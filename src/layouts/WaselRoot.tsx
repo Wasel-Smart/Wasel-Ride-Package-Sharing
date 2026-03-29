@@ -29,133 +29,48 @@ import { C, F, R, SH, GRAD, GLOBAL_STYLES } from '../utils/wasel-ds';
 import { MobileBottomNav } from '../components/MobileBottomNav';
 
 // ── Nav definition (production-safe — no internal testing tools) ──────────────
-export const NAV_GROUPS = [
-  {
-    id: 'rides', label: 'Rides', labelAr: 'رحلات',
-    items: [
-      { emoji: '🚗', label: 'Find a Ride', labelAr: 'ابحث عن رحلة', desc: 'Corridor-first ride marketplace', descAr: 'سوق الرحلات المبني على الممرات', path: '/find-ride', color: C.cyan, badge: null },
-      { emoji: '➕', label: 'Offer a Ride', labelAr: 'أضف رحلتك', desc: 'Publish seats into active corridors', descAr: 'انشر المقاعد داخل الممرات النشطة', path: '/offer-ride', color: C.blue, badge: null },
-    ],
-  },
-  {
-    id: 'returns', label: 'Returns', labelAr: 'الإرجاع',
-    items: [
-      { emoji: '📦', label: 'Package Lanes', labelAr: 'مسارات الطرود', desc: 'Escrow, QR verification, and route-linked package flow', descAr: 'مسار طرود مرتبط بالرحلات مع ضمان ورمز QR', path: '/packages', color: C.gold, badge: null },
-      { emoji: '🔄', label: 'Raje3 Returns', labelAr: 'رجّع للإرجاع', desc: 'Reverse logistics on already scheduled trips', descAr: 'إرجاع البضائع على الرحلات المجدولة', path: '/raje3', color: C.gold, badge: 'RAJE3' },
-    ],
-  },
-  {
-    id: 'business', label: 'Business', labelAr: 'الأعمال',
-    direct: true, path: '/services/corporate', emoji: '💼',
-    desc: 'Recurring commuter contracts and return lanes',
-    descAr: 'عقود تنقل متكررة ومسارات إرجاع للأعمال',
-    color: C.green, badge: 'B2B', items: [],
-  },
-  {
-    id: 'school', label: 'School', labelAr: 'المدارس',
-    direct: true, path: '/services/school', emoji: '🎓',
-    desc: 'Guardian-verified recurring school transport',
-    descAr: 'نقل مدرسي متكرر مع تحقق أولياء الأمور',
-    color: C.gold, badge: 'B2S', items: [],
-  },
-  {
-    id: 'intelligence', label: 'Intelligence', labelAr: 'الذكاء',
-    items: [
-      { emoji: '🌐', label: 'Innovation Hub', labelAr: 'مركز الابتكار', desc: 'Routes, returns, business, school, and trust on one system', descAr: 'المسارات والإرجاع والأعمال والمدارس والثقة في نظام واحد', path: '/innovation-hub', color: C.purple, badge: 'NEW' },
-      { emoji: '💳', label: 'Core Wallet', labelAr: 'المحفظة الأساسية', desc: 'Payments, escrow, earnings, and settlement logic', descAr: 'المدفوعات والضمانات والأرباح والتسوية', path: '/wallet', color: C.gold, badge: 'LIVE' },
-    ],
-  },
-  {
-    id: 'trust', label: 'Trust', labelAr: 'الثقة',
-    direct: true, path: '/trust', emoji: '🛡️',
-    desc: 'Verification, wallet gates, and operational trust',
-    descAr: 'التحقق وصلاحيات المحفظة والثقة التشغيلية',
-    color: C.cyan, badge: 'NEW', items: [],
-  },
-] as const;
-
 const PRODUCT_NAV_GROUPS = [
   {
-    id: 'home', label: 'Home', labelAr: 'الرئيسية',
-    direct: true, path: '/dashboard', emoji: '🏠',
-    desc: 'Command center for the corridor operating model',
-    descAr: 'مركز القيادة لنظام الممرات التشغيلي',
-    color: C.cyan, badge: null, items: [],
-  },
-  {
-    id: 'trips', label: 'Trips', labelAr: 'الرحلات',
+    id: 'trips', label: 'Trips', labelAr: 'Trips',
     items: [
-      { emoji: '🚗', label: 'Find a Ride', labelAr: 'ابحث عن رحلة', desc: 'Intercity ride marketplace built on corridor demand', descAr: 'سوق رحلات بين المدن مبني على طلب الممرات', path: '/find-ride', color: C.cyan, badge: null },
-      { emoji: '➕', label: 'Offer a Ride', labelAr: 'أضف رحلتك', desc: 'Create supply inside a profitable active corridor', descAr: 'أنشئ عرضاً داخل ممر نشط ومربح', path: '/offer-ride', color: C.blue, badge: null },
+      { emoji: 'R', label: 'Find a Ride', labelAr: 'Find a Ride', desc: 'Intercity ride marketplace', descAr: 'Intercity ride marketplace', path: '/find-ride', color: C.cyan, badge: null },
+      { emoji: '+', label: 'Offer a Ride', labelAr: 'Offer a Ride', desc: 'Create supply inside active corridors', descAr: 'Create supply inside active corridors', path: '/offer-ride', color: C.blue, badge: null },
     ],
   },
   {
-    id: 'packages', label: 'Returns', labelAr: 'الإرجاع',
+    id: 'packages', label: 'Returns', labelAr: 'Returns',
     items: [
-      { emoji: '📦', label: 'Package Tracking', labelAr: 'تتبع الطرود', desc: 'Escrow, QR verification, and route-linked tracking', descAr: 'تتبع وربط وضمان ورمز QR', path: '/packages', color: C.gold, badge: null },
-      { emoji: '🔄', label: 'Raje3 Returns', labelAr: 'رجّع للإرجاع', desc: 'Reverse logistics for retail and e-commerce corridors', descAr: 'إرجاع ذكي لممرات المتاجر والتجارة الإلكترونية', path: '/raje3', color: C.gold, badge: 'RAJE3' },
+      { emoji: 'P', label: 'Package Tracking', labelAr: 'Package Tracking', desc: 'Escrow, QR verification, and tracking', descAr: 'Escrow, QR verification, and tracking', path: '/packages', color: C.gold, badge: null },
+      { emoji: 'R3', label: 'Raje3 Returns', labelAr: 'Raje3 Returns', desc: 'Reverse logistics for retail and e-commerce', descAr: 'Reverse logistics for retail and e-commerce', path: '/raje3', color: C.gold, badge: 'RAJE3' },
     ],
   },
   {
-    id: 'business', label: 'Business', labelAr: 'الأعمال',
-    direct: true, path: '/services/corporate', emoji: '💼',
-    desc: 'Recurring commuter contracts and return logistics',
-    descAr: 'عقود تنقل متكررة ولوجستيات الإرجاع',
-    color: C.green, badge: 'B2B', items: [],
-  },
-  {
-    id: 'school', label: 'School', labelAr: 'المدارس',
-    direct: true, path: '/services/school', emoji: '🎓',
-    desc: 'Guardian-verified recurring school transport',
-    descAr: 'نقل مدرسي متكرر مع تحقق أولياء الأمور',
-    color: C.gold, badge: 'B2S', items: [],
-  },
-  {
-    id: 'innovation', label: 'Innovation', labelAr: 'الابتكار',
-    direct: true, path: '/innovation-hub', emoji: '🌐',
-    desc: 'Connected corridor engine for routes, pricing, returns, business, and schools',
-    descAr: 'محرك مترابط للمسارات والتسعير والإرجاع والأعمال والمدارس',
-    color: C.purple, badge: 'NEW', items: [],
-  },
-  {
-    id: 'wallet', label: 'Wallet', labelAr: 'المحفظة',
-    direct: true, path: '/wallet', emoji: '💳',
+    id: 'wallet', label: 'Wallet', labelAr: 'Wallet',
+    direct: true, path: '/wallet', emoji: '$',
     desc: 'Payments, escrow, balances, and earnings in one place',
-    descAr: 'المدفوعات والضمانات والأرصدة والأرباح في مكان واحد',
+    descAr: 'Payments, escrow, balances, and earnings in one place',
     color: C.gold, badge: 'LIVE', items: [],
   },
   {
-    id: 'trust', label: 'Trust', labelAr: 'الثقة',
-    direct: true, path: '/trust', emoji: '🛡️',
-    desc: 'Verification, wallet access, and platform trust',
-    descAr: 'التحقق وصلاحيات المحفظة وثقة المنصة',
-    color: C.cyan, badge: 'NEW', items: [],
-  },
-  {
-    id: 'more', label: 'More', labelAr: 'المزيد',
+    id: 'more', label: 'More', labelAr: 'More',
     items: [
-      { emoji: '🚌', label: 'Bus Support', labelAr: 'الحافلات', desc: 'Supportive fixed routes where they improve corridor density', descAr: 'مسارات مساندة عندما تزيد كثافة الممرات', path: '/bus', color: C.green, badge: null },
-      { emoji: '👤', label: 'Profile', labelAr: 'الملف الشخصي', desc: 'Account overview and identity context', descAr: 'نظرة عامة على الحساب والهوية', path: '/profile', color: C.cyan, badge: null },
+      { emoji: 'B', label: 'Bus', labelAr: 'Bus', desc: 'Fixed-price intercity coaches', descAr: 'Fixed-price intercity coaches', path: '/bus', color: C.green, badge: null },
+      { emoji: 'U', label: 'Profile', labelAr: 'Profile', desc: 'Account overview and identity context', descAr: 'Account overview and identity context', path: '/profile', color: C.cyan, badge: null },
     ],
   },
 ] as const;
 
 type NavGroup = (typeof PRODUCT_NAV_GROUPS)[number];
 
-const HIDDEN_NAV_PATHS = new Set([
-  '/dashboard',
-  '/services/corporate',
-  '/services/school',
-  '/innovation-hub',
-  '/trust',
-]);
+const HIDDEN_NAV_PATHS = new Set<string>();
 
 function isVisibleNavGroup(group: NavGroup) {
   if ('direct' in group && group.direct) {
     return !HIDDEN_NAV_PATHS.has(group.path);
   }
 
-  return group.items.some(item => !HIDDEN_NAV_PATHS.has(item.path));
+  const items = ('items' in group ? group.items : []) as readonly { path: string }[];
+  return items.some(item => !HIDDEN_NAV_PATHS.has(item.path));
 }
 
 function getVisibleNavItems(group: NavGroup) {
@@ -163,7 +78,8 @@ function getVisibleNavItems(group: NavGroup) {
     return [];
   }
 
-  return group.items.filter(item => !HIDDEN_NAV_PATHS.has(item.path));
+  const items = ('items' in group ? group.items : []) as readonly { path: string }[];
+  return items.filter(item => !HIDDEN_NAV_PATHS.has(item.path));
 }
 
 // ── Badge pill ────────────────────────────────────────────────────────────────
@@ -878,3 +794,4 @@ export default function WaselRoot() {
     </div>
   );
 }
+

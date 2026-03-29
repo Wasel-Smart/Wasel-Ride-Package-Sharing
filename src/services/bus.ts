@@ -151,6 +151,12 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
       payload.seatsRequested,
       payload.pickupStop,
       payload.dropoffStop,
+      {
+        schedule_date: payload.scheduleDate,
+        seat_preference: payload.seatPreference,
+        schedule_mode: payload.scheduleMode,
+        total_price: payload.totalPrice,
+      },
     );
 
     const bookingId =

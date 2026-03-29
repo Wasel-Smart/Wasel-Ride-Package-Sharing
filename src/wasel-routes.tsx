@@ -93,7 +93,7 @@ const buildMainChildren = () => [
   // ── Landing ──────────────────────────────────────────────────────────────
   {
     index: true,
-    lazy: lazy(() => import('./pages/WaselLanding')),
+    lazy: lazy(() => import('./components/LandingPageWrapper'), 'LandingPageWrapper'),
   },
 
   // ── Auth ─────────────────────────────────────────────────────────────────
@@ -166,23 +166,12 @@ const buildMainChildren = () => [
   { path: 'services/raje3', Component: () => <RedirectTo to="/app/raje3" /> },
 
   // ── B2B / B2S ─────────────────────────────────────────────────────────────
-  {
-    path: 'services/corporate',
-    lazy: lazy(() => import('./components/BusinessAccounts'), 'BusinessAccounts'),
-  },
-  {
-    path: 'services/school',
-    lazy: lazy(() => import('./components/SchoolTransport'), 'SchoolTransport'),
-  },
-
-  // ── Innovation Hub ────────────────────────────────────────────────────────
-  {
-    path: 'innovation-hub',
-    lazy: lazy(() => import('./pages/WaselInnovationHub')),
-  },
-  { path: 'analytics',       Component: () => <RedirectTo to="/app/innovation-hub" /> },
-  { path: 'mobility-os',     Component: () => <RedirectTo to="/app/innovation-hub" /> },
-  { path: 'ai-intelligence', Component: () => <RedirectTo to="/app/innovation-hub" /> },
+    { path: 'services/corporate', Component: () => <RedirectTo to="/app/dashboard" /> },
+  { path: 'services/school', Component: () => <RedirectTo to="/app/dashboard" /> },
+  { path: 'innovation-hub', Component: () => <RedirectTo to="/app/dashboard" /> },
+  { path: 'analytics', Component: () => <RedirectTo to="/app/dashboard" /> },
+  { path: 'mobility-os', Component: () => <RedirectTo to="/app/dashboard" /> },
+  { path: 'ai-intelligence', Component: () => <RedirectTo to="/app/dashboard" /> },
 
   // ── Wallet ────────────────────────────────────────────────────────────────
   {
@@ -211,10 +200,7 @@ const buildMainChildren = () => [
   },
 
   // ── Trust Center ──────────────────────────────────────────────────────────
-  {
-    path: 'trust',
-    lazy: lazy(() => import('./pages/WaselTrustCenter')),
-  },
+  { path: 'trust', Component: () => <RedirectTo to="/app/dashboard" /> },
 
   // ── Driver ────────────────────────────────────────────────────────────────
   { path: 'driver', Component: () => <RedirectTo to="/app/dashboard" /> },
@@ -242,9 +228,7 @@ const buildMainChildren = () => [
 export const waselRouter = createBrowserRouter([
   {
     path: '/',
-    Component: WaselRoot,
-    errorElement: <RouteErrorFallback />,
-    children: buildMainChildren(),
+    Component: () => <RedirectTo to="/app" />,
   },
   {
     path: '/app',
@@ -253,3 +237,4 @@ export const waselRouter = createBrowserRouter([
     children: buildMainChildren(),
   },
 ]);
+

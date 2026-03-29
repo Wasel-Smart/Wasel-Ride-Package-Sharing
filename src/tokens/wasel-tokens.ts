@@ -28,6 +28,8 @@ export const WaselColors = {
   // Legacy aliases (backwards compat)
   teal:         '#00C8E8',
   bronze:       '#F0A830',
+  orange:       '#F0A830',
+  borderDark:   'rgba(24,46,78,0.85)',
   navyBase:     '#040C18',
   navyCard:     '#0A1628',
 

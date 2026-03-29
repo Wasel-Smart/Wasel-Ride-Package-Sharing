@@ -307,13 +307,11 @@ export async function disable2FA(userId: string, code: string): Promise<boolean>
 // ── Helper Functions ─────────────────────────────────────────────────────────
 
 function generateTOTPSecret(): string {
-  // Generate 20-byte base32 secret
+  // Use crypto.getRandomValues for cryptographically secure randomness
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  let secret = '';
-  for (let i = 0; i < 32; i++) {
-    secret += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return secret;
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => chars[b % chars.length]).join('');
 }
 
 function generateQRCode(secret: string, userId: string): string {
@@ -329,26 +327,23 @@ function generateQRCode(secret: string, userId: string): string {
 function generateBackupCodes(count: number): string[] {
   const codes: string[] = [];
   for (let i = 0; i < count; i++) {
-    // Generate 8-character backup code
-    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+    // Use crypto.getRandomValues for cryptographically secure backup codes
+    const bytes = new Uint8Array(6);
+    crypto.getRandomValues(bytes);
+    const code = Array.from(bytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+      .toUpperCase()
+      .slice(0, 8);
     codes.push(code);
   }
   return codes;
 }
 
-function verifyTOTPCode(secret: string, code: string): boolean {
-  // Simplified TOTP verification
-  // In production, use a library like otplib
-  
-  // For now, accept any 6-digit code (dev mode)
-  if (import.meta.env.DEV && code === '000000') {
-    return true;
-  }
-  
-  // TODO: Implement proper TOTP verification with otplib
-  // import { authenticator } from 'otplib';
-  // return authenticator.verify({ token: code, secret });
-  
+function verifyTOTPCode(_secret: string, _code: string): boolean {
+  // TOTP verification requires a server-side implementation (otplib).
+  // Client-side TOTP verification is insecure — always delegate to the backend.
+  // TODO: call POST /auth/verify-2fa with { userId, code } and return the result.
   return false;
 }
 

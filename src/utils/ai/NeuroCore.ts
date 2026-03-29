@@ -1,4 +1,3 @@
-import { Trip } from '../../types/trip';
 import { OrganicGrowth } from '../growth/organicGrowth';
 
 export interface NeuroPrediction {

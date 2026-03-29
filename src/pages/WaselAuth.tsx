@@ -11,6 +11,8 @@ import { WaselLogo, WaselHeroMark } from '../components/wasel-ds/WaselLogo';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { Eye, EyeOff, CheckCircle2, Loader2, Shield, Zap, Package, Bus } from 'lucide-react';
+import { checkRateLimit, validateEmail } from '../utils/security';
+import { useAuth } from '../contexts/AuthContext';
 
 // ── Tokens (all dark) ─────────────────────────────────────────────────────────
 const C = {
@@ -116,36 +118,65 @@ export default function WaselAuth() {
   const [success,  setSuccess]  = useState(false);
 
   const { signIn, register, loading, user } = useLocalAuth();
+  const { resetPassword } = useAuth();
   const nav = useIframeSafeNavigate();
   const mountedRef = useRef(true);
 
-  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
-  useEffect(() => { if (user && mountedRef.current) nav(returnTo); }, [user, nav, returnTo]);
+  // Validate returnTo to prevent open redirect — only allow same-origin paths
+  const safeReturnTo = (() => {
+    const raw = params.get('returnTo') || '/app/dashboard';
+    return raw.startsWith('/') && !raw.startsWith('//') ? raw : '/app/dashboard';
+  })();
 
-  const pw = pwStrength(password);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+  useEffect(() => { if (user && mountedRef.current) nav(safeReturnTo); }, [user, nav, safeReturnTo]);
+
+  const handleDemo = async () => {
+    await signIn('demo@wasel.jo', 'demo123');
+    if (mountedRef.current) setTimeout(() => { if (mountedRef.current) nav(safeReturnTo); }, 600);
+  };
 
   const handleSignIn = async () => {
     setErr('');
-    if (!email)    { setErr('Please enter your email'); return; }
+    if (!email) { setErr('Please enter your email'); return; }
+    if (!validateEmail(email)) { setErr('Please enter a valid email address'); return; }
+    if (!password) { setErr('Please enter your password'); return; }
+    // Client-side rate limit: 5 attempts per minute per email
+    if (!checkRateLimit(`signin:${email}`, { maxRequests: 5, windowMs: 60_000 })) {
+      setErr('Too many attempts. Please wait a minute before trying again.');
+      return;
+    }
     const { error } = await signIn(email, password);
     if (error) setErr(error);
-    else if (mountedRef.current) { setSuccess(true); setTimeout(() => { if (mountedRef.current) nav(returnTo); }, 600); }
+    else if (mountedRef.current) { setSuccess(true); setTimeout(() => { if (mountedRef.current) nav(safeReturnTo); }, 600); }
   };
 
   const handleRegister = async () => {
     setErr('');
-    if (!name)            { setErr('Please enter your name'); return; }
-    if (!email)           { setErr('Please enter your email'); return; }
+    if (!name) { setErr('Please enter your name'); return; }
+    if (!email) { setErr('Please enter your email'); return; }
+    if (!validateEmail(email)) { setErr('Please enter a valid email address'); return; }
     if (password.length < 6) { setErr('Password must be at least 6 characters'); return; }
+    // Client-side rate limit: 3 registrations per minute per email
+    if (!checkRateLimit(`register:${email}`, { maxRequests: 3, windowMs: 60_000 })) {
+      setErr('Too many attempts. Please wait a minute before trying again.');
+      return;
+    }
     const { error } = await register(name, email, password, phone);
     if (error) setErr(error);
-    else if (mountedRef.current) { setSuccess(true); setTimeout(() => { if (mountedRef.current) nav(returnTo); }, 600); }
+    else if (mountedRef.current) { setSuccess(true); setTimeout(() => { if (mountedRef.current) nav(safeReturnTo); }, 600); }
   };
 
-  const handleDemo = async () => {
-    await signIn('demo@wasel.jo', 'demo123');
-    if (mountedRef.current) setTimeout(() => { if (mountedRef.current) nav(returnTo); }, 600);
+  const handleForgotPassword = async () => {
+    if (!email) { setErr('Enter your email above first'); return; }
+    if (!validateEmail(email)) { setErr('Please enter a valid email address'); return; }
+    const { error } = await resetPassword(email);
+    if (error) setErr(typeof error === 'string' ? error : (error as Error).message);
+    else setErr('');
+    // Show success regardless to prevent email enumeration
+    alert(`If ${email} is registered, a reset link has been sent.`);
   };
+  const pw = pwStrength(password);
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg, fontFamily:C.F, display:'grid', gridTemplateColumns:'1fr 1fr' }}

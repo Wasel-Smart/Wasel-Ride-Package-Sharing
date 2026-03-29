@@ -1,53 +1,27 @@
 import { useEffect, useState } from 'react';
-import {
-  ArrowRight,
-  BriefcaseBusiness,
-  Building2,
-  GraduationCap,
-  MapPinned,
-  Package,
-  Route,
-  ShieldCheck,
-  Sparkles,
-  TrendingUp,
-} from 'lucide-react';
+import { ArrowRight, Bus, MapPinned, Package, Route, ShieldCheck, Sparkles, Ticket } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { useLocalAuth } from '../contexts/LocalAuth';
-import { buildBusinessAccountSnapshot, buildSchoolTransportSnapshot } from '../services/corridorOperations';
+import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
+import { getConnectedStats } from '../services/journeyLogistics';
 import { buildInnovationSnapshot, getJordanLaunchRoutes, type InnovationSnapshot } from '../services/innovationNetwork';
-
-function formatJod(value: number) {
-  return new Intl.NumberFormat('en-JO', {
-    style: 'currency',
-    currency: 'JOD',
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 export default function WaselLanding() {
   const nav = useIframeSafeNavigate();
   const { user } = useLocalAuth();
   const [snapshot, setSnapshot] = useState<InnovationSnapshot | null>(null);
-  const [businessInvoice, setBusinessInvoice] = useState<number>(0);
-  const [schoolPricing, setSchoolPricing] = useState<{ standard: number; premium: number } | null>(null);
+  const [networkStats, setNetworkStats] = useState(() => getConnectedStats());
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
-      const [innovation, business, school] = await Promise.all([
-        buildInnovationSnapshot(),
-        buildBusinessAccountSnapshot(),
-        buildSchoolTransportSnapshot(),
-      ]);
-
+      const nextSnapshot = await buildInnovationSnapshot();
       if (cancelled) return;
-      setSnapshot(innovation);
-      setBusinessInvoice(business.monthlyInvoiceJOD);
-      setSchoolPricing(school.subscriptionPricing);
+      setSnapshot(nextSnapshot);
+      setNetworkStats(getConnectedStats());
     }
 
     void load();
@@ -57,7 +31,49 @@ export default function WaselLanding() {
     };
   }, []);
 
-  const launchRoutes = getJordanLaunchRoutes();
+  const launchRoutes = getJordanLaunchRoutes().slice(0, 6);
+  const serviceCards = [
+    {
+      title: 'Find Ride',
+      description: 'Search active seats across Jordan corridor routes with pricing, filters, and instant booking.',
+      icon: Route,
+      cta: 'Browse rides',
+      path: '/app/find-ride',
+      tone: 'border-cyan-500/20 bg-cyan-500/5',
+    },
+    {
+      title: 'Offer Ride',
+      description: 'Post your route, expose spare seats, and make your trip discoverable to the network.',
+      icon: MapPinned,
+      cta: 'Post a ride',
+      path: '/app/offer-ride',
+      tone: 'border-sky-500/20 bg-sky-500/5',
+    },
+    {
+      title: 'Packages',
+      description: 'Send and track route-linked deliveries with escrow-backed status updates.',
+      icon: Package,
+      cta: 'Open packages',
+      path: '/app/packages',
+      tone: 'border-amber-500/20 bg-amber-500/5',
+    },
+    {
+      title: 'Raje3 Returns',
+      description: 'Turn reverse logistics into a lighter-weight return flow built on scheduled rides.',
+      icon: ShieldCheck,
+      cta: 'Start a return',
+      path: '/app/raje3',
+      tone: 'border-emerald-500/20 bg-emerald-500/5',
+    },
+    {
+      title: 'Bus',
+      description: 'Book fixed-price intercity coaches when a predictable scheduled trip is the right fit.',
+      icon: Bus,
+      cta: 'See bus routes',
+      path: '/app/bus',
+      tone: 'border-white/10 bg-white/[0.03]',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-[#040C18] text-slate-50">
@@ -66,14 +82,15 @@ export default function WaselLanding() {
           <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
             <div className="space-y-6">
               <Badge className="border-cyan-400/30 bg-cyan-400/10 text-cyan-100 hover:bg-cyan-400/10">
-                Middle East-first corridor commerce platform
+                Intercity rides, packages, returns, and bus in one Jordan-first app
               </Badge>
               <div className="space-y-4">
                 <h1 className="max-w-4xl text-4xl font-semibold leading-tight tracking-tight text-white md:text-6xl">
-                  Route intelligence, reverse logistics, business mobility, and school transport on one operating layer.
+                  Move people and packages through the same corridor network.
                 </h1>
                 <p className="max-w-3xl text-base leading-7 text-slate-300 md:text-lg">
-                  Wasel is strongest when every seat, trunk, return, business contract, and guardian-verified school route runs through one corridor engine.
+                  Wasel is now focused on the journeys users actually need every day: finding rides, offering seats,
+                  sending packages, handling returns, and booking intercity bus trips without product sprawl.
                 </p>
               </div>
 
@@ -83,15 +100,15 @@ export default function WaselLanding() {
                   className="bg-cyan-400 text-slate-950 hover:bg-cyan-300"
                   onClick={() => nav(user ? '/app/dashboard' : '/app/auth?tab=register')}
                 >
-                  {user ? 'Open Command Center' : 'Start Building With Wasel'}
+                  {user ? 'Open Dashboard' : 'Create Account'}
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
                   className="border-white/15 bg-white/5 text-white hover:bg-white/10"
-                  onClick={() => nav('/app/innovation-hub')}
+                  onClick={() => nav('/app/find-ride')}
                 >
-                  Explore Innovation Hub
+                  Explore rides
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -99,24 +116,20 @@ export default function WaselLanding() {
               <div className="grid gap-4 sm:grid-cols-3">
                 <Card className="border-white/10 bg-white/5 text-white">
                   <CardContent className="pt-6">
-                    <div className="text-sm text-slate-400">Active launch regions</div>
-                    <div className="mt-2 text-3xl font-semibold">{snapshot?.activeRegionCount ?? '...'}</div>
+                    <div className="text-sm text-slate-400">Launch corridors</div>
+                    <div className="mt-2 text-3xl font-semibold">{launchRoutes.length}</div>
                   </CardContent>
                 </Card>
                 <Card className="border-white/10 bg-white/5 text-white">
                   <CardContent className="pt-6">
-                    <div className="text-sm text-slate-400">Business recurring invoice</div>
-                    <div className="mt-2 text-3xl font-semibold">
-                      {businessInvoice > 0 ? formatJod(businessInvoice) : '...'}
-                    </div>
+                    <div className="text-sm text-slate-400">Rides posted</div>
+                    <div className="mt-2 text-3xl font-semibold">{networkStats.ridesPosted}</div>
                   </CardContent>
                 </Card>
                 <Card className="border-white/10 bg-white/5 text-white">
                   <CardContent className="pt-6">
-                    <div className="text-sm text-slate-400">School standard plan</div>
-                    <div className="mt-2 text-3xl font-semibold">
-                      {schoolPricing ? formatJod(schoolPricing.standard) : '...'}
-                    </div>
+                    <div className="text-sm text-slate-400">Packages created</div>
+                    <div className="mt-2 text-3xl font-semibold">{networkStats.packagesCreated}</div>
                   </CardContent>
                 </Card>
               </div>
@@ -124,32 +137,32 @@ export default function WaselLanding() {
 
             <Card className="border-cyan-500/20 bg-slate-950/50 text-slate-50">
               <CardHeader>
-                <CardTitle>What makes this vision different</CardTitle>
+                <CardTitle>Why this version is sharper</CardTitle>
                 <CardDescription className="text-slate-400">
-                  The product is no longer a generic ride app. It is a corridor-based transport and logistics operating system.
+                  The product now tells one clear story instead of stretching across too many verticals.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {[
                   {
-                    title: 'Route intelligence',
-                    detail: 'Decide where supply should go based on corridor health, not on random city-wide inventory.',
+                    title: 'Rides come first',
+                    detail: 'Ride discovery and ride supply are now the center of the user journey.',
                     icon: Route,
                   },
                   {
-                    title: 'Return matching',
-                    detail: 'Returns move on already scheduled rides instead of creating standalone courier cost.',
+                    title: 'Packages connect to routes',
+                    detail: 'Package lanes stay tied to real route demand instead of feeling like a separate app.',
                     icon: Package,
                   },
                   {
-                    title: 'Recurring revenue',
-                    detail: 'Business accounts and school routes create contract revenue instead of one-off trip volatility.',
-                    icon: BriefcaseBusiness,
+                    title: 'Returns stay lightweight',
+                    detail: 'Raje3 extends the ride network with reverse logistics instead of introducing product clutter.',
+                    icon: Sparkles,
                   },
                   {
-                    title: 'Trust and escrow',
-                    detail: 'Wallet, verification, guardian handoff, and package release all reinforce platform credibility.',
-                    icon: ShieldCheck,
+                    title: 'Bus stays predictable',
+                    detail: 'Scheduled intercity coach booking remains available when users want fixed timing and fixed price.',
+                    icon: Ticket,
                   },
                 ].map((item) => (
                   <div key={item.title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -172,51 +185,29 @@ export default function WaselLanding() {
         <section className="space-y-5">
           <div className="space-y-2">
             <Badge className="border-emerald-400/30 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/10">
-              Product Spine
+              Core Services
             </Badge>
-            <h2 className="text-3xl font-semibold tracking-tight text-white">The strongest six signals now define the platform.</h2>
+            <h2 className="text-3xl font-semibold tracking-tight text-white">Everything on the landing page now points to a real user job.</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {[
-              {
-                title: 'Route Intelligence',
-                description: 'Liquidity, prayer-aware timing, seat usage, and corridor prioritization.',
-                icon: MapPinned,
-              },
-              {
-                title: 'Return Matching',
-                description: 'Raje3 turns reverse logistics into a high-margin extension of live trips.',
-                icon: Package,
-              },
-              {
-                title: 'Package Tracking',
-                description: 'Escrow, QR verification, tracking, and trust-led release logic.',
-                icon: ShieldCheck,
-              },
-              {
-                title: 'Seat Pricing',
-                description: 'Yield logic pushes profitability through occupancy instead of flat pricing.',
-                icon: TrendingUp,
-              },
-              {
-                title: 'Business Accounts',
-                description: 'Recurring commuter corridors and return lanes create contract revenue.',
-                icon: Building2,
-              },
-              {
-                title: 'School Transport',
-                description: 'Guardian-verified subscriptions turn recurring family mobility into a durable vertical.',
-                icon: GraduationCap,
-              },
-            ].map((item) => (
-              <Card key={item.title} className="border-white/10 bg-white/[0.03] text-white">
+            {serviceCards.map((item) => (
+              <Card key={item.title} className={`${item.tone} text-white`}>
                 <CardHeader>
-                  <div className="mb-3 w-fit rounded-xl border border-cyan-400/15 bg-cyan-400/10 p-2 text-cyan-100">
+                  <div className="mb-3 w-fit rounded-xl border border-white/10 bg-white/10 p-2 text-cyan-100">
                     <item.icon className="h-5 w-5" />
                   </div>
                   <CardTitle>{item.title}</CardTitle>
-                  <CardDescription className="text-slate-400">{item.description}</CardDescription>
+                  <CardDescription className="text-slate-300">{item.description}</CardDescription>
                 </CardHeader>
+                <CardContent>
+                  <Button
+                    variant="outline"
+                    className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+                    onClick={() => nav(item.path)}
+                  >
+                    {item.cta}
+                  </Button>
+                </CardContent>
               </Card>
             ))}
           </div>
@@ -225,9 +216,9 @@ export default function WaselLanding() {
         <section className="space-y-5">
           <div className="space-y-2">
             <Badge className="border-amber-400/30 bg-amber-400/10 text-amber-100 hover:bg-amber-400/10">
-              Jordan Launch Corridors
+              Jordan Corridors
             </Badge>
-            <h2 className="text-3xl font-semibold tracking-tight text-white">Launch corridors should be the product, not just a dataset.</h2>
+            <h2 className="text-3xl font-semibold tracking-tight text-white">Launch routes should help users decide quickly.</h2>
           </div>
           <div className="grid gap-4 lg:grid-cols-3">
             {launchRoutes.map((route) => (
@@ -240,8 +231,8 @@ export default function WaselLanding() {
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm text-slate-300">
                   <div className="flex items-center justify-between">
-                    <span>Package enabled</span>
-                    <span>{route.packageEnabled ? 'Yes' : 'No'}</span>
+                    <span>Packages</span>
+                    <span>{route.packageEnabled ? 'Enabled' : 'No'}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Tier</span>
@@ -260,43 +251,43 @@ export default function WaselLanding() {
         <section className="grid gap-4 lg:grid-cols-3">
           <Card className="border-cyan-500/20 bg-cyan-500/5 text-white">
             <CardHeader>
-              <CardTitle>Returns on top of rides</CardTitle>
+              <CardTitle>Corridor health</CardTitle>
               <CardDescription className="text-slate-400">
-                Returns should increase corridor yield without creating a second logistics network.
+                A single view of route readiness keeps search, posting, and package demand aligned.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-slate-300">
-              <div>Tracking code: {snapshot?.packageOps.tracking.trackingCode ?? 'Loading...'}</div>
-              <div>Insured value: {snapshot ? formatJod(snapshot.packageOps.insuredValueJOD) : '...'}</div>
-              <div>Escrow-backed release: {snapshot?.packageOps.escrow.heldInEscrow ? 'Enabled' : 'Pending'}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-emerald-500/20 bg-emerald-500/5 text-white">
-            <CardHeader>
-              <CardTitle>Business recurring engine</CardTitle>
-              <CardDescription className="text-slate-400">
-                Business contracts should be measured by recurring revenue and corridor utilization.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-slate-300">
-              <div>Recurring invoice: {businessInvoice > 0 ? formatJod(businessInvoice) : '...'}</div>
-              <div>Revenue mode: monthly corridor allocation</div>
-              <div>Return lane attach-rate: integrated into business mobility</div>
+              <div>Health score: {snapshot?.liquidity.healthScore ?? '...'}/100</div>
+              <div>Prayer-aware stops: {snapshot?.prayerStops.length ?? 0}</div>
+              <div>Passenger matches: {snapshot?.passengerMatches.length ?? 0}</div>
             </CardContent>
           </Card>
 
           <Card className="border-amber-500/20 bg-amber-500/5 text-white">
             <CardHeader>
-              <CardTitle>Guardian-verified school routes</CardTitle>
+              <CardTitle>Package protection</CardTitle>
               <CardDescription className="text-slate-400">
-                School transport should feel like a premium recurring service, not a generic form.
+                Packages still benefit from tracking, insurance, and escrow-backed status updates.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-slate-300">
-              <div>Standard monthly plan: {schoolPricing ? formatJod(schoolPricing.standard) : '...'}</div>
-              <div>Premium monthly plan: {schoolPricing ? formatJod(schoolPricing.premium) : '...'}</div>
-              <div>Guardian alerts and live route tracking are treated as core trust infrastructure.</div>
+              <div>Tracking code: {snapshot?.packageOps.tracking.trackingCode ?? 'Loading...'}</div>
+              <div>Insured value: JOD {snapshot?.packageOps.insuredValueJOD ?? '...'}</div>
+              <div>Escrow: {snapshot?.packageOps.escrow.heldInEscrow ? 'Protected' : 'Pending'}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-emerald-500/20 bg-emerald-500/5 text-white">
+            <CardHeader>
+              <CardTitle>Connected network</CardTitle>
+              <CardDescription className="text-slate-400">
+                Offer Ride, Packages, and Raje3 all get stronger when they share the same route inventory.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-slate-300">
+              <div>Package-ready rides: {networkStats.packageEnabledRides}</div>
+              <div>Matched packages: {networkStats.matchedPackages}</div>
+              <div>Shared route inventory: active</div>
             </CardContent>
           </Card>
         </section>
@@ -304,23 +295,24 @@ export default function WaselLanding() {
         <section className="rounded-[28px] border border-white/10 bg-white/[0.03] p-8 text-center shadow-xl shadow-black/20">
           <div className="mx-auto max-w-3xl space-y-4">
             <Badge className="border-white/10 bg-white/5 text-white hover:bg-white/5">
-              Precision over feature sprawl
+              Focused Product Scope
             </Badge>
             <h2 className="text-3xl font-semibold tracking-tight text-white">
-              The fastest path to a world-class product is one story told everywhere.
+              The product is cleaner when every action leads to rides, packages, returns, or bus.
             </h2>
             <p className="text-base leading-7 text-slate-400">
-              Every page should reinforce the same idea: Wasel is the connected corridor engine for rides, returns, packages, business accounts, and school transport in Jordan and across the Middle East.
+              This landing page now reinforces one story everywhere: Wasel helps users move through Jordan with a
+              smaller, sharper product surface and clearer next steps.
             </p>
             <div className="flex flex-wrap justify-center gap-3 pt-2">
               <Button className="bg-cyan-400 text-slate-950 hover:bg-cyan-300" onClick={() => nav('/app/dashboard')}>
                 Open Dashboard
               </Button>
-              <Button variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10" onClick={() => nav('/app/services/corporate')}>
-                Review Business Operations
+              <Button variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10" onClick={() => nav('/app/packages')}>
+                Open Packages
               </Button>
-              <Button variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10" onClick={() => nav('/app/services/school')}>
-                Review School Operations
+              <Button variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10" onClick={() => nav('/app/bus')}>
+                Open Bus
               </Button>
             </div>
           </div>

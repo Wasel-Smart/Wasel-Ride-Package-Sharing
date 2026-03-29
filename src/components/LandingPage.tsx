@@ -20,6 +20,9 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 interface LandingPageProps {
   onGetStarted: () => void;
   onLogin: () => void;
+  onExploreRides: () => void;
+  onOfferRide: () => void;
+  onExplorePackages: () => void;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -427,12 +430,12 @@ function HomeScreen() {
 
 function MobilityOSScreen() {
   const services = [
-    { icon: '🚗', label: 'Carpooling', labelAr: 'كربول', color: '#00C8E8', count: '3 rides' },
-    { icon: '📦', label: 'Packages', labelAr: 'طرود', color: '#F0A830', count: '1 sent' },
-    { icon: '🚌', label: 'Wasel Bus', labelAr: 'باص', color: '#00C875', count: '2 routes' },
-    { icon: '🏫', label: 'School', labelAr: 'مدرسة', color: '#A8E63D', count: 'Active' },
-    { icon: '📍', label: 'Hubs', labelAr: 'نقاط', color: '#00C8E8', count: '6 hubs' },
-    { icon: '↩️', label: 'Returns', labelAr: 'إرجاع', color: '#F0A830', count: 'New' },
+    { icon: '🔎', label: 'Find a Ride', labelAr: 'ابحث عن رحلة', color: '#00C8E8', count: 'Live' },
+    { icon: '➕', label: 'Offer a Ride', labelAr: 'اعرض رحلة', color: '#3B82F6', count: 'Live' },
+    { icon: '📦', label: 'Packages', labelAr: 'طرود', color: '#F0A830', count: 'Live' },
+    { icon: '🚌', label: 'Wasel Bus', labelAr: 'باص', color: '#00C875', count: 'Ready' },
+    { icon: '💳', label: 'Wallet', labelAr: 'محفظة', color: '#A78BFA', count: 'Live' },
+    { icon: '🔔', label: 'Alerts', labelAr: 'تنبيهات', color: '#22C55E', count: 'Live' },
   ];
   return (
     <div className="h-full w-full flex flex-col" style={{ background: '#040C18' }}>
@@ -750,7 +753,7 @@ function SectionTag({ text }: { text: string }) {
 /* ═══════════════════════════════════════════════════════════════
    MAIN LANDING PAGE COMPONENT
    ═══════════════════════════════════════════════════════════════ */
-export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
+export function LandingPage({ onGetStarted, onLogin, onExploreRides, onOfferRide, onExplorePackages }: LandingPageProps) {
   const [navOpen, setNavOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeScreen, setActiveScreen] = useState(0);
@@ -785,6 +788,30 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
     { label: 'How It Works', href: '#how-it-works' },
     { label: 'Product', href: '#product' },
     { label: 'Trust', href: '#trust' },
+  ];
+
+  const liveServiceCards = [
+    {
+      title: 'Find a Ride',
+      subtitle: 'Search live intercity rides and book the corridor instantly.',
+      icon: <Navigation className="w-5 h-5" />,
+      color: '#00C8E8',
+      action: onExploreRides,
+    },
+    {
+      title: 'Offer a Ride',
+      subtitle: 'Publish seats, turn your route live, and open package capacity.',
+      icon: <Car className="w-5 h-5" />,
+      color: '#3B82F6',
+      action: onOfferRide,
+    },
+    {
+      title: 'Packages',
+      subtitle: 'Send, track, and attach deliveries to already-posted rides.',
+      icon: <Package className="w-5 h-5" />,
+      color: '#F0A830',
+      action: onExplorePackages,
+    },
   ];
 
   // Problem story cards
@@ -889,10 +916,10 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
               <button onClick={onLogin} className="px-5 py-2 text-sm font-medium text-white/60 hover:text-white transition-colors">
                 Sign In | دخول
               </button>
-              <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={onGetStarted}
+              <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={onExploreRides}
                 className="px-6 py-2.5 rounded-2xl text-sm font-bold text-white relative overflow-hidden group"
                 style={{ background: 'linear-gradient(135deg, #00C8E8 0%, #0095b8 100%)' }}>
-                <span className="relative z-10">Join Early Access →</span>
+                <span className="relative z-10">Open Live Services →</span>
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               </motion.button>
             </div>
@@ -920,9 +947,9 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 ))}
                 <div className="pt-2 border-t border-white/10 flex flex-col gap-2">
                   <button onClick={() => { setNavOpen(false); onLogin(); }} className="py-2.5 text-white/70 text-sm font-medium">Sign In | دخول</button>
-                  <button onClick={() => { setNavOpen(false); onGetStarted(); }}
+                  <button onClick={() => { setNavOpen(false); onExploreRides(); }}
                     className="py-3 rounded-2xl text-white font-bold text-sm" style={{ background: '#00C8E8' }}>
-                    Join Early Access →
+                    Open Live Services →
                   </button>
                 </div>
               </div>
@@ -999,19 +1026,44 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
             <motion.div className="flex flex-col sm:flex-row gap-4"
               initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.8 }}>
               <motion.button whileHover={{ scale: 1.04, boxShadow: '0 20px 40px rgba(0,200,232,0.4)' }}
-                whileTap={{ scale: 0.97 }} onClick={onGetStarted}
+                whileTap={{ scale: 0.97 }} onClick={onExploreRides}
                 className="group flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-bold text-lg text-white relative overflow-hidden"
                 style={{ background: 'linear-gradient(135deg, #00C8E8 0%, #0095b8 100%)' }}>
-                <span>Enter the network</span>
+                <span>Find a live ride</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
               </motion.button>
 
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onLogin}
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onOfferRide}
                 className="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl font-semibold text-white/80 border border-white/15 hover:border-white/30 hover:text-white transition-all"
                 style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)' }}>
-                Sign In | دخول
+                Offer a Ride | اعرض رحلة
               </motion.button>
+            </motion.div>
+
+            <motion.div
+              className="grid md:grid-cols-3 gap-4 mt-8 max-w-5xl"
+              initial={{ opacity: 0, y: 26 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.95 }}
+            >
+              {liveServiceCards.map((service) => (
+                <button
+                  key={service.title}
+                  onClick={service.action}
+                  className="text-left rounded-3xl p-5 border transition-all hover:-translate-y-1"
+                  style={{ background: 'rgba(255,255,255,0.04)', borderColor: `${service.color}33`, backdropFilter: 'blur(16px)' }}
+                >
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <span className="inline-flex items-center justify-center w-11 h-11 rounded-2xl" style={{ background: `${service.color}18`, color: service.color }}>
+                      {service.icon}
+                    </span>
+                    <span className="text-[10px] uppercase tracking-[0.22em] font-bold" style={{ color: service.color }}>Live now</span>
+                  </div>
+                  <div className="text-white font-bold text-lg">{service.title}</div>
+                  <div className="text-white/60 text-sm leading-6 mt-2">{service.subtitle}</div>
+                </button>
+              ))}
             </motion.div>
 
             {/* Live stats */}
@@ -1948,25 +2000,25 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           <Reveal delay={0.2}>
             <div className="flex flex-col sm:flex-row gap-5 justify-center mb-16">
               <motion.button whileHover={{ scale: 1.05, boxShadow: '0 24px 60px rgba(0,200,232,0.45)' }}
-                whileTap={{ scale: 0.97 }} onClick={onGetStarted}
+                whileTap={{ scale: 0.97 }} onClick={onExploreRides}
                 className="group flex items-center justify-center gap-3 px-10 py-5 rounded-2xl font-black text-xl text-white relative overflow-hidden"
                 style={{ background: 'linear-gradient(135deg, #00C8E8 0%, #0095b8 100%)' }}>
-                <span>Join Early Access</span>
+                <span>Open Live Mobility</span>
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </motion.button>
 
-              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onGetStarted}
+              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onOfferRide}
                 className="flex items-center justify-center gap-3 px-10 py-5 rounded-2xl font-bold text-white/80 border border-white/15 hover:border-[#F0A830]/40 hover:text-[#F0A830] transition-all"
                 style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)' }}>
                 <Car className="w-5 h-5" />
-                Become a Driver
+                Offer a Ride
               </motion.button>
 
-              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onGetStarted}
+              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onExplorePackages}
                 className="flex items-center justify-center gap-3 px-10 py-5 rounded-2xl font-bold text-white/80 border border-white/15 hover:border-[#00C875]/40 hover:text-[#00C875] transition-all"
                 style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)' }}>
                 <Layers className="w-5 h-5" />
-                Partner With Wasel
+                Open Packages
               </motion.button>
             </div>
           </Reveal>

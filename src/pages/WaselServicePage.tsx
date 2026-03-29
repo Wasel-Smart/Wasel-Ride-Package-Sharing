@@ -19,7 +19,7 @@ import { usePushNotifications } from '../hooks/usePushNotifications';
 import { MapWrapper } from '../components/MapWrapper';
 import { createBusBooking, fetchBusRoutes, type BusRoute } from '../services/bus';
 import { notificationsAPI } from '../services/notifications';
-import { createConnectedPackage, createConnectedRide, getConnectedPackages, getConnectedRides, getConnectedStats, getPackageByTrackingId, type PackageRequest } from '../services/journeyLogistics';
+import { createConnectedPackage, createConnectedRide, getConnectedPackages, getConnectedRides, getConnectedStats, getPackageByTrackingId, type PackageRequest, type PostedRide } from '../services/journeyLogistics';
 import { PAGE_DS } from '../styles/wasel-page-theme';
 
 // ── Unified Dark Design System ────────────────────────────────────────────────
@@ -250,6 +250,47 @@ function readStoredObject<T>(key: string, fallback: T): T {
   } catch {
     return fallback;
   }
+}
+
+function buildRideFromPostedRide(ride: PostedRide): Ride {
+  const capacityLabel = ride.packageCapacity === 'large'
+    ? 'Large trunk'
+    : ride.packageCapacity === 'small'
+      ? 'Compact package lane'
+      : 'Package lane ready';
+
+  return {
+    id: `live-${ride.id}`,
+    driver: {
+      name: ride.carModel ? `${ride.carModel.split(' ')[0]} Captain` : 'Wasel Captain',
+      nameAr: ride.carModel ? `${ride.carModel.split(' ')[0]} Captain` : 'Wasel Captain',
+      rating: 4.8,
+      verified: true,
+      trips: 0,
+      phone: '+962790000000',
+      avatar: (ride.carModel || 'Wasel').slice(0, 2).toUpperCase(),
+    },
+    from: ride.from,
+    fromAr: ride.from,
+    fromPoint: 'Shared pickup point',
+    to: ride.to,
+    toAr: ride.to,
+    toPoint: 'Shared dropoff point',
+    date: ride.date || new Date().toISOString().slice(0, 10),
+    time: ride.time || 'Flexible',
+    seatsAvailable: Math.max(1, ride.seats),
+    totalSeats: Math.max(1, ride.seats),
+    pricePerSeat: Math.max(0, ride.price),
+    distance: 0,
+    duration: 'Live route',
+    genderPref: ride.gender === 'women_only' ? 'women_only' : ride.gender === 'family_only' ? 'family_only' : 'mixed',
+    amenities: ['Live post', ride.carModel || 'Private vehicle', capacityLabel],
+    prayerStops: ride.prayer,
+    car: ride.carModel || 'Private vehicle',
+    pkgCapacity: ride.acceptsPackages ? ride.packageCapacity : 'none',
+    conversationLevel: 'normal',
+    reviews: ride.note ? [{ name: 'Route note', rating: 5, text: ride.note }] : undefined,
+  };
 }
 
 // ── Trip Detail Modal ─────────────────────────────────────────────────────────
@@ -562,9 +603,15 @@ function RideCard({ ride, idx, onOpen, booked = false }: { ride:Ride; idx:number
 // ── Find Ride Page ────────────────────────────────────────────────────────────
 export function FindRidePage() {
   const nav = useIframeSafeNavigate();
+  const location = useLocation();
   const { language } = useLanguage();
   const ar = language === 'ar';
   const { notifyTripConfirmed, requestPermission, permission } = usePushNotifications();
+  const corridorParams = new URLSearchParams(location.search);
+  const initialFrom = CITIES.includes(corridorParams.get('from') ?? '') ? corridorParams.get('from')! : 'Amman';
+  const initialTo = CITIES.includes(corridorParams.get('to') ?? '') ? corridorParams.get('to')! : 'Aqaba';
+  const initialDate = corridorParams.get('date') ?? '';
+  const initialSearched = corridorParams.get('search') === '1';
   const t = {
     from: ar ? 'من' : 'FROM',
     to: ar ? 'إلى' : 'TO',
@@ -611,10 +658,10 @@ export function FindRidePage() {
     matchingDesc: ar ? 'سنطابقك مع مسافر موثوق متجه إلى' : "We'll match you with a verified traveler heading to",
   };
   const [tab,      setTab]      = useState<'ride'|'package'>('ride');
-  const [from,     setFrom]     = useState('Amman');
-  const [to,       setTo]       = useState('Aqaba');
-  const [date,     setDate]     = useState('');
-  const [searched, setSearched] = useState(false);
+  const [from,     setFrom]     = useState(initialFrom);
+  const [to,       setTo]       = useState(initialTo);
+  const [date,     setDate]     = useState(initialDate);
+  const [searched, setSearched] = useState(initialSearched);
   const [loading,  setLoading]  = useState(false);
   const [sort,     setSort]     = useState<'price'|'time'|'rating'>('rating');
   const [selected, setSelected] = useState<Ride|null>(null);
@@ -625,10 +672,12 @@ export function FindRidePage() {
   const [pkg,      setPkg]      = useState({ from:'Amman', to:'Aqaba', weight:'<1 kg', note:'', sent:false });
   const searchFromCoord = resolveCityCoord(from);
   const searchToCoord = resolveCityCoord(to);
+  const connectedRides = getConnectedRides().map(buildRideFromPostedRide);
+  const allAvailableRides = [...connectedRides, ...ALL_RIDES];
 
   // Filtered & sorted rides
   const results: Ride[] = searched
-    ? ALL_RIDES
+    ? allAvailableRides
         .filter(r =>
           (!from || r.from.toLowerCase().includes(from.toLowerCase()) || r.fromAr === from) &&
           (!to   || r.to.toLowerCase().includes(to.toLowerCase())   || r.toAr   === to) &&
@@ -639,9 +688,9 @@ export function FindRidePage() {
           sort === 'time'   ? a.time.localeCompare(b.time) :
           b.driver.rating - a.driver.rating
         )
-    : ALL_RIDES.slice(0, 4);
+    : allAvailableRides.slice(0, 4);
 
-  const corridorRides = ALL_RIDES.filter((ride) => ride.from === from && ride.to === to);
+  const corridorRides = allAvailableRides.filter((ride) => ride.from === from && ride.to === to);
   const routeReadinessLabel = corridorRides.length >= 2 ? t.instantMatch : corridorRides.length === 1 ? t.bookingReady : t.searchHelp;
   const recommendedRides = [...results]
     .sort((a, b) => {
@@ -649,7 +698,7 @@ export function FindRidePage() {
       return score(b) - score(a);
     })
     .slice(0, 2);
-  const bookedRides = ALL_RIDES.filter((ride) => booked.has(ride.id)).slice(0, 3);
+  const bookedRides = allAvailableRides.filter((ride) => booked.has(ride.id)).slice(0, 3);
 
   useEffect(() => {
     writeStoredStringList(RIDE_BOOKINGS_KEY, Array.from(booked));
@@ -658,6 +707,19 @@ export function FindRidePage() {
   useEffect(() => {
     writeStoredStringList(RIDE_SEARCHES_KEY, recentSearches);
   }, [recentSearches]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const nextFrom = CITIES.includes(params.get('from') ?? '') ? params.get('from')! : 'Amman';
+    const nextTo = CITIES.includes(params.get('to') ?? '') ? params.get('to')! : 'Aqaba';
+    const nextDate = params.get('date') ?? '';
+    const nextSearched = params.get('search') === '1';
+
+    setFrom(nextFrom);
+    setTo(nextTo);
+    setDate(nextDate);
+    setSearched(nextSearched);
+  }, [location.search]);
 
   const handleSearch = () => {
     if (from === to) {
@@ -982,6 +1044,7 @@ export function FindRidePage() {
 // OFFER RIDE PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
 export function OfferRidePage() {
+  const nav = useIframeSafeNavigate();
   const defaultForm = {
     from:'Amman',
     to:'Aqaba',
@@ -1146,7 +1209,6 @@ export function OfferRidePage() {
                 setStep(1);
                 setForm(defaultForm);
               }} style={{ padding:'12px 28px', borderRadius:'99px', border:'none', background:DS.gradC, color:'#fff', fontWeight:700, fontFamily:DS.F, cursor:'pointer' }}>Post Another</button>
-              <button onClick={() => nav('/app/find-ride')} style={{ padding:'12px 28px', borderRadius:'99px', border:`1px solid ${DS.border}`, background:DS.card2, color:DS.sub, fontWeight:700, fontFamily:DS.F, cursor:'pointer' }}>View live corridor</button>
             </div>
           </div>
         ) : (

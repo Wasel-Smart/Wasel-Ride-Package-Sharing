@@ -1,7 +1,13 @@
 import { API_URL, fetchWithRetry, getAuthDetails } from './core';
 
 export const bookingsAPI = {
-  async createBooking(tripId: string, seatsRequested: number, pickup?: string, dropoff?: string) {
+  async createBooking(
+    tripId: string,
+    seatsRequested: number,
+    pickup?: string,
+    dropoff?: string,
+    metadata?: Record<string, unknown>,
+  ) {
     const { token } = await getAuthDetails();
 
     const response = await fetchWithRetry(`${API_URL}/bookings`, {
@@ -10,7 +16,13 @@ export const bookingsAPI = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ trip_id: tripId, seats_requested: seatsRequested, pickup_stop: pickup, dropoff_stop: dropoff })
+      body: JSON.stringify({
+        trip_id: tripId,
+        seats_requested: seatsRequested,
+        pickup_stop: pickup,
+        dropoff_stop: dropoff,
+        ...metadata,
+      })
     });
 
     if (!response.ok) {

@@ -42,20 +42,17 @@ export function initSentry() {
     
     // Enhanced error context
     beforeSend(event, hint) {
-      // Add user context
-      const user = localStorage.getItem('wasel_user');
-      if (user) {
-        try {
-          const userData = JSON.parse(user);
-          event.user = {
-            id: userData.id,
-            email: userData.email,
-            username: userData.full_name,
-          };
-        } catch (e) {
-          // Ignore parse errors
-        }
+      // Add user context — only send non-PII identifier
+    const raw = localStorage.getItem('wasel_local_user_v2');
+    if (raw) {
+      try {
+        const userData = JSON.parse(raw);
+        // Only send user ID to Sentry — never email or name
+        event.user = { id: userData.id };
+      } catch {
+        // ignore parse errors
       }
+    }
       
       // Add custom tags
       event.tags = {
@@ -68,35 +65,34 @@ export function initSentry() {
     },
   });
   
-  console.log('✅ Sentry monitoring initialized');
+  if (import.meta.env.DEV) console.log('[Sentry] Initialized');
 }
 
 // Custom error logging functions
 export const logger = {
   error: (message: string, error?: Error | unknown, context?: Record<string, any>) => {
-    console.error('❌ ERROR:', message, error, context);
-    
+    if (import.meta.env.DEV) console.error('[Wasel]', message, error, context);
+
     Sentry.captureException(error || new Error(message), {
       level: 'error',
       tags: { type: 'application_error' },
       extra: context,
     });
   },
-  
+
   warning: (message: string, context?: Record<string, any>) => {
-    console.warn('⚠️ WARNING:', message, context);
-    
+    if (import.meta.env.DEV) console.warn('[Wasel]', message, context);
+
     Sentry.captureMessage(message, {
       level: 'warning',
       tags: { type: 'application_warning' },
       extra: context,
     });
   },
-  
+
   info: (message: string, context?: Record<string, any>) => {
-    console.info('💡 INFO:', message, context);
-    
-    // Only log important info to Sentry
+    if (import.meta.env.DEV) console.info('[Wasel]', message);
+
     if (context?.important) {
       Sentry.captureMessage(message, {
         level: 'info',
@@ -105,23 +101,14 @@ export const logger = {
       });
     }
   },
-  
-  // Performance tracking
+
   startTransaction: (name: string, op: string) => {
     logger.addBreadcrumb(`Transaction: ${name}`, 'performance', { op });
-    return {
-      finish: () => undefined,
-    };
+    return { finish: () => undefined };
   },
-  
-  // Breadcrumb for debugging
+
   addBreadcrumb: (message: string, category: string, data?: Record<string, any>) => {
-    Sentry.addBreadcrumb({
-      message,
-      category,
-      level: 'info',
-      data,
-    });
+    Sentry.addBreadcrumb({ message, category, level: 'info', data });
   },
 };
 

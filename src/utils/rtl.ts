@@ -41,8 +41,19 @@ export function getTextDir(lang?: Language): Dir {
  */
 export const rtl = {
   /** Flex row — reverses in RTL */
-  flex: (lang?: Language) =>
-    isRTL(lang) ? 'flex flex-row-reverse' : 'flex flex-row',
+  flex: (arg1?: Language | string, arg2?: Language) => {
+    const lang = arg1 === 'ar' || arg1 === 'en' ? arg1 : arg2;
+    const classes = typeof arg1 === 'string' && arg1 !== 'ar' && arg1 !== 'en' ? arg1 : 'row';
+
+    if (classes.includes('row')) {
+      const directional = isRTL(lang)
+        ? classes.replace(/\brow\b/, 'row-reverse')
+        : classes;
+      return `flex ${directional}`;
+    }
+
+    return `flex ${classes}`;
+  },
 
   /** Flex row with gap */
   flexGap: (gap: number, lang?: Language) =>
@@ -51,6 +62,14 @@ export const rtl = {
   /** Text alignment */
   text: (lang?: Language) =>
     isRTL(lang) ? 'text-right' : 'text-left',
+
+  /** Alias for text alignment used in older components */
+  textAlign: (lang?: Language) =>
+    rtl.text(lang),
+
+  /** Explicit flex row helper kept for backwards compatibility */
+  flexRow: (lang?: Language) =>
+    rtl.flex(lang),
 
   /** Margin left → becomes margin-right in RTL */
   ml: (n: number, lang?: Language) =>

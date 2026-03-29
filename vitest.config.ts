@@ -14,6 +14,9 @@ export default defineConfig({
     environmentOptions: {
       jsdom: { url: 'http://localhost/' },
     },
+    env: {
+      NODE_ENV: 'test',
+    },
     include: [
       'tests/**/*.test.ts',
       'tests/**/*.test.tsx',

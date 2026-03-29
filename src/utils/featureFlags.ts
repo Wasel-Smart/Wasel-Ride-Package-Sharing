@@ -160,11 +160,8 @@ export function getCurrentPhase(): LaunchPhase {
     if (override && PHASE_CONFIGS[override]) return override;
   } catch { /* ignore */ }
 
-  try {
-    // @ts-ignore
-    const envPhase = typeof import.meta !== 'undefined' && import.meta.env?.VITE_LAUNCH_PHASE as LaunchPhase;
-    if (envPhase && PHASE_CONFIGS[envPhase]) return envPhase;
-  } catch { /* ignore */ }
+  const envPhase = (import.meta.env.VITE_LAUNCH_PHASE ?? '') as string;
+  if (envPhase && envPhase in PHASE_CONFIGS) return envPhase as LaunchPhase;
 
   // Auto-detect from launch date
   const LAUNCH_DATE = new Date('2026-03-01');
@@ -241,17 +238,15 @@ export async function canUserSignUp(): Promise<{ allowed: boolean; reason?: stri
   if (!maxDaily) return { allowed: true };
 
   try {
-    // @ts-ignore
-    const supabaseUrl = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPABASE_URL : '';
-    // @ts-ignore
-    const anonKey = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPABASE_ANON_KEY : '';
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? '';
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
 
     if (!supabaseUrl || !anonKey) return { allowed: true };
 
     const response = await fetch(`${supabaseUrl}/functions/v1/make-server-0b1f4071/signups/today-count`, {
       headers: { Authorization: `Bearer ${anonKey}` },
     });
-    const { count } = await response.json();
+    const { count } = await response.json() as { count: number };
 
     if (count >= maxDaily) {
       return { allowed: false, reason: `Daily signup limit reached (${maxDaily}). Try again tomorrow!` };

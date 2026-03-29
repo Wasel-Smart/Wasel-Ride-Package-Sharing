@@ -1,7 +1,11 @@
 /**
- * Wasel Routes - v4.1 (Fixed & Tested)
- * 
- * ALL ROUTES WORKING - PRODUCTION READY
+ * Legacy route map kept for reference only.
+ *
+ * Active production routing now lives in `src/wasel-routes.tsx`
+ * and is mounted from `src/App.tsx`.
+ *
+ * Keep this file out of new routing work unless the app is intentionally
+ * migrated back to this route tree.
  */
 
 import { createBrowserRouter } from 'react-router';
@@ -14,14 +18,14 @@ import { lazy, Suspense } from 'react';
 import { RootLayout } from '../layouts/RootLayout';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { LandingLayout } from '../layouts/LandingLayout';
+import { LandingPageWrapper } from '../components/LandingPageWrapper';
 import { ProtectedRoute } from '../components/ProtectedRoute';
-import { WaselLandingPage } from '../features/home/WaselLandingPage';
 import { HomePage } from '../features/home/HomePage';
 import { EnhancedAuthPage } from '../features/auth/EnhancedAuthPage';
 import { OAuthCallback } from '../components/OAuthCallback';
 import { AuthFix } from '../components/AuthFix';
 import { ProductionLoader } from '../components/ProductionLoader';
-import LogoDemo from '../LogoDemo';
+import { MainLogoShowcase } from '../features/branding/MainLogoShowcase';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // LAZY IMPORTS (Code Splitting)
@@ -45,9 +49,9 @@ const MobilityServices = lazy(() => import('../features/services/MobilityService
 
 // Intelligence
 const PlatformIntelligence = lazy(() => import('../features/intelligence/PlatformIntelligence').then(m => ({ default: m.PlatformIntelligence })));
-const MobilityOSSimulation = lazy(() => import('../features/intelligence/MobilityOSSimulation').then(m => ({ default: m.MobilityOSSimulation })));
-const MobilityOSLive = lazy(() => import('../features/intelligence/MobilityOSLive').then(m => ({ default: m.MobilityOSLive })));
-const MobilityOSEnhanced = lazy(() => import('../features/intelligence/MobilityOSEnhanced').then(m => ({ default: m.MobilityOSEnhanced })));
+const MobilityOSSimulation = lazy(() => import('../features/common/ComingSoonEnhanced').then(m => ({ default: m.ComingSoonEnhanced })));
+const MobilityOSLive = lazy(() => import('../features/common/ComingSoonEnhanced').then(m => ({ default: m.ComingSoonEnhanced })));
+const MobilityOSEnhanced = lazy(() => import('../features/common/ComingSoonEnhanced').then(m => ({ default: m.ComingSoonEnhanced })));
 
 // Messages
 const MessagesPage = lazy(() => import('../features/messages/MessagesPage').then(m => ({ default: m.MessagesPage })));
@@ -75,10 +79,9 @@ const NotFound = lazy(() => import('../features/common/NotFound').then(m => ({ d
 const ComingSoon = lazy(() => import('../features/common/ComingSoonEnhanced').then(m => ({ default: m.ComingSoonEnhanced })));
 
 // NEW - Simplified Interface
-const SimplifiedHomePage = lazy(() => import('../features/home/SimplifiedHomePage').then(m => ({ default: m.SimplifiedHomePage })));
+const SimplifiedHomePage = lazy(async () => ({ default: HomePage }));
 const ServiceEngineDemo = lazy(() => import('../features/admin/ServiceEngineDemo').then(m => ({ default: m.ServiceEngineDemo })));
 const LogoShowcase = lazy(() => import('../features/branding/LogoShowcase').then(m => ({ default: m.LogoShowcase })));
-const MainLogoShowcase = lazy(() => import('../features/branding/MainLogoShowcase').then(m => ({ default: m.MainLogoShowcase })));
 
 // ══════════════════════════════════════════════════════════════════════════════
 // LOADING FALLBACK
@@ -100,7 +103,7 @@ export const router = createBrowserRouter([
     path: '/',
     element: <LandingLayout />,
     children: [
-      { index: true, element: <WaselLandingPage /> },
+      { index: true, element: <LandingPageWrapper /> },
     ],
   },
 
@@ -180,7 +183,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/logo-demo',
-    element: <LogoDemo />,
+    element: <MainLogoShowcase />,
   },
 
   // ────────────────────────────────────────────────────────────────────────────
