@@ -1,14 +1,16 @@
 {
-  "name": "Wasel | واصل - Smart Mobility",
+  "name": "Wasel | Smart Mobility",
   "short_name": "Wasel",
-  "description": "Jordan's premier bilingual ride-sharing super-app. AI-powered routes, JOD wallet, and 21+ transport services.",
-  "start_url": "/app",
+  "description": "Jordan's bilingual mobility network for rides, packages, and corridor-first travel across the kingdom.",
+  "id": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
-  "background_color": "#0B1120",
-  "theme_color": "#04ADBF",
+  "display_override": ["standalone", "browser"],
+  "background_color": "#040C18",
+  "theme_color": "#040C18",
   "orientation": "portrait-primary",
   "scope": "/",
-  "lang": "en",
+  "lang": "en-JO",
   "dir": "ltr",
   "icons": [
     {
@@ -34,12 +36,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
     }
   ],
   "categories": ["travel", "navigation", "transportation"],

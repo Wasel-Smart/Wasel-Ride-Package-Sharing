@@ -17,11 +17,11 @@ export const C = {
   bg:        '#040C18',
   bgAlt:     '#060E1E',
   bgDeep:    '#020810',    // MobilityOS deep bg — unified here
-  card:      'rgba(255,255,255,0.04)',
+  card:      'rgba(255,255,255,0.045)',
   cardSolid: '#0A1628',   // Opaque card bg for Payments / Moderation
-  card2:     '#0D1F38',
-  panel:     'rgba(255,255,255,0.025)',
-  elevated:  'rgba(255,255,255,0.06)',
+  card2:     '#0C1B33',
+  panel:     'rgba(255,255,255,0.03)',
+  elevated:  'rgba(255,255,255,0.07)',
 
   // Brand blues
   navy:      '#0B1D45',
@@ -52,9 +52,9 @@ export const C = {
   textDim:   'rgba(100,130,180,0.5)',
 
   // Borders — subtle glow
-  border:    'rgba(0,200,232,0.14)',
-  borderHov: 'rgba(0,200,232,0.28)',
-  borderFaint: 'rgba(255,255,255,0.07)',
+  border:    'rgba(0,200,232,0.16)',
+  borderHov: 'rgba(0,200,232,0.3)',
+  borderFaint: 'rgba(255,255,255,0.08)',
 
   // States
   error:     '#FF4455',
@@ -65,7 +65,7 @@ export const C = {
 
   // Overlays
   overlay:   'rgba(4,12,24,0.82)',
-  glass:     'rgba(6,15,35,0.88)',
+  glass:     'rgba(6,15,35,0.9)',
 } as const;
 
 // ── Font Families ─────────────────────────────────────────────────────────────
@@ -156,10 +156,10 @@ export const SH = {
   xl:    '0 20px 60px rgba(0,0,0,0.6)',
   navy:  '0 8px 32px rgba(0,0,0,0.4)',
   cyan:  '0 4px 20px rgba(0,200,232,0.25)',
-  cyanL: '0 8px 32px rgba(0,200,232,0.35)',
-  blue:  '0 4px 20px rgba(32,96,232,0.25)',
-  green: '0 4px 20px rgba(0,200,117,0.25)',
-  gold:  '0 4px 20px rgba(240,168,48,0.25)',
+  cyanL: '0 10px 36px rgba(0,200,232,0.38)',
+  blue:  '0 6px 22px rgba(32,96,232,0.26)',
+  green: '0 6px 22px rgba(0,200,117,0.26)',
+  gold:  '0 6px 22px rgba(240,168,48,0.26)',
   inner: 'inset 0 1px 3px rgba(0,0,0,0.3)',
 } as const;
 
@@ -169,7 +169,9 @@ export const GRAD_GOLD   = 'linear-gradient(135deg, #F0A830, #FF9500)';
 export const GRAD_GREEN  = 'linear-gradient(135deg, #00C875, #0EA5E9)';
 export const GRAD_NAVY   = 'linear-gradient(135deg, #0B1D45, #1E3A6F)';
 export const GRAD_PURPLE = 'linear-gradient(135deg, #8B5CF6, #6D28D9)';
-export const GRAD_HERO   = 'linear-gradient(145deg, #040C18 0%, #071428 60%, #0A1A30 100%)';
+export const GRAD_HERO   = 'linear-gradient(145deg, #040C18 0%, #07162B 56%, #0A1F37 100%)';
+export const GRAD_SIGNAL = 'linear-gradient(135deg, #00C8E8 0%, #2060E8 58%, #8B5CF6 100%)';
+export const GRAD_AURORA = 'radial-gradient(circle at top, rgba(0,200,232,0.24), rgba(32,96,232,0.12) 42%, rgba(4,12,24,0) 74%)';
 
 // ── Animation ─────────────────────────────────────────────────────────────────
 export const ANIM = {

@@ -9,6 +9,7 @@ import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { LocalAuthProvider } from './contexts/LocalAuth';
+import { WaselLogo } from './components/wasel-ds/WaselLogo';
 import {
   probeBackendHealth,
   startAvailabilityPolling,
@@ -76,36 +77,93 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
           justifyContent: 'center',
           minHeight: '100vh',
           fontFamily: "-apple-system, 'Inter', sans-serif",
-          background: '#F0F4FA',
-          padding: 32,
+          background: `
+            radial-gradient(circle at 16% 18%, rgba(85,233,255,0.12), transparent 24%),
+            radial-gradient(circle at 82% 12%, rgba(245,177,30,0.12), transparent 20%),
+            radial-gradient(circle at 78% 72%, rgba(51,232,95,0.08), transparent 20%),
+            #040C18
+          `,
+          color: '#EFF6FF',
+          padding: 24,
           textAlign: 'center',
         }}
       >
-        <div style={{ fontSize: '3rem', marginBottom: 16, fontWeight: 900 }}>!</div>
-        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0B1D45', marginBottom: 8 }}>
-          Something went wrong
-        </h2>
-        <p style={{ color: '#8A9ABD', fontSize: '0.875rem', marginBottom: 24, maxWidth: 360 }}>
-          {this.state.error || 'An unexpected error occurred.'}
-        </p>
-        <p style={{ color: '#8A9ABD', fontSize: '0.825rem', marginBottom: 20, maxWidth: 420, lineHeight: 1.6 }}>
-          Refresh the page or try again. If the issue continues, return to the home screen and restart the flow.
-        </p>
-        <button
-          onClick={() => this.setState({ hasError: false, error: '' })}
+        <div
           style={{
-            padding: '10px 28px',
-            borderRadius: 10,
-            border: 'none',
-            background: 'linear-gradient(135deg, #00CAFF, #2060E8)',
-            color: '#fff',
-            fontWeight: 700,
-            cursor: 'pointer',
-            fontSize: '0.9rem',
+            width: 'min(100%, 560px)',
+            borderRadius: 28,
+            padding: 28,
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), rgba(10,22,40,0.94)',
+            border: '1px solid rgba(85,233,255,0.14)',
+            boxShadow: '0 28px 70px rgba(0,0,0,0.42)',
+            backdropFilter: 'blur(18px)',
           }}
         >
-          Reload Screen
-        </button>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+            <WaselLogo size={42} theme="light" variant="compact" />
+          </div>
+          <div
+            style={{
+              fontSize: '0.74rem',
+              marginBottom: 12,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: '#55E9FF',
+              fontWeight: 800,
+            }}
+          >
+            Recovery Screen
+          </div>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#EFF6FF', margin: '0 0 10px' }}>
+            Something interrupted this screen
+          </h2>
+          <p style={{ color: 'rgba(239,246,255,0.72)', fontSize: '0.92rem', margin: '0 auto 16px', maxWidth: 420, lineHeight: 1.7 }}>
+            {this.state.error || 'An unexpected error occurred while loading this part of Wasel.'}
+          </p>
+          <p style={{ color: 'rgba(239,246,255,0.52)', fontSize: '0.84rem', margin: '0 auto 22px', maxWidth: 440, lineHeight: 1.7 }}>
+            Refresh this experience to continue. If the issue repeats, return to the home screen and reopen the flow.
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => {
+                this.setState({ hasError: false, error: '' });
+                window.location.reload();
+              }}
+              style={{
+                minHeight: 48,
+                padding: '0 22px',
+                borderRadius: 14,
+                border: 'none',
+                background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 55%, #18D7C8 100%)',
+                color: '#041018',
+                fontWeight: 800,
+                cursor: 'pointer',
+                fontSize: '0.92rem',
+              }}
+            >
+              Reload Wasel
+            </button>
+            <button
+              onClick={() => {
+                this.setState({ hasError: false, error: '' });
+                window.location.assign('/');
+              }}
+              style={{
+                minHeight: 48,
+                padding: '0 22px',
+                borderRadius: 14,
+                border: '1px solid rgba(85,233,255,0.18)',
+                background: 'rgba(255,255,255,0.03)',
+                color: '#EFF6FF',
+                fontWeight: 800,
+                cursor: 'pointer',
+                fontSize: '0.92rem',
+              }}
+            >
+              Back to home
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

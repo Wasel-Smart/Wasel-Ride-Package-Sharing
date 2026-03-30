@@ -22,12 +22,12 @@ export const pill = (color: string) => ({
   display: 'inline-flex' as const,
   alignItems: 'center' as const,
   gap: 4,
-  padding: '3px 10px',
+  padding: '4px 11px',
   borderRadius: '99px',
   background: `${color}15`,
   border: `1px solid ${color}30`,
-  fontSize: '0.66rem',
-  fontWeight: 700,
+  fontSize: '0.68rem',
+  fontWeight: 800,
   color,
 });
 
@@ -43,11 +43,15 @@ export const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   Petra:      { lat: 30.3285, lng: 35.4444 },
   Jerash:     { lat: 32.2744, lng: 35.8961 },
   Mafraq:     { lat: 32.3429, lng: 36.2080 },
+  Salt:       { lat: 32.0392, lng: 35.7272 },
+  'Wadi Rum': { lat: 29.5734, lng: 35.4196 },
+  Ajloun:     { lat: 32.3333, lng: 35.7528 },
+  "Ma'in":    { lat: 31.6796, lng: 35.6217 },
 };
 
 export const CITIES = [
   'Amman','Aqaba','Irbid','Zarqa','Dead Sea',
-  'Karak','Madaba','Petra','Jerash','Mafraq','Salt',
+  'Karak','Madaba','Petra','Jerash','Mafraq','Salt','Wadi Rum','Ajloun',"Ma'in",
 ];
 
 export function resolveCityCoord(city: string) {
@@ -128,13 +132,24 @@ export function PageShell({ children }: { children: ReactNode }) {
   const ar = language === 'ar';
   return (
     <div style={{
-      minHeight: '100vh', background: DS.bg,
+      minHeight: '100vh',
+      background: `radial-gradient(circle at 12% 10%, rgba(0,200,232,0.12), transparent 24%), radial-gradient(circle at 88% 6%, rgba(240,168,48,0.10), transparent 22%), radial-gradient(circle at 80% 86%, rgba(0,200,117,0.08), transparent 24%), ${DS.bg}`,
       fontFamily: DS.F, direction: ar ? 'rtl' : 'ltr',
+      position: 'relative',
+      overflow: 'hidden',
     }}>
       <style>{`
-        :root { color-scheme: dark; }
+        :root { color-scheme: dark; scroll-behavior: smooth; }
         .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(0,200,232,0.28); }
         .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(240,168,48,0.28); }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+          }
+        }
         @media(max-width:899px){
           .sp-inner{ padding:16px !important; }
           .sp-2col { grid-template-columns:1fr !important; }
@@ -148,6 +163,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-results-header { flex-direction:column !important; align-items:flex-start !important; gap:12px !important; }
           .sp-book-btn { min-height:44px !important; }
           .sp-ride-card-body { padding:16px !important; }
+          .sp-shell-grid { opacity: 0.12 !important; }
         }
         @media(max-width:480px){
           .sp-4col { grid-template-columns:1fr !important; }
@@ -156,7 +172,29 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-inner { padding:12px !important; }
         }
       `}</style>
-      <div className="sp-inner" style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 16px' }}>
+      <div
+        aria-hidden="true"
+        className="sp-shell-grid"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)',
+          backgroundSize: '54px 54px',
+          maskImage: 'radial-gradient(circle at center, black 0%, black 44%, transparent 82%)',
+          pointerEvents: 'none',
+          opacity: 0.22,
+        }}
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'radial-gradient(circle at 50% 0%, rgba(0,200,232,0.06), transparent 38%)',
+          pointerEvents: 'none',
+        }}
+      />
+      <div className="sp-inner" style={{ position:'relative', maxWidth: 1120, margin: '0 auto', padding: '24px 16px 36px' }}>
         {children}
       </div>
     </div>
@@ -172,46 +210,50 @@ export function SectionHead({
 }) {
   return (
     <div className="sp-head" style={{
-      background: DS.gradNav, borderRadius: r(20), padding: '24px 24px',
+      background: `linear-gradient(135deg, rgba(11,29,69,0.96), rgba(13,31,56,0.94))`,
+      borderRadius: r(22), padding: '26px 24px',
       marginBottom: 20, position: 'relative', overflow: 'hidden',
-      border: `1px solid ${color}18`, boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+      border: `1px solid ${color}20`, boxShadow: '0 16px 44px rgba(0,0,0,0.42)',
     }}>
       <div style={{
         position: 'absolute', inset: 0,
-        background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}12,transparent)`,
+        background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}14,transparent 64%)`,
         pointerEvents: 'none',
       }} />
       <div className="sp-head-inner" style={{
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between', position: 'relative',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: r(16),
-            background: `${color}18`, border: `1.5px solid ${color}30`,
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{
+            width: 58, height: 58, borderRadius: r(18),
+            background: `${color}18`, border: `1.5px solid ${color}34`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1.9rem', flexShrink: 0,
+            fontSize: '1.85rem', flexShrink: 0,
           }}>
             {emoji}
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>{title}</h1>
+              <h1 style={{ fontSize: '1.62rem', fontWeight: 950, color: '#fff', margin: 0, letterSpacing: '-0.03em' }}>{title}</h1>
             </div>
-            {titleAr && (
-              <p dir="rtl" style={{
-                fontSize: '0.9rem', fontWeight: 700, color, margin: '0 0 2px',
-                fontFamily: "'Cairo',sans-serif",
-              }}>{titleAr}</p>
-            )}
-            {sub && <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>{sub}</p>}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+              {titleAr && (
+                <p dir="rtl" style={{
+                  fontSize: '0.9rem', fontWeight: 800, color, margin: 0,
+                  fontFamily: "'Cairo',sans-serif",
+                }}>{titleAr}</p>
+              )}
+              {sub && <span style={{ color: 'rgba(255,255,255,0.48)', fontSize: '0.82rem' }}>{sub}</span>}
+            </div>
           </div>
         </div>
         {action && (
           <button onClick={action.onClick} className="sp-head-btn" style={{
             height: 44, padding: '0 22px', borderRadius: '99px', border: 'none',
-            background: DS.gradC, color: '#fff', fontWeight: 700, fontSize: '0.875rem',
-            boxShadow: `0 4px 16px ${DS.cyan}30`, cursor: 'pointer', flexShrink: 0,
+            background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 52%, #18D7C8 100%)',
+            color: '#041018', fontWeight: 900, fontSize: '0.875rem',
+            boxShadow: `0 12px 28px ${DS.cyan}25`, cursor: 'pointer', flexShrink: 0,
           }}>
             {action.label}
           </button>
@@ -231,19 +273,24 @@ export function CoreExperienceBanner({
     <div style={{
       display: 'grid', gap: 14,
       gridTemplateColumns: 'minmax(0, 1.4fr) minmax(260px, 0.8fr)',
-      background: `linear-gradient(135deg, ${tone}10, rgba(255,255,255,0.02))`,
-      border: `1px solid ${tone}28`, borderRadius: r(18),
-      padding: '18px 20px', marginBottom: 18,
+      background: `linear-gradient(135deg, ${tone}12, rgba(255,255,255,0.02))`,
+      border: `1px solid ${tone}30`, borderRadius: r(20),
+      padding: '20px 20px', marginBottom: 18,
+      boxShadow: '0 14px 34px rgba(0,0,0,0.22)',
     }}>
       <div>
-        <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.98rem', marginBottom: 6 }}>{title}</div>
-        <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.6 }}>{detail}</div>
+        <div style={{ display:'inline-flex', alignItems:'center', gap:6, marginBottom:8, padding:'4px 10px', borderRadius:'999px', background:`${tone}14`, border:`1px solid ${tone}24`, color:tone, fontSize:'0.68rem', fontWeight:900, letterSpacing:'0.08em', textTransform:'uppercase' }}>
+          Core flow
+        </div>
+        <div style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', marginBottom: 6, letterSpacing: '-0.02em' }}>{title}</div>
+        <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.65 }}>{detail}</div>
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, alignContent:'start' }}>
         {[
           { label: 'Verified identity', color: DS.green },
-          { label: 'Live route network', color: DS.cyan },
-          { label: 'Package-ready corridors', color: DS.gold },
+          { label: 'Shared rides', color: DS.cyan },
+          { label: 'Bus corridors', color: DS.green },
+          { label: 'Rider parcel handoff', color: DS.gold },
         ].map((item) => (
           <span key={item.label} style={pill(item.color)}>{item.label}</span>
         ))}

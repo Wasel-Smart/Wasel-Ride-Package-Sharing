@@ -1,6 +1,6 @@
-# Wasel — Jordan's Intercity Mobility Platform
+# Wasel - Jordan's Shared Ride, Bus, and Parcel Platform
 
-Corridor-first ride marketplace connecting passengers, drivers, businesses, and schools across Jordan.
+Ride marketplace where travelers carry passengers and package handoffs between sender and receiver on the same trip, plus scheduled buses for fixed corridors.
 
 ---
 
@@ -61,7 +61,7 @@ src/
 │
 ├── pages/               # Top-level page components
 ├── layouts/             # WaselRoot layout + header
-├── features/            # Feature modules (auth, wallet, trips…)
+├── features/            # Feature modules (rides, packages, trust, auth)
 ├── components/          # Shared UI components
 │   ├── wasel-ds/        # Wasel Design System primitives
 │   └── wasel-ui/        # Wasel-branded composites
@@ -85,12 +85,8 @@ src/
 |---|---|
 | Find a Ride | `/find-ride` |
 | Offer a Ride | `/offer-ride` |
-| Package Lanes (Awasel) | `/packages` |
-| Raje3 Returns | `/raje3` |
-| Business Accounts | `/services/corporate` |
-| School Transport | `/services/school` |
-| Innovation Hub | `/innovation-hub` |
-| Core Wallet | `/wallet` |
+| Bus | `/bus` |
+| Package Delivery via Rides | `/packages` |
 | Trust Center | `/trust` |
 
 ---

@@ -83,6 +83,54 @@ describe('journeyLogistics', () => {
     expect(getConnectedRides()).toHaveLength(1);
   });
 
+  it('marks a package as matched to a rider trip when a compatible ride exists', async () => {
+    mockCreateTrip.mockResolvedValue({
+      id: 'trip-2',
+      from_location: 'Amman',
+      to_location: 'Irbid',
+      departure_date: '2026-04-01',
+      departure_time: '08:00',
+      available_seats: 2,
+      price_per_seat: 5,
+      vehicle_model: 'Hyundai Elantra',
+      notes: 'Morning route',
+      created_at: '2026-03-27T00:00:00Z',
+    });
+
+    await createConnectedRide({
+      from: 'Amman',
+      to: 'Irbid',
+      date: '2026-04-01',
+      time: '08:00',
+      seats: 2,
+      price: 5,
+      gender: 'mixed',
+      prayer: false,
+      carModel: 'Hyundai Elantra',
+      note: 'Morning route',
+      acceptsPackages: true,
+      packageCapacity: 'medium',
+      packageNote: 'Small parcels only',
+    });
+
+    const created = await createConnectedPackage({
+      from: 'Amman',
+      to: 'Irbid',
+      weight: '1 kg',
+      note: 'Documents',
+    });
+
+    expect(created.status).toBe('matched');
+    expect(created.handoffCode).toMatch(/^HC-\d{6}$/);
+    expect(created.timeline.map((step) => step.label)).toEqual([
+      'Request received',
+      'Matched to a rider trip',
+      'Share handoff code',
+      'Rider en route with parcel',
+      'Delivered',
+    ]);
+  });
+
   it('falls back to local package tracking when auth or server is unavailable', async () => {
     mockGetAuthDetails.mockRejectedValue(new Error('not signed in'));
 
@@ -96,6 +144,17 @@ describe('journeyLogistics', () => {
     expect(created.trackingId).toMatch(/^PKG-/);
     expect(getConnectedPackages()).toHaveLength(1);
     expect(['searching', 'matched']).toContain(getConnectedPackages()[0].status);
+  });
+
+  it('rejects packages when sender and receiver cities are the same', async () => {
+    await expect(
+      createConnectedPackage({
+        from: 'Amman',
+        to: 'Amman',
+        weight: '1 kg',
+        note: 'Same city test',
+      }),
+    ).rejects.toThrow('Sender and receiver cities must be different.');
   });
 
   it('attempts to persist packages remotely when auth is available even without recipient details', async () => {

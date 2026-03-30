@@ -8,6 +8,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { sanitizeText } from '../../utils/sanitize';
+import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import {
   User,
   Shield,
@@ -428,6 +429,12 @@ export default function ProfilePage() {
     <div style={{ minHeight: '100vh', background: BG, fontFamily: FONT, direction: ar ? 'rtl' : 'ltr', paddingBottom: 80 }}>
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 16px' }}>
         <div style={{ padding: '40px 0 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <WaselLogo size={34} theme="light" variant="full" />
+          <div style={{ textAlign: 'center', maxWidth: 420 }}>
+            <p style={{ margin: 0, color: 'rgba(148,163,184,0.82)', fontSize: '0.82rem', lineHeight: 1.6, fontFamily: FONT }}>
+              {ar ? 'مركز الهوية والثقة والإعدادات داخل شبكة واصل.' : 'Identity, trust, and account controls inside the Wasel network.'}
+            </p>
+          </div>
           <input
             ref={photoInputRef}
             type="file"

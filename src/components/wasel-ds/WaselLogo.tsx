@@ -1,122 +1,174 @@
-/**
- * Wasel Logo System v7.0
- * ─────────────────────────────────────────────
- * Pure SVG — zero external assets, scales from favicon to billboard.
- * Wordmark: "Wasel" with Crown W mark.
- */
-
-import { useState } from 'react';
-
-const NAVY   = '#0B1D45';
-const NAVY2  = '#162C6A';
-const CYAN   = '#00CAFF';
-const CYANL  = '#6EEEFF';
-const CYANLL = '#C0F8FF';
-const BLUE   = '#2060E8';
-const BLUEL  = '#5590FF';
-
-let _uid = 0;
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  MARK  (64 × 64 viewBox)
-// ═══════════════════════════════════════════════════════════════════════════
-function WaselMarkSVG({ size = 48 }: { size?: number }) {
-  const [p] = useState(() => `wm${++_uid}`);
-
-  const W = 'M 12 18 C 14 26, 18 36, 22 38 C 26 40, 29 28, 32 22 C 35 28, 38 40, 42 38 C 46 36, 50 26, 52 18';
-
-  const dots = [
-    { cx: 12, cy: 18 },
-    { cx: 32, cy: 22 },
-    { cx: 52, cy: 18 },
-  ] as const;
-
-  return (
-    <svg
-      width={size} height={size} viewBox="0 0 64 64" fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ display: 'block', flexShrink: 0 }}
-      role="img" aria-label="Wasel"
-    >
-      <defs>
-        <linearGradient id={`${p}bg`} x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"   stopColor="#162C6E" />
-          <stop offset="100%" stopColor="#0A1638" />
-        </linearGradient>
-        <radialGradient id={`${p}sh`} cx="30%" cy="20%" r="60%">
-          <stop offset="0%"   stopColor={BLUEL} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={BLUEL} stopOpacity="0"    />
-        </radialGradient>
-        <linearGradient id={`${p}wg`} x1="12" y1="28" x2="52" y2="28" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"   stopColor={CYANL} />
-          <stop offset="48%"  stopColor={CYAN}  />
-          <stop offset="100%" stopColor={BLUEL} />
-        </linearGradient>
-        <linearGradient id={`${p}wc`} x1="12" y1="28" x2="52" y2="28" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"   stopColor={CYANLL} />
-          <stop offset="50%"  stopColor={CYANL}  />
-          <stop offset="100%" stopColor={BLUEL}  />
-        </linearGradient>
-        <radialGradient id={`${p}dot`}>
-          <stop offset="0%"   stopColor={CYANLL} />
-          <stop offset="40%"  stopColor={CYAN}   />
-          <stop offset="100%" stopColor={CYAN}   stopOpacity="0" />
-        </radialGradient>
-        <linearGradient id={`${p}brd`} x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"   stopColor={CYANL} stopOpacity="0.5" />
-          <stop offset="50%"  stopColor={BLUEL} stopOpacity="0.2" />
-          <stop offset="100%" stopColor={NAVY2} stopOpacity="0.5" />
-        </linearGradient>
-        <filter id={`${p}f4`} x="-80%" y="-80%" width="260%" height="260%">
-          <feGaussianBlur stdDeviation="4.5" />
-        </filter>
-        <filter id={`${p}f2`} x="-60%" y="-60%" width="220%" height="220%">
-          <feGaussianBlur stdDeviation="2.2" />
-        </filter>
-        <filter id={`${p}fd`} x="-150%" y="-150%" width="400%" height="400%">
-          <feGaussianBlur stdDeviation="5" />
-        </filter>
-        <filter id={`${p}fs`} x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#000" floodOpacity="0.5" />
-        </filter>
-      </defs>
-
-      <rect x="0" y="0" width="64" height="64" rx="16" ry="16" fill={`url(#${p}bg)`} filter={`url(#${p}fs)`} />
-      <rect x="0" y="0" width="64" height="64" rx="16" ry="16" fill={`url(#${p}sh)`} />
-      <path d="M 20 2 Q 32 0.5, 44 2" stroke="rgba(255,255,255,0.12)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-
-      <path d={W} stroke={`url(#${p}wg)`} strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" fill="none" filter={`url(#${p}f4)`} opacity="0.20" />
-      <path d={W} stroke={`url(#${p}wc)`} strokeWidth="8"  strokeLinecap="round" strokeLinejoin="round" fill="none" filter={`url(#${p}f2)`} opacity="0.55" />
-      <path d={W} stroke={`url(#${p}wg)`} strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      <path d={W} stroke={`url(#${p}wc)`} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.75" />
-
-      {dots.map(({ cx, cy }, i) => (
-        <g key={i}>
-          <circle cx={cx} cy={cy} r="9"   fill={`url(#${p}dot)`} opacity="0.22" filter={`url(#${p}fd)`} />
-          <circle cx={cx} cy={cy} r="4.8" fill={`url(#${p}dot)`} opacity="0.6" />
-          <circle cx={cx} cy={cy} r="3.0" fill="rgba(10,22,50,0.85)" stroke={CYANL} strokeWidth="1.3" />
-          <circle cx={cx} cy={cy} r="1.7" fill={CYANLL} />
-          <circle cx={cx - 0.7} cy={cy - 0.7} r="0.65" fill="rgba(255,255,255,0.92)" />
-        </g>
-      ))}
-
-      <rect x="1" y="1" width="62" height="62" rx="15.5" ry="15.5" stroke={`url(#${p}brd)`} strokeWidth="1.2" fill="none" />
-    </svg>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  PUBLIC EXPORTS
-// ═══════════════════════════════════════════════════════════════════════════
+import { useId, type CSSProperties } from 'react';
+import { C, F, R, SH, GRAD_SIGNAL } from '../../utils/wasel-ds';
 
 interface WaselLogoProps {
   size?: number;
   showWordmark?: boolean;
-  /** 'dark' = navy text (default, light bg) | 'light' = white text (dark bg) */
   theme?: 'dark' | 'light';
-  style?: React.CSSProperties;
-  /** compact = just "W" mark; full = Wasel wordmark */
+  style?: CSSProperties;
   variant?: 'full' | 'compact';
+}
+
+const MICRO_BREAKPOINT = 34;
+
+function shouldUseMicroMark(size: number) {
+  return Math.ceil(size) <= MICRO_BREAKPOINT;
+}
+
+function LogoMicroMark({
+  size,
+  alt = 'Wasel micro logo',
+  style,
+  onLightSurface = false,
+}: {
+  size: number;
+  alt?: string;
+  style?: CSSProperties;
+  onLightSurface?: boolean;
+}) {
+  const uid = useId().replace(/:/g, '');
+  const ringId = `wasel-ring-${uid}`;
+  const coreId = `wasel-core-${uid}`;
+  const glowId = `wasel-glow-${uid}`;
+  const nodeStroke = onLightSurface ? 'rgba(11,29,69,0.12)' : 'rgba(255,255,255,0.08)';
+  const centerX = 50;
+  const centerY = 50;
+  const nodes = [
+    { x: 78, y: 24, color: '#F0A830', r: 8 },
+    { x: 82, y: 55, color: '#00C875', r: 7.2 },
+    { x: 63, y: 81, color: '#18D7C8', r: 7 },
+    { x: 27, y: 79, color: '#1EA1FF', r: 7.2 },
+    { x: 16, y: 59, color: '#1EA1FF', r: 7.2 },
+    { x: 36, y: 31, color: '#00C8E8', r: 6.2 },
+  ] as const;
+
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      width={size}
+      height={size}
+      role="img"
+      aria-label={alt}
+      style={{ display: 'block', flexShrink: 0, ...style }}
+    >
+      <defs>
+        <linearGradient id={ringId} x1="16" y1="79" x2="82" y2="24" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#1EA1FF" />
+          <stop offset="0.48" stopColor="#55E9FF" />
+          <stop offset="1" stopColor="#F0A830" />
+        </linearGradient>
+        <radialGradient id={coreId} cx="0" cy="0" r="1" gradientTransform="translate(50 50) rotate(90) scale(22)" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#EAFBFF" />
+          <stop offset="0.42" stopColor="#7BEFFF" />
+          <stop offset="1" stopColor="#18D7C8" />
+        </radialGradient>
+        <filter id={glowId} x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="2.8" />
+        </filter>
+      </defs>
+
+      <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+        {nodes.map((node) => (
+          <line
+            key={`line-${node.x}-${node.y}`}
+            x1={centerX}
+            y1={centerY}
+            x2={node.x}
+            y2={node.y}
+            stroke={node.color}
+            strokeWidth="3.2"
+          />
+        ))}
+      </g>
+
+      <circle
+        cx={centerX}
+        cy={centerY}
+        r="18"
+        fill="url(#coreId)"
+        opacity={onLightSurface ? 0.14 : 0.18}
+        filter={`url(#${glowId})`}
+      />
+      <circle cx={centerX} cy={centerY} r="14" fill="none" stroke={`url(#${ringId})`} strokeWidth="3.4" />
+      <circle cx={centerX} cy={centerY} r="7.2" fill="url(#coreId)" opacity={0.9} />
+      <circle cx={centerX} cy={centerY} r="2.6" fill="#FFFFFF" />
+
+      {nodes.map((node) => (
+        <g key={`node-${node.x}-${node.y}`}>
+          <circle cx={node.x} cy={node.y} r={node.r + 3.4} fill={node.color} opacity={onLightSurface ? 0.08 : 0.14} />
+          <circle cx={node.x} cy={node.y} r={node.r + 1.4} fill="none" stroke={node.color} strokeWidth="2.2" />
+          <circle cx={node.x} cy={node.y} r={node.r - 1.2} fill="none" stroke={nodeStroke} strokeWidth="1.2" opacity="0.9" />
+          <circle cx={node.x} cy={node.y} r={Math.max(2.4, node.r - 3.2)} fill={node.color} />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+function LogoImage({
+  size,
+  alt = 'Wasel logo',
+  style,
+  priority = false,
+}: {
+  size: number;
+  alt?: string;
+  style?: CSSProperties;
+  priority?: boolean;
+}) {
+  const rounded = Math.ceil(size);
+  const src =
+    rounded <= 64
+      ? '/brand/wasellogo-64.png'
+      : rounded <= 96
+        ? '/brand/wasellogo-96.png'
+        : rounded <= 160
+          ? '/brand/wasellogo-160.png'
+          : rounded <= 280
+            ? '/brand/wasellogo-280.png'
+            : '/brand/wasellogo-512.png';
+
+  return (
+    <img
+      src={src}
+      srcSet="/brand/wasellogo-64.png 64w, /brand/wasellogo-96.png 96w, /brand/wasellogo-160.png 160w, /brand/wasellogo-280.png 280w, /brand/wasellogo-512.png 512w"
+      sizes={`${rounded}px`}
+      alt={alt}
+      loading={priority ? 'eager' : 'lazy'}
+      fetchPriority={priority ? 'high' : 'auto'}
+      decoding="async"
+      style={{
+        display: 'block',
+        width: size,
+        height: size,
+        objectFit: 'cover',
+        flexShrink: 0,
+        ...style,
+      }}
+    />
+  );
+}
+
+function LogoVisual({
+  size,
+  alt,
+  style,
+  priority = false,
+  theme = 'dark',
+  forceMicro = false,
+}: {
+  size: number;
+  alt?: string;
+  style?: CSSProperties;
+  priority?: boolean;
+  theme?: 'dark' | 'light';
+  forceMicro?: boolean;
+}) {
+  if (forceMicro || shouldUseMicroMark(size)) {
+    return <LogoMicroMark size={size} alt={alt} style={style} onLightSurface={theme === 'dark'} />;
+  }
+
+  return <LogoImage size={size} alt={alt} style={style} priority={priority} />;
 }
 
 export function WaselLogo({
@@ -126,39 +178,121 @@ export function WaselLogo({
   style,
   variant = 'full',
 }: WaselLogoProps) {
-  const isDark      = theme === 'dark';
-  const textColor   = isDark ? '#0B1D45' : '#FFFFFF';
-  const accentColor = isDark ? '#00CAFF' : '#6EEEFF';
-  const subColor    = isDark ? 'rgba(11,29,69,0.38)' : 'rgba(0,202,255,0.55)';
+  const onLightSurface = theme === 'dark';
+  const useMicroMark = shouldUseMicroMark(size);
+  const titleColor = onLightSurface ? C.navy : C.text;
+  const subColor = onLightSurface ? 'rgba(11,29,69,0.6)' : C.textMuted;
+  const frameInset = useMicroMark ? Math.max(1, Math.round(size * 0.03)) : Math.max(2, Math.round(size * 0.04));
+  const shellRadius = useMicroMark ? Math.max(10, Math.round(size * 0.34)) : Math.max(12, Math.round(size * 0.3));
+  const haloSize = size <= 28 ? 0 : useMicroMark ? Math.round(size * 0.08) : Math.round(size * 0.2);
+  const tagline = variant === 'full' ? 'Jordan Mobility Network' : '';
 
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: Math.round(size * 0.28), ...style }}>
-      <WaselMarkSVG size={size} />
-
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: Math.max(10, Math.round(size * 0.22)), ...style }}>
+      <div
+        style={{
+          position: 'relative',
+          width: size,
+          height: size,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {haloSize > 0 && (
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              inset: -haloSize,
+              borderRadius: shellRadius + haloSize,
+              background: 'radial-gradient(circle, rgba(0,200,232,0.24) 0%, rgba(32,96,232,0.12) 36%, rgba(139,92,246,0.10) 54%, rgba(4,12,24,0) 78%)',
+              filter: 'blur(14px)',
+              opacity: onLightSurface ? 0.16 : 0.92,
+            }}
+          />
+        )}
+        <span
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: -frameInset,
+            borderRadius: shellRadius + frameInset,
+            background: useMicroMark
+              ? `linear-gradient(145deg, rgba(0,200,232,0.18), rgba(32,96,232,0.12) 58%, rgba(240,168,48,0.14))`
+              : `linear-gradient(145deg, ${C.cyanGlow}, rgba(32,96,232,0.18) 58%, rgba(240,168,48,0.16))`,
+            border: `1px solid ${onLightSurface ? 'rgba(11,29,69,0.10)' : C.border}`,
+            boxShadow: onLightSurface ? '0 10px 24px rgba(11,29,69,0.12)' : SH.cyan,
+          }}
+        />
+        <span
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: shellRadius,
+            background: useMicroMark
+              ? (onLightSurface ? 'rgba(255,255,255,0.98)' : 'rgba(4,12,24,0.96)')
+              : (onLightSurface ? 'rgba(255,255,255,0.96)' : 'rgba(4,12,24,0.92)'),
+            border: `1px solid ${onLightSurface ? 'rgba(11,29,69,0.08)' : 'rgba(255,255,255,0.08)'}`,
+            boxShadow: onLightSurface ? 'inset 0 1px 0 rgba(255,255,255,0.7)' : 'inset 0 1px 0 rgba(255,255,255,0.08)',
+          }}
+        />
+        <span
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: Math.max(5, Math.round(size * 0.16)),
+            borderRadius: shellRadius * 0.72,
+            border: `1px solid ${onLightSurface ? 'rgba(11,29,69,0.07)' : 'rgba(0,200,232,0.16)'}`,
+            opacity: useMicroMark ? 0.4 : 0.75,
+          }}
+        />
+        <LogoVisual
+          size={size}
+          priority={size >= 40}
+          theme={theme}
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            borderRadius: shellRadius,
+          }}
+        />
+      </div>
       {showWordmark && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {variant === 'full' ? (
-            <>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: size * 0.04 }}>
-                <span style={{
-                  fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', sans-serif",
-                  fontSize: size * 0.44, fontWeight: 900, color: textColor,
-                  letterSpacing: '-0.035em', whiteSpace: 'nowrap',
-                }}>Wasel</span>
-              </div>
-              <span style={{
-                fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif",
-                fontSize: size * 0.16, fontWeight: 600, color: subColor,
-                letterSpacing: '0.12em', textTransform: 'uppercase',
-                whiteSpace: 'nowrap', paddingLeft: 1,
-              }}>Move smarter across Jordan</span>
-            </>
-          ) : (
-            <span style={{
-              fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', sans-serif",
-              fontSize: size * 0.44, fontWeight: 900, color: textColor,
-              letterSpacing: '-0.035em',
-            }}>W</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span
+            style={{
+              fontFamily: F,
+              fontSize: size * 0.42,
+              lineHeight: 0.95,
+              fontWeight: 900,
+              letterSpacing: '-0.04em',
+              color: titleColor,
+              backgroundImage: onLightSurface ? 'none' : GRAD_SIGNAL,
+              WebkitBackgroundClip: onLightSurface ? undefined : 'text',
+              WebkitTextFillColor: onLightSurface ? undefined : 'transparent',
+              textShadow: onLightSurface ? 'none' : '0 0 24px rgba(0,200,232,0.18)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {variant === 'compact' ? 'W' : 'Wasel'}
+          </span>
+          {variant === 'full' && (
+            <span
+              style={{
+                fontFamily: F,
+                fontSize: size * 0.16,
+                fontWeight: 800,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: subColor,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {tagline}
+            </span>
           )}
         </div>
       )}
@@ -166,29 +300,69 @@ export function WaselLogo({
   );
 }
 
-export function WaselMark({ size = 38, style }: { size?: number; style?: React.CSSProperties }) {
-  return <div style={{ display: 'inline-flex', ...style }}><WaselMarkSVG size={size} /></div>;
+export function WaselMark({ size = 38, style }: { size?: number; style?: CSSProperties }) {
+  return (
+    <div style={{ display: 'inline-flex', ...style }}>
+      <LogoVisual size={size} theme="light" />
+    </div>
+  );
 }
 
 export function WaselHeroMark({ size = 120 }: { size?: number }) {
-  return <WaselMarkSVG size={size} />;
+  return (
+    <div
+      style={{
+        position: 'relative',
+        width: size,
+        height: size,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: -Math.round(size * 0.18),
+          borderRadius: Math.round(size * 0.42),
+          background: 'radial-gradient(circle, rgba(0,200,232,0.30) 0%, rgba(32,96,232,0.14) 38%, rgba(4,12,24,0) 76%)',
+          filter: 'blur(18px)',
+        }}
+      />
+      <span
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: -4,
+          borderRadius: Math.round(size * 0.34),
+          background: `linear-gradient(145deg, ${C.cyanGlow}, rgba(32,96,232,0.16) 56%, rgba(240,168,48,0.18))`,
+        }}
+      />
+      <span
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: Math.round(size * 0.3),
+          background: 'rgba(4,12,24,0.92)',
+          border: `1px solid ${C.border}`,
+        }}
+      />
+      <LogoImage
+        size={size}
+        alt="Wasel logo hero"
+        priority
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          borderRadius: Math.round(size * 0.3),
+        }}
+      />
+    </div>
+  );
 }
 
 export function WaselIcon({ size = 20 }: { size?: number }) {
-  const [p] = useState(() => `wi${++_uid}`);
-  const W = 'M 12 18 C 14 26, 18 36, 22 38 C 26 40, 29 28, 32 22 C 35 28, 38 40, 42 38 C 46 36, 50 26, 52 18';
-  return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-      <defs>
-        <linearGradient id={`${p}g`} x1="12" y1="28" x2="52" y2="28" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"   stopColor={CYANL} />
-          <stop offset="100%" stopColor={BLUEL} />
-        </linearGradient>
-      </defs>
-      <path d={W} stroke={`url(#${p}g)`} strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="12" cy="18" r="2.8" fill={CYANLL} />
-      <circle cx="32" cy="22" r="2.8" fill={CYANLL} />
-      <circle cx="52" cy="18" r="2.8" fill={CYANLL} />
-    </svg>
-  );
+  return <LogoVisual size={size} alt="Wasel icon" theme="light" forceMicro />;
 }

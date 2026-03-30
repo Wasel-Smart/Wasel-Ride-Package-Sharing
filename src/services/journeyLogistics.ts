@@ -25,6 +25,7 @@ export type PackageStatus = 'searching' | 'matched' | 'in_transit' | 'delivered'
 export interface PackageRequest {
   id: string;
   trackingId: string;
+  handoffCode: string;
   from: string;
   to: string;
   weight: string;
@@ -62,6 +63,10 @@ function writeList<T>(key: string, list: T[]): void {
 
 function makeId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+}
+
+function generateHandoffCode(): string {
+  return `HC-${Math.floor(100000 + Math.random() * 900000)}`;
 }
 
 function pickDriverName(carModel: string): string {
@@ -112,8 +117,9 @@ function buildTimeline(status: PackageStatus, matchedRideId?: string): Array<{ l
 
   return [
     { label: 'Request received', complete: true },
-    { label: matched ? 'Matched to scheduled ride' : 'Searching for matching ride', complete: matched },
-    { label: 'Driver en route', complete: inTransit },
+    { label: matched ? 'Matched to a rider trip' : 'Searching for a rider trip', complete: matched },
+    { label: 'Share handoff code', complete: matched },
+    { label: 'Rider en route with parcel', complete: inTransit },
     { label: 'Delivered', complete: delivered },
   ];
 }
@@ -162,11 +168,15 @@ function normalizeLocalRide(raw: Partial<PostedRide>): PostedRide | null {
 function normalizeServerPackage(raw: Record<string, unknown>, fallback: PackageRequest): PackageRequest {
   const matchedRideId = String(raw.trip_id ?? raw.matchedRideId ?? fallback.matchedRideId ?? '').trim() || undefined;
   const status = normalizeStatus(raw.status, matchedRideId);
+  const handoffCode = String(raw.handoff_code ?? raw.handoffCode ?? fallback.handoffCode ?? '').trim().toUpperCase()
+    || fallback.handoffCode
+    || generateHandoffCode();
 
   return {
     ...fallback,
     id: String(raw.id ?? fallback.id),
     trackingId: String(raw.tracking_code ?? raw.trackingId ?? fallback.trackingId).trim().toUpperCase(),
+    handoffCode,
     from: String(raw.from ?? fallback.from),
     to: String(raw.to ?? fallback.to),
     weight: sanitizeWeight(String(raw.weight ?? fallback.weight)),
@@ -190,10 +200,12 @@ function normalizeLocalPackage(raw: Partial<PackageRequest>): PackageRequest | n
 
   const matchedRideId = String(raw.matchedRideId ?? '').trim() || undefined;
   const status = normalizeStatus(raw.status, matchedRideId);
+  const handoffCode = String(raw.handoffCode ?? '').trim().toUpperCase() || generateHandoffCode();
 
   return {
     id: String(raw.id ?? makeId('pkg')),
     trackingId,
+    handoffCode,
     from,
     to,
     weight: sanitizeWeight(String(raw.weight ?? '<1 kg')),
@@ -315,6 +327,7 @@ function buildServerPackagePayload(pkg: PackageRequest) {
     weight: parseWeight(pkg.weight),
     description: pkg.note,
     price: 5,
+    handoffCode: pkg.handoffCode,
     ...(pkg.recipientName ? { recipientName: pkg.recipientName } : {}),
     ...(pkg.recipientPhone ? { recipientPhone: pkg.recipientPhone } : {}),
     ...(pkg.packageType === 'return' ? { packageType: pkg.packageType } : {}),
@@ -334,11 +347,11 @@ export async function createConnectedPackage(input: {
   const to = input.to.trim();
 
   if (!from || !to) {
-    throw new Error('Pickup and destination are required.');
+    throw new Error('Sender and receiver cities are required.');
   }
 
   if (from === to) {
-    throw new Error('Pickup and destination must be different.');
+    throw new Error('Sender and receiver cities must be different.');
   }
 
   const rides = getConnectedRides();
@@ -349,6 +362,7 @@ export async function createConnectedPackage(input: {
   const pkg: PackageRequest = {
     id: makeId('pkg'),
     trackingId,
+    handoffCode: generateHandoffCode(),
     from,
     to,
     weight: sanitizeWeight(input.weight),
@@ -450,6 +464,7 @@ export async function getPackageByTrackingId(trackingId: string): Promise<Packag
     const fallback: PackageRequest = {
       id: String(server.id ?? makeId('pkg')),
       trackingId: normalizedTrackingId,
+      handoffCode: generateHandoffCode(),
       from: String(server.from ?? ''),
       to: String(server.to ?? ''),
       weight: sanitizeWeight(String(server.weight ?? '<1 kg')),

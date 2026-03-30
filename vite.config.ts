@@ -18,8 +18,8 @@ export default defineConfig({
 
   build: {
     target: 'es2020',
-    outDir: 'build',
-    sourcemap: true,
+    outDir: 'dist',
+    sourcemap: false,
     minify: 'esbuild',
     chunkSizeWarningLimit: 600,
     rollupOptions: {

@@ -344,7 +344,6 @@ export default function SettingsPage() {
               { value: 'JOD', label: 'JOD - Jordanian Dinar' },
               { value: 'USD', label: 'USD - US Dollar' },
               { value: 'EUR', label: 'EUR - Euro' },
-              { value: 'AED', label: 'AED - UAE Dirham' },
               { value: 'SAR', label: 'SAR - Saudi Riyal' },
             ]}
             value={display.currency}

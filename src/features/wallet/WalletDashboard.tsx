@@ -31,11 +31,11 @@ import { WaselColors } from '../../tokens/wasel-tokens';
 import { getConfig } from '../../utils/env';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
+import { walletText } from './walletText';
 import {
   TransactionRow as SharedTransactionRow,
   ActionModal as SharedActionModal,
-  TX_ICONS as SHARED_TX_ICONS,
-  PIE_COLORS as SHARED_PIE_COLORS,
 } from './components/WalletShared';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -282,7 +282,7 @@ export function WalletDashboard() {
   const { enableDemoAccount } = getConfig();
   const navigate = useIframeSafeNavigate();
   const isRTL = language === 'ar';
-  const t = txt[isRTL ? 'ar' : 'en'];
+  const t = walletText[isRTL ? 'ar' : 'en'];
   const effectiveUserId = user?.id ?? localUser?.id ?? 'demo-wallet-user';
   const isDemoWallet = enableDemoAccount && Boolean(localUser) && (!WALLET_BACKEND_READY || localUser?.backendMode === 'demo');
   const walletUnavailable = !WALLET_BACKEND_READY && !enableDemoAccount;
@@ -656,6 +656,9 @@ export function WalletDashboard() {
   const bal = walletData?.balance ?? 0;
   const pending = walletData?.pendingBalance ?? 0;
   const rewardsBal = walletData?.rewardsBalance ?? 0;
+  const walletSubtitle = isRTL
+    ? 'Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª ÙˆØ§Ù„Ø±ØµÙŠØ¯ ÙˆØ§Ù„Ù…ÙƒØ§ÙØ¢Øª'
+    : 'Payments, balance, and rewards';
 
   if (shouldRedirectToAuth) {
     return (
@@ -679,17 +682,41 @@ export function WalletDashboard() {
 
   if (walletUnavailable) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-6">
-        <Wallet className="w-12 h-12 text-muted-foreground/50" />
-        <div className="space-y-1">
-          <p className="text-foreground font-semibold">
-            {isRTL ? 'المحفظة غير متاحة بعد' : 'Wallet is not available yet'}
-          </p>
-          <p className="text-muted-foreground text-sm max-w-md">
-            {isRTL
-              ? 'أكمل إعدادات الخلفية أو فعّل وضع العرض التجريبي لإتاحة المحفظة.'
-              : 'Finish backend configuration or enable demo mode to access the wallet.'}
-          </p>
+      <div className="flex items-center justify-center min-h-[60vh] px-6">
+        <div
+          className="w-full max-w-xl rounded-3xl border text-center p-8 md:p-10"
+          style={{
+            background: `linear-gradient(180deg, ${WaselColors.navyCard} 0%, rgba(4,12,24,0.98) 100%)`,
+            borderColor: `${WaselColors.teal}25`,
+            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.35)',
+          }}
+        >
+          <div className="flex justify-center mb-5">
+            <WaselLogo size={44} theme="dark" variant="full" />
+          </div>
+          <div
+            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl"
+            style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${WaselColors.teal}20` }}
+          >
+            <Wallet className="w-7 h-7" style={{ color: WaselColors.teal }} />
+          </div>
+          <div className="space-y-2">
+            <p className="text-foreground text-lg font-semibold">
+              {isRTL ? 'المحفظة قيد الإطلاق' : 'Wallet experience is being finalized'}
+            </p>
+            <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-6">
+              {isRTL
+                ? 'نجهّز تدفق المدفوعات والأمان والتسوية. فعّل وضع العرض التجريبي أو أكمل إعداد الخلفية لرؤية التجربة كاملة.'
+                : 'We are wiring payments, trust checks, and settlement flows. Enable demo mode or complete backend setup to preview the full wallet journey.'}
+            </p>
+          </div>
+          <div
+            className="mt-5 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground"
+            style={{ borderColor: `${WaselColors.teal}22`, background: 'rgba(255,255,255,0.03)' }}
+          >
+            <span className="h-2 w-2 rounded-full" style={{ background: WaselColors.success }} />
+            {isRTL ? 'تجربة مالية أكثر تنسيقاً قريباً' : 'A more polished money experience is on the way'}
+          </div>
         </div>
       </div>
     );
@@ -759,12 +786,17 @@ export function WalletDashboard() {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${WaselColors.teal}, ${WaselColors.bronze})` }}>
-            <Wallet className="w-5 h-5 text-white" />
-          </div>
+          <WaselLogo size={42} showWordmark={false} />
           <div>
-            <h1 className="text-xl font-bold text-foreground">{t.walletTitle}</h1>
-            <p className="text-xs text-muted-foreground">{walletData?.currency || 'JOD'}</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-foreground">{t.walletTitle}</h1>
+              <Badge variant="secondary" className="border border-primary/20 bg-primary/10 text-primary">
+                {isRTL ? 'نشط' : 'Live'}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {walletSubtitle} • {walletData?.currency || 'JOD'}
+            </p>
           </div>
         </div>
         <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>

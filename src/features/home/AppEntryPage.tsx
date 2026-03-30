@@ -4,17 +4,14 @@ import {
   Bus,
   CheckCircle2,
   Clock3,
-  MapPinned,
   Package,
   Shield,
-  Sparkles,
   Star,
-  Waves,
   Zap,
 } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { WaselHeroMark, WaselLogo } from '../../components/wasel-ds/WaselLogo';
+import { WaselIcon, WaselLogo } from '../../components/wasel-ds/WaselLogo';
 
 const C = {
   bg: '#040C18',
@@ -36,7 +33,7 @@ const FONT = "-apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', 'Cai
 const metrics = [
   { value: '100+', label: 'corridors and city links' },
   { value: '24/7', label: 'live trip visibility' },
-  { value: '2-in-1', label: 'rides and parcels' },
+  { value: '3-in-1', label: 'rides, buses, and parcels' },
   { value: 'Trust-first', label: 'verified user journeys' },
 ] as const;
 
@@ -49,14 +46,14 @@ const pillars = [
   },
   {
     icon: Package,
-    title: 'Parcel network',
-    copy: 'Turn active trips into a practical delivery layer for packages, returns, and on-route logistics.',
+    title: 'Rider courier network',
+    copy: 'Let riders carry parcels between sender and receiver on the same trip, so delivery is built on real rides.',
     color: C.gold,
   },
   {
     icon: Bus,
-    title: 'Scheduled movement',
-    copy: 'Support fixed corridors and recurring travel patterns without losing the flexibility of the platform.',
+    title: 'Bus corridors',
+    copy: 'Offer scheduled intercity buses alongside shared rides, so the app covers both flexible and fixed movement.',
     color: C.green,
   },
   {
@@ -73,9 +70,18 @@ const routePreview = [
   { from: 'Amman', to: 'Jerash', note: 'Short-hop regional travel', price: 'from JOD 2' },
 ] as const;
 
+const heroNetworkNodes = [
+  { label: 'Irbid', top: 14, left: 70, color: C.gold, line: 'gold' },
+  { label: 'Jerash', top: 34, left: 58, color: C.cyan, line: 'cyan' },
+  { label: 'Zarqa', top: 52, left: 84, color: C.green, line: 'green' },
+  { label: 'Madaba', top: 72, left: 50, color: C.green, line: 'green' },
+  { label: 'Salt', top: 38, left: 18, color: C.blue, line: 'blue' },
+  { label: 'Dead Sea', top: 66, left: 8, color: C.cyan, line: 'blue' },
+] as const;
+
 const trustPoints = [
-  'Built around one clear mobility story instead of disconnected screens',
-  'Balances rides, parcels, and trust signals in a single branded journey',
+  'Built around one clear story: shared rides plus parcel handoff on the same route',
+  'Balances riders, senders, receivers, and trust signals in a single journey',
   'Feels premium, calm, and direct on both desktop and mobile',
 ] as const;
 
@@ -98,6 +104,7 @@ export default function AppEntryPage() {
       }}
     >
       <style>{`
+        :root { color-scheme: dark; scroll-behavior: smooth; }
         @media (max-width: 980px) {
           .landing-grid { grid-template-columns: 1fr !important; }
           .landing-stats { grid-template-columns: repeat(2, 1fr) !important; }
@@ -107,6 +114,14 @@ export default function AppEntryPage() {
         }
         @media (max-width: 560px) {
           .landing-stats { grid-template-columns: 1fr !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+          }
         }
       `}</style>
 
@@ -124,8 +139,17 @@ export default function AppEntryPage() {
           pointerEvents: 'none',
         }}
       />
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(circle at 50% 0%, rgba(0,200,232,0.08), transparent 36%)',
+          pointerEvents: 'none',
+        }}
+      />
 
-      <div style={{ position: 'relative', maxWidth: 1240, margin: '0 auto', padding: '38px 24px 72px' }}>
+      <div style={{ position: 'relative', maxWidth: 1280, margin: '0 auto', padding: '40px 24px 78px' }}>
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -133,24 +157,26 @@ export default function AppEntryPage() {
           style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}
         >
           <WaselLogo size={44} theme="light" />
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '10px 14px',
-              borderRadius: 999,
-              background: 'rgba(85,233,255,0.08)',
-              border: `1px solid ${C.border}`,
-              color: C.muted,
-              fontSize: '0.76rem',
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}
-          >
-            <Sparkles size={14} color={C.cyan} />
-            Built for Jordan-first mobility
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {['Shared rides', 'Bus corridors', 'Rider parcels'].map((label) => (
+              <span
+                key={label}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '7px 12px',
+                  borderRadius: 9999,
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(85,233,255,0.16)',
+                  color: C.soft,
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                {label}
+              </span>
+            ))}
           </div>
         </motion.div>
 
@@ -169,30 +195,12 @@ export default function AppEntryPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55 }}
           >
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '8px 12px',
-                borderRadius: 999,
-                background: 'rgba(30,161,255,0.08)',
-                border: '1px solid rgba(30,161,255,0.16)',
-                color: C.cyan,
-                fontSize: '0.78rem',
-                fontWeight: 800,
-              }}
-            >
-              <Waves size={14} />
-              Connected mobility network
-            </div>
-
             <h1
               style={{
-                margin: '18px 0 16px',
-                fontSize: 'clamp(2.7rem, 6vw, 5.4rem)',
-                lineHeight: 0.94,
-                letterSpacing: '-0.06em',
+                margin: '20px 0 16px',
+                fontSize: 'clamp(2.8rem, 6vw, 5.7rem)',
+                lineHeight: 0.92,
+                letterSpacing: '-0.07em',
                 fontWeight: 950,
                 maxWidth: 760,
               }}
@@ -209,13 +217,13 @@ export default function AppEntryPage() {
                 Move smarter with Wasel
               </span>
               <span style={{ display: 'block', color: C.text, marginTop: 8 }}>
-                rides, parcels, and trust in one system
+                shared rides, buses, and rider-delivered packages in one system
               </span>
             </h1>
 
             <p style={{ maxWidth: 700, fontSize: '1.03rem', lineHeight: 1.8, color: C.muted, margin: 0 }}>
               Wasel is designed to feel like a premium mobility product from the first screen.
-              It brings intercity rides, parcel movement, route discovery, and verified trust into a single experience that makes sense for real users.
+              It brings intercity rides, scheduled buses, parcel handoff through riders, route discovery, and verified trust into a single experience that makes sense for real users.
             </p>
 
             <div
@@ -232,14 +240,14 @@ export default function AppEntryPage() {
                 <div
                   key={item.label}
                   style={{
-                    borderRadius: 18,
-                    padding: '14px 16px',
-                    background: 'rgba(255,255,255,0.035)',
+                    borderRadius: 20,
+                    padding: '15px 16px',
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
                     border: `1px solid ${C.border}`,
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
+                    boxShadow: '0 10px 24px rgba(0,0,0,0.16)',
                   }}
                 >
-                  <div style={{ fontSize: '1.15rem', fontWeight: 950, color: C.text }}>{item.value}</div>
+                  <div style={{ fontSize: '1.18rem', fontWeight: 950, color: C.text, letterSpacing: '-0.03em' }}>{item.value}</div>
                   <div
                     style={{
                       marginTop: 4,
@@ -295,6 +303,26 @@ export default function AppEntryPage() {
                 Explore rides
               </button>
             </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, marginTop: 20, maxWidth: 760 }}>
+              {trustPoints.map((item) => (
+                <div
+                  key={item}
+                  style={{
+                    borderRadius: 20,
+                    padding: '14px 15px',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.green, boxShadow: `0 0 10px ${C.green}` }} />
+                    <span style={{ color: C.text, fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Trust signal</span>
+                  </div>
+                  <p style={{ margin: 0, color: C.soft, fontSize: '0.82rem', lineHeight: 1.65 }}>{item}</p>
+                </div>
+              ))}
+            </div>
           </motion.div>
 
           <motion.div
@@ -305,16 +333,13 @@ export default function AppEntryPage() {
           >
             <div
               style={{
-                width: 'min(100%, 480px)',
-                borderRadius: 36,
-                padding: 28,
-                background: `
-                  linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025)),
-                  ${C.panelStrong}
-                `,
-                border: `1px solid ${C.border}`,
-                boxShadow: '0 24px 70px rgba(0,0,0,0.45)',
-                backdropFilter: 'blur(18px)',
+                width: 'min(100%, 500px)',
+                padding: 18,
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
+                boxShadow: '0 18px 46px rgba(0,0,0,0.26)',
+                backdropFilter: 'blur(14px)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 28,
                 position: 'relative',
                 overflow: 'hidden',
               }}
@@ -324,48 +349,87 @@ export default function AppEntryPage() {
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'radial-gradient(circle at 50% 20%, rgba(85,233,255,0.12), transparent 42%)',
+                  background: `
+                    radial-gradient(circle at 58% 34%, rgba(85,233,255,0.12), transparent 26%),
+                    radial-gradient(circle at 74% 18%, rgba(245,177,30,0.14), transparent 18%),
+                    radial-gradient(circle at 82% 56%, rgba(51,232,95,0.12), transparent 18%),
+                    radial-gradient(circle at 18% 68%, rgba(30,161,255,0.10), transparent 20%)
+                  `,
                 }}
               />
-              <div style={{ position: 'relative', display: 'grid', placeItems: 'center', minHeight: 420 }}>
-                <motion.div
-                  animate={{ y: [0, -10, 0], rotate: [0, 0.8, 0] }}
-                  transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+              <div style={{ position: 'relative', minHeight: 520 }}>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.82 }}
                 >
-                  <WaselHeroMark size={280} />
-                </motion.div>
-              </div>
+                  <defs>
+                    <linearGradient id="network-gold" x1="58" y1="42" x2="70" y2="14" gradientUnits="userSpaceOnUse">
+                      <stop offset="0" stopColor="rgba(245,177,30,0.18)" />
+                      <stop offset="1" stopColor="rgba(245,177,30,0.72)" />
+                    </linearGradient>
+                    <linearGradient id="network-cyan" x1="58" y1="42" x2="58" y2="34" gradientUnits="userSpaceOnUse">
+                      <stop offset="0" stopColor="rgba(85,233,255,0.16)" />
+                      <stop offset="1" stopColor="rgba(85,233,255,0.66)" />
+                    </linearGradient>
+                    <linearGradient id="network-green" x1="58" y1="42" x2="84" y2="52" gradientUnits="userSpaceOnUse">
+                      <stop offset="0" stopColor="rgba(85,233,255,0.12)" />
+                      <stop offset="1" stopColor="rgba(24,215,200,0.48)" />
+                    </linearGradient>
+                    <linearGradient id="network-blue" x1="58" y1="42" x2="18" y2="38" gradientUnits="userSpaceOnUse">
+                      <stop offset="0" stopColor="rgba(30,161,255,0.16)" />
+                      <stop offset="1" stopColor="rgba(30,161,255,0.72)" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M58 42 C62 34 65 26 70 14" stroke="url(#network-gold)" strokeWidth="0.9" fill="none" strokeLinecap="round" />
+                  <path d="M58 42 C58 39 58 37 58 34" stroke="url(#network-cyan)" strokeWidth="0.9" fill="none" strokeLinecap="round" />
+                  <path d="M58 42 C70 42 77 46 84 52" stroke="url(#network-green)" strokeWidth="0.9" fill="none" strokeLinecap="round" />
+                  <path d="M58 42 C55 53 53 63 50 72" stroke="url(#network-green)" strokeWidth="0.9" fill="none" strokeLinecap="round" opacity="0.8" />
+                  <path d="M58 42 C42 42 28 40 18 38" stroke="url(#network-blue)" strokeWidth="0.9" fill="none" strokeLinecap="round" />
+                  <path d="M58 42 C44 54 28 60 8 66" stroke="url(#network-blue)" strokeWidth="0.9" fill="none" strokeLinecap="round" opacity="0.72" />
+                </svg>
 
-              <div
-                style={{
-                  position: 'relative',
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: 10,
-                  marginTop: 8,
-                }}
-              >
-                {[
-                  { label: 'Brand', value: 'Refined' },
-                  { label: 'Layout', value: 'Launch-ready' },
-                  { label: 'Identity', value: 'Unified' },
-                ].map((item) => (
+                {heroNetworkNodes.map((item) => (
                   <div
                     key={item.label}
                     style={{
-                      borderRadius: 18,
-                      padding: '12px 10px',
-                      background: C.panel,
-                      border: `1px solid rgba(255,255,255,0.06)`,
-                      textAlign: 'center',
+                      position: 'absolute',
+                      top: `${item.top}%`,
+                      left: `${item.left}%`,
+                      transform: 'translate(-50%, -50%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 4,
+                      zIndex: 1,
+                      opacity: 0.88,
                     }}
                   >
-                    <div style={{ color: C.soft, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                      {item.label}
+                    {item.color !== C.green && (
+                      <div style={{ filter: `drop-shadow(0 0 10px ${item.color}20)` }}>
+                        <WaselIcon size={17} />
+                      </div>
+                    )}
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ color: C.text, fontWeight: 900, fontSize: '0.8rem', letterSpacing: '-0.02em' }}>{item.label}</div>
                     </div>
-                    <div style={{ marginTop: 5, color: C.text, fontWeight: 900 }}>{item.value}</div>
                   </div>
                 ))}
+                <div style={{
+                  position: 'absolute',
+                  left: 20,
+                  bottom: 18,
+                  padding: '10px 12px',
+                  borderRadius: 16,
+                  background: 'rgba(4,12,24,0.72)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  color: C.soft,
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                }}>
+                  Shared travel network
+                </div>
               </div>
             </div>
           </motion.div>
@@ -436,8 +500,57 @@ export default function AppEntryPage() {
               background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025))',
               border: `1px solid ${C.border}`,
               backdropFilter: 'blur(14px)',
+              position: 'relative',
+              overflow: 'hidden',
             }}
           >
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                left: 18,
+                top: 56,
+                bottom: 24,
+                width: 36,
+                pointerEvents: 'none',
+                opacity: 0.52,
+              }}
+            >
+              <svg
+                viewBox="0 0 36 280"
+                preserveAspectRatio="none"
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+              >
+                <defs>
+                  <linearGradient id="landing-route-pipe" x1="18" y1="18" x2="18" y2="262" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stopColor="rgba(85,233,255,0.55)" />
+                    <stop offset="0.48" stopColor="rgba(30,161,255,0.34)" />
+                    <stop offset="1" stopColor="rgba(24,215,200,0.18)" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M18 18 C18 58 18 68 18 96 C18 126 18 140 18 170 C18 198 18 214 18 248"
+                  stroke="url(#landing-route-pipe)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+              </svg>
+              {['10%', '47%', '84%'].map((top, index) => (
+                <div
+                  key={top}
+                  style={{
+                    position: 'absolute',
+                    top,
+                    left: 0,
+                    transform: 'translateY(-50%)',
+                    opacity: index === 1 ? 0.75 : 0.58,
+                  }}
+                >
+                  <WaselIcon size={22} />
+                </div>
+              ))}
+            </div>
             <div style={{ fontSize: '0.76rem', fontWeight: 800, color: C.cyan, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
               What the product core looks like
             </div>
@@ -447,7 +560,7 @@ export default function AppEntryPage() {
                   key={`${item.from}-${item.to}`}
                   style={{
                     borderRadius: 18,
-                    padding: '14px 16px',
+                    padding: '14px 16px 14px 52px',
                     background: 'rgba(255,255,255,0.03)',
                     border: `1px solid rgba(255,255,255,0.06)`,
                     display: 'flex',
@@ -455,10 +568,12 @@ export default function AppEntryPage() {
                     justifyContent: 'space-between',
                     gap: 12,
                     flexWrap: 'wrap',
+                    position: 'relative',
+                    zIndex: 1,
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <MapPinned size={16} color={C.cyan} />
+                    <WaselIcon size={18} />
                     <div>
                       <div style={{ fontWeight: 900, color: C.text }}>
                         {item.from} to {item.to}
@@ -485,10 +600,10 @@ export default function AppEntryPage() {
               Why this landing works
             </div>
             <h3 style={{ margin: '10px 0 8px', fontSize: '1.35rem', lineHeight: 1.05, color: C.text }}>
-              A first screen that explains the product fast
+              A first screen that explains rides, buses, and parcel transport fast
             </h3>
             <p style={{ margin: 0, color: C.muted, lineHeight: 1.7, fontSize: '0.9rem' }}>
-              The landing now reflects the actual core of Wasel: a premium mobility brand with routing, parcels, verified trust, and clear calls to action.
+              The landing now reflects the actual core of Wasel: a BlaBlaCar-style shared ride marketplace with bus corridors and package delivery handled by the riders already traveling that route.
             </p>
             <div style={{ marginTop: 16, display: 'grid', gap: 10 }}>
               {trustPoints.map((point) => (

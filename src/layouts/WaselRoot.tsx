@@ -108,6 +108,19 @@ const PRODUCT_NAV_GROUPS = [
     items: [],
   },
   {
+    id: 'mobility-os',
+    label: 'Mobility OS',
+    labelAr: 'حركة OS',
+    direct: true,
+    path: '/mobility-os',
+    emoji: 'M',
+    desc: 'Live network intelligence and operations control',
+    descAr: 'ذكاء الشبكة المباشر والتحكم التشغيلي',
+    color: C.cyan,
+    badge: 'LIVE',
+    items: [],
+  },
+  {
     id: 'profile',
     label: 'Profile',
     labelAr: 'الملف',
@@ -125,23 +138,31 @@ const PRODUCT_NAV_GROUPS = [
 type NavGroup = (typeof PRODUCT_NAV_GROUPS)[number];
 
 const HIDDEN_NAV_PATHS = new Set<string>();
+const USER_ONLY_NAV_PATHS = new Set<string>(['/my-trips', '/profile']);
 
-function isVisibleNavGroup(group: NavGroup) {
+function isVisibleNavGroup(group: NavGroup, isAuthenticated: boolean) {
   if ('direct' in group && group.direct) {
-    return !HIDDEN_NAV_PATHS.has(group.path);
+    return (
+      !HIDDEN_NAV_PATHS.has(group.path) &&
+      (isAuthenticated || !USER_ONLY_NAV_PATHS.has(group.path))
+    );
   }
 
   const items = ('items' in group ? group.items : []) as unknown as readonly NavItem[];
-  return items.some(item => !HIDDEN_NAV_PATHS.has(item.path));
+  return items.some(
+    item => !HIDDEN_NAV_PATHS.has(item.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(item.path)),
+  );
 }
 
-function getVisibleNavItems(group: NavGroup) {
+function getVisibleNavItems(group: NavGroup, isAuthenticated: boolean) {
   if ('direct' in group && group.direct) {
     return [];
   }
 
   const items = ('items' in group ? group.items : []) as unknown as readonly NavItem[];
-  return items.filter(item => !HIDDEN_NAV_PATHS.has(item.path));
+  return items.filter(
+    item => !HIDDEN_NAV_PATHS.has(item.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(item.path)),
+  );
 }
 
 // ── Badge pill ────────────────────────────────────────────────────────────────
@@ -180,7 +201,7 @@ function AppPill({ ar }: { ar: boolean }) {
       }}
     >
       <span style={{ width: 7, height: 7, borderRadius: '50%', background: C.green, boxShadow: `0 0 10px ${C.green}` }} />
-      {ar ? 'شبكة الرحلات والطرود' : 'Ride + Package Network'}
+      {ar ? 'شبكة الرحلات والطرود' : 'Jordan Mobility Network'}
     </div>
   );
 }
@@ -190,7 +211,7 @@ function CurrencySwitcher({ ar }: { ar: boolean }) {
   const [cur, setCur] = useState<SupportedCurrency>(CurrencyService.getInstance().current);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const POPULAR: SupportedCurrency[] = ['JOD', 'USD', 'EUR', 'AED', 'SAR', 'EGP', 'GBP'];
+  const POPULAR: SupportedCurrency[] = ['JOD', 'USD', 'EUR', 'SAR', 'EGP', 'GBP'];
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -300,14 +321,15 @@ function OnlineToggle({ ar }: { ar: boolean }) {
 }
 
 // ── Desktop Dropdown with keyboard nav ────────────────────────────────────────
-function NavDropdown({ group, onNavigate, align, ar }: {
+function NavDropdown({ group, onNavigate, align, ar, isAuthenticated }: {
   group: NavGroup;
   onNavigate: (path: string) => void;
   align?: 'left' | 'center' | 'right';
   ar: boolean;
+  isAuthenticated: boolean;
 }) {
   if ('direct' in group && group.direct) return null;
-  const items = getVisibleNavItems(group);
+  const items = getVisibleNavItems(group, isAuthenticated);
 
   if (!items.length) return null;
 
@@ -556,7 +578,7 @@ function MobileDrawer({ open, onClose, onNavigate, user, onSignOut, ar }: {
   open: boolean; onClose: () => void; onNavigate: (p: string) => void;
   user: { name: string; email: string } | null; onSignOut: () => void; ar: boolean;
 }) {
-  const { setLanguage, language } = useLanguage();
+  const isAuthenticated = Boolean(user);
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = '';
@@ -593,7 +615,7 @@ function MobileDrawer({ open, onClose, onNavigate, user, onSignOut, ar }: {
         {/* Controls row */}
         <div style={{ padding: '10px 20px', borderBottom: '1px solid rgba(0,200,232,0.06)', display: 'flex', gap: 8, alignItems: 'center' }}>
           <LangToggle />
-          <CurrencySwitcher ar={ar} />
+          {isAuthenticated && <CurrencySwitcher ar={ar} />}
         </div>
 
         {user && (
@@ -609,7 +631,7 @@ function MobileDrawer({ open, onClose, onNavigate, user, onSignOut, ar }: {
 
         {/* Nav groups */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {PRODUCT_NAV_GROUPS.filter(isVisibleNavGroup).map(group => (
+          {PRODUCT_NAV_GROUPS.filter(group => isVisibleNavGroup(group, isAuthenticated)).map(group => (
             <div key={group.id} style={{ padding: '12px 20px', borderBottom: '1px solid rgba(0,200,232,0.06)' }}>
               <div style={{ fontSize: '0.6rem', fontWeight: 700, color: 'rgba(148,163,184,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8, fontFamily: F }}>
                 {ar ? 'الخدمة' : 'Service'}
@@ -628,7 +650,7 @@ function MobileDrawer({ open, onClose, onNavigate, user, onSignOut, ar }: {
                   {(group as any).badge && <Badge label={(group as any).badge} />}
                 </button>
               ) : (
-                getVisibleNavItems(group).map(item => (
+                getVisibleNavItems(group, isAuthenticated).map(item => (
                   <button key={item.label} onClick={() => { onNavigate(item.path); onClose(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', background: 'none', border: 'none', cursor: 'pointer', width: '100%' }}>
                     <span style={{ fontSize: '1.05rem' }}>{item.emoji}</span>
                     <span style={{ fontSize: '0.84rem', fontWeight: 500, color: 'rgba(255,255,255,0.75)', fontFamily: F }}>
@@ -676,6 +698,7 @@ export default function WaselRoot() {
   const [scrolled, setScrolled] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const isDriverMode = user?.role === 'driver' || user?.role === 'both';
+  const isAuthenticated = Boolean(user);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -750,7 +773,7 @@ export default function WaselRoot() {
               @media (min-width: 900px) { .wrl-mobile-burger { display: none !important; } }
             `}</style>
 
-            {PRODUCT_NAV_GROUPS.filter(isVisibleNavGroup).map((group, index) => {
+            {PRODUCT_NAV_GROUPS.filter(group => isVisibleNavGroup(group, isAuthenticated)).map((group, index) => {
               const isDirect = 'direct' in group && group.direct;
               const isActive = activeGroup === group.id;
               return (
@@ -791,6 +814,7 @@ export default function WaselRoot() {
                       onNavigate={p => { navigate(p); setActiveGroup(null); }}
                       align={index === 0 ? 'left' : 'center'}
                       ar={ar}
+                      isAuthenticated={isAuthenticated}
                     />
                   )}
                 </div>
@@ -801,7 +825,7 @@ export default function WaselRoot() {
           {/* Right: desktop controls */}
           <div className="wrl-desk-actions" style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
             <LangToggle />
-            <CurrencySwitcher ar={ar} />
+            {user && <CurrencySwitcher ar={ar} />}
             {/* Driver online toggle — shown when user is a driver */}
             {user && isDriverMode && <OnlineToggle ar={ar} />}
 

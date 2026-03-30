@@ -21,6 +21,15 @@ import { createBusBooking, fetchBusRoutes, type BusRoute } from '../services/bus
 import { notificationsAPI } from '../services/notifications';
 import { createConnectedPackage, createConnectedRide, getConnectedPackages, getConnectedRides, getConnectedStats, getPackageByTrackingId, type PackageRequest, type PostedRide } from '../services/journeyLogistics';
 import { PAGE_DS } from '../styles/wasel-page-theme';
+import {
+  CoreExperienceBanner as SharedCoreExperienceBanner,
+  PageShell as SharedPageShell,
+  Protected as SharedProtected,
+  SectionHead as SharedSectionHead,
+  midpoint as sharedMidpoint,
+  resolveCityCoord as sharedResolveCityCoord,
+} from '../features/shared/pageShared';
+import { WaselLogo } from '../components/wasel-ds/WaselLogo';
 
 // ── Unified Dark Design System ────────────────────────────────────────────────
 const DS = PAGE_DS;
@@ -63,9 +72,19 @@ export function Protected({ children }: { children: ReactNode }) {
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
   useEffect(() => { if (!user && mountedRef.current) nav(`/app/auth?returnTo=${encodeURIComponent(location.pathname)}`); }, [user]);
   if (!user) return (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:'60vh', gap:16, background:DS.bg }}>
-      <div style={{ fontSize:'3rem' }}>🔒</div>
-      <div style={{ color:DS.sub, fontFamily:DS.F }}>Redirecting to sign in…</div>
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'60vh', background:DS.bg, padding:'24px 16px' }}>
+      <div style={{ width:'100%', maxWidth:480, padding:'28px 24px', borderRadius:r(24), background:`linear-gradient(180deg, ${DS.card} 0%, ${DS.bg} 100%)`, border:`1px solid ${DS.border}`, boxShadow:'0 20px 60px rgba(0,0,0,0.35)', textAlign:'center' }}>
+        <div style={{ display:'flex', justifyContent:'center', marginBottom:18 }}>
+          <WaselLogo size={42} theme="light" variant="full" />
+        </div>
+        <div style={{ width:58, height:58, borderRadius:r(18), margin:'0 auto 14px', background:`${DS.cyan}12`, border:`1px solid ${DS.cyan}24`, display:'flex', alignItems:'center', justifyContent:'center', color:DS.cyan }}>
+          <Shield size={24} />
+        </div>
+        <div style={{ color:'#fff', fontSize:'1rem', fontWeight:800, marginBottom:8 }}>Protected Wasel experience</div>
+        <div style={{ color:DS.sub, fontFamily:DS.F, fontSize:'0.85rem', lineHeight:1.7 }}>
+          Redirecting you to sign in so your rides, packages, and bookings stay inside your trusted account.
+        </div>
+      </div>
     </div>
   );
   return <>{children}</>;
@@ -86,6 +105,7 @@ function PageShell({ children }: { children: ReactNode }) {
           .sp-2col { grid-template-columns:1fr !important; }
           .sp-3col { grid-template-columns:1fr !important; }
           .sp-4col { grid-template-columns:1fr 1fr !important; }
+          .sp-brand-row { flex-direction:column !important; align-items:flex-start !important; gap:10px !important; }
           .sp-head  { padding:20px 16px !important; border-radius:16px !important; }
           .sp-search-grid { grid-template-columns:1fr !important; gap:10px !important; }
           .sp-sort-bar { overflow-x:auto !important; -webkit-overflow-scrolling:touch !important; padding-bottom:6px !important; flex-wrap:nowrap !important; scrollbar-width:none !important; }
@@ -103,6 +123,13 @@ function PageShell({ children }: { children: ReactNode }) {
         }
       `}</style>
       <div className="sp-inner" style={{ maxWidth:1040, margin:'0 auto', padding:'24px 16px' }}>
+        <div className="sp-brand-row" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, marginBottom:18 }}>
+          <WaselLogo size={34} theme="light" variant="full" />
+          <div style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:'999px', background:'rgba(0,200,232,0.08)', border:'1px solid rgba(0,200,232,0.16)', color:'rgba(239,246,255,0.78)', fontSize:'0.72rem', fontWeight:700 }}>
+            <span style={{ width:7, height:7, borderRadius:'50%', background:DS.green, boxShadow:`0 0 10px ${DS.green}` }} />
+            {ar ? 'شبكة واصل للحركة والطرود' : 'Wasel mobility + package network'}
+          </div>
+        </div>
         {children}
       </div>
     </div>
@@ -170,11 +197,11 @@ function CoreExperienceBanner({
         <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.98rem', marginBottom: 6 }}>{title}</div>
         <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.6 }}>{detail}</div>
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 8 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', alignContent:'flex-start', gap: 8 }}>
         {[
-          { label: 'Verified identity', color: DS.green },
+          { label: 'Verified identity layer', color: DS.green },
           { label: 'Live route network', color: DS.cyan },
-          { label: 'Package-ready corridors', color: DS.gold },
+          { label: 'Cross-service corridor logic', color: DS.gold },
         ].map((item) => (
           <span key={item.label} style={pill(item.color)}>
             {item.label}
@@ -686,17 +713,17 @@ export function FindRidePage() {
     routeSummary: ar ? 'ملخص المسار' : 'Route summary',
     seatsLeft: ar ? 'مقاعد متبقية' : 'Seats left',
     routeIntensity: ar ? 'كثافة المسار' : 'Route intensity',
-    sendPackageTitle: ar ? 'أرسل طرداً عبر مسافر' : 'Send a Package via Traveler',
+    sendPackageTitle: ar ? 'أرسل طرداً مع رحلة' : 'Send a Package with a Ride',
     deliveryRoute: ar ? 'مسار التوصيل' : 'Delivery Route',
-    deliveryHint: ar ? 'معاينة بسيطة للمسار تساعدك على الاطمئنان قبل طلب حامل.' : 'A simple route preview helps senders feel confident before requesting a carrier.',
+    deliveryHint: ar ? 'المسار يربط بين المرسل والراكب والمستلم في رحلة واحدة واضحة.' : 'The route connects sender, rider, and receiver in one clear trip.',
     packageFriendly: ar ? 'مناسب للطرود' : 'Package-friendly',
     weight: ar ? 'الوزن' : 'Weight',
     note: ar ? 'ملاحظة' : 'Note',
     notePh: ar ? 'قابل للكسر، يرجى التعامل بحذر…' : 'Fragile, handle with care…',
-    sendPackageBtn: ar ? 'إرسال الطرد عبر مسافر' : 'Send Package via Traveler',
-    sentTitle: ar ? 'تم إرسال طلب الطرد!' : 'Package Request Sent!',
+    sendPackageBtn: ar ? 'إرسال الطرد مع الرحلة' : 'Send Package with Ride',
+    sentTitle: ar ? 'تم إرسال طلب الطرد للراكب!' : 'Package request sent to a rider!',
     sendAnother: ar ? 'أرسل طرداً آخر' : 'Send Another',
-    matchingDesc: ar ? 'سنطابقك مع مسافر موثوق متجه إلى' : "We'll match you with a verified traveler heading to",
+    matchingDesc: ar ? 'سنطابقك مع راكب موثوق متجه إلى' : "We'll match you with a verified rider heading to",
   };
   const [tab,      setTab]      = useState<'ride'|'package'>('ride');
   const [from,     setFrom]     = useState(initialFrom);
@@ -806,7 +833,7 @@ export function FindRidePage() {
           sub={ar ? 'مسارات يومية بين المدن · احجز مقعدك فورا' : '100+ daily intercity routes · Book a seat instantly'}
           action={{ label: ar ? '➕ أضف رحلة' : '➕ Offer a Ride', onClick:() => nav('/app/offer-ride') }} />
         <CoreExperienceBanner
-          title="Jordan-first ride sharing built for Middle East standards"
+          title="Jordan-first mobility network built for trusted intercity movement"
           detail="Every search is organized around trusted captains, live intercity corridors, and package-compatible routes so the experience feels clear, premium, and region-ready from the first step."
           tone={DS.cyan}
         />
@@ -1020,6 +1047,18 @@ export function FindRidePage() {
               </div>
             ) : (<>
               <h3 style={{ color:'#fff', fontWeight:800, marginBottom:20 }}>📦 {t.sendPackageTitle}</h3>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:10, marginBottom:18 }}>
+                {[
+                  { title: ar ? 'المرسل' : 'Sender', desc: ar ? 'اختر المدينة والوزن والملاحظة.' : 'Choose city, weight, and note.' },
+                  { title: ar ? 'الراكب' : 'Rider', desc: ar ? 'نطابق الطلب مع رحلة حقيقية.' : 'We match to a real trip.' },
+                  { title: ar ? 'المستلم' : 'Receiver', desc: ar ? 'التسليم يتم على نفس المسار.' : 'Delivery finishes on the same route.' },
+                ].map((step) => (
+                  <div key={step.title} style={{ borderRadius:r(14), padding:'12px 13px', border:`1px solid ${DS.border}`, background:DS.card2 }}>
+                    <div style={{ color:'#fff', fontWeight:800, fontSize:'0.84rem', marginBottom:4 }}>{step.title}</div>
+                    <div style={{ color:DS.sub, fontSize:'0.74rem', lineHeight:1.5 }}>{step.desc}</div>
+                  </div>
+                ))}
+              </div>
               <div style={{ display:'grid', gap:14, gridTemplateColumns:'1fr 1fr' }}>
                 {[
                   { label:t.from, value:pkg.from, key:'from' as const },
@@ -1225,7 +1264,7 @@ export function OfferRidePage() {
             { label:'Packages matched', value:String(networkStats.matchedPackages), detail:'Matched through ride routes', color:DS.green },
             { label:'Network activity', value:String(networkStats.packagesCreated), detail:'Tracked requests created', color:DS.blue },
           ].map((item) => (
-            <div key={item.label} style={{ background:DS.card, borderRadius:r(18), border:`1px solid ${DS.border}`, padding:'18px 18px 16px' }}>
+            <div key={item.label} style={{ background:'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius:r(18), border:`1px solid ${DS.border}`, padding:'18px 18px 16px', boxShadow:'0 12px 28px rgba(0,0,0,0.16)' }}>
               <div style={{ color:item.color, fontWeight:900, fontSize:'1.2rem', marginBottom:4 }}>{item.value}</div>
               <div style={{ color:'#fff', fontWeight:800, fontSize:'0.84rem' }}>{item.label}</div>
               <div style={{ color:DS.muted, fontSize:'0.74rem', marginTop:4 }}>{item.detail}</div>
@@ -1568,18 +1607,18 @@ export function PackagesPage() {
             </div>
           ))}
         </div>
-        <div style={{ display:'flex', gap:0, background:DS.card, borderRadius:r(14), padding:4, border:`1px solid ${DS.border}`, marginBottom:24 }}>
+        <div style={{ display:'flex', gap:8, background:'rgba(255,255,255,0.03)', borderRadius:r(16), padding:6, border:`1px solid ${DS.border}`, marginBottom:24, boxShadow:'0 10px 22px rgba(0,0,0,0.14)' }}>
           {([['send','Send Package'],['track','Track Package'],['raje3','Raje3 Returns']] as const).map(([k, lbl]) => (
             <button key={k} onClick={() => setActiveTab(k)} style={{
-              flex:1, height:44, borderRadius:r(10), border:'none', cursor:'pointer', fontFamily:DS.F,
-              fontWeight: activeTab===k ? 700 : 500, fontSize:'0.82rem',
+              flex:1, height:44, borderRadius:r(12), border:'none', cursor:'pointer', fontFamily:DS.F,
+              fontWeight: activeTab===k ? 800 : 600, fontSize:'0.82rem', letterSpacing:'-0.01em',
               background: activeTab===k ? DS.gradGold : 'transparent',
               color: activeTab===k ? '#fff' : DS.muted, transition:'all 0.18s',
             }}>{lbl}</button>
           ))}
         </div>
 
-        <div style={{ background:DS.card, borderRadius:r(20), padding:'28px 28px', border:`1px solid ${DS.border}` }}>
+        <div style={{ background:'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius:r(22), padding:'28px 28px', border:`1px solid ${DS.border}`, boxShadow:'0 16px 38px rgba(0,0,0,0.18)' }}>
           {activeTab === 'send' && (
             pkg.sent ? (
               <div style={{ textAlign:'center', padding:'40px 0' }}>
@@ -1590,9 +1629,11 @@ export function PackagesPage() {
                     ? `Matched to a connected ride from ${pkg.from} to ${pkg.to}.`
                     : `Searching for the best connected ride from ${pkg.from} to ${pkg.to}.`}
                 </p>
-                <div style={{ margin:'20px auto', maxWidth:360, background:DS.card2, borderRadius:r(14), padding:'16px 20px', border:`1px solid ${DS.border}` }}>
+                <div style={{ margin:'20px auto', maxWidth:360, background:'rgba(255,255,255,0.03)', borderRadius:r(16), padding:'16px 20px', border:`1px solid ${DS.border}`, boxShadow:'0 10px 22px rgba(0,0,0,0.14)' }}>
                   <p style={{ color:DS.muted, fontSize:'0.75rem', marginBottom:4 }}>Tracking ID</p>
                   <p style={{ color:DS.cyan, fontWeight:800, fontSize:'1.2rem', letterSpacing:'0.1em' }}>{pkg.trackingId}</p>
+                  <p style={{ color:DS.muted, fontSize:'0.75rem', margin:'14px 0 4px' }}>Handoff code</p>
+                  <p style={{ color:DS.gold, fontWeight:800, fontSize:'1.05rem', letterSpacing:'0.08em' }}>{trackedPackage?.handoffCode || 'Pending assignment'}</p>
                   <p style={{ color:DS.sub, fontSize:'0.8rem', marginTop:8 }}>{trackedPackage?.matchedDriver ? `Assigned to ${trackedPackage.matchedDriver}` : 'Waiting for route assignment'}</p>
                 </div>
                 <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
@@ -1635,7 +1676,7 @@ export function PackagesPage() {
                     <input placeholder="Fragile or handling notes" value={pkg.note} onChange={e => setPkg(p => ({ ...p, note:e.target.value }))}
                       style={{ width:'100%', padding:'12px 14px', borderRadius:r(10), border:`1px solid ${DS.border}`, background:DS.card2, color:'#fff', fontFamily:DS.F, fontSize:'0.9rem', outline:'none', boxSizing:'border-box' }} />
                   </div>
-                  <div style={{ gridColumn:'1/-1', background:DS.card2, borderRadius:r(14), padding:'16px 18px', border:`1px solid ${DS.border}` }}>
+                  <div style={{ gridColumn:'1/-1', background:'rgba(255,255,255,0.03)', borderRadius:r(14), padding:'16px 18px', border:`1px solid ${DS.border}` }}>
                     <div style={{ color:'#fff', fontWeight:800, marginBottom:6 }}>Connected flow</div>
                     <div style={{ color:DS.sub, fontSize:'0.82rem', lineHeight:1.6 }}>Every package request now checks live posted rides first. If a matching ride accepts packages, your request is immediately attached to that route and tracking starts from the same network.</div>
                   </div>
@@ -1650,7 +1691,7 @@ export function PackagesPage() {
                   </button>
                 </div>
                 <div style={{ display:'grid', gap:14 }}>
-                  <div style={{ background:DS.card2, borderRadius:r(16), padding:'18px 18px 16px', border:`1px solid ${DS.border}` }}>
+                  <div style={{ background:'rgba(255,255,255,0.03)', borderRadius:r(16), padding:'18px 18px 16px', border:`1px solid ${DS.border}`, boxShadow:'0 10px 22px rgba(0,0,0,0.12)' }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom:12 }}>
                       <div>
                         <div style={{ color:'#fff', fontWeight:800, fontSize:'0.95rem' }}>Route readiness</div>
@@ -1664,22 +1705,22 @@ export function PackagesPage() {
                         : 'No package-ready ride is live for this route yet. We will still create the request and keep it queued for the next matching captain.'}
                     </div>
                   </div>
-                  <div style={{ background:DS.card2, borderRadius:r(16), padding:'18px 18px 16px', border:`1px solid ${DS.border}` }}>
+                  <div style={{ background:'rgba(255,255,255,0.03)', borderRadius:r(16), padding:'18px 18px 16px', border:`1px solid ${DS.border}`, boxShadow:'0 10px 22px rgba(0,0,0,0.12)' }}>
                     <div style={{ color:'#fff', fontWeight:800, fontSize:'0.95rem', marginBottom:12 }}>What great looks like</div>
                     <div style={{ display:'grid', gap:10 }}>
                       {[
-                        { title:'Recipient-ready handoff', desc:'Name and phone are captured before pickup starts.' },
+                        { title:'Recipient-ready handoff', desc:'Name, phone, and the handoff code are captured before pickup starts.' },
                         { title:'Connected ride matching', desc:'Existing rides are checked before a new logistics lane is created.' },
                         { title:'Single tracking story', desc:'One tracking ID follows the request from creation to delivery.' },
                       ].map((item) => (
-                        <div key={item.title} style={{ borderRadius:r(12), border:`1px solid ${DS.border}`, padding:'12px 13px', background:DS.card }}>
+                        <div key={item.title} style={{ borderRadius:r(12), border:`1px solid ${DS.border}`, padding:'12px 13px', background:'rgba(255,255,255,0.03)' }}>
                           <div style={{ color:'#fff', fontSize:'0.84rem', fontWeight:700 }}>{item.title}</div>
                           <div style={{ color:DS.muted, fontSize:'0.75rem', marginTop:4 }}>{item.desc}</div>
                         </div>
                       ))}
                     </div>
                   </div>
-                  <div style={{ background:DS.card2, borderRadius:r(16), padding:'18px 18px 16px', border:`1px solid ${DS.border}` }}>
+                  <div style={{ background:'rgba(255,255,255,0.03)', borderRadius:r(16), padding:'18px 18px 16px', border:`1px solid ${DS.border}`, boxShadow:'0 10px 22px rgba(0,0,0,0.12)' }}>
                     <div style={{ color:'#fff', fontWeight:800, fontSize:'0.95rem', marginBottom:10 }}>Recent shipments</div>
                     {recentPackages.length > 0 ? (
                       <div style={{ display:'grid', gap:10 }}>
@@ -1692,7 +1733,7 @@ export function PackagesPage() {
                               setTrackedPackage(item);
                               setTrackingMessage(`Tracking ready for ${item.trackingId}.`);
                             }}
-                            style={{ textAlign:'left', borderRadius:r(12), border:`1px solid ${DS.border}`, padding:'12px 13px', background:DS.card, cursor:'pointer' }}
+                            style={{ textAlign:'left', borderRadius:r(12), border:`1px solid ${DS.border}`, padding:'12px 13px', background:'rgba(255,255,255,0.03)', cursor:'pointer' }}
                           >
                             <div style={{ display:'flex', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
                               <span style={{ color:'#fff', fontWeight:700, fontSize:'0.82rem' }}>{item.from} to {item.to}</span>
@@ -1728,9 +1769,9 @@ export function PackagesPage() {
               {trackingMessage && (
                 <div style={{ marginTop:14, color:trackId.trim().length > 0 && trackedPackage ? DS.cyan : DS.muted, fontSize:'0.82rem' }}>{trackingMessage}</div>
               )}
-              {trackedPackage && trackId.trim().length > 0 && (
-                <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}
-                  style={{ marginTop:20, background:DS.card2, borderRadius:r(16), padding:'20px', border:`1px solid ${DS.border}`, textAlign:'left' }}>
+                {trackedPackage && trackId.trim().length > 0 && (
+                  <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}
+                  style={{ marginTop:20, background:'rgba(255,255,255,0.03)', borderRadius:r(16), padding:'20px', border:`1px solid ${DS.border}`, textAlign:'left', boxShadow:'0 10px 22px rgba(0,0,0,0.14)' }}>
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:16, gap:12, flexWrap:'wrap' }}>
                     <span style={{ color:'#fff', fontWeight:800 }}>Package {trackedPackage.trackingId}</span>
                     <span style={{ ...pill(trackedStatusColor) }}>{trackedPackage.status.replace('_', ' ')}</span>
@@ -1740,13 +1781,24 @@ export function PackagesPage() {
                       ? `Assigned to ${trackedPackage.matchedDriver} on a connected route from ${trackedPackage.from} to ${trackedPackage.to}.`
                       : `Still searching for a posted ride from ${trackedPackage.from} to ${trackedPackage.to}.`}
                   </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(2, minmax(0, 1fr))', gap:10, marginBottom:16 }}>
+                    {[
+                      { label:'Handoff code', value:trackedPackage.handoffCode },
+                      { label:'Recipient handoff', value:trackedPackage.recipientName || 'Name pending' },
+                    ].map((item) => (
+                      <div key={item.label} style={{ borderRadius:r(12), border:`1px solid ${DS.border}`, padding:'12px 13px', background:'rgba(255,255,255,0.03)' }}>
+                        <div style={{ color:DS.muted, fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'0.08em' }}>{item.label}</div>
+                        <div style={{ color:'#fff', fontWeight:700, fontSize:'0.82rem', marginTop:6 }}>{item.value}</div>
+                      </div>
+                    ))}
+                  </div>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:10, marginBottom:16 }}>
                     {[
                       { label:'Route', value:`${trackedPackage.from} to ${trackedPackage.to}` },
                       { label:'Weight', value:trackedPackage.weight },
                       { label:'Mode', value:trackedPackage.packageType === 'return' ? 'Return' : 'Delivery' },
                     ].map((item) => (
-                      <div key={item.label} style={{ borderRadius:r(12), border:`1px solid ${DS.border}`, padding:'12px 13px', background:DS.card }}>
+                      <div key={item.label} style={{ borderRadius:r(12), border:`1px solid ${DS.border}`, padding:'12px 13px', background:'rgba(255,255,255,0.03)' }}>
                         <div style={{ color:DS.muted, fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'0.08em' }}>{item.label}</div>
                         <div style={{ color:'#fff', fontWeight:700, fontSize:'0.82rem', marginTop:6 }}>{item.value}</div>
                       </div>
@@ -1990,6 +2042,7 @@ export function BusPage() {
         pickupStop: activeBus.pickupPoint,
         dropoffStop: activeBus.dropoffPoint,
         scheduleDate: tripDate,
+        departureTime: activeBus.dep,
         seatPreference,
         scheduleMode,
         totalPrice,

@@ -1,171 +1,143 @@
-/**
- * Wasel Service Worker - Ultra-Fast Caching Strategy
- * Makes the app work offline and load instantly
- */
+const CACHE_VERSION = 'wasel-v2';
+const PRECACHE = `${CACHE_VERSION}-precache`;
+const RUNTIME = `${CACHE_VERSION}-runtime`;
 
-const CACHE_NAME = 'wasel-v1';
-const RUNTIME_CACHE = 'wasel-runtime-v1';
-
-// Critical assets to cache immediately
 const PRECACHE_URLS = [
   '/',
   '/index.html',
-  '/styles/globals.css',
+  '/offline.html',
+  '/manifest.json',
+  '/favicon.svg',
+  '/favicon-16x16.png',
+  '/favicon-32x32.png',
+  '/apple-touch-icon.png',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/brand/wasellogo-64.png',
+  '/brand/wasellogo-96.png',
+  '/brand/wasellogo-160.png',
+  '/brand/wasellogo-280.png',
 ];
 
-// Install event - precache critical assets
 self.addEventListener('install', (event) => {
-  console.log('🚀 Service Worker installing...');
-  
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('📦 Precaching critical assets');
-      return cache.addAll(PRECACHE_URLS);
-    }).then(() => {
-      // Force activation immediately
-      return self.skipWaiting();
-    })
+    caches
+      .open(PRECACHE)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting()),
   );
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('✅ Service Worker activated');
-  
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME && name !== RUNTIME_CACHE)
-          .map((name) => {
-            console.log('🗑️ Deleting old cache:', name);
-            return caches.delete(name);
-          })
-      );
-    }).then(() => {
-      // Take control of all pages immediately
-      return self.clients.claim();
-    })
+    caches
+      .keys()
+      .then((names) =>
+        Promise.all(
+          names
+            .filter((name) => ![PRECACHE, RUNTIME].includes(name))
+            .map((name) => caches.delete(name)),
+        ),
+      )
+      .then(() => self.clients.claim()),
   );
 });
 
-// Fetch event - network first with cache fallback
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+
+  if (request.method !== 'GET') return;
+
   const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
 
-  // Skip cross-origin requests
-  if (url.origin !== location.origin) {
+  if (request.mode === 'navigate') {
+    event.respondWith(handleNavigation(request));
     return;
   }
 
-  // Skip Supabase API requests (always fresh)
-  if (url.hostname.includes('supabase.co')) {
+  if (request.destination === 'image' || request.destination === 'font') {
+    event.respondWith(cacheFirst(request));
     return;
   }
 
-  // Use different strategies based on request type
-  if (request.destination === 'document') {
-    // HTML: Network first, cache fallback
-    event.respondWith(networkFirstStrategy(request));
-  } else if (request.destination === 'image') {
-    // Images: Cache first, network fallback
-    event.respondWith(cacheFirstStrategy(request));
-  } else if (request.destination === 'script' || request.destination === 'style') {
-    // JS/CSS: Stale-while-revalidate
-    event.respondWith(staleWhileRevalidateStrategy(request));
-  } else {
-    // Everything else: Network first
-    event.respondWith(networkFirstStrategy(request));
+  if (request.destination === 'script' || request.destination === 'style' || request.destination === 'worker') {
+    event.respondWith(staleWhileRevalidate(request));
+    return;
   }
+
+  event.respondWith(networkFirst(request));
 });
 
-// Network First Strategy (for HTML and API calls)
-async function networkFirstStrategy(request) {
+async function handleNavigation(request) {
   try {
-    const networkResponse = await fetch(request);
-    
-    // Cache successful responses
-    if (networkResponse && networkResponse.status === 200) {
-      const cache = await caches.open(RUNTIME_CACHE);
-      cache.put(request, networkResponse.clone());
+    const response = await fetch(request);
+
+    if (response && response.ok) {
+      const cache = await caches.open(RUNTIME);
+      cache.put(request, response.clone());
     }
-    
-    return networkResponse;
-  } catch (error) {
-    // Network failed, try cache
-    console.log('📴 Network failed, using cache for:', request.url);
-    const cachedResponse = await caches.match(request);
-    
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-    
-    // Return offline page if available
-    return caches.match('/offline.html') || new Response('Offline', {
-      status: 503,
-      statusText: 'Service Unavailable',
-    });
+
+    return response;
+  } catch {
+    const cachedPage = await caches.match(request);
+    if (cachedPage) return cachedPage;
+
+    const cachedRoot = await caches.match('/');
+    if (cachedRoot) return cachedRoot;
+
+    return caches.match('/offline.html');
   }
 }
 
-// Cache First Strategy (for images and static assets)
-async function cacheFirstStrategy(request) {
-  const cachedResponse = await caches.match(request);
-  
-  if (cachedResponse) {
-    // Return cached version immediately
-    return cachedResponse;
-  }
-  
-  // Not in cache, fetch from network
+async function networkFirst(request) {
   try {
-    const networkResponse = await fetch(request);
-    
-    // Cache for next time
-    if (networkResponse && networkResponse.status === 200) {
-      const cache = await caches.open(RUNTIME_CACHE);
-      cache.put(request, networkResponse.clone());
+    const response = await fetch(request);
+
+    if (response && response.ok) {
+      const cache = await caches.open(RUNTIME);
+      cache.put(request, response.clone());
     }
-    
-    return networkResponse;
-  } catch (error) {
-    console.error('Failed to fetch:', request.url, error);
-    return new Response('Asset not available offline', { status: 503 });
+
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    return new Response('Offline', { status: 503, statusText: 'Offline' });
   }
 }
 
-// Stale-While-Revalidate Strategy (for JS/CSS)
-async function staleWhileRevalidateStrategy(request) {
-  const cachedResponse = await caches.match(request);
-  
-  // Fetch from network in background
-  const networkPromise = fetch(request).then((networkResponse) => {
-    if (networkResponse && networkResponse.status === 200) {
-      caches.open(RUNTIME_CACHE).then((cache) => {
-        cache.put(request, networkResponse.clone());
-      });
-    }
-    return networkResponse;
-  }).catch(() => null);
-  
-  // Return cached version immediately, or wait for network
-  return cachedResponse || networkPromise || new Response('Not available', { status: 503 });
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  const response = await fetch(request);
+  if (response && response.ok) {
+    const cache = await caches.open(RUNTIME);
+    cache.put(request, response.clone());
+  }
+
+  return response;
 }
 
-// Listen for messages from the app
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(RUNTIME);
+  const cached = await cache.match(request);
+
+  const networkPromise = fetch(request)
+    .then((response) => {
+      if (response && response.ok) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch(() => null);
+
+  return cached || networkPromise || new Response('Unavailable', { status: 503, statusText: 'Unavailable' });
+}
+
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  
-  if (event.data === 'CLEAR_CACHE') {
-    event.waitUntil(
-      caches.keys().then((cacheNames) => {
-        return Promise.all(cacheNames.map((name) => caches.delete(name)));
-      })
-    );
-  }
 });
-
-console.log('🚀 Wasel Service Worker loaded');

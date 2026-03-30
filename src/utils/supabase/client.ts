@@ -14,6 +14,19 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 import { projectId, publicAnonKey } from './info';
 
+function isPlaceholderValue(value: string | undefined): boolean {
+  if (!value) return true;
+
+  const normalized = value.trim().toLowerCase();
+  return (
+    normalized.length === 0 ||
+    normalized.includes('your-project.supabase.co') ||
+    normalized.includes('your-anon-key-here') ||
+    normalized.includes('replace_with') ||
+    normalized.includes('example.com')
+  );
+}
+
 // ── Credentials ───────────────────────────────────────────────────────────────
 export const supabaseUrl =
   (import.meta.env.VITE_SUPABASE_URL as string | undefined) ||
@@ -23,7 +36,9 @@ export const supabaseAnonKey =
   (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ||
   publicAnonKey;
 
-export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
+export const isSupabaseConfigured = !(
+  isPlaceholderValue(supabaseUrl) || isPlaceholderValue(supabaseAnonKey)
+);
 
 // ── Retry config ──────────────────────────────────────────────────────────────
 const RETRY_CONFIG = {
@@ -97,9 +112,9 @@ function queueIfOffline<T>(fn: () => Promise<T>): Promise<T> {
 
 // ── Supabase singleton ────────────────────────────────────────────────────────
 const getSupabaseClient = () => {
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!isSupabaseConfigured) {
     console.error(
-      '[Supabase] Missing credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.',
+      '[Supabase] Missing valid credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.',
     );
     return null;
   }

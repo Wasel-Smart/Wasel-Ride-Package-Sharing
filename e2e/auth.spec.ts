@@ -1,33 +1,22 @@
 /**
- * E2E: Authentication flows
- *
- * Tests sign-in, sign-up, and auth guard redirects.
- * Run:  npx playwright test e2e/auth.spec.ts
+ * E2E: Authentication and entry flows
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { seedDemoSession, signInThroughForm } from './helpers/session';
 
 const BASE = 'http://127.0.0.1:4173';
 
-async function fillSignIn(page: Page, email: string, password: string) {
-  await page.getByLabel(/email/i).fill(email);
-  await page.getByLabel(/password/i).fill(password);
-  await page.getByRole('button', { name: /submit sign in/i }).click();
-}
-
-test('find-ride redirects unauthenticated users into auth', async ({ page }) => {
-  await page.goto(`${BASE}/app/find-ride`);
+test('app entry redirects unauthenticated users into auth with a return target', async ({ page }) => {
+  await page.goto(`${BASE}/app`);
+  await expect(page).toHaveURL(/\/app\/auth/);
   await expect(page).toHaveURL(/returnTo=(%2Fapp%2Ffind-ride|\/app\/find-ride)/);
 });
 
-test('wallet auth guard preserves the returnTo param', async ({ page }) => {
-  await page.goto(`${BASE}/app/wallet`);
-  await expect(page).toHaveURL(/returnTo=(%2Fapp%2Fwallet|\/app\/wallet)/);
-});
-
-test('app entry redirects unauthenticated users into the auth flow', async ({ page }) => {
+test('app entry routes authenticated users to find-ride', async ({ page }) => {
+  await seedDemoSession(page);
   await page.goto(`${BASE}/app`);
-  await expect(page).toHaveURL(/\/app\/auth/);
-  await expect(page.getByText(/welcome back|join wasel/i).first()).toBeVisible();
+  await expect(page).toHaveURL(/\/app\/find-ride/);
+  await expect(page.getByRole('heading', { name: /find a ride/i })).toBeVisible();
 });
 
 test('sign in page renders accessible form fields', async ({ page }) => {
@@ -40,13 +29,12 @@ test('sign in page renders accessible form fields', async ({ page }) => {
 test('sign in with empty form shows validation feedback', async ({ page }) => {
   await page.goto(`${BASE}/app/auth`);
   await page.getByRole('button', { name: /submit sign in/i }).click();
-  await expect(page.getByText(/please enter/i).first()).toBeVisible({ timeout: 3000 });
+  await expect(page.getByText(/please enter/i).first()).toBeVisible();
 });
 
-test('sign in with wrong credentials shows an error message', async ({ page }) => {
-  await page.goto(`${BASE}/app/auth`);
-  await fillSignIn(page, 'nonexistent@example.com', 'WrongPass99!');
-  await expect(page.getByText(/invalid|incorrect|failed|error|wrong/i).first()).toBeVisible({ timeout: 8000 });
+test('sign in through the form navigates into the app', async ({ page }) => {
+  await signInThroughForm(page, BASE);
+  await expect(page).toHaveURL(/\/app\/find-ride/);
 });
 
 test('register tab is accessible from the sign-in page', async ({ page }) => {

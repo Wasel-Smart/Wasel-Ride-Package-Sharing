@@ -1,5 +1,6 @@
 import { bookingsAPI } from './bookings';
 import { tripsAPI } from './trips';
+import { OFFICIAL_JORDAN_BUS_ROUTES } from '../data/jordanBusNetwork';
 
 export interface BusRoute {
   id: string;
@@ -19,6 +20,12 @@ export interface BusRoute {
   pickupPoint: string;
   dropoffPoint: string;
   summary: string;
+  departureTimes?: string[];
+  scheduleDays?: string;
+  serviceLevel?: string;
+  sourceUrl?: string;
+  lastVerifiedAt?: string;
+  dataSource?: 'live' | 'official';
 }
 
 export interface BusRouteQuery {
@@ -34,6 +41,7 @@ export interface BusBookingPayload {
   pickupStop: string;
   dropoffStop: string;
   scheduleDate: string;
+  departureTime: string;
   seatPreference: string;
   scheduleMode: 'depart-now' | 'schedule-later';
   totalPrice: number;
@@ -53,26 +61,36 @@ function toNumber(value: unknown, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function toStops(value: unknown): string[] {
+function toStringList(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.filter((item) => typeof item === 'string' && item.trim().length > 0);
+  }
+  if (typeof value === 'string' && value.trim()) {
+    return value
+      .split(/[|,;/]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
   }
   return [];
 }
 
-function looksLikeBusTrip(item: Record<string, unknown>): boolean {
-  const busTokens = ['bus', 'coach', 'intercity'];
+export function looksLikeBusTrip(item: Record<string, unknown>): boolean {
+  const busTokens = ['bus', 'coach', 'intercity', 'shuttle'];
   const candidates = [
     item.type,
     item.mode,
     item.service,
     item.transport_type,
+    item.route_type,
+    item.company,
+    item.title,
+    item.summary,
   ].map((x) => String(x ?? '').toLowerCase());
 
   return candidates.some((value) => busTokens.some((token) => value.includes(token)));
 }
 
-function normalizeBusRoute(raw: Record<string, unknown>, index: number): BusRoute {
+export function normalizeBusRoute(raw: Record<string, unknown>, index: number): BusRoute {
   const colors = ['#00C8E8', '#2060E8', '#00C875', '#F0A830'];
   const defaultId = `live-bus-${index + 1}`;
   const from = toText(raw.from ?? raw.origin_city, 'Amman');
@@ -80,9 +98,9 @@ function normalizeBusRoute(raw: Record<string, unknown>, index: number): BusRout
   const dep = toText(raw.departure_time ?? raw.dep, '07:00');
   const arr = toText(raw.arrival_time ?? raw.arr, '11:30');
   const price = toNumber(raw.price_per_seat ?? raw.price, 5);
-  const seats = toNumber(raw.seats_available ?? raw.available_seats ?? raw.seats, 8);
-  const via = toStops(raw.via_stops ?? raw.intermediate_stops);
-  const amenities = toStops(raw.amenities);
+  const seats = Math.max(0, Math.floor(toNumber(raw.seats_available ?? raw.available_seats ?? raw.seats, 8)));
+  const via = toStringList(raw.via_stops ?? raw.intermediate_stops ?? raw.via);
+  const amenities = toStringList(raw.amenities ?? raw.features);
 
   return {
     id: toText(raw.id, defaultId),
@@ -101,22 +119,56 @@ function normalizeBusRoute(raw: Record<string, unknown>, index: number): BusRout
     punctuality: toText(raw.punctuality, 'On-time service'),
     pickupPoint: toText(raw.pickup_stop ?? raw.pickupPoint, `${from} Main Terminal`),
     dropoffPoint: toText(raw.dropoff_stop ?? raw.dropoffPoint, `${to} Main Terminal`),
-    summary: toText(raw.summary, 'Comfortable intercity coach with scheduled departures.'),
+    departureTimes: [dep],
+    scheduleDays: toText(raw.schedule_days ?? raw.scheduleDays, 'Selected date'),
+    serviceLevel: toText(raw.service_level ?? raw.serviceLevel, 'Standard'),
+    summary: toText(
+      raw.summary,
+      `Scheduled ${from} to ${to} coach with digital boarding details and clear seat availability.`,
+    ),
+    dataSource: 'live',
   };
 }
 
+function matchOfficialRoute(route: BusRoute, query: BusRouteQuery): boolean {
+  if (query.from && route.from !== query.from) return false;
+  if (query.to && route.to !== query.to) return false;
+  if (query.seats && route.seats < query.seats) return false;
+  return true;
+}
+
+export function getOfficialBusRoutes(query: BusRouteQuery = {}): BusRoute[] {
+  const exact = OFFICIAL_JORDAN_BUS_ROUTES.filter((route) => matchOfficialRoute(route, query));
+  if (exact.length > 0) return exact;
+
+  if (query.from || query.to) {
+    const close = OFFICIAL_JORDAN_BUS_ROUTES.filter((route) => {
+      if (query.seats && route.seats < query.seats) return false;
+      return route.from === query.from || route.to === query.to || route.to === query.from || route.from === query.to;
+    });
+    if (close.length > 0) return close;
+  }
+
+  return OFFICIAL_JORDAN_BUS_ROUTES.filter((route) => !query.seats || route.seats >= query.seats);
+}
+
 export async function fetchBusRoutes(query: BusRouteQuery): Promise<BusRoute[]> {
-  const response = await tripsAPI.searchTrips(query.from, query.to, query.date, query.seats);
-  const list = Array.isArray(response) ? response : [];
+  const officialRoutes = getOfficialBusRoutes(query);
 
-  const mapped = list
-    .filter((item: unknown) => item && typeof item === 'object')
-    .map((item) => item as unknown as Record<string, unknown>);
+  try {
+    const response = await tripsAPI.searchTrips(query.from, query.to, query.date, query.seats);
+    const list = Array.isArray(response) ? response : [];
 
-  const busOnly = mapped.filter(looksLikeBusTrip);
-  const candidate = busOnly.length > 0 ? busOnly : mapped;
+    const mapped = list
+      .filter((item: unknown) => item && typeof item === 'object')
+      .map((item) => item as unknown as Record<string, unknown>);
 
-  return candidate.map((item, index) => normalizeBusRoute(item, index));
+    const busOnly = mapped.filter(looksLikeBusTrip).map((item, index) => normalizeBusRoute(item, index));
+
+    return busOnly.length > 0 ? busOnly : officialRoutes;
+  } catch {
+    return officialRoutes;
+  }
 }
 
 function persistLocalBusBooking(payload: BusBookingPayload): string {
@@ -129,8 +181,13 @@ function persistLocalBusBooking(payload: BusBookingPayload): string {
   };
 
   if (typeof window !== 'undefined') {
-    const currentRaw = window.localStorage.getItem(key);
-    const current = currentRaw ? JSON.parse(currentRaw) : [];
+    let current: unknown[] = [];
+    try {
+      const currentRaw = window.localStorage.getItem(key);
+      current = currentRaw ? JSON.parse(currentRaw) : [];
+    } catch {
+      current = [];
+    }
     const next = Array.isArray(current) ? [draft, ...current].slice(0, 50) : [draft];
     window.localStorage.setItem(key, JSON.stringify(next));
   }
@@ -147,6 +204,7 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
       payload.dropoffStop,
       {
         schedule_date: payload.scheduleDate,
+        departure_time: payload.departureTime,
         seat_preference: payload.seatPreference,
         schedule_mode: payload.scheduleMode,
         total_price: payload.totalPrice,

@@ -192,6 +192,24 @@ export default function TrustCenterPage() {
           />
         </div>
 
+        <div style={{ background: CARD, border: `1px solid ${BORD}`, borderRadius: 18, padding: '18px 18px 8px', marginBottom: 18 }}>
+          <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>
+            {ar ? 'ما الذي يثبت الثقة؟' : 'What proves trust?'}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
+            {[
+              { title: ar ? 'إثبات الرحلة' : 'Trip proof', desc: ar ? 'احفظ تفاصيل الحجز والوقت والمركبة.' : 'Keep booking, time, and vehicle details visible.', accent: CYAN },
+              { title: ar ? 'تسليم الطرد' : 'Package handoff', desc: ar ? 'استخدم التتبع لتأكيد المرسل والراكب والمستلم.' : 'Use tracking to confirm sender, rider, and receiver.', accent: GOLD },
+              { title: ar ? 'ركوب الباص' : 'Bus boarding', desc: ar ? 'اعرض تفاصيل الانطلاق والوجهة قبل الصعود.' : 'Show departure and destination before boarding.', accent: GREEN },
+            ].map((item) => (
+              <div key={item.title} style={{ borderRadius: 14, padding: '12px 13px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${item.accent}22` }}>
+                <div style={{ color: item.accent, fontWeight: 800, fontSize: '0.84rem', marginBottom: 4 }}>{item.title}</div>
+                <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.76rem', lineHeight: 1.5 }}>{item.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div style={{ background: CARD, border: `1px solid ${BORD}`, borderRadius: 18, padding: '20px 18px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
             <AlertTriangle size={16} color={GOLD} />

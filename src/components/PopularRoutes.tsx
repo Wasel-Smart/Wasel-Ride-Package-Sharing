@@ -58,81 +58,81 @@ const popularRoutes: Route[] = [
     discount: 20,
   },
   {
-    from: 'Dubai',
+    from: 'Amman',
     fromAr: 'دبي',
-    to: 'Abu Dhabi',
+    to: 'Jerash',
     toAr: 'أبوظبي',
-    price: 45,
-    currency: 'AED',
+    price: 2.5,
+    currency: 'JOD',
     availableRides: 156,
-    duration: '1h 30m',
+    duration: '55m',
     passengers: 3200,
   },
   {
-    from: 'Riyadh',
+    from: 'Amman',
     fromAr: 'الرياض',
-    to: 'Jeddah',
+    to: 'Madaba',
     toAr: 'جدة',
-    price: 180,
-    currency: 'SAR',
+    price: 2,
+    currency: 'JOD',
     availableRides: 124,
-    duration: '8h 45m',
+    duration: '40m',
     passengers: 2800,
-    discount: 15,
+    discount: 10,
   },
   {
-    from: 'Cairo',
+    from: 'Amman',
     fromAr: 'القاهرة',
-    to: 'Alexandria',
+    to: 'Karak',
     toAr: 'الإسكندرية',
-    price: 95,
-    currency: 'EGP',
+    price: 5,
+    currency: 'JOD',
     availableRides: 203,
-    duration: '2h 30m',
+    duration: '1h 45m',
     passengers: 4100,
   },
   {
-    from: 'Riyadh',
+    from: 'Irbid',
     fromAr: 'الرياض',
-    to: 'Dammam',
+    to: 'Jerash',
     toAr: 'الدمام',
-    price: 150,
-    currency: 'SAR',
+    price: 2.5,
+    currency: 'JOD',
     availableRides: 98,
-    duration: '4h 15m',
+    duration: '50m',
     passengers: 1900,
   },
   {
-    from: 'Doha',
+    from: 'Zarqa',
     fromAr: 'الدوحة',
-    to: 'Al Khor',
+    to: 'Amman',
     toAr: 'الخور',
-    price: 35,
-    currency: 'QAR',
+    price: 1.5,
+    currency: 'JOD',
     availableRides: 112,
     duration: '45m',
     passengers: 2100,
   },
   {
-    from: 'Kuwait City',
+    from: 'Amman',
     fromAr: 'مدينة الكويت',
-    to: 'Al Ahmadi',
+    to: 'Salt',
     toAr: 'الأحمدي',
-    price: 8,
-    currency: 'KWD',
+    price: 2,
+    currency: 'JOD',
     availableRides: 145,
-    duration: '35m',
+    duration: '45m',
     passengers: 2600,
   },
   {
-    from: 'Muscat',
+    from: 'Amman',
     fromAr: 'مسقط',
-    to: 'Salalah',
+    to: 'Mafraq',
     toAr: 'صلالة',
-    price: 42,
-    currency: 'OMR',
+    price: 3.5,
+    currency: 'JOD',
     availableRides: 54,
-    duration: '10h 30m',
+    duration: '1h 10m',
     passengers: 980,
   },
 ];
@@ -158,11 +158,11 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
               Most Popular
             </Badge>
           </div>
-          <h2 className="mb-4">{isRTL ? 'أشهر المسارات عبر الشرق الأوسط' : 'Hottest Routes Across the Middle East'}</h2>
+          <h2 className="mb-4">{isRTL ? 'أشهر المسارات عبر الأردن' : "Jordan's Hottest Intercity Routes"}</h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             {isRTL 
               ? 'أفضل المسارات مبيعاً التي تربط المدن الكبرى. انضم لآلاف المسافرين لتوفير المال وتقليل الانبعاثات الكربونية.'
-              : 'Our best-selling routes connecting major cities. Join thousands of travelers saving money and reducing carbon emissions.'}
+              : "Top daily corridors linking Amman with Jordan's major cities and destinations. Join the Wasel network for smarter, lower-friction travel across the kingdom."}
           </p>
         </div>
 
@@ -171,8 +171,8 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
           <Card className="border-primary/10">
             <CardContent className="p-6 text-center">
               <div className="text-3xl text-primary mb-2">12</div>
-              <p className="text-sm text-muted-foreground">{isRTL ? 'دولة متصلة' : 'Countries Connected'}</p>
-              {!isRTL && <p className="text-xs text-muted-foreground/70">دولة متصلة</p>}
+              <p className="text-sm text-muted-foreground">{isRTL ? 'محافظات مغطاة' : 'Governorates Covered'}</p>
+              {!isRTL && <p className="text-xs text-muted-foreground/70">محافظات مغطاة</p>}
             </CardContent>
           </Card>
           <Card className="border-primary/10">

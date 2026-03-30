@@ -260,8 +260,8 @@ const buildMainChildren = () => [
   { path: 'auth/callback', lazy: lazy(() => import('./pages/WaselAuthCallback')) },
 
   // ── Dashboard ────────────────────────────────────────────────────────────
-  { path: 'dashboard', Component: () => <RedirectTo to="/app/find-ride" /> },
-  { path: 'home',      Component: () => <RedirectTo to="/app/find-ride" /> },
+  { path: 'dashboard', Component: () => <RedirectTo to="/app" /> },
+  { path: 'home',      Component: () => <RedirectTo to="/app" /> },
 
   // ── Rides — FindRidePage & OfferRidePage still live in WaselServicePage
   //            until they are individually migrated (they share type Ride and
@@ -351,7 +351,7 @@ const buildLegacyAliases = () =>
 
 // ── Router ────────────────────────────────────────────────────────────────────
 export const waselRouter = createBrowserRouter([
-  { path: '/', Component: () => <RedirectTo to="/app" /> },
+  { path: '/', lazy: lazy(() => import('./features/home/AppEntryPage')) },
   ...buildLegacyAliases(),
   {
     path: '/app',
