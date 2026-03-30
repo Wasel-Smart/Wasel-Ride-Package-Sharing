@@ -437,8 +437,8 @@ export default function WaselAuth() {
                 {/* Social / quick login buttons */}
                 <div style={{ display:'flex', gap:8 }}>
                   {[
-                    { icon:'🌐', label:'Google',   color:'#4285F4' },
-                    { icon:'📱', label:'WhatsApp', color:'#25D366' },
+                    { icon:'🌐', label:'Google', color:'#4285F4' },
+                    ...(supportWhatsAppNumber ? [{ icon:'📱', label:'WhatsApp', color:'#25D366' }] : []),
                   ].map(s => (
                     <motion.button key={s.label} whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }} type="button" onClick={() => { void socialActions[s.label]?.(); }}
                       style={{ flex:1, height:44, borderRadius:R.md, border:`1px solid ${s.color}30`, background:`${s.color}0A`, color:s.color, fontWeight:700, fontSize:'0.8rem', fontFamily:C.F, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:7 }}>
@@ -477,3 +477,4 @@ export default function WaselAuth() {
     </div>
   );
 }
+

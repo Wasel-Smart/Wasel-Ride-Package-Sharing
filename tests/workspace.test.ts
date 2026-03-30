@@ -13,6 +13,7 @@ describe('workspace configuration utilities', () => {
     expect(config.appUrl).toBeTruthy();
     expect(config.appName).toBeTruthy();
     expect(config.authCallbackPath.startsWith('/')).toBe(true);
+    expect(config.enableTwoFactorAuth).toBe(false);
     expect(typeof config.isProd).toBe('boolean');
     expect(typeof config.isDev).toBe('boolean');
   });

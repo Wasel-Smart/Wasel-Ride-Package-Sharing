@@ -208,19 +208,19 @@ const buildMainChildren = () => [
   { path: 'services/raje3', Component: () => <RedirectTo to="/app/raje3" /> },
 
   // ── B2B / B2S ─────────────────────────────────────────────────────────────
-    { path: 'services/corporate', Component: () => <RedirectTo to="/app/find-ride" /> },
-  { path: 'services/school', Component: () => <RedirectTo to="/app/find-ride" /> },
-  { path: 'innovation-hub', Component: () => <RedirectTo to="/app/find-ride" /> },
-  { path: 'analytics', Component: () => <RedirectTo to="/app/find-ride" /> },
-  { path: 'mobility-os', Component: () => <RedirectTo to="/app/find-ride" /> },
-  { path: 'ai-intelligence', Component: () => <RedirectTo to="/app/find-ride" /> },
+  { path: 'services/corporate', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
+  { path: 'services/school', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
+  { path: 'innovation-hub', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
+  { path: 'analytics', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
+  { path: 'mobility-os', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
+  { path: 'ai-intelligence', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
 
   // ── Wallet ────────────────────────────────────────────────────────────────
   {
     path: 'wallet',
     lazy: lazy(() => import('./features/wallet'), 'WalletDashboard'),
   },
-  { path: 'plus',     Component: () => <RedirectTo to="/app/wallet" /> },
+  { path: 'plus', lazy: lazy(() => import('./pages/WaselServicePage'), 'WaselPlusPage') },
   { path: 'payments', Component: () => <RedirectTo to="/app/wallet" /> },
 
   // ── Profile ───────────────────────────────────────────────────────────────
@@ -242,10 +242,14 @@ const buildMainChildren = () => [
   },
 
   // ── Trust Center ──────────────────────────────────────────────────────────
-  { path: 'trust', Component: () => <RedirectTo to="/app/profile" /> },
+  {
+    path: 'trust',
+    lazy: lazy(() => import('./features/trust/TrustCenterPage')),
+  },
 
   // ── Driver ────────────────────────────────────────────────────────────────
-  { path: 'driver', Component: () => <RedirectTo to="/app/offer-ride" /> },
+  { path: 'driver', lazy: lazy(() => import('./pages/WaselServicePage'), 'DriverPage') },
+  { path: 'safety', lazy: lazy(() => import('./pages/WaselServicePage'), 'SafetyPage') },
 
   // ── Legal ─────────────────────────────────────────────────────────────────
   {
@@ -260,7 +264,7 @@ const buildMainChildren = () => [
   { path: 'legal/terms',   Component: () => <RedirectTo to="/app/terms" /> },
 
   // ── Moderation ────────────────────────────────────────────────────────────
-  { path: 'moderation', Component: () => <RedirectTo to="/app/profile" /> },
+  { path: 'moderation', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
 
   // ── 404 catch-all ─────────────────────────────────────────────────────────
   { path: '*', Component: NotFound },

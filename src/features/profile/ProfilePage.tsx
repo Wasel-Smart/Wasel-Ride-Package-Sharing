@@ -1,7 +1,8 @@
 /**
  * ProfilePage - /app/profile
  */
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ChangeEvent, type ReactNode } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -216,7 +217,8 @@ function QuickActionCard({ label, detail, icon, color, onClick }: QuickActionCar
 }
 
 export default function ProfilePage() {
-  const { user, updateUser, signOut } = useLocalAuth();
+  const { user, signOut } = useLocalAuth();
+  const { updateProfile } = useAuth();
   const { language } = useLanguage();
   const nav = useIframeSafeNavigate();
   const { isSupported, permission, requestPermission } = usePushNotifications();
@@ -226,6 +228,7 @@ export default function ProfilePage() {
   const [nameInput, setNameInput] = useState(user?.name ?? '');
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
 
   if (!user) {
     return (
@@ -251,9 +254,12 @@ export default function ProfilePage() {
       return;
     }
     setSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 400));
-    updateUser({ name: clean });
+    const { error } = await updateProfile({ full_name: clean });
     setSaving(false);
+    if (error) {
+      showToast(ar ? 'تعذر حفظ الاسم حالياً' : 'Unable to save your name right now');
+      return;
+    }
     setEditing(false);
     showToast(ar ? 'تم حفظ الاسم' : 'Name saved');
   };
@@ -281,6 +287,34 @@ export default function ProfilePage() {
     a.click();
     URL.revokeObjectURL(url);
     showToast(ar ? 'تم تصدير بياناتك' : 'Data exported');
+  };
+
+  const handlePhotoSelection = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast(ar ? 'ÙŠØ±Ø¬Ù‰ Ø§Ø®ØªÙŠØ§Ø± ØµÙˆØ±Ø© ØµØ§Ù„Ø­Ø©' : 'Please choose a valid image');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const avatarUrl = typeof reader.result === 'string' ? reader.result : '';
+      if (!avatarUrl) {
+        showToast(ar ? 'ØªØ¹Ø°Ø± ØªØ¬Ù‡ÙŠØ² Ø§Ù„ØµÙˆØ±Ø©' : 'Unable to process that image');
+        return;
+      }
+
+      const { error } = await updateProfile({ avatar_url: avatarUrl });
+      if (error) {
+        showToast(ar ? 'ØªØ¹Ø°Ø± ØªØ­Ø¯ÙŠØ« Ø§Ù„ØµÙˆØ±Ø© Ø­Ø§Ù„ÙŠØ§Ù‹' : 'Unable to update your photo right now');
+        return;
+      }
+
+      showToast(ar ? 'ØªÙ… ØªØ­Ø¯ÙŠØ« Ø§Ù„ØµÙˆØ±Ø© Ø§Ù„Ø´Ø®ØµÙŠØ©' : 'Profile photo updated');
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
   };
 
   const handleNotificationSetup = async () => {
@@ -394,6 +428,13 @@ export default function ProfilePage() {
     <div style={{ minHeight: '100vh', background: BG, fontFamily: FONT, direction: ar ? 'rtl' : 'ltr', paddingBottom: 80 }}>
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 16px' }}>
         <div style={{ padding: '40px 0 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoSelection}
+            style={{ display: 'none' }}
+          />
           <div style={{ position: 'relative' }}>
             <div
               style={{
@@ -408,13 +449,22 @@ export default function ProfilePage() {
                 fontWeight: 900,
                 color: '#040C18',
                 boxShadow: `0 0 0 3px rgba(0,200,232,0.35), 0 8px 32px rgba(0,200,232,0.2)`,
+                overflow: 'hidden',
               }}
             >
-              {initials}
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                initials
+              )}
             </div>
             <button
               title={ar ? 'تغيير الصورة' : 'Change photo'}
-              onClick={() => showToast(ar ? 'رفع الصور قريباً' : 'Photo upload coming soon')}
+              onClick={() => photoInputRef.current?.click()}
               style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: '#1E293B', border: `2px solid ${BG}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             >
               <Camera size={12} color={CYAN} />

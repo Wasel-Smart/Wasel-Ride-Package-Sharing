@@ -2,11 +2,12 @@
  * LocalAuth
  *
  * Uses real Supabase auth/session data when configured.
- * Falls back to a local demo profile when backend credentials are absent.
+ * Falls back to a local demo profile only when demo mode is explicitly enabled.
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { authAPI } from '../services/auth';
 import { initSupabaseListeners, isSupabaseConfigured, supabase } from '../utils/supabase/client';
+import { getConfig } from '../utils/env';
 
 export interface WaselUser {
   id: string;
@@ -149,7 +150,13 @@ const STORAGE_KEY = 'wasel_local_user_v2';
 function loadUser(): WaselUser | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as WaselUser;
+    if (parsed.backendMode === 'demo' && !getConfig().enableDemoAccount) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -180,6 +187,7 @@ function toMessage(error: unknown): string {
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<WaselUser | null>(loadUser);
   const [loading, setLoading] = useState(true);
+  const { enableDemoAccount } = getConfig();
 
   useEffect(() => {
     const cleanup = initSupabaseListeners();
@@ -280,6 +288,9 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       }
 
       // ── Demo mode: accept any non-empty email + password ──────────────
+      if (!enableDemoAccount) {
+        return { error: 'Backend auth is not configured. Set your environment variables or enable demo mode.' };
+      }
       if (!email.trim() || !password) {
         return { error: 'Please enter your email and password.' };
       }
@@ -337,6 +348,9 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       }
 
       // ── Demo mode: create a local profile immediately ────────────────
+      if (!enableDemoAccount) {
+        return { error: 'Backend auth is not configured. Set your environment variables or enable demo mode.' };
+      }
       if (!name.trim() || !email.trim() || !password) {
         return { error: 'Please fill in all required fields.' };
       }

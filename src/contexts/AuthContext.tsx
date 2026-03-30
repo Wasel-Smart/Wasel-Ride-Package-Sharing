@@ -332,6 +332,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           name: String(updates.full_name ?? localAuth.user?.name ?? ''),
           email: String(updates.email ?? localAuth.user?.email ?? ''),
           phone: updates.phone_number ?? localAuth.user?.phone,
+          avatar: updates.avatar_url ?? localAuth.user?.avatar,
         });
         return { error: null };
       }
@@ -343,6 +344,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             name: String(updates.full_name ?? localAuth.user.name),
             email: String(updates.email ?? localAuth.user.email),
             phone: updates.phone_number ?? localAuth.user.phone,
+            avatar: updates.avatar_url ?? localAuth.user.avatar,
           });
         }
         return { error: null };

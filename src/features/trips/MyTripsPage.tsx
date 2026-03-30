@@ -1,11 +1,13 @@
 /**
- * MyTripsPage — /app/my-trips
- * Harmonized with the main Wasel ride/package UX system.
+ * MyTripsPage - /app/my-trips
+ * Connected to locally persisted and live-synced rides/packages.
  */
 import { useMemo, useState, type ReactNode } from 'react';
+import { useLocation } from 'react-router';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { getConnectedPackages, getConnectedRides, type PackageRequest, type PostedRide } from '../../services/journeyLogistics';
 import {
   Car, Package, Clock, CheckCircle, XCircle, MapPin, ChevronRight, Plus,
   Shield, Navigation, Star, ArrowRight,
@@ -27,7 +29,7 @@ const FONT = "-apple-system,'Inter','Cairo','Tajawal',sans-serif";
 type TripStatus = 'upcoming' | 'completed' | 'cancelled';
 type TabKey = 'rides' | 'packages';
 
-interface MockTrip {
+interface TripItem {
   id: string;
   from: string;
   to: string;
@@ -39,25 +41,67 @@ interface MockTrip {
   driver?: string;
   rating?: number;
   trustLabel?: string;
+  openPath: string;
 }
-
-const MOCK_RIDES: MockTrip[] = [
-  { id: 't1', from: 'Amman', to: 'Aqaba', date: 'Mar 28, 2026', time: '07:00', price: 'JOD 8.00', status: 'upcoming', seats: 1, driver: 'Ahmad K.', trustLabel: 'Verified captain' },
-  { id: 't2', from: 'Amman', to: 'Irbid', date: 'Mar 24, 2026', time: '09:30', price: 'JOD 4.50', status: 'completed', seats: 1, driver: 'Sara M.', rating: 5, trustLabel: 'High trust route' },
-  { id: 't3', from: 'Zarqa', to: 'Amman', date: 'Mar 20, 2026', time: '08:00', price: 'JOD 2.00', status: 'completed', seats: 2, driver: 'Khalid R.', rating: 4, trustLabel: 'Verified captain' },
-  { id: 't4', from: 'Amman', to: 'Karak', date: 'Mar 15, 2026', time: '06:30', price: 'JOD 6.00', status: 'cancelled', seats: 1, driver: 'Omar H.', trustLabel: 'Schedule changed' },
-];
-
-const MOCK_PACKAGES: MockTrip[] = [
-  { id: 'p1', from: 'Amman', to: 'Aqaba', date: 'Mar 27, 2026', time: '10:00', price: 'JOD 3.50', status: 'upcoming', trustLabel: 'Matched to live route' },
-  { id: 'p2', from: 'Irbid', to: 'Amman', date: 'Mar 22, 2026', time: '14:00', price: 'JOD 2.50', status: 'completed', trustLabel: 'Delivered successfully' },
-];
 
 const STATUS_CONFIG: Record<TripStatus, { label: string; labelAr: string; color: string; bg: string; icon: ReactNode }> = {
   upcoming: { label: 'Upcoming', labelAr: 'قادمة', color: CYAN, bg: 'rgba(0,200,232,0.12)', icon: <Clock size={12} /> },
   completed: { label: 'Completed', labelAr: 'مكتملة', color: GREEN, bg: 'rgba(34,197,94,0.12)', icon: <CheckCircle size={12} /> },
   cancelled: { label: 'Cancelled', labelAr: 'ملغاة', color: RED, bg: 'rgba(239,68,68,0.12)', icon: <XCircle size={12} /> },
 };
+
+function formatDateLabel(input: string): string {
+  const date = new Date(input);
+  if (Number.isNaN(date.getTime())) return input || 'Flexible';
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function deriveRideStatus(ride: PostedRide): TripStatus {
+  const when = new Date(`${ride.date}T${ride.time || '00:00'}`);
+  if (Number.isNaN(when.getTime())) return 'upcoming';
+  return when.getTime() < Date.now() ? 'completed' : 'upcoming';
+}
+
+function derivePackageStatus(pkg: PackageRequest): TripStatus {
+  if (pkg.status === 'delivered') return 'completed';
+  return 'upcoming';
+}
+
+function toRideItem(ride: PostedRide): TripItem {
+  return {
+    id: ride.id,
+    from: ride.from,
+    to: ride.to,
+    date: formatDateLabel(ride.date),
+    time: ride.time || 'Flexible',
+    price: `JOD ${ride.price.toFixed(2)}`,
+    status: deriveRideStatus(ride),
+    seats: ride.seats,
+    driver: ride.carModel ? `${ride.carModel.split(' ')[0]} Captain` : 'Wasel Captain',
+    rating: 4.8,
+    trustLabel: ride.acceptsPackages ? 'Package-ready corridor' : 'Live posted route',
+    openPath: '/app/offer-ride',
+  };
+}
+
+function toPackageItem(pkg: PackageRequest): TripItem {
+  const status = derivePackageStatus(pkg);
+  return {
+    id: pkg.id,
+    from: pkg.from,
+    to: pkg.to,
+    date: formatDateLabel(pkg.createdAt),
+    time: pkg.packageType === 'return' ? 'Return lane' : 'Package lane',
+    price: pkg.matchedRideId ? 'Matched to route' : 'Searching for route',
+    status,
+    driver: pkg.matchedDriver,
+    trustLabel:
+      pkg.packageType === 'return'
+        ? pkg.matchedRideId ? 'Return matched to ride' : 'Return request queued'
+        : pkg.matchedRideId ? 'Matched to live route' : 'Waiting for route assignment',
+    openPath: '/app/packages',
+  };
+}
 
 function pill(color: string) {
   return {
@@ -101,12 +145,12 @@ function ExperienceBanner({ ar }: { ar: boolean }) {
     >
       <div>
         <div style={{ color: TEXT, fontWeight: 800, fontSize: '0.98rem', marginBottom: 6, fontFamily: FONT }}>
-          {ar ? 'كل رحلاتك وطرودك في نفس الشبكة' : 'All your rides and parcels in one network'}
+          {ar ? 'كل رحلاتك وطرودك من الشبكة الحية نفسها' : 'All your rides and parcels from the same live network'}
         </div>
         <div style={{ color: MUTED, fontSize: '0.84rem', lineHeight: 1.6, fontFamily: FONT }}>
           {ar
-            ? 'رحلاتي الآن تعرض الحجز، التتبع، والثقة بنفس لغة المنتج الأساسية حتى تشعر أن كل ما بعد الحجز جزء من نفس تجربة واصل.'
-            : 'My Trips now carries the same trust, tracking, and corridor language as the primary booking flow so post-booking feels like part of the same Wasel product.'}
+            ? 'رحلاتي الآن تقرأ من الرحلات والطرود التي أنشأتها فعلياً داخل واصل، بدل البطاقات الثابتة.'
+            : 'My Trips now reflects the rides and packages you actually create in Wasel instead of static placeholder cards.'}
         </div>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 8 }}>
@@ -132,24 +176,14 @@ function SummaryCard({ label, value, detail, color, icon }: { label: string; val
   );
 }
 
-function TripCard({
-  trip,
-  ar,
-  onRebook,
-  type,
-}: {
-  trip: MockTrip;
-  ar: boolean;
-  onRebook: () => void;
-  type: TabKey;
-}) {
+function TripCard({ trip, ar, onOpen, type }: { trip: TripItem; ar: boolean; onOpen: () => void; type: TabKey }) {
   const [expanded, setExpanded] = useState(false);
   const routeAccent = type === 'rides' ? CYAN : GOLD;
 
   return (
     <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 18, overflow: 'hidden', marginBottom: 12 }}>
       <button
-        onClick={() => setExpanded((value) => !value)}
+        onClick={() => setExpanded(value => !value)}
         style={{
           width: '100%',
           padding: '16px 18px',
@@ -172,11 +206,11 @@ function TripCard({
             <span style={{ fontWeight: 800, color: TEXT, fontFamily: FONT, fontSize: '0.92rem' }}>{trip.to}</span>
           </div>
           <div style={{ fontSize: '0.74rem', color: MUTED, fontFamily: FONT, marginTop: 4 }}>{trip.date} · {trip.time}</div>
-          {trip.trustLabel && (
+          {trip.trustLabel ? (
             <div style={{ marginTop: 8 }}>
               <span style={pill(type === 'rides' ? GREEN : routeAccent)}>{trip.trustLabel}</span>
             </div>
-          )}
+          ) : null}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
           <span style={{ fontWeight: 900, color: TEXT, fontFamily: FONT, fontSize: '0.92rem' }}>{trip.price}</span>
@@ -185,51 +219,41 @@ function TripCard({
         <ChevronRight size={14} color="rgba(148,163,184,0.35)" style={{ flexShrink: 0, transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
       </button>
 
-      {expanded && (
+      {expanded ? (
         <div style={{ borderTop: `1px solid ${BORDER}`, padding: '14px 18px', display: 'grid', gap: 12, background: CARD_ALT }}>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-            {trip.driver && (
+            {trip.driver ? (
               <span style={{ fontSize: '0.78rem', color: MUTED, fontFamily: FONT }}>
                 {ar ? `السائق: ${trip.driver}` : `Captain: ${trip.driver}`}
               </span>
-            )}
-            {trip.rating && (
+            ) : null}
+            {trip.rating ? (
               <span style={{ fontSize: '0.78rem', color: GOLD, fontFamily: FONT, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <Star size={12} fill={GOLD} stroke={GOLD} />
                 {trip.rating.toFixed(1)} / 5
               </span>
-            )}
-            {trip.seats && (
+            ) : null}
+            {trip.seats ? (
               <span style={{ fontSize: '0.78rem', color: MUTED, fontFamily: FONT }}>
                 {ar ? `${trip.seats} مقعد` : `${trip.seats} seat${trip.seats > 1 ? 's' : ''}`}
               </span>
-            )}
+            ) : null}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <div style={{ color: DIM, fontSize: '0.76rem', fontFamily: FONT }}>
               {type === 'rides'
-                ? (ar ? 'يمكنك إعادة الحجز أو متابعة الرحلة من نفس المسار.' : 'You can rebook or continue tracking from the same corridor.')
-                : (ar ? 'الطرد يبقى ضمن نفس سلسلة التتبع حتى التسليم.' : 'Package continuity stays on the same tracking chain until delivery.')}
+                ? (ar ? 'هذه الرحلة منشورة داخل شبكة واصل ويمكنك العودة لمسار العرض أو التعديل منها.' : 'This posted ride lives in the Wasel network and can be reopened from the ride posting flow.')
+                : (ar ? 'هذا الطلب مرتبط بتتبع فعلي ويمكنك مواصلة المتابعة من صفحة الطرود.' : 'This request stays on a live tracking chain and can be reopened from the packages page.')}
             </div>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              {trip.status === 'completed' && (
-                <button
-                  onClick={onRebook}
-                  style={{ padding: '7px 14px', borderRadius: 10, background: 'rgba(0,200,232,0.12)', border: '1px solid rgba(0,200,232,0.28)', color: CYAN, fontWeight: 700, fontFamily: FONT, fontSize: '0.76rem', cursor: 'pointer' }}
-                >
-                  {ar ? 'أعد الحجز' : 'Rebook'}
-                </button>
-              )}
-              <button
-                onClick={type === 'rides' ? onRebook : () => onRebook()}
-                style={{ padding: '7px 14px', borderRadius: 10, background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT, fontWeight: 700, fontFamily: FONT, fontSize: '0.76rem', cursor: 'pointer' }}
-              >
-                {type === 'rides' ? (ar ? 'افتح الحجز' : 'Open booking') : (ar ? 'افتح التتبع' : 'Open tracking')}
-              </button>
-            </div>
+            <button
+              onClick={onOpen}
+              style={{ padding: '7px 14px', borderRadius: 10, background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT, fontWeight: 700, fontFamily: FONT, fontSize: '0.76rem', cursor: 'pointer' }}
+            >
+              {type === 'rides' ? (ar ? 'افتح المسار' : 'Open route') : (ar ? 'افتح التتبع' : 'Open tracking')}
+            </button>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -238,21 +262,25 @@ export default function MyTripsPage() {
   const { user } = useLocalAuth();
   const { language } = useLanguage();
   const nav = useIframeSafeNavigate();
+  const location = useLocation();
   const ar = language === 'ar';
 
-  const [tab, setTab] = useState<TabKey>('rides');
+  const initialTab = new URLSearchParams(location.search).get('tab') === 'packages' ? 'packages' : 'rides';
+  const [tab, setTab] = useState<TabKey>(initialTab);
   const [filter, setFilter] = useState<TripStatus | 'all'>('all');
 
-  const items = tab === 'rides' ? MOCK_RIDES : MOCK_PACKAGES;
-  const filtered = filter === 'all' ? items : items.filter((trip) => trip.status === filter);
+  const rideItems = useMemo(() => getConnectedRides().map(toRideItem), []);
+  const packageItems = useMemo(() => getConnectedPackages().map(toPackageItem), []);
+  const items = tab === 'rides' ? rideItems : packageItems;
+  const filtered = filter === 'all' ? items : items.filter(trip => trip.status === filter);
 
   const stats = useMemo(() => {
-    const source = tab === 'rides' ? MOCK_RIDES : MOCK_PACKAGES;
-    const upcoming = source.filter((trip) => trip.status === 'upcoming').length;
-    const completed = source.filter((trip) => trip.status === 'completed').length;
-    const cancelled = source.filter((trip) => trip.status === 'cancelled').length;
+    const source = tab === 'rides' ? rideItems : packageItems;
+    const upcoming = source.filter(trip => trip.status === 'upcoming').length;
+    const completed = source.filter(trip => trip.status === 'completed').length;
+    const cancelled = source.filter(trip => trip.status === 'cancelled').length;
     return { total: source.length, upcoming, completed, cancelled };
-  }, [tab]);
+  }, [packageItems, rideItems, tab]);
 
   const FILTERS: { key: TripStatus | 'all'; label: string; labelAr: string }[] = [
     { key: 'all', label: 'All', labelAr: 'الكل' },
@@ -261,7 +289,7 @@ export default function MyTripsPage() {
     { key: 'cancelled', label: 'Cancelled', labelAr: 'ملغاة' },
   ];
 
-  const createPath = tab === 'rides' ? '/app/find-ride' : '/app/packages';
+  const createPath = tab === 'rides' ? '/app/offer-ride' : '/app/packages';
 
   return (
     <div style={{ minHeight: '100vh', background: BG, fontFamily: FONT, direction: ar ? 'rtl' : 'ltr', paddingBottom: 88 }}>
@@ -275,9 +303,7 @@ export default function MyTripsPage() {
               {ar ? 'رحلاتي' : 'My Trips'}
             </h1>
             <p style={{ fontSize: '0.82rem', color: MUTED, fontFamily: FONT, margin: '6px 0 0' }}>
-              {ar
-                ? `مرحباً ${user?.name ?? ''} · ${filtered.length} عنصر ظاهر الآن`
-                : `Welcome ${user?.name ?? ''} · ${filtered.length} visible items right now`}
+              {ar ? `مرحباً ${user?.name ?? ''} · ${filtered.length} عنصر ظاهر الآن` : `Welcome ${user?.name ?? ''} · ${filtered.length} visible items right now`}
             </p>
           </div>
           <button
@@ -292,34 +318,10 @@ export default function MyTripsPage() {
         <ExperienceBanner ar={ar} />
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 20 }}>
-          <SummaryCard
-            label={ar ? 'الإجمالي' : 'Total'}
-            value={String(stats.total)}
-            detail={tab === 'rides' ? (ar ? 'رحلات على حسابك' : 'Trips on your account') : (ar ? 'طرود على حسابك' : 'Packages on your account')}
-            color={CYAN}
-            icon={<Navigation size={18} color={CYAN} />}
-          />
-          <SummaryCard
-            label={ar ? 'القادمة' : 'Upcoming'}
-            value={String(stats.upcoming)}
-            detail={ar ? 'تحتاج متابعة' : 'Need attention'}
-            color={CYAN}
-            icon={<Clock size={18} color={CYAN} />}
-          />
-          <SummaryCard
-            label={ar ? 'المكتملة' : 'Completed'}
-            value={String(stats.completed)}
-            detail={ar ? 'مغلقة بنجاح' : 'Closed successfully'}
-            color={GREEN}
-            icon={<CheckCircle size={18} color={GREEN} />}
-          />
-          <SummaryCard
-            label={ar ? 'الثقة' : 'Trust layer'}
-            value={tab === 'rides' ? '4.9' : '24/7'}
-            detail={tab === 'rides' ? (ar ? 'متوسط تقييم المسارات' : 'Average route confidence') : (ar ? 'تتبع الطرود متاح' : 'Tracking always visible')}
-            color={GOLD}
-            icon={<Shield size={18} color={GOLD} />}
-          />
+          <SummaryCard label={ar ? 'الإجمالي' : 'Total'} value={String(stats.total)} detail={tab === 'rides' ? (ar ? 'رحلات منشورة' : 'Posted rides') : (ar ? 'طلبات طرود' : 'Package requests')} color={CYAN} icon={<Navigation size={18} color={CYAN} />} />
+          <SummaryCard label={ar ? 'القادمة' : 'Upcoming'} value={String(stats.upcoming)} detail={ar ? 'بحاجة متابعة' : 'Need attention'} color={CYAN} icon={<Clock size={18} color={CYAN} />} />
+          <SummaryCard label={ar ? 'المكتملة' : 'Completed'} value={String(stats.completed)} detail={ar ? 'مغلقة بنجاح' : 'Closed successfully'} color={GREEN} icon={<CheckCircle size={18} color={GREEN} />} />
+          <SummaryCard label={ar ? 'الثقة' : 'Trust layer'} value={tab === 'rides' ? String(rideItems.length) : String(packageItems.length)} detail={tab === 'rides' ? (ar ? 'رحلات على الشبكة' : 'Routes on network') : (ar ? 'سلسلة تتبع فعلية' : 'Live tracking chain')} color={GOLD} icon={<Shield size={18} color={GOLD} />} />
         </div>
 
         <div style={{ display: 'flex', gap: 0, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 4, marginBottom: 16 }}>
@@ -355,7 +357,7 @@ export default function MyTripsPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-          {FILTERS.map((filterOption) => (
+          {FILTERS.map(filterOption => (
             <button
               key={filterOption.key}
               onClick={() => setFilter(filterOption.key)}
@@ -381,25 +383,25 @@ export default function MyTripsPage() {
             {tab === 'rides' ? <Car size={42} style={{ marginBottom: 12, opacity: 0.35 }} /> : <Package size={42} style={{ marginBottom: 12, opacity: 0.35 }} />}
             <p style={{ fontFamily: FONT, fontSize: '0.94rem', margin: 0 }}>
               {tab === 'rides'
-                ? (ar ? 'لا توجد رحلات مطابقة لهذا الفلتر' : 'No rides match this filter')
-                : (ar ? 'لا توجد طرود مطابقة لهذا الفلتر' : 'No packages match this filter')}
+                ? (ar ? 'لا توجد رحلات متصلة بهذا الفلتر بعد' : 'No connected rides match this filter yet')
+                : (ar ? 'لا توجد طلبات طرود متصلة بهذا الفلتر بعد' : 'No connected packages match this filter yet')}
             </p>
             <button
               onClick={() => nav(createPath)}
               style={{ marginTop: 16, padding: '10px 18px', borderRadius: 10, background: 'rgba(0,200,232,0.12)', border: '1px solid rgba(0,200,232,0.25)', color: CYAN, fontWeight: 800, fontFamily: FONT, fontSize: '0.82rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}
             >
-              {tab === 'rides' ? (ar ? 'ابحث عن رحلة' : 'Find a ride') : (ar ? 'أنشئ طلب طرد' : 'Create package request')}
+              {tab === 'rides' ? (ar ? 'أنشئ رحلة' : 'Create a ride') : (ar ? 'أنشئ طلب طرد' : 'Create package request')}
               <ArrowRight size={14} />
             </button>
           </div>
         ) : (
-          filtered.map((trip) => (
+          filtered.map(trip => (
             <TripCard
               key={trip.id}
               trip={trip}
               ar={ar}
               type={tab}
-              onRebook={() => nav(createPath)}
+              onOpen={() => nav(trip.openPath)}
             />
           ))
         )}

@@ -29,6 +29,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { walletApi } from '../../services/walletApi';
 import type { WalletData, InsightsData } from '../../services/walletApi';
 import { WaselColors } from '../../tokens/wasel-tokens';
+import { getConfig } from '../../utils/env';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import {
   TransactionRow as SharedTransactionRow,
@@ -199,7 +200,7 @@ const TX_ICONS: Record<string, any> = {
 
 const PIE_COLORS = ['#04ADBF', '#D9965B', '#22C55E', '#A855F7', '#3B82F6', '#F59E0B', '#EF4444'];
 
-const WALLET_DEMO_MODE = !(projectId && publicAnonKey);
+const WALLET_BACKEND_READY = Boolean(projectId && publicAnonKey);
 
 function createDemoWalletData(user: WaselUser | null): WalletData {
   const baseBalance = typeof user?.balance === 'number' ? user.balance : 145.75;
@@ -278,10 +279,12 @@ export function WalletDashboard() {
   const { user } = useAuth();
   const { user: localUser, updateUser } = useLocalAuth();
   const { language } = useLanguage();
+  const { enableDemoAccount } = getConfig();
   const isRTL = language === 'ar';
   const t = txt[isRTL ? 'ar' : 'en'];
   const effectiveUserId = user?.id ?? localUser?.id ?? 'demo-wallet-user';
-  const isDemoWallet = WALLET_DEMO_MODE || !user?.id;
+  const isDemoWallet = enableDemoAccount && (!WALLET_BACKEND_READY || localUser?.backendMode === 'demo' || !user?.id);
+  const walletUnavailable = !WALLET_BACKEND_READY && !enableDemoAccount;
 
   const [tab, setTab] = useState('overview');
   const [walletData, setWalletData] = useState<WalletData | null>(null);
@@ -333,13 +336,19 @@ export function WalletDashboard() {
       setAutoTopUpThreshold(String(data.wallet?.autoTopUpThreshold || 5));
     } catch (err) {
       console.error('[Wallet] fetch error:', err);
-      const demoWallet = createDemoWalletData(localUser);
-      setWalletData(demoWallet);
-      setInsights(createDemoInsights(demoWallet));
+      if (enableDemoAccount) {
+        const demoWallet = createDemoWalletData(localUser);
+        setWalletData(demoWallet);
+        setInsights(createDemoInsights(demoWallet));
+      } else {
+        setWalletData(null);
+        setInsights(null);
+        toast.error(isRTL ? 'تعذر تحميل المحفظة الآن' : 'Unable to load wallet right now');
+      }
     } finally {
       setLoading(false);
     }
-  }, [effectiveUserId, isDemoWallet, localUser]);
+  }, [effectiveUserId, enableDemoAccount, isDemoWallet, isRTL, localUser]);
 
   const fetchInsights = useCallback(async () => {
     if (isDemoWallet) {
@@ -352,9 +361,11 @@ export function WalletDashboard() {
       setInsights(data);
     } catch (err) {
       console.error('[Wallet] insights error:', err);
-      if (walletData) setInsights(createDemoInsights(walletData));
+      if (enableDemoAccount && walletData) {
+        setInsights(createDemoInsights(walletData));
+      }
     }
-  }, [effectiveUserId, isDemoWallet, walletData]);
+  }, [effectiveUserId, enableDemoAccount, isDemoWallet, walletData]);
 
   useEffect(() => { fetchWallet(); }, [fetchWallet]);
   useEffect(() => { if (tab === 'insights') fetchInsights(); }, [tab, fetchInsights]);
@@ -631,6 +642,24 @@ export function WalletDashboard() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
         <p className="text-muted-foreground text-sm">{t.processing}</p>
+      </div>
+    );
+  }
+
+  if (walletUnavailable) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-6">
+        <Wallet className="w-12 h-12 text-muted-foreground/50" />
+        <div className="space-y-1">
+          <p className="text-foreground font-semibold">
+            {isRTL ? 'المحفظة غير متاحة بعد' : 'Wallet is not available yet'}
+          </p>
+          <p className="text-muted-foreground text-sm max-w-md">
+            {isRTL
+              ? 'أكمل إعدادات الخلفية أو فعّل وضع العرض التجريبي لإتاحة المحفظة.'
+              : 'Finish backend configuration or enable demo mode to access the wallet.'}
+          </p>
+        </div>
       </div>
     );
   }

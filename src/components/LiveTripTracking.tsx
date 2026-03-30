@@ -40,6 +40,7 @@ const TRIP = {
   toAr: 'جامعة الأردن',
   toCoord: { lat: 32.0156, lng: 35.8696 },
   driver: {
+    id: 'driver-ahmad-khalil',
     name: 'Ahmad Khalil',
     nameAr: 'أحمد خليل',
     rating: 4.92,
@@ -450,6 +451,7 @@ export function LiveTripTracking() {
   const [cancelling, setCancelling] = useState(false);
   const [showRating, setShowRating] = useState(false);
   const [aiTip, setAiTip] = useState(true);
+  const driverPhoneDigits = TRIP.driver.phone.replace(/[^\d]/g, '');
 
   // Track which milestones we've already notified about
   const notifiedRef = useRef({ approaching: false, arrived: false, started: false, completed: false });
@@ -510,7 +512,7 @@ export function LiveTripTracking() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          reviewee_id: 'driver_placeholder',
+          reviewee_id: TRIP.driver.id,
           role: 'driver',
           overall_rating: stars,
           comment,
@@ -693,13 +695,18 @@ export function LiveTripTracking() {
               {/* Quick contact */}
               <div className="flex gap-1.5 flex-shrink-0">
                 <button
-                  onClick={() => toast.info(`Calling ${TRIP.driver.name}…`)}
+                  onClick={() => {
+                    window.open(`tel:${TRIP.driver.phone}`, '_self');
+                    toast.info(`Calling ${TRIP.driver.name}…`);
+                  }}
                   className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/30 transition-all"
                 >
                   <Phone className="w-3.5 h-3.5" />
                 </button>
                 <button
-                  onClick={() => toast.info('Chat coming soon!')}
+                  onClick={() => {
+                    window.open(`https://wa.me/${driverPhoneDigits}?text=${encodeURIComponent(`Hi ${TRIP.driver.name}, I'm on trip ${TRIP.id} with Wasel.`)}`, '_blank', 'noopener,noreferrer');
+                  }}
                   className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center text-slate-400 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />

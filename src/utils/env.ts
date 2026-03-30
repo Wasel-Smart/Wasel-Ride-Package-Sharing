@@ -30,6 +30,7 @@ export function getConfig() {
     .trim();
   const authCallbackPath = getEnv('VITE_AUTH_CALLBACK_PATH', '/app/auth/callback');
   const enableDemoAccount = getEnv('VITE_ENABLE_DEMO_DATA', 'false').toLowerCase() === 'true';
+  const enableTwoFactorAuth = getEnv('VITE_ENABLE_TWO_FACTOR_AUTH', 'false').toLowerCase() === 'true';
 
   return {
     appName: getEnv('VITE_APP_NAME', 'Wasel'),
@@ -37,6 +38,7 @@ export function getConfig() {
     supportWhatsAppNumber,
     authCallbackPath: authCallbackPath.startsWith('/') ? authCallbackPath : `/${authCallbackPath}`,
     enableDemoAccount,
+    enableTwoFactorAuth,
     isProd: getEnv('NODE_ENV') === 'production',
     isDev: getEnv('NODE_ENV', 'development') !== 'production',
   };

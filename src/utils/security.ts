@@ -11,6 +11,7 @@
 
 import { supabase } from '@/utils/supabase/client';
 import { logger } from '@/utils/monitoring';
+import { getConfig } from '@/utils/env';
 
 // ── Content Security Policy ─────────────────────────────────────────────────
 export const CSP_DIRECTIVES = {
@@ -204,10 +205,20 @@ export interface TwoFactorSetup {
 }
 
 export function isTwoFactorAvailable(): boolean {
-  return typeof window !== 'undefined' && typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function';
+  return (
+    getConfig().enableTwoFactorAuth &&
+    typeof window !== 'undefined' &&
+    typeof crypto !== 'undefined' &&
+    typeof crypto.getRandomValues === 'function' &&
+    typeof crypto.subtle !== 'undefined'
+  );
 }
 
 export async function enable2FA(userId: string): Promise<TwoFactorSetup> {
+  if (!isTwoFactorAvailable()) {
+    throw new Error('Two-factor authentication is not enabled for this environment.');
+  }
+
   try {
     // Generate TOTP secret
     const secret = generateTOTPSecret();
@@ -238,6 +249,11 @@ export async function enable2FA(userId: string): Promise<TwoFactorSetup> {
 }
 
 export async function verify2FACode(userId: string, code: string): Promise<boolean> {
+  if (!isTwoFactorAvailable()) {
+    logger.warning('2FA verification requested while 2FA is disabled', { userId });
+    return false;
+  }
+
   try {
     // Get user's 2FA secret
     const { data: profile } = await supabase
@@ -249,7 +265,7 @@ export async function verify2FACode(userId: string, code: string): Promise<boole
     if (!profile) return false;
     
     // Check TOTP code
-    const isValidTOTP = verifyTOTPCode(profile.two_factor_secret, code);
+    const isValidTOTP = await verifyTOTPCode(profile.two_factor_secret, code);
     
     if (isValidTOTP) {
       logger.info('2FA verified (TOTP)', { userId });
@@ -282,6 +298,11 @@ export async function verify2FACode(userId: string, code: string): Promise<boole
 }
 
 export async function disable2FA(userId: string, code: string): Promise<boolean> {
+  if (!isTwoFactorAvailable()) {
+    logger.warning('2FA disable requested while 2FA is disabled', { userId });
+    return false;
+  }
+
   try {
     // Verify code before disabling
     const isValid = await verify2FACode(userId, code);
@@ -344,11 +365,70 @@ function generateBackupCodes(count: number): string[] {
   return codes;
 }
 
-function verifyTOTPCode(_secret: string, _code: string): boolean {
-  // TOTP verification requires a server-side implementation (otplib).
-  // Client-side TOTP verification is insecure — always delegate to the backend.
-  // TODO: call POST /auth/verify-2fa with { userId, code } and return the result.
+async function verifyTOTPCode(secret: string, code: string): Promise<boolean> {
+  const normalizedCode = code.replace(/\s+/g, '');
+  if (!/^\d{6}$/.test(normalizedCode)) {
+    return false;
+  }
+
+  const key = decodeBase32Secret(secret);
+  const currentCounter = Math.floor(Date.now() / 30000);
+
+  for (let offset = -1; offset <= 1; offset++) {
+    const candidate = await generateTOTPCode(key, currentCounter + offset);
+    if (candidate === normalizedCode) {
+      return true;
+    }
+  }
+
   return false;
+}
+
+function decodeBase32Secret(secret: string): Uint8Array {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  const normalized = secret.toUpperCase().replace(/=+$/g, '');
+  let bits = '';
+
+  for (const char of normalized) {
+    const value = alphabet.indexOf(char);
+    if (value === -1) {
+      throw new Error('Invalid TOTP secret');
+    }
+    bits += value.toString(2).padStart(5, '0');
+  }
+
+  const bytes: number[] = [];
+  for (let index = 0; index + 8 <= bits.length; index += 8) {
+    bytes.push(parseInt(bits.slice(index, index + 8), 2));
+  }
+
+  return new Uint8Array(bytes);
+}
+
+async function generateTOTPCode(secretKey: Uint8Array, counter: number): Promise<string> {
+  const buffer = new ArrayBuffer(8);
+  const view = new DataView(buffer);
+  view.setUint32(0, Math.floor(counter / 0x100000000), false);
+  view.setUint32(4, counter >>> 0, false);
+  const rawSecret = secretKey.slice().buffer as ArrayBuffer;
+
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    rawSecret,
+    { name: 'HMAC', hash: 'SHA-1' },
+    false,
+    ['sign'],
+  );
+
+  const signature = new Uint8Array(await crypto.subtle.sign('HMAC', cryptoKey, buffer));
+  const offset = signature[signature.length - 1] & 0x0f;
+  const binaryCode =
+    ((signature[offset] & 0x7f) << 24) |
+    ((signature[offset + 1] & 0xff) << 16) |
+    ((signature[offset + 2] & 0xff) << 8) |
+    (signature[offset + 3] & 0xff);
+
+  return String(binaryCode % 1000000).padStart(6, '0');
 }
 
 // ── Security Headers for Netlify/Vercel ─────────────────────────────────────
@@ -426,3 +506,4 @@ export const Security = {
 };
 
 export default Security;
+

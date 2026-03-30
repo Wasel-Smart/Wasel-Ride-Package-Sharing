@@ -98,7 +98,7 @@ src/
 ## Environment Variables
 
 See `.env.example` for all required and optional variables.  
-Use `VITE_EDGE_FUNCTION_NAME` when your backend edge function name differs from the default slug, `VITE_API_URL` for a custom API base, and `VITE_SUPPORT_WHATSAPP_NUMBER` / `VITE_AUTH_CALLBACK_PATH` for production auth and support routing.
+Use `VITE_EDGE_FUNCTION_NAME` when your backend edge function name differs from the default slug, `VITE_API_URL` for a custom API base, `VITE_SUPPORT_WHATSAPP_NUMBER` / `VITE_AUTH_CALLBACK_PATH` for production auth and support routing, and `VITE_ENABLE_TWO_FACTOR_AUTH=true` only after a secure backend verifier is in place.
 **Never commit `.env` files.** They are in `.gitignore`.
 
 ---
