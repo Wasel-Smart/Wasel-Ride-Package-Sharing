@@ -5,6 +5,36 @@ function canUseEdgeApi(): boolean {
   return Boolean(API_URL && publicAnonKey);
 }
 
+function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'generic'): string {
+  const lower = message.toLowerCase();
+
+  if (
+    lower.includes('invalid login credentials') ||
+    lower.includes('invalid credentials') ||
+    lower.includes('authentication failed') ||
+    lower.includes('wrong email') ||
+    lower.includes('wrong password')
+  ) {
+    return 'Incorrect email or password.';
+  }
+
+  if (lower.includes('email not confirmed')) {
+    return 'Please confirm your email before signing in.';
+  }
+
+  if (
+    lower.includes('already been registered') ||
+    lower.includes('already registered') ||
+    lower.includes('user already exists')
+  ) {
+    return 'This email is already registered.';
+  }
+
+  if (context === 'signin') return 'Sign in failed. Please try again.';
+  if (context === 'signup') return 'Sign up failed. Please try again.';
+  return message || 'Request failed.';
+}
+
 function requireSupabase() {
   if (!supabase) {
     throw new Error('Supabase auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
@@ -54,7 +84,7 @@ export const authAPI = {
           errorData.error?.includes('already been registered') ||
           errorData.error?.includes('User already registered')
         ) {
-          throw new Error('EMAIL_ALREADY_EXISTS');
+          throw new Error('This email is already registered.');
         }
 
         throw new Error(errorData.error || `Server error: ${response.status}`);
@@ -62,7 +92,7 @@ export const authAPI = {
 
       return await response.json();
     } catch (error) {
-      if (error instanceof Error && error.message === 'EMAIL_ALREADY_EXISTS') {
+      if (error instanceof Error && error.message === 'This email is already registered.') {
         throw error;
       }
 
@@ -77,7 +107,9 @@ export const authAPI = {
         },
       });
 
-      if (fallbackError) throw fallbackError;
+      if (fallbackError) {
+        throw new Error(normalizeAuthError(fallbackError.message, 'signup'));
+      }
       return data;
     }
   },
@@ -180,7 +212,7 @@ export const authAPI = {
     const client = requireSupabase();
     const { data, error } = await client.auth.signInWithPassword({ email, password });
 
-    if (error) throw error;
+    if (error) throw new Error(normalizeAuthError(error.message, 'signin'));
     return data;
   },
 

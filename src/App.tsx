@@ -81,7 +81,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
           textAlign: 'center',
         }}
       >
-        <div style={{ fontSize: '3rem', marginBottom: 16 }}>⚠️</div>
+        <div style={{ fontSize: '3rem', marginBottom: 16, fontWeight: 900 }}>!</div>
         <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0B1D45', marginBottom: 8 }}>
           Something went wrong
         </h2>
