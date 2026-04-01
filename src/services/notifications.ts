@@ -1,5 +1,13 @@
 import { API_URL, fetchWithRetry, getAuthDetails } from './core';
 import {
+  buildDeliveryPlan,
+  getCommunicationCapabilities,
+  getCommunicationPreferences,
+  queueCommunicationDeliveries,
+  type CommunicationChannel,
+  type DeliveryQueueRequest,
+} from './communicationPreferences';
+import {
   createDirectNotification,
   getDirectNotifications,
   markDirectNotificationAsRead,
@@ -19,6 +27,27 @@ type StoredNotification = {
   read?: boolean;
   created_at: string;
   source?: 'local' | 'server';
+};
+
+type NotificationCreateInput = {
+  title: string;
+  message: string;
+  type: string;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  action_url?: string;
+  channels?: CommunicationChannel[];
+  contact?: {
+    email?: string | null;
+    phone?: string | null;
+  };
+};
+
+type NotificationCreateResult = {
+  success: boolean;
+  source: 'local' | 'server';
+  deliveriesQueued?: number;
+  deliverySource?: 'none' | 'local' | 'server';
+  channels?: CommunicationChannel[];
 };
 
 function canUseEdgeApi(): boolean {
@@ -92,6 +121,78 @@ function markLocalNotificationAsRead(notificationId: string): void {
         : item
     )),
   );
+}
+
+async function queueSecondaryDeliveries(args: {
+  userId?: string | null;
+  notificationId?: string;
+  type: string;
+  title: string;
+  message: string;
+  explicitChannels?: CommunicationChannel[];
+  contact?: {
+    email?: string | null;
+    phone?: string | null;
+  };
+}): Promise<Pick<NotificationCreateResult, 'deliveriesQueued' | 'deliverySource' | 'channels'>> {
+  const preferences = await getCommunicationPreferences(args.userId);
+  const capabilities = getCommunicationCapabilities(args.contact);
+  const channels = buildDeliveryPlan({
+    type: args.type,
+    preferences,
+    capabilities,
+    explicitChannels: args.explicitChannels,
+  }).filter(
+    (channel): channel is DeliveryQueueRequest['channel'] =>
+      channel !== 'in_app' && channel !== 'push',
+  );
+
+  if (channels.length === 0) {
+    return { deliveriesQueued: 0, deliverySource: 'none', channels: [] };
+  }
+
+  const requests: DeliveryQueueRequest[] = [];
+
+  for (const channel of channels) {
+    if (channel === 'email' && args.contact?.email) {
+      requests.push({
+        channel,
+        destination: args.contact.email,
+        subject: args.title,
+        body: args.message,
+        notificationId: args.notificationId,
+        metadata: { type: args.type },
+      });
+      continue;
+    }
+
+    if ((channel === 'sms' || channel === 'whatsapp') && args.contact?.phone) {
+      requests.push({
+        channel,
+        destination: args.contact.phone,
+        subject: args.title,
+        body: args.message,
+        notificationId: args.notificationId,
+        metadata: { type: args.type },
+      });
+    }
+  }
+
+  if (requests.length === 0) {
+    return { deliveriesQueued: 0, deliverySource: 'none', channels: [] };
+  }
+
+  const result = await queueCommunicationDeliveries({
+    userId: args.userId,
+    notificationId: args.notificationId,
+    requests,
+  });
+
+  return {
+    deliveriesQueued: result.queued,
+    deliverySource: result.source,
+    channels,
+  };
 }
 
 export const notificationsAPI = {
@@ -195,13 +296,7 @@ export const notificationsAPI = {
     }
   },
 
-  async createNotification(data: {
-    title: string;
-    message: string;
-    type: string;
-    priority?: 'low' | 'medium' | 'high' | 'urgent';
-    action_url?: string;
-  }) {
+  async createNotification(data: NotificationCreateInput): Promise<NotificationCreateResult> {
     const localNotifications = readLocalNotifications();
     let token: string | null = null;
     let userId: string | null = null;
@@ -224,7 +319,7 @@ export const notificationsAPI = {
         created_at: new Date().toISOString(),
         source: 'local',
       }, ...localNotifications]));
-      return { success: true, source: 'local' };
+      return { success: true, source: 'local', deliveriesQueued: 0, deliverySource: 'none', channels: ['in_app'] };
     }
 
     const localDraft: StoredNotification = {
@@ -243,7 +338,14 @@ export const notificationsAPI = {
 
     if (!token || !userId) {
       writeLocalNotifications(sortNotifications([localDraft, ...localNotifications]));
-      return { success: true, source: 'local' };
+      const deliveryResult = await queueSecondaryDeliveries({
+        type: data.type,
+        title: data.title,
+        message: data.message,
+        explicitChannels: data.channels,
+        contact: data.contact,
+      });
+      return { success: true, source: 'local', ...deliveryResult };
     }
 
     if (!canUseEdgeApi()) {
@@ -257,19 +359,38 @@ export const notificationsAPI = {
           action_url: data.action_url,
         });
 
+        const notificationId = String(created?.id ?? localDraft.id);
         writeLocalNotifications(sortNotifications([
           {
             ...localDraft,
-            id: String(created?.id ?? localDraft.id),
+            id: notificationId,
             source: 'server',
           },
           ...localNotifications,
         ]));
 
-        return { success: true, source: 'server' };
+        const deliveryResult = await queueSecondaryDeliveries({
+          userId,
+          notificationId,
+          type: data.type,
+          title: data.title,
+          message: data.message,
+          explicitChannels: data.channels,
+          contact: data.contact,
+        });
+        return { success: true, source: 'server', ...deliveryResult };
       } catch {
         writeLocalNotifications(sortNotifications([localDraft, ...localNotifications]));
-        return { success: false, source: 'local' };
+        const deliveryResult = await queueSecondaryDeliveries({
+          userId,
+          notificationId: localDraft.id,
+          type: data.type,
+          title: data.title,
+          message: data.message,
+          explicitChannels: data.channels,
+          contact: data.contact,
+        });
+        return { success: false, source: 'local', ...deliveryResult };
       }
     }
 
@@ -288,20 +409,39 @@ export const notificationsAPI = {
 
       if (!response.ok) {
         writeLocalNotifications(sortNotifications([localDraft, ...localNotifications]));
-        return { success: false, source: 'local' };
+        const deliveryResult = await queueSecondaryDeliveries({
+          userId,
+          notificationId: localDraft.id,
+          type: data.type,
+          title: data.title,
+          message: data.message,
+          explicitChannels: data.channels,
+          contact: data.contact,
+        });
+        return { success: false, source: 'local', ...deliveryResult };
       }
 
       const server = await response.json().catch(() => ({}));
+      const notificationId = String(server?.notification?.id ?? localDraft.id);
       writeLocalNotifications(sortNotifications([
         {
           ...localDraft,
-          id: String(server?.notification?.id ?? localDraft.id),
+          id: notificationId,
           source: 'server',
         },
         ...localNotifications,
       ]));
 
-      return { success: true, source: 'server' };
+      const deliveryResult = await queueSecondaryDeliveries({
+        userId,
+        notificationId,
+        type: data.type,
+        title: data.title,
+        message: data.message,
+        explicitChannels: data.channels,
+        contact: data.contact,
+      });
+      return { success: true, source: 'server', ...deliveryResult };
     } catch {
       try {
         const created = await createDirectNotification({
@@ -313,19 +453,38 @@ export const notificationsAPI = {
           action_url: data.action_url,
         });
 
+        const notificationId = String(created?.id ?? localDraft.id);
         writeLocalNotifications(sortNotifications([
           {
             ...localDraft,
-            id: String(created?.id ?? localDraft.id),
+            id: notificationId,
             source: 'server',
           },
           ...localNotifications,
         ]));
 
-        return { success: true, source: 'server' };
+        const deliveryResult = await queueSecondaryDeliveries({
+          userId,
+          notificationId,
+          type: data.type,
+          title: data.title,
+          message: data.message,
+          explicitChannels: data.channels,
+          contact: data.contact,
+        });
+        return { success: true, source: 'server', ...deliveryResult };
       } catch {
         writeLocalNotifications(sortNotifications([localDraft, ...localNotifications]));
-        return { success: false, source: 'local' };
+        const deliveryResult = await queueSecondaryDeliveries({
+          userId,
+          notificationId: localDraft.id,
+          type: data.type,
+          title: data.title,
+          message: data.message,
+          explicitChannels: data.channels,
+          contact: data.contact,
+        });
+        return { success: false, source: 'local', ...deliveryResult };
       }
     }
   },

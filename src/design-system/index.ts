@@ -1,31 +1,32 @@
 /**
- * Wasel Design System — Single Source of Truth
+ * Wasel Design System — Single Source of Truth v2
  *
- * Import everything from here instead of scattered locations:
+ * Import everything from here:
  *
- *   import { WaselColors, WaselTokens, WaselLogo, WaselBadge } from '@/design-system';
- *
- * Sources consolidated:
- *  - src/styles/wasel-design-system.ts   → WaselColors, WaselTypography, WaselSpacing
- *  - src/tokens/wasel-tokens.ts          → WaselTokens (design tokens)
- *  - src/utils/wasel-ds.ts               → C, F, R, SH, GRAD, GLOBAL_STYLES (layout helpers)
- *  - src/styles/wasel-page-theme.ts      → PAGE_DS (page-level theme)
- *  - src/components/wasel-ds/WaselLogo   → WaselLogo component
- *  - src/components/wasel-ui/WaselBadge  → WaselBadge component
+ *   import { C, R, TYPE, WaselButton, WaselInput, WaselCard, WaselBadge } from '@/design-system';
  */
 
 // ── Token layer ───────────────────────────────────────────────────────────────
 export * from '../tokens/wasel-tokens';
 
-// ── Color / typography / spacing constants ────────────────────────────────────
-export * from '../styles/wasel-design-system';
-
-// ── Page-level theme (DS shorthand used in service pages) ────────────────────
-export * from '../styles/wasel-page-theme';
-
-// ── Layout helpers (C, F, R, SH, GRAD, GLOBAL_STYLES) ───────────────────────
+// ── Primary token source (C, R, TYPE, SPACE, SH, ANIM, etc.) ─────────────────
+// wasel-ds.ts is the canonical token file. wasel-design-system.ts re-exports
+// a subset for legacy consumers — both are kept for compat.
 export * from '../utils/wasel-ds';
 
+// ── Extended colour / typography / spacing constants ─────────────────────────
+// (WaselColors, WaselTypography, WaselSpacing, WaselRadius, WaselAnimations …)
+export * from '../styles/wasel-design-system';
+
+// ── Page-level theme shorthand ───────────────────────────────────────────────
+export * from '../styles/wasel-page-theme';
+
+// ── Auth utilities (friendlyAuthError, pwStrength) ───────────────────────────
+export { friendlyAuthError, pwStrength } from '../utils/authHelpers';
+
 // ── Components ────────────────────────────────────────────────────────────────
-export { WaselLogo } from '../components/wasel-ds/WaselLogo';
-export { WaselBadge } from '../components/wasel-ui/WaselBadge';
+export { WaselLogo }   from '../components/wasel-ds/WaselLogo';
+export { WaselBadge }  from '../components/wasel-ui/WaselBadge';
+export { WaselButton } from '../components/wasel-ui/WaselButton';
+export { WaselInput }  from '../components/wasel-ui/WaselInput';
+export { WaselCard }   from '../components/wasel-ui/WaselCard';

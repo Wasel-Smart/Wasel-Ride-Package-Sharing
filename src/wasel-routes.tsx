@@ -266,8 +266,8 @@ const buildMainChildren = () => [
   // ── Rides — FindRidePage & OfferRidePage still live in WaselServicePage
   //            until they are individually migrated (they share type Ride and
   //            a lot of internal state logic that benefits from a separate pass).
-  { path: 'find-ride',  lazy: lazy(() => import('./pages/WaselServicePage'), 'FindRidePage') },
-  { path: 'offer-ride', lazy: lazy(() => import('./pages/WaselServicePage'), 'OfferRidePage') },
+  { path: 'find-ride',  lazy: lazy(() => import('./features/rides/FindRidePage')) },
+  { path: 'offer-ride', lazy: lazy(() => import('./features/rides/OfferRidePage')) },
   { path: 'post-ride',  Component: () => <RedirectTo to="/app/offer-ride" /> },
 
   // ── My Trips ──────────────────────────────────────────────────────────────
@@ -286,7 +286,7 @@ const buildMainChildren = () => [
   { path: 'bus', lazy: lazy(() => import('./features/bus/BusPage'), 'BusPage') },
 
   // ── Packages / Awasel — still in WaselServicePage pending migration ───────
-  { path: 'packages',     lazy: lazy(() => import('./pages/WaselServicePage'), 'PackagesPage') },
+  { path: 'packages',     lazy: lazy(() => import('./features/packages/PackagesPage')) },
   { path: 'awasel/send',  Component: () => <RedirectTo to="/app/packages" /> },
   { path: 'awasel/track', Component: () => <RedirectTo to="/app/packages" /> },
 
@@ -299,7 +299,7 @@ const buildMainChildren = () => [
   { path: 'services/school',    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
   { path: 'innovation-hub',     lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
   { path: 'analytics',          lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
-  { path: 'mobility-os',        lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
+  { path: 'mobility-os',        lazy: lazy(() => import('./features/mobility-os')) },
   { path: 'ai-intelligence',    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
 
   // ── Wallet ────────────────────────────────────────────────────────────────

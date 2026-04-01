@@ -1,9 +1,11 @@
 import { API_URL, fetchWithRetry, getAuthDetails } from './core';
-import { createDirectPackage, getDirectPackageByTrackingId } from './directSupabase';
+import { createDirectPackage, getDirectPackageByTrackingId, updateDirectPackageStatus } from './directSupabase';
+import { trackGrowthEvent } from './growthEngine';
 import { tripsAPI } from './trips';
 
 export interface PostedRide {
   id: string;
+  ownerId?: string;
   from: string;
   to: string;
   date: string;
@@ -18,9 +20,16 @@ export interface PostedRide {
   packageCapacity: 'small' | 'medium' | 'large';
   packageNote: string;
   createdAt: string;
+  status?: 'active' | 'cancelled' | 'completed';
 }
 
 export type PackageStatus = 'searching' | 'matched' | 'in_transit' | 'delivered';
+
+export interface PackageVerification {
+  senderCodeSharedAt?: string;
+  riderPickupConfirmedAt?: string;
+  receiverDeliveryConfirmedAt?: string;
+}
 
 export interface PackageRequest {
   id: string;
@@ -37,6 +46,7 @@ export interface PackageRequest {
   matchedDriver?: string;
   status: PackageStatus;
   createdAt: string;
+  verification: PackageVerification;
   timeline: Array<{ label: string; complete: boolean }>;
 }
 
@@ -110,17 +120,22 @@ function normalizeStatus(value: unknown, matchedRideId?: string): PackageStatus 
   return matchedRideId ? 'matched' : 'searching';
 }
 
-function buildTimeline(status: PackageStatus, matchedRideId?: string): Array<{ label: string; complete: boolean }> {
+function buildTimeline(
+  status: PackageStatus,
+  matchedRideId?: string,
+  verification: PackageVerification = {},
+): Array<{ label: string; complete: boolean }> {
   const matched = Boolean(matchedRideId) || status !== 'searching';
-  const inTransit = status === 'in_transit' || status === 'delivered';
-  const delivered = status === 'delivered';
+  const senderShared = Boolean(verification.senderCodeSharedAt);
+  const inTransit = Boolean(verification.riderPickupConfirmedAt) || status === 'in_transit' || status === 'delivered';
+  const delivered = Boolean(verification.receiverDeliveryConfirmedAt) || status === 'delivered';
 
   return [
     { label: 'Request received', complete: true },
     { label: matched ? 'Matched to a rider trip' : 'Searching for a rider trip', complete: matched },
-    { label: 'Share handoff code', complete: matched },
-    { label: 'Rider en route with parcel', complete: inTransit },
-    { label: 'Delivered', complete: delivered },
+    { label: 'Sender shared OTP handoff code', complete: senderShared },
+    { label: 'Rider pickup confirmed', complete: inTransit },
+    { label: 'Receiver delivery confirmed', complete: delivered },
   ];
 }
 
@@ -137,6 +152,8 @@ function normalizeServerRide(raw: Record<string, unknown>, fallback: PostedRide)
     carModel: String(raw.vehicle_model ?? raw.carModel ?? fallback.carModel),
     note: String(raw.notes ?? raw.note ?? fallback.note),
     createdAt: String(raw.created_at ?? fallback.createdAt),
+    ownerId: String(raw.owner_id ?? raw.ownerId ?? fallback.ownerId ?? '').trim() || fallback.ownerId,
+    status: raw.status === 'cancelled' || raw.status === 'completed' ? raw.status : (fallback.status ?? 'active'),
   };
 }
 
@@ -162,6 +179,8 @@ function normalizeLocalRide(raw: Partial<PostedRide>): PostedRide | null {
     packageCapacity: (raw.packageCapacity === 'large' || raw.packageCapacity === 'small' ? raw.packageCapacity : 'medium'),
     packageNote: String(raw.packageNote ?? ''),
     createdAt: String(raw.createdAt ?? new Date().toISOString()),
+    ownerId: String(raw.ownerId ?? '').trim() || undefined,
+    status: raw.status === 'cancelled' || raw.status === 'completed' ? raw.status : 'active',
   };
 }
 
@@ -188,7 +207,16 @@ function normalizeServerPackage(raw: Record<string, unknown>, fallback: PackageR
     matchedDriver: String(raw.driver_name ?? raw.matchedDriver ?? fallback.matchedDriver ?? '').trim() || fallback.matchedDriver,
     status,
     createdAt: String(raw.created_at ?? fallback.createdAt),
-    timeline: buildTimeline(status, matchedRideId),
+    verification: {
+      senderCodeSharedAt: String(raw.sender_code_shared_at ?? raw.senderCodeSharedAt ?? fallback.verification?.senderCodeSharedAt ?? '').trim() || undefined,
+      riderPickupConfirmedAt: String(raw.rider_pickup_confirmed_at ?? raw.riderPickupConfirmedAt ?? fallback.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
+      receiverDeliveryConfirmedAt: String(raw.receiver_delivery_confirmed_at ?? raw.receiverDeliveryConfirmedAt ?? fallback.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
+    },
+    timeline: buildTimeline(status, matchedRideId, {
+      senderCodeSharedAt: String(raw.sender_code_shared_at ?? raw.senderCodeSharedAt ?? fallback.verification?.senderCodeSharedAt ?? '').trim() || undefined,
+      riderPickupConfirmedAt: String(raw.rider_pickup_confirmed_at ?? raw.riderPickupConfirmedAt ?? fallback.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
+      receiverDeliveryConfirmedAt: String(raw.receiver_delivery_confirmed_at ?? raw.receiverDeliveryConfirmedAt ?? fallback.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
+    }),
   };
 }
 
@@ -217,12 +245,21 @@ function normalizeLocalPackage(raw: Partial<PackageRequest>): PackageRequest | n
     matchedDriver: String(raw.matchedDriver ?? '').trim() || undefined,
     status,
     createdAt: String(raw.createdAt ?? new Date().toISOString()),
+    verification: {
+      senderCodeSharedAt: String(raw.verification?.senderCodeSharedAt ?? '').trim() || undefined,
+      riderPickupConfirmedAt: String(raw.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
+      receiverDeliveryConfirmedAt: String(raw.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
+    },
     timeline: Array.isArray(raw.timeline) && raw.timeline.length > 0
       ? raw.timeline.map((step) => ({
           label: String(step.label ?? ''),
           complete: Boolean(step.complete),
         }))
-      : buildTimeline(status, matchedRideId),
+      : buildTimeline(status, matchedRideId, {
+          senderCodeSharedAt: String(raw.verification?.senderCodeSharedAt ?? '').trim() || undefined,
+          riderPickupConfirmedAt: String(raw.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
+          receiverDeliveryConfirmedAt: String(raw.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
+        }),
   };
 }
 
@@ -286,6 +323,7 @@ export async function createConnectedRide(input: Omit<PostedRide, 'id' | 'create
     ...input,
     id: makeId('ride'),
     createdAt: new Date().toISOString(),
+    status: input.status ?? 'active',
   };
 
   try {
@@ -307,11 +345,49 @@ export async function createConnectedRide(input: Omit<PostedRide, 'id' | 'create
 
     const created = normalizeServerRide(server as unknown as Record<string, unknown>, ride);
     saveRides([created], getConnectedRides());
+    void trackGrowthEvent({
+      userId: input.ownerId,
+      eventName: 'ride_offer_created',
+      funnelStage: 'selected',
+      serviceType: 'ride',
+      from: created.from,
+      to: created.to,
+      valueJod: created.price,
+      metadata: { seats: created.seats, acceptsPackages: created.acceptsPackages },
+    });
     return created;
   } catch {
     saveRides([ride], getConnectedRides());
+    void trackGrowthEvent({
+      userId: input.ownerId,
+      eventName: 'ride_offer_created',
+      funnelStage: 'selected',
+      serviceType: 'ride',
+      from: ride.from,
+      to: ride.to,
+      valueJod: ride.price,
+      metadata: { seats: ride.seats, acceptsPackages: ride.acceptsPackages, source: 'local' },
+    });
     return ride;
   }
+}
+
+export function updateConnectedRide(
+  rideId: string,
+  updates: Partial<Pick<PostedRide, 'seats' | 'status' | 'note' | 'date' | 'time'>>,
+): PostedRide | null {
+  const rides = getConnectedRides();
+  const target = rides.find((ride) => ride.id === rideId);
+  if (!target) return null;
+
+  const updated: PostedRide = {
+    ...target,
+    ...updates,
+    seats: typeof updates.seats === 'number' ? Math.max(0, updates.seats) : target.seats,
+  };
+
+  saveRides(rides.map((ride) => (ride.id === rideId ? updated : ride)));
+  return updated;
 }
 
 export function getConnectedPackages(): PackageRequest[] {
@@ -374,7 +450,8 @@ export async function createConnectedPackage(input: {
     matchedDriver: matchedRide ? pickDriverName(matchedRide.carModel) : undefined,
     status,
     createdAt: new Date().toISOString(),
-    timeline: buildTimeline(status, matchedRide?.id),
+    verification: {},
+    timeline: buildTimeline(status, matchedRide?.id, {}),
   };
 
   try {
@@ -394,6 +471,19 @@ export async function createConnectedPackage(input: {
         const server = await response.json();
         const created = normalizeServerPackage(server.package as Record<string, unknown>, pkg);
         savePackages([created], getConnectedPackages());
+        void trackGrowthEvent({
+          userId,
+          eventName: 'package_request_created',
+          funnelStage: created.matchedRideId ? 'selected' : 'searched',
+          serviceType: 'package',
+          from: created.from,
+          to: created.to,
+          valueJod: 5,
+          metadata: {
+            trackingId: created.trackingId,
+            packageType: created.packageType,
+          },
+        });
         return created;
       }
     } else {
@@ -415,6 +505,19 @@ export async function createConnectedPackage(input: {
         weight: sanitizeWeight(String(createdDirect.weight_kg ?? pkg.weight)),
       });
       savePackages([created], getConnectedPackages());
+      void trackGrowthEvent({
+        userId,
+        eventName: 'package_request_created',
+        funnelStage: created.matchedRideId ? 'selected' : 'searched',
+        serviceType: 'package',
+        from: created.from,
+        to: created.to,
+        valueJod: 5,
+        metadata: {
+          trackingId: created.trackingId,
+          packageType: created.packageType,
+        },
+      });
       return created;
     }
   } catch {
@@ -422,6 +525,19 @@ export async function createConnectedPackage(input: {
   }
 
   savePackages([pkg], getConnectedPackages());
+  void trackGrowthEvent({
+    eventName: 'package_request_created',
+    funnelStage: pkg.matchedRideId ? 'selected' : 'searched',
+    serviceType: 'package',
+    from: pkg.from,
+    to: pkg.to,
+    valueJod: 5,
+    metadata: {
+      trackingId: pkg.trackingId,
+      packageType: pkg.packageType,
+      source: 'local',
+    },
+  });
   return pkg;
 }
 
@@ -476,9 +592,11 @@ export async function getPackageByTrackingId(trackingId: string): Promise<Packag
       matchedDriver: String(server.driver_name ?? '').trim() || undefined,
       status: normalizeStatus(server.status, String(server.trip_id ?? '').trim() || undefined),
       createdAt: String(server.created_at ?? new Date().toISOString()),
+      verification: {},
       timeline: buildTimeline(
         normalizeStatus(server.status, String(server.trip_id ?? '').trim() || undefined),
         String(server.trip_id ?? '').trim() || undefined,
+        {},
       ),
     };
     const normalizedPkg = normalizeServerPackage(server as Record<string, unknown>, fallback);
@@ -500,4 +618,71 @@ export function getConnectedStats() {
     packageEnabledRides,
     matchedPackages: packages.filter((pkg) => !!pkg.matchedRideId).length,
   };
+}
+
+export type PackageVerificationAction = 'share_code' | 'confirm_pickup' | 'confirm_delivery';
+
+export function updatePackageVerification(
+  trackingId: string,
+  action: PackageVerificationAction,
+): PackageRequest | null {
+  const normalizedTrackingId = trackingId.trim().toUpperCase();
+  if (!normalizedTrackingId) return null;
+
+  const packages = getConnectedPackages();
+  const target = packages.find((item) => item.trackingId === normalizedTrackingId);
+  if (!target) return null;
+
+  const now = new Date().toISOString();
+  const verification: PackageVerification = { ...target.verification };
+  let status = target.status;
+
+  if (action === 'share_code') {
+    verification.senderCodeSharedAt = verification.senderCodeSharedAt ?? now;
+    if (status === 'searching' && target.matchedRideId) status = 'matched';
+  }
+
+  if (action === 'confirm_pickup') {
+    verification.senderCodeSharedAt = verification.senderCodeSharedAt ?? now;
+    verification.riderPickupConfirmedAt = verification.riderPickupConfirmedAt ?? now;
+    status = 'in_transit';
+  }
+
+  if (action === 'confirm_delivery') {
+    verification.senderCodeSharedAt = verification.senderCodeSharedAt ?? now;
+    verification.riderPickupConfirmedAt = verification.riderPickupConfirmedAt ?? now;
+    verification.receiverDeliveryConfirmedAt = verification.receiverDeliveryConfirmedAt ?? now;
+    status = 'delivered';
+  }
+
+  const updated: PackageRequest = {
+    ...target,
+    status,
+    verification,
+    timeline: buildTimeline(status, target.matchedRideId, verification),
+  };
+
+  savePackages(
+    packages.map((item) => (item.trackingId === normalizedTrackingId ? updated : item)),
+  );
+
+  void updateDirectPackageStatus(
+    normalizedTrackingId,
+    status === 'searching' ? 'matched' : status,
+  ).catch(() => {});
+
+  void trackGrowthEvent({
+    eventName: 'package_verification_updated',
+    funnelStage: status === 'delivered' ? 'completed' : status === 'in_transit' ? 'booked' : 'selected',
+    serviceType: 'package',
+    from: updated.from,
+    to: updated.to,
+    metadata: {
+      trackingId: updated.trackingId,
+      action,
+      status,
+    },
+  });
+
+  return updated;
 }

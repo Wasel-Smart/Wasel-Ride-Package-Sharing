@@ -2,7 +2,7 @@
  * LocalAuth
  *
  * Uses real Supabase auth/session data when configured.
- * Falls back to a local demo profile only when demo mode is explicitly enabled.
+ * Local storage only persists authenticated profile state for the active user.
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { authAPI } from '../services/auth';
@@ -26,8 +26,9 @@ export interface WaselUser {
   joinedAt: string;
   emailVerified: boolean;
   phoneVerified: boolean;
+  twoFactorEnabled: boolean;
   trustScore: number;
-  backendMode: 'supabase' | 'demo';
+  backendMode: 'supabase';
 }
 
 function computeTrustScore(user: Pick<WaselUser, 'verified' | 'sanadVerified' | 'emailVerified' | 'phoneVerified' | 'trips' | 'rating'>) {
@@ -38,52 +39,6 @@ function computeTrustScore(user: Pick<WaselUser, 'verified' | 'sanadVerified' | 
   score += Math.min(user.trips, 50) * 0.4;
   score += Math.max(0, Math.min(user.rating, 5)) * 2;
   return Math.max(0, Math.min(100, Math.round(score)));
-}
-
-function createDemoUserProfile(input: {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  verified: boolean;
-  balance: number;
-  trips: number;
-  rating: number;
-}): WaselUser {
-  const emailVerified = true;
-  const phoneVerified = Boolean(input.phone);
-  const sanadVerified = input.verified;
-  const verificationLevel = sanadVerified
-    ? 'level_3'
-    : phoneVerified
-      ? 'level_1'
-      : 'level_0';
-
-  const baseUser: WaselUser = {
-    id: input.id,
-    name: input.name,
-    email: input.email,
-    phone: input.phone,
-    role: 'rider',
-    balance: input.balance,
-    rating: input.rating,
-    trips: input.trips,
-    verified: input.verified,
-    sanadVerified,
-    verificationLevel,
-    walletStatus: 'active',
-    avatar: undefined,
-    joinedAt: new Date().toISOString().slice(0, 10),
-    emailVerified,
-    phoneVerified,
-    trustScore: 0,
-    backendMode: 'demo',
-  };
-
-  return {
-    ...baseUser,
-    trustScore: computeTrustScore(baseUser),
-  };
 }
 
 function mapBackendProfile({
@@ -102,8 +57,8 @@ function mapBackendProfile({
   const phone = profile?.phone_number ?? authUser?.phone ?? undefined;
   const verified = Boolean(profile?.verified ?? profile?.sanad_verified ?? false);
   const sanadVerified = Boolean(profile?.sanad_verified ?? verified);
-  const emailVerified = Boolean(authUser?.email_confirmed_at || authUser?.confirmed_at || authUser?.user_metadata?.emailVerified);
-  const phoneVerified = Boolean(profile?.phone_verified ?? authUser?.phone_confirmed_at ?? phone);
+  const emailVerified = Boolean(profile?.email_verified ?? authUser?.email_confirmed_at ?? authUser?.confirmed_at ?? false);
+  const phoneVerified = Boolean(profile?.phone_verified ?? authUser?.phone_confirmed_at ?? false);
   const verificationLevel = profile?.verification_level || (sanadVerified ? 'level_3' : phoneVerified ? 'level_1' : 'level_0');
   const walletStatus = profile?.wallet_status || 'active';
   const role = profile?.role || 'rider';
@@ -125,6 +80,7 @@ function mapBackendProfile({
     joinedAt: String(profile?.created_at ?? authUser?.created_at ?? new Date().toISOString()).slice(0, 10),
     emailVerified,
     phoneVerified,
+    twoFactorEnabled: Boolean(profile?.two_factor_enabled),
     trustScore: 0,
     backendMode: 'supabase',
   };
@@ -152,7 +108,7 @@ function loadUser(): WaselUser | null {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as WaselUser;
-    if (parsed.backendMode === 'demo' && !getConfig().enableDemoAccount) {
+    if (parsed.backendMode !== 'supabase') {
       localStorage.removeItem(STORAGE_KEY);
       return null;
     }
@@ -187,8 +143,6 @@ function toMessage(error: unknown): string {
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<WaselUser | null>(loadUser);
   const [loading, setLoading] = useState(true);
-  const { enableDemoAccount } = getConfig();
-
   useEffect(() => {
     const cleanup = initSupabaseListeners();
     return cleanup;
@@ -287,25 +241,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         return { error: null };
       }
 
-      // ── Demo mode: accept any non-empty email + password ──────────────
-      if (!enableDemoAccount) {
-        return { error: 'Backend auth is not configured. Set your environment variables or enable demo mode.' };
-      }
-      if (!email.trim() || !password) {
-        return { error: 'Please enter your email and password.' };
-      }
-      const demoUser = createDemoUserProfile({
-        id: `demo-${btoa(email).slice(0, 12)}`,
-        name: email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-        email,
-        verified: false,
-        balance: 0,
-        trips: 0,
-        rating: 0,
-      });
-      setUser(demoUser);
-      saveUser(demoUser);
-      return { error: null };
+      return { error: 'Backend auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
     } catch (error) {
       return { error: toMessage(error) };
     } finally {
@@ -347,26 +283,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         return { error: null };
       }
 
-      // ── Demo mode: create a local profile immediately ────────────────
-      if (!enableDemoAccount) {
-        return { error: 'Backend auth is not configured. Set your environment variables or enable demo mode.' };
-      }
-      if (!name.trim() || !email.trim() || !password) {
-        return { error: 'Please fill in all required fields.' };
-      }
-      const demoUser = createDemoUserProfile({
-        id: `demo-${btoa(email).slice(0, 12)}`,
-        name: name.trim(),
-        email,
-        phone,
-        verified: false,
-        balance: 0,
-        trips: 0,
-        rating: 0,
-      });
-      setUser(demoUser);
-      saveUser(demoUser);
-      return { error: null };
+      return { error: 'Backend auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
     } catch (error) {
       return { error: toMessage(error) };
     } finally {
@@ -391,6 +308,14 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     setUser((prev) => {
       if (!prev) return prev;
       const next = { ...prev, ...updates };
+      next.trustScore = computeTrustScore({
+        verified: next.verified,
+        sanadVerified: next.sanadVerified,
+        emailVerified: next.emailVerified,
+        phoneVerified: next.phoneVerified,
+        trips: next.trips,
+        rating: next.rating,
+      });
       saveUser(next);
       return next;
     });

@@ -31,6 +31,7 @@ import {
   getConnectedPackages,
   getConnectedRides,
   getPackageByTrackingId,
+  updatePackageVerification,
 } from '../../../src/services/journeyLogistics';
 
 function response(data: any, ok = true) {
@@ -125,10 +126,64 @@ describe('journeyLogistics', () => {
     expect(created.timeline.map((step) => step.label)).toEqual([
       'Request received',
       'Matched to a rider trip',
-      'Share handoff code',
-      'Rider en route with parcel',
-      'Delivered',
+      'Sender shared OTP handoff code',
+      'Rider pickup confirmed',
+      'Receiver delivery confirmed',
     ]);
+  });
+
+  it('progresses package verification from OTP handoff to final delivery', async () => {
+    mockCreateTrip.mockResolvedValue({
+      id: 'trip-verify',
+      from_location: 'Amman',
+      to_location: 'Aqaba',
+      departure_date: '2026-04-01',
+      departure_time: '09:00',
+      available_seats: 2,
+      price_per_seat: 8,
+      vehicle_model: 'Toyota Camry',
+      notes: 'Verification route',
+      created_at: '2026-03-27T00:00:00Z',
+    });
+
+    await createConnectedRide({
+      from: 'Amman',
+      to: 'Aqaba',
+      date: '2026-04-01',
+      time: '09:00',
+      seats: 2,
+      price: 8,
+      gender: 'mixed',
+      prayer: false,
+      carModel: 'Toyota Camry',
+      note: 'Verification route',
+      acceptsPackages: true,
+      packageCapacity: 'medium',
+      packageNote: 'Documents only',
+    });
+
+    const created = await createConnectedPackage({
+      from: 'Amman',
+      to: 'Aqaba',
+      weight: '1 kg',
+      note: 'Passport',
+      recipientName: 'Lina',
+      recipientPhone: '+962790000001',
+    });
+
+    const codeShared = updatePackageVerification(created.trackingId, 'share_code');
+    expect(codeShared?.verification.senderCodeSharedAt).toBeTruthy();
+    expect(codeShared?.timeline[2].complete).toBe(true);
+
+    const pickedUp = updatePackageVerification(created.trackingId, 'confirm_pickup');
+    expect(pickedUp?.status).toBe('in_transit');
+    expect(pickedUp?.verification.riderPickupConfirmedAt).toBeTruthy();
+    expect(pickedUp?.timeline[3].complete).toBe(true);
+
+    const delivered = updatePackageVerification(created.trackingId, 'confirm_delivery');
+    expect(delivered?.status).toBe('delivered');
+    expect(delivered?.verification.receiverDeliveryConfirmedAt).toBeTruthy();
+    expect(delivered?.timeline[4].complete).toBe(true);
   });
 
   it('falls back to local package tracking when auth or server is unavailable', async () => {

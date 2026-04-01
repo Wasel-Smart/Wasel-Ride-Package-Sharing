@@ -1620,7 +1620,7 @@ export const translations: Record<Language, any> = {
         availableSeats: 'المقاعد المتاحة',
         pricePerSeat: 'السعر للمقعد',
         departureTime: 'وقت المغادرة',
-        estimatedArrival: 'الوصو�� المتوقع',
+        estimatedArrival: 'الوصول المتوقع',
         meetingPoint: 'نقطة اللقاء',
         dropoffPoint: 'نقطة التوصيل',
         vehicleInfo: 'معلومات المركبة',

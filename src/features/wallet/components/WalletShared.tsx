@@ -1,6 +1,7 @@
 /**
- * WalletShared — Shared sub-components for the WalletDashboard
- * Extracted from the 1000+ line monolith to improve maintainability.
+ * WalletShared
+ *
+ * Shared wallet primitives used across the dashboard surface.
  */
 
 import { motion, AnimatePresence } from 'motion/react';
@@ -11,7 +12,7 @@ import {
 } from 'lucide-react';
 import { WaselColors } from '../../../tokens/wasel-tokens';
 
-// ── TX_ICONS ───────────────────────────────────────────────────────────────
+// Transaction styling by wallet event type
 export const TX_ICONS: Record<string, any> = {
   topup: { icon: Plus, color: WaselColors.success, bg: 'bg-green-500/10' },
   payment: { icon: CreditCard, color: WaselColors.error, bg: 'bg-red-500/10' },
@@ -29,7 +30,18 @@ export const TX_ICONS: Record<string, any> = {
 
 export const PIE_COLORS = ['#04ADBF', '#D9965B', '#22C55E', '#A855F7', '#3B82F6', '#F59E0B', '#EF4444'];
 
-// ── TransactionRow ─────────────────────────────────────────────────────────
+const TX_STATUS_META: Record<string, { label: string; className: string }> = {
+  pending: { label: 'Pending', className: 'text-amber-300 border-amber-400/30 bg-amber-500/10' },
+  processing: { label: 'Processing', className: 'text-sky-300 border-sky-400/30 bg-sky-500/10' },
+  authorized: { label: 'Authorized', className: 'text-cyan-300 border-cyan-400/30 bg-cyan-500/10' },
+  posted: { label: 'Posted', className: 'text-cyan-300 border-cyan-400/30 bg-cyan-500/10' },
+  completed: { label: 'Completed', className: 'text-green-300 border-green-400/30 bg-green-500/10' },
+  captured: { label: 'Captured', className: 'text-green-300 border-green-400/30 bg-green-500/10' },
+  refunded: { label: 'Refunded', className: 'text-sky-300 border-sky-400/30 bg-sky-500/10' },
+  failed: { label: 'Failed', className: 'text-red-300 border-red-400/30 bg-red-500/10' },
+};
+
+// Shared transaction row used across wallet tabs
 export function TransactionRow({ tx, isRTL, jodLabel }: { tx: any; isRTL: boolean; jodLabel: string }) {
   const txType = tx.type || 'payment';
   const iconCfg = TX_ICONS[txType] || TX_ICONS.payment;
@@ -37,6 +49,9 @@ export function TransactionRow({ tx, isRTL, jodLabel }: { tx: any; isRTL: boolea
   const amount = tx.amount ?? 0;
   const isPositive = amount > 0;
   const date = new Date(tx.createdAt || tx.created_at);
+  const statusKey = String(tx.status ?? tx.transaction_status ?? 'completed').toLowerCase();
+  const statusMeta = TX_STATUS_META[statusKey] ?? TX_STATUS_META.completed;
+  const reference = tx.reference || tx.reference_id || tx.externalReference || tx.id;
 
   return (
     <motion.div
@@ -49,9 +64,19 @@ export function TransactionRow({ tx, isRTL, jodLabel }: { tx: any; isRTL: boolea
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground truncate">{tx.description}</p>
-        <p className="text-xs text-muted-foreground">
-          {date.toLocaleDateString(isRTL ? 'ar-JO' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-        </p>
+        <div className="flex flex-wrap items-center gap-2 mt-1">
+          <p className="text-xs text-muted-foreground">
+            {date.toLocaleDateString(isRTL ? 'ar-JO' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          </p>
+          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusMeta.className}`}>
+            {statusMeta.label}
+          </span>
+          {reference ? (
+            <span className="text-[10px] text-muted-foreground/80">
+              Ref {String(reference).slice(-8)}
+            </span>
+          ) : null}
+        </div>
       </div>
       <span className={`text-sm font-bold tabular-nums ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
         {isPositive ? '+' : ''}{amount.toFixed(2)} {jodLabel}
@@ -60,7 +85,7 @@ export function TransactionRow({ tx, isRTL, jodLabel }: { tx: any; isRTL: boolea
   );
 }
 
-// ── ActionModal ────────────────────────────────────────────────────────────
+// Shared modal shell for wallet actions
 export function ActionModal({ show, onClose, title, children }: { show: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
   return (
     <AnimatePresence>

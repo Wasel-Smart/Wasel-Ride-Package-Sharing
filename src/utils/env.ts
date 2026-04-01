@@ -23,24 +23,53 @@ export function hasEnv(key: string): boolean {
   return getEnv(key).length > 0;
 }
 
+function getBooleanEnv(key: string, fallback: boolean): boolean {
+  const value = getEnv(key);
+  if (!value) {
+    return fallback;
+  }
+
+  return value.toLowerCase() === 'true';
+}
+
 export function getConfig() {
   const appUrl = getEnv('VITE_APP_URL', 'http://localhost:3000');
   const supportWhatsAppNumber = getEnv('VITE_SUPPORT_WHATSAPP_NUMBER')
     .replace(/[^\d+]/g, '')
     .trim();
+  const supportEmail = getEnv('VITE_SUPPORT_EMAIL', 'support@wasel.jo').trim();
+  const supportPhoneNumber = getEnv('VITE_SUPPORT_PHONE_NUMBER')
+    .replace(/[^\d+]/g, '')
+    .trim();
+  const supportSmsNumber = getEnv('VITE_SUPPORT_SMS_NUMBER', supportPhoneNumber)
+    .replace(/[^\d+]/g, '')
+    .trim();
   const authCallbackPath = getEnv('VITE_AUTH_CALLBACK_PATH', '/app/auth/callback');
-  const enableDemoAccount = getEnv('VITE_ENABLE_DEMO_DATA', 'false').toLowerCase() === 'true';
-  const enableTwoFactorAuth = getEnv('VITE_ENABLE_TWO_FACTOR_AUTH', 'false').toLowerCase() === 'true';
+  const mode = getEnv('MODE') || getEnv('VITE_MODE') || getEnv('NODE_ENV', 'development');
+  const isProd = mode === 'production';
+  const enableDemoAccount = getBooleanEnv('VITE_ENABLE_DEMO_DATA', false);
+  const enableTwoFactorAuth = getBooleanEnv('VITE_ENABLE_TWO_FACTOR_AUTH', false);
+  const enableEmailNotifications = getBooleanEnv('VITE_ENABLE_EMAIL_NOTIFICATIONS', true);
+  const enableSmsNotifications = getBooleanEnv('VITE_ENABLE_SMS_NOTIFICATIONS', true);
+  const enableWhatsAppNotifications = getBooleanEnv('VITE_ENABLE_WHATSAPP_NOTIFICATIONS', true);
+  const allowDirectSupabaseFallback = getBooleanEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', !isProd);
 
   return {
     appName: getEnv('VITE_APP_NAME', 'Wasel'),
     appUrl,
     supportWhatsAppNumber,
+    supportEmail,
+    supportPhoneNumber,
+    supportSmsNumber,
     authCallbackPath: authCallbackPath.startsWith('/') ? authCallbackPath : `/${authCallbackPath}`,
     enableDemoAccount,
     enableTwoFactorAuth,
-    isProd: getEnv('NODE_ENV') === 'production',
-    isDev: getEnv('NODE_ENV', 'development') !== 'production',
+    enableEmailNotifications,
+    enableSmsNotifications,
+    enableWhatsAppNotifications,
+    allowDirectSupabaseFallback,
+    isProd,
+    isDev: !isProd,
   };
 }
 
@@ -51,10 +80,39 @@ export function getAuthCallbackUrl(origin?: string): string {
 }
 
 export function getWhatsAppSupportUrl(message = 'Hi Wasel'): string {
-  const { supportWhatsAppNumber } = getConfig();
-  if (!supportWhatsAppNumber) {
+  const { supportWhatsAppNumber, enableWhatsAppNotifications } = getConfig();
+  if (!supportWhatsAppNumber || !enableWhatsAppNotifications) {
     return '';
   }
   const encodedMessage = encodeURIComponent(message);
   return `https://wa.me/${supportWhatsAppNumber.replace(/^\+/, '')}?text=${encodedMessage}`;
+}
+
+export function getSupportEmailUrl(subject = 'Wasel Support', body = ''): string {
+  const { supportEmail, enableEmailNotifications } = getConfig();
+  if (!supportEmail || !enableEmailNotifications) {
+    return '';
+  }
+
+  const search = new URLSearchParams();
+  if (subject) search.set('subject', subject);
+  if (body) search.set('body', body);
+  const suffix = search.toString();
+  return `mailto:${supportEmail}${suffix ? `?${suffix}` : ''}`;
+}
+
+export function getSmsSupportUrl(message = 'Hi Wasel'): string {
+  const { supportSmsNumber, enableSmsNotifications } = getConfig();
+  if (!supportSmsNumber || !enableSmsNotifications) {
+    return '';
+  }
+  return `sms:${supportSmsNumber}${message ? `?body=${encodeURIComponent(message)}` : ''}`;
+}
+
+export function getSupportPhoneUrl(): string {
+  const { supportPhoneNumber } = getConfig();
+  if (!supportPhoneNumber) {
+    return '';
+  }
+  return `tel:${supportPhoneNumber}`;
 }

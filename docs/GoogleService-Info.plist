@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  ⚠️  THIS FILE DOES NOT BELONG IN THIS WEB PROJECT.
+
+  GoogleService-Info.plist is the iOS / macOS Firebase config format.
+  This is a web (Vite + React) project — it only needs firebase config
+  via environment variables (VITE_FIREBASE_* in .env), not a plist file.
+
+  WHAT TO DO:
+    1. Verify this file is listed in .gitignore  → it IS: "src/GoogleService-Info.plist"
+    2. Run: git rm --cached src/GoogleService-Info.plist
+       to stop git tracking it if it was ever committed.
+    3. Store your real Firebase credentials in .env (gitignored) or
+       in your CI/CD secrets vault — NOT in source files.
+    4. You can safely delete this file entirely.
+
+  Real credentials must NEVER be committed to version control.
+-->
+<plist version="1.0">
+  <dict>
+    <key>NOTE</key>
+    <string>PLACEHOLDER — real credentials removed. See comment above.</string>
+  </dict>
+</plist>

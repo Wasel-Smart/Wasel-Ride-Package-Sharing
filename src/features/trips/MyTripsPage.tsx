@@ -1,17 +1,37 @@
-/**
- * MyTripsPage - /app/my-trips
- * Connected to locally persisted and live-synced rides/packages.
- */
 import { useMemo, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
+import {
+  ArrowRight,
+  Bus,
+  Car,
+  CheckCircle,
+  ChevronRight,
+  Clock,
+  LifeBuoy,
+  MapPin,
+  Package,
+  Plus,
+  ShieldAlert,
+  Ticket,
+  Wallet,
+  XCircle,
+} from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { getConnectedPackages, getConnectedRides, type PackageRequest, type PostedRide } from '../../services/journeyLogistics';
+import { getStoredBusBookings, type StoredBusBooking } from '../../services/bus';
+import { getConnectedPackages, type PackageRequest } from '../../services/journeyLogistics';
 import {
-  Car, Package, Clock, CheckCircle, XCircle, MapPin, ChevronRight, Plus,
-  Shield, Navigation, Star, ArrowRight,
-} from 'lucide-react';
+  syncRideBookingCompletion,
+  type RideBookingRecord,
+  type RidePaymentStatus,
+} from '../../services/rideLifecycle';
+import {
+  getSupportTickets,
+  type SupportPriority,
+  type SupportStatus,
+  type SupportTicket,
+} from '../../services/supportInbox';
 
 const BG = '#040C18';
 const CARD = 'rgba(255,255,255,0.04)';
@@ -21,33 +41,63 @@ const CYAN = '#00C8E8';
 const GOLD = '#F0A830';
 const GREEN = '#22C55E';
 const RED = '#EF4444';
+const AMBER = '#F59E0B';
 const TEXT = '#EFF6FF';
 const MUTED = 'rgba(148,163,184,0.72)';
 const DIM = 'rgba(148,163,184,0.55)';
 const FONT = "-apple-system,'Inter','Cairo','Tajawal',sans-serif";
 
-type TripStatus = 'upcoming' | 'completed' | 'cancelled';
-type TabKey = 'rides' | 'packages';
+type TripLifecycle = 'active' | 'attention' | 'completed' | 'cancelled';
+type TripKind = 'rides' | 'packages' | 'buses';
 
 interface TripItem {
   id: string;
+  kind: TripKind;
   from: string;
   to: string;
   date: string;
   time: string;
-  price: string;
-  status: TripStatus;
-  seats?: number;
-  driver?: string;
-  rating?: number;
-  trustLabel?: string;
+  title: string;
+  valueLabel: string;
+  lifecycle: TripLifecycle;
+  primaryStatus: string;
+  secondaryStatus?: string;
+  ticketLabel?: string;
+  captainLabel?: string;
+  supportCount: number;
+  paymentStatus?: RidePaymentStatus | 'n/a';
   openPath: string;
 }
 
-const STATUS_CONFIG: Record<TripStatus, { label: string; labelAr: string; color: string; bg: string; icon: ReactNode }> = {
-  upcoming: { label: 'Upcoming', labelAr: 'قادمة', color: CYAN, bg: 'rgba(0,200,232,0.12)', icon: <Clock size={12} /> },
-  completed: { label: 'Completed', labelAr: 'مكتملة', color: GREEN, bg: 'rgba(34,197,94,0.12)', icon: <CheckCircle size={12} /> },
-  cancelled: { label: 'Cancelled', labelAr: 'ملغاة', color: RED, bg: 'rgba(239,68,68,0.12)', icon: <XCircle size={12} /> },
+const lifecycleConfig: Record<TripLifecycle, { label: string; color: string; bg: string; icon: ReactNode }> = {
+  active: { label: 'Active', color: CYAN, bg: 'rgba(0,200,232,0.12)', icon: <Clock size={12} /> },
+  attention: { label: 'Needs attention', color: AMBER, bg: 'rgba(245,158,11,0.12)', icon: <ShieldAlert size={12} /> },
+  completed: { label: 'Completed', color: GREEN, bg: 'rgba(34,197,94,0.12)', icon: <CheckCircle size={12} /> },
+  cancelled: { label: 'Cancelled', color: RED, bg: 'rgba(239,68,68,0.12)', icon: <XCircle size={12} /> },
+};
+
+const paymentConfig: Record<RidePaymentStatus | 'n/a', { label: string; color: string; bg: string }> = {
+  pending: { label: 'Payment pending', color: AMBER, bg: 'rgba(245,158,11,0.12)' },
+  authorized: { label: 'Payment authorized', color: CYAN, bg: 'rgba(0,200,232,0.12)' },
+  captured: { label: 'Settlement captured', color: GREEN, bg: 'rgba(34,197,94,0.12)' },
+  refunded: { label: 'Refund completed', color: CYAN, bg: 'rgba(59,130,246,0.12)' },
+  failed: { label: 'Payment issue', color: RED, bg: 'rgba(239,68,68,0.12)' },
+  'n/a': { label: 'No payment state', color: MUTED, bg: 'rgba(148,163,184,0.12)' },
+};
+
+const supportStatusConfig: Record<SupportStatus, { label: string; color: string; bg: string }> = {
+  open: { label: 'Open', color: CYAN, bg: 'rgba(0,200,232,0.12)' },
+  investigating: { label: 'Investigating', color: AMBER, bg: 'rgba(245,158,11,0.12)' },
+  waiting_on_user: { label: 'Waiting on you', color: GOLD, bg: 'rgba(240,168,48,0.12)' },
+  resolved: { label: 'Resolved', color: GREEN, bg: 'rgba(34,197,94,0.12)' },
+  closed: { label: 'Closed', color: MUTED, bg: 'rgba(148,163,184,0.12)' },
+};
+
+const supportPriorityConfig: Record<SupportPriority, { label: string; color: string }> = {
+  low: { label: 'Low', color: MUTED },
+  normal: { label: 'Normal', color: CYAN },
+  high: { label: 'High', color: GOLD },
+  urgent: { label: 'Urgent', color: RED },
 };
 
 function formatDateLabel(input: string): string {
@@ -56,61 +106,14 @@ function formatDateLabel(input: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function deriveRideStatus(ride: PostedRide): TripStatus {
-  const when = new Date(`${ride.date}T${ride.time || '00:00'}`);
-  if (Number.isNaN(when.getTime())) return 'upcoming';
-  return when.getTime() < Date.now() ? 'completed' : 'upcoming';
-}
-
-function derivePackageStatus(pkg: PackageRequest): TripStatus {
-  if (pkg.status === 'delivered') return 'completed';
-  return 'upcoming';
-}
-
-function toRideItem(ride: PostedRide): TripItem {
-  return {
-    id: ride.id,
-    from: ride.from,
-    to: ride.to,
-    date: formatDateLabel(ride.date),
-    time: ride.time || 'Flexible',
-    price: `JOD ${ride.price.toFixed(2)}`,
-    status: deriveRideStatus(ride),
-    seats: ride.seats,
-    driver: ride.carModel ? `${ride.carModel.split(' ')[0]} Captain` : 'Wasel Captain',
-    rating: 4.8,
-    trustLabel: ride.acceptsPackages ? 'Package-ready corridor' : 'Live posted route',
-    openPath: '/app/offer-ride',
-  };
-}
-
-function toPackageItem(pkg: PackageRequest): TripItem {
-  const status = derivePackageStatus(pkg);
-  return {
-    id: pkg.id,
-    from: pkg.from,
-    to: pkg.to,
-    date: formatDateLabel(pkg.createdAt),
-    time: pkg.packageType === 'return' ? 'Return lane' : 'Package lane',
-    price: pkg.matchedRideId ? 'Matched to route' : 'Searching for route',
-    status,
-    driver: pkg.matchedDriver,
-    trustLabel:
-      pkg.packageType === 'return'
-        ? pkg.matchedRideId ? 'Return matched to ride' : 'Return request queued'
-        : pkg.matchedRideId ? 'Matched to live route' : 'Waiting for route assignment',
-    openPath: '/app/packages',
-  };
-}
-
-function pill(color: string) {
+function pill(color: string, bg?: string) {
   return {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 5,
     padding: '4px 10px',
     borderRadius: 999,
-    background: `${color}15`,
+    background: bg ?? `${color}15`,
     border: `1px solid ${color}30`,
     color,
     fontSize: '0.66rem',
@@ -119,47 +122,96 @@ function pill(color: string) {
   } as const;
 }
 
-function StatusBadge({ status, ar }: { status: TripStatus; ar: boolean }) {
-  const item = STATUS_CONFIG[status];
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.64rem', fontWeight: 700, padding: '4px 9px', borderRadius: 999, color: item.color, background: item.bg, fontFamily: FONT }}>
-      {item.icon}
-      {ar ? item.labelAr : item.label}
-    </span>
-  );
+function getSupportForItem(tickets: SupportTicket[], identifiers: Array<string | undefined>): SupportTicket[] {
+  const lookup = new Set(identifiers.filter(Boolean));
+  return tickets.filter((ticket) => ticket.relatedId && lookup.has(ticket.relatedId));
 }
 
-function ExperienceBanner({ ar }: { ar: boolean }) {
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.4fr) minmax(240px, 0.8fr)',
-        gap: 14,
-        borderRadius: 18,
-        padding: '18px 20px',
-        background: 'linear-gradient(135deg, rgba(0,200,232,0.10), rgba(255,255,255,0.03))',
-        border: '1px solid rgba(0,200,232,0.18)',
-        marginBottom: 18,
-      }}
-    >
-      <div>
-        <div style={{ color: TEXT, fontWeight: 800, fontSize: '0.98rem', marginBottom: 6, fontFamily: FONT }}>
-          {ar ? 'كل رحلاتك وطرودك من الشبكة الحية نفسها' : 'All your rides and parcels from the same live network'}
-        </div>
-        <div style={{ color: MUTED, fontSize: '0.84rem', lineHeight: 1.6, fontFamily: FONT }}>
-          {ar
-            ? 'رحلاتي الآن تقرأ من الرحلات والطرود التي أنشأتها فعلياً داخل واصل، بدل البطاقات الثابتة.'
-            : 'My Trips now reflects the rides and packages you actually create in Wasel instead of static placeholder cards.'}
-        </div>
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 8 }}>
-        <span style={pill(GREEN)}><Shield size={12} />Verified trust</span>
-        <span style={pill(CYAN)}><Navigation size={12} />Live route state</span>
-        <span style={pill(GOLD)}><Package size={12} />Package continuity</span>
-      </div>
-    </div>
-  );
+function deriveRideLifecycle(booking: RideBookingRecord, support: SupportTicket[]): TripLifecycle {
+  if (booking.status === 'cancelled' || booking.status === 'rejected') return 'cancelled';
+  if (booking.status === 'completed') return 'completed';
+  if (support.length > 0 || booking.supportThreadOpen || booking.paymentStatus === 'failed' || booking.paymentStatus === 'refunded' || booking.status === 'pending_driver') {
+    return 'attention';
+  }
+  return 'active';
+}
+
+function derivePackageLifecycle(pkg: PackageRequest, support: SupportTicket[]): TripLifecycle {
+  if (pkg.status === 'delivered') return 'completed';
+  if (support.length > 0 || pkg.status === 'searching') return 'attention';
+  return 'active';
+}
+
+function deriveBusLifecycle(booking: StoredBusBooking, support: SupportTicket[]): TripLifecycle {
+  if (booking.status === 'cancelled') return 'cancelled';
+  if (booking.status === 'completed') return 'completed';
+  if (support.length > 0) return 'attention';
+  return 'active';
+}
+
+function toRideItem(booking: RideBookingRecord, support: SupportTicket[]): TripItem {
+  const lifecycle = deriveRideLifecycle(booking, support);
+  return {
+    id: booking.id,
+    kind: 'rides',
+    from: booking.from,
+    to: booking.to,
+    date: formatDateLabel(booking.date),
+    time: booking.time || 'Flexible',
+    title: 'Ride booking',
+    valueLabel: `${booking.seatsRequested} seat${booking.seatsRequested > 1 ? 's' : ''}`,
+    lifecycle,
+    primaryStatus: booking.status === 'pending_driver' ? 'Waiting for driver confirmation' : `Trip ${booking.status}`,
+    secondaryStatus: support.length > 0 ? `${support.length} support thread${support.length > 1 ? 's' : ''}` : undefined,
+    ticketLabel: booking.ticketCode,
+    captainLabel: booking.driverName,
+    supportCount: support.length,
+    paymentStatus: booking.paymentStatus,
+    openPath: '/app/find-ride',
+  };
+}
+
+function toPackageItem(pkg: PackageRequest, support: SupportTicket[]): TripItem {
+  const lifecycle = derivePackageLifecycle(pkg, support);
+  return {
+    id: pkg.id,
+    kind: 'packages',
+    from: pkg.from,
+    to: pkg.to,
+    date: formatDateLabel(pkg.createdAt),
+    time: pkg.packageType === 'return' ? 'Return corridor' : 'Package lane',
+    title: pkg.packageType === 'return' ? 'Return parcel' : 'Package request',
+    valueLabel: pkg.matchedRideId ? 'Matched to route' : 'Waiting for route match',
+    lifecycle,
+    primaryStatus: pkg.status === 'searching' ? 'Searching for a carrier' : `Package ${pkg.status.replace('_', ' ')}`,
+    secondaryStatus: pkg.handoffCode ? `Handoff code ${pkg.handoffCode}` : undefined,
+    ticketLabel: pkg.matchedRideId ?? undefined,
+    captainLabel: pkg.matchedDriver,
+    supportCount: support.length,
+    paymentStatus: 'n/a',
+    openPath: '/app/packages',
+  };
+}
+
+function toBusItem(booking: StoredBusBooking, support: SupportTicket[]): TripItem {
+  const lifecycle = deriveBusLifecycle(booking, support);
+  return {
+    id: booking.id,
+    kind: 'buses',
+    from: booking.pickupStop,
+    to: booking.dropoffStop,
+    date: formatDateLabel(booking.scheduleDate),
+    time: booking.departureTime,
+    title: 'Bus booking',
+    valueLabel: `${booking.seatsRequested} seat${booking.seatsRequested > 1 ? 's' : ''}`,
+    lifecycle,
+    primaryStatus: booking.status === 'confirmed' ? 'Boarding details ready' : `Booking ${booking.status}`,
+    secondaryStatus: `Preference: ${booking.seatPreference}`,
+    ticketLabel: booking.ticket_code,
+    supportCount: support.length,
+    paymentStatus: 'authorized',
+    openPath: '/app/bus',
+  };
 }
 
 function SummaryCard({ label, value, detail, color, icon }: { label: string; value: string; detail: string; color: string; icon: ReactNode }) {
@@ -176,84 +228,121 @@ function SummaryCard({ label, value, detail, color, icon }: { label: string; val
   );
 }
 
-function TripCard({ trip, ar, onOpen, type }: { trip: TripItem; ar: boolean; onOpen: () => void; type: TabKey }) {
+function StatusBadge({ lifecycle }: { lifecycle: TripLifecycle }) {
+  const item = lifecycleConfig[lifecycle];
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.64rem', fontWeight: 700, padding: '4px 9px', borderRadius: 999, color: item.color, background: item.bg, fontFamily: FONT }}>
+      {item.icon}
+      {item.label}
+    </span>
+  );
+}
+
+function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
   const [expanded, setExpanded] = useState(false);
-  const routeAccent = type === 'rides' ? CYAN : GOLD;
+  const routeAccent = trip.kind === 'rides' ? CYAN : trip.kind === 'packages' ? GOLD : '#4F8CFF';
+  const payment = paymentConfig[trip.paymentStatus ?? 'n/a'];
 
   return (
     <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 18, overflow: 'hidden', marginBottom: 12 }}>
       <button
-        onClick={() => setExpanded(value => !value)}
+        onClick={() => setExpanded((value) => !value)}
         style={{
           width: '100%',
           padding: '16px 18px',
           background: 'none',
           border: 'none',
           cursor: 'pointer',
-          textAlign: ar ? 'right' : 'left',
+          textAlign: 'left',
           display: 'flex',
           alignItems: 'center',
           gap: 14,
         }}
       >
         <div style={{ width: 42, height: 42, borderRadius: 13, background: `${routeAccent}14`, border: `1px solid ${routeAccent}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <MapPin size={16} color={routeAccent} />
+          {trip.kind === 'rides' ? <Car size={16} color={routeAccent} /> : trip.kind === 'packages' ? <Package size={16} color={routeAccent} /> : <Bus size={16} color={routeAccent} />}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <span style={{ fontWeight: 800, color: TEXT, fontFamily: FONT, fontSize: '0.92rem' }}>{trip.from}</span>
-            <span style={{ color: 'rgba(148,163,184,0.42)', fontSize: '0.78rem' }}>→</span>
+            <span style={{ color: 'rgba(148,163,184,0.42)', fontSize: '0.78rem' }}>to</span>
             <span style={{ fontWeight: 800, color: TEXT, fontFamily: FONT, fontSize: '0.92rem' }}>{trip.to}</span>
           </div>
-          <div style={{ fontSize: '0.74rem', color: MUTED, fontFamily: FONT, marginTop: 4 }}>{trip.date} · {trip.time}</div>
-          {trip.trustLabel ? (
-            <div style={{ marginTop: 8 }}>
-              <span style={pill(type === 'rides' ? GREEN : routeAccent)}>{trip.trustLabel}</span>
-            </div>
-          ) : null}
+          <div style={{ fontSize: '0.74rem', color: MUTED, fontFamily: FONT, marginTop: 4 }}>{trip.title} · {trip.date} · {trip.time}</div>
+          <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <span style={pill(routeAccent)}>{trip.primaryStatus}</span>
+            {trip.ticketLabel ? <span style={pill('#ffffff', 'rgba(255,255,255,0.06)')}><Ticket size={12} />{trip.ticketLabel}</span> : null}
+          </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-          <span style={{ fontWeight: 900, color: TEXT, fontFamily: FONT, fontSize: '0.92rem' }}>{trip.price}</span>
-          <StatusBadge status={trip.status} ar={ar} />
+          <span style={{ fontWeight: 900, color: TEXT, fontFamily: FONT, fontSize: '0.9rem' }}>{trip.valueLabel}</span>
+          <StatusBadge lifecycle={trip.lifecycle} />
         </div>
         <ChevronRight size={14} color="rgba(148,163,184,0.35)" style={{ flexShrink: 0, transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
       </button>
 
       {expanded ? (
         <div style={{ borderTop: `1px solid ${BORDER}`, padding: '14px 18px', display: 'grid', gap: 12, background: CARD_ALT }}>
-          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-            {trip.driver ? (
-              <span style={{ fontSize: '0.78rem', color: MUTED, fontFamily: FONT }}>
-                {ar ? `السائق: ${trip.driver}` : `Captain: ${trip.driver}`}
-              </span>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <span style={pill(payment.color, payment.bg)}><Wallet size={12} />{payment.label}</span>
+            {trip.supportCount > 0 ? (
+              <span style={pill(AMBER, 'rgba(245,158,11,0.12)')}><LifeBuoy size={12} />{trip.supportCount} active support</span>
             ) : null}
-            {trip.rating ? (
-              <span style={{ fontSize: '0.78rem', color: GOLD, fontFamily: FONT, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <Star size={12} fill={GOLD} stroke={GOLD} />
-                {trip.rating.toFixed(1)} / 5
-              </span>
-            ) : null}
-            {trip.seats ? (
-              <span style={{ fontSize: '0.78rem', color: MUTED, fontFamily: FONT }}>
-                {ar ? `${trip.seats} مقعد` : `${trip.seats} seat${trip.seats > 1 ? 's' : ''}`}
-              </span>
-            ) : null}
+            {trip.captainLabel ? <span style={pill(GREEN, 'rgba(34,197,94,0.12)')}>{trip.captainLabel}</span> : null}
           </div>
+          {trip.secondaryStatus ? (
+            <div style={{ color: MUTED, fontSize: '0.78rem', fontFamily: FONT, lineHeight: 1.6 }}>
+              {trip.secondaryStatus}
+            </div>
+          ) : null}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <div style={{ color: DIM, fontSize: '0.76rem', fontFamily: FONT }}>
-              {type === 'rides'
-                ? (ar ? 'هذه الرحلة منشورة داخل شبكة واصل ويمكنك العودة لمسار العرض أو التعديل منها.' : 'This posted ride lives in the Wasel network and can be reopened from the ride posting flow.')
-                : (ar ? 'هذا الطلب مرتبط بتتبع فعلي ويمكنك مواصلة المتابعة من صفحة الطرود.' : 'This request stays on a live tracking chain and can be reopened from the packages page.')}
+              Operational status is now tied to live booking, package, bus, and support records so this view shows what still needs action.
             </div>
             <button
               onClick={onOpen}
               style={{ padding: '7px 14px', borderRadius: 10, background: 'transparent', border: `1px solid ${BORDER}`, color: TEXT, fontWeight: 700, fontFamily: FONT, fontSize: '0.76rem', cursor: 'pointer' }}
             >
-              {type === 'rides' ? (ar ? 'افتح المسار' : 'Open route') : (ar ? 'افتح التتبع' : 'Open tracking')}
+              Open journey
             </button>
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function SupportQueue({ tickets }: { tickets: SupportTicket[] }) {
+  if (tickets.length === 0) return null;
+  return (
+    <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 16, padding: '16px 18px', marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <LifeBuoy size={16} color={CYAN} />
+        <div style={{ color: TEXT, fontWeight: 800, fontFamily: FONT }}>Support queue</div>
+      </div>
+      <div style={{ display: 'grid', gap: 10 }}>
+        {tickets.map((ticket) => {
+          const status = supportStatusConfig[ticket.status];
+          const priority = supportPriorityConfig[ticket.priority];
+          return (
+            <div key={ticket.id} style={{ background: CARD_ALT, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 14px', display: 'grid', gap: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                <div>
+                  <div style={{ color: TEXT, fontWeight: 700, fontSize: '0.82rem', fontFamily: FONT }}>{ticket.subject}</div>
+                  <div style={{ color: MUTED, fontSize: '0.74rem', marginTop: 4, fontFamily: FONT }}>{ticket.routeLabel ?? ticket.topic}</div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={pill(status.color, status.bg)}>{status.label}</span>
+                  <span style={pill(priority.color)}>{priority.label}</span>
+                </div>
+              </div>
+              <div style={{ color: DIM, fontSize: '0.74rem', fontFamily: FONT }}>
+                {ticket.resolutionSummary ?? ticket.history.at(-1)?.note ?? ticket.detail}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -263,47 +352,74 @@ export default function MyTripsPage() {
   const { language } = useLanguage();
   const nav = useIframeSafeNavigate();
   const location = useLocation();
-  const ar = language === 'ar';
+  const isRTL = language === 'ar';
 
-  const initialTab = new URLSearchParams(location.search).get('tab') === 'packages' ? 'packages' : 'rides';
-  const [tab, setTab] = useState<TabKey>(initialTab);
-  const [filter, setFilter] = useState<TripStatus | 'all'>('all');
+  const initialTab = new URLSearchParams(location.search).get('tab');
+  const [tab, setTab] = useState<TripKind>(
+    initialTab === 'packages' || initialTab === 'buses' ? initialTab : 'rides',
+  );
+  const [filter, setFilter] = useState<TripLifecycle | 'all'>('all');
 
-  const rideItems = useMemo(() => getConnectedRides().map(toRideItem), []);
-  const packageItems = useMemo(() => getConnectedPackages().map(toPackageItem), []);
-  const items = tab === 'rides' ? rideItems : packageItems;
-  const filtered = filter === 'all' ? items : items.filter(trip => trip.status === filter);
+  const supportTickets = useMemo(() => getSupportTickets().slice(0, 5), []);
 
-  const stats = useMemo(() => {
-    const source = tab === 'rides' ? rideItems : packageItems;
-    const upcoming = source.filter(trip => trip.status === 'upcoming').length;
-    const completed = source.filter(trip => trip.status === 'completed').length;
-    const cancelled = source.filter(trip => trip.status === 'cancelled').length;
-    return { total: source.length, upcoming, completed, cancelled };
-  }, [packageItems, rideItems, tab]);
+  const rideItems = useMemo(() => {
+    return syncRideBookingCompletion().map((booking) => {
+      const relatedSupport = getSupportForItem(supportTickets, [booking.id, booking.backendBookingId, booking.ticketCode, booking.rideId]);
+      return toRideItem(booking, relatedSupport);
+    });
+  }, [supportTickets]);
 
-  const FILTERS: { key: TripStatus | 'all'; label: string; labelAr: string }[] = [
-    { key: 'all', label: 'All', labelAr: 'الكل' },
-    { key: 'upcoming', label: 'Upcoming', labelAr: 'قادمة' },
-    { key: 'completed', label: 'Completed', labelAr: 'مكتملة' },
-    { key: 'cancelled', label: 'Cancelled', labelAr: 'ملغاة' },
+  const packageItems = useMemo(() => {
+    return getConnectedPackages().map((pkg) => {
+      const relatedSupport = getSupportForItem(supportTickets, [pkg.id, pkg.matchedRideId, pkg.handoffCode]);
+      return toPackageItem(pkg, relatedSupport);
+    });
+  }, [supportTickets]);
+
+  const busItems = useMemo(() => {
+    return getStoredBusBookings().map((booking) => {
+      const relatedSupport = getSupportForItem(supportTickets, [booking.id, booking.ticket_code, booking.tripId]);
+      return toBusItem(booking, relatedSupport);
+    });
+  }, [supportTickets]);
+
+  const collections: Record<TripKind, TripItem[]> = {
+    rides: rideItems,
+    packages: packageItems,
+    buses: busItems,
+  };
+
+  const items = collections[tab];
+  const filtered = filter === 'all' ? items : items.filter((trip) => trip.lifecycle === filter);
+  const stats = useMemo(() => ({
+    total: items.length,
+    active: items.filter((trip) => trip.lifecycle === 'active').length,
+    attention: items.filter((trip) => trip.lifecycle === 'attention').length,
+    completed: items.filter((trip) => trip.lifecycle === 'completed').length,
+  }), [items]);
+
+  const createPath = tab === 'rides' ? '/app/offer-ride' : tab === 'packages' ? '/app/packages' : '/app/bus';
+  const filters: Array<{ key: TripLifecycle | 'all'; label: string }> = [
+    { key: 'all', label: 'All' },
+    { key: 'active', label: 'Active' },
+    { key: 'attention', label: 'Needs attention' },
+    { key: 'completed', label: 'Completed' },
+    { key: 'cancelled', label: 'Cancelled' },
   ];
 
-  const createPath = tab === 'rides' ? '/app/offer-ride' : '/app/packages';
-
   return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: FONT, direction: ar ? 'rtl' : 'ltr', paddingBottom: 88 }}>
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '32px 16px 0' }}>
+    <div style={{ minHeight: '100vh', background: BG, fontFamily: FONT, direction: isRTL ? 'rtl' : 'ltr', paddingBottom: 88 }}>
+      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '32px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', marginBottom: 24 }}>
           <div>
             <div style={{ fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: CYAN, marginBottom: 6, fontFamily: FONT }}>
-              {ar ? 'واصل · إدارة الرحلات' : 'WASEL · JOURNEY CONTROL'}
+              WASEL · JOURNEY CONTROL
             </div>
             <h1 style={{ fontSize: '1.8rem', fontWeight: 900, color: TEXT, fontFamily: FONT, margin: 0 }}>
-              {ar ? 'رحلاتي' : 'My Trips'}
+              My Trips
             </h1>
             <p style={{ fontSize: '0.82rem', color: MUTED, fontFamily: FONT, margin: '6px 0 0' }}>
-              {ar ? `مرحباً ${user?.name ?? ''} · ${filtered.length} عنصر ظاهر الآن` : `Welcome ${user?.name ?? ''} · ${filtered.length} visible items right now`}
+              Welcome {user?.name ?? 'traveler'} · {filtered.length} operational item{filtered.length === 1 ? '' : 's'} visible right now
             </p>
           </div>
           <button
@@ -311,24 +427,52 @@ export default function MyTripsPage() {
             style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, background: `linear-gradient(135deg,${CYAN},#0095B8)`, border: 'none', color: '#041018', fontWeight: 800, fontFamily: FONT, fontSize: '0.82rem', cursor: 'pointer' }}
           >
             <Plus size={14} />
-            {tab === 'rides' ? (ar ? 'رحلة جديدة' : 'New ride') : (ar ? 'طرد جديد' : 'New package')}
+            {tab === 'rides' ? 'New ride' : tab === 'packages' ? 'New package' : 'Book bus'}
           </button>
         </div>
 
-        <ExperienceBanner ar={ar} />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1.35fr) minmax(240px, 0.9fr)',
+            gap: 14,
+            borderRadius: 18,
+            padding: '18px 20px',
+            background: 'linear-gradient(135deg, rgba(0,200,232,0.10), rgba(255,255,255,0.03))',
+            border: '1px solid rgba(0,200,232,0.18)',
+            marginBottom: 18,
+          }}
+        >
+          <div>
+            <div style={{ color: TEXT, fontWeight: 800, fontSize: '0.98rem', marginBottom: 6, fontFamily: FONT }}>
+              Your live mobility operations now sit in one place
+            </div>
+            <div style={{ color: MUTED, fontSize: '0.84rem', lineHeight: 1.6, fontFamily: FONT }}>
+              Rides, buses, packages, payment state, and support queues all feed this page so we can spot what is done and what still needs action.
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 8 }}>
+            <span style={pill(GREEN)}><CheckCircle size={12} />Captured lifecycle</span>
+            <span style={pill(CYAN)}><Ticket size={12} />Ticket visibility</span>
+            <span style={pill(AMBER)}><LifeBuoy size={12} />Support queue</span>
+          </div>
+        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 20 }}>
-          <SummaryCard label={ar ? 'الإجمالي' : 'Total'} value={String(stats.total)} detail={tab === 'rides' ? (ar ? 'رحلات منشورة' : 'Posted rides') : (ar ? 'طلبات طرود' : 'Package requests')} color={CYAN} icon={<Navigation size={18} color={CYAN} />} />
-          <SummaryCard label={ar ? 'القادمة' : 'Upcoming'} value={String(stats.upcoming)} detail={ar ? 'بحاجة متابعة' : 'Need attention'} color={CYAN} icon={<Clock size={18} color={CYAN} />} />
-          <SummaryCard label={ar ? 'المكتملة' : 'Completed'} value={String(stats.completed)} detail={ar ? 'مغلقة بنجاح' : 'Closed successfully'} color={GREEN} icon={<CheckCircle size={18} color={GREEN} />} />
-          <SummaryCard label={ar ? 'الثقة' : 'Trust layer'} value={tab === 'rides' ? String(rideItems.length) : String(packageItems.length)} detail={tab === 'rides' ? (ar ? 'رحلات على الشبكة' : 'Routes on network') : (ar ? 'سلسلة تتبع فعلية' : 'Live tracking chain')} color={GOLD} icon={<Shield size={18} color={GOLD} />} />
+          <SummaryCard label="Total journeys" value={String(stats.total)} detail={`${tab} currently in your account`} color={CYAN} icon={<MapPin size={18} color={CYAN} />} />
+          <SummaryCard label="Active" value={String(stats.active)} detail="Running smoothly" color={CYAN} icon={<Clock size={18} color={CYAN} />} />
+          <SummaryCard label="Needs attention" value={String(stats.attention)} detail="Pending support, approval, or action" color={AMBER} icon={<ShieldAlert size={18} color={AMBER} />} />
+          <SummaryCard label="Completed" value={String(stats.completed)} detail="Closed with delivery or settlement" color={GREEN} icon={<CheckCircle size={18} color={GREEN} />} />
         </div>
+
+        <SupportQueue tickets={supportTickets} />
 
         <div style={{ display: 'flex', gap: 0, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 4, marginBottom: 16 }}>
           {([
-            ['rides', '🚗', ar ? 'الرحلات' : 'Rides'],
-            ['packages', '📦', ar ? 'الطرود' : 'Packages'],
-          ] as const).map(([key, emoji, label]) => (
+            ['rides', <Car key="car" size={14} />, 'Rides'],
+            ['packages', <Package key="pkg" size={14} />, 'Packages'],
+            ['buses', <Bus key="bus" size={14} />, 'Buses'],
+          ] as const).map(([key, icon, label]) => (
             <button
               key={key}
               onClick={() => setTab(key)}
@@ -350,14 +494,14 @@ export default function MyTripsPage() {
                 gap: 6,
               }}
             >
-              <span>{emoji}</span>
+              {icon}
               {label}
             </button>
           ))}
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-          {FILTERS.map(filterOption => (
+          {filters.map((filterOption) => (
             <button
               key={filterOption.key}
               onClick={() => setFilter(filterOption.key)}
@@ -373,34 +517,30 @@ export default function MyTripsPage() {
                 color: filter === filterOption.key ? CYAN : MUTED,
               }}
             >
-              {ar ? filterOption.labelAr : filterOption.label}
+              {filterOption.label}
             </button>
           ))}
         </div>
 
         {filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '72px 0', color: DIM, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 18 }}>
-            {tab === 'rides' ? <Car size={42} style={{ marginBottom: 12, opacity: 0.35 }} /> : <Package size={42} style={{ marginBottom: 12, opacity: 0.35 }} />}
+            {tab === 'rides' ? <Car size={42} style={{ marginBottom: 12, opacity: 0.35 }} /> : tab === 'packages' ? <Package size={42} style={{ marginBottom: 12, opacity: 0.35 }} /> : <Bus size={42} style={{ marginBottom: 12, opacity: 0.35 }} />}
             <p style={{ fontFamily: FONT, fontSize: '0.94rem', margin: 0 }}>
-              {tab === 'rides'
-                ? (ar ? 'لا توجد رحلات متصلة بهذا الفلتر بعد' : 'No connected rides match this filter yet')
-                : (ar ? 'لا توجد طلبات طرود متصلة بهذا الفلتر بعد' : 'No connected packages match this filter yet')}
+              No {tab} match this lifecycle filter yet
             </p>
             <button
               onClick={() => nav(createPath)}
               style={{ marginTop: 16, padding: '10px 18px', borderRadius: 10, background: 'rgba(0,200,232,0.12)', border: '1px solid rgba(0,200,232,0.25)', color: CYAN, fontWeight: 800, fontFamily: FONT, fontSize: '0.82rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}
             >
-              {tab === 'rides' ? (ar ? 'أنشئ رحلة' : 'Create a ride') : (ar ? 'أنشئ طلب طرد' : 'Create package request')}
+              {tab === 'rides' ? 'Create ride' : tab === 'packages' ? 'Create package request' : 'Find a bus'}
               <ArrowRight size={14} />
             </button>
           </div>
         ) : (
-          filtered.map(trip => (
+          filtered.map((trip) => (
             <TripCard
-              key={trip.id}
+              key={`${trip.kind}-${trip.id}`}
               trip={trip}
-              ar={ar}
-              type={tab}
               onOpen={() => nav(trip.openPath)}
             />
           ))

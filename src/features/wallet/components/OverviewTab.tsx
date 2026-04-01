@@ -25,6 +25,12 @@ interface OverviewTabProps {
 }
 
 export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actionLoading }: OverviewTabProps) {
+  const transactions = walletData?.transactions ?? [];
+  const pendingCount = transactions.filter((tx: any) => ['pending', 'processing', 'authorized', 'posted'].includes(String(tx.status ?? '').toLowerCase())).length;
+  const failedCount = transactions.filter((tx: any) => ['failed'].includes(String(tx.status ?? '').toLowerCase())).length;
+  const refundedCount = transactions.filter((tx: any) => ['refunded'].includes(String(tx.status ?? '').toLowerCase())).length;
+  const paymentMethodsCount = walletData?.wallet?.paymentMethods?.length ?? 0;
+
   return (
     <div className="space-y-4">
       {/* Stats Grid */}
@@ -42,6 +48,42 @@ export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actio
             <p className="text-lg font-bold text-foreground tabular-nums">{s.value.toFixed(2)}</p>
           </Card>
         ))}
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-3">
+        <Card className="rounded-xl border-border/30">
+          <CardContent className="p-4">
+            <div className="text-xs text-muted-foreground mb-1">{isRTL ? 'التحويلات قيد المعالجة' : 'In settlement'}</div>
+            <div className="text-lg font-bold text-foreground">{pendingCount}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {walletData?.pendingBalance
+                ? `${walletData.pendingBalance.toFixed(2)} ${t.jod} ${isRTL ? 'قيد الإطلاق' : 'awaiting release'}`
+                : isRTL ? 'لا توجد مبالغ معلقة الآن' : 'No held balance right now'}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="rounded-xl border-border/30">
+          <CardContent className="p-4">
+            <div className="text-xs text-muted-foreground mb-1">{isRTL ? 'حالات تحتاج متابعة' : 'Needs follow-up'}</div>
+            <div className="text-lg font-bold text-foreground">{failedCount + refundedCount}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {failedCount > 0
+                ? isRTL ? 'راجع المحاولات الفاشلة أو الاستردادات.' : 'Review failed payouts or refund events.'
+                : isRTL ? 'لا توجد مشاكل دفع مفتوحة.' : 'No open payment issues.'}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="rounded-xl border-border/30">
+          <CardContent className="p-4">
+            <div className="text-xs text-muted-foreground mb-1">{isRTL ? 'جاهزية السداد' : 'Settlement readiness'}</div>
+            <div className="text-lg font-bold text-foreground">{paymentMethodsCount}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {paymentMethodsCount > 0
+                ? isRTL ? 'وسائل دفع محفوظة للحجز والسحب.' : 'Saved payment methods for booking and withdrawal.'
+                : isRTL ? 'أضف وسيلة دفع لفتح السداد الكامل.' : 'Add a payment method to unlock full settlement.'}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Active Escrows */}

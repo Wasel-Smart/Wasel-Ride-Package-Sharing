@@ -1,14 +1,7 @@
-/**
- * DriverPage — /app/driver
- * Earnings overview · Demand heatmap · Trip stats
- *
- * Fix: Protected now calls useIframeSafeNavigate so unauthenticated
- * users are actually redirected to /app/auth instead of stuck on
- * the lock screen forever.
- */
 import { useEffect, type ReactNode } from 'react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { getDriverReadinessSummary } from '../../services/driverOnboarding';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
 
 const DS = PAGE_DS;
@@ -31,7 +24,7 @@ function Protected({ children }: { children: ReactNode }) {
         justifyContent: 'center', minHeight: '60vh', gap: 16, background: DS.bg,
       }}>
         <div style={{ fontSize: '3rem' }}>🔒</div>
-        <div style={{ color: DS.sub, fontFamily: DS.F }}>Redirecting to sign in…</div>
+        <div style={{ color: DS.sub, fontFamily: DS.F }}>Redirecting to sign in...</div>
       </div>
     );
   }
@@ -40,26 +33,24 @@ function Protected({ children }: { children: ReactNode }) {
 }
 
 const METRICS = [
-  { label: "Today's Earnings", val: 'JOD 42', icon: '💰', color: DS.green },
-  { label: 'Active Trips',     val: '3',      icon: '🚗', color: DS.cyan  },
-  { label: 'Rating',           val: '4.9★',   icon: '⭐', color: DS.gold  },
-  { label: 'Total Trips',      val: '127',    icon: '📍', color: DS.blue  },
-];
-
-const DEMAND_ZONES = [
-  { zone: 'Abdali',      demand: 92, earn: 'JOD 45/hr', surge: '2.5×', color: '#EF4444' },
-  { zone: 'Shmeisani',  demand: 65, earn: 'JOD 28/hr', surge: '1.4×', color: DS.gold   },
-  { zone: 'Sweifieh',   demand: 38, earn: 'JOD 18/hr', surge: '1.0×', color: DS.green  },
-  { zone: '7th Circle', demand: 54, earn: 'JOD 22/hr', surge: '1.2×', color: DS.cyan   },
+  { label: 'Driver approval', val: 'Review-based', icon: '🛡️', color: DS.green },
+  { label: 'Identity level', val: 'Level 2+', icon: '🪪', color: DS.cyan },
+  { label: 'Package carry', val: 'Level 3', icon: '📦', color: DS.gold },
+  { label: 'Payout ready', val: 'Verified email', icon: '💳', color: DS.blue },
 ];
 
 export default function DriverPage() {
+  const { user } = useLocalAuth();
+  const navigate = useIframeSafeNavigate();
+
+  if (!user) return null;
+
+  const readiness = getDriverReadinessSummary(user);
+
   return (
     <Protected>
       <div style={{ minHeight: '100vh', background: DS.bg, fontFamily: DS.F }}>
         <div style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 16px' }}>
-
-          {/* Header */}
           <div style={{
             background: DS.gradNav, borderRadius: r(20), padding: '24px',
             marginBottom: 20, border: `1px solid ${DS.blue}18`,
@@ -71,77 +62,132 @@ export default function DriverPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '1.9rem',
               }}>
-                📊
+                🧭
               </div>
               <div>
                 <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>
-                  Driver Dashboard
+                  Driver Onboarding
                 </h1>
                 <p style={{ color: DS.sub, margin: '4px 0 0', fontSize: '0.82rem' }}>
-                  Earnings · Trips · Demand Heatmap
+                  Review your approval status, trust readiness, and the exact steps needed to operate.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Metrics */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 24 }}>
-            {METRICS.map(m => (
+            {METRICS.map((m) => (
               <div key={m.label} style={{
                 background: DS.card, borderRadius: r(16), padding: '20px 18px',
                 border: `1px solid ${DS.border}`,
               }}>
                 <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>{m.icon}</div>
-                <div style={{ color: m.color, fontWeight: 900, fontSize: '1.5rem' }}>{m.val}</div>
+                <div style={{ color: m.color, fontWeight: 900, fontSize: '1.05rem' }}>{m.val}</div>
                 <div style={{ color: DS.muted, fontSize: '0.75rem', marginTop: 4 }}>{m.label}</div>
               </div>
             ))}
           </div>
 
-          {/* Demand heatmap */}
-          <div style={{
-            background: DS.card, borderRadius: r(20), padding: '24px',
-            border: `1px solid ${DS.border}`,
-          }}>
-            <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 16px' }}>
-              🔥 Demand Heatmap — Amman
-            </h3>
-            <div style={{ display: 'grid', gap: 10 }}>
-              {DEMAND_ZONES.map(z => (
-                <div key={z.zone} style={{
-                  display: 'flex', alignItems: 'center', gap: 14,
-                  background: DS.card2, borderRadius: r(12), padding: '14px 18px',
-                  border: `1px solid ${DS.border}`,
-                }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: r(10),
-                    background: `${z.color}15`, border: `1.5px solid ${z.color}30`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontWeight: 900, color: z.color, fontSize: '0.8rem', flexShrink: 0,
+          <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.95fr', gap: 18 }}>
+            <div style={{
+              background: DS.card, borderRadius: r(20), padding: '24px',
+              border: `1px solid ${DS.border}`,
+            }}>
+              <h3 style={{ color: '#fff', fontWeight: 900, margin: '0 0 10px', fontSize: '1.15rem' }}>
+                {readiness.headline}
+              </h3>
+              <p style={{ color: DS.sub, margin: '0 0 18px', lineHeight: 1.6, fontSize: '0.84rem' }}>
+                {readiness.detail}
+              </p>
+
+              <div style={{ display: 'grid', gap: 12 }}>
+                {readiness.steps.map((step) => (
+                  <div key={step.id} style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 12,
+                    background: DS.card2,
+                    borderRadius: r(14),
+                    padding: '14px 16px',
+                    border: `1px solid ${step.complete ? `${DS.green}33` : DS.border}`,
                   }}>
-                    {z.demand}%
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: '#fff', fontWeight: 700 }}>{z.zone}</div>
                     <div style={{
-                      flex: 1, height: 4, borderRadius: 2,
-                      background: 'rgba(255,255,255,0.1)', overflow: 'hidden', marginTop: 6,
+                      width: 32,
+                      height: 32,
+                      borderRadius: r(10),
+                      background: step.complete ? `${DS.green}18` : 'rgba(255,255,255,0.06)',
+                      border: `1px solid ${step.complete ? `${DS.green}33` : DS.border}`,
+                      color: step.complete ? DS.green : DS.muted,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 900,
+                      flexShrink: 0,
                     }}>
-                      <div style={{
-                        width: `${z.demand}%`, height: '100%',
-                        background: `linear-gradient(90deg,${z.color},${z.color}80)`, borderRadius: 2,
-                      }} />
+                      {step.complete ? 'OK' : '...'}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>{step.label}</div>
+                      <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 4, lineHeight: 1.55 }}>{step.description}</div>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ color: z.color, fontWeight: 800 }}>{z.earn}</div>
-                    <div style={{ color: DS.muted, fontSize: '0.72rem' }}>Surge {z.surge}</div>
-                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gap: 18 }}>
+              <div style={{
+                background: DS.card, borderRadius: r(20), padding: '22px',
+                border: `1px solid ${DS.border}`,
+              }}>
+                <div style={{ color: '#fff', fontWeight: 900, marginBottom: 10 }}>Capability matrix</div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {[
+                    {
+                      label: 'Post rides',
+                      ready: readiness.canOfferRide,
+                    },
+                    {
+                      label: 'Carry packages',
+                      ready: readiness.canCarryPackages,
+                    },
+                    {
+                      label: 'Receive payouts',
+                      ready: user.emailVerified && (user.verificationLevel === 'level_2' || user.verificationLevel === 'level_3'),
+                    },
+                  ].map((item) => (
+                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}` }}>
+                      <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>{item.label}</div>
+                      <span style={{ color: item.ready ? DS.green : DS.gold, fontWeight: 800, fontSize: '0.75rem' }}>
+                        {item.ready ? 'Ready' : 'Blocked'}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              <div style={{
+                background: DS.card, borderRadius: r(20), padding: '22px',
+                border: `1px solid ${DS.border}`,
+              }}>
+                <div style={{ color: '#fff', fontWeight: 900, marginBottom: 10 }}>Next actions</div>
+                <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.6, marginBottom: 14 }}>
+                  Use the pages below to complete the missing parts of driver onboarding and unlock ride posting.
+                </div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <button onClick={() => navigate('/app/settings')} style={{ height: 44, borderRadius: '999px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+                    Open Settings
+                  </button>
+                  <button onClick={() => navigate('/app/trust')} style={{ height: 44, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+                    Open Trust Center
+                  </button>
+                  <button onClick={() => navigate('/app/offer-ride')} style={{ height: 44, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+                    Try Offer Ride
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-
         </div>
       </div>
     </Protected>

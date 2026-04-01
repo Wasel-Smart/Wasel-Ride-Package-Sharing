@@ -1,0 +1,263 @@
+import {
+  getDirectGrowthAnalytics,
+  getDirectReferralSnapshot,
+  recordDirectGrowthEvent,
+  redeemDirectReferralCode,
+} from './directSupabase';
+
+export interface ReferralSnapshot {
+  code: string;
+  invited: number;
+  converted: number;
+  pendingCredit: number;
+  earnedCredit: number;
+  shareUrl: string;
+}
+
+export interface GrowthDashboard {
+  funnel: {
+    searched: number;
+    selected: number;
+    booked: number;
+    completed: number;
+  };
+  serviceMix: {
+    rides: number;
+    buses: number;
+    packages: number;
+    referrals: number;
+  };
+  revenueJod: number;
+  activeDemand: number;
+  topCorridors: Array<{
+    corridor: string;
+    demand: number;
+    conversions: number;
+  }>;
+}
+
+const LOCAL_REFERRAL_KEY = 'wasel-referral-snapshot';
+const LOCAL_GROWTH_EVENTS_KEY = 'wasel-growth-events';
+const LOCAL_DEMAND_KEY = 'wasel-demand-alerts';
+
+function buildFallbackCode(userId?: string, name?: string) {
+  const seed = (name || userId || 'wasel').replace(/[^a-z0-9]/gi, '').slice(0, 6).toUpperCase();
+  return `WASEL-${seed || 'MOVE'}`;
+}
+
+function readLocalSnapshots(): Record<string, ReferralSnapshot> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(LOCAL_REFERRAL_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeLocalSnapshots(snapshots: Record<string, ReferralSnapshot>) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(LOCAL_REFERRAL_KEY, JSON.stringify(snapshots));
+}
+
+function readLocalGrowthEvents(): Array<{
+  eventName: string;
+  funnelStage: string;
+  serviceType: 'ride' | 'bus' | 'package' | 'referral' | 'wallet';
+  from?: string;
+  to?: string;
+  valueJod?: number;
+  createdAt: string;
+}> {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(LOCAL_GROWTH_EVENTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalGrowthEvents(events: ReturnType<typeof readLocalGrowthEvents>) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(LOCAL_GROWTH_EVENTS_KEY, JSON.stringify(events.slice(0, 300)));
+}
+
+function readLocalDemandAlerts(): Array<{
+  from: string;
+  to: string;
+  status: string;
+  service: 'ride' | 'bus' | 'package';
+}> {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(LOCAL_DEMAND_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function trackGrowthEvent(input: {
+  userId?: string;
+  eventName: string;
+  funnelStage: string;
+  serviceType: 'ride' | 'bus' | 'package' | 'referral' | 'wallet';
+  from?: string;
+  to?: string;
+  valueJod?: number;
+  metadata?: Record<string, unknown>;
+}) {
+  writeLocalGrowthEvents([
+    {
+      eventName: input.eventName,
+      funnelStage: input.funnelStage,
+      serviceType: input.serviceType,
+      from: input.from,
+      to: input.to,
+      valueJod: input.valueJod,
+      createdAt: new Date().toISOString(),
+    },
+    ...readLocalGrowthEvents(),
+  ]);
+
+  try {
+    await recordDirectGrowthEvent(input);
+  } catch {
+    // local fallback is already stored
+  }
+}
+
+export async function getReferralSnapshot(user?: { id?: string; name?: string } | null): Promise<ReferralSnapshot | null> {
+  if (!user?.id) return null;
+
+  const shareUrlBase =
+    typeof window !== 'undefined'
+      ? window.location.origin
+      : 'https://wasel14.online';
+
+  try {
+    const remote = await getDirectReferralSnapshot(user.id);
+    const snapshot: ReferralSnapshot = {
+      ...remote,
+      shareUrl: `${shareUrlBase}/app/auth?ref=${encodeURIComponent(remote.code)}`,
+    };
+    const snapshots = readLocalSnapshots();
+    snapshots[user.id] = snapshot;
+    writeLocalSnapshots(snapshots);
+    return snapshot;
+  } catch {
+    const snapshots = readLocalSnapshots();
+    const existing = snapshots[user.id];
+    if (existing) return existing;
+
+    const fallbackCode = buildFallbackCode(user.id, user.name);
+    const fallback: ReferralSnapshot = {
+      code: fallbackCode,
+      invited: 0,
+      converted: 0,
+      pendingCredit: 0,
+      earnedCredit: 0,
+      shareUrl: `${shareUrlBase}/app/auth?ref=${encodeURIComponent(fallbackCode)}`,
+    };
+    snapshots[user.id] = fallback;
+    writeLocalSnapshots(snapshots);
+    return fallback;
+  }
+}
+
+export async function applyReferralCode(user: { id?: string; name?: string } | null | undefined, code: string) {
+  if (!user?.id) {
+    throw new Error('Sign in to redeem a referral code.');
+  }
+
+  const normalizedCode = code.trim().toUpperCase();
+  if (!normalizedCode) {
+    throw new Error('Enter a referral code first.');
+  }
+
+  try {
+    await redeemDirectReferralCode(user.id, normalizedCode);
+  } finally {
+    await trackGrowthEvent({
+      userId: user.id,
+      eventName: 'referral_attempted',
+      funnelStage: 'redeemed',
+      serviceType: 'referral',
+      metadata: { code: normalizedCode },
+    }).catch(() => {});
+  }
+
+  return getReferralSnapshot(user);
+}
+
+export async function getGrowthDashboard(userId?: string): Promise<GrowthDashboard> {
+  try {
+    return await getDirectGrowthAnalytics(userId);
+  } catch {
+    const events = readLocalGrowthEvents();
+    const alerts = readLocalDemandAlerts();
+    const corridorMap = new Map<string, { corridor: string; demand: number; conversions: number }>();
+
+    for (const event of events) {
+      const corridor = [event.from, event.to].filter(Boolean).join(' to ');
+      if (corridor) {
+        const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
+        current.conversions += event.funnelStage === 'booked' ? 1 : 0;
+        corridorMap.set(corridor, current);
+      }
+    }
+
+    for (const alert of alerts) {
+      const corridor = `${alert.from} to ${alert.to}`;
+      const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
+      current.demand += 1;
+      corridorMap.set(corridor, current);
+    }
+
+    return {
+      funnel: {
+        searched: events.filter((event) => event.funnelStage === 'searched').length,
+        selected: events.filter((event) => event.funnelStage === 'selected').length,
+        booked: events.filter((event) => event.funnelStage === 'booked').length,
+        completed: events.filter((event) => event.funnelStage === 'completed').length,
+      },
+      serviceMix: {
+        rides: events.filter((event) => event.serviceType === 'ride').length,
+        buses: events.filter((event) => event.serviceType === 'bus').length,
+        packages: events.filter((event) => event.serviceType === 'package').length,
+        referrals: events.filter((event) => event.serviceType === 'referral').length,
+      },
+      revenueJod: events.reduce((sum, event) => sum + Number(event.valueJod ?? 0), 0),
+      activeDemand: alerts.filter((alert) => alert.status === 'active').length,
+      topCorridors: Array.from(corridorMap.values()).sort((a, b) => (b.demand + b.conversions) - (a.demand + a.conversions)).slice(0, 6),
+    };
+  }
+}
+
+export function getCorridorDemandLeaders(limit = 3) {
+  const alerts = readLocalDemandAlerts();
+  const corridorMap = new Map<string, { corridor: string; active: number; serviceLabel: string }>();
+
+  for (const alert of alerts.filter((item) => item.status === 'active')) {
+    const key = `${alert.from} to ${alert.to}`;
+    const existing = corridorMap.get(key);
+    corridorMap.set(key, {
+      corridor: key,
+      active: (existing?.active ?? 0) + 1,
+      serviceLabel:
+        alert.service === 'bus'
+          ? 'Bus demand'
+          : alert.service === 'package'
+            ? 'Package demand'
+            : 'Ride demand',
+    });
+  }
+
+  return Array.from(corridorMap.values())
+    .sort((left, right) => right.active - left.active)
+    .slice(0, limit);
+}

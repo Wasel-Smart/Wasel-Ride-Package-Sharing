@@ -163,6 +163,10 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-results-header { flex-direction:column !important; align-items:flex-start !important; gap:12px !important; }
           .sp-book-btn { min-height:44px !important; }
           .sp-ride-card-body { padding:16px !important; }
+          .sp-summary-grid { grid-template-columns:1fr !important; }
+          .sp-bus-card-grid { grid-template-columns:1fr !important; }
+          .sp-empty-actions { grid-template-columns:1fr !important; }
+          .sp-side-column { position:static !important; }
           .sp-shell-grid { opacity: 0.12 !important; }
         }
         @media(max-width:480px){
@@ -170,6 +174,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-head-inner { flex-direction:column !important; gap:12px !important; align-items:flex-start !important; }
           .sp-head-btn { width:100% !important; display:flex !important; justify-content:center !important; }
           .sp-inner { padding:12px !important; }
+          .sp-corridor-snapshot { grid-template-columns:1fr !important; }
         }
       `}</style>
       <div

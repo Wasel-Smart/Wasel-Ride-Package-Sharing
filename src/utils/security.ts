@@ -1,38 +1,32 @@
 /**
  * Security Headers & Configuration
- * Version: 1.1.0
+ * Version: 1.2.0
  *
  * Implements security best practices:
- * - Content Security Policy (CSP) — env-aware (no unsafe-* in production)
- * - Rate Limiting
- * - Strong Password Requirements
- * - 2FA Support
+ * - Content Security Policy (CSP) — env-aware
+ * - Client-side request throttling hints
+ * - Strong password requirements
+ * - Server-verified 2FA flows
  */
 
-import { supabase } from '@/utils/supabase/client';
-import { logger } from '@/utils/monitoring';
+import { API_URL, fetchWithRetry, getAuthDetails } from '@/services/core';
 import { getConfig } from '@/utils/env';
+import { logger } from '@/utils/monitoring';
 
-// ── Detect environment ───────────────────────────────────────────────────────
 const IS_DEV =
   typeof import.meta !== 'undefined' &&
   import.meta.env?.MODE === 'development';
 
-// ── Content Security Policy ─────────────────────────────────────────────────
-// unsafe-inline / unsafe-eval are ONLY included in development.
-// Production uses strict CSP without these dangerous directives.
 export const CSP_DIRECTIVES = {
   'default-src': ["'self'"],
   'script-src': [
     "'self'",
     ...(IS_DEV ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
-    'https://cdn.jsdelivr.net',
-    'https://unpkg.com',
     'https://js.stripe.com',
+    'https://maps.googleapis.com',
   ],
   'style-src': [
     "'self'",
-    // unsafe-inline is required for Tailwind inline styles at runtime
     "'unsafe-inline'",
     'https://fonts.googleapis.com',
   ],
@@ -55,7 +49,8 @@ export const CSP_DIRECTIVES = {
     'https://*.supabase.co',
     'wss://*.supabase.co',
     'https://api.stripe.com',
-    'https://api.unsplash.com',
+    'https://maps.googleapis.com',
+    'https://*.sentry.io',
     ...(IS_DEV ? ['ws://localhost:*', 'http://localhost:*'] : []),
   ],
   'frame-src': [
@@ -76,8 +71,6 @@ export function getCSPHeader(): string {
     .join('; ');
 }
 
-// ── Rate Limiting ────────────────────────────────────────────────────────────
-
 interface RateLimitConfig {
   maxRequests: number;
   windowMs: number;
@@ -87,7 +80,7 @@ const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 export function checkRateLimit(
   key: string,
-  config: RateLimitConfig = { maxRequests: 100, windowMs: 60000 }
+  config: RateLimitConfig = { maxRequests: 100, windowMs: 60_000 },
 ): boolean {
   const now = Date.now();
   const record = rateLimitStore.get(key);
@@ -97,7 +90,7 @@ export function checkRateLimit(
     return true;
   }
 
-  record.count++;
+  record.count += 1;
 
   if (record.count > config.maxRequests) {
     logger.warning('Rate limit exceeded', { key, count: record.count, limit: config.maxRequests });
@@ -111,15 +104,14 @@ export function resetRateLimit(key: string): void {
   rateLimitStore.delete(key);
 }
 
-// Cleanup old entries every 5 minutes
 setInterval(() => {
   const now = Date.now();
   for (const [key, record] of rateLimitStore.entries()) {
-    if (now > record.resetAt) rateLimitStore.delete(key);
+    if (now > record.resetAt) {
+      rateLimitStore.delete(key);
+    }
   }
 }, 5 * 60 * 1000);
-
-// ── Password Strength ────────────────────────────────────────────────────────
 
 export interface PasswordStrength {
   score: 0 | 1 | 2 | 3 | 4;
@@ -134,9 +126,9 @@ export function checkPasswordStrength(password: string): PasswordStrength {
   if (password.length < 8) {
     feedback.push('Password must be at least 8 characters');
   } else {
-    score++;
+    score += 1;
   }
-  if (password.length >= 12) score++;
+  if (password.length >= 12) score += 1;
 
   const hasLowercase = /[a-z]/.test(password);
   const hasUppercase = /[A-Z]/.test(password);
@@ -152,7 +144,7 @@ export function checkPasswordStrength(password: string): PasswordStrength {
   score += Math.min(diversityScore - 1, 2);
 
   const commonPatterns = [/^123456/, /password/i, /qwerty/i, /admin/i, /letmein/i];
-  if (commonPatterns.some(p => p.test(password))) {
+  if (commonPatterns.some((pattern) => pattern.test(password))) {
     feedback.push('Avoid common patterns');
     score = Math.max(0, score - 1);
   }
@@ -173,156 +165,84 @@ export function getPasswordStrengthColor(score: number): string {
   return ['#ef4444', '#f59e0b', '#eab308', '#22c55e', '#10b981'][score] ?? '#ef4444';
 }
 
-// ── Two-Factor Authentication (2FA) ──────────────────────────────────────────
-
 export interface TwoFactorSetup {
   secret: string;
   qrCode: string;
   backupCodes: string[];
 }
 
+async function getAuthenticatedHeaders(): Promise<HeadersInit> {
+  const { token } = await getAuthDetails();
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
+}
+
+async function callTwoFactorEndpoint<T>(path: string, body?: Record<string, unknown>): Promise<T> {
+  if (!isTwoFactorAvailable()) {
+    throw new Error('Two-factor authentication is not enabled for this environment.');
+  }
+
+  const response = await fetchWithRetry(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: await getAuthenticatedHeaders(),
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(
+      typeof payload?.error === 'string'
+        ? payload.error
+        : 'Two-factor authentication request failed.',
+    );
+  }
+
+  return payload as T;
+}
+
 export function isTwoFactorAvailable(): boolean {
-  return (
-    getConfig().enableTwoFactorAuth &&
-    typeof window !== 'undefined' &&
-    typeof crypto !== 'undefined' &&
-    typeof crypto.getRandomValues === 'function' &&
-    typeof crypto.subtle !== 'undefined'
-  );
+  return getConfig().enableTwoFactorAuth && Boolean(API_URL);
 }
 
-export async function enable2FA(userId: string): Promise<TwoFactorSetup> {
-  if (!isTwoFactorAvailable()) throw new Error('2FA is not enabled for this environment.');
-
-  const secret = generateTOTPSecret();
-  const qrCode = generateQRCode(secret, userId);
-  const backupCodes = generateBackupCodes(10);
-
-  await supabase
-    .from('profiles')
-    .update({ two_factor_enabled: true, two_factor_secret: secret, two_factor_backup_codes: backupCodes })
-    .eq('id', userId);
-
-  logger.info('2FA enabled', { userId });
-  return { secret, qrCode, backupCodes };
+export async function enable2FA(_userId: string): Promise<TwoFactorSetup> {
+  const payload = await callTwoFactorEndpoint<{ setup: TwoFactorSetup }>('/auth/2fa/setup');
+  logger.info('2FA setup started', { important: true });
+  return payload.setup;
 }
 
-export async function verify2FACode(userId: string, code: string): Promise<boolean> {
-  if (!isTwoFactorAvailable()) return false;
+export async function verify2FACode(_userId: string, code: string): Promise<boolean> {
+  if (!isTwoFactorAvailable()) {
+    return false;
+  }
 
   try {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('two_factor_secret, two_factor_backup_codes')
-      .eq('id', userId)
-      .single();
-
-    if (!profile) return false;
-
-    if (await verifyTOTPCode(profile.two_factor_secret, code)) return true;
-
-    const backupCodes: string[] = profile.two_factor_backup_codes ?? [];
-    const idx = backupCodes.indexOf(code);
-    if (idx !== -1) {
-      backupCodes.splice(idx, 1);
-      await supabase.from('profiles').update({ two_factor_backup_codes: backupCodes }).eq('id', userId);
-      return true;
-    }
-
-    return false;
+    const payload = await callTwoFactorEndpoint<{ valid: boolean }>('/auth/2fa/verify', { code });
+    return payload.valid === true;
   } catch (error) {
-    logger.error('2FA verification failed', error, { userId });
+    logger.error('2FA verification failed', error);
     return false;
   }
 }
 
-export async function disable2FA(userId: string, code: string): Promise<boolean> {
-  if (!isTwoFactorAvailable()) return false;
-  if (!(await verify2FACode(userId, code))) return false;
-
-  await supabase
-    .from('profiles')
-    .update({ two_factor_enabled: false, two_factor_secret: null, two_factor_backup_codes: null })
-    .eq('id', userId);
-
-  logger.info('2FA disabled', { userId });
-  return true;
-}
-
-// ── TOTP helpers ─────────────────────────────────────────────────────────────
-
-function generateTOTPSecret(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes).map(b => chars[b % chars.length]).join('');
-}
-
-function generateQRCode(secret: string, userId: string): string {
-  const issuer = 'Wasel';
-  const label = `${issuer}:${userId}`;
-  const url = `otpauth://totp/${encodeURIComponent(label)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
-}
-
-function generateBackupCodes(count: number): string[] {
-  return Array.from({ length: count }, () => {
-    const bytes = new Uint8Array(6);
-    crypto.getRandomValues(bytes);
-    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase().slice(0, 8);
-  });
-}
-
-async function verifyTOTPCode(secret: string, code: string): Promise<boolean> {
-  const normalized = code.replace(/\s+/g, '');
-  if (!/^\d{6}$/.test(normalized)) return false;
-
-  const key = decodeBase32Secret(secret);
-  const counter = Math.floor(Date.now() / 30000);
-
-  for (let offset = -1; offset <= 1; offset++) {
-    if ((await generateTOTPCode(key, counter + offset)) === normalized) return true;
+export async function disable2FA(_userId: string, code: string): Promise<boolean> {
+  if (!isTwoFactorAvailable()) {
+    return false;
   }
-  return false;
-}
 
-function decodeBase32Secret(secret: string): Uint8Array {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  const normalized = secret.toUpperCase().replace(/=+$/, '');
-  let bits = '';
-  for (const char of normalized) {
-    const value = alphabet.indexOf(char);
-    if (value === -1) throw new Error('Invalid TOTP secret');
-    bits += value.toString(2).padStart(5, '0');
+  try {
+    const payload = await callTwoFactorEndpoint<{ disabled: boolean }>('/auth/2fa/disable', { code });
+    if (payload.disabled) {
+      logger.info('2FA disabled', { important: true });
+    }
+    return payload.disabled === true;
+  } catch (error) {
+    logger.error('2FA disable failed', error);
+    return false;
   }
-  const bytes: number[] = [];
-  for (let i = 0; i + 8 <= bits.length; i += 8) {
-    bytes.push(parseInt(bits.slice(i, i + 8), 2));
-  }
-  return new Uint8Array(bytes);
 }
 
-async function generateTOTPCode(secretKey: Uint8Array, counter: number): Promise<string> {
-  const buffer = new ArrayBuffer(8);
-  const view = new DataView(buffer);
-  view.setUint32(0, Math.floor(counter / 0x100000000), false);
-  view.setUint32(4, counter >>> 0, false);
-
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw', secretKey.slice().buffer as ArrayBuffer,
-    { name: 'HMAC', hash: 'SHA-1' }, false, ['sign'],
-  );
-  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', cryptoKey, buffer));
-  const offset = sig[sig.length - 1] & 0x0f;
-  const binary =
-    ((sig[offset] & 0x7f) << 24) |
-    ((sig[offset + 1] & 0xff) << 16) |
-    ((sig[offset + 2] & 0xff) << 8) |
-    (sig[offset + 3] & 0xff);
-  return String(binary % 1_000_000).padStart(6, '0');
-}
-
-// ── Security Headers for Netlify/Vercel ──────────────────────────────────────
 export const SECURITY_HEADERS = `
 /*
   X-Frame-Options: DENY
@@ -334,7 +254,6 @@ export const SECURITY_HEADERS = `
   Content-Security-Policy: ${getCSPHeader()}
 `;
 
-// ── Input Sanitization ───────────────────────────────────────────────────────
 export function sanitizeInput(input: string): string {
   return input
     .replace(/&/g, '&amp;')
@@ -354,10 +273,14 @@ export function validatePhone(phone: string): boolean {
 }
 
 export function validateURL(url: string): boolean {
-  try { new URL(url); return true; } catch { return false; }
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-// ── Export ───────────────────────────────────────────────────────────────────
 export const Security = {
   CSP_DIRECTIVES,
   getCSPHeader,

@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { MapWrapper } from '../../components/MapWrapper';
 import { createBusBooking, fetchBusRoutes, getOfficialBusRoutes, type BusRoute } from '../../services/bus';
+import { createSupportTicket } from '../../services/supportInbox';
+import { notificationsAPI } from '../../services/notifications.js';
 import {
   CITIES,
   CoreExperienceBanner,
@@ -69,7 +71,7 @@ function getRouteStatus(route: BusRoute, tripDate: string, today: string) {
   const next = times.find((minutes) => minutes >= currentMinutes);
 
   if (next === undefined) {
-    return { label: 'Closed today', detail: 'No more departures today', color: DS.gold };
+    return { label: 'Closed today', detail: 'No more departures left today', color: DS.gold };
   }
 
   const minutesAway = next - currentMinutes;
@@ -80,7 +82,7 @@ function getRouteStatus(route: BusRoute, tripDate: string, today: string) {
     return { label: 'Departing this hour', detail: `${minutesAway} min to departure`, color: DS.cyan };
   }
 
-  return { label: 'Later today', detail: `${minutesAway} min to next departure`, color: DS.cyan };
+  return { label: 'Later today', detail: `${minutesAway} min to the next departure`, color: DS.cyan };
 }
 
 export function BusPage() {
@@ -99,6 +101,7 @@ export function BusPage() {
   const [bookingBusy, setBookingBusy] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
   const [bookingSource, setBookingSource] = useState<'server' | 'local' | null>(null);
+  const [bookingTicketCode, setBookingTicketCode] = useState<string | null>(null);
 
   useEffect(() => {
     if (tripDate < today) setTripDate(today);
@@ -161,6 +164,7 @@ export function BusPage() {
   const departureKey = departureTimes.join('|');
   const departureLabel = scheduleMode === 'depart-now' ? `Next departure today at ${selectedDeparture}` : `${tripDate} at ${selectedDeparture}`;
   const activeStatus = getRouteStatus(activeBus, tripDate, today);
+  const fallbackBuses = busRoutes.filter((route) => route.id !== activeBus.id && route.seats > 0).slice(0, 2);
 
   useEffect(() => {
     setPassengers((value) => (activeBus.seats > 0 ? Math.min(value, activeBus.seats) : 1));
@@ -187,7 +191,15 @@ export function BusPage() {
         totalPrice,
       });
       setBookingSource(result.source);
+      setBookingTicketCode(result.ticketCode);
       setBookingComplete(true);
+      notificationsAPI.createNotification({
+        title: 'Bus seat confirmed',
+        message: `${activeBus.from} to ${activeBus.to} is confirmed. Ticket ${result.ticketCode}.`,
+        type: 'booking',
+        priority: 'high',
+        action_url: '/app/bus',
+      }).catch(() => {});
     } finally {
       setBookingBusy(false);
     }
@@ -202,12 +214,12 @@ export function BusPage() {
         <div style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', border: `1px solid ${DS.border}`, borderRadius: r(22), padding: 18, marginBottom: 18, boxShadow: '0 14px 34px rgba(0,0,0,0.18)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
             <div>
-              <div style={{ color: '#fff', fontWeight: 900, letterSpacing: '-0.02em' }}>Plan your corridor</div>
+              <div style={{ color: '#fff', fontWeight: 900, letterSpacing: '-0.02em' }}>Plan your trip</div>
               <div style={{ color: DS.sub, fontSize: '0.82rem', marginTop: 4 }}>Pick your cities first so live inventory and fallback schedules stay relevant.</div>
             </div>
             <button onClick={() => { setOrigin(destination); setDestination(origin); setBookingComplete(false); setBookingSource(null); }} type="button" style={{ height: 42, padding: '0 16px', borderRadius: '99px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: '0 8px 18px rgba(0,0,0,0.14)' }}>
               <ArrowLeftRight size={16} />
-              Swap direction
+              Swap cities
             </button>
           </div>
           <div className="sp-search-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
@@ -291,7 +303,7 @@ export function BusPage() {
                         <span style={{ ...pill(soldOut ? DS.gold : route.seats > 5 ? DS.green : DS.gold), marginTop: 6, fontSize: '0.65rem' }}>{soldOut ? 'No seats left' : `${route.seats} seats left`}</span>
                       </div>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 10, marginTop: 16 }}>
+                    <div className="sp-bus-card-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 10, marginTop: 16 }}>
                       {[{ label: 'Pickup', value: route.pickupPoint, icon: <MapPin size={13} color={route.color ?? DS.cyan} /> }, { label: 'Schedule', value: route.scheduleDays ?? route.frequency, icon: <Calendar size={13} color={route.color ?? DS.cyan} /> }, { label: 'Status', value: routeStatus.detail, icon: <Award size={13} color={route.color ?? DS.cyan} /> }].map((item) => (
                         <div key={item.label} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${DS.border}`, borderRadius: r(12), padding: '12px 13px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: DS.muted, fontSize: '0.68rem', fontWeight: 700, marginBottom: 4 }}>{item.icon}{item.label}</div>
@@ -313,18 +325,18 @@ export function BusPage() {
             })}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 16 }}>
+          <div className="sp-side-column" style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 16 }}>
             <div style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', border: `1px solid ${(activeBus.color ?? DS.cyan)}30`, borderRadius: r(22), overflow: 'hidden', boxShadow: `0 16px 42px ${activeBus.color ?? DS.cyan}10` }}>
               <div style={{ padding: '22px 22px 18px', background: `linear-gradient(135deg, ${DS.navy}, ${activeBus.color ?? DS.cyan}22)` }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
                   <div>
-                    <div style={{ color: '#fff', fontWeight: 900, fontSize: '1.15rem' }}>Schedule your seat</div>
+                    <div style={{ color: '#fff', fontWeight: 900, fontSize: '1.15rem' }}>Reserve your seat</div>
                     <div style={{ color: DS.sub, fontSize: '0.8rem', marginTop: 4 }}>{activeBus.from} to {activeBus.to} - {activeBus.company} - {activeBus.serviceLevel ?? 'Standard'}</div>
                   </div>
                   <span style={{ ...pill(activeStatus.color), fontSize: '0.7rem' }}>{activeStatus.label}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {(['depart-now', 'schedule-later'] as const).map((mode) => <button key={mode} onClick={() => { setScheduleMode(mode); setBookingComplete(false); }} type="button" style={{ height: 38, padding: '0 14px', borderRadius: '99px', border: 'none', cursor: 'pointer', background: scheduleMode === mode ? (mode === 'depart-now' ? DS.gradC : DS.gradG) : 'rgba(255,255,255,0.08)', color: '#fff', fontWeight: 700 }}>{mode === 'depart-now' ? 'Next departure' : 'Schedule ahead'}</button>)}
+                  {(['depart-now', 'schedule-later'] as const).map((mode) => <button key={mode} onClick={() => { setScheduleMode(mode); setBookingComplete(false); }} type="button" style={{ height: 38, padding: '0 14px', borderRadius: '99px', border: 'none', cursor: 'pointer', background: scheduleMode === mode ? (mode === 'depart-now' ? DS.gradC : DS.gradG) : 'rgba(255,255,255,0.08)', color: '#fff', fontWeight: 700 }}>{mode === 'depart-now' ? 'Depart now' : 'Book later'}</button>)}
                 </div>
               </div>
               <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -358,7 +370,7 @@ export function BusPage() {
                     ))}
                   </div>
                 </div>
-                {activeBus.seats === 0 && <div style={{ background: 'rgba(240,168,48,0.10)', border: '1px solid rgba(240,168,48,0.28)', borderRadius: r(16), padding: '14px 16px', color: '#fff', fontSize: '0.84rem', lineHeight: 1.5 }}>This coach is currently full. Switch routes and keep the same corridor filters.</div>}
+                {activeBus.seats === 0 && <div style={{ background: 'rgba(240,168,48,0.10)', border: '1px solid rgba(240,168,48,0.28)', borderRadius: r(16), padding: '14px 16px', color: '#fff', fontSize: '0.84rem', lineHeight: 1.5 }}>This coach is full right now. Switch routes and keep the same corridor filters.</div>}
                 {scheduleMode === 'schedule-later' && <input type="date" min={today} value={tripDate} onChange={(event) => { setTripDate(event.target.value); setBookingComplete(false); }} style={{ width: '100%', height: 46, borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', padding: '0 14px', fontFamily: DS.F }} />}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
@@ -382,20 +394,25 @@ export function BusPage() {
                   {[{ label: 'Seat fare', value: `${activeBus.price} JOD x ${passengers}` }, { label: 'Schedule days', value: activeBus.scheduleDays ?? activeBus.frequency }, { label: 'Available on this coach', value: `${activeBus.seats} seats` }].map((row) => <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}><span style={{ color: DS.sub, fontSize: '0.78rem' }}>{row.label}</span><span style={{ color: '#fff', fontWeight: 700 }}>{row.value}</span></div>)}
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, paddingTop: 10, borderTop: `1px solid ${DS.border}` }}><span style={{ color: '#fff', fontWeight: 800 }}>Total</span><span style={{ color: activeBus.color ?? DS.cyan, fontWeight: 900, fontSize: '1.2rem' }}>{totalPrice} JOD</span></div>
                 </div>
-                <button onClick={handleBusBooking} disabled={bookingDisabled} type="button" style={{ width: '100%', height: 52, borderRadius: r(16), border: 'none', background: `linear-gradient(135deg,${activeBus.color ?? DS.cyan},${DS.blue})`, color: '#fff', fontWeight: 900, fontFamily: DS.F, cursor: bookingDisabled ? 'not-allowed' : 'pointer', fontSize: '0.95rem', opacity: bookingDisabled ? 0.72 : 1, boxShadow: '0 14px 28px rgba(0,0,0,0.18)' }}>{bookingBusy ? 'Confirming booking...' : activeBus.seats === 0 ? 'Sold out for now' : 'Confirm booking'}</button>
+                <button data-testid="bus-confirm-booking" onClick={handleBusBooking} disabled={bookingDisabled} type="button" style={{ width: '100%', height: 52, borderRadius: r(16), border: 'none', background: bookingDisabled ? 'linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))' : `linear-gradient(135deg,${activeBus.color ?? DS.cyan},${DS.blue})`, color: '#fff', fontWeight: 900, fontFamily: DS.F, cursor: bookingDisabled ? 'not-allowed' : 'pointer', fontSize: '0.95rem', opacity: bookingDisabled ? 0.72 : 1, boxShadow: '0 14px 28px rgba(0,0,0,0.18)' }}>{bookingBusy ? 'Reserving seat...' : activeBus.seats === 0 ? 'Try another departure' : 'Reserve seat'}</button>
+                <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.55 }}>
+                  {activeBus.seats === 0
+                    ? 'This coach is full right now. Pick another departure below and keep the same corridor details.'
+                    : 'Your seat, boarding stop, and departure alerts stay linked in your account. If the schedule changes, Wasel updates you.'}
+                </div>
                 {activeBus.sourceUrl && (
                   <a href={activeBus.sourceUrl} target="_blank" rel="noreferrer" style={{ color: DS.cyan, fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
                     <ExternalLink size={14} />
-                    Official provider schedule, verified {activeBus.lastVerifiedAt}
+                    Official schedule, verified {activeBus.lastVerifiedAt}
                   </a>
                 )}
-                {bookingComplete && <div style={{ background: 'rgba(0,200,117,0.10)', border: '1px solid rgba(0,200,117,0.28)', borderRadius: r(16), padding: '14px 16px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 8, color: DS.green, fontWeight: 800, marginBottom: 6 }}><CheckCircle2 size={16} />Booking reserved</div><div style={{ color: '#fff', fontSize: '0.86rem', lineHeight: 1.5 }}>{passengers} seat{passengers > 1 ? 's are' : ' is'} reserved for {departureLabel}. Your {seatPreference.replace('-', ' ')} preference was saved for the {activeBus.from} to {activeBus.to} corridor.{bookingSource === 'local' ? ' Saved locally while server sync completes.' : ' Saved in your account.'}</div></div>}
+                {bookingComplete && <div style={{ background: 'rgba(0,200,117,0.10)', border: '1px solid rgba(0,200,117,0.28)', borderRadius: r(16), padding: '14px 16px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 8, color: DS.green, fontWeight: 800, marginBottom: 6 }}><CheckCircle2 size={16} />Seat confirmed</div><div style={{ color: '#fff', fontSize: '0.86rem', lineHeight: 1.5 }}>{passengers} seat{passengers > 1 ? 's are' : ' is'} reserved for {departureLabel}. Ticket code {bookingTicketCode ?? 'pending'} was saved for the {activeBus.from} to {activeBus.to} corridor.{bookingSource === 'local' ? ' Saved locally while server sync completes.' : ' Saved in your account with departure reminders.'}</div><div style={{ display:'flex', gap:10, flexWrap:'wrap', marginTop:10 }}><button type="button" onClick={() => { const ticket = createSupportTicket({ topic: 'bus_booking', subject: `Bus help for ${activeBus.from} to ${activeBus.to}`, detail: `Support requested for bus ticket ${bookingTicketCode ?? 'pending'} on ${departureLabel}.`, relatedId: bookingTicketCode ?? activeBus.id, routeLabel: `${activeBus.from} to ${activeBus.to}` }); notificationsAPI.createNotification({ title: 'Bus support opened', message: `Support ticket ${ticket.id} is following your bus booking.`, type: 'support', priority: 'high', action_url: '/app/profile' }).catch(() => {}); }} style={{ height:38, padding:'0 14px', borderRadius:'99px', border:`1px solid ${DS.border}`, background:DS.card2, color:'#fff', fontWeight:700, cursor:'pointer' }}>Open support</button></div></div>}
               </div>
             </div>
 
             <div style={{ background: DS.card, border: `1px solid ${DS.border}`, borderRadius: r(22), padding: 18 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
-                <div><div style={{ color: '#fff', fontWeight: 800 }}>Live route view</div><div style={{ color: DS.sub, fontSize: '0.76rem', marginTop: 4 }}>Pickup, destination, and route direction before checkout.</div></div>
+                <div><div style={{ color: '#fff', fontWeight: 800 }}>Live route view</div><div style={{ color: DS.sub, fontSize: '0.76rem', marginTop: 4 }}>See pickup, destination, and route direction before checkout.</div></div>
                 <span style={{ ...pill(activeBus.color ?? DS.cyan), fontSize: '0.68rem' }}>Map enabled</span>
               </div>
               <MapWrapper mode="live" center={routeCenter} pickupLocation={pickupCoord} dropoffLocation={dropoffCoord} driverLocation={midpoint(pickupCoord, dropoffCoord)} height={230} showMosques={false} showRadars={false} />
@@ -405,12 +422,12 @@ export function BusPage() {
             </div>
 
             <div style={{ background: DS.card, border: `1px solid ${DS.border}`, borderRadius: r(22), padding: '18px 18px 16px' }}>
-              <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Network snapshot</div>
+              <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Corridor snapshot</div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {busRoutes.slice(0, 6).map((route) => {
                   const times = getScheduleTimes(route);
                   return (
-                    <div key={`${route.id}-snapshot`} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.2fr) auto auto', gap: 10, alignItems: 'center', background: DS.card2, border: `1px solid ${DS.border}`, borderRadius: r(14), padding: '12px 14px' }}>
+                    <div key={`${route.id}-snapshot`} className="sp-corridor-snapshot" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.2fr) auto auto', gap: 10, alignItems: 'center', background: DS.card2, border: `1px solid ${DS.border}`, borderRadius: r(14), padding: '12px 14px' }}>
                       <div>
                         <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{route.from} to {route.to}</div>
                         <div style={{ color: DS.sub, fontSize: '0.74rem', marginTop: 4 }}>{route.company} - {times[0]} first / {times[times.length - 1]} last</div>
@@ -424,13 +441,27 @@ export function BusPage() {
             </div>
 
             <div style={{ background: DS.card, border: `1px solid ${DS.border}`, borderRadius: r(22), padding: '18px 18px 16px' }}>
-              <div style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>What riders need to know</div>
+              <div style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>What to know before you go</div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
-                  'Jordan corridors now use official provider schedules, fares, and operating days instead of a four-route demo list.',
-                  'Departure time is selectable, and the page now shows today-aware schedule status like Boarding soon or Closed today.',
-                  'If a live inventory feed is not available, Wasel falls back to the verified official schedule rather than hiding the corridor.',
+                  'Jordan corridors now use official provider schedules, fares, and operating days instead of a demo-only list.',
+                  'Departure time is selectable, and the page shows today-aware status such as Boarding soon or Closed today.',
+                  'If live inventory is unavailable, Wasel falls back to the verified official schedule instead of hiding the corridor.',
                 ].map((item) => <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: DS.sub, fontSize: '0.8rem', lineHeight: 1.5 }}><Shield size={15} color={DS.green} style={{ flexShrink: 0, marginTop: 2 }} /><span>{item}</span></div>)}
+              </div>
+            </div>
+            <div style={{ background: DS.card, border: `1px solid ${DS.border}`, borderRadius: r(22), padding: '18px 18px 16px' }}>
+              <div style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>If this coach fills up</div>
+              <div style={{ display: 'grid', gap: 10 }}>
+                {fallbackBuses.length > 0 ? fallbackBuses.map((route) => (
+                  <button key={`fallback-${route.id}`} type="button" onClick={() => { setSelected(route.id); setBookingComplete(false); setBookingSource(null); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer', color: '#fff' }}>
+                    <div style={{ textAlign: 'left' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.84rem' }}>{route.dep} departure</div>
+                      <div style={{ color: DS.sub, fontSize: '0.74rem', marginTop: 4 }}>{route.summary}</div>
+                    </div>
+                    <span style={{ ...pill(route.color ?? DS.cyan), fontSize: '0.68rem' }}>{route.seats} seats</span>
+                  </button>
+                )) : <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.55 }}>More departures will appear here as the corridor refreshes. If the route is urgent, try another coach or a shared ride on the same day.</div>}
               </div>
             </div>
           </div>

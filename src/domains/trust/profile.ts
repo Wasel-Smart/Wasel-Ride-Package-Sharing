@@ -1,7 +1,7 @@
 export type WaselUserRole = 'passenger' | 'driver' | 'both' | 'admin';
 export type WaselVerificationLevel = 'level_0' | 'level_1' | 'level_2' | 'level_3';
 export type WaselWalletStatus = 'active' | 'limited' | 'frozen';
-export type WaselBackendMode = 'demo' | 'supabase';
+export type WaselBackendMode = 'supabase' | 'demo';
 
 export interface WaselUserProfile {
   id: string;
@@ -24,6 +24,20 @@ export interface WaselUserProfile {
   backendMode: WaselBackendMode;
 }
 
+type DemoProfileInput = {
+  id: string;
+  name: string;
+  email: string;
+  role?: WaselUserRole;
+  verified?: boolean;
+  rating?: number;
+  trips?: number;
+  balance?: number;
+  phone?: string;
+  avatar?: string;
+  joinedAt?: string;
+};
+
 type PartialProfileSource = Partial<{
   full_name: string;
   fullName: string;
@@ -45,6 +59,7 @@ type PartialProfileSource = Partial<{
   created_at: string;
   joined_at: string;
   avatar_url: string;
+  two_factor_enabled: boolean;
 }>;
 
 function toRole(value: unknown): WaselUserRole {
@@ -81,40 +96,37 @@ export function deriveTrustScore(input: {
   return Math.min(99, baseByLevel[input.verificationLevel] + ratingBonus + tripBonus);
 }
 
-export function createDemoUserProfile(params: {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  role?: WaselUserRole;
-  verified?: boolean;
-  balance?: number;
-  trips?: number;
-  rating?: number;
-}): WaselUserProfile {
-  const role = params.role ?? 'passenger';
-  const verified = Boolean(params.verified);
-  const phoneVerified = Boolean(params.phone);
-  const sanadVerified = verified;
-  const verificationLevel = deriveVerificationLevel({ phoneVerified, sanadVerified, role, verified });
+export function createDemoUserProfile(input: DemoProfileInput): WaselUserProfile {
+  const role = input.role ?? 'passenger';
+  const sanadVerified = Boolean(input.verified);
+  const phoneVerified = Boolean(input.phone);
+  const emailVerified = Boolean(input.email);
+  const verificationLevel = deriveVerificationLevel({
+    phoneVerified,
+    sanadVerified,
+    role,
+    verified: sanadVerified,
+  });
+  const rating = input.rating ?? 4.8;
+  const trips = input.trips ?? 0;
 
   return {
-    id: params.id,
-    name: params.name,
-    email: params.email,
+    id: input.id,
+    name: input.name,
+    email: input.email,
     role,
-    verified,
-    rating: params.rating ?? (verified ? 4.8 : 0),
-    trips: params.trips ?? (verified ? 18 : 0),
-    balance: params.balance ?? 0,
-    phone: params.phone,
-    avatar: '👤',
-    joinedAt: new Date().toISOString().slice(0, 10),
+    verified: sanadVerified,
+    rating,
+    trips,
+    balance: input.balance ?? 0,
+    phone: input.phone,
+    avatar: input.avatar,
+    joinedAt: input.joinedAt ?? new Date().toISOString().slice(0, 10),
     phoneVerified,
-    emailVerified: true,
+    emailVerified,
     sanadVerified,
     verificationLevel,
-    trustScore: deriveTrustScore({ verificationLevel, rating: params.rating, trips: params.trips }),
+    trustScore: deriveTrustScore({ verificationLevel, rating, trips }),
     walletStatus: 'active',
     backendMode: 'demo',
   };
@@ -144,8 +156,8 @@ export function mapBackendProfile(args: {
       ? profile.trips
       : 0;
   const verified = Boolean(profile?.verified);
-  const phoneVerified = Boolean(profile?.phone_verified ?? authUser.phone_confirmed_at ?? phone);
-  const emailVerified = Boolean(profile?.email_verified ?? authUser.email_confirmed_at ?? authUser.email);
+  const phoneVerified = Boolean(profile?.phone_verified ?? authUser.phone_confirmed_at ?? false);
+  const emailVerified = Boolean(profile?.email_verified ?? authUser.email_confirmed_at ?? false);
   const sanadVerified = Boolean(profile?.sanad_verified ?? metadata.sanad_verified ?? verified);
   const verificationLevel = ((): WaselVerificationLevel => {
     const raw = profile?.verification_level;
@@ -175,7 +187,7 @@ export function mapBackendProfile(args: {
         ? profile.balance
         : 0,
     phone,
-    avatar: typeof profile?.avatar_url === 'string' ? profile.avatar_url : '👤',
+    avatar: typeof profile?.avatar_url === 'string' ? profile.avatar_url : undefined,
     joinedAt: profile?.created_at ?? profile?.joined_at ?? authUser.created_at?.slice(0, 10),
     phoneVerified,
     emailVerified,

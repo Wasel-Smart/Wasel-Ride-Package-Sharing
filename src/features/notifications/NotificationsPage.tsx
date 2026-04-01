@@ -11,14 +11,16 @@ const C = WaselColors;
 
 export function NotificationsPage() {
   const { dir } = useLanguage();
-  
+
   return (
     <div
       className="min-h-screen px-4 py-8"
-      style={{ background: C.bg }}
+      style={{
+        background: `radial-gradient(circle at top left, rgba(0,200,232,0.12), transparent 28%), ${C.bg}`,
+      }}
       dir={dir}
     >
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto max-w-5xl">
         <NotificationCenter />
       </div>
     </div>

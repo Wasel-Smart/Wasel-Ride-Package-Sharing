@@ -4,7 +4,7 @@ import {
   deriveTrustScore,
   deriveVerificationLevel,
   mapBackendProfile,
-} from '@/domains/trust/profile';
+} from '../src/domains/trust/profile';
 
 describe('trust profile derivation', () => {
   it('assigns verification levels correctly', () => {
@@ -63,5 +63,26 @@ describe('trust profile derivation', () => {
     expect(mapped.verificationLevel).toBe('level_3');
     expect(mapped.balance).toBe(44.2);
     expect(mapped.trips).toBe(25);
+  });
+
+  it('does not mark a phone as verified just because a phone number exists', () => {
+    const mapped = mapBackendProfile({
+      authUser: {
+        id: 'auth_2',
+        email: 'pending@example.com',
+        created_at: '2026-01-01T00:00:00.000Z',
+        email_confirmed_at: '2026-01-02T00:00:00.000Z',
+        phone_confirmed_at: null,
+      },
+      profile: {
+        full_name: 'Pending Phone User',
+        phone_number: '+962799999999',
+        verification_level: 'level_0',
+      },
+    });
+
+    expect(mapped.phone).toBe('+962799999999');
+    expect(mapped.phoneVerified).toBe(false);
+    expect(mapped.verificationLevel).toBe('level_0');
   });
 });

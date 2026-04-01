@@ -168,7 +168,7 @@ export const CURRENCIES: Record<SupportedCurrency, CurrencyConfig> = {
   },
 };
 
-// ─── Exchange rates (base: JOD) ─────────────────���─────────────────────────────
+// Exchange rates (base: JOD)
 // In production, these should be refreshed from a live exchange-rate API
 // (e.g., exchangerate-api.com) at least once per hour.
 
@@ -424,3 +424,4 @@ export function useCurrency() {
     available:   svc.getAvailable(),
   };
 }
+

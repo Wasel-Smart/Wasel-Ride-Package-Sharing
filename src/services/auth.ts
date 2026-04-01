@@ -1,8 +1,17 @@
 import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey, supabase } from './core';
-import { getDirectProfile, updateDirectProfile } from './directSupabase';
+import { getDirectProfile, getDirectVerificationRecord, updateDirectProfile } from './directSupabase';
+import { getConfig } from '../utils/env';
 
 function canUseEdgeApi(): boolean {
   return Boolean(API_URL && publicAnonKey);
+}
+
+function canUseDirectFallbackForWrites(): boolean {
+  return getConfig().allowDirectSupabaseFallback;
+}
+
+function getDirectFallbackError(operation: string): Error {
+  return new Error(`${operation} is temporarily unavailable while the secure backend is degraded. Please try again shortly.`);
 }
 
 function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'generic'): string {
@@ -43,11 +52,65 @@ function requireSupabase() {
   return supabase;
 }
 
+type VerificationRecord = {
+  sanad_status?: string | null;
+  document_status?: string | null;
+  verification_level?: string | null;
+  verification_timestamp?: string | null;
+  failure_reason?: string | null;
+  updated_at?: string | null;
+};
+
+function mergeVerificationIntoProfile(
+  profile: Record<string, unknown> | null,
+  verification: VerificationRecord | null,
+): Record<string, unknown> | null {
+  if (!profile && !verification) {
+    return null;
+  }
+
+  if (!verification) {
+    return profile;
+  }
+
+  const current = profile ?? {};
+  const sanadVerified = verification.sanad_status === 'verified';
+  const documentVerified = verification.document_status === 'verified';
+  const verificationLevel = verification.verification_level
+    || (sanadVerified ? 'level_3' : documentVerified ? 'level_2' : 'level_0');
+
+  return {
+    ...current,
+    sanad_verified: current.sanad_verified ?? sanadVerified,
+    verified: current.verified ?? (sanadVerified || documentVerified),
+    verification_level: current.verification_level ?? verificationLevel,
+    verification_updated_at:
+      current.verification_updated_at ??
+      verification.updated_at ??
+      verification.verification_timestamp ??
+      null,
+    verification_failure_reason: current.verification_failure_reason ?? verification.failure_reason ?? null,
+  };
+}
+
+async function enrichProfileWithVerification(userId: string, profile: Record<string, unknown> | null) {
+  try {
+    const verification = await getDirectVerificationRecord(userId);
+    return mergeVerificationIntoProfile(profile, verification);
+  } catch {
+    return profile;
+  }
+}
+
 export const authAPI = {
   async signUp(email: string, password: string, firstName: string, lastName: string, phone: string) {
     const client = requireSupabase();
 
     if (!canUseEdgeApi()) {
+      if (!canUseDirectFallbackForWrites()) {
+        throw getDirectFallbackError('Sign up');
+      }
+
       const { data, error } = await client.auth.signUp({
         email,
         password,
@@ -96,6 +159,10 @@ export const authAPI = {
         throw error;
       }
 
+      if (!canUseDirectFallbackForWrites()) {
+        throw getDirectFallbackError('Sign up');
+      }
+
       const { data, error: fallbackError } = await client.auth.signUp({
         email,
         password,
@@ -116,6 +183,10 @@ export const authAPI = {
 
   async createProfile(userId: string, email: string, firstName: string, lastName: string) {
     if (!canUseEdgeApi()) {
+      if (!canUseDirectFallbackForWrites()) {
+        throw getDirectFallbackError('Profile creation');
+      }
+
       return updateDirectProfile(userId, {
         email,
         full_name: `${firstName} ${lastName}`.trim(),
@@ -235,7 +306,8 @@ export const authAPI = {
 
     if (!canUseEdgeApi()) {
       const profile = await getDirectProfile(userId);
-      return { profile };
+      const enrichedProfile = await enrichProfileWithVerification(userId, profile as Record<string, unknown> | null);
+      return { profile: enrichedProfile };
     }
 
     try {
@@ -246,14 +318,20 @@ export const authAPI = {
 
       if (!response.ok) {
         const profile = await getDirectProfile(userId).catch(() => null);
-        return { profile };
+        const enrichedProfile = await enrichProfileWithVerification(userId, profile as Record<string, unknown> | null);
+        return { profile: enrichedProfile };
       }
 
       const data = await response.json();
-      return { profile: data };
+      const enrichedProfile = await enrichProfileWithVerification(
+        userId,
+        data as Record<string, unknown>,
+      );
+      return { profile: enrichedProfile };
     } catch {
       const profile = await getDirectProfile(userId).catch(() => null);
-      return { profile };
+      const enrichedProfile = await enrichProfileWithVerification(userId, profile as Record<string, unknown> | null);
+      return { profile: enrichedProfile };
     }
   },
 
@@ -262,6 +340,10 @@ export const authAPI = {
     if (!token || !userId) return { success: false, error: 'Not authenticated' };
 
     if (!canUseEdgeApi()) {
+      if (!canUseDirectFallbackForWrites()) {
+        return { success: false, error: getDirectFallbackError('Profile update').message };
+      }
+
       try {
         const profile = await updateDirectProfile(userId, updates);
         return { success: true, profile };
@@ -285,13 +367,40 @@ export const authAPI = {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: `Server error: ${response.status}` }));
-        console.error('[authAPI.updateProfile] Server error:', response.status, errorData);
-        return { success: false, error: errorData.error || `Failed to update profile: ${response.status}` };
+        if (!canUseDirectFallbackForWrites()) {
+          console.error('[authAPI.updateProfile] Server error:', response.status, errorData);
+          return {
+            success: false,
+            error: errorData.error || getDirectFallbackError('Profile update').message,
+          };
+        }
+
+        try {
+          const profile = await updateDirectProfile(userId, updates);
+          return { success: true, profile };
+        } catch (fallbackError) {
+          console.error('[authAPI.updateProfile] Server error:', response.status, errorData);
+          return {
+            success: false,
+            error:
+              fallbackError instanceof Error
+                ? fallbackError.message
+                : errorData.error || `Failed to update profile: ${response.status}`,
+          };
+        }
       }
 
       const data = await response.json();
       return { success: true, profile: data };
     } catch (error) {
+      if (!canUseDirectFallbackForWrites()) {
+        console.error('[authAPI.updateProfile] Network/fetch error:', error);
+        return {
+          success: false,
+          error: getDirectFallbackError('Profile update').message,
+        };
+      }
+
       try {
         const profile = await updateDirectProfile(userId, updates);
         return { success: true, profile };

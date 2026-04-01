@@ -1,4 +1,5 @@
 import { bookingsAPI } from './bookings';
+import { trackGrowthEvent } from './growthEngine';
 import { tripsAPI } from './trips';
 import { OFFICIAL_JORDAN_BUS_ROUTES } from '../data/jordanBusNetwork';
 
@@ -50,6 +51,14 @@ export interface BusBookingPayload {
 export interface BusBookingResult {
   source: 'server' | 'local';
   bookingId: string;
+  ticketCode: string;
+}
+
+export interface StoredBusBooking extends BusBookingPayload {
+  id: string;
+  created_at: string;
+  ticket_code: string;
+  status: 'confirmed' | 'cancelled' | 'completed';
 }
 
 function toText(value: unknown, fallback: string): string {
@@ -171,12 +180,13 @@ export async function fetchBusRoutes(query: BusRouteQuery): Promise<BusRoute[]> 
   }
 }
 
-function persistLocalBusBooking(payload: BusBookingPayload): string {
+function persistLocalBusBooking(payload: BusBookingPayload): StoredBusBooking {
   const key = 'wasel-bus-bookings';
-  const bookingId = `local-${Date.now()}`;
-  const draft = {
-    id: bookingId,
+  const draft: StoredBusBooking = {
+    id: `local-${Date.now()}`,
     created_at: new Date().toISOString(),
+    ticket_code: `BUS-${Math.floor(100000 + Math.random() * 900000)}`,
+    status: 'confirmed',
     ...payload,
   };
 
@@ -192,7 +202,18 @@ function persistLocalBusBooking(payload: BusBookingPayload): string {
     window.localStorage.setItem(key, JSON.stringify(next));
   }
 
-  return bookingId;
+  return draft;
+}
+
+export function getStoredBusBookings(): StoredBusBooking[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem('wasel-bus-bookings');
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function createBusBooking(payload: BusBookingPayload): Promise<BusBookingResult> {
@@ -216,14 +237,44 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
       server?.id ??
       `server-${Date.now()}`;
 
-    return {
+    const result: BusBookingResult = {
       source: 'server',
       bookingId: String(bookingId),
+      ticketCode: `BUS-${String(bookingId).slice(-6).toUpperCase()}`,
     };
+    void trackGrowthEvent({
+      eventName: 'bus_booking_created',
+      funnelStage: 'booked',
+      serviceType: 'bus',
+      from: payload.pickupStop,
+      to: payload.dropoffStop,
+      valueJod: payload.totalPrice,
+      metadata: {
+        tripId: payload.tripId,
+        source: 'server',
+        scheduleDate: payload.scheduleDate,
+      },
+    });
+    return result;
   } catch {
+    const stored = persistLocalBusBooking(payload);
+    void trackGrowthEvent({
+      eventName: 'bus_booking_created',
+      funnelStage: 'booked',
+      serviceType: 'bus',
+      from: payload.pickupStop,
+      to: payload.dropoffStop,
+      valueJod: payload.totalPrice,
+      metadata: {
+        tripId: payload.tripId,
+        source: 'local',
+        scheduleDate: payload.scheduleDate,
+      },
+    });
     return {
       source: 'local',
-      bookingId: persistLocalBusBooking(payload),
+      bookingId: stored.id,
+      ticketCode: stored.ticket_code,
     };
   }
 }

@@ -8,17 +8,18 @@
  * - Performance monitoring
  */
 
-import { projectId, publicAnonKey } from './supabase/info';
+import { API_URL, publicAnonKey } from '../services/core';
 
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
 
 /**
- * Base URL for all API calls
- * Uses the 'server' edge function with '/make-server-0b1f4071' prefix
+ * Base URL for all API calls.
+ * This reuses the shared backend resolution from services/core so the app only
+ * has one edge-function/backend contract.
  */
-export const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/server/make-server-0b1f4071`;
+export const API_BASE_URL = API_URL;
 
 /**
  * Request timeout (30 seconds)
@@ -155,6 +156,10 @@ export async function apiRequest<T = any>(
   options: RequestInit = {},
   retries: number = RETRY_CONFIG.maxRetries
 ): Promise<T> {
+  if (!API_BASE_URL && !endpoint.startsWith('http')) {
+    throw new APIError('Backend API base URL is not configured.', 500, 'api_not_configured');
+  }
+
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
   
   let lastError: Error | null = null;

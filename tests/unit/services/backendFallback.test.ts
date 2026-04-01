@@ -6,6 +6,8 @@ const mockSupabaseSignUp = vi.fn();
 const mockCreateDirectTrip = vi.fn();
 const mockSearchDirectTrips = vi.fn();
 const mockGetDirectProfile = vi.fn();
+const mockUpdateDirectProfile = vi.fn();
+const mockGetConfig = vi.fn();
 
 vi.mock('../../../src/services/core', () => ({
   API_URL: '',
@@ -28,11 +30,15 @@ vi.mock('../../../src/services/directSupabase', () => ({
   getDirectProfile: (...args: any[]) => mockGetDirectProfile(...args),
   searchDirectTrips: (...args: any[]) => mockSearchDirectTrips(...args),
   updateDirectBookingStatus: vi.fn(),
-  updateDirectProfile: vi.fn(),
+  updateDirectProfile: (...args: any[]) => mockUpdateDirectProfile(...args),
   updateDirectTrip: vi.fn(),
   createDirectBooking: vi.fn(),
   getDirectTripBookings: vi.fn(),
   getDirectUserBookings: vi.fn(),
+}));
+
+vi.mock('../../../src/utils/env', () => ({
+  getConfig: () => mockGetConfig(),
 }));
 
 import { authAPI } from '../../../src/services/auth';
@@ -42,6 +48,9 @@ describe('backend fallback services', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetAuthDetails.mockResolvedValue({ token: 'token-123', userId: 'user-123' });
+    mockGetConfig.mockReturnValue({
+      allowDirectSupabaseFallback: true,
+    });
   });
 
   it('uses Supabase auth signUp directly when the edge auth endpoint is unavailable', async () => {
@@ -76,6 +85,43 @@ describe('backend fallback services', () => {
 
     expect(mockGetDirectProfile).toHaveBeenCalledWith('user-123');
     expect(result.profile?.full_name).toBe('Sara Ali');
+  });
+
+  it('updates the profile directly through Supabase when the edge update endpoint returns an error', async () => {
+    mockFetchWithRetry.mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ error: 'edge failed' }),
+    });
+    mockUpdateDirectProfile.mockResolvedValue({
+      id: 'user-123',
+      phone_number: '+962791234567',
+    });
+
+    const result = await authAPI.updateProfile({ phone_number: '+962791234567' });
+
+    expect(mockUpdateDirectProfile).toHaveBeenCalledWith('user-123', { phone_number: '+962791234567' });
+    expect(result.success).toBe(true);
+    expect(result.profile?.phone_number).toBe('+962791234567');
+  });
+
+  it('fails closed for profile updates when direct fallback is disabled', async () => {
+    mockGetConfig.mockReturnValue({
+      allowDirectSupabaseFallback: false,
+    });
+    mockFetchWithRetry.mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ error: 'edge failed' }),
+    });
+
+    const result = await authAPI.updateProfile({ phone_number: '+962791234567' });
+
+    expect(mockUpdateDirectProfile).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      success: false,
+      error: 'Profile update is temporarily unavailable while the secure backend is degraded. Please try again shortly.',
+    });
   });
 
   it('creates trips through the direct Supabase adapter when the edge trip endpoint is unavailable', async () => {

@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Activity, Briefcase, Brain, GraduationCap, LineChart, Rocket, Shield } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { getGrowthDashboard, type GrowthDashboard } from '../../services/growthEngine';
 
 const BG = '#040C18';
 const CARD = 'rgba(255,255,255,0.04)';
@@ -120,6 +121,15 @@ export default function OperationsOverviewPage() {
   const { pathname } = useLocation();
   const { language } = useLanguage();
   const ar = language === 'ar';
+  const [dashboard, setDashboard] = useState<GrowthDashboard | null>(null);
+
+  useEffect(() => {
+    if (pathname !== '/app/analytics') {
+      setDashboard(null);
+      return;
+    }
+    void getGrowthDashboard().then(setDashboard).catch(() => setDashboard(null));
+  }, [pathname]);
 
   const config = useMemo(
     () =>
@@ -189,6 +199,78 @@ export default function OperationsOverviewPage() {
             </div>
           ))}
         </div>
+
+        {pathname === '/app/analytics' && dashboard && (
+          <div style={{ display: 'grid', gap: 12, marginTop: 18 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+              {[
+                { label: ar ? 'بحث' : 'Searches', value: dashboard.funnel.searched, color: CYAN },
+                { label: ar ? 'اختيارات' : 'Selections', value: dashboard.funnel.selected, color: GOLD },
+                { label: ar ? 'حجوزات' : 'Bookings', value: dashboard.funnel.booked, color: GREEN },
+                { label: ar ? 'مكتملة' : 'Completed', value: dashboard.funnel.completed, color: PURPLE },
+              ].map((item) => (
+                <div key={item.label} style={{ background: CARD, border: `1px solid ${BORD}`, borderRadius: 16, padding: '16px 18px' }}>
+                  <div style={{ color: 'rgba(148,163,184,0.76)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
+                  <div style={{ color: item.color, fontWeight: 900, fontSize: '1.35rem', marginTop: 8 }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ background: CARD, border: `1px solid ${BORD}`, borderRadius: 16, padding: '16px 18px' }}>
+                <div style={{ color: '#EFF6FF', fontWeight: 700, marginBottom: 10 }}>{ar ? 'مزيج الخدمات' : 'Service mix'}</div>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {[
+                    { label: ar ? 'رحلات' : 'Rides', value: dashboard.serviceMix.rides },
+                    { label: ar ? 'باصات' : 'Buses', value: dashboard.serviceMix.buses },
+                    { label: ar ? 'طرود' : 'Packages', value: dashboard.serviceMix.packages },
+                    { label: ar ? 'إحالات' : 'Referrals', value: dashboard.serviceMix.referrals },
+                  ].map((item) => (
+                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, color: '#CBD5E1', fontSize: '0.88rem' }}>
+                      <span>{item.label}</span>
+                      <strong style={{ color: '#EFF6FF' }}>{item.value}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ background: CARD, border: `1px solid ${BORD}`, borderRadius: 16, padding: '16px 18px' }}>
+                <div style={{ color: '#EFF6FF', fontWeight: 700, marginBottom: 10 }}>{ar ? 'الإيراد والطلب' : 'Revenue and demand'}</div>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#CBD5E1', fontSize: '0.88rem' }}>
+                    <span>{ar ? 'إيراد تقديري' : 'Estimated revenue'}</span>
+                    <strong style={{ color: CYAN }}>{dashboard.revenueJod.toFixed(2)} JOD</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#CBD5E1', fontSize: '0.88rem' }}>
+                    <span>{ar ? 'الطلب النشط' : 'Active demand'}</span>
+                    <strong style={{ color: GREEN }}>{dashboard.activeDemand}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ background: CARD, border: `1px solid ${BORD}`, borderRadius: 16, padding: '16px 18px' }}>
+              <div style={{ color: '#EFF6FF', fontWeight: 700, marginBottom: 10 }}>{ar ? 'أهم الممرات' : 'Top corridors'}</div>
+              <div style={{ display: 'grid', gap: 10 }}>
+                {dashboard.topCorridors.length > 0 ? dashboard.topCorridors.map((corridor) => (
+                  <div key={corridor.corridor} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 14px', borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORD}` }}>
+                    <div>
+                      <div style={{ color: '#EFF6FF', fontWeight: 700 }}>{corridor.corridor}</div>
+                      <div style={{ color: 'rgba(148,163,184,0.76)', fontSize: '0.76rem', marginTop: 4 }}>
+                        {(ar ? 'طلب' : 'Demand') + ` ${corridor.demand} · ` + (ar ? 'تحويل' : 'Conversions') + ` ${corridor.conversions}`}
+                      </div>
+                    </div>
+                    <div style={{ color: GOLD, fontWeight: 800, alignSelf: 'center' }}>{corridor.demand + corridor.conversions}</div>
+                  </div>
+                )) : (
+                  <div style={{ color: 'rgba(148,163,184,0.76)', fontSize: '0.82rem' }}>
+                    {ar ? 'ستظهر الممرات الأعلى أداء هنا عندما تبدأ إشارات النمو بالتراكم.' : 'Top-performing corridors will appear here as growth signals accumulate.'}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

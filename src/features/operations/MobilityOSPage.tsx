@@ -95,7 +95,7 @@ export default function MobilityOSPage() {
     };
     rafRef.current = requestAnimationFrame(loop);
     return () => {
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
   }, [paused]);
 
@@ -253,33 +253,35 @@ export default function MobilityOSPage() {
                     <text x={node.x} y={node.y + 10.2} textAnchor="middle" fill={C.textMuted} fontSize="1.45">{node.subtitle}</text>
                   </g>
                 ))}
-                {UNITS.filter((unit) => tab === 'signal' || (tab === 'fleet' && unit.type === 'ride') || (tab === 'recovery' && unit.type === 'package') || tab === 'math').map((unit, index) => {
-                  const route = routeStats.find((entry) => entry.id === unit.routeId);
-                  if (!route) return null;
-                  const from = route.fromNode;
-                  const to = route.toNode;
-                  const dx = to.x - from.x;
-                  const dy = to.y - from.y;
-                  const c1 = { x: from.x + dx * 0.26, y: from.y + dy * 0.08 };
-                  const c2 = { x: from.x + dx * 0.76, y: from.y + dy * 0.92 };
-                  const t = (unit.phase + tick * unit.speed * 100 * unit.dir + 1) % 1;
-                  const mt = 1 - t;
-                  const x = mt ** 3 * from.x + 3 * mt ** 2 * t * c1.x + 3 * mt * t ** 2 * c2.x + t ** 3 * to.x;
-                  const y = mt ** 3 * from.y + 3 * mt ** 2 * t * c1.y + 3 * mt * t ** 2 * c2.y + t ** 3 * to.y;
-                  const tx = 3 * mt ** 2 * (c1.x - from.x) + 6 * mt * t * (c2.x - c1.x) + 3 * t ** 2 * (to.x - c2.x);
-                  const ty = 3 * mt ** 2 * (c1.y - from.y) + 6 * mt * t * (c2.y - c1.y) + 3 * t ** 2 * (to.y - c2.y);
-                  const length = Math.max(0.001, Math.hypot(tx, ty));
-                  const nx = (-ty / length) * unit.lane;
-                  const ny = (tx / length) * unit.lane;
-                  const rotation = Math.atan2(ty, tx) * (180 / Math.PI);
-                  return (
-                    <g key={unit.id} transform={`translate(${x + nx} ${y + ny}) rotate(${rotation})`} opacity={clamp(0.52 + Math.sin(tick * 14 + index) * 0.22, 0.36, 0.98)}>
-                      {unit.type === 'ride'
-                        ? <rect x={-2.8} y={-1.6} width={5.6} height={3.2} rx={1.2} fill={accentColor(unit.accent)} />
-                        : <rect x={-2} y={-2} width={4} height={4} rx={1.1} fill={C.gold} />}
-                    </g>
-                  );
-                })}
+                {UNITS
+                  .filter((unit) => tab === 'signal' || (tab === 'fleet' && unit.type === 'ride') || (tab === 'recovery' && unit.type === 'package') || tab === 'math')
+                  .map((unit, index) => {
+                    const route = routeStats.find((entry) => entry.id === unit.routeId);
+                    if (!route) return null;
+                    const from = route.fromNode;
+                    const to = route.toNode;
+                    const dx = to.x - from.x;
+                    const dy = to.y - from.y;
+                    const c1 = { x: from.x + dx * 0.26, y: from.y + dy * 0.08 };
+                    const c2 = { x: from.x + dx * 0.76, y: from.y + dy * 0.92 };
+                    const t = (unit.phase + tick * unit.speed * 100 * unit.dir + 1) % 1;
+                    const mt = 1 - t;
+                    const x = mt ** 3 * from.x + 3 * mt ** 2 * t * c1.x + 3 * mt * t ** 2 * c2.x + t ** 3 * to.x;
+                    const y = mt ** 3 * from.y + 3 * mt ** 2 * t * c1.y + 3 * mt * t ** 2 * c2.y + t ** 3 * to.y;
+                    const tx = 3 * mt ** 2 * (c1.x - from.x) + 6 * mt * t * (c2.x - c1.x) + 3 * t ** 2 * (to.x - c2.x);
+                    const ty = 3 * mt ** 2 * (c1.y - from.y) + 6 * mt * t * (c2.y - c1.y) + 3 * t ** 2 * (to.y - c2.y);
+                    const length = Math.max(0.001, Math.hypot(tx, ty));
+                    const nx = (-ty / length) * unit.lane;
+                    const ny = (tx / length) * unit.lane;
+                    const rotation = Math.atan2(ty, tx) * (180 / Math.PI);
+                    return (
+                      <g key={unit.id} transform={`translate(${x + nx} ${y + ny}) rotate(${rotation})`} opacity={clamp(0.52 + Math.sin(tick * 14 + index) * 0.22, 0.36, 0.98)}>
+                        {unit.type === 'ride'
+                          ? <rect x={-2.8} y={-1.6} width={5.6} height={3.2} rx={1.2} fill={accentColor(unit.accent)} />
+                          : <rect x={-2} y={-2} width={4} height={4} rx={1.1} fill={C.gold} />}
+                      </g>
+                    );
+                  })}
               </svg>
             </div>
           </div>
@@ -292,7 +294,7 @@ export default function MobilityOSPage() {
                   <div key={route.id} style={{ padding: '12px 14px', borderRadius: 18, border: `1px solid ${accentColor(route.accent)}2a`, background: 'rgba(255,255,255,0.03)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline' }}>
                       <div>
-                        <div style={{ fontWeight: 800 }}>{route.fromNode.name} -> {route.toNode.name}</div>
+                        <div style={{ fontWeight: 800 }}>{route.fromNode.name} {'->'} {route.toNode.name}</div>
                         <div style={{ marginTop: 4, color: C.textMuted, fontSize: '0.82rem' }}>{route.distance} km / ETA {route.etaLive} min</div>
                       </div>
                       <div style={{ fontSize: '1.2rem', fontWeight: 900, color: accentColor(route.accent) }}>{route.score}</div>
@@ -336,115 +338,6 @@ export default function MobilityOSPage() {
             { icon: ShieldCheck, title: 'Recovery posture', value: `${network.resilience}%`, body: 'Risk is framed as control logic instead of generic warning noise.', accent: C.gold },
             { icon: AlertTriangle, title: 'ETA drift', value: `${Math.max(0, weakest.etaLive - weakest.eta)} min`, body: `${weakest.fromNode.name} -> ${weakest.toNode.name} is the main watch corridor.`, accent: C.purple },
             { icon: CarFront, title: 'Fleet pressure', value: `${Math.round(hottest.load * 100)}%`, body: `${hottest.fromNode.name} -> ${hottest.toNode.name} is carrying the highest live demand.`, accent: accentColor(hottest.accent) },
-            { icon: Activity, title: 'Math core', value: `${network.dispatchIQ}`, body: 'Intelligence score blended from route score, balance, and velocity.', accent: C.cyan },
-          ].map((card) => (
-            <article key={card.title} style={panelStyle({ padding: 18, borderRadius: 22 })}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 14, background: `${card.accent}18`, border: `1px solid ${card.accent}28`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <card.icon size={18} color={card.accent} />
-                </div>
-                <div style={{ fontSize: '1.24rem', fontWeight: 900, color: card.accent }}>{card.value}</div>
-              </div>
-              <h3 style={{ margin: '14px 0 8px', fontSize: '1rem' }}>{card.title}</h3>
-              <p style={{ margin: 0, color: C.textSub, lineHeight: 1.62, fontSize: '0.92rem' }}>{card.body}</p>
-            </article>
-          ))}
-        </section>
-
-        <section style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
-          {[
-            { title: 'Signal equation', formula: 'dispatchIQ = 0.44 * score + 0.24 * balance + 0.32 * velocity', accent: C.cyan },
-            { title: 'Balance equation', formula: 'balance = 100 - sqrt(variance(load[1..n])) * 170', accent: C.gold },
-            { title: 'Recovery equation', formula: 'resilience = nodeStability * 0.76 + (1 - load) * 0.24', accent: C.green },
-          ].map((item) => (
-            <article key={item.title} style={panelStyle({ padding: 18, borderRadius: 22 })}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: item.accent, fontWeight: 800 }}><Sparkles size={15} />{item.title}</div>
-              <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 16, border: `1px solid ${item.accent}2c`, background: `${item.accent}14`, fontFamily: FM, fontSize: '0.9rem' }}>{item.formula}</div>
-            </article>
-          ))}
-        </section>
-      </div>
-    </div>
-  );
-}
-                  const dx = to.x - from.x;
-                  const dy = to.y - from.y;
-                  const c1 = { x: from.x + dx * 0.26, y: from.y + dy * 0.08 };
-                  const c2 = { x: from.x + dx * 0.76, y: from.y + dy * 0.92 };
-                  const t = (unit.phase + tick * unit.speed * 100 * unit.dir + 1) % 1;
-                  const mt = 1 - t;
-                  const x = mt ** 3 * from.x + 3 * mt ** 2 * t * c1.x + 3 * mt * t ** 2 * c2.x + t ** 3 * to.x;
-                  const y = mt ** 3 * from.y + 3 * mt ** 2 * t * c1.y + 3 * mt * t ** 2 * c2.y + t ** 3 * to.y;
-                  const tx = 3 * mt ** 2 * (c1.x - from.x) + 6 * mt * t * (c2.x - c1.x) + 3 * t ** 2 * (to.x - c2.x);
-                  const ty = 3 * mt ** 2 * (c1.y - from.y) + 6 * mt * t * (c2.y - c1.y) + 3 * t ** 2 * (to.y - c2.y);
-                  const length = Math.max(0.001, Math.hypot(tx, ty));
-                  const nx = (-ty / length) * unit.lane;
-                  const ny = (tx / length) * unit.lane;
-                  const rotation = Math.atan2(ty, tx) * (180 / Math.PI);
-                  return (
-                    <g key={unit.id} transform={`translate(${x + nx} ${y + ny}) rotate(${rotation})`} opacity={clamp(0.52 + Math.sin(tick * 14 + index) * 0.22, 0.36, 0.98)}>
-                      {unit.type === 'ride'
-                        ? <rect x={-2.8} y={-1.6} width={5.6} height={3.2} rx={1.2} fill={accentColor(unit.accent)} />
-                        : <rect x={-2} y={-2} width={4} height={4} rx={1.1} fill={C.gold} />}
-                    </g>
-                  );
-                })}
-              </svg>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gap: 14 }}>
-            <div style={panelStyle({ padding: 18, borderRadius: 24 })}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Gauge size={18} color={C.cyan} /><h3 style={{ margin: 0, fontSize: '1.02rem' }}>Corridor leaderboard</h3></div>
-              <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
-                {routeStats.map((route) => (
-                  <div key={route.id} style={{ padding: '12px 14px', borderRadius: 18, border: `1px solid ${accentColor(route.accent)}2a`, background: 'rgba(255,255,255,0.03)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline' }}>
-                      <div>
-                        <div style={{ fontWeight: 800 }}>{route.fromNode.name} → {route.toNode.name}</div>
-                        <div style={{ marginTop: 4, color: C.textMuted, fontSize: '0.82rem' }}>{route.distance} km · ETA {route.etaLive} min</div>
-                      </div>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 900, color: accentColor(route.accent) }}>{route.score}</div>
-                    </div>
-                    <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
-                      {[{ label: 'Load', value: route.load, color: C.cyan }, { label: 'Reliability', value: route.reliability, color: C.green }, { label: 'Package sync', value: route.packageSync, color: C.gold }].map((metric) => (
-                        <div key={metric.label}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: C.textMuted }}><span>{metric.label}</span><span>{Math.round(metric.value * 100)}%</span></div>
-                          <div style={{ marginTop: 6, height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
-                            <div style={{ width: `${metric.value * 100}%`, height: '100%', borderRadius: 999, background: metric.color }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={panelStyle({ padding: 18, borderRadius: 24 })}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Brain size={18} color={C.purple} /><h3 style={{ margin: 0, fontSize: '1.02rem' }}>Decision engine</h3></div>
-              <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
-                {[
-                  `${hottest.fromNode.name} → ${hottest.toNode.name} is carrying the hottest demand wave at ${Math.round(hottest.load * 100)}% load.`,
-                  `${weakest.fromNode.name} → ${weakest.toNode.name} is the first corridor to protect if reliability slips further.`,
-                  `${routeStats[0].fromNode.name} → ${routeStats[0].toNode.name} sets the current corridor benchmark with a score of ${routeStats[0].score}.`,
-                ].map((line, index) => (
-                  <article key={line} style={{ padding: '14px 16px', borderRadius: 18, border: `1px solid ${index === 1 ? C.purpleDim : C.border}`, background: 'rgba(255,255,255,0.03)', color: C.textSub, lineHeight: 1.65 }}>
-                    {line}
-                  </article>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-          {[
-            { icon: TimerReset, title: 'Scenario tuning', value: TABS[tab], body: 'The UI changes by operational lens without hiding the network.', accent: C.cyan },
-            { icon: Users, title: 'Agent synchrony', value: `${network.agentSync}%`, body: 'Ride and package layers are paced to feel orchestrated, not random.', accent: C.green },
-            { icon: ShieldCheck, title: 'Recovery posture', value: `${network.resilience}%`, body: 'Risk is framed as control logic instead of generic warning noise.', accent: C.gold },
-            { icon: AlertTriangle, title: 'ETA drift', value: `${Math.max(0, weakest.etaLive - weakest.eta)} min`, body: `${weakest.fromNode.name} → ${weakest.toNode.name} is the main watch corridor.`, accent: C.purple },
-            { icon: CarFront, title: 'Fleet pressure', value: `${Math.round(hottest.load * 100)}%`, body: `${hottest.fromNode.name} → ${hottest.toNode.name} is carrying the highest live demand.`, accent: accentColor(hottest.accent) },
             { icon: Activity, title: 'Math core', value: `${network.dispatchIQ}`, body: 'Intelligence score blended from route score, balance, and velocity.', accent: C.cyan },
           ].map((card) => (
             <article key={card.title} style={panelStyle({ padding: 18, borderRadius: 22 })}>
