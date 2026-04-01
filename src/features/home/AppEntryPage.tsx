@@ -64,7 +64,7 @@ export default function AppEntryPage() {
   const moatLines = useMemo(() => getMovementDefensibilityLines(), []);
   const membership = useMemo(() => getMovementMembershipSnapshot(), []);
 
-  const primaryLabel = user ? 'Open my movement network' : 'Start with a shared route';
+  const primaryLabel = user ? 'Open app' : 'Get started';
   const primaryPath = user ? '/app/find-ride' : '/app/auth?returnTo=/app/find-ride';
 
   return (
@@ -198,6 +198,19 @@ export default function AppEntryPage() {
                 <ShieldCheck size={14} color={C.gold} />
                 Routes plus cost sharing is the moat
               </span>
+            </div>
+
+            <div
+              style={{
+                marginTop: 18,
+                color: C.gold,
+                fontSize: '0.88rem',
+                fontWeight: 800,
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Move smarter with Wasel
             </div>
 
             <h1
@@ -396,7 +409,7 @@ export default function AppEntryPage() {
           </motion.div>
         </div>
 
-        <motion.section
+        <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.08 }}
@@ -441,9 +454,9 @@ export default function AppEntryPage() {
               );
             })}
           </div>
-        </motion.section>
+        </motion.div>
 
-        <motion.section
+        <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.14 }}
@@ -500,9 +513,9 @@ export default function AppEntryPage() {
               </div>
             ))}
           </div>
-        </motion.section>
+        </motion.div>
 
-        <motion.section
+        <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.2 }}
@@ -546,9 +559,9 @@ export default function AppEntryPage() {
               );
             })}
           </div>
-        </motion.section>
+        </motion.div>
 
-        <motion.section
+        <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.26 }}
@@ -627,9 +640,9 @@ export default function AppEntryPage() {
               </div>
             </div>
           </div>
-        </motion.section>
+        </motion.div>
 
-        <motion.section
+        <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.32 }}
@@ -690,7 +703,7 @@ export default function AppEntryPage() {
               </div>
             </div>
           </div>
-        </motion.section>
+        </motion.div>
       </div>
     </div>
   );

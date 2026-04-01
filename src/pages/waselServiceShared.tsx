@@ -84,7 +84,7 @@ export function Protected({ children }: { children: ReactNode }) {
           </div>
           <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Protected Wasel experience</div>
           <div style={{ color: DS.sub, fontFamily: DS.F, fontSize: '0.85rem', lineHeight: 1.7 }}>
-            We are taking you to sign in so your rides, buses, and packages stay tied to one trusted account.
+            We are taking you to sign in so your routes, packages, and movement history stay tied to one trusted account.
           </div>
         </div>
       </div>
@@ -139,7 +139,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           <WaselLogo size={34} theme="light" variant="full" />
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: '999px', background: 'rgba(0,200,232,0.08)', border: '1px solid rgba(0,200,232,0.16)', color: 'rgba(239,246,255,0.78)', fontSize: '0.72rem', fontWeight: 700 }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: DS.green, boxShadow: `0 0 10px ${DS.green}` }} />
-            {ar ? 'شبكة واصل للحركة والطرود' : 'Wasel rides, buses, and parcels'}
+            {ar ? 'شبكة واصل للحركة والطرود' : 'Wasel movement network for people, goods, and services'}
           </div>
         </div>
         {children}

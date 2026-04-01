@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { MapWrapper } from '../../../components/MapWrapper';
+import { getCorridorOpportunity } from '../../../config/wasel-movement-network';
 import {
   DS,
   midpoint,
@@ -55,6 +56,7 @@ export function FindRideTripDetailModal({
   const dropoffCoord = resolveCityCoord(ride.to);
   const driverCoord = midpoint(pickupCoord, dropoffCoord);
   const genderMeta = GENDER_META[ride.genderPref];
+  const corridorPlan = getCorridorOpportunity(ride.from, ride.to);
 
   return (
     <AnimatePresence>
@@ -471,6 +473,16 @@ export function FindRideTripDetailModal({
                 <div style={{ color: DS.muted, fontSize: '0.72rem', marginTop: 2 }}>
                   ~{Math.round(ride.pricePerSeat * 1.41)} USD
                 </div>
+                {corridorPlan && (
+                  <div style={{ marginTop: 10, display: 'grid', gap: 6 }}>
+                    <div style={{ color: DS.green, fontSize: '0.76rem', fontWeight: 800 }}>
+                      {corridorPlan.savingsPercent}% cheaper than solo movement
+                    </div>
+                    <div style={{ color: DS.sub, fontSize: '0.72rem', lineHeight: 1.55 }}>
+                      Solo reference: {corridorPlan.soloReferencePriceJod} JOD | Best pickup: {corridorPlan.pickupPoints[0]}
+                    </div>
+                  </div>
+                )}
               </div>
               <div
                 style={{

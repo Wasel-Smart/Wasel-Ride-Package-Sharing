@@ -2,6 +2,7 @@ import { Shield } from 'lucide-react';
 import { CITIES } from '../../../pages/waselCoreRideData';
 import { DS, r } from '../../../pages/waselServiceShared';
 import type { PostedRide } from '../../../services/journeyLogistics';
+import type { DriverRoutePlan } from '../../../config/wasel-movement-network';
 import { OFFER_RIDE_PACKAGE_CAPACITY_OPTIONS } from '../offerRideContent';
 
 type OfferRideForm = {
@@ -29,6 +30,7 @@ type OfferRideFormPanelProps = {
   formError: string | null;
   busyState: 'idle' | 'posting';
   genderMeta: Record<string, { label: string; color: string }>;
+  driverPlan: DriverRoutePlan | null;
   onUpdate: (key: string, value: string | number | boolean) => void;
   onStepChange: (step: number) => void;
   onSubmit: () => void;
@@ -43,6 +45,7 @@ export function OfferRideFormPanel({
   formError,
   busyState,
   genderMeta,
+  driverPlan,
   onUpdate,
   onStepChange,
   onSubmit,
@@ -55,6 +58,7 @@ export function OfferRideFormPanel({
           <div style={{ display: 'grid', gap: 10 }}>
             {[
               { label: 'Live corridor', value: corridorCount > 0 ? `${corridorCount} rides already posted on this route` : 'No live rides on this route yet' },
+              { label: 'Route signal', value: driverPlan ? `${driverPlan.corridor.predictedDemandScore}/100 demand score with ${driverPlan.corridor.density} density` : 'Pick a corridor to unlock route intelligence' },
               { label: 'Package visibility', value: form.acceptsPackages ? `Eligible for package matching (${form.packageCapacity})` : 'Passengers only' },
               { label: 'Draft status', value: draftMessage || 'Draft autosaves on this device.' },
             ].map((item) => (
@@ -127,12 +131,35 @@ export function OfferRideFormPanel({
       {step === 2 && (
         <div style={{ display: 'grid', gap: 14 }}>
           <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 4px' }}>Seats, Pricing, and Capacity</h3>
+          {driverPlan && (
+            <div className="sp-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
+              {[
+                { label: 'Recommended seat price', value: `${driverPlan.recommendedSeatPriceJod} JOD`, detail: 'Cheaper than solo movement while protecting fill rate' },
+                { label: 'Full route gross', value: `${driverPlan.grossWhenFullJod} JOD`, detail: `${driverPlan.corridor.fillTargetSeats} seats is the target load for this corridor` },
+                { label: 'Best pickup point', value: driverPlan.corridor.pickupPoints[0] ?? 'Trusted corridor node', detail: driverPlan.corridor.autoGroupWindow },
+              ].map((item) => (
+                <div key={item.label} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '13px 14px' }}>
+                  <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
+                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>{item.value}</div>
+                  <div style={{ color: DS.sub, fontSize: '0.73rem', lineHeight: 1.45, marginTop: 5 }}>{item.detail}</div>
+                </div>
+              ))}
+            </div>
+          )}
           {[{ label: 'Available Seats', key: 'seats' as const, min: 1, max: 7 }, { label: 'Price per Seat (JOD)', key: 'price' as const, min: 1, max: 50 }].map((field) => (
             <div key={field.label}>
               <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>{field.label}</label>
               <input type="number" min={field.min} max={field.max} value={form[field.key]} onChange={(event) => onUpdate(field.key, Number(event.target.value))} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
             </div>
           ))}
+          {driverPlan && (
+            <div style={{ borderRadius: r(14), border: `1px solid ${DS.cyan}24`, background: `${DS.cyan}08`, padding: '13px 14px' }}>
+              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem' }}>Wasel Brain recommendation</div>
+              <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.6, marginTop: 6 }}>
+                {driverPlan.waselBrainNote} Empty-seat risk is about {driverPlan.emptySeatCostJod} JOD per open seat, and package-ready supply can add about {driverPlan.packageBonusJod} JOD on this route.
+              </div>
+            </div>
+          )}
           <div>
             <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Car Model</label>
             <input placeholder="e.g. Toyota Camry 2023" value={form.carModel} onChange={(event) => onUpdate('carModel', event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
@@ -193,6 +220,12 @@ export function OfferRideFormPanel({
               {form.seats} seats - {form.price} JOD/seat - {form.carModel || 'Car TBD'}
               <br />
               {form.acceptsPackages ? `Packages enabled (${form.packageCapacity})` : 'Passengers only'}
+              {driverPlan && (
+                <>
+                  <br />
+                  Wasel Brain target: {driverPlan.recommendedSeatPriceJod} JOD/seat, {driverPlan.corridor.savingsPercent}% cheaper than solo movement, best pickup at {driverPlan.corridor.pickupPoints[0] ?? 'the top corridor node'}
+                </>
+              )}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>

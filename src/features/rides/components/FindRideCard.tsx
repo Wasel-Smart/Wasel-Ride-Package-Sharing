@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import {
+  Brain,
   CheckCircle2,
   Clock,
   Package,
@@ -7,6 +8,7 @@ import {
   Users,
 } from 'lucide-react';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
+import { getCorridorOpportunity } from '../../../config/wasel-movement-network';
 import {
   createGenderMeta,
   type Ride,
@@ -29,6 +31,7 @@ export function FindRideCard({
 }: FindRideCardProps) {
   const genderMeta = GENDER_META[ride.genderPref];
   const soldOut = ride.seatsAvailable <= 0;
+  const corridorPlan = getCorridorOpportunity(ride.from, ride.to);
 
   return (
     <motion.div
@@ -115,7 +118,7 @@ export function FindRideCard({
                   {ride.driver.rating}
                 </span>
                 <span style={{ color: DS.muted, fontSize: '0.72rem' }}>
-                  · {ride.driver.trips} trips
+                  | {ride.driver.trips} trips
                 </span>
               </div>
             </div>
@@ -135,7 +138,7 @@ export function FindRideCard({
             background: 'rgba(0,0,0,0.25)',
             borderRadius: r(14),
             padding: '14px 18px',
-            marginBottom: 16,
+            marginBottom: 14,
             display: 'flex',
             alignItems: 'center',
             gap: 12,
@@ -186,6 +189,26 @@ export function FindRideCard({
           </div>
         </div>
 
+        {corridorPlan && (
+          <div
+            style={{
+              marginBottom: 14,
+              borderRadius: r(14),
+              padding: '12px 14px',
+              background: 'linear-gradient(135deg, rgba(0,200,232,0.08), rgba(255,255,255,0.03))',
+              border: `1px solid ${DS.border}`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <Brain size={14} color={DS.cyan} />
+              <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.8rem' }}>Wasel Brain</span>
+            </div>
+            <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.6 }}>
+              {corridorPlan.savingsPercent}% cheaper than solo movement on {corridorPlan.label}. Best pickup: {corridorPlan.pickupPoints[0]}.
+            </div>
+          </div>
+        )}
+
         <div
           style={{
             display: 'flex',
@@ -208,6 +231,7 @@ export function FindRideCard({
                 <Package size={9} /> {ride.pkgCapacity}
               </span>
             )}
+            {corridorPlan && <span style={pill(DS.green)}>Demand {corridorPlan.predictedDemandScore}</span>}
             {booked && (
               <span style={pill(DS.green)}>
                 <CheckCircle2 size={9} /> Booked
@@ -244,7 +268,7 @@ export function FindRideCard({
                 opacity: booked || soldOut ? 0.88 : 1,
               }}
             >
-              {booked ? 'Booked' : soldOut ? 'Sold out' : 'Book Seat'}
+              {booked ? 'Booked' : soldOut ? 'Sold out' : 'Book seat'}
             </motion.button>
           </div>
         </div>
