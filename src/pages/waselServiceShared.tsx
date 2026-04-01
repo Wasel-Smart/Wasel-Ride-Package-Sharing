@@ -222,9 +222,9 @@ export function CoreExperienceBanner({
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', alignContent: 'flex-start', gap: 8 }}>
         {[
-          { label: 'Verified identity layer', color: DS.green },
-          { label: 'Live route network', color: DS.cyan },
-          { label: 'Cross-service corridor logic', color: DS.gold },
+          { label: 'People and trust layer', color: DS.green },
+          { label: 'Goods and services layer', color: DS.gold },
+          { label: 'Route intelligence layer', color: DS.cyan },
         ].map((item) => (
           <span key={item.label} style={pill(item.color)}>
             {item.label}

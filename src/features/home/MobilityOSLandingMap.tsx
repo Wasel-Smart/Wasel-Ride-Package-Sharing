@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, MapPinned } from 'lucide-react';
-import { useLanguage } from '../../contexts/LanguageContext';
 
 type City = {
   id: number;
-  name: string;
-  nameAr: string;
   lat: number;
   lon: number;
   hub?: boolean;
@@ -20,9 +16,8 @@ type Corridor = {
 
 const PASSENGER = '#00C8E8';
 const PACKAGE = '#F0A830';
-const TEXT = '#EFF6FF';
-const TEXT_MUTED = 'rgba(239,246,255,0.6)';
-const BASE_ROUTES = [
+
+const BASE_ROUTES: readonly Corridor[] = [
   { id: 'amman-aqaba', from: 0, to: 1, distanceKm: 335 },
   { id: 'amman-irbid', from: 0, to: 2, distanceKm: 85 },
   { id: 'amman-zarqa', from: 0, to: 3, distanceKm: 25 },
@@ -35,25 +30,22 @@ const BASE_ROUTES = [
   { id: 'tafila-maan', from: 9, to: 10, distanceKm: 89 },
   { id: 'maan-aqaba', from: 10, to: 1, distanceKm: 114 },
   { id: 'irbid-zarqa', from: 2, to: 3, distanceKm: 79 },
-  { id: 'amman-salt', from: 0, to: 11, distanceKm: 32 },
-  { id: 'salt-jerash', from: 11, to: 5, distanceKm: 38 },
-  { id: 'ajloun-jerash', from: 6, to: 5, distanceKm: 24 },
-] as const satisfies readonly Corridor[];
+];
 
 const CITIES: readonly City[] = [
-  { id: 0, name: 'Amman', nameAr: 'عمّان', lat: 31.9454, lon: 35.9284, hub: true },
-  { id: 1, name: 'Aqaba', nameAr: 'العقبة', lat: 29.532, lon: 35.0063, hub: true },
-  { id: 2, name: 'Irbid', nameAr: 'إربد', lat: 32.5556, lon: 35.85, hub: true },
-  { id: 3, name: 'Zarqa', nameAr: 'الزرقاء', lat: 32.0728, lon: 36.088, hub: true },
-  { id: 4, name: 'Mafraq', nameAr: 'المفرق', lat: 32.3406, lon: 36.208 },
-  { id: 5, name: 'Jerash', nameAr: 'جرش', lat: 32.2803, lon: 35.8993 },
-  { id: 6, name: 'Ajloun', nameAr: 'عجلون', lat: 32.3326, lon: 35.7519 },
-  { id: 7, name: 'Madaba', nameAr: 'مادبا', lat: 31.7197, lon: 35.7936 },
-  { id: 8, name: 'Karak', nameAr: 'الكرك', lat: 31.1853, lon: 35.7048 },
-  { id: 9, name: 'Tafila', nameAr: 'الطفيلة', lat: 30.8375, lon: 35.6042 },
-  { id: 10, name: "Ma'an", nameAr: 'معان', lat: 30.1962, lon: 35.736 },
-  { id: 11, name: 'Salt', nameAr: 'السلط', lat: 32.0392, lon: 35.7272 },
-] as const;
+  { id: 0, lat: 31.9454, lon: 35.9284, hub: true },
+  { id: 1, lat: 29.532, lon: 35.0063, hub: true },
+  { id: 2, lat: 32.5556, lon: 35.85, hub: true },
+  { id: 3, lat: 32.0728, lon: 36.088, hub: true },
+  { id: 4, lat: 32.3406, lon: 36.208 },
+  { id: 5, lat: 32.2803, lon: 35.8993 },
+  { id: 6, lat: 32.3326, lon: 35.7519 },
+  { id: 7, lat: 31.7197, lon: 35.7936 },
+  { id: 8, lat: 31.1853, lon: 35.7048 },
+  { id: 9, lat: 30.8375, lon: 35.6042 },
+  { id: 10, lat: 30.1962, lon: 35.736 },
+  { id: 11, lat: 32.0392, lon: 35.7272 },
+];
 
 const BORDER = [
   { lat: 33.37, lon: 35.55 },
@@ -110,60 +102,45 @@ function getCurve(from: { x: number; y: number }, to: { x: number; y: number }, 
   };
 }
 
-function topRouteLabel(routes: Array<{ id: string; total: number }>) {
-  return [...routes].sort((a, b) => b.total - a.total)[0]?.id.replace(/-/g, ' -> ') ?? 'amman -> aqaba';
-}
-
 export function MobilityOSLandingMap() {
-  const { language } = useLanguage();
-  const ar = language === 'ar';
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
-  const [size, setSize] = useState({ width: 680, height: 520 });
+  const [size, setSize] = useState({ width: 920, height: 640 });
 
   useEffect(() => {
     const update = () => {
       const el = wrapRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      setSize({ width: Math.max(320, rect.width), height: Math.max(360, rect.height) });
+      setSize({ width: Math.max(320, rect.width), height: Math.max(420, rect.height) });
     };
     update();
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
 
-  const routes = useMemo(() => {
-    return BASE_ROUTES.map((route, index) => {
-      const passengerFlow = 220 + ((index * 91) % 460);
-      const packageFlow = 40 + ((index * 33) % 160);
-      const congestion = Math.min(0.88, 0.18 + ((index * 0.09) % 0.48));
-      const speedKph = Math.max(38, Math.round(112 - congestion * 56));
-      return {
-        ...route,
-        passengerFlow,
-        packageFlow,
-        congestion,
-        speedKph,
-        total: passengerFlow + packageFlow,
-      };
-    });
-  }, []);
-
-  const topRoute = useMemo(() => [...routes].sort((a, b) => b.total - a.total)[0], [routes]);
-  const analytics = useMemo(() => ({
-    activePassengers: routes.reduce((sum, route) => sum + route.passengerFlow, 0),
-    activePackages: routes.reduce((sum, route) => sum + route.packageFlow, 0),
-    topCorridor: topRouteLabel(routes),
-    recommendedPath: ar ? 'عمان -> العقبة' : 'Amman -> Aqaba',
-  }), [ar, routes]);
+  const routes = useMemo(
+    () =>
+      BASE_ROUTES.map((route, index) => {
+        const passengerFlow = 220 + ((index * 91) % 460);
+        const packageFlow = 40 + ((index * 33) % 160);
+        const congestion = Math.min(0.88, 0.18 + ((index * 0.09) % 0.48));
+        return {
+          ...route,
+          passengerFlow,
+          packageFlow,
+          congestion,
+          total: passengerFlow + packageFlow,
+        };
+      }),
+    [],
+  );
 
   useEffect(() => {
     const render = (time: number) => {
       const canvas = canvasRef.current;
-      const container = wrapRef.current;
-      if (!canvas || !container) {
+      if (!canvas) {
         frameRef.current = requestAnimationFrame(render);
         return;
       }
@@ -175,6 +152,7 @@ export function MobilityOSLandingMap() {
         canvas.width = Math.round(width * dpr);
         canvas.height = Math.round(height * dpr);
       }
+
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         frameRef.current = requestAnimationFrame(render);
@@ -190,10 +168,16 @@ export function MobilityOSLandingMap() {
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, width, height);
 
-      const glow = ctx.createRadialGradient(width * 0.2, height * 0.12, 0, width * 0.2, height * 0.12, width * 0.5);
-      glow.addColorStop(0, 'rgba(0,200,232,0.12)');
-      glow.addColorStop(1, 'rgba(0,200,232,0)');
-      ctx.fillStyle = glow;
+      const glowA = ctx.createRadialGradient(width * 0.18, height * 0.12, 0, width * 0.18, height * 0.12, width * 0.5);
+      glowA.addColorStop(0, 'rgba(0,200,232,0.14)');
+      glowA.addColorStop(1, 'rgba(0,200,232,0)');
+      ctx.fillStyle = glowA;
+      ctx.fillRect(0, 0, width, height);
+
+      const glowB = ctx.createRadialGradient(width * 0.78, height * 0.24, 0, width * 0.78, height * 0.24, width * 0.35);
+      glowB.addColorStop(0, 'rgba(240,168,48,0.12)');
+      glowB.addColorStop(1, 'rgba(240,168,48,0)');
+      ctx.fillStyle = glowB;
       ctx.fillRect(0, 0, width, height);
 
       ctx.beginPath();
@@ -203,9 +187,9 @@ export function MobilityOSLandingMap() {
         else ctx.lineTo(p.x, p.y);
       });
       ctx.closePath();
-      ctx.fillStyle = 'rgba(255,255,255,0.025)';
-      ctx.strokeStyle = 'rgba(255,255,255,0.09)';
-      ctx.lineWidth = 1.2;
+      ctx.fillStyle = 'rgba(255,255,255,0.022)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.085)';
+      ctx.lineWidth = 1.1;
       ctx.fill();
       ctx.stroke();
 
@@ -219,15 +203,15 @@ export function MobilityOSLandingMap() {
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);
         ctx.quadraticCurveTo(control.x, control.y, to.x, to.y);
-        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
         ctx.lineWidth = 1;
         ctx.stroke();
 
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);
         ctx.quadraticCurveTo(control.x, control.y, to.x, to.y);
-        ctx.strokeStyle = `rgba(0,200,232,${0.22 + route.passengerFlow / 1600})`;
-        ctx.lineWidth = 1.2 + route.passengerFlow / 520;
+        ctx.strokeStyle = `rgba(0,200,232,${0.24 + route.passengerFlow / 1600})`;
+        ctx.lineWidth = 1.3 + route.passengerFlow / 520;
         ctx.shadowBlur = 18;
         ctx.shadowColor = 'rgba(0,200,232,0.2)';
         ctx.stroke();
@@ -247,7 +231,7 @@ export function MobilityOSLandingMap() {
           const t = (time * 0.00005 * (1 + i * 0.08) + i / passengerCount + index * 0.07) % 1;
           const point = pointOnCurve(from, control, to, t);
           ctx.beginPath();
-          ctx.arc(point.x, point.y, 2.6, 0, Math.PI * 2);
+          ctx.arc(point.x, point.y, 2.5, 0, Math.PI * 2);
           ctx.fillStyle = 'rgba(198,252,255,0.95)';
           ctx.shadowBlur = 14;
           ctx.shadowColor = 'rgba(0,200,232,0.55)';
@@ -269,24 +253,19 @@ export function MobilityOSLandingMap() {
 
       CITIES.forEach((city) => {
         const point = project(city.lat, city.lon, width, height);
-        const halo = city.hub ? 18 : 11;
-        const gradient = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, halo);
-        gradient.addColorStop(0, city.hub ? 'rgba(0,200,232,0.22)' : 'rgba(255,255,255,0.14)');
+        const haloRadius = city.hub ? 18 : 11;
+        const gradient = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, haloRadius);
+        gradient.addColorStop(0, city.hub ? 'rgba(0,200,232,0.24)' : 'rgba(255,255,255,0.14)');
         gradient.addColorStop(1, 'rgba(255,255,255,0)');
         ctx.beginPath();
-        ctx.arc(point.x, point.y, halo, 0, Math.PI * 2);
+        ctx.arc(point.x, point.y, haloRadius, 0, Math.PI * 2);
         ctx.fillStyle = gradient;
         ctx.fill();
 
         ctx.beginPath();
-        ctx.arc(point.x, point.y, city.hub ? 5.5 : 4.2, 0, Math.PI * 2);
-        ctx.fillStyle = city.hub ? 'rgba(255,255,255,0.98)' : 'rgba(239,246,255,0.86)';
+        ctx.arc(point.x, point.y, city.hub ? 5.6 : 4.2, 0, Math.PI * 2);
+        ctx.fillStyle = city.hub ? 'rgba(255,255,255,0.98)' : 'rgba(239,246,255,0.84)';
         ctx.fill();
-
-        ctx.font = `700 ${city.hub ? 12 : 11}px Inter, sans-serif`;
-        ctx.fillStyle = city.hub ? TEXT : 'rgba(239,246,255,0.88)';
-        ctx.textAlign = 'center';
-        ctx.fillText(ar ? city.nameAr : city.name, point.x, point.y - 12);
       });
 
       frameRef.current = requestAnimationFrame(render);
@@ -296,20 +275,20 @@ export function MobilityOSLandingMap() {
     return () => {
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     };
-  }, [ar, routes, size]);
+  }, [routes, size]);
 
   return (
     <div
       ref={wrapRef}
       style={{
-        width: 'min(100%, 500px)',
-        minHeight: 520,
+        width: '100%',
+        minHeight: 'min(760px, 72vh)',
         padding: 18,
         background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
-        boxShadow: '0 18px 46px rgba(0,0,0,0.26)',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.32)',
         backdropFilter: 'blur(14px)',
         border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: 28,
+        borderRadius: 32,
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -324,40 +303,6 @@ export function MobilityOSLandingMap() {
         }}
       />
 
-      <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 2, display: 'grid', gap: 8 }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.68)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <Activity size={14} color={PASSENGER} />
-          <span style={{ fontSize: '0.76rem', fontWeight: 800, color: TEXT }}>Mobility OS live map</span>
-        </div>
-        <div style={{ padding: '10px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div style={{ fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: TEXT_MUTED }}>
-            {ar ? 'الممر الأبرز' : 'Top corridor'}
-          </div>
-          <div style={{ marginTop: 4, color: TEXT, fontWeight: 800, fontSize: '0.8rem' }}>
-            {analytics?.topCorridor || topRoute?.id.replace(/-/g, ' -> ')}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 2, display: 'grid', gap: 8 }}>
-        <div style={{ padding: '10px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', minWidth: 140 }}>
-          <div style={{ fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: TEXT_MUTED }}>
-            {ar ? 'الركاب النشطون' : 'Active passengers'}
-          </div>
-          <div style={{ marginTop: 4, color: PASSENGER, fontWeight: 900, fontSize: '1rem' }}>
-            {analytics?.activePassengers ?? routes.reduce((sum, route) => sum + route.passengerFlow, 0)}
-          </div>
-        </div>
-        <div style={{ padding: '10px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', minWidth: 140 }}>
-          <div style={{ fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: TEXT_MUTED }}>
-            {ar ? 'الطرود النشطة' : 'Active parcels'}
-          </div>
-          <div style={{ marginTop: 4, color: PACKAGE, fontWeight: 900, fontSize: '1rem' }}>
-            {analytics?.activePackages ?? routes.reduce((sum, route) => sum + route.packageFlow, 0)}
-          </div>
-        </div>
-      </div>
-
       <canvas
         ref={canvasRef}
         style={{
@@ -366,25 +311,28 @@ export function MobilityOSLandingMap() {
           width: '100%',
           height: '100%',
           display: 'block',
-          minHeight: 484,
-          borderRadius: 22,
+          minHeight: 'min(620px, 64vh)',
+          borderRadius: 24,
           filter: 'saturate(1.2) contrast(1.06) brightness(1.03)',
         }}
       />
 
-      <div style={{ position: 'absolute', left: 16, right: 16, bottom: 16, zIndex: 2, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <div style={{ padding: '9px 12px', borderRadius: 999, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', color: TEXT, fontSize: '0.76rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ width: 28, height: 0, borderTop: `3px solid ${PASSENGER}`, display: 'inline-block' }} />
-          {ar ? 'تدفق الركاب' : 'Passenger flow'}
-        </div>
-        <div style={{ padding: '9px 12px', borderRadius: 999, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', color: TEXT, fontSize: '0.76rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ width: 28, height: 0, borderTop: `3px dashed ${PACKAGE}`, display: 'inline-block' }} />
-          {ar ? 'تدفق الطرود' : 'Parcel flow'}
-        </div>
-        <div style={{ padding: '9px 12px', borderRadius: 999, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', color: TEXT_MUTED, fontSize: '0.76rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          <MapPinned size={14} color={PASSENGER} />
-          {analytics?.recommendedPath || (ar ? 'توصية تشغيلية مباشرة' : 'Live operating recommendation')}
-        </div>
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          marginTop: 14,
+          padding: '14px 16px',
+          borderRadius: 18,
+          background: 'rgba(4,12,24,0.52)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          color: 'rgba(239,246,255,0.82)',
+          fontSize: '0.9rem',
+          lineHeight: 1.65,
+          textAlign: 'center',
+        }}
+      >
+        A live Jordan mobility view of 12 shared routes showing how riders, drivers, and parcel handoffs move together across the Wasel network.
       </div>
     </div>
   );
