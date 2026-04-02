@@ -14,9 +14,6 @@ type Corridor = {
   distanceKm: number;
 };
 
-const PASSENGER = '#00C8E8';
-const PACKAGE = '#F0A830';
-
 const BASE_ROUTES: readonly Corridor[] = [
   { id: 'amman-aqaba', from: 0, to: 1, distanceKm: 335 },
   { id: 'amman-irbid', from: 0, to: 2, distanceKm: 85 },
@@ -282,9 +279,9 @@ export function MobilityOSLandingMap() {
       ref={wrapRef}
       style={{
         width: '100%',
-        minHeight: 'min(760px, 72vh)',
-        padding: 18,
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
+        minHeight: 'min(720px, 70vh)',
+        padding: 16,
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.042), rgba(255,255,255,0.018))',
         boxShadow: '0 24px 60px rgba(0,0,0,0.32)',
         backdropFilter: 'blur(14px)',
         border: '1px solid rgba(255,255,255,0.06)',
@@ -311,29 +308,11 @@ export function MobilityOSLandingMap() {
           width: '100%',
           height: '100%',
           display: 'block',
-          minHeight: 'min(620px, 64vh)',
+          minHeight: 'min(590px, 60vh)',
           borderRadius: 24,
-          filter: 'saturate(1.2) contrast(1.06) brightness(1.03)',
+          filter: 'saturate(1.18) contrast(1.07) brightness(1.03)',
         }}
       />
-
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 1,
-          marginTop: 14,
-          padding: '14px 16px',
-          borderRadius: 18,
-          background: 'rgba(4,12,24,0.52)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          color: 'rgba(239,246,255,0.82)',
-          fontSize: '0.9rem',
-          lineHeight: 1.65,
-          textAlign: 'center',
-        }}
-      >
-        A live Jordan mobility view of 12 shared routes showing how riders, drivers, and parcel handoffs move together across the Wasel network.
-      </div>
     </div>
   );
 }

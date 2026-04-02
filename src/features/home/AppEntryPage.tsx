@@ -1,34 +1,16 @@
 import { motion } from 'motion/react';
-import {
-  ArrowRight,
-  Brain,
-  Network,
-  Package,
-  Route,
-  ShieldCheck,
-  Sparkles,
-  Truck,
-  Users,
-} from 'lucide-react';
-import { useMemo } from 'react';
+import { ArrowRight, Clock3, Package, Route, ShieldCheck } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
-import {
-  getFeaturedCorridors,
-  getHabitLoopPrograms,
-  getMarketplaceNodes,
-  getMovementDefensibilityLines,
-  getMovementLayers,
-  getWaselCategoryPosition,
-} from '../../config/wasel-movement-network';
-import { getMovementMembershipSnapshot } from '../../services/movementMembership';
+import { MobilityOSLandingMap } from './MobilityOSLandingMap';
 
 const C = {
   bg: '#040C18',
   border: 'rgba(85, 233, 255, 0.16)',
   borderSoft: 'rgba(255,255,255,0.08)',
   cyan: '#55E9FF',
+  blue: '#1EA1FF',
   green: '#33E85F',
   gold: '#F5B11E',
   text: '#EFF6FF',
@@ -38,31 +20,58 @@ const C = {
 
 const FONT = "-apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', 'Cairo', sans-serif";
 
-const ICONS = {
-  people: Users,
-  goods: Package,
-  services: Sparkles,
-  data: Brain,
-} as const;
+const metrics = [
+  { value: '12', label: 'priority corridors' },
+  { value: '24/7', label: 'movement visibility' },
+  { value: '3-in-1', label: 'rides, buses, parcels' },
+  { value: 'Trust-led', label: 'verified journeys' },
+] as const;
 
-const MARKETPLACE_ICONS = {
-  riders: Users,
-  drivers: Route,
-  businesses: Network,
-  'truck-owners': Truck,
-  'service-providers': Sparkles,
-} as const;
+const trustPoints = [
+  'One clear story: the same route can carry people and parcels without creating a messy experience.',
+  'The map stays visual-first, while the meaning of each movement sits outside it where users can understand it quickly.',
+  'Every action leads to one trusted workflow: discover, match, move, and complete the trip with confidence.',
+] as const;
+
+const workflowSteps = [
+  {
+    title: 'Choose the corridor',
+    detail: 'A rider or sender starts with a city-to-city route instead of searching through disconnected transport options.',
+  },
+  {
+    title: 'Match shared capacity',
+    detail: 'Wasel groups riders, buses, and available seats on the same movement corridor to reduce cost and improve fill rate.',
+  },
+  {
+    title: 'Track one movement stream',
+    detail: 'Passenger flow and parcel flow stay visible in one system, so users understand where the trip is going and what it carries.',
+  },
+] as const;
+
+const mapLegend = [
+  {
+    label: 'Passenger flow',
+    color: C.cyan,
+    detail: 'Bright motion paths show where rider demand is actively moving through the network.',
+    icon: Route,
+  },
+  {
+    label: 'Parcel flow',
+    color: C.gold,
+    detail: 'Parcel movement follows the same trusted corridors, so delivery feels native to the route instead of bolted on.',
+    icon: Package,
+  },
+  {
+    label: 'Verified route logic',
+    color: C.green,
+    detail: 'The workflow stays calm and understandable: route selection, seat matching, handoff, and trip completion.',
+    icon: ShieldCheck,
+  },
+] as const;
 
 export default function AppEntryPage() {
   const { user } = useLocalAuth();
   const navigate = useIframeSafeNavigate();
-  const category = useMemo(() => getWaselCategoryPosition(), []);
-  const movementLayers = useMemo(() => getMovementLayers(), []);
-  const featuredCorridors = useMemo(() => getFeaturedCorridors(6), []);
-  const marketplaceNodes = useMemo(() => getMarketplaceNodes(), []);
-  const habitLoops = useMemo(() => getHabitLoopPrograms(), []);
-  const moatLines = useMemo(() => getMovementDefensibilityLines(), []);
-  const membership = useMemo(() => getMovementMembershipSnapshot(), []);
 
   const primaryLabel = user ? 'Open app' : 'Get started';
   const primaryPath = user ? '/app/find-ride' : '/app/auth?returnTo=/app/find-ride';
@@ -80,21 +89,17 @@ export default function AppEntryPage() {
     >
       <style>{`
         :root { color-scheme: dark; scroll-behavior: smooth; }
-        @media (max-width: 1080px) {
-          .landing-hero-grid { grid-template-columns: 1fr !important; }
-          .landing-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .landing-layer-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .landing-corridor-grid { grid-template-columns: 1fr !important; }
-          .landing-marketplace-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .landing-loop-grid { grid-template-columns: 1fr !important; }
-          .landing-footer-grid { grid-template-columns: 1fr !important; }
+        @media (max-width: 1120px) {
+          .landing-grid { grid-template-columns: 1fr !important; }
+          .landing-stats { grid-template-columns: repeat(2, 1fr) !important; }
+          .landing-cta { flex-direction: column !important; align-items: stretch !important; }
+          .landing-support-grid { grid-template-columns: 1fr !important; }
+          .landing-map-meta { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 640px) {
-          .landing-stat-grid { grid-template-columns: 1fr !important; }
-          .landing-layer-grid { grid-template-columns: 1fr !important; }
-          .landing-marketplace-grid { grid-template-columns: 1fr !important; }
-          .landing-cta { flex-direction: column !important; align-items: stretch !important; }
-          .landing-hero-title { font-size: clamp(2.4rem, 13vw, 4rem) !important; }
+          .landing-stats { grid-template-columns: 1fr !important; }
+          .landing-hero-title { font-size: clamp(2.5rem, 13vw, 4.35rem) !important; }
+          .landing-shell { padding-left: 18px !important; padding-right: 18px !important; }
         }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
@@ -112,25 +117,45 @@ export default function AppEntryPage() {
           position: 'absolute',
           inset: 0,
           background: `
-            radial-gradient(circle at 12% 18%, rgba(85,233,255,0.16), transparent 26%),
-            radial-gradient(circle at 84% 12%, rgba(245,177,30,0.14), transparent 24%),
-            radial-gradient(circle at 78% 70%, rgba(51,232,95,0.12), transparent 24%),
+            radial-gradient(circle at 12% 18%, rgba(85,233,255,0.14), transparent 26%),
+            radial-gradient(circle at 82% 16%, rgba(245,177,30,0.12), transparent 22%),
+            radial-gradient(circle at 78% 72%, rgba(51,232,95,0.1), transparent 20%),
             linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))
           `,
           pointerEvents: 'none',
         }}
       />
 
-      <div style={{ position: 'relative', maxWidth: 1320, margin: '0 auto', padding: '36px 24px 88px' }}>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'radial-gradient(circle at 48% 0%, rgba(0,200,232,0.08), transparent 36%), radial-gradient(circle at 100% 100%, rgba(30,161,255,0.07), transparent 28%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <div
+        className="landing-shell"
+        style={{ position: 'relative', maxWidth: 1320, margin: '0 auto', padding: '40px 24px 82px' }}
+      >
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}
+          transition={{ duration: 0.45 }}
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 20,
+            flexWrap: 'wrap',
+          }}
         >
           <WaselLogo size={44} theme="light" />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {['People', 'Goods', 'Services', 'Data'].map((label) => (
+            {['Shared rides', 'Bus corridors', 'Rider parcels'].map((label) => (
               <span
                 key={label}
                 style={{
@@ -139,7 +164,7 @@ export default function AppEntryPage() {
                   padding: '7px 12px',
                   borderRadius: 9999,
                   background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(85,233,255,0.16)',
+                  border: `1px solid ${C.border}`,
                   color: C.soft,
                   fontSize: '0.72rem',
                   fontWeight: 800,
@@ -153,17 +178,17 @@ export default function AppEntryPage() {
         </motion.div>
 
         <div
-          className="landing-hero-grid"
+          className="landing-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: '1.08fr 0.92fr',
-            gap: 32,
+            gridTemplateColumns: '1.03fr 0.97fr',
+            gap: 34,
             alignItems: 'start',
             marginTop: 42,
           }}
         >
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55 }}
           >
@@ -183,7 +208,7 @@ export default function AppEntryPage() {
                   textTransform: 'uppercase',
                 }}
               >
-                {category.categoryLabel}
+                Premium mobility hub
               </span>
               <span
                 style={{
@@ -195,31 +220,18 @@ export default function AppEntryPage() {
                   fontWeight: 700,
                 }}
               >
-                <ShieldCheck size={14} color={C.gold} />
-                Routes plus cost sharing is the moat
+                <Clock3 size={14} color={C.gold} />
+                Clean landing with map-first storytelling
               </span>
-            </div>
-
-            <div
-              style={{
-                marginTop: 18,
-                color: C.gold,
-                fontSize: '0.88rem',
-                fontWeight: 800,
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
-              }}
-            >
-              Move smarter with Wasel
             </div>
 
             <h1
               className="landing-hero-title"
               style={{
-                margin: '20px 0 14px',
-                fontSize: 'clamp(2.9rem, 6vw, 5.8rem)',
+                margin: '20px 0 16px',
+                fontSize: 'clamp(3rem, 6.2vw, 5.9rem)',
                 lineHeight: 0.92,
-                letterSpacing: '-0.07em',
+                letterSpacing: '-0.075em',
                 fontWeight: 950,
                 maxWidth: 780,
               }}
@@ -227,63 +239,71 @@ export default function AppEntryPage() {
               <span
                 style={{
                   display: 'block',
-                  background: 'linear-gradient(135deg, #FFFFFF 0%, #CFFAFF 26%, #55E9FF 62%, #33E85F 100%)',
+                  background: 'linear-gradient(135deg, #FFFFFF 0%, #CFFAFF 28%, #55E9FF 65%, #33E85F 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
                 }}
               >
-                The operating system of movement in Jordan
+                Smarter with Wasel
               </span>
-              <span style={{ display: 'block', color: C.text, marginTop: 10 }}>
-                routes, intelligence, and shared economics in one network
+              <span style={{ display: 'block', color: C.text, marginTop: 8 }}>
+                shared rides, buses, and rider-delivered packages in one system
               </span>
             </h1>
 
-            <p style={{ maxWidth: 760, fontSize: '1.02rem', lineHeight: 1.82, color: C.muted, margin: 0 }}>
-              {category.promise} Instead of competing as another ride app, Wasel now owns corridors,
-              predicts demand, auto-groups riders, opens logistics and service capacity, and keeps learning how Jordan moves.
+            <p style={{ maxWidth: 720, fontSize: '1.03rem', lineHeight: 1.8, color: C.muted, margin: 0 }}>
+              Wasel keeps the first screen calm and premium. Users can immediately understand that one route can carry people,
+              available seats, and trusted parcel handoff without jumping between different products or confusing transport flows.
             </p>
 
             <div
-              className="landing-stat-grid"
+              className="landing-stats"
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
                 gap: 10,
                 marginTop: 24,
-                maxWidth: 780,
+                maxWidth: 760,
               }}
             >
-              {[
-                { value: '12', label: 'priority corridors', tone: C.cyan },
-                { value: '4', label: 'movement layers', tone: C.green },
-                { value: '5', label: 'marketplace nodes', tone: C.gold },
-                { value: `${membership.movementCredits}`, label: 'movement credits ready', tone: C.cyan },
-              ].map((item) => (
+              {metrics.map((item, index) => (
                 <div
                   key={item.label}
                   style={{
                     borderRadius: 20,
-                    padding: '16px 16px 15px',
+                    padding: '15px 16px',
                     background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
-                    border: `1px solid ${C.border}`,
+                    border: `1px solid ${index === 0 ? C.border : C.borderSoft}`,
                     boxShadow: '0 10px 24px rgba(0,0,0,0.16)',
                   }}
                 >
-                  <div style={{ fontSize: '1.24rem', fontWeight: 950, color: item.tone, letterSpacing: '-0.03em' }}>{item.value}</div>
-                  <div style={{ marginTop: 4, fontSize: '0.76rem', color: C.soft, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  <div style={{ fontSize: '1.18rem', fontWeight: 950, color: index === 0 ? C.cyan : C.text, letterSpacing: '-0.03em' }}>
+                    {item.value}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 4,
+                      fontSize: '0.75rem',
+                      color: C.soft,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                    }}
+                  >
                     {item.label}
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="landing-cta" style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 28, flexWrap: 'wrap' }}>
+            <div
+              className="landing-cta"
+              style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 30, flexWrap: 'wrap' }}
+            >
               <button
                 onClick={() => navigate(primaryPath)}
                 style={{
-                  height: 54,
+                  height: 52,
                   padding: '0 22px',
                   border: 'none',
                   borderRadius: 16,
@@ -303,9 +323,9 @@ export default function AppEntryPage() {
               </button>
 
               <button
-                onClick={() => navigate('/app/mobility-os')}
+                onClick={() => navigate('/app/find-ride')}
                 style={{
-                  height: 54,
+                  height: 52,
                   padding: '0 20px',
                   borderRadius: 16,
                   background: 'rgba(255,255,255,0.03)',
@@ -316,394 +336,194 @@ export default function AppEntryPage() {
                   cursor: 'pointer',
                 }}
               >
-                Open Movement OS
+                Explore rides
               </button>
+            </div>
+
+            <div
+              className="landing-support-grid"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: 12,
+                marginTop: 22,
+                maxWidth: 780,
+              }}
+            >
+              {trustPoints.map((item, index) => (
+                <div
+                  key={item}
+                  style={{
+                    borderRadius: 22,
+                    padding: '15px 16px',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${index === 1 ? C.border : C.borderSoft}`,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <div
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: index === 1 ? C.cyan : C.green,
+                        boxShadow: `0 0 10px ${index === 1 ? C.cyan : C.green}`,
+                      }}
+                    />
+                    <span
+                      style={{
+                        color: C.text,
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                      }}
+                    >
+                      {index === 1 ? 'Map principle' : 'User signal'}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, color: C.soft, fontSize: '0.82rem', lineHeight: 1.65 }}>{item}</p>
+                </div>
+              ))}
             </div>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            style={{
-              borderRadius: 30,
-              padding: 24,
-              background: 'linear-gradient(180deg, rgba(9,20,36,0.92), rgba(6,14,28,0.98))',
-              border: `1px solid ${C.border}`,
-              boxShadow: '0 26px 70px rgba(0,0,0,0.34)',
-            }}
+            transition={{ duration: 0.62 }}
+            style={{ display: 'grid', gap: 16 }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <MobilityOSLandingMap />
+
+            <div
+              className="landing-map-meta"
+              style={{ display: 'grid', gridTemplateColumns: '1.08fr 0.92fr', gap: 12 }}
+            >
               <div
                 style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 14,
-                  display: 'grid',
-                  placeItems: 'center',
-                  background: 'rgba(85,233,255,0.12)',
+                  borderRadius: 24,
+                  padding: '18px 18px 16px',
+                  background: 'rgba(255,255,255,0.035)',
                   border: `1px solid ${C.border}`,
                 }}
               >
-                <Brain size={18} color={C.cyan} />
-              </div>
-              <div>
-                <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.cyan }}>
-                  Wasel Brain
-                </div>
-                <div style={{ marginTop: 4, fontSize: '1.15rem', fontWeight: 900 }}>
-                  Demand is predicted before a rider searches
-                </div>
-              </div>
-            </div>
-
-            <div style={{ marginTop: 18, display: 'grid', gap: 12 }}>
-              {featuredCorridors.slice(0, 4).map((corridor, index) => (
-                <button
-                  key={corridor.id}
-                  onClick={() => navigate(`/app/find-ride?from=${encodeURIComponent(corridor.from)}&to=${encodeURIComponent(corridor.to)}&search=1`)}
+                <div
                   style={{
-                    textAlign: 'left',
-                    borderRadius: 20,
-                    padding: '16px 16px 14px',
-                    background: index === 0
-                      ? 'linear-gradient(135deg, rgba(85,233,255,0.12), rgba(255,255,255,0.03))'
-                      : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${index === 0 ? 'rgba(85,233,255,0.28)' : C.borderSoft}`,
-                    cursor: 'pointer',
+                    color: C.cyan,
+                    fontSize: '0.74rem',
+                    fontWeight: 900,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: '0.96rem' }}>{corridor.label}</div>
-                      <div style={{ marginTop: 6, color: C.soft, fontSize: '0.8rem', lineHeight: 1.6 }}>
-                        {corridor.autoGroupWindow}
+                  How to read the map
+                </div>
+                <p style={{ margin: '10px 0 0', color: C.muted, fontSize: '0.9rem', lineHeight: 1.7 }}>
+                  The map itself stays free of text so the movement is easy to absorb at a glance. Explanation lives here,
+                  where users can learn what each stream means without blocking the visual.
+                </p>
+
+                <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
+                  {mapLegend.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={item.label}
+                        style={{
+                          borderRadius: 18,
+                          padding: '12px 13px',
+                          background: 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${C.borderSoft}`,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div
+                            style={{
+                              width: 34,
+                              height: 34,
+                              borderRadius: 12,
+                              display: 'grid',
+                              placeItems: 'center',
+                              background: `${item.color}1A`,
+                              border: `1px solid ${item.color}55`,
+                              color: item.color,
+                              flexShrink: 0,
+                            }}
+                          >
+                            <Icon size={16} />
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 800, fontSize: '0.92rem', color: C.text }}>{item.label}</div>
+                            <div style={{ marginTop: 4, color: C.soft, fontSize: '0.79rem', lineHeight: 1.6 }}>{item.detail}</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  borderRadius: 24,
+                  padding: '18px 18px 16px',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025))',
+                  border: `1px solid ${C.borderSoft}`,
+                }}
+              >
+                <div
+                  style={{
+                    color: C.gold,
+                    fontSize: '0.74rem',
+                    fontWeight: 900,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Workflow
+                </div>
+
+                <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
+                  {workflowSteps.map((step, index) => (
+                    <div
+                      key={step.title}
+                      style={{
+                        borderRadius: 18,
+                        padding: '13px 14px',
+                        background: 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${index === 0 ? C.border : C.borderSoft}`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 10,
+                            display: 'grid',
+                            placeItems: 'center',
+                            background: index === 0 ? 'rgba(85,233,255,0.12)' : 'rgba(255,255,255,0.06)',
+                            color: index === 0 ? C.cyan : C.text,
+                            fontSize: '0.82rem',
+                            fontWeight: 900,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {index + 1}
+                        </div>
+                        <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{step.title}</div>
+                      </div>
+                      <div style={{ marginTop: 8, color: C.soft, fontSize: '0.79rem', lineHeight: 1.6 }}>
+                        {step.detail}
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ color: C.green, fontWeight: 900, fontSize: '1.1rem' }}>{corridor.savingsPercent}%</div>
-                      <div style={{ color: C.soft, fontSize: '0.72rem' }}>cheaper than solo movement</div>
-                    </div>
-                  </div>
-                  <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(51,232,95,0.12)', border: '1px solid rgba(51,232,95,0.22)', color: C.green, fontSize: '0.72rem', fontWeight: 700 }}>
-                      Demand {corridor.predictedDemandScore}
-                    </span>
-                    <span style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(245,177,30,0.12)', border: '1px solid rgba(245,177,30,0.22)', color: C.gold, fontSize: '0.72rem', fontWeight: 700 }}>
-                      From {corridor.sharedPriceJod} JOD
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            <div style={{ marginTop: 16, borderRadius: 18, padding: '16px 18px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.borderSoft}` }}>
-              <div style={{ color: C.soft, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Current daily route</div>
-              <div style={{ marginTop: 8, fontWeight: 800, fontSize: '1rem' }}>
-                {membership.dailyRoute?.label ?? 'Amman -> Irbid'}
-              </div>
-              <div style={{ marginTop: 6, color: C.muted, fontSize: '0.82rem', lineHeight: 1.7 }}>
-                Credits, subscriptions, and repeat corridors are what make Wasel sticky enough to become a movement habit.
+                  ))}
+                </div>
               </div>
             </div>
           </motion.div>
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.08 }}
-          style={{ marginTop: 34 }}
-        >
-          <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.cyan }}>
-            Movement layers
-          </div>
-          <div className="landing-layer-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginTop: 14 }}>
-            {movementLayers.map((layer) => {
-              const Icon = ICONS[layer.id];
-              return (
-                <div
-                  key={layer.id}
-                  style={{
-                    borderRadius: 24,
-                    padding: '18px 18px 20px',
-                    background: 'rgba(8, 20, 40, 0.78)',
-                    border: `1px solid ${C.borderSoft}`,
-                    backdropFilter: 'blur(14px)',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 42,
-                      height: 42,
-                      borderRadius: 14,
-                      display: 'grid',
-                      placeItems: 'center',
-                      background: 'rgba(85,233,255,0.12)',
-                      border: `1px solid ${C.border}`,
-                    }}
-                  >
-                    <Icon size={18} color={C.cyan} />
-                  </div>
-                  <div style={{ marginTop: 14, fontWeight: 900, fontSize: '1rem' }}>{layer.title}</div>
-                  <p style={{ margin: '8px 0 0', color: C.muted, fontSize: '0.84rem', lineHeight: 1.7 }}>{layer.summary}</p>
-                  <div style={{ marginTop: 12, color: C.green, fontSize: '0.76rem', lineHeight: 1.6, fontWeight: 700 }}>
-                    {layer.valueLine}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.14 }}
-          style={{ marginTop: 22 }}
-        >
-          <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.gold }}>
-            Route intelligence engine
-          </div>
-          <div className="landing-corridor-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginTop: 14 }}>
-            {featuredCorridors.map((corridor) => (
-              <div
-                key={corridor.id}
-                style={{
-                  borderRadius: 26,
-                  padding: '20px 22px',
-                  background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025))',
-                  border: `1px solid ${C.border}`,
-                  backdropFilter: 'blur(14px)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline', flexWrap: 'wrap' }}>
-                  <div>
-                    <div style={{ fontWeight: 900, fontSize: '1rem' }}>{corridor.label}</div>
-                    <div style={{ marginTop: 5, color: C.soft, fontSize: '0.78rem' }}>
-                      {corridor.distanceKm} km | {corridor.durationMin} min
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: C.cyan, fontWeight: 900, fontSize: '1.05rem' }}>{corridor.sharedPriceJod} JOD</div>
-                    <div style={{ color: C.soft, fontSize: '0.72rem' }}>shared seat target</div>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: 14, display: 'grid', gap: 8 }}>
-                  <div style={{ color: C.muted, fontSize: '0.82rem', lineHeight: 1.6 }}>
-                    {corridor.intelligenceSignals[0]}
-                  </div>
-                  <div style={{ color: C.soft, fontSize: '0.8rem', lineHeight: 1.6 }}>
-                    Pickup nodes: {corridor.pickupPoints.join(' | ')}
-                  </div>
-                </div>
-
-                <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(85,233,255,0.12)', border: `1px solid ${C.border}`, color: C.cyan, fontSize: '0.72rem', fontWeight: 700 }}>
-                    Demand {corridor.predictedDemandScore}
-                  </span>
-                  <span style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(51,232,95,0.12)', border: '1px solid rgba(51,232,95,0.22)', color: C.green, fontSize: '0.72rem', fontWeight: 700 }}>
-                    {corridor.savingsPercent}% saved
-                  </span>
-                  <span style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(245,177,30,0.12)', border: '1px solid rgba(245,177,30,0.22)', color: C.gold, fontSize: '0.72rem', fontWeight: 700 }}>
-                    Driver boost {corridor.driverBoostJod} JOD
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.2 }}
-          style={{ marginTop: 22 }}
-        >
-          <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.green }}>
-            Marketplace expansion
-          </div>
-          <div className="landing-marketplace-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginTop: 14 }}>
-            {marketplaceNodes.map((node) => {
-              const Icon = MARKETPLACE_ICONS[node.id];
-              return (
-                <div
-                  key={node.id}
-                  style={{
-                    borderRadius: 22,
-                    padding: '18px 16px',
-                    background: 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${C.borderSoft}`,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 14,
-                      display: 'grid',
-                      placeItems: 'center',
-                      background: 'rgba(51,232,95,0.12)',
-                      border: '1px solid rgba(51,232,95,0.2)',
-                    }}
-                  >
-                    <Icon size={18} color={C.green} />
-                  </div>
-                  <div style={{ marginTop: 12, fontWeight: 800, fontSize: '0.94rem' }}>{node.title}</div>
-                  <p style={{ margin: '8px 0 0', color: C.muted, fontSize: '0.78rem', lineHeight: 1.65 }}>{node.summary}</p>
-                  <div style={{ marginTop: 12, color: C.gold, fontSize: '0.72rem', lineHeight: 1.55, fontWeight: 700 }}>
-                    {node.moat}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.26 }}
-          style={{ marginTop: 22 }}
-        >
-          <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.cyan }}>
-            Habit loop
-          </div>
-          <div className="landing-loop-grid" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginTop: 14 }}>
-            <div
-              style={{
-                borderRadius: 28,
-                padding: '22px 24px',
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.025))',
-                border: `1px solid ${C.border}`,
-              }}
-            >
-              <div style={{ fontWeight: 900, fontSize: '1.15rem' }}>
-                We win when the default thought becomes: "I do not move without Wasel."
-              </div>
-              <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
-                {habitLoops.map((loop) => (
-                  <div
-                    key={loop.id}
-                    style={{
-                      borderRadius: 18,
-                      padding: '14px 16px',
-                      background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.06)',
-                    }}
-                  >
-                    <div style={{ fontWeight: 800, fontSize: '0.92rem' }}>{loop.title}</div>
-                    <div style={{ marginTop: 6, color: C.muted, fontSize: '0.8rem', lineHeight: 1.65 }}>{loop.summary}</div>
-                    <div style={{ marginTop: 10, color: C.green, fontSize: '0.74rem', lineHeight: 1.55, fontWeight: 700 }}>{loop.outcome}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div
-              style={{
-                borderRadius: 28,
-                padding: '22px 24px',
-                background: 'rgba(8,20,40,0.8)',
-                border: '1px solid rgba(255,255,255,0.07)',
-              }}
-            >
-              <div style={{ fontSize: '0.76rem', fontWeight: 800, color: C.gold, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                Membership pulse
-              </div>
-              <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
-                {[
-                  `Movement credits: ${membership.movementCredits}`,
-                  `Loyalty tier: ${membership.loyaltyTier}`,
-                  `Daily route: ${membership.dailyRoute?.label ?? 'Amman -> Irbid'}`,
-                  `Commuter pass: ${membership.commuterPassRoute?.label ?? 'Not started yet'}`,
-                ].map((line) => (
-                  <div
-                    key={line}
-                    style={{
-                      borderRadius: 16,
-                      padding: '12px 14px',
-                      background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      color: C.text,
-                      fontWeight: 700,
-                      lineHeight: 1.55,
-                    }}
-                  >
-                    {line}
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop: 14, color: C.muted, fontSize: '0.82rem', lineHeight: 1.7 }}>
-                Commuter passes, route credits, and loyalty rewards are what turn route usage into a defensible habit loop.
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.32 }}
-          style={{ marginTop: 22 }}
-        >
-          <div className="landing-footer-grid" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 14 }}>
-            <div
-              style={{
-                borderRadius: 28,
-                padding: '24px 24px',
-                background: 'linear-gradient(135deg, rgba(85,233,255,0.08), rgba(51,232,95,0.06))',
-                border: `1px solid ${C.border}`,
-              }}
-            >
-              <div style={{ fontSize: '0.76rem', fontWeight: 800, color: C.cyan, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                Category creation
-              </div>
-              <h3 style={{ margin: '12px 0 8px', fontSize: '1.5rem', lineHeight: 1.05 }}>
-                Wasel is no longer "a ride-sharing app."
-              </h3>
-              <p style={{ margin: 0, color: C.muted, lineHeight: 1.75, fontSize: '0.94rem' }}>
-                The product is now positioned as {category.infrastructureLabel}. It owns how Jordan moves by combining corridor intelligence,
-                cost sharing, movement layers, and network density into one operating model.
-              </p>
-              <div style={{ marginTop: 14, color: C.gold, fontWeight: 800, fontSize: '0.84rem' }}>
-                Killer advantage: {category.killerAdvantage}
-              </div>
-            </div>
-
-            <div
-              style={{
-                borderRadius: 28,
-                padding: '24px 24px',
-                background: 'rgba(8,20,40,0.82)',
-                border: '1px solid rgba(255,255,255,0.07)',
-              }}
-            >
-              <div style={{ fontSize: '0.76rem', fontWeight: 800, color: C.gold, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                Defensibility
-              </div>
-              <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
-                {moatLines.map((line) => (
-                  <div
-                    key={line}
-                    style={{
-                      borderRadius: 16,
-                      padding: '12px 14px',
-                      background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      color: C.text,
-                      lineHeight: 1.65,
-                      fontSize: '0.82rem',
-                    }}
-                  >
-                    {line}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </div>
   );
