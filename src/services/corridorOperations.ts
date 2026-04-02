@@ -276,6 +276,10 @@ export async function buildBusinessAccountSnapshot(
   }
   const linkedTracking = packageTrackingService.getPackage(tracking.id) ?? tracking;
   const escrow = await packageTrackingService.processPayment(tracking.id, 'wallet');
+  const liquidityHealth = calculateLiquidityHealth(18, 72, 54) as LiquidityMetrics & {
+    routeId: string;
+    averagePriceJOD: number;
+  };
 
   return {
     companyName: 'Wasel Enterprise',
@@ -283,7 +287,7 @@ export async function buildBusinessAccountSnapshot(
     employees,
     fleetDrivers,
     liquidity: {
-      ...calculateLiquidityHealth(18, 72, 54),
+      ...liquidityHealth,
       routeId: corridor.id,
       averagePriceJOD: seatYield[1]?.price ?? seatYield[0]?.price ?? 0,
     },
@@ -332,12 +336,16 @@ export async function buildSchoolTransportSnapshot(
     100,
     Math.round((guardianCount / Math.max(1, students.length)) * 50),
   );
+  const liquidityHealth = calculateLiquidityHealth(14, 42, 35) as LiquidityMetrics & {
+    routeId: string;
+    averagePriceJOD: number;
+  };
 
   return {
     route,
     students,
     liquidity: {
-      ...calculateLiquidityHealth(14, 42, 35),
+      ...liquidityHealth,
       routeId: route.id,
       averagePriceJOD: seatYield[2]?.price ?? seatYield[0]?.price ?? 0,
     },

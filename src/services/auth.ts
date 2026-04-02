@@ -1,6 +1,6 @@
 import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey, supabase } from './core';
 import { getDirectProfile, getDirectVerificationRecord, updateDirectProfile } from './directSupabase';
-import { getConfig } from '../utils/env';
+import { getAuthCallbackUrl, getConfig } from '../utils/env';
 
 function canUseEdgeApi(): boolean {
   return Boolean(API_URL && publicAnonKey);
@@ -105,80 +105,27 @@ async function enrichProfileWithVerification(userId: string, profile: Record<str
 export const authAPI = {
   async signUp(email: string, password: string, firstName: string, lastName: string, phone: string) {
     const client = requireSupabase();
+    const redirectTo = getAuthCallbackUrl(
+      typeof window !== 'undefined' ? window.location.origin : undefined,
+    );
 
-    if (!canUseEdgeApi()) {
-      if (!canUseDirectFallbackForWrites()) {
-        throw getDirectFallbackError('Sign up');
-      }
-
-      const { data, error } = await client.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: `${firstName} ${lastName}`.trim(),
-            phone,
-          },
+    const { data, error } = await client.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectTo,
+        data: {
+          full_name: `${firstName} ${lastName}`.trim(),
+          phone,
         },
-      });
+      },
+    });
 
-      if (error) throw error;
-      return data;
+    if (error) {
+      throw new Error(normalizeAuthError(error.message, 'signup'));
     }
 
-    try {
-      const response = await fetchWithRetry(`${API_URL}/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${publicAnonKey}`,
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          fullName: `${firstName} ${lastName}`.trim(),
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-
-        if (
-          errorData.error?.includes('already been registered') ||
-          errorData.error?.includes('User already registered')
-        ) {
-          throw new Error('This email is already registered.');
-        }
-
-        throw new Error(errorData.error || `Server error: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      if (error instanceof Error && error.message === 'This email is already registered.') {
-        throw error;
-      }
-
-      if (!canUseDirectFallbackForWrites()) {
-        throw getDirectFallbackError('Sign up');
-      }
-
-      const { data, error: fallbackError } = await client.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: `${firstName} ${lastName}`.trim(),
-            phone,
-          },
-        },
-      });
-
-      if (fallbackError) {
-        throw new Error(normalizeAuthError(fallbackError.message, 'signup'));
-      }
-      return data;
-    }
+    return data;
   },
 
   async createProfile(userId: string, email: string, firstName: string, lastName: string) {

@@ -159,6 +159,7 @@ export default function WaselAuth() {
   const [params]      = useSearchParams();
   const rawTab        = params.get('tab')?.toLowerCase();
   const initialTab: Tab = rawTab === 'signup' || rawTab === 'register' ? 'signup' : 'signin';
+  const passwordResetCompleted = params.get('reset') === 'success';
 
   const [tab,      setTab]      = useState<Tab>(initialTab);
   const [email,    setEmail]    = useState('');
@@ -167,6 +168,9 @@ export default function WaselAuth() {
   const [phone,    setPhone]    = useState('');
   const [error,    setError]    = useState('');
   const [success,  setSuccess]  = useState(false);
+  const [notice,   setNotice]   = useState(
+    passwordResetCompleted ? 'Password updated. Sign in with your new password.' : '',
+  );
 
   const { signIn, register, loading, user } = useLocalAuth();
   const { resetPassword, signInWithGoogle, signInWithFacebook } = useAuth();
@@ -197,10 +201,16 @@ export default function WaselAuth() {
     setTab(next);
     setError('');
     setSuccess(false);
+    if (!passwordResetCompleted) {
+      setNotice('');
+    }
   };
 
   const handleSignIn = async () => {
     setError('');
+    if (!passwordResetCompleted) {
+      setNotice('');
+    }
     if (!email.trim())            { setError('Please enter your email address.'); return; }
     if (!validateEmail(email))    { setError('Please enter a valid email address.'); return; }
     if (!password)                { setError('Please enter your password.'); return; }
@@ -214,6 +224,9 @@ export default function WaselAuth() {
 
   const handleSignUp = async () => {
     setError('');
+    if (!passwordResetCompleted) {
+      setNotice('');
+    }
     if (!name.trim())             { setError('Please enter your full name.'); return; }
     if (!email.trim())            { setError('Please enter your email address.'); return; }
     if (!validateEmail(email))    { setError('Please enter a valid email address.'); return; }
@@ -221,8 +234,17 @@ export default function WaselAuth() {
     if (!checkRateLimit(`signup:${email}`, { maxRequests: 3, windowMs: 60_000 })) {
       setError('Too many attempts. Please wait a minute and try again.'); return;
     }
-    const { error: signUpError } = await register(name, email, password, phone);
-    if (signUpError) { setError(friendlyAuthError(signUpError, 'Sign up failed. Please try again.')); return; }
+    const registration = await register(name, email, password, phone);
+    if (registration.error) {
+      setError(friendlyAuthError(registration.error, 'Sign up failed. Please try again.'));
+      return;
+    }
+    if (registration.requiresEmailConfirmation) {
+      setPassword('');
+      setNotice(`Check ${registration.email ?? email} and confirm your email address to finish creating your account.`);
+      setTab('signin');
+      return;
+    }
     pushSuccessRedirect();
   };
 
@@ -311,6 +333,21 @@ export default function WaselAuth() {
           </div>
 
           {/* Error banner */}
+          <AnimatePresence>
+            {notice && !error && !success && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                style={{ overflow: 'hidden', marginBottom: SPACE[5] }}
+              >
+                <WaselCard variant="solid" padding={`${SPACE[3]} ${SPACE[4]}`} radius={R.lg} style={{ background: C.greenDim, border: `1px solid ${C.green}40` }}>
+                  <span style={{ fontSize: TYPE.size.sm, color: C.green, fontFamily: F }}>{notice}</span>
+                </WaselCard>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <AnimatePresence>
             {error && (
               <motion.div
@@ -442,14 +479,15 @@ export default function WaselAuth() {
                   {socialButtons.map((social) => (
                     <motion.button
                       key={social.label}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                      type="button"
-                      onClick={() => { void social.onClick(); }}
-                      style={{ flex: '1 1 120px', height: 44, borderRadius: R.lg, border: `1px solid ${social.color}30`, background: `${social.color}0C`, color: social.color, fontWeight: TYPE.weight.black, fontSize: TYPE.size.sm, fontFamily: F, cursor: 'pointer', transition: 'all 150ms ease' }}
-                    >
-                      {social.label}
-                    </motion.button>
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    type="button"
+                    disabled={loading || success}
+                    onClick={() => { void social.onClick(); }}
+                    style={{ flex: '1 1 120px', height: 44, borderRadius: R.lg, border: `1px solid ${social.color}30`, background: `${social.color}0C`, color: social.color, fontWeight: TYPE.weight.black, fontSize: TYPE.size.sm, fontFamily: F, cursor: loading || success ? 'not-allowed' : 'pointer', opacity: loading || success ? 0.55 : 1, transition: 'all 150ms ease' }}
+                  >
+                    {social.label}
+                  </motion.button>
                   ))}
                 </div>
 

@@ -92,6 +92,7 @@ export function createRideBooking(input: {
   driverName: string;
   passengerName: string;
   seatsRequested?: number;
+  pricePerSeatJod?: number;
   routeMode: 'live_post' | 'network_inventory';
 }): RideBookingRecord {
   const now = new Date().toISOString();
@@ -123,10 +124,14 @@ export function createRideBooking(input: {
     serviceType: 'ride',
     from: input.from,
     to: input.to,
+    valueJod: input.pricePerSeatJod
+      ? Number((booking.seatsRequested * input.pricePerSeatJod).toFixed(2))
+      : undefined,
     metadata: {
       rideId: input.rideId,
       routeMode: input.routeMode,
       seatsRequested: booking.seatsRequested,
+      pricePerSeatJod: input.pricePerSeatJod,
     },
   });
   if (input.passengerId) {

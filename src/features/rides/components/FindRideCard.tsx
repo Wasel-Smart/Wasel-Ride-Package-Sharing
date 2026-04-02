@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
 import { getCorridorOpportunity } from '../../../config/wasel-movement-network';
+import { getMovementPriceQuote } from '../../../services/movementPricing';
+import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
 import {
   createGenderMeta,
   type Ride,
@@ -20,6 +22,7 @@ type FindRideCardProps = {
   ride: Ride;
   idx: number;
   booked?: boolean;
+  signal?: LiveCorridorSignal | null;
   onOpen: () => void;
 };
 
@@ -27,11 +30,17 @@ export function FindRideCard({
   ride,
   idx,
   booked = false,
+  signal = null,
   onOpen,
 }: FindRideCardProps) {
   const genderMeta = GENDER_META[ride.genderPref];
   const soldOut = ride.seatsAvailable <= 0;
   const corridorPlan = getCorridorOpportunity(ride.from, ride.to);
+  const priceQuote = getMovementPriceQuote({
+    basePriceJod: ride.pricePerSeat,
+    corridorId: signal?.id,
+    forecastDemandScore: signal?.forecastDemandScore,
+  });
 
   return (
     <motion.div
@@ -125,11 +134,16 @@ export function FindRideCard({
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ color: DS.cyan, fontWeight: 900, fontSize: '1.7rem', lineHeight: 1 }}>
-              {ride.pricePerSeat}
+              {priceQuote.finalPriceJod}
             </div>
             <div style={{ color: DS.muted, fontSize: '0.62rem', fontWeight: 600, marginTop: 2 }}>
               JOD/seat
             </div>
+            {priceQuote.discountJod > 0 ? (
+              <div style={{ color: DS.green, fontSize: '0.68rem', fontWeight: 700, marginTop: 5 }}>
+                Save {priceQuote.discountJod} JOD from {priceQuote.basePriceJod}
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -204,8 +218,15 @@ export function FindRideCard({
               <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.8rem' }}>Wasel Brain</span>
             </div>
             <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.6 }}>
-              {corridorPlan.savingsPercent}% cheaper than solo movement on {corridorPlan.label}. Best pickup: {corridorPlan.pickupPoints[0]}.
+              {signal
+                ? `${signal.recommendedReason} Current route ownership is ${signal.routeOwnershipScore}/100 and pickup is ${signal.recommendedPickupPoint}.`
+                : `${corridorPlan.savingsPercent}% cheaper than solo movement on ${corridorPlan.label}. Best pickup: ${corridorPlan.pickupPoints[0]}.`}
             </div>
+            {signal ? (
+              <div style={{ color: DS.muted, fontSize: '0.7rem', lineHeight: 1.55, marginTop: 8 }}>
+                {signal.productionSources.slice(0, 3).join(' | ')}
+              </div>
+            ) : null}
           </div>
         )}
 
@@ -231,7 +252,9 @@ export function FindRideCard({
                 <Package size={9} /> {ride.pkgCapacity}
               </span>
             )}
-            {corridorPlan && <span style={pill(DS.green)}>Demand {corridorPlan.predictedDemandScore}</span>}
+            {signal && <span style={pill(DS.green)}>Demand {signal.forecastDemandScore}</span>}
+            {signal && <span style={pill(DS.cyan)}>Owns {signal.routeOwnershipScore}</span>}
+            {!signal && corridorPlan && <span style={pill(DS.green)}>Demand {corridorPlan.predictedDemandScore}</span>}
             {booked && (
               <span style={pill(DS.green)}>
                 <CheckCircle2 size={9} /> Booked
@@ -240,7 +263,13 @@ export function FindRideCard({
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
             <span style={{ color: booked ? DS.green : soldOut ? DS.gold : DS.muted, fontSize: '0.75rem' }}>
-              {booked ? 'Reserved' : soldOut ? 'Bus fallback available' : 'View details'}
+              {booked
+                ? 'Reserved'
+                : soldOut
+                  ? 'Bus fallback available'
+                  : signal
+                    ? `${signal.nextWaveWindow} next`
+                    : 'View details'}
             </span>
             <motion.button
               whileTap={{ scale: 0.94 }}

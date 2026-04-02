@@ -10,6 +10,7 @@ import {
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { createConnectedPackage, getConnectedRides, type PackageRequest } from '../../services/journeyLogistics';
+import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 
 const D = {
   bg:'#040C18', card:'#0A1628', card2:'#0D1F38',
@@ -284,6 +285,8 @@ export function ReturnMatching() {
             ))}
           </div>
         </div>
+
+        <ServiceFlowPlaybook focusService="returns" />
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>

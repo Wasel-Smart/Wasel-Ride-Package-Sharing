@@ -22,6 +22,7 @@ import {
   getMarketplaceNodes,
   getWaselCategoryPosition,
 } from '../../config/wasel-movement-network';
+import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { PackageReturnsPanel } from './components/PackageReturnsPanel';
 import { PackageSendPanel } from './components/PackageSendPanel';
 import { PackageTrackPanel } from './components/PackageTrackPanel';
@@ -351,6 +352,16 @@ export function PackagesPage() {
             </div>
           </div>
         </div>
+
+        <ServiceFlowPlaybook
+          focusService={
+            activeTab === 'track'
+              ? 'deliver-package'
+              : activeTab === 'raje3'
+                ? 'returns'
+                : 'send-package'
+          }
+        />
       </PageShell>
     </Protected>
   );

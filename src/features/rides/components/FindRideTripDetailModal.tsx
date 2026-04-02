@@ -19,6 +19,8 @@ import {
   r,
   resolveCityCoord,
 } from '../../../pages/waselServiceShared';
+import { getMovementPriceQuote } from '../../../services/movementPricing';
+import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
 import {
   createGenderMeta,
   type Ride,
@@ -29,6 +31,7 @@ const GENDER_META = createGenderMeta(DS);
 type FindRideTripDetailModalProps = {
   ride: Ride;
   booked: boolean;
+  signal?: LiveCorridorSignal | null;
   onClose: () => void;
   onBook: () => void;
 };
@@ -47,6 +50,7 @@ function getConversationMeta(level: Ride['conversationLevel']) {
 export function FindRideTripDetailModal({
   ride,
   booked,
+  signal = null,
   onClose,
   onBook,
 }: FindRideTripDetailModalProps) {
@@ -57,6 +61,11 @@ export function FindRideTripDetailModal({
   const driverCoord = midpoint(pickupCoord, dropoffCoord);
   const genderMeta = GENDER_META[ride.genderPref];
   const corridorPlan = getCorridorOpportunity(ride.from, ride.to);
+  const priceQuote = getMovementPriceQuote({
+    basePriceJod: ride.pricePerSeat,
+    corridorId: signal?.id,
+    forecastDemandScore: signal?.forecastDemandScore,
+  });
 
   return (
     <AnimatePresence>
@@ -264,7 +273,7 @@ export function FindRideTripDetailModal({
                 { icon: <Calendar size={14} />, label: 'Date', val: ride.date },
                 { icon: <Clock size={14} />, label: 'Departure', val: ride.time },
                 { icon: <Users size={14} />, label: 'Seats left', val: `${ride.seatsAvailable} / ${ride.totalSeats}` },
-                { icon: <Navigation size={14} />, label: 'Distance', val: `${ride.distance} km` },
+                { icon: <Navigation size={14} />, label: signal ? 'Live demand' : 'Distance', val: signal ? `${signal.forecastDemandScore}/100` : `${ride.distance} km` },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -281,8 +290,32 @@ export function FindRideTripDetailModal({
                   </div>
                   <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>{item.val}</div>
                 </div>
-              ))}
+                ))}
             </div>
+
+            {signal ? (
+              <div
+                style={{
+                  background: DS.card2,
+                  borderRadius: r(16),
+                  padding: '16px 18px',
+                  border: `1px solid ${DS.border}`,
+                }}
+              >
+                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 10 }}>Production route proof</div>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {[
+                    `Route ownership score: ${signal.routeOwnershipScore}/100.`,
+                    `Next recommended wave: ${signal.nextWaveWindow}. Best pickup point is ${signal.recommendedPickupPoint}.`,
+                    signal.productionSources.slice(0, 3).join(' | '),
+                  ].map((line) => (
+                    <div key={line} style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>
+                      {line}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             <div
               style={{
@@ -468,10 +501,10 @@ export function FindRideTripDetailModal({
               <div>
                 <div style={{ color: DS.sub, fontSize: '0.75rem', marginBottom: 4 }}>Price per seat</div>
                 <div style={{ color: DS.cyan, fontWeight: 900, fontSize: '2rem' }}>
-                  {ride.pricePerSeat} <span style={{ fontSize: '1rem', fontWeight: 600 }}>JOD</span>
+                  {priceQuote.finalPriceJod} <span style={{ fontSize: '1rem', fontWeight: 600 }}>JOD</span>
                 </div>
                 <div style={{ color: DS.muted, fontSize: '0.72rem', marginTop: 2 }}>
-                  ~{Math.round(ride.pricePerSeat * 1.41)} USD
+                  Base {priceQuote.basePriceJod} JOD | Save {priceQuote.discountJod} JOD
                 </div>
                 {corridorPlan && (
                   <div style={{ marginTop: 10, display: 'grid', gap: 6 }}>
@@ -479,7 +512,10 @@ export function FindRideTripDetailModal({
                       {corridorPlan.savingsPercent}% cheaper than solo movement
                     </div>
                     <div style={{ color: DS.sub, fontSize: '0.72rem', lineHeight: 1.55 }}>
-                      Solo reference: {corridorPlan.soloReferencePriceJod} JOD | Best pickup: {corridorPlan.pickupPoints[0]}
+                      Solo reference: {corridorPlan.soloReferencePriceJod} JOD | Best pickup: {signal?.recommendedPickupPoint ?? corridorPlan.pickupPoints[0]}
+                    </div>
+                    <div style={{ color: DS.cyan, fontSize: '0.72rem', lineHeight: 1.55 }}>
+                      {priceQuote.explanation}
                     </div>
                   </div>
                 )}

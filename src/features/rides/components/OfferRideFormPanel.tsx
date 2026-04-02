@@ -2,6 +2,7 @@ import { Shield } from 'lucide-react';
 import { CITIES } from '../../../pages/waselCoreRideData';
 import { DS, r } from '../../../pages/waselServiceShared';
 import type { PostedRide } from '../../../services/journeyLogistics';
+import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
 import type { DriverRoutePlan } from '../../../config/wasel-movement-network';
 import { OFFER_RIDE_PACKAGE_CAPACITY_OPTIONS } from '../offerRideContent';
 
@@ -31,6 +32,7 @@ type OfferRideFormPanelProps = {
   busyState: 'idle' | 'posting';
   genderMeta: Record<string, { label: string; color: string }>;
   driverPlan: DriverRoutePlan | null;
+  liveSignal?: LiveCorridorSignal | null;
   onUpdate: (key: string, value: string | number | boolean) => void;
   onStepChange: (step: number) => void;
   onSubmit: () => void;
@@ -46,6 +48,7 @@ export function OfferRideFormPanel({
   busyState,
   genderMeta,
   driverPlan,
+  liveSignal = null,
   onUpdate,
   onStepChange,
   onSubmit,
@@ -58,7 +61,8 @@ export function OfferRideFormPanel({
           <div style={{ display: 'grid', gap: 10 }}>
             {[
               { label: 'Live corridor', value: corridorCount > 0 ? `${corridorCount} rides already posted on this route` : 'No live rides on this route yet' },
-              { label: 'Route signal', value: driverPlan ? `${driverPlan.corridor.predictedDemandScore}/100 demand score with ${driverPlan.corridor.density} density` : 'Pick a corridor to unlock route intelligence' },
+              { label: 'Route signal', value: liveSignal ? `${liveSignal.forecastDemandScore}/100 demand score with ${liveSignal.pricePressure} pricing` : driverPlan ? `${driverPlan.corridor.predictedDemandScore}/100 demand score with ${driverPlan.corridor.density} density` : 'Pick a corridor to unlock route intelligence' },
+              { label: 'Live proof', value: liveSignal ? `${liveSignal.liveSearches} searches | ${liveSignal.liveBookings} bookings | ${liveSignal.activeDemandAlerts} alerts` : 'Production proof appears when Wasel sees corridor demand' },
               { label: 'Package visibility', value: form.acceptsPackages ? `Eligible for package matching (${form.packageCapacity})` : 'Passengers only' },
               { label: 'Draft status', value: draftMessage || 'Draft autosaves on this device.' },
             ].map((item) => (
@@ -136,7 +140,7 @@ export function OfferRideFormPanel({
               {[
                 { label: 'Recommended seat price', value: `${driverPlan.recommendedSeatPriceJod} JOD`, detail: 'Cheaper than solo movement while protecting fill rate' },
                 { label: 'Full route gross', value: `${driverPlan.grossWhenFullJod} JOD`, detail: `${driverPlan.corridor.fillTargetSeats} seats is the target load for this corridor` },
-                { label: 'Best pickup point', value: driverPlan.corridor.pickupPoints[0] ?? 'Trusted corridor node', detail: driverPlan.corridor.autoGroupWindow },
+                { label: 'Best pickup point', value: liveSignal?.recommendedPickupPoint ?? driverPlan.corridor.pickupPoints[0] ?? 'Trusted corridor node', detail: liveSignal?.nextWaveWindow ?? driverPlan.corridor.autoGroupWindow },
               ].map((item) => (
                 <div key={item.label} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '13px 14px' }}>
                   <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
@@ -157,6 +161,7 @@ export function OfferRideFormPanel({
               <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem' }}>Wasel Brain recommendation</div>
               <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.6, marginTop: 6 }}>
                 {driverPlan.waselBrainNote} Empty-seat risk is about {driverPlan.emptySeatCostJod} JOD per open seat, and package-ready supply can add about {driverPlan.packageBonusJod} JOD on this route.
+                {liveSignal ? ` Live route proof shows ${liveSignal.routeOwnershipScore}/100 ownership with ${liveSignal.productionSources[0]}.` : ''}
               </div>
             </div>
           )}
@@ -223,7 +228,8 @@ export function OfferRideFormPanel({
               {driverPlan && (
                 <>
                   <br />
-                  Wasel Brain target: {driverPlan.recommendedSeatPriceJod} JOD/seat, {driverPlan.corridor.savingsPercent}% cheaper than solo movement, best pickup at {driverPlan.corridor.pickupPoints[0] ?? 'the top corridor node'}
+                  Wasel Brain target: {driverPlan.recommendedSeatPriceJod} JOD/seat, {driverPlan.corridor.savingsPercent}% cheaper than solo movement, best pickup at {liveSignal?.recommendedPickupPoint ?? driverPlan.corridor.pickupPoints[0] ?? 'the top corridor node'}
+                  {liveSignal ? `, with ${liveSignal.activeDemandAlerts} active alerts and ${liveSignal.nextWaveWindow} as the next dense departure window` : ''}
                 </>
               )}
             </div>

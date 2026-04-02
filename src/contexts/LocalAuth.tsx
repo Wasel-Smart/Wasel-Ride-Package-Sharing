@@ -95,7 +95,16 @@ interface LocalAuthCtx {
   user: WaselUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  register: (name: string, email: string, password: string, phone?: string) => Promise<{ error: string | null }>;
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    phone?: string,
+  ) => Promise<{
+    error: string | null;
+    requiresEmailConfirmation?: boolean;
+    email?: string;
+  }>;
   signOut: () => Promise<void>;
   updateUser: (updates: Partial<WaselUser>) => void;
 }
@@ -254,20 +263,36 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     phone?: string,
-  ): Promise<{ error: string | null }> => {
+  ): Promise<{
+    error: string | null;
+    requiresEmailConfirmation?: boolean;
+    email?: string;
+  }> => {
     setLoading(true);
 
     try {
       if (isSupabaseConfigured && supabase) {
         const { firstName, lastName } = splitName(name);
-        const result = await authAPI.signUp(email, password, firstName, lastName, phone ?? '');
-        if (!result) {
-          // signUp already completed and auth state listener should hydrate.
+        await authAPI.signUp(email, password, firstName, lastName, phone ?? '');
+
+        let authUser: unknown = null;
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          const { data } = await supabase.auth.getSession();
+          authUser = data.session?.user ?? null;
+          if (authUser) {
+            break;
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 200));
         }
 
-        const { data } = await supabase.auth.getSession();
-        const authUser = data.session?.user;
-        if (!authUser) return { error: null };
+        if (!authUser) {
+          return {
+            error: null,
+            requiresEmailConfirmation: true,
+            email,
+          };
+        }
 
         const profileResult = await authAPI.getProfile().catch(() => ({ profile: null }));
         const mapped = mapBackendProfile({
@@ -280,10 +305,12 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         });
         setUser(mapped);
         saveUser(mapped);
-        return { error: null };
+        return { error: null, requiresEmailConfirmation: false, email };
       }
 
-      return { error: 'Backend auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
+      return {
+        error: 'Backend auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+      };
     } catch (error) {
       return { error: toMessage(error) };
     } finally {

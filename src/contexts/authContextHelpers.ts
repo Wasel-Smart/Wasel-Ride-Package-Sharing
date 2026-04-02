@@ -81,28 +81,16 @@ export async function signInWithOAuthProvider(
   }
 
   try {
-    const { data, error } = await client.auth.signInWithOAuth({
+    const { error } = await client.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: getAuthCallbackUrl(window.location.origin),
-        skipBrowserRedirect: true,
+        redirectTo: getAuthCallbackUrl(
+          typeof window !== 'undefined' ? window.location.origin : undefined,
+        ),
       },
     });
 
-    if (error) return { error };
-
-    if (data?.url) {
-      const popup = window.open(
-        data.url,
-        `wasel_${provider}_oauth`,
-        'width=520,height=650,scrollbars=yes,resizable=yes,left=200,top=100',
-      );
-      if (!popup || popup.closed) {
-        window.open(data.url, '_blank', 'noopener,noreferrer');
-      }
-    }
-
-    return { error: null };
+    return { error: error ?? null };
   } catch (error: unknown) {
     return {
       error: normalizeOperationError(

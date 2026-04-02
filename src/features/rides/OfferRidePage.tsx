@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Brain, Network, TrendingUp } from 'lucide-react';
+import { Brain, Briefcase, Network, TrendingUp } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
@@ -20,11 +20,13 @@ import { notificationsAPI } from '../../services/notifications.js';
 import { getDriverReadinessSummary } from '../../services/driverOnboarding';
 import { evaluateTrustCapability } from '../../services/trustRules';
 import { recordMovementActivity } from '../../services/movementMembership';
+import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
 import {
   buildDriverRoutePlan,
   getMarketplaceNodes,
   getWaselCategoryPosition,
 } from '../../config/wasel-movement-network';
+import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { OfferRideFormPanel } from './components/OfferRideFormPanel';
 import { OfferRideIncomingRequests } from './components/OfferRideIncomingRequests';
 
@@ -53,6 +55,8 @@ export function OfferRidePage() {
     () => buildDriverRoutePlan(form.from, form.to, form.seats),
     [form.from, form.to, form.seats],
   );
+  const routeIntelligence = useLiveRouteIntelligence({ from: form.from, to: form.to });
+  const selectedSignal = routeIntelligence.selectedSignal;
   const corridorCount = getConnectedRides().filter((ride) => ride.from === form.from && ride.to === form.to).length;
   const recentPostedRides = getConnectedRides().filter((ride) => ride.from === form.from && ride.to === form.to).slice(0, 3);
   const incomingRequests = user
@@ -213,9 +217,9 @@ export function OfferRidePage() {
               color: DS.gold,
             },
             {
-              label: 'Demand signal',
-              value: driverPlan ? `${driverPlan.corridor.predictedDemandScore}` : String(networkStats.ridesPosted),
-              detail: driverPlan ? 'Wasel Brain route confidence score' : 'Connected network activity',
+              label: 'Live demand signal',
+              value: selectedSignal ? `${selectedSignal.forecastDemandScore}/100` : driverPlan ? `${driverPlan.corridor.predictedDemandScore}/100` : String(networkStats.ridesPosted),
+              detail: selectedSignal ? `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings | ${selectedSignal.livePackages} packages` : driverPlan ? 'Wasel Brain route confidence score' : 'Connected network activity',
               color: DS.blue,
             },
           ].map((item) => (
@@ -242,9 +246,9 @@ export function OfferRidePage() {
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {[
-                driverPlan?.waselBrainNote ?? 'Pick a route to unlock a lane-specific earnings recommendation.',
-                driverPlan?.corridor.autoGroupWindow ?? 'Auto-grouping begins when the corridor gets enough saved demand.',
-                driverPlan ? `Empty-seat risk on this route is about ${driverPlan.emptySeatCostJod} JOD per unfilled seat.` : 'Fill rate is the lever that keeps the route profitable.',
+                selectedSignal?.recommendedReason ?? driverPlan?.waselBrainNote ?? 'Pick a route to unlock a lane-specific earnings recommendation.',
+                selectedSignal ? `Next dense departure window is ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.` : driverPlan?.corridor.autoGroupWindow ?? 'Auto-grouping begins when the corridor gets enough saved demand.',
+                selectedSignal ? `${selectedSignal.productionSources.slice(0, 3).join(' | ')}.` : driverPlan ? `Empty-seat risk on this route is about ${driverPlan.emptySeatCostJod} JOD per unfilled seat.` : 'Fill rate is the lever that keeps the route profitable.',
               ].map((line) => (
                 <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
                   {line}
@@ -274,6 +278,44 @@ export function OfferRidePage() {
               ))}
             </div>
           </div>
+        </div>
+
+        <div className="sp-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
+          {[
+            {
+              title: 'Business lanes',
+              detail: 'Recurring employee seats, managed invoicing, and return-lane packages now sit on the same corridor you are opening.',
+              action: () => nav('/app/services/corporate'),
+              label: 'Open corporate workflow',
+            },
+            {
+              title: 'Service providers',
+              detail: 'Technicians, installers, and mobile crews can attach dispatch windows and backhauls to this route once density is proven.',
+              action: () => nav('/app/services/corporate'),
+              label: 'Open service workflow',
+            },
+            {
+              title: 'Corridor proof',
+              detail: selectedSignal
+                ? `This route already shows ${selectedSignal.routeOwnershipScore}/100 ownership and ${selectedSignal.priceQuote.finalPriceJod} JOD shared pricing.`
+                : 'Wasel turns posted supply into proof once searches, bookings, and demand alerts accumulate.',
+              action: () => nav('/app/analytics'),
+              label: 'Open corridor proof',
+            },
+          ].map((item) => (
+            <div key={item.title} style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <div style={{ width: 34, height: 34, borderRadius: r(10), background: `${DS.blue}14`, border: `1px solid ${DS.blue}28`, display: 'grid', placeItems: 'center' }}>
+                  <Briefcase size={16} color={DS.blue} />
+                </div>
+                <div style={{ color: '#fff', fontWeight: 800 }}>{item.title}</div>
+              </div>
+              <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>{item.detail}</div>
+              <button onClick={item.action} style={{ width: '100%', height: 40, marginTop: 12, borderRadius: '999px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+                {item.label}
+              </button>
+            </div>
+          ))}
         </div>
 
         <OfferRideIncomingRequests incomingRequests={incomingRequests} onStatusMessage={setDraftMessage} />
@@ -315,11 +357,14 @@ export function OfferRidePage() {
             busyState={busyState}
             genderMeta={GENDER_META}
             driverPlan={driverPlan}
+            liveSignal={selectedSignal}
             onUpdate={updateForm}
             onStepChange={moveToStep}
             onSubmit={handlePostRide}
           />
         )}
+
+        <ServiceFlowPlaybook focusService={form.acceptsPackages ? 'deliver-package' : 'share-ride'} />
       </PageShell>
     </Protected>
   );

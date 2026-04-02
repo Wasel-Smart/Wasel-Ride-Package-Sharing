@@ -36,6 +36,16 @@ export interface GrowthDashboard {
   }>;
 }
 
+export interface GrowthEventRecord {
+  eventName: string;
+  funnelStage: string;
+  serviceType: 'ride' | 'bus' | 'package' | 'referral' | 'wallet';
+  from?: string;
+  to?: string;
+  valueJod?: number;
+  createdAt: string;
+}
+
 const LOCAL_REFERRAL_KEY = 'wasel-referral-snapshot';
 const LOCAL_GROWTH_EVENTS_KEY = 'wasel-growth-events';
 const LOCAL_DEMAND_KEY = 'wasel-demand-alerts';
@@ -61,15 +71,7 @@ function writeLocalSnapshots(snapshots: Record<string, ReferralSnapshot>) {
   window.localStorage.setItem(LOCAL_REFERRAL_KEY, JSON.stringify(snapshots));
 }
 
-function readLocalGrowthEvents(): Array<{
-  eventName: string;
-  funnelStage: string;
-  serviceType: 'ride' | 'bus' | 'package' | 'referral' | 'wallet';
-  from?: string;
-  to?: string;
-  valueJod?: number;
-  createdAt: string;
-}> {
+function readLocalGrowthEvents(): GrowthEventRecord[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = window.localStorage.getItem(LOCAL_GROWTH_EVENTS_KEY);
@@ -80,9 +82,15 @@ function readLocalGrowthEvents(): Array<{
   }
 }
 
-function writeLocalGrowthEvents(events: ReturnType<typeof readLocalGrowthEvents>) {
+function writeLocalGrowthEvents(events: GrowthEventRecord[]) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(LOCAL_GROWTH_EVENTS_KEY, JSON.stringify(events.slice(0, 300)));
+}
+
+export function getGrowthEventFeed(): GrowthEventRecord[] {
+  return readLocalGrowthEvents()
+    .slice()
+    .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 }
 
 function readLocalDemandAlerts(): Array<{
