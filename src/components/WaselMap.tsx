@@ -19,7 +19,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Locate, ZoomIn, ZoomOut, Maximize2, Minimize2,
-  Car, Radio, AlertTriangle, X, Navigation2,
+  Radio, AlertTriangle, X, Navigation2,
   Wifi, WifiOff, MapPin, Map, Satellite, Mountain,
 } from 'lucide-react';
 
@@ -39,7 +39,7 @@ function ensureLeafletCSS() {
     style.textContent = `
       .leaflet-container {
         background: #081220 !important;
-        font-family: -apple-system, 'Inter', 'Cairo', sans-serif;
+        font-family: var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif);
         width: 100% !important;
         height: 100% !important;
       }

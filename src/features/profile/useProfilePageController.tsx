@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type ReactNode, type RefObject } from 'react';
+import { useState, type ChangeEvent, type ReactNode } from 'react';
 import { Bell, Car, CreditCard, Settings } from 'lucide-react';
 import type { WaselUser } from '../../contexts/LocalAuth';
 import { sanitizeText } from '../../utils/sanitize';
@@ -10,7 +10,7 @@ import {
 export const PROFILE_BG = '#040C18';
 export const PROFILE_BORDER = 'rgba(255,255,255,0.09)';
 export const PROFILE_CYAN = '#00C8E8';
-export const PROFILE_FONT = "-apple-system,'Inter',sans-serif";
+export const PROFILE_FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 export type SavingField = 'name' | 'phone' | 'photo' | null;
 
@@ -49,7 +49,6 @@ interface UseProfilePageControllerArgs {
   notificationSupport: NotificationSupport;
   showToast: (message: string) => void;
   signOut: () => Promise<void>;
-  photoInputRef: RefObject<HTMLInputElement | null>;
 }
 
 async function readAvatarFile(file: File): Promise<string> {
@@ -225,7 +224,6 @@ export function useProfilePageController({
   notificationSupport,
   showToast,
   signOut,
-  photoInputRef,
 }: UseProfilePageControllerArgs) {
   const [editingField, setEditingField] = useState<'name' | 'phone' | null>(
     null,

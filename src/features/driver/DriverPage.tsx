@@ -38,9 +38,9 @@ export default function DriverPage() {
           emoji="Driver"
           title="Route Operator"
           titleAr="مشغل المسار"
-          sub="Get approved, unlock package carry, and operate profitable corridor supply."
+          sub="Get approved, unlock package carry, and operate a profitable corridor route."
           color={DS.blue}
-          action={{ label: 'Open route supply', onClick: () => navigate('/app/offer-ride') }}
+          action={{ label: 'Offer route', onClick: () => navigate('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
@@ -119,7 +119,7 @@ export default function DriverPage() {
               <div style={{ color: '#fff', fontWeight: 900, marginBottom: 10 }}>Capability matrix</div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
-                  { label: 'Post route supply', ready: readiness.canOfferRide },
+                  { label: 'Offer route', ready: readiness.canOfferRide },
                   { label: 'Carry packages', ready: readiness.canCarryPackages },
                   { label: 'Receive payouts', ready: user.emailVerified && (user.verificationLevel === 'level_2' || user.verificationLevel === 'level_3') },
                 ].map((item) => (
@@ -179,7 +179,7 @@ export default function DriverPage() {
               Open trust center
             </button>
             <button onClick={() => navigate('/app/offer-ride')} style={{ height: 44, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
-              Publish route supply
+              Offer route
             </button>
           </div>
         </div>

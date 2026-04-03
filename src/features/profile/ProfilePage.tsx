@@ -97,7 +97,7 @@ interface ProfilePageContentProps {
   isSupported: boolean;
   permission: NotificationPermission;
   requestPermission: () => Promise<NotificationPermission>;
-  photoInputRef: React.RefObject<HTMLInputElement | null>;
+  photoInputRef: React.MutableRefObject<HTMLInputElement | null>;
 }
 
 function ProfilePageContent({
@@ -148,7 +148,6 @@ function ProfilePageContent({
     },
     showToast,
     signOut,
-    photoInputRef,
   });
 
   const initials = getProfileInitials(user.name);
@@ -168,7 +167,15 @@ function ProfilePageContent({
               {ar ? 'مركز الهوية والثقة والإعدادات داخل شبكة واصل.' : 'Identity, trust, and account controls inside the Wasel network.'}
             </p>
           </div>
-          <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoSelection} style={{ display: 'none' }} />
+          <input
+            ref={(node) => {
+              photoInputRef.current = node;
+            }}
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoSelection}
+            style={{ display: 'none' }}
+          />
           <div style={{ position: 'relative' }}>
             <div
               style={{

@@ -7,7 +7,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Plus, ArrowDownLeft, ArrowUpRight, Send, Gift, RefreshCw,
-  TrendingUp, Clock, CheckCircle, Lock, Crown, Zap,
+  TrendingUp, CheckCircle, Lock, Crown, Zap,
   CreditCard,
 } from 'lucide-react';
 import { WaselColors } from '../../../tokens/wasel-tokens';

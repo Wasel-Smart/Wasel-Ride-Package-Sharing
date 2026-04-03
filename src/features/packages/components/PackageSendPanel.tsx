@@ -1,8 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { Shield } from 'lucide-react';
-import { MapWrapper } from '../../../components/MapWrapper';
 import { CITIES } from '../../../pages/waselCoreRideData';
-import { DS, midpoint, pill, r, resolveCityCoord } from '../../../pages/waselServiceShared';
+import { DS, pill, r } from '../../../pages/waselServiceShared';
 import type { PackageRequest } from '../../../services/journeyLogistics';
 import {
   PACKAGE_EXCELLENCE_POINTS,

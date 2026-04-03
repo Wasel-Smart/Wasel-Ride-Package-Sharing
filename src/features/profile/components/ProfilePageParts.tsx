@@ -3,7 +3,7 @@ import { ChevronRight } from 'lucide-react';
 
 const CARD = 'rgba(255,255,255,0.04)';
 const BORD = 'rgba(255,255,255,0.09)';
-const FONT = "-apple-system,'Inter',sans-serif";
+const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 export interface StatCardProps {
   label: string;

@@ -3,7 +3,6 @@
  * Extracted from WalletDashboard to reduce file size
  */
 
-import { motion } from 'motion/react';
 import {
   ArrowDownLeft, ArrowUpRight, TrendingUp, Lock, Crown, ChevronRight,
   Car, Package,
@@ -13,7 +12,7 @@ import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { WaselColors } from '../../../tokens/wasel-tokens';
 import { TransactionRow } from './WalletShared';
-import type { WalletData } from '../../../services/walletApi';
+import type { WalletData, WalletTransaction } from '../../../services/walletApi';
 
 interface OverviewTabProps {
   walletData: WalletData | null;
@@ -26,9 +25,9 @@ interface OverviewTabProps {
 
 export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actionLoading }: OverviewTabProps) {
   const transactions = walletData?.transactions ?? [];
-  const pendingCount = transactions.filter((tx: any) => ['pending', 'processing', 'authorized', 'posted'].includes(String(tx.status ?? '').toLowerCase())).length;
-  const failedCount = transactions.filter((tx: any) => ['failed'].includes(String(tx.status ?? '').toLowerCase())).length;
-  const refundedCount = transactions.filter((tx: any) => ['refunded'].includes(String(tx.status ?? '').toLowerCase())).length;
+  const pendingCount = transactions.filter((tx: WalletTransaction) => ['pending', 'processing', 'authorized', 'posted'].includes(String(tx.status ?? '').toLowerCase())).length;
+  const failedCount = transactions.filter((tx: WalletTransaction) => ['failed'].includes(String(tx.status ?? '').toLowerCase())).length;
+  const refundedCount = transactions.filter((tx: WalletTransaction) => ['refunded'].includes(String(tx.status ?? '').toLowerCase())).length;
   const paymentMethodsCount = walletData?.wallet?.paymentMethods?.length ?? 0;
 
   return (
@@ -153,7 +152,7 @@ export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actio
           {(!walletData?.transactions || walletData.transactions.length === 0) ? (
             <div className="text-center py-8 text-muted-foreground text-sm">{t.noTransactions}</div>
           ) : (
-            walletData.transactions.slice(0, 5).map((tx: any) => (
+            walletData.transactions.slice(0, 5).map((tx: WalletTransaction) => (
               <TransactionRow key={tx.id} tx={tx} isRTL={isRTL} jodLabel={t.jod} />
             ))
           )}

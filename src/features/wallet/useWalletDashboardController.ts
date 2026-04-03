@@ -13,7 +13,7 @@ const WALLET_BACKEND_READY = Boolean(projectId && publicAnonKey);
 
 export function useWalletDashboardController() {
   const { user } = useAuth();
-  const { user: localUser } = useLocalAuth();
+  const { user: localUser, loading: localAuthLoading } = useLocalAuth();
   const { language } = useLanguage();
   const navigate = useIframeSafeNavigate();
   const isRTL = language === 'ar';
@@ -23,8 +23,8 @@ export function useWalletDashboardController() {
     localUser,
     backendReady: WALLET_BACKEND_READY,
   });
-  const walletUnavailable = runtimeMode === 'unavailable';
-  const shouldRedirectToAuth = runtimeMode === 'redirect';
+  const walletUnavailable = !localAuthLoading && runtimeMode === 'unavailable';
+  const shouldRedirectToAuth = !localAuthLoading && runtimeMode === 'redirect';
 
   const [tab, setTab] = useState('overview');
   const [walletData, setWalletData] = useState<WalletData | null>(null);
@@ -51,6 +51,11 @@ export function useWalletDashboardController() {
   const [autoTopUpThreshold, setAutoTopUpThreshold] = useState('5');
 
   const fetchWallet = useCallback(async () => {
+    if (localAuthLoading) {
+      setLoading(true);
+      return;
+    }
+
     if (shouldRedirectToAuth) {
       setWalletData(null);
       setInsights(null);
@@ -72,10 +77,10 @@ export function useWalletDashboardController() {
     } finally {
       setLoading(false);
     }
-  }, [effectiveUserId, shouldRedirectToAuth, t.walletLoadError]);
+  }, [effectiveUserId, localAuthLoading, shouldRedirectToAuth, t.walletLoadError]);
 
   const fetchInsights = useCallback(async () => {
-    if (shouldRedirectToAuth) {
+    if (localAuthLoading || shouldRedirectToAuth) {
       setInsights(null);
       return;
     }
@@ -87,7 +92,7 @@ export function useWalletDashboardController() {
       console.error('[Wallet] insights error:', err);
       setInsights(null);
     }
-  }, [effectiveUserId, shouldRedirectToAuth]);
+  }, [effectiveUserId, localAuthLoading, shouldRedirectToAuth]);
 
   useEffect(() => {
     if (shouldRedirectToAuth) {
@@ -113,7 +118,10 @@ export function useWalletDashboardController() {
 
   const handleTopUp = async () => {
     const amt = parseFloat(topUpAmount);
-    if (!amt || amt <= 0) return toast.error(t.invalidAmount);
+    if (!amt || amt <= 0) {
+      toast.error(t.invalidAmount);
+      return;
+    }
 
     setActionLoading(true);
     try {
@@ -131,8 +139,14 @@ export function useWalletDashboardController() {
 
   const handleWithdraw = async () => {
     const amt = parseFloat(withdrawAmount);
-    if (!amt || amt <= 0) return toast.error(t.invalidAmount);
-    if (!withdrawBank.trim()) return toast.error(t.enterBankAccount);
+    if (!amt || amt <= 0) {
+      toast.error(t.invalidAmount);
+      return;
+    }
+    if (!withdrawBank.trim()) {
+      toast.error(t.enterBankAccount);
+      return;
+    }
 
     setActionLoading(true);
     try {
@@ -151,8 +165,14 @@ export function useWalletDashboardController() {
 
   const handleSend = async () => {
     const amt = parseFloat(sendAmount);
-    if (!amt || amt <= 0) return toast.error(t.invalidAmount);
-    if (!sendRecipient.trim()) return toast.error(t.enterRecipientId);
+    if (!amt || amt <= 0) {
+      toast.error(t.invalidAmount);
+      return;
+    }
+    if (!sendRecipient.trim()) {
+      toast.error(t.enterRecipientId);
+      return;
+    }
 
     setActionLoading(true);
     try {
@@ -172,7 +192,8 @@ export function useWalletDashboardController() {
 
   const handleSetPin = async () => {
     if (pinValue.length !== 4 || !/^\d{4}$/.test(pinValue)) {
-      return toast.error(t.pinMustBeFourDigits);
+      toast.error(t.pinMustBeFourDigits);
+      return;
     }
 
     setActionLoading(true);

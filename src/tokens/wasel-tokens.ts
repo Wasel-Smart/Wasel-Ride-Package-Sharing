@@ -72,8 +72,8 @@ export const WaselSpacing = {
 // ─── Typography ───────────────────────────────────────────────────────────────
 
 export const WaselFonts = {
-  sans:    "'Inter', 'Segoe UI', 'Cairo', 'Tajawal', sans-serif",
-  arabic:  "'Cairo', 'Tajawal', 'Almarai', sans-serif",
+  sans:    "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
+  arabic:  "var(--wasel-font-arabic, 'Cairo', 'Tajawal', 'Almarai', sans-serif)",
   mono:    "'JetBrains Mono', 'Fira Code', monospace",
 } as const;
 

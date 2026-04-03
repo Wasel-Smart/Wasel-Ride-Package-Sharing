@@ -21,7 +21,7 @@ interface InsightsTabProps {
   t: Record<string, string>;
 }
 
-export function InsightsTab({ insights, isRTL, t }: InsightsTabProps) {
+export function InsightsTab({ insights, isRTL: _isRTL, t }: InsightsTabProps) {
   if (!insights) {
     return (
       <div className="text-center py-12">

@@ -18,7 +18,8 @@ export interface Notification {
   source?: 'local' | 'server';
 }
 
-type RawNotification = Notification & {
+type RawNotification = Omit<Notification, 'read'> & {
+  read?: boolean;
   is_read?: boolean;
 };
 

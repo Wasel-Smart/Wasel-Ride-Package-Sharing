@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Brain, Briefcase, Network, TrendingUp } from 'lucide-react';
+import { Brain, Briefcase, Network } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
@@ -97,7 +97,7 @@ export function OfferRidePage() {
       return;
     }
     if (!offerGate.allowed) {
-      setFormError(offerGate.reason || 'Your account is not ready to post route supply yet.');
+      setFormError(offerGate.reason || 'Your account is not ready to offer a route yet.');
       return;
     }
     if (form.acceptsPackages && !packageGate.allowed) {
@@ -134,14 +134,14 @@ export function OfferRidePage() {
       });
 
       setSubmitted(true);
-      setDraftMessage('Route supply posted and draft cleared.');
+      setDraftMessage('Route posted and draft cleared.');
       setNetworkStats(getConnectedStats());
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem(OFFER_RIDE_DRAFT_KEY);
       }
 
       notificationsAPI.createNotification({
-        title: 'Route supply posted',
+        title: 'Route posted',
         message: form.acceptsPackages ? `Your ${form.from} to ${form.to} route is live for riders and packages.` : `Your ${form.from} to ${form.to} route is now live.`,
         type: 'booking',
         priority: 'high',
@@ -165,15 +165,15 @@ export function OfferRidePage() {
       <PageShell>
         <SectionHead
           emoji="Supply"
-          title="Open Route Supply"
-          titleAr="Route Supply"
+          title="Offer Route"
+          titleAr="Offer Route"
           sub="Publish seats, package space, and corridor capacity in one flow."
           color={DS.blue}
         />
 
         <CoreExperienceBanner
-          title="One route post should unlock people, goods, and service demand together."
-          detail={`${category.promise} Drivers are no longer posting isolated rides. They are opening supply on a route graph that Wasel Brain can price, fill, and reuse across the network.`}
+          title="One route post should open seats, packages, and repeat demand together."
+          detail={`${category.promise} Drivers are no longer posting isolated rides. They are opening a route that Wasel can price, fill, and reuse across the network.`}
           tone={DS.blue}
         />
 
@@ -265,7 +265,7 @@ export function OfferRidePage() {
               <div>
                 <div style={{ color: '#fff', fontWeight: 800 }}>Marketplace pull</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                  Route supply can now serve more than passengers.
+              This route can now serve more than passengers.
                 </div>
               </div>
             </div>
@@ -323,7 +323,7 @@ export function OfferRidePage() {
         {submitted ? (
           <div style={{ background: DS.card, borderRadius: r(20), padding: '60px 28px', textAlign: 'center', border: `1px solid ${DS.border}` }}>
             <div style={{ fontSize: '4rem', marginBottom: 20 }}>OK</div>
-            <h2 style={{ color: DS.green, fontWeight: 900, fontSize: '1.5rem', margin: '0 0 12px' }}>Route supply is live</h2>
+              <h2 style={{ color: DS.green, fontWeight: 900, fontSize: '1.5rem', margin: '0 0 12px' }}>Route is live</h2>
             <p style={{ color: DS.sub }}>
               Your route from <strong style={{ color: '#fff' }}>{form.from}</strong> to <strong style={{ color: '#fff' }}>{form.to}</strong> is now part of the Wasel movement network.
             </p>

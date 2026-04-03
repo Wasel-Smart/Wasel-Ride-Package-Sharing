@@ -13,9 +13,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Navigation, Phone, MessageSquare, Shield, Share2, ChevronDown,
-  ChevronUp, MapPin, Clock, ArrowRight, Star, Users, Zap,
-  AlertTriangle, CheckCircle, Brain, Leaf, Car, X, Copy,
+  Phone, MessageSquare, Shield, Share2, ChevronDown,
+  ChevronUp, Star,
+  AlertTriangle, CheckCircle, Brain, Leaf, X, Copy,
   XCircle, ThumbsUp,
 } from 'lucide-react';
 import { Button } from './ui/button';
@@ -68,8 +68,6 @@ const WAYPOINTS = [
 // ─── Progress timeline ──────────────────────────────────────────────────────
 
 function ProgressTimeline({ progress }: { progress: number }) {
-  const wpProgress = [100, 100, Math.max(0, (progress - 40) * 3.3), 0];
-
   return (
     <div className="flex items-start gap-2">
       {WAYPOINTS.map((wp, i) => (
@@ -503,6 +501,8 @@ export function LiveTripTracking() {
       const t = setTimeout(() => setShowRating(true), 2500);
       return () => clearTimeout(t);
     }
+
+    return undefined;
   }, [progress]);
 
   const handleRatingSubmit = useCallback(async (stars: number, comment: string) => {

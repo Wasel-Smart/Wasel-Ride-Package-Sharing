@@ -11,6 +11,12 @@ import { useLocation } from 'react-router';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
+import {
+  WaselBusinessFooter,
+  WaselContactActionRow,
+  WaselProofOfLifeBlock,
+} from '../../components/system/WaselPresence';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
 
 // ── Design-system shorthand ───────────────────────────────────────────────────
@@ -96,7 +102,7 @@ export function readStoredObject<T>(key: string, fallback: T): T {
 
 // ── Auth guard ────────────────────────────────────────────────────────────────
 export function Protected({ children }: { children: ReactNode }) {
-  const { user } = useLocalAuth();
+  const { user, loading } = useLocalAuth();
   const nav = useIframeSafeNavigate();
   const location = useLocation();
   const mountedRef = useRef(true);
@@ -107,10 +113,22 @@ export function Protected({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!user && mountedRef.current) {
+    if (!loading && !user && mountedRef.current) {
       nav(`/app/auth?returnTo=${encodeURIComponent(location.pathname)}`);
     }
-  }, [user]);
+  }, [loading, location.pathname, nav, user]);
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', minHeight: '60vh', gap: 16, background: DS.bg,
+      }}>
+        <div style={{ color: '#fff', fontWeight: 800, fontFamily: DS.F }}>Checking your Wasel session...</div>
+        <div style={{ color: DS.sub, fontFamily: DS.F }}>We are confirming account access before opening this protected flow.</div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -152,6 +170,7 @@ export function PageShell({ children }: { children: ReactNode }) {
         }
         @media(max-width:899px){
           .sp-inner{ padding:16px !important; }
+          .sp-brand-row { flex-direction:column !important; align-items:flex-start !important; }
           .sp-2col { grid-template-columns:1fr !important; }
           .sp-3col { grid-template-columns:1fr !important; }
           .sp-4col { grid-template-columns:1fr 1fr !important; }
@@ -174,6 +193,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-head-inner { flex-direction:column !important; gap:12px !important; align-items:flex-start !important; }
           .sp-head-btn { width:100% !important; display:flex !important; justify-content:center !important; }
           .sp-inner { padding:12px !important; }
+          .sp-brand-row { gap: 12px !important; }
           .sp-corridor-snapshot { grid-template-columns:1fr !important; }
         }
       `}</style>
@@ -199,8 +219,28 @@ export function PageShell({ children }: { children: ReactNode }) {
           pointerEvents: 'none',
         }}
       />
-      <div className="sp-inner" style={{ position:'relative', maxWidth: 1120, margin: '0 auto', padding: '24px 16px 36px' }}>
+      <div className="sp-inner" style={{ position:'relative', maxWidth: 1180, margin: '0 auto', padding: '24px 16px 40px' }}>
+        <div className="sp-brand-row" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:14, marginBottom:18, flexWrap:'wrap' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
+            <WaselLogo size={36} theme="light" variant="full" />
+            <div style={{ display:'grid', gap:4 }}>
+              <div style={{ color:'#EFF6FF', fontWeight:800, fontSize:'0.92rem', letterSpacing:'-0.02em' }}>
+                {ar ? 'واجهة تشغيل واصل' : 'Wasel operating surface'}
+              </div>
+              <div style={{ color:DS.sub, fontSize:'0.76rem', lineHeight:1.55 }}>
+                {ar ? 'قرارات حقيقية، ثقة ظاهرة، وحياة تشغيلية على نفس المسار.' : 'Real actions, visible trust, and operating proof on the same corridor.'}
+              </div>
+            </div>
+          </div>
+          <WaselContactActionRow ar={ar} compact />
+        </div>
+        <div style={{ marginBottom: 18 }}>
+          <WaselProofOfLifeBlock ar={ar} compact />
+        </div>
         {children}
+        <div style={{ marginTop: 18 }}>
+          <WaselBusinessFooter ar={ar} />
+        </div>
       </div>
     </div>
   );

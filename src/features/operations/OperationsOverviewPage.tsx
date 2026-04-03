@@ -26,7 +26,7 @@ const CYAN = '#00C8E8';
 const GOLD = '#F59E0B';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
-const FONT = "-apple-system,'Inter',sans-serif";
+const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 type SurfaceConfig = {
   title: string;

@@ -45,7 +45,7 @@ const AMBER = '#F59E0B';
 const TEXT = '#EFF6FF';
 const MUTED = 'rgba(148,163,184,0.72)';
 const DIM = 'rgba(148,163,184,0.55)';
-const FONT = "-apple-system,'Inter','Cairo','Tajawal',sans-serif";
+const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 type TripLifecycle = 'active' | 'attention' | 'completed' | 'cancelled';
 type TripKind = 'rides' | 'packages' | 'buses';

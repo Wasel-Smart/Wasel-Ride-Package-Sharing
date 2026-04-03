@@ -46,7 +46,7 @@ type WalletActionModalsProps = {
 export function WalletActionModals({
   actionLoading,
   balance,
-  isRTL,
+  isRTL: _isRTL,
   pinValue,
   sendAmount,
   sendNote,

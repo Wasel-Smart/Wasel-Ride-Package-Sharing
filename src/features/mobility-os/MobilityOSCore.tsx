@@ -1,5 +1,5 @@
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Gauge, MapPinned, Package, Pause, Play, Route, Users } from 'lucide-react';
+import { Gauge, MapPinned, Pause, Play, Route } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
 import { type LiveMobilityVehicleSnapshot, useMobilityOSLiveData } from './liveMobilityData';
@@ -99,9 +99,9 @@ function getCityLabel(city: City, ar: boolean) {
 
 function createMobilityOSCopy(ar: boolean) {
   return {
-    heroLabel: ar ? 'نظام الحركة / سطح التحكم الوطني' : 'Mobility OS / Jordan Control Surface',
-    heroTitle: ar ? 'منصة تشغيل موحّدة لحركة الأردن، وتدفق الركاب، وذكاء الطرود.' : 'A unified live command layer for Jordan mobility, passenger flow, and parcel intelligence.',
-    heroBody: ar ? 'سطح تشغيلي واحد بمشهد بصري متماسك يعرض المحاكاة الحية، وذكاء المسارات، وقرارات إعادة التوزيع، وضغط الممرات بلغة واضحة وممتازة ومناسبة للسوق الأردني.' : 'Mobility OS now behaves like one premium operating surface: real-time simulation, cinematic route intelligence, dispatch-aware analytics, and scientifically modeled corridor pressure all presented in a single coherent visual system.',
+    heroLabel: ar ? 'نظام الحركة / سطح التحكم الوطني' : 'Mobility OS / Live network view',
+    heroTitle: ar ? 'منصة تشغيل موحّدة لحركة الأردن، وتدفق الركاب، وذكاء الطرود.' : 'A clear live view of how Jordan moves people and packages.',
+    heroBody: ar ? 'سطح تشغيلي واحد بمشهد بصري متماسك يعرض المحاكاة الحية، وذكاء المسارات، وقرارات إعادة التوزيع، وضغط الممرات بلغة واضحة وممتازة ومناسبة للسوق الأردني.' : 'Mobility OS brings route pressure, travel speed, package load, and corridor health into one readable network view.',
     controlState: ar ? 'حالة التحكم' : 'Control state',
     selectedCity: ar ? 'المدينة المحددة' : 'Selected city',
     topCorridor: ar ? 'الممر الأبرز' : 'Top corridor',
@@ -118,10 +118,10 @@ function createMobilityOSCopy(ar: boolean) {
     packageFlow: ar ? 'تدفق الطرود' : 'Package flow',
     routeIntelligence: ar ? 'ذكاء المسار' : 'Route intelligence',
     activeMode: ar ? 'النمط الحالي' : 'Active mode',
-    liveMesh: ar ? 'المشهد الحي متزامن بسرعة 60 إطار/ث' : 'Live mesh synced at 60 FPS',
+    liveMesh: ar ? 'المشهد الحي متزامن بسرعة 60 إطار/ث' : 'Live network feed',
     parcelLoad: ar ? 'حمولة الطرود' : 'Parcel load',
-    signalLayer: ar ? 'طبقة الإشارات' : 'Signal Layer',
-    mobilityMatrix: ar ? 'مصفوفة الحركة الأردنية' : 'Jordan Mobility Matrix',
+    signalLayer: ar ? 'طبقة الإشارات' : 'Route signals',
+    mobilityMatrix: ar ? 'مصفوفة الحركة الأردنية' : 'Jordan route map',
     fieldEnhancement: ar ? 'تعزيز المشهد' : 'Field enhancement',
     tempoDeck: ar ? 'لوحة الوتيرة والعمق' : 'Flow tempo and depth deck',
     cinematic: ar ? 'أهدأ / سينمائي' : 'cinematic / slower',
@@ -287,22 +287,22 @@ export default function MobilityOSCore() {
   const { snapshot: liveSnapshot } = useMobilityOSLiveData(ar);
   const copy = {
     ...createMobilityOSCopy(ar),
-    heroBody: ar ? 'يجمع هذا السطح بين بيانات مرجعية رسمية ومحاكاة تشغيلية حيّة، مع فصل واضح بين الحقائق المعتمدة والتوصيات الناتجة عن النموذج.' : 'This surface combines official reference data with a live operational simulation, clearly separating verified facts from model-generated recommendations.',
-    controlState: ar ? 'حالة المحاكاة' : 'Simulation state',
-    liveSync: ar ? 'محاكاة مباشرة' : 'Live simulation',
-    actionableOutputs: ar ? 'توصيات تشغيلية من النموذج' : 'Modeled operational recommendations',
-    mapBody: ar ? 'الأزرق يوضح تدفق الركاب والذهبي يوضح تدفق الطرود. الحركة ومواقع المركبات وتوصيات التوجيه هنا مخرجات نموذجية، بينما البيانات السكانية المرجعية معروضة من المصدر الرسمي.' : 'Blue is passenger flow and gold is package flow. Vehicle movement, corridor health, and routing suggestions here are model outputs, while population reference data is shown from the official source.',
-    liveMesh: ar ? 'المشهد التشغيلي متزامن بسرعة 60 إطار/ث' : 'Simulation mesh synced at 60 FPS',
+    heroBody: ar ? 'يجمع هذا السطح بين بيانات مرجعية رسمية ومحاكاة تشغيلية حيّة، مع فصل واضح بين الحقائق المعتمدة والتوصيات الناتجة عن النموذج.' : 'This surface combines official reference data with a live route model so teams can compare corridor pressure, capacity, and recommended next actions in one place.',
+    controlState: ar ? 'حالة المحاكاة' : 'Network state',
+    liveSync: ar ? 'محاكاة مباشرة' : 'Live route model',
+    actionableOutputs: ar ? 'توصيات تشغيلية من النموذج' : 'Recommended next actions',
+    mapBody: ar ? 'الأزرق يوضح تدفق الركاب والذهبي يوضح تدفق الطرود. الحركة ومواقع المركبات وتوصيات التوجيه هنا مخرجات نموذجية، بينما البيانات السكانية المرجعية معروضة من المصدر الرسمي.' : 'Blue is passenger flow and gold is package flow. Vehicle movement, corridor pressure, and route recommendations come from the live model, while population data comes from the official reference source.',
+    liveMesh: ar ? 'المشهد التشغيلي متزامن بسرعة 60 إطار/ث' : 'Live network feed',
     officialUnit: ar ? 'الوحدة الإدارية الرسمية' : 'Official administrative unit',
     officialPopulation2025: ar ? 'تقدير السكان الرسمي 2025' : 'Official 2025 population estimate',
-    modelRecommendation: ar ? 'توصية المسار من النموذج' : 'Modeled route recommendation',
+    modelRecommendation: ar ? 'توصية المسار من النموذج' : 'Best route now',
     sourceJordanDos: ar ? 'المصدر: دائرة الإحصاءات العامة الأردنية، تقديرات 2025' : 'Source: Jordan Department of Statistics, 2025 estimates',
-    simulationTag: ar ? 'محاكاة' : 'Simulated',
-    estimateTag: ar ? 'تقديري' : 'Estimated',
-    officialTag: ar ? 'رسمي' : 'Official',
+    simulationTag: ar ? 'محاكاة' : 'Model',
+    estimateTag: ar ? 'تقديري' : 'Modelled',
+    officialTag: ar ? 'رسمي' : 'Reference',
     modeledTag: ar ? 'من النموذج' : 'Modeled',
-    simulationNotice: ar ? 'كل مؤشرات الحركة والسعة والضغط أدناه ناتجة عن نموذج تشغيلي حيّ.' : 'All movement, capacity, and pressure metrics below come from the live operating model.',
-    corridorDeckBody: ar ? 'ترتيب تقديري للممرات وفق نموذج التدفق والضغط والكفاءة التشغيلية، وليس ترتيباً من مصدر حكومي مباشر.' : 'Estimated corridor ranking derived from the operating model, not from a direct government feed.',
+    simulationNotice: ar ? 'كل مؤشرات الحركة والسعة والضغط أدناه ناتجة عن نموذج تشغيلي حيّ.' : 'Movement, capacity, and pressure metrics below come from the live route model.',
+    corridorDeckBody: ar ? 'ترتيب تقديري للممرات وفق نموذج التدفق والضغط والكفاءة التشغيلية، وليس ترتيباً من مصدر حكومي مباشر.' : 'A model-based ranking of corridors using flow, pressure, and operating efficiency.',
     routeIntelligence: ar ? 'توصية المسار' : 'Route recommendation',
     selectedNode: ar ? 'مرجع المدينة المحددة' : 'Selected city reference',
   };
@@ -321,6 +321,8 @@ export default function MobilityOSCore() {
   const telemetryCoverageLabel = ar ? 'ØªØºØ·ÙŠØ© Ø§Ù„ØªÙ„Ù…ØªØ±ÙŠØ§' : 'Telemetry coverage';
   const realtimeVerifiedLabel = ar ? 'Ù…ØªØ­Ù‚Ù‚ Ù…Ø¨Ø§Ø´Ø±Ø§Ù‹' : 'Verified live';
   const estimatedFromLoadLabel = ar ? 'Ù…Ù‚Ø¯Ù‘Ø± Ù…Ù† Ø§Ù„Ø­Ù…ÙˆÙ„Ø©' : 'Estimated from load';
+  void hybridTag;
+  void realtimeVerifiedLabel;
   const numberFormatter = useMemo(() => new Intl.NumberFormat(ar ? 'ar-JO' : 'en-US'), [ar]);
   const dateTimeFormatter = useMemo(() => new Intl.DateTimeFormat(ar ? 'ar-JO' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }), [ar]);
   const [paused, setPaused] = useState(false);
@@ -1004,7 +1006,7 @@ export default function MobilityOSCore() {
     const filtered = routeSnapshot.filter((route) => route.from === selectedCityId || route.to === selectedCityId);
     return (filtered.length ? filtered : routeSnapshot).slice().sort((a, b) => b.passengerFlow + b.packageFlow - (a.passengerFlow + a.packageFlow)).slice(0, 6);
   }, [routeSnapshot, selectedCityId]);
-  const selectedCity = cityMap.get(selectedCityId)!;
+  void cityMap.get(selectedCityId);
   const activeMode = {
     command: { title: copy.commandMode, body: copy.commandModeBody, accent: C.cyan },
     satellite: { title: copy.satelliteMode, body: copy.satelliteModeBody, accent: C.green },
@@ -1190,7 +1192,7 @@ export default function MobilityOSCore() {
                 </div>
                 <div style={{ display: 'grid', gap: 6, padding: '10px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)' }}>
                   <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.14em', color: C.textMuted }}>{copy.modelRecommendation}</div>
-                  <div style={{ fontFamily: FM, fontSize: '0.78rem', color: C.cyan }}>optimal_path(selected,aqaba)</div>
+                  <div style={{ fontFamily: FM, fontSize: '0.78rem', color: C.cyan }}>best_route_now</div>
                   <div style={{ fontSize: '0.8rem', color: C.textSub }}>{analytics.recommendedPath || (ar ? 'عمّان ← العقبة' : 'Amman -> Aqaba')}</div>
                 </div>
               </div>

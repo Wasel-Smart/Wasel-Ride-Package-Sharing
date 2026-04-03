@@ -137,7 +137,7 @@ const SERVICE_FLOW_COPY: Record<ServiceFlowKey, ServiceFlowConfig> = {
     shortLabel: 'Supply',
     accent: DS.gold,
     summary:
-      'A driver publishes route supply, reviews incoming bookings, and manages one shared communication stream for riders and optional package requests.',
+      'A driver offers a corridor route, reviews incoming bookings, and manages one shared communication stream for riders and optional package requests.',
     roles: [
       {
         label: 'Driver',

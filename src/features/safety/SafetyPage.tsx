@@ -15,14 +15,26 @@ const DS = PAGE_DS;
 const r = (px = 12) => `${px}px`;
 
 function Protected({ children }: { children: ReactNode }) {
-  const { user } = useLocalAuth();
+  const { user, loading } = useLocalAuth();
   const navigate = useIframeSafeNavigate();
 
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       navigate('/app/auth?returnTo=/app/safety');
     }
-  }, [user, navigate]);
+  }, [loading, user, navigate]);
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', minHeight: '60vh', gap: 16, background: DS.bg,
+      }}>
+        <div style={{ color: '#fff', fontWeight: 800, fontFamily: DS.F }}>Checking your Wasel session...</div>
+        <div style={{ color: DS.sub, fontFamily: DS.F }}>Safety tools open once we confirm your trusted account.</div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (

@@ -76,7 +76,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
           alignItems: 'center',
           justifyContent: 'center',
           minHeight: '100vh',
-          fontFamily: "-apple-system, 'Inter', sans-serif",
+          fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
           background: `
             radial-gradient(circle at 16% 18%, rgba(85,233,255,0.12), transparent 24%),
             radial-gradient(circle at 82% 12%, rgba(245,177,30,0.12), transparent 20%),
@@ -223,7 +223,7 @@ export default function App() {
                     background: '#0A1628',
                     border: '1px solid rgba(0,200,232,0.25)',
                     color: '#EFF6FF',
-                    fontFamily: "-apple-system, 'Inter', sans-serif",
+          fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
                   },
                 }}
               />

@@ -1,10 +1,15 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { Shield } from 'lucide-react';
+import { WaselLogo } from '../components/wasel-ds/WaselLogo';
+import {
+  WaselBusinessFooter,
+  WaselContactActionRow,
+  WaselProofOfLifeBlock,
+} from '../components/system/WaselPresence';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
-import { PAGE_DS } from '../styles/wasel-page-theme';
 import {
   CoreExperienceBanner as SharedCoreExperienceBanner,
   PageShell as SharedPageShell,
@@ -13,7 +18,7 @@ import {
   midpoint as sharedMidpoint,
   resolveCityCoord as sharedResolveCityCoord,
 } from '../features/shared/pageShared';
-import { WaselLogo } from '../components/wasel-ds/WaselLogo';
+import { PAGE_DS } from '../styles/wasel-page-theme';
 
 export const DS = PAGE_DS;
 
@@ -34,15 +39,15 @@ export const pill = (color: string) => ({
 
 const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   Amman: { lat: 31.9539, lng: 35.9106 },
-  Aqaba: { lat: 29.5321, lng: 35.0060 },
+  Aqaba: { lat: 29.5321, lng: 35.006 },
   Irbid: { lat: 32.5568, lng: 35.8479 },
-  Zarqa: { lat: 32.0728, lng: 36.0880 },
-  'Dead Sea': { lat: 31.5590, lng: 35.4732 },
+  Zarqa: { lat: 32.0728, lng: 36.088 },
+  'Dead Sea': { lat: 31.559, lng: 35.4732 },
   Karak: { lat: 31.1854, lng: 35.7048 },
   Madaba: { lat: 31.7196, lng: 35.7939 },
   Petra: { lat: 30.3285, lng: 35.4444 },
   Jerash: { lat: 32.2744, lng: 35.8961 },
-  Mafraq: { lat: 32.3429, lng: 36.2080 },
+  Mafraq: { lat: 32.3429, lng: 36.208 },
 };
 
 export function resolveCityCoord(city: string) {
@@ -54,7 +59,7 @@ export function midpoint(a: { lat: number; lng: number }, b: { lat: number; lng:
 }
 
 export function Protected({ children }: { children: ReactNode }) {
-  const { user } = useLocalAuth();
+  const { user, loading } = useLocalAuth();
   const nav = useIframeSafeNavigate();
   const location = useLocation();
   const mountedRef = useRef(true);
@@ -67,10 +72,26 @@ export function Protected({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!user && mountedRef.current) {
+    if (!loading && !user && mountedRef.current) {
       nav(`/app/auth?returnTo=${encodeURIComponent(location.pathname)}`);
     }
-  }, [location.pathname, nav, user]);
+  }, [loading, location.pathname, nav, user]);
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', background: DS.bg, padding: '24px 16px' }}>
+        <div style={{ width: '100%', maxWidth: 480, padding: '28px 24px', borderRadius: r(24), background: `linear-gradient(180deg, ${DS.card} 0%, ${DS.bg} 100%)`, border: `1px solid ${DS.border}`, boxShadow: '0 20px 60px rgba(0,0,0,0.35)', textAlign: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+            <WaselLogo size={42} theme="light" variant="full" />
+          </div>
+          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Checking your Wasel access</div>
+          <div style={{ color: DS.sub, fontFamily: DS.F, fontSize: '0.85rem', lineHeight: 1.7 }}>
+            We are syncing your session so your routes, packages, and history open in the right account.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -134,15 +155,28 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-modal-route > div { width:100%; text-align:left !important; }
         }
       `}</style>
-      <div className="sp-inner" style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 16px' }}>
-        <div className="sp-brand-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
-          <WaselLogo size={34} theme="light" variant="full" />
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: '999px', background: 'rgba(0,200,232,0.08)', border: '1px solid rgba(0,200,232,0.16)', color: 'rgba(239,246,255,0.78)', fontSize: '0.72rem', fontWeight: 700 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: DS.green, boxShadow: `0 0 10px ${DS.green}` }} />
-            {ar ? 'شبكة واصل للحركة والطرود' : 'Wasel movement network for people, goods, and services'}
+      <div className="sp-inner" style={{ maxWidth: 1120, margin: '0 auto', padding: '24px 16px' }}>
+        <div className="sp-brand-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 18, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <WaselLogo size={36} theme="light" variant="full" />
+            <div style={{ display: 'grid', gap: 4 }}>
+              <div style={{ color: '#EFF6FF', fontSize: '0.92rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
+                {ar ? 'واجهة تشغيل واصل' : 'Wasel operating surface'}
+              </div>
+              <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55 }}>
+                {ar ? 'قرارات حقيقية، ثقة ظاهرة، وحياة تشغيلية على نفس المسار.' : 'Real actions, visible trust, and operating proof on the same corridor.'}
+              </div>
+            </div>
           </div>
+          <WaselContactActionRow ar={ar} compact />
+        </div>
+        <div style={{ marginBottom: 18 }}>
+          <WaselProofOfLifeBlock ar={ar} compact />
         </div>
         {children}
+        <div style={{ marginTop: 18 }}>
+          <WaselBusinessFooter ar={ar} />
+        </div>
       </div>
     </div>
   );
@@ -180,8 +214,8 @@ export function SectionHead({ emoji, title, titleAr, sub, color = DS.cyan, actio
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
               <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>{title}</h1>
             </div>
-            {titleAr && <p dir="rtl" style={{ fontSize: '0.9rem', fontWeight: 700, color, margin: '0 0 2px', fontFamily: "'Cairo',sans-serif" }}>{titleAr}</p>}
-            {sub && <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>{sub}</p>}
+            {titleAr && <p dir="rtl" style={{ fontSize: '0.9rem', fontWeight: 700, color, margin: '0 0 2px', fontFamily: "var(--wasel-font-arabic, 'Cairo', 'Tajawal', sans-serif)" }}>{titleAr}</p>}
+            {sub && <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.48)', margin: 0 }}>{sub}</p>}
           </div>
         </div>
         {action && (
@@ -243,3 +277,4 @@ export const SharedPrimitives = {
   sharedMidpoint,
   sharedResolveCityCoord,
 };
+

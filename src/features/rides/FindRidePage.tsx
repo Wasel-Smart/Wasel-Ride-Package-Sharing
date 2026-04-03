@@ -6,7 +6,6 @@ import {
   Calendar,
   CheckCircle2,
   MapPin,
-  Network,
   Search,
   Shield,
   Sparkles,
@@ -35,7 +34,6 @@ import { getLiveCorridorSignal, useLiveRouteIntelligence } from '../../services/
 import { createRideBooking, hydrateRideBookings } from '../../services/rideLifecycle';
 import {
   getCorridorOpportunity,
-  getMarketplaceNodes,
   getWaselCategoryPosition,
 } from '../../config/wasel-movement-network';
 import {
@@ -49,7 +47,6 @@ import {
 import {
   createFindRideCopy,
   parseFindRideParams,
-  scoreRideForRecommendation,
 } from '../../pages/waselCorePageHelpers';
 import { readStoredStringList, writeStoredStringList } from '../../pages/waselCoreStorage';
 import {
@@ -98,7 +95,6 @@ export function FindRidePage() {
   const [pkg, setPkg] = useState({ from: 'Amman', to: 'Aqaba', weight: '<1 kg', note: '', sent: false });
 
   const category = useMemo(() => getWaselCategoryPosition(), []);
-  const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(0, 3), []);
   const corridorPlan = useMemo(() => getCorridorOpportunity(from, to), [from, to]);
   const routeIntelligence = useLiveRouteIntelligence({ from, to });
   const selectedSignal = routeIntelligence.selectedSignal;
@@ -122,8 +118,6 @@ export function FindRidePage() {
   const connectedRides = getConnectedRides().map(buildRideFromPostedRide);
   const allAvailableRides = [...connectedRides, ...ALL_RIDES];
   const corridorRides = allAvailableRides.filter((ride) => ride.from === from && ride.to === to);
-  const availableCorridorRides = corridorRides.filter((ride) => ride.seatsAvailable > 0);
-  const soldOutCorridorRides = corridorRides.filter((ride) => ride.seatsAvailable <= 0);
   const nearbyCorridors = allAvailableRides
     .filter(
       (ride) =>
@@ -151,9 +145,6 @@ export function FindRidePage() {
     : allAvailableRides.slice(0, 4);
 
   const routeReadinessLabel = corridorRides.length >= 2 ? t.instantMatch : corridorRides.length === 1 ? t.bookingReady : t.searchHelp;
-  const recommendedRides = [...results]
-    .sort((left, right) => scoreRideForRecommendation(right) - scoreRideForRecommendation(left))
-    .slice(0, 2);
   const bookedRides = allAvailableRides.filter((ride) => booked.has(ride.id)).slice(0, 3);
   const selectedPriceQuote = selectedSignal?.priceQuote
     ?? (corridorPlan
@@ -365,13 +356,13 @@ export function FindRidePage() {
           emoji="Route"
           title="Find a Shared Route"
           titleAr={copy.tabRide}
-          sub="Search corridors, unlock cost sharing, and let Wasel Brain propose the best match."
-          action={{ label: 'Open route supply', onClick: () => nav('/app/offer-ride') }}
+          sub="Search live corridors, compare departures, and book the clearest route."
+          action={{ label: 'Offer route', onClick: () => nav('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Wasel is now organized around route intelligence, not random ride requests."
-          detail={`${category.promise} Search one corridor and the platform responds with shared-price targets, pickup nodes, auto-grouping, and the best available supply.`}
+          title="Search one corridor and get one clear booking decision."
+          detail={`${category.promise} Wasel reads route pressure, shared pricing, and pickup timing so the rider can decide faster with less guesswork.`}
           tone={DS.cyan}
         />
 
@@ -429,7 +420,7 @@ export function FindRidePage() {
 
               <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={handleSearch} data-testid="find-ride-search" style={{ width: '100%', height: 52, borderRadius: r(14), border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                 {loading ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }} style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%' }} /> : <Search size={18} />}
-                {loading ? t.searching : 'Let Wasel Brain search this route'}
+                {loading ? t.searching : 'Search this route'}
               </motion.button>
 
               <div style={{ marginTop: 14, background: DS.card2, borderRadius: r(14), padding: 12, border: `1px solid ${DS.border}` }}>
@@ -438,8 +429,8 @@ export function FindRidePage() {
                     <p style={{ color: DS.muted, fontSize: '0.72rem', fontWeight: 700, margin: '0 0 4px' }}>Corridor preview</p>
                     <p style={{ color: DS.sub, fontSize: '0.8rem', margin: 0 }}>
                       {selectedSignal
-                        ? `Production data is live on this lane. Wasel sees ${selectedSignal.liveSearches} searches, ${selectedSignal.liveBookings} bookings, and ${selectedSignal.activeDemandAlerts} active alerts.`
-                        : 'See the movement corridor before Wasel Brain suggests seats, pickup points, and grouped departures.'}
+                        ? `This lane is live now. Wasel sees ${selectedSignal.liveSearches} searches, ${selectedSignal.liveBookings} bookings, and ${selectedSignal.activeDemandAlerts} active alerts.`
+                        : 'Read the lane first, then book with a clearer view of price, timing, and corridor demand.'}
                     </p>
                   </div>
                   <span style={{ ...pill(DS.green), fontSize: '0.72rem' }}>
@@ -456,7 +447,7 @@ export function FindRidePage() {
               <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginTop: 14 }}>
                 {[
                   {
-                    label: 'Route readiness',
+                    label: 'Live departures',
                     value: selectedSignal ? `${selectedSignal.activeSupply} live departures` : routeReadinessLabel,
                     sub: selectedSignal ? `${selectedSignal.liveBookings} bookings and ${selectedSignal.activeDemandAlerts} active alerts` : `${corridorRides.length} live departures`,
                     tone: DS.cyan,
@@ -474,7 +465,7 @@ export function FindRidePage() {
                     tone: DS.gold,
                   },
                   {
-                    label: 'Route ownership',
+                    label: 'Route confidence',
                     value: selectedSignal ? `${selectedSignal.routeOwnershipScore}/100` : corridorPlan?.routeMoat ?? 'Route data compounds on every search',
                     sub: selectedSignal ? selectedSignal.productionSources.slice(0, 2).join(' | ') : `Demand alerts: ${demandStats.active}`,
                     tone: DS.cyan,
@@ -489,16 +480,16 @@ export function FindRidePage() {
               </div>
             </div>
 
-            <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
+            <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 22 }}>
               <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}28`, display: 'grid', placeItems: 'center' }}>
                     <Brain size={18} color={DS.cyan} />
                   </div>
                   <div>
-                    <div style={{ color: '#fff', fontWeight: 800 }}>Wasel Brain briefing</div>
+                    <div style={{ color: '#fff', fontWeight: 800 }}>Route brief</div>
                     <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                      The system should suggest, not make the rider guess.
+                      The route page should help the rider decide fast.
                     </div>
                   </div>
                 </div>
@@ -507,13 +498,13 @@ export function FindRidePage() {
                     selectedSignal
                       ? [
                           selectedSignal.recommendedReason,
-                          `Next wave is ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.`,
-                          `Live feed: ${selectedSignal.productionSources.slice(0, 3).join(' | ')}.`,
+                          `Best pickup is ${selectedSignal.recommendedPickupPoint}. Next strong window is ${selectedSignal.nextWaveWindow}.`,
+                          `Live sources: ${selectedSignal.productionSources.slice(0, 3).join(' | ')}.`,
                         ]
                       : corridorPlan?.intelligenceSignals ?? [
-                          'Predict demand before the next rider opens search.',
-                          'Recommend pickup points based on dense corridor behavior.',
-                          'Use cost sharing to keep the shared route cheaper than solo movement.',
+                          'Start with the lane, not with a random listing.',
+                          'Read shared price and pickup timing before the rider commits.',
+                          'Use corridor demand to keep the booking cheaper than solo movement.',
                         ]
                   ).map((line) => (
                     <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
@@ -530,164 +521,41 @@ export function FindRidePage() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gap: 14 }}>
-                <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.gold}12`, border: `1px solid ${DS.gold}28`, display: 'grid', placeItems: 'center' }}>
-                      <TrendingUp size={18} color={DS.gold} />
-                    </div>
-                    <div>
-                      <div style={{ color: '#fff', fontWeight: 800 }}>Priority corridors</div>
-                      <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                        Routes the network wants to fill next.
-                      </div>
-                    </div>
+              <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.gold}12`, border: `1px solid ${DS.gold}28`, display: 'grid', placeItems: 'center' }}>
+                    <TrendingUp size={18} color={DS.gold} />
                   </div>
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {featuredSignals.map((corridor) => (
-                      <button
-                        key={corridor.id}
-                        onClick={() => {
-                          setFrom(corridor.from);
-                          setTo(corridor.to);
-                          setSearched(true);
-                        }}
-                        style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                          <div>
-                            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{corridor.label}</div>
-                            <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                              Demand {corridor.forecastDemandScore} | {corridor.priceQuote.finalPriceJod} JOD | Owns {corridor.routeOwnershipScore}
-                            </div>
-                          </div>
-                          <span style={pill(DS.cyan)}>{corridor.pricePressure}</span>
-                        </div>
-                      </button>
-                    ))}
+                  <div>
+                    <div style={{ color: '#fff', fontWeight: 800 }}>Priority corridors</div>
+                    <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
+                      Strong live lanes the network can fill next.
+                    </div>
                   </div>
                 </div>
-
-                <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.green}12`, border: `1px solid ${DS.green}28`, display: 'grid', placeItems: 'center' }}>
-                      <Network size={18} color={DS.green} />
-                    </div>
-                    <div>
-                      <div style={{ color: '#fff', fontWeight: 800 }}>Marketplace layers</div>
-                      <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                        This route graph serves more than riders.
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {marketplaceNodes.map((node) => (
-                      <div key={node.id} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>{node.title}</div>
-                        <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.55 }}>{node.summary}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
-              <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Auto-suggested recurring routes</div>
-                {recurringSuggestions.length > 0 ? (
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {recurringSuggestions.map((suggestion) => {
-                      const alreadySaved = Boolean(getRouteReminderForCorridor(suggestion.corridorId));
-                      return (
-                        <div key={suggestion.corridorId} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                            <div>
-                              <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{suggestion.label}</div>
-                              <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                                {suggestion.confidenceScore}/100 confidence | {suggestion.priceQuote.finalPriceJod} JOD now | {suggestion.weeklyFrequency} recent signals
-                              </div>
-                            </div>
-                            <span style={pill(DS.green)}>{suggestion.recommendedFrequency}</span>
-                          </div>
-                          <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 8 }}>{suggestion.reason}</div>
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-                            <button onClick={() => { setFrom(suggestion.from); setTo(suggestion.to); setSearched(true); }} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
-                              Search lane
-                            </button>
-                            <button onClick={() => handleSaveReminder(suggestion.corridorId)} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: 'none', background: alreadySaved ? DS.gradG : DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
-                              {alreadySaved ? 'Reminder active' : 'Save reminder'}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div style={{ color: DS.muted, fontSize: '0.8rem' }}>
-                    Search and book a few more lanes and Wasel will start proposing recurring corridors automatically.
-                  </div>
-                )}
-              </div>
-
-              <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Saved reminders</div>
-                {savedReminders.length > 0 ? (
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {savedReminders.slice(0, 4).map((reminder) => (
-                      <div key={reminder.id} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, padding: '11px 12px' }}>
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>{reminder.label}</div>
-                        <div style={{ color: DS.muted, fontSize: '0.73rem', marginTop: 4 }}>
-                          {formatRouteReminderSchedule(reminder)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ color: DS.muted, fontSize: '0.8rem', lineHeight: 1.55 }}>
-                    Save a recurring route and Wasel will turn it into reminder-driven demand before the next commute wave.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
-              <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Recommended corridor matches</div>
                 <div style={{ display: 'grid', gap: 10 }}>
-                  {recommendedRides.map((ride) => {
-                    const rideSignal = resolveSignalForRoute(ride.from, ride.to);
-                    const ridePriceQuote = getMovementPriceQuote({
-                      basePriceJod: ride.pricePerSeat,
-                      corridorId: rideSignal?.id,
-                      forecastDemandScore: rideSignal?.forecastDemandScore,
-                      membership: routeIntelligence.membership,
-                    });
-
-                    return (
-                      <button key={ride.id} onClick={() => handleOpenRide(ride)} style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                          <div>
-                            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{ride.from} to {ride.to}</div>
-                            <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                              {ride.time} | {ride.driver.name} | {rideSignal ? `${rideSignal.routeOwnershipScore}/100 ownership` : ride.car}
-                            </div>
+                  {featuredSignals.map((corridor) => (
+                    <button
+                      key={corridor.id}
+                      onClick={() => {
+                        setFrom(corridor.from);
+                        setTo(corridor.to);
+                        setSearched(true);
+                      }}
+                      style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                        <div>
+                          <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{corridor.label}</div>
+                          <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
+                            Demand {corridor.forecastDemandScore} | {corridor.priceQuote.finalPriceJod} JOD | Confidence {corridor.routeOwnershipScore}
                           </div>
-                          <span style={{ ...pill(booked.has(ride.id) ? DS.green : DS.cyan) }}>{booked.has(ride.id) ? 'Booked' : `${ridePriceQuote.finalPriceJod} JOD`}</span>
                         </div>
-                      </button>
-                    );
-                  })}
+                        <span style={pill(DS.cyan)}>{corridor.pricePressure}</span>
+                      </div>
+                    </button>
+                  ))}
                 </div>
-              </div>
-
-              <div style={{ display: 'grid', gap: 14 }}>
-                {[{ title: t.recentSearches, items: recentSearches, empty: t.searchHelp }, { title: t.bookedTrips, items: bookedRides.map((ride) => `${ride.from} to ${ride.to} | ${ride.time} | ${ride.driver.name}`), empty: t.noTripsYet }].map((card) => (
-                  <div key={card.title} style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                    <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>{card.title}</div>
-                    {card.items.length > 0 ? <div style={{ display: 'grid', gap: 10 }}>{card.items.map((item) => <div key={item} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, padding: '11px 12px', color: '#fff', fontSize: '0.78rem' }}>{item}</div>)}</div> : <div style={{ color: DS.muted, fontSize: '0.8rem' }}>{card.empty}</div>}
-                  </div>
-                ))}
               </div>
             </div>
 
@@ -728,6 +596,71 @@ export function FindRidePage() {
                   </motion.div>
                 ) : results.map((ride, index) => <FindRideCard key={ride.id} ride={ride} idx={index} booked={booked.has(ride.id)} signal={resolveSignalForRoute(ride.from, ride.to)} onOpen={() => handleOpenRide(ride)} />)}
               </AnimatePresence>
+            </div>
+
+            <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginTop: 18 }}>
+              <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
+                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Recurring routes</div>
+                <div style={{ color: DS.muted, fontSize: '0.78rem', lineHeight: 1.6, marginBottom: 12 }}>
+                  Save the lanes you repeat and let Wasel warn you before the next strong commute window.
+                </div>
+                {recurringSuggestions.length > 0 ? (
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {recurringSuggestions.slice(0, 3).map((suggestion) => {
+                      const alreadySaved = Boolean(getRouteReminderForCorridor(suggestion.corridorId));
+                      return (
+                        <div key={suggestion.corridorId} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                            <div>
+                              <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{suggestion.label}</div>
+                              <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
+                                {suggestion.confidenceScore}/100 confidence | {suggestion.priceQuote.finalPriceJod} JOD now
+                              </div>
+                            </div>
+                            <span style={pill(DS.green)}>{suggestion.recommendedFrequency}</span>
+                          </div>
+                          <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 8 }}>{suggestion.reason}</div>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                            <button onClick={() => { setFrom(suggestion.from); setTo(suggestion.to); setSearched(true); }} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+                              Search lane
+                            </button>
+                            <button onClick={() => handleSaveReminder(suggestion.corridorId)} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: 'none', background: alreadySaved ? DS.gradG : DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+                              {alreadySaved ? 'Reminder active' : 'Save reminder'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ color: DS.muted, fontSize: '0.8rem', lineHeight: 1.55 }}>
+                    Search and book a few more lanes and Wasel will start proposing recurring corridors automatically.
+                  </div>
+                )}
+
+                {savedReminders.length > 0 && (
+                  <div style={{ marginTop: 14, display: 'grid', gap: 8 }}>
+                    <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem' }}>Saved reminders</div>
+                    {savedReminders.slice(0, 3).map((reminder) => (
+                      <div key={reminder.id} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, padding: '11px 12px' }}>
+                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>{reminder.label}</div>
+                        <div style={{ color: DS.muted, fontSize: '0.73rem', marginTop: 4 }}>
+                          {formatRouteReminderSchedule(reminder)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'grid', gap: 14 }}>
+                {[{ title: t.recentSearches, items: recentSearches, empty: t.searchHelp }, { title: t.bookedTrips, items: bookedRides.map((ride) => `${ride.from} to ${ride.to} | ${ride.time} | ${ride.driver.name}`), empty: t.noTripsYet }].map((card) => (
+                  <div key={card.title} style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
+                    <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>{card.title}</div>
+                    {card.items.length > 0 ? <div style={{ display: 'grid', gap: 10 }}>{card.items.map((item) => <div key={item} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, padding: '11px 12px', color: '#fff', fontSize: '0.78rem' }}>{item}</div>)}</div> : <div style={{ color: DS.muted, fontSize: '0.8rem' }}>{card.empty}</div>}
+                  </div>
+                ))}
+              </div>
             </div>
           </>
         )}

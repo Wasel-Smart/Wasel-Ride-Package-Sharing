@@ -1,7 +1,6 @@
 import { startTransition, useDeferredValue, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import {
-  AlertTriangle,
   Bell,
   BellOff,
   Check,

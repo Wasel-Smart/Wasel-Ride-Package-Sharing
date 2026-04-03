@@ -39,7 +39,7 @@ const BG = '#040C18';
 const CARD = 'rgba(255,255,255,0.04)';
 const BORD = 'rgba(255,255,255,0.09)';
 const CYAN = '#00C8E8';
-const FONT = "-apple-system,'Inter',sans-serif";
+const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 const STORAGE_KEYS = {
   privacy: 'wasel.settings.privacy',

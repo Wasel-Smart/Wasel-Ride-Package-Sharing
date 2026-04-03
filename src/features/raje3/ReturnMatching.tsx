@@ -5,7 +5,7 @@
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  RotateCcw, Check, Clock, Star, CheckCircle2, AlertCircle, Search, RefreshCw, QrCode,
+  Check, Star, CheckCircle2, AlertCircle, Search, RefreshCw, QrCode,
 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -16,7 +16,7 @@ const D = {
   bg:'#040C18', card:'#0A1628', card2:'#0D1F38',
   border:'rgba(240,168,48,0.12)', gold:'#F0A830', cyan:'#00C8E8', green:'#00C875',
   text:'#EFF6FF', sub:'rgba(148,163,184,0.80)', muted:'rgba(100,130,180,0.60)',
-  F:"-apple-system,'Inter','Cairo',sans-serif", MONO:"'JetBrains Mono','Fira Mono',monospace",
+  F:"var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)", MONO:"'JetBrains Mono','Fira Mono',monospace",
 } as const;
 
 const RETAILERS = [
