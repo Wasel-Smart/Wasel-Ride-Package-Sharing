@@ -71,3 +71,8 @@ vitest.config.mjs
 
 # ── Cleanup backup (safe to delete after review) ───────────────
 _REMOVED/
+
+# Local Codex worktrees / ad hoc artifacts
+.codex-landing-deploy/
+mobility-os-current.png
+preview-log.txt
