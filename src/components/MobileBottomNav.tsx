@@ -3,24 +3,25 @@
  * Shared with the app's core navigation model for consistent UX.
  */
 
-import { Bus, Clock, Search, PlusCircle, Package } from 'lucide-react';
+import { Clock, Gauge, Search, User2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLocation, useNavigate } from 'react-router';
 import { CORE_NAV_ITEMS } from '../config/user-navigation';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useLocalAuth } from '../contexts/LocalAuth';
 
 const BG = 'rgba(4,12,24,0.97)';
 const CYAN = '#00C8E8';
 const GOLD = '#F0A830';
 const INACTIVE = 'rgba(148,163,184,0.50)';
 const BORDER = 'rgba(0,200,232,0.12)';
-const F = "-apple-system,'Inter','Cairo',sans-serif";
+const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 const ICONS = {
   find: Search,
-  post: PlusCircle,
-  packages: Package,
+  movement: Gauge,
   trips: Clock,
-  bus: Bus,
+  profile: User2,
 } as const;
 
 interface MobileBottomNavProps {
@@ -30,7 +31,11 @@ interface MobileBottomNavProps {
 export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const isArabic = language === 'ar';
+  const { language: contextLanguage } = useLanguage();
+  const { user } = useLocalAuth();
+  const resolvedLanguage = language ?? contextLanguage;
+  const isArabic = resolvedLanguage === 'ar';
+  const navItems = CORE_NAV_ITEMS.filter((item) => !item.requiresAuth || Boolean(user));
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/' || location.pathname === '/app' || location.pathname === '/app/';
@@ -67,10 +72,9 @@ export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
           alignItems: 'stretch',
         }}
       >
-        {CORE_NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const active = isActive(item.path);
           const Icon = ICONS[item.id as keyof typeof ICONS];
-          const isPost = item.id === 'post';
           const itemColor = item.accent === 'gold' ? GOLD : CYAN;
 
           return (
@@ -99,7 +103,7 @@ export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
                 position: 'relative',
               }}
             >
-              {active && !isPost && (
+              {active && (
                 <motion.div
                   layoutId="nav-accent"
                   style={{
@@ -115,48 +119,25 @@ export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
                 />
               )}
 
-              {isPost ? (
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 16,
-                    background: active
-                      ? `linear-gradient(135deg,${GOLD},#E89200)`
-                      : 'linear-gradient(135deg,rgba(240,168,48,0.22),rgba(232,146,0,0.18))',
-                    border: `1.5px solid ${active ? GOLD : 'rgba(240,168,48,0.35)'}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: active
-                      ? '0 4px 20px rgba(240,168,48,0.45)'
-                      : '0 2px 12px rgba(240,168,48,0.15)',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <Icon size={22} strokeWidth={active ? 2.5 : 2} color={active ? '#040C18' : GOLD} />
-                </div>
-              ) : (
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {Icon && (
-                    <Icon
-                      size={22}
-                      strokeWidth={active ? 2.5 : 1.8}
-                      style={{
-                        color: active ? itemColor : INACTIVE,
-                        transition: 'color 0.18s ease, transform 0.18s ease',
-                        transform: active ? 'scale(1.05)' : 'scale(1)',
-                      }}
-                    />
-                  )}
-                </div>
-              )}
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {Icon && (
+                  <Icon
+                    size={22}
+                    strokeWidth={active ? 2.5 : 1.8}
+                    style={{
+                      color: active ? itemColor : INACTIVE,
+                      transition: 'color 0.18s ease, transform 0.18s ease',
+                      transform: active ? 'scale(1.05)' : 'scale(1)',
+                    }}
+                  />
+                )}
+              </div>
 
               <span
                 style={{
                   fontSize: 10,
                   fontWeight: active ? 700 : 500,
-                  color: active ? (isPost ? GOLD : itemColor) : INACTIVE,
+                  color: active ? itemColor : INACTIVE,
                   fontFamily: F,
                   lineHeight: 1,
                   whiteSpace: 'nowrap',

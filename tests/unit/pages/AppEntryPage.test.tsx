@@ -8,6 +8,7 @@ const mockUseLocalAuth = vi.fn();
 vi.mock('motion/react', () => ({
   motion: {
     div: ({ children, ...props }: PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
+    section: ({ children, ...props }: PropsWithChildren<Record<string, unknown>>) => <section {...props}>{children}</section>,
   },
 }));
 
@@ -19,9 +20,33 @@ vi.mock('@/contexts/LocalAuth', () => ({
   useLocalAuth: () => mockUseLocalAuth(),
 }));
 
+vi.mock('@/contexts/LanguageContext', () => ({
+  useLanguage: () => ({ language: 'en' }),
+}));
+
 vi.mock('@/components/wasel-ds/WaselLogo', () => ({
   WaselLogo: () => <div>Wasel</div>,
   WaselIcon: () => <div>Icon</div>,
+}));
+
+vi.mock('@/components/system/WaselPresence', () => ({
+  WaselBusinessFooter: () => <div>Footer</div>,
+  WaselContactActionRow: () => <div>Contact</div>,
+  WaselProofOfLifeBlock: () => <div>Proof</div>,
+  WaselWhyCard: () => <div>Why</div>,
+}));
+
+vi.mock('@/domains/trust/waselPresence', () => ({
+  getWaselPresenceProfile: () => ({
+    supportPhoneDisplay: '+962 00 000 0000',
+    supportEmail: 'hello@example.com',
+    businessAddress: 'Amman',
+    businessAddressAr: 'Amman',
+  }),
+}));
+
+vi.mock('@/features/home/MobilityOSLandingMap', () => ({
+  MobilityOSLandingMap: () => <div>Map</div>,
 }));
 
 import AppEntryPage from '@/features/home/AppEntryPage';
@@ -36,7 +61,7 @@ describe('AppEntryPage', () => {
 
     render(<AppEntryPage />);
 
-    expect(screen.getByText(/Move smarter with Wasel/i)).toBeInTheDocument();
+    expect(screen.getByText(/Understand the route/i)).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Get started/i }).length).toBeGreaterThan(0);
   });
 

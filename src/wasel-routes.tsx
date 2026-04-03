@@ -121,7 +121,7 @@ function NotFound() {
         justifyContent: 'center',
         background: '#040C18',
         color: '#fff',
-        fontFamily: "-apple-system,'Inter',sans-serif",
+            fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
         padding: 24,
       }}
     >
@@ -184,7 +184,7 @@ function RouteErrorFallback() {
         background: '#040C18',
         color: '#EFF6FF',
         padding: 24,
-        fontFamily: "-apple-system,'Inter',sans-serif",
+          fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
       }}
     >
       <div

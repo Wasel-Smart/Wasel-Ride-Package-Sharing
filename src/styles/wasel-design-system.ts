@@ -113,8 +113,8 @@ export const WaselImages = {
 
 export const WaselTypography = {
   // Font Families
-  sans: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
-  arabic: '"Noto Sans Arabic", "Segoe UI", Roboto, sans-serif',
+  sans: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
+  arabic: "var(--wasel-font-arabic, 'Cairo', 'Tajawal', 'Almarai', sans-serif)",
   
   // Sizes
   h1: 'clamp(2.5rem, 5vw, 4rem)',

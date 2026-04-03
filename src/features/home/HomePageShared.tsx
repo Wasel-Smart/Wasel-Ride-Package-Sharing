@@ -24,7 +24,7 @@ export const C = {
   textDim: 'rgba(148,163,184,0.55)',
 } as const;
 
-export const F = "-apple-system, BlinkMacSystemFont, 'Inter', 'Cairo', 'Tajawal', sans-serif";
+export const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 export const glass = (op = 0.68) => `rgba(10,22,40,${op})`;
 
 export const POPULAR_ROUTES = [
@@ -77,7 +77,7 @@ export function SectionHeader({
   );
 }
 
-export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
+export function InlineCurrencySwitcher({ ar: _ar }: { ar: boolean }) {
   const svc = CurrencyService.getInstance();
   const [cur, setCur] = useState<SupportedCurrency>(svc.current);
   const [open, setOpen] = useState(false);

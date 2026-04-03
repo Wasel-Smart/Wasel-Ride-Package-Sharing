@@ -28,7 +28,7 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif);
   font-size: 16px; /* Base font size */
   line-height: 1.5;
   color: #0F172A;
@@ -132,7 +132,7 @@ small, .caption {
 
 /* Arabic text support */
 [dir="rtl"] {
-  font-family: 'Tajawal', 'Cairo', 'Almarai', -apple-system, sans-serif;
+  font-family: var(--wasel-font-arabic, 'Cairo', 'Tajawal', 'Almarai', sans-serif);
 }
 
 /* ═══════════════════════════════════════════════════════════════

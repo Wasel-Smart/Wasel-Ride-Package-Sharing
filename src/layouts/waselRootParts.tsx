@@ -4,7 +4,13 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { CurrencyService, type SupportedCurrency } from '../utils/currency';
 import { C, F, R } from '../utils/wasel-ds';
-import { getVisibleNavItems, isVisibleNavGroup, PRODUCT_NAV_GROUPS, type NavGroup } from './waselRootConfig';
+import {
+  getNavGroupPrimaryPath,
+  getVisibleNavItems,
+  isVisibleNavGroup,
+  PRODUCT_NAV_GROUPS,
+  type NavGroup,
+} from './waselRootConfig';
 
 export function Badge({ label, color = C.cyan }: { label: string; color?: string }) {
   const map: Record<string, string> = { LIVE: C.cyan, RAJE3: C.gold, AI: C.blue, VIP: C.gold, 'Fixed Price': C.green, QA: '#8B5CF6', TRUST: C.green };
@@ -68,6 +74,72 @@ export function NavDropdown({ group, onNavigate, align, ar, isAuthenticated }: {
       <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#EFF6FF', fontFamily: F }}>{ar ? item.labelAr : item.label}</div>
       <div style={{ fontSize: '0.7rem', color: 'rgba(148,163,184,0.72)', fontFamily: F, lineHeight: 1.4 }}>{ar ? item.descAr : item.desc}</div>
     </button>)}
+  </div>;
+}
+
+export function DesktopOverflowMenu({
+  groups,
+  activeId,
+  open,
+  onOpenChange,
+  onNavigate,
+  ar,
+  isAuthenticated,
+}: {
+  groups: readonly NavGroup[];
+  activeId: string | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onNavigate: (path: string) => void;
+  ar: boolean;
+  isAuthenticated: boolean;
+}) {
+  if (!groups.length) return null;
+
+  return <div style={{ position: 'relative' }}>
+    <button
+      type="button"
+      onClick={() => onOpenChange(!open)}
+      aria-haspopup="true"
+      aria-expanded={open}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 40, padding: '0 14px', borderRadius: R.full, background: open ? 'rgba(255,255,255,0.06)' : 'transparent', border: `1px solid ${open ? 'rgba(0,200,232,0.22)' : 'transparent'}`, color: open ? C.text : 'rgba(239,246,255,0.72)', fontSize: '0.8rem', fontWeight: 600, fontFamily: F, cursor: 'pointer', transition: 'all 0.16s ease', whiteSpace: 'nowrap' }}
+    >
+      <span>More</span>
+      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 20, height: 20, padding: '0 6px', borderRadius: R.full, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(148,163,184,0.8)', fontSize: '0.66rem', fontWeight: 700 }}>{groups.length}</span>
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.14s', opacity: 0.6 }}><path d="M6 9l6 6 6-6" /></svg>
+    </button>
+
+    {open && <div role="menu" style={{ position: 'absolute', top: 'calc(100% + 10px)', right: ar ? 'auto' : 0, left: ar ? 0 : 'auto', width: 320, background: 'rgba(4,12,24,0.98)', backdropFilter: 'blur(28px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, boxShadow: '0 24px 64px rgba(0,0,0,0.65)', padding: 10, display: 'grid', gap: 8, zIndex: 1000, animation: 'fade-in 0.15s ease' }}>
+      <div style={{ padding: '6px 8px 2px', fontSize: '0.62rem', fontWeight: 700, color: 'rgba(148,163,184,0.58)', letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: F }}>
+        More destinations
+      </div>
+      {groups.map((group) => {
+        const path = getNavGroupPrimaryPath(group, isAuthenticated);
+        if (!path) return null;
+        const isCurrent = activeId === group.id;
+
+        return (
+          <button
+            key={group.id}
+            role="menuitem"
+            onClick={() => {
+              onNavigate(path);
+              onOpenChange(false);
+            }}
+            aria-current={isCurrent ? 'page' : undefined}
+            style={{ display: 'grid', gap: 4, width: '100%', padding: '12px 14px', borderRadius: 16, background: isCurrent ? 'rgba(0,200,232,0.10)' : 'rgba(255,255,255,0.03)', border: `1px solid ${isCurrent ? 'rgba(0,200,232,0.18)' : 'rgba(255,255,255,0.06)'}`, cursor: 'pointer', textAlign: ar ? 'right' : 'left', transition: 'all 0.16s ease' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: isCurrent ? C.text : 'rgba(239,246,255,0.86)', fontFamily: F }}>{ar ? group.labelAr : group.label}</span>
+              {'badge' in group && group.badge && <Badge label={group.badge} color={group.color} />}
+            </div>
+            <span style={{ fontSize: '0.72rem', lineHeight: 1.5, color: isCurrent ? 'rgba(239,246,255,0.68)' : 'rgba(148,163,184,0.7)', fontFamily: F }}>
+              {ar ? group.descAr : group.desc}
+            </span>
+          </button>
+        );
+      })}
+    </div>}
   </div>;
 }
 

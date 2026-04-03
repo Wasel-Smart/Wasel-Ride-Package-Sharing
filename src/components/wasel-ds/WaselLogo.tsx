@@ -1,5 +1,5 @@
 import { useId, type CSSProperties } from 'react';
-import { C, F, R, SH, GRAD_SIGNAL } from '../../utils/wasel-ds';
+import { C, F, SH, GRAD_SIGNAL } from '../../utils/wasel-ds';
 
 interface WaselLogoProps {
   size?: number;

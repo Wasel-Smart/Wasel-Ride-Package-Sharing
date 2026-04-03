@@ -26,32 +26,6 @@ export const PRODUCT_NAV_GROUPS = [
     items: [],
   },
   {
-    id: 'offer',
-    label: 'Route Supply',
-    labelAr: 'Route Supply',
-    direct: true,
-    path: '/offer-ride',
-    emoji: '+',
-    desc: 'Open seats, package space, and route capacity in one post.',
-    descAr: 'Open seats, package space, and route capacity in one post.',
-    color: C.blue,
-    badge: null,
-    items: [],
-  },
-  {
-    id: 'packages',
-    label: 'Goods Network',
-    labelAr: 'Goods Network',
-    direct: true,
-    path: '/packages',
-    emoji: 'P',
-    desc: 'Move packages, returns, and commerce on live corridors.',
-    descAr: 'Move packages, returns, and commerce on live corridors.',
-    color: C.gold,
-    badge: 'LIVE',
-    items: [],
-  },
-  {
     id: 'my-trips',
     label: 'My Movement',
     labelAr: 'My Movement',
@@ -65,22 +39,9 @@ export const PRODUCT_NAV_GROUPS = [
     items: [],
   },
   {
-    id: 'bus',
-    label: 'Fixed Corridors',
-    labelAr: 'Fixed Corridors',
-    direct: true,
-    path: '/bus',
-    emoji: 'B',
-    desc: 'Use scheduled corridor capacity when demand is predictable.',
-    descAr: 'Use scheduled corridor capacity when demand is predictable.',
-    color: C.green,
-    badge: null,
-    items: [],
-  },
-  {
     id: 'mobility-os',
-    label: 'Movement OS',
-    labelAr: 'Movement OS',
+    label: 'Mobility OS',
+    labelAr: 'Mobility OS',
     direct: true,
     path: '/mobility-os',
     emoji: 'M',
@@ -106,9 +67,20 @@ export const PRODUCT_NAV_GROUPS = [
 ] as const;
 
 export type NavGroup = (typeof PRODUCT_NAV_GROUPS)[number];
+export const DESKTOP_PRIMARY_NAV_IDS = ['find', 'mobility-os', 'my-trips', 'profile'] as const;
 
 const HIDDEN_NAV_PATHS = new Set<string>();
 const USER_ONLY_NAV_PATHS = new Set<string>(['/my-trips', '/profile']);
+
+function doesPathMatch(pathname: string, path: string) {
+  const normalizedPath = path.startsWith('/app') ? path : `/app${path}`;
+  return (
+    pathname === path ||
+    pathname.startsWith(`${path}/`) ||
+    pathname === normalizedPath ||
+    pathname.startsWith(`${normalizedPath}/`)
+  );
+}
 
 export function isVisibleNavGroup(group: NavGroup, isAuthenticated: boolean) {
   if ('direct' in group && group.direct) {
@@ -126,4 +98,17 @@ export function getVisibleNavItems(group: NavGroup, isAuthenticated: boolean) {
   return items.filter(
     (item) => !HIDDEN_NAV_PATHS.has(item.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(item.path)),
   );
+}
+
+export function getNavGroupPrimaryPath(group: NavGroup, isAuthenticated: boolean) {
+  if ('direct' in group && group.direct) return group.path;
+  return getVisibleNavItems(group, isAuthenticated)[0]?.path ?? null;
+}
+
+export function isNavGroupActive(group: NavGroup, pathname: string, isAuthenticated: boolean) {
+  if ('direct' in group && group.direct) {
+    return doesPathMatch(pathname, group.path);
+  }
+
+  return getVisibleNavItems(group, isAuthenticated).some((item) => doesPathMatch(pathname, item.path));
 }
