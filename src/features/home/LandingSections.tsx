@@ -1,5 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
-import { Fragment } from 'react';
+import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, ShieldCheck, type LucideIcon } from 'lucide-react';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
