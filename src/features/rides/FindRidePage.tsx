@@ -1,17 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
-import { AnimatePresence, motion } from 'motion/react';
-import {
-  Brain,
-  Calendar,
-  CheckCircle2,
-  MapPin,
-  Search,
-  Shield,
-  Sparkles,
-  TrendingUp,
-} from 'lucide-react';
-import { MapWrapper } from '../../components/MapWrapper';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -25,7 +13,6 @@ import {
   createReminderFromSuggestion,
   formatRouteReminderSchedule,
   getRecurringRouteSuggestions,
-  getRouteReminderForCorridor,
   getRouteReminders,
   syncRouteReminders,
 } from '../../services/movementRetention';
@@ -52,17 +39,15 @@ import { readStoredStringList, writeStoredStringList } from '../../pages/waselCo
 import {
   CoreExperienceBanner,
   DS,
-  midpoint,
   PageShell,
-  pill,
   Protected,
   r,
   resolveCityCoord,
   SectionHead,
 } from '../../pages/waselServiceShared';
 import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
-import { FindRideCard } from './components/FindRideCard';
 import { FindRidePackagePanel } from './components/FindRidePackagePanel';
+import { FindRideRideTab } from './components/FindRideRideTab';
 import { FindRideTripDetailModal } from './components/FindRideTripDetailModal';
 import { getFindRideStaticCopy } from './findRideContent';
 
@@ -155,9 +140,32 @@ export function FindRidePage() {
           membership: routeIntelligence.membership,
         })
       : null);
+  const savedReminderIds = useMemo(
+    () => new Set(savedReminders.map((reminder) => reminder.corridorId)),
+    [savedReminders],
+  );
+  const bookedRideSummaries = useMemo(
+    () => bookedRides.map((ride) => `${ride.from} to ${ride.to} | ${ride.time} | ${ride.driver.name}`),
+    [bookedRides],
+  );
 
   const resolveSignalForRoute = (routeFrom: string, routeTo: string) =>
     signalLookup.get(`${routeFrom}::${routeTo}`) ?? getLiveCorridorSignal(routeFrom, routeTo, routeIntelligence.membership);
+  const nearbyCorridorCards = useMemo(
+    () => nearbyCorridors.map((ride) => {
+      const signal = resolveSignalForRoute(ride.from, ride.to);
+      const priceLabel = ride.seatsAvailable > 0
+        ? `${getMovementPriceQuote({
+            basePriceJod: ride.pricePerSeat,
+            corridorId: signal?.id,
+            forecastDemandScore: signal?.forecastDemandScore,
+            membership: routeIntelligence.membership,
+          }).finalPriceJod} JOD`
+        : 'Sold out';
+      return { ride, priceLabel };
+    }),
+    [nearbyCorridors, routeIntelligence.membership, routeIntelligence.updatedAt],
+  );
 
   useEffect(() => {
     if (!user?.id) return;
@@ -349,6 +357,22 @@ export function FindRidePage() {
     });
   };
 
+  const handleFocusCorridor = (nextFrom: string, nextTo: string) => {
+    setFrom(nextFrom);
+    setTo(nextTo);
+    setSearched(true);
+  };
+
+  const handleClearDateFilter = () => {
+    setDate('');
+    setSearchError(null);
+    setSearched(true);
+  };
+
+  const handleOpenBusFallback = () => {
+    nav(`/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+  };
+
   return (
     <Protected>
       <PageShell>
@@ -391,278 +415,68 @@ export function FindRidePage() {
         </div>
 
         {tab === 'ride' && (
-          <>
-            <div style={{ background: DS.card, borderRadius: r(20), padding: 24, border: `1px solid ${DS.border}`, marginBottom: 24 }}>
-              <div className="sp-search-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 180px', gap: 12, marginBottom: 14 }}>
-                {[{ label: t.from, value: from, setter: setFrom, icon: DS.green }, { label: t.to, value: to, setter: setTo, icon: DS.cyan }].map((field) => (
-                  <div key={field.label}>
-                    <label style={{ display: 'block', fontSize: '0.7rem', color: DS.muted, fontWeight: 700, marginBottom: 6 }}>{field.label}</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: DS.card2, borderRadius: r(12), padding: '0 14px', border: `1px solid ${DS.border}`, height: 46 }}>
-                      <MapPin size={15} color={field.icon} />
-                      <select value={field.value} onChange={(event) => field.setter(event.target.value)} style={{ background: 'transparent', border: 'none', color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', flex: 1, outline: 'none' }}>
-                        {CITIES.map((city) => (
-                          <option key={city} value={city} style={{ background: DS.card }}>
-                            {city}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                ))}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.7rem', color: DS.muted, fontWeight: 700, marginBottom: 6 }}>{t.date}</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: DS.card2, borderRadius: r(12), padding: '0 14px', border: `1px solid ${DS.border}`, height: 46 }}>
-                    <Calendar size={15} color={DS.muted} />
-                    <input type="date" value={date} onChange={(event) => setDate(event.target.value)} min={new Date().toISOString().split('T')[0]} style={{ background: 'transparent', border: 'none', color: '#fff', fontFamily: DS.F, fontSize: '0.85rem', flex: 1, outline: 'none', colorScheme: 'dark' }} />
-                  </div>
-                </div>
-              </div>
-
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={handleSearch} data-testid="find-ride-search" style={{ width: '100%', height: 52, borderRadius: r(14), border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                {loading ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }} style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%' }} /> : <Search size={18} />}
-                {loading ? t.searching : 'Search this route'}
-              </motion.button>
-
-              <div style={{ marginTop: 14, background: DS.card2, borderRadius: r(14), padding: 12, border: `1px solid ${DS.border}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
-                  <div>
-                    <p style={{ color: DS.muted, fontSize: '0.72rem', fontWeight: 700, margin: '0 0 4px' }}>Corridor preview</p>
-                    <p style={{ color: DS.sub, fontSize: '0.8rem', margin: 0 }}>
-                      {selectedSignal
-                        ? `This lane is live now. Wasel sees ${selectedSignal.liveSearches} searches, ${selectedSignal.liveBookings} bookings, and ${selectedSignal.activeDemandAlerts} active alerts.`
-                        : 'Read the lane first, then book with a clearer view of price, timing, and corridor demand.'}
-                    </p>
-                  </div>
-                  <span style={{ ...pill(DS.green), fontSize: '0.72rem' }}>
-                    {selectedSignal ? `${selectedSignal.forecastDemandScore}/100 forecast` : corridorPlan?.density ?? 'steady density'}
-                  </span>
-                </div>
-                <MapWrapper mode="static" center={midpoint(searchFromCoord, searchToCoord)} pickupLocation={searchFromCoord} dropoffLocation={searchToCoord} height={180} showMosques={false} showRadars={false} />
-              </div>
-
-              {searchError && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: `${DS.gold}12`, border: `1px solid ${DS.gold}30`, borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}><Shield size={16} color={DS.gold} /><span>{searchError}</span></div>}
-              {bookingMessage && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: 'rgba(0,200,117,0.10)', border: '1px solid rgba(0,200,117,0.28)', borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}><CheckCircle2 size={16} color={DS.green} /><span>{bookingMessage}</span></div>}
-              {retentionMessage && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}30`, borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}><Sparkles size={16} color={DS.cyan} /><span>{retentionMessage}</span></div>}
-
-              <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginTop: 14 }}>
-                {[
-                  {
-                    label: 'Live departures',
-                    value: selectedSignal ? `${selectedSignal.activeSupply} live departures` : routeReadinessLabel,
-                    sub: selectedSignal ? `${selectedSignal.liveBookings} bookings and ${selectedSignal.activeDemandAlerts} active alerts` : `${corridorRides.length} live departures`,
-                    tone: DS.cyan,
-                  },
-                  {
-                    label: 'Shared price now',
-                    value: selectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : '--',
-                    sub: selectedPriceQuote ? `${selectedPriceQuote.discountJod} JOD saved via ${selectedPriceQuote.explanation}` : 'Cost sharing unlocks the best price',
-                    tone: DS.green,
-                  },
-                  {
-                    label: 'Next wave',
-                    value: selectedSignal?.nextWaveWindow ?? corridorPlan?.autoGroupWindow ?? 'Grouping begins when demand clusters',
-                    sub: selectedSignal?.recommendedPickupPoint ?? corridorPlan?.pickupPoints[0] ?? 'Pickup points appear once a corridor is selected',
-                    tone: DS.gold,
-                  },
-                  {
-                    label: 'Route confidence',
-                    value: selectedSignal ? `${selectedSignal.routeOwnershipScore}/100` : corridorPlan?.routeMoat ?? 'Route data compounds on every search',
-                    sub: selectedSignal ? selectedSignal.productionSources.slice(0, 2).join(' | ') : `Demand alerts: ${demandStats.active}`,
-                    tone: DS.cyan,
-                  },
-                ].map((item) => (
-                  <div key={item.label} style={{ background: DS.card2, borderRadius: r(14), padding: '14px 15px', border: `1px solid ${DS.border}` }}>
-                    <div style={{ color: DS.muted, fontSize: '0.68rem', fontWeight: 800, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
-                    <div style={{ color: item.tone, fontWeight: 800, fontSize: '0.88rem', lineHeight: 1.55 }}>{item.value}</div>
-                    <div style={{ color: DS.sub, fontSize: '0.76rem', marginTop: 6, lineHeight: 1.55 }}>{item.sub}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 22 }}>
-              <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}28`, display: 'grid', placeItems: 'center' }}>
-                    <Brain size={18} color={DS.cyan} />
-                  </div>
-                  <div>
-                    <div style={{ color: '#fff', fontWeight: 800 }}>Route brief</div>
-                    <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                      The route page should help the rider decide fast.
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gap: 10 }}>
-                  {(
-                    selectedSignal
-                      ? [
-                          selectedSignal.recommendedReason,
-                          `Best pickup is ${selectedSignal.recommendedPickupPoint}. Next strong window is ${selectedSignal.nextWaveWindow}.`,
-                          `Live sources: ${selectedSignal.productionSources.slice(0, 3).join(' | ')}.`,
-                        ]
-                      : corridorPlan?.intelligenceSignals ?? [
-                          'Start with the lane, not with a random listing.',
-                          'Read shared price and pickup timing before the rider commits.',
-                          'Use corridor demand to keep the booking cheaper than solo movement.',
-                        ]
-                  ).map((line) => (
-                    <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
-                      {line}
-                    </div>
-                  ))}
-                </div>
-                <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {(corridorPlan?.movementLayers ?? ['people', 'goods', 'services']).map((layer) => (
-                    <span key={layer} style={pill(DS.green)}>
-                      <Sparkles size={10} /> {layer}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.gold}12`, border: `1px solid ${DS.gold}28`, display: 'grid', placeItems: 'center' }}>
-                    <TrendingUp size={18} color={DS.gold} />
-                  </div>
-                  <div>
-                    <div style={{ color: '#fff', fontWeight: 800 }}>Priority corridors</div>
-                    <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                      Strong live lanes the network can fill next.
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gap: 10 }}>
-                  {featuredSignals.map((corridor) => (
-                    <button
-                      key={corridor.id}
-                      onClick={() => {
-                        setFrom(corridor.from);
-                        setTo(corridor.to);
-                        setSearched(true);
-                      }}
-                      style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                        <div>
-                          <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{corridor.label}</div>
-                          <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                            Demand {corridor.forecastDemandScore} | {corridor.priceQuote.finalPriceJod} JOD | Confidence {corridor.routeOwnershipScore}
-                          </div>
-                        </div>
-                        <span style={pill(DS.cyan)}>{corridor.pricePressure}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="sp-results-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-              <h2 style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
-                {searched
-                  ? `${from} to ${to} | ${results.length} route match${results.length !== 1 ? 'es' : ''}`
-                  : `Priority corridors | showing ${results.length} departures`}
-              </h2>
-              {selectedSignal ? (
-                <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
-                  Live lane price {selectedSignal.priceQuote.finalPriceJod} JOD | Next wave {selectedSignal.nextWaveWindow}
-                </div>
-              ) : null}
-              <div className="sp-sort-bar" style={{ display: 'flex', gap: 6 }}>
-                {([['price', t.cheapest], ['time', t.earliest], ['rating', t.topRated]] as const).map(([key, label]) => (
-                  <button key={key} onClick={() => setSort(key)} style={{ padding: '6px 14px', borderRadius: '99px', border: `1px solid ${sort === key ? DS.cyan : DS.border}`, background: sort === key ? `${DS.cyan}15` : DS.card2, color: sort === key ? DS.cyan : DS.sub, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>{label}</button>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <AnimatePresence>
-                {results.length === 0 ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: DS.card, borderRadius: r(20), padding: '60px 24px', textAlign: 'center', border: `1px solid ${DS.border}` }}>
-                    <div style={{ fontSize: '3rem', marginBottom: 16 }}>{copy.noResultsIcon}</div>
-                    <h3 style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>{t.noRidesFound}</h3>
-                    <p style={{ color: DS.sub, fontSize: '0.875rem' }}>
-                      No live corridor match appeared yet. Save the route and let Wasel Brain wake you when density is ready{selectedSignal ? ` around ${selectedSignal.nextWaveWindow}` : ''}.
-                    </p>
-                    <div className="sp-empty-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 18 }}>
-                      <button onClick={() => { setDate(''); setSearchError(null); setSearched(true); }} style={{ height: 44, borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{t.clearDateFilter}</button>
-                      <button onClick={() => nav(`/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)} style={{ height: 44, borderRadius: r(12), border: 'none', background: DS.gradG, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{t.openBusFallback}</button>
-                    </div>
-                    <button onClick={handleDemandCapture} style={{ marginTop: 10, width: '100%', height: 44, borderRadius: r(12), border: `1px solid ${DS.cyan}35`, background: `${DS.cyan}12`, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{copy.notifyMe}</button>
-                    {(waitlistMessage || demandStats.active > 0) && <div style={{ marginTop: 12, color: DS.sub, fontSize: '0.78rem', lineHeight: 1.5 }}>{waitlistMessage ?? `You currently have ${demandStats.active} active demand alert${demandStats.active === 1 ? '' : 's'}.`}</div>}
-                    {nearbyCorridors.length > 0 && <div style={{ marginTop: 20, textAlign: 'left' }}><div style={{ color: '#fff', fontWeight: 800, marginBottom: 10 }}>{t.nearbyCorridors}</div><div style={{ display: 'grid', gap: 10 }}>{nearbyCorridors.map((ride) => <button key={ride.id} onClick={() => handleOpenRide(ride)} style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}><div><div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{ride.from} to {ride.to}</div><div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>{ride.time} | {ride.driver.name}</div></div><span style={{ ...pill(ride.seatsAvailable > 0 ? DS.cyan : DS.gold) }}>{ride.seatsAvailable > 0 ? `${getMovementPriceQuote({ basePriceJod: ride.pricePerSeat, corridorId: resolveSignalForRoute(ride.from, ride.to)?.id, forecastDemandScore: resolveSignalForRoute(ride.from, ride.to)?.forecastDemandScore, membership: routeIntelligence.membership }).finalPriceJod} JOD` : 'Sold out'}</span></div></button>)}</div></div>}
-                  </motion.div>
-                ) : results.map((ride, index) => <FindRideCard key={ride.id} ride={ride} idx={index} booked={booked.has(ride.id)} signal={resolveSignalForRoute(ride.from, ride.to)} onOpen={() => handleOpenRide(ride)} />)}
-              </AnimatePresence>
-            </div>
-
-            <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginTop: 18 }}>
-              <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Recurring routes</div>
-                <div style={{ color: DS.muted, fontSize: '0.78rem', lineHeight: 1.6, marginBottom: 12 }}>
-                  Save the lanes you repeat and let Wasel warn you before the next strong commute window.
-                </div>
-                {recurringSuggestions.length > 0 ? (
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {recurringSuggestions.slice(0, 3).map((suggestion) => {
-                      const alreadySaved = Boolean(getRouteReminderForCorridor(suggestion.corridorId));
-                      return (
-                        <div key={suggestion.corridorId} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                            <div>
-                              <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{suggestion.label}</div>
-                              <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                                {suggestion.confidenceScore}/100 confidence | {suggestion.priceQuote.finalPriceJod} JOD now
-                              </div>
-                            </div>
-                            <span style={pill(DS.green)}>{suggestion.recommendedFrequency}</span>
-                          </div>
-                          <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 8 }}>{suggestion.reason}</div>
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-                            <button onClick={() => { setFrom(suggestion.from); setTo(suggestion.to); setSearched(true); }} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
-                              Search lane
-                            </button>
-                            <button onClick={() => handleSaveReminder(suggestion.corridorId)} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: 'none', background: alreadySaved ? DS.gradG : DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
-                              {alreadySaved ? 'Reminder active' : 'Save reminder'}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div style={{ color: DS.muted, fontSize: '0.8rem', lineHeight: 1.55 }}>
-                    Search and book a few more lanes and Wasel will start proposing recurring corridors automatically.
-                  </div>
-                )}
-
-                {savedReminders.length > 0 && (
-                  <div style={{ marginTop: 14, display: 'grid', gap: 8 }}>
-                    <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem' }}>Saved reminders</div>
-                    {savedReminders.slice(0, 3).map((reminder) => (
-                      <div key={reminder.id} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, padding: '11px 12px' }}>
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>{reminder.label}</div>
-                        <div style={{ color: DS.muted, fontSize: '0.73rem', marginTop: 4 }}>
-                          {formatRouteReminderSchedule(reminder)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div style={{ display: 'grid', gap: 14 }}>
-                {[{ title: t.recentSearches, items: recentSearches, empty: t.searchHelp }, { title: t.bookedTrips, items: bookedRides.map((ride) => `${ride.from} to ${ride.to} | ${ride.time} | ${ride.driver.name}`), empty: t.noTripsYet }].map((card) => (
-                  <div key={card.title} style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                    <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>{card.title}</div>
-                    {card.items.length > 0 ? <div style={{ display: 'grid', gap: 10 }}>{card.items.map((item) => <div key={item} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, padding: '11px 12px', color: '#fff', fontSize: '0.78rem' }}>{item}</div>)}</div> : <div style={{ color: DS.muted, fontSize: '0.8rem' }}>{card.empty}</div>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
+          <FindRideRideTab
+            labels={{
+              from: t.from,
+              to: t.to,
+              date: t.date,
+              searching: t.searching,
+              cheapest: t.cheapest,
+              earliest: t.earliest,
+              topRated: t.topRated,
+              noRidesFound: t.noRidesFound,
+              clearDateFilter: t.clearDateFilter,
+              openBusFallback: t.openBusFallback,
+              nearbyCorridors: t.nearbyCorridors,
+              recentSearches: t.recentSearches,
+              bookedTrips: t.bookedTrips,
+              noTripsYet: t.noTripsYet,
+            }}
+            staticCopy={{
+              noResultsIcon: copy.noResultsIcon,
+              notifyMe: copy.notifyMe,
+            }}
+            from={from}
+            to={to}
+            date={date}
+            loading={loading}
+            searched={searched}
+            sort={sort}
+            searchError={searchError}
+            bookingMessage={bookingMessage}
+            retentionMessage={retentionMessage}
+            waitlistMessage={waitlistMessage}
+            routeReadinessLabel={routeReadinessLabel}
+            corridorRidesCount={corridorRides.length}
+            demandStatsActive={demandStats.active}
+            selectedSignal={selectedSignal}
+            selectedPriceQuote={selectedPriceQuote}
+            corridorPlan={corridorPlan}
+            featuredSignals={featuredSignals}
+            results={results}
+            bookedRideIds={booked}
+            nearbyCorridors={nearbyCorridorCards}
+            recurringSuggestions={recurringSuggestions}
+            savedReminders={savedReminders}
+            savedReminderIds={savedReminderIds}
+            recentSearches={recentSearches}
+            bookedRideSummaries={bookedRideSummaries}
+            searchFromCoord={searchFromCoord}
+            searchToCoord={searchToCoord}
+            onSetFrom={setFrom}
+            onSetTo={setTo}
+            onSetDate={setDate}
+            onSearch={handleSearch}
+            onSetSort={setSort}
+            onOpenRide={handleOpenRide}
+            onFocusCorridor={handleFocusCorridor}
+            onSaveReminder={handleSaveReminder}
+            onClearDateFilter={handleClearDateFilter}
+            onOpenBusFallback={handleOpenBusFallback}
+            onDemandCapture={handleDemandCapture}
+            formatRouteReminderSchedule={formatRouteReminderSchedule}
+            resolveSignalForRide={(ride) => resolveSignalForRoute(ride.from, ride.to)}
+          />
         )}
 
         {tab === 'package' && (
