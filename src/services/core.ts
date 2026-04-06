@@ -245,6 +245,8 @@ warmUpServer().catch(() => {
 
 interface FetchWithRetryOptions extends RequestInit {
   timeout?: number;
+  priority?: 'critical' | 'high' | 'normal' | 'low';
+  deduplicationKey?: string;
 }
 
 export async function fetchWithRetry(
@@ -260,6 +262,8 @@ export async function fetchWithRetry(
   const {
     timeout = 5_000,
     signal: callerSignal,
+    priority = 'normal',
+    deduplicationKey,
     ...fetchOptions
   } = options;
 
@@ -294,6 +298,24 @@ export async function fetchWithRetry(
 
     if (!response.ok && response.status >= 500) {
       setBackendStatus(getNetworkOnline() ? 'degraded' : 'offline');
+      // Queue for retry on 5xx errors
+      try {
+        const { getOfflineQueueManager } = await import('./offlineQueue');
+        const queue = getOfflineQueueManager();
+        queue.addRequest(
+          (options.method?.toUpperCase() || 'GET') as any,
+          url,
+          {
+            body: options.body,
+            headers: options.headers as Record<string, string>,
+            priority,
+            deduplicationKey,
+            maxRetries: retries + 3,
+          }
+        );
+      } catch (e) {
+        // Offline queue not available
+      }
     }
 
     return response;
@@ -315,6 +337,27 @@ export async function fetchWithRetry(
 
     if (url.startsWith(API_URL)) {
       setEdgeFunctionAvailability(false);
+    }
+
+    // Network error - queue for later
+    if (!getNetworkOnline()) {
+      try {
+        const { getOfflineQueueManager } = await import('./offlineQueue');
+        const queue = getOfflineQueueManager();
+        queue.addRequest(
+          (options.method?.toUpperCase() || 'GET') as any,
+          url,
+          {
+            body: options.body,
+            headers: options.headers as Record<string, string>,
+            priority: priority === 'critical' ? 'critical' : priority === 'high' ? 'high' : 'normal',
+            deduplicationKey,
+            maxRetries: 5,
+          }
+        );
+      } catch (e) {
+        // Offline queue not available
+      }
     }
 
     throw error;
