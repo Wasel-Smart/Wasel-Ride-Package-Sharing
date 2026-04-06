@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { Gauge, Package, Search } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { friendlyAuthError } from '../../utils/authHelpers';
+import { buildAuthPagePath } from '../../utils/authFlow';
 import { getWaselPresenceProfile } from '../../domains/trust/waselPresence';
 import {
   LANDING_COLORS,
@@ -62,15 +66,41 @@ const LANDING_ROWS: readonly LandingRowDefinition[] = [
 
 export default function AppEntryPage() {
   const { user } = useLocalAuth();
+  const { signInWithGoogle, signInWithFacebook } = useAuth();
   const { language } = useLanguage();
   const navigate = useIframeSafeNavigate();
+  const [authError, setAuthError] = useState('');
+  const [oauthProvider, setOauthProvider] = useState<'google' | 'facebook' | null>(null);
   const ar = language === 'ar';
   const profile = getWaselPresenceProfile();
+  const defaultReturnTo = '/app/find-ride';
 
   const buildPath = (path: string, requiresAuth = false) =>
     !requiresAuth || user
       ? path
-      : `/app/auth?returnTo=${encodeURIComponent(path)}`;
+      : buildAuthPagePath('signin', path);
+
+  const handleOAuth = async (provider: 'google' | 'facebook') => {
+    setAuthError('');
+    setOauthProvider(provider);
+
+    const result =
+      provider === 'google'
+        ? await signInWithGoogle(defaultReturnTo)
+        : await signInWithFacebook(defaultReturnTo);
+
+    if (result.error) {
+      setAuthError(
+        friendlyAuthError(
+          result.error,
+          provider === 'google'
+            ? 'Google sign-in failed.'
+            : 'Facebook sign-in failed.',
+        ),
+      );
+      setOauthProvider(null);
+    }
+  };
 
   const primaryActions: readonly LandingActionCard[] = [
     {
@@ -138,8 +168,12 @@ export default function AppEntryPage() {
       : 'Move from corridor insight to action without changing context.',
   ] as const;
 
-  const openAppLabel = user ? (ar ? 'افتح التطبيق' : 'Open app') : (ar ? 'ابدأ الآن' : 'Get started');
-  const primaryAppPath = buildPath('/app/find-ride');
+  const openAppLabel = user
+    ? (ar ? 'افتح التطبيق' : 'Open app')
+    : (ar ? 'تابع بالإيميل' : 'Continue with email');
+  const primaryAppPath = user
+    ? '/app/find-ride'
+    : buildAuthPagePath('signin', defaultReturnTo);
   const supportLine = profile.supportPhoneDisplay || profile.supportEmail || 'Wasel';
   const businessAddress = ar ? profile.businessAddressAr : profile.businessAddress;
 
@@ -154,12 +188,19 @@ export default function AppEntryPage() {
               ar={ar}
               openAppLabel={openAppLabel}
               primaryAppPath={primaryAppPath}
+              emailAuthPath={buildAuthPagePath('signin', defaultReturnTo)}
+              signupAuthPath={buildAuthPagePath('signup', defaultReturnTo)}
               mobilityOsPath="/app/mobility-os"
               myTripsPath={buildPath('/app/my-trips', true)}
               supportLine={supportLine}
               businessAddress={businessAddress}
               heroBullets={heroBullets}
               primaryActions={primaryActions}
+              authError={authError}
+              oauthLoadingProvider={oauthProvider}
+              showQuickAuth={!user}
+              onGoogleAuth={() => { void handleOAuth('google'); }}
+              onFacebookAuth={() => { void handleOAuth('facebook'); }}
               onNavigate={navigate}
             />
           ),

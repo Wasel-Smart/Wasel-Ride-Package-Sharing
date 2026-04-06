@@ -1,6 +1,10 @@
 import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, ShieldCheck, type LucideIcon } from 'lucide-react';
+import { ArrowRight, Mail, ShieldCheck, type LucideIcon } from 'lucide-react';
+import {
+  AUTH_PROVIDER_META,
+  AuthProviderBadge,
+} from '../../components/auth/AuthProviderBadge';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import {
   WaselBusinessFooter,
@@ -35,11 +39,13 @@ export const LANDING_RESPONSIVE_STYLES = `
   @media (max-width: 840px) {
     .landing-action-grid { grid-template-columns: 1fr !important; }
     .landing-signal-grid { grid-template-columns: 1fr !important; }
+    .landing-auth-grid { grid-template-columns: 1fr !important; }
   }
   @media (max-width: 640px) {
     .landing-header-row { flex-direction: column !important; align-items: flex-start !important; }
     .landing-cta-row { flex-direction: column !important; align-items: stretch !important; }
     .landing-map-shell { padding: 12px !important; }
+    .landing-auth-meta { flex-direction: column !important; align-items: flex-start !important; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -85,12 +91,19 @@ type LandingHeroSectionProps = {
   ar: boolean;
   openAppLabel: string;
   primaryAppPath: string;
+  emailAuthPath: string;
+  signupAuthPath: string;
   mobilityOsPath: string;
   myTripsPath: string;
   supportLine: string;
   businessAddress: string;
   heroBullets: readonly string[];
   primaryActions: readonly LandingActionCard[];
+  authError?: string;
+  oauthLoadingProvider?: 'google' | 'facebook' | null;
+  showQuickAuth?: boolean;
+  onGoogleAuth?: () => void;
+  onFacebookAuth?: () => void;
   onNavigate: (path: string) => void;
 };
 
@@ -199,12 +212,19 @@ export function LandingHeroSection({
   ar,
   openAppLabel,
   primaryAppPath,
+  emailAuthPath,
+  signupAuthPath,
   mobilityOsPath,
   myTripsPath,
   supportLine,
   businessAddress,
   heroBullets,
   primaryActions,
+  authError,
+  oauthLoadingProvider,
+  showQuickAuth = false,
+  onGoogleAuth,
+  onFacebookAuth,
   onNavigate,
 }: LandingHeroSectionProps) {
   return (
@@ -305,29 +325,258 @@ export function LandingHeroSection({
         ))}
       </div>
 
-      <div className="landing-cta-row" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button
-          type="button"
-          onClick={() => onNavigate(primaryAppPath)}
+      {showQuickAuth && onGoogleAuth && onFacebookAuth ? (
+        <div
           style={{
-            height: 50,
-            padding: '0 22px',
-            borderRadius: 18,
-            border: 'none',
-            background: 'linear-gradient(135deg, #17C7EA, #1E7CFF)',
-            color: '#F8FBFF',
-            fontWeight: 900,
-            fontSize: '0.95rem',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 10,
-            boxShadow: '0 18px 44px rgba(30,124,255,0.28)',
+            display: 'grid',
+            gap: 14,
+            padding: '20px',
+            borderRadius: 26,
+            background:
+              'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(85,233,255,0.04))',
+            border: `1px solid ${LANDING_COLORS.borderStrong}`,
+            boxShadow: '0 22px 60px rgba(0,0,0,0.2)',
           }}
         >
-          {openAppLabel}
-          <ArrowRight size={16} />
-        </button>
+          <div
+            className="landing-auth-meta"
+            style={{
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'space-between',
+              gap: 16,
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ display: 'grid', gap: 8 }}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  width: 'fit-content',
+                  padding: '6px 10px',
+                  borderRadius: 999,
+                  background: 'rgba(85,233,255,0.08)',
+                  border: `1px solid ${LANDING_COLORS.borderStrong}`,
+                  color: LANDING_COLORS.cyan,
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {ar ? 'دخول سريع' : 'Fast access'}
+              </div>
+              <div>
+                <h2
+                  style={{
+                    margin: '0 0 6px',
+                    fontSize: '1.45rem',
+                    lineHeight: 1.1,
+                    letterSpacing: '-0.04em',
+                    fontFamily: LANDING_DISPLAY,
+                  }}
+                >
+                  {ar ? 'ابدأ Wasel بخطوة واحدة.' : 'Start Wasel in one quick step.'}
+                </h2>
+                <p
+                  style={{
+                    margin: 0,
+                    color: LANDING_COLORS.muted,
+                    fontSize: '0.92rem',
+                    lineHeight: 1.7,
+                    maxWidth: 560,
+                  }}
+                >
+                  {ar
+                    ? 'Google وFacebook للدخول السريع، والإيميل لمسار تسجيل بسيط وواضح.'
+                    : 'Use Google or Facebook for the fastest start, or take the simple email path for sign in and sign up.'}
+                </p>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 14px',
+                borderRadius: 18,
+                background: 'rgba(255,255,255,0.04)',
+                border: `1px solid ${LANDING_COLORS.border}`,
+                color: LANDING_COLORS.text,
+                fontSize: '0.82rem',
+                fontWeight: 700,
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: LANDING_COLORS.green,
+                  boxShadow: `0 0 12px ${LANDING_COLORS.green}`,
+                }}
+              />
+              {ar ? 'أسرع طريق للحجز والمتابعة' : 'Fastest path into booking and tracking'}
+            </div>
+          </div>
+
+          {authError ? (
+            <div
+              role="alert"
+              style={{
+                padding: '12px 14px',
+                borderRadius: 16,
+                background: 'rgba(255,68,85,0.12)',
+                border: '1px solid rgba(255,68,85,0.26)',
+                color: '#FF9BA4',
+                fontSize: '0.86rem',
+                lineHeight: 1.6,
+              }}
+            >
+              {authError}
+            </div>
+          ) : null}
+
+          <div
+            className="landing-auth-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gap: 12,
+            }}
+          >
+            {(['google', 'facebook'] as const).map((provider) => {
+              const meta = AUTH_PROVIDER_META[provider];
+              const loading = oauthLoadingProvider === provider;
+
+              return (
+                <button
+                  key={provider}
+                  type="button"
+                  onClick={provider === 'google' ? onGoogleAuth : onFacebookAuth}
+                  disabled={Boolean(oauthLoadingProvider)}
+                  style={{
+                    minHeight: 56,
+                    borderRadius: 20,
+                    border: `1px solid ${meta.accent}40`,
+                    background: `${meta.accent}12`,
+                    color: LANDING_COLORS.text,
+                    padding: '0 16px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 10,
+                    fontSize: '0.92rem',
+                    fontWeight: 800,
+                    cursor: oauthLoadingProvider ? 'not-allowed' : 'pointer',
+                    opacity: oauthLoadingProvider && !loading ? 0.55 : 1,
+                  }}
+                >
+                  <AuthProviderBadge provider={provider} size={20} />
+                  <span>
+                    {loading
+                      ? ar
+                        ? `جاري ربط ${meta.label}...`
+                        : `Connecting ${meta.label}...`
+                      : ar
+                        ? `تابع باستخدام ${meta.label}`
+                        : `Continue with ${meta.label}`}
+                  </span>
+                </button>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={() => onNavigate(emailAuthPath)}
+              disabled={Boolean(oauthLoadingProvider)}
+              style={{
+                minHeight: 56,
+                borderRadius: 20,
+                border: `1px solid ${LANDING_COLORS.borderStrong}`,
+                background: 'rgba(255,255,255,0.04)',
+                color: LANDING_COLORS.text,
+                padding: '0 16px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 10,
+                fontSize: '0.92rem',
+                fontWeight: 800,
+                cursor: oauthLoadingProvider ? 'not-allowed' : 'pointer',
+                opacity: oauthLoadingProvider ? 0.55 : 1,
+              }}
+            >
+              <Mail size={18} />
+              <span>{ar ? 'تابع بالإيميل' : 'Continue with email'}</span>
+            </button>
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              flexWrap: 'wrap',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => onNavigate(signupAuthPath)}
+              style={{
+                minHeight: 44,
+                padding: '0 16px',
+                borderRadius: 16,
+                border: `1px solid ${LANDING_COLORS.border}`,
+                background: 'transparent',
+                color: LANDING_COLORS.soft,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                fontSize: '0.88rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {ar ? 'أنشئ حسابا' : 'Create an account'}
+              <ArrowRight size={14} />
+            </button>
+
+            <span style={{ color: LANDING_COLORS.soft, fontSize: '0.84rem', lineHeight: 1.6 }}>
+              {ar
+                ? 'الدخول الاجتماعي والإيميل يوصلك إلى نفس تجربة Wasel.'
+                : 'Social sign-in and email both bring users into the same Wasel experience.'}
+            </span>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="landing-cta-row" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        {!showQuickAuth ? (
+          <button
+            type="button"
+            onClick={() => onNavigate(primaryAppPath)}
+            style={{
+              height: 50,
+              padding: '0 22px',
+              borderRadius: 18,
+              border: 'none',
+              background: 'linear-gradient(135deg, #17C7EA, #1E7CFF)',
+              color: '#F8FBFF',
+              fontWeight: 900,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              boxShadow: '0 18px 44px rgba(30,124,255,0.28)',
+            }}
+          >
+            {openAppLabel}
+            <ArrowRight size={16} />
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => onNavigate(mobilityOsPath)}

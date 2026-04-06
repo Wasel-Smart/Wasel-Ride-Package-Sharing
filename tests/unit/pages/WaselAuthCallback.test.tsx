@@ -25,6 +25,7 @@ import WaselAuthCallback from '@/pages/WaselAuthCallback';
 describe('WaselAuthCallback', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     mockInitialize.mockResolvedValue({ error: null });
     mockOnAuthStateChange.mockReturnValue({
       data: {
@@ -37,13 +38,16 @@ describe('WaselAuthCallback', () => {
   });
 
   it('redirects into the app when opened in the same tab', async () => {
+    window.localStorage.setItem('wasel_auth_return_to', '/app/my-trips');
+
     render(<WaselAuthCallback />);
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/app/find-ride', { replace: true });
+      expect(mockNavigate).toHaveBeenCalledWith('/app/my-trips', { replace: true });
     });
 
     expect(screen.getByText(/Finalizing authentication/i)).toBeInTheDocument();
+    expect(window.localStorage.getItem('wasel_auth_return_to')).toBeNull();
   });
 
   it('shows an error when auth completion fails', async () => {

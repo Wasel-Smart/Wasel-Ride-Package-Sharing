@@ -2,6 +2,7 @@ import type { AuthChangeEvent, AuthError, Session, SupabaseClient, User } from '
 import type { WaselUser } from './LocalAuth';
 import { authAPI } from '../services/auth';
 import { getAuthCallbackUrl } from '../utils/env';
+import { persistAuthReturnTo } from '../utils/authFlow';
 
 export type Profile = {
   id: string;
@@ -75,12 +76,17 @@ export function normalizeOperationError(
 export async function signInWithOAuthProvider(
   client: SupabaseClient | null,
   provider: 'google' | 'facebook',
+  returnTo?: string,
 ): Promise<{ error: AuthOperationError }> {
   if (!client) {
     return { error: new Error('Backend not configured') };
   }
 
   try {
+    if (returnTo) {
+      persistAuthReturnTo(returnTo);
+    }
+
     const { error } = await client.auth.signInWithOAuth({
       provider,
       options: {

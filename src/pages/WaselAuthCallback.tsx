@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { AuthChangeEvent } from '@supabase/supabase-js';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
+import { consumePersistedAuthReturnTo } from '../utils/authFlow';
 import { supabase } from '../utils/supabase/client';
 
 type CallbackState = 'loading' | 'closing' | 'redirecting' | 'recovery' | 'error';
@@ -118,7 +119,7 @@ export default function WaselAuthCallback() {
 
         setState('redirecting');
         setMessage('Sign-in complete. Redirecting...');
-        navigate('/app/find-ride', { replace: true });
+        navigate(consumePersistedAuthReturnTo('/app/find-ride'), { replace: true });
       } catch (error) {
         if (!active) return;
         setState('error');

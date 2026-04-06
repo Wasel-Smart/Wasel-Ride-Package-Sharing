@@ -25,8 +25,8 @@ interface AuthContextType {
   isBackendConnected: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: AuthOperationError }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthOperationError }>;
-  signInWithGoogle: () => Promise<{ error: AuthOperationError }>;
-  signInWithFacebook: () => Promise<{ error: AuthOperationError }>;
+  signInWithGoogle: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
+  signInWithFacebook: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: AuthOperationError }>;
   refreshProfile: () => Promise<void>;
@@ -203,12 +203,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [localAuth]);
 
-  const signInWithGoogle = useCallback(async (): Promise<{ error: AuthOperationError }> => {
-    return signInWithOAuthProvider(supabase, 'google');
+  const signInWithGoogle = useCallback(async (returnTo?: string): Promise<{ error: AuthOperationError }> => {
+    return signInWithOAuthProvider(supabase, 'google', returnTo);
   }, []);
 
-  const signInWithFacebook = useCallback(async (): Promise<{ error: AuthOperationError }> => {
-    return signInWithOAuthProvider(supabase, 'facebook');
+  const signInWithFacebook = useCallback(async (returnTo?: string): Promise<{ error: AuthOperationError }> => {
+    return signInWithOAuthProvider(supabase, 'facebook', returnTo);
   }, []);
 
   const signOut = useCallback(async () => {
