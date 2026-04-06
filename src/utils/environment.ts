@@ -4,6 +4,7 @@
  */
 
 import { ConfigError } from './errors';
+import { publicAnonKey, publicSupabaseUrl } from './supabase/info';
 
 /**
  * Environment configuration interface
@@ -28,8 +29,8 @@ export function getEnvironmentConfig(): EnvironmentConfig {
     mode,
     isDemoMode,
     enableDemoData: isDemoMode,
-    supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
-    supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+    supabaseUrl: publicSupabaseUrl || '',
+    supabaseKey: publicAnonKey || '',
     appUrl: import.meta.env.VITE_APP_URL || window.location.origin,
   };
 }
