@@ -11,9 +11,14 @@ export type {
   RawDemandAlert,
   RawGrowthEvent,
   RawNotification,
+  RawAutomationJob,
   RawPackage,
+  RawPricingSnapshot,
   RawProfile,
   RawReferral,
+  RawRouteReminder,
+  RawSupportTicket,
+  RawSupportTicketEvent,
   RawVerificationRecord,
   TripRow,
   UserContext,
@@ -48,6 +53,17 @@ export {
   getDirectDemandAlerts,
   getDirectGrowthAnalytics,
 } from './growth';
+
+export {
+  createDirectPricingSnapshot,
+  createDirectSupportTicket,
+  enqueueDirectAutomationJob,
+  getDirectRouteReminders,
+  getDirectSupportTickets,
+  markDirectRouteReminderDelivered,
+  updateDirectSupportTicketStatus,
+  upsertDirectRouteReminder,
+} from './automation';
 
 export {
   processReferralConversionForPassenger,

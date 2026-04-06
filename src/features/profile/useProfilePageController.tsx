@@ -7,9 +7,9 @@ import {
   normalizeProfilePhone,
 } from './profileUtils';
 
-export const PROFILE_BG = '#040C18';
-export const PROFILE_BORDER = 'rgba(255,255,255,0.09)';
-export const PROFILE_CYAN = '#00C8E8';
+export const PROFILE_BG = '#061726';
+export const PROFILE_BORDER = 'rgba(73,190,242,0.14)';
+export const PROFILE_CYAN = '#16C7F2';
 export const PROFILE_FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 export type SavingField = 'name' | 'phone' | 'photo' | null;

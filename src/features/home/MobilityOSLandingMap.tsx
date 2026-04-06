@@ -1,283 +1,744 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Clock3, Gauge, Package, Route, Sparkles } from 'lucide-react';
+import { ArrowRight, Gauge, Route, Sparkles } from 'lucide-react';
+import { WaselMap, type WaselMapMarker, type WaselMapRoute } from '../../components/WaselMap';
+import { JORDAN_MOBILITY_NETWORK } from '../../config/jordan-mobility-network';
+import {
+  buildDriverRoutePlan,
+  getFeaturedCorridors,
+  type CorridorOpportunity,
+} from '../../config/wasel-movement-network';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { trackGrowthEvent } from '../../services/growthEngine';
 
-type PeriodId = 'morning' | 'midday' | 'evening' | 'night';
-type City = { id: number; name: string; lat: number; lon: number; hub?: boolean };
-type Corridor = { id: string; from: number; to: number; distanceKm: number; passengerBase: number; packageBase: number; importance: number };
-type CorridorState = Corridor & { passengerFlow: number; packageFlow: number; totalFlow: number; congestion: number; speedKph: number; score: number };
+type PeriodId = 'morning' | 'midday' | 'evening';
+type PressureId = 'Calm' | 'Steady' | 'Busy';
 
-const UI = { text: '#EFF6FF', muted: 'rgba(239,246,255,0.72)', soft: 'rgba(239,246,255,0.52)', border: 'rgba(255,255,255,0.08)', borderStrong: 'rgba(85,233,255,0.18)', cyan: '#55E9FF', blue: '#1EA1FF', gold: '#F5B11E', green: '#33E85F', coral: '#FF8A5B' } as const;
-const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+type CorridorViewModel = {
+  id: string;
+  from: string;
+  fromAr: string;
+  to: string;
+  toAr: string;
+  distanceKm: number;
+  score: number;
+  speedKph: number;
+  pressure: PressureId;
+  center: { lat: number; lng: number };
+  route: readonly WaselMapRoute[];
+  markers: readonly WaselMapMarker[];
+  demandScore: number;
+  savingsPercent: number;
+  attachRatePercent: number;
+  fillTargetSeats: number;
+  recommendedSeatPriceJod: number;
+  packageBonusJod: number;
+  intelligenceSignal: string;
+  pickupSummary: string;
+};
+
+const UI = {
+  text: '#EAF7FF',
+  muted: 'rgba(234,247,255,0.72)',
+  soft: 'rgba(153,184,210,0.58)',
+  border: 'rgba(73,190,242,0.14)',
+  borderStrong: 'rgba(73,190,242,0.24)',
+  cyan: '#16C7F2',
+  gold: '#C7FF1A',
+  green: '#60C536',
+  blue: '#0A74C9',
+  panel: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02))',
+} as const;
+
 const PERIODS = [
-  { id: 'morning' as const, label: 'Morning rush', time: '07:30', detail: 'Commuters dominate the northern and capital corridors.', passengerBoost: 1.32, packageBoost: 0.86, congestionBias: 0.24, top: '#09182A', bottom: '#06111E', glow: 'rgba(255,186,104,0.16)' },
-  { id: 'midday' as const, label: 'Midday flow', time: '13:00', detail: 'Package movement stays active while rider pressure softens.', passengerBoost: 0.94, packageBoost: 1.18, congestionBias: 0.12, top: '#07192A', bottom: '#061320', glow: 'rgba(85,233,255,0.14)' },
-  { id: 'evening' as const, label: 'Evening rush', time: '18:15', detail: 'Return trips intensify around Amman and Zarqa.', passengerBoost: 1.26, packageBoost: 0.92, congestionBias: 0.22, top: '#121523', bottom: '#08111C', glow: 'rgba(255,138,91,0.16)' },
-  { id: 'night' as const, label: 'Night calm', time: '22:30', detail: 'The network cools and calmer routes are easier to predict.', passengerBoost: 0.56, packageBoost: 0.72, congestionBias: -0.02, top: '#040D19', bottom: '#020814', glow: 'rgba(85,233,255,0.10)' },
+  {
+    id: 'morning' as const,
+    label: 'Morning',
+    labelAr: 'الصباح',
+    time: '07:30',
+    note: 'Commuter pressure is strongest and group departures tighten fastest.',
+    noteAr: 'ضغط التنقل اليومي يبلغ ذروته وتتشكل الرحلات المشتركة بشكل أسرع.',
+    demandDelta: 6,
+    speedDelta: -6,
+  },
+  {
+    id: 'midday' as const,
+    label: 'Midday',
+    labelAr: 'الظهيرة',
+    time: '13:00',
+    note: 'Rider and parcel movement balance out with smoother timing.',
+    noteAr: 'حركة الركاب والطرود تصبح أكثر توازنا مع توقيت أكثر هدوءا.',
+    demandDelta: -4,
+    speedDelta: 5,
+  },
+  {
+    id: 'evening' as const,
+    label: 'Evening',
+    labelAr: 'المساء',
+    time: '18:15',
+    note: 'Return movement intensifies and the strongest corridors glow again.',
+    noteAr: 'حركة العودة تشتد وتعود الممرات الأقوى إلى الواجهة من جديد.',
+    demandDelta: 3,
+    speedDelta: -3,
+  },
 ] as const;
-const CITIES: readonly City[] = [
-  { id: 0, name: 'Amman', lat: 31.9454, lon: 35.9284, hub: true }, { id: 1, name: 'Aqaba', lat: 29.532, lon: 35.0063, hub: true }, { id: 2, name: 'Irbid', lat: 32.5556, lon: 35.85, hub: true }, { id: 3, name: 'Zarqa', lat: 32.0728, lon: 36.088, hub: true }, { id: 4, name: 'Mafraq', lat: 32.3406, lon: 36.208 }, { id: 5, name: 'Jerash', lat: 32.2803, lon: 35.8993 }, { id: 6, name: 'Ajloun', lat: 32.3326, lon: 35.7519 }, { id: 7, name: 'Madaba', lat: 31.7197, lon: 35.7936 }, { id: 8, name: 'Karak', lat: 31.1853, lon: 35.7048 }, { id: 9, name: 'Tafila', lat: 30.8375, lon: 35.6042 }, { id: 10, name: "Ma'an", lat: 30.1962, lon: 35.736 }, { id: 11, name: 'Salt', lat: 32.0392, lon: 35.7272 },
-] as const;
-const CORRIDORS: readonly Corridor[] = [
-  { id: 'amman-zarqa', from: 0, to: 3, distanceKm: 25, passengerBase: 980, packageBase: 180, importance: 1.1 }, { id: 'amman-irbid', from: 0, to: 2, distanceKm: 85, passengerBase: 860, packageBase: 220, importance: 1.05 }, { id: 'amman-aqaba', from: 0, to: 1, distanceKm: 335, passengerBase: 620, packageBase: 310, importance: 1.02 }, { id: 'irbid-zarqa', from: 2, to: 3, distanceKm: 79, passengerBase: 690, packageBase: 170, importance: 0.94 }, { id: 'amman-jerash', from: 0, to: 5, distanceKm: 48, passengerBase: 520, packageBase: 110, importance: 0.76 }, { id: 'amman-madaba', from: 0, to: 7, distanceKm: 33, passengerBase: 470, packageBase: 120, importance: 0.72 }, { id: 'madaba-karak', from: 7, to: 8, distanceKm: 111, passengerBase: 340, packageBase: 160, importance: 0.74 }, { id: 'karak-tafila', from: 8, to: 9, distanceKm: 74, passengerBase: 220, packageBase: 120, importance: 0.58 }, { id: 'tafila-maan', from: 9, to: 10, distanceKm: 89, passengerBase: 190, packageBase: 110, importance: 0.52 }, { id: 'maan-aqaba', from: 10, to: 1, distanceKm: 114, passengerBase: 280, packageBase: 180, importance: 0.62 }, { id: 'zarqa-mafraq', from: 3, to: 4, distanceKm: 55, passengerBase: 410, packageBase: 150, importance: 0.7 }, { id: 'irbid-ajloun', from: 2, to: 6, distanceKm: 30, passengerBase: 310, packageBase: 90, importance: 0.56 },
-] as const;
-const BORDER = [{ lat: 33.37, lon: 35.55 }, { lat: 32.58, lon: 36.42 }, { lat: 31.24, lon: 37.12 }, { lat: 29.62, lon: 36.22 }, { lat: 29.2, lon: 35.03 }, { lat: 31.2, lon: 35.5 }, { lat: 32.56, lon: 35.55 }] as const;
-const bounds = CITIES.reduce((acc, city) => ({ minLat: Math.min(acc.minLat, city.lat), maxLat: Math.max(acc.maxLat, city.lat), minLon: Math.min(acc.minLon, city.lon), maxLon: Math.max(acc.maxLon, city.lon) }), { minLat: Infinity, maxLat: -Infinity, minLon: Infinity, maxLon: -Infinity });
 
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
-const mercator = (lat: number) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
-const pressureLabel = (congestion: number) => congestion >= 0.78 ? 'Rush' : congestion >= 0.58 ? 'Busy' : congestion >= 0.36 ? 'Steady' : 'Calm';
-const corridorName = (corridor: CorridorState) => `${CITIES[corridor.from].name} -> ${CITIES[corridor.to].name}`;
-const insightFor = (corridor: CorridorState, period: (typeof PERIODS)[number]) => corridor.congestion >= 0.74 ? `Peak ${period.label.toLowerCase()} pressure makes this lane strongest for dense ride matching.` : corridor.packageFlow > corridor.passengerFlow * 0.33 ? 'Package demand is attaching well here, so mixed movement stays efficient.' : corridor.speedKph >= 88 ? 'This corridor is moving cleanly, making it a strong low-friction option.' : 'Balanced demand and manageable pressure make this corridor reliable.';
+const TRANSLATIONS = {
+  bestCorridor: { en: 'Best corridor', ar: 'أفضل ممر' },
+  pressure: { en: 'Pressure', ar: 'الضغط' },
+  savings: { en: 'Savings', ar: 'التوفير' },
+  speed: { en: 'Speed', ar: 'السرعة' },
+  distance: { en: 'Distance', ar: 'المسافة' },
+  routeScore: { en: 'Route score', ar: 'درجة المسار' },
+  seatsToFill: { en: 'Seats to fill', ar: 'المقاعد المستهدفة' },
+  selectedRoute: { en: 'Selected route', ar: 'المسار المختار' },
+  selectedCorridor: { en: 'Selected corridor', ar: 'الممر المختار' },
+  liveScore: { en: 'Live score', ar: 'الدرجة الحية' },
+  demandRead: { en: 'Demand read', ar: 'قراءة الطلب' },
+  packageLift: { en: 'Package lift', ar: 'دعم الطرود' },
+  pickupSignal: { en: 'Pickup signal', ar: 'إشارة الالتقاط' },
+  mapTitle: { en: 'Mobility OS live map', ar: 'خريطة Mobility OS الحية' },
+  mapBody: {
+    en: 'Featured corridors now reflect Wasel route intelligence, price planning, and demand signals from the network model.',
+    ar: 'الممرات المعروضة الآن تستند إلى ذكاء المسارات والتسعير وإشارات الطلب من نموذج شبكة Wasel.',
+  },
+  mapOverlay: {
+    en: 'The live map mirrors the same corridor intelligence used to open search and pricing flows.',
+    ar: 'الخريطة الحية تعرض نفس ذكاء الممرات المستخدم لفتح البحث والتسعير داخل التطبيق.',
+  },
+  exploreCorridor: { en: 'Explore corridor', ar: 'استكشف الممر' },
+  openFullMap: { en: 'Open full map', ar: 'افتح الخريطة الكاملة' },
+  networkReady: { en: 'Network ready', ar: 'جاهز للشبكة' },
+  routeEconomics: { en: 'Route economics', ar: 'اقتصاديات المسار' },
+  corridorRanking: { en: 'Corridor ranking', ar: 'ترتيب الممرات' },
+  to: { en: 'to', ar: 'إلى' },
+  kmh: { en: 'km/h', ar: 'كم/س' },
+  km: { en: 'km', ar: 'كم' },
+  jod: { en: 'JOD', ar: 'د.أ' },
+  savingsValue: { en: 'saved vs solo', ar: 'توفير مقابل رحلة فردية' },
+  mapLoading: {
+    en: 'Preparing the live corridor surface...',
+    ar: 'يتم تجهيز سطح الممرات الحية...',
+  },
+} as const;
 
-function project(lat: number, lon: number, width: number, height: number) {
-  const px = width * 0.08;
-  const py = height * 0.08;
-  const x = px + ((lon - bounds.minLon) / (bounds.maxLon - bounds.minLon || 1)) * (width - px * 2);
-  const minY = mercator(bounds.minLat);
-  const maxY = mercator(bounds.maxLat);
-  const y = py + (1 - (mercator(lat) - minY) / (maxY - minY || 1)) * (height - py * 2);
-  return { x, y };
+function t(ar: boolean, copy: { en: string; ar: string }) {
+  return ar ? copy.ar : copy.en;
 }
 
-function controlPoint(from: { x: number; y: number }, to: { x: number; y: number }, seed: number, weight: number) {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  const length = Math.max(1, Math.hypot(dx, dy));
-  const midpointX = (from.x + to.x) / 2;
-  const midpointY = (from.y + to.y) / 2;
-  const offset = (16 + weight * 15 + (seed % 4) * 3) * (seed % 2 === 0 ? 1 : -1);
-  return { x: midpointX - (dy / length) * offset, y: midpointY + (dx / length) * offset };
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }
 
-function pointOnCurve(start: { x: number; y: number }, control: { x: number; y: number }, end: { x: number; y: number }, t: number) {
-  const mt = 1 - t;
-  return { x: mt * mt * start.x + 2 * mt * t * control.x + t * t * end.x, y: mt * mt * start.y + 2 * mt * t * control.y + t * t * end.y };
+function getPressure(demandScore: number): PressureId {
+  if (demandScore >= 92) return 'Busy';
+  if (demandScore >= 78) return 'Steady';
+  return 'Calm';
 }
 
-export function MobilityOSLandingMap() {
+function getPressureLabel(ar: boolean, pressure: PressureId) {
+  if (ar) {
+    if (pressure === 'Busy') return 'مرتفع';
+    if (pressure === 'Steady') return 'متوازن';
+    return 'هادئ';
+  }
+  return pressure;
+}
+
+function buildRouteGeometry(opportunity: CorridorOpportunity) {
+  const routeMeta = JORDAN_MOBILITY_NETWORK.find((route) => route.id === opportunity.id);
+  const origin = routeMeta?.coordinates.origin ?? { lat: 31.9454, lng: 35.9284 };
+  const destination = routeMeta?.coordinates.destination ?? { lat: 32.0728, lng: 36.0882 };
+  const latDelta = destination.lat - origin.lat;
+  const lngDelta = destination.lng - origin.lng;
+  const curveBias = opportunity.distanceKm > 160 ? 0.18 : opportunity.distanceKm > 80 ? 0.12 : 0.08;
+
+  return {
+    origin,
+    destination,
+    fromAr: routeMeta?.originAr ?? opportunity.from,
+    toAr: routeMeta?.destinationAr ?? opportunity.to,
+    mid: {
+      lat: origin.lat + latDelta * 0.5 + Math.abs(lngDelta) * curveBias,
+      lng: origin.lng + lngDelta * 0.5 - Math.abs(latDelta) * curveBias * 0.6,
+    },
+  };
+}
+
+function buildCorridorViewModels(periodId: PeriodId) {
+  const period = PERIODS.find((item) => item.id === periodId) ?? PERIODS[0];
+
+  return getFeaturedCorridors(5).map((opportunity) => {
+    const routePlan = buildDriverRoutePlan(opportunity.from, opportunity.to, opportunity.fillTargetSeats);
+    const geometry = buildRouteGeometry(opportunity);
+    const baseSpeed = Math.round((opportunity.distanceKm / Math.max(opportunity.durationMin, 1)) * 60);
+    const demandScore = clamp(opportunity.predictedDemandScore + period.demandDelta, 56, 99);
+    const score = clamp(
+      Math.round(
+        demandScore * 0.52
+        + opportunity.attachRatePercent * 0.22
+        + opportunity.savingsPercent * 0.14
+        + Math.min(opportunity.fillTargetSeats * 4, 16),
+      ),
+      58,
+      99,
+    );
+    const speedKph = clamp(baseSpeed + period.speedDelta, 42, 102);
+    const pressure = getPressure(demandScore);
+
+    const route: WaselMapRoute[] = [
+      {
+        lat: geometry.origin.lat,
+        lng: geometry.origin.lng,
+        label: opportunity.from,
+      },
+      {
+        lat: geometry.mid.lat,
+        lng: geometry.mid.lng,
+        label: opportunity.pickupPoints[1] ?? opportunity.label,
+      },
+      {
+        lat: geometry.destination.lat,
+        lng: geometry.destination.lng,
+        label: opportunity.to,
+      },
+    ];
+
+    const markers: WaselMapMarker[] = [
+      { lat: route[0].lat, lng: route[0].lng, label: opportunity.from, type: 'pickup' },
+      { lat: route[route.length - 1].lat, lng: route[route.length - 1].lng, label: opportunity.to, type: 'dropoff' },
+    ];
+
+    return {
+      id: opportunity.id,
+      from: opportunity.from,
+      fromAr: geometry.fromAr,
+      to: opportunity.to,
+      toAr: geometry.toAr,
+      distanceKm: opportunity.distanceKm,
+      score,
+      speedKph,
+      pressure,
+      center: {
+        lat: (route[0].lat + route[route.length - 1].lat) / 2,
+        lng: (route[0].lng + route[route.length - 1].lng) / 2,
+      },
+      route,
+      markers,
+      demandScore,
+      savingsPercent: opportunity.savingsPercent,
+      attachRatePercent: opportunity.attachRatePercent,
+      fillTargetSeats: opportunity.fillTargetSeats,
+      recommendedSeatPriceJod: routePlan?.recommendedSeatPriceJod ?? opportunity.sharedPriceJod,
+      packageBonusJod: routePlan?.packageBonusJod ?? opportunity.driverBoostJod,
+      intelligenceSignal: opportunity.intelligenceSignals[0] ?? opportunity.routeMoat,
+      pickupSummary: opportunity.pickupPoints.slice(0, 2).join(' • '),
+    } satisfies CorridorViewModel;
+  }).sort((left, right) => right.score - left.score);
+}
+
+export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
   const navigate = useIframeSafeNavigate();
+  const hostRef = useRef<HTMLElement | null>(null);
   const [periodId, setPeriodId] = useState<PeriodId>('morning');
-  const [selectedId, setSelectedId] = useState('amman-zarqa');
-  const [size, setSize] = useState({ width: 920, height: 620 });
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const frameRef = useRef<number | null>(null);
-  const period = useMemo(() => PERIODS.find((item) => item.id === periodId) ?? PERIODS[0], [periodId]);
-  const corridors = useMemo<readonly CorridorState[]>(() => CORRIDORS.map((corridor) => {
-    const passengerFlow = Math.round(corridor.passengerBase * period.passengerBoost * (0.92 + corridor.importance * 0.18));
-    const packageFlow = Math.round(corridor.packageBase * period.packageBoost * (0.94 + corridor.importance * 0.16));
-    const totalFlow = passengerFlow + packageFlow;
-    const congestion = clamp(0.12 + period.congestionBias + passengerFlow / 1500 + corridor.importance * 0.08 + corridor.distanceKm / 2200, 0.1, 0.94);
-    const speedKph = Math.round(clamp(118 - congestion * 62 - corridor.distanceKm * 0.035, 34, 118));
-    const score = Math.round(clamp((1 - congestion) * 44 + clamp(totalFlow / 1100, 0, 1.25) * 24 + corridor.importance * 22 + (packageFlow / Math.max(totalFlow, 1)) * 12, 18, 99));
-    return { ...corridor, passengerFlow, packageFlow, totalFlow, congestion, speedKph, score };
-  }), [period]);
-  const byScore = useMemo(() => [...corridors].sort((a, b) => b.score - a.score), [corridors]);
-  const byVolume = useMemo(() => [...corridors].sort((a, b) => b.totalFlow - a.totalFlow), [corridors]);
-  const byCalm = useMemo(() => [...corridors].sort((a, b) => a.congestion - b.congestion), [corridors]);
-  const best = byScore[0];
-  const busiest = byVolume[0];
-  const calmest = byCalm[0];
-  const selected = corridors.find((item) => item.id === selectedId) ?? best;
-  const totalPassengers = corridors.reduce((sum, corridor) => sum + corridor.passengerFlow, 0);
-  const totalPackages = corridors.reduce((sum, corridor) => sum + corridor.packageFlow, 0);
-  const selectedRoutePath = selected
-    ? `/app/find-ride?from=${encodeURIComponent(CITIES[selected.from].name)}&to=${encodeURIComponent(CITIES[selected.to].name)}&search=1`
-    : '/app/find-ride';
+  const [selectedId, setSelectedId] = useState<string>('');
+  const [mapVisible, setMapVisible] = useState(false);
 
   useEffect(() => {
-    if (!corridors.some((item) => item.id === selectedId) && best) setSelectedId(best.id);
-  }, [best, corridors, selectedId]);
+    const target = hostRef.current;
+    if (!target || typeof IntersectionObserver === 'undefined') {
+      setMapVisible(true);
+      return;
+    }
 
-  useEffect(() => {
-    const update = () => {
-      const node = wrapRef.current;
-      if (!node) return;
-      const rect = node.getBoundingClientRect();
-      setSize({ width: Math.max(320, rect.width), height: Math.max(420, rect.height) });
-    };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setMapVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '240px 0px' },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
   }, []);
 
+  const corridors = useMemo(() => buildCorridorViewModels(periodId), [periodId]);
+
   useEffect(() => {
-    const render = (time: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      const dpr = window.devicePixelRatio || 1;
-      if (canvas.width !== Math.round(size.width * dpr) || canvas.height !== Math.round(size.height * dpr)) {
-        canvas.width = Math.round(size.width * dpr);
-        canvas.height = Math.round(size.height * dpr);
-      }
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, size.width, size.height);
-      const background = ctx.createLinearGradient(0, 0, 0, size.height);
-      background.addColorStop(0, period.top);
-      background.addColorStop(1, period.bottom);
-      ctx.fillStyle = background;
-      ctx.fillRect(0, 0, size.width, size.height);
-      const glow = ctx.createRadialGradient(size.width * 0.24, size.height * 0.16, 0, size.width * 0.24, size.height * 0.16, size.width * 0.5);
-      glow.addColorStop(0, period.glow);
-      glow.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, size.width, size.height);
-      ctx.beginPath();
-      BORDER.forEach((point, index) => {
-        const projected = project(point.lat, point.lon, size.width, size.height);
-        if (index === 0) ctx.moveTo(projected.x, projected.y); else ctx.lineTo(projected.x, projected.y);
-      });
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(255,255,255,0.024)';
-      ctx.strokeStyle = 'rgba(255,255,255,0.10)';
-      ctx.lineWidth = 1.2;
-      ctx.fill();
-      ctx.stroke();
-      corridors.forEach((corridor, index) => {
-        const from = project(CITIES[corridor.from].lat, CITIES[corridor.from].lon, size.width, size.height);
-        const to = project(CITIES[corridor.to].lat, CITIES[corridor.to].lon, size.width, size.height);
-        const control = controlPoint(from, to, index, corridor.importance + corridor.totalFlow / 1500);
-        const active = corridor.id === selected.id;
-        ctx.beginPath();
-        ctx.moveTo(from.x, from.y);
-        ctx.quadraticCurveTo(control.x, control.y, to.x, to.y);
-        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(from.x, from.y);
-        ctx.quadraticCurveTo(control.x, control.y, to.x, to.y);
-        ctx.strokeStyle = `rgba(85,233,255,${active ? 0.96 : 0.34 + corridor.passengerFlow / 2200})`;
-        ctx.lineWidth = (active ? 2.8 : 1.5) + corridor.passengerFlow / 420;
-        ctx.shadowBlur = active ? 22 : 14;
-        ctx.shadowColor = active ? 'rgba(85,233,255,0.62)' : 'rgba(85,233,255,0.24)';
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-        ctx.beginPath();
-        ctx.moveTo(from.x, from.y);
-        ctx.quadraticCurveTo(control.x, control.y, to.x, to.y);
-        ctx.setLineDash([6, 9]);
-        ctx.strokeStyle = `rgba(245,177,30,${active ? 0.88 : 0.26 + corridor.packageFlow / 1200})`;
-        ctx.lineWidth = (active ? 2.4 : 1.1) + corridor.packageFlow / 280;
-        ctx.stroke();
-        ctx.setLineDash([]);
-        for (let i = 0; i < clamp(Math.round(corridor.passengerFlow / 260), 1, 5); i += 1) {
-          const t = (time * 0.000045 * (1 + i * 0.12) + i / 4 + index * 0.07) % 1;
-          const point = pointOnCurve(from, control, to, t);
-          ctx.beginPath();
-          ctx.arc(point.x, point.y, active ? 3 : 2.3, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(228,253,255,0.94)';
-          ctx.shadowBlur = active ? 18 : 10;
-          ctx.shadowColor = 'rgba(85,233,255,0.56)';
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        }
-        for (let i = 0; i < clamp(Math.round(corridor.packageFlow / 120), 1, 4); i += 1) {
-          const t = 1 - ((time * 0.000032 * (1 + i * 0.08) + i / 3 + index * 0.05) % 1);
-          const point = pointOnCurve(from, control, to, t);
-          ctx.fillStyle = 'rgba(255,219,134,0.95)';
-          ctx.fillRect(point.x - 2.5, point.y - 2.5, 5, 5);
-        }
-      });
-      CITIES.forEach((city) => {
-        const point = project(city.lat, city.lon, size.width, size.height);
-        const endpoint = city.id === selected.from || city.id === selected.to;
-        const label = city.hub || endpoint;
-        const halo = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, endpoint ? 22 : city.hub ? 16 : 11);
-        halo.addColorStop(0, endpoint ? 'rgba(85,233,255,0.24)' : 'rgba(255,255,255,0.16)');
-        halo.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, endpoint ? 22 : city.hub ? 16 : 11, 0, Math.PI * 2);
-        ctx.fillStyle = halo;
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, endpoint ? 5.4 : city.hub ? 4.7 : 3.6, 0, Math.PI * 2);
-        ctx.fillStyle = endpoint ? '#FFFFFF' : city.hub ? 'rgba(239,246,255,0.94)' : 'rgba(239,246,255,0.78)';
-        ctx.fill();
-        if (label) {
-          ctx.font = `${endpoint ? 700 : 600} 12px ${FONT}`;
-          ctx.textAlign = 'center';
-          ctx.fillStyle = endpoint ? '#FFFFFF' : 'rgba(239,246,255,0.72)';
-          ctx.fillText(city.name, point.x, point.y - (endpoint ? 16 : 14));
-        }
-      });
-      frameRef.current = requestAnimationFrame(render);
-    };
-    frameRef.current = requestAnimationFrame(render);
-    return () => { if (frameRef.current !== null) cancelAnimationFrame(frameRef.current); };
-  }, [corridors, period, selected, size]);
+    if (!corridors.some((corridor) => corridor.id === selectedId)) {
+      setSelectedId(corridors[0]?.id ?? '');
+    }
+  }, [corridors, selectedId]);
+
+  const selected = corridors.find((corridor) => corridor.id === selectedId) ?? corridors[0];
+  const period = PERIODS.find((item) => item.id === periodId) ?? PERIODS[0];
+
+  if (!selected) return null;
+
+  const routeLabel = `${ar ? selected.fromAr : selected.from} ${t(ar, TRANSLATIONS.to)} ${ar ? selected.toAr : selected.to}`;
+  const topStats = [
+    { label: t(ar, TRANSLATIONS.bestCorridor), value: routeLabel, accent: UI.green },
+    { label: t(ar, TRANSLATIONS.pressure), value: getPressureLabel(ar, selected.pressure), accent: UI.cyan },
+    { label: t(ar, TRANSLATIONS.savings), value: `${selected.savingsPercent}%`, accent: UI.gold },
+  ] as const;
+
+  const handlePeriodChange = (nextPeriodId: PeriodId) => {
+    setPeriodId(nextPeriodId);
+    void trackGrowthEvent({
+      eventName: 'landing_corridor_period_selected',
+      funnelStage: 'selected',
+      serviceType: 'ride',
+      from: selected.from,
+      to: selected.to,
+      metadata: { periodId: nextPeriodId, corridorId: selected.id, source: 'landing_map' },
+    });
+  };
+
+  const handleSelectCorridor = (corridor: CorridorViewModel) => {
+    setSelectedId(corridor.id);
+    void trackGrowthEvent({
+      eventName: 'landing_corridor_selected',
+      funnelStage: 'selected',
+      serviceType: 'ride',
+      from: corridor.from,
+      to: corridor.to,
+      metadata: { corridorId: corridor.id, demandScore: corridor.demandScore, source: 'landing_map' },
+    });
+  };
+
+  const handleExploreCorridor = () => {
+    void trackGrowthEvent({
+      eventName: 'landing_corridor_explored',
+      funnelStage: 'selected',
+      serviceType: 'ride',
+      from: selected.from,
+      to: selected.to,
+      valueJod: selected.recommendedSeatPriceJod,
+      metadata: {
+        corridorId: selected.id,
+        demandScore: selected.demandScore,
+        pricePressure: selected.pressure,
+        source: 'landing_map',
+      },
+    });
+    navigate(`/app/find-ride?from=${encodeURIComponent(selected.from)}&to=${encodeURIComponent(selected.to)}&search=1`);
+  };
+
+  const handleOpenFullMap = () => {
+    void trackGrowthEvent({
+      eventName: 'landing_mobility_os_opened',
+      funnelStage: 'selected',
+      serviceType: 'ride',
+      from: selected.from,
+      to: selected.to,
+      metadata: { corridorId: selected.id, source: 'landing_map' },
+    });
+    navigate('/app/mobility-os');
+  };
 
   return (
-    <section style={{ display: 'grid', gap: 16, fontFamily: FONT }}>
-      <style>{`@media (max-width:1080px){.landing-map-layout{grid-template-columns:1fr!important}}@media (max-width:760px){.landing-map-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}.landing-map-toolbar{flex-direction:column!important;align-items:stretch!important}.landing-map-periods{grid-template-columns:1fr 1fr!important}}@media (max-width:560px){.landing-map-summary,.landing-map-periods{grid-template-columns:1fr!important}}`}</style>
-      <div className="landing-map-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}>
-        {[{ label: 'Current window', value: `${period.label} / ${period.time}`, accent: UI.cyan }, { label: 'Best corridor', value: best ? corridorName(best) : '-', accent: UI.green }, { label: 'Most trafficked', value: busiest ? corridorName(busiest) : '-', accent: UI.gold }, { label: 'Calmest corridor', value: calmest ? corridorName(calmest) : '-', accent: UI.blue }].map((item) => (
-          <div key={item.label} style={{ borderRadius: 22, padding: '16px 18px', background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025))', border: `1px solid ${UI.border}`, boxShadow: '0 16px 36px rgba(0,0,0,0.18)' }}>
-            <div style={{ color: UI.soft, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 800 }}>{item.label}</div>
-            <div style={{ marginTop: 8, color: item.accent, fontSize: '1rem', lineHeight: 1.4, fontWeight: 900, letterSpacing: '-0.03em' }}>{item.value}</div>
+    <section
+      ref={hostRef}
+      aria-label={t(ar, TRANSLATIONS.mapTitle)}
+      style={{
+        display: 'grid',
+        gap: 16,
+        fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
+      }}
+    >
+      <style>{`
+        .landing-map-layout { display:grid; grid-template-columns:minmax(0, 1.18fr) minmax(290px, 0.82fr); gap:16px; }
+        .landing-map-periods { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
+        .landing-map-stats { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
+        .landing-map-ranking { display:grid; gap:10px; }
+        .landing-map-frame { min-height: clamp(320px, 44vw, 520px); }
+        .landing-map-refresh { animation: landing-map-pulse 1.9s ease-in-out infinite; }
+        @keyframes landing-map-pulse {
+          0%, 100% { opacity: 0.65; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.08); }
+        }
+        @media (max-width: 1180px) { .landing-map-layout { grid-template-columns:1fr; } }
+        @media (max-width: 760px) {
+          .landing-map-periods, .landing-map-stats { grid-template-columns:1fr; }
+          .landing-map-frame { min-height: 340px; }
+        }
+        @media (max-width: 560px) {
+          .landing-map-frame { min-height: 300px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .landing-map-refresh { animation: none !important; }
+        }
+      `}</style>
+
+      <div className="landing-map-stats">
+        {topStats.map((item) => (
+          <div
+            key={item.label}
+            style={{
+              borderRadius: 20,
+              padding: '14px 16px',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02))',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)',
+              display: 'grid',
+              gap: 6,
+            }}
+          >
+            <span
+              style={{
+                color: UI.soft,
+                fontSize: '0.72rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                fontWeight: 800,
+              }}
+            >
+              {item.label}
+            </span>
+            <span style={{ color: item.accent, fontSize: '1rem', fontWeight: 900, lineHeight: 1.35 }}>
+              {item.value}
+            </span>
           </div>
         ))}
       </div>
-      <div className="landing-map-layout" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.25fr) minmax(300px,0.75fr)', gap: 16 }}>
-        <div style={{ borderRadius: 34, padding: 18, background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02))', border: `1px solid ${UI.border}`, boxShadow: '0 30px 80px rgba(0,0,0,0.26)' }}>
-          <div className="landing-map-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 18, marginBottom: 16 }}>
-            <div style={{ maxWidth: 460 }}>
-              <div style={{ color: UI.cyan, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 900 }}>Mobility OS map</div>
-              <h2 style={{ margin: '8px 0', color: UI.text, fontSize: 'clamp(1.5rem, 3vw, 2.2rem)', lineHeight: 1.05, letterSpacing: '-0.05em', fontWeight: 950 }}>Watch how city-to-city corridors move people and packages together.</h2>
-              <p style={{ margin: 0, color: UI.muted, fontSize: '0.96rem', lineHeight: 1.7 }}>Switch the time window to compare rush periods and calmer hours, then read the strongest lanes directly from the map.</p>
+
+      <div className="landing-map-layout">
+        <div
+          style={{
+            borderRadius: 28,
+            padding: 18,
+            background: 'radial-gradient(circle at 16% 12%, rgba(22,199,242,0.12), rgba(4,18,30,0) 22%), linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)), rgba(9,27,43,0.92)',
+            boxShadow: '0 28px 72px rgba(0,0,0,0.24)',
+            display: 'grid',
+            gap: 14,
+          }}
+        >
+          <div style={{ display: 'grid', gap: 12 }}>
+            <div
+              style={{
+                color: UI.cyan,
+                fontSize: '0.74rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.12em',
+                fontWeight: 900,
+              }}
+            >
+              {t(ar, TRANSLATIONS.mapTitle)}
             </div>
-            <div className="landing-map-periods" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, minWidth: 'min(100%, 360px)' }}>
-              {PERIODS.map((item) => {
-                const active = item.id === period.id;
-                return <button key={item.id} type="button" onClick={() => setPeriodId(item.id)} style={{ padding: '12px 14px', borderRadius: 18, border: `1px solid ${active ? UI.borderStrong : UI.border}`, background: active ? 'linear-gradient(135deg, rgba(85,233,255,0.12), rgba(30,161,255,0.08))' : 'rgba(255,255,255,0.03)', color: active ? UI.text : UI.muted, textAlign: 'left', cursor: 'pointer', boxShadow: active ? '0 12px 30px rgba(30,161,255,0.12)' : 'none' }}><div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{item.label}</div><div style={{ marginTop: 4, fontSize: '0.72rem', color: active ? UI.cyan : UI.soft }}>{item.time}</div></button>;
-              })}
+            <div
+              style={{
+                color: UI.text,
+                fontSize: 'clamp(1.45rem, 2.8vw, 2.15rem)',
+                lineHeight: 1.04,
+                letterSpacing: '-0.04em',
+                fontWeight: 900,
+              }}
+            >
+              {t(ar, TRANSLATIONS.mapBody)}
             </div>
+            <p style={{ margin: 0, color: UI.muted, fontSize: '0.92rem', lineHeight: 1.65 }}>
+              {ar ? period.noteAr : period.note}
+            </p>
           </div>
-          <div ref={wrapRef} style={{ position: 'relative', minHeight: 'clamp(420px, 54vw, 680px)', borderRadius: 28, overflow: 'hidden', border: `1px solid ${UI.border}`, background: '#040C18' }}>
-            <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%', minHeight: 'clamp(420px, 54vw, 680px)', filter: 'saturate(1.15) contrast(1.06) brightness(1.04)' }} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 14 }}>
-            {[{ label: 'People moving', value: totalPassengers.toLocaleString('en-US'), color: UI.cyan, icon: Route }, { label: 'Packages moving', value: totalPackages.toLocaleString('en-US'), color: UI.gold, icon: Package }].map((item) => {
-              const Icon = item.icon;
-              return <div key={item.label} style={{ borderRadius: 20, padding: '14px 15px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${UI.border}` }}><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon size={15} color={item.color} /><span style={{ color: UI.soft, fontSize: '0.74rem', fontWeight: 700 }}>{item.label}</span></div><div style={{ marginTop: 8, color: item.color, fontSize: '1.04rem', fontWeight: 900 }}>{item.value}</div></div>;
+
+          <div className="landing-map-periods" role="tablist" aria-label={t(ar, TRANSLATIONS.demandRead)}>
+            {PERIODS.map((item) => {
+              const active = item.id === periodId;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  aria-pressed={active}
+                  aria-label={`${ar ? item.labelAr : item.label} ${item.time}`}
+                  onClick={() => handlePeriodChange(item.id)}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 18,
+                    border: 'none',
+                    background: active
+                      ? 'linear-gradient(135deg, rgba(85,233,255,0.14), rgba(30,161,255,0.1))'
+                      : 'rgba(255,255,255,0.03)',
+                    color: active ? UI.text : UI.muted,
+                    textAlign: ar ? 'right' : 'left',
+                    cursor: 'pointer',
+                    boxShadow: active ? '0 14px 32px rgba(22,199,242,0.16)' : 'inset 0 1px 0 rgba(255,255,255,0.02)',
+                  }}
+                >
+                  <div style={{ fontSize: '0.86rem', fontWeight: 800 }}>{ar ? item.labelAr : item.label}</div>
+                  <div style={{ marginTop: 4, color: active ? UI.cyan : UI.soft, fontSize: '0.74rem' }}>
+                    {item.time}
+                  </div>
+                </button>
+              );
             })}
           </div>
-        </div>
-        <aside style={{ display: 'grid', gap: 16 }}>
-          <div style={{ borderRadius: 30, padding: '18px 18px 16px', background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02))', border: `1px solid ${UI.border}`, boxShadow: '0 28px 70px rgba(0,0,0,0.2)' }}>
-            <div style={{ color: UI.cyan, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 900 }}>Selected corridor</div>
-            <div style={{ marginTop: 8, color: UI.text, fontSize: '1.45rem', fontWeight: 950, letterSpacing: '-0.04em' }}>{selected ? corridorName(selected) : '-'}</div>
-            <p style={{ margin: '10px 0 0', color: UI.muted, fontSize: '0.88rem', lineHeight: 1.7 }}>{selected ? insightFor(selected, period) : ''}</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 10, marginTop: 16 }}>
-              {selected && [{ label: 'Route score', value: `${selected.score}/100`, accent: UI.green, icon: Sparkles }, { label: 'Travel speed', value: `${selected.speedKph} km/h`, accent: UI.cyan, icon: Gauge }, { label: 'Pressure', value: pressureLabel(selected.congestion), accent: UI.coral, icon: Clock3 }, { label: 'Distance', value: `${selected.distanceKm} km`, accent: UI.gold, icon: Route }].map((metric) => {
-                const Icon = metric.icon;
-                return <div key={metric.label} style={{ borderRadius: 18, padding: '13px 14px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${UI.border}` }}><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon size={15} color={metric.accent} /><span style={{ color: UI.soft, fontSize: '0.74rem', fontWeight: 700 }}>{metric.label}</span></div><div style={{ marginTop: 9, color: metric.accent, fontSize: '1rem', fontWeight: 900 }}>{metric.value}</div></div>;
-              })}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16 }}>
-              <button
-                type="button"
-                onClick={() => navigate(selectedRoutePath)}
+
+          <div
+            className="landing-map-frame"
+            style={{
+              position: 'relative',
+              borderRadius: 24,
+              overflow: 'hidden',
+              background: '#06111E',
+              boxShadow: '0 20px 48px rgba(0,0,0,0.24)',
+            }}
+          >
+            {mapVisible ? (
+              <WaselMap
+                compact
+                center={selected.center}
+                route={[...selected.route]}
+                markers={[...selected.markers]}
+                height="100%"
+                className="landing-map-frame"
+              />
+            ) : (
+              <div
                 style={{
-                  height: 44,
-                  borderRadius: 16,
-                  border: 'none',
-                  background: 'linear-gradient(135deg, rgba(85,233,255,0.22), rgba(30,161,255,0.16))',
-                  color: UI.text,
-                  fontWeight: 800,
-                  cursor: 'pointer',
+                  height: '100%',
+                  minHeight: 'inherit',
+                  display: 'grid',
+                  placeItems: 'center',
+                  background: 'radial-gradient(circle at 30% 30%, rgba(22,199,242,0.16), rgba(6,17,30,0) 32%), linear-gradient(180deg, rgba(8,21,36,0.96), rgba(5,13,24,0.98))',
+                  color: UI.muted,
+                  fontSize: '0.92rem',
+                  letterSpacing: '0.02em',
                 }}
               >
-                Search this route
+                {t(ar, TRANSLATIONS.mapLoading)}
+              </div>
+            )}
+
+            <div
+              style={{
+                position: 'absolute',
+                top: 16,
+                left: 16,
+                maxWidth: 320,
+                padding: '14px 16px',
+                borderRadius: 20,
+                background: 'rgba(6,22,38,0.86)',
+                backdropFilter: 'blur(14px)',
+                pointerEvents: 'none',
+                boxShadow: '0 16px 36px rgba(0,0,0,0.18)',
+              }}
+            >
+              <div
+                style={{
+                  color: UI.cyan,
+                  fontSize: '0.72rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  fontWeight: 900,
+                }}
+              >
+                {t(ar, TRANSLATIONS.selectedRoute)}
+              </div>
+              <div style={{ marginTop: 8, color: UI.text, fontSize: '1rem', fontWeight: 900 }}>
+                {routeLabel}
+              </div>
+              <div style={{ marginTop: 6, color: UI.muted, fontSize: '0.82rem', lineHeight: 1.55 }}>
+                {t(ar, TRANSLATIONS.mapOverlay)}
+              </div>
+            </div>
+
+            <div
+              style={{
+                position: 'absolute',
+                right: 16,
+                bottom: 16,
+                width: 'min(300px, calc(100% - 32px))',
+                padding: '12px 14px',
+                borderRadius: 18,
+                background: 'rgba(6,22,38,0.84)',
+                backdropFilter: 'blur(14px)',
+                pointerEvents: 'none',
+                boxShadow: '0 16px 36px rgba(0,0,0,0.18)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <span
+                  style={{
+                    color: UI.soft,
+                    fontSize: '0.72rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    fontWeight: 800,
+                  }}
+                >
+                  {t(ar, TRANSLATIONS.liveScore)}
+                </span>
+                <span style={{ color: UI.green, fontSize: '0.9rem', fontWeight: 900 }}>
+                  {selected.score}/100
+                </span>
+              </div>
+              <div
+                style={{
+                  marginTop: 10,
+                  height: 7,
+                  borderRadius: 999,
+                  background: 'rgba(255,255,255,0.08)',
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  className="landing-map-refresh"
+                  style={{
+                    width: `${selected.score}%`,
+                    height: '100%',
+                    borderRadius: 999,
+                    background: `linear-gradient(90deg, ${UI.green}, rgba(255,255,255,0.92))`,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside style={{ display: 'grid', gap: 14 }}>
+          <div
+            style={{
+              borderRadius: 28,
+              padding: '18px',
+              background: UI.panel,
+              border: `1px solid ${UI.borderStrong}`,
+              boxShadow: '0 28px 72px rgba(0,0,0,0.24)',
+              display: 'grid',
+              gap: 14,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  color: UI.cyan,
+                  fontSize: '0.74rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.12em',
+                  fontWeight: 900,
+                }}
+              >
+                {t(ar, TRANSLATIONS.selectedCorridor)}
+              </div>
+              <div
+                style={{
+                  marginTop: 8,
+                  color: UI.text,
+                  fontSize: '1.35rem',
+                  lineHeight: 1.08,
+                  letterSpacing: '-0.04em',
+                  fontWeight: 900,
+                }}
+              >
+                {routeLabel}
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+              {[
+                { label: t(ar, TRANSLATIONS.routeScore), value: `${selected.score}/100`, accent: UI.green, icon: Sparkles },
+                { label: t(ar, TRANSLATIONS.speed), value: `${selected.speedKph} ${t(ar, TRANSLATIONS.kmh)}`, accent: UI.cyan, icon: Gauge },
+                { label: t(ar, TRANSLATIONS.pressure), value: getPressureLabel(ar, selected.pressure), accent: UI.gold, icon: Route },
+                { label: t(ar, TRANSLATIONS.distance), value: `${selected.distanceKm} ${t(ar, TRANSLATIONS.km)}`, accent: UI.blue, icon: Route },
+              ].map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <div
+                    key={item.label}
+                    style={{
+                      borderRadius: 18,
+                      padding: '12px 14px',
+                      background: 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${UI.border}`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Icon size={14} color={item.accent} />
+                      <span style={{ color: UI.soft, fontSize: '0.72rem', fontWeight: 700 }}>
+                        {item.label}
+                      </span>
+                    </div>
+                    <div style={{ marginTop: 8, color: item.accent, fontSize: '0.96rem', fontWeight: 900 }}>
+                      {item.value}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div
+              style={{
+                borderRadius: 20,
+                padding: '14px 16px',
+                background: 'rgba(255,255,255,0.03)',
+                border: `1px solid ${UI.border}`,
+                display: 'grid',
+                gap: 8,
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+                <span style={{ color: UI.soft, fontSize: '0.74rem', fontWeight: 800 }}>{t(ar, TRANSLATIONS.routeEconomics)}</span>
+                <span style={{ color: UI.green, fontWeight: 900 }}>
+                  {selected.recommendedSeatPriceJod.toFixed(2)} {t(ar, TRANSLATIONS.jod)}
+                </span>
+              </div>
+              <div style={{ color: UI.muted, fontSize: '0.82rem', lineHeight: 1.6 }}>
+                {selected.intelligenceSignal}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
+                <div>
+                  <div style={{ color: UI.soft, fontSize: '0.7rem' }}>{t(ar, TRANSLATIONS.savingsValue)}</div>
+                  <div style={{ color: UI.gold, fontWeight: 900 }}>{selected.savingsPercent}%</div>
+                </div>
+                <div>
+                  <div style={{ color: UI.soft, fontSize: '0.7rem' }}>{t(ar, TRANSLATIONS.seatsToFill)}</div>
+                  <div style={{ color: UI.cyan, fontWeight: 900 }}>{selected.fillTargetSeats}</div>
+                </div>
+                <div>
+                  <div style={{ color: UI.soft, fontSize: '0.7rem' }}>{t(ar, TRANSLATIONS.packageLift)}</div>
+                  <div style={{ color: UI.green, fontWeight: 900 }}>
+                    +{selected.packageBonusJod.toFixed(1)} {t(ar, TRANSLATIONS.jod)}
+                  </div>
+                </div>
+              </div>
+              <div style={{ color: UI.soft, fontSize: '0.76rem' }}>
+                {t(ar, TRANSLATIONS.pickupSignal)}: {selected.pickupSummary}
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gap: 10 }}>
+              <button
+                type="button"
+                aria-label={`${t(ar, TRANSLATIONS.exploreCorridor)} ${routeLabel}`}
+                onClick={handleExploreCorridor}
+                style={{
+                  minHeight: 48,
+                  borderRadius: 16,
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'linear-gradient(135deg, #18D4F7 0%, #1697EF 48%, #C7FF1A 100%)',
+                  color: '#041521',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  boxShadow: '0 20px 44px rgba(22,151,239,0.28)',
+                }}
+              >
+                {t(ar, TRANSLATIONS.exploreCorridor)}
+                <ArrowRight size={15} />
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/app/mobility-os')}
+                aria-label={t(ar, TRANSLATIONS.openFullMap)}
+                onClick={handleOpenFullMap}
                 style={{
-                  height: 44,
+                  minHeight: 48,
                   borderRadius: 16,
                   border: `1px solid ${UI.borderStrong}`,
                   background: 'rgba(255,255,255,0.03)',
@@ -286,17 +747,64 @@ export function MobilityOSLandingMap() {
                   cursor: 'pointer',
                 }}
               >
-                Open full map
+                {t(ar, TRANSLATIONS.openFullMap)}
               </button>
             </div>
           </div>
-          <div style={{ borderRadius: 30, padding: '18px 18px 16px', background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.018))', border: `1px solid ${UI.border}`, boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}>
-            <div style={{ color: UI.gold, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 900 }}>Corridor ranking</div>
-            <div style={{ marginTop: 8, color: UI.text, fontSize: '1.18rem', fontWeight: 900 }}>Top routes for this window</div>
-            <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
-              {byScore.slice(0, 5).map((corridor, index) => {
-                const active = corridor.id === selected?.id;
-                return <button key={corridor.id} type="button" onClick={() => setSelectedId(corridor.id)} style={{ width: '100%', borderRadius: 20, padding: '14px 15px', background: active ? 'linear-gradient(135deg, rgba(85,233,255,0.12), rgba(30,161,255,0.08))' : 'rgba(255,255,255,0.03)', border: `1px solid ${active ? UI.borderStrong : UI.border}`, color: UI.text, textAlign: 'left', cursor: 'pointer' }}><div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center' }}><div><div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><span style={{ width: 26, height: 26, borderRadius: 10, display: 'grid', placeItems: 'center', background: active ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)', fontSize: '0.74rem', fontWeight: 900, color: active ? UI.cyan : UI.soft }}>{index + 1}</span><span style={{ fontSize: '0.92rem', fontWeight: 800 }}>{corridorName(corridor)}</span></div><div style={{ marginTop: 8, color: UI.soft, fontSize: '0.78rem' }}>{corridor.speedKph} km/h · {corridor.totalFlow.toLocaleString('en-US')} total flow</div></div><div style={{ textAlign: 'right' }}><div style={{ color: active ? UI.cyan : UI.green, fontSize: '0.96rem', fontWeight: 900 }}>{corridor.score}</div><div style={{ marginTop: 4, color: UI.soft, fontSize: '0.72rem' }}>{pressureLabel(corridor.congestion)}</div></div></div></button>;
+
+          <div
+            style={{
+              borderRadius: 24,
+              padding: 16,
+              background: 'rgba(255,255,255,0.03)',
+              border: `1px solid ${UI.border}`,
+              display: 'grid',
+              gap: 10,
+            }}
+          >
+            <div style={{ color: UI.cyan, fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 900 }}>
+              {t(ar, TRANSLATIONS.corridorRanking)}
+            </div>
+            <div className="landing-map-ranking">
+              {corridors.map((corridor, index) => {
+                const active = corridor.id === selected.id;
+                const label = `${ar ? corridor.fromAr : corridor.from} ${t(ar, TRANSLATIONS.to)} ${ar ? corridor.toAr : corridor.to}`;
+                return (
+                  <button
+                    key={corridor.id}
+                    type="button"
+                    aria-pressed={active}
+                    aria-label={`${label} ${corridor.score}/100`}
+                    onClick={() => handleSelectCorridor(corridor)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: 18,
+                      border: `1px solid ${active ? UI.borderStrong : UI.border}`,
+                      background: active
+                        ? 'linear-gradient(135deg, rgba(85,233,255,0.12), rgba(30,161,255,0.08))'
+                        : 'rgba(255,255,255,0.03)',
+                      color: UI.text,
+                      cursor: 'pointer',
+                      display: 'grid',
+                      gap: 6,
+                      textAlign: ar ? 'right' : 'left',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                      <span style={{ color: active ? UI.cyan : UI.soft, fontSize: '0.76rem', fontWeight: 900 }}>
+                        #{index + 1}
+                      </span>
+                      <span style={{ color: UI.green, fontSize: '0.8rem', fontWeight: 900 }}>
+                        {corridor.score}/100
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.92rem', fontWeight: 900 }}>{label}</div>
+                    <div style={{ color: UI.muted, fontSize: '0.76rem', lineHeight: 1.5 }}>
+                      {getPressureLabel(ar, corridor.pressure)} | {corridor.speedKph} {t(ar, TRANSLATIONS.kmh)} | {corridor.attachRatePercent}% {t(ar, TRANSLATIONS.networkReady)}
+                    </div>
+                  </button>
+                );
               })}
             </div>
           </div>

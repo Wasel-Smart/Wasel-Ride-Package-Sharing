@@ -122,10 +122,10 @@ export function PackageSendPanel({
   }
 
   return (
-    <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0, 1.5fr) minmax(320px, 1fr)' }}>
-      <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr' }}>
+    <div className="sp-2col" style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0, 1.5fr) minmax(320px, 1fr)' }}>
+      <div className="pkg-send-form-grid" style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr' }}>
         <h3 style={{ color: '#fff', fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>
-          Send through the shared network
+          Send in one clean flow
         </h3>
         {[{ l: 'From', k: 'from' as const }, { l: 'To', k: 'to' as const }].map((field) => (
           <div key={field.l}>
@@ -197,12 +197,12 @@ export function PackageSendPanel({
           />
         </div>
         <div style={{ gridColumn: '1/-1', background: 'rgba(255,255,255,0.03)', borderRadius: r(14), padding: '16px 18px', border: `1px solid ${DS.border}` }}>
-          <div style={{ color: '#fff', fontWeight: 800, marginBottom: 6 }}>Connected flow</div>
+          <div style={{ color: '#fff', fontWeight: 800, marginBottom: 6 }}>Why this stays simple</div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>
-            Every package request checks live posted rides first. If a matching ride accepts parcels, the request attaches to that route and tracking starts from the same network.
+            Every request checks live rides first. If a matching route accepts parcels, tracking starts on the same route instead of sending you into a second workflow.
           </div>
         </div>
-        <div style={{ gridColumn: '1/-1', display: 'grid', gap: 10, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+        <div className="pkg-send-steps-grid" style={{ gridColumn: '1/-1', display: 'grid', gap: 10, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
           {PACKAGE_SEND_STEPS.map((item) => (
             <div key={item.title} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)' }}>
               <div style={{ color: '#fff', fontSize: '0.82rem', fontWeight: 700 }}>{item.title}</div>
@@ -246,12 +246,12 @@ export function PackageSendPanel({
         <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: r(16), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 10px 22px rgba(0,0,0,0.12)' }}>
           <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>What great looks like</div>
           <div style={{ display: 'grid', gap: 10 }}>
-            {PACKAGE_EXCELLENCE_POINTS.map((item) => (
-              <div key={item.title} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)' }}>
-                <div style={{ color: '#fff', fontSize: '0.84rem', fontWeight: 700 }}>{item.title}</div>
-                <div style={{ color: DS.muted, fontSize: '0.75rem', marginTop: 4 }}>{item.desc}</div>
-              </div>
-            ))}
+          {PACKAGE_EXCELLENCE_POINTS.slice(0, 2).map((item) => (
+            <div key={item.title} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)' }}>
+              <div style={{ color: '#fff', fontSize: '0.84rem', fontWeight: 700 }}>{item.title}</div>
+              <div style={{ color: DS.muted, fontSize: '0.75rem', marginTop: 4 }}>{item.desc}</div>
+            </div>
+          ))}
           </div>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: r(16), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 10px 22px rgba(0,0,0,0.12)' }}>

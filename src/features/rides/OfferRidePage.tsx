@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { Brain, Briefcase, Network } from 'lucide-react';
+import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
@@ -58,6 +59,7 @@ export function OfferRidePage() {
   );
   const routeIntelligence = useLiveRouteIntelligence({ from: form.from, to: form.to });
   const selectedSignal = routeIntelligence.selectedSignal;
+  const hasDemandSignal = typeof selectedSignal?.forecastDemandScore === 'number';
   const corridorCount = getConnectedRides().filter((ride) => routeMatchesLocationPair(ride.from, ride.to, form.from, form.to, { allowReverse: false })).length;
   const recentPostedRides = getConnectedRides().filter((ride) => routeMatchesLocationPair(ride.from, ride.to, form.from, form.to, { allowReverse: false })).slice(0, 3);
   const incomingRequests = user
@@ -118,6 +120,8 @@ export function OfferRidePage() {
     try {
       const createdRide = await createConnectedRide({
         ownerId: user.id,
+        ownerPhone: user.phone,
+        ownerEmail: user.email,
         from: form.from,
         to: form.to,
         date: form.date,
@@ -165,7 +169,7 @@ export function OfferRidePage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="Supply"
+          emoji="🚘"
           title="Offer Route"
           titleAr="Offer Route"
           sub="Publish seats, package space, and corridor capacity in one flow."
@@ -178,8 +182,32 @@ export function OfferRidePage() {
           tone={DS.blue}
         />
 
+        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
+          <StakeholderSignalBanner
+            eyebrow="Wasel · supply comms"
+            title="Route publishing now speaks to drivers, riders, packages, and operations at once"
+            detail="This supply flow now makes route readiness, trust gating, earnings logic, and network pull visible in one place so a posted route feels operationally complete from the start."
+            stakeholders={[
+              { label: 'Driver readiness', value: `${driverReadiness.steps.filter((step) => step.complete).length}/${driverReadiness.steps.length}`, tone: 'teal' },
+              { label: 'Pending requests', value: String(incomingRequests.length), tone: 'amber' },
+              { label: 'Live corridor rides', value: String(corridorCount), tone: 'blue' },
+              { label: 'Package mode', value: form.acceptsPackages ? 'On' : 'Off', tone: form.acceptsPackages ? 'green' : 'slate' },
+            ]}
+            statuses={[
+              { label: 'Offer gate', value: offerGate.allowed ? 'Open' : 'Blocked', tone: offerGate.allowed ? 'green' : 'rose' },
+              { label: 'Package gate', value: packageGate.allowed ? 'Open' : 'Blocked', tone: packageGate.allowed ? 'green' : 'amber' },
+              { label: 'Demand signal', value: hasDemandSignal ? `${selectedSignal.forecastDemandScore}/100` : 'Pending', tone: hasDemandSignal ? 'blue' : 'slate' },
+            ]}
+            lanes={[
+              { label: 'Supply lane', detail: 'Route publishing, draft state, and incoming requests now point to one live supply story.' },
+              { label: 'Trust lane', detail: 'Posting and package carrying rights stay tied to the same readiness and trust checks.' },
+              { label: 'Revenue lane', detail: 'Seat pricing, package bonus, and marketplace pull explain why this corridor matters before it goes live.' },
+            ]}
+          />
+        </div>}
+
         {(!offerGate.allowed || (form.acceptsPackages && !packageGate.allowed)) && (
-          <div style={{ marginBottom: 18, background: 'rgba(240,168,48,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: '#fff' }}>
+          <div style={{ marginBottom: 18, background: 'rgba(199,255,26,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: '#fff' }}>
             <div style={{ fontWeight: 800, marginBottom: 6 }}>Trust readiness required</div>
             <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>{(!offerGate.allowed ? offerGate.reason : packageGate.reason) ?? 'Complete account checks before opening supply.'}</div>
             <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
@@ -372,3 +400,4 @@ export function OfferRidePage() {
 }
 
 export default OfferRidePage;
+

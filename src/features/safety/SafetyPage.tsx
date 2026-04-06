@@ -7,9 +7,11 @@
  * the lock screen forever.
  */
 import { useEffect, type ReactNode } from 'react';
+import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
+import { buildAuthPagePath } from '../../utils/authFlow';
 
 const DS = PAGE_DS;
 const r = (px = 12) => `${px}px`;
@@ -20,7 +22,7 @@ function Protected({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/app/auth?returnTo=/app/safety');
+      navigate(buildAuthPagePath('signin', '/app/safety'));
     }
   }, [loading, user, navigate]);
 
@@ -123,6 +125,30 @@ export default function SafetyPage() {
               ride, package, and scheduled trip.
             </div>
           </div>
+
+        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 20 }}>
+            <StakeholderSignalBanner
+              eyebrow="Wasel · safety comms"
+              title="Safety now reads like a shared operating layer across the app"
+              detail="This page makes it clear how trust, emergency response, insurance, and rider comfort work together so users and support teams are reading the same protection story."
+              stakeholders={[
+                { label: 'Trust', value: 'Identity checks', tone: 'green' },
+                { label: 'Support', value: 'SOS handoff', tone: 'rose' },
+                { label: 'Operations', value: 'Trip-wide safety', tone: 'teal' },
+                { label: 'Rider comfort', value: 'Cultural cues', tone: 'blue' },
+              ]}
+              statuses={[
+                { label: 'Emergency lane', value: 'Ready', tone: 'rose' },
+                { label: 'Insurance lane', value: 'Active', tone: 'amber' },
+                { label: 'Verification lane', value: 'Enabled', tone: 'green' },
+              ]}
+              lanes={[
+                { label: 'Emergency communication', detail: 'SOS flows should move quickly from rider context into direct support action.' },
+                { label: 'Verification communication', detail: 'ID checks and trusted-account messaging reduce uncertainty before a trip begins.' },
+                { label: 'Comfort communication', detail: 'Cultural and situational cues help riders feel informed, not surprised.' },
+              ]}
+            />
+          </div>}
 
           {/* Feature cards */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>

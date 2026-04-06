@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Wasel Router v7.2 — WaselServicePage monolith split into feature files.
  *
  * Changes from v7.1:
@@ -17,7 +17,9 @@ import {
   Navigate,
   useRouteError,
 } from 'react-router';
+import { useLocalAuth } from './contexts/LocalAuth';
 import WaselRoot from './layouts/WaselRoot';
+import { buildAuthPagePath } from './utils/authFlow';
 
 // ── Page loader fallback ──────────────────────────────────────────────────────
 function PageLoader() {
@@ -36,8 +38,8 @@ function PageLoader() {
           width: 36,
           height: 36,
           borderRadius: '50%',
-          border: '3px solid rgba(0,200,232,0.15)',
-          borderTop: '3px solid #00C8E8',
+          border: '3px solid rgba(22,199,242,0.15)',
+          borderTop: '3px solid #16C7F2',
           animation: 'spin 0.8s linear infinite',
         }}
       />
@@ -69,6 +71,16 @@ function lazy(
 // ── Utility redirects ─────────────────────────────────────────────────────────
 function RedirectTo({ to }: { to: string }) {
   return <Navigate to={to} replace />;
+}
+
+function AppEntryRedirect() {
+  const { user, loading } = useLocalAuth();
+
+  if (loading) {
+    return <PageLoader />;
+  }
+
+  return <Navigate to={user ? '/app/find-ride' : buildAuthPagePath('signin')} replace />;
 }
 
 const LEGACY_APP_ALIASES = [
@@ -113,6 +125,7 @@ const LEGACY_APP_ALIASES = [
 function NotFound() {
   return (
     <div
+      role="alert"
       style={{
         minHeight: '80vh',
         display: 'flex',
@@ -131,7 +144,7 @@ function NotFound() {
           marginBottom: 16,
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
-          color: '#00C8E8',
+          color: '#16C7F2',
           fontWeight: 800,
         }}
       >
@@ -148,19 +161,34 @@ function NotFound() {
       >
         The page you requested is unavailable or the link is outdated.
       </p>
-      <a
-        href="/"
-        style={{
-          padding: '10px 24px',
-          borderRadius: 12,
-          background: 'linear-gradient(135deg,#00C8E8,#0095B8)',
-          color: '#040C18',
-          fontWeight: 700,
-          textDecoration: 'none',
-        }}
-      >
-        Back to Wasel
-      </a>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <a
+          href="/"
+          style={{
+            padding: '10px 24px',
+            borderRadius: 12,
+            background: 'linear-gradient(135deg,#16C7F2,#0F78BF)',
+            color: '#040C18',
+            fontWeight: 700,
+            textDecoration: 'none',
+          }}
+        >
+          Back to Wasel
+        </a>
+        <a
+          href="/app/find-ride"
+          style={{
+            padding: '10px 24px',
+            borderRadius: 12,
+            border: '1px solid rgba(22,199,242,0.22)',
+            color: '#EFF6FF',
+            fontWeight: 700,
+            textDecoration: 'none',
+          }}
+        >
+          Open Find ride
+        </a>
+      </div>
     </div>
   );
 }
@@ -194,13 +222,13 @@ function RouteErrorFallback() {
           borderRadius: 20,
           padding: 28,
           background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(0,200,232,0.14)',
+          border: '1px solid rgba(22,199,242,0.14)',
         }}
       >
         <div
           style={{
             fontSize: '0.7rem',
-            color: '#00C8E8',
+            color: '#16C7F2',
             fontWeight: 800,
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
@@ -219,7 +247,7 @@ function RouteErrorFallback() {
             style={{
               padding: '10px 18px',
               borderRadius: 12,
-              background: 'linear-gradient(135deg,#00C8E8,#0095B8)',
+              background: 'linear-gradient(135deg,#16C7F2,#0F78BF)',
               color: '#041018',
               textDecoration: 'none',
               fontWeight: 800,
@@ -228,11 +256,24 @@ function RouteErrorFallback() {
             Find a Ride
           </a>
           <a
+            href={buildAuthPagePath('signin')}
+            style={{
+              padding: '10px 18px',
+              borderRadius: 12,
+              border: '1px solid rgba(255,255,255,0.12)',
+              color: '#EFF6FF',
+              textDecoration: 'none',
+              fontWeight: 700,
+            }}
+          >
+            Sign in
+          </a>
+          <a
             href="/"
             style={{
               padding: '10px 18px',
               borderRadius: 12,
-              border: '1px solid rgba(0,200,232,0.22)',
+              border: '1px solid rgba(22,199,242,0.22)',
               color: '#EFF6FF',
               textDecoration: 'none',
               fontWeight: 700,
@@ -252,7 +293,7 @@ const buildMainChildren = () => [
   // ── Landing ──────────────────────────────────────────────────────────────
   {
     index: true,
-    Component: () => <RedirectTo to="/app/find-ride" />,
+    Component: AppEntryRedirect,
   },
 
   // ── Auth ─────────────────────────────────────────────────────────────────
@@ -365,3 +406,4 @@ export const waselRouter = createBrowserRouter([
     errorElement: <RouteErrorFallback />,
   },
 ]);
+

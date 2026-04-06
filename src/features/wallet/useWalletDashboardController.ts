@@ -6,6 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { walletApi, type InsightsData, type WalletData } from '../../services/walletApi';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
+import { buildAuthPagePath } from '../../utils/authFlow';
 import { walletText } from './walletText';
 import { resolveWalletRuntimeMode } from './walletRuntime';
 
@@ -96,7 +97,7 @@ export function useWalletDashboardController() {
 
   useEffect(() => {
     if (shouldRedirectToAuth) {
-      navigate('/app/auth?returnTo=/app/wallet');
+      navigate(buildAuthPagePath('signin', '/app/wallet'));
     }
   }, [navigate, shouldRedirectToAuth]);
 

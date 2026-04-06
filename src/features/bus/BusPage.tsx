@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   ArrowLeftRight,
@@ -16,6 +16,7 @@ import {
   TimerReset,
   Users,
 } from 'lucide-react';
+import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { MapWrapper } from '../../components/MapWrapper';
 import { createBusBooking, fetchBusRoutes, getOfficialBusRoutes, type BusRoute } from '../../services/bus';
 import { createSupportTicket } from '../../services/supportInbox';
@@ -216,6 +217,30 @@ export function BusPage() {
         <SectionHead emoji="🚌" title="Wasel Bus" sub="Official Jordan intercity schedules, route-aware booking, and provider-backed fare visibility." color={DS.green} />
         <CoreExperienceBanner title="Jordan-wide bus schedules with provider-backed fares" detail="Wasel Bus now uses official intercity coach schedules as the baseline network across Jordan, while still allowing live inventory to take over when a real bus feed is available." tone={DS.green} />
 
+        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
+          <StakeholderSignalBanner
+            eyebrow="Wasel · bus comms"
+            title="Bus booking now shows the same shared context as the rest of the app"
+            detail="Passengers, operators, and support can now read one clearer coach story with route status, fallback choices, ticket state, and official schedule context all in one place."
+            stakeholders={[
+              { label: 'Visible routes', value: String(busRoutes.length), tone: 'teal' },
+              { label: 'Operators', value: String(operatorCount), tone: 'blue' },
+              { label: 'Open seats', value: String(totalOpenSeats), tone: 'green' },
+              { label: 'Fallback options', value: String(fallbackBuses.length), tone: 'amber' },
+            ]}
+            statuses={[
+              { label: 'Active route', value: `${activeBus.from} to ${activeBus.to}`, tone: 'teal' },
+              { label: 'Route status', value: activeStatus.label, tone: activeStatus.label === 'Boarding soon' ? 'green' : activeStatus.label === 'Closed today' ? 'amber' : 'blue' },
+              { label: 'Ticket state', value: bookingComplete ? 'Reserved' : 'Open', tone: bookingComplete ? 'green' : 'slate' },
+            ]}
+            lanes={[
+              { label: 'Passenger lane', detail: 'Schedule, seat preference, and ticket state all stay tied to one route record.' },
+              { label: 'Operator lane', detail: 'Official schedules, provider visibility, and route status make coach supply easier to trust.' },
+              { label: 'Support lane', detail: 'When a booking changes or fills up, fallback departures and support handoff stay close by.' },
+            ]}
+          />
+        </div>}
+
         <div style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', border: `1px solid ${DS.border}`, borderRadius: r(22), padding: 18, marginBottom: 18, boxShadow: '0 14px 34px rgba(0,0,0,0.18)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
             <div>
@@ -375,7 +400,7 @@ export function BusPage() {
                     ))}
                   </div>
                 </div>
-                {activeBus.seats === 0 && <div style={{ background: 'rgba(240,168,48,0.10)', border: '1px solid rgba(240,168,48,0.28)', borderRadius: r(16), padding: '14px 16px', color: '#fff', fontSize: '0.84rem', lineHeight: 1.5 }}>This coach is full right now. Switch routes and keep the same corridor filters.</div>}
+                {activeBus.seats === 0 && <div style={{ background: 'rgba(199,255,26,0.10)', border: '1px solid rgba(199,255,26,0.28)', borderRadius: r(16), padding: '14px 16px', color: '#fff', fontSize: '0.84rem', lineHeight: 1.5 }}>This coach is full right now. Switch routes and keep the same corridor filters.</div>}
                 {scheduleMode === 'schedule-later' && <input type="date" min={today} value={tripDate} onChange={(event) => { setTripDate(event.target.value); setBookingComplete(false); }} style={{ width: '100%', height: 46, borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', padding: '0 14px', fontFamily: DS.F }} />}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
@@ -395,7 +420,7 @@ export function BusPage() {
                     </select>
                   </div>
                 </div>
-                <div style={{ background: 'linear-gradient(135deg, rgba(0,200,232,0.08), rgba(240,168,48,0.08))', border: `1px solid ${DS.border}`, borderRadius: r(16), padding: '16px 16px 14px', boxShadow: '0 10px 24px rgba(0,0,0,0.12)' }}>
+                <div style={{ background: 'linear-gradient(135deg, rgba(22,199,242,0.08), rgba(199,255,26,0.08))', border: `1px solid ${DS.border}`, borderRadius: r(16), padding: '16px 16px 14px', boxShadow: '0 10px 24px rgba(0,0,0,0.12)' }}>
                   {[{ label: 'Seat fare', value: `${activeBus.price} JOD x ${passengers}` }, { label: 'Schedule days', value: activeBus.scheduleDays ?? activeBus.frequency }, { label: 'Available on this coach', value: `${activeBus.seats} seats` }].map((row) => <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}><span style={{ color: DS.sub, fontSize: '0.78rem' }}>{row.label}</span><span style={{ color: '#fff', fontWeight: 700 }}>{row.value}</span></div>)}
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, paddingTop: 10, borderTop: `1px solid ${DS.border}` }}><span style={{ color: '#fff', fontWeight: 800 }}>Total</span><span style={{ color: activeBus.color ?? DS.cyan, fontWeight: 900, fontSize: '1.2rem' }}>{totalPrice} JOD</span></div>
                 </div>
@@ -411,7 +436,7 @@ export function BusPage() {
                     Official schedule, verified {activeBus.lastVerifiedAt}
                   </a>
                 )}
-                {bookingComplete && <div style={{ background: 'rgba(0,200,117,0.10)', border: '1px solid rgba(0,200,117,0.28)', borderRadius: r(16), padding: '14px 16px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 8, color: DS.green, fontWeight: 800, marginBottom: 6 }}><CheckCircle2 size={16} />Seat confirmed</div><div style={{ color: '#fff', fontSize: '0.86rem', lineHeight: 1.5 }}>{passengers} seat{passengers > 1 ? 's are' : ' is'} reserved for {departureLabel}. Ticket code {bookingTicketCode ?? 'pending'} was saved for the {activeBus.from} to {activeBus.to} corridor.{bookingSource === 'local' ? ' Saved locally while server sync completes.' : ' Saved in your account with departure reminders.'}</div><div style={{ display:'flex', gap:10, flexWrap:'wrap', marginTop:10 }}><button type="button" onClick={() => { const ticket = createSupportTicket({ topic: 'bus_booking', subject: `Bus help for ${activeBus.from} to ${activeBus.to}`, detail: `Support requested for bus ticket ${bookingTicketCode ?? 'pending'} on ${departureLabel}.`, relatedId: bookingTicketCode ?? activeBus.id, routeLabel: `${activeBus.from} to ${activeBus.to}` }); notificationsAPI.createNotification({ title: 'Bus support opened', message: `Support ticket ${ticket.id} is following your bus booking.`, type: 'support', priority: 'high', action_url: '/app/profile' }).catch(() => {}); }} style={{ height:38, padding:'0 14px', borderRadius:'99px', border:`1px solid ${DS.border}`, background:DS.card2, color:'#fff', fontWeight:700, cursor:'pointer' }}>Open support</button></div></div>}
+                {bookingComplete && <div style={{ background: 'rgba(96,197,54,0.10)', border: '1px solid rgba(96,197,54,0.28)', borderRadius: r(16), padding: '14px 16px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 8, color: DS.green, fontWeight: 800, marginBottom: 6 }}><CheckCircle2 size={16} />Seat confirmed</div><div style={{ color: '#fff', fontSize: '0.86rem', lineHeight: 1.5 }}>{passengers} seat{passengers > 1 ? 's are' : ' is'} reserved for {departureLabel}. Ticket code {bookingTicketCode ?? 'pending'} was saved for the {activeBus.from} to {activeBus.to} corridor.{bookingSource === 'local' ? ' Saved locally while server sync completes.' : ' Saved in your account with departure reminders.'}</div><div style={{ display:'flex', gap:10, flexWrap:'wrap', marginTop:10 }}><button type="button" onClick={() => { const ticket = createSupportTicket({ topic: 'bus_booking', subject: `Bus help for ${activeBus.from} to ${activeBus.to}`, detail: `Support requested for bus ticket ${bookingTicketCode ?? 'pending'} on ${departureLabel}.`, relatedId: bookingTicketCode ?? activeBus.id, routeLabel: `${activeBus.from} to ${activeBus.to}` }); notificationsAPI.createNotification({ title: 'Bus support opened', message: `Support ticket ${ticket.id} is following your bus booking.`, type: 'support', priority: 'high', action_url: '/app/profile' }).catch(() => {}); }} style={{ height:38, padding:'0 14px', borderRadius:'99px', border:`1px solid ${DS.border}`, background:DS.card2, color:'#fff', fontWeight:700, cursor:'pointer' }}>Open support</button></div></div>}
               </div>
             </div>
 
@@ -479,3 +504,4 @@ export function BusPage() {
 }
 
 export default BusPage;
+

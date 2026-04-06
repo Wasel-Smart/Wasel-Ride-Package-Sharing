@@ -6,6 +6,11 @@ import {
   upsertDirectCommunicationPreferences,
 } from './directSupabase';
 import { getConfig } from '../utils/env';
+import {
+  buildTraceHeaders,
+  communicationPreferenceUpdateSchema,
+  withDataIntegrity,
+} from './dataIntegrity';
 
 export type CommunicationChannel = 'in_app' | 'push' | 'email' | 'sms' | 'whatsapp';
 export type NotificationTopic =
@@ -177,7 +182,7 @@ export function getCommunicationCapabilities(contact?: { email?: string | null; 
     push: typeof NotificationApi !== 'undefined',
     email: Boolean(config.enableEmailNotifications && contact?.email),
     sms: Boolean(config.enableSmsNotifications && contact?.phone),
-    whatsapp: Boolean(config.enableWhatsAppNotifications && contact?.phone && config.supportWhatsAppNumber),
+    whatsapp: Boolean(config.enableWhatsAppNotifications && contact?.phone),
   };
 }
 
@@ -203,11 +208,12 @@ export function buildDeliveryPlan(args: {
     : (['in_app', 'push', 'email', 'sms'] as CommunicationChannel[]);
 
   return requestedChannels.filter((channel) => {
-    if (channel === 'in_app') return args.preferences.inApp && args.capabilities.inApp;
-    if (channel === 'push') return args.preferences.push && args.capabilities.push;
-    if (channel === 'email') return args.preferences.email && args.capabilities.email;
-    if (channel === 'sms') return args.preferences.sms && args.capabilities.sms;
-    if (channel === 'whatsapp') return args.preferences.whatsapp && args.capabilities.whatsapp;
+    const forceChannel = Boolean(args.explicitChannels?.includes(channel));
+    if (channel === 'in_app') return args.capabilities.inApp && (forceChannel || args.preferences.inApp);
+    if (channel === 'push') return args.capabilities.push && (forceChannel || args.preferences.push);
+    if (channel === 'email') return args.capabilities.email && (forceChannel || args.preferences.email);
+    if (channel === 'sms') return args.capabilities.sms && (forceChannel || args.preferences.sms);
+    if (channel === 'whatsapp') return args.capabilities.whatsapp && (forceChannel || args.preferences.whatsapp);
     return false;
   });
 }
@@ -255,7 +261,8 @@ export async function updateCommunicationPreferences(
   userId: string | null | undefined,
   updates: Partial<CommunicationPreferences>,
 ): Promise<CommunicationPreferences> {
-  const merged = normalizePreferences({ ...readStoredPreferences(userId), ...updates });
+  const validatedUpdates = communicationPreferenceUpdateSchema.parse(updates);
+  const merged = normalizePreferences({ ...readStoredPreferences(userId), ...validatedUpdates });
   writeStoredPreferences(userId, merged);
 
   if (!userId) return merged;
@@ -270,19 +277,27 @@ export async function updateCommunicationPreferences(
   }
 
   try {
-    const { token } = await getAuthDetails();
-    const response = await fetchWithRetry(`${API_URL}/communications/preferences`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+    await withDataIntegrity({
+      operation: 'communication.preferences.update',
+      schema: communicationPreferenceUpdateSchema,
+      payload: validatedUpdates,
+      execute: async ({ requestId }) => {
+        const { token } = await getAuthDetails();
+        const response = await fetchWithRetry(`${API_URL}/communications/preferences`, {
+          method: 'PATCH',
+          headers: buildTraceHeaders(requestId, {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          }),
+          body: JSON.stringify(merged),
+        });
+        if (!response.ok) throw new Error('Failed to update communication preferences');
+        return merged;
       },
-      body: JSON.stringify(merged),
     });
-    if (!response.ok) throw new Error('Failed to update communication preferences');
   } catch {
     try {
-      await upsertDirectCommunicationPreferences(userId, toDirectPreferenceUpdate(updates));
+      await upsertDirectCommunicationPreferences(userId, toDirectPreferenceUpdate(validatedUpdates));
     } catch {
       // keep local copy
     }

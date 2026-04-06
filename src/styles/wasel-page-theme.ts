@@ -7,6 +7,7 @@ import {
   GRAD_GREEN,
   GRAD_HERO,
   GRAD_NAVY,
+  GRAD_SIGNAL,
 } from '../utils/wasel-ds';
 
 export const PAGE_DS = {
@@ -34,9 +35,9 @@ export const PAGE_DS = {
   gradG: GRAD_GREEN,
   gradGld: GRAD_GOLD,
   gradGold: GRAD_GOLD,
-  gradB: GRAD,
+  gradB: GRAD_SIGNAL,
   gradNav: GRAD_NAVY,
   gradHero: GRAD_HERO,
 } as const;
 
-export const PAGE_RADIUS = { sm: 8, md: 10, lg: 12, xl: 16, xxl: 20, full: 9999 } as const;
+export const PAGE_RADIUS = { sm: 10, md: 14, lg: 18, xl: 22, xxl: 28, full: 9999 } as const;

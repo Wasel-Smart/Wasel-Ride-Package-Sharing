@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Brain } from 'lucide-react';
+import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
@@ -55,6 +56,7 @@ export function PackagesPage() {
       : trackedPackage?.status === 'matched'
         ? DS.gold
         : DS.muted;
+  const hasAttachRate = typeof corridorPlan?.attachRatePercent === 'number';
 
   const refreshPackageSnapshot = () => {
     setNetworkStats(getConnectedStats());
@@ -185,19 +187,43 @@ export function PackagesPage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="Goods"
+          emoji="📦"
           title="Packages"
           titleAr="شبكة البضائع"
-          sub="Move packages and returns on the same city-to-city corridors used by riders."
+          sub="Send, track, and manage packages without leaving the same live route network."
           color={DS.gold}
           action={{ label: 'Offer route', onClick: () => nav('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Packages should ride on the route network, not beside it."
-          detail={`${category.infrastructureLabel} lets package requests learn from live corridor density, package-ready drivers, and repeat demand on the same lanes used by commuters.`}
+          title="Send fast, track clearly, and keep every handoff visible."
+          detail={`${category.infrastructureLabel} The best package experience comes from staying close to the ride network, not building a second workflow around it.`}
           tone={DS.gold}
         />
+
+        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
+          <StakeholderSignalBanner
+            eyebrow="Wasel · package comms"
+            title="Senders, riders, support, and route supply now read from one package story"
+            detail="Packages are now framed as a shared corridor workflow so the sender, carrier, and support team can all see the same movement, handoff, and escalation context."
+            stakeholders={[
+              { label: 'Tracked packages', value: String(networkStats.packagesCreated), tone: 'teal' },
+              { label: 'Matched now', value: String(networkStats.matchedPackages), tone: 'green' },
+              { label: 'Package-ready routes', value: String(networkStats.packageEnabledRides), tone: 'blue' },
+              { label: 'Live rider lanes', value: String(matchingRideCount), tone: 'amber' },
+            ]}
+            statuses={[
+              { label: 'Current tab', value: activeTab === 'send' ? 'Send' : activeTab === 'track' ? 'Track' : 'Returns', tone: 'teal' },
+              { label: 'Tracking focus', value: trackedPackage?.trackingId ?? 'Waiting', tone: trackedPackage ? 'green' : 'slate' },
+              { label: 'Corridor attach rate', value: hasAttachRate ? `${corridorPlan.attachRatePercent}%` : 'Pending', tone: hasAttachRate ? 'amber' : 'slate' },
+            ]}
+            lanes={[
+              { label: 'Sender lane', detail: 'Creation, tracking, and return flows stay connected to one corridor record.' },
+              { label: 'Carrier lane', detail: 'Package-ready drivers and route density are surfaced before the sender commits.' },
+              { label: 'Support lane', detail: 'Tracking and support tickets now reference the same package identifiers and movement state.' },
+            ]}
+          />
+        </div>}
 
         <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
           {[

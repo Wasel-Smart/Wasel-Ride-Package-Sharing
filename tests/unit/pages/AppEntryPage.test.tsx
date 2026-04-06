@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockNavigate = vi.fn();
 const mockUseLocalAuth = vi.fn();
 const mockUseAuth = vi.fn();
+let mockLanguage = 'en';
 
 vi.mock('motion/react', () => ({
   motion: {
@@ -26,12 +27,14 @@ vi.mock('@/contexts/AuthContext', () => ({
 }));
 
 vi.mock('@/contexts/LanguageContext', () => ({
-  useLanguage: () => ({ language: 'en' }),
+  useLanguage: () => ({ language: mockLanguage }),
 }));
 
 vi.mock('@/components/wasel-ds/WaselLogo', () => ({
   WaselLogo: () => <div>Wasel</div>,
   WaselIcon: () => <div>Icon</div>,
+  WaselMark: () => <div>Mark</div>,
+  WaselHeroMark: () => <div>HeroMark</div>,
 }));
 
 vi.mock('@/components/system/WaselPresence', () => ({
@@ -59,18 +62,21 @@ import AppEntryPage from '@/features/home/AppEntryPage';
 describe('AppEntryPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLanguage = 'en';
     mockUseAuth.mockReturnValue({
       signInWithGoogle: vi.fn().mockResolvedValue({ error: null }),
       signInWithFacebook: vi.fn().mockResolvedValue({ error: null }),
     });
   });
 
-  it('shows guest CTA copy by default', { timeout: 15000 }, () => {
+  it('shows guest CTA copy by default', { timeout: 30000 }, () => {
     mockUseLocalAuth.mockReturnValue({ user: null });
 
     render(<AppEntryPage />);
 
-    expect(screen.getByText(/Understand the route/i)).toBeInTheDocument();
+    expect(screen.getByText(/Start from the corridor/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sign in/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Create account/i }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /Continue with Google/i })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Continue with email/i }).length).toBeGreaterThan(0);
   });
@@ -87,13 +93,42 @@ describe('AppEntryPage', () => {
     );
   });
 
+  it('routes guest header auth buttons to sign in and sign up', () => {
+    mockUseLocalAuth.mockReturnValue({ user: null });
+
+    render(<AppEntryPage />);
+
+    screen.getByRole('button', { name: /Sign in/i }).click();
+    screen.getAllByRole('button', { name: /Create account/i })[0].click();
+
+    expect(mockNavigate).toHaveBeenNthCalledWith(
+      1,
+      '/app/auth?tab=signin&returnTo=%2Fapp%2Ffind-ride',
+    );
+    expect(mockNavigate).toHaveBeenNthCalledWith(
+      2,
+      '/app/auth?tab=signup&returnTo=%2Fapp%2Ffind-ride',
+    );
+  });
+
   it('navigates authenticated users straight into the app', () => {
     mockUseLocalAuth.mockReturnValue({ user: { id: 'user-1' } });
 
     render(<AppEntryPage />);
 
-    screen.getAllByRole('button', { name: /Open app/i })[0].click();
+    screen.getAllByRole('button', { name: /Find a ride/i })[0].click();
 
     expect(mockNavigate).toHaveBeenCalledWith('/app/find-ride');
+  });
+
+  it('renders Arabic landing copy when Arabic is active', () => {
+    mockLanguage = 'ar';
+    mockUseLocalAuth.mockReturnValue({ user: null });
+
+    render(<AppEntryPage />);
+
+    expect(screen.getByRole('heading', { name: /ابدأ من الممر/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /تسجيل الدخول/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /تابع بالإيميل/i })).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import { bookingsAPI } from './bookings';
+﻿import { bookingsAPI } from './bookings';
 import { trackGrowthEvent } from './growthEngine';
 import { tripsAPI } from './trips';
 import { OFFICIAL_JORDAN_BUS_ROUTES } from '../data/jordanBusNetwork';
@@ -104,7 +104,7 @@ export function looksLikeBusTrip(item: Record<string, unknown>): boolean {
 }
 
 export function normalizeBusRoute(raw: Record<string, unknown>, index: number): BusRoute {
-  const colors = ['#00C8E8', '#2060E8', '#00C875', '#F0A830'];
+  const colors = ['#16C7F2', '#0F78BF', '#60C536', '#C7FF1A'];
   const defaultId = `live-bus-${index + 1}`;
   const from = toText(raw.from ?? raw.origin_city, 'Amman');
   const to = toText(raw.to ?? raw.destination_city, 'Aqaba');
@@ -286,3 +286,4 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
     };
   }
 }
+

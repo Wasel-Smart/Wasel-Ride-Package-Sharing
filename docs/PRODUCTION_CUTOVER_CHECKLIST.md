@@ -16,12 +16,29 @@ users and live operational traffic.
 - Apply [20260401113000_unified_backend_contract.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401113000_unified_backend_contract.sql)
 - Apply [20260401133000_align_canonical_rls_policies.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401133000_align_canonical_rls_policies.sql)
 - Apply [20260401143000_harden_rpc_execute_permissions.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401143000_harden_rpc_execute_permissions.sql)
+- Apply [20260404110000_route_automation_backbone.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260404110000_route_automation_backbone.sql)
+- Apply [20260404133000_harden_auth_signup_trigger.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260404133000_harden_auth_signup_trigger.sql)
+- Apply [20260404153000_operational_bootstrap_reference_data.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260404153000_operational_bootstrap_reference_data.sql)
+- Apply [20260406101500_harden_automation_queue_access_and_support_rpcs.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260406101500_harden_automation_queue_access_and_support_rpcs.sql)
 - Confirm all migrations complete without manual edits in the dashboard
 - Confirm [MIGRATIONS_README.md](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/MIGRATIONS_README.md) matches what is applied
+
+## 2.1 Automation Runtime
+
+- Set `AUTOMATION_WORKER_SECRET`
+- Confirm the edge function responds to `POST /automation/admin/apply-migrations`
+- Confirm the edge function responds to `POST /automation/process`
+- Run `npm run worker:automation -- --inline-communications` against the production function URL for a smoke pass
+- Verify `automation_jobs`, `route_reminders`, `support_tickets`, and `pricing_snapshots` are present in Supabase
+- Confirm direct browser inserts into `automation_jobs`, `support_tickets`, and `support_ticket_events` are denied under RLS
+- Confirm `app_enqueue_automation_job`, `app_create_support_ticket`, and `app_update_support_ticket_status` execute for authenticated users
 
 ## 3. Auth to Canonical User Binding
 
 - Create a real Supabase Auth test user
+- Run `npm run verify:auth:production`
+- Confirm the verifier reaches both `accounts.google.com` and `www.facebook.com`
+- Confirm the verifier no longer reports `Database error saving new user`
 - Sign in through the app
 - Confirm `public.users.auth_user_id` is populated for that user
 - Confirm profile fetch returns canonical user data rather than only legacy compatibility fields
@@ -96,6 +113,7 @@ No-go when:
 ## Suggested Final Commands
 
 - `node scripts/verify-supabase-rollout.mjs`
+- `npm run verify:auth:production`
 - `npm run type-check`
 - `npm run lint`
 - `npm run test`

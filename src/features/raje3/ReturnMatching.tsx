@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Wasel Raje3 Returns
  * Connected to the shared ride/package network.
  */
@@ -14,7 +14,7 @@ import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 
 const D = {
   bg:'#040C18', card:'#0A1628', card2:'#0D1F38',
-  border:'rgba(240,168,48,0.12)', gold:'#F0A830', cyan:'#00C8E8', green:'#00C875',
+  border:'rgba(199,255,26,0.12)', gold:'#C7FF1A', cyan:'#16C7F2', green:'#60C536',
   text:'#EFF6FF', sub:'rgba(148,163,184,0.80)', muted:'rgba(100,130,180,0.60)',
   F:"var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)", MONO:"'JetBrains Mono','Fira Mono',monospace",
 } as const;
@@ -204,7 +204,7 @@ export function ReturnMatching() {
                 {matches.length > 0 ? (
                   <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:18 }}>
                     {matches.map(match => (
-                      <button key={match.id} onClick={() => setSelectedMatch(match.id)} style={{ background: selectedMatch===match.id ? `rgba(240,168,48,0.07)` : D.card2, border:`1px solid ${selectedMatch===match.id ? D.gold+'50' : D.border}`, borderRadius:14, padding:'16px 18px', cursor:'pointer', textAlign:'left' }}>
+                      <button key={match.id} onClick={() => setSelectedMatch(match.id)} style={{ background: selectedMatch===match.id ? `rgba(199,255,26,0.07)` : D.card2, border:`1px solid ${selectedMatch===match.id ? D.gold+'50' : D.border}`, borderRadius:14, padding:'16px 18px', cursor:'pointer', textAlign:'left' }}>
                         <div style={{ display:'flex', justifyContent:'space-between', gap:12 }}>
                           <div>
                             <div style={{ fontSize:'0.88rem', fontWeight:800, color:D.text }}>{match.driverName}</div>
@@ -239,7 +239,7 @@ export function ReturnMatching() {
             {step === 3 && createdReturn && (
               <motion.div key="done" initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }}>
                 <div style={{ textAlign:'center', padding:'16px 0 24px' }}>
-                  <div style={{ width:70, height:70, borderRadius:'50%', background:'rgba(0,200,117,0.12)', border:`2px solid ${D.green}`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
+                  <div style={{ width:70, height:70, borderRadius:'50%', background:'rgba(96,197,54,0.12)', border:`2px solid ${D.green}`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
                     <CheckCircle2 size={34} color={D.green}/>
                   </div>
                   <h2 style={{ fontSize:'1.3rem', fontWeight:900, color:D.green, margin:'0 0 6px' }}>{isRTL?'تم إنشاء طلب الإرجاع!':'Return Request Created!'}</h2>
@@ -249,7 +249,7 @@ export function ReturnMatching() {
                       : (isRTL ? 'تم إنشاء الطلب بحالة بحث وسيظهر في تتبع الطرود حتى تتم المطابقة.' : 'The request was created in searching mode and will stay visible in package tracking until matched.')}
                   </p>
                   <div style={{ background:D.card2, border:`1px solid ${D.gold}30`, borderRadius:16, padding:'24px', marginBottom:20, display:'inline-block' }}>
-                    <div style={{ width:120, height:120, background:'linear-gradient(135deg,rgba(240,168,48,0.15),rgba(0,200,232,0.10))', border:`2px solid ${D.gold}40`, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 10px' }}>
+                    <div style={{ width:120, height:120, background:'linear-gradient(135deg,rgba(199,255,26,0.15),rgba(22,199,242,0.10))', border:`2px solid ${D.gold}40`, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 10px' }}>
                       <QrCode size={56} color={D.gold}/>
                     </div>
                     <div style={{ fontSize:'0.72rem', fontFamily:D.MONO, color:D.gold, letterSpacing:'0.12em' }}>{createdReturn.trackingId}</div>
@@ -294,3 +294,4 @@ export function ReturnMatching() {
 }
 
 export default ReturnMatching;
+

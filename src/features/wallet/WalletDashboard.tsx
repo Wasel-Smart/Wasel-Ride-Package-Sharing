@@ -80,7 +80,6 @@ export function WalletDashboard() {
   const bal = walletData?.balance ?? 0;
   const pending = walletData?.pendingBalance ?? 0;
   const rewardsBal = walletData?.rewardsBalance ?? 0;
-
   if (shouldRedirectToAuth) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">

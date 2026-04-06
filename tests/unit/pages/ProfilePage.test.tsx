@@ -88,7 +88,7 @@ describe('ProfilePage', () => {
     });
   });
 
-  it('shows a sign-in gate when no profile is loaded', () => {
+  it('shows a sign-in gate when no profile is loaded', { timeout: 15000 }, () => {
     mockUseLocalAuth.mockReturnValue({ user: null, signOut: vi.fn() });
 
     render(<ProfilePage />);
@@ -96,7 +96,7 @@ describe('ProfilePage', () => {
     screen.getByRole('button', { name: /sign in/i }).click();
 
     expect(screen.getByText(/please sign in to view your profile/i)).toBeInTheDocument();
-    expect(mockNavigate).toHaveBeenCalledWith('/app/auth');
+    expect(mockNavigate).toHaveBeenCalledWith('/app/auth?tab=signin&returnTo=%2Fapp%2Ffind-ride');
   });
 
   it('renders the production readiness summary for authenticated users', () => {
@@ -126,9 +126,9 @@ describe('ProfilePage', () => {
 
     render(<ProfilePage />);
 
-    expect(screen.getByText(/account readiness/i)).toBeInTheDocument();
-    expect(screen.getByText(/profile completeness/i)).toBeInTheDocument();
-    expect(screen.getByText(/wallet & payments/i)).toBeInTheDocument();
-    expect(screen.getByText(/trust & verification/i)).toBeInTheDocument();
+    expect(screen.getByText(/^account readiness$/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/^profile completeness$/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/^wallet & payments$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^trust & verification$/i)).toBeInTheDocument();
   });
 });

@@ -120,10 +120,10 @@ describe('backend fallback services', () => {
     const result = await authAPI.updateProfile({ phone_number: '+962791234567' });
 
     expect(mockUpdateDirectProfile).not.toHaveBeenCalled();
-    expect(result).toEqual({
-      success: false,
-      error: 'Profile update is temporarily unavailable while the secure backend is degraded. Please try again shortly.',
-    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain(
+      'Profile update is temporarily unavailable while the secure backend is degraded. Please try again shortly.',
+    );
   });
 
   it('creates trips through the direct Supabase adapter when the edge trip endpoint is unavailable', async () => {

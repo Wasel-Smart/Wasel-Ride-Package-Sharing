@@ -25,12 +25,16 @@ export interface RideBookingRecord {
   id: string;
   rideId: string;
   ownerId?: string;
+  driverPhone?: string;
+  driverEmail?: string;
   from: string;
   to: string;
   date: string;
   time: string;
   driverName: string;
   passengerName: string;
+  passengerPhone?: string;
+  passengerEmail?: string;
   seatsRequested: number;
   status: RideBookingStatus;
   paymentStatus: RidePaymentStatus;
@@ -84,6 +88,8 @@ export function getRideBookings(): RideBookingRecord[] {
 export function createRideBooking(input: {
   rideId: string;
   ownerId?: string;
+  driverPhone?: string;
+  driverEmail?: string;
   passengerId?: string;
   from: string;
   to: string;
@@ -91,6 +97,8 @@ export function createRideBooking(input: {
   time: string;
   driverName: string;
   passengerName: string;
+  passengerPhone?: string;
+  passengerEmail?: string;
   seatsRequested?: number;
   pricePerSeatJod?: number;
   routeMode: 'live_post' | 'network_inventory';
@@ -100,12 +108,16 @@ export function createRideBooking(input: {
     id: `ride-booking-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     rideId: input.rideId,
     ownerId: input.ownerId,
+    driverPhone: input.driverPhone,
+    driverEmail: input.driverEmail,
     from: input.from,
     to: input.to,
     date: input.date,
     time: input.time,
     driverName: input.driverName,
     passengerName: input.passengerName,
+    passengerPhone: input.passengerPhone,
+    passengerEmail: input.passengerEmail,
     seatsRequested: Math.max(1, input.seatsRequested ?? 1),
     status: input.routeMode === 'live_post' ? 'pending_driver' : 'confirmed',
     paymentStatus: input.routeMode === 'live_post' ? 'pending' : 'authorized',
@@ -245,12 +257,16 @@ export async function hydrateRideBookings(userId: string, rides: PostedRide[] = 
       backendBookingId: String(raw.booking_id ?? raw.id ?? ''),
       rideId,
       ownerId: ride?.ownerId,
+      driverPhone: ride?.ownerPhone,
+      driverEmail: ride?.ownerEmail,
       from: String(raw.pickup_location ?? ride?.from ?? ''),
       to: String(raw.dropoff_location ?? ride?.to ?? ''),
       date: ride?.date ?? new Date(String(raw.created_at ?? new Date().toISOString())).toISOString().slice(0, 10),
       time: ride?.time ?? '08:00',
       driverName: ride ? ride.carModel || 'Wasel Captain' : 'Wasel Captain',
       passengerName: 'Passenger',
+      passengerPhone: undefined,
+      passengerEmail: undefined,
       seatsRequested: Number(raw.seats_requested ?? 1) || 1,
       status:
         status === 'completed' || status === 'cancelled' || status === 'rejected' || status === 'confirmed'

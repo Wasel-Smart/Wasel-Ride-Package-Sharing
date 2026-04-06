@@ -1,32 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import {
+  operationalSeedFiles,
+  requiredDocs,
+  rolloutMigrations,
+  rolloutSeedFiles,
+} from './supabase-rollout-manifest.mjs';
 
 const root = process.cwd();
-
-const requiredFiles = [
-  'src/supabase/migrations/20260326080000_legacy_public_table_cutover.sql',
-  'src/supabase/migrations/20260327090000_production_operating_model.sql',
-  'src/supabase/migrations/20260327110000_notifications_runtime_contract.sql',
-  'src/supabase/migrations/20260401093000_database_hardening.sql',
-  'src/supabase/migrations/20260401113000_unified_backend_contract.sql',
-  'src/supabase/migrations/20260401133000_align_canonical_rls_policies.sql',
-  'src/supabase/migrations/20260401143000_harden_rpc_execute_permissions.sql',
-  'src/supabase/migrations/20260401183000_growth_and_demand_alerts.sql',
-  'src/supabase/migrations/20260401193000_referrals_and_growth_events.sql',
-  'src/supabase/migrations/20260401213000_expand_runtime_contract_tables.sql',
-  'src/supabase/migrations/20260401223000_communications_runtime_contract.sql',
-  'src/supabase/migrations/20260401233000_communication_delivery_operations.sql',
-  'src/supabase/seeds/mock_engine_launch_pack.sql',
-  'src/supabase/seeds/mock_engine_smoke_checks.sql',
-  'docs/MOCK_ENGINE_LAUNCH_PACK.md',
-  'docs/LAUNCH_REHEARSAL_CHECKLIST.md',
-  'docs/PRODUCTION_CUTOVER_CHECKLIST.md',
-  'docs/REAL_USER_TEST_MATRIX.md',
-  'docs/COMMUNICATIONS_DELIVERY_RUNBOOK.md',
-];
-
-const rolloutMigrations = requiredFiles.filter((file) => file.includes('/migrations/'));
-const rolloutSeeds = requiredFiles.filter((file) => file.includes('/seeds/'));
+const requiredFiles = [...rolloutMigrations, ...rolloutSeedFiles, ...requiredDocs];
 
 function exists(relativePath) {
   return fs.existsSync(path.join(root, relativePath));
@@ -130,28 +112,29 @@ if (exists(rpcMigration)) {
 }
 
 printSection('Seed Pack Coverage');
-const seedFile = 'src/supabase/seeds/mock_engine_launch_pack.sql';
-if (exists(seedFile)) {
-  const text = read(seedFile);
-  const expectedTables = [
-    'insert into public.users',
-    'insert into public.drivers',
-    'insert into public.vehicles',
-    'insert into public.trips',
-    'insert into public.bookings',
-    'insert into public.packages',
-    'insert into public.package_events',
-    'insert into public.transactions',
-    'insert into public.notifications',
-  ];
+const expectedSeedCoverage = [
+  ['db/seeds/roles.seed.sql', ['insert into public.system_roles', 'insert into public.seed_execution_log']],
+  ['db/seeds/cities.seed.sql', ['insert into public.cities', 'insert into public.seed_execution_log']],
+  ['db/seeds/trip_types.seed.sql', ['insert into public.trip_types_catalog', 'insert into public.seed_execution_log']],
+  ['db/seeds/pricing.seed.sql', ['insert into public.route_corridors', 'insert into public.pricing_rules']],
+  ['db/seeds/core.seed.sql', ['insert into public.users', 'insert into public.trips', 'insert into public.bookings', 'insert into public.packages', 'insert into public.notifications']],
+  ['db/seeds/automation.seed.sql', ['insert into public.route_reminders', 'insert into public.pricing_snapshots', 'insert into public.automation_jobs', 'select public.app_backfill_automation_jobs(50);']],
+];
 
-  const missingTables = expectedTables.filter((snippet) => !text.includes(snippet));
-  if (missingTables.length > 0) {
-    for (const snippet of missingTables) {
-      fail(`Mock seed pack is missing expected insert block: ${snippet}`);
+for (const [seedFile, expectedSnippets] of expectedSeedCoverage) {
+  if (!exists(seedFile)) {
+    fail(`Missing operational seed file: ${seedFile}`);
+    continue;
+  }
+
+  const text = read(seedFile);
+  const missingSnippets = expectedSnippets.filter((snippet) => !text.includes(snippet));
+  if (missingSnippets.length > 0) {
+    for (const snippet of missingSnippets) {
+      fail(`Operational seed ${seedFile} is missing expected snippet: ${snippet}`);
     }
   } else {
-    console.log('Mock launch pack covers the core application engine tables.');
+    console.log(`${seedFile} covers its expected bootstrap layer.`);
   }
 }
 
@@ -175,6 +158,101 @@ if (exists(communicationsMigration)) {
   }
 }
 
+printSection('Automation Backbone');
+const automationMigration = 'src/supabase/migrations/20260404110000_route_automation_backbone.sql';
+if (exists(automationMigration)) {
+  const text = read(automationMigration);
+  const expectedSnippets = [
+    'create table if not exists public.automation_jobs',
+    'create table if not exists public.route_reminders',
+    'create table if not exists public.support_tickets',
+    'create or replace function public.app_claim_automation_jobs',
+    'create or replace function public.app_backfill_automation_jobs',
+  ];
+
+  const missingSnippets = expectedSnippets.filter((snippet) => !text.includes(snippet));
+  if (missingSnippets.length > 0) {
+    for (const snippet of missingSnippets) {
+      fail(`Automation backbone migration is missing expected snippet: ${snippet}`);
+    }
+  } else {
+    console.log('Automation backbone migration includes queue tables and worker-safe helper functions.');
+  }
+}
+
+printSection('Operational Bootstrap Schema');
+const bootstrapMigration = 'src/supabase/migrations/20260404153000_operational_bootstrap_reference_data.sql';
+if (exists(bootstrapMigration)) {
+  const text = read(bootstrapMigration);
+  const expectedSnippets = [
+    'create table if not exists public.system_roles',
+    'create table if not exists public.cities',
+    'create table if not exists public.trip_types_catalog',
+    'create table if not exists public.route_corridors',
+    'create table if not exists public.pricing_rules',
+    'create table if not exists public.seed_execution_log',
+    'add column if not exists trip_type_key text not null default \'wasel\'',
+    'add column if not exists paired_trip_id uuid',
+    'chk_trips_trip_type_key',
+  ];
+
+  const missingSnippets = expectedSnippets.filter((snippet) => !text.includes(snippet));
+  if (missingSnippets.length > 0) {
+    for (const snippet of missingSnippets) {
+      fail(`Operational bootstrap migration is missing expected snippet: ${snippet}`);
+    }
+  } else {
+    console.log('Operational bootstrap migration includes reference data catalogs and paired-trip lifecycle support.');
+  }
+}
+
+printSection('Automation Access Hardening');
+const automationAccessMigration = 'src/supabase/migrations/20260406101500_harden_automation_queue_access_and_support_rpcs.sql';
+if (exists(automationAccessMigration)) {
+  const text = read(automationAccessMigration);
+  const expectedSnippets = [
+    'drop policy if exists automation_jobs_insert_own on public.automation_jobs',
+    'drop policy if exists support_tickets_insert_own on public.support_tickets',
+    'drop policy if exists support_tickets_update_own on public.support_tickets',
+    'drop policy if exists support_ticket_events_insert_own on public.support_ticket_events',
+    'create or replace function public.app_enqueue_automation_job(',
+    'create or replace function public.app_create_support_ticket(',
+    'create or replace function public.app_update_support_ticket_status(',
+    'grant execute on function public.app_enqueue_automation_job',
+  ];
+
+  const missingSnippets = expectedSnippets.filter((snippet) => !text.includes(snippet));
+  if (missingSnippets.length > 0) {
+    for (const snippet of missingSnippets) {
+      fail(`Automation access hardening migration is missing expected snippet: ${snippet}`);
+    }
+  } else {
+    console.log('Automation access hardening migration disables direct queue writes and adds atomic support ticket RPCs.');
+  }
+}
+
+printSection('Auth Signup Hardening');
+const authMigration = 'src/supabase/migrations/20260404133000_harden_auth_signup_trigger.sql';
+if (exists(authMigration)) {
+  const text = read(authMigration);
+  const expectedSnippets = [
+    'drop trigger if exists on_auth_user_created on auth.users',
+    'drop trigger if exists on_auth_user_synced_to_canonical on auth.users',
+    'create or replace function public.handle_new_user()',
+    'create or replace function public.sync_auth_user_to_canonical_user()',
+    'insert into public.users (auth_user_id, email, full_name, phone_number)',
+  ];
+
+  const missingSnippets = expectedSnippets.filter((snippet) => !text.includes(snippet));
+  if (missingSnippets.length > 0) {
+    for (const snippet of missingSnippets) {
+      fail(`Auth signup hardening migration is missing expected snippet: ${snippet}`);
+    }
+  } else {
+    console.log('Auth signup hardening migration removes the legacy trigger and reasserts canonical auth sync.');
+  }
+}
+
 printSection('Environment Readiness');
 const envHints = [
   'VITE_SUPABASE_URL',
@@ -193,7 +271,7 @@ printSection('Next Commands');
 for (const file of rolloutMigrations) {
   console.log(`psql "$SUPABASE_DB_URL" -f ${file}`);
 }
-for (const file of rolloutSeeds) {
+for (const file of rolloutSeedFiles) {
   console.log(`psql "$SUPABASE_DB_URL" -f ${file}`);
 }
 

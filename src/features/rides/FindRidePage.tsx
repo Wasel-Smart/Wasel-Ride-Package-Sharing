@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
+import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -84,6 +85,7 @@ export function FindRidePage() {
   const [retentionMessage, setRetentionMessage] = useState<string | null>(null);
   const [savedReminders, setSavedReminders] = useState(() => getRouteReminders());
   const [pkg, setPkg] = useState({ from: 'Amman', to: 'Aqaba', weight: '<1 kg', note: '', sent: false });
+  const searchTimerRef = useRef<number | null>(null);
 
   const category = useMemo(() => getWaselCategoryPosition(), []);
   const corridorPlan = useMemo(() => getCorridorOpportunity(from, to), [from, to]);
@@ -106,37 +108,57 @@ export function FindRidePage() {
 
   const searchFromCoord = resolveCityCoord(from);
   const searchToCoord = resolveCityCoord(to);
-  const connectedRides = getConnectedRides().map(buildRideFromPostedRide);
-  const allAvailableRides = [...connectedRides, ...ALL_RIDES];
-  const corridorRides = allAvailableRides.filter((ride) => routeMatchesLocationPair(ride.from, ride.to, from, to, { allowReverse: false }));
-  const nearbyCorridors = allAvailableRides
-    .filter(
-      (ride) =>
-        ride.id &&
-        !routeMatchesLocationPair(ride.from, ride.to, from, to, { allowReverse: false }) &&
-        (routeTouchesLocation(ride.from, ride.to, from) || routeTouchesLocation(ride.from, ride.to, to)),
-    )
-    .slice(0, 3);
-
-  const results: Ride[] = searched
-    ? allAvailableRides
+  const connectedRides = useMemo(
+    () => getConnectedRides().map(buildRideFromPostedRide),
+    [location.key, routeIntelligence.updatedAt],
+  );
+  const allAvailableRides = useMemo(
+    () => [...connectedRides, ...ALL_RIDES],
+    [connectedRides],
+  );
+  const corridorRides = useMemo(
+    () => allAvailableRides.filter((ride) => routeMatchesLocationPair(ride.from, ride.to, from, to, { allowReverse: false })),
+    [allAvailableRides, from, to],
+  );
+  const nearbyCorridors = useMemo(
+    () =>
+      allAvailableRides
         .filter(
           (ride) =>
-            (!from || routeMatchesLocationPair(ride.from, ride.to, from, ride.to, { allowReverse: false })) &&
-            (!to || routeMatchesLocationPair(ride.from, ride.to, ride.from, to, { allowReverse: false })) &&
-            (!date || ride.date === date),
+            ride.id &&
+            !routeMatchesLocationPair(ride.from, ride.to, from, to, { allowReverse: false }) &&
+            (routeTouchesLocation(ride.from, ride.to, from) || routeTouchesLocation(ride.from, ride.to, to)),
         )
-        .sort((left, right) =>
-          sort === 'price'
-            ? left.pricePerSeat - right.pricePerSeat
-            : sort === 'time'
-              ? left.time.localeCompare(right.time)
-              : right.driver.rating - left.driver.rating,
-        )
-    : allAvailableRides.slice(0, 4);
+        .slice(0, 3),
+    [allAvailableRides, from, to],
+  );
+
+  const results: Ride[] = useMemo(
+    () =>
+      searched
+        ? allAvailableRides
+            .filter(
+              (ride) =>
+                (!from || routeMatchesLocationPair(ride.from, ride.to, from, ride.to, { allowReverse: false })) &&
+                (!to || routeMatchesLocationPair(ride.from, ride.to, ride.from, to, { allowReverse: false })) &&
+                (!date || ride.date === date),
+            )
+            .sort((left, right) =>
+              sort === 'price'
+                ? left.pricePerSeat - right.pricePerSeat
+                : sort === 'time'
+                  ? left.time.localeCompare(right.time)
+                  : right.driver.rating - left.driver.rating,
+            )
+        : allAvailableRides.slice(0, 4),
+    [allAvailableRides, date, from, searched, sort, to],
+  );
 
   const routeReadinessLabel = corridorRides.length >= 2 ? t.instantMatch : corridorRides.length === 1 ? t.bookingReady : t.searchHelp;
-  const bookedRides = allAvailableRides.filter((ride) => booked.has(ride.id)).slice(0, 3);
+  const bookedRides = useMemo(
+    () => allAvailableRides.filter((ride) => booked.has(ride.id)).slice(0, 3),
+    [allAvailableRides, booked],
+  );
   const selectedPriceQuote = selectedSignal?.priceQuote
     ?? (corridorPlan
       ? getMovementPriceQuote({
@@ -146,6 +168,7 @@ export function FindRidePage() {
           membership: routeIntelligence.membership,
         })
       : null);
+  const hasSelectedPriceQuote = typeof selectedPriceQuote?.finalPriceJod === 'number';
   const savedReminderIds = useMemo(
     () => new Set(savedReminders.map((reminder) => reminder.corridorId)),
     [savedReminders],
@@ -218,6 +241,12 @@ export function FindRidePage() {
     setSearched(nextSearched);
   }, [location.search]);
 
+  useEffect(() => () => {
+    if (searchTimerRef.current !== null) {
+      window.clearTimeout(searchTimerRef.current);
+    }
+  }, []);
+
   const handleSearch = () => {
     if (!routeEndpointsAreDistinct(from, to)) {
       setSearchError(t.chooseDifferentCities);
@@ -229,7 +258,11 @@ export function FindRidePage() {
     setBookingMessage(null);
     setLoading(true);
 
-    setTimeout(() => {
+    if (searchTimerRef.current !== null) {
+      window.clearTimeout(searchTimerRef.current);
+    }
+
+    searchTimerRef.current = window.setTimeout(() => {
       setLoading(false);
       setSearched(true);
       setRecentSearches((previous) => {
@@ -251,6 +284,7 @@ export function FindRidePage() {
           pricePressure: selectedSignal?.pricePressure ?? null,
         },
       });
+      searchTimerRef.current = null;
     }, 700);
   };
 
@@ -304,6 +338,8 @@ export function FindRidePage() {
     const booking = createRideBooking({
       rideId: ride.id,
       ownerId: ride.ownerId,
+      driverPhone: ride.driver.phone,
+      driverEmail: ride.driver.email,
       passengerId: user.id,
       from: ride.from,
       to: ride.to,
@@ -311,6 +347,8 @@ export function FindRidePage() {
       time: ride.time,
       driverName: ride.driver.name,
       passengerName: user.name,
+      passengerPhone: user.phone,
+      passengerEmail: user.email,
       seatsRequested: 1,
       pricePerSeatJod: ridePriceQuote.finalPriceJod,
       routeMode: ride.routeMode === 'live_post' ? 'live_post' : 'network_inventory',
@@ -332,6 +370,11 @@ export function FindRidePage() {
       type: 'booking',
       priority: 'high',
       action_url: '/app/my-trips?tab=rides',
+      channels: ['whatsapp', 'sms', 'email'],
+      contact: {
+        phone: ride.driver.phone || null,
+        email: ride.driver.email ?? null,
+      },
     }).catch(() => {});
 
     if (permission === 'default') {
@@ -400,18 +443,51 @@ export function FindRidePage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="Route"
-          title="Find a Shared Route"
+          emoji="🛣️"
+          title="Find a Ride"
           titleAr={copy.tabRide}
-          sub="Search live corridors, compare departures, and book the clearest route."
+          sub="Choose your cities, compare live departures, and book the right ride fast."
           action={{ label: 'Offer route', onClick: () => nav('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Search one corridor and get one clear booking decision."
-          detail={`${category.promise} Wasel reads route pressure, shared pricing, and pickup timing so the rider can decide faster with less guesswork.`}
+          title="Search once, compare clearly, and book with confidence."
+          detail={`${category.promise} Shared price, route timing, and the best departure windows stay visible without slowing the booking flow down.`}
           tone={DS.cyan}
         />
+
+        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
+          <StakeholderSignalBanner
+            dir={ar ? 'rtl' : 'ltr'}
+            eyebrow={ar ? 'واصل · تواصل الحجز' : 'Wasel · booking comms'}
+            title={
+              ar
+                ? 'اكتشاف الرحلة أصبح لغة مشتركة بين الراكب والطلب الحي والسائق'
+                : 'Ride discovery now reads as a shared language between the rider, live demand, and driver supply'
+            }
+            detail={
+              ar
+                ? 'هذه الصفحة تجمع التسعير والضغط على المسار والتنبيهات والتذكيرات في قرار واحد أوضح للحجز.'
+                : 'This page now pulls pricing, corridor pressure, alerts, and reminders into one clearer booking decision.'
+            }
+            stakeholders={[
+              { label: ar ? 'نتائج' : 'Matches', value: String(results.length), tone: 'teal' },
+              { label: ar ? 'الممرات الحية' : 'Live corridors', value: String(featuredSignals.length), tone: 'blue' },
+              { label: ar ? 'الحجوزات' : 'Booked', value: String(booked.size), tone: 'green' },
+              { label: ar ? 'تنبيهات الطلب' : 'Demand alerts', value: String(demandStats.active), tone: 'amber' },
+            ]}
+            statuses={[
+              { label: ar ? 'جاهزية المسار' : 'Route readiness', value: routeReadinessLabel, tone: corridorRides.length >= 2 ? 'green' : corridorRides.length === 1 ? 'teal' : 'amber' },
+              { label: ar ? 'التسعير' : 'Price signal', value: hasSelectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : 'Pending', tone: hasSelectedPriceQuote ? 'blue' : 'slate' },
+              { label: ar ? 'التذكيرات المحفوظة' : 'Saved reminders', value: String(savedReminders.length), tone: savedReminders.length > 0 ? 'green' : 'slate' },
+            ]}
+            lanes={[
+              { label: ar ? 'مسار الراكب' : 'Rider lane', detail: ar ? 'البحث والنتائج والحجز أصبحت تظهر في سياق واحد.' : 'Search, results, and booking now stay inside one consistent context.' },
+              { label: ar ? 'مسار الطلب' : 'Demand lane', detail: ar ? 'تنبيهات الانتظار والتذكيرات تجعل الممرات الضعيفة قابلة للمتابعة بدل الضياع.' : 'Waitlist alerts and reminders keep weaker corridors trackable instead of invisible.' },
+              { label: ar ? 'مسار السائق' : 'Driver lane', detail: ar ? 'الإشارة الحية والتسعير المشترك يوضحان متى تكون الرحلة جاهزة للحجز.' : 'Live signal strength and shared pricing show when a route is ready to book.' },
+            ]}
+          />
+        </div>}
 
         <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
           {([

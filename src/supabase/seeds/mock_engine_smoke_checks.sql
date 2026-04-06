@@ -1,5 +1,5 @@
--- Mock engine smoke checks
--- Run after mock_engine_launch_pack.sql to confirm the application engine has
+-- Operational bootstrap smoke checks
+-- Run after db/seeds/*.sql to confirm the application engine has
 -- enough realistic data to boot search, booking, wallet, package, and trust
 -- scenarios.
 
@@ -22,13 +22,15 @@ select 'trips', count(*) from public.trips
 where trip_id in (
   'bbbbbbb1-bbbb-bbbb-bbbb-bbbbbbbbbbb1',
   'bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbb2',
-  'bbbbbbb3-bbbb-bbbb-bbbb-bbbbbbbbbbb3'
+  'bbbbbbb3-bbbb-bbbb-bbbb-bbbbbbbbbbb3',
+  'bbbbbbb4-bbbb-bbbb-bbbb-bbbbbbbbbbb4'
 )
 union all
 select 'bookings', count(*) from public.bookings
 where booking_id in (
   'ddddddd1-dddd-dddd-dddd-ddddddddddd1',
-  'ddddddd2-dddd-dddd-dddd-ddddddddddd2'
+  'ddddddd2-dddd-dddd-dddd-ddddddddddd2',
+  'ddddddd3-dddd-dddd-dddd-ddddddddddd3'
 )
 union all
 select 'packages', count(*) from public.packages
@@ -44,14 +46,17 @@ where transaction_id in (
   'abababab-abab-abab-abab-ababababab02',
   'abababab-abab-abab-abab-ababababab03',
   'abababab-abab-abab-abab-ababababab04',
-  'abababab-abab-abab-abab-ababababab05'
+  'abababab-abab-abab-abab-ababababab05',
+  'abababab-abab-abab-abab-ababababab06',
+  'abababab-abab-abab-abab-ababababab07'
 )
 union all
 select 'notifications', count(*) from public.notifications
 where id in (
   '12121212-1212-1212-1212-121212121211',
   '12121212-1212-1212-1212-121212121212',
-  '12121212-1212-1212-1212-121212121213'
+  '12121212-1212-1212-1212-121212121213',
+  '12121212-1212-1212-1212-121212121214'
 );
 
 select
@@ -68,7 +73,8 @@ join public.users u on u.id = d.user_id
 where t.trip_id in (
   'bbbbbbb1-bbbb-bbbb-bbbb-bbbbbbbbbbb1',
   'bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbb2',
-  'bbbbbbb3-bbbb-bbbb-bbbb-bbbbbbbbbbb3'
+  'bbbbbbb3-bbbb-bbbb-bbbb-bbbbbbbbbbb3',
+  'bbbbbbb4-bbbb-bbbb-bbbb-bbbbbbbbbbb4'
 )
 order by t.departure_time;
 
@@ -84,7 +90,8 @@ join public.users passenger on passenger.id = b.passenger_id
 join public.trips trip on trip.trip_id = b.trip_id
 where b.booking_id in (
   'ddddddd1-dddd-dddd-dddd-ddddddddddd1',
-  'ddddddd2-dddd-dddd-dddd-ddddddddddd2'
+  'ddddddd2-dddd-dddd-dddd-ddddddddddd2',
+  'ddddddd3-dddd-dddd-dddd-ddddddddddd3'
 )
 order by b.created_at;
 

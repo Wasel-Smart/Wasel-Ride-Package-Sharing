@@ -1,4 +1,4 @@
-/**
+﻿/**
  * WaselButton — primary interactive element.
  *
  * Variants:
@@ -30,7 +30,7 @@ interface WaselButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, { background: string; color: string; border: string; boxShadow: string; hoverShadow: string }> = {
   primary: {
-    background:  'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)',
+    background:  'linear-gradient(135deg, #16C7F2 0%, #0F78BF 100%)',
     color:       '#040C18',
     border:      'none',
     boxShadow:   SH.cyan,
@@ -51,11 +51,11 @@ const variantStyles: Record<ButtonVariant, { background: string; color: string; 
     hoverShadow: 'none',
   },
   gold: {
-    background:  'linear-gradient(135deg, #F0A830 0%, #C8751A 100%)',
+    background:  'linear-gradient(135deg, #C7FF1A 0%, #60C536 100%)',
     color:       '#040C18',
     border:      'none',
     boxShadow:   SH.gold,
-    hoverShadow: '0 10px 36px rgba(240,168,48,0.45)',
+    hoverShadow: '0 10px 36px rgba(199,255,26,0.45)',
   },
   danger: {
     background:  C.errorDim,
@@ -156,3 +156,5 @@ export function WaselButton({
     </button>
   );
 }
+
+

@@ -10,26 +10,26 @@ const DISPLAY = "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans',
 
 const TONE_STYLES = {
   cyan: {
-    border: 'rgba(0,200,232,0.22)',
-    background: 'rgba(0,200,232,0.10)',
-    color: '#55E9FF',
+    border: 'rgba(73,190,242,0.24)',
+    background: 'rgba(22,199,242,0.12)',
+    color: '#16C7F2',
   },
   green: {
-    border: 'rgba(0,200,117,0.22)',
-    background: 'rgba(0,200,117,0.10)',
-    color: '#38E787',
+    border: 'rgba(96,197,54,0.24)',
+    background: 'rgba(96,197,54,0.12)',
+    color: '#60C536',
   },
   gold: {
-    border: 'rgba(240,168,48,0.22)',
-    background: 'rgba(240,168,48,0.10)',
-    color: '#F5B11E',
+    border: 'rgba(199,255,26,0.24)',
+    background: 'rgba(199,255,26,0.12)',
+    color: '#C7FF1A',
   },
 } as const;
 
 function getActionMeta(action: WaselContactAction) {
-  if (action.id === 'call') return { icon: PhoneCall, color: '#55E9FF' };
-  if (action.id === 'whatsapp') return { icon: MessageSquareText, color: '#38E787' };
-  return { icon: Mail, color: '#F5B11E' };
+  if (action.id === 'call') return { icon: PhoneCall, color: '#16C7F2' };
+  if (action.id === 'whatsapp') return { icon: MessageSquareText, color: '#60C536' };
+  return { icon: Mail, color: '#C7FF1A' };
 }
 
 export function WaselContactActionRow({
@@ -70,12 +70,12 @@ export function WaselContactActionRow({
               borderRadius: 999,
               border: `1px solid ${meta.color}33`,
               background: `${meta.color}15`,
-              color: '#EFF6FF',
+              color: '#EAF7FF',
               fontFamily: FONT,
               fontSize: compact ? '0.76rem' : '0.82rem',
               fontWeight: 800,
               textDecoration: 'none',
-              boxShadow: '0 10px 24px rgba(0,0,0,0.16)',
+              boxShadow: '0 12px 28px rgba(1,10,18,0.16)',
             }}
           >
             <Icon size={compact ? 14 : 16} color={meta.color} />
@@ -103,9 +103,9 @@ export function WaselProofOfLifeBlock({
       style={{
         borderRadius: compact ? 20 : 24,
         padding: compact ? '16px 16px 14px' : '22px 22px 20px',
-        background: 'linear-gradient(135deg, rgba(0,200,232,0.10), rgba(255,255,255,0.04) 48%, rgba(0,200,117,0.08) 100%)',
-        border: '1px solid rgba(0,200,232,0.18)',
-        boxShadow: '0 22px 56px rgba(0,0,0,0.18)',
+        background: 'linear-gradient(135deg, rgba(22,199,242,0.12), rgba(255,255,255,0.04) 46%, rgba(199,255,26,0.09) 100%)',
+        border: '1px solid rgba(73,190,242,0.18)',
+        boxShadow: '0 22px 56px rgba(1,10,18,0.18)',
       }}
     >
       <div
@@ -127,9 +127,9 @@ export function WaselProofOfLifeBlock({
               marginBottom: 6,
               padding: '6px 10px',
               borderRadius: 999,
-              background: 'rgba(4,12,24,0.36)',
+              background: 'rgba(6,23,38,0.5)',
               border: '1px solid rgba(255,255,255,0.08)',
-              color: '#55E9FF',
+              color: '#16C7F2',
               fontSize: '0.72rem',
               fontWeight: 900,
               letterSpacing: '0.08em',
@@ -142,7 +142,7 @@ export function WaselProofOfLifeBlock({
           </div>
           <div
             style={{
-              color: '#EFF6FF',
+              color: '#EAF7FF',
               fontFamily: DISPLAY,
               fontSize: compact ? '1rem' : '1.15rem',
               fontWeight: 700,
@@ -159,15 +159,15 @@ export function WaselProofOfLifeBlock({
             gap: 8,
             padding: '8px 12px',
             borderRadius: 999,
-            background: 'rgba(4,12,24,0.38)',
-            border: '1px solid rgba(0,200,117,0.18)',
-            color: '#D9FBEA',
+            background: 'rgba(6,23,38,0.5)',
+            border: '1px solid rgba(96,197,54,0.2)',
+            color: '#EAF7FF',
             fontSize: '0.76rem',
             fontWeight: 700,
             fontFamily: FONT,
           }}
         >
-          <BadgeCheck size={15} color="#38E787" />
+          <BadgeCheck size={15} color="#60C536" />
           {profile.supportPhoneDisplay || profile.supportEmail}
         </div>
       </div>
@@ -239,9 +239,9 @@ export function WaselFounderCard({
       style={{
         borderRadius: compact ? 20 : 24,
         padding: compact ? '16px 16px 15px' : '22px 22px 20px',
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03))',
-        border: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 18px 48px rgba(0,0,0,0.18)',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+        border: '1px solid rgba(73,190,242,0.14)',
+        boxShadow: '0 18px 48px rgba(1,10,18,0.18)',
       }}
     >
       <div
@@ -251,9 +251,9 @@ export function WaselFounderCard({
           gap: 8,
           padding: '6px 10px',
           borderRadius: 999,
-          background: 'rgba(240,168,48,0.12)',
-          border: '1px solid rgba(240,168,48,0.22)',
-          color: '#F5B11E',
+          background: 'rgba(199,255,26,0.12)',
+          border: '1px solid rgba(199,255,26,0.22)',
+          color: '#C7FF1A',
           fontSize: '0.72rem',
           fontWeight: 900,
           letterSpacing: '0.08em',
@@ -268,7 +268,7 @@ export function WaselFounderCard({
 
       <div
         style={{
-          color: '#EFF6FF',
+          color: '#EAF7FF',
           fontFamily: DISPLAY,
           fontSize: compact ? '1.04rem' : '1.18rem',
           fontWeight: 700,
@@ -282,7 +282,7 @@ export function WaselFounderCard({
       <p
         style={{
           margin: 0,
-          color: 'rgba(239,246,255,0.76)',
+          color: 'rgba(234,247,255,0.76)',
           fontSize: compact ? '0.82rem' : '0.9rem',
           lineHeight: 1.75,
           fontFamily: FONT,
@@ -309,9 +309,9 @@ export function WaselWhyCard({
       style={{
         borderRadius: compact ? 20 : 24,
         padding: compact ? '16px 16px 15px' : '22px 22px 20px',
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03))',
-        border: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 18px 48px rgba(0,0,0,0.18)',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+        border: '1px solid rgba(73,190,242,0.14)',
+        boxShadow: '0 18px 48px rgba(1,10,18,0.18)',
       }}
     >
       <div
@@ -321,9 +321,9 @@ export function WaselWhyCard({
           gap: 8,
           padding: '6px 10px',
           borderRadius: 999,
-          background: 'rgba(0,200,117,0.12)',
-          border: '1px solid rgba(0,200,117,0.22)',
-          color: '#38E787',
+          background: 'rgba(96,197,54,0.12)',
+          border: '1px solid rgba(96,197,54,0.22)',
+          color: '#60C536',
           fontSize: '0.72rem',
           fontWeight: 900,
           letterSpacing: '0.08em',
@@ -339,7 +339,7 @@ export function WaselWhyCard({
       <p
         style={{
           margin: 0,
-          color: 'rgba(239,246,255,0.82)',
+          color: 'rgba(234,247,255,0.82)',
           fontSize: compact ? '0.84rem' : '0.92rem',
           lineHeight: 1.75,
           fontFamily: FONT,
@@ -364,9 +364,9 @@ export function WaselBusinessFooter({
       style={{
         borderRadius: 24,
         padding: '18px 18px 16px',
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03))',
-        border: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 20px 48px rgba(0,0,0,0.18)',
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+        border: '1px solid rgba(73,190,242,0.14)',
+        boxShadow: '0 20px 48px rgba(1,10,18,0.18)',
       }}
     >
       <div
@@ -381,7 +381,7 @@ export function WaselBusinessFooter({
         <div>
           <div
             style={{
-              color: '#EFF6FF',
+              color: '#EAF7FF',
               fontFamily: DISPLAY,
               fontSize: '1rem',
               fontWeight: 700,
@@ -396,12 +396,12 @@ export function WaselBusinessFooter({
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              color: 'rgba(239,246,255,0.72)',
+              color: 'rgba(234,247,255,0.72)',
               fontSize: '0.8rem',
               fontFamily: FONT,
             }}
           >
-            <MapPin size={14} color="#F5B11E" />
+            <MapPin size={14} color="#C7FF1A" />
             {ar ? profile.businessAddressAr : profile.businessAddress}
           </div>
         </div>
@@ -409,7 +409,7 @@ export function WaselBusinessFooter({
       </div>
       <div
         style={{
-          color: 'rgba(239,246,255,0.72)',
+          color: 'rgba(234,247,255,0.72)',
           fontSize: '0.8rem',
           lineHeight: 1.7,
           fontFamily: FONT,
@@ -434,9 +434,9 @@ export function WaselPresenceStrip({
       style={{
         borderRadius: 20,
         padding: '12px 14px',
-        background: 'linear-gradient(135deg, rgba(0,200,232,0.08), rgba(255,255,255,0.03) 52%, rgba(0,200,117,0.06))',
-        border: '1px solid rgba(0,200,232,0.14)',
-        boxShadow: '0 16px 36px rgba(0,0,0,0.16)',
+        background: 'linear-gradient(135deg, rgba(22,199,242,0.1), rgba(255,255,255,0.03) 52%, rgba(199,255,26,0.07))',
+        border: '1px solid rgba(73,190,242,0.16)',
+        boxShadow: '0 16px 36px rgba(1,10,18,0.16)',
       }}
     >
       <div
@@ -457,9 +457,9 @@ export function WaselPresenceStrip({
               width: 'fit-content',
               padding: '5px 10px',
               borderRadius: 999,
-              background: 'rgba(4,12,24,0.38)',
+              background: 'rgba(6,23,38,0.48)',
               border: '1px solid rgba(255,255,255,0.08)',
-              color: '#55E9FF',
+              color: '#16C7F2',
               fontSize: '0.7rem',
               fontWeight: 900,
               letterSpacing: '0.08em',
@@ -470,10 +470,10 @@ export function WaselPresenceStrip({
             <HeartPulse size={13} />
             {ar ? profile.proofOfLife.ar : profile.proofOfLife.en}
           </div>
-          <div style={{ color: '#EFF6FF', fontFamily: DISPLAY, fontSize: '0.96rem', fontWeight: 700, letterSpacing: '-0.03em' }}>
+          <div style={{ color: '#EAF7FF', fontFamily: DISPLAY, fontSize: '0.96rem', fontWeight: 700, letterSpacing: '-0.03em' }}>
             {ar ? profile.actionSummary.ar : profile.actionSummary.en}
           </div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', color: 'rgba(239,246,255,0.68)', fontSize: '0.76rem', fontFamily: FONT }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', color: 'rgba(234,247,255,0.68)', fontSize: '0.76rem', fontFamily: FONT }}>
             <span>{profile.supportPhoneDisplay || profile.supportEmail}</span>
             <span>{ar ? profile.businessAddressAr : profile.businessAddress}</span>
           </div>

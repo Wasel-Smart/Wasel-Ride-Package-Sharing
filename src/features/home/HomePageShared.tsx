@@ -4,35 +4,35 @@ import { ChevronDown, ChevronRight, ChevronUp, Info, Phone } from 'lucide-react'
 import { CurrencyService, type SupportedCurrency } from '../../utils/currency';
 
 export const C = {
-  bg: '#040C18',
-  card: '#0A1628',
-  card2: '#0D1E36',
-  s3: '#10203A',
-  cyan: '#00C8E8',
-  cyanDim: 'rgba(0,200,232,0.12)',
-  gold: '#F0A830',
-  goldDim: 'rgba(240,168,48,0.12)',
-  green: '#00C875',
-  greenDim: 'rgba(0,200,117,0.12)',
+  bg: '#061726',
+  card: '#0B2135',
+  card2: '#102B44',
+  s3: '#14334F',
+  cyan: '#16C7F2',
+  cyanDim: 'rgba(22,199,242,0.12)',
+  gold: '#C7FF1A',
+  goldDim: 'rgba(199,255,26,0.12)',
+  green: '#60C536',
+  greenDim: 'rgba(96,197,54,0.12)',
   purple: '#8B5CF6',
   purpleDim: 'rgba(139,92,246,0.12)',
   red: '#FF4455',
   redDim: 'rgba(255,68,85,0.12)',
-  border: 'rgba(0,200,232,0.08)',
-  text: '#EFF6FF',
-  textMuted: 'rgba(148,163,184,0.75)',
-  textDim: 'rgba(148,163,184,0.55)',
+  border: 'rgba(73,190,242,0.14)',
+  text: '#EAF7FF',
+  textMuted: 'rgba(153,184,210,0.75)',
+  textDim: 'rgba(153,184,210,0.55)',
 } as const;
 
 export const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
-export const glass = (op = 0.68) => `rgba(10,22,40,${op})`;
+export const glass = (op = 0.68) => `rgba(11,33,53,${op})`;
 
 export const POPULAR_ROUTES = [
   { from: 'Amman', fromAr: 'عمان', to: 'Aqaba', toAr: 'العقبة', dist: 330, priceJod: 8, icon: 'A', color: C.cyan },
   { from: 'Amman', fromAr: 'عمان', to: 'Irbid', toAr: 'إربد', dist: 85, priceJod: 3, icon: 'I', color: C.green },
-  { from: 'Amman', fromAr: 'عمان', to: 'Dead Sea', toAr: 'البحر الميت', dist: 60, priceJod: 5, icon: 'D', color: '#0EA5E9' },
+  { from: 'Amman', fromAr: 'عمان', to: 'Dead Sea', toAr: 'البحر الميت', dist: 60, priceJod: 5, icon: 'D', color: C.cyan },
   { from: 'Amman', fromAr: 'عمان', to: 'Petra', toAr: 'البترا', dist: 250, priceJod: 12, icon: 'P', color: C.gold },
-  { from: 'Amman', fromAr: 'عمان', to: 'Wadi Rum', toAr: 'وادي رم', dist: 320, priceJod: 15, icon: 'W', color: '#F59E0B' },
+  { from: 'Amman', fromAr: 'عمان', to: 'Wadi Rum', toAr: 'وادي رم', dist: 320, priceJod: 15, icon: 'W', color: C.gold },
   { from: 'Amman', fromAr: 'عمان', to: 'Zarqa', toAr: 'الزرقاء', dist: 30, priceJod: 2, icon: 'Z', color: C.purple },
 ] as const;
 
@@ -100,14 +100,14 @@ export function InlineCurrencySwitcher({ ar: _ar }: { ar: boolean }) {
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-      <button onClick={() => setOpen((o) => !o)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 9999, background: 'rgba(0,200,232,0.10)', border: '1px solid rgba(0,200,232,0.25)', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700, color: C.cyan, fontFamily: F }}>
+      <button onClick={() => setOpen((o) => !o)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 9999, background: 'rgba(22,199,242,0.12)', border: '1px solid rgba(73,190,242,0.26)', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700, color: C.cyan, fontFamily: F }}>
         FX {cur}
         <ChevronDown size={10} />
       </button>
       {open && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, minWidth: 120, background: '#0A1628', border: '1px solid rgba(0,200,232,0.18)', borderRadius: 10, boxShadow: '0 12px 32px rgba(0,0,0,0.6)', zIndex: 100, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, minWidth: 120, background: 'rgba(7,23,38,0.98)', border: '1px solid rgba(73,190,242,0.18)', borderRadius: 10, boxShadow: '0 12px 32px rgba(0,0,0,0.6)', zIndex: 100, overflow: 'hidden' }}>
           {popular.map((code) => (
-            <button key={code} onClick={() => select(code)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '7px 12px', border: 'none', background: cur === code ? 'rgba(0,200,232,0.12)' : 'transparent', cursor: 'pointer', fontSize: '0.78rem', fontWeight: cur === code ? 700 : 500, color: cur === code ? C.cyan : C.text, fontFamily: F }}>
+            <button key={code} onClick={() => select(code)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '7px 12px', border: 'none', background: cur === code ? 'rgba(22,199,242,0.14)' : 'transparent', cursor: 'pointer', fontSize: '0.78rem', fontWeight: cur === code ? 700 : 500, color: cur === code ? C.cyan : C.text, fontFamily: F }}>
               <span>{code}</span>
               <span style={{ color: C.textDim, fontSize: '0.65rem' }}>{svc.getSymbol(code)}</span>
             </button>
@@ -158,12 +158,12 @@ export function TrustScoreCard({ score, ar }: { score: number; ar: boolean }) {
     { label: ar ? 'تقييمات المستخدمين' : 'User Ratings', weight: 25, yours: 22, color: C.green },
     { label: ar ? 'الرحلات المكتملة' : 'Completed Trips', weight: 20, yours: 14, color: C.gold },
     { label: ar ? 'النشاط الحديث' : 'Recent Activity', weight: 10, yours: 8, color: C.purple },
-    { label: ar ? 'الإعدادات الثقافية' : 'Cultural Preferences Set', weight: 10, yours: 8, color: '#0EA5E9' },
+    { label: ar ? 'الإعدادات الثقافية' : 'Cultural Preferences Set', weight: 10, yours: 8, color: C.cyan },
   ];
   const color = pct >= 80 ? C.green : pct >= 60 ? C.gold : C.red;
 
   return (
-    <div style={{ borderRadius: 16, padding: '16px 20px', background: glass(0.5), border: '1px solid rgba(0,200,232,0.10)', backdropFilter: 'blur(20px)' }}>
+    <div style={{ borderRadius: 16, padding: '16px 20px', background: glass(0.5), border: '1px solid rgba(73,190,242,0.12)', backdropFilter: 'blur(20px)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 48, height: 48, borderRadius: '50%', background: `${color}18`, border: `2px solid ${color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -176,7 +176,7 @@ export function TrustScoreCard({ score, ar }: { score: number; ar: boolean }) {
             </div>
           </div>
         </div>
-        <button onClick={() => setExpanded((e) => !e)} style={{ background: 'rgba(0,200,232,0.08)', border: '1px solid rgba(0,200,232,0.18)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.72rem', color: C.cyan, fontFamily: F, fontWeight: 600 }}>
+        <button onClick={() => setExpanded((e) => !e)} style={{ background: 'rgba(22,199,242,0.1)', border: '1px solid rgba(73,190,242,0.2)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.72rem', color: C.cyan, fontFamily: F, fontWeight: 600 }}>
           <Info size={12} />
           {ar ? 'لماذا؟' : 'Why?'}
           {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -188,7 +188,7 @@ export function TrustScoreCard({ score, ar }: { score: number; ar: boolean }) {
       <AnimatePresence>
         {expanded && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }} style={{ overflow: 'hidden' }}>
-            <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(0,200,232,0.10)' }}>
+            <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(73,190,242,0.12)' }}>
               <p style={{ fontSize: '0.75rem', color: C.textMuted, fontFamily: F, marginBottom: 12 }}>
                 {ar ? 'يُحسب هذا المؤشر من خمسة عوامل واضحة. لكل عامل وزن محدد من أصل 100 نقطة.' : 'Your score is calculated from 5 factors. Each has a weight out of 100 points:'}
               </p>

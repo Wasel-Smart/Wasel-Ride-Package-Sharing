@@ -1,6 +1,11 @@
 import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey, supabase } from './core';
 import { getDirectProfile, getDirectVerificationRecord, updateDirectProfile } from './directSupabase';
 import { getAuthCallbackUrl, getConfig } from '../utils/env';
+import {
+  buildTraceHeaders,
+  profileUpdatePayloadSchema,
+  withDataIntegrity,
+} from './dataIntegrity';
 
 function canUseEdgeApi(): boolean {
   return Boolean(API_URL && publicAnonKey);
@@ -283,81 +288,79 @@ export const authAPI = {
   },
 
   async updateProfile(updates: Record<string, unknown>) {
-    const { token, userId } = await getAuthDetails();
-    if (!token || !userId) return { success: false, error: 'Not authenticated' };
-
-    if (!canUseEdgeApi()) {
-      if (!canUseDirectFallbackForWrites()) {
-        return { success: false, error: getDirectFallbackError('Profile update').message };
-      }
-
-      try {
-        const profile = await updateDirectProfile(userId, updates);
-        return { success: true, profile };
-      } catch (error) {
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to update profile',
-        };
-      }
-    }
-
     try {
-      const response = await fetchWithRetry(`${API_URL}/profile/${userId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      return await withDataIntegrity({
+        operation: 'profile.update.api',
+        schema: profileUpdatePayloadSchema,
+        payload: updates,
+        execute: async ({ requestId, payload }) => {
+          const { token, userId } = await getAuthDetails();
+          if (!token || !userId) {
+            throw new Error('Not authenticated');
+          }
+
+          if (!canUseEdgeApi()) {
+            if (!canUseDirectFallbackForWrites()) {
+              throw getDirectFallbackError('Profile update');
+            }
+
+            const profile = await updateDirectProfile(userId, payload);
+            return { success: true, profile };
+          }
+
+          let response: Response;
+          try {
+            response = await fetchWithRetry(`${API_URL}/profile/${userId}`, {
+              method: 'PATCH',
+              headers: buildTraceHeaders(requestId, {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              }),
+              body: JSON.stringify(payload),
+            });
+          } catch (networkError) {
+            if (!canUseDirectFallbackForWrites()) {
+              throw networkError;
+            }
+
+            const profile = await updateDirectProfile(userId, payload);
+            return { success: true, profile };
+          }
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: `Server error: ${response.status}` }));
+            if (!canUseDirectFallbackForWrites()) {
+              console.error('[authAPI.updateProfile] Server error:', response.status, errorData, requestId);
+              return {
+                success: false,
+                error: errorData.error || getDirectFallbackError('Profile update').message,
+              };
+            }
+
+            try {
+              const profile = await updateDirectProfile(userId, payload);
+              return { success: true, profile };
+            } catch (fallbackError) {
+              console.error('[authAPI.updateProfile] Server error:', response.status, errorData, requestId);
+              return {
+                success: false,
+                error:
+                  fallbackError instanceof Error
+                    ? fallbackError.message
+                    : errorData.error || `Failed to update profile: ${response.status}`,
+              };
+            }
+          }
+
+          const data = await response.json();
+          return { success: true, profile: data };
         },
-        body: JSON.stringify(updates),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: `Server error: ${response.status}` }));
-        if (!canUseDirectFallbackForWrites()) {
-          console.error('[authAPI.updateProfile] Server error:', response.status, errorData);
-          return {
-            success: false,
-            error: errorData.error || getDirectFallbackError('Profile update').message,
-          };
-        }
-
-        try {
-          const profile = await updateDirectProfile(userId, updates);
-          return { success: true, profile };
-        } catch (fallbackError) {
-          console.error('[authAPI.updateProfile] Server error:', response.status, errorData);
-          return {
-            success: false,
-            error:
-              fallbackError instanceof Error
-                ? fallbackError.message
-                : errorData.error || `Failed to update profile: ${response.status}`,
-          };
-        }
-      }
-
-      const data = await response.json();
-      return { success: true, profile: data };
     } catch (error) {
-      if (!canUseDirectFallbackForWrites()) {
-        console.error('[authAPI.updateProfile] Network/fetch error:', error);
-        return {
-          success: false,
-          error: getDirectFallbackError('Profile update').message,
-        };
-      }
-
-      try {
-        const profile = await updateDirectProfile(userId, updates);
-        return { success: true, profile };
-      } catch (fallbackError) {
-        console.error('[authAPI.updateProfile] Network/fetch error:', error);
-        return {
-          success: false,
-          error: fallbackError instanceof Error ? fallbackError.message : 'Network error updating profile',
-        };
-      }
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Network error updating profile',
+      };
     }
   },
 };

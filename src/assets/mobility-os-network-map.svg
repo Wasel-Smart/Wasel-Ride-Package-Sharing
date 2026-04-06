@@ -1,0 +1,133 @@
+<svg width="1400" height="980" viewBox="0 0 1400 980" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="84" x2="1258" y2="902" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B2437"/>
+      <stop offset="0.55" stop-color="#081726"/>
+      <stop offset="1" stop-color="#06121D"/>
+    </linearGradient>
+    <linearGradient id="routePassenger" x1="318" y1="822" x2="996" y2="170" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#16C7F2"/>
+      <stop offset="0.45" stop-color="#9EF8FF"/>
+      <stop offset="1" stop-color="#16C7F2"/>
+    </linearGradient>
+    <linearGradient id="routePackage" x1="244" y1="842" x2="992" y2="176" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C7FF1A"/>
+      <stop offset="0.55" stop-color="#F7FFA3"/>
+      <stop offset="1" stop-color="#C7FF1A"/>
+    </linearGradient>
+    <radialGradient id="glowLeft" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(274 174) rotate(43.9416) scale(360.594 278.551)">
+      <stop stop-color="#16C7F2" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#16C7F2" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowRight" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1120 218) rotate(126.387) scale(300.932 242.261)">
+      <stop stop-color="#C7FF1A" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#C7FF1A" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="routeGlow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="980" rx="44" fill="url(#bg)"/>
+  <rect x="26" y="26" width="1348" height="928" rx="34" stroke="rgba(255,255,255,0.08)"/>
+  <path d="M54 116C54 85.0721 79.0721 60 110 60H632C645.255 60 658 65.2678 667.373 74.6447L809.588 216.86C820.091 227.362 826 241.606 826 256.454V920H110C79.0721 920 54 894.928 54 864V116Z" fill="url(#glowLeft)"/>
+  <path d="M948 84H1300C1330.93 84 1356 109.072 1356 140V866C1356 896.928 1330.93 922 1300 922H924V108C924 94.7452 934.745 84 948 84Z" fill="url(#glowRight)"/>
+
+  <g opacity="0.12">
+    <path d="M120 124H560" stroke="#D8F7FF" stroke-width="2"/>
+    <path d="M120 174H468" stroke="#D8F7FF" stroke-width="2"/>
+    <path d="M120 224H404" stroke="#D8F7FF" stroke-width="2"/>
+    <path d="M90 120V860" stroke="#D8F7FF" stroke-width="2"/>
+    <path d="M160 120V860" stroke="#D8F7FF" stroke-width="2"/>
+  </g>
+
+  <g filter="url(#soft)">
+    <circle cx="578" cy="232" r="42" fill="#FFF3C7" fill-opacity="0.72"/>
+  </g>
+
+  <g stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M242 840L420 794L596 734L722 664L834 564L902 474L960 384L996 270L1048 196L1120 140L1208 166" stroke="#D7F5FF" stroke-opacity="0.18" stroke-width="22" filter="url(#routeGlow)"/>
+    <path d="M358 842L498 790L646 728L738 692L816 692L880 742" stroke="#D7F5FF" stroke-opacity="0.12" stroke-width="18" filter="url(#routeGlow)"/>
+    <path d="M964 266L1078 212L1182 258L1226 216" stroke="#D7F5FF" stroke-opacity="0.1" stroke-width="18" filter="url(#routeGlow)"/>
+
+    <path d="M242 840L420 794L596 734L722 664L834 564L902 474L960 384L996 270L1048 196L1120 140L1208 166" stroke="url(#routePassenger)" stroke-width="8"/>
+    <path d="M358 842L498 790L646 728L738 692L816 692L880 742" stroke="url(#routePassenger)" stroke-width="6"/>
+    <path d="M964 266L1078 212L1182 258L1226 216" stroke="url(#routePassenger)" stroke-width="6"/>
+
+    <path d="M242 840L420 794L596 734L722 664L834 564L902 474L960 384L996 270L1048 196L1120 140L1208 166" stroke="url(#routePackage)" stroke-width="4" stroke-dasharray="10 14"/>
+    <path d="M358 842L498 790L646 728L738 692L816 692L880 742" stroke="url(#routePackage)" stroke-width="4" stroke-dasharray="10 14"/>
+    <path d="M964 266L1078 212L1182 258L1226 216" stroke="url(#routePackage)" stroke-width="4" stroke-dasharray="10 14"/>
+  </g>
+
+  <g fill="#EAF7FF">
+    <circle cx="242" cy="840" r="7"/>
+    <circle cx="420" cy="794" r="8"/>
+    <circle cx="596" cy="734" r="7"/>
+    <circle cx="722" cy="664" r="7"/>
+    <circle cx="834" cy="564" r="7"/>
+    <circle cx="902" cy="474" r="7"/>
+    <circle cx="960" cy="384" r="8"/>
+    <circle cx="996" cy="270" r="12" fill="#C7FF1A"/>
+    <circle cx="1048" cy="196" r="7"/>
+    <circle cx="1120" cy="140" r="7"/>
+    <circle cx="1208" cy="166" r="7"/>
+    <circle cx="880" cy="742" r="7"/>
+    <circle cx="1226" cy="216" r="7"/>
+  </g>
+
+  <g fill="#9EF8FF">
+    <circle cx="308" cy="820" r="3"/>
+    <circle cx="486" cy="770" r="3"/>
+    <circle cx="684" cy="686" r="3"/>
+    <circle cx="846" cy="550" r="3"/>
+    <circle cx="934" cy="430" r="3"/>
+    <circle cx="1018" cy="242" r="3"/>
+    <circle cx="1088" cy="164" r="3"/>
+  </g>
+
+  <g fill="#DCEAFF" font-family="Arial, sans-serif" font-size="21" font-weight="700" opacity="0.9">
+    <text x="188" y="872">Aqaba</text>
+    <text x="468" y="758">Karak</text>
+    <text x="686" y="632">Madaba</text>
+    <text x="928" y="234">Amman</text>
+    <text x="1100" y="116">Jerash</text>
+    <text x="1186" y="198">Irbid</text>
+    <text x="840" y="774">Ma'an</text>
+  </g>
+
+  <g fill="#0A1628" stroke="rgba(255,255,255,0.12)">
+    <rect x="74" y="68" width="170" height="34" rx="12"/>
+    <rect x="74" y="120" width="176" height="70" rx="16"/>
+    <rect x="1086" y="64" width="188" height="58" rx="16"/>
+    <rect x="1094" y="136" width="180" height="76" rx="18"/>
+  </g>
+  <g fill="#DCEAFF" font-family="Arial, sans-serif">
+    <text x="90" y="91" font-size="14" font-weight="700">Live network feed</text>
+    <text x="92" y="146" font-size="13" font-weight="700" opacity="0.72">BEST ROUTE NOW</text>
+    <text x="92" y="176" font-size="23" font-weight="800">best_route_now</text>
+    <text x="92" y="204" font-size="18" font-weight="700">Amman → Aqaba</text>
+    <text x="1106" y="88" font-size="13" font-weight="700" opacity="0.72">PASSENGER FLOW · MODELED</text>
+    <text x="1106" y="110" font-size="30" font-weight="900" fill="#16C7F2">67</text>
+    <text x="1112" y="162" font-size="13" font-weight="700" opacity="0.72">PARCEL LOAD · MODELED</text>
+    <text x="1112" y="195" font-size="34" font-weight="900" fill="#C7FF1A">235</text>
+  </g>
+
+  <g fill="#0A1628" stroke="rgba(255,255,255,0.12)">
+    <rect x="74" y="900" width="254" height="36" rx="18"/>
+    <rect x="342" y="900" width="334" height="36" rx="18"/>
+    <rect x="690" y="900" width="170" height="36" rx="18"/>
+  </g>
+  <g fill="#DCEAFF" font-family="Arial, sans-serif" font-size="14" font-weight="700">
+    <text x="92" y="923">Top corridor  Amman → Zarqa</text>
+    <text x="360" y="923">Dispatch  Reposition supply toward Zarqa</text>
+    <text x="710" y="923">Seats 67 / Capacity 359</text>
+  </g>
+
+  <g opacity="0.28" fill="#DCEAFF" font-family="Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="6">
+    <text transform="rotate(-90 52 608)" x="52" y="608">JORDAN ROUTE MATRIX</text>
+    <text transform="rotate(90 1344 588)" x="1344" y="588">ROUTE SIGNALS</text>
+  </g>
+</svg>

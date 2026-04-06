@@ -15,13 +15,13 @@ import {
   getRecurringRouteSuggestions,
   getRouteReminderForCorridor,
   getRouteReminders,
+  hydrateRouteReminders,
   syncRouteReminders,
 } from '../../services/movementRetention';
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
 import {
   getFeaturedCorridors,
   getHabitLoopPrograms,
-  getWaselCategoryPosition,
 } from '../../config/wasel-movement-network';
 
 function tierLabel(tier: MovementMembershipSnapshot['loyaltyTier']) {
@@ -34,7 +34,6 @@ function tierLabel(tier: MovementMembershipSnapshot['loyaltyTier']) {
 export default function WaselPlusPage() {
   const nav = useIframeSafeNavigate();
   const { user } = useLocalAuth();
-  const category = useMemo(() => getWaselCategoryPosition(), []);
   const habitPrograms = useMemo(() => getHabitLoopPrograms(), []);
   const featuredCorridors = useMemo(() => getFeaturedCorridors(4), []);
   const [membership, setMembership] = useState(() => getMovementMembershipSnapshot());
@@ -64,7 +63,7 @@ export default function WaselPlusPage() {
     const suggestion = recurringSuggestions.find((item) => item.corridorId === corridorId);
     if (!suggestion) return;
 
-    const reminder = createReminderFromSuggestion(suggestion);
+    const reminder = createReminderFromSuggestion(suggestion, user?.id);
     setSavedReminders(getRouteReminders());
     setRetentionMessage(`Reminder saved for ${reminder.label}. ${formatRouteReminderSchedule(reminder)}.`);
   };
@@ -72,6 +71,13 @@ export default function WaselPlusPage() {
   useEffect(() => {
     setSavedReminders(getRouteReminders());
   }, [routeIntelligence.updatedAt]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    void hydrateRouteReminders(user.id).then((reminders) => {
+      setSavedReminders(reminders);
+    });
+  }, [user?.id, routeIntelligence.updatedAt]);
 
   useEffect(() => {
     void syncRouteReminders(user ?? undefined).then((delivered) => {
@@ -85,26 +91,26 @@ export default function WaselPlusPage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="Plus"
-          title="My Movement"
+          emoji="✨"
+          title="Membership"
           titleAr="حركتي"
-          sub="Credits, commuter passes, and loyalty programs that make Wasel the default way to move."
+          sub="Manage credits, commuter passes, and reminders that make repeat travel easier."
           color={DS.gold}
-          action={{ label: 'Find a route', onClick: () => nav('/app/find-ride') }}
+          action={{ label: 'Find a ride', onClick: () => nav('/app/find-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Behavior lock-in happens when every route gets easier, cheaper, and more automatic."
-          detail={`${category.promise} Wasel Plus is no longer just a discount plan. It is the habit loop layer that ties credits, commuter passes, and route intelligence into one movement membership.`}
+          title="This page should make repeat travel cheaper, simpler, and easier to keep on schedule."
+          detail="Use one place to activate benefits, pin your commuter route, and save reminders before the next strong departure window."
           tone={DS.gold}
         />
 
         <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
           {[
             { label: 'Membership', value: membership.plusActive ? 'Active' : 'Inactive', detail: membership.plusActive ? 'Wasel Plus benefits are live' : 'Activate to unlock route-level rewards', color: DS.gold },
-            { label: 'Movement credits', value: String(membership.movementCredits), detail: 'Earned from rides, routes, and package activity', color: DS.green },
-            { label: 'Streak', value: `${membership.streakDays} days`, detail: 'Daily movement habit tracked inside Wasel', color: DS.cyan },
-            { label: 'Tier', value: tierLabel(membership.loyaltyTier), detail: dailySignal ? `${dailySignal.priceQuote.finalPriceJod} JOD on your daily lane` : membership.commuterPassRoute?.label ?? 'No commuter pass selected yet', color: DS.blue },
+            { label: 'Credits', value: String(membership.movementCredits), detail: 'Earned from rides, routes, and package activity', color: DS.green },
+            { label: 'Streak', value: `${membership.streakDays} days`, detail: 'Tracked across your regular travel', color: DS.cyan },
+            { label: 'Tier', value: tierLabel(membership.loyaltyTier), detail: dailySignal ? `${dailySignal.priceQuote.finalPriceJod} JOD on your daily route` : membership.commuterPassRoute?.label ?? 'No commuter pass selected yet', color: DS.blue },
           ].map((item) => (
             <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
               <div style={{ color: item.color, fontWeight: 900, fontSize: '1.18rem', marginBottom: 4 }}>{item.value}</div>
@@ -118,22 +124,22 @@ export default function WaselPlusPage() {
           <div style={{ background: DS.card, borderRadius: r(20), padding: '24px', border: `1px solid ${DS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <BadgeDollarSign size={18} color={DS.gold} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Movement membership</div>
+              <div style={{ color: '#fff', fontWeight: 900 }}>Membership overview</div>
             </div>
             <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.65, marginBottom: 18 }}>
-              Membership should make Wasel the cheapest and smartest default way to move. Credits increase with every useful action, commuter passes tie users to strategic corridors, and savings improve when the network gets denser.
+              Membership should help you spend less, remember your usual route, and get back into booking faster.
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {[ 
                 membership.plusActive
-                  ? 'Wasel Plus is active and your route-level rewards are compounding.'
+                  ? 'Wasel Plus is active and your route benefits are already stacking up.'
                   : 'Activate Wasel Plus to start stacking credits, route savings, and priority matching.',
                 membership.commuterPassRoute
-                  ? `Your commuter pass is pinned to ${membership.commuterPassRoute.label} at about ${membership.commuterPassRoute.subscriptionPriceJod} JOD for dense monthly movement.`
-                  : 'Choose a commuter corridor to turn repeat movement into a habit loop.',
+                  ? `Your commuter pass is pinned to ${membership.commuterPassRoute.label} at about ${membership.commuterPassRoute.subscriptionPriceJod} JOD for repeat monthly travel.`
+                  : 'Choose a commuter route to make repeat travel easier to manage.',
                 membership.dailyRoute
-                  ? `Daily route memory is centered on ${membership.dailyRoute.label}, currently ${dailySignal?.priceQuote.finalPriceJod ?? membership.dailyRoute.sharedPriceJod} JOD after credits and ${membership.dailyRoute.savingsPercent}% cheaper than solo movement when shared demand is healthy.`
-                  : 'Once you start moving more often, Wasel will remember your preferred corridor.',
+                  ? `Your daily route is centered on ${membership.dailyRoute.label}, currently ${dailySignal?.priceQuote.finalPriceJod ?? membership.dailyRoute.sharedPriceJod} JOD after credits and ${membership.dailyRoute.savingsPercent}% cheaper than solo movement when shared demand is healthy.`
+                  : 'Once you start moving more often, Wasel will remember your preferred route.',
               ].map((line) => (
                 <div key={line} style={{ background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}`, color: '#fff', fontSize: '0.8rem', lineHeight: 1.55 }}>
                   {line}
@@ -148,7 +154,7 @@ export default function WaselPlusPage() {
           <div style={{ background: DS.card, borderRadius: r(20), padding: '24px', border: `1px solid ${DS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <Brain size={18} color={DS.cyan} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Habit loop programs</div>
+              <div style={{ color: '#fff', fontWeight: 900 }}>Helpful programs</div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {habitPrograms.map((program) => (
@@ -165,7 +171,7 @@ export default function WaselPlusPage() {
         <div style={{ background: DS.card, borderRadius: r(20), padding: '24px', border: `1px solid ${DS.border}`, marginBottom: 18 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
             <Route size={18} color={DS.green} />
-            <div style={{ color: '#fff', fontWeight: 900 }}>Commuter passes on strategic corridors</div>
+            <div style={{ color: '#fff', fontWeight: 900 }}>Commuter passes</div>
           </div>
           <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
             {featuredCorridors.map((corridor) => {
@@ -207,7 +213,7 @@ export default function WaselPlusPage() {
           <div style={{ background: DS.card, borderRadius: r(20), padding: '24px', border: `1px solid ${DS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <Route size={18} color={DS.cyan} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Recurring route suggestions</div>
+              <div style={{ color: '#fff', fontWeight: 900 }}>Recommended reminders</div>
             </div>
             {retentionMessage ? (
               <div style={{ marginBottom: 12, borderRadius: r(12), border: `1px solid ${DS.cyan}35`, background: `${DS.cyan}12`, padding: '11px 12px', color: '#fff', fontSize: '0.78rem' }}>
@@ -257,7 +263,7 @@ export default function WaselPlusPage() {
               </div>
             ) : (
               <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.65 }}>
-                As soon as you pin a recurring lane, Wasel starts nudging you before the next dense departure window.
+                As soon as you pin a recurring route, Wasel can nudge you before the next strong departure window.
               </div>
             )}
           </div>
@@ -266,10 +272,10 @@ export default function WaselPlusPage() {
         <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <Sparkles size={18} color={DS.blue} />
-            <div style={{ color: '#fff', fontWeight: 900 }}>Why this creates lock-in</div>
+            <div style={{ color: '#fff', fontWeight: 900 }}>Why this helps</div>
           </div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.65 }}>
-            Once users have credits, a saved corridor, a commuter pass, and lower shared-route pricing, they stop thinking in terms of individual rides. They start thinking in terms of movement managed by Wasel, which is exactly the behavior loop a category-defining platform needs.
+            Once you have credits, a saved route, a commuter pass, and lower shared pricing, getting around takes less effort and fewer repeated decisions.
           </div>
         </div>
       </PageShell>

@@ -1,162 +1,141 @@
 /**
- * Wasel Design Token System — v3.0 "Deep Space Network"
- * Electric Cyan · Solar Gold · Emerald Green
- * Single source of truth — maps to CSS variables in /styles/globals.css
- * ⚠️ Never hardcode hex/px/rgba in components — always use these tokens.
+ * Structured Wasel tokens for documentation, charts, and design-system consumers.
+ *
+ * These stay in sync with `utils/wasel-ds.ts` but preserve the original export
+ * surface used around the codebase.
  */
 
-// ─── Colors ───────────────────────────────────────────────────────────────────
-
 export const WaselColors = {
-  // Base surfaces — 5-level elevation
-  spaceDeep:    '#040C18',   // --background / page bg
-  spaceCard:    '#0A1628',   // --card / card surface
-  space1:       '#070F1F',   // elevated 1
-  space2:       '#0A1628',   // cards
-  space3:       '#10203A',   // secondary
-  space4:       '#182E4E',   // borders / controls
+  spaceDeep: '#061726',
+  spaceCard: '#0B2135',
+  space1: '#0A1F31',
+  space2: '#0D2740',
+  space3: '#12314D',
+  space4: '#183D5F',
 
-  // Brand primaries — UPGRADED
-  cyan:         '#00C8E8',   // Electric Cyan (primary dark-mode)
-  cyanLight:    '#5EE7FF',   // Hover/highlight state
-  gold:         '#F0A830',   // Solar Gold (accent)
-  goldLight:    '#FFD070',   // Gold highlight
-  green:        '#00C875',   // Emerald Green (success)
-  greenDark:    '#0078A8',   // Deep cyan (primary light-mode)
-  lime:         '#A8E63D',   // Volt Lime
+  cyan: '#16C7F2',
+  cyanLight: '#63E2F4',
+  gold: '#C7FF1A',
+  goldLight: '#E4FF3A',
+  green: '#60C536',
+  greenDark: '#49A82F',
+  lime: '#D7FF62',
 
-  // Legacy aliases (backwards compat)
-  teal:         '#00C8E8',
-  bronze:       '#F0A830',
-  orange:       '#F0A830',
-  borderDark:   'rgba(24,46,78,0.85)',
-  navyBase:     '#040C18',
-  navyCard:     '#0A1628',
+  teal: '#16C7F2',
+  bronze: '#C7FF1A',
+  orange: '#D7FF62',
+  borderDark: 'rgba(73,190,242,0.2)',
+  navyBase: '#061726',
+  navyCard: '#0B2135',
 
-  // Text
-  textPrimary:  '#EFF6FF',
-  textSecondary:'#4D6A8A',
-  textMuted:    '#2D4A6A',
+  textPrimary: '#EAF7FF',
+  textSecondary: 'rgba(234,247,255,0.84)',
+  textMuted: 'rgba(153,184,210,0.66)',
 
-  // Status
-  success:      '#00C875',
-  warning:      '#F0A830',
-  error:        '#FF4455',
-  info:         '#00C8E8',
+  success: '#60C536',
+  warning: '#FFD84A',
+  error: '#FF646A',
+  info: '#16C7F2',
 
-  // Transparent utilities
-  cyanGlow:     'rgba(0,200,232,0.15)',
-  goldGlow:     'rgba(240,168,48,0.15)',
-  greenGlow:    'rgba(0,200,117,0.15)',
-  glassBg:      'rgba(10,22,40,0.85)',
+  cyanGlow: 'rgba(22,199,242,0.18)',
+  goldGlow: 'rgba(199,255,26,0.16)',
+  greenGlow: 'rgba(96,197,54,0.18)',
+  glassBg: 'rgba(11,33,53,0.84)',
 } as const;
-
-// ─── Spacing ──────────────────────────────────────────────────────────────────
 
 export const WaselSpacing = {
-  '0':   '0px',
-  '1':   '4px',
-  '2':   '8px',
-  '3':   '12px',
-  '4':   '16px',
-  '5':   '20px',
-  '6':   '24px',
-  '8':   '32px',
-  '10':  '40px',
-  '12':  '48px',
-  '16':  '64px',
-  '20':  '80px',
-  '24':  '96px',
+  '0': '0px',
+  '1': '4px',
+  '2': '8px',
+  '3': '12px',
+  '4': '16px',
+  '5': '20px',
+  '6': '24px',
+  '8': '32px',
+  '10': '40px',
+  '12': '48px',
+  '16': '64px',
+  '20': '80px',
+  '24': '96px',
 } as const;
 
-// ─── Typography ───────────────────────────────────────────────────────────────
-
 export const WaselFonts = {
-  sans:    "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
-  arabic:  "var(--wasel-font-arabic, 'Cairo', 'Tajawal', 'Almarai', sans-serif)",
-  mono:    "'JetBrains Mono', 'Fira Code', monospace",
+  sans:
+    "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
+  arabic:
+    "var(--wasel-font-arabic, 'Cairo', 'Tajawal', 'Almarai', sans-serif)",
+  mono: "'JetBrains Mono', 'Fira Code', monospace",
 } as const;
 
 export const WaselFontSizes = {
-  xs:   '0.75rem',
-  sm:   '0.875rem',
+  xs: '0.75rem',
+  sm: '0.875rem',
   base: '1rem',
-  lg:   '1.125rem',
-  xl:   '1.25rem',
-  '2xl':'1.5rem',
-  '3xl':'1.875rem',
-  '4xl':'2.25rem',
-  '5xl':'3rem',
+  lg: '1.125rem',
+  xl: '1.3125rem',
+  '2xl': '1.625rem',
+  '3xl': '2rem',
+  '4xl': '2.5rem',
+  '5xl': '3.25rem',
 } as const;
 
-// ─── Border Radius ────────────────────────────────────────────────────────────
-
 export const WaselRadius = {
-  sm:   '8px',
-  base: '12px',
-  lg:   '16px',
-  xl:   '20px',
-  '2xl':'28px',
+  sm: '10px',
+  base: '14px',
+  lg: '18px',
+  xl: '22px',
+  '2xl': '28px',
   full: '9999px',
 } as const;
 
-// ─── Shadows ──────────────────────────────────────────────────────────────────
-
 export const WaselShadows = {
-  sm:         '0 1px 4px rgba(0,0,0,0.5)',
-  base:       '0 4px 20px rgba(0,0,0,0.55)',
-  lg:         '0 8px 40px rgba(0,0,0,0.6)',
-  glow:       '0 0 24px rgba(0,200,232,0.25)',
-  glowGold:   '0 0 24px rgba(240,168,48,0.25)',
-  glowGreen:  '0 0 24px rgba(0,200,117,0.25)',
-  cyanBorder: '0 0 0 1px rgba(0,200,232,0.15), 0 4px 20px rgba(0,0,0,0.5)',
+  sm: '0 8px 20px rgba(1,9,16,0.2)',
+  base: '0 18px 44px rgba(1,10,18,0.28)',
+  lg: '0 30px 72px rgba(1,10,18,0.36)',
+  glow: '0 18px 50px rgba(22,199,242,0.22)',
+  glowGold: '0 18px 50px rgba(199,255,26,0.18)',
+  glowGreen: '0 18px 50px rgba(96,197,54,0.22)',
+  cyanBorder: '0 0 0 1px rgba(73,190,242,0.18), 0 18px 44px rgba(1,10,18,0.28)',
 } as const;
 
-// ─── Z-Index ──────────────────────────────────────────────────────────────────
-
 export const WaselZIndex = {
-  base:    0,
-  raised:  10,
+  base: 0,
+  raised: 10,
   overlay: 100,
-  modal:   200,
-  toast:   300,
+  modal: 200,
+  toast: 300,
   tooltip: 400,
 } as const;
 
-// ─── Transitions ──────────────────────────────────────────────────────────────
-
 export const WaselTransitions = {
-  fast:   '150ms ease',
-  base:   '250ms ease',
-  slow:   '400ms ease',
-  spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+  fast: '120ms cubic-bezier(0.2, 0.9, 0.2, 1)',
+  base: '180ms cubic-bezier(0.2, 0.9, 0.2, 1)',
+  slow: '280ms cubic-bezier(0.2, 0.9, 0.2, 1)',
+  spring: 'cubic-bezier(0.22, 1, 0.36, 1)',
 } as const;
-
-// ─── Glassmorphism presets ────────────────────────────────────────────────────
 
 export const WaselGlass = {
   card: {
-    background: 'rgba(10,22,40,0.85)',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(0,200,232,0.08)',
+    background: 'rgba(11,33,53,0.84)',
+    backdropFilter: 'blur(18px)',
+    border: '1px solid rgba(73,190,242,0.16)',
   },
   overlay: {
-    background: 'rgba(4,12,24,0.92)',
+    background: 'rgba(3,12,20,0.84)',
     backdropFilter: 'blur(28px)',
   },
   panel: {
-    background: 'rgba(7,15,31,0.97)',
-    backdropFilter: 'blur(32px)',
-    border: '1px solid rgba(0,200,232,0.07)',
+    background: 'rgba(8,27,43,0.94)',
+    backdropFilter: 'blur(28px)',
+    border: '1px solid rgba(73,190,242,0.12)',
   },
 } as const;
 
-// ─── Gradient presets ─────────────────────────────────────────────────────────
-
 export const WaselGradients = {
-  primaryBtn:  'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)',
-  accentBtn:   'linear-gradient(135deg, #F0A830 0%, #C8751A 100%)',
-  successBtn:  'linear-gradient(135deg, #00C875 0%, #009855 100%)',
-  heroCard:    'linear-gradient(135deg, rgba(0,200,232,0.12) 0%, rgba(0,200,117,0.05) 100%)',
-  constellation: 'linear-gradient(135deg, #00C8E8 0%, #F0A830 100%)',
+  primaryBtn: 'linear-gradient(135deg, #16C7F2 0%, #0A74C9 52%, #33D7D0 100%)',
+  accentBtn: 'linear-gradient(135deg, #59C83B 0%, #C7FF1A 100%)',
+  successBtn: 'linear-gradient(135deg, #2ED7B7 0%, #7EED3A 100%)',
+  heroCard:
+    'linear-gradient(135deg, rgba(22,199,242,0.14) 0%, rgba(51,215,208,0.08) 56%, rgba(199,255,26,0.08) 100%)',
+  constellation: 'linear-gradient(135deg, #16C7F2 0%, #3AD7E4 48%, #C7FF1A 100%)',
 } as const;

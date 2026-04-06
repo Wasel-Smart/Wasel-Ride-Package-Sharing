@@ -12,6 +12,7 @@ export interface Ride {
     verified: boolean;
     trips: number;
     phone: string;
+    email?: string;
     avatar: string;
   };
   from: string;
@@ -223,7 +224,8 @@ export function buildRideFromPostedRide(ride: PostedRide): Ride {
       rating: 4.8,
       verified: true,
       trips: 0,
-      phone: '+962790000000',
+      phone: ride.ownerPhone ?? '',
+      email: ride.ownerEmail,
       avatar: (ride.carModel || 'Wasel').slice(0, 2).toUpperCase(),
     },
     from: ride.from,

@@ -11,66 +11,117 @@ export type NavItem = {
   badge: string | null;
 };
 
-export const PRODUCT_NAV_GROUPS = [
+type NavGroupBase = {
+  id: string;
+  label: string;
+  labelAr: string;
+  desc: string;
+  descAr: string;
+  color: string;
+  badge?: string | null;
+};
+
+export type DirectNavGroup = NavGroupBase & {
+  direct: true;
+  path: string;
+  emoji: string;
+  items?: readonly NavItem[];
+};
+
+export type NestedNavGroup = NavGroupBase & {
+  direct?: false;
+  items: readonly NavItem[];
+};
+
+export type NavGroup = DirectNavGroup | NestedNavGroup;
+
+export const PRODUCT_NAV_GROUPS: readonly NavGroup[] = [
   {
     id: 'find',
-    label: 'Find Route',
-    labelAr: 'Find Route',
+    label: 'Find Ride',
+    labelAr: 'ابحث عن رحلة',
     direct: true,
     path: '/find-ride',
-    emoji: 'R',
-    desc: 'Discover shared corridors with Wasel Brain guidance.',
-    descAr: 'Discover shared corridors with Wasel Brain guidance.',
+    emoji: '🛣️',
+    desc: 'Search routes, compare departures, and book the clearest ride.',
+    descAr: 'ابحث في المسارات، وقارن أوقات الانطلاق، واحجز أوضح رحلة.',
     color: C.cyan,
-    badge: 'AI',
+    badge: null,
     items: [],
   },
   {
-    id: 'my-trips',
-    label: 'My Movement',
-    labelAr: 'My Movement',
+    id: 'trips',
+    label: 'Trips',
+    labelAr: 'رحلاتي',
     direct: true,
     path: '/my-trips',
-    emoji: 'T',
-    desc: 'Track bookings, passes, daily routes, and movement history.',
-    descAr: 'Track bookings, passes, daily routes, and movement history.',
+    emoji: '🎫',
+    desc: 'Track active rides, bookings, and recent movement.',
+    descAr: 'تابع الرحلات النشطة والحجوزات والتحركات الأخيرة.',
+    color: C.cyan,
+    badge: null,
+    items: [],
+  },
+  {
+    id: 'packages',
+    label: 'Packages',
+    labelAr: 'الطرود',
+    direct: true,
+    path: '/packages',
+    emoji: '📦',
+    desc: 'Send, track, and manage packages on live corridors.',
+    descAr: 'أرسل الطرود وتتبعها وأدرها على الممرات الحية.',
+    color: C.gold,
+    items: [],
+  },
+  {
+    id: 'wallet',
+    label: 'Wallet',
+    labelAr: 'المحفظة',
+    direct: true,
+    path: '/wallet',
+    emoji: '💳',
+    desc: 'Top up, send money, and review recent transactions.',
+    descAr: 'اشحن الرصيد، وأرسل المال، وراجع آخر المعاملات.',
+    color: C.cyan,
+    badge: null,
+    items: [],
+  },
+  {
+    id: 'profile',
+    label: 'Profile',
+    labelAr: 'الملف الشخصي',
+    direct: true,
+    path: '/profile',
+    emoji: '👤',
+    desc: 'Manage account details, verification, and preferences.',
+    descAr: 'أدر بيانات الحساب والتحقق والتفضيلات.',
     color: C.cyan,
     badge: null,
     items: [],
   },
   {
     id: 'mobility-os',
-    label: 'Mobility OS',
-    labelAr: 'Mobility OS',
+    label: 'Network',
+    labelAr: 'الشبكة',
     direct: true,
     path: '/mobility-os',
-    emoji: 'M',
-    desc: 'See route intelligence, network density, and command decisions.',
-    descAr: 'See route intelligence, network density, and command decisions.',
+    emoji: '📡',
+    desc: 'See corridor insights, route pressure, and network trends.',
+    descAr: 'اطلع على ذكاء الممرات وضغط المسارات واتجاهات الشبكة.',
     color: C.cyan,
     badge: 'LIVE',
     items: [],
   },
-  {
-    id: 'profile',
-    label: 'Identity',
-    labelAr: 'Identity',
-    direct: true,
-    path: '/profile',
-    emoji: 'U',
-    desc: 'Manage trust, verification, and your movement profile.',
-    descAr: 'Manage trust, verification, and your movement profile.',
-    color: C.cyan,
-    badge: null,
-    items: [],
-  },
-] as const;
-
-export type NavGroup = (typeof PRODUCT_NAV_GROUPS)[number];
-export const DESKTOP_PRIMARY_NAV_IDS = ['find', 'mobility-os', 'my-trips', 'profile'] as const;
+];
+export const DESKTOP_PRIMARY_NAV_IDS = ['find', 'trips', 'packages', 'wallet', 'profile'] as const;
 
 const HIDDEN_NAV_PATHS = new Set<string>();
-const USER_ONLY_NAV_PATHS = new Set<string>(['/my-trips', '/profile']);
+const USER_ONLY_NAV_PATHS = new Set<string>(['/my-trips', '/wallet', '/profile']);
+
+export function isDirectNavGroup(group: NavGroup): group is DirectNavGroup {
+  return group.direct === true;
+}
 
 function doesPathMatch(pathname: string, path: string) {
   const normalizedPath = path.startsWith('/app') ? path : `/app${path}`;
@@ -83,30 +134,30 @@ function doesPathMatch(pathname: string, path: string) {
 }
 
 export function isVisibleNavGroup(group: NavGroup, isAuthenticated: boolean) {
-  if ('direct' in group && group.direct) {
+  if (isDirectNavGroup(group)) {
     return !HIDDEN_NAV_PATHS.has(group.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(group.path));
   }
-  const items = ('items' in group ? group.items : []) as unknown as readonly NavItem[];
+  const items = group.items;
   return items.some(
     (item) => !HIDDEN_NAV_PATHS.has(item.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(item.path)),
   );
 }
 
 export function getVisibleNavItems(group: NavGroup, isAuthenticated: boolean) {
-  if ('direct' in group && group.direct) return [];
-  const items = ('items' in group ? group.items : []) as unknown as readonly NavItem[];
+  if (isDirectNavGroup(group)) return [];
+  const items = group.items;
   return items.filter(
     (item) => !HIDDEN_NAV_PATHS.has(item.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(item.path)),
   );
 }
 
 export function getNavGroupPrimaryPath(group: NavGroup, isAuthenticated: boolean) {
-  if ('direct' in group && group.direct) return group.path;
+  if (isDirectNavGroup(group)) return group.path;
   return getVisibleNavItems(group, isAuthenticated)[0]?.path ?? null;
 }
 
 export function isNavGroupActive(group: NavGroup, pathname: string, isAuthenticated: boolean) {
-  if ('direct' in group && group.direct) {
+  if (isDirectNavGroup(group)) {
     return doesPathMatch(pathname, group.path);
   }
 

@@ -228,6 +228,88 @@ export type RawGrowthEvent = {
   created_at?: string | null;
 };
 
+export type RawRouteReminder = {
+  reminder_id?: string;
+  user_id?: string;
+  corridor_id?: string | null;
+  label?: string | null;
+  origin_location?: string | null;
+  destination_location?: string | null;
+  frequency?: string | null;
+  preferred_time?: string | null;
+  next_reminder_at?: string | null;
+  enabled?: boolean | null;
+  last_sent_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type RawSupportTicket = {
+  ticket_id?: string;
+  user_id?: string;
+  topic?: string | null;
+  subject?: string | null;
+  detail?: string | null;
+  related_id?: string | null;
+  route_label?: string | null;
+  status?: string | null;
+  priority?: string | null;
+  channel?: string | null;
+  resolution_summary?: string | null;
+  latest_note?: string | null;
+  sla_due_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type RawSupportTicketEvent = {
+  event_id?: string;
+  ticket_id?: string;
+  status?: string | null;
+  note?: string | null;
+  actor_type?: string | null;
+  created_at?: string | null;
+};
+
+export type RawPricingSnapshot = {
+  snapshot_id?: string;
+  user_id?: string | null;
+  corridor_id?: string | null;
+  corridor_key?: string | null;
+  route_scope?: string | null;
+  origin_location?: string | null;
+  destination_location?: string | null;
+  base_price_jod?: number | string | null;
+  final_price_jod?: number | string | null;
+  demand_score?: number | string | null;
+  price_pressure?: string | null;
+  source_context?: string | null;
+  metadata?: Record<string, unknown> | null;
+  created_at?: string | null;
+};
+
+export type RawAutomationJob = {
+  job_id?: string;
+  user_id?: string | null;
+  job_type?: string | null;
+  corridor_id?: string | null;
+  corridor_key?: string | null;
+  route_scope?: string | null;
+  origin_location?: string | null;
+  destination_location?: string | null;
+  job_status?: string | null;
+  payload?: Record<string, unknown> | null;
+  run_after?: string | null;
+  attempts_count?: number | null;
+  locked_at?: string | null;
+  last_attempt_at?: string | null;
+  processed_by?: string | null;
+  last_error?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  completed_at?: string | null;
+};
+
 export type UserContext = {
   user: UserRow;
   wallet: WalletRow | null;

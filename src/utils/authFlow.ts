@@ -29,6 +29,18 @@ export function buildAuthPagePath(
   return `/app/auth?${params.toString()}`;
 }
 
+export function buildAuthReturnTo(
+  pathname: string,
+  search = '',
+  hash = '',
+  fallback = DEFAULT_AUTH_RETURN_TO,
+): string {
+  const safePath = normalizeAuthReturnTo(pathname, fallback);
+  const normalizedSearch = search.startsWith('?') ? search : search ? `?${search}` : '';
+  const normalizedHash = hash.startsWith('#') ? hash : hash ? `#${hash}` : '';
+  return `${safePath}${normalizedSearch}${normalizedHash}`;
+}
+
 export function persistAuthReturnTo(returnTo: string) {
   try {
     localStorage.setItem(

@@ -1,4 +1,4 @@
-import { Component, useEffect, useState, type ReactNode } from 'react';
+﻿import { Component, useEffect, useState, type ReactNode } from 'react';
 import {
   QueryClient,
   QueryClientProvider,
@@ -22,6 +22,7 @@ import {
 } from './utils/performance';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
+import { buildAuthPagePath } from './utils/authFlow';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -89,6 +90,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
         }}
       >
         <div
+          role="alert"
           style={{
             width: 'min(100%, 560px)',
             borderRadius: 28,
@@ -125,6 +127,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
+              type="button"
               onClick={() => {
                 this.setState({ hasError: false, error: '' });
                 window.location.reload();
@@ -144,6 +147,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
               Reload Wasel
             </button>
             <button
+              type="button"
               onClick={() => {
                 this.setState({ hasError: false, error: '' });
                 window.location.assign('/');
@@ -161,6 +165,26 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
               }}
             >
               Back to home
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                this.setState({ hasError: false, error: '' });
+                window.location.assign(buildAuthPagePath('signin'));
+              }}
+              style={{
+                minHeight: 48,
+                padding: '0 22px',
+                borderRadius: 14,
+                border: '1px solid rgba(85,233,255,0.18)',
+                background: 'transparent',
+                color: '#55E9FF',
+                fontWeight: 800,
+                cursor: 'pointer',
+                fontSize: '0.92rem',
+              }}
+            >
+              Open sign in
             </button>
           </div>
         </div>
@@ -221,7 +245,7 @@ export default function App() {
                 toastOptions={{
                   style: {
                     background: '#0A1628',
-                    border: '1px solid rgba(0,200,232,0.25)',
+                    border: '1px solid rgba(22,199,242,0.25)',
                     color: '#EFF6FF',
           fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
                   },
@@ -234,3 +258,4 @@ export default function App() {
     </AppErrorBoundary>
   );
 }
+

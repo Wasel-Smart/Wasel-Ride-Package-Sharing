@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "name": "Wasel Brand System",
+    "version": "2026-04-05",
+    "source": "Linked mobility logo refresh"
+  },
+  "color": {
+    "bg": "#061726",
+    "bgAlt": "#082033",
+    "bgDeep": "#04131F",
+    "surface": "#0B2135",
+    "surfaceAlt": "#102B44",
+    "primary": "#16C7F2",
+    "primaryDeep": "#0A74C9",
+    "accent": "#C7FF1A",
+    "success": "#60C536",
+    "text": "#EAF7FF",
+    "textSub": "rgba(234,247,255,0.84)",
+    "textMuted": "rgba(153,184,210,0.66)",
+    "border": "rgba(73,190,242,0.16)",
+    "borderStrong": "rgba(73,190,242,0.34)",
+    "error": "#FF646A",
+    "warning": "#FFD84A"
+  },
+  "typography": {
+    "fontSans": "Plus Jakarta Sans",
+    "fontArabic": "Cairo",
+    "fontDisplay": "Space Grotesk",
+    "scale": {
+      "h1": "3.25rem",
+      "h2": "2.5rem",
+      "h3": "2rem",
+      "h4": "1.6rem",
+      "h5": "1.32rem",
+      "h6": "1.125rem",
+      "body": "0.92rem",
+      "bodyLarge": "1rem",
+      "caption": "0.76rem",
+      "meta": "0.66rem"
+    }
+  },
+  "spacing": {
+    "base": 4,
+    "grid": 8,
+    "steps": [4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 64, 80, 96]
+  },
+  "radius": {
+    "sm": 10,
+    "md": 14,
+    "lg": 18,
+    "xl": 22,
+    "xxl": 28,
+    "pill": 9999
+  },
+  "shadow": {
+    "card": "0 18px 44px rgba(1,10,18,0.28)",
+    "raised": "0 24px 56px rgba(1,10,18,0.34)",
+    "hero": "0 34px 80px rgba(1,10,18,0.38)",
+    "glowPrimary": "0 18px 50px rgba(22,199,242,0.22)"
+  },
+  "gradient": {
+    "primary": "linear-gradient(135deg, #16C7F2 0%, #0A74C9 52%, #33D7D0 100%)",
+    "accent": "linear-gradient(135deg, #59C83B 0%, #C7FF1A 100%)",
+    "signal": "linear-gradient(135deg, #16C7F2 0%, #3AD7E4 48%, #C7FF1A 100%)"
+  }
+}

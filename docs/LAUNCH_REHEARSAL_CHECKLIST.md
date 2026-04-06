@@ -47,3 +47,11 @@ No-go when:
 - canonical insert/update flows fail under RLS
 - wallet or booking flows regress after RPC hardening
 - auth-user to canonical-user mapping fails
+
+## Seeding Readiness
+
+After technical go-live, use the founder seeding pack before broad promotion:
+
+- review [e-SOSTAC Founder Seeding Sprint](/C:/Users/user/OneDrive/Desktop/Wdoubleme/docs/E_SOSTAC_FOUNDER_SEEDING_SPRINT.md)
+- use [Seeding Outreach Copy](/C:/Users/user/OneDrive/Desktop/Wdoubleme/docs/SEEDING_OUTREACH_COPY.md)
+- track daily execution in [Seeding Tracker Template](/C:/Users/user/OneDrive/Desktop/Wdoubleme/docs/SEEDING_TRACKER_TEMPLATE.csv)

@@ -3,6 +3,7 @@
 import { getDb, toNumber } from './helpers';
 import { buildUserContext } from './userContext.ts';
 import type { RawDemandAlert, RawGrowthEvent } from './types';
+import { normalizeJordanLocation } from '../../utils/jordanLocations';
 
 export async function recordDirectGrowthEvent(input: {
   userId?: string;
@@ -16,6 +17,8 @@ export async function recordDirectGrowthEvent(input: {
 }) {
   const db = getDb();
   const context = input.userId ? await buildUserContext(input.userId).catch(() => null) : null;
+  const from = input.from ? normalizeJordanLocation(input.from, input.from) : null;
+  const to = input.to ? normalizeJordanLocation(input.to, input.to) : null;
   const { data, error } = await db
     .from('growth_events')
     .insert({
@@ -23,8 +26,8 @@ export async function recordDirectGrowthEvent(input: {
       event_name: input.eventName,
       funnel_stage: input.funnelStage,
       service_type: input.serviceType,
-      route_from: input.from ?? null,
-      route_to: input.to ?? null,
+      route_from: from,
+      route_to: to,
       monetary_value_jod: input.valueJod ?? 0,
       metadata: input.metadata ?? null,
     })
@@ -44,12 +47,14 @@ export async function createDirectDemandAlert(input: {
 }) {
   const db = getDb();
   const context = input.userId ? await buildUserContext(input.userId).catch(() => null) : null;
+  const from = normalizeJordanLocation(input.from, input.from);
+  const to = normalizeJordanLocation(input.to, input.to);
   const { data, error } = await db
     .from('demand_alerts')
     .insert({
       user_id: context?.user.id ?? null,
-      origin_city: input.from,
-      destination_city: input.to,
+      origin_city: from,
+      destination_city: to,
       service_type: input.service,
       requested_date: input.date,
       seats_or_slots: input.seatsOrSlots,

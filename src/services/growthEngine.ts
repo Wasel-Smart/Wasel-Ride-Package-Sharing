@@ -1,9 +1,17 @@
 import {
+  createDirectPricingSnapshot,
+  enqueueDirectAutomationJob,
   getDirectGrowthAnalytics,
   getDirectReferralSnapshot,
   recordDirectGrowthEvent,
   redeemDirectReferralCode,
 } from './directSupabase';
+import {
+  buildJordanCorridorKey,
+  getJordanRouteScope,
+  normalizeJordanLocation,
+} from '../utils/jordanLocations';
+import { getAutomationJobRunAfter } from '../utils/automationScheduling';
 
 export interface ReferralSnapshot {
   code: string;
@@ -109,6 +117,29 @@ function readLocalDemandAlerts(): Array<{
   }
 }
 
+function normalizeRouteInput(from?: string, to?: string) {
+  const normalizedFrom = from ? normalizeJordanLocation(from, from) : undefined;
+  const normalizedTo = to ? normalizeJordanLocation(to, to) : undefined;
+  return {
+    from: normalizedFrom,
+    to: normalizedTo,
+    corridorKey: normalizedFrom && normalizedTo ? buildJordanCorridorKey(normalizedFrom, normalizedTo) : undefined,
+    routeScope: normalizedFrom && normalizedTo ? getJordanRouteScope(normalizedFrom, normalizedTo) : undefined,
+  };
+}
+
+function mapAutomationJobType(input: {
+  eventName: string;
+  funnelStage: string;
+  serviceType: 'ride' | 'bus' | 'package' | 'referral' | 'wallet';
+}) {
+  if (input.eventName.includes('support') || input.funnelStage === 'cancelled') return 'support_follow_up';
+  if (input.funnelStage === 'searched') return 'demand_recovery';
+  if (input.funnelStage === 'selected') return 'corridor_conversion';
+  if (input.funnelStage === 'booked' || input.funnelStage === 'completed') return 'pricing_refresh';
+  return 'revenue_observe';
+}
+
 export async function trackGrowthEvent(input: {
   userId?: string;
   eventName: string;
@@ -119,13 +150,14 @@ export async function trackGrowthEvent(input: {
   valueJod?: number;
   metadata?: Record<string, unknown>;
 }) {
+  const route = normalizeRouteInput(input.from, input.to);
   writeLocalGrowthEvents([
     {
       eventName: input.eventName,
       funnelStage: input.funnelStage,
       serviceType: input.serviceType,
-      from: input.from,
-      to: input.to,
+      from: route.from,
+      to: route.to,
       valueJod: input.valueJod,
       createdAt: new Date().toISOString(),
     },
@@ -133,7 +165,58 @@ export async function trackGrowthEvent(input: {
   ]);
 
   try {
-    await recordDirectGrowthEvent(input);
+    await recordDirectGrowthEvent({
+      ...input,
+      from: route.from,
+      to: route.to,
+      metadata: {
+        ...input.metadata,
+        corridorKey: route.corridorKey,
+        routeScope: route.routeScope,
+      },
+    });
+
+    if (input.userId && route.from && route.to) {
+      const jobType = mapAutomationJobType(input);
+      await enqueueDirectAutomationJob({
+        userId: input.userId,
+        jobType,
+        from: route.from,
+        to: route.to,
+        payload: {
+          eventName: input.eventName,
+          funnelStage: input.funnelStage,
+          serviceType: input.serviceType,
+          valueJod: input.valueJod ?? null,
+          corridorKey: route.corridorKey,
+          pricePressure: typeof input.metadata?.pricePressure === 'string' ? input.metadata.pricePressure : null,
+          priceQuote: (input.metadata?.priceQuote as Record<string, unknown> | undefined) ?? null,
+        },
+        runAfter: getAutomationJobRunAfter(jobType),
+      }).catch(() => {});
+    }
+
+    const priceQuote = input.metadata?.priceQuote as Record<string, unknown> | undefined;
+    const basePrice = Number(priceQuote?.basePriceJod ?? input.valueJod ?? 0);
+    const finalPrice = Number(priceQuote?.finalPriceJod ?? input.valueJod ?? 0);
+    if (route.from && route.to && Number.isFinite(basePrice) && Number.isFinite(finalPrice) && finalPrice > 0) {
+      await createDirectPricingSnapshot({
+        userId: input.userId,
+        corridorId: typeof input.metadata?.corridorId === 'string' ? input.metadata.corridorId : null,
+        from: route.from,
+        to: route.to,
+        basePriceJod: basePrice,
+        finalPriceJod: finalPrice,
+        demandScore: Number(priceQuote?.forecastDemandScore ?? input.metadata?.demandScore ?? 0) || undefined,
+        pricePressure: typeof input.metadata?.pricePressure === 'string' ? input.metadata.pricePressure : undefined,
+        sourceContext: input.eventName,
+        metadata: {
+          eventName: input.eventName,
+          funnelStage: input.funnelStage,
+          serviceType: input.serviceType,
+        },
+      }).catch(() => {});
+    }
   } catch {
     // local fallback is already stored
   }

@@ -2,11 +2,17 @@ import { describe, expect, it } from 'vitest';
 
 import type { Notification } from '../../../src/hooks/useNotifications';
 import {
+  buildFilterCounts,
   buildNotificationSections,
+  buildStakeholderCounts,
+  getNotificationChannelPreview,
   getNotificationCategory,
+  getNotificationEscalationLabel,
   getNotificationSummary,
+  getNotificationStakeholders,
   matchesNotificationFilter,
   matchesNotificationSearch,
+  rankNotifications,
 } from '../../../src/features/notifications/notificationCenterModel';
 
 function createNotification(partial: Partial<Notification>): Notification {
@@ -87,5 +93,77 @@ describe('notificationCenterModel', () => {
       urgent: 1,
       archived: 1,
     });
+  });
+
+  it('ranks unread urgent notifications ahead of older read items', () => {
+    const ranked = rankNotifications([
+      createNotification({
+        id: 'older-read',
+        read: true,
+        priority: 'high',
+        created_at: '2026-04-01T08:00:00.000Z',
+      }),
+      createNotification({
+        id: 'urgent-unread',
+        read: false,
+        priority: 'urgent',
+        created_at: '2026-04-04T08:30:00.000Z',
+      }),
+    ]);
+
+    expect(ranked[0]?.id).toBe('urgent-unread');
+  });
+
+  it('builds filter counts for live and archived views', () => {
+    const notifications = [
+      createNotification({ id: 'ride-1', type: 'trip_update', read: false }),
+      createNotification({ id: 'wallet-1', type: 'wallet_credit', read: true }),
+      createNotification({
+        id: 'support-1',
+        type: 'support_reply',
+        read: false,
+        priority: 'urgent',
+      }),
+    ];
+
+    const counts = buildFilterCounts(notifications, new Set(['wallet-1']));
+
+    expect(counts.all).toBe(2);
+    expect(counts.unread).toBe(2);
+    expect(counts.urgent).toBe(1);
+    expect(counts.wallet).toBe(0);
+    expect(counts.support).toBe(1);
+    expect(counts.archived).toBe(1);
+  });
+
+  it('infers stakeholders, channels, and escalation labels for communication-heavy notifications', () => {
+    const notification = createNotification({
+      type: 'support_security',
+      title: 'Driver verification requires support follow-up',
+      message: 'Operations escalated this case for immediate review.',
+      priority: 'urgent',
+    });
+
+    expect(getNotificationStakeholders(notification)).toEqual(
+      expect.arrayContaining(['driver', 'operations', 'support', 'trust']),
+    );
+    expect(getNotificationChannelPreview(notification)).toEqual(
+      expect.arrayContaining(['in_app', 'push', 'email']),
+    );
+    expect(getNotificationEscalationLabel(notification)).toBe('Immediate');
+  });
+
+  it('summarizes visible notifications by stakeholder', () => {
+    const notifications = [
+      createNotification({ id: 'ride-ops', type: 'trip_update', title: 'Driver near pickup' }),
+      createNotification({ id: 'wallet-finance', type: 'wallet_credit', title: 'Refund processed' }),
+      createNotification({ id: 'support-case', type: 'support_reply', title: 'Support replied' }),
+    ];
+
+    const counts = buildStakeholderCounts(notifications, new Set());
+
+    expect(counts.operations).toBeGreaterThan(0);
+    expect(counts.finance).toBeGreaterThan(0);
+    expect(counts.support).toBeGreaterThan(0);
   });
 });

@@ -81,6 +81,11 @@ export function OfferRideIncomingRequests({
                           type: 'booking',
                           priority: 'high',
                           action_url: '/app/my-trips?tab=rides',
+                          channels: ['whatsapp', 'sms', 'email'],
+                          contact: {
+                            phone: updated.passengerPhone ?? null,
+                            email: updated.passengerEmail ?? null,
+                          },
                         })
                         .catch(() => {});
                     }
@@ -113,6 +118,11 @@ export function OfferRideIncomingRequests({
                           type: 'booking',
                           priority: 'medium',
                           action_url: '/app/find-ride',
+                          channels: ['whatsapp', 'sms', 'email'],
+                          contact: {
+                            phone: updated.passengerPhone ?? null,
+                            email: updated.passengerEmail ?? null,
+                          },
                         })
                         .catch(() => {});
                     }

@@ -1,67 +1,20 @@
 import { useState } from 'react';
-import { Gauge, Package, Search } from 'lucide-react';
+import { Car, Package, Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { trackGrowthEvent } from '../../services/growthEngine';
 import { friendlyAuthError } from '../../utils/authHelpers';
 import { buildAuthPagePath } from '../../utils/authFlow';
 import { getWaselPresenceProfile } from '../../domains/trust/waselPresence';
-import {
-  LANDING_COLORS,
-  type LandingActionCard,
-  type LandingRowDefinition,
-  type LandingSignalCard,
-  LandingFooterSlot,
-  LandingHeader,
-  LandingHeroSection,
-  LandingMapSection,
-  LandingPageFrame,
-  LandingSignalSection,
-  LandingSlotRows,
-  LandingTrustSection,
-  LandingWhySlot,
-} from './LandingSections';
+import { LANDING_COLORS, type LandingActionCard, type LandingRowDefinition, type LandingSignalCard, LandingFooterSlot, LandingHeader, LandingHeroSection, LandingMapSection, LandingPageFrame, LandingSignalSection, LandingSlotRows, LandingTrustSection, LandingWhySlot } from './LandingSections';
 
 const LANDING_ROWS: readonly LandingRowDefinition[] = [
-  {
-    id: 'main',
-    className: 'landing-main-grid',
-    style: {
-      display: 'grid',
-      gridTemplateColumns: 'minmax(0, 0.92fr) minmax(0, 1.08fr)',
-      gap: 24,
-      alignItems: 'start',
-    },
-    slots: ['hero', 'map'],
-  },
-  {
-    id: 'signals',
-    className: 'landing-signal-grid',
-    style: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-      gap: 12,
-      marginTop: 18,
-    },
-    slots: ['signals'],
-  },
-  {
-    id: 'trust',
-    className: 'landing-bottom-grid',
-    style: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: 14,
-      marginTop: 18,
-    },
-    slots: ['why', 'trust'],
-  },
-  {
-    id: 'footer',
-    style: { marginTop: 18 },
-    slots: ['footer'],
-  },
+  { id: 'main', className: 'landing-main-grid', style: { display: 'grid', gridTemplateColumns: 'minmax(0, 0.94fr) minmax(0, 1.06fr)', gap: 20, alignItems: 'stretch' }, slots: ['hero', 'map'] },
+  { id: 'signals', className: 'landing-signal-grid', style: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, marginTop: 16 }, slots: ['signals'] },
+  { id: 'trust', className: 'landing-bottom-grid', style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 16 }, slots: ['why', 'trust'] },
+  { id: 'footer', style: { marginTop: 16 }, slots: ['footer'] },
 ] as const;
 
 export default function AppEntryPage() {
@@ -74,136 +27,74 @@ export default function AppEntryPage() {
   const ar = language === 'ar';
   const profile = getWaselPresenceProfile();
   const defaultReturnTo = '/app/find-ride';
+  const signInPath = buildAuthPagePath('signin', defaultReturnTo);
+  const signUpPath = buildAuthPagePath('signup', defaultReturnTo);
 
-  const buildPath = (path: string, requiresAuth = false) =>
-    !requiresAuth || user
-      ? path
-      : buildAuthPagePath('signin', path);
+  const buildPath = (path: string, requiresAuth = false) => (!requiresAuth || user ? path : buildAuthPagePath('signin', path));
+  const handleLandingNavigate = (path: string) => {
+    const eventMap = [
+      { match: '/app/find-ride', eventName: 'landing_find_ride_opened', serviceType: 'ride' as const },
+      { match: '/app/offer-ride', eventName: 'landing_offer_ride_opened', serviceType: 'ride' as const },
+      { match: '/app/packages', eventName: 'landing_packages_opened', serviceType: 'package' as const },
+      { match: '/app/mobility-os', eventName: 'landing_mobility_os_opened', serviceType: 'ride' as const },
+      { match: '/app/my-trips', eventName: 'landing_my_trips_opened', serviceType: 'ride' as const },
+      { match: 'tab=signup', eventName: 'landing_signup_opened', serviceType: 'referral' as const },
+      { match: 'tab=signin', eventName: 'landing_signin_opened', serviceType: 'referral' as const },
+    ].find((item) => path.includes(item.match));
+
+    void trackGrowthEvent({
+      userId: user?.id,
+      eventName: eventMap?.eventName ?? 'landing_navigation',
+      funnelStage: 'selected',
+      serviceType: eventMap?.serviceType ?? 'ride',
+      metadata: {
+        path,
+        authState: user ? 'authenticated' : 'guest',
+        locale: language,
+      },
+    });
+
+    navigate(path);
+  };
 
   const handleOAuth = async (provider: 'google' | 'facebook') => {
     setAuthError('');
     setOauthProvider(provider);
-
-    const result =
-      provider === 'google'
-        ? await signInWithGoogle(defaultReturnTo)
-        : await signInWithFacebook(defaultReturnTo);
-
+    const result = provider === 'google' ? await signInWithGoogle(defaultReturnTo) : await signInWithFacebook(defaultReturnTo);
     if (result.error) {
-      setAuthError(
-        friendlyAuthError(
-          result.error,
-          provider === 'google'
-            ? 'Google sign-in failed.'
-            : 'Facebook sign-in failed.',
-        ),
-      );
+      setAuthError(friendlyAuthError(result.error, provider === 'google' ? 'Google sign-in failed.' : 'Facebook sign-in failed.'));
       setOauthProvider(null);
     }
   };
 
   const primaryActions: readonly LandingActionCard[] = [
-    {
-      title: ar ? 'ابحث عن المسار' : 'Search routes',
-      detail: ar
-        ? 'افتح المسارات الحية وشاهد السعر المشترك قبل الحجز.'
-        : 'Open live corridors, compare departures, and see the shared price before booking.',
-      path: buildPath('/app/find-ride'),
-      icon: Search,
-      color: LANDING_COLORS.cyan,
-    },
-    {
-      title: ar ? 'افتح Mobility OS' : 'Open Mobility OS',
-      detail: ar
-        ? 'راقب ازدحام المدن والممرات الأقوى وأهدأ الساعات.'
-        : 'Watch the busiest lanes, the strongest corridors, and the calmest hours.',
-      path: '/app/mobility-os',
-      icon: Gauge,
-      color: LANDING_COLORS.gold,
-    },
-    {
-      title: ar ? 'أرسل طردا' : 'Send package',
-      detail: ar
-        ? 'حرّك الطرود على نفس شبكة الرحلات بين المدن.'
-        : 'Attach parcels to the same city-to-city network without leaving the route graph.',
-      path: '/app/packages',
-      icon: Package,
-      color: LANDING_COLORS.blue,
-    },
+    { title: ar ? 'ابحث عن رحلة' : 'Find a ride', detail: ar ? 'ابحث في الشبكة الحية وقارن المسار ثم احجز بسرعة.' : 'Search the live network, compare the route, and book quickly.', path: buildPath('/app/find-ride'), icon: Search, color: LANDING_COLORS.cyan },
+    { title: ar ? 'أنشئ رحلة' : 'Create a ride', detail: ar ? 'انشر المقاعد واستقبل الطلبات واملأ المسار بثقة.' : 'Publish seats, accept requests, and fill the route with confidence.', path: buildPath('/app/offer-ride', true), icon: Car, color: LANDING_COLORS.gold },
+    { title: ar ? 'أرسل طردا' : 'Send a package', detail: ar ? 'استخدم نفس شبكة الحركة للإرسال والتسليم.' : 'Use the same movement network for sending and delivery.', path: buildPath('/app/packages'), icon: Package, color: LANDING_COLORS.green },
   ] as const;
 
   const signalCards: readonly LandingSignalCard[] = [
-    {
-      title: ar ? 'اقرأ الضغط' : 'Read route pressure',
-      detail: ar
-        ? 'اعرف متى تكون الممرات مزدحمة ومتى تكون أسهل للحجز.'
-        : 'See when routes are busy, when they cool down, and where matching is strongest.',
-      accent: LANDING_COLORS.cyan,
-    },
-    {
-      title: ar ? 'قارن المدن' : 'Compare city corridors',
-      detail: ar
-        ? 'الشبكة تعرض الحركة بين المدن بدل البحث الأعمى رحلة برحلة.'
-        : 'The map shows movement between cities first, so users understand the lane before the listing.',
-      accent: LANDING_COLORS.gold,
-    },
-    {
-      title: ar ? 'تحرك من القرار' : 'Move from insight to action',
-      detail: ar
-        ? 'من نفس الرؤية يمكنك الحجز أو التتبع أو إرسال الطرود.'
-        : 'From the same view, users can book a seat, track a trip, or send a package.',
-      accent: LANDING_COLORS.green,
-    },
+    { title: ar ? 'للركاب' : 'For riders', detail: ar ? 'اعرف متى يكون الممر نشطا وتحرك قبل أن يزداد الازدحام.' : 'See when a corridor is active and move before it gets crowded.', accent: LANDING_COLORS.cyan, trendLabel: ar ? 'المطابقة تتحسن' : 'Matching is improving', trendDirection: 'up', intensity: ar ? 'إشارة عالية' : 'High signal', sparkline: [32, 36, 40, 44, 48, 55] },
+    { title: ar ? 'لمنشئي الرحلات' : 'For ride creators', detail: ar ? 'افتح العرض حيث يكون الطلب أقوى وتجنب السعة الفارغة.' : 'Open supply where demand is strongest and avoid empty capacity.', accent: LANDING_COLORS.gold, trendLabel: ar ? 'العائد يرتفع' : 'Yield is rising', trendDirection: 'up', intensity: ar ? 'متوازن' : 'Balanced', sparkline: [24, 29, 27, 34, 38, 43] },
+    { title: ar ? 'للطرود' : 'For packages', detail: ar ? 'أضف حركة الطرود من داخل نفس نظام المسارات.' : 'Add parcel movement without leaving the same route system.', accent: LANDING_COLORS.green, trendLabel: ar ? 'أكثر قابلية للتوقع' : 'More predictable', trendDirection: 'down', intensity: ar ? 'احتكاك منخفض' : 'Low friction', sparkline: [62, 58, 54, 49, 45, 41] },
   ] as const;
 
   const heroBullets = [
-    ar
-      ? 'اكتشف أكثر الممرات ازدحاما وأفضلها للحجز.'
-      : 'Spot the busiest lanes and the best corridors for matching.',
-    ar
-      ? 'افهم كيف تتحرك الطرود مع الركاب على نفس الخريطة.'
-      : 'Understand how packages move on the same graph as riders.',
-    ar
-      ? 'انتقل من الرؤية إلى الإجراء بدون تغيير السياق.'
-      : 'Move from corridor insight to action without changing context.',
+    ar ? 'اقرأ الشبكة قبل اختيار الرحلة.' : 'Read the network before choosing the trip.',
+    ar ? 'اعرف أين يكون الممر أقوى ثم تحرك بثقة.' : 'See where the corridor is strongest, then act with confidence.',
+    ar ? 'اجمع الركاب ومنشئي الرحلات والتوصيل في رؤية واحدة واضحة.' : 'Keep riders, creators, and delivery in one clear system view.',
   ] as const;
 
-  const openAppLabel = user
-    ? (ar ? 'افتح التطبيق' : 'Open app')
-    : (ar ? 'تابع بالإيميل' : 'Continue with email');
-  const primaryAppPath = user
-    ? '/app/find-ride'
-    : buildAuthPagePath('signin', defaultReturnTo);
   const supportLine = profile.supportPhoneDisplay || profile.supportEmail || 'Wasel';
   const businessAddress = ar ? profile.businessAddressAr : profile.businessAddress;
 
   return (
     <LandingPageFrame>
-      <LandingHeader ar={ar} />
+      <LandingHeader ar={ar} signinPath={signInPath} signupPath={signUpPath} showAuthActions={!user} onNavigate={handleLandingNavigate} />
       <LandingSlotRows
         rows={LANDING_ROWS}
         slots={{
-          hero: (
-            <LandingHeroSection
-              ar={ar}
-              openAppLabel={openAppLabel}
-              primaryAppPath={primaryAppPath}
-              emailAuthPath={buildAuthPagePath('signin', defaultReturnTo)}
-              signupAuthPath={buildAuthPagePath('signup', defaultReturnTo)}
-              mobilityOsPath="/app/mobility-os"
-              myTripsPath={buildPath('/app/my-trips', true)}
-              supportLine={supportLine}
-              businessAddress={businessAddress}
-              heroBullets={heroBullets}
-              primaryActions={primaryActions}
-              authError={authError}
-              oauthLoadingProvider={oauthProvider}
-              showQuickAuth={!user}
-              onGoogleAuth={() => { void handleOAuth('google'); }}
-              onFacebookAuth={() => { void handleOAuth('facebook'); }}
-              onNavigate={navigate}
-            />
-          ),
+          hero: <LandingHeroSection ar={ar} emailAuthPath={signInPath} signupAuthPath={signUpPath} findRidePath={buildPath('/app/find-ride')} mobilityOsPath="/app/mobility-os" myTripsPath={buildPath('/app/my-trips', true)} supportLine={supportLine} businessAddress={businessAddress} heroBullets={heroBullets} primaryActions={primaryActions} authError={authError} oauthLoadingProvider={oauthProvider} showQuickAuth={!user} onGoogleAuth={() => { void handleOAuth('google'); }} onFacebookAuth={() => { void handleOAuth('facebook'); }} onNavigate={handleLandingNavigate} />,
           map: <LandingMapSection ar={ar} />,
           signals: <LandingSignalSection cards={signalCards} />,
           why: <LandingWhySlot ar={ar} />,

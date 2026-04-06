@@ -1,4 +1,4 @@
-/**
+﻿/**
  * NotificationsPage - Full notification center
  * Shows all user notifications with real-time updates
  */
@@ -16,7 +16,7 @@ export function NotificationsPage() {
     <div
       className="min-h-screen px-4 py-8"
       style={{
-        background: `radial-gradient(circle at top left, rgba(0,200,232,0.12), transparent 28%), ${C.bg}`,
+        background: `radial-gradient(circle at top left, rgba(22,199,242,0.12), transparent 28%), ${C.bg}`,
       }}
       dir={dir}
     >
@@ -26,3 +26,4 @@ export function NotificationsPage() {
     </div>
   );
 }
+

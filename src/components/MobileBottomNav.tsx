@@ -3,24 +3,25 @@
  * Shared with the app's core navigation model for consistent UX.
  */
 
-import { Clock, Gauge, Search, User2 } from 'lucide-react';
+import { Clock, Package, Search, User2, Wallet } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLocation, useNavigate } from 'react-router';
 import { CORE_NAV_ITEMS } from '../config/user-navigation';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
 
-const BG = 'rgba(4,12,24,0.97)';
-const CYAN = '#00C8E8';
-const GOLD = '#F0A830';
-const INACTIVE = 'rgba(148,163,184,0.50)';
-const BORDER = 'rgba(0,200,232,0.12)';
+const BG = 'rgba(8,27,43,0.96)';
+const CYAN = '#16C7F2';
+const GOLD = '#C7FF1A';
+const INACTIVE = 'rgba(153,184,210,0.56)';
+const BORDER = 'rgba(73,190,242,0.16)';
 const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 const ICONS = {
   find: Search,
-  movement: Gauge,
   trips: Clock,
+  packages: Package,
+  wallet: Wallet,
   profile: User2,
 } as const;
 
@@ -28,7 +29,7 @@ interface MobileBottomNavProps {
   language?: 'en' | 'ar';
 }
 
-export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
+export function MobileBottomNav({ language }: MobileBottomNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { language: contextLanguage } = useLanguage();
@@ -55,6 +56,7 @@ export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
       <nav
         className="wasel-bottom-nav"
         aria-label="Main navigation"
+        dir={isArabic ? 'rtl' : 'ltr'}
         style={{
           position: 'fixed',
           bottom: 0,
@@ -65,7 +67,7 @@ export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
           backdropFilter: 'blur(28px)',
           WebkitBackdropFilter: 'blur(28px)',
           borderTop: `1px solid ${BORDER}`,
-          boxShadow: '0 -8px 32px rgba(0,0,0,0.6), 0 -1px 0 rgba(0,200,232,0.08)',
+          boxShadow: '0 -12px 40px rgba(1,10,18,0.34), 0 -1px 0 rgba(73,190,242,0.08)',
           paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))',
           flexDirection: 'row',
           justifyContent: 'space-around',
@@ -80,10 +82,12 @@ export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
           return (
             <motion.button
               key={item.id}
+              type="button"
               onClick={() => navigate(item.path)}
               whileTap={{ scale: 0.86 }}
               transition={{ duration: 0.09, type: 'spring', stiffness: 500, damping: 30 }}
               aria-label={isArabic ? item.labelAr : item.label}
+              title={isArabic ? item.descriptionAr : item.description}
               aria-current={active ? 'page' : undefined}
               style={{
                 flex: 1,
@@ -92,9 +96,9 @@ export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 3,
-                minHeight: 56,
+                minHeight: 58,
                 minWidth: 44,
-                padding: '8px 4px 6px',
+                padding: '8px 2px 6px',
                 background: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
@@ -114,15 +118,29 @@ export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
                     height: 2,
                     borderRadius: '0 0 2px 2px',
                     background: itemColor,
-                    boxShadow: `0 2px 8px ${itemColor}80`,
+                     boxShadow: `0 3px 12px ${itemColor}80`,
                   }}
                 />
               )}
 
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {Icon && (
-                  <Icon
-                    size={22}
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {active && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        inset: -8,
+                        borderRadius: 999,
+                        background:
+                          item.accent === 'gold'
+                            ? 'radial-gradient(circle, rgba(199,255,26,0.22), rgba(199,255,26,0))'
+                            : 'radial-gradient(circle, rgba(22,199,242,0.24), rgba(22,199,242,0))',
+                        pointerEvents: 'none',
+                      }}
+                    />
+                  )}
+                  {Icon && (
+                    <Icon
+                    size={20}
                     strokeWidth={active ? 2.5 : 1.8}
                     style={{
                       color: active ? itemColor : INACTIVE,

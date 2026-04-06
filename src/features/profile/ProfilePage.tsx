@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ProfilePage - /app/profile
  */
 import { type MutableRefObject, type ReactNode, useEffect, useRef } from 'react';
@@ -15,8 +15,10 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
+import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
+import { buildAuthPagePath } from '../../utils/authFlow';
 import { getProfileInitials } from './profileUtils';
 import {
   InsightCard as SharedInsightCard,
@@ -48,7 +50,7 @@ function showToast(message: string) {
     left: '50%',
     transform: 'translateX(-50%)',
     background: '#0A1628',
-    border: '1px solid rgba(0,200,232,0.3)',
+    border: '1px solid rgba(22,199,242,0.3)',
     color: '#EFF6FF',
     padding: '10px 20px',
     borderRadius: '10px',
@@ -70,7 +72,7 @@ export default function ProfilePage() {
   const photoInputRef = useRef<HTMLInputElement | null>(null);
 
   if (!user) {
-    return <ProfileSignedOutState ar={ar} onSignIn={() => nav('/app/auth')} />;
+    return <ProfileSignedOutState ar={ar} onSignIn={() => nav(buildAuthPagePath('signin'))} />;
   }
 
   return (
@@ -411,6 +413,54 @@ function ProfilePageContent({
           onPhotoSelection={handlePhotoSelection}
         />
 
+        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 24 }}>
+          <StakeholderSignalBanner
+            dir={ar ? 'rtl' : 'ltr'}
+            eyebrow={ar ? 'واصل · تواصل الهوية' : 'Wasel · identity comms'}
+            title={
+              ar
+                ? 'الملف الشخصي أصبح نقطة تنسيق بين الهوية والثقة والتشغيل'
+                : 'Profile now acts as the shared handoff point between identity, trust, and operations'
+            }
+            detail={
+              ar
+                ? 'هذه الصفحة لم تعد مجرد معلومات شخصية. هي الآن ملخص واضح لما يراه المستخدم والدعم والثقة والتشغيل عن جاهزية الحساب.'
+                : 'This page is no longer just personal info. It now summarizes what the user, support, trust, and operations all need to see about account readiness.'
+            }
+            stakeholders={[
+              { label: ar ? 'الثقة' : 'Trust', value: `${user.trustScore}/100`, tone: 'green' },
+              { label: ar ? 'الرحلات' : 'Trips', value: String(user.trips ?? 0), tone: 'teal' },
+              { label: ar ? 'الإشعارات' : 'Alerts', value: permissionStatus.label, tone: 'blue' },
+              { label: ar ? 'المحفظة' : 'Wallet', value: walletStatus.label, tone: 'amber' },
+            ]}
+            statuses={[
+              { label: ar ? 'اكتمال الملف' : 'Profile completeness', value: `${profileCompleteness}%`, tone: profileCompleteness >= 80 ? 'green' : 'amber' },
+              { label: ar ? 'التحقق' : 'Verification', value: trustTier, tone: user.verified || user.sanadVerified ? 'green' : 'amber' },
+              { label: ar ? 'الحماية الثنائية' : '2FA', value: user.twoFactorEnabled ? (ar ? 'مفعلة' : 'Enabled') : (ar ? 'غير مفعلة' : 'Disabled'), tone: user.twoFactorEnabled ? 'green' : 'rose' },
+            ]}
+            lanes={[
+              {
+                label: ar ? 'مسار الهوية' : 'Identity lane',
+                detail: ar
+                  ? 'الاسم والهاتف والتحقق وصورة الملف كلها تصنع الانطباع الأول للحساب.'
+                  : 'Name, phone, verification, and profile media define the account’s first layer of trust.',
+              },
+              {
+                label: ar ? 'مسار التشغيل' : 'Operations lane',
+                detail: ar
+                  ? 'الرحلات والتقييم والمحفظة تظهر هنا حتى تبقى الجاهزية مرئية قبل أي نشاط جديد.'
+                  : 'Trips, rating, and wallet health stay visible here so readiness is clear before the next action.',
+              },
+              {
+                label: ar ? 'مسار الدعم' : 'Support lane',
+                detail: ar
+                  ? 'الإشعارات والإعدادات السريعة تقلل الوقت اللازم لحل مشاكل الحساب.'
+                  : 'Alerts and quick settings reduce the time it takes to resolve account issues.',
+              },
+            ]}
+          />
+        </div>}
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 28 }}>
           <SharedStatCard label={ar ? 'رحلات' : 'Trips'} value={user.trips ?? 0} icon={<Car size={16} />} color={CYAN} />
           <SharedStatCard label={ar ? 'تقييم' : 'Rating'} value={(user.rating ?? 5).toFixed(1)} icon={<Star size={16} />} color="#F59E0B" />
@@ -418,7 +468,7 @@ function ProfilePageContent({
           <SharedStatCard label={ar ? 'الرصيد' : 'Balance'} value={`JOD ${(user.balance ?? 0).toFixed(1)}`} icon={<CreditCard size={16} />} color="#A78BFA" />
         </div>
 
-        <SharedSection title={ar ? 'مركز الحساب' : 'Account Command Center'}>
+        <SharedSection title={ar ? 'مركز الحساب' : 'Quick actions'}>
           <div style={{ padding: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
             {quickActions.map((action) => (
               <SharedQuickActionCard
@@ -433,7 +483,7 @@ function ProfilePageContent({
           </div>
         </SharedSection>
 
-        <SharedSection title={ar ? 'صحة الحساب' : 'Account Health'}>
+        <SharedSection title={ar ? 'صحة الحساب' : 'Account overview'}>
           <div style={{ padding: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
             <SharedInsightCard
               label={ar ? 'اكتمال الملف' : 'Profile completeness'}
@@ -522,3 +572,4 @@ function ProfilePageContent({
     </div>
   );
 }
+

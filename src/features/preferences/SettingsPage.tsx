@@ -9,6 +9,7 @@ import { Bell, ChevronRight, Eye, Globe, Palette, Shield } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
+import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { normalizeProfilePhone } from '../../features/profile/profileUtils';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import type { Language } from '../../locales/translations';
@@ -35,10 +36,10 @@ import {
   type TwoFactorSetup,
 } from '../../utils/security';
 
-const BG = '#040C18';
-const CARD = 'rgba(255,255,255,0.04)';
-const BORD = 'rgba(255,255,255,0.09)';
-const CYAN = '#00C8E8';
+const BG = '#061726';
+const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))';
+const BORD = 'rgba(73,190,242,0.14)';
+const CYAN = '#16C7F2';
 const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 const STORAGE_KEYS = {
@@ -425,6 +426,12 @@ export default function SettingsPage() {
       toast.error(emptyMessage);
       return;
     }
+
+    if (/^https?:/i.test(url)) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
     window.location.href = url;
   };
 
@@ -615,6 +622,13 @@ export default function SettingsPage() {
   const sessionSummary = user
     ? 'One active session on this device · Supabase'
     : 'Sign in to view active sessions';
+  const activeChannelCount = [
+    notifs.inApp,
+    notifs.push && notificationCapabilities.push,
+    notifs.email && notificationCapabilities.email,
+    notifs.sms && notificationCapabilities.sms,
+    notifs.whatsapp && notificationCapabilities.whatsapp,
+  ].filter(Boolean).length;
 
   return (
     <div style={{ minHeight: '100vh', background: BG, fontFamily: FONT, direction: ar ? 'rtl' : 'ltr', paddingBottom: 80 }}>
@@ -622,6 +636,31 @@ export default function SettingsPage() {
         <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#EFF6FF', fontFamily: FONT, marginBottom: 28 }}>
           Settings
         </h1>
+
+      {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 22 }}>
+          <StakeholderSignalBanner
+            dir={ar ? 'rtl' : 'ltr'}
+            eyebrow="Wasel · account comms"
+            title="Account, support, and trust preferences now speak with one voice"
+            detail="Settings now frame communication as a shared contract between the account holder, operational alerts, support escalation, and trust protections so the delivery path is clearer before a critical moment happens."
+            stakeholders={[
+              { label: 'Active channels', value: String(activeChannelCount), tone: 'teal' },
+              { label: 'Critical alerts', value: notifs.criticalAlerts ? 'On' : 'Off', tone: notifs.criticalAlerts ? 'green' : 'rose' },
+              { label: 'Preferred language', value: notifs.preferredLanguage.toUpperCase(), tone: 'blue' },
+              { label: 'Phone ready', value: notificationCapabilities.sms ? 'Yes' : 'No', tone: notificationCapabilities.sms ? 'green' : 'amber' },
+            ]}
+            statuses={[
+              { label: 'Push delivery', value: notificationCapabilities.push ? 'Available' : 'Unavailable', tone: notificationCapabilities.push ? 'green' : 'amber' },
+              { label: '2FA', value: twoFactorEnabled ? 'Enabled' : 'Not enabled', tone: twoFactorEnabled ? 'green' : 'rose' },
+              { label: 'Profile visibility', value: privacy.showProfile ? 'Shared' : 'Private', tone: privacy.showProfile ? 'blue' : 'slate' },
+            ]}
+            lanes={[
+              { label: 'Notification routing', detail: 'In-app, email, SMS, and WhatsApp preferences are now treated as one delivery policy.' },
+              { label: 'Support handoff', detail: 'Support email, phone, SMS, and WhatsApp links stay close to the same preference surface.' },
+              { label: 'Trust controls', detail: 'Security settings, 2FA, and account contact details now reinforce the same escalation story.' },
+            ]}
+          />
+        </div>}
 
         <Section icon={<Bell size={16} />} title="Notifications">
           <ToggleRow label="Trip Updates" sub="Accept, cancel, confirm" value={notifs.tripUpdates} onChange={toggleNotificationPreference('tripUpdates')} />

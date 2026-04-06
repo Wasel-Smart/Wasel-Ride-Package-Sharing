@@ -11,6 +11,8 @@ import {
 export interface PostedRide {
   id: string;
   ownerId?: string;
+  ownerPhone?: string;
+  ownerEmail?: string;
   from: string;
   to: string;
   date: string;
@@ -106,6 +108,11 @@ function sanitizePhone(phone?: string): string | undefined {
   return sanitized || undefined;
 }
 
+function sanitizeEmail(email?: string): string | undefined {
+  const sanitized = String(email ?? '').trim().toLowerCase();
+  return sanitized || undefined;
+}
+
 function sortByCreatedAtDesc<T extends { createdAt: string }>(items: T[]): T[] {
   return [...items].sort((a, b) => {
     const left = new Date(a.createdAt).getTime();
@@ -158,6 +165,12 @@ function normalizeServerRide(raw: Record<string, unknown>, fallback: PostedRide)
     note: String(raw.notes ?? raw.note ?? fallback.note),
     createdAt: String(raw.created_at ?? fallback.createdAt),
     ownerId: String(raw.owner_id ?? raw.ownerId ?? fallback.ownerId ?? '').trim() || fallback.ownerId,
+    ownerPhone: sanitizePhone(
+      String(raw.owner_phone ?? raw.ownerPhone ?? raw.phone_number ?? raw.driver_phone ?? fallback.ownerPhone ?? ''),
+    ),
+    ownerEmail: sanitizeEmail(
+      String(raw.owner_email ?? raw.ownerEmail ?? raw.email ?? fallback.ownerEmail ?? ''),
+    ),
     status: raw.status === 'cancelled' || raw.status === 'completed' ? raw.status : (fallback.status ?? 'active'),
   };
 }
@@ -185,6 +198,8 @@ function normalizeLocalRide(raw: Partial<PostedRide>): PostedRide | null {
     packageNote: String(raw.packageNote ?? ''),
     createdAt: String(raw.createdAt ?? new Date().toISOString()),
     ownerId: String(raw.ownerId ?? '').trim() || undefined,
+    ownerPhone: sanitizePhone(String(raw.ownerPhone ?? '')),
+    ownerEmail: sanitizeEmail(String(raw.ownerEmail ?? '')),
     status: raw.status === 'cancelled' || raw.status === 'completed' ? raw.status : 'active',
   };
 }

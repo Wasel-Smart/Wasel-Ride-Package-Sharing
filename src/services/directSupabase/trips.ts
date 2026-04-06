@@ -16,6 +16,13 @@ import {
 import { buildUserContext, ensureDriverForUser, getLatestVerificationRecord } from './userContext.ts';
 import { recordDirectGrowthEvent } from './growth';
 import { processReferralConversionForPassenger } from './referrals';
+import {
+  bookingCreatePayloadSchema,
+  profileUpdatePayloadSchema,
+  tripCreatePayloadSchema,
+  tripUpdatePayloadSchema,
+  withDataIntegrity,
+} from '../dataIntegrity';
 import type { DriverRow, RawBooking, RawProfile, TripRow, UserContext, UserRow, WalletRow } from './types';
 import type { TripCreatePayload, TripSearchResult, TripUpdatePayload } from '../trips';
 import {
@@ -86,44 +93,59 @@ export async function getDirectVerificationRecord(userId: string) {
 }
 
 export async function updateDirectProfile(userId: string, updates: Record<string, unknown>) {
-  const context = await buildUserContext(userId, {
-    email: typeof updates.email === 'string' ? updates.email : null,
-    full_name: typeof updates.full_name === 'string' ? updates.full_name : null,
-    phone_number:
-      typeof updates.phone_number === 'string'
-        ? updates.phone_number
-        : typeof updates.phone === 'string'
-          ? updates.phone
-          : null,
-    role: typeof updates.role === 'string' ? updates.role : null,
+  return withDataIntegrity({
+    operation: 'profile.update.direct',
+    schema: profileUpdatePayloadSchema,
+    payload: updates,
+    execute: async ({ payload }) => {
+      const nextPhone =
+        typeof payload.phone_number === 'string'
+          ? payload.phone_number
+          : typeof payload.phone === 'string'
+            ? payload.phone
+            : null;
+
+      const context = await buildUserContext(userId, {
+        email: typeof payload.email === 'string' ? payload.email : null,
+        full_name: typeof payload.full_name === 'string' ? payload.full_name : null,
+        phone_number: nextPhone,
+        role: typeof payload.role === 'string' ? payload.role : null,
+      });
+
+      const db = getDb();
+      const userPatch: Record<string, unknown> = {};
+      const walletPatch: Record<string, unknown> = {};
+
+      if (typeof payload.email === 'string') userPatch.email = payload.email.trim();
+      if (typeof payload.full_name === 'string') userPatch.full_name = payload.full_name.trim();
+      if (typeof payload.phone_number === 'string') userPatch.phone_number = payload.phone_number.trim();
+      if (typeof payload.phone === 'string') userPatch.phone_number = payload.phone.trim();
+      if (payload.phone_number === null || payload.phone === null) {
+        userPatch.phone_number = null;
+      }
+      if (typeof payload.role === 'string') userPatch.role = payload.role;
+      if (typeof payload.verification_level === 'string') userPatch.verification_level = payload.verification_level;
+      if (typeof payload.avatar_url === 'string') userPatch.avatar_url = payload.avatar_url;
+      if (payload.phone_number !== undefined || payload.phone !== undefined) {
+        userPatch.phone_verified_at = null;
+      }
+      if (payload.wallet_balance !== undefined) walletPatch.balance = toNumber(payload.wallet_balance, 0);
+      if (typeof payload.wallet_status === 'string') walletPatch.wallet_status = payload.wallet_status;
+
+      if (Object.keys(userPatch).length > 0) {
+        const { error } = await db.from('users').update(userPatch).eq('id', context.user.id);
+        if (error) throw error;
+      }
+      if (Object.keys(walletPatch).length > 0) {
+        const wallet = context.wallet ?? await getWalletByCanonicalUserId(context.user.id);
+        if (wallet?.wallet_id) {
+          const { error } = await db.from('wallets').update(walletPatch).eq('wallet_id', wallet.wallet_id);
+          if (error) throw error;
+        }
+      }
+      return getDirectProfile(userId);
+    },
   });
-
-  const db = getDb();
-  const userPatch: Record<string, unknown> = {};
-  const walletPatch: Record<string, unknown> = {};
-
-  if (typeof updates.email === 'string') userPatch.email = updates.email.trim();
-  if (typeof updates.full_name === 'string') userPatch.full_name = updates.full_name.trim();
-  if (typeof updates.phone_number === 'string') userPatch.phone_number = updates.phone_number.trim();
-  if (typeof updates.phone === 'string') userPatch.phone_number = updates.phone.trim();
-  if (typeof updates.role === 'string') userPatch.role = updates.role;
-  if (typeof updates.verification_level === 'string') userPatch.verification_level = updates.verification_level;
-  if (typeof updates.avatar_url === 'string') userPatch.avatar_url = updates.avatar_url;
-  if (updates.wallet_balance !== undefined) walletPatch.balance = toNumber(updates.wallet_balance, 0);
-  if (typeof updates.wallet_status === 'string') walletPatch.wallet_status = updates.wallet_status;
-
-  if (Object.keys(userPatch).length > 0) {
-    const { error } = await db.from('users').update(userPatch).eq('id', context.user.id);
-    if (error) throw error;
-  }
-  if (Object.keys(walletPatch).length > 0) {
-    const wallet = context.wallet ?? await getWalletByCanonicalUserId(context.user.id);
-    if (wallet?.wallet_id) {
-      const { error } = await db.from('wallets').update(walletPatch).eq('wallet_id', wallet.wallet_id);
-      if (error) throw error;
-    }
-  }
-  return getDirectProfile(userId);
 }
 
 export async function searchDirectTrips(from?: string, to?: string, date?: string, seats?: number): Promise<TripSearchResult[]> {
@@ -181,69 +203,83 @@ export async function getDirectDriverTrips(userId: string): Promise<TripSearchRe
 }
 
 export async function createDirectTrip(userId: string, tripData: TripCreatePayload): Promise<TripSearchResult> {
-  const context = await buildUserContext(userId);
-  const driver = await ensureDriverForUser(context);
-  const db = getDb();
-  const vehicleParts = (tripData.carModel ?? '').trim().split(/\s+/).filter(Boolean);
-  const [vehicleMake = null, ...vehicleRest] = vehicleParts;
-  const departureTime = new Date(`${tripData.date}T${tripData.time}:00`).toISOString();
+  return withDataIntegrity({
+    operation: 'trip.create.direct',
+    schema: tripCreatePayloadSchema,
+    payload: tripData,
+    execute: async ({ payload }) => {
+      const context = await buildUserContext(userId);
+      const driver = await ensureDriverForUser(context);
+      const db = getDb();
+      const vehicleParts = (payload.carModel ?? '').trim().split(/\s+/).filter(Boolean);
+      const [vehicleMake = null, ...vehicleRest] = vehicleParts;
+      const departureTime = new Date(`${payload.date}T${payload.time}:00`).toISOString();
 
-  const { data, error } = await db
-    .from('trips')
-    .insert({
-      driver_id: driver.driver_id,
-      origin_city: normalizeJordanLocation(tripData.from, tripData.from),
-      destination_city: normalizeJordanLocation(tripData.to, tripData.to),
-      departure_time: departureTime,
-      available_seats: tripData.seats,
-      price_per_seat: tripData.price,
-      trip_status: 'open',
-      allow_packages: Boolean(tripData.acceptsPackages),
-      package_capacity: normalizePackageCapacity(tripData.packageCapacity),
-      package_slots_remaining: normalizePackageCapacity(tripData.packageCapacity),
-      vehicle_make: vehicleMake,
-      vehicle_model: vehicleRest.length > 0 ? vehicleRest.join(' ') : tripData.carModel ?? null,
-      notes: buildTripNotes(tripData),
-    })
-    .select('trip_id, driver_id, origin_city, destination_city, departure_time, available_seats, price_per_seat, trip_status, allow_packages, package_capacity, vehicle_make, vehicle_model, notes, created_at')
-    .single();
-  if (error) throw error;
-  return mapTripRow(data as TripRow, mapProfileFromContext(context));
+      const { data, error } = await db
+        .from('trips')
+        .insert({
+          driver_id: driver.driver_id,
+          origin_city: normalizeJordanLocation(payload.from, payload.from),
+          destination_city: normalizeJordanLocation(payload.to, payload.to),
+          departure_time: departureTime,
+          available_seats: payload.seats,
+          price_per_seat: payload.price,
+          trip_status: 'open',
+          allow_packages: Boolean(payload.acceptsPackages),
+          package_capacity: normalizePackageCapacity(payload.packageCapacity),
+          package_slots_remaining: normalizePackageCapacity(payload.packageCapacity),
+          vehicle_make: vehicleMake,
+          vehicle_model: vehicleRest.length > 0 ? vehicleRest.join(' ') : payload.carModel ?? null,
+          notes: buildTripNotes(payload),
+        })
+        .select('trip_id, driver_id, origin_city, destination_city, departure_time, available_seats, price_per_seat, trip_status, allow_packages, package_capacity, vehicle_make, vehicle_model, notes, created_at')
+        .single();
+      if (error) throw error;
+      return mapTripRow(data as TripRow, mapProfileFromContext(context));
+    },
+  });
 }
 
 export async function updateDirectTrip(tripId: string, updates: TripUpdatePayload): Promise<TripSearchResult> {
-  const db = getDb();
-  const payload: Record<string, unknown> = {};
+  return withDataIntegrity({
+    operation: 'trip.update.direct',
+    schema: tripUpdatePayloadSchema,
+    payload: updates,
+    execute: async ({ payload: updatesPayload }) => {
+      const db = getDb();
+      const payload: Record<string, unknown> = {};
 
-  if (updates.from) payload.origin_city = normalizeJordanLocation(updates.from, updates.from);
-  if (updates.to) payload.destination_city = normalizeJordanLocation(updates.to, updates.to);
-  if (updates.date || updates.time) {
-    const current = await getDirectTripById(tripId);
-    const date = updates.date ?? current?.date ?? new Date().toISOString().slice(0, 10);
-    const time = updates.time ?? current?.time ?? '08:00';
-    payload.departure_time = new Date(`${date}T${time}:00`).toISOString();
-  }
-  if (typeof updates.seats === 'number') payload.available_seats = updates.seats;
-  if (typeof updates.price === 'number') payload.price_per_seat = updates.price;
-  if (updates.carModel !== undefined) {
-    const parts = String(updates.carModel ?? '').trim().split(/\s+/).filter(Boolean);
-    const [make = null, ...rest] = parts;
-    payload.vehicle_make = make;
-    payload.vehicle_model = rest.length > 0 ? rest.join(' ') : updates.carModel ?? null;
-  }
-  if (updates.note !== undefined) payload.notes = updates.note;
-  if (updates.status) payload.trip_status = normalizeTripStatus(updates.status);
+      if (updatesPayload.from) payload.origin_city = normalizeJordanLocation(updatesPayload.from, updatesPayload.from);
+      if (updatesPayload.to) payload.destination_city = normalizeJordanLocation(updatesPayload.to, updatesPayload.to);
+      if (updatesPayload.date || updatesPayload.time) {
+        const current = await getDirectTripById(tripId);
+        const date = updatesPayload.date ?? current?.date ?? new Date().toISOString().slice(0, 10);
+        const time = updatesPayload.time ?? current?.time ?? '08:00';
+        payload.departure_time = new Date(`${date}T${time}:00`).toISOString();
+      }
+      if (typeof updatesPayload.seats === 'number') payload.available_seats = updatesPayload.seats;
+      if (typeof updatesPayload.price === 'number') payload.price_per_seat = updatesPayload.price;
+      if (updatesPayload.carModel !== undefined) {
+        const parts = String(updatesPayload.carModel ?? '').trim().split(/\s+/).filter(Boolean);
+        const [make = null, ...rest] = parts;
+        payload.vehicle_make = make;
+        payload.vehicle_model = rest.length > 0 ? rest.join(' ') : updatesPayload.carModel ?? null;
+      }
+      if (updatesPayload.note !== undefined) payload.notes = updatesPayload.note;
+      if (updatesPayload.status) payload.trip_status = normalizeTripStatus(updatesPayload.status);
 
-  const { data, error } = await db
-    .from('trips')
-    .update(payload)
-    .eq('trip_id', tripId)
-    .select('trip_id, driver_id, origin_city, destination_city, departure_time, available_seats, price_per_seat, trip_status, allow_packages, package_capacity, vehicle_make, vehicle_model, notes, created_at')
-    .single();
-  if (error) throw error;
+      const { data, error } = await db
+        .from('trips')
+        .update(payload)
+        .eq('trip_id', tripId)
+        .select('trip_id, driver_id, origin_city, destination_city, departure_time, available_seats, price_per_seat, trip_status, allow_packages, package_capacity, vehicle_make, vehicle_model, notes, created_at')
+        .single();
+      if (error) throw error;
 
-  const profiles = await fetchProfilesByDriverIds([String((data as TripRow).driver_id ?? '')]);
-  return mapTripRow(data as TripRow, profiles[String((data as TripRow).driver_id ?? '')] ?? null);
+      const profiles = await fetchProfilesByDriverIds([String((data as TripRow).driver_id ?? '')]);
+      return mapTripRow(data as TripRow, profiles[String((data as TripRow).driver_id ?? '')] ?? null);
+    },
+  });
 }
 
 export async function deleteDirectTrip(tripId: string): Promise<{ success: boolean }> {
@@ -267,95 +303,120 @@ export async function createDirectBooking(input: {
   metadata?: Record<string, unknown>;
   bookingStatus?: string;
 }) {
-  const db = getDb();
-  const passenger = await buildUserContext(input.userId);
-  ensureBookingEligibility(mapProfileFromContext(passenger));
+  return withDataIntegrity({
+    operation: 'booking.create.direct',
+    schema: bookingCreatePayloadSchema,
+    payload: input,
+    execute: async ({ payload }) => {
+      const db = getDb();
+      const passenger = await buildUserContext(payload.userId);
+      ensureBookingEligibility(mapProfileFromContext(passenger));
 
-  const { data: trip, error: tripError } = await db
-    .from('trips')
-    .select('trip_id, available_seats, price_per_seat, trip_status')
-    .eq('trip_id', input.tripId)
-    .single();
-  if (tripError) throw tripError;
+      const { data: trip, error: tripError } = await db
+        .from('trips')
+        .select('trip_id, available_seats, price_per_seat, trip_status')
+        .eq('trip_id', payload.tripId)
+        .single();
+      if (tripError) throw tripError;
 
-  const availableSeats = toNumber(trip?.available_seats, 0);
-  if (availableSeats < input.seatsRequested) throw new Error('Not enough seats available');
+      const { data: existingBooking, error: existingBookingError } = await db
+        .from('bookings')
+        .select('*')
+        .eq('trip_id', payload.tripId)
+        .eq('passenger_id', passenger.user.id)
+        .in('booking_status', ['pending', 'pending_driver', 'confirmed'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (existingBookingError) throw existingBookingError;
+      if (existingBooking) {
+        return { booking: mapBookingRow(existingBooking as RawBooking) };
+      }
 
-  const { data: existingSeats } = await db
-    .from('bookings')
-    .select('seat_number')
-    .eq('trip_id', input.tripId)
-    .neq('booking_status', 'cancelled');
+      const availableSeats = toNumber(trip?.available_seats, 0);
+      if (availableSeats < payload.seatsRequested) throw new Error('Not enough seats available');
 
-  const usedSeats = new Set(
-    (Array.isArray(existingSeats) ? existingSeats : []).map((item: RawBooking) => toNumber(item.seat_number, 0)),
-  );
-  const resolvedSeatNumber =
-    toNumber(input.metadata?.seat_number, 0) ||
-    Array.from({ length: Math.max(availableSeats + usedSeats.size + 1, 100) }, (_, i) => i + 1).find(
-      (s) => !usedSeats.has(s),
-    ) ||
-    1;
+      const { data: existingSeats } = await db
+        .from('bookings')
+        .select('seat_number')
+        .eq('trip_id', payload.tripId)
+        .neq('booking_status', 'cancelled');
 
-  const pricePerSeat = toNumber(trip?.price_per_seat, 0);
-  const totalPrice = toNumber(input.metadata?.total_price, pricePerSeat * input.seatsRequested);
+      const usedSeats = new Set(
+        (Array.isArray(existingSeats) ? existingSeats : []).map((item: RawBooking) => toNumber(item.seat_number, 0)),
+      );
+      const resolvedSeatNumber =
+        toNumber(payload.metadata?.seat_number, 0) ||
+        Array.from({ length: Math.max(availableSeats + usedSeats.size + 1, 100) }, (_, i) => i + 1).find(
+          (seat) => !usedSeats.has(seat),
+        ) ||
+        1;
 
-  const { data, error } = await db
-    .from('bookings')
-    .insert({
-      trip_id: input.tripId,
-      passenger_id: passenger.user.id,
-      seat_number: resolvedSeatNumber,
-      booking_status: input.bookingStatus ?? 'confirmed',
-      status: input.bookingStatus ?? 'confirmed',
-      confirmed_by_driver: input.bookingStatus === 'pending_driver' ? false : true,
-      amount: totalPrice,
-    })
-    .select('*')
-    .single();
-  if (error) throw error;
+      const pricePerSeat = toNumber(trip?.price_per_seat, 0);
+      const totalPrice = toNumber(payload.metadata?.total_price, pricePerSeat * payload.seatsRequested);
+      const bookingStatus = payload.bookingStatus ?? 'confirmed';
 
-  await recordDirectGrowthEvent({
-    userId: input.userId,
-    eventName: 'ride_booking_created',
-    funnelStage: input.bookingStatus === 'pending_driver' ? 'selected' : 'booked',
-    serviceType: 'ride',
-    from: input.pickup,
-    to: input.dropoff,
-    valueJod: totalPrice,
-    metadata: { tripId: input.tripId, bookingStatus: input.bookingStatus ?? 'confirmed', seatsRequested: input.seatsRequested },
-  }).catch(() => {});
+      const { data, error } = await db
+        .from('bookings')
+        .insert({
+          trip_id: payload.tripId,
+          passenger_id: passenger.user.id,
+          seats_requested: payload.seatsRequested,
+          seat_number: resolvedSeatNumber,
+          pickup_location: payload.pickup ?? null,
+          dropoff_location: payload.dropoff ?? null,
+          price_per_seat: pricePerSeat,
+          total_price: totalPrice,
+          amount: totalPrice,
+          booking_status: bookingStatus,
+          status: bookingStatus,
+          confirmed_by_driver: bookingStatus === 'pending_driver' ? false : true,
+        })
+        .select('*')
+        .single();
+      if (error) throw error;
 
-  if (input.bookingStatus !== 'pending_driver') {
-    await processReferralConversionForPassenger(passenger.user.id).catch(() => {});
-  }
+      await recordDirectGrowthEvent({
+        userId: payload.userId,
+        eventName: 'ride_booking_created',
+        funnelStage: bookingStatus === 'pending_driver' ? 'selected' : 'booked',
+        serviceType: 'ride',
+        from: payload.pickup,
+        to: payload.dropoff,
+        valueJod: totalPrice,
+        metadata: {
+          tripId: payload.tripId,
+          bookingStatus,
+          seatsRequested: payload.seatsRequested,
+          seatNumber: resolvedSeatNumber,
+        },
+      }).catch(() => {});
 
-  await db
-    .from('trips')
-    .update({
-      available_seats:
-        input.bookingStatus === 'pending_driver'
-          ? availableSeats
-          : Math.max(availableSeats - input.seatsRequested, 0),
-      trip_status:
-        input.bookingStatus === 'pending_driver'
-          ? (trip?.trip_status ?? 'open')
-          : availableSeats - input.seatsRequested <= 0
-            ? 'booked'
-            : (trip?.trip_status ?? 'open'),
-    })
-    .eq('trip_id', input.tripId);
+      if (bookingStatus !== 'pending_driver') {
+        await processReferralConversionForPassenger(passenger.user.id).catch(() => {});
+      }
 
-  return {
-    booking: mapBookingRow({
-      ...(data as RawBooking),
-      pickup_location: input.pickup ?? null,
-      dropoff_location: input.dropoff ?? null,
-      seats_requested: input.seatsRequested,
-      price_per_seat: pricePerSeat,
-      total_price: totalPrice,
-    }),
-  };
+      await db
+        .from('trips')
+        .update({
+          available_seats:
+            bookingStatus === 'pending_driver'
+              ? availableSeats
+              : Math.max(availableSeats - payload.seatsRequested, 0),
+          trip_status:
+            bookingStatus === 'pending_driver'
+              ? (trip?.trip_status ?? 'open')
+              : availableSeats - payload.seatsRequested <= 0
+                ? 'booked'
+                : (trip?.trip_status ?? 'open'),
+        })
+        .eq('trip_id', payload.tripId);
+
+      return {
+        booking: mapBookingRow(data as RawBooking),
+      };
+    },
+  });
 }
 
 export async function getDirectUserBookings(userId: string) {

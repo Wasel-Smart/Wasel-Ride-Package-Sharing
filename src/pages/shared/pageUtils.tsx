@@ -12,6 +12,7 @@ import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
+import { buildAuthPagePath, buildAuthReturnTo } from '../../utils/authFlow';
 
 // ── Re-export the design-system singleton so pages don't import PAGE_DS directly
 export const DS = PAGE_DS;
@@ -73,9 +74,14 @@ export function Protected({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user && mountedRef.current) {
-      nav(`/app/auth?returnTo=${encodeURIComponent(location.pathname)}`);
+      nav(
+        buildAuthPagePath(
+          'signin',
+          buildAuthReturnTo(location.pathname, location.search, location.hash),
+        ),
+      );
     }
-  }, [user, nav, location.pathname]);
+  }, [location.hash, location.pathname, location.search, nav, user]);
 
   if (!user) {
     return (
@@ -108,15 +114,36 @@ export function PageShell({ children }: { children: ReactNode }) {
     <div
       style={{
         minHeight: '100vh',
-        background: DS.bg,
+        background: `radial-gradient(circle at 12% 10%, rgba(22,199,242,0.16), transparent 24%), radial-gradient(circle at 88% 6%, rgba(199,255,26,0.1), transparent 22%), radial-gradient(circle at 80% 86%, rgba(96,197,54,0.1), transparent 24%), ${DS.bg}`,
         fontFamily: DS.F,
         direction: ar ? 'rtl' : 'ltr',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.032) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.032) 1px, transparent 1px)',
+          backgroundSize: '54px 54px',
+          maskImage: 'radial-gradient(circle at center, black 0%, black 44%, transparent 82%)',
+          pointerEvents: 'none',
+          opacity: 0.2,
+        }}
+      />
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'radial-gradient(circle at 50% 0%, rgba(22,199,242,0.08), transparent 38%), radial-gradient(circle at 82% 76%, rgba(199,255,26,0.05), transparent 24%)',
+          pointerEvents: 'none',
+        }}
+      />
       <style>{`
         :root { color-scheme: dark; }
-        .w-focus:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(0,200,232,0.28); }
-        .w-focus-gold:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(240,168,48,0.28); }
+        .w-focus:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(22,199,242,0.28); }
+        .w-focus-gold:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(199,255,26,0.24); }
         @media(max-width:899px){
           .sp-inner { padding: 16px !important; }
           .sp-2col { grid-template-columns: 1fr !important; }
@@ -138,7 +165,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-inner { padding: 12px !important; }
         }
       `}</style>
-      <div className="sp-inner" style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 16px' }}>
+      <div className="sp-inner" style={{ position: 'relative', zIndex: 1, maxWidth: 1040, margin: '0 auto', padding: '24px 16px' }}>
         {children}
       </div>
     </div>

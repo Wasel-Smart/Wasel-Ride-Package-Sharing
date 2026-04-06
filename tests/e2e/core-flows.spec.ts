@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 
 test('find ride books a seat', async ({ page }) => {
   await page.goto('/app/find-ride', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: /find a shared route/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /find a ride|find a shared route/i })).toBeVisible();
   await page.getByTestId('find-ride-search').click();
   await page.getByRole('button', { name: /book seat/i }).first().click();
   await page.getByRole('button', { name: /reserve this seat/i }).click();

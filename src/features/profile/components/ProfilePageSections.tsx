@@ -1,4 +1,4 @@
-import type { ChangeEventHandler, MutableRefObject } from 'react';
+﻿import type { ChangeEventHandler, MutableRefObject } from 'react';
 import { Camera, Clock, User } from 'lucide-react';
 import { WaselLogo } from '../../../components/wasel-ds/WaselLogo';
 import type { WaselUser } from '../../../contexts/LocalAuth';
@@ -206,7 +206,7 @@ export function ProfileSignedOutState({
         style={{
           padding: '10px 24px',
           borderRadius: 10,
-          background: `linear-gradient(135deg,${PROFILE_CYAN},#0095B8)`,
+          background: `linear-gradient(135deg,${PROFILE_CYAN},#0F78BF)`,
           border: 'none',
           color: '#040C18',
           fontWeight: 700,
@@ -274,14 +274,14 @@ export function ProfileHeroSection({
             width: 88,
             height: 88,
             borderRadius: '50%',
-            background: 'linear-gradient(135deg,#00C8E8,#0060D8)',
+            background: 'linear-gradient(135deg,#16C7F2,#0F78BF)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '1.8rem',
             fontWeight: 900,
             color: '#040C18',
-            boxShadow: '0 0 0 3px rgba(0,200,232,0.35), 0 8px 32px rgba(0,200,232,0.2)',
+            boxShadow: '0 0 0 3px rgba(22,199,242,0.35), 0 8px 32px rgba(22,199,242,0.2)',
             overflow: 'hidden',
           }}
         >
@@ -326,7 +326,7 @@ export function ProfileHeroSection({
               padding: '8px 12px',
               borderRadius: 8,
               border: `1.5px solid ${PROFILE_CYAN}`,
-              background: 'rgba(0,200,232,0.07)',
+              background: 'rgba(22,199,242,0.07)',
               color: '#EFF6FF',
               fontSize: '0.9rem',
               fontFamily: PROFILE_FONT,
@@ -377,7 +377,7 @@ export function ProfileHeroSection({
             {user.name}
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-            <span style={{ fontSize: '0.66rem', padding: '4px 9px', borderRadius: 999, color: PROFILE_CYAN, background: 'rgba(0,200,232,0.12)', border: '1px solid rgba(0,200,232,0.25)', fontFamily: PROFILE_FONT, fontWeight: 700 }}>
+            <span style={{ fontSize: '0.66rem', padding: '4px 9px', borderRadius: 999, color: PROFILE_CYAN, background: 'rgba(22,199,242,0.12)', border: '1px solid rgba(22,199,242,0.25)', fontFamily: PROFILE_FONT, fontWeight: 700 }}>
               {roleLabel}
             </span>
             <span style={{ fontSize: '0.66rem', padding: '4px 9px', borderRadius: 999, color: walletStatus.color, background: `${walletStatus.color}1A`, border: `1px solid ${walletStatus.color}33`, fontFamily: PROFILE_FONT, fontWeight: 700 }}>
@@ -446,7 +446,7 @@ export function ProfileQuickPhoneEditor({
               padding: '10px 12px',
               borderRadius: 10,
               border: `1px solid ${editingField === 'phone' ? PROFILE_CYAN : PROFILE_BORDER}`,
-              background: 'rgba(0,200,232,0.07)',
+              background: 'rgba(22,199,242,0.07)',
               color: '#EFF6FF',
               fontSize: '0.88rem',
               fontFamily: PROFILE_FONT,
@@ -513,3 +513,5 @@ export function ProfileDeleteConfirmDialog({
     </div>
   );
 }
+
+

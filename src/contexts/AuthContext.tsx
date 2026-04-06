@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import { authAPI } from '../services/auth';
 import { supabase, isSupabaseConfigured } from '../utils/supabase/client';
-import { getAuthCallbackUrl } from '../utils/env';
+import { getAuthCallbackUrl, getConfig } from '../utils/env';
 import { useLocalAuth } from './LocalAuth';
 import {
   AuthOperationError,
@@ -61,6 +61,62 @@ export const useAuth = () => {
 
 interface AuthProviderProps {
   children: React.ReactNode;
+}
+
+function isLocalDevelopmentOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    return url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
+export function getResetPasswordRedirectCandidates(origin?: string): string[] {
+  const candidates = new Set<string>();
+  const currentOrigin = typeof origin === 'string' ? origin.trim() : '';
+  const configOrigin = getConfig().appUrl.trim();
+
+  if (currentOrigin) {
+    candidates.add(getAuthCallbackUrl(currentOrigin));
+  }
+
+  if (configOrigin) {
+    candidates.add(getAuthCallbackUrl(configOrigin));
+  }
+
+  if (currentOrigin && isLocalDevelopmentOrigin(currentOrigin)) {
+    try {
+      const url = new URL(currentOrigin);
+      const host = url.hostname;
+      const protocol = url.protocol || 'http:';
+      candidates.add(getAuthCallbackUrl(`${protocol}//${host}:3000`));
+      candidates.add(getAuthCallbackUrl(`${protocol}//${host}:5173`));
+    } catch {
+      // Ignore malformed local origins and continue with known candidates.
+    }
+  }
+
+  return Array.from(candidates);
+}
+
+function shouldRetryResetPasswordForRedirect(error: unknown): boolean {
+  const message =
+    error instanceof Error
+      ? error.message.toLowerCase()
+      : typeof error === 'string'
+        ? error.toLowerCase()
+        : '';
+
+  return (
+    message.includes('redirect') ||
+    message.includes('redirectto') ||
+    message.includes('callback') ||
+    message.includes('not allowed') ||
+    message.includes('allow list') ||
+    message.includes('whitelist') ||
+    message.includes('url')
+  );
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
@@ -266,11 +322,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const resetPassword = useCallback(async (email: string): Promise<{ error: AuthOperationError }> => {
     if (!supabase) return { error: new Error('Backend not configured') };
+
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: getAuthCallbackUrl(window.location.origin),
-      });
-      return { error: error ?? null };
+      const redirectCandidates = getResetPasswordRedirectCandidates(
+        typeof window !== 'undefined' ? window.location.origin : undefined,
+      );
+
+      let lastError: AuthOperationError = null;
+      for (const redirectTo of redirectCandidates) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+        if (!error) {
+          return { error: null };
+        }
+
+        lastError = error;
+        if (!shouldRetryResetPasswordForRedirect(error)) {
+          break;
+        }
+      }
+
+      return {
+        error:
+          lastError instanceof Error && shouldRetryResetPasswordForRedirect(lastError)
+            ? new Error(
+                'Recovery email could not be sent because the current reset callback URL is not allowed yet. Add your local app URL to Supabase Auth redirect URLs or try again from the configured app origin.',
+              )
+            : lastError,
+      };
     } catch (error: unknown) {
       return { error: normalizeOperationError(error, 'Password reset failed') };
     }

@@ -9,14 +9,12 @@ import {
   buildDriverRoutePlan,
   getMarketplaceNodes,
   getMovementDefensibilityLines,
-  getWaselCategoryPosition,
 } from '../../config/wasel-movement-network';
 
 export default function DriverPage() {
   const { user } = useLocalAuth();
   const navigate = useIframeSafeNavigate();
 
-  const category = useMemo(() => getWaselCategoryPosition(), []);
   const membership = useMemo(() => getMovementMembershipSnapshot(), []);
   const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(1), []);
   const defensibility = useMemo(() => getMovementDefensibilityLines(), []);
@@ -35,26 +33,26 @@ export default function DriverPage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="Driver"
-          title="Route Operator"
+          emoji="🚗"
+          title="Driver"
           titleAr="مشغل المسار"
-          sub="Get approved, unlock package carry, and operate a profitable corridor route."
+          sub="Finish approval, unlock package carry, and open your next route with confidence."
           color={DS.blue}
-          action={{ label: 'Offer route', onClick: () => navigate('/app/offer-ride') }}
+          action={{ label: 'Offer a ride', onClick: () => navigate('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Drivers are not just accepting rides. They are opening supply on Jordan's route graph."
-          detail={`${category.categoryLabel} means trust, earnings, and route density all compound together. The more reliable your corridor behavior becomes, the harder it is for generic ride apps to match your economics.`}
+          title="This page should tell you if you are ready, what to fix, and where to drive next."
+          detail="Keep the setup simple: finish the missing trust steps, check your strongest corridor, and use the earnings guidance below before you publish a route."
           tone={DS.blue}
         />
 
         <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
           {[
-            { label: 'Readiness score', value: `${readinessPercent}%`, detail: `${completedSteps}/${readiness.steps.length} operator checks complete`, color: DS.green },
-            { label: 'Suggested corridor', value: primaryCorridor?.label ?? 'No daily route yet', detail: 'Best lane for predictable supply', color: DS.cyan },
-            { label: 'Full-route gross', value: driverPlan ? `${driverPlan.grossWhenFullJod} JOD` : '--', detail: 'Wasel Brain earnings target when seats are filled', color: DS.gold },
-            { label: 'Operator tier', value: membership.loyaltyTier, detail: `${membership.movementCredits} movement credits in the network`, color: DS.blue },
+            { label: 'Readiness', value: `${readinessPercent}%`, detail: `${completedSteps}/${readiness.steps.length} setup checks complete`, color: DS.green },
+            { label: 'Suggested route', value: primaryCorridor?.label ?? 'No daily route yet', detail: 'Best lane for predictable demand', color: DS.cyan },
+            { label: 'Estimated full fare', value: driverPlan ? `${driverPlan.grossWhenFullJod} JOD` : '--', detail: 'Target when all seats are filled', color: DS.gold },
+            { label: 'Driver tier', value: membership.loyaltyTier, detail: `${membership.movementCredits} movement credits earned`, color: DS.blue },
           ].map((item) => (
             <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
               <div style={{ color: item.color, fontWeight: 900, fontSize: '1.18rem', marginBottom: 4 }}>{item.value}</div>
@@ -68,7 +66,7 @@ export default function DriverPage() {
           <div style={{ background: DS.card, borderRadius: r(20), padding: '24px', border: `1px solid ${DS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <ShieldCheck size={18} color={DS.green} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Operator readiness</div>
+              <div style={{ color: '#fff', fontWeight: 900 }}>Driver readiness</div>
             </div>
             <h3 style={{ color: '#fff', fontWeight: 900, margin: '0 0 10px', fontSize: '1.15rem' }}>
               {readiness.headline}
@@ -96,17 +94,17 @@ export default function DriverPage() {
             <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <Brain size={18} color={DS.cyan} />
-                <div style={{ color: '#fff', fontWeight: 900 }}>Wasel Brain playbook</div>
+              <div style={{ color: '#fff', fontWeight: 900 }}>Route guidance</div>
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
-                  driverPlan?.waselBrainNote ?? 'Pick a daily route to unlock lane-specific earnings guidance.',
+                  driverPlan?.waselBrainNote ?? 'Pick a daily route to unlock route-specific earnings guidance.',
                   driverPlan
                     ? `Best pickup point: ${driverPlan.corridor.pickupPoints[0] ?? 'Trusted corridor node'}. ${driverPlan.corridor.autoGroupWindow}`
-                    : 'Auto-grouping begins when corridor demand gets dense enough to predict the next departure wave.',
+                    : 'A clear pickup point matters once demand is strong enough to predict the next departure window.',
                   driverPlan
                     ? `Package-ready supply can add about ${driverPlan.packageBonusJod} JOD while keeping the route ${driverPlan.corridor.savingsPercent}% cheaper than solo movement.`
-                    : 'Package carry becomes a meaningful margin booster on the right corridor.',
+                    : 'Package carry becomes a useful earnings boost on the right route.',
                 ].map((item) => (
                   <div key={item} style={{ background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}`, color: '#fff', fontSize: '0.8rem', lineHeight: 1.55 }}>
                     {item}
@@ -116,7 +114,7 @@ export default function DriverPage() {
             </div>
 
             <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
-              <div style={{ color: '#fff', fontWeight: 900, marginBottom: 10 }}>Capability matrix</div>
+              <div style={{ color: '#fff', fontWeight: 900, marginBottom: 10 }}>What is unlocked</div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
                   { label: 'Offer route', ready: readiness.canOfferRide },
@@ -139,7 +137,7 @@ export default function DriverPage() {
           <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <Network size={18} color={DS.green} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Marketplace pull</div>
+              <div style={{ color: '#fff', fontWeight: 900 }}>Demand signals</div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {marketplaceNodes.map((node) => (
@@ -154,7 +152,7 @@ export default function DriverPage() {
           <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <Truck size={18} color={DS.gold} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Defensibility flywheel</div>
+              <div style={{ color: '#fff', fontWeight: 900 }}>Why this route can work</div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {defensibility.map((line) => (
@@ -169,7 +167,7 @@ export default function DriverPage() {
         <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
           <div style={{ color: '#fff', fontWeight: 900, marginBottom: 10 }}>Next actions</div>
           <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.6, marginBottom: 14 }}>
-            Complete the missing trust steps, open your strongest corridor, and then expand into package-ready supply so your lane becomes part of the operating system of movement in Jordan.
+            Finish the missing trust steps, review your strongest route, and then publish only when the lane looks healthy enough to support repeat demand.
           </div>
           <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
             <button onClick={() => navigate('/app/settings')} style={{ height: 44, borderRadius: '999px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
@@ -179,7 +177,7 @@ export default function DriverPage() {
               Open trust center
             </button>
             <button onClick={() => navigate('/app/offer-ride')} style={{ height: 44, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
-              Offer route
+              Offer a ride
             </button>
           </div>
         </div>

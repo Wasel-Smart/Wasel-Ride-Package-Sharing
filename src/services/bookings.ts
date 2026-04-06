@@ -5,6 +5,11 @@ import {
   getDirectUserBookings,
   updateDirectBookingStatus,
 } from './directSupabase';
+import {
+  bookingCreatePayloadSchema,
+  buildTraceHeaders,
+  withDataIntegrity,
+} from './dataIntegrity';
 
 function canUseEdgeApi(): boolean {
   return Boolean(API_URL);
@@ -20,31 +25,43 @@ export const bookingsAPI = {
   ) {
     const { token, userId } = await getAuthDetails();
 
-    if (!canUseEdgeApi()) {
-      return createDirectBooking({ tripId, userId, seatsRequested, pickup, dropoff, metadata });
-    }
+    return withDataIntegrity({
+      operation: 'booking.create.api',
+      schema: bookingCreatePayloadSchema,
+      payload: { tripId, userId, seatsRequested, pickup, dropoff, metadata },
+      execute: async ({ requestId, payload }) => {
+        if (!canUseEdgeApi()) {
+          return createDirectBooking(payload);
+        }
 
-    const response = await fetchWithRetry(`${API_URL}/bookings`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+        let response: Response;
+        try {
+          response = await fetchWithRetry(`${API_URL}/bookings`, {
+            method: 'POST',
+            headers: buildTraceHeaders(requestId, {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            }),
+            body: JSON.stringify({
+              trip_id: payload.tripId,
+              seats_requested: payload.seatsRequested,
+              pickup_stop: payload.pickup,
+              dropoff_stop: payload.dropoff,
+              ...payload.metadata,
+            }),
+          });
+        } catch {
+          return createDirectBooking(payload);
+        }
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({ error: 'Failed to create booking' }));
+          throw new Error(error.error || 'Failed to create booking');
+        }
+
+        return await response.json();
       },
-      body: JSON.stringify({
-        trip_id: tripId,
-        seats_requested: seatsRequested,
-        pickup_stop: pickup,
-        dropoff_stop: dropoff,
-        ...metadata,
-      }),
     });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Failed to create booking' }));
-      throw new Error(error.error || 'Failed to create booking');
-    }
-
-    return await response.json();
   },
 
   async getUserBookings() {

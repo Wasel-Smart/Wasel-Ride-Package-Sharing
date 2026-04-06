@@ -11,17 +11,15 @@ import { useLocation } from 'react-router';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import {
   WaselBusinessFooter,
-  WaselContactActionRow,
-  WaselProofOfLifeBlock,
 } from '../../components/system/WaselPresence';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
 import {
   JORDAN_LOCATION_OPTIONS,
   resolveJordanLocationCoord,
 } from '../../utils/jordanLocations';
+import { buildAuthPagePath, buildAuthReturnTo } from '../../utils/authFlow';
 
 // ── Design-system shorthand ───────────────────────────────────────────────────
 export const DS = PAGE_DS;
@@ -98,9 +96,14 @@ export function Protected({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!loading && !user && mountedRef.current) {
-      nav(`/app/auth?returnTo=${encodeURIComponent(location.pathname)}`);
+      nav(
+        buildAuthPagePath(
+          'signin',
+          buildAuthReturnTo(location.pathname, location.search, location.hash),
+        ),
+      );
     }
-  }, [loading, location.pathname, nav, user]);
+  }, [loading, location.hash, location.pathname, location.search, nav, user]);
 
   if (loading) {
     return (
@@ -135,15 +138,15 @@ export function PageShell({ children }: { children: ReactNode }) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: `radial-gradient(circle at 12% 10%, rgba(0,200,232,0.12), transparent 24%), radial-gradient(circle at 88% 6%, rgba(240,168,48,0.10), transparent 22%), radial-gradient(circle at 80% 86%, rgba(0,200,117,0.08), transparent 24%), ${DS.bg}`,
+      background: `radial-gradient(circle at 12% 10%, rgba(22,199,242,0.16), transparent 24%), radial-gradient(circle at 88% 6%, rgba(199,255,26,0.1), transparent 22%), radial-gradient(circle at 80% 86%, rgba(96,197,54,0.1), transparent 24%), ${DS.bg}`,
       fontFamily: DS.F, direction: ar ? 'rtl' : 'ltr',
       position: 'relative',
       overflow: 'hidden',
     }}>
       <style>{`
         :root { color-scheme: dark; scroll-behavior: smooth; }
-        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(0,200,232,0.28); }
-        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(240,168,48,0.28); }
+        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(22,199,242,0.28); }
+        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(199,255,26,0.24); }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
             animation-duration: 0.01ms !important;
@@ -154,7 +157,6 @@ export function PageShell({ children }: { children: ReactNode }) {
         }
         @media(max-width:899px){
           .sp-inner{ padding:16px !important; }
-          .sp-brand-row { flex-direction:column !important; align-items:flex-start !important; }
           .sp-2col { grid-template-columns:1fr !important; }
           .sp-3col { grid-template-columns:1fr !important; }
           .sp-4col { grid-template-columns:1fr 1fr !important; }
@@ -170,6 +172,8 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-bus-card-grid { grid-template-columns:1fr !important; }
           .sp-empty-actions { grid-template-columns:1fr !important; }
           .sp-side-column { position:static !important; }
+          .pkg-send-form-grid { grid-template-columns:1fr !important; }
+          .pkg-send-steps-grid { grid-template-columns:1fr !important; }
           .sp-shell-grid { opacity: 0.12 !important; }
         }
         @media(max-width:480px){
@@ -177,7 +181,6 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-head-inner { flex-direction:column !important; gap:12px !important; align-items:flex-start !important; }
           .sp-head-btn { width:100% !important; display:flex !important; justify-content:center !important; }
           .sp-inner { padding:12px !important; }
-          .sp-brand-row { gap: 12px !important; }
           .sp-corridor-snapshot { grid-template-columns:1fr !important; }
         }
       `}</style>
@@ -187,7 +190,7 @@ export function PageShell({ children }: { children: ReactNode }) {
         style={{
           position: 'fixed',
           inset: 0,
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.032) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.032) 1px, transparent 1px)',
           backgroundSize: '54px 54px',
           maskImage: 'radial-gradient(circle at center, black 0%, black 44%, transparent 82%)',
           pointerEvents: 'none',
@@ -199,28 +202,11 @@ export function PageShell({ children }: { children: ReactNode }) {
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'radial-gradient(circle at 50% 0%, rgba(0,200,232,0.06), transparent 38%)',
+          background: 'radial-gradient(circle at 50% 0%, rgba(22,199,242,0.08), transparent 38%), radial-gradient(circle at 82% 76%, rgba(199,255,26,0.05), transparent 24%)',
           pointerEvents: 'none',
         }}
       />
       <div className="sp-inner" style={{ position:'relative', maxWidth: 1180, margin: '0 auto', padding: '24px 16px 40px' }}>
-        <div className="sp-brand-row" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:14, marginBottom:18, flexWrap:'wrap' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
-            <WaselLogo size={36} theme="light" variant="full" />
-            <div style={{ display:'grid', gap:4 }}>
-              <div style={{ color:'#EFF6FF', fontWeight:800, fontSize:'0.92rem', letterSpacing:'-0.02em' }}>
-                {ar ? 'واجهة تشغيل واصل' : 'Wasel operating surface'}
-              </div>
-              <div style={{ color:DS.sub, fontSize:'0.76rem', lineHeight:1.55 }}>
-                {ar ? 'قرارات حقيقية، ثقة ظاهرة، وحياة تشغيلية على نفس المسار.' : 'Real actions, visible trust, and operating proof on the same corridor.'}
-              </div>
-            </div>
-          </div>
-          <WaselContactActionRow ar={ar} compact />
-        </div>
-        <div style={{ marginBottom: 18 }}>
-          <WaselProofOfLifeBlock ar={ar} compact />
-        </div>
         {children}
         <div style={{ marginTop: 18 }}>
           <WaselBusinessFooter ar={ar} />
@@ -237,16 +223,19 @@ export function SectionHead({
   emoji: string; title: string; titleAr?: string; sub?: string; color?: string;
   action?: { label: string; onClick: () => void };
 }) {
+  const { language } = useLanguage();
+  const ar = language === 'ar';
+
   return (
     <div className="sp-head" style={{
-      background: `linear-gradient(135deg, rgba(11,29,69,0.96), rgba(13,31,56,0.94))`,
-      borderRadius: r(22), padding: '26px 24px',
+      background: 'linear-gradient(180deg, rgba(8,23,40,0.96), rgba(8,23,40,0.92))',
+      borderRadius: r(22), padding: '22px 24px',
       marginBottom: 20, position: 'relative', overflow: 'hidden',
-      border: `1px solid ${color}20`, boxShadow: '0 16px 44px rgba(0,0,0,0.42)',
+      border: `1px solid ${color}1f`, boxShadow: '0 18px 44px rgba(0,0,0,0.34)',
     }}>
       <div style={{
         position: 'absolute', inset: 0,
-        background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}14,transparent 64%)`,
+        background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}10,transparent 64%)`,
         pointerEvents: 'none',
       }} />
       <div className="sp-head-inner" style={{
@@ -254,7 +243,7 @@ export function SectionHead({
         justifyContent: 'space-between', position: 'relative',
       }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{
+          <div style={{
             width: 58, height: 58, borderRadius: r(18),
             background: `${color}18`, border: `1.5px solid ${color}34`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -263,17 +252,20 @@ export function SectionHead({
             {emoji}
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+            <div style={{ color, fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>
+              {ar ? 'المهمة الأساسية' : 'Primary task'}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
               <h1 style={{ fontSize: '1.62rem', fontWeight: 950, color: '#fff', margin: 0, letterSpacing: '-0.03em' }}>{title}</h1>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
               {titleAr && (
                 <p dir="rtl" style={{
-                  fontSize: '0.9rem', fontWeight: 800, color, margin: 0,
+                  fontSize: '0.86rem', fontWeight: 800, color, margin: 0,
                   fontFamily: "'Cairo',sans-serif",
                 }}>{titleAr}</p>
               )}
-              {sub && <span style={{ color: 'rgba(255,255,255,0.48)', fontSize: '0.82rem' }}>{sub}</span>}
+              {sub && <span style={{ color: 'rgba(239,246,255,0.72)', fontSize: '0.88rem', lineHeight: 1.6, maxWidth: 620 }}>{sub}</span>}
             </div>
           </div>
         </div>
@@ -282,7 +274,7 @@ export function SectionHead({
             height: 44, padding: '0 22px', borderRadius: '99px', border: 'none',
             background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 52%, #18D7C8 100%)',
             color: '#041018', fontWeight: 900, fontSize: '0.875rem',
-            boxShadow: `0 12px 28px ${DS.cyan}25`, cursor: 'pointer', flexShrink: 0,
+            boxShadow: `0 10px 24px ${DS.cyan}26`, cursor: 'pointer', flexShrink: 0,
           }}>
             {action.label}
           </button>
@@ -300,29 +292,18 @@ export function CoreExperienceBanner({
 }) {
   return (
     <div style={{
-      display: 'grid', gap: 14,
-      gridTemplateColumns: 'minmax(0, 1.4fr) minmax(260px, 0.8fr)',
+      display: 'grid', gap: 10,
       background: `linear-gradient(135deg, ${tone}12, rgba(255,255,255,0.02))`,
       border: `1px solid ${tone}30`, borderRadius: r(20),
-      padding: '20px 20px', marginBottom: 18,
+      padding: '16px 18px', marginBottom: 18,
       boxShadow: '0 14px 34px rgba(0,0,0,0.22)',
     }}>
       <div>
-        <div style={{ display:'inline-flex', alignItems:'center', gap:6, marginBottom:8, padding:'4px 10px', borderRadius:'999px', background:`${tone}14`, border:`1px solid ${tone}24`, color:tone, fontSize:'0.68rem', fontWeight:900, letterSpacing:'0.08em', textTransform:'uppercase' }}>
-          Core flow
+        <div style={{ color: tone, fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>
+          Quick brief
         </div>
-        <div style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', marginBottom: 6, letterSpacing: '-0.02em' }}>{title}</div>
-        <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.65 }}>{detail}</div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, alignContent:'start' }}>
-        {[
-          { label: 'Verified identity', color: DS.green },
-          { label: 'Shared rides', color: DS.cyan },
-          { label: 'Bus corridors', color: DS.green },
-          { label: 'Rider parcel handoff', color: DS.gold },
-        ].map((item) => (
-          <span key={item.label} style={pill(item.color)}>{item.label}</span>
-        ))}
+        <div style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', marginBottom: 4, letterSpacing: '-0.02em' }}>{title}</div>
+        <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.65, maxWidth: 760 }}>{detail}</div>
       </div>
     </div>
   );

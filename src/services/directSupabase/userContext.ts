@@ -77,9 +77,16 @@ export async function ensureCanonicalUser(
   if (existing) return existing;
 
   const resolvedSeed = await resolveAuthSeed(userKey, seed);
-  if (!resolvedSeed.email || !resolvedSeed.full_name || !resolvedSeed.phone_number) {
+  const email = resolvedSeed.email?.trim() || null;
+  const fullName =
+    resolvedSeed.full_name?.trim() ||
+    email?.split('@')[0]?.trim() ||
+    'Wasel User';
+  const phoneNumber = resolvedSeed.phone_number?.trim() || null;
+
+  if (!email) {
     throw new Error(
-      'User profile is incomplete. Complete your account profile in Supabase before continuing.',
+      'User profile is incomplete. Add a valid email address before continuing.',
     );
   }
 
@@ -88,9 +95,9 @@ export async function ensureCanonicalUser(
     .from('users')
     .insert({
       auth_user_id: userKey,
-      email: resolvedSeed.email,
-      full_name: resolvedSeed.full_name,
-      phone_number: resolvedSeed.phone_number,
+      email,
+      full_name: fullName,
+      phone_number: phoneNumber,
       role: mapCanonicalRole(resolvedSeed.role) || 'passenger',
     })
     .select('*')

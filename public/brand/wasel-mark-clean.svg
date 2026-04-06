@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none" role="img" aria-labelledby="title desc" shape-rendering="geometricPrecision">
+  <title id="title">Wasel clean mark</title>
+  <desc id="desc">A clean interlocking rounded-rectangle mark with cyan-to-lime gradients and a transparent background.</desc>
+  <defs>
+    <linearGradient id="topStroke" x1="24" y1="68" x2="124" y2="68" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13D6FF" />
+      <stop offset="1" stop-color="#11C3F2" />
+    </linearGradient>
+    <linearGradient id="rightStroke" x1="122" y1="122" x2="232" y2="122" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#15DEBF" />
+      <stop offset="1" stop-color="#ADFF31" />
+    </linearGradient>
+    <linearGradient id="bottomStroke" x1="24" y1="190" x2="124" y2="190" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#14DBBE" />
+      <stop offset="0.55" stop-color="#48EB84" />
+      <stop offset="1" stop-color="#AEFF32" />
+    </linearGradient>
+    <linearGradient id="linkStroke" x1="128" y1="76" x2="128" y2="198" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#12D4FF" />
+      <stop offset="0.45" stop-color="#17E2D0" />
+      <stop offset="1" stop-color="#B1FF33" />
+    </linearGradient>
+  </defs>
+
+  <rect x="24" y="28" width="104" height="76" rx="18" stroke="url(#topStroke)" stroke-width="12" />
+  <rect x="122" y="92" width="110" height="58" rx="16" stroke="url(#rightStroke)" stroke-width="12" />
+  <rect x="24" y="152" width="104" height="76" rx="18" stroke="url(#bottomStroke)" stroke-width="12" />
+  <path d="M128 84V172" stroke="url(#linkStroke)" stroke-width="12" stroke-linecap="round" />
+</svg>

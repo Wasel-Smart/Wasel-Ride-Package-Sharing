@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+﻿import { motion } from 'motion/react';
 import {
   Brain,
   CheckCircle2,
@@ -47,7 +47,7 @@ export function FindRideCard({
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.06, type: 'spring', stiffness: 380, damping: 28 }}
-      whileHover={{ y: -3, boxShadow: '0 12px 40px rgba(0,200,232,0.12)' }}
+      whileHover={{ y: -3, boxShadow: '0 12px 40px rgba(22,199,242,0.12)' }}
       onClick={onOpen}
       style={{
         background: DS.card,
@@ -209,7 +209,7 @@ export function FindRideCard({
               marginBottom: 14,
               borderRadius: r(14),
               padding: '12px 14px',
-              background: 'linear-gradient(135deg, rgba(0,200,232,0.08), rgba(255,255,255,0.03))',
+              background: 'linear-gradient(135deg, rgba(22,199,242,0.08), rgba(255,255,255,0.03))',
               border: `1px solid ${DS.border}`,
             }}
           >
@@ -305,3 +305,4 @@ export function FindRideCard({
     </motion.div>
   );
 }
+

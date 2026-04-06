@@ -199,6 +199,7 @@ interface LocalAuthCtx {
 
 const Ctx = createContext<LocalAuthCtx | null>(null);
 const STORAGE_KEY = 'wasel_local_user_v2';
+const AUTH_BOOTSTRAP_GUARD_MS = 2500;
 
 function loadUser(): WaselUser | null {
   try {
@@ -249,6 +250,18 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let bootstrapTimedOut = false;
+    const bootstrapGuard =
+      typeof window !== 'undefined'
+        ? window.setTimeout(() => {
+            if (!mounted) return;
+            bootstrapTimedOut = true;
+            setLoading(false);
+            if (import.meta.env?.DEV && !import.meta.env?.TEST) {
+              console.warn('[LocalAuth] Auth bootstrap timed out; continuing with cached access state.');
+            }
+          }, AUTH_BOOTSTRAP_GUARD_MS)
+        : null;
     const getPersistedDemoUser = () => {
       const storedUser = loadUser();
       if (!enableDemoAccount || storedUser?.backendMode !== 'demo') {
@@ -292,7 +305,13 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         }
         // Keep any previously stored user if backend sync fails.
       } finally {
+        if (bootstrapGuard !== null) {
+          window.clearTimeout(bootstrapGuard);
+        }
         if (mounted) setLoading(false);
+        if (bootstrapTimedOut && import.meta.env?.DEV && !import.meta.env?.TEST) {
+          console.info('[LocalAuth] Auth bootstrap recovered after the guard released loading.');
+        }
       }
     };
 
@@ -322,12 +341,18 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
 
       return () => {
         mounted = false;
+        if (bootstrapGuard !== null) {
+          window.clearTimeout(bootstrapGuard);
+        }
         subscription.unsubscribe();
       };
     }
 
     return () => {
       mounted = false;
+      if (bootstrapGuard !== null) {
+        window.clearTimeout(bootstrapGuard);
+      }
     };
   }, [enableDemoAccount]);
 
@@ -420,15 +445,20 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    setUser(null);
+    saveUser(null);
+
     try {
       if (isSupabaseConfigured && supabase) {
-        await authAPI.signOut();
+        await Promise.race([
+          authAPI.signOut(),
+          new Promise<void>((resolve) => {
+            window.setTimeout(resolve, 1200);
+          }),
+        ]);
       }
     } catch {
       // Continue local sign-out even if backend sign-out fails.
-    } finally {
-      setUser(null);
-      saveUser(null);
     }
   };
 

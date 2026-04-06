@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+﻿import { AnimatePresence, motion } from 'motion/react';
 import {
   Brain,
   Calendar,
@@ -255,7 +255,7 @@ function RideSearchPanel({
 }: RideSearchPanelProps) {
   const metricItems: SignalMetric[] = [
     {
-      label: 'Live departures',
+      label: 'Departures',
       value: selectedSignal
         ? `${selectedSignal.activeSupply} live departures`
         : routeReadinessLabel,
@@ -265,7 +265,7 @@ function RideSearchPanel({
       tone: DS.cyan,
     },
     {
-      label: 'Shared price now',
+      label: 'Price now',
       value: selectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : '--',
       sub: selectedPriceQuote
         ? `${selectedPriceQuote.discountJod} JOD saved via ${selectedPriceQuote.explanation}`
@@ -273,7 +273,7 @@ function RideSearchPanel({
       tone: DS.green,
     },
     {
-      label: 'Next wave',
+      label: 'Best window',
       value:
         selectedSignal?.nextWaveWindow
         ?? corridorPlan?.autoGroupWindow
@@ -285,10 +285,10 @@ function RideSearchPanel({
       tone: DS.gold,
     },
     {
-      label: 'Route confidence',
+      label: 'Route fit',
       value: selectedSignal
         ? `${selectedSignal.routeOwnershipScore}/100`
-        : corridorPlan?.routeMoat ?? 'Route data compounds on every search',
+        : corridorPlan?.routeMoat ?? 'Strong route match',
       sub: selectedSignal
         ? selectedSignal.productionSources.slice(0, 2).join(' | ')
         : `Demand alerts: ${demandStatsActive}`,
@@ -479,12 +479,12 @@ function RideSearchPanel({
                 margin: '0 0 4px',
               }}
             >
-              Corridor preview
+              Route preview
             </p>
             <p style={{ color: DS.sub, fontSize: '0.8rem', margin: 0 }}>
               {selectedSignal
-                ? `This lane is live now. Wasel sees ${selectedSignal.liveSearches} searches, ${selectedSignal.liveBookings} bookings, and ${selectedSignal.activeDemandAlerts} active alerts.`
-                : 'Read the lane first, then book with a clearer view of price, timing, and corridor demand.'}
+                ? `This lane is live now with visible demand, active bookings, and a clearer shared price.`
+                : 'See the route first, then book with a clearer view of price, timing, and demand.'}
             </p>
           </div>
           <span style={{ ...pill(DS.green), fontSize: '0.72rem' }}>
@@ -517,8 +517,8 @@ function RideSearchPanel({
         <AlertBanner
           icon={CheckCircle2}
           tone={DS.green}
-          background="rgba(0,200,117,0.10)"
-          border="1px solid rgba(0,200,117,0.28)"
+          background="rgba(96,197,54,0.10)"
+          border="1px solid rgba(96,197,54,0.28)"
           message={bookingMessage}
         />
       ) : null}
@@ -597,7 +597,7 @@ function RideBriefPanels({
           <div>
             <div style={{ color: '#fff', fontWeight: 800 }}>Route brief</div>
             <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-              The route page should help the rider decide fast.
+              What matters before you book.
             </div>
           </div>
         </div>
@@ -653,7 +653,7 @@ function RideBriefPanels({
           <div>
             <div style={{ color: '#fff', fontWeight: 800 }}>Priority corridors</div>
             <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-              Strong live lanes the network can fill next.
+              Strong live lanes you can switch to quickly.
             </div>
           </div>
         </div>
@@ -1273,3 +1273,4 @@ export function FindRideRideTab({
     </>
   );
 }
+

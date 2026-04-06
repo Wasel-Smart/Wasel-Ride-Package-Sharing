@@ -8,6 +8,12 @@ import {
   searchDirectTrips,
   updateDirectTrip,
 } from './directSupabase';
+import {
+  buildTraceHeaders,
+  tripCreatePayloadSchema,
+  tripUpdatePayloadSchema,
+  withDataIntegrity,
+} from './dataIntegrity';
 
 export interface TripCreatePayload {
   from: string;
@@ -52,27 +58,39 @@ function canUseEdgeApi(): boolean {
 
 export const tripsAPI = {
   async createTrip(tripData: TripCreatePayload): Promise<TripSearchResult> {
-    const { token, userId } = await getAuthDetails();
+    return withDataIntegrity({
+      operation: 'trip.create.api',
+      schema: tripCreatePayloadSchema,
+      payload: tripData,
+      execute: async ({ requestId, payload }) => {
+        const { token, userId } = await getAuthDetails();
 
-    if (!canUseEdgeApi()) {
-      return createDirectTrip(userId, tripData);
-    }
+        if (!canUseEdgeApi()) {
+          return createDirectTrip(userId, payload);
+        }
 
-    const response = await fetchWithRetry(`${API_URL}/trips`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+        let response: Response;
+        try {
+          response = await fetchWithRetry(`${API_URL}/trips`, {
+            method: 'POST',
+            headers: buildTraceHeaders(requestId, {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            }),
+            body: JSON.stringify(payload),
+          });
+        } catch {
+          return createDirectTrip(userId, payload);
+        }
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({ error: 'Failed to create trip' }));
+          throw new Error(error.error || 'Failed to create trip');
+        }
+
+        return response.json();
       },
-      body: JSON.stringify(tripData),
     });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Failed to create trip' }));
-      throw new Error(error.error || 'Failed to create trip');
-    }
-
-    return response.json();
   },
 
   async searchTrips(from?: string, to?: string, date?: string, seats?: number): Promise<TripSearchResult[]> {
@@ -134,27 +152,39 @@ export const tripsAPI = {
   },
 
   async updateTrip(tripId: string, updates: TripUpdatePayload): Promise<TripSearchResult> {
-    const { token } = await getAuthDetails();
+    return withDataIntegrity({
+      operation: 'trip.update.api',
+      schema: tripUpdatePayloadSchema,
+      payload: updates,
+      execute: async ({ requestId, payload }) => {
+        const { token } = await getAuthDetails();
 
-    if (!canUseEdgeApi()) {
-      return updateDirectTrip(tripId, updates);
-    }
+        if (!canUseEdgeApi()) {
+          return updateDirectTrip(tripId, payload);
+        }
 
-    const response = await fetchWithRetry(`${API_URL}/trips/${tripId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+        let response: Response;
+        try {
+          response = await fetchWithRetry(`${API_URL}/trips/${tripId}`, {
+            method: 'PUT',
+            headers: buildTraceHeaders(requestId, {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            }),
+            body: JSON.stringify(payload),
+          });
+        } catch {
+          return updateDirectTrip(tripId, payload);
+        }
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({ error: 'Failed to update trip' }));
+          throw new Error(error.error || 'Failed to update trip');
+        }
+
+        return response.json();
       },
-      body: JSON.stringify(updates),
     });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Failed to update trip' }));
-      throw new Error(error.error || 'Failed to update trip');
-    }
-
-    return response.json();
   },
 
   async deleteTrip(tripId: string): Promise<{ success: boolean }> {

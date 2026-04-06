@@ -47,6 +47,10 @@ Example: `20260401120000_add_driver_rating_column.sql`
 | 20 | `20260401213000_expand_runtime_contract_tables.sql` | Add the remaining trip, booking, and package columns required by the live app runtime contract | Ready |
 | 21 | `20260401223000_communications_runtime_contract.sql` | Persist communication preferences and outbound delivery queue rows | Ready |
 | 22 | `20260401233000_communication_delivery_operations.sql` | Add retries, idempotency, and processor operation fields for outbound communications | Ready |
+| 23 | `20260404110000_route_automation_backbone.sql` | Queue-backed reminders, support SLA automation, pricing snapshots, and worker-safe automation job helpers | Ready |
+| 24 | `20260404133000_harden_auth_signup_trigger.sql` | Remove the legacy auth profile trigger path, backfill canonical users from auth, and keep signup bound to `public.users` | Ready |
+| 25 | `20260404153000_operational_bootstrap_reference_data.sql` | Add operational catalogs for roles, cities, trip types, route corridors, pricing rules, and seed execution logging | Ready |
+| 26 | `20260406101500_harden_automation_queue_access_and_support_rpcs.sql` | Lock down direct client automation queue inserts and move support ticket writes behind atomic RPCs | Ready |
 
 ---
 
@@ -67,8 +71,17 @@ For older production projects that still have legacy `public.users`, `public.tri
 10. `20260401213000_expand_runtime_contract_tables.sql`
 11. `20260401223000_communications_runtime_contract.sql`
 12. `20260401233000_communication_delivery_operations.sql`
-13. `src/supabase/seeds/mock_engine_launch_pack.sql`
-14. `src/supabase/seeds/mock_engine_smoke_checks.sql`
+13. `20260404110000_route_automation_backbone.sql`
+14. `20260404133000_harden_auth_signup_trigger.sql`
+15. `20260404153000_operational_bootstrap_reference_data.sql`
+16. `20260406101500_harden_automation_queue_access_and_support_rpcs.sql`
+17. `db/seeds/roles.seed.sql`
+18. `db/seeds/cities.seed.sql`
+19. `db/seeds/trip_types.seed.sql`
+20. `db/seeds/pricing.seed.sql`
+21. `db/seeds/core.seed.sql`
+22. `db/seeds/automation.seed.sql`
+23. `src/supabase/seeds/mock_engine_smoke_checks.sql`
 
 ---
 
@@ -91,12 +104,34 @@ Or manually:
 psql "$SUPABASE_DB_URL" -f migrations/20260401120000_my_change.sql
 ```
 
+Or apply the full production rollout pack from the project root:
+
+```bash
+npm run apply:supabase-rollout
+```
+
+To apply only the operational seed pipeline:
+
+```bash
+npm run seed
+```
+
 ## Seed Packs
 
-Mock engine seed assets live in `src/supabase/seeds/`.
+Operational bootstrap seed assets now live in `db/seeds/`.
 
-- `mock_engine_launch_pack.sql`
+- `roles.seed.sql`
+- `cities.seed.sql`
+- `trip_types.seed.sql`
+- `pricing.seed.sql`
+- `core.seed.sql`
+- `automation.seed.sql`
+
+Smoke checks remain in `src/supabase/seeds/`.
+
 - `mock_engine_smoke_checks.sql`
+
+The legacy `mock_engine_launch_pack.sql` is retained only as a historical reference pack.
 
 ---
 
