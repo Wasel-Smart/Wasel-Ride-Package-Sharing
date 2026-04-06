@@ -74,7 +74,7 @@ describe('AppEntryPage', () => {
 
     render(<AppEntryPage />);
 
-    expect(screen.getByText(/Start from the corridor/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /calmer way to read movement/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Sign in/i })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Create account/i }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /Continue with Google/i })).toBeInTheDocument();
@@ -127,8 +127,8 @@ describe('AppEntryPage', () => {
 
     render(<AppEntryPage />);
 
-    expect(screen.getByRole('heading', { name: /ابدأ من الممر/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /تسجيل الدخول/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /تابع بالإيميل/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /طريقة أهدأ لقراءة الحركة/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /ابحث عن رحلة/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /افتح خريطة Mobility OS الحية/i })).toBeInTheDocument();
   });
 });

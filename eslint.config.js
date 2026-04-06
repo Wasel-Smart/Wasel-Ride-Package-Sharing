@@ -19,19 +19,30 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      'react-hooks/exhaustive-deps': 'off',
-      'react-refresh/only-export-components': 'off',
+      'react-hooks/exhaustive-deps': 'warn', // ENABLED: Critical for hook dependency validation
+      'react-refresh/only-export-components': 'warn',
       // TypeScript
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'off',
-      '@typescript-eslint/consistent-type-imports': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn', // ENABLED: Enforce proper typing
+      '@typescript-eslint/no-unused-vars': 'warn', // ENABLED: Catch dead code
+      '@typescript-eslint/no-non-null-assertion': 'warn', // ENABLED: Safe null handling
+      '@typescript-eslint/consistent-type-imports': ['warn', {
+        prefer: 'type-imports',
+        fixStyle: 'inline-type-imports',
+      }],
+      '@typescript-eslint/no-empty-object-type': 'warn',
+      '@typescript-eslint/explicit-function-return-types': ['warn', {
+        allowExpressions: true,
+        allowTypedFunctionExpressions: true,
+        allowHigherOrderFunctions: true,
+      }],
       // General code quality
-      'no-console': 'off',
+      'no-console': ['warn', { allow: ['warn', 'error'] }], // Allow warnings/errors in production
       'prefer-const': 'error',
       'no-var': 'error',
       'eqeqeq': ['error', 'always'],
       'no-duplicate-imports': 'error',
+      'no-debugger': 'warn',
+      'prefer-arrow-callback': 'warn',
     },
   },
 );

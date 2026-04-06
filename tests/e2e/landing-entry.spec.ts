@@ -11,7 +11,7 @@ test('guest landing routes email entry into auth with return target', async ({ p
 test('authenticated landing sends riders into find ride search', async ({ page }) => {
   await seedDemoSession(page);
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: /find a ride/i }).first().click();
+  await page.getByRole('button', { name: /explore routes/i }).click();
   await expect(page).toHaveURL(/\/app\/find-ride/);
   await expect(page.getByRole('heading', { name: /find a ride|find a shared route/i })).toBeVisible();
 });

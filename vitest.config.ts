@@ -52,10 +52,10 @@ export default defineConfig({
         'src/locales/**',
       ],
       thresholds: {
-        lines: 60,
-        functions: 60,
-        branches: 55,
-        statements: 60,
+        lines: 75,        // Increased from 60
+        functions: 75,    // Increased from 60
+        branches: 70,     // Increased from 55
+        statements: 75,   // Increased from 60
       },
     },
     reporters: ['verbose'],

@@ -23,6 +23,7 @@ import {
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
 import { buildAuthPagePath } from './utils/authFlow';
+import { shouldIgnoreError, formatErrorMessage, type WaselError } from './utils/errors';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -36,34 +37,32 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
   }
 
   static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
-    const message = error instanceof Error ? error.message : String(error);
-    const ignoredPatterns = [
-      'IframeMessageAbortError',
-      'message port was destroyed',
-      'Message aborted',
-      'setupMessageChannel',
-      'figma_app-',
-    ];
-
-    if (ignoredPatterns.some((pattern) => message.includes(pattern))) {
+    // Use centralized error handling to determine if error should be ignored
+    if (shouldIgnoreError(error)) {
       return { hasError: false, error: '' };
     }
 
+    const message = error instanceof Error ? error.message : String(error);
     return { hasError: true, error: message };
   }
 
-  componentDidCatch(error: unknown, info: { componentStack?: string | null }) {
+  componentDidCatch(error: unknown, info: { componentStack?: string | null }): void {
+    // Ignore framework-level system errors
+    if (shouldIgnoreError(error)) return;
+
     const message = error instanceof Error ? error.message : String(error);
-    const ignoredPatterns = [
-      'IframeMessageAbortError',
-      'message port was destroyed',
-      'Message aborted',
-      'setupMessageChannel',
-    ];
-
-    if (ignoredPatterns.some((pattern) => message.includes(pattern))) return;
-
     console.error('[Wasel ErrorBoundary]', message, info?.componentStack ?? '');
+
+    // Send to monitoring (Sentry)
+    if (typeof window !== 'undefined' && window.__SENTRY__?.captureException) {
+      window.__SENTRY__.captureException(error, {
+        contexts: {
+          react: {
+            componentStack: info?.componentStack ?? undefined,
+          },
+        },
+      });
+    }
   }
 
   render() {
