@@ -8,6 +8,7 @@ import {
   Check, Star, CheckCircle2, AlertCircle, Search, RefreshCw, QrCode,
 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { createConnectedPackage, getConnectedRides, type PackageRequest } from '../../services/journeyLogistics';
 import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
@@ -43,6 +44,7 @@ function inferWeight(size: 'small' | 'medium' | 'large') {
 
 export function ReturnMatching() {
   const { language } = useLanguage();
+  const { user } = useLocalAuth();
   const isRTL = language === 'ar';
   const nav = useIframeSafeNavigate();
 
@@ -95,6 +97,8 @@ export function ReturnMatching() {
         weight: inferWeight(size),
         note: [orderId && `Order ${orderId}`, item, reason].filter(Boolean).join(' · '),
         packageType: 'return',
+        senderName: user?.name,
+        senderEmail: user?.email,
       });
       setCreatedReturn(created);
       setStep(3);

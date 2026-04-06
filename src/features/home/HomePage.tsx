@@ -12,7 +12,7 @@ import {
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { CurrencyService } from '../../utils/currency';
+import { useCurrency } from '../../utils/currency';
 import { useLiveUserStats, useLivePlatformStats } from '../../services/liveDataService';
 import { applyReferralCode, getCorridorDemandLeaders, getGrowthDashboard, getReferralSnapshot, type GrowthDashboard, type ReferralSnapshot } from '../../services/growthEngine';
 import { WaselMark } from '../../components/wasel-ds/WaselLogo';
@@ -42,9 +42,9 @@ export function HomePage() {
 
   const { stats: liveStats, loading } = useLiveUserStats();
   const platformStats = useLivePlatformStats();
+  const { formatFromJOD } = useCurrency();
 
   const ar = language === 'ar';
-  const svc = CurrencyService.getInstance();
 
   if (starsRef.current.length === 0) {
     starsRef.current = Array.from({ length: 60 }, () => ({
@@ -54,15 +54,6 @@ export function HomePage() {
       size: Math.random() < 0.15 ? 2 : 1,
     }));
   }
-
-  useEffect(() => {
-    const handleStorage = () => {
-      // Trigger a render when currency changes elsewhere.
-      setRefreshing((prev) => prev);
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
 
   useEffect(() => {
     if (!user?.id) {
@@ -129,7 +120,7 @@ export function HomePage() {
 
   const statsData = [
     { icon: Car, label: ar ? 'إجمالي الرحلات' : 'Total Trips', value: liveStats?.totalTrips?.toString() ?? '...', color: C.cyan },
-    { icon: TrendingUp, label: ar ? 'إجمالي التوفير' : 'Total Savings', value: liveStats ? svc.formatFromJOD(liveStats.totalSaved) : '...', color: C.green },
+    { icon: TrendingUp, label: ar ? 'إجمالي التوفير' : 'Total Savings', value: liveStats ? formatFromJOD(liveStats.totalSaved) : '...', color: C.green },
     { icon: Star, label: ar ? 'التقييم' : 'Rating', value: liveStats ? String(liveStats.rating) : '...', color: C.gold },
     { icon: Package, label: ar ? 'الطرود المسلّمة' : 'Pkgs Delivered', value: liveStats?.pkgsDelivered?.toString() ?? '...', color: C.purple },
   ];
@@ -266,7 +257,7 @@ export function HomePage() {
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 12, color: C.textDim, fontFamily: F, fontSize: '0.74rem' }}>
-                <span>{ar ? 'إيراد تقديري' : 'Estimated revenue'}: <strong style={{ color: C.text }}>{svc.formatFromJOD(growthDashboard?.revenueJod ?? 0)}</strong></span>
+                <span>{ar ? 'إيراد تقديري' : 'Estimated revenue'}: <strong style={{ color: C.text }}>{formatFromJOD(growthDashboard?.revenueJod ?? 0)}</strong></span>
                 <span>{ar ? 'طلب نشط' : 'Active demand'}: <strong style={{ color: C.text }}>{growthDashboard?.activeDemand ?? 0}</strong></span>
               </div>
             </div>
@@ -279,7 +270,7 @@ export function HomePage() {
               <span style={{ fontSize: '1.1rem' }}>L</span>
               <h2 style={{ fontWeight: 800, color: C.text, fontSize: '1rem', margin: 0 }}>{ar ? 'إحصاءات مباشرة' : 'Live stats'}</h2>
             </div>
-            <InlineCurrencySwitcher ar={ar} />
+            <InlineCurrencySwitcher />
           </div>
 
           <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
@@ -433,7 +424,7 @@ export function HomePage() {
           <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.24 }} style={{ marginTop: 24, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ flex: '1 1 200px', borderRadius: 18, padding: '16px 20px', background: `linear-gradient(135deg, rgba(22,199,242,0.14), rgba(199,255,26,0.07))`, border: '1px solid rgba(73,190,242,0.22)' }}>
               <div style={{ fontSize: '0.68rem', fontWeight: 700, color: C.textDim, textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: F }}>{ar ? 'رصيد المحفظة' : 'Wallet Balance'}</div>
-              <div style={{ marginTop: 6, fontSize: '1.5rem', fontWeight: 900, color: C.cyan, fontFamily: F }}>{loading ? <Skeleton w={100} h={28} radius={6} /> : svc.formatFromJOD(liveStats?.walletBalance ?? 47.5)}</div>
+              <div style={{ marginTop: 6, fontSize: '1.5rem', fontWeight: 900, color: C.cyan, fontFamily: F }}>{loading ? <Skeleton w={100} h={28} radius={6} /> : formatFromJOD(liveStats?.walletBalance ?? 47.5)}</div>
               <div style={{ fontSize: '0.65rem', color: C.textDim, fontFamily: F, marginTop: 2 }}>{liveStats ? `JOD ${liveStats.walletBalance.toFixed(3)} base` : ''}</div>
             </div>
 
@@ -510,7 +501,7 @@ export function HomePage() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span style={{ fontSize: '0.65rem', color: C.textDim, fontFamily: F }}>{r.dist} {ar ? 'كم' : 'km'}</span>
                       <span style={{ fontSize: '0.78rem', fontWeight: 800, color: r.color, fontFamily: F }}>
-                        {svc.formatFromJOD(r.priceJod)}
+                        {formatFromJOD(r.priceJod)}
                         <span style={{ fontSize: '0.6rem', fontWeight: 400, color: C.textDim }}>{ar ? '/للمقعد' : '/seat'}</span>
                       </span>
                     </div>

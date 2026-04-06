@@ -1,6 +1,6 @@
 import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey, supabase } from './core';
 import { getDirectProfile, getDirectVerificationRecord, updateDirectProfile } from './directSupabase';
-import { getAuthCallbackUrl, getConfig } from '../utils/env';
+import { getAuthRedirectCandidates, getConfig } from '../utils/env';
 import {
   buildTraceHeaders,
   profileUpdatePayloadSchema,
@@ -37,6 +37,14 @@ function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'gen
   }
 
   if (
+    lower.includes('provider is not enabled') ||
+    lower.includes('unsupported provider') ||
+    lower.includes('oauth provider not supported')
+  ) {
+    return 'This social sign-in provider is not enabled yet in Supabase Auth.';
+  }
+
+  if (
     lower.includes('already been registered') ||
     lower.includes('already registered') ||
     lower.includes('user already exists')
@@ -47,6 +55,25 @@ function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'gen
   if (context === 'signin') return 'Sign in failed. Please try again.';
   if (context === 'signup') return 'Sign up failed. Please try again.';
   return message || 'Request failed.';
+}
+
+function shouldRetryAuthRedirect(error: unknown): boolean {
+  const message =
+    error instanceof Error
+      ? error.message.toLowerCase()
+      : typeof error === 'string'
+        ? error.toLowerCase()
+        : '';
+
+  return (
+    message.includes('redirect') ||
+    message.includes('redirectto') ||
+    message.includes('callback') ||
+    message.includes('not allowed') ||
+    message.includes('allow list') ||
+    message.includes('whitelist') ||
+    message.includes('url')
+  );
 }
 
 function requireSupabase() {
@@ -110,27 +137,72 @@ async function enrichProfileWithVerification(userId: string, profile: Record<str
 export const authAPI = {
   async signUp(email: string, password: string, firstName: string, lastName: string, phone: string) {
     const client = requireSupabase();
-    const redirectTo = getAuthCallbackUrl(
+    const redirectCandidates = getAuthRedirectCandidates(
       typeof window !== 'undefined' ? window.location.origin : undefined,
     );
+    let lastError: Error | null = null;
 
-    const { data, error } = await client.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectTo,
-        data: {
-          full_name: `${firstName} ${lastName}`.trim(),
-          phone,
+    for (const redirectTo of redirectCandidates) {
+      const { data, error } = await client.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectTo,
+          data: {
+            full_name: `${firstName} ${lastName}`.trim(),
+            phone,
+          },
         },
-      },
-    });
+      });
 
-    if (error) {
-      throw new Error(normalizeAuthError(error.message, 'signup'));
+      if (!error) {
+        return data;
+      }
+
+      lastError = new Error(normalizeAuthError(error.message, 'signup'));
+      if (!shouldRetryAuthRedirect(error)) {
+        throw lastError;
+      }
     }
 
-    return data;
+    if (lastError) {
+      throw lastError;
+    }
+
+    throw new Error('Sign up failed. Please try again.');
+  },
+
+  async resendSignupConfirmation(email: string) {
+    const client = requireSupabase();
+    const redirectCandidates = getAuthRedirectCandidates(
+      typeof window !== 'undefined' ? window.location.origin : undefined,
+    );
+    let lastError: Error | null = null;
+
+    for (const redirectTo of redirectCandidates) {
+      const { error } = await client.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: redirectTo,
+        },
+      });
+
+      if (!error) {
+        return { success: true };
+      }
+
+      lastError = new Error(normalizeAuthError(error.message, 'signup'));
+      if (!shouldRetryAuthRedirect(error)) {
+        throw lastError;
+      }
+    }
+
+    if (lastError) {
+      throw lastError;
+    }
+
+    throw new Error('Confirmation email could not be sent. Please try again.');
   },
 
   async createProfile(userId: string, email: string, firstName: string, lastName: string) {

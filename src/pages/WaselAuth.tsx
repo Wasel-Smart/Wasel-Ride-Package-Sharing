@@ -22,6 +22,7 @@ import { WaselInput } from '../components/wasel-ui/WaselInput';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
+import { triggerWelcomeEmail } from '../services/transactionalEmailTriggers';
 import { friendlyAuthError, pwStrength } from '../utils/authHelpers';
 import {
   normalizeAuthReturnTo,
@@ -107,17 +108,19 @@ function TabSwitcher({
             style={{
               minHeight: 42,
               borderRadius: 14,
-              border: 'none',
+              border: active ? '1px solid rgba(255,255,255,0.12)' : `1px solid ${C.border}`,
               background: active
-                ? 'linear-gradient(135deg, #17C7EA 0%, #1E7CFF 100%)'
-                : 'transparent',
-              color: active ? '#041018' : C.textSub,
+                ? 'linear-gradient(135deg, #18D2F5 0%, #1194FF 56%, #8DF64A 100%)'
+                : 'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015))',
+              color: active ? '#032131' : '#D7EAF4',
               fontWeight: active ? TYPE.weight.black : TYPE.weight.semibold,
               fontFamily: F,
               fontSize: TYPE.size.sm,
               cursor: 'pointer',
               transition: 'all 160ms ease',
-              boxShadow: active ? '0 14px 34px rgba(30,124,255,0.24)' : 'none',
+              boxShadow: active
+                ? '0 16px 34px rgba(17,148,255,0.24), inset 0 1px 0 rgba(255,255,255,0.22)'
+                : 'inset 0 1px 0 rgba(255,255,255,0.03)',
             }}
           >
             {value === 'signin' ? 'Sign in' : 'Create account'}
@@ -226,9 +229,16 @@ export default function WaselAuth() {
       : '',
   );
   const [oauthProvider, setOauthProvider] = useState<AuthProvider | null>(null);
+  const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState('');
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
 
   const { signIn, register, loading, user } = useLocalAuth();
-  const { resetPassword, signInWithGoogle, signInWithFacebook } = useAuth();
+  const {
+    resetPassword,
+    resendSignupConfirmation,
+    signInWithGoogle,
+    signInWithFacebook,
+  } = useAuth();
   const navigate = useIframeSafeNavigate();
   const mountedRef = useRef(true);
   const { supportWhatsAppNumber } = getConfig();
@@ -332,12 +342,20 @@ export default function WaselAuth() {
 
       const result = await signIn(email, password);
       if (result.error) {
+        const nextError = friendlyAuthError(
+          result.error,
+          'Sign in failed. Please try again.',
+        );
+        if (nextError.toLowerCase().includes('confirm your email')) {
+          setPendingConfirmationEmail(email.trim());
+        }
         setError(
-          friendlyAuthError(result.error, 'Sign in failed. Please try again.'),
+          nextError,
         );
         return;
       }
 
+      setPendingConfirmationEmail('');
       pushSuccessRedirect();
       return;
     }
@@ -370,14 +388,20 @@ export default function WaselAuth() {
 
     if (registration.requiresEmailConfirmation) {
       setPassword('');
+      setPendingConfirmationEmail((registration.email ?? email).trim());
       setNotice(
-        `Check ${registration.email ?? email} and confirm your email address to finish creating your account.`,
+        `Check ${registration.email ?? email} and activate your email address to finish creating your account.`,
       );
       setTab('signin');
       syncTabParam('signin');
       return;
     }
 
+    setPendingConfirmationEmail('');
+    void triggerWelcomeEmail({
+      name: name.trim() || email.split('@')[0] || 'Wasel member',
+      email,
+    });
     pushSuccessRedirect();
   };
 
@@ -404,6 +428,7 @@ export default function WaselAuth() {
 
   const handleSocialAuth = async (provider: AuthProvider) => {
     clearStatus();
+    setPendingConfirmationEmail('');
     setOauthProvider(provider);
 
     const result =
@@ -420,6 +445,32 @@ export default function WaselAuth() {
       );
       setOauthProvider(null);
     }
+  };
+
+  const handleResendConfirmation = async () => {
+    const nextEmail = pendingConfirmationEmail || email.trim();
+    if (!nextEmail) {
+      setError('Enter your email address first so we can resend the activation email.');
+      return;
+    }
+
+    setResendingConfirmation(true);
+    const result = await resendSignupConfirmation(nextEmail);
+    setResendingConfirmation(false);
+
+    if (result.error) {
+      setError(
+        friendlyAuthError(
+          result.error,
+          'Confirmation email could not be sent. Please try again.',
+        ),
+      );
+      return;
+    }
+
+    setNotice(`A fresh activation email has been sent to ${nextEmail}.`);
+    setError('');
+    setPendingConfirmationEmail(nextEmail);
   };
 
   const handleSupportClick = () => {
@@ -776,6 +827,51 @@ export default function WaselAuth() {
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
+
+                {pendingConfirmationEmail ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      flexWrap: 'wrap',
+                      padding: '12px 14px',
+                      borderRadius: 14,
+                      background: 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${C.border}`,
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: C.textMuted,
+                        fontSize: TYPE.size.xs,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      Need a new activation email for {pendingConfirmationEmail}?
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleResendConfirmation();
+                      }}
+                      disabled={resendingConfirmation || busy}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        color: C.cyan,
+                        fontFamily: F,
+                        fontWeight: TYPE.weight.bold,
+                        cursor: resendingConfirmation || busy ? 'not-allowed' : 'pointer',
+                        opacity: resendingConfirmation || busy ? 0.65 : 1,
+                        padding: 0,
+                      }}
+                    >
+                      {resendingConfirmation ? 'Sending...' : 'Resend activation email'}
+                    </button>
+                  </div>
+                ) : null}
 
                 <AnimatePresence mode="wait">
                   {error ? (

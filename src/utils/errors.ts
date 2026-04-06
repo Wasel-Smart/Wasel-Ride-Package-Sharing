@@ -124,66 +124,70 @@ export function normalizeError(error: unknown, context?: Record<string, unknown>
 
   if (error instanceof Error) {
     const message = error.message;
+    const lowerMessage = message.toLowerCase();
 
     // System errors that should be ignored
     if (
-      message.includes('IframeMessageAbortError') ||
-      message.includes('message port was destroyed') ||
-      message.includes('Message aborted') ||
-      message.includes('setupMessageChannel') ||
-      message.includes('figma_app-')
+      lowerMessage.includes('iframemessageaborterror'.toLowerCase()) ||
+      lowerMessage.includes('message port was destroyed') ||
+      lowerMessage.includes('message aborted') ||
+      lowerMessage.includes('setupmessagechannel') ||
+      lowerMessage.includes('figma_app-')
     ) {
       return new IgnorableSystemError(message, context);
     }
 
     // Network errors
     if (
-      message.includes('fetch') ||
-      message.includes('NetworkError') ||
-      message.includes('ECONNREFUSED') ||
-      message.includes('timeout')
+      lowerMessage.includes('fetch') ||
+      lowerMessage.includes('networkerror') ||
+      lowerMessage.includes('network request failed') ||
+      lowerMessage.includes('network error') ||
+      lowerMessage.includes('failed to fetch') ||
+      lowerMessage.includes('econnrefused') ||
+      lowerMessage.includes('timeout')
     ) {
       return new NetworkError(message, context);
     }
 
     // Authentication errors
     if (
-      message.includes('Unauthorized') ||
-      message.includes('Invalid credentials') ||
-      message.includes('session_not_found') ||
-      message.includes('invalid_jwt')
+      lowerMessage.includes('unauthorized') ||
+      lowerMessage.includes('invalid credentials') ||
+      lowerMessage.includes('session_not_found') ||
+      lowerMessage.includes('invalid_jwt')
     ) {
       return new AuthenticationError(message, context);
     }
 
     // Authorization errors
     if (
-      message.includes('permission') ||
-      message.includes('Forbidden') ||
-      message.includes('access denied')
+      lowerMessage.includes('permission') ||
+      lowerMessage.includes('forbidden') ||
+      lowerMessage.includes('access denied')
     ) {
       return new AuthorizationError(message, context);
     }
 
     // Payment errors
-    if (message.includes('payment') || message.includes('stripe')) {
+    if (lowerMessage.includes('payment') || lowerMessage.includes('stripe')) {
       return new PaymentError(message, context);
     }
 
     // Timeout errors
     if (
-      message.includes('timeout') ||
-      message.includes('timed out') ||
-      message.includes('deadline exceeded')
+      lowerMessage.includes('timeout') ||
+      lowerMessage.includes('timed out') ||
+      lowerMessage.includes('deadline exceeded')
     ) {
       return new TimeoutError(message, context);
     }
 
     // Validation errors
     if (
-      message.includes('validation') ||
-      message.includes('invalid') ||
-      message.includes('required')
+      lowerMessage.includes('validation') ||
+      lowerMessage.includes('invalid') ||
+      lowerMessage.includes('required')
     ) {
       return new ValidationError(message, context);
     }
@@ -229,5 +233,9 @@ export function formatErrorMessage(error: unknown): string {
     UNKNOWN_ERROR: 'An unexpected error occurred. Please try again.',
   };
 
-  return messageMap[normalized.code] || normalized.message;
+  if (Object.prototype.hasOwnProperty.call(messageMap, normalized.code)) {
+    return messageMap[normalized.code];
+  }
+
+  return normalized.message;
 }

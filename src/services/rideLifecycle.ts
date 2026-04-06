@@ -6,6 +6,12 @@ import {
   updateDirectBookingStatus,
 } from './directSupabase';
 import { trackGrowthEvent } from './growthEngine';
+import {
+  getTransactionalEmailAppUrl,
+  triggerBookingStatusUpdateEmail,
+  triggerRideBookingEmails,
+  triggerRideCompletedEmails,
+} from './transactionalEmailTriggers';
 
 export type RideBookingStatus =
   | 'pending_driver'
@@ -41,6 +47,8 @@ export interface RideBookingRecord {
   routeMode: 'live_post' | 'network_inventory';
   supportThreadOpen: boolean;
   ticketCode: string;
+  pricePerSeatJod?: number;
+  totalPriceJod?: number;
   createdAt: string;
   updatedAt: string;
   backendBookingId?: string;
@@ -104,6 +112,11 @@ export function createRideBooking(input: {
   routeMode: 'live_post' | 'network_inventory';
 }): RideBookingRecord {
   const now = new Date().toISOString();
+  const seatsRequested = Math.max(1, input.seatsRequested ?? 1);
+  const totalPriceJod =
+    typeof input.pricePerSeatJod === 'number'
+      ? Number((seatsRequested * input.pricePerSeatJod).toFixed(2))
+      : undefined;
   const booking: RideBookingRecord = {
     id: `ride-booking-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     rideId: input.rideId,
@@ -118,17 +131,28 @@ export function createRideBooking(input: {
     passengerName: input.passengerName,
     passengerPhone: input.passengerPhone,
     passengerEmail: input.passengerEmail,
-    seatsRequested: Math.max(1, input.seatsRequested ?? 1),
+    seatsRequested,
     status: input.routeMode === 'live_post' ? 'pending_driver' : 'confirmed',
     paymentStatus: input.routeMode === 'live_post' ? 'pending' : 'authorized',
     routeMode: input.routeMode,
     supportThreadOpen: false,
     ticketCode: makeTicketCode(),
+    pricePerSeatJod: input.pricePerSeatJod,
+    totalPriceJod,
     createdAt: now,
     updatedAt: now,
   };
 
   writeBookings([booking, ...readBookings()]);
+  if (booking.passengerEmail) {
+    triggerRideBookingEmails({
+      booking,
+      passengerEmail: booking.passengerEmail,
+      driverEmail: booking.driverEmail,
+      priceJod: booking.totalPriceJod ?? 0,
+      appUrl: getTransactionalEmailAppUrl(),
+    });
+  }
   void trackGrowthEvent({
     userId: input.passengerId,
     eventName: 'ride_booking_started',
@@ -136,9 +160,7 @@ export function createRideBooking(input: {
     serviceType: 'ride',
     from: input.from,
     to: input.to,
-    valueJod: input.pricePerSeatJod
-      ? Number((booking.seatsRequested * input.pricePerSeatJod).toFixed(2))
-      : undefined,
+    valueJod: totalPriceJod,
     metadata: {
       rideId: input.rideId,
       routeMode: input.routeMode,
@@ -155,7 +177,7 @@ export function createRideBooking(input: {
       dropoff: input.to,
       bookingStatus: booking.status,
       metadata: {
-        total_price: booking.seatsRequested,
+        total_price: booking.totalPriceJod ?? booking.seatsRequested,
       },
     })
       .then(({ booking: persisted }) => {
@@ -171,6 +193,14 @@ export function createRideBooking(input: {
             persisted.status === 'confirmed'
               ? 'authorized'
               : booking.paymentStatus,
+          pricePerSeatJod:
+            typeof persisted.price_per_seat === 'number'
+              ? persisted.price_per_seat
+              : booking.pricePerSeatJod,
+          totalPriceJod:
+            typeof persisted.total_price === 'number'
+              ? persisted.total_price
+              : booking.totalPriceJod,
           syncedAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -220,6 +250,45 @@ export function updateRideBooking(
   }
 
   if (updates.status) {
+    if (
+      updates.status !== target.status &&
+      updated.passengerEmail &&
+      (updates.status === 'confirmed' || updates.status === 'rejected' || updates.status === 'cancelled')
+    ) {
+      triggerBookingStatusUpdateEmail({
+        passengerEmail: updated.passengerEmail,
+        passengerName: updated.passengerName,
+        ticketCode: updated.ticketCode,
+        from: updated.from,
+        to_city: updated.to,
+        date: updated.date,
+        time: updated.time,
+        driverName: updated.driverName,
+        newStatus: updates.status,
+        priceJod: updated.totalPriceJod ?? 0,
+      });
+    }
+
+    if (
+      updates.status === 'completed' &&
+      updates.status !== target.status &&
+      updated.passengerEmail &&
+      updated.driverEmail
+    ) {
+      triggerRideCompletedEmails({
+        passengerEmail: updated.passengerEmail,
+        passengerName: updated.passengerName,
+        driverEmail: updated.driverEmail,
+        driverName: updated.driverName,
+        ticketCode: updated.ticketCode,
+        from: updated.from,
+        to_city: updated.to,
+        date: updated.date,
+        driverEarningsJod: updated.totalPriceJod ?? 0,
+        appUrl: getTransactionalEmailAppUrl(),
+      });
+    }
+
     void trackGrowthEvent({
       eventName: 'ride_booking_updated',
       funnelStage:
@@ -283,6 +352,8 @@ export async function hydrateRideBookings(userId: string, rides: PostedRide[] = 
       routeMode: ride ? 'live_post' : 'network_inventory',
       supportThreadOpen: false,
       ticketCode: `RIDE-${String(raw.booking_id ?? raw.id ?? '').slice(-6).toUpperCase() || 'SYNCED'}`,
+      pricePerSeatJod: Number(raw.price_per_seat ?? 0) || undefined,
+      totalPriceJod: Number(raw.total_price ?? raw.amount ?? 0) || undefined,
       createdAt: String(raw.created_at ?? new Date().toISOString()),
       updatedAt: String(raw.updated_at ?? raw.created_at ?? new Date().toISOString()),
       syncedAt: new Date().toISOString(),
@@ -306,18 +377,37 @@ export async function hydrateRideBookings(userId: string, rides: PostedRide[] = 
 export function syncRideBookingCompletion(referenceDate = Date.now()): RideBookingRecord[] {
   const now = referenceDate;
   const bookings = readBookings();
+  const completedThisPass: RideBookingRecord[] = [];
   const next = bookings.map((booking) => {
     if (booking.status !== 'confirmed') return booking;
     const tripTime = new Date(`${booking.date}T${booking.time || '00:00'}`).getTime();
     if (!Number.isFinite(tripTime) || tripTime > now) return booking;
-    return {
+    const completedBooking = {
       ...booking,
       status: 'completed' as RideBookingStatus,
       paymentStatus: booking.paymentStatus === 'authorized' ? 'captured' as RidePaymentStatus : booking.paymentStatus,
       updatedAt: new Date(now).toISOString(),
     };
+    completedThisPass.push(completedBooking);
+    return completedBooking;
   });
 
   writeBookings(next);
+  for (const booking of completedThisPass) {
+    if (booking.passengerEmail && booking.driverEmail) {
+      triggerRideCompletedEmails({
+        passengerEmail: booking.passengerEmail,
+        passengerName: booking.passengerName,
+        driverEmail: booking.driverEmail,
+        driverName: booking.driverName,
+        ticketCode: booking.ticketCode,
+        from: booking.from,
+        to_city: booking.to,
+        date: booking.date,
+        driverEarningsJod: booking.totalPriceJod ?? 0,
+        appUrl: getTransactionalEmailAppUrl(),
+      });
+    }
+  }
   return sortBookings(next);
 }

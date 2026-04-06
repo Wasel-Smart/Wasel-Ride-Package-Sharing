@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import { authAPI } from '../services/auth';
 import { supabase, isSupabaseConfigured } from '../utils/supabase/client';
-import { getAuthCallbackUrl, getConfig } from '../utils/env';
+import { getAuthRedirectCandidates } from '../utils/env';
 import { useLocalAuth } from './LocalAuth';
 import {
   AuthOperationError,
@@ -30,6 +30,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: AuthOperationError }>;
   refreshProfile: () => Promise<void>;
+  resendSignupConfirmation: (email: string) => Promise<{ error: AuthOperationError }>;
   resetPassword: (email: string) => Promise<{ error: AuthOperationError }>;
   changePassword: (nextPassword: string) => Promise<{ error: AuthOperationError }>;
 }
@@ -47,6 +48,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   updateProfile: async () => ({ error: null }),
   refreshProfile: async () => {},
+  resendSignupConfirmation: async () => ({ error: null }),
   resetPassword: async () => ({ error: null }),
   changePassword: async () => ({ error: null }),
 });
@@ -63,41 +65,8 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-function isLocalDevelopmentOrigin(origin: string): boolean {
-  try {
-    const url = new URL(origin);
-    return url.hostname === 'localhost' || url.hostname === '127.0.0.1';
-  } catch {
-    return false;
-  }
-}
-
 export function getResetPasswordRedirectCandidates(origin?: string): string[] {
-  const candidates = new Set<string>();
-  const currentOrigin = typeof origin === 'string' ? origin.trim() : '';
-  const configOrigin = getConfig().appUrl.trim();
-
-  if (currentOrigin) {
-    candidates.add(getAuthCallbackUrl(currentOrigin));
-  }
-
-  if (configOrigin) {
-    candidates.add(getAuthCallbackUrl(configOrigin));
-  }
-
-  if (currentOrigin && isLocalDevelopmentOrigin(currentOrigin)) {
-    try {
-      const url = new URL(currentOrigin);
-      const host = url.hostname;
-      const protocol = url.protocol || 'http:';
-      candidates.add(getAuthCallbackUrl(`${protocol}//${host}:3000`));
-      candidates.add(getAuthCallbackUrl(`${protocol}//${host}:5173`));
-    } catch {
-      // Ignore malformed local origins and continue with known candidates.
-    }
-  }
-
-  return Array.from(candidates);
+  return getAuthRedirectCandidates(origin);
 }
 
 function shouldRetryResetPasswordForRedirect(error: unknown): boolean {
@@ -320,6 +289,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [fetchProfile, user]);
 
+  const resendSignupConfirmation = useCallback(async (email: string): Promise<{ error: AuthOperationError }> => {
+    try {
+      await authAPI.resendSignupConfirmation(email);
+      return { error: null };
+    } catch (error: unknown) {
+      return {
+        error: normalizeOperationError(
+          error,
+          'Confirmation email could not be sent.',
+        ),
+      };
+    }
+  }, []);
+
   const resetPassword = useCallback(async (email: string): Promise<{ error: AuthOperationError }> => {
     if (!supabase) return { error: new Error('Backend not configured') };
 
@@ -378,12 +361,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signOut,
     updateProfile,
     refreshProfile,
+    resendSignupConfirmation,
     resetPassword,
     changePassword,
   }), [
     user, profile, session, loading, isBackendConnected,
     signUp, signIn, signInWithGoogle, signInWithFacebook, signOut,
-    updateProfile, refreshProfile, resetPassword, changePassword,
+    updateProfile, refreshProfile, resendSignupConfirmation, resetPassword, changePassword,
   ]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

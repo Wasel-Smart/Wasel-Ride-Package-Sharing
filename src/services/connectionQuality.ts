@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 /**
  * Connection Quality Monitoring Service
  * 
@@ -45,8 +47,6 @@ class ConnectionQualityMonitor {
   private checkInterval: number | null = null;
   private lastOnlineAt = Date.now();
   private disconnectionCount = 0;
-  private wasOnline = navigator.onLine;
-
   constructor() {
     this.setupNetworkListeners();
     this.startMonitoring();
@@ -268,13 +268,11 @@ class ConnectionQualityMonitor {
    */
   private setupNetworkListeners(): void {
     window.addEventListener('online', () => {
-      this.wasOnline = true;
       this.lastOnlineAt = Date.now();
       this.performInitialCheck();
     });
 
     window.addEventListener('offline', () => {
-      this.wasOnline = false;
       this.disconnectionCount += 1;
       this.addMetrics(this.getOfflineMetrics());
     });
@@ -327,9 +325,9 @@ export function getConnectionQualityMonitor(): ConnectionQualityMonitor {
  * React hook for connection quality monitoring
  */
 export function useConnectionQuality() {
-  const [metrics, setMetrics] = require('react').useState<ConnectionMetrics | null>(null);
+  const [metrics, setMetrics] = useState<ConnectionMetrics | null>(null);
 
-  require('react').useEffect(() => {
+  useEffect(() => {
     const monitor = getConnectionQualityMonitor();
     const unsubscribe = monitor.subscribe(setMetrics);
     return unsubscribe;

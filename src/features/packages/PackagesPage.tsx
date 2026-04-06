@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Brain } from 'lucide-react';
 import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
+import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
@@ -30,6 +31,7 @@ import { routeMatchesLocationPair } from '../../utils/jordanLocations';
 
 export function PackagesPage() {
   const nav = useIframeSafeNavigate();
+  const { user } = useLocalAuth();
   const { notify, requestPermission, permission } = usePushNotifications();
   const [activeTab, setActiveTab] = useState<'send' | 'track' | 'raje3'>('send');
   const [pkg, setPkg] = useState(() => createPackageComposer());
@@ -98,6 +100,8 @@ export function PackagesPage() {
         packageType,
         recipientName: pkg.recipientName,
         recipientPhone: pkg.recipientPhone,
+        senderName: user?.name,
+        senderEmail: user?.email,
       });
 
       setPkg((previous) => ({ ...previous, sent: true, trackingId: created.trackingId }));

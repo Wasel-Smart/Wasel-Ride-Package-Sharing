@@ -10,19 +10,17 @@
  * - Driver profile integration
  */
 
-import { useEffect, useState, useCallback } from 'react';
-import { WaselMapProps } from './WaselMap';
+import { useEffect, useState } from 'react';
+import { WaselMap, type WaselMapProps } from './WaselMap';
 import {
   useDriverTracking,
   useRouteAlternatives,
   useTrafficIncidents,
   calculateETA,
-  DriverLocation,
   RouteAlternative,
-  TrafficIncident,
 } from '../services/driverTracking';
 import { motion, AnimatePresence } from 'motion/react';
-import { AlertTriangle, Navigation, Clock, Zap, MapPin } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 export interface EnhancedWaselMapProps extends WaselMapProps {
   driverId?: string;
@@ -45,7 +43,6 @@ export interface NavigationGuidance {
  */
 export function DriverLocationTracker({ driverId }: { driverId: string }) {
   const { location, loading, error } = useDriverTracking(driverId);
-  const [eta, setEta] = useState<string | null>(null);
 
   useEffect(() => {
     if (location && location.isLive) {
@@ -295,11 +292,13 @@ export function ETAWidget({
   startLng,
   endLat,
   endLng,
+  onETAUpdate,
 }: {
   startLat: number;
   startLng: number;
   endLat: number;
   endLng: number;
+  onETAUpdate?: (eta: string) => void;
 }) {
   const [etaData, setEtaData] = useState<{
     distance: number;
@@ -315,6 +314,12 @@ export function ETAWidget({
       .then(setEtaData)
       .finally(() => setLoading(false));
   }, [startLat, startLng, endLat, endLng]);
+
+  useEffect(() => {
+    if (etaData?.eta) {
+      onETAUpdate?.(etaData.eta);
+    }
+  }, [etaData?.eta, onETAUpdate]);
 
   if (loading) {
     return (
@@ -376,12 +381,9 @@ export function EnhancedWaselMapWrapper({
   endLat?: number;
   endLng?: number;
 }) {
-  const [showDetailsPanel, setShowDetailsPanel] = useState(false);
-
   return (
     <div className="space-y-4">
-      {/* Main Map */}
-      {/* <WaselMap {...mapProps} /> */}
+      <WaselMap {...mapProps} />
 
       {/* Details Panel */}
       {(showTrafficIncidents || showRouteAlternatives || driverId) && (
@@ -394,7 +396,7 @@ export function EnhancedWaselMapWrapper({
             <DriverLocationTracker driverId={driverId} />
           )}
 
-          {showRouteAlternatives && startLat !== undefined && startLng !== undefined && endLat !== undefined && endLng !== undefined && (
+          {showRouteAlternatives && showNavigation && startLat !== undefined && startLng !== undefined && endLat !== undefined && endLng !== undefined && (
             <>
               <NavigationPanel
                 startLat={startLat}
@@ -408,6 +410,7 @@ export function EnhancedWaselMapWrapper({
                 startLng={startLng}
                 endLat={endLat}
                 endLng={endLng}
+                onETAUpdate={onETAUpdate}
               />
             </>
           )}

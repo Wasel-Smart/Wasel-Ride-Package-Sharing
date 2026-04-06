@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Wifi, WifiOff, AlertCircle, Signal } from 'lucide-react';
+import { Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import { getConnectionQualityMonitor, ConnectionMetrics } from '../services/connectionQuality';
 import { getOfflineQueueManager } from '../services/offlineQueue';
 import { motion, AnimatePresence } from 'motion/react';
@@ -36,6 +36,14 @@ export function NetworkStatusIndicator({ compact = false, showDetails = false }:
 
   if (!metrics) return null;
 
+  const qualityTone = {
+    excellent: { dotClass: 'bg-green-500', color: '#22c55e', surface: 'rgba(34,197,94,0.10)', border: 'rgba(34,197,94,0.20)' },
+    good: { dotClass: 'bg-blue-500', color: '#3b82f6', surface: 'rgba(59,130,246,0.10)', border: 'rgba(59,130,246,0.20)' },
+    fair: { dotClass: 'bg-yellow-500', color: '#eab308', surface: 'rgba(234,179,8,0.10)', border: 'rgba(234,179,8,0.20)' },
+    poor: { dotClass: 'bg-orange-500', color: '#f97316', surface: 'rgba(249,115,22,0.10)', border: 'rgba(249,115,22,0.20)' },
+    offline: { dotClass: 'bg-red-500', color: '#ef4444', surface: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.20)' },
+  } as const;
+
   const getQualityColor = (quality: string) => {
     switch (quality) {
       case 'excellent': return 'bg-green-500';
@@ -46,6 +54,8 @@ export function NetworkStatusIndicator({ compact = false, showDetails = false }:
       default: return 'bg-gray-500';
     }
   };
+
+  const tone = qualityTone[metrics.quality];
 
   const getQualityText = (quality: string) => {
     switch (quality) {
@@ -141,18 +151,18 @@ export function NetworkStatusIndicator({ compact = false, showDetails = false }:
   }
 
   return (
-    <motion.div
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-        metrics.online
-          ? `${getQualityColor(metrics.quality)}/10 border border-${getQualityColor(metrics.quality)}/20`
-          : 'bg-red-500/10 border border-red-500/20'
-      }`}
+      <motion.div
+      className="flex items-center gap-2 px-3 py-2 rounded-lg border"
+      style={{
+        background: metrics.online ? tone.surface : qualityTone.offline.surface,
+        borderColor: metrics.online ? tone.border : qualityTone.offline.border,
+      }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       {metrics.online ? (
-        <Wifi size={16} className={`text-${getQualityColor(metrics.quality)}`} />
+        <Wifi size={16} style={{ color: tone.color }} />
       ) : (
         <WifiOff size={16} className="text-red-500" />
       )}

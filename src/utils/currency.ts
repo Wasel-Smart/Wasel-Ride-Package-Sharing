@@ -11,6 +11,8 @@
 
 // ─── Supported currencies ─────────────────────────────────────────────────────
 
+import { useSyncExternalStore } from 'react';
+
 export const SUPPORTED_CURRENCY_CODES = [
   'JOD', 'USD', 'EUR', 'GBP',
   'AED', 'SAR', 'EGP', 'KWD', 'BHD',
@@ -205,6 +207,19 @@ export function money(amount: number, currency: SupportedCurrency = PLATFORM_CUR
 // ─── Currency service ─────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'wasel-preferred-currency';
+const CURRENCY_CHANGE_EVENT = 'wasel-currency-change';
+
+function emitCurrencyChange(code: SupportedCurrency): void {
+  if (typeof window === 'undefined') return;
+
+  window.dispatchEvent(new Event(CURRENCY_CHANGE_EVENT));
+
+  try {
+    window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: code }));
+  } catch {
+    // Synthetic StorageEvent is not available in every runtime.
+  }
+}
 
 export class CurrencyService {
   private static _instance: CurrencyService | null = null;
@@ -270,6 +285,7 @@ export class CurrencyService {
   setCurrency(code: SupportedCurrency): void {
     this._current = code;
     try { localStorage.setItem(STORAGE_KEY, code); } catch { /* noop */ }
+    emitCurrencyChange(code);
   }
 
   // ── Conversion ────────────────────────────────────────────────────────────
@@ -393,12 +409,32 @@ export function getCurrencySymbol(currency?: SupportedCurrency): string {
  */
 export function useCurrency() {
   const svc = CurrencyService.getInstance();
+  const current = useSyncExternalStore(
+    (onStoreChange) => {
+      if (typeof window === 'undefined') return () => {};
+
+      const handleCurrencyChange = () => onStoreChange();
+      const handleStorage = (event: StorageEvent) => {
+        if (event.key === STORAGE_KEY) onStoreChange();
+      };
+
+      window.addEventListener(CURRENCY_CHANGE_EVENT, handleCurrencyChange);
+      window.addEventListener('storage', handleStorage);
+
+      return () => {
+        window.removeEventListener(CURRENCY_CHANGE_EVENT, handleCurrencyChange);
+        window.removeEventListener('storage', handleStorage);
+      };
+    },
+    () => svc.current,
+    () => PLATFORM_CURRENCY,
+  );
 
   return {
     /** ISO-4217 code of the active display currency */
-    current: svc.current,
+    current,
     /** Full config object for the active currency */
-    config:  svc.config,
+    config: CURRENCIES[current],
     /** Switch the active display currency */
     setCurrency: (code: SupportedCurrency) => svc.setCurrency(code),
     /** Format an amount in the active (or specified) currency */
@@ -414,14 +450,15 @@ export function useCurrency() {
     /** General cross-currency conversion */
     convert:     (amount: number, from: SupportedCurrency, to: SupportedCurrency) =>
                    svc.convert(amount, from, to),
+    /** Currency symbol for any supported currency, defaulting to the active one */
+    getSymbol:   (currency?: SupportedCurrency) => svc.getSymbol(currency ?? current),
     /** Currency symbol for the active currency */
-    symbol:      svc.getSymbol(),
+    symbol:      svc.getSymbol(current),
     /** Platform settlement currency (always JOD) */
     platformCurrency: PLATFORM_CURRENCY,
     /** Minimum fare in the active display currency */
-    minFare:     svc.minFare,
+    minFare:     CURRENCIES[current].minFare,
     /** All supported currencies */
     available:   svc.getAvailable(),
   };
 }
-

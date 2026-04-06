@@ -3,7 +3,7 @@
  * Implements retry logic, exponential backoff, and circuit breaker pattern
  */
 
-import { NetworkError, TimeoutError, ConfigError } from './errors';
+import { NetworkError, TimeoutError } from './errors';
 
 /**
  * Retry configuration

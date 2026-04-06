@@ -9,7 +9,7 @@
  * - Driver profile integration
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from './core';
 
 export interface DriverLocation {
@@ -65,6 +65,31 @@ export interface TrafficIncident {
   updatedAt: string;
 }
 
+type DriverLocationRecord = {
+  driver_id: string;
+  trip_id: string;
+  latitude: number;
+  longitude: number;
+  accuracy?: number | null;
+  speed?: number | null;
+  heading?: number | null;
+  updated_at: string;
+};
+
+function mapDriverLocationRecord(record: DriverLocationRecord): DriverLocation {
+  return {
+    driverId: record.driver_id,
+    tripId: record.trip_id,
+    latitude: record.latitude,
+    longitude: record.longitude,
+    accuracy: record.accuracy || 10,
+    speed: record.speed || 0,
+    heading: record.heading || 0,
+    timestamp: record.updated_at,
+    isLive: true,
+  };
+}
+
 /**
  * Subscribe to real driver location updates
  * Returns unsubscribe function
@@ -90,20 +115,10 @@ export function subscribeToDriverLocation(
         table: 'driver_locations',
         filter: `driver_id=eq.${driverId}`,
       },
-      (payload) => {
+      (payload: { new: DriverLocationRecord | null }) => {
         try {
-          const record = payload.new as any;
-          onUpdate({
-            driverId: record.driver_id,
-            tripId: record.trip_id,
-            latitude: record.latitude,
-            longitude: record.longitude,
-            accuracy: record.accuracy || 10,
-            speed: record.speed || 0,
-            heading: record.heading || 0,
-            timestamp: record.updated_at,
-            isLive: true,
-          });
+          if (!payload.new) return;
+          onUpdate(mapDriverLocationRecord(payload.new));
         } catch (error) {
           onError?.(error instanceof Error ? error : new Error(String(error)));
         }
@@ -136,17 +151,7 @@ export async function getDriverLocation(
     if (error) throw error;
     if (!data) return null;
 
-    return {
-      driverId: data.driver_id,
-      tripId: data.trip_id,
-      latitude: data.latitude,
-      longitude: data.longitude,
-      accuracy: data.accuracy || 10,
-      speed: data.speed || 0,
-      heading: data.heading || 0,
-      timestamp: data.updated_at,
-      isLive: true,
-    };
+    return mapDriverLocationRecord(data as DriverLocationRecord);
   } catch (error) {
     console.error('[DriverTracking] Failed to get driver location:', error);
     return null;
@@ -172,17 +177,9 @@ export async function getTripDriverLocations(
     if (error) throw error;
     if (!data) return [];
 
-    return data.map(record => ({
-      driverId: record.driver_id,
-      tripId: record.trip_id,
-      latitude: record.latitude,
-      longitude: record.longitude,
-      accuracy: record.accuracy || 10,
-      speed: record.speed || 0,
-      heading: record.heading || 0,
-      timestamp: record.updated_at,
-      isLive: true,
-    }));
+    return (data as DriverLocationRecord[]).map((record: DriverLocationRecord) =>
+      mapDriverLocationRecord(record),
+    );
   } catch (error) {
     console.error('[DriverTracking] Failed to get trip driver locations:', error);
     return [];
@@ -255,8 +252,7 @@ export async function getRouteAlternatives(
   startLat: number,
   startLng: number,
   endLat: number,
-  endLng: number,
-  currentRoute?: RouteAlternative
+  endLng: number
 ): Promise<RouteAlternative[]> {
   try {
     const now = new Date();
@@ -320,12 +316,14 @@ function generateNavigationInstructions(
   end: { lat: number; lng: number },
   routeType: 'direct' | 'scenic'
 ): NavigationInstruction[] {
+  const northbound = end.lat >= start.lat;
+  const eastbound = end.lng >= start.lng;
   // Simulate navigation waypoints
   const instructions: NavigationInstruction[] = [
     {
       distance: 0.5,
       duration: 1,
-      direction: 'Head north on current street',
+      direction: `Head ${northbound ? 'north' : 'south'} on the current street`,
       maneuver: 'straight',
     },
     {
@@ -358,12 +356,12 @@ function generateNavigationInstructions(
     {
       distance: 0.3,
       duration: 1,
-      direction: 'Arrive at destination on the right',
+      direction: `Arrive at destination on the ${eastbound ? 'right' : 'left'}`,
       maneuver: 'straight',
     },
   ];
 
-  return instructions.map((instr, idx) => ({
+  return instructions.map((instr) => ({
     ...instr,
     distance: routeType === 'scenic' ? instr.distance * 1.1 : instr.distance,
   }));
@@ -384,12 +382,14 @@ export async function getNearbyTrafficIncidents(
     // For now, return simulated incidents
     const incidents: TrafficIncident[] = [];
 
+    const spread = Math.max(0.01, radiusKm * 0.01);
+
     // Simulate occasional incidents
     if (Math.random() > 0.7) {
       incidents.push({
         id: `incident-${Date.now()}`,
-        lat: lat + (Math.random() - 0.5) * 0.05,
-        lng: lng + (Math.random() - 0.5) * 0.05,
+        lat: lat + (Math.random() - 0.5) * spread,
+        lng: lng + (Math.random() - 0.5) * spread,
         type: 'congestion',
         severity: Math.random() > 0.5 ? 'moderate' : 'high',
         description: 'Heavy traffic reported',
@@ -401,8 +401,8 @@ export async function getNearbyTrafficIncidents(
     if (Math.random() > 0.85) {
       incidents.push({
         id: `incident-construction-${Date.now()}`,
-        lat: lat + (Math.random() - 0.5) * 0.08,
-        lng: lng + (Math.random() - 0.5) * 0.08,
+        lat: lat + (Math.random() - 0.5) * spread * 1.5,
+        lng: lng + (Math.random() - 0.5) * spread * 1.5,
         type: 'construction',
         severity: 'low',
         description: 'Road construction in progress',

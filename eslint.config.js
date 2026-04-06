@@ -30,11 +30,6 @@ export default tseslint.config(
         fixStyle: 'inline-type-imports',
       }],
       '@typescript-eslint/no-empty-object-type': 'warn',
-      '@typescript-eslint/explicit-function-return-types': ['warn', {
-        allowExpressions: true,
-        allowTypedFunctionExpressions: true,
-        allowHigherOrderFunctions: true,
-      }],
       // General code quality
       'no-console': ['warn', { allow: ['warn', 'error'] }], // Allow warnings/errors in production
       'prefer-const': 'error',

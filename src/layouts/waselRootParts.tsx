@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { WaselLogo } from '../components/wasel-ds/WaselLogo';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
-import { CurrencyService, type SupportedCurrency } from '../utils/currency';
+import { type SupportedCurrency, useCurrency, CurrencyService } from '../utils/currency';
 import { buildAuthPagePath } from '../utils/authFlow';
 import { C, F, R } from '../utils/wasel-ds';
 import {
@@ -93,9 +93,7 @@ export function AppPill({ ar }: { ar: boolean }) {
 }
 
 export function CurrencySwitcher({ ar }: { ar: boolean }) {
-  const [cur, setCur] = useState<SupportedCurrency>(
-    CurrencyService.getInstance().current,
-  );
+  const { current, setCurrency, getSymbol } = useCurrency();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const popular: SupportedCurrency[] = ['JOD', 'USD', 'EUR', 'SAR', 'EGP', 'GBP'];
@@ -109,12 +107,8 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
   }, []);
 
   const handleSelect = (code: SupportedCurrency) => {
-    CurrencyService.getInstance().setCurrency(code);
-    setCur(code);
+    setCurrency(code);
     setOpen(false);
-    window.dispatchEvent(
-      new StorageEvent('storage', { key: 'wasel-preferred-currency' }),
-    );
   };
 
   return (
@@ -142,7 +136,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
         }}
       >
         <span style={{ fontSize: '0.68rem', opacity: 0.7 }}>$</span>
-        {cur}
+        {current}
         <svg
           width="8"
           height="8"
@@ -201,12 +195,12 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
                 width: '100%',
                 padding: '8px 12px',
                 background:
-                  cur === code ? 'rgba(22,199,242,0.12)' : 'transparent',
+                  current === code ? 'rgba(22,199,242,0.12)' : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 fontSize: '0.8rem',
-                fontWeight: cur === code ? 700 : 500,
-                color: cur === code ? C.cyan : 'rgba(234,247,255,0.78)',
+                fontWeight: current === code ? 700 : 500,
+                color: current === code ? C.cyan : 'rgba(234,247,255,0.78)',
                 fontFamily: F,
                 transition: 'background 0.12s',
               }}
@@ -219,7 +213,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
                   fontFamily: F,
                 }}
               >
-                {CurrencyService.getInstance().getSymbol(code)}
+                {getSymbol(code)}
               </span>
             </button>
           ))}

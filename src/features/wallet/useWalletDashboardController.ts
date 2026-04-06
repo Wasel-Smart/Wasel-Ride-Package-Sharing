@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { triggerPaymentReceiptEmail } from '../../services/transactionalEmailTriggers';
 import { walletApi, type InsightsData, type WalletData } from '../../services/walletApi';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import { buildAuthPagePath } from '../../utils/authFlow';
@@ -50,18 +51,24 @@ export function useWalletDashboardController() {
   const [autoTopUpEnabled, setAutoTopUpEnabled] = useState(false);
   const [autoTopUpAmount, setAutoTopUpAmount] = useState('20');
   const [autoTopUpThreshold, setAutoTopUpThreshold] = useState('5');
+  const effectiveUserName =
+    localUser?.name ||
+    user?.user_metadata?.full_name ||
+    user?.email?.split('@')[0] ||
+    'Wasel member';
+  const effectiveUserEmail = localUser?.email || user?.email || '';
 
-  const fetchWallet = useCallback(async () => {
+  const fetchWallet = useCallback(async (): Promise<WalletData | null> => {
     if (localAuthLoading) {
       setLoading(true);
-      return;
+      return null;
     }
 
     if (shouldRedirectToAuth) {
       setWalletData(null);
       setInsights(null);
       setLoading(false);
-      return;
+      return null;
     }
 
     try {
@@ -70,11 +77,13 @@ export function useWalletDashboardController() {
       setAutoTopUpEnabled(data.wallet.autoTopUp || false);
       setAutoTopUpAmount(String(data.wallet.autoTopUpAmount || 20));
       setAutoTopUpThreshold(String(data.wallet.autoTopUpThreshold || 5));
+      return data;
     } catch (err) {
       console.error('[Wallet] fetch error:', err);
       setWalletData(null);
       setInsights(null);
       toast.error(t.walletLoadError);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -126,11 +135,26 @@ export function useWalletDashboardController() {
 
     setActionLoading(true);
     try {
+      const previousTransactionIds = new Set(
+        (walletData?.transactions ?? []).map((transaction) => transaction.id),
+      );
       await walletApi.topUp(effectiveUserId, amt, topUpMethod);
       toast.success(`JOD ${amt} added successfully`);
       setShowTopUp(false);
       setTopUpAmount('');
-      await fetchWallet();
+      const refreshedWallet = await fetchWallet();
+      const latestTransaction = refreshedWallet?.transactions.find(
+        (transaction) => !previousTransactionIds.has(transaction.id),
+      );
+      if (latestTransaction && effectiveUserEmail) {
+        triggerPaymentReceiptEmail({
+          userEmail: effectiveUserEmail,
+          userName: effectiveUserName,
+          transaction: latestTransaction,
+          balanceJod: refreshedWallet?.balance ?? 0,
+          paymentMethod: topUpMethod,
+        });
+      }
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -151,12 +175,27 @@ export function useWalletDashboardController() {
 
     setActionLoading(true);
     try {
+      const previousTransactionIds = new Set(
+        (walletData?.transactions ?? []).map((transaction) => transaction.id),
+      );
       await walletApi.withdraw(effectiveUserId, amt, withdrawBank, withdrawMethod);
       toast.success(`JOD ${amt} withdrawn successfully`);
       setShowWithdraw(false);
       setWithdrawAmount('');
       setWithdrawBank('');
-      await fetchWallet();
+      const refreshedWallet = await fetchWallet();
+      const latestTransaction = refreshedWallet?.transactions.find(
+        (transaction) => !previousTransactionIds.has(transaction.id),
+      );
+      if (latestTransaction && effectiveUserEmail) {
+        triggerPaymentReceiptEmail({
+          userEmail: effectiveUserEmail,
+          userName: effectiveUserName,
+          transaction: latestTransaction,
+          balanceJod: refreshedWallet?.balance ?? 0,
+          paymentMethod: withdrawMethod,
+        });
+      }
     } catch (err: any) {
       toast.error(err.message);
     } finally {

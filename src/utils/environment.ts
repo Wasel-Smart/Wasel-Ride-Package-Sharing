@@ -21,7 +21,6 @@ interface EnvironmentConfig {
  * Get current environment configuration
  */
 export function getEnvironmentConfig(): EnvironmentConfig {
-  const isProduction = import.meta.env.PROD;
   const isDemoMode = import.meta.env.VITE_ENABLE_DEMO_DATA === 'true';
   const mode = import.meta.env.MODE as EnvironmentConfig['mode'];
 

@@ -113,14 +113,14 @@ export const PERFORMANCE_CONFIG = {
 /**
  * Check if metric meets performance budget
  */
-export function isWithinBudget(metric: string, value: number, budget: number): boolean {
+export function isWithinBudget(_metric: string, value: number, budget: number): boolean {
   return value <= budget;
 }
 
 /**
  * Check if metric triggers warning
  */
-export function shouldWarn(metric: string, value: number, warning: number): boolean {
+export function shouldWarn(_metric: string, value: number, warning: number): boolean {
   return value > warning;
 }
 
@@ -182,7 +182,7 @@ export const PERFORMANCE_CI_RULES = {
   bundleSizeRegressionThreshold: 50 * 1024, // 50 KB
 
   // Fail build if absolute performance is poor
-  failOnPoorWeb Vitals: true,
+  failOnPoorWebVitals: true,
 
   // Track performance over time
   enablePerformanceTrending: true,

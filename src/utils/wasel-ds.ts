@@ -1,65 +1,63 @@
 /**
- * Wasel brand tokens aligned to the linked mobility logo system.
+ * Wasel brand tokens aligned to the neon linked mobility mark.
  *
- * The new identity is built around:
- * - electric cyan for motion, activation, and system feedback
- * - vibrant lime for availability, completion, and positive momentum
- * - deep navy support surfaces for focus-heavy transport workflows
+ * The identity is built around:
+ * - luminous cyan for movement, system focus, and live state
+ * - electric lime for shared capacity, routing gain, and positive momentum
+ * - midnight navy support surfaces that let the mark glow without noise
  */
 
 export const C = {
-  bg: '#061726',
-  bgAlt: '#082033',
-  bgDeep: '#04131F',
-  card: 'rgba(11,33,53,0.78)',
-  cardSolid: '#0B2135',
-  card2: '#102B44',
+  bg: '#061120',
+  bgAlt: '#08192D',
+  bgDeep: '#040C18',
+  card: 'rgba(9,24,42,0.8)',
+  cardSolid: '#0A1B30',
+  card2: '#10253D',
   panel: 'rgba(255,255,255,0.03)',
   elevated: 'rgba(255,255,255,0.07)',
 
-  navy: '#0A2237',
-  navyMid: '#0E436C',
-  navyLight: '#1B6EA0',
+  navy: '#09182B',
+  navyMid: '#10365A',
+  navyLight: '#1B5D8F',
 
-  cyan: '#16C7F2',
-  cyanDark: '#0A74C9',
-  cyanDim: 'rgba(22,199,242,0.14)',
-  cyanGlow: 'rgba(22,199,242,0.28)',
-  blue: '#0C6EA8',
-  blueLight: '#47B8FF',
-  blueDim: 'rgba(12,110,168,0.18)',
-  gold: '#C7FF1A',
-  goldDim: 'rgba(199,255,26,0.14)',
-  green: '#60C536',
-  greenDim: 'rgba(96,197,54,0.14)',
-  purple: '#33D6D0',
-  purpleDim: 'rgba(51,214,208,0.14)',
-  orange: '#D7FF62',
-  orangeDim: 'rgba(215,255,98,0.16)',
+  cyan: '#12DBFF',
+  cyanDark: '#0E86D2',
+  cyanDim: 'rgba(18,219,255,0.16)',
+  cyanGlow: 'rgba(18,219,255,0.32)',
+  blue: '#0F7BC3',
+  blueLight: '#5DCCFF',
+  blueDim: 'rgba(15,123,195,0.18)',
+  gold: '#BFFF18',
+  goldDim: 'rgba(191,255,24,0.16)',
+  green: '#69FF45',
+  greenDim: 'rgba(105,255,69,0.16)',
+  purple: '#39D8F1',
+  purpleDim: 'rgba(57,216,241,0.14)',
+  orange: '#D8FF67',
+  orangeDim: 'rgba(216,255,103,0.16)',
 
   text: '#EAF7FF',
   textSub: 'rgba(234,247,255,0.84)',
-  textMuted: 'rgba(153,184,210,0.66)',
-  textDim: 'rgba(123,150,174,0.5)',
+  textMuted: 'rgba(158,185,210,0.66)',
+  textDim: 'rgba(121,149,176,0.5)',
 
-  border: 'rgba(73,190,242,0.16)',
-  borderHov: 'rgba(73,190,242,0.34)',
+  border: 'rgba(70,205,255,0.18)',
+  borderHov: 'rgba(70,205,255,0.34)',
   borderFaint: 'rgba(255,255,255,0.08)',
 
   error: '#FF646A',
   errorDim: 'rgba(255,100,106,0.12)',
   warning: '#FFD84A',
-  success: '#60C536',
-  info: '#16C7F2',
+  success: '#69FF45',
+  info: '#12DBFF',
 
   overlay: 'rgba(3,12,20,0.84)',
-  glass: 'rgba(8,27,43,0.9)',
+  glass: 'rgba(8,23,39,0.9)',
 } as const;
 
-export const F =
-  "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
-export const FA =
-  "var(--wasel-font-arabic, 'Cairo', 'Tajawal', sans-serif)";
+export const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+export const FA = "var(--wasel-font-arabic, 'Cairo', 'Tajawal', sans-serif)";
 export const FM = "'JetBrains Mono', 'Fira Mono', monospace";
 
 export const TYPE = {
@@ -140,30 +138,23 @@ export const SH = {
   lg: '0 34px 80px rgba(1,10,18,0.38)',
   xl: '0 44px 100px rgba(1,10,18,0.42)',
   navy: '0 20px 54px rgba(1,10,18,0.34)',
-  cyan: '0 18px 50px rgba(22,199,242,0.22)',
-  cyanL: '0 24px 64px rgba(22,199,242,0.32)',
-  blue: '0 18px 50px rgba(12,110,168,0.24)',
-  green: '0 18px 50px rgba(96,197,54,0.22)',
-  gold: '0 18px 50px rgba(199,255,26,0.2)',
+  cyan: '0 18px 50px rgba(18,219,255,0.22)',
+  cyanL: '0 24px 64px rgba(18,219,255,0.34)',
+  blue: '0 18px 50px rgba(15,123,195,0.24)',
+  green: '0 18px 50px rgba(105,255,69,0.24)',
+  gold: '0 18px 50px rgba(191,255,24,0.22)',
   inner: 'inset 0 1px 0 rgba(255,255,255,0.05)',
 } as const;
 
-export const GRAD =
-  'linear-gradient(135deg, #16C7F2 0%, #0A74C9 52%, #33D7D0 100%)';
-export const GRAD_GOLD =
-  'linear-gradient(135deg, #59C83B 0%, #C7FF1A 100%)';
-export const GRAD_GREEN =
-  'linear-gradient(135deg, #2ED7B7 0%, #7EED3A 100%)';
-export const GRAD_NAVY =
-  'linear-gradient(135deg, #0A2237 0%, #0F3C5B 100%)';
-export const GRAD_PURPLE =
-  'linear-gradient(135deg, #0C6EA8 0%, #16C7F2 100%)';
-export const GRAD_HERO =
-  'linear-gradient(160deg, #04121E 0%, #061E32 42%, #0A2E46 100%)';
-export const GRAD_SIGNAL =
-  'linear-gradient(135deg, #16C7F2 0%, #3AD7E4 48%, #C7FF1A 100%)';
+export const GRAD = 'linear-gradient(135deg, #12DBFF 0%, #0E86D2 52%, #39D8F1 100%)';
+export const GRAD_GOLD = 'linear-gradient(135deg, #67FF49 0%, #BFFF18 100%)';
+export const GRAD_GREEN = 'linear-gradient(135deg, #16E2FF 0%, #92FF2A 100%)';
+export const GRAD_NAVY = 'linear-gradient(135deg, #09182B 0%, #113557 100%)';
+export const GRAD_PURPLE = 'linear-gradient(135deg, #0F7BC3 0%, #12DBFF 100%)';
+export const GRAD_HERO = 'linear-gradient(160deg, #040E1B 0%, #081A2D 42%, #0D2942 100%)';
+export const GRAD_SIGNAL = 'linear-gradient(135deg, #12DBFF 0%, #2AD4FF 44%, #BFFF18 100%)';
 export const GRAD_AURORA =
-  'radial-gradient(circle at top, rgba(22,199,242,0.28), rgba(96,197,54,0.14) 44%, rgba(4,18,30,0) 74%)';
+  'radial-gradient(circle at top, rgba(18,219,255,0.3), rgba(105,255,69,0.16) 44%, rgba(4,18,30,0) 74%)';
 
 export const ANIM = {
   dur: {
@@ -239,9 +230,7 @@ export function focusRing(color = C.cyan): string {
   return `0 0 0 3px ${color}2E`;
 }
 
-export function statusColor(
-  status: 'success' | 'warning' | 'error' | 'info' | 'neutral',
-): string {
+export function statusColor(status: 'success' | 'warning' | 'error' | 'info' | 'neutral'): string {
   return {
     success: C.green,
     warning: C.warning,

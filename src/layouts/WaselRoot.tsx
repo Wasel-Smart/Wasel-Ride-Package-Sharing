@@ -181,8 +181,54 @@ export default function WaselRoot() {
               </>
             ) : (
               <>
-                <button type="button" onClick={() => navigate(buildAuthPagePath('signin'))} style={{ height: 38, padding: '0 16px', borderRadius: R.md, fontSize: '0.82rem', fontWeight: 600, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(73,190,242,0.18)', color: 'rgba(234,247,255,0.88)', fontFamily: F, cursor: 'pointer', transition: 'all 0.14s', whiteSpace: 'nowrap' }}>{ar ? 'دخول' : 'Sign in'}</button>
-                <button type="button" onClick={() => navigate(buildAuthPagePath('signup'))} style={{ height: 38, padding: '0 18px', borderRadius: R.md, fontSize: '0.82rem', fontWeight: 700, background: 'linear-gradient(135deg,#16C7F2 0%, #0A74C9 58%, #C7FF1A 100%)', border: '1px solid rgba(255,255,255,0.08)', color: '#041521', fontFamily: F, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.14s', boxShadow: '0 18px 44px rgba(22,199,242,0.22)' }}>{ar ? 'ابدأ الآن' : 'Get started'}</button>
+                <button
+                  type="button"
+                  onClick={() => navigate(buildAuthPagePath('signin'))}
+                  style={{
+                    height: 42,
+                    padding: '0 18px',
+                    borderRadius: R.lg,
+                    fontSize: '0.84rem',
+                    fontWeight: 700,
+                    letterSpacing: '-0.01em',
+                    background:
+                      'linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)), rgba(6,29,45,0.88)',
+                    border: '1px solid rgba(73,190,242,0.32)',
+                    color: '#F4FCFF',
+                    fontFamily: F,
+                    cursor: 'pointer',
+                    transition: 'all 0.18s ease',
+                    whiteSpace: 'nowrap',
+                    boxShadow:
+                      '0 10px 26px rgba(2,14,24,0.24), inset 0 1px 0 rgba(255,255,255,0.06)',
+                  }}
+                >
+                  {ar ? '\u062f\u062e\u0648\u0644' : 'Sign in'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate(buildAuthPagePath('signup'))}
+                  style={{
+                    height: 42,
+                    padding: '0 20px',
+                    borderRadius: R.lg,
+                    fontSize: '0.84rem',
+                    fontWeight: 800,
+                    letterSpacing: '-0.01em',
+                    background:
+                      'linear-gradient(135deg, #1BD4F6 0%, #1597FF 48%, #8AF54A 100%)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    color: '#032033',
+                    fontFamily: F,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.18s ease',
+                    boxShadow:
+                      '0 16px 38px rgba(21,151,255,0.28), inset 0 1px 0 rgba(255,255,255,0.32)',
+                  }}
+                >
+                  {ar ? '\u0627\u0628\u062f\u0623 \u0627\u0644\u0622\u0646' : 'Create account'}
+                </button>
               </>
             )}
           </div>
@@ -211,3 +257,4 @@ export default function WaselRoot() {
     </div>
   );
 }
+

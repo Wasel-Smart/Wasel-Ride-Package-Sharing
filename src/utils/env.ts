@@ -85,6 +85,43 @@ export function getAuthCallbackUrl(origin?: string): string {
   return `${base}${authCallbackPath}`;
 }
 
+function isLocalDevelopmentOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    return url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
+export function getAuthRedirectCandidates(origin?: string): string[] {
+  const candidates = new Set<string>();
+  const currentOrigin = typeof origin === 'string' ? origin.trim() : '';
+  const configOrigin = getConfig().appUrl.trim();
+
+  if (currentOrigin) {
+    candidates.add(getAuthCallbackUrl(currentOrigin));
+  }
+
+  if (configOrigin) {
+    candidates.add(getAuthCallbackUrl(configOrigin));
+  }
+
+  if (currentOrigin && isLocalDevelopmentOrigin(currentOrigin)) {
+    try {
+      const url = new URL(currentOrigin);
+      const host = url.hostname;
+      const protocol = url.protocol || 'http:';
+      candidates.add(getAuthCallbackUrl(`${protocol}//${host}:3000`));
+      candidates.add(getAuthCallbackUrl(`${protocol}//${host}:5173`));
+    } catch {
+      // Ignore malformed local origins and continue with known candidates.
+    }
+  }
+
+  return Array.from(candidates);
+}
+
 export function getWhatsAppSupportUrl(message = 'Hi Wasel'): string {
   const { supportWhatsAppNumber, enableWhatsAppNotifications } = getConfig();
   if (!supportWhatsAppNumber || !enableWhatsAppNotifications) {

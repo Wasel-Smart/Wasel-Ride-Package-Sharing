@@ -1,7 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ChevronDown, ChevronRight, ChevronUp, Info, Phone } from 'lucide-react';
-import { CurrencyService, type SupportedCurrency } from '../../utils/currency';
+import { type SupportedCurrency, useCurrency } from '../../utils/currency';
 
 export const C = {
   bg: '#061726',
@@ -77,9 +78,8 @@ export function SectionHeader({
   );
 }
 
-export function InlineCurrencySwitcher({ ar: _ar }: { ar: boolean }) {
-  const svc = CurrencyService.getInstance();
-  const [cur, setCur] = useState<SupportedCurrency>(svc.current);
+export function InlineCurrencySwitcher() {
+  const { current, setCurrency, getSymbol } = useCurrency();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const popular: SupportedCurrency[] = ['JOD', 'USD', 'EUR', 'SAR', 'EGP', 'GBP'];
@@ -93,23 +93,22 @@ export function InlineCurrencySwitcher({ ar: _ar }: { ar: boolean }) {
   }, []);
 
   const select = (code: SupportedCurrency) => {
-    svc.setCurrency(code);
-    setCur(code);
+    setCurrency(code);
     setOpen(false);
   };
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
       <button onClick={() => setOpen((o) => !o)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 9999, background: 'rgba(22,199,242,0.12)', border: '1px solid rgba(73,190,242,0.26)', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700, color: C.cyan, fontFamily: F }}>
-        FX {cur}
+        FX {current}
         <ChevronDown size={10} />
       </button>
       {open && (
         <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, minWidth: 120, background: 'rgba(7,23,38,0.98)', border: '1px solid rgba(73,190,242,0.18)', borderRadius: 10, boxShadow: '0 12px 32px rgba(0,0,0,0.6)', zIndex: 100, overflow: 'hidden' }}>
           {popular.map((code) => (
-            <button key={code} onClick={() => select(code)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '7px 12px', border: 'none', background: cur === code ? 'rgba(22,199,242,0.14)' : 'transparent', cursor: 'pointer', fontSize: '0.78rem', fontWeight: cur === code ? 700 : 500, color: cur === code ? C.cyan : C.text, fontFamily: F }}>
+            <button key={code} onClick={() => select(code)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '7px 12px', border: 'none', background: current === code ? 'rgba(22,199,242,0.14)' : 'transparent', cursor: 'pointer', fontSize: '0.78rem', fontWeight: current === code ? 700 : 500, color: current === code ? C.cyan : C.text, fontFamily: F }}>
               <span>{code}</span>
-              <span style={{ color: C.textDim, fontSize: '0.65rem' }}>{svc.getSymbol(code)}</span>
+              <span style={{ color: C.textDim, fontSize: '0.65rem' }}>{getSymbol(code)}</span>
             </button>
           ))}
         </div>

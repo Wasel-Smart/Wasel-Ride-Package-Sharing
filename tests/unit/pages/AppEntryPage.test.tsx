@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -74,10 +74,15 @@ describe('AppEntryPage', () => {
 
     render(<AppEntryPage />);
 
-    expect(screen.getByRole('heading', { name: /calmer way to read movement/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Sign in/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: /The live map is the heart of Wasel\. Rides, packages, and route intelligence in one operating flow\./i,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Sign in/i }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('button', { name: /Create account/i }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /Continue with Google/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Continue with Facebook/i })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Continue with email/i }).length).toBeGreaterThan(0);
   });
 
@@ -88,9 +93,7 @@ describe('AppEntryPage', () => {
 
     screen.getAllByRole('button', { name: /Continue with email/i })[0].click();
 
-    expect(mockNavigate).toHaveBeenCalledWith(
-      '/app/auth?tab=signin&returnTo=%2Fapp%2Ffind-ride',
-    );
+    expect(mockNavigate).toHaveBeenCalledWith('/app/auth?tab=signin&returnTo=%2Fapp%2Ffind-ride');
   });
 
   it('routes guest header auth buttons to sign in and sign up', () => {
@@ -98,17 +101,49 @@ describe('AppEntryPage', () => {
 
     render(<AppEntryPage />);
 
-    screen.getByRole('button', { name: /Sign in/i }).click();
+    screen.getAllByRole('button', { name: /Sign in/i })[0].click();
     screen.getAllByRole('button', { name: /Create account/i })[0].click();
 
-    expect(mockNavigate).toHaveBeenNthCalledWith(
-      1,
-      '/app/auth?tab=signin&returnTo=%2Fapp%2Ffind-ride',
-    );
-    expect(mockNavigate).toHaveBeenNthCalledWith(
-      2,
-      '/app/auth?tab=signup&returnTo=%2Fapp%2Ffind-ride',
-    );
+    expect(mockNavigate).toHaveBeenNthCalledWith(1, '/app/auth?tab=signin&returnTo=%2Fapp%2Ffind-ride');
+    expect(mockNavigate).toHaveBeenNthCalledWith(2, '/app/auth?tab=signup&returnTo=%2Fapp%2Ffind-ride');
+  });
+
+  it('starts Google auth from the landing gateway', async () => {
+    const signInWithGoogle = vi.fn().mockResolvedValue({ error: null });
+    mockUseAuth.mockReturnValue({
+      signInWithGoogle,
+      signInWithFacebook: vi.fn().mockResolvedValue({ error: null }),
+    });
+    mockUseLocalAuth.mockReturnValue({ user: null });
+
+    render(<AppEntryPage />);
+
+    await act(async () => {
+      screen.getByRole('button', { name: /Continue with Google/i }).click();
+    });
+
+    await waitFor(() => {
+      expect(signInWithGoogle).toHaveBeenCalledWith('/app/find-ride');
+    });
+  });
+
+  it('starts Facebook auth from the landing gateway', async () => {
+    const signInWithFacebook = vi.fn().mockResolvedValue({ error: null });
+    mockUseAuth.mockReturnValue({
+      signInWithGoogle: vi.fn().mockResolvedValue({ error: null }),
+      signInWithFacebook,
+    });
+    mockUseLocalAuth.mockReturnValue({ user: null });
+
+    render(<AppEntryPage />);
+
+    await act(async () => {
+      screen.getByRole('button', { name: /Continue with Facebook/i }).click();
+    });
+
+    await waitFor(() => {
+      expect(signInWithFacebook).toHaveBeenCalledWith('/app/find-ride');
+    });
   });
 
   it('navigates authenticated users straight into the app', () => {
@@ -127,7 +162,11 @@ describe('AppEntryPage', () => {
 
     render(<AppEntryPage />);
 
-    expect(screen.getByRole('heading', { name: /طريقة أهدأ لقراءة الحركة/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: /الخريطة الحية هي قلب Wasel\. رحلات وطرود ومسارات ذكية في تدفق تشغيلي واحد\./i,
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /ابحث عن رحلة/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /افتح خريطة Mobility OS الحية/i })).toBeInTheDocument();
   });

@@ -1,6 +1,7 @@
 import { API_URL, fetchWithRetry, getAuthDetails } from './core';
 import { createDirectPackage, getDirectPackageByTrackingId, updateDirectPackageStatus } from './directSupabase';
 import { trackGrowthEvent } from './growthEngine';
+import { triggerPackageConfirmationEmail } from './transactionalEmailTriggers';
 import { tripsAPI } from './trips';
 import {
   normalizeJordanLocation,
@@ -440,6 +441,8 @@ export async function createConnectedPackage(input: {
   packageType?: 'delivery' | 'return';
   recipientName?: string;
   recipientPhone?: string;
+  senderName?: string;
+  senderEmail?: string;
 }): Promise<PackageRequest> {
   const from = normalizeJordanLocation(input.from, input.from.trim() || 'Amman');
   const to = normalizeJordanLocation(input.to, input.to.trim() || 'Aqaba');
@@ -506,6 +509,20 @@ export async function createConnectedPackage(input: {
             packageType: created.packageType,
           },
         });
+        if (input.senderEmail) {
+          triggerPackageConfirmationEmail({
+            senderEmail: input.senderEmail,
+            senderName: input.senderName ?? 'Wasel sender',
+            trackingId: created.trackingId,
+            handoffCode: created.handoffCode,
+            from: created.from,
+            to_city: created.to,
+            weight: created.weight,
+            recipientName: created.recipientName,
+            matchedDriver: created.matchedDriver,
+            status: created.status === 'matched' ? 'matched' : 'searching',
+          });
+        }
         return created;
       }
     } else {
@@ -540,6 +557,20 @@ export async function createConnectedPackage(input: {
           packageType: created.packageType,
         },
       });
+      if (input.senderEmail) {
+        triggerPackageConfirmationEmail({
+          senderEmail: input.senderEmail,
+          senderName: input.senderName ?? 'Wasel sender',
+          trackingId: created.trackingId,
+          handoffCode: created.handoffCode,
+          from: created.from,
+          to_city: created.to,
+          weight: created.weight,
+          recipientName: created.recipientName,
+          matchedDriver: created.matchedDriver,
+          status: created.status === 'matched' ? 'matched' : 'searching',
+        });
+      }
       return created;
     }
   } catch {
@@ -560,6 +591,20 @@ export async function createConnectedPackage(input: {
       source: 'local',
     },
   });
+  if (input.senderEmail) {
+    triggerPackageConfirmationEmail({
+      senderEmail: input.senderEmail,
+      senderName: input.senderName ?? 'Wasel sender',
+      trackingId: pkg.trackingId,
+      handoffCode: pkg.handoffCode,
+      from: pkg.from,
+      to_city: pkg.to,
+      weight: pkg.weight,
+      recipientName: pkg.recipientName,
+      matchedDriver: pkg.matchedDriver,
+      status: pkg.status === 'matched' ? 'matched' : 'searching',
+    });
+  }
   return pkg;
 }
 

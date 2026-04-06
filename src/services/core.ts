@@ -245,7 +245,7 @@ warmUpServer().catch(() => {
 
 interface FetchWithRetryOptions extends RequestInit {
   timeout?: number;
-  priority?: 'critical' | 'high' | 'normal' | 'low';
+  queuePriority?: 'critical' | 'high' | 'normal' | 'low';
   deduplicationKey?: string;
 }
 
@@ -262,7 +262,7 @@ export async function fetchWithRetry(
   const {
     timeout = 5_000,
     signal: callerSignal,
-    priority = 'normal',
+    queuePriority = 'normal',
     deduplicationKey,
     ...fetchOptions
   } = options;
@@ -308,7 +308,7 @@ export async function fetchWithRetry(
           {
             body: options.body,
             headers: options.headers as Record<string, string>,
-            priority,
+            priority: queuePriority,
             deduplicationKey,
             maxRetries: retries + 3,
           }
@@ -350,7 +350,12 @@ export async function fetchWithRetry(
           {
             body: options.body,
             headers: options.headers as Record<string, string>,
-            priority: priority === 'critical' ? 'critical' : priority === 'high' ? 'high' : 'normal',
+            priority:
+              queuePriority === 'critical'
+                ? 'critical'
+                : queuePriority === 'high'
+                  ? 'high'
+                  : 'normal',
             deduplicationKey,
             maxRetries: 5,
           }

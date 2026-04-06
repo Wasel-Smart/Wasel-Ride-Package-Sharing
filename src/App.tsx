@@ -4,6 +4,7 @@ import {
   QueryClientProvider,
   onlineManager,
 } from '@tanstack/react-query';
+import { captureException } from '@sentry/react';
 import { RouterProvider } from 'react-router';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
@@ -23,7 +24,7 @@ import {
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
 import { buildAuthPagePath } from './utils/authFlow';
-import { shouldIgnoreError, formatErrorMessage, type WaselError } from './utils/errors';
+import { shouldIgnoreError, formatErrorMessage } from './utils/errors';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -42,7 +43,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
       return { hasError: false, error: '' };
     }
 
-    const message = error instanceof Error ? error.message : String(error);
+    const message = formatErrorMessage(error);
     return { hasError: true, error: message };
   }
 
@@ -54,15 +55,13 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
     console.error('[Wasel ErrorBoundary]', message, info?.componentStack ?? '');
 
     // Send to monitoring (Sentry)
-    if (typeof window !== 'undefined' && window.__SENTRY__?.captureException) {
-      window.__SENTRY__.captureException(error, {
-        contexts: {
-          react: {
-            componentStack: info?.componentStack ?? undefined,
-          },
+    captureException(error, {
+      contexts: {
+        react: {
+          componentStack: info?.componentStack ?? undefined,
         },
-      });
-    }
+      },
+    });
   }
 
   render() {
@@ -257,4 +256,3 @@ export default function App() {
     </AppErrorBoundary>
   );
 }
-

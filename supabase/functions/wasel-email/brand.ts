@@ -25,7 +25,7 @@ export const BRAND = {
 
   // ── App metadata ──────────────────────────────────────────────────────────
   appName:     'Wasel',
-  tagline:     'Linked Mobility Network',
+  tagline:     'Mobility OS',
   appUrl:      Deno.env.get('VITE_APP_URL') ?? 'https://wasel14.online',
   supportEmail:Deno.env.get('RESEND_REPLY_TO_EMAIL') ?? 'support@wasel.jo',
   fromEmail:   Deno.env.get('RESEND_FROM_EMAIL')     ?? 'Wasel <notifications@wasel14.online>',
@@ -35,20 +35,40 @@ export const BRAND = {
 } as const;
 
 /**
- * Inline SVG of the Wasel logomark — 3 rounded rectangles + connector bar.
- * Sized at 48 × 48 px so it renders cleanly in email clients that block remote images.
- * Gradients are replaced with flat fills for maximum email-client compatibility.
+ * Inline SVG of the Wasel mark on the same bright tile used in the app.
+ * Sized for email clients that block remote images.
  */
 export const LOGO_SVG_48 = `
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 112 112" role="img" aria-label="Wasel">
-  <!-- Upper cyan rectangle -->
-  <rect x="16" y="12" width="58" height="34" rx="12" fill="#12D6F4" stroke="#0C6EA8" stroke-width="6"/>
-  <!-- Right lime rectangle -->
-  <rect x="62" y="44" width="34" height="22" rx="8" fill="#7CE642" stroke="#49A82F" stroke-width="6"/>
-  <!-- Lower teal-lime rectangle -->
-  <rect x="16" y="66" width="58" height="34" rx="12" fill="#2FD3B8" stroke="#49A82F" stroke-width="6"/>
-  <!-- Connector bar -->
-  <rect x="59" y="27" width="10" height="56" rx="5" fill="#11C5F0"/>
+  <defs>
+    <linearGradient id="waselBg48" x1="12" y1="12" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" />
+      <stop offset="1" stop-color="#EFF6F2" />
+    </linearGradient>
+    <linearGradient id="waselTop48" x1="20" y1="40" x2="68" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00C9F5" />
+      <stop offset="1" stop-color="#00AEE4" />
+    </linearGradient>
+    <linearGradient id="waselRight48" x1="66" y1="66" x2="96" y2="66" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0BCFAE" />
+      <stop offset="1" stop-color="#8FDD00" />
+    </linearGradient>
+    <linearGradient id="waselBottom48" x1="20" y1="88" x2="68" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10D0B1" />
+      <stop offset="0.55" stop-color="#42D86A" />
+      <stop offset="1" stop-color="#98E100" />
+    </linearGradient>
+    <linearGradient id="waselLink48" x1="70" y1="44" x2="70" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00C4F3" />
+      <stop offset="0.45" stop-color="#12D6BB" />
+      <stop offset="1" stop-color="#99E100" />
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="100" height="100" rx="18" fill="url(#waselBg48)" />
+  <rect x="20" y="24" width="48" height="32" rx="8" stroke="url(#waselTop48)" stroke-width="5"/>
+  <rect x="66" y="50" width="30" height="20" rx="6" stroke="url(#waselRight48)" stroke-width="5"/>
+  <rect x="20" y="76" width="48" height="32" rx="8" stroke="url(#waselBottom48)" stroke-width="5"/>
+  <path d="M70 40V92" stroke="url(#waselLink48)" stroke-width="5" stroke-linecap="round" />
 </svg>`.trim();
 
 /**
@@ -56,8 +76,33 @@ export const LOGO_SVG_48 = `
  */
 export const LOGO_SVG_64 = `
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 112 112" role="img" aria-label="Wasel">
-  <rect x="16" y="12" width="58" height="34" rx="12" fill="#12D6F4" stroke="#0C6EA8" stroke-width="6"/>
-  <rect x="62" y="44" width="34" height="22" rx="8" fill="#7CE642" stroke="#49A82F" stroke-width="6"/>
-  <rect x="16" y="66" width="58" height="34" rx="12" fill="#2FD3B8" stroke="#49A82F" stroke-width="6"/>
-  <rect x="59" y="27" width="10" height="56" rx="5" fill="#11C5F0"/>
+  <defs>
+    <linearGradient id="waselBg64" x1="12" y1="12" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" />
+      <stop offset="1" stop-color="#EFF6F2" />
+    </linearGradient>
+    <linearGradient id="waselTop64" x1="20" y1="40" x2="68" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00C9F5" />
+      <stop offset="1" stop-color="#00AEE4" />
+    </linearGradient>
+    <linearGradient id="waselRight64" x1="66" y1="66" x2="96" y2="66" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0BCFAE" />
+      <stop offset="1" stop-color="#8FDD00" />
+    </linearGradient>
+    <linearGradient id="waselBottom64" x1="20" y1="88" x2="68" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10D0B1" />
+      <stop offset="0.55" stop-color="#42D86A" />
+      <stop offset="1" stop-color="#98E100" />
+    </linearGradient>
+    <linearGradient id="waselLink64" x1="70" y1="44" x2="70" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00C4F3" />
+      <stop offset="0.45" stop-color="#12D6BB" />
+      <stop offset="1" stop-color="#99E100" />
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="100" height="100" rx="18" fill="url(#waselBg64)" />
+  <rect x="20" y="24" width="48" height="32" rx="8" stroke="url(#waselTop64)" stroke-width="5"/>
+  <rect x="66" y="50" width="30" height="20" rx="6" stroke="url(#waselRight64)" stroke-width="5"/>
+  <rect x="20" y="76" width="48" height="32" rx="8" stroke="url(#waselBottom64)" stroke-width="5"/>
+  <path d="M70 40V92" stroke="url(#waselLink64)" stroke-width="5" stroke-linecap="round" />
 </svg>`.trim();

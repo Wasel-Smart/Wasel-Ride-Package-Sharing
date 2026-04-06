@@ -1,7 +1,6 @@
 ﻿import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Gauge, MapPinned, Pause, Play, Route } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import mobilityOsNetworkMap from '../../assets/mobility-os-network-map.svg';
 import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
 import { type LiveMobilityVehicleSnapshot, useMobilityOSLiveData } from './liveMobilityData';
 
@@ -1225,14 +1224,16 @@ export default function MobilityOSCore() {
               <div style={{ position: 'absolute', right: 22, top: '50%', transform: 'translateY(-50%)', zIndex: 2, writingMode: 'vertical-rl', textOrientation: 'mixed', letterSpacing: '0.28em', textTransform: 'uppercase', fontSize: '0.64rem', color: 'rgba(22,199,242,0.34)', pointerEvents: 'none' }}>
                 {copy.signalLayer}
               </div>
-              <img
-                src={mobilityOsNetworkMap}
-                alt={ar ? 'خريطة تشغيلية لشبكة واصل في الأردن' : 'Operational Wasel network map of Jordan'}
+              <canvas
+                ref={canvasRef}
+                aria-label={ar ? 'خريطة تشغيلية حية لشبكة واصل في الأردن' : 'Live operational Wasel network map of Jordan'}
+                role="img"
                 style={{
+                  position: 'absolute',
+                  inset: 0,
                   display: 'block',
                   width: '100%',
                   height: '100%',
-                  objectFit: 'cover',
                   borderRadius: 32,
                   filter: 'saturate(1.08) contrast(1.04) brightness(1.01) drop-shadow(0 30px 50px rgba(0,0,0,0.22))',
                 }}

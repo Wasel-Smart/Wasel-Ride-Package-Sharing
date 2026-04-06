@@ -23,6 +23,22 @@ function readCallbackParam(key: string): string {
   return new URLSearchParams(hash).get(key) ?? '';
 }
 
+function shouldIgnoreExchangeCodeError(error: unknown): boolean {
+  const message =
+    error instanceof Error
+      ? error.message.toLowerCase()
+      : typeof error === 'string'
+        ? error.toLowerCase()
+        : '';
+
+  return (
+    message.includes('code verifier') ||
+    message.includes('auth code') ||
+    message.includes('already been used') ||
+    message.includes('invalid flow state')
+  );
+}
+
 export default function WaselAuthCallback() {
   const navigate = useIframeSafeNavigate();
   const [state, setState] = useState<CallbackState>('loading');
@@ -32,6 +48,7 @@ export default function WaselAuthCallback() {
   const [formError, setFormError] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
   const callbackType = useMemo(() => readCallbackParam('type'), []);
+  const authCode = useMemo(() => readCallbackParam('code'), []);
   const callbackError = useMemo(
     () => decodeURIComponent(readCallbackParam('error_description') || readCallbackParam('error') || ''),
     [],
@@ -90,6 +107,19 @@ export default function WaselAuthCallback() {
 
         await new Promise((resolve) => setTimeout(resolve, 50));
 
+        if (authCode && typeof supabase.auth.exchangeCodeForSession === 'function') {
+          const {
+            data: { session: existingSession },
+          } = await supabase.auth.getSession();
+
+          if (!existingSession) {
+            const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(authCode);
+            if (exchangeError && !shouldIgnoreExchangeCodeError(exchangeError)) {
+              throw exchangeError;
+            }
+          }
+        }
+
         if (isRecoveryFlow) {
           if (!active) return;
           setState('recovery');
@@ -134,7 +164,7 @@ export default function WaselAuthCallback() {
     return () => {
       active = false;
     };
-  }, [callbackError, callbackType, navigate]);
+  }, [authCode, callbackError, callbackType, navigate]);
 
   const handlePasswordUpdate = async () => {
     if (!supabase) {

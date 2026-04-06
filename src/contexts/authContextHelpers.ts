@@ -1,7 +1,7 @@
 import type { AuthChangeEvent, AuthError, Session, SupabaseClient, User } from '@supabase/supabase-js';
 import type { WaselUser } from './LocalAuth';
 import { authAPI } from '../services/auth';
-import { getAuthCallbackUrl } from '../utils/env';
+import { getAuthRedirectCandidates } from '../utils/env';
 import { persistAuthReturnTo } from '../utils/authFlow';
 
 export type Profile = {
@@ -87,16 +87,51 @@ export async function signInWithOAuthProvider(
       persistAuthReturnTo(returnTo);
     }
 
-    const { error } = await client.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: getAuthCallbackUrl(
-          typeof window !== 'undefined' ? window.location.origin : undefined,
-        ),
-      },
-    });
+    const redirectCandidates = getAuthRedirectCandidates(
+      typeof window !== 'undefined' ? window.location.origin : undefined,
+    );
+    let lastError: AuthOperationError = null;
 
-    return { error: error ?? null };
+    for (const redirectTo of redirectCandidates) {
+      const { data, error } = await client.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo,
+          skipBrowserRedirect: true,
+          scopes: provider === 'facebook' ? 'email,public_profile' : 'email profile',
+          queryParams:
+            provider === 'google'
+              ? { prompt: 'select_account' }
+              : undefined,
+        },
+      });
+
+      if (!error && data?.url) {
+        window.location.assign(data.url);
+        return { error: null };
+      }
+
+      lastError = error ?? new Error(`${provider} sign-in could not start.`);
+
+      const message =
+        error instanceof Error
+          ? error.message.toLowerCase()
+          : '';
+
+      const shouldRetry =
+        message.includes('redirect') ||
+        message.includes('callback') ||
+        message.includes('not allowed') ||
+        message.includes('allow list') ||
+        message.includes('whitelist') ||
+        message.includes('url');
+
+      if (!shouldRetry) {
+        break;
+      }
+    }
+
+    return { error: lastError };
   } catch (error: unknown) {
     return {
       error: normalizeOperationError(

@@ -1,5 +1,6 @@
 ﻿import { bookingsAPI } from './bookings';
 import { trackGrowthEvent } from './growthEngine';
+import { triggerBusBookingConfirmationEmail } from './transactionalEmailTriggers';
 import { tripsAPI } from './trips';
 import { OFFICIAL_JORDAN_BUS_ROUTES } from '../data/jordanBusNetwork';
 import {
@@ -50,6 +51,8 @@ export interface BusBookingPayload {
   seatPreference: string;
   scheduleMode: 'depart-now' | 'schedule-later';
   totalPrice: number;
+  passengerName?: string;
+  passengerEmail?: string;
 }
 
 export interface BusBookingResult {
@@ -250,6 +253,20 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
       bookingId: String(bookingId),
       ticketCode: `BUS-${String(bookingId).slice(-6).toUpperCase()}`,
     };
+    if (payload.passengerEmail) {
+      triggerBusBookingConfirmationEmail({
+        passengerEmail: payload.passengerEmail,
+        passengerName: payload.passengerName ?? 'Wasel passenger',
+        ticketCode: result.ticketCode,
+        pickupStop: payload.pickupStop,
+        dropoffStop: payload.dropoffStop,
+        scheduleDate: payload.scheduleDate,
+        departureTime: payload.departureTime,
+        seats: payload.seatsRequested,
+        seatPreference: payload.seatPreference,
+        priceJod: payload.totalPrice,
+      });
+    }
     void trackGrowthEvent({
       eventName: 'bus_booking_created',
       funnelStage: 'booked',
@@ -279,11 +296,26 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
         scheduleDate: payload.scheduleDate,
       },
     });
-    return {
+    const result: BusBookingResult = {
       source: 'local',
       bookingId: stored.id,
       ticketCode: stored.ticket_code,
     };
+    if (payload.passengerEmail) {
+      triggerBusBookingConfirmationEmail({
+        passengerEmail: payload.passengerEmail,
+        passengerName: payload.passengerName ?? 'Wasel passenger',
+        ticketCode: result.ticketCode,
+        pickupStop: payload.pickupStop,
+        dropoffStop: payload.dropoffStop,
+        scheduleDate: payload.scheduleDate,
+        departureTime: payload.departureTime,
+        seats: payload.seatsRequested,
+        seatPreference: payload.seatPreference,
+        priceJod: payload.totalPrice,
+      });
+    }
+    return result;
   }
 }
 

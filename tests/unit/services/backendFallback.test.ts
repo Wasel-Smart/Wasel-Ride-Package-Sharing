@@ -40,6 +40,7 @@ vi.mock('../../../src/services/directSupabase', () => ({
 vi.mock('../../../src/utils/env', () => ({
   getConfig: () => mockGetConfig(),
   getAuthCallbackUrl: vi.fn(() => 'http://localhost:3000/app/auth/callback'),
+  getAuthRedirectCandidates: vi.fn(() => ['http://localhost:3000/app/auth/callback']),
 }));
 
 import { authAPI } from '../../../src/services/auth';

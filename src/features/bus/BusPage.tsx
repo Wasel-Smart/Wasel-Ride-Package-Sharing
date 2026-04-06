@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { MapWrapper } from '../../components/MapWrapper';
+import { useLocalAuth } from '../../contexts/LocalAuth';
 import { createBusBooking, fetchBusRoutes, getOfficialBusRoutes, type BusRoute } from '../../services/bus';
 import { createSupportTicket } from '../../services/supportInbox';
 import { notificationsAPI } from '../../services/notifications.js';
@@ -92,6 +93,7 @@ function getRouteStatus(route: BusRoute, tripDate: string, today: string) {
 }
 
 export function BusPage() {
+  const { user } = useLocalAuth();
   const today = getTodayIsoDate();
   const [origin, setOrigin] = useState('Amman');
   const [destination, setDestination] = useState('Aqaba');
@@ -195,6 +197,8 @@ export function BusPage() {
         seatPreference,
         scheduleMode,
         totalPrice,
+        passengerName: user?.name,
+        passengerEmail: user?.email,
       });
       setBookingSource(result.source);
       setBookingTicketCode(result.ticketCode);
