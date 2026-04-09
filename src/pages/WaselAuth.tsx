@@ -276,8 +276,6 @@ export default function WaselAuth() {
   // OAuth busy state — only blocks the social buttons.
   const oauthBusy = Boolean(oauthProvider) || success;
   // Global busy (any async op in flight) — used for misc disabled states.
-  const busy = emailBusy || oauthBusy;
-
   useEffect(() => {
     mountedRef.current = true;
     return () => {

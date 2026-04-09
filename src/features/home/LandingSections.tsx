@@ -10,7 +10,7 @@ import {
 } from '../../components/system/WaselPresence';
 import { useTheme } from '../../contexts/ThemeContext';
 import { MobilityOSLandingMap } from './MobilityOSLandingMap';
-import { C, GRAD_AURORA, GRAD_HERO, GRAD_SIGNAL, SH } from '../../utils/wasel-ds';
+import { GRAD_AURORA, GRAD_HERO, GRAD_SIGNAL, SH } from '../../utils/wasel-ds';
 
 export const LANDING_COLORS = {
   bg: 'var(--background)',

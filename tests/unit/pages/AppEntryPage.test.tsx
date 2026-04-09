@@ -1,6 +1,7 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 const mockNavigate = vi.fn();
 const mockUseLocalAuth = vi.fn();
@@ -59,6 +60,14 @@ vi.mock('@/features/home/MobilityOSLandingMap', () => ({
 
 import AppEntryPage from '@/features/home/AppEntryPage';
 
+function renderAppEntryPage() {
+  return render(
+    <ThemeProvider>
+      <AppEntryPage />
+    </ThemeProvider>,
+  );
+}
+
 describe('AppEntryPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -72,7 +81,7 @@ describe('AppEntryPage', () => {
   it('shows guest CTA copy by default', { timeout: 30000 }, () => {
     mockUseLocalAuth.mockReturnValue({ user: null });
 
-    render(<AppEntryPage />);
+    renderAppEntryPage();
 
     expect(
       screen.getByRole('heading', {
@@ -89,7 +98,7 @@ describe('AppEntryPage', () => {
   it('routes guest email entry to the auth page with a return target', () => {
     mockUseLocalAuth.mockReturnValue({ user: null });
 
-    render(<AppEntryPage />);
+    renderAppEntryPage();
 
     screen.getAllByRole('button', { name: /Continue with email/i })[0].click();
 
@@ -99,7 +108,7 @@ describe('AppEntryPage', () => {
   it('routes guest header auth buttons to sign in and sign up', () => {
     mockUseLocalAuth.mockReturnValue({ user: null });
 
-    render(<AppEntryPage />);
+    renderAppEntryPage();
 
     screen.getAllByRole('button', { name: /Sign in/i })[0].click();
     screen.getAllByRole('button', { name: /Create account/i })[0].click();
@@ -116,7 +125,7 @@ describe('AppEntryPage', () => {
     });
     mockUseLocalAuth.mockReturnValue({ user: null });
 
-    render(<AppEntryPage />);
+    renderAppEntryPage();
 
     await act(async () => {
       screen.getByRole('button', { name: /Continue with Google/i }).click();
@@ -135,7 +144,7 @@ describe('AppEntryPage', () => {
     });
     mockUseLocalAuth.mockReturnValue({ user: null });
 
-    render(<AppEntryPage />);
+    renderAppEntryPage();
 
     await act(async () => {
       screen.getByRole('button', { name: /Continue with Facebook/i }).click();
@@ -149,7 +158,7 @@ describe('AppEntryPage', () => {
   it('navigates authenticated users straight into the app', () => {
     mockUseLocalAuth.mockReturnValue({ user: { id: 'user-1' } });
 
-    render(<AppEntryPage />);
+    renderAppEntryPage();
 
     screen.getAllByRole('button', { name: /Find a ride/i })[0].click();
 
@@ -160,7 +169,7 @@ describe('AppEntryPage', () => {
     mockLanguage = 'ar';
     mockUseLocalAuth.mockReturnValue({ user: null });
 
-    render(<AppEntryPage />);
+    renderAppEntryPage();
 
     expect(
       screen.getByRole('heading', {
