@@ -45,7 +45,7 @@ export default function WaselPlusPage() {
   });
   const recurringSuggestions = useMemo(
     () => getRecurringRouteSuggestions(4),
-    [routeIntelligence.updatedAt],
+    [],
   );
   const dailySignal = routeIntelligence.selectedSignal;
 
@@ -85,7 +85,7 @@ export default function WaselPlusPage() {
         setSavedReminders(getRouteReminders());
       }
     });
-  }, [routeIntelligence.updatedAt, user?.email, user?.phone]);
+  }, [routeIntelligence.updatedAt, user]);
 
   return (
     <Protected>

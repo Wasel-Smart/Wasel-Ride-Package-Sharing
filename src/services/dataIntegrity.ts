@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { logger } from '../utils/monitoring';
+import { logger } from '../utils/logging';
 import { sanitizeErrorMessage } from '../utils/redaction';
 
 const PHONE_REGEX = /^\+[1-9]\d{7,14}$/;

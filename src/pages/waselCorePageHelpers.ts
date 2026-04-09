@@ -85,11 +85,25 @@ export interface PackageComposer {
   trackingId: string;
 }
 
-export function parseFindRideParams(search: string) {
+export function parseFindRideParams(search: string): {
+  initialFrom: string;
+  initialTo: string;
+  initialDate: string;
+  initialSearched: boolean;
+} {
   const corridorParams = new URLSearchParams(search);
+  const fromParam = corridorParams.get('from');
+  const toParam = corridorParams.get('to');
+
   return {
-    initialFrom: isKnownJordanLocation(corridorParams.get('from')) ? corridorParams.get('from')! : 'Amman',
-    initialTo: isKnownJordanLocation(corridorParams.get('to')) ? corridorParams.get('to')! : 'Aqaba',
+    initialFrom:
+      typeof fromParam === 'string' && isKnownJordanLocation(fromParam)
+        ? fromParam
+        : 'Amman',
+    initialTo:
+      typeof toParam === 'string' && isKnownJordanLocation(toParam)
+        ? toParam
+        : 'Aqaba',
     initialDate: corridorParams.get('date') ?? '',
     initialSearched: corridorParams.get('search') === '1',
   };

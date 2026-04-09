@@ -1,4 +1,4 @@
-import { logger, trackAPICall } from '../utils/monitoring';
+import { logger, trackAPICall } from '../utils/logging';
 import { redactSensitiveValue } from '../utils/redaction';
 import {
   AuthenticationError,

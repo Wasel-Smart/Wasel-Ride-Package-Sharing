@@ -38,10 +38,23 @@ const DEFAULT_ICON = '/icon-192.png';
 const DEFAULT_BADGE = '/favicon-32x32.png';
 const DEFAULT_CLOSE_MS = 8_000;
 
+type NotificationInit = ConstructorParameters<typeof Notification>[1];
+type NotificationApiLike = {
+  permission: NotificationPermission;
+  requestPermission: () => Promise<NotificationPermission>;
+};
+type NotificationConstructorLike =
+  & NotificationApiLike
+  & (new (title: string, options?: NotificationInit) => Notification);
+type NotificationFactoryLike =
+  & NotificationApiLike
+  & ((title: string, options?: NotificationInit) => Notification);
+
 export function usePushNotifications() {
   const NotificationApi =
-    (typeof window !== 'undefined' ? (window as any).Notification : undefined) ??
-    (globalThis as any).Notification;
+    (typeof globalThis !== 'undefined' && 'Notification' in globalThis
+      ? globalThis.Notification
+      : undefined) as NotificationConstructorLike | NotificationFactoryLike | undefined;
 
   const isSupported = typeof NotificationApi !== 'undefined';
 
@@ -102,7 +115,6 @@ export function usePushNotifications() {
       }
 
       const createNotification = () => {
-        const Ctor = NotificationApi as any;
         const init = {
           body: options.body,
           icon: options.icon ?? DEFAULT_ICON,
@@ -115,9 +127,9 @@ export function usePushNotifications() {
         // Some test environments stub Notification with a non-constructible function.
         // Prefer `new`, but gracefully fall back to direct invocation.
         try {
-          return new Ctor(options.title, init) as Notification;
+          return new (NotificationApi as NotificationConstructorLike)(options.title, init);
         } catch {
-          return Ctor(options.title, init) as Notification;
+          return (NotificationApi as NotificationFactoryLike)(options.title, init);
         }
       };
 
@@ -138,7 +150,7 @@ export function usePushNotifications() {
       activeNotif.current = notif;
       return notif;
     },
-    [isSupported, permission],
+    [NotificationApi, isSupported, permission],
   );
 
   // ── Trip-event helpers ─────────────────────────────────────────────────────

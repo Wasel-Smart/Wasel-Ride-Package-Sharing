@@ -9,7 +9,11 @@ const migrationPath = path.resolve(
 
 const walletHardeningMigrationPath = path.resolve(
   __dirname,
-  '../../src/supabase/migrations/20260409120000_wallet_and_runtime_integrity_hardening.sql',
+  '../../src/supabase/migrations/20260409113000_wallet_and_runtime_integrity_hardening.sql',
+);
+const performanceIndexesMigrationPath = path.resolve(
+  __dirname,
+  '../../src/supabase/migrations/20260409153000_runtime_performance_indexes.sql',
 );
 
 const scorecardPath = path.resolve(
@@ -67,5 +71,14 @@ describe('database scorecard', () => {
     expect(scorecard).toContain('9.2/10');
     expect(scorecard).toContain('Why It Reaches 9+');
     expect(scorecard).toContain('Remaining Gap To Watch');
+  });
+});
+
+describe('runtime performance indexes migration', () => {
+  const sql = fs.readFileSync(performanceIndexesMigrationPath, 'utf8');
+
+  it('adds an expression index for auth-user text lookups used by runtime policies', () => {
+    expect(sql).toContain('idx_users_auth_user_id_text_lookup');
+    expect(sql).toContain('auth_user_id::text');
   });
 });

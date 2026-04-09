@@ -39,9 +39,9 @@ export async function shareContent(options: ShareOptions): Promise<boolean> {
     try {
       await navigator.share({ title, text, url });
       return true;
-    } catch (err: any) {
+    } catch (error) {
       // User cancelled the share dialog — not an error
-      if (err?.name === 'AbortError') return false;
+      if (error instanceof Error && error.name === 'AbortError') return false;
       // Fall through to clipboard
     }
   }

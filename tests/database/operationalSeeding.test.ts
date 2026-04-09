@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
+  migrationCatalog,
   operationalSeedFiles,
   rolloutMigrations,
   rolloutSeedFiles,
@@ -24,9 +25,23 @@ function read(relativePath: string) {
 
 describe('operational seeding rollout', () => {
   it('registers the automation access hardening migration after the operational bootstrap step', () => {
-    expect(rolloutMigrations.at(-1)).toBe(
-      'src/supabase/migrations/20260406101500_harden_automation_queue_access_and_support_rpcs.sql',
+    const bootstrapIndex = rolloutMigrations.indexOf(
+      'src/supabase/migrations/20260404153000_operational_bootstrap_reference_data.sql',
     );
+    const automationSecurityIndex = rolloutMigrations.indexOf(
+      'src/supabase/migrations/20260409120000_production_security_and_queue_hardening.sql',
+    );
+
+    expect(bootstrapIndex).toBeGreaterThanOrEqual(0);
+    expect(automationSecurityIndex).toBeGreaterThan(bootstrapIndex);
+  });
+
+  it('keeps the rollout migration registry in canonical timestamp order with unique timestamps', () => {
+    const rolloutEntries = migrationCatalog.filter((migration) => migration.phase === 'rollout');
+    const timestamps = rolloutEntries.map((migration) => path.basename(migration.path).match(/^(\d{14})_/)?.[1]);
+
+    expect(timestamps).toEqual([...timestamps].sort());
+    expect(new Set(timestamps).size).toBe(timestamps.length);
   });
 
   it('defines the required modular seed files in execution order', () => {
@@ -98,7 +113,7 @@ describe('operational seeding rollout', () => {
     const docs = fs.readFileSync(docsPath, 'utf8');
     expect(docs).toContain('npm run seed');
     expect(docs).toContain('apply:supabase-rollout -- --with-seeds');
-    expect(docs).toContain('scripts/supabase-rollout-manifest.mjs');
+    expect(docs).toContain('scripts/supabase-migration-registry.mjs');
     expect(docs).toContain('The legacy mock launch pack');
   });
 });

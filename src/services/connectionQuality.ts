@@ -41,6 +41,12 @@ export interface ConnectionStats {
   lastCheckAt: number;
 }
 
+type NetworkInformationLike = {
+  effectiveType?: '4g' | '3g' | '2g' | 'slow-2g' | string;
+  type?: 'wifi' | 'ethernet' | 'cellular' | 'bluetooth' | string;
+  addEventListener?: (type: 'change', listener: () => void) => void;
+};
+
 class ConnectionQualityMonitor {
   private metrics: ConnectionMetrics[] = [];
   private listeners: Set<(metrics: ConnectionMetrics) => void> = new Set();
@@ -108,7 +114,7 @@ class ConnectionQualityMonitor {
       clearTimeout(timeoutId);
       const latency = Math.round(performance.now() - startTime);
       return Math.min(latency, 10000); // Cap at 10s
-    } catch (error) {
+    } catch {
       return 10000; // Max latency on timeout
     }
   }
@@ -131,7 +137,7 @@ class ConnectionQualityMonitor {
       const bandwidth = (testSizeBytes * 8 / 1024 / 1024) / duration; // Mbps
 
       return Math.max(0.1, Math.min(bandwidth, 1000)); // Between 0.1 and 1000 Mbps
-    } catch (error) {
+    } catch {
       return 0;
     }
   }
@@ -142,8 +148,15 @@ class ConnectionQualityMonitor {
   private getConnectionType(): ConnectionType {
     if (!navigator.onLine) return 'offline';
 
-    const navigator_ = navigator as any;
-    const connection = navigator_.connection || navigator_.mozConnection || navigator_.webkitConnection;
+    const navigatorWithConnection = navigator as Navigator & {
+      connection?: NetworkInformationLike;
+      mozConnection?: NetworkInformationLike;
+      webkitConnection?: NetworkInformationLike;
+    };
+    const connection =
+      navigatorWithConnection.connection ||
+      navigatorWithConnection.mozConnection ||
+      navigatorWithConnection.webkitConnection;
 
     if (!connection) return 'unknown';
 
@@ -278,9 +291,15 @@ class ConnectionQualityMonitor {
     });
 
     // Listen to connection changes
-    const connection = (navigator as any).connection || (navigator as any).mozConnection;
+    const navigatorWithConnection = navigator as Navigator & {
+      connection?: NetworkInformationLike;
+      mozConnection?: NetworkInformationLike;
+    };
+    const connection =
+      navigatorWithConnection.connection ||
+      navigatorWithConnection.mozConnection;
     if (connection) {
-      connection.addEventListener('change', () => {
+      connection.addEventListener?.('change', () => {
         this.performInitialCheck();
       });
     }

@@ -69,11 +69,12 @@ vi.mock('../../../src/services/core', () => ({
   supabase: mockDb,
 }));
 
-import { walletApi } from '../../../src/services/walletApi';
+import { __resetWalletApiCachesForTests, walletApi } from '../../../src/services/walletApi';
 
 describe('walletApi', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    __resetWalletApiCachesForTests();
 
     const createQueryBuilder = () => {
       const builder = {
@@ -118,30 +119,30 @@ describe('walletApi', () => {
       },
       error: null,
     });
+    mockLimit.mockResolvedValueOnce({
+      data: [
+        {
+          transaction_id: 'tx-1',
+          amount: 40,
+          direction: 'credit',
+          transaction_type: 'add_funds',
+          transaction_status: 'posted',
+          created_at: '2026-04-01T10:00:00.000Z',
+          metadata: { description: 'Wallet top-up' },
+        },
+        {
+          transaction_id: 'tx-2',
+          amount: 12.5,
+          direction: 'debit',
+          transaction_type: 'ride_payment',
+          transaction_status: 'posted',
+          created_at: '2026-04-01T12:00:00.000Z',
+          metadata: { description: 'Ride payment' },
+        },
+      ],
+      error: null,
+    });
     mockOrder
-      .mockResolvedValueOnce({
-        data: [
-          {
-            transaction_id: 'tx-1',
-            amount: 40,
-            direction: 'credit',
-            transaction_type: 'add_funds',
-            transaction_status: 'posted',
-            created_at: '2026-04-01T10:00:00.000Z',
-            metadata: { description: 'Wallet top-up' },
-          },
-          {
-            transaction_id: 'tx-2',
-            amount: 12.5,
-            direction: 'debit',
-            transaction_type: 'ride_payment',
-            transaction_status: 'posted',
-            created_at: '2026-04-01T12:00:00.000Z',
-            metadata: { description: 'Ride payment' },
-          },
-        ],
-        error: null,
-      })
       .mockImplementationOnce(() => ({
         select: mockSelect,
         eq: mockEq,
@@ -181,8 +182,8 @@ describe('walletApi', () => {
       },
       error: null,
     });
+    mockLimit.mockResolvedValueOnce({ data: [], error: null });
     mockOrder
-      .mockResolvedValueOnce({ data: [], error: null })
       .mockImplementationOnce(() => ({
         select: mockSelect,
         eq: mockEq,

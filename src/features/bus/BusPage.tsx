@@ -94,7 +94,7 @@ function getRouteStatus(route: BusRoute, tripDate: string, today: string) {
 
 export function BusPage() {
   const { user } = useLocalAuth();
-  const today = getTodayIsoDate();
+  const [today] = useState(getTodayIsoDate);
   const [origin, setOrigin] = useState('Amman');
   const [destination, setDestination] = useState('Aqaba');
   const [tripDate, setTripDate] = useState(today);
@@ -157,7 +157,7 @@ export function BusPage() {
     }
     loadBusRoutes();
     return () => { cancelled = true; };
-  }, [destination, origin, passengers, tripDate]);
+  }, [destination, origin, passengers, today, tripDate]);
 
   const activeBus = busRoutes.find((route) => route.id === selected) ?? busRoutes[0] ?? getOfficialBusRoutes()[0];
   const pickupCoord = resolveCityCoord(activeBus.from);
@@ -180,7 +180,7 @@ export function BusPage() {
 
   useEffect(() => {
     setSelectedDeparture(departureTimes[0] ?? activeBus.dep);
-  }, [activeBus.dep, activeBus.id, departureKey]);
+  }, [activeBus.dep, departureKey, departureTimes]);
 
   async function handleBusBooking() {
     if (bookingDisabled) return;

@@ -69,10 +69,7 @@ order by executed_at desc;
 4. Always use `ON CONFLICT` or deterministic update logic.
 5. Keep each seed file internally transactional with `begin` and `commit`.
 6. If a new automation flow needs queue rows, seed both the source record and the derived worker job contract.
-7. If you add a new seed file, update:
-   - `scripts/supabase-rollout-manifest.mjs`
-   - `scripts/verify-supabase-rollout.mjs`
-   - `tests/database/operationalSeeding.test.ts`
+7. If you add a new seed file, update `scripts/supabase-migration-registry.mjs`, regenerate docs with `npm run sync:supabase-migration-docs`, and run `npm run verify:supabase-rollout`.
 
 ## Operational Notes
 

@@ -1,4 +1,5 @@
-import { Suspense } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { Suspense, type ComponentType } from 'react';
 import {
   createBrowserRouter,
   isRouteErrorResponse,
@@ -8,6 +9,11 @@ import {
 import { useLocalAuth } from './contexts/LocalAuth';
 import WaselRoot from './layouts/WaselRoot';
 import { buildAuthPagePath } from './utils/authFlow';
+
+type RouteComponent = ComponentType<Record<string, unknown>>;
+type LazyModule = {
+  default?: RouteComponent;
+} & Record<string, unknown>;
 
 function PageLoader() {
   return (
@@ -36,17 +42,19 @@ function PageLoader() {
 }
 
 function lazy(
-  importFn: () => Promise<
-    | { default: React.ComponentType<any> }
-    | { [key: string]: React.ComponentType<any> }
-  >,
+  importFn: () => Promise<LazyModule>,
   exportName?: string,
 ) {
   return async () => {
-    const mod = (await importFn()) as any;
-    const Component = exportName ? mod[exportName] : mod.default;
+    const mod = await importFn();
+    const candidate = exportName ? mod[exportName] : mod.default;
+    const Component =
+      typeof candidate === 'function'
+        ? (candidate as RouteComponent)
+        : PageLoader;
+
     return {
-      Component: (props: any) => (
+      Component: (props: Record<string, unknown>) => (
         <Suspense fallback={<PageLoader />}>
           <Component {...props} />
         </Suspense>

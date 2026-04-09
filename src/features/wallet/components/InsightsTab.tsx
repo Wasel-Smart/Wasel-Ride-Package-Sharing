@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { WaselColors } from '../../../tokens/wasel-tokens';
-import { PIE_COLORS } from './WalletShared';
+import { PIE_COLORS } from './walletSharedMeta';
 import type { InsightsData } from '../../../services/walletApi';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -21,10 +21,10 @@ interface InsightsTabProps {
   t: Record<string, string>;
 }
 
-export function InsightsTab({ insights, isRTL: _isRTL, t }: InsightsTabProps) {
+export function InsightsTab({ insights, isRTL, t }: InsightsTabProps) {
   if (!insights) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto mb-3" />
         <p className="text-sm text-muted-foreground">{t.processing}</p>
       </div>
@@ -32,7 +32,7 @@ export function InsightsTab({ insights, isRTL: _isRTL, t }: InsightsTabProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Month summary cards */}
       <div className="grid grid-cols-2 gap-3">
         <Card className="p-4 rounded-xl">

@@ -13,6 +13,10 @@ interface FeedbackOptions {
   duration?: number;
 }
 
+type AudioWindow = Window & {
+  webkitAudioContext?: typeof AudioContext;
+};
+
 class InstantFeedbackEngine {
   private supportsHaptics: boolean = false;
   private audioContext: AudioContext | null = null;
@@ -38,10 +42,12 @@ class InstantFeedbackEngine {
     this.supportsHaptics = 'vibrate' in navigator;
     
     // Initialize audio context for audio feedback (deferred)
-    if ('AudioContext' in window || 'webkitAudioContext' in window) {
+    const audioWindow = window as AudioWindow;
+    if ('AudioContext' in window || 'webkitAudioContext' in audioWindow) {
       try {
-        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      } catch (e) {
+        const AudioContextCtor = window.AudioContext ?? audioWindow.webkitAudioContext;
+        this.audioContext = AudioContextCtor ? new AudioContextCtor() : null;
+      } catch {
         // Ignore - audio not critical
       }
     }
@@ -75,7 +81,7 @@ class InstantFeedbackEngine {
       } else {
         navigator.vibrate(pattern);
       }
-    } catch (e) {
+    } catch {
       // Ignore vibration errors silently
     }
   }
@@ -166,7 +172,7 @@ class InstantFeedbackEngine {
       
       oscillator.start(this.audioContext.currentTime);
       oscillator.stop(this.audioContext.currentTime + duration / 1000);
-    } catch (e) {
+    } catch {
       // Ignore audio errors silently
     }
   }
@@ -286,20 +292,22 @@ import { useEffect, useRef } from 'react';
 
 export function useInstantFeedback(type: FeedbackType = 'light', options: FeedbackOptions = {}) {
   const elementRef = useRef<HTMLElement>(null);
+  const { audio, duration, haptic, visual } = options;
 
   useEffect(() => {
     const element = elementRef.current;
     if (!element) return;
+    const effectOptions: FeedbackOptions = { audio, duration, haptic, visual };
 
     // Attach both touch and click feedback
-    const cleanupTouch = instantFeedback.attachTouchFeedback(element, type, options);
-    const cleanupClick = instantFeedback.attachClickFeedback(element, type, options);
+    const cleanupTouch = instantFeedback.attachTouchFeedback(element, type, effectOptions);
+    const cleanupClick = instantFeedback.attachClickFeedback(element, type, effectOptions);
 
     return () => {
       cleanupTouch();
       cleanupClick();
     };
-  }, [type]);
+  }, [audio, duration, haptic, type, visual]);
 
   return elementRef;
 }

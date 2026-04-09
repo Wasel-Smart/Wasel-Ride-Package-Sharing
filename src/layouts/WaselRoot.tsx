@@ -11,7 +11,7 @@ import { buildAuthPagePath } from '../utils/authFlow';
 import { MobileBottomNav } from '../components/MobileBottomNav';
 import { AvailabilityBanner } from '../components/system/AvailabilityBanner';
 import { WaselBusinessFooter } from '../components/system/WaselPresence';
-import { DESKTOP_PRIMARY_NAV_IDS, isNavGroupActive, isVisibleNavGroup, PRODUCT_NAV_GROUPS } from './waselRootConfig';
+import { DESKTOP_PRIMARY_NAV_IDS, isDirectNavGroup, isNavGroupActive, isVisibleNavGroup, PRODUCT_NAV_GROUPS } from './waselRootConfig';
 import {
   AppPill,
   Badge,
@@ -89,7 +89,7 @@ export default function WaselRoot() {
   const handleSignOut = useCallback(async () => {
     await signOut();
     window.location.replace('/');
-  }, [nav, signOut]);
+  }, [signOut]);
 
   return (
     <div
@@ -130,16 +130,19 @@ export default function WaselRoot() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%', minWidth: 0, padding: 5, borderRadius: R.full, background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)), rgba(11,33,53,0.7)', border: '1px solid rgba(73,190,242,0.14)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
               {primaryGroups.map((group, index) => {
-                const isDirect = 'direct' in group && group.direct;
+                const isDirect = isDirectNavGroup(group);
                 const isOpen = activeGroup === group.id;
                 const isCurrent = isNavGroupActive(group, location.pathname, isAuthenticated);
                 const isEmphasized = isOpen || isCurrent;
+                const directPath = isDirect ? group.path : null;
+                const directBadge = isDirect ? group.badge : null;
+                const directColor = isDirect ? group.color : undefined;
 
                 return (
                   <div key={group.id} style={{ position: 'relative' }}>
                     <button
                       type="button"
-                      onClick={() => isDirect ? navigate((group as any).path) : setActiveGroup(isOpen ? null : group.id)}
+                      onClick={() => isDirect && directPath ? navigate(directPath) : setActiveGroup(isOpen ? null : group.id)}
                       onMouseEnter={() => !isDirect && setActiveGroup(group.id)}
                       aria-current={isCurrent ? 'page' : undefined}
                       aria-haspopup={!isDirect ? 'true' : undefined}
@@ -147,7 +150,7 @@ export default function WaselRoot() {
                       style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 42, padding: '0 14px', borderRadius: R.full, background: isEmphasized ? 'linear-gradient(135deg, rgba(22,199,242,0.18), rgba(12,110,168,0.16) 58%, rgba(199,255,26,0.14))' : 'transparent', border: `1px solid ${isEmphasized ? 'rgba(73,190,242,0.24)' : 'transparent'}`, boxShadow: isEmphasized ? '0 12px 28px rgba(22,199,242,0.14)' : 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: isEmphasized ? 700 : 600, color: isEmphasized ? C.text : 'rgba(234,247,255,0.72)', fontFamily: F, letterSpacing: '-0.01em', transition: 'all 0.16s ease', whiteSpace: 'nowrap' }}
                     >
                       <span>{ar ? group.labelAr : group.label}</span>
-                      {isDirect && (group as any).badge && <Badge label={(group as any).badge} color={(group as any).color} />}
+                      {isDirect && directBadge && <Badge label={directBadge} color={directColor} />}
                       {!isDirect && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.14s', opacity: 0.5 }}><path d="M6 9l6 6 6-6" /></svg>}
                     </button>
 

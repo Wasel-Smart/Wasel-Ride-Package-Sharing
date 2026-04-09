@@ -44,7 +44,7 @@ export class APIError extends Error {
     message: string,
     public statusCode: number = 500,
     public code?: string,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'APIError';
@@ -135,9 +135,9 @@ async function fetchWithTimeout(
     });
     clearTimeout(id);
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     clearTimeout(id);
-    if (error.name === 'AbortError') {
+    if (error instanceof Error && error.name === 'AbortError') {
       throw new TimeoutError(`Request timeout after ${timeout}ms`);
     }
     throw error;
@@ -151,7 +151,14 @@ async function fetchWithTimeout(
 /**
  * Make an API request to the Wasel backend with automatic retry
  */
-export async function apiRequest<T = any>(
+type APIErrorPayload = {
+  error?: string;
+  message?: string;
+  code?: string;
+  details?: unknown;
+};
+
+export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {},
   retries: number = RETRY_CONFIG.maxRetries
@@ -186,7 +193,7 @@ export async function apiRequest<T = any>(
 
       // Error response
       const contentType = response.headers.get('content-type');
-      let errorData: any = { error: 'Request failed' };
+      let errorData: APIErrorPayload = { error: 'Request failed' };
       
       if (contentType?.includes('application/json')) {
         try {
@@ -214,8 +221,8 @@ export async function apiRequest<T = any>(
         errorData.details
       );
 
-    } catch (error: any) {
-      lastError = error;
+    } catch (error: unknown) {
+      lastError = error instanceof Error ? error : new NetworkError('Request failed');
 
       // Don't retry on client errors (except timeout)
       if (error instanceof APIError && error.statusCode >= 400 && error.statusCode < 500 && error.statusCode !== 429) {
@@ -252,14 +259,38 @@ export async function apiRequest<T = any>(
 /**
  * GET request
  */
-export async function apiGet<T = any>(
+type QueryParams = Record<string, string | number | boolean | null | undefined>;
+type APIBody = BodyInit | Record<string, unknown> | null | undefined;
+
+function isBodyInit(value: APIBody): value is BodyInit {
+  return (
+    typeof value === 'string' ||
+    value instanceof Blob ||
+    value instanceof FormData ||
+    value instanceof URLSearchParams ||
+    value instanceof ArrayBuffer ||
+    ArrayBuffer.isView(value)
+  );
+}
+
+function serializeBody(body: APIBody): BodyInit | undefined {
+  if (body === null || body === undefined) {
+    return undefined;
+  }
+
+  return isBodyInit(body) ? body : JSON.stringify(body);
+}
+
+export async function apiGet<T = unknown>(
   endpoint: string,
-  params?: Record<string, any>,
+  params?: QueryParams,
   accessToken?: string
 ): Promise<T> {
   const queryString = params 
     ? '?' + new URLSearchParams(
-        Object.entries(params).filter(([_, v]) => v !== undefined && v !== null) as [string, string][]
+        Object.entries(params)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => [key, String(value)])
       ).toString()
     : '';
 
@@ -272,52 +303,52 @@ export async function apiGet<T = any>(
 /**
  * POST request
  */
-export async function apiPost<T = any>(
+export async function apiPost<T = unknown>(
   endpoint: string,
-  body?: any,
+  body?: APIBody,
   accessToken?: string
 ): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'POST',
     headers: getApiHeaders(accessToken),
-    body: body ? JSON.stringify(body) : undefined,
+    body: serializeBody(body),
   });
 }
 
 /**
  * PUT request
  */
-export async function apiPut<T = any>(
+export async function apiPut<T = unknown>(
   endpoint: string,
-  body?: any,
+  body?: APIBody,
   accessToken?: string
 ): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'PUT',
     headers: getApiHeaders(accessToken),
-    body: body ? JSON.stringify(body) : undefined,
+    body: serializeBody(body),
   });
 }
 
 /**
  * PATCH request
  */
-export async function apiPatch<T = any>(
+export async function apiPatch<T = unknown>(
   endpoint: string,
-  body?: any,
+  body?: APIBody,
   accessToken?: string
 ): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'PATCH',
     headers: getApiHeaders(accessToken),
-    body: body ? JSON.stringify(body) : undefined,
+    body: serializeBody(body),
   });
 }
 
 /**
  * DELETE request
  */
-export async function apiDelete<T = any>(
+export async function apiDelete<T = unknown>(
   endpoint: string,
   accessToken?: string
 ): Promise<T> {

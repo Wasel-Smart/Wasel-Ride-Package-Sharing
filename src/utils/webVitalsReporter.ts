@@ -63,7 +63,7 @@ async function report(metric: Metric): Promise<void> {
   // Always log to console in dev
   if (import.meta.env.DEV) {
     const colour = r === 'good' ? '#22c55e' : r === 'needs-improvement' ? '#f59e0b' : '#ef4444';
-    console.log(`%c[WebVitals] ${metric.name}: ${metric.value.toFixed(2)} (${r})`, `color:${colour};font-weight:bold`);
+    console.warn(`%c[WebVitals] ${metric.name}: ${metric.value.toFixed(2)} (${r})`, `color:${colour};font-weight:bold`);
   }
 
   // Skip write if Supabase isn't configured

@@ -1,6 +1,6 @@
 -- Final wallet/runtime integrity pass.
--- Focus: wallet balance safety, positive transaction amounts, non-empty payment
--- method references, and indexes for the most common wallet access paths.
+-- Responsibility boundary: schema hardening only. No data backfill or runtime-owned
+-- side effects should be added here.
 
 alter table public.wallets
   drop constraint if exists chk_wallets_non_negative_balances;

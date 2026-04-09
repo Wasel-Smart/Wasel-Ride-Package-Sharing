@@ -116,7 +116,7 @@ export async function registerServiceWorker(
   onUpdate?: () => void,
 ): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) {
-    console.info('[SW] Service workers not supported');
+    console.warn('[SW] Service workers not supported');
     return null;
   }
 
@@ -126,7 +126,7 @@ export async function registerServiceWorker(
       updateViaCache: 'none', // Always check for updates
     });
 
-    console.info('[SW] Registered successfully', registration.scope);
+    console.warn('[SW] Registered successfully', registration.scope);
 
     // Monitor for updates
     registration.addEventListener('updatefound', () => {
@@ -136,7 +136,7 @@ export async function registerServiceWorker(
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             // New service worker available - notify user
-            console.info('[SW] Update available');
+            console.warn('[SW] Update available');
             onUpdate?.();
           }
         });
@@ -191,7 +191,8 @@ export async function getCachedData(cacheName: string): Promise<Response | undef
   try {
     const cache = await caches.open(cacheName);
     const keys = await cache.keys();
-    return keys.length > 0 ? cache.match(keys[0]!) : undefined;
+    const firstKey = keys[0];
+    return firstKey ? cache.match(firstKey) : undefined;
   } catch {
     return undefined;
   }
@@ -204,7 +205,7 @@ export async function clearAllCaches(): Promise<void> {
   try {
     const cacheNames = await caches.keys();
     await Promise.all(cacheNames.map((name) => caches.delete(name)));
-    console.info('[SW] All caches cleared');
+    console.warn('[SW] All caches cleared');
   } catch (error) {
     console.error('[SW] Failed to clear caches:', error);
   }
@@ -231,7 +232,7 @@ export async function getCacheStats(): Promise<{
     }
 
     return { caches: stats, totalSize };
-  } catch (error) {
+  } catch {
     return { caches: [], totalSize: 0 };
   }
 }

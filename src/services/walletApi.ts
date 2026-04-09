@@ -8,7 +8,14 @@ import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey, supabase } from
 
 const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
 
+// The generated Supabase database types in this repo are still incomplete for
+// wallet/runtime tables and RPCs, so this boundary stays intentionally loose.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DbClient = any;
+type CacheEntry<T> = {
+  expiresAt: number;
+  promise: Promise<T>;
+};
 
 type WalletRow = {
   wallet_id?: string;
@@ -144,6 +151,12 @@ function getDb(): DbClient {
 
   return supabase as DbClient;
 }
+
+const WALLET_READ_CACHE_TTL_MS = 15_000;
+const INSIGHTS_CACHE_TTL_MS = 30_000;
+const canonicalUserCache = new Map<string, Promise<string>>();
+const walletReadCache = new Map<string, CacheEntry<WalletData>>();
+const walletInsightsCache = new Map<string, CacheEntry<InsightsData>>();
 
 function canUseEdgeApi(): boolean {
   return Boolean(WALLET_API_BASE && publicAnonKey);
@@ -349,32 +362,115 @@ function buildWalletPayload(
 }
 
 async function resolveCanonicalUserId(userKey: string): Promise<string> {
-  const db = getDb();
-  const { data: byAuth } = await db
-    .from('users')
-    .select('id')
-    .eq('auth_user_id', userKey)
-    .maybeSingle();
-
-  if (byAuth?.id) {
-    return String(byAuth.id);
+  const cached = canonicalUserCache.get(userKey);
+  if (cached) {
+    return cached;
   }
 
-  const { data: byId, error } = await db
-    .from('users')
-    .select('id')
-    .eq('id', userKey)
-    .maybeSingle();
+  const resolution = (async () => {
+    const db = getDb();
+    const { data: byAuth } = await db
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', userKey)
+      .maybeSingle();
 
-  if (error) {
+    if (byAuth?.id) {
+      return String(byAuth.id);
+    }
+
+    const { data: byId, error } = await db
+      .from('users')
+      .select('id')
+      .eq('id', userKey)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    if (byId?.id) {
+      return String(byId.id);
+    }
+
+    return userKey;
+  })();
+
+  canonicalUserCache.set(userKey, resolution);
+  return resolution;
+}
+
+function readCached<T>(cache: Map<string, CacheEntry<T>>, key: string): Promise<T> | null {
+  const hit = cache.get(key);
+  if (!hit) {
+    return null;
+  }
+
+  if (hit.expiresAt <= Date.now()) {
+    cache.delete(key);
+    return null;
+  }
+
+  return hit.promise;
+}
+
+function writeCached<T>(
+  cache: Map<string, CacheEntry<T>>,
+  key: string,
+  ttlMs: number,
+  producer: () => Promise<T>,
+): Promise<T> {
+  const promise = producer().catch((error) => {
+    cache.delete(key);
     throw error;
+  });
+
+  cache.set(key, {
+    expiresAt: Date.now() + ttlMs,
+    promise,
+  });
+
+  return promise;
+}
+
+function invalidateWalletCaches(userId?: string): void {
+  if (!userId) {
+    walletReadCache.clear();
+    walletInsightsCache.clear();
+    return;
   }
 
-  if (byId?.id) {
-    return String(byId.id);
+  walletReadCache.delete(userId);
+  walletInsightsCache.delete(userId);
+}
+
+export function __resetWalletApiCachesForTests(): void {
+  canonicalUserCache.clear();
+  invalidateWalletCaches();
+}
+
+async function resolveWalletContext(userId: string): Promise<{ canonicalUserId: string; wallet: WalletRow }> {
+  const directWallet = await findWalletByUserId(userId);
+  if (directWallet?.wallet_id) {
+    return {
+      canonicalUserId: userId,
+      wallet: directWallet,
+    };
   }
 
-  return userKey;
+  const canonicalUserId = await resolveCanonicalUserId(userId);
+  const wallet = canonicalUserId === userId
+    ? directWallet
+    : await findWalletByUserId(canonicalUserId);
+
+  if (!wallet?.wallet_id) {
+    throw new Error('Wallet not found');
+  }
+
+  return {
+    canonicalUserId,
+    wallet,
+  };
 }
 
 async function findWalletByUserId(userId: string): Promise<WalletRow | null> {
@@ -409,47 +505,46 @@ async function getAuthHeaders() {
 
 async function fetchWalletDirect(userId: string): Promise<WalletData> {
   const db = getDb();
-  let wallet = await findWalletByUserId(userId);
-  let walletUserId = userId;
-
-  if (!wallet?.wallet_id) {
-    const canonicalUserId = await resolveCanonicalUserId(userId);
-    if (canonicalUserId !== userId) {
-      wallet = await findWalletByUserId(canonicalUserId);
-      walletUserId = canonicalUserId;
-    }
-  }
-
-  if (!wallet?.wallet_id) {
-    throw new Error('Wallet not found');
-  }
-
-  const { data: transactions, error: transactionsError } = await db
-    .from('transactions')
-    .select('*')
-    .eq('wallet_id', wallet.wallet_id)
-    .order('created_at', { ascending: false });
+  const { canonicalUserId, wallet } = await resolveWalletContext(userId);
+  const [
+    { data: transactions, error: transactionsError },
+    { data: paymentMethods, error: paymentMethodsError },
+  ] = await Promise.all([
+    db
+      .from('transactions')
+      .select('transaction_id, amount, direction, transaction_type, transaction_status, created_at, metadata')
+      .eq('wallet_id', wallet.wallet_id)
+      .order('created_at', { ascending: false })
+      .limit(50),
+    db
+      .from('payment_methods')
+      .select('payment_method_id, method_type, provider, token_reference, is_default, status, created_at, updated_at')
+      .eq('user_id', canonicalUserId)
+      .order('created_at', { ascending: false }),
+  ]);
 
   if (transactionsError) {
     throw transactionsError;
   }
 
-  const { data: paymentMethods } = await db
-    .from('payment_methods')
-    .select('*')
-    .eq('user_id', walletUserId)
-    .order('is_default', { ascending: false })
-    .order('created_at', { ascending: false });
+  if (paymentMethodsError) {
+    throw paymentMethodsError;
+  }
 
   return buildWalletPayload(
     wallet as WalletRow,
-    (Array.isArray(transactions) ? transactions.slice(0, 50) : []) as TransactionRow[],
-    (Array.isArray(paymentMethods) ? paymentMethods : []) as PaymentMethodRow[],
+    (Array.isArray(transactions) ? transactions : []) as TransactionRow[],
+    (Array.isArray(paymentMethods) ? [...paymentMethods].sort((left, right) => {
+      if (!!left.is_default === !!right.is_default) {
+        return 0;
+      }
+      return left.is_default ? -1 : 1;
+    }) : []) as PaymentMethodRow[],
   );
 }
 
 async function getWalletTransactionRows(userId: string): Promise<TransactionRow[]> {
-  const wallet = await fetchWalletDirect(userId);
+  const wallet = await walletApi.getWallet(userId);
   return wallet.transactions.map((tx) => ({
     transaction_id: tx.id,
     amount: Math.abs(tx.amount),
@@ -487,6 +582,7 @@ async function addWalletFundsDirect(userId: string, amount: number, paymentMetho
     throw error;
   }
 
+  invalidateWalletCaches(userId);
   return fetchWalletDirect(userId);
 }
 
@@ -517,6 +613,8 @@ async function transferWalletFundsDirect(userId: string, recipientId: string, am
     throw error;
   }
 
+  invalidateWalletCaches(userId);
+  invalidateWalletCaches(recipientId);
   return fetchWalletDirect(userId);
 }
 
@@ -567,6 +665,7 @@ async function withdrawWalletFundsDirect(userId: string, amount: number, bankAcc
     throw walletUpdateError;
   }
 
+  invalidateWalletCaches(userId);
   return fetchWalletDirect(userId);
 }
 
@@ -595,6 +694,7 @@ async function updateWalletPreferencesDirect(
     throw error;
   }
 
+  invalidateWalletCaches(userId);
   return fetchWalletDirect(userId);
 }
 
@@ -625,6 +725,7 @@ async function addPaymentMethodDirect(
     throw error;
   }
 
+  invalidateWalletCaches(userId);
   return data;
 }
 
@@ -652,6 +753,7 @@ async function deletePaymentMethodDirect(userId: string, methodId: string) {
     throw error;
   }
 
+  invalidateWalletCaches(userId);
   return { success: true };
 }
 
@@ -705,15 +807,18 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const walletApi = {
   async getWallet(userId: string): Promise<WalletData> {
-    if (canUseEdgeApi()) {
-      try {
-        return await requestJson<WalletData>(`${WALLET_API_BASE}/${userId}`);
-      } catch {
-        // Fall back to direct Supabase below.
-      }
-    }
+    return readCached(walletReadCache, userId)
+      ?? writeCached(walletReadCache, userId, WALLET_READ_CACHE_TTL_MS, async () => {
+        if (canUseEdgeApi()) {
+          try {
+            return await requestJson<WalletData>(`${WALLET_API_BASE}/${userId}`);
+          } catch {
+            // Fall back to direct Supabase below.
+          }
+        }
 
-    return fetchWalletDirect(userId);
+        return fetchWalletDirect(userId);
+      });
   },
 
   async getTransactions(userId: string, page = 1, limit = 20, type?: string) {
@@ -730,7 +835,7 @@ export const walletApi = {
       }
     }
 
-    const wallet = await fetchWalletDirect(userId);
+    const wallet = await walletApi.getWallet(userId);
     const filtered = type
       ? wallet.transactions.filter((tx) => tx.type === type)
       : wallet.transactions;
@@ -746,10 +851,12 @@ export const walletApi = {
   async topUp(userId: string, amount: number, paymentMethod: string) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/top-up`, {
+        const result = await requestJson(`${WALLET_API_BASE}/${userId}/top-up`, {
           method: 'POST',
           body: JSON.stringify({ amount, paymentMethod }),
         });
+        invalidateWalletCaches(userId);
+        return result;
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -761,10 +868,12 @@ export const walletApi = {
   async withdraw(userId: string, amount: number, bankAccount: string, method = 'bank_transfer') {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/withdraw`, {
+        const result = await requestJson(`${WALLET_API_BASE}/${userId}/withdraw`, {
           method: 'POST',
           body: JSON.stringify({ amount, bankAccount, method }),
         });
+        invalidateWalletCaches(userId);
+        return result;
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -776,10 +885,13 @@ export const walletApi = {
   async sendMoney(userId: string, recipientId: string, amount: number, note?: string) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/send`, {
+        const result = await requestJson(`${WALLET_API_BASE}/${userId}/send`, {
           method: 'POST',
           body: JSON.stringify({ recipientId, amount, note }),
         });
+        invalidateWalletCaches(userId);
+        invalidateWalletCaches(recipientId);
+        return result;
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -840,16 +952,24 @@ export const walletApi = {
   },
 
   async getInsights(userId: string): Promise<InsightsData> {
-    if (canUseEdgeApi()) {
-      try {
-        return await requestJson<InsightsData>(`${WALLET_API_BASE}/${userId}/insights`);
-      } catch {
-        // Fall back to direct Supabase below.
-      }
-    }
+    return readCached(walletInsightsCache, userId)
+      ?? writeCached(walletInsightsCache, userId, INSIGHTS_CACHE_TTL_MS, async () => {
+        if (canUseEdgeApi()) {
+          try {
+            return await requestJson<InsightsData>(`${WALLET_API_BASE}/${userId}/insights`);
+          } catch {
+            // Fall back to direct Supabase below.
+          }
+        }
 
-    const rows = await getWalletTransactionRows(userId);
-    return buildInsightsFromTransactions(rows.map(toWalletTransaction));
+        const wallet = await walletApi.getWallet(userId);
+        if (wallet.transactions.length > 0) {
+          return buildInsightsFromTransactions(wallet.transactions);
+        }
+
+        const rows = await getWalletTransactionRows(userId);
+        return buildInsightsFromTransactions(rows.map(toWalletTransaction));
+      });
   },
 
   async setPin(userId: string, pin: string) {
@@ -877,10 +997,12 @@ export const walletApi = {
   async setAutoTopUp(userId: string, enabled: boolean, amount: number, threshold: number) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/auto-topup`, {
+        const result = await requestJson(`${WALLET_API_BASE}/${userId}/auto-topup`, {
           method: 'POST',
           body: JSON.stringify({ enabled, amount, threshold }),
         });
+        invalidateWalletCaches(userId);
+        return result;
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -908,10 +1030,12 @@ export const walletApi = {
   async addPaymentMethod(userId: string, method: AddPaymentMethodInput) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/payment-methods`, {
+        const result = await requestJson(`${WALLET_API_BASE}/${userId}/payment-methods`, {
           method: 'POST',
           body: JSON.stringify(method),
         });
+        invalidateWalletCaches(userId);
+        return result;
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -923,9 +1047,11 @@ export const walletApi = {
   async deletePaymentMethod(userId: string, methodId: string) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/payment-methods/${methodId}`, {
+        const result = await requestJson(`${WALLET_API_BASE}/${userId}/payment-methods/${methodId}`, {
           method: 'DELETE',
         });
+        invalidateWalletCaches(userId);
+        return result;
       } catch {
         // Fall back to direct Supabase below.
       }

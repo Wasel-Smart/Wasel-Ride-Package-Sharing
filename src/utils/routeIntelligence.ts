@@ -521,6 +521,7 @@ export function calculatePrayerStops(
   totalDurationMin: number,
   _country: CountryCode,
 ): PrayerStop[] {
+  void _country;
   const stops: PrayerStop[] = [];
   const dep = new Date(departureISO).getTime();
 

@@ -1,5 +1,5 @@
 import { onCLS, onFCP, onINP, onLCP, onTTFB, type Metric } from 'web-vitals';
-import { logger } from './monitoring';
+import { logger } from './logging';
 
 let performanceMonitoringInitialized = false;
 let longTaskObserverStarted = false;

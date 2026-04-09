@@ -1,6 +1,10 @@
 export type Language = 'en' | 'ar';
 
-export const translations: Record<Language, any> = {
+type TranslationTree = {
+  [key: string]: string | TranslationTree;
+};
+
+export const translations: Record<Language, TranslationTree> = {
   en: {
     common: {
       wasel: 'Wasel',

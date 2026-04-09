@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router';
 import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -94,7 +94,7 @@ export function FindRidePage() {
   const featuredSignals = routeIntelligence.featuredSignals.slice(0, 4);
   const recurringSuggestions = useMemo(
     () => getRecurringRouteSuggestions(3),
-    [routeIntelligence.updatedAt],
+    [],
   );
   const signalLookup = useMemo(() => {
     const lookup = new Map<string, ReturnType<typeof getLiveCorridorSignal>>();
@@ -103,14 +103,14 @@ export function FindRidePage() {
       lookup.set(`${signal.to}::${signal.from}`, signal);
     }
     return lookup;
-  }, [routeIntelligence.updatedAt]);
+  }, [routeIntelligence.allSignals]);
   const demandStats = getDemandStats();
 
   const searchFromCoord = resolveCityCoord(from);
   const searchToCoord = resolveCityCoord(to);
   const connectedRides = useMemo(
     () => getConnectedRides().map(buildRideFromPostedRide),
-    [location.key, routeIntelligence.updatedAt],
+    [],
   );
   const allAvailableRides = useMemo(
     () => [...connectedRides, ...ALL_RIDES],
@@ -178,8 +178,12 @@ export function FindRidePage() {
     [bookedRides],
   );
 
-  const resolveSignalForRoute = (routeFrom: string, routeTo: string) =>
-    signalLookup.get(`${routeFrom}::${routeTo}`) ?? getLiveCorridorSignal(routeFrom, routeTo, routeIntelligence.membership);
+  const resolveSignalForRoute = useCallback(
+    (routeFrom: string, routeTo: string) =>
+      signalLookup.get(`${routeFrom}::${routeTo}`) ??
+      getLiveCorridorSignal(routeFrom, routeTo, routeIntelligence.membership),
+    [routeIntelligence.membership, signalLookup],
+  );
   const nearbyCorridorCards = useMemo(
     () => nearbyCorridors.map((ride) => {
       const signal = resolveSignalForRoute(ride.from, ride.to);
@@ -193,7 +197,7 @@ export function FindRidePage() {
         : 'Sold out';
       return { ride, priceLabel };
     }),
-    [nearbyCorridors, routeIntelligence.membership, routeIntelligence.updatedAt],
+    [nearbyCorridors, resolveSignalForRoute, routeIntelligence.membership],
   );
 
   useEffect(() => {
@@ -219,7 +223,7 @@ export function FindRidePage() {
         setSavedReminders(getRouteReminders());
       }
     });
-  }, [routeIntelligence.updatedAt, user?.email, user?.phone]);
+  }, [routeIntelligence.updatedAt, user]);
 
   useEffect(() => {
     writeStoredStringList(RIDE_BOOKINGS_KEY, Array.from(booked));
@@ -231,8 +235,10 @@ export function FindRidePage() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const nextFrom = CITIES.includes(params.get('from') ?? '') ? params.get('from')! : 'Amman';
-    const nextTo = CITIES.includes(params.get('to') ?? '') ? params.get('to')! : 'Aqaba';
+    const fromParam = params.get('from');
+    const toParam = params.get('to');
+    const nextFrom = fromParam && CITIES.includes(fromParam) ? fromParam : 'Amman';
+    const nextTo = toParam && CITIES.includes(toParam) ? toParam : 'Aqaba';
     const nextDate = params.get('date') ?? '';
     const nextSearched = params.get('search') === '1';
     setFrom(nextFrom);

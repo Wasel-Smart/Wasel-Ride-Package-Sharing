@@ -15,7 +15,17 @@
  * ✅ Bilingual EN / AR tooltips
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import type * as LeafletNamespace from 'leaflet';
+import type {
+  Circle as LeafletCircle,
+  DivIcon as LeafletDivIcon,
+  Layer as LeafletLayer,
+  Map as LeafletMap,
+  Marker as LeafletMarker,
+  Polyline as LeafletPolyline,
+  TileLayer as LeafletTileLayer,
+} from 'leaflet';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Locate, ZoomIn, ZoomOut, Maximize2, Minimize2,
@@ -96,11 +106,32 @@ function ensureLeafletCSS() {
 }
 
 /* ─── Singleton Leaflet loader ───────────────────────────────────────── */
-let _leafletPromise: Promise<any> | null = null;
-function loadLeaflet(): Promise<any> {
+type LeafletModule = typeof LeafletNamespace;
+type LeafletImportModule = LeafletModule & { default?: LeafletModule };
+type LeafletMapWithPanes = LeafletMap & { _panes?: Record<string, unknown> };
+type OverpassResponse = {
+  elements?: Array<{
+    lat: number;
+    lon: number;
+    tags?: Record<string, string | undefined>;
+  }>;
+};
+type OsrmRouteResponse = {
+  routes?: Array<{
+    geometry?: {
+      coordinates?: [number, number][];
+    };
+  }>;
+};
+
+let _leafletPromise: Promise<LeafletModule> | null = null;
+function loadLeaflet(): Promise<LeafletModule> {
   if (!_leafletPromise) {
     ensureLeafletCSS();
-    _leafletPromise = import('leaflet').then((mod) => mod.default ?? mod);
+    _leafletPromise = import('leaflet').then((mod) => {
+      const leafletModule = mod as LeafletImportModule;
+      return leafletModule.default ?? mod;
+    });
   }
   return _leafletPromise;
 }
@@ -300,7 +331,14 @@ function wideControlButtonStyle(active = false) {
 }
 
 /* ─── Leaflet divIcon factory ────────────────────────────────────────── */
-function makeDivIcon(L: any, html: string, w: number, h: number, anchorX: number, anchorY: number) {
+function makeDivIcon(
+  L: Pick<LeafletModule, 'divIcon'>,
+  html: string,
+  w: number,
+  h: number,
+  anchorX: number,
+  anchorY: number,
+): LeafletDivIcon {
   return L.divIcon({
     html,
     className: '',
@@ -311,19 +349,22 @@ function makeDivIcon(L: any, html: string, w: number, h: number, anchorX: number
 }
 
 /** Safe wrapper — guards against Leaflet _initIcon crash when pane isn't ready yet */
-function safeAddTo(marker: any, map: any): any {
+function safeAddTo<T extends { addTo(map: LeafletMap): T }>(
+  marker: T,
+  map: LeafletMapWithPanes,
+): T {
   // Pre-check: Leaflet deletes map._panes on map.remove() — guard before calling addTo
   if (!map || !map._panes || !map._panes['markerPane']) return marker;
   try {
     return marker.addTo(map);
-  } catch (e) {
+  } catch {
     // Swallow silently — already guarded above, this is a last-resort safety net
     return marker;
   }
 }
 
 /** Returns true if the Leaflet map instance is alive and has its panes intact */
-function isMapAlive(map: any): boolean {
+function isMapAlive(map: LeafletMapWithPanes | null | undefined): map is LeafletMapWithPanes {
   return !!(map && map._panes && map._panes['markerPane']);
 }
 
@@ -388,8 +429,8 @@ function getMapContentPoints(
 }
 
 function fitMapToPoints(
-  mapInstance: any,
-  L: any,
+  mapInstance: LeafletMap,
+  L: Pick<LeafletModule, 'latLngBounds'>,
   points: readonly MapPoint[],
   fallbackCenter: MapPoint,
   fallbackZoom: number,
@@ -433,16 +474,19 @@ function WaselMapCompact({
 }: Pick<WaselMapProps, 'center' | 'height' | 'className' | 'route' | 'markers'>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapDivRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
-  const LRef = useRef<any>(null);
-  const drawnLayersRef = useRef<any[]>([]);
+  const mapRef = useRef<LeafletMap | null>(null);
+  const LRef = useRef<LeafletModule | null>(null);
+  const drawnLayersRef = useRef<LeafletLayer[]>([]);
   const roRef = useRef<ResizeObserver | null>(null);
   const rafRef = useRef<number | null>(null);
   const [fallbackSvg, setFallbackSvg] = useState(false);
 
   const cssHeight = typeof height === 'number' ? `${height}px` : (height ?? '500px');
 
-  const fallbackCenter = center ?? { lat: 31.9539, lng: 35.9106 };
+  const fallbackCenter = useMemo(
+    () => center ?? { lat: 31.9539, lng: 35.9106 },
+    [center],
+  );
   const pts = getMapContentPoints(fallbackCenter, route ?? [], markers ?? []);
 
   const bounds = pts.reduce(
@@ -466,7 +510,7 @@ function WaselMapCompact({
     Number.isFinite(bounds.minLng) &&
     Number.isFinite(bounds.maxLng);
 
-  const invalidate = useCallback(() => {
+  const invalidate = useCallback((): void => {
     const m = mapRef.current;
     if (!m) return;
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -494,9 +538,8 @@ function WaselMapCompact({
           scrollWheelZoom: false,
           doubleClickZoom: false,
           boxZoom: false,
-          keyboard: false,
-          tap: false,
-          touchZoom: false,
+            keyboard: false,
+            touchZoom: false,
         });
         mapRef.current = map;
 
@@ -530,7 +573,7 @@ function WaselMapCompact({
       mapRef.current = null;
       drawnLayersRef.current = [];
     };
-  }, []);
+  }, [fallbackCenter, invalidate]);
 
   // Draw route/markers whenever inputs change.
   useEffect(() => {
@@ -718,18 +761,18 @@ function WaselMapFull(props: WaselMapProps) {
 
   const containerRef  = useRef<HTMLDivElement>(null);
   const mapDivRef     = useRef<HTMLDivElement>(null);
-  const mapRef        = useRef<any>(null);
-  const tileLayerRef  = useRef<any>(null);
-  const routeLineRef  = useRef<any>(null);
-  const liveMarkerRef = useRef<any>(null);
-  const liveCircleRef = useRef<any>(null);
-  const mosqueLayerRef = useRef<any[]>([]);
-  const radarLayerRef  = useRef<any[]>([]);
-  const routeMarkersRef = useRef<any[]>([]);
-  const customMarkersRef = useRef<any[]>([]);
+  const mapRef        = useRef<LeafletMap | null>(null);
+  const tileLayerRef  = useRef<LeafletTileLayer | null>(null);
+  const routeLineRef  = useRef<LeafletPolyline | null>(null);
+  const liveMarkerRef = useRef<LeafletMarker | null>(null);
+  const liveCircleRef = useRef<LeafletCircle | null>(null);
+  const mosqueLayerRef = useRef<LeafletMarker[]>([]);
+  const radarLayerRef  = useRef<LeafletMarker[]>([]);
+  const routeMarkersRef = useRef<LeafletMarker[]>([]);
+  const customMarkersRef = useRef<LeafletMarker[]>([]);
   const watchIdRef    = useRef<number | null>(null);
   const initDone      = useRef(false);
-  const LRef          = useRef<any>(null); // Leaflet instance
+  const LRef          = useRef<LeafletModule | null>(null); // Leaflet instance
 
   const [isLoaded,      setIsLoaded]      = useState(false);
   const [loadError,     setLoadError]     = useState<string | null>(null);
@@ -786,7 +829,7 @@ function WaselMapFull(props: WaselMapProps) {
   }, [isLoaded, height, isFullscreen]);
 
   /* ── Mosque markers via Overpass API ── */
-  const loadMosques = useCallback(async (mapInstance: any) => {
+  const loadMosques = useCallback(async (mapInstance: LeafletMapWithPanes) => {
     if (!LRef.current) return;
     const L = LRef.current;
 
@@ -804,9 +847,10 @@ function WaselMapFull(props: WaselMapProps) {
       const query = `[out:json][timeout:10];node["amenity"="place_of_worship"]["religion"="muslim"](around:8000,${lat},${lng});out 20;`;
       const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
       if (res.ok) {
-        const data = await res.json();
-        if (data.elements?.length > 0) {
-          mosquesToShow = data.elements.map((el: any) => ({
+        const data = (await res.json()) as OverpassResponse;
+        const elements = data.elements ?? [];
+        if (elements.length > 0) {
+          mosquesToShow = elements.map((el) => ({
             lat: el.lat,
             lng: el.lon,
             name: el.tags?.name || el.tags?.['name:ar'] || 'Mosque | مسجد',
@@ -832,7 +876,7 @@ function WaselMapFull(props: WaselMapProps) {
   }, []);
 
   /* ── Radar markers ── */
-  const loadRadars = useCallback((mapInstance: any) => {
+  const loadRadars = useCallback((mapInstance: LeafletMapWithPanes) => {
     if (!LRef.current) return;
     const L = LRef.current;
 
@@ -865,7 +909,7 @@ function WaselMapFull(props: WaselMapProps) {
   }, [extraHazards]);
 
   /* ── Draw route ── */
-  const drawRoute = useCallback(async (mapInstance: any) => {
+  const drawRoute = useCallback(async (mapInstance: LeafletMapWithPanes) => {
     if (!LRef.current || route.length < 2) return;
     const L = LRef.current;
 
@@ -897,7 +941,7 @@ function WaselMapFull(props: WaselMapProps) {
         { signal: AbortSignal.timeout(5000) }
       );
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as OsrmRouteResponse;
         const coords2 = data.routes?.[0]?.geometry?.coordinates;
         if (coords2?.length) {
           latlngs = coords2.map(([lng, lat]: [number, number]) => [lat, lng]);
@@ -930,7 +974,7 @@ function WaselMapFull(props: WaselMapProps) {
   }, [center, liveLocation, markers, route, zoom]);
 
   /* ── Custom prop markers ── */
-  const drawCustomMarkers = useCallback((mapInstance: any) => {
+  const drawCustomMarkers = useCallback((mapInstance: LeafletMapWithPanes) => {
     if (!LRef.current) return;
     const L = LRef.current;
 

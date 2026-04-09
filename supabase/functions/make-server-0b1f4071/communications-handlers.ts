@@ -43,6 +43,7 @@ interface CommunicationModuleOptions {
 
 const DELIVERY_CHANNELS = new Set(['email', 'sms', 'whatsapp', 'push', 'in_app']);
 const COMMUNICATION_QUEUE_RATE_LIMIT = { maxRequests: 25, windowMs: 5 * 60_000 };
+const COMMUNICATION_DELIVERY_CONCURRENCY = 4;
 
 function readJsonBody(request: Request): Promise<Record<string, unknown>> {
   return request.json()
@@ -312,14 +313,25 @@ export function createCommunicationHandlers(
     functionBaseUrl: string,
   ) {
     const dueDeliveries = await claimQueuedDeliveries(admin, 'edge:communications-process', 25);
+    const startedAt = Date.now();
 
     let sent = 0;
     let failed = 0;
-    for (const delivery of dueDeliveries) {
-      const result = await sendDelivery(admin, delivery, functionBaseUrl);
-      if (result.ok) sent += 1;
-      else failed += 1;
+    for (let index = 0; index < dueDeliveries.length; index += COMMUNICATION_DELIVERY_CONCURRENCY) {
+      const batch = dueDeliveries.slice(index, index + COMMUNICATION_DELIVERY_CONCURRENCY);
+      const results = await Promise.all(batch.map((delivery) => sendDelivery(admin, delivery, functionBaseUrl)));
+      for (const result of results) {
+        if (result.ok) sent += 1;
+        else failed += 1;
+      }
     }
+
+    console.info('[communications] processed queue batch', {
+      processed: dueDeliveries.length,
+      sent,
+      failed,
+      durationMs: Date.now() - startedAt,
+    });
 
     return {
       processed: dueDeliveries.length,

@@ -298,9 +298,10 @@ export function createRideBooking(input: {
     },
   });
   if (input.passengerId) {
+    const passengerId = input.passengerId;
     void createDirectBooking({
       tripId: input.rideId,
-      userId: input.passengerId,
+      userId: passengerId,
       seatsRequested: booking.seatsRequested,
       pickup: input.from,
       dropoff: input.to,
@@ -340,7 +341,7 @@ export function createRideBooking(input: {
         // Sync failed (offline or transient error) — enqueue for retry on reconnect
         enqueuePendingSync({
           bookingId: booking.id,
-          passengerId: input.passengerId!,
+          passengerId,
           rideId: input.rideId,
           seatsRequested: booking.seatsRequested,
           from: input.from,

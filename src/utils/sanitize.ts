@@ -3,6 +3,28 @@
  * Protects against XSS and injection attacks
  */
 
+type SanitizableRecord = Record<string, unknown>;
+
+function isSanitizableRecord(value: unknown): value is SanitizableRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function sanitizeUnknown(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return sanitizeText(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeUnknown(item));
+  }
+
+  if (isSanitizableRecord(value)) {
+    return sanitizeObject(value);
+  }
+
+  return value;
+}
+
 /**
  * Sanitize HTML content to prevent XSS
  * Removes dangerous tags and attributes
@@ -133,23 +155,11 @@ export function sanitizeNumber(input: string): string {
  * Deep sanitize object (recursive)
  * Useful for sanitizing form data
  */
-export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
+export function sanitizeObject<T extends SanitizableRecord>(obj: T): T {
   const sanitized = {} as T;
 
   for (const [key, value] of Object.entries(obj)) {
-    if (typeof value === 'string') {
-      sanitized[key as keyof T] = sanitizeText(value) as any;
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      sanitized[key as keyof T] = sanitizeObject(value);
-    } else if (Array.isArray(value)) {
-      sanitized[key as keyof T] = value.map(item => 
-        typeof item === 'string' ? sanitizeText(item) : 
-        typeof item === 'object' ? sanitizeObject(item) : 
-        item
-      ) as any;
-    } else {
-      sanitized[key as keyof T] = value;
-    }
+    sanitized[key as keyof T] = sanitizeUnknown(value) as T[keyof T];
   }
 
   return sanitized;
@@ -165,7 +175,7 @@ export function escapeRegExp(str: string): string {
 /**
  * Safe JSON parse with fallback
  */
-export function safeJSONParse<T = any>(json: string, fallback: T): T {
+export function safeJSONParse<T = unknown>(json: string, fallback: T): T {
   try {
     return JSON.parse(json);
   } catch {

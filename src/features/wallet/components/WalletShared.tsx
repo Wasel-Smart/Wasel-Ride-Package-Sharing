@@ -5,31 +5,10 @@
  */
 
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  Plus, ArrowDownLeft, ArrowUpRight, Send, Gift, RefreshCw,
-  TrendingUp, CheckCircle, Lock, Crown, Zap,
-  CreditCard, type LucideIcon,
-} from 'lucide-react';
+import { type ReactNode } from 'react';
 import { WaselColors } from '../../../tokens/wasel-tokens';
 import type { WalletTransaction } from '../../../services/walletApi';
-
-// Transaction styling by wallet event type
-export const TX_ICONS: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
-  topup: { icon: Plus, color: WaselColors.success, bg: 'bg-green-500/10' },
-  payment: { icon: CreditCard, color: WaselColors.error, bg: 'bg-red-500/10' },
-  earning: { icon: TrendingUp, color: WaselColors.teal, bg: 'bg-teal-500/10' },
-  withdrawal: { icon: ArrowUpRight, color: WaselColors.warning, bg: 'bg-orange-500/10' },
-  refund: { icon: RefreshCw, color: WaselColors.info, bg: 'bg-blue-500/10' },
-  send: { icon: Send, color: WaselColors.bronze, bg: 'bg-amber-500/10' },
-  receive: { icon: ArrowDownLeft, color: WaselColors.success, bg: 'bg-green-500/10' },
-  reward: { icon: Gift, color: '#A855F7', bg: 'bg-purple-500/10' },
-  subscription: { icon: Crown, color: WaselColors.bronze, bg: 'bg-amber-500/10' },
-  escrow_hold: { icon: Lock, color: WaselColors.warning, bg: 'bg-yellow-500/10' },
-  escrow_release: { icon: CheckCircle, color: WaselColors.success, bg: 'bg-green-500/10' },
-  cashback: { icon: Zap, color: '#A855F7', bg: 'bg-purple-500/10' },
-};
-
-export const PIE_COLORS = ['#16C7F2', '#C7FF1A', '#22C55E', '#A855F7', '#3B82F6', '#F59E0B', '#EF4444'];
+import { TX_ICONS } from './walletSharedMeta';
 
 const TX_STATUS_META: Record<string, { label: string; className: string }> = {
   pending: { label: 'Pending', className: 'text-amber-300 border-amber-400/30 bg-amber-500/10' },
@@ -87,7 +66,7 @@ export function TransactionRow({ tx, isRTL, jodLabel }: { tx: WalletTransaction;
 }
 
 // Shared modal shell for wallet actions
-export function ActionModal({ show, onClose, title, children }: { show: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
+export function ActionModal({ show, onClose, title, children }: { show: boolean; onClose: () => void; title: string; children: ReactNode }) {
   return (
     <AnimatePresence>
       {show && (

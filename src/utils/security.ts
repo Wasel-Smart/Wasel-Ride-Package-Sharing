@@ -11,7 +11,7 @@
 
 import { API_URL, fetchWithRetry, getAuthDetails } from '@/services/core';
 import { getConfig } from '@/utils/env';
-import { logger } from '@/utils/monitoring';
+import { logger } from '@/utils/logging';
 
 const IS_DEV =
   typeof import.meta !== 'undefined' &&
@@ -206,13 +206,15 @@ export function isTwoFactorAvailable(): boolean {
   return getConfig().enableTwoFactorAuth && Boolean(API_URL);
 }
 
-export async function enable2FA(_userId: string): Promise<TwoFactorSetup> {
+export async function enable2FA(userId: string): Promise<TwoFactorSetup> {
+  void userId;
   const payload = await callTwoFactorEndpoint<{ setup: TwoFactorSetup }>('/auth/2fa/setup');
   logger.info('2FA setup started', { important: true });
   return payload.setup;
 }
 
-export async function verify2FACode(_userId: string, code: string): Promise<boolean> {
+export async function verify2FACode(userId: string, code: string): Promise<boolean> {
+  void userId;
   if (!isTwoFactorAvailable()) {
     return false;
   }
@@ -228,7 +230,8 @@ export async function verify2FACode(_userId: string, code: string): Promise<bool
   }
 }
 
-export async function disable2FA(_userId: string, code: string): Promise<boolean> {
+export async function disable2FA(userId: string, code: string): Promise<boolean> {
+  void userId;
   if (!isTwoFactorAvailable()) {
     return false;
   }

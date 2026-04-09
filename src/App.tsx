@@ -17,16 +17,12 @@ import {
   startAvailabilityPolling,
   warmUpServer,
 } from './services/core';
-import { initSentry } from './utils/monitoring';
-import {
-  detectLongTasks,
-  initPerformanceMonitoring,
-} from './utils/performance';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
 import { buildAuthPagePath } from './utils/authFlow';
 import { shouldIgnoreError, formatErrorMessage } from './utils/errors';
 import { getInitialLanguage } from './utils/locale';
+import { scheduleDeferredTask } from './utils/runtimeScheduling';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -207,13 +203,23 @@ class AppErrorBoundary extends Component<{
 
 function AppRuntimeCoordinator() {
   useEffect(() => {
-    initSentry();
-    initPerformanceMonitoring();
-    detectLongTasks();
-    void warmUpServer();
-    void probeBackendHealth();
+    const cancelMonitoringSetup = scheduleDeferredTask(async () => {
+      const [{ initSentry }, { detectLongTasks, initPerformanceMonitoring }] = await Promise.all([
+        import('./utils/monitoring'),
+        import('./utils/performance'),
+      ]);
 
-    const stopPolling = startAvailabilityPolling();
+      initSentry();
+      initPerformanceMonitoring();
+      detectLongTasks();
+    }, 1_500);
+
+    const cancelWarmup = scheduleDeferredTask(async () => {
+      await warmUpServer();
+      await probeBackendHealth();
+    }, 900);
+
+    const stopPolling = startAvailabilityPolling(120_000);
     const syncOnlineState = () => {
       const online = typeof navigator === 'undefined' ? true : navigator.onLine;
       onlineManager.setOnline(online);
@@ -228,6 +234,8 @@ function AppRuntimeCoordinator() {
     }
 
     return () => {
+      cancelMonitoringSetup();
+      cancelWarmup();
       stopPolling();
       if (typeof window !== 'undefined') {
         window.removeEventListener('online', syncOnlineState);

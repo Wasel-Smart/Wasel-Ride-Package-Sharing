@@ -16,7 +16,7 @@ export interface QueuedRequest {
   id: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   url: string;
-  body?: any;
+  body?: unknown;
   headers?: Record<string, string>;
   priority: QueuedRequestPriority;
   retries: number;
@@ -62,7 +62,7 @@ class OfflineQueueManager {
     method: string,
     url: string,
     options?: {
-      body?: any;
+      body?: unknown;
       headers?: Record<string, string>;
       priority?: QueuedRequestPriority;
       maxRetries?: number;
@@ -212,7 +212,7 @@ class OfflineQueueManager {
             // Retry with exponential backoff
             this.retryRequest(request);
           }
-        } catch (error) {
+        } catch {
           this.retryRequest(request);
         }
 
@@ -399,7 +399,7 @@ export async function fetchWithOfflineQueue(
         url,
         {
           body: options?.body,
-          headers: options?.headers as Record<string, string>,
+      headers: options?.headers as Record<string, string>,
           priority: options?.priority,
           deduplicationKey: options?.deduplicationKey,
         }

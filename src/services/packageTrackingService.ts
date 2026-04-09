@@ -591,9 +591,11 @@ export class PackageTrackingService {
   }
 
   private isNearDestination(
-    _currentLocation: { lat: number; lng: number },
-    _destination: string,
+    currentLocation: { lat: number; lng: number },
+    destination: string,
   ): boolean {
+    void currentLocation;
+    void destination;
     // Production: geocode destination and compare with PostGIS ST_DWithin
     return false;
   }

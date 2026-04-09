@@ -6,6 +6,15 @@
  */
 
 import * as Sentry from '@sentry/react';
+import {
+  logger,
+  registerMonitoringSink,
+  trackAPICall,
+  trackNavigation,
+  trackUserAction,
+  usePerformanceMonitoring,
+  type LogContext,
+} from './logging';
 import { redactSensitiveValue } from './redaction';
 
 let sentryInitialized = false;
@@ -21,8 +30,6 @@ function safeStorageGet(key: string): string | null {
     return null;
   }
 }
-
-type LogContext = Record<string, unknown>;
 
 function redactContext(context?: LogContext): LogContext | undefined {
   if (!context) {
@@ -87,93 +94,39 @@ export function initSentry() {
     },
   });
 
-  sentryInitialized = true;
-}
-
-export const logger = {
-  error: (message: string, error?: Error | unknown, context?: LogContext) => {
-    const sanitizedContext = redactContext(context);
-    if (import.meta.env.DEV) {
-      console.error('[Wasel]', message, error, sanitizedContext);
-    }
-
-    Sentry.captureException(error || new Error(message), {
-      level: 'error',
-      tags: { type: 'application_error' },
-      extra: sanitizedContext,
-    });
-  },
-
-  warning: (message: string, context?: LogContext) => {
-    const sanitizedContext = redactContext(context);
-    if (import.meta.env.DEV) {
-      console.warn('[Wasel]', message, sanitizedContext);
-    }
-
-    Sentry.captureMessage(message, {
-      level: 'warning',
-      tags: { type: 'application_warning' },
-      extra: sanitizedContext,
-    });
-  },
-
-  info: (message: string, context?: LogContext) => {
-    const sanitizedContext = redactContext(context);
-    if (context?.important) {
-      Sentry.captureMessage(message, {
-        level: 'info',
-        tags: { type: 'application_info' },
-        extra: sanitizedContext,
+  registerMonitoringSink({
+    captureException: (error, context) => {
+      Sentry.captureException(error || new Error('Unknown error'), {
+        extra: redactContext(context),
       });
-    }
-  },
-
-  startTransaction: (name: string, op: string) => {
-    logger.addBreadcrumb(`Transaction: ${name}`, 'performance', { op });
-    return { finish: () => undefined };
-  },
-
-  addBreadcrumb: (message: string, category: string, data?: LogContext) => {
-    Sentry.addBreadcrumb({ message, category, level: 'info', data });
-  },
-};
-
-export function trackAPICall(endpoint: string, method: string, duration: number, status: number) {
-  logger.addBreadcrumb(`API ${method} ${endpoint}`, 'api', {
-    endpoint,
-    method,
-    duration,
-    status,
+    },
+    captureMessage: (message, level, context) => {
+      Sentry.captureMessage(message, {
+        level,
+        extra: redactContext(context),
+      });
+    },
+    addBreadcrumb: (message, category, data) => {
+      Sentry.addBreadcrumb({
+        message,
+        category,
+        level: 'info',
+        data: redactContext(data),
+      });
+    },
   });
 
-  if (duration > 3000) {
-    logger.warning(`Slow API call: ${method} ${endpoint}`, {
-      duration,
-      status,
-      endpoint,
-    });
-  }
-}
-
-export function trackUserAction(action: string, data?: LogContext) {
-  logger.addBreadcrumb(action, 'user_action', data);
-}
-
-export function trackNavigation(from: string, to: string) {
-  logger.addBreadcrumb(`Navigation: ${from} -> ${to}`, 'navigation', {
-    from,
-    to,
-  });
+  sentryInitialized = true;
 }
 
 export const ErrorBoundary = Sentry.ErrorBoundary;
 
-export function usePerformanceMonitoring(componentName: string) {
-  const transaction = logger.startTransaction(componentName, 'component.render');
-
-  return () => {
-    transaction.finish();
-  };
-}
+export {
+  logger,
+  trackAPICall,
+  trackNavigation,
+  trackUserAction,
+  usePerformanceMonitoring,
+};
 
 export default Sentry;

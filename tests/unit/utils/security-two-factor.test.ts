@@ -26,7 +26,7 @@ vi.mock('@/utils/env', () => ({
   getConfig: () => mockGetConfig(),
 }));
 
-vi.mock('@/utils/monitoring', () => ({
+vi.mock('@/utils/logging', () => ({
   logger: mockLogger,
 }));
 

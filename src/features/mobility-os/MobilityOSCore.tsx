@@ -97,6 +97,26 @@ function getCityLabel(city: City, ar: boolean) {
   return ar ? city.nameAr : city.name;
 }
 
+function getCityOrThrow(cityId: number): City {
+  const city = cityMap.get(cityId);
+  if (!city) {
+    throw new Error(`[MobilityOSCore] Missing city for id ${cityId}`);
+  }
+  return city;
+}
+
+function getRouteCities(route: Pick<RouteBase, 'from' | 'to'>) {
+  return {
+    from: getCityOrThrow(route.from),
+    to: getCityOrThrow(route.to),
+  };
+}
+
+function projectCity(cityId: number, width: number, height: number) {
+  const city = getCityOrThrow(cityId);
+  return project(city.lat, city.lon, width, height);
+}
+
 function createMobilityOSCopy(ar: boolean) {
   return {
     heroLabel: ar ? 'نظام الحركة / سطح التحكم الوطني' : 'Mobility OS / Live network view',
@@ -199,8 +219,7 @@ function speedFromDensity(density: number) {
 
 function initialRoutes(hour: number): RouteState[] {
   return ROUTES.map((route, index) => {
-    const from = cityMap.get(route.from)!;
-    const to = cityMap.get(route.to)!;
+    const { from, to } = getRouteCities(route);
     const passengerFlow = Math.min(route.lanes * 1800, (demand(from.populationK, from.attractiveness, hour) + demand(to.populationK, to.attractiveness, hour + 0.35)) * 190);
     const packageFlow = Math.min(route.lanes * 820, (demand(from.populationK, from.attractiveness * 0.76, hour + 1.1) + demand(to.populationK, to.attractiveness * 0.7, hour + 1.6)) * 88);
     const density = 16 + passengerFlow / 110 + packageFlow / 230 + index * 1.2;
@@ -211,8 +230,8 @@ function initialRoutes(hour: number): RouteState[] {
 function initialVehicles(routes: RouteState[]): Vehicle[] {
   return Array.from({ length: TARGET_VEHICLES }, (_, index) => {
     const route = routes[index % routes.length];
-    const from = project(cityMap.get(route.from)!.lat, cityMap.get(route.from)!.lon, BASE_W, BASE_H);
-    const to = project(cityMap.get(route.to)!.lat, cityMap.get(route.to)!.lon, BASE_W, BASE_H);
+    const from = projectCity(route.from, BASE_W, BASE_H);
+    const to = projectCity(route.to, BASE_W, BASE_H);
     const passenger = index % 3 !== 0;
     return { id: `vehicle-${index}`, routeId: route.id, type: passenger ? 'passenger' : 'package', progress: (index * 0.137) % 1, direction: index % 4 === 0 ? -1 : 1, speedFactor: 0.82 + (index % 7) * 0.05, x: from.x, y: from.y, angle: Math.atan2(to.y - from.y, to.x - from.x), passengers: passenger ? 1 + (index % 4) : undefined, seatCapacity: passenger ? 4 : undefined, packageCapacity: passenger ? undefined : 14 + (index % 6), packageLoad: passenger ? undefined : 5 + (index % 5) };
   });
@@ -223,8 +242,8 @@ function buildVehicleFleet(routes: RouteState[], liveVehicles: LiveMobilityVehic
     .map((vehicle): Vehicle | null => {
       const route = routes.find((item) => item.id === vehicle.routeId);
       if (!route) return null;
-      const from = project(cityMap.get(route.from)!.lat, cityMap.get(route.from)!.lon, BASE_W, BASE_H);
-      const to = project(cityMap.get(route.to)!.lat, cityMap.get(route.to)!.lon, BASE_W, BASE_H);
+      const from = projectCity(route.from, BASE_W, BASE_H);
+      const to = projectCity(route.to, BASE_W, BASE_H);
       return {
         id: vehicle.id,
         routeId: route.id,
@@ -331,6 +350,7 @@ export default function MobilityOSCore() {
   const [viewMode, setViewMode] = useState<ViewMode>('command');
   const [analytics, setAnalytics] = useState<Analytics>({ totalVehicles: 0, activePassengers: 0, activePackages: 0, seatAvailability: 0, packageCapacity: 0, avgSpeed: 0, networkUtilization: 0, congestionLevel: 0, topCorridor: '', recommendedPath: '', dispatchAction: '' });
   const [routeSnapshot, setRouteSnapshot] = useState<RouteState[]>(() => initialRoutes(8));
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const frameRef = useRef<number | null>(null);
@@ -371,7 +391,8 @@ export default function MobilityOSCore() {
     const wrap = wrapRef.current;
     if (!canvas || !wrap) return;
     const width = Math.max(320, Math.floor(wrap.clientWidth));
-    const height = Math.max(440, Math.floor(wrap.clientHeight || width / HERO_MAP_ASPECT));
+    const minH = window.innerWidth < 768 ? 240 : 440;
+    const height = Math.max(minH, Math.floor(wrap.clientHeight || width / HERO_MAP_ASPECT));
     const dpr = window.devicePixelRatio || 1;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
@@ -561,7 +582,7 @@ export default function MobilityOSCore() {
     ctx.filter = 'none';
     ctx.restore();
 
-    const selectedPoint = project(cityMap.get(selectedCityId)!.lat, cityMap.get(selectedCityId)!.lon, width, height);
+    const selectedPoint = projectCity(selectedCityId, width, height);
     const scan = ctx.createRadialGradient(selectedPoint.x, selectedPoint.y, 0, selectedPoint.x, selectedPoint.y, 180);
     scan.addColorStop(0, 'rgba(255,255,255,0.06)');
     scan.addColorStop(0.45, 'rgba(22,199,242,0.08)');
@@ -579,8 +600,8 @@ export default function MobilityOSCore() {
     }
 
     routesRef.current.forEach((route, routeIndex) => {
-      const from = project(cityMap.get(route.from)!.lat, cityMap.get(route.from)!.lon, width, height);
-      const to = project(cityMap.get(route.to)!.lat, cityMap.get(route.to)!.lon, width, height);
+      const from = projectCity(route.from, width, height);
+      const to = projectCity(route.to, width, height);
       const curve = getRouteCurve(from, to, route.congestion + route.lanes * 0.1, routeIndex);
       const control = { x: curve.cx, y: curve.cy };
       const flowMix = route.passengerFlow + route.packageFlow;
@@ -707,12 +728,13 @@ export default function MobilityOSCore() {
       .sort((a, b) => b.passengerFlow + b.packageFlow - (a.passengerFlow + a.packageFlow))
       .slice(0, 3)
       .forEach((route, rank) => {
-        const from = project(cityMap.get(route.from)!.lat, cityMap.get(route.from)!.lon, width, height);
-        const to = project(cityMap.get(route.to)!.lat, cityMap.get(route.to)!.lon, width, height);
+        const from = projectCity(route.from, width, height);
+        const to = projectCity(route.to, width, height);
         const curve = getRouteCurve(from, to, route.congestion + route.lanes * 0.1, rank + 17);
         const control = { x: curve.cx, y: curve.cy };
         const labelPoint = pointOnQuadratic(from, control, to, 0.6);
-        const label = `${getCityLabel(cityMap.get(route.from)!, ar)} - ${getCityLabel(cityMap.get(route.to)!, ar)}`;
+        const { from: fromCity, to: toCity } = getRouteCities(route);
+        const label = `${getCityLabel(fromCity, ar)} - ${getCityLabel(toCity, ar)}`;
         ctx.font = `700 10px ${F}`;
         const widthLabel = ctx.measureText(label).width + 28;
         const x = clamp(labelPoint.x - widthLabel / 2, 18, width - widthLabel - 18);
@@ -880,8 +902,7 @@ export default function MobilityOSCore() {
           congestion: liveRoute.congestion,
         };
       }
-      const from = cityMap.get(route.from)!;
-      const to = cityMap.get(route.to)!;
+      const { from, to } = getRouteCities(route);
       const passengerFlow = Math.min(route.lanes * 1800, (demand(from.populationK, from.attractiveness, timeOfDay) + demand(to.populationK, to.attractiveness, timeOfDay + 0.35)) * 190 * (route.from === selectedCityId || route.to === selectedCityId ? 1.12 : 1));
       const packageFlow = Math.min(route.lanes * 820, (demand(from.populationK, from.attractiveness * 0.76, timeOfDay + 1.1) + demand(to.populationK, to.attractiveness * 0.7, timeOfDay + 1.6)) * 88);
       const density = clamp(10 + passengerFlow / 110 + packageFlow / 230 + Math.sin(now * 0.00035 + index * 0.6) * 4.2, 8, 130);
@@ -892,9 +913,13 @@ export default function MobilityOSCore() {
     const width = canvas ? parseFloat(canvas.style.width || '0') || BASE_W : BASE_W;
     const height = canvas ? parseFloat(canvas.style.height || '0') || BASE_H : BASE_H;
     vehiclesRef.current = vehiclesRef.current.map((vehicle, index) => {
-      const route = routeMap.get(vehicle.routeId)!;
-      const startCity = vehicle.direction === 1 ? cityMap.get(route.from)! : cityMap.get(route.to)!;
-      const endCity = vehicle.direction === 1 ? cityMap.get(route.to)! : cityMap.get(route.from)!;
+      const route = routeMap.get(vehicle.routeId);
+      if (!route) {
+        return vehicle;
+      }
+      const routeCities = getRouteCities(route);
+      const startCity = vehicle.direction === 1 ? routeCities.from : routeCities.to;
+      const endCity = vehicle.direction === 1 ? routeCities.to : routeCities.from;
       const start = project(startCity.lat, startCity.lon, width, height);
       const end = project(endCity.lat, endCity.lon, width, height);
       if (vehicle.isLiveTelemetry && typeof vehicle.liveLat === 'number' && typeof vehicle.liveLng === 'number') {
@@ -933,6 +958,11 @@ export default function MobilityOSCore() {
       const avgSpeed = routesRef.current.reduce((sum, route) => sum + route.speedKph, 0) / routesRef.current.length;
       const congestionLevel = routesRef.current.reduce((sum, route) => sum + route.congestion, 0) / routesRef.current.length;
       const topRoute = [...routesRef.current].sort((a, b) => b.passengerFlow + b.packageFlow - (a.passengerFlow + a.packageFlow))[0];
+      if (!topRoute) {
+        return;
+      }
+      const topRouteCities = getRouteCities(topRoute);
+      const selectedCity = getCityOrThrow(selectedCityId);
       setAnalytics({
         totalVehicles: vehiclesRef.current.length,
         activePassengers,
@@ -942,11 +972,11 @@ export default function MobilityOSCore() {
         avgSpeed,
         networkUtilization: vehiclesRef.current.length / (TARGET_VEHICLES * 1.15),
         congestionLevel,
-        topCorridor: `${getCityLabel(cityMap.get(topRoute.from)!, ar)}${ar ? ' ← ' : ' -> '}${getCityLabel(cityMap.get(topRoute.to)!, ar)}`,
+        topCorridor: `${getCityLabel(topRouteCities.from, ar)}${ar ? ' ← ' : ' -> '}${getCityLabel(topRouteCities.to, ar)}`,
         recommendedPath: path,
         dispatchAction: topRoute.congestion > 0.78
-          ? (ar ? `إعادة توجيه العرض باتجاه ${getCityLabel(cityMap.get(topRoute.to)!, ar)}` : `Reposition supply toward ${getCityLabel(cityMap.get(topRoute.to)!, ar)}`)
-          : (ar ? `موازنة العرض حول ${getCityLabel(cityMap.get(selectedCityId)!, ar)}` : `Balance supply around ${getCityLabel(cityMap.get(selectedCityId)!, ar)}`),
+          ? (ar ? `إعادة توجيه العرض باتجاه ${getCityLabel(topRouteCities.to, ar)}` : `Reposition supply toward ${getCityLabel(topRouteCities.to, ar)}`)
+          : (ar ? `موازنة العرض حول ${getCityLabel(selectedCity, ar)}` : `Balance supply around ${getCityLabel(selectedCity, ar)}`),
       });
     }
   }, [ar, liveSnapshot, liveRouteOverrides, paused, selectedCityId, timeOfDay]);
@@ -1002,6 +1032,12 @@ export default function MobilityOSCore() {
     return () => { if (frameRef.current !== null) cancelAnimationFrame(frameRef.current); prevTimeRef.current = null; };
   }, [drawScene, updateSimulation]);
 
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const visibleRoutes = useMemo(() => {
     const filtered = routeSnapshot.filter((route) => route.from === selectedCityId || route.to === selectedCityId);
     return (filtered.length ? filtered : routeSnapshot).slice().sort((a, b) => b.passengerFlow + b.packageFlow - (a.passengerFlow + a.packageFlow)).slice(0, 6);
@@ -1030,7 +1066,7 @@ export default function MobilityOSCore() {
         <section style={glassPanelStyle({ padding: 28, borderRadius: 34 })}>
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.04), transparent 24%, transparent 72%, rgba(22,199,242,0.08))' }} />
           <div style={{ position: 'relative', display: 'grid', gap: 18 }}>
-            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'minmax(0, 1.2fr) minmax(320px, 0.8fr)' }}>
+            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.2fr) minmax(320px, 0.8fr)' }}>
               <div style={{ display: 'grid', gap: 14, alignContent: 'start' }}>
                 <div style={sectionLabelStyle}>{copy.heroLabel}</div>
                 <div style={{ display: 'grid', gap: 10 }}>
@@ -1127,7 +1163,7 @@ export default function MobilityOSCore() {
             <div style={{ color: C.textMuted, fontSize: '0.8rem', lineHeight: 1.65 }}>
               {copy.simulationNotice}
             </div>
-            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'minmax(0, 1.3fr) minmax(280px, 0.7fr)' }}>
+            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.3fr) minmax(280px, 0.7fr)' }}>
               <div style={{ padding: '14px 16px', borderRadius: 20, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)' }}>
                 <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{sourceMatrixLabel}</div>
                 <div style={{ marginTop: 8, color: C.textSub, fontSize: '0.88rem', lineHeight: 1.7 }}>{sourceMatrixBody}</div>
@@ -1178,7 +1214,7 @@ export default function MobilityOSCore() {
                 </div>
               </div>
             </div>
-            <div ref={wrapRef} style={{ ...glassPanelStyle({ padding: 0, borderRadius: 34, aspectRatio: `${HERO_MAP_ASPECT} / 1`, minHeight: 'clamp(500px, 54vw, 860px)', boxShadow: '0 60px 160px rgba(0,0,0,0.54), inset 0 1px 0 rgba(255,255,255,0.08)', transform: 'perspective(2200px) rotateX(5deg)', transformStyle: 'preserve-3d', transformOrigin: 'center top' }), background: 'linear-gradient(180deg, rgba(6,16,28,0.98), rgba(5,12,22,0.98))' }}>
+            <div ref={wrapRef} style={{ ...glassPanelStyle({ padding: 0, borderRadius: 34, aspectRatio: isMobile ? '4/3' : `${HERO_MAP_ASPECT} / 1`, minHeight: isMobile ? 'clamp(260px, 80vw, 420px)' : 'clamp(500px, 54vw, 860px)', boxShadow: '0 60px 160px rgba(0,0,0,0.54), inset 0 1px 0 rgba(255,255,255,0.08)', transform: isMobile ? 'none' : 'perspective(2200px) rotateX(5deg)', transformStyle: isMobile ? 'flat' : 'preserve-3d', transformOrigin: 'center top' }), background: 'linear-gradient(180deg, rgba(6,16,28,0.98), rgba(5,12,22,0.98))' }}>
               <div style={{ position: 'absolute', inset: -30, pointerEvents: 'none', background: 'radial-gradient(circle at 50% 8%, rgba(255,255,255,0.07), transparent 24%), radial-gradient(circle at 14% 30%, rgba(22,199,242,0.14), transparent 20%), radial-gradient(circle at 84% 26%, rgba(199,255,26,0.12), transparent 22%)', filter: 'blur(18px)', opacity: 0.9 }} />
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.04), transparent 18%, transparent 82%, rgba(22,199,242,0.06))' }} />
               <div style={{ position: 'absolute', inset: 14, borderRadius: 22, border: '1px solid rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
@@ -1280,8 +1316,7 @@ export default function MobilityOSCore() {
             </div>
             <div style={{ display: 'grid', gap: 14 }}>
               {visibleRoutes.map((route, index) => {
-                const from = cityMap.get(route.from)!;
-                const to = cityMap.get(route.to)!;
+                const { from, to } = getRouteCities(route);
                 const totalFlow = Math.round(route.passengerFlow + route.packageFlow);
                 const routeScore = Math.round((route.passengerFlow / Math.max(route.lanes * 1800, 1)) * 52 + (route.packageFlow / Math.max(route.lanes * 820, 1)) * 18 + (1 - route.congestion) * 30);
                 const pressureTone = route.congestion > 0.75 ? 'rgba(255,120,92,0.16)' : route.packageFlow > route.passengerFlow * 0.45 ? 'rgba(199,255,26,0.14)' : 'rgba(22,199,242,0.12)';

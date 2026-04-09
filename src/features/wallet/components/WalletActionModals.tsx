@@ -46,7 +46,7 @@ type WalletActionModalsProps = {
 export function WalletActionModals({
   actionLoading,
   balance,
-  isRTL: _isRTL,
+  isRTL,
   pinValue,
   sendAmount,
   sendNote,
@@ -81,7 +81,7 @@ export function WalletActionModals({
   onWithdraw,
 }: WalletActionModalsProps) {
   return (
-    <>
+    <div dir={isRTL ? 'rtl' : 'ltr'}>
       <SharedActionModal show={showTopUp} onClose={() => setShowTopUp(false)} title={t.addMoney}>
         <div className="space-y-3">
           <div className="grid grid-cols-4 gap-2">
@@ -215,6 +215,6 @@ export function WalletActionModals({
           </Button>
         </div>
       </SharedActionModal>
-    </>
+    </div>
   );
 }

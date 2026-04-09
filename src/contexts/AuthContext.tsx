@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import { authAPI } from '../services/auth';
@@ -155,7 +156,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         if (shouldRefreshProfile(event, nextSession)) {
           setTimeout(() => {
-            void fetchProfile(nextSession!.user.id);
+            if (nextSession?.user?.id) {
+              void fetchProfile(nextSession.user.id);
+            }
           }, 100);
         } else if (!nextSession) {
           setProfile(null);
@@ -174,7 +177,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setSession(data.session);
           setUser(data.session.user);
           setTimeout(() => {
-            void fetchProfile(data.session!.user.id);
+            if (data.session?.user?.id) {
+              void fetchProfile(data.session.user.id);
+            }
           }, 150);
         }
       } catch (error: unknown) {
