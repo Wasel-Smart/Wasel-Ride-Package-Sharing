@@ -128,10 +128,7 @@ export function isEdgeFunctionAvailable(): boolean {
 
 export function markEdgeFunctionUnavailable(): void {
   if (edgeFunctionAvailable) {
-    const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
-    if (isDev) {
-      console.info('[Wasel] Edge Function unavailable, using direct Supabase queries.');
-    }
+    // Preserve the state change without extra console noise in shared runtime code.
   }
 
   setEdgeFunctionAvailability(false);
@@ -313,7 +310,7 @@ export async function fetchWithRetry(
             maxRetries: retries + 3,
           }
         );
-      } catch (e) {
+      } catch {
         // Offline queue not available
       }
     }
@@ -360,7 +357,7 @@ export async function fetchWithRetry(
             maxRetries: 5,
           }
         );
-      } catch (e) {
+      } catch {
         // Offline queue not available
       }
     }

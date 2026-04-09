@@ -76,15 +76,6 @@ export function validateEnvironmentConfig(): void {
     throw new ConfigError(message, { errors, config });
   }
 
-  // Log environment info for debugging
-  if (!import.meta.env.PROD) {
-    console.info('[Wasel Environment]', {
-      mode: config.mode,
-      isDemoMode: config.isDemoMode,
-      appUrl: config.appUrl,
-      supabaseUrl: config.supabaseUrl.split('.')[0] + '.[redacted]',
-    });
-  }
 }
 
 /**

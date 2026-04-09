@@ -1,11 +1,21 @@
 import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey, supabase } from './core';
 import { getDirectProfile, getDirectVerificationRecord, updateDirectProfile } from './directSupabase';
 import { getAuthRedirectCandidates, getConfig } from '../utils/env';
+import { friendlyAuthError } from '../utils/authHelpers';
 import {
   buildTraceHeaders,
   profileUpdatePayloadSchema,
   withDataIntegrity,
 } from './dataIntegrity';
+import {
+  expectJsonResponse,
+  sanitizeEmail,
+  sanitizeOptionalTextField,
+  sanitizePhoneNumber,
+  sanitizeTextField,
+  withApiTelemetry,
+} from './http';
+import { ValidationError } from '../utils/errors';
 
 function canUseEdgeApi(): boolean {
   return Boolean(API_URL && publicAnonKey);
@@ -19,42 +29,49 @@ function getDirectFallbackError(operation: string): Error {
   return new Error(`${operation} is temporarily unavailable while the secure backend is degraded. Please try again shortly.`);
 }
 
-function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'generic'): string {
-  const lower = message.toLowerCase();
+export function normalizeAuthError(
+  message: string,
+  context: 'signin' | 'signup' | 'generic',
+): string {
+  return friendlyAuthError(
+    message,
+    context === 'signin'
+      ? 'Sign in failed. Please try again.'
+      : context === 'signup'
+        ? 'Sign up failed. Please try again.'
+        : 'Request failed.',
+  );
+}
 
-  if (
-    lower.includes('invalid login credentials') ||
-    lower.includes('invalid credentials') ||
-    lower.includes('authentication failed') ||
-    lower.includes('wrong email') ||
-    lower.includes('wrong password')
-  ) {
-    return 'Incorrect email or password.';
-  }
+function normalizeAuthException(
+  error: unknown,
+  context: 'signin' | 'signup' | 'generic',
+): Error {
+  const message =
+    error instanceof Error ? error.message : typeof error === 'string' ? error : '';
 
-  if (lower.includes('email not confirmed')) {
-    return 'Please confirm your email before signing in.';
-  }
+  return new Error(
+    normalizeAuthError(
+      message || (context === 'signup' ? 'Sign up failed.' : 'Sign in failed.'),
+      context,
+    ),
+  );
+}
 
-  if (
-    lower.includes('provider is not enabled') ||
-    lower.includes('unsupported provider') ||
-    lower.includes('oauth provider not supported')
-  ) {
-    return 'This social sign-in provider is not enabled yet in Supabase Auth.';
-  }
+function normalizeEmailInput(email: string): string {
+  return email.trim().toLowerCase();
+}
 
-  if (
-    lower.includes('already been registered') ||
-    lower.includes('already registered') ||
-    lower.includes('user already exists')
-  ) {
-    return 'This email is already registered.';
-  }
-
-  if (context === 'signin') return 'Sign in failed. Please try again.';
-  if (context === 'signup') return 'Sign up failed. Please try again.';
-  return message || 'Request failed.';
+function isDuplicateSupabaseSignupResult(data: {
+  user?: { identities?: Array<unknown> | null } | null;
+  session?: unknown;
+}): boolean {
+  return Boolean(
+    data.user &&
+      !data.session &&
+      Array.isArray(data.user.identities) &&
+      data.user.identities.length === 0,
+  );
 }
 
 function shouldRetryAuthRedirect(error: unknown): boolean {
@@ -134,34 +151,66 @@ async function enrichProfileWithVerification(userId: string, profile: Record<str
   }
 }
 
+async function safeGetDirectProfile(userId: string): Promise<Record<string, unknown> | null> {
+  try {
+    const profile = await getDirectProfile(userId);
+    return (profile as Record<string, unknown> | null) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export const authAPI = {
   async signUp(email: string, password: string, firstName: string, lastName: string, phone: string) {
     const client = requireSupabase();
+    const sanitizedEmail = sanitizeEmail(normalizeEmailInput(email));
+    const sanitizedFirstName = sanitizeTextField(firstName, 'First name', 80);
+    const sanitizedLastName = sanitizeTextField(lastName, 'Last name', 80);
+    const sanitizedPhone = sanitizePhoneNumber(phone);
+
+    if (password.trim().length < 8) {
+      throw new ValidationError('Password must be at least 8 characters long');
+    }
+
     const redirectCandidates = getAuthRedirectCandidates(
       typeof window !== 'undefined' ? window.location.origin : undefined,
     );
     let lastError: Error | null = null;
 
     for (const redirectTo of redirectCandidates) {
-      const { data, error } = await client.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectTo,
-          data: {
-            full_name: `${firstName} ${lastName}`.trim(),
-            phone,
+      try {
+        const { data, error } = await client.auth.signUp({
+          email: sanitizedEmail,
+          password,
+          options: {
+            emailRedirectTo: redirectTo,
+            data: {
+              full_name: `${sanitizedFirstName} ${sanitizedLastName}`.trim(),
+              phone: sanitizedPhone,
+            },
           },
-        },
-      });
+        });
 
-      if (!error) {
+        if (error) {
+          lastError = new Error(normalizeAuthError(error.message, 'signup'));
+          if (!shouldRetryAuthRedirect(error)) {
+            throw lastError;
+          }
+          continue;
+        }
+
+        if (isDuplicateSupabaseSignupResult(data)) {
+          throw new Error(
+            'An account with this email already exists. Sign in instead, or reset your password if you need access.',
+          );
+        }
+
         return data;
-      }
-
-      lastError = new Error(normalizeAuthError(error.message, 'signup'));
-      if (!shouldRetryAuthRedirect(error)) {
-        throw lastError;
+      } catch (error) {
+        lastError = normalizeAuthException(error, 'signup');
+        if (!shouldRetryAuthRedirect(error)) {
+          throw lastError;
+        }
       }
     }
 
@@ -174,6 +223,7 @@ export const authAPI = {
 
   async resendSignupConfirmation(email: string) {
     const client = requireSupabase();
+    const sanitizedEmail = sanitizeEmail(normalizeEmailInput(email));
     const redirectCandidates = getAuthRedirectCandidates(
       typeof window !== 'undefined' ? window.location.origin : undefined,
     );
@@ -182,7 +232,7 @@ export const authAPI = {
     for (const redirectTo of redirectCandidates) {
       const { error } = await client.auth.resend({
         type: 'signup',
-        email,
+        email: sanitizedEmail,
         options: {
           emailRedirectTo: redirectTo,
         },
@@ -206,14 +256,18 @@ export const authAPI = {
   },
 
   async createProfile(userId: string, email: string, firstName: string, lastName: string) {
+    const sanitizedEmail = sanitizeEmail(email);
+    const sanitizedFirstName = sanitizeTextField(firstName, 'First name', 80);
+    const sanitizedLastName = sanitizeTextField(lastName, 'Last name', 80);
+
     if (!canUseEdgeApi()) {
       if (!canUseDirectFallbackForWrites()) {
         throw getDirectFallbackError('Profile creation');
       }
 
       return updateDirectProfile(userId, {
-        email,
-        full_name: `${firstName} ${lastName}`.trim(),
+        email: sanitizedEmail,
+        full_name: `${sanitizedFirstName} ${sanitizedLastName}`.trim(),
       });
     }
 
@@ -239,25 +293,35 @@ export const authAPI = {
         throw new Error('Not authenticated - please try logging in again');
       }
 
-      const response = await fetchWithRetry(`${API_URL}/profile`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          userId,
-          email,
-          firstName,
-          lastName,
-          fullName: `${firstName} ${lastName}`.trim(),
-        }),
-      });
+      const response = await withApiTelemetry(
+        'profile.create',
+        `${API_URL}/profile`,
+        'POST',
+        () =>
+          fetchWithRetry(`${API_URL}/profile`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              userId,
+              email: sanitizedEmail,
+              firstName: sanitizedFirstName,
+              lastName: sanitizedLastName,
+              fullName: `${sanitizedFirstName} ${sanitizedLastName}`.trim(),
+            }),
+          }),
+      );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        const createProfileError = await expectJsonResponse<never>(
+          response,
+          `Failed to create profile: ${response.status}`,
+          { operation: 'profile.create' },
+        ).catch((error) => error);
 
-        if (response.status === 401 && errorData.message?.includes('JWT')) {
+        if (response.status === 401 && createProfileError instanceof Error && createProfileError.message.includes('JWT')) {
           const {
             data: { session: refreshedSession },
             error: refreshError,
@@ -267,33 +331,38 @@ export const authAPI = {
             throw new Error('Session expired - please log in again');
           }
 
-          const retryResponse = await fetchWithRetry(`${API_URL}/profile`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${refreshedSession.access_token}`,
-            },
-            body: JSON.stringify({
-              userId,
-              email,
-              firstName,
-              lastName,
-              fullName: `${firstName} ${lastName}`.trim(),
-            }),
+          const retryResponse = await withApiTelemetry(
+            'profile.create.retry',
+            `${API_URL}/profile`,
+            'POST',
+            () =>
+              fetchWithRetry(`${API_URL}/profile`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${refreshedSession.access_token}`,
+                },
+                body: JSON.stringify({
+                  userId,
+                  email: sanitizedEmail,
+                  firstName: sanitizedFirstName,
+                  lastName: sanitizedLastName,
+                  fullName: `${sanitizedFirstName} ${sanitizedLastName}`.trim(),
+                }),
+              }),
+          );
+
+          return expectJsonResponse(retryResponse, `Failed to create profile: ${retryResponse.status}`, {
+            operation: 'profile.create.retry',
           });
-
-          if (!retryResponse.ok) {
-            const retryErrorData = await retryResponse.json().catch(() => ({ error: 'Unknown error' }));
-            throw new Error(retryErrorData.error || `Failed to create profile: ${retryResponse.status}`);
-          }
-
-          return await retryResponse.json();
         }
 
-        throw new Error(errorData.error || `Failed to create profile: ${response.status}`);
+        throw createProfileError;
       }
 
-      return await response.json();
+      return await expectJsonResponse(response, `Failed to create profile: ${response.status}`, {
+        operation: 'profile.create',
+      });
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('createProfile error:', error);
@@ -305,10 +374,19 @@ export const authAPI = {
 
   async signIn(email: string, password: string) {
     const client = requireSupabase();
-    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    const sanitizedEmail = sanitizeEmail(normalizeEmailInput(email));
 
-    if (error) throw new Error(normalizeAuthError(error.message, 'signin'));
-    return data;
+    try {
+      const { data, error } = await client.auth.signInWithPassword({
+        email: sanitizedEmail,
+        password,
+      });
+
+      if (error) throw new Error(normalizeAuthError(error.message, 'signin'));
+      return data;
+    } catch (error) {
+      throw normalizeAuthException(error, 'signin');
+    }
   },
 
   async signOut() {
@@ -335,26 +413,39 @@ export const authAPI = {
     }
 
     try {
-      const response = await fetchWithRetry(
-        `${API_URL}/profile/${userId}`,
-        { headers: { Authorization: `Bearer ${token}` } },
+      const endpoint = `${API_URL}/profile/${userId}`;
+      const response = await withApiTelemetry(
+        'profile.get',
+        endpoint,
+        'GET',
+        () =>
+          fetchWithRetry(
+            endpoint,
+            { headers: { Authorization: `Bearer ${token}` } },
+          ),
       );
 
       if (!response.ok) {
-        const profile = await getDirectProfile(userId).catch(() => null);
-        const enrichedProfile = await enrichProfileWithVerification(userId, profile as Record<string, unknown> | null);
+        const profile = await safeGetDirectProfile(userId);
+        const enrichedProfile = await enrichProfileWithVerification(userId, profile);
         return { profile: enrichedProfile };
       }
 
-      const data = await response.json();
+      const data =
+        (typeof response.json === 'function'
+          ? await response.json().catch(() => null)
+          : null) ??
+        await expectJsonResponse<Record<string, unknown>>(response, 'Failed to load profile', {
+          operation: 'profile.get',
+        });
       const enrichedProfile = await enrichProfileWithVerification(
         userId,
         data as Record<string, unknown>,
       );
       return { profile: enrichedProfile };
     } catch {
-      const profile = await getDirectProfile(userId).catch(() => null);
-      const enrichedProfile = await enrichProfileWithVerification(userId, profile as Record<string, unknown> | null);
+      const profile = await safeGetDirectProfile(userId);
+      const enrichedProfile = await enrichProfileWithVerification(userId, profile);
       return { profile: enrichedProfile };
     }
   },
@@ -371,31 +462,60 @@ export const authAPI = {
             throw new Error('Not authenticated');
           }
 
+          const sanitizedPayload = {
+            ...payload,
+            ...(typeof payload.email === 'string' ? { email: sanitizeEmail(payload.email) } : {}),
+            ...(typeof payload.full_name === 'string'
+              ? { full_name: sanitizeTextField(payload.full_name, 'Full name', 120) }
+              : {}),
+            ...(typeof payload.phone_number === 'string'
+              ? { phone_number: sanitizePhoneNumber(payload.phone_number) }
+              : {}),
+            ...(typeof payload.phone === 'string'
+              ? { phone: sanitizePhoneNumber(payload.phone) }
+              : {}),
+            ...(typeof payload.role === 'string'
+              ? { role: sanitizeTextField(payload.role, 'Role', 32) }
+              : {}),
+            ...(typeof payload.verification_level === 'string'
+              ? { verification_level: sanitizeTextField(payload.verification_level, 'Verification level', 32) }
+              : {}),
+            ...(typeof payload.avatar_url === 'string'
+              ? { avatar_url: sanitizeOptionalTextField(payload.avatar_url, 500) }
+              : {}),
+          };
+
           if (!canUseEdgeApi()) {
             if (!canUseDirectFallbackForWrites()) {
               throw getDirectFallbackError('Profile update');
             }
 
-            const profile = await updateDirectProfile(userId, payload);
+            const profile = await updateDirectProfile(userId, sanitizedPayload);
             return { success: true, profile };
           }
 
           let response: Response;
           try {
-            response = await fetchWithRetry(`${API_URL}/profile/${userId}`, {
-              method: 'PATCH',
-              headers: buildTraceHeaders(requestId, {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              }),
-              body: JSON.stringify(payload),
-            });
+            response = await withApiTelemetry(
+              'profile.update',
+              `${API_URL}/profile/${userId}`,
+              'PATCH',
+              () =>
+                fetchWithRetry(`${API_URL}/profile/${userId}`, {
+                  method: 'PATCH',
+                  headers: buildTraceHeaders(requestId, {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                  }),
+                  body: JSON.stringify(sanitizedPayload),
+                }),
+            );
           } catch (networkError) {
             if (!canUseDirectFallbackForWrites()) {
               throw networkError;
             }
 
-            const profile = await updateDirectProfile(userId, payload);
+            const profile = await updateDirectProfile(userId, sanitizedPayload);
             return { success: true, profile };
           }
 
@@ -410,7 +530,7 @@ export const authAPI = {
             }
 
             try {
-              const profile = await updateDirectProfile(userId, payload);
+              const profile = await updateDirectProfile(userId, sanitizedPayload);
               return { success: true, profile };
             } catch (fallbackError) {
               console.error('[authAPI.updateProfile] Server error:', response.status, errorData, requestId);
@@ -424,7 +544,10 @@ export const authAPI = {
             }
           }
 
-          const data = await response.json();
+          const data = await expectJsonResponse<Record<string, unknown>>(response, 'Failed to update profile', {
+            operation: 'profile.update',
+            requestId,
+          });
           return { success: true, profile: data };
         },
       });

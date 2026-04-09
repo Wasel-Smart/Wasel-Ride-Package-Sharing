@@ -48,6 +48,7 @@ npm run dev
 | `npm run test:e2e` | Run end-to-end tests (Playwright) |
 | `npm run type-check` | TypeScript check only |
 | `npm run verify` | Full verification: types + unit tests + build + E2E |
+| `npm run test:coverage` | Unit tests with coverage thresholds enforced |
 
 ---
 
@@ -108,6 +109,20 @@ npm run build
 ```
 
 Recommended: Set `VITE_APP_URL` to your production domain before building.
+
+---
+
+## Quality Gates
+
+The repository now includes a GitHub Actions workflow at `.github/workflows/ci.yml` that runs:
+
+- `npm ci`
+- `npm run type-check`
+- `npm run lint`
+- `npm run test:coverage`
+- `npm run build`
+
+This keeps the shared service layer, runtime config, and production build path verified on every push and pull request.
 
 ---
 

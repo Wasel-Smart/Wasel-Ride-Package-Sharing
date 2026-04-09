@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState, useMemo, useCallback, ReactNode } from 'react';
-import { translations, Language } from '../locales/translations';
+import { createContext, useContext, useEffect, useState, useMemo, useCallback, type ReactNode } from 'react';
+import { translations, type Language } from '../locales/translations';
 import {
   formatLocaleDate,
   formatLocaleNumber,
@@ -70,13 +70,16 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   // Memoized translation function
   const t = useCallback((key: string): string => {
     const keys = key.split('.');
-    let value: any = translations[language];
-    
+    let value: unknown = translations[language];
+
     for (const k of keys) {
-      value = value?.[k];
+      if (!value || typeof value !== 'object') {
+        return key;
+      }
+      value = (value as Record<string, unknown>)[k];
     }
-    
-    return value || key;
+
+    return typeof value === 'string' ? value : key;
   }, [language]);
 
   const localeConfig = useMemo(() => getLocaleConfig(language), [language]);

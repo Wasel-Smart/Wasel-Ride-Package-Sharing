@@ -5,7 +5,6 @@ import { supabase, isSupabaseConfigured } from '../utils/supabase/client';
 import { getAuthRedirectCandidates } from '../utils/env';
 import { useLocalAuth } from './LocalAuth';
 import {
-  AuthOperationError,
   buildUpdatedLocalUser,
   createLocalAuthProfile,
   createLocalAuthUser,
@@ -15,6 +14,7 @@ import {
   shouldRefreshProfile,
   signInWithOAuthProvider,
   type Profile,
+  type AuthOperationError,
 } from './authContextHelpers';
 
 interface AuthContextType {

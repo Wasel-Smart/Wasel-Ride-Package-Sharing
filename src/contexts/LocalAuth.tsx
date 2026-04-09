@@ -35,6 +35,43 @@ export interface WaselUser {
 
 type SignInResult = Awaited<ReturnType<typeof authAPI.signIn>>;
 
+type BackendAuthUser = {
+  id?: string;
+  email?: string;
+  phone?: string;
+  created_at?: string;
+  confirmed_at?: string | null;
+  email_confirmed_at?: string | null;
+  phone_confirmed_at?: string | null;
+  user_metadata?: {
+    full_name?: string;
+    name?: string;
+    avatar_url?: string;
+  };
+};
+
+type BackendProfile = {
+  id?: string;
+  full_name?: string;
+  email?: string;
+  phone_number?: string;
+  verified?: boolean;
+  sanad_verified?: boolean;
+  email_verified?: boolean;
+  phone_verified?: boolean;
+  verification_level?: string;
+  wallet_status?: WaselUser['walletStatus'];
+  role?: WaselUser['role'];
+  wallet_balance?: number;
+  balance?: number;
+  rating?: number;
+  trip_count?: number;
+  trips?: number;
+  avatar_url?: string;
+  created_at?: string;
+  two_factor_enabled?: boolean;
+};
+
 function computeTrustScore(user: Pick<WaselUser, 'verified' | 'sanadVerified' | 'emailVerified' | 'phoneVerified' | 'trips' | 'rating'>) {
   let score = 45;
   if (user.emailVerified) score += 10;
@@ -133,8 +170,8 @@ function mapBackendProfile({
   authUser,
   profile,
 }: {
-  authUser: any;
-  profile: any;
+  authUser: BackendAuthUser | null;
+  profile: BackendProfile | null;
 }): WaselUser {
   const name =
     profile?.full_name ||
@@ -250,12 +287,10 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    let bootstrapTimedOut = false;
     const bootstrapGuard =
       typeof window !== 'undefined'
         ? window.setTimeout(() => {
             if (!mounted) return;
-            bootstrapTimedOut = true;
             setLoading(false);
             if (import.meta.env?.DEV && !import.meta.env?.TEST) {
               console.warn('[LocalAuth] Auth bootstrap timed out; continuing with cached access state.');
@@ -309,9 +344,6 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
           window.clearTimeout(bootstrapGuard);
         }
         if (mounted) setLoading(false);
-        if (bootstrapTimedOut && import.meta.env?.DEV && !import.meta.env?.TEST) {
-          console.info('[LocalAuth] Auth bootstrap recovered after the guard released loading.');
-        }
       }
     };
 

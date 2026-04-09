@@ -43,6 +43,10 @@ export function WaselInput({
   const isPassword   = type === 'password';
   const resolvedType = isPassword && showPassword ? 'text' : type;
   const hasError     = Boolean(error);
+  const descriptionId = description && id ? `${id}-description` : undefined;
+  const errorId = error && id ? `${id}-error` : undefined;
+  const hintId = hint && !error && id ? `${id}-hint` : undefined;
+  const describedBy = [descriptionId, errorId, hintId].filter(Boolean).join(' ') || undefined;
 
   const borderColor = hasError
     ? C.error
@@ -69,7 +73,10 @@ export function WaselInput({
             </label>
           )}
           {description && (
-            <span style={{ fontSize: TYPE.size.xs, color: C.textMuted, fontFamily: F }}>
+            <span
+              id={descriptionId}
+              style={{ fontSize: TYPE.size.xs, color: C.textMuted, fontFamily: F }}
+            >
               {description}
             </span>
           )}
@@ -103,6 +110,8 @@ export function WaselInput({
           onChange={(e) => onChange?.(e.target.value)}
           onFocus={(e) => { setFocused(true); rest.onFocus?.(e); }}
           onBlur={(e)  => { setFocused(false); rest.onBlur?.(e); }}
+          aria-invalid={hasError || rest['aria-invalid'] === true}
+          aria-describedby={rest['aria-describedby'] ?? describedBy}
           style={{
             flex:       1,
             border:     'none',
@@ -133,12 +142,16 @@ export function WaselInput({
       </div>
 
       {error && (
-        <span style={{ fontSize: TYPE.size.xs, color: C.error, fontFamily: F, lineHeight: 1.5 }}>
+        <span
+          id={errorId}
+          role="alert"
+          style={{ fontSize: TYPE.size.xs, color: C.error, fontFamily: F, lineHeight: 1.5 }}
+        >
           {error}
         </span>
       )}
 
-      {hint && !error && hint}
+      {hint && !error ? <div id={hintId}>{hint}</div> : null}
     </div>
   );
 }

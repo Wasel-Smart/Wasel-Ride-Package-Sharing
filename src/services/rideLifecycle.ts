@@ -12,6 +12,7 @@ import {
   triggerRideBookingEmails,
   triggerRideCompletedEmails,
 } from './transactionalEmailTriggers';
+import { ValidationError } from '../utils/errors';
 
 export type RideBookingStatus =
   | 'pending_driver'
@@ -55,6 +56,21 @@ export interface RideBookingRecord {
   syncedAt?: string;
   /** True when the Supabase sync failed and a retry is pending */
   pendingSync?: boolean;
+}
+
+const ALLOWED_RIDE_STATUS_TRANSITIONS: Record<RideBookingStatus, readonly RideBookingStatus[]> = {
+  pending_driver: ['confirmed', 'rejected', 'cancelled'],
+  confirmed: ['completed', 'cancelled'],
+  rejected: [],
+  cancelled: [],
+  completed: [],
+};
+
+export function canTransitionRideBookingStatus(
+  currentStatus: RideBookingStatus,
+  nextStatus: RideBookingStatus,
+): boolean {
+  return currentStatus === nextStatus || ALLOWED_RIDE_STATUS_TRANSITIONS[currentStatus].includes(nextStatus);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -358,6 +374,13 @@ export function updateRideBooking(
   const bookings = readBookings();
   const target = bookings.find((booking) => booking.id === bookingId);
   if (!target) return null;
+
+  if (updates.status && !canTransitionRideBookingStatus(target.status, updates.status)) {
+    throw new ValidationError(
+      `Invalid ride booking transition from ${target.status} to ${updates.status}.`,
+      { bookingId, fromStatus: target.status, toStatus: updates.status },
+    );
+  }
 
   const updated: RideBookingRecord = {
     ...target,

@@ -1,20 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { AuthChangeEvent } from '@supabase/supabase-js';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
+import {
+  friendlyAuthError,
+  getPasswordRequirements,
+  validatePassword,
+} from '../utils/authHelpers';
 import { consumePersistedAuthReturnTo } from '../utils/authFlow';
 import { supabase } from '../utils/supabase/client';
 
 type CallbackState = 'loading' | 'closing' | 'redirecting' | 'recovery' | 'error';
 
 function readCallbackParam(key: string): string {
-  if (typeof window === 'undefined') {
-    return '';
-  }
+  if (typeof window === 'undefined') return '';
 
   const searchValue = new URLSearchParams(window.location.search).get(key);
-  if (searchValue) {
-    return searchValue;
-  }
+  if (searchValue) return searchValue;
 
   const hash = window.location.hash.startsWith('#')
     ? window.location.hash.slice(1)
@@ -39,6 +40,34 @@ function shouldIgnoreExchangeCodeError(error: unknown): boolean {
   );
 }
 
+function hasUsableOpener(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    return Boolean(window.opener && !window.opener.closed);
+  } catch {
+    return false;
+  }
+}
+
+async function ensureEstablishedSession() {
+  if (!supabase) return null;
+
+  const firstAttempt = await supabase.auth.getSession();
+  if (firstAttempt.error) throw firstAttempt.error;
+  if (firstAttempt.data.session) return firstAttempt.data.session;
+
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  const retryAttempt = await supabase.auth.getSession();
+  if (retryAttempt.error) throw retryAttempt.error;
+  if (retryAttempt.data.session) return retryAttempt.data.session;
+
+  throw new Error(
+    'Authentication session could not be established. Please try signing in again.',
+  );
+}
+
 export default function WaselAuthCallback() {
   const navigate = useIframeSafeNavigate();
   const [state, setState] = useState<CallbackState>('loading');
@@ -49,10 +78,15 @@ export default function WaselAuthCallback() {
   const [savingPassword, setSavingPassword] = useState(false);
   const callbackType = useMemo(() => readCallbackParam('type'), []);
   const authCode = useMemo(() => readCallbackParam('code'), []);
-  const callbackError = useMemo(
+  const rawCallbackError = useMemo(
     () => decodeURIComponent(readCallbackParam('error_description') || readCallbackParam('error') || ''),
     [],
   );
+  const callbackError = useMemo(
+    () => (rawCallbackError ? friendlyAuthError(rawCallbackError, 'Unable to complete sign-in.') : ''),
+    [rawCallbackError],
+  );
+  const passwordRequirements = getPasswordRequirements(password);
 
   useEffect(() => {
     let active = true;
@@ -108,11 +142,12 @@ export default function WaselAuthCallback() {
         await new Promise((resolve) => setTimeout(resolve, 50));
 
         if (authCode && typeof supabase.auth.exchangeCodeForSession === 'function') {
-          const {
-            data: { session: existingSession },
-          } = await supabase.auth.getSession();
+          const existingSession = await supabase.auth.getSession();
+          if (existingSession.error) {
+            throw existingSession.error;
+          }
 
-          if (!existingSession) {
+          if (!existingSession.data.session) {
             const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(authCode);
             if (exchangeError && !shouldIgnoreExchangeCodeError(exchangeError)) {
               throw exchangeError;
@@ -127,40 +162,23 @@ export default function WaselAuthCallback() {
           return;
         }
 
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-        if (error) {
-          throw error;
-        }
+        await ensureEstablishedSession();
 
-        if (!session) {
-          // No session yet — wait one tick and retry once before giving up.
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          const { data: retryData, error: retryError } = await supabase.auth.getSession();
-          if (retryError) throw retryError;
-          if (!retryData.session) {
-            throw new Error(
-              'Authentication session could not be established. ' +
-              'Please try signing in again.',
-            );
-          }
-          // Session found on retry — fall through with retryData.session.
-        }
-
-        if (window.opener && !window.opener.closed) {
-          // Popup flow: notify the opener and close this window.
+        if (hasUsableOpener()) {
           try {
             window.opener.postMessage({ type: 'wasel-auth-complete' }, window.location.origin);
           } catch {
-            // cross-origin postMessage guard — ignore and fall through to redirect
+            // Ignore cross-origin opener restrictions and continue to close.
           }
+
           setState('closing');
           setMessage('Sign-in complete. You can return to Wasel.');
-          // Give the opener a moment to receive the message before closing.
           setTimeout(() => {
-            try { window.close(); } catch { /* ignore */ }
+            try {
+              window.close();
+            } catch {
+              // Ignore close failures in embedded browsers or tests.
+            }
           }, 300);
           return;
         }
@@ -171,7 +189,12 @@ export default function WaselAuthCallback() {
       } catch (error) {
         if (!active) return;
         setState('error');
-        setMessage(error instanceof Error ? error.message : 'Unable to complete sign-in.');
+        setMessage(
+          friendlyAuthError(
+            error instanceof Error ? error : String(error),
+            'Unable to complete sign-in.',
+          ),
+        );
       } finally {
         subscription.unsubscribe();
       }
@@ -190,8 +213,9 @@ export default function WaselAuthCallback() {
       return;
     }
 
-    if (password.length < 8) {
-      setFormError('Password must be at least 8 characters long.');
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setFormError(passwordError);
       return;
     }
 
@@ -206,7 +230,9 @@ export default function WaselAuthCallback() {
     const { error } = await supabase.auth.updateUser({ password });
     if (error) {
       setSavingPassword(false);
-      setFormError(error.message || 'Unable to update your password.');
+      setFormError(
+        friendlyAuthError(error.message || error, 'Unable to update your password.'),
+      );
       return;
     }
 
@@ -228,7 +254,7 @@ export default function WaselAuthCallback() {
           background: '#040C18',
           color: '#EFF6FF',
           padding: 24,
-              fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
+          fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
         }}
       >
         <div
@@ -272,6 +298,35 @@ export default function WaselAuthCallback() {
             />
           </label>
 
+          <div
+            style={{
+              display: 'grid',
+              gap: 6,
+              padding: '12px 14px',
+              borderRadius: 12,
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(73,190,242,0.16)',
+            }}
+          >
+            <span style={{ fontSize: '0.78rem', color: '#CBD5E1', fontWeight: 700 }}>
+              Password requirements
+            </span>
+            <div style={{ display: 'grid', gap: 6 }}>
+              {passwordRequirements.map((requirement) => (
+                <span
+                  key={requirement.key}
+                  style={{
+                    color: requirement.met ? '#82F4BF' : 'rgba(239,246,255,0.72)',
+                    fontSize: '0.8rem',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {requirement.met ? '✓' : '•'} {requirement.label}
+                </span>
+              ))}
+            </div>
+          </div>
+
           <label style={{ display: 'grid', gap: 6 }}>
             <span style={{ fontSize: '0.82rem', color: '#CBD5E1' }}>Confirm password</span>
             <input
@@ -292,7 +347,7 @@ export default function WaselAuthCallback() {
             />
           </label>
 
-          {formError && (
+          {formError ? (
             <div
               style={{
                 borderRadius: 12,
@@ -306,11 +361,13 @@ export default function WaselAuthCallback() {
             >
               {formError}
             </div>
-          )}
+          ) : null}
 
           <button
             type="button"
-            onClick={() => { void handlePasswordUpdate(); }}
+            onClick={() => {
+              void handlePasswordUpdate();
+            }}
             disabled={savingPassword}
             style={{
               minHeight: 46,
@@ -358,7 +415,7 @@ export default function WaselAuthCallback() {
         background: '#040C18',
         color: '#EFF6FF',
         padding: 24,
-                  fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
+        fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
       }}
     >
       <div
@@ -380,13 +437,36 @@ export default function WaselAuthCallback() {
             borderRadius: '50%',
             border: state === 'error' ? '3px solid rgba(255,68,85,0.3)' : '3px solid rgba(73,190,242,0.18)',
             borderTop: state === 'error' ? '3px solid #FF4455' : '3px solid #16C7F2',
-            animation: state === 'redirecting' || state === 'loading' || state === 'closing' ? 'spin 0.8s linear infinite' : 'none',
+            animation:
+              state === 'redirecting' || state === 'loading' || state === 'closing'
+                ? 'spin 0.8s linear infinite'
+                : 'none',
           }}
         />
         <h1 style={{ margin: '0 0 8px', fontSize: '1.35rem', lineHeight: 1.2 }}>
           {state === 'error' ? 'Sign-in could not finish' : 'Finalizing authentication'}
         </h1>
         <p style={{ margin: 0, color: 'rgba(239,246,255,0.7)' }}>{message}</p>
+        {state === 'error' ? (
+          <button
+            type="button"
+            onClick={() => navigate('/app/auth?tab=signin', { replace: true })}
+            style={{
+              marginTop: 18,
+              minHeight: 42,
+              padding: '0 16px',
+              borderRadius: 12,
+              border: '1px solid rgba(73,190,242,0.18)',
+              background: 'transparent',
+              color: '#EFF6FF',
+              fontSize: '0.92rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            Back to sign in
+          </button>
+        ) : null}
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     </div>

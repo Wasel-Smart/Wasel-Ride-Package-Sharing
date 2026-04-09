@@ -10,6 +10,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
+  canTransitionRideBookingStatus,
   createRideBooking,
   getRideBookings,
   getBookingsForRide,
@@ -19,6 +20,7 @@ import {
   syncRideBookingCompletion,
   type RideBookingRecord,
 } from '../../../src/services/rideLifecycle';
+import { ValidationError } from '../../../src/utils/errors';
 
 // ── Setup: clear localStorage before each test ────────────────────────────────
 
@@ -240,6 +242,23 @@ describe('updateRideBooking()', () => {
     updateRideBooking(b1.id, { status: 'rejected' });
     const b2Persisted = getRideBookings().find(b => b.id === b2.id);
     expect(b2Persisted?.status).toBe('pending_driver');
+  });
+
+  it('rejects invalid lifecycle regressions', () => {
+    const booking = createRideBooking(BASE_INPUT);
+    expect(() => updateRideBooking(booking.id, { status: 'completed' })).toThrow(ValidationError);
+  });
+});
+
+describe('canTransitionRideBookingStatus()', () => {
+  it('allows valid forward transitions', () => {
+    expect(canTransitionRideBookingStatus('pending_driver', 'confirmed')).toBe(true);
+    expect(canTransitionRideBookingStatus('confirmed', 'completed')).toBe(true);
+  });
+
+  it('blocks invalid backward or terminal transitions', () => {
+    expect(canTransitionRideBookingStatus('completed', 'confirmed')).toBe(false);
+    expect(canTransitionRideBookingStatus('rejected', 'confirmed')).toBe(false);
   });
 });
 

@@ -211,7 +211,11 @@ export function getFeatureRolloutStatus(): Record<FeatureFlag, {
   rolloutPercentage: number;
   status: 'alpha' | 'beta' | 'stable' | 'deprecated';
 }> {
-  const status: Record<string, any> = {};
+  const status: Partial<Record<FeatureFlag, {
+    enabled: boolean;
+    rolloutPercentage: number;
+    status: 'alpha' | 'beta' | 'stable' | 'deprecated';
+  }>> = {};
 
   for (const [flag, config] of Object.entries(FEATURE_FLAGS) as [FeatureFlag, typeof FEATURE_FLAGS[FeatureFlag]][]) {
     const rolloutStatus: 'alpha' | 'beta' | 'stable' | 'deprecated' = config.rolloutPercentage === 0
@@ -229,7 +233,11 @@ export function getFeatureRolloutStatus(): Record<FeatureFlag, {
     };
   }
 
-  return status as Record<FeatureFlag, any>;
+  return status as Record<FeatureFlag, {
+    enabled: boolean;
+    rolloutPercentage: number;
+    status: 'alpha' | 'beta' | 'stable' | 'deprecated';
+  }>;
 }
 
 /**
@@ -239,7 +247,6 @@ export function setFeatureFlagOverride(flag: FeatureFlag, enabled: boolean): voi
   if (import.meta.env.DEV) {
     // Store override in sessionStorage for testing
     sessionStorage.setItem(`ff:${flag}`, String(enabled));
-    console.info(`[Feature flag override] ${flag} = ${enabled}`);
   } else {
     console.warn('[Feature flags] Cannot override in production');
   }

@@ -8,7 +8,7 @@
 
 import { Suspense } from 'react';
 import { MapPin } from 'lucide-react';
-import { WaselMap, type WaselMapRoute } from './WaselMap';
+import { WaselMap, type WaselMapMarker, type WaselMapRoute } from './WaselMap';
 
 export type MapMode = 'google' | 'static' | 'live';
 
@@ -64,14 +64,20 @@ export function MapWrapper({
 }: MapWrapperProps) {
   const isCompact = compact ?? mode === 'static';
 
-  // Build route from location props (live mode)
-  const route: WaselMapRoute[] = [];
-  if (pickupLocation)  route.push({ ...pickupLocation,  label: 'Pickup' });
-  if (driverLocation)  route.push({ ...driverLocation,  label: 'Driver' });
-  if (dropoffLocation) route.push({ ...dropoffLocation, label: 'Dropoff' });
+  const routePoints: WaselMapRoute[] = [];
+  if (pickupLocation) routePoints.push({ ...pickupLocation, label: 'Pickup' });
+  if (driverLocation) routePoints.push({ ...driverLocation, label: 'Driver' });
+  if (dropoffLocation) routePoints.push({ ...dropoffLocation, label: 'Dropoff' });
 
-  // Convert generic markers to WaselMap markers
-  const waselMarkers = markers.map(m => ({ lat: m.lat, lng: m.lng }));
+  const contextualMarkers: WaselMapMarker[] = [
+    ...(pickupLocation ? [{ ...pickupLocation, label: 'Pickup', type: 'pickup' as const }] : []),
+    ...(driverLocation ? [{ ...driverLocation, label: 'Driver', type: 'waypoint' as const }] : []),
+    ...(dropoffLocation ? [{ ...dropoffLocation, label: 'Dropoff', type: 'dropoff' as const }] : []),
+  ];
+  const waselMarkers: WaselMapMarker[] = [
+    ...contextualMarkers,
+    ...markers.map((m) => ({ lat: m.lat, lng: m.lng, type: 'default' as const })),
+  ];
 
   return (
     <Suspense fallback={<MapLoader height={height} />}>
@@ -80,7 +86,7 @@ export function MapWrapper({
         zoom={zoom}
         height={height}
         className={className}
-        route={route.length >= 2 ? route : undefined}
+        route={routePoints.length >= 2 ? routePoints : undefined}
         markers={waselMarkers.length > 0 ? waselMarkers : undefined}
         showTraffic={showTraffic}
         showMosques={showMosques}

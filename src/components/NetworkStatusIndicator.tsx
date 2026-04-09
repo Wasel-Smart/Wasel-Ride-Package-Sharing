@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { Wifi, WifiOff, AlertCircle } from 'lucide-react';
-import { getConnectionQualityMonitor, ConnectionMetrics } from '../services/connectionQuality';
+import { getConnectionQualityMonitor, type ConnectionMetrics } from '../services/connectionQuality';
 import { getOfflineQueueManager } from '../services/offlineQueue';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -44,17 +44,6 @@ export function NetworkStatusIndicator({ compact = false, showDetails = false }:
     offline: { dotClass: 'bg-red-500', color: '#ef4444', surface: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.20)' },
   } as const;
 
-  const getQualityColor = (quality: string) => {
-    switch (quality) {
-      case 'excellent': return 'bg-green-500';
-      case 'good': return 'bg-blue-500';
-      case 'fair': return 'bg-yellow-500';
-      case 'poor': return 'bg-orange-500';
-      case 'offline': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
   const tone = qualityTone[metrics.quality];
 
   const getQualityText = (quality: string) => {
@@ -76,7 +65,7 @@ export function NetworkStatusIndicator({ compact = false, showDetails = false }:
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        <div className={`w-3 h-3 rounded-full ${getQualityColor(metrics.quality)}`} />
+        <div className={`w-3 h-3 rounded-full ${tone?.dotClass ?? 'bg-gray-500'}`} />
         
         <AnimatePresence>
           {queuedCount > 0 && (

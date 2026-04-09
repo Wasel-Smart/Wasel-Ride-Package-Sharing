@@ -364,11 +364,63 @@ export interface WaselMapProps {
   compact?: boolean;
 }
 
+type MapPoint = { lat: number; lng: number };
+
 interface POI {
   name: string;
   type: 'mosque' | 'radar' | 'accident' | 'police';
   vicinity?: string;
   info?: string;
+}
+
+function getMapContentPoints(
+  center: MapPoint,
+  route: readonly WaselMapRoute[],
+  markers: readonly WaselMapMarker[],
+  liveLocation?: MapPoint | null,
+) {
+  return [
+    ...route.map((point) => ({ lat: point.lat, lng: point.lng })),
+    ...markers.map((point) => ({ lat: point.lat, lng: point.lng })),
+    ...(liveLocation ? [{ lat: liveLocation.lat, lng: liveLocation.lng }] : []),
+    { lat: center.lat, lng: center.lng },
+  ];
+}
+
+function fitMapToPoints(
+  mapInstance: any,
+  L: any,
+  points: readonly MapPoint[],
+  fallbackCenter: MapPoint,
+  fallbackZoom: number,
+  options?: { maxZoom?: number; singlePointZoom?: number; animate?: boolean },
+) {
+  if (!points.length) {
+    mapInstance.setView([fallbackCenter.lat, fallbackCenter.lng], fallbackZoom, {
+      animate: options?.animate ?? false,
+    });
+    return;
+  }
+
+  const uniquePoints = points.filter(
+    (point, index, all) =>
+      all.findIndex((candidate) => candidate.lat === point.lat && candidate.lng === point.lng) === index,
+  );
+
+  if (uniquePoints.length === 1) {
+    const only = uniquePoints[0];
+    mapInstance.setView([only.lat, only.lng], options?.singlePointZoom ?? fallbackZoom, {
+      animate: options?.animate ?? false,
+    });
+    return;
+  }
+
+  const bounds = L.latLngBounds(uniquePoints.map((point) => [point.lat, point.lng]));
+  mapInstance.fitBounds(bounds.pad(0.15), {
+    animate: options?.animate ?? false,
+    maxZoom: options?.maxZoom ?? Math.max(fallbackZoom + 1, 15),
+    padding: [42, 42],
+  });
 }
 
 /* ─── Component ──────────────────────────────────────────────────────── */
@@ -390,11 +442,8 @@ function WaselMapCompact({
 
   const cssHeight = typeof height === 'number' ? `${height}px` : (height ?? '500px');
 
-  const pts = [
-    ...(route ?? []).map((p) => ({ lat: p.lat, lng: p.lng })),
-    ...(markers ?? []).map((m) => ({ lat: m.lat, lng: m.lng })),
-    ...(center ? [{ lat: center.lat, lng: center.lng }] : []),
-  ];
+  const fallbackCenter = center ?? { lat: 31.9539, lng: 35.9106 };
+  const pts = getMapContentPoints(fallbackCenter, route ?? [], markers ?? []);
 
   const bounds = pts.reduce(
     (acc, p) => ({
@@ -435,7 +484,7 @@ function WaselMapCompact({
         if (!mapDivRef.current || mapRef.current) return;
         LRef.current = L;
 
-        const c = center ?? { lat: 31.9539, lng: 35.9106 };
+        const c = fallbackCenter;
         const map = L.map(mapDivRef.current, {
           center: [c.lat, c.lng],
           zoom: 10,
@@ -515,13 +564,7 @@ function WaselMapCompact({
       drawnLayersRef.current.push(cm);
     });
 
-    if (hasBounds) {
-      const sw = L.latLng(bounds.minLat, bounds.minLng);
-      const ne = L.latLng(bounds.maxLat, bounds.maxLng);
-      map.fitBounds(L.latLngBounds(sw, ne).pad(0.15), { animate: false, maxZoom: 12 });
-    } else if (center) {
-      map.setView([center.lat, center.lng], 10, { animate: false });
-    }
+    fitMapToPoints(map, L, pts, fallbackCenter, 10, { animate: false, maxZoom: 12, singlePointZoom: 12 });
 
     invalidate();
   }, [
@@ -533,7 +576,9 @@ function WaselMapCompact({
     hasBounds,
     invalidate,
     markers,
+    pts,
     route,
+    fallbackCenter,
   ]);
 
   // SVG fallback stays available if Leaflet fails to load (CSP/offline/tests).
@@ -696,6 +741,18 @@ function WaselMapFull(props: WaselMapProps) {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isFullscreen,  setIsFullscreen]  = useState(false);
   const [selectedPOI,   setSelectedPOI]   = useState<POI | null>(null);
+
+  const fitCurrentView = useCallback(() => {
+    if (!mapRef.current || !LRef.current) return;
+    fitMapToPoints(
+      mapRef.current,
+      LRef.current,
+      getMapContentPoints(center, route, markers, liveLocation),
+      center,
+      zoom,
+      { animate: true, maxZoom: Math.max(zoom + 2, 16), singlePointZoom: Math.max(zoom, 16) },
+    );
+  }, [center, liveLocation, markers, route, zoom]);
 
   // Leaflet often renders blank space if its container size changes after mount
   // (tabs, responsive layout, fullscreen). Keep it always correct.
@@ -862,9 +919,15 @@ function WaselMapFull(props: WaselMapProps) {
     }).addTo(mapInstance);
 
     // Fit bounds
-    const bounds = L.latLngBounds(route.map(p => [p.lat, p.lng]));
-    mapInstance.fitBounds(bounds, { padding: [50, 50] });
-  }, [route]);
+    fitMapToPoints(
+      mapInstance,
+      L,
+      getMapContentPoints(center, route, markers, liveLocation),
+      center,
+      zoom,
+      { animate: true, maxZoom: Math.max(zoom + 2, 16), singlePointZoom: Math.max(zoom, 16) },
+    );
+  }, [center, liveLocation, markers, route, zoom]);
 
   /* ── Custom prop markers ── */
   const drawCustomMarkers = useCallback((mapInstance: any) => {
@@ -886,6 +949,35 @@ function WaselMapFull(props: WaselMapProps) {
       } catch { /* skip */ }
     });
   }, [markers]);
+
+  useEffect(() => {
+    setMosquesOn(showMosques);
+  }, [showMosques]);
+
+  useEffect(() => {
+    setRadarsOn(showRadars);
+  }, [showRadars]);
+
+  useEffect(() => {
+    if (!isLoaded || !mapRef.current) return;
+    if (route.length >= 2) {
+      void drawRoute(mapRef.current);
+    } else {
+      routeMarkersRef.current.forEach((marker) => marker.remove());
+      routeMarkersRef.current = [];
+      routeLineRef.current?.remove();
+      routeLineRef.current = null;
+      fitCurrentView();
+    }
+  }, [drawRoute, fitCurrentView, isLoaded, route]);
+
+  useEffect(() => {
+    if (!isLoaded || !mapRef.current) return;
+    drawCustomMarkers(mapRef.current);
+    if (route.length < 2) {
+      fitCurrentView();
+    }
+  }, [drawCustomMarkers, fitCurrentView, isLoaded, markers, route.length]);
 
   /* ── GPS tracking ── */
   const startTracking = useCallback(() => {
@@ -969,8 +1061,8 @@ function WaselMapFull(props: WaselMapProps) {
         if (!mapDivRef.current || mapRef.current) return;
         LRef.current = L;
 
-        const map = L.map(mapDivRef.current, {
-          center:           [center.lat, center.lng],
+          const map = L.map(mapDivRef.current, {
+            center:           [center.lat, center.lng],
           zoom,
           zoomControl:      false,
           attributionControl: false,
@@ -1016,11 +1108,15 @@ function WaselMapFull(props: WaselMapProps) {
               if (!m.getPane('markerPane')) return;
               if (radarsOn)           loadRadars(m);
               if (mosquesOn)          loadMosques(m);
-              if (route.length >= 2)  drawRoute(m);
-              if (markers.length > 0) drawCustomMarkers(m);
-            });
-          });
-        });
+               if (route.length >= 2)  {
+                 void drawRoute(m);
+               } else {
+                 fitCurrentView();
+               }
+               if (markers.length > 0) drawCustomMarkers(m);
+             });
+           });
+         });
       })
       .catch(err => {
         console.error('[WaselMap] Failed to load Leaflet:', err);
@@ -1033,7 +1129,7 @@ function WaselMapFull(props: WaselMapProps) {
       mapRef.current = null;
       initDone.current = false;
     };
-  }, []);
+  }, [autoTrack, center.lat, center.lng, drawCustomMarkers, drawRoute, fitCurrentView, loadMosques, loadRadars, markers.length, mosquesOn, radarsOn, route.length, startTracking, zoom]);
 
   /* ── Map type switcher ── */
   const changeMapType = useCallback((t: 'roadmap' | 'satellite' | 'terrain') => {
@@ -1191,6 +1287,9 @@ function WaselMapFull(props: WaselMapProps) {
             {/* Fullscreen */}
             <button onClick={toggleFullscreen} style={compactControlButtonStyle(isFullscreen)}>
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
+            <button onClick={fitCurrentView} style={compactControlButtonStyle()} title="Fit map to trip">
+              <Navigation2 className="w-4 h-4" />
             </button>
           </div>
 

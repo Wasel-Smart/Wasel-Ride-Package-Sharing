@@ -149,6 +149,10 @@ function appendLog(entry: DataFlowLogEntry) {
 
 export function logDataFlow(entry: DataFlowLogEntry) {
   appendLog(entry);
+  if (import.meta.env.MODE === 'test') {
+    return;
+  }
+
   const context = {
     requestId: entry.requestId,
     operation: entry.operation,

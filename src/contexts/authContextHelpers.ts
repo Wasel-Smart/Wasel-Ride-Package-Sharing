@@ -1,8 +1,9 @@
 import type { AuthChangeEvent, AuthError, Session, SupabaseClient, User } from '@supabase/supabase-js';
 import type { WaselUser } from './LocalAuth';
 import { authAPI } from '../services/auth';
+import { friendlyAuthError } from '../utils/authHelpers';
 import { getAuthRedirectCandidates } from '../utils/env';
-import { persistAuthReturnTo } from '../utils/authFlow';
+import { normalizeAuthReturnTo, persistAuthReturnTo } from '../utils/authFlow';
 
 export type Profile = {
   id: string;
@@ -66,13 +67,6 @@ export async function loadProfile(): Promise<Profile | null> {
   return (profileData?.profile as Profile | null) || null;
 }
 
-export function normalizeOperationError(
-  error: unknown,
-  fallback: string,
-): Error {
-  return error instanceof Error ? error : new Error(fallback);
-}
-
 export async function signInWithOAuthProvider(
   client: SupabaseClient | null,
   provider: 'google' | 'facebook',
@@ -85,7 +79,7 @@ export async function signInWithOAuthProvider(
   try {
     // Persist the post-auth destination before we leave the page.
     if (returnTo) {
-      persistAuthReturnTo(returnTo);
+      persistAuthReturnTo(normalizeAuthReturnTo(returnTo));
     }
 
     // Build the redirect URL from the current origin so it always matches
@@ -111,9 +105,10 @@ export async function signInWithOAuthProvider(
     if (error) {
       return {
         error: new Error(
-          error.message ||
-          `${provider[0].toUpperCase()}${provider.slice(1)} sign-in could not start. ` +
-          'Make sure this provider is enabled in your Supabase project and the redirect URL is on the allow-list.',
+          friendlyAuthError(
+            error.message,
+            `${provider[0].toUpperCase()}${provider.slice(1)} sign-in could not start. Make sure this provider is enabled in your Supabase project and the redirect URL is on the allow-list.`,
+          ),
         ),
       };
     }
@@ -124,11 +119,29 @@ export async function signInWithOAuthProvider(
   } catch (error: unknown) {
     return {
       error: normalizeOperationError(
-        error,
+        friendlyAuthError(
+          error,
+          `${provider[0].toUpperCase()}${provider.slice(1)} login failed`,
+        ),
         `${provider[0].toUpperCase()}${provider.slice(1)} login failed`,
       ),
     };
   }
+}
+
+export function normalizeOperationError(
+  error: unknown,
+  fallback: string,
+): Error {
+  if (error instanceof Error) {
+    return new Error(friendlyAuthError(error, fallback));
+  }
+
+  if (typeof error === 'string') {
+    return new Error(friendlyAuthError(error, fallback));
+  }
+
+  return new Error(fallback);
 }
 
 export function buildUpdatedLocalUser(

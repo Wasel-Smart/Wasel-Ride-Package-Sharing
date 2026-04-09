@@ -9,6 +9,20 @@ import * as Sentry from '@sentry/react';
 
 let sentryInitialized = false;
 
+function safeStorageGet(key: string): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+type LogContext = Record<string, unknown>;
+
 export function initSentry() {
   if (sentryInitialized) {
     return;
@@ -39,7 +53,7 @@ export function initSentry() {
       'Failed to fetch',
     ],
     beforeSend(event) {
-      const raw = localStorage.getItem('wasel_local_user_v2');
+      const raw = safeStorageGet('wasel_local_user_v2');
 
       if (raw) {
         try {
@@ -52,8 +66,8 @@ export function initSentry() {
 
       event.tags = {
         ...event.tags,
-        language: localStorage.getItem('wasel_language') || 'ar',
-        theme: localStorage.getItem('wasel_theme') || 'dark',
+        language: safeStorageGet('wasel_language') || 'ar',
+        theme: safeStorageGet('wasel_theme') || 'dark',
       };
 
       return event;
@@ -61,14 +75,10 @@ export function initSentry() {
   });
 
   sentryInitialized = true;
-
-  if (import.meta.env.DEV) {
-    console.log('[Sentry] Initialized');
-  }
 }
 
 export const logger = {
-  error: (message: string, error?: Error | unknown, context?: Record<string, any>) => {
+  error: (message: string, error?: Error | unknown, context?: LogContext) => {
     if (import.meta.env.DEV) {
       console.error('[Wasel]', message, error, context);
     }
@@ -80,7 +90,7 @@ export const logger = {
     });
   },
 
-  warning: (message: string, context?: Record<string, any>) => {
+  warning: (message: string, context?: LogContext) => {
     if (import.meta.env.DEV) {
       console.warn('[Wasel]', message, context);
     }
@@ -92,11 +102,7 @@ export const logger = {
     });
   },
 
-  info: (message: string, context?: Record<string, any>) => {
-    if (import.meta.env.DEV) {
-      console.info('[Wasel]', message);
-    }
-
+  info: (message: string, context?: LogContext) => {
     if (context?.important) {
       Sentry.captureMessage(message, {
         level: 'info',
@@ -111,7 +117,7 @@ export const logger = {
     return { finish: () => undefined };
   },
 
-  addBreadcrumb: (message: string, category: string, data?: Record<string, any>) => {
+  addBreadcrumb: (message: string, category: string, data?: LogContext) => {
     Sentry.addBreadcrumb({ message, category, level: 'info', data });
   },
 };
@@ -133,7 +139,7 @@ export function trackAPICall(endpoint: string, method: string, duration: number,
   }
 }
 
-export function trackUserAction(action: string, data?: Record<string, any>) {
+export function trackUserAction(action: string, data?: LogContext) {
   logger.addBreadcrumb(action, 'user_action', data);
 }
 

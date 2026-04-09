@@ -11,6 +11,7 @@ vi.mock('@/hooks/useIframeSafeNavigate', () => ({
 }));
 
 vi.mock('@/utils/supabase/client', () => ({
+  supabaseUrl: 'https://example.supabase.co',
   supabase: {
     auth: {
       getSession: (...args: unknown[]) => mockGetSession(...args),

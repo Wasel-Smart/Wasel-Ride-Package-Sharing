@@ -8,6 +8,7 @@
  */
 
 import { generateId } from '../utils/api';
+import { ValidationError } from '../utils/errors';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -95,12 +96,30 @@ export interface PackagePaymentEscrow {
   };
 }
 
+export interface PackageTimelineEvent {
+  id: string;
+  packageId: string;
+  type:
+    | 'created'
+    | 'linked_to_ride'
+    | 'payment_escrowed'
+    | 'pickup_verified'
+    | 'location_updated'
+    | 'delivery_verified'
+    | 'payment_released';
+  status: PackageStatus;
+  timestamp: string;
+  note?: string;
+  metadata?: Record<string, unknown>;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // STORAGE
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const PACKAGES_STORAGE_KEY = 'wasel-packages';
 const ESCROWS_STORAGE_KEY  = 'wasel-package-escrows';
+const TIMELINE_STORAGE_KEY = 'wasel-package-timeline';
 
 function loadMap<T>(key: string): Map<string, T> {
   try {
@@ -129,11 +148,13 @@ export class PackageTrackingService {
   private static instance: PackageTrackingService;
   private packages: Map<string, PackageTracking>;
   private escrows: Map<string, PackagePaymentEscrow>;
+  private timeline: Map<string, PackageTimelineEvent[]>;
 
   private constructor() {
     // Rehydrate from localStorage on startup
     this.packages = loadMap<PackageTracking>(PACKAGES_STORAGE_KEY);
     this.escrows  = loadMap<PackagePaymentEscrow>(ESCROWS_STORAGE_KEY);
+    this.timeline = loadMap<PackageTimelineEvent[]>(TIMELINE_STORAGE_KEY);
   }
 
   static getInstance(): PackageTrackingService {
@@ -153,6 +174,39 @@ export class PackageTrackingService {
     saveMap(ESCROWS_STORAGE_KEY, this.escrows);
   }
 
+  private saveTimeline(): void {
+    saveMap(TIMELINE_STORAGE_KEY, this.timeline);
+  }
+
+  private recordPackageEvent(
+    packageId: string,
+    type: PackageTimelineEvent['type'],
+    status: PackageStatus,
+    metadata?: Record<string, unknown>,
+    note?: string,
+  ): void {
+    const events = this.timeline.get(packageId) ?? [];
+    events.push({
+      id: generateId('pkg_evt'),
+      packageId,
+      type,
+      status,
+      timestamp: new Date().toISOString(),
+      note,
+      metadata,
+    });
+    this.timeline.set(packageId, events);
+    this.saveTimeline();
+  }
+
+  private requirePackage(packageId: string): PackageTracking {
+    const pkg = this.packages.get(packageId);
+    if (!pkg) {
+      throw new ValidationError('Package not found', { packageId });
+    }
+    return pkg;
+  }
+
   // ── public API ─────────────────────────────────────────────────────────────
 
   /**
@@ -167,6 +221,19 @@ export class PackageTrackingService {
     insurance: boolean;
     description?: string;
   }): Promise<PackageTracking> {
+    if (!params.senderId.trim()) {
+      throw new ValidationError('senderId is required for package creation', { senderId: params.senderId });
+    }
+    if (!params.from.trim() || !params.to.trim()) {
+      throw new ValidationError('Both origin and destination are required for package creation', {
+        from: params.from,
+        to: params.to,
+      });
+    }
+    if (params.value < 0) {
+      throw new ValidationError('Package value cannot be negative', { value: params.value });
+    }
+
     const packageId = generateId('pkg');
     const trackingCode = this.generateTrackingCode();
     const pickupCode = this.generateVerificationCode();
@@ -209,6 +276,11 @@ export class PackageTrackingService {
 
     this.packages.set(packageId, pkg);
     this.savePackages();
+    this.recordPackageEvent(packageId, 'created', pkg.status, {
+      from: pkg.from,
+      to: pkg.to,
+      totalCost: pkg.totalCost,
+    });
     return pkg;
   }
 
@@ -226,8 +298,13 @@ export class PackageTrackingService {
       vehicleInfo?: string;
     },
   ): Promise<PackageTracking> {
-    const pkg = this.packages.get(packageId);
-    if (!pkg) throw new Error('Package not found');
+    const pkg = this.requirePackage(packageId);
+    if (pkg.status !== 'created') {
+      throw new ValidationError('Only newly created packages can be linked to a ride', {
+        packageId,
+        status: pkg.status,
+      });
+    }
 
     const updated: PackageTracking = {
       ...pkg,
@@ -244,6 +321,10 @@ export class PackageTrackingService {
 
     this.packages.set(packageId, updated);
     this.savePackages();
+    this.recordPackageEvent(packageId, 'linked_to_ride', updated.status, {
+      rideId: rideDetails.rideId,
+      driverId: rideDetails.driverId,
+    });
     return updated;
   }
 
@@ -251,8 +332,18 @@ export class PackageTrackingService {
    * Process payment and hold in escrow
    */
   async processPayment(packageId: string, paymentMethod: string): Promise<PackagePaymentEscrow> {
-    const pkg = this.packages.get(packageId);
-    if (!pkg) throw new Error('Package not found');
+    const pkg = this.requirePackage(packageId);
+    if (!pkg.rideId || !pkg.driverId) {
+      throw new ValidationError('Package must be linked to a ride before payment can be escrowed', {
+        packageId,
+      });
+    }
+    if (pkg.paymentStatus !== 'pending') {
+      throw new ValidationError('Package payment has already been processed', {
+        packageId,
+        paymentStatus: pkg.paymentStatus,
+      });
+    }
 
     const escrow: PackagePaymentEscrow = {
       packageId,
@@ -271,6 +362,7 @@ export class PackageTrackingService {
       ...pkg,
       paymentStatus: 'escrowed',
       paymentMethod,
+      status: pkg.status === 'matched' ? 'pickup_scheduled' : pkg.status,
       lastUpdated: new Date().toISOString(),
     };
 
@@ -278,6 +370,10 @@ export class PackageTrackingService {
     this.escrows.set(packageId, escrow);
     this.savePackages();
     this.saveEscrows();
+    this.recordPackageEvent(packageId, 'payment_escrowed', updatedPkg.status, {
+      paymentMethod,
+      amount: escrow.amount,
+    });
     return escrow;
   }
 
@@ -285,8 +381,19 @@ export class PackageTrackingService {
    * Verify pickup with QR code
    */
   async verifyPickup(packageId: string, verificationCode: string, photo?: string): Promise<boolean> {
-    const pkg = this.packages.get(packageId);
-    if (!pkg) throw new Error('Package not found');
+    const pkg = this.requirePackage(packageId);
+    if (pkg.paymentStatus !== 'escrowed') {
+      throw new ValidationError('Pickup cannot be verified until payment is held in escrow', {
+        packageId,
+        paymentStatus: pkg.paymentStatus,
+      });
+    }
+    if (!['matched', 'pickup_scheduled'].includes(pkg.status)) {
+      throw new ValidationError('Pickup verification is only allowed before transit begins', {
+        packageId,
+        status: pkg.status,
+      });
+    }
 
     if (pkg.pickupVerificationCode !== verificationCode) return false;
 
@@ -301,6 +408,9 @@ export class PackageTrackingService {
 
     this.packages.set(packageId, updated);
     this.savePackages();
+    this.recordPackageEvent(packageId, 'pickup_verified', updated.status, {
+      photoProvided: Boolean(photo),
+    });
     return true;
   }
 
@@ -308,8 +418,13 @@ export class PackageTrackingService {
    * Update package location during transit
    */
   async updateLocation(packageId: string, location: { lat: number; lng: number }): Promise<void> {
-    const pkg = this.packages.get(packageId);
-    if (!pkg) throw new Error('Package not found');
+    const pkg = this.requirePackage(packageId);
+    if (!['picked_up', 'in_transit', 'near_destination'].includes(pkg.status)) {
+      throw new ValidationError('Package location updates are only allowed after pickup', {
+        packageId,
+        status: pkg.status,
+      });
+    }
 
     let status: PackageStatus = pkg.status;
     let inTransitAt = pkg.inTransitAt;
@@ -331,6 +446,9 @@ export class PackageTrackingService {
 
     this.packages.set(packageId, updated);
     this.savePackages();
+    this.recordPackageEvent(packageId, 'location_updated', updated.status, {
+      location,
+    });
   }
 
   /**
@@ -341,8 +459,19 @@ export class PackageTrackingService {
     verificationCode: string,
     photo?: string,
   ): Promise<{ verified: boolean; paymentReleased: boolean }> {
-    const pkg = this.packages.get(packageId);
-    if (!pkg) throw new Error('Package not found');
+    const pkg = this.requirePackage(packageId);
+    if (!pkg.pickupVerified) {
+      throw new ValidationError('Delivery cannot be verified before pickup is confirmed', {
+        packageId,
+        status: pkg.status,
+      });
+    }
+    if (!['picked_up', 'in_transit', 'near_destination'].includes(pkg.status)) {
+      throw new ValidationError('Delivery verification is only allowed for packages currently in delivery', {
+        packageId,
+        status: pkg.status,
+      });
+    }
 
     if (pkg.deliveryVerificationCode !== verificationCode) {
       return { verified: false, paymentReleased: false };
@@ -377,6 +506,16 @@ export class PackageTrackingService {
 
     this.packages.set(packageId, updatedPkg);
     this.savePackages();
+    this.recordPackageEvent(packageId, 'delivery_verified', updatedPkg.status, {
+      photoProvided: Boolean(photo),
+      paymentReleased: updatedPkg.paymentStatus === 'released',
+    });
+
+    if (updatedPkg.paymentStatus === 'released') {
+      this.recordPackageEvent(packageId, 'payment_released', updatedPkg.status, {
+        amount: escrow?.amount ?? updatedPkg.totalCost,
+      });
+    }
 
     return {
       verified: true,
@@ -404,6 +543,21 @@ export class PackageTrackingService {
 
   getEscrowStatus(packageId: string): PackagePaymentEscrow | undefined {
     return this.escrows.get(packageId);
+  }
+
+  getPackageTimeline(packageId: string): PackageTimelineEvent[] {
+    return [...(this.timeline.get(packageId) ?? [])].sort((a, b) => (
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    ));
+  }
+
+  resetForTesting(): void {
+    this.packages.clear();
+    this.escrows.clear();
+    this.timeline.clear();
+    this.savePackages();
+    this.saveEscrows();
+    this.saveTimeline();
   }
 
   // ── private helpers ────────────────────────────────────────────────────────

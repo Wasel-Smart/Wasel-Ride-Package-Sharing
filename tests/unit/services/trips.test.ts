@@ -91,11 +91,23 @@ const CREATE_PAYLOAD: TripCreatePayload = {
 };
 
 function ok(body: unknown) {
-  return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(body) });
+  return Promise.resolve({
+    ok: true,
+    status: 200,
+    statusText: 'OK',
+    headers: new Headers({ 'content-type': 'application/json' }),
+    json: () => Promise.resolve(body),
+  });
 }
 
 function fail(body: unknown = { error: 'Server error' }, status = 500) {
-  return Promise.resolve({ ok: false, status, json: () => Promise.resolve(body) });
+  return Promise.resolve({
+    ok: false,
+    status,
+    statusText: 'Error',
+    headers: new Headers({ 'content-type': 'application/json' }),
+    json: () => Promise.resolve(body),
+  });
 }
 
 // ── createTrip ────────────────────────────────────────────────────────────────
@@ -192,7 +204,7 @@ describe('tripsAPI.searchTrips()', () => {
   });
 
   it('throws when API returns non-OK response', async () => {
-    mockFetch.mockReturnValueOnce(fail());
+    mockFetch.mockReturnValueOnce(fail({ error: 'Failed to search trips' }));
     await expect(tripsAPI.searchTrips('Amman', 'Irbid')).rejects.toThrow('Failed to search trips');
   });
 
@@ -224,7 +236,7 @@ describe('tripsAPI.getTripById()', () => {
   });
 
   it('throws on non-OK response', async () => {
-    mockFetch.mockReturnValueOnce(fail());
+    mockFetch.mockReturnValueOnce(fail({ error: 'Failed to fetch trip' }));
     await expect(tripsAPI.getTripById('trip-x')).rejects.toThrow('Failed to fetch trip');
   });
 });
@@ -249,7 +261,7 @@ describe('tripsAPI.getDriverTrips()', () => {
   });
 
   it('throws on non-OK response', async () => {
-    mockFetch.mockReturnValueOnce(fail());
+    mockFetch.mockReturnValueOnce(fail({ error: 'Failed to fetch driver trips' }));
     await expect(tripsAPI.getDriverTrips()).rejects.toThrow('Failed to fetch driver trips');
   });
 });
@@ -394,7 +406,7 @@ describe('tripsAPI.calculatePrice()', () => {
   });
 
   it('throws on non-OK response', async () => {
-    mockFetch.mockReturnValueOnce(fail());
+    mockFetch.mockReturnValueOnce(fail({ error: 'Failed to calculate price' }));
     await expect(tripsAPI.calculatePrice('passenger')).rejects.toThrow('Failed to calculate price');
   });
 });

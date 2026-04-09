@@ -17,7 +17,7 @@ import {
   useRouteAlternatives,
   useTrafficIncidents,
   calculateETA,
-  RouteAlternative,
+  type RouteAlternative,
 } from '../services/driverTracking';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertTriangle } from 'lucide-react';
@@ -45,15 +45,7 @@ export function DriverLocationTracker({ driverId }: { driverId: string }) {
   const { location, loading, error } = useDriverTracking(driverId);
 
   useEffect(() => {
-    if (location && location.isLive) {
-      // Update ETA based on driver location
-      console.log('[DriverTracking] Driver location:', {
-        lat: location.latitude,
-        lng: location.longitude,
-        speed: location.speed,
-        accuracy: location.accuracy,
-      });
-    }
+    if (!location?.isLive) return;
   }, [location]);
 
   if (loading) {
