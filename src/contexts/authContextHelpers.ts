@@ -79,59 +79,48 @@ export async function signInWithOAuthProvider(
   returnTo?: string,
 ): Promise<{ error: AuthOperationError }> {
   if (!client) {
-    return { error: new Error('Backend not configured') };
+    return { error: new Error('Backend not configured — Supabase is not initialised.') };
   }
 
   try {
+    // Persist the post-auth destination before we leave the page.
     if (returnTo) {
       persistAuthReturnTo(returnTo);
     }
 
-    const redirectCandidates = getAuthRedirectCandidates(
+    // Build the redirect URL from the current origin so it always matches
+    // whatever is configured in the Supabase dashboard.
+    const redirectTo = getAuthRedirectCandidates(
       typeof window !== 'undefined' ? window.location.origin : undefined,
-    );
-    let lastError: AuthOperationError = null;
+    )[0];
 
-    for (const redirectTo of redirectCandidates) {
-      const { data, error } = await client.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo,
-          skipBrowserRedirect: true,
-          scopes: provider === 'facebook' ? 'email,public_profile' : 'email profile',
-          queryParams:
-            provider === 'google'
-              ? { prompt: 'select_account' }
-              : undefined,
-        },
-      });
+    // Use the native browser redirect (no skipBrowserRedirect) so Supabase
+    // drives the full OAuth flow reliably across all browsers and contexts.
+    const { error } = await client.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo,
+        scopes: provider === 'facebook' ? 'email,public_profile' : 'email profile',
+        queryParams:
+          provider === 'google'
+            ? { prompt: 'select_account', access_type: 'offline' }
+            : undefined,
+      },
+    });
 
-      if (!error && data?.url) {
-        window.location.assign(data.url);
-        return { error: null };
-      }
-
-      lastError = error ?? new Error(`${provider} sign-in could not start.`);
-
-      const message =
-        error instanceof Error
-          ? error.message.toLowerCase()
-          : '';
-
-      const shouldRetry =
-        message.includes('redirect') ||
-        message.includes('callback') ||
-        message.includes('not allowed') ||
-        message.includes('allow list') ||
-        message.includes('whitelist') ||
-        message.includes('url');
-
-      if (!shouldRetry) {
-        break;
-      }
+    if (error) {
+      return {
+        error: new Error(
+          error.message ||
+          `${provider[0].toUpperCase()}${provider.slice(1)} sign-in could not start. ` +
+          'Make sure this provider is enabled in your Supabase project and the redirect URL is on the allow-list.',
+        ),
+      };
     }
 
-    return { error: lastError };
+    // signInWithOAuth with native redirect navigates the page away — we
+    // return success here but the Promise may never resolve in practice.
+    return { error: null };
   } catch (error: unknown) {
     return {
       error: normalizeOperationError(

@@ -1,5 +1,14 @@
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, ReactNode } from 'react';
 import { translations, Language } from '../locales/translations';
+import {
+  formatLocaleDate,
+  formatLocaleNumber,
+  formatLocaleTime,
+  getDirectionForLanguage,
+  getInitialLanguage,
+  getLocaleConfig,
+  persistLanguage,
+} from '../utils/locale';
 
 interface LanguageContextType {
   language: Language;
@@ -7,6 +16,13 @@ interface LanguageContextType {
   toggleLanguage: () => void;
   t: (key: string) => string;
   dir: 'ltr' | 'rtl';
+  locale: 'en-JO' | 'ar-JO';
+  region: 'JO';
+  currency: 'JOD';
+  timezone: 'Asia/Amman';
+  formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
+  formatDate: (value: Date | number | string, options?: Intl.DateTimeFormatOptions) => string;
+  formatTime: (value: Date | number | string, options?: Intl.DateTimeFormatOptions) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -24,27 +40,18 @@ interface LanguageProviderProps {
 }
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
-  const [language, setLanguageState] = useState<Language>(() => {
-    try {
-      const saved = localStorage.getItem('wasel-language');
-      return (saved === 'ar' ? 'ar' : 'en') as Language;
-    } catch (error) {
-      console.error('Failed to load language from localStorage:', error);
-      return 'en';
-    }
-  });
+  const [language, setLanguageState] = useState<Language>(() => getInitialLanguage());
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
-    try {
-      localStorage.setItem('wasel-language', lang);
-    } catch (error) {
-      console.error('Failed to save language to localStorage:', error);
-    }
-    
-    // Update HTML dir attribute
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = lang;
+    persistLanguage(lang);
+
+    const localeConfig = getLocaleConfig(lang);
+    document.documentElement.dir = localeConfig.direction;
+    document.documentElement.lang = localeConfig.locale;
+    document.documentElement.dataset.locale = localeConfig.locale;
+    document.documentElement.dataset.region = localeConfig.region.toLowerCase();
+    document.body?.setAttribute('dir', localeConfig.direction);
   }, []);
 
   const toggleLanguage = useCallback(() => {
@@ -52,9 +59,12 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   }, [language, setLanguage]);
 
   useEffect(() => {
-    // Set initial dir attribute
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = language;
+    const localeConfig = getLocaleConfig(language);
+    document.documentElement.dir = localeConfig.direction;
+    document.documentElement.lang = localeConfig.locale;
+    document.documentElement.dataset.locale = localeConfig.locale;
+    document.documentElement.dataset.region = localeConfig.region.toLowerCase();
+    document.body?.setAttribute('dir', localeConfig.direction);
   }, [language]);
 
   // Memoized translation function
@@ -69,7 +79,21 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     return value || key;
   }, [language]);
 
-  const dir: LanguageContextType['dir'] = language === 'ar' ? 'rtl' : 'ltr';
+  const localeConfig = useMemo(() => getLocaleConfig(language), [language]);
+  const dir: LanguageContextType['dir'] = getDirectionForLanguage(language);
+
+  const formatNumber = useCallback<LanguageContextType['formatNumber']>(
+    (value, options) => formatLocaleNumber(language, value, options),
+    [language],
+  );
+  const formatDate = useCallback<LanguageContextType['formatDate']>(
+    (value, options) => formatLocaleDate(language, value, options),
+    [language],
+  );
+  const formatTime = useCallback<LanguageContextType['formatTime']>(
+    (value, options) => formatLocaleTime(language, value, options),
+    [language],
+  );
 
   // Memoize the context value
   const value = useMemo(() => ({
@@ -77,8 +101,15 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     setLanguage,
     toggleLanguage,
     t,
-    dir
-  }), [language, setLanguage, toggleLanguage, t, dir]);
+    dir,
+    locale: localeConfig.locale,
+    region: localeConfig.region,
+    currency: localeConfig.currency,
+    timezone: localeConfig.timezone,
+    formatNumber,
+    formatDate,
+    formatTime,
+  }), [dir, formatDate, formatNumber, formatTime, language, localeConfig.currency, localeConfig.locale, localeConfig.region, localeConfig.timezone, setLanguage, t, toggleLanguage]);
 
   return (
     <LanguageContext.Provider value={value}>

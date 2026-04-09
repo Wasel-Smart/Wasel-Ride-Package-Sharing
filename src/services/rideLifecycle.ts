@@ -53,7 +53,119 @@ export interface RideBookingRecord {
   updatedAt: string;
   backendBookingId?: string;
   syncedAt?: string;
+  /** True when the Supabase sync failed and a retry is pending */
+  pendingSync?: boolean;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Offline-resilient Supabase sync helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+const PENDING_SYNCS_KEY = 'wasel-pending-booking-syncs';
+
+interface PendingSyncEntry {
+  bookingId: string;
+  passengerId: string;
+  rideId: string;
+  seatsRequested: number;
+  from: string;
+  to: string;
+  status: RideBookingStatus;
+  totalPriceJod?: number;
+  pricePerSeatJod?: number;
+  retries: number;
+  queuedAt: number;
+}
+
+function loadPendingSyncs(): PendingSyncEntry[] {
+  try {
+    const raw = typeof window !== 'undefined' ? window.localStorage.getItem(PENDING_SYNCS_KEY) : null;
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePendingSyncs(entries: PendingSyncEntry[]): void {
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(PENDING_SYNCS_KEY, JSON.stringify(entries.slice(0, 50)));
+    }
+  } catch { /* storage unavailable */ }
+}
+
+function enqueuePendingSync(entry: Omit<PendingSyncEntry, 'retries' | 'queuedAt'>): void {
+  const existing = loadPendingSyncs();
+  // Deduplicate by bookingId
+  const filtered = existing.filter((e) => e.bookingId !== entry.bookingId);
+  savePendingSyncs([...filtered, { ...entry, retries: 0, queuedAt: Date.now() }]);
+}
+
+function removePendingSync(bookingId: string): void {
+  savePendingSyncs(loadPendingSyncs().filter((e) => e.bookingId !== bookingId));
+}
+
+async function attemptSyncEntry(entry: PendingSyncEntry): Promise<void> {
+  try {
+    const { booking: persisted } = await createDirectBooking({
+      tripId: entry.rideId,
+      userId: entry.passengerId,
+      seatsRequested: entry.seatsRequested,
+      pickup: entry.from,
+      dropoff: entry.to,
+      bookingStatus: entry.status,
+      metadata: { total_price: entry.totalPriceJod ?? entry.seatsRequested },
+    });
+
+    const backendId = String(persisted.booking_id ?? persisted.id ?? '');
+    // Patch local record with backend ID
+    const bookings = readBookings();
+    const idx = bookings.findIndex((b) => b.id === entry.bookingId);
+    if (idx !== -1) {
+      bookings[idx] = {
+        ...bookings[idx],
+        backendBookingId: backendId,
+        syncedAt: new Date().toISOString(),
+        pendingSync: false,
+        updatedAt: new Date().toISOString(),
+      };
+      writeBookings(bookings);
+    }
+    removePendingSync(entry.bookingId);
+  } catch {
+    // Increment retry count; give up after 10 attempts
+    const all = loadPendingSyncs();
+    const updated = all.map((e) =>
+      e.bookingId === entry.bookingId ? { ...e, retries: e.retries + 1 } : e,
+    );
+    savePendingSyncs(updated.filter((e) => e.retries < 10));
+  }
+}
+
+/** Drain all pending syncs — called on reconnect and on app start */
+export async function drainPendingBookingSyncs(): Promise<void> {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+  const pending = loadPendingSyncs();
+  if (pending.length === 0) return;
+
+  for (const entry of pending) {
+    await attemptSyncEntry(entry);
+    // Throttle
+    await new Promise((r) => setTimeout(r, 150));
+  }
+}
+
+// Wire drain to reconnect event once
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    void drainPendingBookingSyncs();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Core booking storage
+// ─────────────────────────────────────────────────────────────────────────────
 
 const BOOKING_KEY = 'wasel-ride-booking-records';
 
@@ -141,6 +253,7 @@ export function createRideBooking(input: {
     totalPriceJod,
     createdAt: now,
     updatedAt: now,
+    pendingSync: Boolean(input.passengerId), // will be cleared on successful sync
   };
 
   writeBookings([booking, ...readBookings()]);
@@ -202,11 +315,25 @@ export function createRideBooking(input: {
               ? persisted.total_price
               : booking.totalPriceJod,
           syncedAt: new Date().toISOString(),
+          pendingSync: false,
           updatedAt: new Date().toISOString(),
         };
         upsertBookings([synced]);
       })
-      .catch(() => {});
+      .catch(() => {
+        // Sync failed (offline or transient error) — enqueue for retry on reconnect
+        enqueuePendingSync({
+          bookingId: booking.id,
+          passengerId: input.passengerId!,
+          rideId: input.rideId,
+          seatsRequested: booking.seatsRequested,
+          from: input.from,
+          to: input.to,
+          status: booking.status,
+          totalPriceJod: booking.totalPriceJod,
+          pricePerSeatJod: booking.pricePerSeatJod,
+        });
+      });
   }
   return booking;
 }
@@ -246,7 +373,10 @@ export function updateRideBooking(
       .then(() => {
         upsertBookings([{ ...updated, syncedAt: new Date().toISOString() }]);
       })
-      .catch(() => {});
+      .catch(() => {
+        // Status update failed — mark as pending so it retries on reconnect
+        upsertBookings([{ ...updated, pendingSync: true }]);
+      });
   }
 
   if (updates.status) {
@@ -357,6 +487,7 @@ export async function hydrateRideBookings(userId: string, rides: PostedRide[] = 
       createdAt: String(raw.created_at ?? new Date().toISOString()),
       updatedAt: String(raw.updated_at ?? raw.created_at ?? new Date().toISOString()),
       syncedAt: new Date().toISOString(),
+      pendingSync: false,
     };
   };
 
@@ -370,6 +501,9 @@ export async function hydrateRideBookings(userId: string, rides: PostedRide[] = 
   if (remote.length > 0) {
     upsertBookings(remote);
   }
+
+  // Drain any pending syncs that were queued while offline
+  void drainPendingBookingSyncs();
 
   return getRideBookings();
 }

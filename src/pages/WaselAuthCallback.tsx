@@ -136,14 +136,32 @@ export default function WaselAuthCallback() {
         }
 
         if (!session) {
-          throw new Error('Authentication session could not be established.');
+          // No session yet — wait one tick and retry once before giving up.
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          const { data: retryData, error: retryError } = await supabase.auth.getSession();
+          if (retryError) throw retryError;
+          if (!retryData.session) {
+            throw new Error(
+              'Authentication session could not be established. ' +
+              'Please try signing in again.',
+            );
+          }
+          // Session found on retry — fall through with retryData.session.
         }
 
         if (window.opener && !window.opener.closed) {
+          // Popup flow: notify the opener and close this window.
+          try {
+            window.opener.postMessage({ type: 'wasel-auth-complete' }, window.location.origin);
+          } catch {
+            // cross-origin postMessage guard — ignore and fall through to redirect
+          }
           setState('closing');
           setMessage('Sign-in complete. You can return to Wasel.');
-          window.opener.postMessage({ type: 'wasel-auth-complete' }, window.location.origin);
-          window.close();
+          // Give the opener a moment to receive the message before closing.
+          setTimeout(() => {
+            try { window.close(); } catch { /* ignore */ }
+          }, 300);
           return;
         }
 

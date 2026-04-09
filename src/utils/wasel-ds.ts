@@ -8,14 +8,14 @@
  */
 
 export const C = {
-  bg: '#061120',
-  bgAlt: '#08192D',
-  bgDeep: '#040C18',
-  card: 'rgba(9,24,42,0.8)',
-  cardSolid: '#0A1B30',
-  card2: '#10253D',
-  panel: 'rgba(255,255,255,0.03)',
-  elevated: 'rgba(255,255,255,0.07)',
+  bg: 'var(--background)',
+  bgAlt: 'var(--wasel-surface-1)',
+  bgDeep: 'var(--wasel-surface-0)',
+  card: 'var(--wasel-panel-soft)',
+  cardSolid: 'var(--card)',
+  card2: 'var(--wasel-surface-3)',
+  panel: 'var(--wasel-panel-muted)',
+  elevated: 'var(--wasel-panel-muted-strong)',
 
   navy: '#09182B',
   navyMid: '#10365A',
@@ -37,14 +37,14 @@ export const C = {
   orange: '#D8FF67',
   orangeDim: 'rgba(216,255,103,0.16)',
 
-  text: '#EAF7FF',
-  textSub: 'rgba(234,247,255,0.84)',
-  textMuted: 'rgba(158,185,210,0.66)',
-  textDim: 'rgba(121,149,176,0.5)',
+  text: 'var(--wasel-copy-primary)',
+  textSub: 'var(--wasel-copy-muted)',
+  textMuted: 'var(--wasel-copy-muted)',
+  textDim: 'var(--wasel-copy-soft)',
 
-  border: 'rgba(70,205,255,0.18)',
-  borderHov: 'rgba(70,205,255,0.34)',
-  borderFaint: 'rgba(255,255,255,0.08)',
+  border: 'var(--border)',
+  borderHov: 'rgba(var(--wasel-border-rgb), 0.34)',
+  borderFaint: 'rgba(var(--wasel-border-rgb), 0.10)',
 
   error: '#FF646A',
   errorDim: 'rgba(255,100,106,0.12)',
@@ -52,8 +52,8 @@ export const C = {
   success: '#69FF45',
   info: '#12DBFF',
 
-  overlay: 'rgba(3,12,20,0.84)',
-  glass: 'rgba(8,23,39,0.9)',
+  overlay: 'var(--wasel-overlay)',
+  glass: 'var(--wasel-glass-xl)',
 } as const;
 
 export const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
@@ -131,13 +131,13 @@ export const R = {
 
 export const SH = {
   none: 'none',
-  xs: '0 4px 12px rgba(1,9,16,0.16)',
-  sm: '0 10px 24px rgba(1,9,16,0.2)',
-  card: '0 18px 44px rgba(1,10,18,0.28)',
-  md: '0 24px 56px rgba(1,10,18,0.34)',
-  lg: '0 34px 80px rgba(1,10,18,0.38)',
-  xl: '0 44px 100px rgba(1,10,18,0.42)',
-  navy: '0 20px 54px rgba(1,10,18,0.34)',
+  xs: 'var(--wasel-shadow-sm)',
+  sm: 'var(--wasel-shadow-sm)',
+  card: 'var(--wasel-shadow-md)',
+  md: 'var(--wasel-shadow-lg)',
+  lg: 'var(--wasel-shadow-xl)',
+  xl: 'var(--wasel-shadow-xl)',
+  navy: 'var(--wasel-shadow-md)',
   cyan: '0 18px 50px rgba(18,219,255,0.22)',
   cyanL: '0 24px 64px rgba(18,219,255,0.34)',
   blue: '0 18px 50px rgba(15,123,195,0.24)',
@@ -200,12 +200,11 @@ export function card({
   radius?: string;
 } = {}): Record<string, string | number> {
   return {
-    background:
-      'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)), rgba(11,33,53,0.88)',
+    background: 'var(--wasel-panel-strong)',
     border: `1px solid ${C.border}`,
     borderRadius: radius,
     padding,
-    boxShadow: SH.card,
+    boxShadow: 'var(--wasel-shadow-md)',
     backdropFilter: 'blur(18px)',
   };
 }
@@ -218,11 +217,11 @@ export function solidCard({
   radius?: string;
 } = {}): Record<string, string | number> {
   return {
-    background: C.cardSolid,
+    background: 'var(--card)',
     border: `1px solid ${C.border}`,
     borderRadius: radius,
     padding,
-    boxShadow: SH.card,
+    boxShadow: 'var(--wasel-shadow-md)',
   };
 }
 

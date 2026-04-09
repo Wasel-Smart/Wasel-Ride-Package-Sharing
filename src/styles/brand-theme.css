@@ -89,6 +89,21 @@
   --wasel-glass-lg: rgba(9, 28, 45, 0.9);
   --wasel-glass-xl: rgba(8, 24, 38, 0.96);
   --wasel-glass-brand: rgba(9, 31, 48, 0.82);
+
+  --wasel-shell-background:
+    radial-gradient(circle at 14% 14%, rgba(22, 199, 242, 0.16), transparent 24%),
+    radial-gradient(circle at 82% 16%, rgba(199, 255, 26, 0.12), transparent 18%),
+    linear-gradient(180deg, #071b2b 0%, #05121d 100%);
+  --wasel-panel-strong:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+    rgba(11, 33, 53, 0.88);
+  --wasel-panel-soft: rgba(11, 33, 53, 0.72);
+  --wasel-panel-muted: rgba(255, 255, 255, 0.04);
+  --wasel-panel-muted-strong: rgba(255, 255, 255, 0.06);
+  --wasel-copy-primary: var(--foreground);
+  --wasel-copy-muted: rgba(153, 184, 210, 0.78);
+  --wasel-copy-soft: rgba(153, 184, 210, 0.58);
+  --wasel-overlay: rgba(3, 12, 20, 0.78);
 }
 
 .light {
@@ -152,6 +167,21 @@
   --wasel-glass-lg: rgba(255, 255, 255, 0.92);
   --wasel-glass-xl: rgba(255, 255, 255, 0.97);
   --wasel-glass-brand: rgba(255, 255, 255, 0.88);
+
+  --wasel-shell-background:
+    radial-gradient(circle at 12% 12%, rgba(22, 199, 242, 0.10), transparent 26%),
+    radial-gradient(circle at 88% 14%, rgba(199, 255, 26, 0.09), transparent 18%),
+    linear-gradient(180deg, #ffffff 0%, #f5faff 100%);
+  --wasel-panel-strong:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.94)),
+    rgba(255, 255, 255, 0.94);
+  --wasel-panel-soft: rgba(255, 255, 255, 0.86);
+  --wasel-panel-muted: rgba(12, 110, 168, 0.05);
+  --wasel-panel-muted-strong: rgba(12, 110, 168, 0.08);
+  --wasel-copy-primary: var(--foreground);
+  --wasel-copy-muted: rgba(59, 82, 104, 0.82);
+  --wasel-copy-soft: rgba(75, 102, 128, 0.68);
+  --wasel-overlay: rgba(12, 36, 61, 0.16);
 }
 
 html {

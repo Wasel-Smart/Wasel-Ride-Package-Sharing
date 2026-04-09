@@ -58,6 +58,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
+    "@lhci/cli": "^0.14.0",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/vite": "^4.1.12",
     "@testing-library/jest-dom": "^6.9.1",
@@ -92,6 +93,7 @@
     "test:watch": "vitest --config vitest.config.mjs",
     "test:coverage": "vitest run --config vitest.config.mjs --coverage",
     "test:e2e": "playwright test",
+    "test:lhci": "lhci autorun --config=src/lighthouserc.json",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
     "verify:supabase-rollout": "node scripts/verify-supabase-rollout.mjs",
@@ -99,6 +101,7 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
-    "verify": "npm run type-check && npm run lint && npm run test && npm run build && npm run test:e2e"
+    "verify": "npm run type-check && npm run lint && npm run test && npm run build && npm run test:e2e",
+    "verify:full": "npm run verify && npm run test:lhci"
   }
 }

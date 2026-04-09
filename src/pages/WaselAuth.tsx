@@ -186,11 +186,17 @@ function SocialButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
+      aria-busy={loading}
+      aria-label={loading ? `Connecting to ${meta.label}...` : `Continue with ${meta.label}`}
       style={{
         minHeight: 54,
         borderRadius: 18,
-        border: `1px solid ${meta.accent}38`,
-        background: `${meta.accent}12`,
+        border: loading
+          ? `1px solid ${meta.accent}66`
+          : `1px solid ${meta.accent}38`,
+        background: loading
+          ? `${meta.accent}1e`
+          : `${meta.accent}12`,
         color: C.text,
         fontFamily: F,
         fontWeight: TYPE.weight.black,
@@ -200,12 +206,29 @@ function SocialButton({
         justifyContent: 'center',
         gap: 10,
         cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled && !loading ? 0.6 : 1,
-        transition: 'transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease',
+        opacity: disabled && !loading ? 0.55 : 1,
+        transition: 'transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease, border-color 160ms ease',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <AuthProviderBadge provider={provider} size={20} />
+      {loading ? (
+        <span
+          style={{
+            width: 18,
+            height: 18,
+            borderRadius: '50%',
+            border: `2px solid ${meta.accent}44`,
+            borderTop: `2px solid ${meta.accent}`,
+            animation: 'social-spin 0.75s linear infinite',
+            flexShrink: 0,
+          }}
+        />
+      ) : (
+        <AuthProviderBadge provider={provider} size={20} />
+      )}
       <span>{loading ? `Connecting ${meta.label}...` : `Continue with ${meta.label}`}</span>
+      <style>{`@keyframes social-spin { to { transform: rotate(360deg); } }`}</style>
     </button>
   );
 }
@@ -248,7 +271,12 @@ export default function WaselAuth() {
     '/app/find-ride',
   );
   const destinationLabel = describeReturnTo(safeReturnTo);
-  const busy = loading || Boolean(oauthProvider) || success;
+  // Email-form busy state — only blocks the email submit button.
+  const emailBusy = loading || success;
+  // OAuth busy state — only blocks the social buttons.
+  const oauthBusy = Boolean(oauthProvider) || success;
+  // Global busy (any async op in flight) — used for misc disabled states.
+  const busy = emailBusy || oauthBusy;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -431,16 +459,28 @@ export default function WaselAuth() {
     setPendingConfirmationEmail('');
     setOauthProvider(provider);
 
-    const result =
-      provider === 'google'
-        ? await signInWithGoogle(safeReturnTo)
-        : await signInWithFacebook(safeReturnTo);
+    try {
+      const result =
+        provider === 'google'
+          ? await signInWithGoogle(safeReturnTo)
+          : await signInWithFacebook(safeReturnTo);
 
-    if (result.error) {
+      if (result.error) {
+        setError(
+          friendlyAuthError(
+            result.error,
+            `${AUTH_PROVIDER_META[provider].label} sign-in could not start. Check that the provider is enabled in Supabase and the redirect URL is on the allow-list.`,
+          ),
+        );
+        setOauthProvider(null);
+      }
+      // If no error, Supabase is navigating the page away — leave the spinner
+      // running until the browser leaves this page.
+    } catch (err: unknown) {
       setError(
         friendlyAuthError(
-          result.error,
-          `${AUTH_PROVIDER_META[provider].label} sign-in failed.`,
+          err instanceof Error ? err : new Error(String(err)),
+          `${AUTH_PROVIDER_META[provider].label} sign-in failed unexpectedly.`,
         ),
       );
       setOauthProvider(null);
@@ -784,7 +824,7 @@ export default function WaselAuth() {
                   <SocialButton
                     provider="google"
                     loading={oauthProvider === 'google'}
-                    disabled={busy}
+                    disabled={oauthBusy}
                     onClick={() => {
                       void handleSocialAuth('google');
                     }}
@@ -792,7 +832,7 @@ export default function WaselAuth() {
                   <SocialButton
                     provider="facebook"
                     loading={oauthProvider === 'facebook'}
-                    disabled={busy}
+                    disabled={oauthBusy}
                     onClick={() => {
                       void handleSocialAuth('facebook');
                     }}
@@ -856,15 +896,15 @@ export default function WaselAuth() {
                       onClick={() => {
                         void handleResendConfirmation();
                       }}
-                      disabled={resendingConfirmation || busy}
+                      disabled={resendingConfirmation}
                       style={{
                         border: 'none',
                         background: 'transparent',
                         color: C.cyan,
                         fontFamily: F,
                         fontWeight: TYPE.weight.bold,
-                        cursor: resendingConfirmation || busy ? 'not-allowed' : 'pointer',
-                        opacity: resendingConfirmation || busy ? 0.65 : 1,
+                        cursor: resendingConfirmation ? 'not-allowed' : 'pointer',
+                        opacity: resendingConfirmation ? 0.65 : 1,
                         padding: 0,
                       }}
                     >
@@ -1010,7 +1050,7 @@ export default function WaselAuth() {
                     size="lg"
                     fullWidth
                     loading={loading}
-                    disabled={busy}
+                    disabled={emailBusy}
                     aria-label={
                       tab === 'signin' ? 'Sign in with email' : 'Create account'
                     }

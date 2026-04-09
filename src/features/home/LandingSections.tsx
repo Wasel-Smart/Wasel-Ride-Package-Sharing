@@ -8,30 +8,31 @@ import {
   WaselProofOfLifeBlock,
   WaselWhyCard,
 } from '../../components/system/WaselPresence';
+import { useTheme } from '../../contexts/ThemeContext';
 import { MobilityOSLandingMap } from './MobilityOSLandingMap';
 import { C, GRAD_AURORA, GRAD_HERO, GRAD_SIGNAL, SH } from '../../utils/wasel-ds';
 
 export const LANDING_COLORS = {
-  bg: '#04111D',
-  bgDeep: '#020A13',
-  panel: 'rgba(6,24,39,0.86)',
-  panelSoft: 'rgba(255,255,255,0.035)',
-  text: C.text,
-  muted: 'rgba(228,244,255,0.84)',
-  soft: 'rgba(163,192,214,0.7)',
+  bg: 'var(--background)',
+  bgDeep: 'var(--wasel-surface-0)',
+  panel: 'var(--wasel-panel-strong)',
+  panelSoft: 'var(--wasel-panel-muted)',
+  text: 'var(--wasel-copy-primary)',
+  muted: 'var(--wasel-copy-muted)',
+  soft: 'var(--wasel-copy-soft)',
   cyan: '#20D8FF',
   blue: '#1388D9',
   gold: '#B7FF2B',
   green: '#72FF47',
-  border: 'rgba(79,213,255,0.16)',
-  borderStrong: 'rgba(79,213,255,0.3)',
+  border: 'var(--border)',
+  borderStrong: 'rgba(var(--wasel-border-rgb), 0.30)',
 } as const;
 export const LANDING_FONT =
   "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 export const LANDING_DISPLAY =
   "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', 'Cairo', sans-serif)";
 export const LANDING_RESPONSIVE_STYLES = `
-  :root { color-scheme: dark; }
+  :root { color-scheme: inherit; }
   .landing-shell, .landing-shell * { box-sizing: border-box; }
   .landing-shell > * { min-width: 0; }
   .landing-shell button:focus-visible {
@@ -139,10 +140,9 @@ type LandingSlotRowsProps = {
 
 const panel = (radius = 28): CSSProperties => ({
   borderRadius: radius,
-  background:
-    'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.012)), rgba(6,24,39,0.94)',
+  background: 'var(--wasel-panel-strong)',
   border: `1px solid ${LANDING_COLORS.border}`,
-  boxShadow: '0 26px 72px rgba(1,10,18,0.34)',
+  boxShadow: 'var(--wasel-shadow-lg)',
   backdropFilter: 'blur(22px)',
 });
 const copy = (value: string) => value;
@@ -153,7 +153,7 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
     <div
       style={{
         minHeight: '100vh',
-        background: LANDING_COLORS.bg,
+        background: 'var(--wasel-shell-background)',
         color: LANDING_COLORS.text,
         fontFamily: LANDING_FONT,
         position: 'relative',
@@ -209,7 +209,9 @@ export function LandingHeader({
   showAuthActions = false,
   onNavigate,
 }: LandingHeaderProps) {
+  const { resolvedTheme } = useTheme();
   const canShowAuthActions = Boolean(showAuthActions && signinPath && signupPath && onNavigate);
+  const logoTheme = resolvedTheme === 'light' ? 'dark' : 'light';
 
   const headerAuthButtonBase: CSSProperties = {
     minHeight: 46,
@@ -240,7 +242,7 @@ export function LandingHeader({
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <WaselLogo
           size={34}
-          theme="light"
+          theme={logoTheme}
           variant="full"
           subtitle="Mobility OS"
           style={{

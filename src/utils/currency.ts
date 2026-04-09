@@ -12,6 +12,7 @@
 // ─── Supported currencies ─────────────────────────────────────────────────────
 
 import { useSyncExternalStore } from 'react';
+import { DEFAULT_TIMEZONE, LANGUAGE_STORAGE_KEY, sanitizeLanguage } from './locale';
 
 export const SUPPORTED_CURRENCY_CODES = [
   'JOD', 'USD', 'EUR', 'GBP',
@@ -258,7 +259,12 @@ export class CurrencyService {
 
     // Infer from browser locale — Jordan is primary, so JOD first.
     const lang = typeof navigator === 'undefined' ? 'ar-jo' : navigator.language.toLowerCase();
-    if (lang.startsWith('ar-jo') || lang.startsWith('ar'))  return 'JOD';
+    const timezone =
+      typeof Intl === 'undefined'
+        ? DEFAULT_TIMEZONE
+        : Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE;
+    if (lang.includes('-jo') || timezone === DEFAULT_TIMEZONE) return 'JOD';
+    if (lang.startsWith('ar'))                                  return 'JOD';
     if (lang.startsWith('en-gb'))                            return 'GBP';
     if (lang.startsWith('ar-ae'))                            return 'AED';
     if (lang.startsWith('ar-sa'))                            return 'SAR';
@@ -274,6 +280,19 @@ export class CurrencyService {
     if (lang.startsWith('en'))                               return 'USD';
 
     return PLATFORM_CURRENCY;
+  }
+
+  private getRuntimeLocale(defaultLocale: string): string {
+    if (typeof window === 'undefined') {
+      return defaultLocale;
+    }
+
+    try {
+      const storedLanguage = sanitizeLanguage(window.localStorage.getItem(LANGUAGE_STORAGE_KEY));
+      return storedLanguage === 'ar' ? 'ar-JO' : 'en-JO';
+    } catch {
+      return defaultLocale;
+    }
   }
 
   // ── Getters / setters ─────────────────────────────────────────────────────
@@ -327,8 +346,9 @@ export class CurrencyService {
   format(amount: number, currency?: SupportedCurrency): string {
     const curr   = currency ?? this._current;
     const config = CURRENCIES[curr];
+    const locale = this.getRuntimeLocale(config.locale);
     try {
-      return new Intl.NumberFormat(config.locale, {
+      return new Intl.NumberFormat(locale, {
         style:                 'currency',
         currency:              config.code,
         minimumFractionDigits: config.decimals,

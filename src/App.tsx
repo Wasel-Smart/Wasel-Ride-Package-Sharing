@@ -10,6 +10,7 @@ import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { LocalAuthProvider } from './contexts/LocalAuth';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { WaselLogo } from './components/wasel-ds/WaselLogo';
 import {
   probeBackendHealth,
@@ -25,14 +26,19 @@ import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
 import { buildAuthPagePath } from './utils/authFlow';
 import { shouldIgnoreError, formatErrorMessage } from './utils/errors';
+import { getInitialLanguage } from './utils/locale';
 
 interface ErrorBoundaryState {
   hasError: boolean;
   error: string;
 }
 
-class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
-  constructor(props: { children: ReactNode }) {
+class AppErrorBoundary extends Component<{
+  children: ReactNode;
+  language: 'en' | 'ar';
+  resolvedTheme: 'light' | 'dark';
+}, ErrorBoundaryState> {
+  constructor(props: { children: ReactNode; language: 'en' | 'ar'; resolvedTheme: 'light' | 'dark' }) {
     super(props);
     this.state = { hasError: false, error: '' };
   }
@@ -67,6 +73,9 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
   render() {
     if (!this.state.hasError) return this.props.children;
 
+    const ar = this.props.language === 'ar';
+    const isLight = this.props.resolvedTheme === 'light';
+
     return (
       <div
         style={{
@@ -77,14 +86,15 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
           minHeight: '100vh',
           fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
           background: `
-            radial-gradient(circle at 16% 18%, rgba(85,233,255,0.12), transparent 24%),
-            radial-gradient(circle at 82% 12%, rgba(245,177,30,0.12), transparent 20%),
-            radial-gradient(circle at 78% 72%, rgba(51,232,95,0.08), transparent 20%),
-            #040C18
+            ${isLight
+              ? 'radial-gradient(circle at 16% 18%, rgba(85,233,255,0.10), transparent 24%), radial-gradient(circle at 82% 12%, rgba(245,177,30,0.08), transparent 20%), radial-gradient(circle at 78% 72%, rgba(51,232,95,0.06), transparent 20%), #f6fbff'
+              : 'radial-gradient(circle at 16% 18%, rgba(85,233,255,0.12), transparent 24%), radial-gradient(circle at 82% 12%, rgba(245,177,30,0.12), transparent 20%), radial-gradient(circle at 78% 72%, rgba(51,232,95,0.08), transparent 20%), #040C18'
+            }
           `,
-          color: '#EFF6FF',
+          color: isLight ? '#10243d' : '#EFF6FF',
           padding: 24,
           textAlign: 'center',
+          direction: ar ? 'rtl' : 'ltr',
         }}
       >
         <div
@@ -93,14 +103,16 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
             width: 'min(100%, 560px)',
             borderRadius: 28,
             padding: 28,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), rgba(10,22,40,0.94)',
-            border: '1px solid rgba(85,233,255,0.14)',
-            boxShadow: '0 28px 70px rgba(0,0,0,0.42)',
+            background: isLight
+              ? 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.94)), rgba(255,255,255,0.92)'
+              : 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), rgba(10,22,40,0.94)',
+            border: `1px solid ${isLight ? 'rgba(12,110,168,0.12)' : 'rgba(85,233,255,0.14)'}`,
+            boxShadow: isLight ? '0 28px 70px rgba(16,36,61,0.14)' : '0 28px 70px rgba(0,0,0,0.42)',
             backdropFilter: 'blur(18px)',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
-            <WaselLogo size={42} theme="light" variant="compact" />
+            <WaselLogo size={42} theme={isLight ? 'dark' : 'light'} variant="compact" />
           </div>
           <div
             style={{
@@ -112,16 +124,18 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
               fontWeight: 800,
             }}
           >
-            Recovery Screen
+            {ar ? 'شاشة الاسترجاع' : 'Recovery Screen'}
           </div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#EFF6FF', margin: '0 0 10px' }}>
-            Something interrupted this screen
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: isLight ? '#10243d' : '#EFF6FF', margin: '0 0 10px' }}>
+            {ar ? 'صار خلل ووقف هالجزء من التطبيق' : 'Something interrupted this screen'}
           </h2>
-          <p style={{ color: 'rgba(239,246,255,0.72)', fontSize: '0.92rem', margin: '0 auto 16px', maxWidth: 420, lineHeight: 1.7 }}>
-            {this.state.error || 'An unexpected error occurred while loading this part of Wasel.'}
+          <p style={{ color: isLight ? 'rgba(16,36,61,0.76)' : 'rgba(239,246,255,0.72)', fontSize: '0.92rem', margin: '0 auto 16px', maxWidth: 420, lineHeight: 1.7 }}>
+            {this.state.error || (ar ? 'صار خطأ غير متوقع وإحنا عم نحمّل هالجزء من واصل.' : 'An unexpected error occurred while loading this part of Wasel.')}
           </p>
-          <p style={{ color: 'rgba(239,246,255,0.52)', fontSize: '0.84rem', margin: '0 auto 22px', maxWidth: 440, lineHeight: 1.7 }}>
-            Refresh this experience to continue. If the issue repeats, return to the home screen and reopen the flow.
+          <p style={{ color: isLight ? 'rgba(16,36,61,0.60)' : 'rgba(239,246,255,0.52)', fontSize: '0.84rem', margin: '0 auto 22px', maxWidth: 440, lineHeight: 1.7 }}>
+            {ar
+              ? 'حدّث الصفحة لتكمل. وإذا رجعت المشكلة، ارجع للرئيسية وافتح الخدمة مرة ثانية.'
+              : 'Refresh this experience to continue. If the issue repeats, return to the home screen and reopen the flow.'}
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
@@ -142,7 +156,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
                 fontSize: '0.92rem',
               }}
             >
-              Reload Wasel
+              {ar ? 'حدّث واصل' : 'Reload Wasel'}
             </button>
             <button
               type="button"
@@ -155,14 +169,14 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
                 padding: '0 22px',
                 borderRadius: 14,
                 border: '1px solid rgba(85,233,255,0.18)',
-                background: 'rgba(255,255,255,0.03)',
-                color: '#EFF6FF',
+                background: isLight ? 'rgba(12,110,168,0.04)' : 'rgba(255,255,255,0.03)',
+                color: isLight ? '#10243d' : '#EFF6FF',
                 fontWeight: 800,
                 cursor: 'pointer',
                 fontSize: '0.92rem',
               }}
             >
-              Back to home
+              {ar ? 'ارجع للرئيسية' : 'Back to home'}
             </button>
             <button
               type="button"
@@ -182,7 +196,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
                 fontSize: '0.92rem',
               }}
             >
-              Open sign in
+              {ar ? 'افتح تسجيل الدخول' : 'Open sign in'}
             </button>
           </div>
         </div>
@@ -229,29 +243,47 @@ export default function App() {
   const [queryClient] = useState(
     () => new QueryClient({ defaultOptions: DEFAULT_QUERY_OPTIONS }),
   );
+  const initialLanguage = getInitialLanguage();
 
   return (
-    <AppErrorBoundary>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AppShell queryClient={queryClient} initialLanguage={initialLanguage} />
+      </LanguageProvider>
+    </ThemeProvider>
+  );
+}
+
+function AppShell({
+  queryClient,
+  initialLanguage,
+}: {
+  queryClient: QueryClient;
+  initialLanguage: 'en' | 'ar';
+}) {
+  const { resolvedTheme } = useTheme();
+
+  return (
+    <AppErrorBoundary language={initialLanguage} resolvedTheme={resolvedTheme}>
       <QueryClientProvider client={queryClient}>
-        <LanguageProvider>
-          <LocalAuthProvider>
-            <AuthProvider>
-              <AppRuntimeCoordinator />
-              <RouterProvider router={waselRouter} />
-              <Toaster
-                position="bottom-center"
-                toastOptions={{
-                  style: {
-                    background: '#0A1628',
-                    border: '1px solid rgba(22,199,242,0.25)',
-                    color: '#EFF6FF',
-          fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
-                  },
-                }}
-              />
-            </AuthProvider>
-          </LocalAuthProvider>
-        </LanguageProvider>
+        <LocalAuthProvider>
+          <AuthProvider>
+            <AppRuntimeCoordinator />
+            <RouterProvider router={waselRouter} />
+            <Toaster
+              position="bottom-center"
+              toastOptions={{
+                style: {
+                  background: resolvedTheme === 'light' ? 'rgba(255,255,255,0.96)' : '#0A1628',
+                  border: `1px solid ${resolvedTheme === 'light' ? 'rgba(12,110,168,0.16)' : 'rgba(22,199,242,0.25)'}`,
+                  color: resolvedTheme === 'light' ? '#10243d' : '#EFF6FF',
+                  boxShadow: resolvedTheme === 'light' ? '0 18px 40px rgba(16,36,61,0.14)' : '0 18px 44px rgba(1,10,18,0.28)',
+                  fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
+                },
+              }}
+            />
+          </AuthProvider>
+        </LocalAuthProvider>
       </QueryClientProvider>
     </AppErrorBoundary>
   );

@@ -5,10 +5,10 @@ import { ChevronDown, ChevronRight, ChevronUp, Info, Phone } from 'lucide-react'
 import { type SupportedCurrency, useCurrency } from '../../utils/currency';
 
 export const C = {
-  bg: '#061726',
-  card: '#0B2135',
-  card2: '#102B44',
-  s3: '#14334F',
+  bg: 'var(--background)',
+  card: 'var(--card)',
+  card2: 'var(--wasel-surface-3)',
+  s3: 'var(--wasel-surface-4)',
   cyan: '#16C7F2',
   cyanDim: 'rgba(22,199,242,0.12)',
   gold: '#C7FF1A',
@@ -19,14 +19,18 @@ export const C = {
   purpleDim: 'rgba(139,92,246,0.12)',
   red: '#FF4455',
   redDim: 'rgba(255,68,85,0.12)',
-  border: 'rgba(73,190,242,0.14)',
-  text: '#EAF7FF',
-  textMuted: 'rgba(153,184,210,0.75)',
-  textDim: 'rgba(153,184,210,0.55)',
+  border: 'var(--border)',
+  text: 'var(--wasel-copy-primary)',
+  textMuted: 'var(--wasel-copy-muted)',
+  textDim: 'var(--wasel-copy-soft)',
 } as const;
 
 export const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
-export const glass = (op = 0.68) => `rgba(11,33,53,${op})`;
+export const glass = (op = 0.68) => {
+  if (op >= 0.7) return 'var(--wasel-panel-strong)';
+  if (op >= 0.5) return 'var(--wasel-panel-soft)';
+  return 'var(--wasel-panel-muted)';
+};
 
 export const POPULAR_ROUTES = [
   { from: 'Amman', fromAr: 'عمان', to: 'Aqaba', toAr: 'العقبة', dist: 330, priceJod: 8, icon: 'A', color: C.cyan },
@@ -44,7 +48,7 @@ export function Skeleton({ w = '100%', h = 20, radius = 8 }: { w?: string | numb
         width: w,
         height: h,
         borderRadius: radius,
-        background: 'linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 100%)',
+        background: 'linear-gradient(90deg, var(--wasel-panel-muted) 0%, var(--wasel-panel-soft) 50%, var(--wasel-panel-muted) 100%)',
         backgroundSize: '200% 100%',
         animation: 'shimmer 1.6s infinite linear',
       }}
