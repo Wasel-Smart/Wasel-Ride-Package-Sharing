@@ -2,7 +2,7 @@ import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState }
 import { Gauge, MapPinned, Pause, Play, Route } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { buildCorridorCommercialSnapshot, type CorridorCommercialSnapshot } from '../../services/corridorCommercial';
-import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
+import { C, F, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
 import { type LiveMobilityVehicleSnapshot, useMobilityOSLiveData } from './liveMobilityData';
 
 type FlowType = 'passenger' | 'package';
@@ -1097,7 +1097,7 @@ export default function MobilityOSCore() {
         { label: ar ? '????? ????????' : 'Stakeholders', value: numberFormatter.format(commercialSnapshot.activeStakeholders), sub: commercialSnapshot.corridorPassCoverage ?? (ar ? '???? ?????? ????? ???' : 'No corridor pass pinned'), color: C.gold },
       ]
     : [];
-  const cleanLabel = (value: string) => value.replaceAll('Â·', '·');
+  const formatLabel = (value: string) => value.replace(/\s*Â·\s*/g, ' · ');
 
   return (
     <div dir={dir} style={{ minHeight: '100vh', background: `${GRAD_AURORA}, radial-gradient(circle at 15% 12%, rgba(71,183,230,0.16), transparent 22%), radial-gradient(circle at 82% 18%, rgba(168,214,20,0.14), transparent 24%), radial-gradient(circle at 50% 100%, rgba(92,255,149,0.08), transparent 28%), ${C.bg}`, color: C.text, fontFamily: F, padding: isCompactMobile ? '14px 12px 84px' : '20px 14px 88px' }}>
@@ -1115,7 +1115,7 @@ export default function MobilityOSCore() {
                 <div style={{ display: 'grid', gap: 10, gridTemplateColumns: isCompactMobile ? '1fr' : 'repeat(auto-fit, minmax(170px, 1fr))', marginTop: 2 }}>
                   {heroSignals.map((signal) => (
                     <div key={signal.label} style={{ minWidth: 0, padding: isCompactMobile ? '11px 12px' : '12px 14px', borderRadius: 18, border: `1px solid ${C.borderFaint}`, background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
-                      <div style={{ color: C.textMuted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{cleanLabel(signal.label)}</div>
+                      <div style={{ color: C.textMuted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{formatLabel(signal.label)}</div>
                       <div style={{ marginTop: 6, color: signal.tone, fontWeight: 900, fontSize: signal.label === copy.dispatch ? '0.94rem' : '1rem', lineHeight: 1.35 }}>{signal.value}</div>
                     </div>
                   ))}
@@ -1191,7 +1191,7 @@ export default function MobilityOSCore() {
                 return (
                 <div key={band.label} style={{ padding: isCompactMobile ? '14px 14px' : '16px 18px', borderRadius: 22, border: `1px solid ${C.borderFaint}`, background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
-                    <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{cleanLabel(displayLabel)}</div>
+                    <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{formatLabel(displayLabel)}</div>
                     <div style={{ width: 10, height: 10, borderRadius: 999, background: band.color, boxShadow: `0 0 18px ${band.color}` }} />
                   </div>
                   <div style={{ marginTop: 10, fontSize: '1.42rem', fontWeight: 900, color: band.color, textShadow: `0 0 22px ${band.color}30` }}>{band.value}</div>
@@ -1204,7 +1204,7 @@ export default function MobilityOSCore() {
                 {commercialBands.map((band) => (
                   <div key={band.label} style={{ padding: '16px 18px', borderRadius: 22, border: `1px solid ${C.borderFaint}`, background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.018))' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
-                      <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{cleanLabel(band.label)}</div>
+                      <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{formatLabel(band.label)}</div>
                       <div style={{ width: 10, height: 10, borderRadius: 999, background: band.color, boxShadow: `0 0 18px ${band.color}` }} />
                     </div>
                     <div style={{ marginTop: 10, fontSize: '1.3rem', fontWeight: 900, color: band.color }}>{band.value}</div>
@@ -1241,78 +1241,70 @@ export default function MobilityOSCore() {
         </section>
 
         <section style={{ display: 'grid', gap: 18 }}>
-          <div style={glassPanelStyle({ padding: isCompactMobile ? 14 : 20, borderRadius: isCompactMobile ? 22 : 30, background: 'linear-gradient(180deg, rgba(8,20,37,0.97), rgba(4,10,22,0.99))', alignSelf: 'start' })}>
+          <div style={glassPanelStyle({ padding: isCompactMobile ? 14 : 18, borderRadius: isCompactMobile ? 24 : 30, background: 'linear-gradient(180deg, rgba(8,18,30,0.96), rgba(5,10,20,0.99))', alignSelf: 'start', boxShadow: '0 24px 64px rgba(0,0,0,0.28)' })}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 14 }}>
-              <div style={{ display: 'grid', gap: 8 }}>
-                <div style={sectionLabelStyle}>{copy.operationalMap}</div>
-                <h2 style={{ margin: 0, fontSize: '1.5rem', letterSpacing: '-0.03em' }}>{copy.mapTitle}</h2>
-                <p style={{ margin: 0, color: C.textSub, lineHeight: 1.68, maxWidth: 700 }}>{isCompactMobile ? 'A simplified live map of routes, pressure, and the next best corridor action.' : copy.mapBody}</p>
+              <div style={{ display: 'grid', gap: 8, maxWidth: 760 }}>
+                <div style={{ ...sectionLabelStyle, color: 'rgba(158,248,255,0.82)' }}>{copy.operationalMap}</div>
+                <h2 style={{ margin: 0, fontSize: isCompactMobile ? '1.22rem' : '1.4rem', letterSpacing: '-0.03em' }}>
+                  {isCompactMobile ? 'Jordan live network' : 'A simpler live view of Jordan’s mobility network'}
+                </h2>
+                <p style={{ margin: 0, color: C.textSub, lineHeight: 1.62, maxWidth: 680, fontSize: isCompactMobile ? '0.9rem' : '0.95rem' }}>
+                  {isCompactMobile
+                    ? 'See the route network, key movement totals, and the best next corridor action in one clean view.'
+                    : 'A cleaner operational surface for route reading, movement totals, and the next recommended corridor action.'}
+                </p>
               </div>
               <div style={{ display: 'grid', gap: 10, alignContent: 'start', width: isCompactMobile ? '100%' : undefined }}>
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: isCompactMobile ? 'stretch' : 'flex-end' }}>
                   {[{ label: copy.passengerFlow, stroke: `3px solid ${PASSENGER_COLOR}` }, { label: copy.packageFlow, stroke: `3px dashed ${PACKAGE_COLOR}` }].map((item) => (
-                    <div key={item.label} style={{ padding: '9px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.035)', color: C.textSub, fontSize: '0.82rem', display: 'inline-flex', gap: 10, alignItems: 'center' }}>
-                      <span style={{ width: 34, height: 0, borderTop: item.stroke, display: 'inline-block' }} />
+                    <div key={item.label} style={{ padding: '9px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: C.textSub, fontSize: '0.8rem', display: 'inline-flex', gap: 10, alignItems: 'center', minHeight: 38 }}>
+                      <span style={{ width: 24, height: 0, borderTop: item.stroke, display: 'inline-block' }} />
                       {item.label}
                     </div>
                   ))}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: isCompactMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
                   {[{ label: `${copy.routeIntelligence} · ${copy.modeledTag}`, value: analytics.recommendedPath || (ar ? '????? ? ??????' : 'Amman -> Aqaba'), color: C.cyan }, { label: copy.activeMode, value: activeMode.title, color: activeMode.accent }].map((item) => (
-                    <div key={item.label} style={{ padding: '12px 14px', borderRadius: 18, border: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))' }}>
-                      <div style={{ color: C.textMuted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{cleanLabel(item.label)}</div>
+                    <div key={item.label} style={{ padding: '12px 14px', borderRadius: 18, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
+                      <div style={{ color: C.textMuted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{formatLabel(item.label)}</div>
                       <div style={{ marginTop: 6, color: item.color, fontWeight: 800, fontSize: '0.86rem', lineHeight: 1.45 }}>{item.value}</div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-            <div ref={wrapRef} style={{ ...glassPanelStyle({ padding: 0, borderRadius: isCompactMobile ? 22 : 34, aspectRatio: isMobile ? '4/3' : `${HERO_MAP_ASPECT} / 1`, minHeight: isMobile ? 'clamp(220px, 72vw, 360px)' : 'clamp(500px, 54vw, 860px)', boxShadow: isCompactMobile ? '0 24px 60px rgba(0,0,0,0.34)' : '0 60px 160px rgba(0,0,0,0.54), inset 0 1px 0 rgba(255,255,255,0.08)', transform: isMobile ? 'none' : 'perspective(2200px) rotateX(5deg)', transformStyle: isMobile ? 'flat' : 'preserve-3d', transformOrigin: 'center top' }), background: 'linear-gradient(180deg, rgba(6,16,28,0.98), rgba(5,12,22,0.98))' }}>
-              <div style={{ position: 'absolute', inset: -30, pointerEvents: 'none', background: 'radial-gradient(circle at 50% 8%, rgba(255,255,255,0.07), transparent 24%), radial-gradient(circle at 14% 30%, rgba(71,183,230,0.14), transparent 20%), radial-gradient(circle at 84% 26%, rgba(168,214,20,0.12), transparent 22%)', filter: 'blur(18px)', opacity: 0.9 }} />
-              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.04), transparent 18%, transparent 82%, rgba(71,183,230,0.06))' }} />
-              {!isCompactMobile ? <div style={{ position: 'absolute', inset: 14, borderRadius: 22, border: '1px solid rgba(255,255,255,0.06)', pointerEvents: 'none' }} /> : null}
-              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at top center, rgba(255,255,255,0.08), transparent 22%), radial-gradient(circle at bottom right, rgba(71,183,230,0.08), transparent 28%)' }} />
-              {!isCompactMobile ? <div style={{ position: 'absolute', inset: '0 0 auto 0', height: '24%', pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.03) 42%, rgba(255,255,255,0))', mixBlendMode: 'screen', opacity: 0.48 }} /> : null}
-              {!isCompactMobile ? <div style={{ position: 'absolute', left: 24, right: 24, bottom: -22, height: 38, borderRadius: 999, pointerEvents: 'none', background: 'linear-gradient(90deg, rgba(71,183,230,0), rgba(71,183,230,0.24), rgba(168,214,20,0.18), rgba(71,183,230,0.24), rgba(71,183,230,0))', filter: 'blur(16px)', opacity: 0.8 }} /> : null}
-              <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 2, display: 'grid', gap: 10 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.68)', border: `1px solid ${C.border}`, backdropFilter: 'blur(16px)', boxShadow: '0 10px 30px rgba(0,0,0,0.24)' }}>
+            <div ref={wrapRef} style={{ ...glassPanelStyle({ padding: 0, borderRadius: isCompactMobile ? 22 : 30, aspectRatio: isMobile ? '4/3' : `${HERO_MAP_ASPECT} / 1`, minHeight: isMobile ? 'clamp(220px, 72vw, 360px)' : 'clamp(500px, 54vw, 860px)', boxShadow: '0 18px 44px rgba(0,0,0,0.32)', transform: 'none', transformStyle: 'flat', transformOrigin: 'center top' }), background: 'linear-gradient(180deg, rgba(6,15,25,0.99), rgba(6,13,22,0.99))', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0) 18%, rgba(71,183,230,0.04) 100%)' }} />
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 18% 12%, rgba(255,255,255,0.05), transparent 18%), radial-gradient(circle at 82% 20%, rgba(71,183,230,0.06), transparent 22%)' }} />
+              <div style={{ position: 'absolute', top: 14, left: 14, right: 14, zIndex: 2, display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 999, background: 'rgba(7,18,30,0.74)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
                   <div style={{ width: 8, height: 8, borderRadius: 999, background: '#5CFF95', boxShadow: '0 0 14px #5CFF95' }} />
                   <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>{copy.liveMesh}</span>
                 </div>
-                {!isCompactMobile ? <div style={{ display: 'grid', gap: 6, padding: '10px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)' }}>
-                  <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.14em', color: C.textMuted }}>{copy.modelRecommendation}</div>
-                  <div style={{ fontFamily: FM, fontSize: '0.78rem', color: C.cyan }}>best_route_now</div>
-                  <div style={{ fontSize: '0.8rem', color: C.textSub }}>{analytics.recommendedPath || (ar ? '????? ? ??????' : 'Amman -> Aqaba')}</div>
+                {!isCompactMobile ? <div style={{ display: 'grid', gap: 6, padding: '10px 12px', borderRadius: 16, background: 'rgba(7,18,30,0.72)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', minWidth: 172 }}>
+                  <div style={{ fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: C.textMuted }}>Best route now</div>
+                  <div style={{ color: C.cyan, fontWeight: 800, fontSize: '0.82rem', lineHeight: 1.4 }}>{analytics.recommendedPath || (ar ? '????? ? ??????' : 'Amman -> Aqaba')}</div>
                 </div> : null}
               </div>
-              {!isCompactMobile ? <div style={{ position: 'absolute', right: 16, top: 16, zIndex: 2, display: 'grid', gap: 8 }}>
+              {!isCompactMobile ? <div style={{ position: 'absolute', right: 14, top: 68, zIndex: 2, display: 'grid', gap: 8 }}>
                 {[{ label: `${copy.passengerFlow} · ${copy.simulationTag}`, value: numberFormatter.format(analytics.activePassengers), color: PASSENGER_COLOR }, { label: `${copy.parcelLoad} · ${copy.simulationTag}`, value: numberFormatter.format(analytics.activePackages), color: PACKAGE_COLOR }].map((chip) => (
-                  <div key={chip.label} style={{ padding: '10px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', minWidth: 146 }}>
-                    <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: C.textMuted }}>{cleanLabel(chip.label)}</div>
-                    <div style={{ marginTop: 4, color: chip.color, fontSize: '1.05rem', fontWeight: 900, textShadow: `0 0 16px ${chip.color}44` }}>{chip.value}</div>
+                  <div key={chip.label} style={{ padding: '10px 12px', borderRadius: 16, background: 'rgba(7,18,30,0.72)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', minWidth: 146 }}>
+                    <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: C.textMuted }}>{formatLabel(chip.label)}</div>
+                    <div style={{ marginTop: 4, color: chip.color, fontSize: '1rem', fontWeight: 900 }}>{chip.value}</div>
                   </div>
                 ))}
               </div> : null}
-              <div style={{ position: 'absolute', left: 16, right: 16, bottom: 16, zIndex: 2, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ position: 'absolute', left: 14, right: 14, bottom: 14, zIndex: 2, display: 'grid', gridTemplateColumns: isCompactMobile ? '1fr' : '1fr auto auto', gap: 8, alignItems: 'center' }}>
                 {(isCompactMobile ? primaryActionItems.slice(0, 1) : [
                   `${copy.topCorridor} ${analytics.topCorridor || (ar ? '????? ? ???????' : 'Amman -> Zarqa')}`,
                   `${copy.dispatch} ${analytics.dispatchAction || (ar ? '?????? ?????' : 'Balance supply')}`,
                   ar ? `??????? ${numberFormatter.format(analytics.seatAvailability)} / ????? ${numberFormatter.format(analytics.packageCapacity)}` : `Seats ${analytics.seatAvailability} / Capacity ${analytics.packageCapacity}`,
                 ]).map((chip) => (
-                  <div key={chip} style={{ padding: '9px 12px', borderRadius: 999, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', color: C.textSub, fontSize: '0.78rem' }}>
+                  <div key={chip} style={{ padding: '10px 12px', borderRadius: 16, background: 'rgba(7,18,30,0.72)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', color: C.textSub, fontSize: '0.76rem' }}>
                     {chip}
                   </div>
                 ))}
               </div>
-              {!isCompactMobile ? <div style={{ position: 'absolute', left: '50%', bottom: 20, transform: 'translateX(-50%)', zIndex: 2, pointerEvents: 'none' }}>
-                <div style={{ width: 180, height: 18, borderRadius: 999, background: 'linear-gradient(90deg, rgba(71,183,230,0), rgba(71,183,230,0.16), rgba(168,214,20,0.16), rgba(168,214,20,0))', filter: 'blur(10px)' }} />
-              </div> : null}
-              {!isCompactMobile ? <div style={{ position: 'absolute', left: 22, top: '50%', transform: 'translateY(-50%)', zIndex: 2, writingMode: 'vertical-rl', textOrientation: 'mixed', letterSpacing: '0.28em', textTransform: 'uppercase', fontSize: '0.64rem', color: 'rgba(255,255,255,0.34)', pointerEvents: 'none' }}>
-                {copy.mobilityMatrix}
-              </div> : null}
-              {!isCompactMobile ? <div style={{ position: 'absolute', right: 22, top: '50%', transform: 'translateY(-50%)', zIndex: 2, writingMode: 'vertical-rl', textOrientation: 'mixed', letterSpacing: '0.28em', textTransform: 'uppercase', fontSize: '0.64rem', color: 'rgba(71,183,230,0.34)', pointerEvents: 'none' }}>
-                {copy.signalLayer}
-              </div> : null}
               <canvas
                 ref={canvasRef}
                 aria-label={ar ? '????? ??????? ??? ????? ???? ?? ??????' : 'Live operational Wasel network map of Jordan'}
@@ -1323,8 +1315,8 @@ export default function MobilityOSCore() {
                   display: 'block',
                   width: '100%',
                   height: '100%',
-                  borderRadius: 32,
-                  filter: 'saturate(1.08) contrast(1.04) brightness(1.01) drop-shadow(0 30px 50px rgba(0,0,0,0.22))',
+                  borderRadius: isCompactMobile ? 22 : 30,
+                  filter: 'saturate(1.02) contrast(1.01) brightness(1.01)',
                 }}
               />
             </div>
@@ -1343,7 +1335,7 @@ export default function MobilityOSCore() {
                   `${copy.modelRecommendation} ${analytics.recommendedPath}`,
                 ].map((row, index) => (
                   <div key={row} style={{ padding: '10px 12px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', background: index === 2 ? 'rgba(71,183,230,0.08)' : 'rgba(255,255,255,0.03)', color: index === 2 ? C.cyan : C.textSub, fontWeight: index === 2 ? 700 : 500 }}>
-                    {cleanLabel(row)}
+                    {formatLabel(row)}
                   </div>
                 ))}
               </div>
@@ -1398,7 +1390,7 @@ export default function MobilityOSCore() {
                               { label: `${copy.flow} · ${copy.simulationTag}`, value: `${numberFormatter.format(totalFlow)}`, color: C.cyan },
                             ].map((pill) => (
                               <div key={pill.label} style={{ padding: '7px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', color: C.textSub, fontSize: '0.76rem', width: isCompactMobile ? '100%' : undefined }}>
-                                <span style={{ color: C.textMuted }}>{cleanLabel(pill.label)}</span>{' '}
+                                <span style={{ color: C.textMuted }}>{formatLabel(pill.label)}</span>{' '}
                                 <strong style={{ color: pill.color }}>{pill.value}</strong>
                               </div>
                             ))}
@@ -1420,7 +1412,7 @@ export default function MobilityOSCore() {
                         ].map((metric) => (
                           <div key={metric.label} style={{ padding: '12px 12px 10px', borderRadius: 16, background: metric.tone, border: '1px solid rgba(255,255,255,0.05)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                              <span style={{ fontSize: '0.76rem', color: C.textSub }}>{cleanLabel(metric.label)}</span>
+                              <span style={{ fontSize: '0.76rem', color: C.textSub }}>{formatLabel(metric.label)}</span>
                               <span style={{ fontSize: '0.82rem', fontWeight: 800, color: metric.color }}>{Math.round(metric.value * 100)}%</span>
                             </div>
                             <div style={{ marginTop: 10, height: 8, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
