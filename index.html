@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#061726" />
-    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#081c36" />
+    <meta name="color-scheme" content="dark" />
     <meta name="application-name" content="Wasel" />
     <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
 
@@ -20,6 +20,7 @@
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://wasel14.online" />
 
+    <!-- ── Open Graph (PNG required — SVG is rejected by crawlers) ────────── -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Wasel" />
     <meta property="og:title" content="Wasel | Shared Routes That Reduce Travel Cost" />
@@ -30,37 +31,68 @@
     <meta property="og:url" content="https://wasel14.online" />
     <meta property="og:locale" content="en_JO" />
     <meta property="og:locale:alternate" content="ar_JO" />
-    <meta property="og:image" content="/brand/wasel-mark-clean.svg" />
-    <meta property="og:image:alt" content="Wasel Mobility OS logo" />
+    <!-- 1200×630 PNG social card — replace SVG which is ignored by fb/twitter -->
+    <meta property="og:image" content="https://wasel14.online/brand/og-social-card.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Wasel — Shared Routes That Reduce Travel Cost across Jordan" />
 
+    <!-- ── Twitter / X Card ──────────────────────────────────────────────── -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@wasel_jo" />
     <meta name="twitter:title" content="Wasel | Shared Routes That Reduce Travel Cost" />
     <meta
       name="twitter:description"
       content="Wasel connects riders and drivers through shared routes to reduce cost. Book a ride, offer a route, or join the network across Jordan."
     />
-    <meta name="twitter:image" content="/brand/wasel-mark-clean.svg" />
-    <meta name="twitter:image:alt" content="Wasel Mobility OS logo" />
+    <meta name="twitter:image" content="https://wasel14.online/brand/og-social-card.png" />
+    <meta name="twitter:image:alt" content="Wasel — Shared Routes across Jordan" />
 
+    <!-- ── PWA / Apple ────────────────────────────────────────────────────── -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Wasel" />
-    <link rel="icon" type="image/svg+xml" href="/brand/wasel-mark-clean.svg?v=20260406b" />
+
+    <!-- ── Favicons ───────────────────────────────────────────────────────── -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20260409c" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
-    <link rel="preload" as="image" href="/brand/wasel-mark-clean.svg" />
 
+    <!-- ── Critical image preload ─────────────────────────────────────────── -->
+    <link rel="preload" as="image" href="/brand/wasel-mark-clean.svg?v=20260409c" />
+
+    <!-- ── Font preconnect (must come before the font stylesheet) ────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!--
+      Non-blocking font load:
+      1. rel="preload" + as="style" fetches the CSS without blocking render.
+      2. onload switches rel to "stylesheet" once it arrives.
+      3. <noscript> fallback for JS-disabled crawlers/users.
+      4. &display=swap avoids FOIT — text stays visible while fonts load.
+    -->
     <link
-      rel="stylesheet"
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=Cairo:wght@500;600;700;800&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=Cairo:wght@500;600;700;800&display=swap"
+      />
+    </noscript>
+
+    <!-- ── External service preconnects ──────────────────────────────────── -->
     <link rel="preconnect" href="https://maps.googleapis.com" />
     <link rel="dns-prefetch" href="https://supabase.co" />
+    <link rel="dns-prefetch" href="https://sentry.io" />
   </head>
 
   <body>

@@ -9,12 +9,12 @@ export const C = {
   card: 'var(--card)',
   card2: 'var(--wasel-surface-3)',
   s3: 'var(--wasel-surface-4)',
-  cyan: '#16C7F2',
-  cyanDim: 'rgba(22,199,242,0.12)',
-  gold: '#C7FF1A',
-  goldDim: 'rgba(199,255,26,0.12)',
-  green: '#60C536',
-  greenDim: 'rgba(96,197,54,0.12)',
+  cyan: '#47B7E6',
+  cyanDim: 'rgba(71,183,230,0.12)',
+  gold: '#A8D614',
+  goldDim: 'rgba(168,214,20,0.12)',
+  green: '#6BB515',
+  greenDim: 'rgba(107,181,21,0.12)',
   purple: '#8B5CF6',
   purpleDim: 'rgba(139,92,246,0.12)',
   red: '#FF4455',
@@ -103,14 +103,14 @@ export function InlineCurrencySwitcher() {
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-      <button onClick={() => setOpen((o) => !o)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 9999, background: 'rgba(22,199,242,0.12)', border: '1px solid rgba(73,190,242,0.26)', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700, color: C.cyan, fontFamily: F }}>
+      <button onClick={() => setOpen((o) => !o)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 9999, background: 'rgba(71,183,230,0.12)', border: '1px solid rgba(93,150,210,0.26)', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700, color: C.cyan, fontFamily: F }}>
         FX {current}
         <ChevronDown size={10} />
       </button>
       {open && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, minWidth: 120, background: 'rgba(7,23,38,0.98)', border: '1px solid rgba(73,190,242,0.18)', borderRadius: 10, boxShadow: '0 12px 32px rgba(0,0,0,0.6)', zIndex: 100, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, minWidth: 120, background: 'rgba(7,23,38,0.98)', border: '1px solid rgba(93,150,210,0.18)', borderRadius: 10, boxShadow: '0 12px 32px rgba(0,0,0,0.6)', zIndex: 100, overflow: 'hidden' }}>
           {popular.map((code) => (
-            <button key={code} onClick={() => select(code)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '7px 12px', border: 'none', background: current === code ? 'rgba(22,199,242,0.14)' : 'transparent', cursor: 'pointer', fontSize: '0.78rem', fontWeight: current === code ? 700 : 500, color: current === code ? C.cyan : C.text, fontFamily: F }}>
+            <button key={code} onClick={() => select(code)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '7px 12px', border: 'none', background: current === code ? 'rgba(71,183,230,0.14)' : 'transparent', cursor: 'pointer', fontSize: '0.78rem', fontWeight: current === code ? 700 : 500, color: current === code ? C.cyan : C.text, fontFamily: F }}>
               <span>{code}</span>
               <span style={{ color: C.textDim, fontSize: '0.65rem' }}>{getSymbol(code)}</span>
             </button>
@@ -166,7 +166,7 @@ export function TrustScoreCard({ score, ar }: { score: number; ar: boolean }) {
   const color = pct >= 80 ? C.green : pct >= 60 ? C.gold : C.red;
 
   return (
-    <div style={{ borderRadius: 16, padding: '16px 20px', background: glass(0.5), border: '1px solid rgba(73,190,242,0.12)', backdropFilter: 'blur(20px)' }}>
+    <div style={{ borderRadius: 16, padding: '16px 20px', background: glass(0.5), border: '1px solid rgba(93,150,210,0.12)', backdropFilter: 'blur(20px)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 48, height: 48, borderRadius: '50%', background: `${color}18`, border: `2px solid ${color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -179,7 +179,7 @@ export function TrustScoreCard({ score, ar }: { score: number; ar: boolean }) {
             </div>
           </div>
         </div>
-        <button onClick={() => setExpanded((e) => !e)} style={{ background: 'rgba(22,199,242,0.1)', border: '1px solid rgba(73,190,242,0.2)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.72rem', color: C.cyan, fontFamily: F, fontWeight: 600 }}>
+        <button onClick={() => setExpanded((e) => !e)} style={{ background: 'rgba(71,183,230,0.1)', border: '1px solid rgba(93,150,210,0.2)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.72rem', color: C.cyan, fontFamily: F, fontWeight: 600 }}>
           <Info size={12} />
           {ar ? 'لماذا؟' : 'Why?'}
           {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -191,7 +191,7 @@ export function TrustScoreCard({ score, ar }: { score: number; ar: boolean }) {
       <AnimatePresence>
         {expanded && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }} style={{ overflow: 'hidden' }}>
-            <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(73,190,242,0.12)' }}>
+            <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(93,150,210,0.12)' }}>
               <p style={{ fontSize: '0.75rem', color: C.textMuted, fontFamily: F, marginBottom: 12 }}>
                 {ar ? 'يُحسب هذا المؤشر من خمسة عوامل واضحة. لكل عامل وزن محدد من أصل 100 نقطة.' : 'Your score is calculated from 5 factors. Each has a weight out of 100 points:'}
               </p>

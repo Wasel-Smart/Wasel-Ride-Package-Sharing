@@ -30,4 +30,4 @@ export const TX_ICONS: Record<string, { icon: LucideIcon; color: string; bg: str
   cashback: { icon: Zap, color: '#A855F7', bg: 'bg-purple-500/10' },
 };
 
-export const PIE_COLORS = ['#16C7F2', '#C7FF1A', '#22C55E', '#A855F7', '#3B82F6', '#F59E0B', '#EF4444'];
+export const PIE_COLORS = ['#47B7E6', '#A8D614', '#22C55E', '#A855F7', '#3B82F6', '#F59E0B', '#EF4444'];

@@ -38,8 +38,8 @@ import {
 
 const BG = '#061726';
 const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))';
-const BORD = 'rgba(73,190,242,0.14)';
-const CYAN = '#16C7F2';
+const BORD = 'rgba(93,150,210,0.14)';
+const CYAN = '#47B7E6';
 const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 const STORAGE_KEYS = {
@@ -145,7 +145,7 @@ function ToggleRow({
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#EFF6FF', fontFamily: FONT }}>{label}</div>
         {sub ? (
-          <div style={{ fontSize: '0.72rem', color: 'rgba(148,163,184,0.55)', fontFamily: FONT, marginTop: 2 }}>
+          <div style={{ marginTop: 4, fontSize: '0.72rem', color: 'rgba(148,163,184,0.68)', fontFamily: FONT, lineHeight: 1.5 }}>
             {sub}
           </div>
         ) : null}
@@ -215,7 +215,7 @@ function LinkRow({ label, sub, onClick }: { label: string; sub?: string; onClick
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#EFF6FF', fontFamily: FONT }}>{label}</div>
         {sub ? (
-          <div style={{ fontSize: '0.72rem', color: 'rgba(148,163,184,0.55)', fontFamily: FONT, marginTop: 2 }}>
+          <div style={{ marginTop: 4, fontSize: '0.72rem', color: 'rgba(148,163,184,0.68)', fontFamily: FONT, lineHeight: 1.5 }}>
             {sub}
           </div>
         ) : null}
@@ -413,7 +413,7 @@ export default function SettingsPage() {
     const next = await updateCommunicationPreferences(user?.id ?? null, updates);
     setNotifs(next);
     setNotificationSavingKey(null);
-    toast.success('Communication preferences updated.');
+    toast.success('Saved.');
   };
 
   const toggleNotificationPreference = (key: keyof CommunicationPreferences) => (value: boolean) => {
@@ -620,8 +620,8 @@ export default function SettingsPage() {
   };
 
   const sessionSummary = user
-    ? 'One active session on this device · Supabase'
-    : 'Sign in to view active sessions';
+    ? 'Active on this device'
+    : 'Sign in to view sessions';
   const activeChannelCount = [
     notifs.inApp,
     notifs.push && notificationCapabilities.push,
@@ -699,7 +699,7 @@ export default function SettingsPage() {
             onChange={toggleNotificationPreference('criticalAlerts')}
           />
           <div style={{ padding: '14px 18px', fontSize: '0.72rem', color: 'rgba(148,163,184,0.65)', fontFamily: FONT }}>
-            {notificationSavingKey ? `Saving ${notificationSavingKey} preference...` : 'Notification channels now sync to your backend communication profile.'}
+            {notificationSavingKey ? 'Saving...' : 'Notification settings sync automatically.'}
           </div>
           <LinkRow
             label="Email Support"

@@ -1,4 +1,4 @@
-﻿import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   Brain,
   Calendar,
@@ -191,16 +191,6 @@ function SignalMetricGrid({ items }: { items: SignalMetric[] }) {
             }}
           >
             {item.value}
-          </div>
-          <div
-            style={{
-              color: DS.sub,
-              fontSize: '0.76rem',
-              marginTop: 6,
-              lineHeight: 1.55,
-            }}
-          >
-            {item.sub}
           </div>
         </div>
       ))}
@@ -448,7 +438,7 @@ function RideSearchPanel({
         ) : (
           <Search size={18} />
         )}
-        {loading ? labels.searching : 'Search this route'}
+        {loading ? labels.searching : 'Search'}
       </motion.button>
 
       <div
@@ -479,12 +469,12 @@ function RideSearchPanel({
                 margin: '0 0 4px',
               }}
             >
-              Route preview
+              Route
             </p>
             <p style={{ color: DS.sub, fontSize: '0.8rem', margin: 0 }}>
               {selectedSignal
-                ? `This lane is live now with visible demand, active bookings, and a clearer shared price.`
-                : 'See the route first, then book with a clearer view of price, timing, and demand.'}
+                ? 'This lane is live now.'
+                : 'Preview the lane before you book.'}
             </p>
           </div>
           <span style={{ ...pill(DS.green), fontSize: '0.72rem' }}>
@@ -517,8 +507,8 @@ function RideSearchPanel({
         <AlertBanner
           icon={CheckCircle2}
           tone={DS.green}
-          background="rgba(96,197,54,0.10)"
-          border="1px solid rgba(96,197,54,0.28)"
+          background="rgba(107,181,21,0.10)"
+          border="1px solid rgba(107,181,21,0.28)"
           message={bookingMessage}
         />
       ) : null}
@@ -553,13 +543,13 @@ function RideBriefPanels({
   const routeBriefLines = selectedSignal
     ? [
         selectedSignal.recommendedReason,
-        `Best pickup is ${selectedSignal.recommendedPickupPoint}. Next strong window is ${selectedSignal.nextWaveWindow}.`,
-        `Live sources: ${selectedSignal.productionSources.slice(0, 3).join(' | ')}.`,
+        `Pickup: ${selectedSignal.recommendedPickupPoint}.`,
+        `Next wave: ${selectedSignal.nextWaveWindow}.`,
       ]
     : corridorPlan?.intelligenceSignals ?? [
-        'Start with the lane, not with a random listing.',
-        'Read shared price and pickup timing before the rider commits.',
-        'Use corridor demand to keep the booking cheaper than solo movement.',
+        'Start with the lane.',
+        'Check price and pickup.',
+        'Use demand to save more.',
       ];
 
   return (
@@ -597,7 +587,7 @@ function RideBriefPanels({
           <div>
             <div style={{ color: '#fff', fontWeight: 800 }}>Route brief</div>
             <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-              What matters before you book.
+              Key route details.
             </div>
           </div>
         </div>
@@ -653,7 +643,7 @@ function RideBriefPanels({
           <div>
             <div style={{ color: '#fff', fontWeight: 800 }}>Priority corridors</div>
             <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-              Strong live lanes you can switch to quickly.
+              Easy alternatives.
             </div>
           </div>
         </div>
@@ -706,7 +696,7 @@ function RideBriefPanels({
               lineHeight: 1.6,
             }}
           >
-            Live corridor intelligence will appear here as soon as Wasel sees a stronger lane building around your current route.
+            Stronger live lanes will appear here.
           </div>
         )}
       </div>
@@ -823,7 +813,7 @@ function RideResultsSection({
                 {labels.noRidesFound}
               </h3>
               <p style={{ color: DS.sub, fontSize: '0.875rem' }}>
-                No live corridor match appeared yet. Save the route and let Wasel Brain wake you when density is ready
+                No live match yet. Save the route and check again
                 {selectedSignal ? ` around ${selectedSignal.nextWaveWindow}` : ''}.
               </p>
 
@@ -886,7 +876,7 @@ function RideResultsSection({
               {waitlistMessage || demandStatsActive > 0 ? (
                 <div style={{ marginTop: 12, color: DS.sub, fontSize: '0.78rem', lineHeight: 1.5 }}>
                   {waitlistMessage
-                    ?? `You currently have ${demandStatsActive} active demand alert${demandStatsActive === 1 ? '' : 's'}.`}
+                    ?? `${demandStatsActive} active alert${demandStatsActive === 1 ? '' : 's'}.`}
                 </div>
               ) : null}
 
@@ -981,7 +971,7 @@ function RideMemoryPanels({
     {
       title: labels.recentSearches,
       items: recentSearches,
-      empty: 'Search a route to start building corridor memory.',
+      empty: 'Search a route to save it here.',
     },
     {
       title: labels.bookedTrips,
@@ -1012,7 +1002,7 @@ function RideMemoryPanels({
           Recurring routes
         </div>
         <div style={{ color: DS.muted, fontSize: '0.78rem', lineHeight: 1.6, marginBottom: 12 }}>
-          Save the lanes you repeat and let Wasel warn you before the next strong commute window.
+          Save routes you use often.
         </div>
 
         {recurringSuggestions.length > 0 ? (
@@ -1067,7 +1057,7 @@ function RideMemoryPanels({
                         cursor: 'pointer',
                       }}
                     >
-                      Search lane
+                      Open route
                     </button>
                     <button
                       onClick={() => onSaveReminder(suggestion.corridorId)}
@@ -1082,7 +1072,7 @@ function RideMemoryPanels({
                         cursor: 'pointer',
                       }}
                     >
-                      {alreadySaved ? 'Reminder active' : 'Save reminder'}
+                      {alreadySaved ? 'Saved' : 'Save'}
                     </button>
                   </div>
                 </div>
@@ -1091,7 +1081,7 @@ function RideMemoryPanels({
           </div>
         ) : (
           <div style={{ color: DS.muted, fontSize: '0.8rem', lineHeight: 1.55 }}>
-            Search and book a few more lanes and Wasel will start proposing recurring corridors automatically.
+            Search a few more routes to see suggestions here.
           </div>
         )}
 

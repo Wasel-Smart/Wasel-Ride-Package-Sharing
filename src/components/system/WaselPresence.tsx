@@ -10,26 +10,26 @@ const DISPLAY = "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans',
 
 const TONE_STYLES = {
   cyan: {
-    border: 'rgba(73,190,242,0.24)',
-    background: 'rgba(22,199,242,0.12)',
-    color: '#16C7F2',
+    border: 'rgba(93,150,210,0.24)',
+    background: 'rgba(71,183,230,0.12)',
+    color: '#47B7E6',
   },
   green: {
-    border: 'rgba(96,197,54,0.24)',
-    background: 'rgba(96,197,54,0.12)',
-    color: '#60C536',
+    border: 'rgba(107,181,21,0.24)',
+    background: 'rgba(107,181,21,0.12)',
+    color: '#6BB515',
   },
   gold: {
-    border: 'rgba(199,255,26,0.24)',
-    background: 'rgba(199,255,26,0.12)',
-    color: '#C7FF1A',
+    border: 'rgba(168,214,20,0.24)',
+    background: 'rgba(168,214,20,0.12)',
+    color: '#A8D614',
   },
 } as const;
 
 function getActionMeta(action: WaselContactAction) {
-  if (action.id === 'call') return { icon: PhoneCall, color: '#16C7F2' };
-  if (action.id === 'whatsapp') return { icon: MessageSquareText, color: '#60C536' };
-  return { icon: Mail, color: '#C7FF1A' };
+  if (action.id === 'call') return { icon: PhoneCall, color: '#47B7E6' };
+  if (action.id === 'whatsapp') return { icon: MessageSquareText, color: '#6BB515' };
+  return { icon: Mail, color: '#A8D614' };
 }
 
 export function WaselContactActionRow({
@@ -103,8 +103,8 @@ export function WaselProofOfLifeBlock({
       style={{
         borderRadius: compact ? 20 : 24,
         padding: compact ? '16px 16px 14px' : '22px 22px 20px',
-        background: 'linear-gradient(135deg, rgba(22,199,242,0.12), rgba(255,255,255,0.04) 46%, rgba(199,255,26,0.09) 100%)',
-        border: '1px solid rgba(73,190,242,0.18)',
+        background: 'linear-gradient(135deg, rgba(71,183,230,0.12), rgba(255,255,255,0.04) 46%, rgba(168,214,20,0.09) 100%)',
+        border: '1px solid rgba(93,150,210,0.18)',
         boxShadow: '0 22px 56px rgba(1,10,18,0.18)',
       }}
     >
@@ -129,7 +129,7 @@ export function WaselProofOfLifeBlock({
               borderRadius: 999,
               background: 'rgba(6,23,38,0.5)',
               border: '1px solid rgba(255,255,255,0.08)',
-              color: '#16C7F2',
+              color: '#47B7E6',
               fontSize: '0.72rem',
               fontWeight: 900,
               letterSpacing: '0.08em',
@@ -160,14 +160,14 @@ export function WaselProofOfLifeBlock({
             padding: '8px 12px',
             borderRadius: 999,
             background: 'rgba(6,23,38,0.5)',
-            border: '1px solid rgba(96,197,54,0.2)',
+            border: '1px solid rgba(107,181,21,0.2)',
             color: '#EAF7FF',
             fontSize: '0.76rem',
             fontWeight: 700,
             fontFamily: FONT,
           }}
         >
-          <BadgeCheck size={15} color="#60C536" />
+          <BadgeCheck size={15} color="#6BB515" />
           {profile.supportPhoneDisplay || profile.supportEmail}
         </div>
       </div>
@@ -240,7 +240,7 @@ export function WaselFounderCard({
         borderRadius: compact ? 20 : 24,
         padding: compact ? '16px 16px 15px' : '22px 22px 20px',
         background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-        border: '1px solid rgba(73,190,242,0.14)',
+        border: '1px solid rgba(93,150,210,0.14)',
         boxShadow: '0 18px 48px rgba(1,10,18,0.18)',
       }}
     >
@@ -251,9 +251,9 @@ export function WaselFounderCard({
           gap: 8,
           padding: '6px 10px',
           borderRadius: 999,
-          background: 'rgba(199,255,26,0.12)',
-          border: '1px solid rgba(199,255,26,0.22)',
-          color: '#C7FF1A',
+          background: 'rgba(168,214,20,0.12)',
+          border: '1px solid rgba(168,214,20,0.22)',
+          color: '#A8D614',
           fontSize: '0.72rem',
           fontWeight: 900,
           letterSpacing: '0.08em',
@@ -310,7 +310,7 @@ export function WaselWhyCard({
         borderRadius: compact ? 20 : 24,
         padding: compact ? '16px 16px 15px' : '22px 22px 20px',
         background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-        border: '1px solid rgba(73,190,242,0.14)',
+        border: '1px solid rgba(93,150,210,0.14)',
         boxShadow: '0 18px 48px rgba(1,10,18,0.18)',
       }}
     >
@@ -321,9 +321,9 @@ export function WaselWhyCard({
           gap: 8,
           padding: '6px 10px',
           borderRadius: 999,
-          background: 'rgba(96,197,54,0.12)',
-          border: '1px solid rgba(96,197,54,0.22)',
-          color: '#60C536',
+          background: 'rgba(107,181,21,0.12)',
+          border: '1px solid rgba(107,181,21,0.22)',
+          color: '#6BB515',
           fontSize: '0.72rem',
           fontWeight: 900,
           letterSpacing: '0.08em',
@@ -365,7 +365,7 @@ export function WaselBusinessFooter({
         borderRadius: 24,
         padding: '18px 18px 16px',
         background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-        border: '1px solid rgba(73,190,242,0.14)',
+        border: '1px solid rgba(93,150,210,0.14)',
         boxShadow: '0 20px 48px rgba(1,10,18,0.18)',
       }}
     >
@@ -401,7 +401,7 @@ export function WaselBusinessFooter({
               fontFamily: FONT,
             }}
           >
-            <MapPin size={14} color="#C7FF1A" />
+            <MapPin size={14} color="#A8D614" />
             {ar ? profile.businessAddressAr : profile.businessAddress}
           </div>
         </div>
@@ -434,8 +434,8 @@ export function WaselPresenceStrip({
       style={{
         borderRadius: 20,
         padding: '12px 14px',
-        background: 'linear-gradient(135deg, rgba(22,199,242,0.1), rgba(255,255,255,0.03) 52%, rgba(199,255,26,0.07))',
-        border: '1px solid rgba(73,190,242,0.16)',
+        background: 'linear-gradient(135deg, rgba(71,183,230,0.1), rgba(255,255,255,0.03) 52%, rgba(168,214,20,0.07))',
+        border: '1px solid rgba(93,150,210,0.16)',
         boxShadow: '0 16px 36px rgba(1,10,18,0.16)',
       }}
     >
@@ -459,7 +459,7 @@ export function WaselPresenceStrip({
               borderRadius: 999,
               background: 'rgba(6,23,38,0.48)',
               border: '1px solid rgba(255,255,255,0.08)',
-              color: '#16C7F2',
+              color: '#47B7E6',
               fontSize: '0.7rem',
               fontWeight: 900,
               letterSpacing: '0.08em',

@@ -3,7 +3,7 @@ import { ChevronRight } from 'lucide-react';
 
 const CARD =
   'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))';
-const BORD = 'rgba(73,190,242,0.14)';
+const BORD = 'rgba(93,150,210,0.14)';
 const FONT =
   "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
@@ -172,7 +172,7 @@ export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
 export function VerificationBadge({
   level,
   ar = false,
-  accent = '#16C7F2',
+  accent = '#47B7E6',
 }: {
   level: string;
   ar?: boolean;
@@ -181,8 +181,8 @@ export function VerificationBadge({
   const map: Record<string, { label: string; color: string; bg: string }> = {
     level_0: { label: ar ? 'غير موثق' : 'Unverified', color: '#94A3B8', bg: 'rgba(148,163,184,0.12)' },
     level_1: { label: ar ? 'موثق الهاتف' : 'Phone Verified', color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
-    level_2: { label: ar ? 'موثق الهوية' : 'ID Verified', color: accent, bg: 'rgba(22,199,242,0.12)' },
-    level_3: { label: ar ? 'موثوق' : 'Trusted', color: '#60C536', bg: 'rgba(96,197,54,0.12)' },
+    level_2: { label: ar ? 'موثق الهوية' : 'ID Verified', color: accent, bg: 'rgba(71,183,230,0.12)' },
+    level_3: { label: ar ? 'موثوق' : 'Trusted', color: '#6BB515', bg: 'rgba(107,181,21,0.12)' },
   };
   const v = map[level] ?? map.level_0;
 
@@ -257,7 +257,7 @@ export function QuickActionCard({
         transition: 'border-color 0.15s, transform 0.15s',
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(73,190,242,0.28)';
+        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(93,150,210,0.28)';
         (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
       }}
       onMouseLeave={(e) => {

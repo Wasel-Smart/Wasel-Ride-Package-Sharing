@@ -1,5 +1,5 @@
-ï»¿/**
- * WaselButton â€” primary interactive element.
+/**
+ * WaselButton — primary interactive element.
  *
  * Variants:
  *  - primary  : Electric Cyan gradient CTA
@@ -8,7 +8,7 @@
  *  - gold     : Solar Gold gradient (accent / demo)
  *  - danger   : Error red
  *
- * Always pulls from design-system tokens â€” zero hardcoded hex.
+ * Always pulls from design-system tokens — zero hardcoded hex.
  */
 
 import { Loader2 } from 'lucide-react';
@@ -30,7 +30,7 @@ interface WaselButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, { background: string; color: string; border: string; boxShadow: string; hoverShadow: string }> = {
   primary: {
-    background:  'linear-gradient(135deg, #16C7F2 0%, #0F78BF 100%)',
+    background:  'linear-gradient(135deg, #47B7E6 0%, #1E5FAE 100%)',
     color:       '#040C18',
     border:      'none',
     boxShadow:   SH.cyan,
@@ -51,11 +51,11 @@ const variantStyles: Record<ButtonVariant, { background: string; color: string; 
     hoverShadow: 'none',
   },
   gold: {
-    background:  'linear-gradient(135deg, #C7FF1A 0%, #60C536 100%)',
+    background:  'linear-gradient(135deg, #A8D614 0%, #6BB515 100%)',
     color:       '#040C18',
     border:      'none',
     boxShadow:   SH.gold,
-    hoverShadow: '0 10px 36px rgba(199,255,26,0.45)',
+    hoverShadow: '0 10px 36px rgba(168,214,20,0.45)',
   },
   danger: {
     background:  C.errorDim,

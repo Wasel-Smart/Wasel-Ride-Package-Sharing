@@ -1,4 +1,4 @@
-﻿import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -142,7 +142,7 @@ export default function MobilityOSPage() {
   const weakest = [...routeStats].sort((a, b) => a.reliability - b.reliability)[0];
 
   return (
-    <div style={{ minHeight: '100vh', background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, rgba(199,255,26,0.16), transparent 22%), ${C.bg}`, color: C.text, fontFamily: F, padding: '24px 16px 44px' }}>
+    <div style={{ minHeight: '100vh', background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, rgba(168,214,20,0.16), transparent 22%), ${C.bg}`, color: C.text, fontFamily: F, padding: '24px 16px 44px' }}>
       <div style={{ maxWidth: 1320, margin: '0 auto', display: 'grid', gap: 18 }}>
         <section style={panelStyle({ padding: 26, borderRadius: 32 })}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>

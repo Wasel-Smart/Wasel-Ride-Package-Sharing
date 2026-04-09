@@ -1,10 +1,9 @@
-﻿import { Component, useEffect, useState, type ReactNode } from 'react';
+import { Component, useEffect, useState, type ReactNode } from 'react';
 import {
   QueryClient,
   QueryClientProvider,
   onlineManager,
 } from '@tanstack/react-query';
-import { captureException } from '@sentry/react';
 import { RouterProvider } from 'react-router';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
@@ -12,11 +11,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { LocalAuthProvider } from './contexts/LocalAuth';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { WaselLogo } from './components/wasel-ds/WaselLogo';
-import {
-  probeBackendHealth,
-  startAvailabilityPolling,
-  warmUpServer,
-} from './services/core';
+import { PrivacyConsentBanner } from './components/PrivacyConsentBanner';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
 import { buildAuthPagePath } from './utils/authFlow';
@@ -40,29 +35,25 @@ class AppErrorBoundary extends Component<{
   }
 
   static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
-    // Use centralized error handling to determine if error should be ignored
     if (shouldIgnoreError(error)) {
       return { hasError: false, error: '' };
     }
-
     const message = formatErrorMessage(error);
     return { hasError: true, error: message };
   }
 
   componentDidCatch(error: unknown, info: { componentStack?: string | null }): void {
-    // Ignore framework-level system errors
     if (shouldIgnoreError(error)) return;
 
     const message = error instanceof Error ? error.message : String(error);
     console.error('[Wasel ErrorBoundary]', message, info?.componentStack ?? '');
 
-    // Send to monitoring (Sentry)
-    captureException(error, {
-      contexts: {
-        react: {
-          componentStack: info?.componentStack ?? undefined,
+    void import('./utils/monitoring').then((monitoring) => {
+      monitoring.default.captureException(error, {
+        contexts: {
+          react: { componentStack: info?.componentStack ?? undefined },
         },
-      },
+      });
     });
   }
 
@@ -203,27 +194,42 @@ class AppErrorBoundary extends Component<{
 
 function AppRuntimeCoordinator() {
   useEffect(() => {
+    let disposed = false;
+    let stopPolling: () => void = () => {};
+    const currentPath = typeof window === 'undefined' ? '/' : window.location.pathname;
+    const isPublicEntryPath = currentPath === '/';
+
     const cancelMonitoringSetup = scheduleDeferredTask(async () => {
       const [{ initSentry }, { detectLongTasks, initPerformanceMonitoring }] = await Promise.all([
         import('./utils/monitoring'),
         import('./utils/performance'),
       ]);
 
+      if (disposed) return;
+
       initSentry();
       initPerformanceMonitoring();
       detectLongTasks();
-    }, 1_500);
+    }, isPublicEntryPath ? 2_500 : 1_500);
 
     const cancelWarmup = scheduleDeferredTask(async () => {
-      await warmUpServer();
-      await probeBackendHealth();
-    }, 900);
+      const core = await import('./services/core');
+      if (disposed) return;
 
-    const stopPolling = startAvailabilityPolling(120_000);
+      stopPolling = core.startAvailabilityPolling(120_000);
+      await core.warmUpServer();
+      await core.probeBackendHealth();
+    }, isPublicEntryPath ? 2_200 : 900);
+
     const syncOnlineState = () => {
       const online = typeof navigator === 'undefined' ? true : navigator.onLine;
       onlineManager.setOnline(online);
-      if (online) void probeBackendHealth();
+      if (online) {
+        void import('./services/core').then((core) => {
+          if (!disposed) return core.probeBackendHealth();
+          return undefined;
+        });
+      }
     };
 
     syncOnlineState();
@@ -234,6 +240,7 @@ function AppRuntimeCoordinator() {
     }
 
     return () => {
+      disposed = true;
       cancelMonitoringSetup();
       cancelWarmup();
       stopPolling();
@@ -278,12 +285,17 @@ function AppShell({
           <AuthProvider>
             <AppRuntimeCoordinator />
             <RouterProvider router={waselRouter} />
+
+            {/* ── Privacy/analytics consent banner (GDPR + Jordan PDPL) ─── */}
+            <PrivacyConsentBanner />
+
+            {/* ── Global toast notifications ────────────────────────────── */}
             <Toaster
               position="bottom-center"
               toastOptions={{
                 style: {
                   background: resolvedTheme === 'light' ? 'rgba(255,255,255,0.96)' : '#0A1628',
-                  border: `1px solid ${resolvedTheme === 'light' ? 'rgba(12,110,168,0.16)' : 'rgba(22,199,242,0.25)'}`,
+                  border: `1px solid ${resolvedTheme === 'light' ? 'rgba(12,110,168,0.16)' : 'rgba(71,183,230,0.25)'}`,
                   color: resolvedTheme === 'light' ? '#10243d' : '#EFF6FF',
                   boxShadow: resolvedTheme === 'light' ? '0 18px 40px rgba(16,36,61,0.14)' : '0 18px 44px rgba(1,10,18,0.28)',
                   fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",

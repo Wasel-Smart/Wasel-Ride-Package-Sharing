@@ -1,4 +1,4 @@
-﻿import { type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { AlertTriangle, ChevronRight, Shield } from 'lucide-react';
 import {
   WaselContactActionRow,
@@ -10,10 +10,10 @@ import {
 export const TRUST_THEME = {
   bg: '#061726',
   card: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-  border: 'rgba(73,190,242,0.14)',
-  cyan: '#16C7F2',
-  green: '#60C536',
-  gold: '#C7FF1A',
+  border: 'rgba(93,150,210,0.14)',
+  cyan: '#47B7E6',
+  green: '#6BB515',
+  gold: '#A8D614',
   red: '#EF4444',
   font: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
   display: "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', 'Cairo', sans-serif)",
@@ -195,17 +195,6 @@ function TrustActionRow({
         >
           {item.label}
         </div>
-        <div
-          style={{
-            color: 'rgba(148,163,184,0.72)',
-            fontFamily: TRUST_THEME.font,
-            fontSize: '0.78rem',
-            marginTop: 4,
-            lineHeight: 1.55,
-          }}
-        >
-          {item.sub}
-        </div>
       </div>
       <ChevronRight size={16} color="rgba(148,163,184,0.45)" />
     </button>
@@ -254,8 +243,8 @@ export function TrustHeroCard({
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, rgba(22,199,242,0.16), rgba(255,255,255,0.03))',
-        border: '1px solid rgba(22,199,242,0.22)',
+        background: 'linear-gradient(135deg, rgba(71,183,230,0.16), rgba(255,255,255,0.03))',
+        border: '1px solid rgba(71,183,230,0.22)',
         borderRadius: 24,
         padding: '24px 22px',
         marginBottom: 20,
@@ -277,8 +266,8 @@ export function TrustHeroCard({
             width: 52,
             height: 52,
             borderRadius: 16,
-            background: 'rgba(22,199,242,0.15)',
-            border: '1px solid rgba(22,199,242,0.25)',
+            background: 'rgba(71,183,230,0.15)',
+            border: '1px solid rgba(71,183,230,0.25)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -298,16 +287,6 @@ export function TrustHeroCard({
             }}
           >
             {title}
-          </div>
-          <div
-            style={{
-              color: 'rgba(148,163,184,0.78)',
-              fontSize: '0.84rem',
-              marginTop: 5,
-              lineHeight: 1.7,
-            }}
-          >
-            {description}
           </div>
         </div>
       </div>
@@ -366,6 +345,9 @@ export function TrustHeroCard({
           {readinessLabel}
         </span>
       </div>
+      <div style={{ marginTop: 14, color: 'rgba(148,163,184,0.78)', fontSize: '0.82rem', lineHeight: 1.65 }}>
+        {description}
+      </div>
     </div>
   );
 }
@@ -416,14 +398,7 @@ export function TrustPresencePanels({
             >
               {contactTitle}
             </div>
-            <div
-              style={{
-                color: 'rgba(148,163,184,0.78)',
-                fontSize: '0.8rem',
-                lineHeight: 1.65,
-                marginTop: 4,
-              }}
-            >
+            <div style={{ marginTop: 4, color: 'rgba(148,163,184,0.72)', fontSize: '0.78rem', lineHeight: 1.55 }}>
               {contactDescription}
             </div>
           </div>
@@ -465,7 +440,10 @@ export function TrustDriverReadinessCard({
           marginBottom: 14,
         }}
       >
-        {headline} · {detail}
+        {headline}
+      </div>
+      <div style={{ color: 'rgba(203,213,225,0.78)', fontSize: '0.78rem', lineHeight: 1.6, marginBottom: 14 }}>
+        {detail}
       </div>
       <div style={{ display: 'grid', gap: 10 }}>
         {steps.map((step) => (
@@ -501,16 +479,6 @@ export function TrustDriverReadinessCard({
             </div>
             <div>
               <div style={{ color: '#EFF6FF', fontWeight: 700, fontSize: '0.82rem' }}>{step.label}</div>
-              <div
-                style={{
-                  color: 'rgba(148,163,184,0.78)',
-                  fontSize: '0.75rem',
-                  marginTop: 4,
-                  lineHeight: 1.55,
-                }}
-              >
-                {step.description}
-              </div>
             </div>
           </div>
         ))}
@@ -522,7 +490,7 @@ export function TrustDriverReadinessCard({
           style={{
             border: 'none',
             borderRadius: 12,
-            background: `linear-gradient(135deg, ${TRUST_THEME.cyan}, #0F78BF)`,
+            background: `linear-gradient(135deg, ${TRUST_THEME.cyan}, #1E5FAE)`,
             color: '#041018',
             fontWeight: 800,
             padding: '11px 16px',
@@ -582,16 +550,6 @@ export function TrustCapabilityMatrix({
           >
             <div>
               <div style={{ color: '#EFF6FF', fontWeight: 700, fontSize: '0.82rem' }}>{item.title}</div>
-              <div
-                style={{
-                  color: 'rgba(148,163,184,0.78)',
-                  fontSize: '0.74rem',
-                  marginTop: 4,
-                  lineHeight: 1.55,
-                }}
-              >
-                {item.description}
-              </div>
             </div>
             <span
               style={{
@@ -645,15 +603,6 @@ export function TrustSignalsCard({ title, items }: TrustSignalsCardProps) {
               }}
             >
               {item.title}
-            </div>
-            <div
-              style={{
-                color: 'rgba(148,163,184,0.78)',
-                fontSize: '0.76rem',
-                lineHeight: 1.55,
-              }}
-            >
-              {item.desc}
             </div>
           </div>
         ))}

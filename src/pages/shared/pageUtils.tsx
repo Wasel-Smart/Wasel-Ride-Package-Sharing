@@ -115,7 +115,7 @@ export function PageShell({ children }: { children: ReactNode }) {
     <div
       style={{
         minHeight: '100vh',
-        background: `radial-gradient(circle at 12% 10%, rgba(22,199,242,0.16), transparent 24%), radial-gradient(circle at 88% 6%, rgba(199,255,26,0.1), transparent 22%), radial-gradient(circle at 80% 86%, rgba(96,197,54,0.1), transparent 24%), ${DS.bg}`,
+        background: `radial-gradient(circle at 12% 10%, rgba(71,183,230,0.16), transparent 24%), radial-gradient(circle at 88% 6%, rgba(168,214,20,0.1), transparent 22%), radial-gradient(circle at 80% 86%, rgba(107,181,21,0.1), transparent 24%), ${DS.bg}`,
         fontFamily: DS.F,
         direction: ar ? 'rtl' : 'ltr',
         position: 'relative',
@@ -137,14 +137,14 @@ export function PageShell({ children }: { children: ReactNode }) {
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'radial-gradient(circle at 50% 0%, rgba(22,199,242,0.08), transparent 38%), radial-gradient(circle at 82% 76%, rgba(199,255,26,0.05), transparent 24%)',
+          background: 'radial-gradient(circle at 50% 0%, rgba(71,183,230,0.08), transparent 38%), radial-gradient(circle at 82% 76%, rgba(168,214,20,0.05), transparent 24%)',
           pointerEvents: 'none',
         }}
       />
       <style>{`
         :root { color-scheme: dark; }
-        .w-focus:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(22,199,242,0.28); }
-        .w-focus-gold:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(199,255,26,0.24); }
+        .w-focus:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(71,183,230,0.28); }
+        .w-focus-gold:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(168,214,20,0.24); }
         @media(max-width:899px){
           .sp-inner { padding: 16px !important; }
           .sp-2col { grid-template-columns: 1fr !important; }

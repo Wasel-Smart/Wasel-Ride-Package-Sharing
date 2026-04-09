@@ -76,9 +76,9 @@ export function Protected({ children }: { children: ReactNode }) {
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
             <WaselLogo size={42} theme="light" variant="full" />
           </div>
-          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Checking your Wasel access</div>
+          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Checking access</div>
           <div style={{ color: DS.sub, fontFamily: DS.F, fontSize: '0.85rem', lineHeight: 1.7 }}>
-            We are syncing your session so your routes, packages, and history open in the right account.
+            Syncing your account.
           </div>
         </div>
       </div>
@@ -99,9 +99,9 @@ export function Protected({ children }: { children: ReactNode }) {
           <div style={{ width: 58, height: 58, borderRadius: r(18), margin: '0 auto 14px', background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}24`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DS.cyan }}>
             <Shield size={24} />
           </div>
-          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Protected Wasel experience</div>
+          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Sign in required</div>
           <div style={{ color: DS.sub, fontFamily: DS.F, fontSize: '0.85rem', lineHeight: 1.7, marginBottom: 16 }}>
-            We are taking you to sign in so your routes, packages, and movement history stay tied to one trusted account.
+            Sign in to continue.
           </div>
           <button
             type="button"
@@ -115,7 +115,7 @@ export function Protected({ children }: { children: ReactNode }) {
             }
             style={{ minHeight: 44, padding: '0 18px', borderRadius: r(14), border: 'none', background: DS.gradC, color: '#041018', fontWeight: 800, cursor: 'pointer', fontFamily: DS.F }}
           >
-            Open sign in
+            Sign in
           </button>
         </div>
       </div>
@@ -133,8 +133,8 @@ export function PageShell({ children }: { children: ReactNode }) {
     <div style={{ minHeight: '100vh', background: DS.bg, fontFamily: DS.F, direction: ar ? 'rtl' : 'ltr' }}>
       <style>{`
         :root { color-scheme: dark; }
-        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(22,199,242,0.28); }
-        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(199,255,26,0.24); }
+        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(71,183,230,0.28); }
+        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(168,214,20,0.24); }
         @media(max-width:899px){
           .sp-inner{ padding:16px !important; }
           .sp-2col { grid-template-columns:1fr !important; }
@@ -173,7 +173,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           inset: 0,
           pointerEvents: 'none',
           background:
-            'radial-gradient(circle at 14% 10%, rgba(22,199,242,0.16), transparent 24%), radial-gradient(circle at 85% 12%, rgba(199,255,26,0.08), transparent 20%), radial-gradient(circle at 78% 84%, rgba(96,197,54,0.08), transparent 24%)',
+            'radial-gradient(circle at 14% 10%, rgba(71,183,230,0.16), transparent 24%), radial-gradient(circle at 85% 12%, rgba(168,214,20,0.08), transparent 20%), radial-gradient(circle at 78% 84%, rgba(107,181,21,0.08), transparent 24%)',
         }}
       />
       <div className="sp-inner" style={{ position: 'relative', maxWidth: 1120, margin: '0 auto', padding: '24px 16px' }}>
@@ -196,6 +196,7 @@ export function SectionHead({ emoji, title, titleAr, sub, color = DS.cyan, actio
 }) {
   const { language } = useLanguage();
   const ar = language === 'ar';
+  const heading = ar && titleAr ? titleAr : title;
 
   return (
     <div
@@ -218,14 +219,12 @@ export function SectionHead({ emoji, title, titleAr, sub, color = DS.cyan, actio
             {emoji}
           </div>
           <div>
-            <div style={{ color, fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>
-              {ar ? 'المهمة الأساسية' : 'Primary task'}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>{title}</h1>
-            </div>
-            {titleAr && <p dir="rtl" style={{ fontSize: '0.86rem', fontWeight: 700, color, margin: '0 0 4px', fontFamily: "var(--wasel-font-arabic, 'Cairo', 'Tajawal', sans-serif)" }}>{titleAr}</p>}
-            {sub && <p style={{ fontSize: '0.88rem', color: 'rgba(239,246,255,0.72)', margin: 0, lineHeight: 1.6, maxWidth: 620 }}>{sub}</p>}
+            <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>{heading}</h1>
+            {sub ? (
+              <div style={{ marginTop: 6, color: DS.sub, fontSize: '0.86rem', lineHeight: 1.6, maxWidth: 620 }}>
+                {sub}
+              </div>
+            ) : null}
           </div>
         </div>
         {action && (
@@ -240,7 +239,7 @@ export function SectionHead({ emoji, title, titleAr, sub, color = DS.cyan, actio
 
 export function CoreExperienceBanner({
   title,
-  detail,
+  detail: _detail,
   tone = DS.cyan,
 }: {
   title: string;
@@ -259,13 +258,7 @@ export function CoreExperienceBanner({
         marginBottom: 18,
       }}
     >
-      <div>
-        <div style={{ color: tone, fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>
-          Quick brief
-        </div>
-        <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.98rem', marginBottom: 4 }}>{title}</div>
-        <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.6, maxWidth: 760 }}>{detail}</div>
-      </div>
+      <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.94rem' }}>{title}</div>
     </div>
   );
 }

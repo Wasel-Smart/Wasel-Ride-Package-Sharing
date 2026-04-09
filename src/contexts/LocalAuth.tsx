@@ -11,6 +11,7 @@ import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { authAPI } from '../services/auth';
 import { initSupabaseListeners, isSupabaseConfigured, supabase } from '../utils/supabase/client';
 import { getConfig } from '../utils/env';
+import { scheduleDeferredTask } from '../utils/runtimeScheduling';
 
 export interface WaselUser {
   id: string;
@@ -280,11 +281,25 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<WaselUser | null>(loadUser);
   const [loading, setLoading] = useState(true);
   const { enableDemoAccount } = getConfig();
+  const isPublicLanding =
+    typeof window !== 'undefined' && window.location.pathname === '/';
 
   useEffect(() => {
-    const cleanup = initSupabaseListeners();
-    return cleanup;
-  }, []);
+    let cleanup: () => void = () => {};
+    const cancelDeferredSetup = isPublicLanding
+      ? scheduleDeferredTask(() => {
+          cleanup = initSupabaseListeners();
+        }, 2_000)
+      : (((): (() => void) => {
+          cleanup = initSupabaseListeners();
+          return () => {};
+        })());
+
+    return () => {
+      cancelDeferredSetup();
+      cleanup();
+    };
+  }, [isPublicLanding]);
 
   useEffect(() => {
     let mounted = true;
@@ -348,7 +363,14 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    hydrateFromSession();
+    const cancelDeferredHydration = isPublicLanding
+      ? scheduleDeferredTask(() => {
+          void hydrateFromSession();
+        }, 1_200)
+      : (((): (() => void) => {
+          void hydrateFromSession();
+          return () => {};
+        })());
 
     if (isSupabaseConfigured && supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
@@ -374,6 +396,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
 
       return () => {
         mounted = false;
+        cancelDeferredHydration();
         if (bootstrapGuard !== null) {
           window.clearTimeout(bootstrapGuard);
         }
@@ -383,11 +406,12 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mounted = false;
+      cancelDeferredHydration();
       if (bootstrapGuard !== null) {
         window.clearTimeout(bootstrapGuard);
       }
     };
-  }, [enableDemoAccount]);
+  }, [enableDemoAccount, isPublicLanding]);
 
   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
     setLoading(true);

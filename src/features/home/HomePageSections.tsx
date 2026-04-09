@@ -125,7 +125,7 @@ export function QuickActionsSection({
       transition={{ duration: 0.5, delay: 0.1 }}
       className="home-section"
     >
-      <SectionHeader title={ar ? 'إجراءات سريعة' : 'Quick Actions'} icon="+" />
+      <SectionHeader title={ar ? 'ابدأ' : 'Start'} icon="+" />
       <div className="home-quick-grid">
         {quickActions.map((action, index) => {
           const Icon = action.icon;
@@ -150,7 +150,7 @@ export function QuickActionsSection({
               <span className="home-card-title">{action.title}</span>
               <span className="home-card-description">{action.description}</span>
               <div className="home-card-cta" style={{ color: action.color }}>
-                <span>{ar ? 'ابدأ' : 'Start'}</span>
+                <span>{ar ? 'افتح' : 'Open'}</span>
                 <ChevronRight size={10} />
               </div>
             </motion.button>
@@ -158,7 +158,7 @@ export function QuickActionsSection({
         })}
 
         <div className="home-panel">
-          <div className="home-panel-title">{ar ? 'نبض القمع' : 'Funnel pulse'}</div>
+          <div className="home-panel-title">{ar ? 'حي' : 'Live'}</div>
           <div className="home-funnel-grid">
             {funnelItems.map((item) => (
               <div key={item.label} className="home-metric-tile">
@@ -168,8 +168,8 @@ export function QuickActionsSection({
             ))}
           </div>
           <div className="home-inline-metrics">
-            <span>{ar ? 'إيراد تقديري' : 'Estimated revenue'}: <strong>{estimatedRevenue}</strong></span>
-            <span>{ar ? 'طلب نشط' : 'Active demand'}: <strong>{growthDashboard?.activeDemand ?? 0}</strong></span>
+            <span>{ar ? 'إيراد' : 'Revenue'}: <strong>{estimatedRevenue}</strong></span>
+            <span>{ar ? 'طلب' : 'Demand'}: <strong>{growthDashboard?.activeDemand ?? 0}</strong></span>
           </div>
         </div>
       </div>
@@ -194,10 +194,10 @@ export function GrowthSection({
       transition={{ duration: 0.5, delay: 0.18 }}
       className="home-section"
     >
-      <SectionHeader title={ar ? 'المشهد التجاري' : 'Growth layer'} icon="G" />
+      <SectionHeader title={ar ? 'الإحالات' : 'Referrals'} icon="G" />
       <div className="home-two-column-grid">
         <div className="home-panel">
-          <div className="home-panel-title">{ar ? 'الطبقة التجارية الحية' : 'Live growth stack'}</div>
+          <div className="home-panel-title">{ar ? 'الدعوات' : 'Invites'}</div>
           <div className="home-inline-metrics">
             <span>{ar ? 'دعوات مفعلة' : 'Invites activated'}: <strong>{referral?.invited ?? 0}</strong></span>
             <span>{ar ? 'رصيد الإحالات' : 'Referral credits'}: <strong>{referral?.earnedCredit ?? 0}</strong></span>
@@ -212,18 +212,18 @@ export function GrowthSection({
                 void navigator.clipboard?.writeText(referral.shareUrl).catch(() => undefined);
               }}
             >
-              {ar ? 'انسخ رابط الدعوة' : 'Copy invite link'}
+              {ar ? 'انسخ الرابط' : 'Copy link'}
             </button>
             <button type="button" className="home-tertiary-button" onClick={() => navigate('/find-ride')}>
-              {ar ? 'افتح الرحلات' : 'Open rides'}
+              {ar ? 'الرحلات' : 'Rides'}
             </button>
             <button type="button" className="home-success-button" onClick={() => navigate('/analytics')}>
-              {ar ? 'افتح التحليلات' : 'Open analytics'}
+              {ar ? 'التحليلات' : 'Analytics'}
             </button>
           </div>
           <div className="home-stack-sm">
             <div className="home-subtle-text">
-              {ar ? 'أدخل رمز إحالة لربط أول حجز مؤكد بالدعوة.' : 'Enter a referral code to link your first completed booking to an invite.'}
+              {ar ? 'أدخل رمز إحالة.' : 'Add a referral code.'}
             </div>
             <div className="home-input-row">
               <input
@@ -241,7 +241,7 @@ export function GrowthSection({
         </div>
 
         <div className="home-panel">
-          <div className="home-panel-title">{ar ? 'الممرات المطلوبة الآن' : 'Corridors in demand'}</div>
+          <div className="home-panel-title">{ar ? 'الطلب' : 'Demand'}</div>
           <div className="home-stack-sm">
             {corridorLeaders.length > 0 ? corridorLeaders.map((item) => (
               <button
@@ -261,7 +261,7 @@ export function GrowthSection({
               </button>
             )) : (
               <div className="home-subtle-text">
-                {ar ? 'سيظهر الطلب الحي على الممرات هنا عندما يبدأ المستخدمون بحفظ تنبيهات الرحلات.' : 'Live corridor demand will appear here as riders save route alerts.'}
+                {ar ? 'سيظهر الطلب هنا.' : 'Demand will appear here.'}
               </div>
             )}
           </div>
@@ -295,7 +295,7 @@ export function UserSnapshotSection({
         className="home-snapshot-row"
       >
         <div className="home-panel home-wallet-panel">
-          <div className="home-mini-label">{ar ? 'رصيد المحفظة' : 'Wallet Balance'}</div>
+          <div className="home-mini-label">{ar ? 'المحفظة' : 'Wallet'}</div>
           <div className="home-balance-value">
             {loading ? <Skeleton w={100} h={28} radius={6} /> : formatFromJOD(liveStats?.walletBalance ?? 47.5)}
           </div>
@@ -304,7 +304,7 @@ export function UserSnapshotSection({
 
         {platformStats ? (
           <div className="home-panel home-platform-panel">
-            <div className="home-mini-label">{ar ? 'نبض المنصة المباشر' : 'Live Platform'}</div>
+            <div className="home-mini-label">{ar ? 'حي' : 'Live'}</div>
             <div className="home-inline-signal-row">
               {signals.map((signal) => (
                 <div key={signal.label} className="home-inline-signal">
@@ -318,7 +318,7 @@ export function UserSnapshotSection({
         ) : null}
 
         <div className="home-panel home-sos-panel">
-          <div className="home-mini-label">{ar ? 'طوارئ SOS' : 'Emergency SOS'}</div>
+          <div className="home-mini-label">SOS</div>
           <SOSButton ar={ar} />
         </div>
       </motion.section>
@@ -329,7 +329,7 @@ export function UserSnapshotSection({
         transition={{ duration: 0.5, delay: 0.28 }}
         className="home-section"
       >
-        <SectionHeader title={ar ? 'لقطة الثقة' : 'Trust snapshot'} icon="T" />
+        <SectionHeader title={ar ? 'الثقة' : 'Trust'} icon="T" />
         {loading ? <Skeleton h={80} radius={16} /> : <TrustScoreCard score={87} ar={ar} />}
       </motion.section>
     </>
@@ -359,14 +359,14 @@ export function MobilityOsSection({
           <div>
             <div className="home-os-header">
               <span className="home-os-icon">OS</span>
-              <span className="home-os-tag">{ar ? 'واصل لحركة ذكية' : 'MOBILITY OS | LAYER 8'}</span>
+              <span className="home-os-tag">Mobility OS</span>
               <span className="home-os-live">LIVE</span>
             </div>
             <div className="home-os-title">
-              {ar ? 'شبكة تنقل الأردن المباشرة' : 'Jordan mobility network | live'}
+              {ar ? 'شبكة الأردن الحية' : 'Jordan live network'}
             </div>
             <div className="home-os-subtitle">
-              {ar ? 'الطلب المباشر | السائقون | المسارات | التسعير الديناميكي' : 'Live demand | drivers | routes | pricing'}
+              {ar ? 'الطلب | السائقون | المسارات' : 'Demand | drivers | routes'}
             </div>
           </div>
           <div className="home-os-open">
@@ -393,9 +393,9 @@ export function PopularRoutesSection({
       className="home-section"
     >
       <SectionHeader
-        title={ar ? 'المسارات الشائعة' : 'Popular routes'}
+        title={ar ? 'المسارات' : 'Routes'}
         icon="R"
-        action={ar ? 'عرض الكل' : 'View all routes'}
+        action={ar ? 'الكل' : 'All'}
         onAction={() => navigate('/find-ride')}
       />
       <div className="home-routes-grid routes-grid">
@@ -446,7 +446,7 @@ export function FeaturesSection({
       transition={{ duration: 0.5, delay: 0.42 }}
       className="home-section"
     >
-      <SectionHeader title={ar ? 'لماذا يتميز واصل؟' : 'Why Wasel stands out'} icon="W" />
+      <SectionHeader title={ar ? 'لماذا واصل؟' : 'Why Wasel'} icon="W" />
       <div className="home-feature-grid">
         {features.map((feature, index) => {
           const Icon = feature.icon;
@@ -488,14 +488,14 @@ export function GuestCtaSection({
         <div className="home-guest-mark">W</div>
         <h2 className="home-panel-title">{ar ? 'انضم إلى واصل' : 'Join Wasel'}</h2>
         <p className="home-panel-copy">
-          {ar ? 'ابدأ مع الرحلات والباصات والطرود المحمولة مع المسافر. وفّر حتى 70% مقارنة بخيارات التنقل الفردية.' : 'Start with rides, buses, and rider-delivered packages. Save up to 70% versus taxis.'}
+          {ar ? 'رحلات وباصات وطرود في تطبيق واحد.' : 'Rides, buses, and packages in one app.'}
         </p>
         <div className="home-button-row home-button-row-center">
           <button type="button" className="home-primary-button" onClick={() => navigate('/auth?tab=register')}>
-            {ar ? 'ابدأ مجاناً' : 'Get started free'}
+            {ar ? 'ابدأ' : 'Get started'}
           </button>
           <button type="button" className="home-tertiary-button" onClick={() => navigate('/find-ride')}>
-            {ar ? 'تصفح الرحلات' : 'Browse rides'}
+            {ar ? 'الرحلات' : 'Browse'}
           </button>
         </div>
       </div>

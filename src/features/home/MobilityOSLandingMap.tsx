@@ -23,8 +23,8 @@ type Point = { x: number; y: number };
 
 const VIEWBOX_WIDTH = 720;
 const VIEWBOX_HEIGHT = 560;
-const PASSENGER_COLOR = '#16C7F2';
-const PASSENGER_GLOW = 'rgba(22, 199, 242, 0.36)';
+const PASSENGER_COLOR = '#47B7E6';
+const PASSENGER_GLOW = 'rgba(71, 183, 230, 0.36)';
 const PACKAGE_COLOR = '#FFC857';
 const PACKAGE_GLOW = 'rgba(255, 200, 87, 0.28)';
 
@@ -362,8 +362,8 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
           overflow: hidden;
           border: 1px solid rgba(255,255,255,0.06);
           background:
-            radial-gradient(circle at 16% 14%, rgba(22,199,242,0.14), rgba(4,18,30,0) 24%),
-            radial-gradient(circle at 74% 78%, rgba(199,255,26,0.08), rgba(4,18,30,0) 22%),
+            radial-gradient(circle at 16% 14%, rgba(71,183,230,0.14), rgba(4,18,30,0) 24%),
+            radial-gradient(circle at 74% 78%, rgba(168,214,20,0.08), rgba(4,18,30,0) 22%),
             linear-gradient(180deg, rgba(8,20,35,0.96), rgba(3,12,24,0.98));
           box-shadow:
             inset 0 1px 0 rgba(255,255,255,0.03),
@@ -509,9 +509,9 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
               y2="60"
               gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0" stopColor="#16C7F2" />
+              <stop offset="0" stopColor="#47B7E6" />
               <stop offset="0.48" stopColor="#A7F7FF" />
-              <stop offset="1" stopColor="#16C7F2" />
+              <stop offset="1" stopColor="#47B7E6" />
             </linearGradient>
             <linearGradient
               id="landing-package-gradient"
@@ -533,8 +533,8 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
               gradientUnits="userSpaceOnUse"
               gradientTransform="translate(368 184) rotate(40) scale(164 136)"
             >
-              <stop stopColor="#16C7F2" stopOpacity="0.18" />
-              <stop offset="1" stopColor="#16C7F2" stopOpacity="0" />
+              <stop stopColor="#47B7E6" stopOpacity="0.18" />
+              <stop offset="1" stopColor="#47B7E6" stopOpacity="0" />
             </radialGradient>
           </defs>
 
@@ -575,7 +575,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                 strokeLinecap="round"
                 opacity={corridor.highlighted ? 1 : 0.82}
                 filter={
-                  corridor.highlighted ? 'drop-shadow(0 0 12px rgba(22,199,242,0.30))' : undefined
+                  corridor.highlighted ? 'drop-shadow(0 0 12px rgba(71,183,230,0.30))' : undefined
                 }
               />
               <path
@@ -617,7 +617,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
           {cityPoints.map(city => (
             <g key={city.id}>
               {city.featured ? (
-                <circle cx={city.point.x} cy={city.point.y} r="26" fill="rgba(22,199,242,0.07)" />
+                <circle cx={city.point.x} cy={city.point.y} r="26" fill="rgba(71,183,230,0.07)" />
               ) : null}
               <circle
                 cx={city.point.x}
@@ -630,7 +630,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                 cy={city.point.y}
                 r={city.featured ? 10.5 : 8}
                 fill="none"
-                stroke={city.featured ? 'rgba(22,199,242,0.34)' : 'rgba(239,248,255,0.16)'}
+                stroke={city.featured ? 'rgba(71,183,230,0.34)' : 'rgba(239,248,255,0.16)'}
               />
               <text
                 x={city.point.x + (city.id === 'aqaba' ? -26 : city.id === 'mafraq' ? -14 : -20)}

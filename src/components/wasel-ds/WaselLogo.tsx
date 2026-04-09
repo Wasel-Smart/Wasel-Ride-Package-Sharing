@@ -11,7 +11,8 @@ interface WaselLogoProps {
   subtitle?: string;
 }
 
-const CLEAN_MARK_SRC = '/brand/wasel-mark-clean.svg';
+const LOGO_ASSET_VERSION = '20260409c';
+const CLEAN_MARK_SRC = `/brand/wasel-mark-clean.svg?v=${LOGO_ASSET_VERSION}`;
 
 function LogoImage({
   size,
@@ -53,8 +54,8 @@ export function WaselLogo({
   subtitle = 'Mobility OS',
 }: WaselLogoProps) {
   const onDarkSurface = theme === 'light';
-  const titleColor = onDarkSurface ? '#F7FCFF' : '#0A1D2D';
-  const metaColor = onDarkSurface ? 'rgba(203, 232, 246, 0.88)' : 'rgba(10, 29, 45, 0.72)';
+  const titleColor = onDarkSurface ? '#F4F8FE' : '#173862';
+  const metaColor = onDarkSurface ? 'rgba(194, 214, 236, 0.82)' : 'rgba(23, 56, 98, 0.64)';
   const titleSize =
     variant === 'compact'
       ? Math.max(11, Math.round(size * 0.34))
@@ -76,8 +77,8 @@ export function WaselLogo({
         alt="Wasel mobility application logo"
         style={{
           filter: onDarkSurface
-            ? 'drop-shadow(0 6px 16px rgba(18, 214, 255, 0.14))'
-            : 'drop-shadow(0 3px 10px rgba(10, 29, 45, 0.10))',
+            ? 'drop-shadow(0 8px 18px rgba(71, 183, 230, 0.18))'
+            : 'drop-shadow(0 8px 20px rgba(23, 56, 98, 0.12))',
         }}
       />
 
@@ -153,7 +154,7 @@ export function WaselHeroMark({ size = 120 }: { size?: number }) {
           inset: -24,
           borderRadius: '36%',
           background:
-            'radial-gradient(circle, rgba(18,219,255,0.28) 0%, rgba(106,255,69,0.14) 44%, rgba(4,18,30,0) 78%)',
+            'radial-gradient(circle, rgba(71,183,230,0.28) 0%, rgba(106,255,69,0.14) 44%, rgba(4,18,30,0) 78%)',
           filter: 'blur(22px)',
         }}
       />
@@ -163,7 +164,7 @@ export function WaselHeroMark({ size = 120 }: { size?: number }) {
         alt="Wasel hero logo"
         style={{
           position: 'relative',
-          filter: 'drop-shadow(0 10px 26px rgba(18, 214, 255, 0.2))',
+          filter: 'drop-shadow(0 12px 28px rgba(71, 183, 230, 0.2))',
         }}
       />
     </div>

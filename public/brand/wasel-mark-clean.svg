@@ -1,29 +1,95 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none" role="img" aria-labelledby="title desc" shape-rendering="geometricPrecision">
-  <title id="title">Wasel clean mark</title>
-  <desc id="desc">A clean interlocking rounded-rectangle mark with cyan-to-lime gradients and a transparent background.</desc>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="100%"
+  height="100%"
+  viewBox="0 0 512 512"
+  fill="none"
+  role="img"
+  aria-labelledby="title desc"
+  preserveAspectRatio="xMidYMid meet"
+>
+  <title id="title">Wasel arrow W logo</title>
+  <desc id="desc">A geometric blue and green Wasel W logo with an upward arrow and motion arcs.</desc>
   <defs>
-    <linearGradient id="topStroke" x1="24" y1="68" x2="124" y2="68" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#13D6FF" />
-      <stop offset="1" stop-color="#11C3F2" />
+    <linearGradient id="leftWing" x1="70" y1="176" x2="238" y2="368" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#70D1EE" />
+      <stop offset="0.46" stop-color="#49B9E5" />
+      <stop offset="1" stop-color="#2F8ECE" />
     </linearGradient>
-    <linearGradient id="rightStroke" x1="122" y1="122" x2="232" y2="122" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#15DEBF" />
-      <stop offset="1" stop-color="#ADFF31" />
+    <linearGradient id="centerBlue" x1="172" y1="144" x2="304" y2="364" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5EC4EA" />
+      <stop offset="0.5" stop-color="#2B8BC8" />
+      <stop offset="1" stop-color="#1A4C9C" />
     </linearGradient>
-    <linearGradient id="bottomStroke" x1="24" y1="190" x2="124" y2="190" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#14DBBE" />
-      <stop offset="0.55" stop-color="#48EB84" />
-      <stop offset="1" stop-color="#AEFF32" />
+    <linearGradient id="blueCap" x1="228" y1="142" x2="350" y2="168" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2E7BC2" />
+      <stop offset="1" stop-color="#173E7E" />
     </linearGradient>
-    <linearGradient id="linkStroke" x1="128" y1="76" x2="128" y2="198" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#12D4FF" />
-      <stop offset="0.45" stop-color="#17E2D0" />
-      <stop offset="1" stop-color="#B1FF33" />
+    <linearGradient id="greenWing" x1="312" y1="148" x2="448" y2="364" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A6D910" />
+      <stop offset="0.48" stop-color="#83C80A" />
+      <stop offset="1" stop-color="#5AA20D" />
     </linearGradient>
+    <linearGradient id="greenCore" x1="330" y1="214" x2="404" y2="366" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#77BA10" />
+      <stop offset="1" stop-color="#2E7A13" />
+    </linearGradient>
+    <linearGradient id="arrowFill" x1="348" y1="116" x2="486" y2="336" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#AEDD0A" />
+      <stop offset="0.56" stop-color="#82C50C" />
+      <stop offset="1" stop-color="#5AA20D" />
+    </linearGradient>
+    <linearGradient id="arcBlue" x1="82" y1="174" x2="330" y2="290" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7ED7F0" stop-opacity="0.56" />
+      <stop offset="1" stop-color="#2E7EBD" stop-opacity="0.12" />
+    </linearGradient>
+    <linearGradient id="arcGreen" x1="278" y1="206" x2="476" y2="204" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#B8E53A" stop-opacity="0.14" />
+      <stop offset="1" stop-color="#7EC10D" stop-opacity="0.42" />
+    </linearGradient>
+    <linearGradient id="shadow" x1="156" y1="392" x2="374" y2="392" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D1DDE8" stop-opacity="0" />
+      <stop offset="0.48" stop-color="#B8C7D6" stop-opacity="0.82" />
+      <stop offset="1" stop-color="#D1DDE8" stop-opacity="0" />
+    </linearGradient>
+    <filter id="brandShadow" x="42" y="112" width="444" height="302" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="16" stdDeviation="14" flood-color="#6D8AA7" flood-opacity="0.16" />
+    </filter>
   </defs>
 
-  <rect x="24" y="28" width="104" height="76" rx="18" stroke="url(#topStroke)" stroke-width="12" />
-  <rect x="122" y="92" width="110" height="58" rx="16" stroke="url(#rightStroke)" stroke-width="12" />
-  <rect x="24" y="152" width="104" height="76" rx="18" stroke="url(#bottomStroke)" stroke-width="12" />
-  <path d="M128 84V172" stroke="url(#linkStroke)" stroke-width="12" stroke-linecap="round" />
+  <ellipse cx="266" cy="392" rx="128" ry="14" fill="url(#shadow)" />
+
+  <g filter="url(#brandShadow)">
+    <path d="M64 206H180L266 366H152L64 206Z" fill="url(#leftWing)" />
+    <path d="M152 366H236L180 206L152 366Z" fill="#1B4E98" opacity="0.54" />
+
+    <path d="M180 206L234 142H350L266 366L180 206Z" fill="url(#centerBlue)" />
+    <path d="M234 142H350L304 256L234 142Z" fill="url(#blueCap)" />
+
+    <path d="M304 256L350 142L430 366H322L304 256Z" fill="url(#greenWing)" />
+    <path d="M322 366H430L382 254L322 366Z" fill="url(#greenCore)" />
+
+    <path
+      d="M350 142L430 366H466L506 214L478 204L486 178L428 196L350 142Z"
+      fill="url(#arrowFill)"
+    />
+    <path
+      d="M428 196L506 214L478 58L380 126L410 136L350 142L428 196Z"
+      fill="#86CB08"
+    />
+    <path
+      d="M392 132L472 82L384 122L392 132Z"
+      fill="#DDF377"
+      opacity="0.78"
+    />
+
+    <path
+      d="M72 206C136 270 230 286 322 246C280 186 224 166 176 168C135 170 98 183 72 206Z"
+      fill="url(#arcBlue)"
+    />
+    <path
+      d="M266 250C320 284 393 286 480 228C447 188 402 172 352 182C315 190 286 212 266 250Z"
+      fill="url(#arcGreen)"
+    />
+  </g>
 </svg>

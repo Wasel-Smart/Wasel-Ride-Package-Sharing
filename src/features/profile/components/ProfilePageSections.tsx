@@ -1,4 +1,4 @@
-﻿import type { ChangeEventHandler, MutableRefObject } from 'react';
+import type { ChangeEventHandler, MutableRefObject } from 'react';
 import { Camera, Clock, User } from 'lucide-react';
 import { WaselLogo } from '../../../components/wasel-ds/WaselLogo';
 import type { WaselUser } from '../../../contexts/LocalAuth';
@@ -135,7 +135,7 @@ function ProfileOperationalSummary({
           marginBottom: 12,
         }}
       >
-        {ar ? 'جاهزية الحساب' : 'Account readiness'}
+        {ar ? '?????? ??????' : 'Account readiness'}
       </div>
       <div
         style={{
@@ -145,22 +145,22 @@ function ProfileOperationalSummary({
         }}
       >
         <ProfileSummaryStat
-          label={ar ? 'اكتمال الملف' : 'Profile'}
+          label={ar ? '?????? ?????' : 'Profile'}
           value={`${profileCompleteness}%`}
           tone={profileCompleteness >= 80 ? '#22C55E' : PROFILE_CYAN}
         />
         <ProfileSummaryStat
-          label={ar ? 'التنبيهات' : 'Alerts'}
+          label={ar ? '?????????' : 'Alerts'}
           value={permissionStatus.label}
           tone={permissionStatus.color}
         />
         <ProfileSummaryStat
-          label={ar ? 'المحفظة' : 'Wallet'}
+          label={ar ? '???????' : 'Wallet'}
           value={walletStatus.label}
           tone={walletStatus.color}
         />
         <ProfileSummaryStat
-          label={ar ? 'الثقة' : 'Trust'}
+          label={ar ? '?????' : 'Trust'}
           value={trustTier}
           tone="#22C55E"
         />
@@ -174,7 +174,7 @@ function ProfileOperationalSummary({
           fontFamily: PROFILE_FONT,
         }}
       >
-        {ar ? `عضو منذ ${joinedText}` : `Member since ${joinedText}`}
+        {ar ? `??? ??? ${joinedText}` : `Member since ${joinedText}`}
       </div>
     </div>
   );
@@ -199,14 +199,14 @@ export function ProfileSignedOutState({
     >
       <User size={40} color="rgba(148,163,184,0.4)" />
       <p style={{ color: 'rgba(148,163,184,0.6)', fontSize: '0.9rem' }}>
-        {ar ? 'يرجى تسجيل الدخول أولاً' : 'Please sign in to view your profile'}
+        {ar ? '???? ????? ?????? ?????' : 'Please sign in to view your profile'}
       </p>
       <button
         onClick={onSignIn}
         style={{
           padding: '10px 24px',
           borderRadius: 10,
-          background: `linear-gradient(135deg,${PROFILE_CYAN},#0F78BF)`,
+          background: `linear-gradient(135deg,${PROFILE_CYAN},#1E5FAE)`,
           border: 'none',
           color: '#040C18',
           fontWeight: 700,
@@ -215,7 +215,7 @@ export function ProfileSignedOutState({
           fontFamily: PROFILE_FONT,
         }}
       >
-        {ar ? 'تسجيل الدخول' : 'Sign In'}
+        {ar ? '????? ??????' : 'Sign In'}
       </button>
     </div>
   );
@@ -255,7 +255,7 @@ export function ProfileHeroSection({
           }}
         >
           {ar
-            ? 'مركز الهوية والثقة والإعدادات داخل شبكة واصل.'
+            ? '???? ?????? ?????? ?????????? ???? ???? ????.'
             : 'Identity, trust, and account controls inside the Wasel network.'}
         </p>
       </div>
@@ -274,14 +274,14 @@ export function ProfileHeroSection({
             width: 88,
             height: 88,
             borderRadius: '50%',
-            background: 'linear-gradient(135deg,#16C7F2,#0F78BF)',
+            background: 'linear-gradient(135deg,#47B7E6,#1E5FAE)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '1.8rem',
             fontWeight: 900,
             color: '#040C18',
-            boxShadow: '0 0 0 3px rgba(22,199,242,0.35), 0 8px 32px rgba(22,199,242,0.2)',
+            boxShadow: '0 0 0 3px rgba(71,183,230,0.35), 0 8px 32px rgba(71,183,230,0.2)',
             overflow: 'hidden',
           }}
         >
@@ -292,7 +292,7 @@ export function ProfileHeroSection({
           )}
         </div>
         <button
-          title={ar ? 'تغيير الصورة' : 'Change photo'}
+          title={ar ? '????? ??????' : 'Change photo'}
           onClick={() => photoInputRef.current?.click()}
           disabled={savingField === 'photo'}
           style={{
@@ -326,7 +326,7 @@ export function ProfileHeroSection({
               padding: '8px 12px',
               borderRadius: 8,
               border: `1.5px solid ${PROFILE_CYAN}`,
-              background: 'rgba(22,199,242,0.07)',
+              background: 'rgba(71,183,230,0.07)',
               color: '#EFF6FF',
               fontSize: '0.9rem',
               fontFamily: PROFILE_FONT,
@@ -353,7 +353,7 @@ export function ProfileHeroSection({
               fontFamily: PROFILE_FONT,
             }}
           >
-            {savingField === 'name' ? '...' : (ar ? 'حفظ' : 'Save')}
+            {savingField === 'name' ? '...' : (ar ? '???' : 'Save')}
           </button>
           <button
             onClick={onNameEditCancel}
@@ -368,7 +368,7 @@ export function ProfileHeroSection({
               fontFamily: PROFILE_FONT,
             }}
           >
-            {ar ? 'إلغاء' : 'Cancel'}
+            {ar ? '?????' : 'Cancel'}
           </button>
         </div>
       ) : (
@@ -377,21 +377,21 @@ export function ProfileHeroSection({
             {user.name}
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-            <span style={{ fontSize: '0.66rem', padding: '4px 9px', borderRadius: 999, color: PROFILE_CYAN, background: 'rgba(22,199,242,0.12)', border: '1px solid rgba(22,199,242,0.25)', fontFamily: PROFILE_FONT, fontWeight: 700 }}>
+            <span style={{ fontSize: '0.66rem', padding: '4px 9px', borderRadius: 999, color: PROFILE_CYAN, background: 'rgba(71,183,230,0.12)', border: '1px solid rgba(71,183,230,0.25)', fontFamily: PROFILE_FONT, fontWeight: 700 }}>
               {roleLabel}
             </span>
             <span style={{ fontSize: '0.66rem', padding: '4px 9px', borderRadius: 999, color: walletStatus.color, background: `${walletStatus.color}1A`, border: `1px solid ${walletStatus.color}33`, fontFamily: PROFILE_FONT, fontWeight: 700 }}>
-              {ar ? 'المحفظة' : 'Wallet'}: {walletStatus.label}
+              {ar ? '???????' : 'Wallet'}: {walletStatus.label}
             </span>
             <span style={{ fontSize: '0.66rem', padding: '4px 9px', borderRadius: 999, color: '#94A3B8', background: 'rgba(148,163,184,0.12)', border: '1px solid rgba(148,163,184,0.2)', fontFamily: PROFILE_FONT, fontWeight: 700 }}>
-              {ar ? 'ملف مباشر' : 'Live profile'}
+              {ar ? '??? ?????' : 'Live profile'}
             </span>
           </div>
           <button
             onClick={onNameEditStart}
             style={{ fontSize: '0.72rem', color: PROFILE_CYAN, background: 'none', border: 'none', cursor: 'pointer', marginTop: 8, fontFamily: PROFILE_FONT }}
           >
-            {ar ? 'تعديل الاسم' : 'Edit name'}
+            {ar ? '????? ?????' : 'Edit name'}
           </button>
         </div>
       )}
@@ -399,7 +399,7 @@ export function ProfileHeroSection({
       <VerificationBadge level={user.verificationLevel ?? 'level_0'} ar={ar} accent={PROFILE_CYAN} />
       <p style={{ color: 'rgba(148,163,184,0.6)', fontSize: '0.82rem', fontFamily: PROFILE_FONT, margin: 0 }}>{user.email}</p>
       <p style={{ color: 'rgba(148,163,184,0.72)', fontSize: '0.76rem', fontFamily: PROFILE_FONT, margin: 0, textAlign: 'center', lineHeight: 1.5 }}>
-        {ar ? `درجة الثقة ${user.trustScore}/100 - ${trustTier}` : `Trust score ${user.trustScore}/100 - ${trustTier}`}
+        {ar ? `???? ????? ${user.trustScore}/100 - ${trustTier}` : `Trust score ${user.trustScore}/100 - ${trustTier}`}
       </p>
 
       <ProfileOperationalSummary
@@ -428,7 +428,7 @@ export function ProfileQuickPhoneEditor({
     <div style={{ padding: 18, display: 'grid', gap: 14 }}>
       <div style={{ display: 'grid', gap: 8 }}>
         <div style={{ fontSize: '0.72rem', color: 'rgba(148,163,184,0.72)', fontFamily: PROFILE_FONT, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          {ar ? 'رقم الهاتف' : 'Phone number'}
+          {ar ? '??? ??????' : 'Phone number'}
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <input
@@ -446,7 +446,7 @@ export function ProfileQuickPhoneEditor({
               padding: '10px 12px',
               borderRadius: 10,
               border: `1px solid ${editingField === 'phone' ? PROFILE_CYAN : PROFILE_BORDER}`,
-              background: 'rgba(22,199,242,0.07)',
+              background: 'rgba(71,183,230,0.07)',
               color: '#EFF6FF',
               fontSize: '0.88rem',
               fontFamily: PROFILE_FONT,
@@ -468,11 +468,11 @@ export function ProfileQuickPhoneEditor({
               fontFamily: PROFILE_FONT,
             }}
           >
-            {savingField === 'phone' ? '...' : (ar ? 'حفظ الهاتف' : 'Save phone')}
+            {savingField === 'phone' ? '...' : (ar ? '??? ??????' : 'Save phone')}
           </button>
         </div>
         <div style={{ fontSize: '0.74rem', color: 'rgba(148,163,184,0.7)', fontFamily: PROFILE_FONT }}>
-          {ar ? 'يُستخدم للتنبيهات والتحقق وتنسيق الرحلات.' : 'Used for alerts, verification, and ride coordination.'}
+          {ar ? '??????? ????????? ??????? ?????? ???????.' : 'Used for alerts, verification, and ride coordination.'}
         </div>
       </div>
     </div>
@@ -488,11 +488,11 @@ export function ProfileDeleteConfirmDialog({
     <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ background: '#0A1628', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 16, padding: 28, maxWidth: 360, width: '100%' }}>
         <h3 style={{ color: '#EF4444', fontFamily: PROFILE_FONT, fontWeight: 800, fontSize: '1.1rem', marginBottom: 10 }}>
-          {ar ? 'طلب حذف الحساب' : 'Request Account Deletion'}
+          {ar ? '??? ??? ??????' : 'Request Account Deletion'}
         </h3>
         <p style={{ color: 'rgba(148,163,184,0.8)', fontFamily: PROFILE_FONT, fontSize: '0.85rem', marginBottom: 20 }}>
           {ar
-            ? 'الحذف الكامل غير متاح من هذا السطح حاليا. سنسجل خروجك الآن لتأمين الحساب، ثم يمكنك متابعة طلب الحذف عبر الدعم.'
+            ? '????? ?????? ??? ???? ?? ??? ????? ?????. ????? ????? ???? ?????? ??????? ?? ????? ?????? ??? ????? ??? ?????.'
             : 'Full account deletion is not available from this screen yet. We will sign you out now so you can safely continue a deletion request through support.'}
         </p>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -500,13 +500,13 @@ export function ProfileDeleteConfirmDialog({
             onClick={onCancel}
             style={{ flex: 1, height: 40, borderRadius: 10, background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)', fontFamily: PROFILE_FONT, cursor: 'pointer' }}
           >
-            {ar ? 'إلغاء' : 'Cancel'}
+            {ar ? '?????' : 'Cancel'}
           </button>
           <button
             onClick={() => void onContinue()}
             style={{ flex: 1, height: 40, borderRadius: 10, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#EF4444', fontFamily: PROFILE_FONT, fontWeight: 700, cursor: 'pointer' }}
           >
-            {ar ? 'متابعة' : 'Continue'}
+            {ar ? '??????' : 'Continue'}
           </button>
         </div>
       </div>

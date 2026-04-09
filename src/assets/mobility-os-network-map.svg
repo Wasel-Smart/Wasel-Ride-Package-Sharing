@@ -6,22 +6,22 @@
       <stop offset="1" stop-color="#06121D"/>
     </linearGradient>
     <linearGradient id="routePassenger" x1="318" y1="822" x2="996" y2="170" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#16C7F2"/>
+      <stop stop-color="#47B7E6"/>
       <stop offset="0.45" stop-color="#9EF8FF"/>
-      <stop offset="1" stop-color="#16C7F2"/>
+      <stop offset="1" stop-color="#47B7E6"/>
     </linearGradient>
     <linearGradient id="routePackage" x1="244" y1="842" x2="992" y2="176" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#C7FF1A"/>
+      <stop stop-color="#A8D614"/>
       <stop offset="0.55" stop-color="#F7FFA3"/>
-      <stop offset="1" stop-color="#C7FF1A"/>
+      <stop offset="1" stop-color="#A8D614"/>
     </linearGradient>
     <radialGradient id="glowLeft" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(274 174) rotate(43.9416) scale(360.594 278.551)">
-      <stop stop-color="#16C7F2" stop-opacity="0.16"/>
-      <stop offset="1" stop-color="#16C7F2" stop-opacity="0"/>
+      <stop stop-color="#47B7E6" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#47B7E6" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="glowRight" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1120 218) rotate(126.387) scale(300.932 242.261)">
-      <stop stop-color="#C7FF1A" stop-opacity="0.12"/>
-      <stop offset="1" stop-color="#C7FF1A" stop-opacity="0"/>
+      <stop stop-color="#A8D614" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#A8D614" stop-opacity="0"/>
     </radialGradient>
     <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
       <feGaussianBlur stdDeviation="12"/>
@@ -70,7 +70,7 @@
     <circle cx="834" cy="564" r="7"/>
     <circle cx="902" cy="474" r="7"/>
     <circle cx="960" cy="384" r="8"/>
-    <circle cx="996" cy="270" r="12" fill="#C7FF1A"/>
+    <circle cx="996" cy="270" r="12" fill="#A8D614"/>
     <circle cx="1048" cy="196" r="7"/>
     <circle cx="1120" cy="140" r="7"/>
     <circle cx="1208" cy="166" r="7"/>
@@ -110,9 +110,9 @@
     <text x="92" y="176" font-size="23" font-weight="800">best_route_now</text>
     <text x="92" y="204" font-size="18" font-weight="700">Amman → Aqaba</text>
     <text x="1106" y="88" font-size="13" font-weight="700" opacity="0.72">PASSENGER FLOW · MODELED</text>
-    <text x="1106" y="110" font-size="30" font-weight="900" fill="#16C7F2">67</text>
+    <text x="1106" y="110" font-size="30" font-weight="900" fill="#47B7E6">67</text>
     <text x="1112" y="162" font-size="13" font-weight="700" opacity="0.72">PARCEL LOAD · MODELED</text>
-    <text x="1112" y="195" font-size="34" font-weight="900" fill="#C7FF1A">235</text>
+    <text x="1112" y="195" font-size="34" font-weight="900" fill="#A8D614">235</text>
   </g>
 
   <g fill="#0A1628" stroke="rgba(255,255,255,0.12)">

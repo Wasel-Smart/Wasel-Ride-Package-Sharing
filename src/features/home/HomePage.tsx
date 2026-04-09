@@ -81,13 +81,13 @@ function HomeHero({
         </motion.div>
         <div className="home-hero-copy">
           <p className="home-eyebrow">
-            {ar ? 'واصل | رفيقك في التنقل الذكي' : 'WASEL | YOUR MOBILITY COMPANION'}
+            {ar ? 'واصل' : 'WASEL'}
           </p>
           <h1 className="home-hero-title hero-title">
             {ar ? `أهلاً بعودتك${firstName ? `، ${firstName}` : ''}` : `Welcome back${firstName ? `, ${firstName}` : ''}`}
           </h1>
           <p className="home-subtle">
-            {ar ? 'ما الذي تريد القيام به اليوم؟' : 'What would you like to do today?'}
+            {ar ? 'إلى أين؟' : 'Where to?'}
           </p>
         </div>
       </div>
@@ -95,7 +95,7 @@ function HomeHero({
       <div className="home-panel home-panel-accent">
         <p className="home-mini-label">{ar ? 'نوع الرحلة' : 'TRIP TYPE'}</p>
         <p className="home-panel-copy">
-          {ar ? 'اختر النمط وسنفتح لك المطابقات المناسبة مباشرة.' : 'Pick a mode and jump straight into the best matching flow.'}
+          {ar ? 'اختر واحدا وابدأ.' : 'Choose once and go.'}
         </p>
         <div className="home-trip-mode-grid">
           {options.map((option) => {

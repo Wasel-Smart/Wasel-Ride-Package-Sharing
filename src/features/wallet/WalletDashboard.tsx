@@ -71,7 +71,6 @@ export function WalletDashboard() {
     topUpAmount,
     topUpMethod,
     walletData,
-    walletSubtitle,
     walletUnavailable,
     withdrawAmount,
     withdrawBank,
@@ -153,9 +152,7 @@ export function WalletDashboard() {
                 {t.activeLabel}
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {walletSubtitle} - {walletData?.currency || 'JOD'}
-            </p>
+            <p className="text-xs text-muted-foreground">{walletData?.currency || 'JOD'}</p>
           </div>
         </div>
         <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
@@ -222,9 +219,6 @@ export function WalletDashboard() {
                 <div className="text-center py-8">
                   <Gift className="w-12 h-12 mx-auto mb-3 text-muted-foreground/30" />
                   <p className="text-muted-foreground text-sm">{t.noRewards}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t.rewardsEmptyHint}
-                  </p>
                 </div>
               ) : (
                 walletData.activeRewards.map((r: RewardItem) => (

@@ -2,23 +2,23 @@
   "meta": {
     "name": "Wasel Brand System",
     "version": "2026-04-05",
-    "source": "Linked mobility logo refresh"
+    "source": "Geometric arrow mobility logo refresh"
   },
   "color": {
-    "bg": "#061726",
-    "bgAlt": "#082033",
-    "bgDeep": "#04131F",
-    "surface": "#0B2135",
-    "surfaceAlt": "#102B44",
-    "primary": "#16C7F2",
-    "primaryDeep": "#0A74C9",
-    "accent": "#C7FF1A",
-    "success": "#60C536",
-    "text": "#EAF7FF",
-    "textSub": "rgba(234,247,255,0.84)",
-    "textMuted": "rgba(153,184,210,0.66)",
-    "border": "rgba(73,190,242,0.16)",
-    "borderStrong": "rgba(73,190,242,0.34)",
+    "bg": "#081C36",
+    "bgAlt": "#0B2341",
+    "bgDeep": "#071529",
+    "surface": "#0D284B",
+    "surfaceAlt": "#16385D",
+    "primary": "#47B7E6",
+    "primaryDeep": "#1E5FAE",
+    "accent": "#A8D614",
+    "success": "#6BB515",
+    "text": "#EEF5FF",
+    "textSub": "rgba(238,245,255,0.84)",
+    "textMuted": "rgba(171,194,221,0.66)",
+    "border": "rgba(93,150,210,0.16)",
+    "borderStrong": "rgba(93,150,210,0.34)",
     "error": "#FF646A",
     "warning": "#FFD84A"
   },
@@ -53,14 +53,14 @@
     "pill": 9999
   },
   "shadow": {
-    "card": "0 18px 44px rgba(1,10,18,0.28)",
-    "raised": "0 24px 56px rgba(1,10,18,0.34)",
-    "hero": "0 34px 80px rgba(1,10,18,0.38)",
-    "glowPrimary": "0 18px 50px rgba(22,199,242,0.22)"
+    "card": "0 18px 44px rgba(4,16,32,0.3)",
+    "raised": "0 24px 56px rgba(4,16,32,0.34)",
+    "hero": "0 34px 80px rgba(4,16,32,0.4)",
+    "glowPrimary": "0 18px 50px rgba(71,183,230,0.2)"
   },
   "gradient": {
-    "primary": "linear-gradient(135deg, #16C7F2 0%, #0A74C9 52%, #33D7D0 100%)",
-    "accent": "linear-gradient(135deg, #59C83B 0%, #C7FF1A 100%)",
-    "signal": "linear-gradient(135deg, #16C7F2 0%, #3AD7E4 48%, #C7FF1A 100%)"
+    "primary": "linear-gradient(135deg, #72D0EF 0%, #2F92CF 42%, #8BC61A 100%)",
+    "accent": "linear-gradient(135deg, #6BB515 0%, #A8D614 100%)",
+    "signal": "linear-gradient(135deg, #47B7E6 0%, #72D0EF 48%, #A8D614 100%)"
   }
 }

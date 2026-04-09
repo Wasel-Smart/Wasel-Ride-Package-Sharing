@@ -5,59 +5,23 @@ export const THEME_STORAGE_KEY = 'wasel-theme';
 export const LEGACY_DISPLAY_STORAGE_KEY = 'wasel.settings.display';
 
 export function sanitizeThemePreference(value: string | null | undefined): ThemePreference {
-  if (value === 'light' || value === 'dark' || value === 'system') {
-    return value;
-  }
-
-  return 'system';
-}
-
-export function getSystemTheme(): ResolvedTheme {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+  if (value === 'dark') {
     return 'dark';
   }
 
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return 'dark';
 }
 
-function readLegacyDisplayTheme(): ThemePreference | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(LEGACY_DISPLAY_STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    const parsed = JSON.parse(raw) as { theme?: string } | null;
-    return sanitizeThemePreference(parsed?.theme ?? null);
-  } catch (error) {
-    console.error('Failed to read legacy display theme:', error);
-    return null;
-  }
+export function getSystemTheme(): ResolvedTheme {
+  return 'dark';
 }
 
 export function getStoredThemePreference(): ThemePreference {
-  if (typeof window === 'undefined') {
-    return 'system';
-  }
-
-  try {
-    const saved = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (saved) {
-      return sanitizeThemePreference(saved);
-    }
-  } catch (error) {
-    console.error('Failed to read theme preference:', error);
-  }
-
-  return readLegacyDisplayTheme() ?? 'system';
+  return 'dark';
 }
 
-export function resolveThemePreference(theme: ThemePreference): ResolvedTheme {
-  return theme === 'system' ? getSystemTheme() : theme;
+export function resolveThemePreference(_theme: ThemePreference): ResolvedTheme {
+  return 'dark';
 }
 
 function mergeThemeIntoLegacyDisplay(theme: ThemePreference): void {
@@ -80,14 +44,14 @@ function mergeThemeIntoLegacyDisplay(theme: ThemePreference): void {
   }
 }
 
-export function persistThemePreference(theme: ThemePreference): void {
+export function persistThemePreference(_theme: ThemePreference): void {
   if (typeof window === 'undefined') {
     return;
   }
 
   try {
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-    mergeThemeIntoLegacyDisplay(theme);
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+    mergeThemeIntoLegacyDisplay('dark');
   } catch (error) {
     console.error('Failed to persist theme preference:', error);
   }
@@ -122,13 +86,12 @@ export function applyThemeToDocument(
 
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) {
-    themeMeta.setAttribute('content', isLight ? '#ffffff' : '#061726');
+    themeMeta.setAttribute('content', isLight ? '#f6f9fc' : '#081c36');
   }
 }
 
 export function initializeThemeFromStorage(): ThemePreference {
-  const preference = getStoredThemePreference();
+  const preference = 'dark';
   applyThemeToDocument(resolveThemePreference(preference), preference);
   return preference;
 }
-

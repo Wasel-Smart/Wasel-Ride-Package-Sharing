@@ -1,4 +1,4 @@
-﻿import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Gauge, MapPinned, Pause, Play, Route } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
@@ -26,45 +26,45 @@ type Vehicle = { id: string; routeId: string; type: FlowType; progress: number; 
 type Analytics = { totalVehicles: number; activePassengers: number; activePackages: number; seatAvailability: number; packageCapacity: number; avgSpeed: number; networkUtilization: number; congestionLevel: number; topCorridor: string; recommendedPath: string; dispatchAction: string };
 type Star = { x: number; y: number; size: number; alpha: number; drift: number };
 
-const PASSENGER_COLOR = '#16C7F2';
-const PACKAGE_COLOR = '#C7FF1A';
-const PASSENGER_GLOW = 'rgba(22,199,242,0.45)';
-const PACKAGE_GLOW = 'rgba(199,255,26,0.34)';
+const PASSENGER_COLOR = '#47B7E6';
+const PACKAGE_COLOR = '#A8D614';
+const PASSENGER_GLOW = 'rgba(71,183,230,0.45)';
+const PACKAGE_GLOW = 'rgba(168,214,20,0.34)';
 const TARGET_VEHICLES = 84;
 const BASE_W = 1200;
 const BASE_H = 700;
 const FLOW_SPEED_SCALE = 0.42;
 const HERO_MAP_ASPECT = 1.42;
 const CITY_DATA: City[] = [
-  { id: 0, name: 'Amman', nameAr: 'عمّان', lat: 31.9454, lon: 35.9284, populationK: 5004.6, officialPopulation: 5004600, officialArea: 'Amman Governorate', officialAreaAr: 'محافظة العاصمة', attractiveness: 1, isHub: true, tier: 1 },
-  { id: 1, name: 'Aqaba', nameAr: 'العقبة', lat: 29.532, lon: 35.0063, populationK: 250.9, officialPopulation: 250900, officialArea: 'Aqaba Governorate', officialAreaAr: 'محافظة العقبة', attractiveness: 0.92, isHub: true, tier: 1 },
-  { id: 2, name: 'Irbid', nameAr: 'إربد', lat: 32.5556, lon: 35.85, populationK: 2210.5, officialPopulation: 2210500, officialArea: 'Irbid Governorate', officialAreaAr: 'محافظة إربد', attractiveness: 0.88, isHub: true, tier: 1 },
-  { id: 3, name: 'Zarqa', nameAr: 'الزرقاء', lat: 32.0728, lon: 36.088, populationK: 1704.5, officialPopulation: 1704500, officialArea: 'Zarqa Governorate', officialAreaAr: 'محافظة الزرقاء', attractiveness: 0.84, isHub: true, tier: 1 },
-  { id: 4, name: 'Mafraq', nameAr: 'المفرق', lat: 32.3406, lon: 36.208, populationK: 686.8, officialPopulation: 686800, officialArea: 'Mafraq Governorate', officialAreaAr: 'محافظة المفرق', attractiveness: 0.58, isHub: false, tier: 2 },
-  { id: 5, name: 'Jerash', nameAr: 'جرش', lat: 32.2803, lon: 35.8993, populationK: 296, officialPopulation: 296000, officialArea: 'Jerash Governorate', officialAreaAr: 'محافظة جرش', attractiveness: 0.64, isHub: false, tier: 2 },
-  { id: 6, name: 'Ajloun', nameAr: 'عجلون', lat: 32.3326, lon: 35.7519, populationK: 219.9, officialPopulation: 219900, officialArea: 'Ajloun Governorate', officialAreaAr: 'محافظة عجلون', attractiveness: 0.62, isHub: false, tier: 2 },
-  { id: 7, name: 'Madaba', nameAr: 'مادبا', lat: 31.7197, lon: 35.7936, populationK: 236.2, officialPopulation: 236200, officialArea: 'Madaba Governorate', officialAreaAr: 'محافظة مادبا', attractiveness: 0.6, isHub: false, tier: 2 },
-  { id: 8, name: 'Karak', nameAr: 'الكرك', lat: 31.1853, lon: 35.7048, populationK: 395.4, officialPopulation: 395400, officialArea: 'Karak Governorate', officialAreaAr: 'محافظة الكرك', attractiveness: 0.66, isHub: false, tier: 2 },
-  { id: 9, name: 'Tafila', nameAr: 'الطفيلة', lat: 30.8375, lon: 35.6042, populationK: 120.3, officialPopulation: 120300, officialArea: 'Tafilah Governorate', officialAreaAr: 'محافظة الطفيلة', attractiveness: 0.48, isHub: false, tier: 3 },
-  { id: 10, name: "Ma'an", nameAr: 'معان', lat: 30.1962, lon: 35.736, populationK: 197.9, officialPopulation: 197900, officialArea: "Ma'an Governorate", officialAreaAr: 'محافظة معان', attractiveness: 0.54, isHub: false, tier: 3 },
-  { id: 11, name: 'Salt', nameAr: 'السلط', lat: 32.0392, lon: 35.7272, populationK: 614, officialPopulation: 614000, officialArea: 'Balqa Governorate', officialAreaAr: 'محافظة البلقاء', attractiveness: 0.57, isHub: false, tier: 2 },
+  { id: 0, name: 'Amman', nameAr: '?????', lat: 31.9454, lon: 35.9284, populationK: 5004.6, officialPopulation: 5004600, officialArea: 'Amman Governorate', officialAreaAr: '?????? ???????', attractiveness: 1, isHub: true, tier: 1 },
+  { id: 1, name: 'Aqaba', nameAr: '??????', lat: 29.532, lon: 35.0063, populationK: 250.9, officialPopulation: 250900, officialArea: 'Aqaba Governorate', officialAreaAr: '?????? ??????', attractiveness: 0.92, isHub: true, tier: 1 },
+  { id: 2, name: 'Irbid', nameAr: '????', lat: 32.5556, lon: 35.85, populationK: 2210.5, officialPopulation: 2210500, officialArea: 'Irbid Governorate', officialAreaAr: '?????? ????', attractiveness: 0.88, isHub: true, tier: 1 },
+  { id: 3, name: 'Zarqa', nameAr: '???????', lat: 32.0728, lon: 36.088, populationK: 1704.5, officialPopulation: 1704500, officialArea: 'Zarqa Governorate', officialAreaAr: '?????? ???????', attractiveness: 0.84, isHub: true, tier: 1 },
+  { id: 4, name: 'Mafraq', nameAr: '??????', lat: 32.3406, lon: 36.208, populationK: 686.8, officialPopulation: 686800, officialArea: 'Mafraq Governorate', officialAreaAr: '?????? ??????', attractiveness: 0.58, isHub: false, tier: 2 },
+  { id: 5, name: 'Jerash', nameAr: '???', lat: 32.2803, lon: 35.8993, populationK: 296, officialPopulation: 296000, officialArea: 'Jerash Governorate', officialAreaAr: '?????? ???', attractiveness: 0.64, isHub: false, tier: 2 },
+  { id: 6, name: 'Ajloun', nameAr: '?????', lat: 32.3326, lon: 35.7519, populationK: 219.9, officialPopulation: 219900, officialArea: 'Ajloun Governorate', officialAreaAr: '?????? ?????', attractiveness: 0.62, isHub: false, tier: 2 },
+  { id: 7, name: 'Madaba', nameAr: '?????', lat: 31.7197, lon: 35.7936, populationK: 236.2, officialPopulation: 236200, officialArea: 'Madaba Governorate', officialAreaAr: '?????? ?????', attractiveness: 0.6, isHub: false, tier: 2 },
+  { id: 8, name: 'Karak', nameAr: '?????', lat: 31.1853, lon: 35.7048, populationK: 395.4, officialPopulation: 395400, officialArea: 'Karak Governorate', officialAreaAr: '?????? ?????', attractiveness: 0.66, isHub: false, tier: 2 },
+  { id: 9, name: 'Tafila', nameAr: '???????', lat: 30.8375, lon: 35.6042, populationK: 120.3, officialPopulation: 120300, officialArea: 'Tafilah Governorate', officialAreaAr: '?????? ???????', attractiveness: 0.48, isHub: false, tier: 3 },
+  { id: 10, name: "Ma'an", nameAr: '????', lat: 30.1962, lon: 35.736, populationK: 197.9, officialPopulation: 197900, officialArea: "Ma'an Governorate", officialAreaAr: '?????? ????', attractiveness: 0.54, isHub: false, tier: 3 },
+  { id: 11, name: 'Salt', nameAr: '?????', lat: 32.0392, lon: 35.7272, populationK: 614, officialPopulation: 614000, officialArea: 'Balqa Governorate', officialAreaAr: '?????? ???????', attractiveness: 0.57, isHub: false, tier: 2 },
 ];
 const ROUTES: RouteBase[] = [
-  { id: 'amman-aqaba', from: 0, to: 1, distanceKm: 335, lanes: 2, highway: 'Desert Highway', highwayAr: 'الطريق الصحراوي' },
-  { id: 'amman-irbid', from: 0, to: 2, distanceKm: 85, lanes: 2, highway: 'Jordan Valley Highway', highwayAr: 'طريق وادي الأردن' },
-  { id: 'amman-zarqa', from: 0, to: 3, distanceKm: 25, lanes: 3, highway: 'Amman-Zarqa Expressway', highwayAr: 'أوتوستراد عمّان الزرقاء' },
-  { id: 'zarqa-mafraq', from: 3, to: 4, distanceKm: 55, lanes: 2, highway: 'International Highway', highwayAr: 'الطريق الدولي' },
-  { id: 'amman-jerash', from: 0, to: 5, distanceKm: 48, lanes: 2, highway: 'Jerash Road', highwayAr: 'طريق جرش' },
-  { id: 'irbid-ajloun', from: 2, to: 6, distanceKm: 30, lanes: 1, highway: 'Ajloun Corridor', highwayAr: 'ممر عجلون' },
-  { id: 'amman-madaba', from: 0, to: 7, distanceKm: 33, lanes: 2, highway: 'Airport Corridor', highwayAr: 'ممر المطار' },
-  { id: 'madaba-karak', from: 7, to: 8, distanceKm: 111, lanes: 2, highway: "King's Highway", highwayAr: 'الطريق الملوكي' },
-  { id: 'karak-tafila', from: 8, to: 9, distanceKm: 74, lanes: 1, highway: 'Southern Ridge Road', highwayAr: 'طريق المرتفعات الجنوبية' },
-  { id: 'tafila-maan', from: 9, to: 10, distanceKm: 89, lanes: 1, highway: 'South Mountain Road', highwayAr: 'طريق الجبال الجنوبية' },
-  { id: 'maan-aqaba', from: 10, to: 1, distanceKm: 114, lanes: 2, highway: 'Aqaba Arterial', highwayAr: 'الشريان المؤدي إلى العقبة' },
-  { id: 'irbid-zarqa', from: 2, to: 3, distanceKm: 79, lanes: 2, highway: 'Northern Connector', highwayAr: 'الواصل الشمالي' },
-  { id: 'amman-salt', from: 0, to: 11, distanceKm: 32, lanes: 2, highway: 'Salt Corridor', highwayAr: 'ممر السلط' },
-  { id: 'salt-jerash', from: 11, to: 5, distanceKm: 38, lanes: 1, highway: 'Hill Connector', highwayAr: 'الواصل الجبلي' },
-  { id: 'ajloun-jerash', from: 6, to: 5, distanceKm: 24, lanes: 1, highway: 'Forest Road', highwayAr: 'طريق الغابات' },
+  { id: 'amman-aqaba', from: 0, to: 1, distanceKm: 335, lanes: 2, highway: 'Desert Highway', highwayAr: '?????? ????????' },
+  { id: 'amman-irbid', from: 0, to: 2, distanceKm: 85, lanes: 2, highway: 'Jordan Valley Highway', highwayAr: '???? ???? ??????' },
+  { id: 'amman-zarqa', from: 0, to: 3, distanceKm: 25, lanes: 3, highway: 'Amman-Zarqa Expressway', highwayAr: '????????? ????? ???????' },
+  { id: 'zarqa-mafraq', from: 3, to: 4, distanceKm: 55, lanes: 2, highway: 'International Highway', highwayAr: '?????? ??????' },
+  { id: 'amman-jerash', from: 0, to: 5, distanceKm: 48, lanes: 2, highway: 'Jerash Road', highwayAr: '???? ???' },
+  { id: 'irbid-ajloun', from: 2, to: 6, distanceKm: 30, lanes: 1, highway: 'Ajloun Corridor', highwayAr: '??? ?????' },
+  { id: 'amman-madaba', from: 0, to: 7, distanceKm: 33, lanes: 2, highway: 'Airport Corridor', highwayAr: '??? ??????' },
+  { id: 'madaba-karak', from: 7, to: 8, distanceKm: 111, lanes: 2, highway: "King's Highway", highwayAr: '?????? ???????' },
+  { id: 'karak-tafila', from: 8, to: 9, distanceKm: 74, lanes: 1, highway: 'Southern Ridge Road', highwayAr: '???? ????????? ????????' },
+  { id: 'tafila-maan', from: 9, to: 10, distanceKm: 89, lanes: 1, highway: 'South Mountain Road', highwayAr: '???? ?????? ????????' },
+  { id: 'maan-aqaba', from: 10, to: 1, distanceKm: 114, lanes: 2, highway: 'Aqaba Arterial', highwayAr: '??????? ?????? ??? ??????' },
+  { id: 'irbid-zarqa', from: 2, to: 3, distanceKm: 79, lanes: 2, highway: 'Northern Connector', highwayAr: '?????? ???????' },
+  { id: 'amman-salt', from: 0, to: 11, distanceKm: 32, lanes: 2, highway: 'Salt Corridor', highwayAr: '??? ?????' },
+  { id: 'salt-jerash', from: 11, to: 5, distanceKm: 38, lanes: 1, highway: 'Hill Connector', highwayAr: '?????? ??????' },
+  { id: 'ajloun-jerash', from: 6, to: 5, distanceKm: 24, lanes: 1, highway: 'Forest Road', highwayAr: '???? ???????' },
 ];
 const BORDER = [{ lat: 33.37, lon: 35.55 }, { lat: 32.58, lon: 36.42 }, { lat: 31.24, lon: 37.12 }, { lat: 29.62, lon: 36.22 }, { lat: 29.2, lon: 35.03 }, { lat: 31.2, lon: 35.5 }, { lat: 32.56, lon: 35.55 }];
 const TRAFFIC = { FREE: 120, JAM: 150, CRITICAL: 45 };
@@ -90,7 +90,7 @@ function hourPalette(hour: number) {
   if (hour >= 17 && hour <= 20) {
     return { top: '#120f20', bottom: '#091726', glow: 'rgba(255,120,72,0.14)' };
   }
-  return { top: '#020914', bottom: '#071423', glow: 'rgba(22,199,242,0.12)' };
+  return { top: '#020914', bottom: '#071423', glow: 'rgba(71,183,230,0.12)' };
 }
 
 function getCityLabel(city: City, ar: boolean) {
@@ -119,58 +119,58 @@ function projectCity(cityId: number, width: number, height: number) {
 
 function createMobilityOSCopy(ar: boolean) {
   return {
-    heroLabel: ar ? 'نظام الحركة / سطح التحكم الوطني' : 'Mobility OS / Live network view',
-    heroTitle: ar ? 'منصة تشغيل موحّدة لحركة الأردن، وتدفق الركاب، وذكاء الطرود.' : 'A clear live view of how Jordan moves people and packages.',
-    heroBody: ar ? 'سطح تشغيلي واحد بمشهد بصري متماسك يعرض المحاكاة الحية، وذكاء المسارات، وقرارات إعادة التوزيع، وضغط الممرات بلغة واضحة وممتازة ومناسبة للسوق الأردني.' : 'Mobility OS brings route pressure, travel speed, package load, and corridor health into one readable network view.',
-    controlState: ar ? 'حالة التحكم' : 'Control state',
-    selectedCity: ar ? 'المدينة المحددة' : 'Selected city',
-    topCorridor: ar ? 'الممر الأبرز' : 'Top corridor',
-    dispatch: ar ? 'توجيه التشغيل' : 'Dispatch',
-    liveSync: ar ? 'بث مباشر' : 'Live sync',
-    selectedNode: ar ? 'العقدة المحددة' : 'Selected node',
-    signatureMode: ar ? 'أسلوب العرض' : 'Signature mode',
-    actionableOutputs: ar ? 'مخرجات جاهزة للتنفيذ' : 'Actionable outputs',
-    servicePriority: ar ? 'أولوية الخدمات' : 'Service priority',
-    operationalMap: ar ? 'الخريطة التشغيلية' : 'Operational map',
-    mapTitle: ar ? 'الأردن مع 12 مدينة و15 ممراً بين المدن' : 'Jordan with 12 cities and 15 intercity corridors',
-    mapBody: ar ? 'الأزرق يوضح حركة الركاب، والذهبي يوضح حركة الطرود. مواقع المركبات، وصحة الممرات، وبروز المدن، وإشارات التوجيه يتم تحديثها مباشرة مع كل إطار.' : 'Blue is passenger flow. Gold is package flow. Vehicle positions, corridor health, city emphasis, and dispatch signals are updated in real time on every simulation frame.',
-    passengerFlow: ar ? 'تدفق الركاب' : 'Passenger flow',
-    packageFlow: ar ? 'تدفق الطرود' : 'Package flow',
-    routeIntelligence: ar ? 'ذكاء المسار' : 'Route intelligence',
-    activeMode: ar ? 'النمط الحالي' : 'Active mode',
-    liveMesh: ar ? 'المشهد الحي متزامن بسرعة 60 إطار/ث' : 'Live network feed',
-    parcelLoad: ar ? 'حمولة الطرود' : 'Parcel load',
-    signalLayer: ar ? 'طبقة الإشارات' : 'Route signals',
-    mobilityMatrix: ar ? 'مصفوفة الحركة الأردنية' : 'Jordan route map',
-    fieldEnhancement: ar ? 'تعزيز المشهد' : 'Field enhancement',
-    tempoDeck: ar ? 'لوحة الوتيرة والعمق' : 'Flow tempo and depth deck',
-    cinematic: ar ? 'أهدأ / سينمائي' : 'cinematic / slower',
-    commandNotes: ar ? 'ملاحظات تشغيلية' : 'Command notes',
-    commandMode: ar ? 'نمط القيادة' : 'Command mode',
-    commandModeBody: ar ? 'عرض متوازن لغرفة التحكم يساعد على قراءة الوضع واتخاذ القرار.' : 'Balanced command-room visibility for routing, dispatch, and health monitoring.',
-    satelliteMode: ar ? 'نمط التضاريس' : 'Satellite mode',
-    satelliteModeBody: ar ? 'تفاصيل أوضح للتضاريس مع إبراز أقوى لحركة اللوجستيات على الممرات.' : 'Sharper terrain definition and greener logistics emphasis for corridor reading.',
-    pulseMode: ar ? 'نمط النبض' : 'Pulse mode',
-    pulseModeBody: ar ? 'مشهد أكثر حيوية يبرز الحركة والحرارة ووتيرة الشبكة.' : 'High-energy rhythm view that amplifies motion, heat, and network intensity.',
-    population: ar ? 'عدد السكان' : 'Population',
-    tier: ar ? 'الفئة' : 'Tier',
-    optimalPath: ar ? 'أفضل مسار' : 'Optimal path',
-    corridorIntelligence: ar ? 'ذكاء الممرات' : 'Corridor intelligence',
-    corridorDeck: ar ? 'ترتيب الممرات المباشر' : 'Live corridor ranking deck',
-    corridorDeckBody: ar ? 'ترتيب مباشر للممرات بناءً على التدفق المركب، وهوية الطريق، وضغط الحركة، وكفاءة دمج الركاب والطرود.' : 'Ranked corridors with live composite flow, route identity, health pressure, and blended passenger-package utilization.',
-    liveRanking: ar ? 'ترتيب مباشر' : 'Live ranking',
-    corridors: ar ? 'ممرات' : 'corridors',
-    speed: ar ? 'السرعة' : 'Speed',
-    pressure: ar ? 'الضغط' : 'Pressure',
-    flow: ar ? 'التدفق' : 'Flow',
-    compositeScore: ar ? 'النتيجة المركبة' : 'Composite score',
-    passengerOccupancy: ar ? 'إشغال المقاعد' : 'Passenger occupancy',
-    packageUtilization: ar ? 'استغلال الطرود' : 'Package utilization',
-    congestionIntensity: ar ? 'حدة الازدحام' : 'Congestion intensity',
-    rideFlowTempo: ar ? 'وتيرة حركة الركاب' : 'Ride flow tempo',
-    parcelCadence: ar ? 'وتيرة الطرود' : 'Parcel cadence',
-    depthField: ar ? 'طبقة العمق' : 'Depth field',
-    structuredTiers: ar ? 'عدد طبقات الخدمة المنظمة' : 'Structured service tiers',
+    heroLabel: ar ? '???? ?????? / ??? ?????? ??????' : 'Mobility OS / Live network view',
+    heroTitle: ar ? '???? ????? ?????? ????? ??????? ????? ??????? ????? ??????.' : 'A clear live view of how Jordan moves people and packages.',
+    heroBody: ar ? '??? ?????? ???? ????? ???? ?????? ???? ???????? ?????? ????? ????????? ??????? ????? ???????? ???? ??????? ???? ????? ??????? ??????? ????? ???????.' : 'Mobility OS brings route pressure, travel speed, package load, and corridor health into one readable network view.',
+    controlState: ar ? '???? ??????' : 'Control state',
+    selectedCity: ar ? '??????? ???????' : 'Selected city',
+    topCorridor: ar ? '????? ??????' : 'Top corridor',
+    dispatch: ar ? '????? ???????' : 'Dispatch',
+    liveSync: ar ? '?? ?????' : 'Live sync',
+    selectedNode: ar ? '?????? ???????' : 'Selected node',
+    signatureMode: ar ? '????? ?????' : 'Signature mode',
+    actionableOutputs: ar ? '?????? ????? ???????' : 'Actionable outputs',
+    servicePriority: ar ? '?????? ???????' : 'Service priority',
+    operationalMap: ar ? '??????? ?????????' : 'Operational map',
+    mapTitle: ar ? '?????? ?? 12 ????? ?15 ????? ??? ?????' : 'Jordan with 12 cities and 15 intercity corridors',
+    mapBody: ar ? '?????? ???? ???? ??????? ??????? ???? ???? ??????. ????? ????????? ???? ???????? ????? ?????? ??????? ??????? ??? ??????? ?????? ?? ?? ????.' : 'Blue is passenger flow. Gold is package flow. Vehicle positions, corridor health, city emphasis, and dispatch signals are updated in real time on every simulation frame.',
+    passengerFlow: ar ? '???? ??????' : 'Passenger flow',
+    packageFlow: ar ? '???? ??????' : 'Package flow',
+    routeIntelligence: ar ? '???? ??????' : 'Route intelligence',
+    activeMode: ar ? '????? ??????' : 'Active mode',
+    liveMesh: ar ? '?????? ???? ?????? ????? 60 ????/?' : 'Live network feed',
+    parcelLoad: ar ? '????? ??????' : 'Parcel load',
+    signalLayer: ar ? '???? ????????' : 'Route signals',
+    mobilityMatrix: ar ? '?????? ?????? ????????' : 'Jordan route map',
+    fieldEnhancement: ar ? '????? ??????' : 'Field enhancement',
+    tempoDeck: ar ? '???? ??????? ??????' : 'Flow tempo and depth deck',
+    cinematic: ar ? '???? / ???????' : 'cinematic / slower',
+    commandNotes: ar ? '??????? ???????' : 'Command notes',
+    commandMode: ar ? '??? ???????' : 'Command mode',
+    commandModeBody: ar ? '??? ?????? ????? ?????? ????? ??? ????? ????? ?????? ??????.' : 'Balanced command-room visibility for routing, dispatch, and health monitoring.',
+    satelliteMode: ar ? '??? ????????' : 'Satellite mode',
+    satelliteModeBody: ar ? '?????? ???? ???????? ?? ????? ???? ????? ?????????? ??? ???????.' : 'Sharper terrain definition and greener logistics emphasis for corridor reading.',
+    pulseMode: ar ? '??? ?????' : 'Pulse mode',
+    pulseModeBody: ar ? '???? ???? ????? ???? ?????? ???????? ?????? ??????.' : 'High-energy rhythm view that amplifies motion, heat, and network intensity.',
+    population: ar ? '??? ??????' : 'Population',
+    tier: ar ? '?????' : 'Tier',
+    optimalPath: ar ? '???? ????' : 'Optimal path',
+    corridorIntelligence: ar ? '???? ???????' : 'Corridor intelligence',
+    corridorDeck: ar ? '????? ??????? ???????' : 'Live corridor ranking deck',
+    corridorDeckBody: ar ? '????? ????? ??????? ????? ??? ?????? ??????? ????? ??????? ???? ??????? ?????? ??? ?????? ???????.' : 'Ranked corridors with live composite flow, route identity, health pressure, and blended passenger-package utilization.',
+    liveRanking: ar ? '????? ?????' : 'Live ranking',
+    corridors: ar ? '?????' : 'corridors',
+    speed: ar ? '??????' : 'Speed',
+    pressure: ar ? '?????' : 'Pressure',
+    flow: ar ? '??????' : 'Flow',
+    compositeScore: ar ? '??????? ???????' : 'Composite score',
+    passengerOccupancy: ar ? '????? ???????' : 'Passenger occupancy',
+    packageUtilization: ar ? '??????? ??????' : 'Package utilization',
+    congestionIntensity: ar ? '??? ????????' : 'Congestion intensity',
+    rideFlowTempo: ar ? '????? ???? ??????' : 'Ride flow tempo',
+    parcelCadence: ar ? '????? ??????' : 'Parcel cadence',
+    depthField: ar ? '???? ?????' : 'Depth field',
+    structuredTiers: ar ? '??? ????? ?????? ???????' : 'Structured service tiers',
   };
 }
 
@@ -306,40 +306,40 @@ export default function MobilityOSCore() {
   const { snapshot: liveSnapshot } = useMobilityOSLiveData(ar);
   const copy = {
     ...createMobilityOSCopy(ar),
-    heroBody: ar ? 'يجمع هذا السطح بين بيانات مرجعية رسمية ومحاكاة تشغيلية حيّة، مع فصل واضح بين الحقائق المعتمدة والتوصيات الناتجة عن النموذج.' : 'This surface combines official reference data with a live route model so teams can compare corridor pressure, capacity, and recommended next actions in one place.',
-    controlState: ar ? 'حالة المحاكاة' : 'Network state',
-    liveSync: ar ? 'محاكاة مباشرة' : 'Live route model',
-    actionableOutputs: ar ? 'توصيات تشغيلية من النموذج' : 'Recommended next actions',
-    mapBody: ar ? 'الأزرق يوضح تدفق الركاب والذهبي يوضح تدفق الطرود. الحركة ومواقع المركبات وتوصيات التوجيه هنا مخرجات نموذجية، بينما البيانات السكانية المرجعية معروضة من المصدر الرسمي.' : 'Blue is passenger flow and gold is package flow. Vehicle movement, corridor pressure, and route recommendations come from the live model, while population data comes from the official reference source.',
-    liveMesh: ar ? 'المشهد التشغيلي متزامن بسرعة 60 إطار/ث' : 'Live network feed',
-    officialUnit: ar ? 'الوحدة الإدارية الرسمية' : 'Official administrative unit',
-    officialPopulation2025: ar ? 'تقدير السكان الرسمي 2025' : 'Official 2025 population estimate',
-    modelRecommendation: ar ? 'توصية المسار من النموذج' : 'Best route now',
-    sourceJordanDos: ar ? 'المصدر: دائرة الإحصاءات العامة الأردنية، تقديرات 2025' : 'Source: Jordan Department of Statistics, 2025 estimates',
-    simulationTag: ar ? 'محاكاة' : 'Model',
-    estimateTag: ar ? 'تقديري' : 'Modelled',
-    officialTag: ar ? 'رسمي' : 'Reference',
-    modeledTag: ar ? 'من النموذج' : 'Modeled',
-    simulationNotice: ar ? 'كل مؤشرات الحركة والسعة والضغط أدناه ناتجة عن نموذج تشغيلي حيّ.' : 'Movement, capacity, and pressure metrics below come from the live route model.',
-    corridorDeckBody: ar ? 'ترتيب تقديري للممرات وفق نموذج التدفق والضغط والكفاءة التشغيلية، وليس ترتيباً من مصدر حكومي مباشر.' : 'A model-based ranking of corridors using flow, pressure, and operating efficiency.',
-    routeIntelligence: ar ? 'توصية المسار' : 'Route recommendation',
-    selectedNode: ar ? 'مرجع المدينة المحددة' : 'Selected city reference',
+    heroBody: ar ? '???? ??? ????? ??? ?????? ?????? ????? ??????? ??????? ????? ?? ??? ???? ??? ??????? ???????? ????????? ??????? ?? ???????.' : 'This surface combines official reference data with a live route model so teams can compare corridor pressure, capacity, and recommended next actions in one place.',
+    controlState: ar ? '???? ????????' : 'Network state',
+    liveSync: ar ? '?????? ??????' : 'Live route model',
+    actionableOutputs: ar ? '?????? ??????? ?? ???????' : 'Recommended next actions',
+    mapBody: ar ? '?????? ???? ???? ?????? ??????? ???? ???? ??????. ?????? ?????? ???????? ??????? ??????? ??? ?????? ???????? ????? ???????? ???????? ???????? ?????? ?? ?????? ??????.' : 'Blue is passenger flow and gold is package flow. Vehicle movement, corridor pressure, and route recommendations come from the live model, while population data comes from the official reference source.',
+    liveMesh: ar ? '?????? ???????? ?????? ????? 60 ????/?' : 'Live network feed',
+    officialUnit: ar ? '?????? ???????? ???????' : 'Official administrative unit',
+    officialPopulation2025: ar ? '????? ?????? ?????? 2025' : 'Official 2025 population estimate',
+    modelRecommendation: ar ? '????? ?????? ?? ???????' : 'Best route now',
+    sourceJordanDos: ar ? '??????: ????? ????????? ?????? ????????? ??????? 2025' : 'Source: Jordan Department of Statistics, 2025 estimates',
+    simulationTag: ar ? '??????' : 'Model',
+    estimateTag: ar ? '??????' : 'Modelled',
+    officialTag: ar ? '????' : 'Reference',
+    modeledTag: ar ? '?? ???????' : 'Modeled',
+    simulationNotice: ar ? '?? ?????? ?????? ?????? ?????? ????? ????? ?? ????? ?????? ???.' : 'Movement, capacity, and pressure metrics below come from the live route model.',
+    corridorDeckBody: ar ? '????? ?????? ??????? ??? ????? ?????? ?????? ???????? ?????????? ???? ??????? ?? ???? ????? ?????.' : 'A model-based ranking of corridors using flow, pressure, and operating efficiency.',
+    routeIntelligence: ar ? '????? ??????' : 'Route recommendation',
+    selectedNode: ar ? '???? ??????? ???????' : 'Selected city reference',
   };
-  const liveTag = liveSnapshot ? (ar ? 'مباشر' : 'Live') : copy.modeledTag;
-  const liveOpsTag = ar ? 'ØªØ´ØºÙŠÙ„ Ø­ÙŠ' : 'Live ops';
-  const hybridTag = ar ? 'Ù‡Ø¬ÙŠÙ†' : 'Hybrid';
-  const telemetryFreshLabel = ar ? 'ØªÙ„Ù…ØªØ±ÙŠØ§ Ø­Ø¯ÙŠØ«Ø©' : 'Fresh telemetry';
-  const telemetryStaleLabel = ar ? 'ØªÙ„Ù…ØªØ±ÙŠØ§ Ù…ØªØ£Ø®Ø±Ø©' : 'Stale telemetry';
-  const telemetryNoneLabel = ar ? 'Ø¨Ù„Ø§ ØªÙ„Ù…ØªØ±ÙŠØ§' : 'No telemetry';
-  const telemetryLabel = ar ? 'Ø­Ø§Ù„Ø© Ø§Ù„ØªÙ„Ù…ØªØ±ÙŠØ§' : 'Telemetry status';
-  const sourceMatrixLabel = ar ? 'Ù…ØµÙÙˆÙØ© Ø§Ù„Ù…ØµØ§Ø¯Ø±' : 'Source matrix';
+  const liveTag = liveSnapshot ? (ar ? '?????' : 'Live') : copy.modeledTag;
+  const liveOpsTag = ar ? 'تشغيل حي' : 'Live ops';
+  const hybridTag = ar ? 'هجين' : 'Hybrid';
+  const telemetryFreshLabel = ar ? 'تلمتريا حديثة' : 'Fresh telemetry';
+  const telemetryStaleLabel = ar ? 'تلمتريا متأخرة' : 'Stale telemetry';
+  const telemetryNoneLabel = ar ? 'بلا تلمتريا' : 'No telemetry';
+  const telemetryLabel = ar ? 'حالة التلمتريا' : 'Telemetry status';
+  const sourceMatrixLabel = ar ? 'مصفوفة المصادر' : 'Source matrix';
   const sourceMatrixBody = ar
-    ? 'Ø§Ù„Ø±ÙƒØ§Ø¨ ÙˆØ§Ù„Ø·Ø±ÙˆØ¯ Ù…Ù† Ø³Ø¬Ù„Ø§Øª Ø§Ù„Ø±Ø­Ù„Ø§Øª Ø§Ù„Ø­ÙŠØ©ØŒ Ø§Ù„Ø³Ø±Ø¹Ø© ÙˆØ§Ù„Ø¶ØºØ· ØªÙ‚Ø¯ÙŠØ±ÙŠØ§Ù† Ø­ØªÙ‰ Ø±Ø¨Ø· Ù…ØµØ¯Ø± Ù…Ø±ÙˆØ± Ø­Ù‚ÙŠÙ‚ÙŠØŒ Ø£Ù…Ø§ ØªÙˆØµÙŠØ© Ø§Ù„Ù…Ø³Ø§Ø± ÙÙ†Ø§ØªØ¬Ø© Ø¹Ù† Ù†Ù…ÙˆØ°Ø¬ Ø§Ù„ØªØ­Ø³ÙŠÙ†.'
+    ? 'الركاب والطرود من سجلات الرحلات الحية، السرعة والضغط تقديريان حتى ربط مصدر مرور حقيقي، أما توصية المسار فناتجة عن نموذج التحسين.'
     : 'Passengers and packages come from live trip records. Speed and pressure remain estimated until a true traffic source is connected. Route guidance is produced by the optimization model.';
-  const telemetryHeartbeatLabel = ar ? 'Ø¢Ø®Ø± Ù†Ø¨Ø¶Ø©' : 'Latest heartbeat';
-  const telemetryCoverageLabel = ar ? 'ØªØºØ·ÙŠØ© Ø§Ù„ØªÙ„Ù…ØªØ±ÙŠØ§' : 'Telemetry coverage';
-  const realtimeVerifiedLabel = ar ? 'Ù…ØªØ­Ù‚Ù‚ Ù…Ø¨Ø§Ø´Ø±Ø§Ù‹' : 'Verified live';
-  const estimatedFromLoadLabel = ar ? 'Ù…Ù‚Ø¯Ù‘Ø± Ù…Ù† Ø§Ù„Ø­Ù…ÙˆÙ„Ø©' : 'Estimated from load';
+  const telemetryHeartbeatLabel = ar ? 'آخر نبضة' : 'Latest heartbeat';
+  const telemetryCoverageLabel = ar ? 'تغطية التلمتريا' : 'Telemetry coverage';
+  const realtimeVerifiedLabel = ar ? 'متحقق مباشراً' : 'Verified live';
+  const estimatedFromLoadLabel = ar ? 'مقدّر من الحمولة' : 'Estimated from load';
   void hybridTag;
   void realtimeVerifiedLabel;
   const numberFormatter = useMemo(() => new Intl.NumberFormat(ar ? 'ar-JO' : 'en-US'), [ar]);
@@ -384,7 +384,7 @@ export default function MobilityOSCore() {
       : C.textMuted;
   const latestHeartbeatValue = liveSnapshot?.telemetry.latestHeartbeatAt
     ? dateTimeFormatter.format(new Date(liveSnapshot.telemetry.latestHeartbeatAt))
-    : (ar ? 'Ù„Ø§ ÙŠÙˆØ¬Ø¯' : 'Unavailable');
+    : (ar ? 'لا يوجد' : 'Unavailable');
 
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -425,14 +425,14 @@ export default function MobilityOSCore() {
     ctx.fillStyle = skyRibbon;
     ctx.fillRect(0, 0, width, height * 0.38);
     const atmosphere = ctx.createRadialGradient(width * 0.2, height * 0.18, 0, width * 0.2, height * 0.18, width * 0.5);
-    atmosphere.addColorStop(0, viewMode === 'pulse' ? 'rgba(167,124,255,0.18)' : 'rgba(22,199,242,0.18)');
-    atmosphere.addColorStop(0.35, viewMode === 'pulse' ? 'rgba(167,124,255,0.08)' : 'rgba(22,199,242,0.06)');
-    atmosphere.addColorStop(1, 'rgba(22,199,242,0)');
+    atmosphere.addColorStop(0, viewMode === 'pulse' ? 'rgba(167,124,255,0.18)' : 'rgba(71,183,230,0.18)');
+    atmosphere.addColorStop(0.35, viewMode === 'pulse' ? 'rgba(167,124,255,0.08)' : 'rgba(71,183,230,0.06)');
+    atmosphere.addColorStop(1, 'rgba(71,183,230,0)');
     ctx.fillStyle = atmosphere;
     ctx.fillRect(0, 0, width, height);
     const amberGlow = ctx.createRadialGradient(width * 0.78, height * 0.82, 0, width * 0.78, height * 0.82, width * 0.42);
-    amberGlow.addColorStop(0, viewMode === 'satellite' ? 'rgba(102,244,198,0.08)' : 'rgba(199,255,26,0.12)');
-    amberGlow.addColorStop(1, 'rgba(199,255,26,0)');
+    amberGlow.addColorStop(0, viewMode === 'satellite' ? 'rgba(102,244,198,0.08)' : 'rgba(168,214,20,0.12)');
+    amberGlow.addColorStop(1, 'rgba(168,214,20,0)');
     ctx.fillStyle = amberGlow;
     ctx.fillRect(0, 0, width, height);
     const polarAurora = ctx.createRadialGradient(width * 0.72, height * 0.1, 0, width * 0.72, height * 0.1, width * 0.38);
@@ -463,9 +463,9 @@ export default function MobilityOSCore() {
     }
     const energyRibbon = ctx.createLinearGradient(-width * 0.1 + Math.sin(phase * 0.00035) * 140, 0, width * 0.65 + Math.sin(phase * 0.00035) * 140, height);
     energyRibbon.addColorStop(0, 'rgba(255,255,255,0)');
-    energyRibbon.addColorStop(0.35, 'rgba(22,199,242,0.025)');
+    energyRibbon.addColorStop(0.35, 'rgba(71,183,230,0.025)');
     energyRibbon.addColorStop(0.55, 'rgba(255,255,255,0.045)');
-    energyRibbon.addColorStop(0.7, 'rgba(199,255,26,0.022)');
+    energyRibbon.addColorStop(0.7, 'rgba(168,214,20,0.022)');
     energyRibbon.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = energyRibbon;
     ctx.fillRect(0, 0, width, height);
@@ -477,8 +477,8 @@ export default function MobilityOSCore() {
     ctx.fillStyle = floorGlow;
     ctx.fillRect(0, height * 0.52, width, height * 0.48);
     const horizonShelf = ctx.createLinearGradient(0, height * 0.66, 0, height);
-    horizonShelf.addColorStop(0, 'rgba(22,199,242,0)');
-    horizonShelf.addColorStop(0.5, 'rgba(22,199,242,0.05)');
+    horizonShelf.addColorStop(0, 'rgba(71,183,230,0)');
+    horizonShelf.addColorStop(0.5, 'rgba(71,183,230,0.05)');
     horizonShelf.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = horizonShelf;
     ctx.fillRect(0, height * 0.62, width, height * 0.25);
@@ -507,7 +507,7 @@ export default function MobilityOSCore() {
       ctx.lineTo(width, y);
       ctx.stroke();
     }
-    ctx.strokeStyle = viewMode === 'pulse' ? 'rgba(167,124,255,0.04)' : 'rgba(22,199,242,0.026)';
+    ctx.strokeStyle = viewMode === 'pulse' ? 'rgba(167,124,255,0.04)' : 'rgba(71,183,230,0.026)';
     for (let x = -height; x < width; x += 58) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
@@ -535,13 +535,13 @@ export default function MobilityOSCore() {
     const terrain = ctx.createLinearGradient(width * 0.18, height * 0.1, width * 0.85, height * 0.92);
     terrain.addColorStop(0, 'rgba(96,150,186,0.06)');
     terrain.addColorStop(0.45, 'rgba(255,255,255,0.01)');
-    terrain.addColorStop(1, 'rgba(199,255,26,0.05)');
+    terrain.addColorStop(1, 'rgba(168,214,20,0.05)');
     ctx.fillStyle = terrain;
     ctx.fillRect(0, 0, width, height);
     const reliefWash = ctx.createLinearGradient(width * 0.25, height * 0.12, width * 0.78, height * 0.9);
     reliefWash.addColorStop(0, 'rgba(255,255,255,0.02)');
-    reliefWash.addColorStop(0.4, 'rgba(22,199,242,0.03)');
-    reliefWash.addColorStop(1, 'rgba(199,255,26,0.03)');
+    reliefWash.addColorStop(0.4, 'rgba(71,183,230,0.03)');
+    reliefWash.addColorStop(1, 'rgba(168,214,20,0.03)');
     ctx.fillStyle = reliefWash;
     ctx.fillRect(0, 0, width, height);
     for (let ridge = 0; ridge < 5; ridge += 1) {
@@ -585,8 +585,8 @@ export default function MobilityOSCore() {
     const selectedPoint = projectCity(selectedCityId, width, height);
     const scan = ctx.createRadialGradient(selectedPoint.x, selectedPoint.y, 0, selectedPoint.x, selectedPoint.y, 180);
     scan.addColorStop(0, 'rgba(255,255,255,0.06)');
-    scan.addColorStop(0.45, 'rgba(22,199,242,0.08)');
-    scan.addColorStop(1, 'rgba(22,199,242,0)');
+    scan.addColorStop(0.45, 'rgba(71,183,230,0.08)');
+    scan.addColorStop(1, 'rgba(71,183,230,0)');
     ctx.fillStyle = scan;
     ctx.beginPath();
     ctx.arc(selectedPoint.x, selectedPoint.y, 180 + Math.sin(phase * 0.001) * 6, 0, Math.PI * 2);
@@ -638,7 +638,7 @@ export default function MobilityOSCore() {
       ctx.quadraticCurveTo(curve.cx, curve.cy, to.x, to.y);
       const passengerGradient = ctx.createLinearGradient(from.x, from.y, to.x, to.y);
       passengerGradient.addColorStop(0, viewMode === 'pulse' ? 'rgba(198,166,255,0.2)' : 'rgba(111,246,255,0.18)');
-      passengerGradient.addColorStop(0.5, viewMode === 'pulse' ? `rgba(167,124,255,${0.38 + route.passengerFlow / 3400})` : `rgba(22,199,242,${0.34 + route.passengerFlow / 3200})`);
+      passengerGradient.addColorStop(0.5, viewMode === 'pulse' ? `rgba(167,124,255,${0.38 + route.passengerFlow / 3400})` : `rgba(71,183,230,${0.34 + route.passengerFlow / 3200})`);
       passengerGradient.addColorStop(1, viewMode === 'pulse' ? 'rgba(217,194,255,0.18)' : 'rgba(98,225,255,0.2)');
       ctx.strokeStyle = passengerGradient;
       ctx.shadowBlur = viewMode === 'pulse' ? 28 : 22;
@@ -656,7 +656,7 @@ export default function MobilityOSCore() {
       ctx.setLineDash([7, 6]);
       ctx.moveTo(from.x, from.y);
       ctx.quadraticCurveTo(curve.cx, curve.cy, to.x, to.y);
-      ctx.strokeStyle = viewMode === 'satellite' ? `rgba(114,255,213,${0.16 + route.packageFlow / 1500})` : `rgba(199,255,26,${0.18 + route.packageFlow / 1400})`;
+      ctx.strokeStyle = viewMode === 'satellite' ? `rgba(114,255,213,${0.16 + route.packageFlow / 1500})` : `rgba(168,214,20,${0.18 + route.packageFlow / 1400})`;
       ctx.shadowBlur = viewMode === 'satellite' ? 20 : 16;
       ctx.shadowColor = viewMode === 'satellite' ? 'rgba(114,255,213,0.36)' : PACKAGE_GLOW;
       ctx.lineWidth = 1.3 + route.packageFlow / 880;
@@ -715,12 +715,12 @@ export default function MobilityOSCore() {
         ctx.rotate(Math.atan2(to.y - from.y, to.x - from.x));
         ctx.fillStyle = 'rgba(255,255,255,0.08)';
         ctx.fillRect(-18, -8, 36, 16);
-        ctx.strokeStyle = 'rgba(22,199,242,0.18)';
+        ctx.strokeStyle = 'rgba(71,183,230,0.18)';
         ctx.strokeRect(-18, -8, 36, 16);
         ctx.fillStyle = 'rgba(239,246,255,0.86)';
         ctx.font = `600 8px ${F}`;
         ctx.textAlign = 'center';
-        ctx.fillText(ar ? `${numberFormatter.format(route.distanceKm)} كم` : `${route.distanceKm} km`, 0, 3);
+        ctx.fillText(ar ? `${numberFormatter.format(route.distanceKm)} ??` : `${route.distanceKm} km`, 0, 3);
         ctx.restore();
       }
     });
@@ -749,7 +749,7 @@ export default function MobilityOSCore() {
         ctx.shadowColor = 'rgba(0,0,0,0.22)';
         ctx.fill();
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = rank === 0 ? 'rgba(22,199,242,0.42)' : 'rgba(255,255,255,0.16)';
+        ctx.strokeStyle = rank === 0 ? 'rgba(71,183,230,0.42)' : 'rgba(255,255,255,0.16)';
         ctx.lineWidth = 1;
         ctx.stroke();
         ctx.fillStyle = rank === 0 ? '#9ef8ff' : '#eff6ff';
@@ -765,7 +765,7 @@ export default function MobilityOSCore() {
       if (vehicle.isLiveTelemetry) {
         ctx.beginPath();
         ctx.arc(0, 0, vehicle.freshness === 'fresh' ? 11 : 9, 0, Math.PI * 2);
-        ctx.strokeStyle = vehicle.freshness === 'fresh' ? 'rgba(92,255,149,0.9)' : 'rgba(199,255,26,0.82)';
+        ctx.strokeStyle = vehicle.freshness === 'fresh' ? 'rgba(92,255,149,0.9)' : 'rgba(168,214,20,0.82)';
         ctx.lineWidth = 1.4;
         ctx.stroke();
       }
@@ -799,7 +799,7 @@ export default function MobilityOSCore() {
       ctx.fill();
       const haloRadius = (city.isHub ? 22 : 14) + Math.sin(phase * 0.0014 + city.id) * 2;
       const halo = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, haloRadius);
-      halo.addColorStop(0, selected ? 'rgba(255,255,255,0.34)' : city.isHub ? 'rgba(22,199,242,0.26)' : 'rgba(255,255,255,0.16)');
+      halo.addColorStop(0, selected ? 'rgba(255,255,255,0.34)' : city.isHub ? 'rgba(71,183,230,0.26)' : 'rgba(255,255,255,0.16)');
       halo.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.beginPath();
       ctx.arc(point.x, point.y, haloRadius, 0, Math.PI * 2);
@@ -808,21 +808,21 @@ export default function MobilityOSCore() {
 
       ctx.beginPath();
       ctx.arc(point.x, point.y, selected ? 9 : city.isHub ? 7 : 5.5, 0, Math.PI * 2);
-      ctx.fillStyle = selected ? 'rgba(255,255,255,0.98)' : city.isHub ? 'rgba(22,199,242,0.98)' : 'rgba(255,255,255,0.82)';
+      ctx.fillStyle = selected ? 'rgba(255,255,255,0.98)' : city.isHub ? 'rgba(71,183,230,0.98)' : 'rgba(255,255,255,0.82)';
       ctx.fill();
       ctx.beginPath();
       ctx.moveTo(point.x, point.y - (selected ? 26 : city.isHub ? 22 : 18));
       ctx.lineTo(point.x, point.y - 6);
-      ctx.strokeStyle = selected ? 'rgba(199,255,26,0.34)' : city.isHub ? 'rgba(22,199,242,0.28)' : 'rgba(255,255,255,0.12)';
+      ctx.strokeStyle = selected ? 'rgba(168,214,20,0.34)' : city.isHub ? 'rgba(71,183,230,0.28)' : 'rgba(255,255,255,0.12)';
       ctx.lineWidth = selected ? 2 : 1.3;
       ctx.stroke();
       ctx.beginPath();
       ctx.arc(point.x, point.y, selected ? 4.6 : city.isHub ? 3.6 : 2.8, 0, Math.PI * 2);
-      ctx.fillStyle = selected ? 'rgba(199,255,26,0.94)' : 'rgba(255,255,255,0.95)';
+      ctx.fillStyle = selected ? 'rgba(168,214,20,0.94)' : 'rgba(255,255,255,0.95)';
       ctx.fill();
       ctx.beginPath();
       ctx.arc(point.x, point.y, selected ? 14 : city.isHub ? 11 : 8, 0, Math.PI * 2);
-      ctx.strokeStyle = selected ? 'rgba(199,255,26,0.82)' : city.isHub ? 'rgba(22,199,242,0.34)' : 'rgba(255,255,255,0.18)';
+      ctx.strokeStyle = selected ? 'rgba(168,214,20,0.82)' : city.isHub ? 'rgba(71,183,230,0.34)' : 'rgba(255,255,255,0.18)';
       ctx.lineWidth = selected ? 1.5 : 1;
       ctx.stroke();
 
@@ -841,17 +841,17 @@ export default function MobilityOSCore() {
       labelFill.addColorStop(1, selected ? 'rgba(11,54,76,0.92)' : 'rgba(7,18,30,0.7)');
       ctx.fillStyle = labelFill;
       ctx.shadowBlur = selected ? 18 : 8;
-      ctx.shadowColor = selected ? 'rgba(199,255,26,0.18)' : 'rgba(22,199,242,0.08)';
+      ctx.shadowColor = selected ? 'rgba(168,214,20,0.18)' : 'rgba(71,183,230,0.08)';
       ctx.fill();
       ctx.shadowBlur = 0;
-      ctx.strokeStyle = selected ? 'rgba(199,255,26,0.42)' : 'rgba(255,255,255,0.1)';
+      ctx.strokeStyle = selected ? 'rgba(168,214,20,0.42)' : 'rgba(255,255,255,0.1)';
       ctx.lineWidth = 1;
       ctx.stroke();
 
       ctx.beginPath();
       ctx.moveTo(point.x, point.y - 8);
       ctx.lineTo(point.x, labelY + labelHeight);
-      ctx.strokeStyle = selected ? 'rgba(199,255,26,0.32)' : 'rgba(255,255,255,0.12)';
+      ctx.strokeStyle = selected ? 'rgba(168,214,20,0.32)' : 'rgba(255,255,255,0.12)';
       ctx.lineWidth = 1;
       ctx.stroke();
 
@@ -869,7 +869,7 @@ export default function MobilityOSCore() {
     ctx.strokeStyle = 'rgba(255,255,255,0.08)';
     ctx.lineWidth = 1;
     ctx.strokeRect(12, 12, width - 24, height - 24);
-    ctx.strokeStyle = 'rgba(22,199,242,0.16)';
+    ctx.strokeStyle = 'rgba(71,183,230,0.16)';
     ctx.strokeRect(20, 20, width - 40, height - 40);
 
     [
@@ -882,7 +882,7 @@ export default function MobilityOSCore() {
       ctx.moveTo(corner[0], corner[1]);
       ctx.lineTo(corner[2], corner[3]);
       ctx.lineTo(corner[4], corner[5]);
-      ctx.strokeStyle = 'rgba(22,199,242,0.34)';
+      ctx.strokeStyle = 'rgba(71,183,230,0.34)';
       ctx.lineWidth = 2;
       ctx.stroke();
     });
@@ -942,7 +942,7 @@ export default function MobilityOSCore() {
       const path = optimalPath(routesRef.current, selectedCityId, 1).map((id) => {
         const city = cityMap.get(id);
         return city ? getCityLabel(city, ar) : '';
-      }).join(ar ? ' ← ' : ' -> ');
+      }).join(ar ? ' ? ' : ' -> ');
       if (liveSnapshot?.analytics) {
         setAnalytics({
           ...liveSnapshot.analytics,
@@ -972,11 +972,11 @@ export default function MobilityOSCore() {
         avgSpeed,
         networkUtilization: vehiclesRef.current.length / (TARGET_VEHICLES * 1.15),
         congestionLevel,
-        topCorridor: `${getCityLabel(topRouteCities.from, ar)}${ar ? ' ← ' : ' -> '}${getCityLabel(topRouteCities.to, ar)}`,
+        topCorridor: `${getCityLabel(topRouteCities.from, ar)}${ar ? ' ? ' : ' -> '}${getCityLabel(topRouteCities.to, ar)}`,
         recommendedPath: path,
         dispatchAction: topRoute.congestion > 0.78
-          ? (ar ? `إعادة توجيه العرض باتجاه ${getCityLabel(topRouteCities.to, ar)}` : `Reposition supply toward ${getCityLabel(topRouteCities.to, ar)}`)
-          : (ar ? `موازنة العرض حول ${getCityLabel(selectedCity, ar)}` : `Balance supply around ${getCityLabel(selectedCity, ar)}`),
+          ? (ar ? `????? ????? ????? ?????? ${getCityLabel(topRouteCities.to, ar)}` : `Reposition supply toward ${getCityLabel(topRouteCities.to, ar)}`)
+          : (ar ? `?????? ????? ??? ${getCityLabel(selectedCity, ar)}` : `Balance supply around ${getCityLabel(selectedCity, ar)}`),
       });
     }
   }, [ar, liveSnapshot, liveRouteOverrides, paused, selectedCityId, timeOfDay]);
@@ -1049,22 +1049,22 @@ export default function MobilityOSCore() {
     pulse: { title: copy.pulseMode, body: copy.pulseModeBody, accent: C.purple },
   }[viewMode];
   const heroSignals = [
-    { label: copy.controlState, value: paused ? (ar ? 'متوقف مؤقتاً' : 'Paused') : copy.liveSync, tone: paused ? C.orange : C.green },
-    { label: `${copy.topCorridor} · ${liveTag}`, value: analytics.topCorridor || (ar ? 'عمّان ← الزرقاء' : 'Amman -> Zarqa'), tone: C.gold },
-    { label: `${copy.dispatch} · ${liveTag}`, value: analytics.dispatchAction || (ar ? 'موازنة العرض' : 'Balance supply'), tone: C.text },
+    { label: copy.controlState, value: paused ? (ar ? '????? ??????' : 'Paused') : copy.liveSync, tone: paused ? C.orange : C.green },
+    { label: `${copy.topCorridor} � ${liveTag}`, value: analytics.topCorridor || (ar ? '????? ? ???????' : 'Amman -> Zarqa'), tone: C.gold },
+    { label: `${copy.dispatch} � ${liveTag}`, value: analytics.dispatchAction || (ar ? '?????? ?????' : 'Balance supply'), tone: C.text },
   ];
   const systemBands = [
-    { label: `${ar ? 'الركاب' : 'Passengers'} · ${liveSnapshot ? liveTag : copy.simulationTag}`, value: numberFormatter.format(analytics.activePassengers), sub: ar ? `${numberFormatter.format(analytics.seatAvailability)} مقعد متاح` : `${analytics.seatAvailability} seats open`, color: PASSENGER_COLOR },
-    { label: `${ar ? 'الطرود' : 'Packages'} · ${liveSnapshot ? liveTag : copy.simulationTag}`, value: numberFormatter.format(analytics.activePackages), sub: ar ? `${numberFormatter.format(analytics.packageCapacity)} خانة متاحة` : `${analytics.packageCapacity} slots open`, color: PACKAGE_COLOR },
-    { label: `${ar ? 'السرعة' : 'Velocity'} · ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(analytics.avgSpeed))} ${ar ? 'كم/س' : 'km/h'}`, sub: ar ? `${numberFormatter.format(Math.round(analytics.networkUtilization * 100))}% استخدام` : `${Math.round(analytics.networkUtilization * 100)}% utilization`, color: C.green },
-    { label: `${ar ? 'الضغط' : 'Pressure'} · ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(analytics.congestionLevel * 100))}%`, sub: activeMode.title, color: C.orange },
+    { label: `${ar ? '??????' : 'Passengers'} � ${liveSnapshot ? liveTag : copy.simulationTag}`, value: numberFormatter.format(analytics.activePassengers), sub: ar ? `${numberFormatter.format(analytics.seatAvailability)} ???? ????` : `${analytics.seatAvailability} seats open`, color: PASSENGER_COLOR },
+    { label: `${ar ? '??????' : 'Packages'} � ${liveSnapshot ? liveTag : copy.simulationTag}`, value: numberFormatter.format(analytics.activePackages), sub: ar ? `${numberFormatter.format(analytics.packageCapacity)} ???? ?????` : `${analytics.packageCapacity} slots open`, color: PACKAGE_COLOR },
+    { label: `${ar ? '??????' : 'Velocity'} � ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(analytics.avgSpeed))} ${ar ? '??/?' : 'km/h'}`, sub: ar ? `${numberFormatter.format(Math.round(analytics.networkUtilization * 100))}% ???????` : `${Math.round(analytics.networkUtilization * 100)}% utilization`, color: C.green },
+    { label: `${ar ? '?????' : 'Pressure'} � ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(analytics.congestionLevel * 100))}%`, sub: activeMode.title, color: C.orange },
   ];
 
   return (
-    <div dir={dir} style={{ minHeight: '100vh', background: `${GRAD_AURORA}, radial-gradient(circle at 15% 12%, rgba(22,199,242,0.16), transparent 22%), radial-gradient(circle at 82% 18%, rgba(199,255,26,0.14), transparent 24%), radial-gradient(circle at 50% 100%, rgba(92,255,149,0.08), transparent 28%), ${C.bg}`, color: C.text, fontFamily: F, padding: '20px 14px 88px' }}>
+    <div dir={dir} style={{ minHeight: '100vh', background: `${GRAD_AURORA}, radial-gradient(circle at 15% 12%, rgba(71,183,230,0.16), transparent 22%), radial-gradient(circle at 82% 18%, rgba(168,214,20,0.14), transparent 24%), radial-gradient(circle at 50% 100%, rgba(92,255,149,0.08), transparent 28%), ${C.bg}`, color: C.text, fontFamily: F, padding: '20px 14px 88px' }}>
       <div style={{ maxWidth: 1460, margin: '0 auto', display: 'grid', gap: 18 }}>
         <section style={glassPanelStyle({ padding: 28, borderRadius: 34 })}>
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.04), transparent 24%, transparent 72%, rgba(22,199,242,0.08))' }} />
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.04), transparent 24%, transparent 72%, rgba(71,183,230,0.08))' }} />
           <div style={{ position: 'relative', display: 'grid', gap: 18 }}>
             <div style={{ display: 'grid', gap: 12, gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.2fr) minmax(320px, 0.8fr)' }}>
               <div style={{ display: 'grid', gap: 14, alignContent: 'start' }}>
@@ -1086,17 +1086,17 @@ export default function MobilityOSCore() {
                 <div style={{ ...glassPanelStyle({ padding: 16, borderRadius: 24, boxShadow: 'none' }), background: 'linear-gradient(180deg, rgba(9,25,43,0.94), rgba(5,12,24,0.98))' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
                     <div>
-                      <div style={{ color: C.textMuted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{ar ? 'الساعة التشغيلية' : 'Operating hour'}</div>
-                      <div style={{ marginTop: 6, fontSize: '1.1rem', fontWeight: 900 }}>{ar ? 'ساعة الشبكة الأردنية' : 'Jordan network chronograph'}</div>
+                      <div style={{ color: C.textMuted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{ar ? '?????? ?????????' : 'Operating hour'}</div>
+                      <div style={{ marginTop: 6, fontSize: '1.1rem', fontWeight: 900 }}>{ar ? '???? ?????? ????????' : 'Jordan network chronograph'}</div>
                     </div>
                     <strong style={{ color: C.gold, fontSize: '1.1rem' }}>{String(timeOfDay).padStart(2, '0')}:00</strong>
                   </div>
                   <input type="range" min={0} max={23} step={1} value={timeOfDay} className="mobility-os-slider" onChange={(event) => setTimeOfDay(Number(event.target.value))} style={{ width: '100%', marginTop: 14 }} />
                   <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
                     {[
-                      { label: ar ? 'الشروق' : 'Sunrise', value: '06:00' },
-                      { label: ar ? 'الذروة' : 'Peak', value: '08:00 / 18:00' },
-                      { label: ar ? 'الشحن' : 'Freight', value: '13:00' },
+                      { label: ar ? '??????' : 'Sunrise', value: '06:00' },
+                      { label: ar ? '??????' : 'Peak', value: '08:00 / 18:00' },
+                      { label: ar ? '?????' : 'Freight', value: '13:00' },
                     ].map((item) => (
                       <div key={item.label} style={{ padding: '10px 12px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)' }}>
                         <div style={{ color: C.textMuted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{item.label}</div>
@@ -1108,17 +1108,17 @@ export default function MobilityOSCore() {
                 <div style={{ ...glassPanelStyle({ padding: 16, borderRadius: 24, boxShadow: 'none' }), background: 'linear-gradient(180deg, rgba(8,20,37,0.94), rgba(4,10,22,0.98))' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 12 }}>
                     <div>
-                      <div style={{ color: C.textMuted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{ar ? 'نمط العرض' : 'Presentation mode'}</div>
+                      <div style={{ color: C.textMuted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{ar ? '??? ?????' : 'Presentation mode'}</div>
                       <div style={{ marginTop: 6, fontWeight: 900, fontSize: '1.02rem', color: activeMode.accent }}>{activeMode.title}</div>
                     </div>
-                    <button onClick={() => setPaused((value) => !value)} style={{ height: 42, padding: '0 16px', borderRadius: R.full, border: `1px solid ${paused ? C.border : C.cyanGlow}`, background: paused ? 'rgba(255,255,255,0.04)' : C.cyanDim, color: C.text, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', fontWeight: 800 }}>{paused ? <Play size={16} /> : <Pause size={16} />}{paused ? (ar ? 'استئناف' : 'Resume') : (ar ? 'إيقاف' : 'Pause')}</button>
+                    <button onClick={() => setPaused((value) => !value)} style={{ height: 42, padding: '0 16px', borderRadius: R.full, border: `1px solid ${paused ? C.border : C.cyanGlow}`, background: paused ? 'rgba(255,255,255,0.04)' : C.cyanDim, color: C.text, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', fontWeight: 800 }}>{paused ? <Play size={16} /> : <Pause size={16} />}{paused ? (ar ? '???????' : 'Resume') : (ar ? '?????' : 'Pause')}</button>
                   </div>
                   <div style={{ color: C.textSub, fontSize: '0.88rem', lineHeight: 1.65 }}>{activeMode.body}</div>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
                 {[
-                  { id: 'command', label: ar ? 'قيادة' : 'Command' },
-                  { id: 'satellite', label: ar ? 'تضاريس' : 'Satellite' },
-                  { id: 'pulse', label: ar ? 'نبض' : 'Pulse' },
+                  { id: 'command', label: ar ? '?????' : 'Command' },
+                  { id: 'satellite', label: ar ? '??????' : 'Satellite' },
+                  { id: 'pulse', label: ar ? '???' : 'Pulse' },
                 ].map((mode) => (
                   <button
                     key={mode.id}
@@ -1127,14 +1127,14 @@ export default function MobilityOSCore() {
                       padding: '10px 14px',
                       borderRadius: 999,
                       border: `1px solid ${viewMode === mode.id ? C.cyan : C.border}`,
-                      background: viewMode === mode.id ? 'rgba(22,199,242,0.14)' : 'rgba(255,255,255,0.035)',
+                      background: viewMode === mode.id ? 'rgba(71,183,230,0.14)' : 'rgba(255,255,255,0.035)',
                       color: viewMode === mode.id ? C.text : C.textSub,
                       cursor: 'pointer',
                       fontWeight: 800,
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
                       fontSize: '0.72rem',
-                      boxShadow: viewMode === mode.id ? '0 0 24px rgba(22,199,242,0.18)' : 'none',
+                      boxShadow: viewMode === mode.id ? '0 0 24px rgba(71,183,230,0.18)' : 'none',
                     }}
                   >
                     {mode.label}
@@ -1180,7 +1180,7 @@ export default function MobilityOSCore() {
                   {telemetryHeartbeatLabel}: {latestHeartbeatValue}
                 </div>
                 <div style={{ color: C.textSub, fontSize: '0.84rem' }}>
-                  {ar ? 'حركة المرور' : 'Traffic feed'}: {liveSnapshot?.traffic.enabled ? (ar ? `متصل عبر Google Routes (${numberFormatter.format(liveSnapshot.traffic.liveCorridors)} ممرات)` : `Connected via Google Routes (${liveSnapshot.traffic.liveCorridors} corridors)`) : (ar ? 'غير متاح حتى تهيئة مفتاح خرائط حقيقي' : 'Unavailable until a real Maps key is configured')}
+                  {ar ? '???? ??????' : 'Traffic feed'}: {liveSnapshot?.traffic.enabled ? (ar ? `???? ??? Google Routes (${numberFormatter.format(liveSnapshot.traffic.liveCorridors)} ?????)` : `Connected via Google Routes (${liveSnapshot.traffic.liveCorridors} corridors)`) : (ar ? '??? ???? ??? ????? ????? ????? ?????' : 'Unavailable until a real Maps key is configured')}
                 </div>
               </div>
             </div>
@@ -1205,7 +1205,7 @@ export default function MobilityOSCore() {
                   ))}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-                  {[{ label: `${copy.routeIntelligence} · ${copy.modeledTag}`, value: analytics.recommendedPath || (ar ? 'عمّان ← العقبة' : 'Amman -> Aqaba'), color: C.cyan }, { label: copy.activeMode, value: activeMode.title, color: activeMode.accent }].map((item) => (
+                  {[{ label: `${copy.routeIntelligence} � ${copy.modeledTag}`, value: analytics.recommendedPath || (ar ? '????? ? ??????' : 'Amman -> Aqaba'), color: C.cyan }, { label: copy.activeMode, value: activeMode.title, color: activeMode.accent }].map((item) => (
                     <div key={item.label} style={{ padding: '12px 14px', borderRadius: 18, border: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))' }}>
                       <div style={{ color: C.textMuted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{item.label}</div>
                       <div style={{ marginTop: 6, color: item.color, fontWeight: 800, fontSize: '0.86rem', lineHeight: 1.45 }}>{item.value}</div>
@@ -1215,12 +1215,12 @@ export default function MobilityOSCore() {
               </div>
             </div>
             <div ref={wrapRef} style={{ ...glassPanelStyle({ padding: 0, borderRadius: 34, aspectRatio: isMobile ? '4/3' : `${HERO_MAP_ASPECT} / 1`, minHeight: isMobile ? 'clamp(260px, 80vw, 420px)' : 'clamp(500px, 54vw, 860px)', boxShadow: '0 60px 160px rgba(0,0,0,0.54), inset 0 1px 0 rgba(255,255,255,0.08)', transform: isMobile ? 'none' : 'perspective(2200px) rotateX(5deg)', transformStyle: isMobile ? 'flat' : 'preserve-3d', transformOrigin: 'center top' }), background: 'linear-gradient(180deg, rgba(6,16,28,0.98), rgba(5,12,22,0.98))' }}>
-              <div style={{ position: 'absolute', inset: -30, pointerEvents: 'none', background: 'radial-gradient(circle at 50% 8%, rgba(255,255,255,0.07), transparent 24%), radial-gradient(circle at 14% 30%, rgba(22,199,242,0.14), transparent 20%), radial-gradient(circle at 84% 26%, rgba(199,255,26,0.12), transparent 22%)', filter: 'blur(18px)', opacity: 0.9 }} />
-              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.04), transparent 18%, transparent 82%, rgba(22,199,242,0.06))' }} />
+              <div style={{ position: 'absolute', inset: -30, pointerEvents: 'none', background: 'radial-gradient(circle at 50% 8%, rgba(255,255,255,0.07), transparent 24%), radial-gradient(circle at 14% 30%, rgba(71,183,230,0.14), transparent 20%), radial-gradient(circle at 84% 26%, rgba(168,214,20,0.12), transparent 22%)', filter: 'blur(18px)', opacity: 0.9 }} />
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.04), transparent 18%, transparent 82%, rgba(71,183,230,0.06))' }} />
               <div style={{ position: 'absolute', inset: 14, borderRadius: 22, border: '1px solid rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
-              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at top center, rgba(255,255,255,0.08), transparent 22%), radial-gradient(circle at bottom right, rgba(22,199,242,0.08), transparent 28%)' }} />
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at top center, rgba(255,255,255,0.08), transparent 22%), radial-gradient(circle at bottom right, rgba(71,183,230,0.08), transparent 28%)' }} />
               <div style={{ position: 'absolute', inset: '0 0 auto 0', height: '24%', pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.03) 42%, rgba(255,255,255,0))', mixBlendMode: 'screen', opacity: 0.48 }} />
-              <div style={{ position: 'absolute', left: 24, right: 24, bottom: -22, height: 38, borderRadius: 999, pointerEvents: 'none', background: 'linear-gradient(90deg, rgba(22,199,242,0), rgba(22,199,242,0.24), rgba(199,255,26,0.18), rgba(22,199,242,0.24), rgba(22,199,242,0))', filter: 'blur(16px)', opacity: 0.8 }} />
+              <div style={{ position: 'absolute', left: 24, right: 24, bottom: -22, height: 38, borderRadius: 999, pointerEvents: 'none', background: 'linear-gradient(90deg, rgba(71,183,230,0), rgba(71,183,230,0.24), rgba(168,214,20,0.18), rgba(71,183,230,0.24), rgba(71,183,230,0))', filter: 'blur(16px)', opacity: 0.8 }} />
               <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 2, display: 'grid', gap: 10 }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.68)', border: `1px solid ${C.border}`, backdropFilter: 'blur(16px)', boxShadow: '0 10px 30px rgba(0,0,0,0.24)' }}>
                   <div style={{ width: 8, height: 8, borderRadius: 999, background: '#5CFF95', boxShadow: '0 0 14px #5CFF95' }} />
@@ -1229,11 +1229,11 @@ export default function MobilityOSCore() {
                 <div style={{ display: 'grid', gap: 6, padding: '10px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)' }}>
                   <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.14em', color: C.textMuted }}>{copy.modelRecommendation}</div>
                   <div style={{ fontFamily: FM, fontSize: '0.78rem', color: C.cyan }}>best_route_now</div>
-                  <div style={{ fontSize: '0.8rem', color: C.textSub }}>{analytics.recommendedPath || (ar ? 'عمّان ← العقبة' : 'Amman -> Aqaba')}</div>
+                  <div style={{ fontSize: '0.8rem', color: C.textSub }}>{analytics.recommendedPath || (ar ? '????? ? ??????' : 'Amman -> Aqaba')}</div>
                 </div>
               </div>
               <div style={{ position: 'absolute', right: 16, top: 16, zIndex: 2, display: 'grid', gap: 8 }}>
-                {[{ label: `${copy.passengerFlow} · ${copy.simulationTag}`, value: numberFormatter.format(analytics.activePassengers), color: PASSENGER_COLOR }, { label: `${copy.parcelLoad} · ${copy.simulationTag}`, value: numberFormatter.format(analytics.activePackages), color: PACKAGE_COLOR }].map((chip) => (
+                {[{ label: `${copy.passengerFlow} � ${copy.simulationTag}`, value: numberFormatter.format(analytics.activePassengers), color: PASSENGER_COLOR }, { label: `${copy.parcelLoad} � ${copy.simulationTag}`, value: numberFormatter.format(analytics.activePackages), color: PACKAGE_COLOR }].map((chip) => (
                   <div key={chip.label} style={{ padding: '10px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', minWidth: 146 }}>
                     <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: C.textMuted }}>{chip.label}</div>
                     <div style={{ marginTop: 4, color: chip.color, fontSize: '1.05rem', fontWeight: 900, textShadow: `0 0 16px ${chip.color}44` }}>{chip.value}</div>
@@ -1242,9 +1242,9 @@ export default function MobilityOSCore() {
               </div>
               <div style={{ position: 'absolute', left: 16, right: 16, bottom: 16, zIndex: 2, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 {[
-                  `${copy.topCorridor} ${analytics.topCorridor || (ar ? 'عمّان ← الزرقاء' : 'Amman -> Zarqa')}`,
-                  `${copy.dispatch} ${analytics.dispatchAction || (ar ? 'موازنة العرض' : 'Balance supply')}`,
-                  ar ? `المقاعد ${numberFormatter.format(analytics.seatAvailability)} / السعة ${numberFormatter.format(analytics.packageCapacity)}` : `Seats ${analytics.seatAvailability} / Capacity ${analytics.packageCapacity}`,
+                  `${copy.topCorridor} ${analytics.topCorridor || (ar ? '????? ? ???????' : 'Amman -> Zarqa')}`,
+                  `${copy.dispatch} ${analytics.dispatchAction || (ar ? '?????? ?????' : 'Balance supply')}`,
+                  ar ? `??????? ${numberFormatter.format(analytics.seatAvailability)} / ????? ${numberFormatter.format(analytics.packageCapacity)}` : `Seats ${analytics.seatAvailability} / Capacity ${analytics.packageCapacity}`,
                 ].map((chip) => (
                   <div key={chip} style={{ padding: '9px 12px', borderRadius: 999, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', color: C.textSub, fontSize: '0.78rem' }}>
                     {chip}
@@ -1252,17 +1252,17 @@ export default function MobilityOSCore() {
                 ))}
               </div>
               <div style={{ position: 'absolute', left: '50%', bottom: 20, transform: 'translateX(-50%)', zIndex: 2, pointerEvents: 'none' }}>
-                <div style={{ width: 180, height: 18, borderRadius: 999, background: 'linear-gradient(90deg, rgba(22,199,242,0), rgba(22,199,242,0.16), rgba(199,255,26,0.16), rgba(199,255,26,0))', filter: 'blur(10px)' }} />
+                <div style={{ width: 180, height: 18, borderRadius: 999, background: 'linear-gradient(90deg, rgba(71,183,230,0), rgba(71,183,230,0.16), rgba(168,214,20,0.16), rgba(168,214,20,0))', filter: 'blur(10px)' }} />
               </div>
               <div style={{ position: 'absolute', left: 22, top: '50%', transform: 'translateY(-50%)', zIndex: 2, writingMode: 'vertical-rl', textOrientation: 'mixed', letterSpacing: '0.28em', textTransform: 'uppercase', fontSize: '0.64rem', color: 'rgba(255,255,255,0.34)', pointerEvents: 'none' }}>
                 {copy.mobilityMatrix}
               </div>
-              <div style={{ position: 'absolute', right: 22, top: '50%', transform: 'translateY(-50%)', zIndex: 2, writingMode: 'vertical-rl', textOrientation: 'mixed', letterSpacing: '0.28em', textTransform: 'uppercase', fontSize: '0.64rem', color: 'rgba(22,199,242,0.34)', pointerEvents: 'none' }}>
+              <div style={{ position: 'absolute', right: 22, top: '50%', transform: 'translateY(-50%)', zIndex: 2, writingMode: 'vertical-rl', textOrientation: 'mixed', letterSpacing: '0.28em', textTransform: 'uppercase', fontSize: '0.64rem', color: 'rgba(71,183,230,0.34)', pointerEvents: 'none' }}>
                 {copy.signalLayer}
               </div>
               <canvas
                 ref={canvasRef}
-                aria-label={ar ? 'خريطة تشغيلية حية لشبكة واصل في الأردن' : 'Live operational Wasel network map of Jordan'}
+                aria-label={ar ? '????? ??????? ??? ????? ???? ?? ??????' : 'Live operational Wasel network map of Jordan'}
                 role="img"
                 style={{
                   position: 'absolute',
@@ -1280,14 +1280,14 @@ export default function MobilityOSCore() {
           <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
             <article style={glassPanelStyle({ padding: 18, borderRadius: 26, background: 'linear-gradient(180deg, rgba(8,24,38,0.96), rgba(4,10,22,0.98))' })}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><MapPinned size={18} color={C.cyan} /><h3 style={{ margin: 0, fontSize: '1rem' }}>{copy.selectedNode}</h3></div>
-              <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>{CITY_DATA.map((city) => <button key={city.id} onClick={() => setSelectedCityId(city.id)} style={{ padding: '10px 12px', borderRadius: 14, border: `1px solid ${selectedCityId === city.id ? C.gold : C.border}`, background: selectedCityId === city.id ? 'rgba(199,255,26,0.12)' : 'rgba(255,255,255,0.03)', color: C.text, cursor: 'pointer', fontWeight: selectedCityId === city.id ? 800 : 600 }}>{getCityLabel(city, ar)}</button>)}</div>
+              <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>{CITY_DATA.map((city) => <button key={city.id} onClick={() => setSelectedCityId(city.id)} style={{ padding: '10px 12px', borderRadius: 14, border: `1px solid ${selectedCityId === city.id ? C.gold : C.border}`, background: selectedCityId === city.id ? 'rgba(168,214,20,0.12)' : 'rgba(255,255,255,0.03)', color: C.text, cursor: 'pointer', fontWeight: selectedCityId === city.id ? 800 : 600 }}>{getCityLabel(city, ar)}</button>)}</div>
               <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
                 {[
-                  ar ? `${copy.officialUnit} · ${copy.officialTag}: ${cityMap.get(selectedCityId)?.officialAreaAr ?? ''}` : `${copy.officialUnit} · ${copy.officialTag}: ${cityMap.get(selectedCityId)?.officialArea ?? ''}`,
-                  `${copy.officialPopulation2025} · ${copy.officialTag}: ${numberFormatter.format(cityMap.get(selectedCityId)?.officialPopulation ?? 0)}`,
+                  ar ? `${copy.officialUnit} � ${copy.officialTag}: ${cityMap.get(selectedCityId)?.officialAreaAr ?? ''}` : `${copy.officialUnit} � ${copy.officialTag}: ${cityMap.get(selectedCityId)?.officialArea ?? ''}`,
+                  `${copy.officialPopulation2025} � ${copy.officialTag}: ${numberFormatter.format(cityMap.get(selectedCityId)?.officialPopulation ?? 0)}`,
                   `${copy.modelRecommendation} ${analytics.recommendedPath}`,
                 ].map((row, index) => (
-                  <div key={row} style={{ padding: '10px 12px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', background: index === 2 ? 'rgba(22,199,242,0.08)' : 'rgba(255,255,255,0.03)', color: index === 2 ? C.cyan : C.textSub, fontWeight: index === 2 ? 700 : 500 }}>
+                  <div key={row} style={{ padding: '10px 12px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', background: index === 2 ? 'rgba(71,183,230,0.08)' : 'rgba(255,255,255,0.03)', color: index === 2 ? C.cyan : C.textSub, fontWeight: index === 2 ? 700 : 500 }}>
                     {row}
                   </div>
                 ))}
@@ -1296,8 +1296,8 @@ export default function MobilityOSCore() {
             </article>
             <article style={glassPanelStyle({ padding: 18, borderRadius: 26, background: 'linear-gradient(180deg, rgba(9,19,35,0.96), rgba(4,10,22,0.98))' })}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Route size={18} color={C.gold} /><h3 style={{ margin: 0, fontSize: '1rem' }}>{copy.actionableOutputs}</h3></div>
-              <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>{[analytics.dispatchAction, `${copy.topCorridor}: ${analytics.topCorridor}`, ar ? `توفر المقاعد: ${numberFormatter.format(analytics.seatAvailability)} / سعة الطرود: ${numberFormatter.format(analytics.packageCapacity)}` : `Seat availability: ${analytics.seatAvailability} / Package capacity: ${analytics.packageCapacity}`].map((item, index) => <div key={item} style={{ padding: '12px 14px', borderRadius: 16, background: index === 0 ? 'linear-gradient(135deg, rgba(199,255,26,0.12), rgba(255,255,255,0.03))' : 'rgba(255,255,255,0.03)', border: `1px solid ${index === 0 ? 'rgba(199,255,26,0.24)' : C.borderFaint}`, color: C.textSub, lineHeight: 1.6, boxShadow: index === 0 ? '0 10px 24px rgba(199,255,26,0.08)' : 'none' }}>{item}</div>)}</div>
-              <div style={{ marginTop: 12, color: C.textMuted, fontSize: '0.76rem', lineHeight: 1.6 }}>{ar ? 'هذه التوصيات تقديرية وناتجة عن نموذج المحاكاة، وليست بيانات تشغيل حكومية مباشرة.' : 'These recommendations are estimated by the simulation model and are not direct government operational data.'}</div>
+              <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>{[analytics.dispatchAction, `${copy.topCorridor}: ${analytics.topCorridor}`, ar ? `???? ???????: ${numberFormatter.format(analytics.seatAvailability)} / ??? ??????: ${numberFormatter.format(analytics.packageCapacity)}` : `Seat availability: ${analytics.seatAvailability} / Package capacity: ${analytics.packageCapacity}`].map((item, index) => <div key={item} style={{ padding: '12px 14px', borderRadius: 16, background: index === 0 ? 'linear-gradient(135deg, rgba(168,214,20,0.12), rgba(255,255,255,0.03))' : 'rgba(255,255,255,0.03)', border: `1px solid ${index === 0 ? 'rgba(168,214,20,0.24)' : C.borderFaint}`, color: C.textSub, lineHeight: 1.6, boxShadow: index === 0 ? '0 10px 24px rgba(168,214,20,0.08)' : 'none' }}>{item}</div>)}</div>
+              <div style={{ marginTop: 12, color: C.textMuted, fontSize: '0.76rem', lineHeight: 1.6 }}>{ar ? '??? ???????? ??????? ?????? ?? ????? ????????? ????? ?????? ????? ?????? ??????.' : 'These recommendations are estimated by the simulation model and are not direct government operational data.'}</div>
             </article>
           </div>
         </section>
@@ -1319,28 +1319,28 @@ export default function MobilityOSCore() {
                 const { from, to } = getRouteCities(route);
                 const totalFlow = Math.round(route.passengerFlow + route.packageFlow);
                 const routeScore = Math.round((route.passengerFlow / Math.max(route.lanes * 1800, 1)) * 52 + (route.packageFlow / Math.max(route.lanes * 820, 1)) * 18 + (1 - route.congestion) * 30);
-                const pressureTone = route.congestion > 0.75 ? 'rgba(255,120,92,0.16)' : route.packageFlow > route.passengerFlow * 0.45 ? 'rgba(199,255,26,0.14)' : 'rgba(22,199,242,0.12)';
+                const pressureTone = route.congestion > 0.75 ? 'rgba(255,120,92,0.16)' : route.packageFlow > route.passengerFlow * 0.45 ? 'rgba(168,214,20,0.14)' : 'rgba(71,183,230,0.12)';
                 return (
-                  <div key={route.id} style={{ position: 'relative', padding: '18px 18px 16px', borderRadius: 24, border: `1px solid ${index === 0 ? C.cyanGlow : C.borderFaint}`, background: `linear-gradient(180deg, ${pressureTone}, rgba(255,255,255,0.025))`, boxShadow: index === 0 ? '0 18px 40px rgba(22,199,242,0.12)' : '0 10px 30px rgba(0,0,0,0.16)' }}>
-                    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: `radial-gradient(circle at top right, ${index === 0 ? 'rgba(22,199,242,0.16)' : 'rgba(255,255,255,0.05)'}, transparent 32%)` }} />
+                  <div key={route.id} style={{ position: 'relative', padding: '18px 18px 16px', borderRadius: 24, border: `1px solid ${index === 0 ? C.cyanGlow : C.borderFaint}`, background: `linear-gradient(180deg, ${pressureTone}, rgba(255,255,255,0.025))`, boxShadow: index === 0 ? '0 18px 40px rgba(71,183,230,0.12)' : '0 10px 30px rgba(0,0,0,0.16)' }}>
+                    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: `radial-gradient(circle at top right, ${index === 0 ? 'rgba(71,183,230,0.16)' : 'rgba(255,255,255,0.05)'}, transparent 32%)` }} />
                     <div style={{ position: 'absolute', inset: 1, borderRadius: 23, border: '1px solid rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
                     <div style={{ position: 'relative', display: 'grid', gap: 14 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                         <div style={{ display: 'grid', gap: 8 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                            <div style={{ width: 34, height: 34, borderRadius: 12, background: index === 0 ? 'rgba(22,199,242,0.16)' : 'rgba(255,255,255,0.06)', border: `1px solid ${index === 0 ? 'rgba(22,199,242,0.24)' : 'rgba(255,255,255,0.08)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: index === 0 ? C.cyan : C.textSub }}>
+                            <div style={{ width: 34, height: 34, borderRadius: 12, background: index === 0 ? 'rgba(71,183,230,0.16)' : 'rgba(255,255,255,0.06)', border: `1px solid ${index === 0 ? 'rgba(71,183,230,0.24)' : 'rgba(255,255,255,0.08)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: index === 0 ? C.cyan : C.textSub }}>
                               {String(index + 1).padStart(2, '0')}
                             </div>
                             <div>
-                              <div style={{ fontWeight: 900, fontSize: '1.02rem', letterSpacing: '-0.02em' }}>{getCityLabel(from, ar)}{ar ? ' ← ' : ' -> '}{getCityLabel(to, ar)}</div>
-                              <div style={{ marginTop: 3, color: C.textMuted, fontSize: '0.8rem' }}>{ar ? route.highwayAr : route.highway} / {numberFormatter.format(route.distanceKm)} {ar ? 'كم' : 'km'} / {numberFormatter.format(route.lanes)} {ar ? 'مسارب' : 'lanes'}</div>
+                              <div style={{ fontWeight: 900, fontSize: '1.02rem', letterSpacing: '-0.02em' }}>{getCityLabel(from, ar)}{ar ? ' ? ' : ' -> '}{getCityLabel(to, ar)}</div>
+                              <div style={{ marginTop: 3, color: C.textMuted, fontSize: '0.8rem' }}>{ar ? route.highwayAr : route.highway} / {numberFormatter.format(route.distanceKm)} {ar ? '??' : 'km'} / {numberFormatter.format(route.lanes)} {ar ? '?????' : 'lanes'}</div>
                             </div>
                           </div>
                           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                             {[
-                              { label: `${copy.speed} · ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(route.speedKph))} ${ar ? 'كم/س' : 'km/h'}`, color: C.green },
-                              { label: `${copy.pressure} · ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(route.congestion * 100))}%`, color: C.orange },
-                              { label: `${copy.flow} · ${copy.simulationTag}`, value: `${numberFormatter.format(totalFlow)}`, color: C.cyan },
+                              { label: `${copy.speed} � ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(route.speedKph))} ${ar ? '??/?' : 'km/h'}`, color: C.green },
+                              { label: `${copy.pressure} � ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(route.congestion * 100))}%`, color: C.orange },
+                              { label: `${copy.flow} � ${copy.simulationTag}`, value: `${numberFormatter.format(totalFlow)}`, color: C.cyan },
                             ].map((pill) => (
                               <div key={pill.label} style={{ padding: '7px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', color: C.textSub, fontSize: '0.76rem' }}>
                                 <span style={{ color: C.textMuted }}>{pill.label}</span>{' '}
@@ -1351,7 +1351,7 @@ export default function MobilityOSCore() {
                         </div>
                         <div style={{ display: 'grid', gap: 8, minWidth: 120 }}>
                           <div style={{ textAlign: 'right', color: C.textMuted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{copy.compositeScore}</div>
-                          <div style={{ textAlign: 'right', color: index === 0 ? C.cyan : C.text, fontWeight: 900, fontSize: '2rem', lineHeight: 1, textShadow: index === 0 ? '0 0 18px rgba(22,199,242,0.22)' : 'none' }}>
+                          <div style={{ textAlign: 'right', color: index === 0 ? C.cyan : C.text, fontWeight: 900, fontSize: '2rem', lineHeight: 1, textShadow: index === 0 ? '0 0 18px rgba(71,183,230,0.22)' : 'none' }}>
                             {routeScore}
                           </div>
                         </div>
@@ -1359,9 +1359,9 @@ export default function MobilityOSCore() {
 
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                             {[
-                          { label: `${copy.passengerOccupancy} · ${copy.estimateTag}`, value: route.passengerFlow / Math.max(route.lanes * 1800, 1), color: PASSENGER_COLOR, tone: 'rgba(22,199,242,0.08)' },
-                          { label: `${copy.packageUtilization} · ${copy.estimateTag}`, value: route.packageFlow / Math.max(route.lanes * 820, 1), color: PACKAGE_COLOR, tone: 'rgba(199,255,26,0.08)' },
-                          { label: `${copy.congestionIntensity} · ${copy.estimateTag}`, value: route.congestion, color: C.orange, tone: 'rgba(255,149,72,0.08)' },
+                          { label: `${copy.passengerOccupancy} � ${copy.estimateTag}`, value: route.passengerFlow / Math.max(route.lanes * 1800, 1), color: PASSENGER_COLOR, tone: 'rgba(71,183,230,0.08)' },
+                          { label: `${copy.packageUtilization} � ${copy.estimateTag}`, value: route.packageFlow / Math.max(route.lanes * 820, 1), color: PACKAGE_COLOR, tone: 'rgba(168,214,20,0.08)' },
+                          { label: `${copy.congestionIntensity} � ${copy.estimateTag}`, value: route.congestion, color: C.orange, tone: 'rgba(255,149,72,0.08)' },
                         ].map((metric) => (
                           <div key={metric.label} style={{ padding: '12px 12px 10px', borderRadius: 16, background: metric.tone, border: '1px solid rgba(255,255,255,0.05)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>

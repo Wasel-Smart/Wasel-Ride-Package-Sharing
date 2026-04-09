@@ -6,41 +6,41 @@
  */
 
 export const WaselColors = {
-  spaceDeep: '#061726',
-  spaceCard: '#0B2135',
-  space1: '#0A1F31',
-  space2: '#0D2740',
-  space3: '#12314D',
-  space4: '#183D5F',
+  spaceDeep: '#081C36',
+  spaceCard: '#0D284B',
+  space1: '#0B2341',
+  space2: '#102C4D',
+  space3: '#16385D',
+  space4: '#214A75',
 
-  cyan: '#16C7F2',
-  cyanLight: '#63E2F4',
-  gold: '#C7FF1A',
-  goldLight: '#E4FF3A',
-  green: '#60C536',
-  greenDark: '#49A82F',
-  lime: '#D7FF62',
+  cyan: '#47B7E6',
+  cyanLight: '#72D0EF',
+  gold: '#A8D614',
+  goldLight: '#C9E96B',
+  green: '#6BB515',
+  greenDark: '#4A910E',
+  lime: '#C9E96B',
 
-  teal: '#16C7F2',
-  bronze: '#C7FF1A',
-  orange: '#D7FF62',
-  borderDark: 'rgba(73,190,242,0.2)',
-  navyBase: '#061726',
-  navyCard: '#0B2135',
+  teal: '#72D0EF',
+  bronze: '#A8D614',
+  orange: '#C9E96B',
+  borderDark: 'rgba(93,150,210,0.2)',
+  navyBase: '#081C36',
+  navyCard: '#0D284B',
 
-  textPrimary: '#EAF7FF',
-  textSecondary: 'rgba(234,247,255,0.84)',
-  textMuted: 'rgba(153,184,210,0.66)',
+  textPrimary: '#EEF5FF',
+  textSecondary: 'rgba(238,245,255,0.84)',
+  textMuted: 'rgba(171,194,221,0.66)',
 
-  success: '#60C536',
+  success: '#6BB515',
   warning: '#FFD84A',
   error: '#FF646A',
-  info: '#16C7F2',
+  info: '#47B7E6',
 
-  cyanGlow: 'rgba(22,199,242,0.18)',
-  goldGlow: 'rgba(199,255,26,0.16)',
-  greenGlow: 'rgba(96,197,54,0.18)',
-  glassBg: 'rgba(11,33,53,0.84)',
+  cyanGlow: 'rgba(71,183,230,0.18)',
+  goldGlow: 'rgba(168,214,20,0.16)',
+  greenGlow: 'rgba(107,181,21,0.18)',
+  glassBg: 'rgba(13,40,75,0.84)',
 } as const;
 
 export const WaselSpacing = {
@@ -89,13 +89,13 @@ export const WaselRadius = {
 } as const;
 
 export const WaselShadows = {
-  sm: '0 8px 20px rgba(1,9,16,0.2)',
-  base: '0 18px 44px rgba(1,10,18,0.28)',
-  lg: '0 30px 72px rgba(1,10,18,0.36)',
-  glow: '0 18px 50px rgba(22,199,242,0.22)',
-  glowGold: '0 18px 50px rgba(199,255,26,0.18)',
-  glowGreen: '0 18px 50px rgba(96,197,54,0.22)',
-  cyanBorder: '0 0 0 1px rgba(73,190,242,0.18), 0 18px 44px rgba(1,10,18,0.28)',
+  sm: '0 8px 20px rgba(4,16,32,0.22)',
+  base: '0 18px 44px rgba(4,16,32,0.3)',
+  lg: '0 30px 72px rgba(4,16,32,0.38)',
+  glow: '0 18px 50px rgba(71,183,230,0.2)',
+  glowGold: '0 18px 50px rgba(168,214,20,0.18)',
+  glowGreen: '0 18px 50px rgba(107,181,21,0.22)',
+  cyanBorder: '0 0 0 1px rgba(93,150,210,0.18), 0 18px 44px rgba(4,16,32,0.3)',
 } as const;
 
 export const WaselZIndex = {
@@ -116,26 +116,26 @@ export const WaselTransitions = {
 
 export const WaselGlass = {
   card: {
-    background: 'rgba(11,33,53,0.84)',
+    background: 'rgba(13,40,75,0.84)',
     backdropFilter: 'blur(18px)',
-    border: '1px solid rgba(73,190,242,0.16)',
+    border: '1px solid rgba(93,150,210,0.16)',
   },
   overlay: {
     background: 'rgba(3,12,20,0.84)',
     backdropFilter: 'blur(28px)',
   },
   panel: {
-    background: 'rgba(8,27,43,0.94)',
+    background: 'rgba(10,33,60,0.94)',
     backdropFilter: 'blur(28px)',
-    border: '1px solid rgba(73,190,242,0.12)',
+    border: '1px solid rgba(93,150,210,0.12)',
   },
 } as const;
 
 export const WaselGradients = {
-  primaryBtn: 'linear-gradient(135deg, #16C7F2 0%, #0A74C9 52%, #33D7D0 100%)',
-  accentBtn: 'linear-gradient(135deg, #59C83B 0%, #C7FF1A 100%)',
-  successBtn: 'linear-gradient(135deg, #2ED7B7 0%, #7EED3A 100%)',
+  primaryBtn: 'linear-gradient(135deg, #72D0EF 0%, #2F92CF 42%, #8BC61A 100%)',
+  accentBtn: 'linear-gradient(135deg, #6BB515 0%, #A8D614 100%)',
+  successBtn: 'linear-gradient(135deg, #47B7E6 0%, #6BB515 100%)',
   heroCard:
-    'linear-gradient(135deg, rgba(22,199,242,0.14) 0%, rgba(51,215,208,0.08) 56%, rgba(199,255,26,0.08) 100%)',
-  constellation: 'linear-gradient(135deg, #16C7F2 0%, #3AD7E4 48%, #C7FF1A 100%)',
+    'linear-gradient(135deg, rgba(71,183,230,0.14) 0%, rgba(114,208,239,0.08) 56%, rgba(168,214,20,0.08) 100%)',
+  constellation: 'linear-gradient(135deg, #47B7E6 0%, #72D0EF 48%, #A8D614 100%)',
 } as const;

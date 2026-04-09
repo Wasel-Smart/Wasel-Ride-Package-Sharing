@@ -1,119 +1,25 @@
-# Wasel | واصل - Robots.txt
-# Production-ready configuration for search engine crawlers
-
-# ═══════════════════════════════════════════════════════════════════
-# ALLOW ALL SEARCH ENGINES (default)
-# ═══════════════════════════════════════════════════════════════════
-
 User-agent: *
 Allow: /
 
-# ═══════════════════════════════════════════════════════════════════
-# BLOCK SENSITIVE ROUTES
-# ═══════════════════════════════════════════════════════════════════
+# Block raw app-shell routes that carry no indexable content
+Disallow: /app/auth
+Disallow: /app/auth/callback
+Disallow: /app/wallet
+Disallow: /app/notifications
+Disallow: /app/settings
+Disallow: /app/moderation
+Disallow: /app/live-trip
 
-# Authentication pages (no SEO value)
-Disallow: /auth/
-Disallow: /auth/callback
-Disallow: /auth/fix
+# Block legacy redirect aliases (they 301 anyway, but avoid crawl waste)
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /home
+Disallow: /post-ride
+Disallow: /booking-requests
+Disallow: /awasel/send
+Disallow: /awasel/track
+Disallow: /payments
+Disallow: /legal/privacy
+Disallow: /legal/terms
 
-# Admin panel (private)
-Disallow: /admin/
-Disallow: /admin/*
-
-# User private areas
-Disallow: /profile
-Disallow: /trips
-Disallow: /wallet
-Disallow: /payments/
-
-# Protected features (require login)
-Disallow: /carpooling/requests
-Disallow: /carpooling/book/
-Disallow: /awasel/scan
-Disallow: /intelligence/
-
-# API endpoints (if any)
-Disallow: /api/
-Disallow: /_/*
-
-# ═══════════════════════════════════════════════════════════════════
-# ALLOW PUBLIC PAGES (explicit for clarity)
-# ═══════════════════════════════════════════════════════════════════
-
-Allow: /
-Allow: /landing
-Allow: /carpooling/search
-Allow: /carpooling/calculator
-Allow: /awasel/browse
-Allow: /mobility-hubs
-Allow: /safety/trust
-Allow: /cultural/*
-
-# ═══════════════════════════════════════════════════════════════════
-# CRAWL RATE OPTIMIZATION
-# ═══════════════════════════════════════════════════════════════════
-
-# Google-specific crawl rate (optional - Google ignores this in practice)
-User-agent: Googlebot
-Crawl-delay: 0
-
-# Bing-specific
-User-agent: Bingbot
-Crawl-delay: 1
-
-# General crawlers
-Crawl-delay: 2
-
-# ═══════════════════════════════════════════════════════════════════
-# BLOCK BAD BOTS & SCRAPERS
-# ═══════════════════════════════════════════════════════════════════
-
-# AI crawlers (block to protect content)
-User-agent: GPTBot
-Disallow: /
-
-User-agent: ChatGPT-User
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
-User-agent: anthropic-ai
-Disallow: /
-
-User-agent: Claude-Web
-Disallow: /
-
-# Known scrapers
-User-agent: AhrefsBot
-Disallow: /
-
-User-agent: SemrushBot
-Crawl-delay: 10
-
-User-agent: DotBot
-Disallow: /
-
-User-agent: MJ12bot
-Disallow: /
-
-# ═══════════════════════════════════════════════════════════════════
-# SITEMAPS
-# ═══════════════════════════════════════════════════════════════════
-
-Sitemap: https://www.wasel14.online/sitemap.xml
-
-# ═══════════════════════════════════════════════════════════════════
-# NOTES
-# ═══════════════════════════════════════════════════════════════════
-# 
-# This robots.txt configuration:
-# 1. Allows all major search engines (Google, Bing, etc.)
-# 2. Blocks private/sensitive routes from indexing
-# 3. Protects against AI scrapers and content theft
-# 4. Optimizes crawl rate for better server performance
-# 5. Points to sitemap for efficient crawling
-#
-# Update sitemap URL when deploying to production domain.
-# ═══════════════════════════════════════════════════════════════════
+Sitemap: https://wasel14.online/sitemap.xml

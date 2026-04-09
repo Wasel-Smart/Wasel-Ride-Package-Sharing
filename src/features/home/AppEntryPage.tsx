@@ -135,8 +135,8 @@ export default function AppEntryPage() {
     {
       title: ar ? 'ابحث عن رحلة' : 'Find a ride',
       detail: ar
-        ? 'ابحث في الشبكة الحية وقارن المسار ثم احجز بسرعة.'
-        : 'Search the live network, compare the route, and book quickly.',
+        ? 'رحلات حية'
+        : 'Live routes',
       path: buildPath('/app/find-ride'),
       icon: Search,
       color: LANDING_COLORS.cyan,
@@ -144,8 +144,8 @@ export default function AppEntryPage() {
     {
       title: ar ? 'أنشئ رحلة' : 'Create a ride',
       detail: ar
-        ? 'انشر المقاعد واستقبل الطلبات واملأ المسار بثقة.'
-        : 'Publish seats, accept requests, and fill the route with confidence.',
+        ? 'شارك المقاعد'
+        : 'Share seats',
       path: buildPath('/app/offer-ride', true),
       icon: Car,
       color: LANDING_COLORS.gold,
@@ -153,8 +153,8 @@ export default function AppEntryPage() {
     {
       title: ar ? 'أرسل طردا' : 'Send a package',
       detail: ar
-        ? 'استخدم نفس شبكة الحركة للإرسال والتسليم.'
-        : 'Use the same movement network for sending and delivery.',
+        ? 'توصيل عبر الرحلات'
+        : 'Ride-based delivery',
       path: buildPath('/app/packages'),
       icon: Package,
       color: LANDING_COLORS.green,
@@ -165,21 +165,21 @@ export default function AppEntryPage() {
     {
       title: ar ? 'للركاب' : 'For riders',
       detail: ar
-        ? 'اعرف متى يكون الممر نشطا وتحرك قبل أن يزداد الازدحام.'
-        : 'See when a corridor is active and move before it gets crowded.',
+        ? 'الممرات الأقوى أولا'
+        : 'See the strongest lanes first.',
       accent: LANDING_COLORS.cyan,
-      trendLabel: ar ? 'المطابقة تتحسن' : 'Matching is improving',
+      trendLabel: ar ? 'تحسن' : 'Up',
       trendDirection: 'up',
-      intensity: ar ? 'إشارة عالية' : 'High signal',
+      intensity: ar ? 'قوي' : 'Strong',
       sparkline: [32, 36, 40, 44, 48, 55],
     },
     {
       title: ar ? 'لمنشئي الرحلات' : 'For ride creators',
       detail: ar
-        ? 'افتح العرض حيث يكون الطلب أقوى وتجنب السعة الفارغة.'
-        : 'Open supply where demand is strongest and avoid empty capacity.',
+        ? 'افتح حيث يوجد طلب'
+        : 'Open where demand is high.',
       accent: LANDING_COLORS.gold,
-      trendLabel: ar ? 'العائد يرتفع' : 'Yield is rising',
+      trendLabel: ar ? 'صاعد' : 'Up',
       trendDirection: 'up',
       intensity: ar ? 'متوازن' : 'Balanced',
       sparkline: [24, 29, 27, 34, 38, 43],
@@ -187,24 +187,19 @@ export default function AppEntryPage() {
     {
       title: ar ? 'للطرود' : 'For packages',
       detail: ar
-        ? 'أضف حركة الطرود من داخل نفس نظام المسارات.'
-        : 'Add parcel movement without leaving the same route system.',
+        ? 'طرود على نفس الشبكة'
+        : 'Packages on the same network.',
       accent: LANDING_COLORS.green,
-      trendLabel: ar ? 'أكثر قابلية للتوقع' : 'More predictable',
+      trendLabel: ar ? 'أكثر ثباتا' : 'Stable',
       trendDirection: 'down',
-      intensity: ar ? 'احتكاك منخفض' : 'Low friction',
+      intensity: ar ? 'سلس' : 'Smooth',
       sparkline: [62, 58, 54, 49, 45, 41],
     },
   ] as const;
 
   const heroBullets = [
-    ar ? 'اقرأ الشبكة قبل اختيار الرحلة.' : 'Read the network before choosing the trip.',
-    ar
-      ? 'اعرف أين يكون الممر أقوى ثم تحرك بثقة.'
-      : 'See where the corridor is strongest, then act with confidence.',
-    ar
-      ? 'اجمع الركاب ومنشئي الرحلات والتوصيل في رؤية واحدة واضحة.'
-      : 'Keep riders, creators, and delivery in one clear system view.',
+    ar ? 'ابدأ من الخريطة.' : 'Start from the map.',
+    ar ? 'اختر أسرع.' : 'Choose faster.',
   ] as const;
 
   const supportLine = profile.supportPhoneDisplay || profile.supportEmail || 'Wasel';

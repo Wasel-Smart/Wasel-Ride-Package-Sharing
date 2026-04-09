@@ -4,6 +4,7 @@ import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import { authAPI } from '../services/auth';
 import { supabase, isSupabaseConfigured } from '../utils/supabase/client';
 import { getAuthRedirectCandidates } from '../utils/env';
+import { scheduleDeferredTask } from '../utils/runtimeScheduling';
 import { useLocalAuth } from './LocalAuth';
 import {
   buildUpdatedLocalUser,
@@ -96,6 +97,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isBackendConnected, setIsBackendConnected] = useState(true);
+  const isPublicLanding =
+    typeof window !== 'undefined' && window.location.pathname === '/';
 
   const fetchProfile = useCallback(async (userId: string, force = false) => {
     try {
@@ -212,15 +215,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     };
 
-    void initializeAuth();
+    const cancelDeferredInit = isPublicLanding
+      ? scheduleDeferredTask(() => {
+          void initializeAuth();
+        }, 1_600)
+      : (() => {
+          void initializeAuth();
+          return () => undefined;
+        })();
     window.addEventListener('message', handleAuthMessage);
 
     return () => {
       mounted = false;
+      cancelDeferredInit();
       window.removeEventListener('message', handleAuthMessage);
       subscription.unsubscribe();
     };
-  }, [fetchProfile, localAuth.loading, localAuth.user]);
+  }, [fetchProfile, isPublicLanding, localAuth.loading, localAuth.user]);
 
   const signUp = useCallback(async (email: string, password: string, fullName: string): Promise<{ error: AuthOperationError }> => {
     try {

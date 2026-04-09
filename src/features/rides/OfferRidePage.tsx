@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Brain, Briefcase, Network } from 'lucide-react';
 import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useLocalAuth } from '../../contexts/LocalAuth';
@@ -169,7 +169,7 @@ export function OfferRidePage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="🚘"
+          emoji="??"
           title="Offer Route"
           titleAr="Offer Route"
           sub="Publish seats, package space, and corridor capacity in one flow."
@@ -184,7 +184,7 @@ export function OfferRidePage() {
 
         {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
           <StakeholderSignalBanner
-            eyebrow="Wasel · supply comms"
+            eyebrow="Wasel � supply comms"
             title="Route publishing now speaks to drivers, riders, packages, and operations at once"
             detail="This supply flow now makes route readiness, trust gating, earnings logic, and network pull visible in one place so a posted route feels operationally complete from the start."
             stakeholders={[
@@ -207,7 +207,7 @@ export function OfferRidePage() {
         </div>}
 
         {(!offerGate.allowed || (form.acceptsPackages && !packageGate.allowed)) && (
-          <div style={{ marginBottom: 18, background: 'rgba(199,255,26,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: '#fff' }}>
+          <div style={{ marginBottom: 18, background: 'rgba(168,214,20,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: '#fff' }}>
             <div style={{ fontWeight: 800, marginBottom: 6 }}>Trust readiness required</div>
             <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>{(!offerGate.allowed ? offerGate.reason : packageGate.reason) ?? 'Complete account checks before opening supply.'}</div>
             <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>

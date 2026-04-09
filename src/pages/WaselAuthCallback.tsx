@@ -264,7 +264,7 @@ export default function WaselAuthCallback() {
             borderRadius: 20,
             padding: 28,
             background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(73,190,242,0.16)',
+            border: '1px solid rgba(93,150,210,0.16)',
             display: 'grid',
             gap: 14,
           }}
@@ -289,7 +289,7 @@ export default function WaselAuthCallback() {
                 width: '100%',
                 minHeight: 46,
                 borderRadius: 12,
-                border: '1px solid rgba(73,190,242,0.18)',
+                border: '1px solid rgba(93,150,210,0.18)',
                 background: 'rgba(255,255,255,0.03)',
                 color: '#EFF6FF',
                 padding: '0 14px',
@@ -305,7 +305,7 @@ export default function WaselAuthCallback() {
               padding: '12px 14px',
               borderRadius: 12,
               background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(73,190,242,0.16)',
+              border: '1px solid rgba(93,150,210,0.16)',
             }}
           >
             <span style={{ fontSize: '0.78rem', color: '#CBD5E1', fontWeight: 700 }}>
@@ -338,7 +338,7 @@ export default function WaselAuthCallback() {
                 width: '100%',
                 minHeight: 46,
                 borderRadius: 12,
-                border: '1px solid rgba(73,190,242,0.18)',
+                border: '1px solid rgba(93,150,210,0.18)',
                 background: 'rgba(255,255,255,0.03)',
                 color: '#EFF6FF',
                 padding: '0 14px',
@@ -373,7 +373,7 @@ export default function WaselAuthCallback() {
               minHeight: 46,
               borderRadius: 12,
               border: 'none',
-              background: 'linear-gradient(135deg, #16C7F2, #0F78BF)',
+              background: 'linear-gradient(135deg, #47B7E6, #1E5FAE)',
               color: '#041018',
               fontSize: '0.95rem',
               fontWeight: 800,
@@ -390,7 +390,7 @@ export default function WaselAuthCallback() {
             style={{
               minHeight: 42,
               borderRadius: 12,
-              border: '1px solid rgba(73,190,242,0.18)',
+              border: '1px solid rgba(93,150,210,0.18)',
               background: 'transparent',
               color: '#EFF6FF',
               fontSize: '0.9rem',
@@ -425,7 +425,7 @@ export default function WaselAuthCallback() {
           borderRadius: 20,
           padding: 28,
           background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(73,190,242,0.16)',
+          border: '1px solid rgba(93,150,210,0.16)',
           textAlign: 'center',
         }}
       >
@@ -435,8 +435,8 @@ export default function WaselAuthCallback() {
             height: 42,
             margin: '0 auto 16px',
             borderRadius: '50%',
-            border: state === 'error' ? '3px solid rgba(255,68,85,0.3)' : '3px solid rgba(73,190,242,0.18)',
-            borderTop: state === 'error' ? '3px solid #FF4455' : '3px solid #16C7F2',
+            border: state === 'error' ? '3px solid rgba(255,68,85,0.3)' : '3px solid rgba(93,150,210,0.18)',
+            borderTop: state === 'error' ? '3px solid #FF4455' : '3px solid #47B7E6',
             animation:
               state === 'redirecting' || state === 'loading' || state === 'closing'
                 ? 'spin 0.8s linear infinite'
@@ -456,7 +456,7 @@ export default function WaselAuthCallback() {
               minHeight: 42,
               padding: '0 16px',
               borderRadius: 12,
-              border: '1px solid rgba(73,190,242,0.18)',
+              border: '1px solid rgba(93,150,210,0.18)',
               background: 'transparent',
               color: '#EFF6FF',
               fontSize: '0.92rem',

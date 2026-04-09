@@ -38,7 +38,7 @@ try {
 
   document.body.innerHTML = `
     <div dir="${initialDirection}" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif); background: ${initialThemePreference === 'light' ? '#f5faff' : '#061726'}; color: ${initialThemePreference === 'light' ? '#10243d' : '#eff6ff'};">
-      <div style="text-align: ${isArabic ? 'right' : 'center'}; max-width: 500px; padding: 40px; background: ${initialThemePreference === 'light' ? 'rgba(255,255,255,0.96)' : 'rgba(10,22,40,0.94)'}; border-radius: 16px; box-shadow: 0 12px 36px ${initialThemePreference === 'light' ? 'rgba(16,36,61,0.10)' : 'rgba(0,0,0,0.28)'}; border: 1px solid ${initialThemePreference === 'light' ? 'rgba(16,36,61,0.08)' : 'rgba(73,190,242,0.14)'};">
+      <div style="text-align: ${isArabic ? 'right' : 'center'}; max-width: 500px; padding: 40px; background: ${initialThemePreference === 'light' ? 'rgba(255,255,255,0.96)' : 'rgba(10,22,40,0.94)'}; border-radius: 16px; box-shadow: 0 12px 36px ${initialThemePreference === 'light' ? 'rgba(16,36,61,0.10)' : 'rgba(0,0,0,0.28)'}; border: 1px solid ${initialThemePreference === 'light' ? 'rgba(16,36,61,0.08)' : 'rgba(93,150,210,0.14)'};">
         <h1 style="color: ${initialThemePreference === 'light' ? '#c2410c' : '#fca5a5'}; margin: 0 0 16px;">${configurationTitle}</h1>
         <p style="color: ${initialThemePreference === 'light' ? '#33526f' : 'rgba(239,246,255,0.78)'}; margin: 16px 0;">${configurationBody}</p>
         <p style="color: ${initialThemePreference === 'light' ? '#64748b' : 'rgba(239,246,255,0.56)'}; font-size: 14px;">${configurationHelp}</p>

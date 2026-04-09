@@ -1,5 +1,4 @@
-﻿import { Fragment, type CSSProperties, type ReactNode } from 'react';
-import { motion } from 'motion/react';
+import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import { ArrowRight, ShieldCheck, type LucideIcon } from 'lucide-react';
 import { WaselLogo, WaselMark } from '../../components/wasel-ds/WaselLogo';
 import {
@@ -9,7 +8,7 @@ import {
   WaselWhyCard,
 } from '../../components/system/WaselPresence';
 import { useTheme } from '../../contexts/ThemeContext';
-import { MobilityOSLandingMap } from './MobilityOSLandingMap';
+import { DeferredLandingMap } from './DeferredLandingMap';
 import {
   LANDING_DISPLAY,
   LANDING_FONT,
@@ -120,6 +119,15 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
       }}
     >
       <style>{LANDING_RESPONSIVE_STYLES}</style>
+      <style>{`
+        @keyframes landing-orbit-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes landing-orbit-reverse { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+        @keyframes landing-mark-float {
+          0% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(0, -12px) scale(1.035); }
+          100% { transform: translate(0, 0) scale(1); }
+        }
+      `}</style>
       <div
         aria-hidden="true"
         style={{ position: 'absolute', inset: 0, background: GRAD_HERO, pointerEvents: 'none' }}
@@ -129,7 +137,7 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
         style={{
           position: 'absolute',
           inset: 0,
-          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, rgba(22,199,242,0.18), rgba(4,18,30,0) 26%), radial-gradient(circle at 72% 68%, rgba(199,255,26,0.14), rgba(4,18,30,0) 18%)`,
+          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, rgba(71,183,230,0.18), rgba(4,18,30,0) 26%), radial-gradient(circle at 72% 68%, rgba(168,214,20,0.14), rgba(4,18,30,0) 18%)`,
           pointerEvents: 'none',
           opacity: 0.96,
         }}
@@ -184,11 +192,8 @@ export function LandingHeader({
   };
 
   return (
-    <motion.div
+    <div
       className="landing-header-row"
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
       style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -233,7 +238,7 @@ export function LandingHeader({
               boxShadow: `0 0 14px ${LANDING_COLORS.green}`,
             }}
           />
-          {copy(ar ? 'Ø´Ø¨ÙƒØ© Ø§Ù„Ø£Ø±Ø¯Ù† Ø§Ù„Ø­ÙŠØ©' : 'Jordan mobility network')}
+          {copy(ar ? 'شبكة الأردن الحية' : 'Jordan mobility network')}
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -241,7 +246,7 @@ export function LandingHeader({
           <>
             <button
               aria-label={copy(
-                ar ? 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù…Ù† Ø´Ø±ÙŠØ· Ø§Ù„Ø±Ø£Ø³' : 'Sign in from header',
+                ar ? 'تسجيل الدخول من شريط الرأس' : 'Sign in from header',
               )}
               type="button"
               onClick={() => {
@@ -257,11 +262,11 @@ export function LandingHeader({
                 boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 14px 30px rgba(1,10,18,0.18)',
               }}
             >
-              {copy(ar ? 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„' : 'Sign in')}
+              {copy(ar ? 'تسجيل الدخول' : 'Sign in')}
             </button>
             <button
               aria-label={copy(
-                ar ? 'Ø¥Ù†Ø´Ø§Ø¡ Ø­Ø³Ø§Ø¨ Ù…Ù† Ø´Ø±ÙŠØ· Ø§Ù„Ø±Ø£Ø³' : 'Sign up from header',
+                ar ? 'إنشاء حساب من شريط الرأس' : 'Sign up from header',
               )}
               type="button"
               onClick={() => {
@@ -277,13 +282,13 @@ export function LandingHeader({
                 boxShadow: '0 18px 40px rgba(30,124,255,0.28)',
               }}
             >
-              {copy(ar ? 'Ø¥Ù†Ø´Ø§Ø¡ Ø­Ø³Ø§Ø¨' : 'Sign up')}
+              {copy(ar ? 'إنشاء حساب' : 'Sign up')}
             </button>
           </>
         ) : null}
         <WaselContactActionRow ar={ar} />
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -305,40 +310,35 @@ export function LandingHeroSection({
   onFacebookAuth,
   onNavigate,
 }: LandingHeroSectionProps) {
-  const bullets = heroBullets.slice(0, 3);
+  const bullets = heroBullets.slice(0, 2);
   const isGoogleLoading = oauthLoadingProvider === 'google';
   const isFacebookLoading = oauthLoadingProvider === 'facebook';
   const highlights = [
     {
-      label: ar ? 'نظام واحد' : 'One system',
+      label: ar ? '???? ????' : 'One system',
       value: ar
-        ? 'Mobility OS يجمع الخريطة والقرار والخطوة التالية في نفس الواجهة.'
-        : 'Mobility OS keeps the map, the decision, and the next step inside one surface.',
+        ? '??????? ??????? ?? ????? ?????.'
+        : 'Map and action in one place.',
     },
     {
-      label: ar ? 'تدفقان بلغة واحدة' : 'Two flows, one language',
+      label: ar ? '?????? ???? ?????' : 'Two flows, one language',
       value: ar
-        ? 'الرحلات والطرود يتحركان بين المدن بنفس منطق المسار.'
-        : 'Rides and packages move between cities using the same corridor logic.',
+        ? '??????? ??????? ??? ??? ??????.'
+        : 'Rides and packages share the same lanes.',
     },
   ] as const;
   const heroLogoSignals = [
-    ar ? 'الهوية الحية للشبكة' : 'Live network identity',
-    ar ? 'ركاب + طرود + مسارات' : 'Rides + packages + routes',
-    ar ? 'مصمم للهاتف والويب' : 'Built for mobile and web',
+    ar ? '?????? ????? ??????' : 'Live network identity',
+    ar ? '???? + ???? + ??????' : 'Rides + packages + routes',
+    ar ? '???? ?????? ??????' : 'Built for mobile and web',
   ] as const;
   const heroMetricPills = [
-    ar ? 'خريطة حيّة أولاً' : 'Live map first',
-    ar ? 'واجهة أنظف' : 'Cleaner first view',
-    ar ? 'علامة أوضح' : 'Sharper brand mark',
+    ar ? '????? ???? ?????' : 'Live map first',
+    ar ? '????? ????' : 'Cleaner first view',
+    ar ? '????? ????' : 'Sharper brand mark',
   ] as const;
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      style={{ display: 'grid', gap: 16, height: '100%' }}
-    >
+    <section style={{ display: 'grid', gap: 16, height: '100%' }}>
       <div
         className="landing-glow-card"
         style={{
@@ -358,7 +358,7 @@ export function LandingHeroSection({
             position: 'absolute',
             inset: 0,
             background:
-              'radial-gradient(circle at 18% 18%, rgba(22,199,242,0.18), rgba(4,18,30,0) 32%), radial-gradient(circle at 82% 26%, rgba(199,255,26,0.12), rgba(4,18,30,0) 24%), linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
+              'radial-gradient(circle at 18% 18%, rgba(71,183,230,0.18), rgba(4,18,30,0) 32%), radial-gradient(circle at 82% 26%, rgba(168,214,20,0.12), rgba(4,18,30,0) 24%), linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
             pointerEvents: 'none',
           }}
         />
@@ -380,7 +380,7 @@ export function LandingHeroSection({
                 width: 'fit-content',
                 padding: '8px 12px',
                 borderRadius: 999,
-                background: 'rgba(22,199,242,0.1)',
+                background: 'rgba(71,183,230,0.1)',
                 border: `1px solid ${LANDING_COLORS.borderStrong}`,
                 color: LANDING_COLORS.cyan,
                 fontSize: '0.75rem',
@@ -389,7 +389,7 @@ export function LandingHeroSection({
                 textTransform: 'uppercase',
               }}
             >
-              {copy(ar ? 'Mobility OS للأردن' : 'Mobility OS for Jordan')}
+              {copy(ar ? 'Mobility OS ??????' : 'Mobility OS for Jordan')}
             </div>
             <div style={{ display: 'grid', gap: 14 }}>
               <h1
@@ -404,7 +404,7 @@ export function LandingHeroSection({
                 }}
               >
                 <span style={{ display: 'block', color: LANDING_COLORS.text }}>
-                  {copy(ar ? 'الخريطة الحية هي قلب Wasel.' : 'The live map is the heart of Wasel.')}
+                  {copy(ar ? '???? ?? ???????.' : 'Move by map.')}
                 </span>
                 <span
                   style={{
@@ -418,8 +418,8 @@ export function LandingHeroSection({
                 >
                   {copy(
                     ar
-                      ? 'رحلات وطرود ومسارات ذكية في تدفق تشغيلي واحد.'
-                      : 'Rides, packages, and route intelligence in one operating flow.',
+                      ? '????? ????? ??? ???? ?????.'
+                      : 'Rides and packages, one network.',
                   )}
                 </span>
               </h1>
@@ -434,8 +434,8 @@ export function LandingHeroSection({
               >
                 {copy(
                   ar
-                    ? 'بدل أن تبدو Wasel كخدمات منفصلة، نعرض Mobility OS من البداية كالمشهد الذي يربط الرحلات والطرود والتوجيه. هكذا يفهم المستخدم الشبكة قبل أن يضغط أي زر.'
-                    : 'Instead of presenting Wasel as disconnected services, the first screen now leads with Mobility OS as the shared scene that connects rides, packages, and routing. Users understand the network before they tap.',
+                    ? '???? ?????? ????? ?? ???? ??????.'
+                    : 'See the network first, then choose a service.',
                 )}
               </p>
             </div>
@@ -512,7 +512,7 @@ export function LandingHeroSection({
             </div>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
               <button
-                aria-label={copy(ar ? 'افتح خريطة Mobility OS الحية' : 'Open Mobility OS live map')}
+                aria-label={copy(ar ? '???? ???????' : 'Open map')}
                 type="button"
                 onClick={() => onNavigate(mobilityOsPath || findRidePath)}
                 style={{
@@ -531,11 +531,11 @@ export function LandingHeroSection({
                   boxShadow: SH.cyanL,
                 }}
               >
-                {copy(ar ? 'افتح خريطة Mobility OS الحية' : 'Open Mobility OS live map')}
+                {copy(ar ? '???? ???????' : 'Open map')}
                 <ArrowRight size={16} />
               </button>
               <button
-                aria-label={copy(ar ? 'استكشف المسارات' : 'Explore routes')}
+                aria-label={copy(ar ? '???? ?? ????' : 'Find rides')}
                 type="button"
                 onClick={() => onNavigate(findRidePath)}
                 style={{
@@ -550,7 +550,7 @@ export function LandingHeroSection({
                   cursor: 'pointer',
                 }}
               >
-                {copy(ar ? 'استكشف المسارات' : 'Explore routes')}
+                {copy(ar ? '???? ?? ????' : 'Find rides')}
               </button>
               <div
                 className="landing-hero-meta"
@@ -576,111 +576,52 @@ export function LandingHeroSection({
               </div>
             </div>
           </div>
-          <div style={{ display: 'grid', gap: 18, alignContent: 'center' }}>
+          <div className="landing-hero-art-column">
             <div
+              className="landing-hero-visual"
               style={{
                 position: 'relative',
-                minHeight: 520,
-                display: 'grid',
-                alignItems: 'start',
-                justifyItems: 'center',
-                overflow: 'visible',
-                paddingTop: 18,
               }}
             >
               <div
+                className="landing-hero-glow-field"
                 aria-hidden="true"
                 style={{
-                  position: 'absolute',
-                  inset: '0% 4% 12% 4%',
                   background:
-                    'radial-gradient(circle at 48% 18%, rgba(18,219,255,0.2), rgba(18,219,255,0) 24%), radial-gradient(circle at 58% 54%, rgba(105,255,69,0.42), rgba(105,255,69,0) 30%), radial-gradient(circle at 62% 72%, rgba(191,255,24,0.16), rgba(191,255,24,0) 22%)',
-                  filter: 'blur(22px)',
-                  opacity: 1,
-                  pointerEvents: 'none',
+                    'radial-gradient(circle at 48% 18%, rgba(71,183,230,0.2), rgba(71,183,230,0) 24%), radial-gradient(circle at 58% 54%, rgba(107,181,21,0.42), rgba(107,181,21,0) 30%), radial-gradient(circle at 62% 72%, rgba(168,214,20,0.16), rgba(168,214,20,0) 22%)',
                 }}
               />
-              <motion.div
+              <div
+                className="landing-hero-orbit landing-hero-orbit--outer"
                 aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  width: '92%',
-                  maxWidth: 420,
-                  aspectRatio: '1 / 1',
-                  borderRadius: '50%',
-                  border: '1px solid rgba(18,219,255,0.14)',
-                  opacity: 0.58,
-                  pointerEvents: 'none',
-                  top: -176,
-                }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
               />
-              <motion.div
+              <div
+                className="landing-hero-orbit landing-hero-orbit--inner"
                 aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  width: '66%',
-                  maxWidth: 310,
-                  aspectRatio: '1 / 1',
-                  borderRadius: '50%',
-                  border: '1px solid rgba(105,255,69,0.12)',
-                  opacity: 0.48,
-                  pointerEvents: 'none',
-                  top: -124,
-                }}
-                animate={{ rotate: -360 }}
-                transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
               />
-              <motion.div
+              <div
+                className="landing-hero-mark-stage"
                 style={{
                   position: 'relative',
-                  display: 'grid',
-                  placeItems: 'center',
-                  width: '100%',
-                    minHeight: 430,
-                    marginTop: -184,
                 }}
-                animate={{ y: [0, -12, 0], scale: [1, 1.035, 1] }}
-                transition={{ duration: 5.4, repeat: Infinity, ease: 'easeInOut' }}
               >
+                <div className="landing-hero-mark-glow landing-hero-mark-glow--cyan" aria-hidden="true" />
                 <div
+                  className="landing-hero-mark-glow landing-hero-mark-glow--green"
                   aria-hidden="true"
-                  style={{
-                    position: 'absolute',
-                    width: 340,
-                    height: 340,
-                    borderRadius: '50%',
-                    background:
-                      'radial-gradient(circle, rgba(18,219,255,0.34) 0%, rgba(18,219,255,0.12) 34%, rgba(18,219,255,0) 74%)',
-                    filter: 'blur(26px)',
-                    pointerEvents: 'none',
-                    transform: 'translate(-8px, -22px)',
-                  }}
                 />
-                <div
-                  aria-hidden="true"
-                  style={{
-                    position: 'absolute',
-                    width: 320,
-                    height: 320,
-                    borderRadius: '50%',
-                    background:
-                      'radial-gradient(circle, rgba(105,255,69,0.26) 0%, rgba(105,255,69,0.1) 36%, rgba(105,255,69,0) 74%)',
-                    filter: 'blur(24px)',
-                    transform: 'translate(28px, 34px)',
-                    pointerEvents: 'none',
-                  }}
-                />
-                <WaselMark
-                  size={334}
-                  style={{
-                    filter:
-                      'drop-shadow(0 0 42px rgba(18,219,255,0.32)) drop-shadow(0 0 56px rgba(105,255,69,0.26)) saturate(1.08)',
-                      transform: 'translate(6px, -124px)',
-                  }}
-                />
-              </motion.div>
+                <div className="landing-hero-mark">
+                  <WaselMark
+                    size={334}
+                    style={{
+                      justifyContent: 'center',
+                      filter:
+                        'drop-shadow(0 0 42px rgba(71,183,230,0.32)) drop-shadow(0 0 56px rgba(107,181,21,0.26)) saturate(1.08)',
+                      transform: 'translateY(12px)',
+                    }}
+                  />
+                </div>
+              </div>
               <div
                 style={{
                   display: 'flex',
@@ -760,7 +701,7 @@ export function LandingHeroSection({
                   >
                     <button
                       type="button"
-                      aria-label={copy(ar ? 'متابعة باستخدام Google' : 'Continue with Google')}
+                      aria-label={copy(ar ? '?????? ???????? Google' : 'Continue with Google')}
                       onClick={() => onGoogleAuth?.()}
                       disabled={!onGoogleAuth || isGoogleLoading}
                       style={{
@@ -779,16 +720,16 @@ export function LandingHeroSection({
                       {copy(
                         isGoogleLoading
                           ? ar
-                            ? 'جارٍ الاتصال بـ Google...'
+                            ? '???? ??????? ?? Google...'
                             : 'Connecting to Google...'
                           : ar
-                            ? 'متابعة باستخدام Google'
+                            ? '?????? ???????? Google'
                             : 'Continue with Google',
                       )}
                     </button>
                     <button
                       type="button"
-                      aria-label={copy(ar ? 'متابعة باستخدام Facebook' : 'Continue with Facebook')}
+                      aria-label={copy(ar ? '?????? ???????? Facebook' : 'Continue with Facebook')}
                       onClick={() => onFacebookAuth?.()}
                       disabled={!onFacebookAuth || isFacebookLoading}
                       style={{
@@ -807,17 +748,17 @@ export function LandingHeroSection({
                       {copy(
                         isFacebookLoading
                           ? ar
-                            ? 'جارٍ الاتصال بـ Facebook...'
+                            ? '???? ??????? ?? Facebook...'
                             : 'Connecting to Facebook...'
                           : ar
-                            ? 'متابعة باستخدام Facebook'
+                            ? '?????? ???????? Facebook'
                             : 'Continue with Facebook',
                       )}
                     </button>
                     <button
                       type="button"
                       aria-label={copy(
-                        ar ? 'متابعة باستخدام البريد الإلكتروني' : 'Continue with email',
+                        ar ? '?????? ???????? ?????? ??????????' : 'Continue with email',
                       )}
                       onClick={() => onNavigate(emailAuthPath)}
                       style={{
@@ -833,7 +774,7 @@ export function LandingHeroSection({
                         boxShadow: SH.cyanL,
                       }}
                     >
-                      {copy(ar ? 'متابعة باستخدام البريد الإلكتروني' : 'Continue with email')}
+                      {copy(ar ? '?????? ???????? ?????? ??????????' : 'Continue with email')}
                     </button>
                   </div>
                   <div
@@ -846,7 +787,7 @@ export function LandingHeroSection({
                   >
                     <button
                       type="button"
-                      aria-label={copy(ar ? 'تسجيل الدخول' : 'Sign in')}
+                      aria-label={copy(ar ? '????? ??????' : 'Sign in')}
                       onClick={() => onNavigate(emailAuthPath)}
                       style={{
                         minHeight: 48,
@@ -860,11 +801,11 @@ export function LandingHeroSection({
                         cursor: 'pointer',
                       }}
                     >
-                      {copy(ar ? 'تسجيل الدخول' : 'Sign in')}
+                      {copy(ar ? '????? ??????' : 'Sign in')}
                     </button>
                     <button
                       type="button"
-                      aria-label={copy(ar ? 'إنشاء حساب' : 'Create account')}
+                      aria-label={copy(ar ? '????? ????' : 'Create account')}
                       onClick={() => onNavigate(signupAuthPath)}
                       style={{
                         minHeight: 48,
@@ -879,7 +820,7 @@ export function LandingHeroSection({
                         boxShadow: SH.cyanL,
                       }}
                     >
-                      {copy(ar ? 'إنشاء حساب' : 'Create account')}
+                      {copy(ar ? '????? ????' : 'Create account')}
                     </button>
                   </div>
                 </div>
@@ -909,7 +850,7 @@ export function LandingHeroSection({
                   display: 'grid',
                   gap: 10,
                   alignContent: 'start',
-                  minHeight: 138,
+                  minHeight: 118,
                   padding: '18px',
                   borderRadius: 24,
                   textAlign: 'left',
@@ -981,7 +922,7 @@ export function LandingHeroSection({
               boxShadow: `0 0 12px ${LANDING_COLORS.green}`,
             }}
           />
-          {copy(ar ? 'تحديث حي للممرات' : 'Live corridor refresh')}
+          {copy(ar ? '????? ?? ???????' : 'Live corridor refresh')}
         </span>
         <span
           style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(239,246,255,0.28)' }}
@@ -998,10 +939,10 @@ export function LandingHeroSection({
             fontWeight: 700,
           }}
         >
-          {copy(ar ? 'ØªØ§Ø¨Ø¹ Ø±Ø­Ù„Ø§ØªÙŠ' : 'Track my trips')}
+          {copy(ar ? 'تابع رحلاتي' : 'Track my trips')}
         </button>
       </div>
-    </motion.section>
+    </section>
   );
 }
 
@@ -1014,35 +955,30 @@ export function LandingMapSection({
 }: LandingMapSectionProps) {
   const educationCards = [
     {
-      title: ar ? 'تدفق الرحلات' : 'Ride flow',
+      title: ar ? '???? ???????' : 'Ride flow',
       detail: ar
-        ? 'الخطوط والنقاط الزرقاء تشرح أين تتحرك المقاعد والطلب بين المدن.'
-        : 'Blue lines and moving dots show where seats and rider demand are moving between cities.',
+        ? '?????? ??????? ??????? ???? ??? ????? ??????? ?????? ??? ?????.'
+        : 'Where rides are moving.',
       accent: LANDING_COLORS.cyan,
     },
     {
-      title: ar ? 'تدفق الطرود' : 'Package flow',
+      title: ar ? '???? ??????' : 'Package flow',
       detail: ar
-        ? 'الخطوط المتقطعة والعناصر الذهبية توضّح كيف تستفيد الطرود من نفس الشبكة.'
-        : 'Gold dashed paths and moving parcels show how package delivery uses the same network.',
+        ? '?????? ???????? ???????? ??????? ????? ??? ?????? ?????? ?? ??? ??????.'
+        : 'Where packages are moving.',
       accent: LANDING_COLORS.gold,
     },
     {
-      title: ar ? 'طبقة المحاكاة' : 'Simulation layer',
+      title: ar ? '???? ????????' : 'Simulation layer',
       detail: ar
-        ? 'هذه الحركة ليست للزينة؛ إنها تشرح منطق النظام الذي يربط Mobility OS بكل خدمة في Wasel.'
-        : 'This motion is not decoration. It explains the system logic that connects Mobility OS to every Wasel service.',
+        ? '??? ?????? ???? ??????? ???? ???? ???? ?????? ???? ???? Mobility OS ??? ???? ?? Wasel.'
+        : 'Shows the network logic.',
       accent: LANDING_COLORS.green,
     },
   ] as const;
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45 }}
-      style={{ display: 'grid', gap: 14, height: '100%' }}
-    >
+    <section style={{ display: 'grid', gap: 14, height: '100%' }}>
       <div
         className="landing-map-shell wasel-lift-card"
         style={{
@@ -1051,7 +987,7 @@ export function LandingMapSection({
           height: '100%',
           borderRadius: 32,
           background:
-            'radial-gradient(circle at 14% 10%, rgba(22,199,242,0.18), rgba(4,18,30,0) 24%), radial-gradient(circle at 88% 14%, rgba(199,255,26,0.12), rgba(4,18,30,0) 18%), linear-gradient(165deg, rgba(7,24,39,0.96) 0%, rgba(7,27,43,0.9) 42%, rgba(4,19,31,0.96) 100%)',
+            'radial-gradient(circle at 14% 10%, rgba(71,183,230,0.18), rgba(4,18,30,0) 24%), radial-gradient(circle at 88% 14%, rgba(168,214,20,0.12), rgba(4,18,30,0) 18%), linear-gradient(165deg, rgba(7,24,39,0.96) 0%, rgba(7,27,43,0.9) 42%, rgba(4,19,31,0.96) 100%)',
           boxShadow: SH.navy,
           overflow: 'hidden',
         }}
@@ -1085,7 +1021,7 @@ export function LandingMapSection({
                 fontWeight: 900,
               }}
             >
-              {copy(ar ? 'الخريطة الحية الكاملة' : 'Full live mobility map')}
+              {copy(ar ? '??????? ?????' : 'Live map')}
             </div>
             <div
               style={{
@@ -1098,8 +1034,8 @@ export function LandingMapSection({
             >
               {copy(
                 ar
-                  ? 'Mobility OS هو المشهد الذي تتفرع منه كل خدمات Wasel.'
-                  : 'Mobility OS is the scene every Wasel service branches from.',
+                  ? 'Mobility OS ?? ?????? ???? ????? ??? ?? ????? Wasel.'
+                  : 'One view for every service.',
               )}
             </div>
             <p
@@ -1113,8 +1049,8 @@ export function LandingMapSection({
             >
               {copy(
                 ar
-                  ? 'نُظهر المحاكاة بالحجم الكامل حتى يفهم المستخدم كيف تتحرك الرحلات والطرود على نفس المسارات، ثم نفتح له الإجراء المناسب.'
-                  : 'The simulation gets full space so users can understand how rides and packages move through the same corridors before they choose an action.',
+                  ? '????? ???????? ?????? ?????? ??? ???? ???????? ??? ????? ??????? ??????? ??? ??? ????????? ?? ???? ?? ??????? ???????.'
+                  : 'Rides and packages share the same corridors.',
               )}
             </p>
           </div>
@@ -1140,11 +1076,11 @@ export function LandingMapSection({
                 boxShadow: `0 0 10px ${LANDING_COLORS.green}`,
               }}
             />
-            {copy(ar ? 'Optimized for mobile and desktop' : 'Optimized for mobile and desktop')}
+            {copy(ar ? '?????? + ?????' : 'Mobile + desktop')}
           </div>
         </div>
         <div style={{ position: 'relative', borderRadius: 28, overflow: 'hidden' }}>
-          <MobilityOSLandingMap ar={ar} />
+          <DeferredLandingMap ar={ar} />
         </div>
         <div
           className="landing-map-education-grid"
@@ -1207,8 +1143,8 @@ export function LandingMapSection({
             >
               {copy(
                 ar
-                  ? 'ابدأ من الخريطة ثم انتقل إلى الرحلات أو الطرود أو مساحة Mobility OS الكاملة.'
-                  : 'Start from the map, then move into rides, packages, or the full Mobility OS surface.',
+                  ? '???? ?? ??????? ?? ???? ??????.'
+                  : 'Start here, then open the right flow.',
               )}
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -1232,7 +1168,7 @@ export function LandingMapSection({
                     boxShadow: SH.cyanL,
                   }}
                 >
-                  {copy(ar ? 'افتح Mobility OS' : 'Open Mobility OS')}
+                  {copy(ar ? '???? Mobility OS' : 'Open Mobility OS')}
                   <ArrowRight size={15} />
                 </button>
               ) : null}
@@ -1252,7 +1188,7 @@ export function LandingMapSection({
                     cursor: 'pointer',
                   }}
                 >
-                  {copy(ar ? 'استكشف الرحلات' : 'Explore rides')}
+                  {copy(ar ? '???????' : 'Rides')}
                 </button>
               ) : null}
               {packagesPath ? (
@@ -1271,14 +1207,14 @@ export function LandingMapSection({
                     cursor: 'pointer',
                   }}
                 >
-                  {copy(ar ? 'استكشف الطرود' : 'Explore packages')}
+                  {copy(ar ? '??????' : 'Packages')}
                 </button>
               ) : null}
             </div>
           </div>
         ) : null}
       </div>
-    </motion.section>
+    </section>
   );
 }
 
@@ -1449,7 +1385,7 @@ export function LandingTrustSection({ ar }: LandingTrustSectionProps) {
             position: 'absolute',
             inset: 0,
             background:
-              'radial-gradient(circle at top right, rgba(96,197,54,0.18), rgba(4,18,30,0) 30%)',
+              'radial-gradient(circle at top right, rgba(107,181,21,0.18), rgba(4,18,30,0) 30%)',
             pointerEvents: 'none',
           }}
         />
@@ -1477,7 +1413,7 @@ export function LandingTrustSection({ ar }: LandingTrustSectionProps) {
                 letterSpacing: '-0.03em',
               }}
             >
-              {copy(ar ? 'Trust stays visible' : 'Trust stays visible')}
+              {copy(ar ? '????? ???? ?????' : 'Trust stays clear')}
             </div>
             <div
               style={{
@@ -1489,8 +1425,8 @@ export function LandingTrustSection({ ar }: LandingTrustSectionProps) {
             >
               {copy(
                 ar
-                  ? 'Identity, support, and business presence appear early, which makes the first contact with Wasel feel real and dependable.'
-                  : 'Identity, support, and business presence appear early, which makes the first contact with Wasel feel real and dependable.',
+                  ? '?????? ?????? ?????? ?? ???????.'
+                  : 'Identity and support are easy to find.',
               )}
             </div>
           </div>

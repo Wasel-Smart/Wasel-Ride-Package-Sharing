@@ -3,58 +3,58 @@
  */
 
 export const WaselColors = {
-  bg: '#061726',
-  surface: '#082033',
-  card: '#0B2135',
-  card2: '#102B44',
+  bg: '#081C36',
+  surface: '#0B2341',
+  card: '#0D284B',
+  card2: '#16385D',
 
-  border: 'rgba(73,190,242,0.16)',
-  border2: 'rgba(73,190,242,0.28)',
-  borderGlow: 'rgba(73,190,242,0.36)',
-  borderDark: 'rgba(8,32,51,0.72)',
+  border: 'rgba(93,150,210,0.16)',
+  border2: 'rgba(93,150,210,0.28)',
+  borderGlow: 'rgba(93,150,210,0.36)',
+  borderDark: 'rgba(8,28,54,0.72)',
 
-  cyan: '#16C7F2',
-  cyanDark: '#0A74C9',
-  cyanDim: 'rgba(22,199,242,0.14)',
-  cyanGlow: 'rgba(22,199,242,0.26)',
-  teal: '#16C7F2',
+  cyan: '#47B7E6',
+  cyanDark: '#1E5FAE',
+  cyanDim: 'rgba(71,183,230,0.14)',
+  cyanGlow: 'rgba(71,183,230,0.24)',
+  teal: '#72D0EF',
 
-  gold: '#C7FF1A',
-  goldDim: 'rgba(199,255,26,0.14)',
-  orange: '#D7FF62',
-  bronze: '#7DD13A',
-  green: '#60C536',
-  greenDim: 'rgba(96,197,54,0.14)',
-  purple: '#33D6D0',
-  purpleDim: 'rgba(51,214,208,0.14)',
+  gold: '#A8D614',
+  goldDim: 'rgba(168,214,20,0.14)',
+  orange: '#C9E96B',
+  bronze: '#84C51A',
+  green: '#6BB515',
+  greenDim: 'rgba(107,181,21,0.14)',
+  purple: '#72D0EF',
+  purpleDim: 'rgba(114,208,239,0.14)',
   red: '#FF646A',
   redDim: 'rgba(255,100,106,0.12)',
 
-  text: '#EAF7FF',
-  textDim: 'rgba(153,184,210,0.66)',
-  muted: 'rgba(123,150,174,0.82)',
+  text: '#EEF5FF',
+  textDim: 'rgba(171,194,221,0.66)',
+  muted: 'rgba(145,173,202,0.82)',
 
   white: '#FFFFFF',
   black: '#000000',
 } as const;
 
 export const WaselGradients = {
-  primary: `linear-gradient(135deg, ${WaselColors.cyan} 0%, ${WaselColors.cyanDark} 52%, ${WaselColors.green} 100%)`,
+  primary: `linear-gradient(135deg, ${WaselColors.teal} 0%, ${WaselColors.cyanDark} 42%, ${WaselColors.gold} 100%)`,
   cyan: `linear-gradient(135deg, ${WaselColors.cyan}, ${WaselColors.cyanDark})`,
-  card: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)), rgba(11,33,53,0.92)',
-  hero: 'linear-gradient(180deg, rgba(4,18,30,0) 0%, #061726 100%)',
+  card: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)), rgba(13,40,75,0.92)',
+  hero: 'linear-gradient(180deg, rgba(4,18,30,0) 0%, #081C36 100%)',
   glow: `radial-gradient(circle, ${WaselColors.cyanGlow}, transparent)`,
   gold: `linear-gradient(135deg, ${WaselColors.green}, ${WaselColors.gold})`,
   orange: `linear-gradient(135deg, ${WaselColors.orange}, ${WaselColors.gold})`,
-  green: `linear-gradient(135deg, ${WaselColors.green}, #7EED3A)`,
-  purple: `linear-gradient(135deg, ${WaselColors.cyanDark}, ${WaselColors.cyan})`,
+  green: `linear-gradient(135deg, ${WaselColors.green}, ${WaselColors.gold})`,
+  purple: `linear-gradient(135deg, ${WaselColors.cyanDark}, ${WaselColors.teal})`,
 };
 
 export const WaselShadows = {
-  sm: '0 10px 24px rgba(1,9,16,0.2)',
-  md: '0 18px 44px rgba(1,10,18,0.28)',
-  lg: '0 30px 72px rgba(1,10,18,0.36)',
-  xl: '0 40px 96px rgba(1,10,18,0.42)',
+  sm: '0 10px 24px rgba(4,16,32,0.22)',
+  md: '0 18px 44px rgba(4,16,32,0.3)',
+  lg: '0 30px 72px rgba(4,16,32,0.38)',
+  xl: '0 40px 96px rgba(4,16,32,0.44)',
   glow: `0 18px 50px ${WaselColors.cyanGlow}`,
 };
 
@@ -141,7 +141,7 @@ export const WaselBreakpoints = {
 };
 
 export const glassmorphism = (opacity = 0.84) => ({
-  background: `rgba(11,33,53,${opacity})`,
+  background: `rgba(13,40,75,${opacity})`,
   backdropFilter: 'blur(20px)',
   border: `1px solid ${WaselColors.border}`,
 });

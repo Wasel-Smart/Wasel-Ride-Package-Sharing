@@ -15,7 +15,7 @@ import {
 } from './waselRootConfig';
 
 const PANEL_BG = 'rgba(8,27,43,0.96)';
-const PANEL_BORDER = 'rgba(73,190,242,0.18)';
+const PANEL_BORDER = 'rgba(93,150,210,0.18)';
 const PANEL_MUTED = 'rgba(153,184,210,0.78)';
 const PANEL_SOFT = 'rgba(255,255,255,0.04)';
 const PANEL_SHADOW = '0 24px 56px rgba(1,10,18,0.34)';
@@ -121,7 +121,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
           height: 34,
           padding: '0 10px',
           borderRadius: R.md,
-          background: open ? 'rgba(22,199,242,0.12)' : PANEL_SOFT,
+          background: open ? 'rgba(71,183,230,0.12)' : PANEL_SOFT,
           border: `1px solid ${open ? C.borderHov : C.border}`,
           cursor: 'pointer',
           display: 'flex',
@@ -132,7 +132,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
           color: open ? C.cyan : 'rgba(234,247,255,0.8)',
           fontFamily: F,
           transition: 'all 0.14s',
-          boxShadow: open ? '0 10px 24px rgba(22,199,242,0.16)' : 'none',
+          boxShadow: open ? '0 10px 24px rgba(71,183,230,0.16)' : 'none',
         }}
       >
         <span style={{ fontSize: '0.68rem', opacity: 0.7 }}>$</span>
@@ -195,7 +195,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
                 width: '100%',
                 padding: '8px 12px',
                 background:
-                  current === code ? 'rgba(22,199,242,0.12)' : 'transparent',
+                  current === code ? 'rgba(71,183,230,0.12)' : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 fontSize: '0.8rem',
@@ -243,9 +243,9 @@ export function OnlineToggle({ ar }: { ar: boolean }) {
         height: 34,
         padding: '0 12px',
         borderRadius: R.full,
-        background: online ? 'rgba(96,197,54,0.16)' : PANEL_SOFT,
+        background: online ? 'rgba(107,181,21,0.16)' : PANEL_SOFT,
         border: `1.5px solid ${
-          online ? 'rgba(96,197,54,0.4)' : 'rgba(255,255,255,0.14)'
+          online ? 'rgba(107,181,21,0.4)' : 'rgba(255,255,255,0.14)'
         }`,
         cursor: 'pointer',
         display: 'flex',
@@ -315,7 +315,7 @@ export function NavDropdown({
         backdropFilter: 'blur(28px)',
         border: `1px solid ${PANEL_BORDER}`,
         borderRadius: 18,
-        boxShadow: `${PANEL_SHADOW}, 0 0 0 1px rgba(22,199,242,0.06)`,
+        boxShadow: `${PANEL_SHADOW}, 0 0 0 1px rgba(71,183,230,0.06)`,
         padding: 12,
         minWidth: 380,
         display: 'grid',
@@ -520,7 +520,7 @@ export function DesktopOverflowMenu({
                   width: '100%',
                   padding: '12px 14px',
                   borderRadius: 16,
-                  background: isCurrent ? 'rgba(22,199,242,0.11)' : PANEL_SOFT,
+                  background: isCurrent ? 'rgba(71,183,230,0.11)' : PANEL_SOFT,
                   border: `1px solid ${
                     isCurrent ? PANEL_BORDER : 'rgba(255,255,255,0.06)'
                   }`,
@@ -622,7 +622,7 @@ export function UserMenu({
           gap: 8,
           padding: '5px 12px 5px 5px',
           borderRadius: 9999,
-          background: open ? 'rgba(22,199,242,0.1)' : 'rgba(255,255,255,0.06)',
+          background: open ? 'rgba(71,183,230,0.1)' : 'rgba(255,255,255,0.06)',
           border: `1px solid ${open ? C.borderHov : C.border}`,
           cursor: 'pointer',
           transition: 'all 0.15s',
@@ -635,8 +635,8 @@ export function UserMenu({
             height: 28,
             borderRadius: '50%',
             background:
-              'linear-gradient(135deg,#16C7F2 0%, #0A74C9 58%, #C7FF1A 100%)',
-            boxShadow: '0 0 0 1.5px rgba(73,190,242,0.34)',
+              'linear-gradient(135deg,#47B7E6 0%, #1E5FAE 58%, #A8D614 100%)',
+            boxShadow: '0 0 0 1.5px rgba(93,150,210,0.34)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -687,7 +687,7 @@ export function UserMenu({
             style={{
               padding: '14px 16px',
               background:
-                'linear-gradient(180deg, rgba(22,199,242,0.08), rgba(255,255,255,0.02))',
+                'linear-gradient(180deg, rgba(71,183,230,0.08), rgba(255,255,255,0.02))',
               borderBottom: `1px solid ${C.border}`,
             }}
           >
@@ -994,7 +994,7 @@ export function MobileDrawer({
             style={{
               padding: '14px 20px',
               background:
-                'linear-gradient(180deg, rgba(22,199,242,0.08), rgba(255,255,255,0.02))',
+                'linear-gradient(180deg, rgba(71,183,230,0.08), rgba(255,255,255,0.02))',
               borderBottom: `1px solid ${C.border}`,
             }}
           >
@@ -1194,7 +1194,7 @@ export function MobileDrawer({
                   height: 42,
                   borderRadius: R.md,
                   background:
-                    'linear-gradient(135deg,#16C7F2 0%, #0A74C9 58%, #C7FF1A 100%)',
+                    'linear-gradient(135deg,#47B7E6 0%, #1E5FAE 58%, #A8D614 100%)',
                   border: 'none',
                   color: '#041018',
                   fontWeight: 700,
