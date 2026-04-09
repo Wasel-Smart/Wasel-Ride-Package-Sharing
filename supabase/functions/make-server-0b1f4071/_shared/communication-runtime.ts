@@ -1,3 +1,5 @@
+import { timingSafeEqual } from './security-runtime.ts';
+
 export type DeliveryChannel = 'email' | 'sms' | 'whatsapp' | 'push' | 'in_app';
 export type DeliveryLifecycleStatus = 'queued' | 'processing' | 'sent' | 'delivered' | 'failed' | 'cancelled';
 
@@ -50,12 +52,18 @@ export function buildIdempotencyKey(args: {
   destination: string | null;
   body: string;
 }): string {
-  return [
+  const source = [
     args.deliveryId,
     args.channel,
     args.destination ?? 'no-destination',
     args.body.trim().slice(0, 120),
   ].join(':');
+  let hash = 2166136261;
+  for (const char of source) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `delivery:${Math.abs(hash >>> 0).toString(16)}`;
 }
 
 export function buildRetrySchedule(args: {
@@ -122,9 +130,10 @@ export function buildResendPayload(
 
   const body = String(delivery.payload?.body ?? '');
   const subject = delivery.subject?.trim() || 'Wasel notification';
+  const escapeHtml = (value: string) => value.replace(/[<>&"]/g, (char) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[char] ?? char));
   const html = body
     .split('\n')
-    .map((line) => `<p>${line.replace(/[<>&"]/g, (char) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[char] ?? char))}</p>`)
+    .map((line) => `<p>${escapeHtml(line)}</p>`)
     .join('');
 
   return {
@@ -158,6 +167,7 @@ export function buildSendgridPayload(
 
   const body = String(delivery.payload?.body ?? '');
   const subject = delivery.subject?.trim() || 'Wasel notification';
+  const escapeHtml = (value: string) => value.replace(/[<>&"]/g, (char) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[char] ?? char));
 
   return {
     url: 'https://api.sendgrid.com/v3/mail/send',
@@ -173,7 +183,7 @@ export function buildSendgridPayload(
         reply_to: env.resendReplyToEmail ? { email: env.resendReplyToEmail } : undefined,
         content: [
           { type: 'text/plain', value: body },
-          { type: 'text/html', value: body.split('\n').map((line) => `<p>${line}</p>`).join('') },
+          { type: 'text/html', value: body.split('\n').map((line) => `<p>${escapeHtml(line)}</p>`).join('') },
         ],
       }),
     },
@@ -248,5 +258,6 @@ export function mapTwilioStatusToLifecycle(status: string): DeliveryLifecycleSta
 
 export function hasValidWebhookToken(url: URL, expectedToken?: string): boolean {
   if (!expectedToken) return false;
-  return url.searchParams.get('token') === expectedToken;
+  const provided = url.searchParams.get('token') ?? '';
+  return timingSafeEqual(provided, expectedToken);
 }

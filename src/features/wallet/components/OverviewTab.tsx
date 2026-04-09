@@ -12,7 +12,7 @@ import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { WaselColors } from '../../../tokens/wasel-tokens';
 import { TransactionRow } from './WalletShared';
-import type { WalletData, WalletTransaction } from '../../../services/walletApi';
+import type { WalletData, WalletEscrow, WalletTransaction } from '../../../services/walletApi';
 
 interface OverviewTabProps {
   walletData: WalletData | null;
@@ -95,7 +95,7 @@ export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actio
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {walletData.activeEscrows.map((esc: any) => (
+            {walletData.activeEscrows.map((esc: WalletEscrow) => (
               <div key={esc.id} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
                 <div className="flex items-center gap-2">
                   {esc.type === 'package' ? <Package className="w-4 h-4 text-muted-foreground" /> : <Car className="w-4 h-4 text-muted-foreground" />}

@@ -51,6 +51,7 @@ Example: `20260401120000_add_driver_rating_column.sql`
 | 24 | `20260404133000_harden_auth_signup_trigger.sql` | Remove the legacy auth profile trigger path, backfill canonical users from auth, and keep signup bound to `public.users` | Ready |
 | 25 | `20260404153000_operational_bootstrap_reference_data.sql` | Add operational catalogs for roles, cities, trip types, route corridors, pricing rules, and seed execution logging | Ready |
 | 26 | `20260406101500_harden_automation_queue_access_and_support_rpcs.sql` | Lock down direct client automation queue inserts and move support ticket writes behind atomic RPCs | Ready |
+| 27 | `20260409120000_production_security_and_queue_hardening.sql` | Move 2FA secrets into a private schema, null legacy public secret columns, and add atomic communication queue claiming | Ready |
 
 ---
 
@@ -75,13 +76,14 @@ For older production projects that still have legacy `public.users`, `public.tri
 14. `20260404133000_harden_auth_signup_trigger.sql`
 15. `20260404153000_operational_bootstrap_reference_data.sql`
 16. `20260406101500_harden_automation_queue_access_and_support_rpcs.sql`
-17. `db/seeds/roles.seed.sql`
-18. `db/seeds/cities.seed.sql`
-19. `db/seeds/trip_types.seed.sql`
-20. `db/seeds/pricing.seed.sql`
-21. `db/seeds/core.seed.sql`
-22. `db/seeds/automation.seed.sql`
-23. `src/supabase/seeds/mock_engine_smoke_checks.sql`
+17. `20260409120000_production_security_and_queue_hardening.sql`
+18. `db/seeds/roles.seed.sql`
+19. `db/seeds/cities.seed.sql`
+20. `db/seeds/trip_types.seed.sql`
+21. `db/seeds/pricing.seed.sql`
+22. `db/seeds/core.seed.sql`
+23. `db/seeds/automation.seed.sql`
+24. `src/supabase/seeds/mock_engine_smoke_checks.sql`
 
 ---
 

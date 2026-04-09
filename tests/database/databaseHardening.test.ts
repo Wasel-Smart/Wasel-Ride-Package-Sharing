@@ -7,6 +7,11 @@ const migrationPath = path.resolve(
   '../../src/supabase/migrations/20260401093000_database_hardening.sql',
 );
 
+const walletHardeningMigrationPath = path.resolve(
+  __dirname,
+  '../../src/supabase/migrations/20260409120000_wallet_and_runtime_integrity_hardening.sql',
+);
+
 const scorecardPath = path.resolve(
   __dirname,
   '../../docs/DATABASE_SCORECARD.md',
@@ -31,6 +36,27 @@ describe('database hardening migration', () => {
     expect(sql).toContain('idx_bookings_passenger_status_created');
     expect(sql).toContain('idx_packages_sender_status_created');
     expect(sql).toContain('idx_package_events_package_created');
+  });
+});
+
+describe('wallet runtime hardening migration', () => {
+  const sql = fs.readFileSync(walletHardeningMigrationPath, 'utf8');
+
+  it('enforces wallet balance and auto top-up bounds', () => {
+    expect(sql).toContain('chk_wallets_non_negative_balances');
+    expect(sql).toContain('chk_wallets_auto_top_up_bounds');
+  });
+
+  it('requires positive transaction amounts and non-empty payment references', () => {
+    expect(sql).toContain('chk_transactions_positive_amount');
+    expect(sql).toContain('chk_payment_methods_provider_present');
+    expect(sql).toContain('chk_payment_methods_token_reference_present');
+  });
+
+  it('adds indexes for wallet lookup and transaction history access paths', () => {
+    expect(sql).toContain('idx_wallets_user_status');
+    expect(sql).toContain('idx_transactions_wallet_created_desc');
+    expect(sql).toContain('idx_payment_methods_active_default');
   });
 });
 

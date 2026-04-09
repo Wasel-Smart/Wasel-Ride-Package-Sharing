@@ -1,4 +1,5 @@
 import { logger, trackAPICall } from '../utils/monitoring';
+import { redactSensitiveValue } from '../utils/redaction';
 import {
   AuthenticationError,
   ValidationError,
@@ -92,7 +93,11 @@ export async function expectJsonResponse<T>(
 }
 
 export function sanitizeEmail(value: string): string {
-  return value.trim().toLowerCase();
+  const normalized = value.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+    throw new ValidationError('Enter a valid email address');
+  }
+  return normalized;
 }
 
 export function sanitizeTextField(value: string, fieldName: string, maxLength = 200): string {
@@ -130,7 +135,7 @@ export function sanitizeOptionalTextField(value: string | undefined, maxLength =
 
 export function sanitizePhoneNumber(value: string): string {
   const normalized = value.replace(/[^\d+]/g, '').trim();
-  if (!normalized) {
+  if (!normalized || !/^\+[1-9]\d{7,14}$/.test(normalized)) {
     throw new ValidationError('Phone number is required');
   }
 
@@ -161,7 +166,7 @@ export async function withApiTelemetry<T>(
       logger.error(`[API] ${operation} failed`, normalized, {
         endpoint,
         method,
-        ...(normalized.context ?? {}),
+        ...(redactSensitiveValue(normalized.context ?? {}) as JsonRecord),
       });
     }
 

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { logger } from '../utils/monitoring';
+import { sanitizeErrorMessage } from '../utils/redaction';
 
 const PHONE_REGEX = /^\+[1-9]\d{7,14}$/;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
@@ -110,7 +111,9 @@ export const communicationPreferenceUpdateSchema = z
 
 export function buildRequestId(operation: string): string {
   const slug = operation.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase();
-  const entropy = Math.random().toString(36).slice(2, 8);
+  const entropy = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID().slice(0, 8)
+    : `${Date.now().toString(36)}${Math.floor(Math.random() * 1_000_000).toString(36)}`.slice(0, 8);
   return `${slug || 'write'}-${Date.now()}-${entropy}`;
 }
 
@@ -213,6 +216,7 @@ export async function withDataIntegrity<TPayload, TResult>(args: {
   payload: unknown;
   execute: (context: { requestId: string; payload: TPayload; attempt: number }) => Promise<TResult>;
   maxAttempts?: number;
+  retryPolicy?: 'never' | 'transient';
 }): Promise<TResult> {
   const requestId = buildRequestId(args.operation);
   const payload = validatePayload(args.schema, args.payload, args.operation);
@@ -228,7 +232,10 @@ export async function withDataIntegrity<TPayload, TResult>(args: {
     details: { payload: sanitizedPayload as Record<string, unknown> },
   });
 
-  const maxAttempts = Math.max(1, args.maxAttempts ?? 2);
+  const retryPolicy = args.retryPolicy ?? 'never';
+  const maxAttempts = retryPolicy === 'transient'
+    ? Math.max(1, args.maxAttempts ?? 2)
+    : 1;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
@@ -256,11 +263,11 @@ export async function withDataIntegrity<TPayload, TResult>(args: {
       return result;
     } catch (error) {
       const details = {
-        error: toErrorMessage(error),
+        error: sanitizeErrorMessage(error, toErrorMessage(error)),
         payload: sanitizedPayload as Record<string, unknown>,
       };
 
-      const retryable = attempt < maxAttempts && isTransientWriteError(error);
+      const retryable = retryPolicy === 'transient' && attempt < maxAttempts && isTransientWriteError(error);
       logDataFlow({
         requestId,
         operation: args.operation,

@@ -167,7 +167,7 @@ export function getPasswordStrengthColor(score: number): string {
 
 export interface TwoFactorSetup {
   secret: string;
-  qrCode: string;
+  otpauthUrl: string;
   backupCodes: string[];
 }
 
@@ -218,7 +218,9 @@ export async function verify2FACode(_userId: string, code: string): Promise<bool
   }
 
   try {
-    const payload = await callTwoFactorEndpoint<{ valid: boolean }>('/auth/2fa/verify', { code });
+    const payload = await callTwoFactorEndpoint<{ valid: boolean }>('/auth/2fa/verify', {
+      code: code.replace(/\s+/g, ''),
+    });
     return payload.valid === true;
   } catch (error) {
     logger.error('2FA verification failed', error);
@@ -232,7 +234,9 @@ export async function disable2FA(_userId: string, code: string): Promise<boolean
   }
 
   try {
-    const payload = await callTwoFactorEndpoint<{ disabled: boolean }>('/auth/2fa/disable', { code });
+    const payload = await callTwoFactorEndpoint<{ disabled: boolean }>('/auth/2fa/disable', {
+      code: code.replace(/\s+/g, ''),
+    });
     if (payload.disabled) {
       logger.info('2FA disabled', { important: true });
     }

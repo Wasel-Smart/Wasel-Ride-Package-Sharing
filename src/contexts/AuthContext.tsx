@@ -138,8 +138,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     let mounted = true;
+    const supabaseClient = supabase;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    if (!supabaseClient) {
+      setLoading(false);
+      setIsBackendConnected(false);
+      return;
+    }
+
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(
       async (event: AuthChangeEvent, nextSession: Session | null) => {
         if (!mounted) return;
 
@@ -160,7 +167,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const initializeAuth = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        const { data, error } = await supabaseClient.auth.getSession();
         if (error) throw error;
 
         if (mounted && data.session) {
@@ -186,7 +193,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (event.data?.type !== 'wasel-auth-complete') return;
 
       try {
-        const { data, error } = await supabase.auth.getSession();
+        const { data, error } = await supabaseClient.auth.getSession();
         if (error) throw error;
         if (!mounted || !data.session) return;
 

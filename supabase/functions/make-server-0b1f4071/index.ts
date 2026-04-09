@@ -7,6 +7,7 @@ import {
   noContentResponse,
   type RouteDefinition,
 } from './_shared/http-runtime.ts';
+import { timingSafeEqual } from './_shared/security-runtime.ts';
 import { createAutomationHandlers } from './automation-handlers.ts';
 import { createCommunicationHandlers } from './communications-handlers.ts';
 import { createTwoFactorHandlers } from './two-factor-handlers.ts';
@@ -15,11 +16,22 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('VITE_SUPABASE_ANON_KEY') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const SUPABASE_DB_URL = Deno.env.get('SUPABASE_DB_URL') ?? '';
+const APP_URL = Deno.env.get('APP_URL') ?? Deno.env.get('VITE_APP_URL') ?? '';
+const ENABLE_RUNTIME_MIGRATION_ENDPOINTS = Deno.env.get('ENABLE_RUNTIME_MIGRATION_ENDPOINTS') === 'true';
+
+function resolveCorsOrigin() {
+  try {
+    return APP_URL ? new URL(APP_URL).origin : '*';
+  } catch {
+    return '*';
+  }
+}
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-communication-worker-secret, x-automation-worker-secret',
+  'Access-Control-Allow-Origin': resolveCorsOrigin(),
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-communication-worker-secret, x-automation-worker-secret, x-request-id',
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
+  Vary: 'Origin',
 };
 
 const deliveryEnv: DeliveryProcessorEnv = {
@@ -999,7 +1011,8 @@ async function authenticateRequest(request: Request) {
     .maybeSingle();
 
   if (byAuthError) {
-    return { error: json({ error: byAuthError.message }, 500) };
+    console.error('[authenticateRequest] canonical user lookup failed', byAuthError);
+    return { error: json({ error: 'Authentication lookup failed' }, 500) };
   }
 
   let canonicalUser = byAuthUser;
@@ -1032,15 +1045,15 @@ function getAutomationWorkerSecret() {
 function hasCommunicationWorkerAccess(request: Request): boolean {
   const secret = getCommunicationWorkerSecret();
   if (!secret) return false;
-  return request.headers.get('x-communication-worker-secret') === secret;
+  return timingSafeEqual(request.headers.get('x-communication-worker-secret') ?? '', secret);
 }
 
 function hasAutomationWorkerAccess(request: Request): boolean {
   const secret = getAutomationWorkerSecret();
   if (!secret) return false;
   return (
-    request.headers.get('x-automation-worker-secret') === secret ||
-    request.headers.get('x-communication-worker-secret') === secret
+    timingSafeEqual(request.headers.get('x-automation-worker-secret') ?? '', secret) ||
+    timingSafeEqual(request.headers.get('x-communication-worker-secret') ?? '', secret)
   );
 }
 
@@ -1103,26 +1116,7 @@ async function handleHealth() {
   return json({
     ok: true,
     service: 'make-server-0b1f4071',
-    twoFactor: {
-      enabled: true,
-      serverVerified: true,
-    },
-    communications: {
-      resendConfigured: Boolean(deliveryEnv.resendApiKey && deliveryEnv.resendFromEmail),
-      sendgridConfigured: Boolean(deliveryEnv.sendgridApiKey && deliveryEnv.sendgridFromEmail),
-      twilioConfigured: Boolean(
-        deliveryEnv.twilioAccountSid &&
-        deliveryEnv.twilioAuthToken &&
-        (deliveryEnv.twilioMessagingServiceSid || deliveryEnv.twilioSmsFrom || deliveryEnv.twilioWhatsappFrom),
-      ),
-      workerSecretConfigured: Boolean(getCommunicationWorkerSecret()),
-      webhookTokenConfigured: Boolean(deliveryEnv.communicationWebhookToken),
-    },
-    automation: {
-      workerSecretConfigured: Boolean(getAutomationWorkerSecret()),
-      maxAttempts: Number(Deno.env.get('AUTOMATION_MAX_ATTEMPTS') ?? '5'),
-      inlineCommunications: Deno.env.get('AUTOMATION_PROCESS_COMMUNICATIONS_INLINE') === 'true',
-    },
+    timestamp: new Date().toISOString(),
   });
 }
 
@@ -1152,8 +1146,20 @@ const routes: RouteDefinition[] = [
   { method: 'POST', path: '/automation/process', handler: handleProcessAutomationQueue },
   { method: 'POST', path: '/communications/admin/send-test', handler: handleSendTestCommunication },
   { method: 'GET', path: '/communications/admin/provider-diagnostics', handler: handleProviderDiagnostics },
-  { method: 'POST', path: '/communications/admin/apply-migrations', handler: handleApplyCommunicationMigrations },
-  { method: 'POST', path: '/automation/admin/apply-migrations', handler: handleApplyAutomationMigrations },
+  {
+    method: 'POST',
+    path: '/communications/admin/apply-migrations',
+    handler: (request) => ENABLE_RUNTIME_MIGRATION_ENDPOINTS
+      ? handleApplyCommunicationMigrations(request)
+      : json({ error: 'Runtime migration endpoints are disabled' }, 403),
+  },
+  {
+    method: 'POST',
+    path: '/automation/admin/apply-migrations',
+    handler: (request) => ENABLE_RUNTIME_MIGRATION_ENDPOINTS
+      ? handleApplyAutomationMigrations(request)
+      : json({ error: 'Runtime migration endpoints are disabled' }, 403),
+  },
   { method: 'POST', path: '/communications/webhooks/resend', handler: handleResendWebhook },
   { method: 'POST', path: '/communications/webhooks/twilio', handler: handleTwilioWebhook },
 ];

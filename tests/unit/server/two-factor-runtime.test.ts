@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildOtpAuthUrl,
   generateBackupCodes,
-  generateQRCode,
   generateTOTPSecret,
   hashBackupCode,
   hashBackupCodes,
@@ -12,12 +12,12 @@ import {
 } from '../../../supabase/functions/make-server-0b1f4071/_shared/two-factor-runtime';
 
 describe('two-factor runtime helpers', () => {
-  it('generates a base32 secret and qr code', () => {
+  it('generates a base32 secret and otpauth url', () => {
     const secret = generateTOTPSecret();
-    const qrCode = generateQRCode(secret, 'user@example.com');
+    const otpauthUrl = buildOtpAuthUrl(secret, 'user@example.com');
 
     expect(secret).toMatch(/^[A-Z2-7]{32}$/);
-    expect(qrCode).toContain('otpauth%3A%2F%2Ftotp%2F');
+    expect(otpauthUrl).toContain('otpauth://totp/');
   });
 
   it('creates distinct backup codes and hashes them', async () => {

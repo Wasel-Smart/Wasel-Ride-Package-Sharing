@@ -1,6 +1,6 @@
 export type TwoFactorSetupPayload = {
   secret: string;
-  qrCode: string;
+  otpauthUrl: string;
   backupCodes: string[];
 };
 
@@ -19,11 +19,14 @@ export function generateTOTPSecret(): string {
     .join('');
 }
 
-export function generateQRCode(secret: string, userLabel: string): string {
+export function buildOtpAuthUrl(secret: string, userLabel: string): string {
   const issuer = 'Wasel';
   const label = `${issuer}:${userLabel}`;
-  const otpUrl = `otpauth://totp/${encodeURIComponent(label)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpUrl)}`;
+  return `otpauth://totp/${encodeURIComponent(label)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
+}
+
+export function generateQRCode(secret: string, userLabel: string): string {
+  return buildOtpAuthUrl(secret, userLabel);
 }
 
 export function generateBackupCodes(count = 10): string[] {

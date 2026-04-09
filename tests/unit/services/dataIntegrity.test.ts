@@ -27,18 +27,36 @@ describe('dataIntegrity', () => {
     expect(result.success).toBe(false);
   });
 
-  it('retries transient write failures and preserves the final result', async () => {
+  it('does not retry unsafe writes unless explicitly enabled', async () => {
+    const execute = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Network timeout while writing'))
+      .mockResolvedValueOnce({ ok: true });
+
+    await expect(withDataIntegrity({
+      operation: 'test.write',
+      schema: profileUpdatePayloadSchema,
+      payload: { full_name: 'Laith Khaled' },
+      execute,
+      maxAttempts: 2,
+    })).rejects.toThrow('Network timeout while writing');
+
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries transient failures only when the operation opts into transient retries', async () => {
     const execute = vi
       .fn()
       .mockRejectedValueOnce(new Error('Network timeout while writing'))
       .mockResolvedValueOnce({ ok: true });
 
     const result = await withDataIntegrity({
-      operation: 'test.write',
+      operation: 'test.idempotent-write',
       schema: profileUpdatePayloadSchema,
       payload: { full_name: 'Laith Khaled' },
       execute,
       maxAttempts: 2,
+      retryPolicy: 'transient',
     });
 
     expect(result).toEqual({ ok: true });

@@ -4,6 +4,7 @@ import {
   supabase as supabaseClient,
   supabaseUrl,
 } from '../utils/supabase/client';
+import type { QueuedRequest } from './offlineQueue';
 
 export { projectId, publicAnonKey };
 
@@ -244,6 +245,45 @@ interface FetchWithRetryOptions extends RequestInit {
   timeout?: number;
   queuePriority?: 'critical' | 'high' | 'normal' | 'low';
   deduplicationKey?: string;
+  offlineQueueable?: boolean;
+  retryUnsafeRequests?: boolean;
+}
+
+function isSafeRetryMethod(method: string): boolean {
+  return ['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase());
+}
+
+function toQueuedRequestMethod(method: string): QueuedRequest['method'] {
+  switch (method.toUpperCase()) {
+    case 'POST':
+      return 'POST';
+    case 'PUT':
+      return 'PUT';
+    case 'DELETE':
+      return 'DELETE';
+    case 'PATCH':
+      return 'PATCH';
+    default:
+      return 'GET';
+  }
+}
+
+function toRequestHeaders(headers: HeadersInit | undefined): Record<string, string> {
+  if (!headers) {
+    return {};
+  }
+
+  if (headers instanceof Headers) {
+    return Object.fromEntries(headers.entries());
+  }
+
+  if (Array.isArray(headers)) {
+    return Object.fromEntries(headers);
+  }
+
+  return Object.fromEntries(
+    Object.entries(headers).map(([key, value]) => [key, String(value)]),
+  );
 }
 
 export async function fetchWithRetry(
@@ -261,8 +301,13 @@ export async function fetchWithRetry(
     signal: callerSignal,
     queuePriority = 'normal',
     deduplicationKey,
+    offlineQueueable,
+    retryUnsafeRequests = false,
     ...fetchOptions
   } = options;
+  const method = (fetchOptions.method ?? options.method ?? 'GET').toUpperCase();
+  const canRetryInClient = isSafeRetryMethod(method) || retryUnsafeRequests;
+  const canQueueOffline = offlineQueueable ?? isSafeRetryMethod(method);
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
@@ -288,30 +333,31 @@ export async function fetchWithRetry(
       }
     }
 
-    if (retries > 0 && [502, 503, 504].includes(response.status)) {
+    if (canRetryInClient && retries > 0 && [502, 503, 504].includes(response.status)) {
       await delay(backoff);
       return fetchWithRetry(url, options, retries - 1, backoff * 2);
     }
 
     if (!response.ok && response.status >= 500) {
       setBackendStatus(getNetworkOnline() ? 'degraded' : 'offline');
-      // Queue for retry on 5xx errors
-      try {
-        const { getOfflineQueueManager } = await import('./offlineQueue');
-        const queue = getOfflineQueueManager();
-        queue.addRequest(
-          (options.method?.toUpperCase() || 'GET') as any,
-          url,
-          {
-            body: options.body,
-            headers: options.headers as Record<string, string>,
-            priority: queuePriority,
-            deduplicationKey,
-            maxRetries: retries + 3,
-          }
-        );
-      } catch {
-        // Offline queue not available
+      if (canQueueOffline) {
+        try {
+          const { getOfflineQueueManager } = await import('./offlineQueue');
+          const queue = getOfflineQueueManager();
+          queue.addRequest(
+            toQueuedRequestMethod(method),
+            url,
+            {
+              body: options.body,
+              headers: toRequestHeaders(options.headers),
+              priority: queuePriority,
+              deduplicationKey,
+              maxRetries: retries + 3,
+            }
+          );
+        } catch {
+          // Offline queue not available
+        }
       }
     }
 
@@ -325,7 +371,7 @@ export async function fetchWithRetry(
       error instanceof TypeError ||
       (error instanceof DOMException && error.name === 'AbortError');
 
-    if (retries > 0 && isRetryable) {
+    if (canRetryInClient && retries > 0 && isRetryable) {
       await delay(backoff);
       return fetchWithRetry(url, options, retries - 1, backoff * 2);
     }
@@ -337,16 +383,16 @@ export async function fetchWithRetry(
     }
 
     // Network error - queue for later
-    if (!getNetworkOnline()) {
+    if (!getNetworkOnline() && canQueueOffline) {
       try {
         const { getOfflineQueueManager } = await import('./offlineQueue');
         const queue = getOfflineQueueManager();
         queue.addRequest(
-          (options.method?.toUpperCase() || 'GET') as any,
+          toQueuedRequestMethod(method),
           url,
           {
             body: options.body,
-            headers: options.headers as Record<string, string>,
+            headers: toRequestHeaders(options.headers),
             priority:
               queuePriority === 'critical'
                 ? 'critical'

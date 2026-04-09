@@ -25,6 +25,21 @@
 import { onCLS, onFCP, onINP, onLCP, onTTFB, type Metric } from 'web-vitals';
 import { supabase } from '../services/core';
 
+type MetricsClient = {
+  from: (table: string) => {
+    insert: (values: Record<string, unknown>) => Promise<unknown>;
+    select: (columns: string) => {
+      gte: (
+        column: string,
+        value: string,
+      ) => Promise<{
+        data: Array<{ name: string; value: number; rating: string }> | null;
+        error: unknown;
+      }>;
+    };
+  };
+};
+
 // ─── Thresholds (aligned with lighthouserc.json) ──────────────────────────────
 const BUDGETS: Record<string, { good: number; poor: number }> = {
   LCP:  { good: 2500,  poor: 4000  },
@@ -52,10 +67,11 @@ async function report(metric: Metric): Promise<void> {
   }
 
   // Skip write if Supabase isn't configured
-  if (!supabase) return;
+  const metricsClient = supabase as MetricsClient | null;
+  if (!metricsClient) return;
 
   try {
-    await supabase.from('web_vitals').insert({
+    await metricsClient.from('web_vitals').insert({
       name:       metric.name,
       value:      metric.value,
       rating:     r,
@@ -92,10 +108,11 @@ export async function fetchVitalsSummary(days = 7): Promise<{
   p75: number;
   rating: string;
 }[] | null> {
-  if (!supabase) return null;
+  const metricsClient = supabase as MetricsClient | null;
+  if (!metricsClient) return null;
   try {
     const since = new Date(Date.now() - days * 86_400_000).toISOString();
-    const { data, error } = await supabase
+    const { data, error } = await metricsClient
       .from('web_vitals')
       .select('name, value, rating')
       .gte('recorded_at', since);

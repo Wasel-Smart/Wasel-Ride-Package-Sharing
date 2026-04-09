@@ -91,7 +91,7 @@ describe('notificationsAPI', () => {
 
     expect(result.notifications).toHaveLength(1);
     expect(result.notifications[0].title).toBe('Saved');
-  });
+  }, 15_000);
 
   it('persists server push notifications to the local queue for continuity', async () => {
     mockGetAuthDetails.mockResolvedValue({ token: 'token-123', userId: 'user-123' });

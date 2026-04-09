@@ -105,8 +105,17 @@ export function subscribeToDriverLocation(
   }
 
   // Subscribe to driver_locations table changes
-  const subscription = supabase
-    .channel(`driver:${driverId}`)
+  const channel = supabase.channel(`driver:${driverId}`) as unknown as {
+    on: (
+      event: string,
+      filter: Record<string, string>,
+      callback: (payload: { new: DriverLocationRecord | null }) => void,
+    ) => {
+      subscribe: () => Parameters<NonNullable<typeof supabase>['removeChannel']>[0];
+    };
+  };
+
+  const subscription = channel
     .on(
       'postgres_changes',
       {
@@ -115,7 +124,7 @@ export function subscribeToDriverLocation(
         table: 'driver_locations',
         filter: `driver_id=eq.${driverId}`,
       },
-      (payload: { new: DriverLocationRecord | null }) => {
+      (payload) => {
         try {
           if (!payload.new) return;
           onUpdate(mapDriverLocationRecord(payload.new));

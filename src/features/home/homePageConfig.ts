@@ -1,4 +1,3 @@
-import type { LucideIcon } from 'lucide-react';
 import {
   ArrowRight,
   Bus,
@@ -11,6 +10,7 @@ import {
   Shield,
   Star,
   TrendingUp,
+  type LucideIcon,
 } from 'lucide-react';
 import { C } from './HomePageShared';
 
@@ -119,7 +119,10 @@ export function buildStatsData(
     {
       icon: Star,
       label: ar ? 'التقييم' : 'Rating',
-      value: liveStats?.rating != null ? String(liveStats.rating) : '...',
+      value:
+        liveStats?.rating !== null && liveStats?.rating !== undefined
+          ? String(liveStats.rating)
+          : '...',
       color: C.gold,
     },
     {

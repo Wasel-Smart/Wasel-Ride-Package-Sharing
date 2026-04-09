@@ -5,6 +5,15 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "./utils";
 import { instantFeedback } from "../../utils/instantFeedback";
 
+type ButtonProps = React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean;
+    enableFeedback?: boolean;
+    feedbackType?: 'light' | 'medium' | 'heavy';
+  };
+
+const feedbackCleanupRegistry = new WeakMap<HTMLElement, () => void>();
+
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[1.1rem] text-sm font-semibold tracking-[-0.01em] transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
@@ -38,47 +47,47 @@ const buttonVariants = cva(
 
 const Button = React.forwardRef<
   HTMLButtonElement,
-  React.ComponentProps<"button"> &
-    VariantProps<typeof buttonVariants> & {
-      asChild?: boolean;
-      enableFeedback?: boolean; // NEW: Enable instant feedback
-      feedbackType?: 'light' | 'medium' | 'heavy'; // NEW: Feedback intensity
-    }
+  ButtonProps
 >(({ className, variant, size, asChild = false, enableFeedback = true, feedbackType = 'light', ...props }, ref) => {
   const Comp = asChild ? Slot : "button";
-  const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const buttonRef = React.useRef<HTMLButtonElement | null>(null);
+  const setButtonRef = React.useCallback((node: HTMLButtonElement | null) => {
+    buttonRef.current = node;
 
-  // OPTIMIZED: Attach instant feedback on mount - DEFERRED to avoid blocking FID
+    if (typeof ref === "function") {
+      ref(node);
+      return;
+    }
+
+    if (ref) {
+      ref.current = node;
+    }
+  }, [ref]);
+
   React.useEffect(() => {
     const element = buttonRef.current;
     if (!element || !enableFeedback) return;
 
-    // Defer feedback attachment to avoid blocking initial interactions
-    const timeoutId = setTimeout(() => {
+    const timeoutId = window.setTimeout(() => {
       const cleanupTouch = instantFeedback.attachTouchFeedback(element, feedbackType);
       const cleanupClick = instantFeedback.attachClickFeedback(element, feedbackType);
 
-      // Store cleanup functions for unmount
-      (element as any).__feedbackCleanup = () => {
+      feedbackCleanupRegistry.set(element, () => {
         cleanupTouch();
         cleanupClick();
-      };
+        feedbackCleanupRegistry.delete(element);
+      });
     }, 100); // Defer by 100ms
 
     return () => {
-      clearTimeout(timeoutId);
-      if ((element as any).__feedbackCleanup) {
-        (element as any).__feedbackCleanup();
-      }
+      window.clearTimeout(timeoutId);
+      feedbackCleanupRegistry.get(element)?.();
     };
   }, [enableFeedback, feedbackType]);
 
-  // Merge refs
-  React.useImperativeHandle(ref, () => buttonRef.current!);
-
   return (
     <Comp
-      ref={buttonRef}
+      ref={setButtonRef}
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       style={{ 

@@ -6,6 +6,7 @@
  */
 
 import * as Sentry from '@sentry/react';
+import { redactSensitiveValue } from './redaction';
 
 let sentryInitialized = false;
 
@@ -22,6 +23,14 @@ function safeStorageGet(key: string): string | null {
 }
 
 type LogContext = Record<string, unknown>;
+
+function redactContext(context?: LogContext): LogContext | undefined {
+  if (!context) {
+    return undefined;
+  }
+
+  return redactSensitiveValue(context) as LogContext;
+}
 
 export function initSentry() {
   if (sentryInitialized) {
@@ -70,6 +79,10 @@ export function initSentry() {
         theme: safeStorageGet('wasel_theme') || 'dark',
       };
 
+      if (event.extra) {
+        event.extra = redactSensitiveValue(event.extra) as Record<string, unknown>;
+      }
+
       return event;
     },
   });
@@ -79,35 +92,38 @@ export function initSentry() {
 
 export const logger = {
   error: (message: string, error?: Error | unknown, context?: LogContext) => {
+    const sanitizedContext = redactContext(context);
     if (import.meta.env.DEV) {
-      console.error('[Wasel]', message, error, context);
+      console.error('[Wasel]', message, error, sanitizedContext);
     }
 
     Sentry.captureException(error || new Error(message), {
       level: 'error',
       tags: { type: 'application_error' },
-      extra: context,
+      extra: sanitizedContext,
     });
   },
 
   warning: (message: string, context?: LogContext) => {
+    const sanitizedContext = redactContext(context);
     if (import.meta.env.DEV) {
-      console.warn('[Wasel]', message, context);
+      console.warn('[Wasel]', message, sanitizedContext);
     }
 
     Sentry.captureMessage(message, {
       level: 'warning',
       tags: { type: 'application_warning' },
-      extra: context,
+      extra: sanitizedContext,
     });
   },
 
   info: (message: string, context?: LogContext) => {
+    const sanitizedContext = redactContext(context);
     if (context?.important) {
       Sentry.captureMessage(message, {
         level: 'info',
         tags: { type: 'application_info' },
-        extra: context,
+        extra: sanitizedContext,
       });
     }
   },

@@ -8,12 +8,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Plus, ArrowDownLeft, ArrowUpRight, Send, Gift, RefreshCw,
   TrendingUp, CheckCircle, Lock, Crown, Zap,
-  CreditCard,
+  CreditCard, type LucideIcon,
 } from 'lucide-react';
 import { WaselColors } from '../../../tokens/wasel-tokens';
+import type { WalletTransaction } from '../../../services/walletApi';
 
 // Transaction styling by wallet event type
-export const TX_ICONS: Record<string, any> = {
+export const TX_ICONS: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
   topup: { icon: Plus, color: WaselColors.success, bg: 'bg-green-500/10' },
   payment: { icon: CreditCard, color: WaselColors.error, bg: 'bg-red-500/10' },
   earning: { icon: TrendingUp, color: WaselColors.teal, bg: 'bg-teal-500/10' },
@@ -42,16 +43,16 @@ const TX_STATUS_META: Record<string, { label: string; className: string }> = {
 };
 
 // Shared transaction row used across wallet tabs
-export function TransactionRow({ tx, isRTL, jodLabel }: { tx: any; isRTL: boolean; jodLabel: string }) {
+export function TransactionRow({ tx, isRTL, jodLabel }: { tx: WalletTransaction; isRTL: boolean; jodLabel: string }) {
   const txType = tx.type || 'payment';
   const iconCfg = TX_ICONS[txType] || TX_ICONS.payment;
   const Icon = iconCfg.icon;
   const amount = tx.amount ?? 0;
   const isPositive = amount > 0;
-  const date = new Date(tx.createdAt || tx.created_at);
-  const statusKey = String(tx.status ?? tx.transaction_status ?? 'completed').toLowerCase();
+  const date = new Date(tx.createdAt);
+  const statusKey = String(tx.status ?? 'completed').toLowerCase();
   const statusMeta = TX_STATUS_META[statusKey] ?? TX_STATUS_META.completed;
-  const reference = tx.reference || tx.reference_id || tx.externalReference || tx.id;
+  const reference = tx.id;
 
   return (
     <motion.div

@@ -9,6 +9,11 @@ import { walletApi, type InsightsData, type WalletData } from '../../services/wa
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import { buildAuthPagePath } from '../../utils/authFlow';
 import { walletText } from './walletText';
+import {
+  getLatestNewTransaction,
+  getWalletErrorMessage,
+  runWalletAction,
+} from './walletControllerUtils';
 import { resolveWalletRuntimeMode } from './walletRuntime';
 
 const WALLET_BACKEND_READY = Boolean(projectId && publicAnonKey);
@@ -57,6 +62,13 @@ export function useWalletDashboardController() {
     user?.email?.split('@')[0] ||
     'Wasel member';
   const effectiveUserEmail = localUser?.email || user?.email || '';
+  const topUpErrorMessage = 'Unable to add wallet funds right now.';
+  const withdrawErrorMessage = 'Unable to process this withdrawal right now.';
+  const sendErrorMessage = 'Unable to send money right now.';
+  const pinErrorMessage = 'Unable to update your wallet PIN right now.';
+  const rewardErrorMessage = 'Unable to claim this reward right now.';
+  const autoTopUpErrorMessage = 'Unable to update auto top-up settings right now.';
+  const subscribeErrorMessage = 'Unable to activate Wasel Plus right now.';
 
   const fetchWallet = useCallback(async (): Promise<WalletData | null> => {
     if (localAuthLoading) {
@@ -78,8 +90,7 @@ export function useWalletDashboardController() {
       setAutoTopUpAmount(String(data.wallet.autoTopUpAmount || 20));
       setAutoTopUpThreshold(String(data.wallet.autoTopUpThreshold || 5));
       return data;
-    } catch (err) {
-      console.error('[Wallet] fetch error:', err);
+    } catch {
       setWalletData(null);
       setInsights(null);
       toast.error(t.walletLoadError);
@@ -98,8 +109,7 @@ export function useWalletDashboardController() {
     try {
       const data = await walletApi.getInsights(effectiveUserId);
       setInsights(data);
-    } catch (err) {
-      console.error('[Wallet] insights error:', err);
+    } catch {
       setInsights(null);
     }
   }, [effectiveUserId, localAuthLoading, shouldRedirectToAuth]);
@@ -119,11 +129,19 @@ export function useWalletDashboardController() {
   }, [tab, fetchInsights]);
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchWallet();
-    if (tab === 'insights') await fetchInsights();
-    setRefreshing(false);
-    toast.success(t.refreshed);
+    await runWalletAction({
+      action: async () => {
+        await fetchWallet();
+        if (tab === 'insights') {
+          await fetchInsights();
+        }
+      },
+      fallbackErrorMessage: t.walletLoadError,
+      loadingSetter: setRefreshing,
+      onSuccess: () => {
+        toast.success(t.refreshed);
+      },
+    });
   };
 
   const handleTopUp = async () => {
@@ -133,33 +151,31 @@ export function useWalletDashboardController() {
       return;
     }
 
-    setActionLoading(true);
-    try {
-      const previousTransactionIds = new Set(
-        (walletData?.transactions ?? []).map((transaction) => transaction.id),
-      );
-      await walletApi.topUp(effectiveUserId, amt, topUpMethod);
-      toast.success(`JOD ${amt} added successfully`);
-      setShowTopUp(false);
-      setTopUpAmount('');
-      const refreshedWallet = await fetchWallet();
-      const latestTransaction = refreshedWallet?.transactions.find(
-        (transaction) => !previousTransactionIds.has(transaction.id),
-      );
-      if (latestTransaction && effectiveUserEmail) {
-        triggerPaymentReceiptEmail({
-          userEmail: effectiveUserEmail,
-          userName: effectiveUserName,
-          transaction: latestTransaction,
-          balanceJod: refreshedWallet?.balance ?? 0,
-          paymentMethod: topUpMethod,
-        });
-      }
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setActionLoading(false);
-    }
+    const previousWallet = walletData;
+    await runWalletAction({
+      action: async () => {
+        await walletApi.topUp(effectiveUserId, amt, topUpMethod);
+        return fetchWallet();
+      },
+      fallbackErrorMessage: topUpErrorMessage,
+      loadingSetter: setActionLoading,
+      onSuccess: (refreshedWallet) => {
+        toast.success(`JOD ${amt} added successfully`);
+        setShowTopUp(false);
+        setTopUpAmount('');
+
+        const latestTransaction = getLatestNewTransaction(previousWallet, refreshedWallet);
+        if (latestTransaction && effectiveUserEmail) {
+          void triggerPaymentReceiptEmail({
+            userEmail: effectiveUserEmail,
+            userName: effectiveUserName,
+            transaction: latestTransaction,
+            balanceJod: refreshedWallet?.balance ?? 0,
+            paymentMethod: topUpMethod,
+          });
+        }
+      },
+    });
   };
 
   const handleWithdraw = async () => {
@@ -173,34 +189,32 @@ export function useWalletDashboardController() {
       return;
     }
 
-    setActionLoading(true);
-    try {
-      const previousTransactionIds = new Set(
-        (walletData?.transactions ?? []).map((transaction) => transaction.id),
-      );
-      await walletApi.withdraw(effectiveUserId, amt, withdrawBank, withdrawMethod);
-      toast.success(`JOD ${amt} withdrawn successfully`);
-      setShowWithdraw(false);
-      setWithdrawAmount('');
-      setWithdrawBank('');
-      const refreshedWallet = await fetchWallet();
-      const latestTransaction = refreshedWallet?.transactions.find(
-        (transaction) => !previousTransactionIds.has(transaction.id),
-      );
-      if (latestTransaction && effectiveUserEmail) {
-        triggerPaymentReceiptEmail({
-          userEmail: effectiveUserEmail,
-          userName: effectiveUserName,
-          transaction: latestTransaction,
-          balanceJod: refreshedWallet?.balance ?? 0,
-          paymentMethod: withdrawMethod,
-        });
-      }
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setActionLoading(false);
-    }
+    const previousWallet = walletData;
+    await runWalletAction({
+      action: async () => {
+        await walletApi.withdraw(effectiveUserId, amt, withdrawBank, withdrawMethod);
+        return fetchWallet();
+      },
+      fallbackErrorMessage: withdrawErrorMessage,
+      loadingSetter: setActionLoading,
+      onSuccess: (refreshedWallet) => {
+        toast.success(`JOD ${amt} withdrawn successfully`);
+        setShowWithdraw(false);
+        setWithdrawAmount('');
+        setWithdrawBank('');
+
+        const latestTransaction = getLatestNewTransaction(previousWallet, refreshedWallet);
+        if (latestTransaction && effectiveUserEmail) {
+          void triggerPaymentReceiptEmail({
+            userEmail: effectiveUserEmail,
+            userName: effectiveUserName,
+            transaction: latestTransaction,
+            balanceJod: refreshedWallet?.balance ?? 0,
+            paymentMethod: withdrawMethod,
+          });
+        }
+      },
+    });
   };
 
   const handleSend = async () => {
@@ -214,20 +228,21 @@ export function useWalletDashboardController() {
       return;
     }
 
-    setActionLoading(true);
-    try {
-      await walletApi.sendMoney(effectiveUserId, sendRecipient, amt, sendNote || undefined);
-      toast.success(`JOD ${amt} sent successfully`);
-      setShowSend(false);
-      setSendAmount('');
-      setSendRecipient('');
-      setSendNote('');
-      await fetchWallet();
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setActionLoading(false);
-    }
+    await runWalletAction({
+      action: async () => {
+        await walletApi.sendMoney(effectiveUserId, sendRecipient, amt, sendNote || undefined);
+        return fetchWallet();
+      },
+      fallbackErrorMessage: sendErrorMessage,
+      loadingSetter: setActionLoading,
+      onSuccess: () => {
+        toast.success(`JOD ${amt} sent successfully`);
+        setShowSend(false);
+        setSendAmount('');
+        setSendRecipient('');
+        setSendNote('');
+      },
+    });
   };
 
   const handleSetPin = async () => {
@@ -236,28 +251,32 @@ export function useWalletDashboardController() {
       return;
     }
 
-    setActionLoading(true);
-    try {
-      await walletApi.setPin(effectiveUserId, pinValue);
-      toast.success(t.pinSetSuccess);
-      setShowPinSetup(false);
-      setPinValue('');
-      await fetchWallet();
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setActionLoading(false);
-    }
+    await runWalletAction({
+      action: async () => {
+        await walletApi.setPin(effectiveUserId, pinValue);
+        return fetchWallet();
+      },
+      fallbackErrorMessage: pinErrorMessage,
+      loadingSetter: setActionLoading,
+      onSuccess: () => {
+        toast.success(t.pinSetSuccess);
+        setShowPinSetup(false);
+        setPinValue('');
+      },
+    });
   };
 
   const handleClaimReward = async (rewardId: string) => {
-    try {
-      await walletApi.claimReward(effectiveUserId, rewardId);
-      toast.success(t.rewardClaimed);
-      await fetchWallet();
-    } catch (err: any) {
-      toast.error(err.message);
-    }
+    await runWalletAction({
+      action: async () => {
+        await walletApi.claimReward(effectiveUserId, rewardId);
+        return fetchWallet();
+      },
+      fallbackErrorMessage: rewardErrorMessage,
+      onSuccess: () => {
+        toast.success(t.rewardClaimed);
+      },
+    });
   };
 
   const handleAutoTopUpToggle = async (enabled: boolean) => {
@@ -272,23 +291,24 @@ export function useWalletDashboardController() {
       );
       toast.success(enabled ? t.autoTopUpEnabledToast : t.autoTopUpDisabledToast);
       await fetchWallet();
-    } catch (err: any) {
+    } catch (error) {
       setAutoTopUpEnabled(!enabled);
-      toast.error(err.message);
+      toast.error(getWalletErrorMessage(error, autoTopUpErrorMessage));
     }
   };
 
   const handleSubscribe = async () => {
-    setActionLoading(true);
-    try {
-      await walletApi.subscribe(effectiveUserId, 'Wasel Plus', 9.99);
-      toast.success(t.welcomeToPlus);
-      await fetchWallet();
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setActionLoading(false);
-    }
+    await runWalletAction({
+      action: async () => {
+        await walletApi.subscribe(effectiveUserId, 'Wasel Plus', 9.99);
+        return fetchWallet();
+      },
+      fallbackErrorMessage: subscribeErrorMessage,
+      loadingSetter: setActionLoading,
+      onSuccess: () => {
+        toast.success(t.welcomeToPlus);
+      },
+    });
   };
 
   return {

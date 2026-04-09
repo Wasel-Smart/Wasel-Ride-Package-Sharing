@@ -565,14 +565,16 @@ export class PackageTrackingService {
   private generateTrackingCode(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = 'WSL-PKG-';
-    for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    const bytes = crypto.getRandomValues(new Uint8Array(6));
+    for (const byte of bytes) {
+      code += chars.charAt(byte % chars.length);
     }
     return code;
   }
 
   private generateVerificationCode(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+    const bytes = crypto.getRandomValues(new Uint32Array(1));
+    return String(100000 + (bytes[0] % 900000)).padStart(6, '0');
   }
 
   private generateQRCodeUrl(trackingCode: string): string {

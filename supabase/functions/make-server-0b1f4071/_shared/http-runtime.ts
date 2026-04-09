@@ -58,8 +58,10 @@ export async function dispatchRouteRequest(options: {
   try {
     return await matchedRoute.handler(options.request);
   } catch (error) {
+    const requestId = crypto.randomUUID();
+    console.error('[edge-route]', requestId, error);
     return jsonResponse(
-      { error: error instanceof Error ? error.message : String(error) },
+      { error: 'Internal server error', requestId },
       options.corsHeaders,
       500,
     );

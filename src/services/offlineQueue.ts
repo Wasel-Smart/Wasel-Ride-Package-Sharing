@@ -25,6 +25,10 @@ export interface QueuedRequest {
   deduplicationKey?: string;
 }
 
+function isSafeQueueMethod(method: string): boolean {
+  return ['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase());
+}
+
 export interface QueueStats {
   totalQueued: number;
   highPriority: number;
@@ -376,9 +380,12 @@ export async function fetchWithOfflineQueue(
   options?: RequestInit & {
     priority?: QueuedRequestPriority;
     deduplicationKey?: string;
+    offlineQueueable?: boolean;
   }
 ): Promise<Response> {
   const manager = getOfflineQueueManager();
+  const method = (options?.method ?? 'GET').toUpperCase();
+  const canQueueOffline = options?.offlineQueueable ?? isSafeQueueMethod(method);
 
   // Try to fetch immediately
   try {
@@ -386,9 +393,9 @@ export async function fetchWithOfflineQueue(
     if (response.ok) return response;
 
     // Queue on 5xx or 429 errors
-    if (response.status >= 500 || response.status === 429) {
+    if ((response.status >= 500 || response.status === 429) && canQueueOffline) {
       manager.addRequest(
-        (options?.method ?? 'GET') as QueuedRequest['method'],
+        method as QueuedRequest['method'],
         url,
         {
           body: options?.body,
@@ -401,17 +408,20 @@ export async function fetchWithOfflineQueue(
 
     return response;
   } catch (error) {
-    // Network error - queue the request
-    manager.addRequest(
-      (options?.method ?? 'GET') as QueuedRequest['method'],
-      url,
-      {
-        body: options?.body,
-        headers: options?.headers as Record<string, string>,
-        priority: options?.priority,
-        deduplicationKey: options?.deduplicationKey,
-      }
-    );
+    if (canQueueOffline) {
+      manager.addRequest(
+        method as QueuedRequest['method'],
+        url,
+        {
+          body: options?.body,
+          headers: options?.headers as Record<string, string>,
+          priority: options?.priority,
+          deduplicationKey: options?.deduplicationKey,
+        }
+      );
+    } else {
+      throw error;
+    }
 
     // Return a pending response placeholder
     return new Response(JSON.stringify({ queued: true }), {

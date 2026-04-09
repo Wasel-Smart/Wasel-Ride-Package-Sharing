@@ -52,6 +52,18 @@ const RETRY_CONFIG = {
 };
 
 const HEALTH_CHECK_INTERVAL = 60_000;
+const CLIENT_KEY = Symbol.for('supabase.client.instance.v4');
+
+type QueueTask<T> = {
+  fn: () => Promise<T>;
+  resolve: (value: T) => void;
+  reject: (error: unknown) => void;
+};
+
+type SupabaseClientInstance = ReturnType<typeof createClient<Database>>;
+type GlobalWithSupabaseClient = typeof globalThis & {
+  [CLIENT_KEY]?: SupabaseClientInstance;
+};
 
 function getBrowserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | undefined {
   if (typeof window === 'undefined') return undefined;
@@ -64,11 +76,7 @@ function getBrowserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | u
 }
 
 // ── Request queue (used only if a request fires while offline) ────────────────
-const requestQueue: Array<{
-  fn: () => Promise<any>;
-  resolve: (v: any) => void;
-  reject: (e: any) => void;
-}> = [];
+const requestQueue: Array<QueueTask<unknown>> = [];
 
 function getIsOnline(): boolean {
   if (typeof navigator === 'undefined') return true;
@@ -77,9 +85,17 @@ function getIsOnline(): boolean {
 
 async function processRequestQueue(): Promise<void> {
   while (requestQueue.length > 0 && getIsOnline()) {
-    const { fn, resolve, reject } = requestQueue.shift()!;
-    try   { resolve(await fn()); }
-    catch (e) { reject(e); }
+    const nextRequest = requestQueue.shift();
+    if (!nextRequest) {
+      break;
+    }
+
+    const { fn, resolve, reject } = nextRequest;
+    try {
+      resolve(await fn());
+    } catch (error) {
+      reject(error);
+    }
   }
 }
 
@@ -88,17 +104,29 @@ async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   retries = RETRY_CONFIG.maxRetries,
 ): Promise<T> {
-  let lastError: any;
+  let lastError: unknown;
   for (let i = 0; i < retries; i++) {
-    try { return await fn(); }
-    catch (error: any) {
+    try {
+      return await fn();
+    } catch (error) {
       lastError = error;
-      if (error?.status >= 400 && error?.status < 500 && error?.status !== 429) throw error;
+      const status =
+        typeof error === 'object' &&
+        error !== null &&
+        'status' in error &&
+        typeof (error as { status?: unknown }).status === 'number'
+          ? (error as { status: number }).status
+          : null;
+
+      if (status !== null && status >= 400 && status < 500 && status !== 429) {
+        throw error;
+      }
+
       const delay = Math.min(
         RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffMultiplier, i),
         RETRY_CONFIG.maxDelay,
       );
-      await new Promise(res => setTimeout(res, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
   throw lastError;
@@ -107,7 +135,11 @@ async function retryWithBackoff<T>(
 function queueIfOffline<T>(fn: () => Promise<T>): Promise<T> {
   if (!getIsOnline()) {
     return new Promise((resolve, reject) => {
-      requestQueue.push({ fn, resolve, reject });
+      requestQueue.push({
+        fn: fn as () => Promise<unknown>,
+        resolve: resolve as (value: unknown) => void,
+        reject,
+      });
     });
   }
   return fn();
@@ -122,9 +154,10 @@ const getSupabaseClient = () => {
     return null;
   }
 
-  const CLIENT_KEY = Symbol.for('supabase.client.instance.v4');
-  const globalAny  = typeof window !== 'undefined' ? window : globalThis;
-  if ((globalAny as any)[CLIENT_KEY]) return (globalAny as any)[CLIENT_KEY];
+  const globalStore = (typeof window !== 'undefined' ? window : globalThis) as GlobalWithSupabaseClient;
+  if (globalStore[CLIENT_KEY]) {
+    return globalStore[CLIENT_KEY];
+  }
 
   try {
     const client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -141,7 +174,7 @@ const getSupabaseClient = () => {
       db:       { schema: 'public' },
       realtime: { params: { eventsPerSecond: 10 } },
     });
-    (globalAny as any)[CLIENT_KEY] = client;
+    globalStore[CLIENT_KEY] = client;
     return client;
   } catch (error) {
     console.error('[Supabase] Failed to create client:', error);

@@ -54,16 +54,16 @@ export interface WalletSummary {
   autoTopUp: boolean;
   autoTopUpAmount: number;
   autoTopUpThreshold: number;
-  paymentMethods: any[];
+  paymentMethods: WalletPaymentMethod[];
   createdAt: string | null;
 }
 
-type RewardItem = {
+export interface RewardItem {
   id: string;
   description: string;
   amount: number;
   expirationDate: string;
-};
+}
 
 export interface WalletTransaction {
   id: string;
@@ -73,6 +73,41 @@ export interface WalletTransaction {
   createdAt: string;
   status?: string;
 };
+
+export interface WalletPaymentMethod {
+  id: string;
+  type: string;
+  provider: string;
+  tokenReference: string | null;
+  isDefault: boolean;
+  status: string;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface WalletEscrow {
+  id: string;
+  type: string;
+  amount: number;
+  tripId: string | null;
+  status: string | null;
+}
+
+export interface WalletSubscription {
+  id: string;
+  planName: string;
+  price: number;
+  status: string;
+  renewalDate: string | null;
+}
+
+export interface AddPaymentMethodInput {
+  type: string;
+  provider: string;
+  tokenReference?: string | null;
+  last4?: string | null;
+  isDefault?: boolean;
+}
 
 export interface WalletData {
   wallet: WalletSummary;
@@ -86,9 +121,9 @@ export interface WalletData {
   pinSet: boolean;
   autoTopUp: boolean;
   transactions: WalletTransaction[];
-  activeEscrows: any[];
+  activeEscrows: WalletEscrow[];
   activeRewards: RewardItem[];
-  subscription: any | null;
+  subscription: WalletSubscription | null;
 }
 
 export interface InsightsData {
@@ -185,6 +220,22 @@ function toWalletTransaction(row: TransactionRow): WalletTransaction {
   };
 }
 
+function toWalletPaymentMethod(row: PaymentMethodRow): WalletPaymentMethod {
+  return {
+    id: String(row.payment_method_id ?? `pm-${Date.now()}`),
+    type: String(row.method_type ?? 'card'),
+    provider: String(row.provider ?? 'unknown'),
+    tokenReference:
+      row.token_reference === null || row.token_reference === undefined
+        ? null
+        : String(row.token_reference),
+    isDefault: Boolean(row.is_default),
+    status: String(row.status ?? 'inactive'),
+    createdAt: row.created_at ?? null,
+    updatedAt: row.updated_at ?? null,
+  };
+}
+
 function isCredit(row: TransactionRow): boolean {
   return row.direction === 'credit';
 }
@@ -257,6 +308,7 @@ function buildWalletPayload(
   paymentMethods: PaymentMethodRow[] = [],
 ): WalletData {
   const normalizedTransactions = transactions.map(toWalletTransaction);
+  const normalizedPaymentMethods = paymentMethods.map(toWalletPaymentMethod);
   const totalEarned = transactions
     .filter(isCredit)
     .reduce((total, row) => total + toNumber(row.amount, 0), 0);
@@ -277,7 +329,7 @@ function buildWalletPayload(
       autoTopUp: Boolean(wallet?.auto_top_up_enabled),
       autoTopUpAmount: toNumber(wallet?.auto_top_up_amount, 20),
       autoTopUpThreshold: toNumber(wallet?.auto_top_up_threshold, 5),
-      paymentMethods,
+      paymentMethods: normalizedPaymentMethods,
       createdAt: wallet?.created_at ?? null,
     },
     balance: toNumber(wallet?.balance, 0),
@@ -546,14 +598,14 @@ async function updateWalletPreferencesDirect(
   return fetchWalletDirect(userId);
 }
 
-async function getPaymentMethodsDirect(userId: string): Promise<{ methods: any[] }> {
+async function getPaymentMethodsDirect(userId: string): Promise<{ methods: WalletPaymentMethod[] }> {
   const wallet = await fetchWalletDirect(userId);
   return { methods: Array.isArray(wallet.wallet.paymentMethods) ? wallet.wallet.paymentMethods : [] };
 }
 
 async function addPaymentMethodDirect(
   userId: string,
-  method: { type: string; provider: string; [key: string]: any },
+  method: AddPaymentMethodInput,
 ) {
   const db = getDb();
   const { data, error } = await db
@@ -562,8 +614,8 @@ async function addPaymentMethodDirect(
       user_id: userId,
       provider: method.provider,
       method_type: normalizePaymentMethod(method.type),
-      token_reference: String(method.token_reference ?? method.last4 ?? `pm-${Date.now()}`),
-      is_default: Boolean(method.is_default),
+      token_reference: String(method.tokenReference ?? method.last4 ?? `pm-${Date.now()}`),
+      is_default: Boolean(method.isDefault),
       status: 'active',
     })
     .select('*')
@@ -841,10 +893,10 @@ export const walletApi = {
     });
   },
 
-  async getPaymentMethods(userId: string): Promise<{ methods: any[] }> {
+  async getPaymentMethods(userId: string): Promise<{ methods: WalletPaymentMethod[] }> {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson<{ methods: any[] }>(`${WALLET_API_BASE}/${userId}/payment-methods`);
+        return await requestJson<{ methods: WalletPaymentMethod[] }>(`${WALLET_API_BASE}/${userId}/payment-methods`);
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -853,7 +905,7 @@ export const walletApi = {
     return getPaymentMethodsDirect(userId);
   },
 
-  async addPaymentMethod(userId: string, method: { type: string; provider: string; [key: string]: any }) {
+  async addPaymentMethod(userId: string, method: AddPaymentMethodInput) {
     if (canUseEdgeApi()) {
       try {
         return await requestJson(`${WALLET_API_BASE}/${userId}/payment-methods`, {

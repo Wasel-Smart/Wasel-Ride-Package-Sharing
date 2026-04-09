@@ -589,7 +589,14 @@ export function useMobilityOSLiveData(ar: boolean) {
 
     void refresh();
 
-    const channel = supabase
+    const supabaseClient = supabase;
+    if (!supabaseClient) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const channel = supabaseClient
       .channel(`mobility-os-live-${ar ? 'ar' : 'en'}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, () => { void refresh(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => { void refresh(); })
@@ -599,7 +606,7 @@ export function useMobilityOSLiveData(ar: boolean) {
 
     return () => {
       cancelled = true;
-      void supabase.removeChannel(channel);
+      void supabaseClient.removeChannel(channel);
     };
   }, [ar]);
 

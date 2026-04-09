@@ -19,6 +19,7 @@ import { InsightsTab } from './components/InsightsTab';
 import { SettingsTab } from './components/SettingsTab';
 import { WalletHeroCard } from './components/WalletHeroCard';
 import { WalletActionModals } from './components/WalletActionModals';
+import type { RewardItem, WalletTransaction } from '../../services/walletApi';
 
 export function WalletDashboard() {
   const {
@@ -200,7 +201,7 @@ export function WalletDashboard() {
               {(!walletData?.transactions || walletData.transactions.length === 0) ? (
                 <div className="text-center py-12 text-muted-foreground text-sm">{t.noTransactions}</div>
               ) : (
-                walletData.transactions.map((tx: any) => (
+                walletData.transactions.map((tx: WalletTransaction) => (
                   <SharedTransactionRow key={tx.id} tx={tx} isRTL={isRTL} jodLabel={t.jod} />
                 ))
               )}
@@ -226,7 +227,7 @@ export function WalletDashboard() {
                   </p>
                 </div>
               ) : (
-                walletData.activeRewards.map((r: any) => (
+                walletData.activeRewards.map((r: RewardItem) => (
                   <div key={r.id} className="flex items-center justify-between py-3 border-b border-border/30 last:border-0">
                     <div>
                       <p className="text-sm font-medium">{r.description}</p>

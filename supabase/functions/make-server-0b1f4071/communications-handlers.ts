@@ -12,6 +12,7 @@ import {
   type CommunicationDeliveryRecord,
   type DeliveryProcessorEnv,
 } from './_shared/communication-runtime.ts';
+import { getClientIp, takeRateLimitToken } from './_shared/security-runtime.ts';
 
 interface CanonicalUser {
   id: string;
@@ -40,10 +41,93 @@ interface CommunicationModuleOptions {
   communicationsOperationsSql: string;
 }
 
+const DELIVERY_CHANNELS = new Set(['email', 'sms', 'whatsapp', 'push', 'in_app']);
+const COMMUNICATION_QUEUE_RATE_LIMIT = { maxRequests: 25, windowMs: 5 * 60_000 };
+
 function readJsonBody(request: Request): Promise<Record<string, unknown>> {
   return request.json()
     .then((body) => (body && typeof body === 'object' && !Array.isArray(body) ? body as Record<string, unknown> : {}))
     .catch(() => ({}));
+}
+
+function validateDeliveryChannel(channel: string): string {
+  if (!DELIVERY_CHANNELS.has(channel)) {
+    throw new Error('Unsupported delivery channel');
+  }
+
+  return channel;
+}
+
+function sanitizeDeliveryText(value: unknown, maxLength: number): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.trim();
+  if (!normalized) {
+    return null;
+  }
+
+  return normalized.slice(0, maxLength);
+}
+
+async function claimQueuedDeliveries(
+  admin: SupabaseClient,
+  workerName: string,
+  limit = 25,
+) {
+  const { data, error } = await admin.rpc('app_claim_communication_deliveries', {
+    max_deliveries: Math.max(1, Math.min(limit, 100)),
+    worker_name: workerName,
+  });
+
+  if (!error && Array.isArray(data)) {
+    return data as CommunicationDeliveryRecord[];
+  }
+
+  const now = new Date().toISOString();
+  const { data: fallbackRows, error: fallbackError } = await admin
+    .from('communication_deliveries')
+    .select('*')
+    .eq('delivery_status', 'queued')
+    .order('queued_at', { ascending: true })
+    .limit(Math.max(1, Math.min(limit, 100)));
+
+  if (fallbackError) {
+    throw new Error(fallbackError.message);
+  }
+
+  const dueRows = (Array.isArray(fallbackRows) ? fallbackRows : []).filter((delivery) => (
+    !delivery.next_attempt_at || new Date(delivery.next_attempt_at).getTime() <= Date.now()
+  )) as CommunicationDeliveryRecord[];
+
+  const locked: CommunicationDeliveryRecord[] = [];
+  for (const delivery of dueRows) {
+    const { data: updated, error: updateError } = await admin
+      .from('communication_deliveries')
+      .update({
+        delivery_status: 'processing',
+        attempts_count: Number(delivery.attempts_count ?? 0) + 1,
+        last_attempt_at: now,
+        locked_at: now,
+        processed_by: workerName,
+        updated_at: now,
+      })
+      .eq('delivery_id', delivery.delivery_id)
+      .eq('delivery_status', 'queued')
+      .select('*')
+      .maybeSingle();
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+
+    if (updated) {
+      locked.push(updated as CommunicationDeliveryRecord);
+    }
+  }
+
+  return locked;
 }
 
 function buildLifecyclePatch(
@@ -144,19 +228,7 @@ export function createCommunicationHandlers(
     const now = new Date().toISOString();
     const env = { ...deliveryEnv, functionBaseUrl };
     const payload = delivery.payload ?? {};
-    const attemptsCount = (delivery.attempts_count ?? 0) + 1;
-
-    await admin
-      .from('communication_deliveries')
-      .update({
-        delivery_status: 'processing',
-        attempts_count: attemptsCount,
-        last_attempt_at: now,
-        locked_at: now,
-        processed_by: 'edge:communications-process',
-        updated_at: now,
-      })
-      .eq('delivery_id', delivery.delivery_id);
+    const attemptsCount = Number(delivery.attempts_count ?? 1);
 
     try {
       let response: Response;
@@ -239,21 +311,7 @@ export function createCommunicationHandlers(
     admin: SupabaseClient,
     functionBaseUrl: string,
   ) {
-    const now = new Date().toISOString();
-    const { data, error } = await admin
-      .from('communication_deliveries')
-      .select('*')
-      .eq('delivery_status', 'queued')
-      .order('queued_at', { ascending: true })
-      .limit(25);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    const dueDeliveries = (Array.isArray(data) ? data : []).filter((delivery) => (
-      !delivery.next_attempt_at || new Date(delivery.next_attempt_at).getTime() <= new Date(now).getTime()
-    )) as CommunicationDeliveryRecord[];
+    const dueDeliveries = await claimQueuedDeliveries(admin, 'edge:communications-process', 25);
 
     let sent = 0;
     let failed = 0;
@@ -267,13 +325,19 @@ export function createCommunicationHandlers(
       processed: dueDeliveries.length,
       sent,
       failed,
-      skipped: (Array.isArray(data) ? data.length : 0) - dueDeliveries.length,
+      skipped: 0,
     };
   }
 
   async function handleQueueCommunicationDeliveries(request: Request) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
+    if (!takeRateLimitToken({
+      key: ['communications', auth.canonicalUser.id, getClientIp(request)].join(':'),
+      ...COMMUNICATION_QUEUE_RATE_LIMIT,
+    })) {
+      return runtime.json({ error: 'Too many outbound communication requests. Please wait and try again.' }, 429);
+    }
 
     const body = await readJsonBody(request);
     const deliveries = Array.isArray(body.deliveries) ? body.deliveries : [];
@@ -283,33 +347,41 @@ export function createCommunicationHandlers(
       return runtime.json({ queued: 0 });
     }
 
-    const rows = deliveries.map((delivery: Record<string, unknown>, index: number) => {
-      const payloadBody = String(delivery.body ?? '');
-      return {
-        user_id: auth.canonicalUser.id,
-        notification_id: typeof body.notificationId === 'string' ? body.notificationId : null,
-        channel: String(delivery.channel ?? 'email'),
-        delivery_status: 'queued',
-        destination: typeof delivery.destination === 'string' ? delivery.destination : null,
-        subject: typeof delivery.subject === 'string' ? delivery.subject : null,
-        payload: {
-          body: payloadBody,
-          metadata: delivery.metadata ?? null,
-        },
-        provider_name: determineProviderName(String(delivery.channel ?? 'email')),
-        queued_at: now,
-        updated_at: now,
-        idempotency_key:
-          typeof delivery.idempotencyKey === 'string' && delivery.idempotencyKey
-            ? delivery.idempotencyKey
-            : buildIdempotencyKey({
-                deliveryId: `${body.notificationId ?? 'direct'}-${index}`,
-                channel: String(delivery.channel ?? 'email'),
-                destination: typeof delivery.destination === 'string' ? delivery.destination : null,
-                body: payloadBody,
-              }),
-      };
-    });
+    let rows;
+    try {
+      rows = deliveries.map((delivery: Record<string, unknown>, index: number) => {
+        const channel = validateDeliveryChannel(String(delivery.channel ?? 'email'));
+        const payloadBody = sanitizeDeliveryText(delivery.body, 2_000) ?? '';
+        const destination = sanitizeDeliveryText(delivery.destination, 320);
+        const subject = sanitizeDeliveryText(delivery.subject, 160);
+        return {
+          user_id: auth.canonicalUser.id,
+          notification_id: typeof body.notificationId === 'string' ? body.notificationId : null,
+          channel,
+          delivery_status: 'queued',
+          destination,
+          subject,
+          payload: {
+            body: payloadBody,
+            metadata: delivery.metadata ?? null,
+          },
+          provider_name: determineProviderName(channel),
+          queued_at: now,
+          updated_at: now,
+          idempotency_key:
+            typeof delivery.idempotencyKey === 'string' && delivery.idempotencyKey
+              ? delivery.idempotencyKey
+              : buildIdempotencyKey({
+                  deliveryId: `${body.notificationId ?? 'direct'}-${index}`,
+                  channel,
+                  destination,
+                  body: payloadBody,
+                }),
+        };
+      });
+    } catch (error) {
+      return runtime.json({ error: error instanceof Error ? error.message : 'Invalid delivery payload' }, 400);
+    }
 
     const { data, error } = await auth.admin
       .from('communication_deliveries')

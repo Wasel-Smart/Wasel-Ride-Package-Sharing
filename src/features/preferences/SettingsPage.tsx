@@ -849,11 +849,12 @@ export default function SettingsPage() {
                 {twoFactorSetup && (
                   <div style={{ display: 'grid', gap: 12, background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORD}`, borderRadius: 12, padding: 14 }}>
                     <div style={{ fontSize: '0.76rem', color: '#EFF6FF', fontFamily: FONT, fontWeight: 700 }}>Current setup details</div>
-                    <img
-                      src={twoFactorSetup.qrCode}
-                      alt="Two-factor QR code"
-                      style={{ width: 160, height: 160, borderRadius: 12, background: '#fff', padding: 8 }}
-                    />
+                    <a
+                      href={twoFactorSetup.otpauthUrl}
+                      style={{ color: '#7DD3FC', fontFamily: FONT, fontSize: '0.74rem', wordBreak: 'break-all' }}
+                    >
+                      Open your authenticator app with this `otpauth://` link
+                    </a>
                     <div style={{ fontSize: '0.72rem', color: 'rgba(148,163,184,0.7)', fontFamily: FONT, lineHeight: 1.5 }}>
                       Secret: <span style={{ color: '#EFF6FF' }}>{twoFactorSetup.secret}</span>
                     </div>

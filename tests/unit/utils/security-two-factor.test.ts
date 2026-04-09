@@ -54,7 +54,7 @@ describe('security two-factor api helpers', () => {
       json: async () => ({
         setup: {
           secret: 'SECRET',
-          qrCode: 'https://example.test/qr',
+          otpauthUrl: 'otpauth://totp/Wasel:user@example.com?secret=SECRET',
           backupCodes: ['CODE1234'],
         },
       }),
@@ -62,7 +62,7 @@ describe('security two-factor api helpers', () => {
 
     await expect(enable2FA('user-123')).resolves.toEqual({
       secret: 'SECRET',
-      qrCode: 'https://example.test/qr',
+      otpauthUrl: 'otpauth://totp/Wasel:user@example.com?secret=SECRET',
       backupCodes: ['CODE1234'],
     });
 
