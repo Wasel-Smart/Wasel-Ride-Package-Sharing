@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'wasel-v5-brand-identity';
+const CACHE_VERSION = 'wasel-v9-logo-rollout';
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -7,15 +7,30 @@ const PRECACHE_URLS = [
   '/index.html',
   '/offline.html',
   '/manifest.json',
+  '/manifest.json?v=20260410b',
   '/favicon.svg',
+  '/favicon.svg?v=20260410b',
   '/favicon-16x16.png',
+  '/favicon-16x16.png?v=20260410b',
   '/favicon-32x32.png',
+  '/favicon-32x32.png?v=20260410b',
   '/apple-touch-icon.png',
+  '/apple-touch-icon.png?v=20260410b',
   '/icon-192.png',
+  '/icon-192.png?v=20260410b',
   '/icon-512.png',
+  '/icon-512.png?v=20260410b',
+  '/brand/wasel-mark-clean.svg',
+  '/brand/wasel-mark-clean.svg?v=20260410b',
+  '/brand/wasel-mark.svg',
+  '/brand/wasel-mark-clean-dark.svg',
+  '/brand/wasel-mark-clean-light.svg',
+  '/brand/og-social-card.png',
+  '/brand/og-social-card.png?v=20260410b',
   '/brand/wasellogo-64.png',
   '/brand/wasellogo-96.png',
   '/brand/wasellogo-160.png',
+  '/brand/wasellogo-160.png?v=20260410b',
   '/brand/wasellogo-280.png',
 ];
 

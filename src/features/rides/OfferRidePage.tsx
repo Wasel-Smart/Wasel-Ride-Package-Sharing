@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { Brain, Briefcase, Network } from 'lucide-react';
 import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useLocalAuth } from '../../contexts/LocalAuth';
@@ -8,6 +8,7 @@ import { createGenderMeta, OFFER_RIDE_DRAFT_KEY } from '../../pages/waselCoreRid
 import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
 import { createOfferRideDefaultForm, validateOfferRideStep } from '../../pages/waselCorePageHelpers';
 import { readStoredObject } from '../../pages/waselCoreStorage';
+import { useCorridorTruth } from '../../services/corridorTruth';
 import {
   createConnectedRide,
   getConnectedRides,
@@ -21,7 +22,6 @@ import { notificationsAPI } from '../../services/notifications.js';
 import { getDriverReadinessSummary } from '../../services/driverOnboarding';
 import { evaluateTrustCapability } from '../../services/trustRules';
 import { recordMovementActivity } from '../../services/movementMembership';
-import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
 import {
   buildDriverRoutePlan,
   getMarketplaceNodes,
@@ -57,10 +57,10 @@ export function OfferRidePage() {
     () => buildDriverRoutePlan(form.from, form.to, form.seats),
     [form.from, form.to, form.seats],
   );
-  const routeIntelligence = useLiveRouteIntelligence({ from: form.from, to: form.to });
-  const selectedSignal = routeIntelligence.selectedSignal;
+  const corridorTruth = useCorridorTruth({ from: form.from, to: form.to });
+  const selectedSignal = corridorTruth.selectedSignal;
   const hasDemandSignal = typeof selectedSignal?.forecastDemandScore === 'number';
-  const corridorCount = getConnectedRides().filter((ride) => routeMatchesLocationPair(ride.from, ride.to, form.from, form.to, { allowReverse: false })).length;
+  const corridorCount = corridorTruth.matchingRideCount;
   const recentPostedRides = getConnectedRides().filter((ride) => routeMatchesLocationPair(ride.from, ride.to, form.from, form.to, { allowReverse: false })).slice(0, 3);
   const incomingRequests = user
     ? getBookingsForDriver(user.id, getConnectedRides()).filter((booking) => booking.status === 'pending_driver').slice(0, 4)
@@ -184,7 +184,7 @@ export function OfferRidePage() {
 
         {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
           <StakeholderSignalBanner
-            eyebrow="Wasel � supply comms"
+            eyebrow="Wasel · supply comms"
             title="Route publishing now speaks to drivers, riders, packages, and operations at once"
             detail="This supply flow now makes route readiness, trust gating, earnings logic, and network pull visible in one place so a posted route feels operationally complete from the start."
             stakeholders={[
@@ -400,4 +400,5 @@ export function OfferRidePage() {
 }
 
 export default OfferRidePage;
+
 

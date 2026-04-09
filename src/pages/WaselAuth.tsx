@@ -4,15 +4,12 @@ import { AnimatePresence, motion } from 'motion/react';
 import { toast } from 'sonner';
 import {
   ArrowRight,
-  Bus,
   CheckCircle2,
   Lock,
   Mail,
-  Package,
   Phone,
   Shield,
   UserRound,
-  Zap,
 } from 'lucide-react';
 import { WaselHeroMark, WaselLogo } from '../components/wasel-ds/WaselLogo';
 import { WaselButton }               from '../components/wasel-ui/WaselButton';
@@ -23,7 +20,7 @@ import { useIframeSafeNavigate }     from '../hooks/useIframeSafeNavigate';
 import { checkRateLimit, validateEmail } from '../utils/security';
 import { useAuth }                   from '../contexts/AuthContext';
 import { getConfig, getWhatsAppSupportUrl } from '../utils/env';
-import { friendlyAuthError, pwStrength }    from '../utils/authHelpers';
+import { friendlyAuthError, pwStrength, validateFullName, validatePassword } from '../utils/authHelpers';
 import { C, R, TYPE, F, SPACE }      from '../utils/wasel-ds';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -31,13 +28,10 @@ type Tab = 'signin' | 'signup';
 
 // ─── Feature list for the brand panel ────────────────────────────────────────
 const BRAND_FEATURES = [
-  { icon: <Zap  size={14} />, text: 'Live ride discovery with real route visibility', color: C.cyan   },
-  { icon: <Package size={14} />, text: 'Parcel movement through active trips',        color: C.gold   },
-  { icon: <Bus  size={14} />, text: 'Scheduled corridors with clean booking flows',   color: C.green  },
-  { icon: <Shield size={14} />, text: 'Verified-first trust signals from the first tap', color: C.purple },
+  { icon: <Shield size={14} />, text: 'Fast sign in', color: C.cyan },
+  { icon: <Mail size={14} />, text: 'One account', color: C.gold },
+  { icon: <Lock size={14} />, text: 'Secure access', color: C.green },
 ] as const;
-
-const BRAND_PILLS = ['Secure sign-in', 'Jordan-first UX', 'Low-friction onboarding'] as const;
 
 // ─── Brand panel (left column) ────────────────────────────────────────────────
 function BrandPanel() {
@@ -60,7 +54,7 @@ function BrandPanel() {
       <div style={{ position: 'absolute', bottom: -100, left: -80, width: 420, height: 420, borderRadius: '50%', background: `radial-gradient(circle, ${C.blueDim}cc, transparent 66%)`, filter: 'blur(80px)', pointerEvents: 'none' }} />
 
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 380 }}>
-        <WaselLogo size={44} theme="light" variant="full" />
+        <WaselLogo size={44} theme="light" variant="full" showWordmark={false} />
         <div style={{ margin: `${SPACE[8]} 0 ${SPACE[6]}` }}>
           <WaselHeroMark size={92} />
         </div>
@@ -68,12 +62,12 @@ function BrandPanel() {
         <h2 style={{ fontSize: TYPE.size['3xl'], fontWeight: TYPE.weight.ultra, color: C.text, letterSpacing: '-0.04em', margin: `0 0 ${SPACE[3]}`, lineHeight: 1.12 }}>
           Wasel
           <span style={{ display: 'block', background: 'linear-gradient(90deg, #55E9FF, #60A5FA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Move smarter
+            Sign in faster
           </span>
         </h2>
 
         <p style={{ fontSize: TYPE.size.base, color: C.textMuted, lineHeight: TYPE.lineHeight.loose, marginBottom: SPACE[6] }}>
-          Sign in once and move through rides, parcels, trust, and live corridors from the same experience.
+          Clean access to the app.
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3], textAlign: 'left' }}>
@@ -84,14 +78,6 @@ function BrandPanel() {
               </div>
               <span style={{ fontSize: TYPE.size.sm, color: `${C.text}99` }}>{item.text}</span>
             </div>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: SPACE[3], justifyContent: 'center', marginTop: SPACE[8], flexWrap: 'wrap' }}>
-          {BRAND_PILLS.map((label) => (
-            <span key={label} style={{ fontSize: TYPE.size.xs, color: `${C.text}66`, background: `${C.text}0a`, border: `1px solid ${C.text}18`, borderRadius: R.full, padding: '4px 10px' }}>
-              {label}
-            </span>
           ))}
         </div>
       </div>
@@ -227,10 +213,13 @@ export default function WaselAuth() {
     if (!passwordResetCompleted) {
       setNotice('');
     }
-    if (!name.trim())             { setError('Please enter your full name.'); return; }
+    const fullNameError = validateFullName(name);
+    if (fullNameError)            { setError(fullNameError); return; }
     if (!email.trim())            { setError('Please enter your email address.'); return; }
     if (!validateEmail(email))    { setError('Please enter a valid email address.'); return; }
-    if (password.length < 8)      { setError('Password must be at least 8 characters long.'); return; }
+    const passwordError = validatePassword(password);
+    if (passwordError)            { setError(passwordError); return; }
+    if (!phone.trim())            { setError('Please enter your phone number.'); return; }
     if (!checkRateLimit(`signup:${email}`, { maxRequests: 3, windowMs: 60_000 })) {
       setError('Too many attempts. Please wait a minute and try again.'); return;
     }
@@ -259,19 +248,23 @@ export default function WaselAuth() {
 
   const handleGoogleSignIn = async () => {
     setError('');
-    const { error: oauthError } = await signInWithGoogle();
+    const { error: oauthError } = await signInWithGoogle(safeReturnTo);
     if (oauthError) setError(friendlyAuthError(oauthError, 'Google sign-in failed.'));
   };
 
   const handleFacebookSignIn = async () => {
     setError('');
-    const { error: oauthError } = await signInWithFacebook();
+    const { error: oauthError } = await signInWithFacebook(safeReturnTo);
     if (oauthError) setError(friendlyAuthError(oauthError, 'Facebook sign-in failed.'));
   };
 
   const handleWhatsAppHelp = () => {
-    if (!supportWhatsAppNumber) { setError('WhatsApp support is not configured yet.'); return; }
-    window.open(getWhatsAppSupportUrl('Hi Wasel'), '_blank', 'noopener,noreferrer');
+    const supportUrl = getWhatsAppSupportUrl('Hi Wasel');
+    if (!supportWhatsAppNumber || !supportUrl) {
+      setError('WhatsApp support is not configured yet.');
+      return;
+    }
+    window.open(supportUrl, '_blank', 'noopener,noreferrer');
   };
 
   const socialButtons = [
@@ -309,12 +302,12 @@ export default function WaselAuth() {
             className="auth-mobile-header"
             style={{ display: 'none', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: SPACE[7], paddingBottom: SPACE[6], borderBottom: `1px solid ${C.border}` }}
           >
-            <WaselLogo size={38} theme="light" variant="full" />
+            <WaselLogo size={38} theme="light" variant="full" showWordmark={false} />
             <h2 style={{ fontSize: TYPE.size.xl, fontWeight: TYPE.weight.ultra, color: C.text, marginTop: SPACE[4], marginBottom: SPACE[2], letterSpacing: '-0.03em' }}>
-              Wasel <span style={{ color: C.cyan }}>Move smarter</span>
+              Wasel <span style={{ color: C.cyan }}>Access</span>
             </h2>
             <p style={{ fontSize: TYPE.size.sm, color: C.textMuted, marginBottom: SPACE[3] }}>
-              Sign in to continue into the mobility experience.
+              {tab === 'signin' ? 'Sign in to continue.' : 'Create your account.'}
             </p>
           </div>
 
@@ -323,12 +316,12 @@ export default function WaselAuth() {
           {/* Heading */}
           <div style={{ marginBottom: SPACE[6] }}>
             <h3 style={{ fontSize: TYPE.size['2xl'], fontWeight: TYPE.weight.ultra, color: C.text, margin: `0 0 ${SPACE[2]}`, letterSpacing: '-0.02em' }}>
-              {tab === 'signin' ? 'Welcome back' : 'Join Wasel'}
+              {tab === 'signin' ? 'Sign in' : 'Sign up'}
             </h3>
             <p style={{ fontSize: TYPE.size.sm, color: C.textMuted, margin: 0, lineHeight: TYPE.lineHeight.relaxed }}>
               {tab === 'signin'
-                ? 'Use your Wasel account to continue where you left off.'
-                : 'Create your account to unlock rides, parcels, and trust in one place.'}
+                ? 'Use your account.'
+                : 'Set up your account.'}
             </p>
           </div>
 
@@ -375,7 +368,7 @@ export default function WaselAuth() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2] }}>
                     <CheckCircle2 size={16} color={C.green} />
                     <span style={{ fontSize: TYPE.size.sm, color: C.green, fontFamily: F }}>
-                      Signed in successfully. Redirecting now.
+                      Success. Redirecting.
                     </span>
                   </div>
                 </WaselCard>
@@ -398,7 +391,6 @@ export default function WaselAuth() {
                   <WaselInput
                     id="full-name"
                     label="Full name"
-                    description="As shown on your profile"
                     value={name}
                     onChange={setName}
                     placeholder="Ahmad Al-Rashid"
@@ -409,7 +401,6 @@ export default function WaselAuth() {
                 <WaselInput
                   id="auth-email"
                   label="Email address"
-                  description="Used for sign in"
                   type="email"
                   value={email}
                   onChange={setEmail}
@@ -420,7 +411,6 @@ export default function WaselAuth() {
                 <WaselInput
                   id="auth-password"
                   label="Password"
-                  description={tab === 'signin' ? 'Your account password' : 'Minimum 8 characters'}
                   type="password"
                   value={password}
                   onChange={setPassword}
@@ -433,7 +423,6 @@ export default function WaselAuth() {
                   <WaselInput
                     id="auth-phone"
                     label="Phone number"
-                    description="Optional"
                     type="tel"
                     value={phone}
                     onChange={setPhone}
@@ -470,7 +459,7 @@ export default function WaselAuth() {
                 {/* Divider */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
                   <div style={{ flex: 1, height: 1, background: C.border }} />
-                  <span style={{ fontSize: TYPE.size.xs, color: C.textMuted }}>or continue with</span>
+                  <span style={{ fontSize: TYPE.size.xs, color: C.textMuted }}>or</span>
                   <div style={{ flex: 1, height: 1, background: C.border }} />
                 </div>
 
@@ -497,7 +486,7 @@ export default function WaselAuth() {
 
           {/* Legal */}
           <p style={{ fontSize: TYPE.size.xs, color: C.textMuted, textAlign: 'center', marginTop: SPACE[6], lineHeight: TYPE.lineHeight.relaxed }}>
-            By continuing, you agree to our{' '}
+            By continuing, you agree to the{' '}
             <button type="button" onClick={() => nav('/terms')} style={{ color: C.cyan, cursor: 'pointer', background: 'none', border: 'none', padding: 0, font: 'inherit' }}>Terms of Service</button>
             {' '}and{' '}
             <button type="button" onClick={() => nav('/privacy')} style={{ color: C.cyan, cursor: 'pointer', background: 'none', border: 'none', padding: 0, font: 'inherit' }}>Privacy Policy</button>.

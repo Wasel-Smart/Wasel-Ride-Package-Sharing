@@ -47,11 +47,6 @@ function emitConsentEvent(accepted: boolean) {
   }
 }
 
-// Called from App/monitoring bootstrap to read stored consent without importing the component
-export function isAnalyticsConsented(): boolean {
-  return readConsent() === 'accepted';
-}
-
 const SHELL_FONT =
   "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 

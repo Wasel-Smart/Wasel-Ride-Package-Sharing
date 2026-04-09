@@ -955,7 +955,7 @@ export function MobileDrawer({
             flexShrink: 0,
           }}
         >
-          <WaselLogo size={30} theme="light" variant="full" />
+          <WaselLogo size={30} theme="light" variant="full" showWordmark={false} />
           <button
             type="button"
             onClick={onClose}

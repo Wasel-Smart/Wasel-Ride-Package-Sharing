@@ -121,6 +121,7 @@ describe('walletApi direct fallback insights and pagination', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     __resetWalletApiCachesForTests();
+    window.localStorage.removeItem('wasel-movement-membership');
   });
 
   it('builds wallet insights from cached wallet transactions', async () => {
@@ -152,6 +153,28 @@ describe('walletApi direct fallback insights and pagination', () => {
     expect(insights.totalTransactions).toBe(2);
     expect(insights.thisMonthEarned).toBeGreaterThanOrEqual(0);
     expect(mockMaybeSingle).toHaveBeenCalledTimes(1);
+  });
+
+  it('marks fallback insights as degraded metadata', async () => {
+    setupWalletReads({
+      transactions: [
+        {
+          transaction_id: 'tx-1',
+          amount: 20,
+          direction: 'credit',
+          transaction_type: 'add_funds',
+          transaction_status: 'posted',
+          created_at: '2026-04-01T10:00:00.000Z',
+          metadata: { description: 'Wallet top-up' },
+        },
+      ],
+    });
+
+    const snapshot = await walletApi.getInsightsSnapshot('u1');
+
+    expect(snapshot.data.totalTransactions).toBe(1);
+    expect(snapshot.meta.degraded).toBe(true);
+    expect(snapshot.meta.source).toBe('direct-supabase');
   });
 
   it('paginates transactions from the cached wallet payload in fallback mode', async () => {

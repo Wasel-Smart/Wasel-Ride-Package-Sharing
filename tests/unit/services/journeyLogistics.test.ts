@@ -81,6 +81,7 @@ describe('journeyLogistics', () => {
 
     expect(mockCreateTrip).toHaveBeenCalledOnce();
     expect(created.id).toBe('trip-1');
+    expect(created.syncState).toBe('synced');
     expect(getConnectedRides()).toHaveLength(1);
   });
 
@@ -122,6 +123,7 @@ describe('journeyLogistics', () => {
     });
 
     expect(created.status).toBe('matched');
+    expect(created.syncState).toBe('local-only');
     expect(created.handoffCode).toMatch(/^HC-\d{6}$/);
     expect(created.timeline.map((step) => step.label)).toEqual([
       'Request received',
@@ -268,6 +270,7 @@ describe('journeyLogistics', () => {
       expect.objectContaining({ method: 'POST' })
     );
     expect(created.trackingId).toBe('PKG-54321');
+    expect(created.syncState).toBe('synced');
   });
 
   it('looks up remote package tracking when local state is empty', async () => {
@@ -286,5 +289,6 @@ describe('journeyLogistics', () => {
 
     expect(found?.trackingId).toBe('PKG-67890');
     expect(found?.status).toBe('delivered');
+    expect(found?.syncState).toBe('synced');
   });
 });

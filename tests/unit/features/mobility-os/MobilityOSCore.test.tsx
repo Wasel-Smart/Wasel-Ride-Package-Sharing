@@ -12,17 +12,29 @@
  * (which require a real browser) and focus on structural / style attributes
  * that are deterministic and testable.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 
 // ── Minimal mocks required for MobilityOSCore to mount ────────────────────
 
-vi.mock('../../../src/contexts/LanguageContext', () => ({
+vi.mock('../../../../src/contexts/LanguageContext', () => ({
   useLanguage: () => ({ language: 'en', dir: 'ltr' }),
 }));
 
-vi.mock('../../../src/features/mobility-os/liveMobilityData', () => ({
+vi.mock('../../../../src/features/mobility-os/liveMobilityData', () => ({
   useMobilityOSLiveData: () => ({ snapshot: null }),
+}));
+
+vi.mock('../../../../src/services/corridorCommercial', () => ({
+  buildCorridorCommercialSnapshot: vi.fn().mockResolvedValue({
+    contracts: [],
+    totalRecurringRevenueJod: 0,
+    ownedCorridorContracts: 0,
+    activeStakeholders: 0,
+    topContract: null,
+    recommendedCommercialAction: 'Balance supply',
+    corridorPassCoverage: null,
+  }),
 }));
 
 // Canvas getContext is not available in jsdom — stub it
@@ -88,7 +100,7 @@ function setViewportWidth(width: number) {
 async function importAndRender() {
   // Dynamic import so each test gets a fresh module (with reset viewport)
   const { default: MobilityOSCore } = await import(
-    '../../../src/features/mobility-os/MobilityOSCore'
+    '../../../../src/features/mobility-os/MobilityOSCore'
   );
   return render(<MobilityOSCore />);
 }

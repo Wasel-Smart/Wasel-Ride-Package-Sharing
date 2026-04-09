@@ -90,6 +90,15 @@ export function friendlyAuthError(error: unknown, fallback: string): string {
   }
 
   if (
+    lower.includes('database error saving new user') ||
+    (lower.includes('null value in column') &&
+      lower.includes('phone_number') &&
+      lower.includes('relation "users"'))
+  ) {
+    return 'Account creation is blocked by the current Supabase signup trigger. Apply the latest auth signup migration, then try again.';
+  }
+
+  if (
     lower.includes('provider is not enabled') ||
     lower.includes('unsupported provider') ||
     lower.includes('oauth provider not supported')

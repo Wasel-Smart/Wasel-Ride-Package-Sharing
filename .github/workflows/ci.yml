@@ -42,6 +42,26 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: Verify Supabase migration integrity
+        run: npm run verify:supabase-rollout
+        continue-on-error: false
+
+      - name: Security headers smoke test
+        run: |
+          echo "Checking required security headers are configured in vercel.json..."
+          node -e "
+            const fs = require('fs');
+            const config = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
+            const headers = (config.headers || []).flatMap(h => h.headers || []).map(h => h.key.toLowerCase());
+            const required = ['x-frame-options', 'x-content-type-options', 'strict-transport-security', 'referrer-policy'];
+            const missing = required.filter(h => !headers.includes(h));
+            if (missing.length > 0) {
+              console.error('Missing security headers: ' + missing.join(', '));
+              process.exit(1);
+            }
+            console.log('All required security headers are configured: ' + required.join(', '));
+          "
+
       - name: Upload coverage artifacts
         if: always()
         uses: actions/upload-artifact@v4

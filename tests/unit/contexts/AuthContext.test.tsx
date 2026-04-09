@@ -31,6 +31,8 @@ vi.mock('../../../src/utils/supabase/client', () => ({
       updateUser: (...args: unknown[]) => mockUpdateUser(...args),
     },
   },
+  supabaseUrl: 'https://wasel.test.supabase.co',
+  checkSupabaseConnection: vi.fn().mockResolvedValue(true),
   isSupabaseConfigured: true,
 }));
 
@@ -116,7 +118,7 @@ describe('AuthContext — signIn', () => {
   });
 
   it('returns an error when LocalAuth rejects', async () => {
-    mockLocalSignIn.mockResolvedValueOnce({ error: 'Invalid credentials' });
+    mockLocalSignIn.mockResolvedValue({ error: 'Invalid credentials' });
     let result: { error: unknown } | null = null;
 
     renderWithAuth(ctx => {
@@ -144,7 +146,7 @@ describe('AuthContext — signUp', () => {
   });
 
   it('surfaces registration errors', async () => {
-    mockLocalRegister.mockResolvedValueOnce({ error: 'Email already in use' });
+    mockLocalRegister.mockResolvedValue({ error: 'Email already in use' });
     let result: { error: unknown } | null = null;
 
     renderWithAuth(ctx => {
@@ -184,7 +186,7 @@ describe('AuthContext — resetPassword', () => {
   });
 
   it('returns an error when supabase rejects with a non-redirect error', async () => {
-    mockResetPasswordForEmail.mockResolvedValueOnce({
+    mockResetPasswordForEmail.mockResolvedValue({
       error: { message: 'Rate limited' },
     });
     let result: { error: unknown } | null = null;
@@ -214,7 +216,7 @@ describe('AuthContext — changePassword', () => {
 
   it('surfaces supabase errors on password update failure', async () => {
     const err = new Error('Password update failed');
-    mockUpdateUser.mockResolvedValueOnce({ error: err });
+    mockUpdateUser.mockResolvedValue({ error: err });
     let result: { error: unknown } | null = null;
 
     renderWithAuth(ctx => {

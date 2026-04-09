@@ -25,6 +25,17 @@ function sanitizeUnknown(value: unknown): unknown {
   return value;
 }
 
+function stripControlWhitespaceCharacters(value: string): string {
+  return Array.from(value)
+    .filter((character) => {
+      const code = character.charCodeAt(0);
+      const isControl = (code >= 0 && code <= 31) || (code >= 127 && code <= 159);
+      const isWhitespace = /\s/u.test(character);
+      return !isControl && !isWhitespace;
+    })
+    .join('');
+}
+
 /**
  * Sanitize HTML content to prevent XSS
  * Removes dangerous tags and attributes
@@ -60,18 +71,20 @@ export function sanitizeText(text: string): string {
 export function sanitizeURL(url: string): string {
   if (!url) return '';
 
-  const trimmed = url.trim().toLowerCase();
-  
-  // Block dangerous protocols
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+
+  const normalized = stripControlWhitespaceCharacters(trimmed).toLowerCase();
+
   if (
-    trimmed.startsWith('javascript:') ||
-    trimmed.startsWith('data:') ||
-    trimmed.startsWith('vbscript:')
+    normalized.startsWith('javascript:') ||
+    normalized.startsWith('data:') ||
+    normalized.startsWith('vbscript:')
   ) {
     return '';
   }
 
-  return url;
+  return trimmed;
 }
 
 /**

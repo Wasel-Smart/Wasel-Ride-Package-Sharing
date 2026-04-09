@@ -28,6 +28,12 @@ export type RidePaymentStatus =
   | 'refunded'
   | 'failed';
 
+export type RideBookingSyncState =
+  | 'local-only'
+  | 'syncing'
+  | 'synced'
+  | 'sync-error';
+
 export interface RideBookingRecord {
   id: string;
   rideId: string;
@@ -56,6 +62,7 @@ export interface RideBookingRecord {
   syncedAt?: string;
   /** True when the Supabase sync failed and a retry is pending */
   pendingSync?: boolean;
+  syncState?: RideBookingSyncState;
 }
 
 const ALLOWED_RIDE_STATUS_TRANSITIONS: Record<RideBookingStatus, readonly RideBookingStatus[]> = {
@@ -91,6 +98,18 @@ interface PendingSyncEntry {
   pricePerSeatJod?: number;
   retries: number;
   queuedAt: number;
+}
+
+function markRideBookingSyncState(
+  booking: RideBookingRecord,
+  syncState: RideBookingSyncState,
+): RideBookingRecord {
+  return {
+    ...booking,
+    syncState,
+    pendingSync: syncState === 'syncing' || syncState === 'sync-error',
+    syncedAt: syncState === 'synced' ? new Date().toISOString() : booking.syncedAt,
+  };
 }
 
 function loadPendingSyncs(): PendingSyncEntry[] {
@@ -139,17 +158,24 @@ async function attemptSyncEntry(entry: PendingSyncEntry): Promise<void> {
     const bookings = readBookings();
     const idx = bookings.findIndex((b) => b.id === entry.bookingId);
     if (idx !== -1) {
-      bookings[idx] = {
+      bookings[idx] = markRideBookingSyncState({
         ...bookings[idx],
         backendBookingId: backendId,
-        syncedAt: new Date().toISOString(),
-        pendingSync: false,
         updatedAt: new Date().toISOString(),
-      };
+      }, 'synced');
       writeBookings(bookings);
     }
     removePendingSync(entry.bookingId);
   } catch {
+    const bookings = readBookings();
+    const idx = bookings.findIndex((b) => b.id === entry.bookingId);
+    if (idx !== -1) {
+      bookings[idx] = markRideBookingSyncState({
+        ...bookings[idx],
+        updatedAt: new Date().toISOString(),
+      }, 'sync-error');
+      writeBookings(bookings);
+    }
     // Increment retry count; give up after 10 attempts
     const all = loadPendingSyncs();
     const updated = all.map((e) =>
@@ -170,6 +196,10 @@ export async function drainPendingBookingSyncs(): Promise<void> {
     // Throttle
     await new Promise((r) => setTimeout(r, 150));
   }
+}
+
+export function getPendingRideBookingSyncs(): PendingSyncEntry[] {
+  return loadPendingSyncs();
 }
 
 // Wire drain to reconnect event once
@@ -270,6 +300,7 @@ export function createRideBooking(input: {
     createdAt: now,
     updatedAt: now,
     pendingSync: Boolean(input.passengerId), // will be cleared on successful sync
+    syncState: input.passengerId ? 'syncing' : 'local-only',
   };
 
   writeBookings([booking, ...readBookings()]);
@@ -331,13 +362,15 @@ export function createRideBooking(input: {
             typeof persisted.total_price === 'number'
               ? persisted.total_price
               : booking.totalPriceJod,
-          syncedAt: new Date().toISOString(),
-          pendingSync: false,
           updatedAt: new Date().toISOString(),
         };
-        upsertBookings([synced]);
+        upsertBookings([markRideBookingSyncState(synced, 'synced')]);
       })
       .catch(() => {
+        upsertBookings([markRideBookingSyncState({
+          ...booking,
+          updatedAt: new Date().toISOString(),
+        }, 'sync-error')]);
         // Sync failed (offline or transient error) — enqueue for retry on reconnect
         enqueuePendingSync({
           bookingId: booking.id,
@@ -395,11 +428,11 @@ export function updateRideBooking(
     const directStatus = updates.status === 'confirmed' ? 'accepted' : updates.status;
     void updateDirectBookingStatus(updated.backendBookingId, directStatus as 'accepted' | 'rejected' | 'cancelled')
       .then(() => {
-        upsertBookings([{ ...updated, syncedAt: new Date().toISOString() }]);
+        upsertBookings([markRideBookingSyncState(updated, 'synced')]);
       })
       .catch(() => {
         // Status update failed — mark as pending so it retries on reconnect
-        upsertBookings([{ ...updated, pendingSync: true }]);
+        upsertBookings([markRideBookingSyncState(updated, 'sync-error')]);
       });
   }
 
@@ -512,6 +545,7 @@ export async function hydrateRideBookings(userId: string, rides: PostedRide[] = 
       updatedAt: String(raw.updated_at ?? raw.created_at ?? new Date().toISOString()),
       syncedAt: new Date().toISOString(),
       pendingSync: false,
+      syncState: 'synced',
     };
   };
 

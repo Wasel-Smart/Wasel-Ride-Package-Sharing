@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-import { C, SH, TYPE } from '../../utils/wasel-ds';
+import { TYPE } from '../../utils/wasel-ds';
 
 interface WaselLogoProps {
   size?: number;
@@ -11,16 +11,19 @@ interface WaselLogoProps {
   subtitle?: string;
 }
 
-const LOGO_ASSET_VERSION = '20260409c';
+const LOGO_ASSET_VERSION = '20260410b';
 const CLEAN_MARK_SRC = `/brand/wasel-mark-clean.svg?v=${LOGO_ASSET_VERSION}`;
+const LOGO_MARK_ASPECT_RATIO = 464 / 360;
 
 function LogoImage({
-  size,
+  width,
+  height,
   src,
   alt,
   style,
 }: {
-  size: number;
+  width: number;
+  height: number;
   src: string;
   alt: string;
   style?: CSSProperties;
@@ -29,13 +32,14 @@ function LogoImage({
     <img
       src={src}
       alt={alt}
-      width={size}
-      height={size}
+      width={width}
+      height={height}
       draggable={false}
+      decoding="async"
       style={{
         display: 'block',
-        width: size,
-        height: size,
+        width,
+        height,
         flexShrink: 0,
         objectFit: 'contain',
         userSelect: 'none',
@@ -54,6 +58,8 @@ export function WaselLogo({
   subtitle = 'Mobility OS',
 }: WaselLogoProps) {
   const onDarkSurface = theme === 'light';
+  const markHeight = size;
+  const markWidth = Math.round(size * LOGO_MARK_ASPECT_RATIO);
   const titleColor = onDarkSurface ? '#F4F8FE' : '#173862';
   const metaColor = onDarkSurface ? 'rgba(194, 214, 236, 0.82)' : 'rgba(23, 56, 98, 0.64)';
   const titleSize =
@@ -72,14 +78,10 @@ export function WaselLogo({
       }}
     >
       <LogoImage
-        size={size}
+        width={markWidth}
+        height={markHeight}
         src={CLEAN_MARK_SRC}
         alt="Wasel mobility application logo"
-        style={{
-          filter: onDarkSurface
-            ? 'drop-shadow(0 8px 18px rgba(71, 183, 230, 0.18))'
-            : 'drop-shadow(0 8px 20px rgba(23, 56, 98, 0.12))',
-        }}
       />
 
       {showWordmark ? (
@@ -124,7 +126,12 @@ export function WaselLogo({
 export function WaselMark({ size = 38, style }: { size?: number; style?: CSSProperties }) {
   return (
     <div style={{ display: 'inline-flex', ...style }}>
-      <LogoImage size={size} src={CLEAN_MARK_SRC} alt="Wasel logo mark" />
+      <LogoImage
+        width={Math.round(size * LOGO_MARK_ASPECT_RATIO)}
+        height={size}
+        src={CLEAN_MARK_SRC}
+        alt="Wasel logo mark"
+      />
     </div>
   );
 }
@@ -133,44 +140,30 @@ export function WaselHeroMark({ size = 120 }: { size?: number }) {
   return (
     <div
       style={{
-        position: 'relative',
-        width: size,
+        width: Math.round(size * LOGO_MARK_ASPECT_RATIO),
         height: size,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: '32%',
-        background:
-          'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)), rgba(7,18,34,0.84)',
-        border: `1px solid ${C.border}`,
-        boxShadow: SH.card,
-        backdropFilter: 'blur(24px)',
       }}
     >
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: -24,
-          borderRadius: '36%',
-          background:
-            'radial-gradient(circle, rgba(71,183,230,0.28) 0%, rgba(106,255,69,0.14) 44%, rgba(4,18,30,0) 78%)',
-          filter: 'blur(22px)',
-        }}
-      />
       <LogoImage
-        size={Math.round(size * 0.74)}
+        width={Math.round(size * 0.74 * LOGO_MARK_ASPECT_RATIO)}
+        height={Math.round(size * 0.74)}
         src={CLEAN_MARK_SRC}
         alt="Wasel hero logo"
-        style={{
-          position: 'relative',
-          filter: 'drop-shadow(0 12px 28px rgba(71, 183, 230, 0.2))',
-        }}
       />
     </div>
   );
 }
 
 export function WaselIcon({ size = 20 }: { size?: number }) {
-  return <LogoImage size={size} src={CLEAN_MARK_SRC} alt="Wasel icon" />;
+  return (
+    <LogoImage
+      width={Math.round(size * LOGO_MARK_ASPECT_RATIO)}
+      height={size}
+      src={CLEAN_MARK_SRC}
+      alt="Wasel icon"
+    />
+  );
 }

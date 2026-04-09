@@ -71,6 +71,8 @@ export function WalletDashboard() {
     topUpAmount,
     topUpMethod,
     walletData,
+    walletHealth,
+    walletInsightsHealth,
     walletUnavailable,
     withdrawAmount,
     withdrawBank,
@@ -80,6 +82,23 @@ export function WalletDashboard() {
   const bal = walletData?.balance ?? 0;
   const pending = walletData?.pendingBalance ?? 0;
   const rewardsBal = walletData?.rewardsBalance ?? 0;
+  const walletStatusLabel = !walletHealth
+    ? null
+    : walletHealth.degraded
+      ? (isRTL ? 'وضع احتياطي' : 'Fallback mode')
+      : walletHealth.source === 'edge-api'
+        ? (isRTL ? 'خدمة مباشرة' : 'Live backend')
+        : (isRTL ? 'مزامنة مباشرة' : 'Direct sync');
+  const walletStatusDescription = !walletHealth
+    ? null
+    : walletHealth.degraded
+      ? (isRTL ? 'البيانات قادمة من Supabase مباشرة بسبب تعطل مسار المحفظة الأساسي.' : 'Wallet data is coming from direct Supabase fallback because the primary wallet path degraded.')
+      : walletHealth.source === 'edge-api'
+        ? (isRTL ? 'المحفظة تقرأ من مسار الخدمة الأساسي.' : 'Wallet reads are flowing through the primary service path.')
+        : (isRTL ? 'المحفظة تقرأ مباشرة من Supabase.' : 'Wallet reads are using direct Supabase access.');
+  const insightsStatusLabel = walletInsightsHealth?.degraded
+    ? (isRTL ? 'الإحصاءات محلية' : 'Insights fallback')
+    : null;
   if (shouldRedirectToAuth) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -112,7 +131,7 @@ export function WalletDashboard() {
           }}
         >
           <div className="flex justify-center mb-5">
-            <WaselLogo size={44} theme="dark" variant="full" />
+            <WaselLogo size={44} theme="dark" variant="full" showWordmark={false} />
           </div>
           <div
             className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl"
@@ -160,11 +179,35 @@ export function WalletDashboard() {
         </Button>
       </div>
 
+      {walletStatusLabel && (
+        <Card className="rounded-xl border-primary/10 bg-card/70">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="border border-primary/20 bg-primary/10 text-primary">
+                  {walletStatusLabel}
+                </Badge>
+                {insightsStatusLabel && (
+                  <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-500">
+                    {insightsStatusLabel}
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">{walletStatusDescription}</p>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {isRTL ? 'آخر تحديث' : 'Updated'} {new Date(walletHealth.fetchedAt).toLocaleTimeString(isRTL ? 'ar-JO' : 'en-US')}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <WalletHeroCard
         balanceVisible={balanceVisible}
         balance={bal}
         pendingBalance={pending}
         rewardsBalance={rewardsBal}
+        subscription={walletData?.subscription ?? null}
         t={t}
         onToggleBalance={() => setBalanceVisible(!balanceVisible)}
         onShowTopUp={() => setShowTopUp(true)}

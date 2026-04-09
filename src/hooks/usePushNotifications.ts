@@ -34,8 +34,9 @@ export interface NotifyOptions {
   autoCloseMs?: number;
 }
 
-const DEFAULT_ICON = '/icon-192.png';
-const DEFAULT_BADGE = '/favicon-32x32.png';
+const BRAND_ASSET_VERSION = '20260409d';
+const DEFAULT_ICON = `/icon-192.png?v=${BRAND_ASSET_VERSION}`;
+const DEFAULT_BADGE = `/favicon-32x32.png?v=${BRAND_ASSET_VERSION}`;
 const DEFAULT_CLOSE_MS = 8_000;
 
 type NotificationInit = ConstructorParameters<typeof Notification>[1];

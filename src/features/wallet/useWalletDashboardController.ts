@@ -4,8 +4,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { getMovementMembershipSnapshot } from '../../services/movementMembership';
 import { triggerPaymentReceiptEmail } from '../../services/transactionalEmailTriggers';
-import { walletApi, type InsightsData, type WalletData } from '../../services/walletApi';
+import {
+  walletApi,
+  type InsightsData,
+  type WalletData,
+  type WalletReliabilityMeta,
+} from '../../services/walletApi';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import { buildAuthPagePath } from '../../utils/authFlow';
 import { walletText } from './walletText';
@@ -36,6 +42,8 @@ export function useWalletDashboardController() {
   const [tab, setTab] = useState('overview');
   const [walletData, setWalletData] = useState<WalletData | null>(null);
   const [insights, setInsights] = useState<InsightsData | null>(null);
+  const [walletHealth, setWalletHealth] = useState<WalletReliabilityMeta | null>(null);
+  const [walletInsightsHealth, setWalletInsightsHealth] = useState<WalletReliabilityMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -69,6 +77,7 @@ export function useWalletDashboardController() {
   const rewardErrorMessage = 'Unable to claim this reward right now.';
   const autoTopUpErrorMessage = 'Unable to update auto top-up settings right now.';
   const subscribeErrorMessage = 'Unable to activate Wasel Plus right now.';
+  const membershipSnapshot = getMovementMembershipSnapshot();
 
   const fetchWallet = useCallback(async (): Promise<WalletData | null> => {
     if (localAuthLoading) {
@@ -84,15 +93,18 @@ export function useWalletDashboardController() {
     }
 
     try {
-      const data = await walletApi.getWallet(effectiveUserId);
-      setWalletData(data);
-      setAutoTopUpEnabled(data.wallet.autoTopUp || false);
-      setAutoTopUpAmount(String(data.wallet.autoTopUpAmount || 20));
-      setAutoTopUpThreshold(String(data.wallet.autoTopUpThreshold || 5));
-      return data;
+      const snapshot = await walletApi.getWalletSnapshot(effectiveUserId);
+      setWalletData(snapshot.data);
+      setWalletHealth(snapshot.meta);
+      setAutoTopUpEnabled(snapshot.data.wallet.autoTopUp || false);
+      setAutoTopUpAmount(String(snapshot.data.wallet.autoTopUpAmount || 20));
+      setAutoTopUpThreshold(String(snapshot.data.wallet.autoTopUpThreshold || 5));
+      return snapshot.data;
     } catch {
       setWalletData(null);
       setInsights(null);
+      setWalletHealth(null);
+      setWalletInsightsHealth(null);
       toast.error(t.walletLoadError);
       return null;
     } finally {
@@ -107,10 +119,12 @@ export function useWalletDashboardController() {
     }
 
     try {
-      const data = await walletApi.getInsights(effectiveUserId);
-      setInsights(data);
+      const snapshot = await walletApi.getInsightsSnapshot(effectiveUserId);
+      setInsights(snapshot.data);
+      setWalletInsightsHealth(snapshot.meta);
     } catch {
       setInsights(null);
+      setWalletInsightsHealth(null);
     }
   }, [effectiveUserId, localAuthLoading, shouldRedirectToAuth]);
 
@@ -298,9 +312,21 @@ export function useWalletDashboardController() {
   };
 
   const handleSubscribe = async () => {
+    const preferredCorridorId = walletData?.subscription?.corridorId
+      ?? membershipSnapshot.dailyRouteId
+      ?? membershipSnapshot.commuterPassRouteId
+      ?? null;
+
     await runWalletAction({
       action: async () => {
-        await walletApi.subscribe(effectiveUserId, 'Wasel Plus', 9.99);
+        await walletApi.subscribe(
+          effectiveUserId,
+          preferredCorridorId ? 'Wasel Corridor Pass' : 'Wasel Plus',
+          preferredCorridorId
+            ? (membershipSnapshot.dailyRoute?.subscriptionPriceJod ?? 9.99)
+            : 9.99,
+          preferredCorridorId,
+        );
         return fetchWallet();
       },
       fallbackErrorMessage: subscribeErrorMessage,
@@ -363,6 +389,8 @@ export function useWalletDashboardController() {
     topUpAmount,
     topUpMethod,
     walletData,
+    walletHealth,
+    walletInsightsHealth,
     walletSubtitle: t.walletSubtitle,
     walletUnavailable,
     withdrawAmount,

@@ -184,7 +184,7 @@ export default function WaselRoot() {
               minWidth: 44,
             }}
           >
-            <WaselLogo size={32} theme="light" variant="full" />
+            <WaselLogo size={32} theme="light" variant="full" showWordmark={false} />
           </button>
 
           {/* Brand pill — hidden below 1340px */}

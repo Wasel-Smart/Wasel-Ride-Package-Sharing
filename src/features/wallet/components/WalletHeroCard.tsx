@@ -8,6 +8,10 @@ type WalletHeroCardProps = {
   balanceVisible: boolean;
   pendingBalance: number;
   rewardsBalance: number;
+  subscription?: {
+    planName: string;
+    corridorLabel?: string | null;
+  } | null;
   t: Record<string, string>;
   onShowSend: () => void;
   onShowTopUp: () => void;
@@ -20,6 +24,7 @@ export function WalletHeroCard({
   balanceVisible,
   pendingBalance,
   rewardsBalance,
+  subscription = null,
   t,
   onShowSend,
   onShowTopUp,
@@ -44,7 +49,9 @@ export function WalletHeroCard({
           <div>
             <span className="text-sm text-slate-400">{t.balance}</span>
             <p className="mt-1 text-xs text-slate-400">
-              Keep your money actions in one place: add money, withdraw, or send instantly.
+              {subscription
+                ? `${subscription.planName}${subscription.corridorLabel ? ` · ${subscription.corridorLabel}` : ''}`
+                : 'Keep your money actions in one place: add money, withdraw, or send instantly.'}
             </p>
           </div>
           <button type="button" onClick={onToggleBalance} className="text-slate-400 transition-colors hover:text-white">

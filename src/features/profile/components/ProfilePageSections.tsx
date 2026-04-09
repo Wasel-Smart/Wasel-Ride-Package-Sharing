@@ -243,7 +243,7 @@ export function ProfileHeroSection({
 }: ProfileHeroSectionProps) {
   return (
     <div style={{ padding: '40px 0 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-      <WaselLogo size={34} theme="light" variant="full" />
+              <WaselLogo size={34} theme="light" variant="full" showWordmark={false} />
       <div style={{ textAlign: 'center', maxWidth: 420 }}>
         <p
           style={{

@@ -171,15 +171,23 @@ async function verifySignup() {
     options: {
       data: {
         full_name: 'Codex Smoke',
+        first_name: 'Codex',
+        last_name: 'Smoke',
+        phone: '+962790000000',
+        phone_number: '+962790000000',
       },
     },
   });
 
   if (error) {
+    const detail =
+      /phone_number/i.test(error.message) && /database error saving new user/i.test(error.message)
+        ? `${error.message} Apply src/supabase/migrations/20260410110000_reassert_auth_signup_user_sync.sql to the target project and rerun this check.`
+        : error.message;
     return {
       ok: false,
       email,
-      detail: error.message,
+      detail,
     };
   }
 

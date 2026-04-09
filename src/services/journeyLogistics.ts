@@ -9,6 +9,12 @@ import {
   routeMatchesLocationPair,
 } from '../utils/jordanLocations';
 
+export type RecordSyncState =
+  | 'local-only'
+  | 'syncing'
+  | 'synced'
+  | 'sync-error';
+
 export interface PostedRide {
   id: string;
   ownerId?: string;
@@ -29,6 +35,8 @@ export interface PostedRide {
   packageNote: string;
   createdAt: string;
   status?: 'active' | 'cancelled' | 'completed';
+  syncState?: RecordSyncState;
+  syncedAt?: string;
 }
 
 export type PackageStatus = 'searching' | 'matched' | 'in_transit' | 'delivered';
@@ -56,6 +64,8 @@ export interface PackageRequest {
   createdAt: string;
   verification: PackageVerification;
   timeline: Array<{ label: string; complete: boolean }>;
+  syncState?: RecordSyncState;
+  syncedAt?: string;
 }
 
 const RIDES_KEY = 'wasel-connected-rides';
@@ -173,6 +183,8 @@ function normalizeServerRide(raw: Record<string, unknown>, fallback: PostedRide)
       String(raw.owner_email ?? raw.ownerEmail ?? raw.email ?? fallback.ownerEmail ?? ''),
     ),
     status: raw.status === 'cancelled' || raw.status === 'completed' ? raw.status : (fallback.status ?? 'active'),
+    syncState: 'synced',
+    syncedAt: new Date().toISOString(),
   };
 }
 
@@ -202,6 +214,11 @@ function normalizeLocalRide(raw: Partial<PostedRide>): PostedRide | null {
     ownerPhone: sanitizePhone(String(raw.ownerPhone ?? '')),
     ownerEmail: sanitizeEmail(String(raw.ownerEmail ?? '')),
     status: raw.status === 'cancelled' || raw.status === 'completed' ? raw.status : 'active',
+    syncState:
+      raw.syncState === 'synced' || raw.syncState === 'syncing' || raw.syncState === 'sync-error'
+        ? raw.syncState
+        : 'local-only',
+    syncedAt: typeof raw.syncedAt === 'string' ? raw.syncedAt : undefined,
   };
 }
 
@@ -235,9 +252,11 @@ function normalizeServerPackage(raw: Record<string, unknown>, fallback: PackageR
     },
     timeline: buildTimeline(status, matchedRideId, {
       senderCodeSharedAt: String(raw.sender_code_shared_at ?? raw.senderCodeSharedAt ?? fallback.verification?.senderCodeSharedAt ?? '').trim() || undefined,
-      riderPickupConfirmedAt: String(raw.rider_pickup_confirmed_at ?? raw.riderPickupConfirmedAt ?? fallback.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
-      receiverDeliveryConfirmedAt: String(raw.receiver_delivery_confirmed_at ?? raw.receiverDeliveryConfirmedAt ?? fallback.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
+        riderPickupConfirmedAt: String(raw.rider_pickup_confirmed_at ?? raw.riderPickupConfirmedAt ?? fallback.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
+        receiverDeliveryConfirmedAt: String(raw.receiver_delivery_confirmed_at ?? raw.receiverDeliveryConfirmedAt ?? fallback.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
     }),
+    syncState: 'synced',
+    syncedAt: new Date().toISOString(),
   };
 }
 
@@ -281,6 +300,11 @@ function normalizeLocalPackage(raw: Partial<PackageRequest>): PackageRequest | n
           riderPickupConfirmedAt: String(raw.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
           receiverDeliveryConfirmedAt: String(raw.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
         }),
+    syncState:
+      raw.syncState === 'synced' || raw.syncState === 'syncing' || raw.syncState === 'sync-error'
+        ? raw.syncState
+        : 'local-only',
+    syncedAt: typeof raw.syncedAt === 'string' ? raw.syncedAt : undefined,
   };
 }
 
@@ -347,6 +371,7 @@ export async function createConnectedRide(input: Omit<PostedRide, 'id' | 'create
     id: makeId('ride'),
     createdAt: new Date().toISOString(),
     status: input.status ?? 'active',
+    syncState: 'local-only',
   };
 
   try {
@@ -477,6 +502,7 @@ export async function createConnectedPackage(input: {
     createdAt: new Date().toISOString(),
     verification: {},
     timeline: buildTimeline(status, matchedRide?.id, {}),
+    syncState: 'local-only',
   };
 
   try {
@@ -727,6 +753,7 @@ export function updatePackageVerification(
     status,
     verification,
     timeline: buildTimeline(status, target.matchedRideId, verification),
+    syncState: target.syncState === 'local-only' ? 'local-only' : 'syncing',
   };
 
   savePackages(
@@ -736,7 +763,30 @@ export function updatePackageVerification(
   void updateDirectPackageStatus(
     normalizedTrackingId,
     status === 'searching' ? 'matched' : status,
-  ).catch(() => {});
+  ).then(() => {
+    savePackages(
+      getConnectedPackages().map((item) =>
+        item.trackingId === normalizedTrackingId
+          ? {
+              ...item,
+              syncState: 'synced' as const,
+              syncedAt: new Date().toISOString(),
+            }
+          : item,
+      ),
+    );
+  }).catch(() => {
+    savePackages(
+      getConnectedPackages().map((item) =>
+        item.trackingId === normalizedTrackingId
+          ? {
+              ...item,
+              syncState: item.syncState === 'local-only' ? 'local-only' as const : 'sync-error' as const,
+            }
+          : item,
+      ),
+    );
+  });
 
   void trackGrowthEvent({
     eventName: 'package_verification_updated',

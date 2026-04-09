@@ -92,6 +92,10 @@ describe('sanitizeURL()', () => {
     expect(sanitizeURL('JAVASCRIPT:void(0)')).toBe('');
   });
 
+  it('blocks control-character obfuscated javascript URLs', () => {
+    expect(sanitizeURL('  java\nscript:alert(1)  ')).toBe('');
+  });
+
   it('returns empty string for empty input', () => {
     expect(sanitizeURL('')).toBe('');
   });

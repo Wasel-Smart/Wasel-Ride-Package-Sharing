@@ -99,7 +99,7 @@ class AppErrorBoundary extends Component<{
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
-            <WaselLogo size={42} theme={isLight ? 'dark' : 'light'} variant="compact" />
+            <WaselLogo size={42} theme={isLight ? 'dark' : 'light'} variant="compact" showWordmark={false} />
           </div>
           <div
             style={{
@@ -193,9 +193,9 @@ class AppErrorBoundary extends Component<{
 }
 
 function AppRuntimeCoordinator() {
+  // Effect 1: Monitoring & performance — isolated so a failure here doesn't affect warmup
   useEffect(() => {
     let disposed = false;
-    let stopPolling: () => void = () => {};
     const currentPath = typeof window === 'undefined' ? '/' : window.location.pathname;
     const isPublicEntryPath = currentPath === '/';
 
@@ -212,6 +212,19 @@ function AppRuntimeCoordinator() {
       detectLongTasks();
     }, isPublicEntryPath ? 2_500 : 1_500);
 
+    return () => {
+      disposed = true;
+      cancelMonitoringSetup();
+    };
+  }, []);
+
+  // Effect 2: Server warmup & availability polling — isolated so monitoring failure doesn't block it
+  useEffect(() => {
+    let disposed = false;
+    let stopPolling: () => void = () => {};
+    const currentPath = typeof window === 'undefined' ? '/' : window.location.pathname;
+    const isPublicEntryPath = currentPath === '/';
+
     const cancelWarmup = scheduleDeferredTask(async () => {
       const core = await import('./services/core');
       if (disposed) return;
@@ -220,6 +233,17 @@ function AppRuntimeCoordinator() {
       await core.warmUpServer();
       await core.probeBackendHealth();
     }, isPublicEntryPath ? 2_200 : 900);
+
+    return () => {
+      disposed = true;
+      cancelWarmup();
+      stopPolling();
+    };
+  }, []);
+
+  // Effect 3: Online/offline network sync — isolated for clarity and independent lifecycle
+  useEffect(() => {
+    let disposed = false;
 
     const syncOnlineState = () => {
       const online = typeof navigator === 'undefined' ? true : navigator.onLine;
@@ -241,9 +265,6 @@ function AppRuntimeCoordinator() {
 
     return () => {
       disposed = true;
-      cancelMonitoringSetup();
-      cancelWarmup();
-      stopPolling();
       if (typeof window !== 'undefined') {
         window.removeEventListener('online', syncOnlineState);
         window.removeEventListener('offline', syncOnlineState);

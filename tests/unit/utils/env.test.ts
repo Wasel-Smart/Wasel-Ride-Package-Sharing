@@ -7,7 +7,7 @@
  * Standard: Environment configuration is the bootstrap contract.
  * Incorrect defaults silently break auth, payments, and support flows.
  */
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect } from 'vitest';
 import {
   getEnv,
   hasEnv,
@@ -18,6 +18,18 @@ import {
   getSmsSupportUrl,
   getSupportPhoneUrl,
 } from '../../../src/utils/env';
+
+const originalAppUrl = process.env.VITE_APP_URL;
+
+afterEach(() => {
+  if (originalAppUrl === undefined) {
+    delete process.env.VITE_APP_URL;
+  } else {
+    process.env.VITE_APP_URL = originalAppUrl;
+  }
+
+  window.history.replaceState({}, '', '/');
+});
 
 // ── 1. getEnv ─────────────────────────────────────────────────────────────────
 
@@ -75,6 +87,12 @@ describe('getConfig()', () => {
 
   it('enableEmailNotifications defaults to true in test env', () => {
     expect(getConfig().enableEmailNotifications).toBe(true);
+  });
+
+  it('prefers the runtime localhost origin over a stale local VITE_APP_URL', () => {
+    process.env.VITE_APP_URL = 'http://localhost:5173';
+
+    expect(getConfig().appUrl).toBe(window.location.origin);
   });
 });
 

@@ -4,6 +4,10 @@ import { useLocation } from 'react-router';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import {
+  buildCorridorCommercialSnapshot,
+  type CorridorCommercialSnapshot,
+} from '../../services/corridorCommercial';
+import {
   buildBusinessAccountSnapshot,
   buildSchoolTransportSnapshot,
   type BusinessAccountSnapshot,
@@ -140,6 +144,7 @@ export default function OperationsOverviewPage() {
   const [schoolSnapshot, setSchoolSnapshot] = useState<SchoolTransportSnapshot | null>(null);
   const [serviceSnapshot, setServiceSnapshot] = useState<ServiceProviderWorkflowSnapshot | null>(null);
   const [proofSnapshot, setProofSnapshot] = useState<MiddleEastCorridorProofSnapshot | null>(null);
+  const [commercialSnapshot, setCommercialSnapshot] = useState<CorridorCommercialSnapshot | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -150,6 +155,13 @@ export default function OperationsOverviewPage() {
       })
       .catch(() => {
         if (!cancelled) setDashboard(null);
+      });
+    void buildCorridorCommercialSnapshot()
+      .then((value) => {
+        if (!cancelled) setCommercialSnapshot(value);
+      })
+      .catch(() => {
+        if (!cancelled) setCommercialSnapshot(null);
       });
 
     if (pathname === '/app/services/corporate') {
@@ -216,7 +228,7 @@ export default function OperationsOverviewPage() {
             { label: 'Live corridors', value: String(liveCorridors.length), tone: 'teal' as const },
             { label: 'Bookings', value: String(dashboard?.funnel.booked ?? 0), tone: 'green' as const },
             { label: 'Growth proof', value: `${proofSnapshot?.averageSavingsPercent ?? 0}%`, tone: 'amber' as const },
-            { label: 'Network revenue', value: `${(dashboard?.revenueJod ?? 0).toFixed(0)} JOD`, tone: 'blue' as const },
+            { label: 'Network revenue', value: `${(commercialSnapshot?.totalRecurringRevenueJod ?? dashboard?.revenueJod ?? 0).toFixed(0)} JOD`, tone: 'blue' as const },
           ];
 
   return (
@@ -454,8 +466,55 @@ export default function OperationsOverviewPage() {
               <StatCard label="Searches" value={String(dashboard?.funnel.searched ?? 0)} detail="Live rider demand flowing into route selection." color={CYAN} />
               <StatCard label="Bookings" value={String(dashboard?.funnel.booked ?? 0)} detail="Confirmed route conversions from the active movement graph." color={GREEN} />
               <StatCard label="Average savings" value={`${proofSnapshot?.averageSavingsPercent ?? 0}%`} detail="Shared-route price advantage versus generic on-demand alternatives." color={GOLD} />
-              <StatCard label="Live-owned corridors" value={String(proofSnapshot?.liveOwnedCorridors ?? 0)} detail="Jordan lanes backed by production signals right now." color={BLUE} />
+              <StatCard label="Live-owned corridors" value={String(commercialSnapshot?.ownedCorridorContracts ?? proofSnapshot?.liveOwnedCorridors ?? 0)} detail="Jordan lanes backed by production signals and recurring contracts right now." color={BLUE} />
             </div>
+
+            {commercialSnapshot ? (
+              <Section title="Commercial Corridor Engine">
+                <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
+                  <div style={cardStyle()}>
+                    <div style={{ color: '#EFF6FF', fontWeight: 800, marginBottom: 10 }}>Recurring corridor contracts</div>
+                    <div style={{ display: 'grid', gap: 10 }}>
+                      {commercialSnapshot.contracts.map((contract) => (
+                        <div key={contract.id} style={{ borderRadius: 14, border: `1px solid ${BORD}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                            <div>
+                              <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.82rem' }}>{contract.title}</div>
+                              <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.74rem', marginTop: 4 }}>{contract.corridorLabel} | {contract.operatingModel}</div>
+                            </div>
+                            <div style={{ color: CYAN, fontWeight: 800, fontSize: '0.8rem' }}>{contract.recurringRevenueJod.toFixed(0)} JOD</div>
+                          </div>
+                          <div style={{ color: '#CBD5E1', fontSize: '0.75rem', marginTop: 6 }}>
+                            Ownership {contract.routeOwnershipScore}/100 | Renewal {new Date(contract.renewalDate).toLocaleDateString('en-US')}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={cardStyle()}>
+                    <div style={{ color: '#EFF6FF', fontWeight: 800, marginBottom: 10 }}>Commercial next action</div>
+                    <div style={{ color: '#CBD5E1', fontSize: '0.8rem', lineHeight: 1.7 }}>
+                      {commercialSnapshot.recommendedCommercialAction}
+                    </div>
+                    <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
+                      <div style={{ borderRadius: 14, border: `1px solid ${BORD}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
+                        <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.82rem' }}>Recurring revenue</div>
+                        <div style={{ color: CYAN, fontSize: '0.82rem', marginTop: 6 }}>{commercialSnapshot.totalRecurringRevenueJod.toFixed(0)} JOD across active contract lanes</div>
+                      </div>
+                      <div style={{ borderRadius: 14, border: `1px solid ${BORD}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
+                        <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.82rem' }}>Stakeholder coverage</div>
+                        <div style={{ color: GOLD, fontSize: '0.82rem', marginTop: 6 }}>{commercialSnapshot.activeStakeholders} active accounts, guardians, and operators tied to these corridors</div>
+                      </div>
+                      <div style={{ borderRadius: 14, border: `1px solid ${BORD}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
+                        <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.82rem' }}>Pass coverage</div>
+                        <div style={{ color: BLUE, fontSize: '0.82rem', marginTop: 6 }}>{commercialSnapshot.corridorPassCoverage ?? 'No corridor pass pinned yet'}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Section>
+            ) : null}
 
             <Section title="Live Corridor Leaders">
               <div style={{ display: 'grid', gap: 10 }}>

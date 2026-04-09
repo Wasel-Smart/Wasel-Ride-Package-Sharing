@@ -137,30 +137,20 @@ export function normalizeError(error: unknown, context?: Record<string, unknown>
       return new IgnorableSystemError(message, context);
     }
 
-    // Network errors
-    if (
-      lowerMessage.includes('fetch') ||
-      lowerMessage.includes('networkerror') ||
-      lowerMessage.includes('network request failed') ||
-      lowerMessage.includes('network error') ||
-      lowerMessage.includes('failed to fetch') ||
-      lowerMessage.includes('econnrefused') ||
-      lowerMessage.includes('timeout')
-    ) {
-      return new NetworkError(message, context);
-    }
-
-    // Authentication errors
+    // Authentication errors — checked before generic 'invalid' to avoid misclassification
+    // e.g. 'invalid_jwt' must become AuthenticationError, not ValidationError
     if (
       lowerMessage.includes('unauthorized') ||
       lowerMessage.includes('invalid credentials') ||
       lowerMessage.includes('session_not_found') ||
-      lowerMessage.includes('invalid_jwt')
+      lowerMessage.includes('invalid_jwt') ||
+      lowerMessage.includes('jwt expired') ||
+      lowerMessage.includes('jwt invalid')
     ) {
       return new AuthenticationError(message, context);
     }
 
-    // Authorization errors
+    // Authorization errors — checked before generic 'invalid'
     if (
       lowerMessage.includes('permission') ||
       lowerMessage.includes('forbidden') ||
@@ -169,12 +159,7 @@ export function normalizeError(error: unknown, context?: Record<string, unknown>
       return new AuthorizationError(message, context);
     }
 
-    // Payment errors
-    if (lowerMessage.includes('payment') || lowerMessage.includes('stripe')) {
-      return new PaymentError(message, context);
-    }
-
-    // Timeout errors
+    // Timeout errors — checked before network to be more specific
     if (
       lowerMessage.includes('timeout') ||
       lowerMessage.includes('timed out') ||
@@ -183,7 +168,24 @@ export function normalizeError(error: unknown, context?: Record<string, unknown>
       return new TimeoutError(message, context);
     }
 
-    // Validation errors
+    // Network errors
+    if (
+      lowerMessage.includes('fetch') ||
+      lowerMessage.includes('networkerror') ||
+      lowerMessage.includes('network request failed') ||
+      lowerMessage.includes('network error') ||
+      lowerMessage.includes('failed to fetch') ||
+      lowerMessage.includes('econnrefused')
+    ) {
+      return new NetworkError(message, context);
+    }
+
+    // Payment errors
+    if (lowerMessage.includes('payment') || lowerMessage.includes('stripe')) {
+      return new PaymentError(message, context);
+    }
+
+    // Validation errors — last among specific checks because 'invalid' is broad
     if (
       lowerMessage.includes('validation') ||
       lowerMessage.includes('invalid') ||

@@ -74,7 +74,7 @@ export function Protected({ children }: { children: ReactNode }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', background: DS.bg, padding: '24px 16px' }}>
         <div style={{ width: '100%', maxWidth: 480, padding: '28px 24px', borderRadius: r(24), background: `linear-gradient(180deg, ${DS.card} 0%, ${DS.bg} 100%)`, border: `1px solid ${DS.border}`, boxShadow: '0 20px 60px rgba(0,0,0,0.35)', textAlign: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
-            <WaselLogo size={42} theme="light" variant="full" />
+          <WaselLogo size={42} theme="light" variant="full" showWordmark={false} />
           </div>
           <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Checking access</div>
           <div style={{ color: DS.sub, fontFamily: DS.F, fontSize: '0.85rem', lineHeight: 1.7 }}>
@@ -94,7 +94,7 @@ export function Protected({ children }: { children: ReactNode }) {
           style={{ width: '100%', maxWidth: 480, padding: '28px 24px', borderRadius: r(24), background: `linear-gradient(180deg, ${DS.card} 0%, ${DS.bg} 100%)`, border: `1px solid ${DS.border}`, boxShadow: '0 20px 60px rgba(0,0,0,0.35)', textAlign: 'center' }}
         >
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
-            <WaselLogo size={42} theme="light" variant="full" />
+          <WaselLogo size={42} theme="light" variant="full" showWordmark={false} />
           </div>
           <div style={{ width: 58, height: 58, borderRadius: r(18), margin: '0 auto 14px', background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}24`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DS.cyan }}>
             <Shield size={24} />
@@ -239,7 +239,7 @@ export function SectionHead({ emoji, title, titleAr, sub, color = DS.cyan, actio
 
 export function CoreExperienceBanner({
   title,
-  detail: _detail,
+  detail,
   tone = DS.cyan,
 }: {
   title: string;
@@ -259,6 +259,7 @@ export function CoreExperienceBanner({
       }}
     >
       <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.94rem' }}>{title}</div>
+      <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.65, maxWidth: 760 }}>{detail}</div>
     </div>
   );
 }

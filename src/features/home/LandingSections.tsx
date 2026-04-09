@@ -440,9 +440,9 @@ export function LandingHeroSection({
               </p>
             </div>
             <div style={{ display: 'grid', gap: 10, maxWidth: 620 }}>
-              {bullets.map(bullet => (
+              {bullets.map((bullet, index) => (
                 <div
-                  key={bullet}
+                  key={`hero-bullet-${index}`}
                   style={{
                     display: 'flex',
                     alignItems: 'flex-start',
@@ -472,9 +472,9 @@ export function LandingHeroSection({
               className="landing-hero-highlights"
               style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}
             >
-              {highlights.map(item => (
+              {highlights.map((item, index) => (
                 <div
-                  key={item.label}
+                  key={`hero-highlight-${index}`}
                   className="landing-glow-card wasel-lift-card"
                   style={{
                     padding: '16px 16px 18px',
@@ -633,9 +633,9 @@ export function LandingHeroSection({
                   textAlign: 'center',
                 }}
                 >
-                {heroLogoSignals.map(signal => (
+                {heroLogoSignals.map((signal, index) => (
                   <span
-                    key={signal}
+                    key={`hero-signal-${index}`}
                     style={{
                       whiteSpace: 'nowrap',
                       padding: '7px 10px',
@@ -656,9 +656,9 @@ export function LandingHeroSection({
                   flexWrap: 'wrap',
                 }}
               >
-                {heroMetricPills.map(item => (
+                {heroMetricPills.map((item, index) => (
                   <span
-                    key={item}
+                    key={`hero-metric-${index}`}
                     style={{
                       padding: '7px 12px',
                       borderRadius: 999,

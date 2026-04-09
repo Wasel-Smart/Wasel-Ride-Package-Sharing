@@ -262,6 +262,15 @@ export const migrationCatalog = [
     category: 'performance',
     naming: 'canonical',
   },
+  {
+    sequence: 30,
+    path: 'src/supabase/migrations/20260410110000_reassert_auth_signup_user_sync.sql',
+    description: 'Reassert canonical auth.users to public.users sync and recover missing phone numbers for signup-triggered users',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'security',
+    naming: 'canonical',
+  },
 ];
 
 export const operationalSeedFiles = [

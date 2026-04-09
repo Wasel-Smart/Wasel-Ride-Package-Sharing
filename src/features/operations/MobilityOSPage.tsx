@@ -148,7 +148,7 @@ export default function MobilityOSPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
             <div style={{ maxWidth: 840, display: 'grid', gap: 12 }}>
               <div style={{ display: 'inline-flex', padding: '10px 14px', borderRadius: R.full, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.04)', width: 'fit-content' }}>
-                <WaselLogo size={44} theme="light" variant="full" />
+            <WaselLogo size={44} theme="light" variant="full" showWordmark={false} />
               </div>
               <div style={{ fontSize: '0.72rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: C.cyan }}>Mobility OS / Neural Corridor Engine</div>
               <h1 style={{ margin: 0, fontSize: 'clamp(2.2rem, 4vw, 4rem)', lineHeight: 0.98, letterSpacing: '-0.04em' }}>

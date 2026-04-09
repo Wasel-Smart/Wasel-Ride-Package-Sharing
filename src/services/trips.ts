@@ -1,4 +1,5 @@
 import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey } from './core';
+import { logger } from '../utils/logging';
 import {
   calculateDirectPrice,
   createDirectTrip,
@@ -104,7 +105,11 @@ export const tripsAPI = {
                 body: JSON.stringify(sanitizedPayload),
               }),
           );
-        } catch {
+        } catch (err) {
+          logger.warn('[trips] edge API unavailable for trip.create, falling back to direct Supabase', {
+            operation: 'trip.create.edge_fallback',
+            error: err instanceof Error ? err.message : String(err),
+          });
           return createDirectTrip(userId, sanitizedPayload);
         }
 
@@ -124,15 +129,24 @@ export const tripsAPI = {
     if (date) params.append('date', date);
     if (seats) params.append('seats', seats.toString());
 
-    const response = await withApiTelemetry(
-      'trip.search',
-      `${API_URL}/trips/search?${params}`,
-      'GET',
-      () =>
-        fetchWithRetry(`${API_URL}/trips/search?${params}`, {
-          headers: { Authorization: `Bearer ${publicAnonKey}` },
-        }),
-    );
+    let response: Response;
+    try {
+      response = await withApiTelemetry(
+        'trip.search',
+        `${API_URL}/trips/search?${params}`,
+        'GET',
+        () =>
+          fetchWithRetry(`${API_URL}/trips/search?${params}`, {
+            headers: { Authorization: `Bearer ${publicAnonKey}` },
+          }),
+      );
+    } catch (err) {
+      logger.warn('[trips] edge API unavailable for trip.search, falling back to direct Supabase', {
+        operation: 'trip.search.edge_fallback',
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return searchDirectTrips(from, to, date, seats);
+    }
 
     return expectJsonResponse(response, 'Failed to search trips', { operation: 'trip.search' });
   },
@@ -209,7 +223,12 @@ export const tripsAPI = {
                 body: JSON.stringify(sanitizedPayload),
               }),
           );
-        } catch {
+        } catch (err) {
+          logger.warn('[trips] edge API unavailable for trip.update, falling back to direct Supabase', {
+            operation: 'trip.update.edge_fallback',
+            tripId,
+            error: err instanceof Error ? err.message : String(err),
+          });
           return updateDirectTrip(tripId, sanitizedPayload);
         }
 

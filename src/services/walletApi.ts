@@ -5,6 +5,11 @@
  */
 
 import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey, supabase } from './core';
+import {
+  activateWaselPlus,
+  getMovementMembershipSnapshot,
+  startCommuterPass,
+} from './movementMembership';
 
 const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
 
@@ -106,6 +111,10 @@ export interface WalletSubscription {
   price: number;
   status: string;
   renewalDate: string | null;
+  type?: 'plus' | 'commuter-pass';
+  corridorId?: string | null;
+  corridorLabel?: string | null;
+  benefits?: string[];
 }
 
 export interface AddPaymentMethodInput {
@@ -144,6 +153,22 @@ export interface InsightsData {
   carbonSaved: number;
 }
 
+export interface WalletReliabilityMeta {
+  source: 'edge-api' | 'direct-supabase';
+  degraded: boolean;
+  fetchedAt: string;
+}
+
+export interface WalletSnapshot {
+  data: WalletData;
+  meta: WalletReliabilityMeta;
+}
+
+export interface WalletInsightsSnapshot {
+  data: InsightsData;
+  meta: WalletReliabilityMeta;
+}
+
 function getDb(): DbClient {
   if (!supabase) {
     throw new Error('Supabase client is not initialised');
@@ -157,9 +182,19 @@ const INSIGHTS_CACHE_TTL_MS = 30_000;
 const canonicalUserCache = new Map<string, Promise<string>>();
 const walletReadCache = new Map<string, CacheEntry<WalletData>>();
 const walletInsightsCache = new Map<string, CacheEntry<InsightsData>>();
+const walletReadSnapshotCache = new Map<string, CacheEntry<WalletSnapshot>>();
+const walletInsightsSnapshotCache = new Map<string, CacheEntry<WalletInsightsSnapshot>>();
 
 function canUseEdgeApi(): boolean {
   return Boolean(WALLET_API_BASE && publicAnonKey);
+}
+
+function createWalletReliabilityMeta(source: WalletReliabilityMeta['source'], degraded: boolean): WalletReliabilityMeta {
+  return {
+    source,
+    degraded,
+    fetchedAt: new Date().toISOString(),
+  };
 }
 
 function toNumber(value: unknown, fallback = 0): number {
@@ -320,6 +355,7 @@ function buildWalletPayload(
   transactions: TransactionRow[],
   paymentMethods: PaymentMethodRow[] = [],
 ): WalletData {
+  const membership = getMovementMembershipSnapshot();
   const normalizedTransactions = transactions.map(toWalletTransaction);
   const normalizedPaymentMethods = paymentMethods.map(toWalletPaymentMethod);
   const totalEarned = transactions
@@ -357,7 +393,19 @@ function buildWalletPayload(
     transactions: normalizedTransactions,
     activeEscrows: [],
     activeRewards: [],
-    subscription: null,
+    subscription: membership.activeSubscription
+      ? {
+          id: membership.activeSubscription.id,
+          planName: membership.activeSubscription.planName,
+          price: membership.activeSubscription.priceJod,
+          status: 'active',
+          renewalDate: membership.activeSubscription.renewalDate,
+          type: membership.activeSubscription.type,
+          corridorId: membership.activeSubscription.corridorId,
+          corridorLabel: membership.activeSubscription.corridorLabel,
+          benefits: membership.activeSubscription.benefits,
+        }
+      : null,
   };
 }
 
@@ -437,11 +485,15 @@ function invalidateWalletCaches(userId?: string): void {
   if (!userId) {
     walletReadCache.clear();
     walletInsightsCache.clear();
+    walletReadSnapshotCache.clear();
+    walletInsightsSnapshotCache.clear();
     return;
   }
 
   walletReadCache.delete(userId);
   walletInsightsCache.delete(userId);
+  walletReadSnapshotCache.delete(userId);
+  walletInsightsSnapshotCache.delete(userId);
 }
 
 export function __resetWalletApiCachesForTests(): void {
@@ -806,18 +858,33 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const walletApi = {
-  async getWallet(userId: string): Promise<WalletData> {
-    return readCached(walletReadCache, userId)
-      ?? writeCached(walletReadCache, userId, WALLET_READ_CACHE_TTL_MS, async () => {
+  async getWalletSnapshot(userId: string): Promise<WalletSnapshot> {
+    return readCached(walletReadSnapshotCache, userId)
+      ?? writeCached(walletReadSnapshotCache, userId, WALLET_READ_CACHE_TTL_MS, async () => {
         if (canUseEdgeApi()) {
           try {
-            return await requestJson<WalletData>(`${WALLET_API_BASE}/${userId}`);
+            const data = await requestJson<WalletData>(`${WALLET_API_BASE}/${userId}`);
+            return {
+              data,
+              meta: createWalletReliabilityMeta('edge-api', false),
+            };
           } catch {
             // Fall back to direct Supabase below.
           }
         }
 
-        return fetchWalletDirect(userId);
+        return {
+          data: await fetchWalletDirect(userId),
+          meta: createWalletReliabilityMeta('direct-supabase', true),
+        };
+      });
+  },
+
+  async getWallet(userId: string): Promise<WalletData> {
+    return readCached(walletReadCache, userId)
+      ?? writeCached(walletReadCache, userId, WALLET_READ_CACHE_TTL_MS, async () => {
+        const snapshot = await walletApi.getWalletSnapshot(userId);
+        return snapshot.data;
       });
   },
 
@@ -937,38 +1004,85 @@ export const walletApi = {
       }
     }
 
-    return { subscription: null };
+    const membership = getMovementMembershipSnapshot();
+    return {
+      subscription: membership.activeSubscription
+        ? {
+            id: membership.activeSubscription.id,
+            planName: membership.activeSubscription.planName,
+            price: membership.activeSubscription.priceJod,
+            status: 'active',
+            renewalDate: membership.activeSubscription.renewalDate,
+            type: membership.activeSubscription.type,
+            corridorId: membership.activeSubscription.corridorId,
+            corridorLabel: membership.activeSubscription.corridorLabel,
+            benefits: membership.activeSubscription.benefits,
+          }
+        : null,
+    };
   },
 
-  async subscribe(userId: string, planName: string, price: number) {
+  async subscribe(userId: string, planName: string, price: number, corridorId?: string | null) {
     if (canUseEdgeApi()) {
-      return requestJson(`${WALLET_API_BASE}/${userId}/subscribe`, {
+      const result = await requestJson(`${WALLET_API_BASE}/${userId}/subscribe`, {
         method: 'POST',
-        body: JSON.stringify({ planName, price }),
+        body: JSON.stringify({ planName, price, corridorId }),
       });
+      invalidateWalletCaches(userId);
+      return result;
     }
 
-    throw new Error('Subscription changes require the wallet backend.');
+    if (corridorId) {
+      startCommuterPass(corridorId);
+    } else {
+      activateWaselPlus(price);
+    }
+    invalidateWalletCaches(userId);
+    return walletApi.getSubscription(userId);
   },
 
   async getInsights(userId: string): Promise<InsightsData> {
     return readCached(walletInsightsCache, userId)
       ?? writeCached(walletInsightsCache, userId, INSIGHTS_CACHE_TTL_MS, async () => {
+        const snapshot = await walletApi.getInsightsSnapshot(userId);
+        return snapshot.data;
+      });
+  },
+
+  async getInsightsSnapshot(userId: string): Promise<WalletInsightsSnapshot> {
+    return readCached(walletInsightsSnapshotCache, userId)
+      ?? writeCached(walletInsightsSnapshotCache, userId, INSIGHTS_CACHE_TTL_MS, async () => {
         if (canUseEdgeApi()) {
           try {
-            return await requestJson<InsightsData>(`${WALLET_API_BASE}/${userId}/insights`);
+            const data = await requestJson<InsightsData>(`${WALLET_API_BASE}/${userId}/insights`);
+            return {
+              data,
+              meta: createWalletReliabilityMeta('edge-api', false),
+            };
           } catch {
-            // Fall back to direct Supabase below.
+            // Fall back to wallet-backed insights below.
           }
         }
 
-        const wallet = await walletApi.getWallet(userId);
-        if (wallet.transactions.length > 0) {
-          return buildInsightsFromTransactions(wallet.transactions);
+        const walletSnapshot = await walletApi.getWalletSnapshot(userId);
+        if (walletSnapshot.data.transactions.length > 0) {
+          return {
+            data: buildInsightsFromTransactions(walletSnapshot.data.transactions),
+            meta: {
+              ...walletSnapshot.meta,
+              degraded: true,
+            },
+          };
         }
 
         const rows = await getWalletTransactionRows(userId);
-        return buildInsightsFromTransactions(rows.map(toWalletTransaction));
+        return {
+          data: buildInsightsFromTransactions(rows.map(toWalletTransaction)),
+          meta: {
+            ...walletSnapshot.meta,
+            degraded: true,
+          },
+        };
       });
   },
 

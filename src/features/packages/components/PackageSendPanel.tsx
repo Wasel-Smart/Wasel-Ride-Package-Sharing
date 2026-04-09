@@ -2,7 +2,10 @@ import type { Dispatch, SetStateAction } from 'react';
 import { Shield } from 'lucide-react';
 import { CITIES } from '../../../pages/waselCoreRideData';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
+import type { CorridorOpportunity } from '../../../config/wasel-movement-network';
 import type { PackageRequest } from '../../../services/journeyLogistics';
+import type { MovementPriceQuote } from '../../../services/movementPricing';
+import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
 import {
   PACKAGE_EXCELLENCE_POINTS,
   PACKAGE_SEND_STEPS,
@@ -27,6 +30,9 @@ type PackageSendPanelProps = {
   createError: string | null;
   busyState: 'idle' | 'creating' | 'tracking';
   matchingRideCount: number;
+  corridorPlan: CorridorOpportunity | null;
+  selectedSignal: LiveCorridorSignal | null;
+  selectedPriceQuote: MovementPriceQuote | null;
   recentPackages: PackageRequest[];
   onCreate: () => void;
   onReset: () => void;
@@ -41,6 +47,9 @@ export function PackageSendPanel({
   createError,
   busyState,
   matchingRideCount,
+  corridorPlan,
+  selectedSignal,
+  selectedPriceQuote,
   recentPackages,
   onCreate,
   onReset,
@@ -242,6 +251,35 @@ export function PackageSendPanel({
               ? 'This corridor already has package-ready rides, so matching should be immediate or near-immediate.'
               : 'No package-ready ride is live for this route yet. We will still create the request and keep it queued for the next matching captain.'}
           </div>
+          {(selectedSignal || corridorPlan || selectedPriceQuote) && (
+            <div
+              style={{
+                marginTop: 12,
+                display: 'grid',
+                gap: 10,
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              }}
+            >
+              <div style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)' }}>
+                <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Attach rate</div>
+                <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>
+                  {corridorPlan ? `${corridorPlan.attachRatePercent}%` : 'Pending'}
+                </div>
+              </div>
+              <div style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)' }}>
+                <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Shared price</div>
+                <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>
+                  {selectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : corridorPlan ? `${corridorPlan.sharedPriceJod} JOD` : 'Pending'}
+                </div>
+              </div>
+              <div style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)' }}>
+                <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Next wave</div>
+                <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>
+                  {selectedSignal?.nextWaveWindow ?? corridorPlan?.autoGroupWindow ?? 'Waiting for demand'}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: r(16), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 10px 22px rgba(0,0,0,0.12)' }}>
           <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>What great looks like</div>

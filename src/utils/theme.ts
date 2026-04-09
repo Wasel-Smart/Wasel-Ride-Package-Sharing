@@ -5,22 +5,69 @@ export const THEME_STORAGE_KEY = 'wasel-theme';
 export const LEGACY_DISPLAY_STORAGE_KEY = 'wasel.settings.display';
 
 export function sanitizeThemePreference(value: string | null | undefined): ThemePreference {
-  if (value === 'dark') {
-    return 'dark';
+  if (value === 'light' || value === 'dark' || value === 'system') {
+    return value;
   }
 
   return 'dark';
 }
 
+function readLegacyDisplayTheme(): ThemePreference | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(LEGACY_DISPLAY_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as { theme?: string } | null;
+    return sanitizeThemePreference(parsed?.theme);
+  } catch {
+    return null;
+  }
+}
+
 export function getSystemTheme(): ResolvedTheme {
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-color-scheme: light)').matches
+  ) {
+    return 'light';
+  }
+
   return 'dark';
 }
 
 export function getStoredThemePreference(): ThemePreference {
-  return 'dark';
+  if (typeof window === 'undefined') {
+    return 'dark';
+  }
+
+  try {
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored) {
+      return sanitizeThemePreference(stored);
+    }
+  } catch {
+    return readLegacyDisplayTheme() ?? 'dark';
+  }
+
+  return readLegacyDisplayTheme() ?? 'dark';
 }
 
-export function resolveThemePreference(_theme: ThemePreference): ResolvedTheme {
+export function resolveThemePreference(theme: ThemePreference): ResolvedTheme {
+  if (theme === 'system') {
+    return getSystemTheme();
+  }
+
+  if (theme === 'light') {
+    return 'light';
+  }
+
   return 'dark';
 }
 
@@ -44,14 +91,14 @@ function mergeThemeIntoLegacyDisplay(theme: ThemePreference): void {
   }
 }
 
-export function persistThemePreference(_theme: ThemePreference): void {
+export function persistThemePreference(theme: ThemePreference): void {
   if (typeof window === 'undefined') {
     return;
   }
 
   try {
-    window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
-    mergeThemeIntoLegacyDisplay('dark');
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    mergeThemeIntoLegacyDisplay(theme);
   } catch (error) {
     console.error('Failed to persist theme preference:', error);
   }
@@ -91,7 +138,7 @@ export function applyThemeToDocument(
 }
 
 export function initializeThemeFromStorage(): ThemePreference {
-  const preference = 'dark';
+  const preference = getStoredThemePreference();
   applyThemeToDocument(resolveThemePreference(preference), preference);
   return preference;
 }

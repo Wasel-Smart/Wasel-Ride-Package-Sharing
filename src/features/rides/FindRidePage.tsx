@@ -5,10 +5,10 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
+import { getCorridorMovementQuote, useCorridorTruth } from '../../services/corridorTruth';
 import { createDemandAlert, getDemandStats, hydrateDemandAlerts } from '../../services/demandCapture';
 import { trackGrowthEvent } from '../../services/growthEngine';
 import { getConnectedRides } from '../../services/journeyLogistics';
-import { getMovementPriceQuote } from '../../services/movementPricing';
 import { recordMovementActivity } from '../../services/movementMembership';
 import {
   createReminderFromSuggestion,
@@ -19,12 +19,8 @@ import {
   syncRouteReminders,
 } from '../../services/movementRetention';
 import { notificationsAPI } from '../../services/notifications.js';
-import { getLiveCorridorSignal, useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
 import { createRideBooking, hydrateRideBookings } from '../../services/rideLifecycle';
-import {
-  getCorridorOpportunity,
-  getWaselCategoryPosition,
-} from '../../config/wasel-movement-network';
+import { getWaselCategoryPosition } from '../../config/wasel-movement-network';
 import {
   ALL_RIDES,
   buildRideFromPostedRide,
@@ -88,22 +84,20 @@ export function FindRidePage() {
   const searchTimerRef = useRef<number | null>(null);
 
   const category = useMemo(() => getWaselCategoryPosition(), []);
-  const corridorPlan = useMemo(() => getCorridorOpportunity(from, to), [from, to]);
-  const routeIntelligence = useLiveRouteIntelligence({ from, to });
-  const selectedSignal = routeIntelligence.selectedSignal;
-  const featuredSignals = routeIntelligence.featuredSignals.slice(0, 4);
+  const corridorTruth = useCorridorTruth({ from, to, featuredLimit: 4 });
+  const { allSignals, corridorPlan, featuredSignals, membership, selectedPriceQuote, selectedSignal } = corridorTruth;
   const recurringSuggestions = useMemo(
     () => getRecurringRouteSuggestions(3),
     [],
   );
   const signalLookup = useMemo(() => {
-    const lookup = new Map<string, ReturnType<typeof getLiveCorridorSignal>>();
-    for (const signal of routeIntelligence.allSignals) {
+    const lookup = new Map<string, (typeof allSignals)[number]>();
+    for (const signal of allSignals) {
       lookup.set(`${signal.from}::${signal.to}`, signal);
       lookup.set(`${signal.to}::${signal.from}`, signal);
     }
     return lookup;
-  }, [routeIntelligence.allSignals]);
+  }, [allSignals]);
   const demandStats = getDemandStats();
 
   const searchFromCoord = resolveCityCoord(from);
@@ -159,15 +153,6 @@ export function FindRidePage() {
     () => allAvailableRides.filter((ride) => booked.has(ride.id)).slice(0, 3),
     [allAvailableRides, booked],
   );
-  const selectedPriceQuote = selectedSignal?.priceQuote
-    ?? (corridorPlan
-      ? getMovementPriceQuote({
-          basePriceJod: corridorPlan.sharedPriceJod,
-          corridorId: corridorPlan.id,
-          forecastDemandScore: corridorPlan.predictedDemandScore,
-          membership: routeIntelligence.membership,
-        })
-      : null);
   const hasSelectedPriceQuote = typeof selectedPriceQuote?.finalPriceJod === 'number';
   const savedReminderIds = useMemo(
     () => new Set(savedReminders.map((reminder) => reminder.corridorId)),
@@ -181,23 +166,24 @@ export function FindRidePage() {
   const resolveSignalForRoute = useCallback(
     (routeFrom: string, routeTo: string) =>
       signalLookup.get(`${routeFrom}::${routeTo}`) ??
-      getLiveCorridorSignal(routeFrom, routeTo, routeIntelligence.membership),
-    [routeIntelligence.membership, signalLookup],
+      getCorridorMovementQuote({ from: routeFrom, to: routeTo, basePriceJod: 0, membership }).signal,
+    [membership, signalLookup],
   );
   const nearbyCorridorCards = useMemo(
     () => nearbyCorridors.map((ride) => {
-      const signal = resolveSignalForRoute(ride.from, ride.to);
+      const routeQuote = getCorridorMovementQuote({
+        from: ride.from,
+        to: ride.to,
+        basePriceJod: ride.pricePerSeat,
+        membership,
+        signal: resolveSignalForRoute(ride.from, ride.to),
+      });
       const priceLabel = ride.seatsAvailable > 0
-        ? `${getMovementPriceQuote({
-            basePriceJod: ride.pricePerSeat,
-            corridorId: signal?.id,
-            forecastDemandScore: signal?.forecastDemandScore,
-            membership: routeIntelligence.membership,
-          }).finalPriceJod} JOD`
+        ? `${routeQuote.priceQuote.finalPriceJod} JOD`
         : 'Sold out';
       return { ride, priceLabel };
     }),
-    [nearbyCorridors, resolveSignalForRoute, routeIntelligence.membership],
+    [membership, nearbyCorridors, resolveSignalForRoute],
   );
 
   useEffect(() => {
@@ -208,14 +194,14 @@ export function FindRidePage() {
 
   useEffect(() => {
     setSavedReminders(getRouteReminders());
-  }, [routeIntelligence.updatedAt]);
+  }, [selectedSignal?.freshestSignalAt]);
 
   useEffect(() => {
     if (!user?.id) return;
     void hydrateRouteReminders(user.id).then((reminders) => {
       setSavedReminders(reminders);
     });
-  }, [user?.id, routeIntelligence.updatedAt]);
+  }, [selectedSignal?.freshestSignalAt, user?.id]);
 
   useEffect(() => {
     void syncRouteReminders(user ?? undefined).then((delivered) => {
@@ -223,7 +209,7 @@ export function FindRidePage() {
         setSavedReminders(getRouteReminders());
       }
     });
-  }, [routeIntelligence.updatedAt, user]);
+  }, [selectedSignal?.freshestSignalAt, user]);
 
   useEffect(() => {
     writeStoredStringList(RIDE_BOOKINGS_KEY, Array.from(booked));
@@ -295,13 +281,15 @@ export function FindRidePage() {
   };
 
   const handleOpenRide = (ride: Ride) => {
-    const rideSignal = resolveSignalForRoute(ride.from, ride.to);
-    const priceQuote = getMovementPriceQuote({
+    const routeQuote = getCorridorMovementQuote({
+      from: ride.from,
+      to: ride.to,
       basePriceJod: ride.pricePerSeat,
-      corridorId: rideSignal?.id,
-      forecastDemandScore: rideSignal?.forecastDemandScore,
-      membership: routeIntelligence.membership,
+      membership,
+      signal: resolveSignalForRoute(ride.from, ride.to),
     });
+    const rideSignal = routeQuote.signal;
+    const priceQuote = routeQuote.priceQuote;
     setSelected(ride);
     void trackGrowthEvent({
       userId: user?.id,
@@ -333,13 +321,14 @@ export function FindRidePage() {
       return;
     }
 
-    const rideSignal = resolveSignalForRoute(ride.from, ride.to);
-    const ridePriceQuote = getMovementPriceQuote({
+    const routeQuote = getCorridorMovementQuote({
+      from: ride.from,
+      to: ride.to,
       basePriceJod: ride.pricePerSeat,
-      corridorId: rideSignal?.id,
-      forecastDemandScore: rideSignal?.forecastDemandScore,
-      membership: routeIntelligence.membership,
+      membership,
+      signal: resolveSignalForRoute(ride.from, ride.to),
     });
+    const ridePriceQuote = routeQuote.priceQuote;
 
     const booking = createRideBooking({
       rideId: ride.id,

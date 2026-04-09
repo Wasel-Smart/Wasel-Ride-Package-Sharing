@@ -32,7 +32,7 @@
     <meta property="og:locale" content="en_JO" />
     <meta property="og:locale:alternate" content="ar_JO" />
     <!-- 1200×630 PNG social card — replace SVG which is ignored by fb/twitter -->
-    <meta property="og:image" content="https://wasel14.online/brand/og-social-card.png" />
+    <meta property="og:image" content="https://wasel14.online/brand/og-social-card.png?v=20260410b" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -46,7 +46,7 @@
       name="twitter:description"
       content="Wasel connects riders and drivers through shared routes to reduce cost. Book a ride, offer a route, or join the network across Jordan."
     />
-    <meta name="twitter:image" content="https://wasel14.online/brand/og-social-card.png" />
+    <meta name="twitter:image" content="https://wasel14.online/brand/og-social-card.png?v=20260410b" />
     <meta name="twitter:image:alt" content="Wasel — Shared Routes across Jordan" />
 
     <!-- ── PWA / Apple ────────────────────────────────────────────────────── -->
@@ -56,14 +56,14 @@
     <meta name="apple-mobile-web-app-title" content="Wasel" />
 
     <!-- ── Favicons ───────────────────────────────────────────────────────── -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20260409c" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20260410b" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=20260410b" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=20260410b" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=20260410b" />
+    <link rel="manifest" href="/manifest.json?v=20260410b" />
 
     <!-- ── Critical image preload ─────────────────────────────────────────── -->
-    <link rel="preload" as="image" href="/brand/wasel-mark-clean.svg?v=20260409c" />
+    <link rel="preload" as="image" href="/brand/wasel-mark-clean.svg?v=20260410b" />
 
     <!-- ── Font preconnect (must come before the font stylesheet) ────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -77,10 +77,11 @@
       4. &display=swap avoids FOIT — text stays visible while fonts load.
     -->
     <link
+      id="wasel-font-preload"
+      data-wasel-font-preload="true"
       rel="preload"
       as="style"
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=Cairo:wght@500;600;700;800&display=swap"
-      onload="this.onload=null;this.rel='stylesheet'"
     />
     <noscript>
       <link

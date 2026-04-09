@@ -20,10 +20,10 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 const CONSENT_KEY = 'wasel:analytics-consent-v1';
 
-export type ConsentDecision = 'accepted' | 'declined' | null;
+type ConsentDecision = 'accepted' | 'declined' | null;
 
 /** Read the stored consent decision (null = not yet decided). */
-export function getConsentDecision(): ConsentDecision {
+function getConsentDecision(): ConsentDecision {
   try {
     const stored = localStorage.getItem(CONSENT_KEY);
     if (stored === 'accepted' || stored === 'declined') return stored;

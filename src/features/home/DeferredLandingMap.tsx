@@ -56,6 +56,12 @@ export function DeferredLandingMap({ ar = false }: { ar?: boolean }) {
       setShouldLoad(true);
     }, 3_200);
 
+    if (typeof IntersectionObserver !== 'function') {
+      return () => {
+        cancelIdleLoad();
+      };
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {

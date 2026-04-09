@@ -1,6 +1,7 @@
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Gauge, MapPinned, Pause, Play, Route } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { buildCorridorCommercialSnapshot, type CorridorCommercialSnapshot } from '../../services/corridorCommercial';
 import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
 import { type LiveMobilityVehicleSnapshot, useMobilityOSLiveData } from './liveMobilityData';
 
@@ -326,20 +327,20 @@ export default function MobilityOSCore() {
     selectedNode: ar ? '???? ??????? ???????' : 'Selected city reference',
   };
   const liveTag = liveSnapshot ? (ar ? '?????' : 'Live') : copy.modeledTag;
-  const liveOpsTag = ar ? 'تشغيل حي' : 'Live ops';
-  const hybridTag = ar ? 'هجين' : 'Hybrid';
-  const telemetryFreshLabel = ar ? 'تلمتريا حديثة' : 'Fresh telemetry';
-  const telemetryStaleLabel = ar ? 'تلمتريا متأخرة' : 'Stale telemetry';
-  const telemetryNoneLabel = ar ? 'بلا تلمتريا' : 'No telemetry';
-  const telemetryLabel = ar ? 'حالة التلمتريا' : 'Telemetry status';
-  const sourceMatrixLabel = ar ? 'مصفوفة المصادر' : 'Source matrix';
+  const liveOpsTag = 'Live ops';
+  const hybridTag = 'Hybrid';
+  const telemetryFreshLabel = 'Fresh telemetry';
+  const telemetryStaleLabel = 'Stale telemetry';
+  const telemetryNoneLabel = 'No telemetry';
+  const telemetryLabel = 'Telemetry status';
+  const sourceMatrixLabel = 'Source matrix';
   const sourceMatrixBody = ar
-    ? 'الركاب والطرود من سجلات الرحلات الحية، السرعة والضغط تقديريان حتى ربط مصدر مرور حقيقي، أما توصية المسار فناتجة عن نموذج التحسين.'
+    ? 'Passengers and packages come from live trip records. Speed and pressure remain estimated until a true traffic source is connected. Route guidance is produced by the optimization model.'
     : 'Passengers and packages come from live trip records. Speed and pressure remain estimated until a true traffic source is connected. Route guidance is produced by the optimization model.';
-  const telemetryHeartbeatLabel = ar ? 'آخر نبضة' : 'Latest heartbeat';
-  const telemetryCoverageLabel = ar ? 'تغطية التلمتريا' : 'Telemetry coverage';
-  const realtimeVerifiedLabel = ar ? 'متحقق مباشراً' : 'Verified live';
-  const estimatedFromLoadLabel = ar ? 'مقدّر من الحمولة' : 'Estimated from load';
+  const telemetryHeartbeatLabel = 'Latest heartbeat';
+  const telemetryCoverageLabel = 'Telemetry coverage';
+  const realtimeVerifiedLabel = 'Verified live';
+  const estimatedFromLoadLabel = 'Estimated from load';
   void hybridTag;
   void realtimeVerifiedLabel;
   const numberFormatter = useMemo(() => new Intl.NumberFormat(ar ? 'ar-JO' : 'en-US'), [ar]);
@@ -350,7 +351,9 @@ export default function MobilityOSCore() {
   const [viewMode, setViewMode] = useState<ViewMode>('command');
   const [analytics, setAnalytics] = useState<Analytics>({ totalVehicles: 0, activePassengers: 0, activePackages: 0, seatAvailability: 0, packageCapacity: 0, avgSpeed: 0, networkUtilization: 0, congestionLevel: 0, topCorridor: '', recommendedPath: '', dispatchAction: '' });
   const [routeSnapshot, setRouteSnapshot] = useState<RouteState[]>(() => initialRoutes(8));
+  const [commercialSnapshot, setCommercialSnapshot] = useState<CorridorCommercialSnapshot | null>(null);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const isCompactMobile = isMobile;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const frameRef = useRef<number | null>(null);
@@ -384,14 +387,28 @@ export default function MobilityOSCore() {
       : C.textMuted;
   const latestHeartbeatValue = liveSnapshot?.telemetry.latestHeartbeatAt
     ? dateTimeFormatter.format(new Date(liveSnapshot.telemetry.latestHeartbeatAt))
-    : (ar ? 'لا يوجد' : 'Unavailable');
+    : 'Unavailable';
+
+  useEffect(() => {
+    let cancelled = false;
+    void buildCorridorCommercialSnapshot()
+      .then((snapshot) => {
+        if (!cancelled) setCommercialSnapshot(snapshot);
+      })
+      .catch(() => {
+        if (!cancelled) setCommercialSnapshot(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const wrap = wrapRef.current;
     if (!canvas || !wrap) return;
     const width = Math.max(320, Math.floor(wrap.clientWidth));
-    const minH = window.innerWidth < 768 ? 240 : 440;
+    const minH = window.innerWidth < 768 ? 220 : 440;
     const height = Math.max(minH, Math.floor(wrap.clientHeight || width / HERO_MAP_ASPECT));
     const dpr = window.devicePixelRatio || 1;
     canvas.width = width * dpr;
@@ -410,6 +427,8 @@ export default function MobilityOSCore() {
     const height = canvas.height / dpr;
     const phase = phaseRef.current;
     const palette = hourPalette(timeOfDay);
+    const routeTopN = isCompactMobile ? 2 : 3;
+    const showMapChrome = !isCompactMobile;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
     const bg = ctx.createLinearGradient(0, 0, width, height);
@@ -483,7 +502,7 @@ export default function MobilityOSCore() {
     ctx.fillStyle = horizonShelf;
     ctx.fillRect(0, height * 0.62, width, height * 0.25);
 
-    starsRef.current.forEach((star, index) => {
+    starsRef.current.slice(0, isCompactMobile ? 20 : starsRef.current.length).forEach((star, index) => {
       const x = star.x * width + Math.sin(phase * 0.4 + index) * 2;
       const y = ((star.y + phase * 0.0008 * star.drift) % 1) * height;
       ctx.beginPath();
@@ -492,29 +511,31 @@ export default function MobilityOSCore() {
       ctx.fill();
     });
 
-    ctx.save();
-    ctx.strokeStyle = viewMode === 'satellite' ? 'rgba(120,255,214,0.03)' : 'rgba(255,255,255,0.03)';
-    ctx.lineWidth = 1;
-    for (let x = 0; x < width; x += 34) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
+    if (!isCompactMobile) {
+      ctx.save();
+      ctx.strokeStyle = viewMode === 'satellite' ? 'rgba(120,255,214,0.03)' : 'rgba(255,255,255,0.03)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < width; x += 34) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < height; y += 34) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = viewMode === 'pulse' ? 'rgba(167,124,255,0.04)' : 'rgba(71,183,230,0.026)';
+      for (let x = -height; x < width; x += 58) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x + height * 0.8, height);
+        ctx.stroke();
+      }
+      ctx.restore();
     }
-    for (let y = 0; y < height; y += 34) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
-    }
-    ctx.strokeStyle = viewMode === 'pulse' ? 'rgba(167,124,255,0.04)' : 'rgba(71,183,230,0.026)';
-    for (let x = -height; x < width; x += 58) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x + height * 0.8, height);
-      ctx.stroke();
-    }
-    ctx.restore();
 
     ctx.beginPath();
     BORDER.forEach((point, index) => { const p = project(point.lat, point.lon, width, height); if (index === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
@@ -544,7 +565,7 @@ export default function MobilityOSCore() {
     reliefWash.addColorStop(1, 'rgba(168,214,20,0.03)');
     ctx.fillStyle = reliefWash;
     ctx.fillRect(0, 0, width, height);
-    for (let ridge = 0; ridge < 5; ridge += 1) {
+    for (let ridge = 0; ridge < (isCompactMobile ? 2 : 5); ridge += 1) {
       ctx.beginPath();
       const yOffset = height * (0.18 + ridge * 0.14);
       ctx.moveTo(width * 0.12, yOffset);
@@ -553,7 +574,7 @@ export default function MobilityOSCore() {
       ctx.lineWidth = 1;
       ctx.stroke();
     }
-    for (let contour = 0; contour < 10; contour += 1) {
+    for (let contour = 0; contour < (isCompactMobile ? 4 : 10); contour += 1) {
       ctx.beginPath();
       const yOffset = height * (0.12 + contour * 0.075);
       ctx.moveTo(width * 0.08, yOffset);
@@ -664,7 +685,7 @@ export default function MobilityOSCore() {
       ctx.setLineDash([]);
       ctx.shadowBlur = 0;
 
-      const passengerParticleCount = Math.max(1, Math.round(route.passengerFlow / 450));
+      const passengerParticleCount = Math.max(1, Math.round(route.passengerFlow / (isCompactMobile ? 900 : 450)));
       for (let particle = 0; particle < passengerParticleCount; particle += 1) {
         const t = (phase * 0.00018 * FLOW_SPEED_SCALE * (1.2 + particle * 0.08) + particle / passengerParticleCount) % 1;
         const point = pointOnQuadratic(from, control, to, t);
@@ -676,7 +697,7 @@ export default function MobilityOSCore() {
         ctx.fill();
       }
 
-      const packageParticleCount = Math.max(1, Math.round(route.packageFlow / 190));
+      const packageParticleCount = Math.max(1, Math.round(route.packageFlow / (isCompactMobile ? 380 : 190)));
       for (let particle = 0; particle < packageParticleCount; particle += 1) {
         const t = (1 - ((phase * 0.00012 * FLOW_SPEED_SCALE * (1 + particle * 0.06) + particle / packageParticleCount) % 1));
         const point = pointOnQuadratic(from, control, to, t);
@@ -708,7 +729,7 @@ export default function MobilityOSCore() {
         ctx.stroke();
       }
 
-      if (routeIndex % 3 === 0) {
+      if (!isCompactMobile && routeIndex % 3 === 0) {
         const routeMarker = pointOnQuadratic(from, control, to, 0.3);
         ctx.save();
         ctx.translate(routeMarker.x, routeMarker.y);
@@ -726,7 +747,7 @@ export default function MobilityOSCore() {
     });
     [...routesRef.current]
       .sort((a, b) => b.passengerFlow + b.packageFlow - (a.passengerFlow + a.packageFlow))
-      .slice(0, 3)
+      .slice(0, routeTopN)
       .forEach((route, rank) => {
         const from = projectCity(route.from, width, height);
         const to = projectCity(route.to, width, height);
@@ -826,38 +847,40 @@ export default function MobilityOSCore() {
       ctx.lineWidth = selected ? 1.5 : 1;
       ctx.stroke();
 
-      const labelText = getCityLabel(city, ar);
-      ctx.font = `700 ${selected ? 13 : 11}px ${F}`;
-      const textWidth = ctx.measureText(labelText).width;
-      const labelWidth = textWidth + 18;
-      const labelHeight = selected ? 24 : 20;
-      const labelX = point.x - labelWidth / 2;
-      const labelY = point.y - 36;
+      if (!isCompactMobile || selected || city.isHub) {
+        const labelText = getCityLabel(city, ar);
+        ctx.font = `700 ${selected ? 13 : 11}px ${F}`;
+        const textWidth = ctx.measureText(labelText).width;
+        const labelWidth = textWidth + 18;
+        const labelHeight = selected ? 24 : 20;
+        const labelX = point.x - labelWidth / 2;
+        const labelY = point.y - 36;
 
-      ctx.beginPath();
-      ctx.roundRect(labelX, labelY, labelWidth, labelHeight, 10);
-      const labelFill = ctx.createLinearGradient(labelX, labelY, labelX + labelWidth, labelY + labelHeight);
-      labelFill.addColorStop(0, selected ? 'rgba(16,40,58,0.92)' : 'rgba(10,24,38,0.72)');
-      labelFill.addColorStop(1, selected ? 'rgba(11,54,76,0.92)' : 'rgba(7,18,30,0.7)');
-      ctx.fillStyle = labelFill;
-      ctx.shadowBlur = selected ? 18 : 8;
-      ctx.shadowColor = selected ? 'rgba(168,214,20,0.18)' : 'rgba(71,183,230,0.08)';
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = selected ? 'rgba(168,214,20,0.42)' : 'rgba(255,255,255,0.1)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.roundRect(labelX, labelY, labelWidth, labelHeight, 10);
+        const labelFill = ctx.createLinearGradient(labelX, labelY, labelX + labelWidth, labelY + labelHeight);
+        labelFill.addColorStop(0, selected ? 'rgba(16,40,58,0.92)' : 'rgba(10,24,38,0.72)');
+        labelFill.addColorStop(1, selected ? 'rgba(11,54,76,0.92)' : 'rgba(7,18,30,0.7)');
+        ctx.fillStyle = labelFill;
+        ctx.shadowBlur = selected ? 18 : 8;
+        ctx.shadowColor = selected ? 'rgba(168,214,20,0.18)' : 'rgba(71,183,230,0.08)';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = selected ? 'rgba(168,214,20,0.42)' : 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
 
-      ctx.beginPath();
-      ctx.moveTo(point.x, point.y - 8);
-      ctx.lineTo(point.x, labelY + labelHeight);
-      ctx.strokeStyle = selected ? 'rgba(168,214,20,0.32)' : 'rgba(255,255,255,0.12)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(point.x, point.y - 8);
+        ctx.lineTo(point.x, labelY + labelHeight);
+        ctx.strokeStyle = selected ? 'rgba(168,214,20,0.32)' : 'rgba(255,255,255,0.12)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
 
-      ctx.fillStyle = '#EFF6FF';
-      ctx.textAlign = 'center';
-      ctx.fillText(labelText, point.x, labelY + labelHeight / 2 + 4);
+        ctx.fillStyle = '#EFF6FF';
+        ctx.textAlign = 'center';
+        ctx.fillText(labelText, point.x, labelY + labelHeight / 2 + 4);
+      }
     });
 
     const vignette = ctx.createRadialGradient(width * 0.5, height * 0.48, Math.min(width, height) * 0.2, width * 0.5, height * 0.48, Math.max(width, height) * 0.76);
@@ -866,27 +889,29 @@ export default function MobilityOSCore() {
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, width, height);
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(12, 12, width - 24, height - 24);
-    ctx.strokeStyle = 'rgba(71,183,230,0.16)';
-    ctx.strokeRect(20, 20, width - 40, height - 40);
+    if (showMapChrome) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(12, 12, width - 24, height - 24);
+      ctx.strokeStyle = 'rgba(71,183,230,0.16)';
+      ctx.strokeRect(20, 20, width - 40, height - 40);
 
-    [
-      [26, 26, 48, 26, 26, 48],
-      [width - 26, 26, width - 48, 26, width - 26, 48],
-      [26, height - 26, 48, height - 26, 26, height - 48],
-      [width - 26, height - 26, width - 48, height - 26, width - 26, height - 48],
-    ].forEach((corner) => {
-      ctx.beginPath();
-      ctx.moveTo(corner[0], corner[1]);
-      ctx.lineTo(corner[2], corner[3]);
-      ctx.lineTo(corner[4], corner[5]);
-      ctx.strokeStyle = 'rgba(71,183,230,0.34)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    });
-  }, [ar, numberFormatter, selectedCityId, timeOfDay, viewMode]);
+      [
+        [26, 26, 48, 26, 26, 48],
+        [width - 26, 26, width - 48, 26, width - 26, 48],
+        [26, height - 26, 48, height - 26, 26, height - 48],
+        [width - 26, height - 26, width - 48, height - 26, width - 26, height - 48],
+      ].forEach((corner) => {
+        ctx.beginPath();
+        ctx.moveTo(corner[0], corner[1]);
+        ctx.lineTo(corner[2], corner[3]);
+        ctx.lineTo(corner[4], corner[5]);
+        ctx.strokeStyle = 'rgba(71,183,230,0.34)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+    }
+  }, [ar, isCompactMobile, numberFormatter, selectedCityId, timeOfDay, viewMode]);
 
   const updateSimulation = useCallback((deltaTime: number, now: number) => {
     if (paused) return;
@@ -1042,6 +1067,11 @@ export default function MobilityOSCore() {
     const filtered = routeSnapshot.filter((route) => route.from === selectedCityId || route.to === selectedCityId);
     return (filtered.length ? filtered : routeSnapshot).slice().sort((a, b) => b.passengerFlow + b.packageFlow - (a.passengerFlow + a.packageFlow)).slice(0, 6);
   }, [routeSnapshot, selectedCityId]);
+  const primaryActionItems = [
+    analytics.dispatchAction,
+    `${copy.topCorridor}: ${analytics.topCorridor}`,
+    ar ? `???? ???????: ${numberFormatter.format(analytics.seatAvailability)} / ??? ??????: ${numberFormatter.format(analytics.packageCapacity)}` : `Seat availability: ${analytics.seatAvailability} / Package capacity: ${analytics.packageCapacity}`,
+  ].filter(Boolean);
   void cityMap.get(selectedCityId);
   const activeMode = {
     command: { title: copy.commandMode, body: copy.commandModeBody, accent: C.cyan },
@@ -1050,33 +1080,42 @@ export default function MobilityOSCore() {
   }[viewMode];
   const heroSignals = [
     { label: copy.controlState, value: paused ? (ar ? '????? ??????' : 'Paused') : copy.liveSync, tone: paused ? C.orange : C.green },
-    { label: `${copy.topCorridor} � ${liveTag}`, value: analytics.topCorridor || (ar ? '????? ? ???????' : 'Amman -> Zarqa'), tone: C.gold },
-    { label: `${copy.dispatch} � ${liveTag}`, value: analytics.dispatchAction || (ar ? '?????? ?????' : 'Balance supply'), tone: C.text },
+    { label: `${copy.topCorridor} · ${liveTag}`, value: analytics.topCorridor || (ar ? '????? ? ???????' : 'Amman -> Zarqa'), tone: C.gold },
+    { label: `${copy.dispatch} · ${liveTag}`, value: analytics.dispatchAction || (ar ? '?????? ?????' : 'Balance supply'), tone: C.text },
   ];
   const systemBands = [
-    { label: `${ar ? '??????' : 'Passengers'} � ${liveSnapshot ? liveTag : copy.simulationTag}`, value: numberFormatter.format(analytics.activePassengers), sub: ar ? `${numberFormatter.format(analytics.seatAvailability)} ???? ????` : `${analytics.seatAvailability} seats open`, color: PASSENGER_COLOR },
-    { label: `${ar ? '??????' : 'Packages'} � ${liveSnapshot ? liveTag : copy.simulationTag}`, value: numberFormatter.format(analytics.activePackages), sub: ar ? `${numberFormatter.format(analytics.packageCapacity)} ???? ?????` : `${analytics.packageCapacity} slots open`, color: PACKAGE_COLOR },
-    { label: `${ar ? '??????' : 'Velocity'} � ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(analytics.avgSpeed))} ${ar ? '??/?' : 'km/h'}`, sub: ar ? `${numberFormatter.format(Math.round(analytics.networkUtilization * 100))}% ???????` : `${Math.round(analytics.networkUtilization * 100)}% utilization`, color: C.green },
-    { label: `${ar ? '?????' : 'Pressure'} � ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(analytics.congestionLevel * 100))}%`, sub: activeMode.title, color: C.orange },
+    { label: `${ar ? '??????' : 'Passengers'} · ${liveSnapshot ? liveTag : copy.simulationTag}`, value: numberFormatter.format(analytics.activePassengers), sub: ar ? `${numberFormatter.format(analytics.seatAvailability)} ???? ????` : `${analytics.seatAvailability} seats open`, color: PASSENGER_COLOR },
+    { label: `${ar ? '??????' : 'Packages'} · ${liveSnapshot ? liveTag : copy.simulationTag}`, value: numberFormatter.format(analytics.activePackages), sub: ar ? `${numberFormatter.format(analytics.packageCapacity)} ???? ?????` : `${analytics.packageCapacity} slots open`, color: PACKAGE_COLOR },
+    { label: `${ar ? '??????' : 'Velocity'} · ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(analytics.avgSpeed))} ${ar ? '??/?' : 'km/h'}`, sub: ar ? `${numberFormatter.format(Math.round(analytics.networkUtilization * 100))}% ???????` : `${Math.round(analytics.networkUtilization * 100)}% utilization`, color: C.green },
+    { label: `${ar ? '?????' : 'Pressure'} · ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(analytics.congestionLevel * 100))}%`, sub: activeMode.title, color: C.orange },
   ];
+  const topMobileBands = isCompactMobile ? systemBands.slice(0, 2) : systemBands;
+  const commercialBands = commercialSnapshot
+    ? [
+        { label: ar ? '????? ??????' : 'Recurring revenue', value: `${numberFormatter.format(Math.round(commercialSnapshot.totalRecurringRevenueJod))} ${ar ? '?.?' : 'JOD'}`, sub: commercialSnapshot.topContract?.corridorLabel ?? (ar ? '???? ??? ?????' : 'No contract lead'), color: C.cyan },
+        { label: ar ? '????? ???????' : 'Owned contracts', value: numberFormatter.format(commercialSnapshot.ownedCorridorContracts), sub: ar ? '?????? ????? ??? ?????? ??????' : 'Corridors backed by recurring agreements', color: C.green },
+        { label: ar ? '????? ????????' : 'Stakeholders', value: numberFormatter.format(commercialSnapshot.activeStakeholders), sub: commercialSnapshot.corridorPassCoverage ?? (ar ? '???? ?????? ????? ???' : 'No corridor pass pinned'), color: C.gold },
+      ]
+    : [];
+  const cleanLabel = (value: string) => value.replaceAll('Â·', '·');
 
   return (
-    <div dir={dir} style={{ minHeight: '100vh', background: `${GRAD_AURORA}, radial-gradient(circle at 15% 12%, rgba(71,183,230,0.16), transparent 22%), radial-gradient(circle at 82% 18%, rgba(168,214,20,0.14), transparent 24%), radial-gradient(circle at 50% 100%, rgba(92,255,149,0.08), transparent 28%), ${C.bg}`, color: C.text, fontFamily: F, padding: '20px 14px 88px' }}>
-      <div style={{ maxWidth: 1460, margin: '0 auto', display: 'grid', gap: 18 }}>
-        <section style={glassPanelStyle({ padding: 28, borderRadius: 34 })}>
+    <div dir={dir} style={{ minHeight: '100vh', background: `${GRAD_AURORA}, radial-gradient(circle at 15% 12%, rgba(71,183,230,0.16), transparent 22%), radial-gradient(circle at 82% 18%, rgba(168,214,20,0.14), transparent 24%), radial-gradient(circle at 50% 100%, rgba(92,255,149,0.08), transparent 28%), ${C.bg}`, color: C.text, fontFamily: F, padding: isCompactMobile ? '14px 12px 84px' : '20px 14px 88px' }}>
+      <div style={{ maxWidth: 1460, margin: '0 auto', display: 'grid', gap: isCompactMobile ? 14 : 18 }}>
+        <section style={glassPanelStyle({ padding: isCompactMobile ? 18 : 28, borderRadius: isCompactMobile ? 24 : 34 })}>
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.04), transparent 24%, transparent 72%, rgba(71,183,230,0.08))' }} />
           <div style={{ position: 'relative', display: 'grid', gap: 18 }}>
-            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.2fr) minmax(320px, 0.8fr)' }}>
+            <div style={{ display: 'grid', gap: isCompactMobile ? 14 : 12, gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.2fr) minmax(320px, 0.8fr)' }}>
               <div style={{ display: 'grid', gap: 14, alignContent: 'start' }}>
                 <div style={sectionLabelStyle}>{copy.heroLabel}</div>
                 <div style={{ display: 'grid', gap: 10 }}>
-                  <h1 style={{ margin: 0, fontSize: 'clamp(2.25rem, 4.6vw, 4.25rem)', lineHeight: 0.96, letterSpacing: '-0.05em', maxWidth: 920 }}>{copy.heroTitle}</h1>
-                  <p style={{ margin: 0, color: C.textSub, lineHeight: 1.78, maxWidth: 820, fontSize: '1rem' }}>{copy.heroBody}</p>
+                  <h1 style={{ margin: 0, fontSize: isCompactMobile ? 'clamp(1.8rem, 8vw, 2.5rem)' : 'clamp(2.25rem, 4.6vw, 4.25rem)', lineHeight: isCompactMobile ? 1.02 : 0.96, letterSpacing: '-0.05em', maxWidth: 920 }}>{copy.heroTitle}</h1>
+                  <p style={{ margin: 0, color: C.textSub, lineHeight: isCompactMobile ? 1.6 : 1.78, maxWidth: 820, fontSize: isCompactMobile ? '0.94rem' : '1rem' }}>{copy.heroBody}</p>
                 </div>
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 2 }}>
+                <div style={{ display: 'grid', gap: 10, gridTemplateColumns: isCompactMobile ? '1fr' : 'repeat(auto-fit, minmax(170px, 1fr))', marginTop: 2 }}>
                   {heroSignals.map((signal) => (
-                    <div key={signal.label} style={{ minWidth: 170, padding: '12px 14px', borderRadius: 18, border: `1px solid ${C.borderFaint}`, background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
-                      <div style={{ color: C.textMuted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{signal.label}</div>
+                    <div key={signal.label} style={{ minWidth: 0, padding: isCompactMobile ? '11px 12px' : '12px 14px', borderRadius: 18, border: `1px solid ${C.borderFaint}`, background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
+                      <div style={{ color: C.textMuted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{cleanLabel(signal.label)}</div>
                       <div style={{ marginTop: 6, color: signal.tone, fontWeight: 900, fontSize: signal.label === copy.dispatch ? '0.94rem' : '1rem', lineHeight: 1.35 }}>{signal.value}</div>
                     </div>
                   ))}
@@ -1092,7 +1131,7 @@ export default function MobilityOSCore() {
                     <strong style={{ color: C.gold, fontSize: '1.1rem' }}>{String(timeOfDay).padStart(2, '0')}:00</strong>
                   </div>
                   <input type="range" min={0} max={23} step={1} value={timeOfDay} className="mobility-os-slider" onChange={(event) => setTimeOfDay(Number(event.target.value))} style={{ width: '100%', marginTop: 14 }} />
-                  <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+                  <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: isCompactMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
                     {[
                       { label: ar ? '??????' : 'Sunrise', value: '06:00' },
                       { label: ar ? '??????' : 'Peak', value: '08:00 / 18:00' },
@@ -1124,7 +1163,7 @@ export default function MobilityOSCore() {
                     key={mode.id}
                     onClick={() => setViewMode(mode.id as ViewMode)}
                     style={{
-                      padding: '10px 14px',
+                      padding: isCompactMobile ? '10px 12px' : '10px 14px',
                       borderRadius: 999,
                       border: `1px solid ${viewMode === mode.id ? C.cyan : C.border}`,
                       background: viewMode === mode.id ? 'rgba(71,183,230,0.14)' : 'rgba(255,255,255,0.035)',
@@ -1144,15 +1183,15 @@ export default function MobilityOSCore() {
                 </div>
               </div>
             </div>
-            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-              {systemBands.map((band, index) => {
+            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: `repeat(auto-fit, minmax(${isCompactMobile ? 160 : 220}px, 1fr))` }}>
+              {topMobileBands.map((band, index) => {
                 const displayLabel = index <= 1
                   ? band.label.replace(liveTag, liveOpsTag)
                   : band.label.replace(copy.estimateTag, estimatedFromLoadLabel);
                 return (
-                <div key={band.label} style={{ padding: '16px 18px', borderRadius: 22, border: `1px solid ${C.borderFaint}`, background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
+                <div key={band.label} style={{ padding: isCompactMobile ? '14px 14px' : '16px 18px', borderRadius: 22, border: `1px solid ${C.borderFaint}`, background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
-                    <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{displayLabel}</div>
+                    <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{cleanLabel(displayLabel)}</div>
                     <div style={{ width: 10, height: 10, borderRadius: 999, background: band.color, boxShadow: `0 0 18px ${band.color}` }} />
                   </div>
                   <div style={{ marginTop: 10, fontSize: '1.42rem', fontWeight: 900, color: band.color, textShadow: `0 0 22px ${band.color}30` }}>{band.value}</div>
@@ -1160,10 +1199,24 @@ export default function MobilityOSCore() {
                 </div>
               )})}
             </div>
-            <div style={{ color: C.textMuted, fontSize: '0.8rem', lineHeight: 1.65 }}>
+            {!isCompactMobile && commercialBands.length > 0 ? (
+              <div style={{ display: 'grid', gap: 12, gridTemplateColumns: `repeat(auto-fit, minmax(${isCompactMobile ? 160 : 220}px, 1fr))` }}>
+                {commercialBands.map((band) => (
+                  <div key={band.label} style={{ padding: '16px 18px', borderRadius: 22, border: `1px solid ${C.borderFaint}`, background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.018))' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+                      <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{cleanLabel(band.label)}</div>
+                      <div style={{ width: 10, height: 10, borderRadius: 999, background: band.color, boxShadow: `0 0 18px ${band.color}` }} />
+                    </div>
+                    <div style={{ marginTop: 10, fontSize: '1.3rem', fontWeight: 900, color: band.color }}>{band.value}</div>
+                    <div style={{ marginTop: 6, color: C.textSub, fontSize: '0.82rem', lineHeight: 1.5 }}>{band.sub}</div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            <div style={{ color: C.textMuted, fontSize: '0.8rem', lineHeight: 1.65, display: isCompactMobile ? 'none' : 'block' }}>
               {copy.simulationNotice}
             </div>
-            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.3fr) minmax(280px, 0.7fr)' }}>
+            <div style={{ display: isCompactMobile ? 'none' : 'grid', gap: 12, gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.3fr) minmax(280px, 0.7fr)' }}>
               <div style={{ padding: '14px 16px', borderRadius: 20, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)' }}>
                 <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{sourceMatrixLabel}</div>
                 <div style={{ marginTop: 8, color: C.textSub, fontSize: '0.88rem', lineHeight: 1.7 }}>{sourceMatrixBody}</div>
@@ -1188,14 +1241,14 @@ export default function MobilityOSCore() {
         </section>
 
         <section style={{ display: 'grid', gap: 18 }}>
-          <div style={glassPanelStyle({ padding: 20, borderRadius: 30, background: 'linear-gradient(180deg, rgba(8,20,37,0.97), rgba(4,10,22,0.99))', alignSelf: 'start' })}>
+          <div style={glassPanelStyle({ padding: isCompactMobile ? 14 : 20, borderRadius: isCompactMobile ? 22 : 30, background: 'linear-gradient(180deg, rgba(8,20,37,0.97), rgba(4,10,22,0.99))', alignSelf: 'start' })}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 14 }}>
               <div style={{ display: 'grid', gap: 8 }}>
                 <div style={sectionLabelStyle}>{copy.operationalMap}</div>
                 <h2 style={{ margin: 0, fontSize: '1.5rem', letterSpacing: '-0.03em' }}>{copy.mapTitle}</h2>
-                <p style={{ margin: 0, color: C.textSub, lineHeight: 1.68, maxWidth: 700 }}>{copy.mapBody}</p>
+                <p style={{ margin: 0, color: C.textSub, lineHeight: 1.68, maxWidth: 700 }}>{isCompactMobile ? 'A simplified live map of routes, pressure, and the next best corridor action.' : copy.mapBody}</p>
               </div>
-              <div style={{ display: 'grid', gap: 10, alignContent: 'start' }}>
+              <div style={{ display: 'grid', gap: 10, alignContent: 'start', width: isCompactMobile ? '100%' : undefined }}>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   {[{ label: copy.passengerFlow, stroke: `3px solid ${PASSENGER_COLOR}` }, { label: copy.packageFlow, stroke: `3px dashed ${PACKAGE_COLOR}` }].map((item) => (
                     <div key={item.label} style={{ padding: '9px 12px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.035)', color: C.textSub, fontSize: '0.82rem', display: 'inline-flex', gap: 10, alignItems: 'center' }}>
@@ -1204,62 +1257,62 @@ export default function MobilityOSCore() {
                     </div>
                   ))}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-                  {[{ label: `${copy.routeIntelligence} � ${copy.modeledTag}`, value: analytics.recommendedPath || (ar ? '????? ? ??????' : 'Amman -> Aqaba'), color: C.cyan }, { label: copy.activeMode, value: activeMode.title, color: activeMode.accent }].map((item) => (
+                <div style={{ display: 'grid', gridTemplateColumns: isCompactMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
+                  {[{ label: `${copy.routeIntelligence} · ${copy.modeledTag}`, value: analytics.recommendedPath || (ar ? '????? ? ??????' : 'Amman -> Aqaba'), color: C.cyan }, { label: copy.activeMode, value: activeMode.title, color: activeMode.accent }].map((item) => (
                     <div key={item.label} style={{ padding: '12px 14px', borderRadius: 18, border: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))' }}>
-                      <div style={{ color: C.textMuted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{item.label}</div>
+                      <div style={{ color: C.textMuted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{cleanLabel(item.label)}</div>
                       <div style={{ marginTop: 6, color: item.color, fontWeight: 800, fontSize: '0.86rem', lineHeight: 1.45 }}>{item.value}</div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-            <div ref={wrapRef} style={{ ...glassPanelStyle({ padding: 0, borderRadius: 34, aspectRatio: isMobile ? '4/3' : `${HERO_MAP_ASPECT} / 1`, minHeight: isMobile ? 'clamp(260px, 80vw, 420px)' : 'clamp(500px, 54vw, 860px)', boxShadow: '0 60px 160px rgba(0,0,0,0.54), inset 0 1px 0 rgba(255,255,255,0.08)', transform: isMobile ? 'none' : 'perspective(2200px) rotateX(5deg)', transformStyle: isMobile ? 'flat' : 'preserve-3d', transformOrigin: 'center top' }), background: 'linear-gradient(180deg, rgba(6,16,28,0.98), rgba(5,12,22,0.98))' }}>
+            <div ref={wrapRef} style={{ ...glassPanelStyle({ padding: 0, borderRadius: isCompactMobile ? 22 : 34, aspectRatio: isMobile ? '4/3' : `${HERO_MAP_ASPECT} / 1`, minHeight: isMobile ? 'clamp(220px, 72vw, 360px)' : 'clamp(500px, 54vw, 860px)', boxShadow: isCompactMobile ? '0 24px 60px rgba(0,0,0,0.34)' : '0 60px 160px rgba(0,0,0,0.54), inset 0 1px 0 rgba(255,255,255,0.08)', transform: isMobile ? 'none' : 'perspective(2200px) rotateX(5deg)', transformStyle: isMobile ? 'flat' : 'preserve-3d', transformOrigin: 'center top' }), background: 'linear-gradient(180deg, rgba(6,16,28,0.98), rgba(5,12,22,0.98))' }}>
               <div style={{ position: 'absolute', inset: -30, pointerEvents: 'none', background: 'radial-gradient(circle at 50% 8%, rgba(255,255,255,0.07), transparent 24%), radial-gradient(circle at 14% 30%, rgba(71,183,230,0.14), transparent 20%), radial-gradient(circle at 84% 26%, rgba(168,214,20,0.12), transparent 22%)', filter: 'blur(18px)', opacity: 0.9 }} />
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.04), transparent 18%, transparent 82%, rgba(71,183,230,0.06))' }} />
-              <div style={{ position: 'absolute', inset: 14, borderRadius: 22, border: '1px solid rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
+              {!isCompactMobile ? <div style={{ position: 'absolute', inset: 14, borderRadius: 22, border: '1px solid rgba(255,255,255,0.06)', pointerEvents: 'none' }} /> : null}
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at top center, rgba(255,255,255,0.08), transparent 22%), radial-gradient(circle at bottom right, rgba(71,183,230,0.08), transparent 28%)' }} />
-              <div style={{ position: 'absolute', inset: '0 0 auto 0', height: '24%', pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.03) 42%, rgba(255,255,255,0))', mixBlendMode: 'screen', opacity: 0.48 }} />
-              <div style={{ position: 'absolute', left: 24, right: 24, bottom: -22, height: 38, borderRadius: 999, pointerEvents: 'none', background: 'linear-gradient(90deg, rgba(71,183,230,0), rgba(71,183,230,0.24), rgba(168,214,20,0.18), rgba(71,183,230,0.24), rgba(71,183,230,0))', filter: 'blur(16px)', opacity: 0.8 }} />
+              {!isCompactMobile ? <div style={{ position: 'absolute', inset: '0 0 auto 0', height: '24%', pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.03) 42%, rgba(255,255,255,0))', mixBlendMode: 'screen', opacity: 0.48 }} /> : null}
+              {!isCompactMobile ? <div style={{ position: 'absolute', left: 24, right: 24, bottom: -22, height: 38, borderRadius: 999, pointerEvents: 'none', background: 'linear-gradient(90deg, rgba(71,183,230,0), rgba(71,183,230,0.24), rgba(168,214,20,0.18), rgba(71,183,230,0.24), rgba(71,183,230,0))', filter: 'blur(16px)', opacity: 0.8 }} /> : null}
               <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 2, display: 'grid', gap: 10 }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.68)', border: `1px solid ${C.border}`, backdropFilter: 'blur(16px)', boxShadow: '0 10px 30px rgba(0,0,0,0.24)' }}>
                   <div style={{ width: 8, height: 8, borderRadius: 999, background: '#5CFF95', boxShadow: '0 0 14px #5CFF95' }} />
                   <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>{copy.liveMesh}</span>
                 </div>
-                <div style={{ display: 'grid', gap: 6, padding: '10px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)' }}>
+                {!isCompactMobile ? <div style={{ display: 'grid', gap: 6, padding: '10px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)' }}>
                   <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.14em', color: C.textMuted }}>{copy.modelRecommendation}</div>
                   <div style={{ fontFamily: FM, fontSize: '0.78rem', color: C.cyan }}>best_route_now</div>
                   <div style={{ fontSize: '0.8rem', color: C.textSub }}>{analytics.recommendedPath || (ar ? '????? ? ??????' : 'Amman -> Aqaba')}</div>
-                </div>
+                </div> : null}
               </div>
-              <div style={{ position: 'absolute', right: 16, top: 16, zIndex: 2, display: 'grid', gap: 8 }}>
-                {[{ label: `${copy.passengerFlow} � ${copy.simulationTag}`, value: numberFormatter.format(analytics.activePassengers), color: PASSENGER_COLOR }, { label: `${copy.parcelLoad} � ${copy.simulationTag}`, value: numberFormatter.format(analytics.activePackages), color: PACKAGE_COLOR }].map((chip) => (
+              {!isCompactMobile ? <div style={{ position: 'absolute', right: 16, top: 16, zIndex: 2, display: 'grid', gap: 8 }}>
+                {[{ label: `${copy.passengerFlow} · ${copy.simulationTag}`, value: numberFormatter.format(analytics.activePassengers), color: PASSENGER_COLOR }, { label: `${copy.parcelLoad} · ${copy.simulationTag}`, value: numberFormatter.format(analytics.activePackages), color: PACKAGE_COLOR }].map((chip) => (
                   <div key={chip.label} style={{ padding: '10px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', minWidth: 146 }}>
-                    <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: C.textMuted }}>{chip.label}</div>
+                    <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: C.textMuted }}>{cleanLabel(chip.label)}</div>
                     <div style={{ marginTop: 4, color: chip.color, fontSize: '1.05rem', fontWeight: 900, textShadow: `0 0 16px ${chip.color}44` }}>{chip.value}</div>
                   </div>
                 ))}
-              </div>
+              </div> : null}
               <div style={{ position: 'absolute', left: 16, right: 16, bottom: 16, zIndex: 2, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {[
+                {(isCompactMobile ? primaryActionItems.slice(0, 1) : [
                   `${copy.topCorridor} ${analytics.topCorridor || (ar ? '????? ? ???????' : 'Amman -> Zarqa')}`,
                   `${copy.dispatch} ${analytics.dispatchAction || (ar ? '?????? ?????' : 'Balance supply')}`,
                   ar ? `??????? ${numberFormatter.format(analytics.seatAvailability)} / ????? ${numberFormatter.format(analytics.packageCapacity)}` : `Seats ${analytics.seatAvailability} / Capacity ${analytics.packageCapacity}`,
-                ].map((chip) => (
+                ]).map((chip) => (
                   <div key={chip} style={{ padding: '9px 12px', borderRadius: 999, background: 'rgba(4,12,24,0.58)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', color: C.textSub, fontSize: '0.78rem' }}>
                     {chip}
                   </div>
                 ))}
               </div>
-              <div style={{ position: 'absolute', left: '50%', bottom: 20, transform: 'translateX(-50%)', zIndex: 2, pointerEvents: 'none' }}>
+              {!isCompactMobile ? <div style={{ position: 'absolute', left: '50%', bottom: 20, transform: 'translateX(-50%)', zIndex: 2, pointerEvents: 'none' }}>
                 <div style={{ width: 180, height: 18, borderRadius: 999, background: 'linear-gradient(90deg, rgba(71,183,230,0), rgba(71,183,230,0.16), rgba(168,214,20,0.16), rgba(168,214,20,0))', filter: 'blur(10px)' }} />
-              </div>
-              <div style={{ position: 'absolute', left: 22, top: '50%', transform: 'translateY(-50%)', zIndex: 2, writingMode: 'vertical-rl', textOrientation: 'mixed', letterSpacing: '0.28em', textTransform: 'uppercase', fontSize: '0.64rem', color: 'rgba(255,255,255,0.34)', pointerEvents: 'none' }}>
+              </div> : null}
+              {!isCompactMobile ? <div style={{ position: 'absolute', left: 22, top: '50%', transform: 'translateY(-50%)', zIndex: 2, writingMode: 'vertical-rl', textOrientation: 'mixed', letterSpacing: '0.28em', textTransform: 'uppercase', fontSize: '0.64rem', color: 'rgba(255,255,255,0.34)', pointerEvents: 'none' }}>
                 {copy.mobilityMatrix}
-              </div>
-              <div style={{ position: 'absolute', right: 22, top: '50%', transform: 'translateY(-50%)', zIndex: 2, writingMode: 'vertical-rl', textOrientation: 'mixed', letterSpacing: '0.28em', textTransform: 'uppercase', fontSize: '0.64rem', color: 'rgba(71,183,230,0.34)', pointerEvents: 'none' }}>
+              </div> : null}
+              {!isCompactMobile ? <div style={{ position: 'absolute', right: 22, top: '50%', transform: 'translateY(-50%)', zIndex: 2, writingMode: 'vertical-rl', textOrientation: 'mixed', letterSpacing: '0.28em', textTransform: 'uppercase', fontSize: '0.64rem', color: 'rgba(71,183,230,0.34)', pointerEvents: 'none' }}>
                 {copy.signalLayer}
-              </div>
+              </div> : null}
               <canvas
                 ref={canvasRef}
                 aria-label={ar ? '????? ??????? ??? ????? ???? ?? ??????' : 'Live operational Wasel network map of Jordan'}
@@ -1277,40 +1330,42 @@ export default function MobilityOSCore() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
-            <article style={glassPanelStyle({ padding: 18, borderRadius: 26, background: 'linear-gradient(180deg, rgba(8,24,38,0.96), rgba(4,10,22,0.98))' })}>
+          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: `repeat(auto-fit, minmax(${isCompactMobile ? 260 : 320}px, 1fr))` }}>
+            <article style={glassPanelStyle({ padding: isCompactMobile ? 16 : 18, borderRadius: isCompactMobile ? 20 : 26, background: 'linear-gradient(180deg, rgba(8,24,38,0.96), rgba(4,10,22,0.98))' })}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><MapPinned size={18} color={C.cyan} /><h3 style={{ margin: 0, fontSize: '1rem' }}>{copy.selectedNode}</h3></div>
-              <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>{CITY_DATA.map((city) => <button key={city.id} onClick={() => setSelectedCityId(city.id)} style={{ padding: '10px 12px', borderRadius: 14, border: `1px solid ${selectedCityId === city.id ? C.gold : C.border}`, background: selectedCityId === city.id ? 'rgba(168,214,20,0.12)' : 'rgba(255,255,255,0.03)', color: C.text, cursor: 'pointer', fontWeight: selectedCityId === city.id ? 800 : 600 }}>{getCityLabel(city, ar)}</button>)}</div>
+              <div style={{ marginTop: 14, display: 'grid', gap: 8, gridTemplateColumns: isCompactMobile ? 'repeat(2, minmax(0, 1fr))' : undefined }}>
+                {CITY_DATA.map((city) => <button key={city.id} onClick={() => setSelectedCityId(city.id)} style={{ padding: '10px 12px', borderRadius: 14, border: `1px solid ${selectedCityId === city.id ? C.gold : C.border}`, background: selectedCityId === city.id ? 'rgba(168,214,20,0.12)' : 'rgba(255,255,255,0.03)', color: C.text, cursor: 'pointer', fontWeight: selectedCityId === city.id ? 800 : 600 }}>{getCityLabel(city, ar)}</button>)}
+              </div>
               <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
                 {[
-                  ar ? `${copy.officialUnit} � ${copy.officialTag}: ${cityMap.get(selectedCityId)?.officialAreaAr ?? ''}` : `${copy.officialUnit} � ${copy.officialTag}: ${cityMap.get(selectedCityId)?.officialArea ?? ''}`,
-                  `${copy.officialPopulation2025} � ${copy.officialTag}: ${numberFormatter.format(cityMap.get(selectedCityId)?.officialPopulation ?? 0)}`,
+                  ar ? `${copy.officialUnit} · ${copy.officialTag}: ${cityMap.get(selectedCityId)?.officialAreaAr ?? ''}` : `${copy.officialUnit} · ${copy.officialTag}: ${cityMap.get(selectedCityId)?.officialArea ?? ''}`,
+                  `${copy.officialPopulation2025} · ${copy.officialTag}: ${numberFormatter.format(cityMap.get(selectedCityId)?.officialPopulation ?? 0)}`,
                   `${copy.modelRecommendation} ${analytics.recommendedPath}`,
                 ].map((row, index) => (
                   <div key={row} style={{ padding: '10px 12px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', background: index === 2 ? 'rgba(71,183,230,0.08)' : 'rgba(255,255,255,0.03)', color: index === 2 ? C.cyan : C.textSub, fontWeight: index === 2 ? 700 : 500 }}>
-                    {row}
+                    {cleanLabel(row)}
                   </div>
                 ))}
               </div>
               <div style={{ marginTop: 12, color: C.textMuted, fontSize: '0.76rem', lineHeight: 1.6 }}>{copy.sourceJordanDos}</div>
             </article>
-            <article style={glassPanelStyle({ padding: 18, borderRadius: 26, background: 'linear-gradient(180deg, rgba(9,19,35,0.96), rgba(4,10,22,0.98))' })}>
+            <article style={glassPanelStyle({ padding: isCompactMobile ? 16 : 18, borderRadius: isCompactMobile ? 20 : 26, background: 'linear-gradient(180deg, rgba(9,19,35,0.96), rgba(4,10,22,0.98))' })}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Route size={18} color={C.gold} /><h3 style={{ margin: 0, fontSize: '1rem' }}>{copy.actionableOutputs}</h3></div>
-              <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>{[analytics.dispatchAction, `${copy.topCorridor}: ${analytics.topCorridor}`, ar ? `???? ???????: ${numberFormatter.format(analytics.seatAvailability)} / ??? ??????: ${numberFormatter.format(analytics.packageCapacity)}` : `Seat availability: ${analytics.seatAvailability} / Package capacity: ${analytics.packageCapacity}`].map((item, index) => <div key={item} style={{ padding: '12px 14px', borderRadius: 16, background: index === 0 ? 'linear-gradient(135deg, rgba(168,214,20,0.12), rgba(255,255,255,0.03))' : 'rgba(255,255,255,0.03)', border: `1px solid ${index === 0 ? 'rgba(168,214,20,0.24)' : C.borderFaint}`, color: C.textSub, lineHeight: 1.6, boxShadow: index === 0 ? '0 10px 24px rgba(168,214,20,0.08)' : 'none' }}>{item}</div>)}</div>
+              <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>{primaryActionItems.map((item, index) => <div key={item} style={{ padding: '12px 14px', borderRadius: 16, background: index === 0 ? 'linear-gradient(135deg, rgba(168,214,20,0.12), rgba(255,255,255,0.03))' : 'rgba(255,255,255,0.03)', border: `1px solid ${index === 0 ? 'rgba(168,214,20,0.24)' : C.borderFaint}`, color: C.textSub, lineHeight: 1.6, boxShadow: index === 0 ? '0 10px 24px rgba(168,214,20,0.08)' : 'none' }}>{item}</div>)}</div>
               <div style={{ marginTop: 12, color: C.textMuted, fontSize: '0.76rem', lineHeight: 1.6 }}>{ar ? '??? ???????? ??????? ?????? ?? ????? ????????? ????? ?????? ????? ?????? ??????.' : 'These recommendations are estimated by the simulation model and are not direct government operational data.'}</div>
             </article>
           </div>
         </section>
 
         <section style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0, 1fr)' }}>
-          <article style={glassPanelStyle({ padding: 22, borderRadius: 32, background: 'linear-gradient(180deg, rgba(8,18,34,0.98), rgba(4,10,22,1))' })}>
+          <article style={glassPanelStyle({ padding: isCompactMobile ? 16 : 22, borderRadius: isCompactMobile ? 24 : 32, background: 'linear-gradient(180deg, rgba(8,18,34,0.98), rgba(4,10,22,1))' })}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 18 }}>
               <div>
                 <div style={sectionLabelStyle}>{copy.corridorIntelligence}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}><Gauge size={18} color={C.cyan} /><h3 style={{ margin: 0, fontSize: '1.25rem' }}>{copy.corridorDeck}</h3></div>
                 <div style={{ marginTop: 6, color: C.textMuted, fontSize: '0.84rem' }}>{copy.corridorDeckBody}</div>
               </div>
-              <div style={{ padding: '10px 14px', borderRadius: 999, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.03)', color: C.textSub, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+              <div style={{ padding: '10px 14px', borderRadius: 999, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.03)', color: C.textSub, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.12em', display: isCompactMobile ? 'none' : 'block' }}>
                 {copy.liveRanking} / {numberFormatter.format(visibleRoutes.length)} {copy.corridors}
               </div>
             </div>
@@ -1321,7 +1376,7 @@ export default function MobilityOSCore() {
                 const routeScore = Math.round((route.passengerFlow / Math.max(route.lanes * 1800, 1)) * 52 + (route.packageFlow / Math.max(route.lanes * 820, 1)) * 18 + (1 - route.congestion) * 30);
                 const pressureTone = route.congestion > 0.75 ? 'rgba(255,120,92,0.16)' : route.packageFlow > route.passengerFlow * 0.45 ? 'rgba(168,214,20,0.14)' : 'rgba(71,183,230,0.12)';
                 return (
-                  <div key={route.id} style={{ position: 'relative', padding: '18px 18px 16px', borderRadius: 24, border: `1px solid ${index === 0 ? C.cyanGlow : C.borderFaint}`, background: `linear-gradient(180deg, ${pressureTone}, rgba(255,255,255,0.025))`, boxShadow: index === 0 ? '0 18px 40px rgba(71,183,230,0.12)' : '0 10px 30px rgba(0,0,0,0.16)' }}>
+                  <div key={route.id} style={{ position: 'relative', padding: isCompactMobile ? '14px 14px 12px' : '18px 18px 16px', borderRadius: isCompactMobile ? 18 : 24, border: `1px solid ${index === 0 ? C.cyanGlow : C.borderFaint}`, background: `linear-gradient(180deg, ${pressureTone}, rgba(255,255,255,0.025))`, boxShadow: index === 0 ? '0 18px 40px rgba(71,183,230,0.12)' : '0 10px 30px rgba(0,0,0,0.16)' }}>
                     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: `radial-gradient(circle at top right, ${index === 0 ? 'rgba(71,183,230,0.16)' : 'rgba(255,255,255,0.05)'}, transparent 32%)` }} />
                     <div style={{ position: 'absolute', inset: 1, borderRadius: 23, border: '1px solid rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
                     <div style={{ position: 'relative', display: 'grid', gap: 14 }}>
@@ -1336,14 +1391,14 @@ export default function MobilityOSCore() {
                               <div style={{ marginTop: 3, color: C.textMuted, fontSize: '0.8rem' }}>{ar ? route.highwayAr : route.highway} / {numberFormatter.format(route.distanceKm)} {ar ? '??' : 'km'} / {numberFormatter.format(route.lanes)} {ar ? '?????' : 'lanes'}</div>
                             </div>
                           </div>
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flexDirection: isCompactMobile ? 'column' : 'row' }}>
                             {[
-                              { label: `${copy.speed} � ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(route.speedKph))} ${ar ? '??/?' : 'km/h'}`, color: C.green },
-                              { label: `${copy.pressure} � ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(route.congestion * 100))}%`, color: C.orange },
-                              { label: `${copy.flow} � ${copy.simulationTag}`, value: `${numberFormatter.format(totalFlow)}`, color: C.cyan },
+                              { label: `${copy.speed} · ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(route.speedKph))} ${ar ? '??/?' : 'km/h'}`, color: C.green },
+                              { label: `${copy.pressure} · ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(route.congestion * 100))}%`, color: C.orange },
+                              { label: `${copy.flow} · ${copy.simulationTag}`, value: `${numberFormatter.format(totalFlow)}`, color: C.cyan },
                             ].map((pill) => (
-                              <div key={pill.label} style={{ padding: '7px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', color: C.textSub, fontSize: '0.76rem' }}>
-                                <span style={{ color: C.textMuted }}>{pill.label}</span>{' '}
+                              <div key={pill.label} style={{ padding: '7px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', color: C.textSub, fontSize: '0.76rem', width: isCompactMobile ? '100%' : undefined }}>
+                                <span style={{ color: C.textMuted }}>{cleanLabel(pill.label)}</span>{' '}
                                 <strong style={{ color: pill.color }}>{pill.value}</strong>
                               </div>
                             ))}
@@ -1357,15 +1412,15 @@ export default function MobilityOSCore() {
                         </div>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${isCompactMobile ? 140 : 180}px, 1fr))`, gap: 12 }}>
                             {[
-                          { label: `${copy.passengerOccupancy} � ${copy.estimateTag}`, value: route.passengerFlow / Math.max(route.lanes * 1800, 1), color: PASSENGER_COLOR, tone: 'rgba(71,183,230,0.08)' },
-                          { label: `${copy.packageUtilization} � ${copy.estimateTag}`, value: route.packageFlow / Math.max(route.lanes * 820, 1), color: PACKAGE_COLOR, tone: 'rgba(168,214,20,0.08)' },
-                          { label: `${copy.congestionIntensity} � ${copy.estimateTag}`, value: route.congestion, color: C.orange, tone: 'rgba(255,149,72,0.08)' },
+                          { label: `${copy.passengerOccupancy} · ${copy.estimateTag}`, value: route.passengerFlow / Math.max(route.lanes * 1800, 1), color: PASSENGER_COLOR, tone: 'rgba(71,183,230,0.08)' },
+                          { label: `${copy.packageUtilization} · ${copy.estimateTag}`, value: route.packageFlow / Math.max(route.lanes * 820, 1), color: PACKAGE_COLOR, tone: 'rgba(168,214,20,0.08)' },
+                          { label: `${copy.congestionIntensity} · ${copy.estimateTag}`, value: route.congestion, color: C.orange, tone: 'rgba(255,149,72,0.08)' },
                         ].map((metric) => (
                           <div key={metric.label} style={{ padding: '12px 12px 10px', borderRadius: 16, background: metric.tone, border: '1px solid rgba(255,255,255,0.05)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                              <span style={{ fontSize: '0.76rem', color: C.textSub }}>{metric.label}</span>
+                              <span style={{ fontSize: '0.76rem', color: C.textSub }}>{cleanLabel(metric.label)}</span>
                               <span style={{ fontSize: '0.82rem', fontWeight: 800, color: metric.color }}>{Math.round(metric.value * 100)}%</span>
                             </div>
                             <div style={{ marginTop: 10, height: 8, borderRadius: 999, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
@@ -1385,4 +1440,5 @@ export default function MobilityOSCore() {
     </div>
   );
 }
+
 

@@ -22,7 +22,7 @@ export default defineConfig({
   build: {
     target: 'es2020',
     outDir: 'dist',
-    sourcemap: false,
+    sourcemap: 'hidden',
     minify: 'esbuild',
     chunkSizeWarningLimit: 600,
     rollupOptions: {

@@ -29,6 +29,7 @@ export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actio
   const failedCount = transactions.filter((tx: WalletTransaction) => ['failed'].includes(String(tx.status ?? '').toLowerCase())).length;
   const refundedCount = transactions.filter((tx: WalletTransaction) => ['refunded'].includes(String(tx.status ?? '').toLowerCase())).length;
   const paymentMethodsCount = walletData?.wallet?.paymentMethods?.length ?? 0;
+  const activeSubscription = walletData?.subscription;
 
   return (
     <div className="space-y-4">
@@ -121,13 +122,15 @@ export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actio
               <div>
                 <h3 className="font-bold text-foreground">{t.subscription}</h3>
                 <p className="text-xs text-muted-foreground">
-                  {walletData?.subscription
-                    ? t.activeSubscription
+                  {activeSubscription
+                    ? activeSubscription.corridorLabel
+                      ? `${t.activeSubscription} · ${activeSubscription.corridorLabel}`
+                      : t.activeSubscription
                     : isRTL ? '10% \u062E\u0635\u0645 \u0639\u0644\u0649 \u0627\u0644\u0631\u062D\u0644\u0627\u062A \u2022 \u062D\u062C\u0632 \u0623\u0648\u0644\u0648\u064A\u0629' : '10% off rides \u2022 Priority booking'}
                 </p>
               </div>
             </div>
-            {walletData?.subscription ? (
+            {activeSubscription ? (
               <Badge className="bg-green-500/10 text-green-400 border-green-500/30">{isRTL ? '\u0641\u0639\u0651\u0627\u0644' : 'Active'}</Badge>
             ) : (
               <Button size="sm" onClick={onSubscribe} disabled={actionLoading} style={{ background: WaselColors.bronze }}>
@@ -135,6 +138,43 @@ export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actio
               </Button>
             )}
           </div>
+          {activeSubscription && (
+            <div className="mt-4 grid gap-2 md:grid-cols-3">
+              <div className="rounded-xl border border-border/30 bg-background/40 p-3">
+                <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                  {isRTL ? 'الخطة' : 'Plan'}
+                </div>
+                <div className="mt-1 text-sm font-semibold text-foreground">{activeSubscription.planName}</div>
+              </div>
+              <div className="rounded-xl border border-border/30 bg-background/40 p-3">
+                <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                  {isRTL ? 'التجديد' : 'Renewal'}
+                </div>
+                <div className="mt-1 text-sm font-semibold text-foreground">
+                  {activeSubscription.renewalDate
+                    ? new Date(activeSubscription.renewalDate).toLocaleDateString(isRTL ? 'ar-JO' : 'en-US')
+                    : '\u2014'}
+                </div>
+              </div>
+              <div className="rounded-xl border border-border/30 bg-background/40 p-3">
+                <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                  {isRTL ? 'القيمة' : 'Value'}
+                </div>
+                <div className="mt-1 text-sm font-semibold text-foreground">
+                  {activeSubscription.price.toFixed(2)} {t.jod}
+                </div>
+              </div>
+            </div>
+          )}
+          {activeSubscription?.benefits && activeSubscription.benefits.length > 0 && (
+            <div className="mt-3 grid gap-2 md:grid-cols-3">
+              {activeSubscription.benefits.slice(0, 3).map((benefit) => (
+                <div key={benefit} className="rounded-xl border border-border/30 bg-background/30 p-3 text-xs text-muted-foreground">
+                  {benefit}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </Card>
 

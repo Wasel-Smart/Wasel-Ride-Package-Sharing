@@ -37,23 +37,7 @@ interface AuthContextType {
   changePassword: (nextPassword: string) => Promise<{ error: AuthOperationError }>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  profile: null,
-  session: null,
-  loading: true,
-  isBackendConnected: false,
-  signUp: async () => ({ error: null }),
-  signIn: async () => ({ error: null }),
-  signInWithGoogle: async () => ({ error: null }),
-  signInWithFacebook: async () => ({ error: null }),
-  signOut: async () => {},
-  updateProfile: async () => ({ error: null }),
-  refreshProfile: async () => {},
-  resendSignupConfirmation: async () => ({ error: null }),
-  resetPassword: async () => ({ error: null }),
-  changePassword: async () => ({ error: null }),
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -215,7 +199,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     };
 
-    const cancelDeferredInit = isPublicLanding
+    const shouldDeferAuthInit = isPublicLanding && import.meta.env.MODE !== 'test';
+    const cancelDeferredInit = shouldDeferAuthInit
       ? scheduleDeferredTask(() => {
           void initializeAuth();
         }, 1_600)

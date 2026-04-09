@@ -32,8 +32,23 @@ function getBooleanEnv(key: string, fallback: boolean): boolean {
   return value.toLowerCase() === 'true';
 }
 
+function resolveAppUrl(): string {
+  const configuredAppUrl = getEnv('VITE_APP_URL', 'http://localhost:3000').trim();
+
+  if (typeof window !== 'undefined') {
+    const runtimeOrigin = window.location.origin.trim();
+    if (runtimeOrigin && isLocalDevelopmentOrigin(runtimeOrigin)) {
+      if (!configuredAppUrl || isLocalDevelopmentOrigin(configuredAppUrl)) {
+        return runtimeOrigin;
+      }
+    }
+  }
+
+  return configuredAppUrl || 'http://localhost:3000';
+}
+
 export function getConfig() {
-  const appUrl = getEnv('VITE_APP_URL', 'http://localhost:3000');
+  const appUrl = resolveAppUrl();
   const supportWhatsAppNumber = getEnv('VITE_SUPPORT_WHATSAPP_NUMBER')
     .replace(/[^\d+]/g, '')
     .trim();

@@ -17,7 +17,12 @@ export type LoyaltyTier = 'starter' | 'dense' | 'network' | 'infrastructure';
 
 export interface MovementMembershipSnapshot {
   plusActive: boolean;
+  plusStartedAt: string | null;
+  plusRenewalDate: string | null;
+  plusPriceJod: number;
   commuterPassRouteId: string | null;
+  commuterPassStartedAt: string | null;
+  commuterPassRenewalDate: string | null;
   movementCredits: number;
   streakDays: number;
   dailyRouteId: string | null;
@@ -27,7 +32,12 @@ export interface MovementMembershipSnapshot {
 
 const DEFAULT_SNAPSHOT: MovementMembershipSnapshot = {
   plusActive: false,
+  plusStartedAt: null,
+  plusRenewalDate: null,
+  plusPriceJod: 9.99,
   commuterPassRouteId: null,
+  commuterPassStartedAt: null,
+  commuterPassRenewalDate: null,
   movementCredits: 120,
   streakDays: 3,
   dailyRouteId: DEFAULT_CORRIDOR_ID,
@@ -60,7 +70,12 @@ function readSnapshot(): MovementMembershipSnapshot {
 
     return {
       plusActive: Boolean(parsed.plusActive),
+      plusStartedAt: typeof parsed.plusStartedAt === 'string' ? parsed.plusStartedAt : null,
+      plusRenewalDate: typeof parsed.plusRenewalDate === 'string' ? parsed.plusRenewalDate : null,
+      plusPriceJod: Number(parsed.plusPriceJod ?? DEFAULT_SNAPSHOT.plusPriceJod) || DEFAULT_SNAPSHOT.plusPriceJod,
       commuterPassRouteId: typeof parsed.commuterPassRouteId === 'string' ? parsed.commuterPassRouteId : null,
+      commuterPassStartedAt: typeof parsed.commuterPassStartedAt === 'string' ? parsed.commuterPassStartedAt : null,
+      commuterPassRenewalDate: typeof parsed.commuterPassRenewalDate === 'string' ? parsed.commuterPassRenewalDate : null,
       movementCredits: Number(parsed.movementCredits ?? DEFAULT_SNAPSHOT.movementCredits) || DEFAULT_SNAPSHOT.movementCredits,
       streakDays: Number(parsed.streakDays ?? DEFAULT_SNAPSHOT.streakDays) || DEFAULT_SNAPSHOT.streakDays,
       dailyRouteId: typeof parsed.dailyRouteId === 'string' ? parsed.dailyRouteId : DEFAULT_SNAPSHOT.dailyRouteId,
@@ -83,6 +98,12 @@ function resolveTier(credits: number): LoyaltyTier {
   if (credits >= 600) return 'network';
   if (credits >= 300) return 'dense';
   return 'starter';
+}
+
+function addDaysIso(days: number) {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString();
 }
 
 function updateStreak(previousDate: string | null) {
@@ -114,14 +135,52 @@ export function getMovementMembershipSnapshot() {
     commuterPassRoute: snapshot.commuterPassRouteId
       ? getCorridorOpportunityById(snapshot.commuterPassRouteId)
       : null,
+    activeSubscription:
+      snapshot.commuterPassRouteId && getCorridorOpportunityById(snapshot.commuterPassRouteId)
+        ? {
+            id: `commuter-pass-${snapshot.commuterPassRouteId}`,
+            type: 'commuter-pass' as const,
+            planName: `${getCorridorOpportunityById(snapshot.commuterPassRouteId)?.label ?? 'Corridor'} Pass`,
+            priceJod:
+              getCorridorOpportunityById(snapshot.commuterPassRouteId)?.subscriptionPriceJod
+              ?? DEFAULT_SNAPSHOT.plusPriceJod,
+            renewalDate: snapshot.commuterPassRenewalDate,
+            corridorId: snapshot.commuterPassRouteId,
+            corridorLabel: getCorridorOpportunityById(snapshot.commuterPassRouteId)?.label ?? null,
+            benefits: [
+              'Priority seat access on your daily corridor',
+              'Corridor-specific commuter discount',
+              'Pinned pickup point and route recall',
+            ],
+          }
+        : snapshot.plusActive
+          ? {
+              id: 'wasel-plus',
+              type: 'plus' as const,
+              planName: 'Wasel Plus',
+              priceJod: snapshot.plusPriceJod,
+              renewalDate: snapshot.plusRenewalDate,
+              corridorId: null,
+              corridorLabel: corridor?.label ?? null,
+              benefits: [
+                'Plus discount on shared movement',
+                'Priority booking in dense route windows',
+                'Faster conversion into corridor passes',
+              ],
+            }
+          : null,
   };
 }
 
-export function activateWaselPlus() {
+export function activateWaselPlus(priceJod = DEFAULT_SNAPSHOT.plusPriceJod) {
   const current = readSnapshot();
+  const startedAt = new Date().toISOString();
   const next = {
     ...current,
     plusActive: true,
+    plusStartedAt: startedAt,
+    plusRenewalDate: addDaysIso(30),
+    plusPriceJod: priceJod,
     loyaltyTier: resolveTier(current.movementCredits),
   };
   return writeSnapshot(next);
@@ -131,10 +190,15 @@ export function startCommuterPass(routeId: string) {
   const current = readSnapshot();
   const streak = updateStreak(current.lastActivityDate);
   const credits = current.movementCredits + DEFAULT_POINTS.pass_started;
+  const startedAt = new Date().toISOString();
   const next: MovementMembershipSnapshot = {
     ...current,
     plusActive: true,
+    plusStartedAt: current.plusStartedAt ?? startedAt,
+    plusRenewalDate: current.plusRenewalDate ?? addDaysIso(30),
     commuterPassRouteId: routeId,
+    commuterPassStartedAt: startedAt,
+    commuterPassRenewalDate: addDaysIso(30),
     dailyRouteId: routeId,
     movementCredits: credits,
     streakDays:

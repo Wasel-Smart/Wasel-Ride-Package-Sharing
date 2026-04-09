@@ -25,15 +25,28 @@ const passwordField = z
 
 const phoneField = z
   .string()
-  .regex(/^\+[1-9]\d{1,14}$/, 'Phone must be in international format: +962xxxxxxxxx')
+  .regex(/^\+[1-9]\d{7,14}$/, 'Phone must be in international format: +962xxxxxxxxx')
   .optional()
   .or(z.literal(''));
 
 const nameField = z
   .string({ required_error: 'Name is required' })
+  .trim()
   .min(2, 'Name must be at least 2 characters')
   .max(80, 'Name is too long')
-  .trim();
+  .refine((value) => value.length > 0, 'Name is required');
+
+const safeAvatarUrlField = z
+  .string()
+  .url('Invalid image URL')
+  .refine((value) => {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }, 'Avatar URL must use http or https');
 
 // ── Auth schemas ──────────────────────────────────────────────────────────────
 
@@ -118,7 +131,7 @@ export const updateProfileSchema = z.object({
   fullName: nameField,
   phone: phoneField,
   bio: z.string().max(250, 'Bio too long').optional(),
-  avatarUrl: z.string().url('Invalid image URL').optional().or(z.literal('')),
+  avatarUrl: safeAvatarUrlField.optional().or(z.literal('')),
 });
 export type UpdateProfileFields = z.infer<typeof updateProfileSchema>;
 

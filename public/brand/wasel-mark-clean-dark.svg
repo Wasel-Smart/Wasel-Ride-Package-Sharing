@@ -1,31 +1,80 @@
-<svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Wasel logo</title>
+  <desc id="desc">The standalone Wasel W mark on a transparent background.</desc>
+  <svg x="50" y="90" width="412" height="320"
   xmlns="http://www.w3.org/2000/svg"
-  width="100%"
-  height="100%"
-  viewBox="0 0 512 512"
+  viewBox="48 50 464 360"
   fill="none"
   role="img"
   aria-labelledby="title desc"
+  preserveAspectRatio="xMidYMid meet"
 >
-  <title id="title">Wasel logo on dark background</title>
-  <desc id="desc">The Wasel arrow logo on a deep navy card for dark surfaces.</desc>
+  <title id="title">Wasel W logo</title>
+  <desc id="desc">A standalone Wasel W mark using the current blue, green, and lime brand gradients on a transparent background.</desc>
   <defs>
-    <linearGradient id="darkBg" x1="24" y1="18" x2="486" y2="490" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#091A33" />
-      <stop offset="1" stop-color="#0C2141" />
+    <linearGradient id="leftWing" x1="98" y1="112" x2="206" y2="324" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#70D1EE" />
+      <stop offset="0.44" stop-color="#49B9E5" />
+      <stop offset="1" stop-color="#2F8ECE" />
     </linearGradient>
-    <radialGradient id="darkBlue" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(184 232) rotate(90) scale(144 168)">
-      <stop offset="0" stop-color="#46B7E5" stop-opacity="0.22" />
-      <stop offset="1" stop-color="#46B7E5" stop-opacity="0" />
-    </radialGradient>
-    <radialGradient id="darkGreen" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(334 242) rotate(90) scale(132 154)">
-      <stop offset="0" stop-color="#9BCB14" stop-opacity="0.2" />
-      <stop offset="1" stop-color="#9BCB14" stop-opacity="0" />
-    </radialGradient>
+    <linearGradient id="centerBlue" x1="178" y1="322" x2="272" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1A4C9C" />
+      <stop offset="0.52" stop-color="#2B8BC8" />
+      <stop offset="1" stop-color="#5EC4EA" />
+    </linearGradient>
+    <linearGradient id="centerGreen" x1="250" y1="108" x2="348" y2="322" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A6D910" />
+      <stop offset="0.46" stop-color="#83C80A" />
+      <stop offset="1" stop-color="#2E7A13" />
+    </linearGradient>
+    <linearGradient id="rightWing" x1="330" y1="322" x2="428" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2F8ECE" />
+      <stop offset="0.38" stop-color="#49B9E5" />
+      <stop offset="0.76" stop-color="#82C50C" />
+      <stop offset="1" stop-color="#AEDD0A" />
+    </linearGradient>
+    <linearGradient id="innerShade" x1="196" y1="320" x2="316" y2="152" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#173E7E" stop-opacity="0.22" />
+      <stop offset="0.5" stop-color="#173E7E" stop-opacity="0.08" />
+      <stop offset="1" stop-color="#173E7E" stop-opacity="0" />
+    </linearGradient>
+    <clipPath id="innerClip">
+      <path d="M176 312L256 116L338 312H176Z" />
+    </clipPath>
   </defs>
-  <rect x="20" y="20" width="472" height="472" rx="88" fill="url(#darkBg)" />
-  <rect x="20.5" y="20.5" width="471" height="471" rx="87.5" stroke="#173355" />
-  <ellipse cx="192" cy="236" rx="162" ry="138" fill="url(#darkBlue)" />
-  <ellipse cx="334" cy="242" rx="142" ry="130" fill="url(#darkGreen)" />
-  <image href="/brand/wasel-mark-clean.svg" x="42" y="72" width="428" height="340" />
+
+  <path
+    d="M110 120L176 310"
+    stroke="url(#leftWing)"
+    stroke-width="68"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M176 310L256 114"
+    stroke="url(#centerBlue)"
+    stroke-width="68"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M256 114L338 310"
+    stroke="url(#centerGreen)"
+    stroke-width="68"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M338 310L414 120"
+    stroke="url(#rightWing)"
+    stroke-width="68"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <g clip-path="url(#innerClip)">
+    <path d="M176 312L256 114L338 312L298 312L252 176L214 312Z" fill="url(#innerShade)" />
+  </g>
+</svg>
+
 </svg>

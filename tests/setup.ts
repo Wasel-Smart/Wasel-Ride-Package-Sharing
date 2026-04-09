@@ -14,6 +14,36 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
+class MockIntersectionObserver implements IntersectionObserver {
+  readonly root = null;
+  readonly rootMargin = '0px';
+  readonly thresholds = [0];
+
+  constructor(private readonly _callback: IntersectionObserverCallback) {}
+
+  disconnect() {}
+
+  observe(_target: Element) {}
+
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+
+  unobserve() {}
+}
+
+Object.defineProperty(window, 'IntersectionObserver', {
+  configurable: true,
+  writable: true,
+  value: MockIntersectionObserver,
+});
+
+Object.defineProperty(globalThis, 'IntersectionObserver', {
+  configurable: true,
+  writable: true,
+  value: MockIntersectionObserver,
+});
+
 class MemoryStorage implements Storage {
   private store = new Map<string, string>();
 

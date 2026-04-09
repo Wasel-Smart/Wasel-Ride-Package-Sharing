@@ -75,6 +75,7 @@ describe('walletApi', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     __resetWalletApiCachesForTests();
+    window.localStorage.removeItem('wasel-movement-membership');
 
     const createQueryBuilder = () => {
       const builder = {
@@ -169,6 +170,40 @@ describe('walletApi', () => {
     expect(wallet.total_spent).toBe(12.5);
   });
 
+  it('exposes wallet reliability metadata for fallback reads', async () => {
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: {
+        wallet_id: 'wallet-1',
+        user_id: 'user-123',
+        balance: 50,
+        pending_balance: 0,
+        wallet_status: 'active',
+        currency_code: 'JOD',
+      },
+      error: null,
+    });
+    mockLimit.mockResolvedValueOnce({ data: [], error: null });
+    mockOrder
+      .mockImplementationOnce(() => ({
+        select: mockSelect,
+        eq: mockEq,
+        order: mockOrder,
+        limit: mockLimit,
+        single: mockSingle,
+        maybeSingle: mockMaybeSingle,
+        insert: mockInsert,
+        update: mockUpdate,
+        delete: mockDelete,
+      }))
+      .mockResolvedValueOnce({ data: [], error: null });
+
+    const snapshot = await walletApi.getWalletSnapshot('user-123');
+
+    expect(snapshot.data.balance).toBe(50);
+    expect(snapshot.meta.source).toBe('direct-supabase');
+    expect(snapshot.meta.degraded).toBe(true);
+  });
+
   it('uses the backend RPC to transfer wallet funds when edge endpoints are unavailable', async () => {
     mockRpc.mockResolvedValue({ data: null, error: null });
     mockMaybeSingle.mockResolvedValue({
@@ -206,5 +241,40 @@ describe('walletApi', () => {
       p_payment_method: 'wallet',
     });
     expect(result.success).toBe(true);
+  });
+
+  it('creates a local subscription in fallback mode and projects it into wallet data', async () => {
+    mockMaybeSingle.mockResolvedValue({
+      data: {
+        wallet_id: 'wallet-1',
+        user_id: 'user-123',
+        balance: 60,
+        pending_balance: 0,
+        wallet_status: 'active',
+        currency_code: 'JOD',
+      },
+      error: null,
+    });
+    mockLimit.mockResolvedValue({ data: [], error: null });
+    mockOrder
+      .mockImplementationOnce(() => ({
+        select: mockSelect,
+        eq: mockEq,
+        order: mockOrder,
+        limit: mockLimit,
+        single: mockSingle,
+        maybeSingle: mockMaybeSingle,
+        insert: mockInsert,
+        update: mockUpdate,
+        delete: mockDelete,
+      }))
+      .mockResolvedValueOnce({ data: [], error: null });
+
+    await walletApi.subscribe('user-123', 'Wasel Corridor Pass', 39, 'amman-irbid');
+    const wallet = await walletApi.getWallet('user-123');
+
+    expect(wallet.subscription?.type).toBe('commuter-pass');
+    expect(wallet.subscription?.corridorId).toBe('amman-irbid');
+    expect(wallet.subscription?.price).toBeGreaterThan(0);
   });
 });

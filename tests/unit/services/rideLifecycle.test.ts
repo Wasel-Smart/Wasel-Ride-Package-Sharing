@@ -64,12 +64,14 @@ describe('createRideBooking()', () => {
     const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'live_post' });
     expect(booking.status).toBe('pending_driver');
     expect(booking.paymentStatus).toBe('pending');
+    expect(booking.syncState).toBe('syncing');
   });
 
   it('network_inventory bookings start as confirmed', () => {
     const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'network_inventory' });
     expect(booking.status).toBe('confirmed');
     expect(booking.paymentStatus).toBe('authorized');
+    expect(booking.syncState).toBe('syncing');
   });
 
   it('defaults seatsRequested to 1 when not provided', () => {
@@ -106,6 +108,12 @@ describe('createRideBooking()', () => {
   it('supportThreadOpen defaults to false', () => {
     const booking = createRideBooking(BASE_INPUT);
     expect(booking.supportThreadOpen).toBe(false);
+  });
+
+  it('creates a local-only booking when no passenger id is available for backend sync', () => {
+    const booking = createRideBooking({ ...BASE_INPUT, passengerId: undefined });
+    expect(booking.syncState).toBe('local-only');
+    expect(booking.pendingSync).toBe(false);
   });
 
   it('ownerId is preserved from input', () => {

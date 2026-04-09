@@ -6,10 +6,10 @@ import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
 import { createPackageComposer, validatePackageComposer } from '../../pages/waselCorePageHelpers';
+import { useCorridorTruth } from '../../services/corridorTruth';
 import {
   createConnectedPackage,
   getConnectedPackages,
-  getConnectedRides,
   getConnectedStats,
   getPackageByTrackingId,
   updatePackageVerification,
@@ -19,7 +19,6 @@ import { notificationsAPI } from '../../services/notifications.js';
 import { recordMovementActivity } from '../../services/movementMembership';
 import { createSupportTicket } from '../../services/supportInbox';
 import {
-  getCorridorOpportunity,
   getFeaturedCorridors,
   getWaselCategoryPosition,
 } from '../../config/wasel-movement-network';
@@ -27,7 +26,6 @@ import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { PackageReturnsPanel } from './components/PackageReturnsPanel';
 import { PackageSendPanel } from './components/PackageSendPanel';
 import { PackageTrackPanel } from './components/PackageTrackPanel';
-import { routeMatchesLocationPair } from '../../utils/jordanLocations';
 
 export function PackagesPage() {
   const nav = useIframeSafeNavigate();
@@ -45,12 +43,9 @@ export function PackagesPage() {
 
   const category = useMemo(() => getWaselCategoryPosition(), []);
   const featuredCorridors = useMemo(() => getFeaturedCorridors(3), []);
-  const corridorPlan = useMemo(
-    () => getCorridorOpportunity(pkg.from, pkg.to),
-    [pkg.from, pkg.to],
-  );
-
-  const matchingRideCount = getConnectedRides().filter((ride) => ride.acceptsPackages && routeMatchesLocationPair(ride.from, ride.to, pkg.from, pkg.to, { allowReverse: false })).length;
+  const corridorTruth = useCorridorTruth({ from: pkg.from, to: pkg.to });
+  const { corridorPlan, packageReadyRideCount, selectedPriceQuote, selectedSignal } = corridorTruth;
+  const matchingRideCount = packageReadyRideCount;
   const trackedStatusColor = trackedPackage?.status === 'delivered'
     ? DS.green
     : trackedPackage?.status === 'in_transit'
@@ -316,6 +311,9 @@ export function PackagesPage() {
               createError={createError}
               busyState={busyState}
               matchingRideCount={matchingRideCount}
+              corridorPlan={corridorPlan}
+              selectedSignal={selectedSignal}
+              selectedPriceQuote={selectedPriceQuote}
               recentPackages={recentPackages}
               onCreate={() => handlePackageCreate('delivery')}
               onReset={resetComposer}
