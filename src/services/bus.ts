@@ -1,4 +1,4 @@
-import { bookingsAPI } from './bookings';
+﻿import { bookingsAPI } from './bookings';
 import { trackGrowthEvent } from './growthEngine';
 import { triggerBusBookingConfirmationEmail } from './transactionalEmailTriggers';
 import { tripsAPI } from './trips';
@@ -107,7 +107,7 @@ export function looksLikeBusTrip(item: Record<string, unknown>): boolean {
 }
 
 export function normalizeBusRoute(raw: Record<string, unknown>, index: number): BusRoute {
-  const colors = ['#47B7E6', '#1E5FAE', '#6BB515', '#A8D614'];
+  const colors = ['#F4C651', '#8A6220', '#FFE08A', '#FFF0C1'];
   const defaultId = `live-bus-${index + 1}`;
   const from = toText(raw.from ?? raw.origin_city, 'Amman');
   const to = toText(raw.to ?? raw.destination_city, 'Aqaba');
@@ -318,4 +318,5 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
     return result;
   }
 }
+
 

@@ -14,6 +14,7 @@
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, act } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
 
 // ── Minimal mocks required for MobilityOSCore to mount ────────────────────
 
@@ -102,7 +103,24 @@ async function importAndRender() {
   const { default: MobilityOSCore } = await import(
     '../../../../src/features/mobility-os/MobilityOSCore'
   );
-  return render(<MobilityOSCore />);
+  let rendered: ReturnType<typeof render> | null = null;
+  await act(async () => {
+    rendered = render(<MobilityOSCore />);
+  });
+  if (!rendered) {
+    throw new Error('Failed to render MobilityOSCore');
+  }
+  return rendered;
+}
+
+function findMapWrap(container: RenderResult['container'], aspectRatioSnippet: string) {
+  return (
+    Array.from(container.querySelectorAll('div')).find(
+      (div) =>
+        div.getAttribute('style')?.includes('aspect-ratio') &&
+        div.getAttribute('style')?.includes(aspectRatioSnippet),
+    ) ?? null
+  );
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────
@@ -117,18 +135,16 @@ describe('MobilityOSCore — isMobile initialisation', () => {
     setViewportWidth(1024);
     const { container } = await importAndRender();
 
-    // The map wrapper should have the desktop 3D transform applied
-    // We look for the perspective transform in the wrapRef container
-    const mapWrap = container.querySelector('[style*="perspective"]');
-    expect(mapWrap).not.toBeNull();
+    expect(findMapWrap(container, '1.42')).not.toBeNull();
+    expect(findMapWrap(container, '4/3')).toBeNull();
   });
 
   it('treats viewport < 768 as mobile (no 3D transform)', async () => {
     setViewportWidth(375);
     const { container } = await importAndRender();
 
-    const mapWrap = container.querySelector('[style*="perspective"]');
-    expect(mapWrap).toBeNull();
+    expect(findMapWrap(container, '4/3')).not.toBeNull();
+    expect(findMapWrap(container, '1.42')).toBeNull();
   });
 
   it('applies 4/3 aspect ratio on mobile', async () => {
@@ -165,8 +181,7 @@ describe('MobilityOSCore — resize listener', () => {
     setViewportWidth(375);
     const { container } = await importAndRender();
 
-    // Verify starts as mobile (no perspective)
-    expect(container.querySelector('[style*="perspective"]')).toBeNull();
+    expect(findMapWrap(container, '4/3')).not.toBeNull();
 
     // Simulate resize to desktop width
     await act(async () => {
@@ -174,24 +189,23 @@ describe('MobilityOSCore — resize listener', () => {
       window.dispatchEvent(new Event('resize'));
     });
 
-    // After resize, the 3D perspective should be applied
-    const mapWrap = container.querySelector('[style*="perspective"]');
-    expect(mapWrap).not.toBeNull();
+    expect(findMapWrap(container, '1.42')).not.toBeNull();
+    expect(findMapWrap(container, '4/3')).toBeNull();
   });
 
   it('responds to resize from desktop to mobile', async () => {
     setViewportWidth(1440);
     const { container } = await importAndRender();
 
-    // Verify starts as desktop (has perspective)
-    expect(container.querySelector('[style*="perspective"]')).not.toBeNull();
+    expect(findMapWrap(container, '1.42')).not.toBeNull();
 
     await act(async () => {
       setViewportWidth(375);
       window.dispatchEvent(new Event('resize'));
     });
 
-    expect(container.querySelector('[style*="perspective"]')).toBeNull();
+    expect(findMapWrap(container, '4/3')).not.toBeNull();
+    expect(findMapWrap(container, '1.42')).toBeNull();
   });
 });
 

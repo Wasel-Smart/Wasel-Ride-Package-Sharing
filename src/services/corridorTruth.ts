@@ -76,7 +76,10 @@ function buildCorridorTruthSnapshot(args: {
   featuredLimit?: number;
   routeIntelligence: RouteIntelligenceSnapshot;
 }): CorridorTruthSnapshot {
-  const corridorPlan = getCorridorOpportunity(args.from, args.to);
+  const corridorPlan =
+    args.from && args.to
+      ? getCorridorOpportunity(args.from, args.to)
+      : null;
   const selectedSignal = args.routeIntelligence.selectedSignal;
   const { matchingRideCount, packageReadyRideCount } = countMatchingRides(args.from, args.to);
   const matchingPackageCount = countMatchingPackages(args.from, args.to);
@@ -159,7 +162,10 @@ export function getCorridorMovementQuote(args: {
 }) {
   const membership = args.membership ?? getMovementMembershipSnapshot();
   const signal = args.signal ?? getLiveCorridorSignal(args.from, args.to, membership);
-  const corridorPlan = getCorridorOpportunity(args.from, args.to);
+  const corridorPlan =
+    args.from && args.to
+      ? getCorridorOpportunity(args.from, args.to)
+      : null;
   const corridorId = signal?.id ?? corridorPlan?.id ?? null;
   const forecastDemandScore = signal?.forecastDemandScore ?? corridorPlan?.predictedDemandScore;
 
@@ -170,6 +176,7 @@ export function getCorridorMovementQuote(args: {
       basePriceJod: args.basePriceJod,
       corridorId,
       forecastDemandScore,
+      pricePressure: signal?.pricePressure,
       membership,
     }),
   };

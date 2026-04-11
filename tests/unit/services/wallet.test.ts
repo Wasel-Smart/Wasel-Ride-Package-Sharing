@@ -66,6 +66,7 @@ vi.mock('../../../src/services/core', () => ({
   publicAnonKey: '',
   fetchWithRetry: (...args: any[]) => mockFetchWithRetry(...args),
   getAuthDetails: vi.fn().mockResolvedValue({ token: 'token-123', userId: 'user-123' }),
+  isEdgeFunctionAvailable: vi.fn(() => false),
   supabase: mockDb,
 }));
 
@@ -202,6 +203,41 @@ describe('walletApi', () => {
     expect(snapshot.data.balance).toBe(50);
     expect(snapshot.meta.source).toBe('direct-supabase');
     expect(snapshot.meta.degraded).toBe(true);
+  });
+
+  it('persists a fresh wallet snapshot for fast reopen flows', async () => {
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: {
+        wallet_id: 'wallet-1',
+        user_id: 'user-123',
+        balance: 88,
+        pending_balance: 0,
+        wallet_status: 'active',
+        currency_code: 'JOD',
+      },
+      error: null,
+    });
+    mockLimit.mockResolvedValueOnce({ data: [], error: null });
+    mockOrder
+      .mockImplementationOnce(() => ({
+        select: mockSelect,
+        eq: mockEq,
+        order: mockOrder,
+        limit: mockLimit,
+        single: mockSingle,
+        maybeSingle: mockMaybeSingle,
+        insert: mockInsert,
+        update: mockUpdate,
+        delete: mockDelete,
+      }))
+      .mockResolvedValueOnce({ data: [], error: null });
+
+    const snapshot = await walletApi.getWalletSnapshot('user-123');
+    const persistedSnapshot = walletApi.getPersistedWalletSnapshot('user-123');
+
+    expect(snapshot.data.balance).toBe(88);
+    expect(persistedSnapshot?.data.balance).toBe(88);
+    expect(persistedSnapshot?.meta.source).toBe('direct-supabase');
   });
 
   it('uses the backend RPC to transfer wallet funds when edge endpoints are unavailable', async () => {

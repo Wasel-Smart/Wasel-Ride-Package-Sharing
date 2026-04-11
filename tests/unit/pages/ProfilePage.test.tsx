@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
+import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockNavigate = vi.fn();
@@ -46,6 +47,14 @@ vi.mock('@/features/profile/useProfilePageController', () => ({
 
 import ProfilePage from '@/features/profile/ProfilePage';
 
+function renderProfilePage() {
+  return render(
+    <MemoryRouter>
+      <ProfilePage />
+    </MemoryRouter>,
+  );
+}
+
 describe('ProfilePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -91,7 +100,7 @@ describe('ProfilePage', () => {
   it('shows a sign-in gate when no profile is loaded', { timeout: 15000 }, () => {
     mockUseLocalAuth.mockReturnValue({ user: null, signOut: vi.fn() });
 
-    render(<ProfilePage />);
+    renderProfilePage();
 
     screen.getByRole('button', { name: /sign in/i }).click();
 
@@ -124,7 +133,7 @@ describe('ProfilePage', () => {
       },
     });
 
-    render(<ProfilePage />);
+    renderProfilePage();
 
     expect(screen.getByText(/^account readiness$/i)).toBeInTheDocument();
     expect(screen.getAllByText(/^profile completeness$/i).length).toBeGreaterThan(0);

@@ -35,6 +35,7 @@ import {
   verify2FACode,
   type TwoFactorSetup,
 } from '../../utils/security';
+import { omitUndefined } from '../../utils/object';
 
 const BG = '#061726';
 const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))';
@@ -303,7 +304,13 @@ export default function SettingsPage() {
   const nav = useIframeSafeNavigate();
   const ar = language === 'ar';
   const notificationCapabilities = useMemo(
-    () => getCommunicationCapabilities({ email: user?.email ?? profile?.email, phone: user?.phone ?? profile?.phone_number }),
+    () =>
+      getCommunicationCapabilities(
+        omitUndefined({
+          email: user?.email ?? profile?.email,
+          phone: user?.phone ?? profile?.phone_number,
+        }),
+      ),
     [profile?.email, profile?.phone_number, user?.email, user?.phone],
   );
   const accountRef = useRef<HTMLDivElement | null>(null);
@@ -455,10 +462,10 @@ export default function SettingsPage() {
       return;
     }
 
-    updateUser({
+    updateUser(omitUndefined({
       phone: normalized || undefined,
       phoneVerified: false,
-    });
+    }));
     toast.success(normalized ? 'Phone number saved.' : 'Phone number removed.');
   };
 

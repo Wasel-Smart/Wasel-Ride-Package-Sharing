@@ -92,10 +92,10 @@ export function WalletDashboard() {
   const walletStatusDescription = !walletHealth
     ? null
     : walletHealth.degraded
-      ? (isRTL ? 'البيانات قادمة من Supabase مباشرة بسبب تعطل مسار المحفظة الأساسي.' : 'Wallet data is coming from direct Supabase fallback because the primary wallet path degraded.')
+      ? (isRTL ? 'البيانات قادمة من Supabase مباشرة بسبب تعطل مسار المحفظة الأساسي.' : 'Using backup data.')
       : walletHealth.source === 'edge-api'
-        ? (isRTL ? 'المحفظة تقرأ من مسار الخدمة الأساسي.' : 'Wallet reads are flowing through the primary service path.')
-        : (isRTL ? 'المحفظة تقرأ مباشرة من Supabase.' : 'Wallet reads are using direct Supabase access.');
+        ? (isRTL ? 'المحفظة تقرأ من مسار الخدمة الأساسي.' : 'Using the main service.')
+        : (isRTL ? 'المحفظة تقرأ مباشرة من Supabase.' : 'Using direct sync.');
   const insightsStatusLabel = walletInsightsHealth?.degraded
     ? (isRTL ? 'الإحصاءات محلية' : 'Insights fallback')
     : null;
@@ -196,7 +196,7 @@ export function WalletDashboard() {
               <p className="text-xs text-muted-foreground">{walletStatusDescription}</p>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              {isRTL ? 'آخر تحديث' : 'Updated'} {new Date(walletHealth.fetchedAt).toLocaleTimeString(isRTL ? 'ar-JO' : 'en-US')}
+              {isRTL ? 'آخر تحديث' : 'Updated'} {new Date(walletHealth?.fetchedAt ?? Date.now()).toLocaleTimeString(isRTL ? 'ar-JO' : 'en-US')}
             </p>
           </CardContent>
         </Card>

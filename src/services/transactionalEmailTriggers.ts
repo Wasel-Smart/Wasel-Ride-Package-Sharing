@@ -1,4 +1,5 @@
 import { getConfig } from '../utils/env';
+import { omitUndefined } from '../utils/object';
 import { emailService } from './emailService';
 import type { RideBookingRecord } from './rideLifecycle';
 import type { WalletTransaction } from './walletApi';
@@ -21,11 +22,11 @@ export async function triggerWelcomeEmail(opts: {
   confirmUrl?: string;
 }): Promise<void> {
   void emailService
-    .sendWelcome({
+    .sendWelcome(omitUndefined({
       to: opts.email,
       name: opts.name,
       confirmUrl: opts.confirmUrl,
-    })
+    }))
     .catch((error) => console.error('[email] welcome failed:', error));
 }
 
@@ -51,13 +52,13 @@ export async function triggerSecurityAlert(opts: {
   userAgent?: string;
 }): Promise<void> {
   void emailService
-    .sendSecurityAlert({
+    .sendSecurityAlert(omitUndefined({
       to: opts.email,
       name: opts.name,
       eventType: opts.eventType,
       ip: opts.ip,
       userAgent: opts.userAgent,
-    })
+    }))
     .catch((error) => console.error('[email] security alert failed:', error));
 }
 
@@ -72,7 +73,7 @@ export function triggerRideBookingEmails(opts: {
   const appUrl = opts.appUrl ?? getAppUrl();
 
   void emailService
-    .sendBookingConfirmation({
+    .sendBookingConfirmation(omitUndefined({
       to: passengerEmail,
       passengerName: booking.passengerName,
       ticketCode: booking.ticketCode,
@@ -84,8 +85,8 @@ export function triggerRideBookingEmails(opts: {
       driverPhone: booking.driverPhone,
       seats: booking.seatsRequested,
       priceJod,
-      status: booking.status === 'pending_driver' ? 'pending_driver' : 'confirmed',
-    })
+      status: booking.status === 'pending_driver' ? 'pending_driver' as const : 'confirmed' as const,
+    }))
     .catch((error) => console.error('[email] booking confirmation failed:', error));
 
   if (booking.status === 'pending_driver' && driverEmail) {
@@ -202,7 +203,7 @@ export function triggerPaymentReceiptEmail(opts: {
   };
 
   void emailService
-    .sendPaymentReceipt({
+    .sendPaymentReceipt(omitUndefined({
       to: opts.userEmail,
       name: opts.userName,
       transactionId: transaction.id,
@@ -212,7 +213,7 @@ export function triggerPaymentReceiptEmail(opts: {
       description: transaction.description,
       createdAt: transaction.createdAt,
       paymentMethod: opts.paymentMethod,
-    })
+    }))
     .catch((error) => console.error('[email] payment receipt failed:', error));
 }
 
@@ -229,7 +230,7 @@ export function triggerPackageConfirmationEmail(opts: {
   status: 'searching' | 'matched';
 }): void {
   void emailService
-    .sendPackageConfirmation({
+    .sendPackageConfirmation(omitUndefined({
       to: opts.senderEmail,
       senderName: opts.senderName,
       trackingId: opts.trackingId,
@@ -240,7 +241,7 @@ export function triggerPackageConfirmationEmail(opts: {
       recipientName: opts.recipientName,
       matchedDriver: opts.matchedDriver,
       status: opts.status,
-    })
+    }))
     .catch((error) => console.error('[email] package confirmation failed:', error));
 }
 

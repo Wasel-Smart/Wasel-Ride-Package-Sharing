@@ -11,7 +11,7 @@
  * - Verified driver badge, occupancy bar, prayer-stops tag
  */
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   motion,
   useMotionValue,
@@ -33,6 +33,7 @@ import {
   Moon,
 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { omitUndefined } from '../../utils/object';
 
 /* ─── Brand ───────────────────────────────────────────────────────────────── */
 const CYAN   = '#47B7E6';
@@ -298,7 +299,12 @@ export function WaselSwipeableRideCard({
           {/* Driver row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <DriverAvatar name={driverName} avatarUrl={ride.driver.avatarUrl} />
+              <DriverAvatar
+                {...omitUndefined({
+                  name: driverName,
+                  avatarUrl: ride.driver.avatarUrl,
+                })}
+              />
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <span style={{ fontFamily: F, fontWeight: 600, fontSize: 13, color: '#EAF7FF' }}>{driverName}</span>

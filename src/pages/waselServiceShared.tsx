@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+﻿/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { Shield } from 'lucide-react';
@@ -133,8 +133,8 @@ export function PageShell({ children }: { children: ReactNode }) {
     <div style={{ minHeight: '100vh', background: DS.bg, fontFamily: DS.F, direction: ar ? 'rtl' : 'ltr' }}>
       <style>{`
         :root { color-scheme: dark; }
-        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(71,183,230,0.28); }
-        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(168,214,20,0.24); }
+        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(244,198,81,0.28); }
+        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(255,240,193,0.24); }
         @media(max-width:899px){
           .sp-inner{ padding:16px !important; }
           .sp-2col { grid-template-columns:1fr !important; }
@@ -156,6 +156,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-side-column { position:static !important; }
           .pkg-send-form-grid { grid-template-columns:1fr !important; }
           .pkg-send-steps-grid { grid-template-columns:1fr !important; }
+          .sp-clarity-grid { grid-template-columns:1fr !important; }
         }
         @media(max-width:480px){
           .sp-4col { grid-template-columns:1fr !important; }
@@ -173,7 +174,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           inset: 0,
           pointerEvents: 'none',
           background:
-            'radial-gradient(circle at 14% 10%, rgba(71,183,230,0.16), transparent 24%), radial-gradient(circle at 85% 12%, rgba(168,214,20,0.08), transparent 20%), radial-gradient(circle at 78% 84%, rgba(107,181,21,0.08), transparent 24%)',
+            'radial-gradient(circle at 14% 10%, rgba(244,198,81,0.16), transparent 24%), radial-gradient(circle at 85% 12%, rgba(255,240,193,0.08), transparent 20%), radial-gradient(circle at 78% 84%, rgba(219,159,44,0.08), transparent 24%)',
         }}
       />
       <div className="sp-inner" style={{ position: 'relative', maxWidth: 1120, margin: '0 auto', padding: '24px 16px' }}>
@@ -264,6 +265,57 @@ export function CoreExperienceBanner({
   );
 }
 
+export function ClarityBand({
+  title,
+  detail,
+  items,
+  tone = DS.cyan,
+}: {
+  title: string;
+  detail: string;
+  items: Array<{ label: string; value: string }>;
+  tone?: string;
+}) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gap: 14,
+        marginBottom: 18,
+        background: `linear-gradient(180deg, ${tone}0f, rgba(255,255,255,0.025))`,
+        border: `1px solid ${tone}26`,
+        borderRadius: r(20),
+        padding: '18px 18px 16px',
+        boxShadow: '0 14px 32px rgba(0,0,0,0.2)',
+      }}
+    >
+      <div>
+        <div style={{ color: tone, fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>
+          Clear next step
+        </div>
+        <div style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', letterSpacing: '-0.02em', marginBottom: 4 }}>
+          {title}
+        </div>
+        <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.65, maxWidth: 760 }}>
+          {detail}
+        </div>
+      </div>
+      <div className="sp-clarity-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
+        {items.map((item) => (
+          <div key={item.label} style={{ background: DS.card2, border: `1px solid ${DS.border}`, borderRadius: r(14), padding: '12px 14px' }}>
+            <div style={{ color: tone, fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>
+              {item.label}
+            </div>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem', lineHeight: 1.5 }}>
+              {item.value}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export const SharedPrimitives = {
   SharedCoreExperienceBanner,
   SharedPageShell,
@@ -272,3 +324,4 @@ export const SharedPrimitives = {
   sharedMidpoint,
   sharedResolveCityCoord,
 };
+

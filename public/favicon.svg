@@ -1,78 +1,82 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <svg x="50" y="90" width="412" height="320"
+<svg
   xmlns="http://www.w3.org/2000/svg"
-  viewBox="48 50 464 360"
+  viewBox="106 100 300 330"
   fill="none"
   role="img"
   aria-labelledby="title desc"
   preserveAspectRatio="xMidYMid meet"
 >
-  <title id="title">Wasel W logo</title>
-  <desc id="desc">A standalone Wasel W mark using the current blue, green, and lime brand gradients on a transparent background.</desc>
+  <title id="title">Wasel app icon</title>
+  <desc id="desc">The current Wasel location pin mark.</desc>
   <defs>
-    <linearGradient id="leftWing" x1="98" y1="112" x2="206" y2="324" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#70D1EE" />
-      <stop offset="0.44" stop-color="#49B9E5" />
-      <stop offset="1" stop-color="#2F8ECE" />
+    <linearGradient id="wasel-pin" x1="156" y1="136" x2="344" y2="372" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFE898" />
+      <stop offset="0.32" stop-color="#F9D967" />
+      <stop offset="0.7" stop-color="#F0BF3A" />
+      <stop offset="1" stop-color="#D89A1A" />
     </linearGradient>
-    <linearGradient id="centerBlue" x1="178" y1="322" x2="272" y2="108" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#1A4C9C" />
-      <stop offset="0.52" stop-color="#2B8BC8" />
-      <stop offset="1" stop-color="#5EC4EA" />
+    <linearGradient id="wasel-pin-edge" x1="168" y1="144" x2="326" y2="356" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF6C8" />
+      <stop offset="1" stop-color="#E9B32F" />
     </linearGradient>
-    <linearGradient id="centerGreen" x1="250" y1="108" x2="348" y2="322" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#A6D910" />
-      <stop offset="0.46" stop-color="#83C80A" />
-      <stop offset="1" stop-color="#2E7A13" />
-    </linearGradient>
-    <linearGradient id="rightWing" x1="330" y1="322" x2="428" y2="110" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#2F8ECE" />
-      <stop offset="0.38" stop-color="#49B9E5" />
-      <stop offset="0.76" stop-color="#82C50C" />
-      <stop offset="1" stop-color="#AEDD0A" />
-    </linearGradient>
-    <linearGradient id="innerShade" x1="196" y1="320" x2="316" y2="152" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#173E7E" stop-opacity="0.22" />
-      <stop offset="0.5" stop-color="#173E7E" stop-opacity="0.08" />
-      <stop offset="1" stop-color="#173E7E" stop-opacity="0" />
-    </linearGradient>
-    <clipPath id="innerClip">
-      <path d="M176 312L256 116L338 312H176Z" />
-    </clipPath>
+    <filter id="wasel-pin-glow" x="106" y="100" width="300" height="330" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="18" flood-color="#F4C651" flood-opacity="0.38" />
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#0A101A" flood-opacity="0.28" />
+    </filter>
   </defs>
 
-  <path
-    d="M110 120L176 310"
-    stroke="url(#leftWing)"
-    stroke-width="68"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-  <path
-    d="M176 310L256 114"
-    stroke="url(#centerBlue)"
-    stroke-width="68"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-  <path
-    d="M256 114L338 310"
-    stroke="url(#centerGreen)"
-    stroke-width="68"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-  <path
-    d="M338 310L414 120"
-    stroke="url(#rightWing)"
-    stroke-width="68"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-
-  <g clip-path="url(#innerClip)">
-    <path d="M176 312L256 114L338 312L298 312L252 176L214 312Z" fill="url(#innerShade)" />
+  <g opacity="0.22" stroke="#061323" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M92 302C136 282 155 252 195 248C225 245 249 254 282 240C314 226 328 196 370 178" stroke-width="12" />
+    <path d="M120 198C140 197 154 205 174 221C190 234 203 239 221 238" stroke-width="8" />
+    <path d="M286 214C304 209 320 210 339 218C352 223 365 233 384 251" stroke-width="8" />
+    <path d="M228 258L251 304" stroke-width="6" />
+    <path d="M286 240L328 240" stroke-width="6" />
+    <path d="M260 198L268 140" stroke-width="8" />
   </g>
-</svg>
 
+  <g opacity="0.36">
+    <circle cx="205" cy="248" r="8" fill="#FFF3C6" />
+    <circle cx="256" cy="242" r="9" fill="#FFF3C6" />
+    <circle cx="294" cy="278" r="8" fill="#FFF3C6" />
+    <circle cx="332" cy="214" r="7" fill="#FFF3C6" />
+    <circle cx="370" cy="178" r="6" fill="#FFF3C6" />
+  </g>
+
+  <g filter="url(#wasel-pin-glow)">
+    <path
+      d="M256 118C186.964 118 131 173.964 131 243C131 270.122 139.949 295.555 156.121 317.131L242.949 401.167C249.914 407.908 260.086 407.908 267.051 401.167L353.879 317.131C370.051 295.555 379 270.122 379 243C379 173.964 323.036 118 256 118Z"
+      fill="url(#wasel-pin)"
+    />
+    <path
+      d="M256 118C186.964 118 131 173.964 131 243C131 270.122 139.949 295.555 156.121 317.131L242.949 401.167C249.914 407.908 260.086 407.908 267.051 401.167L353.879 317.131C370.051 295.555 379 270.122 379 243C379 173.964 323.036 118 256 118Z"
+      stroke="url(#wasel-pin-edge)"
+      stroke-width="5"
+    />
+  </g>
+
+  <clipPath id="wasel-pin-clip">
+    <path d="M256 130C193.592 130 143 180.592 143 243C143 267.57 151.116 290.594 165.808 310.123L244.338 386.507C250.422 392.424 259.578 392.424 265.662 386.507L344.192 310.123C358.884 290.594 367 267.57 367 243C367 180.592 317.408 130 256 130Z" />
+  </clipPath>
+
+  <g clip-path="url(#wasel-pin-clip)">
+    <path d="M142 242C178 237 198 219 223 221C244 223 259 237 285 231C310 225 322 201 367 182" stroke="#0A1830" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M148 253C180 247 198 228 223 230C243 232 259 245 286 240C311 235 325 212 361 197" stroke="#E8D7A8" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.82" />
+
+    <path d="M186 206C201 211 212 223 224 240" stroke="#0A1830" stroke-width="6" stroke-linecap="round" />
+    <path d="M277 239L278 304" stroke="#0A1830" stroke-width="7" stroke-linecap="round" />
+    <path d="M224 240L212 290" stroke="#0A1830" stroke-width="6" stroke-linecap="round" />
+    <path d="M279 304C303 301 315 309 330 329" stroke="#0A1830" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+
+    <path d="M185 210C200 214 210 226 219 241" stroke="#F6E8B4" stroke-width="2.8" stroke-linecap="round" opacity="0.86" />
+    <path d="M278 240L279 301" stroke="#F6E8B4" stroke-width="2.6" stroke-linecap="round" opacity="0.82" />
+    <path d="M225 241L214 286" stroke="#F6E8B4" stroke-width="2.4" stroke-linecap="round" opacity="0.82" />
+
+    <circle cx="223" cy="240" r="7.5" fill="#FFF3C6" stroke="#0A1830" stroke-width="3" />
+    <circle cx="278" cy="239" r="7.5" fill="#FFF3C6" stroke="#0A1830" stroke-width="3" />
+    <circle cx="279" cy="301" r="7.5" fill="#FFF3C6" stroke="#0A1830" stroke-width="3" />
+    <circle cx="331" cy="210" r="6" fill="#FFF3C6" stroke="#C79B31" stroke-width="2.5" opacity="0.95" />
+    <circle cx="362" cy="194" r="5" fill="#FFF3C6" stroke="#C79B31" stroke-width="2" opacity="0.92" />
+    <circle cx="189" cy="210" r="5.5" fill="#FFF3C6" stroke="#C79B31" stroke-width="2" opacity="0.94" />
+    <circle cx="206" cy="272" r="6" fill="#FFF3C6" opacity="0.65" />
+  </g>
 </svg>

@@ -14,6 +14,22 @@ describe('dataIntegrity', () => {
     expect(result.success).toBe(true);
   });
 
+  it('canonicalizes local and 00-prefixed phone updates before profile validation', () => {
+    const localResult = profileUpdatePayloadSchema.safeParse({
+      phone_number: '0792084333',
+    });
+    const internationalPrefixResult = profileUpdatePayloadSchema.safeParse({
+      phone_number: '00962 79 208 4333',
+    });
+
+    expect(localResult.success).toBe(true);
+    expect(localResult.success && localResult.data.phone_number).toBe('+962792084333');
+    expect(internationalPrefixResult.success).toBe(true);
+    expect(internationalPrefixResult.success && internationalPrefixResult.data.phone_number).toBe(
+      '+962792084333',
+    );
+  });
+
   it('rejects malformed trip writes before they hit the API or database', () => {
     const result = tripCreatePayloadSchema.safeParse({
       from: 'Amman',

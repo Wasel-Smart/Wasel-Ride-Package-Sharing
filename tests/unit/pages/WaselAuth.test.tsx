@@ -82,8 +82,18 @@ vi.mock('@/components/wasel-ui/WaselCard', () => ({
 }));
 
 vi.mock('@/components/wasel-ui/WaselButton', () => ({
-  WaselButton: ({ children, onClick, disabled }: PropsWithChildren<{ onClick?: () => void; disabled?: boolean }>) => (
-    <button type="button" onClick={onClick} disabled={disabled}>
+  WaselButton: ({
+    children,
+    type,
+    onClick,
+    disabled,
+    ...props
+  }: PropsWithChildren<{
+    type?: 'button' | 'submit' | 'reset';
+    onClick?: () => void;
+    disabled?: boolean;
+  } & Record<string, unknown>>) => (
+    <button type={type} onClick={onClick} disabled={disabled} {...props}>
       {children}
     </button>
   ),
@@ -144,7 +154,7 @@ describe('WaselAuth', () => {
     fireEvent.change(screen.getByLabelText('Email address'), { target: { value: 'laith@example.com' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: '12345678' } });
     fireEvent.change(screen.getByLabelText('Phone number'), { target: { value: '+962792084333' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit sign up' }));
 
     await waitFor(() => {
       expect(screen.getByText(/Choose a stronger password/i)).toBeInTheDocument();
@@ -152,18 +162,22 @@ describe('WaselAuth', () => {
     expect(mockRegister).not.toHaveBeenCalled();
   });
 
-  it('blocks signup when the phone number is missing', async () => {
+  it('allows signup without a phone number', async () => {
     render(<WaselAuth />);
 
     fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Laith Nassar' } });
     fireEvent.change(screen.getByLabelText('Email address'), { target: { value: 'laith@example.com' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'StrongPass1!' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit sign up' }));
 
     await waitFor(() => {
-      expect(screen.getByText('Please enter your phone number.')).toBeInTheDocument();
+      expect(mockRegister).toHaveBeenCalledWith(
+        'Laith Nassar',
+        'laith@example.com',
+        'StrongPass1!',
+        undefined,
+      );
     });
-    expect(mockRegister).not.toHaveBeenCalled();
   });
 
   it('submits signup with the full backend payload once inputs are valid', async () => {
@@ -173,7 +187,7 @@ describe('WaselAuth', () => {
     fireEvent.change(screen.getByLabelText('Email address'), { target: { value: 'laith@example.com' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'StrongPass1!' } });
     fireEvent.change(screen.getByLabelText('Phone number'), { target: { value: '+962792084333' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit sign up' }));
 
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledWith(
@@ -189,10 +203,14 @@ describe('WaselAuth', () => {
     render(<WaselAuth />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Google' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Facebook' }));
 
     await waitFor(() => {
       expect(mockSignInWithGoogle).toHaveBeenCalledWith('/app/find-ride');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Facebook' }));
+
+    await waitFor(() => {
       expect(mockSignInWithFacebook).toHaveBeenCalledWith('/app/find-ride');
     });
   });

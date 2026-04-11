@@ -112,8 +112,8 @@ export function Protected({ children }: { children: ReactNode }) {
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', minHeight: '60vh', gap: 16, background: DS.bg,
       }}>
-        <div style={{ color: '#fff', fontWeight: 800, fontFamily: DS.F }}>Checking your Wasel session...</div>
-        <div style={{ color: DS.sub, fontFamily: DS.F }}>We are confirming account access before opening this protected flow.</div>
+        <div style={{ color: '#fff', fontWeight: 800, fontFamily: DS.F }}>Checking access...</div>
+        <div style={{ color: DS.sub, fontFamily: DS.F }}>Please wait.</div>
       </div>
     );
   }
@@ -176,6 +176,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           .pkg-send-form-grid { grid-template-columns:1fr !important; }
           .pkg-send-steps-grid { grid-template-columns:1fr !important; }
           .sp-shell-grid { opacity: 0.12 !important; }
+          .sp-clarity-grid { grid-template-columns:1fr !important; }
         }
         @media(max-width:480px){
           .sp-4col { grid-template-columns:1fr !important; }
@@ -253,21 +254,14 @@ export function SectionHead({
             {emoji}
           </div>
           <div>
-            <div style={{ color, fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>
-              {ar ? 'المهمة الأساسية' : 'Primary task'}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <h1 style={{ fontSize: '1.62rem', fontWeight: 950, color: '#fff', margin: 0, letterSpacing: '-0.03em' }}>{title}</h1>
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-              {titleAr && (
-                <p dir="rtl" style={{
-                  fontSize: '0.86rem', fontWeight: 800, color, margin: 0,
-                  fontFamily: "'Cairo',sans-serif",
-                }}>{titleAr}</p>
-              )}
-              {sub && <span style={{ color: 'rgba(239,246,255,0.72)', fontSize: '0.88rem', lineHeight: 1.6, maxWidth: 620 }}>{sub}</span>}
-            </div>
+            <h1 style={{ fontSize: '1.62rem', fontWeight: 950, color: '#fff', margin: 0, letterSpacing: '-0.03em' }}>
+              {ar && titleAr ? titleAr : title}
+            </h1>
+            {sub ? (
+              <div style={{ marginTop: 6, color: 'rgba(239,246,255,0.72)', fontSize: '0.88rem', lineHeight: 1.6, maxWidth: 620 }}>
+                {sub}
+              </div>
+            ) : null}
           </div>
         </div>
         {action && (
@@ -301,10 +295,61 @@ export function CoreExperienceBanner({
     }}>
       <div>
         <div style={{ color: tone, fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>
-          Quick brief
+          Brief
         </div>
         <div style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', marginBottom: 4, letterSpacing: '-0.02em' }}>{title}</div>
         <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.65, maxWidth: 760 }}>{detail}</div>
+      </div>
+    </div>
+  );
+}
+
+export function ClarityBand({
+  title,
+  detail,
+  items,
+  tone = DS.cyan,
+}: {
+  title: string;
+  detail: string;
+  items: Array<{ label: string; value: string }>;
+  tone?: string;
+}) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gap: 14,
+        marginBottom: 18,
+        background: `linear-gradient(180deg, ${tone}0f, rgba(255,255,255,0.025))`,
+        border: `1px solid ${tone}26`,
+        borderRadius: r(20),
+        padding: '18px 18px 16px',
+        boxShadow: '0 14px 32px rgba(0,0,0,0.2)',
+      }}
+    >
+      <div>
+        <div style={{ color: tone, fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>
+          Next step
+        </div>
+        <div style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', letterSpacing: '-0.02em', marginBottom: 4 }}>
+          {title}
+        </div>
+        <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.65, maxWidth: 760 }}>
+          {detail}
+        </div>
+      </div>
+      <div className="sp-clarity-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
+        {items.map((item) => (
+          <div key={item.label} style={{ background: DS.card2, border: `1px solid ${DS.border}`, borderRadius: r(14), padding: '12px 14px' }}>
+            <div style={{ color: tone, fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>
+              {item.label}
+            </div>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem', lineHeight: 1.5 }}>
+              {item.value}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

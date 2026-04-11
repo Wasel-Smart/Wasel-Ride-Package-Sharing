@@ -112,7 +112,7 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
     setFrom(''); setTo(''); setDate(today()); setSeats(1);
     y.set(0);
     setTimeout(() => fromRef.current?.focus(), 300);
-  }, [open]);
+  }, [open, y]);
 
   const saveRecent = useCallback((params: SearchParams) => {
     const entry: RecentSearch = { from: params.from, to: params.to, date: params.date };

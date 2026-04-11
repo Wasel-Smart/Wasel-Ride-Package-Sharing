@@ -1,46 +1,56 @@
 /**
- * Structured Wasel tokens for documentation, charts, and design-system consumers.
+ * Wasel design tokens — unified gold-navy identity.
  *
- * These stay in sync with `utils/wasel-ds.ts` but preserve the original export
- * surface used around the codebase.
+ * SINGLE SOURCE OF TRUTH: All values in sync with brand-tokens.json and
+ * brand-theme.css CSS variables. Do not add colours here that differ from
+ * brand-theme.css :root definitions.
+ *
+ * Brand palette:
+ *   Primary action  — #F4C651  (solar gold)
+ *   Primary deep    — #D59E26  (burnished gold)
+ *   Primary light   — #FFF0C1  (champagne)
+ *   Accent bronze   — #C5831F
+ *   Backgrounds     — deep navy #07111B → surface #101D2C
  */
 
 export const WaselColors = {
-  spaceDeep: '#081C36',
-  spaceCard: '#0D284B',
-  space1: '#0B2341',
-  space2: '#102C4D',
-  space3: '#16385D',
-  space4: '#214A75',
+  // Surfaces
+  spaceDeep: '#07111B',
+  spaceCard: '#101D2C',
+  space1: '#0C1724',
+  space2: '#101D2C',
+  space3: '#172738',
+  space4: '#203447',
 
-  cyan: '#47B7E6',
-  cyanLight: '#72D0EF',
-  gold: '#A8D614',
-  goldLight: '#C9E96B',
-  green: '#6BB515',
-  greenDark: '#4A910E',
-  lime: '#C9E96B',
+  // Brand primaries (gold)
+  cyan: '#F4C651',        // canonical primary — named cyan for legacy compat
+  cyanLight: '#FFF0C1',   // champagne highlight
+  gold: '#D59E26',        // deep gold
+  goldLight: '#FFE8A0',   // light gold
+  green: '#FFF0C1',       // cream / champagne alias
+  greenDark: '#D59E26',   // deep gold alias
+  lime: '#FFE8A0',        // warm lime alias
 
-  teal: '#72D0EF',
-  bronze: '#A8D614',
-  orange: '#C9E96B',
-  borderDark: 'rgba(93,150,210,0.2)',
-  navyBase: '#081C36',
-  navyCard: '#0D284B',
+  teal: '#FFF0C1',        // champagne alias
+  bronze: '#C5831F',      // accent bronze
+  orange: '#DB9F2C',      // warm accent
+  borderDark: 'rgba(7,15,25,0.72)',
+  navyBase: '#07111B',
+  navyCard: '#101D2C',
 
-  textPrimary: '#EEF5FF',
-  textSecondary: 'rgba(238,245,255,0.84)',
-  textMuted: 'rgba(171,194,221,0.66)',
+  textPrimary: '#F8EFD6',
+  textSecondary: 'rgba(228,214,180,0.82)',
+  textMuted: 'rgba(216,198,160,0.58)',
 
-  success: '#6BB515',
-  warning: '#FFD84A',
+  success: '#FFF0C1',
+  warning: '#FFE08A',
   error: '#FF646A',
-  info: '#47B7E6',
+  info: '#FFE8A0',
 
-  cyanGlow: 'rgba(71,183,230,0.18)',
-  goldGlow: 'rgba(168,214,20,0.16)',
-  greenGlow: 'rgba(107,181,21,0.18)',
-  glassBg: 'rgba(13,40,75,0.84)',
+  cyanGlow: 'rgba(244,198,81,0.2)',
+  goldGlow: 'rgba(213,158,38,0.18)',
+  greenGlow: 'rgba(255,240,193,0.18)',
+  glassBg: 'rgba(12,23,36,0.84)',
 } as const;
 
 export const WaselSpacing = {
@@ -92,10 +102,10 @@ export const WaselShadows = {
   sm: '0 8px 20px rgba(4,16,32,0.22)',
   base: '0 18px 44px rgba(4,16,32,0.3)',
   lg: '0 30px 72px rgba(4,16,32,0.38)',
-  glow: '0 18px 50px rgba(71,183,230,0.2)',
-  glowGold: '0 18px 50px rgba(168,214,20,0.18)',
-  glowGreen: '0 18px 50px rgba(107,181,21,0.22)',
-  cyanBorder: '0 0 0 1px rgba(93,150,210,0.18), 0 18px 44px rgba(4,16,32,0.3)',
+  glow: '0 18px 50px rgba(30,168,231,0.2)',
+  glowGold: '0 18px 50px rgba(243,178,58,0.18)',
+  glowGreen: '0 18px 50px rgba(255,207,99,0.22)',
+  cyanBorder: '0 0 0 1px rgba(76,123,170,0.18), 0 18px 44px rgba(4,16,32,0.3)',
 } as const;
 
 export const WaselZIndex = {
@@ -116,26 +126,26 @@ export const WaselTransitions = {
 
 export const WaselGlass = {
   card: {
-    background: 'rgba(13,40,75,0.84)',
+    background: 'rgba(16,34,53,0.84)',
     backdropFilter: 'blur(18px)',
-    border: '1px solid rgba(93,150,210,0.16)',
+    border: '1px solid rgba(76,123,170,0.16)',
   },
   overlay: {
     background: 'rgba(3,12,20,0.84)',
     backdropFilter: 'blur(28px)',
   },
   panel: {
-    background: 'rgba(10,33,60,0.94)',
+    background: 'rgba(11,25,41,0.94)',
     backdropFilter: 'blur(28px)',
-    border: '1px solid rgba(93,150,210,0.12)',
+    border: '1px solid rgba(76,123,170,0.12)',
   },
 } as const;
 
 export const WaselGradients = {
-  primaryBtn: 'linear-gradient(135deg, #72D0EF 0%, #2F92CF 42%, #8BC61A 100%)',
-  accentBtn: 'linear-gradient(135deg, #6BB515 0%, #A8D614 100%)',
-  successBtn: 'linear-gradient(135deg, #47B7E6 0%, #6BB515 100%)',
+  primaryBtn: 'linear-gradient(135deg, #FFF0C1 0%, #F4C651 44%, #C5831F 100%)',
+  accentBtn: 'linear-gradient(135deg, #D59E26 0%, #FFE8A0 100%)',
+  successBtn: 'linear-gradient(135deg, #F4C651 0%, #FFF0C1 100%)',
   heroCard:
-    'linear-gradient(135deg, rgba(71,183,230,0.14) 0%, rgba(114,208,239,0.08) 56%, rgba(168,214,20,0.08) 100%)',
-  constellation: 'linear-gradient(135deg, #47B7E6 0%, #72D0EF 48%, #A8D614 100%)',
+    'linear-gradient(135deg, rgba(244,198,81,0.14) 0%, rgba(255,240,193,0.08) 56%, rgba(197,131,31,0.08) 100%)',
+  constellation: 'linear-gradient(135deg, #FFF0C1 0%, #F4C651 44%, #D59E26 100%)',
 } as const;

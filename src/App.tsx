@@ -13,7 +13,10 @@ import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { WaselLogo } from './components/wasel-ds/WaselLogo';
 import { PrivacyConsentBanner } from './components/PrivacyConsentBanner';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
+import monitoring, { initSentry } from './utils/monitoring';
+import { detectLongTasks, initPerformanceMonitoring } from './utils/performance';
 import { waselRouter } from './router';
+import { probeBackendHealth, startAvailabilityPolling, warmUpServer } from './services/core';
 import { buildAuthPagePath } from './utils/authFlow';
 import { shouldIgnoreError, formatErrorMessage } from './utils/errors';
 import { getInitialLanguage } from './utils/locale';
@@ -47,13 +50,10 @@ class AppErrorBoundary extends Component<{
 
     const message = error instanceof Error ? error.message : String(error);
     console.error('[Wasel ErrorBoundary]', message, info?.componentStack ?? '');
-
-    void import('./utils/monitoring').then((monitoring) => {
-      monitoring.default.captureException(error, {
-        contexts: {
-          react: { componentStack: info?.componentStack ?? undefined },
-        },
-      });
+    monitoring.captureException(error, {
+      contexts: {
+        react: { componentStack: info?.componentStack ?? undefined },
+      },
     });
   }
 
@@ -74,8 +74,8 @@ class AppErrorBoundary extends Component<{
           fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
           background: `
             ${isLight
-              ? 'radial-gradient(circle at 16% 18%, rgba(85,233,255,0.10), transparent 24%), radial-gradient(circle at 82% 12%, rgba(245,177,30,0.08), transparent 20%), radial-gradient(circle at 78% 72%, rgba(51,232,95,0.06), transparent 20%), #f6fbff'
-              : 'radial-gradient(circle at 16% 18%, rgba(85,233,255,0.12), transparent 24%), radial-gradient(circle at 82% 12%, rgba(245,177,30,0.12), transparent 20%), radial-gradient(circle at 78% 72%, rgba(51,232,95,0.08), transparent 20%), #040C18'
+              ? 'radial-gradient(circle at 16% 18%, rgba(255,232,159,0.12), transparent 24%), radial-gradient(circle at 82% 12%, rgba(215,163,58,0.08), transparent 20%), radial-gradient(circle at 78% 72%, rgba(255,240,193,0.08), transparent 20%), #fffaf0'
+              : 'radial-gradient(circle at 16% 18%, rgba(255,232,159,0.12), transparent 24%), radial-gradient(circle at 82% 12%, rgba(244,198,81,0.12), transparent 20%), radial-gradient(circle at 78% 72%, rgba(255,240,193,0.08), transparent 20%), #050c15'
             }
           `,
           color: isLight ? '#10243d' : '#EFF6FF',
@@ -93,7 +93,7 @@ class AppErrorBoundary extends Component<{
             background: isLight
               ? 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.94)), rgba(255,255,255,0.92)'
               : 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), rgba(10,22,40,0.94)',
-            border: `1px solid ${isLight ? 'rgba(12,110,168,0.12)' : 'rgba(85,233,255,0.14)'}`,
+            border: `1px solid ${isLight ? 'rgba(215,163,58,0.12)' : 'rgba(244,198,81,0.14)'}`,
             boxShadow: isLight ? '0 28px 70px rgba(16,36,61,0.14)' : '0 28px 70px rgba(0,0,0,0.42)',
             backdropFilter: 'blur(18px)',
           }}
@@ -107,7 +107,7 @@ class AppErrorBoundary extends Component<{
               marginBottom: 12,
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
-              color: '#55E9FF',
+              color: '#DB9F2C',
               fontWeight: 800,
             }}
           >
@@ -136,8 +136,8 @@ class AppErrorBoundary extends Component<{
                 padding: '0 22px',
                 borderRadius: 14,
                 border: 'none',
-                background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 55%, #18D7C8 100%)',
-                color: '#041018',
+                background: 'linear-gradient(135deg, #FFF0C1 0%, #F4C651 44%, #C5831F 100%)',
+                color: '#120D04',
                 fontWeight: 800,
                 cursor: 'pointer',
                 fontSize: '0.92rem',
@@ -155,8 +155,8 @@ class AppErrorBoundary extends Component<{
                 minHeight: 48,
                 padding: '0 22px',
                 borderRadius: 14,
-                border: '1px solid rgba(85,233,255,0.18)',
-                background: isLight ? 'rgba(12,110,168,0.04)' : 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(244,198,81,0.18)',
+                background: isLight ? 'rgba(215,163,58,0.04)' : 'rgba(255,247,229,0.03)',
                 color: isLight ? '#10243d' : '#EFF6FF',
                 fontWeight: 800,
                 cursor: 'pointer',
@@ -175,9 +175,9 @@ class AppErrorBoundary extends Component<{
                 minHeight: 48,
                 padding: '0 22px',
                 borderRadius: 14,
-                border: '1px solid rgba(85,233,255,0.18)',
+                border: '1px solid rgba(244,198,81,0.18)',
                 background: 'transparent',
-                color: '#55E9FF',
+                color: '#F4C651',
                 fontWeight: 800,
                 cursor: 'pointer',
                 fontSize: '0.92rem',
@@ -200,11 +200,6 @@ function AppRuntimeCoordinator() {
     const isPublicEntryPath = currentPath === '/';
 
     const cancelMonitoringSetup = scheduleDeferredTask(async () => {
-      const [{ initSentry }, { detectLongTasks, initPerformanceMonitoring }] = await Promise.all([
-        import('./utils/monitoring'),
-        import('./utils/performance'),
-      ]);
-
       if (disposed) return;
 
       initSentry();
@@ -226,12 +221,11 @@ function AppRuntimeCoordinator() {
     const isPublicEntryPath = currentPath === '/';
 
     const cancelWarmup = scheduleDeferredTask(async () => {
-      const core = await import('./services/core');
       if (disposed) return;
 
-      stopPolling = core.startAvailabilityPolling(120_000);
-      await core.warmUpServer();
-      await core.probeBackendHealth();
+      stopPolling = startAvailabilityPolling(120_000);
+      await warmUpServer();
+      await probeBackendHealth();
     }, isPublicEntryPath ? 2_200 : 900);
 
     return () => {
@@ -249,10 +243,11 @@ function AppRuntimeCoordinator() {
       const online = typeof navigator === 'undefined' ? true : navigator.onLine;
       onlineManager.setOnline(online);
       if (online) {
-        void import('./services/core').then((core) => {
-          if (!disposed) return core.probeBackendHealth();
-          return undefined;
-        });
+        void (async () => {
+          if (!disposed) {
+            await probeBackendHealth();
+          }
+        })();
       }
     };
 
@@ -316,7 +311,7 @@ function AppShell({
               toastOptions={{
                 style: {
                   background: resolvedTheme === 'light' ? 'rgba(255,255,255,0.96)' : '#0A1628',
-                  border: `1px solid ${resolvedTheme === 'light' ? 'rgba(12,110,168,0.16)' : 'rgba(71,183,230,0.25)'}`,
+                  border: `1px solid ${resolvedTheme === 'light' ? 'rgba(215,163,58,0.16)' : 'rgba(244,198,81,0.22)'}`,
                   color: resolvedTheme === 'light' ? '#10243d' : '#EFF6FF',
                   boxShadow: resolvedTheme === 'light' ? '0 18px 40px rgba(16,36,61,0.14)' : '0 18px 44px rgba(1,10,18,0.28)',
                   fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",

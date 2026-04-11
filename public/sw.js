@@ -1,39 +1,37 @@
-const CACHE_VERSION = 'wasel-v9-logo-rollout';
+// ─── Wasel Service Worker ─────────────────────────────────────────────────────
+// Strategy: precache shell + assets; network-first for navigation;
+//           cache-first for images/fonts; stale-while-revalidate for scripts.
+// Push:     handles Web Push notifications for trip and package events.
+// Sync:     background-sync queue for offline booking actions.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CACHE_VERSION = 'wasel-v10-20260411';
 const PRECACHE = `${CACHE_VERSION}-precache`;
-const RUNTIME = `${CACHE_VERSION}-runtime`;
+const RUNTIME  = `${CACHE_VERSION}-runtime`;
 
 const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/offline.html',
   '/manifest.json',
-  '/manifest.json?v=20260410b',
   '/favicon.svg',
-  '/favicon.svg?v=20260410b',
   '/favicon-16x16.png',
-  '/favicon-16x16.png?v=20260410b',
   '/favicon-32x32.png',
-  '/favicon-32x32.png?v=20260410b',
   '/apple-touch-icon.png',
-  '/apple-touch-icon.png?v=20260410b',
   '/icon-192.png',
-  '/icon-192.png?v=20260410b',
   '/icon-512.png',
-  '/icon-512.png?v=20260410b',
   '/brand/wasel-mark-clean.svg',
-  '/brand/wasel-mark-clean.svg?v=20260410b',
   '/brand/wasel-mark.svg',
   '/brand/wasel-mark-clean-dark.svg',
   '/brand/wasel-mark-clean-light.svg',
   '/brand/og-social-card.png',
-  '/brand/og-social-card.png?v=20260410b',
   '/brand/wasellogo-64.png',
   '/brand/wasellogo-96.png',
   '/brand/wasellogo-160.png',
-  '/brand/wasellogo-160.png?v=20260410b',
   '/brand/wasellogo-280.png',
 ];
 
+// ─── Install ─────────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
@@ -43,6 +41,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
+// ─── Activate ────────────────────────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
@@ -58,6 +57,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// ─── Fetch ────────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
@@ -76,13 +76,120 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (request.destination === 'script' || request.destination === 'style' || request.destination === 'worker') {
+  if (
+    request.destination === 'script' ||
+    request.destination === 'style' ||
+    request.destination === 'worker'
+  ) {
     event.respondWith(staleWhileRevalidate(request));
     return;
   }
 
   event.respondWith(networkFirst(request));
 });
+
+// ─── Push notifications ───────────────────────────────────────────────────────
+self.addEventListener('push', (event) => {
+  let data = { title: 'Wasel', body: 'You have a new update.', tag: 'wasel-default', url: '/' };
+
+  try {
+    if (event.data) {
+      const parsed = event.data.json();
+      data = { ...data, ...parsed };
+    }
+  } catch {
+    if (event.data) {
+      data.body = event.data.text();
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: '/icon-192.png',
+    badge: '/favicon-32x32.png',
+    tag: data.tag ?? 'wasel-notification',
+    renotify: false,
+    requireInteraction: false,
+    silent: false,
+    data: { url: data.url ?? '/' },
+    actions: data.actions ?? [],
+  };
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+
+// ─── Notification click ───────────────────────────────────────────────────────
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const targetUrl = event.notification.data?.url ?? '/';
+  const actionUrl = event.action ? (event.notification.data?.[event.action] ?? targetUrl) : targetUrl;
+  const absoluteUrl = new URL(actionUrl, self.location.origin).href;
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clients) => {
+        const existingClient = clients.find(
+          (c) => c.url === absoluteUrl && 'focus' in c,
+        );
+
+        if (existingClient) {
+          return existingClient.focus();
+        }
+
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(absoluteUrl);
+        }
+      }),
+  );
+});
+
+// ─── Background sync ─────────────────────────────────────────────────────────
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'wasel-offline-queue') {
+    event.waitUntil(drainOfflineQueue());
+  }
+});
+
+async function drainOfflineQueue() {
+  try {
+    const cache = await caches.open(RUNTIME);
+    const keys = await cache.keys();
+    const queueKeys = keys.filter((req) => req.url.includes('__offline-queue__'));
+
+    await Promise.allSettled(
+      queueKeys.map(async (req) => {
+        const cached = await cache.match(req);
+        if (!cached) return;
+
+        const body = await cached.text();
+        const { url, method, headers: hdrs, payload } = JSON.parse(body);
+
+        const response = await fetch(url, {
+          method: method ?? 'POST',
+          headers: { 'Content-Type': 'application/json', ...hdrs },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          await cache.delete(req);
+        }
+      }),
+    );
+  } catch {
+    /* Silently retry on next sync */
+  }
+}
+
+// ─── Message handler ─────────────────────────────────────────────────────────
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// ─── Fetch strategies ─────────────────────────────────────────────────────────
 
 async function handleNavigation(request) {
   try {
@@ -148,11 +255,5 @@ async function staleWhileRevalidate(request) {
     })
     .catch(() => null);
 
-  return cached || networkPromise || new Response('Unavailable', { status: 503, statusText: 'Unavailable' });
+  return cached ?? networkPromise ?? new Response('Unavailable', { status: 503, statusText: 'Unavailable' });
 }
-
-self.addEventListener('message', (event) => {
-  if (event.data === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-});

@@ -16,6 +16,7 @@ import {
   type LogContext,
 } from './logging';
 import { redactSensitiveValue } from './redaction';
+import { omitUndefined } from './object';
 
 let sentryInitialized = false;
 
@@ -96,23 +97,29 @@ export function initSentry() {
 
   registerMonitoringSink({
     captureException: (error, context) => {
-      Sentry.captureException(error || new Error('Unknown error'), {
-        extra: redactContext(context),
-      });
+      Sentry.captureException(
+        error || new Error('Unknown error'),
+        omitUndefined({
+          extra: redactContext(context),
+        }),
+      );
     },
     captureMessage: (message, level, context) => {
-      Sentry.captureMessage(message, {
-        level,
-        extra: redactContext(context),
-      });
+      Sentry.captureMessage(
+        message,
+        omitUndefined({
+          level,
+          extra: redactContext(context),
+        }),
+      );
     },
     addBreadcrumb: (message, category, data) => {
-      Sentry.addBreadcrumb({
+      Sentry.addBreadcrumb(omitUndefined({
         message,
         category,
-        level: 'info',
+        level: 'info' as const,
         data: redactContext(data),
-      });
+      }));
     },
   });
 

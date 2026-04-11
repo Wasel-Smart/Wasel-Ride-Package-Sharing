@@ -16,6 +16,7 @@
  */
 
 import type { CountryCode } from './regionConfig';
+import { omitUndefined } from './object';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -318,14 +319,14 @@ export function checkPackageCompatibility(
 
   score = Math.max(0, score);
 
-  return {
+  return omitUndefined({
     compatible: blockers.length === 0,
     score,
     blockers,
     blockersAr,
     estimatedDeliveryTime: arrivesOnTime ? trip.estimatedArrivalTime : undefined,
     detourKm: 0, // Same route = no detour for package
-  };
+  }) as PackageCompatibilityResult;
 }
 
 // ─── Multi-Stop Route Optimization ───────────────────────────────────────────

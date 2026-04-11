@@ -143,8 +143,8 @@ export function PrivacyConsentBanner() {
           style={{
             width: '100%',
             maxWidth: 560,
-            background: 'var(--card, rgba(11,33,53,0.97))',
-            border: '1px solid var(--border, rgba(93,150,210,0.18))',
+            background: 'var(--card, rgba(15,26,38,0.97))',
+            border: '1px solid var(--border, rgba(244,198,81,0.18))',
             borderRadius: 20,
             boxShadow:
               'var(--wasel-shadow-lg, 0 24px 64px rgba(1,10,18,0.38))',
@@ -158,7 +158,7 @@ export function PrivacyConsentBanner() {
             style={{
               fontWeight: 800,
               fontSize: '0.9rem',
-              color: 'var(--foreground, #EDF7FF)',
+              color: 'var(--foreground, #F8EFD6)',
               margin: '0 0 6px',
               lineHeight: 1.4,
             }}
@@ -170,7 +170,7 @@ export function PrivacyConsentBanner() {
           <p
             style={{
               fontSize: '0.8rem',
-              color: 'var(--muted-foreground, rgba(153,184,210,0.82))',
+              color: 'var(--muted-foreground, rgba(228,214,180,0.82))',
               margin: '0 0 14px',
               lineHeight: 1.65,
             }}
@@ -179,7 +179,7 @@ export function PrivacyConsentBanner() {
             <a
               href="/app/privacy"
               style={{
-                color: 'var(--primary, #47B7E6)',
+                color: 'var(--primary, #F4C651)',
                 textDecoration: 'underline',
                 textUnderlineOffset: 2,
                 fontWeight: 600,
@@ -207,8 +207,8 @@ export function PrivacyConsentBanner() {
                 borderRadius: 12,
                 border: 'none',
                 background:
-                  'linear-gradient(135deg, var(--primary, #47B7E6) 0%, #1E5FAE 100%)',
-                color: 'var(--primary-foreground, #041521)',
+                  'linear-gradient(135deg, #FFF0C1 0%, var(--primary, #F4C651) 44%, #C5831F 100%)',
+                color: 'var(--primary-foreground, #120D04)',
                 fontWeight: 800,
                 fontSize: '0.84rem',
                 fontFamily: SHELL_FONT,
@@ -228,9 +228,9 @@ export function PrivacyConsentBanner() {
                 minHeight: 40,
                 padding: '0 22px',
                 borderRadius: 12,
-                border: '1px solid var(--border, rgba(93,150,210,0.18))',
+                border: '1px solid var(--border, rgba(244,198,81,0.18))',
                 background: 'transparent',
-                color: 'var(--foreground, #EDF7FF)',
+                color: 'var(--foreground, #F8EFD6)',
                 fontWeight: 700,
                 fontSize: '0.84rem',
                 fontFamily: SHELL_FONT,
@@ -239,7 +239,7 @@ export function PrivacyConsentBanner() {
               }}
               onMouseEnter={(e) =>
                 ((e.target as HTMLButtonElement).style.background =
-                  'rgba(255,255,255,0.05)')
+                  'rgba(255,247,229,0.05)')
               }
               onMouseLeave={(e) =>
                 ((e.target as HTMLButtonElement).style.background = 'transparent')

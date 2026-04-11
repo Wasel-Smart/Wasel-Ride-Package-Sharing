@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
+import { useSearchParams } from 'react-router';
 import {
   ArrowLeftRight,
   ArrowRight,
@@ -28,6 +29,7 @@ import {
 } from '../../utils/jordanLocations';
 import {
   CITIES,
+  ClarityBand,
   CoreExperienceBanner,
   DS,
   midpoint,
@@ -94,6 +96,7 @@ function getRouteStatus(route: BusRoute, tripDate: string, today: string) {
 
 export function BusPage() {
   const { user } = useLocalAuth();
+  const [searchParams] = useSearchParams();
   const [today] = useState(getTodayIsoDate);
   const [origin, setOrigin] = useState('Amman');
   const [destination, setDestination] = useState('Aqaba');
@@ -114,6 +117,18 @@ export function BusPage() {
   useEffect(() => {
     if (tripDate < today) setTripDate(today);
   }, [today, tripDate]);
+
+  useEffect(() => {
+    const queryFrom = searchParams.get('from');
+    const queryTo = searchParams.get('to');
+
+    if (queryFrom && CITIES.includes(queryFrom) && queryFrom !== origin) {
+      setOrigin(queryFrom);
+    }
+    if (queryTo && CITIES.includes(queryTo) && queryTo !== destination) {
+      setDestination(queryTo);
+    }
+  }, [destination, origin, searchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -173,6 +188,16 @@ export function BusPage() {
   const departureLabel = scheduleMode === 'depart-now' ? `Next departure today at ${selectedDeparture}` : `${tripDate} at ${selectedDeparture}`;
   const activeStatus = getRouteStatus(activeBus, tripDate, today);
   const fallbackBuses = busRoutes.filter((route) => route.id !== activeBus.id && route.seats > 0).slice(0, 2);
+  const bestFare = busRoutes.length ? Math.min(...busRoutes.map((route) => route.price)) : activeBus.price;
+  const networkBrief = exactRouteCount > 0
+    ? `${exactRouteCount} direct coach ${exactRouteCount === 1 ? 'departure is' : 'departures are'} visible for this corridor.`
+    : 'No direct coach is open yet, so Wasel is keeping the closest official alternatives visible.';
+  const corridorSupport = routeEndpointsAreDistinct(origin, destination)
+    ? `${operatorCount} operators are contributing inventory across ${busRoutes.length} visible departures.`
+    : 'Choose two different cities to unlock the full corridor view.';
+  const bookingSignal = activeBus.seats === 0
+    ? 'This departure is full, but the same corridor filters stay active while you switch to another coach.'
+    : `${activeBus.seats} seats are open on the selected coach and the departure plan stays linked to one ticket flow.`;
 
   useEffect(() => {
     setPassengers((value) => (activeBus.seats > 0 ? Math.min(value, activeBus.seats) : 1));
@@ -218,12 +243,89 @@ export function BusPage() {
   return (
     <Protected>
       <PageShell>
-        <SectionHead emoji="??" title="Wasel Bus" sub="Official Jordan intercity schedules, route-aware booking, and provider-backed fare visibility." color={DS.green} />
+        <SectionHead emoji="🚌" title="Wasel Bus" sub="Official Jordan intercity schedules, route-aware booking, and provider-backed fare visibility." color={DS.green} />
         <CoreExperienceBanner title="Jordan-wide bus schedules with provider-backed fares" detail="Wasel Bus now uses official intercity coach schedules as the baseline network across Jordan, while still allowing live inventory to take over when a real bus feed is available." tone={DS.green} />
+        <ClarityBand
+          title="Choose the corridor, lock the departure, then reserve one clear seat plan."
+          detail="The bus flow now follows the same product rhythm as the rest of Wasel: start with the route, read live or official schedule confidence, and commit only when the operator, fare, and boarding stop are all visible."
+          tone={DS.green}
+          items={[
+            { label: '1. Corridor', value: 'Pick the cities first so direct coach options stay ahead of fallback departures.' },
+            { label: '2. Departure', value: 'Read route status, provider type, and schedule windows before choosing a seat.' },
+            { label: '3. Reserve', value: 'Keep the fare, boarding stop, and ticket state inside one booking panel.' },
+          ]}
+        />
+
+        <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
+          <div style={{ background: DS.card, borderRadius: r(20), border: `1px solid ${DS.border}`, padding: '18px 18px 16px', boxShadow: '0 14px 34px rgba(0,0,0,0.18)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.green}16`, border: `1px solid ${DS.green}28`, display: 'grid', placeItems: 'center' }}>
+                <Bus size={18} color={DS.green} />
+              </div>
+              <div>
+                <div style={{ color: '#fff', fontWeight: 800 }}>Coach corridor brief</div>
+                <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
+                  Bus service now reads as a guided network flow instead of a standalone booking screen.
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              {[
+                networkBrief,
+                corridorSupport,
+                bookingSignal,
+              ].map((line) => (
+                <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
+                  {line}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background: 'linear-gradient(135deg, rgba(107,181,21,0.12), rgba(71,183,230,0.08) 58%, rgba(255,255,255,0.03))', borderRadius: r(20), border: `1px solid ${(activeBus.color ?? DS.green)}30`, padding: '18px 18px 16px', boxShadow: '0 14px 34px rgba(0,0,0,0.18)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+              <div>
+                <div style={{ color: activeBus.color ?? DS.green, fontSize: '0.68rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>
+                  Selected journey
+                </div>
+                <div style={{ color: '#fff', fontWeight: 900, fontSize: '1.08rem', letterSpacing: '-0.02em' }}>
+                  {activeBus.from} to {activeBus.to}
+                </div>
+                <div style={{ color: DS.sub, fontSize: '0.8rem', marginTop: 4 }}>
+                  {activeBus.company} • {activeBus.serviceLevel ?? 'Standard'} • {activeBus.duration}
+                </div>
+              </div>
+              <span style={{ ...pill(activeStatus.color), fontSize: '0.68rem' }}>{activeStatus.label}</span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginBottom: 14 }}>
+              {[
+                { label: 'Fare', value: `${activeBus.price} JOD` },
+                { label: 'Departure', value: selectedDeparture },
+                { label: 'Source', value: activeBus.dataSource === 'live' ? 'Live feed' : 'Official' },
+              ].map((item) => (
+                <div key={item.label} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${DS.border}`, borderRadius: r(14), padding: '12px 12px 10px' }}>
+                  <div style={{ color: DS.muted, fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>
+                    {item.label}
+                  </div>
+                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem', lineHeight: 1.4 }}>
+                    {item.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <span style={pill(activeBus.color ?? DS.green)}>{departureLabel}</span>
+              <span style={pill(DS.cyan)}>{activeBus.pickupPoint}</span>
+              <span style={pill(activeBus.seats > 0 ? DS.green : DS.gold)}>{activeBus.seats > 0 ? `${activeBus.seats} seats open` : 'Sold out'}</span>
+            </div>
+          </div>
+        </div>
 
         {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
           <StakeholderSignalBanner
-            eyebrow="Wasel � bus comms"
+            eyebrow="Wasel · bus comms"
             title="Bus booking now shows the same shared context as the rest of the app"
             detail="Passengers, operators, and support can now read one clearer coach story with route status, fallback choices, ticket state, and official schedule context all in one place."
             stakeholders={[
@@ -245,11 +347,20 @@ export function BusPage() {
           />
         </div>}
 
-        <div style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', border: `1px solid ${DS.border}`, borderRadius: r(22), padding: 18, marginBottom: 18, boxShadow: '0 14px 34px rgba(0,0,0,0.18)' }}>
+        <div style={{ background: 'linear-gradient(135deg, rgba(107,181,21,0.12), rgba(71,183,230,0.06) 50%, rgba(255,255,255,0.03))', border: `1px solid ${DS.border}`, borderRadius: r(22), padding: 18, marginBottom: 18, boxShadow: '0 14px 34px rgba(0,0,0,0.18)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
             <div>
+              <div style={{ color: DS.green, fontSize: '0.68rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Trip planner</div>
               <div style={{ color: '#fff', fontWeight: 900, letterSpacing: '-0.02em' }}>Plan your trip</div>
               <div style={{ color: DS.sub, fontSize: '0.82rem', marginTop: 4 }}>Pick your cities first so live inventory and fallback schedules stay relevant.</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                <span style={pill(routeEndpointsAreDistinct(origin, destination) ? DS.green : DS.gold)}>
+                  {routeEndpointsAreDistinct(origin, destination) ? 'Corridor ready' : 'Choose 2 cities'}
+                </span>
+                <span style={pill(activeBus.dataSource === 'live' ? DS.cyan : DS.green)}>
+                  {activeBus.dataSource === 'live' ? 'Live feed active' : 'Official schedule'}
+                </span>
+              </div>
             </div>
             <button onClick={() => { setOrigin(destination); setDestination(origin); setBookingComplete(false); setBookingSource(null); }} type="button" style={{ height: 42, padding: '0 16px', borderRadius: '99px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: '0 8px 18px rgba(0,0,0,0.14)' }}>
               <ArrowLeftRight size={16} />
@@ -290,7 +401,7 @@ export function BusPage() {
           {[ 
             { label: 'Matching routes', value: `${exactRouteCount}/${busRoutes.length}`, detail: 'Exact corridor coaches first', icon: <Route size={18} />, color: DS.green },
             { label: 'Open seats', value: `${totalOpenSeats}`, detail: 'Across the visible schedules', icon: <Users size={18} />, color: activeBus.color ?? DS.cyan },
-            { label: 'Best fare', value: `${Math.min(...busRoutes.map((route) => route.price))} JOD`, detail: 'Lowest official fare on screen', icon: <CreditCard size={18} />, color: DS.cyan },
+            { label: 'Best fare', value: `${bestFare} JOD`, detail: 'Lowest official fare on screen', icon: <CreditCard size={18} />, color: DS.cyan },
             { label: 'Operators', value: `${operatorCount}`, detail: 'Visible schedule providers', icon: <TimerReset size={18} />, color: DS.gold },
           ].map((item) => (
             <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', border: `1px solid ${DS.border}`, borderRadius: r(18), padding: '18px 18px 16px', boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
@@ -508,4 +619,5 @@ export function BusPage() {
 }
 
 export default BusPage;
+
 

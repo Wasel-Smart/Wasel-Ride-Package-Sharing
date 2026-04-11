@@ -4,7 +4,14 @@
  * Supabase reads/RPCs so the wallet stays connected to persisted backend data.
  */
 
-import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey, supabase } from './core';
+import {
+  API_URL,
+  fetchWithRetry,
+  getAuthDetails,
+  isEdgeFunctionAvailable,
+  publicAnonKey,
+  supabase,
+} from './core';
 import {
   activateWaselPlus,
   getMovementMembershipSnapshot,
@@ -12,6 +19,9 @@ import {
 } from './movementMembership';
 
 const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
+const WALLET_EDGE_READ_TIMEOUT_MS = 1_200;
+const WALLET_PERSISTED_SNAPSHOT_MAX_AGE_MS = 2 * 60_000;
+const WALLET_PERSISTED_SNAPSHOT_STORAGE_PREFIX = 'wasel-wallet-snapshot-v1';
 
 // The generated Supabase database types in this repo are still incomplete for
 // wallet/runtime tables and RPCs, so this boundary stays intentionally loose.
@@ -169,6 +179,11 @@ export interface WalletInsightsSnapshot {
   meta: WalletReliabilityMeta;
 }
 
+type PersistedWalletSnapshot = {
+  storedAt: number;
+  snapshot: WalletSnapshot;
+};
+
 function getDb(): DbClient {
   if (!supabase) {
     throw new Error('Supabase client is not initialised');
@@ -187,6 +202,10 @@ const walletInsightsSnapshotCache = new Map<string, CacheEntry<WalletInsightsSna
 
 function canUseEdgeApi(): boolean {
   return Boolean(WALLET_API_BASE && publicAnonKey);
+}
+
+function canUseEdgeApiForReads(): boolean {
+  return canUseEdgeApi() && isEdgeFunctionAvailable();
 }
 
 function createWalletReliabilityMeta(source: WalletReliabilityMeta['source'], degraded: boolean): WalletReliabilityMeta {
@@ -481,6 +500,89 @@ function writeCached<T>(
   return promise;
 }
 
+function getPersistedWalletSnapshotStorageKey(userId: string): string {
+  return `${WALLET_PERSISTED_SNAPSHOT_STORAGE_PREFIX}:${userId}`;
+}
+
+function getSessionStorage(): Storage | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+function isWalletSnapshot(value: unknown): value is WalletSnapshot {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+  const meta = record.meta as Record<string, unknown> | undefined;
+  return Boolean(
+    record.data
+      && meta
+      && typeof meta.source === 'string'
+      && typeof meta.degraded === 'boolean'
+      && typeof meta.fetchedAt === 'string',
+  );
+}
+
+function persistWalletSnapshot(userId: string, snapshot: WalletSnapshot): void {
+  const storage = getSessionStorage();
+  if (!storage || !userId) {
+    return;
+  }
+
+  try {
+    const payload: PersistedWalletSnapshot = {
+      storedAt: Date.now(),
+      snapshot,
+    };
+    storage.setItem(getPersistedWalletSnapshotStorageKey(userId), JSON.stringify(payload));
+  } catch {
+    // Ignore storage write failures.
+  }
+}
+
+function readPersistedWalletSnapshot(
+  userId: string,
+  maxAgeMs = WALLET_PERSISTED_SNAPSHOT_MAX_AGE_MS,
+): WalletSnapshot | null {
+  const storage = getSessionStorage();
+  if (!storage || !userId) {
+    return null;
+  }
+
+  try {
+    const raw = storage.getItem(getPersistedWalletSnapshotStorageKey(userId));
+    if (!raw) {
+      return null;
+    }
+
+    const payload = JSON.parse(raw) as PersistedWalletSnapshot | null;
+    if (
+      !payload
+      || typeof payload !== 'object'
+      || typeof payload.storedAt !== 'number'
+      || payload.storedAt + maxAgeMs <= Date.now()
+      || !isWalletSnapshot(payload.snapshot)
+    ) {
+      storage.removeItem(getPersistedWalletSnapshotStorageKey(userId));
+      return null;
+    }
+
+    return payload.snapshot;
+  } catch {
+    storage.removeItem(getPersistedWalletSnapshotStorageKey(userId));
+    return null;
+  }
+}
+
 function invalidateWalletCaches(userId?: string): void {
   if (!userId) {
     walletReadCache.clear();
@@ -499,6 +601,17 @@ function invalidateWalletCaches(userId?: string): void {
 export function __resetWalletApiCachesForTests(): void {
   canonicalUserCache.clear();
   invalidateWalletCaches();
+  const storage = getSessionStorage();
+  if (!storage) {
+    return;
+  }
+
+  for (let index = storage.length - 1; index >= 0; index -= 1) {
+    const key = storage.key(index);
+    if (key?.startsWith(`${WALLET_PERSISTED_SNAPSHOT_STORAGE_PREFIX}:`)) {
+      storage.removeItem(key);
+    }
+  }
 }
 
 async function resolveWalletContext(userId: string): Promise<{ canonicalUserId: string; wallet: WalletRow }> {
@@ -840,6 +953,22 @@ async function getTrustScoreDirect(userId: string) {
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  return requestJsonWithPolicy<T>(path, init);
+}
+
+async function requestJsonWithPolicy<T>(
+  path: string,
+  init?: RequestInit,
+  {
+    backoff = 500,
+    retries = 1,
+    timeout,
+  }: {
+    backoff?: number;
+    retries?: number;
+    timeout?: number;
+  } = {},
+): Promise<T> {
   const headers = await getAuthHeaders();
   const response = await fetchWithRetry(path, {
     ...init,
@@ -847,7 +976,8 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
       ...headers,
       ...(init?.headers ?? {}),
     },
-  });
+    timeout,
+  }, retries, backoff);
 
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
@@ -858,25 +988,36 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const walletApi = {
+  getPersistedWalletSnapshot(userId: string, maxAgeMs?: number): WalletSnapshot | null {
+    return readPersistedWalletSnapshot(userId, maxAgeMs);
+  },
+
   async getWalletSnapshot(userId: string): Promise<WalletSnapshot> {
     return readCached(walletReadSnapshotCache, userId)
       ?? writeCached(walletReadSnapshotCache, userId, WALLET_READ_CACHE_TTL_MS, async () => {
-        if (canUseEdgeApi()) {
+        if (canUseEdgeApiForReads()) {
           try {
-            const data = await requestJson<WalletData>(`${WALLET_API_BASE}/${userId}`);
-            return {
+            const data = await requestJsonWithPolicy<WalletData>(`${WALLET_API_BASE}/${userId}`, undefined, {
+              retries: 0,
+              timeout: WALLET_EDGE_READ_TIMEOUT_MS,
+            });
+            const snapshot = {
               data,
               meta: createWalletReliabilityMeta('edge-api', false),
             };
+            persistWalletSnapshot(userId, snapshot);
+            return snapshot;
           } catch {
             // Fall back to direct Supabase below.
           }
         }
 
-        return {
+        const snapshot = {
           data: await fetchWalletDirect(userId),
           meta: createWalletReliabilityMeta('direct-supabase', true),
         };
+        persistWalletSnapshot(userId, snapshot);
+        return snapshot;
       });
   },
 
@@ -1052,9 +1193,12 @@ export const walletApi = {
   async getInsightsSnapshot(userId: string): Promise<WalletInsightsSnapshot> {
     return readCached(walletInsightsSnapshotCache, userId)
       ?? writeCached(walletInsightsSnapshotCache, userId, INSIGHTS_CACHE_TTL_MS, async () => {
-        if (canUseEdgeApi()) {
+        if (canUseEdgeApiForReads()) {
           try {
-            const data = await requestJson<InsightsData>(`${WALLET_API_BASE}/${userId}/insights`);
+            const data = await requestJsonWithPolicy<InsightsData>(`${WALLET_API_BASE}/${userId}/insights`, undefined, {
+              retries: 0,
+              timeout: WALLET_EDGE_READ_TIMEOUT_MS,
+            });
             return {
               data,
               meta: createWalletReliabilityMeta('edge-api', false),

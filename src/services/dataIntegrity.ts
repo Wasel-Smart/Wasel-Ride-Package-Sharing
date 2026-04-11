@@ -1,8 +1,8 @@
 import { z } from 'zod';
+import { canonicalizePhoneNumber } from '../utils/phone';
 import { logger } from '../utils/logging';
 import { sanitizeErrorMessage } from '../utils/redaction';
 
-const PHONE_REGEX = /^\+[1-9]\d{7,14}$/;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_REGEX = /^\d{2}:\d{2}$/;
 
@@ -25,7 +25,17 @@ export type DataFlowLogEntry = {
 const profilePhoneField = z
   .string()
   .trim()
-  .regex(PHONE_REGEX, 'Phone must be in international format')
+  .transform((value, ctx) => {
+    const normalized = canonicalizePhoneNumber(value);
+    if (!normalized) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Phone must be in international format',
+      });
+      return z.NEVER;
+    }
+    return normalized;
+  })
   .nullable()
   .optional();
 

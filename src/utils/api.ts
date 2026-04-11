@@ -9,6 +9,7 @@
  */
 
 import { API_URL, publicAnonKey } from '../services/core';
+import { omitUndefined } from './object';
 
 // ============================================================================
 // CONFIGURATION
@@ -281,6 +282,14 @@ function serializeBody(body: APIBody): BodyInit | undefined {
   return isBodyInit(body) ? body : JSON.stringify(body);
 }
 
+function withOptionalBody(method: string, headers: HeadersInit, body?: BodyInit): RequestInit {
+  return omitUndefined({
+    method,
+    headers,
+    body: body ?? undefined,
+  });
+}
+
 export async function apiGet<T = unknown>(
   endpoint: string,
   params?: QueryParams,
@@ -308,11 +317,7 @@ export async function apiPost<T = unknown>(
   body?: APIBody,
   accessToken?: string
 ): Promise<T> {
-  return apiRequest<T>(endpoint, {
-    method: 'POST',
-    headers: getApiHeaders(accessToken),
-    body: serializeBody(body),
-  });
+  return apiRequest<T>(endpoint, withOptionalBody('POST', getApiHeaders(accessToken), serializeBody(body)));
 }
 
 /**
@@ -323,11 +328,7 @@ export async function apiPut<T = unknown>(
   body?: APIBody,
   accessToken?: string
 ): Promise<T> {
-  return apiRequest<T>(endpoint, {
-    method: 'PUT',
-    headers: getApiHeaders(accessToken),
-    body: serializeBody(body),
-  });
+  return apiRequest<T>(endpoint, withOptionalBody('PUT', getApiHeaders(accessToken), serializeBody(body)));
 }
 
 /**
@@ -338,11 +339,7 @@ export async function apiPatch<T = unknown>(
   body?: APIBody,
   accessToken?: string
 ): Promise<T> {
-  return apiRequest<T>(endpoint, {
-    method: 'PATCH',
-    headers: getApiHeaders(accessToken),
-    body: serializeBody(body),
-  });
+  return apiRequest<T>(endpoint, withOptionalBody('PATCH', getApiHeaders(accessToken), serializeBody(body)));
 }
 
 /**

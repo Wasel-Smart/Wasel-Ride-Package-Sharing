@@ -27,10 +27,10 @@ type Vehicle = { id: string; routeId: string; type: FlowType; progress: number; 
 type Analytics = { totalVehicles: number; activePassengers: number; activePackages: number; seatAvailability: number; packageCapacity: number; avgSpeed: number; networkUtilization: number; congestionLevel: number; topCorridor: string; recommendedPath: string; dispatchAction: string };
 type Star = { x: number; y: number; size: number; alpha: number; drift: number };
 
-const PASSENGER_COLOR = '#47B7E6';
-const PACKAGE_COLOR = '#A8D614';
-const PASSENGER_GLOW = 'rgba(71,183,230,0.45)';
-const PACKAGE_GLOW = 'rgba(168,214,20,0.34)';
+const PASSENGER_COLOR = '#FFE7A8';
+const PACKAGE_COLOR = '#F4C651';
+const PASSENGER_GLOW = 'rgba(255,231,168,0.45)';
+const PACKAGE_GLOW = 'rgba(244,198,81,0.34)';
 const TARGET_VEHICLES = 84;
 const BASE_W = 1200;
 const BASE_H = 700;
@@ -86,12 +86,12 @@ const glassPanelStyle = (extra: CSSProperties = {}): CSSProperties => ({
 
 function hourPalette(hour: number) {
   if (hour >= 6 && hour <= 10) {
-    return { top: '#081726', bottom: '#0b2233', glow: 'rgba(255,188,104,0.12)' };
+    return { top: '#081523', bottom: '#11283b', glow: 'rgba(255,232,160,0.16)' };
   }
   if (hour >= 17 && hour <= 20) {
-    return { top: '#120f20', bottom: '#091726', glow: 'rgba(255,120,72,0.14)' };
+    return { top: '#120d08', bottom: '#0b1827', glow: 'rgba(244,198,81,0.18)' };
   }
-  return { top: '#020914', bottom: '#071423', glow: 'rgba(71,183,230,0.12)' };
+  return { top: '#030914', bottom: '#0a1624', glow: 'rgba(255,240,193,0.12)' };
 }
 
 function getCityLabel(city: City, ar: boolean) {
@@ -134,7 +134,7 @@ function createMobilityOSCopy(ar: boolean) {
     servicePriority: ar ? '?????? ???????' : 'Service priority',
     operationalMap: ar ? '??????? ?????????' : 'Operational map',
     mapTitle: ar ? '?????? ?? 12 ????? ?15 ????? ??? ?????' : 'Jordan with 12 cities and 15 intercity corridors',
-    mapBody: ar ? '?????? ???? ???? ??????? ??????? ???? ???? ??????. ????? ????????? ???? ???????? ????? ?????? ??????? ??????? ??? ??????? ?????? ?? ?? ????.' : 'Blue is passenger flow. Gold is package flow. Vehicle positions, corridor health, city emphasis, and dispatch signals are updated in real time on every simulation frame.',
+    mapBody: ar ? '?????? ???? ???? ??????? ??????? ???? ???? ??????. ????? ????????? ???? ???????? ????? ?????? ??????? ??????? ??? ??????? ?????? ?? ?? ????.' : 'Champagne light is passenger flow. Gold is package flow. The map now renders as a layered command-stage with live vehicles, corridor pressure, and elevated city beacons.',
     passengerFlow: ar ? '???? ??????' : 'Passenger flow',
     packageFlow: ar ? '???? ??????' : 'Package flow',
     routeIntelligence: ar ? '???? ??????' : 'Route intelligence',
@@ -432,9 +432,9 @@ export default function MobilityOSCore() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
     const bg = ctx.createLinearGradient(0, 0, width, height);
-    bg.addColorStop(0, viewMode === 'satellite' ? '#03111b' : palette.top);
-    bg.addColorStop(0.55, viewMode === 'pulse' ? '#0c1020' : '#081726');
-    bg.addColorStop(1, viewMode === 'satellite' ? '#0a1d2e' : palette.bottom);
+    bg.addColorStop(0, viewMode === 'satellite' ? '#08111a' : palette.top);
+    bg.addColorStop(0.55, viewMode === 'pulse' ? '#140f1d' : '#091624');
+    bg.addColorStop(1, viewMode === 'satellite' ? '#102234' : palette.bottom);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, height);
     const skyRibbon = ctx.createLinearGradient(0, 0, width, height * 0.32);
@@ -444,18 +444,18 @@ export default function MobilityOSCore() {
     ctx.fillStyle = skyRibbon;
     ctx.fillRect(0, 0, width, height * 0.38);
     const atmosphere = ctx.createRadialGradient(width * 0.2, height * 0.18, 0, width * 0.2, height * 0.18, width * 0.5);
-    atmosphere.addColorStop(0, viewMode === 'pulse' ? 'rgba(167,124,255,0.18)' : 'rgba(71,183,230,0.18)');
-    atmosphere.addColorStop(0.35, viewMode === 'pulse' ? 'rgba(167,124,255,0.08)' : 'rgba(71,183,230,0.06)');
-    atmosphere.addColorStop(1, 'rgba(71,183,230,0)');
+    atmosphere.addColorStop(0, viewMode === 'pulse' ? 'rgba(167,124,255,0.16)' : 'rgba(255,232,160,0.16)');
+    atmosphere.addColorStop(0.35, viewMode === 'pulse' ? 'rgba(167,124,255,0.08)' : 'rgba(255,232,160,0.06)');
+    atmosphere.addColorStop(1, 'rgba(255,232,160,0)');
     ctx.fillStyle = atmosphere;
     ctx.fillRect(0, 0, width, height);
     const amberGlow = ctx.createRadialGradient(width * 0.78, height * 0.82, 0, width * 0.78, height * 0.82, width * 0.42);
-    amberGlow.addColorStop(0, viewMode === 'satellite' ? 'rgba(102,244,198,0.08)' : 'rgba(168,214,20,0.12)');
-    amberGlow.addColorStop(1, 'rgba(168,214,20,0)');
+    amberGlow.addColorStop(0, viewMode === 'satellite' ? 'rgba(255,240,193,0.08)' : 'rgba(197,131,31,0.14)');
+    amberGlow.addColorStop(1, 'rgba(197,131,31,0)');
     ctx.fillStyle = amberGlow;
     ctx.fillRect(0, 0, width, height);
     const polarAurora = ctx.createRadialGradient(width * 0.72, height * 0.1, 0, width * 0.72, height * 0.1, width * 0.38);
-    polarAurora.addColorStop(0, viewMode === 'satellite' ? 'rgba(112,255,212,0.1)' : 'rgba(145,215,255,0.08)');
+    polarAurora.addColorStop(0, viewMode === 'satellite' ? 'rgba(255,240,193,0.08)' : 'rgba(255,247,229,0.08)');
     polarAurora.addColorStop(0.45, 'rgba(255,255,255,0.03)');
     polarAurora.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = polarAurora;
@@ -482,9 +482,9 @@ export default function MobilityOSCore() {
     }
     const energyRibbon = ctx.createLinearGradient(-width * 0.1 + Math.sin(phase * 0.00035) * 140, 0, width * 0.65 + Math.sin(phase * 0.00035) * 140, height);
     energyRibbon.addColorStop(0, 'rgba(255,255,255,0)');
-    energyRibbon.addColorStop(0.35, 'rgba(71,183,230,0.025)');
+    energyRibbon.addColorStop(0.35, 'rgba(255,232,160,0.03)');
     energyRibbon.addColorStop(0.55, 'rgba(255,255,255,0.045)');
-    energyRibbon.addColorStop(0.7, 'rgba(168,214,20,0.022)');
+    energyRibbon.addColorStop(0.7, 'rgba(244,198,81,0.028)');
     energyRibbon.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = energyRibbon;
     ctx.fillRect(0, 0, width, height);
@@ -496,11 +496,46 @@ export default function MobilityOSCore() {
     ctx.fillStyle = floorGlow;
     ctx.fillRect(0, height * 0.52, width, height * 0.48);
     const horizonShelf = ctx.createLinearGradient(0, height * 0.66, 0, height);
-    horizonShelf.addColorStop(0, 'rgba(71,183,230,0)');
-    horizonShelf.addColorStop(0.5, 'rgba(71,183,230,0.05)');
+    horizonShelf.addColorStop(0, 'rgba(255,232,160,0)');
+    horizonShelf.addColorStop(0.5, 'rgba(255,232,160,0.06)');
     horizonShelf.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = horizonShelf;
     ctx.fillRect(0, height * 0.62, width, height * 0.25);
+    const stageTop = height * 0.69;
+    const vanishingX = width * (0.5 + Math.sin(phase * 0.00012) * 0.02);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(width * 0.06, stageTop);
+    ctx.lineTo(width * 0.94, stageTop);
+    ctx.lineTo(width, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+    const stageFill = ctx.createLinearGradient(0, stageTop, 0, height);
+    stageFill.addColorStop(0, 'rgba(12,24,36,0.72)');
+    stageFill.addColorStop(0.42, 'rgba(9,18,28,0.86)');
+    stageFill.addColorStop(1, 'rgba(3,8,14,0.98)');
+    ctx.fillStyle = stageFill;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,240,193,0.04)';
+    ctx.lineWidth = 1;
+    for (let line = 0; line < 12; line += 1) {
+      const startX = width * 0.04 + line * (width * 0.92 / 11);
+      const endX = vanishingX + (line - 5.5) * width * 0.022;
+      ctx.beginPath();
+      ctx.moveTo(startX, height);
+      ctx.lineTo(endX, stageTop);
+      ctx.stroke();
+    }
+    for (let row = 0; row < 7; row += 1) {
+      const y = stageTop + ((row + 1) / 8) ** 1.75 * (height - stageTop);
+      const inset = row * 8;
+      ctx.beginPath();
+      ctx.moveTo(width * 0.04 + inset, y);
+      ctx.lineTo(width * 0.96 - inset, y);
+      ctx.strokeStyle = `rgba(255,232,160,${0.055 - row * 0.005})`;
+      ctx.stroke();
+    }
+    ctx.restore();
 
     starsRef.current.slice(0, isCompactMobile ? 20 : starsRef.current.length).forEach((star, index) => {
       const x = star.x * width + Math.sin(phase * 0.4 + index) * 2;
@@ -513,7 +548,7 @@ export default function MobilityOSCore() {
 
     if (!isCompactMobile) {
       ctx.save();
-      ctx.strokeStyle = viewMode === 'satellite' ? 'rgba(120,255,214,0.03)' : 'rgba(255,255,255,0.03)';
+      ctx.strokeStyle = viewMode === 'satellite' ? 'rgba(255,240,193,0.03)' : 'rgba(255,255,255,0.03)';
       ctx.lineWidth = 1;
       for (let x = 0; x < width; x += 34) {
         ctx.beginPath();
@@ -527,7 +562,7 @@ export default function MobilityOSCore() {
         ctx.lineTo(width, y);
         ctx.stroke();
       }
-      ctx.strokeStyle = viewMode === 'pulse' ? 'rgba(167,124,255,0.04)' : 'rgba(71,183,230,0.026)';
+      ctx.strokeStyle = viewMode === 'pulse' ? 'rgba(167,124,255,0.04)' : 'rgba(255,232,160,0.026)';
       for (let x = -height; x < width; x += 58) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
@@ -541,28 +576,29 @@ export default function MobilityOSCore() {
     BORDER.forEach((point, index) => { const p = project(point.lat, point.lon, width, height); if (index === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
     ctx.closePath();
     const landFill = ctx.createLinearGradient(width * 0.2, 0, width * 0.82, height);
-    landFill.addColorStop(0, 'rgba(6,17,30,0.86)');
-    landFill.addColorStop(1, 'rgba(15,34,53,0.96)');
+    landFill.addColorStop(0, 'rgba(10,22,35,0.92)');
+    landFill.addColorStop(0.58, 'rgba(9,18,28,0.97)');
+    landFill.addColorStop(1, 'rgba(16,35,50,0.98)');
     ctx.fillStyle = landFill;
-    ctx.strokeStyle = 'rgba(255,255,255,0.09)';
-    ctx.lineWidth = 1.1;
-    ctx.shadowBlur = 40;
-    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.strokeStyle = 'rgba(255,240,193,0.1)';
+    ctx.lineWidth = 1.2;
+    ctx.shadowBlur = 46;
+    ctx.shadowColor = 'rgba(0,0,0,0.38)';
     ctx.fill();
     ctx.stroke();
     ctx.shadowBlur = 0;
     ctx.save();
     ctx.clip();
     const terrain = ctx.createLinearGradient(width * 0.18, height * 0.1, width * 0.85, height * 0.92);
-    terrain.addColorStop(0, 'rgba(96,150,186,0.06)');
-    terrain.addColorStop(0.45, 'rgba(255,255,255,0.01)');
-    terrain.addColorStop(1, 'rgba(168,214,20,0.05)');
+    terrain.addColorStop(0, 'rgba(255,240,193,0.08)');
+    terrain.addColorStop(0.45, 'rgba(255,255,255,0.015)');
+    terrain.addColorStop(1, 'rgba(244,198,81,0.08)');
     ctx.fillStyle = terrain;
     ctx.fillRect(0, 0, width, height);
     const reliefWash = ctx.createLinearGradient(width * 0.25, height * 0.12, width * 0.78, height * 0.9);
     reliefWash.addColorStop(0, 'rgba(255,255,255,0.02)');
-    reliefWash.addColorStop(0.4, 'rgba(71,183,230,0.03)');
-    reliefWash.addColorStop(1, 'rgba(168,214,20,0.03)');
+    reliefWash.addColorStop(0.4, 'rgba(255,232,160,0.04)');
+    reliefWash.addColorStop(1, 'rgba(197,131,31,0.04)');
     ctx.fillStyle = reliefWash;
     ctx.fillRect(0, 0, width, height);
     for (let ridge = 0; ridge < (isCompactMobile ? 2 : 5); ridge += 1) {
@@ -606,8 +642,8 @@ export default function MobilityOSCore() {
     const selectedPoint = projectCity(selectedCityId, width, height);
     const scan = ctx.createRadialGradient(selectedPoint.x, selectedPoint.y, 0, selectedPoint.x, selectedPoint.y, 180);
     scan.addColorStop(0, 'rgba(255,255,255,0.06)');
-    scan.addColorStop(0.45, 'rgba(71,183,230,0.08)');
-    scan.addColorStop(1, 'rgba(71,183,230,0)');
+    scan.addColorStop(0.45, 'rgba(255,232,160,0.1)');
+    scan.addColorStop(1, 'rgba(255,232,160,0)');
     ctx.fillStyle = scan;
     ctx.beginPath();
     ctx.arc(selectedPoint.x, selectedPoint.y, 180 + Math.sin(phase * 0.001) * 6, 0, Math.PI * 2);
@@ -658,9 +694,9 @@ export default function MobilityOSCore() {
       ctx.moveTo(from.x, from.y);
       ctx.quadraticCurveTo(curve.cx, curve.cy, to.x, to.y);
       const passengerGradient = ctx.createLinearGradient(from.x, from.y, to.x, to.y);
-      passengerGradient.addColorStop(0, viewMode === 'pulse' ? 'rgba(198,166,255,0.2)' : 'rgba(111,246,255,0.18)');
-      passengerGradient.addColorStop(0.5, viewMode === 'pulse' ? `rgba(167,124,255,${0.38 + route.passengerFlow / 3400})` : `rgba(71,183,230,${0.34 + route.passengerFlow / 3200})`);
-      passengerGradient.addColorStop(1, viewMode === 'pulse' ? 'rgba(217,194,255,0.18)' : 'rgba(98,225,255,0.2)');
+      passengerGradient.addColorStop(0, viewMode === 'pulse' ? 'rgba(198,166,255,0.2)' : 'rgba(255,247,229,0.18)');
+      passengerGradient.addColorStop(0.5, viewMode === 'pulse' ? `rgba(167,124,255,${0.38 + route.passengerFlow / 3400})` : `rgba(255,231,168,${0.34 + route.passengerFlow / 3200})`);
+      passengerGradient.addColorStop(1, viewMode === 'pulse' ? 'rgba(217,194,255,0.18)' : 'rgba(244,198,81,0.2)');
       ctx.strokeStyle = passengerGradient;
       ctx.shadowBlur = viewMode === 'pulse' ? 28 : 22;
       ctx.shadowColor = viewMode === 'pulse' ? 'rgba(167,124,255,0.52)' : PASSENGER_GLOW;
@@ -677,9 +713,9 @@ export default function MobilityOSCore() {
       ctx.setLineDash([7, 6]);
       ctx.moveTo(from.x, from.y);
       ctx.quadraticCurveTo(curve.cx, curve.cy, to.x, to.y);
-      ctx.strokeStyle = viewMode === 'satellite' ? `rgba(114,255,213,${0.16 + route.packageFlow / 1500})` : `rgba(168,214,20,${0.18 + route.packageFlow / 1400})`;
+      ctx.strokeStyle = viewMode === 'satellite' ? `rgba(255,240,193,${0.16 + route.packageFlow / 1500})` : `rgba(244,198,81,${0.18 + route.packageFlow / 1400})`;
       ctx.shadowBlur = viewMode === 'satellite' ? 20 : 16;
-      ctx.shadowColor = viewMode === 'satellite' ? 'rgba(114,255,213,0.36)' : PACKAGE_GLOW;
+      ctx.shadowColor = viewMode === 'satellite' ? 'rgba(255,240,193,0.36)' : PACKAGE_GLOW;
       ctx.lineWidth = 1.3 + route.packageFlow / 880;
       ctx.stroke();
       ctx.setLineDash([]);
@@ -691,7 +727,7 @@ export default function MobilityOSCore() {
         const point = pointOnQuadratic(from, control, to, t);
         ctx.beginPath();
         ctx.arc(point.x, point.y, 1.6 + route.lanes * 0.1, 0, Math.PI * 2);
-        ctx.fillStyle = viewMode === 'pulse' ? 'rgba(225,208,255,0.96)' : 'rgba(153, 246, 255, 0.92)';
+        ctx.fillStyle = viewMode === 'pulse' ? 'rgba(225,208,255,0.96)' : 'rgba(255, 249, 230, 0.94)';
         ctx.shadowBlur = viewMode === 'pulse' ? 20 : 16;
         ctx.shadowColor = viewMode === 'pulse' ? 'rgba(167,124,255,0.5)' : PASSENGER_GLOW;
         ctx.fill();
@@ -704,9 +740,9 @@ export default function MobilityOSCore() {
         ctx.save();
         ctx.translate(point.x, point.y);
         ctx.rotate(phase * 0.002 + particle);
-        ctx.fillStyle = viewMode === 'satellite' ? 'rgba(156,255,224,0.92)' : 'rgba(255, 214, 122, 0.92)';
+        ctx.fillStyle = viewMode === 'satellite' ? 'rgba(255,240,193,0.92)' : 'rgba(255, 214, 122, 0.92)';
         ctx.shadowBlur = 14;
-        ctx.shadowColor = viewMode === 'satellite' ? 'rgba(114,255,213,0.42)' : PACKAGE_GLOW;
+        ctx.shadowColor = viewMode === 'satellite' ? 'rgba(255,240,193,0.42)' : PACKAGE_GLOW;
         ctx.fillRect(-2.2, -2.2, 4.4, 4.4);
         ctx.restore();
       }
@@ -734,11 +770,11 @@ export default function MobilityOSCore() {
         ctx.save();
         ctx.translate(routeMarker.x, routeMarker.y);
         ctx.rotate(Math.atan2(to.y - from.y, to.x - from.x));
-        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.fillStyle = 'rgba(9,22,34,0.78)';
         ctx.fillRect(-18, -8, 36, 16);
-        ctx.strokeStyle = 'rgba(71,183,230,0.18)';
+        ctx.strokeStyle = 'rgba(255,232,160,0.24)';
         ctx.strokeRect(-18, -8, 36, 16);
-        ctx.fillStyle = 'rgba(239,246,255,0.86)';
+        ctx.fillStyle = 'rgba(255,247,229,0.9)';
         ctx.font = `600 8px ${F}`;
         ctx.textAlign = 'center';
         ctx.fillText(ar ? `${numberFormatter.format(route.distanceKm)} ??` : `${route.distanceKm} km`, 0, 3);
@@ -763,17 +799,17 @@ export default function MobilityOSCore() {
         ctx.beginPath();
         ctx.roundRect(x, y, widthLabel, 22, 11);
         const calloutFill = ctx.createLinearGradient(x, y, x + widthLabel, y + 22);
-        calloutFill.addColorStop(0, 'rgba(7,18,30,0.78)');
-        calloutFill.addColorStop(1, 'rgba(10,40,58,0.82)');
+        calloutFill.addColorStop(0, 'rgba(7,18,30,0.82)');
+        calloutFill.addColorStop(1, 'rgba(38,25,9,0.84)');
         ctx.fillStyle = calloutFill;
         ctx.shadowBlur = 20;
         ctx.shadowColor = 'rgba(0,0,0,0.22)';
         ctx.fill();
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = rank === 0 ? 'rgba(71,183,230,0.42)' : 'rgba(255,255,255,0.16)';
+        ctx.strokeStyle = rank === 0 ? 'rgba(255,232,160,0.42)' : 'rgba(255,255,255,0.16)';
         ctx.lineWidth = 1;
         ctx.stroke();
-        ctx.fillStyle = rank === 0 ? '#9ef8ff' : '#eff6ff';
+        ctx.fillStyle = rank === 0 ? '#FFF5D1' : '#eff6ff';
         ctx.textAlign = 'center';
         ctx.fillText(label, x + widthLabel / 2, y + 14.5);
       });
@@ -786,12 +822,12 @@ export default function MobilityOSCore() {
       if (vehicle.isLiveTelemetry) {
         ctx.beginPath();
         ctx.arc(0, 0, vehicle.freshness === 'fresh' ? 11 : 9, 0, Math.PI * 2);
-        ctx.strokeStyle = vehicle.freshness === 'fresh' ? 'rgba(92,255,149,0.9)' : 'rgba(168,214,20,0.82)';
+        ctx.strokeStyle = vehicle.freshness === 'fresh' ? 'rgba(255,240,193,0.9)' : 'rgba(244,198,81,0.82)';
         ctx.lineWidth = 1.4;
         ctx.stroke();
       }
       if (vehicle.type === 'passenger') {
-        ctx.fillStyle = '#dffcff';
+        ctx.fillStyle = '#fff8e4';
         ctx.beginPath();
         ctx.roundRect(-6, -3.6, 12, 7.2, 3);
         ctx.fill();
@@ -820,7 +856,7 @@ export default function MobilityOSCore() {
       ctx.fill();
       const haloRadius = (city.isHub ? 22 : 14) + Math.sin(phase * 0.0014 + city.id) * 2;
       const halo = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, haloRadius);
-      halo.addColorStop(0, selected ? 'rgba(255,255,255,0.34)' : city.isHub ? 'rgba(71,183,230,0.26)' : 'rgba(255,255,255,0.16)');
+      halo.addColorStop(0, selected ? 'rgba(255,255,255,0.34)' : city.isHub ? 'rgba(255,232,160,0.26)' : 'rgba(255,255,255,0.16)');
       halo.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.beginPath();
       ctx.arc(point.x, point.y, haloRadius, 0, Math.PI * 2);
@@ -829,21 +865,21 @@ export default function MobilityOSCore() {
 
       ctx.beginPath();
       ctx.arc(point.x, point.y, selected ? 9 : city.isHub ? 7 : 5.5, 0, Math.PI * 2);
-      ctx.fillStyle = selected ? 'rgba(255,255,255,0.98)' : city.isHub ? 'rgba(71,183,230,0.98)' : 'rgba(255,255,255,0.82)';
+      ctx.fillStyle = selected ? 'rgba(255,255,255,0.98)' : city.isHub ? 'rgba(255,232,160,0.98)' : 'rgba(255,255,255,0.82)';
       ctx.fill();
       ctx.beginPath();
       ctx.moveTo(point.x, point.y - (selected ? 26 : city.isHub ? 22 : 18));
       ctx.lineTo(point.x, point.y - 6);
-      ctx.strokeStyle = selected ? 'rgba(168,214,20,0.34)' : city.isHub ? 'rgba(71,183,230,0.28)' : 'rgba(255,255,255,0.12)';
+      ctx.strokeStyle = selected ? 'rgba(244,198,81,0.38)' : city.isHub ? 'rgba(255,232,160,0.28)' : 'rgba(255,255,255,0.12)';
       ctx.lineWidth = selected ? 2 : 1.3;
       ctx.stroke();
       ctx.beginPath();
       ctx.arc(point.x, point.y, selected ? 4.6 : city.isHub ? 3.6 : 2.8, 0, Math.PI * 2);
-      ctx.fillStyle = selected ? 'rgba(168,214,20,0.94)' : 'rgba(255,255,255,0.95)';
+      ctx.fillStyle = selected ? 'rgba(244,198,81,0.94)' : 'rgba(255,255,255,0.95)';
       ctx.fill();
       ctx.beginPath();
       ctx.arc(point.x, point.y, selected ? 14 : city.isHub ? 11 : 8, 0, Math.PI * 2);
-      ctx.strokeStyle = selected ? 'rgba(168,214,20,0.82)' : city.isHub ? 'rgba(71,183,230,0.34)' : 'rgba(255,255,255,0.18)';
+      ctx.strokeStyle = selected ? 'rgba(244,198,81,0.82)' : city.isHub ? 'rgba(255,232,160,0.34)' : 'rgba(255,255,255,0.18)';
       ctx.lineWidth = selected ? 1.5 : 1;
       ctx.stroke();
 
@@ -859,21 +895,21 @@ export default function MobilityOSCore() {
         ctx.beginPath();
         ctx.roundRect(labelX, labelY, labelWidth, labelHeight, 10);
         const labelFill = ctx.createLinearGradient(labelX, labelY, labelX + labelWidth, labelY + labelHeight);
-        labelFill.addColorStop(0, selected ? 'rgba(16,40,58,0.92)' : 'rgba(10,24,38,0.72)');
-        labelFill.addColorStop(1, selected ? 'rgba(11,54,76,0.92)' : 'rgba(7,18,30,0.7)');
+        labelFill.addColorStop(0, selected ? 'rgba(38,26,10,0.9)' : 'rgba(10,24,38,0.72)');
+        labelFill.addColorStop(1, selected ? 'rgba(84,55,14,0.9)' : 'rgba(7,18,30,0.7)');
         ctx.fillStyle = labelFill;
         ctx.shadowBlur = selected ? 18 : 8;
-        ctx.shadowColor = selected ? 'rgba(168,214,20,0.18)' : 'rgba(71,183,230,0.08)';
+        ctx.shadowColor = selected ? 'rgba(244,198,81,0.18)' : 'rgba(255,232,160,0.08)';
         ctx.fill();
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = selected ? 'rgba(168,214,20,0.42)' : 'rgba(255,255,255,0.1)';
+        ctx.strokeStyle = selected ? 'rgba(244,198,81,0.42)' : 'rgba(255,255,255,0.1)';
         ctx.lineWidth = 1;
         ctx.stroke();
 
         ctx.beginPath();
         ctx.moveTo(point.x, point.y - 8);
         ctx.lineTo(point.x, labelY + labelHeight);
-        ctx.strokeStyle = selected ? 'rgba(168,214,20,0.32)' : 'rgba(255,255,255,0.12)';
+        ctx.strokeStyle = selected ? 'rgba(244,198,81,0.32)' : 'rgba(255,255,255,0.12)';
         ctx.lineWidth = 1;
         ctx.stroke();
 
@@ -893,7 +929,7 @@ export default function MobilityOSCore() {
       ctx.strokeStyle = 'rgba(255,255,255,0.08)';
       ctx.lineWidth = 1;
       ctx.strokeRect(12, 12, width - 24, height - 24);
-      ctx.strokeStyle = 'rgba(71,183,230,0.16)';
+      ctx.strokeStyle = 'rgba(255,232,160,0.16)';
       ctx.strokeRect(20, 20, width - 40, height - 40);
 
       [
@@ -906,7 +942,7 @@ export default function MobilityOSCore() {
         ctx.moveTo(corner[0], corner[1]);
         ctx.lineTo(corner[2], corner[3]);
         ctx.lineTo(corner[4], corner[5]);
-        ctx.strokeStyle = 'rgba(71,183,230,0.34)';
+        ctx.strokeStyle = 'rgba(255,232,160,0.3)';
         ctx.lineWidth = 2;
         ctx.stroke();
       });
@@ -1100,7 +1136,7 @@ export default function MobilityOSCore() {
   const formatLabel = (value: string) => value.replace(/\s*Â·\s*/g, ' · ');
 
   return (
-    <div dir={dir} style={{ minHeight: '100vh', background: `${GRAD_AURORA}, radial-gradient(circle at 15% 12%, rgba(71,183,230,0.16), transparent 22%), radial-gradient(circle at 82% 18%, rgba(168,214,20,0.14), transparent 24%), radial-gradient(circle at 50% 100%, rgba(92,255,149,0.08), transparent 28%), ${C.bg}`, color: C.text, fontFamily: F, padding: isCompactMobile ? '14px 12px 84px' : '20px 14px 88px' }}>
+    <div dir={dir} style={{ minHeight: '100vh', background: `${GRAD_AURORA}, radial-gradient(circle at 15% 12%, rgba(255,232,160,0.16), transparent 22%), radial-gradient(circle at 82% 18%, rgba(244,198,81,0.14), transparent 24%), radial-gradient(circle at 50% 100%, rgba(255,240,193,0.08), transparent 28%), ${C.bg}`, color: C.text, fontFamily: F, padding: isCompactMobile ? '14px 12px 84px' : '20px 14px 88px' }}>
       <div style={{ maxWidth: 1460, margin: '0 auto', display: 'grid', gap: isCompactMobile ? 14 : 18 }}>
         <section style={glassPanelStyle({ padding: isCompactMobile ? 18 : 28, borderRadius: isCompactMobile ? 24 : 34 })}>
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.04), transparent 24%, transparent 72%, rgba(71,183,230,0.08))' }} />
@@ -1278,7 +1314,7 @@ export default function MobilityOSCore() {
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 18% 12%, rgba(255,255,255,0.05), transparent 18%), radial-gradient(circle at 82% 20%, rgba(71,183,230,0.06), transparent 22%)' }} />
               <div style={{ position: 'absolute', top: 14, left: 14, right: 14, zIndex: 2, display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 999, background: 'rgba(7,18,30,0.74)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
-                  <div style={{ width: 8, height: 8, borderRadius: 999, background: '#5CFF95', boxShadow: '0 0 14px #5CFF95' }} />
+                  <div style={{ width: 8, height: 8, borderRadius: 999, background: '#FFF0C1', boxShadow: '0 0 14px rgba(255,240,193,0.64)' }} />
                   <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>{copy.liveMesh}</span>
                 </div>
                 {!isCompactMobile ? <div style={{ display: 'grid', gap: 6, padding: '10px 12px', borderRadius: 16, background: 'rgba(7,18,30,0.72)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)', minWidth: 172 }}>
@@ -1326,7 +1362,7 @@ export default function MobilityOSCore() {
             <article style={glassPanelStyle({ padding: isCompactMobile ? 16 : 18, borderRadius: isCompactMobile ? 20 : 26, background: 'linear-gradient(180deg, rgba(8,24,38,0.96), rgba(4,10,22,0.98))' })}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><MapPinned size={18} color={C.cyan} /><h3 style={{ margin: 0, fontSize: '1rem' }}>{copy.selectedNode}</h3></div>
               <div style={{ marginTop: 14, display: 'grid', gap: 8, gridTemplateColumns: isCompactMobile ? 'repeat(2, minmax(0, 1fr))' : undefined }}>
-                {CITY_DATA.map((city) => <button key={city.id} onClick={() => setSelectedCityId(city.id)} style={{ padding: '10px 12px', borderRadius: 14, border: `1px solid ${selectedCityId === city.id ? C.gold : C.border}`, background: selectedCityId === city.id ? 'rgba(168,214,20,0.12)' : 'rgba(255,255,255,0.03)', color: C.text, cursor: 'pointer', fontWeight: selectedCityId === city.id ? 800 : 600 }}>{getCityLabel(city, ar)}</button>)}
+                {CITY_DATA.map((city) => <button key={city.id} onClick={() => setSelectedCityId(city.id)} style={{ padding: '10px 12px', borderRadius: 14, border: `1px solid ${selectedCityId === city.id ? C.gold : C.border}`, background: selectedCityId === city.id ? 'rgba(244,198,81,0.12)' : 'rgba(255,255,255,0.03)', color: C.text, cursor: 'pointer', fontWeight: selectedCityId === city.id ? 800 : 600 }}>{getCityLabel(city, ar)}</button>)}
               </div>
               <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
                 {[
@@ -1343,7 +1379,7 @@ export default function MobilityOSCore() {
             </article>
             <article style={glassPanelStyle({ padding: isCompactMobile ? 16 : 18, borderRadius: isCompactMobile ? 20 : 26, background: 'linear-gradient(180deg, rgba(9,19,35,0.96), rgba(4,10,22,0.98))' })}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Route size={18} color={C.gold} /><h3 style={{ margin: 0, fontSize: '1rem' }}>{copy.actionableOutputs}</h3></div>
-              <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>{primaryActionItems.map((item, index) => <div key={item} style={{ padding: '12px 14px', borderRadius: 16, background: index === 0 ? 'linear-gradient(135deg, rgba(168,214,20,0.12), rgba(255,255,255,0.03))' : 'rgba(255,255,255,0.03)', border: `1px solid ${index === 0 ? 'rgba(168,214,20,0.24)' : C.borderFaint}`, color: C.textSub, lineHeight: 1.6, boxShadow: index === 0 ? '0 10px 24px rgba(168,214,20,0.08)' : 'none' }}>{item}</div>)}</div>
+              <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>{primaryActionItems.map((item, index) => <div key={item} style={{ padding: '12px 14px', borderRadius: 16, background: index === 0 ? 'linear-gradient(135deg, rgba(244,198,81,0.14), rgba(255,255,255,0.03))' : 'rgba(255,255,255,0.03)', border: `1px solid ${index === 0 ? 'rgba(244,198,81,0.24)' : C.borderFaint}`, color: C.textSub, lineHeight: 1.6, boxShadow: index === 0 ? '0 10px 24px rgba(244,198,81,0.08)' : 'none' }}>{item}</div>)}</div>
               <div style={{ marginTop: 12, color: C.textMuted, fontSize: '0.76rem', lineHeight: 1.6 }}>{ar ? '??? ???????? ??????? ?????? ?? ????? ????????? ????? ?????? ????? ?????? ??????.' : 'These recommendations are estimated by the simulation model and are not direct government operational data.'}</div>
             </article>
           </div>
@@ -1366,7 +1402,7 @@ export default function MobilityOSCore() {
                 const { from, to } = getRouteCities(route);
                 const totalFlow = Math.round(route.passengerFlow + route.packageFlow);
                 const routeScore = Math.round((route.passengerFlow / Math.max(route.lanes * 1800, 1)) * 52 + (route.packageFlow / Math.max(route.lanes * 820, 1)) * 18 + (1 - route.congestion) * 30);
-                const pressureTone = route.congestion > 0.75 ? 'rgba(255,120,92,0.16)' : route.packageFlow > route.passengerFlow * 0.45 ? 'rgba(168,214,20,0.14)' : 'rgba(71,183,230,0.12)';
+                const pressureTone = route.congestion > 0.75 ? 'rgba(255,120,92,0.16)' : route.packageFlow > route.passengerFlow * 0.45 ? 'rgba(244,198,81,0.14)' : 'rgba(255,232,160,0.12)';
                 return (
                   <div key={route.id} style={{ position: 'relative', padding: isCompactMobile ? '14px 14px 12px' : '18px 18px 16px', borderRadius: isCompactMobile ? 18 : 24, border: `1px solid ${index === 0 ? C.cyanGlow : C.borderFaint}`, background: `linear-gradient(180deg, ${pressureTone}, rgba(255,255,255,0.025))`, boxShadow: index === 0 ? '0 18px 40px rgba(71,183,230,0.12)' : '0 10px 30px rgba(0,0,0,0.16)' }}>
                     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: `radial-gradient(circle at top right, ${index === 0 ? 'rgba(71,183,230,0.16)' : 'rgba(255,255,255,0.05)'}, transparent 32%)` }} />
@@ -1407,7 +1443,7 @@ export default function MobilityOSCore() {
                       <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${isCompactMobile ? 140 : 180}px, 1fr))`, gap: 12 }}>
                             {[
                           { label: `${copy.passengerOccupancy} · ${copy.estimateTag}`, value: route.passengerFlow / Math.max(route.lanes * 1800, 1), color: PASSENGER_COLOR, tone: 'rgba(71,183,230,0.08)' },
-                          { label: `${copy.packageUtilization} · ${copy.estimateTag}`, value: route.packageFlow / Math.max(route.lanes * 820, 1), color: PACKAGE_COLOR, tone: 'rgba(168,214,20,0.08)' },
+                          { label: `${copy.packageUtilization} · ${copy.estimateTag}`, value: route.packageFlow / Math.max(route.lanes * 820, 1), color: PACKAGE_COLOR, tone: 'rgba(244,198,81,0.08)' },
                           { label: `${copy.congestionIntensity} · ${copy.estimateTag}`, value: route.congestion, color: C.orange, tone: 'rgba(255,149,72,0.08)' },
                         ].map((metric) => (
                           <div key={metric.label} style={{ padding: '12px 12px 10px', borderRadius: 16, background: metric.tone, border: '1px solid rgba(255,255,255,0.05)' }}>

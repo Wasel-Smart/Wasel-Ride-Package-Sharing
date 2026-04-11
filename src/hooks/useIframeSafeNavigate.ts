@@ -62,7 +62,7 @@ function normalizeTo(to: To): To {
 
   return {
     ...to,
-    pathname: to.pathname ? normalizePathname(to.pathname) : to.pathname,
+    ...(to.pathname ? { pathname: normalizePathname(to.pathname) } : {}),
   };
 }
 

@@ -289,6 +289,7 @@ export const instantFeedback = new InstantFeedbackEngine();
  * React hook for instant feedback
  */
 import { useEffect, useRef } from 'react';
+import { omitUndefined } from './object';
 
 export function useInstantFeedback(type: FeedbackType = 'light', options: FeedbackOptions = {}) {
   const elementRef = useRef<HTMLElement>(null);
@@ -297,7 +298,7 @@ export function useInstantFeedback(type: FeedbackType = 'light', options: Feedba
   useEffect(() => {
     const element = elementRef.current;
     if (!element) return;
-    const effectOptions: FeedbackOptions = { audio, duration, haptic, visual };
+    const effectOptions = omitUndefined({ audio, duration, haptic, visual });
 
     // Attach both touch and click feedback
     const cleanupTouch = instantFeedback.attachTouchFeedback(element, type, effectOptions);

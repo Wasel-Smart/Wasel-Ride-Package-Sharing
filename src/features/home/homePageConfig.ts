@@ -39,6 +39,23 @@ export interface HomeFeatureItem {
   color: string;
 }
 
+export interface HomeHeroHighlight {
+  title: string;
+  description: string;
+  color: string;
+}
+
+export interface HomeServicePillar {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  metric: string;
+  color: string;
+  dim: string;
+  border: string;
+  path: string;
+}
+
 export interface HomeTripModeOption {
   key: 'one-way' | 'round';
   title: string;
@@ -54,40 +71,40 @@ export function buildQuickActions(ar: boolean): HomeQuickAction[] {
       icon: Search,
       badge: 'R',
       title: ar ? 'ابحث عن رحلة' : 'Find a Ride',
-      description: ar ? 'رحلات حية' : 'Live matches',
+      description: ar ? 'رحلات حية' : 'Matches',
       color: C.cyan,
       dim: C.cyanDim,
-      border: 'rgba(93,150,210,0.26)',
+      border: 'rgba(244,198,81,0.24)',
       path: '/find-ride',
     },
     {
       icon: Car,
       badge: 'O',
       title: ar ? 'اعرض رحلتك' : 'Offer a Ride',
-      description: ar ? 'شارك المقاعد' : 'Share seats',
+      description: ar ? 'شارك المقاعد' : 'Seats',
       color: C.gold,
       dim: C.goldDim,
-      border: 'rgba(168,214,20,0.28)',
+      border: 'rgba(219,159,44,0.26)',
       path: '/offer-ride',
     },
     {
       icon: Package,
       badge: 'P',
-      title: ar ? 'أرسل طرداً مع رحلة' : 'Send Package with Ride',
-      description: ar ? 'طرد مع راكب' : 'Send with a rider',
+      title: ar ? 'أرسل طرداً مع رحلة' : 'Packages',
+      description: ar ? 'طرد مع راكب' : 'Delivery',
       color: C.gold,
       dim: C.goldDim,
-      border: 'rgba(168,214,20,0.28)',
+      border: 'rgba(219,159,44,0.26)',
       path: '/packages',
     },
     {
       icon: Bus,
       badge: 'B',
-      title: ar ? 'احجز باص' : 'Book a Bus',
-      description: ar ? 'رحلات بين المدن' : 'Intercity trips',
+      title: ar ? 'احجز باص' : 'Bus',
+      description: ar ? 'رحلات بين المدن' : 'Intercity',
       color: C.green,
       dim: C.greenDim,
-      border: 'rgba(107,181,21,0.24)',
+      border: 'rgba(255,240,193,0.24)',
       path: '/bus',
     },
   ];
@@ -159,6 +176,61 @@ export function buildFeatureItems(ar: boolean): HomeFeatureItem[] {
       title: ar ? 'آمن وموثوق' : 'Safe & Secure',
       description: ar ? 'SOS ودعم' : 'SOS and support',
       color: C.purple,
+    },
+  ];
+}
+
+export function buildHeroHighlights(ar: boolean): HomeHeroHighlight[] {
+  return [
+    {
+      title: ar ? 'رحلات ومشاوير' : 'Shared rides',
+      description: ar ? 'مطابقة حيّة بين المدن والداخلية.' : 'Live matching for city and corridor trips.',
+      color: C.cyan,
+    },
+    {
+      title: ar ? 'طرود مع الرحلة' : 'Packages on the move',
+      description: ar ? 'تسليم أسرع عبر المسارات القائمة.' : 'Faster delivery through existing routes.',
+      color: C.gold,
+    },
+    {
+      title: ar ? 'ثقة وتشغيل' : 'Trust and operations',
+      description: ar ? 'دعم، تتبع، ومؤشرات تشغيل في مكان واحد.' : 'Support, tracking, and live operations in one place.',
+      color: C.green,
+    },
+  ];
+}
+
+export function buildServicePillars(ar: boolean): HomeServicePillar[] {
+  return [
+    {
+      icon: Search,
+      title: ar ? 'ابحث واحجز' : 'Find and book',
+      description: ar ? 'رحلات سريعة داخل المدن وبينها.' : 'Fast bookings across city and corridor routes.',
+      metric: ar ? 'رحلات حيّة' : 'Live ride supply',
+      color: C.cyan,
+      dim: C.cyanDim,
+      border: 'rgba(244,198,81,0.24)',
+      path: '/find-ride',
+    },
+    {
+      icon: Package,
+      title: ar ? 'أرسل طرداً' : 'Send packages',
+      description: ar ? 'اربط الطرود مع رحلات موثوقة.' : 'Attach package delivery to verified trips.',
+      metric: ar ? 'تسليم مرن' : 'Flexible delivery',
+      color: C.gold,
+      dim: C.goldDim,
+      border: 'rgba(219,159,44,0.26)',
+      path: '/packages',
+    },
+    {
+      icon: Bus,
+      title: ar ? 'خطوط مجدولة' : 'Scheduled mobility',
+      description: ar ? 'باصات ومسارات متكررة للحركة اليومية.' : 'Buses and recurring corridors for daily movement.',
+      metric: ar ? 'تغطية وطنية' : 'National coverage',
+      color: C.green,
+      dim: C.greenDim,
+      border: 'rgba(255,240,193,0.24)',
+      path: '/bus',
     },
   ];
 }

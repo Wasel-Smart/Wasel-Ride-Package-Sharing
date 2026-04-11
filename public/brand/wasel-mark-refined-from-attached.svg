@@ -1,0 +1,97 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Wasel premium circular mark</title>
+  <desc id="desc">A refined circular mobility logo with a ring road, river junction, skyline, and green urban core.</desc>
+  <defs>
+    <linearGradient id="bg" x1="86" y1="82" x2="422" y2="434" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FCFEFF"/>
+      <stop offset="1" stop-color="#E6F1FA"/>
+    </linearGradient>
+    <radialGradient id="plateGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(252 156) rotate(90) scale(280)">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="roadOuter" x1="124" y1="116" x2="394" y2="396" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#68EEFF"/>
+      <stop offset="0.46" stop-color="#219DFF"/>
+      <stop offset="1" stop-color="#1CD0C5"/>
+    </linearGradient>
+    <linearGradient id="roadInner" x1="140" y1="136" x2="382" y2="388" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0A68BC"/>
+      <stop offset="1" stop-color="#0F88E2"/>
+    </linearGradient>
+    <linearGradient id="river" x1="259" y1="158" x2="259" y2="384" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#42DEFF"/>
+      <stop offset="1" stop-color="#1876D2"/>
+    </linearGradient>
+    <linearGradient id="parkLeft" x1="148" y1="170" x2="260" y2="342" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#B8F84B"/>
+      <stop offset="1" stop-color="#39A954"/>
+    </linearGradient>
+    <linearGradient id="parkRight" x1="286" y1="260" x2="386" y2="378" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#B3F550"/>
+      <stop offset="1" stop-color="#58C94E"/>
+    </linearGradient>
+    <linearGradient id="skyline" x1="164" y1="122" x2="354" y2="216" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#51BDEB"/>
+      <stop offset="1" stop-color="#B4D7E8"/>
+    </linearGradient>
+    <filter id="shadow" x="34" y="36" width="444" height="444" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="22" stdDeviation="20" flood-color="#06213A" flood-opacity="0.18"/>
+    </filter>
+    <clipPath id="badgeClip">
+      <circle cx="256" cy="256" r="176"/>
+    </clipPath>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <circle cx="256" cy="256" r="194" fill="url(#bg)"/>
+    <circle cx="256" cy="256" r="194" fill="url(#plateGlow)" opacity="0.72"/>
+  </g>
+
+  <circle cx="256" cy="256" r="194" stroke="#FFFFFF" stroke-width="8"/>
+  <circle cx="256" cy="256" r="194" stroke="#07213A" stroke-opacity="0.07" stroke-width="2"/>
+
+  <circle cx="256" cy="256" r="146" stroke="url(#roadOuter)" stroke-width="42"/>
+  <circle cx="256" cy="256" r="146" stroke="url(#roadInner)" stroke-width="12"/>
+
+  <g clip-path="url(#badgeClip)">
+    <path d="M150 164C126 180 110 205 104 234C137 222 171 223 198 236C221 248 239 269 254 295C266 269 284 248 308 235C336 220 370 220 406 234C398 205 381 180 357 164H150Z" fill="url(#parkLeft)"/>
+
+    <path d="M259 156C228 182 214 202 214 229C214 258 233 281 259 309C286 281 305 258 305 229C305 202 292 182 259 156Z" fill="url(#river)"/>
+    <path d="M258 307C218 334 187 354 165 388C193 401 224 408 256 408C291 408 323 400 351 386C328 353 296 332 258 307Z" fill="url(#river)"/>
+    <path d="M258 272C293 252 313 238 339 236C354 235 368 238 383 244C366 279 330 307 286 332C279 323 270 314 258 307V272Z" fill="url(#river)"/>
+
+    <path d="M280 258L298 286L280 279L262 286L280 258Z" fill="#F49A27"/>
+
+    <g fill="url(#parkRight)" opacity="0.94">
+      <path d="M302 283C334 279 360 287 380 307C368 346 338 375 298 391C290 363 286 332 302 283Z"/>
+      <path d="M324 314C332 304 346 300 361 304C352 317 350 331 354 343C341 340 330 331 324 314Z" fill="#7DDA4D"/>
+      <path d="M300 332C309 323 322 320 336 323C326 337 324 351 328 363C315 360 305 350 300 332Z" fill="#8FE34B"/>
+    </g>
+
+    <g fill="url(#skyline)">
+      <rect x="152" y="154" width="14" height="60" rx="4"/>
+      <rect x="172" y="144" width="16" height="70" rx="4"/>
+      <rect x="194" y="131" width="18" height="83" rx="4"/>
+      <rect x="218" y="119" width="18" height="95" rx="4"/>
+      <rect x="242" y="108" width="17" height="106" rx="4"/>
+      <rect x="266" y="100" width="18" height="114" rx="4"/>
+      <rect x="290" y="115" width="19" height="99" rx="4"/>
+      <rect x="315" y="129" width="18" height="85" rx="4"/>
+      <rect x="339" y="144" width="16" height="70" rx="4"/>
+      <rect x="361" y="156" width="14" height="58" rx="4"/>
+    </g>
+
+    <g fill="#FFFFFF" opacity="0.98">
+      <rect x="132" y="248" width="16" height="8" rx="4"/>
+      <rect x="364" y="248" width="16" height="8" rx="4"/>
+      <rect x="252" y="383" width="12" height="8" rx="4"/>
+    </g>
+
+    <g opacity="0.24" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round">
+      <path d="M166 169C154 177 146 186 139 197"/>
+      <path d="M226 119C241 112 258 108 278 107"/>
+      <path d="M338 172C351 182 362 194 370 208"/>
+    </g>
+  </g>
+</svg>

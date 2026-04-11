@@ -1,3 +1,5 @@
+import { canonicalizePhoneNumber } from '../../utils/phone';
+
 export function getProfileInitials(name?: string | null) {
   return (name ?? '')
     .trim()
@@ -13,12 +15,7 @@ export function normalizeProfilePhone(phone: string) {
   const trimmed = phone.trim();
   if (!trimmed) return '';
 
-  const normalized = trimmed.replace(/[\s()-]/g, '');
-  if (!/^\+?\d{8,15}$/.test(normalized)) {
-    return null;
-  }
-
-  return normalized.startsWith('+') ? normalized : `+${normalized}`;
+  return canonicalizePhoneNumber(trimmed);
 }
 
 export function buildProfileExportPayload(user: {

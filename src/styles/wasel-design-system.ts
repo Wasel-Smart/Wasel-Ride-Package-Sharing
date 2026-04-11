@@ -1,53 +1,56 @@
 /**
  * Presentation-oriented tokens used by wallet, notifications, and older UI modules.
+ *
+ * ALIGNED to the unified Wasel gold-navy brand identity.
+ * All colour values match brand-theme.css :root CSS variables.
  */
 
 export const WaselColors = {
-  bg: '#081C36',
-  surface: '#0B2341',
-  card: '#0D284B',
-  card2: '#16385D',
+  bg: '#07111B',
+  surface: '#0C1724',
+  card: '#101D2C',
+  card2: '#172738',
 
-  border: 'rgba(93,150,210,0.16)',
-  border2: 'rgba(93,150,210,0.28)',
-  borderGlow: 'rgba(93,150,210,0.36)',
-  borderDark: 'rgba(8,28,54,0.72)',
+  border: 'rgba(244,198,81,0.16)',
+  border2: 'rgba(244,198,81,0.26)',
+  borderGlow: 'rgba(255,240,193,0.3)',
+  borderDark: 'rgba(7,15,25,0.72)',
 
-  cyan: '#47B7E6',
-  cyanDark: '#1E5FAE',
-  cyanDim: 'rgba(71,183,230,0.14)',
-  cyanGlow: 'rgba(71,183,230,0.24)',
-  teal: '#72D0EF',
+  cyan: '#F4C651',
+  cyanDark: '#D59E26',
+  cyanDim: 'rgba(244,198,81,0.14)',
+  cyanGlow: 'rgba(244,198,81,0.2)',
+  teal: '#FFF0C1',
 
-  gold: '#A8D614',
-  goldDim: 'rgba(168,214,20,0.14)',
-  orange: '#C9E96B',
-  bronze: '#84C51A',
-  green: '#6BB515',
-  greenDim: 'rgba(107,181,21,0.14)',
-  purple: '#72D0EF',
-  purpleDim: 'rgba(114,208,239,0.14)',
+  gold: '#D59E26',
+  goldDim: 'rgba(213,158,38,0.14)',
+  orange: '#FFE08A',
+  bronze: '#C5831F',
+  green: '#FFF0C1',
+  greenDim: 'rgba(255,240,193,0.14)',
+  purple: '#D7C79A',
+  purpleDim: 'rgba(215,199,154,0.14)',
   red: '#FF646A',
   redDim: 'rgba(255,100,106,0.12)',
 
-  text: '#EEF5FF',
-  textDim: 'rgba(171,194,221,0.66)',
-  muted: 'rgba(145,173,202,0.82)',
+  text: '#F8EFD6',
+  textDim: 'rgba(228,214,180,0.64)',
+  muted: 'rgba(216,198,160,0.82)',
 
   white: '#FFFFFF',
   black: '#000000',
 } as const;
 
 export const WaselGradients = {
-  primary: `linear-gradient(135deg, ${WaselColors.teal} 0%, ${WaselColors.cyanDark} 42%, ${WaselColors.gold} 100%)`,
-  cyan: `linear-gradient(135deg, ${WaselColors.cyan}, ${WaselColors.cyanDark})`,
-  card: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)), rgba(13,40,75,0.92)',
-  hero: 'linear-gradient(180deg, rgba(4,18,30,0) 0%, #081C36 100%)',
+  primary: `linear-gradient(135deg, ${WaselColors.green} 0%, ${WaselColors.cyan} 44%, ${WaselColors.bronze} 100%)`,
+  cyan: `linear-gradient(135deg, ${WaselColors.cyan}, ${WaselColors.gold})`,
+  card: 'linear-gradient(180deg, rgba(255,249,234,0.05), rgba(255,249,234,0.02)), rgba(16,29,44,0.92)',
+  hero: 'linear-gradient(180deg, rgba(4,18,30,0) 0%, #07111B 100%)',
   glow: `radial-gradient(circle, ${WaselColors.cyanGlow}, transparent)`,
-  gold: `linear-gradient(135deg, ${WaselColors.green}, ${WaselColors.gold})`,
+  gold: `linear-gradient(135deg, ${WaselColors.gold}, ${WaselColors.orange})`,
   orange: `linear-gradient(135deg, ${WaselColors.orange}, ${WaselColors.gold})`,
-  green: `linear-gradient(135deg, ${WaselColors.green}, ${WaselColors.gold})`,
-  purple: `linear-gradient(135deg, ${WaselColors.cyanDark}, ${WaselColors.teal})`,
+  green: `linear-gradient(135deg, ${WaselColors.cyan}, ${WaselColors.green})`,
+  purple: `linear-gradient(135deg, ${WaselColors.gold}, ${WaselColors.teal})`,
 };
 
 export const WaselShadows = {
@@ -141,7 +144,7 @@ export const WaselBreakpoints = {
 };
 
 export const glassmorphism = (opacity = 0.84) => ({
-  background: `rgba(13,40,75,${opacity})`,
+  background: `rgba(16,29,44,${opacity})`,
   backdropFilter: 'blur(20px)',
   border: `1px solid ${WaselColors.border}`,
 });

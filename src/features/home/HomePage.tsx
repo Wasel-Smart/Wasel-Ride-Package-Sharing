@@ -5,20 +5,22 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { useLivePlatformStats, useLiveUserStats } from '../../services/liveDataService';
-import { getCorridorDemandLeaders } from '../../services/growthEngine';
 import { useCurrency } from '../../utils/currency';
 import { C, F } from './HomePageShared';
 import {
-  FeaturesSection,
   GuestCtaSection,
-  GrowthSection,
   HomeStatsGrid,
   MobilityOsSection,
   PopularRoutesSection,
   QuickActionsSection,
   UserSnapshotSection,
 } from './HomePageSections';
-import { buildFeatureItems, buildQuickActions, buildStatsData, buildTripModeOptions, type HomeTripModeOption } from './homePageConfig';
+import {
+  buildQuickActions,
+  buildStatsData,
+  buildTripModeOptions,
+  type HomeTripModeOption,
+} from './homePageConfig';
 import { useHomePageDashboard } from './useHomePageDashboard';
 import './HomePage.css';
 
@@ -76,18 +78,18 @@ function HomeHero({
         >
           <div className="home-logo-glow" />
           <div className="home-logo-mark">
-            <WaselMark size={80} />
+            <WaselMark size={148} />
           </div>
         </motion.div>
         <div className="home-hero-copy">
           <p className="home-eyebrow">
-            {ar ? 'واصل' : 'WASEL'}
+            {ar ? 'واصل | شبكة الحركة' : 'WASEL | Mobility Network'}
           </p>
           <h1 className="home-hero-title hero-title">
             {ar ? `أهلاً بعودتك${firstName ? `، ${firstName}` : ''}` : `Welcome back${firstName ? `, ${firstName}` : ''}`}
           </h1>
           <p className="home-subtle">
-            {ar ? 'إلى أين؟' : 'Where to?'}
+            {ar ? 'نقل أشخاص، طرود، وثقة تشغيلية في تجربة واحدة واضحة.' : 'Move people, packages, and operational trust through one unified experience.'}
           </p>
         </div>
       </div>
@@ -95,7 +97,7 @@ function HomeHero({
       <div className="home-panel home-panel-accent">
         <p className="home-mini-label">{ar ? 'نوع الرحلة' : 'TRIP TYPE'}</p>
         <p className="home-panel-copy">
-          {ar ? 'اختر واحدا وابدأ.' : 'Choose once and go.'}
+          {ar ? 'اختر النمط ثم ادخل الشبكة.' : 'Choose the mode, then enter the network.'}
         </p>
         <div className="home-trip-mode-grid">
           {options.map((option) => {
@@ -144,21 +146,12 @@ export function HomePage() {
     handleRefresh,
     tripMode,
     setTripMode,
-    referral,
-    referralCode,
-    setReferralCode,
-    referralMessage,
-    growthDashboard,
-    redeemReferral,
   } = useHomePageDashboard(user);
 
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
   const quickActions = buildQuickActions(ar);
   const stats = buildStatsData(ar, liveStats, formatFromJOD);
-  const features = buildFeatureItems(ar);
   const tripModeOptions = buildTripModeOptions(ar);
-  const corridorLeaders = getCorridorDemandLeaders();
-  const estimatedRevenue = formatFromJOD(growthDashboard?.revenueJod ?? 0);
 
   return (
     <div className="home-root" dir={dir} style={{ background: C.bg, color: C.text, fontFamily: F }}>
@@ -194,19 +187,6 @@ export function HomePage() {
         <QuickActionsSection
           ar={ar}
           quickActions={quickActions}
-          estimatedRevenue={estimatedRevenue}
-          growthDashboard={growthDashboard}
-          navigate={navigate}
-        />
-
-        <GrowthSection
-          ar={ar}
-          referral={referral}
-          referralCode={referralCode}
-          referralMessage={referralMessage}
-          corridorLeaders={corridorLeaders}
-          setReferralCode={setReferralCode}
-          redeemReferral={redeemReferral}
           navigate={navigate}
         />
 
@@ -220,8 +200,6 @@ export function HomePage() {
           />
         ) : null}
 
-        <MobilityOsSection ar={ar} navigate={navigate} />
-
         <PopularRoutesSection
           ar={ar}
           loading={loading}
@@ -229,7 +207,7 @@ export function HomePage() {
           navigate={navigate}
         />
 
-        <FeaturesSection ar={ar} features={features} />
+        <MobilityOsSection ar={ar} navigate={navigate} />
 
         {!user ? <GuestCtaSection ar={ar} navigate={navigate} /> : null}
       </div>

@@ -21,6 +21,7 @@ import {
 } from '../services/driverTracking';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertTriangle } from 'lucide-react';
+import { omitUndefined } from '../utils/object';
 
 export interface EnhancedWaselMapProps extends WaselMapProps {
   driverId?: string;
@@ -402,7 +403,7 @@ export function EnhancedWaselMapWrapper({
                 startLng={startLng}
                 endLat={endLat}
                 endLng={endLng}
-                onETAUpdate={onETAUpdate}
+                {...omitUndefined({ onETAUpdate })}
               />
             </>
           )}

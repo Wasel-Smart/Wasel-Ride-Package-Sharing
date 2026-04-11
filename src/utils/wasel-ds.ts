@@ -1,10 +1,10 @@
 /**
- * Wasel brand tokens aligned to the geometric growth-arrow mobility mark.
+ * Wasel brand tokens aligned to the investor mobility pin mark.
  *
  * The identity is built around:
- * - clear sky blue for route movement, live state, and trusted navigation
- * - growth green for network gain, availability, and positive momentum
- * - deep navy support surfaces that keep the mark crisp and professional
+ * - warm gold for actions, trust, and premium emphasis
+ * - champagne highlights for elevated surfaces and investor polish
+ * - deep navy surfaces that keep the route-pin mark crisp and cinematic
  */
 
 export const C = {
@@ -17,25 +17,25 @@ export const C = {
   panel: 'var(--wasel-panel-muted)',
   elevated: 'var(--wasel-panel-muted-strong)',
 
-  navy: '#0A1E3B',
-  navyMid: '#163A64',
-  navyLight: '#2F6EA5',
+  navy: '#07111B',
+  navyMid: '#122233',
+  navyLight: '#1D3448',
 
-  cyan: '#47B7E6',
-  cyanDark: '#1E5FAE',
-  cyanDim: 'rgba(71,183,230,0.16)',
-  cyanGlow: 'rgba(71,183,230,0.28)',
-  blue: '#2F92CF',
-  blueLight: '#72D0EF',
-  blueDim: 'rgba(47,146,207,0.18)',
-  gold: '#A8D614',
-  goldDim: 'rgba(168,214,20,0.16)',
-  green: '#6BB515',
-  greenDim: 'rgba(107,181,21,0.16)',
-  purple: '#72D0EF',
-  purpleDim: 'rgba(114,208,239,0.14)',
-  orange: '#C9E96B',
-  orangeDim: 'rgba(201,233,107,0.16)',
+  cyan: '#F4C651',
+  cyanDark: '#D59E26',
+  cyanDim: 'rgba(244,198,81,0.16)',
+  cyanGlow: 'rgba(244,198,81,0.24)',
+  blue: '#FFE8A0',
+  blueLight: '#FFF5D1',
+  blueDim: 'rgba(255,232,160,0.18)',
+  gold: '#DB9F2C',
+  goldDim: 'rgba(219,159,44,0.18)',
+  green: '#FFF0C1',
+  greenDim: 'rgba(255,240,193,0.18)',
+  purple: '#D7C79A',
+  purpleDim: 'rgba(215,199,154,0.16)',
+  orange: '#C5831F',
+  orangeDim: 'rgba(197,131,31,0.16)',
 
   text: 'var(--wasel-copy-primary)',
   textSub: 'var(--wasel-copy-muted)',
@@ -48,9 +48,9 @@ export const C = {
 
   error: '#FF646A',
   errorDim: 'rgba(255,100,106,0.12)',
-  warning: '#FFD84A',
-  success: '#6BB515',
-  info: '#47B7E6',
+  warning: '#FFE08A',
+  success: '#F4C651',
+  info: '#FFE8A0',
 
   overlay: 'var(--wasel-overlay)',
   glass: 'var(--wasel-glass-xl)',
@@ -138,23 +138,23 @@ export const SH = {
   lg: 'var(--wasel-shadow-xl)',
   xl: 'var(--wasel-shadow-xl)',
   navy: 'var(--wasel-shadow-md)',
-  cyan: '0 18px 50px rgba(71,183,230,0.2)',
-  cyanL: '0 24px 64px rgba(71,183,230,0.3)',
-  blue: '0 18px 50px rgba(47,146,207,0.22)',
-  green: '0 18px 50px rgba(107,181,21,0.2)',
-  gold: '0 18px 50px rgba(168,214,20,0.2)',
+  cyan: '0 18px 50px rgba(244,198,81,0.2)',
+  cyanL: '0 24px 64px rgba(244,198,81,0.28)',
+  blue: '0 18px 50px rgba(255,232,160,0.2)',
+  green: '0 18px 50px rgba(255,240,193,0.18)',
+  gold: '0 18px 50px rgba(219,159,44,0.22)',
   inner: 'inset 0 1px 0 rgba(255,255,255,0.05)',
 } as const;
 
-export const GRAD = 'linear-gradient(135deg, #72D0EF 0%, #2F92CF 42%, #8BC61A 100%)';
-export const GRAD_GOLD = 'linear-gradient(135deg, #6BB515 0%, #A8D614 100%)';
-export const GRAD_GREEN = 'linear-gradient(135deg, #47B7E6 0%, #84C51A 100%)';
-export const GRAD_NAVY = 'linear-gradient(135deg, #0A1E3B 0%, #183B67 100%)';
-export const GRAD_PURPLE = 'linear-gradient(135deg, #1E5FAE 0%, #72D0EF 100%)';
-export const GRAD_HERO = 'linear-gradient(160deg, #061426 0%, #0A1F3B 42%, #14355E 100%)';
-export const GRAD_SIGNAL = 'linear-gradient(135deg, #47B7E6 0%, #72D0EF 44%, #A8D614 100%)';
+export const GRAD = 'linear-gradient(135deg, #FFF0C1 0%, #F4C651 44%, #C5831F 100%)';
+export const GRAD_GOLD = 'linear-gradient(135deg, #DB9F2C 0%, #FFE08A 100%)';
+export const GRAD_GREEN = 'linear-gradient(135deg, #F4C651 0%, #FFF0C1 100%)';
+export const GRAD_NAVY = 'linear-gradient(135deg, #07111B 0%, #1D3448 100%)';
+export const GRAD_PURPLE = 'linear-gradient(135deg, #D59E26 0%, #FFE8A0 100%)';
+export const GRAD_HERO = 'linear-gradient(160deg, #07111B 0%, #0A1724 42%, #1A3043 100%)';
+export const GRAD_SIGNAL = 'linear-gradient(135deg, #FFE8A0 0%, #F4C651 44%, #DB9F2C 100%)';
 export const GRAD_AURORA =
-  'radial-gradient(circle at top, rgba(71,183,230,0.28), rgba(107,181,21,0.16) 44%, rgba(4,18,30,0) 74%)';
+  'radial-gradient(circle at top, rgba(255,232,160,0.24), rgba(244,198,81,0.18) 44%, rgba(4,18,30,0) 74%)';
 
 export const ANIM = {
   dur: {
@@ -276,8 +276,8 @@ export const GLOBAL_STYLES = `
   50% { opacity: 0.6; transform: scale(0.92); }
 }
 @keyframes pulse-glow {
-  0%,100% { box-shadow: 0 0 18px rgba(71,183,230,0.2); }
-  50% { box-shadow: 0 0 28px rgba(71,183,230,0.3), 0 0 36px rgba(168,214,20,0.16); }
+  0%,100% { box-shadow: 0 0 18px rgba(244,198,81,0.18); }
+  50% { box-shadow: 0 0 28px rgba(244,198,81,0.26), 0 0 36px rgba(255,240,193,0.16); }
 }
 @keyframes shimmer {
   0% { background-position: -1000px 0; }

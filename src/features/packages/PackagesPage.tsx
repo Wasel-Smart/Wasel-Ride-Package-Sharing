@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Brain } from 'lucide-react';
-import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
@@ -20,7 +19,6 @@ import { recordMovementActivity } from '../../services/movementMembership';
 import { createSupportTicket } from '../../services/supportInbox';
 import {
   getFeaturedCorridors,
-  getWaselCategoryPosition,
 } from '../../config/wasel-movement-network';
 import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { PackageReturnsPanel } from './components/PackageReturnsPanel';
@@ -41,7 +39,6 @@ export function PackagesPage() {
   const [trackingMessage, setTrackingMessage] = useState<string | null>(null);
   const [busyState, setBusyState] = useState<'idle' | 'creating' | 'tracking'>('idle');
 
-  const category = useMemo(() => getWaselCategoryPosition(), []);
   const featuredCorridors = useMemo(() => getFeaturedCorridors(3), []);
   const corridorTruth = useCorridorTruth({ from: pkg.from, to: pkg.to });
   const { corridorPlan, packageReadyRideCount, selectedPriceQuote, selectedSignal } = corridorTruth;
@@ -53,7 +50,6 @@ export function PackagesPage() {
       : trackedPackage?.status === 'matched'
         ? DS.gold
         : DS.muted;
-  const hasAttachRate = typeof corridorPlan?.attachRatePercent === 'number';
 
   const refreshPackageSnapshot = () => {
     setNetworkStats(getConnectedStats());
@@ -189,47 +185,22 @@ export function PackagesPage() {
           emoji="📦"
           title="Packages"
           titleAr="شبكة البضائع"
-          sub="Send, track, and manage packages without leaving the same live route network."
+          sub="Send and track on one route network."
           color={DS.gold}
           action={{ label: 'Offer route', onClick: () => nav('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Send fast, track clearly, and keep every handoff visible."
-          detail={`${category.infrastructureLabel} The best package experience comes from staying close to the ride network, not building a second workflow around it.`}
+          title="One package flow."
+          detail="Create, track, and handle returns in one place."
           tone={DS.gold}
         />
 
-        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
-          <StakeholderSignalBanner
-            eyebrow="Wasel · package comms"
-            title="Senders, riders, support, and route supply now read from one package story"
-            detail="Packages are now framed as a shared corridor workflow so the sender, carrier, and support team can all see the same movement, handoff, and escalation context."
-            stakeholders={[
-              { label: 'Tracked packages', value: String(networkStats.packagesCreated), tone: 'teal' },
-              { label: 'Matched now', value: String(networkStats.matchedPackages), tone: 'green' },
-              { label: 'Package-ready routes', value: String(networkStats.packageEnabledRides), tone: 'blue' },
-              { label: 'Live rider lanes', value: String(matchingRideCount), tone: 'amber' },
-            ]}
-            statuses={[
-              { label: 'Current tab', value: activeTab === 'send' ? 'Send' : activeTab === 'track' ? 'Track' : 'Returns', tone: 'teal' },
-              { label: 'Tracking focus', value: trackedPackage?.trackingId ?? 'Waiting', tone: trackedPackage ? 'green' : 'slate' },
-              { label: 'Corridor attach rate', value: hasAttachRate ? `${corridorPlan.attachRatePercent}%` : 'Pending', tone: hasAttachRate ? 'amber' : 'slate' },
-            ]}
-            lanes={[
-              { label: 'Sender lane', detail: 'Creation, tracking, and return flows stay connected to one corridor record.' },
-              { label: 'Carrier lane', detail: 'Package-ready drivers and route density are surfaced before the sender commits.' },
-              { label: 'Support lane', detail: 'Tracking and support tickets now reference the same package identifiers and movement state.' },
-            ]}
-          />
-        </div>}
-
-        <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
+        <div className="sp-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
           {[
-            { label: 'Package-ready routes', value: String(networkStats.packageEnabledRides), detail: 'Live route posts currently accepting packages', color: DS.green },
-            { label: 'Corridor attach rate', value: corridorPlan ? `${corridorPlan.attachRatePercent}%` : '--', detail: 'Probability that goods can piggyback on route density', color: DS.gold },
-            { label: 'Shared delivery price', value: corridorPlan ? `${corridorPlan.sharedPriceJod} JOD` : '--', detail: 'Reference price for low-friction route matching', color: DS.cyan },
-            { label: 'Matched packages', value: String(networkStats.matchedPackages), detail: 'Requests already connected to a live ride', color: DS.blue },
+            { label: 'Ready routes', value: String(networkStats.packageEnabledRides), detail: 'Accepting packages', color: DS.green },
+            { label: 'Attach rate', value: corridorPlan ? `${corridorPlan.attachRatePercent}%` : '--', detail: 'Chance of a fast match', color: DS.gold },
+            { label: 'Shared price', value: corridorPlan ? `${corridorPlan.sharedPriceJod} JOD` : '--', detail: 'Current reference price', color: DS.cyan },
           ].map((item) => (
             <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(18), border: `1px solid ${DS.border}`, padding: '18px 18px 16px', boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
               <div style={{ color: item.color, fontWeight: 900, fontSize: '1.2rem', marginBottom: 4 }}>{item.value}</div>
@@ -248,21 +219,18 @@ export function PackagesPage() {
               <div>
                 <div style={{ color: '#fff', fontWeight: 800 }}>Package route brief</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                  Read the lane before the sender commits.
+                  Key route details.
                 </div>
               </div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {[
                 corridorPlan
-                  ? `${corridorPlan.label} is ${corridorPlan.savingsPercent}% cheaper than solo movement when packages attach to shared route density.`
-                  : 'Choose a route to see its predicted package economics.',
+                  ? `${corridorPlan.label} saves ${corridorPlan.savingsPercent}%.`
+                  : 'Choose a route to see package pricing.',
                 corridorPlan
-                  ? `Best pickup point: ${corridorPlan.pickupPoints[0] ?? 'Trusted corridor node'}. ${corridorPlan.autoGroupWindow}`
-                  : 'Wasel recommends trusted pickup points to reduce handoff friction.',
-                corridorPlan
-                  ? `Business demand already attached here: ${corridorPlan.businessDemand.join(', ')}.`
-                  : 'Returns, documents, and same-day service demand can reinforce weaker package corridors.',
+                  ? `Pickup: ${corridorPlan.pickupPoints[0] ?? 'Trusted node'}.`
+                  : 'Pickup points appear here.',
               ].map((line) => (
                 <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
                   {line}
@@ -272,7 +240,7 @@ export function PackagesPage() {
           </div>
 
           <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-            <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Strong package corridors</div>
+            <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Top corridors</div>
             <div style={{ display: 'grid', gap: 10 }}>
               {featuredCorridors.map((corridor) => (
                 <button
@@ -295,7 +263,7 @@ export function PackagesPage() {
         </div>
 
         <div style={{ display: 'flex', gap: 8, background: 'rgba(255,255,255,0.03)', borderRadius: r(16), padding: 6, border: `1px solid ${DS.border}`, marginBottom: 24, boxShadow: '0 10px 22px rgba(0,0,0,0.14)' }}>
-          {([['send', 'Send Package'], ['track', 'Track Package'], ['raje3', 'Raje3 Returns']] as const).map(([key, label]) => (
+          {([['send', 'Send'], ['track', 'Track'], ['raje3', 'Returns']] as const).map(([key, label]) => (
             <button key={key} onClick={() => setActiveTab(key)} style={{ flex: 1, height: 44, borderRadius: r(12), border: 'none', cursor: 'pointer', fontFamily: DS.F, fontWeight: activeTab === key ? 800 : 600, fontSize: '0.82rem', letterSpacing: '-0.01em', background: activeTab === key ? DS.gradG : 'transparent', color: activeTab === key ? '#fff' : DS.muted, transition: 'all 0.18s' }}>
               {label}
             </button>

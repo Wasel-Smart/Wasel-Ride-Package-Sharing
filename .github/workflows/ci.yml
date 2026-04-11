@@ -13,7 +13,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ── Job 1: Static analysis + unit tests ────────────────────────────────────
   verify:
+    name: Verify (types · lint · unit tests · build)
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
@@ -30,11 +32,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # ── Security: dependency vulnerability audit ──────────────────────────
+      - name: Dependency audit (high + critical only)
+        run: npm audit --audit-level=high
+        continue-on-error: false
+
       - name: Type check
         run: npm run type-check
 
-      - name: Lint
-        run: npm run lint
+      - name: Lint (zero warnings)
+        run: npm run lint:strict
+
+      - name: Format check
+        run: npm run format:check
 
       - name: Unit tests with coverage
         run: npm run test:coverage
@@ -42,25 +52,78 @@ jobs:
       - name: Production build
         run: npm run build
 
-      - name: Verify Supabase migration integrity
-        run: npm run verify:supabase-rollout
-        continue-on-error: false
+      # ── Bundle size gate ──────────────────────────────────────────────────
+      - name: Bundle size gate
+        run: |
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
 
+            function dirSize(dir) {
+              const entries = fs.readdirSync(dir, { withFileTypes: true });
+              return entries.reduce((total, entry) => {
+                const full = path.join(dir, entry.name);
+                return total + (entry.isDirectory() ? dirSize(full) : fs.statSync(full).size);
+              }, 0);
+            }
+
+            const distDir = './dist';
+            if (!fs.existsSync(distDir)) {
+              console.log('dist/ not found — skipping bundle size check');
+              process.exit(0);
+            }
+
+            const assetsDir = path.join(distDir, 'assets');
+            if (!fs.existsSync(assetsDir)) {
+              console.log('dist/assets/ not found — skipping');
+              process.exit(0);
+            }
+
+            const jsFiles = fs.readdirSync(assetsDir).filter(f => f.endsWith('.js'));
+            const largeFiles = jsFiles.filter(f => {
+              const size = fs.statSync(path.join(assetsDir, f)).size;
+              return size > 600 * 1024; // 600 KB threshold per chunk
+            });
+
+            if (largeFiles.length > 0) {
+              console.error('Bundle chunk(s) exceed 600 KB limit:');
+              largeFiles.forEach(f => {
+                const kb = (fs.statSync(path.join(assetsDir, f)).size / 1024).toFixed(1);
+                console.error(' ', f, kb + ' KB');
+              });
+              process.exit(1);
+            }
+
+            const totalKB = (dirSize(assetsDir) / 1024).toFixed(0);
+            console.log('Bundle size OK. Total assets: ' + totalKB + ' KB');
+          "
+
+      # ── Security headers smoke test ───────────────────────────────────────
       - name: Security headers smoke test
         run: |
-          echo "Checking required security headers are configured in vercel.json..."
           node -e "
             const fs = require('fs');
             const config = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
             const headers = (config.headers || []).flatMap(h => h.headers || []).map(h => h.key.toLowerCase());
-            const required = ['x-frame-options', 'x-content-type-options', 'strict-transport-security', 'referrer-policy'];
+            const required = [
+              'x-frame-options',
+              'x-content-type-options',
+              'strict-transport-security',
+              'referrer-policy',
+              'content-security-policy',
+              'permissions-policy',
+            ];
             const missing = required.filter(h => !headers.includes(h));
             if (missing.length > 0) {
               console.error('Missing security headers: ' + missing.join(', '));
               process.exit(1);
             }
-            console.log('All required security headers are configured: ' + required.join(', '));
+            console.log('All required security headers present:', required.join(', '));
           "
+
+      - name: Verify Supabase migration integrity
+        run: npm run verify:supabase-rollout
+        continue-on-error: false
 
       - name: Upload coverage artifacts
         if: always()
@@ -71,3 +134,69 @@ jobs:
             coverage
             coverage-summary.json
           if-no-files-found: ignore
+
+  # ── Job 2: End-to-end tests ─────────────────────────────────────────────────
+  e2e:
+    name: End-to-end (Playwright · Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: verify
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Build for E2E
+        run: npm run build
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+
+  # ── Job 3: Lighthouse performance budget ────────────────────────────────────
+  lighthouse:
+    name: Lighthouse CI (performance budget)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: verify
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run Lighthouse CI
+        run: npm run test:lhci
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}

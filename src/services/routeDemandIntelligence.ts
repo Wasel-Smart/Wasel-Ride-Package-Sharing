@@ -202,6 +202,7 @@ function computeSignal(corridor: CorridorOpportunity, membership = getMovementMe
     basePriceJod: recommendedSharedPriceJod,
     corridorId: corridor.id,
     forecastDemandScore,
+    pricePressure,
     membership,
   });
   const routeOwnershipScore = clamp(

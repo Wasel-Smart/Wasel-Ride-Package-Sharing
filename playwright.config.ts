@@ -1,6 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const useDemoData = process.env.PLAYWRIGHT_USE_DEMO_DATA !== 'false';
+const devServerCommand = process.platform === 'win32'
+  ? `cmd /c "set VITE_ENABLE_DEMO_DATA=${useDemoData ? 'true' : 'false'}&& npm run dev -- --host 127.0.0.1 --port 4173"`
+  : `VITE_ENABLE_DEMO_DATA=${useDemoData ? 'true' : 'false'} npm run dev -- --host 127.0.0.1 --port 4173`;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -14,7 +17,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: `cmd /c "set VITE_ENABLE_DEMO_DATA=${useDemoData ? 'true' : 'false'}&& npm run dev -- --host 127.0.0.1 --port 4173"`,
+    command: devServerCommand,
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: true,
     timeout: 120_000,

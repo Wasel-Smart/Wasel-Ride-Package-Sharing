@@ -10,11 +10,11 @@ import { CORE_NAV_ITEMS } from '../config/user-navigation';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
 
-const BG = 'rgba(8,27,43,0.96)';
-const CYAN = '#47B7E6';
-const GOLD = '#A8D614';
-const INACTIVE = 'rgba(153,184,210,0.56)';
-const BORDER = 'rgba(93,150,210,0.16)';
+const BG = 'linear-gradient(180deg, rgba(12,20,30,0.98), rgba(8,14,22,0.98))';
+const CYAN = '#F4C651';
+const GOLD = '#FFF0C1';
+const INACTIVE = 'rgba(228,214,180,0.56)';
+const BORDER = 'rgba(244,198,81,0.16)';
 const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 const ICONS = {
@@ -67,7 +67,7 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
           backdropFilter: 'blur(28px)',
           WebkitBackdropFilter: 'blur(28px)',
           borderTop: `1px solid ${BORDER}`,
-          boxShadow: '0 -12px 40px rgba(1,10,18,0.34), 0 -1px 0 rgba(93,150,210,0.08)',
+          boxShadow: '0 -14px 40px rgba(1,10,18,0.38), 0 -1px 0 rgba(244,198,81,0.08)',
           paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))',
           flexDirection: 'row',
           justifyContent: 'space-around',
@@ -132,8 +132,8 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
                         borderRadius: 999,
                         background:
                           item.accent === 'gold'
-                            ? 'radial-gradient(circle, rgba(168,214,20,0.22), rgba(168,214,20,0))'
-                            : 'radial-gradient(circle, rgba(71,183,230,0.24), rgba(71,183,230,0))',
+                            ? 'radial-gradient(circle, rgba(255,240,193,0.2), rgba(255,240,193,0))'
+                            : 'radial-gradient(circle, rgba(244,198,81,0.22), rgba(244,198,81,0))',
                         pointerEvents: 'none',
                       }}
                     />

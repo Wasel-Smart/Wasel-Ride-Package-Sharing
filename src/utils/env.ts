@@ -34,13 +34,14 @@ function getBooleanEnv(key: string, fallback: boolean): boolean {
 
 function resolveAppUrl(): string {
   const configuredAppUrl = getEnv('VITE_APP_URL', 'http://localhost:3000').trim();
+  const runtimeOrigin =
+    typeof window !== 'undefined' && typeof window.location?.origin === 'string'
+      ? window.location.origin.trim()
+      : '';
 
-  if (typeof window !== 'undefined') {
-    const runtimeOrigin = window.location.origin.trim();
-    if (runtimeOrigin && isLocalDevelopmentOrigin(runtimeOrigin)) {
-      if (!configuredAppUrl || isLocalDevelopmentOrigin(configuredAppUrl)) {
-        return runtimeOrigin;
-      }
+  if (runtimeOrigin && isLocalDevelopmentOrigin(runtimeOrigin)) {
+    if (!configuredAppUrl || isLocalDevelopmentOrigin(configuredAppUrl)) {
+      return runtimeOrigin;
     }
   }
 

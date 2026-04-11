@@ -143,25 +143,30 @@ const LEGACY_APP_ALIASES = [
 
 /* ─────────────────────────────────────────────────────────────────────────
    App lazy routes
+   Each route now has its own purpose-built page component.
+   The three previously shared OperationsOverviewPage stubs (analytics,
+   ai-intelligence, moderation) are now dedicated production pages.
 ───────────────────────────────────────────────────────────────────────── */
 const APP_LAZY_ROUTES = [
-  { path: 'auth',            lazy: lazy(() => import('./pages/WaselAuth')) },
-  { path: 'auth/callback',   lazy: lazy(() => import('./pages/WaselAuthCallback')) },
-  { path: 'find-ride',       lazy: lazy(() => import('./features/rides/FindRidePage')) },
-  { path: 'offer-ride',      lazy: lazy(() => import('./features/rides/OfferRidePage')) },
-  { path: 'my-trips',        lazy: lazy(() => import('./features/trips/MyTripsPage')) },
-  { path: 'live-trip',       lazy: lazy(() => import('./components/LiveTripTracking'), 'LiveTripTracking') },
-  { path: 'routes',          lazy: lazy(() => import('./components/PopularRoutes'), 'PopularRoutes') },
-  { path: 'bus',             lazy: lazy(() => import('./features/bus/BusPage'), 'BusPage') },
-  { path: 'packages',        lazy: lazy(() => import('./features/packages/PackagesPage')) },
-  { path: 'raje3',           lazy: lazy(() => import('./features/raje3/ReturnMatching')) },
+  { path: 'auth',               lazy: lazy(() => import('./pages/WaselAuth')) },
+  { path: 'auth/callback',      lazy: lazy(() => import('./pages/WaselAuthCallback')) },
+  { path: 'find-ride',          lazy: lazy(() => import('./features/rides/FindRidePage')) },
+  { path: 'offer-ride',         lazy: lazy(() => import('./features/rides/OfferRidePage')) },
+  { path: 'my-trips',           lazy: lazy(() => import('./features/trips/MyTripsPage')) },
+  { path: 'live-trip',          lazy: lazy(() => import('./components/LiveTripTracking'), 'LiveTripTracking') },
+  { path: 'routes',             lazy: lazy(() => import('./components/PopularRoutes'), 'PopularRoutes') },
+  { path: 'bus',                lazy: lazy(() => import('./features/bus/BusPage'), 'BusPage') },
+  { path: 'packages',           lazy: lazy(() => import('./features/packages/PackagesPage')) },
+  { path: 'raje3',              lazy: lazy(() => import('./features/raje3/ReturnMatching')) },
   { path: 'services/corporate', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
   { path: 'services/school',    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
   { path: 'innovation-hub',     lazy: lazy(() => import('./features/innovation/InnovationHubPage')) },
-  { path: 'analytics',          lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
+  // ── Dedicated analytics dashboard (was: OperationsOverviewPage stub) ──
+  { path: 'analytics',          lazy: lazy(() => import('./features/operations/AnalyticsPage')) },
   { path: 'execution-os',       lazy: lazy(() => import('./features/operations/ExecutionOSPage')) },
   { path: 'mobility-os',        lazy: lazy(() => import('./features/mobility-os')) },
-  { path: 'ai-intelligence',    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
+  // ── Dedicated AI intelligence page (was: OperationsOverviewPage stub) ─
+  { path: 'ai-intelligence',    lazy: lazy(() => import('./features/operations/AIIntelligencePage')) },
   { path: 'wallet',             lazy: lazy(() => import('./features/wallet'), 'WalletDashboard') },
   { path: 'plus',               lazy: lazy(() => import('./features/plus/WaselPlusPage')) },
   { path: 'profile',            lazy: lazy(() => import('./features/profile/ProfilePage')) },
@@ -172,7 +177,8 @@ const APP_LAZY_ROUTES = [
   { path: 'safety',             lazy: lazy(() => import('./features/safety/SafetyPage')) },
   { path: 'privacy',            lazy: lazy(() => import('./features/legal/PrivacyPolicy'), 'PrivacyPolicy') },
   { path: 'terms',              lazy: lazy(() => import('./features/legal/TermsOfService'), 'TermsOfService') },
-  { path: 'moderation',         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
+  // ── Dedicated moderation page (was: OperationsOverviewPage stub) ──────
+  { path: 'moderation',         lazy: lazy(() => import('./features/operations/ModerationPage')) },
 ] as const;
 
 const APP_REDIRECT_ROUTES = [

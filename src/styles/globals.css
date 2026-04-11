@@ -357,7 +357,7 @@ a[href].wasel-outline-button:active,
 }
 .sidebar-item:hover  { background: var(--wasel-sidebar-item-hover); color: rgba(241,245,249,0.9); transform: translateX(2px); }
 .sidebar-item:active { transform: scale(0.98); }
-.sidebar-item.active { background: var(--wasel-sidebar-item-active); color: var(--wasel-sidebar-active-text, #00C8E8); font-weight: var(--wasel-fw-bold); }
+.sidebar-item.active { background: var(--wasel-sidebar-item-active); color: var(--wasel-sidebar-active-text, #1EA8E7); font-weight: var(--wasel-fw-bold); }
 .sidebar-item.active::before {
   content: '';
   position: absolute;
@@ -473,10 +473,10 @@ a[href].wasel-outline-button:active,
   padding: 3px 10px; border-radius: var(--wasel-radius-pill);
   font-size: var(--wasel-text-caption); font-weight: var(--wasel-fw-semibold); line-height: 1.6;
 }
-.pill-teal   { background: rgba(0,200,232,0.12);  color: #00C8E8; border: 1px solid rgba(0,200,232,0.22); }
-.pill-green  { background: rgba(0,200,117,0.12);  color: #00C875; border: 1px solid rgba(0,200,117,0.22); }
-.pill-bronze { background: rgba(240,168,48,0.12); color: #F0A830; border: 1px solid rgba(240,168,48,0.22); }
-.pill-amber  { background: rgba(240,168,48,0.12); color: #F0A830; border: 1px solid rgba(240,168,48,0.22); }
+.pill-teal   { background: rgba(30,168,231,0.12);  color: #1EA8E7; border: 1px solid rgba(30,168,231,0.22); }
+.pill-green  { background: rgba(255,207,99,0.12);  color: #FFCF63; border: 1px solid rgba(255,207,99,0.22); }
+.pill-bronze { background: rgba(243,178,58,0.12); color: #F3B23A; border: 1px solid rgba(243,178,58,0.22); }
+.pill-amber  { background: rgba(243,178,58,0.12); color: #F3B23A; border: 1px solid rgba(243,178,58,0.22); }
 .pill-pink   { background: rgba(255,107,157,0.12); color: #FF6B9D; border: 1px solid rgba(255,107,157,0.25); }
 .pill-slate  { background: rgba(0,0,0,0.2); color: #4D6A8A; border: 1px solid rgba(0,200,232,0.08); }
 
@@ -620,23 +620,23 @@ a[href].wasel-outline-button:active,
 
 /* ── Text gradient utilities ─────────────────────────────────────────────── */
 .text-gradient-primary {
-  background: linear-gradient(135deg, #00C8E8 0%, #5EE7FF 50%, #00C875 100%);
+  background: linear-gradient(135deg, #1EA8E7 0%, #69D7F7 50%, #F3B23A 100%);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
 .text-gradient-teal {
-  background: linear-gradient(135deg, #00C8E8 0%, #5EE7FF 100%);
+  background: linear-gradient(135deg, #1EA8E7 0%, #69D7F7 100%);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
 .text-gradient-bronze {
-  background: linear-gradient(135deg, #F0A830 0%, #FFD070 50%, #C8751A 100%);
+  background: linear-gradient(135deg, #F3B23A 0%, #FFD76A 50%, #D88922 100%);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
 .text-gradient-gold {
-  background: linear-gradient(135deg, #F0A830 0%, #FFD070 50%, #C8751A 100%);
+  background: linear-gradient(135deg, #F3B23A 0%, #FFD76A 50%, #D88922 100%);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
 .savings-shimmer {
-  background: linear-gradient(90deg, #00C875 0%, #00C8E8 30%, #5EE7FF 50%, #00C8E8 70%, #00C875 100%);
+  background: linear-gradient(90deg, #F3B23A 0%, #1EA8E7 30%, #69D7F7 50%, #1EA8E7 70%, #F3B23A 100%);
   background-size: 200% auto;
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
   animation: savings-shimmer 3s linear infinite;
@@ -701,8 +701,8 @@ a[href].wasel-outline-button:active,
 /* ── Premium button styles ───────────────────────────────────────────────── */
 .btn-wasel-primary {
   position: relative; overflow: hidden;
-  background: linear-gradient(135deg, #00C8E8 0%, #0095b8 100%);
-  box-shadow: 0 4px 20px rgba(0,200,232,0.35), 0 1px 0 rgba(255,255,255,0.15) inset;
+  background: linear-gradient(135deg, #1EA8E7 0%, #146FB5 58%, #F3B23A 100%);
+  box-shadow: 0 4px 20px rgba(30,168,231,0.35), 0 1px 0 rgba(255,255,255,0.15) inset;
   transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
   color: #040C18; font-weight: 800; border-radius: 14px;
 }
@@ -717,12 +717,12 @@ a[href].wasel-outline-button:active,
 
 .btn-wasel-outline {
   position: relative; background: transparent;
-  border: 1px solid rgba(0,200,232,0.3); color: #00C8E8; font-weight: 700; border-radius: 14px;
+  border: 1px solid rgba(30,168,231,0.3); color: #1EA8E7; font-weight: 700; border-radius: 14px;
   transition: all 0.25s ease;
 }
 .btn-wasel-outline:hover {
-  background: rgba(0,200,232,0.07); border-color: rgba(0,200,232,0.55);
-  box-shadow: 0 0 20px rgba(0,200,232,0.15); transform: translateY(-1px);
+  background: rgba(30,168,231,0.07); border-color: rgba(30,168,231,0.55);
+  box-shadow: 0 0 20px rgba(30,168,231,0.15); transform: translateY(-1px);
 }
 
 /* ── Glow spot utilities ─────────────────────────────────────────────────── */
@@ -805,12 +805,12 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
   width: 12px; height: 12px; border-radius: 50%;
-  background: var(--primary, #00C8E8); border: 2px solid var(--wasel-surface-0, #0b1525);
+  background: var(--primary, #1EA8E7); border: 2px solid var(--wasel-surface-0, #0b1525);
   cursor: pointer; box-shadow: 0 0 6px rgba(0,200,232,0.6);
 }
 input[type="range"]::-moz-range-thumb {
   width: 12px; height: 12px; border-radius: 50%;
-  background: var(--primary, #00C8E8); border: 2px solid var(--wasel-surface-0, #0b1525);
+  background: var(--primary, #1EA8E7); border: 2px solid var(--wasel-surface-0, #0b1525);
   cursor: pointer; box-shadow: 0 0 6px rgba(0,200,232,0.6);
 }
 

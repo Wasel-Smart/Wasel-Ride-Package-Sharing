@@ -119,8 +119,6 @@ export function createDemoUserProfile(input: DemoProfileInput): WaselUserProfile
     rating,
     trips,
     balance: input.balance ?? 0,
-    phone: input.phone,
-    avatar: input.avatar,
     joinedAt: input.joinedAt ?? new Date().toISOString().slice(0, 10),
     phoneVerified,
     emailVerified,
@@ -129,6 +127,8 @@ export function createDemoUserProfile(input: DemoProfileInput): WaselUserProfile
     trustScore: deriveTrustScore({ verificationLevel, rating, trips }),
     walletStatus: 'active',
     backendMode: 'demo',
+    ...(input.phone ? { phone: input.phone } : {}),
+    ...(input.avatar ? { avatar: input.avatar } : {}),
   };
 }
 
@@ -159,6 +159,7 @@ export function mapBackendProfile(args: {
   const phoneVerified = Boolean(profile?.phone_verified ?? authUser.phone_confirmed_at ?? false);
   const emailVerified = Boolean(profile?.email_verified ?? authUser.email_confirmed_at ?? false);
   const sanadVerified = Boolean(profile?.sanad_verified ?? metadata.sanad_verified ?? verified);
+  const joinedAt = profile?.created_at ?? profile?.joined_at ?? authUser.created_at?.slice(0, 10);
   const verificationLevel = ((): WaselVerificationLevel => {
     const raw = profile?.verification_level;
     if (raw === 'level_0' || raw === 'level_1' || raw === 'level_2' || raw === 'level_3') return raw;
@@ -186,9 +187,6 @@ export function mapBackendProfile(args: {
       : typeof profile?.balance === 'number'
         ? profile.balance
         : 0,
-    phone,
-    avatar: typeof profile?.avatar_url === 'string' ? profile.avatar_url : undefined,
-    joinedAt: profile?.created_at ?? profile?.joined_at ?? authUser.created_at?.slice(0, 10),
     phoneVerified,
     emailVerified,
     sanadVerified,
@@ -199,5 +197,8 @@ export function mapBackendProfile(args: {
         ? profile.wallet_status
         : 'active',
     backendMode: 'supabase',
+    ...(phone ? { phone } : {}),
+    ...(typeof profile?.avatar_url === 'string' ? { avatar: profile.avatar_url } : {}),
+    ...(joinedAt ? { joinedAt } : {}),
   };
 }

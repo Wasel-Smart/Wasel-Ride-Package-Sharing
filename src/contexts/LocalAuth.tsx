@@ -12,6 +12,7 @@ import { authAPI } from '../services/auth';
 import { initSupabaseListeners, isSupabaseConfigured, supabase } from '../utils/supabase/client';
 import { getConfig } from '../utils/env';
 import { scheduleDeferredTask } from '../utils/runtimeScheduling';
+import { omitUndefined } from '../utils/object';
 
 export interface WaselUser {
   id: string;
@@ -138,7 +139,6 @@ function normalizeStoredUser(raw: unknown): WaselUser | null {
     id,
     name,
     email,
-    phone,
     role: normalizeRole(value.role),
     balance: Number.isFinite(Number(value.balance)) ? Number(value.balance) : 0,
     rating,
@@ -147,10 +147,6 @@ function normalizeStoredUser(raw: unknown): WaselUser | null {
     sanadVerified,
     verificationLevel: normalizeVerificationLevel(value.verificationLevel, phoneVerified, sanadVerified),
     walletStatus: normalizeWalletStatus(value.walletStatus),
-    avatar:
-      typeof value.avatar === 'string' && value.avatar.trim()
-        ? value.avatar.trim()
-        : undefined,
     joinedAt:
       typeof value.joinedAt === 'string' && value.joinedAt.trim()
         ? value.joinedAt.slice(0, 10)
@@ -160,6 +156,13 @@ function normalizeStoredUser(raw: unknown): WaselUser | null {
     twoFactorEnabled: Boolean(value.twoFactorEnabled),
     trustScore: 0,
     backendMode: value.backendMode === 'demo' ? 'demo' : 'supabase',
+    ...omitUndefined({
+      phone,
+      avatar:
+        typeof value.avatar === 'string' && value.avatar.trim()
+          ? value.avatar.trim()
+          : undefined,
+    }),
   };
 
   return {
@@ -194,7 +197,6 @@ function mapBackendProfile({
     id: authUser?.id || profile?.id || `user-${Date.now()}`,
     name,
     email: authUser?.email || profile?.email || '',
-    phone,
     role,
     balance: Number(profile?.wallet_balance ?? profile?.balance ?? 0),
     rating: Number(profile?.rating ?? 5),
@@ -203,13 +205,16 @@ function mapBackendProfile({
     sanadVerified,
     verificationLevel,
     walletStatus,
-    avatar: profile?.avatar_url ?? authUser?.user_metadata?.avatar_url ?? undefined,
     joinedAt: String(profile?.created_at ?? authUser?.created_at ?? new Date().toISOString()).slice(0, 10),
     emailVerified,
     phoneVerified,
     twoFactorEnabled: Boolean(profile?.two_factor_enabled),
     trustScore: 0,
     backendMode: 'supabase',
+    ...omitUndefined({
+      phone,
+      avatar: profile?.avatar_url ?? authUser?.user_metadata?.avatar_url ?? undefined,
+    }),
   };
 
   return {

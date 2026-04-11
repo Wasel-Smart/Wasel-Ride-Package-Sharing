@@ -1,5 +1,6 @@
 import { logger, trackAPICall } from '../utils/logging';
 import { redactSensitiveValue } from '../utils/redaction';
+import { canonicalizePhoneNumber } from '../utils/phone';
 import {
   AuthenticationError,
   ValidationError,
@@ -134,9 +135,9 @@ export function sanitizeOptionalTextField(value: string | undefined, maxLength =
 }
 
 export function sanitizePhoneNumber(value: string): string {
-  const normalized = value.replace(/[^\d+]/g, '').trim();
-  if (!normalized || !/^\+[1-9]\d{7,14}$/.test(normalized)) {
-    throw new ValidationError('Phone number is required');
+  const normalized = canonicalizePhoneNumber(value);
+  if (!normalized) {
+    throw new ValidationError('Phone number must be in international format');
   }
 
   return normalized;

@@ -12,6 +12,7 @@
 import { API_URL, fetchWithRetry, getAuthDetails } from '@/services/core';
 import { getConfig } from '@/utils/env';
 import { logger } from '@/utils/logging';
+import { omitUndefined } from './object';
 
 const IS_DEV =
   typeof import.meta !== 'undefined' &&
@@ -187,7 +188,9 @@ async function callTwoFactorEndpoint<T>(path: string, body?: Record<string, unkn
   const response = await fetchWithRetry(`${API_URL}${path}`, {
     method: 'POST',
     headers: await getAuthenticatedHeaders(),
-    body: body ? JSON.stringify(body) : undefined,
+    ...omitUndefined({
+      body: body ? JSON.stringify(body) : undefined,
+    }),
   });
 
   const payload = await response.json().catch(() => ({}));

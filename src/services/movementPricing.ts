@@ -1,7 +1,12 @@
 import {
+  getCorridorOpportunityById,
+} from '../config/wasel-movement-network';
+import {
   getMovementMembershipSnapshot,
   type MovementMembershipSnapshot,
 } from './movementMembership';
+
+export type MovementPricePressure = 'surging' | 'balanced' | 'value-window';
 
 export interface MovementPriceQuote {
   basePriceJod: number;
@@ -13,6 +18,9 @@ export interface MovementPriceQuote {
   commuterDiscountPercent: number;
   creditDiscountPercent: number;
   loyaltyTier: MovementMembershipSnapshot['loyaltyTier'];
+  forecastDemandScore: number;
+  pricePressure: MovementPricePressure;
+  savingsPercent: number;
   explanation: string;
 }
 
@@ -31,10 +39,39 @@ function getCreditDiscountPercent(credits: number) {
   return Math.min(10, Math.max(1.5, Math.round((credits / 120) * 10) / 10));
 }
 
+function resolvePricePressure(
+  forecastDemandScore: number,
+  explicitPressure?: MovementPricePressure,
+): MovementPricePressure {
+  if (explicitPressure) return explicitPressure;
+  if (forecastDemandScore >= 86) return 'surging';
+  if (forecastDemandScore >= 58) return 'balanced';
+  return 'value-window';
+}
+
+function getSavingsPercent(
+  corridorId: string | null | undefined,
+  basePriceJod: number,
+  finalPriceJod: number,
+) {
+  const corridor = corridorId ? getCorridorOpportunityById(corridorId) : null;
+  const benchmarkPrice = corridor?.soloReferencePriceJod ?? basePriceJod;
+
+  if (!benchmarkPrice || benchmarkPrice <= 0) {
+    return 0;
+  }
+
+  return Math.max(
+    0,
+    Math.round((1 - (finalPriceJod / benchmarkPrice)) * 100),
+  );
+}
+
 export function getMovementPriceQuote(args: {
   basePriceJod: number;
   corridorId?: string | null;
   forecastDemandScore?: number;
+  pricePressure?: MovementPricePressure;
   membership?: ReturnType<typeof getMovementMembershipSnapshot>;
 }) {
   const membership = args.membership ?? getMovementMembershipSnapshot();
@@ -50,6 +87,8 @@ export function getMovementPriceQuote(args: {
   );
   const finalPriceJod = roundMoney(basePriceJod * (1 - totalDiscountPercent / 100));
   const discountJod = roundMoney(Math.max(0, basePriceJod - finalPriceJod));
+  const pricePressure = resolvePricePressure(forecastDemandScore, args.pricePressure);
+  const savingsPercent = getSavingsPercent(args.corridorId, basePriceJod, finalPriceJod);
 
   const explanationBits = [
     densityDiscountPercent > 0 ? `${densityDiscountPercent}% route-density discount` : null,
@@ -68,6 +107,9 @@ export function getMovementPriceQuote(args: {
     commuterDiscountPercent: roundMoney(commuterDiscountPercent),
     creditDiscountPercent: roundMoney(creditDiscountPercent),
     loyaltyTier: membership.loyaltyTier,
+    forecastDemandScore,
+    pricePressure,
+    savingsPercent,
     explanation: explanationBits.join(' + '),
   } satisfies MovementPriceQuote;
 }

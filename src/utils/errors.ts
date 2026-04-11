@@ -21,7 +21,9 @@ export class WaselError extends Error {
     this.name = 'WaselError';
     this.code = code;
     this.isIgnorable = isIgnorable;
-    this.context = context;
+    if (context !== undefined) {
+      this.context = context;
+    }
     Object.setPrototypeOf(this, WaselError.prototype);
   }
 }

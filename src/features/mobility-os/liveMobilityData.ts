@@ -123,55 +123,145 @@ type TrafficSnapshot = {
 };
 
 const ROUTE_CITY_PAIRS = [
-  { routeId: 'amman-aqaba', from: 'amman', to: 'aqaba', label: 'Amman -> Aqaba', labelAr: 'عمّان ← العقبة' },
-  { routeId: 'amman-irbid', from: 'amman', to: 'irbid', label: 'Amman -> Irbid', labelAr: 'عمّان ← إربد' },
-  { routeId: 'amman-zarqa', from: 'amman', to: 'zarqa', label: 'Amman -> Zarqa', labelAr: 'عمّان ← الزرقاء' },
-  { routeId: 'zarqa-mafraq', from: 'zarqa', to: 'mafraq', label: 'Zarqa -> Mafraq', labelAr: 'الزرقاء ← المفرق' },
-  { routeId: 'amman-jerash', from: 'amman', to: 'jerash', label: 'Amman -> Jerash', labelAr: 'عمّان ← جرش' },
-  { routeId: 'irbid-ajloun', from: 'irbid', to: 'ajloun', label: 'Irbid -> Ajloun', labelAr: 'إربد ← عجلون' },
-  { routeId: 'amman-madaba', from: 'amman', to: 'madaba', label: 'Amman -> Madaba', labelAr: 'عمّان ← مادبا' },
-  { routeId: 'madaba-karak', from: 'madaba', to: 'karak', label: 'Madaba -> Karak', labelAr: 'مادبا ← الكرك' },
-  { routeId: 'karak-tafila', from: 'karak', to: 'tafila', label: 'Karak -> Tafila', labelAr: 'الكرك ← الطفيلة' },
-  { routeId: 'tafila-maan', from: 'tafila', to: 'maan', label: "Tafila -> Ma'an", labelAr: 'الطفيلة ← معان' },
-  { routeId: 'maan-aqaba', from: 'maan', to: 'aqaba', label: "Ma'an -> Aqaba", labelAr: 'معان ← العقبة' },
-  { routeId: 'irbid-zarqa', from: 'irbid', to: 'zarqa', label: 'Irbid -> Zarqa', labelAr: 'إربد ← الزرقاء' },
-  { routeId: 'amman-salt', from: 'amman', to: 'salt', label: 'Amman -> Salt', labelAr: 'عمّان ← السلط' },
-  { routeId: 'salt-jerash', from: 'salt', to: 'jerash', label: 'Salt -> Jerash', labelAr: 'السلط ← جرش' },
-  { routeId: 'ajloun-jerash', from: 'ajloun', to: 'jerash', label: 'Ajloun -> Jerash', labelAr: 'عجلون ← جرش' },
+  {
+    routeId: 'amman-aqaba',
+    from: 'amman',
+    to: 'aqaba',
+    label: 'Amman -> Aqaba',
+    labelAr: 'عمّان ← العقبة',
+  },
+  {
+    routeId: 'amman-irbid',
+    from: 'amman',
+    to: 'irbid',
+    label: 'Amman -> Irbid',
+    labelAr: 'عمّان ← إربد',
+  },
+  {
+    routeId: 'amman-zarqa',
+    from: 'amman',
+    to: 'zarqa',
+    label: 'Amman -> Zarqa',
+    labelAr: 'عمّان ← الزرقاء',
+  },
+  {
+    routeId: 'zarqa-mafraq',
+    from: 'zarqa',
+    to: 'mafraq',
+    label: 'Zarqa -> Mafraq',
+    labelAr: 'الزرقاء ← المفرق',
+  },
+  {
+    routeId: 'amman-jerash',
+    from: 'amman',
+    to: 'jerash',
+    label: 'Amman -> Jerash',
+    labelAr: 'عمّان ← جرش',
+  },
+  {
+    routeId: 'irbid-ajloun',
+    from: 'irbid',
+    to: 'ajloun',
+    label: 'Irbid -> Ajloun',
+    labelAr: 'إربد ← عجلون',
+  },
+  {
+    routeId: 'amman-madaba',
+    from: 'amman',
+    to: 'madaba',
+    label: 'Amman -> Madaba',
+    labelAr: 'عمّان ← مادبا',
+  },
+  {
+    routeId: 'madaba-karak',
+    from: 'madaba',
+    to: 'karak',
+    label: 'Madaba -> Karak',
+    labelAr: 'مادبا ← الكرك',
+  },
+  {
+    routeId: 'karak-tafila',
+    from: 'karak',
+    to: 'tafila',
+    label: 'Karak -> Tafila',
+    labelAr: 'الكرك ← الطفيلة',
+  },
+  {
+    routeId: 'tafila-maan',
+    from: 'tafila',
+    to: 'maan',
+    label: "Tafila -> Ma'an",
+    labelAr: 'الطفيلة ← معان',
+  },
+  {
+    routeId: 'maan-aqaba',
+    from: 'maan',
+    to: 'aqaba',
+    label: "Ma'an -> Aqaba",
+    labelAr: 'معان ← العقبة',
+  },
+  {
+    routeId: 'irbid-zarqa',
+    from: 'irbid',
+    to: 'zarqa',
+    label: 'Irbid -> Zarqa',
+    labelAr: 'إربد ← الزرقاء',
+  },
+  {
+    routeId: 'amman-salt',
+    from: 'amman',
+    to: 'salt',
+    label: 'Amman -> Salt',
+    labelAr: 'عمّان ← السلط',
+  },
+  {
+    routeId: 'salt-jerash',
+    from: 'salt',
+    to: 'jerash',
+    label: 'Salt -> Jerash',
+    labelAr: 'السلط ← جرش',
+  },
+  {
+    routeId: 'ajloun-jerash',
+    from: 'ajloun',
+    to: 'jerash',
+    label: 'Ajloun -> Jerash',
+    labelAr: 'عجلون ← جرش',
+  },
 ] as const;
 
 const CITY_ALIASES: Record<string, string> = {
   amman: 'amman',
   'amman governorate': 'amman',
-  'عمان': 'amman',
-  'عمّان': 'amman',
+  عمان: 'amman',
+  عمّان: 'amman',
   aqaba: 'aqaba',
-  'العقبة': 'aqaba',
+  العقبة: 'aqaba',
   irbid: 'irbid',
-  'اربد': 'irbid',
-  'إربد': 'irbid',
+  اربد: 'irbid',
+  إربد: 'irbid',
   zarqa: 'zarqa',
-  'الزرقاء': 'zarqa',
+  الزرقاء: 'zarqa',
   mafraq: 'mafraq',
-  'المفرق': 'mafraq',
+  المفرق: 'mafraq',
   jerash: 'jerash',
   jarash: 'jerash',
-  'جرش': 'jerash',
+  جرش: 'jerash',
   ajloun: 'ajloun',
   ajlun: 'ajloun',
-  'عجلون': 'ajloun',
+  عجلون: 'ajloun',
   madaba: 'madaba',
-  'مادبا': 'madaba',
+  مادبا: 'madaba',
   karak: 'karak',
-  'الكرك': 'karak',
+  الكرك: 'karak',
   tafila: 'tafila',
   tafilah: 'tafila',
-  'الطفيلة': 'tafila',
+  الطفيلة: 'tafila',
   maan: 'maan',
   "ma'an": 'maan',
-  'معان': 'maan',
+  معان: 'maan',
   salt: 'salt',
-  'السلط': 'salt',
+  السلط: 'salt',
 };
 
 const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
@@ -193,29 +283,31 @@ const TRAFFIC_CACHE_TTL_MS = 2 * 60 * 1000;
 const trafficCache = new Map<string, { expiresAt: number; snapshot: TrafficSnapshot }>();
 
 function normalizeCity(value: string | null | undefined): string | null {
-  const raw = String(value ?? '').trim().toLowerCase();
+  const raw = String(value ?? '')
+    .trim()
+    .toLowerCase();
   if (!raw) return null;
-  const normalized = raw
-    .replace(/[’']/g, '')
-    .replace(/\s+/g, ' ')
-    .replace(/-/g, ' ');
+  const normalized = raw.replace(/[’']/g, '').replace(/\s+/g, ' ').replace(/-/g, ' ');
   return CITY_ALIASES[normalized] ?? null;
 }
 
-function matchRouteId(origin: string | null | undefined, destination: string | null | undefined): string | null {
+function matchRouteId(
+  origin: string | null | undefined,
+  destination: string | null | undefined,
+): string | null {
   const from = normalizeCity(origin);
   const to = normalizeCity(destination);
   if (!from || !to || from === to) return null;
 
-  const exact = ROUTE_CITY_PAIRS.find((route) => route.from === from && route.to === to);
+  const exact = ROUTE_CITY_PAIRS.find(route => route.from === from && route.to === to);
   if (exact) return exact.routeId;
 
-  const reverse = ROUTE_CITY_PAIRS.find((route) => route.from === to && route.to === from);
+  const reverse = ROUTE_CITY_PAIRS.find(route => route.from === to && route.to === from);
   return reverse?.routeId ?? null;
 }
 
 function routeLabel(routeId: string, ar: boolean): string {
-  const route = ROUTE_CITY_PAIRS.find((item) => item.routeId === routeId);
+  const route = ROUTE_CITY_PAIRS.find(item => item.routeId === routeId);
   if (!route) return routeId;
   return ar ? route.labelAr : route.label;
 }
@@ -256,7 +348,11 @@ function parseGoogleDurationSeconds(value: string | null | undefined): number | 
   return Number.isFinite(seconds) ? seconds : null;
 }
 
-async function fetchTrafficSnapshot(routeId: string, from: string, to: string): Promise<TrafficSnapshot | null> {
+async function fetchTrafficSnapshot(
+  routeId: string,
+  from: string,
+  to: string,
+): Promise<TrafficSnapshot | null> {
   const apiKey = getGoogleMapsApiKey();
   if (!apiKey) return null;
 
@@ -279,7 +375,9 @@ async function fetchTrafficSnapshot(routeId: string, from: string, to: string): 
       },
       body: JSON.stringify({
         origin: { location: { latLng: { latitude: origin.lat, longitude: origin.lng } } },
-        destination: { location: { latLng: { latitude: destination.lat, longitude: destination.lng } } },
+        destination: {
+          location: { latLng: { latitude: destination.lat, longitude: destination.lng } },
+        },
         travelMode: 'DRIVE',
         routingPreference: 'TRAFFIC_AWARE',
         departureTime: new Date().toISOString(),
@@ -296,9 +394,10 @@ async function fetchTrafficSnapshot(routeId: string, from: string, to: string): 
     if (!durationSeconds || distanceMeters <= 0) return null;
 
     const speedKph = Math.max(18, Math.round((distanceMeters / durationSeconds) * 3.6));
-    const trafficRatio = staticDurationSeconds && staticDurationSeconds > 0
-      ? durationSeconds / staticDurationSeconds
-      : 1;
+    const trafficRatio =
+      staticDurationSeconds && staticDurationSeconds > 0
+        ? durationSeconds / staticDurationSeconds
+        : 1;
     const congestion = Math.max(0.05, Math.min(0.98, (trafficRatio - 1) / 0.65));
     const snapshot = {
       speedKph,
@@ -317,7 +416,13 @@ async function fetchTrafficSnapshot(routeId: string, from: string, to: string): 
   }
 }
 
-function estimateCongestion(activeTrips: number, seatsFilled: number, seatsOpen: number, packageFilled: number, packageOpen: number): number {
+function estimateCongestion(
+  activeTrips: number,
+  seatsFilled: number,
+  seatsOpen: number,
+  packageFilled: number,
+  packageOpen: number,
+): number {
   const seatCapacity = Math.max(seatsFilled + seatsOpen, 1);
   const packageCapacity = Math.max(packageFilled + packageOpen, 1);
   const seatUtil = seatsFilled / seatCapacity;
@@ -330,7 +435,7 @@ function estimateSpeed(congestion: number): number {
 }
 
 function buildDispatch(topRoute: string, ar: boolean): string {
-  const route = ROUTE_CITY_PAIRS.find((item) => item.routeId === topRoute);
+  const route = ROUTE_CITY_PAIRS.find(item => item.routeId === topRoute);
   if (!route) return ar ? 'مراجعة التوزيع التشغيلي' : 'Review operational distribution';
   const target = ar ? route.labelAr.split(' ← ')[0] : route.label.split(' -> ')[1];
   return ar ? `إعادة توجيه العرض باتجاه ${target}` : `Reposition supply toward ${target}`;
@@ -339,25 +444,30 @@ function buildDispatch(topRoute: string, ar: boolean): string {
 async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot | null> {
   if (!supabase) return null;
 
-  const [{ data: trips }, { data: bookings }, { data: packages }, { data: tripPresence }] = await Promise.all([
-    supabase
-      .from('trips')
-      .select('trip_id, origin_city, destination_city, available_seats, total_seats, package_capacity, package_slots_remaining, departure_time, trip_status, allow_packages')
-      .is('deleted_at', null)
-      .in('trip_status', ['open', 'booked', 'in_progress']),
-    supabase
-      .from('bookings')
-      .select('trip_id, seats_requested, booking_status, status')
-      .in('booking_status', ['confirmed', 'pending_driver'])
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('packages')
-      .select('trip_id, origin_name, origin_location, destination_name, destination_location, package_status, status')
-      .in('package_status', ['created', 'assigned', 'in_transit']),
-    supabase
-      .from('trip_presence')
-      .select('trip_id, active_passengers, active_packages, last_location, last_heartbeat_at'),
-  ]);
+  const [{ data: trips }, { data: bookings }, { data: packages }, { data: tripPresence }] =
+    await Promise.all([
+      supabase
+        .from('trips')
+        .select(
+          'trip_id, origin_city, destination_city, available_seats, total_seats, package_capacity, package_slots_remaining, departure_time, trip_status, allow_packages',
+        )
+        .is('deleted_at', null)
+        .in('trip_status', ['open', 'booked', 'in_progress']),
+      supabase
+        .from('bookings')
+        .select('trip_id, seats_requested, booking_status, status')
+        .in('booking_status', ['confirmed', 'pending_driver'])
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('packages')
+        .select(
+          'trip_id, origin_name, origin_location, destination_name, destination_location, package_status, status',
+        )
+        .in('package_status', ['created', 'assigned', 'in_transit']),
+      supabase
+        .from('trip_presence')
+        .select('trip_id, active_passengers, active_packages, last_location, last_heartbeat_at'),
+    ]);
 
   const tripRows = (Array.isArray(trips) ? trips : []) as TripRow[];
   if (tripRows.length === 0) return null;
@@ -367,14 +477,14 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
   const presenceRows = (Array.isArray(tripPresence) ? tripPresence : []) as PresenceRow[];
 
   const bookingsByTrip = new Map<string, BookingRow[]>();
-  bookingRows.forEach((row) => {
+  bookingRows.forEach(row => {
     const current = bookingsByTrip.get(row.trip_id) ?? [];
     current.push(row);
     bookingsByTrip.set(row.trip_id, current);
   });
 
   const packagesByTrip = new Map<string, PackageRow[]>();
-  packageRows.forEach((row) => {
+  packageRows.forEach(row => {
     if (!row.trip_id) return;
     const current = packagesByTrip.get(row.trip_id) ?? [];
     current.push(row);
@@ -382,36 +492,48 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
   });
 
   const presenceByTrip = new Map<string, PresenceRow>();
-  presenceRows.forEach((row) => {
+  presenceRows.forEach(row => {
     if (!row.trip_id) return;
     presenceByTrip.set(row.trip_id, row);
   });
 
   const tripsByTripId = new Map<string, TripRow>();
-  tripRows.forEach((trip) => {
+  tripRows.forEach(trip => {
     if (!trip.trip_id) return;
     tripsByTripId.set(trip.trip_id, trip);
   });
 
   const corridorMap = new Map<string, CorridorAggregate>();
 
-  tripRows.forEach((trip) => {
+  tripRows.forEach(trip => {
     const routeId = matchRouteId(trip.origin_city, trip.destination_city);
     if (!routeId || !trip.trip_id) return;
 
-    const routeConfig = ROUTE_CITY_PAIRS.find((item) => item.routeId === routeId);
+    const routeConfig = ROUTE_CITY_PAIRS.find(item => item.routeId === routeId);
     if (!routeConfig) return;
 
     const tripBookings = bookingsByTrip.get(trip.trip_id) ?? [];
-    const bookedSeats = tripBookings.reduce((sum, booking) => sum + Math.max(1, Number(booking.seats_requested ?? 1) || 1), 0);
+    const bookedSeats = tripBookings.reduce(
+      (sum, booking) => sum + Math.max(1, Number(booking.seats_requested ?? 1) || 1),
+      0,
+    );
     const tripPackages = packagesByTrip.get(trip.trip_id) ?? [];
     const packagesOnTrip = tripPackages.length;
     const presence = presenceByTrip.get(trip.trip_id);
     const seatsOpen = Math.max(0, Number(trip.available_seats ?? 0) || 0);
     const totalSeats = Math.max(seatsOpen + bookedSeats, Number(trip.total_seats ?? 0) || 0);
-    const packageCapacity = Math.max(Number(trip.package_capacity ?? 0) || 0, Number(trip.package_slots_remaining ?? 0) || 0);
-    const packageSlotsOpen = Math.max(0, Number(trip.package_slots_remaining ?? Math.max(packageCapacity - packagesOnTrip, 0)) || 0);
-    const packageSlotsFilled = Math.max(0, Math.max(packageCapacity - packageSlotsOpen, packagesOnTrip));
+    const packageCapacity = Math.max(
+      Number(trip.package_capacity ?? 0) || 0,
+      Number(trip.package_slots_remaining ?? 0) || 0,
+    );
+    const packageSlotsOpen = Math.max(
+      0,
+      Number(trip.package_slots_remaining ?? Math.max(packageCapacity - packagesOnTrip, 0)) || 0,
+    );
+    const packageSlotsFilled = Math.max(
+      0,
+      Math.max(packageCapacity - packageSlotsOpen, packagesOnTrip),
+    );
 
     const current = corridorMap.get(routeId) ?? {
       routeId,
@@ -442,14 +564,16 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
   if (corridorMap.size === 0) return null;
 
   const trafficEntries = await Promise.all(
-    Array.from(corridorMap.values()).map(async (corridor) => {
+    Array.from(corridorMap.values()).map(async corridor => {
       const snapshot = await fetchTrafficSnapshot(corridor.routeId, corridor.from, corridor.to);
       return [corridor.routeId, snapshot] as const;
     }),
   );
-  const trafficByRoute = new Map(trafficEntries.filter((entry) => entry[1]).map((entry) => [entry[0], entry[1] as TrafficSnapshot]));
+  const trafficByRoute = new Map(
+    trafficEntries.filter(entry => entry[1]).map(entry => [entry[0], entry[1] as TrafficSnapshot]),
+  );
 
-  const routes = Array.from(corridorMap.values()).map((corridor) => {
+  const routes = Array.from(corridorMap.values()).map(corridor => {
     const estimatedCongestion = estimateCongestion(
       corridor.activeTrips,
       corridor.seatsFilled,
@@ -462,7 +586,9 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
       routeId: corridor.routeId,
       passengerFlow: corridor.activePassengers,
       packageFlow: corridor.activePackages,
-      density: Math.round((corridor.activeTrips * 10) + (corridor.seatsFilled * 1.5) + corridor.packageSlotsFilled * 2),
+      density: Math.round(
+        corridor.activeTrips * 10 + corridor.seatsFilled * 1.5 + corridor.packageSlotsFilled * 2,
+      ),
       speedKph: trafficSnapshot?.speedKph ?? estimateSpeed(estimatedCongestion),
       congestion: trafficSnapshot?.congestion ?? estimatedCongestion,
     };
@@ -477,19 +603,30 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
       acc.packageCapacity += corridor.packageSlotsOpen;
       return acc;
     },
-    { totalVehicles: 0, activePassengers: 0, activePackages: 0, seatAvailability: 0, packageCapacity: 0 },
+    {
+      totalVehicles: 0,
+      activePassengers: 0,
+      activePackages: 0,
+      seatAvailability: 0,
+      packageCapacity: 0,
+    },
   );
 
-  const telemetryRows = presenceRows.filter((row) => Boolean(row.trip_id));
+  const telemetryRows = presenceRows.filter(row => Boolean(row.trip_id));
   const totalTripsWithTelemetry = telemetryRows.length;
-  const freshTripsWithTelemetry = telemetryRows.filter((row) => isFreshHeartbeat(row.last_heartbeat_at)).length;
+  const freshTripsWithTelemetry = telemetryRows.filter(row =>
+    isFreshHeartbeat(row.last_heartbeat_at),
+  ).length;
   const staleTripsWithTelemetry = Math.max(0, totalTripsWithTelemetry - freshTripsWithTelemetry);
-  const latestHeartbeatAt = telemetryRows
-    .map((row) => row.last_heartbeat_at)
-    .filter((value): value is string => Boolean(value))
-    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] ?? null;
-  const hasRenderableLocations = telemetryRows.some((row) => hasRenderableLocation(row.last_location));
-  const vehicles = telemetryRows.flatMap((presence) => {
+  const latestHeartbeatAt =
+    telemetryRows
+      .map(row => row.last_heartbeat_at)
+      .filter((value): value is string => Boolean(value))
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] ?? null;
+  const hasRenderableLocations = telemetryRows.some(row =>
+    hasRenderableLocation(row.last_location),
+  );
+  const vehicles = telemetryRows.flatMap(presence => {
     const trip = tripsByTripId.get(presence.trip_id);
     if (!trip) return [];
 
@@ -503,29 +640,41 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
       0,
     );
     const packageRowsForTrip = packagesByTrip.get(presence.trip_id) ?? [];
-    const packageCapacity = Math.max(Number(trip.package_capacity ?? 0) || 0, packageRowsForTrip.length);
-    const totalSeats = Math.max(Number(trip.total_seats ?? 0) || 0, bookedSeats + Math.max(0, Number(trip.available_seats ?? 0) || 0));
+    const packageCapacity = Math.max(
+      Number(trip.package_capacity ?? 0) || 0,
+      packageRowsForTrip.length,
+    );
+    const totalSeats = Math.max(
+      Number(trip.total_seats ?? 0) || 0,
+      bookedSeats + Math.max(0, Number(trip.available_seats ?? 0) || 0),
+    );
     const passengers = getPresencePassengers(presence, bookedSeats);
     const packageLoad = getPresencePackages(presence, packageRowsForTrip.length);
 
-    return [{
-      id: `live-${presence.trip_id}`,
-      tripId: presence.trip_id,
-      routeId,
-      lat,
-      lng,
-      type: packageLoad > passengers ? 'package' as const : 'passenger' as const,
-      passengers,
-      seatCapacity: totalSeats || undefined,
-      packageCapacity: packageCapacity || undefined,
-      packageLoad: packageLoad || undefined,
-      fresh: isFreshHeartbeat(presence.last_heartbeat_at),
-    }];
+    return [
+      {
+        id: `live-${presence.trip_id}`,
+        tripId: presence.trip_id,
+        routeId,
+        lat,
+        lng,
+        type: packageLoad > passengers ? ('package' as const) : ('passenger' as const),
+        passengers,
+        seatCapacity: totalSeats || undefined,
+        packageCapacity: packageCapacity || undefined,
+        packageLoad: packageLoad || undefined,
+        fresh: isFreshHeartbeat(presence.last_heartbeat_at),
+      },
+    ];
   });
 
-  const avgSpeed = routes.reduce((sum, route) => sum + route.speedKph, 0) / Math.max(routes.length, 1);
-  const congestionLevel = routes.reduce((sum, route) => sum + route.congestion, 0) / Math.max(routes.length, 1);
-  const topRoute = routes.slice().sort((a, b) => (b.passengerFlow + b.packageFlow) - (a.passengerFlow + a.packageFlow))[0];
+  const avgSpeed =
+    routes.reduce((sum, route) => sum + route.speedKph, 0) / Math.max(routes.length, 1);
+  const congestionLevel =
+    routes.reduce((sum, route) => sum + route.congestion, 0) / Math.max(routes.length, 1);
+  const topRoute = routes
+    .slice()
+    .sort((a, b) => b.passengerFlow + b.packageFlow - (a.passengerFlow + a.packageFlow))[0];
   const networkUtilization = Math.max(0.05, Math.min(1, totals.totalVehicles / 24));
 
   return {
@@ -544,9 +693,13 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
       provider: trafficByRoute.size > 0 ? 'google-routes' : 'none',
       enabled: trafficByRoute.size > 0,
       liveCorridors: trafficByRoute.size,
-      updatedAt: trafficByRoute.size > 0
-        ? Array.from(trafficByRoute.values()).map((item) => item.updatedAt).sort().slice(-1)[0] ?? null
-        : null,
+      updatedAt:
+        trafficByRoute.size > 0
+          ? (Array.from(trafficByRoute.values())
+              .map(item => item.updatedAt)
+              .sort()
+              .slice(-1)[0] ?? null)
+          : null,
     },
     analytics: {
       totalVehicles: totals.totalVehicles,
@@ -559,7 +712,11 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
       congestionLevel,
       topCorridor: topRoute ? routeLabel(topRoute.routeId, ar) : '',
       recommendedPath: topRoute ? routeLabel(topRoute.routeId, ar) : '',
-      dispatchAction: topRoute ? buildDispatch(topRoute.routeId, ar) : (ar ? 'مراجعة التوزيع التشغيلي' : 'Review operational distribution'),
+      dispatchAction: topRoute
+        ? buildDispatch(topRoute.routeId, ar)
+        : ar
+          ? 'مراجعة التوزيع التشغيلي'
+          : 'Review operational distribution',
     },
   };
 }
@@ -575,14 +732,18 @@ export function useMobilityOSLiveData(ar: boolean) {
     }
 
     let cancelled = false;
+    let refreshInFlight = false;
 
     const refresh = async () => {
+      if (refreshInFlight) return;
+      refreshInFlight = true;
       try {
         const next = await fetchMobilitySnapshot(ar);
         if (!cancelled) {
           setSnapshot(next);
         }
       } finally {
+        refreshInFlight = false;
         if (!cancelled) setLoading(false);
       }
     };
@@ -596,16 +757,50 @@ export function useMobilityOSLiveData(ar: boolean) {
       };
     }
 
+    const refreshInterval =
+      typeof window !== 'undefined'
+        ? window.setInterval(() => {
+            void refresh();
+          }, 15_000)
+        : null;
+
+    const handleVisibilityRefresh = () => {
+      if (document.visibilityState === 'visible') {
+        void refresh();
+      }
+    };
+    const handleWindowFocus = () => {
+      void refresh();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleWindowFocus);
+      document.addEventListener('visibilitychange', handleVisibilityRefresh);
+    }
+
     const channel = supabaseClient
       .channel(`mobility-os-live-${ar ? 'ar' : 'en'}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, () => { void refresh(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => { void refresh(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'packages' }, () => { void refresh(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trip_presence' }, () => { void refresh(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, () => {
+        void refresh();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+        void refresh();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'packages' }, () => {
+        void refresh();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trip_presence' }, () => {
+        void refresh();
+      })
       .subscribe();
 
     return () => {
       cancelled = true;
+      if (refreshInterval !== null && typeof window !== 'undefined') {
+        window.clearInterval(refreshInterval);
+        window.removeEventListener('focus', handleWindowFocus);
+        document.removeEventListener('visibilitychange', handleVisibilityRefresh);
+      }
       void supabaseClient.removeChannel(channel);
     };
   }, [ar]);

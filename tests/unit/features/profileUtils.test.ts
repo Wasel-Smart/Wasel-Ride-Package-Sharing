@@ -14,7 +14,8 @@ describe('profileUtils', () => {
 
   it('normalizes valid profile phone input', () => {
     expect(normalizeProfilePhone('+962 79 123 4567')).toBe('+962791234567');
-    expect(normalizeProfilePhone('0791234567')).toBe('+0791234567');
+    expect(normalizeProfilePhone('0791234567')).toBe('+962791234567');
+    expect(normalizeProfilePhone('00962 79 123 4567')).toBe('+962791234567');
   });
 
   it('rejects invalid phone input', () => {

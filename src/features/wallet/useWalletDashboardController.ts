@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
@@ -38,13 +38,16 @@ export function useWalletDashboardController() {
   });
   const walletUnavailable = !localAuthLoading && runtimeMode === 'unavailable';
   const shouldRedirectToAuth = !localAuthLoading && runtimeMode === 'redirect';
+  const initialPersistedSnapshot = !localAuthLoading && effectiveUserId && !shouldRedirectToAuth
+    ? walletApi.getPersistedWalletSnapshot(effectiveUserId)
+    : null;
 
   const [tab, setTab] = useState('overview');
-  const [walletData, setWalletData] = useState<WalletData | null>(null);
+  const [walletData, setWalletData] = useState<WalletData | null>(initialPersistedSnapshot?.data ?? null);
   const [insights, setInsights] = useState<InsightsData | null>(null);
-  const [walletHealth, setWalletHealth] = useState<WalletReliabilityMeta | null>(null);
+  const [walletHealth, setWalletHealth] = useState<WalletReliabilityMeta | null>(initialPersistedSnapshot?.meta ?? null);
   const [walletInsightsHealth, setWalletInsightsHealth] = useState<WalletReliabilityMeta | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !initialPersistedSnapshot);
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showTopUp, setShowTopUp] = useState(false);
@@ -61,9 +64,9 @@ export function useWalletDashboardController() {
   const [sendNote, setSendNote] = useState('');
   const [pinValue, setPinValue] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
-  const [autoTopUpEnabled, setAutoTopUpEnabled] = useState(false);
-  const [autoTopUpAmount, setAutoTopUpAmount] = useState('20');
-  const [autoTopUpThreshold, setAutoTopUpThreshold] = useState('5');
+  const [autoTopUpEnabled, setAutoTopUpEnabled] = useState(initialPersistedSnapshot?.data.wallet.autoTopUp || false);
+  const [autoTopUpAmount, setAutoTopUpAmount] = useState(String(initialPersistedSnapshot?.data.wallet.autoTopUpAmount || 20));
+  const [autoTopUpThreshold, setAutoTopUpThreshold] = useState(String(initialPersistedSnapshot?.data.wallet.autoTopUpThreshold || 5));
   const effectiveUserName =
     localUser?.name ||
     user?.user_metadata?.full_name ||
@@ -78,6 +81,11 @@ export function useWalletDashboardController() {
   const autoTopUpErrorMessage = 'Unable to update auto top-up settings right now.';
   const subscribeErrorMessage = 'Unable to activate Wasel Plus right now.';
   const membershipSnapshot = getMovementMembershipSnapshot();
+  const walletDataRef = useRef<WalletData | null>(initialPersistedSnapshot?.data ?? null);
+
+  useEffect(() => {
+    walletDataRef.current = walletData;
+  }, [walletData]);
 
   const fetchWallet = useCallback(async (): Promise<WalletData | null> => {
     if (localAuthLoading) {
@@ -92,6 +100,17 @@ export function useWalletDashboardController() {
       return null;
     }
 
+    const persistedSnapshot = effectiveUserId
+      ? walletApi.getPersistedWalletSnapshot(effectiveUserId)
+      : null;
+    const hasVisibleWalletData =
+      walletDataRef.current?.wallet.userId === effectiveUserId
+      || Boolean(persistedSnapshot);
+
+    if (!hasVisibleWalletData) {
+      setLoading(true);
+    }
+
     try {
       const snapshot = await walletApi.getWalletSnapshot(effectiveUserId);
       setWalletData(snapshot.data);
@@ -101,10 +120,12 @@ export function useWalletDashboardController() {
       setAutoTopUpThreshold(String(snapshot.data.wallet.autoTopUpThreshold || 5));
       return snapshot.data;
     } catch {
-      setWalletData(null);
       setInsights(null);
-      setWalletHealth(null);
       setWalletInsightsHealth(null);
+      if (!hasVisibleWalletData) {
+        setWalletData(null);
+        setWalletHealth(null);
+      }
       toast.error(t.walletLoadError);
       return null;
     } finally {
@@ -133,6 +154,34 @@ export function useWalletDashboardController() {
       navigate(buildAuthPagePath('signin', '/app/wallet'));
     }
   }, [navigate, shouldRedirectToAuth]);
+
+  useEffect(() => {
+    if (localAuthLoading) {
+      return;
+    }
+
+    if (shouldRedirectToAuth || !effectiveUserId) {
+      setWalletData(null);
+      setInsights(null);
+      setWalletHealth(null);
+      setWalletInsightsHealth(null);
+      setLoading(false);
+      return;
+    }
+
+    const persistedSnapshot = walletApi.getPersistedWalletSnapshot(effectiveUserId);
+    if (!persistedSnapshot) {
+      setLoading(true);
+      return;
+    }
+
+    setWalletData(persistedSnapshot.data);
+    setWalletHealth(persistedSnapshot.meta);
+    setAutoTopUpEnabled(persistedSnapshot.data.wallet.autoTopUp || false);
+    setAutoTopUpAmount(String(persistedSnapshot.data.wallet.autoTopUpAmount || 20));
+    setAutoTopUpThreshold(String(persistedSnapshot.data.wallet.autoTopUpThreshold || 5));
+    setLoading(false);
+  }, [effectiveUserId, localAuthLoading, shouldRedirectToAuth]);
 
   useEffect(() => {
     fetchWallet();

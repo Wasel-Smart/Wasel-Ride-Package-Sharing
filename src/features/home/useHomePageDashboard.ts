@@ -6,6 +6,7 @@ import {
   type GrowthDashboard,
   type ReferralSnapshot,
 } from '../../services/growthEngine';
+import { omitUndefined } from '../../utils/object';
 
 interface HomeUserShape {
   id?: string;
@@ -43,10 +44,12 @@ export function useHomePageDashboard(user: HomeUserShape | null | undefined) {
     const resolvedName = user.user_metadata?.name || user.email?.split('@')[0];
 
     await Promise.all([
-      getReferralSnapshot({
-        id: user.id,
-        name: resolvedName,
-      }).then(setReferral).catch(() => setReferral(null)),
+      getReferralSnapshot(
+        omitUndefined({
+          id: user.id,
+          name: resolvedName,
+        }),
+      ).then(setReferral).catch(() => setReferral(null)),
       getGrowthDashboard(user.id).then(setGrowthDashboard).catch(() => setGrowthDashboard(null)),
     ]);
   }, [user?.email, user?.id, user?.user_metadata?.name]);
@@ -66,10 +69,10 @@ export function useHomePageDashboard(user: HomeUserShape | null | undefined) {
       try {
         const snapshot = await applyReferralCode(
           user?.id
-            ? {
+            ? omitUndefined({
                 id: user.id,
                 name: user.user_metadata?.name || user.email?.split('@')[0],
-              }
+              })
             : null,
           referralCode,
         );

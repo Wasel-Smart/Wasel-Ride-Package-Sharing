@@ -62,6 +62,7 @@ vi.mock('../../../src/services/core', () => ({
   publicAnonKey: '',
   fetchWithRetry: (...a: any[]) => mockFetch(...a),
   getAuthDetails: vi.fn().mockResolvedValue({ token: 'tok', userId: 'u1' }),
+  isEdgeFunctionAvailable: vi.fn(() => false),
   supabase: mockDb,
 }));
 

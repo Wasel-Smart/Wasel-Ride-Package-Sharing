@@ -1,5 +1,5 @@
-/**
- * MapWrapper — canonical map entry-point for Wasel
+﻿/**
+ * MapWrapper â€” canonical map entry-point for Wasel
  *
  * All modes ('google', 'static', 'live') now render WaselMap.
  * This preserves the MapWrapper API used across 40+ components
@@ -9,6 +9,7 @@
 import { Suspense } from 'react';
 import { MapPin } from 'lucide-react';
 import { WaselMap, type WaselMapMarker, type WaselMapRoute } from './WaselMap';
+import { omitUndefined } from '../utils/object';
 
 export type MapMode = 'google' | 'static' | 'live';
 
@@ -41,8 +42,8 @@ function MapLoader({ height }: { height?: string | number }) {
       className="flex flex-col items-center justify-center bg-[#0c1520] rounded-2xl gap-3 text-[#8590a2]"
       style={{ height: typeof height === 'number' ? `${height}px` : (height ?? '400px') }}
     >
-      <MapPin className="w-8 h-8 animate-pulse text-[#47B7E6]" />
-      <p className="text-sm">Loading map…</p>
+      <MapPin className="w-8 h-8 animate-pulse text-[#F4C651]" />
+      <p className="text-sm">Loading mapâ€¦</p>
     </div>
   );
 }
@@ -82,18 +83,21 @@ export function MapWrapper({
   return (
     <Suspense fallback={<MapLoader height={height} />}>
       <WaselMap
-        center={center}
-        zoom={zoom}
-        height={height}
-        className={className}
-        route={routePoints.length >= 2 ? routePoints : undefined}
-        markers={waselMarkers.length > 0 ? waselMarkers : undefined}
-        showTraffic={showTraffic}
-        showMosques={showMosques}
-        showRadars={showRadars}
-        autoTrack={mode === 'live'}
-        compact={isCompact}
+        {...omitUndefined({
+          center,
+          zoom,
+          height,
+          className,
+          route: routePoints.length >= 2 ? routePoints : undefined,
+          markers: waselMarkers.length > 0 ? waselMarkers : undefined,
+          showTraffic,
+          showMosques,
+          showRadars,
+          autoTrack: mode === 'live',
+          compact: isCompact,
+        })}
       />
     </Suspense>
   );
 }
+

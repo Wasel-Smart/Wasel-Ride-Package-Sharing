@@ -4,6 +4,7 @@ import { authAPI } from '../services/auth';
 import { friendlyAuthError } from '../utils/authHelpers';
 import { getAuthRedirectCandidates } from '../utils/env';
 import { normalizeAuthReturnTo, persistAuthReturnTo } from '../utils/authFlow';
+import { omitUndefined } from '../utils/object';
 
 export type Profile = {
   id: string;
@@ -95,10 +96,12 @@ export async function signInWithOAuthProvider(
       options: {
         redirectTo,
         scopes: provider === 'facebook' ? 'email,public_profile' : 'email profile',
-        queryParams:
-          provider === 'google'
-            ? { prompt: 'select_account', access_type: 'offline' }
-            : undefined,
+        ...omitUndefined({
+          queryParams:
+            provider === 'google'
+              ? { prompt: 'select_account', access_type: 'offline' }
+              : undefined,
+        }),
       },
     });
 
@@ -156,13 +159,13 @@ export function buildUpdatedLocalUser(
   const shouldResetPhoneVerification =
     normalizedPhone !== undefined && normalizedPhone !== currentPhone;
 
-  return {
+  return omitUndefined({
     name: String(updates.full_name ?? localUser.name),
     email: String(updates.email ?? localUser.email),
     phone: updates.phone_number ?? localUser.phone,
     avatar: updates.avatar_url ?? localUser.avatar,
     phoneVerified: shouldResetPhoneVerification ? false : localUser.phoneVerified,
-  };
+  });
 }
 
 export function shouldRefreshProfile(

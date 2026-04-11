@@ -68,5 +68,7 @@ describe('services/http', () => {
     expect(sanitizeTextField('  Amman   Jordan ', 'Origin', 40)).toBe('Amman Jordan');
     expect(sanitizeOptionalTextField('   ')).toBeUndefined();
     expect(sanitizePhoneNumber('+962 79-000-0000')).toBe('+962790000000');
+    expect(sanitizePhoneNumber('0790000000')).toBe('+962790000000');
+    expect(sanitizePhoneNumber('00962 79 000 0000')).toBe('+962790000000');
   });
 });

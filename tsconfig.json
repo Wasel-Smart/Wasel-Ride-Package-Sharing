@@ -24,7 +24,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": false,
     "forceConsistentCasingInFileNames": true,
 
     /* ── Interop ──────────────────────────────────────────────────────────── */

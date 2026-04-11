@@ -1,14 +1,14 @@
-/**
- * WaselButton — primary interactive element.
+ï»¿/**
+ * WaselButton â€” primary interactive element.
  *
  * Variants:
- *  - primary  : Electric Cyan gradient CTA
- *  - outline  : Transparent with cyan border
+ *  - primary  : Premium gold gradient CTA
+ *  - outline  : Transparent with gold border
  *  - ghost    : No border, subtle hover
  *  - gold     : Solar Gold gradient (accent / demo)
  *  - danger   : Error red
  *
- * Always pulls from design-system tokens — zero hardcoded hex.
+ * Always pulls from design-system tokens â€” zero hardcoded hex.
  */
 
 import { Loader2 } from 'lucide-react';
@@ -30,11 +30,11 @@ interface WaselButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, { background: string; color: string; border: string; boxShadow: string; hoverShadow: string }> = {
   primary: {
-    background:  'linear-gradient(135deg, #47B7E6 0%, #1E5FAE 100%)',
-    color:       '#040C18',
+    background:  'linear-gradient(135deg, #FFF0C1 0%, #F4C651 44%, #C5831F 100%)',
+    color:       '#120D04',
     border:      'none',
-    boxShadow:   SH.cyan,
-    hoverShadow: SH.cyanL,
+    boxShadow:   SH.gold,
+    hoverShadow: '0 24px 60px rgba(244,198,81,0.32)',
   },
   outline: {
     background:  'transparent',
@@ -51,11 +51,11 @@ const variantStyles: Record<ButtonVariant, { background: string; color: string; 
     hoverShadow: 'none',
   },
   gold: {
-    background:  'linear-gradient(135deg, #A8D614 0%, #6BB515 100%)',
-    color:       '#040C18',
+    background:  'linear-gradient(135deg, #FFE08A 0%, #DB9F2C 100%)',
+    color:       '#120D04',
     border:      'none',
     boxShadow:   SH.gold,
-    hoverShadow: '0 10px 36px rgba(168,214,20,0.45)',
+    hoverShadow: '0 10px 36px rgba(219,159,44,0.34)',
   },
   danger: {
     background:  C.errorDim,
@@ -156,5 +156,6 @@ export function WaselButton({
     </button>
   );
 }
+
 
 

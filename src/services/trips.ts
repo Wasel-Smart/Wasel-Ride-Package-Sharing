@@ -21,6 +21,7 @@ import {
   sanitizeTextField,
   withApiTelemetry,
 } from './http';
+import { omitUndefined } from '../utils/object';
 
 export interface TripCreatePayload {
   from: string;
@@ -63,8 +64,8 @@ function canUseEdgeApi(): boolean {
   return Boolean(API_URL && publicAnonKey);
 }
 
-function sanitizeTripPayload(payload: TripCreatePayload | TripUpdatePayload): TripCreatePayload | TripUpdatePayload {
-  return {
+function sanitizeTripPayload<T extends TripCreatePayload | TripUpdatePayload>(payload: T): T {
+  return omitUndefined({
     ...payload,
     ...(typeof payload.from === 'string' ? { from: sanitizeTextField(payload.from, 'Origin', 80) } : {}),
     ...(typeof payload.to === 'string' ? { to: sanitizeTextField(payload.to, 'Destination', 80) } : {}),
@@ -72,7 +73,7 @@ function sanitizeTripPayload(payload: TripCreatePayload | TripUpdatePayload): Tr
     ...(typeof payload.carModel === 'string' ? { carModel: sanitizeTextField(payload.carModel, 'Car model', 120) } : {}),
     ...(typeof payload.note === 'string' ? { note: sanitizeOptionalTextField(payload.note, 500) } : {}),
     ...(typeof payload.packageNote === 'string' ? { packageNote: sanitizeOptionalTextField(payload.packageNote, 500) } : {}),
-  };
+  }) as unknown as T;
 }
 
 export const tripsAPI = {
@@ -106,7 +107,7 @@ export const tripsAPI = {
               }),
           );
         } catch (err) {
-          logger.warn('[trips] edge API unavailable for trip.create, falling back to direct Supabase', {
+          logger.warning('[trips] edge API unavailable for trip.create, falling back to direct Supabase', {
             operation: 'trip.create.edge_fallback',
             error: err instanceof Error ? err.message : String(err),
           });
@@ -141,7 +142,7 @@ export const tripsAPI = {
           }),
       );
     } catch (err) {
-      logger.warn('[trips] edge API unavailable for trip.search, falling back to direct Supabase', {
+      logger.warning('[trips] edge API unavailable for trip.search, falling back to direct Supabase', {
         operation: 'trip.search.edge_fallback',
         error: err instanceof Error ? err.message : String(err),
       });
@@ -224,7 +225,7 @@ export const tripsAPI = {
               }),
           );
         } catch (err) {
-          logger.warn('[trips] edge API unavailable for trip.update, falling back to direct Supabase', {
+          logger.warning('[trips] edge API unavailable for trip.update, falling back to direct Supabase', {
             operation: 'trip.update.edge_fallback',
             tripId,
             error: err instanceof Error ? err.message : String(err),

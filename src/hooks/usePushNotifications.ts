@@ -19,6 +19,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { API_URL, fetchWithRetry, getAuthDetails } from '../services/core';
+import { omitUndefined } from '../utils/object';
 
 export type NotifPermission = 'default' | 'granted' | 'denied';
 
@@ -34,7 +35,7 @@ export interface NotifyOptions {
   autoCloseMs?: number;
 }
 
-const BRAND_ASSET_VERSION = '20260409d';
+const BRAND_ASSET_VERSION = '20260411logo';
 const DEFAULT_ICON = `/icon-192.png?v=${BRAND_ASSET_VERSION}`;
 const DEFAULT_BADGE = `/favicon-32x32.png?v=${BRAND_ASSET_VERSION}`;
 const DEFAULT_CLOSE_MS = 8_000;
@@ -116,14 +117,14 @@ export function usePushNotifications() {
       }
 
       const createNotification = () => {
-        const init = {
+        const init = omitUndefined({
           body: options.body,
           icon: options.icon ?? DEFAULT_ICON,
           badge: DEFAULT_BADGE,
           tag: options.tag,
           silent: options.silent ?? false,
           data: options.data,
-        };
+        });
 
         // Some test environments stub Notification with a non-constructible function.
         // Prefer `new`, but gracefully fall back to direct invocation.

@@ -61,6 +61,7 @@ Historical files that predate the current standards remain frozen and explicitly
 | 27 | `20260409113000_wallet_and_runtime_integrity_hardening.sql` | hardening | Finalize wallet and runtime integrity constraints and wallet access indexes | Ready |
 | 28 | `20260409120000_production_security_and_queue_hardening.sql` | security | Move 2FA secrets into a private schema, null legacy public secret columns, and add atomic communication queue claiming | Ready |
 | 29 | `20260409153000_runtime_performance_indexes.sql` | performance | Add expression indexes for auth-linked runtime and RLS lookup paths | Ready |
+| 30 | `20260410110000_reassert_auth_signup_user_sync.sql` | security | Reassert canonical auth.users to public.users sync and recover missing phone numbers for signup-triggered users | Ready |
 
 ## Rollout Sequence
 
@@ -87,6 +88,7 @@ Apply the rollout set in this exact order for production cutover projects:
 17. `20260409113000_wallet_and_runtime_integrity_hardening.sql`
 18. `20260409120000_production_security_and_queue_hardening.sql`
 19. `20260409153000_runtime_performance_indexes.sql`
+20. `20260410110000_reassert_auth_signup_user_sync.sql`
 
 ### Seeds
 

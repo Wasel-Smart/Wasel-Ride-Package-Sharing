@@ -1,26 +1,35 @@
 import { motion } from 'motion/react';
 import { ArrowUpRight, ChevronRight } from 'lucide-react';
-import { C, POPULAR_ROUTES, SectionHeader, Skeleton, SOSButton, TrustScoreCard } from './HomePageShared';
-import type { HomeFeatureItem, HomeQuickAction, HomeStatItem } from './homePageConfig';
+import { C, POPULAR_ROUTES, SectionHeader, Skeleton, SOSButton } from './HomePageShared';
+import type {
+  HomeFeatureItem,
+  HomeHeroHighlight,
+  HomeQuickAction,
+  HomeServicePillar,
+  HomeStatItem,
+} from './homePageConfig';
 
 interface HomeStatsGridProps {
   loading: boolean;
   stats: HomeStatItem[];
 }
 
+interface FocusHeroSectionProps {
+  ar: boolean;
+  userName: string;
+  highlights: HomeHeroHighlight[];
+  navigate: (path: string) => void;
+}
+
+interface ServicePillarsSectionProps {
+  ar: boolean;
+  pillars: HomeServicePillar[];
+  navigate: (path: string) => void;
+}
+
 interface QuickActionsSectionProps {
   ar: boolean;
   quickActions: HomeQuickAction[];
-  estimatedRevenue: string;
-  growthDashboard: {
-    funnel: {
-      searched: number;
-      selected: number;
-      booked: number;
-      completed: number;
-    };
-    activeDemand: number;
-  } | null;
   navigate: (path: string) => void;
 }
 
@@ -104,20 +113,109 @@ export function HomeStatsGrid({
   );
 }
 
+export function FocusHeroSection({
+  ar,
+  userName,
+  highlights,
+  navigate,
+}: FocusHeroSectionProps) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.04 }}
+      className="home-section home-section-tight"
+    >
+      <div className="home-focus-hero">
+        <div className="home-focus-copy">
+          <div className="home-mini-label">{ar ? 'منصة حركة واحدة' : 'One movement platform'}</div>
+          <h2 className="home-focus-title">
+            {ar
+              ? `كل ما تحتاجه للتنقل والإرسال في واجهة واحدة${userName ? `، ${userName}` : ''}`
+              : `Everything for moving people and packages in one flow${userName ? `, ${userName}` : ''}`}
+          </h2>
+          <p className="home-focus-description">
+            {ar
+              ? 'واسِل يجمع الرحلات والطرود والباصات والثقة التشغيلية في تجربة أوضح وأسهل.'
+              : 'Wasel brings rides, packages, buses, and trust operations into a clearer, tighter experience.'}
+          </p>
+          <div className="home-button-row">
+            <button type="button" className="home-primary-button" onClick={() => navigate('/find-ride')}>
+              {ar ? 'ابدأ برحلة' : 'Start a trip'}
+            </button>
+            <button type="button" className="home-tertiary-button" onClick={() => navigate('/mobility-os')}>
+              {ar ? 'شاهد الشبكة الحية' : 'View live network'}
+            </button>
+          </div>
+        </div>
+
+        <div className="home-focus-highlights">
+          {highlights.map((item) => (
+            <div key={item.title} className="home-focus-highlight" style={{ borderColor: `${item.color}30` }}>
+              <span className="home-focus-dot" style={{ background: item.color }} />
+              <div>
+                <div className="home-card-title">{item.title}</div>
+                <div className="home-card-description">{item.description}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+export function ServicePillarsSection({
+  ar,
+  pillars,
+  navigate,
+}: ServicePillarsSectionProps) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.08 }}
+      className="home-section home-section-tight"
+    >
+      <SectionHeader title={ar ? 'ماذا يمكنك أن تفعل هنا؟' : 'What can you do here?'} icon="W" />
+      <div className="home-pillars-grid">
+        {pillars.map((pillar, index) => {
+          const Icon = pillar.icon;
+          return (
+            <motion.button
+              key={pillar.title}
+              type="button"
+              onClick={() => navigate(pillar.path)}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 + index * 0.06 }}
+              whileHover={{ y: -3 }}
+              whileTap={{ scale: 0.98 }}
+              className="home-pillar-card"
+              style={{ borderColor: pillar.border }}
+            >
+              <div className="home-feature-icon-box" style={{ background: pillar.dim, borderColor: pillar.border }}>
+                <Icon size={16} color={pillar.color} />
+              </div>
+              <div className="home-card-title">{pillar.title}</div>
+              <div className="home-card-description">{pillar.description}</div>
+              <div className="home-card-cta" style={{ color: pillar.color }}>
+                <span>{pillar.metric}</span>
+                <ChevronRight size={10} />
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
+    </motion.section>
+  );
+}
+
 export function QuickActionsSection({
   ar,
   quickActions,
-  estimatedRevenue,
-  growthDashboard,
   navigate,
 }: QuickActionsSectionProps) {
-  const funnelItems = [
-    { label: ar ? 'بحث' : 'Search', value: growthDashboard?.funnel.searched ?? 0, color: C.cyan },
-    { label: ar ? 'اختيار' : 'Select', value: growthDashboard?.funnel.selected ?? 0, color: C.gold },
-    { label: ar ? 'حجز' : 'Booked', value: growthDashboard?.funnel.booked ?? 0, color: C.green },
-    { label: ar ? 'اكتمل' : 'Complete', value: growthDashboard?.funnel.completed ?? 0, color: C.gold },
-  ];
-
   return (
     <motion.section
       initial={{ opacity: 0, y: 16 }}
@@ -125,8 +223,24 @@ export function QuickActionsSection({
       transition={{ duration: 0.5, delay: 0.1 }}
       className="home-section"
     >
-      <SectionHeader title={ar ? 'ابدأ' : 'Start'} icon="+" />
+      <SectionHeader title={ar ? '\u0627\u0628\u062f\u0623 \u0627\u0644\u0622\u0646' : 'Start now'} icon="+" />
       <div className="home-quick-grid">
+        <div className="home-panel home-featured-panel">
+          <div className="home-mini-label">{ar ? '\u0627\u0644\u0628\u062f\u0627\u064a\u0629' : 'Start'}</div>
+          <div className="home-featured-title">{ar ? '\u0627\u062e\u062a\u0631 \u0627\u0644\u062e\u062f\u0645\u0629' : 'Choose a service'}</div>
+          <p className="home-panel-copy home-featured-copy">
+            {ar ? '\u0631\u062d\u0644\u0629\u060c \u0637\u0631\u062f\u060c \u0623\u0648 \u0628\u0627\u0635.' : 'Ride, package, or bus.'}
+          </p>
+          <div className="home-button-row">
+            <button type="button" className="home-primary-button" onClick={() => navigate('/find-ride')}>
+              {ar ? '\u0627\u0628\u062d\u062b \u0639\u0646 \u0631\u062d\u0644\u0629' : 'Find a ride'}
+            </button>
+            <button type="button" className="home-secondary-button" onClick={() => navigate('/offer-ride')}>
+              {ar ? '\u0627\u0639\u0631\u0636 \u0631\u062d\u0644\u0629' : 'Offer a ride'}
+            </button>
+          </div>
+        </div>
+
         {quickActions.map((action, index) => {
           const Icon = action.icon;
           return (
@@ -150,28 +264,12 @@ export function QuickActionsSection({
               <span className="home-card-title">{action.title}</span>
               <span className="home-card-description">{action.description}</span>
               <div className="home-card-cta" style={{ color: action.color }}>
-                <span>{ar ? 'افتح' : 'Open'}</span>
+                <span>{ar ? '\u0627\u0641\u062a\u062d' : 'Open'}</span>
                 <ChevronRight size={10} />
               </div>
             </motion.button>
           );
         })}
-
-        <div className="home-panel">
-          <div className="home-panel-title">{ar ? 'حي' : 'Live'}</div>
-          <div className="home-funnel-grid">
-            {funnelItems.map((item) => (
-              <div key={item.label} className="home-metric-tile">
-                <div className="home-metric-label">{item.label}</div>
-                <div className="home-metric-value" style={{ color: item.color }}>{item.value}</div>
-              </div>
-            ))}
-          </div>
-          <div className="home-inline-metrics">
-            <span>{ar ? 'إيراد' : 'Revenue'}: <strong>{estimatedRevenue}</strong></span>
-            <span>{ar ? 'طلب' : 'Demand'}: <strong>{growthDashboard?.activeDemand ?? 0}</strong></span>
-          </div>
-        </div>
       </div>
     </motion.section>
   );
@@ -194,10 +292,10 @@ export function GrowthSection({
       transition={{ duration: 0.5, delay: 0.18 }}
       className="home-section"
     >
-      <SectionHeader title={ar ? 'الإحالات' : 'Referrals'} icon="G" />
+      <SectionHeader title={ar ? 'النمو والطلب' : 'Growth and demand'} icon="G" />
       <div className="home-two-column-grid">
         <div className="home-panel">
-          <div className="home-panel-title">{ar ? 'الدعوات' : 'Invites'}</div>
+          <div className="home-panel-title">{ar ? 'الإحالات' : 'Referrals'}</div>
           <div className="home-inline-metrics">
             <span>{ar ? 'دعوات مفعلة' : 'Invites activated'}: <strong>{referral?.invited ?? 0}</strong></span>
             <span>{ar ? 'رصيد الإحالات' : 'Referral credits'}: <strong>{referral?.earnedCredit ?? 0}</strong></span>
@@ -241,7 +339,7 @@ export function GrowthSection({
         </div>
 
         <div className="home-panel">
-          <div className="home-panel-title">{ar ? 'الطلب' : 'Demand'}</div>
+          <div className="home-panel-title">{ar ? 'أعلى المسارات طلباً' : 'Highest demand corridors'}</div>
           <div className="home-stack-sm">
             {corridorLeaders.length > 0 ? corridorLeaders.map((item) => (
               <button
@@ -280,59 +378,47 @@ export function UserSnapshotSection({
 }: UserSnapshotSectionProps) {
   const signals = platformStats
     ? [
-        { value: platformStats.activeDrivers, label: ar ? 'السائقون' : 'Drivers', color: C.cyan },
-        { value: `${platformStats.avgWaitMinutes} min`, label: ar ? 'متوسط الانتظار' : 'Avg Wait', color: C.gold },
-        { value: platformStats.passengersMatchedToday.toLocaleString(), label: ar ? 'المطابقات' : 'Matched', color: C.green },
+        { value: platformStats.activeDrivers, label: ar ? '\u0627\u0644\u0633\u0627\u0626\u0642\u0648\u0646' : 'Drivers', color: C.cyan },
+        { value: `${platformStats.avgWaitMinutes} min`, label: ar ? '\u0627\u0644\u0627\u0646\u062a\u0638\u0627\u0631' : 'Wait', color: C.gold },
+        { value: platformStats.passengersMatchedToday.toLocaleString(), label: ar ? '\u0627\u0644\u0645\u0637\u0627\u0628\u0642\u0627\u062a' : 'Matched', color: C.green },
       ]
     : [];
 
   return (
-    <>
-      <motion.section
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.24 }}
-        className="home-snapshot-row"
-      >
-        <div className="home-panel home-wallet-panel">
-          <div className="home-mini-label">{ar ? 'المحفظة' : 'Wallet'}</div>
-          <div className="home-balance-value">
-            {loading ? <Skeleton w={100} h={28} radius={6} /> : formatFromJOD(liveStats?.walletBalance ?? 47.5)}
-          </div>
-          <div className="home-stat-label">{liveStats ? `JOD ${liveStats.walletBalance.toFixed(3)} base` : ''}</div>
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.24 }}
+      className="home-snapshot-row"
+    >
+      <div className="home-panel home-wallet-panel">
+        <div className="home-mini-label">{ar ? '\u0627\u0644\u0645\u062d\u0641\u0638\u0629' : 'Wallet'}</div>
+        <div className="home-balance-value">
+          {loading ? <Skeleton w={100} h={28} radius={6} /> : formatFromJOD(liveStats?.walletBalance ?? 47.5)}
         </div>
+        <div className="home-stat-label">{liveStats ? `JOD ${liveStats.walletBalance.toFixed(3)}` : ''}</div>
+      </div>
 
-        {platformStats ? (
-          <div className="home-panel home-platform-panel">
-            <div className="home-mini-label">{ar ? 'حي' : 'Live'}</div>
-            <div className="home-inline-signal-row">
-              {signals.map((signal) => (
-                <div key={signal.label} className="home-inline-signal">
-                  <span className="home-inline-dot" style={{ background: signal.color, boxShadow: `0 0 6px ${signal.color}` }} />
-                  <span style={{ color: signal.color, fontWeight: 800 }}>{signal.value}</span>
-                  <span className="home-stat-label">{signal.label}</span>
-                </div>
-              ))}
-            </div>
+      {platformStats ? (
+        <div className="home-panel home-platform-panel">
+          <div className="home-mini-label">{ar ? '\u062d\u064a' : 'Live'}</div>
+          <div className="home-inline-signal-row">
+            {signals.map((signal) => (
+              <div key={signal.label} className="home-inline-signal">
+                <span className="home-inline-dot" style={{ background: signal.color, boxShadow: `0 0 6px ${signal.color}` }} />
+                <span style={{ color: signal.color, fontWeight: 800 }}>{signal.value}</span>
+                <span className="home-stat-label">{signal.label}</span>
+              </div>
+            ))}
           </div>
-        ) : null}
-
-        <div className="home-panel home-sos-panel">
-          <div className="home-mini-label">SOS</div>
-          <SOSButton ar={ar} />
         </div>
-      </motion.section>
+      ) : null}
 
-      <motion.section
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.28 }}
-        className="home-section"
-      >
-        <SectionHeader title={ar ? 'الثقة' : 'Trust'} icon="T" />
-        {loading ? <Skeleton h={80} radius={16} /> : <TrustScoreCard score={87} ar={ar} />}
-      </motion.section>
-    </>
+      <div className="home-panel home-sos-panel">
+        <div className="home-mini-label">SOS</div>
+        <SOSButton ar={ar} />
+      </div>
+    </motion.section>
   );
 }
 

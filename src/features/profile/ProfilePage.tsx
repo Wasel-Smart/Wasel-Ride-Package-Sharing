@@ -29,7 +29,6 @@ import {
   VerificationBadge as SharedVerificationBadge,
 } from './components/ProfilePageParts';
 import {
-  PROFILE_BG as BG,
   PROFILE_CYAN as CYAN,
   PROFILE_FONT as FONT,
   useProfilePageController,
@@ -40,6 +39,13 @@ import {
   ProfileQuickPhoneEditor,
   ProfileSignedOutState,
 } from './components/ProfilePageSections';
+import {
+  ClarityBand,
+  CoreExperienceBanner,
+  PageShell,
+  Protected,
+  SectionHead,
+} from '../shared/pageShared';
 
 function showToast(message: string) {
   const element = document.createElement('div');
@@ -207,8 +213,8 @@ function ProfilePageContent({
     })),
     {
       key: 'operational-standing',
-      label: ar ? '????? ????????' : 'Operational standing',
-      value: ar ? `${trustTier} - ??? ??? ${joinedText}` : `${trustTier} - Member since ${joinedText}`,
+      label: ar ? 'الوضع التشغيلي' : 'Operational standing',
+      value: ar ? `${trustTier} - عضو منذ ${joinedText}` : `${trustTier} - Member since ${joinedText}`,
       icon: <CheckCircle size={15} />,
       onClick: () => nav('/app/my-trips'),
     },
@@ -217,29 +223,29 @@ function ProfilePageContent({
   const accountRows: ProfileRowConfig[] = [
     {
       key: 'phone',
-      label: ar ? '??????' : 'Phone number',
-      value: user.phone ?? (ar ? '?? ???? ???' : 'Not added'),
-      icon: <span>??</span>,
+      label: ar ? 'الهاتف' : 'Phone number',
+      value: user.phone ?? (ar ? 'غير مضاف' : 'Not added'),
+      icon: <span>📱</span>,
       onClick: () => nav('/app/settings?section=phone'),
     },
     {
       key: 'id-verification',
-      label: ar ? '?????? ?? ??????' : 'ID Verification',
-      value: ar ? '??? eKYC' : 'Sanad eKYC',
+      label: ar ? 'التحقق من الهوية' : 'ID Verification',
+      value: ar ? 'سند eKYC' : 'Sanad eKYC',
       icon: <Shield size={15} />,
       badge: <SharedVerificationBadge level={user.verificationLevel ?? 'level_0'} ar={ar} accent={CYAN} />,
       onClick: () => nav('/app/trust'),
     },
     {
       key: 'language',
-      label: ar ? '?????' : 'Language',
-      value: ar ? '???????' : 'English',
-      icon: <span>??</span>,
+      label: ar ? 'اللغة' : 'Language',
+      value: ar ? 'العربية' : 'English',
+      icon: <span>🌐</span>,
       onClick: () => nav('/app/settings?section=account'),
     },
     {
       key: 'notifications',
-      label: ar ? '?????????' : 'Notifications',
+      label: ar ? 'الإشعارات' : 'Notifications',
       value: permissionStatus.label,
       icon: <Bell size={15} />,
       badge: (
@@ -266,23 +272,23 @@ function ProfilePageContent({
   const driverRows: ProfileRowConfig[] = [
     {
       key: 'vehicle',
-      label: ar ? '??????' : 'My Vehicle',
-      value: ar ? '?????? ?????? 2021' : 'Toyota Corolla 2021',
+      label: ar ? 'مركبتي' : 'My Vehicle',
+      value: ar ? 'تويوتا كورولا 2021' : 'Toyota Corolla 2021',
       icon: <Car size={15} />,
       onClick: () => nav('/app/settings?section=account'),
     },
     {
       key: 'documents',
-      label: ar ? '?????????' : 'Documents',
-      value: ar ? '???? + ????? + ?????' : 'License � Insurance � Registration',
-      icon: <span>??</span>,
+      label: ar ? 'المستندات' : 'Documents',
+      value: ar ? 'رخصة + تأمين + تسجيل' : 'License · Insurance · Registration',
+      icon: <span>🪪</span>,
       badge: <CheckCircle size={14} color="#22C55E" />,
       onClick: () => nav('/app/trust'),
     },
     {
       key: 'earnings',
-      label: ar ? '???????' : 'Earnings',
-      icon: <span>??</span>,
+      label: ar ? 'الأرباح' : 'Earnings',
+      icon: <span>💰</span>,
       onClick: () => nav('/app/wallet'),
     },
   ];
@@ -290,21 +296,21 @@ function ProfilePageContent({
   const preferenceRows: ProfileRowConfig[] = [
     {
       key: 'gender-preference',
-      label: ar ? '????? ?????' : 'Gender Preference',
-      value: ar ? '????? (???????)' : 'Mixed (default)',
-      icon: <span>??</span>,
+      label: ar ? 'تفضيل الجنس' : 'Gender Preference',
+      value: ar ? 'مختلط (افتراضي)' : 'Mixed (default)',
+      icon: <span>⚙️</span>,
       onClick: () => nav('/app/settings?section=account'),
     },
     {
       key: 'currency',
-      label: ar ? '??????' : 'Currency',
+      label: ar ? 'العملة' : 'Currency',
       value: 'JOD',
-      icon: <span>??</span>,
+      icon: <span>💱</span>,
       onClick: () => nav('/app/settings?section=account'),
     },
     {
       key: 'advanced-settings',
-      label: ar ? '????????? ????????' : 'Advanced Settings',
+      label: ar ? 'إعدادات متقدمة' : 'Advanced Settings',
       icon: <Settings size={15} />,
       onClick: () => nav('/app/settings?section=account'),
     },
@@ -313,14 +319,14 @@ function ProfilePageContent({
   const securityRows: ProfileRowConfig[] = [
     {
       key: 'password',
-      label: ar ? '????? ???? ??????' : 'Change Password',
-      icon: <span>??</span>,
+      label: ar ? 'تغيير كلمة المرور' : 'Change Password',
+      icon: <span>🔐</span>,
       onClick: () => nav('/app/settings?section=security'),
     },
     {
       key: 'two-factor',
-      label: ar ? '?????? ??????? (2FA)' : 'Two-Factor Auth (2FA)',
-      icon: <span>???</span>,
+      label: ar ? 'المصادقة الثنائية (2FA)' : 'Two-Factor Auth (2FA)',
+      icon: <span>🛡️</span>,
       badge: (
         <span
           style={{
@@ -333,15 +339,15 @@ function ProfilePageContent({
             fontWeight: 700,
           }}
         >
-          {user.twoFactorEnabled ? (ar ? '????' : 'On') : (ar ? '??? ????' : 'Off')}
+          {user.twoFactorEnabled ? (ar ? 'مفعل' : 'On') : (ar ? 'غير مفعل' : 'Off')}
         </span>
       ),
       onClick: () => nav('/app/settings?section=security'),
     },
     {
       key: 'sessions',
-      label: ar ? '??????? ???????' : 'Active Sessions',
-      icon: <span>??</span>,
+      label: ar ? 'الجلسات النشطة' : 'Active Sessions',
+      icon: <span>🖥️</span>,
       onClick: () => nav('/app/settings?section=security'),
     },
   ];
@@ -349,14 +355,14 @@ function ProfilePageContent({
   const legalRows: ProfileRowConfig[] = [
     {
       key: 'privacy',
-      label: ar ? '????? ????????' : 'Privacy Policy',
-      icon: <span>??</span>,
+      label: ar ? 'سياسة الخصوصية' : 'Privacy Policy',
+      icon: <span>📄</span>,
       onClick: () => nav('/app/privacy'),
     },
     {
       key: 'terms',
-      label: ar ? '???? ??????' : 'Terms of Service',
-      icon: <span>??</span>,
+      label: ar ? 'شروط الخدمة' : 'Terms of Service',
+      icon: <span>📘</span>,
       onClick: () => nav('/app/terms'),
     },
   ];
@@ -364,20 +370,20 @@ function ProfilePageContent({
   const dangerRows: ProfileRowConfig[] = [
     {
       key: 'export-data',
-      label: ar ? '????? ???????' : 'Export My Data',
-      icon: <span>??</span>,
+      label: ar ? 'تصدير بياناتي' : 'Export My Data',
+      icon: <span>⬇️</span>,
       onClick: handleExportData,
     },
     {
       key: 'delete-account',
-      label: ar ? '??? ??? ??????' : 'Request Account Deletion',
-      icon: <span>???</span>,
+      label: ar ? 'طلب حذف الحساب' : 'Request Account Deletion',
+      icon: <span>🗑️</span>,
       danger: true,
       onClick: () => setShowDeleteConfirm(true),
     },
     {
       key: 'sign-out',
-      label: ar ? '????? ??????' : 'Sign Out',
+      label: ar ? 'تسجيل الخروج' : 'Sign Out',
       icon: <LogOut size={15} />,
       danger: true,
       onClick: () => {
@@ -387,180 +393,207 @@ function ProfilePageContent({
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: FONT, direction: ar ? 'rtl' : 'ltr', paddingBottom: 80 }}>
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 16px' }}>
-        <ProfileHeroSection
-          user={user}
-          ar={ar}
-          initials={initials}
-          roleLabel={roleLabel}
-          walletStatus={walletStatus}
-          trustTier={trustTier}
-          joinedText={joinedText}
-          profileCompleteness={profileCompleteness}
-          permissionStatus={permissionStatus}
-          editingField={editingField}
-          nameInput={nameInput}
-          savingField={savingField}
-          photoInputRef={photoInputRef}
-          onNameInputChange={setNameInput}
-          onNameEditStart={() => {
-            setNameInput(user.name);
-            setEditingField('name');
-          }}
-          onNameEditCancel={() => setEditingField(null)}
-          onNameSave={handleSaveName}
-          onPhotoSelection={handlePhotoSelection}
-        />
-
-        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 24 }}>
-          <StakeholderSignalBanner
-            dir={ar ? 'rtl' : 'ltr'}
-            eyebrow={ar ? '???? � ????? ??????' : 'Wasel � identity comms'}
-            title={
-              ar
-                ? '????? ?????? ???? ???? ????? ??? ?????? ?????? ????????'
-                : 'Profile now acts as the shared handoff point between identity, trust, and operations'
-            }
-            detail={
-              ar
-                ? '??? ?????? ?? ??? ???? ??????? ?????. ?? ???? ???? ???? ??? ???? ???????? ?????? ?????? ???????? ?? ?????? ??????.'
-                : 'This page is no longer just personal info. It now summarizes what the user, support, trust, and operations all need to see about account readiness.'
-            }
-            stakeholders={[
-              { label: ar ? '?????' : 'Trust', value: `${user.trustScore}/100`, tone: 'green' },
-              { label: ar ? '???????' : 'Trips', value: String(user.trips ?? 0), tone: 'teal' },
-              { label: ar ? '?????????' : 'Alerts', value: permissionStatus.label, tone: 'blue' },
-              { label: ar ? '???????' : 'Wallet', value: walletStatus.label, tone: 'amber' },
-            ]}
-            statuses={[
-              { label: ar ? '?????? ?????' : 'Profile completeness', value: `${profileCompleteness}%`, tone: profileCompleteness >= 80 ? 'green' : 'amber' },
-              { label: ar ? '??????' : 'Verification', value: trustTier, tone: user.verified || user.sanadVerified ? 'green' : 'amber' },
-              { label: ar ? '??????? ????????' : '2FA', value: user.twoFactorEnabled ? (ar ? '?????' : 'Enabled') : (ar ? '??? ?????' : 'Disabled'), tone: user.twoFactorEnabled ? 'green' : 'rose' },
-            ]}
-            lanes={[
-              {
-                label: ar ? '???? ??????' : 'Identity lane',
-                detail: ar
-                  ? '????? ??????? ??????? ????? ????? ???? ???? ???????? ????? ??????.'
-                  : 'Name, phone, verification, and profile media define the account�s first layer of trust.',
-              },
-              {
-                label: ar ? '???? ???????' : 'Operations lane',
-                detail: ar
-                  ? '??????? ???????? ???????? ???? ??? ??? ???? ???????? ????? ??? ?? ???? ????.'
-                  : 'Trips, rating, and wallet health stay visible here so readiness is clear before the next action.',
-              },
-              {
-                label: ar ? '???? ?????' : 'Support lane',
-                detail: ar
-                  ? '????????? ?????????? ??????? ???? ????? ?????? ??? ????? ??????.'
-                  : 'Alerts and quick settings reduce the time it takes to resolve account issues.',
-              },
-            ]}
+    <Protected>
+      <PageShell>
+        <div style={{ maxWidth: 760, margin: '0 auto', fontFamily: FONT, direction: ar ? 'rtl' : 'ltr', paddingBottom: 48 }}>
+          <SectionHead
+            emoji="👤"
+            title="My Profile"
+            titleAr="ملفي"
+            sub={ar ? 'الهوية والثقة والإعدادات في مكان واحد.' : 'Identity, trust, and settings in one place.'}
+            color={CYAN}
           />
-        </div>}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 28 }}>
-          <SharedStatCard label={ar ? '?????' : 'Trips'} value={user.trips ?? 0} icon={<Car size={16} />} color={CYAN} />
-          <SharedStatCard label={ar ? '?????' : 'Rating'} value={(user.rating ?? 5).toFixed(1)} icon={<Star size={16} />} color="#F59E0B" />
-          <SharedStatCard label={ar ? '?????' : 'Trust'} value={`${user.trustScore}/100`} icon={<Shield size={16} />} color="#22C55E" />
-          <SharedStatCard label={ar ? '??????' : 'Balance'} value={`JOD ${(user.balance ?? 0).toFixed(1)}`} icon={<CreditCard size={16} />} color="#A78BFA" />
-        </div>
+          <CoreExperienceBanner
+            title={ar ? 'جاهزية الحساب واضحة' : 'Account readiness at a glance'}
+            detail={ar ? 'أهم الإشارات بدون تفاصيل مشتتة.' : 'The most important account signals without extra noise.'}
+            tone={CYAN}
+          />
 
-        <SharedSection title={ar ? '???? ??????' : 'Quick actions'}>
-          <div style={{ padding: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-            {quickActions.map((action) => (
-              <SharedQuickActionCard
-                key={action.label}
-                label={action.label}
-                detail={action.detail}
-                icon={action.icon}
-                color={action.color}
-                onClick={action.onClick}
-              />
-            ))}
-          </div>
-        </SharedSection>
-
-        <SharedSection title={ar ? '??? ??????' : 'Account overview'}>
-          <div style={{ padding: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-            <SharedInsightCard
-              label={ar ? '?????? ?????' : 'Profile completeness'}
-              value={`${profileCompleteness}%`}
-              detail={ar ? '???? ????? ????? ????? ????? ????? ?????.' : 'A more complete account improves trust and booking confidence.'}
-              color={profileCompleteness >= 80 ? '#22C55E' : CYAN}
-            />
-            <SharedInsightCard
-              label={ar ? '????? ??????' : 'Verification level'}
-              value={(user.verificationLevel ?? 'level_0').replace('level_', 'L')}
-              detail={ar ? '????? ??????? ??????? ??????? ?? ???.' : 'Driven by email, phone, and identity completion.'}
-              color={user.verified || user.sanadVerified ? CYAN : '#F59E0B'}
-            />
-            <SharedInsightCard
-              label={ar ? '???? ???????' : 'Wallet status'}
-              value={walletStatus.label}
-              detail={ar ? '???? ?????? ????? ???????? ???? ????.' : 'Shows whether payments and payouts are ready to flow.'}
-              color={walletStatus.color}
-            />
-            <SharedInsightCard
-              label={ar ? '?????????' : 'Alerts'}
-              value={permissionStatus.label}
-              detail={ar ? '??????? ??????? ??????? ?????????? ??????.' : 'Critical ride, package, and account alerts for this device.'}
-              color={permissionStatus.color}
-            />
-          </div>
-        </SharedSection>
-
-        <SharedSection title={ar ? '????? ???????' : 'Trust & Verification'}>
-          {renderRows(trustVerificationRows)}
-        </SharedSection>
-
-        <SharedSection title={ar ? '??????? ?????' : 'Quick Edits'}>
-          <ProfileQuickPhoneEditor
+          <ProfileHeroSection
+            user={user}
             ar={ar}
-            phoneInput={phoneInput}
+            initials={initials}
+            roleLabel={roleLabel}
+            walletStatus={walletStatus}
+            trustTier={trustTier}
+            joinedText={joinedText}
+            profileCompleteness={profileCompleteness}
+            permissionStatus={permissionStatus}
             editingField={editingField}
+            nameInput={nameInput}
             savingField={savingField}
-            onPhoneInputChange={setPhoneInput}
-            onPhoneFocus={() => setEditingField('phone')}
-            onPhoneSave={handleSavePhone}
-            onPhoneCancel={() => setEditingField(null)}
+            photoInputRef={photoInputRef}
+            onNameInputChange={setNameInput}
+            onNameEditStart={() => {
+              setNameInput(user.name);
+              setEditingField('name');
+            }}
+            onNameEditCancel={() => setEditingField(null)}
+            onNameSave={handleSaveName}
+            onPhotoSelection={handlePhotoSelection}
           />
-        </SharedSection>
 
-        <SharedSection title={ar ? '??????' : 'Account'}>
-          {renderRows(accountRows)}
-        </SharedSection>
+          {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 24 }}>
+            <StakeholderSignalBanner
+              dir={ar ? 'rtl' : 'ltr'}
+              eyebrow={ar ? 'واصل الهوية' : 'Wasel identity'}
+              title={
+                ar
+                  ? 'الملف الشخصي هو نقطة الربط بين الهوية والثقة والتشغيل'
+                  : 'Profile is now the shared handoff point for identity, trust, and operations'
+              }
+              detail={
+                ar
+                  ? 'هذا العرض يلخص أهم مؤشرات الجاهزية للحساب.'
+                  : 'This surface summarizes the account signals that matter before the next action.'
+              }
+              stakeholders={[
+                { label: ar ? 'الثقة' : 'Trust', value: `${user.trustScore}/100`, tone: 'green' },
+                { label: ar ? 'الرحلات' : 'Trips', value: String(user.trips ?? 0), tone: 'teal' },
+                { label: ar ? 'التنبيهات' : 'Alerts', value: permissionStatus.label, tone: 'blue' },
+                { label: ar ? 'المحفظة' : 'Wallet', value: walletStatus.label, tone: 'amber' },
+              ]}
+              statuses={[
+                { label: ar ? 'اكتمال الحساب' : 'Profile completeness', value: `${profileCompleteness}%`, tone: profileCompleteness >= 80 ? 'green' : 'amber' },
+                { label: ar ? 'التحقق' : 'Verification', value: trustTier, tone: user.verified || user.sanadVerified ? 'green' : 'amber' },
+                { label: ar ? 'المصادقة الثنائية' : '2FA', value: user.twoFactorEnabled ? (ar ? 'مفعلة' : 'Enabled') : (ar ? 'غير مفعلة' : 'Disabled'), tone: user.twoFactorEnabled ? 'green' : 'rose' },
+              ]}
+              lanes={[
+                {
+                  label: ar ? 'مسار الهوية' : 'Identity lane',
+                  detail: ar
+                    ? 'الاسم والهاتف والتحقق تحدد الطبقة الأولى من الثقة.'
+                    : 'Name, phone, and verification define the first layer of trust.',
+                },
+                {
+                  label: ar ? 'مسار التشغيل' : 'Operations lane',
+                  detail: ar
+                    ? 'الرحلات والتقييم والمحفظة تظهر هنا بوضوح.'
+                    : 'Trips, rating, and wallet health stay visible here.',
+                },
+                {
+                  label: ar ? 'مسار الدعم' : 'Support lane',
+                  detail: ar
+                    ? 'الإشعارات والإعدادات السريعة تقلل وقت حل المشاكل.'
+                    : 'Alerts and quick settings reduce resolution time.',
+                },
+              ]}
+            />
+          </div>}
 
-        {(user.role === 'driver' || user.role === 'both') && (
-          <SharedSection title={ar ? '??? ??????' : 'Driver Mode'}>
-            {renderRows(driverRows)}
+          <ClarityBand
+            title={ar ? 'لقطة سريعة' : 'Quick status'}
+            detail={ar ? 'البيانات الأساسية التي تحدد جاهزية الحساب.' : 'The core signals that define account readiness.'}
+            tone={CYAN}
+            items={[
+              { label: ar ? 'الثقة' : 'Trust', value: `${user.trustScore}/100` },
+              { label: ar ? 'الاكتمال' : 'Profile', value: `${profileCompleteness}%` },
+              { label: ar ? 'المحفظة' : 'Wallet', value: walletStatus.label },
+            ]}
+          />
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 28 }}>
+            <SharedStatCard label={ar ? 'الرحلات' : 'Trips'} value={user.trips ?? 0} icon={<Car size={16} />} color={CYAN} />
+            <SharedStatCard label={ar ? 'التقييم' : 'Rating'} value={(user.rating ?? 5).toFixed(1)} icon={<Star size={16} />} color="#F59E0B" />
+            <SharedStatCard label={ar ? 'الثقة' : 'Trust'} value={`${user.trustScore}/100`} icon={<Shield size={16} />} color="#22C55E" />
+            <SharedStatCard label={ar ? 'الرصيد' : 'Balance'} value={`JOD ${(user.balance ?? 0).toFixed(1)}`} icon={<CreditCard size={16} />} color="#A78BFA" />
+          </div>
+
+          <SharedSection title={ar ? 'إجراءات سريعة' : 'Quick actions'}>
+            <div style={{ padding: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+              {quickActions.map((action) => (
+                <SharedQuickActionCard
+                  key={action.label}
+                  label={action.label}
+                  detail={action.detail}
+                  icon={action.icon}
+                  color={action.color}
+                  onClick={action.onClick}
+                />
+              ))}
+            </div>
           </SharedSection>
-        )}
 
-        <SharedSection title={ar ? '?????????' : 'Preferences'}>
-          {renderRows(preferenceRows)}
-        </SharedSection>
+          <SharedSection title={ar ? 'نظرة عامة' : 'Account overview'}>
+            <div style={{ padding: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+              <SharedInsightCard
+                label={ar ? 'اكتمال الحساب' : 'Profile completeness'}
+                value={`${profileCompleteness}%`}
+                detail={ar ? 'الحساب المكتمل يرفع الثقة.' : 'A more complete account improves trust.'}
+                color={profileCompleteness >= 80 ? '#22C55E' : CYAN}
+              />
+              <SharedInsightCard
+                label={ar ? 'مستوى التحقق' : 'Verification level'}
+                value={(user.verificationLevel ?? 'level_0').replace('level_', 'L')}
+                detail={ar ? 'يعتمد على البريد والهاتف والهوية.' : 'Driven by email, phone, and identity.'}
+                color={user.verified || user.sanadVerified ? CYAN : '#F59E0B'}
+              />
+              <SharedInsightCard
+                label={ar ? 'حالة المحفظة' : 'Wallet status'}
+                value={walletStatus.label}
+                detail={ar ? 'يوضح جاهزية الدفع والتحويل.' : 'Shows whether payments are ready.'}
+                color={walletStatus.color}
+              />
+              <SharedInsightCard
+                label={ar ? 'التنبيهات' : 'Alerts'}
+                value={permissionStatus.label}
+                detail={ar ? 'تنبيهات الرحلات والحساب على هذا الجهاز.' : 'Trip and account alerts for this device.'}
+                color={permissionStatus.color}
+              />
+            </div>
+          </SharedSection>
 
-        <SharedSection title={ar ? '??????' : 'Security'}>
-          {renderRows(securityRows)}
-        </SharedSection>
+          <SharedSection title={ar ? 'الثقة والتحقق' : 'Trust & Verification'}>
+            {renderRows(trustVerificationRows)}
+          </SharedSection>
 
-        <SharedSection title={ar ? '????????' : 'Legal'}>
-          {renderRows(legalRows)}
-        </SharedSection>
+          <SharedSection title={ar ? 'تعديل سريع' : 'Quick edits'}>
+            <ProfileQuickPhoneEditor
+              ar={ar}
+              phoneInput={phoneInput}
+              editingField={editingField}
+              savingField={savingField}
+              onPhoneInputChange={setPhoneInput}
+              onPhoneFocus={() => setEditingField('phone')}
+              onPhoneSave={handleSavePhone}
+              onPhoneCancel={() => setEditingField(null)}
+            />
+          </SharedSection>
 
-        <SharedSection title={ar ? '????? ?????' : 'Danger Zone'}>
-          {renderRows(dangerRows)}
-        </SharedSection>
+          <SharedSection title={ar ? 'الحساب' : 'Account'}>
+            {renderRows(accountRows)}
+          </SharedSection>
 
-        <p style={{ textAlign: 'center', fontSize: '0.72rem', color: 'rgba(148,163,184,0.35)', fontFamily: FONT }}>
-          {user.joinedAt
-            ? (ar ? `??? ??? ${joinedText}` : `Member since ${joinedText}`)
-            : (ar ? '??? ?? ????' : 'Wasel member')}
-        </p>
-      </div>
+          {(user.role === 'driver' || user.role === 'both') && (
+            <SharedSection title={ar ? 'وضع السائق' : 'Driver mode'}>
+              {renderRows(driverRows)}
+            </SharedSection>
+          )}
+
+          <SharedSection title={ar ? 'التفضيلات' : 'Preferences'}>
+            {renderRows(preferenceRows)}
+          </SharedSection>
+
+          <SharedSection title={ar ? 'الأمان' : 'Security'}>
+            {renderRows(securityRows)}
+          </SharedSection>
+
+          <SharedSection title={ar ? 'القانوني' : 'Legal'}>
+            {renderRows(legalRows)}
+          </SharedSection>
+
+          <SharedSection title={ar ? 'منطقة الخطر' : 'Danger Zone'}>
+            {renderRows(dangerRows)}
+          </SharedSection>
+
+          <p style={{ textAlign: 'center', fontSize: '0.72rem', color: 'rgba(148,163,184,0.35)', fontFamily: FONT }}>
+            {user.joinedAt
+              ? (ar ? `عضو منذ ${joinedText}` : `Member since ${joinedText}`)
+              : (ar ? 'عضو واصل' : 'Wasel member')}
+          </p>
+        </div>
+      </PageShell>
 
       {showDeleteConfirm ? (
         <ProfileDeleteConfirmDialog
@@ -569,7 +602,6 @@ function ProfilePageContent({
           onContinue={handleDeletionContinue}
         />
       ) : null}
-    </div>
+    </Protected>
   );
 }
-
