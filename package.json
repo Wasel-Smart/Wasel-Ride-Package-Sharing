@@ -58,6 +58,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.9.1",
     "@eslint/js": "^9.22.0",
     "@lhci/cli": "^0.14.0",
     "@playwright/test": "^1.58.2",
@@ -74,6 +75,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "jest-axe": "^9.0.0",
     "jsdom": "^29.0.1",
     "prettier": "^3.5.3",
     "tailwindcss": "^4.1.12",
@@ -95,6 +97,9 @@
     "test:watch": "vitest --config vitest.config.ts",
     "test:coverage": "vitest run --config vitest.config.ts --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:a11y": "playwright test tests/e2e/accessibility.spec.ts",
+    "test:e2e:mobile": "playwright test --project=mobile-android-chrome --project=mobile-ios-safari",
+    "test:e2e:rtl": "playwright test tests/e2e/rtl-arabic.spec.ts",
     "test:lhci": "lhci autorun --config=src/lighthouserc.json",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",

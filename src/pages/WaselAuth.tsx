@@ -421,7 +421,7 @@ export default function WaselAuth() {
             </h3>
             <p style={{ fontSize: TYPE.size.sm, color: C.textMuted, margin: 0, lineHeight: TYPE.lineHeight.relaxed }}>
               {tab === 'signin'
-                ? 'Continue to your account.'
+                ? 'Sign in to continue to your account.'
                 : 'Create your account in under a minute.'}
             </p>
             <div style={{ marginTop: SPACE[3], display: 'flex', alignItems: 'center', gap: SPACE[2], flexWrap: 'wrap', color: C.textMuted, fontSize: TYPE.size.xs }}>
@@ -609,7 +609,7 @@ export default function WaselAuth() {
                       whileHover={{ scale: 1.02, y: -1 }}
                       whileTap={{ scale: 0.97 }}
                       type="button"
-                      aria-label={social.label}
+                      aria-label={social.label === 'WhatsApp' ? 'WhatsApp' : `Continue with ${social.label}`}
                       disabled={isBusy}
                       onClick={() => { void social.onClick(); }}
                       style={{ minHeight: 68, borderRadius: R.xl, border: `1px solid ${SOCIAL_META[social.label].border}`, background: `linear-gradient(180deg, ${SOCIAL_META[social.label].bg}, rgba(255,255,255,0.02))`, color: C.text, fontWeight: TYPE.weight.black, fontSize: TYPE.size.sm, fontFamily: F, cursor: isBusy ? 'not-allowed' : 'pointer', opacity: isBusy ? 0.55 : 1, transition: 'all 150ms ease', padding: `${SPACE[3]} ${SPACE[4]}`, textAlign: 'left', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)' }}

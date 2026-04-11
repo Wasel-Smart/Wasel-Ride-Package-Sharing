@@ -13,9 +13,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ── Job 1: Static analysis + unit tests ────────────────────────────────────
+  # ── Job 1: Static analysis + unit tests ──────────────────────────────────────
   verify:
-    name: Verify (types · lint · unit tests · build)
+    name: Verify (types · lint · format · unit tests · build)
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
@@ -32,10 +32,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # ── Security: dependency vulnerability audit ──────────────────────────
       - name: Dependency audit (high + critical only)
         run: npm audit --audit-level=high
-        continue-on-error: false
 
       - name: Type check
         run: npm run type-check
@@ -52,73 +50,58 @@ jobs:
       - name: Production build
         run: npm run build
 
-      # ── Bundle size gate ──────────────────────────────────────────────────
-      - name: Bundle size gate
+      - name: Bundle size gate (600 KB per chunk)
         run: |
           node -e "
             const fs = require('fs');
             const path = require('path');
 
             function dirSize(dir) {
-              const entries = fs.readdirSync(dir, { withFileTypes: true });
-              return entries.reduce((total, entry) => {
+              return fs.readdirSync(dir, { withFileTypes: true }).reduce((total, entry) => {
                 const full = path.join(dir, entry.name);
                 return total + (entry.isDirectory() ? dirSize(full) : fs.statSync(full).size);
               }, 0);
             }
 
-            const distDir = './dist';
-            if (!fs.existsSync(distDir)) {
-              console.log('dist/ not found — skipping bundle size check');
-              process.exit(0);
-            }
-
-            const assetsDir = path.join(distDir, 'assets');
-            if (!fs.existsSync(assetsDir)) {
-              console.log('dist/assets/ not found — skipping');
-              process.exit(0);
-            }
+            const assetsDir = './dist/assets';
+            if (!fs.existsSync(assetsDir)) { console.log('No assets dir — skipping'); process.exit(0); }
 
             const jsFiles = fs.readdirSync(assetsDir).filter(f => f.endsWith('.js'));
-            const largeFiles = jsFiles.filter(f => {
-              const size = fs.statSync(path.join(assetsDir, f)).size;
-              return size > 600 * 1024; // 600 KB threshold per chunk
-            });
-
-            if (largeFiles.length > 0) {
-              console.error('Bundle chunk(s) exceed 600 KB limit:');
-              largeFiles.forEach(f => {
+            const large = jsFiles.filter(f => fs.statSync(path.join(assetsDir, f)).size > 600 * 1024);
+            if (large.length > 0) {
+              large.forEach(f => {
                 const kb = (fs.statSync(path.join(assetsDir, f)).size / 1024).toFixed(1);
-                console.error(' ', f, kb + ' KB');
+                console.error('OVER BUDGET:', f, kb + ' KB (limit: 600 KB)');
               });
               process.exit(1);
             }
-
-            const totalKB = (dirSize(assetsDir) / 1024).toFixed(0);
-            console.log('Bundle size OK. Total assets: ' + totalKB + ' KB');
+            console.log('Bundle size OK. Total assets:', (dirSize(assetsDir) / 1024).toFixed(0), 'KB');
           "
 
-      # ── Security headers smoke test ───────────────────────────────────────
       - name: Security headers smoke test
         run: |
           node -e "
             const fs = require('fs');
             const config = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
-            const headers = (config.headers || []).flatMap(h => h.headers || []).map(h => h.key.toLowerCase());
-            const required = [
-              'x-frame-options',
-              'x-content-type-options',
-              'strict-transport-security',
-              'referrer-policy',
-              'content-security-policy',
-              'permissions-policy',
-            ];
-            const missing = required.filter(h => !headers.includes(h));
-            if (missing.length > 0) {
-              console.error('Missing security headers: ' + missing.join(', '));
-              process.exit(1);
-            }
-            console.log('All required security headers present:', required.join(', '));
+            const keys = (config.headers || []).flatMap(h => h.headers || []).map(h => h.key.toLowerCase());
+            const required = ['x-frame-options','x-content-type-options','strict-transport-security','referrer-policy','content-security-policy','permissions-policy'];
+            const missing = required.filter(h => !keys.includes(h));
+            if (missing.length) { console.error('Missing:', missing.join(', ')); process.exit(1); }
+            console.log('All security headers present.');
+          "
+
+      - name: PWA manifest validation
+        run: |
+          node -e "
+            const fs = require('fs');
+            const manifest = JSON.parse(fs.readFileSync('public/manifest.json', 'utf8'));
+            const required = ['name','short_name','icons','start_url','display','background_color','theme_color'];
+            const missing = required.filter(k => !manifest[k]);
+            if (missing.length) { console.error('Manifest missing:', missing.join(', ')); process.exit(1); }
+            if (!manifest.icons || manifest.icons.length < 2) { console.error('Need at least 2 icons'); process.exit(1); }
+            const has512 = manifest.icons.some(i => i.sizes && i.sizes.includes('512'));
+            if (!has512) { console.error('Missing 512x512 icon'); process.exit(1); }
+            console.log('PWA manifest valid.');
           "
 
       - name: Verify Supabase migration integrity
@@ -135,9 +118,9 @@ jobs:
             coverage-summary.json
           if-no-files-found: ignore
 
-  # ── Job 2: End-to-end tests ─────────────────────────────────────────────────
-  e2e:
-    name: End-to-end (Playwright · Chromium)
+  # ── Job 2: E2E — core user flows ─────────────────────────────────────────────
+  e2e-core:
+    name: E2E Core flows (Chromium)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: verify
@@ -155,24 +138,96 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browser
+      - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Build for E2E
+      - name: Build
         run: npm run build
 
-      - name: End-to-end tests
-        run: npm run test:e2e
+      - name: E2E — core flows
+        run: npx playwright test --project=chromium-desktop
+        env:
+          PLAYWRIGHT_USE_DEMO_DATA: 'true'
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-core-report
           path: playwright-report/
           if-no-files-found: ignore
 
-  # ── Job 3: Lighthouse performance budget ────────────────────────────────────
+  # ── Job 3: E2E — accessibility WCAG 2.1 AA ───────────────────────────────────
+  e2e-a11y:
+    name: E2E Accessibility (WCAG 2.1 AA)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: verify
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      - name: E2E — WCAG 2.1 AA accessibility audit
+        run: npm run test:e2e:a11y -- --project=chromium-desktop
+        env:
+          PLAYWRIGHT_USE_DEMO_DATA: 'true'
+
+      - name: Upload accessibility report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-a11y-report
+          path: playwright-report/
+          if-no-files-found: ignore
+
+  # ── Job 4: E2E — RTL / Arabic layout ─────────────────────────────────────────
+  e2e-rtl:
+    name: E2E RTL Arabic layout
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: verify
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      - name: E2E — RTL Arabic
+        run: npm run test:e2e:rtl -- --project=rtl-arabic-mobile
+        env:
+          PLAYWRIGHT_USE_DEMO_DATA: 'true'
+
+  # ── Job 5: Lighthouse performance budget (main branch only) ──────────────────
   lighthouse:
     name: Lighthouse CI (performance budget)
     runs-on: ubuntu-latest
