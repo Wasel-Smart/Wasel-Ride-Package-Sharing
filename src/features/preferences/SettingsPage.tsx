@@ -648,8 +648,8 @@ export default function SettingsPage() {
           <StakeholderSignalBanner
             dir={ar ? 'rtl' : 'ltr'}
             eyebrow="Wasel · account comms"
-            title="Account, support, and trust preferences now speak with one voice"
-            detail="Settings now frame communication as a shared contract between the account holder, operational alerts, support escalation, and trust protections so the delivery path is clearer before a critical moment happens."
+            title="Account and alert settings in one place"
+            detail="Keep support, trust, and notification choices clear before they matter."
             stakeholders={[
               { label: 'Active channels', value: String(activeChannelCount), tone: 'teal' },
               { label: 'Critical alerts', value: notifs.criticalAlerts ? 'On' : 'Off', tone: notifs.criticalAlerts ? 'green' : 'rose' },

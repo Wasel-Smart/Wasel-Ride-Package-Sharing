@@ -243,7 +243,7 @@ export function ProfileHeroSection({
 }: ProfileHeroSectionProps) {
   return (
     <div style={{ padding: '40px 0 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-              <WaselLogo size={34} theme="light" variant="full" showWordmark={false} />
+      <WaselLogo size={28} theme="light" variant="full" showWordmark={false} />
       <div style={{ textAlign: 'center', maxWidth: 420 }}>
         <p
           style={{
@@ -256,7 +256,7 @@ export function ProfileHeroSection({
         >
           {ar
             ? '???? ?????? ?????? ?????????? ???? ???? ????.'
-            : 'Your Wasel identity and account controls.'}
+            : 'Your account and trust status.'}
         </p>
       </div>
       <input
@@ -274,14 +274,14 @@ export function ProfileHeroSection({
             width: 88,
             height: 88,
             borderRadius: '50%',
-            background: 'linear-gradient(135deg,#47B7E6,#1E5FAE)',
+            background: 'linear-gradient(135deg,#FFF0C1 0%, #F4C651 48%, #C5831F 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '1.8rem',
             fontWeight: 900,
-            color: '#040C18',
-            boxShadow: '0 0 0 3px rgba(71,183,230,0.35), 0 8px 32px rgba(71,183,230,0.2)',
+            color: '#120D04',
+            boxShadow: '0 0 0 3px rgba(244,198,81,0.24), 0 8px 32px rgba(197,131,31,0.22)',
             overflow: 'hidden',
           }}
         >
@@ -384,7 +384,7 @@ export function ProfileHeroSection({
               {ar ? '???????' : 'Wallet'}: {walletStatus.label}
             </span>
             <span style={{ fontSize: '0.66rem', padding: '4px 9px', borderRadius: 999, color: '#94A3B8', background: 'rgba(148,163,184,0.12)', border: '1px solid rgba(148,163,184,0.2)', fontFamily: PROFILE_FONT, fontWeight: 700 }}>
-              {ar ? '??? ?????' : 'Live profile'}
+              {ar ? '??? ?????' : 'Profile'}
             </span>
           </div>
           <button
@@ -399,7 +399,7 @@ export function ProfileHeroSection({
       <VerificationBadge level={user.verificationLevel ?? 'level_0'} ar={ar} accent={PROFILE_CYAN} />
       <p style={{ color: 'rgba(148,163,184,0.6)', fontSize: '0.82rem', fontFamily: PROFILE_FONT, margin: 0 }}>{user.email}</p>
       <p style={{ color: 'rgba(148,163,184,0.72)', fontSize: '0.76rem', fontFamily: PROFILE_FONT, margin: 0, textAlign: 'center', lineHeight: 1.5 }}>
-        {ar ? `???? ????? ${user.trustScore}/100 - ${trustTier}` : `Trust score ${user.trustScore}/100 - ${trustTier}`}
+        {ar ? `???? ????? ${user.trustScore}/100` : `Trust score ${user.trustScore}/100`}
       </p>
 
       <ProfileOperationalSummary

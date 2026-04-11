@@ -307,7 +307,7 @@ export default function AppEntryPage() {
               }}
             >
               <WaselMark
-                size={78}
+                size={64}
                 style={{
                   filter:
                     'drop-shadow(0 22px 38px rgba(1,10,18,0.32)) drop-shadow(0 0 28px rgba(244,198,81,0.14))',
@@ -456,10 +456,10 @@ export default function AppEntryPage() {
                 <p
                   style={{
                     margin: 0,
-                    maxWidth: 660,
+                    maxWidth: 560,
                     color: 'rgba(228,214,180,0.78)',
                     fontSize: '1.02rem',
-                    lineHeight: 1.76,
+                    lineHeight: 1.62,
                   }}
                 >
                   {heroDescription}
@@ -682,7 +682,7 @@ export default function AppEntryPage() {
                       gap: 10,
                     }}
                   >
-                    {ar ? '\u0623\u0646\u0634\u0626 \u0631\u062d\u0644\u062a\u0643 \u0648\u0627\u0628\u062f\u0623 \u0628\u0627\u0644\u0628\u064a\u0639' : 'Create ride and start selling seats'}
+                    {ar ? '\u0623\u0646\u0634\u0626 \u0631\u062d\u0644\u062a\u0643 \u0648\u0627\u0628\u062f\u0623 \u0628\u0627\u0644\u0628\u064a\u0639' : 'Create ride'}
                     <ArrowRight size={16} />
                   </button>
                   <button
@@ -696,7 +696,7 @@ export default function AppEntryPage() {
                     }}
                   >
                     <Package size={16} />
-                    {ar ? '\u0627\u0639\u0631\u0641 \u0643\u064a\u0641 \u062a\u062d\u0645\u0644 \u0627\u0644\u0637\u0631\u0648\u062f' : 'See how package carrying works'}
+                    {ar ? '\u0627\u0639\u0631\u0641 \u0643\u064a\u0641 \u062a\u062d\u0645\u0644 \u0627\u0644\u0637\u0631\u0648\u062f' : 'Open packages'}
                   </button>
                 </div>
               </div>
@@ -814,7 +814,7 @@ export default function AppEntryPage() {
                       }}
                     />
                     <WaselMark
-                      size={208}
+                      size={184}
                       style={{
                         position: 'relative',
                         filter:

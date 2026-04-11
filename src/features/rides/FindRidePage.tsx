@@ -442,24 +442,24 @@ export function FindRidePage() {
           emoji="🛣️"
           title="Find a Ride"
           titleAr={copy.tabRide}
-          sub="Choose your cities, compare live departures, and book the right ride fast."
+          sub="Choose cities, compare routes, and book fast."
           action={{ label: 'Offer route', onClick: () => nav('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Search once, compare clearly, and book with confidence."
-          detail={`${category.promise} Shared price, route timing, and the best departure windows stay visible without slowing the booking flow down.`}
+          title="Search, compare, and book fast."
+          detail={`${category.promise} Price, timing, and route readiness stay visible.`}
           tone={DS.cyan}
         />
 
         <ClarityBand
-          title="Pick your route, compare the best match, then book."
-          detail="This screen is structured around one simple decision: choose the corridor, understand route readiness, and open only the trip that fits your timing and price."
+          title="Pick a route and book."
+          detail="Choose the corridor, compare readiness, then open the ride that fits."
           tone={DS.cyan}
           items={[
-            { label: '1. Choose', value: 'Set from, to, and date first so the corridor signal stays relevant.' },
-            { label: '2. Compare', value: 'Use readiness, price, and reminders to narrow down before opening a ride.' },
-            { label: '3. Commit', value: 'Book only when the route, captain, and price are clear enough to trust.' },
+            { label: '1. Choose', value: 'Set from, to, and date.' },
+            { label: '2. Compare', value: 'Check readiness, price, and reminders.' },
+            { label: '3. Commit', value: 'Book when the route and price are clear.' },
           ]}
         />
 

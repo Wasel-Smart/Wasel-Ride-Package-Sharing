@@ -41,8 +41,14 @@ export function WalletHeroCard({
         border: `1px solid ${WaselColors.teal}20`,
       }}
     >
-      <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full opacity-10" style={{ background: WaselColors.teal }} />
-      <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full opacity-5" style={{ background: WaselColors.bronze }} />
+      <div
+        className="absolute -top-12 -right-12 h-40 w-40 rounded-full opacity-10"
+        style={{ background: WaselColors.teal }}
+      />
+      <div
+        className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full opacity-5"
+        style={{ background: WaselColors.bronze }}
+      />
 
       <div className="relative z-10">
         <div className="mb-1 flex items-center justify-between gap-4">
@@ -50,11 +56,15 @@ export function WalletHeroCard({
             <span className="text-sm text-slate-400">{t.balance}</span>
             <p className="mt-1 text-xs text-slate-400">
               {subscription
-                ? `${subscription.planName}${subscription.corridorLabel ? ` · ${subscription.corridorLabel}` : ''}`
-                : 'Keep your money actions in one place: add money, withdraw, or send instantly.'}
+                ? [subscription.planName, subscription.corridorLabel].filter(Boolean).join(' - ')
+                : 'Add, send, or withdraw in one place.'}
             </p>
           </div>
-          <button type="button" onClick={onToggleBalance} className="text-slate-400 transition-colors hover:text-white">
+          <button
+            type="button"
+            onClick={onToggleBalance}
+            className="text-slate-400 transition-colors hover:text-white"
+          >
             {balanceVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           </button>
         </div>
@@ -86,15 +96,27 @@ export function WalletHeroCard({
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Button onClick={onShowTopUp} className="h-12 rounded-xl text-sm font-semibold" style={{ background: WaselColors.teal }}>
+          <Button
+            onClick={onShowTopUp}
+            className="h-12 rounded-xl text-sm font-semibold"
+            style={{ background: WaselColors.teal }}
+          >
             <Plus className="mr-1.5 h-4 w-4" />
             {t.addMoney}
           </Button>
-          <Button onClick={onShowWithdraw} variant="outline" className="h-12 rounded-xl border-slate-600 text-sm font-semibold text-slate-200 hover:bg-slate-700/50">
+          <Button
+            onClick={onShowWithdraw}
+            variant="outline"
+            className="h-12 rounded-xl border-slate-600 text-sm font-semibold text-slate-200 hover:bg-slate-700/50"
+          >
             <ArrowUpRight className="mr-1.5 h-4 w-4" />
             {t.withdraw}
           </Button>
-          <Button onClick={onShowSend} variant="outline" className="h-12 rounded-xl border-slate-600 text-sm font-semibold text-slate-200 hover:bg-slate-700/50">
+          <Button
+            onClick={onShowSend}
+            variant="outline"
+            className="h-12 rounded-xl border-slate-600 text-sm font-semibold text-slate-200 hover:bg-slate-700/50"
+          >
             <Send className="mr-1.5 h-4 w-4" />
             {t.sendMoney}
           </Button>

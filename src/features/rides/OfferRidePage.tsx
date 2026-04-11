@@ -172,13 +172,13 @@ export function OfferRidePage() {
           emoji="??"
           title="Offer Route"
           titleAr="Offer Route"
-          sub="Publish seats, package space, and corridor capacity in one flow."
+          sub="Publish seats and package space in one flow."
           color={DS.blue}
         />
 
         <CoreExperienceBanner
-          title="One route post should open seats, packages, and repeat demand together."
-          detail={`${category.promise} Drivers are no longer posting isolated rides. They are opening a route that Wasel can price, fill, and reuse across the network.`}
+          title="Post one route and open supply."
+          detail={`${category.promise} Publish the route once so Wasel can price, fill, and reuse it.`}
           tone={DS.blue}
         />
 

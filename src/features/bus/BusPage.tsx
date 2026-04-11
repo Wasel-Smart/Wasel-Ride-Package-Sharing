@@ -243,16 +243,16 @@ export function BusPage() {
   return (
     <Protected>
       <PageShell>
-        <SectionHead emoji="🚌" title="Wasel Bus" sub="Official Jordan intercity schedules, route-aware booking, and provider-backed fare visibility." color={DS.green} />
-        <CoreExperienceBanner title="Jordan-wide bus schedules with provider-backed fares" detail="Wasel Bus now uses official intercity coach schedules as the baseline network across Jordan, while still allowing live inventory to take over when a real bus feed is available." tone={DS.green} />
+        <SectionHead emoji="🚌" title="Wasel Bus" sub="Official Jordan schedules and direct booking." color={DS.green} />
+        <CoreExperienceBanner title="Jordan bus schedules with trusted fares" detail="Official intercity schedules stay visible, with live inventory when available." tone={DS.green} />
         <ClarityBand
-          title="Choose the corridor, lock the departure, then reserve one clear seat plan."
-          detail="The bus flow now follows the same product rhythm as the rest of Wasel: start with the route, read live or official schedule confidence, and commit only when the operator, fare, and boarding stop are all visible."
+          title="Choose the corridor, then reserve."
+          detail="Start with the route, confirm operator and fare, then book."
           tone={DS.green}
           items={[
-            { label: '1. Corridor', value: 'Pick the cities first so direct coach options stay ahead of fallback departures.' },
-            { label: '2. Departure', value: 'Read route status, provider type, and schedule windows before choosing a seat.' },
-            { label: '3. Reserve', value: 'Keep the fare, boarding stop, and ticket state inside one booking panel.' },
+            { label: '1. Corridor', value: 'Pick the cities first.' },
+            { label: '2. Departure', value: 'Check schedule, operator, and fare.' },
+            { label: '3. Reserve', value: 'Keep the seat and ticket in one flow.' },
           ]}
         />
 
@@ -265,7 +265,7 @@ export function BusPage() {
               <div>
                 <div style={{ color: '#fff', fontWeight: 800 }}>Coach corridor brief</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                  Bus service now reads as a guided network flow instead of a standalone booking screen.
+                  A clearer view of the bus network.
                 </div>
               </div>
             </div>

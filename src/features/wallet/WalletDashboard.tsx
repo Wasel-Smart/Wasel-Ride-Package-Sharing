@@ -131,7 +131,7 @@ export function WalletDashboard() {
           }}
         >
           <div className="flex justify-center mb-5">
-            <WaselLogo size={44} theme="dark" variant="full" showWordmark={false} />
+            <WaselLogo size={36} theme="dark" variant="full" showWordmark={false} />
           </div>
           <div
             className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl"
@@ -163,7 +163,7 @@ export function WalletDashboard() {
     <div className="space-y-6 pb-8 max-w-4xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <WaselLogo size={42} showWordmark={false} />
+          <WaselLogo size={34} showWordmark={false} />
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-foreground">{t.walletTitle}</h1>
@@ -171,7 +171,7 @@ export function WalletDashboard() {
                 {t.activeLabel}
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">{walletData?.currency || 'JOD'}</p>
+            <p className="text-xs text-muted-foreground">{t.walletSubtitle}</p>
           </div>
         </div>
         <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
