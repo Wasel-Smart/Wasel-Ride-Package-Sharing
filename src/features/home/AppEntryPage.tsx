@@ -129,7 +129,7 @@ export default function AppEntryPage() {
       title: ar ? '\u0627\u0628\u062d\u062b \u0639\u0646 \u0631\u062d\u0644\u0629' : 'Find a ride',
       detail: ar
         ? '\u0642\u0627\u0631\u0646 \u0627\u0644\u0645\u0633\u0627\u0631\u0627\u062a \u0627\u0644\u062d\u064a\u0629 \u0641\u064a \u062b\u0648\u0627\u0646'
-        : 'Compare live routes in seconds',
+        : 'Compare live routes fast',
       path: buildPath('/app/find-ride'),
       color: C.cyan,
     },
@@ -138,7 +138,7 @@ export default function AppEntryPage() {
       title: ar ? '\u0623\u0646\u0634\u0626 \u0631\u062d\u0644\u0629' : 'Create a ride',
       detail: ar
         ? '\u0628\u0639 \u0627\u0644\u0645\u0642\u0627\u0639\u062f\u060c \u0648\u0627\u062d\u0645\u0644 \u0627\u0644\u0637\u0631\u0648\u062f\u060c \u0648\u0627\u0641\u062a\u062d \u062f\u062e\u0644\u064b\u0627 \u0623\u0643\u0628\u0631 \u0645\u0646 \u0646\u0641\u0633 \u0627\u0644\u0631\u062d\u0644\u0629'
-        : 'Sell seats, carry packages, and earn more from the same trip',
+        : 'Sell seats and carry packages',
       path: buildPath('/app/offer-ride', true),
       color: C.gold,
     },
@@ -147,7 +147,7 @@ export default function AppEntryPage() {
       title: ar ? '\u0623\u0631\u0633\u0644 \u0637\u0631\u062f\u0627' : 'Send a package',
       detail: ar
         ? '\u062d\u0631\u0643 \u0627\u0644\u0637\u0631\u0648\u062f \u0639\u0628\u0631 \u0646\u0641\u0633 \u0627\u0644\u0634\u0628\u0643\u0629'
-        : 'Move packages across the same network',
+        : 'Send on the live network',
       path: buildPath('/app/packages'),
       color: C.green,
     },
@@ -155,7 +155,7 @@ export default function AppEntryPage() {
 
   const heroBadgeText = ar
     ? '\u0634\u0628\u0643\u0629 \u062d\u064a\u0629 \u0644\u0644\u0631\u062d\u0644\u0627\u062a \u0648\u0627\u0644\u0637\u0631\u0648\u062f'
-    : 'One live mobility network';
+    : 'Live mobility network';
   const heroTitleLead = ar
     ? '\u0627\u0641\u062a\u062d \u0627\u0644\u0634\u0628\u0643\u0629 \u0623\u0648\u0644\u0627\u064b.'
     : 'Open the network first.';
@@ -164,13 +164,13 @@ export default function AppEntryPage() {
     : 'Choose movement with clarity.';
   const heroDescription = ar
     ? '\u0648\u0627\u0635\u0644 \u062a\u062c\u0645\u0639 \u0627\u0644\u0631\u062d\u0644\u0627\u062a \u0648\u0627\u0644\u0637\u0631\u0648\u062f \u0641\u064a \u062a\u062f\u0641\u0642 \u0648\u0627\u062d\u062f\u060c \u062d\u062a\u0649 \u0645\u064f\u0646\u0634\u0626 \u0627\u0644\u0631\u062d\u0644\u0629 \u064a\u0642\u062f\u0631 \u064a\u0628\u064a\u0639 \u0627\u0644\u0645\u0642\u0627\u0639\u062f \u0648\u064a\u062d\u0645\u0644 \u0627\u0644\u0637\u0631\u0648\u062f \u0641\u064a \u0646\u0641\u0633 \u0627\u0644\u0645\u0634\u0648\u0627\u0631.'
-    : 'Wasel unifies rides and packages in one calm flow: post one trip, sell its seats, pick up packages for delivery on the same route, and grow the value of every departure.';
+    : 'Rides, buses, packages, and wallet access in one network.';
   const supplyTitle = ar
     ? '\u0631\u062d\u0644\u0629 \u0648\u0627\u062d\u062f\u0629\u060c \u0623\u0643\u062b\u0631 \u0645\u0646 \u0645\u0635\u062f\u0631 \u062f\u062e\u0644.'
-    : 'One trip, more than one revenue lane.';
+    : 'One trip. More value.';
   const supplyBody = ar
     ? '\u0644\u0645\u0627 \u062a\u0646\u0634\u0626 \u0631\u062d\u0644\u0629 \u0639\u0628\u0631 \u0648\u0627\u0635\u0644\u060c \u062a\u0642\u062f\u0631 \u062a\u0639\u0631\u0636 \u0627\u0644\u0645\u0642\u0627\u0639\u062f \u0644\u0644\u0628\u064a\u0639 \u0644\u0644\u0631\u0643\u0627\u0628 \u0648\u0628\u0646\u0641\u0633 \u0627\u0644\u0648\u0642\u062a \u062a\u0641\u0639\u0644 \u0648\u0636\u0639 \u0627\u0633\u062a\u0644\u0627\u0645 \u0627\u0644\u0637\u0631\u0648\u062f \u0648\u062a\u0633\u0644\u064a\u0645\u0647\u0627 \u0639\u0644\u0649 \u0646\u0641\u0633 \u0627\u0644\u0645\u0633\u0627\u0631.'
-    : 'When you create a ride in Wasel, you can open passenger seats for sale and turn on package carrying at the same time, so the same route can move people and deliveries together.';
+    : 'Open seats and package carrying on the same route.';
   const supplyPills = ar
     ? [
         '\u0628\u064a\u0639 \u0627\u0644\u0645\u0642\u0627\u0639\u062f \u0644\u0644\u0631\u0643\u0627\u0628',
@@ -188,20 +188,20 @@ export default function AppEntryPage() {
         '\u0631\u062d\u0644\u0627\u062a + \u0637\u0631\u0648\u062f',
         '\u062f\u0639\u0645 \u0645\u062d\u0644\u064a',
       ]
-    : ['Live map first', 'Rides + packages', 'Local support'];
+    : ['Map first', 'Rides + packages', 'Ready support'];
   const quickPills = ar
     ? [
         '\u062d\u0631\u0643\u0629 \u062d\u064a\u0629',
         '\u0645\u0633\u0627\u0631\u0627\u062a \u0623\u0630\u0643\u0649',
         '\u0648\u0635\u0648\u0644 \u0623\u0628\u0633\u0637',
       ]
-    : ['Live movement', 'Smarter routes', 'Cleaner delivery'];
+    : ['Live routes', 'Simple booking', 'Fast delivery'];
   const mapTitle = ar
     ? '\u0631\u0627\u0642\u0628 \u0627\u0644\u062d\u0631\u0643\u0629 \u0642\u0628\u0644 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u062e\u062f\u0645\u0629.'
-    : 'See movement before you open a service.';
+    : 'See the network first.';
   const mapBody = ar
     ? '\u0645\u0639\u0627\u064a\u0646\u0629 \u0648\u0627\u062d\u062f\u0629 \u062a\u0638\u0647\u0631 \u0627\u0644\u0634\u0628\u0643\u0629 \u0643\u0627\u0645\u0644\u0629\u060c \u062b\u0645 \u062a\u0641\u062a\u062d \u0627\u0644\u0631\u062d\u0644\u0629 \u0623\u0648 \u0627\u0644\u0637\u0631\u062f \u0627\u0644\u0645\u0646\u0627\u0633\u0628 \u0641\u0648\u0631\u0627\u064b.'
-    : 'One visual layer shows the whole network, then drops you directly into the best ride or package flow.';
+    : 'Scan movement, then open the right ride or package flow.';
 
   const supportLine = profile.supportPhoneDisplay || profile.supportEmail || 'Wasel';
   const businessAddress = ar ? profile.businessAddressAr : profile.businessAddress;

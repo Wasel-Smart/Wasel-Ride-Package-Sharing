@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-# Block raw app-shell routes that carry no indexable content
+# ── Disallow authenticated / operational app-shell routes ─────────────────────
 Disallow: /app/auth
 Disallow: /app/auth/callback
 Disallow: /app/wallet
@@ -9,8 +9,10 @@ Disallow: /app/notifications
 Disallow: /app/settings
 Disallow: /app/moderation
 Disallow: /app/live-trip
+Disallow: /app/execution-os
+Disallow: /app/analytics
 
-# Block legacy redirect aliases (they 301 anyway, but avoid crawl waste)
+# ── Block legacy redirect aliases (301 anyway, but save crawl budget) ─────────
 Disallow: /auth
 Disallow: /dashboard
 Disallow: /home
@@ -21,5 +23,13 @@ Disallow: /awasel/track
 Disallow: /payments
 Disallow: /legal/privacy
 Disallow: /legal/terms
+
+# ── Block common scanner paths ─────────────────────────────────────────────────
+Disallow: /.env
+Disallow: /.git/
+Disallow: /node_modules/
+Disallow: /src/
+
+Crawl-delay: 2
 
 Sitemap: https://wasel14.online/sitemap.xml
