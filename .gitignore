@@ -28,12 +28,17 @@ desktop.ini
 
 # ── Logs & dev server output ───────────────────────────────────
 *.log
+*.log.*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 vite-out.log
 vite-err.log
+build-check.log
+gcm-diagnose.log
+firepit-log.txt
+preview-log.txt
 
 # ── Editor artifacts ───────────────────────────────────────────
 .vscode/settings.json
@@ -75,4 +80,10 @@ _REMOVED/
 # Local Codex worktrees / ad hoc artifacts
 .codex-landing-deploy/
 mobility-os-current.png
-preview-log.txt
+
+# Temp icon/image generation artifacts
+tmp-wasel-pin-*.png
+tmp-wasel-pin-*.ico
+tmp-wasel-*.ico
+tmp-*.png
+tmp-*.ico
