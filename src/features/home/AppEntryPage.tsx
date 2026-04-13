@@ -374,7 +374,7 @@ export default function AppEntryPage() {
                     <span>{copy.from}</span>
                     <select value={route.from} onChange={updateRoute('from')}>
                       {CITY_OPTIONS.map(option => (
-                        <option key={option.value} value={option.value}>
+                        <option key={option.value} value={option.value} disabled={option.value === route.to}>
                           {ar ? option.ar : option.en}
                         </option>
                       ))}

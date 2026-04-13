@@ -54,8 +54,8 @@ vi.mock('@/domains/trust/waselPresence', () => ({
   }),
 }));
 
-vi.mock('@/features/home/MobilityOSLandingMap', () => ({
-  MobilityOSLandingMap: () => <div>Map</div>,
+vi.mock('@/features/home/DeferredLandingMap', () => ({
+  DeferredLandingMap: () => <div>Map</div>,
 }));
 
 import AppEntryPage from '@/features/home/AppEntryPage';
@@ -99,7 +99,7 @@ describe('AppEntryPage', () => {
 
     screen.getAllByRole('button', { name: /Continue with email/i })[0].click();
 
-    expect(mockNavigate).toHaveBeenCalledWith('/app/auth?tab=signin&returnTo=%2Fapp%2Ffind-ride');
+    expect(mockNavigate).toHaveBeenCalledWith('/app/auth?tab=signin&returnTo=%2Fapp%2Ffind-ride%3Ffrom%3DAmman%26to%3DIrbid%26search%3D1');
   });
 
   it('routes guest header auth buttons to sign in and sign up', () => {
@@ -129,7 +129,7 @@ describe('AppEntryPage', () => {
     });
 
     await waitFor(() => {
-      expect(signInWithGoogle).toHaveBeenCalledWith('/app/find-ride');
+      expect(signInWithGoogle).toHaveBeenCalledWith('/app/find-ride?from=Amman&to=Irbid&search=1');
     });
   });
 
@@ -148,7 +148,7 @@ describe('AppEntryPage', () => {
     });
 
     await waitFor(() => {
-      expect(signInWithFacebook).toHaveBeenCalledWith('/app/find-ride');
+      expect(signInWithFacebook).toHaveBeenCalledWith('/app/find-ride?from=Amman&to=Irbid&search=1');
     });
   });
 
@@ -159,7 +159,18 @@ describe('AppEntryPage', () => {
 
     screen.getAllByRole('button', { name: /Find a ride/i })[0].click();
 
-    expect(mockNavigate).toHaveBeenCalledWith('/app/find-ride');
+    expect(mockNavigate).toHaveBeenCalledWith('/app/find-ride?from=Amman&to=Irbid&search=1');
+  });
+
+  it('opens packages with the selected corridor prefilled', () => {
+    mockUseLocalAuth.mockReturnValue({ user: null });
+
+    renderAppEntryPage();
+
+    screen.getByRole('button', { name: /^Packages$/i }).click();
+    screen.getAllByRole('button', { name: /Open packages/i })[0].click();
+
+    expect(mockNavigate).toHaveBeenCalledWith('/app/packages?from=Amman&to=Irbid');
   });
 
   it('renders Arabic landing copy when Arabic is active', () => {
