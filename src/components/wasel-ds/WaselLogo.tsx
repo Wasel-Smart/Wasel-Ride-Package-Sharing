@@ -11,9 +11,10 @@ interface WaselLogoProps {
   subtitle?: string;
   framed?: boolean;
   markAsset?: 'default' | 'attached-primary';
+  animated?: boolean;
 }
 
-const LOGO_ASSET_VERSION = '20260413network-teal-glow';
+const LOGO_ASSET_VERSION = '20260413figma-video-lockup';
 const LOGO_MARK_SOURCES = {
   default: {
     src: `/brand/wasel-main-network-logo.svg?v=${LOGO_ASSET_VERSION}`,
@@ -71,6 +72,7 @@ export function WaselLogo({
   variant = 'full',
   subtitle = 'Mobility OS',
   markAsset = 'default',
+  animated = false,
 }: WaselLogoProps) {
   const onDarkSurface = theme === 'light';
   const mark = getLogoMark(markAsset);
@@ -87,17 +89,30 @@ export function WaselLogo({
       : Math.max(14, Math.round(size * 0.38));
   const metaSize = Math.max(9, Math.round(size * 0.2));
   const markElement = (
-    <LogoImage
-      width={markWidth}
-      height={markHeight}
-      src={mark.src}
-      alt="Wasel main logo"
-        style={{
-        filter: onDarkSurface
-          ? 'drop-shadow(0 18px 28px rgba(4, 8, 14, 0.32)) drop-shadow(0 0 18px rgba(25, 231, 187, 0.16))'
-          : 'drop-shadow(0 14px 22px rgba(7, 36, 33, 0.18))',
+    <div
+      className={animated ? 'wasel-logo-breathe wasel-logo-breathe--inline' : undefined}
+      style={{
+        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
-    />
+    >
+      {animated ? <span className="wasel-logo-breathe__halo" aria-hidden="true" /> : null}
+      <LogoImage
+        width={markWidth}
+        height={markHeight}
+        src={mark.src}
+        alt="Wasel main logo"
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          filter: onDarkSurface
+            ? 'drop-shadow(0 18px 28px rgba(4, 8, 14, 0.32)) drop-shadow(0 0 18px rgba(25, 231, 187, 0.16))'
+            : 'drop-shadow(0 14px 22px rgba(7, 36, 33, 0.18))',
+        }}
+      />
+    </div>
   );
 
   return (
@@ -158,20 +173,28 @@ export function WaselMark({
   size = 38,
   style,
   markAsset = 'default',
+  animated = false,
 }: {
   size?: number;
   style?: CSSProperties;
   markAsset?: 'default' | 'attached-primary';
+  animated?: boolean;
 }) {
   const mark = getLogoMark(markAsset);
   return (
-    <div style={{ display: 'inline-flex', ...style }}>
+    <div
+      className={animated ? 'wasel-logo-breathe wasel-logo-breathe--mark' : undefined}
+      style={{ display: 'inline-flex', position: 'relative', alignItems: 'center', justifyContent: 'center', ...style }}
+    >
+      {animated ? <span className="wasel-logo-breathe__halo" aria-hidden="true" /> : null}
       <LogoImage
         width={Math.max(1, Math.round(size * mark.aspectRatio))}
         height={size}
         src={mark.src}
         alt="Wasel main logo"
         style={{
+          position: 'relative',
+          zIndex: 1,
           filter: 'drop-shadow(0 18px 28px rgba(4, 8, 14, 0.24)) drop-shadow(0 0 18px rgba(25, 231, 187, 0.14))',
         }}
       />

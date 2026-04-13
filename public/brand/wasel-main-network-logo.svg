@@ -6,87 +6,84 @@
   aria-labelledby="title desc"
 >
   <title id="title">Wasel main logo</title>
-  <desc id="desc">A glowing network mark in deep navy, teal, and mint.</desc>
+  <desc id="desc">A dark circular Wasel badge with a luminous green network mark.</desc>
   <defs>
-    <radialGradient id="wasel-logo-shell" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 254) rotate(90) scale(188)">
-      <stop offset="0" stop-color="#1A223A" />
-      <stop offset="0.6" stop-color="#10192E" />
-      <stop offset="1" stop-color="#0A1020" />
+    <radialGradient id="wasel-badge-fill" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 252) rotate(90) scale(132)">
+      <stop offset="0" stop-color="#161C33" />
+      <stop offset="0.58" stop-color="#111A2C" />
+      <stop offset="1" stop-color="#0A1324" />
     </radialGradient>
-    <linearGradient id="wasel-logo-link" x1="152" y1="328" x2="367" y2="180" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#17D7A6" />
-      <stop offset="0.5" stop-color="#33EAC2" />
-      <stop offset="1" stop-color="#64F3DE" />
-    </linearGradient>
-    <linearGradient id="wasel-logo-link-core" x1="156" y1="320" x2="361" y2="188" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#A7FFEA" />
-      <stop offset="0.55" stop-color="#8DFFF1" />
-      <stop offset="1" stop-color="#D7FFF9" />
-    </linearGradient>
-    <radialGradient id="wasel-logo-node" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 0) scale(1)">
-      <stop offset="0" stop-color="#E8FFFB" />
-      <stop offset="0.28" stop-color="#93FFF2" />
-      <stop offset="0.62" stop-color="#30E9C0" />
-      <stop offset="1" stop-color="#10B996" />
+    <radialGradient id="wasel-halo-core" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 248) rotate(90) scale(150)">
+      <stop offset="0" stop-color="#34EFC4" stop-opacity="0.5" />
+      <stop offset="0.48" stop-color="#21E4B8" stop-opacity="0.2" />
+      <stop offset="1" stop-color="#21E4B8" stop-opacity="0" />
     </radialGradient>
-    <filter id="wasel-logo-ambient-glow" x="27" y="34" width="458" height="444" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="30" />
+    <linearGradient id="wasel-link-glow" x1="184" y1="292" x2="338" y2="196" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#12C896" />
+      <stop offset="0.5" stop-color="#34EEBE" />
+      <stop offset="1" stop-color="#68FFE5" />
+    </linearGradient>
+    <linearGradient id="wasel-link-core" x1="188" y1="286" x2="334" y2="202" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#CCFFF2" />
+      <stop offset="0.45" stop-color="#B7FFF0" />
+      <stop offset="1" stop-color="#ECFFFC" />
+    </linearGradient>
+    <radialGradient id="wasel-node-fill" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 0) scale(1)">
+      <stop offset="0" stop-color="#F5FFFD" />
+      <stop offset="0.22" stop-color="#BBFFF2" />
+      <stop offset="0.55" stop-color="#43F4C5" />
+      <stop offset="1" stop-color="#0DBA88" />
+    </radialGradient>
+    <filter id="wasel-halo-blur" x="52" y="44" width="408" height="408" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="32" />
     </filter>
-    <filter id="wasel-logo-node-glow" x="-70" y="-70" width="140" height="140" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="16" />
+    <filter id="wasel-badge-shadow" x="108" y="102" width="296" height="296" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#020A16" flood-opacity="0.3" />
     </filter>
-    <filter id="wasel-logo-shell-shadow" x="46" y="42" width="420" height="420" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="28" stdDeviation="34" flood-color="#04111D" flood-opacity="0.34" />
+    <filter id="wasel-node-glow" x="-84" y="-84" width="168" height="168" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="18" />
     </filter>
   </defs>
 
-  <g opacity="0.94">
-    <circle cx="256" cy="250" r="108" fill="#22E1B8" opacity="0.2" filter="url(#wasel-logo-ambient-glow)" />
-    <circle cx="286" cy="232" r="76" fill="#63FFF2" opacity="0.12" filter="url(#wasel-logo-ambient-glow)" />
-  </g>
+  <circle cx="256" cy="248" r="108" fill="url(#wasel-halo-core)" filter="url(#wasel-halo-blur)" />
 
-  <g filter="url(#wasel-logo-shell-shadow)">
-    <circle cx="256" cy="256" r="92" fill="url(#wasel-logo-shell)" />
-    <circle cx="256" cy="256" r="90" stroke="#16314A" stroke-width="2" opacity="0.8" />
-    <circle cx="256" cy="256" r="78" stroke="#47ECC5" stroke-width="1.5" opacity="0.08" />
+  <g filter="url(#wasel-badge-shadow)">
+    <circle cx="256" cy="252" r="78" fill="url(#wasel-badge-fill)" />
+    <circle cx="256" cy="252" r="76" stroke="#1D3147" stroke-width="2" opacity="0.82" />
+    <circle cx="256" cy="252" r="68" stroke="#35506A" stroke-width="1.5" opacity="0.16" />
   </g>
 
   <g stroke-linecap="round" stroke-linejoin="round">
-    <path d="M172 302L256 246L338 201" stroke="url(#wasel-logo-link)" stroke-width="11" />
-    <path d="M178 296L256 246L332 206" stroke="url(#wasel-logo-link-core)" stroke-width="3.4" opacity="0.85" />
-    <path d="M190 235L256 246" stroke="#6E8AA2" stroke-width="4" opacity="0.58" />
-    <path d="M172 302L190 235" stroke="#163D52" stroke-width="4" opacity="0.7" />
-    <path d="M256 246L314 285" stroke="#6A88A4" stroke-width="4" opacity="0.44" />
+    <path d="M210 282L256 242L308 208" stroke="url(#wasel-link-glow)" stroke-width="9.5" />
+    <path d="M214 278L256 242L304 212" stroke="url(#wasel-link-core)" stroke-width="2.6" opacity="0.92" />
+    <path d="M244 233L256 242" stroke="#DFFCF8" stroke-width="2.6" opacity="0.56" />
+    <path d="M272 250L283 263" stroke="#CFFAF4" stroke-width="2.4" opacity="0.38" />
   </g>
 
   <g>
-    <g transform="translate(172 302)">
-      <circle cx="0" cy="0" r="34" fill="#18D9A8" opacity="0.3" filter="url(#wasel-logo-node-glow)" />
-      <circle cx="0" cy="0" r="17" fill="url(#wasel-logo-node)" />
-      <circle cx="0" cy="0" r="8.5" fill="#A9FFF3" opacity="0.72" />
-      <circle cx="0" cy="0" r="22" stroke="#26E3B8" stroke-width="3" opacity="0.28" />
+    <g transform="translate(208 282)">
+      <circle cx="0" cy="0" r="28" fill="#19DBA9" opacity="0.42" filter="url(#wasel-node-glow)" />
+      <circle cx="0" cy="0" r="13" fill="url(#wasel-node-fill)" />
+      <circle cx="0" cy="0" r="6.4" fill="#D1FFF7" opacity="0.72" />
+      <circle cx="0" cy="0" r="18" stroke="#34E9BB" stroke-width="2.4" opacity="0.28" />
     </g>
-    <g transform="translate(256 246)">
-      <circle cx="0" cy="0" r="40" fill="#25E2B6" opacity="0.34" filter="url(#wasel-logo-node-glow)" />
-      <circle cx="0" cy="0" r="21" fill="url(#wasel-logo-node)" />
-      <circle cx="0" cy="0" r="9.5" fill="#C5FFF8" opacity="0.72" />
-      <circle cx="0" cy="0" r="28" stroke="#4AF0C8" stroke-width="3" opacity="0.34" />
+    <g transform="translate(256 242)">
+      <circle cx="0" cy="0" r="34" fill="#23E4B6" opacity="0.48" filter="url(#wasel-node-glow)" />
+      <circle cx="0" cy="0" r="15.5" fill="url(#wasel-node-fill)" />
+      <circle cx="0" cy="0" r="7.2" fill="#E4FFFB" opacity="0.76" />
+      <circle cx="0" cy="0" r="21" stroke="#4BF4CA" stroke-width="2.6" opacity="0.34" />
     </g>
-    <g transform="translate(338 201)">
-      <circle cx="0" cy="0" r="36" fill="#5CF7EA" opacity="0.32" filter="url(#wasel-logo-node-glow)" />
-      <circle cx="0" cy="0" r="17" fill="url(#wasel-logo-node)" />
-      <circle cx="0" cy="0" r="8" fill="#CBFFFA" opacity="0.7" />
-      <circle cx="0" cy="0" r="22" stroke="#65F5E1" stroke-width="3" opacity="0.28" />
+    <g transform="translate(308 208)">
+      <circle cx="0" cy="0" r="30" fill="#48F6D2" opacity="0.44" filter="url(#wasel-node-glow)" />
+      <circle cx="0" cy="0" r="13.5" fill="url(#wasel-node-fill)" />
+      <circle cx="0" cy="0" r="6.2" fill="#E8FFFD" opacity="0.74" />
+      <circle cx="0" cy="0" r="19" stroke="#6AFAE0" stroke-width="2.4" opacity="0.28" />
     </g>
-    <g transform="translate(190 235)">
-      <circle cx="0" cy="0" r="11" fill="#B2C4D5" opacity="0.16" filter="url(#wasel-logo-node-glow)" />
-      <circle cx="0" cy="0" r="6" fill="#A7B8CA" opacity="0.54" />
-      <circle cx="0" cy="0" r="9" stroke="#7A8FA5" stroke-width="2.4" opacity="0.28" />
+    <g transform="translate(237 229)">
+      <circle cx="0" cy="0" r="4.6" fill="#E6FFFD" opacity="0.62" />
     </g>
-    <g transform="translate(314 285)">
-      <circle cx="0" cy="0" r="11" fill="#B3C8D7" opacity="0.14" filter="url(#wasel-logo-node-glow)" />
-      <circle cx="0" cy="0" r="5.8" fill="#9DAFC0" opacity="0.5" />
-      <circle cx="0" cy="0" r="9" stroke="#6E869C" stroke-width="2.4" opacity="0.24" />
+    <g transform="translate(279 260)">
+      <circle cx="0" cy="0" r="3.8" fill="#E6FFFD" opacity="0.42" />
     </g>
   </g>
 </svg>

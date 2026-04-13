@@ -335,8 +335,8 @@ export default function AppEntryPage() {
             >
               <div
                 style={{
-                  width: 64,
-                  minHeight: 56,
+                  width: 68,
+                  minHeight: 64,
                   display: 'grid',
                   placeItems: 'center',
                   background: 'none',
@@ -345,40 +345,54 @@ export default function AppEntryPage() {
                 }}
               >
                 <WaselMark
-                  size={54}
+                  size={58}
+                  animated
                   style={{
                     filter:
-                      'drop-shadow(0 12px 24px rgba(1,10,18,0.22)) drop-shadow(0 0 18px rgba(25,231,187,0.12))',
+                      'drop-shadow(0 12px 24px rgba(1,10,18,0.22)) drop-shadow(0 0 22px rgba(25,231,187,0.18))',
                   }}
                 />
               </div>
-              <div style={{ display: 'grid', gap: 4, textAlign: ar ? 'right' : 'left' }}>
+              <div style={{ display: 'grid', gap: 2, textAlign: ar ? 'right' : 'left' }}>
                 <span
                   style={{
                     fontFamily: LANDING_DISPLAY,
-                    fontSize: 'clamp(1.8rem, 2.6vw, 2.6rem)',
+                    fontSize: 'clamp(1.7rem, 2.4vw, 2.45rem)',
                     fontWeight: 800,
-                    letterSpacing: '-0.05em',
-                    lineHeight: 0.9,
-                    background: 'linear-gradient(135deg, #E9FFFA 0%, #88F3DB 58%, #48CFFF 100%)',
+                    letterSpacing: '-0.045em',
+                    lineHeight: 0.92,
+                    background: 'linear-gradient(180deg, #DFFFF8 0%, #6EF0D1 58%, #19DAB2 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
-                    textShadow: '0 10px 20px rgba(8, 17, 29, 0.12)',
+                    textShadow: '0 10px 22px rgba(8, 17, 29, 0.14)',
                   }}
                 >
                   Wasel
                 </span>
                 <span
                   style={{
-                    color: 'rgba(198, 223, 227, 0.86)',
-                    fontSize: 'clamp(0.84rem, 1.05vw, 0.98rem)',
-                    fontWeight: TYPE.weight.semibold,
-                    letterSpacing: '-0.01em',
-                    lineHeight: 1.2,
+                    color: '#1EE4B5',
+                    fontSize: 'clamp(1.08rem, 1.3vw, 1.4rem)',
+                    fontWeight: 800,
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1,
                   }}
                 >
-                  {'\u0623\u0646\u0627 \u0648\u0627\u0635\u0644\u060c \u0623\u0646\u062a\u061f'}
+                  {'\u0648\u0627\u0635\u0644'}
+                </span>
+                <span
+                  style={{
+                    color: 'rgba(204, 223, 227, 0.72)',
+                    fontSize: 'clamp(0.72rem, 0.92vw, 0.84rem)',
+                    fontWeight: TYPE.weight.medium,
+                    letterSpacing: '-0.01em',
+                    lineHeight: 1.15,
+                  }}
+                >
+                  {ar
+                    ? '\u0646\u0631\u0628\u0637 \u0627\u0644\u0631\u062d\u0644\u0627\u062a\u060c \u0646\u0634\u0627\u0631\u0643 \u0627\u0644\u0645\u0634\u0627\u0648\u064a\u0631\u060c \u0648\u0646\u0648\u0641\u0651\u0631 \u0633\u0648\u064a\u0627\u064b'
+                    : 'Connect journeys, share rides, save together'}
                 </span>
               </div>
             </button>

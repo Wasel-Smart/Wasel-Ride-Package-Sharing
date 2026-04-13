@@ -21,6 +21,66 @@
   to   { transform: rotate(360deg); }
 }
 
+@keyframes wasel-logo-breathe {
+  0%, 100% {
+    transform: translateY(0) scale(0.985);
+    filter: brightness(0.94) saturate(0.96);
+  }
+  42% {
+    transform: translateY(-1px) scale(1.018);
+    filter: brightness(1.08) saturate(1.08);
+  }
+  68% {
+    transform: translateY(0) scale(1.005);
+    filter: brightness(1) saturate(1.02);
+  }
+}
+
+@keyframes wasel-logo-halo-breathe {
+  0%, 100% {
+    opacity: 0.26;
+    transform: scale(0.92);
+  }
+  45% {
+    opacity: 0.6;
+    transform: scale(1.12);
+  }
+  70% {
+    opacity: 0.34;
+    transform: scale(1);
+  }
+}
+
+.wasel-logo-breathe {
+  position: relative;
+  isolation: isolate;
+}
+
+.wasel-logo-breathe img {
+  animation: wasel-logo-breathe 5.8s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.wasel-logo-breathe__halo {
+  position: absolute;
+  inset: 8%;
+  z-index: 0;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(34, 244, 197, 0.3) 0%, rgba(25, 231, 187, 0.18) 42%, rgba(25, 231, 187, 0) 76%);
+  filter: blur(14px);
+  animation: wasel-logo-halo-breathe 5.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.wasel-logo-breathe--inline .wasel-logo-breathe__halo {
+  inset: 10%;
+}
+
+.wasel-logo-breathe--mark .wasel-logo-breathe__halo {
+  inset: 6%;
+}
+
 /* ── Base: scroll behaviour ────────────────────────────────────────────────── */
 html, body {
   position: relative;

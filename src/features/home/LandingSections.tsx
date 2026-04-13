@@ -24,10 +24,10 @@ export const LANDING_COLORS = {
   text: 'var(--wasel-copy-primary)',
   muted: 'var(--wasel-copy-muted)',
   soft: 'var(--wasel-copy-soft)',
-  cyan: '#20D8FF',
-  blue: '#1388D9',
-  gold: '#B7FF2B',
-  green: '#72FF47',
+  cyan: '#5EF6D8',
+  blue: '#3DD8FF',
+  gold: '#19E7BB',
+  green: '#A7FFE9',
   border: 'var(--border)',
   borderStrong: 'rgba(var(--wasel-border-rgb), 0.30)',
 } as const;
@@ -613,10 +613,11 @@ export function LandingHeroSection({
                 <div className="landing-hero-mark">
                   <WaselMark
                     size={334}
+                    animated
                     style={{
                       justifyContent: 'center',
                       filter:
-                        'drop-shadow(0 0 42px rgba(71,183,230,0.32)) drop-shadow(0 0 56px rgba(107,181,21,0.26)) saturate(1.08)',
+                        'drop-shadow(0 0 42px rgba(61,216,255,0.24)) drop-shadow(0 0 56px rgba(25,231,187,0.28)) saturate(1.04)',
                       transform: 'translateY(12px)',
                     }}
                   />

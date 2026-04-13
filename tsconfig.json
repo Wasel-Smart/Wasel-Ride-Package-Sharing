@@ -46,6 +46,7 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.d.ts",
+    "shared/**/*.ts",
     "vite.config.ts",
     "vitest.config.ts",
     "playwright.config.ts"

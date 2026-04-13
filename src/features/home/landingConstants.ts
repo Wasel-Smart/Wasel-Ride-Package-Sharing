@@ -42,13 +42,13 @@ export const LANDING_RESPONSIVE_STYLES = `
   }
   .landing-hero-orbit--outer {
     width: min(92%, 420px);
-    border: 1px solid rgba(71,183,230,0.14);
+    border: 1px solid rgba(73, 239, 206, 0.14);
     opacity: 0.58;
     animation: landing-orbit-slow 22s linear infinite;
   }
   .landing-hero-orbit--inner {
     width: min(66%, 310px);
-    border: 1px solid rgba(107,181,21,0.12);
+    border: 1px solid rgba(167, 255, 234, 0.12);
     opacity: 0.48;
     animation: landing-orbit-reverse 16s linear infinite;
   }
@@ -71,14 +71,14 @@ export const LANDING_RESPONSIVE_STYLES = `
   .landing-hero-mark-glow--cyan {
     width: min(76vw, 340px);
     height: min(76vw, 340px);
-    background: radial-gradient(circle, rgba(71,183,230,0.34) 0%, rgba(71,183,230,0.12) 34%, rgba(71,183,230,0) 74%);
+    background: radial-gradient(circle, rgba(79, 246, 212, 0.32) 0%, rgba(79, 246, 212, 0.12) 34%, rgba(79, 246, 212, 0) 74%);
     filter: blur(26px);
     transform: translate(-8px, -10px);
   }
   .landing-hero-mark-glow--green {
     width: min(72vw, 320px);
     height: min(72vw, 320px);
-    background: radial-gradient(circle, rgba(107,181,21,0.26) 0%, rgba(107,181,21,0.1) 36%, rgba(107,181,21,0) 74%);
+    background: radial-gradient(circle, rgba(25, 231, 187, 0.24) 0%, rgba(25, 231, 187, 0.1) 36%, rgba(25, 231, 187, 0) 74%);
     filter: blur(24px);
     transform: translate(22px, 28px);
   }
@@ -92,7 +92,7 @@ export const LANDING_RESPONSIVE_STYLES = `
     content: '';
     position: absolute;
     inset: -1px;
-    background: linear-gradient(135deg, rgba(71,183,230,0.18), rgba(71,183,230,0) 36%, rgba(168,214,20,0.16) 100%);
+    background: linear-gradient(135deg, rgba(79, 246, 212, 0.18), rgba(79, 246, 212, 0) 36%, rgba(25, 231, 187, 0.16) 100%);
     opacity: 0.9;
     pointer-events: none;
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
