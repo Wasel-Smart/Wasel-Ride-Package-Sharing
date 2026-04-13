@@ -4,8 +4,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { getMovementMembershipSnapshot } from '../../services/movementMembership';
-import { triggerPaymentReceiptEmail } from '../../services/transactionalEmailTriggers';
+import {
+  getMovementMembershipSnapshot,
+  hydrateMovementMembershipFromWallet,
+  refreshMovementMembership,
+} from '../../services/movementMembership';
 import {
   walletApi,
   type InsightsData,
@@ -16,7 +19,6 @@ import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import { buildAuthPagePath } from '../../utils/authFlow';
 import { walletText } from './walletText';
 import {
-  getLatestNewTransaction,
   getWalletErrorMessage,
   runWalletAction,
 } from './walletControllerUtils';
@@ -67,12 +69,6 @@ export function useWalletDashboardController() {
   const [autoTopUpEnabled, setAutoTopUpEnabled] = useState(initialPersistedSnapshot?.data?.wallet?.autoTopUp || false);
   const [autoTopUpAmount, setAutoTopUpAmount] = useState(String(initialPersistedSnapshot?.data?.wallet?.autoTopUpAmount || 20));
   const [autoTopUpThreshold, setAutoTopUpThreshold] = useState(String(initialPersistedSnapshot?.data?.wallet?.autoTopUpThreshold || 5));
-  const effectiveUserName =
-    localUser?.name ||
-    user?.user_metadata?.full_name ||
-    user?.email?.split('@')[0] ||
-    'Wasel member';
-  const effectiveUserEmail = localUser?.email || user?.email || '';
   const topUpErrorMessage = 'Unable to add wallet funds right now.';
   const withdrawErrorMessage = 'Unable to process this withdrawal right now.';
   const sendErrorMessage = 'Unable to send money right now.';
@@ -126,6 +122,7 @@ export function useWalletDashboardController() {
       const snapshot = await walletApi.getWalletSnapshot(effectiveUserId);
       setWalletData(snapshot.data);
       setWalletHealth(snapshot.meta);
+      hydrateMovementMembershipFromWallet(snapshot.data);
       setAutoTopUpEnabled(snapshot.data.wallet.autoTopUp || false);
       setAutoTopUpAmount(String(snapshot.data.wallet.autoTopUpAmount || 20));
       setAutoTopUpThreshold(String(snapshot.data.wallet.autoTopUpThreshold || 5));
@@ -188,6 +185,7 @@ export function useWalletDashboardController() {
 
     setWalletData(persistedSnapshot.data);
     setWalletHealth(persistedSnapshot.meta);
+    hydrateMovementMembershipFromWallet(persistedSnapshot.data);
     setAutoTopUpEnabled(persistedSnapshot.data.wallet.autoTopUp || false);
     setAutoTopUpAmount(String(persistedSnapshot.data.wallet.autoTopUpAmount || 20));
     setAutoTopUpThreshold(String(persistedSnapshot.data.wallet.autoTopUpThreshold || 5));
@@ -229,32 +227,48 @@ export function useWalletDashboardController() {
       return;
     }
 
-    const previousWallet = walletData;
     await runWalletAction({
       action: async () => {
-        await walletApi.topUp(effectiveUserId, amt, topUpMethod);
-        return fetchWallet();
+        return walletApi.topUp(effectiveUserId, amt, topUpMethod);
       },
       fallbackErrorMessage: topUpErrorMessage,
       loadingSetter: setActionLoading,
-      onSuccess: (refreshedWallet) => {
-        toast.success(t.topUpSuccess.replace('{amount}', String(amt)));
+      onSuccess: (intent) => {
+        void fetchWallet();
+        toast.success(
+          intent.status === 'succeeded'
+            ? t.topUpSuccess.replace('{amount}', String(amt))
+            : `Payment intent created. Status: ${intent.status}. Wallet balance will update after provider confirmation.`,
+        );
         setShowTopUp(false);
         setTopUpAmount('');
-
-        const latestTransaction = getLatestNewTransaction(previousWallet, refreshedWallet);
-        if (latestTransaction && effectiveUserEmail) {
-          void triggerPaymentReceiptEmail({
-            userEmail: effectiveUserEmail,
-            userName: effectiveUserName,
-            transaction: latestTransaction,
-            balanceJod: refreshedWallet?.balance ?? 0,
-            paymentMethod: topUpMethod,
-          });
-        }
       },
     });
   };
+
+  const ensureWalletVerification = useCallback(async (purpose: 'transfer' | 'withdrawal' | 'payment_method') => {
+    const pin = window.prompt(
+      purpose === 'payment_method'
+        ? 'Enter your 4-digit wallet PIN to manage payment methods.'
+        : 'Enter your 4-digit wallet PIN.',
+    )?.trim();
+
+    if (!pin) {
+      throw new Error('Wallet verification was cancelled.');
+    }
+
+    const challenge = await walletApi.verifyPin(effectiveUserId, pin, purpose);
+    if (challenge.verified && challenge.verificationToken) {
+      return challenge;
+    }
+
+    const otpCode = window.prompt('Enter the OTP sent to your verified email or phone.')?.trim();
+    if (!otpCode) {
+      throw new Error('OTP verification was cancelled.');
+    }
+
+    return walletApi.verifyPin(effectiveUserId, pin, purpose, otpCode, challenge.challengeId);
+  }, [effectiveUserId]);
 
   const handleWithdraw = async () => {
     if (!guardWalletActionsAvailable()) {
@@ -275,30 +289,19 @@ export function useWalletDashboardController() {
       return;
     }
 
-    const previousWallet = walletData;
     await runWalletAction({
       action: async () => {
+        await ensureWalletVerification('withdrawal');
         await walletApi.withdraw(effectiveUserId, amt, withdrawBank, withdrawMethod);
         return fetchWallet();
       },
       fallbackErrorMessage: withdrawErrorMessage,
       loadingSetter: setActionLoading,
-      onSuccess: (refreshedWallet) => {
+      onSuccess: () => {
         toast.success(t.withdrawSuccess.replace('{amount}', String(amt)));
         setShowWithdraw(false);
         setWithdrawAmount('');
         setWithdrawBank('');
-
-        const latestTransaction = getLatestNewTransaction(previousWallet, refreshedWallet);
-        if (latestTransaction && effectiveUserEmail) {
-          void triggerPaymentReceiptEmail({
-            userEmail: effectiveUserEmail,
-            userName: effectiveUserName,
-            transaction: latestTransaction,
-            balanceJod: refreshedWallet?.balance ?? 0,
-            paymentMethod: withdrawMethod,
-          });
-        }
       },
     });
   };
@@ -320,6 +323,7 @@ export function useWalletDashboardController() {
 
     await runWalletAction({
       action: async () => {
+        await ensureWalletVerification('transfer');
         await walletApi.sendMoney(effectiveUserId, sendRecipient, amt, sendNote || undefined);
         return fetchWallet();
       },
@@ -399,6 +403,81 @@ export function useWalletDashboardController() {
     }
   };
 
+  const handleAddPaymentMethod = async () => {
+    if (!guardWalletActionsAvailable()) {
+      return;
+    }
+
+    const typeInput = window.prompt('Enter payment method type: card, wallet, bank_transfer, or cliq.')?.trim() ?? 'card';
+    const providerInput = window.prompt('Enter provider: stripe, wallet, cliq, or aman.')?.trim() ?? 'stripe';
+    const providerReference = window.prompt('Enter the provider token or reference for this payment method.')?.trim();
+    const label = window.prompt('Optional label for this payment method.')?.trim() ?? undefined;
+    const last4 = window.prompt('Optional last 4 digits or identifier.')?.trim() ?? undefined;
+
+    if (!providerReference) {
+      toast.error('A provider reference is required to save a payment method.');
+      return;
+    }
+
+    await runWalletAction({
+      action: async () => {
+        await ensureWalletVerification('payment_method');
+        await walletApi.addPaymentMethod(effectiveUserId, {
+          type: typeInput as 'card' | 'wallet' | 'bank_transfer' | 'cliq',
+          provider: providerInput as 'stripe' | 'wallet' | 'cliq' | 'aman',
+          providerReference,
+          label,
+          last4,
+          isDefault: !(walletData?.wallet.paymentMethods?.length ?? 0),
+        });
+        return fetchWallet();
+      },
+      fallbackErrorMessage: 'Unable to add this payment method right now.',
+      loadingSetter: setActionLoading,
+      onSuccess: () => {
+        toast.success('Payment method added.');
+      },
+    });
+  };
+
+  const handleRemovePaymentMethod = async (paymentMethodId: string) => {
+    if (!guardWalletActionsAvailable()) {
+      return;
+    }
+
+    await runWalletAction({
+      action: async () => {
+        await ensureWalletVerification('payment_method');
+        await walletApi.deletePaymentMethod(effectiveUserId, paymentMethodId);
+        return fetchWallet();
+      },
+      fallbackErrorMessage: 'Unable to remove this payment method right now.',
+      loadingSetter: setActionLoading,
+      onSuccess: () => {
+        toast.success('Payment method removed.');
+      },
+    });
+  };
+
+  const handleSetDefaultPaymentMethod = async (paymentMethodId: string) => {
+    if (!guardWalletActionsAvailable()) {
+      return;
+    }
+
+    await runWalletAction({
+      action: async () => {
+        await ensureWalletVerification('payment_method');
+        await walletApi.setDefaultPaymentMethod(effectiveUserId, paymentMethodId);
+        return fetchWallet();
+      },
+      fallbackErrorMessage: 'Unable to update the default payment method right now.',
+      loadingSetter: setActionLoading,
+      onSuccess: () => {
+        toast.success('Default payment method updated.');
+      },
+    });
+  };
+
   const handleSubscribe = async () => {
     if (!guardWalletActionsAvailable()) {
       return;
@@ -411,7 +490,7 @@ export function useWalletDashboardController() {
 
     await runWalletAction({
       action: async () => {
-        await walletApi.subscribe(
+        const intent = await walletApi.subscribe(
           effectiveUserId,
           preferredCorridorId ? 'Wasel Corridor Pass' : 'Wasel Plus',
           preferredCorridorId
@@ -419,7 +498,9 @@ export function useWalletDashboardController() {
             : 9.99,
           preferredCorridorId,
         );
-        return fetchWallet();
+        await fetchWallet();
+        await refreshMovementMembership();
+        return intent;
       },
       fallbackErrorMessage: subscribeErrorMessage,
       loadingSetter: setActionLoading,
@@ -441,11 +522,14 @@ export function useWalletDashboardController() {
     handleAutoTopUpToggle,
     handleClaimReward,
     handleRefresh,
+    handleRemovePaymentMethod,
     handleSend,
+    handleSetDefaultPaymentMethod,
     handleSetPin,
     handleSubscribe,
     handleTopUp,
     handleWithdraw,
+    handleAddPaymentMethod,
     insights,
     isRTL,
     loading,

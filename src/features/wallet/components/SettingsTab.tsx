@@ -23,6 +23,9 @@ interface SettingsTabProps {
   onAutoTopUpAmountChange: (val: string) => void;
   onAutoTopUpThresholdChange: (val: string) => void;
   onShowPinSetup: () => void;
+  onAddPaymentMethod: () => void;
+  onRemovePaymentMethod: (paymentMethodId: string) => void;
+  onSetDefaultPaymentMethod: (paymentMethodId: string) => void;
   actionsLocked?: boolean;
   actionsLockedMessage?: string;
 }
@@ -32,6 +35,9 @@ export function SettingsTab({
   autoTopUpEnabled, autoTopUpAmount, autoTopUpThreshold,
   onAutoTopUpToggle, onAutoTopUpAmountChange, onAutoTopUpThresholdChange,
   onShowPinSetup,
+  onAddPaymentMethod,
+  onRemovePaymentMethod,
+  onSetDefaultPaymentMethod,
   actionsLocked = false,
   actionsLockedMessage,
 }: SettingsTabProps) {
@@ -111,6 +117,46 @@ export function SettingsTab({
       {/* Wallet Info */}
       <Card className="rounded-xl">
         <CardContent className="pt-4 space-y-3">
+          <div className="flex items-center justify-between py-1.5">
+            <span className="text-sm text-muted-foreground">{isRTL ? 'وسائل الدفع' : 'Payment Methods'}</span>
+            <Button size="sm" variant="outline" onClick={onAddPaymentMethod} disabled={actionsLocked} className="text-xs">
+              {isRTL ? 'إضافة وسيلة' : 'Add method'}
+            </Button>
+          </div>
+          {(walletData?.wallet.paymentMethods ?? []).length > 0 ? (
+            <div className="space-y-2">
+              {walletData?.wallet.paymentMethods.map((method) => (
+                <div key={method.id} className="rounded-xl border border-border/30 bg-background/30 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-medium text-foreground">
+                        {method.label || `${method.provider} ${method.last4 ? `•••• ${method.last4}` : method.type}`}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {method.provider} • {method.type}
+                        {method.expiryMonth && method.expiryYear ? ` • ${String(method.expiryMonth).padStart(2, '0')}/${method.expiryYear}` : ''}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {!method.isDefault && (
+                        <Button size="sm" variant="outline" disabled={actionsLocked} onClick={() => onSetDefaultPaymentMethod(method.id)} className="text-xs">
+                          {isRTL ? 'افتراضي' : 'Set default'}
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline" disabled={actionsLocked} onClick={() => onRemovePaymentMethod(method.id)} className="text-xs">
+                        {isRTL ? 'إزالة' : 'Remove'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border/40 bg-background/20 p-4 text-sm text-muted-foreground">
+              {isRTL ? 'لا توجد وسائل دفع محفوظة حتى الآن.' : 'No saved payment methods yet.'}
+            </div>
+          )}
+
           {[
             { label: isRTL ? '\u0627\u0644\u0639\u0645\u0644\u0629' : 'Currency', value: walletData?.currency || 'JOD' },
             { label: isRTL ? '\u0646\u0648\u0639 \u0627\u0644\u0645\u062D\u0641\u0638\u0629' : 'Wallet Type', value: walletData?.wallet?.walletType || 'user' },

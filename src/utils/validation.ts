@@ -9,6 +9,7 @@
  *   const form = useForm<SignInFields>({ resolver: zodResolver(signInSchema) });
  */
 import { z } from 'zod';
+import { WALLET_PAYMENT_METHOD_TYPES } from '../../shared/wallet-contracts';
 
 // ── Reusable field validators ─────────────────────────────────────────────────
 
@@ -157,7 +158,9 @@ export const topUpSchema = z.object({
     .number({ required_error: 'Amount is required' })
     .positive('Amount must be positive')
     .max(500, 'Maximum top-up is JOD 500 per transaction'),
-  paymentMethod: z.enum(['card', 'cliq', 'cash_agent']).default('card'),
+  paymentMethod: z.enum(WALLET_PAYMENT_METHOD_TYPES).refine((method) => method !== 'wallet', {
+    message: 'Wallet balance cannot be used to fund a deposit.',
+  }).default('card'),
 });
 export type TopUpFields = z.infer<typeof topUpSchema>;
 

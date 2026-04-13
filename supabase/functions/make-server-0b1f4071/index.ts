@@ -11,6 +11,7 @@ import { timingSafeEqual } from './_shared/security-runtime.ts';
 import { createAutomationHandlers } from './automation-handlers.ts';
 import { createCommunicationHandlers } from './communications-handlers.ts';
 import { createTwoFactorHandlers } from './two-factor-handlers.ts';
+import { createWalletHandlers } from './wallet-handlers.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('VITE_SUPABASE_ANON_KEY') ?? '';
@@ -1112,6 +1113,26 @@ const {
   json,
 });
 
+const {
+  handleGetWallet,
+  handleSetPin,
+  handleVerifyPin,
+  handleCreatePaymentIntent,
+  handleConfirmPayment,
+  handlePaymentWebhook,
+  handleWalletDeposit,
+  handleWalletTransfer,
+  handleWalletWithdraw,
+  handleWalletPaymentMethods,
+  handleWalletSettings,
+  handleReleaseEscrow,
+  handleRefundEscrow,
+} = createWalletHandlers({
+  authenticateRequest,
+  getAdminClient,
+  json,
+});
+
 async function handleHealth() {
   return json({
     ok: true,
@@ -1136,10 +1157,23 @@ const {
 
 const routes: RouteDefinition[] = [
   { method: 'GET', path: '/health', handler: handleHealth },
+  { method: 'GET', path: '/wallet', handler: handleGetWallet },
   { method: 'GET', path: '/communications/preferences', handler: handleGetCommunicationPreferences },
   { method: 'POST', path: '/auth/2fa/setup', handler: handleTwoFactorSetup },
   { method: 'POST', path: '/auth/2fa/verify', handler: handleTwoFactorVerify },
   { method: 'POST', path: '/auth/2fa/disable', handler: handleTwoFactorDisable },
+  { method: 'POST', path: '/wallet/set-pin', handler: handleSetPin },
+  { method: 'POST', path: '/wallet/verify-pin', handler: handleVerifyPin },
+  { method: 'POST', path: '/wallet/deposit', handler: handleWalletDeposit },
+  { method: 'POST', path: '/wallet/transfer', handler: handleWalletTransfer },
+  { method: 'POST', path: '/wallet/withdraw', handler: handleWalletWithdraw },
+  { method: 'POST', path: '/wallet/payment-methods', handler: handleWalletPaymentMethods },
+  { method: 'POST', path: '/wallet/settings', handler: handleWalletSettings },
+  { method: 'POST', path: '/wallet/escrows/release', handler: handleReleaseEscrow },
+  { method: 'POST', path: '/wallet/escrows/refund', handler: handleRefundEscrow },
+  { method: 'POST', path: '/payments/create-intent', handler: handleCreatePaymentIntent },
+  { method: 'POST', path: '/payments/confirm', handler: handleConfirmPayment },
+  { method: 'POST', path: '/payments/webhook', handler: handlePaymentWebhook },
   { method: 'PATCH', path: '/communications/preferences', handler: handlePatchCommunicationPreferences },
   { method: 'POST', path: '/communications/deliver', handler: handleQueueCommunicationDeliveries },
   { method: 'POST', path: '/communications/process', handler: handleProcessCommunicationQueue },

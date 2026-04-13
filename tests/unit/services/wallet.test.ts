@@ -1,324 +1,271 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const {
-  mockFetchWithRetry,
-  mockRpc,
-  mockSingle,
-  mockMaybeSingle,
-  mockSelect,
-  mockEq,
-  mockOrder,
-  mockLimit,
-  mockInsert,
-  mockUpdate,
-  mockDelete,
-  mockDb,
-} = vi.hoisted(() => {
-  const mockFetchWithRetry = vi.fn();
-  const mockRpc = vi.fn();
-  const mockSingle = vi.fn();
-  const mockMaybeSingle = vi.fn();
-  const mockSelect = vi.fn();
-  const mockEq = vi.fn();
-  const mockOrder = vi.fn();
-  const mockLimit = vi.fn();
-  const mockInsert = vi.fn();
-  const mockUpdate = vi.fn();
-  const mockDelete = vi.fn();
-
-  function createQueryBuilder() {
-    return {
-      select: mockSelect,
-      eq: mockEq,
-      order: mockOrder,
-      limit: mockLimit,
-      single: mockSingle,
-      maybeSingle: mockMaybeSingle,
-      insert: mockInsert,
-      update: mockUpdate,
-      delete: mockDelete,
-    };
-  }
-
-  const mockDb = {
-    from: vi.fn(() => createQueryBuilder()),
-    rpc: (...args: any[]) => mockRpc(...args),
-  };
-
-  return {
-    mockFetchWithRetry,
-    mockRpc,
-    mockSingle,
-    mockMaybeSingle,
-    mockSelect,
-    mockEq,
-    mockOrder,
-    mockLimit,
-    mockInsert,
-    mockUpdate,
-    mockDelete,
-    mockDb,
-  };
-});
-
-vi.mock('../../../src/services/core', () => ({
-  API_URL: '',
-  publicAnonKey: '',
-  fetchWithRetry: (...args: any[]) => mockFetchWithRetry(...args),
-  getAuthDetails: vi.fn().mockResolvedValue({ token: 'token-123', userId: 'user-123' }),
-  isEdgeFunctionAvailable: vi.fn(() => false),
-  supabase: mockDb,
+const { mockFetchWithRetry, mockGetAuthDetails } = vi.hoisted(() => ({
+  mockFetchWithRetry: vi.fn(),
+  mockGetAuthDetails: vi.fn().mockResolvedValue({ token: 'token-123', userId: 'user-123' }),
 }));
 
-import { __resetWalletApiCachesForTests, walletApi } from '../../../src/services/walletApi';
+vi.mock('../../../src/services/core', () => ({
+  API_URL: 'https://api.wasel.test',
+  publicAnonKey: 'public-key',
+  fetchWithRetry: (...args: unknown[]) => mockFetchWithRetry(...args),
+  getAuthDetails: (...args: unknown[]) => mockGetAuthDetails(...args),
+}));
 
-describe('walletApi', () => {
+import { __resetWalletApiCachesForTests, requestWalletVerification, walletApi } from '../../../src/services/walletApi';
+
+function jsonResponse(body: unknown, status = 200) {
+  return Promise.resolve(
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { 'Content-Type': 'application/json' },
+    }),
+  );
+}
+
+const walletPayload = {
+  wallet: {
+    id: 'wallet-1',
+    userId: 'user-123',
+    walletType: 'custodial',
+    status: 'active',
+    currency: 'JOD',
+    autoTopUp: false,
+    autoTopUpAmount: 20,
+    autoTopUpThreshold: 5,
+    paymentMethods: [
+      {
+        id: 'pm-1',
+        type: 'card',
+        provider: 'stripe',
+        label: 'Visa ending 4242',
+        last4: '4242',
+        expiryMonth: 12,
+        expiryYear: 2030,
+        isDefault: true,
+        status: 'active',
+        createdAt: '2026-04-01T00:00:00.000Z',
+        updatedAt: '2026-04-01T00:00:00.000Z',
+      },
+    ],
+    createdAt: '2026-04-01T00:00:00.000Z',
+  },
+  balance: 125.5,
+  pendingBalance: 18,
+  rewardsBalance: 0,
+  total_earned: 24,
+  total_spent: 30,
+  total_deposited: 140,
+  currency: 'JOD',
+  pinSet: true,
+  autoTopUp: false,
+  transactions: [
+    {
+      id: 'tx-1',
+      type: 'deposit',
+      description: 'Wallet deposit settled',
+      amount: 80,
+      createdAt: '2026-04-10T10:00:00.000Z',
+      status: 'completed',
+    },
+    {
+      id: 'tx-2',
+      type: 'escrow_hold',
+      description: 'Ride payment held in escrow',
+      amount: -18,
+      createdAt: '2026-04-11T10:00:00.000Z',
+      status: 'processing',
+    },
+  ],
+  activeEscrows: [
+    {
+      id: 'esc-1',
+      type: 'ride',
+      amount: 18,
+      tripId: 'trip-1',
+      status: 'held',
+    },
+  ],
+  activeRewards: [],
+  subscription: null,
+};
+
+describe('walletApi secure backend flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     __resetWalletApiCachesForTests();
-    window.localStorage.removeItem('wasel-movement-membership');
-
-    const createQueryBuilder = () => {
-      const builder = {
-        select: mockSelect,
-        eq: mockEq,
-        order: mockOrder,
-        limit: mockLimit,
-        single: mockSingle,
-        maybeSingle: mockMaybeSingle,
-        insert: mockInsert,
-        update: mockUpdate,
-        delete: mockDelete,
-      };
-
-      return builder;
-    };
-
-    mockDb.from.mockImplementation(() => createQueryBuilder());
-    mockSelect.mockImplementation(() => createQueryBuilder());
-    mockEq.mockImplementation(() => createQueryBuilder());
-    mockOrder.mockImplementation(() => createQueryBuilder());
-    mockLimit.mockImplementation(() => Promise.resolve({ data: [], error: null }));
-    mockSingle.mockResolvedValue({ data: null, error: null });
-    mockMaybeSingle.mockResolvedValue({ data: null, error: null });
-    mockInsert.mockImplementation(() => createQueryBuilder());
-    mockUpdate.mockImplementation(() => createQueryBuilder());
-    mockDelete.mockImplementation(() => createQueryBuilder());
+    window.localStorage.clear();
   });
 
-  it('falls back to direct Supabase wallet reads when the edge wallet API is unavailable', async () => {
-    mockMaybeSingle.mockResolvedValueOnce({
-      data: {
-        wallet_id: 'wallet-1',
-        user_id: 'user-123',
-        balance: 145.5,
-        pending_balance: 12,
-        wallet_status: 'active',
-        currency_code: 'JOD',
-        auto_top_up_enabled: true,
-        auto_top_up_amount: 25,
-        auto_top_up_threshold: 8,
-      },
-      error: null,
-    });
-    mockLimit.mockResolvedValueOnce({
-      data: [
-        {
-          transaction_id: 'tx-1',
-          amount: 40,
-          direction: 'credit',
-          transaction_type: 'add_funds',
-          transaction_status: 'posted',
-          created_at: '2026-04-01T10:00:00.000Z',
-          metadata: { description: 'Wallet top-up' },
-        },
-        {
-          transaction_id: 'tx-2',
-          amount: 12.5,
-          direction: 'debit',
-          transaction_type: 'ride_payment',
-          transaction_status: 'posted',
-          created_at: '2026-04-01T12:00:00.000Z',
-          metadata: { description: 'Ride payment' },
-        },
-      ],
-      error: null,
-    });
-    mockOrder
-      .mockImplementationOnce(() => ({
-        select: mockSelect,
-        eq: mockEq,
-        order: mockOrder,
-        limit: mockLimit,
-        single: mockSingle,
-        maybeSingle: mockMaybeSingle,
-        insert: mockInsert,
-        update: mockUpdate,
-        delete: mockDelete,
-      }))
-      .mockResolvedValueOnce({
-        data: [{ payment_method_id: 'pm-1', provider: 'stripe', method_type: 'card' }],
-        error: null,
-      });
-
-    const wallet = await walletApi.getWallet('user-123');
-
-    expect(wallet.balance).toBe(145.5);
-    expect(wallet.pendingBalance).toBe(12);
-    expect(wallet.autoTopUp).toBe(true);
-    expect(wallet.transactions).toHaveLength(2);
-    expect(wallet.total_deposited).toBe(40);
-    expect(wallet.total_spent).toBe(12.5);
-  });
-
-  it('exposes wallet reliability metadata for fallback reads', async () => {
-    mockMaybeSingle.mockResolvedValueOnce({
-      data: {
-        wallet_id: 'wallet-1',
-        user_id: 'user-123',
-        balance: 50,
-        pending_balance: 0,
-        wallet_status: 'active',
-        currency_code: 'JOD',
-      },
-      error: null,
-    });
-    mockLimit.mockResolvedValueOnce({ data: [], error: null });
-    mockOrder
-      .mockImplementationOnce(() => ({
-        select: mockSelect,
-        eq: mockEq,
-        order: mockOrder,
-        limit: mockLimit,
-        single: mockSingle,
-        maybeSingle: mockMaybeSingle,
-        insert: mockInsert,
-        update: mockUpdate,
-        delete: mockDelete,
-      }))
-      .mockResolvedValueOnce({ data: [], error: null });
+  it('loads wallet data from the secure edge API and persists a snapshot', async () => {
+    mockFetchWithRetry.mockResolvedValueOnce(await jsonResponse(walletPayload));
 
     const snapshot = await walletApi.getWalletSnapshot('user-123');
+    const persisted = walletApi.getPersistedWalletSnapshot('user-123');
 
-    expect(snapshot.data.balance).toBe(50);
-    expect(snapshot.meta.source).toBe('direct-supabase');
-    expect(snapshot.meta.degraded).toBe(true);
-  });
-
-  it('persists a fresh wallet snapshot for fast reopen flows', async () => {
-    mockMaybeSingle.mockResolvedValueOnce({
-      data: {
-        wallet_id: 'wallet-1',
-        user_id: 'user-123',
-        balance: 88,
-        pending_balance: 0,
-        wallet_status: 'active',
-        currency_code: 'JOD',
-      },
-      error: null,
-    });
-    mockLimit.mockResolvedValueOnce({ data: [], error: null });
-    mockOrder
-      .mockImplementationOnce(() => ({
-        select: mockSelect,
-        eq: mockEq,
-        order: mockOrder,
-        limit: mockLimit,
-        single: mockSingle,
-        maybeSingle: mockMaybeSingle,
-        insert: mockInsert,
-        update: mockUpdate,
-        delete: mockDelete,
-      }))
-      .mockResolvedValueOnce({ data: [], error: null });
-
-    const snapshot = await walletApi.getWalletSnapshot('user-123');
-    const persistedSnapshot = walletApi.getPersistedWalletSnapshot('user-123');
-
-    expect(snapshot.data.balance).toBe(88);
-    expect(persistedSnapshot?.data.balance).toBe(88);
-    expect(persistedSnapshot?.meta.source).toBe('direct-supabase');
-  });
-
-  it('times out stalled direct wallet reads instead of hanging forever', async () => {
-    vi.useFakeTimers();
-
-    try {
-      mockMaybeSingle.mockImplementationOnce(() => new Promise(() => {}));
-
-      const snapshotPromise = walletApi.getWalletSnapshot('user-123');
-      const timedOutAssertion = expect(snapshotPromise).rejects.toThrow(
-        'Wallet fallback read timed out after 4000ms',
-      );
-
-      await vi.advanceTimersByTimeAsync(4_000);
-
-      await timedOutAssertion;
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('reuses the last persisted wallet snapshot when a direct fallback read stalls', async () => {
-    vi.useFakeTimers();
-
-    try {
-      mockMaybeSingle.mockResolvedValueOnce({
-        data: {
-          wallet_id: 'wallet-1',
-          user_id: 'user-123',
-          balance: 88,
-          pending_balance: 0,
-          wallet_status: 'active',
-          currency_code: 'JOD',
-        },
-        error: null,
-      });
-      mockLimit.mockResolvedValueOnce({ data: [], error: null });
-      mockOrder
-        .mockImplementationOnce(() => ({
-          select: mockSelect,
-          eq: mockEq,
-          order: mockOrder,
-          limit: mockLimit,
-          single: mockSingle,
-          maybeSingle: mockMaybeSingle,
-          insert: mockInsert,
-          update: mockUpdate,
-          delete: mockDelete,
-        }))
-        .mockResolvedValueOnce({ data: [], error: null });
-
-      const initialSnapshot = await walletApi.getWalletSnapshot('user-123');
-      expect(initialSnapshot.data.balance).toBe(88);
-      expect(walletApi.getPersistedWalletSnapshot('user-123')?.data.balance).toBe(88);
-
-      await vi.advanceTimersByTimeAsync(15_001);
-
-      mockMaybeSingle.mockImplementationOnce(() => new Promise(() => {}));
-
-      const recoveredSnapshotPromise = walletApi.getWalletSnapshot('user-123');
-
-      await vi.advanceTimersByTimeAsync(4_000);
-
-      const recoveredSnapshot = await recoveredSnapshotPromise;
-      expect(recoveredSnapshot.data.balance).toBe(88);
-      expect(recoveredSnapshot.meta.degraded).toBe(true);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('blocks wallet transfers when the secure wallet backend is unavailable', async () => {
-    await expect(walletApi.sendMoney('user-123', 'user-999', 20, 'Ride split')).rejects.toThrow(
-      'Wallet actions are temporarily read-only while the secure payment service reconnects.',
+    expect(snapshot.data.balance).toBe(125.5);
+    expect(snapshot.meta.source).toBe('edge-api');
+    expect(snapshot.meta.degraded).toBe(false);
+    expect(persisted?.data.wallet.paymentMethods).toHaveLength(1);
+    expect(mockFetchWithRetry).toHaveBeenCalledWith(
+      'https://api.wasel.test/wallet',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer token-123',
+        }),
+      }),
     );
-    expect(mockRpc).not.toHaveBeenCalled();
   });
 
-  it('blocks new subscriptions when the secure wallet backend is unavailable', async () => {
-    await expect(walletApi.subscribe('user-123', 'Wasel Corridor Pass', 39, 'amman-irbid')).rejects.toThrow(
-      'Wallet actions are temporarily read-only while the secure payment service reconnects.',
+  it('reuses the last persisted backend snapshot when the wallet API is temporarily unavailable', async () => {
+    mockFetchWithRetry.mockResolvedValueOnce(await jsonResponse(walletPayload));
+    await walletApi.getWalletSnapshot('user-123');
+    __resetWalletApiCachesForTests();
+
+    mockFetchWithRetry.mockRejectedValueOnce(new Error('network down'));
+
+    const degradedSnapshot = await walletApi.getWalletSnapshot('user-123');
+
+    expect(degradedSnapshot.data.balance).toBe(125.5);
+    expect(degradedSnapshot.meta.degraded).toBe(true);
+    expect(degradedSnapshot.meta.source).toBe('edge-api');
+  });
+
+  it('creates a deposit payment intent instead of mutating wallet balances on the client', async () => {
+    mockFetchWithRetry.mockResolvedValueOnce(await jsonResponse({
+      id: 'pi-1',
+      purpose: 'deposit',
+      status: 'requires_action',
+      amount: 25,
+      currency: 'JOD',
+      paymentMethodType: 'card',
+      provider: 'stripe',
+      clientSecret: 'pi_secret_123',
+      createdAt: '2026-04-12T10:00:00.000Z',
+    }));
+
+    const intent = await walletApi.topUp('user-123', 25, 'card');
+
+    expect(intent.id).toBe('pi-1');
+    expect(intent.status).toBe('requires_action');
+    expect(mockFetchWithRetry).toHaveBeenCalledWith(
+      'https://api.wasel.test/payments/create-intent',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          purpose: 'deposit',
+          amount: 25,
+          paymentMethodType: 'card',
+          referenceType: null,
+          referenceId: null,
+          metadata: {},
+          idempotencyKey: null,
+        }),
+      }),
+    );
+  });
+
+  it('requires step-up verification before sending money and forwards the verification token to the backend', async () => {
+    mockFetchWithRetry
+      .mockResolvedValueOnce(await jsonResponse({
+        purpose: 'transfer',
+        verified: true,
+        otpRequired: true,
+        verificationToken: 'step-up-token',
+        expiresAt: '2026-04-12T11:00:00.000Z',
+      }))
+      .mockResolvedValueOnce(await jsonResponse({ ok: true }));
+
+    const verification = await requestWalletVerification('transfer', '1234');
+    await walletApi.sendMoney('user-123', 'user-456', 20, 'Ride split');
+
+    expect(verification.verificationToken).toBe('step-up-token');
+    expect(mockFetchWithRetry).toHaveBeenLastCalledWith(
+      'https://api.wasel.test/wallet/transfer',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          recipientUserId: 'user-456',
+          amount: 20,
+          note: 'Ride split',
+          verificationToken: 'step-up-token',
+        }),
+      }),
+    );
+  });
+
+  it('submits a wallet-funded subscription through the payment-intent and confirm flow', async () => {
+    mockFetchWithRetry
+      .mockResolvedValueOnce(await jsonResponse(walletPayload))
+      .mockResolvedValueOnce(await jsonResponse({
+        id: 'pi-sub',
+        purpose: 'subscription',
+        status: 'requires_confirmation',
+        amount: 9.99,
+        currency: 'JOD',
+        paymentMethodType: 'wallet',
+        provider: 'wallet',
+        createdAt: '2026-04-12T12:00:00.000Z',
+      }))
+      .mockResolvedValueOnce(await jsonResponse({
+        id: 'pi-sub',
+        status: 'succeeded',
+        settled: true,
+      }));
+
+    await walletApi.getWallet('user-123');
+    __resetWalletApiCachesForTests();
+    mockFetchWithRetry
+      .mockResolvedValueOnce(await jsonResponse(walletPayload))
+      .mockResolvedValueOnce(await jsonResponse({
+        id: 'pi-sub',
+        purpose: 'subscription',
+        status: 'requires_confirmation',
+        amount: 9.99,
+        currency: 'JOD',
+        paymentMethodType: 'wallet',
+        provider: 'wallet',
+        createdAt: '2026-04-12T12:00:00.000Z',
+      }))
+      .mockResolvedValueOnce(await jsonResponse({
+        id: 'pi-sub',
+        status: 'succeeded',
+        settled: true,
+      }));
+
+    const intent = await walletApi.subscribe('user-123', 'Wasel Plus', 9.99, null);
+
+    expect(intent.id).toBe('pi-sub');
+    expect(mockFetchWithRetry).toHaveBeenNthCalledWith(
+      2,
+      'https://api.wasel.test/payments/create-intent',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          purpose: 'subscription',
+          amount: 9.99,
+          paymentMethodType: 'wallet',
+          referenceType: null,
+          referenceId: null,
+          metadata: {
+            planName: 'Wasel Plus',
+            planCode: 'wasel-plus',
+            corridorId: null,
+          },
+          idempotencyKey: null,
+        }),
+      }),
+    );
+    expect(mockFetchWithRetry).toHaveBeenNthCalledWith(
+      3,
+      'https://api.wasel.test/payments/confirm',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          paymentIntentId: 'pi-sub',
+          paymentMethodId: 'pm-1',
+        }),
+      }),
     );
   });
 });

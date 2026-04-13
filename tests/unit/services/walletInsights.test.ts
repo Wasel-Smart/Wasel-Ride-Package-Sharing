@@ -1,195 +1,108 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const {
-  mockFetch,
-  mockRpc,
-  mockMaybeSingle,
-  mockOrder,
-  mockLimit,
-  mockInsert,
-  mockSelect,
-  mockEq,
-  mockUpdate,
-  mockDelete,
-  mockDb,
-} = vi.hoisted(() => {
-  const mockFetch = vi.fn();
-  const mockRpc = vi.fn();
-  const mockMaybeSingle = vi.fn();
-  const mockOrder = vi.fn();
-  const mockLimit = vi.fn();
-  const mockInsert = vi.fn();
-  const mockSelect = vi.fn();
-  const mockEq = vi.fn();
-  const mockUpdate = vi.fn();
-  const mockDelete = vi.fn();
-
-  function builder(): any {
-    return {
-      select: mockSelect,
-      eq: mockEq,
-      order: mockOrder,
-      limit: mockLimit,
-      maybeSingle: mockMaybeSingle,
-      insert: mockInsert,
-      update: mockUpdate,
-      delete: mockDelete,
-    };
-  }
-
-  const mockDb = {
-    from: vi.fn(() => builder()),
-    rpc: (...args: any[]) => mockRpc(...args),
-  };
-
-  return {
-    mockFetch,
-    mockRpc,
-    mockMaybeSingle,
-    mockOrder,
-    mockLimit,
-    mockInsert,
-    mockSelect,
-    mockEq,
-    mockUpdate,
-    mockDelete,
-    mockDb,
-  };
-});
+const { mockFetchWithRetry, mockGetAuthDetails } = vi.hoisted(() => ({
+  mockFetchWithRetry: vi.fn(),
+  mockGetAuthDetails: vi.fn().mockResolvedValue({ token: 'tok', userId: 'u1' }),
+}));
 
 vi.mock('../../../src/services/core', () => ({
-  API_URL: '',
-  publicAnonKey: '',
-  fetchWithRetry: (...a: any[]) => mockFetch(...a),
-  getAuthDetails: vi.fn().mockResolvedValue({ token: 'tok', userId: 'u1' }),
-  isEdgeFunctionAvailable: vi.fn(() => false),
-  supabase: mockDb,
+  API_URL: 'https://api.wasel.test',
+  publicAnonKey: 'public-key',
+  fetchWithRetry: (...args: unknown[]) => mockFetchWithRetry(...args),
+  getAuthDetails: (...args: unknown[]) => mockGetAuthDetails(...args),
 }));
 
 import { __resetWalletApiCachesForTests, walletApi } from '../../../src/services/walletApi';
 
-function createBuilder() {
-  return {
-    select: mockSelect,
-    eq: mockEq,
-    order: mockOrder,
-    limit: mockLimit,
-    maybeSingle: mockMaybeSingle,
-    insert: mockInsert,
-    update: mockUpdate,
-    delete: mockDelete,
-  };
+function jsonResponse(body: unknown, status = 200) {
+  return Promise.resolve(
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { 'Content-Type': 'application/json' },
+    }),
+  );
 }
 
-function setupWalletReads(args?: {
-  wallet?: Record<string, unknown>;
-  transactions?: Array<Record<string, unknown>>;
-  paymentMethods?: Array<Record<string, unknown>>;
-}) {
-  mockDb.from.mockImplementation(() => createBuilder());
-  mockSelect.mockImplementation(() => createBuilder());
-  mockEq.mockImplementation(() => createBuilder());
-  mockInsert.mockImplementation(() => createBuilder());
-  mockUpdate.mockImplementation(() => createBuilder());
-  mockDelete.mockImplementation(() => createBuilder());
-  mockMaybeSingle.mockResolvedValue({
-    data: {
-      wallet_id: 'w-1',
-      user_id: 'u1',
-      balance: 100,
-      pending_balance: 5,
-      wallet_status: 'active',
-      currency_code: 'JOD',
-      auto_top_up_enabled: false,
-      auto_top_up_amount: 20,
-      auto_top_up_threshold: 5,
-      pin_hash: null,
-      created_at: '2026-01-01T00:00:00.000Z',
-      ...(args?.wallet ?? {}),
+const walletPayload = {
+  wallet: {
+    id: 'wallet-1',
+    userId: 'u1',
+    walletType: 'custodial',
+    status: 'active',
+    currency: 'JOD',
+    autoTopUp: false,
+    autoTopUpAmount: 20,
+    autoTopUpThreshold: 5,
+    paymentMethods: [],
+    createdAt: '2026-04-01T00:00:00.000Z',
+  },
+  balance: 100,
+  pendingBalance: 5,
+  rewardsBalance: 0,
+  total_earned: 30,
+  total_spent: 22,
+  total_deposited: 120,
+  currency: 'JOD',
+  pinSet: true,
+  autoTopUp: false,
+  transactions: [
+    {
+      id: 'tx-1',
+      type: 'deposit',
+      description: 'Wallet deposit',
+      amount: 40,
+      createdAt: '2026-04-01T10:00:00.000Z',
+      status: 'completed',
     },
-    error: null,
-  });
-  mockLimit.mockResolvedValue({
-    data: args?.transactions ?? [],
-    error: null,
-  });
-  mockOrder
-    .mockImplementationOnce(() => createBuilder())
-    .mockResolvedValueOnce({ data: args?.paymentMethods ?? [], error: null });
-}
+    {
+      id: 'tx-2',
+      type: 'payment',
+      description: 'Subscription payment',
+      amount: -10,
+      createdAt: '2026-04-02T10:00:00.000Z',
+      status: 'completed',
+    },
+    {
+      id: 'tx-3',
+      type: 'transfer',
+      description: 'Wallet transfer',
+      amount: -12,
+      createdAt: '2026-04-03T10:00:00.000Z',
+      status: 'completed',
+    },
+    {
+      id: 'tx-4',
+      type: 'refund',
+      description: 'Escrow refund',
+      amount: 8,
+      createdAt: '2026-03-03T10:00:00.000Z',
+      status: 'completed',
+    },
+  ],
+  activeEscrows: [],
+  activeRewards: [],
+  subscription: null,
+};
 
-describe('walletApi direct fallback insights and pagination', () => {
+describe('walletApi insights and payment-method controls', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     __resetWalletApiCachesForTests();
-    window.localStorage.removeItem('wasel-movement-membership');
+    window.localStorage.clear();
   });
 
-  it('builds wallet insights from cached wallet transactions', async () => {
-    setupWalletReads({
-      transactions: [
-        {
-          transaction_id: 'tx-1',
-          amount: 40,
-          direction: 'credit',
-          transaction_type: 'add_funds',
-          transaction_status: 'posted',
-          created_at: '2026-04-01T10:00:00.000Z',
-          metadata: { description: 'Wallet top-up' },
-        },
-        {
-          transaction_id: 'tx-2',
-          amount: 15,
-          direction: 'debit',
-          transaction_type: 'ride_payment',
-          transaction_status: 'posted',
-          created_at: '2026-04-02T10:00:00.000Z',
-          metadata: { description: 'Ride payment' },
-        },
-      ],
-    });
+  it('derives wallet insights from secure backend transactions', async () => {
+    mockFetchWithRetry.mockResolvedValueOnce(await jsonResponse(walletPayload));
 
     const insights = await walletApi.getInsights('u1');
 
-    expect(insights.totalTransactions).toBe(2);
-    expect(insights.thisMonthEarned).toBeGreaterThanOrEqual(0);
-    expect(mockMaybeSingle).toHaveBeenCalledTimes(1);
+    expect(insights.totalTransactions).toBe(4);
+    expect(insights.thisMonthSpent).toBeGreaterThan(0);
+    expect(insights.monthlyTrend).toHaveLength(6);
   });
 
-  it('marks fallback insights as degraded metadata', async () => {
-    setupWalletReads({
-      transactions: [
-        {
-          transaction_id: 'tx-1',
-          amount: 20,
-          direction: 'credit',
-          transaction_type: 'add_funds',
-          transaction_status: 'posted',
-          created_at: '2026-04-01T10:00:00.000Z',
-          metadata: { description: 'Wallet top-up' },
-        },
-      ],
-    });
-
-    const snapshot = await walletApi.getInsightsSnapshot('u1');
-
-    expect(snapshot.data.totalTransactions).toBe(1);
-    expect(snapshot.meta.degraded).toBe(true);
-    expect(snapshot.meta.source).toBe('direct-supabase');
-  });
-
-  it('paginates transactions from the cached wallet payload in fallback mode', async () => {
-    setupWalletReads({
-      transactions: Array.from({ length: 4 }, (_, index) => ({
-        transaction_id: `tx-${index + 1}`,
-        amount: 10 + index,
-        direction: index % 2 === 0 ? 'credit' : 'debit',
-        transaction_type: index % 2 === 0 ? 'add_funds' : 'ride_payment',
-        transaction_status: 'posted',
-        created_at: `2026-04-0${index + 1}T10:00:00.000Z`,
-        metadata: null,
-      })),
-    });
+  it('paginates wallet transactions from the secure snapshot cache', async () => {
+    mockFetchWithRetry.mockResolvedValueOnce(await jsonResponse(walletPayload));
 
     const page1 = await walletApi.getTransactions('u1', 1, 2);
     const page2 = await walletApi.getTransactions('u1', 2, 2);
@@ -199,17 +112,72 @@ describe('walletApi direct fallback insights and pagination', () => {
     expect(page1.total).toBe(4);
   });
 
-  it('requires the backend for pin management when edge APIs are unavailable', async () => {
-    await expect(walletApi.setPin('u1', '1234')).rejects.toThrow('Wallet PIN management requires the wallet backend.');
-    await expect(walletApi.verifyPin('u1', '1234')).rejects.toThrow('Wallet PIN verification requires the wallet backend.');
+  it('blocks payment-method mutations until a step-up token is present', async () => {
+    await expect(walletApi.addPaymentMethod('u1', {
+      type: 'card',
+      provider: 'stripe',
+      providerReference: 'pm_123',
+      isDefault: true,
+    })).rejects.toThrow('Verify your wallet PIN and OTP before changing payment methods.');
   });
 
-  it('keeps wallet transfers read-only when only fallback data is available', async () => {
-    setupWalletReads();
+  it('adds a payment method after step-up verification and calls the secure backend endpoint', async () => {
+    mockFetchWithRetry
+      .mockResolvedValueOnce(await jsonResponse({
+        purpose: 'payment_method',
+        verified: true,
+        otpRequired: true,
+        verificationToken: 'pm-step-up',
+        expiresAt: '2026-04-12T11:00:00.000Z',
+      }))
+      .mockResolvedValueOnce(await jsonResponse({ ok: true, paymentMethodId: 'pm-local-1' }));
 
-    await expect(walletApi.sendMoney('u1', 'u2', 20, 'Split')).rejects.toThrow(
-      'Wallet actions are temporarily read-only while the secure payment service reconnects.',
+    await walletApi.verifyPin('u1', '1234', 'payment_method');
+    await walletApi.addPaymentMethod('u1', {
+      type: 'card',
+      provider: 'stripe',
+      providerReference: 'pm_123',
+      label: 'Visa',
+      last4: '4242',
+      isDefault: true,
+    });
+
+    expect(mockFetchWithRetry).toHaveBeenLastCalledWith(
+      'https://api.wasel.test/wallet/payment-methods',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'add',
+          type: 'card',
+          provider: 'stripe',
+          providerReference: 'pm_123',
+          label: 'Visa',
+          brand: null,
+          last4: '4242',
+          expiryMonth: null,
+          expiryYear: null,
+          isDefault: true,
+          verificationToken: 'pm-step-up',
+        }),
+      }),
     );
-    expect(mockRpc).not.toHaveBeenCalled();
+  });
+
+  it('posts auto top-up settings to the secure backend', async () => {
+    mockFetchWithRetry.mockResolvedValueOnce(await jsonResponse({ ok: true }));
+
+    await walletApi.setAutoTopUp('u1', true, 25, 7);
+
+    expect(mockFetchWithRetry).toHaveBeenCalledWith(
+      'https://api.wasel.test/wallet/settings',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          autoTopUpEnabled: true,
+          autoTopUpAmount: 25,
+          autoTopUpThreshold: 7,
+        }),
+      }),
+    );
   });
 });

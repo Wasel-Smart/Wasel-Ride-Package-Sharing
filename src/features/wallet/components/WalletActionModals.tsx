@@ -1,4 +1,4 @@
-import { CreditCard, Landmark, Smartphone, Zap } from 'lucide-react';
+import { CreditCard, Landmark, Zap } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
@@ -116,7 +116,6 @@ export function WalletActionModals({
             <div className="mt-1 grid grid-cols-2 gap-2">
               {[
                 { id: 'card', label: t.card, icon: CreditCard },
-                { id: 'apple_pay', label: t.applePay, icon: Smartphone },
                 { id: 'bank_transfer', label: t.bankTransfer, icon: Landmark },
                 { id: 'cliq', label: t.cliq, icon: Zap },
               ].map((method) => (

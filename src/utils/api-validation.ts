@@ -5,6 +5,10 @@
  */
 
 import { z } from 'zod';
+import {
+  WALLET_PAYMENT_METHOD_TYPES,
+  WALLET_TRANSACTION_TYPES,
+} from '../../shared/wallet-contracts';
 
 /**
  * Base schemas
@@ -84,12 +88,21 @@ export const PaymentSchema = z.object({
   amount: z.number().min(0),
   currency: z.string().length(3),
   status: z.enum(['pending', 'processing', 'completed', 'failed', 'refunded']),
-  method: z.enum(['card', 'wallet', 'bank_transfer', 'cash']),
+  method: z.enum(WALLET_PAYMENT_METHOD_TYPES),
   stripePaymentIntentId: z.string().optional(),
   errorMessage: z.string().optional(),
   createdAt: DateSchema,
   completedAt: DateSchema.optional(),
   transactionId: z.string().optional(),
+});
+
+export const WalletTransactionSchema = z.object({
+  id: z.string(),
+  type: z.enum(WALLET_TRANSACTION_TYPES),
+  description: z.string(),
+  amount: z.number(),
+  createdAt: DateSchema,
+  status: z.string(),
 });
 
 export type Payment = z.infer<typeof PaymentSchema>;

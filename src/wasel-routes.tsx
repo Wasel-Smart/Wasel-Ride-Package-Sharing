@@ -168,6 +168,7 @@ const APP_LAZY_ROUTES = [
   // ── Dedicated AI intelligence page (was: OperationsOverviewPage stub) ─
   { path: 'ai-intelligence',    lazy: lazy(() => import('./features/operations/AIIntelligencePage')) },
   { path: 'wallet',             lazy: lazy(() => import('./features/wallet'), 'WalletDashboard') },
+  { path: 'payments',           lazy: lazy(() => import('./features/payments/PaymentsPage')) },
   { path: 'plus',               lazy: lazy(() => import('./features/plus/WaselPlusPage')) },
   { path: 'profile',            lazy: lazy(() => import('./features/profile/ProfilePage')) },
   { path: 'settings',           lazy: lazy(() => import('./features/preferences/SettingsPage')) },
@@ -189,7 +190,6 @@ const APP_REDIRECT_ROUTES = [
   { path: 'awasel/send',      to: '/app/packages' },
   { path: 'awasel/track',     to: '/app/packages' },
   { path: 'services/raje3',   to: '/app/raje3' },
-  { path: 'payments',         to: '/app/wallet' },
   { path: 'legal/privacy',    to: '/app/privacy' },
   { path: 'legal/terms',      to: '/app/terms' },
 ] as const;

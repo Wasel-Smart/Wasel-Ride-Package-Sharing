@@ -6,6 +6,7 @@ import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '
 import {
   activateWaselPlus,
   getMovementMembershipSnapshot,
+  refreshMovementMembership,
   startCommuterPass,
   type MovementMembershipSnapshot,
 } from '../../services/movementMembership';
@@ -49,13 +50,13 @@ export default function WaselPlusPage() {
   );
   const dailySignal = routeIntelligence.selectedSignal;
 
-  const handleActivatePlus = () => {
-    activateWaselPlus();
+  const handleActivatePlus = async () => {
+    await activateWaselPlus();
     setMembership(getMovementMembershipSnapshot());
   };
 
-  const handleStartPass = (routeId: string) => {
-    startCommuterPass(routeId);
+  const handleStartPass = async (routeId: string) => {
+    await startCommuterPass(routeId);
     setMembership(getMovementMembershipSnapshot());
   };
 
@@ -67,6 +68,12 @@ export default function WaselPlusPage() {
     setSavedReminders(getRouteReminders());
     setRetentionMessage(`Reminder saved for ${reminder.label}. ${formatRouteReminderSchedule(reminder)}.`);
   };
+
+  useEffect(() => {
+    void refreshMovementMembership().then((snapshot) => {
+      setMembership(snapshot);
+    });
+  }, []);
 
   useEffect(() => {
     setSavedReminders(getRouteReminders());

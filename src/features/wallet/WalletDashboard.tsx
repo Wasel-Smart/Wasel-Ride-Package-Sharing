@@ -33,10 +33,13 @@ export function WalletDashboard() {
     autoTopUpEnabled,
     autoTopUpThreshold,
     balanceVisible,
+    handleAddPaymentMethod,
     handleAutoTopUpToggle,
     handleClaimReward,
     handleRefresh,
+    handleRemovePaymentMethod,
     handleSend,
+    handleSetDefaultPaymentMethod,
     handleSetPin,
     handleSubscribe,
     handleTopUp,
@@ -390,6 +393,9 @@ export function WalletDashboard() {
             onAutoTopUpAmountChange={setAutoTopUpAmount}
             onAutoTopUpThresholdChange={setAutoTopUpThreshold}
             onShowPinSetup={() => setShowPinSetup(true)}
+            onAddPaymentMethod={handleAddPaymentMethod}
+            onRemovePaymentMethod={handleRemovePaymentMethod}
+            onSetDefaultPaymentMethod={handleSetDefaultPaymentMethod}
             actionsLocked={walletActionsLocked}
             actionsLockedMessage={walletActionsLockedMessage}
           />

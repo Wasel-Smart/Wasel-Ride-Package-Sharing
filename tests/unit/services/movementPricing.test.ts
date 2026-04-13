@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { activateWaselPlus } from '../../../src/services/movementMembership';
+import {
+  __resetMovementMembershipForTests,
+  hydrateMovementMembershipFromWallet,
+} from '../../../src/services/movementMembership';
 import { getMovementPriceQuote } from '../../../src/services/movementPricing';
-
-const MEMBERSHIP_KEY = 'wasel-movement-membership';
 
 describe('movementPricing', () => {
   beforeEach(() => {
-    window.localStorage.removeItem(MEMBERSHIP_KEY);
+    __resetMovementMembershipForTests();
   });
 
   it('includes demand metadata and corridor savings in quotes', () => {
@@ -23,8 +24,41 @@ describe('movementPricing', () => {
     expect(quote.finalPriceJod).toBeLessThanOrEqual(12);
   });
 
-  it('applies membership discounts and derives price pressure when needed', () => {
-    activateWaselPlus();
+  it('applies backend subscription discounts when a membership is active', () => {
+    hydrateMovementMembershipFromWallet({
+      wallet: {
+        id: 'wallet-1',
+        userId: 'user-1',
+        walletType: 'custodial',
+        status: 'active',
+        currency: 'JOD',
+        autoTopUp: false,
+        autoTopUpAmount: 20,
+        autoTopUpThreshold: 5,
+        paymentMethods: [],
+        createdAt: '2026-04-01T00:00:00.000Z',
+      },
+      balance: 0,
+      pendingBalance: 0,
+      rewardsBalance: 0,
+      total_earned: 0,
+      total_spent: 0,
+      total_deposited: 0,
+      currency: 'JOD',
+      pinSet: false,
+      autoTopUp: false,
+      transactions: [],
+      activeEscrows: [],
+      activeRewards: [],
+      subscription: {
+        id: 'sub-1',
+        planName: 'Wasel Plus',
+        price: 9.99,
+        status: 'active',
+        renewalDate: '2026-05-01T00:00:00.000Z',
+        type: 'plus',
+      },
+    });
 
     const quote = getMovementPriceQuote({
       basePriceJod: 10,

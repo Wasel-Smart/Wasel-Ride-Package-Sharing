@@ -3,8 +3,8 @@ import {
   getCorridorOpportunityById,
   type CorridorOpportunity,
 } from '../config/wasel-movement-network';
-
-const MEMBERSHIP_KEY = 'wasel-movement-membership';
+import { getAuthDetails } from './core';
+import { walletApi, type WalletData } from './walletApi';
 
 export type MovementActivityType =
   | 'ride_booked'
@@ -38,8 +38,8 @@ const DEFAULT_SNAPSHOT: MovementMembershipSnapshot = {
   commuterPassRouteId: null,
   commuterPassStartedAt: null,
   commuterPassRenewalDate: null,
-  movementCredits: 120,
-  streakDays: 3,
+  movementCredits: 0,
+  streakDays: 0,
   dailyRouteId: DEFAULT_CORRIDOR_ID,
   loyaltyTier: 'starter',
   lastActivityDate: null,
@@ -53,57 +53,13 @@ const DEFAULT_POINTS: Record<MovementActivityType, number> = {
   referral_unlocked: 30,
 };
 
-function isBrowser() {
-  return typeof window !== 'undefined';
-}
-
-function readSnapshot(): MovementMembershipSnapshot {
-  if (!isBrowser()) return DEFAULT_SNAPSHOT;
-
-  try {
-    const raw = window.localStorage.getItem(MEMBERSHIP_KEY);
-    const parsed = raw ? JSON.parse(raw) : null;
-
-    if (!parsed || typeof parsed !== 'object') {
-      return DEFAULT_SNAPSHOT;
-    }
-
-    return {
-      plusActive: Boolean(parsed.plusActive),
-      plusStartedAt: typeof parsed.plusStartedAt === 'string' ? parsed.plusStartedAt : null,
-      plusRenewalDate: typeof parsed.plusRenewalDate === 'string' ? parsed.plusRenewalDate : null,
-      plusPriceJod: Number(parsed.plusPriceJod ?? DEFAULT_SNAPSHOT.plusPriceJod) || DEFAULT_SNAPSHOT.plusPriceJod,
-      commuterPassRouteId: typeof parsed.commuterPassRouteId === 'string' ? parsed.commuterPassRouteId : null,
-      commuterPassStartedAt: typeof parsed.commuterPassStartedAt === 'string' ? parsed.commuterPassStartedAt : null,
-      commuterPassRenewalDate: typeof parsed.commuterPassRenewalDate === 'string' ? parsed.commuterPassRenewalDate : null,
-      movementCredits: Number(parsed.movementCredits ?? DEFAULT_SNAPSHOT.movementCredits) || DEFAULT_SNAPSHOT.movementCredits,
-      streakDays: Number(parsed.streakDays ?? DEFAULT_SNAPSHOT.streakDays) || DEFAULT_SNAPSHOT.streakDays,
-      dailyRouteId: typeof parsed.dailyRouteId === 'string' ? parsed.dailyRouteId : DEFAULT_SNAPSHOT.dailyRouteId,
-      loyaltyTier: resolveTier(Number(parsed.movementCredits ?? DEFAULT_SNAPSHOT.movementCredits) || DEFAULT_SNAPSHOT.movementCredits),
-      lastActivityDate: typeof parsed.lastActivityDate === 'string' ? parsed.lastActivityDate : null,
-    };
-  } catch {
-    return DEFAULT_SNAPSHOT;
-  }
-}
-
-function writeSnapshot(snapshot: MovementMembershipSnapshot) {
-  if (!isBrowser()) return snapshot;
-  window.localStorage.setItem(MEMBERSHIP_KEY, JSON.stringify(snapshot));
-  return snapshot;
-}
+let cachedSnapshot: MovementMembershipSnapshot = { ...DEFAULT_SNAPSHOT };
 
 function resolveTier(credits: number): LoyaltyTier {
   if (credits >= 900) return 'infrastructure';
   if (credits >= 600) return 'network';
   if (credits >= 300) return 'dense';
   return 'starter';
-}
-
-function addDaysIso(days: number) {
-  const date = new Date();
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString();
 }
 
 function updateStreak(previousDate: string | null) {
@@ -122,15 +78,37 @@ function updateStreak(previousDate: string | null) {
   return { streakDays: 1, lastActivityDate: today };
 }
 
+function snapshotFromWallet(wallet: WalletData | null | undefined): MovementMembershipSnapshot {
+  const subscription = wallet?.subscription ?? null;
+  const isCommuterPass = subscription?.type === 'commuter-pass';
+  return {
+    plusActive: Boolean(subscription),
+    plusStartedAt: subscription ? subscription.renewalDate ?? new Date().toISOString() : null,
+    plusRenewalDate: subscription?.renewalDate ?? null,
+    plusPriceJod: subscription?.price ?? DEFAULT_SNAPSHOT.plusPriceJod,
+    commuterPassRouteId: isCommuterPass ? subscription?.corridorId ?? null : null,
+    commuterPassStartedAt: isCommuterPass ? new Date().toISOString() : null,
+    commuterPassRenewalDate: isCommuterPass ? subscription?.renewalDate ?? null : null,
+    movementCredits: cachedSnapshot.movementCredits,
+    streakDays: cachedSnapshot.streakDays,
+    dailyRouteId: subscription?.corridorId ?? cachedSnapshot.dailyRouteId ?? DEFAULT_CORRIDOR_ID,
+    loyaltyTier: resolveTier(cachedSnapshot.movementCredits),
+    lastActivityDate: cachedSnapshot.lastActivityDate,
+  };
+}
+
+function hydrateCachedSnapshot(wallet: WalletData | null | undefined) {
+  cachedSnapshot = snapshotFromWallet(wallet);
+}
+
 export function getMovementMembershipSnapshot() {
-  const snapshot = readSnapshot();
+  const snapshot = { ...cachedSnapshot, loyaltyTier: resolveTier(cachedSnapshot.movementCredits) };
   const corridor = snapshot.dailyRouteId
     ? getCorridorOpportunityById(snapshot.dailyRouteId)
     : getCorridorOpportunityById(DEFAULT_CORRIDOR_ID);
 
   return {
     ...snapshot,
-    loyaltyTier: resolveTier(snapshot.movementCredits),
     dailyRoute: corridor,
     commuterPassRoute: snapshot.commuterPassRouteId
       ? getCorridorOpportunityById(snapshot.commuterPassRouteId)
@@ -141,9 +119,7 @@ export function getMovementMembershipSnapshot() {
             id: `commuter-pass-${snapshot.commuterPassRouteId}`,
             type: 'commuter-pass' as const,
             planName: `${getCorridorOpportunityById(snapshot.commuterPassRouteId)?.label ?? 'Corridor'} Pass`,
-            priceJod:
-              getCorridorOpportunityById(snapshot.commuterPassRouteId)?.subscriptionPriceJod
-              ?? DEFAULT_SNAPSHOT.plusPriceJod,
+            priceJod: corridor?.subscriptionPriceJod ?? snapshot.plusPriceJod,
             renewalDate: snapshot.commuterPassRenewalDate,
             corridorId: snapshot.commuterPassRouteId,
             corridorLabel: getCorridorOpportunityById(snapshot.commuterPassRouteId)?.label ?? null,
@@ -172,43 +148,45 @@ export function getMovementMembershipSnapshot() {
   };
 }
 
-export function activateWaselPlus(priceJod = DEFAULT_SNAPSHOT.plusPriceJod) {
-  const current = readSnapshot();
-  const startedAt = new Date().toISOString();
-  const next = {
-    ...current,
-    plusActive: true,
-    plusStartedAt: startedAt,
-    plusRenewalDate: addDaysIso(30),
-    plusPriceJod: priceJod,
-    loyaltyTier: resolveTier(current.movementCredits),
-  };
-  return writeSnapshot(next);
+export async function refreshMovementMembership() {
+  try {
+    const { userId } = await getAuthDetails();
+    const wallet = await walletApi.getWallet(userId);
+    hydrateCachedSnapshot(wallet);
+  } catch {
+    cachedSnapshot = { ...cachedSnapshot };
+  }
+  return getMovementMembershipSnapshot();
 }
 
-export function startCommuterPass(routeId: string) {
-  const current = readSnapshot();
-  const streak = updateStreak(current.lastActivityDate);
-  const credits = current.movementCredits + DEFAULT_POINTS.pass_started;
-  const startedAt = new Date().toISOString();
-  const next: MovementMembershipSnapshot = {
-    ...current,
-    plusActive: true,
-    plusStartedAt: current.plusStartedAt ?? startedAt,
-    plusRenewalDate: current.plusRenewalDate ?? addDaysIso(30),
-    commuterPassRouteId: routeId,
-    commuterPassStartedAt: startedAt,
-    commuterPassRenewalDate: addDaysIso(30),
-    dailyRouteId: routeId,
+export async function activateWaselPlus(priceJod = DEFAULT_SNAPSHOT.plusPriceJod) {
+  const { userId } = await getAuthDetails();
+  await walletApi.subscribe(userId, 'Wasel Plus', priceJod, null);
+  return refreshMovementMembership();
+}
+
+export async function startCommuterPass(routeId: string) {
+  const corridor = getCorridorOpportunityById(routeId);
+  const { userId } = await getAuthDetails();
+  await walletApi.subscribe(
+    userId,
+    `${corridor?.label ?? 'Corridor'} Pass`,
+    corridor?.subscriptionPriceJod ?? DEFAULT_SNAPSHOT.plusPriceJod,
+    routeId,
+  );
+  const streak = updateStreak(cachedSnapshot.lastActivityDate);
+  const credits = cachedSnapshot.movementCredits + DEFAULT_POINTS.pass_started;
+  cachedSnapshot = {
+    ...cachedSnapshot,
     movementCredits: credits,
     streakDays:
       streak.streakDays === 'increment'
-        ? current.streakDays + 1
-        : streak.streakDays ?? current.streakDays,
+        ? cachedSnapshot.streakDays + 1
+        : streak.streakDays ?? cachedSnapshot.streakDays,
     loyaltyTier: resolveTier(credits),
     lastActivityDate: streak.lastActivityDate,
   };
-  return writeSnapshot(next);
+  return refreshMovementMembership();
 }
 
 export function recordMovementActivity(
@@ -216,24 +194,32 @@ export function recordMovementActivity(
   routeId?: string | null,
   points?: number,
 ) {
-  const current = readSnapshot();
-  const streak = updateStreak(current.lastActivityDate);
-  const credits = current.movementCredits + Math.max(0, points ?? DEFAULT_POINTS[activity]);
-  const next: MovementMembershipSnapshot = {
-    ...current,
+  const streak = updateStreak(cachedSnapshot.lastActivityDate);
+  const credits = cachedSnapshot.movementCredits + Math.max(0, points ?? DEFAULT_POINTS[activity]);
+  cachedSnapshot = {
+    ...cachedSnapshot,
     movementCredits: credits,
-    dailyRouteId: routeId ?? current.dailyRouteId ?? DEFAULT_CORRIDOR_ID,
+    dailyRouteId: routeId ?? cachedSnapshot.dailyRouteId ?? DEFAULT_CORRIDOR_ID,
     streakDays:
       streak.streakDays === 'increment'
-        ? current.streakDays + 1
-        : streak.streakDays ?? current.streakDays,
+        ? cachedSnapshot.streakDays + 1
+        : streak.streakDays ?? cachedSnapshot.streakDays,
     loyaltyTier: resolveTier(credits),
     lastActivityDate: streak.lastActivityDate,
   };
-  return writeSnapshot(next);
+  return getMovementMembershipSnapshot();
+}
+
+export function hydrateMovementMembershipFromWallet(wallet: WalletData | null | undefined) {
+  hydrateCachedSnapshot(wallet);
+  return getMovementMembershipSnapshot();
 }
 
 export function getMembershipCorridor(routeId?: string | null): CorridorOpportunity | null {
   if (!routeId) return getCorridorOpportunityById(DEFAULT_CORRIDOR_ID);
   return getCorridorOpportunityById(routeId);
+}
+
+export function __resetMovementMembershipForTests() {
+  cachedSnapshot = { ...DEFAULT_SNAPSHOT };
 }
