@@ -278,7 +278,7 @@ export default function AppEntryPage() {
             onClick={() => navigateLanding(user ? '/app/find-ride' : '/')}
           >
             <span className="app-entry-page__brand-mark" aria-hidden="true">
-              <WaselMark size={40} />
+              <WaselMark size={48} />
             </span>
             <span className="app-entry-page__brand-copy">
               <span className="app-entry-page__brand-name">Wasel</span>
