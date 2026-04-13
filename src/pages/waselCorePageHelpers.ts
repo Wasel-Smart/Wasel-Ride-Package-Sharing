@@ -109,6 +109,26 @@ export function parseFindRideParams(search: string): {
   };
 }
 
+export function parsePackagePrefillParams(search: string): {
+  initialFrom: string;
+  initialTo: string;
+} {
+  const params = new URLSearchParams(search);
+  const fromParam = params.get('from');
+  const toParam = params.get('to');
+
+  return {
+    initialFrom:
+      typeof fromParam === 'string' && isKnownJordanLocation(fromParam)
+        ? fromParam
+        : 'Amman',
+    initialTo:
+      typeof toParam === 'string' && isKnownJordanLocation(toParam)
+        ? toParam
+        : 'Aqaba',
+  };
+}
+
 export function createFindRideCopy(ar: boolean): FindRideCopy {
   return {
     from: ar ? 'من' : 'FROM',
@@ -200,10 +220,12 @@ export function validateOfferRideStep(form: OfferRideForm, targetStep: number) {
   return null;
 }
 
-export function createPackageComposer(): PackageComposer {
+export function createPackageComposer(
+  overrides?: Partial<Pick<PackageComposer, 'from' | 'to'>>,
+): PackageComposer {
   return {
-    from: 'Amman',
-    to: 'Aqaba',
+    from: overrides?.from ?? 'Amman',
+    to: overrides?.to ?? 'Aqaba',
     weight: '<1 kg',
     recipientName: '',
     recipientPhone: '',

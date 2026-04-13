@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router';
 import { Brain } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
-import { createPackageComposer, validatePackageComposer } from '../../pages/waselCorePageHelpers';
+import {
+  createPackageComposer,
+  parsePackagePrefillParams,
+  validatePackageComposer,
+} from '../../pages/waselCorePageHelpers';
 import { useCorridorTruth } from '../../services/corridorTruth';
 import {
   createConnectedPackage,
@@ -27,10 +32,17 @@ import { PackageTrackPanel } from './components/PackageTrackPanel';
 
 export function PackagesPage() {
   const nav = useIframeSafeNavigate();
+  const location = useLocation();
   const { user } = useLocalAuth();
   const { notify, requestPermission, permission } = usePushNotifications();
+  const initialPackagePrefill = parsePackagePrefillParams(location.search);
   const [activeTab, setActiveTab] = useState<'send' | 'track' | 'raje3'>('send');
-  const [pkg, setPkg] = useState(() => createPackageComposer());
+  const [pkg, setPkg] = useState(() =>
+    createPackageComposer({
+      from: initialPackagePrefill.initialFrom,
+      to: initialPackagePrefill.initialTo,
+    }),
+  );
   const [trackId, setTrackId] = useState('');
   const [trackedPackage, setTrackedPackage] = useState<PackageRequest | null>(() => getConnectedPackages()[0] ?? null);
   const [networkStats, setNetworkStats] = useState(() => getConnectedStats());
@@ -60,8 +72,17 @@ export function PackagesPage() {
     refreshPackageSnapshot();
   }, [pkg.sent, activeTab]);
 
+  useEffect(() => {
+    const nextPrefill = parsePackagePrefillParams(location.search);
+    setPkg(previous => ({
+      ...previous,
+      from: nextPrefill.initialFrom,
+      to: nextPrefill.initialTo,
+    }));
+  }, [location.search]);
+
   const resetComposer = () => {
-    setPkg(createPackageComposer());
+    setPkg(createPackageComposer({ from: pkg.from, to: pkg.to }));
     setCreateError(null);
   };
 
