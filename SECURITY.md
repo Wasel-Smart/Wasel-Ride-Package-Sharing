@@ -1,8 +1,8 @@
 # Security Policy
 
-## Supported Branch
+## Supported Branches
 
-Security fixes are supported on `main`.
+Security fixes are supported on `master` and `main`.
 
 ## Reporting A Vulnerability
 
