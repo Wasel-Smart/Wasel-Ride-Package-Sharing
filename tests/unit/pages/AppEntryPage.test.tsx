@@ -167,7 +167,9 @@ describe('AppEntryPage', () => {
 
     renderAppEntryPage();
 
-    screen.getByRole('button', { name: /^Packages$/i }).click();
+    act(() => {
+      screen.getByRole('button', { name: /^Packages$/i }).click();
+    });
     screen.getAllByRole('button', { name: /Open packages/i })[0].click();
 
     expect(mockNavigate).toHaveBeenCalledWith('/app/packages?from=Amman&to=Irbid');
