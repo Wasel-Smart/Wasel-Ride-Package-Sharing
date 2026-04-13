@@ -35,7 +35,7 @@ export interface NotifyOptions {
   autoCloseMs?: number;
 }
 
-const BRAND_ASSET_VERSION = '20260411logo';
+const BRAND_ASSET_VERSION = '20260413clear';
 const DEFAULT_ICON = `/icon-192.png?v=${BRAND_ASSET_VERSION}`;
 const DEFAULT_BADGE = `/favicon-32x32.png?v=${BRAND_ASSET_VERSION}`;
 const DEFAULT_CLOSE_MS = 8_000;
@@ -45,18 +45,17 @@ type NotificationApiLike = {
   permission: NotificationPermission;
   requestPermission: () => Promise<NotificationPermission>;
 };
-type NotificationConstructorLike =
-  & NotificationApiLike
-  & (new (title: string, options?: NotificationInit) => Notification);
-type NotificationFactoryLike =
-  & NotificationApiLike
-  & ((title: string, options?: NotificationInit) => Notification);
+type NotificationConstructorLike = NotificationApiLike &
+  (new (title: string, options?: NotificationInit) => Notification);
+type NotificationFactoryLike = NotificationApiLike &
+  ((title: string, options?: NotificationInit) => Notification);
 
 export function usePushNotifications() {
-  const NotificationApi =
-    (typeof globalThis !== 'undefined' && 'Notification' in globalThis
+  const NotificationApi = (
+    typeof globalThis !== 'undefined' && 'Notification' in globalThis
       ? globalThis.Notification
-      : undefined) as NotificationConstructorLike | NotificationFactoryLike | undefined;
+      : undefined
+  ) as NotificationConstructorLike | NotificationFactoryLike | undefined;
 
   const isSupported = typeof NotificationApi !== 'undefined';
 
@@ -157,11 +156,23 @@ export function usePushNotifications() {
 
   // ── Trip-event helpers ─────────────────────────────────────────────────────
 
-  const notifyTripConfirmed = useCallback(
-    (driverName: string, eta: string) =>
+  const notifyBookingRequested = useCallback(
+    (driverName: string, routeLabel: string) =>
       notify({
-        title: '\u{1F697} Ride Confirmed! \u00B7 \u062A\u0645 \u062A\u0623\u0643\u064A\u062F \u0627\u0644\u0631\u062D\u0644\u0629',
-        body: `${driverName} is ${eta} away. Open Wasel to track live.`,
+        title:
+          '\u23F3 Booking Request Sent \u00B7 \u062A\u0645 \u0625\u0631\u0633\u0627\u0644 \u0637\u0644\u0628 \u0627\u0644\u062D\u062C\u0632',
+        body: `${routeLabel} with ${driverName} is being confirmed in Wasel.`,
+        tag: 'trip-requested',
+      }),
+    [notify],
+  );
+
+  const notifyTripConfirmed = useCallback(
+    (driverName: string, routeLabel: string) =>
+      notify({
+        title:
+          '\u{1F697} Ride Confirmed! \u00B7 \u062A\u0645 \u062A\u0623\u0643\u064A\u062F \u0627\u0644\u0631\u062D\u0644\u0629',
+        body: `${routeLabel} with ${driverName} is confirmed in Wasel. Open the app for live trip details.`,
         tag: 'trip-confirmed',
       }),
     [notify],
@@ -170,7 +181,8 @@ export function usePushNotifications() {
   const notifyDriverApproaching = useCallback(
     (driverName: string) =>
       notify({
-        title: '\u{1F4CD} Driver Approaching \u00B7 \u0627\u0644\u0633\u0627\u0626\u0642 \u064A\u0642\u062A\u0631\u0628',
+        title:
+          '\u{1F4CD} Driver Approaching \u00B7 \u0627\u0644\u0633\u0627\u0626\u0642 \u064A\u0642\u062A\u0631\u0628',
         body: `${driverName} is almost at your pickup location.`,
         tag: 'driver-approaching',
       }),
@@ -180,7 +192,8 @@ export function usePushNotifications() {
   const notifyDriverArrived = useCallback(
     (driverName: string) =>
       notify({
-        title: '\u{1F3C1} Driver Arrived \u00B7 \u0648\u0635\u0644 \u0627\u0644\u0633\u0627\u0626\u0642',
+        title:
+          '\u{1F3C1} Driver Arrived \u00B7 \u0648\u0635\u0644 \u0627\u0644\u0633\u0627\u0626\u0642',
         body: `${driverName} is waiting at your pickup point.`,
         tag: 'driver-arrived',
       }),
@@ -190,7 +203,8 @@ export function usePushNotifications() {
   const notifyTripStarted = useCallback(
     () =>
       notify({
-        title: '\u25B6\uFE0F Trip Started \u00B7 \u0628\u062F\u0623\u062A \u0627\u0644\u0631\u062D\u0644\u0629',
+        title:
+          '\u25B6\uFE0F Trip Started \u00B7 \u0628\u062F\u0623\u062A \u0627\u0644\u0631\u062D\u0644\u0629',
         body: 'Your Wasel trip is underway. Enjoy the journey!',
         tag: 'trip-started',
       }),
@@ -200,7 +214,8 @@ export function usePushNotifications() {
   const notifyTripCompleted = useCallback(
     (price: string) =>
       notify({
-        title: '\u2705 Trip Complete \u00B7 \u0627\u0643\u062A\u0645\u0644\u062A \u0627\u0644\u0631\u062D\u0644\u0629',
+        title:
+          '\u2705 Trip Complete \u00B7 \u0627\u0643\u062A\u0645\u0644\u062A \u0627\u0644\u0631\u062D\u0644\u0629',
         body: `You've arrived! Total: ${price} JOD. Rate your driver?`,
         tag: 'trip-completed',
       }),
@@ -213,6 +228,7 @@ export function usePushNotifications() {
     requestPermission,
     notify,
     // Trip helpers
+    notifyBookingRequested,
     notifyTripConfirmed,
     notifyDriverApproaching,
     notifyDriverArrived,

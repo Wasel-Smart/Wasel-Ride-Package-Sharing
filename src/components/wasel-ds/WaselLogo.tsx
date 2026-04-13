@@ -13,12 +13,21 @@ interface WaselLogoProps {
   markAsset?: 'default' | 'attached-primary';
 }
 
-const LOGO_ASSET_VERSION = '20260411pin-no-shell';
+const LOGO_ASSET_VERSION = '20260413network-teal-glow';
 const LOGO_MARK_SOURCES = {
-  default: `/brand/wasel-investor-pin.svg?v=${LOGO_ASSET_VERSION}`,
-  attachedPrimary: `/brand/wasel-mark-attached-primary.svg?v=${LOGO_ASSET_VERSION}`,
+  default: {
+    src: `/brand/wasel-main-network-logo.svg?v=${LOGO_ASSET_VERSION}`,
+    aspectRatio: 1,
+  },
+  'attached-primary': {
+    src: '/brand/wasel-mark-attached-primary.svg?v=20260411pin-no-shell',
+    aspectRatio: 0.91,
+  },
 } as const;
-const LOGO_MARK_ASPECT_RATIO = 0.91;
+
+function getLogoMark(markAsset: 'default' | 'attached-primary') {
+  return LOGO_MARK_SOURCES[markAsset];
+}
 
 function LogoImage({
   width,
@@ -64,17 +73,14 @@ export function WaselLogo({
   markAsset = 'default',
 }: WaselLogoProps) {
   const onDarkSurface = theme === 'light';
+  const mark = getLogoMark(markAsset);
   const markHeight = size;
-  const markWidth = Math.round(size * LOGO_MARK_ASPECT_RATIO);
-  const markSrc =
-    markAsset === 'attached-primary'
-      ? LOGO_MARK_SOURCES.attachedPrimary
-      : LOGO_MARK_SOURCES.default;
-  const titleColor = onDarkSurface ? '#FFF4D0' : '#8A6220';
-  const metaColor = onDarkSurface ? 'rgba(243, 226, 185, 0.76)' : 'rgba(104, 78, 33, 0.72)';
+  const markWidth = Math.max(1, Math.round(size * mark.aspectRatio));
+  const titleColor = onDarkSurface ? '#A5FFEA' : '#0E8A6D';
+  const metaColor = onDarkSurface ? 'rgba(197, 236, 233, 0.76)' : 'rgba(16, 112, 101, 0.72)';
   const titleGradient = onDarkSurface
-    ? 'linear-gradient(180deg, #FFF4D0 0%, #F7D777 55%, #D89B20 100%)'
-    : 'linear-gradient(180deg, #7D5719 0%, #D29A26 100%)';
+    ? 'linear-gradient(180deg, #D8FFF7 0%, #3AE9C2 52%, #099A7C 100%)'
+    : 'linear-gradient(180deg, #0D6C61 0%, #1DD4AF 100%)';
   const titleSize =
     variant === 'compact'
       ? Math.max(12, Math.round(size * 0.34))
@@ -84,12 +90,12 @@ export function WaselLogo({
     <LogoImage
       width={markWidth}
       height={markHeight}
-      src={markSrc}
+      src={mark.src}
       alt="Wasel main logo"
-      style={{
+        style={{
         filter: onDarkSurface
-          ? 'drop-shadow(0 24px 34px rgba(4, 8, 14, 0.4))'
-          : 'drop-shadow(0 18px 24px rgba(33, 23, 7, 0.16))',
+          ? 'drop-shadow(0 18px 28px rgba(4, 8, 14, 0.32)) drop-shadow(0 0 18px rgba(25, 231, 187, 0.16))'
+          : 'drop-shadow(0 14px 22px rgba(7, 36, 33, 0.18))',
       }}
     />
   );
@@ -121,7 +127,7 @@ export function WaselLogo({
               backgroundClip: 'text',
               color: titleColor,
               whiteSpace: 'nowrap',
-              textShadow: onDarkSurface ? '0 12px 28px rgba(8, 7, 4, 0.24)' : 'none',
+              textShadow: onDarkSurface ? '0 12px 28px rgba(4, 16, 22, 0.24)' : 'none',
             }}
           >
             Wasel
@@ -130,7 +136,7 @@ export function WaselLogo({
             <span
               style={{
                 fontFamily:
-                "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
+                  "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
                 fontSize: metaSize,
                 fontWeight: TYPE.weight.semibold,
                 letterSpacing: '0.08em',
@@ -157,19 +163,16 @@ export function WaselMark({
   style?: CSSProperties;
   markAsset?: 'default' | 'attached-primary';
 }) {
-  const markSrc =
-    markAsset === 'attached-primary'
-      ? LOGO_MARK_SOURCES.attachedPrimary
-      : LOGO_MARK_SOURCES.default;
+  const mark = getLogoMark(markAsset);
   return (
     <div style={{ display: 'inline-flex', ...style }}>
       <LogoImage
-        width={Math.round(size * LOGO_MARK_ASPECT_RATIO)}
+        width={Math.max(1, Math.round(size * mark.aspectRatio))}
         height={size}
-        src={markSrc}
+        src={mark.src}
         alt="Wasel main logo"
         style={{
-          filter: 'drop-shadow(0 20px 30px rgba(4, 8, 14, 0.34))',
+          filter: 'drop-shadow(0 18px 28px rgba(4, 8, 14, 0.24)) drop-shadow(0 0 18px rgba(25, 231, 187, 0.14))',
         }}
       />
     </div>
@@ -183,14 +186,11 @@ export function WaselHeroMark({
   size?: number;
   markAsset?: 'default' | 'attached-primary';
 }) {
-  const markSrc =
-    markAsset === 'attached-primary'
-      ? LOGO_MARK_SOURCES.attachedPrimary
-      : LOGO_MARK_SOURCES.default;
+  const mark = getLogoMark(markAsset);
   return (
     <div
       style={{
-        width: Math.round(size * LOGO_MARK_ASPECT_RATIO),
+        width: Math.max(1, Math.round(size * mark.aspectRatio)),
         height: size,
         display: 'inline-flex',
         alignItems: 'center',
@@ -198,12 +198,12 @@ export function WaselHeroMark({
       }}
     >
       <LogoImage
-        width={Math.round(size * 0.92 * LOGO_MARK_ASPECT_RATIO)}
+        width={Math.max(1, Math.round(size * 0.92 * mark.aspectRatio))}
         height={Math.round(size * 0.92)}
-        src={markSrc}
+        src={mark.src}
         alt="Wasel main logo"
         style={{
-          filter: 'drop-shadow(0 28px 44px rgba(7, 10, 17, 0.34))',
+          filter: 'drop-shadow(0 22px 36px rgba(7, 10, 17, 0.26)) drop-shadow(0 0 24px rgba(25, 231, 187, 0.18))',
         }}
       />
     </div>
@@ -217,15 +217,12 @@ export function WaselIcon({
   size?: number;
   markAsset?: 'default' | 'attached-primary';
 }) {
-  const markSrc =
-    markAsset === 'attached-primary'
-      ? LOGO_MARK_SOURCES.attachedPrimary
-      : LOGO_MARK_SOURCES.default;
+  const mark = getLogoMark(markAsset);
   return (
     <LogoImage
-      width={Math.round(size * LOGO_MARK_ASPECT_RATIO)}
+      width={Math.max(1, Math.round(size * mark.aspectRatio))}
       height={size}
-      src={markSrc}
+      src={mark.src}
       alt="Wasel main logo"
     />
   );

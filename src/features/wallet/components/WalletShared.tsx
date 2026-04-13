@@ -1,28 +1,39 @@
-﻿/**
+/**
  * WalletShared
  *
  * Shared wallet primitives used across the dashboard surface.
  */
 
 import { motion, AnimatePresence } from 'motion/react';
-import { type ReactNode } from 'react';
+import { useEffect, useId, type ReactNode } from 'react';
 import { WaselColors } from '../../../tokens/wasel-tokens';
 import type { WalletTransaction } from '../../../services/walletApi';
 import { TX_ICONS } from './walletSharedMeta';
 
-const TX_STATUS_META: Record<string, { label: string; className: string }> = {
-  pending: { label: 'Pending', className: 'text-amber-300 border-amber-400/30 bg-amber-500/10' },
-  processing: { label: 'Processing', className: 'text-sky-300 border-sky-400/30 bg-sky-500/10' },
-  authorized: { label: 'Authorized', className: 'text-cyan-300 border-cyan-400/30 bg-cyan-500/10' },
-  posted: { label: 'Posted', className: 'text-cyan-300 border-cyan-400/30 bg-cyan-500/10' },
-  completed: { label: 'Completed', className: 'text-green-300 border-green-400/30 bg-green-500/10' },
-  captured: { label: 'Captured', className: 'text-green-300 border-green-400/30 bg-green-500/10' },
-  refunded: { label: 'Refunded', className: 'text-sky-300 border-sky-400/30 bg-sky-500/10' },
-  failed: { label: 'Failed', className: 'text-red-300 border-red-400/30 bg-red-500/10' },
+const STATUS_LABEL_KEY: Record<string, string> = {
+  pending: 'txStatusPending',
+  processing: 'txStatusProcessing',
+  authorized: 'txStatusAuthorized',
+  posted: 'txStatusPosted',
+  completed: 'txStatusCompleted',
+  captured: 'txStatusCaptured',
+  refunded: 'txStatusRefunded',
+  failed: 'txStatusFailed',
+};
+
+const TX_STATUS_CLASS: Record<string, string> = {
+  pending: 'text-amber-300 border-amber-400/30 bg-amber-500/10',
+  processing: 'text-sky-300 border-sky-400/30 bg-sky-500/10',
+  authorized: 'text-cyan-300 border-cyan-400/30 bg-cyan-500/10',
+  posted: 'text-cyan-300 border-cyan-400/30 bg-cyan-500/10',
+  completed: 'text-green-300 border-green-400/30 bg-green-500/10',
+  captured: 'text-green-300 border-green-400/30 bg-green-500/10',
+  refunded: 'text-sky-300 border-sky-400/30 bg-sky-500/10',
+  failed: 'text-red-300 border-red-400/30 bg-red-500/10',
 };
 
 // Shared transaction row used across wallet tabs
-export function TransactionRow({ tx, isRTL, jodLabel }: { tx: WalletTransaction; isRTL: boolean; jodLabel: string }) {
+export function TransactionRow({ tx, isRTL, jodLabel, t }: { tx: WalletTransaction; isRTL: boolean; jodLabel: string; t: Record<string, string> }) {
   const txType = tx.type || 'payment';
   const iconCfg = TX_ICONS[txType] || TX_ICONS.payment;
   const Icon = iconCfg.icon;
@@ -30,7 +41,8 @@ export function TransactionRow({ tx, isRTL, jodLabel }: { tx: WalletTransaction;
   const isPositive = amount > 0;
   const date = new Date(tx.createdAt);
   const statusKey = String(tx.status ?? 'completed').toLowerCase();
-  const statusMeta = TX_STATUS_META[statusKey] ?? TX_STATUS_META.completed;
+  const statusLabel = t[STATUS_LABEL_KEY[statusKey]] ?? t.txStatusCompleted ?? statusKey;
+  const statusClassName = TX_STATUS_CLASS[statusKey] ?? TX_STATUS_CLASS.completed;
   const reference = tx.id;
 
   return (
@@ -48,8 +60,8 @@ export function TransactionRow({ tx, isRTL, jodLabel }: { tx: WalletTransaction;
           <p className="text-xs text-muted-foreground">
             {date.toLocaleDateString(isRTL ? 'ar-JO' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
           </p>
-          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusMeta.className}`}>
-            {statusMeta.label}
+          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusClassName}`}>
+            {statusLabel}
           </span>
           {reference ? (
             <span className="text-[10px] text-muted-foreground/80">
@@ -67,6 +79,17 @@ export function TransactionRow({ tx, isRTL, jodLabel }: { tx: WalletTransaction;
 
 // Shared modal shell for wallet actions
 export function ActionModal({ show, onClose, title, children }: { show: boolean; onClose: () => void; title: string; children: ReactNode }) {
+  const titleId = useId();
+
+  useEffect(() => {
+    if (!show) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [show, onClose]);
+
   return (
     <AnimatePresence>
       {show && (
@@ -76,8 +99,12 @@ export function ActionModal({ show, onClose, title, children }: { show: boolean;
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={onClose}
+          aria-hidden="true"
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
@@ -86,7 +113,7 @@ export function ActionModal({ show, onClose, title, children }: { show: boolean;
             style={{ background: WaselColors.navyCard }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-foreground">{title}</h3>
+            <h3 id={titleId} className="text-lg font-bold text-foreground">{title}</h3>
             {children}
           </motion.div>
         </motion.div>

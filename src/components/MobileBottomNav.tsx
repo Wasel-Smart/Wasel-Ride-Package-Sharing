@@ -47,9 +47,9 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
     <>
       <style>{`
         .wasel-bottom-nav { display: none !important; }
-        @media (max-width: 899px) {
+        @media (max-width: 767px) {
           .wasel-bottom-nav { display: flex !important; }
-          .wasel-main-content { padding-bottom: 80px !important; }
+          main.wasel-app-main { padding-bottom: 88px !important; }
         }
       `}</style>
 

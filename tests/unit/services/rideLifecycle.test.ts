@@ -16,6 +16,9 @@ import {
   getBookingsForRide,
   getBookingsForDriver,
   getBookingsForPassenger,
+  getRideBookingCustomerState,
+  isRideBookingConfirmed,
+  isRideBookingPending,
   updateRideBooking,
   syncRideBookingCompletion,
   type RideBookingRecord,
@@ -72,6 +75,25 @@ describe('createRideBooking()', () => {
     expect(booking.status).toBe('confirmed');
     expect(booking.paymentStatus).toBe('authorized');
     expect(booking.syncState).toBe('syncing');
+  });
+
+  it('treats unsynced network_inventory bookings as pending for customer-facing state', () => {
+    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'network_inventory' });
+    expect(getRideBookingCustomerState(booking)).toBe('pending');
+    expect(isRideBookingPending(booking)).toBe(true);
+    expect(isRideBookingConfirmed(booking)).toBe(false);
+  });
+
+  it('treats synced confirmed bookings as confirmed for customer-facing state', () => {
+    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'network_inventory' });
+    const syncedBooking = {
+      ...booking,
+      backendBookingId: 'backend-booking-1',
+      syncState: 'synced' as const,
+    };
+    expect(getRideBookingCustomerState(syncedBooking)).toBe('confirmed');
+    expect(isRideBookingConfirmed(syncedBooking)).toBe(true);
+    expect(isRideBookingPending(syncedBooking)).toBe(false);
   });
 
   it('defaults seatsRequested to 1 when not provided', () => {

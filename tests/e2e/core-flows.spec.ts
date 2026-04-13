@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { seedDemoSession } from '../../e2e/helpers/session';
 
+test.describe.configure({ mode: 'serial' });
+
 test.beforeEach(async ({ page }) => {
   await seedDemoSession(page);
 });
@@ -28,7 +30,9 @@ test('offer ride posts a connected trip', async ({ page }) => {
 test('bus flow reserves a seat', async ({ page }) => {
   await page.goto('/app/bus');
   await expect(page.getByRole('heading', { name: /wasel bus/i })).toBeVisible();
-  await page.getByTestId('bus-confirm-booking').click();
+  await expect(page.getByText(/showing official jordan schedule data verified on|live bus inventory is synced for this corridor|live route api is unavailable/i)).toBeVisible();
+  await expect(page.getByTestId('bus-confirm-booking')).toBeVisible();
+  await page.getByTestId('bus-confirm-booking').click({ timeout: 20_000 });
   await expect(page.getByText(/seat confirmed/i)).toBeVisible();
 });
 

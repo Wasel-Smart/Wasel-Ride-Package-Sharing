@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import {
   Brain,
   CheckCircle2,
@@ -20,21 +19,22 @@ const GENDER_META = createGenderMeta(DS);
 
 type FindRideCardProps = {
   ride: Ride;
-  idx: number;
   booked?: boolean;
+  pending?: boolean;
   signal?: LiveCorridorSignal | null;
   onOpen: () => void;
 };
 
 export function FindRideCard({
   ride,
-  idx,
   booked = false,
+  pending = false,
   signal = null,
   onOpen,
 }: FindRideCardProps) {
   const genderMeta = GENDER_META[ride.genderPref];
   const soldOut = ride.seatsAvailable <= 0;
+  const actionLocked = booked || pending || soldOut;
   const corridorPlan = getCorridorOpportunity(ride.from, ride.to);
   const priceQuote = getMovementPriceQuote({
     basePriceJod: ride.pricePerSeat,
@@ -43,11 +43,7 @@ export function FindRideCard({
   });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: idx * 0.06, type: 'spring', stiffness: 380, damping: 28 }}
-      whileHover={{ y: -3, boxShadow: '0 12px 40px rgba(71,183,230,0.12)' }}
+    <div
       onClick={onOpen}
       style={{
         background: DS.card,
@@ -260,25 +256,31 @@ export function FindRideCard({
                 <CheckCircle2 size={9} /> Booked
               </span>
             )}
+            {pending && !booked && (
+              <span style={pill(DS.gold)}>
+                <Clock size={9} /> Pending
+              </span>
+            )}
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            <span style={{ color: booked ? DS.green : soldOut ? DS.gold : DS.muted, fontSize: '0.75rem' }}>
+            <span style={{ color: booked ? DS.green : pending ? DS.gold : soldOut ? DS.gold : DS.muted, fontSize: '0.75rem' }}>
               {booked
                 ? 'Reserved'
+                : pending
+                  ? 'Request pending'
                 : soldOut
                   ? 'Bus fallback available'
                   : signal
                     ? `${signal.nextWaveWindow} next`
                     : 'View details'}
             </span>
-            <motion.button
-              whileTap={{ scale: 0.94 }}
+            <button
               onClick={(event) => {
                 event.stopPropagation();
                 onOpen();
               }}
               className="sp-book-btn"
-              disabled={booked || soldOut}
+              disabled={actionLocked}
               style={{
                 height: 44,
                 padding: '0 18px',
@@ -286,23 +288,26 @@ export function FindRideCard({
                 border: 'none',
                 background: booked
                   ? DS.gradG
+                  : pending
+                    ? `linear-gradient(135deg, ${DS.gold}, #d97706)`
                   : soldOut
                     ? 'linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))'
                     : DS.gradC,
                 color: '#fff',
                 fontWeight: 800,
                 fontSize: '0.82rem',
-                boxShadow: `0 4px 16px ${booked ? DS.green : soldOut ? 'rgba(255,255,255,0.14)' : DS.cyan}30`,
-                cursor: booked || soldOut ? 'not-allowed' : 'pointer',
-                opacity: booked || soldOut ? 0.88 : 1,
+                boxShadow: `0 4px 16px ${booked ? DS.green : pending ? DS.gold : soldOut ? 'rgba(255,255,255,0.14)' : DS.cyan}30`,
+                cursor: actionLocked ? 'not-allowed' : 'pointer',
+                opacity: actionLocked ? 0.88 : 1,
+                scrollMarginTop: 104,
               }}
             >
-              {booked ? 'Booked' : soldOut ? 'Sold out' : 'Book seat'}
-            </motion.button>
+              {booked ? 'Booked' : pending ? 'Pending' : soldOut ? 'Sold out' : 'Book seat'}
+            </button>
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 

@@ -240,77 +240,16 @@ describe('walletApi', () => {
     expect(persistedSnapshot?.meta.source).toBe('direct-supabase');
   });
 
-  it('uses the backend RPC to transfer wallet funds when edge endpoints are unavailable', async () => {
-    mockRpc.mockResolvedValue({ data: null, error: null });
-    mockMaybeSingle.mockResolvedValue({
-      data: {
-        wallet_id: 'wallet-1',
-        user_id: 'user-123',
-        balance: 60,
-        pending_balance: 0,
-        wallet_status: 'active',
-        currency_code: 'JOD',
-      },
-      error: null,
-    });
-    mockLimit.mockResolvedValueOnce({ data: [], error: null });
-    mockOrder
-      .mockImplementationOnce(() => ({
-        select: mockSelect,
-        eq: mockEq,
-        order: mockOrder,
-        limit: mockLimit,
-        single: mockSingle,
-        maybeSingle: mockMaybeSingle,
-        insert: mockInsert,
-        update: mockUpdate,
-        delete: mockDelete,
-      }))
-      .mockResolvedValueOnce({ data: [], error: null });
-
-    const result = await walletApi.sendMoney('user-123', 'user-999', 20, 'Ride split');
-
-    expect(mockRpc).toHaveBeenCalledWith('app_transfer_wallet_funds', {
-      p_from_user_id: 'user-123',
-      p_to_user_id: 'user-999',
-      p_amount: 20,
-      p_payment_method: 'wallet',
-    });
-    expect(result.success).toBe(true);
+  it('blocks wallet transfers when the secure wallet backend is unavailable', async () => {
+    await expect(walletApi.sendMoney('user-123', 'user-999', 20, 'Ride split')).rejects.toThrow(
+      'Wallet actions are temporarily read-only while the secure payment service reconnects.',
+    );
+    expect(mockRpc).not.toHaveBeenCalled();
   });
 
-  it('creates a local subscription in fallback mode and projects it into wallet data', async () => {
-    mockMaybeSingle.mockResolvedValue({
-      data: {
-        wallet_id: 'wallet-1',
-        user_id: 'user-123',
-        balance: 60,
-        pending_balance: 0,
-        wallet_status: 'active',
-        currency_code: 'JOD',
-      },
-      error: null,
-    });
-    mockLimit.mockResolvedValue({ data: [], error: null });
-    mockOrder
-      .mockImplementationOnce(() => ({
-        select: mockSelect,
-        eq: mockEq,
-        order: mockOrder,
-        limit: mockLimit,
-        single: mockSingle,
-        maybeSingle: mockMaybeSingle,
-        insert: mockInsert,
-        update: mockUpdate,
-        delete: mockDelete,
-      }))
-      .mockResolvedValueOnce({ data: [], error: null });
-
-    await walletApi.subscribe('user-123', 'Wasel Corridor Pass', 39, 'amman-irbid');
-    const wallet = await walletApi.getWallet('user-123');
-
-    expect(wallet.subscription?.type).toBe('commuter-pass');
-    expect(wallet.subscription?.corridorId).toBe('amman-irbid');
-    expect(wallet.subscription?.price).toBeGreaterThan(0);
+  it('blocks new subscriptions when the secure wallet backend is unavailable', async () => {
+    await expect(walletApi.subscribe('user-123', 'Wasel Corridor Pass', 39, 'amman-irbid')).rejects.toThrow(
+      'Wallet actions are temporarily read-only while the secure payment service reconnects.',
+    );
   });
 });

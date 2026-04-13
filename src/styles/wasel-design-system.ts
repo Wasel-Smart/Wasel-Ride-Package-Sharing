@@ -1,7 +1,7 @@
 /**
  * Presentation-oriented tokens used by wallet, notifications, and older UI modules.
  *
- * ALIGNED to the unified Wasel gold-navy brand identity.
+ * ALIGNED to the unified Wasel teal-network brand identity.
  * All colour values match brand-theme.css :root CSS variables.
  */
 
@@ -11,38 +11,38 @@ export const WaselColors = {
   card: '#101D2C',
   card2: '#172738',
 
-  border: 'rgba(244,198,81,0.16)',
-  border2: 'rgba(244,198,81,0.26)',
-  borderGlow: 'rgba(255,240,193,0.3)',
+  border: 'rgba(25,231,187,0.16)',
+  border2: 'rgba(25,231,187,0.26)',
+  borderGlow: 'rgba(162,255,231,0.3)',
   borderDark: 'rgba(7,15,25,0.72)',
 
-  cyan: '#F4C651',
-  cyanDark: '#D59E26',
-  cyanDim: 'rgba(244,198,81,0.14)',
-  cyanGlow: 'rgba(244,198,81,0.2)',
-  teal: '#FFF0C1',
+  cyan: '#19E7BB',
+  cyanDark: '#0BC3A0',
+  cyanDim: 'rgba(25,231,187,0.14)',
+  cyanGlow: 'rgba(25,231,187,0.2)',
+  teal: '#A2FFE7',
 
-  gold: '#D59E26',
-  goldDim: 'rgba(213,158,38,0.14)',
-  orange: '#FFE08A',
-  bronze: '#C5831F',
-  green: '#FFF0C1',
-  greenDim: 'rgba(255,240,193,0.14)',
-  purple: '#D7C79A',
-  purpleDim: 'rgba(215,199,154,0.14)',
+  gold: '#48CFFF',
+  goldDim: 'rgba(72,207,255,0.14)',
+  orange: '#65E1FF',
+  bronze: '#0BC3A0',
+  green: '#A2FFE7',
+  greenDim: 'rgba(162,255,231,0.14)',
+  purple: '#96B7C6',
+  purpleDim: 'rgba(150,183,198,0.14)',
   red: '#FF646A',
   redDim: 'rgba(255,100,106,0.12)',
 
-  text: '#F8EFD6',
-  textDim: 'rgba(228,214,180,0.64)',
-  muted: 'rgba(216,198,160,0.82)',
+  text: '#E9F5F7',
+  textDim: 'rgba(170,191,196,0.64)',
+  muted: 'rgba(198,223,227,0.82)',
 
   white: '#FFFFFF',
   black: '#000000',
 } as const;
 
 export const WaselGradients = {
-  primary: `linear-gradient(135deg, ${WaselColors.green} 0%, ${WaselColors.cyan} 44%, ${WaselColors.bronze} 100%)`,
+  primary: `linear-gradient(135deg, #DCFFF8 0%, ${WaselColors.cyan} 44%, ${WaselColors.gold} 100%)`,
   cyan: `linear-gradient(135deg, ${WaselColors.cyan}, ${WaselColors.gold})`,
   card: 'linear-gradient(180deg, rgba(255,249,234,0.05), rgba(255,249,234,0.02)), rgba(16,29,44,0.92)',
   hero: 'linear-gradient(180deg, rgba(4,18,30,0) 0%, #07111B 100%)',

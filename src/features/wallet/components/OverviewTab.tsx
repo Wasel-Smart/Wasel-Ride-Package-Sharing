@@ -21,9 +21,18 @@ interface OverviewTabProps {
   onSetTab: (tab: string) => void;
   onSubscribe: () => void;
   actionLoading: boolean;
+  actionsLocked?: boolean;
 }
 
-export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actionLoading }: OverviewTabProps) {
+export function OverviewTab({
+  walletData,
+  isRTL,
+  t,
+  onSetTab,
+  onSubscribe,
+  actionLoading,
+  actionsLocked = false,
+}: OverviewTabProps) {
   const transactions = walletData?.transactions ?? [];
   const pendingCount = transactions.filter((tx: WalletTransaction) => ['pending', 'processing', 'authorized', 'posted'].includes(String(tx.status ?? '').toLowerCase())).length;
   const failedCount = transactions.filter((tx: WalletTransaction) => ['failed'].includes(String(tx.status ?? '').toLowerCase())).length;
@@ -34,11 +43,11 @@ export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actio
   return (
     <div className="space-y-4">
       {/* Stats Grid */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {[
-          { label: isRTL ? '\u0625\u062C\u0645\u0627\u0644\u064A \u0627\u0644\u0625\u064A\u062F\u0627\u0639' : 'Deposited', value: walletData?.total_deposited ?? 0, icon: ArrowDownLeft, color: WaselColors.success },
-          { label: isRTL ? '\u0625\u062C\u0645\u0627\u0644\u064A \u0627\u0644\u0625\u0646\u0641\u0627\u0642' : 'Spent', value: walletData?.total_spent ?? 0, icon: ArrowUpRight, color: WaselColors.error },
-          { label: isRTL ? '\u0625\u062C\u0645\u0627\u0644\u064A \u0627\u0644\u0631\u0628\u062D' : 'Earned', value: walletData?.total_earned ?? 0, icon: TrendingUp, color: WaselColors.teal },
+          { label: t.totalDeposited, value: walletData?.total_deposited ?? 0, icon: ArrowDownLeft, color: WaselColors.success },
+          { label: t.totalSpentLabel, value: walletData?.total_spent ?? 0, icon: ArrowUpRight, color: WaselColors.error },
+          { label: t.totalEarnedLabel, value: walletData?.total_earned ?? 0, icon: TrendingUp, color: WaselColors.teal },
         ].map((s) => (
           <Card key={s.label} className="p-3 rounded-xl border-border/30">
             <div className="flex items-center gap-2 mb-1">
@@ -53,7 +62,7 @@ export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actio
       <div className="grid gap-3 md:grid-cols-3">
         <Card className="rounded-xl border-border/30">
           <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground mb-1">{isRTL ? 'التحويلات قيد المعالجة' : 'In settlement'}</div>
+            <div className="text-xs text-muted-foreground mb-1">{t.inSettlement}</div>
             <div className="text-lg font-bold text-foreground">{pendingCount}</div>
             <div className="text-xs text-muted-foreground mt-1">
               {walletData?.pendingBalance
@@ -64,7 +73,7 @@ export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actio
         </Card>
         <Card className="rounded-xl border-border/30">
           <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground mb-1">{isRTL ? 'حالات تحتاج متابعة' : 'Needs follow-up'}</div>
+            <div className="text-xs text-muted-foreground mb-1">{t.needsFollowUp}</div>
             <div className="text-lg font-bold text-foreground">{failedCount + refundedCount}</div>
             <div className="text-xs text-muted-foreground mt-1">
               {failedCount > 0
@@ -75,7 +84,7 @@ export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actio
         </Card>
         <Card className="rounded-xl border-border/30">
           <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground mb-1">{isRTL ? 'جاهزية السداد' : 'Settlement readiness'}</div>
+            <div className="text-xs text-muted-foreground mb-1">{t.settlementReadiness}</div>
             <div className="text-lg font-bold text-foreground">{paymentMethodsCount}</div>
             <div className="text-xs text-muted-foreground mt-1">
               {paymentMethodsCount > 0
@@ -133,7 +142,7 @@ export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actio
             {activeSubscription ? (
               <Badge className="bg-green-500/10 text-green-400 border-green-500/30">{isRTL ? '\u0641\u0639\u0651\u0627\u0644' : 'Active'}</Badge>
             ) : (
-              <Button size="sm" onClick={onSubscribe} disabled={actionLoading} style={{ background: WaselColors.bronze }}>
+              <Button size="sm" onClick={onSubscribe} disabled={actionLoading || actionsLocked} style={{ background: WaselColors.bronze }}>
                 {t.subscribeNow}
               </Button>
             )}
@@ -193,7 +202,7 @@ export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actio
             <div className="text-center py-8 text-muted-foreground text-sm">{t.noTransactions}</div>
           ) : (
             walletData.transactions.slice(0, 5).map((tx: WalletTransaction) => (
-              <TransactionRow key={tx.id} tx={tx} isRTL={isRTL} jodLabel={t.jod} />
+              <TransactionRow key={tx.id} tx={tx} isRTL={isRTL} jodLabel={t.jod} t={t} />
             ))
           )}
         </CardContent>

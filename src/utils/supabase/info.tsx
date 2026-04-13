@@ -12,6 +12,10 @@ const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9z
 const PLACEHOLDER_MARKERS = [
   'your-project.supabase.co',
   'your-anon-key-here',
+  'your-publishable-key',
+  'your_publishable_key',
+  'your-supabase-url',
+  'your_supabase_url',
   'replace_with',
   'example.com',
 ];

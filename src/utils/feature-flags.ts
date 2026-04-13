@@ -180,10 +180,12 @@ export function isFeatureEnabled(flag: FeatureFlag, userId?: string): boolean {
       return Math.random() * 100 < config.rolloutPercentage;
     }
 
-    // Use user ID for consistent rollout
-    const hash = userId
-      .split('')
-      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    // Use user ID for consistent rollout via djb2 hash (better distribution than char-code sum)
+    let hash = 5381;
+    for (let i = 0; i < userId.length; i++) {
+      hash = ((hash << 5) + hash) ^ userId.charCodeAt(i);
+      hash = hash >>> 0; // keep unsigned 32-bit
+    }
     return (hash % 100) < config.rolloutPercentage;
   }
 

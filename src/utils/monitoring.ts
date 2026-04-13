@@ -15,6 +15,7 @@ import {
   usePerformanceMonitoring,
   type LogContext,
 } from './logging';
+import { hasTelemetryConsent } from './consent';
 import { redactSensitiveValue } from './redaction';
 import { omitUndefined } from './object';
 
@@ -41,7 +42,7 @@ function redactContext(context?: LogContext): LogContext | undefined {
 }
 
 export function initSentry() {
-  if (sentryInitialized) {
+  if (sentryInitialized || !hasTelemetryConsent()) {
     return;
   }
 

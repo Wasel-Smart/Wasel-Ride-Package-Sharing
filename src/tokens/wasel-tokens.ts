@@ -1,15 +1,15 @@
 /**
- * Wasel design tokens — unified gold-navy identity.
+ * Wasel design tokens — unified teal-network identity.
  *
  * SINGLE SOURCE OF TRUTH: All values in sync with brand-tokens.json and
  * brand-theme.css CSS variables. Do not add colours here that differ from
  * brand-theme.css :root definitions.
  *
  * Brand palette:
- *   Primary action  — #F4C651  (solar gold)
- *   Primary deep    — #D59E26  (burnished gold)
- *   Primary light   — #FFF0C1  (champagne)
- *   Accent bronze   — #C5831F
+ *   Primary action  — #19E7BB  (network teal)
+ *   Primary deep    — #0BC3A0  (deep teal)
+ *   Primary light   — #DCFFF8  (mint light)
+ *   Accent aqua     — #48CFFF
  *   Backgrounds     — deep navy #07111B → surface #101D2C
  */
 
@@ -22,34 +22,34 @@ export const WaselColors = {
   space3: '#172738',
   space4: '#203447',
 
-  // Brand primaries (gold)
-  cyan: '#F4C651',        // canonical primary — named cyan for legacy compat
-  cyanLight: '#FFF0C1',   // champagne highlight
-  gold: '#D59E26',        // deep gold
-  goldLight: '#FFE8A0',   // light gold
-  green: '#FFF0C1',       // cream / champagne alias
-  greenDark: '#D59E26',   // deep gold alias
-  lime: '#FFE8A0',        // warm lime alias
+  // Brand primaries (teal / aqua)
+  cyan: '#19E7BB',        // canonical primary — named cyan for legacy compat
+  cyanLight: '#DCFFF8',   // mint highlight
+  gold: '#48CFFF',        // aqua accent
+  goldLight: '#D8FBFF',   // light aqua
+  green: '#A2FFE7',       // soft mint
+  greenDark: '#0BC3A0',   // deep teal alias
+  lime: '#65E1FF',        // electric aqua alias
 
-  teal: '#FFF0C1',        // champagne alias
-  bronze: '#C5831F',      // accent bronze
-  orange: '#DB9F2C',      // warm accent
+  teal: '#A2FFE7',        // mint alias
+  bronze: '#0BC3A0',      // deep teal accent
+  orange: '#65E1FF',      // aqua accent alias
   borderDark: 'rgba(7,15,25,0.72)',
   navyBase: '#07111B',
   navyCard: '#101D2C',
 
-  textPrimary: '#F8EFD6',
-  textSecondary: 'rgba(228,214,180,0.82)',
-  textMuted: 'rgba(216,198,160,0.58)',
+  textPrimary: '#E9F5F7',
+  textSecondary: 'rgba(198,223,227,0.82)',
+  textMuted: 'rgba(170,191,196,0.58)',
 
-  success: '#FFF0C1',
-  warning: '#FFE08A',
+  success: '#A2FFE7',
+  warning: '#65E1FF',
   error: '#FF646A',
-  info: '#FFE8A0',
+  info: '#65E1FF',
 
-  cyanGlow: 'rgba(244,198,81,0.2)',
-  goldGlow: 'rgba(213,158,38,0.18)',
-  greenGlow: 'rgba(255,240,193,0.18)',
+  cyanGlow: 'rgba(25,231,187,0.2)',
+  goldGlow: 'rgba(72,207,255,0.18)',
+  greenGlow: 'rgba(162,255,231,0.18)',
   glassBg: 'rgba(12,23,36,0.84)',
 } as const;
 
@@ -102,9 +102,9 @@ export const WaselShadows = {
   sm: '0 8px 20px rgba(4,16,32,0.22)',
   base: '0 18px 44px rgba(4,16,32,0.3)',
   lg: '0 30px 72px rgba(4,16,32,0.38)',
-  glow: '0 18px 50px rgba(30,168,231,0.2)',
-  glowGold: '0 18px 50px rgba(243,178,58,0.18)',
-  glowGreen: '0 18px 50px rgba(255,207,99,0.22)',
+  glow: '0 18px 50px rgba(25,231,187,0.2)',
+  glowGold: '0 18px 50px rgba(72,207,255,0.18)',
+  glowGreen: '0 18px 50px rgba(162,255,231,0.22)',
   cyanBorder: '0 0 0 1px rgba(76,123,170,0.18), 0 18px 44px rgba(4,16,32,0.3)',
 } as const;
 
@@ -142,10 +142,10 @@ export const WaselGlass = {
 } as const;
 
 export const WaselGradients = {
-  primaryBtn: 'linear-gradient(135deg, #FFF0C1 0%, #F4C651 44%, #C5831F 100%)',
-  accentBtn: 'linear-gradient(135deg, #D59E26 0%, #FFE8A0 100%)',
-  successBtn: 'linear-gradient(135deg, #F4C651 0%, #FFF0C1 100%)',
+  primaryBtn: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
+  accentBtn: 'linear-gradient(135deg, #65E1FF 0%, #A2FFE7 100%)',
+  successBtn: 'linear-gradient(135deg, #19E7BB 0%, #A2FFE7 100%)',
   heroCard:
-    'linear-gradient(135deg, rgba(244,198,81,0.14) 0%, rgba(255,240,193,0.08) 56%, rgba(197,131,31,0.08) 100%)',
-  constellation: 'linear-gradient(135deg, #FFF0C1 0%, #F4C651 44%, #D59E26 100%)',
+    'linear-gradient(135deg, rgba(25,231,187,0.14) 0%, rgba(162,255,231,0.08) 56%, rgba(72,207,255,0.08) 100%)',
+  constellation: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
 } as const;

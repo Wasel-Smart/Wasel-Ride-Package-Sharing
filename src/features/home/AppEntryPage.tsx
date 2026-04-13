@@ -26,40 +26,55 @@ type ActionCard = {
   color: string;
 };
 
+const ENTRY_TEXT = '#E9F5F7';
+const ENTRY_TEXT_SOFT = 'rgba(198,223,227,0.82)';
+const ENTRY_TEXT_MUTED = 'rgba(170,191,196,0.72)';
+const ENTRY_BORDER = 'rgba(25,231,187,0.16)';
+const ENTRY_BORDER_SOFT = 'rgba(152,255,228,0.12)';
+const ENTRY_PANEL =
+  'linear-gradient(180deg, rgba(220,255,248,0.06), rgba(220,255,248,0.015)), rgba(10,18,31,0.88)';
+const ENTRY_PANEL_ALT =
+  'linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.02)), rgba(16,28,41,0.72)';
+const ENTRY_PANEL_STRONG =
+  'linear-gradient(180deg, rgba(220,255,248,0.04), rgba(220,255,248,0.01)), rgba(8,16,27,0.9)';
+const ENTRY_ACCENT = '#19E7BB';
+const ENTRY_MINT = '#A2FFE7';
+const ENTRY_DEEP = '#041019';
+
 const panelStyle: CSSProperties = {
-  borderRadius: 32,
-  border: '1px solid rgba(244,198,81,0.16)',
-  background:
-    'linear-gradient(180deg, rgba(255,247,229,0.05), rgba(255,247,229,0.02)), rgba(12,20,30,0.86)',
-  boxShadow: '0 30px 70px rgba(1,10,18,0.36)',
-  backdropFilter: 'blur(24px)',
+  borderRadius: 34,
+  border: `1px solid ${ENTRY_BORDER_SOFT}`,
+  background: ENTRY_PANEL,
+  boxShadow: 'inset 0 1px 0 rgba(220,255,248,0.05), 0 28px 72px rgba(1,10,18,0.34)',
+  backdropFilter: 'blur(26px)',
 };
 
 const outlineButtonStyle: CSSProperties = {
-  minHeight: 52,
-  padding: '0 20px',
+  minHeight: 50,
+  padding: '0 22px',
   borderRadius: 18,
-  border: '1px solid rgba(244,198,81,0.2)',
-  background: 'rgba(255,247,229,0.04)',
-  color: '#F8EFD6',
+  border: `1px solid ${ENTRY_BORDER}`,
+  background: ENTRY_PANEL_ALT,
+  color: ENTRY_TEXT,
   fontSize: TYPE.size.sm,
   fontWeight: TYPE.weight.black,
   fontFamily: F,
   cursor: 'pointer',
+  boxShadow: '0 16px 38px rgba(1,10,18,0.18)',
 };
 
 const primaryButtonStyle: CSSProperties = {
-  minHeight: 52,
-  padding: '0 22px',
+  minHeight: 50,
+  padding: '0 24px',
   borderRadius: 18,
   border: 'none',
-  background: 'linear-gradient(135deg, #FFF0C1 0%, #F4C651 44%, #C5831F 100%)',
-  color: '#120D04',
+  background: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
+  color: ENTRY_DEEP,
   fontSize: TYPE.size.sm,
   fontWeight: TYPE.weight.ultra,
   fontFamily: F,
   cursor: 'pointer',
-  boxShadow: '0 24px 64px rgba(197,131,31,0.24)',
+  boxShadow: '0 22px 56px rgba(25,231,187,0.26)',
 };
 
 export default function AppEntryPage() {
@@ -81,9 +96,21 @@ export default function AppEntryPage() {
 
   const handleLandingNavigate = (path: string) => {
     const eventMap = [
-      { match: '/app/find-ride', eventName: 'landing_find_ride_opened', serviceType: 'ride' as const },
-      { match: '/app/offer-ride', eventName: 'landing_offer_ride_opened', serviceType: 'ride' as const },
-      { match: '/app/packages', eventName: 'landing_packages_opened', serviceType: 'package' as const },
+      {
+        match: '/app/find-ride',
+        eventName: 'landing_find_ride_opened',
+        serviceType: 'ride' as const,
+      },
+      {
+        match: '/app/offer-ride',
+        eventName: 'landing_offer_ride_opened',
+        serviceType: 'ride' as const,
+      },
+      {
+        match: '/app/packages',
+        eventName: 'landing_packages_opened',
+        serviceType: 'package' as const,
+      },
       { match: 'tab=signup', eventName: 'landing_signup_opened', serviceType: 'referral' as const },
       { match: 'tab=signin', eventName: 'landing_signin_opened', serviceType: 'referral' as const },
     ].find(item => path.includes(item.match));
@@ -182,13 +209,6 @@ export default function AppEntryPage() {
         'Carry packages on the same ride',
         'Increase earnings per departure',
       ];
-  const heroSignals = ar
-    ? [
-        '\u0627\u0644\u062e\u0631\u064a\u0637\u0629 \u0623\u0648\u0644\u0627\u064b',
-        '\u0631\u062d\u0644\u0627\u062a + \u0637\u0631\u0648\u062f',
-        '\u062f\u0639\u0645 \u0645\u062d\u0644\u064a',
-      ]
-    : ['Map first', 'Rides + packages', 'Ready support'];
   const quickPills = ar
     ? [
         '\u062d\u0631\u0643\u0629 \u062d\u064a\u0629',
@@ -196,12 +216,6 @@ export default function AppEntryPage() {
         '\u0648\u0635\u0648\u0644 \u0623\u0628\u0633\u0637',
       ]
     : ['Live routes', 'Simple booking', 'Fast delivery'];
-  const mapTitle = ar
-    ? '\u0631\u0627\u0642\u0628 \u0627\u0644\u062d\u0631\u0643\u0629 \u0642\u0628\u0644 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u062e\u062f\u0645\u0629.'
-    : 'See the network first.';
-  const mapBody = ar
-    ? '\u0645\u0639\u0627\u064a\u0646\u0629 \u0648\u0627\u062d\u062f\u0629 \u062a\u0638\u0647\u0631 \u0627\u0644\u0634\u0628\u0643\u0629 \u0643\u0627\u0645\u0644\u0629\u060c \u062b\u0645 \u062a\u0641\u062a\u062d \u0627\u0644\u0631\u062d\u0644\u0629 \u0623\u0648 \u0627\u0644\u0637\u0631\u062f \u0627\u0644\u0645\u0646\u0627\u0633\u0628 \u0641\u0648\u0631\u0627\u064b.'
-    : 'Scan movement, then open the right ride or package flow.';
 
   const supportLine = profile.supportPhoneDisplay || profile.supportEmail || 'Wasel';
   const businessAddress = ar ? profile.businessAddressAr : profile.businessAddress;
@@ -211,8 +225,8 @@ export default function AppEntryPage() {
       style={{
         minHeight: '100vh',
         background:
-          'radial-gradient(circle at 0% 0%, rgba(255,232,160,0.14), transparent 28%), radial-gradient(circle at 100% 0%, rgba(244,198,81,0.12), transparent 24%), radial-gradient(circle at 70% 60%, rgba(219,159,44,0.08), transparent 26%), linear-gradient(180deg, #07111B 0%, #09131F 52%, #050C15 100%)',
-        color: '#F8EFD6',
+          'radial-gradient(circle at 50% 18%, rgba(25,231,187,0.22), transparent 14%), radial-gradient(circle at 86% 84%, rgba(151,164,173,0.18), transparent 28%), radial-gradient(circle at 16% 88%, rgba(72,207,255,0.12), transparent 20%), linear-gradient(135deg, #040816 0%, #071022 36%, #121d32 62%, #65717A 100%)',
+        color: ENTRY_TEXT,
         fontFamily: LANDING_FONT,
       }}
     >
@@ -221,11 +235,15 @@ export default function AppEntryPage() {
         .entry-shell * { box-sizing: border-box; }
         .entry-shell button:focus-visible,
         .entry-shell a:focus-visible {
-          outline: 2px solid rgba(244,198,81,0.92);
+          outline: 2px solid rgba(25,231,187,0.92);
           outline-offset: 3px;
         }
+        @media (max-width: 1280px) {
+          .entry-main-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
         @media (max-width: 1120px) {
-          .entry-main-grid,
           .entry-actions,
           .entry-meta {
             grid-template-columns: 1fr !important;
@@ -256,16 +274,17 @@ export default function AppEntryPage() {
 
       <div
         className="entry-shell"
-        style={{ maxWidth: 1340, margin: '0 auto', padding: '24px 18px 84px' }}
+        style={{ maxWidth: 1560, margin: '0 auto', padding: 'clamp(18px, 2vw, 28px) 22px 84px' }}
       >
         <section
           style={{
             ...panelStyle,
             position: 'relative',
             overflow: 'hidden',
-            padding: 22,
+            padding: 'clamp(18px, 2vw, 30px)',
+            minHeight: 'clamp(700px, 88vh, 860px)',
             background:
-              'radial-gradient(circle at 18% 18%, rgba(255,232,160,0.12), rgba(8,19,31,0) 28%), radial-gradient(circle at 86% 18%, rgba(244,198,81,0.12), rgba(8,19,31,0) 24%), linear-gradient(180deg, rgba(255,247,229,0.03), rgba(255,247,229,0.015)), rgba(11,19,29,0.9)',
+              'radial-gradient(circle at 50% 14%, rgba(25,231,187,0.18), rgba(8,19,31,0) 22%), radial-gradient(circle at 88% 12%, rgba(101,225,255,0.12), rgba(8,19,31,0) 20%), radial-gradient(circle at 82% 100%, rgba(151,164,173,0.12), rgba(8,19,31,0) 28%), linear-gradient(140deg, rgba(15,27,41,0.97) 0%, rgba(9,18,30,0.97) 48%, rgba(11,18,31,0.98) 72%, rgba(78,89,99,0.94) 100%)',
           }}
         >
           <div
@@ -274,8 +293,10 @@ export default function AppEntryPage() {
               position: 'absolute',
               inset: 0,
               background:
-                'linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 18%, rgba(255,255,255,0) 82%, rgba(255,255,255,0.03) 100%)',
+                'linear-gradient(90deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0) 16%, rgba(255,255,255,0) 84%, rgba(255,255,255,0.02) 100%), linear-gradient(rgba(25,231,187,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(25,231,187,0.035) 1px, transparent 1px)',
+              backgroundSize: '100% 100%, 72px 72px, 72px 72px',
               pointerEvents: 'none',
+              opacity: 0.6,
             }}
           />
 
@@ -288,54 +309,74 @@ export default function AppEntryPage() {
               alignItems: 'center',
               gap: 16,
               flexWrap: 'wrap',
-              marginBottom: 22,
+              marginBottom: 24,
             }}
           >
             <button
               type="button"
               onClick={() => handleLandingNavigate(user ? '/app/find-ride' : '/')}
-              aria-label={ar ? '\u0627\u0644\u0635\u0641\u062d\u0629 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629' : 'Home'}
+              aria-label={
+                ar
+                  ? '\u0627\u0644\u0635\u0641\u062d\u0629 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629'
+                  : 'Home'
+              }
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 16,
-                background: 'transparent',
-                border: 'none',
-                color: '#F8EFD6',
-                padding: 0,
+                background: ENTRY_PANEL_ALT,
+                border: `1px solid ${ENTRY_BORDER_SOFT}`,
+                color: ENTRY_TEXT,
+                padding: '12px 18px 12px 12px',
+                borderRadius: 28,
                 cursor: 'pointer',
+                boxShadow: '0 18px 42px rgba(1,10,18,0.24)',
               }}
             >
-              <WaselMark
-                size={64}
+              <div
                 style={{
-                  filter:
-                    'drop-shadow(0 22px 38px rgba(1,10,18,0.32)) drop-shadow(0 0 28px rgba(244,198,81,0.14))',
+                  width: 78,
+                  height: 78,
+                  borderRadius: 24,
+                  display: 'grid',
+                  placeItems: 'center',
+                  background:
+                    'radial-gradient(circle at 30% 24%, rgba(25,231,187,0.18), rgba(25,231,187,0) 28%), linear-gradient(180deg, rgba(220,255,248,0.04), rgba(220,255,248,0.01)), rgba(9,21,35,0.88)',
+                  border: `1px solid ${ENTRY_BORDER_SOFT}`,
+                  boxShadow: 'inset 0 1px 0 rgba(220,255,248,0.06), 0 16px 36px rgba(1,10,18,0.24)',
                 }}
-              />
+              >
+                <WaselMark
+                  size={60}
+                  style={{
+                    filter:
+                      'drop-shadow(0 18px 28px rgba(1,10,18,0.28)) drop-shadow(0 0 24px rgba(25,231,187,0.16))',
+                  }}
+                />
+              </div>
               <div style={{ display: 'grid', gap: 8, textAlign: ar ? 'right' : 'left' }}>
                 <span
                   style={{
                     fontFamily: LANDING_DISPLAY,
-                    fontSize: 'clamp(2.1rem, 4vw, 3.6rem)',
-                    fontWeight: 700,
-                    letterSpacing: '-0.08em',
-                    lineHeight: 0.88,
-                    background: 'linear-gradient(180deg, #FFF6DB 0%, #F6D874 58%, #D39019 100%)',
+                    fontSize: 'clamp(2.35rem, 4vw, 4rem)',
+                    fontWeight: 800,
+                    letterSpacing: '-0.075em',
+                    lineHeight: 0.84,
+                    background: 'linear-gradient(180deg, #D8FFF7 0%, #3AE9C2 56%, #089D7E 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
-                    textShadow: '0 14px 34px rgba(8, 17, 29, 0.24)',
+                    textShadow: '0 14px 30px rgba(8, 17, 29, 0.18)',
                   }}
                 >
                   Wasel
                 </span>
                 <span
                   style={{
-                    color: 'rgba(243, 226, 185, 0.82)',
-                    fontSize: 'clamp(0.94rem, 1.5vw, 1.08rem)',
+                    color: 'rgba(233, 245, 247, 0.9)',
+                    fontSize: 'clamp(0.98rem, 1.35vw, 1.1rem)',
                     fontWeight: TYPE.weight.bold,
-                    letterSpacing: '-0.02em',
+                    letterSpacing: '-0.015em',
                     lineHeight: 1.2,
                   }}
                 >
@@ -344,18 +385,26 @@ export default function AppEntryPage() {
                 <span
                   aria-hidden="true"
                   style={{
-                    width: 148,
+                    width: 170,
                     maxWidth: '100%',
                     height: 4,
                     borderRadius: 999,
-                    background: 'linear-gradient(90deg, #FFF0C1 0%, #F4C651 54%, #C5831F 100%)',
-                    boxShadow: '0 0 24px rgba(244,198,81,0.16)',
+                    background: 'linear-gradient(90deg, #DCFFF8 0%, #19E7BB 54%, #48CFFF 100%)',
+                    boxShadow: '0 0 28px rgba(25,231,187,0.18)',
                   }}
                 />
               </div>
             </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                gap: 10,
+                flexWrap: 'wrap',
+              }}
+            >
               <WaselContactActionRow ar={ar} compact />
               {user ? (
                 <button
@@ -372,7 +421,9 @@ export default function AppEntryPage() {
                     onClick={() => handleLandingNavigate(signInPath)}
                     style={outlineButtonStyle}
                   >
-                    {ar ? '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644' : 'Sign in'}
+                    {ar
+                      ? '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644'
+                      : 'Sign in'}
                   </button>
                   <button
                     type="button"
@@ -391,27 +442,36 @@ export default function AppEntryPage() {
             style={{
               position: 'relative',
               display: 'grid',
-              gridTemplateColumns: 'minmax(0, 0.96fr) minmax(360px, 1.04fr)',
-              gap: 18,
+              gridTemplateColumns: 'minmax(0, 0.9fr) minmax(460px, 1.1fr)',
+              gap: 24,
               alignItems: 'stretch',
             }}
           >
-            <div style={{ display: 'grid', gap: 18, alignContent: 'start' }}>
+            <div
+              style={{
+                display: 'grid',
+                gap: 16,
+                alignContent: 'start',
+                paddingTop: 6,
+              }}
+            >
               <div
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 10,
                   width: 'fit-content',
-                  padding: '10px 14px',
+                  padding: '10px 16px',
                   borderRadius: 999,
-                  border: '1px solid rgba(244,198,81,0.16)',
-                  background: 'rgba(244,198,81,0.08)',
-                  color: '#F4C651',
+                  border: `1px solid ${ENTRY_BORDER}`,
+                  background:
+                    'linear-gradient(180deg, rgba(162,255,231,0.12), rgba(25,231,187,0.08))',
+                  color: ENTRY_MINT,
                   fontSize: '0.76rem',
                   fontWeight: TYPE.weight.ultra,
                   letterSpacing: '0.11em',
                   textTransform: 'uppercase',
+                  boxShadow: '0 16px 28px rgba(1,10,18,0.14)',
                 }}
               >
                 <span
@@ -419,8 +479,8 @@ export default function AppEntryPage() {
                     width: 9,
                     height: 9,
                     borderRadius: '50%',
-                    background: C.gold,
-                    boxShadow: `0 0 14px ${C.gold}`,
+                    background: C.cyan,
+                    boxShadow: `0 0 14px ${C.cyan}`,
                   }}
                 />
                 {heroBadgeText}
@@ -430,20 +490,21 @@ export default function AppEntryPage() {
                 <h1
                   style={{
                     margin: 0,
-                    maxWidth: 720,
+                    maxWidth: 760,
                     fontFamily: LANDING_DISPLAY,
-                    fontSize: 'clamp(3rem, 5.2vw, 5.4rem)',
-                    lineHeight: 0.92,
-                    letterSpacing: '-0.08em',
-                    fontWeight: 700,
+                    fontSize: 'clamp(2.95rem, 4.6vw, 5rem)',
+                    lineHeight: 0.9,
+                    letterSpacing: '-0.075em',
+                    fontWeight: 800,
+                    textWrap: 'balance',
                   }}
                 >
                   <span style={{ display: 'block', color: '#F5FAFF' }}>{heroTitleLead}</span>
                   <span
                     style={{
                       display: 'block',
-                      marginTop: 10,
-                      background: 'linear-gradient(135deg, #FFF0C1 0%, #F4C651 46%, #C5831F 100%)',
+                      marginTop: 12,
+                      background: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
@@ -456,10 +517,10 @@ export default function AppEntryPage() {
                 <p
                   style={{
                     margin: 0,
-                    maxWidth: 560,
-                    color: 'rgba(228,214,180,0.78)',
-                    fontSize: '1.02rem',
-                    lineHeight: 1.62,
+                    maxWidth: 620,
+                    color: ENTRY_TEXT_SOFT,
+                    fontSize: 'clamp(1rem, 1.15vw, 1.08rem)',
+                    lineHeight: 1.7,
                   }}
                 >
                   {heroDescription}
@@ -497,25 +558,30 @@ export default function AppEntryPage() {
                   }}
                 >
                   <LogIn size={16} />
-                  {ar ? '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644' : 'Sign in'}
+                  {ar
+                    ? '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644'
+                    : 'Sign in'}
                 </button>
               </div>
 
               {!user ? (
                 <div style={{ display: 'grid', gap: 10 }}>
-                  <div className="entry-auth-row" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void handleOAuth('google');
-                    }}
-                    aria-label={ar ? 'المتابعة باستخدام Google' : 'Continue with Google'}
-                    disabled={oauthProvider !== null}
-                    style={{
+                  <div
+                    className="entry-auth-row"
+                    style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleOAuth('google');
+                      }}
+                      aria-label={ar ? 'المتابعة باستخدام Google' : 'Continue with Google'}
+                      disabled={oauthProvider !== null}
+                      style={{
                         ...outlineButtonStyle,
                         minHeight: 46,
                         borderColor: 'rgba(105,215,247,0.2)',
-                        color: '#F8EFD6',
+                        color: ENTRY_TEXT,
                         opacity: oauthProvider === 'facebook' ? 0.55 : 1,
                       }}
                     >
@@ -525,18 +591,18 @@ export default function AppEntryPage() {
                           : 'Opening...'
                         : 'Google'}
                     </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void handleOAuth('facebook');
-                    }}
-                    aria-label={ar ? 'المتابعة باستخدام Facebook' : 'Continue with Facebook'}
-                    disabled={oauthProvider !== null}
-                    style={{
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleOAuth('facebook');
+                      }}
+                      aria-label={ar ? 'المتابعة باستخدام Facebook' : 'Continue with Facebook'}
+                      disabled={oauthProvider !== null}
+                      style={{
                         ...outlineButtonStyle,
                         minHeight: 46,
-                        borderColor: 'rgba(219,159,44,0.22)',
-                        color: '#F8EFD6',
+                        borderColor: 'rgba(162,255,231,0.22)',
+                        color: ENTRY_TEXT,
                         opacity: oauthProvider === 'google' ? 0.55 : 1,
                       }}
                     >
@@ -549,10 +615,14 @@ export default function AppEntryPage() {
                     <button
                       type="button"
                       onClick={() => handleLandingNavigate(signInPath)}
-                      aria-label={ar ? 'المتابعة باستخدام البريد الإلكتروني' : 'Continue with email'}
+                      aria-label={
+                        ar ? 'المتابعة باستخدام البريد الإلكتروني' : 'Continue with email'
+                      }
                       style={{ ...outlineButtonStyle, minHeight: 46 }}
                     >
-                      {ar ? '\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a' : 'Email'}
+                      {ar
+                        ? '\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a'
+                        : 'Email'}
                     </button>
                   </div>
                   {authError ? (
@@ -576,7 +646,11 @@ export default function AppEntryPage() {
 
               <div
                 className="entry-meta"
-                style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gap: 10,
+                }}
               >
                 {quickPills.map(pill => (
                   <div
@@ -584,12 +658,12 @@ export default function AppEntryPage() {
                     style={{
                       borderRadius: 18,
                       padding: '14px 16px',
-                      border: '1px solid rgba(244,198,81,0.14)',
+                      border: `1px solid ${ENTRY_BORDER_SOFT}`,
                       background:
-                        'linear-gradient(180deg, rgba(255,247,229,0.05), rgba(255,247,229,0.025))',
+                        'linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.025))',
                       fontSize: '0.82rem',
                       fontWeight: TYPE.weight.black,
-                      color: '#F8EFD6',
+                      color: ENTRY_TEXT,
                       textAlign: ar ? 'right' : 'left',
                       lineHeight: 1.45,
                     }}
@@ -603,9 +677,9 @@ export default function AppEntryPage() {
                 style={{
                   borderRadius: 24,
                   padding: '18px 18px 16px',
-                  border: '1px solid rgba(244,198,81,0.16)',
+                  border: `1px solid ${ENTRY_BORDER}`,
                   background:
-                    'radial-gradient(circle at 12% 12%, rgba(244,198,81,0.12), transparent 30%), linear-gradient(180deg, rgba(255,247,229,0.05), rgba(255,247,229,0.02))',
+                    'radial-gradient(circle at 12% 12%, rgba(25,231,187,0.12), transparent 30%), linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.02))',
                   display: 'grid',
                   gap: 12,
                 }}
@@ -618,16 +692,18 @@ export default function AppEntryPage() {
                     width: 'fit-content',
                     padding: '8px 12px',
                     borderRadius: 999,
-                    background: 'rgba(244,198,81,0.10)',
-                    border: '1px solid rgba(244,198,81,0.18)',
-                    color: '#F4C651',
+                    background: 'rgba(25,231,187,0.10)',
+                    border: `1px solid ${ENTRY_BORDER}`,
+                    color: ENTRY_ACCENT,
                     fontSize: '0.74rem',
                     fontWeight: TYPE.weight.ultra,
                     letterSpacing: '0.11em',
                     textTransform: 'uppercase',
                   }}
                 >
-                  {ar ? '\u0639\u0631\u0636 \u0627\u0644\u0631\u062d\u0644\u0629' : 'Create and earn'}
+                  {ar
+                    ? '\u0639\u0631\u0636 \u0627\u0644\u0631\u062d\u0644\u0629'
+                    : 'Create and earn'}
                 </div>
                 <div style={{ display: 'grid', gap: 8 }}>
                   <div
@@ -644,7 +720,7 @@ export default function AppEntryPage() {
                   </div>
                   <div
                     style={{
-                      color: 'rgba(228,214,180,0.72)',
+                      color: ENTRY_TEXT_MUTED,
                       fontSize: '0.9rem',
                       lineHeight: 1.7,
                       maxWidth: 560,
@@ -654,15 +730,15 @@ export default function AppEntryPage() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  {supplyPills.map((pill) => (
+                  {supplyPills.map(pill => (
                     <span
                       key={pill}
                       style={{
                         padding: '10px 14px',
                         borderRadius: 999,
-                        border: '1px solid rgba(244,198,81,0.16)',
-                        background: 'rgba(255,247,229,0.04)',
-                        color: '#F8EFD6',
+                        border: `1px solid ${ENTRY_BORDER}`,
+                        background: 'rgba(220,255,248,0.04)',
+                        color: ENTRY_TEXT,
                         fontSize: '0.8rem',
                         fontWeight: TYPE.weight.black,
                       }}
@@ -671,7 +747,10 @@ export default function AppEntryPage() {
                     </span>
                   ))}
                 </div>
-                <div className="entry-cta-row" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <div
+                  className="entry-cta-row"
+                  style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}
+                >
                   <button
                     type="button"
                     onClick={() => handleLandingNavigate(buildPath('/app/offer-ride', true))}
@@ -682,7 +761,9 @@ export default function AppEntryPage() {
                       gap: 10,
                     }}
                   >
-                    {ar ? '\u0623\u0646\u0634\u0626 \u0631\u062d\u0644\u062a\u0643 \u0648\u0627\u0628\u062f\u0623 \u0628\u0627\u0644\u0628\u064a\u0639' : 'Create ride'}
+                    {ar
+                      ? '\u0623\u0646\u0634\u0626 \u0631\u062d\u0644\u062a\u0643 \u0648\u0627\u0628\u062f\u0623 \u0628\u0627\u0644\u0628\u064a\u0639'
+                      : 'Create ride'}
                     <ArrowRight size={16} />
                   </button>
                   <button
@@ -696,7 +777,9 @@ export default function AppEntryPage() {
                     }}
                   >
                     <Package size={16} />
-                    {ar ? '\u0627\u0639\u0631\u0641 \u0643\u064a\u0641 \u062a\u062d\u0645\u0644 \u0627\u0644\u0637\u0631\u0648\u062f' : 'Open packages'}
+                    {ar
+                      ? '\u0627\u0639\u0631\u0641 \u0643\u064a\u0641 \u062a\u062d\u0645\u0644 \u0627\u0644\u0637\u0631\u0648\u062f'
+                      : 'Open packages'}
                   </button>
                 </div>
               </div>
@@ -707,7 +790,7 @@ export default function AppEntryPage() {
                   gap: 10,
                   alignItems: 'center',
                   flexWrap: 'wrap',
-                  color: 'rgba(228,214,180,0.62)',
+                  color: ENTRY_TEXT_MUTED,
                   fontSize: '0.82rem',
                 }}
               >
@@ -726,149 +809,106 @@ export default function AppEntryPage() {
 
             <div style={{ display: 'grid', gap: 12 }}>
               <div
-                style={{
+              style={{
                   ...panelStyle,
-                  padding: 16,
+                  padding: 18,
                   background:
-                    'radial-gradient(circle at 20% 16%, rgba(255,232,160,0.14), rgba(8,19,31,0) 30%), radial-gradient(circle at 82% 12%, rgba(244,198,81,0.1), rgba(8,19,31,0) 26%), linear-gradient(180deg, rgba(255,247,229,0.03), rgba(255,247,229,0.015)), rgba(11,19,29,0.94)',
+                    'radial-gradient(circle at 18% 14%, rgba(25,231,187,0.15), rgba(8,19,31,0) 24%), radial-gradient(circle at 86% 10%, rgba(101,225,255,0.08), rgba(8,19,31,0) 22%), linear-gradient(180deg, rgba(220,255,248,0.03), rgba(220,255,248,0.015)), rgba(11,19,29,0.95)',
                 }}
               >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: 10,
-                    flexWrap: 'wrap',
-                    marginBottom: 14,
-                  }}
-                >
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    {heroSignals.map(signal => (
-                      <span
-                        key={signal}
-                        style={{
-                          padding: '10px 14px',
-                          borderRadius: 999,
-                          border: '1px solid rgba(244,198,81,0.16)',
-                          background: 'rgba(255,247,229,0.04)',
-                          color: '#F8EFD6',
-                          fontSize: '0.8rem',
-                          fontWeight: TYPE.weight.black,
-                        }}
-                      >
-                        {signal}
-                      </span>
-                    ))}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleLandingNavigate('/app/mobility-os')}
-                    aria-label={ar ? '\u0627\u0641\u062a\u062d \u0627\u0644\u062e\u0631\u064a\u0637\u0629' : 'Open map'}
-                    style={{
-                      minHeight: 42,
-                      padding: '0 16px',
-                      borderRadius: 16,
-                      border: '1px solid rgba(244,198,81,0.18)',
-                      background: 'rgba(255,247,229,0.04)',
-                      color: '#F8EFD6',
-                      fontWeight: TYPE.weight.black,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {ar ? '\u0627\u0633\u062a\u0643\u0634\u0641 \u0627\u0644\u062e\u0631\u064a\u0637\u0629' : 'Explore map'}
-                  </button>
-                </div>
-
-                <div
-                  className="entry-visual-focus"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'minmax(220px, 0.82fr) minmax(0, 1.18fr)',
-                    gap: 14,
-                    alignItems: 'center',
-                    marginBottom: 14,
-                  }}
-                >
+                <div style={{ position: 'relative', paddingTop: 18 }}>
                   <div
+                    aria-hidden="true"
                     style={{
-                      position: 'relative',
-                      minHeight: 260,
-                      borderRadius: 28,
+                      position: 'absolute',
+                      top: 0,
+                      left: 20,
+                      zIndex: 2,
+                      width: 108,
+                      height: 108,
+                      borderRadius: 34,
                       display: 'grid',
                       placeItems: 'center',
                       background:
-                        'radial-gradient(circle at center, rgba(244,198,81,0.14), rgba(8,19,31,0) 62%), linear-gradient(180deg, rgba(255,247,229,0.03), rgba(255,247,229,0.015))',
-                      overflow: 'hidden',
+                        'radial-gradient(circle at 32% 28%, rgba(25,231,187,0.14), rgba(25,231,187,0) 28%), linear-gradient(180deg, rgba(220,255,248,0.06), rgba(220,255,248,0.02)), rgba(10,20,31,0.9)',
+                      border: `1px solid ${ENTRY_BORDER_SOFT}`,
+                      boxShadow:
+                        'inset 0 1px 0 rgba(220,255,248,0.06), 0 28px 52px rgba(1,10,18,0.28)',
+                      backdropFilter: 'blur(22px)',
                     }}
                   >
                     <div
-                      aria-hidden="true"
                       style={{
                         position: 'absolute',
-                        inset: '12% 16%',
-                        borderRadius: '50%',
+                        inset: -18,
+                        borderRadius: 40,
                         background:
-                          'radial-gradient(circle, rgba(244,198,81,0.2) 0%, rgba(244,198,81,0.04) 48%, rgba(8,19,31,0) 74%)',
-                        filter: 'blur(12px)',
+                          'radial-gradient(circle, rgba(25,231,187,0.2) 0%, rgba(25,231,187,0.05) 48%, rgba(8,19,31,0) 74%)',
+                        filter: 'blur(18px)',
                       }}
                     />
                     <WaselMark
-                      size={184}
+                      size={74}
                       style={{
                         position: 'relative',
                         filter:
-                          'drop-shadow(0 32px 54px rgba(1,10,18,0.38)) drop-shadow(0 0 36px rgba(244,198,81,0.14))',
+                          'drop-shadow(0 20px 30px rgba(1,10,18,0.26)) drop-shadow(0 0 26px rgba(25,231,187,0.16))',
                       }}
                     />
                   </div>
 
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    <div
-                      style={{
-                        color: '#F4C651',
-                        fontSize: '0.74rem',
-                        fontWeight: TYPE.weight.ultra,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.12em',
-                      }}
-                    >
-                      {ar ? '\u0627\u0644\u062e\u0631\u064a\u0637\u0629 \u0627\u0644\u062d\u064a\u0629' : 'Live map'}
-                    </div>
-                    <h2
-                      style={{
-                        margin: 0,
-                        fontFamily: LANDING_DISPLAY,
-                        fontSize: 'clamp(1.5rem, 2.7vw, 2.3rem)',
-                        lineHeight: 1,
-                        letterSpacing: '-0.05em',
-                        color: '#F5FAFF',
-                      }}
-                    >
-                      {mapTitle}
-                    </h2>
-                    <p
-                      style={{
-                        margin: 0,
-                        color: 'rgba(228,214,180,0.68)',
-                        fontSize: '0.9rem',
-                        lineHeight: 1.7,
-                        maxWidth: 460,
-                      }}
-                    >
-                      {mapBody}
-                    </p>
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      position: 'absolute',
+                      top: 26,
+                      right: 26,
+                      zIndex: 2,
+                      display: 'flex',
+                      gap: 10,
+                      alignItems: 'center',
+                    }}
+                  >
+                    {[64, 42, 24].map((width, index) => (
+                      <span
+                        key={width}
+                        style={{
+                          width,
+                          height: index === 2 ? 10 : 6,
+                          borderRadius: 999,
+                          background:
+                            index === 2
+                              ? 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 100%)'
+                              : 'linear-gradient(90deg, rgba(162,255,231,0.56), rgba(162,255,231,0.12))',
+                          boxShadow: index === 2 ? '0 0 18px rgba(25,231,187,0.24)' : 'none',
+                        }}
+                      />
+                    ))}
                   </div>
-                </div>
 
-                <div style={{ borderRadius: 26, overflow: 'hidden' }}>
-                  <DeferredLandingMap ar={ar} />
+                  <div
+                    style={{
+                      borderRadius: 32,
+                      padding: 12,
+                      background: ENTRY_PANEL_STRONG,
+                      border: `1px solid ${ENTRY_BORDER_SOFT}`,
+                      boxShadow:
+                        'inset 0 1px 0 rgba(220,255,248,0.04), 0 28px 64px rgba(1,10,18,0.24)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <DeferredLandingMap ar={ar} />
+                  </div>
                 </div>
               </div>
 
               <div
                 className="entry-actions"
-                style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gap: 10,
+                }}
               >
                 {actionCards.map(card => {
                   const Icon = card.icon;
@@ -885,7 +925,7 @@ export default function AppEntryPage() {
                         textAlign: ar ? 'right' : 'left',
                         cursor: 'pointer',
                         background:
-                          'linear-gradient(180deg, rgba(255,247,229,0.05), rgba(255,247,229,0.02)), rgba(14,24,36,0.84)',
+                          'linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.018)), rgba(14,24,36,0.86)',
                       }}
                     >
                       <div
@@ -902,12 +942,18 @@ export default function AppEntryPage() {
                       >
                         <Icon size={18} color={card.color} />
                       </div>
-                      <div style={{ fontSize: '0.95rem', fontWeight: TYPE.weight.ultra, color: '#F8EFD6' }}>
+                      <div
+                        style={{
+                          fontSize: '0.95rem',
+                          fontWeight: TYPE.weight.ultra,
+                          color: ENTRY_TEXT,
+                        }}
+                      >
                         {card.title}
                       </div>
                       <div
                         style={{
-                          color: 'rgba(228,214,180,0.62)',
+                          color: ENTRY_TEXT_MUTED,
                           fontSize: '0.82rem',
                           lineHeight: 1.55,
                         }}

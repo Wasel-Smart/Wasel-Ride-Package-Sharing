@@ -2,10 +2,10 @@
  * WaselButton — primary interactive element.
  *
  * Variants:
- *  - primary  : Premium gold gradient CTA
- *  - outline  : Transparent with gold border
+ *  - primary  : Network teal gradient CTA
+ *  - outline  : Transparent with brand border
  *  - ghost    : No border, subtle hover
- *  - gold     : Solar Gold gradient (accent / demo)
+ *  - gold     : Aqua accent gradient
  *  - danger   : Error red
  *
  * Always pulls from design-system tokens — zero hardcoded hex.
@@ -30,11 +30,11 @@ interface WaselButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, { background: string; color: string; border: string; boxShadow: string; hoverShadow: string }> = {
   primary: {
-    background:  'linear-gradient(135deg, #FFF0C1 0%, #F4C651 44%, #C5831F 100%)',
-    color:       '#120D04',
+    background:  'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
+    color:       '#041019',
     border:      'none',
     boxShadow:   SH.gold,
-    hoverShadow: '0 24px 60px rgba(244,198,81,0.32)',
+    hoverShadow: '0 24px 60px rgba(25,231,187,0.28)',
   },
   outline: {
     background:  'transparent',
@@ -51,11 +51,11 @@ const variantStyles: Record<ButtonVariant, { background: string; color: string; 
     hoverShadow: 'none',
   },
   gold: {
-    background:  'linear-gradient(135deg, #FFE08A 0%, #DB9F2C 100%)',
-    color:       '#120D04',
+    background:  'linear-gradient(135deg, #65E1FF 0%, #A2FFE7 100%)',
+    color:       '#041019',
     border:      'none',
     boxShadow:   SH.gold,
-    hoverShadow: '0 10px 36px rgba(219,159,44,0.34)',
+    hoverShadow: '0 10px 36px rgba(72,207,255,0.26)',
   },
   danger: {
     background:  C.errorDim,

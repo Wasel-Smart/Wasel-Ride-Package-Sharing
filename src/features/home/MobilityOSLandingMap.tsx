@@ -239,6 +239,8 @@ const COPY = {
   },
 } as const;
 
+const LABELED_CITY_IDS = new Set(['amman', 'aqaba', 'irbid', 'zarqa', 'jerash', 'mafraq', 'karak']);
+
 function mercator(lat: number) {
   return Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
 }
@@ -552,26 +554,25 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
         'The landing map stays alive',
       ];
 
+  void overlayLabels;
   return (
     <figure
       aria-label={copy.mapLabel}
       style={{
         margin: 0,
-        display: 'grid',
-        gap: 12,
       }}
     >
       <style>{`
         .landing-sim-shell {
           position: relative;
-          min-height: clamp(320px, 52vw, 520px);
+          min-height: clamp(440px, 62vw, 720px);
           border-radius: 32px;
           overflow: hidden;
-          border: 1px solid rgba(244, 198, 81, 0.16);
+          border: 1px solid rgba(255, 240, 193, 0.14);
           background:
-            radial-gradient(circle at 16% 14%, rgba(255, 232, 160, 0.2), rgba(4, 18, 30, 0) 24%),
-            radial-gradient(circle at 78% 82%, rgba(197, 131, 31, 0.16), rgba(4, 18, 30, 0) 26%),
-            linear-gradient(180deg, rgba(7, 17, 27, 0.98), rgba(4, 10, 18, 1));
+            radial-gradient(circle at 18% 12%, rgba(255, 232, 160, 0.18), rgba(4, 18, 30, 0) 22%),
+            radial-gradient(circle at 86% 82%, rgba(96, 131, 255, 0.1), rgba(4, 18, 30, 0) 24%),
+            linear-gradient(180deg, rgba(9, 19, 32, 0.99), rgba(4, 10, 18, 1));
           box-shadow:
             inset 0 1px 0 rgba(255, 248, 229, 0.06),
             0 30px 96px rgba(1, 5, 10, 0.44);
@@ -597,87 +598,9 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
           mix-blend-mode: screen;
           opacity: 0.82;
         }
-        .landing-sim-legend {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          align-items: center;
-        }
-        .landing-sim-overlay {
-          position: absolute;
-          top: 16px;
-          left: 16px;
-          right: 16px;
-          z-index: 1;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          align-items: center;
-          pointer-events: none;
-        }
-        .landing-sim-chip {
-          display: inline-flex;
-          align-items: center;
-          min-height: 34px;
-          padding: 0 12px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 240, 193, 0.12);
-          background: rgba(8, 20, 33, 0.68);
-          color: rgba(255, 247, 229, 0.92);
-          font-size: 0.74rem;
-          font-weight: 800;
-          letter-spacing: 0.04em;
-          backdrop-filter: blur(18px);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-        }
-        .landing-sim-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          min-height: 46px;
-          padding: 0 14px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 240, 193, 0.1);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
-          color: rgba(255, 245, 224, 0.92);
-          font-size: 0.86rem;
-          font-weight: 700;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-        }
-        .landing-sim-line,
-        .landing-sim-dash {
-          width: 32px;
-          height: 0;
-          flex: 0 0 auto;
-          border-top: 3px solid ${PASSENGER_COLOR};
-          border-radius: 999px;
-          box-shadow: 0 0 12px ${PASSENGER_GLOW};
-        }
-        .landing-sim-dash {
-          border-top-style: dashed;
-          border-top-color: ${PACKAGE_COLOR};
-          box-shadow: 0 0 12px ${PACKAGE_GLOW};
-        }
-        .landing-sim-network-dot {
-          width: 9px;
-          height: 9px;
-          border-radius: 999px;
-          background: #FFF0C1;
-          box-shadow: 0 0 14px rgba(255, 240, 193, 0.42);
-        }
         @media (max-width: 720px) {
           .landing-sim-shell {
-            min-height: clamp(300px, 84vw, 440px);
-          }
-          .landing-sim-overlay {
-            top: 12px;
-            left: 12px;
-            right: 12px;
-          }
-          .landing-sim-chip {
-            min-height: 30px;
-            padding: 0 10px;
-            font-size: 0.68rem;
+            min-height: clamp(360px, 84vw, 520px);
           }
         }
       `}</style>
@@ -697,14 +620,6 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
         >
           {copy.srDescription}
         </span>
-
-        <div className="landing-sim-overlay" aria-hidden="true">
-          {overlayLabels.map(label => (
-            <div key={label} className="landing-sim-chip">
-              {label}
-            </div>
-          ))}
-        </div>
 
         <svg
           viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
@@ -835,7 +750,13 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
             transform="translate(8 12)"
           />
           <g clipPath="url(#landing-land-clip)">
-            <rect x="0" y="0" width={VIEWBOX_WIDTH} height={VIEWBOX_HEIGHT} fill="url(#landing-city-wash)" />
+            <rect
+              x="0"
+              y="0"
+              width={VIEWBOX_WIDTH}
+              height={VIEWBOX_HEIGHT}
+              fill="url(#landing-city-wash)"
+            />
             {Array.from({ length: 7 }, (_, index) => {
               const y = 122 + index * 48;
               return (
@@ -1004,7 +925,12 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                 fill="rgba(0, 0, 0, 0.2)"
               />
               {city.featured ? (
-                <circle cx={city.point.x} cy={city.point.y} r="30" fill="rgba(255, 232, 160, 0.1)" />
+                <circle
+                  cx={city.point.x}
+                  cy={city.point.y}
+                  r="30"
+                  fill="rgba(255, 232, 160, 0.1)"
+                />
               ) : null}
               <line
                 x1={city.point.x}
@@ -1027,35 +953,22 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                 fill="none"
                 stroke={city.featured ? 'rgba(255, 232, 160, 0.38)' : 'rgba(255, 240, 193, 0.18)'}
               />
-              <text
-                x={city.point.x + (city.id === 'aqaba' ? -24 : city.id === 'mafraq' ? -14 : -18)}
-                y={city.point.y + (city.id === 'maan' ? -18 : -16)}
-                fill={city.featured ? '#FFF7DE' : 'rgba(255, 243, 214, 0.76)'}
-                fontSize={city.featured ? 15.5 : 13.4}
-                fontWeight={city.featured ? 700 : 600}
-                style={{ letterSpacing: '-0.02em' }}
-              >
-                {labelFor(city, ar)}
-              </text>
+              {LABELED_CITY_IDS.has(city.id) ? (
+                <text
+                  x={city.point.x + (city.id === 'aqaba' ? -24 : city.id === 'mafraq' ? -14 : -18)}
+                  y={city.point.y + (city.id === 'karak' || city.id === 'aqaba' ? -18 : -16)}
+                  fill={city.featured ? '#FFF7DE' : 'rgba(255, 243, 214, 0.78)'}
+                  fontSize={city.featured ? 16 : 13.4}
+                  fontWeight={city.featured ? 700 : 600}
+                  style={{ letterSpacing: '-0.02em' }}
+                >
+                  {labelFor(city, ar)}
+                </text>
+              ) : null}
             </g>
           ))}
         </svg>
       </div>
-
-      <figcaption className="landing-sim-legend">
-        <div className="landing-sim-pill">
-          <span className="landing-sim-line" aria-hidden="true" />
-          <span>{copy.passengerLegend}</span>
-        </div>
-        <div className="landing-sim-pill">
-          <span className="landing-sim-dash" aria-hidden="true" />
-          <span>{copy.packageLegend}</span>
-        </div>
-        <div className="landing-sim-pill">
-          <span className="landing-sim-network-dot" aria-hidden="true" />
-          <span>{copy.networkLegend}</span>
-        </div>
-      </figcaption>
     </figure>
   );
 }

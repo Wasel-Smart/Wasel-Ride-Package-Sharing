@@ -95,12 +95,12 @@ a[href].wasel-outline-button:active,
 }
 
 /* ── Global Mobile Responsive Helpers ─────────────────────────────────────── */
-@media (max-width: 899px) {
+@media (max-width: 767px) {
   /*
     Scoped to .wasel-app-main (added in WaselRoot) so auth/landing
     pages do not inherit the bottom-nav padding.
   */
-  main.wasel-app-main { padding-bottom: 80px; }
+  main.wasel-app-main { padding-bottom: 88px; }
   body { overflow-x: hidden; max-width: 100vw; }
   h1, h2, h3, h4 { word-break: break-word; }
 }

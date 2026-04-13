@@ -1,4 +1,5 @@
 import { onCLS, onFCP, onINP, onLCP, onTTFB, type Metric } from 'web-vitals';
+import { hasTelemetryConsent } from './consent';
 import { logger } from './logging';
 
 let performanceMonitoringInitialized = false;
@@ -59,7 +60,11 @@ const PERFORMANCE_BUDGETS: Record<keyof PerformanceMetrics, number> = {
 };
 
 export function initPerformanceMonitoring(): void {
-  if (typeof window === 'undefined' || performanceMonitoringInitialized) {
+  if (
+    typeof window === 'undefined'
+    || performanceMonitoringInitialized
+    || !hasTelemetryConsent()
+  ) {
     return;
   }
 
@@ -127,7 +132,7 @@ function reportWebVital(metric: Metric): void {
 }
 
 function sendToAnalytics(vital: WebVital): void {
-  if (typeof window === 'undefined') {
+  if (typeof window === 'undefined' || !hasTelemetryConsent()) {
     return;
   }
 

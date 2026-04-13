@@ -83,6 +83,7 @@ export type FindRideRideTabProps = {
   featuredSignals: LiveCorridorSignal[];
   results: Ride[];
   bookedRideIds: Set<string>;
+  pendingRideIds: Set<string>;
   nearbyCorridors: NearbyCorridorPreview[];
   recurringSuggestions: RecurringRouteSuggestion[];
   savedReminders: RouteReminder[];
@@ -713,6 +714,7 @@ type RideResultsSectionProps = {
   sort: SortOption;
   results: Ride[];
   bookedRideIds: Set<string>;
+  pendingRideIds: Set<string>;
   selectedSignal: LiveCorridorSignal | null;
   waitlistMessage: string | null;
   demandStatsActive: number;
@@ -734,6 +736,7 @@ function RideResultsSection({
   sort,
   results,
   bookedRideIds,
+  pendingRideIds,
   selectedSignal,
   waitlistMessage,
   demandStatsActive,
@@ -927,12 +930,12 @@ function RideResultsSection({
               ) : null}
             </motion.div>
           ) : (
-            results.map((ride, index) => (
+            results.map((ride) => (
               <FindRideCard
                 key={ride.id}
                 ride={ride}
-                idx={index}
                 booked={bookedRideIds.has(ride.id)}
+                pending={pendingRideIds.has(ride.id)}
                 signal={resolveSignalForRide(ride)}
                 onOpen={() => onOpenRide(ride)}
               />
@@ -1174,6 +1177,7 @@ export function FindRideRideTab({
   featuredSignals,
   results,
   bookedRideIds,
+  pendingRideIds,
   nearbyCorridors,
   recurringSuggestions,
   savedReminders,
@@ -1237,6 +1241,7 @@ export function FindRideRideTab({
         sort={sort}
         results={results}
         bookedRideIds={bookedRideIds}
+        pendingRideIds={pendingRideIds}
         selectedSignal={selectedSignal}
         waitlistMessage={waitlistMessage}
         demandStatsActive={demandStatsActive}

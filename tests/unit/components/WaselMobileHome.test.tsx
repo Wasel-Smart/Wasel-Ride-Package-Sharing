@@ -10,7 +10,14 @@ let mockLanguage: 'en' | 'ar' = 'en';
 vi.mock('motion/react', () => ({
   AnimatePresence: ({ children }: PropsWithChildren) => <>{children}</>,
   motion: {
-    button: ({ children, ...props }: PropsWithChildren<Record<string, unknown>>) => <button {...props}>{children}</button>,
+    button: ({
+      children,
+      whileTap: _whileTap,
+      whileHover: _whileHover,
+      whileFocus: _whileFocus,
+      whileInView: _whileInView,
+      ...props
+    }: PropsWithChildren<Record<string, unknown>>) => <button {...props}>{children}</button>,
     div: ({ children, ...props }: PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
   },
   useMotionValue: vi.fn(),

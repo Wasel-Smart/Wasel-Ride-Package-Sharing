@@ -22,6 +22,8 @@ import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { getStoredBusBookings, type StoredBusBooking } from '../../services/bus';
 import { getConnectedPackages, type PackageRequest } from '../../services/journeyLogistics';
 import {
+  isRideBookingConfirmed,
+  isRideBookingPending,
   syncRideBookingCompletion,
   type RideBookingRecord,
   type RidePaymentStatus,
@@ -137,7 +139,14 @@ function getSupportForItem(tickets: SupportTicket[], identifiers: Array<string |
 function deriveRideLifecycle(booking: RideBookingRecord, support: SupportTicket[]): TripLifecycle {
   if (booking.status === 'cancelled' || booking.status === 'rejected') return 'cancelled';
   if (booking.status === 'completed') return 'completed';
-  if (support.length > 0 || booking.supportThreadOpen || booking.paymentStatus === 'failed' || booking.paymentStatus === 'refunded' || booking.status === 'pending_driver') {
+  if (
+    support.length > 0
+    || booking.supportThreadOpen
+    || booking.paymentStatus === 'failed'
+    || booking.paymentStatus === 'refunded'
+    || booking.status === 'pending_driver'
+    || isRideBookingPending(booking)
+  ) {
     return 'attention';
   }
   return 'active';
@@ -168,8 +177,20 @@ function toRideItem(booking: RideBookingRecord, support: SupportTicket[]): TripI
     title: 'Ride',
     valueLabel: `${booking.seatsRequested} seat${booking.seatsRequested > 1 ? 's' : ''}`,
     lifecycle,
-    primaryStatus: booking.status === 'pending_driver' ? 'Waiting for driver' : `Trip ${booking.status}`,
-    secondaryStatus: support.length > 0 ? `${support.length} support thread${support.length > 1 ? 's' : ''}` : undefined,
+    primaryStatus:
+      booking.status === 'pending_driver'
+        ? 'Waiting for driver'
+        : isRideBookingPending(booking)
+          ? 'Confirmation in progress'
+          : isRideBookingConfirmed(booking)
+            ? 'Boarding ready'
+            : `Trip ${booking.status}`,
+    secondaryStatus:
+      support.length > 0
+        ? `${support.length} support thread${support.length > 1 ? 's' : ''}`
+        : isRideBookingPending(booking)
+          ? 'Wasel is finalizing backend confirmation before boarding details unlock.'
+          : undefined,
     ticketLabel: booking.ticketCode,
     captainLabel: booking.driverName,
     supportCount: support.length,

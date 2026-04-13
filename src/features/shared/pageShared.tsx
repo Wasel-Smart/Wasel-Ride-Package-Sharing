@@ -156,7 +156,7 @@ export function PageShell({ children }: { children: ReactNode }) {
             scroll-behavior: auto !important;
           }
         }
-        @media(max-width:899px){
+        @media(max-width:767px){
           .sp-inner{ padding:16px !important; }
           .sp-2col { grid-template-columns:1fr !important; }
           .sp-3col { grid-template-columns:1fr !important; }

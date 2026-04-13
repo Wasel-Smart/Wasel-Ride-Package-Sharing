@@ -1,7 +1,7 @@
 import { getConfig } from '../utils/env';
 import { omitUndefined } from '../utils/object';
 import { emailService } from './emailService';
-import type { RideBookingRecord } from './rideLifecycle';
+import { isRideBookingConfirmed, type RideBookingRecord } from './rideLifecycle';
 import type { WalletTransaction } from './walletApi';
 
 function getAppUrl(): string {
@@ -85,7 +85,10 @@ export function triggerRideBookingEmails(opts: {
       driverPhone: booking.driverPhone,
       seats: booking.seatsRequested,
       priceJod,
-      status: booking.status === 'pending_driver' ? 'pending_driver' as const : 'confirmed' as const,
+      status:
+        booking.status === 'pending_driver' || !isRideBookingConfirmed(booking)
+          ? 'pending_driver' as const
+          : 'confirmed' as const,
     }))
     .catch((error) => console.error('[email] booking confirmation failed:', error));
 

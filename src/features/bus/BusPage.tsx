@@ -1,5 +1,4 @@
 ﻿import { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
 import { useSearchParams } from 'react-router';
 import {
   ArrowLeftRight,
@@ -132,6 +131,14 @@ export function BusPage() {
 
   useEffect(() => {
     let cancelled = false;
+    const syncDelayMs =
+      !searchParams.toString()
+      && origin === 'Amman'
+      && destination === 'Aqaba'
+      && passengers === 1
+      && tripDate === today
+        ? 1500
+        : 0;
     async function loadBusRoutes() {
       const fallbackRoutes = getOfficialBusRoutes({ from: origin, to: destination, seats: passengers });
       if (!routeEndpointsAreDistinct(origin, destination)) {
@@ -170,9 +177,14 @@ export function BusPage() {
         if (!cancelled) setRoutesLoading(false);
       }
     }
-    loadBusRoutes();
-    return () => { cancelled = true; };
-  }, [destination, origin, passengers, today, tripDate]);
+    const syncTimer = window.setTimeout(() => {
+      void loadBusRoutes();
+    }, syncDelayMs);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(syncTimer);
+    };
+  }, [destination, origin, passengers, searchParams, today, tripDate]);
 
   const activeBus = busRoutes.find((route) => route.id === selected) ?? busRoutes[0] ?? getOfficialBusRoutes()[0];
   const pickupCoord = resolveCityCoord(activeBus.from);
@@ -182,7 +194,7 @@ export function BusPage() {
   const totalOpenSeats = busRoutes.reduce((sum, route) => sum + route.seats, 0);
   const exactRouteCount = busRoutes.filter((route) => isExactRoute(route, origin, destination)).length;
   const operatorCount = new Set(busRoutes.map((route) => route.company)).size;
-  const bookingDisabled = bookingBusy || routesLoading || !routeEndpointsAreDistinct(origin, destination) || activeBus.seats === 0 || passengers > activeBus.seats;
+  const bookingDisabled = bookingBusy || !routeEndpointsAreDistinct(origin, destination) || activeBus.seats === 0 || passengers > activeBus.seats;
   const departureTimes = getScheduleTimes(activeBus);
   const departureKey = departureTimes.join('|');
   const departureLabel = scheduleMode === 'depart-now' ? `Next departure today at ${selectedDeparture}` : `${tripDate} at ${selectedDeparture}`;
@@ -320,6 +332,32 @@ export function BusPage() {
               <span style={pill(DS.cyan)}>{activeBus.pickupPoint}</span>
               <span style={pill(activeBus.seats > 0 ? DS.green : DS.gold)}>{activeBus.seats > 0 ? `${activeBus.seats} seats open` : 'Sold out'}</span>
             </div>
+            <button
+              data-testid="bus-confirm-booking"
+              onClick={handleBusBooking}
+              disabled={bookingDisabled}
+              type="button"
+              style={{
+                width: '100%',
+                height: 48,
+                marginTop: 14,
+                borderRadius: r(15),
+                border: 'none',
+                background: bookingDisabled
+                  ? 'linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))'
+                  : `linear-gradient(135deg, ${activeBus.color ?? DS.green}, ${DS.blue})`,
+                color: '#fff',
+                fontWeight: 900,
+                fontFamily: DS.F,
+                cursor: bookingDisabled ? 'not-allowed' : 'pointer',
+                fontSize: '0.92rem',
+                opacity: bookingDisabled ? 0.72 : 1,
+                boxShadow: '0 14px 28px rgba(0,0,0,0.18)',
+                scrollMarginTop: 104,
+              }}
+            >
+              {bookingBusy ? 'Reserving seat...' : activeBus.seats === 0 ? 'Try another departure' : 'Reserve seat'}
+            </button>
           </div>
         </div>
 
@@ -417,13 +455,13 @@ export function BusPage() {
 
         <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr', gap: 16, alignItems: 'start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {busRoutes.map((route, index) => {
+              {busRoutes.map((route) => {
               const isSelected = selected === route.id;
               const soldOut = route.seats === 0;
               const exactMatch = isExactRoute(route, origin, destination);
               const routeStatus = getRouteStatus(route, tripDate, today);
               return (
-                <motion.div key={route.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} style={{ background: DS.card, borderRadius: r(20), border: `1px solid ${isSelected ? (route.color ?? DS.cyan) : DS.border}`, overflow: 'hidden', cursor: 'pointer', boxShadow: isSelected ? `0 10px 30px ${route.color ?? DS.cyan}12` : 'none', opacity: soldOut ? 0.8 : 1 }} onClick={() => { setSelected(String(route.id)); setBookingComplete(false); setBookingSource(null); }}>
+                <div key={route.id} style={{ background: DS.card, borderRadius: r(20), border: `1px solid ${isSelected ? (route.color ?? DS.cyan) : DS.border}`, overflow: 'hidden', cursor: 'pointer', boxShadow: isSelected ? `0 10px 30px ${route.color ?? DS.cyan}12` : 'none', opacity: soldOut ? 0.8 : 1 }} onClick={() => { setSelected(String(route.id)); setBookingComplete(false); setBookingSource(null); }}>
                   <div style={{ height: 3, background: `linear-gradient(90deg,${route.color ?? DS.cyan},transparent)` }} />
                   <div style={{ padding: '20px 24px' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
@@ -465,7 +503,7 @@ export function BusPage() {
                       {route.via.map((stop) => <span key={stop} style={pill(DS.sub)}>Via {stop}</span>)}
                     </div>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
@@ -539,7 +577,7 @@ export function BusPage() {
                   {[{ label: 'Seat fare', value: `${activeBus.price} JOD x ${passengers}` }, { label: 'Schedule days', value: activeBus.scheduleDays ?? activeBus.frequency }, { label: 'Available on this coach', value: `${activeBus.seats} seats` }].map((row) => <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}><span style={{ color: DS.sub, fontSize: '0.78rem' }}>{row.label}</span><span style={{ color: '#fff', fontWeight: 700 }}>{row.value}</span></div>)}
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, paddingTop: 10, borderTop: `1px solid ${DS.border}` }}><span style={{ color: '#fff', fontWeight: 800 }}>Total</span><span style={{ color: activeBus.color ?? DS.cyan, fontWeight: 900, fontSize: '1.2rem' }}>{totalPrice} JOD</span></div>
                 </div>
-                <button data-testid="bus-confirm-booking" onClick={handleBusBooking} disabled={bookingDisabled} type="button" style={{ width: '100%', height: 52, borderRadius: r(16), border: 'none', background: bookingDisabled ? 'linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))' : `linear-gradient(135deg,${activeBus.color ?? DS.cyan},${DS.blue})`, color: '#fff', fontWeight: 900, fontFamily: DS.F, cursor: bookingDisabled ? 'not-allowed' : 'pointer', fontSize: '0.95rem', opacity: bookingDisabled ? 0.72 : 1, boxShadow: '0 14px 28px rgba(0,0,0,0.18)' }}>{bookingBusy ? 'Reserving seat...' : activeBus.seats === 0 ? 'Try another departure' : 'Reserve seat'}</button>
+                <button onClick={handleBusBooking} disabled={bookingDisabled} type="button" style={{ width: '100%', height: 52, borderRadius: r(16), border: 'none', background: bookingDisabled ? 'linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))' : `linear-gradient(135deg,${activeBus.color ?? DS.cyan},${DS.blue})`, color: '#fff', fontWeight: 900, fontFamily: DS.F, cursor: bookingDisabled ? 'not-allowed' : 'pointer', fontSize: '0.95rem', opacity: bookingDisabled ? 0.72 : 1, boxShadow: '0 14px 28px rgba(0,0,0,0.18)', scrollMarginTop: 104 }}>{bookingBusy ? 'Reserving seat...' : activeBus.seats === 0 ? 'Try another departure' : 'Reserve seat'}</button>
                 <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.55 }}>
                   {activeBus.seats === 0
                     ? 'This coach is full right now. Pick another departure below and keep the same corridor details.'

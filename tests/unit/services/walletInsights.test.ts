@@ -204,18 +204,12 @@ describe('walletApi direct fallback insights and pagination', () => {
     await expect(walletApi.verifyPin('u1', '1234')).rejects.toThrow('Wallet PIN verification requires the wallet backend.');
   });
 
-  it('uses the transfer RPC in fallback mode and returns a refreshed wallet payload', async () => {
+  it('keeps wallet transfers read-only when only fallback data is available', async () => {
     setupWalletReads();
-    mockRpc.mockResolvedValue({ data: null, error: null });
 
-    const result = await walletApi.sendMoney('u1', 'u2', 20, 'Split');
-
-    expect(mockRpc).toHaveBeenCalledWith('app_transfer_wallet_funds', {
-      p_from_user_id: 'u1',
-      p_to_user_id: 'u2',
-      p_amount: 20,
-      p_payment_method: 'wallet',
-    });
-    expect(result.success).toBe(true);
+    await expect(walletApi.sendMoney('u1', 'u2', 20, 'Split')).rejects.toThrow(
+      'Wallet actions are temporarily read-only while the secure payment service reconnects.',
+    );
+    expect(mockRpc).not.toHaveBeenCalled();
   });
 });

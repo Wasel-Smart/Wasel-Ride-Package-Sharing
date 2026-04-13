@@ -34,7 +34,7 @@ export function InsightsTab({ insights, isRTL, t }: InsightsTabProps) {
   return (
     <div className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Month summary cards */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Card className="p-4 rounded-xl">
           <div className="flex items-center gap-2 mb-1">
             <ArrowUpRight className="w-4 h-4 text-red-400" />
@@ -96,8 +96,8 @@ export function InsightsTab({ insights, isRTL, t }: InsightsTabProps) {
             <CardTitle className="text-sm">{t.categoryBreakdown}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-6">
-              <ResponsiveContainer width={120} height={120}>
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+              <ResponsiveContainer width="100%" height={140}>
                 <PieChart>
                   <Pie
                     data={Object.entries(insights.categoryBreakdown).map(([name, value]) => ({ name, value }))}

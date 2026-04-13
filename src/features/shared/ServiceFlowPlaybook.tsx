@@ -602,6 +602,8 @@ export function ServiceFlowPlaybook({
         borderRadius: r(24),
         padding: 22,
         boxShadow: '0 20px 44px rgba(0,0,0,0.18)',
+        contentVisibility: 'auto',
+        containIntrinsicSize: '960px',
       }}
     >
       <style>{`

@@ -87,6 +87,9 @@ vi.mock('@/components/wasel-ui/WaselButton', () => ({
     type,
     onClick,
     disabled,
+    fullWidth: _fullWidth,
+    loading: _loading,
+    iconEnd: _iconEnd,
     ...props
   }: PropsWithChildren<{
     type?: 'button' | 'submit' | 'reset';
@@ -202,13 +205,13 @@ describe('WaselAuth', () => {
   it('passes the return target into Google and Facebook auth', async () => {
     render(<WaselAuth />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Google' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
 
     await waitFor(() => {
       expect(mockSignInWithGoogle).toHaveBeenCalledWith('/app/find-ride');
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Facebook' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with Facebook' }));
 
     await waitFor(() => {
       expect(mockSignInWithFacebook).toHaveBeenCalledWith('/app/find-ride');

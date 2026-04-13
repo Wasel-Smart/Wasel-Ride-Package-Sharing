@@ -52,10 +52,10 @@ function getInitials(name?: string): string {
 
 function getAvatarGradient(name?: string): string {
   const gradients = [
-    'linear-gradient(135deg, #FFF0C1 0%, #F4C651 100%)',
-    'linear-gradient(135deg, #F4C651 0%, #C5831F 100%)',
-    'linear-gradient(135deg, #D59E26 0%, #FFF0C1 100%)',
-    'linear-gradient(135deg, #C5831F 0%, #FFE8A0 100%)',
+    'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 100%)',
+    'linear-gradient(135deg, #19E7BB 0%, #48CFFF 100%)',
+    'linear-gradient(135deg, #48CFFF 0%, #A2FFE7 100%)',
+    'linear-gradient(135deg, #0BC3A0 0%, #D8FBFF 100%)',
   ];
   if (!name) return gradients[0];
   const idx = name.charCodeAt(0) % gradients.length;
@@ -106,7 +106,7 @@ export function WaselAvatar({
     fontFamily: F,
     fontSize: fontSizeMap[size],
     fontWeight: 800,
-    color: '#120D04',
+    color: '#041019',
     userSelect: 'none',
     WebkitUserSelect: 'none',
   };
@@ -151,7 +151,7 @@ export function WaselAvatar({
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: Math.max(7, Math.round(dotSize * 0.55)),
-            color: '#120D04',
+            color: '#041019',
             fontWeight: 900,
           }}
         >

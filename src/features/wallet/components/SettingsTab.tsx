@@ -23,6 +23,8 @@ interface SettingsTabProps {
   onAutoTopUpAmountChange: (val: string) => void;
   onAutoTopUpThresholdChange: (val: string) => void;
   onShowPinSetup: () => void;
+  actionsLocked?: boolean;
+  actionsLockedMessage?: string;
 }
 
 export function SettingsTab({
@@ -30,6 +32,8 @@ export function SettingsTab({
   autoTopUpEnabled, autoTopUpAmount, autoTopUpThreshold,
   onAutoTopUpToggle, onAutoTopUpAmountChange, onAutoTopUpThresholdChange,
   onShowPinSetup,
+  actionsLocked = false,
+  actionsLockedMessage,
 }: SettingsTabProps) {
   return (
     <div className="space-y-4">
@@ -46,7 +50,7 @@ export function SettingsTab({
                 <p className="text-xs text-muted-foreground">{t.pinDescription}</p>
               </div>
             </div>
-            <Button size="sm" variant="outline" onClick={onShowPinSetup} className="text-xs">
+            <Button size="sm" variant="outline" onClick={onShowPinSetup} disabled={actionsLocked} className="text-xs">
               {walletData?.pinSet ? t.changePin : t.setPin}
             </Button>
           </div>
@@ -66,8 +70,11 @@ export function SettingsTab({
                 <p className="text-xs text-muted-foreground">{t.autoTopUpDesc}</p>
               </div>
             </div>
-            <Switch checked={autoTopUpEnabled} onCheckedChange={onAutoTopUpToggle} />
+            <Switch checked={autoTopUpEnabled} disabled={actionsLocked} onCheckedChange={onAutoTopUpToggle} />
           </div>
+          {actionsLocked && actionsLockedMessage && (
+            <p className="text-xs text-amber-500">{actionsLockedMessage}</p>
+          )}
 
           {autoTopUpEnabled && (
             <motion.div
@@ -81,6 +88,7 @@ export function SettingsTab({
                 <Input
                   type="number"
                   value={autoTopUpThreshold}
+                  disabled={actionsLocked}
                   onChange={(e) => onAutoTopUpThresholdChange(e.target.value)}
                   className="mt-1 h-9 text-sm rounded-lg"
                 />
@@ -90,6 +98,7 @@ export function SettingsTab({
                 <Input
                   type="number"
                   value={autoTopUpAmount}
+                  disabled={actionsLocked}
                   onChange={(e) => onAutoTopUpAmountChange(e.target.value)}
                   className="mt-1 h-9 text-sm rounded-lg"
                 />

@@ -17,33 +17,10 @@
 
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-
-const CONSENT_KEY = 'wasel:analytics-consent-v1';
-
-type ConsentDecision = 'accepted' | 'declined' | null;
-
-/** Read the stored consent decision (null = not yet decided). */
-function getConsentDecision(): ConsentDecision {
-  try {
-    const stored = localStorage.getItem(CONSENT_KEY);
-    if (stored === 'accepted' || stored === 'declined') return stored;
-  } catch {
-    /* localStorage blocked (private mode, iframe sandbox, etc.) */
-  }
-  return null;
-}
-
-/** Persist the user's decision and dispatch a DOM event so other modules react. */
-function recordDecision(decision: 'accepted' | 'declined') {
-  try {
-    localStorage.setItem(CONSENT_KEY, decision);
-  } catch {
-    /* swallow */
-  }
-  window.dispatchEvent(
-    new CustomEvent('wasel:consent', { detail: { decision } }),
-  );
-}
+import {
+  getConsentDecision,
+  recordConsentDecision,
+} from '../../utils/consent';
 
 const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
@@ -65,12 +42,12 @@ export function ConsentBanner() {
   if (!visible) return null;
 
   const handleAccept = () => {
-    recordDecision('accepted');
+    recordConsentDecision('accepted');
     setVisible(false);
   };
 
   const handleDecline = () => {
-    recordDecision('declined');
+    recordConsentDecision('declined');
     setVisible(false);
   };
 

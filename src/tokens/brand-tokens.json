@@ -2,7 +2,7 @@
   "meta": {
     "name": "Wasel Brand System",
     "version": "2026-04-11",
-    "source": "Unified gold-navy identity — single source of truth",
+    "source": "Unified teal-network identity — single source of truth",
     "canonical": "brand-theme.css is the runtime CSS layer; this file is the design record"
   },
   "color": {
@@ -11,18 +11,18 @@
     "bgDeep": "#050C15",
     "surface": "#101D2C",
     "surfaceAlt": "#172738",
-    "primary": "#F4C651",
-    "primaryDeep": "#D59E26",
-    "primaryLight": "#FFF0C1",
-    "accent": "#C5831F",
-    "success": "#FFF0C1",
-    "text": "#F8EFD6",
-    "textSub": "rgba(228,214,180,0.82)",
-    "textMuted": "rgba(216,198,160,0.58)",
-    "border": "rgba(244,198,81,0.16)",
-    "borderStrong": "rgba(244,198,81,0.34)",
+    "primary": "#19E7BB",
+    "primaryDeep": "#0BC3A0",
+    "primaryLight": "#DCFFF8",
+    "accent": "#48CFFF",
+    "success": "#A2FFE7",
+    "text": "#E9F5F7",
+    "textSub": "rgba(198,223,227,0.82)",
+    "textMuted": "rgba(170,191,196,0.58)",
+    "border": "rgba(25,231,187,0.16)",
+    "borderStrong": "rgba(25,231,187,0.34)",
     "error": "#FF646A",
-    "warning": "#FFE08A"
+    "warning": "#65E1FF"
   },
   "typography": {
     "fontSans": "Plus Jakarta Sans",
@@ -58,11 +58,11 @@
     "card": "0 18px 44px rgba(3,8,14,0.3)",
     "raised": "0 24px 56px rgba(2,6,12,0.36)",
     "hero": "0 34px 80px rgba(2,6,12,0.44)",
-    "glowPrimary": "0 18px 50px rgba(244,198,81,0.22)"
+    "glowPrimary": "0 18px 50px rgba(25,231,187,0.22)"
   },
   "gradient": {
-    "primary": "linear-gradient(135deg, #FFF0C1 0%, #F4C651 44%, #C5831F 100%)",
-    "accent": "linear-gradient(135deg, #DB9F2C 0%, #FFE08A 100%)",
-    "signal": "linear-gradient(135deg, #FFF0C1 0%, #F4C651 44%, #DB9F2C 100%)"
+    "primary": "linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)",
+    "accent": "linear-gradient(135deg, #65E1FF 0%, #A2FFE7 100%)",
+    "signal": "linear-gradient(135deg, #A2FFE7 0%, #19E7BB 44%, #48CFFF 100%)"
   }
 }

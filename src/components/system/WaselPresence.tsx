@@ -1,4 +1,12 @@
-import { BadgeCheck, HeartPulse, Mail, MapPin, MessageSquareText, PhoneCall, Sparkles } from 'lucide-react';
+import {
+  BadgeCheck,
+  HeartPulse,
+  Mail,
+  MapPin,
+  MessageSquareText,
+  PhoneCall,
+  Sparkles,
+} from 'lucide-react';
 import {
   getWaselPresenceProfile,
   getWaselPresenceSignals,
@@ -6,39 +14,42 @@ import {
 } from '../../domains/trust/waselPresence';
 
 const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
-const DISPLAY = "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', 'Cairo', sans-serif)";
+const DISPLAY =
+  "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', 'Cairo', sans-serif)";
+const PRESENCE_TEXT = '#E9F5F7';
+const PRESENCE_TEXT_MUTED = 'rgba(170,191,196,0.76)';
+const PRESENCE_BORDER = 'rgba(25,231,187,0.18)';
+const PRESENCE_BORDER_SOFT = 'rgba(162,255,231,0.22)';
+const PRESENCE_PANEL =
+  'linear-gradient(135deg, rgba(162,255,231,0.08), rgba(255,255,255,0.03) 46%, rgba(72,207,255,0.08) 100%)';
+const PRESENCE_PANEL_SOFT =
+  'linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.02))';
 
 const TONE_STYLES = {
   cyan: {
-    border: 'rgba(244,198,81,0.24)',
-    background: 'rgba(244,198,81,0.12)',
-    color: '#F4C651',
+    border: 'rgba(25,231,187,0.24)',
+    background: 'rgba(25,231,187,0.12)',
+    color: '#19E7BB',
   },
   green: {
-    border: 'rgba(255,240,193,0.24)',
-    background: 'rgba(255,240,193,0.1)',
-    color: '#FFF0C1',
+    border: 'rgba(162,255,231,0.24)',
+    background: 'rgba(162,255,231,0.1)',
+    color: '#A2FFE7',
   },
   gold: {
-    border: 'rgba(219,159,44,0.24)',
-    background: 'rgba(219,159,44,0.12)',
-    color: '#DB9F2C',
+    border: 'rgba(72,207,255,0.24)',
+    background: 'rgba(72,207,255,0.12)',
+    color: '#48CFFF',
   },
 } as const;
 
 function getActionMeta(action: WaselContactAction) {
-  if (action.id === 'call') return { icon: PhoneCall, color: '#F4C651' };
-  if (action.id === 'whatsapp') return { icon: MessageSquareText, color: '#FFF0C1' };
-  return { icon: Mail, color: '#DB9F2C' };
+  if (action.id === 'call') return { icon: PhoneCall, color: '#19E7BB' };
+  if (action.id === 'whatsapp') return { icon: MessageSquareText, color: '#A2FFE7' };
+  return { icon: Mail, color: '#48CFFF' };
 }
 
-export function WaselContactActionRow({
-  ar,
-  compact = false,
-}: {
-  ar: boolean;
-  compact?: boolean;
-}) {
+export function WaselContactActionRow({ ar, compact = false }: { ar: boolean; compact?: boolean }) {
   const profile = getWaselPresenceProfile();
 
   return (
@@ -50,7 +61,7 @@ export function WaselContactActionRow({
         alignItems: 'center',
       }}
     >
-      {profile.contactActions.map((action) => {
+      {profile.contactActions.map(action => {
         const meta = getActionMeta(action);
         const Icon = meta.icon;
 
@@ -65,17 +76,21 @@ export function WaselContactActionRow({
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              minHeight: compact ? 38 : 42,
-              padding: compact ? '0 12px' : '0 16px',
+              minHeight: compact ? 40 : 42,
+              padding: compact ? '0 14px' : '0 16px',
               borderRadius: 999,
-              border: `1px solid ${meta.color}33`,
-              background: `${meta.color}15`,
-              color: '#F8EFD6',
+              border: `1px solid ${meta.color}30`,
+              background: compact
+                ? `linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.02)), rgba(13,24,36,0.68)`
+                : `${meta.color}15`,
+              color: PRESENCE_TEXT,
               fontFamily: FONT,
               fontSize: compact ? '0.76rem' : '0.82rem',
               fontWeight: 800,
               textDecoration: 'none',
-              boxShadow: '0 12px 28px rgba(1,10,18,0.16)',
+              boxShadow: compact
+                ? '0 14px 30px rgba(1,10,18,0.16)'
+                : '0 12px 28px rgba(1,10,18,0.16)',
             }}
           >
             <Icon size={compact ? 14 : 16} color={meta.color} />
@@ -87,13 +102,7 @@ export function WaselContactActionRow({
   );
 }
 
-export function WaselProofOfLifeBlock({
-  ar,
-  compact = false,
-}: {
-  ar: boolean;
-  compact?: boolean;
-}) {
+export function WaselProofOfLifeBlock({ ar, compact = false }: { ar: boolean; compact?: boolean }) {
   const profile = getWaselPresenceProfile();
   const signals = getWaselPresenceSignals();
 
@@ -103,8 +112,8 @@ export function WaselProofOfLifeBlock({
       style={{
         borderRadius: compact ? 20 : 24,
         padding: compact ? '16px 16px 14px' : '22px 22px 20px',
-        background: 'linear-gradient(135deg, rgba(255,240,193,0.08), rgba(255,255,255,0.03) 46%, rgba(219,159,44,0.08) 100%)',
-        border: '1px solid rgba(244,198,81,0.18)',
+        background: PRESENCE_PANEL,
+        border: `1px solid ${PRESENCE_BORDER}`,
         boxShadow: '0 22px 56px rgba(1,10,18,0.22)',
       }}
     >
@@ -128,8 +137,8 @@ export function WaselProofOfLifeBlock({
               padding: '6px 10px',
               borderRadius: 999,
               background: 'rgba(8,15,24,0.5)',
-              border: '1px solid rgba(255,247,229,0.08)',
-              color: '#F4C651',
+              border: `1px solid ${PRESENCE_BORDER_SOFT}`,
+              color: '#19E7BB',
               fontSize: '0.72rem',
               fontWeight: 900,
               letterSpacing: '0.08em',
@@ -142,7 +151,7 @@ export function WaselProofOfLifeBlock({
           </div>
           <div
             style={{
-              color: '#F8EFD6',
+              color: PRESENCE_TEXT,
               fontFamily: DISPLAY,
               fontSize: compact ? '1rem' : '1.15rem',
               fontWeight: 700,
@@ -160,14 +169,14 @@ export function WaselProofOfLifeBlock({
             padding: '8px 12px',
             borderRadius: 999,
             background: 'rgba(8,15,24,0.5)',
-            border: '1px solid rgba(255,240,193,0.22)',
-            color: '#F8EFD6',
+            border: `1px solid ${PRESENCE_BORDER_SOFT}`,
+            color: PRESENCE_TEXT,
             fontSize: '0.76rem',
             fontWeight: 700,
             fontFamily: FONT,
           }}
         >
-          <BadgeCheck size={15} color="#FFF0C1" />
+          <BadgeCheck size={15} color="#A2FFE7" />
           {profile.supportPhoneDisplay || profile.supportEmail}
         </div>
       </div>
@@ -175,11 +184,13 @@ export function WaselProofOfLifeBlock({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: compact ? 'repeat(auto-fit, minmax(180px, 1fr))' : 'repeat(auto-fit, minmax(210px, 1fr))',
+          gridTemplateColumns: compact
+            ? 'repeat(auto-fit, minmax(180px, 1fr))'
+            : 'repeat(auto-fit, minmax(210px, 1fr))',
           gap: 10,
         }}
       >
-        {signals.map((signal) => {
+        {signals.map(signal => {
           const tone = TONE_STYLES[signal.tone];
 
           return (
@@ -207,7 +218,7 @@ export function WaselProofOfLifeBlock({
               <div
                 style={{
                   marginTop: 6,
-                  color: '#F8EFD6',
+                  color: PRESENCE_TEXT,
                   fontSize: compact ? '0.8rem' : '0.84rem',
                   lineHeight: 1.5,
                   fontFamily: FONT,
@@ -224,13 +235,7 @@ export function WaselProofOfLifeBlock({
   );
 }
 
-export function WaselFounderCard({
-  ar,
-  compact = false,
-}: {
-  ar: boolean;
-  compact?: boolean;
-}) {
+export function WaselFounderCard({ ar, compact = false }: { ar: boolean; compact?: boolean }) {
   const profile = getWaselPresenceProfile();
 
   return (
@@ -239,8 +244,8 @@ export function WaselFounderCard({
       style={{
         borderRadius: compact ? 20 : 24,
         padding: compact ? '16px 16px 15px' : '22px 22px 20px',
-        background: 'linear-gradient(180deg, rgba(255,247,229,0.05), rgba(255,247,229,0.02))',
-        border: '1px solid rgba(244,198,81,0.14)',
+        background: PRESENCE_PANEL_SOFT,
+        border: `1px solid ${PRESENCE_BORDER}`,
         boxShadow: '0 18px 48px rgba(1,10,18,0.18)',
       }}
     >
@@ -251,9 +256,9 @@ export function WaselFounderCard({
           gap: 8,
           padding: '6px 10px',
           borderRadius: 999,
-          background: 'rgba(219,159,44,0.12)',
-          border: '1px solid rgba(219,159,44,0.22)',
-          color: '#DB9F2C',
+          background: 'rgba(72,207,255,0.12)',
+          border: '1px solid rgba(72,207,255,0.22)',
+          color: '#48CFFF',
           fontSize: '0.72rem',
           fontWeight: 900,
           letterSpacing: '0.08em',
@@ -282,7 +287,7 @@ export function WaselFounderCard({
       <p
         style={{
           margin: 0,
-          color: 'rgba(248,239,214,0.76)',
+          color: PRESENCE_TEXT_MUTED,
           fontSize: compact ? '0.82rem' : '0.9rem',
           lineHeight: 1.75,
           fontFamily: FONT,
@@ -294,13 +299,7 @@ export function WaselFounderCard({
   );
 }
 
-export function WaselWhyCard({
-  ar,
-  compact = false,
-}: {
-  ar: boolean;
-  compact?: boolean;
-}) {
+export function WaselWhyCard({ ar, compact = false }: { ar: boolean; compact?: boolean }) {
   const profile = getWaselPresenceProfile();
 
   return (
@@ -309,8 +308,8 @@ export function WaselWhyCard({
       style={{
         borderRadius: compact ? 20 : 24,
         padding: compact ? '16px 16px 15px' : '22px 22px 20px',
-        background: 'linear-gradient(180deg, rgba(255,247,229,0.05), rgba(255,247,229,0.02))',
-        border: '1px solid rgba(244,198,81,0.14)',
+        background: PRESENCE_PANEL_SOFT,
+        border: `1px solid ${PRESENCE_BORDER}`,
         boxShadow: '0 18px 48px rgba(1,10,18,0.18)',
       }}
     >
@@ -321,9 +320,9 @@ export function WaselWhyCard({
           gap: 8,
           padding: '6px 10px',
           borderRadius: 999,
-          background: 'rgba(255,240,193,0.12)',
-          border: '1px solid rgba(255,240,193,0.22)',
-          color: '#FFF0C1',
+          background: 'rgba(162,255,231,0.12)',
+          border: '1px solid rgba(162,255,231,0.22)',
+          color: '#A2FFE7',
           fontSize: '0.72rem',
           fontWeight: 900,
           letterSpacing: '0.08em',
@@ -339,7 +338,7 @@ export function WaselWhyCard({
       <p
         style={{
           margin: 0,
-          color: 'rgba(248,239,214,0.82)',
+          color: PRESENCE_TEXT_MUTED,
           fontSize: compact ? '0.84rem' : '0.92rem',
           lineHeight: 1.75,
           fontFamily: FONT,
@@ -351,11 +350,7 @@ export function WaselWhyCard({
   );
 }
 
-export function WaselBusinessFooter({
-  ar,
-}: {
-  ar: boolean;
-}) {
+export function WaselBusinessFooter({ ar }: { ar: boolean }) {
   const profile = getWaselPresenceProfile();
 
   return (
@@ -364,8 +359,8 @@ export function WaselBusinessFooter({
       style={{
         borderRadius: 24,
         padding: '18px 18px 16px',
-        background: 'linear-gradient(135deg, rgba(255,247,229,0.05), rgba(255,247,229,0.02))',
-        border: '1px solid rgba(244,198,81,0.14)',
+        background: PRESENCE_PANEL_SOFT,
+        border: `1px solid ${PRESENCE_BORDER}`,
         boxShadow: '0 20px 48px rgba(1,10,18,0.18)',
       }}
     >
@@ -381,7 +376,7 @@ export function WaselBusinessFooter({
         <div>
           <div
             style={{
-              color: '#F8EFD6',
+              color: PRESENCE_TEXT,
               fontFamily: DISPLAY,
               fontSize: '1rem',
               fontWeight: 700,
@@ -396,12 +391,12 @@ export function WaselBusinessFooter({
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              color: 'rgba(248,239,214,0.72)',
+              color: PRESENCE_TEXT_MUTED,
               fontSize: '0.8rem',
               fontFamily: FONT,
             }}
           >
-            <MapPin size={14} color="#DB9F2C" />
+            <MapPin size={14} color="#48CFFF" />
             {ar ? profile.businessAddressAr : profile.businessAddress}
           </div>
         </div>
@@ -409,7 +404,7 @@ export function WaselBusinessFooter({
       </div>
       <div
         style={{
-          color: 'rgba(248,239,214,0.72)',
+          color: PRESENCE_TEXT_MUTED,
           fontSize: '0.8rem',
           lineHeight: 1.7,
           fontFamily: FONT,
@@ -421,11 +416,7 @@ export function WaselBusinessFooter({
   );
 }
 
-export function WaselPresenceStrip({
-  ar,
-}: {
-  ar: boolean;
-}) {
+export function WaselPresenceStrip({ ar }: { ar: boolean }) {
   const profile = getWaselPresenceProfile();
 
   return (
@@ -434,8 +425,9 @@ export function WaselPresenceStrip({
       style={{
         borderRadius: 20,
         padding: '12px 14px',
-        background: 'linear-gradient(135deg, rgba(255,240,193,0.08), rgba(255,255,255,0.03) 52%, rgba(219,159,44,0.07))',
-        border: '1px solid rgba(244,198,81,0.16)',
+        background:
+          'linear-gradient(135deg, rgba(162,255,231,0.08), rgba(255,255,255,0.03) 52%, rgba(72,207,255,0.07))',
+        border: `1px solid ${PRESENCE_BORDER}`,
         boxShadow: '0 16px 36px rgba(1,10,18,0.16)',
       }}
     >
@@ -458,8 +450,8 @@ export function WaselPresenceStrip({
               padding: '5px 10px',
               borderRadius: 999,
               background: 'rgba(8,15,24,0.48)',
-              border: '1px solid rgba(255,247,229,0.08)',
-              color: '#F4C651',
+              border: `1px solid ${PRESENCE_BORDER_SOFT}`,
+              color: '#19E7BB',
               fontSize: '0.7rem',
               fontWeight: 900,
               letterSpacing: '0.08em',
@@ -470,10 +462,27 @@ export function WaselPresenceStrip({
             <HeartPulse size={13} />
             {ar ? profile.proofOfLife.ar : profile.proofOfLife.en}
           </div>
-          <div style={{ color: '#F8EFD6', fontFamily: DISPLAY, fontSize: '0.96rem', fontWeight: 700, letterSpacing: '-0.03em' }}>
+          <div
+            style={{
+              color: PRESENCE_TEXT,
+              fontFamily: DISPLAY,
+              fontSize: '0.96rem',
+              fontWeight: 700,
+              letterSpacing: '-0.03em',
+            }}
+          >
             {ar ? profile.actionSummary.ar : profile.actionSummary.en}
           </div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', color: 'rgba(248,239,214,0.68)', fontSize: '0.76rem', fontFamily: FONT }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: 10,
+              flexWrap: 'wrap',
+              color: PRESENCE_TEXT_MUTED,
+              fontSize: '0.76rem',
+              fontFamily: FONT,
+            }}
+          >
             <span>{profile.supportPhoneDisplay || profile.supportEmail}</span>
             <span>{ar ? profile.businessAddressAr : profile.businessAddress}</span>
           </div>

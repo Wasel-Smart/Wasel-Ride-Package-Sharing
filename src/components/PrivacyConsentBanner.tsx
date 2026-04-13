@@ -15,37 +15,10 @@
 
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-
-const CONSENT_KEY = 'wasel_analytics_consent_v1';
-type ConsentValue = 'accepted' | 'declined' | null;
-
-function readConsent(): ConsentValue {
-  try {
-    const raw = localStorage.getItem(CONSENT_KEY);
-    if (raw === 'accepted' || raw === 'declined') return raw;
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function writeConsent(value: 'accepted' | 'declined') {
-  try {
-    localStorage.setItem(CONSENT_KEY, value);
-  } catch {
-    // Silently swallow storage errors (private mode, full storage)
-  }
-}
-
-function emitConsentEvent(accepted: boolean) {
-  try {
-    window.dispatchEvent(
-      new CustomEvent('wasel:consent-decision', { detail: { accepted } }),
-    );
-  } catch {
-    // Not critical — monitoring init will fall back to no-analytics mode
-  }
-}
+import {
+  getConsentDecision,
+  recordConsentDecision,
+} from '../utils/consent';
 
 const SHELL_FONT =
   "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
@@ -71,7 +44,7 @@ export function PrivacyConsentBanner() {
   useEffect(() => {
     // Defer slightly so the banner doesn't compete with the initial render
     const t = window.setTimeout(() => {
-      if (readConsent() === null) setVisible(true);
+      if (getConsentDecision() === null) setVisible(true);
     }, 1_200);
     return () => window.clearTimeout(t);
   }, []);
@@ -79,14 +52,12 @@ export function PrivacyConsentBanner() {
   if (!visible) return null;
 
   const handleAccept = () => {
-    writeConsent('accepted');
-    emitConsentEvent(true);
+    recordConsentDecision('accepted');
     setVisible(false);
   };
 
   const handleDecline = () => {
-    writeConsent('declined');
-    emitConsentEvent(false);
+    recordConsentDecision('declined');
     setVisible(false);
   };
 
@@ -112,9 +83,10 @@ export function PrivacyConsentBanner() {
         aria-modal="false"
         aria-labelledby="consent-banner-heading"
         dir={ar ? 'rtl' : 'ltr'}
+        className="wasel-consent-root"
         style={{
           position: 'fixed',
-          bottom: 'max(80px, calc(80px + env(safe-area-inset-bottom, 0px)))',
+          bottom: 'max(20px, calc(20px + env(safe-area-inset-bottom, 0px)))',
           left: 0,
           right: 0,
           zIndex: 900,
@@ -122,6 +94,7 @@ export function PrivacyConsentBanner() {
           justifyContent: 'center',
           padding: '0 12px',
           fontFamily: SHELL_FONT,
+          pointerEvents: 'none',
           // Slide-up entrance (respects prefers-reduced-motion via CSS)
           animation: 'wasel-consent-slide-in 0.32s cubic-bezier(0.4,0,0.2,1) both',
         }}
@@ -130,6 +103,29 @@ export function PrivacyConsentBanner() {
           @keyframes wasel-consent-slide-in {
             from { opacity: 0; transform: translateY(20px); }
             to   { opacity: 1; transform: translateY(0); }
+          }
+          @media (max-width: 767px) {
+            .wasel-consent-root {
+              bottom: max(88px, calc(88px + env(safe-area-inset-bottom, 0px))) !important;
+            }
+          }
+          @media (min-width: 768px) {
+            .wasel-consent-root {
+              justify-content: flex-start !important;
+              padding-inline: 20px !important;
+            }
+            .wasel-consent-card {
+              max-width: 360px !important;
+            }
+          }
+          @media (max-width: 639px) {
+            .wasel-consent-card {
+              border-radius: 18px !important;
+              padding: 16px !important;
+            }
+            .wasel-consent-actions {
+              gap: 8px !important;
+            }
           }
           @media (prefers-reduced-motion: reduce) {
             @keyframes wasel-consent-slide-in {
@@ -140,6 +136,7 @@ export function PrivacyConsentBanner() {
         `}</style>
 
         <div
+          className="wasel-consent-card"
           style={{
             width: '100%',
             maxWidth: 560,
@@ -151,6 +148,7 @@ export function PrivacyConsentBanner() {
             backdropFilter: 'blur(22px)',
             WebkitBackdropFilter: 'blur(22px)',
             padding: '18px 20px 16px',
+            pointerEvents: 'auto',
           }}
         >
           {/* Heading row */}
@@ -191,6 +189,7 @@ export function PrivacyConsentBanner() {
 
           {/* Action row */}
           <div
+            className="wasel-consent-actions"
             style={{
               display: 'flex',
               gap: 10,

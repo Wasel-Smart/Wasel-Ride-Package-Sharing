@@ -34,7 +34,11 @@ vi.mock('@/hooks/usePushNotifications', () => ({
 }));
 
 vi.mock('@/components/wasel-ds/WaselLogo', () => ({
-  WaselLogo: ({ children, ...props }: PropsWithChildren<Record<string, unknown>>) => <div {...props}>Wasel</div>,
+  WaselLogo: ({
+    children: _children,
+    showWordmark: _showWordmark,
+    ...props
+  }: PropsWithChildren<Record<string, unknown>>) => <div {...props}>Wasel</div>,
 }));
 
 vi.mock('@/features/profile/useProfilePageController', () => ({

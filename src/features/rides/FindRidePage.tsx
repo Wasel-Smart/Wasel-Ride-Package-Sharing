@@ -19,7 +19,15 @@ import {
   syncRouteReminders,
 } from '../../services/movementRetention';
 import { notificationsAPI } from '../../services/notifications.js';
-import { createRideBooking, hydrateRideBookings } from '../../services/rideLifecycle';
+import {
+  createRideBooking,
+  getRideBookings,
+  hydrateRideBookings,
+  isRideBookingConfirmed,
+  isRideBookingPending,
+  RIDE_BOOKINGS_CHANGED_EVENT,
+  type RideBookingRecord,
+} from '../../services/rideLifecycle';
 import { getWaselCategoryPosition } from '../../config/wasel-movement-network';
 import {
   ALL_RIDES,
@@ -55,13 +63,52 @@ import {
   routeTouchesLocation,
 } from '../../utils/jordanLocations';
 
+type RideBookingStateSets = {
+  confirmedRideIds: Set<string>;
+  pendingRideIds: Set<string>;
+};
+
+function buildRideBookingStateSets(
+  bookings: RideBookingRecord[],
+  legacyConfirmedIds: Iterable<string> = [],
+): RideBookingStateSets {
+  const confirmedRideIds = new Set(legacyConfirmedIds);
+  const pendingRideIds = new Set<string>();
+
+  for (const booking of bookings) {
+    if (!booking.rideId) {
+      continue;
+    }
+
+    if (isRideBookingConfirmed(booking)) {
+      confirmedRideIds.add(booking.rideId);
+      pendingRideIds.delete(booking.rideId);
+      continue;
+    }
+
+    if (isRideBookingPending(booking) && !confirmedRideIds.has(booking.rideId)) {
+      pendingRideIds.add(booking.rideId);
+    }
+  }
+
+  return {
+    confirmedRideIds,
+    pendingRideIds,
+  };
+}
+
 export function FindRidePage() {
   const nav = useIframeSafeNavigate();
   const location = useLocation();
   const { user } = useLocalAuth();
   const { language } = useLanguage();
   const ar = language === 'ar';
-  const { notifyTripConfirmed, requestPermission, permission } = usePushNotifications();
+  const {
+    notifyBookingRequested,
+    notifyTripConfirmed,
+    requestPermission,
+    permission,
+  } = usePushNotifications();
   const { initialFrom, initialTo, initialDate, initialSearched } = parseFindRideParams(location.search);
   const t = createFindRideCopy(ar);
   const copy = getFindRideStaticCopy(ar);
@@ -74,7 +121,9 @@ export function FindRidePage() {
   const [loading, setLoading] = useState(false);
   const [sort, setSort] = useState<'price' | 'time' | 'rating'>('rating');
   const [selected, setSelected] = useState<Ride | null>(null);
-  const [booked, setBooked] = useState<Set<string>>(() => new Set(readStoredStringList(RIDE_BOOKINGS_KEY)));
+  const [rideBookingState, setRideBookingState] = useState<RideBookingStateSets>(() =>
+    buildRideBookingStateSets(getRideBookings(), readStoredStringList(RIDE_BOOKINGS_KEY)),
+  );
   const [recentSearches, setRecentSearches] = useState<string[]>(() => readStoredStringList(RIDE_SEARCHES_KEY));
   const [searchError, setSearchError] = useState<string | null>(null);
   const [bookingMessage, setBookingMessage] = useState<string | null>(null);
@@ -83,6 +132,18 @@ export function FindRidePage() {
   const [savedReminders, setSavedReminders] = useState(() => getRouteReminders());
   const [pkg, setPkg] = useState({ from: 'Amman', to: 'Aqaba', weight: '<1 kg', note: '', sent: false });
   const searchTimerRef = useRef<number | null>(null);
+  const previousRideBookingStateRef = useRef<RideBookingStateSets>(rideBookingState);
+  const rideBookingHydrationReadyRef = useRef(false);
+
+  const readCurrentRideBookingState = useCallback(
+    () => buildRideBookingStateSets(getRideBookings(), readStoredStringList(RIDE_BOOKINGS_KEY)),
+    [],
+  );
+  const syncRideBookingStateFromStorage = useCallback(() => {
+    const nextState = readCurrentRideBookingState();
+    setRideBookingState(nextState);
+    return nextState;
+  }, [readCurrentRideBookingState]);
 
   const category = useMemo(() => getWaselCategoryPosition(), []);
   const corridorTruth = useCorridorTruth({ from, to, featuredLimit: 4 });
@@ -151,8 +212,8 @@ export function FindRidePage() {
 
   const routeReadinessLabel = corridorRides.length >= 2 ? t.instantMatch : corridorRides.length === 1 ? t.bookingReady : t.searchHelp;
   const bookedRides = useMemo(
-    () => allAvailableRides.filter((ride) => booked.has(ride.id)).slice(0, 3),
-    [allAvailableRides, booked],
+    () => allAvailableRides.filter((ride) => rideBookingState.confirmedRideIds.has(ride.id)).slice(0, 3),
+    [allAvailableRides, rideBookingState],
   );
   const hasSelectedPriceQuote = typeof selectedPriceQuote?.finalPriceJod === 'number';
   const savedReminderIds = useMemo(
@@ -188,10 +249,56 @@ export function FindRidePage() {
   );
 
   useEffect(() => {
-    if (!user?.id) return;
-    void hydrateRideBookings(user.id, getConnectedRides());
+    let cancelled = false;
+    const initialState = syncRideBookingStateFromStorage();
+    previousRideBookingStateRef.current = initialState;
+    rideBookingHydrationReadyRef.current = !user?.id;
+
+    if (!user?.id) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
     void hydrateDemandAlerts(user.id);
-  }, [user?.id]);
+    void hydrateRideBookings(user.id, getConnectedRides())
+      .then(() => {
+        if (cancelled) {
+          return;
+        }
+
+        const nextState = syncRideBookingStateFromStorage();
+        previousRideBookingStateRef.current = nextState;
+        rideBookingHydrationReadyRef.current = true;
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+
+        const nextState = readCurrentRideBookingState();
+        setRideBookingState(nextState);
+        previousRideBookingStateRef.current = nextState;
+        rideBookingHydrationReadyRef.current = true;
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [readCurrentRideBookingState, syncRideBookingStateFromStorage, user?.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleRideBookingsChanged = () => {
+      syncRideBookingStateFromStorage();
+    };
+
+    window.addEventListener(RIDE_BOOKINGS_CHANGED_EVENT, handleRideBookingsChanged);
+    return () => {
+      window.removeEventListener(RIDE_BOOKINGS_CHANGED_EVENT, handleRideBookingsChanged);
+    };
+  }, [syncRideBookingStateFromStorage]);
 
   useEffect(() => {
     setSavedReminders(getRouteReminders());
@@ -213,8 +320,8 @@ export function FindRidePage() {
   }, [selectedSignal?.freshestSignalAt, user]);
 
   useEffect(() => {
-    writeStoredStringList(RIDE_BOOKINGS_KEY, Array.from(booked));
-  }, [booked]);
+    writeStoredStringList(RIDE_BOOKINGS_KEY, Array.from(rideBookingState.confirmedRideIds));
+  }, [rideBookingState.confirmedRideIds]);
 
   useEffect(() => {
     writeStoredStringList(RIDE_SEARCHES_KEY, recentSearches);
@@ -239,6 +346,52 @@ export function FindRidePage() {
       window.clearTimeout(searchTimerRef.current);
     }
   }, []);
+
+  useEffect(() => {
+    const previousState = previousRideBookingStateRef.current;
+    const newlyConfirmedRideIds = Array.from(rideBookingState.confirmedRideIds).filter(
+      (rideId) =>
+        !previousState.confirmedRideIds.has(rideId)
+        && previousState.pendingRideIds.has(rideId),
+    );
+
+    previousRideBookingStateRef.current = rideBookingState;
+
+    if (!rideBookingHydrationReadyRef.current || newlyConfirmedRideIds.length === 0) {
+      return;
+    }
+
+    if (permission === 'default') {
+      requestPermission().catch(() => {});
+    }
+
+    for (const rideId of newlyConfirmedRideIds) {
+      const confirmedBooking = getRideBookings().find(
+        (booking) => booking.rideId === rideId && isRideBookingConfirmed(booking),
+      );
+      if (!confirmedBooking) {
+        continue;
+      }
+
+      notificationsAPI.createNotification({
+        title: t.bookingStarted,
+        message: `${confirmedBooking.from} to ${confirmedBooking.to} at ${confirmedBooking.time} is now confirmed with ${confirmedBooking.driverName}. Ticket ${confirmedBooking.ticketCode} is ready in your trips.`,
+        type: 'booking',
+        priority: 'high',
+        action_url: '/app/my-trips?tab=rides',
+        channels: ['whatsapp', 'sms', 'email'],
+        contact: {
+          phone: confirmedBooking.driverPhone || null,
+          email: confirmedBooking.driverEmail ?? null,
+        },
+      }).catch(() => {});
+
+      notifyTripConfirmed(
+        confirmedBooking.driverName,
+        `${confirmedBooking.from} to ${confirmedBooking.to}`,
+      );
+    }
+  }, [notifyTripConfirmed, permission, requestPermission, rideBookingState, t.bookingStarted]);
 
   const handleSearch = () => {
     if (!routeEndpointsAreDistinct(from, to)) {
@@ -349,20 +502,46 @@ export function FindRidePage() {
       pricePerSeatJod: ridePriceQuote.finalPriceJod,
       routeMode: ride.routeMode === 'live_post' ? 'live_post' : 'network_inventory',
     });
+    const bookingConfirmed = isRideBookingConfirmed(booking);
 
-    setBooked((previous) => new Set(previous).add(ride.id));
+    setRideBookingState((previous) => {
+      const confirmedRideIds = new Set(previous.confirmedRideIds);
+      const pendingRideIds = new Set(previous.pendingRideIds);
+
+      if (bookingConfirmed) {
+        confirmedRideIds.add(ride.id);
+        pendingRideIds.delete(ride.id);
+      } else {
+        confirmedRideIds.delete(ride.id);
+        pendingRideIds.add(ride.id);
+      }
+
+      return {
+        confirmedRideIds,
+        pendingRideIds,
+      };
+    });
     setBookingMessage(
       booking.status === 'pending_driver'
         ? `${ride.from} to ${ride.to} was sent to ${ride.driver.name} for approval at ${ridePriceQuote.finalPriceJod} JOD. We will update you as soon as the captain responds.`
-        : `${ride.from} to ${ride.to} with ${ride.driver.name} is reserved at ${ridePriceQuote.finalPriceJod} JOD. Ticket ${booking.ticketCode} is now saved in your trips.`,
+        : bookingConfirmed
+          ? `${ride.from} to ${ride.to} with ${ride.driver.name} is reserved at ${ridePriceQuote.finalPriceJod} JOD. Ticket ${booking.ticketCode} is now saved in your trips.`
+          : `${ride.from} to ${ride.to} with ${ride.driver.name} is being secured at ${ridePriceQuote.finalPriceJod} JOD. Wasel will confirm the seat and unlock the full trip details once sync finishes.`,
     );
 
     notificationsAPI.createNotification({
-      title: booking.status === 'pending_driver' ? 'Route request sent' : t.bookingStarted,
+      title:
+        booking.status === 'pending_driver'
+          ? 'Route request sent'
+          : bookingConfirmed
+            ? t.bookingStarted
+            : 'Seat request received',
       message:
         booking.status === 'pending_driver'
           ? `${ride.from} to ${ride.to} is waiting for driver approval at ${ridePriceQuote.finalPriceJod} JOD.`
-          : `${ride.from} to ${ride.to} at ${ride.time} is now in your trips at ${ridePriceQuote.finalPriceJod} JOD with boarding reminders.`,
+          : bookingConfirmed
+            ? `${ride.from} to ${ride.to} at ${ride.time} is now in your trips at ${ridePriceQuote.finalPriceJod} JOD with boarding reminders.`
+            : `${ride.from} to ${ride.to} at ${ride.time} is being confirmed at ${ridePriceQuote.finalPriceJod} JOD. Wasel will update your trip once the seat is locked.`,
       type: 'booking',
       priority: 'high',
       action_url: '/app/my-trips?tab=rides',
@@ -377,7 +556,11 @@ export function FindRidePage() {
       requestPermission().catch(() => {});
     }
 
-    notifyTripConfirmed(ride.driver.name, `${ride.from} to ${ride.to}`);
+    if (bookingConfirmed) {
+      notifyTripConfirmed(ride.driver.name, `${ride.from} to ${ride.to}`);
+    } else {
+      notifyBookingRequested(ride.driver.name, `${ride.from} to ${ride.to}`);
+    }
     void recordMovementActivity('ride_booked', corridorPlan?.id ?? null);
     setSelected(null);
   };
@@ -480,7 +663,7 @@ export function FindRidePage() {
             stakeholders={[
               { label: ar ? 'نتائج' : 'Matches', value: String(results.length), tone: 'teal' },
               { label: ar ? 'الممرات الحية' : 'Live corridors', value: String(featuredSignals.length), tone: 'blue' },
-              { label: ar ? 'الحجوزات' : 'Booked', value: String(booked.size), tone: 'green' },
+              { label: ar ? 'الحجوزات' : 'Booked', value: String(rideBookingState.confirmedRideIds.size), tone: 'green' },
               { label: ar ? 'تنبيهات الطلب' : 'Demand alerts', value: String(demandStats.active), tone: 'amber' },
             ]}
             statuses={[
@@ -560,7 +743,8 @@ export function FindRidePage() {
             corridorPlan={corridorPlan}
             featuredSignals={featuredSignals}
             results={results}
-            bookedRideIds={booked}
+            bookedRideIds={rideBookingState.confirmedRideIds}
+            pendingRideIds={rideBookingState.pendingRideIds}
             nearbyCorridors={nearbyCorridorCards}
             recurringSuggestions={recurringSuggestions}
             savedReminders={savedReminders}
@@ -591,7 +775,16 @@ export function FindRidePage() {
 
         <ServiceFlowPlaybook focusService={tab === 'ride' ? 'find-ride' : 'send-package'} />
 
-        {selected && <FindRideTripDetailModal ride={selected} booked={booked.has(selected.id)} signal={resolveSignalForRoute(selected.from, selected.to)} onClose={() => setSelected(null)} onBook={() => handleBook(selected)} />}
+        {selected && (
+          <FindRideTripDetailModal
+            ride={selected}
+            booked={rideBookingState.confirmedRideIds.has(selected.id)}
+            pending={rideBookingState.pendingRideIds.has(selected.id)}
+            signal={resolveSignalForRoute(selected.from, selected.to)}
+            onClose={() => setSelected(null)}
+            onBook={() => handleBook(selected)}
+          />
+        )}
       </PageShell>
     </Protected>
   );

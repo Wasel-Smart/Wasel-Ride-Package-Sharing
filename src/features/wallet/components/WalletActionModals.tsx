@@ -7,6 +7,8 @@ import { ActionModal as SharedActionModal } from './WalletShared';
 
 type WalletActionModalsProps = {
   actionLoading: boolean;
+  actionsLocked?: boolean;
+  actionsLockedMessage?: string;
   balance: number;
   isRTL: boolean;
   pinValue: string;
@@ -45,6 +47,8 @@ type WalletActionModalsProps = {
 
 export function WalletActionModals({
   actionLoading,
+  actionsLocked = false,
+  actionsLockedMessage,
   balance,
   isRTL,
   pinValue,
@@ -80,16 +84,22 @@ export function WalletActionModals({
   onTopUp,
   onWithdraw,
 }: WalletActionModalsProps) {
+  const actionDisabled = actionLoading || actionsLocked;
+
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'}>
       <SharedActionModal show={showTopUp} onClose={() => setShowTopUp(false)} title={t.addMoney}>
         <div className="space-y-3">
+          {actionsLocked && actionsLockedMessage ? (
+            <p className="text-xs text-amber-500">{actionsLockedMessage}</p>
+          ) : null}
           <div className="grid grid-cols-4 gap-2">
             {[5, 10, 20, 50].map((amt) => (
               <Button
                 key={amt}
                 variant={topUpAmount === String(amt) ? 'default' : 'outline'}
                 size="sm"
+                disabled={actionsLocked}
                 onClick={() => setTopUpAmount(String(amt))}
                 className="rounded-lg text-sm"
               >
@@ -99,7 +109,7 @@ export function WalletActionModals({
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">{t.topUpAmount}</Label>
-            <Input type="number" value={topUpAmount} onChange={(e) => setTopUpAmount(e.target.value)} className="mt-1 rounded-lg" placeholder="0.00" />
+            <Input type="number" disabled={actionsLocked} value={topUpAmount} onChange={(e) => setTopUpAmount(e.target.value)} className="mt-1 rounded-lg" placeholder="0.00" />
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">{t.paymentMethod}</Label>
@@ -113,6 +123,7 @@ export function WalletActionModals({
                 <button
                   key={method.id}
                   type="button"
+                  disabled={actionsLocked}
                   onClick={() => setTopUpMethod(method.id)}
                   className={`flex items-center gap-2 rounded-lg border p-3 text-sm transition-all ${topUpMethod === method.id ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-slate-500'}`}
                 >
@@ -122,7 +133,7 @@ export function WalletActionModals({
               ))}
             </div>
           </div>
-          <Button onClick={onTopUp} disabled={actionLoading} className="h-11 w-full rounded-xl font-semibold" style={{ background: WaselColors.teal }}>
+          <Button onClick={onTopUp} disabled={actionDisabled} className="h-11 w-full rounded-xl font-semibold" style={{ background: WaselColors.teal }}>
             {actionLoading ? t.processing : `${t.topUp} ${topUpAmount ? `${topUpAmount} ${t.jod}` : ''}`}
           </Button>
         </div>
@@ -130,14 +141,17 @@ export function WalletActionModals({
 
       <SharedActionModal show={showWithdraw} onClose={() => setShowWithdraw(false)} title={t.withdraw}>
         <div className="space-y-3">
+          {actionsLocked && actionsLockedMessage ? (
+            <p className="text-xs text-amber-500">{actionsLockedMessage}</p>
+          ) : null}
           <div>
             <Label className="text-xs text-muted-foreground">{t.withdrawAmount}</Label>
-            <Input type="number" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} className="mt-1 rounded-lg" placeholder="0.00" />
+            <Input type="number" disabled={actionsLocked} value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} className="mt-1 rounded-lg" placeholder="0.00" />
             <p className="mt-1 text-xs text-muted-foreground">{t.availableLabel}: {balance.toFixed(2)} {t.jod}</p>
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">{t.bankAccount}</Label>
-            <Input value={withdrawBank} onChange={(e) => setWithdrawBank(e.target.value)} className="mt-1 rounded-lg" placeholder="JO12ABCD..." />
+            <Input disabled={actionsLocked} value={withdrawBank} onChange={(e) => setWithdrawBank(e.target.value)} className="mt-1 rounded-lg" placeholder="JO12ABCD..." />
           </div>
           <div className="grid grid-cols-2 gap-2">
             {[
@@ -145,9 +159,10 @@ export function WalletActionModals({
               { id: 'bank_transfer', label: t.standard, fee: t.freeLabel },
             ].map((method) => (
               <button
-                key={method.id}
-                type="button"
-                onClick={() => setWithdrawMethod(method.id)}
+                  key={method.id}
+                  type="button"
+                  disabled={actionsLocked}
+                  onClick={() => setWithdrawMethod(method.id)}
                 className={`rounded-lg border p-3 text-left transition-all ${withdrawMethod === method.id ? 'border-primary bg-primary/10' : 'border-border hover:border-slate-500'}`}
               >
                 <p className="text-sm font-medium">{method.label}</p>
@@ -155,7 +170,7 @@ export function WalletActionModals({
               </button>
             ))}
           </div>
-          <Button onClick={onWithdraw} disabled={actionLoading} className="h-11 w-full rounded-xl font-semibold" style={{ background: WaselColors.bronze }}>
+          <Button onClick={onWithdraw} disabled={actionDisabled} className="h-11 w-full rounded-xl font-semibold" style={{ background: WaselColors.bronze }}>
             {actionLoading ? t.processing : t.confirmWithdraw}
           </Button>
         </div>
@@ -163,19 +178,22 @@ export function WalletActionModals({
 
       <SharedActionModal show={showSend} onClose={() => setShowSend(false)} title={t.sendMoney}>
         <div className="space-y-3">
+          {actionsLocked && actionsLockedMessage ? (
+            <p className="text-xs text-amber-500">{actionsLockedMessage}</p>
+          ) : null}
           <div>
             <Label className="text-xs text-muted-foreground">{t.recipientId}</Label>
-            <Input value={sendRecipient} onChange={(e) => setSendRecipient(e.target.value)} className="mt-1 rounded-lg" placeholder={t.userIdPlaceholder} />
+            <Input disabled={actionsLocked} value={sendRecipient} onChange={(e) => setSendRecipient(e.target.value)} className="mt-1 rounded-lg" placeholder={t.userIdPlaceholder} />
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">{t.sendAmount}</Label>
-            <Input type="number" value={sendAmount} onChange={(e) => setSendAmount(e.target.value)} className="mt-1 rounded-lg" placeholder="0.00" />
+            <Input type="number" disabled={actionsLocked} value={sendAmount} onChange={(e) => setSendAmount(e.target.value)} className="mt-1 rounded-lg" placeholder="0.00" />
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">{t.noteOptional}</Label>
-            <Input value={sendNote} onChange={(e) => setSendNote(e.target.value)} className="mt-1 rounded-lg" placeholder={t.notePlaceholder} />
+            <Input disabled={actionsLocked} value={sendNote} onChange={(e) => setSendNote(e.target.value)} className="mt-1 rounded-lg" placeholder={t.notePlaceholder} />
           </div>
-          <Button onClick={onSend} disabled={actionLoading} className="h-11 w-full rounded-xl font-semibold" style={{ background: WaselColors.teal }}>
+          <Button onClick={onSend} disabled={actionDisabled} className="h-11 w-full rounded-xl font-semibold" style={{ background: WaselColors.teal }}>
             {actionLoading ? t.processing : `${t.confirmSend} ${sendAmount ? `${sendAmount} ${t.jod}` : ''}`}
           </Button>
         </div>
@@ -190,6 +208,9 @@ export function WalletActionModals({
         title={walletData?.pinSet ? t.changePin : t.setPin}
       >
         <div className="space-y-4">
+          {actionsLocked && actionsLockedMessage ? (
+            <p className="text-xs text-amber-500">{actionsLockedMessage}</p>
+          ) : null}
           <p className="text-sm text-muted-foreground">{t.pinDescription}</p>
           <div className="flex justify-center gap-3">
             {[0, 1, 2, 3].map((index) => (
@@ -204,14 +225,15 @@ export function WalletActionModals({
           <Input
             type="tel"
             maxLength={4}
+            disabled={actionsLocked}
             value={pinValue}
             onChange={(e) => setPinValue(e.target.value.replace(/\D/g, '').slice(0, 4))}
             className="rounded-lg text-center text-2xl tracking-[1em]"
             placeholder={t.maskedPin}
             autoFocus
           />
-          <Button onClick={onSetPin} disabled={actionLoading || pinValue.length !== 4} className="h-11 w-full rounded-xl font-semibold" style={{ background: WaselColors.teal }}>
-            {actionLoading ? t.processing : t.setPin}
+          <Button onClick={onSetPin} disabled={actionDisabled || pinValue.length !== 4} className="h-11 w-full rounded-xl font-semibold" style={{ background: WaselColors.teal }}>
+            {actionLoading ? t.processing : walletData?.pinSet ? t.changePin : t.setPin}
           </Button>
         </div>
       </SharedActionModal>

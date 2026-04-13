@@ -64,9 +64,9 @@ export function useWalletDashboardController() {
   const [sendNote, setSendNote] = useState('');
   const [pinValue, setPinValue] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
-  const [autoTopUpEnabled, setAutoTopUpEnabled] = useState(initialPersistedSnapshot?.data.wallet.autoTopUp || false);
-  const [autoTopUpAmount, setAutoTopUpAmount] = useState(String(initialPersistedSnapshot?.data.wallet.autoTopUpAmount || 20));
-  const [autoTopUpThreshold, setAutoTopUpThreshold] = useState(String(initialPersistedSnapshot?.data.wallet.autoTopUpThreshold || 5));
+  const [autoTopUpEnabled, setAutoTopUpEnabled] = useState(initialPersistedSnapshot?.data?.wallet?.autoTopUp || false);
+  const [autoTopUpAmount, setAutoTopUpAmount] = useState(String(initialPersistedSnapshot?.data?.wallet?.autoTopUpAmount || 20));
+  const [autoTopUpThreshold, setAutoTopUpThreshold] = useState(String(initialPersistedSnapshot?.data?.wallet?.autoTopUpThreshold || 5));
   const effectiveUserName =
     localUser?.name ||
     user?.user_metadata?.full_name ||
@@ -82,10 +82,21 @@ export function useWalletDashboardController() {
   const subscribeErrorMessage = 'Unable to activate Wasel Plus right now.';
   const membershipSnapshot = getMovementMembershipSnapshot();
   const walletDataRef = useRef<WalletData | null>(initialPersistedSnapshot?.data ?? null);
+  const walletActionsLocked = Boolean(walletData) && (!walletHealth || walletHealth.degraded || walletHealth.source !== 'edge-api');
+  const walletActionsLockedMessage = t.walletReadOnlyToast;
 
   useEffect(() => {
     walletDataRef.current = walletData;
   }, [walletData]);
+
+  const guardWalletActionsAvailable = useCallback(() => {
+    if (walletActionsLocked) {
+      toast.error(walletActionsLockedMessage);
+      return false;
+    }
+
+    return true;
+  }, [walletActionsLocked, walletActionsLockedMessage]);
 
   const fetchWallet = useCallback(async (): Promise<WalletData | null> => {
     if (localAuthLoading) {
@@ -208,6 +219,10 @@ export function useWalletDashboardController() {
   };
 
   const handleTopUp = async () => {
+    if (!guardWalletActionsAvailable()) {
+      return;
+    }
+
     const amt = parseFloat(topUpAmount);
     if (!amt || amt <= 0) {
       toast.error(t.invalidAmount);
@@ -223,7 +238,7 @@ export function useWalletDashboardController() {
       fallbackErrorMessage: topUpErrorMessage,
       loadingSetter: setActionLoading,
       onSuccess: (refreshedWallet) => {
-        toast.success(`JOD ${amt} added successfully`);
+        toast.success(t.topUpSuccess.replace('{amount}', String(amt)));
         setShowTopUp(false);
         setTopUpAmount('');
 
@@ -242,6 +257,10 @@ export function useWalletDashboardController() {
   };
 
   const handleWithdraw = async () => {
+    if (!guardWalletActionsAvailable()) {
+      return;
+    }
+
     const amt = parseFloat(withdrawAmount);
     if (!amt || amt <= 0) {
       toast.error(t.invalidAmount);
@@ -249,6 +268,10 @@ export function useWalletDashboardController() {
     }
     if (!withdrawBank.trim()) {
       toast.error(t.enterBankAccount);
+      return;
+    }
+    if (amt > (walletData?.balance ?? 0)) {
+      toast.error(t.insufficientBalance);
       return;
     }
 
@@ -261,7 +284,7 @@ export function useWalletDashboardController() {
       fallbackErrorMessage: withdrawErrorMessage,
       loadingSetter: setActionLoading,
       onSuccess: (refreshedWallet) => {
-        toast.success(`JOD ${amt} withdrawn successfully`);
+        toast.success(t.withdrawSuccess.replace('{amount}', String(amt)));
         setShowWithdraw(false);
         setWithdrawAmount('');
         setWithdrawBank('');
@@ -281,6 +304,10 @@ export function useWalletDashboardController() {
   };
 
   const handleSend = async () => {
+    if (!guardWalletActionsAvailable()) {
+      return;
+    }
+
     const amt = parseFloat(sendAmount);
     if (!amt || amt <= 0) {
       toast.error(t.invalidAmount);
@@ -299,7 +326,7 @@ export function useWalletDashboardController() {
       fallbackErrorMessage: sendErrorMessage,
       loadingSetter: setActionLoading,
       onSuccess: () => {
-        toast.success(`JOD ${amt} sent successfully`);
+        toast.success(t.sendSuccess.replace('{amount}', String(amt)));
         setShowSend(false);
         setSendAmount('');
         setSendRecipient('');
@@ -309,6 +336,10 @@ export function useWalletDashboardController() {
   };
 
   const handleSetPin = async () => {
+    if (!guardWalletActionsAvailable()) {
+      return;
+    }
+
     if (pinValue.length !== 4 || !/^\d{4}$/.test(pinValue)) {
       toast.error(t.pinMustBeFourDigits);
       return;
@@ -330,6 +361,10 @@ export function useWalletDashboardController() {
   };
 
   const handleClaimReward = async (rewardId: string) => {
+    if (!guardWalletActionsAvailable()) {
+      return;
+    }
+
     await runWalletAction({
       action: async () => {
         await walletApi.claimReward(effectiveUserId, rewardId);
@@ -343,6 +378,10 @@ export function useWalletDashboardController() {
   };
 
   const handleAutoTopUpToggle = async (enabled: boolean) => {
+    if (!guardWalletActionsAvailable()) {
+      return;
+    }
+
     setAutoTopUpEnabled(enabled);
 
     try {
@@ -361,6 +400,10 @@ export function useWalletDashboardController() {
   };
 
   const handleSubscribe = async () => {
+    if (!guardWalletActionsAvailable()) {
+      return;
+    }
+
     const preferredCorridorId = walletData?.subscription?.corridorId
       ?? membershipSnapshot.dailyRouteId
       ?? membershipSnapshot.commuterPassRouteId
@@ -437,6 +480,8 @@ export function useWalletDashboardController() {
     tab,
     topUpAmount,
     topUpMethod,
+    walletActionsLocked,
+    walletActionsLockedMessage,
     walletData,
     walletHealth,
     walletInsightsHealth,

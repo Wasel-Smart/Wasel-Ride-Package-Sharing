@@ -1,0 +1,92 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512 512"
+  fill="none"
+  role="img"
+  aria-labelledby="title desc"
+>
+  <title id="title">Wasel main logo</title>
+  <desc id="desc">A glowing network mark in deep navy, teal, and mint.</desc>
+  <defs>
+    <radialGradient id="wasel-logo-shell" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 254) rotate(90) scale(188)">
+      <stop offset="0" stop-color="#1A223A" />
+      <stop offset="0.6" stop-color="#10192E" />
+      <stop offset="1" stop-color="#0A1020" />
+    </radialGradient>
+    <linearGradient id="wasel-logo-link" x1="152" y1="328" x2="367" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#17D7A6" />
+      <stop offset="0.5" stop-color="#33EAC2" />
+      <stop offset="1" stop-color="#64F3DE" />
+    </linearGradient>
+    <linearGradient id="wasel-logo-link-core" x1="156" y1="320" x2="361" y2="188" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A7FFEA" />
+      <stop offset="0.55" stop-color="#8DFFF1" />
+      <stop offset="1" stop-color="#D7FFF9" />
+    </linearGradient>
+    <radialGradient id="wasel-logo-node" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 0) scale(1)">
+      <stop offset="0" stop-color="#E8FFFB" />
+      <stop offset="0.28" stop-color="#93FFF2" />
+      <stop offset="0.62" stop-color="#30E9C0" />
+      <stop offset="1" stop-color="#10B996" />
+    </radialGradient>
+    <filter id="wasel-logo-ambient-glow" x="27" y="34" width="458" height="444" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="30" />
+    </filter>
+    <filter id="wasel-logo-node-glow" x="-70" y="-70" width="140" height="140" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="16" />
+    </filter>
+    <filter id="wasel-logo-shell-shadow" x="46" y="42" width="420" height="420" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="28" stdDeviation="34" flood-color="#04111D" flood-opacity="0.34" />
+    </filter>
+  </defs>
+
+  <g opacity="0.94">
+    <circle cx="256" cy="250" r="108" fill="#22E1B8" opacity="0.2" filter="url(#wasel-logo-ambient-glow)" />
+    <circle cx="286" cy="232" r="76" fill="#63FFF2" opacity="0.12" filter="url(#wasel-logo-ambient-glow)" />
+  </g>
+
+  <g filter="url(#wasel-logo-shell-shadow)">
+    <circle cx="256" cy="256" r="92" fill="url(#wasel-logo-shell)" />
+    <circle cx="256" cy="256" r="90" stroke="#16314A" stroke-width="2" opacity="0.8" />
+    <circle cx="256" cy="256" r="78" stroke="#47ECC5" stroke-width="1.5" opacity="0.08" />
+  </g>
+
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M172 302L256 246L338 201" stroke="url(#wasel-logo-link)" stroke-width="11" />
+    <path d="M178 296L256 246L332 206" stroke="url(#wasel-logo-link-core)" stroke-width="3.4" opacity="0.85" />
+    <path d="M190 235L256 246" stroke="#6E8AA2" stroke-width="4" opacity="0.58" />
+    <path d="M172 302L190 235" stroke="#163D52" stroke-width="4" opacity="0.7" />
+    <path d="M256 246L314 285" stroke="#6A88A4" stroke-width="4" opacity="0.44" />
+  </g>
+
+  <g>
+    <g transform="translate(172 302)">
+      <circle cx="0" cy="0" r="34" fill="#18D9A8" opacity="0.3" filter="url(#wasel-logo-node-glow)" />
+      <circle cx="0" cy="0" r="17" fill="url(#wasel-logo-node)" />
+      <circle cx="0" cy="0" r="8.5" fill="#A9FFF3" opacity="0.72" />
+      <circle cx="0" cy="0" r="22" stroke="#26E3B8" stroke-width="3" opacity="0.28" />
+    </g>
+    <g transform="translate(256 246)">
+      <circle cx="0" cy="0" r="40" fill="#25E2B6" opacity="0.34" filter="url(#wasel-logo-node-glow)" />
+      <circle cx="0" cy="0" r="21" fill="url(#wasel-logo-node)" />
+      <circle cx="0" cy="0" r="9.5" fill="#C5FFF8" opacity="0.72" />
+      <circle cx="0" cy="0" r="28" stroke="#4AF0C8" stroke-width="3" opacity="0.34" />
+    </g>
+    <g transform="translate(338 201)">
+      <circle cx="0" cy="0" r="36" fill="#5CF7EA" opacity="0.32" filter="url(#wasel-logo-node-glow)" />
+      <circle cx="0" cy="0" r="17" fill="url(#wasel-logo-node)" />
+      <circle cx="0" cy="0" r="8" fill="#CBFFFA" opacity="0.7" />
+      <circle cx="0" cy="0" r="22" stroke="#65F5E1" stroke-width="3" opacity="0.28" />
+    </g>
+    <g transform="translate(190 235)">
+      <circle cx="0" cy="0" r="11" fill="#B2C4D5" opacity="0.16" filter="url(#wasel-logo-node-glow)" />
+      <circle cx="0" cy="0" r="6" fill="#A7B8CA" opacity="0.54" />
+      <circle cx="0" cy="0" r="9" stroke="#7A8FA5" stroke-width="2.4" opacity="0.28" />
+    </g>
+    <g transform="translate(314 285)">
+      <circle cx="0" cy="0" r="11" fill="#B3C8D7" opacity="0.14" filter="url(#wasel-logo-node-glow)" />
+      <circle cx="0" cy="0" r="5.8" fill="#9DAFC0" opacity="0.5" />
+      <circle cx="0" cy="0" r="9" stroke="#6E869C" stroke-width="2.4" opacity="0.24" />
+    </g>
+  </g>
+</svg>
