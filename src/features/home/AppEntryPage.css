@@ -116,6 +116,7 @@
   font-size: 0.88rem;
   font-weight: 800;
   cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
 }
 
 .app-entry-page__auth-primary {
@@ -300,6 +301,7 @@
   font-size: 0.88rem;
   font-weight: 800;
   cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
 }
 
 .app-entry-page__mode-switch button.is-active {
@@ -378,6 +380,7 @@
   border-radius: 16px;
   font-weight: 800;
   cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
 }
 
 .app-entry-page__primary-button {
@@ -437,6 +440,7 @@
   text-align: start;
   color: inherit;
   cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .app-entry-page__flow-icon {
@@ -459,6 +463,10 @@
   color: var(--landing-blue);
   font-size: 0.86rem;
   font-weight: 800;
+}
+
+[dir='rtl'] .app-entry-page__flow-cta svg {
+  transform: scaleX(-1);
 }
 
 .app-entry-page button:focus-visible,
@@ -511,10 +519,12 @@
     min-height: auto;
   }
 
-  .app-entry-page__hero-title,
+  .app-entry-page__hero-title {
+    max-width: none;
+  }
+
   .app-entry-page__flow-grid,
   .app-entry-page__field-grid {
-    max-width: none;
     grid-template-columns: 1fr;
   }
 
