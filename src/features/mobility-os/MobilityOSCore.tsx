@@ -46,7 +46,6 @@ const FLOW_SPEED_SCALE = 0.42;
 const HERO_MAP_ASPECT = 1.42;
 const ACTIVE_FRAME_RATE = 36;
 const SCROLLING_FRAME_RATE = 20;
-const IDLE_FRAME_RATE = 8;
 const ANALYTICS_COMMIT_INTERVAL_MS = 320;
 const INTERACTION_COOLDOWN_MS = 180;
 const MAP_VISIBILITY_THRESHOLD = 0.18;
@@ -464,18 +463,31 @@ export default function MobilityOSCore() {
   }, [ar]);
 
   useEffect(() => {
+    if (isCompactMobile) {
+      setCommercialSnapshot(null);
+      return undefined;
+    }
+
     let cancelled = false;
-    void buildCorridorCommercialSnapshot()
-      .then((snapshot) => {
-        if (!cancelled) setCommercialSnapshot(snapshot);
-      })
-      .catch(() => {
-        if (!cancelled) setCommercialSnapshot(null);
-      });
+    const timeoutId = window.setTimeout(() => {
+      void buildCorridorCommercialSnapshot()
+        .then((snapshot) => {
+          if (!cancelled) {
+            startTransition(() => {
+              setCommercialSnapshot(snapshot);
+            });
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setCommercialSnapshot(null);
+        });
+    }, 1200);
+
     return () => {
       cancelled = true;
+      window.clearTimeout(timeoutId);
     };
-  }, []);
+  }, [isCompactMobile]);
 
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -1292,12 +1304,13 @@ export default function MobilityOSCore() {
         documentVisibleRef.current &&
         !prefersReducedMotionRef.current &&
         !staticSceneModeRef.current;
-      const targetFrameInterval = activelyAnimating
-        ? 1000 /
-          (interactionActiveRef.current ? SCROLLING_FRAME_RATE : ACTIVE_FRAME_RATE)
-        : 1000 / IDLE_FRAME_RATE;
+      const targetFrameInterval =
+        1000 / (interactionActiveRef.current ? SCROLLING_FRAME_RATE : ACTIVE_FRAME_RATE);
 
-      if (timestamp - lastDrawTimeRef.current >= targetFrameInterval) {
+      if (
+        activelyAnimating &&
+        timestamp - lastDrawTimeRef.current >= targetFrameInterval
+      ) {
         if (activelyAnimating) {
           phaseRef.current = timestamp;
           updateSimulation(delta, timestamp);
@@ -1687,7 +1700,7 @@ export default function MobilityOSCore() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: `repeat(auto-fit, minmax(${isCompactMobile ? 260 : 320}px, 1fr))` }}>
+          <div style={{ display: 'grid', gap: 14, gridTemplateColumns: `repeat(auto-fit, minmax(${isCompactMobile ? 260 : 320}px, 1fr))`, contentVisibility: 'auto', containIntrinsicSize: isCompactMobile ? '420px' : '360px' }}>
             <article style={glassPanelStyle({ padding: isCompactMobile ? 16 : 18, borderRadius: isCompactMobile ? 20 : 26, background: 'linear-gradient(180deg, rgba(8,24,38,0.96), rgba(4,10,22,0.98))' })}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><MapPinned size={18} color={C.cyan} /><h3 style={{ margin: 0, fontSize: '1rem' }}>{copy.selectedNode}</h3></div>
               <div style={{ marginTop: 14, display: 'grid', gap: 8, gridTemplateColumns: isCompactMobile ? 'repeat(2, minmax(0, 1fr))' : undefined }}>
@@ -1714,7 +1727,7 @@ export default function MobilityOSCore() {
           </div>
         </section>
 
-        <section style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0, 1fr)' }}>
+        <section style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0, 1fr)', contentVisibility: 'auto', containIntrinsicSize: isCompactMobile ? '1100px' : '900px' }}>
           <article style={glassPanelStyle({ padding: isCompactMobile ? 16 : 22, borderRadius: isCompactMobile ? 24 : 32, background: 'linear-gradient(180deg, rgba(8,18,34,0.98), rgba(4,10,22,1))' })}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 18 }}>
               <div>
