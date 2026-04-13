@@ -31,7 +31,7 @@
     "@radix-ui/react-toggle-group": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@sentry/react": "^8.0.0",
-    "@stripe/stripe-js": "^4.0.0",
+    "@stripe/stripe-js": "^9.1.0",
     "@supabase/supabase-js": "^2.102.1",
     "@tanstack/react-query": "^5.95.2",
     "@vercel/analytics": "^2.0.1",
