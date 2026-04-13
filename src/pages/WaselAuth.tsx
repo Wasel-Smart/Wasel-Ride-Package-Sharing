@@ -24,6 +24,8 @@ import { useAuth }                   from '../contexts/AuthContext';
 import { getConfig, getWhatsAppSupportUrl } from '../utils/env';
 import { friendlyAuthError, getPasswordRequirements, normalizeEmailInput, pwStrength, validateFullName, validatePassword } from '../utils/authHelpers';
 import { C, R, TYPE, F, SPACE, SH, GRAD_HERO } from '../utils/wasel-ds';
+import { LANDING_DISPLAY, LANDING_FONT } from '../features/home/landingConstants';
+import './WaselAuth.css';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = 'signin' | 'signup';
@@ -41,6 +43,21 @@ const SOCIAL_META: Record<string, { accent: string; bg: string; border: string }
   Facebook: { accent: '#1877F2', bg: 'rgba(24,119,242,0.10)', border: 'rgba(24,119,242,0.20)' },
   WhatsApp: { accent: '#25D366', bg: 'rgba(37,211,102,0.10)', border: 'rgba(37,211,102,0.20)' },
 };
+
+const AUTH_LANDING = {
+  bg:
+    'radial-gradient(circle at top left, rgba(15,115,255,0.12), transparent 22%), radial-gradient(circle at top right, rgba(25,231,187,0.14), transparent 20%), linear-gradient(180deg, #eef4fb 0%, #ffffff 24%, #eef5fb 100%)',
+  hero: 'linear-gradient(135deg, #092544 0%, #071A30 52%, #06111F 100%)',
+  heroScrim:
+    'linear-gradient(90deg, rgba(6,21,39,0.84) 0%, rgba(6,21,39,0.58) 46%, rgba(6,21,39,0.24) 100%), linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0))',
+  panel: 'rgba(255,255,255,0.94)',
+  panelBorder: 'rgba(16,43,73,0.1)',
+  text: '#0d2948',
+  textMuted: 'rgba(13,41,72,0.72)',
+  textSoft: 'rgba(13,41,72,0.6)',
+  blue: '#0f73ff',
+  teal: '#19e7bb',
+} as const;
 
 // ─── Brand panel (left column) ────────────────────────────────────────────────
 function BrandPanel() {
