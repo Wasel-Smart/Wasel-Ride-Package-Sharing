@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 
 import { TYPE } from '../../utils/wasel-ds';
+import { ExactLogoMark } from './ExactLogoMark';
 
 interface WaselLogoProps {
   size?: number;
@@ -14,10 +15,9 @@ interface WaselLogoProps {
   animated?: boolean;
 }
 
-const LOGO_ASSET_VERSION = '20260413figma-video-lockup';
 const LOGO_MARK_SOURCES = {
   default: {
-    src: `/brand/wasel-main-network-logo.svg?v=${LOGO_ASSET_VERSION}`,
+    src: '',
     aspectRatio: 1,
   },
   'attached-primary': {
@@ -78,6 +78,7 @@ export function WaselLogo({
   const mark = getLogoMark(markAsset);
   const markHeight = size;
   const markWidth = Math.max(1, Math.round(size * mark.aspectRatio));
+  const usesUploadedMark = markAsset === 'default';
   const titleColor = onDarkSurface ? '#A5FFEA' : '#0E8A6D';
   const metaColor = onDarkSurface ? 'rgba(197, 236, 233, 0.76)' : 'rgba(16, 112, 101, 0.72)';
   const titleGradient = onDarkSurface
@@ -99,19 +100,25 @@ export function WaselLogo({
       }}
     >
       {animated ? <span className="wasel-logo-breathe__halo" aria-hidden="true" /> : null}
-      <LogoImage
-        width={markWidth}
-        height={markHeight}
-        src={mark.src}
-        alt="Wasel main logo"
-        style={{
-          position: 'relative',
-          zIndex: 1,
-          filter: onDarkSurface
-            ? 'drop-shadow(0 18px 28px rgba(4, 8, 14, 0.32)) drop-shadow(0 0 18px rgba(25, 231, 187, 0.16))'
-            : 'drop-shadow(0 14px 22px rgba(7, 36, 33, 0.18))',
-        }}
-      />
+      {usesUploadedMark ? (
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <ExactLogoMark size={markHeight} animated={animated} />
+        </div>
+      ) : (
+        <LogoImage
+          width={markWidth}
+          height={markHeight}
+          src={mark.src}
+          alt="Wasel main logo"
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            filter: onDarkSurface
+              ? 'drop-shadow(0 18px 28px rgba(4, 8, 14, 0.32)) drop-shadow(0 0 18px rgba(25, 231, 187, 0.16))'
+              : 'drop-shadow(0 14px 22px rgba(7, 36, 33, 0.18))',
+          }}
+        />
+      )}
     </div>
   );
 
@@ -181,23 +188,30 @@ export function WaselMark({
   animated?: boolean;
 }) {
   const mark = getLogoMark(markAsset);
+  const usesUploadedMark = markAsset === 'default';
   return (
     <div
       className={animated ? 'wasel-logo-breathe wasel-logo-breathe--mark' : undefined}
       style={{ display: 'inline-flex', position: 'relative', alignItems: 'center', justifyContent: 'center', ...style }}
     >
       {animated ? <span className="wasel-logo-breathe__halo" aria-hidden="true" /> : null}
-      <LogoImage
-        width={Math.max(1, Math.round(size * mark.aspectRatio))}
-        height={size}
-        src={mark.src}
-        alt="Wasel main logo"
-        style={{
-          position: 'relative',
-          zIndex: 1,
-          filter: 'drop-shadow(0 18px 28px rgba(4, 8, 14, 0.24)) drop-shadow(0 0 18px rgba(25, 231, 187, 0.14))',
-        }}
-      />
+      {usesUploadedMark ? (
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <ExactLogoMark size={size} animated={animated} />
+        </div>
+      ) : (
+        <LogoImage
+          width={Math.max(1, Math.round(size * mark.aspectRatio))}
+          height={size}
+          src={mark.src}
+          alt="Wasel main logo"
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            filter: 'drop-shadow(0 18px 28px rgba(4, 8, 14, 0.24)) drop-shadow(0 0 18px rgba(25, 231, 187, 0.14))',
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -210,6 +224,7 @@ export function WaselHeroMark({
   markAsset?: 'default' | 'attached-primary';
 }) {
   const mark = getLogoMark(markAsset);
+  const usesUploadedMark = markAsset === 'default';
   return (
     <div
       style={{
@@ -220,15 +235,19 @@ export function WaselHeroMark({
         justifyContent: 'center',
       }}
     >
-      <LogoImage
-        width={Math.max(1, Math.round(size * 0.92 * mark.aspectRatio))}
-        height={Math.round(size * 0.92)}
-        src={mark.src}
-        alt="Wasel main logo"
-        style={{
-          filter: 'drop-shadow(0 22px 36px rgba(7, 10, 17, 0.26)) drop-shadow(0 0 24px rgba(25, 231, 187, 0.18))',
-        }}
-      />
+      {usesUploadedMark ? (
+        <ExactLogoMark size={Math.round(size * 0.92)} animated />
+      ) : (
+        <LogoImage
+          width={Math.max(1, Math.round(size * 0.92 * mark.aspectRatio))}
+          height={Math.round(size * 0.92)}
+          src={mark.src}
+          alt="Wasel main logo"
+          style={{
+            filter: 'drop-shadow(0 22px 36px rgba(7, 10, 17, 0.26)) drop-shadow(0 0 24px rgba(25, 231, 187, 0.18))',
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -241,6 +260,10 @@ export function WaselIcon({
   markAsset?: 'default' | 'attached-primary';
 }) {
   const mark = getLogoMark(markAsset);
+  if (markAsset === 'default') {
+    return <ExactLogoMark size={size} />;
+  }
+
   return (
     <LogoImage
       width={Math.max(1, Math.round(size * mark.aspectRatio))}

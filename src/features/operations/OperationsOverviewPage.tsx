@@ -1,18 +1,11 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Activity, Briefcase, Brain, GraduationCap, LineChart, Shield } from 'lucide-react';
+import { Activity, Brain, LineChart, Shield } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import {
   buildCorridorCommercialSnapshot,
   type CorridorCommercialSnapshot,
 } from '../../services/corridorCommercial';
-import {
-  buildBusinessAccountSnapshot,
-  buildSchoolTransportSnapshot,
-  type BusinessAccountSnapshot,
-  type SchoolTransportSnapshot,
-} from '../../services/corridorOperations';
 import { getGrowthDashboard, type GrowthDashboard } from '../../services/growthEngine';
 import {
   buildMiddleEastCorridorProof,

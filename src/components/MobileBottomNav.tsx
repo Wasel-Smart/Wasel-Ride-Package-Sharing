@@ -55,6 +55,7 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
 
       <nav
         className="wasel-bottom-nav"
+        data-wasel-bottom-nav
         aria-label="Main navigation"
         dir={isArabic ? 'rtl' : 'ltr'}
         style={{

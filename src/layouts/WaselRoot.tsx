@@ -140,6 +140,8 @@ export default function WaselRoot() {
       {/* ── Sticky header ────────────────────────────────────────────── */}
       <header
         ref={navRef}
+        data-wasel-nav
+        className="wasel-sticky-header"
         style={{
           position: 'sticky',
           top: 0,

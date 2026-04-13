@@ -87,19 +87,18 @@ html, body {
   overflow-x: hidden;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: auto;
 }
 
 html {
-  overscroll-behavior: none;
-}
-
-body {
-  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
 }
 
 #root, [data-app-root] {
-  height: 100%;
-  overflow: visible;
+  min-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ── 8pt Spacing tokens (additive — not in brand-theme.css) ───────────────── */
@@ -287,7 +286,25 @@ a[href].wasel-outline-button:active,
   background: linear-gradient(135deg, #E8F7F9 0%, #FFFFFF 100%) !important;
 }
 
-/* ── Scrollable container helpers ────────────────────────────────────────── */
+/* ── Performance: GPU-accelerated layers ─────────────────────────────────── */
+/* Promote sticky/fixed UI to their own compositor layers for smooth scrolling */
+[data-wasel-nav],
+[data-wasel-bottom-nav],
+.wasel-sticky-header {
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Touch targets — ensure fast tap response on mobile */
+button, a, [role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Reduce layout thrashing on scroll containers */
 [data-scrollable], .overflow-y-auto, .overflow-y-scroll {
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;

@@ -119,8 +119,6 @@ const LEGACY_APP_ALIASES = [
   '/awasel/track',
   '/raje3',
   '/services/raje3',
-  '/services/corporate',
-  '/services/school',
   '/innovation-hub',
   '/analytics',
   '/execution-os',
@@ -158,8 +156,6 @@ const APP_LAZY_ROUTES = [
   { path: 'bus',                lazy: lazy(() => import('./features/bus/BusPage'), 'BusPage') },
   { path: 'packages',           lazy: lazy(() => import('./features/packages/PackagesPage')) },
   { path: 'raje3',              lazy: lazy(() => import('./features/raje3/ReturnMatching')) },
-  { path: 'services/corporate', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
-  { path: 'services/school',    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
   { path: 'innovation-hub',     lazy: lazy(() => import('./features/innovation/InnovationHubPage')) },
   // ── Dedicated analytics dashboard (was: OperationsOverviewPage stub) ──
   { path: 'analytics',          lazy: lazy(() => import('./features/operations/AnalyticsPage')) },
@@ -190,6 +186,8 @@ const APP_REDIRECT_ROUTES = [
   { path: 'awasel/send',      to: '/app/packages' },
   { path: 'awasel/track',     to: '/app/packages' },
   { path: 'services/raje3',   to: '/app/raje3' },
+  { path: 'services/corporate', to: '/app/find-ride' },
+  { path: 'services/school',    to: '/app/find-ride' },
   { path: 'legal/privacy',    to: '/app/privacy' },
   { path: 'legal/terms',      to: '/app/terms' },
 ] as const;
