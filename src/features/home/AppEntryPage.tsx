@@ -60,8 +60,7 @@ const ENTRY_PANEL_STRONG =
 const ENTRY_ACCENT = '#22E5BC';
 const ENTRY_MINT = '#CCFFF4';
 const ENTRY_PRIMARY_GRAD = 'linear-gradient(135deg, #6FE8FF 0%, #18D7C2 38%, #1668FF 100%)';
-const ENTRY_PRIMARY_GLOW =
-  '0 24px 64px rgba(22,104,255,0.24), 0 16px 44px rgba(24,215,194,0.16)';
+const ENTRY_PRIMARY_GLOW = '0 24px 64px rgba(22,104,255,0.24), 0 16px 44px rgba(24,215,194,0.16)';
 
 const panelStyle: CSSProperties = {
   borderRadius: 34,
@@ -205,8 +204,12 @@ export default function AppEntryPage() {
   const signalCards: readonly InsightCard[] = [
     {
       icon: MapPinned,
-      eyebrow: ar ? '\u0634\u0628\u0643\u0629 \u0648\u0627\u062d\u062f\u0629' : 'One operating surface',
-      title: ar ? '\u0627\u0644\u0642\u0631\u0627\u0631 \u064a\u0628\u062f\u0623 \u0645\u0646 \u0627\u0644\u062e\u0631\u064a\u0637\u0629' : 'Every decision starts from the map',
+      eyebrow: ar
+        ? '\u0634\u0628\u0643\u0629 \u0648\u0627\u062d\u062f\u0629'
+        : 'One operating surface',
+      title: ar
+        ? '\u0627\u0644\u0642\u0631\u0627\u0631 \u064a\u0628\u062f\u0623 \u0645\u0646 \u0627\u0644\u062e\u0631\u064a\u0637\u0629'
+        : 'Every decision starts from the map',
       detail: ar
         ? '\u0627\u0644\u0631\u0627\u0643\u0628 \u0648\u0627\u0644\u0633\u0627\u0626\u0642 \u0648\u0627\u0644\u0637\u0631\u062f \u064a\u0631\u0648\u0646 \u0646\u0641\u0633 \u0627\u0644\u0645\u0634\u0647\u062f \u0627\u0644\u062d\u064a.'
         : 'Riders, drivers, and parcels all start from one live corridor view.',
@@ -214,8 +217,12 @@ export default function AppEntryPage() {
     },
     {
       icon: WalletCards,
-      eyebrow: ar ? '\u0642\u064a\u0645\u0629 \u0623\u0639\u0644\u0649' : 'More yield per departure',
-      title: ar ? '\u0627\u0644\u0645\u0642\u0627\u0639\u062f \u0648\u0627\u0644\u0637\u0631\u0648\u062f \u0639\u0644\u0649 \u0646\u0641\u0633 \u0627\u0644\u0631\u062d\u0644\u0629' : 'Seats and parcels monetize the same trip',
+      eyebrow: ar
+        ? '\u0642\u064a\u0645\u0629 \u0623\u0639\u0644\u0649'
+        : 'More yield per departure',
+      title: ar
+        ? '\u0627\u0644\u0645\u0642\u0627\u0639\u062f \u0648\u0627\u0644\u0637\u0631\u0648\u062f \u0639\u0644\u0649 \u0646\u0641\u0633 \u0627\u0644\u0631\u062d\u0644\u0629'
+        : 'Seats and parcels monetize the same trip',
       detail: ar
         ? '\u0648\u0627\u0635\u0650\u0644 \u062a\u0631\u0641\u0639 \u0642\u064a\u0645\u0629 \u0643\u0644 \u0627\u0646\u0637\u0644\u0627\u0642\u0647 \u0628\u062f\u0648\u0646 \u062a\u0634\u062a\u064a\u062a \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645.'
         : 'Wasel compounds route value without making the product feel crowded.',
@@ -224,7 +231,9 @@ export default function AppEntryPage() {
     {
       icon: ShieldCheck,
       eyebrow: ar ? '\u062b\u0642\u0629 \u0648\u0627\u0636\u062d\u0629' : 'Trust in plain sight',
-      title: ar ? '\u0627\u0644\u062f\u0639\u0645 \u0648\u0627\u0644\u0647\u0648\u064a\u0629 \u0638\u0627\u0647\u0631\u0627\u0646 \u062f\u0627\u0626\u0645\u0627\u064b' : 'Support and identity stay visible',
+      title: ar
+        ? '\u0627\u0644\u062f\u0639\u0645 \u0648\u0627\u0644\u0647\u0648\u064a\u0629 \u0638\u0627\u0647\u0631\u0627\u0646 \u062f\u0627\u0626\u0645\u0627\u064b'
+        : 'Support and identity stay visible',
       detail: ar
         ? '\u0627\u0644\u0647\u0627\u062a\u0641 \u0648\u0648\u0627\u062a\u0633\u0627\u0628 \u0648\u0627\u0644\u0628\u0631\u064a\u062f \u062d\u0627\u0636\u0631\u0629 \u0645\u0646 \u0623\u0648\u0644 \u0634\u0627\u0634\u0629.'
         : 'Call, WhatsApp, and email are all visible from the first screen.',
@@ -268,6 +277,24 @@ export default function AppEntryPage() {
         '\u062f\u0639\u0645 \u0638\u0627\u0647\u0631',
       ]
     : ['Live rides', 'Package flow', 'Visible support'];
+  const mapEyebrow = ar
+    ? '\u0645\u0634\u0647\u062f \u0627\u0644\u0634\u0628\u0643\u0629 \u0627\u0644\u062d\u064a'
+    : 'Live network canvas';
+  const mapTitle = ar
+    ? '\u0634\u0627\u0634\u0629 \u0648\u0627\u062d\u062f\u0629 \u062a\u0634\u0631\u062d \u0627\u0644\u0645\u0646\u062a\u062c \u0643\u0644\u0647.'
+    : 'One screen explains the whole product.';
+  const mapDescription = ar
+    ? '\u0627\u0644\u062e\u0631\u064a\u0637\u0629 \u0644\u064a\u0633\u062a \u062e\u0644\u0641\u064a\u0629\u060c \u0628\u0644 \u0647\u064a \u0623\u0648\u0644 \u0642\u0631\u0627\u0631 \u0641\u064a \u0627\u0644\u062a\u062c\u0631\u0628\u0629: \u0623\u064a\u0646 \u0627\u0644\u062d\u0631\u0643\u0629\u060c \u0648\u0623\u064a \u062e\u062f\u0645\u0629 \u062a\u0646\u0627\u0633\u0628\u0647\u0627\u060c \u0648\u0643\u064a\u0641 \u062a\u0628\u0642\u0649 \u0627\u0644\u062b\u0642\u0629 \u0638\u0627\u0647\u0631\u0629.'
+    : 'The map is not decoration. It is the first product surface: where movement is happening, which service fits, and how trust stays visible.';
+  const mapCalloutLabel = ar
+    ? '\u062c\u0627\u0647\u0632 \u0644\u0644\u0639\u0631\u0636'
+    : 'Pitch-ready';
+  const mapCalloutBody = ar
+    ? '\u0645\u0646 \u0623\u0648\u0644 \u0646\u0638\u0631\u0629 \u064a\u0641\u0647\u0645 \u0627\u0644\u0645\u0634\u0627\u0647\u062f \u0623\u0646 \u0648\u0627\u0635\u0650\u0644 \u0644\u064a\u0633\u062a \u062e\u062f\u0645\u0629 \u0648\u0627\u062d\u062f\u0629\u060c \u0628\u0644 \u0634\u0628\u0643\u0629 \u062a\u0634\u063a\u064a\u0644 \u0643\u0627\u0645\u0644\u0629.'
+    : 'At a glance, the room sees that Wasel is not a single feature. It is a movement system.';
+  const mapFooterNote = ar
+    ? '\u062e\u0631\u064a\u0637\u0629\u060c \u0642\u0631\u0627\u0631\u060c \u062e\u062f\u0645\u0629\u060c \u0648\u062f\u0639\u0645 \u0641\u064a \u0646\u0641\u0633 \u0627\u0644\u0645\u0634\u0647\u062f.'
+    : 'Map, decision, service, and support in the same view.';
 
   const supportLine = profile.supportPhoneDisplay || profile.supportEmail || 'Wasel';
   const businessAddress = ar ? profile.businessAddressAr : profile.businessAddress;
@@ -277,7 +304,7 @@ export default function AppEntryPage() {
       style={{
         minHeight: '100vh',
         background:
-          'radial-gradient(circle at 50% 18%, rgba(25,231,187,0.22), transparent 14%), radial-gradient(circle at 86% 84%, rgba(151,164,173,0.18), transparent 28%), radial-gradient(circle at 16% 88%, rgba(72,207,255,0.12), transparent 20%), linear-gradient(135deg, #040816 0%, #071022 36%, #121d32 62%, #65717A 100%)',
+          'radial-gradient(circle at 16% 12%, rgba(27,215,194,0.18), transparent 20%), radial-gradient(circle at 88% 12%, rgba(22,104,255,0.16), transparent 24%), radial-gradient(circle at 78% 82%, rgba(111,232,255,0.10), transparent 20%), linear-gradient(135deg, #030816 0%, #071121 28%, #0c1c33 58%, #162843 78%, #5f6873 100%)',
         color: ENTRY_TEXT,
         fontFamily: LANDING_FONT,
       }}
@@ -533,7 +560,7 @@ export default function AppEntryPage() {
                     onClick={() => handleLandingNavigate(signUpPath)}
                     style={primaryButtonStyle}
                   >
-                    {ar ? '\u0627\u0628\u062f\u0623 \u0627\u0644\u0622\u0646' : 'Open Wasel'}
+                    {ar ? '\u0627\u0628\u062f\u0623 \u0627\u0644\u0622\u0646' : 'Create account'}
                   </button>
                 </>
               )}
@@ -600,7 +627,6 @@ export default function AppEntryPage() {
                     lineHeight: 0.9,
                     letterSpacing: '-0.08em',
                     fontWeight: 800,
-                    textWrap: 'balance',
                   }}
                 >
                   <span style={{ display: 'block', color: '#F7FCFF' }}>{heroTitleLead}</span>
@@ -631,7 +657,10 @@ export default function AppEntryPage() {
                 </p>
               </div>
 
-              <div className="entry-pill-row" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <div
+                className="entry-pill-row"
+                style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}
+              >
                 {quickPills.map(pill => (
                   <span
                     key={pill}
@@ -887,7 +916,9 @@ export default function AppEntryPage() {
                     textTransform: 'uppercase',
                   }}
                 >
-                  {ar ? '\u0627\u0642\u062a\u0635\u0627\u062f \u0627\u0644\u0645\u0633\u0627\u0631' : 'Route economics'}
+                  {ar
+                    ? '\u0627\u0642\u062a\u0635\u0627\u062f \u0627\u0644\u0645\u0633\u0627\u0631'
+                    : 'Route economics'}
                 </div>
                 <div style={{ display: 'grid', gap: 8 }}>
                   <div
@@ -969,6 +1000,7 @@ export default function AppEntryPage() {
               </div>
 
               <div
+                className="entry-meta-line"
                 style={{
                   display: 'flex',
                   gap: 10,
@@ -993,14 +1025,101 @@ export default function AppEntryPage() {
 
             <div style={{ display: 'grid', gap: 12 }}>
               <div
-              style={{
+                className="entry-float-card"
+                style={{
                   ...panelStyle,
                   padding: 18,
                   background:
-                    'radial-gradient(circle at 18% 14%, rgba(25,231,187,0.15), rgba(8,19,31,0) 24%), radial-gradient(circle at 86% 10%, rgba(101,225,255,0.08), rgba(8,19,31,0) 22%), linear-gradient(180deg, rgba(220,255,248,0.03), rgba(220,255,248,0.015)), rgba(11,19,29,0.95)',
+                    'radial-gradient(circle at 18% 14%, rgba(34,229,188,0.14), rgba(8,19,31,0) 24%), radial-gradient(circle at 86% 10%, rgba(111,232,255,0.1), rgba(8,19,31,0) 20%), linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)), rgba(7,16,27,0.95)',
                 }}
               >
-                <div style={{ position: 'relative', paddingTop: 18 }}>
+                <div
+                  className="entry-map-legend"
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 16,
+                    alignItems: 'flex-start',
+                    flexWrap: 'wrap',
+                    marginBottom: 14,
+                  }}
+                >
+                  <div style={{ maxWidth: 640 }}>
+                    <div
+                      style={{
+                        color: '#6FE8FF',
+                        fontSize: '0.74rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.14em',
+                        fontWeight: TYPE.weight.ultra,
+                      }}
+                    >
+                      {mapEyebrow}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 8,
+                        color: ENTRY_TEXT,
+                        fontFamily: LANDING_DISPLAY,
+                        fontSize: 'clamp(1.28rem, 2.1vw, 1.95rem)',
+                        lineHeight: 0.98,
+                        letterSpacing: '-0.04em',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {mapTitle}
+                    </div>
+                    <p
+                      style={{
+                        margin: '10px 0 0',
+                        color: ENTRY_TEXT_MUTED,
+                        fontSize: '0.9rem',
+                        lineHeight: 1.7,
+                        maxWidth: 700,
+                      }}
+                    >
+                      {mapDescription}
+                    </p>
+                  </div>
+
+                  <div
+                    style={{
+                      minWidth: 230,
+                      maxWidth: 280,
+                      borderRadius: 22,
+                      padding: '14px 16px',
+                      background:
+                        'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
+                      border: `1px solid ${ENTRY_BORDER_SOFT}`,
+                      boxShadow: '0 16px 32px rgba(1,10,18,0.18)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: ENTRY_MINT,
+                        fontSize: '0.72rem',
+                        fontWeight: TYPE.weight.ultra,
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        marginBottom: 8,
+                      }}
+                    >
+                      {mapCalloutLabel}
+                    </div>
+                    <div
+                      style={{
+                        color: ENTRY_TEXT,
+                        fontSize: '0.9rem',
+                        lineHeight: 1.62,
+                        fontWeight: TYPE.weight.black,
+                      }}
+                    >
+                      {mapCalloutBody}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ position: 'relative', paddingTop: 4 }}>
                   <div
                     style={{
                       borderRadius: 32,
@@ -1008,11 +1127,73 @@ export default function AppEntryPage() {
                       background: ENTRY_PANEL_STRONG,
                       border: `1px solid ${ENTRY_BORDER_SOFT}`,
                       boxShadow:
-                        'inset 0 1px 0 rgba(220,255,248,0.04), 0 28px 64px rgba(1,10,18,0.24)',
+                        'inset 0 1px 0 rgba(255,255,255,0.04), 0 28px 64px rgba(1,10,18,0.24)',
                       overflow: 'hidden',
                     }}
                   >
                     <DeferredLandingMap ar={ar} />
+                  </div>
+
+                  <div style={{ position: 'absolute', left: 24, right: 24, bottom: 24 }}>
+                    <div
+                      className="entry-map-footer"
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        padding: '14px 16px',
+                        borderRadius: 22,
+                        background: 'rgba(5,13,23,0.72)',
+                        border: `1px solid ${ENTRY_BORDER_SOFT}`,
+                        backdropFilter: 'blur(18px)',
+                        boxShadow: '0 18px 42px rgba(1,10,18,0.28)',
+                      }}
+                    >
+                      <div style={{ display: 'grid', gap: 6 }}>
+                        <span
+                          style={{
+                            color: ENTRY_MINT,
+                            fontSize: '0.72rem',
+                            fontWeight: TYPE.weight.ultra,
+                            letterSpacing: '0.12em',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {ar
+                            ? '\u0625\u0634\u0627\u0631\u0629 \u0627\u0644\u0645\u0646\u062a\u062c'
+                            : 'Product signal'}
+                        </span>
+                        <span style={{ color: ENTRY_TEXT, fontSize: '0.88rem', fontWeight: 700 }}>
+                          {mapFooterNote}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          flexWrap: 'wrap',
+                          color: ENTRY_TEXT_SOFT,
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                        }}
+                      >
+                        <span
+                          className="entry-live-dot"
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            background: ENTRY_ACCENT,
+                            boxShadow: `0 0 12px ${ENTRY_ACCENT}`,
+                          }}
+                        />
+                        <span>{supportLine}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1022,7 +1203,7 @@ export default function AppEntryPage() {
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                  gap: 10,
+                  gap: 12,
                 }}
               >
                 {actionCards.map(card => {
@@ -1032,36 +1213,38 @@ export default function AppEntryPage() {
                       key={card.title}
                       type="button"
                       onClick={() => handleLandingNavigate(card.path)}
+                      className="entry-float-card"
                       style={{
                         ...panelStyle,
-                        padding: '16px',
+                        padding: '18px',
                         display: 'grid',
-                        gap: 10,
+                        gap: 12,
                         textAlign: ar ? 'right' : 'left',
                         cursor: 'pointer',
                         background:
-                          'linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.018)), rgba(14,24,36,0.86)',
+                          'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.018)), rgba(10,19,32,0.88)',
                       }}
                     >
                       <div
                         style={{
-                          width: 46,
-                          height: 46,
-                          borderRadius: 14,
+                          width: 48,
+                          height: 48,
+                          borderRadius: 16,
                           display: 'grid',
                           placeItems: 'center',
-                          background: `${card.color}15`,
+                          background: `${card.color}16`,
                           border: `1px solid ${card.color}33`,
-                          boxShadow: `0 14px 28px ${card.color}18`,
+                          boxShadow: `0 14px 28px ${card.color}16`,
                         }}
                       >
-                        <Icon size={18} color={card.color} />
+                        <Icon size={20} color={card.color} />
                       </div>
                       <div
                         style={{
-                          fontSize: '0.95rem',
+                          fontSize: '0.98rem',
                           fontWeight: TYPE.weight.ultra,
                           color: ENTRY_TEXT,
+                          lineHeight: 1.08,
                         }}
                       >
                         {card.title}
@@ -1069,11 +1252,26 @@ export default function AppEntryPage() {
                       <div
                         style={{
                           color: ENTRY_TEXT_MUTED,
-                          fontSize: '0.82rem',
-                          lineHeight: 1.55,
+                          fontSize: '0.84rem',
+                          lineHeight: 1.6,
                         }}
                       >
                         {card.detail}
+                      </div>
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          color: card.color,
+                          fontSize: '0.8rem',
+                          fontWeight: TYPE.weight.black,
+                        }}
+                      >
+                        {ar
+                          ? '\u0627\u0641\u062a\u062d \u0627\u0644\u0645\u0633\u0627\u0631'
+                          : 'Open flow'}
+                        <ChevronRight size={14} />
                       </div>
                     </button>
                   );
