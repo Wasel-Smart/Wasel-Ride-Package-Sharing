@@ -61,6 +61,6 @@ export default defineConfig({
         statements: 85,
       },
     },
-    reporters: ['verbose'],
+    reporters: ['default'],
   },
 });

@@ -1,0 +1,57 @@
+name: Bug Report
+description: Report a defect with clear reproduction and impact details.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken and who is affected?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps To Reproduce
+      description: Provide the exact sequence needed to reproduce the issue.
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, device, route, branch, or build details.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs / Screenshots / Links
+      description: Redact secrets and personal data before attaching evidence.

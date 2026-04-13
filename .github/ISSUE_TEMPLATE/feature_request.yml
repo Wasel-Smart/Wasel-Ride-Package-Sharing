@@ -1,0 +1,32 @@
+name: Feature Request
+description: Propose a feature with success criteria and rollout context.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem To Solve
+      description: What user or operational problem are we addressing?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Change
+      description: Describe the solution shape, not just the desired button or screen.
+    validations:
+      required: true
+  - type: textarea
+    id: success
+    attributes:
+      label: Success Metric
+      description: How will we know this change worked?
+    validations:
+      required: true
+  - type: textarea
+    id: rollout
+    attributes:
+      label: Rollout / Risk Notes
+      description: Include migration, feature-flag, support, and monitoring implications.

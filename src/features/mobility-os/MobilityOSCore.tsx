@@ -1,4 +1,12 @@
-import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  startTransition,
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Gauge, MapPinned, Pause, Play, Route } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { buildCorridorCommercialSnapshot, type CorridorCommercialSnapshot } from '../../services/corridorCommercial';
@@ -36,6 +44,12 @@ const BASE_W = 1200;
 const BASE_H = 700;
 const FLOW_SPEED_SCALE = 0.42;
 const HERO_MAP_ASPECT = 1.42;
+const ACTIVE_FRAME_RATE = 36;
+const SCROLLING_FRAME_RATE = 20;
+const IDLE_FRAME_RATE = 8;
+const ANALYTICS_COMMIT_INTERVAL_MS = 320;
+const INTERACTION_COOLDOWN_MS = 180;
+const MAP_VISIBILITY_THRESHOLD = 0.18;
 const CITY_DATA: City[] = [
   { id: 0, name: 'Amman', nameAr: '?????', lat: 31.9454, lon: 35.9284, populationK: 5004.6, officialPopulation: 5004600, officialArea: 'Amman Governorate', officialAreaAr: '?????? ???????', attractiveness: 1, isHub: true, tier: 1 },
   { id: 1, name: 'Aqaba', nameAr: '??????', lat: 29.532, lon: 35.0063, populationK: 250.9, officialPopulation: 250900, officialArea: 'Aqaba Governorate', officialAreaAr: '?????? ??????', attractiveness: 0.92, isHub: true, tier: 1 },
@@ -207,6 +221,30 @@ function pointOnQuadratic(start: { x: number; y: number }, control: { x: number;
   };
 }
 
+function getCanvasDpr(isCompactMobile: boolean) {
+  if (typeof window === 'undefined') {
+    return 1;
+  }
+  return Math.min(window.devicePixelRatio || 1, isCompactMobile ? 1.35 : 1.8);
+}
+
+function upsertMetaTag(name: string, content: string) {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  let meta = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.name = name;
+    meta.dataset.managedBy = 'mobility-os';
+    document.head.appendChild(meta);
+  }
+
+  meta.content = content;
+  return meta;
+}
+
 function demand(populationK: number, attractiveness: number, hour: number) {
   const morning = 1.8 * Math.exp(-0.5 * ((hour - 8) / 1.5) ** 2);
   const evening = 2 * Math.exp(-0.5 * ((hour - 18) / 1.5) ** 2);
@@ -360,6 +398,15 @@ export default function MobilityOSCore() {
   const prevTimeRef = useRef<number | null>(null);
   const analyticsTickRef = useRef(0);
   const phaseRef = useRef(0);
+  const lastDrawTimeRef = useRef(0);
+  const canvasMetricsRef = useRef({ width: 0, height: 0, dpr: 0 });
+  const prefersReducedMotionRef = useRef(false);
+  const mapVisibleRef = useRef(true);
+  const documentVisibleRef = useRef(
+    typeof document === 'undefined' ? true : document.visibilityState === 'visible',
+  );
+  const interactionActiveRef = useRef(false);
+  const interactionTimeoutRef = useRef<number | null>(null);
   const routesRef = useRef<RouteState[]>(initialRoutes(8));
   const vehiclesRef = useRef<Vehicle[]>(buildVehicleFleet(routesRef.current, liveSnapshot?.vehicles ?? []));
   const starsRef = useRef<Star[]>(
@@ -390,6 +437,32 @@ export default function MobilityOSCore() {
     : 'Unavailable';
 
   useEffect(() => {
+    const title = ar ? 'نظام التنقل | واصل' : 'Mobility OS | Wasel';
+    const description = ar
+      ? 'سطح تشغيل حي يوضح ضغط المسارات وسرعة الحركة وسعة الطرود عبر شبكة الأردن.'
+      : 'A live operations surface for Jordan route pressure, movement speed, package capacity, and next-best corridor actions.';
+    const previousTitle = document.title;
+    const previousDescription =
+      document.querySelector('meta[name="description"]')?.getAttribute('content') ?? '';
+
+    document.title = title;
+    upsertMetaTag('description', description);
+
+    return () => {
+      document.title = previousTitle;
+      const meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+      if (!meta) {
+        return;
+      }
+      if (meta.dataset.managedBy === 'mobility-os' && previousDescription.length === 0) {
+        meta.remove();
+        return;
+      }
+      meta.content = previousDescription;
+    };
+  }, [ar]);
+
+  useEffect(() => {
     let cancelled = false;
     void buildCorridorCommercialSnapshot()
       .then((snapshot) => {
@@ -410,25 +483,34 @@ export default function MobilityOSCore() {
     const width = Math.max(320, Math.floor(wrap.clientWidth));
     const minH = window.innerWidth < 768 ? 220 : 440;
     const height = Math.max(minH, Math.floor(wrap.clientHeight || width / HERO_MAP_ASPECT));
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = getCanvasDpr(isCompactMobile);
+    if (
+      canvasMetricsRef.current.width === width &&
+      canvasMetricsRef.current.height === height &&
+      canvasMetricsRef.current.dpr === dpr
+    ) {
+      return;
+    }
+    canvasMetricsRef.current = { width, height, dpr };
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
-  }, []);
+  }, [isCompactMobile]);
 
   const drawScene = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = getCanvasDpr(isCompactMobile);
+    const reducedEffects = isCompactMobile || interactionActiveRef.current || prefersReducedMotionRef.current;
     const width = canvas.width / dpr;
     const height = canvas.height / dpr;
     const phase = phaseRef.current;
     const palette = hourPalette(timeOfDay);
-    const routeTopN = isCompactMobile ? 2 : 3;
-    const showMapChrome = !isCompactMobile;
+    const routeTopN = reducedEffects ? 2 : 3;
+    const showMapChrome = !reducedEffects;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
     const bg = ctx.createLinearGradient(0, 0, width, height);
@@ -537,7 +619,7 @@ export default function MobilityOSCore() {
     }
     ctx.restore();
 
-    starsRef.current.slice(0, isCompactMobile ? 20 : starsRef.current.length).forEach((star, index) => {
+    starsRef.current.slice(0, reducedEffects ? 18 : starsRef.current.length).forEach((star, index) => {
       const x = star.x * width + Math.sin(phase * 0.4 + index) * 2;
       const y = ((star.y + phase * 0.0008 * star.drift) % 1) * height;
       ctx.beginPath();
@@ -546,7 +628,7 @@ export default function MobilityOSCore() {
       ctx.fill();
     });
 
-    if (!isCompactMobile) {
+    if (!reducedEffects) {
       ctx.save();
       ctx.strokeStyle = viewMode === 'satellite' ? 'rgba(220,255,248,0.03)' : 'rgba(255,255,255,0.03)';
       ctx.lineWidth = 1;
@@ -601,7 +683,7 @@ export default function MobilityOSCore() {
     reliefWash.addColorStop(1, 'rgba(25,231,187,0.04)');
     ctx.fillStyle = reliefWash;
     ctx.fillRect(0, 0, width, height);
-    for (let ridge = 0; ridge < (isCompactMobile ? 2 : 5); ridge += 1) {
+    for (let ridge = 0; ridge < (reducedEffects ? 2 : 5); ridge += 1) {
       ctx.beginPath();
       const yOffset = height * (0.18 + ridge * 0.14);
       ctx.moveTo(width * 0.12, yOffset);
@@ -610,7 +692,7 @@ export default function MobilityOSCore() {
       ctx.lineWidth = 1;
       ctx.stroke();
     }
-    for (let contour = 0; contour < (isCompactMobile ? 4 : 10); contour += 1) {
+    for (let contour = 0; contour < (reducedEffects ? 4 : 10); contour += 1) {
       ctx.beginPath();
       const yOffset = height * (0.12 + contour * 0.075);
       ctx.moveTo(width * 0.08, yOffset);
@@ -721,19 +803,25 @@ export default function MobilityOSCore() {
       ctx.setLineDash([]);
       ctx.shadowBlur = 0;
 
-      const passengerParticleCount = Math.max(1, Math.round(route.passengerFlow / (isCompactMobile ? 900 : 450)));
+      const passengerParticleCount = Math.max(
+        1,
+        Math.round(route.passengerFlow / (reducedEffects ? 920 : 450)),
+      );
       for (let particle = 0; particle < passengerParticleCount; particle += 1) {
         const t = (phase * 0.00018 * FLOW_SPEED_SCALE * (1.2 + particle * 0.08) + particle / passengerParticleCount) % 1;
         const point = pointOnQuadratic(from, control, to, t);
         ctx.beginPath();
         ctx.arc(point.x, point.y, 1.6 + route.lanes * 0.1, 0, Math.PI * 2);
         ctx.fillStyle = viewMode === 'pulse' ? 'rgba(225,208,255,0.96)' : 'rgba(255, 249, 230, 0.94)';
-        ctx.shadowBlur = viewMode === 'pulse' ? 20 : 16;
+        ctx.shadowBlur = reducedEffects ? 10 : viewMode === 'pulse' ? 20 : 16;
         ctx.shadowColor = viewMode === 'pulse' ? 'rgba(167,124,255,0.5)' : PASSENGER_GLOW;
         ctx.fill();
       }
 
-      const packageParticleCount = Math.max(1, Math.round(route.packageFlow / (isCompactMobile ? 380 : 190)));
+      const packageParticleCount = Math.max(
+        1,
+        Math.round(route.packageFlow / (reducedEffects ? 360 : 190)),
+      );
       for (let particle = 0; particle < packageParticleCount; particle += 1) {
         const t = (1 - ((phase * 0.00012 * FLOW_SPEED_SCALE * (1 + particle * 0.06) + particle / packageParticleCount) % 1));
         const point = pointOnQuadratic(from, control, to, t);
@@ -741,7 +829,7 @@ export default function MobilityOSCore() {
         ctx.translate(point.x, point.y);
         ctx.rotate(phase * 0.002 + particle);
         ctx.fillStyle = viewMode === 'satellite' ? 'rgba(220,255,248,0.92)' : 'rgba(25,231,187,0.92)';
-        ctx.shadowBlur = 14;
+        ctx.shadowBlur = reducedEffects ? 8 : 14;
         ctx.shadowColor = viewMode === 'satellite' ? 'rgba(220,255,248,0.42)' : PACKAGE_GLOW;
         ctx.fillRect(-2.2, -2.2, 4.4, 4.4);
         ctx.restore();
@@ -765,7 +853,7 @@ export default function MobilityOSCore() {
         ctx.stroke();
       }
 
-      if (!isCompactMobile && routeIndex % 3 === 0) {
+      if (!reducedEffects && routeIndex % 3 === 0) {
         const routeMarker = pointOnQuadratic(from, control, to, 0.3);
         ctx.save();
         ctx.translate(routeMarker.x, routeMarker.y);
@@ -883,7 +971,7 @@ export default function MobilityOSCore() {
       ctx.lineWidth = selected ? 1.5 : 1;
       ctx.stroke();
 
-      if (!isCompactMobile || selected || city.isHub) {
+      if (!reducedEffects || selected || city.isHub) {
         const labelText = getCityLabel(city, ar);
         ctx.font = `700 ${selected ? 13 : 11}px ${F}`;
         const textWidth = ctx.measureText(labelText).width;
@@ -997,17 +1085,20 @@ export default function MobilityOSCore() {
       if (progress >= 1) { progress = 0; direction = vehicle.direction === 1 ? -1 : 1; }
       return { ...vehicle, progress, direction, x: start.x + (end.x - start.x) * progress, y: start.y + (end.y - start.y) * progress, angle: Math.atan2(end.y - start.y, end.x - start.x), passengers: vehicle.type === 'passenger' ? 1 + ((index + Math.round(route.passengerFlow)) % 4) : undefined, packageLoad: vehicle.type === 'package' ? clamp(Math.round((route.packageFlow / 70 + index) % (vehicle.packageCapacity ?? 12)), 1, vehicle.packageCapacity ?? 12) : undefined };
     });
-    if (now - analyticsTickRef.current > 120) {
+    if (now - analyticsTickRef.current > ANALYTICS_COMMIT_INTERVAL_MS) {
       analyticsTickRef.current = now;
-      setRouteSnapshot(routesRef.current);
+      const nextRouteSnapshot = routesRef.current;
       const path = optimalPath(routesRef.current, selectedCityId, 1).map((id) => {
         const city = cityMap.get(id);
         return city ? getCityLabel(city, ar) : '';
       }).join(ar ? ' ? ' : ' -> ');
       if (liveSnapshot?.analytics) {
-        setAnalytics({
-          ...liveSnapshot.analytics,
-          recommendedPath: path,
+        startTransition(() => {
+          setRouteSnapshot(nextRouteSnapshot);
+          setAnalytics({
+            ...liveSnapshot.analytics,
+            recommendedPath: path,
+          });
         });
         return;
       }
@@ -1024,29 +1115,34 @@ export default function MobilityOSCore() {
       }
       const topRouteCities = getRouteCities(topRoute);
       const selectedCity = getCityOrThrow(selectedCityId);
-      setAnalytics({
-        totalVehicles: vehiclesRef.current.length,
-        activePassengers,
-        activePackages: packageVehicles.reduce((sum, vehicle) => sum + (vehicle.packageLoad ?? 0), 0),
-        seatAvailability: Math.max(0, seatCapacity - activePassengers),
-        packageCapacity: Math.max(0, packageCapacity),
-        avgSpeed,
-        networkUtilization: vehiclesRef.current.length / (TARGET_VEHICLES * 1.15),
-        congestionLevel,
-        topCorridor: `${getCityLabel(topRouteCities.from, ar)}${ar ? ' ? ' : ' -> '}${getCityLabel(topRouteCities.to, ar)}`,
-        recommendedPath: path,
-        dispatchAction: topRoute.congestion > 0.78
-          ? (ar ? `????? ????? ????? ?????? ${getCityLabel(topRouteCities.to, ar)}` : `Reposition supply toward ${getCityLabel(topRouteCities.to, ar)}`)
-          : (ar ? `?????? ????? ??? ${getCityLabel(selectedCity, ar)}` : `Balance supply around ${getCityLabel(selectedCity, ar)}`),
+      startTransition(() => {
+        setRouteSnapshot(nextRouteSnapshot);
+        setAnalytics({
+          totalVehicles: vehiclesRef.current.length,
+          activePassengers,
+          activePackages: packageVehicles.reduce((sum, vehicle) => sum + (vehicle.packageLoad ?? 0), 0),
+          seatAvailability: Math.max(0, seatCapacity - activePassengers),
+          packageCapacity: Math.max(0, packageCapacity),
+          avgSpeed,
+          networkUtilization: vehiclesRef.current.length / (TARGET_VEHICLES * 1.15),
+          congestionLevel,
+          topCorridor: `${getCityLabel(topRouteCities.from, ar)}${ar ? ' ? ' : ' -> '}${getCityLabel(topRouteCities.to, ar)}`,
+          recommendedPath: path,
+          dispatchAction: topRoute.congestion > 0.78
+            ? (ar ? `????? ????? ????? ?????? ${getCityLabel(topRouteCities.to, ar)}` : `Reposition supply toward ${getCityLabel(topRouteCities.to, ar)}`)
+            : (ar ? `?????? ????? ??? ${getCityLabel(selectedCity, ar)}` : `Balance supply around ${getCityLabel(selectedCity, ar)}`),
+        });
       });
     }
   }, [ar, liveSnapshot, liveRouteOverrides, paused, selectedCityId, timeOfDay]);
 
   useEffect(() => {
     routesRef.current = initialRoutes(timeOfDay);
-    vehiclesRef.current = buildVehicleFleet(routesRef.current, liveSnapshot?.vehicles ?? []);
-    setRouteSnapshot(routesRef.current);
-  }, [liveSnapshot, timeOfDay]);
+    vehiclesRef.current = buildVehicleFleet(routesRef.current);
+    startTransition(() => {
+      setRouteSnapshot(routesRef.current);
+    });
+  }, [timeOfDay]);
 
   useEffect(() => {
     if (!liveSnapshot) return;
@@ -1064,11 +1160,13 @@ export default function MobilityOSCore() {
         : route;
     });
     vehiclesRef.current = buildVehicleFleet(routesRef.current, liveSnapshot.vehicles);
-    setRouteSnapshot(routesRef.current);
-    setAnalytics((current) => ({
-      ...current,
-      ...liveSnapshot.analytics,
-    }));
+    startTransition(() => {
+      setRouteSnapshot(routesRef.current);
+      setAnalytics((current) => ({
+        ...current,
+        ...liveSnapshot.analytics,
+      }));
+    });
   }, [liveRouteOverrides, liveSnapshot, timeOfDay]);
 
   useEffect(() => {
@@ -1080,18 +1178,119 @@ export default function MobilityOSCore() {
   }, [drawScene, resizeCanvas]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const syncMotionPreference = () => {
+      prefersReducedMotionRef.current = mediaQuery.matches;
+      drawScene();
+    };
+
+    syncMotionPreference();
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', syncMotionPreference);
+      return () => mediaQuery.removeEventListener('change', syncMotionPreference);
+    }
+
+    mediaQuery.addListener(syncMotionPreference);
+    return () => mediaQuery.removeListener(syncMotionPreference);
+  }, [drawScene]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const handleVisibilityChange = () => {
+      documentVisibleRef.current = document.visibilityState === 'visible';
+      if (documentVisibleRef.current) {
+        drawScene();
+      }
+    };
+
+    handleVisibilityChange();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [drawScene]);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap || typeof IntersectionObserver === 'undefined') return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        mapVisibleRef.current =
+          entry.isIntersecting && entry.intersectionRatio >= MAP_VISIBILITY_THRESHOLD;
+        if (mapVisibleRef.current) {
+          drawScene();
+        }
+      },
+      {
+        threshold: [0, MAP_VISIBILITY_THRESHOLD, 0.5],
+      },
+    );
+
+    observer.observe(wrap);
+    return () => observer.disconnect();
+  }, [drawScene]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const markInteraction = () => {
+      interactionActiveRef.current = true;
+      if (interactionTimeoutRef.current !== null) {
+        window.clearTimeout(interactionTimeoutRef.current);
+      }
+      interactionTimeoutRef.current = window.setTimeout(() => {
+        interactionActiveRef.current = false;
+      }, INTERACTION_COOLDOWN_MS);
+    };
+
+    window.addEventListener('scroll', markInteraction, { passive: true });
+    window.addEventListener('wheel', markInteraction, { passive: true });
+    window.addEventListener('touchmove', markInteraction, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', markInteraction);
+      window.removeEventListener('wheel', markInteraction);
+      window.removeEventListener('touchmove', markInteraction);
+      if (interactionTimeoutRef.current !== null) {
+        window.clearTimeout(interactionTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const loop = (timestamp: number) => {
       if (prevTimeRef.current === null) prevTimeRef.current = timestamp;
       const delta = timestamp - prevTimeRef.current;
       prevTimeRef.current = timestamp;
-      phaseRef.current = timestamp;
-      updateSimulation(delta, timestamp);
-      drawScene();
+      const activelyAnimating =
+        !paused &&
+        mapVisibleRef.current &&
+        documentVisibleRef.current &&
+        !prefersReducedMotionRef.current;
+      const targetFrameInterval = activelyAnimating
+        ? 1000 /
+          (interactionActiveRef.current ? SCROLLING_FRAME_RATE : ACTIVE_FRAME_RATE)
+        : 1000 / IDLE_FRAME_RATE;
+
+      if (timestamp - lastDrawTimeRef.current >= targetFrameInterval) {
+        if (activelyAnimating) {
+          phaseRef.current = timestamp;
+          updateSimulation(delta, timestamp);
+        }
+        drawScene();
+        lastDrawTimeRef.current = timestamp;
+      }
+
       frameRef.current = requestAnimationFrame(loop);
     };
     frameRef.current = requestAnimationFrame(loop);
-    return () => { if (frameRef.current !== null) cancelAnimationFrame(frameRef.current); prevTimeRef.current = null; };
-  }, [drawScene, updateSimulation]);
+    return () => {
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+      prevTimeRef.current = null;
+      lastDrawTimeRef.current = 0;
+    };
+  }, [drawScene, paused, updateSimulation]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -1137,6 +1336,95 @@ export default function MobilityOSCore() {
 
   return (
     <div dir={dir} style={{ minHeight: '100vh', background: `${GRAD_AURORA}, radial-gradient(circle at 15% 12%, rgba(101,225,255,0.16), transparent 22%), radial-gradient(circle at 82% 18%, rgba(25,231,187,0.14), transparent 24%), radial-gradient(circle at 50% 100%, rgba(220,255,248,0.08), transparent 28%), ${C.bg}`, color: C.text, fontFamily: F, padding: isCompactMobile ? '14px 12px 84px' : '20px 14px 88px' }}>
+      <style>{`
+        @keyframes mobility-os-mark-float {
+          0%, 100% { transform: translate3d(-50%, -50%, 0); }
+          50% { transform: translate3d(-50%, calc(-50% - 8px), 0); }
+        }
+        @keyframes mobility-os-mark-ring {
+          0% { transform: scale(0.78); opacity: 0.72; }
+          70% { transform: scale(1.38); opacity: 0; }
+          100% { transform: scale(1.38); opacity: 0; }
+        }
+        @keyframes mobility-os-mark-aura {
+          0%, 100% { opacity: 0.48; transform: scale(0.96); }
+          50% { opacity: 0.86; transform: scale(1.08); }
+        }
+        .mobility-os-mark-node {
+          position: absolute;
+          left: 22%;
+          top: 40%;
+          z-index: 1;
+          pointer-events: none;
+          contain: layout paint;
+          will-change: transform, opacity;
+          animation: mobility-os-mark-float 7s ease-in-out infinite;
+        }
+        .mobility-os-mark-node__aura {
+          position: absolute;
+          inset: -26px;
+          border-radius: 999px;
+          background: radial-gradient(circle, rgba(220,255,248,0.52) 0%, rgba(101,225,255,0.24) 38%, rgba(25,231,187,0.08) 58%, rgba(4,15,27,0) 78%);
+          filter: blur(16px);
+          animation: mobility-os-mark-aura 4.8s ease-in-out infinite;
+        }
+        .mobility-os-mark-node__ring {
+          position: absolute;
+          inset: -12px;
+          border-radius: 999px;
+          border: 1px solid rgba(162,255,231,0.3);
+          box-shadow: 0 0 0 1px rgba(220,255,248,0.08), 0 0 28px rgba(25,231,187,0.18);
+          animation: mobility-os-mark-ring 4.4s ease-out infinite;
+        }
+        .mobility-os-mark-node__ring--delay {
+          animation-delay: 1.5s;
+        }
+        .mobility-os-mark-node__image {
+          position: relative;
+          z-index: 1;
+          display: block;
+          width: clamp(72px, 9vw, 118px);
+          height: auto;
+          filter: drop-shadow(0 16px 30px rgba(4,8,14,0.34)) drop-shadow(0 0 24px rgba(220,255,248,0.36));
+        }
+        .mobility-os-mark-node__chip {
+          position: absolute;
+          top: calc(100% + 10px);
+          left: 50%;
+          transform: translateX(-50%);
+          min-width: max-content;
+          padding: 7px 12px;
+          border-radius: 999px;
+          border: 1px solid rgba(220,255,248,0.12);
+          background: rgba(6, 18, 30, 0.72);
+          color: rgba(239,246,255,0.78);
+          font-size: 0.7rem;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          backdrop-filter: blur(10px);
+        }
+        @media (max-width: 767px) {
+          .mobility-os-mark-node {
+            left: 24%;
+            top: 34%;
+          }
+          .mobility-os-mark-node__image {
+            width: clamp(60px, 18vw, 84px);
+          }
+          .mobility-os-mark-node__chip {
+            font-size: 0.62rem;
+            letter-spacing: 0.1em;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .mobility-os-mark-node,
+          .mobility-os-mark-node__aura,
+          .mobility-os-mark-node__ring {
+            animation: none;
+          }
+        }
+      `}</style>
       <div style={{ maxWidth: 1460, margin: '0 auto', display: 'grid', gap: isCompactMobile ? 14 : 18 }}>
         <section style={glassPanelStyle({ padding: isCompactMobile ? 18 : 28, borderRadius: isCompactMobile ? 24 : 34 })}>
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.04), transparent 24%, transparent 72%, rgba(25,231,187,0.08))' }} />
@@ -1166,7 +1454,7 @@ export default function MobilityOSCore() {
                     </div>
                     <strong style={{ color: PACKAGE_COLOR, fontSize: '1.1rem' }}>{String(timeOfDay).padStart(2, '0')}:00</strong>
                   </div>
-                  <input type="range" min={0} max={23} step={1} value={timeOfDay} className="mobility-os-slider" onChange={(event) => setTimeOfDay(Number(event.target.value))} style={{ width: '100%', marginTop: 14, accentColor: PACKAGE_COLOR }} />
+                  <input aria-label={ar ? 'ساعة محاكاة الشبكة' : 'Mobility network simulation hour'} type="range" min={0} max={23} step={1} value={timeOfDay} className="mobility-os-slider" onChange={(event) => setTimeOfDay(Number(event.target.value))} style={{ width: '100%', marginTop: 14, accentColor: PACKAGE_COLOR }} />
                   <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: isCompactMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
                     {[
                       { label: ar ? '??????' : 'Sunrise', value: '06:00' },
@@ -1309,9 +1597,26 @@ export default function MobilityOSCore() {
                 </div>
               </div>
             </div>
-            <div ref={wrapRef} style={{ ...glassPanelStyle({ padding: 0, borderRadius: isCompactMobile ? 22 : 30, aspectRatio: isMobile ? '4/3' : `${HERO_MAP_ASPECT} / 1`, minHeight: isMobile ? 'clamp(220px, 72vw, 360px)' : 'clamp(500px, 54vw, 860px)', boxShadow: '0 18px 44px rgba(0,0,0,0.32)', transform: 'none', transformStyle: 'flat', transformOrigin: 'center top' }), background: 'linear-gradient(180deg, rgba(6,15,25,0.99), rgba(6,13,22,0.99))', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div ref={wrapRef} style={{ ...glassPanelStyle({ padding: 0, borderRadius: isCompactMobile ? 22 : 30, aspectRatio: isMobile ? '4/3' : `${HERO_MAP_ASPECT} / 1`, minHeight: isMobile ? 'clamp(220px, 72vw, 360px)' : 'clamp(500px, 54vw, 860px)', boxShadow: '0 18px 44px rgba(0,0,0,0.32)', transform: 'none', transformStyle: 'flat', transformOrigin: 'center top' }), background: 'linear-gradient(180deg, rgba(6,15,25,0.99), rgba(6,13,22,0.99))', border: '1px solid rgba(255,255,255,0.06)', contain: 'layout paint size' }}>
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0) 18%, rgba(25,231,187,0.04) 100%)' }} />
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 18% 12%, rgba(255,255,255,0.05), transparent 18%), radial-gradient(circle at 82% 20%, rgba(101,225,255,0.06), transparent 22%)' }} />
+              <div className="mobility-os-mark-node" aria-hidden="true">
+                <span className="mobility-os-mark-node__aura" />
+                <span className="mobility-os-mark-node__ring" />
+                <span className="mobility-os-mark-node__ring mobility-os-mark-node__ring--delay" />
+                <img
+                  src="/brand/wasel-mark-attached-primary.svg?v=20260411pin-no-shell"
+                  alt=""
+                  width="118"
+                  height="130"
+                  decoding="async"
+                  loading="eager"
+                  className="mobility-os-mark-node__image"
+                />
+                <span className="mobility-os-mark-node__chip">
+                  {ar ? 'نبض واصل' : 'Wasel signal'}
+                </span>
+              </div>
               <div style={{ position: 'absolute', top: 14, left: 14, right: 14, zIndex: 2, display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 999, background: 'rgba(7,18,30,0.74)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
                   <div style={{ width: 8, height: 8, borderRadius: 999, background: '#19E7BB', boxShadow: '0 0 14px rgba(25,231,187,0.64)' }} />

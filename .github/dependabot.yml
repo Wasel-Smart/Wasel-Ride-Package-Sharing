@@ -1,0 +1,43 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Asia/Amman"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      frontend-runtime:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-router"
+          - "@radix-ui/*"
+          - "@tanstack/*"
+          - "lucide-react"
+          - "motion"
+          - "recharts"
+      testing-and-quality:
+        patterns:
+          - "vitest"
+          - "@playwright/*"
+          - "playwright"
+          - "@testing-library/*"
+          - "eslint"
+          - "@eslint/*"
+          - "typescript"
+          - "typescript-eslint"
+          - "prettier"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:30"
+      timezone: "Asia/Amman"
+    commit-message:
+      prefix: "chore(actions)"

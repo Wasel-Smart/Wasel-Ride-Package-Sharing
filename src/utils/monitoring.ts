@@ -20,6 +20,7 @@ import { redactSensitiveValue } from './redaction';
 import { omitUndefined } from './object';
 
 let sentryInitialized = false;
+let browserRuntimeMonitoringInitialized = false;
 
 function safeStorageGet(key: string): string | null {
   if (typeof window === 'undefined') {
@@ -41,6 +42,85 @@ function redactContext(context?: LogContext): LogContext | undefined {
   return redactSensitiveValue(context) as LogContext;
 }
 
+function captureRuntimeSignal(
+  message: string,
+  level: 'info' | 'warning' | 'error',
+  extra?: Record<string, unknown>,
+) {
+  Sentry.withScope((scope) => {
+    scope.setLevel(level);
+    scope.setTag('runtime_signal', 'browser');
+    if (extra) {
+      scope.setContext('runtime', redactSensitiveValue(extra) as Record<string, unknown>);
+    }
+    Sentry.captureMessage(message);
+  });
+}
+
+function installBrowserRuntimeMonitoring() {
+  if (browserRuntimeMonitoringInitialized || typeof window === 'undefined') {
+    return;
+  }
+
+  window.addEventListener('error', (event) => {
+    if (!event.error) {
+      return;
+    }
+
+    Sentry.withScope((scope) => {
+      scope.setLevel('error');
+      scope.setTag('runtime_signal', 'window_error');
+      scope.setContext('runtime', {
+        pathname: window.location.pathname,
+        filename: event.filename || null,
+        line: event.lineno || null,
+        column: event.colno || null,
+      });
+      Sentry.captureException(event.error);
+    });
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    const rejection =
+      event.reason instanceof Error
+        ? event.reason
+        : new Error(
+            typeof event.reason === 'string'
+              ? event.reason
+              : 'Unhandled promise rejection',
+          );
+
+    Sentry.withScope((scope) => {
+      scope.setLevel('error');
+      scope.setTag('runtime_signal', 'unhandled_rejection');
+      scope.setContext('runtime', {
+        pathname: window.location.pathname,
+      });
+      Sentry.captureException(rejection);
+    });
+  });
+
+  window.addEventListener('offline', () => {
+    captureRuntimeSignal('Browser went offline', 'warning', {
+      online: navigator.onLine,
+      pathname: window.location.pathname,
+    });
+  });
+
+  window.addEventListener('online', () => {
+    Sentry.addBreadcrumb({
+      category: 'connectivity',
+      message: 'Browser connectivity restored',
+      level: 'info',
+      data: {
+        pathname: window.location.pathname,
+      },
+    });
+  });
+
+  browserRuntimeMonitoringInitialized = true;
+}
+
 export function initSentry() {
   if (sentryInitialized || !hasTelemetryConsent()) {
     return;
@@ -59,11 +139,29 @@ export function initSentry() {
   Sentry.init({
     dsn,
     environment,
-    integrations: [],
+    integrations: [
+      Sentry.browserTracingIntegration({
+        enableLongAnimationFrame: true,
+        enableLongTask: true,
+        enableInp: true,
+        traceFetch: true,
+        traceXHR: true,
+      }),
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+    ],
     tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
     replaysSessionSampleRate: environment === 'production' ? 0.1 : 1.0,
     replaysOnErrorSampleRate: 1.0,
     release: `wasel@${import.meta.env.VITE_APP_VERSION || '1.0.0'}`,
+    sendDefaultPii: false,
+    tracePropagationTargets: [
+      'localhost',
+      /^https:\/\/([a-z0-9-]+\.)?supabase\.co/i,
+      /^https:\/\/wasel14\.online/i,
+    ],
     ignoreErrors: [
       'ResizeObserver loop limit exceeded',
       'Non-Error promise rejection captured',
@@ -95,6 +193,8 @@ export function initSentry() {
       return event;
     },
   });
+
+  installBrowserRuntimeMonitoring();
 
   registerMonitoringSink({
     captureException: (error, context) => {

@@ -59,6 +59,9 @@ function rating(name: string, value: number): 'good' | 'needs-improvement' | 'po
 
 async function report(metric: Metric): Promise<void> {
   const r = rating(metric.name, metric.value);
+  const isLocalAuditHost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   // Always log to console in dev
   if (import.meta.env.DEV) {
@@ -68,7 +71,7 @@ async function report(metric: Metric): Promise<void> {
 
   // Skip write if Supabase isn't configured
   const metricsClient = supabase as MetricsClient | null;
-  if (!metricsClient) return;
+  if (!metricsClient || isLocalAuditHost) return;
 
   try {
     await metricsClient.from('web_vitals').insert({

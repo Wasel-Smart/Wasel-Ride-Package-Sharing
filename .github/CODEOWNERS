@@ -1,0 +1,7 @@
+# Update owners as the team expands.
+
+* @laithnassar90
+.github/workflows/* @laithnassar90
+db/ @laithnassar90
+docs/ @laithnassar90
+supabase/ @laithnassar90

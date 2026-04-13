@@ -281,6 +281,19 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
 
 const TRAFFIC_CACHE_TTL_MS = 2 * 60 * 1000;
 const trafficCache = new Map<string, { expiresAt: number; snapshot: TrafficSnapshot }>();
+const ENABLE_MOBILITY_OS_LIVE_DATA =
+  String(import.meta.env.VITE_ENABLE_MOBILITY_OS_LIVE_DATA ?? '').trim().toLowerCase() ===
+  'true';
+
+function shouldUseMobilityLiveData() {
+  if (!supabase) return false;
+  if (import.meta.env.VITE_ENABLE_DEMO_DATA === 'true') return false;
+  if (typeof window === 'undefined') return ENABLE_MOBILITY_OS_LIVE_DATA;
+
+  const hostname = window.location.hostname;
+  const isLocalPreview = hostname === 'localhost' || hostname === '127.0.0.1';
+  return ENABLE_MOBILITY_OS_LIVE_DATA || !isLocalPreview;
+}
 
 function normalizeCity(value: string | null | undefined): string | null {
   const raw = String(value ?? '')
@@ -726,7 +739,8 @@ export function useMobilityOSLiveData(ar: boolean) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!supabase) {
+    if (!shouldUseMobilityLiveData()) {
+      setSnapshot(null);
       setLoading(false);
       return;
     }

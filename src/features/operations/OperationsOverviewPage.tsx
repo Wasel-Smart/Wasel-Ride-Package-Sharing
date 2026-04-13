@@ -1,11 +1,18 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Activity, Brain, LineChart, Shield } from 'lucide-react';
+import { Activity, Brain, Briefcase, GraduationCap, LineChart, Shield } from 'lucide-react';
 import { useLocation } from 'react-router';
+import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
   buildCorridorCommercialSnapshot,
   type CorridorCommercialSnapshot,
 } from '../../services/corridorCommercial';
+import {
+  buildBusinessAccountSnapshot,
+  buildSchoolTransportSnapshot,
+  type BusinessAccountSnapshot,
+  type SchoolTransportSnapshot,
+} from '../../services/corridorOperations';
 import { getGrowthDashboard, type GrowthDashboard } from '../../services/growthEngine';
 import {
   buildMiddleEastCorridorProof,
@@ -159,7 +166,7 @@ export default function OperationsOverviewPage() {
 
     if (pathname === '/app/services/corporate') {
       void buildBusinessAccountSnapshot()
-        .then((value) => {
+        .then((value: BusinessAccountSnapshot) => {
           if (!cancelled) setBusinessSnapshot(value);
         })
         .catch(() => {
@@ -176,7 +183,7 @@ export default function OperationsOverviewPage() {
 
     if (pathname === '/app/services/school') {
       void buildSchoolTransportSnapshot()
-        .then((value) => {
+        .then((value: SchoolTransportSnapshot) => {
           if (!cancelled) setSchoolSnapshot(value);
         })
         .catch(() => {
@@ -299,14 +306,14 @@ export default function OperationsOverviewPage() {
                 <div style={cardStyle()}>
                   <div style={{ color: '#EFF6FF', fontWeight: 800, marginBottom: 10 }}>Managed account snapshot</div>
                   <div style={{ display: 'grid', gap: 10 }}>
-                    {businessSnapshot.policyHighlights.map((line) => (
+                    {businessSnapshot.policyHighlights.map((line: string) => (
                       <div key={line} style={{ color: '#CBD5E1', fontSize: '0.8rem', lineHeight: 1.6 }}>
                         {line}
                       </div>
                     ))}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 14 }}>
-                    {businessSnapshot.employees.slice(0, 4).map((employee) => (
+                    {businessSnapshot.employees.slice(0, 4).map((employee: BusinessAccountSnapshot['employees'][number]) => (
                       <div key={employee.id} style={{ borderRadius: 14, border: `1px solid ${BORD}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
                         <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.82rem' }}>{employee.name}</div>
                         <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.74rem', marginTop: 4 }}>
@@ -348,7 +355,7 @@ export default function OperationsOverviewPage() {
                 <div style={cardStyle()}>
                   <div style={{ color: '#EFF6FF', fontWeight: 800, marginBottom: 10 }}>Seat yield and backhauls</div>
                   <div style={{ display: 'grid', gap: 8 }}>
-                    {businessSnapshot.seatYield.slice(0, 3).map((tier) => (
+                    {businessSnapshot.seatYield.slice(0, 3).map((tier: BusinessAccountSnapshot['seatYield'][number]) => (
                       <div key={`${tier.seatIndex}-${tier.price}`} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, color: '#CBD5E1', fontSize: '0.8rem' }}>
                         <span>Seat {tier.seatIndex}</span>
                         <strong style={{ color: '#EFF6FF' }}>{tier.price.toFixed(2)} JOD</strong>
@@ -421,11 +428,11 @@ export default function OperationsOverviewPage() {
                 <div style={cardStyle()}>
                   <div style={{ color: '#EFF6FF', fontWeight: 800, marginBottom: 10 }}>Guardian and student roster</div>
                   <div style={{ display: 'grid', gap: 10 }}>
-                    {schoolSnapshot.students.map((student) => (
+                    {schoolSnapshot.students.map((student: SchoolTransportSnapshot['students'][number]) => (
                       <div key={student.id} style={{ borderRadius: 14, border: `1px solid ${BORD}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
                         <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.82rem' }}>{student.name}</div>
                         <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.74rem', marginTop: 4 }}>
-                          {student.grade} | {student.guardians.map((guardian) => guardian.name).join(', ')}
+                          {student.grade} | {student.guardians.map((guardian: SchoolTransportSnapshot['students'][number]['guardians'][number]) => guardian.name).join(', ')}
                         </div>
                       </div>
                     ))}
@@ -435,12 +442,12 @@ export default function OperationsOverviewPage() {
                 <div style={cardStyle()}>
                   <div style={{ color: '#EFF6FF', fontWeight: 800, marginBottom: 10 }}>Safety and route discipline</div>
                   <div style={{ display: 'grid', gap: 10 }}>
-                    {schoolSnapshot.safetyChecklist.map((line) => (
+                    {schoolSnapshot.safetyChecklist.map((line: string) => (
                       <div key={line} style={{ color: '#CBD5E1', fontSize: '0.8rem', lineHeight: 1.6 }}>{line}</div>
                     ))}
                   </div>
                   <div style={{ display: 'grid', gap: 8, marginTop: 14 }}>
-                    {schoolSnapshot.operatingDays.map((day) => (
+                    {schoolSnapshot.operatingDays.map((day: string) => (
                       <div key={day} style={{ display: 'flex', justifyContent: 'space-between', color: '#CBD5E1', fontSize: '0.78rem' }}>
                         <span>{day}</span>
                         <strong style={{ color: '#EFF6FF' }}>Active</strong>
