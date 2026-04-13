@@ -1,0 +1,22 @@
+HTTP/1.1 200 OK
+Accept-Ranges: bytes
+Access-Control-Allow-Origin: *
+Age: 24608
+Cache-Control: public, max-age=0, must-revalidate
+Content-Disposition: inline
+Content-Length: 3976
+Content-Security-Policy: default-src 'self'; script-src 'self' https://js.stripe.com https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://maps.googleapis.com https://*.sentry.io; frame-src 'self' https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+Content-Type: text/html; charset=utf-8
+Date: Mon, 13 Apr 2026 17:22:30 GMT
+Etag: "8f78a3ac18b1a8f6ebcb72284d7bf364"
+Last-Modified: Mon, 13 Apr 2026 10:32:21 GMT
+Permissions-Policy: camera=(), microphone=(), geolocation=(self), payment=(self)
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Vercel
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-Vercel-Cache: HIT
+X-Vercel-Id: bom1::x8tqv-1776100950476-a56b129641d4
+X-Xss-Protection: 1; mode=block
+

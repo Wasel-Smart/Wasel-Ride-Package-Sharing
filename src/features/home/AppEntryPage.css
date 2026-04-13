@@ -56,13 +56,13 @@
 }
 
 .app-entry-page__brand-mark {
-  width: 48px;
-  height: 48px;
+  width: 58px;
+  height: 58px;
   display: grid;
   place-items: center;
-  border-radius: 16px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(240, 248, 255, 0.88));
-  box-shadow: 0 12px 24px rgba(16, 50, 95, 0.12);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .app-entry-page__brand-copy,
