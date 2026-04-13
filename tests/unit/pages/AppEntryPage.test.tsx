@@ -89,7 +89,7 @@ describe('AppEntryPage', () => {
     expect(screen.getByRole('button', { name: /Continue with Google/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Continue with Facebook/i })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Continue with email/i }).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /Open map/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Open packages/i })).toBeInTheDocument();
   });
 
   it('routes guest email entry to the auth page with a return target', () => {

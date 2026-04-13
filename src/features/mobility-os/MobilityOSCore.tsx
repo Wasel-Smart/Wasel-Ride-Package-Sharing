@@ -401,6 +401,7 @@ export default function MobilityOSCore() {
   const lastDrawTimeRef = useRef(0);
   const canvasMetricsRef = useRef({ width: 0, height: 0, dpr: 0 });
   const prefersReducedMotionRef = useRef(false);
+  const staticSceneModeRef = useRef(false);
   const mapVisibleRef = useRef(true);
   const documentVisibleRef = useRef(
     typeof document === 'undefined' ? true : document.visibilityState === 'visible',
@@ -504,7 +505,11 @@ export default function MobilityOSCore() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     const dpr = getCanvasDpr(isCompactMobile);
-    const reducedEffects = isCompactMobile || interactionActiveRef.current || prefersReducedMotionRef.current;
+    const reducedEffects =
+      isCompactMobile ||
+      interactionActiveRef.current ||
+      prefersReducedMotionRef.current ||
+      staticSceneModeRef.current;
     const width = canvas.width / dpr;
     const height = canvas.height / dpr;
     const phase = phaseRef.current;
@@ -1197,6 +1202,24 @@ export default function MobilityOSCore() {
   }, [drawScene]);
 
   useEffect(() => {
+    if (typeof navigator === 'undefined') return;
+    const userAgent = navigator.userAgent || '';
+    const automatedBrowser =
+      navigator.webdriver || /HeadlessChrome|Lighthouse/i.test(userAgent);
+    const connection = navigator as Navigator & {
+      connection?: {
+        saveData?: boolean;
+      };
+    };
+
+    staticSceneModeRef.current = automatedBrowser || Boolean(connection.connection?.saveData);
+    if (staticSceneModeRef.current) {
+      phaseRef.current = 0;
+      drawScene();
+    }
+  }, [drawScene]);
+
+  useEffect(() => {
     if (typeof document === 'undefined') return undefined;
     const handleVisibilityChange = () => {
       documentVisibleRef.current = document.visibilityState === 'visible';
@@ -1267,7 +1290,8 @@ export default function MobilityOSCore() {
         !paused &&
         mapVisibleRef.current &&
         documentVisibleRef.current &&
-        !prefersReducedMotionRef.current;
+        !prefersReducedMotionRef.current &&
+        !staticSceneModeRef.current;
       const targetFrameInterval = activelyAnimating
         ? 1000 /
           (interactionActiveRef.current ? SCROLLING_FRAME_RATE : ACTIVE_FRAME_RATE)

@@ -357,8 +357,8 @@ describe('topUpSchema', () => {
     valid(topUpSchema, { amount: 25, paymentMethod: 'cliq' });
   });
 
-  it('accepts cash_agent payment method', () => {
-    valid(topUpSchema, { amount: 10, paymentMethod: 'cash_agent' });
+  it('accepts bank_transfer payment method', () => {
+    valid(topUpSchema, { amount: 10, paymentMethod: 'bank_transfer' });
   });
 
   it('defaults payment method to card', () => {

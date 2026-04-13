@@ -1,161 +1,199 @@
 /**
- * Presentation-oriented tokens used by wallet, notifications, and older UI modules.
- *
- * ALIGNED to the unified Wasel teal-network brand identity.
- * All colour values match brand-theme.css :root CSS variables.
+ * WASEL | واصل — Design System v7.0  "Investor Edition"
+ * Presentation-layer tokens. All values aligned to brand-theme.css v7.
+ * Used by wallet, notifications, older UI modules and inline-style components.
  */
 
 export const WaselColors = {
-  bg: '#07111B',
-  surface: '#0C1724',
-  card: '#101D2C',
-  card2: '#172738',
+  /* ── Backgrounds ─────────────────────────────────────── */
+  bg:        '#040c1a',
+  surface0:  '#040c1a',
+  surface1:  '#081422',
+  surface2:  '#0d1b2f',
+  surface3:  '#13223a',
+  surface4:  '#1a2d47',
+  surface5:  '#223755',
+  card:      '#09132a',
+  card2:     '#0d1b2f',
 
-  border: 'rgba(25,231,187,0.16)',
-  border2: 'rgba(25,231,187,0.26)',
-  borderGlow: 'rgba(162,255,231,0.3)',
-  borderDark: 'rgba(7,15,25,0.72)',
+  /* ── Borders ─────────────────────────────────────────── */
+  border:      'rgba(25,231,187,0.14)',
+  borderStrong:'rgba(25,231,187,0.28)',
+  borderGlow:  'rgba(25,231,187,0.44)',
+  borderDark:  'rgba(4,10,22,0.80)',
 
-  cyan: '#19E7BB',
-  cyanDark: '#0BC3A0',
-  cyanDim: 'rgba(25,231,187,0.14)',
-  cyanGlow: 'rgba(25,231,187,0.2)',
-  teal: '#A2FFE7',
+  /* ── Brand palette ───────────────────────────────────── */
+  cyan:        '#19e7bb',
+  cyanDark:    '#0bc3a0',
+  cyanDim:     'rgba(25,231,187,0.13)',
+  cyanGlow:    'rgba(25,231,187,0.20)',
 
-  gold: '#48CFFF',
-  goldDim: 'rgba(72,207,255,0.14)',
-  orange: '#65E1FF',
-  bronze: '#0BC3A0',
-  green: '#A2FFE7',
-  greenDim: 'rgba(162,255,231,0.14)',
-  purple: '#96B7C6',
-  purpleDim: 'rgba(150,183,198,0.14)',
-  red: '#FF646A',
-  redDim: 'rgba(255,100,106,0.12)',
+  sky:         '#48cfff',
+  skyDim:      'rgba(72,207,255,0.13)',
 
-  text: '#E9F5F7',
-  textDim: 'rgba(170,191,196,0.64)',
-  muted: 'rgba(198,223,227,0.82)',
+  mint:        '#a2ffe7',
+  mintDim:     'rgba(162,255,231,0.11)',
 
-  white: '#FFFFFF',
+  cream:       '#dcfff8',
+
+  lime:        '#65e1ff',
+  limeDim:     'rgba(101,225,255,0.11)',
+
+  teal:        '#44f2d0',
+  bronze:      '#0bc3a0',
+  green:       '#a2ffe7',
+
+  /* ── Semantic status ─────────────────────────────────── */
+  success:     '#19e7bb',
+  successDim:  'rgba(25,231,187,0.13)',
+  warning:     '#f5b840',
+  warningDim:  'rgba(245,184,64,0.13)',
+  error:       '#ff5a61',
+  errorDim:    'rgba(255,90,97,0.13)',
+  info:        '#48cfff',
+  infoDim:     'rgba(72,207,255,0.13)',
+
+  /* ── Text ────────────────────────────────────────────── */
+  text:        '#eaf6f8',
+  textMuted:   'rgba(185,215,220,0.72)',
+  textSoft:    'rgba(145,180,190,0.52)',
+  textDim:     'rgba(185,215,220,0.48)',
+
+  /* ── UI primitives ───────────────────────────────────── */
+  white: '#ffffff',
   black: '#000000',
+
+  /* ── Legacy aliases ──────────────────────────────────── */
+  gold:        '#48cfff',
+  orange:      '#65e1ff',
+  purple:      '#96b7c6',
+  purpleDim:   'rgba(150,183,198,0.13)',
+  red:         '#ff5a61',
+  redDim:      'rgba(255,90,97,0.12)',
+  muted:       'rgba(185,215,220,0.76)',
 } as const;
 
 export const WaselGradients = {
-  primary: `linear-gradient(135deg, #DCFFF8 0%, ${WaselColors.cyan} 44%, ${WaselColors.gold} 100%)`,
-  cyan: `linear-gradient(135deg, ${WaselColors.cyan}, ${WaselColors.gold})`,
-  card: 'linear-gradient(180deg, rgba(255,249,234,0.05), rgba(255,249,234,0.02)), rgba(16,29,44,0.92)',
-  hero: 'linear-gradient(180deg, rgba(4,18,30,0) 0%, #07111B 100%)',
-  glow: `radial-gradient(circle, ${WaselColors.cyanGlow}, transparent)`,
-  gold: `linear-gradient(135deg, ${WaselColors.gold}, ${WaselColors.orange})`,
-  orange: `linear-gradient(135deg, ${WaselColors.orange}, ${WaselColors.gold})`,
-  green: `linear-gradient(135deg, ${WaselColors.cyan}, ${WaselColors.green})`,
-  purple: `linear-gradient(135deg, ${WaselColors.gold}, ${WaselColors.teal})`,
-};
+  primary:  'linear-gradient(135deg, #dcfff8 0%, #19e7bb 44%, #48cfff 100%)',
+  hero:     'linear-gradient(135deg, #19e7bb 0%, #48cfff 50%, #a2ffe7 100%)',
+  subtle:   'linear-gradient(135deg, rgba(25,231,187,0.16) 0%, rgba(72,207,255,0.10) 100%)',
+  card:     'linear-gradient(145deg, rgba(13,24,46,0.97) 0%, rgba(9,16,32,0.98) 100%)',
+  overlay:  'linear-gradient(180deg, transparent 0%, rgba(4,8,20,0.96) 100%)',
+  cyan:     'linear-gradient(135deg, #19e7bb, #48cfff)',
+  sky:      'linear-gradient(135deg, #48cfff, #65e1ff)',
+  gold:     'linear-gradient(135deg, #f5b840, #ffd060)',
+  orange:   'linear-gradient(135deg, #65e1ff, #48cfff)',
+  green:    'linear-gradient(135deg, #19e7bb, #a2ffe7)',
+  glow:     'radial-gradient(circle, rgba(25,231,187,0.20), transparent)',
+  hero2:    'radial-gradient(ellipse at 50% 0%, rgba(25,231,187,0.22) 0%, transparent 52%)',
+} as const;
 
 export const WaselShadows = {
-  sm: '0 10px 24px rgba(4,16,32,0.22)',
-  md: '0 18px 44px rgba(4,16,32,0.3)',
-  lg: '0 30px 72px rgba(4,16,32,0.38)',
-  xl: '0 40px 96px rgba(4,16,32,0.44)',
-  glow: `0 18px 50px ${WaselColors.cyanGlow}`,
-};
+  xs:       '0 2px 8px rgba(1,4,10,0.28)',
+  sm:       '0 6px 18px rgba(1,4,10,0.34)',
+  md:       '0 14px 42px rgba(1,4,10,0.44)',
+  lg:       '0 26px 70px rgba(1,4,10,0.54)',
+  xl:       '0 40px 100px rgba(1,4,10,0.60)',
+  brand:    '0 16px 48px rgba(25,231,187,0.18)',
+  brandLg:  '0 28px 72px rgba(25,231,187,0.24)',
+  sky:      '0 16px 48px rgba(72,207,255,0.16)',
+  inset:    'inset 0 1px 0 rgba(220,255,248,0.06)',
+} as const;
 
 export const WaselImages = {
-  hero:
-    'https://images.unsplash.com/photo-1589500254849-ded0651e35f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920',
-  aqaba:
-    'https://images.unsplash.com/photo-1649195309743-b0b19c102c66?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
-  irbid:
-    'https://images.unsplash.com/photo-1638367915999-8d559b61bd43?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
-  deadSea:
-    'https://images.unsplash.com/photo-1726001739725-cfd1902b2a2b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
-  petra:
-    'https://images.unsplash.com/photo-1771692639394-f3c63ff63ea1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
-  wadiRum:
-    'https://images.unsplash.com/photo-1762255047146-a62d5426d6b2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
-  carpool:
-    'https://images.unsplash.com/photo-1748882585283-1b71bbbec96b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800',
-  package:
-    'https://images.unsplash.com/photo-1606295835125-2338079fdfc3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800',
-  mosque:
-    'https://images.unsplash.com/photo-1733063166469-d77a93d7266e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800',
-};
+  hero:     'https://images.unsplash.com/photo-1589500254849-ded0651e35f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1920',
+  aqaba:    'https://images.unsplash.com/photo-1649195309743-b0b19c102c66?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
+  irbid:    'https://images.unsplash.com/photo-1638367915999-8d559b61bd43?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
+  deadSea:  'https://images.unsplash.com/photo-1726001739725-cfd1902b2a2b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
+  petra:    'https://images.unsplash.com/photo-1771692639394-f3c63ff63ea1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
+  wadiRum:  'https://images.unsplash.com/photo-1762255047146-a62d5426d6b2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600',
+  carpool:  'https://images.unsplash.com/photo-1748882585283-1b71bbbec96b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800',
+  package:  'https://images.unsplash.com/photo-1606295835125-2338079fdfc3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800',
+  mosque:   'https://images.unsplash.com/photo-1733063166469-d77a93d7266e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800',
+} as const;
 
 export const WaselTypography = {
-  sans:
-    "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
-  arabic:
-    "var(--wasel-font-arabic, 'Cairo', 'Tajawal', 'Almarai', sans-serif)",
-  h1: 'clamp(2.4rem, 5vw, 4rem)',
-  h2: 'clamp(1.9rem, 4vw, 3rem)',
-  h3: 'clamp(1.45rem, 3vw, 2rem)',
-  h4: 'clamp(1.15rem, 2vw, 1.5rem)',
-  body: '1rem',
-  small: '0.875rem',
-  tiny: '0.75rem',
-};
+  sans:    "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
+  display: "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', sans-serif)",
+  arabic:  "var(--wasel-font-arabic, 'Cairo', 'Tajawal', 'Almarai', sans-serif)",
+  mono:    "var(--wasel-font-mono, 'JetBrains Mono', 'Fira Code', 'Consolas', monospace)",
+  display_scale: 'clamp(2.6rem, 5.8vw, 4.8rem)',
+  h1:      'clamp(1.9rem, 3.8vw, 2.9rem)',
+  h2:      'clamp(1.4rem, 2.6vw, 2.0rem)',
+  h3:      '1.3rem',
+  h4:      '1.08rem',
+  body:    '0.945rem',
+  small:   '0.820rem',
+  tiny:    '0.755rem',
+} as const;
 
 export const WaselSpacing = {
-  xs: '0.25rem',
-  sm: '0.5rem',
-  md: '1rem',
-  lg: '1.5rem',
-  xl: '2rem',
-  '2xl': '3rem',
-  '3xl': '4rem',
-};
-
-export const WaselAnimations = {
-  fadeIn: {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 },
-  },
-  slideUp: {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
-  },
-  scale: {
-    initial: { opacity: 0, scale: 0.92 },
-    animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.92 },
-  },
-  spring: { type: 'spring', stiffness: 320, damping: 28 },
-  smooth: { duration: 0.28, ease: 'easeInOut' },
-};
+  xs:   '0.25rem',
+  sm:   '0.5rem',
+  md:   '1rem',
+  lg:   '1.5rem',
+  xl:   '2rem',
+  '2xl':'3rem',
+  '3xl':'4rem',
+} as const;
 
 export const WaselRadius = {
-  sm: '0.625rem',
-  md: '0.875rem',
-  lg: '1.125rem',
-  xl: '1.5rem',
-  '2xl': '2rem',
+  xs:   '6px',
+  sm:   '10px',
+  md:   '14px',
+  lg:   '18px',
+  xl:   '22px',
+  '2xl':'28px',
+  '3xl':'36px',
   full: '9999px',
-};
+} as const;
+
+export const WaselAnimations = {
+  fadeIn:  { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } },
+  slideUp: { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -20 } },
+  scale:   { initial: { opacity: 0, scale: 0.93 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 0.93 } },
+  spring:  { type: 'spring', stiffness: 320, damping: 28 },
+  smooth:  { duration: 0.26, ease: 'easeInOut' },
+  snappy:  { type: 'spring', stiffness: 480, damping: 34 },
+} as const;
 
 export const WaselBreakpoints = {
-  sm: '640px',
-  md: '768px',
-  lg: '1024px',
-  xl: '1280px',
-  '2xl': '1536px',
-};
+  sm:   '640px',
+  md:   '768px',
+  lg:   '1024px',
+  xl:   '1280px',
+  '2xl':'1536px',
+} as const;
 
+
+/* ── Helper functions ──────────────────────────────────── */
+
+/** Returns glassmorphism style object */
 export const glassmorphism = (opacity = 0.84) => ({
-  background: `rgba(16,29,44,${opacity})`,
-  backdropFilter: 'blur(20px)',
-  border: `1px solid ${WaselColors.border}`,
-});
+  background:     `rgba(6,12,24,${opacity})`,
+  backdropFilter: 'blur(22px) saturate(180%)',
+  border:         `1px solid ${WaselColors.border}`,
+} as const);
 
-export const glowEffect = (color = WaselColors.cyan) => ({
-  boxShadow: `0 18px 50px ${color}3A`,
-});
+/** Returns teal glow box-shadow */
+export const glowEffect = (color = WaselColors.cyan, spread = '3A') => ({
+  boxShadow: `0 18px 50px ${color}${spread}`,
+} as const);
 
+/** Returns standard card inline style */
 export const cardStyle = () => ({
-  background: WaselGradients.card,
-  border: `1px solid ${WaselColors.border}`,
+  background:   WaselGradients.card,
+  border:       `1px solid ${WaselColors.border}`,
   borderRadius: WaselRadius.xl,
-  boxShadow: WaselShadows.md,
-});
+  boxShadow:    `${WaselShadows.md}, ${WaselShadows.inset}`,
+} as const);
+
+/** Returns brand primary button inline style */
+export const primaryButtonStyle = () => ({
+  background:   WaselGradients.primary,
+  color:        '#020d10',
+  border:       '1px solid rgba(255,255,255,0.10)',
+  borderRadius: WaselRadius.md,
+  fontWeight:   900,
+  boxShadow:    WaselShadows.brand,
+} as const);

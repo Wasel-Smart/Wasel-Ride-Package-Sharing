@@ -1,0 +1,270 @@
+/* ============================================================
+   WASEL | واصل — INVESTOR POLISH v9.5
+   Final beauty layer loaded last — overrides nothing critical,
+   only adds refinement on top of the base design system.
+   ============================================================ */
+
+/* ── Page entry animation ───────────────────────────────────── */
+#root > * {
+  animation: wasel-page-entry 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes wasel-page-entry {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header: tighter, crisper ───────────────────────────────── */
+[data-wasel-nav] header,
+.wasel-sticky-header {
+  border-bottom-width: 1px !important;
+}
+
+/* ── Typography: tighten headings globally ──────────────────── */
+h1, h2, h3 { letter-spacing: -0.035em; }
+h4, h5     { letter-spacing: -0.02em; }
+
+/* ── All interactive cards: consistent hover lift ───────────── */
+.home-panel:hover,
+.home-stat-card:hover,
+.home-pillar-card:hover,
+.home-card-button:hover,
+.home-feature-card:hover,
+.home-route-card:hover,
+.home-metric-tile:hover,
+.home-os-button:hover,
+.home-list-button:hover {
+  border-color: rgba(25, 231, 187, 0.22) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(220, 255, 248, 0.06),
+    0 18px 48px rgba(2, 6, 12, 0.42),
+    0 0 0 0.5px rgba(25, 231, 187, 0.06) !important;
+}
+
+/* ── Focus ring: brand-coloured everywhere ──────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(25, 231, 187, 0.75) !important;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ── Scrollbar: nearly invisible but there ──────────────────── */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(25, 231, 187, 0.18);
+  border-radius: 999px;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(25, 231, 187, 0.40); }
+
+/* ── Radix UI / shadcn primitive polish ─────────────────────── */
+
+/* Dialog / Sheet / Modal */
+[data-radix-popper-content-wrapper],
+[role="dialog"],
+[role="alertdialog"] {
+  --tw-shadow: none;
+  border-radius: 20px !important;
+  border: 1px solid rgba(25, 231, 187, 0.12) !important;
+  background:
+    linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.01)),
+    rgba(9, 17, 30, 0.96) !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(220, 255, 248, 0.05) !important;
+}
+
+/* Dropdown menus */
+[data-radix-collection-item],
+[data-radix-dropdown-menu-content],
+[cmdk-root] {
+  border-radius: 16px !important;
+  border: 1px solid rgba(25, 231, 187, 0.10) !important;
+  background: rgba(9, 17, 30, 0.97) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.48) !important;
+}
+
+/* Tooltip */
+[data-radix-tooltip-content] {
+  border-radius: 10px !important;
+  border: 1px solid rgba(25, 231, 187, 0.14) !important;
+  background: rgba(7, 13, 24, 0.96) !important;
+  backdrop-filter: blur(16px) !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.40) !important;
+}
+
+/* Select / Combobox */
+[data-radix-select-content],
+[data-radix-select-viewport] {
+  border-radius: 14px !important;
+  border: 1px solid rgba(25, 231, 187, 0.10) !important;
+  background: rgba(9, 17, 30, 0.98) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* Progress */
+[role="progressbar"] > span,
+[data-radix-progress-indicator] {
+  background: linear-gradient(90deg, #19e7bb, #65e1ff) !important;
+  box-shadow: 0 0 8px rgba(25, 231, 187, 0.28) !important;
+}
+
+/* Slider thumb */
+[data-radix-slider-thumb] {
+  background: linear-gradient(135deg, #19e7bb, #65e1ff) !important;
+  border: 2px solid rgba(3, 14, 9, 0.95) !important;
+  box-shadow: 0 0 10px rgba(25, 231, 187, 0.50) !important;
+  width: 18px !important; height: 18px !important;
+}
+[data-radix-slider-track] {
+  background: rgba(25, 231, 187, 0.14) !important;
+}
+[data-radix-slider-range] {
+  background: linear-gradient(90deg, #19e7bb, #65e1ff) !important;
+}
+
+/* Switch */
+[data-radix-switch-root][data-state="checked"] {
+  background: linear-gradient(135deg, #19e7bb, #65e1ff) !important;
+  box-shadow: 0 0 10px rgba(25, 231, 187, 0.36) !important;
+}
+[data-radix-switch-root][data-state="unchecked"] {
+  background: rgba(25, 231, 187, 0.12) !important;
+  border: 1px solid rgba(25, 231, 187, 0.18) !important;
+}
+[data-radix-switch-thumb] {
+  background: #ffffff !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+}
+
+/* Checkbox */
+[data-radix-checkbox-root][data-state="checked"] {
+  background: linear-gradient(135deg, #19e7bb, #65e1ff) !important;
+  border-color: transparent !important;
+}
+
+/* Tabs */
+[data-radix-tabs-trigger][data-state="active"] {
+  background: rgba(25, 231, 187, 0.12) !important;
+  color: #19e7bb !important;
+  border-color: rgba(25, 231, 187, 0.28) !important;
+}
+
+/* ── Sonner toasts ───────────────────────────────────────────── */
+[data-sonner-toast] {
+  border-radius: 14px !important;
+  border: 1px solid rgba(25, 231, 187, 0.12) !important;
+  background: rgba(9, 17, 30, 0.97) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  box-shadow:
+    0 16px 44px rgba(0, 0, 0, 0.44),
+    inset 0 1px 0 rgba(220, 255, 248, 0.04) !important;
+  color: #e9f5f7 !important;
+  font-family: var(--wasel-font-sans) !important;
+}
+[data-sonner-toast][data-type="success"] {
+  border-color: rgba(25, 231, 187, 0.22) !important;
+}
+[data-sonner-toast][data-type="error"] {
+  border-color: rgba(255, 92, 99, 0.22) !important;
+}
+
+/* ── Light mode overrides for all polished items ─────────────── */
+.light [data-radix-popper-content-wrapper],
+.light [role="dialog"],
+.light [role="alertdialog"] {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(246,255,252,0.96)) !important;
+  border-color: rgba(12, 181, 145, 0.12) !important;
+  box-shadow:
+    0 24px 64px rgba(12, 56, 50, 0.12),
+    inset 0 1px 0 rgba(255,255,255,0.9) !important;
+}
+.light [data-radix-dropdown-menu-content],
+.light [cmdk-root] {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(12, 181, 145, 0.10) !important;
+  box-shadow: 0 12px 36px rgba(12, 56, 50, 0.10) !important;
+}
+.light [data-sonner-toast] {
+  background: rgba(255, 255, 255, 0.97) !important;
+  border-color: rgba(12, 181, 145, 0.12) !important;
+  color: #0b2826 !important;
+}
+
+/* ── Map container ───────────────────────────────────────────── */
+.leaflet-container {
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(25, 231, 187, 0.12) !important;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.36) !important;
+}
+.leaflet-control-zoom {
+  border: 1px solid rgba(25, 231, 187, 0.14) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  background: rgba(9, 17, 30, 0.92) !important;
+  color: #19e7bb !important;
+  border: none !important;
+  font-weight: 700 !important;
+}
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+  background: rgba(25, 231, 187, 0.12) !important;
+}
+
+/* ── Image fallback ──────────────────────────────────────────── */
+img[data-state="error"],
+img:not([src]),
+img[src=""] {
+  background: rgba(25, 231, 187, 0.06);
+  border: 1px solid rgba(25, 231, 187, 0.10);
+  border-radius: 8px;
+}
+
+/* ── Selection: teal on all elements ────────────────────────── */
+::selection {
+  background: rgba(25, 231, 187, 0.24);
+  color: #030e09;
+}
+
+/* ── Link hover: no underline by default, teal ──────────────── */
+a:not([class]) {
+  color: #19e7bb;
+  text-decoration: none;
+  transition: opacity 0.14s ease;
+}
+a:not([class]):hover { opacity: 0.78; }
+
+/* ── Smooth font rendering globally ─────────────────────────── */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Button base: consistent cursor + no flash ───────────────── */
+button:not(:disabled) { cursor: pointer; }
+button { -webkit-tap-highlight-color: transparent; }
+
+/* ── Reduced motion guard ────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  #root > * { animation: none !important; }
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
