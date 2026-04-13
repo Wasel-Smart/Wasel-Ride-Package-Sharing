@@ -146,6 +146,14 @@ describe('tripsAPI.createTrip()', () => {
     expect(result.id).toBe('trip-1');
   });
 
+  it('falls back to directSupabase when the edge route is missing', async () => {
+    mockFetch.mockReturnValueOnce(fail({ error: 'Not found' }, 404));
+    mockCreateDirectTrip.mockResolvedValueOnce(TRIP_RESULT);
+    const result = await tripsAPI.createTrip(CREATE_PAYLOAD);
+    expect(mockCreateDirectTrip).toHaveBeenCalledOnce();
+    expect(result.id).toBe('trip-1');
+  });
+
   it('throws when the edge API returns a non-OK response and no fallback succeeds', async () => {
     mockFetch.mockReturnValueOnce(fail({ error: 'Validation failed' }));
     await expect(tripsAPI.createTrip(CREATE_PAYLOAD)).rejects.toThrow('Validation failed');

@@ -15,6 +15,10 @@ function canUseEdgeApi(): boolean {
   return Boolean(API_URL);
 }
 
+function shouldFallbackToDirectOnResponse(response: Response): boolean {
+  return response.status === 404 || response.status === 405 || response.status === 501;
+}
+
 export const bookingsAPI = {
   async createBooking(
     tripId: string,
@@ -54,6 +58,10 @@ export const bookingsAPI = {
           return createDirectBooking(payload);
         }
 
+        if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+          return createDirectBooking(payload);
+        }
+
         if (!response.ok) {
           const error = await response.json().catch(() => ({ error: 'Failed to create booking' }));
           throw new Error(error.error || 'Failed to create booking');
@@ -77,6 +85,10 @@ export const bookingsAPI = {
       },
     });
 
+    if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+      return getDirectUserBookings(userId);
+    }
+
     if (!response.ok) {
       throw new Error('Failed to fetch bookings');
     }
@@ -96,6 +108,10 @@ export const bookingsAPI = {
         Authorization: `Bearer ${token}`,
       },
     });
+
+    if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+      return getDirectTripBookings(tripId);
+    }
 
     if (!response.ok) {
       throw new Error('Failed to fetch trip bookings');
@@ -119,6 +135,10 @@ export const bookingsAPI = {
       },
       body: JSON.stringify({ status }),
     });
+
+    if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+      return updateDirectBookingStatus(bookingId, status);
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Failed to update booking' }));

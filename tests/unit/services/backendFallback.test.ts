@@ -77,6 +77,27 @@ describe('backend fallback services', () => {
     expect(result.user.id).toBe('user-123');
   });
 
+  it('allows sign-up without an optional phone number', async () => {
+    mockSupabaseSignUp.mockResolvedValue({
+      data: { user: { id: 'user-123' } },
+      error: null,
+    });
+
+    const result = await authAPI.signUp('sara@example.com', 'secret123', 'Sara', 'Ali');
+
+    expect(mockSupabaseSignUp).toHaveBeenCalledWith({
+      email: 'sara@example.com',
+      password: 'secret123',
+      options: {
+        emailRedirectTo: 'http://localhost:3000/app/auth/callback',
+        data: {
+          full_name: 'Sara Ali',
+        },
+      },
+    });
+    expect(result.user.id).toBe('user-123');
+  });
+
   it('reads the profile directly from Supabase when the edge profile endpoint is unavailable', async () => {
     mockGetDirectProfile.mockResolvedValue({
       id: 'user-123',

@@ -64,6 +64,10 @@ function canUseEdgeApi(): boolean {
   return Boolean(API_URL && publicAnonKey);
 }
 
+function shouldFallbackToDirectOnResponse(response: Response): boolean {
+  return response.status === 404 || response.status === 405 || response.status === 501;
+}
+
 function sanitizeTripPayload<T extends TripCreatePayload | TripUpdatePayload>(payload: T): T {
   return omitUndefined({
     ...payload,
@@ -114,6 +118,14 @@ export const tripsAPI = {
           return createDirectTrip(userId, sanitizedPayload);
         }
 
+        if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+          logger.warning('[trips] edge route unavailable for trip.create, falling back to direct Supabase', {
+            operation: 'trip.create.edge_route_missing',
+            status: response.status,
+          });
+          return createDirectTrip(userId, sanitizedPayload);
+        }
+
         return expectJsonResponse(response, 'Failed to create trip', { operation: 'trip.create' });
       },
     });
@@ -149,6 +161,14 @@ export const tripsAPI = {
       return searchDirectTrips(from, to, date, seats);
     }
 
+    if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+      logger.warning('[trips] edge route unavailable for trip.search, falling back to direct Supabase', {
+        operation: 'trip.search.edge_route_missing',
+        status: response.status,
+      });
+      return searchDirectTrips(from, to, date, seats);
+    }
+
     return expectJsonResponse(response, 'Failed to search trips', { operation: 'trip.search' });
   },
 
@@ -169,6 +189,12 @@ export const tripsAPI = {
         }),
     );
 
+    if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+      const trip = await getDirectTripById(tripId);
+      if (!trip) throw new Error('Failed to fetch trip');
+      return trip;
+    }
+
     return expectJsonResponse(response, 'Failed to fetch trip', { operation: 'trip.get', tripId });
   },
 
@@ -188,6 +214,10 @@ export const tripsAPI = {
           headers: { Authorization: `Bearer ${token}` },
         }),
     );
+
+    if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+      return getDirectDriverTrips(userId);
+    }
 
     return expectJsonResponse(response, 'Failed to fetch driver trips', {
       operation: 'trip.driver.list',
@@ -233,6 +263,15 @@ export const tripsAPI = {
           return updateDirectTrip(tripId, sanitizedPayload);
         }
 
+        if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+          logger.warning('[trips] edge route unavailable for trip.update, falling back to direct Supabase', {
+            operation: 'trip.update.edge_route_missing',
+            tripId,
+            status: response.status,
+          });
+          return updateDirectTrip(tripId, sanitizedPayload);
+        }
+
         return expectJsonResponse(response, 'Failed to update trip', {
           operation: 'trip.update',
           tripId,
@@ -259,6 +298,10 @@ export const tripsAPI = {
         }),
     );
 
+    if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+      return deleteDirectTrip(tripId);
+    }
+
     return expectJsonResponse(response, 'Failed to delete trip', { operation: 'trip.delete', tripId });
   },
 
@@ -280,6 +323,11 @@ export const tripsAPI = {
           headers: { Authorization: `Bearer ${token}` },
         }),
     );
+
+    if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+      await updateDirectTrip(tripId, { status: 'active' });
+      return { success: true };
+    }
 
     return expectJsonResponse(response, 'Failed to publish trip', { operation: 'trip.publish', tripId });
   },
@@ -305,6 +353,10 @@ export const tripsAPI = {
           body: JSON.stringify({ type, weight, distance_km, base_price }),
         }),
     );
+
+    if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+      return calculateDirectPrice(type, weight, distance_km, base_price);
+    }
 
     return expectJsonResponse(response, 'Failed to calculate price', { operation: 'trip.calculatePrice' });
   },

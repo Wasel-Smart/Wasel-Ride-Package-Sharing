@@ -161,12 +161,15 @@ async function safeGetDirectProfile(userId: string): Promise<Record<string, unkn
 }
 
 export const authAPI = {
-  async signUp(email: string, password: string, firstName: string, lastName: string, phone: string) {
+  async signUp(email: string, password: string, firstName: string, lastName: string, phone?: string) {
     const client = requireSupabase();
     const sanitizedEmail = sanitizeEmail(normalizeEmailInput(email));
     const sanitizedFirstName = sanitizeTextField(firstName, 'First name', 80);
     const sanitizedLastName = sanitizeTextField(lastName, 'Last name', 80);
-    const sanitizedPhone = sanitizePhoneNumber(phone);
+    const sanitizedPhone =
+      typeof phone === 'string' && phone.trim().length > 0
+        ? sanitizePhoneNumber(phone)
+        : undefined;
 
     if (password.trim().length < 8) {
       throw new ValidationError('Password must be at least 8 characters long');
@@ -186,7 +189,7 @@ export const authAPI = {
             emailRedirectTo: redirectTo,
             data: {
               full_name: `${sanitizedFirstName} ${sanitizedLastName}`.trim(),
-              phone: sanitizedPhone,
+              ...(sanitizedPhone ? { phone: sanitizedPhone } : {}),
             },
           },
         });

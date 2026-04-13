@@ -461,7 +461,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     try {
       if (isSupabaseConfigured && supabase) {
         const { firstName, lastName } = splitName(name);
-        await authAPI.signUp(email, password, firstName, lastName, phone ?? '');
+        await authAPI.signUp(email, password, firstName, lastName, phone);
 
         let authUser: unknown = null;
         for (let attempt = 0; attempt < 3; attempt += 1) {

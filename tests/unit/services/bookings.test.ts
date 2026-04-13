@@ -115,6 +115,18 @@ describe('bookingsAPI.createBooking()', () => {
     expect(result.id).toBe('bk-1');
   });
 
+  it('falls back to directSupabase when the edge route is missing', async () => {
+    mockFetch.mockReturnValueOnce(Promise.resolve({
+      ok: false,
+      status: 404,
+      json: () => Promise.resolve({ error: 'Not found' }),
+    }));
+    mockCreateDirectBooking.mockResolvedValueOnce(BOOKING_RESULT);
+    const result = await bookingsAPI.createBooking('trip-1', 2);
+    expect(mockCreateDirectBooking).toHaveBeenCalledOnce();
+    expect(result.id).toBe('bk-1');
+  });
+
   it('throws when API returns error body', async () => {
     mockFetch.mockReturnValueOnce(fail({ error: 'No seats available' }));
     await expect(bookingsAPI.createBooking('trip-1', 5)).rejects.toThrow('No seats available');

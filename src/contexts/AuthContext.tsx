@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import { authAPI } from '../services/auth';
 import { supabase, isSupabaseConfigured } from '../utils/supabase/client';
@@ -81,8 +81,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isBackendConnected, setIsBackendConnected] = useState(true);
+  const profileUserIdRef = useRef<string | null>(null);
   const isPublicLanding =
     typeof window !== 'undefined' && window.location.pathname === '/';
+
+  useEffect(() => {
+    profileUserIdRef.current = profile?.id ?? null;
+  }, [profile?.id]);
 
   const fetchProfile = useCallback(async (userId: string, force = false) => {
     try {
@@ -91,13 +96,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
-      if (!force) {
-        let hasProfile = false;
-        setProfile((previous) => {
-          hasProfile = !!previous;
-          return previous;
-        });
-        if (hasProfile) return;
+      if (!force && profileUserIdRef.current === userId) {
+        return;
       }
 
       setProfile(await loadProfile());
@@ -138,13 +138,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
       async (event: AuthChangeEvent, nextSession: Session | null) => {
         if (!mounted) return;
 
+        const nextUserId = nextSession?.user?.id ?? null;
+        const isUserSwitch = Boolean(
+          nextUserId &&
+          profileUserIdRef.current &&
+          profileUserIdRef.current !== nextUserId,
+        );
+
         setSession(nextSession);
         setUser(nextSession?.user ?? null);
 
+        if (isUserSwitch) {
+          setProfile(null);
+        }
+
         if (shouldRefreshProfile(event, nextSession)) {
           setTimeout(() => {
-            if (nextSession?.user?.id) {
-              void fetchProfile(nextSession.user.id);
+            if (nextUserId) {
+              void fetchProfile(nextUserId, isUserSwitch);
             }
           }, 100);
         } else if (!nextSession) {
@@ -163,9 +174,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (mounted && data.session) {
           setSession(data.session);
           setUser(data.session.user);
+          const shouldForceProfileRefresh = profileUserIdRef.current !== data.session.user.id;
+          if (shouldForceProfileRefresh) {
+            setProfile(null);
+          }
           setTimeout(() => {
             if (data.session?.user?.id) {
-              void fetchProfile(data.session.user.id);
+              void fetchProfile(data.session.user.id, shouldForceProfileRefresh);
             }
           }, 150);
         }
@@ -293,7 +308,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshProfile = useCallback(async () => {
     if (user) {
-      await fetchProfile(user.id);
+      await fetchProfile(user.id, true);
     }
   }, [fetchProfile, user]);
 
