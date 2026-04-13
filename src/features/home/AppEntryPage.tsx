@@ -44,6 +44,10 @@ const CITY_OPTIONS = [
   { value: 'Salt', en: 'Salt', ar: '\u0627\u0644\u0633\u0644\u0637' },
 ] as const;
 
+function getAlternateCity(excluded: string) {
+  return CITY_OPTIONS.find(option => option.value !== excluded)?.value ?? excluded;
+}
+
 const COPY = {
   en: {
     navRide: 'Find a ride',
@@ -75,6 +79,14 @@ const COPY = {
     packageHint: 'Packages move through the same corridors. Pick the route first, then continue.',
     guestLead: 'Enter Wasel through the shortest path.',
     email: 'Continue with email',
+    google: 'Continue with Google',
+    googleBusy: 'Connecting Google...',
+    facebook: 'Continue with Facebook',
+    facebookBusy: 'Connecting Facebook...',
+    authErrors: {
+      google: 'Google sign in failed.',
+      facebook: 'Facebook sign in failed.',
+    },
     flowHeading: 'Choose your flow',
     flowSub: 'Three simple ways to understand Wasel in a few seconds.',
     flowCards: {
@@ -113,6 +125,14 @@ const COPY = {
     packageHint: '\u0627\u0644\u0637\u0631\u0648\u062f \u062a\u062a\u062d\u0631\u0643 \u0639\u0628\u0631 \u0646\u0641\u0633 \u0627\u0644\u0645\u0645\u0631\u0627\u062a. \u0627\u062e\u062a\u0631 \u0627\u0644\u0645\u0633\u0627\u0631 \u0623\u0648\u0644\u0627\u064b \u062b\u0645 \u062a\u0627\u0628\u0639.',
     guestLead: '\u0627\u062f\u062e\u0644 \u0625\u0644\u0649 \u0648\u0627\u0635\u0644 \u0628\u0623\u0628\u0633\u0637 \u0637\u0631\u064a\u0642\u0629.',
     email: '\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0628\u0627\u0644\u0628\u0631\u064a\u062f',
+    google: '\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0639\u0628\u0631 Google',
+    googleBusy: '\u062c\u0627\u0631\u064d \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0640 Google...',
+    facebook: '\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0639\u0628\u0631 Facebook',
+    facebookBusy: '\u062c\u0627\u0631\u064d \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0640 Facebook...',
+    authErrors: {
+      google: '\u062a\u0639\u0630\u0631 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0628\u0640 Google.',
+      facebook: '\u062a\u0639\u0630\u0631 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0628\u0640 Facebook.',
+    },
     flowHeading: '\u0627\u062e\u062a\u0631 \u0627\u0644\u062a\u062f\u0641\u0642',
     flowSub: '\u062b\u0644\u0627\u062b \u0637\u0631\u0642 \u0628\u0633\u064a\u0637\u0629 \u062a\u0634\u0631\u062d Wasel \u0641\u064a \u062b\u0648\u0627\u0646\u064d.',
     flowCards: {
@@ -178,6 +198,7 @@ export default function AppEntryPage() {
 
   const protectedPath = (path: string) => (user ? path : buildAuthPagePath('signin', path));
   const primaryPath = mode === 'ride' ? buildRideSearchPath(route) : buildPackagePrefillPath(route);
+  const contextualSignInPath = buildAuthPagePath('signin', primaryPath);
 
   const flowCards: FlowCard[] = [
     {
@@ -206,7 +227,25 @@ export default function AppEntryPage() {
   const updateRoute =
     (field: keyof RouteDraft) => (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const value = event.target.value;
-      setRoute(current => ({ ...current, [field]: value }));
+      setRoute(current => {
+        if (field === 'from') {
+          return {
+            ...current,
+            from: value,
+            to: value === current.to ? getAlternateCity(value) : current.to,
+          };
+        }
+
+        if (field === 'to') {
+          return {
+            ...current,
+            from: value === current.from ? getAlternateCity(value) : current.from,
+            to: value,
+          };
+        }
+
+        return { ...current, [field]: value };
+      });
     };
 
   const handlePrimarySubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -214,22 +253,17 @@ export default function AppEntryPage() {
     navigateLanding(primaryPath);
   };
 
-  const handleOAuth = async (provider: 'google' | 'facebook') => {
+  const handleOAuth = async (provider: 'google' | 'facebook', returnTo = primaryPath) => {
     setAuthError('');
     setOauthProvider(provider);
 
     const result =
       provider === 'google'
-        ? await signInWithGoogle(DEFAULT_RETURN_TO)
-        : await signInWithFacebook(DEFAULT_RETURN_TO);
+        ? await signInWithGoogle(returnTo)
+        : await signInWithFacebook(returnTo);
 
     if (result.error) {
-      setAuthError(
-        friendlyAuthError(
-          result.error,
-          provider === 'google' ? 'Google sign in failed.' : 'Facebook sign in failed.',
-        ),
-      );
+      setAuthError(friendlyAuthError(result.error, copy.authErrors[provider]));
       setOauthProvider(null);
     }
   };
@@ -351,7 +385,7 @@ export default function AppEntryPage() {
                     <span>{copy.to}</span>
                     <select value={route.to} onChange={updateRoute('to')}>
                       {CITY_OPTIONS.map(option => (
-                        <option key={option.value} value={option.value}>
+                        <option key={option.value} value={option.value} disabled={option.value === route.from}>
                           {ar ? option.ar : option.en}
                         </option>
                       ))}
@@ -388,12 +422,12 @@ export default function AppEntryPage() {
                     <p>{copy.guestLead}</p>
                     <div className="app-entry-page__guest-auth-buttons">
                       <button type="button" onClick={() => void handleOAuth('google')}>
-                        {oauthProvider === 'google' ? 'Connecting Google...' : 'Continue with Google'}
+                        {oauthProvider === 'google' ? copy.googleBusy : copy.google}
                       </button>
                       <button type="button" onClick={() => void handleOAuth('facebook')}>
-                        {oauthProvider === 'facebook' ? 'Connecting Facebook...' : 'Continue with Facebook'}
+                        {oauthProvider === 'facebook' ? copy.facebookBusy : copy.facebook}
                       </button>
-                      <button type="button" onClick={() => navigateLanding(signInPath)}>
+                      <button type="button" onClick={() => navigateLanding(contextualSignInPath)}>
                         {copy.email}
                       </button>
                     </div>
