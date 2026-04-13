@@ -99,7 +99,7 @@ function ensureLeafletCSS() {
       }
 
       .leaflet-control-attribution a {
-        color: #f4c651 !important;
+        color: #19e7bb !important;
       }
     `;
     document.head.appendChild(style);
@@ -192,10 +192,14 @@ const FALLBACK_MOSQUES = [
   { lat: 30.3000, lng: 35.2000, name: 'Wadi Rum Mosque | Ù…Ø³Ø¬Ø¯ ÙˆØ§Ø¯ÙŠ Ø±Ù…' },
 ];
 
+const MAP_PRIMARY = '#19E7BB';
+const MAP_PRIMARY_SOFT = '#A2FFE7';
+const MAP_MINT = '#DCFFF8';
+
 /* â”€â”€â”€ SVG icon strings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const SVG = {
   mosque: `<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="20" cy="20" r="18" fill="#F4C651" stroke="white" stroke-width="2"/>
+    <circle cx="20" cy="20" r="18" fill="${MAP_PRIMARY}" stroke="white" stroke-width="2"/>
     <path d="M20 8 C14 8 9 13 9 19 C9 25 13.5 30 20 31 C24 29.5 27 26.5 27.5 24 C25.5 24.5 23.5 23.5 22 21.5 C19 17.5 20.5 12 24 9.5 C22.8 8.7 21.5 8 20 8Z" fill="white"/>
     <circle cx="27" cy="11.5" r="3" fill="white"/>
     <rect x="18" y="3" width="4" height="6" rx="2" fill="white" opacity="0.8"/>
@@ -226,27 +230,27 @@ const SVG = {
   </svg>`,
 
   pinGreen: `<svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
-    <path d="M15 0 C6.7 0 0 6.7 0 15 C0 26 15 42 15 42 C15 42 30 26 30 15 C30 6.7 23.3 0 15 0Z" fill="#FFE08A" stroke="white" stroke-width="2"/>
+    <path d="M15 0 C6.7 0 0 6.7 0 15 C0 26 15 42 15 42 C15 42 30 26 30 15 C30 6.7 23.3 0 15 0Z" fill="${MAP_PRIMARY_SOFT}" stroke="white" stroke-width="2"/>
     <circle cx="15" cy="15" r="7" fill="white"/>
-    <circle cx="15" cy="15" r="4.5" fill="#FFE08A"/>
+    <circle cx="15" cy="15" r="4.5" fill="${MAP_PRIMARY_SOFT}"/>
   </svg>`,
 
   pinOrange: `<svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
-    <path d="M15 0 C6.7 0 0 6.7 0 15 C0 26 15 42 15 42 C15 42 30 26 30 15 C30 6.7 23.3 0 15 0Z" fill="#FFF0C1" stroke="white" stroke-width="2"/>
+    <path d="M15 0 C6.7 0 0 6.7 0 15 C0 26 15 42 15 42 C15 42 30 26 30 15 C30 6.7 23.3 0 15 0Z" fill="${MAP_MINT}" stroke="white" stroke-width="2"/>
     <circle cx="15" cy="15" r="7" fill="white"/>
-    <circle cx="15" cy="15" r="4.5" fill="#FFF0C1"/>
+    <circle cx="15" cy="15" r="4.5" fill="${MAP_MINT}"/>
   </svg>`,
 
   pinTeal: `<svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
-    <path d="M15 0 C6.7 0 0 6.7 0 15 C0 26 15 42 15 42 C15 42 30 26 30 15 C30 6.7 23.3 0 15 0Z" fill="#F4C651" stroke="white" stroke-width="2"/>
+    <path d="M15 0 C6.7 0 0 6.7 0 15 C0 26 15 42 15 42 C15 42 30 26 30 15 C30 6.7 23.3 0 15 0Z" fill="${MAP_PRIMARY}" stroke="white" stroke-width="2"/>
     <circle cx="15" cy="15" r="7" fill="white"/>
-    <circle cx="15" cy="15" r="4.5" fill="#F4C651"/>
+    <circle cx="15" cy="15" r="4.5" fill="${MAP_PRIMARY}"/>
   </svg>`,
 
   live: `<div style="width:52px;height:52px;position:relative;display:flex;align-items:center;justify-content:center;">
-    <div style="position:absolute;inset:0;border-radius:50%;background:rgba(244,198,81,0.16);animation:ping 2s cubic-bezier(0,0,0.2,1) infinite;"></div>
-    <div style="position:absolute;inset:6px;border-radius:50%;background:rgba(244,198,81,0.28);"></div>
-    <div style="position:absolute;inset:13px;border-radius:50%;background:#F4C651;"></div>
+    <div style="position:absolute;inset:0;border-radius:50%;background:rgba(25,231,187,0.16);animation:ping 2s cubic-bezier(0,0,0.2,1) infinite;"></div>
+    <div style="position:absolute;inset:6px;border-radius:50%;background:rgba(25,231,187,0.28);"></div>
+    <div style="position:absolute;inset:13px;border-radius:50%;background:${MAP_PRIMARY};"></div>
     <div style="position:absolute;inset:19px;border-radius:50%;background:white;"></div>
   </div>`,
 };
@@ -284,9 +288,9 @@ function mapTypeButtonStyle(active: boolean) {
     letterSpacing: '0.02em',
     color: active ? '#041018' : '#C6D4EA',
     background: active
-      ? 'linear-gradient(135deg, #F4C651 0%, #8A6220 100%)'
+      ? 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 52%, #65E1FF 100%)'
       : 'rgba(255,255,255,0.03)',
-    boxShadow: active ? '0 8px 18px rgba(244,198,81,0.22)' : 'none',
+    boxShadow: active ? '0 8px 18px rgba(25,231,187,0.22)' : 'none',
   } as const;
 }
 
@@ -300,11 +304,11 @@ function compactControlButtonStyle(active = false) {
     alignItems: 'center',
     justifyContent: 'center',
     background: active
-      ? 'linear-gradient(135deg, rgba(244,198,81,0.95), rgba(15,120,191,0.95))'
+      ? 'linear-gradient(135deg, rgba(220,255,248,0.95), rgba(25,231,187,0.95), rgba(101,225,255,0.95))'
       : 'rgba(255,255,255,0.04)',
     border: active ? '1px solid rgba(255,255,255,0.18)' : '1px solid rgba(93,150,210,0.16)',
     color: active ? '#041018' : '#EFF6FF',
-    boxShadow: active ? '0 10px 24px rgba(244,198,81,0.26)' : '0 10px 24px rgba(0,0,0,0.22)',
+    boxShadow: active ? '0 10px 24px rgba(25,231,187,0.26)' : '0 10px 24px rgba(0,0,0,0.22)',
   } as const;
 }
 
@@ -319,11 +323,11 @@ function wideControlButtonStyle(active = false) {
     justifyContent: 'center',
     gap: 8,
     background: active
-      ? 'linear-gradient(135deg, rgba(244,198,81,0.95), rgba(15,120,191,0.95))'
+      ? 'linear-gradient(135deg, rgba(220,255,248,0.95), rgba(25,231,187,0.95), rgba(101,225,255,0.95))'
       : 'rgba(255,255,255,0.04)',
     border: active ? '1px solid rgba(255,255,255,0.18)' : '1px solid rgba(93,150,210,0.16)',
     color: active ? '#041018' : '#EFF6FF',
-    boxShadow: active ? '0 10px 24px rgba(244,198,81,0.26)' : '0 10px 24px rgba(0,0,0,0.22)',
+    boxShadow: active ? '0 10px 24px rgba(25,231,187,0.26)' : '0 10px 24px rgba(0,0,0,0.22)',
     fontSize: '0.72rem',
     fontWeight: 800,
     letterSpacing: '0.02em',
@@ -593,18 +597,18 @@ function WaselMapCompact({
     if (rPts.length >= 2) {
       const latlngs = rPts.map((p) => [p.lat, p.lng] as [number, number]);
       const shadow = L.polyline(latlngs, { color: 'rgba(0,0,0,0.35)', weight: 8, opacity: 1, lineCap: 'round' }).addTo(map);
-      const line = L.polyline(latlngs, { color: '#F4C651', weight: 5, opacity: 0.95, lineCap: 'round' }).addTo(map);
+      const line = L.polyline(latlngs, { color: MAP_PRIMARY, weight: 5, opacity: 0.95, lineCap: 'round' }).addTo(map);
       drawnLayersRef.current.push(shadow, line);
 
       const start = rPts[0];
       const end = rPts[rPts.length - 1];
-      const startM = L.circleMarker([start.lat, start.lng], { radius: 6, color: '#FFE08A', weight: 2, fillColor: '#FFE08A', fillOpacity: 1 }).addTo(map);
-      const endM = L.circleMarker([end.lat, end.lng], { radius: 6, color: '#FFF0C1', weight: 2, fillColor: '#FFF0C1', fillOpacity: 1 }).addTo(map);
+      const startM = L.circleMarker([start.lat, start.lng], { radius: 6, color: MAP_PRIMARY_SOFT, weight: 2, fillColor: MAP_PRIMARY_SOFT, fillOpacity: 1 }).addTo(map);
+      const endM = L.circleMarker([end.lat, end.lng], { radius: 6, color: MAP_MINT, weight: 2, fillColor: MAP_MINT, fillOpacity: 1 }).addTo(map);
       drawnLayersRef.current.push(startM, endM);
     }
 
     mPts.forEach((m) => {
-      const cm = L.circleMarker([m.lat, m.lng], { radius: 5, color: '#F4C651', weight: 2, fillColor: '#F4C651', fillOpacity: 0.8 }).addTo(map);
+      const cm = L.circleMarker([m.lat, m.lng], { radius: 5, color: MAP_PRIMARY, weight: 2, fillColor: MAP_PRIMARY, fillOpacity: 0.8 }).addTo(map);
       drawnLayersRef.current.push(cm);
     });
 
@@ -663,7 +667,7 @@ function WaselMapCompact({
           borderRadius: 16,
           height: cssHeight,
           background:
-            'radial-gradient(120% 160% at 30% 15%, rgba(244,198,81,0.16), rgba(4,12,24,0.92) 55%, rgba(4,12,24,0.98) 100%)',
+            'radial-gradient(120% 160% at 30% 15%, rgba(25,231,187,0.16), rgba(4,12,24,0.92) 55%, rgba(4,12,24,0.98) 100%)',
           border: '1px solid rgba(93,150,210,0.16)',
         }}
       >
@@ -676,9 +680,9 @@ function WaselMapCompact({
         >
           <defs>
             <linearGradient id="waselRoute" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#FFE08A" stopOpacity="0.95" />
-              <stop offset="55%" stopColor="#F4C651" stopOpacity="0.95" />
-              <stop offset="100%" stopColor="#FFF0C1" stopOpacity="0.95" />
+                    <stop offset="0%" stopColor={MAP_PRIMARY_SOFT} stopOpacity="0.95" />
+                    <stop offset="55%" stopColor={MAP_PRIMARY} stopOpacity="0.95" />
+                    <stop offset="100%" stopColor={MAP_MINT} stopOpacity="0.95" />
             </linearGradient>
             <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
               <path d="M 36 0 L 0 0 0 36" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
@@ -697,13 +701,13 @@ function WaselMapCompact({
           {start && (
             <g>
               <circle cx={start.x} cy={start.y} r="9" fill="rgba(0,0,0,0.35)" />
-              <circle cx={start.x} cy={start.y} r="6" fill="#FFE08A" />
+                    <circle cx={start.x} cy={start.y} r="6" fill={MAP_PRIMARY_SOFT} />
             </g>
           )}
           {end && (
             <g>
               <circle cx={end.x} cy={end.y} r="9" fill="rgba(0,0,0,0.35)" />
-              <circle cx={end.x} cy={end.y} r="6" fill="#FFF0C1" />
+                    <circle cx={end.x} cy={end.y} r="6" fill={MAP_MINT} />
             </g>
           )}
         </svg>
@@ -712,8 +716,8 @@ function WaselMapCompact({
           className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5 px-2 py-1 rounded-lg"
           style={{ background: 'rgba(12,21,32,0.72)', border: '1px solid rgba(93,150,210,0.14)' }}
         >
-          <div className="w-2.5 h-2.5 rounded-full bg-[#F4C651]" />
-          <span className="text-[#F4C651] text-[10px] font-bold tracking-wider">WASEL</span>
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ background: MAP_PRIMARY }} />
+                    <span className="text-[10px] font-bold tracking-wider" style={{ color: MAP_PRIMARY }}>WASEL</span>
         </div>
       </div>
     );
@@ -737,8 +741,8 @@ function WaselMapCompact({
         className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5 px-2 py-1 rounded-lg"
         style={{ background: 'rgba(12,21,32,0.72)', border: '1px solid rgba(93,150,210,0.14)' }}
       >
-        <div className="w-2.5 h-2.5 rounded-full bg-[#F4C651]" />
-        <span className="text-[#F4C651] text-[10px] font-bold tracking-wider">WASEL</span>
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ background: MAP_PRIMARY }} />
+                    <span className="text-[10px] font-bold tracking-wider" style={{ color: MAP_PRIMARY }}>WASEL</span>
       </div>
     </div>
   );
@@ -956,7 +960,7 @@ function WaselMapFull(props: WaselMapProps) {
     if (!isMapAlive(mapInstance)) return;
 
     routeLineRef.current = L.polyline(latlngs, {
-      color: '#F4C651',
+            color: MAP_PRIMARY,
       weight: 5,
       opacity: 0.85,
       lineJoin: 'round',
@@ -1053,8 +1057,8 @@ function WaselMapFull(props: WaselMapProps) {
               .addTo(mapRef.current);
             liveCircleRef.current = L.circle(latlng, {
               radius:      loc.accuracy || 20,
-              color:       '#F4C651',
-              fillColor:   '#F4C651',
+      color:       MAP_PRIMARY,
+      fillColor:   MAP_PRIMARY,
               fillOpacity: 0.08,
               weight:      1,
               opacity:     0.35,
@@ -1271,11 +1275,11 @@ function WaselMapFull(props: WaselMapProps) {
             <div className="relative w-20 h-20">
               <svg viewBox="0 0 80 80" className="w-full h-full animate-spin" style={{ animationDuration: '2s' }}>
                 <circle cx="40" cy="40" r="34" fill="none" stroke="#1e2f4a" strokeWidth="6"/>
-                <circle cx="40" cy="40" r="34" fill="none" stroke="#F4C651" strokeWidth="6"
+                <circle cx="40" cy="40" r="34" fill="none" stroke={MAP_PRIMARY} strokeWidth="6"
                   strokeDasharray="80 134" strokeLinecap="round"/>
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <MapPin className="w-7 h-7 text-[#F4C651]" />
+                <MapPin className="w-7 h-7" style={{ color: MAP_PRIMARY }} />
               </div>
             </div>
             <div className="text-center">
@@ -1350,9 +1354,9 @@ function WaselMapFull(props: WaselMapProps) {
               >
                 <div className="px-4 py-3 space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#F4C651] animate-pulse" />
-                    <span className="text-[#F4C651] text-xs font-bold uppercase tracking-widest">Live</span>
-                    <Wifi className="w-3 h-3 text-[#F4C651]" />
+                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: MAP_PRIMARY }} />
+                    <span className="text-xs font-bold uppercase tracking-widest" style={{ color: MAP_PRIMARY }}>Live</span>
+                    <Wifi className="w-3 h-3" style={{ color: MAP_PRIMARY }} />
                   </div>
                   {liveLocation.speed !== null && liveLocation.speed !== undefined && (
                     <div className="flex items-end gap-1">
@@ -1393,7 +1397,7 @@ function WaselMapFull(props: WaselMapProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-semibold leading-tight">{selectedPOI.name}</p>
                     {selectedPOI.vicinity && <p className="text-[#8590a2] text-xs mt-0.5 truncate">{selectedPOI.vicinity}</p>}
-                    {selectedPOI.info     && <p className="text-[#F4C651] text-xs mt-1 font-medium">{selectedPOI.info}</p>}
+                    {selectedPOI.info     && <p className="text-xs mt-1 font-medium" style={{ color: MAP_PRIMARY }}>{selectedPOI.info}</p>}
                   </div>
                   <button
                     onClick={() => setSelectedPOI(null)}
@@ -1468,9 +1472,9 @@ function WaselMapFull(props: WaselMapProps) {
 	                fontSize: '0.86rem',
 	                fontWeight: 800,
 	                color: '#041018',
-	                background: 'linear-gradient(135deg, #F4C651 0%, #8A6220 100%)',
+	                background: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 52%, #65E1FF 100%)',
 	                border: '1px solid rgba(255,255,255,0.18)',
-	                boxShadow: '0 10px 28px rgba(244,198,81,0.28)',
+	                boxShadow: '0 10px 28px rgba(25,231,187,0.28)',
 	              } : {
 	                ...CONTROL_BUTTON_BASE,
 	                minHeight: 44,
@@ -1507,8 +1511,8 @@ function WaselMapFull(props: WaselMapProps) {
             className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2 py-1 rounded-lg"
             style={{ background: 'rgba(12,21,32,0.7)' }}
           >
-            <div className="w-3 h-3 rounded-full bg-[#F4C651]" />
-            <span className="text-[#F4C651] text-[10px] font-bold tracking-wider">WASEL</span>
+            <div className="w-3 h-3 rounded-full" style={{ background: MAP_PRIMARY }} />
+            <span className="text-[10px] font-bold tracking-wider" style={{ color: MAP_PRIMARY }}>WASEL</span>
           </div>
         </>
       )}

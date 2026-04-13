@@ -16,6 +16,7 @@ import { getMovementMembershipSnapshot } from './movementMembership';
 
 const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
 const WALLET_EDGE_READ_TIMEOUT_MS = 1_200;
+const WALLET_DIRECT_READ_TIMEOUT_MS = 4_000;
 const WALLET_PERSISTED_SNAPSHOT_MAX_AGE_MS = 2 * 60_000;
 const WALLET_PERSISTED_SNAPSHOT_STORAGE_PREFIX = 'wasel-wallet-snapshot-v1';
 const WALLET_READ_ONLY_ERROR = 'Wallet actions are temporarily read-only while the secure payment service reconnects.';
@@ -221,6 +222,33 @@ function createWalletReliabilityMeta(source: WalletReliabilityMeta['source'], de
     degraded,
     fetchedAt: new Date().toISOString(),
   };
+}
+
+function createWalletTimeoutError(operation: string, timeoutMs: number): Error {
+  return new Error(`${operation} timed out after ${timeoutMs}ms`);
+}
+
+function isWalletTimeoutError(error: unknown): boolean {
+  return error instanceof Error && /timed out after \d+ms$/i.test(error.message);
+}
+
+function withWalletTimeout<T>(promise: Promise<T>, timeoutMs: number, operation: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = globalThis.setTimeout(() => {
+      reject(createWalletTimeoutError(operation, timeoutMs));
+    }, timeoutMs);
+
+    promise.then(
+      (value) => {
+        globalThis.clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        globalThis.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
 }
 
 function toNumber(value: unknown, fallback = 0): number {
@@ -805,12 +833,36 @@ export const walletApi = {
           }
         }
 
-        const snapshot = {
-          data: await fetchWalletDirect(userId),
-          meta: createWalletReliabilityMeta('direct-supabase', true),
-        };
-        persistWalletSnapshot(userId, snapshot);
-        return snapshot;
+        try {
+          const snapshot = {
+            data: await withWalletTimeout(
+              fetchWalletDirect(userId),
+              WALLET_DIRECT_READ_TIMEOUT_MS,
+              'Wallet fallback read',
+            ),
+            meta: createWalletReliabilityMeta('direct-supabase', true),
+          };
+          persistWalletSnapshot(userId, snapshot);
+          return snapshot;
+        } catch (error) {
+          if (!isWalletTimeoutError(error)) {
+            throw error;
+          }
+
+          const persistedSnapshot = readPersistedWalletSnapshot(userId);
+          if (persistedSnapshot) {
+            return {
+              data: persistedSnapshot.data,
+              meta: {
+                ...persistedSnapshot.meta,
+                degraded: true,
+                fetchedAt: new Date().toISOString(),
+              },
+            };
+          }
+
+          throw error;
+        }
       });
   },
 

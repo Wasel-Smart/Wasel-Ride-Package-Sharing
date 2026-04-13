@@ -78,7 +78,13 @@ function HomeHero({
         >
           <div className="home-logo-glow" />
           <div className="home-logo-mark">
-            <WaselMark size={148} />
+            <WaselMark
+              size={176}
+              style={{
+                filter:
+                  'drop-shadow(0 26px 48px rgba(1,10,18,0.34)) drop-shadow(0 0 34px rgba(25,231,187,0.2))',
+              }}
+            />
           </div>
         </motion.div>
         <div className="home-hero-copy">

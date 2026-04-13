@@ -42,7 +42,7 @@ function MapLoader({ height }: { height?: string | number }) {
       className="flex flex-col items-center justify-center bg-[#0c1520] rounded-2xl gap-3 text-[#8590a2]"
       style={{ height: typeof height === 'number' ? `${height}px` : (height ?? '400px') }}
     >
-      <MapPin className="w-8 h-8 animate-pulse text-[#F4C651]" />
+      <MapPin className="w-8 h-8 animate-pulse" style={{ color: '#19E7BB' }} />
       <p className="text-sm">Loading mapâ€¦</p>
     </div>
   );

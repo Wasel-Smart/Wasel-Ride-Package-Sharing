@@ -82,7 +82,7 @@ function BrandPanel() {
 
         <h2 style={{ fontSize: TYPE.size['3xl'], fontWeight: TYPE.weight.ultra, color: C.text, letterSpacing: '-0.04em', margin: `0 0 ${SPACE[3]}`, lineHeight: 1.12 }}>
           One account.
-          <span style={{ display: 'block', background: 'linear-gradient(90deg, #FFF0C1, #F4C651, #C5831F)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <span style={{ display: 'block', background: 'linear-gradient(90deg, #DCFFF8, #19E7BB, #48CFFF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Every Wasel service.
           </span>
         </h2>
@@ -147,8 +147,8 @@ function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }
               fontSize:     TYPE.size.sm,
               fontWeight:   active ? TYPE.weight.black : TYPE.weight.semibold,
               fontFamily:   F,
-              background:   active ? 'linear-gradient(135deg, #FFF0C1 0%, #F4C651 48%, #C5831F 100%)' : 'transparent',
-              color:        active ? '#120D04' : C.textMuted,
+              background:   active ? 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 48%, #48CFFF 100%)' : 'transparent',
+              color:        active ? '#041019' : C.textMuted,
               boxShadow:    active ? `0 2px 12px ${C.cyanGlow}` : 'none',
               transition:   'all 150ms ease',
             }}

@@ -240,6 +240,75 @@ describe('walletApi', () => {
     expect(persistedSnapshot?.meta.source).toBe('direct-supabase');
   });
 
+  it('times out stalled direct wallet reads instead of hanging forever', async () => {
+    vi.useFakeTimers();
+
+    try {
+      mockMaybeSingle.mockImplementationOnce(() => new Promise(() => {}));
+
+      const snapshotPromise = walletApi.getWalletSnapshot('user-123');
+      const timedOutAssertion = expect(snapshotPromise).rejects.toThrow(
+        'Wallet fallback read timed out after 4000ms',
+      );
+
+      await vi.advanceTimersByTimeAsync(4_000);
+
+      await timedOutAssertion;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('reuses the last persisted wallet snapshot when a direct fallback read stalls', async () => {
+    vi.useFakeTimers();
+
+    try {
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: {
+          wallet_id: 'wallet-1',
+          user_id: 'user-123',
+          balance: 88,
+          pending_balance: 0,
+          wallet_status: 'active',
+          currency_code: 'JOD',
+        },
+        error: null,
+      });
+      mockLimit.mockResolvedValueOnce({ data: [], error: null });
+      mockOrder
+        .mockImplementationOnce(() => ({
+          select: mockSelect,
+          eq: mockEq,
+          order: mockOrder,
+          limit: mockLimit,
+          single: mockSingle,
+          maybeSingle: mockMaybeSingle,
+          insert: mockInsert,
+          update: mockUpdate,
+          delete: mockDelete,
+        }))
+        .mockResolvedValueOnce({ data: [], error: null });
+
+      const initialSnapshot = await walletApi.getWalletSnapshot('user-123');
+      expect(initialSnapshot.data.balance).toBe(88);
+      expect(walletApi.getPersistedWalletSnapshot('user-123')?.data.balance).toBe(88);
+
+      await vi.advanceTimersByTimeAsync(15_001);
+
+      mockMaybeSingle.mockImplementationOnce(() => new Promise(() => {}));
+
+      const recoveredSnapshotPromise = walletApi.getWalletSnapshot('user-123');
+
+      await vi.advanceTimersByTimeAsync(4_000);
+
+      const recoveredSnapshot = await recoveredSnapshotPromise;
+      expect(recoveredSnapshot.data.balance).toBe(88);
+      expect(recoveredSnapshot.meta.degraded).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('blocks wallet transfers when the secure wallet backend is unavailable', async () => {
     await expect(walletApi.sendMoney('user-123', 'user-999', 20, 'Ride split')).rejects.toThrow(
       'Wallet actions are temporarily read-only while the secure payment service reconnects.',

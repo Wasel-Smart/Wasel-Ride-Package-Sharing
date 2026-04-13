@@ -107,7 +107,7 @@ export function looksLikeBusTrip(item: Record<string, unknown>): boolean {
 }
 
 export function normalizeBusRoute(raw: Record<string, unknown>, index: number): BusRoute {
-  const colors = ['#F4C651', '#8A6220', '#FFE08A', '#FFF0C1'];
+const colors = ['#19E7BB', '#0BC3A0', '#65E1FF', '#A2FFE7'];
   const defaultId = `live-bus-${index + 1}`;
   const from = toText(raw.from ?? raw.origin_city, 'Amman');
   const to = toText(raw.to ?? raw.destination_city, 'Aqaba');

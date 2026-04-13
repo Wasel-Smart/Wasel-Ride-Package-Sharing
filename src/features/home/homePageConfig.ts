@@ -74,7 +74,7 @@ export function buildQuickActions(ar: boolean): HomeQuickAction[] {
       description: ar ? 'رحلات حية' : 'Matches',
       color: C.cyan,
       dim: C.cyanDim,
-      border: 'rgba(244,198,81,0.24)',
+      border: 'rgba(25,231,187,0.24)',
       path: '/find-ride',
     },
     {
@@ -84,7 +84,7 @@ export function buildQuickActions(ar: boolean): HomeQuickAction[] {
       description: ar ? 'شارك المقاعد' : 'Seats',
       color: C.gold,
       dim: C.goldDim,
-      border: 'rgba(219,159,44,0.26)',
+      border: 'rgba(72,207,255,0.24)',
       path: '/offer-ride',
     },
     {
@@ -94,7 +94,7 @@ export function buildQuickActions(ar: boolean): HomeQuickAction[] {
       description: ar ? 'طرد مع راكب' : 'Delivery',
       color: C.gold,
       dim: C.goldDim,
-      border: 'rgba(219,159,44,0.26)',
+      border: 'rgba(72,207,255,0.24)',
       path: '/packages',
     },
     {
@@ -104,7 +104,7 @@ export function buildQuickActions(ar: boolean): HomeQuickAction[] {
       description: ar ? 'رحلات بين المدن' : 'Intercity',
       color: C.green,
       dim: C.greenDim,
-      border: 'rgba(255,240,193,0.24)',
+      border: 'rgba(162,255,231,0.24)',
       path: '/bus',
     },
   ];
@@ -209,7 +209,7 @@ export function buildServicePillars(ar: boolean): HomeServicePillar[] {
       metric: ar ? 'رحلات حيّة' : 'Live ride supply',
       color: C.cyan,
       dim: C.cyanDim,
-      border: 'rgba(244,198,81,0.24)',
+      border: 'rgba(25,231,187,0.24)',
       path: '/find-ride',
     },
     {
@@ -219,7 +219,7 @@ export function buildServicePillars(ar: boolean): HomeServicePillar[] {
       metric: ar ? 'تسليم مرن' : 'Flexible delivery',
       color: C.gold,
       dim: C.goldDim,
-      border: 'rgba(219,159,44,0.26)',
+      border: 'rgba(72,207,255,0.24)',
       path: '/packages',
     },
     {
@@ -229,7 +229,7 @@ export function buildServicePillars(ar: boolean): HomeServicePillar[] {
       metric: ar ? 'تغطية وطنية' : 'National coverage',
       color: C.green,
       dim: C.greenDim,
-      border: 'rgba(255,240,193,0.24)',
+      border: 'rgba(162,255,231,0.24)',
       path: '/bus',
     },
   ];

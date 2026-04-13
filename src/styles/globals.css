@@ -503,9 +503,9 @@ a[href].wasel-outline-button:active,
 }
 .step-progress-fill {
   height: 100%; border-radius: 9999px;
-  background: linear-gradient(90deg, var(--wasel-brand-green), var(--wasel-brand-primary));
+  background: linear-gradient(90deg, var(--wasel-brand-cream), var(--wasel-brand-primary), var(--wasel-brand-bronze));
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 8px rgba(4,173,191,0.5);
+  box-shadow: 0 0 12px rgba(25,231,187,0.32);
 }
 
 /* ========================================

@@ -121,7 +121,7 @@ export default function WaselRoot() {
     <div
       style={{
         minHeight: '100vh',
-        background: 'var(--wasel-shell-background, radial-gradient(circle at 16% 14%, rgba(255,232,159,0.14), transparent 24%), linear-gradient(180deg, #09131f 0%, #050c15 100%))',
+        background: 'var(--wasel-shell-background, radial-gradient(circle at 16% 14%, rgba(101,225,255,0.12), transparent 24%), radial-gradient(circle at 82% 10%, rgba(25,231,187,0.08), transparent 20%), linear-gradient(180deg, #09131f 0%, #050c15 100%))',
         fontFamily: F,
         direction: ar ? 'rtl' : 'ltr',
       }}
@@ -134,7 +134,7 @@ export default function WaselRoot() {
         @keyframes spin { to { transform: rotate(360deg); } }
         * { box-sizing: border-box; }
         input, select, button, textarea { font-family: inherit; }
-        :focus-visible { outline: 2px solid var(--primary, #F4C651); outline-offset: 2px; }
+        :focus-visible { outline: 2px solid var(--primary, #19E7BB); outline-offset: 2px; }
       `}</style>
 
       {/* ── Sticky header ────────────────────────────────────────────── */}
@@ -148,7 +148,7 @@ export default function WaselRoot() {
             ? 'var(--wasel-header-bg-scrolled, rgba(6,23,38,0.95))'
             : 'var(--wasel-header-bg, rgba(7,24,39,0.84))',
           backdropFilter: 'blur(24px)',
-          borderBottom: `1px solid ${scrolled ? 'var(--wasel-header-border-scrolled, rgba(244,198,81,0.20))' : 'var(--wasel-header-border, rgba(244,198,81,0.12))'}`,
+          borderBottom: `1px solid ${scrolled ? 'var(--wasel-header-border-scrolled, rgba(25,231,187,0.20))' : 'var(--wasel-header-border, rgba(25,231,187,0.12))'}`,
           boxShadow: scrolled
             ? 'var(--wasel-shadow-md, 0 18px 44px rgba(1,10,18,0.28))'
             : 'var(--wasel-shadow-sm, 0 8px 24px rgba(1,10,18,0.18))',
@@ -222,9 +222,9 @@ export default function WaselRoot() {
                 padding: 5,
                 borderRadius: R.full,
                 background:
-                  'linear-gradient(180deg, rgba(255,249,235,0.05), rgba(255,249,235,0.015)), rgba(11,19,29,0.74)',
-                border: '1px solid rgba(244,198,81,0.12)',
-                boxShadow: 'inset 0 1px 0 rgba(255,248,233,0.04)',
+                  'linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.015)), rgba(11,19,29,0.74)',
+                border: '1px solid rgba(25,231,187,0.12)',
+                boxShadow: 'inset 0 1px 0 rgba(220,255,248,0.04)',
               }}
             >
               {primaryGroups.map((group, index) => {
@@ -257,14 +257,14 @@ export default function WaselRoot() {
                         padding: '0 14px',
                         borderRadius: R.full,
                         background: isEmphasized
-                          ? 'linear-gradient(135deg, rgba(255,240,193,0.14), rgba(244,198,81,0.16) 58%, rgba(197,131,31,0.14))'
+                          ? 'linear-gradient(135deg, rgba(220,255,248,0.14), rgba(25,231,187,0.16) 58%, rgba(72,207,255,0.14))'
                           : 'transparent',
-                        border: `1px solid ${isEmphasized ? 'rgba(244,198,81,0.24)' : 'transparent'}`,
-                        boxShadow: isEmphasized ? '0 12px 28px rgba(244,198,81,0.12)' : 'none',
+                        border: `1px solid ${isEmphasized ? 'rgba(25,231,187,0.24)' : 'transparent'}`,
+                        boxShadow: isEmphasized ? '0 12px 28px rgba(25,231,187,0.12)' : 'none',
                         cursor: 'pointer',
                         fontSize: '0.78rem',
                         fontWeight: isEmphasized ? 700 : 600,
-                        color: isEmphasized ? C.text : 'rgba(248,239,214,0.68)',
+                        color: isEmphasized ? C.text : 'rgba(233,245,247,0.68)',
                         fontFamily: F,
                         letterSpacing: '-0.01em',
                         transition: 'all 0.16s ease',
@@ -345,9 +345,9 @@ export default function WaselRoot() {
                     height: 38,
                     borderRadius: R.md,
                     background: unreadCount > 0
-                      ? 'var(--wasel-header-icon-hover, rgba(244,198,81,0.12))'
-                      : 'var(--wasel-header-icon-bg, rgba(255,245,222,0.05))',
-                    border: `1px solid ${unreadCount > 0 ? 'rgba(244,198,81,0.28)' : 'var(--border, rgba(244,198,81,0.16))'}`,
+                      ? 'var(--wasel-header-icon-hover, rgba(25,231,187,0.12))'
+                      : 'var(--wasel-header-icon-bg, rgba(220,255,248,0.05))',
+                    border: `1px solid ${unreadCount > 0 ? 'rgba(25,231,187,0.28)' : 'var(--border, rgba(25,231,187,0.16))'}`,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -362,7 +362,7 @@ export default function WaselRoot() {
                     height="15"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke="rgba(248,239,214,0.74)"
+                    stroke="rgba(233,245,247,0.74)"
                     strokeWidth="2"
                     strokeLinecap="round"
                     aria-hidden="true"
@@ -414,14 +414,14 @@ export default function WaselRoot() {
                     fontWeight: 700,
                     letterSpacing: '-0.01em',
                     background:
-                      'linear-gradient(180deg, rgba(255,249,235,0.06), rgba(255,249,235,0.02)), rgba(10,18,28,0.9)',
-                    border: '1px solid rgba(244,198,81,0.22)',
-                    color: '#F8EFD6',
+                      'linear-gradient(180deg, rgba(220,255,248,0.06), rgba(220,255,248,0.02)), rgba(10,18,28,0.9)',
+                    border: '1px solid rgba(25,231,187,0.22)',
+                    color: '#E9F5F7',
                     fontFamily: F,
                     cursor: 'pointer',
                     transition: 'all 0.18s ease',
                     whiteSpace: 'nowrap',
-                    boxShadow: '0 12px 28px rgba(2,6,12,0.28), inset 0 1px 0 rgba(255,248,233,0.05)',
+                    boxShadow: '0 12px 28px rgba(2,6,12,0.28), inset 0 1px 0 rgba(220,255,248,0.05)',
                     minHeight: 42,
                   }}
                 >
@@ -437,14 +437,14 @@ export default function WaselRoot() {
                     fontSize: '0.84rem',
                     fontWeight: 800,
                     letterSpacing: '-0.01em',
-                    background: 'linear-gradient(135deg, #FFF0C1 0%, #F4C651 44%, #C5831F 100%)',
+                    background: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    color: '#140D04',
+                    color: '#041019',
                     fontFamily: F,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
                     transition: 'all 0.18s ease',
-                    boxShadow: '0 18px 40px rgba(197,131,31,0.22), inset 0 1px 0 rgba(255,248,233,0.3)',
+                    boxShadow: '0 18px 40px rgba(25,231,187,0.22), inset 0 1px 0 rgba(220,255,248,0.3)',
                     minHeight: 42,
                   }}
                 >
@@ -469,8 +469,8 @@ export default function WaselRoot() {
               minWidth: 40,
               minHeight: 40,
               borderRadius: R.md,
-              background: 'rgba(255,245,222,0.05)',
-              border: '1px solid rgba(244,198,81,0.18)',
+              background: 'rgba(220,255,248,0.05)',
+              border: '1px solid rgba(25,231,187,0.18)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -484,7 +484,7 @@ export default function WaselRoot() {
               height="18"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="rgba(248,239,214,0.82)"
+              stroke="rgba(233,245,247,0.82)"
               strokeWidth="2"
               strokeLinecap="round"
               aria-hidden="true"
@@ -539,7 +539,7 @@ export default function WaselRoot() {
             inset: 0,
             pointerEvents: 'none',
             background:
-              'radial-gradient(circle at top center, rgba(255,232,160,0.08), transparent 30%), radial-gradient(circle at 80% 20%, rgba(244,198,81,0.08), transparent 24%)',
+              'radial-gradient(circle at top center, rgba(101,225,255,0.08), transparent 30%), radial-gradient(circle at 80% 20%, rgba(25,231,187,0.08), transparent 24%)',
             zIndex: -1,
           }}
         />

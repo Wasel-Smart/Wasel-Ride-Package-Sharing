@@ -177,7 +177,7 @@ export function PrivacyConsentBanner() {
             <a
               href="/app/privacy"
               style={{
-                color: 'var(--primary, #F4C651)',
+                color: 'var(--primary, #19E7BB)',
                 textDecoration: 'underline',
                 textUnderlineOffset: 2,
                 fontWeight: 600,
@@ -206,8 +206,8 @@ export function PrivacyConsentBanner() {
                 borderRadius: 12,
                 border: 'none',
                 background:
-                  'linear-gradient(135deg, #FFF0C1 0%, var(--primary, #F4C651) 44%, #C5831F 100%)',
-                color: 'var(--primary-foreground, #120D04)',
+                  'linear-gradient(135deg, #DCFFF8 0%, var(--primary, #19E7BB) 44%, #48CFFF 100%)',
+                color: 'var(--primary-foreground, #041019)',
                 fontWeight: 800,
                 fontSize: '0.84rem',
                 fontFamily: SHELL_FONT,

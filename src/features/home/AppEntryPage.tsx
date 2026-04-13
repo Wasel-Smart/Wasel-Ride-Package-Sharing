@@ -323,76 +323,63 @@ export default function AppEntryPage() {
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 16,
-                background: ENTRY_PANEL_ALT,
-                border: `1px solid ${ENTRY_BORDER_SOFT}`,
+                gap: 14,
+                background: 'none',
+                border: 'none',
                 color: ENTRY_TEXT,
-                padding: '12px 18px 12px 12px',
-                borderRadius: 28,
+                padding: 0,
+                borderRadius: 0,
                 cursor: 'pointer',
-                boxShadow: '0 18px 42px rgba(1,10,18,0.24)',
+                boxShadow: 'none',
               }}
             >
               <div
                 style={{
-                  width: 78,
-                  height: 78,
-                  borderRadius: 24,
+                  width: 64,
+                  minHeight: 56,
                   display: 'grid',
                   placeItems: 'center',
-                  background:
-                    'radial-gradient(circle at 30% 24%, rgba(25,231,187,0.18), rgba(25,231,187,0) 28%), linear-gradient(180deg, rgba(220,255,248,0.04), rgba(220,255,248,0.01)), rgba(9,21,35,0.88)',
-                  border: `1px solid ${ENTRY_BORDER_SOFT}`,
-                  boxShadow: 'inset 0 1px 0 rgba(220,255,248,0.06), 0 16px 36px rgba(1,10,18,0.24)',
+                  background: 'none',
+                  border: 'none',
+                  boxShadow: 'none',
                 }}
               >
                 <WaselMark
-                  size={60}
+                  size={54}
                   style={{
                     filter:
-                      'drop-shadow(0 18px 28px rgba(1,10,18,0.28)) drop-shadow(0 0 24px rgba(25,231,187,0.16))',
+                      'drop-shadow(0 12px 24px rgba(1,10,18,0.22)) drop-shadow(0 0 18px rgba(25,231,187,0.12))',
                   }}
                 />
               </div>
-              <div style={{ display: 'grid', gap: 8, textAlign: ar ? 'right' : 'left' }}>
+              <div style={{ display: 'grid', gap: 4, textAlign: ar ? 'right' : 'left' }}>
                 <span
                   style={{
                     fontFamily: LANDING_DISPLAY,
-                    fontSize: 'clamp(2.35rem, 4vw, 4rem)',
+                    fontSize: 'clamp(1.8rem, 2.6vw, 2.6rem)',
                     fontWeight: 800,
-                    letterSpacing: '-0.075em',
-                    lineHeight: 0.84,
-                    background: 'linear-gradient(180deg, #D8FFF7 0%, #3AE9C2 56%, #089D7E 100%)',
+                    letterSpacing: '-0.05em',
+                    lineHeight: 0.9,
+                    background: 'linear-gradient(135deg, #E9FFFA 0%, #88F3DB 58%, #48CFFF 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
-                    textShadow: '0 14px 30px rgba(8, 17, 29, 0.18)',
+                    textShadow: '0 10px 20px rgba(8, 17, 29, 0.12)',
                   }}
                 >
                   Wasel
                 </span>
                 <span
                   style={{
-                    color: 'rgba(233, 245, 247, 0.9)',
-                    fontSize: 'clamp(0.98rem, 1.35vw, 1.1rem)',
-                    fontWeight: TYPE.weight.bold,
-                    letterSpacing: '-0.015em',
+                    color: 'rgba(198, 223, 227, 0.86)',
+                    fontSize: 'clamp(0.84rem, 1.05vw, 0.98rem)',
+                    fontWeight: TYPE.weight.semibold,
+                    letterSpacing: '-0.01em',
                     lineHeight: 1.2,
                   }}
                 >
                   {'\u0623\u0646\u0627 \u0648\u0627\u0635\u0644\u060c \u0623\u0646\u062a\u061f'}
                 </span>
-                <span
-                  aria-hidden="true"
-                  style={{
-                    width: 170,
-                    maxWidth: '100%',
-                    height: 4,
-                    borderRadius: 999,
-                    background: 'linear-gradient(90deg, #DCFFF8 0%, #19E7BB 54%, #48CFFF 100%)',
-                    boxShadow: '0 0 28px rgba(25,231,187,0.18)',
-                  }}
-                />
               </div>
             </button>
 
@@ -817,75 +804,6 @@ export default function AppEntryPage() {
                 }}
               >
                 <div style={{ position: 'relative', paddingTop: 18 }}>
-                  <div
-                    aria-hidden="true"
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 20,
-                      zIndex: 2,
-                      width: 108,
-                      height: 108,
-                      borderRadius: 34,
-                      display: 'grid',
-                      placeItems: 'center',
-                      background:
-                        'radial-gradient(circle at 32% 28%, rgba(25,231,187,0.14), rgba(25,231,187,0) 28%), linear-gradient(180deg, rgba(220,255,248,0.06), rgba(220,255,248,0.02)), rgba(10,20,31,0.9)',
-                      border: `1px solid ${ENTRY_BORDER_SOFT}`,
-                      boxShadow:
-                        'inset 0 1px 0 rgba(220,255,248,0.06), 0 28px 52px rgba(1,10,18,0.28)',
-                      backdropFilter: 'blur(22px)',
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: 'absolute',
-                        inset: -18,
-                        borderRadius: 40,
-                        background:
-                          'radial-gradient(circle, rgba(25,231,187,0.2) 0%, rgba(25,231,187,0.05) 48%, rgba(8,19,31,0) 74%)',
-                        filter: 'blur(18px)',
-                      }}
-                    />
-                    <WaselMark
-                      size={74}
-                      style={{
-                        position: 'relative',
-                        filter:
-                          'drop-shadow(0 20px 30px rgba(1,10,18,0.26)) drop-shadow(0 0 26px rgba(25,231,187,0.16))',
-                      }}
-                    />
-                  </div>
-
-                  <div
-                    aria-hidden="true"
-                    style={{
-                      position: 'absolute',
-                      top: 26,
-                      right: 26,
-                      zIndex: 2,
-                      display: 'flex',
-                      gap: 10,
-                      alignItems: 'center',
-                    }}
-                  >
-                    {[64, 42, 24].map((width, index) => (
-                      <span
-                        key={width}
-                        style={{
-                          width,
-                          height: index === 2 ? 10 : 6,
-                          borderRadius: 999,
-                          background:
-                            index === 2
-                              ? 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 100%)'
-                              : 'linear-gradient(90deg, rgba(162,255,231,0.56), rgba(162,255,231,0.12))',
-                          boxShadow: index === 2 ? '0 0 18px rgba(25,231,187,0.24)' : 'none',
-                        }}
-                      />
-                    ))}
-                  </div>
-
                   <div
                     style={{
                       borderRadius: 32,

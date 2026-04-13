@@ -635,8 +635,8 @@ export function UserMenu({
             height: 28,
             borderRadius: '50%',
             background:
-              'linear-gradient(135deg,#FFF0C1 0%, #F4C651 44%, #C5831F 100%)',
-            boxShadow: '0 0 0 1.5px rgba(244,198,81,0.28)',
+              'linear-gradient(135deg,#DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
+            boxShadow: '0 0 0 1.5px rgba(25,231,187,0.28)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1201,7 +1201,7 @@ export function MobileDrawer({
                   height: 42,
                   borderRadius: R.md,
                   background:
-                    'linear-gradient(135deg,#FFF0C1 0%, #F4C651 44%, #C5831F 100%)',
+                    'linear-gradient(135deg,#DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
                   border: 'none',
                   color: '#041018',
                   fontWeight: 700,
