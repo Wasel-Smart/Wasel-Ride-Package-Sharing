@@ -71,7 +71,7 @@ export function WaselContactActionRow({ ar, compact = false }: { ar: boolean; co
             href={action.href}
             target={action.id === 'whatsapp' ? '_blank' : undefined}
             rel={action.id === 'whatsapp' ? 'noreferrer' : undefined}
-            className="wasel-primary-button wasel-lift-card"
+            className="wasel-lift-card"
             style={{
               display: 'inline-flex',
               alignItems: 'center',

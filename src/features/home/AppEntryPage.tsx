@@ -1,5 +1,17 @@
 import { useState, type CSSProperties } from 'react';
-import { ArrowRight, Car, LogIn, Package, Search, type LucideIcon } from 'lucide-react';
+import {
+  ArrowRight,
+  Car,
+  ChevronRight,
+  LogIn,
+  MapPinned,
+  Package,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  WalletCards,
+  type LucideIcon,
+} from 'lucide-react';
 import { WaselMark } from '../../components/wasel-ds/WaselLogo';
 import {
   WaselBusinessFooter,
@@ -26,31 +38,41 @@ type ActionCard = {
   color: string;
 };
 
-const ENTRY_TEXT = '#E9F5F7';
-const ENTRY_TEXT_SOFT = 'rgba(198,223,227,0.82)';
-const ENTRY_TEXT_MUTED = 'rgba(170,191,196,0.72)';
-const ENTRY_BORDER = 'rgba(25,231,187,0.16)';
-const ENTRY_BORDER_SOFT = 'rgba(152,255,228,0.12)';
+type InsightCard = {
+  icon: LucideIcon;
+  eyebrow: string;
+  title: string;
+  detail: string;
+  color: string;
+};
+
+const ENTRY_TEXT = '#F4FBFF';
+const ENTRY_TEXT_SOFT = 'rgba(222,240,247,0.86)';
+const ENTRY_TEXT_MUTED = 'rgba(183,205,214,0.78)';
+const ENTRY_BORDER = 'rgba(34,229,188,0.18)';
+const ENTRY_BORDER_SOFT = 'rgba(179,255,237,0.14)';
 const ENTRY_PANEL =
-  'linear-gradient(180deg, rgba(220,255,248,0.06), rgba(220,255,248,0.015)), rgba(10,18,31,0.88)';
+  'linear-gradient(180deg, rgba(248,255,255,0.08), rgba(248,255,255,0.018)), rgba(7,16,28,0.82)';
 const ENTRY_PANEL_ALT =
-  'linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.02)), rgba(16,28,41,0.72)';
+  'linear-gradient(180deg, rgba(248,255,255,0.06), rgba(248,255,255,0.02)), rgba(10,20,34,0.74)';
 const ENTRY_PANEL_STRONG =
-  'linear-gradient(180deg, rgba(220,255,248,0.04), rgba(220,255,248,0.01)), rgba(8,16,27,0.9)';
-const ENTRY_ACCENT = '#19E7BB';
-const ENTRY_MINT = '#A2FFE7';
-const ENTRY_DEEP = '#041019';
+  'linear-gradient(180deg, rgba(248,255,255,0.08), rgba(248,255,255,0.02)), rgba(6,15,26,0.92)';
+const ENTRY_ACCENT = '#22E5BC';
+const ENTRY_MINT = '#CCFFF4';
+const ENTRY_PRIMARY_GRAD = 'linear-gradient(135deg, #6FE8FF 0%, #18D7C2 38%, #1668FF 100%)';
+const ENTRY_PRIMARY_GLOW =
+  '0 24px 64px rgba(22,104,255,0.24), 0 16px 44px rgba(24,215,194,0.16)';
 
 const panelStyle: CSSProperties = {
   borderRadius: 34,
   border: `1px solid ${ENTRY_BORDER_SOFT}`,
   background: ENTRY_PANEL,
-  boxShadow: 'inset 0 1px 0 rgba(220,255,248,0.05), 0 28px 72px rgba(1,10,18,0.34)',
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 30px 80px rgba(1,10,18,0.34)',
   backdropFilter: 'blur(26px)',
 };
 
 const outlineButtonStyle: CSSProperties = {
-  minHeight: 50,
+  minHeight: 52,
   padding: '0 22px',
   borderRadius: 18,
   border: `1px solid ${ENTRY_BORDER}`,
@@ -64,17 +86,17 @@ const outlineButtonStyle: CSSProperties = {
 };
 
 const primaryButtonStyle: CSSProperties = {
-  minHeight: 50,
+  minHeight: 52,
   padding: '0 24px',
   borderRadius: 18,
-  border: 'none',
-  background: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
-  color: ENTRY_DEEP,
+  border: '1px solid rgba(255,255,255,0.14)',
+  background: ENTRY_PRIMARY_GRAD,
+  color: '#F7FDFF',
   fontSize: TYPE.size.sm,
   fontWeight: TYPE.weight.ultra,
   fontFamily: F,
   cursor: 'pointer',
-  boxShadow: '0 22px 56px rgba(25,231,187,0.26)',
+  boxShadow: ENTRY_PRIMARY_GLOW,
 };
 
 export default function AppEntryPage() {
@@ -155,8 +177,8 @@ export default function AppEntryPage() {
       icon: Search,
       title: ar ? '\u0627\u0628\u062d\u062b \u0639\u0646 \u0631\u062d\u0644\u0629' : 'Find a ride',
       detail: ar
-        ? '\u0642\u0627\u0631\u0646 \u0627\u0644\u0645\u0633\u0627\u0631\u0627\u062a \u0627\u0644\u062d\u064a\u0629 \u0641\u064a \u062b\u0648\u0627\u0646'
-        : 'Compare live routes fast',
+        ? '\u0634\u0627\u0647\u062f \u0627\u0644\u0645\u0633\u0627\u0631 \u0627\u0644\u062d\u064a \u0648\u0627\u062e\u062a\u0631 \u0623\u0633\u0631\u0639 \u0642\u0631\u0627\u0631'
+        : 'See the live corridor and choose fast',
       path: buildPath('/app/find-ride'),
       color: C.cyan,
     },
@@ -164,8 +186,8 @@ export default function AppEntryPage() {
       icon: Car,
       title: ar ? '\u0623\u0646\u0634\u0626 \u0631\u062d\u0644\u0629' : 'Create a ride',
       detail: ar
-        ? '\u0628\u0639 \u0627\u0644\u0645\u0642\u0627\u0639\u062f\u060c \u0648\u0627\u062d\u0645\u0644 \u0627\u0644\u0637\u0631\u0648\u062f\u060c \u0648\u0627\u0641\u062a\u062d \u062f\u062e\u0644\u064b\u0627 \u0623\u0643\u0628\u0631 \u0645\u0646 \u0646\u0641\u0633 \u0627\u0644\u0631\u062d\u0644\u0629'
-        : 'Sell seats and carry packages',
+        ? '\u0628\u0639 \u0627\u0644\u0645\u0642\u0627\u0639\u062f \u0648\u0627\u062d\u0645\u0644 \u0627\u0644\u0637\u0631\u0648\u062f \u0639\u0644\u0649 \u0646\u0641\u0633 \u0627\u0644\u0645\u0633\u0627\u0631'
+        : 'Sell seats and carry packages together',
       path: buildPath('/app/offer-ride', true),
       color: C.gold,
     },
@@ -173,31 +195,61 @@ export default function AppEntryPage() {
       icon: Package,
       title: ar ? '\u0623\u0631\u0633\u0644 \u0637\u0631\u062f\u0627' : 'Send a package',
       detail: ar
-        ? '\u062d\u0631\u0643 \u0627\u0644\u0637\u0631\u0648\u062f \u0639\u0628\u0631 \u0646\u0641\u0633 \u0627\u0644\u0634\u0628\u0643\u0629'
-        : 'Send on the live network',
+        ? '\u062d\u0631\u0651\u0643 \u0627\u0644\u0637\u0631\u0648\u062f \u0639\u0628\u0631 \u0646\u0641\u0633 \u0627\u0644\u0634\u0628\u0643\u0629 \u0627\u0644\u062d\u064a\u0629'
+        : 'Move parcels through the same network',
       path: buildPath('/app/packages'),
       color: C.green,
     },
   ] as const;
 
+  const signalCards: readonly InsightCard[] = [
+    {
+      icon: MapPinned,
+      eyebrow: ar ? '\u0634\u0628\u0643\u0629 \u0648\u0627\u062d\u062f\u0629' : 'One operating surface',
+      title: ar ? '\u0627\u0644\u0642\u0631\u0627\u0631 \u064a\u0628\u062f\u0623 \u0645\u0646 \u0627\u0644\u062e\u0631\u064a\u0637\u0629' : 'Every decision starts from the map',
+      detail: ar
+        ? '\u0627\u0644\u0631\u0627\u0643\u0628 \u0648\u0627\u0644\u0633\u0627\u0626\u0642 \u0648\u0627\u0644\u0637\u0631\u062f \u064a\u0631\u0648\u0646 \u0646\u0641\u0633 \u0627\u0644\u0645\u0634\u0647\u062f \u0627\u0644\u062d\u064a.'
+        : 'Riders, drivers, and parcels all start from one live corridor view.',
+      color: '#6FE8FF',
+    },
+    {
+      icon: WalletCards,
+      eyebrow: ar ? '\u0642\u064a\u0645\u0629 \u0623\u0639\u0644\u0649' : 'More yield per departure',
+      title: ar ? '\u0627\u0644\u0645\u0642\u0627\u0639\u062f \u0648\u0627\u0644\u0637\u0631\u0648\u062f \u0639\u0644\u0649 \u0646\u0641\u0633 \u0627\u0644\u0631\u062d\u0644\u0629' : 'Seats and parcels monetize the same trip',
+      detail: ar
+        ? '\u0648\u0627\u0635\u0650\u0644 \u062a\u0631\u0641\u0639 \u0642\u064a\u0645\u0629 \u0643\u0644 \u0627\u0646\u0637\u0644\u0627\u0642\u0647 \u0628\u062f\u0648\u0646 \u062a\u0634\u062a\u064a\u062a \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645.'
+        : 'Wasel compounds route value without making the product feel crowded.',
+      color: '#22E5BC',
+    },
+    {
+      icon: ShieldCheck,
+      eyebrow: ar ? '\u062b\u0642\u0629 \u0648\u0627\u0636\u062d\u0629' : 'Trust in plain sight',
+      title: ar ? '\u0627\u0644\u062f\u0639\u0645 \u0648\u0627\u0644\u0647\u0648\u064a\u0629 \u0638\u0627\u0647\u0631\u0627\u0646 \u062f\u0627\u0626\u0645\u0627\u064b' : 'Support and identity stay visible',
+      detail: ar
+        ? '\u0627\u0644\u0647\u0627\u062a\u0641 \u0648\u0648\u0627\u062a\u0633\u0627\u0628 \u0648\u0627\u0644\u0628\u0631\u064a\u062f \u062d\u0627\u0636\u0631\u0629 \u0645\u0646 \u0623\u0648\u0644 \u0634\u0627\u0634\u0629.'
+        : 'Call, WhatsApp, and email are all visible from the first screen.',
+      color: '#A7FFE9',
+    },
+  ] as const;
+
   const heroBadgeText = ar
-    ? '\u0634\u0628\u0643\u0629 \u062d\u064a\u0629 \u0644\u0644\u0631\u062d\u0644\u0627\u062a \u0648\u0627\u0644\u0637\u0631\u0648\u062f'
-    : 'Live mobility network';
+    ? '\u0634\u0628\u0643\u0629 \u0627\u0644\u062d\u0631\u0643\u0629 \u0627\u0644\u062d\u064a\u0629 \u0644\u0644\u0623\u0631\u062f\u0646'
+    : 'Jordan live mobility network';
   const heroTitleLead = ar
     ? '\u0627\u0641\u062a\u062d \u0627\u0644\u0634\u0628\u0643\u0629 \u0623\u0648\u0644\u0627\u064b.'
     : 'Open the network first.';
   const heroTitleAccent = ar
-    ? '\u0627\u062e\u062a\u0631 \u0627\u0644\u062d\u0631\u0643\u0629 \u0628\u062f\u0642\u0629 \u0648\u0633\u0631\u0639\u0629.'
-    : 'Choose movement with clarity.';
+    ? '\u0643\u0644 \u0645\u0633\u0627\u0631 \u064a\u0635\u0628\u062d \u0623\u0648\u0636\u062d \u0648\u0623\u0643\u062b\u0631 \u0642\u064a\u0645\u0629.'
+    : 'Make every route clearer and more valuable.';
   const heroDescription = ar
-    ? '\u0648\u0627\u0635\u0644 \u062a\u062c\u0645\u0639 \u0627\u0644\u0631\u062d\u0644\u0627\u062a \u0648\u0627\u0644\u0637\u0631\u0648\u062f \u0641\u064a \u062a\u062f\u0641\u0642 \u0648\u0627\u062d\u062f\u060c \u062d\u062a\u0649 \u0645\u064f\u0646\u0634\u0626 \u0627\u0644\u0631\u062d\u0644\u0629 \u064a\u0642\u062f\u0631 \u064a\u0628\u064a\u0639 \u0627\u0644\u0645\u0642\u0627\u0639\u062f \u0648\u064a\u062d\u0645\u0644 \u0627\u0644\u0637\u0631\u0648\u062f \u0641\u064a \u0646\u0641\u0633 \u0627\u0644\u0645\u0634\u0648\u0627\u0631.'
-    : 'Rides, buses, packages, and wallet access in one network.';
+    ? '\u0648\u0627\u0635\u0650\u0644 \u062a\u0628\u062f\u0623 \u0628\u0627\u0644\u062e\u0631\u064a\u0637\u0629 \u0627\u0644\u062d\u064a\u0629\u060c \u062b\u0645 \u062a\u062a\u064a\u062d \u0644\u0644\u0631\u0627\u0643\u0628 \u0627\u0644\u062d\u062c\u0632\u060c \u0648\u0644\u0644\u0633\u0627\u0626\u0642 \u0628\u064a\u0639 \u0627\u0644\u0645\u0642\u0627\u0639\u062f \u0648\u062d\u0645\u0644 \u0627\u0644\u0637\u0631\u0648\u062f\u060c \u0645\u0639 \u0628\u0642\u0627\u0621 \u0627\u0644\u062f\u0639\u0645 \u0648\u0627\u0636\u062d\u0627\u064b \u0645\u0646 \u0623\u0648\u0644 \u0634\u0627\u0634\u0629.'
+    : 'Wasel opens with the live corridor, then lets riders book, drivers monetize seats and parcels, and support stay visible from the first screen.';
   const supplyTitle = ar
-    ? '\u0631\u062d\u0644\u0629 \u0648\u0627\u062d\u062f\u0629\u060c \u0623\u0643\u062b\u0631 \u0645\u0646 \u0645\u0635\u062f\u0631 \u062f\u062e\u0644.'
-    : 'One trip. More value.';
+    ? '\u0627\u0644\u0645\u0633\u0627\u0631 \u0627\u0644\u0648\u0627\u062d\u062f \u064a\u0628\u064a\u0639 \u0645\u0642\u0627\u0639\u062f \u0648\u064a\u062d\u0631\u0643 \u0637\u0631\u0648\u062f\u0627\u064b.'
+    : 'One route can sell seats and move packages at once.';
   const supplyBody = ar
-    ? '\u0644\u0645\u0627 \u062a\u0646\u0634\u0626 \u0631\u062d\u0644\u0629 \u0639\u0628\u0631 \u0648\u0627\u0635\u0644\u060c \u062a\u0642\u062f\u0631 \u062a\u0639\u0631\u0636 \u0627\u0644\u0645\u0642\u0627\u0639\u062f \u0644\u0644\u0628\u064a\u0639 \u0644\u0644\u0631\u0643\u0627\u0628 \u0648\u0628\u0646\u0641\u0633 \u0627\u0644\u0648\u0642\u062a \u062a\u0641\u0639\u0644 \u0648\u0636\u0639 \u0627\u0633\u062a\u0644\u0627\u0645 \u0627\u0644\u0637\u0631\u0648\u062f \u0648\u062a\u0633\u0644\u064a\u0645\u0647\u0627 \u0639\u0644\u0649 \u0646\u0641\u0633 \u0627\u0644\u0645\u0633\u0627\u0631.'
-    : 'Open seats and package carrying on the same route.';
+    ? '\u0647\u0630\u0627 \u0647\u0648 \u0627\u0644\u0641\u0631\u0642 \u0641\u064a \u0648\u0627\u0635\u0650\u0644: \u0627\u0644\u0645\u0633\u0627\u0631 \u0623\u0648\u0636\u062d \u0644\u0644\u0631\u0627\u0643\u0628\u060c \u0648\u0623\u0643\u062b\u0631 \u0631\u0628\u062d\u0627\u064b \u0644\u0644\u0633\u0627\u0626\u0642\u060c \u0648\u0623\u0633\u0647\u0644 \u0634\u0631\u062d\u0627\u064b \u0644\u0644\u0645\u0633\u062a\u062b\u0645\u0631.'
+    : 'That is the product edge: clearer demand for riders, more value for drivers, and a sharper story for investors.';
   const supplyPills = ar
     ? [
         '\u0628\u064a\u0639 \u0627\u0644\u0645\u0642\u0627\u0639\u062f \u0644\u0644\u0631\u0643\u0627\u0628',
@@ -211,11 +263,11 @@ export default function AppEntryPage() {
       ];
   const quickPills = ar
     ? [
-        '\u062d\u0631\u0643\u0629 \u062d\u064a\u0629',
-        '\u0645\u0633\u0627\u0631\u0627\u062a \u0623\u0630\u0643\u0649',
-        '\u0648\u0635\u0648\u0644 \u0623\u0628\u0633\u0637',
+        '\u0631\u062d\u0644\u0627\u062a \u062d\u064a\u0629',
+        '\u0637\u0631\u0648\u062f \u0639\u0644\u0649 \u0646\u0641\u0633 \u0627\u0644\u0645\u0633\u0627\u0631',
+        '\u062f\u0639\u0645 \u0638\u0627\u0647\u0631',
       ]
-    : ['Live routes', 'Simple booking', 'Fast delivery'];
+    : ['Live rides', 'Package flow', 'Visible support'];
 
   const supportLine = profile.supportPhoneDisplay || profile.supportEmail || 'Wasel';
   const businessAddress = ar ? profile.businessAddressAr : profile.businessAddress;
@@ -235,8 +287,24 @@ export default function AppEntryPage() {
         .entry-shell * { box-sizing: border-box; }
         .entry-shell button:focus-visible,
         .entry-shell a:focus-visible {
-          outline: 2px solid rgba(25,231,187,0.92);
+          outline: 2px solid rgba(34,229,188,0.92);
           outline-offset: 3px;
+        }
+        .entry-float-card {
+          transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+        }
+        .entry-live-dot {
+          animation: entryPulse 1.9s ease-in-out infinite;
+        }
+        @keyframes entryPulse {
+          0%, 100% { opacity: 0.58; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.08); }
+        }
+        @media (hover: hover) and (pointer: fine) {
+          .entry-float-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 26px 64px rgba(1,10,18,0.3);
+          }
         }
         @media (max-width: 1280px) {
           .entry-main-grid {
@@ -245,7 +313,8 @@ export default function AppEntryPage() {
         }
         @media (max-width: 1120px) {
           .entry-actions,
-          .entry-meta {
+          .entry-meta,
+          .entry-signal-grid {
             grid-template-columns: 1fr !important;
           }
         }
@@ -257,11 +326,18 @@ export default function AppEntryPage() {
           .entry-visual-focus {
             grid-template-columns: 1fr !important;
           }
+          .entry-map-legend,
+          .entry-map-footer,
+          .entry-meta-line {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+          }
         }
         @media (max-width: 640px) {
           .entry-shell { padding: 16px 14px 72px !important; }
           .entry-cta-row,
-          .entry-auth-row {
+          .entry-auth-row,
+          .entry-pill-row {
             flex-direction: column !important;
             align-items: stretch !important;
           }
@@ -282,9 +358,9 @@ export default function AppEntryPage() {
             position: 'relative',
             overflow: 'hidden',
             padding: 'clamp(18px, 2vw, 30px)',
-            minHeight: 'clamp(700px, 88vh, 860px)',
+            minHeight: 'clamp(760px, 92vh, 940px)',
             background:
-              'radial-gradient(circle at 50% 14%, rgba(25,231,187,0.18), rgba(8,19,31,0) 22%), radial-gradient(circle at 88% 12%, rgba(101,225,255,0.12), rgba(8,19,31,0) 20%), radial-gradient(circle at 82% 100%, rgba(151,164,173,0.12), rgba(8,19,31,0) 28%), linear-gradient(140deg, rgba(15,27,41,0.97) 0%, rgba(9,18,30,0.97) 48%, rgba(11,18,31,0.98) 72%, rgba(78,89,99,0.94) 100%)',
+              'radial-gradient(circle at 18% 12%, rgba(34,229,188,0.16), rgba(8,18,32,0) 22%), radial-gradient(circle at 88% 14%, rgba(111,232,255,0.11), rgba(8,18,32,0) 18%), radial-gradient(circle at 76% 82%, rgba(22,104,255,0.15), rgba(8,18,32,0) 24%), linear-gradient(145deg, rgba(8,18,30,0.98) 0%, rgba(8,19,31,0.96) 38%, rgba(9,24,41,0.95) 68%, rgba(68,83,99,0.92) 100%)',
           }}
         >
           <div
@@ -293,10 +369,10 @@ export default function AppEntryPage() {
               position: 'absolute',
               inset: 0,
               background:
-                'linear-gradient(90deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0) 16%, rgba(255,255,255,0) 84%, rgba(255,255,255,0.02) 100%), linear-gradient(rgba(25,231,187,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(25,231,187,0.035) 1px, transparent 1px)',
-              backgroundSize: '100% 100%, 72px 72px, 72px 72px',
+                'linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 14%, rgba(255,255,255,0) 86%, rgba(255,255,255,0.024) 100%), linear-gradient(rgba(34,229,188,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(34,229,188,0.03) 1px, transparent 1px)',
+              backgroundSize: '100% 100%, 76px 76px, 76px 76px',
               pointerEvents: 'none',
-              opacity: 0.6,
+              opacity: 0.62,
             }}
           />
 
@@ -309,7 +385,13 @@ export default function AppEntryPage() {
               alignItems: 'center',
               gap: 16,
               flexWrap: 'wrap',
-              marginBottom: 24,
+              marginBottom: 26,
+              padding: '14px 16px',
+              borderRadius: 28,
+              border: `1px solid ${ENTRY_BORDER_SOFT}`,
+              background: 'rgba(255,255,255,0.035)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+              backdropFilter: 'blur(18px)',
             }}
           >
             <button
@@ -354,22 +436,42 @@ export default function AppEntryPage() {
                 />
               </div>
               <div style={{ display: 'grid', gap: 2, textAlign: ar ? 'right' : 'left' }}>
-                <span
-                  style={{
-                    fontFamily: LANDING_DISPLAY,
-                    fontSize: 'clamp(1.7rem, 2.4vw, 2.45rem)',
-                    fontWeight: 800,
-                    letterSpacing: '-0.045em',
-                    lineHeight: 0.92,
-                    background: 'linear-gradient(180deg, #DFFFF8 0%, #6EF0D1 58%, #19DAB2 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    textShadow: '0 10px 22px rgba(8, 17, 29, 0.14)',
-                  }}
-                >
-                  Wasel
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <span
+                    style={{
+                      fontFamily: LANDING_DISPLAY,
+                      fontSize: 'clamp(1.78rem, 2.45vw, 2.55rem)',
+                      fontWeight: 800,
+                      letterSpacing: '-0.045em',
+                      lineHeight: 0.92,
+                      background: 'linear-gradient(180deg, #E8FFF9 0%, #7CF4DA 58%, #22DAB6 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }}
+                  >
+                    Wasel
+                  </span>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      padding: '6px 12px',
+                      borderRadius: 999,
+                      border: `1px solid ${ENTRY_BORDER_SOFT}`,
+                      background: 'rgba(255,255,255,0.04)',
+                      color: ENTRY_MINT,
+                      fontSize: '0.72rem',
+                      fontWeight: TYPE.weight.ultra,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    <Sparkles size={12} />
+                    Mobility OS
+                  </span>
+                </div>
                 <span
                   style={{
                     color: '#1EE4B5',
@@ -383,16 +485,16 @@ export default function AppEntryPage() {
                 </span>
                 <span
                   style={{
-                    color: 'rgba(204, 223, 227, 0.72)',
-                    fontSize: 'clamp(0.72rem, 0.92vw, 0.84rem)',
+                    color: 'rgba(214,231,237,0.76)',
+                    fontSize: 'clamp(0.74rem, 0.9vw, 0.86rem)',
                     fontWeight: TYPE.weight.medium,
                     letterSpacing: '-0.01em',
-                    lineHeight: 1.15,
+                    lineHeight: 1.2,
                   }}
                 >
                   {ar
-                    ? '\u0646\u0631\u0628\u0637 \u0627\u0644\u0631\u062d\u0644\u0627\u062a\u060c \u0646\u0634\u0627\u0631\u0643 \u0627\u0644\u0645\u0634\u0627\u0648\u064a\u0631\u060c \u0648\u0646\u0648\u0641\u0651\u0631 \u0633\u0648\u064a\u0627\u064b'
-                    : 'Connect journeys, share rides, save together'}
+                    ? '\u0646\u0641\u0633 \u0627\u0644\u0645\u0633\u0627\u0631 \u064a\u0645\u0643\u0646 \u0623\u0646 \u064a\u062d\u0645\u0644 \u0631\u0627\u0643\u0628\u0627\u064b \u0648\u0637\u0631\u062f\u0627\u064b \u0648\u0642\u064a\u0645\u0629 \u0623\u0643\u0628\u0631.'
+                    : 'One corridor can carry riders, parcels, and more value.'}
                 </span>
               </div>
             </button>
@@ -476,6 +578,7 @@ export default function AppEntryPage() {
                 }}
               >
                 <span
+                  className="entry-live-dot"
                   style={{
                     width: 9,
                     height: 9,
@@ -491,21 +594,21 @@ export default function AppEntryPage() {
                 <h1
                   style={{
                     margin: 0,
-                    maxWidth: 760,
+                    maxWidth: 820,
                     fontFamily: LANDING_DISPLAY,
-                    fontSize: 'clamp(2.95rem, 4.6vw, 5rem)',
+                    fontSize: 'clamp(3.2rem, 4.9vw, 5.7rem)',
                     lineHeight: 0.9,
-                    letterSpacing: '-0.075em',
+                    letterSpacing: '-0.08em',
                     fontWeight: 800,
                     textWrap: 'balance',
                   }}
                 >
-                  <span style={{ display: 'block', color: '#F5FAFF' }}>{heroTitleLead}</span>
+                  <span style={{ display: 'block', color: '#F7FCFF' }}>{heroTitleLead}</span>
                   <span
                     style={{
                       display: 'block',
                       marginTop: 12,
-                      background: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
+                      background: ENTRY_PRIMARY_GRAD,
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
@@ -518,14 +621,47 @@ export default function AppEntryPage() {
                 <p
                   style={{
                     margin: 0,
-                    maxWidth: 620,
+                    maxWidth: 660,
                     color: ENTRY_TEXT_SOFT,
-                    fontSize: 'clamp(1rem, 1.15vw, 1.08rem)',
-                    lineHeight: 1.7,
+                    fontSize: 'clamp(1rem, 1.16vw, 1.08rem)',
+                    lineHeight: 1.78,
                   }}
                 >
                   {heroDescription}
                 </p>
+              </div>
+
+              <div className="entry-pill-row" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {quickPills.map(pill => (
+                  <span
+                    key={pill}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '10px 14px',
+                      borderRadius: 999,
+                      background: 'rgba(255,255,255,0.045)',
+                      border: `1px solid ${ENTRY_BORDER_SOFT}`,
+                      color: ENTRY_TEXT,
+                      fontSize: '0.8rem',
+                      fontWeight: TYPE.weight.black,
+                      boxShadow: '0 12px 28px rgba(1,10,18,0.14)',
+                    }}
+                  >
+                    <span
+                      className="entry-live-dot"
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: ENTRY_ACCENT,
+                        boxShadow: `0 0 12px ${ENTRY_ACCENT}`,
+                      }}
+                    />
+                    {pill}
+                  </span>
+                ))}
               </div>
 
               <div className="entry-cta-row" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -646,32 +782,81 @@ export default function AppEntryPage() {
               ) : null}
 
               <div
-                className="entry-meta"
+                className="entry-meta entry-signal-grid"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                  gap: 10,
+                  gap: 12,
                 }}
               >
-                {quickPills.map(pill => (
-                  <div
-                    key={pill}
-                    style={{
-                      borderRadius: 18,
-                      padding: '14px 16px',
-                      border: `1px solid ${ENTRY_BORDER_SOFT}`,
-                      background:
-                        'linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.025))',
-                      fontSize: '0.82rem',
-                      fontWeight: TYPE.weight.black,
-                      color: ENTRY_TEXT,
-                      textAlign: ar ? 'right' : 'left',
-                      lineHeight: 1.45,
-                    }}
-                  >
-                    {pill}
-                  </div>
-                ))}
+                {signalCards.map(card => {
+                  const Icon = card.icon;
+
+                  return (
+                    <div
+                      key={card.title}
+                      className="entry-float-card"
+                      style={{
+                        borderRadius: 26,
+                        padding: '18px',
+                        border: `1px solid ${card.color}33`,
+                        background:
+                          'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.018))',
+                        boxShadow: `0 18px 42px ${card.color}12`,
+                        display: 'grid',
+                        gap: 10,
+                        textAlign: ar ? 'right' : 'left',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 16,
+                          display: 'grid',
+                          placeItems: 'center',
+                          background: `${card.color}18`,
+                          border: `1px solid ${card.color}36`,
+                          boxShadow: `0 14px 28px ${card.color}12`,
+                        }}
+                      >
+                        <Icon size={20} color={card.color} />
+                      </div>
+                      <div
+                        style={{
+                          color: card.color,
+                          fontSize: '0.72rem',
+                          fontWeight: TYPE.weight.ultra,
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {card.eyebrow}
+                      </div>
+                      <div
+                        style={{
+                          color: ENTRY_TEXT,
+                          fontFamily: LANDING_DISPLAY,
+                          fontSize: '1rem',
+                          lineHeight: 1.08,
+                          letterSpacing: '-0.03em',
+                          fontWeight: 700,
+                        }}
+                      >
+                        {card.title}
+                      </div>
+                      <div
+                        style={{
+                          color: ENTRY_TEXT_MUTED,
+                          fontSize: '0.84rem',
+                          lineHeight: 1.64,
+                        }}
+                      >
+                        {card.detail}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               <div
@@ -702,18 +887,16 @@ export default function AppEntryPage() {
                     textTransform: 'uppercase',
                   }}
                 >
-                  {ar
-                    ? '\u0639\u0631\u0636 \u0627\u0644\u0631\u062d\u0644\u0629'
-                    : 'Create and earn'}
+                  {ar ? '\u0627\u0642\u062a\u0635\u0627\u062f \u0627\u0644\u0645\u0633\u0627\u0631' : 'Route economics'}
                 </div>
                 <div style={{ display: 'grid', gap: 8 }}>
                   <div
                     style={{
-                      color: '#F5FAFF',
+                      color: '#F7FCFF',
                       fontFamily: LANDING_DISPLAY,
-                      fontSize: 'clamp(1.3rem, 2.4vw, 2rem)',
-                      lineHeight: 1,
-                      letterSpacing: '-0.04em',
+                      fontSize: 'clamp(1.36rem, 2.4vw, 2.1rem)',
+                      lineHeight: 0.98,
+                      letterSpacing: '-0.05em',
                       fontWeight: 700,
                     }}
                   >
