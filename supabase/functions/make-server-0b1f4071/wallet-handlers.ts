@@ -265,7 +265,9 @@ async function getSystemAccount(admin: SupabaseClient, scope: string, currency =
     ownerUserId: null,
     scope,
     currencyCode: currency,
-    normalBalance: scope === 'revenue' ? 'credit' : 'debit',
+    normalBalance: scope === 'revenue' || scope === 'payout_clearing' || scope === 'platform_escrow'
+      ? 'credit'
+      : 'debit',
     accountName: scope.replace(/_/g, ' '),
   });
 }

@@ -394,7 +394,7 @@ export function UserSnapshotSection({
       <div className="home-panel home-wallet-panel">
         <div className="home-mini-label">{ar ? '\u0627\u0644\u0645\u062d\u0641\u0638\u0629' : 'Wallet'}</div>
         <div className="home-balance-value">
-          {loading ? <Skeleton w={100} h={28} radius={6} /> : formatFromJOD(liveStats?.walletBalance ?? 47.5)}
+          {loading ? <Skeleton w={100} h={28} radius={6} /> : formatFromJOD(liveStats?.walletBalance ?? 0)}
         </div>
         <div className="home-stat-label">{liveStats ? `JOD ${liveStats.walletBalance.toFixed(3)}` : ''}</div>
       </div>

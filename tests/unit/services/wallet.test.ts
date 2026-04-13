@@ -195,26 +195,10 @@ describe('walletApi secure backend flow', () => {
   });
 
   it('submits a wallet-funded subscription through the payment-intent and confirm flow', async () => {
-    mockFetchWithRetry
-      .mockResolvedValueOnce(await jsonResponse(walletPayload))
-      .mockResolvedValueOnce(await jsonResponse({
-        id: 'pi-sub',
-        purpose: 'subscription',
-        status: 'requires_confirmation',
-        amount: 9.99,
-        currency: 'JOD',
-        paymentMethodType: 'wallet',
-        provider: 'wallet',
-        createdAt: '2026-04-12T12:00:00.000Z',
-      }))
-      .mockResolvedValueOnce(await jsonResponse({
-        id: 'pi-sub',
-        status: 'succeeded',
-        settled: true,
-      }));
-
+    mockFetchWithRetry.mockResolvedValueOnce(await jsonResponse(walletPayload));
     await walletApi.getWallet('user-123');
     __resetWalletApiCachesForTests();
+    mockFetchWithRetry.mockClear();
     mockFetchWithRetry
       .mockResolvedValueOnce(await jsonResponse(walletPayload))
       .mockResolvedValueOnce(await jsonResponse({

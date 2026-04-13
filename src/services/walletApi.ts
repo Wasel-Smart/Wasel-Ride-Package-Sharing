@@ -4,20 +4,18 @@ import {
   getAuthDetails,
   publicAnonKey,
 } from './core';
-import type {
-  PaymentIntentView,
-  WalletData,
-  WalletEscrow,
-  WalletPaymentMethod,
-  WalletStepUpVerification,
-  WalletSubscription,
-  WalletTransaction,
-} from '../../shared/wallet-contracts';
 import {
   isWalletPaymentMethodType,
   isStepUpPurpose,
+  type PaymentIntentView,
   type StepUpPurpose,
+  type WalletData,
+  type WalletEscrow,
+  type WalletPaymentMethod,
   type WalletPaymentMethodType,
+  type WalletStepUpVerification,
+  type WalletSubscription,
+  type WalletTransaction,
 } from '../../shared/wallet-contracts';
 
 const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
@@ -259,9 +257,10 @@ function getCachedVerificationToken(purpose: StepUpPurpose): string | null {
 }
 
 export const walletApi = {
-  async getWallet(_userId: string): Promise<WalletData> {
-    const { userId } = await getAuthDetails();
-    const snapshot = await walletApi.getWalletSnapshot(userId);
+  async getWallet(userId: string): Promise<WalletData> {
+    void userId;
+    const { userId: authUserId } = await getAuthDetails();
+    const snapshot = await walletApi.getWalletSnapshot(authUserId);
     return snapshot.data;
   },
 
@@ -286,9 +285,10 @@ export const walletApi = {
     return readPersistedWalletSnapshot(userId);
   },
 
-  async getInsights(_userId: string): Promise<InsightsData> {
-    const { userId } = await getAuthDetails();
-    const snapshot = await walletApi.getWalletSnapshot(userId);
+  async getInsights(userId: string): Promise<InsightsData> {
+    void userId;
+    const { userId: authUserId } = await getAuthDetails();
+    const snapshot = await walletApi.getWalletSnapshot(authUserId);
     return buildInsights(snapshot.data);
   },
 
@@ -302,9 +302,10 @@ export const walletApi = {
     });
   },
 
-  async getTransactions(_userId: string, page = 1, pageSize = 20) {
-    const { userId } = await getAuthDetails();
-    const wallet = await walletApi.getWallet(userId);
+  async getTransactions(userId: string, page = 1, pageSize = 20) {
+    void userId;
+    const { userId: authUserId } = await getAuthDetails();
+    const wallet = await walletApi.getWallet(authUserId);
     const start = Math.max(0, (page - 1) * pageSize);
     const end = start + pageSize;
     return {
@@ -352,14 +353,16 @@ export const walletApi = {
     return await response.json() as { id: string; status: string; settled: boolean; clientSecret?: string | null };
   },
 
-  async topUp(_userId: string, amount: number, paymentMethod: string) {
+  async topUp(userId: string, amount: number, paymentMethod: string) {
+    void userId;
     if (!isWalletPaymentMethodType(paymentMethod)) {
       throw new Error('Unsupported payment method.');
     }
     return walletApi.createPaymentIntent('deposit', amount, paymentMethod);
   },
 
-  async withdraw(_userId: string, amount: number, bankAccount: string, providerName: string) {
+  async withdraw(userId: string, amount: number, bankAccount: string, providerName: string) {
+    void userId;
     const token = getCachedVerificationToken('withdrawal');
     if (!token) {
       throw new Error('Verify your wallet PIN and OTP before requesting a withdrawal.');
@@ -375,7 +378,8 @@ export const walletApi = {
     });
   },
 
-  async sendMoney(_userId: string, recipientUserId: string, amount: number, note?: string) {
+  async sendMoney(userId: string, recipientUserId: string, amount: number, note?: string) {
+    void userId;
     const token = getCachedVerificationToken('transfer');
     if (!token) {
       throw new Error('Verify your wallet PIN and OTP before sending money.');
@@ -391,7 +395,8 @@ export const walletApi = {
     });
   },
 
-  async setPin(_userId: string, pin: string) {
+  async setPin(userId: string, pin: string) {
+    void userId;
     await walletFetch('/wallet/set-pin', {
       method: 'POST',
       body: JSON.stringify({ pin }),
@@ -399,12 +404,13 @@ export const walletApi = {
   },
 
   async verifyPin(
-    _userId: string,
+    userId: string,
     pin: string,
     purpose: string = 'transfer',
     otpCode?: string,
     challengeId?: string,
   ): Promise<WalletStepUpVerification> {
+    void userId;
     if (!isStepUpPurpose(purpose)) {
       throw new Error('Unsupported wallet verification purpose.');
     }
@@ -424,11 +430,14 @@ export const walletApi = {
     return verification;
   },
 
-  async claimReward(_userId?: string, _rewardId?: string): Promise<void> {
+  async claimReward(userId?: string, rewardId?: string): Promise<void> {
+    void userId;
+    void rewardId;
     throw new Error('Wallet rewards are not enabled in the secure production wallet.');
   },
 
-  async setAutoTopUp(_userId?: string, enabled?: boolean, amount?: number, threshold?: number): Promise<void> {
+  async setAutoTopUp(userId?: string, enabled?: boolean, amount?: number, threshold?: number): Promise<void> {
+    void userId;
     await walletFetch('/wallet/settings', {
       method: 'POST',
       body: JSON.stringify({
@@ -439,9 +448,10 @@ export const walletApi = {
     });
   },
 
-  async subscribe(_userId: string, planName: string, price: number, corridorId?: string | null) {
-    const { userId } = await getAuthDetails();
-    const wallet = await walletApi.getWallet(userId);
+  async subscribe(userId: string, planName: string, price: number, corridorId?: string | null) {
+    void userId;
+    const { userId: authUserId } = await getAuthDetails();
+    const wallet = await walletApi.getWallet(authUserId);
     const paymentMethodType: WalletPaymentMethodType = wallet.balance >= price
       ? 'wallet'
       : (wallet.wallet.paymentMethods.find((method) => method.isDefault)?.type ?? 'card');
@@ -461,13 +471,15 @@ export const walletApi = {
     return intent;
   },
 
-  async getPaymentMethods(_userId: string): Promise<WalletPaymentMethod[]> {
-    const { userId } = await getAuthDetails();
-    const wallet = await walletApi.getWallet(userId);
+  async getPaymentMethods(userId: string): Promise<WalletPaymentMethod[]> {
+    void userId;
+    const { userId: authUserId } = await getAuthDetails();
+    const wallet = await walletApi.getWallet(authUserId);
     return wallet.wallet.paymentMethods;
   },
 
-  async addPaymentMethod(_userId: string, input: AddPaymentMethodInput) {
+  async addPaymentMethod(userId: string, input: AddPaymentMethodInput) {
+    void userId;
     const token = getCachedVerificationToken('payment_method');
     if (!token) {
       throw new Error('Verify your wallet PIN and OTP before changing payment methods.');
@@ -490,7 +502,8 @@ export const walletApi = {
     });
   },
 
-  async deletePaymentMethod(_userId: string, paymentMethodId: string) {
+  async deletePaymentMethod(userId: string, paymentMethodId: string) {
+    void userId;
     const token = getCachedVerificationToken('payment_method');
     if (!token) {
       throw new Error('Verify your wallet PIN and OTP before changing payment methods.');
@@ -505,7 +518,8 @@ export const walletApi = {
     });
   },
 
-  async setDefaultPaymentMethod(_userId: string, paymentMethodId: string) {
+  async setDefaultPaymentMethod(userId: string, paymentMethodId: string) {
+    void userId;
     const token = getCachedVerificationToken('payment_method');
     if (!token) {
       throw new Error('Verify your wallet PIN and OTP before changing payment methods.');

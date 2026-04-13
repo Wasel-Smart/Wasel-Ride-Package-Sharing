@@ -738,7 +738,7 @@ insert into public.wallet_accounts (
 values
   (null, 'provider_clearing', 'Provider Clearing', 'JOD', 'debit'),
   (null, 'platform_escrow', 'Platform Escrow Control', 'JOD', 'credit'),
-  (null, 'payout_clearing', 'Payout Clearing', 'JOD', 'debit'),
+  (null, 'payout_clearing', 'Payout Clearing', 'JOD', 'credit'),
   (null, 'revenue', 'Platform Revenue', 'JOD', 'credit'),
   (null, 'opening_balance', 'Opening Balance Migration', 'JOD', 'debit')
 on conflict do nothing;
