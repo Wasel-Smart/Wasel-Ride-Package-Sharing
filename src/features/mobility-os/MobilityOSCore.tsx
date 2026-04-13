@@ -1039,7 +1039,9 @@ function buildVehicleFleet(
   return [...liveTelemetryVehicles, ...syntheticVehicles];
 }
 
-function hasLiveRouteSignal(liveRoute: LiveMobilityRouteSnapshot | undefined) {
+function hasLiveRouteSignal(
+  liveRoute: LiveMobilityRouteSnapshot | undefined,
+): liveRoute is LiveMobilityRouteSnapshot {
   if (!liveRoute) return false;
   return (
     liveRoute.passengerFlow > 0 ||
@@ -1061,11 +1063,10 @@ function mergeRouteStateWithLiveData(
   return {
     ...modeledRoute,
     passengerFlow:
-      (liveRoute?.passengerFlow ?? 0) > 0 ? liveRoute!.passengerFlow : modeledRoute.passengerFlow,
-    packageFlow:
-      (liveRoute?.packageFlow ?? 0) > 0 ? liveRoute!.packageFlow : modeledRoute.packageFlow,
+      liveRoute.passengerFlow > 0 ? liveRoute.passengerFlow : modeledRoute.passengerFlow,
+    packageFlow: liveRoute.packageFlow > 0 ? liveRoute.packageFlow : modeledRoute.packageFlow,
     density: Math.max(modeledRoute.density * 0.72, liveRoute?.density ?? 0),
-    speedKph: (liveRoute?.speedKph ?? 0) > 0 ? liveRoute!.speedKph : modeledRoute.speedKph,
+    speedKph: liveRoute.speedKph > 0 ? liveRoute.speedKph : modeledRoute.speedKph,
     congestion: liveRoute?.congestion ?? modeledRoute.congestion,
   };
 }
@@ -2311,7 +2312,7 @@ export default function MobilityOSCore() {
         ctx.stroke();
       });
     }
-  }, [ar, isCompactMobile, numberFormatter, selectedCityId, timeOfDay, viewMode]);
+  }, [ar, isCompactMobile, numberFormatter, routeLens, selectedCityId, timeOfDay, viewMode]);
 
   const updateSimulation = useCallback(
     (deltaTime: number, now: number) => {
