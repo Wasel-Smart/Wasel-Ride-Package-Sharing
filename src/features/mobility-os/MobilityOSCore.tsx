@@ -1,23 +1,43 @@
 import {
   startTransition,
   type CSSProperties,
+  type RefObject,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
-import { Gauge, MapPinned, Pause, Play, Route } from 'lucide-react';
+import {
+  ArrowRight,
+  Gauge,
+  Layers3,
+  MapPinned,
+  Pause,
+  Play,
+  Radar,
+  RefreshCcw,
+  Route,
+  ShieldCheck,
+  Waypoints,
+} from 'lucide-react';
+import { ExactLogoMark } from '../../components/wasel-ds/ExactLogoMark';
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
   buildCorridorCommercialSnapshot,
   type CorridorCommercialSnapshot,
 } from '../../services/corridorCommercial';
 import { C, F, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
-import { type LiveMobilityVehicleSnapshot, useMobilityOSLiveData } from './liveMobilityData';
+import {
+  type LiveMobilityRouteSnapshot,
+  type LiveMobilitySnapshot,
+  type LiveMobilityVehicleSnapshot,
+  useMobilityOSLiveData,
+} from './liveMobilityData';
 
 type FlowType = 'passenger' | 'package';
 type ViewMode = 'command' | 'satellite' | 'pulse';
+type RouteLens = 'all' | 'rides' | 'parcels' | 'stress';
 type City = {
   id: number;
   name: string;
@@ -86,15 +106,17 @@ type Analytics = {
   dispatchAction: string;
 };
 type Star = { x: number; y: number; size: number; alpha: number; drift: number };
+type Point = { x: number; y: number };
+type CurveGeometry = { start: Point; control: Point; end: Point };
 
 const PASSENGER_COLOR = '#A2FFE7';
 const PACKAGE_COLOR = '#19E7BB';
 const PASSENGER_GLOW = 'rgba(162,255,231,0.45)';
 const PACKAGE_GLOW = 'rgba(25,231,187,0.34)';
-const TARGET_VEHICLES = 84;
+const TARGET_VEHICLES = 96;
 const BASE_W = 1200;
 const BASE_H = 700;
-const FLOW_SPEED_SCALE = 0.42;
+const FLOW_SPEED_SCALE = 0.58;
 const HERO_MAP_ASPECT = 1.42;
 const ACTIVE_FRAME_RATE = 36;
 const SCROLLING_FRAME_RATE = 20;
@@ -408,6 +430,7 @@ const ROUTES: RouteBase[] = [
     highwayAr: '???? ???????',
   },
 ];
+const routeVisualIndexById = new Map(ROUTES.map((route, index) => [route.id, index]));
 const BORDER = [
   { lat: 33.37, lon: 35.55 },
   { lat: 32.58, lon: 36.42 },
@@ -572,8 +595,8 @@ function project(lat: number, lon: number, width: number, height: number) {
 }
 
 function getRouteCurve(
-  from: { x: number; y: number },
-  to: { x: number; y: number },
+  from: Point,
+  to: Point,
   intensity: number,
   seed: number,
 ) {
@@ -591,9 +614,9 @@ function getRouteCurve(
 }
 
 function pointOnQuadratic(
-  start: { x: number; y: number },
-  control: { x: number; y: number },
-  end: { x: number; y: number },
+  start: Point,
+  control: Point,
+  end: Point,
   t: number,
 ) {
   const mt = 1 - t;
@@ -604,9 +627,9 @@ function pointOnQuadratic(
 }
 
 function tangentOnQuadratic(
-  start: { x: number; y: number },
-  control: { x: number; y: number },
-  end: { x: number; y: number },
+  start: Point,
+  control: Point,
+  end: Point,
   t: number,
 ) {
   return {
@@ -615,35 +638,94 @@ function tangentOnQuadratic(
   };
 }
 
+function getRouteVisualSeed(routeId: string) {
+  return routeVisualIndexById.get(routeId) ?? 0;
+}
+
+function getNormalFromTangent(tangent: Point) {
+  const tangentLength = Math.max(0.001, Math.hypot(tangent.x, tangent.y));
+  return {
+    x: -tangent.y / tangentLength,
+    y: tangent.x / tangentLength,
+  };
+}
+
+function getRouteLaneGap(route: Pick<RouteBase, 'lanes'>) {
+  return 6 + route.lanes * 1.2;
+}
+
+function offsetQuadraticCurve(
+  start: Point,
+  control: Point,
+  end: Point,
+  offset: number,
+): CurveGeometry {
+  const startNormal = getNormalFromTangent(tangentOnQuadratic(start, control, end, 0.08));
+  const midNormal = getNormalFromTangent(tangentOnQuadratic(start, control, end, 0.5));
+  const endNormal = getNormalFromTangent(tangentOnQuadratic(start, control, end, 0.92));
+
+  return {
+    start: { x: start.x + startNormal.x * offset, y: start.y + startNormal.y * offset },
+    control: {
+      x: control.x + midNormal.x * offset * 1.08,
+      y: control.y + midNormal.y * offset * 1.08,
+    },
+    end: { x: end.x + endNormal.x * offset, y: end.y + endNormal.y * offset },
+  };
+}
+
+function traceQuadraticCurve(ctx: CanvasRenderingContext2D, curve: CurveGeometry) {
+  ctx.beginPath();
+  ctx.moveTo(curve.start.x, curve.start.y);
+  ctx.quadraticCurveTo(curve.control.x, curve.control.y, curve.end.x, curve.end.y);
+}
+
+function getVehicleLaneOffset(type: FlowType, index: number, isLiveTelemetry = false) {
+  const baseOffset = type === 'passenger' ? -5.8 : 5.8;
+  const laneSpread = type === 'passenger' ? 2.2 : 2.6;
+  const groupOffset = ((index % 3) - 1) * laneSpread;
+  const microOffset = isLiveTelemetry ? 0 : index % 2 === 0 ? -0.45 : 0.45;
+  return baseOffset + groupOffset + microOffset;
+}
+
+function getVehicleDriftAmplitude(type: FlowType, index: number, isLiveTelemetry = false) {
+  if (isLiveTelemetry) {
+    return type === 'passenger' ? 0.42 : 0.56;
+  }
+
+  return type === 'passenger' ? 0.72 + (index % 2) * 0.16 : 0.92 + (index % 2) * 0.18;
+}
+
 function getVehicleRouteTarget(
   route: RouteState,
   vehicle: Vehicle,
   width: number,
   height: number,
   now: number,
-  seed: number,
 ) {
   const from = projectCity(route.from, width, height);
   const to = projectCity(route.to, width, height);
-  const curve = getRouteCurve(from, to, route.congestion + route.lanes * 0.1, seed);
+  const routeSeed = getRouteVisualSeed(route.id);
+  const curve = getRouteCurve(from, to, route.congestion + route.lanes * 0.1, routeSeed);
   const control = { x: curve.cx, y: curve.cy };
   const point = pointOnQuadratic(from, control, to, vehicle.progress);
   const tangent = tangentOnQuadratic(from, control, to, vehicle.progress);
-  const tangentLength = Math.max(0.001, Math.hypot(tangent.x, tangent.y));
-  const normalX = -tangent.y / tangentLength;
-  const normalY = tangent.x / tangentLength;
+  const { x: normalX, y: normalY } = getNormalFromTangent(tangent);
   const standingWave = Math.sin(
-    now * (vehicle.type === 'package' ? 0.00105 : 0.00128) +
+    now * (vehicle.type === 'package' ? 0.00068 : 0.00082) +
+      routeSeed * 0.91 +
       vehicle.driftPhase +
-      vehicle.progress * Math.PI * (vehicle.type === 'package' ? 6.2 : 8.8),
+      vehicle.progress * Math.PI * (vehicle.type === 'package' ? 4.4 : 5),
   );
   const compressionWave = Math.cos(
-    now * 0.00074 + seed * 0.53 + route.congestion * 2.2 + vehicle.progress * Math.PI * 4.4,
+    now * 0.0004 + routeSeed * 0.47 + route.congestion * 1.15 + vehicle.progress * Math.PI * 2.8,
   );
+  const driftWeight = vehicle.isLiveTelemetry ? 0.34 : 1;
   const offset =
-    vehicle.laneOffset * (vehicle.type === 'package' ? 1.22 : 1) +
-    standingWave * vehicle.driftAmplitude +
-    compressionWave * (1.4 + route.congestion * 4.8);
+    vehicle.laneOffset +
+    standingWave * vehicle.driftAmplitude * driftWeight +
+    compressionWave *
+      (vehicle.isLiveTelemetry ? 0.18 + route.congestion * 0.42 : 0.3 + route.congestion * 0.88);
 
   return {
     angle: Math.atan2(tangent.y, tangent.x),
@@ -689,6 +771,202 @@ function speedFromDensity(density: number) {
   return Math.max(18, TRAFFIC.FREE * (1 - clamp(density, 0, TRAFFIC.JAM * 0.98) / TRAFFIC.JAM));
 }
 
+function lerpNumber(from: number, to: number, t: number) {
+  return from + (to - from) * t;
+}
+
+function getRouteCompositeLoad(route: Pick<RouteState, 'passengerFlow' | 'packageFlow' | 'congestion' | 'lanes'>) {
+  return (
+    route.passengerFlow * 1.05 +
+    route.packageFlow * 1.18 +
+    route.congestion * 420 +
+    route.lanes * 52
+  );
+}
+
+function buildRouteVehicleQuota(routes: RouteState[], fleetSize: number) {
+  if (fleetSize <= 0 || routes.length === 0) {
+    return new Map<string, number>();
+  }
+
+  const minimumPerRoute = fleetSize >= routes.length * 2 ? 2 : 1;
+  const quota = new Map(routes.map(route => [route.id, minimumPerRoute]));
+  let remaining = Math.max(0, fleetSize - minimumPerRoute * routes.length);
+  const weightedRoutes = routes.map(route => {
+    const weight = Math.max(1, getRouteCompositeLoad(route));
+    return { route, weight, fraction: 0, extra: 0 };
+  });
+  const totalWeight = weightedRoutes.reduce((sum, item) => sum + item.weight, 0);
+
+  if (remaining > 0 && totalWeight > 0) {
+    weightedRoutes.forEach(item => {
+      const exactExtra = (item.weight / totalWeight) * remaining;
+      item.extra = Math.floor(exactExtra);
+      item.fraction = exactExtra - item.extra;
+      quota.set(item.route.id, (quota.get(item.route.id) ?? 0) + item.extra);
+    });
+
+    remaining -= weightedRoutes.reduce((sum, item) => sum + item.extra, 0);
+
+    weightedRoutes
+      .slice()
+      .sort((a, b) => b.fraction - a.fraction)
+      .slice(0, remaining)
+      .forEach(item => {
+        quota.set(item.route.id, (quota.get(item.route.id) ?? 0) + 1);
+      });
+  }
+
+  return quota;
+}
+
+function splitRouteVehicleMix(route: RouteState, quota: number) {
+  if (quota <= 1) {
+    return { passengerCount: route.passengerFlow >= route.packageFlow ? 1 : 0, packageCount: route.packageFlow > route.passengerFlow ? 1 : 0 };
+  }
+
+  const totalFlow = Math.max(1, route.passengerFlow + route.packageFlow);
+  const passengerShare = clamp(route.passengerFlow / totalFlow, 0.26, 0.84);
+  let passengerCount = clamp(Math.round(quota * passengerShare), 1, quota - 1);
+  let packageCount = quota - passengerCount;
+
+  if (route.packageFlow > route.passengerFlow * 0.22 && packageCount === 0) {
+    passengerCount = Math.max(1, passengerCount - 1);
+    packageCount = quota - passengerCount;
+  }
+
+  return { passengerCount, packageCount };
+}
+
+function createSyntheticVehicle(
+  route: RouteState,
+  type: FlowType,
+  routeIndex: number,
+  localIndex: number,
+  quota: number,
+) {
+  const from = projectCity(route.from, BASE_W, BASE_H);
+  const to = projectCity(route.to, BASE_W, BASE_H);
+  const routeSeed = getRouteVisualSeed(route.id);
+  const progress = (((localIndex + 0.5) / Math.max(1, quota)) + routeSeed * 0.037) % 1;
+  const curve = getRouteCurve(
+    from,
+    to,
+    route.congestion + route.lanes * 0.1,
+    routeSeed,
+  );
+  const control = { x: curve.cx, y: curve.cy };
+  const point = pointOnQuadratic(from, control, to, progress);
+  const tangent = tangentOnQuadratic(from, control, to, progress);
+  const packageVehicle = type === 'package';
+
+  return {
+    id: `modeled-${route.id}-${type}-${localIndex}`,
+    routeId: route.id,
+    type,
+    progress,
+    direction: (localIndex + routeIndex + routeSeed) % 2 === 0 ? (1 as const) : (-1 as const),
+    speedFactor: packageVehicle
+      ? 0.78 + ((localIndex + routeSeed) % 6) * 0.045
+      : 0.92 + ((localIndex + routeSeed) % 5) * 0.05,
+    x: point.x,
+    y: point.y,
+    angle: Math.atan2(tangent.y, tangent.x),
+    velocityX: 0,
+    velocityY: 0,
+    laneOffset: getVehicleLaneOffset(type, localIndex + routeIndex * 3),
+    driftAmplitude: getVehicleDriftAmplitude(type, localIndex + routeIndex * 3),
+    driftPhase: routeIndex * 0.91 + localIndex * 0.63,
+    passengers: packageVehicle ? undefined : 1 + ((localIndex + routeIndex) % 4),
+    seatCapacity: packageVehicle ? undefined : 4 + ((localIndex + routeSeed) % 2),
+    packageCapacity: packageVehicle ? 12 + ((localIndex + routeSeed) % 8) : undefined,
+    packageLoad: packageVehicle ? 4 + ((localIndex + routeSeed) % 6) : undefined,
+  } satisfies Vehicle;
+}
+
+function buildSyntheticVehicles(routes: RouteState[], fleetSize: number) {
+  const quotaByRoute = buildRouteVehicleQuota(routes, fleetSize);
+
+  return routes.flatMap((route, routeIndex) => {
+    const quota = quotaByRoute.get(route.id) ?? 0;
+    const { passengerCount, packageCount } = splitRouteVehicleMix(route, quota);
+    const passengerVehicles = Array.from({ length: passengerCount }, (_, localIndex) =>
+      createSyntheticVehicle(route, 'passenger', routeIndex, localIndex, quota),
+    );
+    const packageVehicles = Array.from({ length: packageCount }, (_, localIndex) =>
+      createSyntheticVehicle(route, 'package', routeIndex, passengerCount + localIndex, quota),
+    );
+    return [...passengerVehicles, ...packageVehicles];
+  });
+}
+
+function getSimulatedRouteDistance(distanceKm: number) {
+  return Math.max(64, Math.pow(distanceKm, 0.86) * 3.8);
+}
+
+function buildModeledRouteState(
+  route: RouteState,
+  index: number,
+  hour: number,
+  selectedCityId: number,
+  now: number,
+  simulationStep: number,
+) {
+  const { from, to } = getRouteCities(route);
+  const routeSeed = getRouteVisualSeed(route.id) + 1;
+  const focusBoost = route.from === selectedCityId || route.to === selectedCityId ? 1.14 : 1;
+  const hubBoost = from.isHub || to.isHub ? 1.06 : 0.96;
+  const passengerWave =
+    1 +
+    Math.sin(now * 0.00016 + routeSeed * 1.13 + index * 0.72) * 0.08 +
+    Math.cos(now * 0.00007 + route.distanceKm * 0.028) * 0.04;
+  const packageWave =
+    1 +
+    Math.cos(now * 0.00012 + routeSeed * 0.61 + route.distanceKm * 0.018) * 0.12 +
+    Math.sin(now * 0.00005 + index * 0.94) * 0.04;
+  const passengerTarget = Math.min(
+    route.lanes * 1900,
+    (demand(from.populationK, from.attractiveness, hour) +
+      demand(to.populationK, to.attractiveness, hour + 0.35)) *
+      190 *
+      focusBoost *
+      hubBoost *
+      passengerWave,
+  );
+  const packageTarget = Math.min(
+    route.lanes * 900,
+    (demand(from.populationK, from.attractiveness * 0.76, hour + 1.1) +
+      demand(to.populationK, to.attractiveness * 0.7, hour + 1.6)) *
+      90 *
+      (from.isHub || to.isHub ? 1.08 : 0.98) *
+      packageWave,
+  );
+  const densityTarget = clamp(
+    10 +
+      passengerTarget / 112 +
+      packageTarget / 228 +
+      Math.sin(now * 0.00022 + index * 0.65) * 3.4 +
+      Math.cos(now * 0.0001 + routeSeed * 0.84) * 2.2 +
+      route.lanes * 1.4,
+    8,
+    132,
+  );
+  const smoothing = clamp(0.08 * simulationStep, 0.06, 0.18);
+  const passengerFlow = lerpNumber(route.passengerFlow, passengerTarget, smoothing);
+  const packageFlow = lerpNumber(route.packageFlow, packageTarget, smoothing);
+  const density = lerpNumber(route.density, densityTarget, smoothing * 0.9);
+  const speedTarget = speedFromDensity(density);
+
+  return {
+    ...route,
+    passengerFlow,
+    packageFlow,
+    density,
+    speedKph: lerpNumber(route.speedKph, speedTarget, smoothing * 0.84),
+    congestion: lerpNumber(route.congestion, clamp(density / TRAFFIC.CRITICAL, 0, 1), smoothing * 0.9),
+  };
+}
+
 function initialRoutes(hour: number): RouteState[] {
   return ROUTES.map((route, index) => {
     const { from, to } = getRouteCities(route);
@@ -716,40 +994,6 @@ function initialRoutes(hour: number): RouteState[] {
   });
 }
 
-function initialVehicles(routes: RouteState[]): Vehicle[] {
-  return Array.from({ length: TARGET_VEHICLES }, (_, index) => {
-    const route = routes[index % routes.length];
-    const from = projectCity(route.from, BASE_W, BASE_H);
-    const to = projectCity(route.to, BASE_W, BASE_H);
-    const passenger = index % 3 !== 0;
-    const progress = (index * 0.137) % 1;
-    const curve = getRouteCurve(from, to, route.congestion + route.lanes * 0.1, index);
-    const control = { x: curve.cx, y: curve.cy };
-    const point = pointOnQuadratic(from, control, to, progress);
-    const tangent = tangentOnQuadratic(from, control, to, progress);
-    return {
-      id: `vehicle-${index}`,
-      routeId: route.id,
-      type: passenger ? 'passenger' : 'package',
-      progress,
-      direction: index % 4 === 0 ? -1 : 1,
-      speedFactor: 0.82 + (index % 7) * 0.05,
-      x: point.x,
-      y: point.y,
-      angle: Math.atan2(tangent.y, tangent.x),
-      velocityX: 0,
-      velocityY: 0,
-      laneOffset: ((index % 5) - 2) * (passenger ? 2.8 : 4.1),
-      driftAmplitude: passenger ? 2.4 + (index % 3) * 0.7 : 3.8 + (index % 4) * 0.8,
-      driftPhase: index * 0.63,
-      passengers: passenger ? 1 + (index % 4) : undefined,
-      seatCapacity: passenger ? 4 : undefined,
-      packageCapacity: passenger ? undefined : 14 + (index % 6),
-      packageLoad: passenger ? undefined : 5 + (index % 5),
-    };
-  });
-}
-
 function buildVehicleFleet(
   routes: RouteState[],
   liveVehicles: LiveMobilityVehicleSnapshot[] = [],
@@ -773,8 +1017,8 @@ function buildVehicleFleet(
         angle: Math.atan2(to.y - from.y, to.x - from.x),
         velocityX: 0,
         velocityY: 0,
-        laneOffset: ((index % 3) - 1) * (vehicle.type === 'package' ? 4.4 : 2.6),
-        driftAmplitude: vehicle.type === 'package' ? 3.2 : 1.8,
+        laneOffset: getVehicleLaneOffset(vehicle.type, index, true),
+        driftAmplitude: getVehicleDriftAmplitude(vehicle.type, index, true),
         driftPhase: index * 0.71,
         passengers: vehicle.passengers,
         seatCapacity: vehicle.seatCapacity,
@@ -788,11 +1032,199 @@ function buildVehicleFleet(
     })
     .filter((vehicle): vehicle is Vehicle => vehicle !== null);
 
-  const syntheticVehicles = initialVehicles(routes).slice(
-    0,
+  const syntheticVehicles = buildSyntheticVehicles(
+    routes,
     Math.max(0, TARGET_VEHICLES - liveTelemetryVehicles.length),
   );
   return [...liveTelemetryVehicles, ...syntheticVehicles];
+}
+
+function hasLiveRouteSignal(liveRoute: LiveMobilityRouteSnapshot | undefined) {
+  if (!liveRoute) return false;
+  return (
+    liveRoute.passengerFlow > 0 ||
+    liveRoute.packageFlow > 0 ||
+    liveRoute.density > 0 ||
+    liveRoute.speedKph > 0 ||
+    liveRoute.congestion > 0
+  );
+}
+
+function mergeRouteStateWithLiveData(
+  modeledRoute: RouteState,
+  liveRoute: LiveMobilityRouteSnapshot | undefined,
+) {
+  if (!hasLiveRouteSignal(liveRoute)) {
+    return modeledRoute;
+  }
+
+  return {
+    ...modeledRoute,
+    passengerFlow:
+      (liveRoute?.passengerFlow ?? 0) > 0 ? liveRoute!.passengerFlow : modeledRoute.passengerFlow,
+    packageFlow:
+      (liveRoute?.packageFlow ?? 0) > 0 ? liveRoute!.packageFlow : modeledRoute.packageFlow,
+    density: Math.max(modeledRoute.density * 0.72, liveRoute?.density ?? 0),
+    speedKph: (liveRoute?.speedKph ?? 0) > 0 ? liveRoute!.speedKph : modeledRoute.speedKph,
+    congestion: liveRoute?.congestion ?? modeledRoute.congestion,
+  };
+}
+
+function buildDispatchAction(topRoute: RouteState, selectedCityId: number, ar: boolean) {
+  const topRouteCities = getRouteCities(topRoute);
+  const selectedCity = getCityOrThrow(selectedCityId);
+  if (topRoute.congestion > 0.78) {
+    return ar
+      ? `????? ????? ????? ?????? ${getCityLabel(topRouteCities.to, ar)}`
+      : `Reposition supply toward ${getCityLabel(topRouteCities.to, ar)}`;
+  }
+
+  return ar
+    ? `?????? ????? ??? ${getCityLabel(selectedCity, ar)}`
+    : `Balance supply around ${getCityLabel(selectedCity, ar)}`;
+}
+
+function buildModeledAnalytics(
+  routes: RouteState[],
+  vehicles: Vehicle[],
+  selectedCityId: number,
+  ar: boolean,
+): Analytics {
+  const passengerVehicles = vehicles.filter(vehicle => vehicle.type === 'passenger');
+  const packageVehicles = vehicles.filter(vehicle => vehicle.type === 'package');
+  const activePassengers = passengerVehicles.reduce(
+    (sum, vehicle) => sum + (vehicle.passengers ?? 0),
+    0,
+  );
+  const seatCapacity = passengerVehicles.reduce(
+    (sum, vehicle) => sum + (vehicle.seatCapacity ?? 0),
+    0,
+  );
+  const packageCapacity = packageVehicles.reduce(
+    (sum, vehicle) => sum + ((vehicle.packageCapacity ?? 0) - (vehicle.packageLoad ?? 0)),
+    0,
+  );
+  const avgSpeed = routes.reduce((sum, route) => sum + route.speedKph, 0) / Math.max(routes.length, 1);
+  const congestionLevel =
+    routes.reduce((sum, route) => sum + route.congestion, 0) / Math.max(routes.length, 1);
+  const topRoute = routes
+    .slice()
+    .sort((a, b) => b.passengerFlow + b.packageFlow - (a.passengerFlow + a.packageFlow))[0];
+
+  const recommendedPath = optimalPath(routes, selectedCityId, 1)
+    .map(id => {
+      const city = cityMap.get(id);
+      return city ? getCityLabel(city, ar) : '';
+    })
+    .join(ar ? ' ? ' : ' -> ');
+
+  if (!topRoute) {
+    return {
+      totalVehicles: vehicles.length,
+      activePassengers,
+      activePackages: packageVehicles.reduce((sum, vehicle) => sum + (vehicle.packageLoad ?? 0), 0),
+      seatAvailability: Math.max(0, seatCapacity - activePassengers),
+      packageCapacity: Math.max(0, packageCapacity),
+      avgSpeed,
+      networkUtilization: vehicles.length / (TARGET_VEHICLES * 1.15),
+      congestionLevel,
+      topCorridor: '',
+      recommendedPath,
+      dispatchAction: ar ? '?????? ?????' : 'Balance supply',
+    };
+  }
+
+  const topRouteCities = getRouteCities(topRoute);
+
+  return {
+    totalVehicles: vehicles.length,
+    activePassengers,
+    activePackages: packageVehicles.reduce((sum, vehicle) => sum + (vehicle.packageLoad ?? 0), 0),
+    seatAvailability: Math.max(0, seatCapacity - activePassengers),
+    packageCapacity: Math.max(0, packageCapacity),
+    avgSpeed,
+    networkUtilization: vehicles.length / (TARGET_VEHICLES * 1.15),
+    congestionLevel,
+    topCorridor: `${getCityLabel(topRouteCities.from, ar)}${ar ? ' ? ' : ' -> '}${getCityLabel(topRouteCities.to, ar)}`,
+    recommendedPath,
+    dispatchAction: buildDispatchAction(topRoute, selectedCityId, ar),
+  };
+}
+
+function mergeLiveAnalyticsWithModel(
+  modeledAnalytics: Analytics,
+  liveSnapshot: LiveMobilitySnapshot | null | undefined,
+): Analytics {
+  if (!liveSnapshot) {
+    return modeledAnalytics;
+  }
+
+  const { analytics: liveAnalytics, telemetry } = liveSnapshot;
+  const hasLivePassengers = liveAnalytics.activePassengers > 0;
+  const hasLivePackages = liveAnalytics.activePackages > 0;
+  const hasLiveCapacity =
+    liveAnalytics.seatAvailability > 0 ||
+    liveAnalytics.packageCapacity > 0 ||
+    liveAnalytics.totalVehicles > 0;
+  const hasLiveTraffic =
+    liveAnalytics.avgSpeed > 0 || liveAnalytics.congestionLevel > 0 || liveSnapshot.traffic.enabled;
+  const hasLiveDemandSignal =
+    hasLivePassengers || hasLivePackages || telemetry.freshTripsWithTelemetry > 0;
+
+  return {
+    totalVehicles:
+      liveAnalytics.totalVehicles > 0 ? liveAnalytics.totalVehicles : modeledAnalytics.totalVehicles,
+    activePassengers: hasLivePassengers
+      ? liveAnalytics.activePassengers
+      : modeledAnalytics.activePassengers,
+    activePackages: hasLivePackages ? liveAnalytics.activePackages : modeledAnalytics.activePackages,
+    seatAvailability: hasLiveCapacity
+      ? liveAnalytics.seatAvailability
+      : modeledAnalytics.seatAvailability,
+    packageCapacity: hasLiveCapacity ? liveAnalytics.packageCapacity : modeledAnalytics.packageCapacity,
+    avgSpeed: hasLiveTraffic ? liveAnalytics.avgSpeed : modeledAnalytics.avgSpeed,
+    networkUtilization:
+      liveAnalytics.networkUtilization > 0
+        ? liveAnalytics.networkUtilization
+        : modeledAnalytics.networkUtilization,
+    congestionLevel: hasLiveTraffic
+      ? liveAnalytics.congestionLevel
+      : modeledAnalytics.congestionLevel,
+    topCorridor:
+      hasLiveDemandSignal && liveAnalytics.topCorridor
+        ? liveAnalytics.topCorridor
+        : modeledAnalytics.topCorridor,
+    recommendedPath: modeledAnalytics.recommendedPath,
+    dispatchAction:
+      hasLiveDemandSignal && liveAnalytics.dispatchAction
+        ? liveAnalytics.dispatchAction
+        : modeledAnalytics.dispatchAction,
+  };
+}
+
+function hasMeaningfulLiveDemand(snapshot: LiveMobilitySnapshot | null | undefined) {
+  if (!snapshot) return false;
+  return (
+    snapshot.analytics.activePassengers > 0 ||
+    snapshot.analytics.activePackages > 0 ||
+    snapshot.telemetry.freshTripsWithTelemetry > 0
+  );
+}
+
+function matchesRouteLens(
+  route: Pick<RouteState, 'passengerFlow' | 'packageFlow' | 'congestion'>,
+  lens: RouteLens,
+) {
+  switch (lens) {
+    case 'rides':
+      return route.passengerFlow >= route.packageFlow * 1.08;
+    case 'parcels':
+      return route.packageFlow >= route.passengerFlow * 0.62;
+    case 'stress':
+      return route.congestion >= 0.72;
+    default:
+      return true;
+  }
 }
 
 function optimalPath(routes: RouteState[], start: number, end: number) {
@@ -844,6 +1276,7 @@ export default function MobilityOSCore() {
   const { language, dir } = useLanguage();
   const ar = language === 'ar';
   const { snapshot: liveSnapshot } = useMobilityOSLiveData(ar);
+  const hasActiveLiveDemand = hasMeaningfulLiveDemand(liveSnapshot);
   const copy = {
     ...createMobilityOSCopy(ar),
     heroBody: ar
@@ -875,14 +1308,12 @@ export default function MobilityOSCore() {
     routeIntelligence: ar ? '????? ??????' : 'Route recommendation',
     selectedNode: ar ? '???? ??????? ???????' : 'Selected city reference',
   };
-  const liveTag = liveSnapshot ? (ar ? '?????' : 'Live') : copy.modeledTag;
+  const liveTag = hasActiveLiveDemand ? (ar ? '?????' : 'Live') : copy.modeledTag;
   const liveOpsTag = 'Live ops';
   const hybridTag = 'Hybrid';
   const telemetryFreshLabel = 'Fresh telemetry';
   const telemetryStaleLabel = 'Stale telemetry';
   const telemetryNoneLabel = 'No telemetry';
-  const telemetryLabel = 'Telemetry status';
-  const sourceMatrixLabel = 'Source matrix';
   const sourceMatrixBody = ar
     ? 'Passengers and packages come from live trip records. Speed and pressure remain estimated until a true traffic source is connected. Route guidance is produced by the optimization model.'
     : 'Passengers and packages come from live trip records. Speed and pressure remain estimated until a true traffic source is connected. Route guidance is produced by the optimization model.';
@@ -906,18 +1337,10 @@ export default function MobilityOSCore() {
   const [timeOfDay, setTimeOfDay] = useState(8);
   const [selectedCityId, setSelectedCityId] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>('command');
-  const [analytics, setAnalytics] = useState<Analytics>({
-    totalVehicles: 0,
-    activePassengers: 0,
-    activePackages: 0,
-    seatAvailability: 0,
-    packageCapacity: 0,
-    avgSpeed: 0,
-    networkUtilization: 0,
-    congestionLevel: 0,
-    topCorridor: '',
-    recommendedPath: '',
-    dispatchAction: '',
+  const [routeLens, setRouteLens] = useState<RouteLens>('all');
+  const [analytics, setAnalytics] = useState<Analytics>(() => {
+    const seededRoutes = initialRoutes(8);
+    return buildModeledAnalytics(seededRoutes, buildVehicleFleet(seededRoutes), 0, ar);
   });
   const [routeSnapshot, setRouteSnapshot] = useState<RouteState[]>(() => initialRoutes(8));
   const [commercialSnapshot, setCommercialSnapshot] = useState<CorridorCommercialSnapshot | null>(
@@ -929,6 +1352,10 @@ export default function MobilityOSCore() {
   const isCompactMobile = isMobile;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
+  const heroSectionRef = useRef<HTMLElement | null>(null);
+  const mapSectionRef = useRef<HTMLElement | null>(null);
+  const insightSectionRef = useRef<HTMLElement | null>(null);
+  const corridorSectionRef = useRef<HTMLElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const prevTimeRef = useRef<number | null>(null);
   const analyticsTickRef = useRef(0);
@@ -973,6 +1400,57 @@ export default function MobilityOSCore() {
   const latestHeartbeatValue = liveSnapshot?.telemetry.latestHeartbeatAt
     ? dateTimeFormatter.format(new Date(liveSnapshot.telemetry.latestHeartbeatAt))
     : 'Unavailable';
+  const selectedCity = getCityOrThrow(selectedCityId);
+  const liveUpdatedAtValue = liveSnapshot?.updatedAt
+    ? dateTimeFormatter.format(new Date(liveSnapshot.updatedAt))
+    : ar
+      ? '???? ?????'
+      : 'Modeled';
+  const telemetryTotalTrips = liveSnapshot?.telemetry.totalTripsWithTelemetry ?? 0;
+  const telemetryFreshTrips = liveSnapshot?.telemetry.freshTripsWithTelemetry ?? 0;
+  const telemetryCoveragePercent = telemetryTotalTrips
+    ? Math.round((telemetryFreshTrips / telemetryTotalTrips) * 100)
+    : 0;
+  const signalConfidence = Math.round(
+    clamp(
+      (hasActiveLiveDemand ? 58 : 42) +
+        (liveSnapshot?.traffic.enabled ? 14 : 0) +
+        telemetryCoveragePercent * 0.16 +
+        ((liveSnapshot?.telemetry.hasRenderableLocations ? 1 : 0) * 10) +
+        Math.round(clamp(analytics.avgSpeed / 10, 0, 9)),
+      42,
+      97,
+    ),
+  );
+  const confidenceTone =
+    signalConfidence >= 84 ? C.green : signalConfidence >= 68 ? C.cyan : C.orange;
+  const telemetrySummary =
+    telemetryTotalTrips > 0
+      ? `${numberFormatter.format(telemetryFreshTrips)} / ${numberFormatter.format(telemetryTotalTrips)}`
+      : ar
+        ? '?? ???????'
+        : 'Model only';
+  const trafficState = liveSnapshot?.traffic.enabled
+    ? ar
+      ? `Google Routes · ${numberFormatter.format(liveSnapshot.traffic.liveCorridors)}`
+      : `Google Routes · ${liveSnapshot.traffic.liveCorridors} live`
+    : ar
+      ? '???? ??????'
+      : 'Modeled traffic';
+  const liveModeSummary = hasActiveLiveDemand
+    ? liveSnapshot?.traffic.enabled
+      ? ar
+        ? '?? + ???? + ???'
+        : 'Live + telemetry + traffic'
+      : ar
+        ? '?? + ????'
+        : 'Live + modeled traffic'
+    : ar
+      ? '????? ?????'
+      : 'Modeled continuity';
+  const mapA11ySummary = ar
+    ? `????? ?????? ??????? ????? ????? ?? ${getCityLabel(selectedCity, ar)}. ?????? ??????? ${analytics.topCorridor || ''}. ????? ??????? ${analytics.dispatchAction || ''}. ???? ??????? ${telemetryStatus}.`
+    : `Live Jordan operations map centered on ${getCityLabel(selectedCity, ar)}. Top corridor ${analytics.topCorridor || 'not available'}. Dispatch action ${analytics.dispatchAction || 'not available'}. Telemetry status ${telemetryStatus}.`;
 
   useEffect(() => {
     const title = ar ? 'نظام التنقل | واصل' : 'Mobility OS | Wasel';
@@ -1026,6 +1504,13 @@ export default function MobilityOSCore() {
       window.clearTimeout(timeoutId);
     };
   }, [isCompactMobile]);
+
+  const scrollToSection = useCallback((targetRef: RefObject<HTMLElement | null>) => {
+    targetRef.current?.scrollIntoView({
+      behavior: prefersReducedMotionRef.current ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  }, []);
 
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -1130,7 +1615,7 @@ export default function MobilityOSCore() {
     polarAurora.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = polarAurora;
     ctx.fillRect(0, 0, width, height);
-    const celestialX = width * (0.18 + (timeOfDay / 23) * 0.64);
+    const celestialX = width * (0.28 + (timeOfDay / 23) * 0.44);
     const celestialY =
       timeOfDay >= 6 && timeOfDay <= 18
         ? height * (0.18 + Math.abs(12 - timeOfDay) * 0.012)
@@ -1142,13 +1627,13 @@ export default function MobilityOSCore() {
       0,
       celestialX,
       celestialY,
-      isDay ? 58 : 42,
+      isDay ? 42 : 30,
     );
-    celestial.addColorStop(0, isDay ? 'rgba(220,255,248,0.72)' : 'rgba(222,238,255,0.52)');
+    celestial.addColorStop(0, isDay ? 'rgba(220,255,248,0.46)' : 'rgba(222,238,255,0.4)');
     celestial.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = celestial;
     ctx.beginPath();
-    ctx.arc(celestialX, celestialY, isDay ? 58 : 42, 0, Math.PI * 2);
+    ctx.arc(celestialX, celestialY, isDay ? 42 : 30, 0, Math.PI * 2);
     ctx.fill();
     if (!isDay) {
       ctx.beginPath();
@@ -1386,12 +1871,30 @@ export default function MobilityOSCore() {
     }
 
     routesRef.current.forEach((route, routeIndex) => {
+      const lensMatch = matchesRouteLens(route, routeLens);
+      const routeAlpha = routeLens === 'all' ? 1 : lensMatch ? 1 : reducedEffects ? 0.08 : 0.16;
       const from = projectCity(route.from, width, height);
       const to = projectCity(route.to, width, height);
       const curve = getRouteCurve(from, to, route.congestion + route.lanes * 0.1, routeIndex);
       const control = { x: curve.cx, y: curve.cy };
       const flowMix = route.passengerFlow + route.packageFlow;
+      const baseCurve = { start: from, control, end: to };
+      const laneGap = getRouteLaneGap(route);
+      const passengerCurve = offsetQuadraticCurve(
+        from,
+        control,
+        to,
+        -laneGap * (route.lanes > 1 ? 0.46 : 0.38),
+      );
+      const packageCurve = offsetQuadraticCurve(
+        from,
+        control,
+        to,
+        laneGap * (route.lanes > 1 ? 0.46 : 0.38),
+      );
 
+      ctx.save();
+      ctx.globalAlpha = routeAlpha;
       ctx.beginPath();
       ctx.moveTo(from.x + width * 0.008, from.y + height * 0.018);
       ctx.quadraticCurveTo(
@@ -1407,16 +1910,12 @@ export default function MobilityOSCore() {
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.quadraticCurveTo(curve.cx, curve.cy, to.x, to.y);
+      traceQuadraticCurve(ctx, baseCurve);
       ctx.strokeStyle = `rgba(255,255,255,${0.1 + route.congestion * 0.12})`;
       ctx.lineWidth = 1 + route.lanes * 0.35;
       ctx.stroke();
 
-      ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.quadraticCurveTo(curve.cx, curve.cy, to.x, to.y);
+      traceQuadraticCurve(ctx, baseCurve);
       ctx.strokeStyle = 'rgba(255,255,255,0.035)';
       ctx.lineWidth = 9 + route.lanes * 1.1;
       ctx.shadowBlur = 24;
@@ -1424,10 +1923,13 @@ export default function MobilityOSCore() {
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.quadraticCurveTo(curve.cx, curve.cy, to.x, to.y);
-      const passengerGradient = ctx.createLinearGradient(from.x, from.y, to.x, to.y);
+      traceQuadraticCurve(ctx, passengerCurve);
+      const passengerGradient = ctx.createLinearGradient(
+        passengerCurve.start.x,
+        passengerCurve.start.y,
+        passengerCurve.end.x,
+        passengerCurve.end.y,
+      );
       passengerGradient.addColorStop(
         0,
         viewMode === 'pulse' ? 'rgba(198,166,255,0.2)' : 'rgba(220,255,248,0.18)',
@@ -1445,69 +1947,83 @@ export default function MobilityOSCore() {
       ctx.strokeStyle = passengerGradient;
       ctx.shadowBlur = viewMode === 'pulse' ? 28 : 22;
       ctx.shadowColor = viewMode === 'pulse' ? 'rgba(167,124,255,0.52)' : PASSENGER_GLOW;
-      ctx.lineWidth = 1.9 + route.passengerFlow / 1180;
+      ctx.lineWidth = 1.85 + route.passengerFlow / 1280;
       ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.quadraticCurveTo(curve.cx, curve.cy, to.x, to.y);
+      traceQuadraticCurve(ctx, passengerCurve);
       ctx.strokeStyle = 'rgba(255,255,255,0.09)';
       ctx.lineWidth = 0.75;
       ctx.stroke();
 
-      ctx.beginPath();
+      traceQuadraticCurve(ctx, packageCurve);
       ctx.setLineDash([7, 6]);
-      ctx.moveTo(from.x, from.y);
-      ctx.quadraticCurveTo(curve.cx, curve.cy, to.x, to.y);
       ctx.strokeStyle =
         viewMode === 'satellite'
           ? `rgba(220,255,248,${0.16 + route.packageFlow / 1500})`
           : `rgba(25,231,187,${0.18 + route.packageFlow / 1400})`;
       ctx.shadowBlur = viewMode === 'satellite' ? 20 : 16;
       ctx.shadowColor = viewMode === 'satellite' ? 'rgba(220,255,248,0.36)' : PACKAGE_GLOW;
-      ctx.lineWidth = 1.3 + route.packageFlow / 880;
+      ctx.lineWidth = 1.25 + route.packageFlow / 960;
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.shadowBlur = 0;
 
-      const passengerParticleCount = Math.max(
-        1,
-        Math.round(route.passengerFlow / (reducedEffects ? 920 : 450)),
-      );
-      for (let particle = 0; particle < passengerParticleCount; particle += 1) {
-        const t =
-          (phase * 0.00018 * FLOW_SPEED_SCALE * (1.2 + particle * 0.08) +
-            particle / passengerParticleCount) %
-          1;
-        const point = pointOnQuadratic(from, control, to, t);
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, 1.6 + route.lanes * 0.1, 0, Math.PI * 2);
-        ctx.fillStyle =
-          viewMode === 'pulse' ? 'rgba(225,208,255,0.96)' : 'rgba(255, 249, 230, 0.94)';
-        ctx.shadowBlur = reducedEffects ? 10 : viewMode === 'pulse' ? 20 : 16;
-        ctx.shadowColor = viewMode === 'pulse' ? 'rgba(167,124,255,0.5)' : PASSENGER_GLOW;
-        ctx.fill();
-      }
+      if (routeLens === 'all' || lensMatch) {
+        const passengerParticleCount = Math.max(
+          2,
+          Math.round(route.passengerFlow / (reducedEffects ? 980 : 620)),
+        );
+        for (let particle = 0; particle < passengerParticleCount; particle += 1) {
+          const t =
+            (phase * 0.00018 * FLOW_SPEED_SCALE * (1.2 + particle * 0.08) +
+              particle / passengerParticleCount) %
+            1;
+          const point = pointOnQuadratic(
+            passengerCurve.start,
+            passengerCurve.control,
+            passengerCurve.end,
+            t,
+          );
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, 1.6 + route.lanes * 0.1, 0, Math.PI * 2);
+          ctx.fillStyle =
+            viewMode === 'pulse' ? 'rgba(225,208,255,0.96)' : 'rgba(255, 249, 230, 0.94)';
+          ctx.shadowBlur = reducedEffects ? 10 : viewMode === 'pulse' ? 20 : 16;
+          ctx.shadowColor = viewMode === 'pulse' ? 'rgba(167,124,255,0.5)' : PASSENGER_GLOW;
+          ctx.fill();
+        }
 
-      const packageParticleCount = Math.max(
-        1,
-        Math.round(route.packageFlow / (reducedEffects ? 360 : 190)),
-      );
-      for (let particle = 0; particle < packageParticleCount; particle += 1) {
-        const t =
-          1 -
-          ((phase * 0.00012 * FLOW_SPEED_SCALE * (1 + particle * 0.06) +
-            particle / packageParticleCount) %
-            1);
-        const point = pointOnQuadratic(from, control, to, t);
-        ctx.save();
-        ctx.translate(point.x, point.y);
-        ctx.rotate(phase * 0.002 + particle);
-        ctx.fillStyle =
-          viewMode === 'satellite' ? 'rgba(220,255,248,0.92)' : 'rgba(25,231,187,0.92)';
-        ctx.shadowBlur = reducedEffects ? 8 : 14;
-        ctx.shadowColor = viewMode === 'satellite' ? 'rgba(220,255,248,0.42)' : PACKAGE_GLOW;
-        ctx.fillRect(-2.2, -2.2, 4.4, 4.4);
-        ctx.restore();
+        const packageParticleCount = Math.max(
+          2,
+          Math.round(route.packageFlow / (reducedEffects ? 420 : 250)),
+        );
+        for (let particle = 0; particle < packageParticleCount; particle += 1) {
+          const t =
+            1 -
+            ((phase * 0.00012 * FLOW_SPEED_SCALE * (1 + particle * 0.06) +
+              particle / packageParticleCount) %
+              1);
+          const point = pointOnQuadratic(
+            packageCurve.start,
+            packageCurve.control,
+            packageCurve.end,
+            t,
+          );
+          const tangent = tangentOnQuadratic(
+            packageCurve.start,
+            packageCurve.control,
+            packageCurve.end,
+            t,
+          );
+          ctx.save();
+          ctx.translate(point.x, point.y);
+          ctx.rotate(Math.atan2(tangent.y, tangent.x) + Math.PI / 4);
+          ctx.fillStyle =
+            viewMode === 'satellite' ? 'rgba(220,255,248,0.92)' : 'rgba(25,231,187,0.92)';
+          ctx.shadowBlur = reducedEffects ? 8 : 14;
+          ctx.shadowColor = viewMode === 'satellite' ? 'rgba(220,255,248,0.42)' : PACKAGE_GLOW;
+          ctx.fillRect(-2.2, -2.2, 4.4, 4.4);
+          ctx.restore();
+        }
       }
 
       const shimmer = pointOnQuadratic(from, control, to, (phase * 0.00018 + flowMix / 12000) % 1);
@@ -1560,8 +2076,10 @@ export default function MobilityOSCore() {
         );
         ctx.restore();
       }
+      ctx.restore();
     });
     [...routesRef.current]
+      .filter(route => matchesRouteLens(route, routeLens))
       .sort((a, b) => b.passengerFlow + b.packageFlow - (a.passengerFlow + a.packageFlow))
       .slice(0, routeTopN)
       .forEach((route, rank) => {
@@ -1593,8 +2111,12 @@ export default function MobilityOSCore() {
         ctx.textAlign = 'center';
         ctx.fillText(label, x + widthLabel / 2, y + 14.5);
       });
+    const routeLensMap = new Map(routesRef.current.map(route => [route.id, route] as const));
     vehiclesRef.current.forEach(vehicle => {
+      const route = routeLensMap.get(vehicle.routeId);
+      const lensMatch = route ? matchesRouteLens(route, routeLens) : true;
       ctx.save();
+      ctx.globalAlpha = routeLens === 'all' || lensMatch ? 1 : 0.14;
       ctx.translate(vehicle.x, vehicle.y);
       ctx.rotate(vehicle.angle);
       ctx.shadowBlur = vehicle.isLiveTelemetry ? 24 : 18;
@@ -1794,64 +2316,28 @@ export default function MobilityOSCore() {
   const updateSimulation = useCallback(
     (deltaTime: number, now: number) => {
       if (paused) return;
-      routesRef.current = routesRef.current.map((route, index) => {
-        const liveRoute = liveRouteOverrides.get(route.id);
-        if (liveRoute) {
-          return {
-            ...route,
-            passengerFlow: liveRoute.passengerFlow,
-            packageFlow: liveRoute.packageFlow,
-            density: liveRoute.density,
-            speedKph: liveRoute.speedKph,
-            congestion: liveRoute.congestion,
-          };
-        }
-        const { from, to } = getRouteCities(route);
-        const passengerFlow = Math.min(
-          route.lanes * 1800,
-          (demand(from.populationK, from.attractiveness, timeOfDay) +
-            demand(to.populationK, to.attractiveness, timeOfDay + 0.35)) *
-            190 *
-            (route.from === selectedCityId || route.to === selectedCityId ? 1.12 : 1),
-        );
-        const packageFlow = Math.min(
-          route.lanes * 820,
-          (demand(from.populationK, from.attractiveness * 0.76, timeOfDay + 1.1) +
-            demand(to.populationK, to.attractiveness * 0.7, timeOfDay + 1.6)) *
-            88,
-        );
-        const density = clamp(
-          10 +
-            passengerFlow / 110 +
-            packageFlow / 230 +
-            Math.sin(now * 0.00035 + index * 0.6) * 4.2,
-          8,
-          130,
-        );
-        return {
-          ...route,
-          passengerFlow,
-          packageFlow,
-          density,
-          speedKph: speedFromDensity(density),
-          congestion: clamp(density / TRAFFIC.CRITICAL, 0, 1),
-        };
-      });
+      const simulationStep = clamp(deltaTime / 16.67, 0.55, 1.6);
+      routesRef.current = routesRef.current
+        .map((route, index) =>
+          buildModeledRouteState(route, index, timeOfDay, selectedCityId, now, simulationStep),
+        )
+        .map(route => mergeRouteStateWithLiveData(route, liveRouteOverrides.get(route.id)));
       const routeMap = new Map(routesRef.current.map(route => [route.id, route]));
       const canvas = canvasRef.current;
       const width = canvas ? parseFloat(canvas.style.width || '0') || BASE_W : BASE_W;
       const height = canvas ? parseFloat(canvas.style.height || '0') || BASE_H : BASE_H;
-      const simulationStep = clamp(deltaTime / 16.67, 0.55, 1.6);
       vehiclesRef.current = vehiclesRef.current.map((vehicle, index) => {
         const route = routeMap.get(vehicle.routeId);
         if (!route) {
           return vehicle;
         }
+        const simulatedDistance = getSimulatedRouteDistance(route.distanceKm);
+        const flowVelocityMultiplier = vehicle.type === 'passenger' ? 1.04 : 0.9;
         let progress =
           vehicle.progress +
-          ((route.speedKph * vehicle.speedFactor) / Math.max(route.distanceKm, 1)) *
+          ((route.speedKph * vehicle.speedFactor * flowVelocityMultiplier) / simulatedDistance) *
             simulationStep *
-            0.0092 *
+            0.018 *
             FLOW_SPEED_SCALE *
             vehicle.direction;
         let direction = vehicle.direction;
@@ -1868,7 +2354,6 @@ export default function MobilityOSCore() {
           width,
           height,
           now,
-          index + route.distanceKm,
         );
         let targetX = routeField.x;
         let targetY = routeField.y;
@@ -1927,81 +2412,19 @@ export default function MobilityOSCore() {
       if (now - analyticsTickRef.current > ANALYTICS_COMMIT_INTERVAL_MS) {
         analyticsTickRef.current = now;
         const nextRouteSnapshot = routesRef.current;
-        const path = optimalPath(routesRef.current, selectedCityId, 1)
-          .map(id => {
-            const city = cityMap.get(id);
-            return city ? getCityLabel(city, ar) : '';
-          })
-          .join(ar ? ' ? ' : ' -> ');
-        if (liveSnapshot?.analytics) {
-          startTransition(() => {
-            setRouteSnapshot(nextRouteSnapshot);
-            setAnalytics({
-              ...liveSnapshot.analytics,
-              recommendedPath: path,
-            });
-          });
-          return;
-        }
-        const passengerVehicles = vehiclesRef.current.filter(
-          vehicle => vehicle.type === 'passenger',
+        const modeledAnalytics = buildModeledAnalytics(
+          nextRouteSnapshot,
+          vehiclesRef.current,
+          selectedCityId,
+          ar,
         );
-        const packageVehicles = vehiclesRef.current.filter(vehicle => vehicle.type === 'package');
-        const activePassengers = passengerVehicles.reduce(
-          (sum, vehicle) => sum + (vehicle.passengers ?? 0),
-          0,
-        );
-        const seatCapacity = passengerVehicles.reduce(
-          (sum, vehicle) => sum + (vehicle.seatCapacity ?? 0),
-          0,
-        );
-        const packageCapacity = packageVehicles.reduce(
-          (sum, vehicle) => sum + ((vehicle.packageCapacity ?? 0) - (vehicle.packageLoad ?? 0)),
-          0,
-        );
-        const avgSpeed =
-          routesRef.current.reduce((sum, route) => sum + route.speedKph, 0) /
-          routesRef.current.length;
-        const congestionLevel =
-          routesRef.current.reduce((sum, route) => sum + route.congestion, 0) /
-          routesRef.current.length;
-        const topRoute = [...routesRef.current].sort(
-          (a, b) => b.passengerFlow + b.packageFlow - (a.passengerFlow + a.packageFlow),
-        )[0];
-        if (!topRoute) {
-          return;
-        }
-        const topRouteCities = getRouteCities(topRoute);
-        const selectedCity = getCityOrThrow(selectedCityId);
         startTransition(() => {
           setRouteSnapshot(nextRouteSnapshot);
-          setAnalytics({
-            totalVehicles: vehiclesRef.current.length,
-            activePassengers,
-            activePackages: packageVehicles.reduce(
-              (sum, vehicle) => sum + (vehicle.packageLoad ?? 0),
-              0,
-            ),
-            seatAvailability: Math.max(0, seatCapacity - activePassengers),
-            packageCapacity: Math.max(0, packageCapacity),
-            avgSpeed,
-            networkUtilization: vehiclesRef.current.length / (TARGET_VEHICLES * 1.15),
-            congestionLevel,
-            topCorridor: `${getCityLabel(topRouteCities.from, ar)}${ar ? ' ? ' : ' -> '}${getCityLabel(topRouteCities.to, ar)}`,
-            recommendedPath: path,
-            dispatchAction:
-              topRoute.congestion > 0.78
-                ? ar
-                  ? `????? ????? ????? ?????? ${getCityLabel(topRouteCities.to, ar)}`
-                  : `Reposition supply toward ${getCityLabel(topRouteCities.to, ar)}`
-                : ar
-                  ? `?????? ????? ??? ${getCityLabel(selectedCity, ar)}`
-                  : `Balance supply around ${getCityLabel(selectedCity, ar)}`,
-          });
+          setAnalytics(mergeLiveAnalyticsWithModel(modeledAnalytics, liveSnapshot));
         });
       }
     },
-    [ar, liveSnapshot, liveRouteOverrides, paused, selectedCityId, timeOfDay],
+      [ar, liveSnapshot, liveRouteOverrides, paused, selectedCityId, timeOfDay],
   );
 
   useEffect(() => {
@@ -2009,33 +2432,27 @@ export default function MobilityOSCore() {
     vehiclesRef.current = buildVehicleFleet(routesRef.current);
     startTransition(() => {
       setRouteSnapshot(routesRef.current);
+      setAnalytics(buildModeledAnalytics(routesRef.current, vehiclesRef.current, selectedCityId, ar));
     });
-  }, [timeOfDay]);
+  }, [ar, selectedCityId, timeOfDay]);
 
   useEffect(() => {
     if (!liveSnapshot) return;
-    routesRef.current = initialRoutes(timeOfDay).map(route => {
-      const liveRoute = liveRouteOverrides.get(route.id);
-      return liveRoute
-        ? {
-            ...route,
-            passengerFlow: liveRoute.passengerFlow,
-            packageFlow: liveRoute.packageFlow,
-            density: liveRoute.density,
-            speedKph: liveRoute.speedKph,
-            congestion: liveRoute.congestion,
-          }
-        : route;
-    });
+    routesRef.current = initialRoutes(timeOfDay).map(route =>
+      mergeRouteStateWithLiveData(route, liveRouteOverrides.get(route.id)),
+    );
     vehiclesRef.current = buildVehicleFleet(routesRef.current, liveSnapshot.vehicles);
+    const modeledAnalytics = buildModeledAnalytics(
+      routesRef.current,
+      vehiclesRef.current,
+      selectedCityId,
+      ar,
+    );
     startTransition(() => {
       setRouteSnapshot(routesRef.current);
-      setAnalytics(current => ({
-        ...current,
-        ...liveSnapshot.analytics,
-      }));
+      setAnalytics(mergeLiveAnalyticsWithModel(modeledAnalytics, liveSnapshot));
     });
-  }, [liveRouteOverrides, liveSnapshot, timeOfDay]);
+  }, [ar, liveRouteOverrides, liveSnapshot, selectedCityId, timeOfDay]);
 
   useEffect(() => {
     resizeCanvas();
@@ -2151,21 +2568,20 @@ export default function MobilityOSCore() {
       if (prevTimeRef.current === null) prevTimeRef.current = timestamp;
       const delta = timestamp - prevTimeRef.current;
       prevTimeRef.current = timestamp;
-      const activelyAnimating =
-        !paused &&
-        mapVisibleRef.current &&
-        documentVisibleRef.current &&
-        !prefersReducedMotionRef.current &&
-        !staticSceneModeRef.current;
+      const shouldAdvanceSimulation = !paused && documentVisibleRef.current;
+      const canAnimateMap =
+        mapVisibleRef.current && !prefersReducedMotionRef.current && !staticSceneModeRef.current;
       const targetFrameInterval =
         1000 / (interactionActiveRef.current ? SCROLLING_FRAME_RATE : ACTIVE_FRAME_RATE);
 
-      if (activelyAnimating && timestamp - lastDrawTimeRef.current >= targetFrameInterval) {
-        if (activelyAnimating) {
+      if (shouldAdvanceSimulation && timestamp - lastDrawTimeRef.current >= targetFrameInterval) {
+        if (shouldAdvanceSimulation) {
           phaseRef.current = timestamp;
           updateSimulation(delta, timestamp);
         }
-        drawScene();
+        if (canAnimateMap) {
+          drawScene();
+        }
         lastDrawTimeRef.current = timestamp;
       }
 
@@ -2186,14 +2602,16 @@ export default function MobilityOSCore() {
   }, []);
 
   const visibleRoutes = useMemo(() => {
-    const filtered = routeSnapshot.filter(
+    const selectedCityRoutes = routeSnapshot.filter(
       route => route.from === selectedCityId || route.to === selectedCityId,
     );
-    return (filtered.length ? filtered : routeSnapshot)
+    const scopedRoutes = selectedCityRoutes.length ? selectedCityRoutes : routeSnapshot;
+    const lensFilteredRoutes = scopedRoutes.filter(route => matchesRouteLens(route, routeLens));
+    return (lensFilteredRoutes.length ? lensFilteredRoutes : scopedRoutes)
       .slice()
       .sort((a, b) => b.passengerFlow + b.packageFlow - (a.passengerFlow + a.packageFlow))
       .slice(0, 6);
-  }, [routeSnapshot, selectedCityId]);
+  }, [routeLens, routeSnapshot, selectedCityId]);
   const primaryActionItems = [
     analytics.dispatchAction,
     `${copy.topCorridor}: ${analytics.topCorridor}`,
@@ -2201,16 +2619,93 @@ export default function MobilityOSCore() {
       ? `???? ???????: ${numberFormatter.format(analytics.seatAvailability)} / ??? ??????: ${numberFormatter.format(analytics.packageCapacity)}`
       : `Seat availability: ${analytics.seatAvailability} / Package capacity: ${analytics.packageCapacity}`,
   ].filter(Boolean);
-  void cityMap.get(selectedCityId);
   const activeMode = {
     command: { title: copy.commandMode, body: copy.commandModeBody, accent: C.cyan },
     satellite: { title: copy.satelliteMode, body: copy.satelliteModeBody, accent: C.green },
     pulse: { title: copy.pulseMode, body: copy.pulseModeBody, accent: C.purple },
   }[viewMode];
+  const quickSectionLinks = [
+    {
+      id: 'overview',
+      label: ar ? '??????' : 'Overview',
+      icon: ShieldCheck,
+      ref: heroSectionRef,
+    },
+    {
+      id: 'map',
+      label: ar ? '???????' : 'Live map',
+      icon: Waypoints,
+      ref: mapSectionRef,
+    },
+    {
+      id: 'insights',
+      label: ar ? '???????' : 'City intel',
+      icon: MapPinned,
+      ref: insightSectionRef,
+    },
+    {
+      id: 'corridors',
+      label: ar ? '?????' : 'Corridors',
+      icon: Gauge,
+      ref: corridorSectionRef,
+    },
+  ] as const;
+  const sourceSignalCards = [
+    {
+      label: ar ? '???? ?????' : 'Source integrity',
+      value: `${numberFormatter.format(signalConfidence)}%`,
+      sub: liveModeSummary,
+      tone: confidenceTone,
+      icon: ShieldCheck,
+    },
+    {
+      label: ar ? '??????? ??????' : 'Telemetry freshness',
+      value: telemetrySummary,
+      sub:
+        telemetryTotalTrips > 0
+          ? `${numberFormatter.format(telemetryCoveragePercent)}% ${ar ? '??????' : 'coverage'}`
+          : telemetryStatus,
+      tone: telemetryTone,
+      icon: Radar,
+    },
+    {
+      label: ar ? '????? ???????' : 'Refresh cadence',
+      value: liveUpdatedAtValue,
+      sub: hasActiveLiveDemand ? (ar ? '???? 15 ?????' : 'Realtime + 15s refresh') : trafficState,
+      tone: C.cyan,
+      icon: RefreshCcw,
+    },
+  ] as const;
+  const mapLensOptions = [
+    {
+      id: 'all',
+      label: ar ? '?????? ??????' : 'Full network',
+      description: ar ? '???? ??????' : 'All corridors',
+      count: routeSnapshot.length,
+    },
+    {
+      id: 'rides',
+      label: ar ? '???? ??????' : 'Ride-heavy',
+      description: ar ? '???? ??????' : 'Passenger-led',
+      count: routeSnapshot.filter(route => matchesRouteLens(route, 'rides')).length,
+    },
+    {
+      id: 'parcels',
+      label: ar ? '???? ??????' : 'Parcel-heavy',
+      description: ar ? '???? ??????' : 'Package-led',
+      count: routeSnapshot.filter(route => matchesRouteLens(route, 'parcels')).length,
+    },
+    {
+      id: 'stress',
+      label: ar ? '???? ?????' : 'Stress watch',
+      description: ar ? '??? ?????' : 'High pressure',
+      count: routeSnapshot.filter(route => matchesRouteLens(route, 'stress')).length,
+    },
+  ] as const;
   const heroSignals = [
     {
       label: copy.controlState,
-      value: paused ? (ar ? '????? ??????' : 'Paused') : copy.liveSync,
+      value: paused ? (ar ? '????? ??????' : 'Paused') : hasActiveLiveDemand ? copy.liveSync : copy.simulationTag,
       tone: paused ? C.orange : C.green,
     },
     {
@@ -2307,49 +2802,62 @@ export default function MobilityOSCore() {
         }
         .mobility-os-brand-badge {
           position: absolute;
-          left: 19%;
+          left: 17%;
           top: 19%;
           z-index: 1;
-          width: clamp(58px, 7.5vw, 88px);
-          aspect-ratio: 1;
+          width: clamp(116px, 14vw, 182px);
+          height: clamp(86px, 10vw, 132px);
           display: grid;
           place-items: center;
           pointer-events: none;
-          border-radius: 22px;
-          background: linear-gradient(180deg, rgba(10,24,38,0.68), rgba(5,12,22,0.9));
-          border: 1px solid rgba(220,255,248,0.12);
-          box-shadow: 0 18px 40px rgba(2,8,16,0.34), inset 0 1px 0 rgba(255,255,255,0.06);
-          backdrop-filter: blur(12px);
+          border-radius: 999px;
+          background:
+            radial-gradient(circle at 28% 50%, rgba(25,231,187,0.16) 0%, rgba(101,225,255,0.1) 26%, rgba(8,18,28,0) 70%),
+            linear-gradient(90deg, rgba(7,18,30,0.26), rgba(7,18,30,0));
           contain: layout paint;
           will-change: transform, opacity;
           animation: mobility-os-brand-drift 7.2s ease-in-out infinite;
         }
+        .mobility-os-brand-badge__tray {
+          position: absolute;
+          inset: 12px -18px;
+          border-radius: 999px;
+          border: 1px solid rgba(220,255,248,0.08);
+          background:
+            linear-gradient(90deg, rgba(8,18,28,0.56), rgba(8,18,28,0.16)),
+            radial-gradient(circle at 20% 50%, rgba(25,231,187,0.16), rgba(25,231,187,0) 44%);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.04),
+            0 14px 32px rgba(0,0,0,0.16);
+        }
         .mobility-os-brand-badge__glow {
           position: absolute;
-          inset: -18px;
+          inset: -18px -30px;
           border-radius: 999px;
           background: radial-gradient(circle, rgba(25,231,187,0.34) 0%, rgba(101,225,255,0.18) 38%, rgba(4,15,27,0) 74%);
-          filter: blur(14px);
+          filter: blur(16px);
           animation: mobility-os-brand-glow 4.8s ease-in-out infinite;
         }
-        .mobility-os-brand-badge__image {
+        .mobility-os-brand-badge__mark {
           position: relative;
           z-index: 1;
-          display: block;
-          width: clamp(34px, 4.6vw, 54px);
-          height: auto;
-          filter: drop-shadow(0 12px 22px rgba(4,8,14,0.28));
-          opacity: 0.96;
+          display: grid;
+          place-items: center;
+          transform: translateX(-10%);
+          filter: drop-shadow(0 18px 28px rgba(4,8,14,0.24));
         }
         @media (max-width: 767px) {
           .mobility-os-brand-badge {
-            left: 24%;
+            left: 18%;
             top: 18%;
-            width: clamp(52px, 16vw, 72px);
-            border-radius: 18px;
+            width: clamp(94px, 26vw, 132px);
+            height: clamp(72px, 20vw, 102px);
           }
-          .mobility-os-brand-badge__image {
-            width: clamp(30px, 10vw, 44px);
+          .mobility-os-brand-badge__tray {
+            inset: 10px -12px;
+          }
+          .mobility-os-brand-badge__mark {
+            transform: translateX(-6%) scale(0.94);
           }
         }
         @media (prefers-reduced-motion: reduce) {
@@ -2357,6 +2865,30 @@ export default function MobilityOSCore() {
           .mobility-os-brand-badge__glow {
             animation: none;
           }
+        }
+        .mobility-os-focusable {
+          transition: box-shadow 180ms ease, border-color 180ms ease, transform 180ms ease;
+        }
+        .mobility-os-focusable:focus-visible {
+          outline: none;
+          border-color: rgba(101,225,255,0.9) !important;
+          box-shadow:
+            0 0 0 1px rgba(101,225,255,0.8),
+            0 0 0 4px rgba(101,225,255,0.16) !important;
+        }
+        .mobility-os-focusable:hover {
+          transform: translateY(-1px);
+        }
+        .mobility-os-sr-only {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+          border: 0;
         }
       `}</style>
       <div
@@ -2368,6 +2900,7 @@ export default function MobilityOSCore() {
         }}
       >
         <section
+          ref={heroSectionRef}
           style={glassPanelStyle({
             padding: isCompactMobile ? 18 : 28,
             borderRadius: isCompactMobile ? 24 : 34,
@@ -2464,6 +2997,44 @@ export default function MobilityOSCore() {
                       </div>
                     </div>
                   ))}
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 10,
+                    flexWrap: 'wrap',
+                    marginTop: 4,
+                  }}
+                >
+                  {quickSectionLinks.map(item => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className="mobility-os-focusable"
+                        onClick={() => scrollToSection(item.ref)}
+                        style={{
+                          minHeight: 42,
+                          padding: '0 14px',
+                          borderRadius: 999,
+                          border: `1px solid ${C.borderFaint}`,
+                          background: 'rgba(255,255,255,0.035)',
+                          color: C.textSub,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          cursor: 'pointer',
+                          fontWeight: 800,
+                          letterSpacing: '0.04em',
+                        }}
+                      >
+                        <Icon size={15} color={C.cyan} />
+                        <span>{item.label}</span>
+                        <ArrowRight size={14} color={C.textMuted} />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div style={{ display: 'grid', gap: 12 }}>
@@ -2595,7 +3166,10 @@ export default function MobilityOSCore() {
                       </div>
                     </div>
                     <button
+                      type="button"
+                      className="mobility-os-focusable"
                       onClick={() => setPaused(value => !value)}
+                      aria-pressed={paused}
                       style={{
                         height: 42,
                         padding: '0 16px',
@@ -2626,7 +3200,10 @@ export default function MobilityOSCore() {
                     ].map(mode => (
                       <button
                         key={mode.id}
+                        type="button"
+                        className="mobility-os-focusable"
                         onClick={() => setViewMode(mode.id as ViewMode)}
+                        aria-pressed={viewMode === mode.id}
                         style={{
                           padding: isCompactMobile ? '10px 12px' : '10px 14px',
                           borderRadius: 999,
@@ -2805,91 +3382,101 @@ export default function MobilityOSCore() {
             </div>
             <div
               style={{
-                display: isCompactMobile ? 'none' : 'grid',
+                display: 'grid',
                 gap: 12,
-                gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.3fr) minmax(280px, 0.7fr)',
+                gridTemplateColumns: isCompactMobile
+                  ? '1fr'
+                  : 'repeat(auto-fit, minmax(220px, 1fr))',
               }}
             >
-              <div
-                style={{
-                  padding: '14px 16px',
-                  borderRadius: 20,
-                  border: `1px solid ${C.borderFaint}`,
-                  background: 'rgba(255,255,255,0.03)',
-                }}
-              >
-                <div
-                  style={{
-                    color: C.textMuted,
-                    fontSize: '0.72rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.12em',
-                  }}
-                >
-                  {sourceMatrixLabel}
-                </div>
-                <div
-                  style={{ marginTop: 8, color: C.textSub, fontSize: '0.88rem', lineHeight: 1.7 }}
-                >
-                  {sourceMatrixBody}
-                </div>
-              </div>
-              <div
-                style={{
-                  padding: '14px 16px',
-                  borderRadius: 20,
-                  border: `1px solid ${C.borderFaint}`,
-                  background: 'rgba(255,255,255,0.03)',
-                  display: 'grid',
-                  gap: 8,
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    alignItems: 'center',
-                  }}
-                >
+              {sourceSignalCards.map(card => {
+                const Icon = card.icon;
+                return (
                   <div
+                    key={card.label}
                     style={{
-                      color: C.textMuted,
-                      fontSize: '0.72rem',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.12em',
+                      padding: '14px 16px',
+                      borderRadius: 20,
+                      border: `1px solid ${C.borderFaint}`,
+                      background:
+                        'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
+                      display: 'grid',
+                      gap: 10,
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
                     }}
                   >
-                    {telemetryLabel}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          minWidth: 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: 12,
+                            display: 'grid',
+                            placeItems: 'center',
+                            background: 'rgba(255,255,255,0.04)',
+                            border: '1px solid rgba(255,255,255,0.06)',
+                          }}
+                        >
+                          <Icon size={16} color={card.tone} />
+                        </span>
+                        <span
+                          style={{
+                            color: C.textMuted,
+                            fontSize: '0.72rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.12em',
+                          }}
+                        >
+                          {card.label}
+                        </span>
+                      </div>
+                      <strong style={{ color: card.tone, fontSize: '0.98rem' }}>{card.value}</strong>
+                    </div>
+                    <div style={{ color: C.textSub, fontSize: '0.86rem', lineHeight: 1.6 }}>
+                      {card.sub}
+                    </div>
+                    <div
+                      style={{
+                        color: C.textMuted,
+                        fontSize: '0.78rem',
+                        lineHeight: 1.55,
+                      }}
+                    >
+                      {card.label === (ar ? '???? ?????' : 'Source integrity')
+                        ? sourceMatrixBody
+                        : card.label === (ar ? '??????? ??????' : 'Telemetry freshness')
+                          ? `${telemetryCoverageLabel}: ${numberFormatter.format(telemetryFreshTrips)} / ${numberFormatter.format(telemetryTotalTrips)} · ${telemetryHeartbeatLabel}: ${latestHeartbeatValue}`
+                          : liveSnapshot?.traffic.enabled
+                            ? ar
+                              ? `???? ??? Google Routes (${numberFormatter.format(liveSnapshot.traffic.liveCorridors)} ?????)`
+                              : `Connected via Google Routes (${liveSnapshot.traffic.liveCorridors} corridors)`
+                            : ar
+                              ? '??? ???? ??? ????? ????? ????? ?????'
+                              : 'Using modeled traffic because no live Maps key is configured yet.'}
+                    </div>
                   </div>
-                  <div style={{ color: telemetryTone, fontWeight: 800, fontSize: '0.82rem' }}>
-                    {telemetryStatus}
-                  </div>
-                </div>
-                <div style={{ color: C.textSub, fontSize: '0.84rem' }}>
-                  {telemetryCoverageLabel}:{' '}
-                  {numberFormatter.format(liveSnapshot?.telemetry.freshTripsWithTelemetry ?? 0)} /{' '}
-                  {numberFormatter.format(liveSnapshot?.telemetry.totalTripsWithTelemetry ?? 0)}
-                </div>
-                <div style={{ color: C.textSub, fontSize: '0.84rem' }}>
-                  {telemetryHeartbeatLabel}: {latestHeartbeatValue}
-                </div>
-                <div style={{ color: C.textSub, fontSize: '0.84rem' }}>
-                  {ar ? '???? ??????' : 'Traffic feed'}:{' '}
-                  {liveSnapshot?.traffic.enabled
-                    ? ar
-                      ? `???? ??? Google Routes (${numberFormatter.format(liveSnapshot.traffic.liveCorridors)} ?????)`
-                      : `Connected via Google Routes (${liveSnapshot.traffic.liveCorridors} corridors)`
-                    : ar
-                      ? '??? ???? ??? ????? ????? ????? ?????'
-                      : 'Unavailable until a real Maps key is configured'}
-                </div>
-              </div>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        <section style={{ display: 'grid', gap: 18 }}>
+        <section ref={mapSectionRef} style={{ display: 'grid', gap: 18 }}>
           <div
             style={glassPanelStyle({
               padding: isCompactMobile ? 14 : 18,
@@ -2982,7 +3569,67 @@ export default function MobilityOSCore() {
                       />
                       {item.label}
                     </div>
-                  ))}
+                    ))}
+                </div>
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: 8,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      color: C.textMuted,
+                      fontSize: '0.7rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.12em',
+                    }}
+                  >
+                    <Layers3 size={14} color={C.cyan} />
+                    <span>{ar ? '???? ???????' : 'Route lens'}</span>
+                  </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 8,
+                      flexWrap: 'wrap',
+                      justifyContent: isCompactMobile ? 'stretch' : 'flex-end',
+                    }}
+                  >
+                    {mapLensOptions.map(option => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        className="mobility-os-focusable"
+                        onClick={() => setRouteLens(option.id as RouteLens)}
+                        aria-pressed={routeLens === option.id}
+                        style={{
+                          minHeight: 42,
+                          padding: '0 12px',
+                          borderRadius: 16,
+                          border: `1px solid ${routeLens === option.id ? C.cyan : C.border}`,
+                          background:
+                            routeLens === option.id
+                              ? 'rgba(25,231,187,0.14)'
+                              : 'rgba(255,255,255,0.03)',
+                          color: routeLens === option.id ? C.text : C.textSub,
+                          cursor: 'pointer',
+                          display: 'grid',
+                          gap: 2,
+                          alignContent: 'center',
+                          textAlign: ar ? 'right' : 'left',
+                        }}
+                      >
+                        <span style={{ fontSize: '0.76rem', fontWeight: 800 }}>{option.label}</span>
+                        <span style={{ fontSize: '0.68rem', color: C.textMuted }}>
+                          {option.description} · {numberFormatter.format(option.count)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div
                   style={{
@@ -3053,6 +3700,9 @@ export default function MobilityOSCore() {
                 contain: 'layout paint size',
               }}
             >
+              <div id="mobility-os-map-summary" className="mobility-os-sr-only">
+                {mapA11ySummary}
+              </div>
               <div
                 style={{
                   position: 'absolute',
@@ -3072,16 +3722,11 @@ export default function MobilityOSCore() {
                 }}
               />
               <div className="mobility-os-brand-badge" aria-hidden="true">
+                <span className="mobility-os-brand-badge__tray" />
                 <span className="mobility-os-brand-badge__glow" />
-                <img
-                  src="/brand/wasellogo-160.png"
-                  alt=""
-                  width="160"
-                  height="160"
-                  decoding="async"
-                  loading="eager"
-                  className="mobility-os-brand-badge__image"
-                />
+                <div className="mobility-os-brand-badge__mark">
+                  <ExactLogoMark size={isCompactMobile ? 92 : 126} />
+                </div>
               </div>
               <div
                 style={{
@@ -3255,6 +3900,7 @@ export default function MobilityOSCore() {
               </div>
               <canvas
                 ref={canvasRef}
+                aria-describedby="mobility-os-map-summary"
                 aria-label={
                   ar
                     ? '????? ??????? ??? ????? ???? ?? ??????'
@@ -3284,6 +3930,7 @@ export default function MobilityOSCore() {
             }}
           >
             <article
+              ref={insightSectionRef}
               style={glassPanelStyle({
                 padding: isCompactMobile ? 16 : 18,
                 borderRadius: isCompactMobile ? 20 : 26,
@@ -3305,7 +3952,10 @@ export default function MobilityOSCore() {
                 {CITY_DATA.map(city => (
                   <button
                     key={city.id}
+                    type="button"
+                    className="mobility-os-focusable"
                     onClick={() => setSelectedCityId(city.id)}
+                    aria-pressed={selectedCityId === city.id}
                     style={{
                       padding: '10px 12px',
                       borderRadius: 14,
@@ -3396,6 +4046,7 @@ export default function MobilityOSCore() {
         </section>
 
         <section
+          ref={corridorSectionRef}
           style={{
             display: 'grid',
             gap: 16,

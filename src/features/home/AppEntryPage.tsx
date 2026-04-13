@@ -98,6 +98,121 @@ const primaryButtonStyle: CSSProperties = {
   boxShadow: ENTRY_PRIMARY_GLOW,
 };
 
+type EntryBrandLockupProps = {
+  ar: boolean;
+  iconSize: number;
+  titleSize: string;
+  arabicSize: string;
+  metaSize: string;
+  showChip?: boolean;
+};
+
+function EntryBrandLockup({
+  ar,
+  iconSize,
+  titleSize,
+  arabicSize,
+  metaSize,
+  showChip = true,
+}: EntryBrandLockupProps) {
+  return (
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: Math.max(12, Math.round(iconSize * 0.24)),
+        textAlign: ar ? 'right' : 'left',
+      }}
+    >
+      <div
+        style={{
+          width: Math.round(iconSize * 1.16),
+          minHeight: Math.round(iconSize * 1.08),
+          display: 'grid',
+          placeItems: 'center',
+          background: 'none',
+          border: 'none',
+          boxShadow: 'none',
+          flexShrink: 0,
+        }}
+      >
+        <WaselMark
+          size={iconSize}
+          animated
+          style={{
+            filter:
+              'drop-shadow(0 12px 24px rgba(1,10,18,0.22)) drop-shadow(0 0 22px rgba(25,231,187,0.18))',
+          }}
+        />
+      </div>
+      <div style={{ display: 'grid', gap: 2 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span
+            style={{
+              fontFamily: LANDING_DISPLAY,
+              fontSize: titleSize,
+              fontWeight: 800,
+              letterSpacing: '-0.045em',
+              lineHeight: 0.92,
+              background: 'linear-gradient(180deg, #E8FFF9 0%, #7CF4DA 58%, #22DAB6 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            Wasel
+          </span>
+          {showChip ? (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                padding: '6px 12px',
+                borderRadius: 999,
+                border: `1px solid ${ENTRY_BORDER_SOFT}`,
+                background: 'rgba(255,255,255,0.04)',
+                color: ENTRY_MINT,
+                fontSize: '0.72rem',
+                fontWeight: TYPE.weight.ultra,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+              }}
+            >
+              <Sparkles size={12} />
+              Mobility OS
+            </span>
+          ) : null}
+        </div>
+        <span
+          style={{
+            color: '#1EE4B5',
+            fontSize: arabicSize,
+            fontWeight: 800,
+            letterSpacing: '-0.02em',
+            lineHeight: 1,
+          }}
+        >
+          {'\u0648\u0627\u0635\u0644'}
+        </span>
+        <span
+          style={{
+            color: 'rgba(214,231,237,0.76)',
+            fontSize: metaSize,
+            fontWeight: TYPE.weight.medium,
+            letterSpacing: '-0.01em',
+            lineHeight: 1.2,
+          }}
+        >
+          {ar
+            ? '\u0646\u0641\u0633 \u0627\u0644\u0645\u0633\u0627\u0631 \u064a\u0645\u0643\u0646 \u0623\u0646 \u064a\u062d\u0645\u0644 \u0631\u0627\u0643\u0628\u0627\u064b \u0648\u0637\u0631\u062f\u0627\u064b \u0648\u0642\u064a\u0645\u0629 \u0623\u0643\u0628\u0631.'
+            : 'One corridor can carry riders, parcels, and more value.'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function AppEntryPage() {
   const { user } = useLocalAuth();
   const { signInWithGoogle, signInWithFacebook } = useAuth();
@@ -341,8 +456,12 @@ export default function AppEntryPage() {
         @media (max-width: 1120px) {
           .entry-actions,
           .entry-meta,
-          .entry-signal-grid {
+          .entry-signal-grid,
+          .entry-route-band {
             grid-template-columns: 1fr !important;
+          }
+          .entry-route-actions {
+            justify-content: flex-start !important;
           }
         }
         @media (max-width: 960px) {
@@ -442,88 +561,13 @@ export default function AppEntryPage() {
                 boxShadow: 'none',
               }}
             >
-              <div
-                style={{
-                  width: 68,
-                  minHeight: 64,
-                  display: 'grid',
-                  placeItems: 'center',
-                  background: 'none',
-                  border: 'none',
-                  boxShadow: 'none',
-                }}
-              >
-                <WaselMark
-                  size={58}
-                  animated
-                  style={{
-                    filter:
-                      'drop-shadow(0 12px 24px rgba(1,10,18,0.22)) drop-shadow(0 0 22px rgba(25,231,187,0.18))',
-                  }}
-                />
-              </div>
-              <div style={{ display: 'grid', gap: 2, textAlign: ar ? 'right' : 'left' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                  <span
-                    style={{
-                      fontFamily: LANDING_DISPLAY,
-                      fontSize: 'clamp(1.78rem, 2.45vw, 2.55rem)',
-                      fontWeight: 800,
-                      letterSpacing: '-0.045em',
-                      lineHeight: 0.92,
-                      background: 'linear-gradient(180deg, #E8FFF9 0%, #7CF4DA 58%, #22DAB6 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                    }}
-                  >
-                    Wasel
-                  </span>
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 7,
-                      padding: '6px 12px',
-                      borderRadius: 999,
-                      border: `1px solid ${ENTRY_BORDER_SOFT}`,
-                      background: 'rgba(255,255,255,0.04)',
-                      color: ENTRY_MINT,
-                      fontSize: '0.72rem',
-                      fontWeight: TYPE.weight.ultra,
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    <Sparkles size={12} />
-                    Mobility OS
-                  </span>
-                </div>
-                <span
-                  style={{
-                    color: '#1EE4B5',
-                    fontSize: 'clamp(1.08rem, 1.3vw, 1.4rem)',
-                    fontWeight: 800,
-                    letterSpacing: '-0.02em',
-                    lineHeight: 1,
-                  }}
-                >
-                  {'\u0648\u0627\u0635\u0644'}
-                </span>
-                <span
-                  style={{
-                    color: 'rgba(214,231,237,0.76)',
-                    fontSize: 'clamp(0.74rem, 0.9vw, 0.86rem)',
-                    fontWeight: TYPE.weight.medium,
-                    letterSpacing: '-0.01em',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {ar
-                    ? '\u0646\u0641\u0633 \u0627\u0644\u0645\u0633\u0627\u0631 \u064a\u0645\u0643\u0646 \u0623\u0646 \u064a\u062d\u0645\u0644 \u0631\u0627\u0643\u0628\u0627\u064b \u0648\u0637\u0631\u062f\u0627\u064b \u0648\u0642\u064a\u0645\u0629 \u0623\u0643\u0628\u0631.'
-                    : 'One corridor can carry riders, parcels, and more value.'}
-                </span>
-              </div>
+              <EntryBrandLockup
+                ar={ar}
+                iconSize={58}
+                titleSize="clamp(1.78rem, 2.45vw, 2.55rem)"
+                arabicSize="clamp(1.08rem, 1.3vw, 1.4rem)"
+                metaSize="clamp(0.74rem, 0.9vw, 0.86rem)"
+              />
             </button>
 
             <div
@@ -657,25 +701,22 @@ export default function AppEntryPage() {
                 </p>
               </div>
 
-              <div
-                className="entry-pill-row"
-                style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}
-              >
+              <div className="entry-pill-row" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {quickPills.map(pill => (
                   <span
                     key={pill}
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: 8,
-                      padding: '10px 14px',
+                      gap: 7,
+                      padding: '8px 12px',
                       borderRadius: 999,
-                      background: 'rgba(255,255,255,0.045)',
+                      background: 'rgba(255,255,255,0.034)',
                       border: `1px solid ${ENTRY_BORDER_SOFT}`,
                       color: ENTRY_TEXT,
-                      fontSize: '0.8rem',
+                      fontSize: '0.76rem',
                       fontWeight: TYPE.weight.black,
-                      boxShadow: '0 12px 28px rgba(1,10,18,0.14)',
+                      boxShadow: '0 10px 24px rgba(1,10,18,0.12)',
                     }}
                   >
                     <span
@@ -733,8 +774,25 @@ export default function AppEntryPage() {
               {!user ? (
                 <div style={{ display: 'grid', gap: 10 }}>
                   <div
+                    style={{
+                      color: ENTRY_TEXT_MUTED,
+                      fontSize: '0.72rem',
+                      fontWeight: TYPE.weight.ultra,
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {ar
+                      ? '\u0623\u0648 \u062a\u0627\u0628\u0639 \u0628\u0648\u0627\u0633\u0637\u0629'
+                      : 'Or continue with'}
+                  </div>
+                  <div
                     className="entry-auth-row"
-                    style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                      gap: 10,
+                    }}
                   >
                     <button
                       type="button"
@@ -745,10 +803,16 @@ export default function AppEntryPage() {
                       disabled={oauthProvider !== null}
                       style={{
                         ...outlineButtonStyle,
-                        minHeight: 46,
+                        minHeight: 42,
+                        padding: '0 14px',
                         borderColor: 'rgba(105,215,247,0.2)',
                         color: ENTRY_TEXT,
                         opacity: oauthProvider === 'facebook' ? 0.55 : 1,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.78rem',
+                        boxShadow: '0 12px 28px rgba(1,10,18,0.12)',
                       }}
                     >
                       {oauthProvider === 'google'
@@ -766,10 +830,16 @@ export default function AppEntryPage() {
                       disabled={oauthProvider !== null}
                       style={{
                         ...outlineButtonStyle,
-                        minHeight: 46,
+                        minHeight: 42,
+                        padding: '0 14px',
                         borderColor: 'rgba(162,255,231,0.22)',
                         color: ENTRY_TEXT,
                         opacity: oauthProvider === 'google' ? 0.55 : 1,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.78rem',
+                        boxShadow: '0 12px 28px rgba(1,10,18,0.12)',
                       }}
                     >
                       {oauthProvider === 'facebook'
@@ -784,7 +854,16 @@ export default function AppEntryPage() {
                       aria-label={
                         ar ? 'المتابعة باستخدام البريد الإلكتروني' : 'Continue with email'
                       }
-                      style={{ ...outlineButtonStyle, minHeight: 46 }}
+                      style={{
+                        ...outlineButtonStyle,
+                        minHeight: 42,
+                        padding: '0 14px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.78rem',
+                        boxShadow: '0 12px 28px rgba(1,10,18,0.12)',
+                      }}
                     >
                       {ar
                         ? '\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a'
@@ -826,37 +905,37 @@ export default function AppEntryPage() {
                       key={card.title}
                       className="entry-float-card"
                       style={{
-                        borderRadius: 26,
-                        padding: '18px',
+                        borderRadius: 22,
+                        padding: '14px 14px 13px',
                         border: `1px solid ${card.color}33`,
                         background:
-                          'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.018))',
-                        boxShadow: `0 18px 42px ${card.color}12`,
+                          'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014)), rgba(9,18,31,0.76)',
+                        boxShadow: `0 14px 34px ${card.color}10`,
                         display: 'grid',
-                        gap: 10,
+                        gap: 8,
                         textAlign: ar ? 'right' : 'left',
                       }}
                     >
                       <div
                         style={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: 16,
+                          width: 42,
+                          height: 42,
+                          borderRadius: 14,
                           display: 'grid',
                           placeItems: 'center',
                           background: `${card.color}18`,
                           border: `1px solid ${card.color}36`,
-                          boxShadow: `0 14px 28px ${card.color}12`,
+                          boxShadow: `0 10px 22px ${card.color}12`,
                         }}
                       >
-                        <Icon size={20} color={card.color} />
+                        <Icon size={18} color={card.color} />
                       </div>
                       <div
                         style={{
                           color: card.color,
-                          fontSize: '0.72rem',
+                          fontSize: '0.68rem',
                           fontWeight: TYPE.weight.ultra,
-                          letterSpacing: '0.12em',
+                          letterSpacing: '0.11em',
                           textTransform: 'uppercase',
                         }}
                       >
@@ -866,8 +945,8 @@ export default function AppEntryPage() {
                         style={{
                           color: ENTRY_TEXT,
                           fontFamily: LANDING_DISPLAY,
-                          fontSize: '1rem',
-                          lineHeight: 1.08,
+                          fontSize: '0.94rem',
+                          lineHeight: 1.04,
                           letterSpacing: '-0.03em',
                           fontWeight: 700,
                         }}
@@ -877,8 +956,12 @@ export default function AppEntryPage() {
                       <div
                         style={{
                           color: ENTRY_TEXT_MUTED,
-                          fontSize: '0.84rem',
-                          lineHeight: 1.64,
+                          fontSize: '0.78rem',
+                          lineHeight: 1.55,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
                         }}
                       >
                         {card.detail}
@@ -886,117 +969,6 @@ export default function AppEntryPage() {
                     </div>
                   );
                 })}
-              </div>
-
-              <div
-                style={{
-                  borderRadius: 24,
-                  padding: '18px 18px 16px',
-                  border: `1px solid ${ENTRY_BORDER}`,
-                  background:
-                    'radial-gradient(circle at 12% 12%, rgba(25,231,187,0.12), transparent 30%), linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.02))',
-                  display: 'grid',
-                  gap: 12,
-                }}
-              >
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    width: 'fit-content',
-                    padding: '8px 12px',
-                    borderRadius: 999,
-                    background: 'rgba(25,231,187,0.10)',
-                    border: `1px solid ${ENTRY_BORDER}`,
-                    color: ENTRY_ACCENT,
-                    fontSize: '0.74rem',
-                    fontWeight: TYPE.weight.ultra,
-                    letterSpacing: '0.11em',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {ar
-                    ? '\u0627\u0642\u062a\u0635\u0627\u062f \u0627\u0644\u0645\u0633\u0627\u0631'
-                    : 'Route economics'}
-                </div>
-                <div style={{ display: 'grid', gap: 8 }}>
-                  <div
-                    style={{
-                      color: '#F7FCFF',
-                      fontFamily: LANDING_DISPLAY,
-                      fontSize: 'clamp(1.36rem, 2.4vw, 2.1rem)',
-                      lineHeight: 0.98,
-                      letterSpacing: '-0.05em',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {supplyTitle}
-                  </div>
-                  <div
-                    style={{
-                      color: ENTRY_TEXT_MUTED,
-                      fontSize: '0.9rem',
-                      lineHeight: 1.7,
-                      maxWidth: 560,
-                    }}
-                  >
-                    {supplyBody}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  {supplyPills.map(pill => (
-                    <span
-                      key={pill}
-                      style={{
-                        padding: '10px 14px',
-                        borderRadius: 999,
-                        border: `1px solid ${ENTRY_BORDER}`,
-                        background: 'rgba(220,255,248,0.04)',
-                        color: ENTRY_TEXT,
-                        fontSize: '0.8rem',
-                        fontWeight: TYPE.weight.black,
-                      }}
-                    >
-                      {pill}
-                    </span>
-                  ))}
-                </div>
-                <div
-                  className="entry-cta-row"
-                  style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => handleLandingNavigate(buildPath('/app/offer-ride', true))}
-                    style={{
-                      ...primaryButtonStyle,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 10,
-                    }}
-                  >
-                    {ar
-                      ? '\u0623\u0646\u0634\u0626 \u0631\u062d\u0644\u062a\u0643 \u0648\u0627\u0628\u062f\u0623 \u0628\u0627\u0644\u0628\u064a\u0639'
-                      : 'Create ride'}
-                    <ArrowRight size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleLandingNavigate(buildPath('/app/packages'))}
-                    style={{
-                      ...outlineButtonStyle,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 8,
-                    }}
-                  >
-                    <Package size={16} />
-                    {ar
-                      ? '\u0627\u0639\u0631\u0641 \u0643\u064a\u0641 \u062a\u062d\u0645\u0644 \u0627\u0644\u0637\u0631\u0648\u062f'
-                      : 'Open packages'}
-                  </button>
-                </div>
               </div>
 
               <div
@@ -1121,6 +1093,35 @@ export default function AppEntryPage() {
 
                 <div style={{ position: 'relative', paddingTop: 4 }}>
                   <div
+                    aria-hidden="true"
+                    style={{
+                      position: 'absolute',
+                      top: 'clamp(18px, 2.4vw, 30px)',
+                      insetInlineStart: 'clamp(18px, 2.4vw, 30px)',
+                      width: 'min(280px, calc(100% - 44px))',
+                      padding: '14px 16px',
+                      borderRadius: 26,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      border: `1px solid ${ENTRY_BORDER_SOFT}`,
+                      background:
+                        'linear-gradient(180deg, rgba(14,31,44,0.94), rgba(8,17,30,0.9)), rgba(8,17,30,0.92)',
+                      boxShadow:
+                        'inset 0 1px 0 rgba(255,255,255,0.06), 0 22px 46px rgba(1,10,18,0.28), 0 0 0 1px rgba(255,255,255,0.02)',
+                      backdropFilter: 'blur(18px)',
+                      zIndex: 2,
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    <EntryBrandLockup
+                      ar={ar}
+                      iconSize={44}
+                      titleSize="clamp(1.45rem, 1.7vw, 1.8rem)"
+                      arabicSize="clamp(0.96rem, 1.05vw, 1.12rem)"
+                      metaSize="clamp(0.68rem, 0.82vw, 0.74rem)"
+                    />
+                  </div>
+                  <div
                     style={{
                       borderRadius: 32,
                       padding: 12,
@@ -1134,7 +1135,7 @@ export default function AppEntryPage() {
                     <DeferredLandingMap ar={ar} />
                   </div>
 
-                  <div style={{ position: 'absolute', left: 24, right: 24, bottom: 24 }}>
+                  <div style={{ position: 'absolute', left: 24, right: 24, bottom: 24, zIndex: 2 }}>
                     <div
                       className="entry-map-footer"
                       style={{
@@ -1195,6 +1196,35 @@ export default function AppEntryPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  flexWrap: 'wrap',
+                  marginTop: 6,
+                  marginBottom: 2,
+                }}
+              >
+                <div
+                  style={{
+                    color: ENTRY_MINT,
+                    fontSize: '0.74rem',
+                    fontWeight: TYPE.weight.ultra,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {ar ? '\u0627\u062e\u062a\u0631 \u0645\u0633\u0627\u0631\u0643' : 'Choose your flow'}
+                </div>
+                <div style={{ color: ENTRY_TEXT_MUTED, fontSize: '0.82rem' }}>
+                  {ar
+                    ? '\u062b\u0644\u0627\u062b \u0628\u0648\u0627\u0628\u0627\u062a \u0648\u0627\u0636\u062d\u0629 \u062a\u0628\u062f\u0623 \u0645\u0646 \u0646\u0641\u0633 \u0627\u0644\u0634\u0628\u0643\u0629'
+                    : 'Three clear entry points into the same network'}
                 </div>
               </div>
 
@@ -1276,6 +1306,127 @@ export default function AppEntryPage() {
                     </button>
                   );
                 })}
+              </div>
+
+              <div
+                className="entry-route-band"
+                style={{
+                  ...panelStyle,
+                  marginTop: 14,
+                  padding: '18px 20px',
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1.2fr) minmax(260px, 0.95fr) auto',
+                  gap: 16,
+                  alignItems: 'center',
+                  background:
+                    'radial-gradient(circle at 12% 12%, rgba(25,231,187,0.12), transparent 30%), linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.02))',
+                }}
+              >
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      width: 'fit-content',
+                      padding: '8px 12px',
+                      borderRadius: 999,
+                      background: 'rgba(25,231,187,0.10)',
+                      border: `1px solid ${ENTRY_BORDER}`,
+                      color: ENTRY_ACCENT,
+                      fontSize: '0.74rem',
+                      fontWeight: TYPE.weight.ultra,
+                      letterSpacing: '0.11em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {ar
+                      ? '\u0627\u0642\u062a\u0635\u0627\u062f \u0627\u0644\u0645\u0633\u0627\u0631'
+                      : 'Route economics'}
+                  </div>
+                  <div
+                    style={{
+                      color: '#F7FCFF',
+                      fontFamily: LANDING_DISPLAY,
+                      fontSize: 'clamp(1.28rem, 2vw, 1.76rem)',
+                      lineHeight: 0.98,
+                      letterSpacing: '-0.05em',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {supplyTitle}
+                  </div>
+                  <div
+                    style={{
+                      color: ENTRY_TEXT_MUTED,
+                      fontSize: '0.88rem',
+                      lineHeight: 1.68,
+                      maxWidth: 620,
+                    }}
+                  >
+                    {supplyBody}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {supplyPills.map(pill => (
+                    <span
+                      key={pill}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: 999,
+                        border: `1px solid ${ENTRY_BORDER}`,
+                        background: 'rgba(220,255,248,0.04)',
+                        color: ENTRY_TEXT,
+                        fontSize: '0.78rem',
+                        fontWeight: TYPE.weight.black,
+                      }}
+                    >
+                      {pill}
+                    </span>
+                  ))}
+                </div>
+
+                <div
+                  className="entry-route-actions"
+                  style={{
+                    display: 'flex',
+                    gap: 12,
+                    flexWrap: 'wrap',
+                    justifyContent: 'flex-end',
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleLandingNavigate(buildPath('/app/offer-ride', true))}
+                    style={{
+                      ...primaryButtonStyle,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 10,
+                    }}
+                  >
+                    {ar
+                      ? '\u0623\u0646\u0634\u0626 \u0631\u062d\u0644\u062a\u0643'
+                      : 'Create ride'}
+                    <ArrowRight size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLandingNavigate(buildPath('/app/packages'))}
+                    style={{
+                      ...outlineButtonStyle,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    <Package size={16} />
+                    {ar
+                      ? '\u0627\u0639\u0631\u0641 \u0643\u064a\u0641 \u062a\u062d\u0645\u0644 \u0627\u0644\u0637\u0631\u0648\u062f'
+                      : 'Open packages'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

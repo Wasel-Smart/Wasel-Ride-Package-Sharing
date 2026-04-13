@@ -111,11 +111,11 @@ export function PrivacyConsentBanner() {
           }
           @media (min-width: 768px) {
             .wasel-consent-root {
-              justify-content: flex-start !important;
-              padding-inline: 20px !important;
+              justify-content: flex-end !important;
+              padding-inline: 18px !important;
             }
             .wasel-consent-card {
-              max-width: 360px !important;
+              max-width: 320px !important;
             }
           }
           @media (max-width: 639px) {
@@ -139,7 +139,7 @@ export function PrivacyConsentBanner() {
           className="wasel-consent-card"
           style={{
             width: '100%',
-            maxWidth: 560,
+            maxWidth: 360,
             background: 'var(--card, rgba(15,26,38,0.97))',
             border: '1px solid var(--border, rgba(244,198,81,0.18))',
             borderRadius: 20,
@@ -147,7 +147,7 @@ export function PrivacyConsentBanner() {
               'var(--wasel-shadow-lg, 0 24px 64px rgba(1,10,18,0.38))',
             backdropFilter: 'blur(22px)',
             WebkitBackdropFilter: 'blur(22px)',
-            padding: '18px 20px 16px',
+            padding: '15px 16px 14px',
             pointerEvents: 'auto',
           }}
         >
@@ -155,9 +155,9 @@ export function PrivacyConsentBanner() {
           <p
             style={{
               fontWeight: 800,
-              fontSize: '0.9rem',
+              fontSize: '0.84rem',
               color: 'var(--foreground, #F8EFD6)',
-              margin: '0 0 6px',
+              margin: '0 0 4px',
               lineHeight: 1.4,
             }}
           >
@@ -167,10 +167,10 @@ export function PrivacyConsentBanner() {
           {/* Body copy */}
           <p
             style={{
-              fontSize: '0.8rem',
+              fontSize: '0.74rem',
               color: 'var(--muted-foreground, rgba(228,214,180,0.82))',
-              margin: '0 0 14px',
-              lineHeight: 1.65,
+              margin: '0 0 12px',
+              lineHeight: 1.55,
             }}
           >
             {copy.body}{' '}
@@ -192,7 +192,7 @@ export function PrivacyConsentBanner() {
             className="wasel-consent-actions"
             style={{
               display: 'flex',
-              gap: 10,
+              gap: 8,
               flexWrap: 'wrap',
               justifyContent: ar ? 'flex-end' : 'flex-start',
             }}
@@ -201,15 +201,15 @@ export function PrivacyConsentBanner() {
               type="button"
               onClick={handleAccept}
               style={{
-                minHeight: 40,
-                padding: '0 22px',
+                minHeight: 36,
+                padding: '0 18px',
                 borderRadius: 12,
                 border: 'none',
                 background:
                   'linear-gradient(135deg, #DCFFF8 0%, var(--primary, #19E7BB) 44%, #48CFFF 100%)',
                 color: 'var(--primary-foreground, #041019)',
                 fontWeight: 800,
-                fontSize: '0.84rem',
+                fontSize: '0.78rem',
                 fontFamily: SHELL_FONT,
                 cursor: 'pointer',
                 transition: 'opacity 0.14s ease',
@@ -224,14 +224,14 @@ export function PrivacyConsentBanner() {
               type="button"
               onClick={handleDecline}
               style={{
-                minHeight: 40,
-                padding: '0 22px',
+                minHeight: 36,
+                padding: '0 18px',
                 borderRadius: 12,
                 border: '1px solid var(--border, rgba(244,198,81,0.18))',
                 background: 'transparent',
                 color: 'var(--foreground, #F8EFD6)',
                 fontWeight: 700,
-                fontSize: '0.84rem',
+                fontSize: '0.78rem',
                 fontFamily: SHELL_FONT,
                 cursor: 'pointer',
                 transition: 'background 0.14s ease',
