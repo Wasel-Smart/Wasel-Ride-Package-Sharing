@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
 
-const CARD =
-  'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02))';
-const BORD = 'rgba(157,232,255,0.18)';
+const CARD = 'var(--surface-strong)';
+const BORD = 'var(--border)';
 const FONT =
   "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
@@ -30,7 +29,7 @@ export function StatCard({ label, value, icon, color }: StatCardProps) {
         <span
           style={{
             fontSize: '0.68rem',
-            color: 'rgba(153,184,210,0.7)',
+            color: 'var(--text-secondary)',
             fontWeight: 600,
             letterSpacing: '0.07em',
             textTransform: 'uppercase',
@@ -44,7 +43,7 @@ export function StatCard({ label, value, icon, color }: StatCardProps) {
         style={{
           fontSize: '1.4rem',
           fontWeight: 900,
-          color: '#F5FBFF',
+          color: 'var(--text-primary)',
           fontFamily: FONT,
           lineHeight: 1.2,
         }}
@@ -67,7 +66,7 @@ export function Section({ title, children }: SectionProps) {
         style={{
           fontSize: '0.72rem',
           fontWeight: 700,
-          color: 'rgba(153,184,210,0.55)',
+          color: 'var(--text-muted)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           fontFamily: FONT,
@@ -119,7 +118,7 @@ export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
       }}
       onMouseEnter={(e) => {
         if (onClick) {
-          (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)';
+          (e.currentTarget as HTMLElement).style.background = 'var(--surface-muted)';
         }
       }}
       onMouseLeave={(e) => {
@@ -129,7 +128,7 @@ export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
       {icon && (
         <span
           style={{
-            color: danger ? '#EF4444' : 'rgba(153,184,210,0.6)',
+            color: danger ? 'var(--danger)' : 'var(--text-secondary)',
             fontSize: '1rem',
             flexShrink: 0,
           }}
@@ -142,7 +141,7 @@ export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
           style={{
             fontSize: '0.875rem',
             fontWeight: 500,
-            color: danger ? '#EF4444' : '#F5FBFF',
+            color: danger ? 'var(--danger)' : 'var(--text-primary)',
             fontFamily: FONT,
           }}
         >
@@ -152,7 +151,7 @@ export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
           <div
             style={{
               fontSize: '0.75rem',
-              color: 'rgba(153,184,210,0.6)',
+              color: 'var(--text-secondary)',
               fontFamily: FONT,
               marginTop: 2,
             }}
@@ -163,7 +162,7 @@ export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
       </div>
       {badge}
       {onClick && (
-        <ChevronRight size={14} color="rgba(153,184,210,0.4)" style={{ flexShrink: 0 }} />
+        <ChevronRight size={14} color="var(--text-muted)" style={{ flexShrink: 0 }} />
       )}
     </button>
   );
@@ -215,13 +214,13 @@ export interface InsightCardProps {
 export function InsightCard({ label, value, detail, color }: InsightCardProps) {
   return (
     <div style={{ background: CARD, border: `1px solid ${BORD}`, borderRadius: 14, padding: '16px 18px' }}>
-      <div style={{ fontSize: '0.68rem', color: 'rgba(153,184,210,0.62)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: FONT, marginBottom: 10 }}>
+      <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: FONT, marginBottom: 10 }}>
         {label}
       </div>
       <div style={{ fontSize: '1.25rem', fontWeight: 900, color, fontFamily: FONT, marginBottom: 6 }}>
         {value}
       </div>
-      <div style={{ fontSize: '0.76rem', color: 'rgba(153,184,210,0.75)', lineHeight: 1.5, fontFamily: FONT }}>
+      <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: 1.5, fontFamily: FONT }}>
         {detail}
       </div>
     </div>
@@ -257,7 +256,7 @@ export function QuickActionCard({
         transition: 'border-color 0.15s, transform 0.15s',
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(157,232,255,0.28)';
+        (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-strong)';
         (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
       }}
       onMouseLeave={(e) => {
@@ -267,12 +266,12 @@ export function QuickActionCard({
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <span style={{ color, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</span>
-        <ChevronRight size={14} color="rgba(153,184,210,0.45)" />
+        <ChevronRight size={14} color="var(--text-muted)" />
       </div>
-      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#F5FBFF', fontFamily: FONT, marginTop: 14 }}>
+      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', fontFamily: FONT, marginTop: 14 }}>
         {label}
       </div>
-      <div style={{ fontSize: '0.76rem', color: 'rgba(153,184,210,0.72)', lineHeight: 1.5, fontFamily: FONT, marginTop: 6 }}>
+      <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: 1.5, fontFamily: FONT, marginTop: 6 }}>
         {detail}
       </div>
     </button>

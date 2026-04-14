@@ -122,7 +122,7 @@ export default function WaselRoot() {
       className="wasel-app-theme"
       style={{
         minHeight: '100vh',
-        background: 'var(--wasel-shell-background, radial-gradient(circle at 16% 14%, rgba(101,225,255,0.12), transparent 24%), radial-gradient(circle at 82% 10%, rgba(25,231,187,0.08), transparent 20%), linear-gradient(180deg, #09131f 0%, #050c15 100%))',
+        background: 'var(--wasel-shell-background)',
         fontFamily: F,
         direction: ar ? 'rtl' : 'ltr',
       }}
@@ -135,7 +135,7 @@ export default function WaselRoot() {
         @keyframes spin { to { transform: rotate(360deg); } }
         * { box-sizing: border-box; }
         input, select, button, textarea { font-family: inherit; }
-        :focus-visible { outline: 2px solid var(--primary, #19E7BB); outline-offset: 2px; }
+        :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
       `}</style>
 
       {/* ── Sticky header ────────────────────────────────────────────── */}
@@ -189,7 +189,6 @@ export default function WaselRoot() {
           >
             <WaselLogo
               size={36}
-              theme="light"
               variant="full"
               showWordmark
               subtitle=""
@@ -226,7 +225,7 @@ export default function WaselRoot() {
                 borderRadius: R.full,
                 background: 'var(--wasel-app-nav-surface)',
                 border: '1px solid var(--wasel-app-border)',
-                boxShadow: '0 18px 40px rgba(16,50,95,0.08)',
+                boxShadow: 'var(--wasel-shadow-sm)',
               }}
             >
               {primaryGroups.map((group, index) => {
@@ -262,7 +261,7 @@ export default function WaselRoot() {
                           ? 'var(--wasel-app-nav-active-bg)'
                           : 'transparent',
                         border: `1px solid ${isEmphasized ? 'var(--wasel-app-nav-active-border)' : 'transparent'}`,
-                        boxShadow: isEmphasized ? '0 18px 36px rgba(15,115,255,0.12)' : 'none',
+                        boxShadow: isEmphasized ? 'var(--wasel-shadow-teal)' : 'none',
                         cursor: 'pointer',
                         fontSize: '0.78rem',
                         fontWeight: isEmphasized ? 700 : 600,
@@ -384,10 +383,10 @@ export default function WaselRoot() {
                         borderRadius: R.full,
                         background:
                           unreadCount > 9
-                            ? 'linear-gradient(135deg, #FF7A84, #FF646A)'
-                            : '#FF646A',
-                        border: '1.5px solid rgba(8,15,24,0.95)',
-                        color: '#fff',
+                            ? 'linear-gradient(135deg, var(--danger), color-mix(in srgb, var(--danger) 82%, white))'
+                            : 'var(--danger)',
+                        border: '1.5px solid var(--surface-glass)',
+                        color: 'var(--bg-secondary)',
                         fontSize: unreadCount > 9 ? '0.56rem' : 0,
                         fontWeight: 800,
                         display: 'flex',
@@ -439,8 +438,8 @@ export default function WaselRoot() {
                     fontWeight: 800,
                     letterSpacing: '-0.01em',
                     background: 'var(--wasel-app-button-primary)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    color: '#081520',
+                    border: '1px solid rgb(255 255 255 / 0.12)',
+                    color: 'var(--text-inverse)',
                     fontFamily: F,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
@@ -540,7 +539,7 @@ export default function WaselRoot() {
             inset: 0,
             pointerEvents: 'none',
             background:
-              'radial-gradient(circle at top center, rgba(101,225,255,0.08), transparent 30%), radial-gradient(circle at 80% 20%, rgba(25,231,187,0.08), transparent 24%)',
+              'radial-gradient(circle at top center, rgb(var(--accent-secondary-rgb) / 0.08), transparent 30%), radial-gradient(circle at 80% 20%, rgb(var(--accent-rgb) / 0.08), transparent 24%)',
             zIndex: -1,
           }}
         />

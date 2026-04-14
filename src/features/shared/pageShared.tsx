@@ -95,7 +95,7 @@ export function Protected({ children }: { children: ReactNode }) {
       >
         <div style={authPanelStyle()}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
-            <WaselLogo size={38} theme="light" variant="full" showWordmark={false} />
+            <WaselLogo size={38} variant="full" showWordmark={false} />
           </div>
           <div
             style={{
@@ -137,7 +137,7 @@ export function Protected({ children }: { children: ReactNode }) {
       >
         <div role="status" aria-live="polite" style={authPanelStyle()}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
-            <WaselLogo size={38} theme="light" variant="full" showWordmark={false} />
+            <WaselLogo size={38} variant="full" showWordmark={false} />
           </div>
           <div
             style={{

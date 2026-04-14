@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -14,6 +15,7 @@ import {
   getSystemTheme,
   persistThemePreference,
   resolveThemePreference,
+  setThemeTransitionState,
   sanitizeThemePreference,
   type ResolvedTheme,
   type ThemePreference,
@@ -45,12 +47,22 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     resolveThemePreference(getStoredThemePreference()),
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const nextResolved = resolveThemePreference(theme);
     setResolvedTheme(nextResolved);
     persistThemePreference(theme);
     applyThemeToDocument(nextResolved, theme);
   }, [theme]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setThemeTransitionState(true);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {

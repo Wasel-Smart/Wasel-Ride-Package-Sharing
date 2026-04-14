@@ -28,11 +28,11 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useNotifications } from '../../hooks/useNotifications';
 
-const BG       = 'rgba(5,17,30,0.97)';
+const BG       = 'var(--surface-glass)';
 const CYAN     = '#47B7E6';
 const GOLD     = '#A8D614';
-const INACTIVE = 'rgba(142,178,210,0.50)';
-const BORDER   = 'rgba(71,183,230,0.13)';
+const INACTIVE = 'var(--text-muted)';
+const BORDER   = 'var(--border)';
 const F        = "'Plus Jakarta Sans','Cairo','Tajawal',sans-serif";
 
 /* ─── Haptic ──────────────────────────────────────────────────────────────── */
@@ -41,7 +41,7 @@ function haptic(pattern: number | number[]) {
 }
 
 /* ─── Badge dot ───────────────────────────────────────────────────────────── */
-function BadgeDot({ count, color = '#FF646A' }: { count?: number; color?: string }) {
+function BadgeDot({ count, color = 'var(--danger)' }: { count?: number; color?: string }) {
   if (!count && count !== 0) return null;
   if (count === 0) return null;
   return (
@@ -56,13 +56,13 @@ function BadgeDot({ count, color = '#FF646A' }: { count?: number; color?: string
         padding: count > 9 ? '0 3px' : 0,
         borderRadius: 999,
         background: color,
-        border: '1.5px solid rgba(5,17,30,0.97)',
+        border: '1.5px solid var(--surface-glass)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: 9,
         fontWeight: 800,
-        color: '#fff',
+        color: 'var(--bg-secondary)',
         fontFamily: F,
       }}
     >
@@ -81,7 +81,7 @@ function LivePulse() {
         style={{
           width: 8, height: 8, borderRadius: 4,
           background: GOLD,
-          border: '1.5px solid rgba(5,17,30,0.97)',
+          border: '1.5px solid var(--surface-glass)',
         }}
       />
     </div>
@@ -168,9 +168,9 @@ export function WaselMobileBottomNav({ language: langProp, showFAB = true }: Was
             width: 52,
             height: 52,
             borderRadius: 18,
-            background: `linear-gradient(135deg, ${CYAN}, #1597FF)`,
-            border: '2px solid rgba(255,255,255,0.18)',
-            boxShadow: `0 8px 28px rgba(71,183,230,0.5), 0 2px 8px rgba(0,0,0,0.4)`,
+            background: 'var(--theme-gradient-primary)',
+            border: '2px solid rgb(255 255 255 / 0.18)',
+            boxShadow: 'var(--wasel-shadow-teal)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -178,7 +178,7 @@ export function WaselMobileBottomNav({ language: langProp, showFAB = true }: Was
             WebkitTapHighlightColor: 'transparent',
           }}
         >
-          <Plus size={22} color="#032033" strokeWidth={2.8} />
+          <Plus size={22} color="var(--text-inverse)" strokeWidth={2.8} />
         </motion.button>
       )}
 
@@ -195,7 +195,7 @@ export function WaselMobileBottomNav({ language: langProp, showFAB = true }: Was
           backdropFilter: 'blur(32px)',
           WebkitBackdropFilter: 'blur(32px)',
           borderTop: `1px solid ${BORDER}`,
-          boxShadow: '0 -12px 40px rgba(0,8,20,0.36), 0 -1px 0 rgba(93,150,210,0.07)',
+          boxShadow: 'var(--wasel-shadow-lg)',
           paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))',
           flexDirection: 'row',
           justifyContent: 'space-around',
@@ -263,8 +263,8 @@ export function WaselMobileBottomNav({ language: langProp, showFAB = true }: Was
                       inset: -10,
                       borderRadius: 999,
                       background: item.accent === 'gold'
-                        ? 'radial-gradient(circle, rgba(168,214,20,0.22), transparent)'
-                        : 'radial-gradient(circle, rgba(71,183,230,0.24), transparent)',
+                        ? 'radial-gradient(circle, rgb(var(--warning-rgb) / 0.22), transparent)'
+                        : 'radial-gradient(circle, rgb(var(--accent-secondary-rgb) / 0.24), transparent)',
                       pointerEvents: 'none',
                     }}
                   />

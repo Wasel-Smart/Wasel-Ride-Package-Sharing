@@ -11,7 +11,7 @@ import { useLocalAuth } from '../contexts/LocalAuth';
 
 const CYAN  = '#19E7BB';
 const BLUE  = '#65E1FF';
-const INACTIVE = 'rgba(160,188,196,0.52)';
+const INACTIVE = 'var(--text-muted)';
 const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 const ICONS = {
@@ -68,13 +68,11 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
           position: 'fixed',
           bottom: 0, left: 0, right: 0,
           zIndex: 600,
-          background:
-            'linear-gradient(180deg, rgba(9,15,26,0.98), rgba(5,9,18,0.99))',
+          background: 'var(--surface-glass)',
           backdropFilter: 'blur(32px)',
           WebkitBackdropFilter: 'blur(32px)',
-          borderTop: '1px solid rgba(25,231,187,0.12)',
-          boxShadow:
-            '0 -16px 48px rgba(0,0,0,0.40), 0 -1px 0 rgba(25,231,187,0.07)',
+          borderTop: '1px solid var(--border)',
+          boxShadow: 'var(--wasel-shadow-lg)',
           paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))',
           flexDirection: 'row',
           justifyContent: 'space-around',

@@ -6,33 +6,33 @@
 
 export const WaselColors = {
   /* Backgrounds */
-  bg:         'var(--wasel-app-hero)',
-  surface:    'rgba(8, 19, 34, 0.9)',
+  bg:         'var(--bg-primary)',
+  surface:    'var(--surface-soft)',
   card:       'var(--wasel-service-card)',
-  cardSolid:  'rgba(8, 19, 34, 0.92)',
+  cardSolid:  'var(--surface-glass)',
   card2:      'var(--wasel-service-card-2)',
 
   /* Borders */
   border:     'var(--wasel-service-border)',
   borderHov:  'var(--wasel-service-border-strong)',
-  borderGlow: 'rgba(101,225,255,0.28)',
-  borderDark: 'rgba(5,11,26,0.72)',
+  borderGlow: 'rgb(var(--accent-secondary-rgb) / 0.28)',
+  borderDark: 'color-mix(in srgb, var(--bg-primary) 72%, transparent)',
 
   /* Brand palette */
-  cyan:       'var(--wasel-app-blue)',
-  cyanBright: 'var(--wasel-app-blue-strong)',
-  cyanDark:   'var(--wasel-app-teal)',
+  cyan:       '#65e1ff',
+  cyanBright: '#9de8ff',
+  cyanDark:   '#19e7bb',
   cyanDim:    'rgba(101,225,255,0.12)',
   cyanGlow:   'rgba(101,225,255,0.20)',
-  teal:       'var(--wasel-app-teal)',
-  blue:       'var(--wasel-app-blue-strong)',
+  teal:       '#19e7bb',
+  blue:       '#9de8ff',
   blueDim:    'rgba(157,232,255,0.12)',
-  green:      'var(--wasel-app-teal)',
+  green:      '#19e7bb',
   greenDim:   'rgba(25,231,187,0.12)',
-  gold:       'var(--wasel-app-sky)',
+  gold:       '#d8fbff',
   goldDim:    'rgba(216,251,255,0.12)',
   orange:     '#ff9d6c',
-  navy:       '#0d1e30',
+  navy:       'var(--bg-primary)',
   purple:     '#b4d7e8',
   purpleDim:  'rgba(180,215,232,0.12)',
   error:      '#ff5c63',
@@ -45,19 +45,19 @@ export const WaselColors = {
   textSub:    'var(--wasel-service-sub)',
   textMuted:  'var(--wasel-service-muted)',
 
-  white:      '#ffffff',
-  black:      '#000000',
+  white:      'var(--bg-secondary)',
+  black:      'var(--text-inverse)',
 } as const;
 
 export const WaselGradients = {
   primary: 'var(--wasel-app-button-primary)',
-  cyan:    'linear-gradient(135deg, #f5fbff 0%, #bfefff 52%, #65e1ff 100%)',
-  teal:    'linear-gradient(135deg, #efffff 0%, #9de8ff 50%, #19e7bb 100%)',
+  cyan:    'var(--theme-gradient-primary)',
+  teal:    'var(--theme-gradient-accent)',
   card:    'var(--wasel-service-card)',
   hero:    'var(--wasel-service-head-bg)',
-  glow:    'radial-gradient(circle, rgba(101,225,255,0.20), transparent)',
-  gold:    'linear-gradient(135deg, #f5fbff 0%, #d8fbff 48%, #9de8ff 100%)',
-  green:   'linear-gradient(135deg, #eaffff 0%, #9de8ff 42%, #19e7bb 100%)',
+  glow:    'radial-gradient(circle, rgb(var(--accent-secondary-rgb) / 0.20), transparent)',
+  gold:    'var(--theme-gradient-primary)',
+  green:   'var(--theme-gradient-accent)',
   navy:    'var(--wasel-service-bg)',
   signal:  'var(--wasel-app-button-primary)',
   hero2:   'var(--wasel-service-head-bg)',
@@ -72,10 +72,10 @@ export const GRAD_SIGNAL = WaselGradients.signal;
 export const GRAD_HERO   = WaselGradients.hero2;
 
 export const WaselShadows = {
-  sm:   '0 8px 20px rgba(0,0,0,0.30)',
-  md:   '0 18px 48px rgba(0,0,0,0.40)',
-  lg:   '0 32px 80px rgba(0,0,0,0.48)',
-  xl:   '0 48px 110px rgba(0,0,0,0.56)',
+  sm:   'var(--wasel-shadow-sm)',
+  md:   'var(--wasel-shadow-md)',
+  lg:   'var(--wasel-shadow-lg)',
+  xl:   'var(--wasel-shadow-xl)',
   glow: '0 18px 50px rgba(25,231,187,0.20)',
   blue: '0 18px 50px rgba(101,225,255,0.16)',
 } as const;
@@ -142,7 +142,7 @@ export const WaselBreakpoints = {
 
 /** Glass morphism helper */
 export const glassmorphism = (opacity = 0.84) => ({
-  background: `rgba(9,17,30,${opacity})`,
+  background: `color-mix(in srgb, var(--surface-glass) ${Math.round(opacity * 100)}%, transparent)`,
   backdropFilter: 'blur(22px)',
   WebkitBackdropFilter: 'blur(22px)',
   border: `1px solid ${WaselColors.border}`,
@@ -150,7 +150,7 @@ export const glassmorphism = (opacity = 0.84) => ({
 
 /** Glow effect helper */
 export const glowEffect = (color = WaselColors.cyan) => ({
-  boxShadow: `0 18px 50px ${color}38`,
+  boxShadow: `0 18px 50px color-mix(in srgb, ${color} 22%, transparent)`,
 } as const);
 
 /** Standard card style */

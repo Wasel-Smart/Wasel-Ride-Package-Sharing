@@ -1,17 +1,18 @@
 import type { CSSProperties } from 'react';
 
+import { useTheme } from '../../contexts/ThemeContext';
 import { TYPE } from '../../utils/wasel-ds';
 import { ExactLogoMark } from './ExactLogoMark';
 
-const LOGO_ACCENT = '#A9E3FF';
-const LOGO_ACCENT_DARK = '#2F617C';
-const LOGO_ACCENT_SOFT = 'rgba(169, 227, 255, 0.72)';
-const LOGO_ACCENT_DARK_SOFT = 'rgba(47, 97, 124, 0.72)';
+const LOGO_ACCENT = 'var(--accent-secondary)';
+const LOGO_ACCENT_DARK = 'color-mix(in srgb, var(--text-primary) 84%, var(--accent-secondary) 16%)';
+const LOGO_ACCENT_SOFT = 'rgb(var(--accent-secondary-rgb) / 0.72)';
+const LOGO_ACCENT_DARK_SOFT = 'color-mix(in srgb, var(--text-primary) 72%, transparent)';
 
 interface WaselLogoProps {
   size?: number;
   showWordmark?: boolean;
-  theme?: 'dark' | 'light';
+  theme?: 'dark' | 'light' | 'auto';
   style?: CSSProperties;
   variant?: 'full' | 'compact';
   subtitle?: string;
@@ -72,14 +73,16 @@ function LogoImage({
 export function WaselLogo({
   size = 38,
   showWordmark = true,
-  theme = 'light',
+  theme = 'auto',
   style,
   variant = 'full',
   subtitle = 'Mobility OS',
   markAsset = 'default',
   animated = false,
 }: WaselLogoProps) {
-  const onDarkSurface = theme === 'light';
+  const { resolvedTheme } = useTheme();
+  const effectiveTheme = theme === 'auto' ? (resolvedTheme === 'light' ? 'dark' : 'light') : theme;
+  const onDarkSurface = effectiveTheme === 'light';
   const mark = getLogoMark(markAsset);
   const markHeight = size;
   const markWidth = Math.max(1, Math.round(size * mark.aspectRatio));

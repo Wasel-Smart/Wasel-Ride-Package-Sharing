@@ -3,7 +3,7 @@
   --home-primary-rgb: 25, 231, 187;
   --home-accent: #65e1ff;
   --home-accent-rgb: 101, 225, 255;
-  --home-soft: #dcfff8;
+  --home-soft: var(--bg-secondary);
   --home-soft-rgb: 220, 255, 248;
   --home-button-brand: #a9e3ff;
   --home-button-brand-rgb: 169, 227, 255;
@@ -13,6 +13,7 @@
   position: relative;
   min-height: 100vh;
   isolation: isolate;
+  color: var(--text-primary);
 }
 
 /* Subtle grid texture */

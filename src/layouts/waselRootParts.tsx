@@ -17,7 +17,7 @@ import {
 const PANEL_BG = 'var(--wasel-service-card)';
 const PANEL_BORDER = 'var(--wasel-service-border)';
 const PANEL_MUTED = 'var(--wasel-app-muted)';
-const PANEL_SOFT = 'rgba(255,255,255,0.05)';
+const PANEL_SOFT = 'var(--surface-muted)';
 const PANEL_SHADOW = 'var(--wasel-shadow-lg)';
 
 export function Badge({
@@ -46,9 +46,9 @@ export function Badge({
         letterSpacing: '0.08em',
         padding: '2px 6px',
         borderRadius: R.full,
-        background: `${col}18`,
+        background: `color-mix(in srgb, ${col} 12%, transparent)`,
         color: col,
-        border: `1px solid ${col}30`,
+        border: `1px solid color-mix(in srgb, ${col} 22%, transparent)`,
         flexShrink: 0,
       }}
     >
@@ -74,7 +74,7 @@ export function AppPill({ ar }: { ar: boolean }) {
         fontWeight: 700,
         fontFamily: F,
         whiteSpace: 'nowrap',
-        boxShadow: '0 18px 42px rgba(1,10,18,0.18)',
+        boxShadow: 'var(--wasel-shadow-sm)',
       }}
     >
       <span

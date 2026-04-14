@@ -8,29 +8,29 @@
  */
 
 export const C = {
-  bg: 'var(--background)',
-  bgAlt: 'var(--wasel-surface-1)',
-  bgDeep: 'var(--wasel-surface-0)',
-  card: 'var(--wasel-panel-soft)',
+  bg: 'var(--bg-primary)',
+  bgAlt: 'var(--bg-tertiary)',
+  bgDeep: 'var(--bg-primary)',
+  card: 'var(--surface-soft)',
   cardSolid: 'var(--card)',
-  card2: 'var(--wasel-surface-3)',
-  panel: 'var(--wasel-panel-muted)',
-  elevated: 'var(--wasel-panel-muted-strong)',
+  card2: 'var(--service-card-strong)',
+  panel: 'var(--surface-muted)',
+  elevated: 'var(--surface-muted-strong)',
 
   navy: 'var(--wasel-app-hero)',
   navyMid: '#0b2236',
   navyLight: '#18354d',
 
-  cyan: 'var(--wasel-app-blue)',
-  cyanDark: 'var(--wasel-app-teal)',
+  cyan: '#65e1ff',
+  cyanDark: '#19e7bb',
   cyanDim: 'rgba(101,225,255,0.16)',
   cyanGlow: 'rgba(101,225,255,0.24)',
-  blue: 'var(--wasel-app-blue-strong)',
-  blueLight: 'var(--wasel-app-sky)',
+  blue: '#9de8ff',
+  blueLight: '#d8fbff',
   blueDim: 'rgba(157,232,255,0.18)',
-  gold: 'var(--wasel-app-sky)',
+  gold: '#d8fbff',
   goldDim: 'rgba(216,251,255,0.18)',
-  green: 'var(--wasel-app-teal)',
+  green: '#19e7bb',
   greenDim: 'rgba(25,231,187,0.18)',
   purple: '#b4d7e8',
   purpleDim: 'rgba(180,215,232,0.16)',
@@ -43,8 +43,8 @@ export const C = {
   textDim: 'var(--wasel-copy-soft)',
 
   border: 'var(--border)',
-  borderHov: 'rgba(var(--wasel-border-rgb), 0.34)',
-  borderFaint: 'rgba(var(--wasel-border-rgb), 0.10)',
+  borderHov: 'var(--border-strong)',
+  borderFaint: 'var(--surface-divider)',
 
   error: '#FF646A',
   errorDim: 'rgba(255,100,106,0.12)',
@@ -52,8 +52,8 @@ export const C = {
   success: '#19E7BB',
   info: '#65E1FF',
 
-  overlay: 'var(--wasel-overlay)',
-  glass: 'var(--wasel-glass-xl)',
+  overlay: 'var(--bg-overlay)',
+  glass: 'var(--surface-glass)',
 } as const;
 
 export const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
@@ -143,14 +143,14 @@ export const SH = {
   blue: '0 18px 50px rgba(157,232,255,0.2)',
   green: '0 18px 50px rgba(25,231,187,0.18)',
   gold: '0 18px 50px rgba(216,251,255,0.22)',
-  inner: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+  inner: 'inset 0 1px 0 rgb(255 255 255 / 0.05)',
 } as const;
 
 export const GRAD = 'var(--wasel-app-button-primary)';
-export const GRAD_GOLD = 'linear-gradient(135deg, #f5fbff 0%, #d8fbff 50%, #9de8ff 100%)';
-export const GRAD_GREEN = 'linear-gradient(135deg, #efffff 0%, #9de8ff 48%, #19e7bb 100%)';
+export const GRAD_GOLD = 'var(--theme-gradient-primary)';
+export const GRAD_GREEN = 'var(--theme-gradient-accent)';
 export const GRAD_NAVY = 'var(--wasel-service-head-bg)';
-export const GRAD_PURPLE = 'linear-gradient(135deg, #9de8ff 0%, #d8fbff 100%)';
+export const GRAD_PURPLE = 'var(--theme-gradient-primary)';
 export const GRAD_HERO = 'var(--wasel-service-head-bg)';
 export const GRAD_SIGNAL = 'var(--wasel-app-button-primary)';
 export const GRAD_AURORA =
@@ -226,7 +226,7 @@ export function solidCard({
 }
 
 export function focusRing(color = C.cyan): string {
-  return `0 0 0 3px ${color}2E`;
+  return `0 0 0 3px color-mix(in srgb, ${color} 18%, transparent)`;
 }
 
 export function statusColor(status: 'success' | 'warning' | 'error' | 'info' | 'neutral'): string {
@@ -246,8 +246,8 @@ export function pillStyle(color: string): Record<string, string> {
     gap: '4px',
     padding: '3px 10px',
     borderRadius: R.full,
-    background: `${color}16`,
-    border: `1px solid ${color}30`,
+    background: `color-mix(in srgb, ${color} 12%, transparent)`,
+    border: `1px solid color-mix(in srgb, ${color} 22%, transparent)`,
     fontSize: TYPE.size.xs,
     fontWeight: String(TYPE.weight.bold),
     color,

@@ -3,10 +3,61 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#040c1a" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#edf8f6" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="application-name" content="Wasel" />
     <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
+    <script>
+      (() => {
+        const STORAGE_KEY = 'wasel-theme';
+        const LEGACY_KEY = 'wasel.settings.display';
+        const FALLBACK_THEME = 'light';
+        const LIGHT_THEME_COLOR = '#edf8f6';
+        const DARK_THEME_COLOR = '#04091a';
+
+        const sanitize = value =>
+          value === 'light' || value === 'dark' || value === 'system' ? value : FALLBACK_THEME;
+
+        let preference = FALLBACK_THEME;
+
+        try {
+          const stored = window.localStorage.getItem(STORAGE_KEY);
+          if (stored) {
+            preference = sanitize(stored);
+          } else {
+            const legacy = window.localStorage.getItem(LEGACY_KEY);
+            if (legacy) {
+              preference = sanitize(JSON.parse(legacy)?.theme);
+            }
+          }
+        } catch {
+          preference = FALLBACK_THEME;
+        }
+
+        const resolved =
+          preference === 'system'
+            ? window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light'
+            : preference;
+
+        const root = document.documentElement;
+        root.classList.toggle('light', resolved === 'light');
+        root.classList.toggle('dark', resolved === 'dark');
+        root.dataset.theme = resolved;
+        root.dataset.themePreference = preference;
+        root.dataset.themeReady = 'false';
+        root.style.colorScheme = resolved;
+
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeMeta) {
+          themeMeta.setAttribute(
+            'content',
+            resolved === 'light' ? LIGHT_THEME_COLOR : DARK_THEME_COLOR,
+          );
+        }
+      })();
+    </script>
 
     <title>Wasel | Shared Routes That Reduce Travel Cost</title>
     <meta

@@ -6,16 +6,16 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'border border-[rgba(255,255,255,0.18)] bg-[linear-gradient(135deg,_#F3FBFF_0%,_#BFEFFF_38%,_#65E1FF_100%)] text-[#041424] shadow-[0_20px_48px_rgba(101,225,255,0.24)] hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_28px_60px_rgba(101,225,255,0.32)]',
+          'border border-white/15 bg-[var(--theme-gradient-primary)] text-[var(--text-inverse)] shadow-[var(--wasel-shadow-teal)] hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[var(--wasel-shadow-blue)]',
         destructive:
           'bg-destructive text-white shadow-[0_18px_36px_rgba(255,100,106,0.22)] hover:brightness-110 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
         outline:
-          'border border-[rgba(157,232,255,0.2)] bg-[rgba(255,255,255,0.06)] text-foreground backdrop-blur-xl hover:border-[rgba(157,232,255,0.34)] hover:bg-[rgba(255,255,255,0.1)] dark:bg-[rgba(255,255,255,0.06)] dark:hover:bg-[rgba(255,255,255,0.1)]',
+          'border border-[var(--border)] bg-[var(--surface-muted)] text-foreground backdrop-blur-xl hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted-strong)]',
         secondary:
-          'border border-white/10 bg-[rgba(255,255,255,0.06)] text-secondary-foreground backdrop-blur-xl hover:bg-[rgba(255,255,255,0.1)] hover:border-[rgba(157,232,255,0.24)]',
+          'border border-white/10 bg-[var(--surface-muted)] text-secondary-foreground backdrop-blur-xl hover:bg-[var(--surface-muted-strong)] hover:border-[var(--border-strong)]',
         ghost:
-          'text-muted-foreground hover:bg-white/6 hover:text-foreground dark:hover:bg-white/8',
-        link: 'text-[#9DE8FF] underline-offset-4 hover:underline',
+          'text-muted-foreground hover:bg-[var(--surface-muted)] hover:text-foreground',
+        link: 'text-[var(--accent-secondary)] underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-11 px-5 py-2 has-[>svg]:px-4',
