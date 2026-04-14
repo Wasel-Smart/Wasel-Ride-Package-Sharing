@@ -17,12 +17,24 @@ let mockWhatsAppUrl = 'https://wa.me/962790000000?text=Hi%20Wasel';
 vi.mock('motion/react', () => ({
   AnimatePresence: ({ children }: PropsWithChildren) => <>{children}</>,
   motion: {
-    div: ({ children, whileHover: _whileHover, whileTap: _whileTap, ...props }: PropsWithChildren<Record<string, unknown>>) => (
-      <div {...props}>{children}</div>
-    ),
-    button: ({ children, whileHover: _whileHover, whileTap: _whileTap, ...props }: PropsWithChildren<Record<string, unknown>>) => (
-      <button {...props}>{children}</button>
-    ),
+    div: ({
+      children,
+      whileHover: _whileHover,
+      whileTap: _whileTap,
+      ...props
+    }: PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
+    button: ({
+      children,
+      whileHover: _whileHover,
+      whileTap: _whileTap,
+      ...props
+    }: PropsWithChildren<Record<string, unknown>>) => <button {...props}>{children}</button>,
+    form: ({
+      children,
+      whileHover: _whileHover,
+      whileTap: _whileTap,
+      ...props
+    }: PropsWithChildren<Record<string, unknown>>) => <form {...props}>{children}</form>,
   },
 }));
 
@@ -91,11 +103,13 @@ vi.mock('@/components/wasel-ui/WaselButton', () => ({
     loading: _loading,
     iconEnd: _iconEnd,
     ...props
-  }: PropsWithChildren<{
-    type?: 'button' | 'submit' | 'reset';
-    onClick?: () => void;
-    disabled?: boolean;
-  } & Record<string, unknown>>) => (
+  }: PropsWithChildren<
+    {
+      type?: 'button' | 'submit' | 'reset';
+      onClick?: () => void;
+      disabled?: boolean;
+    } & Record<string, unknown>
+  >) => (
     <button type={type} onClick={onClick} disabled={disabled} {...props}>
       {children}
     </button>
@@ -126,7 +140,7 @@ vi.mock('@/components/wasel-ui/WaselInput', () => ({
         type={type}
         value={value}
         placeholder={placeholder}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={event => onChange(event.target.value)}
       />
     </label>
   ),
@@ -154,13 +168,15 @@ describe('WaselAuth', () => {
     render(<WaselAuth />);
 
     fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Laith Nassar' } });
-    fireEvent.change(screen.getByLabelText('Email address'), { target: { value: 'laith@example.com' } });
+    fireEvent.change(screen.getByLabelText('Email address'), {
+      target: { value: 'laith@example.com' },
+    });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: '12345678' } });
     fireEvent.change(screen.getByLabelText('Phone number'), { target: { value: '+962792084333' } });
     fireEvent.click(screen.getByRole('button', { name: 'Submit sign up' }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Choose a stronger password/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Choose a stronger password/i).length).toBeGreaterThan(0);
     });
     expect(mockRegister).not.toHaveBeenCalled();
   });
@@ -169,7 +185,9 @@ describe('WaselAuth', () => {
     render(<WaselAuth />);
 
     fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Laith Nassar' } });
-    fireEvent.change(screen.getByLabelText('Email address'), { target: { value: 'laith@example.com' } });
+    fireEvent.change(screen.getByLabelText('Email address'), {
+      target: { value: 'laith@example.com' },
+    });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'StrongPass1!' } });
     fireEvent.click(screen.getByRole('button', { name: 'Submit sign up' }));
 
@@ -187,7 +205,9 @@ describe('WaselAuth', () => {
     render(<WaselAuth />);
 
     fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Laith Nassar' } });
-    fireEvent.change(screen.getByLabelText('Email address'), { target: { value: 'laith@example.com' } });
+    fireEvent.change(screen.getByLabelText('Email address'), {
+      target: { value: 'laith@example.com' },
+    });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'StrongPass1!' } });
     fireEvent.change(screen.getByLabelText('Phone number'), { target: { value: '+962792084333' } });
     fireEvent.click(screen.getByRole('button', { name: 'Submit sign up' }));

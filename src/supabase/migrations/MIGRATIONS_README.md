@@ -62,6 +62,7 @@ Historical files that predate the current standards remain frozen and explicitly
 | 28 | `20260409120000_production_security_and_queue_hardening.sql` | security | Move 2FA secrets into a private schema, null legacy public secret columns, and add atomic communication queue claiming | Ready |
 | 29 | `20260409153000_runtime_performance_indexes.sql` | performance | Add expression indexes for auth-linked runtime and RLS lookup paths | Ready |
 | 30 | `20260410110000_reassert_auth_signup_user_sync.sql` | security | Reassert canonical auth.users to public.users sync and recover missing phone numbers for signup-triggered users | Ready |
+| 31 | `20260413120000_wallet_fintech_rebuild.sql` | schema | Rebuild the wallet fintech ledger, escrow, payout, subscription, and step-up runtime tables | Ready |
 
 ## Rollout Sequence
 
@@ -89,6 +90,7 @@ Apply the rollout set in this exact order for production cutover projects:
 18. `20260409120000_production_security_and_queue_hardening.sql`
 19. `20260409153000_runtime_performance_indexes.sql`
 20. `20260410110000_reassert_auth_signup_user_sync.sql`
+21. `20260413120000_wallet_fintech_rebuild.sql`
 
 ### Seeds
 
