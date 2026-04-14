@@ -119,6 +119,7 @@ export default function WaselRoot() {
 
   return (
     <div
+      className="wasel-app-theme"
       style={{
         minHeight: '100vh',
         background: 'var(--wasel-shell-background, radial-gradient(circle at 16% 14%, rgba(101,225,255,0.12), transparent 24%), radial-gradient(circle at 82% 10%, rgba(25,231,187,0.08), transparent 20%), linear-gradient(180deg, #09131f 0%, #050c15 100%))',
@@ -223,10 +224,9 @@ export default function WaselRoot() {
                 minWidth: 0,
                 padding: 5,
                 borderRadius: R.full,
-                background:
-                  'linear-gradient(180deg, rgba(220,255,248,0.05), rgba(220,255,248,0.015)), rgba(11,19,29,0.74)',
-                border: '1px solid rgba(25,231,187,0.12)',
-                boxShadow: 'inset 0 1px 0 rgba(220,255,248,0.04)',
+                background: 'var(--wasel-app-nav-surface)',
+                border: '1px solid var(--wasel-app-border)',
+                boxShadow: '0 18px 40px rgba(16,50,95,0.08)',
               }}
             >
               {primaryGroups.map((group, index) => {
@@ -259,14 +259,14 @@ export default function WaselRoot() {
                         padding: '0 14px',
                         borderRadius: R.full,
                         background: isEmphasized
-                          ? 'linear-gradient(135deg, rgba(220,255,248,0.14), rgba(25,231,187,0.16) 58%, rgba(72,207,255,0.14))'
+                          ? 'var(--wasel-app-nav-active-bg)'
                           : 'transparent',
-                        border: `1px solid ${isEmphasized ? 'rgba(25,231,187,0.24)' : 'transparent'}`,
-                        boxShadow: isEmphasized ? '0 12px 28px rgba(25,231,187,0.12)' : 'none',
+                        border: `1px solid ${isEmphasized ? 'var(--wasel-app-nav-active-border)' : 'transparent'}`,
+                        boxShadow: isEmphasized ? '0 18px 36px rgba(15,115,255,0.12)' : 'none',
                         cursor: 'pointer',
                         fontSize: '0.78rem',
                         fontWeight: isEmphasized ? 700 : 600,
-                        color: isEmphasized ? C.text : 'rgba(233,245,247,0.68)',
+                        color: isEmphasized ? 'var(--wasel-app-ink)' : 'var(--wasel-app-muted)',
                         fontFamily: F,
                         letterSpacing: '-0.01em',
                         transition: 'all 0.16s ease',
@@ -341,33 +341,33 @@ export default function WaselRoot() {
                   onClick={() => navigate('/notifications')}
                   title={notificationsLabel}
                   aria-label={unreadNotificationsLabel}
-                  style={{
-                    position: 'relative',
-                    width: 38,
-                    height: 38,
-                    borderRadius: R.md,
-                    background: unreadCount > 0
-                      ? 'var(--wasel-header-icon-hover, rgba(25,231,187,0.12))'
-                      : 'var(--wasel-header-icon-bg, rgba(220,255,248,0.05))',
-                    border: `1px solid ${unreadCount > 0 ? 'rgba(25,231,187,0.28)' : 'var(--border, rgba(25,231,187,0.16))'}`,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
+                    style={{
+                      position: 'relative',
+                      width: 38,
+                      height: 38,
+                      borderRadius: R.md,
+                      background: unreadCount > 0
+                        ? 'var(--wasel-header-icon-hover)'
+                        : 'var(--wasel-header-icon-bg)',
+                      border: `1px solid ${unreadCount > 0 ? 'var(--wasel-app-nav-active-border)' : 'var(--wasel-app-border)'}`,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
                     justifyContent: 'center',
                     transition: 'all 0.14s',
                     minHeight: 38,
                     minWidth: 38,
                   }}
                 >
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="rgba(233,245,247,0.74)"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    aria-hidden="true"
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="var(--wasel-app-ink)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      aria-hidden="true"
                   >
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
                   </svg>
@@ -415,15 +415,14 @@ export default function WaselRoot() {
                     fontSize: '0.84rem',
                     fontWeight: 700,
                     letterSpacing: '-0.01em',
-                    background:
-                      'linear-gradient(180deg, rgba(220,255,248,0.06), rgba(220,255,248,0.02)), rgba(10,18,28,0.9)',
-                    border: '1px solid rgba(25,231,187,0.22)',
-                    color: '#E9F5F7',
+                    background: 'var(--wasel-app-button-secondary)',
+                    border: '1px solid var(--wasel-app-button-secondary-border)',
+                    color: 'var(--wasel-app-ink)',
                     fontFamily: F,
                     cursor: 'pointer',
                     transition: 'all 0.18s ease',
                     whiteSpace: 'nowrap',
-                    boxShadow: '0 12px 28px rgba(2,6,12,0.28), inset 0 1px 0 rgba(220,255,248,0.05)',
+                    boxShadow: 'var(--wasel-app-button-secondary-shadow)',
                     minHeight: 42,
                   }}
                 >
@@ -439,14 +438,14 @@ export default function WaselRoot() {
                     fontSize: '0.84rem',
                     fontWeight: 800,
                     letterSpacing: '-0.01em',
-                    background: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
+                    background: 'var(--wasel-app-button-primary)',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    color: '#041019',
+                    color: '#ffffff',
                     fontFamily: F,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
                     transition: 'all 0.18s ease',
-                    boxShadow: '0 18px 40px rgba(25,231,187,0.22), inset 0 1px 0 rgba(220,255,248,0.3)',
+                    boxShadow: 'var(--wasel-shadow-teal)',
                     minHeight: 42,
                   }}
                 >
@@ -471,8 +470,8 @@ export default function WaselRoot() {
               minWidth: 40,
               minHeight: 40,
               borderRadius: R.md,
-              background: 'rgba(220,255,248,0.05)',
-              border: '1px solid rgba(25,231,187,0.18)',
+              background: 'var(--wasel-app-button-secondary)',
+              border: '1px solid var(--wasel-app-button-secondary-border)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -480,16 +479,16 @@ export default function WaselRoot() {
               flexShrink: 0,
               transition: 'all 0.14s',
             }}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="rgba(233,245,247,0.82)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              aria-hidden="true"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--wasel-app-ink)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
             >
               {mobileOpen ? (
                 <>
