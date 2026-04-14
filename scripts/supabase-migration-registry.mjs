@@ -94,7 +94,8 @@ export const migrationCatalog = [
   {
     sequence: 11,
     path: 'src/supabase/migrations/20260326080000_legacy_public_table_cutover.sql',
-    description: 'Preserve conflicting legacy public tables before canonical runtime tables are created',
+    description:
+      'Preserve conflicting legacy public tables before canonical runtime tables are created',
     status: 'ready',
     phase: 'rollout',
     category: 'schema',
@@ -148,7 +149,8 @@ export const migrationCatalog = [
   {
     sequence: 17,
     path: 'src/supabase/migrations/20260401143000_harden_rpc_execute_permissions.sql',
-    description: 'Restrict privileged RPC execution and set safe search paths on security-definer functions',
+    description:
+      'Restrict privileged RPC execution and set safe search paths on security-definer functions',
     status: 'ready',
     phase: 'rollout',
     category: 'security',
@@ -175,7 +177,8 @@ export const migrationCatalog = [
   {
     sequence: 20,
     path: 'src/supabase/migrations/20260401213000_expand_runtime_contract_tables.sql',
-    description: 'Add the remaining trip, booking, and package columns required by the live app runtime contract',
+    description:
+      'Add the remaining trip, booking, and package columns required by the live app runtime contract',
     status: 'ready',
     phase: 'rollout',
     category: 'runtime-contract',
@@ -193,7 +196,8 @@ export const migrationCatalog = [
   {
     sequence: 22,
     path: 'src/supabase/migrations/20260401233000_communication_delivery_operations.sql',
-    description: 'Add retries, idempotency, and processor operation fields for outbound communications',
+    description:
+      'Add retries, idempotency, and processor operation fields for outbound communications',
     status: 'ready',
     phase: 'rollout',
     category: 'hardening',
@@ -202,7 +206,8 @@ export const migrationCatalog = [
   {
     sequence: 23,
     path: 'src/supabase/migrations/20260404110000_route_automation_backbone.sql',
-    description: 'Queue-backed reminders, support SLA automation, pricing snapshots, and worker-safe automation job helpers',
+    description:
+      'Queue-backed reminders, support SLA automation, pricing snapshots, and worker-safe automation job helpers',
     status: 'ready',
     phase: 'rollout',
     category: 'runtime-contract',
@@ -211,7 +216,8 @@ export const migrationCatalog = [
   {
     sequence: 24,
     path: 'src/supabase/migrations/20260404133000_harden_auth_signup_trigger.sql',
-    description: 'Remove the legacy auth profile trigger path, backfill canonical users from auth, and keep signup bound to public.users',
+    description:
+      'Remove the legacy auth profile trigger path, backfill canonical users from auth, and keep signup bound to public.users',
     status: 'ready',
     phase: 'rollout',
     category: 'security',
@@ -220,7 +226,8 @@ export const migrationCatalog = [
   {
     sequence: 25,
     path: 'src/supabase/migrations/20260404153000_operational_bootstrap_reference_data.sql',
-    description: 'Add operational catalogs for roles, cities, trip types, route corridors, pricing rules, and seed execution logging',
+    description:
+      'Add operational catalogs for roles, cities, trip types, route corridors, pricing rules, and seed execution logging',
     status: 'ready',
     phase: 'rollout',
     category: 'schema',
@@ -229,7 +236,8 @@ export const migrationCatalog = [
   {
     sequence: 26,
     path: 'src/supabase/migrations/20260406101500_harden_automation_queue_access_and_support_rpcs.sql',
-    description: 'Lock down direct client automation queue inserts and move support ticket writes behind atomic RPCs',
+    description:
+      'Lock down direct client automation queue inserts and move support ticket writes behind atomic RPCs',
     status: 'ready',
     phase: 'rollout',
     category: 'security',
@@ -247,7 +255,8 @@ export const migrationCatalog = [
   {
     sequence: 28,
     path: 'src/supabase/migrations/20260409120000_production_security_and_queue_hardening.sql',
-    description: 'Move 2FA secrets into a private schema, null legacy public secret columns, and add atomic communication queue claiming',
+    description:
+      'Move 2FA secrets into a private schema, null legacy public secret columns, and add atomic communication queue claiming',
     status: 'ready',
     phase: 'rollout',
     category: 'security',
@@ -265,10 +274,21 @@ export const migrationCatalog = [
   {
     sequence: 30,
     path: 'src/supabase/migrations/20260410110000_reassert_auth_signup_user_sync.sql',
-    description: 'Reassert canonical auth.users to public.users sync and recover missing phone numbers for signup-triggered users',
+    description:
+      'Reassert canonical auth.users to public.users sync and recover missing phone numbers for signup-triggered users',
     status: 'ready',
     phase: 'rollout',
     category: 'security',
+    naming: 'canonical',
+  },
+  {
+    sequence: 31,
+    path: 'src/supabase/migrations/20260413120000_wallet_fintech_rebuild.sql',
+    description:
+      'Rebuild the wallet fintech ledger, escrow, payout, subscription, and step-up runtime tables',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'schema',
     naming: 'canonical',
   },
 ];
@@ -309,17 +329,19 @@ export function getMigrationTimestamp(relativePath) {
   return match ? match[1] : null;
 }
 
-export const historicalMigrations = migrationCatalog.filter((migration) => migration.phase === 'historical');
+export const historicalMigrations = migrationCatalog.filter(
+  migration => migration.phase === 'historical',
+);
 export const rolloutMigrations = migrationCatalog
-  .filter((migration) => migration.phase === 'rollout')
-  .map((migration) => migration.path);
+  .filter(migration => migration.phase === 'rollout')
+  .map(migration => migration.path);
 
 function renderMigrationTable(migrations) {
   return [
     '| # | File | Category | Description | Status |',
     '|---|------|----------|-------------|--------|',
     ...migrations.map(
-      (migration) =>
+      migration =>
         `| ${String(migration.sequence).padStart(2, '0')} | \`${getMigrationFileName(migration.path)}\` | ${migration.category} | ${migration.description} | ${capitalize(migration.status)} |`,
     ),
   ].join('\n');
@@ -335,8 +357,8 @@ function renderSequence(items) {
 
 export function renderMigrationReadme() {
   const legacyNamingFiles = historicalMigrations
-    .filter((migration) => migration.naming === 'legacy')
-    .map((migration) => `- \`${getMigrationFileName(migration.path)}\``)
+    .filter(migration => migration.naming === 'legacy')
+    .map(migration => `- \`${getMigrationFileName(migration.path)}\``)
     .join('\n');
 
   return `# Wasel Database Migrations

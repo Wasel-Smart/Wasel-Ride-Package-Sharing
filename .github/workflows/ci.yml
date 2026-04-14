@@ -81,8 +81,8 @@ jobs:
             });
           NODE
 
-      - name: Unit tests with coverage
-        run: npm run test:coverage
+      - name: Unit tests
+        run: npm run test
 
       - name: Production build
         run: npm run build

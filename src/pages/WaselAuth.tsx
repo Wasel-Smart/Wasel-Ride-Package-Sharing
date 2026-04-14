@@ -99,9 +99,11 @@ function AuthField({
   const resolvedType = isPassword && showPassword ? 'text' : type;
 
   return (
-    <label className={`auth-field${focused ? ' is-focused' : ''}${error ? ' is-error' : ''}`}>
+    <div className={`auth-field${focused ? ' is-focused' : ''}${error ? ' is-error' : ''}`}>
       <span className="auth-field__meta">
-        <span className="auth-field__label">{label}</span>
+        <label className="auth-field__label" htmlFor={id}>
+          {label}
+        </label>
         {description ? <span className="auth-field__description">{description}</span> : null}
       </span>
 
@@ -137,7 +139,7 @@ function AuthField({
 
       {error ? <span className="auth-field__error">{error}</span> : null}
       {hint && !error ? <div className="auth-field__hint">{hint}</div> : null}
-    </label>
+    </div>
   );
 }
 
