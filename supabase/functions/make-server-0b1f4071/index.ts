@@ -7,12 +7,18 @@ import {
   noContentResponse,
   type RouteDefinition,
 } from './_shared/http-runtime.ts';
+import {
+  buildComponentHealthPayload,
+  buildJobCatalog,
+  buildPublicHealthPayload,
+} from './_shared/status-runtime.ts';
 import { timingSafeEqual } from './_shared/security-runtime.ts';
 import { createAutomationHandlers } from './automation-handlers.ts';
 import { createCommunicationHandlers } from './communications-handlers.ts';
 import { createTwoFactorHandlers } from './two-factor-handlers.ts';
 import { createWalletHandlers } from './wallet-handlers.ts';
 
+const SERVICE_NAME = 'make-server-0b1f4071';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('VITE_SUPABASE_ANON_KEY') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -1063,6 +1069,23 @@ function getFunctionBaseUrl(request: Request): string {
   return url.href.replace(/\/(communications|automation)\/.*$/, '').replace(/\/health$/, '');
 }
 
+function buildCommunicationsHealthSnapshot() {
+  return {
+    resendConfigured: Boolean(deliveryEnv.resendApiKey && deliveryEnv.resendFromEmail),
+    sendgridConfigured: Boolean(deliveryEnv.sendgridApiKey && deliveryEnv.sendgridFromEmail),
+    twilioConfigured: Boolean(deliveryEnv.twilioAccountSid && deliveryEnv.twilioAuthToken),
+    workerSecretConfigured: Boolean(getCommunicationWorkerSecret()),
+    webhookTokenConfigured: Boolean(deliveryEnv.communicationWebhookToken),
+  };
+}
+
+function buildAutomationHealthSnapshot() {
+  return {
+    workerSecretConfigured: Boolean(getAutomationWorkerSecret()),
+    runtimeMigrationEndpointsEnabled: ENABLE_RUNTIME_MIGRATION_ENDPOINTS,
+  };
+}
+
 async function executeSqlStatements(sql: string) {
   if (!SUPABASE_DB_URL) {
     throw new Error('SUPABASE_DB_URL is not configured');
@@ -1134,10 +1157,104 @@ const {
 });
 
 async function handleHealth() {
+  return json(buildPublicHealthPayload({
+    service: SERVICE_NAME,
+    timestamp: new Date().toISOString(),
+    communications: buildCommunicationsHealthSnapshot(),
+    automation: buildAutomationHealthSnapshot(),
+  }));
+}
+
+async function runComponentHealthCheck(
+  component: 'db' | 'auth' | 'storage',
+  required: boolean,
+  probe: (admin: ReturnType<typeof getAdminClient>) => Promise<void>,
+) {
+  const timestamp = new Date().toISOString();
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    return json(buildComponentHealthPayload({
+      service: SERVICE_NAME,
+      component,
+      status: 'degraded',
+      required,
+      timestamp,
+      detail: 'SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not configured.',
+    }), 503);
+  }
+
+  try {
+    const admin = getAdminClient();
+    await probe(admin);
+    return json(buildComponentHealthPayload({
+      service: SERVICE_NAME,
+      component,
+      status: 'healthy',
+      required,
+      timestamp,
+    }));
+  } catch (error) {
+    return json(buildComponentHealthPayload({
+      service: SERVICE_NAME,
+      component,
+      status: 'degraded',
+      required,
+      timestamp,
+      detail: error instanceof Error ? error.message : String(error),
+    }), 503);
+  }
+}
+
+async function handleDatabaseHealth() {
+  return runComponentHealthCheck('db', true, async (admin) => {
+    const { error } = await admin.from('users').select('id').limit(1);
+    if (error) {
+      throw new Error(error.message);
+    }
+  });
+}
+
+async function handleAuthHealth() {
+  return runComponentHealthCheck('auth', true, async (admin) => {
+    const { error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1 });
+    if (error) {
+      throw new Error(error.message);
+    }
+  });
+}
+
+async function handleStorageHealth() {
+  return runComponentHealthCheck('storage', false, async (admin) => {
+    const { error } = await admin.storage.listBuckets();
+    if (error) {
+      throw new Error(error.message);
+    }
+  });
+}
+
+async function handleKvHealth() {
+  return json(buildComponentHealthPayload({
+    service: SERVICE_NAME,
+    component: 'kv',
+    status: 'not_configured',
+    required: false,
+    timestamp: new Date().toISOString(),
+    detail: 'No dedicated key-value backend is configured for this runtime.',
+  }));
+}
+
+async function handleJobsStatus() {
   return json({
     ok: true,
-    service: 'make-server-0b1f4071',
+    service: SERVICE_NAME,
     timestamp: new Date().toISOString(),
+    available_jobs: buildJobCatalog({
+      communicationWorkerSecretConfigured: Boolean(getCommunicationWorkerSecret()),
+      automationWorkerSecretConfigured: Boolean(getAutomationWorkerSecret()),
+      runtimeMigrationEndpointsEnabled: ENABLE_RUNTIME_MIGRATION_ENDPOINTS,
+      webhookTokenConfigured: Boolean(deliveryEnv.communicationWebhookToken),
+    }),
+    communications: buildCommunicationsHealthSnapshot(),
+    automation: buildAutomationHealthSnapshot(),
   });
 }
 
@@ -1157,6 +1274,11 @@ const {
 
 const routes: RouteDefinition[] = [
   { method: 'GET', path: '/health', handler: handleHealth },
+  { method: 'GET', path: '/health/db', handler: handleDatabaseHealth },
+  { method: 'GET', path: '/health/auth', handler: handleAuthHealth },
+  { method: 'GET', path: '/health/storage', handler: handleStorageHealth },
+  { method: 'GET', path: '/health/kv', handler: handleKvHealth },
+  { method: 'GET', path: '/jobs/status', handler: handleJobsStatus },
   { method: 'GET', path: '/wallet', handler: handleGetWallet },
   { method: 'GET', path: '/communications/preferences', handler: handleGetCommunicationPreferences },
   { method: 'POST', path: '/auth/2fa/setup', handler: handleTwoFactorSetup },
