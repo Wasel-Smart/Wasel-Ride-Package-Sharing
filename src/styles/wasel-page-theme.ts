@@ -1,77 +1,57 @@
 /**
- * Wasel page design tokens — v10 unified investor-grade system.
- * Used by waselServiceShared, all feature pages, and shared components.
+ * Wasel page design tokens.
+ * Scoped for the /app experience so service flows inherit the landing palette
+ * while keeping a darker operational surface inside the shell.
  */
-import {
-  F,
-  FA,
-  GRAD,
-  GRAD_GOLD,
-  GRAD_GREEN,
-  GRAD_HERO,
-  GRAD_NAVY,
-  GRAD_SIGNAL,
-} from '../utils/wasel-ds';
+import { F, FA, GRAD_NAVY } from '../utils/wasel-ds';
 
 export const PAGE_DS = {
-  /* ── Backgrounds ─────────────────────────────────── */
-  bg:    'var(--wasel-surface-0)',
-  card:  'var(--wasel-surface-2)',
-  card2: 'var(--wasel-surface-3)',
+  bg: 'var(--wasel-service-bg)',
+  card: 'var(--wasel-service-card)',
+  card2: 'var(--wasel-service-card-2)',
 
-  /* ── Borders ─────────────────────────────────────── */
-  border:  'var(--wasel-panel-border)',
-  borderH: 'var(--wasel-panel-border-hover)',
+  border: 'var(--wasel-service-border)',
+  borderH: 'var(--wasel-service-border-strong)',
 
-  /* ── Brand colours ───────────────────────────────── */
-  cyan:   '#19e7bb',
-  cyanG:  'rgba(25,231,187,0.22)',
-  blue:   '#65e1ff',
-  blueG:  'rgba(101,225,255,0.18)',
-  green:  '#a2ffe7',
-  greenG: 'rgba(162,255,231,0.16)',
-  gold:   '#48cfff',
-  goldG:  'rgba(72,207,255,0.16)',
-  red:    '#ff5060',
-  navy:   'var(--wasel-surface-0)',
+  cyan: 'var(--wasel-app-blue)',
+  cyanG: 'rgba(15,115,255,0.18)',
+  blue: 'var(--wasel-app-teal)',
+  blueG: 'rgba(25,231,187,0.18)',
+  green: 'var(--wasel-app-teal)',
+  greenG: 'rgba(25,231,187,0.16)',
+  gold: 'var(--wasel-app-sky)',
+  goldG: 'rgba(157,232,255,0.18)',
+  red: '#ff5060',
+  navy: 'var(--wasel-app-hero)',
 
-  /* ── Copy ────────────────────────────────────────── */
-  text:  'var(--wasel-copy-primary)',
-  sub:   'var(--wasel-copy-muted)',
-  muted: 'var(--wasel-copy-soft)',
+  text: 'var(--wasel-service-text)',
+  sub: 'var(--wasel-service-sub)',
+  muted: 'var(--wasel-service-muted)',
 
-  /* ── Fonts ───────────────────────────────────────── */
   F,
   FA,
 
-  /* ── Gradients ───────────────────────────────────── */
-  gradC:    GRAD,
-  gradG:    GRAD_GREEN,
-  gradGld:  GRAD_GOLD,
-  gradGold: GRAD_GOLD,
-  gradB:    GRAD_SIGNAL,
-  gradNav:  GRAD_NAVY,
-  gradHero: GRAD_HERO,
+  gradC: 'var(--wasel-app-button-primary)',
+  gradG: 'linear-gradient(135deg, #19e7bb 0%, #9de8ff 100%)',
+  gradGld: 'linear-gradient(135deg, #9de8ff 0%, #19e7bb 100%)',
+  gradGold: 'linear-gradient(135deg, #9de8ff 0%, #19e7bb 100%)',
+  gradB: 'linear-gradient(135deg, #0f73ff 0%, #9de8ff 48%, #19e7bb 100%)',
+  gradNav: GRAD_NAVY,
+  gradHero: 'var(--wasel-service-head-bg)',
 
-  /* ── Section head background ─────────────────────── */
-  sectionHeadBg:
-    'linear-gradient(180deg, rgba(10,20,34,0.96), rgba(7,14,26,0.93))',
+  sectionHeadBg: 'var(--wasel-service-head-bg)',
+  cardGrad: 'var(--wasel-service-card)',
 
-  /* ── Card inner gradient ──────────────────────────── */
-  cardGrad:
-    'linear-gradient(152deg, rgba(12,20,34,0.98) 0%, rgba(7,13,24,0.97) 100%)',
-
-  /* ── Shadows ─────────────────────────────────────── */
-  shadowCard:  'var(--wasel-shadow-card)',
-  shadowMd:    'var(--wasel-shadow-md)',
-  shadowTeal:  'var(--wasel-shadow-teal)',
+  shadowCard: 'var(--wasel-shadow-card)',
+  shadowMd: 'var(--wasel-shadow-md)',
+  shadowTeal: 'var(--wasel-shadow-teal)',
 } as const;
 
 export const PAGE_RADIUS = {
-  sm:   10,
-  md:   14,
-  lg:   18,
-  xl:   22,
-  xxl:  28,
+  sm: 10,
+  md: 14,
+  lg: 18,
+  xl: 22,
+  xxl: 28,
   full: 9999,
 } as const;

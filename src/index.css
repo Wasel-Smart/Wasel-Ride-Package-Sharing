@@ -3,6 +3,7 @@
 @import 'tw-animate-css';
 @import './styles/globals.css';
 @import './styles/brand-theme.css';
+@import './styles/app-service-theme.css';
 @import './styles/investor-polish.css';
 
 @layer base {
