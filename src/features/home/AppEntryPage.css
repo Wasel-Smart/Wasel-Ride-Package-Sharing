@@ -1,17 +1,22 @@
 .app-entry-page {
-  --landing-bg: #eef4fb;
-  --landing-surface: rgba(255, 255, 255, 0.9);
-  --landing-border: rgba(16, 43, 73, 0.1);
-  --landing-text: #0d2948;
-  --landing-muted: rgba(13, 41, 72, 0.72);
-  --landing-blue: #0f73ff;
+  --landing-bg: #071a2d;
+  --landing-surface: rgba(255, 255, 255, 0.08);
+  --landing-border: rgba(157, 232, 255, 0.16);
+  --landing-text: #f5fbff;
+  --landing-muted: rgba(236, 245, 255, 0.74);
+  --landing-blue: #65e1ff;
   --landing-teal: #19e7bb;
-  --landing-hero: #071a30;
+  --landing-button-brand: #65e1ff;
+  --landing-button-brand-soft: #f3fbff;
+  --landing-button-brand-mid: #bfefff;
+  --landing-button-brand-rgb: 101, 225, 255;
+  --landing-hero: #071a2d;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(15, 115, 255, 0.12), transparent 22%),
+    radial-gradient(circle at top left, rgba(101, 225, 255, 0.14), transparent 22%),
     radial-gradient(circle at top right, rgba(25, 231, 187, 0.14), transparent 20%),
-    linear-gradient(180deg, var(--landing-bg) 0%, #ffffff 24%, #eef5fb 100%);
+    radial-gradient(circle at 72% 84%, rgba(157, 232, 255, 0.1), transparent 20%),
+    linear-gradient(180deg, var(--landing-bg) 0%, #081929 24%, #091622 100%);
   color: var(--landing-text);
 }
 
@@ -41,8 +46,8 @@
   padding: 14px 18px;
   border-radius: 24px;
   border: 1px solid var(--landing-border);
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 18px 48px rgba(16, 50, 95, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+  box-shadow: 0 24px 56px rgba(1, 10, 18, 0.22);
   backdrop-filter: blur(18px);
 }
 
@@ -109,9 +114,9 @@
 .app-entry-page__auth-links button {
   min-height: 42px;
   padding: 0 16px;
-  border: 0;
+  border: 1px solid var(--landing-border);
   border-radius: 999px;
-  background: rgba(18, 62, 113, 0.06);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--landing-text);
   font-size: 0.88rem;
   font-weight: 800;
@@ -123,9 +128,10 @@
 }
 
 .app-entry-page__auth-primary {
-  background: linear-gradient(135deg, var(--landing-blue) 0%, var(--landing-teal) 100%) !important;
-  color: #ffffff !important;
-  box-shadow: 0 18px 36px rgba(15, 115, 255, 0.18);
+  background: linear-gradient(135deg, var(--landing-button-brand-soft) 0%, var(--landing-button-brand-mid) 52%, var(--landing-button-brand) 100%) !important;
+  color: #081520 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 18px 36px rgba(var(--landing-button-brand-rgb), 0.24);
 }
 
 .app-entry-page__main,
@@ -280,8 +286,11 @@
 .app-entry-page__flow-card {
   border-radius: 30px;
   border: 1px solid var(--landing-border);
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 28px 68px rgba(16, 50, 95, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(8, 19, 34, 0.82);
+  box-shadow: 0 28px 68px rgba(1, 10, 18, 0.26);
+  backdrop-filter: blur(18px);
 }
 
 .app-entry-page__action-card {
@@ -297,7 +306,7 @@
   gap: 8px;
   padding: 6px;
   border-radius: 18px;
-  background: rgba(16, 43, 73, 0.05);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .app-entry-page__mode-switch button {
@@ -316,9 +325,10 @@
 }
 
 .app-entry-page__mode-switch button.is-active {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--landing-border);
   color: var(--landing-text);
-  box-shadow: 0 12px 28px rgba(16, 50, 95, 0.08);
+  box-shadow: 0 16px 30px rgba(1, 10, 18, 0.2);
 }
 
 .app-entry-page__action-copy h2,
@@ -345,7 +355,7 @@
 }
 
 .app-entry-page__field-grid label span {
-  color: rgba(16, 43, 73, 0.68);
+  color: var(--landing-muted);
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -357,11 +367,12 @@
   width: 100%;
   min-height: 54px;
   padding: 0 16px;
-  border: 1px solid rgba(16, 43, 73, 0.12);
+  border: 1px solid var(--landing-border);
   border-radius: 16px;
-  background: #f8fbff;
+  background: rgba(255, 255, 255, 0.06);
   color: var(--landing-text);
   font: inherit;
+  backdrop-filter: blur(16px);
 }
 
 .app-entry-page__field-grid select {
@@ -375,7 +386,7 @@
 .app-entry-page__field-note {
   padding: 14px 16px;
   border-radius: 16px;
-  background: rgba(15, 115, 255, 0.06);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--landing-muted);
   line-height: 1.65;
 }
@@ -399,16 +410,16 @@
 
 .app-entry-page__primary-button {
   flex: 1 1 220px;
-  border: 0;
-  background: linear-gradient(135deg, var(--landing-blue) 0%, var(--landing-teal) 100%);
-  color: #ffffff;
-  box-shadow: 0 18px 36px rgba(15, 115, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, var(--landing-button-brand-soft) 0%, var(--landing-button-brand-mid) 52%, var(--landing-button-brand) 100%);
+  color: #081520;
+  box-shadow: 0 18px 36px rgba(var(--landing-button-brand-rgb), 0.24);
 }
 
 .app-entry-page__secondary-button,
 .app-entry-page__guest-auth-buttons button {
-  border: 1px solid rgba(16, 43, 73, 0.12);
-  background: #f8fbff;
+  border: 1px solid var(--landing-border);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--landing-text);
 }
 
@@ -420,7 +431,7 @@
   display: grid;
   gap: 12px;
   padding-top: 14px;
-  border-top: 1px solid rgba(16, 43, 73, 0.08);
+  border-top: 1px solid var(--landing-border);
 }
 
 .app-entry-page__guest-auth-buttons {
@@ -465,7 +476,7 @@
   display: grid;
   place-items: center;
   border-radius: 16px;
-  background: rgba(15, 115, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--landing-blue);
 }
 
@@ -488,7 +499,7 @@
 .app-entry-page button:focus-visible,
 .app-entry-page input:focus-visible,
 .app-entry-page select:focus-visible {
-  outline: 2px solid rgba(15, 115, 255, 0.42);
+  outline: 2px solid rgba(var(--landing-button-brand-rgb), 0.42);
   outline-offset: 2px;
 }
 
@@ -498,6 +509,7 @@
   .app-entry-page__secondary-button:hover,
   .app-entry-page__guest-auth-buttons button:hover {
     transform: translateY(-1px);
+    border-color: rgba(var(--landing-button-brand-rgb), 0.34);
   }
 
   .app-entry-page__flow-card:hover {

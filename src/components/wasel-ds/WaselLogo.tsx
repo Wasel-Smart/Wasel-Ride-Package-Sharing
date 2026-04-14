@@ -3,6 +3,11 @@ import type { CSSProperties } from 'react';
 import { TYPE } from '../../utils/wasel-ds';
 import { ExactLogoMark } from './ExactLogoMark';
 
+const LOGO_ACCENT = '#A9E3FF';
+const LOGO_ACCENT_DARK = '#2F617C';
+const LOGO_ACCENT_SOFT = 'rgba(169, 227, 255, 0.72)';
+const LOGO_ACCENT_DARK_SOFT = 'rgba(47, 97, 124, 0.72)';
+
 interface WaselLogoProps {
   size?: number;
   showWordmark?: boolean;
@@ -79,11 +84,8 @@ export function WaselLogo({
   const markHeight = size;
   const markWidth = Math.max(1, Math.round(size * mark.aspectRatio));
   const usesUploadedMark = markAsset === 'default';
-  const titleColor = onDarkSurface ? '#A5FFEA' : '#0E8A6D';
-  const metaColor = onDarkSurface ? 'rgba(197, 236, 233, 0.76)' : 'rgba(16, 112, 101, 0.72)';
-  const titleGradient = onDarkSurface
-    ? 'linear-gradient(180deg, #D8FFF7 0%, #3AE9C2 52%, #099A7C 100%)'
-    : 'linear-gradient(180deg, #0D6C61 0%, #1DD4AF 100%)';
+  const titleColor = onDarkSurface ? LOGO_ACCENT : LOGO_ACCENT_DARK;
+  const metaColor = onDarkSurface ? LOGO_ACCENT_SOFT : LOGO_ACCENT_DARK_SOFT;
   const titleSize =
     variant === 'compact'
       ? Math.max(12, Math.round(size * 0.34))
@@ -114,8 +116,8 @@ export function WaselLogo({
             position: 'relative',
             zIndex: 1,
             filter: onDarkSurface
-              ? 'drop-shadow(0 18px 28px rgba(4, 8, 14, 0.32)) drop-shadow(0 0 18px rgba(25, 231, 187, 0.16))'
-              : 'drop-shadow(0 14px 22px rgba(7, 36, 33, 0.18))',
+              ? 'drop-shadow(0 16px 24px rgba(5, 12, 20, 0.28)) drop-shadow(0 0 14px rgba(169, 227, 255, 0.14))'
+              : 'drop-shadow(0 12px 20px rgba(7, 18, 28, 0.16))',
           }}
         />
       )}
@@ -140,16 +142,12 @@ export function WaselLogo({
               fontFamily:
                 "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
               fontSize: titleSize,
-              fontWeight: TYPE.weight.black,
-              letterSpacing: variant === 'compact' ? '-0.02em' : '-0.04em',
+              fontWeight: 800,
+              letterSpacing: variant === 'compact' ? '-0.02em' : '-0.035em',
               lineHeight: TYPE.lineHeight.tight,
-              background: titleGradient,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
               color: titleColor,
               whiteSpace: 'nowrap',
-              textShadow: onDarkSurface ? '0 12px 28px rgba(4, 16, 22, 0.24)' : 'none',
+              textShadow: onDarkSurface ? '0 10px 24px rgba(6, 16, 24, 0.22)' : 'none',
             }}
           >
             Wasel
@@ -208,7 +206,7 @@ export function WaselMark({
           style={{
             position: 'relative',
             zIndex: 1,
-            filter: 'drop-shadow(0 18px 28px rgba(4, 8, 14, 0.24)) drop-shadow(0 0 18px rgba(25, 231, 187, 0.14))',
+            filter: 'drop-shadow(0 16px 24px rgba(5, 12, 20, 0.26)) drop-shadow(0 0 14px rgba(169, 227, 255, 0.12))',
           }}
         />
       )}
@@ -244,7 +242,7 @@ export function WaselHeroMark({
           src={mark.src}
           alt="Wasel main logo"
           style={{
-            filter: 'drop-shadow(0 22px 36px rgba(7, 10, 17, 0.26)) drop-shadow(0 0 24px rgba(25, 231, 187, 0.18))',
+            filter: 'drop-shadow(0 20px 34px rgba(7, 12, 18, 0.26)) drop-shadow(0 0 20px rgba(169, 227, 255, 0.16))',
           }}
         />
       )}

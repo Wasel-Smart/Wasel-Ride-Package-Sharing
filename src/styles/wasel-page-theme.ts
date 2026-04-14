@@ -9,6 +9,9 @@ export const PAGE_DS = {
   bg: 'var(--wasel-service-bg)',
   card: 'var(--wasel-service-card)',
   card2: 'var(--wasel-service-card-2)',
+  card3: 'var(--wasel-service-card-3)',
+  panel: 'var(--wasel-app-nav-surface)',
+  field: 'rgba(255,255,255,0.08)',
 
   border: 'var(--wasel-service-border)',
   borderH: 'var(--wasel-service-border-strong)',
@@ -30,14 +33,17 @@ export const PAGE_DS = {
 
   F,
   FA,
+  FD: "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', 'Cairo', sans-serif)",
 
-  gradC: 'var(--wasel-app-button-primary)',
+  gradC: 'linear-gradient(135deg, #0f73ff 0%, #2d9cff 48%, #19e7bb 100%)',
   gradG: 'linear-gradient(135deg, #19e7bb 0%, #9de8ff 100%)',
   gradGld: 'linear-gradient(135deg, #9de8ff 0%, #19e7bb 100%)',
   gradGold: 'linear-gradient(135deg, #9de8ff 0%, #19e7bb 100%)',
   gradB: 'linear-gradient(135deg, #0f73ff 0%, #9de8ff 48%, #19e7bb 100%)',
   gradNav: GRAD_NAVY,
   gradHero: 'var(--wasel-service-head-bg)',
+  glowC: 'rgba(101,225,255,0.24)',
+  glowT: 'rgba(25,231,187,0.22)',
 
   sectionHeadBg: 'var(--wasel-service-head-bg)',
   cardGrad: 'var(--wasel-service-card)',

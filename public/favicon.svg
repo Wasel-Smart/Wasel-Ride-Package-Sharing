@@ -6,63 +6,23 @@
   aria-labelledby="title desc"
 >
   <title id="title">Wasel app icon</title>
-  <desc id="desc">A glowing Wasel network icon in deep navy, teal, and mint.</desc>
-  <defs>
-    <radialGradient id="favicon-shell" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 256) rotate(90) scale(188)">
-      <stop offset="0" stop-color="#1A223A" />
-      <stop offset="0.6" stop-color="#10192E" />
-      <stop offset="1" stop-color="#0A1020" />
-    </radialGradient>
-    <linearGradient id="favicon-link" x1="152" y1="328" x2="367" y2="180" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#17D7A6" />
-      <stop offset="0.5" stop-color="#33EAC2" />
-      <stop offset="1" stop-color="#64F3DE" />
-    </linearGradient>
-    <linearGradient id="favicon-link-core" x1="156" y1="320" x2="361" y2="188" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#A7FFEA" />
-      <stop offset="0.55" stop-color="#8DFFF1" />
-      <stop offset="1" stop-color="#D7FFF9" />
-    </linearGradient>
-    <radialGradient id="favicon-node" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 0) scale(1)">
-      <stop offset="0" stop-color="#E8FFFB" />
-      <stop offset="0.28" stop-color="#93FFF2" />
-      <stop offset="0.62" stop-color="#30E9C0" />
-      <stop offset="1" stop-color="#10B996" />
-    </radialGradient>
-    <filter id="favicon-glow" x="27" y="34" width="458" height="444" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="30" />
-    </filter>
-  </defs>
+  <desc id="desc">A simplified Wasel network badge in sky blue.</desc>
 
-  <circle cx="256" cy="250" r="108" fill="#22E1B8" opacity="0.18" filter="url(#favicon-glow)" />
-  <circle cx="256" cy="256" r="92" fill="url(#favicon-shell)" />
-  <circle cx="256" cy="256" r="90" stroke="#16314A" stroke-width="2" opacity="0.8" />
+  <circle cx="256" cy="256" r="156" fill="#A9E3FF" opacity="0.12" />
+  <rect x="96" y="96" width="320" height="320" rx="96" fill="#172A3B" />
+  <rect x="96" y="96" width="320" height="320" rx="96" stroke="#A9E3FF" stroke-opacity="0.18" stroke-width="8" />
+  <path d="M164 314L236 236L332 182" stroke="#A9E3FF" stroke-opacity="0.4" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M164 314L236 236L332 182" stroke="#A9E3FF" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M192 192L236 236L298 294" stroke="#A9E3FF" stroke-opacity="0.52" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" />
 
-  <g stroke-linecap="round" stroke-linejoin="round">
-    <path d="M172 302L256 246L338 201" stroke="url(#favicon-link)" stroke-width="11" />
-    <path d="M178 296L256 246L332 206" stroke="url(#favicon-link-core)" stroke-width="3.4" opacity="0.85" />
-    <path d="M190 235L256 246" stroke="#6E8AA2" stroke-width="4" opacity="0.58" />
-    <path d="M172 302L190 235" stroke="#163D52" stroke-width="4" opacity="0.7" />
-    <path d="M256 246L314 285" stroke="#6A88A4" stroke-width="4" opacity="0.44" />
-  </g>
+  <circle cx="164" cy="314" r="22" fill="#A9E3FF" />
+  <circle cx="236" cy="236" r="28" fill="#A9E3FF" />
+  <circle cx="332" cy="182" r="22" fill="#A9E3FF" />
 
-  <g>
-    <circle cx="172" cy="302" r="17" fill="url(#favicon-node)" />
-    <circle cx="172" cy="302" r="8.5" fill="#A9FFF3" opacity="0.72" />
-    <circle cx="172" cy="302" r="22" stroke="#26E3B8" stroke-width="3" opacity="0.28" />
+  <circle cx="164" cy="314" r="9" fill="#EEF8FF" fill-opacity="0.84" />
+  <circle cx="236" cy="236" r="11" fill="#EEF8FF" fill-opacity="0.84" />
+  <circle cx="332" cy="182" r="9" fill="#EEF8FF" fill-opacity="0.84" />
 
-    <circle cx="256" cy="246" r="21" fill="url(#favicon-node)" />
-    <circle cx="256" cy="246" r="9.5" fill="#C5FFF8" opacity="0.72" />
-    <circle cx="256" cy="246" r="28" stroke="#4AF0C8" stroke-width="3" opacity="0.34" />
-
-    <circle cx="338" cy="201" r="17" fill="url(#favicon-node)" />
-    <circle cx="338" cy="201" r="8" fill="#CBFFFA" opacity="0.7" />
-    <circle cx="338" cy="201" r="22" stroke="#65F5E1" stroke-width="3" opacity="0.28" />
-
-    <circle cx="190" cy="235" r="6" fill="#A7B8CA" opacity="0.54" />
-    <circle cx="190" cy="235" r="9" stroke="#7A8FA5" stroke-width="2.4" opacity="0.28" />
-
-    <circle cx="314" cy="285" r="5.8" fill="#9DAFC0" opacity="0.5" />
-    <circle cx="314" cy="285" r="9" stroke="#6E869C" stroke-width="2.4" opacity="0.24" />
-  </g>
+  <circle cx="192" cy="192" r="10" fill="#A9E3FF" fill-opacity="0.52" />
+  <circle cx="298" cy="294" r="11" fill="#A9E3FF" fill-opacity="0.52" />
 </svg>

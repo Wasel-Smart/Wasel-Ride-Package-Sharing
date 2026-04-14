@@ -36,12 +36,17 @@ import {
   type TwoFactorSetup,
 } from '../../utils/security';
 import { omitUndefined } from '../../utils/object';
+import { PageShell, SectionHead } from '../shared/pageShared';
+import { PAGE_DS } from '../../styles/wasel-page-theme';
 
-const BG = '#061726';
-const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))';
-const BORD = 'rgba(93,150,210,0.14)';
-const CYAN = '#47B7E6';
-const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+const DS = PAGE_DS;
+const CARD = DS.card;
+const BORD = DS.border;
+const CYAN = DS.cyan;
+const FONT = DS.F;
+const DISPLAY_FONT = DS.FD;
+const TEXT = DS.text;
+const SOFT = DS.muted;
 
 const STORAGE_KEYS = {
   privacy: 'wasel.settings.privacy',
@@ -72,12 +77,12 @@ function Section({
   return (
     <div style={{ marginBottom: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <span style={{ color: 'rgba(148,163,184,0.5)', fontSize: '0.9rem' }}>{icon}</span>
+        <span style={{ color: CYAN, fontSize: '0.9rem' }}>{icon}</span>
         <h2
           style={{
             fontSize: '0.68rem',
             fontWeight: 700,
-            color: 'rgba(148,163,184,0.5)',
+            color: SOFT,
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             fontFamily: FONT,
@@ -87,7 +92,16 @@ function Section({
           {title}
         </h2>
       </div>
-      <div style={{ background: CARD, border: `1px solid ${BORD}`, borderRadius: 16, overflow: 'hidden' }}>
+      <div
+        style={{
+          background: CARD,
+          border: `1px solid ${BORD}`,
+          borderRadius: 24,
+          overflow: 'hidden',
+          boxShadow: 'var(--wasel-shadow-card)',
+          backdropFilter: 'blur(18px)',
+        }}
+      >
         {children}
       </div>
     </div>
@@ -105,12 +119,13 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
         width: 44,
         height: 24,
         borderRadius: 12,
-        background: value ? CYAN : 'rgba(255,255,255,0.15)',
-        border: 'none',
+        background: value ? CYAN : 'rgba(255,255,255,0.12)',
+        border: `1px solid ${value ? `${CYAN}55` : BORD}`,
         cursor: 'pointer',
         position: 'relative',
-        transition: 'background 0.2s',
+        transition: 'background 0.2s, border-color 0.2s',
         flexShrink: 0,
+        boxShadow: value ? `0 12px 28px ${CYAN}30` : 'none',
       }}
     >
       <span
@@ -121,9 +136,9 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
           width: 18,
           height: 18,
           borderRadius: '50%',
-          background: '#fff',
+          background: '#f5fbff',
           transition: 'left 0.2s',
-          boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+          boxShadow: '0 4px 12px rgba(1,10,18,0.32)',
         }}
       />
     </button>
@@ -142,11 +157,11 @@ function ToggleRow({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', padding: '14px 18px', borderBottom: `1px solid ${BORD}`, gap: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: `1px solid ${BORD}`, gap: 12 }}>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#EFF6FF', fontFamily: FONT }}>{label}</div>
+        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: TEXT, fontFamily: FONT }}>{label}</div>
         {sub ? (
-          <div style={{ marginTop: 4, fontSize: '0.72rem', color: 'rgba(148,163,184,0.68)', fontFamily: FONT, lineHeight: 1.5 }}>
+          <div style={{ marginTop: 4, fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.55 }}>
             {sub}
           </div>
         ) : null}
@@ -168,25 +183,26 @@ function SelectRow({
   onChange: (v: string) => void;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', padding: '14px 18px', borderBottom: `1px solid ${BORD}`, gap: 12 }}>
-      <div style={{ flex: 1, fontSize: '0.875rem', fontWeight: 500, color: '#EFF6FF', fontFamily: FONT }}>{label}</div>
+    <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: `1px solid ${BORD}`, gap: 12 }}>
+      <div style={{ flex: 1, fontSize: '0.875rem', fontWeight: 600, color: TEXT, fontFamily: FONT }}>{label}</div>
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
         style={{
-          background: 'rgba(255,255,255,0.07)',
+          background: 'rgba(255,255,255,0.08)',
           border: `1px solid ${BORD}`,
-          borderRadius: 8,
-          color: '#EFF6FF',
+          borderRadius: 14,
+          color: TEXT,
           fontFamily: FONT,
           fontSize: '0.8rem',
-          padding: '5px 10px',
+          padding: '7px 12px',
           cursor: 'pointer',
           outline: 'none',
+          backdropFilter: 'blur(16px)',
         }}
       >
         {options.map(option => (
-          <option key={option.value} value={option.value} style={{ background: '#0F172A' }}>
+          <option key={option.value} value={option.value} style={{ background: '#071a2d' }}>
             {option.label}
           </option>
         ))}
@@ -204,7 +220,7 @@ function LinkRow({ label, sub, onClick }: { label: string; sub?: string; onClick
         display: 'flex',
         alignItems: 'center',
         width: '100%',
-        padding: '14px 18px',
+        padding: '16px 20px',
         background: 'transparent',
         border: 'none',
         borderBottom: `1px solid ${BORD}`,
@@ -214,14 +230,14 @@ function LinkRow({ label, sub, onClick }: { label: string; sub?: string; onClick
       }}
     >
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#EFF6FF', fontFamily: FONT }}>{label}</div>
+        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: TEXT, fontFamily: FONT }}>{label}</div>
         {sub ? (
-          <div style={{ marginTop: 4, fontSize: '0.72rem', color: 'rgba(148,163,184,0.68)', fontFamily: FONT, lineHeight: 1.5 }}>
+          <div style={{ marginTop: 4, fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.55 }}>
             {sub}
           </div>
         ) : null}
       </div>
-      <ChevronRight size={14} color="rgba(148,163,184,0.4)" />
+      <ChevronRight size={14} color={SOFT} />
     </button>
   );
 }
@@ -238,8 +254,8 @@ function ActionButton({
   variant?: 'primary' | 'secondary' | 'danger';
 }) {
   const styles = {
-    primary: { background: CYAN, color: '#040C18', border: 'none' },
-    secondary: { background: 'rgba(255,255,255,0.06)', color: '#EFF6FF', border: `1px solid ${BORD}` },
+    primary: { background: DS.gradC, color: '#ffffff', border: '1px solid rgba(255,255,255,0.18)', boxShadow: 'var(--wasel-shadow-teal)' },
+    secondary: { background: 'rgba(255,255,255,0.06)', color: TEXT, border: `1px solid ${BORD}`, backdropFilter: 'blur(16px)' },
     danger: { background: 'rgba(239,68,68,0.12)', color: '#F87171', border: '1px solid rgba(239,68,68,0.24)' },
   } as const;
 
@@ -249,9 +265,9 @@ function ActionButton({
       onClick={onClick}
       disabled={disabled}
       style={{
-        height: 38,
-        borderRadius: 10,
-        padding: '0 14px',
+        minHeight: 42,
+        borderRadius: 999,
+        padding: '0 16px',
         fontFamily: FONT,
         fontWeight: 700,
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -283,14 +299,15 @@ function FormField({
       placeholder={placeholder}
       style={{
         width: '100%',
-        minHeight: 42,
-        padding: '0 12px',
-        borderRadius: 10,
+        minHeight: 46,
+        padding: '0 14px',
+        borderRadius: 16,
         border: `1px solid ${BORD}`,
-        background: 'rgba(255,255,255,0.04)',
-        color: '#EFF6FF',
+        background: 'rgba(255,255,255,0.06)',
+        color: TEXT,
         fontFamily: FONT,
         outline: 'none',
+        backdropFilter: 'blur(16px)',
       }}
     />
   );
@@ -638,13 +655,16 @@ export default function SettingsPage() {
   ].filter(Boolean).length;
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: FONT, direction: ar ? 'rtl' : 'ltr', paddingBottom: 80 }}>
-      <div style={{ maxWidth: 680, margin: '0 auto', padding: '32px 16px 0' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#EFF6FF', fontFamily: FONT, marginBottom: 28 }}>
-          Settings
-        </h1>
+    <PageShell>
+      <div style={{ maxWidth: 760, margin: '0 auto' }}>
+        <SectionHead
+          emoji="⚙️"
+          title="Settings"
+          sub="Control notifications, privacy, security, and account preferences inside the same Wasel glass system."
+          color={CYAN}
+        />
 
-      {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 22 }}>
+        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 22 }}>
           <StakeholderSignalBanner
             dir={ar ? 'rtl' : 'ltr'}
             eyebrow="Wasel · account comms"
@@ -705,7 +725,7 @@ export default function SettingsPage() {
             value={notifs.criticalAlerts}
             onChange={toggleNotificationPreference('criticalAlerts')}
           />
-          <div style={{ padding: '14px 18px', fontSize: '0.72rem', color: 'rgba(148,163,184,0.65)', fontFamily: FONT }}>
+          <div style={{ padding: '14px 18px', fontSize: '0.72rem', color: SOFT, fontFamily: FONT }}>
             {notificationSavingKey ? 'Saving...' : 'Notification settings sync automatically.'}
           </div>
           <LinkRow
@@ -777,7 +797,7 @@ export default function SettingsPage() {
           <Section icon={<Shield size={16} />} title="Security">
             <div style={{ padding: 18, display: 'grid', gap: 14 }}>
               <div style={{ display: 'grid', gap: 10 }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#EFF6FF', fontFamily: FONT }}>Change Password</div>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: TEXT, fontFamily: FONT }}>Change Password</div>
                 <FormField value={passwordInput} onChange={setPasswordInput} type="password" placeholder="New password" />
                 <FormField value={confirmPassword} onChange={setConfirmPassword} type="password" placeholder="Confirm new password" />
                 <div style={{ fontSize: '0.74rem', color: getPasswordStrengthColor(passwordStrength.score), fontFamily: FONT }}>
@@ -786,7 +806,7 @@ export default function SettingsPage() {
                     : 'Use a strong password with at least 8 characters.'}
                 </div>
                 {passwordStrength.feedback.length > 0 && (
-                  <div style={{ fontSize: '0.72rem', color: 'rgba(148,163,184,0.7)', fontFamily: FONT, lineHeight: 1.5 }}>
+                  <div style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.5 }}>
                     {passwordStrength.feedback.join(' · ')}
                   </div>
                 )}
@@ -801,8 +821,8 @@ export default function SettingsPage() {
               <div style={{ display: 'grid', gap: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                   <div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#EFF6FF', fontFamily: FONT }}>Two-Factor Authentication</div>
-                    <div style={{ fontSize: '0.72rem', color: 'rgba(148,163,184,0.65)', fontFamily: FONT, marginTop: 4 }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: TEXT, fontFamily: FONT }}>Two-Factor Authentication</div>
+                    <div style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT, marginTop: 4 }}>
                       {!twoFactorSupported
                         ? 'Unavailable on this device or in this environment.'
                         : twoFactorEnabled
@@ -845,7 +865,7 @@ export default function SettingsPage() {
                       onChange={setTwoFactorCode}
                       placeholder={twoFactorEnabled ? 'Authenticator code or backup code' : '6-digit authenticator code to confirm setup'}
                     />
-                    <div style={{ fontSize: '0.72rem', color: 'rgba(148,163,184,0.65)', fontFamily: FONT }}>
+                    <div style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT }}>
                       {twoFactorEnabled
                         ? 'Use this field when disabling 2FA or testing backup codes.'
                         : 'Enter a code from your authenticator app to finish enabling 2FA.'}
@@ -854,24 +874,24 @@ export default function SettingsPage() {
                 )}
 
                 {twoFactorSetup && (
-                  <div style={{ display: 'grid', gap: 12, background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORD}`, borderRadius: 12, padding: 14 }}>
-                    <div style={{ fontSize: '0.76rem', color: '#EFF6FF', fontFamily: FONT, fontWeight: 700 }}>Current setup details</div>
+                  <div style={{ display: 'grid', gap: 12, background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORD}`, borderRadius: 16, padding: 14 }}>
+                    <div style={{ fontSize: '0.76rem', color: TEXT, fontFamily: FONT, fontWeight: 700 }}>Current setup details</div>
                     <a
                       href={twoFactorSetup.otpauthUrl}
-                      style={{ color: '#7DD3FC', fontFamily: FONT, fontSize: '0.74rem', wordBreak: 'break-all' }}
+                      style={{ color: CYAN, fontFamily: FONT, fontSize: '0.74rem', wordBreak: 'break-all' }}
                     >
                       Open your authenticator app with this `otpauth://` link
                     </a>
-                    <div style={{ fontSize: '0.72rem', color: 'rgba(148,163,184,0.7)', fontFamily: FONT, lineHeight: 1.5 }}>
-                      Secret: <span style={{ color: '#EFF6FF' }}>{twoFactorSetup.secret}</span>
+                    <div style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.5 }}>
+                      Secret: <span style={{ color: TEXT }}>{twoFactorSetup.secret}</span>
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: 'rgba(148,163,184,0.7)', fontFamily: FONT, lineHeight: 1.6 }}>
+                    <div style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.6 }}>
                       Backup codes: {twoFactorSetup.backupCodes.join(' · ')}
                     </div>
                   </div>
                 )}
 
-                <div style={{ fontSize: '0.78rem', color: 'rgba(148,163,184,0.7)', fontFamily: FONT }}>
+                <div style={{ fontSize: '0.78rem', color: SOFT, fontFamily: FONT }}>
                   {sessionSummary}
                 </div>
               </div>
@@ -883,9 +903,9 @@ export default function SettingsPage() {
           <Section icon={<Palette size={16} />} title="Account">
             <div style={{ padding: 18, display: 'grid', gap: 14 }}>
               <div style={{ display: 'grid', gap: 10 }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#EFF6FF', fontFamily: FONT }}>Phone Number</div>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: TEXT, fontFamily: FONT }}>Phone Number</div>
                 <FormField value={phoneInput} onChange={setPhoneInput} type="tel" placeholder="+962791234567" />
-                <div style={{ fontSize: '0.72rem', color: 'rgba(148,163,184,0.65)', fontFamily: FONT, lineHeight: 1.5 }}>
+                <div style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.5 }}>
                   {user?.phoneVerified
                     ? 'Your phone is currently verified.'
                     : user?.phone
@@ -911,10 +931,10 @@ export default function SettingsPage() {
           </Section>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: '0.7rem', color: 'rgba(148,163,184,0.3)', fontFamily: FONT, marginTop: 8 }}>
+        <p style={{ textAlign: 'center', fontSize: '0.7rem', color: SOFT, fontFamily: DISPLAY_FONT, marginTop: 8, opacity: 0.72 }}>
           Wasel v1.0.0 · wasel14.online
         </p>
       </div>
-    </div>
+    </PageShell>
   );
 }

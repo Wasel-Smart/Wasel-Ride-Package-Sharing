@@ -14,11 +14,11 @@ import {
   type NavGroup,
 } from './waselRootConfig';
 
-const PANEL_BG = 'linear-gradient(180deg, rgba(12,20,30,0.98), rgba(8,14,22,0.98))';
-const PANEL_BORDER = 'rgba(244,198,81,0.18)';
-const PANEL_MUTED = 'rgba(228,214,180,0.78)';
-const PANEL_SOFT = 'rgba(255,247,229,0.04)';
-const PANEL_SHADOW = '0 28px 64px rgba(2,6,12,0.4)';
+const PANEL_BG = 'var(--wasel-service-card)';
+const PANEL_BORDER = 'var(--wasel-service-border)';
+const PANEL_MUTED = 'var(--wasel-app-muted)';
+const PANEL_SOFT = 'rgba(255,255,255,0.05)';
+const PANEL_SHADOW = 'var(--wasel-shadow-lg)';
 
 export function Badge({
   label,
@@ -67,15 +67,14 @@ export function AppPill({ ar }: { ar: boolean }) {
         height: 30,
         padding: '0 12px',
         borderRadius: R.full,
-        background:
-          'linear-gradient(180deg, rgba(255,247,229,0.05), rgba(255,247,229,0.03))',
-        border: `1px solid ${PANEL_BORDER}`,
-        color: 'rgba(248,239,214,0.82)',
+        background: 'var(--wasel-app-nav-surface)',
+        border: '1px solid var(--wasel-app-border)',
+        color: 'var(--wasel-app-muted)',
         fontSize: '0.72rem',
         fontWeight: 700,
         fontFamily: F,
         whiteSpace: 'nowrap',
-        boxShadow: '0 12px 24px rgba(1,10,18,0.16)',
+        boxShadow: '0 18px 42px rgba(1,10,18,0.18)',
       }}
     >
       <span
@@ -121,7 +120,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
           height: 34,
           padding: '0 10px',
           borderRadius: R.md,
-          background: open ? 'rgba(244,198,81,0.12)' : PANEL_SOFT,
+          background: open ? 'rgba(15,115,255,0.12)' : PANEL_SOFT,
           border: `1px solid ${open ? C.borderHov : C.border}`,
           cursor: 'pointer',
           display: 'flex',
@@ -129,10 +128,10 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
           gap: 5,
           fontSize: '0.75rem',
           fontWeight: 700,
-          color: open ? C.gold : 'rgba(248,239,214,0.8)',
+          color: open ? 'var(--wasel-app-blue)' : 'var(--wasel-app-ink)',
           fontFamily: F,
           transition: 'all 0.14s',
-          boxShadow: open ? '0 10px 24px rgba(244,198,81,0.16)' : 'none',
+          boxShadow: open ? '0 12px 28px rgba(15,115,255,0.12)' : 'none',
         }}
       >
         <span style={{ fontSize: '0.68rem', opacity: 0.7 }}>$</span>
@@ -163,7 +162,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
             background: PANEL_BG,
             backdropFilter: 'blur(24px)',
             border: `1px solid ${PANEL_BORDER}`,
-            borderRadius: 16,
+            borderRadius: 20,
             boxShadow: PANEL_SHADOW,
             overflow: 'hidden',
             zIndex: 1100,
@@ -175,7 +174,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
               padding: '8px 12px 4px',
               fontSize: '0.6rem',
               fontWeight: 700,
-              color: 'rgba(228,214,180,0.6)',
+              color: 'var(--wasel-app-soft)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               fontFamily: F,
@@ -195,12 +194,12 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
                 width: '100%',
                 padding: '8px 12px',
                 background:
-                  current === code ? 'rgba(244,198,81,0.12)' : 'transparent',
+                  current === code ? 'rgba(15,115,255,0.08)' : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 fontSize: '0.8rem',
                 fontWeight: current === code ? 700 : 500,
-                color: current === code ? C.gold : 'rgba(248,239,214,0.78)',
+                color: current === code ? 'var(--wasel-app-blue)' : 'var(--wasel-app-ink)',
                 fontFamily: F,
                 transition: 'background 0.12s',
               }}
@@ -209,7 +208,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
               <span
                 style={{
                   fontSize: '0.7rem',
-                  color: 'rgba(228,214,180,0.5)',
+                  color: 'var(--wasel-app-soft)',
                   fontFamily: F,
                 }}
               >
@@ -243,9 +242,9 @@ export function OnlineToggle({ ar }: { ar: boolean }) {
         height: 34,
         padding: '0 12px',
         borderRadius: R.full,
-        background: online ? 'rgba(255,240,193,0.14)' : PANEL_SOFT,
+        background: online ? 'rgba(25,231,187,0.12)' : PANEL_SOFT,
         border: `1.5px solid ${
-          online ? 'rgba(255,240,193,0.28)' : 'rgba(255,247,229,0.14)'
+          online ? 'rgba(25,231,187,0.24)' : PANEL_BORDER
         }`,
         cursor: 'pointer',
         display: 'flex',
@@ -253,7 +252,7 @@ export function OnlineToggle({ ar }: { ar: boolean }) {
         gap: 6,
         fontSize: '0.72rem',
         fontWeight: 700,
-        color: online ? C.green : 'rgba(248,239,214,0.56)',
+        color: online ? 'var(--wasel-app-teal)' : 'var(--wasel-app-soft)',
         fontFamily: F,
         transition: 'all 0.2s',
       }}
@@ -314,8 +313,8 @@ export function NavDropdown({
         background: PANEL_BG,
         backdropFilter: 'blur(28px)',
         border: `1px solid ${PANEL_BORDER}`,
-        borderRadius: 18,
-        boxShadow: `${PANEL_SHADOW}, 0 0 0 1px rgba(244,198,81,0.06)`,
+        borderRadius: 22,
+        boxShadow: `${PANEL_SHADOW}, 0 0 0 1px rgba(216,251,255,0.04)`,
         padding: 12,
         minWidth: 380,
         display: 'grid',
@@ -344,9 +343,8 @@ export function NavDropdown({
             gap: 4,
             padding: '11px 13px',
             borderRadius: 14,
-            background:
-              'linear-gradient(180deg, rgba(255,247,229,0.05), rgba(255,247,229,0.03))',
-            border: '1px solid rgba(255,255,255,0.07)',
+            background: 'rgba(15,115,255,0.04)',
+            border: '1px solid rgba(16,43,73,0.08)',
             cursor: 'pointer',
             textAlign: ar ? 'right' : 'left',
             transition: 'all 0.14s ease',
@@ -369,7 +367,7 @@ export function NavDropdown({
           <div
             style={{
               fontSize: '0.7rem',
-              color: 'rgba(228,214,180,0.72)',
+              color: 'var(--wasel-app-soft)',
               fontFamily: F,
               lineHeight: 1.4,
             }}
@@ -420,7 +418,7 @@ export function DesktopOverflowMenu({
           borderRadius: R.full,
           background: open ? PANEL_SOFT : 'transparent',
           border: `1px solid ${open ? PANEL_BORDER : 'transparent'}`,
-          color: open ? C.text : 'rgba(248,239,214,0.72)',
+          color: open ? 'var(--wasel-app-ink)' : 'var(--wasel-app-muted)',
           fontSize: '0.8rem',
           fontWeight: 600,
           fontFamily: F,
@@ -439,8 +437,8 @@ export function DesktopOverflowMenu({
             height: 20,
             padding: '0 6px',
             borderRadius: R.full,
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'rgba(15,115,255,0.06)',
+            border: '1px solid rgba(16,43,73,0.08)',
             color: PANEL_MUTED,
             fontSize: '0.66rem',
             fontWeight: 700,
@@ -478,7 +476,7 @@ export function DesktopOverflowMenu({
             background: PANEL_BG,
             backdropFilter: 'blur(28px)',
             border: `1px solid ${PANEL_BORDER}`,
-            borderRadius: 20,
+            borderRadius: 24,
             boxShadow: PANEL_SHADOW,
             padding: 10,
             display: 'grid',
@@ -492,7 +490,7 @@ export function DesktopOverflowMenu({
               padding: '6px 8px 2px',
               fontSize: '0.62rem',
               fontWeight: 700,
-              color: 'rgba(228,214,180,0.58)',
+              color: 'var(--wasel-app-soft)',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               fontFamily: F,
@@ -520,9 +518,9 @@ export function DesktopOverflowMenu({
                   width: '100%',
                   padding: '12px 14px',
                   borderRadius: 16,
-                  background: isCurrent ? 'rgba(244,198,81,0.11)' : PANEL_SOFT,
+                  background: isCurrent ? 'rgba(15,115,255,0.08)' : PANEL_SOFT,
                   border: `1px solid ${
-                    isCurrent ? PANEL_BORDER : 'rgba(255,255,255,0.06)'
+                    isCurrent ? PANEL_BORDER : 'rgba(16,43,73,0.08)'
                   }`,
                   cursor: 'pointer',
                   textAlign: ar ? 'right' : 'left',
@@ -541,7 +539,7 @@ export function DesktopOverflowMenu({
                     style={{
                       fontSize: '0.85rem',
                       fontWeight: 700,
-                      color: isCurrent ? C.text : 'rgba(248,239,214,0.86)',
+                      color: 'var(--wasel-app-ink)',
                       fontFamily: F,
                     }}
                   >
@@ -555,9 +553,7 @@ export function DesktopOverflowMenu({
                   style={{
                     fontSize: '0.72rem',
                     lineHeight: 1.5,
-                    color: isCurrent
-                      ? 'rgba(248,239,214,0.72)'
-                      : 'rgba(228,214,180,0.72)',
+                    color: isCurrent ? 'var(--wasel-app-muted)' : 'var(--wasel-app-soft)',
                     fontFamily: F,
                   }}
                 >
@@ -622,7 +618,7 @@ export function UserMenu({
           gap: 8,
           padding: '5px 12px 5px 5px',
           borderRadius: 9999,
-          background: open ? 'rgba(244,198,81,0.1)' : 'rgba(255,247,229,0.06)',
+          background: open ? 'rgba(15,115,255,0.08)' : 'rgba(15,115,255,0.04)',
           border: `1px solid ${open ? C.borderHov : C.border}`,
           cursor: 'pointer',
           transition: 'all 0.15s',
@@ -635,14 +631,14 @@ export function UserMenu({
             height: 28,
             borderRadius: '50%',
             background:
-              'linear-gradient(135deg,#DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
-            boxShadow: '0 0 0 1.5px rgba(25,231,187,0.28)',
+              'linear-gradient(135deg, #0f73ff 0%, #19e7bb 100%)',
+            boxShadow: '0 0 0 1.5px rgba(15,115,255,0.18)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '0.68rem',
             fontWeight: 800,
-            color: '#041018',
+            color: '#ffffff',
             flexShrink: 0,
           }}
         >
@@ -677,7 +673,7 @@ export function UserMenu({
             backdropFilter: 'blur(28px)',
             border: `1px solid ${PANEL_BORDER}`,
             borderRadius: 18,
-            boxShadow: '0 28px 64px rgba(1,10,18,0.42)',
+            boxShadow: PANEL_SHADOW,
             overflow: 'hidden',
             animation: 'fade-in 0.15s ease',
             zIndex: 1000,
@@ -687,7 +683,7 @@ export function UserMenu({
             style={{
               padding: '14px 16px',
               background:
-                'linear-gradient(180deg, rgba(244,198,81,0.08), rgba(255,247,229,0.02))',
+                'linear-gradient(180deg, rgba(15,115,255,0.08), rgba(25,231,187,0.04))',
               borderBottom: `1px solid ${C.border}`,
             }}
           >
@@ -704,7 +700,7 @@ export function UserMenu({
             <div
               style={{
                 fontSize: '0.68rem',
-                color: 'rgba(228,214,180,0.72)',
+                color: 'var(--wasel-app-muted)',
                 fontFamily: F,
                 marginTop: 1,
               }}
@@ -716,7 +712,7 @@ export function UserMenu({
                 display: 'flex',
                 gap: 0,
                 marginTop: 12,
-                background: 'rgba(255,247,229,0.04)',
+                background: 'rgba(15,115,255,0.04)',
                 borderRadius: 12,
                 overflow: 'hidden',
                 border: `1px solid ${C.border}`,
@@ -743,7 +739,7 @@ export function UserMenu({
                 <div
                   style={{
                     fontSize: '0.58rem',
-                    color: 'rgba(228,214,180,0.62)',
+                    color: 'var(--wasel-app-soft)',
                     fontFamily: F,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
@@ -766,7 +762,7 @@ export function UserMenu({
                 <div
                   style={{
                     fontSize: '0.58rem',
-                    color: 'rgba(228,214,180,0.62)',
+                    color: 'var(--wasel-app-soft)',
                     fontFamily: F,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',

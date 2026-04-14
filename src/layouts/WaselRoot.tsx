@@ -6,7 +6,7 @@ import { useLocalAuth } from '../contexts/LocalAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
-import { C, F, R, GLOBAL_STYLES } from '../utils/wasel-ds';
+import { F, R, GLOBAL_STYLES } from '../utils/wasel-ds';
 import { buildAuthPagePath } from '../utils/authFlow';
 import { MobileBottomNav } from '../components/MobileBottomNav';
 import { AvailabilityBanner } from '../components/system/AvailabilityBanner';
@@ -440,7 +440,7 @@ export default function WaselRoot() {
                     letterSpacing: '-0.01em',
                     background: 'var(--wasel-app-button-primary)',
                     border: '1px solid rgba(255,255,255,0.12)',
-                    color: '#ffffff',
+                    color: '#081520',
                     fontFamily: F,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',

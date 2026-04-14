@@ -211,7 +211,7 @@ export function LandingHeader({
           subtitle="Mobility OS"
           style={{
             filter:
-              'drop-shadow(0 0 18px rgba(32,216,255,0.16)) drop-shadow(0 0 20px rgba(114,255,71,0.12))',
+              'drop-shadow(0 0 18px rgba(169,227,255,0.16)) drop-shadow(0 0 22px rgba(169,227,255,0.12))',
           }}
         />
         <div

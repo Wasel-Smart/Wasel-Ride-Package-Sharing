@@ -82,7 +82,7 @@ function HomeHero({
               size={176}
               style={{
                 filter:
-                  'drop-shadow(0 26px 48px rgba(1,10,18,0.34)) drop-shadow(0 0 34px rgba(25,231,187,0.2))',
+                  'drop-shadow(0 26px 48px rgba(1,10,18,0.34)) drop-shadow(0 0 34px rgba(169,227,255,0.18))',
               }}
             />
           </div>

@@ -17,25 +17,25 @@ export const C = {
   panel: 'var(--wasel-panel-muted)',
   elevated: 'var(--wasel-panel-muted-strong)',
 
-  navy: '#050B1A',
-  navyMid: '#122235',
-  navyLight: '#25394E',
+  navy: 'var(--wasel-app-hero)',
+  navyMid: '#0b2236',
+  navyLight: '#18354d',
 
-  cyan: '#19E7BB',
-  cyanDark: '#0FA588',
-  cyanDim: 'rgba(25,231,187,0.16)',
-  cyanGlow: 'rgba(25,231,187,0.24)',
-  blue: '#65E1FF',
-  blueLight: '#D8FBFF',
-  blueDim: 'rgba(101,225,255,0.18)',
-  gold: '#48CFFF',
-  goldDim: 'rgba(72,207,255,0.18)',
-  green: '#A2FFE7',
-  greenDim: 'rgba(162,255,231,0.18)',
-  purple: '#96B7C6',
-  purpleDim: 'rgba(150,183,198,0.16)',
-  orange: '#0BC3A0',
-  orangeDim: 'rgba(11,195,160,0.16)',
+  cyan: 'var(--wasel-app-blue)',
+  cyanDark: 'var(--wasel-app-teal)',
+  cyanDim: 'rgba(101,225,255,0.16)',
+  cyanGlow: 'rgba(101,225,255,0.24)',
+  blue: 'var(--wasel-app-blue-strong)',
+  blueLight: 'var(--wasel-app-sky)',
+  blueDim: 'rgba(157,232,255,0.18)',
+  gold: 'var(--wasel-app-sky)',
+  goldDim: 'rgba(216,251,255,0.18)',
+  green: 'var(--wasel-app-teal)',
+  greenDim: 'rgba(25,231,187,0.18)',
+  purple: '#b4d7e8',
+  purpleDim: 'rgba(180,215,232,0.16)',
+  orange: '#ff9d6c',
+  orangeDim: 'rgba(255,157,108,0.16)',
 
   text: 'var(--wasel-copy-primary)',
   textSub: 'var(--wasel-copy-muted)',
@@ -138,23 +138,23 @@ export const SH = {
   lg: 'var(--wasel-shadow-xl)',
   xl: 'var(--wasel-shadow-xl)',
   navy: 'var(--wasel-shadow-md)',
-  cyan: '0 18px 50px rgba(25,231,187,0.2)',
-  cyanL: '0 24px 64px rgba(25,231,187,0.28)',
-  blue: '0 18px 50px rgba(101,225,255,0.2)',
-  green: '0 18px 50px rgba(162,255,231,0.18)',
-  gold: '0 18px 50px rgba(72,207,255,0.22)',
+  cyan: '0 18px 50px rgba(101,225,255,0.2)',
+  cyanL: '0 24px 64px rgba(101,225,255,0.28)',
+  blue: '0 18px 50px rgba(157,232,255,0.2)',
+  green: '0 18px 50px rgba(25,231,187,0.18)',
+  gold: '0 18px 50px rgba(216,251,255,0.22)',
   inner: 'inset 0 1px 0 rgba(255,255,255,0.05)',
 } as const;
 
-export const GRAD = 'linear-gradient(135deg, #D9FFF8 0%, #1AE7BB 44%, #0C9F85 100%)';
-export const GRAD_GOLD = 'linear-gradient(135deg, #48CFFF 0%, #A2FFE7 100%)';
-export const GRAD_GREEN = 'linear-gradient(135deg, #19E7BB 0%, #A2FFE7 100%)';
-export const GRAD_NAVY = 'linear-gradient(135deg, #050B1A 0%, #25394E 100%)';
-export const GRAD_PURPLE = 'linear-gradient(135deg, #2DBFDF 0%, #D8FBFF 100%)';
-export const GRAD_HERO = 'linear-gradient(160deg, #040917 0%, #0A1225 40%, #1B2942 68%, #65717A 100%)';
-export const GRAD_SIGNAL = 'linear-gradient(135deg, #65E1FF 0%, #1AE7BB 44%, #0BC3A0 100%)';
+export const GRAD = 'var(--wasel-app-button-primary)';
+export const GRAD_GOLD = 'linear-gradient(135deg, #f5fbff 0%, #d8fbff 50%, #9de8ff 100%)';
+export const GRAD_GREEN = 'linear-gradient(135deg, #efffff 0%, #9de8ff 48%, #19e7bb 100%)';
+export const GRAD_NAVY = 'var(--wasel-service-head-bg)';
+export const GRAD_PURPLE = 'linear-gradient(135deg, #9de8ff 0%, #d8fbff 100%)';
+export const GRAD_HERO = 'var(--wasel-service-head-bg)';
+export const GRAD_SIGNAL = 'var(--wasel-app-button-primary)';
 export const GRAD_AURORA =
-  'radial-gradient(circle at top, rgba(101,225,255,0.24), rgba(25,231,187,0.18) 44%, rgba(4,18,30,0) 74%)';
+  'radial-gradient(circle at top, rgba(101,225,255,0.24), rgba(25,231,187,0.16) 44%, rgba(4,18,30,0) 74%)';
 
 export const ANIM = {
   dur: {

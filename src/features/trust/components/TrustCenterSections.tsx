@@ -8,12 +8,12 @@ import {
 } from '../../../components/system/WaselPresence';
 
 export const TRUST_THEME = {
-  bg: '#061726',
-  card: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-  border: 'rgba(93,150,210,0.14)',
-  cyan: '#47B7E6',
-  green: '#6BB515',
-  gold: '#A8D614',
+  bg: 'var(--wasel-service-bg)',
+  card: 'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02))',
+  border: 'rgba(157,232,255,0.18)',
+  cyan: '#0F73FF',
+  green: '#19E7BB',
+  gold: '#9DE8FF',
   red: '#EF4444',
   font: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
   display: "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', 'Cairo', sans-serif)",

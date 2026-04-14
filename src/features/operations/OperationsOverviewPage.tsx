@@ -24,13 +24,13 @@ import {
 } from '../../services/serviceProviderWorkflows';
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
 
-const BG = '#061726';
-const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))';
-const BORD = 'rgba(93,150,210,0.14)';
-const CYAN = '#47B7E6';
-const GOLD = '#A8D614';
-const GREEN = '#6BB515';
-const BLUE = '#3B82F6';
+const BG = 'var(--wasel-service-bg)';
+const CARD = 'var(--wasel-service-card)';
+const BORD = 'var(--wasel-service-border)';
+const CYAN = 'var(--wasel-app-blue)';
+const GOLD = 'var(--wasel-app-sky)';
+const GREEN = 'var(--wasel-app-teal)';
+const BLUE = 'var(--wasel-app-blue-strong)';
 const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 type SurfaceConfig = {
@@ -83,8 +83,10 @@ function cardStyle() {
   return {
     background: CARD,
     border: `1px solid ${BORD}`,
-    borderRadius: 18,
+    borderRadius: 22,
     padding: '18px 18px 16px',
+    boxShadow: 'var(--wasel-shadow-card)',
+    backdropFilter: 'blur(18px)',
   } as const;
 }
 

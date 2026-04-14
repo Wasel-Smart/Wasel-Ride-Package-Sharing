@@ -13,10 +13,18 @@
 
 import { Loader2 } from 'lucide-react';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { C, R, SH, F, TYPE } from '../../utils/wasel-ds';
+import { C, R, F, TYPE } from '../../utils/wasel-ds';
 
 type ButtonVariant = 'primary' | 'outline' | 'ghost' | 'gold' | 'danger';
 type ButtonSize    = 'sm' | 'md' | 'lg';
+
+const BUTTON_PRIMARY = 'linear-gradient(135deg, #EEF8FF 0%, #D6EEFF 52%, #A9E3FF 100%)';
+const BUTTON_PRIMARY_SHADOW = '0 18px 46px rgba(169,227,255,0.24)';
+const BUTTON_PRIMARY_HOVER = '0 24px 60px rgba(169,227,255,0.34)';
+const BUTTON_OUTLINE_BG = 'rgba(169,227,255,0.08)';
+const BUTTON_OUTLINE_BG_HOVER = 'rgba(169,227,255,0.12)';
+const BUTTON_OUTLINE_BORDER = 'rgba(169,227,255,0.22)';
+const BUTTON_OUTLINE_BORDER_HOVER = 'rgba(169,227,255,0.42)';
 
 interface WaselButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:  ButtonVariant;
@@ -30,18 +38,18 @@ interface WaselButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, { background: string; color: string; border: string; boxShadow: string; hoverShadow: string }> = {
   primary: {
-    background:  'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
-    color:       '#041019',
-    border:      'none',
-    boxShadow:   SH.gold,
-    hoverShadow: '0 24px 60px rgba(25,231,187,0.28)',
+    background:  BUTTON_PRIMARY,
+    color:       '#081520',
+    border:      '1px solid rgba(255,255,255,0.12)',
+    boxShadow:   BUTTON_PRIMARY_SHADOW,
+    hoverShadow: BUTTON_PRIMARY_HOVER,
   },
   outline: {
-    background:  'transparent',
-    color:       C.cyan,
-    border:      `1px solid ${C.border}`,
+    background:  BUTTON_OUTLINE_BG,
+    color:       'var(--foreground)',
+    border:      `1px solid ${BUTTON_OUTLINE_BORDER}`,
     boxShadow:   'none',
-    hoverShadow: SH.cyan,
+    hoverShadow: '0 14px 36px rgba(169,227,255,0.16)',
   },
   ghost: {
     background:  'transparent',
@@ -51,11 +59,11 @@ const variantStyles: Record<ButtonVariant, { background: string; color: string; 
     hoverShadow: 'none',
   },
   gold: {
-    background:  'linear-gradient(135deg, #65E1FF 0%, #A2FFE7 100%)',
-    color:       '#041019',
-    border:      'none',
-    boxShadow:   SH.gold,
-    hoverShadow: '0 10px 36px rgba(72,207,255,0.26)',
+    background:  'linear-gradient(135deg, #D7F0FF 0%, #BCE8FF 100%)',
+    color:       '#081520',
+    border:      '1px solid rgba(255,255,255,0.12)',
+    boxShadow:   '0 16px 38px rgba(169,227,255,0.2)',
+    hoverShadow: '0 20px 48px rgba(169,227,255,0.28)',
   },
   danger: {
     background:  C.errorDim,
@@ -126,8 +134,8 @@ export function WaselButton({
           (e.currentTarget as HTMLButtonElement).style.transform    = 'translateY(-1px) scale(1.01)';
           (e.currentTarget as HTMLButtonElement).style.boxShadow    = v.hoverShadow;
           if (variant === 'outline') {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = C.borderHov;
-            (e.currentTarget as HTMLButtonElement).style.background  = C.cyanDim;
+            (e.currentTarget as HTMLButtonElement).style.borderColor = BUTTON_OUTLINE_BORDER_HOVER;
+            (e.currentTarget as HTMLButtonElement).style.background  = BUTTON_OUTLINE_BG_HOVER;
           }
         }
         onMouseEnter?.(e);
