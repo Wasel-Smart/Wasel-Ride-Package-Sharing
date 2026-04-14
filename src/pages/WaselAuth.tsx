@@ -48,8 +48,7 @@ type Tab = 'signin' | 'signup';
 type PendingAction = 'google' | 'facebook' | 'reset' | 'whatsapp' | null;
 
 const AUTH_LANDING = {
-  bg:
-    'radial-gradient(circle at top left, rgba(15,115,255,0.12), transparent 22%), radial-gradient(circle at top right, rgba(25,231,187,0.14), transparent 20%), linear-gradient(180deg, #eef4fb 0%, #ffffff 24%, #eef5fb 100%)',
+  bg: 'radial-gradient(circle at top left, rgba(15,115,255,0.12), transparent 22%), radial-gradient(circle at top right, rgba(25,231,187,0.14), transparent 20%), linear-gradient(180deg, #eef4fb 0%, #ffffff 24%, #eef5fb 100%)',
   hero: 'linear-gradient(135deg, #092544 0%, #071A30 52%, #06111F 100%)',
   heroScrim:
     'linear-gradient(90deg, rgba(6,21,39,0.84) 0%, rgba(6,21,39,0.58) 46%, rgba(6,21,39,0.24) 100%), linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0))',
@@ -114,12 +113,12 @@ function AuthField({
           type={resolvedType}
           className="auth-field__input"
           aria-invalid={Boolean(error)}
-          onChange={(event) => onChange(event.target.value)}
-          onFocus={(event) => {
+          onChange={event => onChange(event.target.value)}
+          onFocus={event => {
             setFocused(true);
             rest.onFocus?.(event);
           }}
-          onBlur={(event) => {
+          onBlur={event => {
             setFocused(false);
             rest.onBlur?.(event);
           }}
@@ -129,7 +128,7 @@ function AuthField({
             type="button"
             className="auth-field__toggle"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
-            onClick={() => setShowPassword((current) => !current)}
+            onClick={() => setShowPassword(current => !current)}
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
@@ -150,7 +149,11 @@ function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
           <DeferredLandingMap />
         </div>
       </div>
-      <div className="auth-landing__hero-scrim" aria-hidden="true" style={{ background: AUTH_LANDING.heroScrim }} />
+      <div
+        className="auth-landing__hero-scrim"
+        aria-hidden="true"
+        style={{ background: AUTH_LANDING.heroScrim }}
+      />
       <div className="auth-landing__hero-orb auth-landing__hero-orb--one" aria-hidden="true" />
       <div className="auth-landing__hero-orb auth-landing__hero-orb--two" aria-hidden="true" />
       <div className="auth-landing__hero-mark" aria-hidden="true">
@@ -163,14 +166,7 @@ function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
           One Wasel access layer
         </div>
 
-        <WaselLogo
-          size={50}
-          theme="light"
-          variant="full"
-          showWordmark
-          subtitle=""
-          framed={false}
-        />
+        <WaselLogo size={50} theme="light" variant="full" showWordmark subtitle="" framed={false} />
 
         <h1 className="auth-landing__hero-title" style={{ fontFamily: LANDING_DISPLAY }}>
           One account that looks and feels like the landing page.
@@ -188,7 +184,7 @@ function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
         </div>
 
         <div className="auth-landing__service-grid">
-          {SERVICE_TILES.map((tile) => {
+          {SERVICE_TILES.map(tile => {
             const Icon = tile.icon;
 
             return (
@@ -204,7 +200,7 @@ function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
         </div>
 
         <div className="auth-landing__trust-row">
-          {BRAND_FEATURES.map((item) => (
+          {BRAND_FEATURES.map(item => (
             <div key={item.text} className="auth-landing__trust-chip">
               <span className="auth-landing__trust-icon">{item.icon}</span>
               <span>{item.text}</span>
@@ -224,7 +220,7 @@ function StrengthBar({ password }: { password: string }) {
   return (
     <div className="auth-strength">
       <div className="auth-strength__bars">
-        {[1, 2, 3, 4, 5].map((value) => (
+        {[1, 2, 3, 4, 5].map(value => (
           <div
             key={value}
             className="auth-strength__bar"
@@ -248,8 +244,11 @@ function PasswordChecklist({ password }: { password: string }) {
 
   return (
     <div className="auth-password-checklist">
-      {requirements.map((requirement) => (
-        <div key={requirement.key} className={`auth-password-checklist__item${requirement.met ? ' is-met' : ''}`}>
+      {requirements.map(requirement => (
+        <div
+          key={requirement.key}
+          className={`auth-password-checklist__item${requirement.met ? ' is-met' : ''}`}
+        >
           <span className="auth-password-checklist__dot" />
           <span>{requirement.label}</span>
         </div>
@@ -261,7 +260,7 @@ function PasswordChecklist({ password }: { password: string }) {
 function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
   return (
     <div className="auth-landing__tabs" role="tablist" aria-label="Authentication tabs">
-      {(['signin', 'signup'] as Tab[]).map((value) => {
+      {(['signin', 'signup'] as Tab[]).map(value => {
         const active = tab === value;
 
         return (
@@ -323,7 +322,7 @@ export default function WaselAuth() {
 
     if (!cleaned) return 'find ride';
 
-    return cleaned.replace(/\b\w/g, (letter) => letter.toUpperCase());
+    return cleaned.replace(/\b\w/g, letter => letter.toUpperCase());
   }, [safeReturnTo]);
 
   const normalizedEmail = useMemo(() => normalizeEmailInput(email), [email]);
@@ -339,8 +338,7 @@ export default function WaselAuth() {
   const nameError = tab === 'signup' && name.trim() ? validateFullName(name) : '';
   const emailError =
     normalizedEmail && !validateEmail(normalizedEmail) ? 'Please enter a valid email address.' : '';
-  const passwordError =
-    tab === 'signup' && password ? (validatePassword(password) ?? '') : '';
+  const passwordError = tab === 'signup' && password ? (validatePassword(password) ?? '') : '';
   const phoneError =
     tab === 'signup' && phone.trim() ? (validatePhoneNumber(normalizedPhone) ?? '') : '';
 
@@ -353,7 +351,7 @@ export default function WaselAuth() {
 
   useEffect(() => {
     const nextTab: Tab = rawTab === 'signup' || rawTab === 'register' ? 'signup' : 'signin';
-    setTab((current) => (current === nextTab ? current : nextTab));
+    setTab(current => (current === nextTab ? current : nextTab));
   }, [rawTab]);
 
   useEffect(() => {
@@ -455,7 +453,9 @@ export default function WaselAuth() {
       const friendly = friendlyAuthError(registration.error, 'Sign up failed. Please try again.');
       if (friendly.includes('already exists')) {
         setTab('signin');
-        setNotice(`An account already exists for ${normalizedEmail}. Sign in instead or reset your password.`);
+        setNotice(
+          `An account already exists for ${normalizedEmail}. Sign in instead or reset your password.`,
+        );
         setError('');
         return;
       }
@@ -465,7 +465,9 @@ export default function WaselAuth() {
     if (registration.requiresEmailConfirmation) {
       setPassword('');
       setPhone('');
-      setNotice(`Check ${registration.email ?? normalizedEmail} and confirm your email address to finish creating your account.`);
+      setNotice(
+        `Check ${registration.email ?? normalizedEmail} and confirm your email address to finish creating your account.`,
+      );
       setTab('signin');
       return;
     }
@@ -539,7 +541,12 @@ export default function WaselAuth() {
   return (
     <div
       className="auth-landing"
-      style={{ minHeight: '100vh', background: AUTH_LANDING.bg, color: AUTH_LANDING.text, fontFamily: LANDING_FONT }}
+      style={{
+        minHeight: '100vh',
+        background: AUTH_LANDING.bg,
+        color: AUTH_LANDING.text,
+        fontFamily: LANDING_FONT,
+      }}
     >
       <div className="auth-landing__shell">
         <header className="auth-landing__header">
@@ -650,7 +657,7 @@ export default function WaselAuth() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -12 }}
                   transition={{ duration: 0.15 }}
-                  onSubmit={(event) => {
+                  onSubmit={event => {
                     event.preventDefault();
                     void (tab === 'signin' ? handleSignIn() : handleSignUp());
                   }}
@@ -687,7 +694,9 @@ export default function WaselAuth() {
                     type="password"
                     value={password}
                     onChange={setPassword}
-                    placeholder={tab === 'signin' ? 'Enter your password' : 'Create a secure password'}
+                    placeholder={
+                      tab === 'signin' ? 'Enter your password' : 'Create a secure password'
+                    }
                     icon={<Lock size={16} />}
                     autoComplete={tab === 'signin' ? 'current-password' : 'new-password'}
                     error={passwordError || undefined}
@@ -736,7 +745,13 @@ export default function WaselAuth() {
                     disabled={isBusy}
                     aria-label={tab === 'signin' ? 'Submit sign in' : 'Submit sign up'}
                   >
-                    <span>{loading ? 'Please wait...' : tab === 'signin' ? 'Sign in to Wasel' : 'Create account'}</span>
+                    <span>
+                      {loading
+                        ? 'Please wait...'
+                        : tab === 'signin'
+                          ? 'Sign in to Wasel'
+                          : 'Create account'}
+                    </span>
                     <ArrowRight size={16} />
                   </button>
 
@@ -747,14 +762,16 @@ export default function WaselAuth() {
                   </div>
 
                   <div className="auth-landing__social-grid">
-                    {socialButtons.map((social) => (
+                    {socialButtons.map(social => (
                       <motion.button
                         key={social.label}
                         type="button"
                         whileHover={{ scale: 1.01, y: -1 }}
                         whileTap={{ scale: 0.98 }}
                         className="auth-landing__social-button"
-                        aria-label={social.label === 'WhatsApp' ? 'WhatsApp' : `Continue with ${social.label}`}
+                        aria-label={
+                          social.label === 'WhatsApp' ? 'WhatsApp' : `Continue with ${social.label}`
+                        }
                         disabled={isBusy}
                         onClick={() => {
                           void social.onClick();
@@ -777,7 +794,9 @@ export default function WaselAuth() {
                         <div className="auth-landing__social-copy">
                           <strong>{social.label}</strong>
                           <span>
-                            {pendingAction === social.label.toLowerCase() ? 'Opening secure flow...' : `Continue with ${social.label}`}
+                            {pendingAction === social.label.toLowerCase()
+                              ? 'Opening secure flow...'
+                              : `Continue with ${social.label}`}
                           </span>
                         </div>
                         <ChevronRight size={14} color={SOCIAL_META[social.label].accent} />
@@ -801,13 +820,22 @@ export default function WaselAuth() {
 
               <p className="auth-landing__legal">
                 By continuing, you agree to the{' '}
-                <button type="button" className="auth-landing__legal-link" onClick={() => nav('/app/terms')}>
+                <button
+                  type="button"
+                  className="auth-landing__legal-link"
+                  onClick={() => nav('/app/terms')}
+                >
                   Terms of Service
-                </button>
-                {' '}and{' '}
-                <button type="button" className="auth-landing__legal-link" onClick={() => nav('/app/privacy')}>
+                </button>{' '}
+                and{' '}
+                <button
+                  type="button"
+                  className="auth-landing__legal-link"
+                  onClick={() => nav('/app/privacy')}
+                >
                   Privacy Policy
-                </button>.
+                </button>
+                .
               </p>
             </div>
           </div>

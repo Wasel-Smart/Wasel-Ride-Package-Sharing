@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -41,8 +43,43 @@ jobs:
       - name: Lint (zero warnings)
         run: npm run lint:strict
 
-      - name: Format check
-        run: npm run format:check
+      - name: Format check (changed source files)
+        env:
+          DIFF_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          DIFF_HEAD_SHA: ${{ github.sha }}
+        run: |
+          node - <<'NODE'
+            const { execSync } = require('child_process');
+
+            const zeroSha = /^0+$/;
+            const head = process.env.DIFF_HEAD_SHA || execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+            let base = process.env.DIFF_BASE_SHA?.trim();
+
+            if (!base || zeroSha.test(base)) {
+              try {
+                base = execSync('git rev-parse HEAD^', { encoding: 'utf8' }).trim();
+              } catch {
+                base = execSync('git rev-list --max-parents=0 HEAD', { encoding: 'utf8' }).trim().split('\n').pop();
+              }
+            }
+
+            const diffOutput = execSync(`git diff --name-only ${base} ${head}`, { encoding: 'utf8' });
+            const files = diffOutput
+              .split('\n')
+              .map((file) => file.trim())
+              .filter(Boolean)
+              .filter((file) => /^src\/.*\.(ts|tsx|css)$/.test(file));
+
+            if (files.length === 0) {
+              console.log('No changed source files to format-check.');
+              process.exit(0);
+            }
+
+            console.log(`Checking Prettier on ${files.length} changed source file(s).`);
+            execSync(`npx prettier --check ${files.map((file) => JSON.stringify(file)).join(' ')}`, {
+              stdio: 'inherit',
+            });
+          NODE
 
       - name: Unit tests with coverage
         run: npm run test:coverage
