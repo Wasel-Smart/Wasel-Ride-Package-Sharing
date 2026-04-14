@@ -11,6 +11,24 @@ import { supabase } from '../utils/supabase/client';
 
 type CallbackState = 'loading' | 'closing' | 'redirecting' | 'recovery' | 'error';
 
+const CALLBACK_BG = 'var(--shell-background)';
+const CALLBACK_TEXT = 'var(--text-primary)';
+const CALLBACK_MUTED = 'var(--text-secondary)';
+const CALLBACK_SOFT = 'var(--surface-muted)';
+const CALLBACK_PANEL = 'var(--surface-strong)';
+const CALLBACK_FIELD = 'var(--surface-field)';
+const CALLBACK_BORDER = 'var(--border)';
+const CALLBACK_PANEL_SHADOW = 'var(--wasel-shadow-lg)';
+const CALLBACK_PRIMARY = 'var(--theme-gradient-primary)';
+const CALLBACK_PRIMARY_TEXT = 'var(--text-inverse)';
+const CALLBACK_ACCENT = 'var(--accent)';
+const CALLBACK_DANGER = 'var(--danger)';
+const CALLBACK_DANGER_BG = 'rgb(var(--danger-rgb) / 0.12)';
+const CALLBACK_DANGER_BORDER = 'rgb(var(--danger-rgb) / 0.28)';
+const CALLBACK_SUCCESS_TEXT = 'rgb(var(--accent-rgb) / 1)';
+const CALLBACK_SPINNER_IDLE = 'rgb(var(--accent-secondary-rgb) / 0.18)';
+const CALLBACK_SPINNER_ERROR = 'rgb(var(--danger-rgb) / 0.3)';
+
 function readCallbackParam(key: string): string {
   if (typeof window === 'undefined') return '';
 
@@ -251,8 +269,8 @@ export default function WaselAuthCallback() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#040C18',
-          color: '#EFF6FF',
+          background: CALLBACK_BG,
+          color: CALLBACK_TEXT,
           padding: 24,
           fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
         }}
@@ -263,8 +281,9 @@ export default function WaselAuthCallback() {
             maxWidth: 420,
             borderRadius: 20,
             padding: 28,
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(93,150,210,0.16)',
+            background: CALLBACK_PANEL,
+            border: `1px solid ${CALLBACK_BORDER}`,
+            boxShadow: CALLBACK_PANEL_SHADOW,
             display: 'grid',
             gap: 14,
           }}
@@ -273,13 +292,13 @@ export default function WaselAuthCallback() {
             <h1 style={{ margin: '0 0 8px', fontSize: '1.35rem', lineHeight: 1.2 }}>
               Reset your password
             </h1>
-            <p style={{ margin: 0, color: 'rgba(239,246,255,0.7)', lineHeight: 1.6 }}>
+            <p style={{ margin: 0, color: CALLBACK_MUTED, lineHeight: 1.6 }}>
               {message}
             </p>
           </div>
 
           <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: '0.82rem', color: '#CBD5E1' }}>New password</span>
+            <span style={{ fontSize: '0.82rem', color: CALLBACK_MUTED }}>New password</span>
             <input
               type="password"
               value={password}
@@ -289,9 +308,9 @@ export default function WaselAuthCallback() {
                 width: '100%',
                 minHeight: 46,
                 borderRadius: 12,
-                border: '1px solid rgba(93,150,210,0.18)',
-                background: 'rgba(255,255,255,0.03)',
-                color: '#EFF6FF',
+                border: `1px solid ${CALLBACK_BORDER}`,
+                background: CALLBACK_FIELD,
+                color: CALLBACK_TEXT,
                 padding: '0 14px',
                 fontSize: '0.95rem',
               }}
@@ -304,11 +323,11 @@ export default function WaselAuthCallback() {
               gap: 6,
               padding: '12px 14px',
               borderRadius: 12,
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(93,150,210,0.16)',
+              background: CALLBACK_SOFT,
+              border: `1px solid ${CALLBACK_BORDER}`,
             }}
           >
-            <span style={{ fontSize: '0.78rem', color: '#CBD5E1', fontWeight: 700 }}>
+            <span style={{ fontSize: '0.78rem', color: CALLBACK_MUTED, fontWeight: 700 }}>
               Password requirements
             </span>
             <div style={{ display: 'grid', gap: 6 }}>
@@ -316,7 +335,7 @@ export default function WaselAuthCallback() {
                 <span
                   key={requirement.key}
                   style={{
-                    color: requirement.met ? '#82F4BF' : 'rgba(239,246,255,0.72)',
+                    color: requirement.met ? CALLBACK_SUCCESS_TEXT : CALLBACK_MUTED,
                     fontSize: '0.8rem',
                     lineHeight: 1.5,
                   }}
@@ -328,7 +347,9 @@ export default function WaselAuthCallback() {
           </div>
 
           <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: '0.82rem', color: '#CBD5E1' }}>Confirm password</span>
+            <span style={{ fontSize: '0.82rem', color: CALLBACK_MUTED }}>
+              Confirm password
+            </span>
             <input
               type="password"
               value={confirmPassword}
@@ -338,9 +359,9 @@ export default function WaselAuthCallback() {
                 width: '100%',
                 minHeight: 46,
                 borderRadius: 12,
-                border: '1px solid rgba(93,150,210,0.18)',
-                background: 'rgba(255,255,255,0.03)',
-                color: '#EFF6FF',
+                border: `1px solid ${CALLBACK_BORDER}`,
+                background: CALLBACK_FIELD,
+                color: CALLBACK_TEXT,
                 padding: '0 14px',
                 fontSize: '0.95rem',
               }}
@@ -351,9 +372,9 @@ export default function WaselAuthCallback() {
             <div
               style={{
                 borderRadius: 12,
-                border: '1px solid rgba(255,68,85,0.28)',
-                background: 'rgba(255,68,85,0.12)',
-                color: '#FF8A96',
+                border: `1px solid ${CALLBACK_DANGER_BORDER}`,
+                background: CALLBACK_DANGER_BG,
+                color: CALLBACK_DANGER,
                 padding: '12px 14px',
                 fontSize: '0.85rem',
                 lineHeight: 1.5,
@@ -373,12 +394,13 @@ export default function WaselAuthCallback() {
               minHeight: 46,
               borderRadius: 12,
               border: 'none',
-              background: 'linear-gradient(135deg, #DCFFF8, #19E7BB, #48CFFF)',
-              color: '#041018',
+              background: CALLBACK_PRIMARY,
+              color: CALLBACK_PRIMARY_TEXT,
               fontSize: '0.95rem',
               fontWeight: 800,
               cursor: savingPassword ? 'not-allowed' : 'pointer',
               opacity: savingPassword ? 0.7 : 1,
+              boxShadow: 'var(--wasel-shadow-blue)',
             }}
           >
             {savingPassword ? 'Updating password...' : 'Save new password'}
@@ -390,9 +412,9 @@ export default function WaselAuthCallback() {
             style={{
               minHeight: 42,
               borderRadius: 12,
-              border: '1px solid rgba(93,150,210,0.18)',
+              border: `1px solid ${CALLBACK_BORDER}`,
               background: 'transparent',
-              color: '#EFF6FF',
+              color: CALLBACK_TEXT,
               fontSize: '0.9rem',
               fontWeight: 700,
               cursor: 'pointer',
@@ -412,8 +434,8 @@ export default function WaselAuthCallback() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#040C18',
-        color: '#EFF6FF',
+        background: CALLBACK_BG,
+        color: CALLBACK_TEXT,
         padding: 24,
         fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
       }}
@@ -424,8 +446,9 @@ export default function WaselAuthCallback() {
           maxWidth: 420,
           borderRadius: 20,
           padding: 28,
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(93,150,210,0.16)',
+          background: CALLBACK_PANEL,
+          border: `1px solid ${CALLBACK_BORDER}`,
+          boxShadow: CALLBACK_PANEL_SHADOW,
           textAlign: 'center',
         }}
       >
@@ -435,8 +458,8 @@ export default function WaselAuthCallback() {
             height: 42,
             margin: '0 auto 16px',
             borderRadius: '50%',
-            border: state === 'error' ? '3px solid rgba(255,68,85,0.3)' : '3px solid rgba(93,150,210,0.18)',
-            borderTop: state === 'error' ? '3px solid #FF4455' : '3px solid #19E7BB',
+            border: state === 'error' ? `3px solid ${CALLBACK_SPINNER_ERROR}` : `3px solid ${CALLBACK_SPINNER_IDLE}`,
+            borderTop: state === 'error' ? `3px solid ${CALLBACK_DANGER}` : `3px solid ${CALLBACK_ACCENT}`,
             animation:
               state === 'redirecting' || state === 'loading' || state === 'closing'
                 ? 'spin 0.8s linear infinite'
@@ -446,7 +469,7 @@ export default function WaselAuthCallback() {
         <h1 style={{ margin: '0 0 8px', fontSize: '1.35rem', lineHeight: 1.2 }}>
           {state === 'error' ? 'Sign-in could not finish' : 'Finalizing authentication'}
         </h1>
-        <p style={{ margin: 0, color: 'rgba(239,246,255,0.7)' }}>{message}</p>
+        <p style={{ margin: 0, color: CALLBACK_MUTED }}>{message}</p>
         {state === 'error' ? (
           <button
             type="button"
@@ -456,9 +479,9 @@ export default function WaselAuthCallback() {
               minHeight: 42,
               padding: '0 16px',
               borderRadius: 12,
-              border: '1px solid rgba(93,150,210,0.18)',
+              border: `1px solid ${CALLBACK_BORDER}`,
               background: 'transparent',
-              color: '#EFF6FF',
+              color: CALLBACK_TEXT,
               fontSize: '0.92rem',
               fontWeight: 700,
               cursor: 'pointer',

@@ -148,13 +148,13 @@ export default function WaselRoot() {
           top: 0,
           zIndex: 500,
           background: scrolled
-            ? 'var(--wasel-header-bg-scrolled, rgba(6,23,38,0.95))'
-            : 'var(--wasel-header-bg, rgba(7,24,39,0.84))',
+            ? 'var(--wasel-header-bg-scrolled)'
+            : 'var(--wasel-header-bg)',
           backdropFilter: 'blur(24px)',
-          borderBottom: `1px solid ${scrolled ? 'var(--wasel-header-border-scrolled, rgba(25,231,187,0.20))' : 'var(--wasel-header-border, rgba(25,231,187,0.12))'}`,
+          borderBottom: `1px solid ${scrolled ? 'var(--wasel-header-border-scrolled)' : 'var(--wasel-header-border)'}`,
           boxShadow: scrolled
-            ? 'var(--wasel-shadow-md, 0 18px 44px rgba(1,10,18,0.28))'
-            : 'var(--wasel-shadow-sm, 0 8px 24px rgba(1,10,18,0.18))',
+            ? 'var(--wasel-shadow-md)'
+            : 'var(--wasel-shadow-sm)',
           transition: 'background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease',
         }}
       >
@@ -438,7 +438,7 @@ export default function WaselRoot() {
                     fontWeight: 800,
                     letterSpacing: '-0.01em',
                     background: 'var(--wasel-app-button-primary)',
-                    border: '1px solid rgb(255 255 255 / 0.12)',
+                    border: '1px solid var(--border)',
                     color: 'var(--text-inverse)',
                     fontFamily: F,
                     cursor: 'pointer',
