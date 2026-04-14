@@ -19,6 +19,24 @@ const PANEL_BORDER = 'var(--wasel-service-border)';
 const PANEL_MUTED = 'var(--wasel-app-muted)';
 const PANEL_SOFT = 'var(--surface-muted)';
 const PANEL_SHADOW = 'var(--wasel-shadow-lg)';
+const PANEL_RING = 'rgb(var(--accent-rgb) / 0.06)';
+const ACCENT_BLUE_SOFT = 'rgb(var(--accent-secondary-rgb) / 0.04)';
+const ACCENT_BLUE_SOFT_STRONG = 'rgb(var(--accent-secondary-rgb) / 0.08)';
+const ACCENT_BLUE_SURFACE = 'rgb(var(--accent-secondary-rgb) / 0.12)';
+const ACCENT_GREEN_SURFACE = 'rgb(var(--accent-rgb) / 0.12)';
+const ACCENT_GREEN_BORDER = 'rgb(var(--accent-rgb) / 0.24)';
+const DANGER_SURFACE = 'rgb(var(--danger-rgb) / 0.08)';
+const DANGER_BORDER = 'rgb(var(--danger-rgb) / 0.28)';
+const DRAWER_OVERLAY = 'var(--bg-overlay)';
+const DRAWER_BG = 'var(--service-head-background)';
+const DRAWER_CLOSE_BG = 'var(--surface-muted)';
+const DRAWER_CLOSE_BORDER = 'var(--border)';
+const DRAWER_CLOSE_TEXT = 'var(--text-secondary)';
+const DRAWER_TEXT = 'var(--text-primary)';
+const DRAWER_MUTED = 'var(--text-secondary)';
+const DRAWER_SOFT = 'var(--text-muted)';
+const DRAWER_SECTION_BG =
+  'linear-gradient(180deg, rgb(var(--accent-secondary-rgb) / 0.08), rgb(var(--accent-rgb) / 0.04))';
 
 export function Badge({
   label,
@@ -120,7 +138,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
           height: 34,
           padding: '0 10px',
           borderRadius: R.md,
-          background: open ? 'rgba(15,115,255,0.12)' : PANEL_SOFT,
+          background: open ? ACCENT_BLUE_SURFACE : PANEL_SOFT,
           border: `1px solid ${open ? C.borderHov : C.border}`,
           cursor: 'pointer',
           display: 'flex',
@@ -131,7 +149,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
           color: open ? 'var(--wasel-app-blue)' : 'var(--wasel-app-ink)',
           fontFamily: F,
           transition: 'all 0.14s',
-          boxShadow: open ? '0 12px 28px rgba(15,115,255,0.12)' : 'none',
+          boxShadow: open ? 'var(--wasel-shadow-sm)' : 'none',
         }}
       >
         <span style={{ fontSize: '0.68rem', opacity: 0.7 }}>$</span>
@@ -194,7 +212,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
                 width: '100%',
                 padding: '8px 12px',
                 background:
-                  current === code ? 'rgba(15,115,255,0.08)' : 'transparent',
+                  current === code ? ACCENT_BLUE_SOFT_STRONG : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 fontSize: '0.8rem',
@@ -242,10 +260,8 @@ export function OnlineToggle({ ar }: { ar: boolean }) {
         height: 34,
         padding: '0 12px',
         borderRadius: R.full,
-        background: online ? 'rgba(25,231,187,0.12)' : PANEL_SOFT,
-        border: `1.5px solid ${
-          online ? 'rgba(25,231,187,0.24)' : PANEL_BORDER
-        }`,
+        background: online ? ACCENT_GREEN_SURFACE : PANEL_SOFT,
+        border: `1.5px solid ${online ? ACCENT_GREEN_BORDER : PANEL_BORDER}`,
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
@@ -262,7 +278,7 @@ export function OnlineToggle({ ar }: { ar: boolean }) {
           width: 8,
           height: 8,
           borderRadius: '50%',
-          background: online ? C.green : 'rgba(255,255,255,0.3)',
+          background: online ? C.green : 'var(--border-strong)',
           boxShadow: online ? `0 0 8px ${C.green}` : 'none',
           flexShrink: 0,
           transition: 'all 0.2s',
@@ -314,7 +330,7 @@ export function NavDropdown({
         backdropFilter: 'blur(28px)',
         border: `1px solid ${PANEL_BORDER}`,
         borderRadius: 22,
-        boxShadow: `${PANEL_SHADOW}, 0 0 0 1px rgba(216,251,255,0.04)`,
+        boxShadow: `${PANEL_SHADOW}, 0 0 0 1px ${PANEL_RING}`,
         padding: 12,
         minWidth: 380,
         display: 'grid',
@@ -343,8 +359,8 @@ export function NavDropdown({
             gap: 4,
             padding: '11px 13px',
             borderRadius: 14,
-            background: 'rgba(15,115,255,0.04)',
-            border: '1px solid rgba(16,43,73,0.08)',
+            background: ACCENT_BLUE_SOFT,
+            border: `1px solid ${PANEL_BORDER}`,
             cursor: 'pointer',
             textAlign: ar ? 'right' : 'left',
             transition: 'all 0.14s ease',
@@ -437,8 +453,8 @@ export function DesktopOverflowMenu({
             height: 20,
             padding: '0 6px',
             borderRadius: R.full,
-            background: 'rgba(15,115,255,0.06)',
-            border: '1px solid rgba(16,43,73,0.08)',
+            background: ACCENT_BLUE_SOFT,
+            border: `1px solid ${PANEL_BORDER}`,
             color: PANEL_MUTED,
             fontSize: '0.66rem',
             fontWeight: 700,
@@ -518,10 +534,8 @@ export function DesktopOverflowMenu({
                   width: '100%',
                   padding: '12px 14px',
                   borderRadius: 16,
-                  background: isCurrent ? 'rgba(15,115,255,0.08)' : PANEL_SOFT,
-                  border: `1px solid ${
-                    isCurrent ? PANEL_BORDER : 'rgba(16,43,73,0.08)'
-                  }`,
+                  background: isCurrent ? ACCENT_BLUE_SOFT_STRONG : PANEL_SOFT,
+                  border: `1px solid ${isCurrent ? PANEL_BORDER : C.border}`,
                   cursor: 'pointer',
                   textAlign: ar ? 'right' : 'left',
                   transition: 'all 0.16s ease',
@@ -618,7 +632,7 @@ export function UserMenu({
           gap: 8,
           padding: '5px 12px 5px 5px',
           borderRadius: 9999,
-          background: open ? 'rgba(15,115,255,0.08)' : 'rgba(15,115,255,0.04)',
+          background: open ? ACCENT_BLUE_SOFT_STRONG : ACCENT_BLUE_SOFT,
           border: `1px solid ${open ? C.borderHov : C.border}`,
           cursor: 'pointer',
           transition: 'all 0.15s',
@@ -630,15 +644,14 @@ export function UserMenu({
             width: 28,
             height: 28,
             borderRadius: '50%',
-            background:
-              'linear-gradient(135deg, #0f73ff 0%, #19e7bb 100%)',
-            boxShadow: '0 0 0 1.5px rgba(15,115,255,0.18)',
+            background: 'var(--theme-gradient-primary)',
+            boxShadow: '0 0 0 1.5px rgb(var(--accent-secondary-rgb) / 0.18)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '0.68rem',
             fontWeight: 800,
-            color: '#ffffff',
+            color: 'var(--text-inverse)',
             flexShrink: 0,
           }}
         >
@@ -682,8 +695,7 @@ export function UserMenu({
           <div
             style={{
               padding: '14px 16px',
-              background:
-                'linear-gradient(180deg, rgba(15,115,255,0.08), rgba(25,231,187,0.04))',
+              background: DRAWER_SECTION_BG,
               borderBottom: `1px solid ${C.border}`,
             }}
           >
@@ -712,7 +724,7 @@ export function UserMenu({
                 display: 'flex',
                 gap: 0,
                 marginTop: 12,
-                background: 'rgba(15,115,255,0.04)',
+                background: ACCENT_BLUE_SOFT,
                 borderRadius: 12,
                 overflow: 'hidden',
                 border: `1px solid ${C.border}`,
@@ -793,7 +805,7 @@ export function UserMenu({
                 textAlign: ar ? 'right' : 'left',
                 fontSize: '0.82rem',
                 fontWeight: 500,
-                color: 'rgba(248,239,214,0.78)',
+                color: DRAWER_TEXT,
                 fontFamily: F,
                 cursor: 'pointer',
               }}
@@ -858,7 +870,7 @@ export function LangToggle() {
         gap: 5,
         fontSize: '0.75rem',
         fontWeight: 700,
-        color: 'rgba(248,239,214,0.8)',
+        color: 'var(--wasel-app-ink)',
         fontFamily: F,
         transition: 'all 0.14s',
       }}
@@ -911,7 +923,7 @@ export function MobileDrawer({
         position: 'fixed',
         inset: 0,
         zIndex: 2000,
-        background: 'rgba(3,12,20,0.78)',
+        background: DRAWER_OVERLAY,
         backdropFilter: 'blur(8px)',
       }}
       onClick={onClose}
@@ -928,13 +940,10 @@ export function MobileDrawer({
           left: ar ? 0 : 'auto',
           width: 300,
           height: '100%',
-          background:
-            'linear-gradient(180deg, rgba(7,27,43,0.98), rgba(6,23,38,0.98))',
+          background: DRAWER_BG,
           borderLeft: ar ? undefined : `1px solid ${PANEL_BORDER}`,
           borderRight: ar ? `1px solid ${PANEL_BORDER}` : undefined,
-          boxShadow: ar
-            ? '20px 0 60px rgba(1,10,18,0.38)'
-            : '-20px 0 60px rgba(1,10,18,0.38)',
+          boxShadow: PANEL_SHADOW,
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
@@ -953,7 +962,7 @@ export function MobileDrawer({
         >
           <WaselLogo
             size={36}
-            theme="light"
+            theme="auto"
             variant="compact"
             showWordmark
             subtitle=""
@@ -964,14 +973,14 @@ export function MobileDrawer({
             onClick={onClose}
             aria-label={ar ? 'إغلاق القائمة' : 'Close menu'}
             style={{
-              background: 'rgba(255,247,229,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: DRAWER_CLOSE_BG,
+              border: `1px solid ${DRAWER_CLOSE_BORDER}`,
               borderRadius: R.md,
               width: 32,
               height: 32,
               cursor: 'pointer',
               fontSize: '1.1rem',
-              color: 'rgba(248,239,214,0.72)',
+              color: DRAWER_CLOSE_TEXT,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -996,15 +1005,14 @@ export function MobileDrawer({
           <div
             style={{
               padding: '14px 20px',
-              background:
-                'linear-gradient(180deg, rgba(244,198,81,0.08), rgba(255,247,229,0.02))',
+              background: DRAWER_SECTION_BG,
               borderBottom: `1px solid ${C.border}`,
             }}
           >
             <div
               style={{
                 fontWeight: 700,
-                color: '#fff',
+                color: DRAWER_TEXT,
                 fontFamily: F,
                 fontSize: '0.9rem',
               }}
@@ -1014,7 +1022,7 @@ export function MobileDrawer({
             <div
               style={{
                 fontSize: '0.72rem',
-                color: 'rgba(228,214,180,0.62)',
+                color: DRAWER_MUTED,
                 fontFamily: F,
               }}
             >
@@ -1041,7 +1049,7 @@ export function MobileDrawer({
                 style={{
                   fontSize: '0.6rem',
                   fontWeight: 700,
-                  color: 'rgba(228,214,180,0.52)',
+                  color: DRAWER_SOFT,
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   marginBottom: 8,
@@ -1077,7 +1085,7 @@ export function MobileDrawer({
                       style={{
                         fontSize: '0.875rem',
                         fontWeight: 700,
-                        color: '#fff',
+                        color: DRAWER_TEXT,
                         fontFamily: F,
                       }}
                     >
@@ -1086,7 +1094,7 @@ export function MobileDrawer({
                     <span
                       style={{
                         fontSize: '0.72rem',
-                        color: 'rgba(228,214,180,0.68)',
+                        color: DRAWER_MUTED,
                         fontFamily: F,
                         lineHeight: 1.5,
                       }}
@@ -1122,7 +1130,7 @@ export function MobileDrawer({
                       style={{
                         fontSize: '0.84rem',
                         fontWeight: 500,
-                        color: 'rgba(248,239,214,0.78)',
+                        color: DRAWER_TEXT,
                         fontFamily: F,
                       }}
                     >
@@ -1154,8 +1162,8 @@ export function MobileDrawer({
                 width: '100%',
                 height: 42,
                 borderRadius: R.md,
-                background: 'rgba(255,100,106,0.08)',
-                border: '1px solid rgba(255,100,106,0.28)',
+                background: DANGER_SURFACE,
+                border: `1px solid ${DANGER_BORDER}`,
                 color: C.error,
                 fontWeight: 700,
                 fontFamily: F,
@@ -1177,8 +1185,8 @@ export function MobileDrawer({
                   height: 42,
                   borderRadius: R.md,
                   background: 'transparent',
-                  border: '1.5px solid rgba(255,255,255,0.14)',
-                  color: 'rgba(248,239,214,0.84)',
+                  border: `1.5px solid ${PANEL_BORDER}`,
+                  color: DRAWER_TEXT,
                   fontWeight: 600,
                   fontFamily: F,
                   fontSize: '0.875rem',
@@ -1196,10 +1204,9 @@ export function MobileDrawer({
                 style={{
                   height: 42,
                   borderRadius: R.md,
-                  background:
-                    'linear-gradient(135deg,#DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
+                  background: 'var(--theme-gradient-primary)',
                   border: 'none',
-                  color: '#041018',
+                  color: 'var(--text-inverse)',
                   fontWeight: 700,
                   fontFamily: F,
                   fontSize: '0.875rem',

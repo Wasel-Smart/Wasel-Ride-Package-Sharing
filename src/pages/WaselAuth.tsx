@@ -67,9 +67,21 @@ const SERVICE_TILES = [
 ] as const;
 
 const SOCIAL_META: Record<string, { accent: string; bg: string; border: string }> = {
-  Google: { accent: '#4285F4', bg: 'rgba(66,133,244,0.10)', border: 'rgba(66,133,244,0.20)' },
-  Facebook: { accent: '#1877F2', bg: 'rgba(24,119,242,0.10)', border: 'rgba(24,119,242,0.20)' },
-  WhatsApp: { accent: '#25D366', bg: 'rgba(37,211,102,0.10)', border: 'rgba(37,211,102,0.20)' },
+  Google: {
+    accent: 'var(--auth-social-google)',
+    bg: 'var(--auth-social-google-bg)',
+    border: 'var(--auth-social-google-border)',
+  },
+  Facebook: {
+    accent: 'var(--auth-social-facebook)',
+    bg: 'var(--auth-social-facebook-bg)',
+    border: 'var(--auth-social-facebook-border)',
+  },
+  WhatsApp: {
+    accent: 'var(--auth-social-whatsapp)',
+    bg: 'var(--auth-social-whatsapp-bg)',
+    border: 'var(--auth-social-whatsapp-border)',
+  },
 };
 
 interface AuthFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
@@ -167,7 +179,7 @@ function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
           One Wasel access layer
         </div>
 
-        <WaselLogo size={50} theme="light" variant="full" showWordmark subtitle="" framed={false} />
+        <WaselLogo size={50} theme="auto" variant="full" showWordmark subtitle="" framed={false} />
 
         <h1 className="auth-landing__hero-title" style={{ fontFamily: LANDING_DISPLAY }}>
           One account that looks and feels like the landing page.
@@ -226,7 +238,7 @@ function StrengthBar({ password }: { password: string }) {
             key={value}
             className="auth-strength__bar"
             style={{
-              background: value <= strength.score ? strength.color : 'rgba(13,41,72,0.12)',
+              background: value <= strength.score ? strength.color : 'var(--surface-divider)',
             }}
           />
         ))}
@@ -779,7 +791,7 @@ export default function WaselAuth() {
                         }}
                         style={{
                           borderColor: SOCIAL_META[social.label].border,
-                          background: `linear-gradient(180deg, ${SOCIAL_META[social.label].bg}, rgba(255,255,255,0.92))`,
+                          background: `linear-gradient(180deg, ${SOCIAL_META[social.label].bg}, var(--bg-secondary))`,
                         }}
                       >
                         <div
