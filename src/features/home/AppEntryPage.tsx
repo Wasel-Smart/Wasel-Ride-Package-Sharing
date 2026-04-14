@@ -90,9 +90,21 @@ const COPY = {
     flowHeading: 'Choose your flow',
     flowSub: 'Three simple ways to understand Wasel in a few seconds.',
     flowCards: {
-      ride: { title: 'Find a ride', detail: 'Compare the corridor, timing, and seat.', cta: 'Open rides' },
-      package: { title: 'Send a package', detail: 'Attach the parcel to the same network.', cta: 'Open packages' },
-      offer: { title: 'Offer your ride', detail: 'Turn an empty departure into more value.', cta: 'Open driver flow' },
+      ride: {
+        title: 'Find a ride',
+        detail: 'Compare the corridor, timing, and seat.',
+        cta: 'Open rides',
+      },
+      package: {
+        title: 'Send a package',
+        detail: 'Attach the parcel to the same network.',
+        cta: 'Open packages',
+      },
+      offer: {
+        title: 'Offer your ride',
+        detail: 'Turn an empty departure into more value.',
+        cta: 'Open driver flow',
+      },
     },
   },
   ar: {
@@ -102,52 +114,99 @@ const COPY = {
     signIn: '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644',
     createAccount: '\u0625\u0646\u0634\u0627\u0621 \u062d\u0633\u0627\u0628',
     heroBadge: '\u0634\u0628\u0643\u0629 \u062d\u064a\u0629 \u0648\u0627\u062d\u062f\u0629',
-    heroTitle: '\u0627\u0641\u062a\u062d \u0627\u0644\u0634\u0628\u0643\u0629 \u0623\u0648\u0644\u0627\u064b. \u062a\u062d\u0631\u0643 \u0628\u0637\u0631\u064a\u0642\u062a\u0643 \u0645\u0639 \u0648\u0627\u0635\u0644.',
+    heroTitle:
+      '\u0627\u0641\u062a\u062d \u0627\u0644\u0634\u0628\u0643\u0629 \u0623\u0648\u0644\u0627\u064b. \u062a\u062d\u0631\u0643 \u0628\u0637\u0631\u064a\u0642\u062a\u0643 \u0645\u0639 \u0648\u0627\u0635\u0644.',
     heroBody:
       '\u0648\u0627\u0635\u0644 \u062a\u062c\u0639\u0644 \u0627\u0644\u0641\u0643\u0631\u0629 \u0648\u0627\u0636\u062d\u0629 \u0645\u0646 \u062b\u0648\u0627\u0646\u064d: \u0646\u0641\u0633 \u0627\u0644\u0645\u0633\u0627\u0631 \u064a\u062d\u0645\u0644 \u0627\u0644\u0631\u0627\u0643\u0628 \u0648\u0627\u0644\u0637\u0631\u062f \u0648\u064a\u0648\u0636\u062d \u0627\u0644\u0642\u0631\u0627\u0631.',
-    heroSignal: '\u0645\u0633\u0627\u0631 \u0648\u0627\u062d\u062f \u064a\u062d\u0645\u0644 \u0623\u0634\u062e\u0627\u0635\u0627\u064b \u0648\u0637\u0631\u0648\u062f\u0627\u064b.',
+    heroSignal:
+      '\u0645\u0633\u0627\u0631 \u0648\u0627\u062d\u062f \u064a\u062d\u0645\u0644 \u0623\u0634\u062e\u0627\u0635\u0627\u064b \u0648\u0637\u0631\u0648\u062f\u0627\u064b.',
     points: [
       '\u0627\u0644\u062e\u0631\u064a\u0637\u0629 \u062a\u0628\u0642\u0649 \u0638\u0627\u0647\u0631\u0629 \u0641\u064a \u0627\u0644\u062e\u0644\u0641\u064a\u0629.',
       '\u0627\u0644\u0631\u062d\u0644\u0627\u062a \u0648\u0627\u0644\u0637\u0631\u0648\u062f \u064a\u0634\u062a\u0631\u0643\u0627\u0646 \u0641\u064a \u0646\u0641\u0633 \u0627\u0644\u0645\u0634\u0647\u062f.',
       '\u0627\u0644\u062f\u0639\u0645 \u0648\u0627\u0644\u062b\u0642\u0629 \u064a\u0628\u0642\u064a\u0627\u0646 \u0642\u0631\u064a\u0628\u064a\u0646 \u0645\u0646 \u0627\u0644\u0642\u0631\u0627\u0631.',
     ],
-    modes: { ride: '\u0627\u0644\u0631\u062d\u0644\u0627\u062a', package: '\u0627\u0644\u0637\u0631\u0648\u062f' },
-    cardTitle: { ride: '\u0627\u0628\u062d\u062b \u0639\u0646 \u0631\u062d\u0644\u0629', package: '\u0623\u0631\u0633\u0644 \u0637\u0631\u062f\u0627\u064b' },
+    modes: {
+      ride: '\u0627\u0644\u0631\u062d\u0644\u0627\u062a',
+      package: '\u0627\u0644\u0637\u0631\u0648\u062f',
+    },
+    cardTitle: {
+      ride: '\u0627\u0628\u062d\u062b \u0639\u0646 \u0631\u062d\u0644\u0629',
+      package: '\u0623\u0631\u0633\u0644 \u0637\u0631\u062f\u0627\u064b',
+    },
     cardBody: {
       ride: '\u0627\u062e\u062a\u0631 \u0627\u0644\u0645\u0633\u0627\u0631 \u062b\u0645 \u0627\u0641\u062a\u062d \u062a\u062f\u0641\u0642 \u0627\u0644\u0631\u062d\u0644\u0627\u062a.',
-      package: '\u0627\u0628\u062f\u0623 \u0645\u0646 \u0646\u0641\u0633 \u0627\u0644\u0645\u0633\u0627\u0631 \u062b\u0645 \u0627\u0641\u062a\u062d \u062a\u062f\u0641\u0642 \u0627\u0644\u0637\u0631\u0648\u062f.',
+      package:
+        '\u0627\u0628\u062f\u0623 \u0645\u0646 \u0646\u0641\u0633 \u0627\u0644\u0645\u0633\u0627\u0631 \u062b\u0645 \u0627\u0641\u062a\u062d \u062a\u062f\u0641\u0642 \u0627\u0644\u0637\u0631\u0648\u062f.',
     },
     from: '\u0627\u0644\u0627\u0646\u0637\u0644\u0627\u0642 \u0645\u0646',
     to: '\u0630\u0627\u0647\u0628 \u0625\u0644\u0649',
     date: '\u0645\u062a\u0649',
-    primary: { ride: '\u0627\u0628\u062d\u062b \u0639\u0646 \u0631\u062d\u0644\u0629', package: '\u0627\u0641\u062a\u062d \u0627\u0644\u0637\u0631\u0648\u062f' },
+    primary: {
+      ride: '\u0627\u0628\u062d\u062b \u0639\u0646 \u0631\u062d\u0644\u0629',
+      package: '\u0627\u0641\u062a\u062d \u0627\u0644\u0637\u0631\u0648\u062f',
+    },
     secondary: '\u0623\u0646\u0634\u0626 \u0631\u062d\u0644\u062a\u0643',
-    packageHint: '\u0627\u0644\u0637\u0631\u0648\u062f \u062a\u062a\u062d\u0631\u0643 \u0639\u0628\u0631 \u0646\u0641\u0633 \u0627\u0644\u0645\u0645\u0631\u0627\u062a. \u0627\u062e\u062a\u0631 \u0627\u0644\u0645\u0633\u0627\u0631 \u0623\u0648\u0644\u0627\u064b \u062b\u0645 \u062a\u0627\u0628\u0639.',
-    guestLead: '\u0627\u062f\u062e\u0644 \u0625\u0644\u0649 \u0648\u0627\u0635\u0644 \u0628\u0623\u0628\u0633\u0637 \u0637\u0631\u064a\u0642\u0629.',
-    email: '\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0628\u0627\u0644\u0628\u0631\u064a\u062f',
+    packageHint:
+      '\u0627\u0644\u0637\u0631\u0648\u062f \u062a\u062a\u062d\u0631\u0643 \u0639\u0628\u0631 \u0646\u0641\u0633 \u0627\u0644\u0645\u0645\u0631\u0627\u062a. \u0627\u062e\u062a\u0631 \u0627\u0644\u0645\u0633\u0627\u0631 \u0623\u0648\u0644\u0627\u064b \u062b\u0645 \u062a\u0627\u0628\u0639.',
+    guestLead:
+      '\u0627\u062f\u062e\u0644 \u0625\u0644\u0649 \u0648\u0627\u0635\u0644 \u0628\u0623\u0628\u0633\u0637 \u0637\u0631\u064a\u0642\u0629.',
+    email:
+      '\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0628\u0627\u0644\u0628\u0631\u064a\u062f',
     google: '\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0639\u0628\u0631 Google',
-    googleBusy: '\u062c\u0627\u0631\u064d \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0640 Google...',
+    googleBusy:
+      '\u062c\u0627\u0631\u064d \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0640 Google...',
     facebook: '\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0639\u0628\u0631 Facebook',
-    facebookBusy: '\u062c\u0627\u0631\u064d \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0640 Facebook...',
+    facebookBusy:
+      '\u062c\u0627\u0631\u064d \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u0640 Facebook...',
     authErrors: {
-      google: '\u062a\u0639\u0630\u0631 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0628\u0640 Google.',
-      facebook: '\u062a\u0639\u0630\u0631 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0628\u0640 Facebook.',
+      google:
+        '\u062a\u0639\u0630\u0631 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0628\u0640 Google.',
+      facebook:
+        '\u062a\u0639\u0630\u0631 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0628\u0640 Facebook.',
     },
     flowHeading: '\u0627\u062e\u062a\u0631 \u0627\u0644\u062a\u062f\u0641\u0642',
-    flowSub: '\u062b\u0644\u0627\u062b \u0637\u0631\u0642 \u0628\u0633\u064a\u0637\u0629 \u062a\u0634\u0631\u062d Wasel \u0641\u064a \u062b\u0648\u0627\u0646\u064d.',
+    flowSub:
+      '\u062b\u0644\u0627\u062b \u0637\u0631\u0642 \u0628\u0633\u064a\u0637\u0629 \u062a\u0634\u0631\u062d Wasel \u0641\u064a \u062b\u0648\u0627\u0646\u064d.',
     flowCards: {
-      ride: { title: '\u0627\u0628\u062d\u062b \u0639\u0646 \u0631\u062d\u0644\u0629', detail: '\u0642\u0627\u0631\u0646 \u0627\u0644\u0645\u0633\u0627\u0631 \u0648\u0627\u0644\u0648\u0642\u062a \u0648\u0627\u0644\u0645\u0642\u0639\u062f.', cta: '\u0627\u0641\u062a\u062d \u0627\u0644\u0631\u062d\u0644\u0627\u062a' },
-      package: { title: '\u0623\u0631\u0633\u0644 \u0637\u0631\u062f\u0627\u064b', detail: '\u0627\u0631\u0628\u0637 \u0627\u0644\u0637\u0631\u062f \u0628\u0646\u0641\u0633 \u0627\u0644\u0634\u0628\u0643\u0629.', cta: '\u0627\u0641\u062a\u062d \u0627\u0644\u0637\u0631\u0648\u062f' },
-      offer: { title: '\u0623\u0646\u0634\u0626 \u0631\u062d\u0644\u062a\u0643', detail: '\u062d\u0648\u0651\u0644 \u0627\u0644\u0627\u0646\u0637\u0644\u0627\u0642\u0629 \u0627\u0644\u0641\u0627\u0631\u063a\u0629 \u0625\u0644\u0649 \u0642\u064a\u0645\u0629 \u0623\u0643\u0628\u0631.', cta: '\u0627\u0641\u062a\u062d \u062a\u062f\u0641\u0642 \u0627\u0644\u0633\u0627\u0626\u0642' },
+      ride: {
+        title: '\u0627\u0628\u062d\u062b \u0639\u0646 \u0631\u062d\u0644\u0629',
+        detail:
+          '\u0642\u0627\u0631\u0646 \u0627\u0644\u0645\u0633\u0627\u0631 \u0648\u0627\u0644\u0648\u0642\u062a \u0648\u0627\u0644\u0645\u0642\u0639\u062f.',
+        cta: '\u0627\u0641\u062a\u062d \u0627\u0644\u0631\u062d\u0644\u0627\u062a',
+      },
+      package: {
+        title: '\u0623\u0631\u0633\u0644 \u0637\u0631\u062f\u0627\u064b',
+        detail:
+          '\u0627\u0631\u0628\u0637 \u0627\u0644\u0637\u0631\u062f \u0628\u0646\u0641\u0633 \u0627\u0644\u0634\u0628\u0643\u0629.',
+        cta: '\u0627\u0641\u062a\u062d \u0627\u0644\u0637\u0631\u0648\u062f',
+      },
+      offer: {
+        title: '\u0623\u0646\u0634\u0626 \u0631\u062d\u0644\u062a\u0643',
+        detail:
+          '\u062d\u0648\u0651\u0644 \u0627\u0644\u0627\u0646\u0637\u0644\u0627\u0642\u0629 \u0627\u0644\u0641\u0627\u0631\u063a\u0629 \u0625\u0644\u0649 \u0642\u064a\u0645\u0629 \u0623\u0643\u0628\u0631.',
+        cta: '\u0627\u0641\u062a\u062d \u062a\u062f\u0641\u0642 \u0627\u0644\u0633\u0627\u0626\u0642',
+      },
     },
   },
 } as const;
 
 function trackLandingNavigation(path: string, language: 'en' | 'ar', userId?: string) {
   const eventMap = [
-    { match: '/app/find-ride', eventName: 'landing_find_ride_opened', serviceType: 'ride' as const },
-    { match: '/app/offer-ride', eventName: 'landing_offer_ride_opened', serviceType: 'ride' as const },
-    { match: '/app/packages', eventName: 'landing_packages_opened', serviceType: 'package' as const },
+    {
+      match: '/app/find-ride',
+      eventName: 'landing_find_ride_opened',
+      serviceType: 'ride' as const,
+    },
+    {
+      match: '/app/offer-ride',
+      eventName: 'landing_offer_ride_opened',
+      serviceType: 'ride' as const,
+    },
+    {
+      match: '/app/packages',
+      eventName: 'landing_packages_opened',
+      serviceType: 'package' as const,
+    },
     { match: 'tab=signup', eventName: 'landing_signup_opened', serviceType: 'referral' as const },
     { match: 'tab=signin', eventName: 'landing_signin_opened', serviceType: 'referral' as const },
   ].find(item => path.includes(item.match));
@@ -258,9 +317,7 @@ export default function AppEntryPage() {
     setOauthProvider(provider);
 
     const result =
-      provider === 'google'
-        ? await signInWithGoogle(returnTo)
-        : await signInWithFacebook(returnTo);
+      provider === 'google' ? await signInWithGoogle(returnTo) : await signInWithFacebook(returnTo);
 
     if (result.error) {
       setAuthError(friendlyAuthError(result.error, copy.authErrors[provider]));
@@ -283,7 +340,9 @@ export default function AppEntryPage() {
             <span className="app-entry-page__brand-copy">
               <span className="app-entry-page__brand-name">Wasel</span>
               <span className="app-entry-page__brand-meta">
-                {ar ? '\u0634\u0628\u0643\u0629 \u0627\u0644\u062d\u0631\u0643\u0629 \u0627\u0644\u062d\u064a\u0629' : 'Live mobility network'}
+                {ar
+                  ? '\u0634\u0628\u0643\u0629 \u0627\u0644\u062d\u0631\u0643\u0629 \u0627\u0644\u062d\u064a\u0629'
+                  : 'Live mobility network'}
               </span>
             </span>
           </button>
@@ -347,7 +406,11 @@ export default function AppEntryPage() {
               </div>
 
               <form className="app-entry-page__action-card" onSubmit={handlePrimarySubmit}>
-                <div className="app-entry-page__mode-switch" role="tablist" aria-label={ar ? '\u0627\u0644\u062e\u062f\u0645\u0627\u062a' : 'Services'}>
+                <div
+                  className="app-entry-page__mode-switch"
+                  role="tablist"
+                  aria-label={ar ? '\u0627\u0644\u062e\u062f\u0645\u0627\u062a' : 'Services'}
+                >
                   <button
                     type="button"
                     className={mode === 'ride' ? 'is-active' : undefined}
@@ -374,7 +437,11 @@ export default function AppEntryPage() {
                     <span>{copy.from}</span>
                     <select value={route.from} onChange={updateRoute('from')}>
                       {CITY_OPTIONS.map(option => (
-                        <option key={option.value} value={option.value} disabled={option.value === route.to}>
+                        <option
+                          key={option.value}
+                          value={option.value}
+                          disabled={option.value === route.to}
+                        >
                           {ar ? option.ar : option.en}
                         </option>
                       ))}
@@ -385,7 +452,11 @@ export default function AppEntryPage() {
                     <span>{copy.to}</span>
                     <select value={route.to} onChange={updateRoute('to')}>
                       {CITY_OPTIONS.map(option => (
-                        <option key={option.value} value={option.value} disabled={option.value === route.from}>
+                        <option
+                          key={option.value}
+                          value={option.value}
+                          disabled={option.value === route.from}
+                        >
                           {ar ? option.ar : option.en}
                         </option>
                       ))}
