@@ -1,41 +1,71 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from 'react';
 import { useSearchParams } from 'react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import { toast } from 'sonner';
 import {
   ArrowRight,
+  BusFront,
   CheckCircle2,
   ChevronRight,
+  Eye,
+  EyeOff,
   Lock,
   Mail,
+  MapPinned,
+  Package,
   Phone,
   Shield,
   Sparkles,
   UserRound,
+  WalletCards,
 } from 'lucide-react';
 import { WaselHeroMark, WaselLogo } from '../components/wasel-ds/WaselLogo';
-import { WaselButton }               from '../components/wasel-ui/WaselButton';
-import { WaselInput }                from '../components/wasel-ui/WaselInput';
-import { WaselCard }                 from '../components/wasel-ui/WaselCard';
-import { useLocalAuth }              from '../contexts/LocalAuth';
-import { useIframeSafeNavigate }     from '../hooks/useIframeSafeNavigate';
-import { checkRateLimit, validateEmail } from '../utils/security';
-import { useAuth }                   from '../contexts/AuthContext';
-import { getConfig, getWhatsAppSupportUrl } from '../utils/env';
-import { friendlyAuthError, getPasswordRequirements, normalizeEmailInput, pwStrength, validateFullName, validatePassword } from '../utils/authHelpers';
-import { C, R, TYPE, F, SPACE, SH, GRAD_HERO } from '../utils/wasel-ds';
+import { DeferredLandingMap } from '../features/home/DeferredLandingMap';
 import { LANDING_DISPLAY, LANDING_FONT } from '../features/home/landingConstants';
+import { useLocalAuth } from '../contexts/LocalAuth';
+import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
+import { checkRateLimit, validateEmail } from '../utils/security';
+import { useAuth } from '../contexts/AuthContext';
+import { getConfig, getWhatsAppSupportUrl } from '../utils/env';
+import {
+  friendlyAuthError,
+  getPasswordRequirements,
+  normalizeEmailInput,
+  pwStrength,
+  validateFullName,
+  validatePassword,
+} from '../utils/authHelpers';
 import './WaselAuth.css';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = 'signin' | 'signup';
-
 type PendingAction = 'google' | 'facebook' | 'reset' | 'whatsapp' | null;
 
-// ─── Feature list for the brand panel ────────────────────────────────────────
+const AUTH_LANDING = {
+  bg:
+    'radial-gradient(circle at top left, rgba(15,115,255,0.12), transparent 22%), radial-gradient(circle at top right, rgba(25,231,187,0.14), transparent 20%), linear-gradient(180deg, #eef4fb 0%, #ffffff 24%, #eef5fb 100%)',
+  hero: 'linear-gradient(135deg, #092544 0%, #071A30 52%, #06111F 100%)',
+  heroScrim:
+    'linear-gradient(90deg, rgba(6,21,39,0.84) 0%, rgba(6,21,39,0.58) 46%, rgba(6,21,39,0.24) 100%), linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0))',
+  text: '#0d2948',
+} as const;
+
 const BRAND_FEATURES = [
-  { icon: <Shield size={14} />, text: 'Secure access', color: C.cyan },
-  { icon: <Mail size={14} />, text: 'One account', color: C.gold },
+  { icon: <Shield size={14} />, text: 'Secure access' },
+  { icon: <Mail size={14} />, text: 'One account' },
+] as const;
+
+const SERVICE_TILES = [
+  { icon: MapPinned, title: 'Rides', detail: 'Resume routes, timing, and seat search.' },
+  { icon: Package, title: 'Packages', detail: 'Use the same corridor for parcel delivery.' },
+  { icon: BusFront, title: 'Buses', detail: 'Keep transit access inside the same account.' },
+  { icon: WalletCards, title: 'Wallet', detail: 'Payments and balances stay in one place.' },
 ] as const;
 
 const SOCIAL_META: Record<string, { accent: string; bg: string; border: string }> = {
@@ -44,77 +74,140 @@ const SOCIAL_META: Record<string, { accent: string; bg: string; border: string }
   WhatsApp: { accent: '#25D366', bg: 'rgba(37,211,102,0.10)', border: 'rgba(37,211,102,0.20)' },
 };
 
-const AUTH_LANDING = {
-  bg:
-    'radial-gradient(circle at top left, rgba(15,115,255,0.12), transparent 22%), radial-gradient(circle at top right, rgba(25,231,187,0.14), transparent 20%), linear-gradient(180deg, #eef4fb 0%, #ffffff 24%, #eef5fb 100%)',
-  hero: 'linear-gradient(135deg, #092544 0%, #071A30 52%, #06111F 100%)',
-  heroScrim:
-    'linear-gradient(90deg, rgba(6,21,39,0.84) 0%, rgba(6,21,39,0.58) 46%, rgba(6,21,39,0.24) 100%), linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0))',
-  panel: 'rgba(255,255,255,0.94)',
-  panelBorder: 'rgba(16,43,73,0.1)',
-  text: '#0d2948',
-  textMuted: 'rgba(13,41,72,0.72)',
-  textSoft: 'rgba(13,41,72,0.6)',
-  blue: '#0f73ff',
-  teal: '#19e7bb',
-} as const;
+interface AuthFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
+  label: string;
+  description?: string;
+  error?: string;
+  hint?: ReactNode;
+  icon?: ReactNode;
+  onChange: (value: string) => void;
+}
 
-// ─── Brand panel (left column) ────────────────────────────────────────────────
-function BrandPanel() {
+function AuthField({
+  label,
+  description,
+  error,
+  hint,
+  icon,
+  type = 'text',
+  onChange,
+  id,
+  ...rest
+}: AuthFieldProps) {
+  const [focused, setFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === 'password';
+  const resolvedType = isPassword && showPassword ? 'text' : type;
+
   return (
-    <div
-      className="auth-brand-panel"
-      style={{
-        background: GRAD_HERO,
-        display:        'flex',
-        flexDirection:  'column',
-        alignItems:     'center',
-        justifyContent: 'center',
-        padding:        `${SPACE[16]} ${SPACE[12]}`,
-        position:       'relative',
-        overflow:       'hidden',
-      }}
-    >
-      {/* Ambient glows */}
-      <div style={{ position: 'absolute', top: -110, right: -80, width: 460, height: 460, borderRadius: '50%', background: `radial-gradient(circle, ${C.cyanGlow}, transparent 66%)`, filter: 'blur(80px)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: -100, left: -80, width: 420, height: 420, borderRadius: '50%', background: `radial-gradient(circle, ${C.blueDim}cc, transparent 66%)`, filter: 'blur(80px)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', inset: 24, borderRadius: 40, border: `1px solid ${C.borderFaint}`, pointerEvents: 'none', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }} />
+    <label className={`auth-field${focused ? ' is-focused' : ''}${error ? ' is-error' : ''}`}>
+      <span className="auth-field__meta">
+        <span className="auth-field__label">{label}</span>
+        {description ? <span className="auth-field__description">{description}</span> : null}
+      </span>
 
-      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 420 }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: SPACE[2], padding: '8px 14px', borderRadius: R.full, marginBottom: SPACE[6], background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.borderFaint}`, color: C.blueLight, fontSize: TYPE.size.xs, fontWeight: TYPE.weight.bold, letterSpacing: TYPE.letterSpacing.wide, textTransform: 'uppercase' }}>
-          <Sparkles size={12} />
-          Wasel Access
+      <span className="auth-field__control">
+        {icon ? <span className="auth-field__icon">{icon}</span> : null}
+        <input
+          {...rest}
+          id={id}
+          type={resolvedType}
+          className="auth-field__input"
+          aria-invalid={Boolean(error)}
+          onChange={(event) => onChange(event.target.value)}
+          onFocus={(event) => {
+            setFocused(true);
+            rest.onFocus?.(event);
+          }}
+          onBlur={(event) => {
+            setFocused(false);
+            rest.onBlur?.(event);
+          }}
+        />
+        {isPassword ? (
+          <button
+            type="button"
+            className="auth-field__toggle"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            onClick={() => setShowPassword((current) => !current)}
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        ) : null}
+      </span>
+
+      {error ? <span className="auth-field__error">{error}</span> : null}
+      {hint && !error ? <div className="auth-field__hint">{hint}</div> : null}
+    </label>
+  );
+}
+
+function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
+  return (
+    <div className="auth-landing__hero-panel" style={{ background: AUTH_LANDING.hero }}>
+      <div className="auth-landing__hero-map" aria-hidden="true">
+        <div className="auth-landing__hero-map-scale">
+          <DeferredLandingMap />
         </div>
+      </div>
+      <div className="auth-landing__hero-scrim" aria-hidden="true" style={{ background: AUTH_LANDING.heroScrim }} />
+      <div className="auth-landing__hero-orb auth-landing__hero-orb--one" aria-hidden="true" />
+      <div className="auth-landing__hero-orb auth-landing__hero-orb--two" aria-hidden="true" />
+      <div className="auth-landing__hero-mark" aria-hidden="true">
+        <WaselHeroMark size={136} />
+      </div>
+
+      <div className="auth-landing__hero-copy">
+        <div className="auth-landing__eyebrow">
+          <Sparkles size={15} />
+          One Wasel access layer
+        </div>
+
         <WaselLogo
-          size={48}
+          size={50}
           theme="light"
           variant="full"
           showWordmark
           subtitle=""
           framed={false}
         />
-        <div style={{ margin: `${SPACE[8]} 0 ${SPACE[6]}` }}>
-          <WaselHeroMark size={120} />
-        </div>
 
-        <h2 style={{ fontSize: TYPE.size['3xl'], fontWeight: TYPE.weight.ultra, color: C.text, letterSpacing: '-0.04em', margin: `0 0 ${SPACE[3]}`, lineHeight: 1.12 }}>
-          One account.
-          <span style={{ display: 'block', background: 'linear-gradient(90deg, #DCFFF8, #19E7BB, #48CFFF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Every Wasel service.
-          </span>
-        </h2>
+        <h1 className="auth-landing__hero-title" style={{ fontFamily: LANDING_DISPLAY }}>
+          One account that looks and feels like the landing page.
+        </h1>
 
-        <p style={{ fontSize: TYPE.size.base, color: C.textMuted, lineHeight: TYPE.lineHeight.loose, marginBottom: SPACE[6] }}>
-          One account for rides, buses, packages, and wallet access.
+        <p className="auth-landing__hero-body">
+          {tab === 'signin'
+            ? 'Sign back in and continue across rides, packages, buses, and wallet from the same Wasel network shell.'
+            : 'Create one account and step into every Wasel service with the same landing-page experience from the first screen.'}
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3], textAlign: 'left' }}>
-          {BRAND_FEATURES.map((item) => (
-            <div key={item.text} style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-              <div style={{ width: 30, height: 30, borderRadius: R.sm, background: `${item.color}15`, border: `1px solid ${item.color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color, flexShrink: 0 }}>
-                {item.icon}
+        <div className="auth-landing__hero-signal">
+          <MapPinned size={16} />
+          {`Returning to ${returnLabel || 'find ride'}`}
+        </div>
+
+        <div className="auth-landing__service-grid">
+          {SERVICE_TILES.map((tile) => {
+            const Icon = tile.icon;
+
+            return (
+              <div key={tile.title} className="auth-landing__service-card">
+                <span className="auth-landing__service-icon">
+                  <Icon size={18} />
+                </span>
+                <strong>{tile.title}</strong>
+                <span>{tile.detail}</span>
               </div>
-              <span style={{ fontSize: TYPE.size.sm, color: `${C.text}99` }}>{item.text}</span>
+            );
+          })}
+        </div>
+
+        <div className="auth-landing__trust-row">
+          {BRAND_FEATURES.map((item) => (
+            <div key={item.text} className="auth-landing__trust-chip">
+              <span className="auth-landing__trust-icon">{item.icon}</span>
+              <span>{item.text}</span>
             </div>
           ))}
         </div>
@@ -123,52 +216,64 @@ function BrandPanel() {
   );
 }
 
-// ─── Password strength bar ────────────────────────────────────────────────────
 function StrengthBar({ password }: { password: string }) {
   const strength = pwStrength(password);
+
   if (!password) return null;
+
   return (
-    <div>
-      <div style={{ display: 'flex', gap: SPACE[1], marginBottom: SPACE[1] }}>
-        {[1, 2, 3, 4, 5].map((n) => (
-          <div key={n} style={{ flex: 1, height: 3, borderRadius: R.full, background: n <= strength.score ? strength.color : `${C.text}14`, transition: 'background 200ms ease' }} />
+    <div className="auth-strength">
+      <div className="auth-strength__bars">
+        {[1, 2, 3, 4, 5].map((value) => (
+          <div
+            key={value}
+            className="auth-strength__bar"
+            style={{
+              background: value <= strength.score ? strength.color : 'rgba(13,41,72,0.12)',
+            }}
+          />
         ))}
       </div>
-      {strength.label && (
-        <span style={{ fontSize: TYPE.size.xs, color: strength.color, fontFamily: F }}>
+      {strength.label ? (
+        <span className="auth-strength__label" style={{ color: strength.color }}>
           {strength.label}
         </span>
-      )}
+      ) : null}
     </div>
   );
 }
 
-// ─── Tab switcher ─────────────────────────────────────────────────────────────
+function PasswordChecklist({ password }: { password: string }) {
+  const requirements = getPasswordRequirements(password);
+
+  return (
+    <div className="auth-password-checklist">
+      {requirements.map((requirement) => (
+        <div key={requirement.key} className={`auth-password-checklist__item${requirement.met ? ' is-met' : ''}`}>
+          <span className="auth-password-checklist__dot" />
+          <span>{requirement.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
   return (
-    <div style={{ display: 'flex', background: C.cardSolid, borderRadius: R.xl, padding: 4, marginBottom: SPACE[7], border: `1px solid ${C.border}` }}>
+    <div className="auth-landing__tabs" role="tablist" aria-label="Authentication tabs">
       {(['signin', 'signup'] as Tab[]).map((value) => {
         const active = tab === value;
+
         return (
           <motion.button
             key={value}
-            onClick={() => onChange(value)}
+            type="button"
+            role="tab"
+            aria-selected={active}
             aria-label={value === 'signin' ? 'Switch to sign in' : 'Switch to create account'}
-            whileTap={{ scale: 0.97 }}
-            style={{
-              flex:         1,
-              height:       42,
-              borderRadius: R.lg,
-              border:       'none',
-              cursor:       'pointer',
-              fontSize:     TYPE.size.sm,
-              fontWeight:   active ? TYPE.weight.black : TYPE.weight.semibold,
-              fontFamily:   F,
-              background:   active ? 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 48%, #48CFFF 100%)' : 'transparent',
-              color:        active ? '#041019' : C.textMuted,
-              boxShadow:    active ? `0 2px 12px ${C.cyanGlow}` : 'none',
-              transition:   'all 150ms ease',
-            }}
+            whileTap={{ scale: 0.98 }}
+            className={`auth-landing__tab${active ? ' is-active' : ''}`}
+            onClick={() => onChange(value)}
           >
             {value === 'signin' ? 'Sign in' : 'Create account'}
           </motion.button>
@@ -178,28 +283,27 @@ function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
 export default function WaselAuth() {
   const [params, setParams] = useSearchParams();
-  const rawTab        = params.get('tab')?.toLowerCase();
+  const rawTab = params.get('tab')?.toLowerCase();
   const initialTab: Tab = rawTab === 'signup' || rawTab === 'register' ? 'signup' : 'signin';
   const passwordResetCompleted = params.get('reset') === 'success';
 
-  const [tab,      setTab]      = useState<Tab>(initialTab);
-  const [email,    setEmail]    = useState('');
+  const [tab, setTab] = useState<Tab>(initialTab);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name,     setName]     = useState('');
-  const [phone,    setPhone]    = useState('');
-  const [error,    setError]    = useState('');
-  const [success,  setSuccess]  = useState(false);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
-  const [notice,   setNotice]   = useState(
+  const [notice, setNotice] = useState(
     passwordResetCompleted ? 'Password updated. Sign in with your new password.' : '',
   );
 
   const { signIn, register, loading, user } = useLocalAuth();
   const { resetPassword, signInWithGoogle, signInWithFacebook } = useAuth();
-  const nav        = useIframeSafeNavigate();
+  const nav = useIframeSafeNavigate();
   const mountedRef = useRef(true);
   const { supportWhatsAppNumber } = getConfig();
 
@@ -207,7 +311,21 @@ export default function WaselAuth() {
     const raw = params.get('returnTo') || '/app/find-ride';
     return raw.startsWith('/') && !raw.startsWith('//') ? raw : '/app/find-ride';
   })();
-  const returnLabel = safeReturnTo.replace(/^\/+/, '').replace(/-/g, ' ');
+
+  const returnLabel = useMemo(() => {
+    const [path] = safeReturnTo.split('?');
+    const cleaned = path
+      .replace(/^\/app\//, '')
+      .replace(/^\/+/, '')
+      .replace(/-/g, ' ')
+      .replace(/\//g, ' ')
+      .trim();
+
+    if (!cleaned) return 'find ride';
+
+    return cleaned.replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }, [safeReturnTo]);
+
   const normalizedEmail = useMemo(() => normalizeEmailInput(email), [email]);
   const normalizedPhone = useMemo(() => phone.trim().replace(/[^\d+]/g, ''), [phone]);
   const isBusy = loading || pendingAction !== null || success;
@@ -228,7 +346,9 @@ export default function WaselAuth() {
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -250,7 +370,9 @@ export default function WaselAuth() {
 
   const pushSuccessRedirect = () => {
     setSuccess(true);
-    setTimeout(() => { if (mountedRef.current) nav(safeReturnTo); }, 700);
+    setTimeout(() => {
+      if (mountedRef.current) nav(safeReturnTo);
+    }, 700);
   };
 
   const handleTabChange = (next: Tab) => {
@@ -267,14 +389,27 @@ export default function WaselAuth() {
     if (!passwordResetCompleted) {
       setNotice('');
     }
-    if (!normalizedEmail)         { setError('Please enter your email address.'); return; }
-    if (!validateEmail(normalizedEmail)) { setError('Please enter a valid email address.'); return; }
-    if (!password)                { setError('Please enter your password.'); return; }
+    if (!normalizedEmail) {
+      setError('Please enter your email address.');
+      return;
+    }
+    if (!validateEmail(normalizedEmail)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
     if (!checkRateLimit(`signin:${normalizedEmail}`, { maxRequests: 5, windowMs: 60_000 })) {
-      setError('Too many attempts. Please wait a minute and try again.'); return;
+      setError('Too many attempts. Please wait a minute and try again.');
+      return;
     }
     const { error: signInError } = await signIn(normalizedEmail, password);
-    if (signInError) { setError(friendlyAuthError(signInError, 'Sign in failed. Please try again.')); return; }
+    if (signInError) {
+      setError(friendlyAuthError(signInError, 'Sign in failed. Please try again.'));
+      return;
+    }
     pushSuccessRedirect();
   };
 
@@ -284,17 +419,38 @@ export default function WaselAuth() {
       setNotice('');
     }
     const fullNameError = validateFullName(name);
-    if (fullNameError)            { setError(fullNameError); return; }
-    if (!normalizedEmail)         { setError('Please enter your email address.'); return; }
-    if (!validateEmail(normalizedEmail)) { setError('Please enter a valid email address.'); return; }
-    const passwordError = validatePassword(password);
-    if (passwordError)            { setError(passwordError); return; }
-    const phoneValidationError = validatePhoneNumber(normalizedPhone);
-    if (phoneValidationError)    { setError(phoneValidationError); return; }
-    if (!checkRateLimit(`signup:${normalizedEmail}`, { maxRequests: 3, windowMs: 60_000 })) {
-      setError('Too many attempts. Please wait a minute and try again.'); return;
+    if (fullNameError) {
+      setError(fullNameError);
+      return;
     }
-    const registration = await register(name.trim(), normalizedEmail, password, normalizedPhone || undefined);
+    if (!normalizedEmail) {
+      setError('Please enter your email address.');
+      return;
+    }
+    if (!validateEmail(normalizedEmail)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    const nextPasswordError = validatePassword(password);
+    if (nextPasswordError) {
+      setError(nextPasswordError);
+      return;
+    }
+    const phoneValidationError = validatePhoneNumber(normalizedPhone);
+    if (phoneValidationError) {
+      setError(phoneValidationError);
+      return;
+    }
+    if (!checkRateLimit(`signup:${normalizedEmail}`, { maxRequests: 3, windowMs: 60_000 })) {
+      setError('Too many attempts. Please wait a minute and try again.');
+      return;
+    }
+    const registration = await register(
+      name.trim(),
+      normalizedEmail,
+      password,
+      normalizedPhone || undefined,
+    );
     if (registration.error) {
       const friendly = friendlyAuthError(registration.error, 'Sign up failed. Please try again.');
       if (friendly.includes('already exists')) {
@@ -317,12 +473,21 @@ export default function WaselAuth() {
   };
 
   const handleForgotPassword = async () => {
-    if (!normalizedEmail)         { setError('Enter your email address above first.'); return; }
-    if (!validateEmail(normalizedEmail)) { setError('Please enter a valid email address.'); return; }
+    if (!normalizedEmail) {
+      setError('Enter your email address above first.');
+      return;
+    }
+    if (!validateEmail(normalizedEmail)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
     setPendingAction('reset');
     const { error: resetError } = await resetPassword(normalizedEmail);
     setPendingAction(null);
-    if (resetError) { setError(friendlyAuthError(resetError, 'Password reset failed.')); return; }
+    if (resetError) {
+      setError(friendlyAuthError(resetError, 'Password reset failed.'));
+      return;
+    }
     setError('');
     setNotice(`If ${normalizedEmail} is registered, a password reset link has been sent.`);
     toast.success(`If ${normalizedEmail} is registered, a password reset link has been sent.`);
@@ -366,345 +531,288 @@ export default function WaselAuth() {
   };
 
   const socialButtons = [
-    { label: 'Google',    color: '#4285F4', onClick: handleGoogleSignIn   },
-    { label: 'Facebook',  color: '#1877F2', onClick: handleFacebookSignIn },
-    ...(supportWhatsAppNumber ? [{ label: 'WhatsApp', color: '#25D366', onClick: handleWhatsAppHelp }] : []),
+    { label: 'Google', onClick: handleGoogleSignIn },
+    { label: 'Facebook', onClick: handleFacebookSignIn },
+    ...(supportWhatsAppNumber ? [{ label: 'WhatsApp', onClick: handleWhatsAppHelp }] : []),
   ] as const;
 
   return (
     <div
-      className="auth-grid"
-      style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: F, display: 'grid', gridTemplateColumns: '1fr 1fr' }}
+      className="auth-landing"
+      style={{ minHeight: '100vh', background: AUTH_LANDING.bg, color: AUTH_LANDING.text, fontFamily: LANDING_FONT }}
     >
-      <style>{`
-        @media(max-width:768px){
-          .auth-grid{grid-template-columns:1fr!important}
-          .auth-brand-panel{display:none!important}
-          .auth-form-panel{padding:${SPACE[7]} ${SPACE[5]}!important;align-items:flex-start!important}
-          .auth-mobile-header{display:flex!important}
-          .auth-form-shell{padding:${SPACE[5]}!important;border-radius:${R.xxl}!important}
-          .auth-highlights-grid{grid-template-columns:1fr!important}
-          .auth-social-grid{grid-template-columns:1fr!important}
-        }
-        @keyframes spin{to{transform:rotate(360deg)}}
-      `}</style>
-
-      <BrandPanel />
-
-      {/* ── Form panel ─────────────────────────────────────────────────── */}
-      <div
-        className="auth-form-panel"
-        style={{ background: `radial-gradient(circle at top, rgba(244,198,81,0.10), transparent 28%), linear-gradient(180deg, ${C.bg} 0%, ${C.bgAlt} 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: `${SPACE[16]} ${SPACE[12]}`, overflowY: 'auto' }}
-      >
-        <WaselCard
-          className="auth-form-shell"
-          variant="default"
-          padding={SPACE[7]}
-          radius={R['3xl']}
-          style={{ width: '100%', maxWidth: 520, background: 'linear-gradient(180deg, rgba(10,22,40,0.94), rgba(10,22,40,0.82))', border: `1px solid ${C.borderHov}`, boxShadow: SH.navy }}
-        >
-
-          {/* Mobile header (hidden on desktop) */}
-          <div
-            className="auth-mobile-header"
-            style={{ display: 'none', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: SPACE[7], paddingBottom: SPACE[6], borderBottom: `1px solid ${C.border}` }}
-          >
+      <div className="auth-landing__shell">
+        <header className="auth-landing__header">
+          <button type="button" className="auth-landing__brand" onClick={() => nav('/')}>
             <WaselLogo
               size={40}
-              theme="light"
+              theme="dark"
               variant="compact"
               showWordmark
               subtitle=""
               framed={false}
             />
-            <h2 style={{ fontSize: TYPE.size.xl, fontWeight: TYPE.weight.ultra, color: C.text, marginTop: SPACE[4], marginBottom: SPACE[2], letterSpacing: '-0.03em' }}>
-              Wasel Access
-            </h2>
-            <p style={{ fontSize: TYPE.size.sm, color: C.textMuted, marginBottom: SPACE[3] }}>
-              {tab === 'signin' ? 'Sign in and continue.' : 'Create your Wasel account.'}
-            </p>
+          </button>
+
+          <div className="auth-landing__header-actions">
+            <button type="button" className="auth-landing__ghost-action" onClick={() => nav('/')}>
+              Back to landing
+            </button>
           </div>
+        </header>
 
-          <TabSwitcher tab={tab} onChange={handleTabChange} />
+        <section className="auth-landing__hero-shell">
+          <BrandPanel tab={tab} returnLabel={returnLabel} />
 
-          {/* Heading */}
-          <div style={{ marginBottom: SPACE[6] }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: SPACE[2], marginBottom: SPACE[3], padding: '7px 12px', borderRadius: R.full, background: 'rgba(244,198,81,0.10)', border: '1px solid rgba(244,198,81,0.18)', fontSize: TYPE.size.xs, color: C.blueLight, fontWeight: TYPE.weight.bold, letterSpacing: TYPE.letterSpacing.wide, textTransform: 'uppercase' }}>
-              <Sparkles size={12} />
-              Premium Access
-            </div>
-            <h3 style={{ fontSize: TYPE.size['2xl'], fontWeight: TYPE.weight.ultra, color: C.text, margin: `0 0 ${SPACE[2]}`, letterSpacing: '-0.02em' }}>
-              {tab === 'signin' ? 'Sign in' : 'Sign up'}
-            </h3>
-            <p style={{ fontSize: TYPE.size.sm, color: C.textMuted, margin: 0, lineHeight: TYPE.lineHeight.relaxed }}>
-              {tab === 'signin'
-                ? 'Sign in to continue to your account.'
-                : 'Create your account in under a minute.'}
-            </p>
-            <div style={{ marginTop: SPACE[3], display: 'flex', alignItems: 'center', gap: SPACE[2], flexWrap: 'wrap', color: C.textMuted, fontSize: TYPE.size.xs }}>
-              <span>{tab === 'signin' ? 'New to Wasel?' : 'Already have an account?'}</span>
-              <button
-                type="button"
-                onClick={() => handleTabChange(tab === 'signin' ? 'signup' : 'signin')}
-                style={{ background: 'none', border: 'none', padding: 0, color: C.cyan, cursor: 'pointer', font: 'inherit', fontWeight: TYPE.weight.bold }}
-              >
-                {tab === 'signin' ? 'Create account' : 'Sign in'}
-              </button>
-            </div>
-          </div>
+          <div className="auth-landing__form-column">
+            <div className="auth-landing__form-card">
+              <div className="auth-landing__mobile-brand">
+                <WaselHeroMark size={72} />
+              </div>
 
-          <div style={{ marginBottom: SPACE[6], padding: `${SPACE[3]} ${SPACE[4]}`, borderRadius: R.xl, background: 'linear-gradient(90deg, rgba(255,240,193,0.10), rgba(244,198,81,0.04))', border: '1px solid rgba(244,198,81,0.16)' }}>
-            <div style={{ fontSize: TYPE.size.xs, fontWeight: TYPE.weight.bold, letterSpacing: TYPE.letterSpacing.wide, textTransform: 'uppercase', color: C.blueLight, marginBottom: 4 }}>
-              Return path
-            </div>
-            <div style={{ fontSize: TYPE.size.sm, color: C.text, fontWeight: TYPE.weight.bold }}>
-              {`Back to ${returnLabel || 'find ride'}`}
-            </div>
-          </div>
+              <TabSwitcher tab={tab} onChange={handleTabChange} />
 
-          {/* Error banner */}
-          <AnimatePresence>
-            {notice && !error && !success && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                style={{ overflow: 'hidden', marginBottom: SPACE[5] }}
-              >
-                <WaselCard variant="solid" padding={`${SPACE[3]} ${SPACE[4]}`} radius={R.lg} style={{ background: C.greenDim, border: `1px solid ${C.green}40` }}>
-                  <span style={{ fontSize: TYPE.size.sm, color: C.green, fontFamily: F }}>{notice}</span>
-                </WaselCard>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                style={{ overflow: 'hidden', marginBottom: SPACE[5] }}
-              >
-                <WaselCard variant="solid" padding={`${SPACE[3]} ${SPACE[4]}`} radius={R.lg} style={{ background: C.errorDim, border: `1px solid ${C.error}40` }}>
-                  <span style={{ fontSize: TYPE.size.sm, color: C.error, fontFamily: F }}>{error}</span>
-                </WaselCard>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Success banner */}
-          <AnimatePresence>
-            {success && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                style={{ marginBottom: SPACE[5] }}
-              >
-                <WaselCard variant="solid" padding={`${SPACE[3]} ${SPACE[4]}`} radius={R.lg} style={{ background: C.greenDim, border: `1px solid ${C.green}40` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2] }}>
-                    <CheckCircle2 size={16} color={C.green} />
-                    <span style={{ fontSize: TYPE.size.sm, color: C.green, fontFamily: F }}>
-                      Success. Redirecting.
-                    </span>
-                  </div>
-                </WaselCard>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Fields */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={tab}
-              initial={{ opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -12 }}
-              transition={{ duration: 0.15 }}
-            >
-              <form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void (tab === 'signin' ? handleSignIn() : handleSignUp());
-                }}
-                style={{ display: 'flex', flexDirection: 'column', gap: SPACE[4] }}
-              >
-
-                {tab === 'signup' && (
-                  <WaselInput
-                    id="full-name"
-                    label="Full name"
-                    description="Required"
-                    value={name}
-                    onChange={setName}
-                    placeholder="Ahmad Al-Rashid"
-                    icon={<UserRound size={16} />}
-                    autoComplete="name"
-                    error={nameError || undefined}
-                  />
-                )}
-
-                <WaselInput
-                  id="auth-email"
-                  label="Email address"
-                  type="email"
-                  value={email}
-                  onChange={setEmail}
-                  placeholder="you@example.com"
-                  icon={<Mail size={16} />}
-                  autoComplete="email"
-                  error={emailError || undefined}
-                />
-
-                <WaselInput
-                  id="auth-password"
-                  label="Password"
-                  type="password"
-                  value={password}
-                  onChange={setPassword}
-                  placeholder={tab === 'signin' ? 'Enter your password' : 'Create a secure password'}
-                  icon={<Lock size={16} />}
-                  autoComplete={tab === 'signin' ? 'current-password' : 'new-password'}
-                  error={passwordError || undefined}
-                  hint={tab === 'signup' ? <div>{password.length > 0 ? <StrengthBar password={password} /> : null}<PasswordChecklist password={password} /></div> : undefined}
-                />
-
-                {tab === 'signup' && (
-                  <WaselInput
-                    id="auth-phone"
-                    label="Phone number"
-                    description="Optional"
-                    type="tel"
-                    value={phone}
-                    onChange={setPhone}
-                    placeholder="+962 79 123 4567"
-                    icon={<Phone size={16} />}
-                    autoComplete="tel"
-                    error={phoneError || undefined}
-                    hint={<span style={{ fontSize: TYPE.size.xs, color: C.textMuted, fontFamily: F }}>Add it now or skip it.</span>}
-                  />
-                )}
-
-                {tab === 'signin' && (
-                  <div style={{ textAlign: 'right' }}>
-                    <button
-                      type="button"
-                      onClick={handleForgotPassword}
-                      disabled={isBusy}
-                      style={{ background: 'none', border: 'none', color: C.cyan, fontSize: TYPE.size.xs, cursor: isBusy ? 'not-allowed' : 'pointer', fontFamily: F, padding: 0, opacity: isBusy ? 0.6 : 1 }}
-                    >
-                      {pendingAction === 'reset' ? 'Sending reset link...' : 'Forgot password?'}
-                    </button>
-                  </div>
-                )}
-
-                <WaselButton
-                  variant="primary"
-                  size="lg"
-                  fullWidth
-                  loading={loading}
-                  disabled={isBusy}
-                  type="submit"
-                  aria-label={tab === 'signin' ? 'Submit sign in' : 'Submit sign up'}
-                  iconEnd={<ArrowRight size={16} />}
-                >
-                  {tab === 'signin' ? 'Sign in to Wasel' : 'Create account'}
-                </WaselButton>
-
-                {/* Divider */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-                  <div style={{ flex: 1, height: 1, background: C.border }} />
-                  <span style={{ fontSize: TYPE.size.xs, color: C.textMuted }}>or continue with</span>
-                  <div style={{ flex: 1, height: 1, background: C.border }} />
+              <div className="auth-landing__form-heading">
+                <div className="auth-landing__eyebrow auth-landing__eyebrow--light">
+                  <Sparkles size={14} />
+                  Premium access
                 </div>
+                <h2 style={{ fontFamily: LANDING_DISPLAY }}>
+                  {tab === 'signin' ? 'Sign in to Wasel' : 'Create your Wasel account'}
+                </h2>
+                <p>
+                  {tab === 'signin'
+                    ? 'Continue with the same landing-page design across every Wasel service.'
+                    : 'Start once, then move between rides, packages, buses, and wallet without a design break.'}
+                </p>
+                <div className="auth-landing__switch-copy">
+                  <span>{tab === 'signin' ? 'New to Wasel?' : 'Already have an account?'}</span>
+                  <button
+                    type="button"
+                    className="auth-landing__inline-link"
+                    onClick={() => handleTabChange(tab === 'signin' ? 'signup' : 'signin')}
+                  >
+                    {tab === 'signin' ? 'Create account' : 'Sign in'}
+                  </button>
+                </div>
+              </div>
 
-                {/* Social buttons */}
-                <div className="auth-social-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: SPACE[3] }}>
-                  {socialButtons.map((social) => (
-                    <motion.button
-                      key={social.label}
-                      whileHover={{ scale: 1.02, y: -1 }}
-                      whileTap={{ scale: 0.97 }}
-                      type="button"
-                      aria-label={social.label === 'WhatsApp' ? 'WhatsApp' : `Continue with ${social.label}`}
-                      disabled={isBusy}
-                      onClick={() => { void social.onClick(); }}
-                      style={{ minHeight: 68, borderRadius: R.xl, border: `1px solid ${SOCIAL_META[social.label].border}`, background: `linear-gradient(180deg, ${SOCIAL_META[social.label].bg}, rgba(255,255,255,0.02))`, color: C.text, fontWeight: TYPE.weight.black, fontSize: TYPE.size.sm, fontFamily: F, cursor: isBusy ? 'not-allowed' : 'pointer', opacity: isBusy ? 0.55 : 1, transition: 'all 150ms ease', padding: `${SPACE[3]} ${SPACE[4]}`, textAlign: 'left', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)' }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-                        <div style={{ width: 34, height: 34, borderRadius: R.full, display: 'flex', alignItems: 'center', justifyContent: 'center', background: SOCIAL_META[social.label].bg, color: SOCIAL_META[social.label].accent, border: `1px solid ${SOCIAL_META[social.label].border}` }}>
+              <div className="auth-landing__return-chip">
+                <span className="auth-landing__return-label">Return path</span>
+                <strong>{`Back to ${returnLabel}`}</strong>
+              </div>
+
+              <AnimatePresence>
+                {notice && !error && !success ? (
+                  <motion.div
+                    className="auth-landing__alert auth-landing__alert--notice"
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                  >
+                    {notice}
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {error ? (
+                  <motion.div
+                    className="auth-landing__alert auth-landing__alert--error"
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                  >
+                    {error}
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {success ? (
+                  <motion.div
+                    className="auth-landing__alert auth-landing__alert--success"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                  >
+                    <CheckCircle2 size={16} />
+                    <span>Success. Redirecting.</span>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+
+              <AnimatePresence mode="wait">
+                <motion.form
+                  key={tab}
+                  className="auth-landing__form"
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -12 }}
+                  transition={{ duration: 0.15 }}
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void (tab === 'signin' ? handleSignIn() : handleSignUp());
+                  }}
+                >
+                  {tab === 'signup' ? (
+                    <AuthField
+                      id="full-name"
+                      label="Full name"
+                      description="Required"
+                      value={name}
+                      onChange={setName}
+                      placeholder="Ahmad Al-Rashid"
+                      icon={<UserRound size={16} />}
+                      autoComplete="name"
+                      error={nameError || undefined}
+                    />
+                  ) : null}
+
+                  <AuthField
+                    id="auth-email"
+                    label="Email address"
+                    type="email"
+                    value={email}
+                    onChange={setEmail}
+                    placeholder="you@example.com"
+                    icon={<Mail size={16} />}
+                    autoComplete="email"
+                    error={emailError || undefined}
+                  />
+
+                  <AuthField
+                    id="auth-password"
+                    label="Password"
+                    type="password"
+                    value={password}
+                    onChange={setPassword}
+                    placeholder={tab === 'signin' ? 'Enter your password' : 'Create a secure password'}
+                    icon={<Lock size={16} />}
+                    autoComplete={tab === 'signin' ? 'current-password' : 'new-password'}
+                    error={passwordError || undefined}
+                    hint={
+                      tab === 'signup' ? (
+                        <div>
+                          {password ? <StrengthBar password={password} /> : null}
+                          <PasswordChecklist password={password} />
+                        </div>
+                      ) : undefined
+                    }
+                  />
+
+                  {tab === 'signup' ? (
+                    <AuthField
+                      id="auth-phone"
+                      label="Phone number"
+                      description="Optional"
+                      type="tel"
+                      value={phone}
+                      onChange={setPhone}
+                      placeholder="+962 79 123 4567"
+                      icon={<Phone size={16} />}
+                      autoComplete="tel"
+                      error={phoneError || undefined}
+                      hint={<span>Add it now or skip it.</span>}
+                    />
+                  ) : null}
+
+                  {tab === 'signin' ? (
+                    <div className="auth-landing__forgot-row">
+                      <button
+                        type="button"
+                        className="auth-landing__inline-link"
+                        onClick={handleForgotPassword}
+                        disabled={isBusy}
+                      >
+                        {pendingAction === 'reset' ? 'Sending reset link...' : 'Forgot password?'}
+                      </button>
+                    </div>
+                  ) : null}
+
+                  <button
+                    type="submit"
+                    className="auth-landing__submit"
+                    disabled={isBusy}
+                    aria-label={tab === 'signin' ? 'Submit sign in' : 'Submit sign up'}
+                  >
+                    <span>{loading ? 'Please wait...' : tab === 'signin' ? 'Sign in to Wasel' : 'Create account'}</span>
+                    <ArrowRight size={16} />
+                  </button>
+
+                  <div className="auth-landing__divider">
+                    <span />
+                    <p>or continue with</p>
+                    <span />
+                  </div>
+
+                  <div className="auth-landing__social-grid">
+                    {socialButtons.map((social) => (
+                      <motion.button
+                        key={social.label}
+                        type="button"
+                        whileHover={{ scale: 1.01, y: -1 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="auth-landing__social-button"
+                        aria-label={social.label === 'WhatsApp' ? 'WhatsApp' : `Continue with ${social.label}`}
+                        disabled={isBusy}
+                        onClick={() => {
+                          void social.onClick();
+                        }}
+                        style={{
+                          borderColor: SOCIAL_META[social.label].border,
+                          background: `linear-gradient(180deg, ${SOCIAL_META[social.label].bg}, rgba(255,255,255,0.92))`,
+                        }}
+                      >
+                        <div
+                          className="auth-landing__social-icon"
+                          style={{
+                            color: SOCIAL_META[social.label].accent,
+                            borderColor: SOCIAL_META[social.label].border,
+                            background: SOCIAL_META[social.label].bg,
+                          }}
+                        >
                           {social.label.slice(0, 1)}
                         </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: TYPE.size.sm, fontWeight: TYPE.weight.bold, color: C.text }}>{social.label}</div>
-                          <div style={{ fontSize: TYPE.size.xs, color: C.textMuted, marginTop: 2 }}>
+                        <div className="auth-landing__social-copy">
+                          <strong>{social.label}</strong>
+                          <span>
                             {pendingAction === social.label.toLowerCase() ? 'Opening secure flow...' : `Continue with ${social.label}`}
-                          </div>
+                          </span>
                         </div>
                         <ChevronRight size={14} color={SOCIAL_META[social.label].accent} />
-                      </div>
-                    </motion.button>
-                  ))}
-                </div>
-
-                <div style={{ marginTop: SPACE[2], padding: `${SPACE[3]} ${SPACE[4]}`, borderRadius: R.lg, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: SPACE[3], flexWrap: 'wrap' }}>
-                  <div style={{ fontSize: TYPE.size.xs, color: C.textMuted, lineHeight: 1.6 }}>
-                    {tab === 'signin'
-                      ? 'One account across Wasel.'
-                      : 'Name, email, and password are enough to start.'}
+                      </motion.button>
+                    ))}
                   </div>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: C.green, fontSize: TYPE.size.xs, fontWeight: TYPE.weight.bold }}>
-                    <Shield size={12} />
-                    Secure recovery active
-                  </div>
-                </div>
-              </form>
-            </motion.div>
-          </AnimatePresence>
 
-          {/* Legal */}
-          <p style={{ fontSize: TYPE.size.xs, color: C.textMuted, textAlign: 'center', marginTop: SPACE[6], lineHeight: TYPE.lineHeight.relaxed }}>
-            By continuing, you agree to the{' '}
-            <button type="button" onClick={() => nav('/terms')} style={{ color: C.cyan, cursor: 'pointer', background: 'none', border: 'none', padding: 0, font: 'inherit' }}>Terms of Service</button>
-            {' '}and{' '}
-            <button type="button" onClick={() => nav('/privacy')} style={{ color: C.cyan, cursor: 'pointer', background: 'none', border: 'none', padding: 0, font: 'inherit' }}>Privacy Policy</button>.
-          </p>
-        </WaselCard>
+                  <div className="auth-landing__support-bar">
+                    <div>
+                      {tab === 'signin'
+                        ? 'One account across Wasel services.'
+                        : 'Name, email, and password are enough to start.'}
+                    </div>
+                    <div className="auth-landing__support-status">
+                      <Shield size={12} />
+                      Secure recovery active
+                    </div>
+                  </div>
+                </motion.form>
+              </AnimatePresence>
+
+              <p className="auth-landing__legal">
+                By continuing, you agree to the{' '}
+                <button type="button" className="auth-landing__legal-link" onClick={() => nav('/app/terms')}>
+                  Terms of Service
+                </button>
+                {' '}and{' '}
+                <button type="button" className="auth-landing__legal-link" onClick={() => nav('/app/privacy')}>
+                  Privacy Policy
+                </button>.
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
-    </div>
-  );
-}
-
-function PasswordChecklist({ password }: { password: string }) {
-  const requirements = getPasswordRequirements(password);
-
-  return (
-    <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
-      {requirements.map((requirement) => (
-        <div
-          key={requirement.key}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            fontSize: TYPE.size.xs,
-            color: requirement.met ? C.green : C.textMuted,
-            fontFamily: F,
-          }}
-        >
-          <span
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: 999,
-              background: requirement.met ? C.green : 'rgba(255,255,255,0.14)',
-              boxShadow: requirement.met ? '0 0 12px rgba(255,240,193,0.18)' : 'none',
-              flexShrink: 0,
-            }}
-          />
-          <span>{requirement.label}</span>
-        </div>
-      ))}
     </div>
   );
 }
