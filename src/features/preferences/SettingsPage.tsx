@@ -9,7 +9,9 @@ import { Bell, ChevronRight, Eye, Globe, Palette, Shield } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
+import { useTheme } from '../../contexts/ThemeContext';
 import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
+import { ThemeSwitcher } from '../../components/system/ThemeSwitcher';
 import { normalizeProfilePhone } from '../../features/profile/profileUtils';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import type { Language } from '../../locales/translations';
@@ -35,6 +37,7 @@ import {
   verify2FACode,
   type TwoFactorSetup,
 } from '../../utils/security';
+import type { ThemePreference } from '../../utils/theme';
 import { omitUndefined } from '../../utils/object';
 import { PageShell, SectionHead } from '../shared/pageShared';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
@@ -47,6 +50,9 @@ const FONT = DS.F;
 const DISPLAY_FONT = DS.FD;
 const TEXT = DS.text;
 const SOFT = DS.muted;
+const FIELD_BG = 'var(--surface-field)';
+const SOFT_SURFACE = 'var(--surface-muted)';
+const SOFT_SURFACE_STRONG = 'var(--surface-muted-strong)';
 
 const STORAGE_KEYS = {
   privacy: 'wasel.settings.privacy',
@@ -119,8 +125,8 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
         width: 44,
         height: 24,
         borderRadius: 12,
-        background: value ? CYAN : 'rgba(255,255,255,0.12)',
-        border: `1px solid ${value ? `${CYAN}55` : BORD}`,
+        background: value ? 'var(--accent)' : SOFT_SURFACE_STRONG,
+        border: `1px solid ${value ? 'rgb(var(--accent-secondary-rgb) / 0.35)' : BORD}`,
         cursor: 'pointer',
         position: 'relative',
         transition: 'background 0.2s, border-color 0.2s',
@@ -136,9 +142,9 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
           width: 18,
           height: 18,
           borderRadius: '50%',
-          background: '#f5fbff',
+          background: 'var(--bg-secondary)',
           transition: 'left 0.2s',
-          boxShadow: '0 4px 12px rgba(1,10,18,0.32)',
+          boxShadow: 'var(--wasel-shadow-sm)',
         }}
       />
     </button>
@@ -189,7 +195,7 @@ function SelectRow({
         value={value}
         onChange={e => onChange(e.target.value)}
         style={{
-          background: 'rgba(255,255,255,0.08)',
+          background: FIELD_BG,
           border: `1px solid ${BORD}`,
           borderRadius: 14,
           color: TEXT,
@@ -202,7 +208,7 @@ function SelectRow({
         }}
       >
         {options.map(option => (
-          <option key={option.value} value={option.value} style={{ background: '#071a2d' }}>
+          <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
@@ -254,9 +260,9 @@ function ActionButton({
   variant?: 'primary' | 'secondary' | 'danger';
 }) {
   const styles = {
-    primary: { background: DS.gradC, color: '#ffffff', border: '1px solid rgba(255,255,255,0.18)', boxShadow: 'var(--wasel-shadow-teal)' },
-    secondary: { background: 'rgba(255,255,255,0.06)', color: TEXT, border: `1px solid ${BORD}`, backdropFilter: 'blur(16px)' },
-    danger: { background: 'rgba(239,68,68,0.12)', color: '#F87171', border: '1px solid rgba(239,68,68,0.24)' },
+    primary: { background: DS.gradC, color: 'var(--text-inverse)', border: '1px solid rgb(255 255 255 / 0.18)', boxShadow: 'var(--wasel-shadow-teal)' },
+    secondary: { background: SOFT_SURFACE, color: TEXT, border: `1px solid ${BORD}`, backdropFilter: 'blur(16px)' },
+    danger: { background: 'rgb(var(--danger-rgb) / 0.12)', color: 'var(--danger)', border: '1px solid rgb(var(--danger-rgb) / 0.24)' },
   } as const;
 
   return (
@@ -303,7 +309,7 @@ function FormField({
         padding: '0 14px',
         borderRadius: 16,
         border: `1px solid ${BORD}`,
-        background: 'rgba(255,255,255,0.06)',
+        background: FIELD_BG,
         color: TEXT,
         fontFamily: FONT,
         outline: 'none',
@@ -316,6 +322,7 @@ function FormField({
 export default function SettingsPage() {
   const [searchParams] = useSearchParams();
   const { language, setLanguage } = useLanguage();
+  const { theme } = useTheme();
   const { changePassword, profile, refreshProfile, resetPassword, updateProfile } = useAuth();
   const { user, updateUser } = useLocalAuth();
   const nav = useIframeSafeNavigate();
@@ -367,12 +374,12 @@ export default function SettingsPage() {
   const [display, setDisplay] = useState<{
     language: Language;
     currency: string;
-    theme: string;
+    theme: ThemePreference;
     direction: string;
   }>(() => readStoredState(STORAGE_KEYS.display, {
     language,
     currency: 'JOD',
-    theme: 'dark',
+    theme,
     direction: ar ? 'rtl' : 'ltr',
   }));
 
@@ -387,13 +394,14 @@ export default function SettingsPage() {
     setDisplay(previous => ({
       ...previous,
       language,
+      theme,
       direction: language === 'ar' ? 'rtl' : 'ltr',
     }));
     setNotifs(previous => ({
       ...previous,
       preferredLanguage: language === 'ar' ? 'ar' : 'en',
     }));
-  }, [language]);
+  }, [language, theme]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -750,7 +758,7 @@ export default function SettingsPage() {
           />
         </Section>
 
-        <Section icon={<Globe size={16} />} title="Display & Language">
+        <Section icon={<Globe size={16} />} title="Language & Region">
           <SelectRow
             label="Language"
             options={[
@@ -775,15 +783,10 @@ export default function SettingsPage() {
             value={display.currency}
             onChange={value => setDisplay(previous => ({ ...previous, currency: value }))}
           />
-          <SelectRow
-            label="Theme"
-            options={[
-              { value: 'dark', label: 'Dark' },
-              { value: 'system', label: 'System' },
-            ]}
-            value={display.theme}
-            onChange={value => setDisplay(previous => ({ ...previous, theme: value }))}
-          />
+        </Section>
+
+        <Section icon={<Palette size={16} />} title="Theme">
+          <ThemeSwitcher />
         </Section>
 
         <Section icon={<Eye size={16} />} title="Privacy">
@@ -874,7 +877,7 @@ export default function SettingsPage() {
                 )}
 
                 {twoFactorSetup && (
-                  <div style={{ display: 'grid', gap: 12, background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORD}`, borderRadius: 16, padding: 14 }}>
+                  <div style={{ display: 'grid', gap: 12, background: SOFT_SURFACE, border: `1px solid ${BORD}`, borderRadius: 16, padding: 14 }}>
                     <div style={{ fontSize: '0.76rem', color: TEXT, fontFamily: FONT, fontWeight: 700 }}>Current setup details</div>
                     <a
                       href={twoFactorSetup.otpauthUrl}

@@ -1,22 +1,18 @@
 .app-entry-page {
-  --landing-bg: #071a2d;
-  --landing-surface: rgba(255, 255, 255, 0.08);
-  --landing-border: rgba(157, 232, 255, 0.16);
-  --landing-text: #f5fbff;
-  --landing-muted: rgba(236, 245, 255, 0.74);
+  --landing-bg: var(--bg-primary);
+  --landing-surface: var(--surface-muted);
+  --landing-border: var(--border);
+  --landing-text: var(--text-primary);
+  --landing-muted: var(--text-secondary);
   --landing-blue: #65e1ff;
   --landing-teal: #19e7bb;
   --landing-button-brand: #65e1ff;
   --landing-button-brand-soft: #f3fbff;
   --landing-button-brand-mid: #bfefff;
   --landing-button-brand-rgb: 101, 225, 255;
-  --landing-hero: #071a2d;
+  --landing-hero: var(--bg-secondary);
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(101, 225, 255, 0.14), transparent 22%),
-    radial-gradient(circle at top right, rgba(25, 231, 187, 0.14), transparent 20%),
-    radial-gradient(circle at 72% 84%, rgba(157, 232, 255, 0.1), transparent 20%),
-    linear-gradient(180deg, var(--landing-bg) 0%, #081929 24%, #091622 100%);
+  background: var(--shell-background);
   color: var(--landing-text);
 }
 

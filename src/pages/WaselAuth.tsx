@@ -48,11 +48,10 @@ type Tab = 'signin' | 'signup';
 type PendingAction = 'google' | 'facebook' | 'reset' | 'whatsapp' | null;
 
 const AUTH_LANDING = {
-  bg: 'radial-gradient(circle at top left, rgba(15,115,255,0.12), transparent 22%), radial-gradient(circle at top right, rgba(25,231,187,0.14), transparent 20%), linear-gradient(180deg, #eef4fb 0%, #ffffff 24%, #eef5fb 100%)',
-  hero: 'linear-gradient(135deg, #092544 0%, #071A30 52%, #06111F 100%)',
-  heroScrim:
-    'linear-gradient(90deg, rgba(6,21,39,0.84) 0%, rgba(6,21,39,0.58) 46%, rgba(6,21,39,0.24) 100%), linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0))',
-  text: '#0d2948',
+  bg: 'var(--auth-landing-bg)',
+  hero: 'var(--auth-landing-hero)',
+  heroScrim: 'var(--auth-landing-hero-scrim)',
+  text: 'var(--auth-landing-text)',
 } as const;
 
 const BRAND_FEATURES = [

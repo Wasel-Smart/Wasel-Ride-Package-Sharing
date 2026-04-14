@@ -102,13 +102,8 @@ class AppErrorBoundary extends Component<{
           justifyContent: 'center',
           minHeight: '100vh',
           fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
-          background: `
-            ${isLight
-              ? 'radial-gradient(circle at 50% 18%, rgba(25,231,187,0.1), transparent 18%), radial-gradient(circle at 88% 84%, rgba(151,164,173,0.08), transparent 26%), #fbffff'
-              : 'radial-gradient(circle at 50% 18%, rgba(25,231,187,0.16), transparent 18%), radial-gradient(circle at 82% 80%, rgba(101,225,255,0.08), transparent 24%), #050b1a'
-            }
-          `,
-          color: isLight ? '#10243d' : '#E9F5F7',
+          background: 'var(--shell-background)',
+          color: 'var(--text-primary)',
           padding: 24,
           textAlign: 'center',
           direction: ar ? 'rtl' : 'ltr',
@@ -120,11 +115,9 @@ class AppErrorBoundary extends Component<{
             width: 'min(100%, 560px)',
             borderRadius: 28,
             padding: 28,
-            background: isLight
-              ? 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,251,255,0.94)), rgba(255,255,255,0.92)'
-              : 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), rgba(10,22,40,0.94)',
-            border: `1px solid ${isLight ? 'rgba(14,181,145,0.12)' : 'rgba(25,231,187,0.14)'}`,
-            boxShadow: isLight ? '0 28px 70px rgba(16,36,61,0.14)' : '0 28px 70px rgba(0,0,0,0.42)',
+            background: 'var(--surface-strong)',
+            border: '1px solid var(--border)',
+            boxShadow: 'var(--wasel-shadow-lg)',
             backdropFilter: 'blur(18px)',
           }}
         >
@@ -137,19 +130,19 @@ class AppErrorBoundary extends Component<{
               marginBottom: 12,
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
-              color: '#19E7BB',
+              color: 'var(--accent)',
               fontWeight: 800,
             }}
           >
             {ar ? 'شاشة الاسترجاع' : 'Recovery Screen'}
           </div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: isLight ? '#10243d' : '#E9F5F7', margin: '0 0 10px' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 10px' }}>
             {ar ? 'صار خلل ووقف هالجزء من التطبيق' : 'Something interrupted this screen'}
           </h2>
-          <p style={{ color: isLight ? 'rgba(16,36,61,0.76)' : 'rgba(239,246,255,0.72)', fontSize: '0.92rem', margin: '0 auto 16px', maxWidth: 420, lineHeight: 1.7 }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', margin: '0 auto 16px', maxWidth: 420, lineHeight: 1.7 }}>
             {this.state.error || (ar ? 'صار خطأ غير متوقع وإحنا عم نحمّل هالجزء من واصل.' : 'An unexpected error occurred while loading this part of Wasel.')}
           </p>
-          <p style={{ color: isLight ? 'rgba(16,36,61,0.60)' : 'rgba(239,246,255,0.52)', fontSize: '0.84rem', margin: '0 auto 22px', maxWidth: 440, lineHeight: 1.7 }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.84rem', margin: '0 auto 22px', maxWidth: 440, lineHeight: 1.7 }}>
             {ar
               ? 'حدّث الصفحة لتكمل. وإذا رجعت المشكلة، ارجع للرئيسية وافتح الخدمة مرة ثانية.'
               : 'Refresh this experience to continue. If the issue repeats, return to the home screen and reopen the flow.'}
@@ -166,8 +159,8 @@ class AppErrorBoundary extends Component<{
                 padding: '0 22px',
                 borderRadius: 14,
                 border: 'none',
-                background: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
-                color: '#041019',
+                background: 'var(--theme-gradient-accent)',
+                color: 'var(--text-inverse)',
                 fontWeight: 800,
                 cursor: 'pointer',
                 fontSize: '0.92rem',
@@ -185,9 +178,9 @@ class AppErrorBoundary extends Component<{
                 minHeight: 48,
                 padding: '0 22px',
                 borderRadius: 14,
-                border: '1px solid rgba(25,231,187,0.18)',
-                background: isLight ? 'rgba(14,181,145,0.04)' : 'rgba(220,255,248,0.03)',
-                color: isLight ? '#10243d' : '#E9F5F7',
+                border: '1px solid var(--border)',
+                background: 'var(--surface-muted)',
+                color: 'var(--text-primary)',
                 fontWeight: 800,
                 cursor: 'pointer',
                 fontSize: '0.92rem',
@@ -205,9 +198,9 @@ class AppErrorBoundary extends Component<{
                 minHeight: 48,
                 padding: '0 22px',
                 borderRadius: 14,
-                border: '1px solid rgba(25,231,187,0.18)',
+                border: '1px solid var(--border)',
                 background: 'transparent',
-                color: '#19E7BB',
+                color: 'var(--accent)',
                 fontWeight: 800,
                 cursor: 'pointer',
                 fontSize: '0.92rem',
@@ -364,10 +357,10 @@ function AppShell({
               position="bottom-center"
               toastOptions={{
                 style: {
-                  background: resolvedTheme === 'light' ? 'rgba(255,255,255,0.96)' : '#0A1628',
-                  border: `1px solid ${resolvedTheme === 'light' ? 'rgba(14,181,145,0.16)' : 'rgba(25,231,187,0.22)'}`,
-                  color: resolvedTheme === 'light' ? '#10243d' : '#E9F5F7',
-                  boxShadow: resolvedTheme === 'light' ? '0 18px 40px rgba(16,36,61,0.14)' : '0 18px 44px rgba(1,10,18,0.28)',
+                  background: 'var(--surface-glass)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-primary)',
+                  boxShadow: 'var(--wasel-shadow-md)',
                   fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
                 },
               }}

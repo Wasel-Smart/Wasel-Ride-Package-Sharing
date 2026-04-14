@@ -51,7 +51,7 @@ export function WaselModal({
   const backdropStyle: CSSProperties = {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(2,7,12,0.82)',
+    background: 'var(--bg-overlay)',
     backdropFilter: 'blur(8px)',
     WebkitBackdropFilter: 'blur(8px)',
     display: 'flex',
@@ -112,7 +112,7 @@ export function WaselModal({
             <button
               onClick={onClose}
               aria-label="Close dialog"
-              style={{ background: 'rgba(255,245,222,0.06)', border: `1px solid ${C.border}`, borderRadius: R.lg, padding: '6px', cursor: 'pointer', color: C.textMuted, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+              style={{ background: 'var(--surface-muted)', border: `1px solid ${C.border}`, borderRadius: R.lg, padding: '6px', cursor: 'pointer', color: C.textMuted, display: 'flex', alignItems: 'center', flexShrink: 0 }}
             >
               <X size={16} />
             </button>
