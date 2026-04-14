@@ -409,11 +409,12 @@ export const API_ENDPOINTS = {
   ADMIN_SEED: '/admin/seed-data',
   
   // Health
-  HEALTH: '/',
+  HEALTH: '/health',
   HEALTH_DB: '/health/db',
   HEALTH_AUTH: '/health/auth',
   HEALTH_STORAGE: '/health/storage',
   HEALTH_KV: '/health/kv',
+  JOBS_STATUS: '/jobs/status',
 };
 
 // ============================================================================
