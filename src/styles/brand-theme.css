@@ -303,28 +303,29 @@ body {
 /* ─── Buttons ────────────────────────────────────────────────── */
 .brand-button-primary,
 .wasel-primary-button {
-  background: linear-gradient(135deg, #dcfff8 0%, #19e7bb 42%, #65e1ff 100%);
-  color: #020c07 !important;
-  border: 1px solid rgba(255 255 255 / 0.08);
-  box-shadow: var(--wasel-shadow-teal);
+  background: linear-gradient(135deg, #eef8ff 0%, #d6eeff 52%, #a9e3ff 100%);
+  color: #081520 !important;
+  border: 1px solid rgba(255 255 255 / 0.12);
+  box-shadow: 0 18px 44px rgba(169 227 255 / 0.24);
   transition: transform 0.20s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.20s ease;
 }
 .brand-button-primary:hover,
 .wasel-primary-button:hover {
   transform: translateY(-2px) scale(1.015);
-  box-shadow: 0 22px 58px rgba(25 231 187 / 0.34);
+  box-shadow: 0 22px 58px rgba(169 227 255 / 0.34);
 }
 .brand-button-secondary,
 .wasel-outline-button {
-  background: rgba(255 255 255 / 0.04);
+  background: rgba(169 227 255 / 0.08);
   color: var(--foreground) !important;
-  border: 1px solid rgba(var(--wasel-border-rgb) / 0.17);
+  border: 1px solid rgba(169 227 255 / 0.2);
   box-shadow: var(--wasel-shadow-xs);
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 .brand-button-secondary:hover,
 .wasel-outline-button:hover {
-  border-color: rgba(var(--wasel-border-rgb) / 0.36);
+  border-color: rgba(169 227 255 / 0.4);
+  background: rgba(169 227 255 / 0.12);
   transform: translateY(-1px);
   box-shadow: var(--wasel-shadow-sm);
 }

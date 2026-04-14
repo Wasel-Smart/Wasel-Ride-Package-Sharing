@@ -52,6 +52,7 @@ function authPanelStyle() {
     background: DS.card,
     border: `1px solid ${DS.border}`,
     boxShadow: 'var(--wasel-service-head-shadow)',
+    backdropFilter: 'blur(18px)',
     textAlign: 'center' as const,
     color: DS.text,
   };
@@ -204,10 +205,10 @@ export function PageShell({ children }: { children: ReactNode }) {
         fontFamily: DS.F,
         direction: ar ? 'rtl' : 'ltr',
       }}
-    >
+      >
       <style>{`
-        :root { color-scheme: light; }
-        .w-focus:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(15,115,255,0.22); }
+        :root { color-scheme: dark; }
+        .w-focus:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(101,225,255,0.24); }
         @media (max-width: 899px) {
           .sp-inner { padding: 18px 14px 36px !important; }
           .sp-2col,
@@ -258,11 +259,12 @@ export function PageShell({ children }: { children: ReactNode }) {
           style={{
             position: 'relative',
             overflow: 'hidden',
-            borderRadius: r(32),
-            background: DS.bg,
+            borderRadius: r(34),
+            background: DS.card,
             border: `1px solid ${DS.border}`,
             boxShadow: 'var(--wasel-service-head-shadow)',
-            padding: 24,
+            backdropFilter: 'blur(18px)',
+            padding: 28,
           }}
         >
           <div
@@ -272,9 +274,9 @@ export function PageShell({ children }: { children: ReactNode }) {
               inset: 0,
               pointerEvents: 'none',
               background: [
-                'radial-gradient(circle at 14% 14%, rgba(15,115,255,0.16), transparent 24%)',
-                'radial-gradient(circle at 84% 18%, rgba(25,231,187,0.14), transparent 20%)',
-                'radial-gradient(circle at 72% 88%, rgba(157,232,255,0.12), transparent 18%)',
+                'radial-gradient(circle at 14% 14%, rgba(101,225,255,0.16), transparent 24%)',
+                'radial-gradient(circle at 84% 18%, rgba(25,231,187,0.12), transparent 20%)',
+                'radial-gradient(circle at 72% 88%, rgba(216,251,255,0.1), transparent 18%)',
               ].join(','),
             }}
           />
@@ -283,12 +285,22 @@ export function PageShell({ children }: { children: ReactNode }) {
             style={{
               position: 'absolute',
               inset: 0,
-              opacity: 0.12,
+              opacity: 0.14,
               pointerEvents: 'none',
               backgroundImage:
                 'linear-gradient(rgba(157,232,255,0.22) 1px, transparent 1px), linear-gradient(90deg, rgba(157,232,255,0.22) 1px, transparent 1px)',
               backgroundSize: '56px 56px',
               maskImage: 'radial-gradient(circle at center, black 0%, black 48%, transparent 90%)',
+            }}
+          />
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              inset: '0 0 auto 0',
+              height: 1,
+              background: 'linear-gradient(90deg, transparent, rgba(216,251,255,0.5), transparent)',
+              pointerEvents: 'none',
             }}
           />
           <div style={{ position: 'relative', zIndex: 1 }}>{children}</div>
@@ -321,7 +333,7 @@ export function SectionHead({
       className="sp-head"
       style={{
         background: DS.sectionHeadBg,
-        borderRadius: r(28),
+        borderRadius: r(30),
         padding: '24px 26px',
         marginBottom: 22,
         position: 'relative',
@@ -383,6 +395,7 @@ export function SectionHead({
           <div>
             <h1
               style={{
+                fontFamily: DS.FD,
                 fontSize: 'clamp(1.35rem, 2.4vw, 1.72rem)',
                 fontWeight: 900,
                 color: DS.text,
@@ -449,12 +462,13 @@ export function CoreExperienceBanner({
       style={{
         display: 'grid',
         gap: 10,
-        background: `linear-gradient(135deg, ${tone}12, rgba(255,255,255,0.035))`,
+        background: `linear-gradient(135deg, ${tone}12, rgba(255,255,255,0.055))`,
         border: `1px solid ${tone}2e`,
-        borderRadius: r(20),
+        borderRadius: r(24),
         padding: '16px 18px',
         marginBottom: 18,
         boxShadow: '0 18px 40px rgba(7,25,49,0.14)',
+        backdropFilter: 'blur(18px)',
       }}
     >
       <div style={{ color: tone, fontSize: '0.7rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
@@ -487,11 +501,12 @@ export function ClarityBand({
         display: 'grid',
         gap: 14,
         marginBottom: 18,
-        background: `linear-gradient(180deg, ${tone}10, rgba(255,255,255,0.028))`,
+        background: `linear-gradient(180deg, ${tone}10, rgba(255,255,255,0.04))`,
         border: `1px solid ${tone}28`,
-        borderRadius: r(22),
+        borderRadius: r(24),
         padding: '18px 18px 16px',
         boxShadow: '0 18px 36px rgba(7,25,49,0.14)',
+        backdropFilter: 'blur(18px)',
       }}
     >
       <div>

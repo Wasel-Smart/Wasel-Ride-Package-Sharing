@@ -10,12 +10,12 @@ import {
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getExecutionOperatingSystemSnapshot } from '../../services/executionOperatingSystem';
 
-const BG = '#051321';
-const PANEL = 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.018))';
-const BORDER = 'rgba(93,150,210,0.16)';
-const CYAN = '#47B7E6';
-const GREEN = '#6BB515';
-const GOLD = '#A8D614';
+const BG = 'var(--wasel-service-bg)';
+const PANEL = 'var(--wasel-service-card)';
+const BORDER = 'var(--wasel-service-border)';
+const CYAN = 'var(--wasel-app-blue)';
+const GREEN = 'var(--wasel-app-teal)';
+const GOLD = 'var(--wasel-app-sky)';
 const RED = '#F97316';
 const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
@@ -23,8 +23,10 @@ function cardStyle() {
   return {
     background: PANEL,
     border: `1px solid ${BORDER}`,
-    borderRadius: 20,
+    borderRadius: 24,
     padding: '18px 18px 16px',
+    boxShadow: 'var(--wasel-shadow-card)',
+    backdropFilter: 'blur(18px)',
   } as const;
 }
 
@@ -52,7 +54,7 @@ export default function ExecutionOSPage() {
         <section
           style={{
             ...cardStyle(),
-            background: 'linear-gradient(135deg, rgba(71,183,230,0.16), rgba(168,214,20,0.08))',
+            background: 'linear-gradient(135deg, rgba(101,225,255,0.16), rgba(25,231,187,0.08))',
             border: '1px solid rgba(71,183,230,0.24)',
             padding: '24px 22px 22px',
           }}

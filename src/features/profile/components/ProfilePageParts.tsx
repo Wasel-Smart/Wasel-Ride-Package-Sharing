@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
 
 const CARD =
-  'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))';
-const BORD = 'rgba(93,150,210,0.14)';
+  'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02))';
+const BORD = 'rgba(157,232,255,0.18)';
 const FONT =
   "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
@@ -44,7 +44,7 @@ export function StatCard({ label, value, icon, color }: StatCardProps) {
         style={{
           fontSize: '1.4rem',
           fontWeight: 900,
-          color: '#EAF7FF',
+          color: '#F5FBFF',
           fontFamily: FONT,
           lineHeight: 1.2,
         }}
@@ -142,7 +142,7 @@ export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
           style={{
             fontSize: '0.875rem',
             fontWeight: 500,
-            color: danger ? '#EF4444' : '#EAF7FF',
+            color: danger ? '#EF4444' : '#F5FBFF',
             fontFamily: FONT,
           }}
         >
@@ -172,7 +172,7 @@ export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
 export function VerificationBadge({
   level,
   ar = false,
-  accent = '#47B7E6',
+  accent = '#0F73FF',
 }: {
   level: string;
   ar?: boolean;
@@ -257,7 +257,7 @@ export function QuickActionCard({
         transition: 'border-color 0.15s, transform 0.15s',
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(93,150,210,0.28)';
+        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(157,232,255,0.28)';
         (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
       }}
       onMouseLeave={(e) => {
@@ -269,7 +269,7 @@ export function QuickActionCard({
         <span style={{ color, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</span>
         <ChevronRight size={14} color="rgba(153,184,210,0.45)" />
       </div>
-      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#EAF7FF', fontFamily: FONT, marginTop: 14 }}>
+      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#F5FBFF', fontFamily: FONT, marginTop: 14 }}>
         {label}
       </div>
       <div style={{ fontSize: '0.76rem', color: 'rgba(153,184,210,0.72)', lineHeight: 1.5, fontFamily: FONT, marginTop: 6 }}>

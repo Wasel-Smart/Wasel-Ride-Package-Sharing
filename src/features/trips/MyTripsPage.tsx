@@ -43,17 +43,17 @@ import {
   SectionHead,
 } from '../shared/pageShared';
 
-const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))';
-const CARD_ALT = 'rgba(255,255,255,0.03)';
-const BORDER = 'rgba(93,150,210,0.14)';
-const CYAN = '#47B7E6';
-const GOLD = '#A8D614';
-const GREEN = '#6BB515';
+const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02))';
+const CARD_ALT = 'rgba(255,255,255,0.05)';
+const BORDER = 'rgba(157,232,255,0.18)';
+const CYAN = '#0F73FF';
+const GOLD = '#9DE8FF';
+const GREEN = '#19E7BB';
 const RED = '#EF4444';
 const AMBER = '#F59E0B';
-const TEXT = '#EAF7FF';
-const MUTED = 'rgba(153,184,210,0.74)';
-const DIM = 'rgba(153,184,210,0.56)';
+const TEXT = '#F5FBFF';
+const MUTED = 'rgba(245,251,255,0.78)';
+const DIM = 'rgba(157,232,255,0.56)';
 const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 type TripLifecycle = 'active' | 'attention' | 'completed' | 'cancelled';

@@ -142,9 +142,9 @@ export const WaselGlass = {
 } as const;
 
 export const WaselGradients = {
-  primaryBtn: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
-  accentBtn: 'linear-gradient(135deg, #65E1FF 0%, #A2FFE7 100%)',
-  successBtn: 'linear-gradient(135deg, #19E7BB 0%, #A2FFE7 100%)',
+  primaryBtn: 'linear-gradient(135deg, #EEF8FF 0%, #D6EEFF 52%, #A9E3FF 100%)',
+  accentBtn: 'linear-gradient(135deg, #D7F0FF 0%, #A9E3FF 100%)',
+  successBtn: 'linear-gradient(135deg, #DFF3FF 0%, #A9E3FF 100%)',
   heroCard:
     'linear-gradient(135deg, rgba(25,231,187,0.14) 0%, rgba(162,255,231,0.08) 56%, rgba(72,207,255,0.08) 100%)',
   constellation: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',

@@ -28,21 +28,29 @@ import { getCorridorMovementQuote } from '../../services/corridorTruth';
 import { getMovementMembershipSnapshot } from '../../services/movementMembership';
 
 /* ─── Design tokens ──────────────────────────────────────────────────────────── */
-const BG = '#050d1a';
-const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.052), rgba(255,255,255,0.018))';
-const CARD2 = 'rgba(255,255,255,0.026)';
-const BORDER = 'rgba(71,183,230,0.16)';
-const CYAN = '#47B7E6';
-const GOLD = '#A8D614';
-const GREEN = '#6BB515';
-const PURPLE = '#a78bfa';
-const BLUE = '#3B82F6';
-const TEXT = '#EFF6FF';
-const SUB = 'rgba(148,163,184,0.82)';
+const BG = 'var(--wasel-service-bg)';
+const CARD = 'var(--wasel-service-card)';
+const CARD2 = 'var(--wasel-service-card-2)';
+const BORDER = 'var(--wasel-service-border)';
+const CYAN = 'var(--wasel-app-blue)';
+const GOLD = 'var(--wasel-app-sky)';
+const GREEN = 'var(--wasel-app-teal)';
+const PURPLE = '#4AA8FF';
+const BLUE = 'var(--wasel-app-blue-strong)';
+const TEXT = 'var(--wasel-service-text)';
+const SUB = 'var(--wasel-service-sub)';
 const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 function card(extra?: React.CSSProperties): React.CSSProperties {
-  return { background: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: '20px 20px 18px', ...extra };
+  return {
+    background: CARD,
+    border: `1px solid ${BORDER}`,
+    borderRadius: 24,
+    padding: '20px 20px 18px',
+    boxShadow: 'var(--wasel-shadow-card)',
+    backdropFilter: 'blur(18px)',
+    ...extra,
+  };
 }
 
 function getPricePressureColor(pricePressure: string) {
