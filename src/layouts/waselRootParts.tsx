@@ -1,9 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Monitor, Moon, Sun } from 'lucide-react';
 import { WaselLogo } from '../components/wasel-ds/WaselLogo';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { type SupportedCurrency, useCurrency, CurrencyService } from '../utils/currency';
 import { buildAuthPagePath } from '../utils/authFlow';
+import type { ThemePreference } from '../utils/theme';
 import { C, F, R } from '../utils/wasel-ds';
 import {
   getNavGroupPrimaryPath,
@@ -37,6 +40,16 @@ const DRAWER_MUTED = 'var(--text-secondary)';
 const DRAWER_SOFT = 'var(--text-muted)';
 const DRAWER_SECTION_BG =
   'linear-gradient(180deg, rgb(var(--accent-secondary-rgb) / 0.08), rgb(var(--accent-rgb) / 0.04))';
+
+const THEME_MODE_OPTIONS: Array<{
+  value: ThemePreference;
+  icon: typeof Sun;
+  label: { en: string; ar: string };
+}> = [
+  { value: 'light', icon: Sun, label: { en: 'Light', ar: 'فاتح' } },
+  { value: 'dark', icon: Moon, label: { en: 'Dark', ar: 'داكن' } },
+  { value: 'system', icon: Monitor, label: { en: 'System', ar: 'النظام' } },
+];
 
 export function Badge({
   label,
@@ -681,7 +694,7 @@ export function UserMenu({
             top: 'calc(100% + 8px)',
             right: ar ? 'auto' : 0,
             left: ar ? 0 : 'auto',
-            width: 256,
+            width: 288,
             background: PANEL_BG,
             backdropFilter: 'blur(28px)',
             border: `1px solid ${PANEL_BORDER}`,
@@ -817,6 +830,8 @@ export function UserMenu({
             </button>
           ))}
           <div style={{ height: 1, background: C.border, margin: '0 16px' }} />
+          <ThemeModeSection ar={ar} />
+          <div style={{ height: 1, background: C.border, margin: '0 16px' }} />
           <button
             type="button"
             onClick={() => {
@@ -845,6 +860,165 @@ export function UserMenu({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function ThemeModeSection({
+  ar,
+  compact = 'menu',
+}: {
+  ar: boolean;
+  compact?: 'menu' | 'drawer';
+}) {
+  const { theme, resolvedTheme, setTheme } = useTheme();
+  const sectionPadding = compact === 'drawer' ? '12px 20px' : '12px 16px';
+  const title = ar ? 'المظهر' : 'Theme mode';
+  const subtitle = ar
+    ? 'غيّر النمط من هنا. الافتراضي: فاتح.'
+    : 'Change mode here. Default: Light.';
+  const currentLabel =
+    theme === 'system'
+      ? `${ar ? 'النظام' : 'System'} · ${
+          resolvedTheme === 'light'
+            ? ar
+              ? 'فاتح'
+              : 'Light'
+            : ar
+              ? 'داكن'
+              : 'Dark'
+        }`
+      : THEME_MODE_OPTIONS.find((option) => option.value === theme)?.label[
+          ar ? 'ar' : 'en'
+        ] ?? 'Light';
+  const helper =
+    theme === 'system'
+      ? ar
+        ? `يتبع الجهاز الآن: ${resolvedTheme === 'light' ? 'فاتح' : 'داكن'}.`
+        : `Following your device: ${resolvedTheme === 'light' ? 'Light' : 'Dark'}.`
+      : ar
+        ? 'يتم تطبيق التغيير فوراً على كل الشاشات.'
+        : 'The change applies instantly across the app.';
+
+  return (
+    <div
+      style={{
+        padding: sectionPadding,
+        display: 'grid',
+        gap: 10,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}
+      >
+        <div style={{ display: 'grid', gap: 3 }}>
+          <div
+            style={{
+              fontSize: '0.8rem',
+              fontWeight: 800,
+              color: 'var(--text-primary)',
+              fontFamily: F,
+            }}
+          >
+            {title}
+          </div>
+          <div
+            style={{
+              fontSize: '0.68rem',
+              lineHeight: 1.45,
+              color: 'var(--text-secondary)',
+              fontFamily: F,
+            }}
+          >
+            {subtitle}
+          </div>
+        </div>
+
+        <span
+          style={{
+            flexShrink: 0,
+            padding: '5px 8px',
+            borderRadius: R.full,
+            border: `1px solid ${C.border}`,
+            background: PANEL_SOFT,
+            color: 'var(--text-secondary)',
+            fontSize: '0.66rem',
+            fontWeight: 700,
+            fontFamily: F,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {currentLabel}
+        </span>
+      </div>
+
+      <div
+        role="radiogroup"
+        aria-label={title}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+          gap: 8,
+        }}
+      >
+        {THEME_MODE_OPTIONS.map(({ value, icon: Icon, label }) => {
+          const active = theme === value;
+
+          return (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => setTheme(value)}
+              style={{
+                minHeight: compact === 'drawer' ? 42 : 38,
+                padding: '8px 6px',
+                borderRadius: 14,
+                border: `1px solid ${active ? 'var(--border-strong)' : 'var(--border)'}`,
+                background: active
+                  ? 'linear-gradient(180deg, rgb(var(--accent-rgb) / 0.10), rgb(var(--accent-secondary-rgb) / 0.08))'
+                  : 'var(--surface-muted)',
+                color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                boxShadow: active ? 'var(--wasel-shadow-teal)' : 'none',
+                cursor: 'pointer',
+                display: 'grid',
+                placeItems: 'center',
+                gap: 6,
+                textAlign: 'center',
+                fontFamily: F,
+              }}
+            >
+              <Icon size={14} />
+              <span
+                style={{
+                  fontSize: '0.7rem',
+                  fontWeight: active ? 800 : 700,
+                  lineHeight: 1.1,
+                }}
+              >
+                {ar ? label.ar : label.en}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div
+        style={{
+          fontSize: '0.68rem',
+          lineHeight: 1.45,
+          color: 'var(--text-secondary)',
+          fontFamily: F,
+        }}
+      >
+        {helper}
+      </div>
     </div>
   );
 }
@@ -996,10 +1170,14 @@ export function MobileDrawer({
             display: 'flex',
             gap: 8,
             alignItems: 'center',
+            flexWrap: 'wrap',
           }}
         >
           <LangToggle />
           {isAuthenticated && <CurrencySwitcher ar={ar} />}
+        </div>
+        <div style={{ borderBottom: `1px solid ${C.border}` }}>
+          <ThemeModeSection ar={ar} compact="drawer" />
         </div>
         {user && (
           <div
