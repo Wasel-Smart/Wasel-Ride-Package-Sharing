@@ -7,8 +7,8 @@
   --card-foreground: var(--text-primary);
   --popover: var(--surface-glass);
   --popover-foreground: var(--text-primary);
-  --primary: var(--accent-secondary);
-  --primary-foreground: var(--text-inverse);
+  --primary: rgb(var(--wasel-button-primary-rgb) / 1);
+  --primary-foreground: var(--wasel-button-primary-foreground);
   --secondary: var(--surface-muted);
   --secondary-foreground: var(--text-primary);
   --muted: var(--surface-muted);
@@ -16,7 +16,7 @@
   --accent: rgb(var(--accent-rgb) / 1);
   --accent-foreground: var(--text-inverse);
   --border: var(--surface-divider);
-  --ring: rgb(var(--accent-secondary-rgb) / 0.22);
+  --ring: rgb(var(--wasel-button-primary-rgb) / 0.26);
 
   --wasel-copy-primary: var(--text-primary);
   --wasel-copy-muted: var(--text-secondary);
@@ -45,11 +45,11 @@
   --wasel-app-ink: var(--text-primary);
   --wasel-app-muted: var(--text-secondary);
   --wasel-app-soft: var(--text-muted);
-  --wasel-app-blue: var(--accent-secondary);
-  --wasel-app-blue-strong: color-mix(in srgb, var(--accent-secondary) 72%, white);
+  --wasel-app-blue: var(--wasel-button-primary);
+  --wasel-app-blue-strong: color-mix(in srgb, var(--wasel-button-primary) 72%, white);
   --wasel-app-teal: var(--accent);
   --wasel-app-teal-deep: color-mix(in srgb, var(--accent) 72%, black);
-  --wasel-app-sky: color-mix(in srgb, var(--accent-secondary) 35%, white);
+  --wasel-app-sky: color-mix(in srgb, var(--wasel-button-primary) 35%, white);
   --wasel-app-hero: var(--bg-primary);
   --wasel-app-surface: var(--surface-muted);
   --wasel-app-surface-strong: var(--surface-muted-strong);
@@ -66,9 +66,9 @@
     );
   --wasel-app-nav-active-border: var(--border-strong);
   --wasel-app-button-primary: var(--theme-gradient-primary);
-  --wasel-app-button-secondary: var(--surface-muted);
-  --wasel-app-button-secondary-border: var(--border);
-  --wasel-app-button-secondary-shadow: var(--wasel-shadow-sm);
+  --wasel-app-button-secondary: var(--wasel-button-primary-soft);
+  --wasel-app-button-secondary-border: var(--wasel-button-primary-border);
+  --wasel-app-button-secondary-shadow: 0 10px 30px rgb(var(--wasel-button-primary-rgb) / 0.10);
 
   --wasel-service-bg: var(--service-background);
   --wasel-service-card: var(--service-card);

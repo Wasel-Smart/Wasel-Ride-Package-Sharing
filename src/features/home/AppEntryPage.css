@@ -1,34 +1,35 @@
 .app-entry-page {
-  --landing-bg: var(--bg-primary);
-  --landing-surface: var(--service-card);
-  --landing-border: var(--border);
-  --landing-text: var(--service-text-primary, var(--text-primary));
-  --landing-muted: var(--service-text-secondary, var(--text-secondary));
-  --landing-blue: var(--accent-secondary);
-  --landing-teal: var(--accent);
-  --landing-button-brand-rgb: 46, 158, 216;
-  --landing-button-bg: var(--theme-gradient-primary);
-  --landing-button-foreground: var(--primary-foreground);
-  --landing-panel-bg: var(--service-card);
-  --landing-panel-shadow: var(--service-head-shadow);
-  --landing-hero: var(--service-head-background);
-  --landing-hero-text: var(--service-text-primary, #f5fbff);
-  --landing-hero-muted: var(--service-text-secondary, rgba(245, 251, 255, 0.84));
-  --landing-soft-surface: rgba(255, 255, 255, 0.08);
-  --landing-soft-surface-strong: rgba(255, 255, 255, 0.12);
-  --landing-input-bg: rgba(255, 255, 255, 0.06);
+  --landing-bg:
+    radial-gradient(circle at 18% 0%, rgba(199, 232, 224, 0.66), transparent 32%),
+    radial-gradient(circle at 100% 10%, rgba(205, 234, 251, 0.72), transparent 28%),
+    linear-gradient(180deg, #ddebf6 0%, #e9f1f0 18%, #eef4fb 100%);
+  --landing-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 252, 255, 0.95));
+  --landing-border: rgba(180, 206, 228, 0.72);
+  --landing-text: #143459;
+  --landing-muted: #647b95;
+  --landing-blue: #97ddff;
+  --landing-teal: #22c2aa;
+  --landing-button-brand-rgb: 20, 52, 89;
+  --landing-button-bg: linear-gradient(135deg, #143459 0%, #244c78 100%);
+  --landing-button-foreground: #f7fbff;
+  --landing-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 251, 255, 0.95));
+  --landing-panel-shadow: 0 20px 56px rgba(20, 52, 89, 0.1);
+  --landing-hero:
+    radial-gradient(circle at 70% 36%, rgba(40, 104, 142, 0.18), transparent 22%),
+    radial-gradient(circle at 18% 50%, rgba(29, 140, 160, 0.12), transparent 26%),
+    linear-gradient(135deg, #0b1c2f 0%, #0e2237 54%, #122b45 100%);
+  --landing-hero-text: #f7fbff;
+  --landing-hero-muted: rgba(224, 236, 247, 0.8);
+  --landing-soft-surface: rgba(214, 226, 240, 0.14);
+  --landing-soft-surface-strong: rgba(221, 234, 247, 0.2);
+  --landing-input-bg: rgba(247, 251, 255, 0.98);
   min-height: 100vh;
-  background: var(--shell-background);
+  background: var(--landing-bg);
   color: var(--landing-text);
 }
 
 .light .app-entry-page {
-  --landing-border: rgba(255, 255, 255, 0.10);
-  --landing-button-brand-rgb: 17, 161, 132;
-  --landing-soft-surface: rgba(255, 255, 255, 0.07);
-  --landing-soft-surface-strong: rgba(255, 255, 255, 0.11);
-  --landing-input-bg: rgba(255, 255, 255, 0.08);
-  --landing-panel-shadow: 0 30px 76px rgba(7, 23, 21, 0.16);
+  --landing-panel-shadow: 0 20px 56px rgba(20, 52, 89, 0.1);
 }
 
 .app-entry-page__shell {
@@ -54,12 +55,12 @@
   justify-content: space-between;
   flex-wrap: wrap;
   margin-bottom: 24px;
-  padding: 14px 18px;
-  border-radius: 24px;
+  padding: 22px 28px;
+  border-radius: 32px;
   border: 1px solid var(--landing-border);
   background: var(--landing-panel-bg);
   box-shadow: var(--landing-panel-shadow);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(24px);
 }
 
 .app-entry-page__brand {
@@ -94,14 +95,14 @@
 }
 
 .app-entry-page__brand-name {
-  font-size: 1.18rem;
+  font-size: 1.28rem;
   font-weight: 900;
   letter-spacing: -0.04em;
 }
 
 .app-entry-page__brand-meta {
   color: var(--landing-muted);
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   font-weight: 700;
 }
 
@@ -127,7 +128,7 @@
   padding: 0 16px;
   border: 1px solid var(--landing-border);
   border-radius: 999px;
-  background: var(--landing-soft-surface);
+  background: rgba(255, 255, 255, 0.88);
   color: var(--landing-text);
   font-size: 0.88rem;
   font-weight: 800;
@@ -141,8 +142,8 @@
 .app-entry-page__auth-primary {
   background: var(--landing-button-bg) !important;
   color: var(--landing-button-foreground) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
-  box-shadow: 0 18px 36px rgba(var(--landing-button-brand-rgb), 0.24);
+  border: 1px solid rgba(19, 47, 79, 0.14) !important;
+  box-shadow: 0 18px 36px rgba(var(--landing-button-brand-rgb), 0.2);
 }
 
 .app-entry-page__main,
@@ -158,7 +159,8 @@
   border-radius: 38px;
   min-height: 680px;
   background: var(--landing-hero);
-  box-shadow: 0 42px 120px rgba(7, 25, 49, 0.22);
+  border: 1px solid rgba(14, 37, 60, 0.12);
+  box-shadow: 0 34px 90px rgba(10, 31, 53, 0.2);
 }
 
 .app-entry-page__hero-map,
@@ -169,14 +171,14 @@
 
 .app-entry-page__hero-map {
   pointer-events: none;
-  opacity: 0.74;
+  opacity: 0.8;
 }
 
 .app-entry-page__hero-map-scale {
   position: absolute;
   inset: -6% -6% -8%;
   transform: scale(1.06);
-  filter: saturate(1.08) brightness(0.92);
+  filter: saturate(0.96) brightness(0.9);
 }
 
 .app-entry-page__hero-map-scale .landing-sim-shell {
@@ -191,9 +193,9 @@
   background:
     linear-gradient(
       90deg,
-      rgba(6, 21, 39, 0.82) 0%,
-      rgba(6, 21, 39, 0.58) 42%,
-      rgba(6, 21, 39, 0.26) 100%
+      rgba(7, 22, 38, 0.92) 0%,
+      rgba(7, 22, 38, 0.74) 40%,
+      rgba(7, 22, 38, 0.34) 100%
     ),
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0));
 }
@@ -204,7 +206,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
   gap: 28px;
-  padding: 40px;
+  padding: 42px;
   min-height: 680px;
 }
 
@@ -222,8 +224,8 @@
   gap: 8px;
   padding: 8px 14px;
   border-radius: 999px;
-  background: var(--landing-soft-surface-strong);
-  color: var(--landing-blue);
+  background: rgba(167, 205, 233, 0.18);
+  color: #9adfff;
   font-size: 0.76rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -243,7 +245,7 @@
   margin: 0;
   max-width: 56ch;
   color: var(--landing-hero-muted);
-  font-size: 1rem;
+  font-size: 1.02rem;
   line-height: 1.75;
 }
 
@@ -251,11 +253,12 @@
   width: fit-content;
   padding: 10px 16px;
   border-radius: 999px;
-  background: var(--landing-soft-surface);
+  background: rgba(219, 229, 241, 0.12);
   color: var(--landing-hero-text);
   font-size: 0.9rem;
   font-weight: 800;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(220, 232, 243, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .app-entry-page__hero-points span {
@@ -264,7 +267,7 @@
   gap: 8px;
   padding: 10px 14px;
   border-radius: 999px;
-  background: var(--landing-soft-surface);
+  background: rgba(214, 226, 240, 0.12);
   color: var(--landing-hero-text);
   font-size: 0.84rem;
   font-weight: 700;
@@ -277,8 +280,8 @@
   width: fit-content;
   padding: 14px 16px;
   border-radius: 20px;
-  background: var(--landing-soft-surface);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(214, 226, 240, 0.12);
+  border: 1px solid rgba(220, 232, 243, 0.08);
 }
 
 .app-entry-page__hero-meta strong {
@@ -298,14 +301,14 @@
   border-radius: 30px;
   border: 1px solid var(--landing-border);
   background: var(--landing-panel-bg);
-  box-shadow: var(--landing-panel-shadow);
-  backdrop-filter: blur(18px);
+  box-shadow: 0 22px 58px rgba(20, 52, 89, 0.12);
+  backdrop-filter: blur(24px);
 }
 
 .app-entry-page__action-card {
   align-self: center;
   gap: 18px;
-  padding: 24px;
+  padding: 36px 38px;
   color: var(--landing-text);
 }
 
@@ -315,7 +318,7 @@
   gap: 8px;
   padding: 6px;
   border-radius: 18px;
-  background: var(--landing-soft-surface);
+  background: #e7edf4;
 }
 
 .app-entry-page__mode-switch button {
@@ -334,10 +337,10 @@
 }
 
 .app-entry-page__mode-switch button.is-active {
-  background: var(--landing-soft-surface-strong);
-  border: 1px solid var(--landing-border);
+  background: #ffffff;
+  border: 1px solid rgba(195, 214, 232, 0.78);
   color: var(--landing-text);
-  box-shadow: 0 16px 30px rgba(1, 10, 18, 0.2);
+  box-shadow: 0 8px 20px rgba(20, 52, 89, 0.1);
 }
 
 .app-entry-page__action-copy h2,
@@ -376,11 +379,12 @@
   width: 100%;
   min-height: 54px;
   padding: 0 16px;
-  border: 1px solid var(--landing-border);
+  border: 1px solid rgba(209, 224, 238, 0.92);
   border-radius: 16px;
   background: var(--landing-input-bg);
   color: var(--landing-text);
   font: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(16px);
 }
 
@@ -395,7 +399,7 @@
 .app-entry-page__field-note {
   padding: 14px 16px;
   border-radius: 16px;
-  background: var(--landing-soft-surface);
+  background: #f5f9fd;
   color: var(--landing-muted);
   line-height: 1.65;
 }
@@ -419,16 +423,16 @@
 
 .app-entry-page__primary-button {
   flex: 1 1 220px;
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(19, 47, 79, 0.12);
   background: var(--landing-button-bg);
   color: var(--landing-button-foreground);
-  box-shadow: 0 18px 36px rgba(var(--landing-button-brand-rgb), 0.24);
+  box-shadow: 0 18px 36px rgba(var(--landing-button-brand-rgb), 0.2);
 }
 
 .app-entry-page__secondary-button,
 .app-entry-page__guest-auth-buttons button {
-  border: 1px solid var(--landing-border);
-  background: var(--landing-soft-surface);
+  border: 1px solid rgba(209, 224, 238, 0.92);
+  background: rgba(255, 255, 255, 0.9);
   color: var(--landing-text);
 }
 
@@ -440,7 +444,7 @@
   display: grid;
   gap: 12px;
   padding-top: 14px;
-  border-top: 1px solid var(--landing-border);
+  border-top: 1px solid rgba(209, 224, 238, 0.78);
 }
 
 .app-entry-page__guest-auth-buttons {
@@ -485,8 +489,8 @@
   display: grid;
   place-items: center;
   border-radius: 16px;
-  background: var(--landing-soft-surface);
-  color: var(--landing-blue);
+  background: #f2f7fc;
+  color: #43ade9;
 }
 
 .app-entry-page__flow-card strong {
@@ -523,7 +527,7 @@
 
   .app-entry-page__flow-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 32px 72px rgba(16, 50, 95, 0.14);
+    box-shadow: 0 28px 64px rgba(20, 52, 89, 0.14);
   }
 }
 

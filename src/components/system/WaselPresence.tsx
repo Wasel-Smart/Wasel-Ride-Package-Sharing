@@ -18,12 +18,12 @@ const DISPLAY =
   "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', 'Cairo', sans-serif)";
 const PRESENCE_TEXT = '#0D2948';
 const PRESENCE_TEXT_MUTED = 'rgba(13,41,72,0.74)';
-const PRESENCE_BORDER = 'rgba(16,43,73,0.12)';
-const PRESENCE_BORDER_SOFT = 'rgba(16,43,73,0.16)';
+const PRESENCE_BORDER = 'rgba(181,206,228,0.72)';
+const PRESENCE_BORDER_SOFT = 'rgba(181,206,228,0.82)';
 const PRESENCE_PANEL =
-  'linear-gradient(135deg, rgba(255,255,255,0.96), rgba(243,249,255,0.93) 46%, rgba(231,245,255,0.95) 100%)';
+  'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,252,255,0.95) 100%)';
 const PRESENCE_PANEL_SOFT =
-  'linear-gradient(180deg, rgba(255,255,255,0.95), rgba(243,249,255,0.93))';
+  'linear-gradient(180deg, rgba(255,255,255,0.97), rgba(247,251,255,0.94))';
 
 const TONE_STYLES = {
   cyan: {
@@ -44,9 +44,9 @@ const TONE_STYLES = {
 } as const;
 
 function getActionMeta(action: WaselContactAction) {
-  if (action.id === 'call') return { icon: PhoneCall, color: '#0CA586' };
-  if (action.id === 'whatsapp') return { icon: MessageSquareText, color: '#0F73FF' };
-  return { icon: Mail, color: '#0C8DBE' };
+  if (action.id === 'call') return { icon: PhoneCall, color: '#22C2AA' };
+  if (action.id === 'whatsapp') return { icon: MessageSquareText, color: '#389BFF' };
+  return { icon: Mail, color: '#2CAEE8' };
 }
 
 export function WaselContactActionRow({ ar, compact = false }: { ar: boolean; compact?: boolean }) {
@@ -79,18 +79,18 @@ export function WaselContactActionRow({ ar, compact = false }: { ar: boolean; co
               minHeight: compact ? 40 : 42,
               padding: compact ? '0 14px' : '0 16px',
               borderRadius: 999,
-              border: `1px solid ${meta.color}30`,
+              border: compact ? '1px solid rgba(191,214,234,0.9)' : `1px solid ${meta.color}26`,
               background: compact
-                ? 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,250,255,0.94))'
-                : `${meta.color}14`,
+                ? 'linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,252,255,0.96))'
+                : `${meta.color}10`,
               color: PRESENCE_TEXT,
               fontFamily: FONT,
               fontSize: compact ? '0.76rem' : '0.82rem',
               fontWeight: 800,
               textDecoration: 'none',
               boxShadow: compact
-                ? '0 12px 24px rgba(16,50,95,0.14)'
-                : '0 10px 22px rgba(16,50,95,0.12)',
+                ? '0 10px 24px rgba(20,52,89,0.08)'
+                : '0 10px 22px rgba(20,52,89,0.1)',
             }}
           >
             <Icon size={compact ? 14 : 16} color={meta.color} />
