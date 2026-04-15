@@ -13,6 +13,16 @@ import {
   triggerRideCompletedEmails,
 } from './transactionalEmailTriggers';
 import { ValidationError } from '../utils/errors';
+import {
+  RIDE_LIFECYCLE_CONTRACT_VERSION,
+  rideBookingListSchema,
+  rideBookingRecordSchema,
+} from '../contracts/rideLifecycle';
+import { parseContract } from '../contracts/validation';
+import {
+  allowLocalPersistenceFallback,
+  requireLocalPersistenceFallback,
+} from './runtimePolicy';
 
 export type RideBookingStatus =
   | 'pending_driver'
@@ -135,15 +145,24 @@ function markRideBookingSyncState(
   booking: RideBookingRecord,
   syncState: RideBookingSyncState,
 ): RideBookingRecord {
-  return {
-    ...booking,
-    syncState,
-    pendingSync: syncState === 'syncing' || syncState === 'sync-error',
-    syncedAt: syncState === 'synced' ? new Date().toISOString() : booking.syncedAt,
-  };
+  return parseContract(
+    rideBookingRecordSchema,
+    {
+      ...booking,
+      syncState,
+      pendingSync: syncState === 'syncing' || syncState === 'sync-error',
+      syncedAt: syncState === 'synced' ? new Date().toISOString() : booking.syncedAt,
+    },
+    'ride.booking.state',
+    RIDE_LIFECYCLE_CONTRACT_VERSION,
+  );
 }
 
 function loadPendingSyncs(): PendingSyncEntry[] {
+  if (!allowLocalPersistenceFallback()) {
+    return [];
+  }
+
   try {
     const raw = typeof window !== 'undefined' ? window.localStorage.getItem(PENDING_SYNCS_KEY) : null;
     const parsed = raw ? JSON.parse(raw) : [];
@@ -154,6 +173,10 @@ function loadPendingSyncs(): PendingSyncEntry[] {
 }
 
 function savePendingSyncs(entries: PendingSyncEntry[]): void {
+  if (!allowLocalPersistenceFallback()) {
+    return;
+  }
+
   try {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(PENDING_SYNCS_KEY, JSON.stringify(entries.slice(0, 50)));
@@ -162,6 +185,7 @@ function savePendingSyncs(entries: PendingSyncEntry[]): void {
 }
 
 function enqueuePendingSync(entry: Omit<PendingSyncEntry, 'retries' | 'queuedAt'>): void {
+  requireLocalPersistenceFallback('Ride booking sync queueing');
   const existing = loadPendingSyncs();
   // Deduplicate by bookingId
   const filtered = existing.filter((e) => e.bookingId !== entry.bookingId);
@@ -237,6 +261,7 @@ async function attemptSyncEntry(entry: PendingSyncEntry): Promise<void> {
 
 /** Drain all pending syncs — called on reconnect and on app start */
 export async function drainPendingBookingSyncs(): Promise<void> {
+  if (!allowLocalPersistenceFallback()) return;
   if (typeof navigator !== 'undefined' && !navigator.onLine) return;
   const pending = loadPendingSyncs();
   if (pending.length === 0) return;
@@ -276,12 +301,37 @@ function emitRideBookingsChanged(): void {
   }
 }
 
+function validateRideBooking(record: RideBookingRecord, contractName: string): RideBookingRecord {
+  return parseContract(
+    rideBookingRecordSchema,
+    record,
+    contractName,
+    RIDE_LIFECYCLE_CONTRACT_VERSION,
+  );
+}
+
+function validateRideBookings(records: unknown): RideBookingRecord[] {
+  const parsed = rideBookingListSchema.safeParse(records);
+  if (parsed.success) {
+    return parsed.data;
+  }
+
+  if (!Array.isArray(records)) {
+    return [];
+  }
+
+  return records.flatMap((record) => {
+    const item = rideBookingRecordSchema.safeParse(record);
+    return item.success ? [item.data] : [];
+  });
+}
+
 function readBookings(): RideBookingRecord[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = window.localStorage.getItem(BOOKING_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    return sortBookings(validateRideBookings(parsed));
   } catch {
     return [];
   }
@@ -289,7 +339,10 @@ function readBookings(): RideBookingRecord[] {
 
 function writeBookings(bookings: RideBookingRecord[]) {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(BOOKING_KEY, JSON.stringify(bookings.slice(0, 100)));
+  window.localStorage.setItem(
+    BOOKING_KEY,
+    JSON.stringify(validateRideBookings(bookings).slice(0, 100)),
+  );
   emitRideBookingsChanged();
 }
 
@@ -313,7 +366,45 @@ export function getRideBookings(): RideBookingRecord[] {
   return sortBookings(readBookings());
 }
 
-export function createRideBooking(input: {
+function buildSyncedRideBooking(
+  booking: RideBookingRecord,
+  persisted: Record<string, unknown>,
+): RideBookingRecord {
+  const persistedStatus = String(persisted.status ?? persisted.booking_status ?? booking.status);
+
+  return markRideBookingSyncState(
+    validateRideBooking(
+      {
+        ...booking,
+        id: String(persisted.booking_id ?? persisted.id ?? booking.id),
+        backendBookingId: String(
+          persisted.booking_id ?? persisted.id ?? booking.id,
+        ),
+        status:
+          persistedStatus === 'confirmed' ||
+          persistedStatus === 'cancelled' ||
+          persistedStatus === 'completed'
+            ? persistedStatus
+            : booking.status,
+        paymentStatus:
+          persistedStatus === 'confirmed' ? 'authorized' : booking.paymentStatus,
+        pricePerSeatJod:
+          typeof persisted.price_per_seat === 'number'
+            ? persisted.price_per_seat
+            : booking.pricePerSeatJod,
+        totalPriceJod:
+          typeof persisted.total_price === 'number'
+            ? persisted.total_price
+            : booking.totalPriceJod,
+        updatedAt: new Date().toISOString(),
+      },
+      'ride.booking.synced',
+    ),
+    'synced',
+  );
+}
+
+export async function createRideBooking(input: {
   rideId: string;
   ownerId?: string;
   driverPhone?: string;
@@ -330,44 +421,114 @@ export function createRideBooking(input: {
   seatsRequested?: number;
   pricePerSeatJod?: number;
   routeMode: 'live_post' | 'network_inventory';
-}): RideBookingRecord {
+}): Promise<RideBookingRecord> {
   const now = new Date().toISOString();
   const seatsRequested = Math.max(1, input.seatsRequested ?? 1);
   const totalPriceJod =
     typeof input.pricePerSeatJod === 'number'
       ? Number((seatsRequested * input.pricePerSeatJod).toFixed(2))
       : undefined;
-  const booking: RideBookingRecord = {
-    id: `ride-booking-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    rideId: input.rideId,
-    ownerId: input.ownerId,
-    driverPhone: input.driverPhone,
-    driverEmail: input.driverEmail,
-    from: input.from,
-    to: input.to,
-    date: input.date,
-    time: input.time,
-    driverName: input.driverName,
-    passengerName: input.passengerName,
-    passengerPhone: input.passengerPhone,
-    passengerEmail: input.passengerEmail,
-    seatsRequested,
-    status: input.routeMode === 'live_post' ? 'pending_driver' : 'confirmed',
-    paymentStatus: input.routeMode === 'live_post' ? 'pending' : 'authorized',
-    routeMode: input.routeMode,
-    supportThreadOpen: false,
-    ticketCode: makeTicketCode(),
-    pricePerSeatJod: input.pricePerSeatJod,
-    totalPriceJod,
-    createdAt: now,
-    updatedAt: now,
-    pendingSync: Boolean(input.passengerId), // will be cleared on successful sync
-    syncState: input.passengerId ? 'syncing' : 'local-only',
-  };
+  const booking = validateRideBooking(
+    {
+      id: `ride-booking-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      rideId: input.rideId,
+      ownerId: input.ownerId,
+      driverPhone: input.driverPhone,
+      driverEmail: input.driverEmail,
+      from: input.from,
+      to: input.to,
+      date: input.date,
+      time: input.time,
+      driverName: input.driverName,
+      passengerName: input.passengerName,
+      passengerPhone: input.passengerPhone,
+      passengerEmail: input.passengerEmail,
+      seatsRequested,
+      status: input.routeMode === 'live_post' ? 'pending_driver' : 'confirmed',
+      paymentStatus: input.routeMode === 'live_post' ? 'pending' : 'authorized',
+      routeMode: input.routeMode,
+      supportThreadOpen: false,
+      ticketCode: makeTicketCode(),
+      pricePerSeatJod: input.pricePerSeatJod,
+      totalPriceJod,
+      createdAt: now,
+      updatedAt: now,
+      pendingSync: Boolean(input.passengerId),
+      syncState: input.passengerId ? 'syncing' : 'local-only',
+    },
+    'ride.booking.create',
+  );
   const shouldSendInitialBookingEmail = Boolean(
     booking.passengerEmail
     && (booking.status === 'pending_driver' || isRideBookingConfirmed(booking)),
   );
+
+  if (!input.passengerId) {
+    requireLocalPersistenceFallback('Ride booking creation');
+    writeBookings([booking, ...readBookings()]);
+    if (booking.passengerEmail && shouldSendInitialBookingEmail) {
+      triggerRideBookingEmails({
+        booking,
+        passengerEmail: booking.passengerEmail,
+        driverEmail: booking.driverEmail,
+        priceJod: booking.totalPriceJod ?? 0,
+        appUrl: getTransactionalEmailAppUrl(),
+      });
+    }
+    void trackGrowthEvent({
+      eventName: 'ride_booking_started',
+      funnelStage:
+        booking.status === 'pending_driver' || !isRideBookingConfirmed(booking)
+          ? 'selected'
+          : 'booked',
+      serviceType: 'ride',
+      from: input.from,
+      to: input.to,
+      valueJod: totalPriceJod,
+      metadata: {
+        rideId: input.rideId,
+        routeMode: input.routeMode,
+        seatsRequested: booking.seatsRequested,
+        pricePerSeatJod: input.pricePerSeatJod,
+      },
+    });
+    return booking;
+  }
+
+  if (!allowLocalPersistenceFallback()) {
+    const { booking: persisted } = await createDirectBooking({
+      tripId: input.rideId,
+      userId: input.passengerId,
+      seatsRequested: booking.seatsRequested,
+      pickup: input.from,
+      dropoff: input.to,
+      bookingStatus: booking.status,
+      metadata: {
+        total_price: booking.totalPriceJod ?? booking.seatsRequested,
+      },
+    });
+
+    const syncedRecord = buildSyncedRideBooking(
+      booking,
+      persisted as Record<string, unknown>,
+    );
+    upsertBookings([syncedRecord]);
+
+    if (
+      syncedRecord.passengerEmail &&
+      (syncedRecord.status === 'pending_driver' || isRideBookingConfirmed(syncedRecord))
+    ) {
+      triggerRideBookingEmails({
+        booking: syncedRecord,
+        passengerEmail: syncedRecord.passengerEmail,
+        driverEmail: syncedRecord.driverEmail,
+        priceJod: syncedRecord.totalPriceJod ?? 0,
+        appUrl: getTransactionalEmailAppUrl(),
+      });
+    }
+
+    return syncedRecord;
+  }
 
   writeBookings([booking, ...readBookings()]);
   if (booking.passengerEmail && shouldSendInitialBookingEmail) {
@@ -408,29 +569,10 @@ export function createRideBooking(input: {
       },
       })
       .then(({ booking: persisted }) => {
-        const synced: RideBookingRecord = {
-          ...booking,
-          id: String(persisted.booking_id ?? persisted.id ?? booking.id),
-          backendBookingId: String(persisted.booking_id ?? persisted.id ?? booking.id),
-          status:
-            persisted.status === 'confirmed' || persisted.status === 'cancelled' || persisted.status === 'completed'
-              ? persisted.status
-              : booking.status,
-          paymentStatus:
-            persisted.status === 'confirmed'
-              ? 'authorized'
-              : booking.paymentStatus,
-          pricePerSeatJod:
-            typeof persisted.price_per_seat === 'number'
-              ? persisted.price_per_seat
-              : booking.pricePerSeatJod,
-          totalPriceJod:
-            typeof persisted.total_price === 'number'
-              ? persisted.total_price
-              : booking.totalPriceJod,
-          updatedAt: new Date().toISOString(),
-        };
-        const syncedRecord = markRideBookingSyncState(synced, 'synced');
+        const syncedRecord = buildSyncedRideBooking(
+          booking,
+          persisted as Record<string, unknown>,
+        );
         upsertBookings([syncedRecord]);
         if (
           syncedRecord.passengerEmail
@@ -481,10 +623,76 @@ export function getBookingsForPassenger(passengerName: string): RideBookingRecor
   return getRideBookings().filter((booking) => booking.passengerName === passengerName);
 }
 
-export function updateRideBooking(
+function handleRideBookingStatusSideEffects(
+  previous: RideBookingRecord,
+  updated: RideBookingRecord,
+  bookingId: string,
+): void {
+  if (updated.status === previous.status) {
+    return;
+  }
+
+  if (
+    updated.passengerEmail &&
+    (updated.status === 'confirmed' ||
+      updated.status === 'rejected' ||
+      updated.status === 'cancelled')
+  ) {
+    triggerBookingStatusUpdateEmail({
+      passengerEmail: updated.passengerEmail,
+      passengerName: updated.passengerName,
+      ticketCode: updated.ticketCode,
+      from: updated.from,
+      to_city: updated.to,
+      date: updated.date,
+      time: updated.time,
+      driverName: updated.driverName,
+      newStatus: updated.status,
+      priceJod: updated.totalPriceJod ?? 0,
+    });
+  }
+
+  if (
+    updated.status === 'completed' &&
+    updated.passengerEmail &&
+    updated.driverEmail
+  ) {
+    triggerRideCompletedEmails({
+      passengerEmail: updated.passengerEmail,
+      passengerName: updated.passengerName,
+      driverEmail: updated.driverEmail,
+      driverName: updated.driverName,
+      ticketCode: updated.ticketCode,
+      from: updated.from,
+      to_city: updated.to,
+      date: updated.date,
+      driverEarningsJod: updated.totalPriceJod ?? 0,
+      appUrl: getTransactionalEmailAppUrl(),
+    });
+  }
+
+  void trackGrowthEvent({
+    eventName: 'ride_booking_updated',
+    funnelStage:
+      updated.status === 'completed'
+        ? 'completed'
+        : updated.status === 'confirmed'
+          ? 'booked'
+          : updated.status,
+    serviceType: 'ride',
+    from: updated.from,
+    to: updated.to,
+    metadata: {
+      bookingId,
+      paymentStatus: updated.paymentStatus,
+    },
+  });
+}
+
+export async function updateRideBooking(
   bookingId: string,
   updates: Partial<Pick<RideBookingRecord, 'status' | 'paymentStatus' | 'supportThreadOpen'>>,
-): RideBookingRecord | null {
+): Promise<RideBookingRecord | null> {
   const bookings = readBookings();
   const target = bookings.find((booking) => booking.id === bookingId);
   if (!target) return null;
@@ -496,17 +704,45 @@ export function updateRideBooking(
     );
   }
 
-  const updated: RideBookingRecord = {
-    ...target,
-    ...updates,
-    updatedAt: new Date().toISOString(),
-  };
+  const updated = validateRideBooking(
+    {
+      ...target,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    },
+    'ride.booking.update',
+  );
+
+  const isDriverStatusMutation = Boolean(
+    updated.backendBookingId &&
+    updates.status &&
+    (updates.status === 'rejected' ||
+      updates.status === 'cancelled' ||
+      updates.status === 'confirmed'),
+  );
+
+  if (isDriverStatusMutation && !allowLocalPersistenceFallback()) {
+    const directStatus = updates.status === 'confirmed' ? 'accepted' : updates.status;
+    await updateDirectBookingStatus(
+      updated.backendBookingId!,
+      directStatus as 'accepted' | 'rejected' | 'cancelled',
+    );
+    const syncedUpdated = markRideBookingSyncState(updated, 'synced');
+    writeBookings(
+      bookings.map((booking) => (booking.id === bookingId ? syncedUpdated : booking)),
+    );
+    handleRideBookingStatusSideEffects(target, syncedUpdated, bookingId);
+    return syncedUpdated;
+  }
 
   writeBookings(bookings.map((booking) => (booking.id === bookingId ? updated : booking)));
 
-  if (updated.backendBookingId && updates.status && (updates.status === 'rejected' || updates.status === 'cancelled' || updates.status === 'confirmed')) {
+  if (isDriverStatusMutation) {
     const directStatus = updates.status === 'confirmed' ? 'accepted' : updates.status;
-    void updateDirectBookingStatus(updated.backendBookingId, directStatus as 'accepted' | 'rejected' | 'cancelled')
+    void updateDirectBookingStatus(
+      updated.backendBookingId!,
+      directStatus as 'accepted' | 'rejected' | 'cancelled',
+    )
       .then(() => {
         upsertBookings([markRideBookingSyncState(updated, 'synced')]);
       })
@@ -516,63 +752,7 @@ export function updateRideBooking(
       });
   }
 
-  if (updates.status) {
-    if (
-      updates.status !== target.status &&
-      updated.passengerEmail &&
-      (updates.status === 'confirmed' || updates.status === 'rejected' || updates.status === 'cancelled')
-    ) {
-      triggerBookingStatusUpdateEmail({
-        passengerEmail: updated.passengerEmail,
-        passengerName: updated.passengerName,
-        ticketCode: updated.ticketCode,
-        from: updated.from,
-        to_city: updated.to,
-        date: updated.date,
-        time: updated.time,
-        driverName: updated.driverName,
-        newStatus: updates.status,
-        priceJod: updated.totalPriceJod ?? 0,
-      });
-    }
-
-    if (
-      updates.status === 'completed' &&
-      updates.status !== target.status &&
-      updated.passengerEmail &&
-      updated.driverEmail
-    ) {
-      triggerRideCompletedEmails({
-        passengerEmail: updated.passengerEmail,
-        passengerName: updated.passengerName,
-        driverEmail: updated.driverEmail,
-        driverName: updated.driverName,
-        ticketCode: updated.ticketCode,
-        from: updated.from,
-        to_city: updated.to,
-        date: updated.date,
-        driverEarningsJod: updated.totalPriceJod ?? 0,
-        appUrl: getTransactionalEmailAppUrl(),
-      });
-    }
-
-    void trackGrowthEvent({
-      eventName: 'ride_booking_updated',
-      funnelStage:
-        updates.status === 'completed'
-          ? 'completed'
-          : updates.status === 'confirmed'
-            ? 'booked'
-            : updates.status,
-      serviceType: 'ride',
-      from: updated.from,
-      to: updated.to,
-      metadata: {
-        bookingId,
-        paymentStatus: updated.paymentStatus,
-      },
-    });
-  }
+  handleRideBookingStatusSideEffects(target, updated, bookingId);
 
   return updated;
 }
@@ -588,7 +768,7 @@ export async function hydrateRideBookings(userId: string, rides: PostedRide[] = 
     const rideId = String(raw.trip_id ?? '');
     const ride = knownRides.get(rideId);
     const status = String(raw.status ?? raw.booking_status ?? 'pending');
-    return {
+    return validateRideBooking({
       id: String(raw.booking_id ?? raw.id ?? ''),
       backendBookingId: String(raw.booking_id ?? raw.id ?? ''),
       rideId,
@@ -626,7 +806,7 @@ export async function hydrateRideBookings(userId: string, rides: PostedRide[] = 
       syncedAt: new Date().toISOString(),
       pendingSync: false,
       syncState: 'synced',
-    };
+    }, 'ride.booking.hydrate');
   };
 
   const remote = [
