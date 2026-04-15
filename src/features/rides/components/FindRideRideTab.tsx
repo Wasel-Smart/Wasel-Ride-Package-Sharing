@@ -195,10 +195,10 @@ type SignalMetric = {
 function SignalMetricGrid({ items }: { items: SignalMetric[] }) {
   return (
     <div
-      className="sp-4col"
+      className="sp-3col"
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
         gap: 12,
         marginTop: 14,
       }}
@@ -237,8 +237,9 @@ function SignalMetricGrid({ items }: { items: SignalMetric[] }) {
           <div
             style={{
               fontWeight: 800,
-              fontSize: '0.88rem',
-              lineHeight: 1.55,
+              fontSize: '0.96rem',
+              lineHeight: 1.4,
+              marginBottom: 6,
               background: `linear-gradient(135deg, ${item.tone}, color-mix(in srgb, ${item.tone} 70%, white))`,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -246,6 +247,15 @@ function SignalMetricGrid({ items }: { items: SignalMetric[] }) {
             }}
           >
             {item.value}
+          </div>
+          <div
+            style={{
+              color: DS.sub,
+              fontSize: '0.75rem',
+              lineHeight: 1.55,
+            }}
+          >
+            {item.sub}
           </div>
         </div>
       ))}
@@ -300,44 +310,32 @@ function RideSearchPanel({
 }: RideSearchPanelProps) {
   const metricItems: SignalMetric[] = [
     {
-      label: 'Departures',
-      value: selectedSignal
-        ? `${selectedSignal.activeSupply} live departures`
-        : routeReadinessLabel,
+      label: 'Readiness',
+      value: routeReadinessLabel,
       sub: selectedSignal
-        ? `${selectedSignal.liveBookings} bookings and ${selectedSignal.activeDemandAlerts} active alerts`
-        : `${corridorRidesCount} live departures`,
+        ? `${selectedSignal.activeSupply} live departures · ${selectedSignal.liveBookings} bookings`
+        : `${corridorRidesCount} live departures on this lane`,
       tone: DS.cyan,
     },
     {
-      label: 'Price now',
-      value: selectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : '--',
+      label: 'Price window',
+      value: selectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : 'Search to unlock',
       sub: selectedPriceQuote
         ? `${selectedPriceQuote.discountJod} JOD saved via ${selectedPriceQuote.explanation}`
-        : 'Cost sharing unlocks the best price',
+        : `Shared demand unlocks the best price · ${demandStatsActive} active alerts`,
       tone: DS.green,
     },
     {
-      label: 'Best window',
+      label: 'Best move',
       value:
         selectedSignal?.nextWaveWindow
         ?? corridorPlan?.autoGroupWindow
-        ?? 'Grouping begins when demand clusters',
+        ?? 'Choose the lane first',
       sub:
         selectedSignal?.recommendedPickupPoint
         ?? corridorPlan?.pickupPoints[0]
-        ?? 'Pickup points appear once a corridor is selected',
+        ?? 'Pickup appears after a route is selected',
       tone: DS.gold,
-    },
-    {
-      label: 'Route fit',
-      value: selectedSignal
-        ? `${selectedSignal.routeOwnershipScore}/100`
-        : corridorPlan?.routeMoat ?? 'Strong route match',
-      sub: selectedSignal
-        ? selectedSignal.productionSources.slice(0, 2).join(' | ')
-        : `Demand alerts: ${demandStatsActive}`,
-      tone: DS.cyan,
     },
   ];
 
@@ -496,6 +494,8 @@ function RideSearchPanel({
         {loading ? labels.searching : 'Search'}
       </motion.button>
 
+      <SignalMetricGrid items={metricItems} />
+
       <div
         style={{
           marginTop: 14,
@@ -524,17 +524,17 @@ function RideSearchPanel({
                 margin: '0 0 4px',
               }}
             >
-              Route
+              Corridor preview
             </p>
             <p style={{ color: DS.sub, fontSize: '0.8rem', margin: 0 }}>
               {selectedSignal
-                ? 'This lane is live now.'
-                : 'Preview the lane before you book.'}
+                ? 'Open the map, then book with clearer timing and pickup context.'
+                : 'Preview the lane before you commit to the booking.'}
             </p>
           </div>
-          <span style={{ ...pill(DS.green), fontSize: '0.72rem' }}>
+          <span style={{ ...pill(selectedSignal ? DS.green : DS.cyan), fontSize: '0.72rem' }}>
             {selectedSignal
-              ? `${selectedSignal.forecastDemandScore}/100 forecast`
+              ? `${selectedSignal.routeOwnershipScore}/100 route fit`
               : corridorPlan?.density ?? 'steady density'}
           </span>
         </div>
@@ -576,8 +576,6 @@ function RideSearchPanel({
           message={retentionMessage}
         />
       ) : null}
-
-      <SignalMetricGrid items={metricItems} />
     </div>
   );
 }
@@ -810,46 +808,55 @@ function RideResultsSection({
         className="sp-results-header"
         style={{
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-end',
           justifyContent: 'space-between',
           marginBottom: 16,
           flexWrap: 'wrap',
           gap: 10,
         }}
       >
-        <h2 style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
-          {searched
-            ? `${from} to ${to} | ${results.length} route match${results.length !== 1 ? 'es' : ''}`
-            : `Priority corridors | showing ${results.length} departures`}
-        </h2>
-        {selectedSignal ? (
+        <div style={{ display: 'grid', gap: 6 }}>
+          <h2 style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
+            {searched
+              ? `Matches for ${from} to ${to}`
+              : 'Priority corridors ready now'}
+          </h2>
           <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
-            Live lane price {selectedSignal.priceQuote.finalPriceJod} JOD | Next wave {selectedSignal.nextWaveWindow}
+            {searched
+              ? `${results.length} route match${results.length !== 1 ? 'es' : ''} ready to compare`
+              : `Showing ${results.length} departures with the clearest fit first`}
           </div>
-        ) : null}
-        <div className="sp-sort-bar" style={{ display: 'flex', gap: 6 }}>
-          {([
-            ['price', labels.cheapest],
-            ['time', labels.earliest],
-            ['rating', labels.topRated],
-          ] as const).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => onSetSort(key)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: '99px',
-                border: `1px solid ${sort === key ? DS.cyan : DS.border}`,
-                background: sort === key ? `${DS.cyan}15` : DS.card2,
-                color: sort === key ? DS.cyan : DS.sub,
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              {label}
-            </button>
-          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          {selectedSignal ? (
+            <span style={pill(DS.cyan)}>
+              {selectedSignal.priceQuote.finalPriceJod} JOD · {selectedSignal.nextWaveWindow}
+            </span>
+          ) : null}
+          <div className="sp-sort-bar" style={{ display: 'flex', gap: 6 }}>
+            {([
+              ['price', labels.cheapest],
+              ['time', labels.earliest],
+              ['rating', labels.topRated],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => onSetSort(key)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '99px',
+                  border: `1px solid ${sort === key ? DS.cyan : DS.border}`,
+                  background: sort === key ? `${DS.cyan}15` : DS.card2,
+                  color: sort === key ? DS.cyan : DS.sub,
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

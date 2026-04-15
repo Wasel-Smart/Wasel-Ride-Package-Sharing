@@ -394,6 +394,21 @@ export const walletApi = {
     );
   },
 
+  async getPaymentIntentStatus(paymentIntentId: string) {
+    const response = await walletFetch('/payments/status', {
+      method: 'POST',
+      body: JSON.stringify({
+        paymentIntentId,
+      }),
+    });
+    return parseContract(
+      paymentIntentConfirmationSchema,
+      await response.json(),
+      'wallet.payment-intent.status',
+      WALLET_CONTRACT_VERSION,
+    );
+  },
+
   async topUp(userId: string, amount: number, paymentMethod: string) {
     void userId;
     if (!isWalletPaymentMethodType(paymentMethod)) {

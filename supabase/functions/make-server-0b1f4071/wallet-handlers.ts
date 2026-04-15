@@ -89,6 +89,31 @@ function toIsoDate(value: unknown): string | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 }
 
+function mapStripePaymentStatus(value: unknown): string {
+  const status = String(value ?? '').trim().toLowerCase();
+
+  switch (status) {
+    case 'requires_payment_method':
+    case 'requires_confirmation':
+      return 'requires_confirmation';
+    case 'requires_action':
+      return 'requires_action';
+    case 'processing':
+    case 'requires_capture':
+      return 'processing';
+    case 'succeeded':
+      return 'succeeded';
+    case 'canceled':
+      return 'cancelled';
+    default:
+      return 'processing';
+  }
+}
+
+function isFinalPaymentStatus(status: string): boolean {
+  return ['succeeded', 'failed', 'cancelled'].includes(status);
+}
+
 function encodeText(value: string): Uint8Array {
   return new TextEncoder().encode(value);
 }
@@ -670,6 +695,26 @@ async function confirmStripePaymentIntent(providerPaymentId: string, paymentMeth
   return payload as Record<string, unknown>;
 }
 
+async function retrieveStripePaymentIntent(providerPaymentId: string) {
+  if (!STRIPE_SECRET_KEY) {
+    throw new Error('Stripe is not configured for this environment.');
+  }
+
+  const response = await fetch(`https://api.stripe.com/v1/payment_intents/${providerPaymentId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+    },
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(String((payload as { error?: { message?: string } }).error?.message ?? 'Stripe payment intent retrieval failed.'));
+  }
+
+  return payload as Record<string, unknown>;
+}
+
 async function createLocalGatewayIntent(args: {
   provider: Extract<WalletProviderName, 'cliq' | 'aman'>;
   amount: number;
@@ -830,6 +875,61 @@ async function getDefaultPaymentMethod(admin: SupabaseClient, userId: string) {
   }
 
   return data;
+}
+
+function buildPaymentIntentStatusResponse(intent: Record<string, unknown>) {
+  return {
+    id: String(intent.payment_intent_id),
+    status: String(intent.status ?? 'processing'),
+    settled: String(intent.status) === 'succeeded',
+    clientSecret: normalizeString(intent.provider_client_secret),
+  };
+}
+
+async function reconcilePaymentIntentStatus(
+  admin: SupabaseClient,
+  intent: Record<string, unknown>,
+) {
+  const currentStatus = String(intent.status ?? 'processing');
+  if (String(intent.provider_name) !== 'stripe' || isFinalPaymentStatus(currentStatus)) {
+    return {
+      intent,
+      settled: currentStatus === 'succeeded',
+    };
+  }
+
+  const providerPaymentId = normalizeString(intent.provider_payment_id);
+  if (!providerPaymentId) {
+    return {
+      intent,
+      settled: currentStatus === 'succeeded',
+    };
+  }
+
+  const stripeIntent = await retrieveStripePaymentIntent(providerPaymentId);
+  const providerStatus = mapStripePaymentStatus(stripeIntent.status);
+  const patch: Record<string, unknown> = {
+    status: providerStatus,
+  };
+  const lastPaymentError = normalizeString(
+    ((stripeIntent.last_payment_error as Record<string, unknown> | undefined)?.message),
+  );
+  if (lastPaymentError) {
+    patch.last_error = lastPaymentError;
+  }
+
+  if (providerStatus === 'succeeded' && currentStatus !== 'succeeded') {
+    await settlePaymentIntent(admin, intent);
+  }
+
+  const nextIntent = providerStatus === currentStatus && !patch.last_error
+    ? intent
+    : await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), patch);
+
+  return {
+    intent: nextIntent as Record<string, unknown>,
+    settled: providerStatus === 'succeeded',
+  };
 }
 
 async function findDriverUserIdForTrip(admin: SupabaseClient, tripId: string) {
@@ -1650,7 +1750,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
           idempotencyKey,
           customerEmail: auth.canonicalUser.email,
         });
-        status = String(providerPayload.status ?? 'requires_confirmation');
+        status = mapStripePaymentStatus(providerPayload.status);
       } else if (providerName === 'wallet') {
         providerPayload = {
           id: `wallet_${crypto.randomUUID()}`,
@@ -1758,16 +1858,24 @@ export function createWalletHandlers(runtime: WalletRuntime) {
           String(intent.provider_payment_id),
           normalizeString((resolvedMethod.data as Record<string, unknown> | null)?.provider_reference),
         );
+        const mappedStatus = mapStripePaymentStatus(stripePayload.status);
+
+        if (mappedStatus === 'succeeded' && String(intent.status) !== 'succeeded') {
+          await settlePaymentIntent(auth.admin, intent as Record<string, unknown>);
+        }
 
         const updated = await updatePaymentIntentRecord(auth.admin, String(intent.payment_intent_id), {
-          status: String(stripePayload.status ?? 'processing'),
+          status: mappedStatus,
           confirmed_at: new Date().toISOString(),
+          last_error: normalizeString(
+            ((stripePayload.last_payment_error as Record<string, unknown> | undefined)?.message),
+          ),
         });
 
         return runtime.json({
           id: String(updated.payment_intent_id),
           status: String(updated.status),
-          settled: false,
+          settled: String(updated.status) === 'succeeded',
           clientSecret: normalizeString(stripePayload.client_secret),
         });
       }
@@ -1781,6 +1889,38 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         status: String(updated.status),
         settled: false,
       });
+    } catch (error) {
+      return asResponse(error) ?? runtime.json({ error: sanitizeEdgeErrorMessage(error) }, 400);
+    }
+  }
+
+  async function handleGetPaymentStatus(request: Request) {
+    const auth = await runtime.authenticateRequest(request);
+    if ('error' in auth) return auth.error;
+
+    try {
+      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'payment-status', WALLET_MUTATION_RATE_LIMIT);
+      const body = await readJsonBody(request);
+      const paymentIntentId = normalizeString(body.paymentIntentId);
+      if (!paymentIntentId) {
+        return runtime.json({ error: 'paymentIntentId is required.' }, 400);
+      }
+
+      const { data: storedIntent, error } = await auth.admin
+        .from('wallet_payment_intents')
+        .select('*')
+        .eq('payment_intent_id', paymentIntentId)
+        .eq('user_id', auth.canonicalUser.id)
+        .maybeSingle();
+
+      if (error) throw new Error(error.message);
+      if (!storedIntent) return runtime.json({ error: 'Payment intent was not found.' }, 404);
+
+      const reconciled = await reconcilePaymentIntentStatus(
+        auth.admin,
+        storedIntent as Record<string, unknown>,
+      );
+      return runtime.json(buildPaymentIntentStatusResponse(reconciled.intent));
     } catch (error) {
       return asResponse(error) ?? runtime.json({ error: sanitizeEdgeErrorMessage(error) }, 400);
     }
@@ -1821,7 +1961,6 @@ export function createWalletHandlers(runtime: WalletRuntime) {
 
       let intent: Record<string, unknown> | null = null;
       if (provider === 'stripe') {
-        const eventType = normalizeString(eventBody.type);
         const object = ((eventBody.data as Record<string, unknown> | undefined)?.object as Record<string, unknown> | undefined) ?? {};
         const providerPaymentId = normalizeString(object.id);
         if (!providerPaymentId) {
@@ -1832,18 +1971,16 @@ export function createWalletHandlers(runtime: WalletRuntime) {
           return runtime.json({ ok: true });
         }
 
-        if (eventType === 'payment_intent.succeeded') {
+        const eventType = normalizeString(eventBody.type);
+        const mappedStatus = mapStripePaymentStatus(object.status);
+        if (mappedStatus === 'succeeded' && String(intent.status) !== 'succeeded') {
           await settlePaymentIntent(admin, intent);
-          await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
-            status: 'succeeded',
-            updated_at: new Date().toISOString(),
-          });
-        } else if (eventType === 'payment_intent.payment_failed') {
-          await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
-            status: 'failed',
-            last_error: normalizeString(((object.last_payment_error as Record<string, unknown> | undefined)?.message)),
-          });
         }
+
+        await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
+          status: eventType === 'payment_intent.payment_failed' ? 'failed' : mappedStatus,
+          last_error: normalizeString(((object.last_payment_error as Record<string, unknown> | undefined)?.message)),
+        });
       } else {
         const providerPaymentId = normalizeString(eventBody.providerPaymentId) ?? normalizeString(eventBody.paymentIntentId);
         if (!providerPaymentId) {
@@ -2170,6 +2307,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     handleVerifyPin,
     handleCreatePaymentIntent,
     handleConfirmPayment,
+    handleGetPaymentStatus,
     handlePaymentWebhook,
     handleWalletDeposit,
     handleWalletTransfer,

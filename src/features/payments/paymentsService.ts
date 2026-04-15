@@ -15,6 +15,7 @@ import {
 import { walletApi } from '../../services/walletApi';
 import type {
   PaymentConfirmationResult,
+  PaymentIntentSession,
   PaymentsDashboardData,
   PaymentRequestDraft,
   PaymentsSummary,
@@ -29,6 +30,7 @@ const PAYMENT_RELEVANT_TRANSACTION_TYPES = new Set([
 ]);
 
 const COMPLETED_STATUSES = new Set(['completed', 'posted', 'succeeded', 'refunded']);
+const FINAL_PAYMENT_STATUSES = new Set(['succeeded', 'failed', 'cancelled']);
 
 type PaymentRelevantWalletTransaction = WalletTransaction & {
   type: 'deposit' | 'withdrawal' | 'transfer' | 'payment' | 'refund';
@@ -194,7 +196,7 @@ export const paymentsService = {
     };
   },
 
-  async initiatePayment(userId: string, draft: PaymentRequestDraft): Promise<PaymentTransaction> {
+  async initiatePayment(userId: string, draft: PaymentRequestDraft): Promise<PaymentIntentSession> {
     const metadata = {
       ...(draft.metadata ?? {}),
       originDomain: 'payments',
@@ -212,7 +214,11 @@ export const paymentsService = {
       },
     );
 
-    return toPaymentTransactionFromIntent(intent, draft.description, metadata);
+    return {
+      transaction: toPaymentTransactionFromIntent(intent, draft.description, metadata),
+      clientSecret: intent.clientSecret ?? null,
+      redirectUrl: intent.redirectUrl ?? null,
+    };
   },
 
   async confirmPayment(paymentIntentId: string, paymentMethodId?: string | null): Promise<PaymentConfirmationResult> {
@@ -221,7 +227,41 @@ export const paymentsService = {
       id: String(result.id ?? paymentIntentId),
       status: String(result.status ?? 'processing'),
       settled: Boolean(result.settled),
+      clientSecret: result.clientSecret ?? null,
     };
+  },
+
+  async syncPayment(paymentIntentId: string): Promise<PaymentConfirmationResult> {
+    const result = await walletApi.getPaymentIntentStatus(paymentIntentId);
+    return {
+      id: String(result.id ?? paymentIntentId),
+      status: String(result.status ?? 'processing'),
+      settled: Boolean(result.settled),
+      clientSecret: result.clientSecret ?? null,
+    };
+  },
+
+  async awaitPaymentSettlement(
+    paymentIntentId: string,
+    options: {
+      attempts?: number;
+      delayMs?: number;
+    } = {},
+  ): Promise<PaymentConfirmationResult> {
+    const attempts = Math.max(1, options.attempts ?? 8);
+    const delayMs = Math.max(250, options.delayMs ?? 1_500);
+
+    let latest = await paymentsService.syncPayment(paymentIntentId);
+    for (let attempt = 1; attempt < attempts; attempt += 1) {
+      if (latest.settled || FINAL_PAYMENT_STATUSES.has(String(latest.status))) {
+        return latest;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      latest = await paymentsService.syncPayment(paymentIntentId);
+    }
+
+    return latest;
   },
 };
 

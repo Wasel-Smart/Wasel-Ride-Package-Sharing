@@ -543,7 +543,7 @@ export function LiveTripTracking() {
 
   const copyShareCode = useCallback(() => {
     navigator.clipboard?.writeText(TRIP.shareCode).then(() => {
-      toast.success('Safety code copied!');
+      toast.success('Safety code copied · تم نسخ رمز الأمان');
     });
   }, []);
 
@@ -555,6 +555,21 @@ export function LiveTripTracking() {
   const currentLegProgress = ((progress / 100) * (WAYPOINTS.length - 1)) - currentLegIndex;
   const currentStart = WAYPOINTS[currentLegIndex].coord;
   const currentEnd = WAYPOINTS[currentLegIndex + 1].coord;
+  const nextWaypoint = WAYPOINTS[Math.min(currentLegIndex + 1, WAYPOINTS.length - 1)];
+  const tripPhase = arrived
+    ? { label: 'Arrived', labelAr: 'وصلت', badgeClass: 'border-emerald-400/20 bg-emerald-500/10 text-emerald-300' }
+    : progress >= 90
+      ? { label: 'Arriving soon', labelAr: 'الوجهة قريبة', badgeClass: 'border-emerald-400/20 bg-emerald-500/10 text-emerald-300' }
+      : progress >= 50
+        ? { label: 'En route', labelAr: 'في الطريق', badgeClass: 'border-cyan-400/20 bg-cyan-500/10 text-cyan-300' }
+        : progress >= 45
+          ? { label: 'Pickup confirmed', labelAr: 'تم الالتقاط', badgeClass: 'border-cyan-400/20 bg-cyan-500/10 text-cyan-300' }
+          : { label: 'Driver approaching', labelAr: 'السائق يقترب', badgeClass: 'border-amber-400/20 bg-amber-500/10 text-amber-300' };
+  const tripPulseCards = [
+    { label: 'Next stop', value: nextWaypoint.label, detail: nextWaypoint.labelAr },
+    { label: 'Time left', value: `${Math.max(0, Math.round(timeLeft))} min`, detail: `ETA ${TRIP.estimatedArrival}` },
+    { label: 'Safety', value: 'Live sharing', detail: `Code ${TRIP.shareCode}` },
+  ];
   const driverPosition = {
     lat: currentStart.lat + ((currentEnd.lat - currentStart.lat) * Math.max(0, Math.min(currentLegProgress, 1))),
     lng: currentStart.lng + ((currentEnd.lng - currentStart.lng) * Math.max(0, Math.min(currentLegProgress, 1))),
@@ -593,7 +608,10 @@ export function LiveTripTracking() {
             {TRIP.from} to {TRIP.to}
           </div>
           <div className="rounded-full border border-white/10 bg-slate-950/70 px-3 py-1.5 text-[11px] font-semibold text-cyan-300 backdrop-blur-md">
-            Driver near {WAYPOINTS[Math.min(currentLegIndex + 1, WAYPOINTS.length - 1)].label}
+            Driver near {nextWaypoint.label}
+          </div>
+          <div className="rounded-full border border-emerald-400/20 bg-slate-950/70 px-3 py-1.5 text-[11px] font-semibold text-emerald-300 backdrop-blur-md">
+            {Math.max(0, Math.round(timeLeft))} min left
           </div>
         </div>
 
@@ -630,7 +648,7 @@ export function LiveTripTracking() {
       </div>
 
       {/* ── INFO PANEL ── */}
-      <div className="w-full lg:w-96 bg-background border-t lg:border-t-0 lg:border-l border-border flex flex-col overflow-y-auto">
+      <div className="w-full lg:w-[420px] bg-background border-t lg:border-t-0 lg:border-l border-border flex flex-col overflow-y-auto">
         {/* Trip ID bar */}
         <div className="px-4 py-2.5 border-b border-border bg-card flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -650,13 +668,40 @@ export function LiveTripTracking() {
         </div>
 
         <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+          <div className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-slate-950 to-slate-950 p-4 shadow-lg shadow-primary/10">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-300">
+                  Trip pulse
+                </div>
+                <div className="mt-2 text-lg font-bold text-white">{tripPhase.label}</div>
+                <div className="text-xs font-medium text-slate-300">{tripPhase.labelAr}</div>
+              </div>
+              <div className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${tripPhase.badgeClass}`}>
+                {Math.round(progress)}%
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {tripPulseCards.map((item) => (
+                <div key={item.label} className="rounded-2xl border border-white/8 bg-white/5 px-3 py-2.5">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    {item.label}
+                  </div>
+                  <div className="mt-1 text-sm font-semibold text-white">{item.value}</div>
+                  <div className="mt-1 text-[11px] text-slate-400">{item.detail}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* ETA */}
           <ETACard eta={TRIP.estimatedArrival} timeLeft={Math.round(timeLeft)} />
 
           {/* Progress bar */}
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs text-slate-500">
-              <span>Trip progress</span>
+              <span>Trip progress · تقدم الرحلة</span>
               <span className="text-primary font-semibold">{Math.round(progress)}%</span>
             </div>
             <div className="w-full h-2.5 bg-muted rounded-full overflow-hidden">
@@ -721,7 +766,10 @@ export function LiveTripTracking() {
             className="w-full flex items-center gap-2 bg-card border border-border rounded-xl px-3 py-2.5 hover:border-muted-foreground/30 transition-all group"
           >
             <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-            <span className="text-xs text-slate-500 flex-1 text-left">Safety code: <strong className="text-white font-mono">{TRIP.shareCode}</strong></span>
+            <span className="flex-1 text-left">
+              <span className="block text-[11px] text-slate-500">Safety code · رمز الأمان</span>
+              <strong className="block text-sm font-mono text-white">{TRIP.shareCode}</strong>
+            </span>
             <Copy className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" />
           </button>
 
@@ -776,8 +824,8 @@ export function LiveTripTracking() {
               >
                 <Brain className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-slate-500 flex-1">
-                  <span className="text-cyan-400 font-semibold">AI tip: </span>
-                  You're on track to save <span className="text-emerald-400 font-semibold">0.730 JOD</span> vs solo taxi. Keep it up! 🎉
+                  <span className="text-cyan-400 font-semibold">Wasel insight: </span>
+                  This shared ride is still tracking <span className="text-emerald-400 font-semibold">0.730 JOD</span> below a solo taxi while keeping live safety sharing active.
                 </p>
                 <button onClick={() => setAiTip(false)} className="text-slate-700 hover:text-slate-500">
                   <X className="w-3 h-3" />
