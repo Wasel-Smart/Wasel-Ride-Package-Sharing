@@ -18,7 +18,7 @@ function isConfiguredValue(value: string | undefined): value is string {
   if (!normalized) return false;
 
   const lower = normalized.toLowerCase();
-  return !PLACEHOLDER_MARKERS.some((marker) => lower.includes(marker));
+  return !PLACEHOLDER_MARKERS.some(marker => lower.includes(marker));
 }
 
 function pickConfiguredValue(...candidates: Array<string | undefined>): string {

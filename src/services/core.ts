@@ -10,8 +10,12 @@ import type { QueuedRequest } from './offlineQueue';
 export { projectId, publicAnonKey };
 
 const configuredApiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
-const configuredFunctionsBaseUrl = (import.meta.env.VITE_EDGE_FUNCTIONS_BASE_URL as string | undefined)?.trim();
-const configuredFunctionName = (import.meta.env.VITE_EDGE_FUNCTION_NAME as string | undefined)?.trim();
+const configuredFunctionsBaseUrl = (
+  import.meta.env.VITE_EDGE_FUNCTIONS_BASE_URL as string | undefined
+)?.trim();
+const configuredFunctionName = (
+  import.meta.env.VITE_EDGE_FUNCTION_NAME as string | undefined
+)?.trim();
 const defaultFunctionsBaseUrl = supabaseUrl ? `${supabaseUrl}/functions/v1` : '';
 const resolvedFunctionsBaseUrl = configuredFunctionsBaseUrl || defaultFunctionsBaseUrl;
 const resolvedFunctionName = configuredFunctionName || '';
@@ -88,7 +92,7 @@ function buildAvailabilitySnapshot(): AvailabilitySnapshot {
 
 function notifyAvailabilityListeners(): void {
   const snapshot = buildAvailabilitySnapshot();
-  availabilityListeners.forEach((listener) => listener(snapshot));
+  availabilityListeners.forEach(listener => listener(snapshot));
 }
 
 function setEdgeFunctionAvailability(nextValue: boolean): void {
@@ -308,9 +312,7 @@ function toRequestHeaders(headers: HeadersInit | undefined): Record<string, stri
     return Object.fromEntries(headers);
   }
 
-  return Object.fromEntries(
-    Object.entries(headers).map(([key, value]) => [key, String(value)]),
-  );
+  return Object.fromEntries(Object.entries(headers).map(([key, value]) => [key, String(value)]));
 }
 
 export async function fetchWithRetry(
@@ -326,7 +328,7 @@ export async function fetchWithRetry(
   if (shouldDeduplicate) {
     const inFlight = inflightReadRequests.get(requestDeduplicationKey);
     if (inFlight) {
-      return inFlight.then((response) => response.clone());
+      return inFlight.then(response => response.clone());
     }
   }
 
@@ -337,7 +339,7 @@ export async function fetchWithRetry(
 
   inflightReadRequests.set(
     requestDeduplicationKey,
-    execution.then((response) => response.clone()),
+    execution.then(response => response.clone()),
   );
 
   try {
@@ -354,7 +356,9 @@ async function executeFetchWithRetry(
   backoff: number,
 ): Promise<Response> {
   if (!url) {
-    throw new Error('Backend API is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+    throw new Error(
+      'Backend API is not configured. Set VITE_API_URL or VITE_EDGE_FUNCTION_NAME together with the public Supabase keys.',
+    );
   }
 
   const {
@@ -410,17 +414,13 @@ async function executeFetchWithRetry(
         try {
           const { getOfflineQueueManager } = await import('./offlineQueue');
           const queue = getOfflineQueueManager();
-          queue.addRequest(
-            toQueuedRequestMethod(method),
-            url,
-            {
-              body: options.body,
-              headers: toRequestHeaders(options.headers),
-              priority: queuePriority,
-              deduplicationKey,
-              maxRetries: retries + 3,
-            }
-          );
+          queue.addRequest(toQueuedRequestMethod(method), url, {
+            body: options.body,
+            headers: toRequestHeaders(options.headers),
+            priority: queuePriority,
+            deduplicationKey,
+            maxRetries: retries + 3,
+          });
         } catch {
           // Offline queue not available
         }
@@ -434,8 +434,7 @@ async function executeFetchWithRetry(
     }
 
     const isRetryable =
-      error instanceof TypeError ||
-      (error instanceof DOMException && error.name === 'AbortError');
+      error instanceof TypeError || (error instanceof DOMException && error.name === 'AbortError');
     const duration = Math.round(
       (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startedAt,
     );
@@ -457,22 +456,18 @@ async function executeFetchWithRetry(
       try {
         const { getOfflineQueueManager } = await import('./offlineQueue');
         const queue = getOfflineQueueManager();
-        queue.addRequest(
-          toQueuedRequestMethod(method),
-          url,
-          {
-            body: options.body,
-            headers: toRequestHeaders(options.headers),
-            priority:
-              queuePriority === 'critical'
-                ? 'critical'
-                : queuePriority === 'high'
-                  ? 'high'
-                  : 'normal',
-            deduplicationKey,
-            maxRetries: 5,
-          }
-        );
+        queue.addRequest(toQueuedRequestMethod(method), url, {
+          body: options.body,
+          headers: toRequestHeaders(options.headers),
+          priority:
+            queuePriority === 'critical'
+              ? 'critical'
+              : queuePriority === 'high'
+                ? 'high'
+                : 'normal',
+          deduplicationKey,
+          maxRetries: 5,
+        });
       } catch {
         // Offline queue not available
       }
@@ -486,7 +481,7 @@ async function executeFetchWithRetry(
 }
 
 function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export const supabase = supabaseClient;
@@ -501,7 +496,10 @@ export async function getAuthDetails(): Promise<AuthDetails> {
     throw new Error('Supabase client is not initialised');
   }
 
-  const { data: { session }, error } = await supabase.auth.getSession();
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
   if (error) {
     throw error;
   }

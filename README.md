@@ -6,18 +6,18 @@ Ride marketplace where travelers carry passengers and package handoffs between s
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 18, TypeScript, Vite 6 |
-| Routing | React Router 7 (lazy-loaded routes) |
-| Styling | Tailwind CSS 4 + Wasel Design System |
-| Data | Supabase (Postgres + Realtime + Auth) |
-| State | TanStack Query v5 |
-| UI Primitives | Radix UI |
-| Payments | Stripe |
-| Notifications | Web Notifications API + Service Worker |
-| Error Monitoring | Sentry |
-| Testing | Vitest + Playwright |
+| Layer            | Technology                             |
+| ---------------- | -------------------------------------- |
+| Frontend         | React 18, TypeScript, Vite 6           |
+| Routing          | React Router 7 (lazy-loaded routes)    |
+| Styling          | Tailwind CSS 4 + Wasel Design System   |
+| Data             | Supabase (Postgres + Realtime + Auth)  |
+| State            | TanStack Query v5                      |
+| UI Primitives    | Radix UI                               |
+| Payments         | Stripe                                 |
+| Notifications    | Web Notifications API + Service Worker |
+| Error Monitoring | Sentry                                 |
+| Testing          | Vitest + Playwright                    |
 
 ---
 
@@ -39,16 +39,16 @@ npm run dev
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start dev server on port 3000 |
-| `npm run build` | Type-check + production build |
-| `npm run preview` | Preview production build locally |
-| `npm run test` | Run unit tests (Vitest) |
-| `npm run test:e2e` | Run end-to-end tests (Playwright) |
-| `npm run type-check` | TypeScript check only |
-| `npm run verify` | Full verification: types + unit tests + build + E2E |
-| `npm run test:coverage` | Unit tests with coverage thresholds enforced |
+| Command                 | Description                                         |
+| ----------------------- | --------------------------------------------------- |
+| `npm run dev`           | Start dev server on port 3000                       |
+| `npm run build`         | Type-check + production build                       |
+| `npm run preview`       | Preview production build locally                    |
+| `npm run test`          | Run unit tests (Vitest)                             |
+| `npm run test:e2e`      | Run end-to-end tests (Playwright)                   |
+| `npm run type-check`    | TypeScript check only                               |
+| `npm run verify`        | Full verification: types + unit tests + build + E2E |
+| `npm run test:coverage` | Unit tests with coverage thresholds enforced        |
 
 ---
 
@@ -82,20 +82,27 @@ src/
 
 ## Core Services
 
-| Service | Path |
-|---|---|
-| Find a Ride | `/find-ride` |
-| Offer a Ride | `/offer-ride` |
-| Bus | `/bus` |
-| Package Delivery via Rides | `/packages` |
-| Trust Center | `/trust` |
+| Service                    | Path          |
+| -------------------------- | ------------- |
+| Find a Ride                | `/find-ride`  |
+| Offer a Ride               | `/offer-ride` |
+| Bus                        | `/bus`        |
+| Package Delivery via Rides | `/packages`   |
+| Trust Center               | `/trust`      |
 
 ---
 
 ## Environment Variables
 
-See `.env.example` for all required and optional variables.  
-Use `VITE_EDGE_FUNCTION_NAME` when your backend edge function name differs from the default slug, `VITE_API_URL` for a custom API base, `VITE_SUPPORT_WHATSAPP_NUMBER` / `VITE_AUTH_CALLBACK_PATH` for production auth and support routing, and `VITE_ENABLE_TWO_FACTOR_AUTH=true` only after a secure backend verifier is in place.
+Use the environment-specific templates:
+
+- `.env.development.example`
+- `.env.staging.example`
+- `.env.production.example`
+
+`VITE_APP_ENV` must be one of `development`, `staging`, `production`, or `test`.
+Protected environments require explicit backend configuration through `VITE_API_URL` or `VITE_EDGE_FUNCTION_NAME`; checked-in public runtime fallbacks are no longer used.
+Use `VITE_SUPPORT_WHATSAPP_NUMBER` / `VITE_AUTH_CALLBACK_PATH` for production auth and support routing, and enable `VITE_ENABLE_TWO_FACTOR_AUTH=true` only after a secure backend verifier is in place.
 **Never commit `.env` files.** They are in `.gitignore`.
 
 ---

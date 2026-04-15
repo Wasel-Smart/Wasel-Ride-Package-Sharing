@@ -18,7 +18,9 @@ if (!connectionString) {
 
 const versionCheck = spawnSync('psql', ['--version'], { stdio: 'ignore' });
 if (versionCheck.error) {
-  console.error('psql is not available in PATH. Install the PostgreSQL client or run the SQL files another way.');
+  console.error(
+    'psql is not available in PATH. Install the PostgreSQL client or run the SQL files another way.',
+  );
   process.exit(1);
 }
 

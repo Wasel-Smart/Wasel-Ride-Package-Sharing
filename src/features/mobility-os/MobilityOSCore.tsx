@@ -595,12 +595,7 @@ function project(lat: number, lon: number, width: number, height: number) {
   return { x, y };
 }
 
-function getRouteCurve(
-  from: Point,
-  to: Point,
-  intensity: number,
-  seed: number,
-) {
+function getRouteCurve(from: Point, to: Point, intensity: number, seed: number) {
   const midX = (from.x + to.x) / 2;
   const midY = (from.y + to.y) / 2;
   const dx = to.x - from.x;
@@ -614,12 +609,7 @@ function getRouteCurve(
   };
 }
 
-function pointOnQuadratic(
-  start: Point,
-  control: Point,
-  end: Point,
-  t: number,
-) {
+function pointOnQuadratic(start: Point, control: Point, end: Point, t: number) {
   const mt = 1 - t;
   return {
     x: mt * mt * start.x + 2 * mt * t * control.x + t * t * end.x,
@@ -627,12 +617,7 @@ function pointOnQuadratic(
   };
 }
 
-function tangentOnQuadratic(
-  start: Point,
-  control: Point,
-  end: Point,
-  t: number,
-) {
+function tangentOnQuadratic(start: Point, control: Point, end: Point, t: number) {
   return {
     x: 2 * (1 - t) * (control.x - start.x) + 2 * t * (end.x - control.x),
     y: 2 * (1 - t) * (control.y - start.y) + 2 * t * (end.y - control.y),
@@ -776,7 +761,9 @@ function lerpNumber(from: number, to: number, t: number) {
   return from + (to - from) * t;
 }
 
-function getRouteCompositeLoad(route: Pick<RouteState, 'passengerFlow' | 'packageFlow' | 'congestion' | 'lanes'>) {
+function getRouteCompositeLoad(
+  route: Pick<RouteState, 'passengerFlow' | 'packageFlow' | 'congestion' | 'lanes'>,
+) {
   return (
     route.passengerFlow * 1.05 +
     route.packageFlow * 1.18 +
@@ -823,7 +810,10 @@ function buildRouteVehicleQuota(routes: RouteState[], fleetSize: number) {
 
 function splitRouteVehicleMix(route: RouteState, quota: number) {
   if (quota <= 1) {
-    return { passengerCount: route.passengerFlow >= route.packageFlow ? 1 : 0, packageCount: route.packageFlow > route.passengerFlow ? 1 : 0 };
+    return {
+      passengerCount: route.passengerFlow >= route.packageFlow ? 1 : 0,
+      packageCount: route.packageFlow > route.passengerFlow ? 1 : 0,
+    };
   }
 
   const totalFlow = Math.max(1, route.passengerFlow + route.packageFlow);
@@ -849,13 +839,8 @@ function createSyntheticVehicle(
   const from = projectCity(route.from, BASE_W, BASE_H);
   const to = projectCity(route.to, BASE_W, BASE_H);
   const routeSeed = getRouteVisualSeed(route.id);
-  const progress = (((localIndex + 0.5) / Math.max(1, quota)) + routeSeed * 0.037) % 1;
-  const curve = getRouteCurve(
-    from,
-    to,
-    route.congestion + route.lanes * 0.1,
-    routeSeed,
-  );
+  const progress = ((localIndex + 0.5) / Math.max(1, quota) + routeSeed * 0.037) % 1;
+  const curve = getRouteCurve(from, to, route.congestion + route.lanes * 0.1, routeSeed);
   const control = { x: curve.cx, y: curve.cy };
   const point = pointOnQuadratic(from, control, to, progress);
   const tangent = tangentOnQuadratic(from, control, to, progress);
@@ -964,7 +949,11 @@ function buildModeledRouteState(
     packageFlow,
     density,
     speedKph: lerpNumber(route.speedKph, speedTarget, smoothing * 0.84),
-    congestion: lerpNumber(route.congestion, clamp(density / TRAFFIC.CRITICAL, 0, 1), smoothing * 0.9),
+    congestion: lerpNumber(
+      route.congestion,
+      clamp(density / TRAFFIC.CRITICAL, 0, 1),
+      smoothing * 0.9,
+    ),
   };
 }
 
@@ -1110,7 +1099,8 @@ function buildModeledAnalytics(
     (sum, vehicle) => sum + ((vehicle.packageCapacity ?? 0) - (vehicle.packageLoad ?? 0)),
     0,
   );
-  const avgSpeed = routes.reduce((sum, route) => sum + route.speedKph, 0) / Math.max(routes.length, 1);
+  const avgSpeed =
+    routes.reduce((sum, route) => sum + route.speedKph, 0) / Math.max(routes.length, 1);
   const congestionLevel =
     routes.reduce((sum, route) => sum + route.congestion, 0) / Math.max(routes.length, 1);
   const topRoute = routes
@@ -1179,15 +1169,21 @@ function mergeLiveAnalyticsWithModel(
 
   return {
     totalVehicles:
-      liveAnalytics.totalVehicles > 0 ? liveAnalytics.totalVehicles : modeledAnalytics.totalVehicles,
+      liveAnalytics.totalVehicles > 0
+        ? liveAnalytics.totalVehicles
+        : modeledAnalytics.totalVehicles,
     activePassengers: hasLivePassengers
       ? liveAnalytics.activePassengers
       : modeledAnalytics.activePassengers,
-    activePackages: hasLivePackages ? liveAnalytics.activePackages : modeledAnalytics.activePackages,
+    activePackages: hasLivePackages
+      ? liveAnalytics.activePackages
+      : modeledAnalytics.activePackages,
     seatAvailability: hasLiveCapacity
       ? liveAnalytics.seatAvailability
       : modeledAnalytics.seatAvailability,
-    packageCapacity: hasLiveCapacity ? liveAnalytics.packageCapacity : modeledAnalytics.packageCapacity,
+    packageCapacity: hasLiveCapacity
+      ? liveAnalytics.packageCapacity
+      : modeledAnalytics.packageCapacity,
     avgSpeed: hasLiveTraffic ? liveAnalytics.avgSpeed : modeledAnalytics.avgSpeed,
     networkUtilization:
       liveAnalytics.networkUtilization > 0
@@ -1422,7 +1418,7 @@ export default function MobilityOSCore() {
       (hasActiveLiveDemand ? 58 : 42) +
         (liveSnapshot?.traffic.enabled ? 14 : 0) +
         telemetryCoveragePercent * 0.16 +
-        ((liveSnapshot?.telemetry.hasRenderableLocations ? 1 : 0) * 10) +
+        (liveSnapshot?.telemetry.hasRenderableLocations ? 1 : 0) * 10 +
         Math.round(clamp(analytics.avgSpeed / 10, 0, 9)),
       42,
       97,
@@ -2430,7 +2426,7 @@ export default function MobilityOSCore() {
         });
       }
     },
-      [ar, liveSnapshot, liveRouteOverrides, paused, selectedCityId, timeOfDay],
+    [ar, liveSnapshot, liveRouteOverrides, paused, selectedCityId, timeOfDay],
   );
 
   useEffect(() => {
@@ -2438,7 +2434,9 @@ export default function MobilityOSCore() {
     vehiclesRef.current = buildVehicleFleet(routesRef.current);
     startTransition(() => {
       setRouteSnapshot(routesRef.current);
-      setAnalytics(buildModeledAnalytics(routesRef.current, vehiclesRef.current, selectedCityId, ar));
+      setAnalytics(
+        buildModeledAnalytics(routesRef.current, vehiclesRef.current, selectedCityId, ar),
+      );
     });
   }, [ar, selectedCityId, timeOfDay]);
 
@@ -2711,7 +2709,13 @@ export default function MobilityOSCore() {
   const heroSignals = [
     {
       label: copy.controlState,
-      value: paused ? (ar ? '????? ??????' : 'Paused') : hasActiveLiveDemand ? copy.liveSync : copy.simulationTag,
+      value: paused
+        ? ar
+          ? '????? ??????'
+          : 'Paused'
+        : hasActiveLiveDemand
+          ? copy.liveSync
+          : copy.simulationTag,
       tone: paused ? C.orange : C.green,
     },
     {
@@ -3451,7 +3455,9 @@ export default function MobilityOSCore() {
                           {card.label}
                         </span>
                       </div>
-                      <strong style={{ color: card.tone, fontSize: '0.98rem' }}>{card.value}</strong>
+                      <strong style={{ color: card.tone, fontSize: '0.98rem' }}>
+                        {card.value}
+                      </strong>
                     </div>
                     <div style={{ color: C.textSub, fontSize: '0.86rem', lineHeight: 1.6 }}>
                       {card.sub}
@@ -3575,7 +3581,7 @@ export default function MobilityOSCore() {
                       />
                       {item.label}
                     </div>
-                    ))}
+                  ))}
                 </div>
                 <div
                   style={{

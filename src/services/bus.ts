@@ -3,14 +3,8 @@ import { trackGrowthEvent } from './growthEngine';
 import { triggerBusBookingConfirmationEmail } from './transactionalEmailTriggers';
 import { tripsAPI } from './trips';
 import { OFFICIAL_JORDAN_BUS_ROUTES } from '../data/jordanBusNetwork';
-import {
-  locationsOverlap,
-  routeMatchesLocationPair,
-} from '../utils/jordanLocations';
-import {
-  allowLocalPersistenceFallback,
-  requireLocalPersistenceFallback,
-} from './runtimePolicy';
+import { locationsOverlap, routeMatchesLocationPair } from '../utils/jordanLocations';
+import { allowLocalPersistenceFallback, requireLocalPersistenceFallback } from './runtimePolicy';
 
 export interface BusRoute {
   id: string;
@@ -83,12 +77,12 @@ function toNumber(value: unknown, fallback: number): number {
 
 function toStringList(value: unknown): string[] {
   if (Array.isArray(value)) {
-    return value.filter((item) => typeof item === 'string' && item.trim().length > 0);
+    return value.filter(item => typeof item === 'string' && item.trim().length > 0);
   }
   if (typeof value === 'string' && value.trim()) {
     return value
       .split(/[|,;/]+/)
-      .map((item) => item.trim())
+      .map(item => item.trim())
       .filter(Boolean);
   }
   return [];
@@ -105,20 +99,23 @@ export function looksLikeBusTrip(item: Record<string, unknown>): boolean {
     item.company,
     item.title,
     item.summary,
-  ].map((x) => String(x ?? '').toLowerCase());
+  ].map(x => String(x ?? '').toLowerCase());
 
-  return candidates.some((value) => busTokens.some((token) => value.includes(token)));
+  return candidates.some(value => busTokens.some(token => value.includes(token)));
 }
 
 export function normalizeBusRoute(raw: Record<string, unknown>, index: number): BusRoute {
-const colors = ['#19E7BB', '#0BC3A0', '#65E1FF', '#A2FFE7'];
+  const colors = ['#19E7BB', '#0BC3A0', '#65E1FF', '#A2FFE7'];
   const defaultId = `live-bus-${index + 1}`;
   const from = toText(raw.from ?? raw.origin_city, 'Amman');
   const to = toText(raw.to ?? raw.destination_city, 'Aqaba');
   const dep = toText(raw.departure_time ?? raw.dep, '07:00');
   const arr = toText(raw.arrival_time ?? raw.arr, '11:30');
   const price = toNumber(raw.price_per_seat ?? raw.price, 5);
-  const seats = Math.max(0, Math.floor(toNumber(raw.seats_available ?? raw.available_seats ?? raw.seats, 8)));
+  const seats = Math.max(
+    0,
+    Math.floor(toNumber(raw.seats_available ?? raw.available_seats ?? raw.seats, 8)),
+  );
   const via = toStringList(raw.via_stops ?? raw.intermediate_stops ?? raw.via);
   const amenities = toStringList(raw.amenities ?? raw.features);
 
@@ -158,22 +155,24 @@ function matchOfficialRoute(route: BusRoute, query: BusRouteQuery): boolean {
 }
 
 export function getOfficialBusRoutes(query: BusRouteQuery = {}): BusRoute[] {
-  const exact = OFFICIAL_JORDAN_BUS_ROUTES.filter((route) => matchOfficialRoute(route, query));
+  const exact = OFFICIAL_JORDAN_BUS_ROUTES.filter(route => matchOfficialRoute(route, query));
   if (exact.length > 0) return exact;
 
   if (query.from || query.to) {
-    const close = OFFICIAL_JORDAN_BUS_ROUTES.filter((route) => {
+    const close = OFFICIAL_JORDAN_BUS_ROUTES.filter(route => {
       if (query.seats && route.seats < query.seats) return false;
-      return routeMatchesLocationPair(route.from, route.to, query.from, query.to)
-        || locationsOverlap(route.from, query.from)
-        || locationsOverlap(route.to, query.to)
-        || locationsOverlap(route.to, query.from)
-        || locationsOverlap(route.from, query.to);
+      return (
+        routeMatchesLocationPair(route.from, route.to, query.from, query.to) ||
+        locationsOverlap(route.from, query.from) ||
+        locationsOverlap(route.to, query.to) ||
+        locationsOverlap(route.to, query.from) ||
+        locationsOverlap(route.from, query.to)
+      );
     });
     if (close.length > 0) return close;
   }
 
-  return OFFICIAL_JORDAN_BUS_ROUTES.filter((route) => !query.seats || route.seats >= query.seats);
+  return OFFICIAL_JORDAN_BUS_ROUTES.filter(route => !query.seats || route.seats >= query.seats);
 }
 
 export async function fetchBusRoutes(query: BusRouteQuery): Promise<BusRoute[]> {
@@ -185,9 +184,11 @@ export async function fetchBusRoutes(query: BusRouteQuery): Promise<BusRoute[]> 
 
     const mapped = list
       .filter((item: unknown) => item && typeof item === 'object')
-      .map((item) => item as unknown as Record<string, unknown>);
+      .map(item => item as unknown as Record<string, unknown>);
 
-    const busOnly = mapped.filter(looksLikeBusTrip).map((item, index) => normalizeBusRoute(item, index));
+    const busOnly = mapped
+      .filter(looksLikeBusTrip)
+      .map((item, index) => normalizeBusRoute(item, index));
 
     return busOnly.length > 0 ? busOnly : officialRoutes;
   } catch {
@@ -251,10 +252,7 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
       },
     );
 
-    const bookingId =
-      server?.booking?.id ??
-      server?.id ??
-      `server-${Date.now()}`;
+    const bookingId = server?.id ?? `server-${Date.now()}`;
 
     const result: BusBookingResult = {
       source: 'server',
@@ -327,5 +325,3 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
     return result;
   }
 }
-
-

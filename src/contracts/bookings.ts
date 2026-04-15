@@ -2,7 +2,22 @@ import { z } from 'zod';
 
 export const BOOKINGS_CONTRACT_VERSION = '2026-04-15';
 
-export const bookingRecordSchema = z
+export type BookingRecord = {
+  id: string;
+  tripId?: string;
+  trip_id?: string;
+  userId?: string;
+  user_id?: string;
+  seatsRequested?: number;
+  seats_requested?: number;
+  status?: string;
+  booking_status?: string;
+  createdAt?: string;
+  created_at?: string;
+  [key: string]: unknown;
+};
+
+export const bookingRecordSchema: z.ZodType<BookingRecord> = z
   .object({
     id: z.string().min(1),
     tripId: z.string().min(1).optional(),
@@ -19,3 +34,13 @@ export const bookingRecordSchema = z
   .passthrough();
 
 export const bookingListSchema = z.array(bookingRecordSchema);
+
+export const bookingMutationEnvelopeSchema = z.union([
+  bookingRecordSchema,
+  z.object({
+    booking: bookingRecordSchema,
+  }),
+]);
+
+export type BookingList = z.infer<typeof bookingListSchema>;
+export type BookingMutationEnvelope = z.infer<typeof bookingMutationEnvelopeSchema>;

@@ -1,9 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-import {
-  operationalSeedFiles,
-  smokeCheckSeedFiles,
-} from './supabase-rollout-manifest.mjs';
+import { operationalSeedFiles, smokeCheckSeedFiles } from './supabase-rollout-manifest.mjs';
 
 const root = process.cwd();
 const connectionString = process.env.SUPABASE_DB_URL;
@@ -19,7 +16,9 @@ if (!connectionString) {
 
 const versionCheck = spawnSync('psql', ['--version'], { stdio: 'ignore' });
 if (versionCheck.error) {
-  console.error('psql is not available in PATH. Install the PostgreSQL client or run the SQL files another way.');
+  console.error(
+    'psql is not available in PATH. Install the PostgreSQL client or run the SQL files another way.',
+  );
   process.exit(1);
 }
 
