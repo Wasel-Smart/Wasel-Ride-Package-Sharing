@@ -217,6 +217,7 @@ interface ApiStylePayload {
   error?: string;
   message?: string;
   meta?: Record<string, unknown>;
+  cause?: unknown;
 }
 
 function isApiStylePayload(value: unknown): value is ApiStylePayload {
@@ -240,6 +241,13 @@ export function normalizeError(
 
   // API-style payload objects: { status, error, meta }
   if (isApiStylePayload(error)) {
+    if (error.cause instanceof Error) {
+      const causeNormalized = normalizeError(error.cause, context);
+      if (!(causeNormalized instanceof WaselError && causeNormalized.code === APP_ERROR_CODES.unknown)) {
+        return causeNormalized;
+      }
+    }
+
     const status = typeof error.status === 'number' ? error.status : 0;
     const message =
       typeof error.error === 'string'

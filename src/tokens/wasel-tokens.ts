@@ -1,56 +1,47 @@
 /**
- * Wasel design tokens — unified teal-network identity.
+ * Wasel design tokens aligned with the light screenshot palette.
  *
- * SINGLE SOURCE OF TRUTH: All values in sync with brand-tokens.json and
- * brand-theme.css CSS variables. Do not add colours here that differ from
- * brand-theme.css :root definitions.
- *
- * Brand palette:
- *   Primary action  — #19E7BB  (network teal)
- *   Primary deep    — #0BC3A0  (deep teal)
- *   Primary light   — #DCFFF8  (mint light)
- *   Accent aqua     — #48CFFF
- *   Backgrounds     — deep navy #07111B → surface #101D2C
+ * Buttons use the shared sky-blue action color `#A9E3FF`.
  */
 
 export const WaselColors = {
   // Surfaces
-  spaceDeep: '#07111B',
-  spaceCard: '#101D2C',
-  space1: '#0C1724',
-  space2: '#101D2C',
-  space3: '#172738',
-  space4: '#203447',
+  spaceDeep: '#EEF4FB',
+  spaceCard: '#FFFFFF',
+  space1: '#F6F9FD',
+  space2: '#FFFFFF',
+  space3: '#F0F5FB',
+  space4: '#DBE7F2',
 
-  // Brand primaries (teal / aqua)
-  cyan: '#19E7BB',        // canonical primary — named cyan for legacy compat
-  cyanLight: '#DCFFF8',   // mint highlight
-  gold: '#48CFFF',        // aqua accent
-  goldLight: '#D8FBFF',   // light aqua
-  green: '#A2FFE7',       // soft mint
-  greenDark: '#0BC3A0',   // deep teal alias
-  lime: '#65E1FF',        // electric aqua alias
+  // Brand colors
+  cyan: '#A9E3FF',
+  cyanLight: '#EEF8FF',
+  gold: '#A9E3FF',
+  goldLight: '#EEF8FF',
+  green: '#22C2AA',
+  greenDark: '#1AA792',
+  lime: '#7ECDF9',
 
-  teal: '#A2FFE7',        // mint alias
-  bronze: '#0BC3A0',      // deep teal accent
-  orange: '#65E1FF',      // aqua accent alias
-  borderDark: 'rgba(7,15,25,0.72)',
-  navyBase: '#07111B',
-  navyCard: '#101D2C',
+  teal: '#A9E3FF',
+  bronze: '#A9E3FF',
+  orange: '#A9E3FF',
+  borderDark: 'rgba(185,208,228,0.72)',
+  navyBase: '#143459',
+  navyCard: '#FFFFFF',
 
-  textPrimary: '#E9F5F7',
-  textSecondary: 'rgba(198,223,227,0.82)',
-  textMuted: 'rgba(170,191,196,0.58)',
+  textPrimary: '#143459',
+  textSecondary: 'rgba(100,123,149,0.86)',
+  textMuted: 'rgba(100,123,149,0.66)',
 
-  success: '#A2FFE7',
-  warning: '#65E1FF',
+  success: '#22C2AA',
+  warning: '#A9E3FF',
   error: '#FF646A',
-  info: '#65E1FF',
+  info: '#A9E3FF',
 
-  cyanGlow: 'rgba(25,231,187,0.2)',
-  goldGlow: 'rgba(72,207,255,0.18)',
-  greenGlow: 'rgba(162,255,231,0.18)',
-  glassBg: 'rgba(12,23,36,0.84)',
+  cyanGlow: 'rgba(169,227,255,0.24)',
+  goldGlow: 'rgba(169,227,255,0.24)',
+  greenGlow: 'rgba(34,194,170,0.16)',
+  glassBg: 'rgba(255,255,255,0.9)',
 } as const;
 
 export const WaselSpacing = {
@@ -99,13 +90,13 @@ export const WaselRadius = {
 } as const;
 
 export const WaselShadows = {
-  sm: '0 8px 20px rgba(4,16,32,0.22)',
-  base: '0 18px 44px rgba(4,16,32,0.3)',
-  lg: '0 30px 72px rgba(4,16,32,0.38)',
-  glow: '0 18px 50px rgba(25,231,187,0.2)',
-  glowGold: '0 18px 50px rgba(72,207,255,0.18)',
-  glowGreen: '0 18px 50px rgba(162,255,231,0.22)',
-  cyanBorder: '0 0 0 1px rgba(76,123,170,0.18), 0 18px 44px rgba(4,16,32,0.3)',
+  sm: '0 8px 20px rgba(20,52,89,0.08)',
+  base: '0 18px 44px rgba(20,52,89,0.1)',
+  lg: '0 30px 72px rgba(20,52,89,0.12)',
+  glow: '0 18px 44px rgba(169,227,255,0.22)',
+  glowGold: '0 18px 44px rgba(169,227,255,0.22)',
+  glowGreen: '0 18px 42px rgba(34,194,170,0.14)',
+  cyanBorder: '0 0 0 1px rgba(185,208,228,0.72), 0 18px 44px rgba(20,52,89,0.1)',
 } as const;
 
 export const WaselZIndex = {
@@ -126,18 +117,18 @@ export const WaselTransitions = {
 
 export const WaselGlass = {
   card: {
-    background: 'rgba(16,34,53,0.84)',
+    background: 'rgba(255,255,255,0.92)',
     backdropFilter: 'blur(18px)',
-    border: '1px solid rgba(76,123,170,0.16)',
+    border: '1px solid rgba(185,208,228,0.72)',
   },
   overlay: {
-    background: 'rgba(3,12,20,0.84)',
+    background: 'rgba(20,52,89,0.12)',
     backdropFilter: 'blur(28px)',
   },
   panel: {
-    background: 'rgba(11,25,41,0.94)',
+    background: 'rgba(255,255,255,0.96)',
     backdropFilter: 'blur(28px)',
-    border: '1px solid rgba(76,123,170,0.12)',
+    border: '1px solid rgba(185,208,228,0.72)',
   },
 } as const;
 
@@ -146,6 +137,6 @@ export const WaselGradients = {
   accentBtn: 'linear-gradient(135deg, #D7F0FF 0%, #A9E3FF 100%)',
   successBtn: 'linear-gradient(135deg, #DFF3FF 0%, #A9E3FF 100%)',
   heroCard:
-    'linear-gradient(135deg, rgba(25,231,187,0.14) 0%, rgba(162,255,231,0.08) 56%, rgba(72,207,255,0.08) 100%)',
-  constellation: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
+    'linear-gradient(135deg, rgba(169,227,255,0.16) 0%, rgba(255,255,255,0.08) 56%, rgba(34,194,170,0.06) 100%)',
+  constellation: 'linear-gradient(135deg, #EEF8FF 0%, #A9E3FF 68%, #22C2AA 100%)',
 } as const;

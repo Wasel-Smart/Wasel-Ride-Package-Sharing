@@ -6,8 +6,8 @@ export const LEGACY_DISPLAY_STORAGE_KEY = 'wasel.settings.display';
 export const THEME_READY_ATTRIBUTE = 'data-theme-ready';
 
 const THEME_META_COLORS: Record<ResolvedTheme, string> = {
-  light: '#edf8f6',
-  dark: '#04091a',
+  light: '#eef4fb',
+  dark: '#eef4fb',
 };
 
 export function sanitizeThemePreference(value: string | null | undefined): ThemePreference {
