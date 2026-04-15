@@ -72,9 +72,16 @@ describe('getConfig()', () => {
     expect(getConfig().appName).toBe('Wasel');
   });
 
-  it('isProd and isDev are mutually exclusive', () => {
+  it('activates exactly one environment flag at a time', () => {
     const config = getConfig();
-    expect(config.isProd).toBe(!config.isDev);
+    const activeFlags = [
+      config.isProd,
+      config.isDev,
+      config.isStaging,
+      config.isTest,
+    ].filter(Boolean);
+
+    expect(activeFlags).toHaveLength(1);
   });
 
   it('authCallbackPath starts with /', () => {

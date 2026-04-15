@@ -149,6 +149,12 @@ export function getConfig() {
     environment,
     ['development', 'test'],
   );
+  const enablePersistedTestAuth = flagAllowedInEnvironment(
+    'VITE_ENABLE_PERSISTED_TEST_AUTH',
+    false,
+    environment,
+    ['test'],
+  );
   const enableTwoFactorAuth = getBooleanEnv('VITE_ENABLE_TWO_FACTOR_AUTH', false);
   const enableEmailNotifications = getBooleanEnv('VITE_ENABLE_EMAIL_NOTIFICATIONS', true);
   const enableSmsNotifications = getBooleanEnv('VITE_ENABLE_SMS_NOTIFICATIONS', true);
@@ -180,6 +186,7 @@ export function getConfig() {
     authCallbackPath: authCallbackPath.startsWith('/') ? authCallbackPath : `/${authCallbackPath}`,
     enableDemoAccount,
     enableSyntheticTrips,
+    enablePersistedTestAuth,
     enableTwoFactorAuth,
     enableEmailNotifications,
     enableSmsNotifications,

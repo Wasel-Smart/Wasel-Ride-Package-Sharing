@@ -22,6 +22,12 @@ export function allowLocalPersistenceFallback(): boolean {
   return getConfig().allowLocalPersistenceFallback;
 }
 
+export function allowAuthenticatedLocalPersistence(
+  userId?: string | null,
+): boolean {
+  return !userId || allowLocalPersistenceFallback();
+}
+
 export function allowSyntheticData(): boolean {
   const config = getConfig();
   return config.enableDemoAccount || config.enableSyntheticTrips;
@@ -43,6 +49,17 @@ export function requireLocalPersistenceFallback(operation: string): void {
       operation,
     });
   }
+}
+
+export function requireAuthenticatedLocalPersistence(
+  operation: string,
+  userId?: string | null,
+): void {
+  if (!userId) {
+    return;
+  }
+
+  requireLocalPersistenceFallback(operation);
 }
 
 export function requireSyntheticData(operation: string): void {
