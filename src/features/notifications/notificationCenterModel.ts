@@ -1,4 +1,4 @@
-import type { Notification } from '../../hooks/useNotifications';
+import type { Notification } from '../../../shared/domain-contracts';
 
 export type NotificationCategory =
   | 'rides'

@@ -1,4 +1,5 @@
 import { API_URL, fetchWithRetry, getAuthDetails } from './core';
+import type { Notification, NotificationPriority } from '../../shared/domain-contracts';
 import {
   buildDeliveryPlan,
   getCommunicationCapabilities,
@@ -15,25 +16,16 @@ import {
 
 const LOCAL_NOTIFICATION_KEY = 'wasel-local-notifications';
 
-type StoredNotification = {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
-  action_url?: string;
-  user_id: string;
+type StoredNotification = Omit<Notification, 'read'> & {
   is_read?: boolean;
   read?: boolean;
-  created_at: string;
-  source?: 'local' | 'server';
 };
 
 type NotificationCreateInput = {
   title: string;
   message: string;
   type: string;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  priority?: NotificationPriority;
   action_url?: string;
   channels?: CommunicationChannel[];
   contact?: {

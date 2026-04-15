@@ -29,8 +29,9 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useNotifications, type Notification } from '../hooks/useNotifications';
+import { useNotifications } from '../hooks/useNotifications';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
+import type { Notification } from '../../shared/domain-contracts';
 import {
   buildFilterCounts,
   buildNotificationSections,

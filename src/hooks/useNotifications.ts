@@ -3,20 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { notificationsAPI } from '../services/notifications.js';
-
-export interface Notification {
-  id: string;
-  user_id: string;
-  type: string;
-  title: string;
-  message: string;
-  data?: unknown;
-  read: boolean;
-  created_at: string;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
-  action_url?: string;
-  source?: 'local' | 'server';
-}
+import type { Notification } from '../../shared/domain-contracts';
 
 type RawNotification = Omit<Notification, 'read'> & {
   read?: boolean;
