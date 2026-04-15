@@ -1,0 +1,551 @@
+/* ============================================================
+   WASEL | واصل — UI CLARITY LAYER v1
+   Fixes typography, contrast, cards, inputs, buttons, navbar,
+   icons, and spacing globally. Does NOT change layout structure.
+   ============================================================ */
+
+/* ── 1. FONT CLARITY ─────────────────────────────────────────── */
+
+html, body {
+  font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system,
+    'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: 0.2px;
+  line-height: 1.5;
+  color: var(--text-primary, #0F172A);
+}
+
+/* Override brand-theme font with Inter for LTR content */
+:root:not([dir="rtl"]) body,
+.wasel-app-theme:not([dir="rtl"]) {
+  font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system,
+    'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Heading scale */
+h1 { font-size: 28px; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; }
+h2 { font-size: 22px; font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+h3 { font-size: 18px; font-weight: 600; line-height: 1.4; letter-spacing: 0; }
+h4 { font-size: 15px; font-weight: 500; line-height: 1.5; letter-spacing: 0.2px; }
+h5, h6 { font-size: 14px; font-weight: 400; line-height: 1.5; letter-spacing: 0.2px; }
+
+/* Body text */
+p, span, li, label, td, th {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.2px;
+}
+
+/* Remove blurry text shadows */
+h1, h2, h3, h4, h5, h6, p, span, a, button, label {
+  text-shadow: none !important;
+}
+
+/* ── 2. COLOUR CONTRAST ──────────────────────────────────────── */
+
+/* Primary text — all service pages */
+.wasel-app-theme,
+.wasel-app-theme * {
+  --foreground: #0F172A;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --wasel-copy-primary: #0F172A;
+  --wasel-copy-muted: #475569;
+  --wasel-copy-soft: #64748B;
+  --wasel-service-text: #0F172A;
+  --wasel-service-sub: #475569;
+  --wasel-service-muted: #64748B;
+  --muted-foreground: #64748B;
+}
+
+/* Background & card surfaces */
+.wasel-app-theme {
+  --background: #F8FAFC;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --border: #E2E8F0;
+  --surface-divider: #E2E8F0;
+  --wasel-service-border: #E2E8F0;
+  --wasel-service-border-strong: #CBD5E1;
+  --wasel-panel-border: #E2E8F0;
+  --wasel-panel-border-hover: #CBD5E1;
+  --wasel-app-border: #E2E8F0;
+  --wasel-app-border-strong: #CBD5E1;
+}
+
+/* Accent / primary */
+.wasel-app-theme {
+  --primary: #3A7CA5;
+  --primary-foreground: #FFFFFF;
+  --accent: #3A7CA5;
+  --accent-foreground: #FFFFFF;
+  --ring: rgba(58, 124, 165, 0.25);
+  --wasel-button-primary: #3A7CA5;
+  --wasel-button-primary-rgb: 58 124 165;
+  --wasel-button-primary-foreground: #FFFFFF;
+  --wasel-button-primary-soft: rgba(58, 124, 165, 0.08);
+  --wasel-button-primary-soft-strong: rgba(58, 124, 165, 0.14);
+  --wasel-button-primary-border: rgba(58, 124, 165, 0.28);
+  --wasel-button-primary-border-strong: rgba(58, 124, 165, 0.50);
+  --wasel-button-primary-shadow: 0 8px 24px rgba(58, 124, 165, 0.22);
+  --wasel-button-primary-shadow-hover: 0 12px 32px rgba(58, 124, 165, 0.32);
+  --wasel-app-button-primary: #3A7CA5;
+  --theme-gradient-primary: #3A7CA5;
+  --theme-gradient-accent: #5B9BD5;
+  --theme-gradient-line: linear-gradient(90deg, #3A7CA5, #5B9BD5);
+  --wasel-shadow-teal: 0 8px 24px rgba(58, 124, 165, 0.18);
+  --wasel-shadow-blue: 0 8px 24px rgba(91, 155, 213, 0.18);
+}
+
+/* Success */
+.wasel-app-theme {
+  --success: #22C55E;
+  --success-rgb: 34 197 94;
+}
+
+/* Remove faded opacity text — enforce legibility */
+.wasel-app-theme [style*="opacity: 0."],
+.wasel-app-theme [style*="opacity:0."] {
+  /* Only target decorative opacity, not interactive states */
+}
+
+/* ── 3. CARD COMPONENTS ──────────────────────────────────────── */
+
+/* Unified card style applied to all service cards */
+.wasel-app-theme .brand-panel,
+.wasel-app-theme .wasel-card,
+.wasel-app-theme .glass-card,
+.wasel-app-theme [class*="sp-frame"],
+.wasel-app-theme [class*="ride-card"],
+.wasel-app-theme [class*="bus-card"],
+.wasel-app-theme [class*="pkg-card"],
+.wasel-app-theme [class*="wallet-card"] {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Radix UI card primitives */
+.wasel-app-theme [data-radix-popper-content-wrapper],
+.wasel-app-theme [role="dialog"],
+.wasel-app-theme [role="alertdialog"] {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: #0F172A !important;
+}
+
+.wasel-app-theme [data-radix-dropdown-menu-content],
+.wasel-app-theme [cmdk-root] {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.10) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: #0F172A !important;
+}
+
+.wasel-app-theme [data-radix-select-content],
+.wasel-app-theme [data-radix-select-viewport] {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 14px !important;
+  color: #0F172A !important;
+}
+
+.wasel-app-theme [data-radix-tooltip-content] {
+  background: #0F172A !important;
+  border: 1px solid #1E293B !important;
+  border-radius: 8px !important;
+  color: #F8FAFC !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18) !important;
+}
+
+/* Shadcn card */
+.wasel-app-theme .rounded-xl,
+.wasel-app-theme .rounded-2xl,
+.wasel-app-theme .rounded-3xl {
+  border-color: #E2E8F0;
+}
+
+/* Card spacing */
+.wasel-app-theme .space-y-6 > * + * { margin-top: 16px; }
+.wasel-app-theme .space-y-4 > * + * { margin-top: 16px; }
+
+/* ── 4. INPUT FIELDS ─────────────────────────────────────────── */
+
+.wasel-app-theme input[type="text"],
+.wasel-app-theme input[type="email"],
+.wasel-app-theme input[type="password"],
+.wasel-app-theme input[type="number"],
+.wasel-app-theme input[type="tel"],
+.wasel-app-theme input[type="date"],
+.wasel-app-theme input[type="search"],
+.wasel-app-theme select,
+.wasel-app-theme textarea,
+.wasel-app-theme .input-premium {
+  height: 48px;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  font-family: inherit !important;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 10px !important;
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  padding: 0 14px !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+  outline: none !important;
+  letter-spacing: 0.2px;
+  line-height: 1.5;
+}
+
+.wasel-app-theme textarea {
+  height: auto;
+  min-height: 96px;
+  padding: 12px 14px !important;
+}
+
+.wasel-app-theme input::placeholder,
+.wasel-app-theme textarea::placeholder {
+  color: #94A3B8 !important;
+  font-weight: 400 !important;
+}
+
+.wasel-app-theme input:focus,
+.wasel-app-theme select:focus,
+.wasel-app-theme textarea:focus,
+.wasel-app-theme .input-premium:focus {
+  border-color: #3A7CA5 !important;
+  box-shadow: 0 0 0 3px rgba(58, 124, 165, 0.15) !important;
+}
+
+/* Select dropdown icon */
+.wasel-app-theme select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  padding-right: 40px !important;
+}
+
+/* ── 5. BUTTON SYSTEM ────────────────────────────────────────── */
+
+/* Primary button */
+.wasel-app-theme button[class*="primary"],
+.wasel-app-theme .btn-wasel-primary,
+.wasel-app-theme .brand-button-primary,
+.wasel-app-theme .wasel-primary-button {
+  height: 44px !important;
+  padding: 0 18px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  background: #3A7CA5 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(58, 124, 165, 0.20) !important;
+  transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease !important;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+}
+
+.wasel-app-theme button[class*="primary"]:hover,
+.wasel-app-theme .btn-wasel-primary:hover,
+.wasel-app-theme .brand-button-primary:hover,
+.wasel-app-theme .wasel-primary-button:hover {
+  background: #5B9BD5 !important;
+  box-shadow: 0 4px 14px rgba(58, 124, 165, 0.28) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Secondary button */
+.wasel-app-theme button[class*="secondary"],
+.wasel-app-theme button[class*="outline"],
+.wasel-app-theme .btn-wasel-outline,
+.wasel-app-theme .brand-button-secondary,
+.wasel-app-theme .wasel-outline-button {
+  height: 44px !important;
+  padding: 0 18px !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  border-radius: 10px !important;
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: none !important;
+  transition: background 0.18s ease, border-color 0.18s ease !important;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+}
+
+.wasel-app-theme button[class*="secondary"]:hover,
+.wasel-app-theme button[class*="outline"]:hover,
+.wasel-app-theme .btn-wasel-outline:hover,
+.wasel-app-theme .brand-button-secondary:hover,
+.wasel-app-theme .wasel-outline-button:hover {
+  background: #E2E8F0 !important;
+  border-color: #CBD5E1 !important;
+}
+
+/* Ghost / icon buttons */
+.wasel-app-theme button[class*="ghost"] {
+  background: transparent !important;
+  color: #475569 !important;
+  border: none !important;
+}
+
+.wasel-app-theme button[class*="ghost"]:hover {
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+}
+
+/* ── 6. MAP VISIBILITY ───────────────────────────────────────── */
+
+.wasel-app-theme .leaflet-container {
+  border-radius: 12px !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+  filter: brightness(1.05) contrast(1.02) !important;
+  overflow: hidden !important;
+}
+
+.wasel-app-theme .leaflet-control-zoom {
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+}
+
+.wasel-app-theme .leaflet-control-zoom-in,
+.wasel-app-theme .leaflet-control-zoom-out {
+  background: #FFFFFF !important;
+  color: #3A7CA5 !important;
+  border: none !important;
+  font-weight: 700 !important;
+  transition: background 0.14s ease !important;
+}
+
+.wasel-app-theme .leaflet-control-zoom-in:hover,
+.wasel-app-theme .leaflet-control-zoom-out:hover {
+  background: #EFF6FF !important;
+}
+
+/* ── 7. TOP NAVBAR ───────────────────────────────────────────── */
+
+.wasel-app-theme header[data-wasel-nav],
+.wasel-app-theme .wasel-sticky-header {
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  min-height: 64px !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Nav text contrast */
+.wasel-app-theme header[data-wasel-nav] button,
+.wasel-app-theme header[data-wasel-nav] a,
+.wasel-app-theme header[data-wasel-nav] span {
+  color: #475569;
+}
+
+/* Active nav tab */
+.wasel-app-theme header[data-wasel-nav] button[aria-current="page"],
+.wasel-app-theme header[data-wasel-nav] button[data-active="true"] {
+  background: #EFF6FF !important;
+  color: #3A7CA5 !important;
+  font-weight: 600 !important;
+  border-color: rgba(58, 124, 165, 0.20) !important;
+}
+
+/* Nav pill container */
+.wasel-app-theme header[data-wasel-nav] nav > div {
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* ── 8. ICONS ────────────────────────────────────────────────── */
+
+.wasel-app-theme svg:not([class*="logo"]):not([class*="brand"]) {
+  width: 20px;
+  height: 20px;
+  color: #475569;
+  stroke: currentColor;
+}
+
+/* Active icon state */
+.wasel-app-theme [aria-current="page"] svg,
+.wasel-app-theme [data-active="true"] svg,
+.wasel-app-theme .active svg {
+  color: #3A7CA5 !important;
+}
+
+/* ── 9. SPACING GRID ─────────────────────────────────────────── */
+
+/* Card gap */
+.wasel-app-theme .space-y-4 > * + * { margin-top: 16px !important; }
+.wasel-app-theme .space-y-6 > * + * { margin-top: 16px !important; }
+.wasel-app-theme .gap-4 { gap: 16px !important; }
+.wasel-app-theme .gap-6 { gap: 24px !important; }
+
+/* ── 10. TABS (Radix) ────────────────────────────────────────── */
+
+.wasel-app-theme [data-radix-tabs-list],
+.wasel-app-theme [role="tablist"] {
+  background: #F1F5F9 !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 10px !important;
+  padding: 4px !important;
+}
+
+.wasel-app-theme [data-radix-tabs-trigger],
+.wasel-app-theme [role="tab"] {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #475569 !important;
+  border-radius: 8px !important;
+  transition: background 0.15s ease, color 0.15s ease !important;
+}
+
+.wasel-app-theme [data-radix-tabs-trigger][data-state="active"],
+.wasel-app-theme [role="tab"][aria-selected="true"] {
+  background: #EFF6FF !important;
+  color: #3A7CA5 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* ── 11. BADGES ──────────────────────────────────────────────── */
+
+.wasel-app-theme [class*="badge"],
+.wasel-app-theme .pill {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.2px !important;
+}
+
+/* ── 12. TOASTS ──────────────────────────────────────────────── */
+
+.wasel-app-theme [data-sonner-toast] {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: #0F172A !important;
+  font-size: 14px !important;
+}
+
+.wasel-app-theme [data-sonner-toast][data-type="success"] {
+  border-color: rgba(34, 197, 94, 0.30) !important;
+}
+
+.wasel-app-theme [data-sonner-toast][data-type="error"] {
+  border-color: rgba(239, 68, 68, 0.30) !important;
+}
+
+/* ── 13. MOBILE BOTTOM NAV ───────────────────────────────────── */
+
+.wasel-app-theme [data-wasel-bottom-nav] {
+  background: #FFFFFF !important;
+  border-top: 1px solid #E2E8F0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ── 14. FOCUS RING ──────────────────────────────────────────── */
+
+.wasel-app-theme :focus-visible {
+  outline: 2px solid #3A7CA5 !important;
+  outline-offset: 2px !important;
+  border-radius: 6px !important;
+}
+
+/* ── 15. SELECTION ───────────────────────────────────────────── */
+
+.wasel-app-theme ::selection {
+  background: rgba(58, 124, 165, 0.18);
+  color: #0F172A;
+}
+
+/* ── 16. SCROLLBAR ───────────────────────────────────────────── */
+
+.wasel-app-theme ::-webkit-scrollbar { width: 5px; height: 5px; }
+.wasel-app-theme ::-webkit-scrollbar-track { background: transparent; }
+.wasel-app-theme ::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 999px;
+}
+.wasel-app-theme ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* ── 17. SWITCH (Radix) ──────────────────────────────────────── */
+
+.wasel-app-theme [data-radix-switch-root][data-state="checked"] {
+  background: #3A7CA5 !important;
+  box-shadow: none !important;
+}
+
+.wasel-app-theme [data-radix-switch-root][data-state="unchecked"] {
+  background: #E2E8F0 !important;
+  border: 1px solid #CBD5E1 !important;
+}
+
+.wasel-app-theme [data-radix-switch-thumb] {
+  background: #FFFFFF !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.16) !important;
+}
+
+/* ── 18. CHECKBOX (Radix) ────────────────────────────────────── */
+
+.wasel-app-theme [data-radix-checkbox-root][data-state="checked"] {
+  background: #3A7CA5 !important;
+  border-color: #3A7CA5 !important;
+}
+
+/* ── 19. PROGRESS ────────────────────────────────────────────── */
+
+.wasel-app-theme [role="progressbar"] > span,
+.wasel-app-theme [data-radix-progress-indicator] {
+  background: #3A7CA5 !important;
+  box-shadow: none !important;
+}
+
+/* ── 20. SLIDER ──────────────────────────────────────────────── */
+
+.wasel-app-theme [data-radix-slider-thumb] {
+  background: #3A7CA5 !important;
+  border: 2px solid #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(58, 124, 165, 0.28) !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.wasel-app-theme [data-radix-slider-track] { background: #E2E8F0 !important; }
+.wasel-app-theme [data-radix-slider-range] { background: #3A7CA5 !important; }
+
+/* ── 21. REDUCED MOTION ──────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .wasel-app-theme *,
+  .wasel-app-theme *::before,
+  .wasel-app-theme *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

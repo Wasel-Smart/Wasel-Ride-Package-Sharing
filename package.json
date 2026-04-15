@@ -96,7 +96,7 @@
     "worker:automation": "node scripts/run-automation-worker.mjs",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
-    "test:coverage": "vitest run --config vitest.config.ts --coverage",
+    "test:coverage": "vitest run --config vitest.coverage.config.ts --coverage",
     "test:e2e": "playwright test",
     "test:e2e:a11y": "playwright test tests/e2e/accessibility.spec.ts",
     "test:e2e:mobile": "playwright test --project=mobile-android-chrome --project=mobile-ios-safari",
