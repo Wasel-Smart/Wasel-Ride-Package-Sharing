@@ -39,7 +39,7 @@ import {
 } from '../../utils/security';
 import type { ThemePreference } from '../../utils/theme';
 import { omitUndefined } from '../../utils/object';
-import { PageShell, SectionHead } from '../shared/pageShared';
+import { ClarityBand, PageShell, SectionHead } from '../shared/pageShared';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
 
 const DS = PAGE_DS;
@@ -696,6 +696,17 @@ export default function SettingsPage() {
             ]}
           />
         </div>}
+
+        <ClarityBand
+          title="Keep account controls easy to scan."
+          detail="Notifications, privacy, and security belong in one place, but the next adjustment should still be obvious."
+          tone={CYAN}
+          items={[
+            { label: '1. Alerts', value: 'Turn on the channels you actually want to hear from.' },
+            { label: '2. Privacy', value: 'Decide what profile and trip data stays visible.' },
+            { label: '3. Security', value: 'Use password health and 2FA before the next critical trip.' },
+          ]}
+        />
 
         <Section icon={<Bell size={16} />} title="Notifications">
           <ToggleRow label="Trip Updates" sub="Accept, cancel, confirm" value={notifs.tripUpdates} onChange={toggleNotificationPreference('tripUpdates')} />

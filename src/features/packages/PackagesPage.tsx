@@ -4,7 +4,15 @@ import { Brain } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
-import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
+import {
+  ClarityBand,
+  CoreExperienceBanner,
+  DS,
+  PageShell,
+  Protected,
+  r,
+  SectionHead,
+} from '../../pages/waselServiceShared';
 import {
   createPackageComposer,
   parsePackagePrefillParams,
@@ -215,6 +223,17 @@ export function PackagesPage() {
           title="One package flow."
           detail="Create, track, and handle returns in one place."
           tone={DS.gold}
+        />
+
+        <ClarityBand
+          title="Keep packages in one rhythm."
+          detail="Use this page to send, track, and handle returns without jumping into separate flows."
+          tone={DS.gold}
+          items={[
+            { label: '1. Send', value: 'Create the package and attach it to a live route.' },
+            { label: '2. Track', value: 'Keep the current status, proof, and route visible.' },
+            { label: '3. Return', value: 'Start Raje3 from the same package network.' },
+          ]}
         />
 
         <div className="sp-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>

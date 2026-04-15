@@ -8,15 +8,19 @@ import { useLivePlatformStats, useLiveUserStats } from '../../services/liveDataS
 import { useCurrency } from '../../utils/currency';
 import { C, F } from './HomePageShared';
 import {
+  FocusHeroSection,
   GuestCtaSection,
   HomeStatsGrid,
   MobilityOsSection,
   PopularRoutesSection,
   QuickActionsSection,
+  ServicePillarsSection,
   UserSnapshotSection,
 } from './HomePageSections';
 import {
+  buildHeroHighlights,
   buildQuickActions,
+  buildServicePillars,
   buildStatsData,
   buildTripModeOptions,
   type HomeTripModeOption,
@@ -155,7 +159,9 @@ export function HomePage() {
   } = useHomePageDashboard(user);
 
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
+  const heroHighlights = buildHeroHighlights(ar);
   const quickActions = buildQuickActions(ar);
+  const servicePillars = buildServicePillars(ar);
   const stats = buildStatsData(ar, liveStats, formatFromJOD);
   const tripModeOptions = buildTripModeOptions(ar);
 
@@ -188,11 +194,24 @@ export function HomePage() {
           }}
         />
 
+        <FocusHeroSection
+          ar={ar}
+          userName={firstName}
+          highlights={heroHighlights}
+          navigate={navigate}
+        />
+
         <HomeStatsGrid loading={loading} stats={stats} />
 
         <QuickActionsSection
           ar={ar}
           quickActions={quickActions}
+          navigate={navigate}
+        />
+
+        <ServicePillarsSection
+          ar={ar}
+          pillars={servicePillars}
           navigate={navigate}
         />
 

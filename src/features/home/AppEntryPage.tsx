@@ -254,6 +254,36 @@ export default function AppEntryPage() {
   const protectedPath = (path: string) => (user ? path : buildAuthPagePath('signin', path));
   const primaryPath = buildAppEntryPrimaryPath(mode, route);
   const contextualSignInPath = buildAuthPagePath('signin', primaryPath);
+  const selectedFromLabel =
+    CITY_OPTIONS.find((option) => option.value === route.from)?.[ar ? 'ar' : 'en'] ?? route.from;
+  const selectedToLabel =
+    CITY_OPTIONS.find((option) => option.value === route.to)?.[ar ? 'ar' : 'en'] ?? route.to;
+  const routePreview = ar
+    ? `${selectedFromLabel} ← ${selectedToLabel}`
+    : `${selectedFromLabel} → ${selectedToLabel}`;
+  const serviceLabel = mode === 'ride' ? copy.cardTitle.ride : copy.cardTitle.package;
+  const heroStats = ar
+    ? [
+        { value: '3', label: 'تدفقات أساسية', detail: 'رحلات، طرود، ومسارات عرض' },
+        { value: '1', label: 'شبكة واحدة', detail: 'نفس الممر يحمل القرار والتنفيذ' },
+        { value: '24/7', label: 'دعم قريب', detail: 'الثقة والدعم بجوار الحركة' },
+      ]
+    : [
+        { value: '3', label: 'Core flows', detail: 'Rides, packages, and supply' },
+        { value: '1', label: 'Shared network', detail: 'The same corridor powers the decision' },
+        { value: '24/7', label: 'Close support', detail: 'Trust and help stay near the action' },
+      ];
+  const heroJourney = ar
+    ? [
+        { label: 'اختر', detail: 'حدد الممر أولاً.' },
+        { label: 'افتح', detail: 'ادخل التدفق الصحيح بسرعة.' },
+        { label: 'تابع', detail: 'ابقَ قريباً من التتبع والدعم.' },
+      ]
+    : [
+        { label: 'Choose', detail: 'Start with the corridor.' },
+        { label: 'Open', detail: 'Enter the right flow quickly.' },
+        { label: 'Track', detail: 'Stay close to support and live status.' },
+      ];
 
   const flowCards: FlowCard[] = [
     {
@@ -395,6 +425,31 @@ export default function AppEntryPage() {
                     {copy.points[2]}
                   </span>
                 </div>
+                <div className="app-entry-page__hero-stats" aria-label={ar ? 'إشارات المنصة' : 'Platform signals'}>
+                  {heroStats.map(item => (
+                    <div key={item.label} className="app-entry-page__hero-stat">
+                      <strong>{item.value}</strong>
+                      <span>{item.label}</span>
+                      <small>{item.detail}</small>
+                    </div>
+                  ))}
+                </div>
+                <div className="app-entry-page__hero-journey">
+                  <div className="app-entry-page__hero-journey-label">
+                    {ar ? 'كيف تبدأ' : 'How to start'}
+                  </div>
+                  <div className="app-entry-page__hero-journey-steps">
+                    {heroJourney.map((step, index) => (
+                      <div key={step.label} className="app-entry-page__hero-journey-step">
+                        <span className="app-entry-page__hero-journey-index">{index + 1}</span>
+                        <div>
+                          <strong>{step.label}</strong>
+                          <p>{step.detail}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 <div className="app-entry-page__hero-meta">
                   <strong>{supportLine}</strong>
                   <span>{businessAddress}</span>
@@ -431,6 +486,17 @@ export default function AppEntryPage() {
                 >
                   <h2>{mode === 'ride' ? copy.cardTitle.ride : copy.cardTitle.package}</h2>
                   <p>{mode === 'ride' ? copy.cardBody.ride : copy.cardBody.package}</p>
+                </div>
+
+                <div className="app-entry-page__selection-overview">
+                  <div className="app-entry-page__selection-pill">
+                    <span>{ar ? 'الممر المختار' : 'Selected corridor'}</span>
+                    <strong>{routePreview}</strong>
+                  </div>
+                  <div className="app-entry-page__selection-pill">
+                    <span>{ar ? 'التدفق' : 'Flow'}</span>
+                    <strong>{serviceLabel}</strong>
+                  </div>
                 </div>
 
                 <div className="app-entry-page__field-grid">

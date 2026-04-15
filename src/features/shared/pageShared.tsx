@@ -209,6 +209,14 @@ export function PageShell({ children }: { children: ReactNode }) {
       <style>{`
         :root { color-scheme: inherit; }
         .w-focus:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(101,225,255,0.24); }
+        @media (max-width: 1140px) {
+          .sp-2col,
+          .sp-profile-hero,
+          .sp-profile-grid { grid-template-columns: 1fr !important; }
+          .sp-3col { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+          .sp-4col { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+          .sp-head-inner { align-items: flex-start !important; }
+        }
         @media (max-width: 899px) {
           .sp-inner { padding: 18px 14px 36px !important; }
           .sp-2col,
@@ -222,9 +230,19 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-4col { grid-template-columns: 1fr 1fr !important; }
           .sp-head { padding: 20px 18px !important; border-radius: 22px !important; }
           .sp-head-inner,
+          .sp-brief,
           .sp-results-header,
           .sp-modal-price,
           .sp-modal-route { flex-direction: column !important; align-items: flex-start !important; }
+          .sp-brief { display: grid !important; grid-template-columns: 1fr !important; }
+          .sp-brief-label {
+            border-right: none !important;
+            border-left: none !important;
+            border-bottom: 1px solid rgba(58,124,165,0.16) !important;
+            padding-right: 0 !important;
+            padding-left: 0 !important;
+            padding-bottom: 10px !important;
+          }
           .sp-sort-bar { overflow-x: auto !important; flex-wrap: nowrap !important; padding-bottom: 6px !important; scrollbar-width: none !important; }
           .sp-sort-bar::-webkit-scrollbar { display: none; }
           .sp-sort-btn { flex-shrink: 0 !important; white-space: nowrap !important; }
@@ -249,11 +267,26 @@ export function PageShell({ children }: { children: ReactNode }) {
         className="sp-inner"
         style={{
           position: 'relative',
-          maxWidth: 1180,
+          maxWidth: 1240,
           margin: '0 auto',
-          padding: '24px 16px 48px',
+          padding: '30px 18px 56px',
         }}
       >
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: '10px 8px auto',
+            height: 200,
+            pointerEvents: 'none',
+            background: [
+              `radial-gradient(circle at ${ar ? '92%' : '8%'} 16%, ${DS.cyan}12, transparent 28%)`,
+              `radial-gradient(circle at 78% 28%, ${DS.gold}10, transparent 24%)`,
+              `radial-gradient(circle at 26% 84%, ${DS.blue}0f, transparent 24%)`,
+            ].join(','),
+            filter: 'blur(8px)',
+          }}
+        />
         <div
           className="sp-frame"
           style={{
@@ -262,9 +295,9 @@ export function PageShell({ children }: { children: ReactNode }) {
             borderRadius: r(34),
             background: DS.card,
             border: `1px solid ${DS.border}`,
-            boxShadow: 'var(--wasel-shadow-lg)',
+            boxShadow: '0 32px 72px rgba(8, 18, 34, 0.08)',
             backdropFilter: 'blur(18px)',
-            padding: 28,
+            padding: 30,
           }}
         >
           <div
@@ -274,9 +307,9 @@ export function PageShell({ children }: { children: ReactNode }) {
               inset: 0,
               pointerEvents: 'none',
               background: [
-                'radial-gradient(circle at 14% 14%, rgba(101,225,255,0.16), transparent 24%)',
-                'radial-gradient(circle at 84% 18%, rgba(25,231,187,0.12), transparent 20%)',
-                'radial-gradient(circle at 72% 88%, rgba(216,251,255,0.1), transparent 18%)',
+                'radial-gradient(circle at 14% 14%, rgba(101,225,255,0.14), transparent 24%)',
+                'radial-gradient(circle at 84% 18%, rgba(25,231,187,0.10), transparent 20%)',
+                'radial-gradient(circle at 72% 88%, rgba(216,251,255,0.08), transparent 18%)',
               ].join(','),
             }}
           />
@@ -285,7 +318,7 @@ export function PageShell({ children }: { children: ReactNode }) {
             style={{
               position: 'absolute',
               inset: 0,
-              opacity: 0.14,
+              opacity: 0.1,
               pointerEvents: 'none',
               backgroundImage:
                 'linear-gradient(rgba(157,232,255,0.22) 1px, transparent 1px), linear-gradient(90deg, rgba(157,232,255,0.22) 1px, transparent 1px)',
@@ -303,7 +336,19 @@ export function PageShell({ children }: { children: ReactNode }) {
               pointerEvents: 'none',
             }}
           />
-          <div style={{ position: 'relative', zIndex: 1 }}>{children}</div>
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              inset: '0 auto auto 0',
+              width: '100%',
+              height: 140,
+              pointerEvents: 'none',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.28), transparent)',
+              opacity: 0.6,
+            }}
+          />
+          <div style={{ position: 'relative', zIndex: 1, display: 'grid', gap: 18 }}>{children}</div>
         </div>
       </div>
     </div>
@@ -318,7 +363,7 @@ export function SectionHead({
   color = DS.cyan,
   action,
 }: {
-  emoji: string;
+  emoji: ReactNode;
   title: string;
   titleAr?: string;
   sub?: string;
@@ -334,12 +379,12 @@ export function SectionHead({
       style={{
         background: DS.sectionHeadBg,
         borderRadius: r(30),
-        padding: '24px 26px',
-        marginBottom: 22,
+        padding: '26px 28px',
+        marginBottom: 6,
         position: 'relative',
         overflow: 'hidden',
         border: `1px solid ${color}28`,
-        boxShadow: `var(--wasel-shadow-lg), inset 0 1px 0 ${color}18`,
+        boxShadow: `0 24px 54px rgba(8,18,34,0.08), inset 0 1px 0 ${color}18`,
       }}
     >
       <div
@@ -348,7 +393,10 @@ export function SectionHead({
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
-          background: `radial-gradient(ellipse 54% 100% at 8% 50%, ${color}12, transparent 64%)`,
+          background: [
+            `radial-gradient(ellipse 54% 100% at ${ar ? '92%' : '8%'} 50%, ${color}12, transparent 64%)`,
+            `linear-gradient(135deg, ${color}08, transparent 46%)`,
+          ].join(','),
         }}
       />
       <div
@@ -368,31 +416,50 @@ export function SectionHead({
         className="sp-head-inner"
         style={{
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'stretch',
           justifyContent: 'space-between',
-          gap: 16,
+          gap: 18,
           position: 'relative',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18 }}>
           <div
             style={{
-              width: 58,
-              height: 58,
-              borderRadius: r(18),
-              background: `${color}16`,
-              border: `1px solid ${color}2e`,
+              width: 62,
+              height: 62,
+              borderRadius: r(20),
+              background: `linear-gradient(180deg, ${color}1d, rgba(255,255,255,0.28))`,
+              border: `1px solid ${color}34`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1.8rem',
+              fontSize: '1.7rem',
               flexShrink: 0,
-              boxShadow: `0 18px 34px ${color}18`,
+              boxShadow: `0 20px 34px ${color}18`,
             }}
           >
             {emoji}
           </div>
           <div>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 10,
+                padding: '6px 12px',
+                borderRadius: r(999),
+                background: `${color}12`,
+                border: `1px solid ${color}26`,
+                color,
+                fontSize: '0.66rem',
+                fontWeight: 900,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {ar ? 'صفحة واصل' : 'Wasel page'}
+            </div>
             <h1
               style={{
                 fontFamily: DS.FD,
@@ -408,11 +475,11 @@ export function SectionHead({
             {sub ? (
               <div
                 style={{
-                  marginTop: 6,
+                  marginTop: 8,
                   color: DS.sub,
-                  fontSize: '0.88rem',
-                  lineHeight: 1.65,
-                  maxWidth: 680,
+                  fontSize: '0.9rem',
+                  lineHeight: 1.72,
+                  maxWidth: 720,
                 }}
               >
                 {sub}
@@ -427,15 +494,15 @@ export function SectionHead({
             onClick={action.onClick}
             className="sp-head-btn"
             style={{
-              minHeight: 46,
-              padding: '0 22px',
+              minHeight: 48,
+              padding: '0 24px',
               borderRadius: r(999),
-              border: 'none',
-              background: DS.gradC,
-              color: 'var(--primary-foreground)',
+              border: `1px solid ${color}24`,
+              background: 'rgba(255,255,255,0.82)',
+              color,
               fontWeight: 800,
               fontSize: '0.88rem',
-              boxShadow: 'var(--wasel-shadow-teal)',
+              boxShadow: `0 12px 28px ${color}12`,
               cursor: 'pointer',
               flexShrink: 0,
             }}
@@ -457,28 +524,51 @@ export function CoreExperienceBanner({
   detail: string;
   tone?: string;
 }) {
+  const { language } = useLanguage();
+  const ar = language === 'ar';
+
   return (
     <div
+      className="sp-brief"
       style={{
         display: 'grid',
-        gap: 10,
-        background: `linear-gradient(135deg, ${tone}12, rgba(255,255,255,0.055))`,
+        gridTemplateColumns: 'minmax(0, 180px) minmax(0, 1fr)',
+        gap: 18,
+        background: `linear-gradient(135deg, ${tone}10, rgba(255,255,255,0.06))`,
         border: `1px solid ${tone}2e`,
         borderRadius: r(24),
-        padding: '16px 18px',
-        marginBottom: 18,
-        boxShadow: '0 18px 40px rgba(7,25,49,0.14)',
+        padding: '18px 20px',
+        marginBottom: 4,
+        boxShadow: '0 18px 40px rgba(7,25,49,0.1)',
         backdropFilter: 'blur(18px)',
       }}
     >
-      <div style={{ color: tone, fontSize: '0.7rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-        Service brief
+      <div
+        className="sp-brief-label"
+        style={{
+          display: 'grid',
+          alignContent: 'start',
+          gap: 8,
+          paddingRight: ar ? 0 : 10,
+          paddingLeft: ar ? 10 : 0,
+          borderRight: ar ? 'none' : `1px solid ${tone}20`,
+          borderLeft: ar ? `1px solid ${tone}20` : 'none',
+        }}
+      >
+        <div style={{ color: tone, fontSize: '0.7rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+          {ar ? 'ملخص الصفحة' : 'Page brief'}
+        </div>
+        <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>
+          {ar ? 'اجعل الخطوة التالية واضحة.' : 'Keep the next action obvious.'}
+        </div>
       </div>
-      <div style={{ color: DS.text, fontWeight: 900, fontSize: '1rem', letterSpacing: '-0.02em' }}>
-        {title}
-      </div>
-      <div style={{ color: DS.sub, fontSize: '0.85rem', lineHeight: 1.68, maxWidth: 820 }}>
-        {detail}
+      <div style={{ display: 'grid', gap: 8 }}>
+        <div style={{ color: DS.text, fontWeight: 900, fontSize: '1.02rem', letterSpacing: '-0.02em' }}>
+          {title}
+        </div>
+        <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.72, maxWidth: 820 }}>
+          {detail}
+        </div>
       </div>
     </div>
   );
@@ -495,17 +585,20 @@ export function ClarityBand({
   items: Array<{ label: string; value: string }>;
   tone?: string;
 }) {
+  const { language } = useLanguage();
+  const ar = language === 'ar';
+
   return (
     <div
       style={{
         display: 'grid',
         gap: 14,
-        marginBottom: 18,
+        marginBottom: 4,
         background: `linear-gradient(180deg, ${tone}10, rgba(255,255,255,0.04))`,
         border: `1px solid ${tone}28`,
         borderRadius: r(24),
-        padding: '18px 18px 16px',
-        boxShadow: '0 18px 36px rgba(7,25,49,0.14)',
+        padding: '18px 20px 16px',
+        boxShadow: '0 18px 36px rgba(7,25,49,0.1)',
         backdropFilter: 'blur(18px)',
       }}
     >
@@ -520,7 +613,7 @@ export function ClarityBand({
             marginBottom: 6,
           }}
         >
-          Next step
+          {ar ? 'مسار واضح' : 'Clear path'}
         </div>
         <div style={{ color: DS.text, fontWeight: 900, fontSize: '1rem', letterSpacing: '-0.02em', marginBottom: 4 }}>
           {title}
@@ -535,7 +628,7 @@ export function ClarityBand({
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-          gap: 10,
+          gap: 12,
         }}
       >
         {items.map((item, index) => (
@@ -544,8 +637,8 @@ export function ClarityBand({
             style={{
               background: 'var(--wasel-service-card-3)',
               border: `1px solid ${tone}20`,
-              borderRadius: r(16),
-              padding: '12px 14px',
+              borderRadius: r(18),
+              padding: '14px 15px',
               display: 'flex',
               gap: 10,
               alignItems: 'flex-start',
