@@ -302,9 +302,12 @@ export const operationalSeedFiles = [
   'db/seeds/automation.seed.sql',
 ];
 
+export const smokeCheckSeedFiles = [
+  'src/supabase/seeds/mock_engine_smoke_checks.sql',
+];
+
 export const rolloutSeedFiles = [
   ...operationalSeedFiles,
-  'src/supabase/seeds/mock_engine_smoke_checks.sql',
 ];
 
 export const requiredDocs = [
@@ -398,9 +401,13 @@ Apply the rollout set in this exact order for production cutover projects:
 
 ${renderSequence(rolloutMigrations.map(getMigrationFileName))}
 
-### Seeds
+### Operational seeds
 
 ${renderSequence(rolloutSeedFiles)}
+
+### Smoke checks
+
+${renderSequence(smokeCheckSeedFiles)}
 
 ## Seed Packs
 
@@ -413,7 +420,7 @@ Operational bootstrap seed assets live in \`db/seeds/\`:
 - \`core.seed.sql\`
 - \`automation.seed.sql\`
 
-Smoke checks remain in \`src/supabase/seeds/\`.
+Smoke checks remain in \`src/supabase/seeds/\` and are never part of the production rollout seed pack.
 
 ## Commands
 

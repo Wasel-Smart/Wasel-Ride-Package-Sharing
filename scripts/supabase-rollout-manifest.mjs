@@ -4,4 +4,5 @@ export {
   requiredDocs,
   rolloutMigrations,
   rolloutSeedFiles,
+  smokeCheckSeedFiles,
 } from './supabase-migration-registry.mjs';

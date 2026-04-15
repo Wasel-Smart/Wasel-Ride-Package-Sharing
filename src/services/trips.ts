@@ -22,6 +22,19 @@ import {
   withApiTelemetry,
 } from './http';
 import { omitUndefined } from '../utils/object';
+import {
+  TRIPS_CONTRACT_VERSION,
+  tripMutationResultSchema,
+  tripPriceCalculationResultSchema,
+  tripPublishResultSchema,
+  tripSearchResultSchema,
+  tripSearchResultsSchema,
+} from '../contracts/trips';
+import { parseContract } from '../contracts/validation';
+import {
+  allowDirectSupabaseFallback,
+  requireDirectSupabaseFallback,
+} from './runtimePolicy';
 
 export interface TripCreatePayload {
   from: string;
@@ -91,7 +104,13 @@ export const tripsAPI = {
         const sanitizedPayload = sanitizeTripPayload(payload) as TripCreatePayload;
 
         if (!canUseEdgeApi()) {
-          return createDirectTrip(userId, sanitizedPayload);
+          requireDirectSupabaseFallback('Trip creation');
+          return parseContract(
+            tripMutationResultSchema,
+            await createDirectTrip(userId, sanitizedPayload),
+            'trip.create',
+            TRIPS_CONTRACT_VERSION,
+          );
         }
 
         let response: Response;
@@ -111,29 +130,54 @@ export const tripsAPI = {
               }),
           );
         } catch (err) {
+          if (!allowDirectSupabaseFallback()) {
+            throw err;
+          }
           logger.warning('[trips] edge API unavailable for trip.create, falling back to direct Supabase', {
             operation: 'trip.create.edge_fallback',
             error: err instanceof Error ? err.message : String(err),
           });
-          return createDirectTrip(userId, sanitizedPayload);
+          return parseContract(
+            tripMutationResultSchema,
+            await createDirectTrip(userId, sanitizedPayload),
+            'trip.create',
+            TRIPS_CONTRACT_VERSION,
+          );
         }
 
         if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+          requireDirectSupabaseFallback('Trip creation');
           logger.warning('[trips] edge route unavailable for trip.create, falling back to direct Supabase', {
             operation: 'trip.create.edge_route_missing',
             status: response.status,
           });
-          return createDirectTrip(userId, sanitizedPayload);
+          return parseContract(
+            tripMutationResultSchema,
+            await createDirectTrip(userId, sanitizedPayload),
+            'trip.create',
+            TRIPS_CONTRACT_VERSION,
+          );
         }
 
-        return expectJsonResponse(response, 'Failed to create trip', { operation: 'trip.create' });
+        return parseContract(
+          tripMutationResultSchema,
+          await expectJsonResponse<unknown>(response, 'Failed to create trip', { operation: 'trip.create' }),
+          'trip.create',
+          TRIPS_CONTRACT_VERSION,
+        );
       },
     });
   },
 
   async searchTrips(from?: string, to?: string, date?: string, seats?: number): Promise<TripSearchResult[]> {
     if (!canUseEdgeApi()) {
-      return searchDirectTrips(from, to, date, seats);
+      requireDirectSupabaseFallback('Trip search');
+      return parseContract(
+        tripSearchResultsSchema,
+        await searchDirectTrips(from, to, date, seats),
+        'trip.search',
+        TRIPS_CONTRACT_VERSION,
+      );
     }
 
     const params = new URLSearchParams();
@@ -154,29 +198,54 @@ export const tripsAPI = {
           }),
       );
     } catch (err) {
+      if (!allowDirectSupabaseFallback()) {
+        throw err;
+      }
       logger.warning('[trips] edge API unavailable for trip.search, falling back to direct Supabase', {
         operation: 'trip.search.edge_fallback',
         error: err instanceof Error ? err.message : String(err),
       });
-      return searchDirectTrips(from, to, date, seats);
+      return parseContract(
+        tripSearchResultsSchema,
+        await searchDirectTrips(from, to, date, seats),
+        'trip.search',
+        TRIPS_CONTRACT_VERSION,
+      );
     }
 
     if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+      requireDirectSupabaseFallback('Trip search');
       logger.warning('[trips] edge route unavailable for trip.search, falling back to direct Supabase', {
         operation: 'trip.search.edge_route_missing',
         status: response.status,
       });
-      return searchDirectTrips(from, to, date, seats);
+      return parseContract(
+        tripSearchResultsSchema,
+        await searchDirectTrips(from, to, date, seats),
+        'trip.search',
+        TRIPS_CONTRACT_VERSION,
+      );
     }
 
-    return expectJsonResponse(response, 'Failed to search trips', { operation: 'trip.search' });
+    return parseContract(
+      tripSearchResultsSchema,
+      await expectJsonResponse<unknown>(response, 'Failed to search trips', { operation: 'trip.search' }),
+      'trip.search',
+      TRIPS_CONTRACT_VERSION,
+    );
   },
 
   async getTripById(tripId: string): Promise<TripSearchResult> {
     if (!canUseEdgeApi()) {
+      requireDirectSupabaseFallback('Trip lookup');
       const trip = await getDirectTripById(tripId);
       if (!trip) throw new Error('Failed to fetch trip');
-      return trip;
+      return parseContract(
+        tripSearchResultSchema,
+        trip,
+        'trip.get',
+        TRIPS_CONTRACT_VERSION,
+      );
     }
 
     const response = await withApiTelemetry(
@@ -190,19 +259,36 @@ export const tripsAPI = {
     );
 
     if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+      requireDirectSupabaseFallback('Trip lookup');
       const trip = await getDirectTripById(tripId);
       if (!trip) throw new Error('Failed to fetch trip');
-      return trip;
+      return parseContract(
+        tripSearchResultSchema,
+        trip,
+        'trip.get',
+        TRIPS_CONTRACT_VERSION,
+      );
     }
 
-    return expectJsonResponse(response, 'Failed to fetch trip', { operation: 'trip.get', tripId });
+    return parseContract(
+      tripSearchResultSchema,
+      await expectJsonResponse<unknown>(response, 'Failed to fetch trip', { operation: 'trip.get', tripId }),
+      'trip.get',
+      TRIPS_CONTRACT_VERSION,
+    );
   },
 
   async getDriverTrips(): Promise<TripSearchResult[]> {
     const { token, userId } = await getAuthDetails();
 
     if (!canUseEdgeApi()) {
-      return getDirectDriverTrips(userId);
+      requireDirectSupabaseFallback('Driver trip lookup');
+      return parseContract(
+        tripSearchResultsSchema,
+        await getDirectDriverTrips(userId),
+        'trip.driver.list',
+        TRIPS_CONTRACT_VERSION,
+      );
     }
 
     const response = await withApiTelemetry(
@@ -216,13 +302,24 @@ export const tripsAPI = {
     );
 
     if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
-      return getDirectDriverTrips(userId);
+      requireDirectSupabaseFallback('Driver trip lookup');
+      return parseContract(
+        tripSearchResultsSchema,
+        await getDirectDriverTrips(userId),
+        'trip.driver.list',
+        TRIPS_CONTRACT_VERSION,
+      );
     }
 
-    return expectJsonResponse(response, 'Failed to fetch driver trips', {
-      operation: 'trip.driver.list',
-      userId,
-    });
+    return parseContract(
+      tripSearchResultsSchema,
+      await expectJsonResponse<unknown>(response, 'Failed to fetch driver trips', {
+        operation: 'trip.driver.list',
+        userId,
+      }),
+      'trip.driver.list',
+      TRIPS_CONTRACT_VERSION,
+    );
   },
 
   async updateTrip(tripId: string, updates: TripUpdatePayload): Promise<TripSearchResult> {
@@ -255,27 +352,46 @@ export const tripsAPI = {
               }),
           );
         } catch (err) {
+          if (!allowDirectSupabaseFallback()) {
+            throw err;
+          }
           logger.warning('[trips] edge API unavailable for trip.update, falling back to direct Supabase', {
             operation: 'trip.update.edge_fallback',
             tripId,
             error: err instanceof Error ? err.message : String(err),
           });
-          return updateDirectTrip(tripId, sanitizedPayload);
+          return parseContract(
+            tripMutationResultSchema,
+            await updateDirectTrip(tripId, sanitizedPayload),
+            'trip.update',
+            TRIPS_CONTRACT_VERSION,
+          );
         }
 
         if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+          requireDirectSupabaseFallback('Trip update');
           logger.warning('[trips] edge route unavailable for trip.update, falling back to direct Supabase', {
             operation: 'trip.update.edge_route_missing',
             tripId,
             status: response.status,
           });
-          return updateDirectTrip(tripId, sanitizedPayload);
+          return parseContract(
+            tripMutationResultSchema,
+            await updateDirectTrip(tripId, sanitizedPayload),
+            'trip.update',
+            TRIPS_CONTRACT_VERSION,
+          );
         }
 
-        return expectJsonResponse(response, 'Failed to update trip', {
-          operation: 'trip.update',
-          tripId,
-        });
+        return parseContract(
+          tripMutationResultSchema,
+          await expectJsonResponse<unknown>(response, 'Failed to update trip', {
+            operation: 'trip.update',
+            tripId,
+          }),
+          'trip.update',
+          TRIPS_CONTRACT_VERSION,
+        );
       },
     });
   },
@@ -284,7 +400,13 @@ export const tripsAPI = {
     const { token } = await getAuthDetails();
 
     if (!canUseEdgeApi()) {
-      return deleteDirectTrip(tripId);
+      requireDirectSupabaseFallback('Trip deletion');
+      return parseContract(
+        tripPublishResultSchema,
+        await deleteDirectTrip(tripId),
+        'trip.delete',
+        TRIPS_CONTRACT_VERSION,
+      );
     }
 
     const response = await withApiTelemetry(
@@ -299,16 +421,28 @@ export const tripsAPI = {
     );
 
     if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
-      return deleteDirectTrip(tripId);
+      requireDirectSupabaseFallback('Trip deletion');
+      return parseContract(
+        tripPublishResultSchema,
+        await deleteDirectTrip(tripId),
+        'trip.delete',
+        TRIPS_CONTRACT_VERSION,
+      );
     }
 
-    return expectJsonResponse(response, 'Failed to delete trip', { operation: 'trip.delete', tripId });
+    return parseContract(
+      tripPublishResultSchema,
+      await expectJsonResponse<unknown>(response, 'Failed to delete trip', { operation: 'trip.delete', tripId }),
+      'trip.delete',
+      TRIPS_CONTRACT_VERSION,
+    );
   },
 
   async publishTrip(tripId: string): Promise<{ success: boolean }> {
     const { token } = await getAuthDetails();
 
     if (!canUseEdgeApi()) {
+      requireDirectSupabaseFallback('Trip publication');
       await updateDirectTrip(tripId, { status: 'active' });
       return { success: true };
     }
@@ -325,11 +459,17 @@ export const tripsAPI = {
     );
 
     if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
+      requireDirectSupabaseFallback('Trip publication');
       await updateDirectTrip(tripId, { status: 'active' });
       return { success: true };
     }
 
-    return expectJsonResponse(response, 'Failed to publish trip', { operation: 'trip.publish', tripId });
+    return parseContract(
+      tripPublishResultSchema,
+      await expectJsonResponse<unknown>(response, 'Failed to publish trip', { operation: 'trip.publish', tripId }),
+      'trip.publish',
+      TRIPS_CONTRACT_VERSION,
+    );
   },
 
   async calculatePrice(
@@ -339,7 +479,13 @@ export const tripsAPI = {
     base_price?: number,
   ): Promise<PriceCalculationResult> {
     if (!canUseEdgeApi()) {
-      return calculateDirectPrice(type, weight, distance_km, base_price);
+      requireDirectSupabaseFallback('Trip price calculation');
+      return parseContract(
+        tripPriceCalculationResultSchema,
+        await calculateDirectPrice(type, weight, distance_km, base_price),
+        'trip.calculate-price',
+        TRIPS_CONTRACT_VERSION,
+      );
     }
 
     const response = await withApiTelemetry(
@@ -355,9 +501,20 @@ export const tripsAPI = {
     );
 
     if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
-      return calculateDirectPrice(type, weight, distance_km, base_price);
+      requireDirectSupabaseFallback('Trip price calculation');
+      return parseContract(
+        tripPriceCalculationResultSchema,
+        await calculateDirectPrice(type, weight, distance_km, base_price),
+        'trip.calculate-price',
+        TRIPS_CONTRACT_VERSION,
+      );
     }
 
-    return expectJsonResponse(response, 'Failed to calculate price', { operation: 'trip.calculatePrice' });
+    return parseContract(
+      tripPriceCalculationResultSchema,
+      await expectJsonResponse<unknown>(response, 'Failed to calculate price', { operation: 'trip.calculatePrice' }),
+      'trip.calculate-price',
+      TRIPS_CONTRACT_VERSION,
+    );
   },
 };

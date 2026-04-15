@@ -1,10 +1,15 @@
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-import { rolloutMigrations, rolloutSeedFiles } from './supabase-rollout-manifest.mjs';
+import {
+  rolloutMigrations,
+  rolloutSeedFiles,
+  smokeCheckSeedFiles,
+} from './supabase-rollout-manifest.mjs';
 
 const root = process.cwd();
 const connectionString = process.env.SUPABASE_DB_URL;
 const withSeeds = process.argv.includes('--with-seeds');
+const withSmokeChecks = process.argv.includes('--with-smoke-checks');
 
 if (!connectionString) {
   console.error('SUPABASE_DB_URL is not set. Export it before running the rollout.');
@@ -37,6 +42,12 @@ for (const migration of rolloutMigrations) {
 
 if (withSeeds) {
   for (const seed of rolloutSeedFiles) {
+    applyFile(seed);
+  }
+}
+
+if (withSmokeChecks) {
+  for (const seed of smokeCheckSeedFiles) {
     applyFile(seed);
   }
 }

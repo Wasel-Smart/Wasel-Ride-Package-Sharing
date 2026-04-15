@@ -3,19 +3,19 @@
  * Provides useLiveUserStats and useLivePlatformStats hooks for HomePage.
  *
  * Strategy:
- *  - Reads real user data from LocalAuth context (trips, rating, balance).
- *  - Reuses cached wallet data when a live session is available.
- *  - Platform stats are seeded from real-ish Jordan mobility numbers
- *    with a small random delta each refresh so the dashboard feels live.
+ *  - Reads authenticated wallet data when available.
+ *  - Falls back to cached, synced ride/package counts only.
+ *  - Uses the real Mobility OS live snapshot for network-wide platform stats.
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useAuth } from '../contexts/AuthContext';
 import { walletApi } from './walletApi';
 import { getConnectedStats } from './journeyLogistics';
 import { QUERY_KEYS, STALE_TIMES } from '../utils/performance/cacheStrategy';
+import { useMobilityOSLiveData } from '../features/mobility-os/liveMobilityData';
 
 export interface LiveUserStats {
   totalTrips: number;
@@ -27,16 +27,8 @@ export interface LiveUserStats {
 
 export interface LivePlatformStats {
   activeDrivers: number;
-  avgWaitMinutes: number;
+  seatAvailability: number;
   passengersMatchedToday: number;
-}
-
-function randomDelta(base: number, pct = 0.05): number {
-  return Math.round(base * (1 + (Math.random() - 0.5) * pct));
-}
-
-function clamp(val: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, val));
 }
 
 export function useLiveUserStats(): { stats: LiveUserStats | null; loading: boolean } {
@@ -88,24 +80,17 @@ export function useLiveUserStats(): { stats: LiveUserStats | null; loading: bool
 }
 
 export function useLivePlatformStats(): LivePlatformStats | null {
-  const [stats, setStats] = useState<LivePlatformStats | null>(null);
+  const { snapshot } = useMobilityOSLiveData(false);
 
-  const refresh = useCallback(() => {
-    const hour = new Date().getHours();
-    const isPeak = (hour >= 7 && hour <= 9) || (hour >= 16 && hour <= 19);
+  return useMemo(() => {
+    if (!snapshot) {
+      return null;
+    }
 
-    setStats({
-      activeDrivers: clamp(randomDelta(isPeak ? 380 : 210, 0.08), 80, 600),
-      avgWaitMinutes: clamp(randomDelta(isPeak ? 8 : 4, 0.15), 2, 25),
-      passengersMatchedToday: clamp(randomDelta(isPeak ? 1420 : 780, 0.06), 100, 5000),
-    });
-  }, []);
-
-  useEffect(() => {
-    refresh();
-    const timer = setInterval(refresh, 45_000);
-    return () => clearInterval(timer);
-  }, [refresh]);
-
-  return stats;
+    return {
+      activeDrivers: snapshot.analytics.totalVehicles,
+      seatAvailability: snapshot.analytics.seatAvailability,
+      passengersMatchedToday: snapshot.analytics.activePassengers,
+    };
+  }, [snapshot]);
 }

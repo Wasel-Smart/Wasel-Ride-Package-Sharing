@@ -12,6 +12,17 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  VITE_APP_ENV: test
+  VITE_APP_URL: http://localhost:3000
+  VITE_SUPABASE_URL: https://ci-project.supabase.co
+  VITE_SUPABASE_ANON_KEY: ci-anon-key
+  VITE_SUPABASE_PUBLISHABLE_KEY: ci-anon-key
+  VITE_ENABLE_DEMO_DATA: false
+  VITE_ENABLE_SYNTHETIC_TRIPS: false
+  VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: false
+  VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: false
+
 jobs:
   # ── Job 1: Static analysis + unit tests ──────────────────────────────────────
   verify:
@@ -185,6 +196,9 @@ jobs:
         run: npx playwright test --project=chromium-desktop
         env:
           PLAYWRIGHT_USE_DEMO_DATA: 'true'
+          VITE_ENABLE_DEMO_DATA: 'true'
+          VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true'
+          VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: 'true'
 
       - name: Upload Playwright report
         if: always()
@@ -224,6 +238,9 @@ jobs:
         run: npm run test:e2e:a11y -- --project=chromium-desktop
         env:
           PLAYWRIGHT_USE_DEMO_DATA: 'true'
+          VITE_ENABLE_DEMO_DATA: 'true'
+          VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true'
+          VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: 'true'
 
       - name: Upload accessibility report
         if: always()
@@ -263,6 +280,9 @@ jobs:
         run: npm run test:e2e:rtl -- --project=rtl-arabic-mobile
         env:
           PLAYWRIGHT_USE_DEMO_DATA: 'true'
+          VITE_ENABLE_DEMO_DATA: 'true'
+          VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true'
+          VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: 'true'
 
   # ── Job 5: Lighthouse performance budget (main branch only) ──────────────────
   lighthouse:
