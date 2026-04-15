@@ -118,7 +118,9 @@ function resolveAppUrl(environment: AppEnvironment): string {
   return configuredAppUrl || 'http://localhost:3000';
 }
 
-export function getConfig() {
+let _configCache: ReturnType<typeof buildConfig> | null = null;
+
+function buildConfig() {
   const environment = resolveEnvironment();
   const appUrl = resolveAppUrl(environment);
   const supportWhatsAppNumber = getEnv('VITE_SUPPORT_WHATSAPP_NUMBER')
@@ -200,6 +202,18 @@ export function getConfig() {
     isTest,
     isDev: environment === 'development',
   };
+}
+
+export function getConfig() {
+  if (!_configCache) {
+    _configCache = buildConfig();
+  }
+  return _configCache;
+}
+
+/** Call in tests to reset the config cache between test runs. */
+export function resetConfigCache(): void {
+  _configCache = null;
 }
 
 export function getAuthCallbackUrl(origin?: string): string {

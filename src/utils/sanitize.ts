@@ -42,11 +42,11 @@ function stripControlWhitespaceCharacters(value: string): string {
  */
 export function sanitizeHTML(html: string): string {
   if (!html) return '';
+  if (typeof document === 'undefined') return sanitizeText(html);
 
-  // Create a temporary div to parse HTML
+  // Set as textContent so the browser escapes all HTML — then read innerHTML
   const temp = document.createElement('div');
   temp.textContent = html;
-  
   return temp.innerHTML;
 }
 
@@ -201,6 +201,10 @@ export function safeJSONParse<T = unknown>(json: string, fallback: T): T {
  */
 export function stripHTML(html: string): string {
   if (!html) return '';
+  if (typeof document === 'undefined') {
+    // SSR fallback: strip tags with regex
+    return html.replace(/<[^>]*>/g, '');
+  }
 
   const temp = document.createElement('div');
   temp.innerHTML = html;

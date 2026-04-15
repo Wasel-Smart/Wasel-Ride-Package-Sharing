@@ -163,8 +163,21 @@ async function drainOfflineQueue() {
         const cached = await cache.match(req);
         if (!cached) return;
 
-        const body = await cached.text();
-        const { url, method, headers: hdrs, payload } = JSON.parse(body);
+        let parsed;
+        try {
+          const body = await cached.text();
+          parsed = JSON.parse(body);
+        } catch {
+          // Malformed queue entry — remove it so it doesn't block future syncs
+          await cache.delete(req);
+          return;
+        }
+
+        const { url, method, headers: hdrs, payload } = parsed;
+        if (!url || typeof url !== 'string') {
+          await cache.delete(req);
+          return;
+        }
 
         const response = await fetch(url, {
           method: method ?? 'POST',
@@ -233,13 +246,16 @@ async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
 
-  const response = await fetch(request);
-  if (response && response.ok) {
-    const cache = await caches.open(RUNTIME);
-    cache.put(request, response.clone());
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      const cache = await caches.open(RUNTIME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return new Response('Offline', { status: 503, statusText: 'Offline' });
   }
-
-  return response;
 }
 
 async function staleWhileRevalidate(request) {
@@ -255,5 +271,8 @@ async function staleWhileRevalidate(request) {
     })
     .catch(() => null);
 
-  return cached ?? networkPromise ?? new Response('Unavailable', { status: 503, statusText: 'Unavailable' });
+  if (cached) return cached;
+
+  const networkResponse = await networkPromise;
+  return networkResponse ?? new Response('Unavailable', { status: 503, statusText: 'Unavailable' });
 }

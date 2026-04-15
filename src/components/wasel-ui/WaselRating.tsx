@@ -90,6 +90,15 @@ export function WaselRating({
             onMouseEnter={() => interactive && setHovered(i + 1)}
             onMouseLeave={() => interactive && setHovered(null)}
             onClick={() => interactive && onChange?.(i + 1)}
+            onKeyDown={(e) => {
+              if (interactive && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                onChange?.(i + 1);
+              }
+            }}
+            role={interactive ? 'button' : undefined}
+            tabIndex={interactive ? 0 : undefined}
+            aria-label={interactive ? `Rate ${i + 1} out of ${max}` : undefined}
           >
             <StarIcon fill={fill} size={size} />
           </span>

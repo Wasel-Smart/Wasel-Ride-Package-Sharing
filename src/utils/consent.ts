@@ -40,11 +40,20 @@ export function setConsentDecision(decision: Exclude<ConsentDecision, null>): vo
     return;
   }
 
+  // Write only to the canonical current key
+  try {
+    window.localStorage.setItem(CONSENT_STORAGE_KEY, decision);
+  } catch {
+    return;
+  }
+
+  // Clean up any legacy keys to avoid stale state
   for (const key of LEGACY_CONSENT_STORAGE_KEYS) {
+    if (key === CONSENT_STORAGE_KEY) continue;
     try {
-      window.localStorage.setItem(key, decision);
+      window.localStorage.removeItem(key);
     } catch {
-      return;
+      // Ignore cleanup failures
     }
   }
 }

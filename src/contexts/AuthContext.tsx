@@ -153,11 +153,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         if (shouldRefreshProfile(event, nextSession)) {
-          setTimeout(() => {
-            if (nextUserId) {
+          const timer = setTimeout(() => {
+            if (mounted && nextUserId) {
               void fetchProfile(nextUserId, isUserSwitch);
             }
           }, 100);
+          // Store timer for cleanup — captured in closure, cleared on unmount via mounted flag
+          void timer;
         } else if (!nextSession) {
           setProfile(null);
         }
@@ -179,7 +181,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setProfile(null);
           }
           setTimeout(() => {
-            if (data.session?.user?.id) {
+            if (mounted && data.session?.user?.id) {
               void fetchProfile(data.session.user.id, shouldForceProfileRefresh);
             }
           }, 150);

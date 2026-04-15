@@ -688,13 +688,15 @@ export function FindRidePage() {
           />
         </div>}
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 24 }} role="tablist" aria-label={ar ? '\u0646\u0648\u0639 \u0627\u0644\u062e\u062f\u0645\u0629' : 'Service type'}>
           {([
             ['ride', 'Shared route'],
             ['package', copy.tabPackage],
           ] as const).map(([key, label]) => (
             <button
               key={key}
+              role="tab"
+              aria-selected={tab === key}
               onClick={() => setTab(key)}
               style={{
                 flex: 1,

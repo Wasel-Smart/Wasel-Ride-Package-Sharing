@@ -201,7 +201,7 @@ export function PrivacyConsentBanner() {
               type="button"
               onClick={handleAccept}
               style={{
-                minHeight: 36,
+                minHeight: 44,
                 padding: '0 18px',
                 borderRadius: 12,
                 border: 'none',
@@ -224,7 +224,7 @@ export function PrivacyConsentBanner() {
               type="button"
               onClick={handleDecline}
               style={{
-                minHeight: 36,
+                minHeight: 44,
                 padding: '0 18px',
                 borderRadius: 12,
                 border: '1px solid var(--border, rgba(244,198,81,0.18))',

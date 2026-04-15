@@ -109,7 +109,17 @@ html { overscroll-behavior-x: none; }
 }
 
 /* ── Touch targets (WCAG 2.1 AA) ────────────────────────────── */
-button, a, input[type="button"], input[type="submit"] {
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+/* Anchor touch targets only when used as standalone interactive elements */
+a[role="button"],
+a.btn,
+a.wasel-btn {
   min-height: 44px;
   min-width: 44px;
 }

@@ -1,4 +1,4 @@
-const SENSITIVE_KEY_PATTERN = /(authorization|token|secret|password|cookie|apikey|api_key|key|otp|code|backup|credential)/i;
+const SENSITIVE_KEY_PATTERN = /(authorization|token|secret|password|cookie|apikey|api_key|key|otp|code|backup|credential|phone|email|ssn|national_id)/i;
 
 function redactString(value: string): string {
   if (!value) return value;

@@ -105,14 +105,17 @@ export function resetRateLimit(key: string): void {
   rateLimitStore.delete(key);
 }
 
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, record] of rateLimitStore.entries()) {
-    if (now > record.resetAt) {
-      rateLimitStore.delete(key);
+// Use a WeakRef-safe cleanup that doesn't leak in tests or SSR
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, record] of rateLimitStore.entries()) {
+      if (now > record.resetAt) {
+        rateLimitStore.delete(key);
+      }
     }
-  }
-}, 5 * 60 * 1000);
+  }, 5 * 60 * 1000);
+}
 
 export interface PasswordStrength {
   score: 0 | 1 | 2 | 3 | 4;

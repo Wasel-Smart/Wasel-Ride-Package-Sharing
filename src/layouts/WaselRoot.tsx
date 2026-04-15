@@ -111,7 +111,7 @@ export default function WaselRoot() {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  const navigate = useCallback((path: string) => nav(path), [nav]);
+  const navigate = nav;
   const handleSignOut = useCallback(async () => {
     await signOut();
     window.location.replace('/');

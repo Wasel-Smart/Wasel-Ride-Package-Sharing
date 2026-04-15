@@ -62,7 +62,7 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
       <nav
         className="wasel-bottom-nav"
         data-wasel-bottom-nav
-        aria-label="Main navigation"
+        aria-label={isArabic ? 'التنقل السفلي' : 'Bottom navigation'}
         dir={isArabic ? 'rtl' : 'ltr'}
         style={{
           position: 'fixed',
