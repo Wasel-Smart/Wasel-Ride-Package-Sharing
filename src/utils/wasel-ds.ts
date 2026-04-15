@@ -8,55 +8,55 @@
  */
 
 export const C = {
-  bg: 'var(--bg-primary)',
-  bgAlt: 'var(--bg-tertiary)',
-  bgDeep: 'var(--bg-primary)',
-  card: 'var(--surface-soft)',
-  cardSolid: 'var(--card)',
-  card2: 'var(--service-card-strong)',
-  panel: 'var(--surface-muted)',
-  elevated: 'var(--surface-muted-strong)',
+  bg: 'var(--bg-primary, #F8FAFC)',
+  bgAlt: 'var(--bg-tertiary, #F1F5F9)',
+  bgDeep: 'var(--bg-primary, #F8FAFC)',
+  card: '#FFFFFF',
+  cardSolid: '#FFFFFF',
+  card2: 'var(--service-card-strong, #F1F5F9)',
+  panel: 'var(--surface-muted, #F8FAFC)',
+  elevated: 'var(--surface-muted-strong, #F1F5F9)',
 
-  navy: 'var(--wasel-app-hero)',
-  navyMid: '#143459',
-  navyLight: '#3f638a',
+  navy: '#0F172A',
+  navyMid: '#1E293B',
+  navyLight: '#475569',
 
-  cyan: 'var(--accent-secondary)',
-  cyanDark: 'var(--accent)',
-  cyanDim: 'rgb(var(--accent-secondary-rgb) / 0.16)',
-  cyanGlow: 'rgb(var(--accent-secondary-rgb) / 0.24)',
-  blue: 'color-mix(in srgb, var(--accent-secondary) 72%, white)',
-  blueLight: 'color-mix(in srgb, var(--accent-secondary) 18%, white)',
-  blueDim: 'rgb(var(--accent-secondary-rgb) / 0.18)',
-  gold: 'var(--warning)',
-  goldDim: 'rgb(var(--warning-rgb) / 0.16)',
-  green: 'var(--success)',
-  greenDim: 'rgb(var(--success-rgb) / 0.18)',
-  purple: '#a9e3ff',
-  purpleDim: 'rgba(169,227,255,0.18)',
-  orange: '#a9e3ff',
-  orangeDim: 'rgba(169,227,255,0.18)',
+  cyan: 'var(--primary, #3A7CA5)',
+  cyanDark: 'var(--primary, #3A7CA5)',
+  cyanDim: 'rgba(58,124,165,0.10)',
+  cyanGlow: 'rgba(58,124,165,0.16)',
+  blue: 'var(--accent-secondary, #5B9BD5)',
+  blueLight: 'rgba(91,155,213,0.12)',
+  blueDim: 'rgba(91,155,213,0.10)',
+  gold: 'var(--warning, #F59E0B)',
+  goldDim: 'rgba(245,158,11,0.10)',
+  green: 'var(--success, #22C55E)',
+  greenDim: 'rgba(34,197,94,0.10)',
+  purple: '#5B9BD5',
+  purpleDim: 'rgba(91,155,213,0.10)',
+  orange: '#F59E0B',
+  orangeDim: 'rgba(245,158,11,0.10)',
 
-  text: 'var(--wasel-copy-primary)',
-  textSub: 'var(--wasel-copy-muted)',
-  textMuted: 'var(--wasel-copy-muted)',
-  textDim: 'var(--wasel-copy-soft)',
+  text: 'var(--text-primary, #0F172A)',
+  textSub: 'var(--text-secondary, #475569)',
+  textMuted: 'var(--text-muted, #64748B)',
+  textDim: 'var(--text-muted, #64748B)',
 
-  border: 'var(--border)',
-  borderHov: 'var(--border-strong)',
-  borderFaint: 'var(--surface-divider)',
+  border: 'var(--border, #E2E8F0)',
+  borderHov: 'var(--border-strong, #CBD5E1)',
+  borderFaint: 'var(--surface-divider, #E2E8F0)',
 
-  error: 'var(--danger)',
-  errorDim: 'rgb(var(--danger-rgb) / 0.12)',
-  warning: 'var(--warning)',
-  success: 'var(--success)',
-  info: 'var(--accent-secondary)',
+  error: 'var(--danger, #EF4444)',
+  errorDim: 'rgba(239,68,68,0.10)',
+  warning: 'var(--warning, #F59E0B)',
+  success: 'var(--success, #22C55E)',
+  info: 'var(--accent-secondary, #5B9BD5)',
 
-  overlay: 'var(--bg-overlay)',
-  glass: 'var(--surface-glass)',
+  overlay: 'var(--bg-overlay, rgba(15,23,42,0.08))',
+  glass: '#FFFFFF',
 } as const;
 
-export const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+export const F = "var(--wasel-font-sans, 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif)";
 export const FA = "var(--wasel-font-arabic, 'Cairo', 'Tajawal', sans-serif)";
 export const FM = "'JetBrains Mono', 'Fira Mono', monospace";
 
@@ -146,15 +146,15 @@ export const SH = {
   inner: 'inset 0 1px 0 rgb(255 255 255 / 0.05)',
 } as const;
 
-export const GRAD = 'var(--wasel-app-button-primary)';
-export const GRAD_GOLD = 'var(--theme-gradient-primary)';
-export const GRAD_GREEN = 'var(--theme-gradient-accent)';
-export const GRAD_NAVY = 'var(--wasel-service-head-bg)';
-export const GRAD_PURPLE = 'var(--theme-gradient-primary)';
-export const GRAD_HERO = 'var(--wasel-service-head-bg)';
-export const GRAD_SIGNAL = 'var(--wasel-app-button-primary)';
+export const GRAD = '#3A7CA5';
+export const GRAD_GOLD = '#F59E0B';
+export const GRAD_GREEN = '#22C55E';
+export const GRAD_NAVY = 'linear-gradient(135deg, #1E3A5F 0%, #2D5A8E 54%, #3A7CA5 100%)';
+export const GRAD_PURPLE = '#5B9BD5';
+export const GRAD_HERO = 'linear-gradient(135deg, #1E3A5F 0%, #2D5A8E 54%, #3A7CA5 100%)';
+export const GRAD_SIGNAL = '#3A7CA5';
 export const GRAD_AURORA =
-  'radial-gradient(circle at top, rgba(169,227,255,0.26), rgba(34,194,170,0.12) 44%, rgba(20,52,89,0) 74%)';
+  'radial-gradient(circle at top, rgba(58,124,165,0.14), rgba(91,155,213,0.08) 44%, transparent 74%)';
 
 export const ANIM = {
   dur: {

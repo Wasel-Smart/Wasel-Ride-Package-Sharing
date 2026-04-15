@@ -5,6 +5,8 @@
 @import './styles/brand-theme.css';
 @import './styles/app-service-theme.css';
 @import './styles/investor-polish.css';
+@import './styles/design-tokens.css';
+@import './styles/ui-clarity.css';
 
 @layer base {
   html, body, #root { min-height: 100vh; margin: 0; }

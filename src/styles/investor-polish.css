@@ -1,7 +1,7 @@
 /* ============================================================
-   WASEL | واصل — INVESTOR POLISH v10
-   Final beauty layer. Overrides nothing critical — only adds
-   surface refinement on top of the base design system.
+   WASEL | واصل — INVESTOR POLISH v11
+   Performance & animation layer only.
+   Colour/surface overrides now live in brand-theme.css + ui-clarity.css.
    ============================================================ */
 
 /* ── Global font rendering ───────────────────────────────────── */
@@ -13,39 +13,12 @@
 
 /* ── Page entry animation ───────────────────────────────────── */
 #root > * {
-  animation: wasel-page-entry 0.36s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: wasel-page-entry 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @keyframes wasel-page-entry {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-/* ── Typography: tighter headings globally ──────────────────── */
-h1, h2, h3 { letter-spacing: -0.035em; }
-h4, h5     { letter-spacing: -0.02em; }
-
-/* ── Focus ring: brand teal everywhere ──────────────────────── */
-:focus-visible {
-  outline: 2px solid rgba(25, 231, 187, 0.72) !important;
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-
-/* ── Selection: teal globally ───────────────────────────────── */
-::selection {
-  background: rgba(25, 231, 187, 0.23);
-  color: #020c07;
-}
-
-/* ── Scrollbar: nearly invisible, brand-tinted ──────────────── */
-::-webkit-scrollbar        { width: 4px; height: 4px; }
-::-webkit-scrollbar-track  { background: transparent; }
-::-webkit-scrollbar-thumb  {
-  background: rgba(25, 231, 187, 0.16);
-  border-radius: 999px;
-  transition: background 0.2s;
-}
-::-webkit-scrollbar-thumb:hover { background: rgba(25, 231, 187, 0.38); }
 
 /* ── Button: cursor + no tap flash ──────────────────────────── */
 button:not(:disabled) { cursor: pointer; }
@@ -53,211 +26,107 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* ── Links without explicit class ───────────────────────────── */
 a:not([class]) {
-  color: #19e7bb;
+  color: #3A7CA5;
   text-decoration: none;
-  transition: opacity 0.14s ease;
+  transition: color 0.14s ease;
 }
-a:not([class]):hover { opacity: 0.76; }
+a:not([class]):hover { color: #5B9BD5; }
 
-/* ── Interactive cards: consistent hover glow ───────────────── */
-.home-panel:hover,
-.home-stat-card:hover,
-.home-pillar-card:hover,
-.home-card-button:hover,
-.home-feature-card:hover,
-.home-route-card:hover,
-.home-metric-tile:hover,
-.home-os-button:hover,
-.home-list-button:hover {
-  border-color: rgba(25, 231, 187, 0.22) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(220, 255, 248, 0.06),
-    0 18px 48px rgba(0, 6, 14, 0.44),
-    0 0 0 0.5px rgba(25, 231, 187, 0.055) !important;
-}
-
-/* ══════════════════════════════════════════════════════════════
-   RADIX UI / SHADCN PRIMITIVE POLISH
-   ══════════════════════════════════════════════════════════════ */
-
-/* Dialog / Sheet / Modal */
-[data-radix-popper-content-wrapper],
-[role="dialog"],
-[role="alertdialog"] {
-  border-radius: 22px !important;
-  border: 1px solid rgba(25, 231, 187, 0.11) !important;
-  background:
-    linear-gradient(180deg, rgba(220,255,248,0.048), rgba(220,255,248,0.009)),
-    rgba(8, 15, 28, 0.97) !important;
-  backdrop-filter: blur(30px) !important;
-  -webkit-backdrop-filter: blur(30px) !important;
-  box-shadow:
-    0 32px 80px rgba(0, 0, 0, 0.54),
-    inset 0 1px 0 rgba(220, 255, 248, 0.05) !important;
-}
-
-/* Dropdown menus */
-[data-radix-dropdown-menu-content],
-[cmdk-root] {
-  border-radius: 16px !important;
-  border: 1px solid rgba(25, 231, 187, 0.09) !important;
-  background: rgba(8, 15, 28, 0.98) !important;
-  backdrop-filter: blur(26px) !important;
-  -webkit-backdrop-filter: blur(26px) !important;
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.46) !important;
-}
-
-/* Tooltip */
-[data-radix-tooltip-content] {
-  border-radius: 10px !important;
-  border: 1px solid rgba(25, 231, 187, 0.13) !important;
-  background: rgba(6, 12, 22, 0.97) !important;
-  backdrop-filter: blur(16px) !important;
-  font-size: 0.78rem !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.01em !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.40) !important;
-}
-
-/* Select */
-[data-radix-select-content],
-[data-radix-select-viewport] {
-  border-radius: 14px !important;
-  border: 1px solid rgba(25, 231, 187, 0.09) !important;
-  background: rgba(8, 15, 28, 0.99) !important;
-  backdrop-filter: blur(22px) !important;
-  -webkit-backdrop-filter: blur(22px) !important;
-}
+/* ── Radix UI / Shadcn primitive polish ─────────────────────── */
 
 /* Progress */
 [role="progressbar"] > span,
 [data-radix-progress-indicator] {
-  background: linear-gradient(90deg, #19e7bb, #65e1ff) !important;
-  box-shadow: 0 0 9px rgba(25, 231, 187, 0.28) !important;
+  background: #3A7CA5 !important;
+  box-shadow: none !important;
 }
 
 /* Slider */
 [data-radix-slider-thumb] {
-  background: linear-gradient(135deg, #19e7bb, #65e1ff) !important;
-  border: 2px solid rgba(2, 12, 8, 0.95) !important;
-  box-shadow: 0 0 11px rgba(25, 231, 187, 0.52) !important;
+  background: #3A7CA5 !important;
+  border: 2px solid #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(58, 124, 165, 0.28) !important;
   width: 18px !important; height: 18px !important;
 }
-[data-radix-slider-track]  { background: rgba(25, 231, 187, 0.13) !important; }
-[data-radix-slider-range]  { background: linear-gradient(90deg, #19e7bb, #65e1ff) !important; }
+[data-radix-slider-track]  { background: #E2E8F0 !important; }
+[data-radix-slider-range]  { background: #3A7CA5 !important; }
 
 /* Switch */
 [data-radix-switch-root][data-state="checked"] {
-  background: linear-gradient(135deg, #19e7bb, #65e1ff) !important;
-  box-shadow: 0 0 11px rgba(25, 231, 187, 0.38) !important;
+  background: #3A7CA5 !important;
+  box-shadow: none !important;
 }
 [data-radix-switch-root][data-state="unchecked"] {
-  background: rgba(25, 231, 187, 0.10) !important;
-  border: 1px solid rgba(25, 231, 187, 0.16) !important;
+  background: #E2E8F0 !important;
+  border: 1px solid #CBD5E1 !important;
 }
 [data-radix-switch-thumb] {
-  background: #ffffff !important;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.38) !important;
+  background: #FFFFFF !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.16) !important;
 }
 
 /* Checkbox */
 [data-radix-checkbox-root][data-state="checked"] {
-  background: linear-gradient(135deg, #19e7bb, #65e1ff) !important;
-  border-color: transparent !important;
+  background: #3A7CA5 !important;
+  border-color: #3A7CA5 !important;
 }
 
 /* Tabs */
 [data-radix-tabs-trigger][data-state="active"] {
-  background: rgba(25, 231, 187, 0.10) !important;
-  color: #19e7bb !important;
-  border-color: rgba(25, 231, 187, 0.26) !important;
+  background: #EFF6FF !important;
+  color: #3A7CA5 !important;
+  border-color: rgba(58, 124, 165, 0.20) !important;
 }
 
 /* ── Sonner toasts ───────────────────────────────────────────── */
 [data-sonner-toast] {
-  border-radius: 14px !important;
-  border: 1px solid rgba(25, 231, 187, 0.11) !important;
-  background: rgba(8, 15, 28, 0.97) !important;
-  backdrop-filter: blur(26px) !important;
-  -webkit-backdrop-filter: blur(26px) !important;
-  box-shadow:
-    0 14px 42px rgba(0, 0, 0, 0.44),
-    inset 0 1px 0 rgba(220, 255, 248, 0.04) !important;
-  color: var(--foreground) !important;
+  border-radius: 12px !important;
+  border: 1px solid #E2E8F0 !important;
+  background: #FFFFFF !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12) !important;
+  color: #0F172A !important;
   font-family: var(--wasel-font-sans) !important;
+  font-size: 14px !important;
 }
-[data-sonner-toast][data-type="success"] { border-color: rgba(25, 231, 187, 0.22) !important; }
-[data-sonner-toast][data-type="error"]   { border-color: rgba(255, 80, 96, 0.22) !important; }
-[data-sonner-toast][data-type="warning"] { border-color: rgba(248, 186, 62, 0.22) !important; }
+[data-sonner-toast][data-type="success"] { border-color: rgba(34, 197, 94, 0.30) !important; }
+[data-sonner-toast][data-type="error"]   { border-color: rgba(239, 68, 68, 0.30) !important; }
+[data-sonner-toast][data-type="warning"] { border-color: rgba(245, 158, 11, 0.30) !important; }
 
 /* ── Map (Leaflet) ───────────────────────────────────────────── */
 .leaflet-container {
-  border-radius: 18px !important;
+  border-radius: 12px !important;
   overflow: hidden !important;
-  border: 1px solid rgba(25, 231, 187, 0.11) !important;
-  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.36) !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+  filter: brightness(1.04) contrast(1.02) !important;
 }
 .leaflet-control-zoom {
-  border: 1px solid rgba(25, 231, 187, 0.13) !important;
+  border: 1px solid #E2E8F0 !important;
   border-radius: 10px !important;
   overflow: hidden !important;
 }
 .leaflet-control-zoom-in,
 .leaflet-control-zoom-out {
-  background: rgba(7, 13, 24, 0.93) !important;
-  color: #19e7bb !important;
+  background: #FFFFFF !important;
+  color: #3A7CA5 !important;
   border: none !important;
   font-weight: 700 !important;
   transition: background 0.14s ease !important;
 }
 .leaflet-control-zoom-in:hover,
 .leaflet-control-zoom-out:hover {
-  background: rgba(25, 231, 187, 0.11) !important;
+  background: #EFF6FF !important;
 }
 
 /* ── Image error state ───────────────────────────────────────── */
 img[data-state="error"],
 img:not([src]),
 img[src=""] {
-  background: rgba(25, 231, 187, 0.05);
-  border: 1px solid rgba(25, 231, 187, 0.09);
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
   border-radius: 8px;
-}
-
-/* ══════════════════════════════════════════════════════════════
-   LIGHT MODE OVERRIDES
-   ══════════════════════════════════════════════════════════════ */
-
-.light [data-radix-popper-content-wrapper],
-.light [role="dialog"],
-.light [role="alertdialog"] {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.99), rgba(240,255,250,0.97)) !important;
-  border-color: rgba(10, 175, 138, 0.11) !important;
-  box-shadow:
-    0 22px 60px rgba(10, 50, 44, 0.10),
-    inset 0 1px 0 rgba(255,255,255,0.95) !important;
-}
-.light [data-radix-dropdown-menu-content],
-.light [cmdk-root] {
-  background: rgba(255, 255, 255, 0.99) !important;
-  border-color: rgba(10, 175, 138, 0.09) !important;
-  box-shadow: 0 10px 32px rgba(10, 50, 44, 0.09) !important;
-}
-.light [data-radix-tooltip-content] {
-  background: rgba(255, 255, 255, 0.97) !important;
-  border-color: rgba(10, 175, 138, 0.12) !important;
-  color: #082420 !important;
-}
-.light [data-sonner-toast] {
-  background: rgba(255, 255, 255, 0.97) !important;
-  border-color: rgba(10, 175, 138, 0.11) !important;
-  color: #082420 !important;
-}
-.light .leaflet-control-zoom-in,
-.light .leaflet-control-zoom-out {
-  background: rgba(255, 255, 255, 0.95) !important;
-  color: #0aaf8a !important;
 }
 
 /* ── Reduced motion guard ────────────────────────────────────── */
