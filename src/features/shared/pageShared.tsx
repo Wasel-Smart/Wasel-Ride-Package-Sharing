@@ -103,8 +103,8 @@ export function Protected({ children }: { children: ReactNode }) {
               height: 58,
               borderRadius: r(18),
               margin: '0 auto 18px',
-              background: 'rgba(15,115,255,0.12)',
-              border: '1px solid rgba(15,115,255,0.22)',
+              background: DS.cyanG,
+              border: `1px solid ${DS.cyan}33`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -145,8 +145,8 @@ export function Protected({ children }: { children: ReactNode }) {
               height: 58,
               borderRadius: r(18),
               margin: '0 auto 16px',
-              background: 'rgba(15,115,255,0.12)',
-              border: '1px solid rgba(15,115,255,0.22)',
+              background: DS.cyanG,
+              border: `1px solid ${DS.cyan}33`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -175,7 +175,7 @@ export function Protected({ children }: { children: ReactNode }) {
               borderRadius: r(14),
               border: 'none',
               background: DS.gradC,
-              color: '#ffffff',
+              color: 'var(--primary-foreground)',
               fontWeight: 800,
               cursor: 'pointer',
               fontFamily: DS.F,
@@ -207,7 +207,7 @@ export function PageShell({ children }: { children: ReactNode }) {
       }}
       >
       <style>{`
-        :root { color-scheme: dark; }
+        :root { color-scheme: inherit; }
         .w-focus:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(101,225,255,0.24); }
         @media (max-width: 899px) {
           .sp-inner { padding: 18px 14px 36px !important; }
@@ -432,7 +432,7 @@ export function SectionHead({
               borderRadius: r(999),
               border: 'none',
               background: DS.gradC,
-              color: '#ffffff',
+              color: 'var(--primary-foreground)',
               fontWeight: 800,
               fontSize: '0.88rem',
               boxShadow: 'var(--wasel-shadow-teal)',

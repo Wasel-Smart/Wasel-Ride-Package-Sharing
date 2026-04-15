@@ -18,13 +18,13 @@ import { C, R, F, TYPE } from '../../utils/wasel-ds';
 type ButtonVariant = 'primary' | 'outline' | 'ghost' | 'gold' | 'danger';
 type ButtonSize    = 'sm' | 'md' | 'lg';
 
-const BUTTON_PRIMARY = 'linear-gradient(135deg, #EEF8FF 0%, #D6EEFF 52%, #A9E3FF 100%)';
-const BUTTON_PRIMARY_SHADOW = '0 18px 46px rgba(169,227,255,0.24)';
-const BUTTON_PRIMARY_HOVER = '0 24px 60px rgba(169,227,255,0.34)';
-const BUTTON_OUTLINE_BG = 'rgba(169,227,255,0.08)';
-const BUTTON_OUTLINE_BG_HOVER = 'rgba(169,227,255,0.12)';
-const BUTTON_OUTLINE_BORDER = 'rgba(169,227,255,0.22)';
-const BUTTON_OUTLINE_BORDER_HOVER = 'rgba(169,227,255,0.42)';
+const BUTTON_PRIMARY = 'var(--theme-gradient-primary)';
+const BUTTON_PRIMARY_SHADOW = 'var(--wasel-shadow-teal)';
+const BUTTON_PRIMARY_HOVER = 'var(--wasel-shadow-blue)';
+const BUTTON_OUTLINE_BG = 'var(--surface-muted)';
+const BUTTON_OUTLINE_BG_HOVER = 'var(--surface-muted-strong)';
+const BUTTON_OUTLINE_BORDER = 'var(--border)';
+const BUTTON_OUTLINE_BORDER_HOVER = 'var(--border-strong)';
 
 interface WaselButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:  ButtonVariant;
@@ -39,8 +39,8 @@ interface WaselButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variantStyles: Record<ButtonVariant, { background: string; color: string; border: string; boxShadow: string; hoverShadow: string }> = {
   primary: {
     background:  BUTTON_PRIMARY,
-    color:       '#081520',
-    border:      '1px solid rgba(255,255,255,0.12)',
+    color:       'var(--primary-foreground)',
+    border:      '1px solid rgb(255 255 255 / 0.10)',
     boxShadow:   BUTTON_PRIMARY_SHADOW,
     hoverShadow: BUTTON_PRIMARY_HOVER,
   },
@@ -49,7 +49,7 @@ const variantStyles: Record<ButtonVariant, { background: string; color: string; 
     color:       'var(--foreground)',
     border:      `1px solid ${BUTTON_OUTLINE_BORDER}`,
     boxShadow:   'none',
-    hoverShadow: '0 14px 36px rgba(169,227,255,0.16)',
+    hoverShadow: 'var(--wasel-shadow-sm)',
   },
   ghost: {
     background:  'transparent',
@@ -59,18 +59,18 @@ const variantStyles: Record<ButtonVariant, { background: string; color: string; 
     hoverShadow: 'none',
   },
   gold: {
-    background:  'linear-gradient(135deg, #D7F0FF 0%, #BCE8FF 100%)',
-    color:       '#081520',
-    border:      '1px solid rgba(255,255,255,0.12)',
-    boxShadow:   '0 16px 38px rgba(169,227,255,0.2)',
-    hoverShadow: '0 20px 48px rgba(169,227,255,0.28)',
+    background:  'var(--theme-gradient-accent)',
+    color:       'var(--primary-foreground)',
+    border:      '1px solid rgb(255 255 255 / 0.10)',
+    boxShadow:   'var(--wasel-shadow-blue)',
+    hoverShadow: 'var(--wasel-shadow-lg)',
   },
   danger: {
     background:  C.errorDim,
-    color:       C.error,
+    color:       'var(--danger)',
     border:      `1px solid ${C.error}28`,
     boxShadow:   'none',
-    hoverShadow: '0 4px 20px rgba(255,68,85,0.25)',
+    hoverShadow: '0 4px 20px rgb(var(--danger-rgb) / 0.25)',
   },
 };
 
