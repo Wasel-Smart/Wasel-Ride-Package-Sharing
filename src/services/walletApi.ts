@@ -1,9 +1,4 @@
-import {
-  API_URL,
-  fetchWithRetry,
-  getAuthDetails,
-  publicAnonKey,
-} from './core';
+import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey } from './core';
 import {
   isWalletPaymentMethodType,
   isStepUpPurpose,
@@ -30,7 +25,8 @@ const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
 const PAYMENTS_API_BASE = API_URL ? `${API_URL}/payments` : '';
 const WALLET_SNAPSHOT_STORAGE_PREFIX = 'wasel-wallet-snapshot-v2';
 const WALLET_SNAPSHOT_MAX_AGE_MS = 2 * 60_000;
-const WALLET_READ_ONLY_ERROR = 'Wallet actions are unavailable until the secure wallet backend is reachable.';
+const WALLET_READ_ONLY_ERROR =
+  'Wallet actions are unavailable until the secure wallet backend is reachable.';
 
 type CacheEntry<T> = {
   expiresAt: number;
@@ -44,7 +40,13 @@ export interface RewardItem {
   expirationDate: string;
 }
 
-export type { WalletData, WalletEscrow, WalletPaymentMethod, WalletSubscription, WalletTransaction };
+export type {
+  WalletData,
+  WalletEscrow,
+  WalletPaymentMethod,
+  WalletSubscription,
+  WalletTransaction,
+};
 
 export interface InsightsData {
   thisMonthSpent: number;
@@ -152,7 +154,7 @@ function withCache<T>(
     return existing.promise;
   }
 
-  const promise = producer().catch((error) => {
+  const promise = producer().catch(error => {
     cache.delete(key);
     throw error;
   });
@@ -189,21 +191,30 @@ function buildInsights(wallet: WalletData): InsightsData {
   const lastMonth = lastMonthDate.getMonth();
   const lastMonthYear = lastMonthDate.getFullYear();
 
-  const currentMonth = wallet.transactions.filter((tx) => {
+  const currentMonth = wallet.transactions.filter(tx => {
     const date = new Date(tx.createdAt);
     return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
   });
-  const previousMonth = wallet.transactions.filter((tx) => {
+  const previousMonth = wallet.transactions.filter(tx => {
     const date = new Date(tx.createdAt);
     return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear;
   });
 
-  const thisMonthSpent = currentMonth.filter((tx) => tx.amount < 0).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-  const lastMonthSpent = previousMonth.filter((tx) => tx.amount < 0).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-  const thisMonthEarned = currentMonth.filter((tx) => tx.amount > 0).reduce((sum, tx) => sum + tx.amount, 0);
-  const changePercent = lastMonthSpent === 0
-    ? thisMonthSpent > 0 ? 100 : 0
-    : ((thisMonthSpent - lastMonthSpent) / lastMonthSpent) * 100;
+  const thisMonthSpent = currentMonth
+    .filter(tx => tx.amount < 0)
+    .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+  const lastMonthSpent = previousMonth
+    .filter(tx => tx.amount < 0)
+    .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+  const thisMonthEarned = currentMonth
+    .filter(tx => tx.amount > 0)
+    .reduce((sum, tx) => sum + tx.amount, 0);
+  const changePercent =
+    lastMonthSpent === 0
+      ? thisMonthSpent > 0
+        ? 100
+        : 0
+      : ((thisMonthSpent - lastMonthSpent) / lastMonthSpent) * 100;
 
   const categoryBreakdown = currentMonth.reduce<Record<string, number>>((acc, tx) => {
     const key = String(tx.type ?? 'payment');
@@ -214,14 +225,16 @@ function buildInsights(wallet: WalletData): InsightsData {
   const monthlyTrend = Array.from({ length: 6 }, (_, index) => {
     const date = new Date(now.getFullYear(), now.getMonth() - index, 1);
     const monthLabel = date.toLocaleDateString('en-US', { month: 'short' });
-    const monthlyTx = wallet.transactions.filter((tx) => {
+    const monthlyTx = wallet.transactions.filter(tx => {
       const txDate = new Date(tx.createdAt);
       return txDate.getMonth() === date.getMonth() && txDate.getFullYear() === date.getFullYear();
     });
     return {
       month: monthLabel,
-      spent: monthlyTx.filter((tx) => tx.amount < 0).reduce((sum, tx) => sum + Math.abs(tx.amount), 0),
-      earned: monthlyTx.filter((tx) => tx.amount > 0).reduce((sum, tx) => sum + tx.amount, 0),
+      spent: monthlyTx
+        .filter(tx => tx.amount < 0)
+        .reduce((sum, tx) => sum + Math.abs(tx.amount), 0),
+      earned: monthlyTx.filter(tx => tx.amount > 0).reduce((sum, tx) => sum + tx.amount, 0),
     };
   }).reverse();
 
@@ -253,7 +266,12 @@ async function getFreshWalletSnapshot(userId: string): Promise<WalletSnapshot> {
   return snapshot;
 }
 
-async function requireVerifiedToken(purpose: StepUpPurpose, pin: string, otpCode?: string, challengeId?: string) {
+async function requireVerifiedToken(
+  purpose: StepUpPurpose,
+  pin: string,
+  otpCode?: string,
+  challengeId?: string,
+) {
   const verification = await walletApi.verifyPin('', pin, purpose, otpCode, challengeId);
   if (!verification.verified || !verification.verificationToken) {
     return verification;
@@ -464,7 +482,12 @@ export const walletApi = {
     throw new Error('Wallet rewards are not enabled in the secure production wallet.');
   },
 
-  async setAutoTopUp(userId?: string, enabled?: boolean, amount?: number, threshold?: number): Promise<void> {
+  async setAutoTopUp(
+    userId?: string,
+    enabled?: boolean,
+    amount?: number,
+    threshold?: number,
+  ): Promise<void> {
     void userId;
     await walletFetch('/wallet/settings', {
       method: 'POST',
@@ -480,9 +503,10 @@ export const walletApi = {
     void userId;
     const { userId: authUserId } = await getAuthDetails();
     const wallet = await walletApi.getWallet(authUserId);
-    const paymentMethodType: WalletPaymentMethodType = wallet.balance >= price
-      ? 'wallet'
-      : (wallet.wallet.paymentMethods.find((method) => method.isDefault)?.type ?? 'card');
+    const paymentMethodType: WalletPaymentMethodType =
+      wallet.balance >= price
+        ? 'wallet'
+        : (wallet.wallet.paymentMethods.find(method => method.isDefault)?.type ?? 'card');
 
     const intent = await walletApi.createPaymentIntent('subscription', price, paymentMethodType, {
       metadata: {
@@ -492,8 +516,14 @@ export const walletApi = {
       },
     });
 
-    if (paymentMethodType === 'wallet' || wallet.wallet.paymentMethods.some((method) => method.isDefault)) {
-      await walletApi.confirmPaymentIntent(intent.id, wallet.wallet.paymentMethods.find((method) => method.isDefault)?.id ?? null);
+    if (
+      paymentMethodType === 'wallet' ||
+      wallet.wallet.paymentMethods.some(method => method.isDefault)
+    ) {
+      await walletApi.confirmPaymentIntent(
+        intent.id,
+        wallet.wallet.paymentMethods.find(method => method.isDefault)?.id ?? null,
+      );
     }
 
     return intent;

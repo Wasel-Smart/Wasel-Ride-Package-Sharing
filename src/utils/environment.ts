@@ -44,7 +44,9 @@ export function validateEnvironmentConfig(): void {
   }
 
   const edgeApiConfigured = Boolean(
-    getEnv('VITE_API_URL') || getEnv('VITE_EDGE_FUNCTION_NAME') || getEnv('VITE_EDGE_FUNCTIONS_BASE_URL'),
+    getEnv('VITE_API_URL') ||
+    getEnv('VITE_EDGE_FUNCTION_NAME') ||
+    getEnv('VITE_EDGE_FUNCTIONS_BASE_URL'),
   );
   if (isProtectedEnvironment && !edgeApiConfigured) {
     errors.push('Protected environments must define VITE_API_URL or VITE_EDGE_FUNCTION_NAME');

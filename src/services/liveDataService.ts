@@ -36,19 +36,22 @@ export function useLiveUserStats(): { stats: LiveUserStats | null; loading: bool
   const { user: authUser } = useAuth();
 
   const connectedStats = useMemo(() => getConnectedStats(), []);
-  const baseStats = useMemo<LiveUserStats>(() => ({
-    totalTrips: localUser?.trips ?? connectedStats.ridesPosted,
-    totalSaved: (localUser?.trips ?? 0) * 2.8,
-    rating: localUser?.rating ?? 5.0,
-    pkgsDelivered: connectedStats.packagesCreated,
-    walletBalance: localUser?.balance ?? 0,
-  }), [
-    connectedStats.packagesCreated,
-    connectedStats.ridesPosted,
-    localUser?.balance,
-    localUser?.rating,
-    localUser?.trips,
-  ]);
+  const baseStats = useMemo<LiveUserStats>(
+    () => ({
+      totalTrips: localUser?.trips ?? connectedStats.ridesPosted,
+      totalSaved: (localUser?.trips ?? 0) * 2.8,
+      rating: localUser?.rating ?? 5.0,
+      pkgsDelivered: connectedStats.packagesCreated,
+      walletBalance: localUser?.balance ?? 0,
+    }),
+    [
+      connectedStats.packagesCreated,
+      connectedStats.ridesPosted,
+      localUser?.balance,
+      localUser?.rating,
+      localUser?.trips,
+    ],
+  );
 
   const { data, isLoading } = useQuery({
     queryKey: QUERY_KEYS.payments.wallet(authUser?.id ?? localUser?.id ?? 'guest-home-stats'),

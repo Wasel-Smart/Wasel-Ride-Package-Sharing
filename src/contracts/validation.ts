@@ -12,14 +12,14 @@ export function parseContract<T>(
     return parsed.data;
   }
 
-  const issues = parsed.error.issues.map((issue) => ({
+  const issues = parsed.error.issues.map(issue => ({
     path: issue.path.join('.'),
     message: issue.message,
   }));
 
   throw new ValidationError(
     `Response contract violation for ${contractName}@${contractVersion}: ${issues
-      .map((issue) => `${issue.path || 'payload'} ${issue.message}`)
+      .map(issue => `${issue.path || 'payload'} ${issue.message}`)
       .join('; ')}`,
     {
       contractName,

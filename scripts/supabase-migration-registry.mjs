@@ -302,13 +302,9 @@ export const operationalSeedFiles = [
   'db/seeds/automation.seed.sql',
 ];
 
-export const smokeCheckSeedFiles = [
-  'src/supabase/seeds/mock_engine_smoke_checks.sql',
-];
+export const smokeCheckSeedFiles = ['src/supabase/seeds/mock_engine_smoke_checks.sql'];
 
-export const rolloutSeedFiles = [
-  ...operationalSeedFiles,
-];
+export const rolloutSeedFiles = [...operationalSeedFiles];
 
 export const requiredDocs = [
   'docs/OPERATIONAL_SEEDING.md',

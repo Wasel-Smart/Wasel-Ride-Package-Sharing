@@ -92,7 +92,7 @@ Apply the rollout set in this exact order for production cutover projects:
 20. `20260410110000_reassert_auth_signup_user_sync.sql`
 21. `20260413120000_wallet_fintech_rebuild.sql`
 
-### Seeds
+### Operational seeds
 
 1. `db/seeds/roles.seed.sql`
 2. `db/seeds/cities.seed.sql`
@@ -100,7 +100,10 @@ Apply the rollout set in this exact order for production cutover projects:
 4. `db/seeds/pricing.seed.sql`
 5. `db/seeds/core.seed.sql`
 6. `db/seeds/automation.seed.sql`
-7. `src/supabase/seeds/mock_engine_smoke_checks.sql`
+
+### Smoke checks
+
+1. `src/supabase/seeds/mock_engine_smoke_checks.sql`
 
 ## Seed Packs
 
@@ -113,7 +116,7 @@ Operational bootstrap seed assets live in `db/seeds/`:
 - `core.seed.sql`
 - `automation.seed.sql`
 
-Smoke checks remain in `src/supabase/seeds/`.
+Smoke checks remain in `src/supabase/seeds/` and are never part of the production rollout seed pack.
 
 ## Commands
 

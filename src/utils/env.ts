@@ -38,7 +38,7 @@ function isMeaningfulValue(value: string | undefined): value is string {
   }
 
   const lower = normalized.toLowerCase();
-  return !PLACEHOLDER_MARKERS.some((marker) => lower.includes(marker));
+  return !PLACEHOLDER_MARKERS.some(marker => lower.includes(marker));
 }
 
 function normalizeEnvironment(value: string | undefined): AppEnvironment {
@@ -80,7 +80,10 @@ function getBooleanEnv(key: string, fallback: boolean): boolean {
 
 function resolveEnvironment(): AppEnvironment {
   return normalizeEnvironment(
-    getEnv('VITE_APP_ENV') || getEnv('MODE') || getEnv('VITE_MODE') || getEnv('NODE_ENV', 'development'),
+    getEnv('VITE_APP_ENV') ||
+      getEnv('MODE') ||
+      getEnv('VITE_MODE') ||
+      getEnv('NODE_ENV', 'development'),
   );
 }
 
@@ -136,12 +139,10 @@ export function getConfig() {
   const isProd = environment === 'production';
   const isStaging = environment === 'staging';
   const isTest = environment === 'test';
-  const enableDemoAccount = flagAllowedInEnvironment(
-    'VITE_ENABLE_DEMO_DATA',
-    false,
-    environment,
-    ['development', 'test'],
-  );
+  const enableDemoAccount = flagAllowedInEnvironment('VITE_ENABLE_DEMO_DATA', false, environment, [
+    'development',
+    'test',
+  ]);
   const enableSyntheticTrips = flagAllowedInEnvironment(
     'VITE_ENABLE_SYNTHETIC_TRIPS',
     false,

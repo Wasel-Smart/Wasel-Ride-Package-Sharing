@@ -780,7 +780,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                 <path
                   key={`landing-axis-${index}`}
                   d={`M ${x} 84 L ${x + 34} 448`}
-                stroke="rgba(101, 225, 255, 0.06)"
+                  stroke="rgba(101, 225, 255, 0.06)"
                   strokeWidth="1"
                 />
               );
@@ -929,12 +929,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                 fill="rgba(0, 0, 0, 0.2)"
               />
               {city.featured ? (
-                <circle
-                  cx={city.point.x}
-                  cy={city.point.y}
-                  r="30"
-                  fill="rgba(25, 231, 187, 0.1)"
-                />
+                <circle cx={city.point.x} cy={city.point.y} r="30" fill="rgba(25, 231, 187, 0.1)" />
               ) : null}
               <line
                 x1={city.point.x}
