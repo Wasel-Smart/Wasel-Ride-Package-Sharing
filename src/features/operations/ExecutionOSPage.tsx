@@ -12,11 +12,14 @@ import { getExecutionOperatingSystemSnapshot } from '../../services/executionOpe
 
 const BG = 'var(--wasel-service-bg)';
 const PANEL = 'var(--wasel-service-card)';
+const PANEL_SOFT = 'var(--wasel-service-card-2)';
 const BORDER = 'var(--wasel-service-border)';
 const CYAN = 'var(--wasel-app-blue)';
 const GREEN = 'var(--wasel-app-teal)';
 const GOLD = 'var(--wasel-app-sky)';
 const RED = '#F97316';
+const TEXT = 'var(--wasel-service-text)';
+const SUB = 'var(--wasel-service-sub)';
 const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 function cardStyle() {
@@ -45,7 +48,7 @@ export default function ExecutionOSPage() {
         minHeight: '100vh',
         background: BG,
         fontFamily: FONT,
-        color: '#EFF6FF',
+        color: TEXT,
         direction: ar ? 'rtl' : 'ltr',
         paddingBottom: 72,
       }}
@@ -76,7 +79,7 @@ export default function ExecutionOSPage() {
                   gap: 8,
                   padding: '8px 12px',
                   borderRadius: 999,
-                  border: '1px solid rgba(255,255,255,0.12)',
+                  border: `1px solid ${BORDER}`,
                   color: CYAN,
                   fontWeight: 800,
                   fontSize: '0.78rem',
@@ -90,7 +93,7 @@ export default function ExecutionOSPage() {
               <h1 style={{ margin: '16px 0 10px', fontSize: 'clamp(1.8rem, 4vw, 2.7rem)', fontWeight: 900 }}>
                 Turn Wasel from a strong product into a fully managed execution machine
               </h1>
-              <p style={{ margin: 0, color: 'rgba(226,232,240,0.82)', lineHeight: 1.7, fontSize: '0.98rem' }}>
+              <p style={{ margin: 0, color: SUB, lineHeight: 1.7, fontSize: '0.98rem' }}>
                 This surface makes ownership, operating cadence, KPI discipline, and enforcement visible.
                 It is the execution layer needed to move Wasel from {snapshot.maturityScore.toFixed(1)}/10 to
                 a repeatable 10/10 operating standard.
@@ -102,22 +105,22 @@ export default function ExecutionOSPage() {
                 minWidth: 250,
                 ...cardStyle(),
                 padding: '16px 18px',
-                background: 'rgba(5,19,33,0.42)',
+                background: PANEL_SOFT,
               }}
             >
-              <div style={{ color: 'rgba(226,232,240,0.72)', fontSize: '0.8rem', fontWeight: 700 }}>
+              <div style={{ color: SUB, fontSize: '0.8rem', fontWeight: 700 }}>
                 Maturity score
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 8 }}>
                 <span style={{ color: CYAN, fontSize: '2.3rem', fontWeight: 900 }}>
                   {snapshot.maturityScore.toFixed(1)}
                 </span>
-                <span style={{ color: 'rgba(226,232,240,0.72)', fontWeight: 700 }}>/ {snapshot.targetScore}</span>
+                <span style={{ color: SUB, fontWeight: 700 }}>/ {snapshot.targetScore}</span>
               </div>
               <div style={{ marginTop: 8, color: GOLD, fontWeight: 800, fontSize: '0.84rem' }}>
                 Current level: {snapshot.maturityLevel}
               </div>
-              <div style={{ marginTop: 10, color: 'rgba(226,232,240,0.76)', fontSize: '0.84rem', lineHeight: 1.6 }}>
+              <div style={{ marginTop: 10, color: SUB, fontSize: '0.84rem', lineHeight: 1.6 }}>
                 Remaining gap: {maturityDelta.toFixed(1)} points, closed through governance, quality gates,
                 KPI review, and leadership inspection.
               </div>
@@ -139,7 +142,7 @@ export default function ExecutionOSPage() {
               Owners
             </div>
             <div style={{ marginTop: 10, fontSize: '1.5rem', fontWeight: 900 }}>{snapshot.owners.length}</div>
-            <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.72)', fontSize: '0.82rem' }}>
+            <div style={{ marginTop: 6, color: SUB, fontSize: '0.82rem' }}>
               Every operating domain has one accountable role.
             </div>
           </div>
@@ -149,7 +152,7 @@ export default function ExecutionOSPage() {
               KPIs
             </div>
             <div style={{ marginTop: 10, fontSize: '1.5rem', fontWeight: 900 }}>{snapshot.kpis.length}</div>
-            <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.72)', fontSize: '0.82rem' }}>
+            <div style={{ marginTop: 6, color: SUB, fontSize: '0.82rem' }}>
               Performance is measured across product, commercial, operations, and engineering.
             </div>
           </div>
@@ -159,7 +162,7 @@ export default function ExecutionOSPage() {
               Cadences
             </div>
             <div style={{ marginTop: 10, fontSize: '1.5rem', fontWeight: 900 }}>{snapshot.cadences.length}</div>
-            <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.72)', fontSize: '0.82rem' }}>
+            <div style={{ marginTop: 6, color: SUB, fontSize: '0.82rem' }}>
               Weekly, biweekly, and monthly review loops keep execution visible.
             </div>
           </div>
@@ -169,7 +172,7 @@ export default function ExecutionOSPage() {
               Enforcement
             </div>
             <div style={{ marginTop: 10, fontSize: '1.5rem', fontWeight: 900 }}>{snapshot.enforcementRules.length}</div>
-            <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.72)', fontSize: '0.82rem' }}>
+            <div style={{ marginTop: 6, color: SUB, fontSize: '0.82rem' }}>
               Execution drifts only when rules are optional. Here they are explicit.
             </div>
           </div>
@@ -194,10 +197,10 @@ export default function ExecutionOSPage() {
                   key={principle}
                   style={{
                     borderRadius: 14,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    background: 'rgba(255,255,255,0.028)',
+                    border: `1px solid ${BORDER}`,
+                    background: PANEL_SOFT,
                     padding: '12px 14px',
-                    color: 'rgba(226,232,240,0.86)',
+                    color: TEXT,
                     lineHeight: 1.65,
                     fontSize: '0.88rem',
                   }}
@@ -216,13 +219,13 @@ export default function ExecutionOSPage() {
                   key={kpi.id}
                   style={{
                     borderRadius: 14,
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    border: `1px solid ${BORDER}`,
                     padding: '12px 14px',
-                    background: 'rgba(255,255,255,0.028)',
+                    background: PANEL_SOFT,
                   }}
                 >
-                  <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.88rem' }}>{kpi.title}</div>
-                  <div style={{ marginTop: 4, color: 'rgba(226,232,240,0.72)', fontSize: '0.8rem', lineHeight: 1.6 }}>
+                  <div style={{ color: TEXT, fontWeight: 800, fontSize: '0.88rem' }}>{kpi.title}</div>
+                  <div style={{ marginTop: 4, color: SUB, fontSize: '0.8rem', lineHeight: 1.6 }}>
                     {kpi.definition}
                   </div>
                   <div style={{ marginTop: 8, color: CYAN, fontWeight: 800, fontSize: '0.78rem' }}>
@@ -250,16 +253,16 @@ export default function ExecutionOSPage() {
                   key={owner.domain}
                   style={{
                     borderRadius: 14,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    background: 'rgba(255,255,255,0.024)',
+                    border: `1px solid ${BORDER}`,
+                    background: PANEL_SOFT,
                     padding: '12px 14px',
                   }}
                 >
-                  <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.88rem' }}>{owner.domain}</div>
+                  <div style={{ color: TEXT, fontWeight: 800, fontSize: '0.88rem' }}>{owner.domain}</div>
                   <div style={{ marginTop: 4, color: CYAN, fontWeight: 700, fontSize: '0.8rem' }}>
                     {owner.accountableRole}
                   </div>
-                  <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.72)', fontSize: '0.8rem', lineHeight: 1.6 }}>
+                  <div style={{ marginTop: 6, color: SUB, fontSize: '0.8rem', lineHeight: 1.6 }}>
                     Scope: {owner.scope}
                   </div>
                   <div style={{ marginTop: 6, color: GREEN, fontWeight: 700, fontSize: '0.78rem' }}>
@@ -278,16 +281,16 @@ export default function ExecutionOSPage() {
                   key={cadence.title}
                   style={{
                     borderRadius: 14,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    background: 'rgba(255,255,255,0.024)',
+                    border: `1px solid ${BORDER}`,
+                    background: PANEL_SOFT,
                     padding: '12px 14px',
                   }}
                 >
-                  <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.88rem' }}>{cadence.title}</div>
+                  <div style={{ color: TEXT, fontWeight: 800, fontSize: '0.88rem' }}>{cadence.title}</div>
                   <div style={{ marginTop: 4, color: GOLD, fontWeight: 700, fontSize: '0.8rem' }}>
                     {cadence.frequency}
                   </div>
-                  <div style={{ marginTop: 6, color: 'rgba(226,232,240,0.72)', fontSize: '0.8rem', lineHeight: 1.6 }}>
+                  <div style={{ marginTop: 6, color: SUB, fontSize: '0.8rem', lineHeight: 1.6 }}>
                     {cadence.purpose}
                   </div>
                   <div style={{ marginTop: 10, color: CYAN, fontWeight: 700, fontSize: '0.78rem' }}>
@@ -309,13 +312,13 @@ export default function ExecutionOSPage() {
                   key={playbook.title}
                   style={{
                     borderRadius: 14,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    background: 'rgba(255,255,255,0.024)',
+                    border: `1px solid ${BORDER}`,
+                    background: PANEL_SOFT,
                     padding: '12px 14px',
                   }}
                 >
-                  <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.88rem' }}>{playbook.title}</div>
-                  <div style={{ marginTop: 4, color: 'rgba(226,232,240,0.72)', fontSize: '0.8rem' }}>
+                  <div style={{ color: TEXT, fontWeight: 800, fontSize: '0.88rem' }}>{playbook.title}</div>
+                  <div style={{ marginTop: 4, color: SUB, fontSize: '0.8rem' }}>
                     Owner: {playbook.owner}
                   </div>
                   <div style={{ marginTop: 6, color: CYAN, fontWeight: 700, fontSize: '0.78rem' }}>
@@ -350,7 +353,7 @@ export default function ExecutionOSPage() {
                     gap: 12,
                     alignItems: 'start',
                     padding: '10px 0',
-                    borderTop: index === 0 ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                    borderTop: index === 0 ? 'none' : `1px solid ${BORDER}`,
                   }}
                 >
                   <div
@@ -358,8 +361,8 @@ export default function ExecutionOSPage() {
                       width: 36,
                       height: 36,
                       borderRadius: 12,
-                      background: 'rgba(71,183,230,0.14)',
-                      border: '1px solid rgba(71,183,230,0.22)',
+                      background: 'color-mix(in srgb, var(--wasel-app-blue) 14%, transparent)',
+                      border: '1px solid color-mix(in srgb, var(--wasel-app-blue) 24%, transparent)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -370,8 +373,8 @@ export default function ExecutionOSPage() {
                     {index + 1}
                   </div>
                   <div>
-                    <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.88rem' }}>{step.phase}</div>
-                    <div style={{ marginTop: 4, color: 'rgba(226,232,240,0.72)', fontSize: '0.8rem', lineHeight: 1.6 }}>
+                    <div style={{ color: TEXT, fontWeight: 800, fontSize: '0.88rem' }}>{step.phase}</div>
+                    <div style={{ marginTop: 4, color: SUB, fontSize: '0.8rem', lineHeight: 1.6 }}>
                       {step.objective}
                     </div>
                     <div style={{ marginTop: 6, color: GREEN, fontWeight: 700, fontSize: '0.78rem' }}>
@@ -392,9 +395,9 @@ export default function ExecutionOSPage() {
                   style={{
                     borderRadius: 14,
                     border: '1px solid rgba(249,115,22,0.18)',
-                    background: 'rgba(249,115,22,0.06)',
+                    background: 'color-mix(in srgb, #f97316 10%, var(--wasel-service-card-2))',
                     padding: '12px 14px',
-                    color: 'rgba(255,237,213,0.9)',
+                    color: TEXT,
                     fontSize: '0.84rem',
                     lineHeight: 1.6,
                   }}

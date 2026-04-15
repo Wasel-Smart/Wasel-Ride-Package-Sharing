@@ -340,7 +340,7 @@ export default function WaselAuthCallback() {
                     lineHeight: 1.5,
                   }}
                 >
-                  {requirement.met ? 'âœ“' : 'â€¢'} {requirement.label}
+                  {requirement.met ? '✓' : '•'} {requirement.label}
                 </span>
               ))}
             </div>

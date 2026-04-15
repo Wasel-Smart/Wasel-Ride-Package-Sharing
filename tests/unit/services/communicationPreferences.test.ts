@@ -32,10 +32,23 @@ import {
   resolveNotificationTopic,
   updateCommunicationPreferences,
 } from '../../../src/services/communicationPreferences';
+import {
+  queueDirectCommunicationDeliveries,
+  upsertDirectCommunicationPreferences,
+} from '../../../src/services/directSupabase';
+import { NetworkError } from '../../../src/utils/errors';
+
+const mockedQueueDirectCommunicationDeliveries = vi.mocked(queueDirectCommunicationDeliveries);
+const mockedUpsertDirectCommunicationPreferences = vi.mocked(upsertDirectCommunicationPreferences);
 
 describe('communicationPreferences', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('VITE_APP_ENV', 'test');
+    vi.stubEnv('VITE_ENABLE_DEMO_DATA', 'false');
+    vi.stubEnv('VITE_ENABLE_SYNTHETIC_TRIPS', 'false');
+    vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'true');
+    vi.stubEnv('VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK', 'true');
     vi.stubGlobal('window', {
       localStorage: memoryStorage,
       Notification: class NotificationMock {},
@@ -101,5 +114,53 @@ describe('communicationPreferences', () => {
     });
 
     expect(queued.queued).toBe(1);
+  });
+
+  it('keeps authenticated preferences off local storage when local fallback is disabled', async () => {
+    vi.stubEnv('VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK', 'false');
+    mockedUpsertDirectCommunicationPreferences.mockResolvedValueOnce({
+      in_app_enabled: true,
+      push_enabled: true,
+      email_enabled: true,
+      sms_enabled: true,
+      whatsapp_enabled: true,
+      trip_updates_enabled: true,
+      booking_requests_enabled: true,
+      messages_enabled: true,
+      promotions_enabled: false,
+      prayer_reminders_enabled: true,
+      critical_alerts_enabled: true,
+      preferred_language: 'ar',
+    });
+
+    const updated = await updateCommunicationPreferences('user-123', {
+      whatsapp: true,
+      preferredLanguage: 'ar',
+    });
+
+    expect(updated.whatsapp).toBe(true);
+    expect(mockedUpsertDirectCommunicationPreferences).toHaveBeenCalledTimes(1);
+    expect(memoryStorage.getItem('wasel.communication.preferences:user-123')).toBeNull();
+  });
+
+  it('fails closed for queued deliveries when both direct and local fallbacks are disabled', async () => {
+    vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'false');
+    vi.stubEnv('VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK', 'false');
+
+    await expect(
+      queueCommunicationDeliveries({
+        userId: 'user-123',
+        notificationId: 'notif-2',
+        requests: [{
+          channel: 'email',
+          destination: 'user@example.com',
+          subject: 'Subject',
+          body: 'Body',
+        }],
+      }),
+    ).rejects.toBeInstanceOf(NetworkError);
+
+    expect(mockedQueueDirectCommunicationDeliveries).not.toHaveBeenCalled();
+    expect(memoryStorage.getItem('wasel.communication.outbox')).toBeNull();
   });
 });

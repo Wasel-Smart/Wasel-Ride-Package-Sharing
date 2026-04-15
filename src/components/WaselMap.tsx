@@ -33,6 +33,7 @@ import {
   Wifi, WifiOff, MapPin, Map, Satellite, Mountain,
 } from 'lucide-react';
 import { omitUndefined } from '../utils/object';
+import { normalizeTextTree, repairLikelyMojibake } from '../utils/textEncoding';
 
 /* â”€â”€â”€ Inject Leaflet CSS (once, dynamically) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function ensureLeafletCSS() {
@@ -138,7 +139,7 @@ function loadLeaflet(): Promise<LeafletModule> {
 }
 
 /* â”€â”€â”€ Tile layer configs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-const TILES = {
+const TILES = normalizeTextTree({
   roadmap: {
     url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     attribution: 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors Â© <a href="https://carto.com/">CARTO</a>',
@@ -159,10 +160,10 @@ const TILES = {
     attribution: 'Â© OpenStreetMap contributors, SRTM Â© OpenTopoMap (CC-BY-SA)',
     maxZoom: 17,
   },
-} as const;
+} as const);
 
 /* â”€â”€â”€ Pre-defined data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-const JORDAN_RADARS = [
+const JORDAN_RADARS = normalizeTextTree([
   { lat: 31.9539, lng: 35.9106, name: 'Radar â€“ Amman 7th Circle',      limit: 60  },
   { lat: 31.9786, lng: 35.8444, name: 'Radar â€“ Queen Alia Airport Rd', limit: 80  },
   { lat: 31.7854, lng: 35.9771, name: 'Radar â€“ Madaba Highway',        limit: 80  },
@@ -175,9 +176,9 @@ const JORDAN_RADARS = [
   { lat: 32.0408, lng: 36.0899, name: 'Radar â€“ Zarqa Highway',         limit: 80  },
   { lat: 32.6100, lng: 35.9900, name: 'Radar â€“ Ramtha Border',         limit: 60  },
   { lat: 31.8700, lng: 35.9400, name: 'Radar â€“ South Amman Ring Rd',   limit: 80  },
-];
+]);
 
-const FALLBACK_MOSQUES = [
+const FALLBACK_MOSQUES = normalizeTextTree([
   { lat: 31.9554, lng: 35.9100, name: 'King Abdullah I Mosque | Ù…Ø³Ø¬Ø¯ Ø§Ù„Ù…Ù„Ùƒ Ø¹Ø¨Ø¯Ø§Ù„Ù„Ù‡ Ø§Ù„Ø£ÙˆÙ„' },
   { lat: 31.9515, lng: 35.9219, name: 'Al-Hussein Mosque | Ù…Ø³Ø¬Ø¯ Ø§Ù„Ø­Ø³ÙŠÙ†' },
   { lat: 31.9609, lng: 35.8895, name: 'Abu Darwish Mosque | Ù…Ø³Ø¬Ø¯ Ø£Ø¨Ùˆ Ø¯Ø±ÙˆÙŠØ´' },
@@ -190,7 +191,7 @@ const FALLBACK_MOSQUES = [
   { lat: 31.2200, lng: 35.9300, name: "Ma'an Mosque | Ù…Ø³Ø¬Ø¯ Ù…Ø¹Ø§Ù†" },
   { lat: 31.0000, lng: 35.5000, name: 'Shoubak Rest Stop Mosque | Ù…Ø³Ø¬Ø¯ Ø§Ø³ØªØ±Ø§Ø­Ø© Ø§Ù„Ø´ÙˆØ¨Ùƒ' },
   { lat: 30.3000, lng: 35.2000, name: 'Wadi Rum Mosque | Ù…Ø³Ø¬Ø¯ ÙˆØ§Ø¯ÙŠ Ø±Ù…' },
-];
+]);
 
 const MAP_PRIMARY = '#19E7BB';
 const MAP_PRIMARY_SOFT = '#A2FFE7';
@@ -1079,7 +1080,7 @@ function WaselMapFull(props: WaselMapProps) {
           2: 'Location unavailable | Ø§Ù„Ù…ÙˆÙ‚Ø¹ ØºÙŠØ± Ù…ØªØ§Ø­',
           3: 'Location request timed out | Ø§Ù†ØªÙ‡Øª Ù…Ù‡Ù„Ø© Ø·Ù„Ø¨ Ø§Ù„Ù…ÙˆÙ‚Ø¹',
         };
-        setLocationError(msgs[err.code] ?? 'Location error');
+        setLocationError(repairLikelyMojibake(msgs[err.code] ?? 'Location error'));
         setIsTracking(false);
       },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
@@ -1284,7 +1285,9 @@ function WaselMapFull(props: WaselMapProps) {
             </div>
             <div className="text-center">
               <p className="text-white font-semibold text-base">Loading Map</p>
-              <p className="text-[#8590a2] text-sm mt-1">Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø©...</p>
+              <p className="text-[#8590a2] text-sm mt-1">
+                {repairLikelyMojibake('Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø©...')}
+              </p>
             </div>
           </motion.div>
         )}
@@ -1367,7 +1370,7 @@ function WaselMapFull(props: WaselMapProps) {
                     </div>
                   )}
                   {liveLocation.accuracy !== null && liveLocation.accuracy !== undefined && (
-                    <p className="text-[#5a6475] text-xs">Â±{Math.round(liveLocation.accuracy)}m accuracy</p>
+                    <p className="text-[#5a6475] text-xs">±{Math.round(liveLocation.accuracy)}m accuracy</p>
                   )}
                   <p className="text-[#5a6475] text-xs font-mono">
                     {liveLocation.lat.toFixed(5)}, {liveLocation.lng.toFixed(5)}
@@ -1388,16 +1391,29 @@ function WaselMapFull(props: WaselMapProps) {
                 style={{ background: 'var(--wasel-glass-xl)', backdropFilter: 'blur(16px)', borderColor: 'rgba(93,150,210,0.3)' }}
               >
                 <div className="flex items-start gap-3 p-4">
-                  <span className="text-2xl mt-0.5 shrink-0">
-                    {selectedPOI.type === 'mosque'  ? 'ðŸ•Œ'
-                     : selectedPOI.type === 'radar'  ? 'ðŸ“¸'
-                     : selectedPOI.type === 'police' ? 'ðŸš”'
-                     : 'âš ï¸'}
-                  </span>
+                  <div className="mt-0.5 shrink-0 rounded-xl border border-white/10 bg-white/5 p-2 text-slate-100">
+                    {selectedPOI.type === 'mosque' ? (
+                      <MapPin className="h-5 w-5" />
+                    ) : selectedPOI.type === 'radar' ? (
+                      <Radio className="h-5 w-5" />
+                    ) : (
+                      <AlertTriangle className="h-5 w-5" />
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-semibold leading-tight">{selectedPOI.name}</p>
-                    {selectedPOI.vicinity && <p className="text-[#8590a2] text-xs mt-0.5 truncate">{selectedPOI.vicinity}</p>}
-                    {selectedPOI.info     && <p className="text-xs mt-1 font-medium" style={{ color: MAP_PRIMARY }}>{selectedPOI.info}</p>}
+                    <p className="text-white text-sm font-semibold leading-tight">
+                      {repairLikelyMojibake(selectedPOI.name)}
+                    </p>
+                    {selectedPOI.vicinity && (
+                      <p className="text-[#8590a2] text-xs mt-0.5 truncate">
+                        {repairLikelyMojibake(selectedPOI.vicinity)}
+                      </p>
+                    )}
+                    {selectedPOI.info && (
+                      <p className="text-xs mt-1 font-medium" style={{ color: MAP_PRIMARY }}>
+                        {repairLikelyMojibake(selectedPOI.info)}
+                      </p>
+                    )}
                   </div>
                   <button
                     onClick={() => setSelectedPOI(null)}
@@ -1422,7 +1438,7 @@ function WaselMapFull(props: WaselMapProps) {
               >
                 <div className="flex items-start gap-2">
                   <WifiOff className="w-4 h-4 text-red-300 shrink-0 mt-0.5" />
-                  <p className="text-red-200 text-xs">{locationError}</p>
+                  <p className="text-red-200 text-xs">{repairLikelyMojibake(locationError)}</p>
                   <button onClick={() => setLocationError(null)} className="ml-auto shrink-0 text-red-400 hover:text-red-200">
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -1495,7 +1511,7 @@ function WaselMapFull(props: WaselMapProps) {
                 <>
                   <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
                   <Locate className="w-4 h-4" />
-                  <span>Live Â· Active</span>
+                  <span>Live · Active</span>
                 </>
               ) : (
                 <>
