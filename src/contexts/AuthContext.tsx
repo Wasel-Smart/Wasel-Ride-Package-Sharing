@@ -127,6 +127,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     let mounted = true;
     const supabaseClient = supabase;
+    const pendingTimers: ReturnType<typeof setTimeout>[] = [];
 
     if (!supabaseClient) {
       setLoading(false);
@@ -234,6 +235,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       cancelDeferredInit();
       window.removeEventListener('message', handleAuthMessage);
       subscription.unsubscribe();
+      for (const t of pendingTimers) clearTimeout(t);
     };
   }, [fetchProfile, isPublicLanding, localAuth.loading, localAuth.user]);
 
