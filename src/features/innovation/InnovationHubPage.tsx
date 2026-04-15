@@ -15,6 +15,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { normalizeTextTree } from '../../utils/textEncoding';
 import { C, F, GRAD_AURORA, SH } from '../../utils/wasel-ds';
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -26,7 +27,7 @@ const CARD_BG = 'linear-gradient(180deg, rgba(255,255,255,0.055) 0%, rgba(255,25
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Copy
 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-const COPY = {
+const COPY = normalizeTextTree({
   en: {
     eyebrow: 'Wasel Â· Innovation Hub',
     title: "Where Jordan's mobility future is being built.",
@@ -69,7 +70,7 @@ const COPY = {
     menaBody:
       'ØªÙ†Ø³ÙŠÙ‚ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨ Ø¨Ø´ÙƒÙ„ Ø·Ø¨ÙŠØ¹ÙŠØŒ ÙˆØ§Ø¬Ù‡Ø© ØªÙØ¹Ø·ÙŠ Ø§Ù„Ø£ÙˆÙ„ÙˆÙŠØ© Ù„Ù„Ø¹Ø±Ø¨ÙŠØ©ØŒ ØªØ³Ø¹ÙŠØ± Ø¨Ø§Ù„Ø¯ÙŠÙ†Ø§Ø± Ø§Ù„Ø£Ø±Ø¯Ù†ÙŠØŒ Ø§Ù…ØªØ«Ø§Ù„ Ù„Ù‚Ø§Ù†ÙˆÙ† PDPL Ø§Ù„Ø£Ø±Ø¯Ù†ÙŠØŒ ÙˆØ¨Ù†ÙŠØ© ØªØ­ØªÙŠØ© Ù…Ù‚Ø§ÙˆÙ…Ø© Ù„Ù„Ø§Ù†Ù‚Ø·Ø§Ø¹.',
   },
-} as const;
+} as const);
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Pillar data
@@ -82,7 +83,7 @@ type Pillar = {
   tag: { en: string; ar: string };
 };
 
-const PILLARS: Pillar[] = [
+const RAW_PILLARS: Pillar[] = [
   {
     icon: <Brain size={20} />,
     accent: C.cyan,
@@ -174,6 +175,10 @@ const PILLARS: Pillar[] = [
     tag: { en: 'Network Effect', ar: 'Ø£Ø«Ø± Ø§Ù„Ø´Ø¨ÙƒØ©' },
   },
 ];
+const PILLARS: Pillar[] = RAW_PILLARS.map(({ icon, ...pillar }) => ({
+  icon,
+  ...normalizeTextTree(pillar),
+}));
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Metrics
@@ -186,7 +191,7 @@ type Metric = {
   icon: ReactNode;
 };
 
-const METRICS: Metric[] = [
+const RAW_METRICS: Metric[] = [
   {
     icon: <BarChart3 size={16} />,
     accent: C.cyan,
@@ -230,6 +235,10 @@ const METRICS: Metric[] = [
     sub: { en: 'Verified identity resolution rate', ar: 'Ù…Ø¹Ø¯Ù„ Ø¯Ù‚Ø© Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ù‡ÙˆÙŠØ©' },
   },
 ];
+const METRICS: Metric[] = RAW_METRICS.map(({ icon, ...metric }) => ({
+  icon,
+  ...normalizeTextTree(metric),
+}));
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Roadmap
@@ -242,7 +251,7 @@ type RoadmapItem = {
   accent: string;
 };
 
-const ROADMAP: RoadmapItem[] = [
+const ROADMAP: RoadmapItem[] = normalizeTextTree([
   {
     status: 'live',
     accent: C.green,
@@ -284,7 +293,7 @@ const ROADMAP: RoadmapItem[] = [
       { en: 'Carbon accounting per corridor per trip', ar: 'Ù…Ø­Ø§Ø³Ø¨Ø© Ø§Ù„ÙƒØ±Ø¨ÙˆÙ† Ù„ÙƒÙ„ Ù…Ù…Ø± Ù„ÙƒÙ„ Ø±Ø­Ù„Ø©' },
     ],
   },
-];
+]) as RoadmapItem[];
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Style helpers

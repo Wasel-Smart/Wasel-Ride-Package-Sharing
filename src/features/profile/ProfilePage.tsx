@@ -55,14 +55,14 @@ function showToast(message: string) {
     bottom: '24px',
     left: '50%',
     transform: 'translateX(-50%)',
-    background: '#0A1628',
-    border: '1px solid rgba(71,183,230,0.3)',
-    color: '#EFF6FF',
+    background: 'var(--wasel-service-card)',
+    border: '1px solid var(--wasel-service-border)',
+    color: 'var(--wasel-service-text)',
     padding: '10px 20px',
     borderRadius: '10px',
     fontSize: '0.85rem',
     zIndex: '9999',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+    boxShadow: 'var(--wasel-shadow-md)',
   });
   document.body.appendChild(element);
   setTimeout(() => element.remove(), 2800);
@@ -587,7 +587,7 @@ function ProfilePageContent({
             {renderRows(dangerRows)}
           </SharedSection>
 
-          <p style={{ textAlign: 'center', fontSize: '0.72rem', color: 'rgba(148,163,184,0.35)', fontFamily: FONT }}>
+          <p style={{ textAlign: 'center', fontSize: '0.72rem', color: 'var(--wasel-service-muted)', fontFamily: FONT }}>
             {user.joinedAt
               ? (ar ? `عضو منذ ${joinedText}` : `Member since ${joinedText}`)
               : (ar ? 'عضو واصل' : 'Wasel member')}

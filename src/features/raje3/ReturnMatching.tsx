@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Wasel Raje3 Returns
  * Connected to the shared ride/package network.
  */
@@ -14,9 +14,9 @@ import { createConnectedPackage, getConnectedRides, type PackageRequest } from '
 import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 
 const D = {
-  bg:'#040C18', card:'#0A1628', card2:'#0D1F38',
-  border:'rgba(168,214,20,0.12)', gold:'#A8D614', cyan:'#47B7E6', green:'#6BB515',
-  text:'#EFF6FF', sub:'rgba(148,163,184,0.80)', muted:'rgba(100,130,180,0.60)',
+  bg:'var(--wasel-service-bg)', card:'var(--wasel-service-card)', card2:'var(--wasel-service-card-2)',
+  border:'var(--wasel-service-border)', gold:'var(--warning)', cyan:'var(--wasel-app-blue)', green:'var(--success)',
+  text:'var(--wasel-service-text)', sub:'var(--wasel-service-sub)', muted:'var(--wasel-service-muted)',
   F:"var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)", MONO:"'JetBrains Mono','Fira Mono',monospace",
 } as const;
 
@@ -69,7 +69,7 @@ export function ReturnMatching() {
           driverName: ride.carModel ? `${ride.carModel.split(' ')[0]} Captain` : 'Wasel Captain',
           rating: 4.8,
           trips: 12,
-          departureTime: `${ride.date} · ${ride.time || 'Flexible'}`,
+          departureTime: `${ride.date} Â· ${ride.time || 'Flexible'}`,
           fromCity: ride.from,
           toCity: ride.to,
           priceJOD: ride.price,
@@ -95,7 +95,7 @@ export function ReturnMatching() {
         from: selectedTrip?.fromCity ?? 'Aqaba',
         to: 'Amman',
         weight: inferWeight(size),
-        note: [orderId && `Order ${orderId}`, item, reason].filter(Boolean).join(' · '),
+        note: [orderId && `Order ${orderId}`, item, reason].filter(Boolean).join(' Â· '),
         packageType: 'return',
         senderName: user?.name,
         senderEmail: user?.email,
@@ -112,11 +112,11 @@ export function ReturnMatching() {
   return (
     <div style={{ minHeight:'100vh', background:D.bg, fontFamily:D.F, color:D.text, padding:'28px 16px 80px' }} dir={isRTL?'rtl':'ltr'}>
       <div style={{ maxWidth:860, margin:'0 auto' }}>
-        <div style={{ background:'linear-gradient(135deg,#0B1D45 0%,#2A1A05 60%,#0A1628 100%)', borderRadius:20, padding:'28px 32px', marginBottom:24, border:`1px solid ${D.gold}20` }}>
+        <div style={{ background:'linear-gradient(135deg, rgb(var(--warning-rgb) / 0.14), rgb(var(--accent-secondary-rgb) / 0.10), rgba(255,255,255,0.03))', borderRadius:20, padding:'28px 32px', marginBottom:24, border:`1px solid ${D.gold}20` }}>
           <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:12 }}>
             <div style={{ width:46, height:46, borderRadius:14, background:`linear-gradient(135deg,${D.gold},#E89200)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.4rem', flexShrink:0 }}>??</div>
             <div>
-              <h1 style={{ fontSize:'1.35rem', fontWeight:900, letterSpacing:'-0.03em', margin:0 }}>{isRTL ? '???? — ????? ???' : 'Raje3 Smart Returns'}</h1>
+              <h1 style={{ fontSize:'1.35rem', fontWeight:900, letterSpacing:'-0.03em', margin:0 }}>{isRTL ? '???? â€” ????? ???' : 'Raje3 Smart Returns'}</h1>
               <p style={{ fontSize:'0.72rem', color:D.muted, margin:'3px 0 0' }}>
                 {isRTL ? '????? ?? ??????? ????? ???? ???? ?????? ???????? ??? ?????' : 'Matched against live package-ready rides heading into Amman'}
               </p>
@@ -152,8 +152,8 @@ export function ReturnMatching() {
                     />
                   </div>
                 ) : null}
-                <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => retailer && setStep(1)} disabled={!retailer} style={{ width:'100%', height:48, borderRadius:12, border:'none', background: retailer ? `linear-gradient(135deg,${D.gold},#E89200)` : 'rgba(255,255,255,0.08)', color: retailer ? '#040C18' : D.muted, fontWeight:800, fontSize:'0.9rem', fontFamily:D.F, cursor: retailer ? 'pointer' : 'not-allowed' }}>
-                  {isRTL?'?????? — ?????? ???????':'Next — Return details'} ?
+                <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => retailer && setStep(1)} disabled={!retailer} style={{ width:'100%', height:48, borderRadius:12, border:'none', background: retailer ? `linear-gradient(135deg,${D.gold},#E89200)` : 'var(--surface-muted-strong)', color: retailer ? 'var(--text-inverse)' : D.muted, fontWeight:800, fontSize:'0.9rem', fontFamily:D.F, cursor: retailer ? 'pointer' : 'not-allowed' }}>
+                  {isRTL?'?????? â€” ?????? ???????':'Next â€” Return details'} ?
                 </motion.button>
               </motion.div>
             )}
@@ -190,8 +190,8 @@ export function ReturnMatching() {
                 </div>
                 <div style={{ display:'flex', gap:8 }}>
                   <button onClick={() => setStep(0)} style={{ flex:1, height:48, borderRadius:12, border:`1px solid ${D.border}`, background:'transparent', color:D.sub, fontWeight:600, fontSize:'0.88rem', fontFamily:D.F, cursor:'pointer' }}>? {isRTL?'????':'Back'}</button>
-                  <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => { if (item && reason) void searchMatches(); }} disabled={!item || !reason || searching} style={{ flex:2, height:48, borderRadius:12, border:'none', background: item&&reason ? `linear-gradient(135deg,${D.gold},#E89200)` : 'rgba(255,255,255,0.08)', color: item&&reason ? '#040C18' : D.muted, fontWeight:800, fontSize:'0.9rem', fontFamily:D.F, cursor: item&&reason ? 'pointer' : 'not-allowed', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-                    {searching ? <><RefreshCw size={16} style={{animation:'spin 1s linear infinite'}}/>{isRTL?'???? ?????…':'Finding matches…'}</> : <><Search size={15}/>{isRTL?'???? ?? ????':'Find matching rides'}</>}
+                  <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => { if (item && reason) void searchMatches(); }} disabled={!item || !reason || searching} style={{ flex:2, height:48, borderRadius:12, border:'none', background: item&&reason ? `linear-gradient(135deg,${D.gold},#E89200)` : 'var(--surface-muted-strong)', color: item&&reason ? 'var(--text-inverse)' : D.muted, fontWeight:800, fontSize:'0.9rem', fontFamily:D.F, cursor: item&&reason ? 'pointer' : 'not-allowed', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                    {searching ? <><RefreshCw size={16} style={{animation:'spin 1s linear infinite'}}/>{isRTL?'???? ?????â€¦':'Finding matchesâ€¦'}</> : <><Search size={15}/>{isRTL?'???? ?? ????':'Find matching rides'}</>}
                   </motion.button>
                 </div>
               </motion.div>
@@ -215,9 +215,9 @@ export function ReturnMatching() {
                             <div style={{ display:'flex', gap:8, alignItems:'center', marginTop:6, color:D.sub, fontSize:'0.74rem' }}>
                               <Star size={11} color={D.gold} fill={D.gold} />
                               <span>{match.rating}</span>
-                              <span>· {match.trips} trips</span>
+                              <span>Â· {match.trips} trips</span>
                             </div>
-                            <div style={{ color:D.muted, fontSize:'0.74rem', marginTop:8 }}>{match.fromCity} ? {match.toCity} · {match.departureTime}</div>
+                            <div style={{ color:D.muted, fontSize:'0.74rem', marginTop:8 }}>{match.fromCity} ? {match.toCity} Â· {match.departureTime}</div>
                           </div>
                           <div style={{ color:D.gold, fontFamily:D.MONO, fontWeight:900 }}>JOD {match.priceJOD.toFixed(1)}</div>
                         </div>
@@ -232,8 +232,8 @@ export function ReturnMatching() {
                 )}
                 <div style={{ display:'flex', gap:8 }}>
                   <button onClick={() => setStep(1)} style={{ flex:1, height:48, borderRadius:12, border:`1px solid ${D.border}`, background:'transparent', color:D.sub, fontWeight:600, fontSize:'0.88rem', fontFamily:D.F, cursor:'pointer' }}>? {isRTL?'????':'Back'}</button>
-                  <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => void confirmReturn()} disabled={creating || (matches.length > 0 && !selectedMatch)} style={{ flex:2, height:48, borderRadius:12, border:'none', background: !creating && (matches.length === 0 || selectedMatch) ? `linear-gradient(135deg,${D.gold},#E89200)` : 'rgba(255,255,255,0.08)', color: !creating && (matches.length === 0 || selectedMatch) ? '#040C18' : D.muted, fontWeight:800, fontSize:'0.9rem', fontFamily:D.F, cursor: !creating && (matches.length === 0 || selectedMatch) ? 'pointer' : 'not-allowed' }}>
-                    {creating ? (isRTL?'???? ????? ??? ???????…':'Creating return request…') : (isRTL?'?????? ??????':'Review & Confirm')} ?
+                  <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => void confirmReturn()} disabled={creating || (matches.length > 0 && !selectedMatch)} style={{ flex:2, height:48, borderRadius:12, border:'none', background: !creating && (matches.length === 0 || selectedMatch) ? `linear-gradient(135deg,${D.gold},#E89200)` : 'var(--surface-muted-strong)', color: !creating && (matches.length === 0 || selectedMatch) ? 'var(--text-inverse)' : D.muted, fontWeight:800, fontSize:'0.9rem', fontFamily:D.F, cursor: !creating && (matches.length === 0 || selectedMatch) ? 'pointer' : 'not-allowed' }}>
+                    {creating ? (isRTL?'???? ????? ??? ???????â€¦':'Creating return requestâ€¦') : (isRTL?'?????? ??????':'Review & Confirm')} ?
                   </motion.button>
                 </div>
                 {error ? <div style={{ marginTop:14, color:'#FCA5A5', fontSize:'0.8rem' }}>{error}</div> : null}
@@ -263,7 +263,7 @@ export function ReturnMatching() {
                     <motion.button whileHover={{ scale:1.03 }} onClick={() => nav('/app/raje3')} style={{ flex:1, height:44, borderRadius:12, border:`1px solid ${D.border}`, background:D.card2, color:D.sub, fontWeight:600, fontSize:'0.82rem', fontFamily:D.F, cursor:'pointer' }}>
                       {isRTL?'??? ????':'New return'}
                     </motion.button>
-                    <motion.button whileHover={{ scale:1.03 }} onClick={() => nav('/app/packages')} style={{ flex:1, height:44, borderRadius:12, border:'none', background:`linear-gradient(135deg,${D.gold},#E89200)`, color:'#040C18', fontWeight:800, fontSize:'0.82rem', fontFamily:D.F, cursor:'pointer' }}>
+                    <motion.button whileHover={{ scale:1.03 }} onClick={() => nav('/app/packages')} style={{ flex:1, height:44, borderRadius:12, border:'none', background:`linear-gradient(135deg,${D.gold},#E89200)`, color:'var(--text-inverse)', fontWeight:800, fontSize:'0.82rem', fontFamily:D.F, cursor:'pointer' }}>
                       {isRTL?'???? ??????':'Open tracking'}
                     </motion.button>
                   </div>
@@ -298,4 +298,5 @@ export function ReturnMatching() {
 }
 
 export default ReturnMatching;
+
 

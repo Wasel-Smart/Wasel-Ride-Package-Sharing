@@ -1,5 +1,5 @@
 ﻿/**
- * MapWrapper â€” canonical map entry-point for Wasel
+ * MapWrapper - canonical map entry-point for Wasel
  *
  * All modes ('google', 'static', 'live') now render WaselMap.
  * This preserves the MapWrapper API used across 40+ components
@@ -43,7 +43,7 @@ function MapLoader({ height }: { height?: string | number }) {
       style={{ height: typeof height === 'number' ? `${height}px` : (height ?? '400px') }}
     >
       <MapPin className="w-8 h-8 animate-pulse" style={{ color: '#19E7BB' }} />
-      <p className="text-sm">Loading mapâ€¦</p>
+      <p className="text-sm">Loading map...</p>
     </div>
   );
 }

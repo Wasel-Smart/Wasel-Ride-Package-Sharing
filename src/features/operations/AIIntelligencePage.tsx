@@ -32,6 +32,7 @@ const BG = 'var(--wasel-service-bg)';
 const CARD = 'var(--wasel-service-card)';
 const CARD2 = 'var(--wasel-service-card-2)';
 const BORDER = 'var(--wasel-service-border)';
+const TRACK = 'var(--surface-muted-strong)';
 const CYAN = 'var(--wasel-app-blue)';
 const GOLD = 'var(--wasel-app-sky)';
 const GREEN = 'var(--wasel-app-teal)';
@@ -202,7 +203,7 @@ function CorridorIntelRow({
       <div style={{ display: 'flex', gap: 16 }}>
         <div>
           <div style={{ color: SUB, fontSize: '0.67rem', marginBottom: 3 }}>Ownership</div>
-          <div style={{ height: 5, width: 80, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' }}>
+          <div style={{ height: 5, width: 80, background: TRACK, borderRadius: 3, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${ownershipScore}%`, background: CYAN, borderRadius: 3 }} />
           </div>
           <div style={{ color: CYAN, fontSize: '0.68rem', fontWeight: 700, marginTop: 2 }}>{ownershipScore}/100</div>

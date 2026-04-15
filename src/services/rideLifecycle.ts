@@ -723,8 +723,12 @@ export async function updateRideBooking(
 
   if (isDriverStatusMutation && !allowLocalPersistenceFallback()) {
     const directStatus = updates.status === 'confirmed' ? 'accepted' : updates.status;
+    const backendBookingId = updated.backendBookingId;
+    if (!backendBookingId) {
+      return updated;
+    }
     await updateDirectBookingStatus(
-      updated.backendBookingId!,
+      backendBookingId,
       directStatus as 'accepted' | 'rejected' | 'cancelled',
     );
     const syncedUpdated = markRideBookingSyncState(updated, 'synced');
@@ -739,8 +743,13 @@ export async function updateRideBooking(
 
   if (isDriverStatusMutation) {
     const directStatus = updates.status === 'confirmed' ? 'accepted' : updates.status;
+    const backendBookingId = updated.backendBookingId;
+    if (!backendBookingId) {
+      handleRideBookingStatusSideEffects(target, updated, bookingId);
+      return updated;
+    }
     void updateDirectBookingStatus(
-      updated.backendBookingId!,
+      backendBookingId,
       directStatus as 'accepted' | 'rejected' | 'cancelled',
     )
       .then(() => {
@@ -834,12 +843,18 @@ export function syncRideBookingCompletion(referenceDate = Date.now()): RideBooki
     if (booking.status !== 'confirmed') return booking;
     const tripTime = new Date(`${booking.date}T${booking.time || '00:00'}`).getTime();
     if (!Number.isFinite(tripTime) || tripTime > now) return booking;
-    const completedBooking = {
-      ...booking,
-      status: 'completed' as RideBookingStatus,
-      paymentStatus: booking.paymentStatus === 'authorized' ? 'captured' as RidePaymentStatus : booking.paymentStatus,
-      updatedAt: new Date(now).toISOString(),
-    };
+    const completedBooking = validateRideBooking(
+      {
+        ...booking,
+        status: 'completed' as RideBookingStatus,
+        paymentStatus:
+          booking.paymentStatus === 'authorized'
+            ? 'captured' as RidePaymentStatus
+            : booking.paymentStatus,
+        updatedAt: new Date(now).toISOString(),
+      },
+      'ride.booking.auto-complete',
+    );
     completedThisPass.push(completedBooking);
     return completedBooking;
   });

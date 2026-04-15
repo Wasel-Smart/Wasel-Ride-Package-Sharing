@@ -35,6 +35,7 @@ const BG = 'var(--wasel-service-bg)';
 const CARD = 'var(--wasel-service-card)';
 const CARD2 = 'var(--wasel-service-card-2)';
 const BORDER = 'var(--wasel-service-border)';
+const TRACK = 'var(--surface-muted-strong)';
 const CYAN = 'var(--wasel-app-blue)';
 const GOLD = 'var(--wasel-app-sky)';
 const GREEN = 'var(--wasel-app-teal)';
@@ -367,7 +368,7 @@ export default function ModerationPage() {
                         <div style={{ color: TEXT, fontWeight: 700, fontSize: '0.77rem' }}>{rq.corridor}</div>
                         <span style={{ color: sc, fontWeight: 800, fontSize: '0.67rem' }}>{rq.status}</span>
                       </div>
-                      <div style={{ height: 4, background: 'rgba(255,255,255,0.07)', borderRadius: 3, marginBottom: 6 }}>
+                      <div style={{ height: 4, background: TRACK, borderRadius: 3, marginBottom: 6 }}>
                         <div style={{ height: '100%', width: `${rq.ownershipScore}%`, background: sc, borderRadius: 3 }} />
                       </div>
                       {rq.qualityFlags.map((f) => (

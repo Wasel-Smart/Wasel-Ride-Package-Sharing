@@ -8,8 +8,8 @@ import {
 } from './profileUtils';
 
 export const PROFILE_BG = 'var(--wasel-service-bg)';
-export const PROFILE_BORDER = 'rgba(157,232,255,0.18)';
-export const PROFILE_CYAN = '#0F73FF';
+export const PROFILE_BORDER = 'var(--wasel-service-border)';
+export const PROFILE_CYAN = 'var(--wasel-app-blue)';
 export const PROFILE_FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 export type SavingField = 'name' | 'phone' | 'photo' | null;
