@@ -6,8 +6,8 @@
  * on the user's explicit choice.
  *
  * Architecture:
- *  - First visit → banner appears at bottom
- *  - Accept / Decline → stores in localStorage, banner dismissed forever
+ *  - First visit -> banner appears at bottom
+ *  - Accept / Decline -> stores in localStorage, banner dismissed forever
  *  - Window event "wasel:consent-granted" is emitted on accept so
  *    App.tsx / monitoring.ts can initialise analytics without a page reload
  *  - Respects prefers-reduced-motion

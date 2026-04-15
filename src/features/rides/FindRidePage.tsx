@@ -655,7 +655,7 @@ export function FindRidePage() {
           ]}
         />
 
-        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
+        {import.meta.env.DEV && <div style={{ marginBottom: 18 }}>
           <StakeholderSignalBanner
             dir={ar ? 'rtl' : 'ltr'}
             eyebrow={ar ? 'واصل · تواصل الحجز' : 'Wasel · booking comms'}

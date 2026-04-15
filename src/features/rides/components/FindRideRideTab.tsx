@@ -211,6 +211,15 @@ function SignalMetricGrid({ items }: { items: SignalMetric[] }) {
             borderRadius: r(14),
             padding: '14px 15px',
             border: `1px solid ${DS.border}`,
+            transition: 'border-color 0.16s ease, box-shadow 0.16s ease',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLDivElement).style.borderColor = DS.borderH;
+            (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--wasel-shadow-sm)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLDivElement).style.borderColor = DS.border;
+            (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
           }}
         >
           <div
@@ -227,10 +236,13 @@ function SignalMetricGrid({ items }: { items: SignalMetric[] }) {
           </div>
           <div
             style={{
-              color: item.tone,
               fontWeight: 800,
               fontSize: '0.88rem',
               lineHeight: 1.55,
+              background: `linear-gradient(135deg, ${item.tone}, color-mix(in srgb, ${item.tone} 70%, white))`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
             }}
           >
             {item.value}
@@ -383,7 +395,7 @@ function RideSearchPanel({
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#fff',
+                  color: DS.text,
                   fontFamily: DS.F,
                   fontSize: '0.9rem',
                   flex: 1,
@@ -433,12 +445,12 @@ function RideSearchPanel({
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#fff',
+                color: DS.text,
                 fontFamily: DS.F,
                 fontSize: '0.85rem',
                 flex: 1,
                 outline: 'none',
-                colorScheme: 'dark',
+                colorScheme: 'light dark',
               }}
             />
           </div>

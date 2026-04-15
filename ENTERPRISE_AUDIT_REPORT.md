@@ -1,99 +1,121 @@
-# Wasel Application Enterprise Audit Report
+# Wasel Application Audit Report
 
-Date: 2026-04-15  
-Workspace: `C:\Users\user\OneDrive\Desktop\Wdoubleme`  
-Scope: runtime contracts, environment policy, real-data integrity, localization and encoding hygiene, service consolidation
+Date: 2026-04-15
+Workspace: `C:\Users\user\OneDrive\Desktop\Wdoubleme`
+Scope: release health, contracts, testing, performance, encoding, and governance
 
-## System Health
+## Executive Summary
 
-| Pillar | Current Score | Evidence |
+This repository is not currently a verified 10/10 production-grade system.
+
+What is green today:
+
+- Full Vitest suite passes locally.
+- `npm run type-check` passes.
+- `npm run lint` passes.
+- `npm run build` passes.
+- Payments is now a first-class domain instead of a wallet alias.
+- Shared contracts now exist for landing tabs, errors, wallet, payments, and notifications.
+
+What is not green today:
+
+- Coverage is far below production target.
+- Bundle chunks exceed the new 250 KB budget.
+- Lighthouse >= 90 on every PR is now enforced in CI, but the current build has not been proven to meet that bar.
+- Source-level encoding debt still exists outside the files corrected in this pass.
+- UI text is not yet fully centralized into a complete i18n contract.
+
+## Measured State
+
+| Pillar | Status | Evidence |
 | --- | --- | --- |
-| Contract Completeness | 10/10 | Versioned contracts now protect communications, growth analytics, and ride lifecycle payloads, including hydration and auto-complete paths. |
-| Environment Discipline | 10/10 | Playwright now boots in explicit `test` mode with persisted test auth only, while demo data and persistence fallbacks stay disabled. |
-| Real-Data Integrity | 10/10 | Communication, growth, and ride flows now fail closed or sync directly instead of inventing local-first records in protected paths. |
-| Encoding & Localization Quality | 10/10 | Runtime mojibake repair is deterministic, translation trees are normalized, and high-visibility map/auth/innovation strings now render cleanly. |
-| Architecture Consolidation | 10/10 | Fallback policy, contract validation, and text repair are now centralized utilities reused across the previously fragmented service edges. |
+| Release health | Partial | Full local tests, type-check, lint, and build are green. |
+| Reliability contracts | Improved | Landing tab contract and strict typed error model are shared. |
+| Product architecture | Improved | Payments has its own page, service, and types. |
+| Coverage | Failing target | Coverage run reports 33.81% lines and 23.85% branches. |
+| Performance budgets | Failing target | Current build emits chunks over the enforced 250 KB limit. |
+| Lighthouse governance | Enforced, not yet proven | CI now runs Lighthouse on pull requests and main/master. |
+| Encoding integrity | Partial | Several high-visibility mojibake literals were corrected, but repo-wide cleanup is incomplete. |
+| Reporting honesty | Corrected | This document now reflects measured facts rather than inflated scores. |
 
 ## Validation Executed
 
-- `npm run test -- tests/unit/services/rideLifecycle.test.ts tests/unit/services/communicationPreferences.test.ts tests/unit/utils/textEncoding.test.ts`
+- `npm run test`
 - `npm run type-check`
-- `npm run lint:strict`
+- `npm run lint`
 - `npm run build`
+- `npm run test:coverage`
 
 ## Validation Outcome
 
-- Targeted unit suites: passed, `22/22`
-- Type-check: passed
-- Strict lint: passed
-- Production build: passed
+- Unit tests: passed locally
+- Type-check: passed locally
+- Lint: passed locally
+- Build: passed locally
+- Coverage: failed threshold
+  - Lines: `33.81%`
+  - Branches: `23.85%`
+  - Statements: `32.34%`
+  - Functions: `26.31%`
 
-## Exact Improvements Applied
+## Exact Changes Applied In This Pass
 
-### Contract completeness
+### Release blockers and contracts
 
-- Added versioned contracts for communications, growth, and ride lifecycle domains.
-- Enforced contract parsing inside `communicationPreferences`, `growthEngine`, and `rideLifecycle`.
-- Validated hydrated ride bookings and auto-completed ride records instead of trusting loose storage or backend payloads.
-- Reworked ride booking updates so direct-backed status mutations use one validated side-effect path.
+- Extracted landing tab semantics into a shared typed contract.
+- Replaced error formatting drift with a deterministic typed error system.
+- Updated tests to validate strict error output instead of loose matching.
 
-### Environment discipline
+### Product architecture
 
-- Added explicit Playwright web-server env bootstrapping for `VITE_APP_ENV=test`.
-- Enabled `VITE_ENABLE_PERSISTED_TEST_AUTH=true` only for Playwright test runs.
-- Removed demo-data and persistence-fallback enablement from the E2E runtime path.
-- Kept `LocalAuth` compatible with persisted seeded test sessions without reopening demo-mode data paths.
+- Split Payments into its own domain with dedicated page, service, and types.
+- Reused shared domain contracts for wallet, payments, and notifications.
 
-### Real-data integrity
+### Testing and CI enforcement
 
-- `communicationPreferences` now blocks unsafe authenticated local-first behavior and requires direct persistence when protected rules demand it.
-- `growthEngine` now returns validated remote data or fails closed instead of synthesizing protected-path analytics snapshots.
-- `rideLifecycle` now creates direct-backed synced bookings in strict mode and only uses local-only booking behavior when explicitly allowed.
-- Driver-side ride status updates now sync directly in strict mode and downgrade to explicit `sync-error` state when deferred sync fails.
+- Added service, routing, app, and service-worker tests.
+- Added wallet and payments E2E coverage.
+- Raised enforced coverage thresholds to 80/70.
+- Added a hard coverage gate to CI.
 
-### Encoding and localization quality
+### Performance and reporting
 
-- Replaced the brittle mojibake detector with a Windows-1252-aware repair pipeline.
-- Normalized translation trees and repaired string outputs at the language boundary.
-- Cleaned visible encoding defects in map, auth callback, home dashboard, and innovation surfaces.
-- Added unit coverage for mojibake detection and nested text normalization.
+- Reduced the CI chunk budget from 600 KB to 250 KB.
+- Raised Lighthouse performance minimum from 0.88 to 0.90.
+- Enabled Lighthouse CI on every pull request plus main/master.
+- Added machine-readable quality reports for coverage, bundle size, test status, and Lighthouse artifacts.
 
-### Architecture consolidation
+### Encoding and governance
 
-- Reused `parseContract`, runtime policy, and text repair utilities instead of duplicating service-local logic.
-- Normalized previously fragmented ride side effects into one helper.
-- Consolidated innovation-page copy normalization without rewriting page architecture.
-- Moved test assertions to contract-aware async service behavior instead of synchronous local-storage assumptions.
+- Fixed mojibake in high-visibility runtime strings on privacy and payments surfaces.
+- Added an encoding check script and wired it into a Git pre-commit hook setup path.
+- Replaced inflated readiness claims with measured status.
 
-## Files Hardened In This Pass
+## Definition Of 10/10
 
-- `playwright.config.ts`
-- `src/components/MapWrapper.tsx`
-- `src/components/WaselMap.tsx`
-- `src/features/home/useHomePageDashboard.ts`
-- `src/features/innovation/InnovationHubPage.tsx`
-- `src/features/rides/components/OfferRideIncomingRequests.tsx`
-- `src/pages/WaselAuthCallback.tsx`
-- `src/services/rideLifecycle.ts`
-- `src/utils/textEncoding.ts`
-- `tests/unit/services/communicationPreferences.test.ts`
-- `tests/unit/services/rideLifecycle.test.ts`
-- `tests/unit/utils/textEncoding.test.ts`
+The repo only qualifies as 10/10 when all of the following are true and enforced automatically:
 
-## Release Assessment
+1. Tests are green in CI.
+2. Coverage is at least 80% lines and 70% branches.
+3. No JavaScript chunk exceeds 250 KB.
+4. Lighthouse performance is at least 90 on every PR.
+5. Encoding checks pass with no mojibake in source.
+6. Reporting artifacts match the real CI outputs.
 
-Repo-scope release posture is now enterprise-ready for the audited pillars.
+## Current Score
 
-- Contract boundaries are explicit and versioned in the remaining high-risk domains that were previously open.
-- Protected test and CI execution no longer depend on demo data or permissive persistence toggles.
-- User-facing Arabic and mixed-language surfaces are rendering from normalized text paths.
-- Validation is green across tests, type-check, lint, and production build.
+Current verified score: `7/10`
 
-## Remaining Notes
+Reason:
 
-No repo-internal blockers remain for the audited pillars.
+- The branch is materially healthier than before and locally release-clean.
+- Enforcement is now stricter and more honest.
+- The repository still fails the requested production bar on coverage, performance, and full localization governance.
 
-External operational hygiene still matters:
+## Remaining Blockers
 
-- local secret files outside git should still be rotated and managed through the intended secrets platform
-- staging-backed end-to-end environments remain valuable as an operational confidence layer, even though the repo now fails closed correctly
+- Raise real coverage to the enforced threshold.
+- Reduce oversized chunks below 250 KB.
+- Prove Lighthouse >= 90 on the enforced routes.
+- Finish source-level mojibake cleanup across the remaining files.
+- Complete the migration from hardcoded UI text to a consistent i18n system.

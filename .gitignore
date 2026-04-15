@@ -20,6 +20,8 @@ node_modules/
 coverage/
 test-results/
 playwright-report/
+quality-report*.json
+.lighthouseci/
 
 # ── OS junk ────────────────────────────────────────────────────
 .DS_Store
