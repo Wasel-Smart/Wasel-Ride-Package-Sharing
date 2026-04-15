@@ -76,10 +76,10 @@
   --wasel-service-card-3: var(--service-card-strong);
   --wasel-service-border: var(--border);
   --wasel-service-border-strong: var(--border-strong);
-  --wasel-service-text: var(--text-primary);
-  --wasel-service-sub: var(--text-secondary);
-  --wasel-service-muted: var(--text-muted);
-  --wasel-service-chip-bg: var(--surface-muted);
+  --wasel-service-text: var(--service-text-primary, var(--text-primary));
+  --wasel-service-sub: var(--service-text-secondary, var(--text-secondary));
+  --wasel-service-muted: var(--service-text-muted, var(--text-muted));
+  --wasel-service-chip-bg: var(--service-card-muted, var(--surface-muted));
   --wasel-service-head-bg: var(--service-head-background);
   --wasel-service-head-shadow: var(--service-head-shadow);
 }

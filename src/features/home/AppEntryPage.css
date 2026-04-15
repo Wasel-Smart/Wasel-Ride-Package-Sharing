@@ -1,19 +1,34 @@
 .app-entry-page {
   --landing-bg: var(--bg-primary);
-  --landing-surface: var(--surface-muted);
+  --landing-surface: var(--service-card);
   --landing-border: var(--border);
-  --landing-text: var(--text-primary);
-  --landing-muted: var(--text-secondary);
-  --landing-blue: #65e1ff;
-  --landing-teal: #19e7bb;
-  --landing-button-brand: #65e1ff;
-  --landing-button-brand-soft: #f3fbff;
-  --landing-button-brand-mid: #bfefff;
-  --landing-button-brand-rgb: 101, 225, 255;
-  --landing-hero: var(--bg-secondary);
+  --landing-text: var(--service-text-primary, var(--text-primary));
+  --landing-muted: var(--service-text-secondary, var(--text-secondary));
+  --landing-blue: var(--accent-secondary);
+  --landing-teal: var(--accent);
+  --landing-button-brand-rgb: 46, 158, 216;
+  --landing-button-bg: var(--theme-gradient-primary);
+  --landing-button-foreground: var(--primary-foreground);
+  --landing-panel-bg: var(--service-card);
+  --landing-panel-shadow: var(--service-head-shadow);
+  --landing-hero: var(--service-head-background);
+  --landing-hero-text: var(--service-text-primary, #f5fbff);
+  --landing-hero-muted: var(--service-text-secondary, rgba(245, 251, 255, 0.84));
+  --landing-soft-surface: rgba(255, 255, 255, 0.08);
+  --landing-soft-surface-strong: rgba(255, 255, 255, 0.12);
+  --landing-input-bg: rgba(255, 255, 255, 0.06);
   min-height: 100vh;
   background: var(--shell-background);
   color: var(--landing-text);
+}
+
+.light .app-entry-page {
+  --landing-border: rgba(255, 255, 255, 0.10);
+  --landing-button-brand-rgb: 17, 161, 132;
+  --landing-soft-surface: rgba(255, 255, 255, 0.07);
+  --landing-soft-surface-strong: rgba(255, 255, 255, 0.11);
+  --landing-input-bg: rgba(255, 255, 255, 0.08);
+  --landing-panel-shadow: 0 30px 76px rgba(7, 23, 21, 0.16);
 }
 
 .app-entry-page__shell {
@@ -42,8 +57,8 @@
   padding: 14px 18px;
   border-radius: 24px;
   border: 1px solid var(--landing-border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
-  box-shadow: 0 24px 56px rgba(1, 10, 18, 0.22);
+  background: var(--landing-panel-bg);
+  box-shadow: var(--landing-panel-shadow);
   backdrop-filter: blur(18px);
 }
 
@@ -112,7 +127,7 @@
   padding: 0 16px;
   border: 1px solid var(--landing-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--landing-soft-surface);
   color: var(--landing-text);
   font-size: 0.88rem;
   font-weight: 800;
@@ -124,9 +139,9 @@
 }
 
 .app-entry-page__auth-primary {
-  background: linear-gradient(135deg, var(--landing-button-brand-soft) 0%, var(--landing-button-brand-mid) 52%, var(--landing-button-brand) 100%) !important;
-  color: #081520 !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: var(--landing-button-bg) !important;
+  color: var(--landing-button-foreground) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
   box-shadow: 0 18px 36px rgba(var(--landing-button-brand-rgb), 0.24);
 }
 
@@ -142,7 +157,7 @@
   overflow: hidden;
   border-radius: 38px;
   min-height: 680px;
-  background: linear-gradient(135deg, #092544 0%, var(--landing-hero) 52%, #06111f 100%);
+  background: var(--landing-hero);
   box-shadow: 0 42px 120px rgba(7, 25, 49, 0.22);
 }
 
@@ -196,7 +211,7 @@
 .app-entry-page__hero-copy {
   align-content: center;
   gap: 18px;
-  color: #f5fbff;
+  color: var(--landing-hero-text);
 }
 
 .app-entry-page__eyebrow,
@@ -207,8 +222,8 @@
   gap: 8px;
   padding: 8px 14px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #9de8ff;
+  background: var(--landing-soft-surface-strong);
+  color: var(--landing-blue);
   font-size: 0.76rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -227,7 +242,7 @@
 .app-entry-page__hero-body {
   margin: 0;
   max-width: 56ch;
-  color: rgba(245, 251, 255, 0.84);
+  color: var(--landing-hero-muted);
   font-size: 1rem;
   line-height: 1.75;
 }
@@ -236,8 +251,8 @@
   width: fit-content;
   padding: 10px 16px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background: var(--landing-soft-surface);
+  color: var(--landing-hero-text);
   font-size: 0.9rem;
   font-weight: 800;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -249,8 +264,8 @@
   gap: 8px;
   padding: 10px 14px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(245, 251, 255, 0.92);
+  background: var(--landing-soft-surface);
+  color: var(--landing-hero-text);
   font-size: 0.84rem;
   font-weight: 700;
 }
@@ -262,7 +277,7 @@
   width: fit-content;
   padding: 14px 16px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--landing-soft-surface);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -274,7 +289,7 @@
 }
 
 .app-entry-page__hero-meta span {
-  color: rgba(245, 251, 255, 0.8);
+  color: var(--landing-hero-muted);
   font-size: 0.88rem;
 }
 
@@ -282,10 +297,8 @@
 .app-entry-page__flow-card {
   border-radius: 30px;
   border: 1px solid var(--landing-border);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
-    rgba(8, 19, 34, 0.82);
-  box-shadow: 0 28px 68px rgba(1, 10, 18, 0.26);
+  background: var(--landing-panel-bg);
+  box-shadow: var(--landing-panel-shadow);
   backdrop-filter: blur(18px);
 }
 
@@ -302,7 +315,7 @@
   gap: 8px;
   padding: 6px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--landing-soft-surface);
 }
 
 .app-entry-page__mode-switch button {
@@ -321,7 +334,7 @@
 }
 
 .app-entry-page__mode-switch button.is-active {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--landing-soft-surface-strong);
   border: 1px solid var(--landing-border);
   color: var(--landing-text);
   box-shadow: 0 16px 30px rgba(1, 10, 18, 0.2);
@@ -365,7 +378,7 @@
   padding: 0 16px;
   border: 1px solid var(--landing-border);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--landing-input-bg);
   color: var(--landing-text);
   font: inherit;
   backdrop-filter: blur(16px);
@@ -382,7 +395,7 @@
 .app-entry-page__field-note {
   padding: 14px 16px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--landing-soft-surface);
   color: var(--landing-muted);
   line-height: 1.65;
 }
@@ -406,16 +419,16 @@
 
 .app-entry-page__primary-button {
   flex: 1 1 220px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: linear-gradient(135deg, var(--landing-button-brand-soft) 0%, var(--landing-button-brand-mid) 52%, var(--landing-button-brand) 100%);
-  color: #081520;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: var(--landing-button-bg);
+  color: var(--landing-button-foreground);
   box-shadow: 0 18px 36px rgba(var(--landing-button-brand-rgb), 0.24);
 }
 
 .app-entry-page__secondary-button,
 .app-entry-page__guest-auth-buttons button {
   border: 1px solid var(--landing-border);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--landing-soft-surface);
   color: var(--landing-text);
 }
 
@@ -472,7 +485,7 @@
   display: grid;
   place-items: center;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--landing-soft-surface);
   color: var(--landing-blue);
 }
 
