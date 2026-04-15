@@ -18,8 +18,8 @@ export const C = {
   elevated: 'var(--surface-muted-strong)',
 
   navy: 'var(--wasel-app-hero)',
-  navyMid: '#0b2236',
-  navyLight: '#18354d',
+  navyMid: '#143459',
+  navyLight: '#3f638a',
 
   cyan: 'var(--accent-secondary)',
   cyanDark: 'var(--accent)',
@@ -32,10 +32,10 @@ export const C = {
   goldDim: 'rgb(var(--warning-rgb) / 0.16)',
   green: 'var(--success)',
   greenDim: 'rgb(var(--success-rgb) / 0.18)',
-  purple: '#b4d7e8',
-  purpleDim: 'rgba(180,215,232,0.16)',
-  orange: '#ff9d6c',
-  orangeDim: 'rgba(255,157,108,0.16)',
+  purple: '#a9e3ff',
+  purpleDim: 'rgba(169,227,255,0.18)',
+  orange: '#a9e3ff',
+  orangeDim: 'rgba(169,227,255,0.18)',
 
   text: 'var(--wasel-copy-primary)',
   textSub: 'var(--wasel-copy-muted)',
@@ -154,7 +154,7 @@ export const GRAD_PURPLE = 'var(--theme-gradient-primary)';
 export const GRAD_HERO = 'var(--wasel-service-head-bg)';
 export const GRAD_SIGNAL = 'var(--wasel-app-button-primary)';
 export const GRAD_AURORA =
-  'radial-gradient(circle at top, rgba(101,225,255,0.24), rgba(25,231,187,0.16) 44%, rgba(4,18,30,0) 74%)';
+  'radial-gradient(circle at top, rgba(169,227,255,0.26), rgba(34,194,170,0.12) 44%, rgba(20,52,89,0) 74%)';
 
 export const ANIM = {
   dur: {
