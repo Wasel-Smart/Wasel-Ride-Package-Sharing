@@ -3,7 +3,7 @@
  * Handles: focus trap, backdrop click, Escape key, scroll lock.
  */
 
-import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type CSSProperties, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { C, R, SH, TYPE, F, Z } from '../../utils/wasel-ds';
 
@@ -31,6 +31,9 @@ export function WaselModal({
   style,
 }: WaselModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const uid = useId();
+  const titleId = title ? `wasel-modal-title-${uid}` : undefined;
+  const descId = description ? `wasel-modal-desc-${uid}` : undefined;
 
   useEffect(() => {
     if (!open) return;
@@ -89,8 +92,8 @@ export function WaselModal({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={title ? 'wasel-modal-title' : undefined}
-        aria-describedby={description ? 'wasel-modal-desc' : undefined}
+        aria-labelledby={titleId}
+        aria-describedby={descId}
         tabIndex={-1}
         style={dialogStyle}
       >
@@ -99,12 +102,12 @@ export function WaselModal({
           <div style={{ padding: '22px 24px 16px', borderBottom: `1px solid ${C.borderFaint}`, display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
             <div style={{ flex: 1 }}>
               {title && (
-                <h2 id="wasel-modal-title" style={{ margin: 0, fontSize: TYPE.size.lg, fontWeight: 900, color: C.text, lineHeight: 1.2 }}>
+                <h2 id={titleId} style={{ margin: 0, fontSize: TYPE.size.lg, fontWeight: 900, color: C.text, lineHeight: 1.2 }}>
                   {title}
                 </h2>
               )}
               {description && (
-                <p id="wasel-modal-desc" style={{ margin: '6px 0 0', fontSize: TYPE.size.sm, color: C.textMuted, lineHeight: 1.55 }}>
+                <p id={descId} style={{ margin: '6px 0 0', fontSize: TYPE.size.sm, color: C.textMuted, lineHeight: 1.55 }}>
                   {description}
                 </p>
               )}

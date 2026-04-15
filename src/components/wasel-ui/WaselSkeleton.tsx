@@ -25,7 +25,10 @@ let injected = false;
 function injectShimmer() {
   if (injected || typeof document === 'undefined') return;
   injected = true;
+  const existing = document.getElementById('wasel-shimmer-keyframes');
+  if (existing) return;
   const style = document.createElement('style');
+  style.id = 'wasel-shimmer-keyframes';
   style.textContent = shimmerKeyframes;
   document.head.appendChild(style);
 }

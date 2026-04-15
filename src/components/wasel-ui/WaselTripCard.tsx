@@ -60,6 +60,15 @@ export function WaselTripCard({
   return (
     <div
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? `${from} to ${to}` : undefined}
       style={{
         background: 'var(--wasel-panel-soft)',
         border: `1px solid ${C.border}`,

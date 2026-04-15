@@ -286,12 +286,8 @@ function AppRuntimeCoordinator() {
     const syncOnlineState = () => {
       const online = typeof navigator === 'undefined' ? true : navigator.onLine;
       onlineManager.setOnline(online);
-      if (online) {
-        void (async () => {
-          if (!disposed) {
-            await probeBackendHealth();
-          }
-        })();
+      if (online && !disposed) {
+        void probeBackendHealth();
       }
     };
 

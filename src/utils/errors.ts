@@ -233,11 +233,11 @@ export function formatErrorMessage(error: unknown): string {
     PAYMENT_ERROR: 'Payment processing failed. Please try again.',
     TIMEOUT_ERROR: 'Request timed out. Please try again.',
     CONFIG_ERROR: 'Configuration error. Please contact support.',
-    IGNORABLE_SYSTEM_ERROR: '', // Don't show to user
+    IGNORABLE_SYSTEM_ERROR: 'A background process encountered an issue.',
     UNKNOWN_ERROR: 'An unexpected error occurred. Please try again.',
   };
 
-  if (Object.prototype.hasOwnProperty.call(messageMap, normalized.code)) {
+  if (normalized.code in messageMap) {
     return messageMap[normalized.code];
   }
 

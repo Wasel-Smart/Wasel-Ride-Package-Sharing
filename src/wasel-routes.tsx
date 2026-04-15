@@ -41,6 +41,7 @@ function PageLoader() {
       <div
         role="status"
         aria-label="Loading page"
+        className="wasel-page-loader-spinner"
         style={{
           width: 36,
           height: 36,
@@ -53,7 +54,7 @@ function PageLoader() {
       <style>{`
         @keyframes wasel-spin { to { transform: rotate(360deg); } }
         @media (prefers-reduced-motion: reduce) {
-          [role="status"][aria-label="Loading page"] {
+          .wasel-page-loader-spinner {
             animation: none;
             border-top-color: var(--primary, #47B7E6);
             opacity: 0.55;

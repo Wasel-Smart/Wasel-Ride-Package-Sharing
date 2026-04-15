@@ -43,11 +43,13 @@ const safeAvatarUrlField = z
   .refine((value) => {
     try {
       const url = new URL(value);
-      return url.protocol === 'http:' || url.protocol === 'https:';
+      // Allow http only in development; production must use https
+      const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
+      return url.protocol === 'https:' || (isDev && url.protocol === 'http:');
     } catch {
       return false;
     }
-  }, 'Avatar URL must use http or https');
+  }, 'Avatar URL must use https');
 
 // ── Auth schemas ──────────────────────────────────────────────────────────────
 

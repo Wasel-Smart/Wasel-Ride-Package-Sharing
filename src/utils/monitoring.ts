@@ -173,8 +173,11 @@ export function initSentry() {
 
       if (raw) {
         try {
-          const userData = JSON.parse(raw);
-          event.user = { id: userData.id };
+          const userData = JSON.parse(raw) as { id?: string };
+          // Only attach the opaque user ID — never name, email, or phone
+          if (typeof userData.id === 'string') {
+            event.user = { id: userData.id };
+          }
         } catch {
           // Ignore malformed local user payloads.
         }
@@ -182,12 +185,18 @@ export function initSentry() {
 
       event.tags = {
         ...event.tags,
-        language: safeStorageGet('wasel_language') || 'ar',
-        theme: safeStorageGet('wasel_theme') || 'dark',
+        language: safeStorageGet('wasel_language') ?? 'ar',
+        theme: safeStorageGet('wasel_theme') ?? 'dark',
       };
 
       if (event.extra) {
         event.extra = redactSensitiveValue(event.extra) as Record<string, unknown>;
+      }
+
+      // Strip any request/response bodies that may contain PII
+      if (event.request) {
+        delete event.request.data;
+        delete event.request.cookies;
       }
 
       return event;

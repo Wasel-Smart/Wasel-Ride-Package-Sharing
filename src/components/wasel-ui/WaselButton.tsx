@@ -120,7 +120,7 @@ export function WaselButton({
     transition:     'all 160ms cubic-bezier(0.25,0.1,0.25,1)',
     userSelect:     'none',
     WebkitUserSelect:'none',
-    outline:        'none',
+    // Note: focus-visible outline is handled by globals.css :focus-visible rule
     ...style,
   };
 

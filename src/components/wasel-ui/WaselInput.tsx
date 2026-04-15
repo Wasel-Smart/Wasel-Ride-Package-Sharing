@@ -121,6 +121,7 @@ export function WaselInput({
             fontFamily: F,
             color:      C.text,
             minWidth:   0,
+            // Focus ring is shown on the outer wrapper via boxShadow, not on the input itself
             ...style,
           }}
         />

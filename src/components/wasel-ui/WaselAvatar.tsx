@@ -3,7 +3,7 @@
  * Fully token-based, zero hardcoded hex.
  */
 
-import type { CSSProperties } from 'react';
+import type { CSSProperties, KeyboardEvent } from 'react';
 import { C, R, TYPE, F } from '../../utils/wasel-ds';
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -111,12 +111,28 @@ export function WaselAvatar({
     WebkitUserSelect: 'none',
   };
 
+  const handleKeyDown = onClick
+    ? (e: KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }
+    : undefined;
+
   return (
-    <div style={containerStyle} onClick={onClick} role={onClick ? 'button' : undefined} tabIndex={onClick ? 0 : undefined}>
+    <div
+      style={containerStyle}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? (name ?? 'avatar') : undefined}
+    >
       {src ? (
         <img src={src} alt={name ?? 'avatar'} style={imgStyle} />
       ) : (
-        <div style={initialsStyle}>{getInitials(name)}</div>
+        <div style={initialsStyle} aria-hidden="true">{getInitials(name)}</div>
       )}
 
       {status !== 'none' && (

@@ -413,6 +413,8 @@ export default function AppEntryPage() {
                 >
                   <button
                     type="button"
+                    role="tab"
+                    aria-selected={mode === 'ride'}
                     className={mode === 'ride' ? 'is-active' : undefined}
                     onClick={() => setMode('ride')}
                   >
@@ -420,6 +422,8 @@ export default function AppEntryPage() {
                   </button>
                   <button
                     type="button"
+                    role="tab"
+                    aria-selected={mode === 'package'}
                     className={mode === 'package' ? 'is-active' : undefined}
                     onClick={() => setMode('package')}
                   >
