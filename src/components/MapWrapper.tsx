@@ -73,11 +73,13 @@ export function MapWrapper({
   const contextualMarkers: WaselMapMarker[] = [
     ...(pickupLocation ? [{ ...pickupLocation, label: 'Pickup', type: 'pickup' as const }] : []),
     ...(driverLocation ? [{ ...driverLocation, label: 'Driver', type: 'waypoint' as const }] : []),
-    ...(dropoffLocation ? [{ ...dropoffLocation, label: 'Dropoff', type: 'dropoff' as const }] : []),
+    ...(dropoffLocation
+      ? [{ ...dropoffLocation, label: 'Dropoff', type: 'dropoff' as const }]
+      : []),
   ];
   const waselMarkers: WaselMapMarker[] = [
     ...contextualMarkers,
-    ...markers.map((m) => ({ lat: m.lat, lng: m.lng, type: 'default' as const })),
+    ...markers.map(m => ({ lat: m.lat, lng: m.lng, type: 'default' as const })),
   ];
 
   return (
@@ -100,4 +102,3 @@ export function MapWrapper({
     </Suspense>
   );
 }
-

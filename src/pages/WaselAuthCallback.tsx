@@ -1,11 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import type { AuthChangeEvent } from '@supabase/supabase-js';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
-import {
-  friendlyAuthError,
-  getPasswordRequirements,
-  validatePassword,
-} from '../utils/authHelpers';
+import { friendlyAuthError, getPasswordRequirements, validatePassword } from '../utils/authHelpers';
 import { consumePersistedAuthReturnTo } from '../utils/authFlow';
 import { supabase } from '../utils/supabase/client';
 
@@ -75,15 +71,13 @@ async function ensureEstablishedSession() {
   if (firstAttempt.error) throw firstAttempt.error;
   if (firstAttempt.data.session) return firstAttempt.data.session;
 
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  await new Promise(resolve => setTimeout(resolve, 500));
 
   const retryAttempt = await supabase.auth.getSession();
   if (retryAttempt.error) throw retryAttempt.error;
   if (retryAttempt.data.session) return retryAttempt.data.session;
 
-  throw new Error(
-    'Authentication session could not be established. Please try signing in again.',
-  );
+  throw new Error('Authentication session could not be established. Please try signing in again.');
 }
 
 export default function WaselAuthCallback() {
@@ -97,11 +91,15 @@ export default function WaselAuthCallback() {
   const callbackType = useMemo(() => readCallbackParam('type'), []);
   const authCode = useMemo(() => readCallbackParam('code'), []);
   const rawCallbackError = useMemo(
-    () => decodeURIComponent(readCallbackParam('error_description') || readCallbackParam('error') || ''),
+    () =>
+      decodeURIComponent(
+        readCallbackParam('error_description') || readCallbackParam('error') || '',
+      ),
     [],
   );
   const callbackError = useMemo(
-    () => (rawCallbackError ? friendlyAuthError(rawCallbackError, 'Unable to complete sign-in.') : ''),
+    () =>
+      rawCallbackError ? friendlyAuthError(rawCallbackError, 'Unable to complete sign-in.') : '',
     [rawCallbackError],
   );
   const passwordRequirements = getPasswordRequirements(password);
@@ -147,7 +145,9 @@ export default function WaselAuthCallback() {
               },
             };
 
-      const { data: { subscription } } = authChange;
+      const {
+        data: { subscription },
+      } = authChange;
 
       try {
         if (typeof supabase.auth.initialize === 'function') {
@@ -157,7 +157,7 @@ export default function WaselAuthCallback() {
           }
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        await new Promise(resolve => setTimeout(resolve, 50));
 
         if (authCode && typeof supabase.auth.exchangeCodeForSession === 'function') {
           const existingSession = await supabase.auth.getSession();
@@ -248,9 +248,7 @@ export default function WaselAuthCallback() {
     const { error } = await supabase.auth.updateUser({ password });
     if (error) {
       setSavingPassword(false);
-      setFormError(
-        friendlyAuthError(error.message || error, 'Unable to update your password.'),
-      );
+      setFormError(friendlyAuthError(error.message || error, 'Unable to update your password.'));
       return;
     }
 
@@ -292,9 +290,7 @@ export default function WaselAuthCallback() {
             <h1 style={{ margin: '0 0 8px', fontSize: '1.35rem', lineHeight: 1.2 }}>
               Reset your password
             </h1>
-            <p style={{ margin: 0, color: CALLBACK_MUTED, lineHeight: 1.6 }}>
-              {message}
-            </p>
+            <p style={{ margin: 0, color: CALLBACK_MUTED, lineHeight: 1.6 }}>{message}</p>
           </div>
 
           <label style={{ display: 'grid', gap: 6 }}>
@@ -302,7 +298,7 @@ export default function WaselAuthCallback() {
             <input
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={event => setPassword(event.target.value)}
               placeholder="Enter a new password"
               style={{
                 width: '100%',
@@ -331,7 +327,7 @@ export default function WaselAuthCallback() {
               Password requirements
             </span>
             <div style={{ display: 'grid', gap: 6 }}>
-              {passwordRequirements.map((requirement) => (
+              {passwordRequirements.map(requirement => (
                 <span
                   key={requirement.key}
                   style={{
@@ -347,13 +343,11 @@ export default function WaselAuthCallback() {
           </div>
 
           <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: '0.82rem', color: CALLBACK_MUTED }}>
-              Confirm password
-            </span>
+            <span style={{ fontSize: '0.82rem', color: CALLBACK_MUTED }}>Confirm password</span>
             <input
               type="password"
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
+              onChange={event => setConfirmPassword(event.target.value)}
               placeholder="Re-enter your new password"
               style={{
                 width: '100%',
@@ -458,8 +452,12 @@ export default function WaselAuthCallback() {
             height: 42,
             margin: '0 auto 16px',
             borderRadius: '50%',
-            border: state === 'error' ? `3px solid ${CALLBACK_SPINNER_ERROR}` : `3px solid ${CALLBACK_SPINNER_IDLE}`,
-            borderTop: state === 'error' ? `3px solid ${CALLBACK_DANGER}` : `3px solid ${CALLBACK_ACCENT}`,
+            border:
+              state === 'error'
+                ? `3px solid ${CALLBACK_SPINNER_ERROR}`
+                : `3px solid ${CALLBACK_SPINNER_IDLE}`,
+            borderTop:
+              state === 'error' ? `3px solid ${CALLBACK_DANGER}` : `3px solid ${CALLBACK_ACCENT}`,
             animation:
               state === 'redirecting' || state === 'loading' || state === 'closing'
                 ? 'spin 0.8s linear infinite'
@@ -495,4 +493,3 @@ export default function WaselAuthCallback() {
     </div>
   );
 }
-

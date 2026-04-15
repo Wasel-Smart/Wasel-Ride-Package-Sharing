@@ -1,28 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../../src/services/directSupabase', () => ({
-  createDirectBooking: vi.fn(async ({
-    tripId,
-    bookingStatus,
-    seatsRequested,
-    metadata,
-  }: {
-    tripId: string;
-    bookingStatus: string;
-    seatsRequested: number;
-    metadata?: { total_price?: number | null };
-  }) => ({
-    booking: {
-      booking_id: `backend-${tripId}`,
-      id: `backend-${tripId}`,
-      trip_id: tripId,
-      seats_requested: seatsRequested,
-      status: bookingStatus,
-      total_price: metadata?.total_price ?? null,
-      created_at: '2026-04-15T08:00:00.000Z',
-      updated_at: '2026-04-15T08:00:00.000Z',
-    },
-  })),
+  createDirectBooking: vi.fn(
+    async ({
+      tripId,
+      bookingStatus,
+      seatsRequested,
+      metadata,
+    }: {
+      tripId: string;
+      bookingStatus: string;
+      seatsRequested: number;
+      metadata?: { total_price?: number | null };
+    }) => ({
+      booking: {
+        booking_id: `backend-${tripId}`,
+        id: `backend-${tripId}`,
+        trip_id: tripId,
+        seats_requested: seatsRequested,
+        status: bookingStatus,
+        total_price: metadata?.total_price ?? null,
+        created_at: '2026-04-15T08:00:00.000Z',
+        updated_at: '2026-04-15T08:00:00.000Z',
+      },
+    }),
+  ),
   getDirectDriverBookings: vi.fn(async () => []),
   getDirectUserBookings: vi.fn(async () => []),
   updateDirectBookingStatus: vi.fn(async () => undefined),
@@ -168,7 +170,7 @@ describe('booking queries', () => {
       passengerName: 'Ahmad Khalil',
     });
 
-    expect(getBookingsForRide(BASE_INPUT.rideId).map((booking) => booking.id)).toContain(bookingA.id);
+    expect(getBookingsForRide(BASE_INPUT.rideId).map(booking => booking.id)).toContain(bookingA.id);
     expect(
       getBookingsForDriver('driver-001', [
         {
@@ -189,9 +191,11 @@ describe('booking queries', () => {
           packageNote: '',
           createdAt: '2026-04-15T08:00:00.000Z',
         } satisfies PostedRide,
-      ]).map((booking) => booking.id),
+      ]).map(booking => booking.id),
     ).toContain(bookingA.id);
-    expect(getBookingsForPassenger('Ahmad Khalil').map((booking) => booking.id)).toContain(bookingB.id);
+    expect(getBookingsForPassenger('Ahmad Khalil').map(booking => booking.id)).toContain(
+      bookingB.id,
+    );
   });
 });
 
@@ -211,16 +215,16 @@ describe('updateRideBooking()', () => {
 
     expect(updated?.paymentStatus).toBe('captured');
     expect(updated?.supportThreadOpen).toBe(true);
-    expect(getRideBookings().find((item) => item.id === booking.id)?.paymentStatus).toBe('captured');
+    expect(getRideBookings().find(item => item.id === booking.id)?.paymentStatus).toBe('captured');
   });
 
   it('rejects invalid lifecycle transitions', async () => {
     const booking = await createRideBooking(BASE_INPUT);
     await flushAsyncWork();
 
-    await expect(
-      updateRideBooking(booking.id, { status: 'completed' }),
-    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(updateRideBooking(booking.id, { status: 'completed' })).rejects.toBeInstanceOf(
+      ValidationError,
+    );
   });
 
   it('sends strict driver-status mutations directly when local fallback is disabled', async () => {
@@ -253,7 +257,7 @@ describe('updateRideBooking()', () => {
 
     await flushAsyncWork();
 
-    expect(getRideBookings().find((item) => item.id === booking.id)?.syncState).toBe('sync-error');
+    expect(getRideBookings().find(item => item.id === booking.id)?.syncState).toBe('sync-error');
   });
 });
 
@@ -266,7 +270,7 @@ describe('syncRideBookingCompletion()', () => {
     await flushAsyncWork();
 
     const stored = JSON.parse(localStorage.getItem(BOOKING_KEY) || '[]') as RideBookingRecord[];
-    const next = stored.map((item) =>
+    const next = stored.map(item =>
       item.id === booking.id
         ? {
             ...item,
@@ -281,7 +285,7 @@ describe('syncRideBookingCompletion()', () => {
 
     const synced = syncRideBookingCompletion(new Date('2026-07-02T08:00:00.000Z').getTime());
 
-    expect(synced.find((item) => item.id === booking.id)?.status).toBe('completed');
+    expect(synced.find(item => item.id === booking.id)?.status).toBe('completed');
   });
 });
 

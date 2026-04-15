@@ -4,9 +4,15 @@ const memoryStorage = (() => {
   let store: Record<string, string> = {};
   return {
     getItem: (key: string) => store[key] ?? null,
-    setItem: (key: string, value: string) => { store[key] = value; },
-    clear: () => { store = {}; },
-    removeItem: (key: string) => { delete store[key]; },
+    setItem: (key: string, value: string) => {
+      store[key] = value;
+    },
+    clear: () => {
+      store = {};
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
   };
 })();
 
@@ -105,12 +111,14 @@ describe('communicationPreferences', () => {
     const queued = await queueCommunicationDeliveries({
       userId: 'user-123',
       notificationId: 'notif-1',
-      requests: [{
-        channel: 'email',
-        destination: 'user@example.com',
-        subject: 'Subject',
-        body: 'Body',
-      }],
+      requests: [
+        {
+          channel: 'email',
+          destination: 'user@example.com',
+          subject: 'Subject',
+          body: 'Body',
+        },
+      ],
     });
 
     expect(queued.queued).toBe(1);
@@ -151,12 +159,14 @@ describe('communicationPreferences', () => {
       queueCommunicationDeliveries({
         userId: 'user-123',
         notificationId: 'notif-2',
-        requests: [{
-          channel: 'email',
-          destination: 'user@example.com',
-          subject: 'Subject',
-          body: 'Body',
-        }],
+        requests: [
+          {
+            channel: 'email',
+            destination: 'user@example.com',
+            subject: 'Subject',
+            body: 'Body',
+          },
+        ],
       }),
     ).rejects.toBeInstanceOf(NetworkError);
 
