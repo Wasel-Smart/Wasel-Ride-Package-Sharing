@@ -6,6 +6,52 @@ import { fileURLToPath } from 'node:url';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
+const SOURCE_CHUNKS: Array<{ name: string; patterns: string[] }> = [
+  {
+    name: 'i18n',
+    patterns: ['/src/locales/'],
+  },
+  {
+    name: 'app-shell',
+    patterns: [
+      '/src/App.tsx',
+      '/src/wasel-routes.tsx',
+      '/src/layouts/',
+      '/src/components/MobileBottomNav.tsx',
+      '/src/components/PrivacyConsentBanner.tsx',
+      '/src/components/system/WaselPresence.tsx',
+      '/src/hooks/useNotifications.ts',
+    ],
+  },
+  {
+    name: 'auth-runtime',
+    patterns: [
+      '/src/contexts/AuthContext.tsx',
+      '/src/contexts/LocalAuth.tsx',
+      '/src/contexts/authContextHelpers.ts',
+      '/src/services/auth.ts',
+      '/src/utils/authHelpers.ts',
+      '/src/utils/supabase/',
+      '/src/pages/WaselAuth.tsx',
+      '/src/pages/WaselAuthCallback.tsx',
+    ],
+  },
+  {
+    name: 'data-runtime',
+    patterns: [
+      '/src/services/core.ts',
+      '/src/services/notifications.ts',
+      '/src/services/communicationPreferences.ts',
+      '/src/services/dataIntegrity.ts',
+      '/src/services/directSupabase/',
+    ],
+  },
+];
+
+function resolveSourceChunk(id: string) {
+  return SOURCE_CHUNKS.find((chunk) => chunk.patterns.some((pattern) => id.includes(pattern)))?.name;
+}
+
 export default defineConfig({
   plugins: [
     react(),
@@ -28,6 +74,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          const sourceChunk = resolveSourceChunk(id);
+          if (sourceChunk) return sourceChunk;
+
           if (!id.includes('node_modules')) return undefined;
 
           // React core — must be its own chunk for maximum cache hits
@@ -37,6 +86,9 @@ export default defineConfig({
             id.includes('/node_modules/react-router/') ||
             id.includes('/node_modules/scheduler/')
           ) return 'react-core';
+
+          // Large shared utility vendor used heavily by charts
+          if (id.includes('/node_modules/lodash/')) return 'lodash';
 
           // Animation
           if (id.includes('/node_modules/motion/')) return 'motion';
@@ -61,7 +113,20 @@ export default defineConfig({
           if (id.includes('/node_modules/leaflet/')) return 'maps';
 
           // Charts
-          if (id.includes('/node_modules/recharts/')) return 'charts';
+          if (
+            id.includes('/node_modules/d3-') ||
+            id.includes('/node_modules/internmap/')
+          ) return 'charts-d3';
+          if (
+            id.includes('/node_modules/recharts/') ||
+            id.includes('/node_modules/recharts-scale/') ||
+            id.includes('/node_modules/react-smooth/') ||
+            id.includes('/node_modules/eventemitter3/') ||
+            id.includes('/node_modules/fast-equals/') ||
+            id.includes('/node_modules/prop-types/') ||
+            id.includes('/node_modules/tiny-invariant/') ||
+            id.includes('/node_modules/decimal.js-light/')
+          ) return 'charts';
 
           // Forms
           if (
@@ -70,7 +135,19 @@ export default defineConfig({
           ) return 'forms';
 
           // Monitoring
-          if (id.includes('/node_modules/@sentry/')) return 'monitoring';
+          if (id.includes('/node_modules/@sentry/core/')) return 'monitoring-core';
+          if (
+            id.includes('/node_modules/@sentry/browser/') ||
+            id.includes('/node_modules/@sentry-internal/browser-utils/')
+          ) return 'monitoring-browser';
+          if (
+            id.includes('/node_modules/@sentry/react/') ||
+            id.includes('/node_modules/hoist-non-react-statics/')
+          ) return 'monitoring-react';
+          if (
+            id.includes('/node_modules/@sentry-internal/replay') ||
+            id.includes('/node_modules/@sentry-internal/feedback/')
+          ) return 'monitoring-replay';
 
           // Payments
           if (id.includes('/node_modules/@stripe/')) return 'payments';
