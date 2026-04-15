@@ -256,23 +256,23 @@
     radial-gradient(ellipse 36% 26% at 8% 94%, rgba(15 154 121 / 0.06) 0%, transparent 100%),
     linear-gradient(180deg, #f8fcfa 0%, #edf5f1 100%);
   --service-background:
-    radial-gradient(circle at 12% 12%, rgba(46 158 216 / 0.09), transparent 24%),
-    radial-gradient(circle at 86% 16%, rgba(15 154 121 / 0.11), transparent 24%),
-    radial-gradient(circle at 68% 88%, rgba(46 158 216 / 0.06), transparent 18%),
-    linear-gradient(180deg, #f9fcfb 0%, #eef5f1 48%, #e7f0ec 100%);
+    radial-gradient(circle at 12% 12%, rgba(46 158 216 / 0.10), transparent 24%),
+    radial-gradient(circle at 86% 16%, rgba(15 154 121 / 0.12), transparent 24%),
+    radial-gradient(circle at 68% 88%, rgba(46 158 216 / 0.08), transparent 18%),
+    linear-gradient(180deg, #f9fcfb 0%, #eef5f1 48%, #e4efea 100%);
   --service-card:
-    linear-gradient(180deg, rgba(255 255 255 / 0.10), rgba(255 255 255 / 0.03)),
-    rgba(9 33 30 / 0.88);
-  --service-card-muted:  rgba(9 33 30 / 0.76);
-  --service-card-strong: rgba(9 33 30 / 0.92);
-  --service-text-primary:#f4fbf8;
-  --service-text-secondary: rgba(225 239 234 / 0.78);
-  --service-text-muted: rgba(185 208 200 / 0.58);
+    linear-gradient(180deg, rgba(255 255 255 / 0.98), rgba(243 250 246 / 0.95)),
+    rgba(255 255 255 / 0.94);
+  --service-card-muted:  rgba(247 251 249 / 0.82);
+  --service-card-strong: rgba(232 243 238 / 0.92);
+  --service-text-primary: var(--text-primary);
+  --service-text-secondary: var(--text-secondary);
+  --service-text-muted: var(--text-muted);
   --service-head-background:
-    radial-gradient(circle at 16% 20%, rgba(46 158 216 / 0.18), transparent 26%),
-    radial-gradient(circle at 84% 18%, rgba(15 154 121 / 0.16), transparent 24%),
-    linear-gradient(135deg, #08211d 0%, #0d4138 52%, #114866 100%);
-  --service-head-shadow: 0 36px 96px rgba(7 23 21 / 0.18);
+    radial-gradient(circle at 16% 20%, rgba(46 158 216 / 0.14), transparent 28%),
+    radial-gradient(circle at 84% 18%, rgba(15 154 121 / 0.14), transparent 24%),
+    linear-gradient(135deg, #f8fcfb 0%, #e9f5f0 52%, #ddeef4 100%);
+  --service-head-shadow: 0 32px 88px rgba(7 23 21 / 0.12);
   --theme-gradient-primary: linear-gradient(135deg, #08362f 0%, #0f6b58 48%, #11a184 100%);
   --theme-gradient-accent: linear-gradient(135deg, #0b4a40 0%, #0f9a79 38%, #2e9ed8 100%);
   --theme-gradient-line: linear-gradient(90deg, #8cf2d5, #0f9a79, #2e9ed8);

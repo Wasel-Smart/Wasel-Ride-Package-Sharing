@@ -24,7 +24,9 @@ function readEnvSource(): EnvSource {
       ? (process.env as EnvSource)
       : {};
 
-  return { ...processEnv, ...importMetaEnv };
+  // Prefer runtime process env so tests and server-side overrides can supersede
+  // checked-in or build-time import.meta.env values deterministically.
+  return { ...importMetaEnv, ...processEnv };
 }
 
 function isMeaningfulValue(value: string | undefined): value is string {

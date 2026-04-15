@@ -1,10 +1,21 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const useDemoData = process.env.PLAYWRIGHT_USE_DEMO_DATA !== 'false';
+const webServerEnv = {
+  VITE_APP_ENV: 'test',
+  VITE_ENABLE_DEMO_DATA: 'false',
+  VITE_ENABLE_SYNTHETIC_TRIPS: 'false',
+  VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'false',
+  VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: 'false',
+  VITE_ENABLE_PERSISTED_TEST_AUTH: 'true',
+};
+
+const webServerEnvArgs = Object.entries(webServerEnv)
+  .map(([key, value]) => `${key}=${value}`)
+  .join(' ');
 
 const devServerCommand = process.platform === 'win32'
-  ? `cmd /c "set VITE_ENABLE_DEMO_DATA=${useDemoData ? 'true' : 'false'}&& npm run dev -- --host 127.0.0.1 --port 4173"`
-  : `VITE_ENABLE_DEMO_DATA=${useDemoData ? 'true' : 'false'} npm run dev -- --host 127.0.0.1 --port 4173`;
+  ? `cmd /c "set VITE_APP_ENV=test&& set VITE_ENABLE_DEMO_DATA=false&& set VITE_ENABLE_SYNTHETIC_TRIPS=false&& set VITE_ALLOW_DIRECT_SUPABASE_FALLBACK=false&& set VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK=false&& set VITE_ENABLE_PERSISTED_TEST_AUTH=true&& npm run dev -- --host 127.0.0.1 --port 4173"`
+  : `${webServerEnvArgs} npm run dev -- --host 127.0.0.1 --port 4173`;
 
 export default defineConfig({
   testDir: './tests/e2e',

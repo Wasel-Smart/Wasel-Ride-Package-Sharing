@@ -195,10 +195,7 @@ jobs:
       - name: E2E — core flows
         run: npx playwright test --project=chromium-desktop
         env:
-          PLAYWRIGHT_USE_DEMO_DATA: 'true'
-          VITE_ENABLE_DEMO_DATA: 'true'
-          VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true'
-          VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: 'true'
+          VITE_ENABLE_PERSISTED_TEST_AUTH: 'true'
 
       - name: Upload Playwright report
         if: always()
@@ -237,10 +234,7 @@ jobs:
       - name: E2E — WCAG 2.1 AA accessibility audit
         run: npm run test:e2e:a11y -- --project=chromium-desktop
         env:
-          PLAYWRIGHT_USE_DEMO_DATA: 'true'
-          VITE_ENABLE_DEMO_DATA: 'true'
-          VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true'
-          VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: 'true'
+          VITE_ENABLE_PERSISTED_TEST_AUTH: 'true'
 
       - name: Upload accessibility report
         if: always()
@@ -279,10 +273,7 @@ jobs:
       - name: E2E — RTL Arabic
         run: npm run test:e2e:rtl -- --project=rtl-arabic-mobile
         env:
-          PLAYWRIGHT_USE_DEMO_DATA: 'true'
-          VITE_ENABLE_DEMO_DATA: 'true'
-          VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true'
-          VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: 'true'
+          VITE_ENABLE_PERSISTED_TEST_AUTH: 'true'
 
   # ── Job 5: Lighthouse performance budget (main branch only) ──────────────────
   lighthouse:

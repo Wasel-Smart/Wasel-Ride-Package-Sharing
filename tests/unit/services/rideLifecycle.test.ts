@@ -9,6 +9,25 @@
  * Every state transition must be tested for correctness and idempotency.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+vi.mock('../../../src/services/directSupabase', () => ({
+  createDirectBooking: vi.fn(() => new Promise(() => {})),
+  getDirectDriverBookings: vi.fn(async () => []),
+  getDirectUserBookings: vi.fn(async () => []),
+  updateDirectBookingStatus: vi.fn(async () => undefined),
+}));
+
+vi.mock('../../../src/services/growthEngine', () => ({
+  trackGrowthEvent: vi.fn(async () => undefined),
+}));
+
+vi.mock('../../../src/services/transactionalEmailTriggers', () => ({
+  getTransactionalEmailAppUrl: vi.fn(() => 'https://wasel.example'),
+  triggerBookingStatusUpdateEmail: vi.fn(),
+  triggerRideBookingEmails: vi.fn(),
+  triggerRideCompletedEmails: vi.fn(),
+}));
+
 import {
   canTransitionRideBookingStatus,
   createRideBooking,
@@ -33,7 +52,9 @@ beforeEach(() => {
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
-const BASE_INPUT = {
+type RideBookingInput = Parameters<typeof createRideBooking>[0];
+
+const BASE_INPUT: RideBookingInput = {
   rideId: 'ride-abc-123',
   ownerId: 'driver-001',
   passengerId: 'passenger-001',
@@ -48,11 +69,15 @@ const BASE_INPUT = {
   routeMode: 'live_post' as const,
 };
 
+function createTestBooking(overrides: Partial<RideBookingInput> = {}) {
+  return createRideBooking({ ...BASE_INPUT, ...overrides });
+}
+
 // ── 1. createRideBooking ──────────────────────────────────────────────────────
 
 describe('createRideBooking()', () => {
-  it('returns a RideBookingRecord with required fields', () => {
-    const booking = createRideBooking(BASE_INPUT);
+  it('returns a RideBookingRecord with required fields', async () => {
+    const booking = await createTestBooking();
     expect(booking.id).toBeTruthy();
     expect(booking.rideId).toBe('ride-abc-123');
     expect(booking.from).toBe('Amman');
@@ -63,29 +88,29 @@ describe('createRideBooking()', () => {
     expect(booking.ticketCode).toMatch(/^RIDE-\d{6}$/);
   });
 
-  it('live_post bookings start as pending_driver', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'live_post' });
+  it('live_post bookings start as pending_driver', async () => {
+    const booking = await createTestBooking({ routeMode: 'live_post' });
     expect(booking.status).toBe('pending_driver');
     expect(booking.paymentStatus).toBe('pending');
     expect(booking.syncState).toBe('syncing');
   });
 
-  it('network_inventory bookings start as confirmed', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'network_inventory' });
+  it('network_inventory bookings start as confirmed', async () => {
+    const booking = await createTestBooking({ routeMode: 'network_inventory' });
     expect(booking.status).toBe('confirmed');
     expect(booking.paymentStatus).toBe('authorized');
     expect(booking.syncState).toBe('syncing');
   });
 
-  it('treats unsynced network_inventory bookings as pending for customer-facing state', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'network_inventory' });
+  it('treats unsynced network_inventory bookings as pending for customer-facing state', async () => {
+    const booking = await createTestBooking({ routeMode: 'network_inventory' });
     expect(getRideBookingCustomerState(booking)).toBe('pending');
     expect(isRideBookingPending(booking)).toBe(true);
     expect(isRideBookingConfirmed(booking)).toBe(false);
   });
 
-  it('treats synced confirmed bookings as confirmed for customer-facing state', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'network_inventory' });
+  it('treats synced confirmed bookings as confirmed for customer-facing state', async () => {
+    const booking = await createTestBooking({ routeMode: 'network_inventory' });
     const syncedBooking = {
       ...booking,
       backendBookingId: 'backend-booking-1',
@@ -96,50 +121,50 @@ describe('createRideBooking()', () => {
     expect(isRideBookingPending(syncedBooking)).toBe(false);
   });
 
-  it('defaults seatsRequested to 1 when not provided', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, seatsRequested: undefined });
+  it('defaults seatsRequested to 1 when not provided', async () => {
+    const booking = await createTestBooking({ seatsRequested: undefined });
     expect(booking.seatsRequested).toBe(1);
   });
 
-  it('persists the booking to localStorage', () => {
-    createRideBooking(BASE_INPUT);
+  it('persists the booking to localStorage', async () => {
+    await createTestBooking();
     const persisted = getRideBookings();
     expect(persisted.length).toBe(1);
   });
 
-  it('each booking has a unique id', () => {
-    const b1 = createRideBooking(BASE_INPUT);
-    const b2 = createRideBooking(BASE_INPUT);
+  it('each booking has a unique id', async () => {
+    const [b1, b2] = await Promise.all([createTestBooking(), createTestBooking()]);
     expect(b1.id).not.toBe(b2.id);
   });
 
-  it('each booking has a unique ticketCode', () => {
-    const codes = new Set(
-      Array.from({ length: 10 }, () => createRideBooking(BASE_INPUT).ticketCode),
+  it('each booking has a unique ticketCode', async () => {
+    const bookings = await Promise.all(
+      Array.from({ length: 10 }, () => createTestBooking()),
     );
+    const codes = new Set(bookings.map((booking) => booking.ticketCode));
     // Very high probability of uniqueness
     expect(codes.size).toBeGreaterThan(1);
   });
 
-  it('createdAt and updatedAt are valid ISO timestamps', () => {
-    const booking = createRideBooking(BASE_INPUT);
+  it('createdAt and updatedAt are valid ISO timestamps', async () => {
+    const booking = await createTestBooking();
     expect(new Date(booking.createdAt).getFullYear()).toBeGreaterThan(2000);
     expect(new Date(booking.updatedAt).getFullYear()).toBeGreaterThan(2000);
   });
 
-  it('supportThreadOpen defaults to false', () => {
-    const booking = createRideBooking(BASE_INPUT);
+  it('supportThreadOpen defaults to false', async () => {
+    const booking = await createTestBooking();
     expect(booking.supportThreadOpen).toBe(false);
   });
 
-  it('creates a local-only booking when no passenger id is available for backend sync', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, passengerId: undefined });
+  it('creates a local-only booking when no passenger id is available for backend sync', async () => {
+    const booking = await createTestBooking({ passengerId: undefined });
     expect(booking.syncState).toBe('local-only');
     expect(booking.pendingSync).toBe(false);
   });
 
-  it('ownerId is preserved from input', () => {
-    const booking = createRideBooking(BASE_INPUT);
+  it('ownerId is preserved from input', async () => {
+    const booking = await createTestBooking();
     expect(booking.ownerId).toBe('driver-001');
   });
 });
@@ -151,10 +176,10 @@ describe('getRideBookings()', () => {
     expect(getRideBookings()).toEqual([]);
   });
 
-  it('returns bookings sorted by updatedAt descending (most recent first)', () => {
-    createRideBooking(BASE_INPUT);
+  it('returns bookings sorted by updatedAt descending (most recent first)', async () => {
+    await createTestBooking();
     // Small delay to ensure different timestamps
-    createRideBooking({ ...BASE_INPUT, from: 'Irbid', to: 'Amman' });
+    await createTestBooking({ from: 'Irbid', to: 'Amman' });
     const bookings = getRideBookings();
     expect(bookings.length).toBe(2);
     const t0 = new Date(bookings[0]!.updatedAt).getTime();
@@ -162,10 +187,8 @@ describe('getRideBookings()', () => {
     expect(t0).toBeGreaterThanOrEqual(t1);
   });
 
-  it('returns all created bookings', () => {
-    createRideBooking(BASE_INPUT);
-    createRideBooking(BASE_INPUT);
-    createRideBooking(BASE_INPUT);
+  it('returns all created bookings', async () => {
+    await Promise.all([createTestBooking(), createTestBooking(), createTestBooking()]);
     expect(getRideBookings().length).toBe(3);
   });
 });
@@ -173,10 +196,12 @@ describe('getRideBookings()', () => {
 // ── 3. getBookingsForRide ─────────────────────────────────────────────────────
 
 describe('getBookingsForRide()', () => {
-  it('returns only bookings for the specified rideId', () => {
-    createRideBooking({ ...BASE_INPUT, rideId: 'ride-A' });
-    createRideBooking({ ...BASE_INPUT, rideId: 'ride-B' });
-    createRideBooking({ ...BASE_INPUT, rideId: 'ride-A' });
+  it('returns only bookings for the specified rideId', async () => {
+    await Promise.all([
+      createTestBooking({ rideId: 'ride-A' }),
+      createTestBooking({ rideId: 'ride-B' }),
+      createTestBooking({ rideId: 'ride-A' }),
+    ]);
 
     const forA = getBookingsForRide('ride-A');
     expect(forA.length).toBe(2);
@@ -185,8 +210,8 @@ describe('getBookingsForRide()', () => {
     }
   });
 
-  it('returns empty array for unknown rideId', () => {
-    createRideBooking(BASE_INPUT);
+  it('returns empty array for unknown rideId', async () => {
+    await createTestBooking();
     expect(getBookingsForRide('unknown-ride')).toEqual([]);
   });
 });
@@ -194,9 +219,11 @@ describe('getBookingsForRide()', () => {
 // ── 4. getBookingsForDriver ───────────────────────────────────────────────────
 
 describe('getBookingsForDriver()', () => {
-  it('returns bookings where ownerId matches userId', () => {
-    createRideBooking({ ...BASE_INPUT, rideId: 'ride-driver-001', ownerId: 'driver-001' });
-    createRideBooking({ ...BASE_INPUT, rideId: 'ride-driver-002', ownerId: 'driver-002' });
+  it('returns bookings where ownerId matches userId', async () => {
+    await Promise.all([
+      createTestBooking({ rideId: 'ride-driver-001', ownerId: 'driver-001' }),
+      createTestBooking({ rideId: 'ride-driver-002', ownerId: 'driver-002' }),
+    ]);
     const rides = [{ id: 'ride-driver-001', ownerId: 'driver-001' } as any];
     const forDriver = getBookingsForDriver('driver-001', rides);
     expect(forDriver.every((booking) => booking.ownerId === 'driver-001')).toBe(true);
@@ -206,9 +233,11 @@ describe('getBookingsForDriver()', () => {
 // ── 5. getBookingsForPassenger ────────────────────────────────────────────────
 
 describe('getBookingsForPassenger()', () => {
-  it('filters by passenger name', () => {
-    createRideBooking({ ...BASE_INPUT, passengerName: 'Sara Mansour' });
-    createRideBooking({ ...BASE_INPUT, passengerName: 'Ahmad Khalil' });
+  it('filters by passenger name', async () => {
+    await Promise.all([
+      createTestBooking({ passengerName: 'Sara Mansour' }),
+      createTestBooking({ passengerName: 'Ahmad Khalil' }),
+    ]);
 
     const saraBooksings = getBookingsForPassenger('Sara Mansour');
     expect(saraBooksings.length).toBe(1);
@@ -219,39 +248,39 @@ describe('getBookingsForPassenger()', () => {
 // ── 6. updateRideBooking ──────────────────────────────────────────────────────
 
 describe('updateRideBooking()', () => {
-  it('returns null for unknown bookingId', () => {
-    const result = updateRideBooking('nonexistent-id', { status: 'confirmed' });
+  it('returns null for unknown bookingId', async () => {
+    const result = await updateRideBooking('nonexistent-id', { status: 'confirmed' });
     expect(result).toBeNull();
   });
 
-  it('updates booking status', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    const updated = updateRideBooking(booking.id, { status: 'confirmed' });
+  it('updates booking status', async () => {
+    const booking = await createTestBooking();
+    const updated = await updateRideBooking(booking.id, { status: 'confirmed' });
     expect(updated?.status).toBe('confirmed');
   });
 
-  it('updates payment status', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    const updated = updateRideBooking(booking.id, { paymentStatus: 'captured' });
+  it('updates payment status', async () => {
+    const booking = await createTestBooking();
+    const updated = await updateRideBooking(booking.id, { paymentStatus: 'captured' });
     expect(updated?.paymentStatus).toBe('captured');
   });
 
-  it('updates supportThreadOpen', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    const updated = updateRideBooking(booking.id, { supportThreadOpen: true });
+  it('updates supportThreadOpen', async () => {
+    const booking = await createTestBooking();
+    const updated = await updateRideBooking(booking.id, { supportThreadOpen: true });
     expect(updated?.supportThreadOpen).toBe(true);
   });
 
-  it('updates updatedAt timestamp', () => {
+  it('updates updatedAt timestamp', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-04-02T00:00:00.000Z'));
 
     try {
-      const booking = createRideBooking(BASE_INPUT);
+      const booking = await createTestBooking();
       const originalTs = booking.updatedAt;
 
       vi.setSystemTime(new Date('2026-04-02T00:00:05.000Z'));
-      const updated = updateRideBooking(booking.id, { status: 'confirmed' });
+      const updated = await updateRideBooking(booking.id, { status: 'confirmed' });
 
       expect(updated?.updatedAt).not.toBe(originalTs);
     } finally {
@@ -259,24 +288,23 @@ describe('updateRideBooking()', () => {
     }
   });
 
-  it('persists the update in localStorage', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    updateRideBooking(booking.id, { status: 'confirmed' });
+  it('persists the update in localStorage', async () => {
+    const booking = await createTestBooking();
+    await updateRideBooking(booking.id, { status: 'confirmed' });
     const persisted = getRideBookings().find(b => b.id === booking.id);
     expect(persisted?.status).toBe('confirmed');
   });
 
-  it('does not affect other bookings', () => {
-    const b1 = createRideBooking(BASE_INPUT);
-    const b2 = createRideBooking(BASE_INPUT);
-    updateRideBooking(b1.id, { status: 'rejected' });
+  it('does not affect other bookings', async () => {
+    const [b1, b2] = await Promise.all([createTestBooking(), createTestBooking()]);
+    await updateRideBooking(b1.id, { status: 'rejected' });
     const b2Persisted = getRideBookings().find(b => b.id === b2.id);
     expect(b2Persisted?.status).toBe('pending_driver');
   });
 
-  it('rejects invalid lifecycle regressions', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    expect(() => updateRideBooking(booking.id, { status: 'completed' })).toThrow(ValidationError);
+  it('rejects invalid lifecycle regressions', async () => {
+    const booking = await createTestBooking();
+    await expect(updateRideBooking(booking.id, { status: 'completed' })).rejects.toThrow(ValidationError);
   });
 });
 
@@ -295,12 +323,12 @@ describe('canTransitionRideBookingStatus()', () => {
 // ── 7. syncRideBookingCompletion ──────────────────────────────────────────────
 
 describe('syncRideBookingCompletion()', () => {
-  it('marks past confirmed bookings as completed', () => {
+  it('marks past confirmed bookings as completed', async () => {
     // Create a confirmed booking in the past
-    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'network_inventory' });
+    const booking = await createTestBooking({ routeMode: 'network_inventory' });
     // Manually set date to the past
     const pastDate = '2020-01-01';
-    updateRideBooking(booking.id, { status: 'confirmed' });
+    await updateRideBooking(booking.id, { status: 'confirmed' });
     // Patch the stored booking's date via localStorage
     const stored = JSON.parse(localStorage.getItem('wasel-ride-booking-records') || '[]') as RideBookingRecord[];
     const idx = stored.findIndex(b => b.id === booking.id);
@@ -314,8 +342,8 @@ describe('syncRideBookingCompletion()', () => {
     expect(completedBooking?.status).toBe('completed');
   });
 
-  it('does not affect future confirmed bookings', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'network_inventory' });
+  it('does not affect future confirmed bookings', async () => {
+    const booking = await createTestBooking({ routeMode: 'network_inventory' });
     // Future date
     const stored = JSON.parse(localStorage.getItem('wasel-ride-booking-records') || '[]') as RideBookingRecord[];
     const idx = stored.findIndex(b => b.id === booking.id);
@@ -329,8 +357,8 @@ describe('syncRideBookingCompletion()', () => {
     expect(futureBooking?.status).toBe('confirmed');
   });
 
-  it('does not change non-confirmed bookings', () => {
-    const booking = createRideBooking(BASE_INPUT); // status: pending_driver
+  it('does not change non-confirmed bookings', async () => {
+    const booking = await createTestBooking(); // status: pending_driver
     const stored = JSON.parse(localStorage.getItem('wasel-ride-booking-records') || '[]') as RideBookingRecord[];
     const idx = stored.findIndex(b => b.id === booking.id);
     if (idx !== -1) {
@@ -343,8 +371,8 @@ describe('syncRideBookingCompletion()', () => {
     expect(unchangedBooking?.status).toBe('pending_driver');
   });
 
-  it('returns sorted bookings array', () => {
-    createRideBooking(BASE_INPUT);
+  it('returns sorted bookings array', async () => {
+    await createTestBooking();
     const synced = syncRideBookingCompletion(Date.now());
     expect(Array.isArray(synced)).toBe(true);
   });
@@ -353,9 +381,11 @@ describe('syncRideBookingCompletion()', () => {
 // ── 8. Ticket code format ────────────────────────────────────────────────────
 
 describe('Ticket code generation', () => {
-  it('every ticket code matches RIDE-XXXXXX pattern', () => {
-    for (let i = 0; i < 20; i++) {
-      const booking = createRideBooking(BASE_INPUT);
+  it('every ticket code matches RIDE-XXXXXX pattern', async () => {
+    const bookings = await Promise.all(
+      Array.from({ length: 20 }, () => createTestBooking()),
+    );
+    for (const booking of bookings) {
       expect(booking.ticketCode).toMatch(/^RIDE-\d{6}$/);
     }
   });
@@ -364,10 +394,10 @@ describe('Ticket code generation', () => {
 // ── 9. Storage capacity guard ─────────────────────────────────────────────────
 
 describe('Storage capacity guard', () => {
-  it('does not persist more than 100 bookings (cap enforcement)', () => {
-    for (let i = 0; i < 110; i++) {
-      createRideBooking(BASE_INPUT);
-    }
+  it('does not persist more than 100 bookings (cap enforcement)', async () => {
+    await Promise.all(
+      Array.from({ length: 110 }, () => createTestBooking({ passengerId: undefined })),
+    );
     const stored = JSON.parse(localStorage.getItem('wasel-ride-booking-records') || '[]');
     expect(stored.length).toBeLessThanOrEqual(100);
   });

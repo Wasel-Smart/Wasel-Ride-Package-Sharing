@@ -13,8 +13,9 @@
  * that are deterministic and testable.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, act } from '@testing-library/react';
+import { cleanup, render, act } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import MobilityOSCore from '../../../../src/features/mobility-os/MobilityOSCore';
 
 // ── Minimal mocks required for MobilityOSCore to mount ────────────────────
 
@@ -99,18 +100,7 @@ function setViewportWidth(width: number) {
 }
 
 async function importAndRender() {
-  // Dynamic import so each test gets a fresh module (with reset viewport)
-  const { default: MobilityOSCore } = await import(
-    '../../../../src/features/mobility-os/MobilityOSCore'
-  );
-  let rendered: ReturnType<typeof render> | null = null;
-  await act(async () => {
-    rendered = render(<MobilityOSCore />);
-  });
-  if (!rendered) {
-    throw new Error('Failed to render MobilityOSCore');
-  }
-  return rendered;
+  return render(<MobilityOSCore />);
 }
 
 function findMapWrap(container: RenderResult['container'], aspectRatioSnippet: string) {
@@ -127,7 +117,7 @@ function findMapWrap(container: RenderResult['container'], aspectRatioSnippet: s
 
 describe('MobilityOSCore — isMobile initialisation', () => {
   afterEach(() => {
-    vi.resetModules();
+    cleanup();
     setViewportWidth(1440); // reset to desktop
   });
 
@@ -173,7 +163,7 @@ describe('MobilityOSCore — isMobile initialisation', () => {
 
 describe('MobilityOSCore — resize listener', () => {
   afterEach(() => {
-    vi.resetModules();
+    cleanup();
     setViewportWidth(1440);
   });
 
@@ -211,7 +201,7 @@ describe('MobilityOSCore — resize listener', () => {
 
 describe('MobilityOSCore — hero grid layout', () => {
   afterEach(() => {
-    vi.resetModules();
+    cleanup();
     setViewportWidth(1440);
   });
 

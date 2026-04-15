@@ -22,6 +22,8 @@ export default defineConfig({
       VITE_APP_NAME: 'Wasel',
       VITE_APP_URL: 'http://localhost:3000',
       VITE_SUPPORT_EMAIL: 'support@wasel.jo',
+      VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true',
+      VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: 'true',
       VITE_ENABLE_TWO_FACTOR_AUTH: 'false',
       VITE_ENABLE_EMAIL_NOTIFICATIONS: 'true',
       VITE_ENABLE_SMS_NOTIFICATIONS: 'true',

@@ -464,7 +464,7 @@ export function FindRidePage() {
     });
   };
 
-  const handleBook = (ride: Ride) => {
+  const handleBook = async (ride: Ride) => {
     if (!user) {
       nav('/app/auth');
       return;
@@ -484,24 +484,33 @@ export function FindRidePage() {
     });
     const ridePriceQuote = routeQuote.priceQuote;
 
-    const booking = createRideBooking({
-      rideId: ride.id,
-      ownerId: ride.ownerId,
-      driverPhone: ride.driver.phone,
-      driverEmail: ride.driver.email,
-      passengerId: user.id,
-      from: ride.from,
-      to: ride.to,
-      date: ride.date,
-      time: ride.time,
-      driverName: ride.driver.name,
-      passengerName: user.name,
-      passengerPhone: user.phone,
-      passengerEmail: user.email,
-      seatsRequested: 1,
-      pricePerSeatJod: ridePriceQuote.finalPriceJod,
-      routeMode: ride.routeMode === 'live_post' ? 'live_post' : 'network_inventory',
-    });
+    let booking: RideBookingRecord;
+    try {
+      booking = await createRideBooking({
+        rideId: ride.id,
+        ownerId: ride.ownerId,
+        driverPhone: ride.driver.phone,
+        driverEmail: ride.driver.email,
+        passengerId: user.id,
+        from: ride.from,
+        to: ride.to,
+        date: ride.date,
+        time: ride.time,
+        driverName: ride.driver.name,
+        passengerName: user.name,
+        passengerPhone: user.phone,
+        passengerEmail: user.email,
+        seatsRequested: 1,
+        pricePerSeatJod: ridePriceQuote.finalPriceJod,
+        routeMode: ride.routeMode === 'live_post' ? 'live_post' : 'network_inventory',
+      });
+    } catch {
+      setBookingMessage(
+        `We could not secure ${ride.from} to ${ride.to} right now. Please try again in a moment.`,
+      );
+      return;
+    }
+
     const bookingConfirmed = isRideBookingConfirmed(booking);
 
     setRideBookingState((previous) => {
