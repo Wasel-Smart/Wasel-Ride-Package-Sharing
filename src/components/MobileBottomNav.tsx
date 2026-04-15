@@ -12,6 +12,7 @@ import { useLocalAuth } from '../contexts/LocalAuth';
 const CYAN  = '#19E7BB';
 const BLUE  = '#65E1FF';
 const INACTIVE = 'var(--text-muted)';
+const INACTIVE_BG = 'transparent';
 const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 const ICONS = {
@@ -89,7 +90,7 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
               key={item.id}
               type="button"
               onClick={() => navigate(item.path)}
-              whileTap={{ scale: 0.84 }}
+              whileTap={{ scale: 0.82 }}
               transition={{ duration: 0.08, type: 'spring', stiffness: 520, damping: 30 }}
               aria-label={isArabic ? item.labelAr : item.label}
               title={isArabic ? item.descriptionAr : item.description}
@@ -98,12 +99,16 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
                 flex: 1,
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
-                gap: 3, minHeight: 58, minWidth: 44,
+                gap: 4, minHeight: 58, minWidth: 44,
                 padding: '8px 2px 6px',
-                background: 'transparent', border: 'none',
+                background: active
+                  ? `radial-gradient(ellipse 80% 60% at 50% 100%, color-mix(in srgb, ${itemColor} 14%, transparent), transparent)`
+                  : INACTIVE_BG,
+                border: 'none',
                 cursor: 'pointer',
                 WebkitTapHighlightColor: 'transparent',
                 outline: 'none', position: 'relative',
+                transition: 'background 0.22s ease',
               }}
             >
               {/* Active indicator bar */}
@@ -113,10 +118,10 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
                   transition={{ type: 'spring', stiffness: 420, damping: 32 }}
                   style={{
                     position: 'absolute', top: 0,
-                    left: '28%', right: '28%',
-                    height: 2, borderRadius: '0 0 3px 3px',
-                    background: itemColor,
-                    boxShadow: `0 3px 14px ${itemColor}80`,
+                    left: '20%', right: '20%',
+                    height: 3, borderRadius: '0 0 4px 4px',
+                    background: `linear-gradient(90deg, ${itemColor}, color-mix(in srgb, ${itemColor} 70%, white))`,
+                    boxShadow: `0 2px 10px ${itemColor}90`,
                   }}
                 />
               )}
@@ -125,22 +130,26 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
               <div style={{
                 position: 'relative', display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
+                width: 36, height: 36,
+                borderRadius: 12,
+                background: active ? `color-mix(in srgb, ${itemColor} 14%, transparent)` : 'transparent',
+                transition: 'background 0.2s ease',
               }}>
                 {active && (
                   <span style={{
-                    position: 'absolute', inset: -9,
+                    position: 'absolute', inset: -8,
                     borderRadius: 999, pointerEvents: 'none',
-                    background: `radial-gradient(circle, ${itemColor}1e, transparent 70%)`,
+                    background: `radial-gradient(circle, ${itemColor}28, transparent 68%)`,
                   }} />
                 )}
                 {Icon && (
                   <Icon
-                    size={21}
-                    strokeWidth={active ? 2.4 : 1.7}
+                    size={20}
+                    strokeWidth={active ? 2.5 : 1.8}
                     style={{
                       color: active ? itemColor : INACTIVE,
-                      transition: 'color 0.16s ease, transform 0.16s ease',
-                      transform: active ? 'scale(1.06)' : 'scale(1)',
+                      transition: 'color 0.16s ease, transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',
+                      transform: active ? 'scale(1.1)' : 'scale(1)',
                     }}
                   />
                 )}
@@ -148,7 +157,7 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
 
               {/* Label */}
               <span style={{
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: active ? 700 : 500,
                 color: active ? itemColor : INACTIVE,
                 fontFamily: F,
