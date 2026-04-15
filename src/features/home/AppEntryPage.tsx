@@ -25,12 +25,19 @@ import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { trackGrowthEvent } from '../../services/growthEngine';
 import { friendlyAuthError } from '../../utils/authHelpers';
 import { buildAuthPagePath } from '../../utils/authFlow';
+import {
+  APP_ENTRY_SERVICE_MODE_META,
+  APP_ENTRY_SERVICE_MODES,
+  buildAppEntryPrimaryPath,
+  buildPackagePrefillPath,
+  buildRideSearchPath,
+  type AppEntryRouteDraft,
+  type AppEntryServiceMode,
+} from './appEntryContracts';
 import { DeferredLandingMap } from './DeferredLandingMap';
 import { LANDING_FONT } from './landingConstants';
 import './AppEntryPage.css';
 
-type LandingMode = 'ride' | 'package';
-type RouteDraft = { from: string; to: string; date: string };
 type FlowCard = { icon: LucideIcon; title: string; detail: string; path: string; cta: string };
 
 const DEFAULT_RETURN_TO = '/app/find-ride';
@@ -221,26 +228,15 @@ function trackLandingNavigation(path: string, language: 'en' | 'ar', userId?: st
   void trackGrowthEvent(userId ? { userId, ...payload } : payload);
 }
 
-function buildRideSearchPath(route: RouteDraft) {
-  const params = new URLSearchParams({ from: route.from, to: route.to, search: '1' });
-  if (route.date) params.set('date', route.date);
-  return `/app/find-ride?${params.toString()}`;
-}
-
-function buildPackagePrefillPath(route: RouteDraft) {
-  const params = new URLSearchParams({ from: route.from, to: route.to });
-  return `/app/packages?${params.toString()}`;
-}
-
 export default function AppEntryPage() {
   const { user } = useLocalAuth();
   const { signInWithGoogle, signInWithFacebook } = useAuth();
   const { language } = useLanguage();
   const navigate = useIframeSafeNavigate();
-  const [mode, setMode] = useState<LandingMode>('ride');
+  const [mode, setMode] = useState<AppEntryServiceMode>('ride');
   const [authError, setAuthError] = useState('');
   const [oauthProvider, setOauthProvider] = useState<'google' | 'facebook' | null>(null);
-  const [route, setRoute] = useState<RouteDraft>({ from: 'Amman', to: 'Irbid', date: '' });
+  const [route, setRoute] = useState<AppEntryRouteDraft>({ from: 'Amman', to: 'Irbid', date: '' });
 
   const ar = language === 'ar';
   const copy = COPY[language];
@@ -256,7 +252,7 @@ export default function AppEntryPage() {
   };
 
   const protectedPath = (path: string) => (user ? path : buildAuthPagePath('signin', path));
-  const primaryPath = mode === 'ride' ? buildRideSearchPath(route) : buildPackagePrefillPath(route);
+  const primaryPath = buildAppEntryPrimaryPath(mode, route);
   const contextualSignInPath = buildAuthPagePath('signin', primaryPath);
 
   const flowCards: FlowCard[] = [
@@ -284,7 +280,7 @@ export default function AppEntryPage() {
   ];
 
   const updateRoute =
-    (field: keyof RouteDraft) => (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    (field: keyof AppEntryRouteDraft) => (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const value = event.target.value;
       setRoute(current => {
         if (field === 'from') {
@@ -411,27 +407,28 @@ export default function AppEntryPage() {
                   role="tablist"
                   aria-label={ar ? '\u0627\u0644\u062e\u062f\u0645\u0627\u062a' : 'Services'}
                 >
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={mode === 'ride'}
-                    className={mode === 'ride' ? 'is-active' : undefined}
-                    onClick={() => setMode('ride')}
-                  >
-                    {copy.modes.ride}
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={mode === 'package'}
-                    className={mode === 'package' ? 'is-active' : undefined}
-                    onClick={() => setMode('package')}
-                  >
-                    {copy.modes.package}
-                  </button>
+                  {APP_ENTRY_SERVICE_MODES.map((serviceMode) => (
+                    <button
+                      key={serviceMode}
+                      id={APP_ENTRY_SERVICE_MODE_META[serviceMode].tabId}
+                      type="button"
+                      role="tab"
+                      aria-controls={APP_ENTRY_SERVICE_MODE_META[serviceMode].panelId}
+                      aria-selected={mode === serviceMode}
+                      className={mode === serviceMode ? 'is-active' : undefined}
+                      onClick={() => setMode(serviceMode)}
+                    >
+                      {copy.modes[serviceMode]}
+                    </button>
+                  ))}
                 </div>
 
-                <div className="app-entry-page__action-copy">
+                <div
+                  id={APP_ENTRY_SERVICE_MODE_META[mode].panelId}
+                  className="app-entry-page__action-copy"
+                  role="tabpanel"
+                  aria-labelledby={APP_ENTRY_SERVICE_MODE_META[mode].tabId}
+                >
                   <h2>{mode === 'ride' ? copy.cardTitle.ride : copy.cardTitle.package}</h2>
                   <p>{mode === 'ride' ? copy.cardBody.ride : copy.cardBody.package}</p>
                 </div>

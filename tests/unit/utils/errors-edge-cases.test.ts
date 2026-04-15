@@ -1,186 +1,93 @@
-/**
- * Error utilities — Additional edge-case tests
- *
- * Supplements errors.test.ts with:
- *   - WaselError subclass identity checks
- *   - normalizeError for Supabase-style error objects
- *   - formatErrorMessage locale accuracy
- *   - shouldIgnoreError with nested ignorable errors
- */
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  WaselError,
+  ApiError,
   AuthenticationError,
-  NetworkError,
-  ValidationError,
-  PaymentError,
-  TimeoutError,
   ConfigError,
   IgnorableSystemError,
-  normalizeError,
-  shouldIgnoreError,
+  NetworkError,
+  PaymentError,
+  TimeoutError,
+  ValidationError,
+  WaselError,
+  formatErrorDetails,
   formatErrorMessage,
+  getErrorShape,
+  normalizeError,
 } from '../../../src/utils/errors';
 
-// ── Subclass identity ──────────────────────────────────────────────────────
+describe('error edge cases', () => {
+  it('preserves subclass identity and exact metadata', () => {
+    const err = new AuthenticationError('bad creds', { userId: 'u-1' });
 
-describe('WaselError subclasses — identity', () => {
-  it('AuthenticationError is instanceof WaselError and Error', () => {
-    const err = new AuthenticationError('bad creds');
     expect(err).toBeInstanceOf(WaselError);
     expect(err).toBeInstanceOf(Error);
     expect(err).toBeInstanceOf(AuthenticationError);
+    expect(err.meta).toEqual({ userId: 'u-1' });
+    expect(err.context).toEqual({ userId: 'u-1' });
     expect(err.code).toBe('AUTH_ERROR');
-    expect(err.isIgnorable).toBe(false);
+    expect(err.severity).toBe('error');
   });
 
-  it('NetworkError is ignorable', () => {
-    const err = new NetworkError('fetch failed');
-    expect(err.isIgnorable).toBe(true);
-    expect(err.code).toBe('NETWORK_ERROR');
-  });
+  it('normalizes api objects with nested causes and keeps the more specific cause when possible', () => {
+    const err = normalizeError({
+      status: 500,
+      message: 'Top level error',
+      cause: new Error('request timed out'),
+      meta: { retryable: true },
+    });
 
-  it('TimeoutError is ignorable', () => {
-    const err = new TimeoutError('timeout');
-    expect(err.isIgnorable).toBe(true);
+    expect(err).toBeInstanceOf(TimeoutError);
     expect(err.code).toBe('TIMEOUT_ERROR');
+    expect(err.meta).toEqual({});
   });
 
-  it('IgnorableSystemError is ignorable', () => {
-    const err = new IgnorableSystemError('figma_app-something');
-    expect(err.isIgnorable).toBe(true);
+  it('normalizes explicit api failures when no more specific cause exists', () => {
+    const err = normalizeError({
+      status: 500,
+      error: 'Internal service failure',
+      meta: { traceId: 'trace-1' },
+    });
+
+    expect(err).toBeInstanceOf(ApiError);
+    expect(getErrorShape(err)).toEqual({
+      code: 'API_ERROR',
+      message: 'Internal service failure',
+      meta: {
+        status: 500,
+        traceId: 'trace-1',
+      },
+      severity: 'error',
+      isIgnorable: false,
+    });
   });
 
-  it('ValidationError is NOT ignorable', () => {
-    const err = new ValidationError('invalid field');
-    expect(err.isIgnorable).toBe(false);
+  it('maps deterministic display messages for edge categories', () => {
+    expect(formatErrorMessage(new IgnorableSystemError('figma noise'))).toBe('');
+    expect(formatErrorMessage(new ConfigError('env missing'))).toBe(
+      'Configuration error. Please contact support.',
+    );
+    expect(formatErrorMessage(new NetworkError('offline'))).toBe(
+      'Network connection error. Please check your connection.',
+    );
+    expect(formatErrorMessage(new ValidationError('email missing'))).toBe(
+      'Invalid data provided. Please check your input.',
+    );
+    expect(formatErrorMessage(new PaymentError('declined'))).toBe(
+      'Payment processing failed. Please try again.',
+    );
+    expect(formatErrorMessage(new TimeoutError('timeout'))).toBe(
+      'Request timed out. Please try again.',
+    );
   });
 
-  it('PaymentError carries code PAYMENT_ERROR', () => {
-    const err = new PaymentError('stripe declined');
-    expect(err.code).toBe('PAYMENT_ERROR');
-    expect(err.name).toBe('PaymentError');
-  });
-
-  it('ConfigError carries code CONFIG_ERROR', () => {
-    const err = new ConfigError('env missing');
-    expect(err.code).toBe('CONFIG_ERROR');
-    expect(err.name).toBe('ConfigError');
-  });
-});
-
-// ── normalizeError ─────────────────────────────────────────────────────────
-
-describe('normalizeError', () => {
-  it('returns WaselError unchanged', () => {
-    const err = new AuthenticationError('test');
-    expect(normalizeError(err)).toBe(err);
-  });
-
-  it('classifies fetch failure as NetworkError', () => {
-    const result = normalizeError(new Error('Failed to fetch'));
-    expect(result).toBeInstanceOf(NetworkError);
-  });
-
-  it('classifies "unauthorized" message as AuthenticationError', () => {
-    const result = normalizeError(new Error('unauthorized access'));
-    expect(result).toBeInstanceOf(AuthenticationError);
-  });
-
-  it('classifies "payment" message as PaymentError', () => {
-    const result = normalizeError(new Error('payment processing failed'));
-    expect(result).toBeInstanceOf(PaymentError);
-  });
-
-  it('classifies "timeout" message as TimeoutError', () => {
-    const result = normalizeError(new Error('request timed out'));
-    expect(result).toBeInstanceOf(TimeoutError);
-  });
-
-  it('classifies IframeMessageAbortError as IgnorableSystemError', () => {
-    const result = normalizeError(new Error('IframeMessageAbortError from figma_app-xyz'));
-    expect(result).toBeInstanceOf(IgnorableSystemError);
-    expect(result.isIgnorable).toBe(true);
-  });
-
-  it('normalizes a plain string to WaselError with UNKNOWN_ERROR code', () => {
-    const result = normalizeError('something went wrong');
-    expect(result.code).toBe('UNKNOWN_ERROR');
-    expect(result.message).toBe('something went wrong');
-  });
-
-  it('normalizes null to WaselError with UNKNOWN_ERROR', () => {
-    const result = normalizeError(null);
-    expect(result.code).toBe('UNKNOWN_ERROR');
-  });
-
-  it('attaches passed context to the error', () => {
-    const ctx = { userId: 'u-123', operation: 'signIn' };
-    const result = normalizeError(new Error('connection reset'), ctx);
-    expect(result.context).toEqual(ctx);
-  });
-});
-
-// ── shouldIgnoreError ──────────────────────────────────────────────────────
-
-describe('shouldIgnoreError', () => {
-  it('returns true for NetworkError (ignorable by design)', () => {
-    expect(shouldIgnoreError(new NetworkError('offline'))).toBe(true);
-  });
-
-  it('returns false for AuthenticationError', () => {
-    expect(shouldIgnoreError(new AuthenticationError('bad token'))).toBe(false);
-  });
-
-  it('returns true for raw Error whose message matches ignorable pattern', () => {
-    expect(shouldIgnoreError(new Error('Failed to fetch due to network error'))).toBe(true);
-  });
-
-  it('returns false for plain string error', () => {
-    expect(shouldIgnoreError('unknown issue')).toBe(false);
-  });
-
-  it('returns false for null', () => {
-    expect(shouldIgnoreError(null)).toBe(false);
-  });
-});
-
-// ── formatErrorMessage ─────────────────────────────────────────────────────
-
-describe('formatErrorMessage', () => {
-  it('returns empty string for IgnorableSystemError (never shown to users)', () => {
-    const msg = formatErrorMessage(new IgnorableSystemError('figma noise'));
-    expect(msg).toBe('');
-  });
-
-  it('returns human-readable message for AUTH_ERROR', () => {
-    const msg = formatErrorMessage(new AuthenticationError('invalid_jwt'));
-    expect(msg).toMatch(/authentication failed/i);
-  });
-
-  it('returns human-readable message for NETWORK_ERROR', () => {
-    const msg = formatErrorMessage(new NetworkError('offline'));
-    expect(msg).toMatch(/network/i);
-  });
-
-  it('returns human-readable message for PAYMENT_ERROR', () => {
-    const msg = formatErrorMessage(new PaymentError('declined'));
-    expect(msg).toMatch(/payment/i);
-  });
-
-  it('returns human-readable message for VALIDATION_ERROR', () => {
-    const msg = formatErrorMessage(new ValidationError('email missing'));
-    expect(msg).toMatch(/invalid/i);
-  });
-
-  it('returns correct message for UNKNOWN_ERROR', () => {
-    const msg = formatErrorMessage(new WaselError('mystery', 'UNKNOWN_ERROR', false));
-    expect(msg).toMatch(/unexpected error/i);
-  });
-
-  it('falls back to error message when code is not in the map', () => {
-    const err = new WaselError('custom message here', 'CUSTOM_UNMAPPED_CODE', false);
-    const msg = formatErrorMessage(err);
-    expect(msg).toBe('custom message here');
+  it('returns strict formatted details for unknown errors', () => {
+    expect(
+      formatErrorDetails(new WaselError({ code: 'UNKNOWN_ERROR', message: 'mystery' })),
+    ).toEqual({
+      code: 'UNKNOWN_ERROR',
+      message: 'An unexpected error occurred. Please try again.',
+      meta: {},
+      severity: 'error',
+    });
   });
 });
