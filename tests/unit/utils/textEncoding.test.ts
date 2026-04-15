@@ -13,7 +13,9 @@ describe('textEncoding', () => {
 
   it('repairs latin punctuation and Arabic text', () => {
     expect(repairLikelyMojibake('Live Â· Active')).toBe('Live · Active');
-    expect(repairLikelyMojibake('Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø©...')).toBe('جاري تحميل الخريطة...');
+    expect(repairLikelyMojibake('Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø©...')).toBe(
+      'جاري تحميل الخريطة...',
+    );
   });
 
   it('normalizes nested object graphs without changing clean values', () => {

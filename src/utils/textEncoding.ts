@@ -57,14 +57,11 @@ function escapeForRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-const MOJIBAKE_PATTERN = new RegExp(
-  SUSPICIOUS_TOKENS.map(escapeForRegex).join('|'),
-  'u',
-);
+const MOJIBAKE_PATTERN = new RegExp(SUSPICIOUS_TOKENS.map(escapeForRegex).join('|'), 'u');
 
 function decodeLatin1AsUtf8(value: string): string {
   const bytes = Uint8Array.from(
-    Array.from(value, (char) => {
+    Array.from(value, char => {
       const mappedByte = WINDOWS_1252_BYTES.get(char);
       if (typeof mappedByte === 'number') {
         return mappedByte;
@@ -150,7 +147,7 @@ export function normalizeTextTree<T>(value: T): T {
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => normalizeTextTree(item)) as T;
+    return value.map(item => normalizeTextTree(item)) as T;
   }
 
   if (value && typeof value === 'object') {

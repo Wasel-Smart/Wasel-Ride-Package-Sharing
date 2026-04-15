@@ -1,12 +1,6 @@
 import { notificationsAPI } from '../../../services/notifications.js';
-import {
-  getConnectedRides,
-  updateConnectedRide,
-} from '../../../services/journeyLogistics';
-import {
-  updateRideBooking,
-  type RideBookingRecord,
-} from '../../../services/rideLifecycle';
+import { getConnectedRides, updateConnectedRide } from '../../../services/journeyLogistics';
+import { updateRideBooking, type RideBookingRecord } from '../../../services/rideLifecycle';
 import { DS, r } from '../../../pages/waselServiceShared';
 
 type OfferRideIncomingRequestsProps = {
@@ -30,9 +24,11 @@ export function OfferRideIncomingRequests({
         marginBottom: 18,
       }}
     >
-      <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Incoming booking requests</div>
+      <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
+        Incoming booking requests
+      </div>
       <div style={{ display: 'grid', gap: 10 }}>
-        {incomingRequests.map((request) => (
+        {incomingRequests.map(request => (
           <div
             key={request.id}
             style={{
@@ -56,8 +52,8 @@ export function OfferRideIncomingRequests({
                   {request.from} to {request.to}
                 </div>
                 <div style={{ color: DS.sub, fontSize: '0.74rem', marginTop: 4 }}>
-                  {request.passengerName} requested {request.seatsRequested} seat on {request.date} at{' '}
-                  {request.time}.
+                  {request.passengerName} requested {request.seatsRequested} seat on {request.date}{' '}
+                  at {request.time}.
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -68,7 +64,7 @@ export function OfferRideIncomingRequests({
                         status: 'confirmed',
                         paymentStatus: 'authorized',
                       });
-                      const ride = getConnectedRides().find((item) => item.id === request.rideId);
+                      const ride = getConnectedRides().find(item => item.id === request.rideId);
                       if (ride) {
                         updateConnectedRide(ride.id, {
                           seats: Math.max(0, ride.seats - request.seatsRequested),

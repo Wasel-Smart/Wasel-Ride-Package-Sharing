@@ -197,14 +197,20 @@ const RAW_METRICS: Metric[] = [
     accent: C.cyan,
     value: '18',
     label: { en: 'Active corridors', ar: 'Ù…Ù…Ø±Ø§Øª Ù†Ø´Ø·Ø©' },
-    sub: { en: 'Modelled Jordan-first lanes', ar: 'Ù…Ù…Ø±Ø§Øª Ø£Ø±Ø¯Ù†ÙŠØ© Ø£ÙˆÙ„Ù‰ Ù…ÙÙ†Ù…Ø°Ø¬Ø©' },
+    sub: {
+      en: 'Modelled Jordan-first lanes',
+      ar: 'Ù…Ù…Ø±Ø§Øª Ø£Ø±Ø¯Ù†ÙŠØ© Ø£ÙˆÙ„Ù‰ Ù…ÙÙ†Ù…Ø°Ø¬Ø©',
+    },
   },
   {
     icon: <Zap size={16} />,
     accent: C.gold,
     value: '<3 min',
     label: { en: 'Avg match time', ar: 'Ù…ØªÙˆØ³Ø· ÙˆÙ‚Øª Ø§Ù„Ù…Ø·Ø§Ø¨Ù‚Ø©' },
-    sub: { en: 'Demand-to-supply signal latency', ar: 'Ø²Ù…Ù† Ø§Ø³ØªØ¬Ø§Ø¨Ø© Ø¥Ø´Ø§Ø±Ø© Ø§Ù„Ø·Ù„Ø¨ Ø¥Ù„Ù‰ Ø§Ù„Ø¹Ø±Ø¶' },
+    sub: {
+      en: 'Demand-to-supply signal latency',
+      ar: 'Ø²Ù…Ù† Ø§Ø³ØªØ¬Ø§Ø¨Ø© Ø¥Ø´Ø§Ø±Ø© Ø§Ù„Ø·Ù„Ø¨ Ø¥Ù„Ù‰ Ø§Ù„Ø¹Ø±Ø¶',
+    },
   },
   {
     icon: <Activity size={16} />,
@@ -225,14 +231,20 @@ const RAW_METRICS: Metric[] = [
     accent: C.gold,
     value: '28%',
     label: { en: 'Avg corridor savings', ar: 'Ù…ØªÙˆØ³Ø· ØªÙˆÙÙŠØ± Ø§Ù„Ù…Ù…Ø±' },
-    sub: { en: 'vs solo on-demand alternatives', ar: 'Ù…Ù‚Ø§Ø±Ù†Ø©Ù‹ Ø¨Ø¨Ø¯Ø§Ø¦Ù„ Ø§Ù„Ø·Ù„Ø¨ Ø§Ù„ÙØ±Ø¯ÙŠ' },
+    sub: {
+      en: 'vs solo on-demand alternatives',
+      ar: 'Ù…Ù‚Ø§Ø±Ù†Ø©Ù‹ Ø¨Ø¨Ø¯Ø§Ø¦Ù„ Ø§Ù„Ø·Ù„Ø¨ Ø§Ù„ÙØ±Ø¯ÙŠ',
+    },
   },
   {
     icon: <ShieldCheck size={16} />,
     accent: C.green,
     value: '99.4%',
     label: { en: 'Trust graph accuracy', ar: 'Ø¯Ù‚Ø© Ø±Ø³Ù… Ø§Ù„Ø«Ù‚Ø©' },
-    sub: { en: 'Verified identity resolution rate', ar: 'Ù…Ø¹Ø¯Ù„ Ø¯Ù‚Ø© Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ù‡ÙˆÙŠØ©' },
+    sub: {
+      en: 'Verified identity resolution rate',
+      ar: 'Ù…Ø¹Ø¯Ù„ Ø¯Ù‚Ø© Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ù‡ÙˆÙŠØ©',
+    },
   },
 ];
 const METRICS: Metric[] = RAW_METRICS.map(({ icon, ...metric }) => ({
@@ -258,12 +270,24 @@ const ROADMAP: RoadmapItem[] = normalizeTextTree([
     phase: { en: 'Phase 1 â€” Live', ar: 'Ø§Ù„Ù…Ø±Ø­Ù„Ø© 1 â€” Ø­ÙŠ' },
     title: { en: 'Foundation layer', ar: 'Ø·Ø¨Ù‚Ø© Ø§Ù„ØªØ£Ø³ÙŠØ³' },
     items: [
-      { en: 'Ride marketplace with seat-level pricing', ar: 'Ø³ÙˆÙ‚ Ø§Ù„Ø±Ø­Ù„Ø§Øª Ù…Ø¹ ØªØ³Ø¹ÙŠØ± Ø¹Ù„Ù‰ Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ù…Ù‚Ø¹Ø¯' },
-      { en: 'Package handoff via ride network', ar: 'ØªØ³Ù„ÙŠÙ… Ø§Ù„Ø·Ø±ÙˆØ¯ Ø¹Ø¨Ø± Ø´Ø¨ÙƒØ© Ø§Ù„Ø±Ø­Ù„Ø§Øª' },
+      {
+        en: 'Ride marketplace with seat-level pricing',
+        ar: 'Ø³ÙˆÙ‚ Ø§Ù„Ø±Ø­Ù„Ø§Øª Ù…Ø¹ ØªØ³Ø¹ÙŠØ± Ø¹Ù„Ù‰ Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ù…Ù‚Ø¹Ø¯',
+      },
+      {
+        en: 'Package handoff via ride network',
+        ar: 'ØªØ³Ù„ÙŠÙ… Ø§Ù„Ø·Ø±ÙˆØ¯ Ø¹Ø¨Ø± Ø´Ø¨ÙƒØ© Ø§Ù„Ø±Ø­Ù„Ø§Øª',
+      },
       { en: 'Bus corridor scheduling', ar: 'Ø¬Ø¯ÙˆÙ„Ø© Ù…Ù…Ø± Ø§Ù„Ø­Ø§ÙÙ„Ø§Øª' },
-      { en: 'Wallet and JOD payments', ar: 'Ø§Ù„Ù…Ø­ÙØ¸Ø© ÙˆØ§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª Ø¨Ø§Ù„Ø¯ÙŠÙ†Ø§Ø± Ø§Ù„Ø£Ø±Ø¯Ù†ÙŠ' },
+      {
+        en: 'Wallet and JOD payments',
+        ar: 'Ø§Ù„Ù…Ø­ÙØ¸Ø© ÙˆØ§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª Ø¨Ø§Ù„Ø¯ÙŠÙ†Ø§Ø± Ø§Ù„Ø£Ø±Ø¯Ù†ÙŠ',
+      },
       { en: 'Trust + identity verification', ar: 'Ø§Ù„Ø«Ù‚Ø© + Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ù‡ÙˆÙŠØ©' },
-      { en: 'Bilingual AR/EN, GDPR + Jordan PDPL', ar: 'Ø«Ù†Ø§Ø¦ÙŠ Ø§Ù„Ù„ØºØ©ØŒ GDPR + Ù‚Ø§Ù†ÙˆÙ† PDPL' },
+      {
+        en: 'Bilingual AR/EN, GDPR + Jordan PDPL',
+        ar: 'Ø«Ù†Ø§Ø¦ÙŠ Ø§Ù„Ù„ØºØ©ØŒ GDPR + Ù‚Ø§Ù†ÙˆÙ† PDPL',
+      },
     ],
   },
   {
@@ -272,12 +296,24 @@ const ROADMAP: RoadmapItem[] = normalizeTextTree([
     phase: { en: 'Phase 2 â€” In Progress', ar: 'Ø§Ù„Ù…Ø±Ø­Ù„Ø© 2 â€” Ø¬Ø§Ø±Ù Ø§Ù„ØªÙ†ÙÙŠØ°' },
     title: { en: 'Intelligence layer', ar: 'Ø·Ø¨Ù‚Ø© Ø§Ù„Ø°ÙƒØ§Ø¡' },
     items: [
-      { en: 'Real-time demand prediction engine', ar: 'Ù…Ø­Ø±Ùƒ Ø§Ù„ØªÙ†Ø¨Ø¤ Ø¨Ø§Ù„Ø·Ù„Ø¨ ÙÙŠ Ø§Ù„ÙˆÙ‚Øª Ø§Ù„ÙØ¹Ù„ÙŠ' },
+      {
+        en: 'Real-time demand prediction engine',
+        ar: 'Ù…Ø­Ø±Ùƒ Ø§Ù„ØªÙ†Ø¨Ø¤ Ø¨Ø§Ù„Ø·Ù„Ø¨ ÙÙŠ Ø§Ù„ÙˆÙ‚Øª Ø§Ù„ÙØ¹Ù„ÙŠ',
+      },
       { en: 'Raje3 return-lane matching', ar: 'Ù…Ø·Ø§Ø¨Ù‚Ø© Ø§Ù„Ù…Ø³Ø§Ø± Ø§Ù„Ø¹Ø§Ø¦Ø¯ Ø±Ø§Ø¬Ø¹' },
       { en: 'Dynamic corridor pricing', ar: 'ØªØ³Ø¹ÙŠØ± Ù…Ù…Ø± Ø¯ÙŠÙ†Ø§Ù…ÙŠÙƒÙŠ' },
-      { en: 'WhatsApp-native booking confirmation', ar: 'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø­Ø¬Ø² Ø§Ù„Ø£ØµÙ„ÙŠ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨' },
-      { en: 'Corporate managed-mobility accounts', ar: 'Ø­Ø³Ø§Ø¨Ø§Øª Ø§Ù„ØªÙ†Ù‚Ù„ Ø§Ù„Ù…ÙØ¯Ø§Ø± Ù„Ù„Ø´Ø±ÙƒØ§Øª' },
-      { en: 'School transport + guardian visibility', ar: 'Ù†Ù‚Ù„ Ù…Ø¯Ø±Ø³ÙŠ + Ø±Ø¤ÙŠØ© Ø£ÙˆÙ„ÙŠØ§Ø¡ Ø§Ù„Ø£Ù…ÙˆØ±' },
+      {
+        en: 'WhatsApp-native booking confirmation',
+        ar: 'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø­Ø¬Ø² Ø§Ù„Ø£ØµÙ„ÙŠ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨',
+      },
+      {
+        en: 'Corporate managed-mobility accounts',
+        ar: 'Ø­Ø³Ø§Ø¨Ø§Øª Ø§Ù„ØªÙ†Ù‚Ù„ Ø§Ù„Ù…ÙØ¯Ø§Ø± Ù„Ù„Ø´Ø±ÙƒØ§Øª',
+      },
+      {
+        en: 'School transport + guardian visibility',
+        ar: 'Ù†Ù‚Ù„ Ù…Ø¯Ø±Ø³ÙŠ + Ø±Ø¤ÙŠØ© Ø£ÙˆÙ„ÙŠØ§Ø¡ Ø§Ù„Ø£Ù…ÙˆØ±',
+      },
     ],
   },
   {
@@ -286,11 +322,26 @@ const ROADMAP: RoadmapItem[] = normalizeTextTree([
     phase: { en: 'Phase 3 â€” Next', ar: 'Ø§Ù„Ù…Ø±Ø­Ù„Ø© 3 â€” Ø§Ù„Ù‚Ø§Ø¯Ù…' },
     title: { en: 'Network compounding layer', ar: 'Ø·Ø¨Ù‚Ø© ØªØ¶Ø§Ø¹Ù Ø§Ù„Ø´Ø¨ÙƒØ©' },
     items: [
-      { en: 'Cross-border MENA corridors (Aqaba â†’ Eilat, Amman â†’ Damascus)', ar: 'Ù…Ù…Ø±Ø§Øª Ø¹Ø§Ø¨Ø±Ø© Ù„Ù„Ø­Ø¯ÙˆØ¯ ÙÙŠ Ø§Ù„Ù…Ù†Ø·Ù‚Ø©' },
-      { en: 'AI-driven credit-adjusted movement pricing', ar: 'ØªØ³Ø¹ÙŠØ± Ø§Ù„Ø­Ø±ÙƒØ© Ø§Ù„Ù…Ø¹Ø¯Ù‘Ù„ Ø¨Ø§Ù„Ø§Ø¦ØªÙ…Ø§Ù†' },
-      { en: 'Autonomous dispatch for corporate fleets', ar: 'Ø§Ù„Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„ØªÙ„Ù‚Ø§Ø¦ÙŠ Ù„Ø£Ø³Ø§Ø·ÙŠÙ„ Ø§Ù„Ø´Ø±ÙƒØ§Øª' },
-      { en: 'Open API for third-party corridor integration', ar: 'ÙˆØ§Ø¬Ù‡Ø© Ù…ÙØªÙˆØ­Ø© Ù„ØªÙƒØ§Ù…Ù„ Ø§Ù„Ù…Ù…Ø±' },
-      { en: 'Carbon accounting per corridor per trip', ar: 'Ù…Ø­Ø§Ø³Ø¨Ø© Ø§Ù„ÙƒØ±Ø¨ÙˆÙ† Ù„ÙƒÙ„ Ù…Ù…Ø± Ù„ÙƒÙ„ Ø±Ø­Ù„Ø©' },
+      {
+        en: 'Cross-border MENA corridors (Aqaba â†’ Eilat, Amman â†’ Damascus)',
+        ar: 'Ù…Ù…Ø±Ø§Øª Ø¹Ø§Ø¨Ø±Ø© Ù„Ù„Ø­Ø¯ÙˆØ¯ ÙÙŠ Ø§Ù„Ù…Ù†Ø·Ù‚Ø©',
+      },
+      {
+        en: 'AI-driven credit-adjusted movement pricing',
+        ar: 'ØªØ³Ø¹ÙŠØ± Ø§Ù„Ø­Ø±ÙƒØ© Ø§Ù„Ù…Ø¹Ø¯Ù‘Ù„ Ø¨Ø§Ù„Ø§Ø¦ØªÙ…Ø§Ù†',
+      },
+      {
+        en: 'Autonomous dispatch for corporate fleets',
+        ar: 'Ø§Ù„Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„ØªÙ„Ù‚Ø§Ø¦ÙŠ Ù„Ø£Ø³Ø§Ø·ÙŠÙ„ Ø§Ù„Ø´Ø±ÙƒØ§Øª',
+      },
+      {
+        en: 'Open API for third-party corridor integration',
+        ar: 'ÙˆØ§Ø¬Ù‡Ø© Ù…ÙØªÙˆØ­Ø© Ù„ØªÙƒØ§Ù…Ù„ Ø§Ù„Ù…Ù…Ø±',
+      },
+      {
+        en: 'Carbon accounting per corridor per trip',
+        ar: 'Ù…Ø­Ø§Ø³Ø¨Ø© Ø§Ù„ÙƒØ±Ø¨ÙˆÙ† Ù„ÙƒÙ„ Ù…Ù…Ø± Ù„ÙƒÙ„ Ø±Ø­Ù„Ø©',
+      },
     ],
   },
 ]) as RoadmapItem[];
@@ -347,7 +398,6 @@ export default function InnovationHubPage() {
       }}
     >
       <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 20 }}>
-
         {/* Hero */}
         <section
           style={panel({
@@ -362,34 +412,79 @@ export default function InnovationHubPage() {
               position: 'absolute',
               inset: 0,
               pointerEvents: 'none',
-              background: 'radial-gradient(circle at 82% 20%, rgba(168,214,20,0.14), transparent 30%)',
+              background:
+                'radial-gradient(circle at 82% 20%, rgba(168,214,20,0.14), transparent 30%)',
             }}
           />
           <div style={{ position: 'relative', display: 'grid', gap: 14, maxWidth: 880 }}>
-            <div style={{ fontSize: '0.72rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: C.cyan, fontWeight: 800 }}>
+            <div
+              style={{
+                fontSize: '0.72rem',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: C.cyan,
+                fontWeight: 800,
+              }}
+            >
               {copy.eyebrow}
             </div>
-            <h1 style={{ margin: 0, fontSize: 'clamp(2rem, 4.5vw, 3.75rem)', lineHeight: 1.0, letterSpacing: '-0.04em', fontWeight: 900 }}>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: 'clamp(2rem, 4.5vw, 3.75rem)',
+                lineHeight: 1.0,
+                letterSpacing: '-0.04em',
+                fontWeight: 900,
+              }}
+            >
               {copy.title}
             </h1>
-            <p style={{ margin: 0, color: C.textSub, lineHeight: 1.78, fontSize: '1.02rem', maxWidth: 760 }}>
+            <p
+              style={{
+                margin: 0,
+                color: C.textSub,
+                lineHeight: 1.78,
+                fontSize: '1.02rem',
+                maxWidth: 760,
+              }}
+            >
               {copy.subtitle}
             </p>
           </div>
         </section>
 
         {/* Metrics bar */}
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-          {METRICS.map((m) => (
+        <section
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 12,
+          }}
+        >
+          {METRICS.map(m => (
             <div
               key={m.value + (ar ? m.label.ar : m.label.en)}
-              style={panel({ padding: '16px 18px', borderRadius: 22, border: `1px solid ${m.accent}26`, boxShadow: `0 10px 28px ${m.accent}12` })}
+              style={panel({
+                padding: '16px 18px',
+                borderRadius: 22,
+                border: `1px solid ${m.accent}26`,
+                boxShadow: `0 10px 28px ${m.accent}12`,
+              })}
             >
               <div style={glassChip(m.accent)}>
                 {m.icon}
                 {ar ? m.label.ar : m.label.en}
               </div>
-              <div style={{ fontSize: '1.95rem', fontWeight: 900, color: m.accent, lineHeight: 1, margin: '10px 0 6px', textShadow: `0 0 18px ${m.accent}30` }}>
+              <div
+                style={{
+                  fontSize: '1.95rem',
+                  fontWeight: 900,
+                  color: m.accent,
+                  lineHeight: 1,
+                  margin: '10px 0 6px',
+                  textShadow: `0 0 18px ${m.accent}30`,
+                }}
+              >
                 {m.value}
               </div>
               <div style={{ color: C.textMuted, fontSize: '0.78rem', lineHeight: 1.55 }}>
@@ -401,24 +496,69 @@ export default function InnovationHubPage() {
 
         {/* Pillars grid */}
         <section>
-          <div style={{ fontSize: '0.72rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: C.textMuted, marginBottom: 14, fontWeight: 800 }}>
+          <div
+            style={{
+              fontSize: '0.72rem',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: C.textMuted,
+              marginBottom: 14,
+              fontWeight: 800,
+            }}
+          >
             {copy.pillars}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: 14 }}>
-            {PILLARS.map((pillar) => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))',
+              gap: 14,
+            }}
+          >
+            {PILLARS.map(pillar => (
               <article
                 key={ar ? pillar.title.ar : pillar.title.en}
-                style={panel({ padding: '20px 20px 18px', borderRadius: 22, border: `1px solid ${pillar.accent}22` })}
+                style={panel({
+                  padding: '20px 20px 18px',
+                  borderRadius: 22,
+                  border: `1px solid ${pillar.accent}22`,
+                })}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 14, background: `${pillar.accent}14`, border: `1px solid ${pillar.accent}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: pillar.accent, flexShrink: 0 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    gap: 12,
+                    marginBottom: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 14,
+                      background: `${pillar.accent}14`,
+                      border: `1px solid ${pillar.accent}28`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: pillar.accent,
+                      flexShrink: 0,
+                    }}
+                  >
                     {pillar.icon}
                   </div>
-                  <div style={glassChip(pillar.accent)}>
-                    {ar ? pillar.tag.ar : pillar.tag.en}
-                  </div>
+                  <div style={glassChip(pillar.accent)}>{ar ? pillar.tag.ar : pillar.tag.en}</div>
                 </div>
-                <h3 style={{ margin: '0 0 8px', fontSize: '1rem', fontWeight: 900, letterSpacing: '-0.02em' }}>
+                <h3
+                  style={{
+                    margin: '0 0 8px',
+                    fontSize: '1rem',
+                    fontWeight: 900,
+                    letterSpacing: '-0.02em',
+                  }}
+                >
                   {ar ? pillar.title.ar : pillar.title.en}
                 </h3>
                 <p style={{ margin: 0, color: C.textSub, fontSize: '0.86rem', lineHeight: 1.7 }}>
@@ -433,23 +573,73 @@ export default function InnovationHubPage() {
         {(
           [
             { title: copy.aiSection, body: copy.aiBody, accent: C.cyan, icon: <Brain size={18} /> },
-            { title: copy.trustSection, body: copy.trustBody, accent: C.green, icon: <ShieldCheck size={18} /> },
-            { title: copy.networkSection, body: copy.networkBody, accent: C.gold, icon: <Activity size={18} /> },
-            { title: copy.menaSection, body: copy.menaBody, accent: C.cyan, icon: <Globe2 size={18} /> },
+            {
+              title: copy.trustSection,
+              body: copy.trustBody,
+              accent: C.green,
+              icon: <ShieldCheck size={18} />,
+            },
+            {
+              title: copy.networkSection,
+              body: copy.networkBody,
+              accent: C.gold,
+              icon: <Activity size={18} />,
+            },
+            {
+              title: copy.menaSection,
+              body: copy.menaBody,
+              accent: C.cyan,
+              icon: <Globe2 size={18} />,
+            },
           ] as { title: string; body: string; accent: string; icon: ReactNode }[]
-        ).map((s) => (
+        ).map(s => (
           <section
             key={s.title}
-            style={panel({ padding: '22px 22px 20px', borderRadius: 24, border: `1px solid ${s.accent}22`, display: 'flex', alignItems: 'flex-start', gap: 18 })}
+            style={panel({
+              padding: '22px 22px 20px',
+              borderRadius: 24,
+              border: `1px solid ${s.accent}22`,
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 18,
+            })}
           >
-            <div style={{ width: 46, height: 46, borderRadius: 15, background: `${s.accent}14`, border: `1px solid ${s.accent}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.accent, flexShrink: 0 }}>
+            <div
+              style={{
+                width: 46,
+                height: 46,
+                borderRadius: 15,
+                background: `${s.accent}14`,
+                border: `1px solid ${s.accent}28`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: s.accent,
+                flexShrink: 0,
+              }}
+            >
               {s.icon}
             </div>
             <div>
-              <h2 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: 900, letterSpacing: '-0.02em' }}>
+              <h2
+                style={{
+                  margin: '0 0 8px',
+                  fontSize: '1.1rem',
+                  fontWeight: 900,
+                  letterSpacing: '-0.02em',
+                }}
+              >
                 {s.title}
               </h2>
-              <p style={{ margin: 0, color: C.textSub, lineHeight: 1.75, fontSize: '0.92rem', maxWidth: 820 }}>
+              <p
+                style={{
+                  margin: 0,
+                  color: C.textSub,
+                  lineHeight: 1.75,
+                  fontSize: '0.92rem',
+                  maxWidth: 820,
+                }}
+              >
                 {s.body}
               </p>
             </div>
@@ -458,32 +648,84 @@ export default function InnovationHubPage() {
 
         {/* Roadmap */}
         <section>
-          <div style={{ fontSize: '0.72rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: C.textMuted, marginBottom: 14, fontWeight: 800 }}>
+          <div
+            style={{
+              fontSize: '0.72rem',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: C.textMuted,
+              marginBottom: 14,
+              fontWeight: 800,
+            }}
+          >
             {copy.roadmap}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))', gap: 14 }}>
-            {ROADMAP.map((phase) => (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))',
+              gap: 14,
+            }}
+          >
+            {ROADMAP.map(phase => (
               <article
                 key={ar ? phase.phase.ar : phase.phase.en}
                 style={panel({
                   padding: '20px 20px 18px',
                   borderRadius: 24,
                   border: `1px solid ${phase.accent}28`,
-                  boxShadow: phase.status === 'live' ? `0 14px 36px ${phase.accent}14` : '0 8px 22px rgba(0,0,0,0.18)',
+                  boxShadow:
+                    phase.status === 'live'
+                      ? `0 14px 36px ${phase.accent}14`
+                      : '0 8px 22px rgba(0,0,0,0.18)',
                 })}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <div style={{ fontSize: '0.68rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: phase.accent, fontWeight: 800 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '0.68rem',
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
+                      color: phase.accent,
+                      fontWeight: 800,
+                    }}
+                  >
                     {ar ? phase.phase.ar : phase.phase.en}
                   </div>
-                  <div style={{ width: 10, height: 10, borderRadius: 999, background: phase.accent, boxShadow: `0 0 12px ${phase.accent}`, opacity: phase.status === 'next' ? 0.45 : 1 }} />
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 999,
+                      background: phase.accent,
+                      boxShadow: `0 0 12px ${phase.accent}`,
+                      opacity: phase.status === 'next' ? 0.45 : 1,
+                    }}
+                  />
                 </div>
                 <h3 style={{ margin: '0 0 14px', fontSize: '1rem', fontWeight: 900 }}>
                   {ar ? phase.title.ar : phase.title.en}
                 </h3>
-                <ul style={{ margin: 0, padding: ar ? '0 18px 0 0' : '0 0 0 18px', display: 'grid', gap: 8 }}>
-                  {phase.items.map((item) => (
-                    <li key={ar ? item.ar : item.en} style={{ color: C.textSub, fontSize: '0.84rem', lineHeight: 1.6 }}>
+                <ul
+                  style={{
+                    margin: 0,
+                    padding: ar ? '0 18px 0 0' : '0 0 0 18px',
+                    display: 'grid',
+                    gap: 8,
+                  }}
+                >
+                  {phase.items.map(item => (
+                    <li
+                      key={ar ? item.ar : item.en}
+                      style={{ color: C.textSub, fontSize: '0.84rem', lineHeight: 1.6 }}
+                    >
                       {ar ? item.ar : item.en}
                     </li>
                   ))}
@@ -492,9 +734,7 @@ export default function InnovationHubPage() {
             ))}
           </div>
         </section>
-
       </div>
     </div>
   );
 }
-
