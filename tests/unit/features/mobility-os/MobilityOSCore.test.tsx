@@ -17,8 +17,6 @@ import { cleanup, render, act } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
 import MobilityOSCore from '../../../../src/features/mobility-os/MobilityOSCore';
 
-vi.setConfig({ testTimeout: 30000 });
-
 // ── Minimal mocks required for MobilityOSCore to mount ────────────────────
 
 vi.mock('../../../../src/contexts/LanguageContext', () => ({
@@ -129,7 +127,7 @@ describe('MobilityOSCore — isMobile initialisation', () => {
 
     expect(findMapWrap(container, '1.42')).not.toBeNull();
     expect(findMapWrap(container, '4/3')).toBeNull();
-  });
+  }, 30000);
 
   it('treats viewport < 768 as mobile (no 3D transform)', async () => {
     setViewportWidth(375);

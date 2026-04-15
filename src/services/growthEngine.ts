@@ -106,7 +106,11 @@ function readLocalSnapshots(): Record<string, ReferralSnapshot> {
 function writeLocalSnapshots(snapshots: Record<string, ReferralSnapshot>) {
   if (!allowLocalPersistenceFallback()) return;
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(LOCAL_REFERRAL_KEY, JSON.stringify(snapshots));
+  try {
+    window.localStorage.setItem(LOCAL_REFERRAL_KEY, JSON.stringify(snapshots));
+  } catch {
+    // Storage can be unavailable in protected environments; fail closed.
+  }
 }
 
 function readLocalGrowthEvents(): GrowthEventRecord[] {
@@ -129,17 +133,21 @@ function readLocalGrowthEvents(): GrowthEventRecord[] {
 function writeLocalGrowthEvents(events: GrowthEventRecord[]) {
   if (!allowLocalPersistenceFallback()) return;
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(
-    LOCAL_GROWTH_EVENTS_KEY,
-    JSON.stringify(
-      parseContract(
-        growthEventFeedSchema,
-        events.slice(0, 300),
-        'growth.events.local',
-        GROWTH_CONTRACT_VERSION,
+  try {
+    window.localStorage.setItem(
+      LOCAL_GROWTH_EVENTS_KEY,
+      JSON.stringify(
+        parseContract(
+          growthEventFeedSchema,
+          events.slice(0, 300),
+          'growth.events.local',
+          GROWTH_CONTRACT_VERSION,
+        ),
       ),
-    ),
-  );
+    );
+  } catch {
+    // Storage can be unavailable in protected environments; fail closed.
+  }
 }
 
 export function getGrowthEventFeed(): GrowthEventRecord[] {

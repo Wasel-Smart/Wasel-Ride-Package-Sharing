@@ -544,24 +544,100 @@
 @media (max-width: 760px) {
   .app-entry-page__shell {
     padding-inline: 14px;
+    padding-top: 16px;
   }
 
-  .app-entry-page__hero-grid,
-  .app-entry-page__action-card,
-  .app-entry-page__flow-card {
-    padding: 18px;
+  .app-entry-page__header {
+    padding: 16px 18px;
+    border-radius: 22px;
+    margin-bottom: 16px;
+    gap: 10px;
+  }
+
+  .app-entry-page__brand-mark {
+    width: 44px;
+    height: 44px;
+  }
+
+  .app-entry-page__brand-name {
+    font-size: 1.1rem;
+  }
+
+  .app-entry-page__brand-meta {
+    font-size: 0.78rem;
   }
 
   .app-entry-page__hero {
     min-height: auto;
+    border-radius: 28px;
   }
 
   .app-entry-page__hero-grid {
+    padding: 24px 20px;
     min-height: auto;
+    gap: 20px;
   }
 
   .app-entry-page__hero-title {
     max-width: none;
+    font-size: clamp(2.2rem, 9vw, 3.2rem);
+    letter-spacing: -0.05em;
+  }
+
+  .app-entry-page__hero-body {
+    font-size: 0.92rem;
+  }
+
+  .app-entry-page__hero-points {
+    gap: 8px;
+  }
+
+  .app-entry-page__hero-points span {
+    font-size: 0.78rem;
+    padding: 8px 12px;
+  }
+
+  .app-entry-page__action-card {
+    padding: 22px 20px;
+    border-radius: 24px;
+    gap: 16px;
+  }
+
+  .app-entry-page__action-copy h2 {
+    font-size: 1.35rem;
+  }
+
+  .app-entry-page__field-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .app-entry-page__field-grid select,
+  .app-entry-page__field-grid input {
+    min-height: 50px;
+    font-size: 16px; /* prevent iOS zoom */
+  }
+
+  .app-entry-page__action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .app-entry-page__primary-button,
+  .app-entry-page__secondary-button {
+    flex: none;
+    width: 100%;
+    min-height: 50px;
+    font-size: 0.94rem;
+  }
+
+  .app-entry-page__guest-auth-buttons {
+    flex-direction: column;
+  }
+
+  .app-entry-page__guest-auth-buttons button {
+    flex: none;
+    width: 100%;
   }
 
   .app-entry-page__flow-grid,
@@ -569,9 +645,13 @@
     grid-template-columns: 1fr;
   }
 
-  .app-entry-page__action-buttons {
-    flex-direction: column;
-    align-items: stretch;
+  .app-entry-page__flow-card {
+    padding: 18px 16px;
+    border-radius: 22px;
+  }
+
+  .app-entry-page__section-copy h2 {
+    font-size: 1.4rem;
   }
 }
 
