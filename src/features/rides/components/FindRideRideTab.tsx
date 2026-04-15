@@ -115,6 +115,41 @@ type AlertBannerProps = {
   message: string;
 };
 
+function RideCardSkeleton() {
+  return (
+    <div style={{
+      background: DS.card,
+      borderRadius: r(20),
+      border: `1px solid ${DS.border}`,
+      overflow: 'hidden',
+      boxShadow: 'var(--wasel-shadow-card)',
+    }}>
+      <div style={{ height: 3, background: DS.gradC, opacity: 0.4 }} />
+      <div style={{ padding: '20px 24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div className="skeleton-base" style={{ width: 46, height: 46, borderRadius: r(14) }} />
+            <div style={{ display: 'grid', gap: 8 }}>
+              <div className="skeleton-base sk-line" style={{ width: 120 }} />
+              <div className="skeleton-base sk-line-sm" style={{ width: 80 }} />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gap: 8, alignItems: 'flex-end' }}>
+            <div className="skeleton-base sk-line-lg" style={{ width: 60 }} />
+            <div className="skeleton-base sk-line-sm" style={{ width: 44 }} />
+          </div>
+        </div>
+        <div className="skeleton-base sk-rect" style={{ height: 64, marginBottom: 14 }} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          {[80, 64, 72].map((w) => (
+            <div key={w} className="skeleton-base" style={{ height: 24, width: w, borderRadius: 999 }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AlertBanner({
   icon: Icon,
   tone,
@@ -127,18 +162,25 @@ function AlertBanner({
       style={{
         marginTop: 14,
         display: 'flex',
-        gap: 10,
-        alignItems: 'center',
+        gap: 12,
+        alignItems: 'flex-start',
         background,
         border,
-        borderRadius: r(14),
-        padding: '12px 14px',
-        color: '#fff',
+        borderRadius: r(16),
+        padding: '14px 16px',
         fontSize: '0.84rem',
+        lineHeight: 1.6,
+        boxShadow: `0 4px 16px ${tone}14`,
       }}
     >
-      <Icon size={16} color={tone} />
-      <span>{message}</span>
+      <div style={{
+        width: 32, height: 32, borderRadius: r(10), flexShrink: 0,
+        background: `${tone}18`, border: `1px solid ${tone}30`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon size={15} color={tone} />
+      </div>
+      <span style={{ color: DS.text, paddingTop: 6 }}>{message}</span>
     </div>
   );
 }
@@ -710,6 +752,7 @@ type RideResultsSectionProps = {
   staticCopy: FindRideStaticCopy;
   from: string;
   to: string;
+  loading: boolean;
   searched: boolean;
   sort: SortOption;
   results: Ride[];
@@ -732,6 +775,7 @@ function RideResultsSection({
   staticCopy,
   from,
   to,
+  loading,
   searched,
   sort,
   results,
@@ -799,7 +843,13 @@ function RideResultsSection({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <AnimatePresence>
-          {results.length === 0 ? (
+          {loading ? (
+            <>
+              <RideCardSkeleton />
+              <RideCardSkeleton />
+              <RideCardSkeleton />
+            </>
+          ) : results.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1237,6 +1287,7 @@ export function FindRideRideTab({
         staticCopy={staticCopy}
         from={from}
         to={to}
+        loading={loading}
         searched={searched}
         sort={sort}
         results={results}
