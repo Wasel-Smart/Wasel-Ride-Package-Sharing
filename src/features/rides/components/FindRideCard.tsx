@@ -51,16 +51,21 @@ export function FindRideCard({
         border: `1px solid ${DS.border}`,
         cursor: 'pointer',
         overflow: 'hidden',
-        transition: 'border-color 0.2s',
+        transition: 'border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease',
+        boxShadow: 'var(--wasel-shadow-card)',
       }}
       onMouseEnter={(event) => {
         event.currentTarget.style.borderColor = DS.borderH;
+        event.currentTarget.style.boxShadow = 'var(--wasel-shadow-md)';
+        event.currentTarget.style.transform = 'translateY(-2px)';
       }}
       onMouseLeave={(event) => {
         event.currentTarget.style.borderColor = DS.border;
+        event.currentTarget.style.boxShadow = 'var(--wasel-shadow-card)';
+        event.currentTarget.style.transform = 'translateY(0)';
       }}
     >
-      <div style={{ height: 2, background: DS.gradC }} />
+      <div style={{ height: 3, background: DS.gradC }} />
       <div className="sp-ride-card-body" style={{ padding: '20px 24px' }}>
         <div
           style={{
@@ -74,16 +79,18 @@ export function FindRideCard({
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <div
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: r(12),
-                  background: DS.gradC,
+                  width: 46,
+                  height: 46,
+                  borderRadius: r(14),
+                  background: `linear-gradient(135deg, ${DS.cyan}22, ${DS.green}18)`,
+                  border: `1.5px solid ${DS.cyan}30`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 900,
-                  color: '#fff',
-                  fontSize: '0.95rem',
+                  color: DS.cyan,
+                  fontSize: '1rem',
+                  boxShadow: `0 4px 14px ${DS.cyan}18`,
                 }}
               >
                 {ride.driver.avatar}
@@ -129,15 +136,28 @@ export function FindRideCard({
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ color: DS.cyan, fontWeight: 900, fontSize: '1.7rem', lineHeight: 1 }}>
+            <div style={{
+              fontWeight: 900,
+              fontSize: '1.85rem',
+              lineHeight: 1,
+              background: DS.gradC,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
               {priceQuote.finalPriceJod}
             </div>
-            <div style={{ color: DS.muted, fontSize: '0.62rem', fontWeight: 600, marginTop: 2 }}>
-              JOD/seat
+            <div style={{ color: DS.muted, fontSize: '0.62rem', fontWeight: 700, marginTop: 3, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              JOD / seat
             </div>
             {priceQuote.discountJod > 0 ? (
-              <div style={{ color: DS.green, fontSize: '0.68rem', fontWeight: 700, marginTop: 5 }}>
-                Save {priceQuote.discountJod} JOD from {priceQuote.basePriceJod}
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                marginTop: 6, padding: '2px 8px', borderRadius: 999,
+                background: `${DS.green}14`, border: `1px solid ${DS.green}28`,
+                color: DS.green, fontSize: '0.68rem', fontWeight: 700,
+              }}>
+                Save {priceQuote.discountJod} JOD
               </div>
             ) : null}
           </div>
@@ -145,13 +165,14 @@ export function FindRideCard({
 
         <div
           style={{
-            background: 'rgba(0,0,0,0.25)',
+            background: `linear-gradient(135deg, ${DS.cyan}0a, ${DS.green}06)`,
             borderRadius: r(14),
             padding: '14px 18px',
             marginBottom: 14,
             display: 'flex',
             alignItems: 'center',
             gap: 12,
+            border: `1px solid ${DS.border}`,
           }}
         >
           <div style={{ flex: 1 }}>
