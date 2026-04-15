@@ -11,6 +11,18 @@ import {
   communicationPreferenceUpdateSchema,
   withDataIntegrity,
 } from './dataIntegrity';
+import {
+  COMMUNICATIONS_CONTRACT_VERSION,
+  communicationDeliveryHistorySchema,
+  communicationPreferencesSchema,
+  type CommunicationDeliveryRecordContract,
+} from '../contracts/communications';
+import { parseContract } from '../contracts/validation';
+import {
+  allowAuthenticatedLocalPersistence,
+  allowDirectSupabaseFallback,
+  requireDirectSupabaseFallback,
+} from './runtimePolicy';
 
 export type CommunicationChannel = 'in_app' | 'push' | 'email' | 'sms' | 'whatsapp';
 export type NotificationTopic =
@@ -76,11 +88,16 @@ function canUseEdgeApi(): boolean {
 }
 
 function normalizePreferences(value: Partial<CommunicationPreferences> | null | undefined): CommunicationPreferences {
-  return {
-    ...defaultCommunicationPreferences,
-    ...value,
-    preferredLanguage: value?.preferredLanguage === 'ar' ? 'ar' : 'en',
-  };
+  return parseContract(
+    communicationPreferencesSchema,
+    {
+      ...defaultCommunicationPreferences,
+      ...value,
+      preferredLanguage: value?.preferredLanguage === 'ar' ? 'ar' : 'en',
+    },
+    'communication.preferences',
+    COMMUNICATIONS_CONTRACT_VERSION,
+  );
 }
 
 function storageKeyFor(userId: string | null | undefined) {
@@ -88,19 +105,29 @@ function storageKeyFor(userId: string | null | undefined) {
 }
 
 function readStoredPreferences(userId?: string | null): CommunicationPreferences {
+  if (!allowAuthenticatedLocalPersistence(userId)) {
+    return defaultCommunicationPreferences;
+  }
+
   if (typeof window === 'undefined') return defaultCommunicationPreferences;
 
   try {
     const raw = window.localStorage.getItem(storageKeyFor(userId));
-    return raw ? normalizePreferences(JSON.parse(raw) as Partial<CommunicationPreferences>) : defaultCommunicationPreferences;
+    return raw
+      ? normalizePreferences(JSON.parse(raw) as Partial<CommunicationPreferences>)
+      : defaultCommunicationPreferences;
   } catch {
     return defaultCommunicationPreferences;
   }
 }
 
 function writeStoredPreferences(userId: string | null | undefined, prefs: CommunicationPreferences): void {
+  if (!allowAuthenticatedLocalPersistence(userId)) return;
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(storageKeyFor(userId), JSON.stringify(prefs));
+  window.localStorage.setItem(
+    storageKeyFor(userId),
+    JSON.stringify(normalizePreferences(prefs)),
+  );
 }
 
 type QueuedDeliveryRecord = DeliveryQueueRequest & {
@@ -123,6 +150,95 @@ function readOutbox(): QueuedDeliveryRecord[] {
 function writeOutbox(records: QueuedDeliveryRecord[]): void {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(OUTBOX_KEY, JSON.stringify(records.slice(0, 200)));
+}
+
+function normalizeQueuedDeliveryRecord(
+  record: QueuedDeliveryRecord,
+): CommunicationDeliveryRecordContract {
+  return parseContract(
+    communicationDeliveryHistorySchema.element,
+    {
+      id: record.id,
+      userId: record.userId,
+      notificationId: record.notificationId ?? null,
+      channel: record.channel,
+      status: 'queued',
+      destination: record.destination,
+      subject: record.subject ?? null,
+      body: record.body,
+      metadata: record.metadata ?? null,
+      providerName: 'local_outbox',
+      queuedAt: record.queuedAt,
+      createdAt: record.queuedAt,
+    },
+    'communication.delivery.local',
+    COMMUNICATIONS_CONTRACT_VERSION,
+  );
+}
+
+function normalizeCommunicationDeliveryHistory(
+  records: CommunicationDeliveryRecordContract[],
+) {
+  return parseContract(
+    communicationDeliveryHistorySchema,
+    records,
+    'communication.delivery.history',
+    COMMUNICATIONS_CONTRACT_VERSION,
+  );
+}
+
+function normalizeDirectDeliveryRecord(
+  row: Record<string, unknown>,
+): CommunicationDeliveryRecordContract {
+  const payload =
+    row.payload && typeof row.payload === 'object' && !Array.isArray(row.payload)
+      ? (row.payload as Record<string, unknown>)
+      : {};
+
+  return parseContract(
+    communicationDeliveryHistorySchema.element,
+    {
+      id: String(row.delivery_id ?? row.id ?? ''),
+      userId:
+        typeof row.user_id === 'string' && row.user_id
+          ? row.user_id
+          : undefined,
+      notificationId:
+        typeof row.notification_id === 'string'
+          ? row.notification_id
+          : row.notification_id === null
+            ? null
+            : undefined,
+      channel:
+        row.channel === 'in_app' ||
+        row.channel === 'push' ||
+        row.channel === 'email' ||
+        row.channel === 'sms' ||
+        row.channel === 'whatsapp'
+          ? row.channel
+          : 'email',
+      status: String(row.delivery_status ?? 'queued'),
+      destination: String(row.destination ?? ''),
+      subject:
+        typeof row.subject === 'string' ? row.subject : row.subject === null ? null : undefined,
+      body: String(payload.body ?? ''),
+      metadata:
+        payload.metadata && typeof payload.metadata === 'object' && !Array.isArray(payload.metadata)
+          ? (payload.metadata as Record<string, unknown>)
+          : null,
+      providerName:
+        typeof row.provider_name === 'string'
+          ? row.provider_name
+          : row.provider_name === null
+            ? null
+            : undefined,
+      queuedAt: String(row.queued_at ?? row.created_at ?? new Date().toISOString()),
+      createdAt:
+        typeof row.created_at === 'string' ? row.created_at : undefined,
+    },
+    'communication.delivery.direct',
+    COMMUNICATIONS_CONTRACT_VERSION,
+  );
 }
 
 function normalizeDirectPreferences(row: Record<string, unknown> | null | undefined): CommunicationPreferences {
@@ -223,15 +339,14 @@ export async function getCommunicationPreferences(userId?: string | null): Promi
   if (!userId) return localPrefs;
 
   if (!canUseEdgeApi()) {
-    try {
-      const direct = await getDirectCommunicationPreferences(userId);
-      if (!direct) return localPrefs;
-      const normalized = normalizeDirectPreferences(direct as Record<string, unknown> | null);
-      writeStoredPreferences(userId, normalized);
-      return normalized;
-    } catch {
-      return localPrefs;
-    }
+    requireDirectSupabaseFallback('Communication preference lookup');
+    const direct = await getDirectCommunicationPreferences(userId);
+    if (!direct) return localPrefs;
+    const normalized = normalizeDirectPreferences(
+      direct as Record<string, unknown> | null,
+    );
+    writeStoredPreferences(userId, normalized);
+    return normalized;
   }
 
   try {
@@ -241,19 +356,26 @@ export async function getCommunicationPreferences(userId?: string | null): Promi
     });
     if (!response.ok) throw new Error('Failed to load communication preferences');
     const data = await response.json();
-    const normalized = normalizePreferences(data?.preferences as Partial<CommunicationPreferences>);
+    const normalized = normalizePreferences(
+      (data?.preferences ?? data) as Partial<CommunicationPreferences>,
+    );
     writeStoredPreferences(userId, normalized);
     return normalized;
-  } catch {
-    try {
-      const direct = await getDirectCommunicationPreferences(userId);
-      if (!direct) return localPrefs;
-      const normalized = normalizeDirectPreferences(direct as Record<string, unknown> | null);
-      writeStoredPreferences(userId, normalized);
-      return normalized;
-    } catch {
-      return localPrefs;
+  } catch (error) {
+    if (!allowDirectSupabaseFallback()) {
+      if (allowAuthenticatedLocalPersistence(userId)) {
+        return localPrefs;
+      }
+      throw error;
     }
+
+    const direct = await getDirectCommunicationPreferences(userId);
+    if (!direct) return localPrefs;
+    const normalized = normalizeDirectPreferences(
+      direct as Record<string, unknown> | null,
+    );
+    writeStoredPreferences(userId, normalized);
+    return normalized;
   }
 }
 
@@ -262,22 +384,31 @@ export async function updateCommunicationPreferences(
   updates: Partial<CommunicationPreferences>,
 ): Promise<CommunicationPreferences> {
   const validatedUpdates = communicationPreferenceUpdateSchema.parse(updates);
-  const merged = normalizePreferences({ ...readStoredPreferences(userId), ...validatedUpdates });
-  writeStoredPreferences(userId, merged);
+  const merged = normalizePreferences({
+    ...readStoredPreferences(userId),
+    ...validatedUpdates,
+  });
 
-  if (!userId) return merged;
-
-  if (!canUseEdgeApi()) {
-    try {
-      await upsertDirectCommunicationPreferences(userId, toDirectPreferenceUpdate(updates));
-    } catch {
-      // local-first fallback
-    }
+  if (!userId) {
+    writeStoredPreferences(userId, merged);
     return merged;
   }
 
+  if (!canUseEdgeApi()) {
+    requireDirectSupabaseFallback('Communication preference update');
+    const direct = await upsertDirectCommunicationPreferences(
+      userId,
+      toDirectPreferenceUpdate(validatedUpdates),
+    );
+    const normalized = normalizeDirectPreferences(
+      direct as Record<string, unknown> | null,
+    );
+    writeStoredPreferences(userId, normalized);
+    return normalized;
+  }
+
   try {
-    await withDataIntegrity({
+    const confirmed = await withDataIntegrity({
       operation: 'communication.preferences.update',
       schema: communicationPreferenceUpdateSchema,
       payload: validatedUpdates,
@@ -292,18 +423,33 @@ export async function updateCommunicationPreferences(
           body: JSON.stringify(merged),
         });
         if (!response.ok) throw new Error('Failed to update communication preferences');
-        return merged;
+        const payload = await response.json().catch(() => ({ preferences: merged }));
+        return normalizePreferences(
+          (payload?.preferences ?? payload ?? merged) as Partial<CommunicationPreferences>,
+        );
       },
     });
-  } catch {
-    try {
-      await upsertDirectCommunicationPreferences(userId, toDirectPreferenceUpdate(validatedUpdates));
-    } catch {
-      // keep local copy
+    writeStoredPreferences(userId, confirmed);
+    return confirmed;
+  } catch (error) {
+    if (!allowDirectSupabaseFallback()) {
+      if (allowAuthenticatedLocalPersistence(userId)) {
+        writeStoredPreferences(userId, merged);
+        return merged;
+      }
+      throw error;
     }
-  }
 
-  return merged;
+    const direct = await upsertDirectCommunicationPreferences(
+      userId,
+      toDirectPreferenceUpdate(validatedUpdates),
+    );
+    const normalized = normalizeDirectPreferences(
+      direct as Record<string, unknown> | null,
+    );
+    writeStoredPreferences(userId, normalized);
+    return normalized;
+  }
 }
 
 export async function queueCommunicationDeliveries(args: {
@@ -323,22 +469,21 @@ export async function queueCommunicationDeliveries(args: {
     queuedAt,
   }));
 
-  writeOutbox([...localRecords, ...readOutbox()]);
+  if (allowAuthenticatedLocalPersistence(args.userId)) {
+    writeOutbox([...localRecords, ...readOutbox()]);
+  }
 
   if (!args.userId) {
     return { queued: localRecords.length, source: 'local' as const };
   }
 
   if (!canUseEdgeApi()) {
-    try {
-      await queueDirectCommunicationDeliveries(args.userId, args.requests.map((request) => ({
-        ...request,
-        notification_id: args.notificationId ?? null,
-      })));
-      return { queued: localRecords.length, source: 'server' as const };
-    } catch {
-      return { queued: localRecords.length, source: 'local' as const };
-    }
+    requireDirectSupabaseFallback('Communication delivery queueing');
+    await queueDirectCommunicationDeliveries(args.userId, args.requests.map((request) => ({
+      ...request,
+      notification_id: args.notificationId ?? null,
+    })));
+    return { queued: localRecords.length, source: 'server' as const };
   }
 
   try {
@@ -356,27 +501,44 @@ export async function queueCommunicationDeliveries(args: {
     });
     if (!response.ok) throw new Error('Failed to queue communication deliveries');
     return { queued: localRecords.length, source: 'server' as const };
-  } catch {
-    try {
-      await queueDirectCommunicationDeliveries(args.userId, args.requests.map((request) => ({
-        ...request,
-        notification_id: args.notificationId ?? null,
-      })));
-      return { queued: localRecords.length, source: 'server' as const };
-    } catch {
-      return { queued: localRecords.length, source: 'local' as const };
+  } catch (error) {
+    if (!allowDirectSupabaseFallback()) {
+      if (allowAuthenticatedLocalPersistence(args.userId)) {
+        return { queued: localRecords.length, source: 'local' as const };
+      }
+      throw error;
     }
+
+    await queueDirectCommunicationDeliveries(args.userId, args.requests.map((request) => ({
+      ...request,
+      notification_id: args.notificationId ?? null,
+    })));
+    return { queued: localRecords.length, source: 'server' as const };
   }
 }
 
 export async function getCommunicationDeliveryHistory(userId?: string | null) {
   if (!userId) {
-    return readOutbox();
+    return normalizeCommunicationDeliveryHistory(
+      readOutbox().map(normalizeQueuedDeliveryRecord),
+    );
   }
 
   try {
-    return await getDirectCommunicationDeliveries(userId);
-  } catch {
-    return readOutbox().filter((record) => record.userId === userId);
+    return normalizeCommunicationDeliveryHistory(
+      (await getDirectCommunicationDeliveries(userId)).map((record) =>
+        normalizeDirectDeliveryRecord(record as Record<string, unknown>),
+      ),
+    );
+  } catch (error) {
+    if (!allowAuthenticatedLocalPersistence(userId)) {
+      throw error;
+    }
+
+    return normalizeCommunicationDeliveryHistory(
+      readOutbox()
+        .filter((record) => record.userId === userId)
+        .map(normalizeQueuedDeliveryRecord),
+    );
   }
 }

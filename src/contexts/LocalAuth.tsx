@@ -285,7 +285,7 @@ function toMessage(error: unknown): string {
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<WaselUser | null>(loadUser);
   const [loading, setLoading] = useState(true);
-  const { enableDemoAccount } = getConfig();
+  const { enableDemoAccount, enablePersistedTestAuth } = getConfig();
   const isPublicLanding =
     typeof window !== 'undefined' && window.location.pathname === '/';
 
@@ -320,7 +320,10 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         : null;
     const getPersistedDemoUser = () => {
       const storedUser = loadUser();
-      if (!enableDemoAccount || storedUser?.backendMode !== 'demo') {
+      if (
+        (!enableDemoAccount && !enablePersistedTestAuth) ||
+        storedUser?.backendMode !== 'demo'
+      ) {
         return null;
       }
       return storedUser;
@@ -416,7 +419,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         window.clearTimeout(bootstrapGuard);
       }
     };
-  }, [enableDemoAccount, isPublicLanding]);
+  }, [enableDemoAccount, enablePersistedTestAuth, isPublicLanding]);
 
   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
     setLoading(true);

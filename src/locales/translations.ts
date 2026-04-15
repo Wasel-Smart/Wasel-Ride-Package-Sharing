@@ -1,10 +1,12 @@
+import { normalizeTextTree } from '../utils/textEncoding';
+
 export type Language = 'en' | 'ar';
 
 type TranslationTree = {
   [key: string]: string | TranslationTree;
 };
 
-export const translations: Record<Language, TranslationTree> = {
+export const rawTranslations: Record<Language, TranslationTree> = {
   en: {
     common: {
       wasel: 'Wasel',
@@ -2927,3 +2929,6 @@ export const translations: Record<Language, TranslationTree> = {
     },
   },
 };
+
+export const translations: Record<Language, TranslationTree> =
+  normalizeTextTree(rawTranslations);

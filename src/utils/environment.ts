@@ -7,6 +7,7 @@ interface EnvironmentConfig {
   isDemoMode: boolean;
   enableDemoData: boolean;
   enableSyntheticTrips: boolean;
+  enablePersistedTestAuth: boolean;
   allowDirectSupabaseFallback: boolean;
   allowLocalPersistenceFallback: boolean;
   supabaseUrl: string;
@@ -22,6 +23,7 @@ export function getEnvironmentConfig(): EnvironmentConfig {
     isDemoMode: config.enableDemoAccount,
     enableDemoData: config.enableDemoAccount,
     enableSyntheticTrips: config.enableSyntheticTrips,
+    enablePersistedTestAuth: config.enablePersistedTestAuth,
     allowDirectSupabaseFallback: config.allowDirectSupabaseFallback,
     allowLocalPersistenceFallback: config.allowLocalPersistenceFallback,
     supabaseUrl: publicSupabaseUrl || '',
@@ -59,6 +61,10 @@ export function validateEnvironmentConfig(): void {
 
     if (config.enableSyntheticTrips) {
       errors.push('Synthetic trips cannot be enabled outside development or test environments');
+    }
+
+    if (config.enablePersistedTestAuth) {
+      errors.push('Persisted test auth cannot be enabled outside the test environment');
     }
 
     if (config.allowDirectSupabaseFallback) {
