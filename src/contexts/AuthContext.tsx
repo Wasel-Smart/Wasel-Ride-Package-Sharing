@@ -158,8 +158,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
               void fetchProfile(nextUserId, isUserSwitch);
             }
           }, 100);
-          // Store timer for cleanup — captured in closure, cleared on unmount via mounted flag
-          void timer;
+          // Cleanup is handled by the mounted flag check inside the callback.
+          // Store the timer id so it can be cleared if the component unmounts
+          // before the 100ms fires.
+          pendingTimers.push(timer);
         } else if (!nextSession) {
           setProfile(null);
         }

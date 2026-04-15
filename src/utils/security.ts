@@ -22,12 +22,16 @@ export const CSP_DIRECTIVES = {
   'default-src': ["'self'"],
   'script-src': [
     "'self'",
+    // unsafe-inline/eval only in dev — never in production
     ...(IS_DEV ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
     'https://js.stripe.com',
     'https://maps.googleapis.com',
+    'https://maps.gstatic.com',
+    'https://va.vercel-scripts.com',
   ],
   'style-src': [
     "'self'",
+    // unsafe-inline required for CSS-in-JS (Tailwind v4 + inline styles)
     "'unsafe-inline'",
     'https://fonts.googleapis.com',
   ],
@@ -51,7 +55,11 @@ export const CSP_DIRECTIVES = {
     'wss://*.supabase.co',
     'https://api.stripe.com',
     'https://maps.googleapis.com',
+    'https://maps.gstatic.com',
     'https://*.sentry.io',
+    'https://o*.ingest.sentry.io',
+    'https://vitals.vercel-insights.com',
+    'https://va.vercel-scripts.com',
     ...(IS_DEV ? ['ws://localhost:*', 'http://localhost:*'] : []),
   ],
   'frame-src': [
@@ -59,6 +67,7 @@ export const CSP_DIRECTIVES = {
     'https://js.stripe.com',
     'https://hooks.stripe.com',
   ],
+  'worker-src': ["'self'", 'blob:'],
   'object-src': ["'none'"],
   'base-uri': ["'self'"],
   'form-action': ["'self'"],
