@@ -2,7 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { BadgeDollarSign, Brain, Route, Sparkles } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
+import {
+  ClarityBand,
+  CoreExperienceBanner,
+  DS,
+  PageShell,
+  Protected,
+  r,
+  SectionHead,
+} from '../../pages/waselServiceShared';
 import {
   activateWaselPlus,
   getMovementMembershipSnapshot,
@@ -110,6 +118,17 @@ export default function WaselPlusPage() {
           title="This page should make repeat travel cheaper, simpler, and easier to keep on schedule."
           detail="Use one place to activate benefits, pin your commuter route, and save reminders before the next strong departure window."
           tone={DS.gold}
+        />
+
+        <ClarityBand
+          title="Make repeat travel easier to manage."
+          detail="Activate benefits, pin the route you use most, and save reminders before the next peak movement window."
+          tone={DS.gold}
+          items={[
+            { label: '1. Activate', value: 'Turn on Wasel Plus and refresh route benefits.' },
+            { label: '2. Pin', value: 'Choose the commuter route that should stay on top.' },
+            { label: '3. Remember', value: 'Save reminders before the next strong departure wave.' },
+          ]}
         />
 
         <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>

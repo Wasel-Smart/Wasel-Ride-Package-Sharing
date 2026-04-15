@@ -88,6 +88,9 @@
 .app-entry-page__action-copy,
 .app-entry-page__field-grid,
 .app-entry-page__field-grid label,
+.app-entry-page__hero-journey,
+.app-entry-page__hero-journey-step,
+.app-entry-page__selection-overview,
 .app-entry-page__section-copy,
 .app-entry-page__footer-stack {
   display: grid;
@@ -273,6 +276,95 @@
   font-weight: 700;
 }
 
+.app-entry-page__hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.app-entry-page__hero-stat {
+  display: grid;
+  gap: 4px;
+  padding: 14px 15px;
+  border-radius: 20px;
+  background: rgba(214, 226, 240, 0.1);
+  border: 1px solid rgba(220, 232, 243, 0.08);
+}
+
+.app-entry-page__hero-stat strong {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.app-entry-page__hero-stat span {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #cfe8fb;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.app-entry-page__hero-stat small {
+  color: var(--landing-hero-muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.app-entry-page__hero-journey {
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 24px;
+  background: rgba(214, 226, 240, 0.08);
+  border: 1px solid rgba(220, 232, 243, 0.08);
+}
+
+.app-entry-page__hero-journey-label {
+  color: #9adfff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.app-entry-page__hero-journey-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.app-entry-page__hero-journey-step {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 12px;
+}
+
+.app-entry-page__hero-journey-index {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(154, 223, 255, 0.14);
+  border: 1px solid rgba(154, 223, 255, 0.2);
+  color: #9adfff;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.app-entry-page__hero-journey-step strong {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.app-entry-page__hero-journey-step p {
+  margin: 4px 0 0;
+  color: var(--landing-hero-muted);
+  font-size: 0.8rem;
+  line-height: 1.58;
+}
+
 .app-entry-page__hero-meta {
   display: inline-flex;
   flex-direction: column;
@@ -310,6 +402,34 @@
   gap: 18px;
   padding: 36px 38px;
   color: var(--landing-text);
+}
+
+.app-entry-page__selection-overview {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.app-entry-page__selection-pill {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #f2f7fc;
+  border: 1px solid rgba(209, 224, 238, 0.82);
+}
+
+.app-entry-page__selection-pill span {
+  color: var(--landing-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-entry-page__selection-pill strong {
+  font-size: 0.94rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
 }
 
 .app-entry-page__mode-switch {
@@ -536,6 +656,10 @@
     grid-template-columns: 1fr;
   }
 
+  .app-entry-page__hero-stats {
+    grid-template-columns: 1fr;
+  }
+
   .app-entry-page__flow-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -603,6 +727,10 @@
     gap: 16px;
   }
 
+  .app-entry-page__selection-overview {
+    grid-template-columns: 1fr;
+  }
+
   .app-entry-page__action-copy h2 {
     font-size: 1.35rem;
   }
@@ -616,6 +744,10 @@
   .app-entry-page__field-grid input {
     min-height: 50px;
     font-size: 16px; /* prevent iOS zoom */
+  }
+
+  .app-entry-page__flow-grid {
+    grid-template-columns: 1fr;
   }
 
   .app-entry-page__action-buttons {

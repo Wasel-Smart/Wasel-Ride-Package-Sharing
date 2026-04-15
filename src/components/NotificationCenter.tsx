@@ -700,7 +700,7 @@ export function NotificationCenter() {
                           className={`overflow-hidden border bg-[linear-gradient(135deg,rgba(7,11,24,0.96),rgba(10,15,27,0.92))] ${notification.read ? 'border-white/8' : 'border-cyan-400/20 shadow-[0_18px_48px_-36px_rgba(34,211,238,0.65)]'}`}
                         >
                           <CardContent className="p-0">
-                            <div className="grid gap-0 md:grid-cols-[auto,1fr,auto]">
+                            <div className="grid gap-0 md:grid-cols-[auto,1fr]">
                               <div
                                 className={`flex items-center justify-center border-b border-white/8 bg-gradient-to-b p-5 md:border-b-0 md:border-r ${accent}`}
                               >
@@ -762,9 +762,9 @@ export function NotificationCenter() {
                                 </div>
 
                                 <div className="grid gap-3 lg:grid-cols-3">
-                                  <div className="rounded-2xl border border-white/8 bg-black/10 p-3">
+                                  <div className="rounded-2xl border border-white/8 bg-black/10 p-3 lg:col-span-2">
                                     <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                                      {labels.audience}
+                                      {labels.communicationMap}
                                     </div>
                                     <div className="mt-2 flex flex-wrap gap-2">
                                       {stakeholders.map((stakeholder) => (
@@ -776,10 +776,7 @@ export function NotificationCenter() {
                                         </span>
                                       ))}
                                     </div>
-                                  </div>
-
-                                  <div className="rounded-2xl border border-white/8 bg-black/10 p-3">
-                                    <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
+                                    <div className="mt-3 text-[11px] uppercase tracking-[0.22em] text-slate-500">
                                       {labels.channels}
                                     </div>
                                     <div className="mt-2 flex flex-wrap gap-2">
@@ -800,28 +797,23 @@ export function NotificationCenter() {
 
                                   <div className="rounded-2xl border border-white/8 bg-black/10 p-3">
                                     <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                                      {labels.escalation}
+                                      {labels.spotlightAction}
                                     </div>
                                     <div className="mt-2 text-sm font-medium text-white">
-                                      {escalationLabel}
+                                      {notification.action_url ? actionLabel : labels.liveQueue}
+                                    </div>
+                                    <p className="mt-2 text-sm leading-6 text-slate-300">
+                                      {notification.action_url
+                                        ? labels.spotlightActionCopy
+                                        : labels.liveQueueCopy}
+                                    </p>
+                                    <div className="mt-3 text-xs text-slate-400">
+                                      {labels.escalation}: {escalationLabel}
                                     </div>
                                   </div>
                                 </div>
-                              </div>
 
-                              <div className="flex flex-col justify-between gap-4 border-t border-white/8 bg-white/[0.03] p-5 md:min-w-[220px] md:border-l md:border-t-0">
-                                <div className="space-y-2">
-                                  <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                                    {labels.spotlightAction}
-                                  </div>
-                                  <p className="text-sm leading-6 text-slate-300">
-                                    {notification.action_url
-                                      ? labels.spotlightActionCopy
-                                      : labels.liveQueueCopy}
-                                  </p>
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2 border-t border-white/8 pt-4">
                                   {notification.action_url && (
                                     <Button size="sm" onClick={() => void handleOpenAction(notification)}>
                                       {actionLabel}

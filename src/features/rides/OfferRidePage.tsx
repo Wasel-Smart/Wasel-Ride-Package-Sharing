@@ -1,11 +1,19 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import { Brain, Briefcase, Network } from 'lucide-react';
+import { Brain, Briefcase, CheckCircle2, Network } from 'lucide-react';
 import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { createGenderMeta, OFFER_RIDE_DRAFT_KEY } from '../../pages/waselCoreRideData';
-import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
+import {
+  ClarityBand,
+  CoreExperienceBanner,
+  DS,
+  PageShell,
+  Protected,
+  r,
+  SectionHead,
+} from '../../pages/waselServiceShared';
 import { createOfferRideDefaultForm, validateOfferRideStep } from '../../pages/waselCorePageHelpers';
 import { readStoredObject } from '../../pages/waselCoreStorage';
 import { useCorridorTruth } from '../../services/corridorTruth';
@@ -169,9 +177,9 @@ export function OfferRidePage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="??"
+          emoji="🚘"
           title="Offer Route"
-          titleAr="Offer Route"
+          titleAr="اعرض مساراً"
           sub="Publish seats and package space in one flow."
           color={DS.blue}
         />
@@ -180,6 +188,17 @@ export function OfferRidePage() {
           title="Post one route and open supply."
           detail={`${category.promise} Publish the route once so Wasel can price, fill, and reuse it.`}
           tone={DS.blue}
+        />
+
+        <ClarityBand
+          title="Build the route in three moves."
+          detail="Set the corridor, check the route economics, then publish only when the trust and demand signals are easy to read."
+          tone={DS.blue}
+          items={[
+            { label: '1. Shape', value: 'Set the route, timing, and seat plan.' },
+            { label: '2. Review', value: 'Check earnings, trust gates, and live demand.' },
+            { label: '3. Publish', value: 'Open the route once the signal feels ready.' },
+          ]}
         />
 
         {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
@@ -351,8 +370,12 @@ export function OfferRidePage() {
 
         {submitted ? (
           <div style={{ background: DS.card, borderRadius: r(20), padding: '60px 28px', textAlign: 'center', border: `1px solid ${DS.border}` }}>
-            <div style={{ fontSize: '4rem', marginBottom: 20 }}>OK</div>
-              <h2 style={{ color: DS.green, fontWeight: 900, fontSize: '1.5rem', margin: '0 0 12px' }}>Route is live</h2>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+              <div style={{ width: 84, height: 84, borderRadius: '50%', background: `${DS.green}14`, border: `2px solid ${DS.green}`, display: 'grid', placeItems: 'center' }}>
+                <CheckCircle2 size={40} color={DS.green} />
+              </div>
+            </div>
+            <h2 style={{ color: DS.green, fontWeight: 900, fontSize: '1.5rem', margin: '0 0 12px' }}>Route is live</h2>
             <p style={{ color: DS.sub }}>
               Your route from <strong style={{ color: '#fff' }}>{form.from}</strong> to <strong style={{ color: '#fff' }}>{form.to}</strong> is now part of the Wasel movement network.
             </p>
