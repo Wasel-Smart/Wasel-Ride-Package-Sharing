@@ -3,6 +3,7 @@ import {
   useMobilityOSLiveData,
   type LiveMobilityRouteSnapshot,
 } from '../mobility-os/liveMobilityData';
+import { allowSyntheticData } from '../../services/runtimePolicy';
 
 type City = {
   id: string;
@@ -446,7 +447,10 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
     [corridorGeometry],
   );
 
-  const syntheticFleet = useMemo(() => buildSyntheticFleet(corridors), [corridors]);
+  const syntheticFleet = useMemo(
+    () => (allowSyntheticData() ? buildSyntheticFleet(corridors) : []),
+    [corridors],
+  );
 
   const vehicles = useMemo(() => {
     const liveVehicles = (snapshot?.vehicles ?? []).filter(vehicle =>

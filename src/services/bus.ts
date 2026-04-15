@@ -7,6 +7,10 @@ import {
   locationsOverlap,
   routeMatchesLocationPair,
 } from '../utils/jordanLocations';
+import {
+  allowLocalPersistenceFallback,
+  requireLocalPersistenceFallback,
+} from './runtimePolicy';
 
 export interface BusRoute {
   id: string;
@@ -217,6 +221,10 @@ function persistLocalBusBooking(payload: BusBookingPayload): StoredBusBooking {
 }
 
 export function getStoredBusBookings(): StoredBusBooking[] {
+  if (!allowLocalPersistenceFallback()) {
+    return [];
+  }
+
   if (typeof window === 'undefined') return [];
   try {
     const raw = window.localStorage.getItem('wasel-bus-bookings');
@@ -282,6 +290,7 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
     });
     return result;
   } catch {
+    requireLocalPersistenceFallback('Bus booking persistence');
     const stored = persistLocalBusBooking(payload);
     void trackGrowthEvent({
       eventName: 'bus_booking_created',

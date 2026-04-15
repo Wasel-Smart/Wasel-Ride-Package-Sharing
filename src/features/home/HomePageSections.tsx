@@ -61,7 +61,7 @@ interface UserSnapshotSectionProps {
   } | null | undefined;
   platformStats: {
     activeDrivers: number;
-    avgWaitMinutes: number;
+    seatAvailability: number;
     passengersMatchedToday: number;
   } | null | undefined;
   formatFromJOD: (value: number) => string;
@@ -379,7 +379,7 @@ export function UserSnapshotSection({
   const signals = platformStats
     ? [
         { value: platformStats.activeDrivers, label: ar ? '\u0627\u0644\u0633\u0627\u0626\u0642\u0648\u0646' : 'Drivers', color: C.cyan },
-        { value: `${platformStats.avgWaitMinutes} min`, label: ar ? '\u0627\u0644\u0627\u0646\u062a\u0638\u0627\u0631' : 'Wait', color: C.gold },
+        { value: platformStats.seatAvailability.toLocaleString(), label: ar ? '\u0627\u0644\u0645\u0642\u0627\u0639\u062f' : 'Seats open', color: C.gold },
         { value: platformStats.passengersMatchedToday.toLocaleString(), label: ar ? '\u0627\u0644\u0645\u0637\u0627\u0628\u0642\u0627\u062a' : 'Matched', color: C.green },
       ]
     : [];

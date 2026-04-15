@@ -17,6 +17,14 @@ import {
   type WalletSubscription,
   type WalletTransaction,
 } from '../../shared/wallet-contracts';
+import {
+  WALLET_CONTRACT_VERSION,
+  paymentIntentConfirmationSchema,
+  paymentIntentViewSchema,
+  walletDataSchema,
+  walletStepUpVerificationSchema,
+} from '../contracts/wallet';
+import { parseContract } from '../contracts/validation';
 
 const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
 const PAYMENTS_API_BASE = API_URL ? `${API_URL}/payments` : '';
@@ -231,7 +239,12 @@ function buildInsights(wallet: WalletData): InsightsData {
 
 async function getFreshWalletSnapshot(userId: string): Promise<WalletSnapshot> {
   const response = await walletFetch('/wallet');
-  const data = await response.json() as WalletData;
+  const data = parseContract(
+    walletDataSchema,
+    await response.json(),
+    'wallet.snapshot',
+    WALLET_CONTRACT_VERSION,
+  );
   const snapshot = {
     data,
     meta: createWalletReliabilityMeta(false),
@@ -339,7 +352,12 @@ export const walletApi = {
         idempotencyKey: options?.idempotencyKey ?? null,
       }),
     });
-    return await response.json() as PaymentIntentView;
+    return parseContract(
+      paymentIntentViewSchema,
+      await response.json(),
+      'wallet.payment-intent.create',
+      WALLET_CONTRACT_VERSION,
+    );
   },
 
   async confirmPaymentIntent(paymentIntentId: string, paymentMethodId?: string | null) {
@@ -350,7 +368,12 @@ export const walletApi = {
         paymentMethodId: paymentMethodId ?? null,
       }),
     });
-    return await response.json() as { id: string; status: string; settled: boolean; clientSecret?: string | null };
+    return parseContract(
+      paymentIntentConfirmationSchema,
+      await response.json(),
+      'wallet.payment-intent.confirm',
+      WALLET_CONTRACT_VERSION,
+    );
   },
 
   async topUp(userId: string, amount: number, paymentMethod: string) {
@@ -423,7 +446,12 @@ export const walletApi = {
         challengeId: challengeId ?? null,
       }),
     });
-    const verification = await response.json() as WalletStepUpVerification;
+    const verification = parseContract(
+      walletStepUpVerificationSchema,
+      await response.json(),
+      'wallet.step-up.verify',
+      WALLET_CONTRACT_VERSION,
+    );
     if (verification.verified && verification.verificationToken) {
       cachedStepUpVerification = { ...verification, createdAt: Date.now() };
     }

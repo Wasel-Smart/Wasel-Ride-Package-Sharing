@@ -10,6 +10,12 @@ import {
   buildTraceHeaders,
   withDataIntegrity,
 } from './dataIntegrity';
+import { BOOKINGS_CONTRACT_VERSION, bookingListSchema, bookingRecordSchema } from '../contracts/bookings';
+import { parseContract } from '../contracts/validation';
+import {
+  allowDirectSupabaseFallback,
+  requireDirectSupabaseFallback,
+} from './runtimePolicy';
 
 function canUseEdgeApi(): boolean {
   return Boolean(API_URL);
@@ -35,7 +41,13 @@ export const bookingsAPI = {
       payload: { tripId, userId, seatsRequested, pickup, dropoff, metadata },
       execute: async ({ requestId, payload }) => {
         if (!canUseEdgeApi()) {
-          return createDirectBooking(payload);
+          requireDirectSupabaseFallback('Booking creation');
+          return parseContract(
+            bookingRecordSchema,
+            await createDirectBooking(payload),
+            'booking.create',
+            BOOKINGS_CONTRACT_VERSION,
+          );
         }
 
         let response: Response;
@@ -54,12 +66,27 @@ export const bookingsAPI = {
               ...payload.metadata,
             }),
           });
-        } catch {
-          return createDirectBooking(payload);
+        } catch (error) {
+          if (!allowDirectSupabaseFallback()) {
+            throw error;
+          }
+
+          return parseContract(
+            bookingRecordSchema,
+            await createDirectBooking(payload),
+            'booking.create',
+            BOOKINGS_CONTRACT_VERSION,
+          );
         }
 
         if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
-          return createDirectBooking(payload);
+          requireDirectSupabaseFallback('Booking creation');
+          return parseContract(
+            bookingRecordSchema,
+            await createDirectBooking(payload),
+            'booking.create',
+            BOOKINGS_CONTRACT_VERSION,
+          );
         }
 
         if (!response.ok) {
@@ -67,7 +94,12 @@ export const bookingsAPI = {
           throw new Error(error.error || 'Failed to create booking');
         }
 
-        return await response.json();
+        return parseContract(
+          bookingRecordSchema,
+          await response.json(),
+          'booking.create',
+          BOOKINGS_CONTRACT_VERSION,
+        );
       },
     });
   },
@@ -76,7 +108,13 @@ export const bookingsAPI = {
     const { token, userId } = await getAuthDetails();
 
     if (!canUseEdgeApi()) {
-      return getDirectUserBookings(userId);
+      requireDirectSupabaseFallback('User booking lookup');
+      return parseContract(
+        bookingListSchema,
+        await getDirectUserBookings(userId),
+        'booking.user.list',
+        BOOKINGS_CONTRACT_VERSION,
+      );
     }
 
     const response = await fetchWithRetry(`${API_URL}/bookings/user/${userId}`, {
@@ -86,21 +124,38 @@ export const bookingsAPI = {
     });
 
     if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
-      return getDirectUserBookings(userId);
+      requireDirectSupabaseFallback('User booking lookup');
+      return parseContract(
+        bookingListSchema,
+        await getDirectUserBookings(userId),
+        'booking.user.list',
+        BOOKINGS_CONTRACT_VERSION,
+      );
     }
 
     if (!response.ok) {
       throw new Error('Failed to fetch bookings');
     }
 
-    return await response.json();
+    return parseContract(
+      bookingListSchema,
+      await response.json(),
+      'booking.user.list',
+      BOOKINGS_CONTRACT_VERSION,
+    );
   },
 
   async getTripBookings(tripId: string) {
     const { token } = await getAuthDetails();
 
     if (!canUseEdgeApi()) {
-      return getDirectTripBookings(tripId);
+      requireDirectSupabaseFallback('Trip booking lookup');
+      return parseContract(
+        bookingListSchema,
+        await getDirectTripBookings(tripId),
+        'booking.trip.list',
+        BOOKINGS_CONTRACT_VERSION,
+      );
     }
 
     const response = await fetchWithRetry(`${API_URL}/trips/${tripId}/bookings`, {
@@ -110,21 +165,38 @@ export const bookingsAPI = {
     });
 
     if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
-      return getDirectTripBookings(tripId);
+      requireDirectSupabaseFallback('Trip booking lookup');
+      return parseContract(
+        bookingListSchema,
+        await getDirectTripBookings(tripId),
+        'booking.trip.list',
+        BOOKINGS_CONTRACT_VERSION,
+      );
     }
 
     if (!response.ok) {
       throw new Error('Failed to fetch trip bookings');
     }
 
-    return await response.json();
+    return parseContract(
+      bookingListSchema,
+      await response.json(),
+      'booking.trip.list',
+      BOOKINGS_CONTRACT_VERSION,
+    );
   },
 
   async updateBookingStatus(bookingId: string, status: 'accepted' | 'rejected' | 'cancelled') {
     const { token } = await getAuthDetails();
 
     if (!canUseEdgeApi()) {
-      return updateDirectBookingStatus(bookingId, status);
+      requireDirectSupabaseFallback('Booking status update');
+      return parseContract(
+        bookingRecordSchema,
+        await updateDirectBookingStatus(bookingId, status),
+        'booking.update',
+        BOOKINGS_CONTRACT_VERSION,
+      );
     }
 
     const response = await fetchWithRetry(`${API_URL}/bookings/${bookingId}`, {
@@ -137,7 +209,13 @@ export const bookingsAPI = {
     });
 
     if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
-      return updateDirectBookingStatus(bookingId, status);
+      requireDirectSupabaseFallback('Booking status update');
+      return parseContract(
+        bookingRecordSchema,
+        await updateDirectBookingStatus(bookingId, status),
+        'booking.update',
+        BOOKINGS_CONTRACT_VERSION,
+      );
     }
 
     if (!response.ok) {
@@ -145,6 +223,11 @@ export const bookingsAPI = {
       throw new Error(error.error || 'Failed to update booking');
     }
 
-    return await response.json();
+    return parseContract(
+      bookingRecordSchema,
+      await response.json(),
+      'booking.update',
+      BOOKINGS_CONTRACT_VERSION,
+    );
   },
 };

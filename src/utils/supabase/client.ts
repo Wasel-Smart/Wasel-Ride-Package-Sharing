@@ -1,11 +1,9 @@
 /**
  * Supabase Client — Production
  *
- * Credentials resolved in priority order:
- *   1. VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY  (from .env)
- *   2. info.tsx fallback (checked-in public project config)
+ * Credentials resolved from deploy-time environment variables only.
  *
- * Set these in your .env file for full portability:
+ * Set these in your `.env` file for local development:
  *   VITE_SUPABASE_URL=https://<project-id>.supabase.co
  *   VITE_SUPABASE_ANON_KEY=<your-anon-key>
  */

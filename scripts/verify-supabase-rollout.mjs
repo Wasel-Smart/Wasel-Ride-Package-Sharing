@@ -12,6 +12,7 @@ import {
   requiredDocs,
   rolloutMigrations,
   rolloutSeedFiles,
+  smokeCheckSeedFiles,
 } from './supabase-migration-registry.mjs';
 
 const root = process.cwd();
@@ -52,6 +53,7 @@ const migrationNames = migrationPaths.map(getMigrationFileName);
 const requiredFiles = [
   ...migrationPaths,
   ...rolloutSeedFiles,
+  ...smokeCheckSeedFiles,
   ...requiredDocs,
   migrationReadmePath,
 ];
@@ -195,6 +197,9 @@ for (const file of rolloutMigrations) {
 }
 for (const file of rolloutSeedFiles) {
   console.log(`psql "$SUPABASE_DB_URL" -f ${file}`);
+}
+for (const file of smokeCheckSeedFiles) {
+  console.log(`psql "$SUPABASE_DB_URL" -f ${file}   # smoke-check only`);
 }
 
 if (process.exitCode && process.exitCode !== 0) {

@@ -8,6 +8,12 @@ import {
   routeEndpointsAreDistinct,
   routeMatchesLocationPair,
 } from '../utils/jordanLocations';
+import {
+  allowDirectSupabaseFallback,
+  allowLocalPersistenceFallback,
+  requireDirectSupabaseFallback,
+  requireLocalPersistenceFallback,
+} from './runtimePolicy';
 
 export type RecordSyncState =
   | 'local-only'
@@ -130,6 +136,22 @@ function sortByCreatedAtDesc<T extends { createdAt: string }>(items: T[]): T[] {
     const right = new Date(b.createdAt).getTime();
     return (Number.isFinite(right) ? right : 0) - (Number.isFinite(left) ? left : 0);
   });
+}
+
+function isPersistedRideVisible(ride: PostedRide): boolean {
+  if (allowLocalPersistenceFallback()) {
+    return true;
+  }
+
+  return ride.syncState === 'synced' || ride.syncState === 'syncing';
+}
+
+function isPersistedPackageVisible(pkg: PackageRequest): boolean {
+  if (allowLocalPersistenceFallback()) {
+    return true;
+  }
+
+  return pkg.syncState === 'synced' || pkg.syncState === 'syncing';
 }
 
 function normalizeStatus(value: unknown, matchedRideId?: string): PackageStatus {
@@ -358,7 +380,7 @@ function findBestMatchingRide(rides: PostedRide[], input: { from: string; to: st
 }
 
 export function getConnectedRides(): PostedRide[] {
-  const rides = mergeRides(readList<PostedRide>(RIDES_KEY));
+  const rides = mergeRides(readList<PostedRide>(RIDES_KEY)).filter(isPersistedRideVisible);
   writeList(RIDES_KEY, rides);
   return rides;
 }
@@ -405,6 +427,7 @@ export async function createConnectedRide(input: Omit<PostedRide, 'id' | 'create
     });
     return created;
   } catch {
+    requireLocalPersistenceFallback('Ride creation');
     saveRides([ride], getConnectedRides());
     void trackGrowthEvent({
       userId: input.ownerId,
@@ -439,7 +462,7 @@ export function updateConnectedRide(
 }
 
 export function getConnectedPackages(): PackageRequest[] {
-  const packages = mergePackages(readList<PackageRequest>(PACKAGES_KEY));
+  const packages = mergePackages(readList<PackageRequest>(PACKAGES_KEY)).filter(isPersistedPackageVisible);
   writeList(PACKAGES_KEY, packages);
   return packages;
 }
@@ -552,6 +575,7 @@ export async function createConnectedPackage(input: {
         return created;
       }
     } else {
+      requireDirectSupabaseFallback('Package creation');
       const createdDirect = await createDirectPackage({
         userId,
         trackingNumber: pkg.trackingId,
@@ -600,7 +624,7 @@ export async function createConnectedPackage(input: {
       return created;
     }
   } catch {
-    // Fall back to local storage below.
+    requireLocalPersistenceFallback('Package creation');
   }
 
   savePackages([pkg], getConnectedPackages());
@@ -653,6 +677,7 @@ export async function getPackageByTrackingId(trackingId: string): Promise<Packag
       if (!response.ok) return null;
       server = await response.json();
     } else {
+      requireDirectSupabaseFallback('Package tracking lookup');
       const direct = await getDirectPackageByTrackingId(normalizedTrackingId);
       if (!direct) return null;
       server = {

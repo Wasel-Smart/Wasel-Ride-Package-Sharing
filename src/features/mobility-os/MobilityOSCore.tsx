@@ -34,6 +34,7 @@ import {
   type LiveMobilityVehicleSnapshot,
   useMobilityOSLiveData,
 } from './liveMobilityData';
+import { allowSyntheticData } from '../../services/runtimePolicy';
 
 type FlowType = 'passenger' | 'package';
 type ViewMode = 'command' | 'satellite' | 'pulse';
@@ -1031,6 +1032,10 @@ function buildVehicleFleet(
       };
     })
     .filter((vehicle): vehicle is Vehicle => vehicle !== null);
+
+  if (!allowSyntheticData()) {
+    return liveTelemetryVehicles;
+  }
 
   const syntheticVehicles = buildSyntheticVehicles(
     routes,
