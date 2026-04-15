@@ -1,5 +1,18 @@
 type EnvSource = Record<string, string | undefined>;
 
+export type AppEnvironment = 'development' | 'staging' | 'production' | 'test';
+
+const PLACEHOLDER_MARKERS = [
+  'your-project.supabase.co',
+  'your-anon-key-here',
+  'your-publishable-key',
+  'your_publishable_key',
+  'your-supabase-url',
+  'your_supabase_url',
+  'replace_with',
+  'example.com',
+];
+
 function readEnvSource(): EnvSource {
   const importMetaEnv =
     typeof import.meta !== 'undefined' && typeof import.meta.env === 'object'
@@ -14,13 +27,46 @@ function readEnvSource(): EnvSource {
   return { ...processEnv, ...importMetaEnv };
 }
 
+function isMeaningfulValue(value: string | undefined): value is string {
+  if (!value) {
+    return false;
+  }
+
+  const normalized = value.trim();
+  if (!normalized) {
+    return false;
+  }
+
+  const lower = normalized.toLowerCase();
+  return !PLACEHOLDER_MARKERS.some((marker) => lower.includes(marker));
+}
+
+function normalizeEnvironment(value: string | undefined): AppEnvironment {
+  const normalized = String(value ?? '')
+    .trim()
+    .toLowerCase();
+
+  switch (normalized) {
+    case 'prod':
+    case 'production':
+      return 'production';
+    case 'stage':
+    case 'staging':
+      return 'staging';
+    case 'test':
+      return 'test';
+    default:
+      return 'development';
+  }
+}
+
 export function getEnv(key: string, fallback = ''): string {
   const value = readEnvSource()[key];
   return typeof value === 'string' && value.length > 0 ? value : fallback;
 }
 
 export function hasEnv(key: string): boolean {
-  return getEnv(key).length > 0;
+  return isMeaningfulValue(readEnvSource()[key]);
 }
 
 function getBooleanEnv(key: string, fallback: boolean): boolean {
@@ -29,11 +75,30 @@ function getBooleanEnv(key: string, fallback: boolean): boolean {
     return fallback;
   }
 
-  return value.toLowerCase() === 'true';
+  return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
 }
 
-function resolveAppUrl(): string {
-  const configuredAppUrl = getEnv('VITE_APP_URL', 'http://localhost:3000').trim();
+function resolveEnvironment(): AppEnvironment {
+  return normalizeEnvironment(
+    getEnv('VITE_APP_ENV') || getEnv('MODE') || getEnv('VITE_MODE') || getEnv('NODE_ENV', 'development'),
+  );
+}
+
+function flagAllowedInEnvironment(
+  key: string,
+  fallback: boolean,
+  environment: AppEnvironment,
+  allowedEnvironments: AppEnvironment[],
+): boolean {
+  const enabled = getBooleanEnv(key, fallback);
+  return enabled && allowedEnvironments.includes(environment);
+}
+
+function resolveAppUrl(environment: AppEnvironment): string {
+  const configuredAppUrl = getEnv(
+    'VITE_APP_URL',
+    environment === 'production' || environment === 'staging' ? '' : 'http://localhost:3000',
+  ).trim();
   const runtimeOrigin =
     typeof window !== 'undefined' && typeof window.location?.origin === 'string'
       ? window.location.origin.trim()
@@ -49,7 +114,8 @@ function resolveAppUrl(): string {
 }
 
 export function getConfig() {
-  const appUrl = resolveAppUrl();
+  const environment = resolveEnvironment();
+  const appUrl = resolveAppUrl(environment);
   const supportWhatsAppNumber = getEnv('VITE_SUPPORT_WHATSAPP_NUMBER')
     .replace(/[^\d+]/g, '')
     .trim();
@@ -61,21 +127,48 @@ export function getConfig() {
     .replace(/[^\d+]/g, '')
     .trim();
   const businessAddress = getEnv('VITE_BUSINESS_ADDRESS', 'Amman, Jordan').trim();
-  const businessAddressAr = getEnv('VITE_BUSINESS_ADDRESS_AR', 'عمان، الأردن').trim();
+  const businessAddressAr = getEnv(
+    'VITE_BUSINESS_ADDRESS_AR',
+    '\u0639\u0645\u0627\u0646\u060C \u0627\u0644\u0623\u0631\u062F\u0646',
+  ).trim();
   const founderName = getEnv('VITE_FOUNDER_NAME', 'Wasel founder').trim();
   const authCallbackPath = getEnv('VITE_AUTH_CALLBACK_PATH', '/app/auth/callback');
-  const mode = getEnv('MODE') || getEnv('VITE_MODE') || getEnv('NODE_ENV', 'development');
-  const isProd = mode === 'production';
-  const enableDemoAccount = getBooleanEnv('VITE_ENABLE_DEMO_DATA', false);
+  const isProd = environment === 'production';
+  const isStaging = environment === 'staging';
+  const isTest = environment === 'test';
+  const enableDemoAccount = flagAllowedInEnvironment(
+    'VITE_ENABLE_DEMO_DATA',
+    false,
+    environment,
+    ['development', 'test'],
+  );
+  const enableSyntheticTrips = flagAllowedInEnvironment(
+    'VITE_ENABLE_SYNTHETIC_TRIPS',
+    false,
+    environment,
+    ['development', 'test'],
+  );
   const enableTwoFactorAuth = getBooleanEnv('VITE_ENABLE_TWO_FACTOR_AUTH', false);
   const enableEmailNotifications = getBooleanEnv('VITE_ENABLE_EMAIL_NOTIFICATIONS', true);
   const enableSmsNotifications = getBooleanEnv('VITE_ENABLE_SMS_NOTIFICATIONS', true);
   const enableWhatsAppNotifications = getBooleanEnv('VITE_ENABLE_WHATSAPP_NOTIFICATIONS', true);
-  const allowDirectSupabaseFallback = getBooleanEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', !isProd);
+  const allowDirectSupabaseFallback = flagAllowedInEnvironment(
+    'VITE_ALLOW_DIRECT_SUPABASE_FALLBACK',
+    isTest,
+    environment,
+    ['development', 'test'],
+  );
+  const allowLocalPersistenceFallback = flagAllowedInEnvironment(
+    'VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK',
+    isTest,
+    environment,
+    ['development', 'test'],
+  );
 
   return {
     appName: getEnv('VITE_APP_NAME', 'Wasel'),
     appUrl,
+    environment,
     supportWhatsAppNumber,
     supportEmail,
     supportPhoneNumber,
@@ -85,13 +178,17 @@ export function getConfig() {
     founderName,
     authCallbackPath: authCallbackPath.startsWith('/') ? authCallbackPath : `/${authCallbackPath}`,
     enableDemoAccount,
+    enableSyntheticTrips,
     enableTwoFactorAuth,
     enableEmailNotifications,
     enableSmsNotifications,
     enableWhatsAppNotifications,
     allowDirectSupabaseFallback,
+    allowLocalPersistenceFallback,
     isProd,
-    isDev: !isProd,
+    isStaging,
+    isTest,
+    isDev: environment === 'development',
   };
 }
 
