@@ -2,6 +2,9 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import {
+  buildPackagePrefillPath,
+} from '@/features/home/appEntryContracts';
 
 const mockNavigate = vi.fn();
 const mockUseLocalAuth = vi.fn();
@@ -168,11 +171,13 @@ describe('AppEntryPage', () => {
     renderAppEntryPage();
 
     act(() => {
-      screen.getByRole('button', { name: /^Packages$/i }).click();
+      screen.getByRole('tab', { name: /^Packages$/i }).click();
     });
     screen.getAllByRole('button', { name: /Open packages/i })[0].click();
 
-    expect(mockNavigate).toHaveBeenCalledWith('/app/packages?from=Amman&to=Irbid');
+    expect(mockNavigate).toHaveBeenCalledWith(
+      buildPackagePrefillPath({ from: 'Amman', to: 'Irbid', date: '' }),
+    );
   });
 
   it('renders Arabic landing copy when Arabic is active', () => {

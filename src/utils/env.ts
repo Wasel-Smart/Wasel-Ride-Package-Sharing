@@ -205,6 +205,15 @@ function buildConfig() {
 }
 
 export function getConfig() {
+  // Skip cache in test environments so vi.stubEnv changes are reflected immediately
+  const isTestEnv =
+    (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') ||
+    (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test');
+
+  if (isTestEnv) {
+    return buildConfig();
+  }
+
   if (!_configCache) {
     _configCache = buildConfig();
   }

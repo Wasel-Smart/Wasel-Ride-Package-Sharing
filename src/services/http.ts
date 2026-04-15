@@ -2,9 +2,10 @@ import { logger, trackAPICall } from '../utils/logging';
 import { redactSensitiveValue } from '../utils/redaction';
 import { canonicalizePhoneNumber } from '../utils/phone';
 import {
+  ApiError,
   AuthenticationError,
   ValidationError,
-  WaselError,
+  type WaselError,
   normalizeError,
 } from '../utils/errors';
 
@@ -69,7 +70,7 @@ export async function buildApiError(
     return new ValidationError(message, errorContext);
   }
 
-  return new WaselError(message, 'API_ERROR', false, errorContext);
+  return new ApiError(message, errorContext);
 }
 
 export async function expectJsonResponse<T>(
@@ -83,7 +84,7 @@ export async function expectJsonResponse<T>(
 
   const payload = await parseJsonSafely<T>(response);
   if (payload === null) {
-    throw new WaselError(fallbackMessage, 'API_ERROR', false, {
+    throw new ApiError(fallbackMessage, {
       ...context,
       status: response.status,
       reason: 'Expected JSON response body',

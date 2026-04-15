@@ -1,245 +1,403 @@
 /**
- * Centralized error handling system
- * Replaces brittle regex pattern matching with typed error classes
+ * Wasel — Strict Typed Error System
+ *
+ * Contract:
+ *   Every error has a deterministic shape: { code, message, meta, severity }
+ *   No implicit fallbacks. No loose string matching in consumers.
+ *   All error codes are defined in APP_ERROR_CODES — the single source of truth.
  */
 
-/**
- * Base Wasel error class
- */
+// ── Severity levels ───────────────────────────────────────────────────────────
+
+export type ErrorSeverity = 'info' | 'warning' | 'error' | 'critical';
+
+// ── Error shape ───────────────────────────────────────────────────────────────
+
+export interface ErrorShape {
+  code: string;
+  message: string;
+  meta: Record<string, unknown>;
+  severity: ErrorSeverity;
+  isIgnorable: boolean;
+}
+
+// ── Error code registry ───────────────────────────────────────────────────────
+
+interface ErrorCodeDefinition {
+  code: string;
+  severity: ErrorSeverity;
+  isIgnorable: boolean;
+  displayMessage: string;
+}
+
+export const APP_ERROR_CODES = {
+  auth:            'AUTH_ERROR',
+  authorization:   'AUTHORIZATION_ERROR',
+  network:         'NETWORK_ERROR',
+  validation:      'VALIDATION_ERROR',
+  payment:         'PAYMENT_ERROR',
+  timeout:         'TIMEOUT_ERROR',
+  config:          'CONFIG_ERROR',
+  ignorableSystem: 'IGNORABLE_SYSTEM_ERROR',
+  api:             'API_ERROR',
+  unknown:         'UNKNOWN_ERROR',
+} as const;
+
+export type AppErrorCode = typeof APP_ERROR_CODES[keyof typeof APP_ERROR_CODES];
+
+const ERROR_CODE_REGISTRY: Record<AppErrorCode, ErrorCodeDefinition> = {
+  [APP_ERROR_CODES.auth]: {
+    code: APP_ERROR_CODES.auth,
+    severity: 'error',
+    isIgnorable: false,
+    displayMessage: 'Authentication failed. Please log in again.',
+  },
+  [APP_ERROR_CODES.authorization]: {
+    code: APP_ERROR_CODES.authorization,
+    severity: 'error',
+    isIgnorable: false,
+    displayMessage: 'You do not have permission to perform this action.',
+  },
+  [APP_ERROR_CODES.network]: {
+    code: APP_ERROR_CODES.network,
+    severity: 'warning',
+    isIgnorable: true,
+    displayMessage: 'Network connection error. Please check your connection.',
+  },
+  [APP_ERROR_CODES.validation]: {
+    code: APP_ERROR_CODES.validation,
+    severity: 'error',
+    isIgnorable: false,
+    displayMessage: 'Invalid data provided. Please check your input.',
+  },
+  [APP_ERROR_CODES.payment]: {
+    code: APP_ERROR_CODES.payment,
+    severity: 'critical',
+    isIgnorable: false,
+    displayMessage: 'Payment processing failed. Please try again.',
+  },
+  [APP_ERROR_CODES.timeout]: {
+    code: APP_ERROR_CODES.timeout,
+    severity: 'warning',
+    isIgnorable: true,
+    displayMessage: 'Request timed out. Please try again.',
+  },
+  [APP_ERROR_CODES.config]: {
+    code: APP_ERROR_CODES.config,
+    severity: 'critical',
+    isIgnorable: false,
+    displayMessage: 'Configuration error. Please contact support.',
+  },
+  [APP_ERROR_CODES.ignorableSystem]: {
+    code: APP_ERROR_CODES.ignorableSystem,
+    severity: 'info',
+    isIgnorable: true,
+    displayMessage: '',
+  },
+  [APP_ERROR_CODES.api]: {
+    code: APP_ERROR_CODES.api,
+    severity: 'error',
+    isIgnorable: false,
+    displayMessage: 'The service is unavailable right now. Please try again.',
+  },
+  [APP_ERROR_CODES.unknown]: {
+    code: APP_ERROR_CODES.unknown,
+    severity: 'error',
+    isIgnorable: false,
+    displayMessage: 'An unexpected error occurred. Please try again.',
+  },
+};
+
+// ── WaselError constructor options ────────────────────────────────────────────
+
+interface WaselErrorOptions {
+  code: AppErrorCode;
+  message: string;
+  meta?: Record<string, unknown>;
+  severity?: ErrorSeverity;
+  isIgnorable?: boolean;
+  name?: string;
+}
+
+// ── Base error class ──────────────────────────────────────────────────────────
+
 export class WaselError extends Error {
-  public readonly code: string;
+  public readonly code: AppErrorCode;
+  public readonly meta: Record<string, unknown>;
+  public readonly severity: ErrorSeverity;
   public readonly isIgnorable: boolean;
-  public readonly context?: Record<string, unknown>;
 
-  constructor(
-    message: string,
-    code: string,
-    isIgnorable: boolean = false,
-    context?: Record<string, unknown>,
-  ) {
-    super(message);
-    this.name = 'WaselError';
-    this.code = code;
-    this.isIgnorable = isIgnorable;
-    if (context !== undefined) {
-      this.context = context;
-    }
+  /** @deprecated Use meta instead. Kept for backward compatibility. */
+  public readonly context: Record<string, unknown>;
+
+  constructor(options: WaselErrorOptions) {
+    const definition = ERROR_CODE_REGISTRY[options.code];
+    super(options.message);
+
+    this.name = options.name ?? 'WaselError';
+    this.code = options.code;
+    this.meta = options.meta ?? {};
+    this.context = this.meta; // backward-compat alias
+    this.severity = options.severity ?? definition.severity;
+    this.isIgnorable = options.isIgnorable ?? definition.isIgnorable;
+
     Object.setPrototypeOf(this, WaselError.prototype);
   }
 }
 
-/**
- * Authentication errors
- */
+// ── Typed subclasses ──────────────────────────────────────────────────────────
+
 export class AuthenticationError extends WaselError {
-  constructor(message: string, context?: Record<string, unknown>) {
-    super(message, 'AUTH_ERROR', false, context);
-    this.name = 'AuthenticationError';
+  constructor(message: string, meta?: Record<string, unknown>) {
+    super({ code: APP_ERROR_CODES.auth, message, meta, name: 'AuthenticationError' });
     Object.setPrototypeOf(this, AuthenticationError.prototype);
   }
 }
 
-/**
- * Authorization errors
- */
 export class AuthorizationError extends WaselError {
-  constructor(message: string, context?: Record<string, unknown>) {
-    super(message, 'AUTHORIZATION_ERROR', false, context);
-    this.name = 'AuthorizationError';
+  constructor(message: string, meta?: Record<string, unknown>) {
+    super({ code: APP_ERROR_CODES.authorization, message, meta, name: 'AuthorizationError' });
     Object.setPrototypeOf(this, AuthorizationError.prototype);
   }
 }
 
-/**
- * Network/API errors
- */
 export class NetworkError extends WaselError {
-  constructor(message: string, context?: Record<string, unknown>) {
-    super(message, 'NETWORK_ERROR', true, context);
-    this.name = 'NetworkError';
+  constructor(message: string, meta?: Record<string, unknown>) {
+    super({ code: APP_ERROR_CODES.network, message, meta, name: 'NetworkError' });
     Object.setPrototypeOf(this, NetworkError.prototype);
   }
 }
 
-/**
- * Validation errors
- */
 export class ValidationError extends WaselError {
-  constructor(message: string, context?: Record<string, unknown>) {
-    super(message, 'VALIDATION_ERROR', false, context);
-    this.name = 'ValidationError';
+  constructor(message: string, meta?: Record<string, unknown>) {
+    super({ code: APP_ERROR_CODES.validation, message, meta, name: 'ValidationError' });
     Object.setPrototypeOf(this, ValidationError.prototype);
   }
 }
 
-/**
- * Payment errors
- */
 export class PaymentError extends WaselError {
-  constructor(message: string, context?: Record<string, unknown>) {
-    super(message, 'PAYMENT_ERROR', false, context);
-    this.name = 'PaymentError';
+  constructor(message: string, meta?: Record<string, unknown>) {
+    super({ code: APP_ERROR_CODES.payment, message, meta, name: 'PaymentError' });
     Object.setPrototypeOf(this, PaymentError.prototype);
   }
 }
 
-/**
- * Timeout errors
- */
 export class TimeoutError extends WaselError {
-  constructor(message: string, context?: Record<string, unknown>) {
-    super(message, 'TIMEOUT_ERROR', true, context);
-    this.name = 'TimeoutError';
+  constructor(message: string, meta?: Record<string, unknown>) {
+    super({ code: APP_ERROR_CODES.timeout, message, meta, name: 'TimeoutError' });
     Object.setPrototypeOf(this, TimeoutError.prototype);
   }
 }
 
-/**
- * Configuration errors
- */
 export class ConfigError extends WaselError {
-  constructor(message: string, context?: Record<string, unknown>) {
-    super(message, 'CONFIG_ERROR', false, context);
-    this.name = 'ConfigError';
+  constructor(message: string, meta?: Record<string, unknown>) {
+    super({ code: APP_ERROR_CODES.config, message, meta, name: 'ConfigError' });
     Object.setPrototypeOf(this, ConfigError.prototype);
   }
 }
 
-/**
- * System errors that should be ignored (framework-level, not user-facing)
- */
 export class IgnorableSystemError extends WaselError {
-  constructor(message: string, context?: Record<string, unknown>) {
-    super(message, 'IGNORABLE_SYSTEM_ERROR', true, context);
-    this.name = 'IgnorableSystemError';
+  constructor(message: string, meta?: Record<string, unknown>) {
+    super({ code: APP_ERROR_CODES.ignorableSystem, message, meta, name: 'IgnorableSystemError' });
     Object.setPrototypeOf(this, IgnorableSystemError.prototype);
   }
 }
 
-/**
- * Error normalizer - converts Supabase/external errors to Wasel errors
- */
-export function normalizeError(error: unknown, context?: Record<string, unknown>): WaselError {
+export class ApiError extends WaselError {
+  constructor(message: string, meta?: Record<string, unknown>) {
+    super({ code: APP_ERROR_CODES.api, message, meta, name: 'ApiError' });
+    Object.setPrototypeOf(this, ApiError.prototype);
+  }
+}
+
+// ── API-style payload detection ───────────────────────────────────────────────
+
+interface ApiStylePayload {
+  status?: number;
+  error?: string;
+  message?: string;
+  meta?: Record<string, unknown>;
+}
+
+function isApiStylePayload(value: unknown): value is ApiStylePayload {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    ('status' in value || 'error' in value)
+  );
+}
+
+// ── normalizeError ────────────────────────────────────────────────────────────
+
+export function normalizeError(
+  error: unknown,
+  context?: Record<string, unknown>,
+): WaselError {
   if (error instanceof WaselError) {
     return error;
   }
 
+  // API-style payload objects: { status, error, meta }
+  if (isApiStylePayload(error)) {
+    const status = typeof error.status === 'number' ? error.status : 0;
+    const message =
+      typeof error.error === 'string'
+        ? error.error
+        : typeof error.message === 'string'
+          ? error.message
+          : 'API request failed';
+
+    const payloadMeta: Record<string, unknown> = {
+      ...(typeof error.meta === 'object' && error.meta !== null ? error.meta : {}),
+      ...(context ?? {}),
+    };
+    if (status) payloadMeta.status = status;
+
+    if (status >= 400 && status < 500) {
+      return new ValidationError(message, payloadMeta);
+    }
+    return new ApiError(message, payloadMeta);
+  }
+
   if (error instanceof Error) {
     const message = error.message;
-    const lowerMessage = message.toLowerCase();
+    const lower = message.toLowerCase();
 
-    // System errors that should be ignored
+    // Check nested cause first — more specific than the wrapper
+    const cause = (error as Error & { cause?: unknown }).cause;
+    if (cause instanceof Error) {
+      const causeNormalized = normalizeError(cause, context);
+      if (!(causeNormalized instanceof WaselError && causeNormalized.code === APP_ERROR_CODES.unknown)) {
+        return causeNormalized;
+      }
+    }
+
+    const meta = context ?? {};
+
     if (
-      lowerMessage.includes('iframemessageaborterror'.toLowerCase()) ||
-      lowerMessage.includes('message port was destroyed') ||
-      lowerMessage.includes('message aborted') ||
-      lowerMessage.includes('setupmessagechannel') ||
-      lowerMessage.includes('figma_app-')
+      lower.includes('iframemessageaborterror') ||
+      lower.includes('message port was destroyed') ||
+      lower.includes('message aborted') ||
+      lower.includes('setupmessagechannel') ||
+      lower.includes('figma_app-')
     ) {
-      return new IgnorableSystemError(message, context);
+      return new IgnorableSystemError(message, meta);
     }
 
-    // Authentication errors — checked before generic 'invalid' to avoid misclassification
-    // e.g. 'invalid_jwt' must become AuthenticationError, not ValidationError
     if (
-      lowerMessage.includes('unauthorized') ||
-      lowerMessage.includes('invalid credentials') ||
-      lowerMessage.includes('session_not_found') ||
-      lowerMessage.includes('invalid_jwt') ||
-      lowerMessage.includes('jwt expired') ||
-      lowerMessage.includes('jwt invalid')
+      lower.includes('unauthorized') ||
+      lower.includes('invalid credentials') ||
+      lower.includes('session_not_found') ||
+      lower.includes('invalid_jwt') ||
+      lower.includes('jwt expired') ||
+      lower.includes('jwt invalid')
     ) {
-      return new AuthenticationError(message, context);
+      return new AuthenticationError(message, meta);
     }
 
-    // Authorization errors — checked before generic 'invalid'
     if (
-      lowerMessage.includes('permission') ||
-      lowerMessage.includes('forbidden') ||
-      lowerMessage.includes('access denied')
+      lower.includes('permission') ||
+      lower.includes('forbidden') ||
+      lower.includes('access denied')
     ) {
-      return new AuthorizationError(message, context);
+      return new AuthorizationError(message, meta);
     }
 
-    // Timeout errors — checked before network to be more specific
     if (
-      lowerMessage.includes('timeout') ||
-      lowerMessage.includes('timed out') ||
-      lowerMessage.includes('deadline exceeded')
+      lower.includes('timeout') ||
+      lower.includes('timed out') ||
+      lower.includes('deadline exceeded')
     ) {
-      return new TimeoutError(message, context);
+      return new TimeoutError(message, meta);
     }
 
-    // Network errors
     if (
-      lowerMessage.includes('fetch') ||
-      lowerMessage.includes('networkerror') ||
-      lowerMessage.includes('network request failed') ||
-      lowerMessage.includes('network error') ||
-      lowerMessage.includes('failed to fetch') ||
-      lowerMessage.includes('econnrefused')
+      lower.includes('fetch') ||
+      lower.includes('networkerror') ||
+      lower.includes('network request failed') ||
+      lower.includes('network error') ||
+      lower.includes('failed to fetch') ||
+      lower.includes('econnrefused')
     ) {
-      return new NetworkError(message, context);
+      return new NetworkError(message, meta);
     }
 
-    // Payment errors
-    if (lowerMessage.includes('payment') || lowerMessage.includes('stripe')) {
-      return new PaymentError(message, context);
+    if (lower.includes('payment') || lower.includes('stripe')) {
+      return new PaymentError(message, meta);
     }
 
-    // Validation errors — last among specific checks because 'invalid' is broad
     if (
-      lowerMessage.includes('validation') ||
-      lowerMessage.includes('invalid') ||
-      lowerMessage.includes('required')
+      lower.includes('validation') ||
+      lower.includes('invalid') ||
+      lower.includes('required')
     ) {
-      return new ValidationError(message, context);
+      return new ValidationError(message, meta);
     }
 
-    return new WaselError(message, 'UNKNOWN_ERROR', false, context);
+    return new WaselError({
+      code: APP_ERROR_CODES.unknown,
+      message,
+      meta,
+    });
   }
 
   const message = typeof error === 'string' ? error : 'An unknown error occurred';
-  return new WaselError(message, 'UNKNOWN_ERROR', false, context);
+  return new WaselError({
+    code: APP_ERROR_CODES.unknown,
+    message,
+    meta: context ?? {},
+  });
 }
 
-/**
- * Check if error should be ignored by error boundary
- */
+// ── shouldIgnoreError ─────────────────────────────────────────────────────────
+
 export function shouldIgnoreError(error: unknown): boolean {
   if (error instanceof WaselError) {
     return error.isIgnorable;
   }
 
   if (error instanceof Error) {
-    const normalized = normalizeError(error);
-    return normalized.isIgnorable;
+    return normalizeError(error).isIgnorable;
   }
 
   return false;
 }
 
-/**
- * Format error message for user display
- */
+// ── getErrorShape ─────────────────────────────────────────────────────────────
+
+export function getErrorShape(error: WaselError): ErrorShape {
+  return {
+    code: error.code,
+    message: error.message,
+    meta: error.meta,
+    severity: error.severity,
+    isIgnorable: error.isIgnorable,
+  };
+}
+
+// ── formatErrorMessage ────────────────────────────────────────────────────────
+
 export function formatErrorMessage(error: unknown): string {
   const normalized = normalizeError(error);
+  const definition = ERROR_CODE_REGISTRY[normalized.code];
+  return definition?.displayMessage ?? normalized.message;
+}
 
-  const messageMap: Record<string, string> = {
-    AUTH_ERROR: 'Authentication failed. Please log in again.',
-    AUTHORIZATION_ERROR: 'You do not have permission to perform this action.',
-    NETWORK_ERROR: 'Network connection error. Please check your connection.',
-    VALIDATION_ERROR: 'Invalid data provided. Please check your input.',
-    PAYMENT_ERROR: 'Payment processing failed. Please try again.',
-    TIMEOUT_ERROR: 'Request timed out. Please try again.',
-    CONFIG_ERROR: 'Configuration error. Please contact support.',
-    IGNORABLE_SYSTEM_ERROR: 'A background process encountered an issue.',
-    UNKNOWN_ERROR: 'An unexpected error occurred. Please try again.',
+// ── formatErrorDetails ────────────────────────────────────────────────────────
+
+export interface ErrorDetails {
+  code: string;
+  message: string;
+  meta: Record<string, unknown>;
+  severity: ErrorSeverity;
+}
+
+export function formatErrorDetails(error: WaselError): ErrorDetails {
+  return {
+    code: error.code,
+    message: formatErrorMessage(error),
+    meta: error.meta,
+    severity: error.severity,
   };
-
-  if (normalized.code in messageMap) {
-    return messageMap[normalized.code];
-  }
-
-  return normalized.message;
 }
