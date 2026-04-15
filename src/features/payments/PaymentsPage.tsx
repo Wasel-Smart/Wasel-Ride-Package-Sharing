@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import {
   ArrowRightLeft,
   BadgeCent,
@@ -8,13 +9,15 @@ import {
   LoaderCircle,
   Wallet,
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { PageShell, Protected } from '../shared/pageShared';
+import { StripePaymentForm } from './StripePaymentForm';
 import { paymentsService, resolveDefaultPaymentMethodType } from './paymentsService';
-import { PAYMENT_FLOW_PURPOSES, type PaymentRequestDraft, type PaymentsDashboardData } from './paymentsTypes';
+import { hasStripeClientPaymentsEnabled } from './stripeClient';
+import { PAYMENT_FLOW_PURPOSES, type PaymentIntentSession, type PaymentRequestDraft, type PaymentsDashboardData } from './paymentsTypes';
 import type { PaymentTransaction } from '../../../shared/domain-contracts';
 import type { WalletPaymentMethodType } from '../../../shared/wallet-contracts';
 
@@ -32,6 +35,11 @@ const PAYMENT_METHOD_LABELS: Record<WalletPaymentMethodType, string> = {
   cliq: 'CliQ',
 };
 
+type PaymentNotice = {
+  tone: 'neutral' | 'success' | 'warning';
+  message: string;
+};
+
 function formatCurrency(value: number, currency = 'JOD') {
   return new Intl.NumberFormat('en-JO', {
     style: 'currency',
@@ -42,12 +50,14 @@ function formatCurrency(value: number, currency = 'JOD') {
 
 function PaymentsPageContent() {
   const { user } = useLocalAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [dashboard, setDashboard] = useState<PaymentsDashboardData | null>(null);
-  const [intent, setIntent] = useState<PaymentTransaction | null>(null);
+  const [intentSession, setIntentSession] = useState<PaymentIntentSession | null>(null);
   const [confirmationState, setConfirmationState] = useState<'idle' | 'confirming' | 'confirmed'>('idle');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<PaymentNotice | null>(null);
   const [form, setForm] = useState<PaymentRequestDraft>({
     purpose: 'ride_payment',
     amount: 12,
@@ -56,6 +66,47 @@ function PaymentsPageContent() {
     referenceId: '',
     description: 'Wasel service movement',
   });
+
+  const stripeClientEnabled = hasStripeClientPaymentsEnabled();
+  const returnedPaymentIntentId = searchParams.get('payment_intent');
+  const redirectStatus = searchParams.get('redirect_status');
+  const intent = intentSession?.transaction ?? null;
+
+  function updateIntentStatus(paymentIntentId: string, status: string, clientSecret?: string | null) {
+    setIntentSession((current) => {
+      if (!current || current.transaction.id !== paymentIntentId) {
+        return current;
+      }
+
+      return {
+        ...current,
+        clientSecret: clientSecret ?? current.clientSecret,
+        transaction: {
+          ...current.transaction,
+          status: status as PaymentTransaction['status'],
+        },
+      };
+    });
+  }
+
+  async function refreshDashboard(
+    nextUserId: string,
+    options?: { cancelled?: () => boolean },
+  ) {
+    const nextDashboard = await paymentsService.getDashboard(nextUserId);
+    if (options?.cancelled?.()) {
+      return;
+    }
+    setDashboard(nextDashboard);
+    setForm((current) => ({
+      ...current,
+      paymentMethodType: resolveDefaultPaymentMethodType(
+        nextDashboard.paymentMethods,
+        current.amount,
+        nextDashboard.wallet.balance,
+      ),
+    }));
+  }
 
   useEffect(() => {
     if (!user?.id) {
@@ -67,28 +118,11 @@ function PaymentsPageContent() {
     setLoading(true);
     setError(null);
 
-    void paymentsService.getDashboard(user.id)
-      .then((nextDashboard) => {
-        if (cancelled) {
-          return;
-        }
-
-        setDashboard(nextDashboard);
-        setForm((current) => ({
-          ...current,
-          paymentMethodType: resolveDefaultPaymentMethodType(
-            nextDashboard.paymentMethods,
-            current.amount,
-            nextDashboard.wallet.balance,
-          ),
-        }));
-      })
+    void refreshDashboard(user.id, { cancelled: () => cancelled })
       .catch((nextError: unknown) => {
-        if (cancelled) {
-          return;
+        if (!cancelled) {
+          setError(nextError instanceof Error ? nextError.message : 'Payments could not be loaded.');
         }
-
-        setError(nextError instanceof Error ? nextError.message : 'Payments could not be loaded.');
       })
       .finally(() => {
         if (!cancelled) {
@@ -102,23 +136,102 @@ function PaymentsPageContent() {
   }, [user?.id]);
 
   const paymentMethods = useMemo(() => {
-    if (!dashboard) {
-      return [];
+    const methodsByType = new Map<WalletPaymentMethodType, {
+      id: string;
+      type: WalletPaymentMethodType;
+      label: string;
+    }>();
+
+    if ((dashboard?.wallet.balance ?? 0) > 0) {
+      methodsByType.set('wallet', {
+        id: 'wallet-balance',
+        type: 'wallet',
+        label: 'Wallet balance',
+      });
     }
 
-    const walletMethod = dashboard.wallet.balance > 0
-      ? [{ id: 'wallet-balance', type: 'wallet' as const, label: 'Wallet balance' }]
-      : [];
+    (dashboard?.paymentMethods ?? []).forEach((method) => {
+      const existing = methodsByType.get(method.type);
+      if (!existing || method.isDefault) {
+        methodsByType.set(method.type, {
+          id: method.id,
+          type: method.type,
+          label: method.label,
+        });
+      }
+    });
 
-    return [
-      ...walletMethod,
-      ...dashboard.paymentMethods.map((method) => ({
-        id: method.id,
-        type: method.type,
-        label: method.label,
-      })),
-    ];
-  }, [dashboard]);
+    if (stripeClientEnabled && !methodsByType.has('card')) {
+      methodsByType.set('card', {
+        id: 'stripe-card-entry',
+        type: 'card',
+        label: 'Secure card via Stripe',
+      });
+    }
+
+    return Array.from(methodsByType.values());
+  }, [dashboard, stripeClientEnabled]);
+
+  useEffect(() => {
+    if (!user?.id || !returnedPaymentIntentId) {
+      return;
+    }
+
+    let cancelled = false;
+    setConfirmationState('confirming');
+    setNotice({
+      tone: redirectStatus === 'failed' ? 'warning' : 'neutral',
+      message: redirectStatus === 'failed'
+        ? 'Stripe returned this payment as incomplete. Rechecking the latest status now.'
+        : 'Stripe returned to Wasel. Rechecking the latest payment status now.',
+    });
+
+    void paymentsService.awaitPaymentSettlement(returnedPaymentIntentId, {
+      attempts: 10,
+      delayMs: 1_500,
+    })
+      .then(async (result) => {
+        if (cancelled) {
+          return;
+        }
+
+        updateIntentStatus(returnedPaymentIntentId, String(result.status), result.clientSecret);
+        setConfirmationState(result.settled ? 'confirmed' : 'idle');
+        setNotice(result.settled
+          ? {
+            tone: 'success',
+            message: 'Payment settled successfully and the wallet dashboard is now updated.',
+          }
+          : {
+            tone: 'warning',
+            message: redirectStatus === 'failed'
+              ? 'Payment was not completed. You can retry with another card or funding source.'
+              : 'Payment is still processing. Wasel will reflect settlement as soon as Stripe finishes.',
+          });
+        await refreshDashboard(user.id, { cancelled: () => cancelled });
+      })
+      .catch((nextError: unknown) => {
+        if (!cancelled) {
+          setConfirmationState('idle');
+          setError(nextError instanceof Error ? nextError.message : 'Payment status could not be refreshed.');
+        }
+      })
+      .finally(() => {
+        if (cancelled) {
+          return;
+        }
+
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete('payment_intent');
+        nextParams.delete('payment_intent_client_secret');
+        nextParams.delete('redirect_status');
+        setSearchParams(nextParams, { replace: true });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [redirectStatus, returnedPaymentIntentId, searchParams, setSearchParams, user?.id]);
 
   async function handleInitiatePayment() {
     if (!user?.id) {
@@ -127,14 +240,21 @@ function PaymentsPageContent() {
 
     setSubmitting(true);
     setError(null);
+    setNotice(null);
     setConfirmationState('idle');
 
     try {
-      const transaction = await paymentsService.initiatePayment(user.id, {
+      const session = await paymentsService.initiatePayment(user.id, {
         ...form,
         amount: Number(form.amount),
       });
-      setIntent(transaction);
+      setIntentSession(session);
+      if (session.redirectUrl) {
+        setNotice({
+          tone: 'neutral',
+          message: 'Provider instructions are ready below. Complete the payment with the linked flow.',
+        });
+      }
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : 'Payment initiation failed.');
     } finally {
@@ -147,27 +267,107 @@ function PaymentsPageContent() {
       return;
     }
 
+    if (intent.provider === 'stripe' && intent.paymentMethodType === 'card' && intentSession?.clientSecret) {
+      return;
+    }
+
     setConfirmationState('confirming');
     setError(null);
+    setNotice(null);
 
     try {
       const result = await paymentsService.confirmPayment(intent.id);
-      setIntent((current) => (
-        current
-          ? { ...current, status: String(result.status) as PaymentTransaction['status'] }
-          : current
-      ));
-      setConfirmationState(result.settled ? 'confirmed' : 'idle');
+      updateIntentStatus(intent.id, String(result.status), result.clientSecret);
+
+      if (result.settled) {
+        setConfirmationState('confirmed');
+        setNotice({
+          tone: 'success',
+          message: 'Payment settled successfully and the wallet ledger is updated.',
+        });
+      } else if (intent.provider === 'stripe') {
+        const settled = await paymentsService.awaitPaymentSettlement(intent.id);
+        updateIntentStatus(intent.id, String(settled.status), settled.clientSecret);
+        setConfirmationState(settled.settled ? 'confirmed' : 'idle');
+        setNotice(settled.settled
+          ? {
+            tone: 'success',
+            message: 'Stripe accepted the payment and Wasel has settled it.',
+          }
+          : {
+            tone: 'warning',
+            message: 'Payment confirmation was accepted, but settlement is still processing.',
+          });
+      } else {
+        setConfirmationState('idle');
+        setNotice({
+          tone: 'neutral',
+          message: intentSession?.redirectUrl
+            ? 'Continue with the provider instructions below to finish this payment.'
+            : 'Payment confirmation was accepted and is now processing.',
+        });
+      }
 
       if (user?.id) {
-        const nextDashboard = await paymentsService.getDashboard(user.id);
-        setDashboard(nextDashboard);
+        await refreshDashboard(user.id);
       }
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : 'Payment confirmation failed.');
       setConfirmationState('idle');
     }
   }
+
+  async function handleStripePaymentCompleted(result: {
+    paymentIntentId: string | null;
+    status: string;
+  }) {
+    if (!intent || !user?.id) {
+      return;
+    }
+
+    setConfirmationState('confirming');
+    setError(null);
+    setNotice({
+      tone: 'neutral',
+      message: 'Stripe accepted the payment. Wasel is reconciling settlement now.',
+    });
+    updateIntentStatus(intent.id, result.status);
+
+    try {
+      const settled = await paymentsService.awaitPaymentSettlement(result.paymentIntentId ?? intent.id, {
+        attempts: 10,
+        delayMs: 1_500,
+      });
+      updateIntentStatus(intent.id, String(settled.status), settled.clientSecret);
+      setConfirmationState(settled.settled ? 'confirmed' : 'idle');
+      setNotice(settled.settled
+        ? {
+          tone: 'success',
+          message: 'Stripe payment settled successfully and Wasel refreshed your wallet.',
+        }
+        : {
+          tone: 'warning',
+          message: 'Payment was accepted, but settlement is still processing in Stripe.',
+        });
+      await refreshDashboard(user.id);
+    } catch (nextError) {
+      setConfirmationState('idle');
+      setError(nextError instanceof Error ? nextError.message : 'Stripe payment status could not be reconciled.');
+    }
+  }
+
+  const isStripeCardIntent = Boolean(
+    intent &&
+    intent.provider === 'stripe' &&
+    intent.paymentMethodType === 'card' &&
+    intentSession?.clientSecret,
+  );
+
+  const noticeClassName = notice?.tone === 'success'
+    ? 'border-primary/25 bg-primary/10 text-primary'
+    : notice?.tone === 'warning'
+      ? 'border-amber-500/25 bg-amber-500/10 text-amber-100'
+      : 'border-white/10 bg-white/5 text-muted-foreground';
 
   return (
     <PageShell>
@@ -374,6 +574,17 @@ function PaymentsPageContent() {
                   </div>
                 ) : null}
 
+                {notice ? (
+                  <div className={`flex items-start gap-2 rounded-2xl border p-3 text-sm ${noticeClassName}`}>
+                    {notice.tone === 'success' ? (
+                      <CheckCircle2 className="mt-0.5 h-4 w-4" />
+                    ) : (
+                      <CircleAlert className="mt-0.5 h-4 w-4" />
+                    )}
+                    <span>{notice.message}</span>
+                  </div>
+                ) : null}
+
                 {intent ? (
                   <div className="space-y-3 rounded-3xl border border-primary/15 bg-primary/5 p-5">
                     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -387,6 +598,7 @@ function PaymentsPageContent() {
                         {intent.status}
                       </Badge>
                     </div>
+
                     <div className="grid gap-3 md:grid-cols-3">
                       <div>
                         <p className="text-xs uppercase tracking-wide text-muted-foreground">Amount</p>
@@ -403,18 +615,27 @@ function PaymentsPageContent() {
                         <p className="text-sm text-foreground">{new Date(intent.createdAt).toLocaleString()}</p>
                       </div>
                     </div>
+
                     <div className="flex flex-wrap gap-3">
-                      <Button
-                        disabled={confirmationState === 'confirming'}
-                        onClick={handleConfirmPayment}
-                      >
-                        {confirmationState === 'confirming' ? (
-                          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                        )}
-                        Confirm payment
-                      </Button>
+                      {isStripeCardIntent ? (
+                        <div className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100">
+                          <CreditCard className="h-4 w-4 text-cyan-300" />
+                          Complete the secure Stripe form below to finish this payment.
+                        </div>
+                      ) : (
+                        <Button
+                          disabled={confirmationState === 'confirming'}
+                          onClick={handleConfirmPayment}
+                        >
+                          {confirmationState === 'confirming' ? (
+                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                          )}
+                          Confirm payment
+                        </Button>
+                      )}
+
                       {confirmationState === 'confirmed' ? (
                         <div className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-3 py-2 text-sm text-primary">
                           <CheckCircle2 className="h-4 w-4" />
@@ -422,6 +643,19 @@ function PaymentsPageContent() {
                         </div>
                       ) : null}
                     </div>
+
+                    {isStripeCardIntent && intentSession?.clientSecret ? (
+                      <StripePaymentForm
+                        amount={intent.amount}
+                        currency={intent.currency}
+                        clientSecret={intentSession.clientSecret}
+                        disabled={confirmationState === 'confirming'}
+                        onCompleted={handleStripePaymentCompleted}
+                        onError={(message) => {
+                          setError(message);
+                        }}
+                      />
+                    ) : null}
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-5 text-sm text-muted-foreground">

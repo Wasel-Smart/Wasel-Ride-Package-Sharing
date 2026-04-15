@@ -123,6 +123,9 @@ let _configCache: ReturnType<typeof buildConfig> | null = null;
 function buildConfig() {
   const environment = resolveEnvironment();
   const appUrl = resolveAppUrl(environment);
+  const stripePublishableKey = hasEnv('VITE_STRIPE_PUBLISHABLE_KEY')
+    ? getEnv('VITE_STRIPE_PUBLISHABLE_KEY').trim()
+    : '';
   const supportWhatsAppNumber = getEnv('VITE_SUPPORT_WHATSAPP_NUMBER')
     .replace(/[^\d+]/g, '')
     .trim();
@@ -180,6 +183,8 @@ function buildConfig() {
     appName: getEnv('VITE_APP_NAME', 'Wasel'),
     appUrl,
     environment,
+    stripePublishableKey,
+    stripeEnabled: stripePublishableKey.length > 0,
     supportWhatsAppNumber,
     supportEmail,
     supportPhoneNumber,

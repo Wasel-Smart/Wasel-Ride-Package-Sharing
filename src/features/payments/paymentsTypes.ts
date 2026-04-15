@@ -28,6 +28,13 @@ export interface PaymentConfirmationResult {
   id: string;
   status: PaymentIntentStatus | string;
   settled: boolean;
+  clientSecret?: string | null;
+}
+
+export interface PaymentIntentSession {
+  transaction: PaymentTransaction;
+  clientSecret?: string | null;
+  redirectUrl?: string | null;
 }
 
 export interface PaymentsSummary {

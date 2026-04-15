@@ -262,6 +262,41 @@ export default function AppEntryPage() {
     ? `${selectedFromLabel} ← ${selectedToLabel}`
     : `${selectedFromLabel} → ${selectedToLabel}`;
   const serviceLabel = mode === 'ride' ? copy.cardTitle.ride : copy.cardTitle.package;
+  const guidanceBand = ar
+    ? [
+        {
+          label: 'الممر',
+          value: routePreview,
+          detail: mode === 'ride' ? 'نفس المسار يفتح الرحلات بسرعة.' : 'هذا المسار يفتح تسليم الطرد مباشرة.',
+        },
+        {
+          label: 'الوضوح',
+          value: mode === 'ride' ? 'السعر والمقعد' : 'الالتقاط والتسليم',
+          detail: mode === 'ride' ? 'التوقيت والسعر يبقيان ظاهرين.' : 'يبقى مسار الطرد واضحاً من البداية.',
+        },
+        {
+          label: 'الدعم',
+          value: supportLine,
+          detail: 'الثقة والمساندة تبقيان قريبتين من القرار.',
+        },
+      ]
+    : [
+        {
+          label: 'Corridor',
+          value: routePreview,
+          detail: mode === 'ride' ? 'This lane opens the ride flow fast.' : 'This lane opens parcel routing directly.',
+        },
+        {
+          label: 'Clarity',
+          value: mode === 'ride' ? 'Price and seat' : 'Pickup and dropoff',
+          detail: mode === 'ride' ? 'Timing and price stay visible together.' : 'Parcel movement stays clear from the start.',
+        },
+        {
+          label: 'Support',
+          value: supportLine,
+          detail: 'Trust and help stay close to the decision.',
+        },
+      ];
   const heroStats = ar
     ? [
         { value: '3', label: 'تدفقات أساسية', detail: 'رحلات، طرود، ومسارات عرض' },
@@ -497,6 +532,19 @@ export default function AppEntryPage() {
                     <span>{ar ? 'التدفق' : 'Flow'}</span>
                     <strong>{serviceLabel}</strong>
                   </div>
+                </div>
+
+                <div
+                  className="app-entry-page__guidance-band"
+                  aria-label={ar ? 'إشارات البداية' : 'Entry guidance'}
+                >
+                  {guidanceBand.map((item) => (
+                    <div key={item.label} className="app-entry-page__guidance-item">
+                      <span>{item.label}</span>
+                      <strong>{item.value}</strong>
+                      <small>{item.detail}</small>
+                    </div>
+                  ))}
                 </div>
 
                 <div className="app-entry-page__field-grid">
