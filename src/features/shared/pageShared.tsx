@@ -51,7 +51,7 @@ function authPanelStyle() {
     borderRadius: r(28),
     background: DS.card,
     border: `1px solid ${DS.border}`,
-    boxShadow: 'var(--wasel-service-head-shadow)',
+    boxShadow: 'var(--wasel-shadow-lg)',
     backdropFilter: 'blur(18px)',
     textAlign: 'center' as const,
     color: DS.text,
@@ -262,7 +262,7 @@ export function PageShell({ children }: { children: ReactNode }) {
             borderRadius: r(34),
             background: DS.card,
             border: `1px solid ${DS.border}`,
-            boxShadow: 'var(--wasel-service-head-shadow)',
+            boxShadow: 'var(--wasel-shadow-lg)',
             backdropFilter: 'blur(18px)',
             padding: 28,
           }}
@@ -339,7 +339,7 @@ export function SectionHead({
         position: 'relative',
         overflow: 'hidden',
         border: `1px solid ${color}28`,
-        boxShadow: 'var(--wasel-shadow-lg)',
+        boxShadow: `var(--wasel-shadow-lg), inset 0 1px 0 ${color}18`,
       }}
     >
       <div
@@ -538,7 +538,7 @@ export function ClarityBand({
           gap: 10,
         }}
       >
-        {items.map((item) => (
+        {items.map((item, index) => (
           <div
             key={item.label}
             style={{
@@ -546,22 +546,42 @@ export function ClarityBand({
               border: `1px solid ${tone}20`,
               borderRadius: r(16),
               padding: '12px 14px',
+              display: 'flex',
+              gap: 10,
+              alignItems: 'flex-start',
+              transition: 'border-color 0.16s ease, box-shadow 0.16s ease',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLDivElement).style.borderColor = `${tone}40`;
+              (e.currentTarget as HTMLDivElement).style.boxShadow = `0 4px 14px ${tone}12`;
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLDivElement).style.borderColor = `${tone}20`;
+              (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
             }}
           >
-            <div
-              style={{
+            <div style={{
+              width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+              background: `${tone}18`, border: `1px solid ${tone}30`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '0.62rem', fontWeight: 900, color: tone, marginTop: 1,
+            }}>
+              {index + 1}
+            </div>
+            <div>
+              <div style={{
                 color: tone,
                 fontSize: '0.68rem',
                 fontWeight: 800,
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
-                marginBottom: 6,
-              }}
-            >
-              {item.label}
-            </div>
-            <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.82rem', lineHeight: 1.55 }}>
-              {item.value}
+                marginBottom: 4,
+              }}>
+                {item.label}
+              </div>
+              <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.82rem', lineHeight: 1.55 }}>
+                {item.value}
+              </div>
             </div>
           </div>
         ))}

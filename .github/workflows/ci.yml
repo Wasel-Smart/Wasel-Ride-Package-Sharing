@@ -28,7 +28,7 @@ jobs:
   verify:
     name: Verify (types · lint · format · unit tests · build)
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
 
     steps:
       - name: Checkout
@@ -47,6 +47,9 @@ jobs:
 
       - name: Dependency audit (high + critical only)
         run: npm audit --audit-level=high
+
+      - name: Encoding guard
+        run: npm run check:encoding
 
       - name: Type check
         run: npm run type-check
@@ -95,10 +98,13 @@ jobs:
       - name: Unit tests
         run: npm run test
 
+      - name: Coverage gate
+        run: npm run test:coverage
+
       - name: Production build
         run: npm run build
 
-      - name: Bundle size gate (600 KB per chunk)
+      - name: Bundle size gate (250 KB per chunk)
         run: |
           node -e "
             const fs = require('fs');
@@ -115,11 +121,11 @@ jobs:
             if (!fs.existsSync(assetsDir)) { console.log('No assets dir — skipping'); process.exit(0); }
 
             const jsFiles = fs.readdirSync(assetsDir).filter(f => f.endsWith('.js'));
-            const large = jsFiles.filter(f => fs.statSync(path.join(assetsDir, f)).size > 600 * 1024);
+            const large = jsFiles.filter(f => fs.statSync(path.join(assetsDir, f)).size > 250 * 1024);
             if (large.length > 0) {
               large.forEach(f => {
                 const kb = (fs.statSync(path.join(assetsDir, f)).size / 1024).toFixed(1);
-                console.error('OVER BUDGET:', f, kb + ' KB (limit: 600 KB)');
+                console.error('OVER BUDGET:', f, kb + ' KB (limit: 250 KB)');
               });
               process.exit(1);
             }
@@ -156,14 +162,17 @@ jobs:
         run: npm run verify:supabase-rollout
         continue-on-error: false
 
+      - name: Generate quality report
+        run: npm run report:quality -- --test-status=passed --output=quality-report.verify.json
+
       - name: Upload coverage artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage
+          name: quality-artifacts
           path: |
             coverage
-            coverage-summary.json
+            quality-report.verify.json
           if-no-files-found: ignore
 
   # ── Job 2: E2E — core user flows ─────────────────────────────────────────────
@@ -281,7 +290,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: verify
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
 
     steps:
       - name: Checkout
@@ -303,3 +312,16 @@ jobs:
         run: npm run test:lhci
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Generate Lighthouse quality report
+        run: npm run report:quality -- --test-status=passed --output=quality-report.lighthouse.json
+
+      - name: Upload Lighthouse artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-artifacts
+          path: |
+            .lighthouseci
+            quality-report.lighthouse.json
+          if-no-files-found: ignore

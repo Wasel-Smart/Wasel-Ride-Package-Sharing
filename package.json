@@ -87,6 +87,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "prepare": "node scripts/setup-git-hooks.mjs",
     "build": "tsc --noEmit && vite build && npm run sync:build-output",
     "preview": "vite preview",
     "sync:build-output": "node scripts/sync-build-output.mjs",
@@ -102,6 +103,8 @@
     "test:e2e:mobile": "playwright test --project=mobile-android-chrome --project=mobile-ios-safari",
     "test:e2e:rtl": "playwright test tests/e2e/rtl-arabic.spec.ts",
     "test:lhci": "lhci autorun --config=src/lighthouserc.json",
+    "check:encoding": "node scripts/check-encoding.mjs",
+    "report:quality": "node scripts/generate-quality-report.mjs",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:strict": "eslint src --ext .ts,.tsx --max-warnings 0",
