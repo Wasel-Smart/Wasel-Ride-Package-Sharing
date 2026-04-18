@@ -16,6 +16,8 @@ import { useLocalAuth } from '../../contexts/LocalAuth';
 import { PageShell, Protected } from '../shared/pageShared';
 import { StripePaymentForm } from './StripePaymentForm';
 import { paymentsService, resolveDefaultPaymentMethodType } from './paymentsService';
+import { walletApi } from '../../services/walletApi';
+import { notificationsAPI } from '../../services/notifications';
 import { hasStripeClientPaymentsEnabled } from './stripeClient';
 import { PAYMENT_FLOW_PURPOSES, type PaymentIntentSession, type PaymentRequestDraft, type PaymentsDashboardData } from './paymentsTypes';
 import type { PaymentTransaction } from '../../../shared/domain-contracts';
@@ -93,19 +95,43 @@ function PaymentsPageContent() {
     nextUserId: string,
     options?: { cancelled?: () => boolean },
   ) {
-    const nextDashboard = await paymentsService.getDashboard(nextUserId);
-    if (options?.cancelled?.()) {
-      return;
+    try {
+      const [nextDashboard, walletBalance] = await Promise.all([
+        paymentsService.getDashboard(nextUserId),
+        walletApi.getBalance(nextUserId)
+      ]);
+      
+      if (options?.cancelled?.()) {
+        return;
+      }
+      
+      // Merge wallet data with payments dashboard
+      const enhancedDashboard = {
+        ...nextDashboard,
+        wallet: {
+          ...nextDashboard.wallet,
+          balance: walletBalance.available
+        },
+        summary: {
+          ...nextDashboard.summary,
+          availableBalance: walletBalance.available,
+          pendingAmount: walletBalance.pending
+        }
+      };
+      
+      setDashboard(enhancedDashboard);
+      setForm((current) => ({
+        ...current,
+        paymentMethodType: resolveDefaultPaymentMethodType(
+          enhancedDashboard.paymentMethods,
+          current.amount,
+          enhancedDashboard.wallet.balance,
+        ),
+      }));
+    } catch (error) {
+      console.error('Failed to refresh dashboard:', error);
+      throw error;
     }
-    setDashboard(nextDashboard);
-    setForm((current) => ({
-      ...current,
-      paymentMethodType: resolveDefaultPaymentMethodType(
-        nextDashboard.paymentMethods,
-        current.amount,
-        nextDashboard.wallet.balance,
-      ),
-    }));
   }
 
   useEffect(() => {
@@ -244,15 +270,45 @@ function PaymentsPageContent() {
     setConfirmationState('idle');
 
     try {
+      // Validate payment amount and method
+      const amount = Number(form.amount);
+      if (amount <= 0 || amount > 10000) {
+        throw new Error('Payment amount must be between 0.01 and 10,000 JOD');
+      }
+
+      // Check wallet balance for wallet payments
+      if (form.paymentMethodType === 'wallet') {
+        const balance = await walletApi.getBalance(user.id);
+        if (balance.available < amount) {
+          throw new Error(`Insufficient wallet balance. Available: ${formatCurrency(balance.available)}`);
+        }
+      }
+
       const session = await paymentsService.initiatePayment(user.id, {
         ...form,
-        amount: Number(form.amount),
+        amount,
       });
+      
       setIntentSession(session);
+      
+      // Send notification for payment initiation
+      await notificationsAPI.createNotification({
+        title: 'Payment Initiated',
+        message: `Payment of ${formatCurrency(amount)} has been initiated for ${PURPOSE_LABELS[form.purpose]}`,
+        type: 'payment',
+        priority: 'medium',
+        action_url: '/app/payments',
+      });
+      
       if (session.redirectUrl) {
         setNotice({
           tone: 'neutral',
           message: 'Provider instructions are ready below. Complete the payment with the linked flow.',
+        });
+      } else {
+        setNotice({
+          tone: 'success',
+          message: 'Payment intent created successfully. Proceed with confirmation.',
         });
       }
     } catch (nextError) {
@@ -281,6 +337,27 @@ function PaymentsPageContent() {
 
       if (result.settled) {
         setConfirmationState('confirmed');
+        
+        // Update wallet balance if this was a wallet transaction
+        if (intent.paymentMethodType === 'wallet' && user?.id) {
+          await walletApi.processTransaction(user.id, {
+            amount: intent.amount,
+            type: intent.kind === 'deposit' ? 'credit' : 'debit',
+            description: intent.description,
+            referenceId: intent.id,
+            referenceType: 'payment'
+          });
+        }
+        
+        // Send success notification
+        await notificationsAPI.createNotification({
+          title: 'Payment Completed',
+          message: `Payment of ${formatCurrency(intent.amount)} has been successfully processed`,
+          type: 'payment',
+          priority: 'high',
+          action_url: '/app/payments',
+        });
+        
         setNotice({
           tone: 'success',
           message: 'Payment settled successfully and the wallet ledger is updated.',
@@ -340,15 +417,39 @@ function PaymentsPageContent() {
       });
       updateIntentStatus(intent.id, String(settled.status), settled.clientSecret);
       setConfirmationState(settled.settled ? 'confirmed' : 'idle');
-      setNotice(settled.settled
-        ? {
+      
+      if (settled.settled) {
+        // Process wallet transaction for successful Stripe payments
+        if (intent.kind === 'deposit') {
+          await walletApi.processTransaction(user.id, {
+            amount: intent.amount,
+            type: 'credit',
+            description: `Stripe deposit - ${intent.description}`,
+            referenceId: result.paymentIntentId ?? intent.id,
+            referenceType: 'stripe_payment'
+          });
+        }
+        
+        // Send success notification
+        await notificationsAPI.createNotification({
+          title: 'Stripe Payment Successful',
+          message: `Your ${formatCurrency(intent.amount)} payment via Stripe has been processed successfully`,
+          type: 'payment',
+          priority: 'high',
+          action_url: '/app/wallet',
+        });
+        
+        setNotice({
           tone: 'success',
           message: 'Stripe payment settled successfully and Wasel refreshed your wallet.',
-        }
-        : {
+        });
+      } else {
+        setNotice({
           tone: 'warning',
           message: 'Payment was accepted, but settlement is still processing in Stripe.',
         });
+      }
+      
       await refreshDashboard(user.id);
     } catch (nextError) {
       setConfirmationState('idle');

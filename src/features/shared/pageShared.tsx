@@ -5,6 +5,12 @@ import { Shield } from 'lucide-react';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
+import {
+  LANDING_DISPLAY,
+  LANDING_FONT,
+  LANDING_RESPONSIVE_STYLES,
+} from '../home/landingConstants';
+import { LANDING_COLORS, landingPanel } from '../home/landing/landingTypes';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
 import {
@@ -45,16 +51,14 @@ export function midpoint(
 
 function authPanelStyle() {
   return {
+    ...landingPanel(28),
     width: '100%',
     maxWidth: 460,
     padding: '32px 28px',
-    borderRadius: r(28),
-    background: DS.card,
-    border: `1px solid ${DS.border}`,
-    boxShadow: 'var(--wasel-shadow-lg)',
-    backdropFilter: 'blur(18px)',
     textAlign: 'center' as const,
-    color: DS.text,
+    color: LANDING_COLORS.text,
+    background:
+      'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
   };
 }
 
@@ -115,7 +119,17 @@ export function Protected({ children }: { children: ReactNode }) {
           >
             W
           </div>
-          <div style={{ fontSize: '1rem', fontWeight: 900, marginBottom: 8 }}>Checking access</div>
+          <div
+            style={{
+              fontFamily: LANDING_DISPLAY,
+              fontSize: '1.05rem',
+              fontWeight: 900,
+              marginBottom: 8,
+              letterSpacing: '-0.03em',
+            }}
+          >
+            Checking access
+          </div>
           <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.7 }}>
             Loading your Wasel account and restoring the service flow.
           </div>
@@ -155,7 +169,17 @@ export function Protected({ children }: { children: ReactNode }) {
           >
             <Shield size={24} />
           </div>
-          <div style={{ fontSize: '1rem', fontWeight: 900, marginBottom: 8 }}>Sign in required</div>
+          <div
+            style={{
+              fontFamily: LANDING_DISPLAY,
+              fontSize: '1.05rem',
+              fontWeight: 900,
+              marginBottom: 8,
+              letterSpacing: '-0.03em',
+            }}
+          >
+            Sign in required
+          </div>
           <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.7, marginBottom: 20 }}>
             Sign in to continue into the Wasel service network.
           </div>
@@ -202,11 +226,11 @@ export function PageShell({ children }: { children: ReactNode }) {
       style={{
         minHeight: '100%',
         background: 'transparent',
-        fontFamily: DS.F,
+        fontFamily: LANDING_FONT,
         direction: ar ? 'rtl' : 'ltr',
       }}
       >
-      <style>{`
+      <style>{`${LANDING_RESPONSIVE_STYLES}
         :root { color-scheme: inherit; }
         .w-focus:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(101,225,255,0.24); }
         @media (max-width: 1140px) {
@@ -267,9 +291,9 @@ export function PageShell({ children }: { children: ReactNode }) {
         className="sp-inner"
         style={{
           position: 'relative',
-          maxWidth: 1240,
+          maxWidth: 1380,
           margin: '0 auto',
-          padding: '30px 18px 56px',
+          padding: '28px 20px 72px',
         }}
       >
         <div
@@ -280,24 +304,22 @@ export function PageShell({ children }: { children: ReactNode }) {
             height: 200,
             pointerEvents: 'none',
             background: [
-              `radial-gradient(circle at ${ar ? '92%' : '8%'} 16%, ${DS.cyan}12, transparent 28%)`,
-              `radial-gradient(circle at 78% 28%, ${DS.gold}10, transparent 24%)`,
-              `radial-gradient(circle at 26% 84%, ${DS.blue}0f, transparent 24%)`,
+              `radial-gradient(circle at ${ar ? '92%' : '8%'} 18%, rgba(32,216,255,0.16), transparent 28%)`,
+              'radial-gradient(circle at 78% 28%, rgba(183,255,43,0.10), transparent 24%)',
+              'radial-gradient(circle at 26% 84%, rgba(19,136,217,0.10), transparent 24%)',
             ].join(','),
-            filter: 'blur(8px)',
+            filter: 'blur(10px)',
           }}
         />
         <div
           className="sp-frame"
           style={{
+            ...landingPanel(34),
             position: 'relative',
             overflow: 'hidden',
-            borderRadius: r(34),
-            background: DS.card,
-            border: `1px solid ${DS.border}`,
-            boxShadow: '0 32px 72px rgba(8, 18, 34, 0.08)',
-            backdropFilter: 'blur(18px)',
             padding: 30,
+            background:
+              'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
           }}
         >
           <div
@@ -307,9 +329,9 @@ export function PageShell({ children }: { children: ReactNode }) {
               inset: 0,
               pointerEvents: 'none',
               background: [
-                'radial-gradient(circle at 14% 14%, rgba(101,225,255,0.14), transparent 24%)',
-                'radial-gradient(circle at 84% 18%, rgba(25,231,187,0.10), transparent 20%)',
-                'radial-gradient(circle at 72% 88%, rgba(216,251,255,0.08), transparent 18%)',
+                'radial-gradient(circle at 14% 14%, rgba(32,216,255,0.16), transparent 24%)',
+                'radial-gradient(circle at 84% 18%, rgba(25,231,187,0.12), transparent 20%)',
+                'radial-gradient(circle at 72% 88%, rgba(183,255,43,0.10), transparent 18%)',
               ].join(','),
             }}
           />
@@ -321,7 +343,7 @@ export function PageShell({ children }: { children: ReactNode }) {
               opacity: 0.1,
               pointerEvents: 'none',
               backgroundImage:
-                'linear-gradient(rgba(157,232,255,0.22) 1px, transparent 1px), linear-gradient(90deg, rgba(157,232,255,0.22) 1px, transparent 1px)',
+                'linear-gradient(rgba(157,232,255,0.20) 1px, transparent 1px), linear-gradient(90deg, rgba(157,232,255,0.20) 1px, transparent 1px)',
               backgroundSize: '56px 56px',
               maskImage: 'radial-gradient(circle at center, black 0%, black 48%, transparent 90%)',
             }}
@@ -344,8 +366,8 @@ export function PageShell({ children }: { children: ReactNode }) {
               width: '100%',
               height: 140,
               pointerEvents: 'none',
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.28), transparent)',
-              opacity: 0.6,
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.16), transparent)',
+              opacity: 0.7,
             }}
           />
           <div style={{ position: 'relative', zIndex: 1, display: 'grid', gap: 18 }}>{children}</div>
@@ -462,10 +484,10 @@ export function SectionHead({
             </div>
             <h1
               style={{
-                fontFamily: DS.FD,
+                fontFamily: LANDING_DISPLAY,
                 fontSize: 'clamp(1.35rem, 2.4vw, 1.72rem)',
                 fontWeight: 900,
-                color: DS.text,
+                color: LANDING_COLORS.text,
                 margin: 0,
                 letterSpacing: '-0.04em',
               }}
@@ -563,7 +585,15 @@ export function CoreExperienceBanner({
         </div>
       </div>
       <div style={{ display: 'grid', gap: 8 }}>
-        <div style={{ color: DS.text, fontWeight: 900, fontSize: '1.02rem', letterSpacing: '-0.02em' }}>
+        <div
+          style={{
+            color: LANDING_COLORS.text,
+            fontFamily: LANDING_DISPLAY,
+            fontWeight: 900,
+            fontSize: '1.02rem',
+            letterSpacing: '-0.02em',
+          }}
+        >
           {title}
         </div>
         <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.72, maxWidth: 820 }}>
@@ -594,7 +624,7 @@ export function ClarityBand({
         display: 'grid',
         gap: 14,
         marginBottom: 4,
-        background: `linear-gradient(180deg, ${tone}10, rgba(255,255,255,0.04))`,
+        background: `linear-gradient(180deg, ${tone}12, rgba(255,255,255,0.04))`,
         border: `1px solid ${tone}28`,
         borderRadius: r(24),
         padding: '18px 20px 16px',
@@ -615,7 +645,16 @@ export function ClarityBand({
         >
           {ar ? 'مسار واضح' : 'Clear path'}
         </div>
-        <div style={{ color: DS.text, fontWeight: 900, fontSize: '1rem', letterSpacing: '-0.02em', marginBottom: 4 }}>
+        <div
+          style={{
+            color: LANDING_COLORS.text,
+            fontFamily: LANDING_DISPLAY,
+            fontWeight: 900,
+            fontSize: '1rem',
+            letterSpacing: '-0.02em',
+            marginBottom: 4,
+          }}
+        >
           {title}
         </div>
         <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.66, maxWidth: 760 }}>

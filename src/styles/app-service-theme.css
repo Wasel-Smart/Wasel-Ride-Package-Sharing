@@ -70,16 +70,24 @@
   --wasel-app-button-secondary-border: var(--wasel-button-primary-border);
   --wasel-app-button-secondary-shadow: 0 10px 30px rgb(var(--wasel-button-primary-rgb) / 0.10);
 
-  --wasel-service-bg: var(--service-background);
-  --wasel-service-card: var(--service-card);
-  --wasel-service-card-2: var(--service-card-muted);
-  --wasel-service-card-3: var(--service-card-strong);
-  --wasel-service-border: var(--border);
-  --wasel-service-border-strong: var(--border-strong);
-  --wasel-service-text: var(--service-text-primary, var(--text-primary));
-  --wasel-service-sub: var(--service-text-secondary, var(--text-secondary));
-  --wasel-service-muted: var(--service-text-muted, var(--text-muted));
-  --wasel-service-chip-bg: var(--service-card-muted, var(--surface-muted));
-  --wasel-service-head-bg: var(--service-head-background);
-  --wasel-service-head-shadow: var(--service-head-shadow);
+  --wasel-service-bg:
+    radial-gradient(circle at 12% 10%, rgb(var(--accent-secondary-rgb) / 0.22), transparent 24%),
+    radial-gradient(circle at 88% 14%, rgb(var(--accent-secondary-rgb) / 0.14), transparent 22%),
+    linear-gradient(180deg, #07111d 0%, #091827 54%, #06111d 100%);
+  --wasel-service-card:
+    linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.03)),
+    rgba(8, 18, 31, 0.82);
+  --wasel-service-card-2: rgba(9, 21, 37, 0.78);
+  --wasel-service-card-3: rgba(169, 227, 255, 0.09);
+  --wasel-service-border: rgba(169, 227, 255, 0.18);
+  --wasel-service-border-strong: rgba(169, 227, 255, 0.3);
+  --wasel-service-text: #eef8ff;
+  --wasel-service-sub: rgba(220, 238, 255, 0.82);
+  --wasel-service-muted: rgba(183, 206, 228, 0.72);
+  --wasel-service-chip-bg: rgba(169, 227, 255, 0.08);
+  --wasel-service-head-bg:
+    radial-gradient(circle at 16% 24%, rgb(var(--accent-secondary-rgb) / 0.18), transparent 28%),
+    radial-gradient(circle at 84% 18%, rgb(var(--accent-secondary-rgb) / 0.12), transparent 24%),
+    linear-gradient(135deg, #0b1e34 0%, #112945 56%, #16324f 100%);
+  --wasel-service-head-shadow: 0 28px 80px rgba(2, 8, 16, 0.42);
 }

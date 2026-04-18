@@ -1,5 +1,5 @@
 ﻿/**
- * WaselMap â€” Interactive map for Wasel | ÙˆØ§ØµÙ„
+ * WaselMap - Interactive map for Wasel | واصل
  *
  * âœ… Leaflet + OpenStreetMap/CartoDB (NO API key required)
  * âœ… Dark theme via CartoDB Dark Matter tiles
@@ -44,6 +44,7 @@ import {
   Satellite,
   Mountain,
 } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 import { omitUndefined } from '../utils/object';
 import { normalizeTextTree, repairLikelyMojibake } from '../utils/textEncoding';
 
@@ -62,7 +63,7 @@ function ensureLeafletCSS() {
     style.id = 'wasel-leaflet-theme';
     style.textContent = `
       .leaflet-container {
-        background: #081220 !important;
+        background: var(--surface-strong) !important;
         font-family: var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif);
         width: 100% !important;
         height: 100% !important;
@@ -70,10 +71,10 @@ function ensureLeafletCSS() {
 
       .leaflet-popup-content-wrapper,
       .leaflet-popup-tip {
-        background: rgba(8, 18, 34, 0.94) !important;
-        color: #eff6ff !important;
-        border: 1px solid rgba(93, 150, 210, 0.2);
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
+        background: color-mix(in srgb, var(--surface-strong) 98%, transparent) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border);
+        box-shadow: var(--wasel-shadow-md);
         backdrop-filter: blur(16px);
       }
 
@@ -84,11 +85,11 @@ function ensureLeafletCSS() {
       }
 
       .leaflet-tooltip {
-        background: rgba(8, 18, 34, 0.92) !important;
-        color: #eff6ff !important;
-        border: 1px solid rgba(93, 150, 210, 0.2) !important;
+        background: color-mix(in srgb, var(--surface-strong) 96%, transparent) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border) !important;
         border-radius: 12px !important;
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+        box-shadow: var(--wasel-shadow-sm);
         padding: 8px 10px !important;
       }
 
@@ -96,19 +97,19 @@ function ensureLeafletCSS() {
       .leaflet-tooltip-bottom:before,
       .leaflet-tooltip-left:before,
       .leaflet-tooltip-right:before {
-        border-top-color: rgba(8, 18, 34, 0.92) !important;
-        border-bottom-color: rgba(8, 18, 34, 0.92) !important;
-        border-left-color: rgba(8, 18, 34, 0.92) !important;
-        border-right-color: rgba(8, 18, 34, 0.92) !important;
+        border-top-color: color-mix(in srgb, var(--surface-strong) 96%, transparent) !important;
+        border-bottom-color: color-mix(in srgb, var(--surface-strong) 96%, transparent) !important;
+        border-left-color: color-mix(in srgb, var(--surface-strong) 96%, transparent) !important;
+        border-right-color: color-mix(in srgb, var(--surface-strong) 96%, transparent) !important;
       }
 
       .leaflet-control-attribution {
-        background: rgba(8, 18, 34, 0.72) !important;
-        color: rgba(214, 228, 244, 0.78) !important;
+        background: color-mix(in srgb, var(--surface-glass) 92%, transparent) !important;
+        color: var(--text-secondary) !important;
         border-radius: 12px 0 0 0 !important;
         padding: 4px 8px !important;
-        border-top: 1px solid rgba(93, 150, 210, 0.14);
-        border-left: 1px solid rgba(93, 150, 210, 0.14);
+        border-top: 1px solid var(--border);
+        border-left: 1px solid var(--border);
       }
 
       .leaflet-control-attribution a {
@@ -151,29 +152,56 @@ function loadLeaflet(): Promise<LeafletModule> {
 }
 
 /* â”€â”€â”€ Tile layer configs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-const TILES = normalizeTextTree({
-  roadmap: {
+type MapTileKind = 'roadmap' | 'satellite' | 'terrain';
+type MapTheme = 'light' | 'dark';
+
+const ROADMAP_TILES = normalizeTextTree({
+  light: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution:
+      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+    subdomains: 'abc',
+  },
+  dark: {
     url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     attribution:
-      'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors Â© <a href="https://carto.com/">CARTO</a>',
+      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>',
     maxZoom: 19,
-  },
-  satellite: {
-    // Use Google Maps satellite tiles when key is available, else Esri fallback
-    url: (() => {
-      const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-      if (key) return `https://maps.googleapis.com/maps/vt?lyrs=s&x={x}&y={y}&z={z}&key=${key}`;
-      return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-    })(),
-    attribution: 'Â© Google Maps | Â© Esri, DigitalGlobe',
-    maxZoom: 21,
-  },
-  terrain: {
-    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-    attribution: 'Â© OpenStreetMap contributors, SRTM Â© OpenTopoMap (CC-BY-SA)',
-    maxZoom: 17,
+    subdomains: 'abcd',
   },
 } as const);
+
+const SATELLITE_TILE = normalizeTextTree({
+  // Use Google Maps satellite tiles when key is available, else Esri fallback
+  url: (() => {
+    const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (key) return `https://maps.googleapis.com/maps/vt?lyrs=s&x={x}&y={y}&z={z}&key=${key}`;
+    return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+  })(),
+  attribution: '© Google Maps | © Esri, DigitalGlobe',
+  maxZoom: 21,
+  subdomains: 'abc',
+} as const);
+
+const TERRAIN_TILE = normalizeTextTree({
+  url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+  attribution: '© OpenStreetMap contributors, SRTM © OpenTopoMap (CC-BY-SA)',
+  maxZoom: 17,
+  subdomains: 'abc',
+} as const);
+
+function getTileConfig(type: MapTileKind, theme: MapTheme) {
+  if (type === 'roadmap') {
+    return ROADMAP_TILES[theme];
+  }
+
+  if (type === 'satellite') {
+    return SATELLITE_TILE;
+  }
+
+  return TERRAIN_TILE;
+}
 
 /* â”€â”€â”€ Pre-defined data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const JORDAN_RADARS = normalizeTextTree([
@@ -195,19 +223,19 @@ const FALLBACK_MOSQUES = normalizeTextTree([
   {
     lat: 31.9554,
     lng: 35.91,
-    name: 'King Abdullah I Mosque | Ù…Ø³Ø¬Ø¯ Ø§Ù„Ù…Ù„Ùƒ Ø¹Ø¨Ø¯Ø§Ù„Ù„Ù‡ Ø§Ù„Ø£ÙˆÙ„',
+    name: 'King Abdullah I Mosque | مسجد الملك عبدالله الأول',
   },
-  { lat: 31.9515, lng: 35.9219, name: 'Al-Hussein Mosque | Ù…Ø³Ø¬Ø¯ Ø§Ù„Ø­Ø³ÙŠÙ†' },
-  { lat: 31.9609, lng: 35.8895, name: 'Abu Darwish Mosque | Ù…Ø³Ø¬Ø¯ Ø£Ø¨Ùˆ Ø¯Ø±ÙˆÙŠØ´' },
-  { lat: 31.9657, lng: 35.8982, name: 'Al-Kalouti Mosque | Ù…Ø³Ø¬Ø¯ Ø§Ù„ÙƒÙ„ÙˆØªÙŠ' },
-  { lat: 31.95, lng: 35.8952, name: 'Al-Thaqafeh Mosque | Ù…Ø³Ø¬Ø¯ Ø§Ù„Ø«Ù‚Ø§ÙØ©' },
-  { lat: 31.944, lng: 35.921, name: 'Al-Manar Mosque | Ù…Ø³Ø¬Ø¯ Ø§Ù„Ù…Ù†Ø§Ø±' },
-  { lat: 32.5568, lng: 35.8486, name: 'Irbid Grand Mosque | Ù…Ø³Ø¬Ø¯ Ø¥Ø±Ø¨Ø¯ Ø§Ù„ÙƒØ¨ÙŠØ±' },
-  { lat: 29.5321, lng: 35.006, name: 'Aqaba Central Mosque | Ù…Ø³Ø¬Ø¯ Ø§Ù„Ø¹Ù‚Ø¨Ø©' },
-  { lat: 31.7167, lng: 35.95, name: 'Madaba Mosque | Ù…Ø³Ø¬Ø¯ Ù…Ø£Ø¯Ø¨Ø§' },
-  { lat: 31.22, lng: 35.93, name: "Ma'an Mosque | Ù…Ø³Ø¬Ø¯ Ù…Ø¹Ø§Ù†" },
-  { lat: 31.0, lng: 35.5, name: 'Shoubak Rest Stop Mosque | Ù…Ø³Ø¬Ø¯ Ø§Ø³ØªØ±Ø§Ø­Ø© Ø§Ù„Ø´ÙˆØ¨Ùƒ' },
-  { lat: 30.3, lng: 35.2, name: 'Wadi Rum Mosque | Ù…Ø³Ø¬Ø¯ ÙˆØ§Ø¯ÙŠ Ø±Ù…' },
+  { lat: 31.9515, lng: 35.9219, name: 'Al-Hussein Mosque | مسجد الحسين' },
+  { lat: 31.9609, lng: 35.8895, name: 'Abu Darwish Mosque | مسجد أبو درويش' },
+  { lat: 31.9657, lng: 35.8982, name: 'Al-Kalouti Mosque | مسجد الكالوتي' },
+  { lat: 31.95, lng: 35.8952, name: 'Al-Thaqafeh Mosque | مسجد الثقافة' },
+  { lat: 31.944, lng: 35.921, name: 'Al-Manar Mosque | مسجد المنار' },
+  { lat: 32.5568, lng: 35.8486, name: 'Irbid Grand Mosque | مسجد إربد الكبير' },
+  { lat: 29.5321, lng: 35.006, name: 'Aqaba Central Mosque | مسجد العقبة' },
+  { lat: 31.7167, lng: 35.95, name: 'Madaba Mosque | مسجد مادبا' },
+  { lat: 31.22, lng: 35.93, name: "Ma'an Mosque | مسجد معان" },
+  { lat: 31.0, lng: 35.5, name: 'Shoubak Rest Stop Mosque | مسجد استراحة الشوبك' },
+  { lat: 30.3, lng: 35.2, name: 'Wadi Rum Mosque | مسجد وادي رم' },
 ]);
 
 const MAP_PRIMARY = '#19E7BB';
@@ -274,11 +302,11 @@ const SVG = {
 };
 
 const CONTROL_PANEL_STYLE = {
-  background: 'rgba(10,22,40,0.92)',
+  background: 'color-mix(in srgb, var(--surface-strong) 94%, transparent)',
   backdropFilter: 'blur(18px) saturate(180%)',
   WebkitBackdropFilter: 'blur(18px) saturate(180%)',
-  border: '1px solid rgba(93,150,210,0.16)',
-  boxShadow: '0 16px 40px rgba(0,0,0,0.35)',
+  border: '1px solid var(--border)',
+  boxShadow: 'var(--wasel-shadow-md)',
 } as const;
 
 const CONTROL_BUTTON_BASE = {
@@ -287,7 +315,7 @@ const CONTROL_BUTTON_BASE = {
   outline: 'none',
   cursor: 'pointer',
   transition: 'all 180ms ease',
-  color: '#EFF6FF',
+  color: 'var(--text-primary)',
   background: 'transparent',
 } as const;
 
@@ -304,11 +332,11 @@ function mapTypeButtonStyle(active: boolean) {
     fontSize: '0.74rem',
     fontWeight: 800,
     letterSpacing: '0.02em',
-    color: active ? '#041018' : '#C6D4EA',
+    color: active ? 'var(--text-inverse)' : 'var(--text-secondary)',
     background: active
       ? 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 52%, #65E1FF 100%)'
-      : 'rgba(255,255,255,0.03)',
-    boxShadow: active ? '0 8px 18px rgba(25,231,187,0.22)' : 'none',
+      : 'var(--surface-muted)',
+    boxShadow: active ? 'var(--wasel-shadow-teal)' : 'none',
   } as const;
 }
 
@@ -323,10 +351,10 @@ function compactControlButtonStyle(active = false) {
     justifyContent: 'center',
     background: active
       ? 'linear-gradient(135deg, rgba(220,255,248,0.95), rgba(25,231,187,0.95), rgba(101,225,255,0.95))'
-      : 'rgba(255,255,255,0.04)',
-    border: active ? '1px solid rgba(255,255,255,0.18)' : '1px solid rgba(93,150,210,0.16)',
-    color: active ? '#041018' : '#EFF6FF',
-    boxShadow: active ? '0 10px 24px rgba(25,231,187,0.26)' : '0 10px 24px rgba(0,0,0,0.22)',
+      : 'var(--surface-muted)',
+    border: active ? '1px solid var(--border-strong)' : '1px solid var(--border)',
+    color: active ? 'var(--text-inverse)' : 'var(--text-primary)',
+    boxShadow: active ? 'var(--wasel-shadow-teal)' : 'var(--wasel-shadow-sm)',
   } as const;
 }
 
@@ -342,10 +370,10 @@ function wideControlButtonStyle(active = false) {
     gap: 8,
     background: active
       ? 'linear-gradient(135deg, rgba(220,255,248,0.95), rgba(25,231,187,0.95), rgba(101,225,255,0.95))'
-      : 'rgba(255,255,255,0.04)',
-    border: active ? '1px solid rgba(255,255,255,0.18)' : '1px solid rgba(93,150,210,0.16)',
-    color: active ? '#041018' : '#EFF6FF',
-    boxShadow: active ? '0 10px 24px rgba(25,231,187,0.26)' : '0 10px 24px rgba(0,0,0,0.22)',
+      : 'var(--surface-muted)',
+    border: active ? '1px solid var(--border-strong)' : '1px solid var(--border)',
+    color: active ? 'var(--text-inverse)' : 'var(--text-primary)',
+    boxShadow: active ? 'var(--wasel-shadow-teal)' : 'var(--wasel-shadow-sm)',
     fontSize: '0.72rem',
     fontWeight: 800,
     letterSpacing: '0.02em',
@@ -496,9 +524,11 @@ function WaselMapCompact({
   route,
   markers,
 }: Pick<WaselMapProps, 'center' | 'height' | 'className' | 'route' | 'markers'>) {
+  const { resolvedTheme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapDivRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
+  const tileLayerRef = useRef<LeafletTileLayer | null>(null);
   const LRef = useRef<LeafletModule | null>(null);
   const drawnLayersRef = useRef<LeafletLayer[]>([]);
   const roRef = useRef<ResizeObserver | null>(null);
@@ -540,6 +570,17 @@ function WaselMapCompact({
     });
   }, []);
 
+  const applyRoadmapTile = useCallback(() => {
+    if (!mapRef.current || !LRef.current) return;
+
+    const tile = getTileConfig('roadmap', resolvedTheme);
+    tileLayerRef.current?.remove();
+    tileLayerRef.current = LRef.current.tileLayer(tile.url, {
+      maxZoom: tile.maxZoom,
+      subdomains: tile.subdomains,
+    }).addTo(mapRef.current);
+  }, [resolvedTheme]);
+
   // Initialize a lightweight Leaflet map for compact previews (no OSRM, no Overpass, no controls).
   useEffect(() => {
     if (!mapDivRef.current || mapRef.current) return;
@@ -564,14 +605,11 @@ function WaselMapCompact({
         });
         mapRef.current = map;
 
-        L.tileLayer(TILES.roadmap.url, {
-          maxZoom: TILES.roadmap.maxZoom,
-          subdomains: 'abcd',
-        }).addTo(map);
+        applyRoadmapTile();
 
         L.control
           .attribution({ position: 'bottomright', prefix: false })
-          .addAttribution('Â© OpenStreetMap contributors Â© CARTO')
+          .addAttribution('© OpenStreetMap contributors © CARTO')
           .addTo(map);
 
         if (containerRef.current && !roRef.current) {
@@ -593,9 +631,14 @@ function WaselMapCompact({
       rafRef.current = null;
       mapRef.current?.remove();
       mapRef.current = null;
+      tileLayerRef.current = null;
       drawnLayersRef.current = [];
     };
-  }, [fallbackCenter, invalidate]);
+  }, [applyRoadmapTile, fallbackCenter, invalidate]);
+
+  useEffect(() => {
+    applyRoadmapTile();
+  }, [applyRoadmapTile]);
 
   // Draw route/markers whenever inputs change.
   useEffect(() => {
@@ -784,7 +827,7 @@ function WaselMapCompact({
 
         <div
           className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5 px-2 py-1 rounded-lg"
-          style={{ background: 'rgba(12,21,32,0.72)', border: '1px solid rgba(93,150,210,0.14)' }}
+          style={{ background: 'color-mix(in srgb, var(--surface-glass) 88%, transparent)', border: '1px solid var(--border)' }}
         >
           <div className="w-2.5 h-2.5 rounded-full" style={{ background: MAP_PRIMARY }} />
           <span className="text-[10px] font-bold tracking-wider" style={{ color: MAP_PRIMARY }}>
@@ -804,14 +847,14 @@ function WaselMapCompact({
         overflow: 'hidden',
         borderRadius: 16,
         height: cssHeight,
-        background: '#0c1520',
-        border: '1px solid rgba(93,150,210,0.16)',
+        background: 'var(--surface-strong)',
+        border: '1px solid var(--border)',
       }}
     >
       <div ref={mapDivRef} style={{ position: 'absolute', inset: 0 }} />
       <div
         className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5 px-2 py-1 rounded-lg"
-        style={{ background: 'rgba(12,21,32,0.72)', border: '1px solid rgba(93,150,210,0.14)' }}
+        style={{ background: 'color-mix(in srgb, var(--surface-glass) 88%, transparent)', border: '1px solid var(--border)' }}
       >
         <div className="w-2.5 h-2.5 rounded-full" style={{ background: MAP_PRIMARY }} />
         <span className="text-[10px] font-bold tracking-wider" style={{ color: MAP_PRIMARY }}>
@@ -823,6 +866,7 @@ function WaselMapCompact({
 }
 
 function WaselMapFull(props: WaselMapProps) {
+  const { resolvedTheme } = useTheme();
   const {
     center = { lat: 31.9539, lng: 35.9106 }, // Amman
     zoom = 13,
@@ -868,6 +912,17 @@ function WaselMapFull(props: WaselMapProps) {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
+
+  const applyTileLayer = useCallback((type: MapTileKind) => {
+    if (!mapRef.current || !LRef.current) return;
+
+    const tile = getTileConfig(type, resolvedTheme);
+    tileLayerRef.current?.remove();
+    tileLayerRef.current = LRef.current.tileLayer(tile.url, {
+      maxZoom: tile.maxZoom,
+      subdomains: tile.subdomains,
+    }).addTo(mapRef.current);
+  }, [resolvedTheme]);
 
   const fitCurrentView = useCallback(() => {
     if (!mapRef.current || !LRef.current) return;
@@ -939,7 +994,7 @@ function WaselMapFull(props: WaselMapProps) {
           mosquesToShow = elements.map(el => ({
             lat: el.lat,
             lng: el.lon,
-            name: el.tags?.name || el.tags?.['name:ar'] || 'Mosque | Ù…Ø³Ø¬Ø¯',
+            name: el.tags?.name || el.tags?.['name:ar'] || 'Mosque | مسجد',
           }));
         }
       }
@@ -982,7 +1037,7 @@ function WaselMapFull(props: WaselMapProps) {
               setSelectedPOI({
                 type: 'radar',
                 name: r.name,
-                info: `Speed limit: ${r.limit} km/h | Ø§Ù„Ø­Ø¯ Ø§Ù„Ù…Ø³Ù…ÙˆØ­: ${r.limit} ÙƒÙ…/Ø³`,
+                info: `Speed limit: ${r.limit} km/h | الحد المسموح: ${r.limit} كم/س`,
               }),
           );
           radarLayerRef.current.push(marker);
@@ -1182,9 +1237,9 @@ function WaselMapFull(props: WaselMapProps) {
       },
       err => {
         const msgs: Record<number, string> = {
-          1: 'Location access denied. Enable it in browser settings | ØªÙ… Ø±ÙØ¶ Ø§Ù„ÙˆØµÙˆÙ„ Ù„Ù„Ù…ÙˆÙ‚Ø¹',
-          2: 'Location unavailable | Ø§Ù„Ù…ÙˆÙ‚Ø¹ ØºÙŠØ± Ù…ØªØ§Ø­',
-          3: 'Location request timed out | Ø§Ù†ØªÙ‡Øª Ù…Ù‡Ù„Ø© Ø·Ù„Ø¨ Ø§Ù„Ù…ÙˆÙ‚Ø¹',
+          1: 'Location access denied. Enable it in browser settings | تم رفض الوصول للموقع',
+          2: 'Location unavailable | الموقع غير متاح',
+          3: 'Location request timed out | انتهت مهلة طلب الموقع',
         };
         setLocationError(repairLikelyMojibake(msgs[err.code] ?? 'Location error'));
         setIsTracking(false);
@@ -1228,16 +1283,12 @@ function WaselMapFull(props: WaselMapProps) {
         // Force Leaflet to measure container dimensions before adding any layers
         map.invalidateSize();
 
-        // Dark tile layer (CartoDB)
-        tileLayerRef.current = L.tileLayer(TILES.roadmap.url, {
-          maxZoom: TILES.roadmap.maxZoom,
-          subdomains: 'abcd',
-        }).addTo(map);
+        applyTileLayer('roadmap');
 
         // Attribution (small, bottom-right)
         L.control
           .attribution({ position: 'bottomright', prefix: false })
-          .addAttribution('Â© OpenStreetMap contributors Â© CARTO')
+          .addAttribution('© OpenStreetMap contributors © CARTO')
           .addTo(map);
 
         // Reload mosques when map moves significantly
@@ -1287,6 +1338,7 @@ function WaselMapFull(props: WaselMapProps) {
       initDone.current = false;
     };
   }, [
+    applyTileLayer,
     autoTrack,
     center.lat,
     center.lng,
@@ -1305,15 +1357,13 @@ function WaselMapFull(props: WaselMapProps) {
 
   /* â”€â”€ Map type switcher â”€â”€ */
   const changeMapType = useCallback((t: 'roadmap' | 'satellite' | 'terrain') => {
-    if (!mapRef.current || !LRef.current) return;
-    const L = LRef.current;
     setMapType(t);
-    tileLayerRef.current?.remove();
-    tileLayerRef.current = L.tileLayer(TILES[t].url, {
-      maxZoom: TILES[t].maxZoom,
-      subdomains: t === 'roadmap' ? 'abcd' : 'abc',
-    }).addTo(mapRef.current);
-  }, []);
+    applyTileLayer(t);
+  }, [applyTileLayer]);
+
+  useEffect(() => {
+    applyTileLayer(mapType);
+  }, [applyTileLayer, mapType]);
 
   /* â”€â”€ Layer toggles â”€â”€ */
   const toggleMosques = useCallback(() => {
@@ -1379,7 +1429,7 @@ function WaselMapFull(props: WaselMapProps) {
         overflow: 'hidden',
         borderRadius: 16,
         height: isFullscreen ? '100dvh' : cssHeight,
-        background: '#0c1520',
+        background: 'var(--surface-strong)',
       }}
     >
       {/* â”€â”€ Leaflet map container â”€â”€ */}
@@ -1395,7 +1445,7 @@ function WaselMapFull(props: WaselMapProps) {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-5"
-            style={{ background: '#0c1520' }}
+            style={{ background: 'var(--surface-strong)' }}
           >
             <div className="relative w-20 h-20">
               <svg
@@ -1403,7 +1453,7 @@ function WaselMapFull(props: WaselMapProps) {
                 className="w-full h-full animate-spin"
                 style={{ animationDuration: '2s' }}
               >
-                <circle cx="40" cy="40" r="34" fill="none" stroke="#1e2f4a" strokeWidth="6" />
+                <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border)" strokeWidth="6" />
                 <circle
                   cx="40"
                   cy="40"
@@ -1420,9 +1470,9 @@ function WaselMapFull(props: WaselMapProps) {
               </div>
             </div>
             <div className="text-center">
-              <p className="text-white font-semibold text-base">Loading Map</p>
-              <p className="text-[#8590a2] text-sm mt-1">
-                {repairLikelyMojibake('Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø©...')}
+              <p className="font-semibold text-base" style={{ color: 'var(--text-primary)' }}>Loading Map</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+                {repairLikelyMojibake('جاري تحميل الخريطة...')}
               </p>
             </div>
           </motion.div>
@@ -1433,7 +1483,7 @@ function WaselMapFull(props: WaselMapProps) {
       {loadError && (
         <div
           className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 p-6"
-          style={{ background: '#0c1520' }}
+          style={{ background: 'var(--surface-strong)' }}
         >
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center"
@@ -1442,8 +1492,8 @@ function WaselMapFull(props: WaselMapProps) {
             <AlertTriangle className="w-8 h-8 text-red-400" />
           </div>
           <div className="text-center">
-            <p className="text-white font-semibold">Map failed to load</p>
-            <p className="text-slate-400 text-sm mt-1">{loadError}</p>
+            <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>Map failed to load</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{loadError}</p>
           </div>
         </div>
       )}
@@ -1478,7 +1528,7 @@ function WaselMapFull(props: WaselMapProps) {
               <button onClick={zoomIn} style={compactControlButtonStyle()}>
                 <ZoomIn className="w-4 h-4" />
               </button>
-              <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
+              <div style={{ height: 1, background: 'var(--border)' }} />
               <button onClick={zoomOut} style={compactControlButtonStyle()}>
                 <ZoomOut className="w-4 h-4" />
               </button>
@@ -1508,7 +1558,7 @@ function WaselMapFull(props: WaselMapProps) {
                 style={{
                   background: 'var(--wasel-glass-xl)',
                   backdropFilter: 'blur(12px)',
-                  borderColor: 'rgba(93,150,210,0.32)',
+                  borderColor: 'var(--border-strong)',
                 }}
               >
                 <div className="px-4 py-3 space-y-1.5">
@@ -1527,18 +1577,18 @@ function WaselMapFull(props: WaselMapProps) {
                   </div>
                   {liveLocation.speed !== null && liveLocation.speed !== undefined && (
                     <div className="flex items-end gap-1">
-                      <span className="text-3xl font-black text-white leading-none">
+                      <span className="text-3xl font-black leading-none" style={{ color: 'var(--text-primary)' }}>
                         {Math.round((liveLocation.speed ?? 0) * 3.6)}
                       </span>
-                      <span className="text-[#8590a2] text-xs mb-0.5">km/h</span>
+                      <span className="text-xs mb-0.5" style={{ color: 'var(--text-secondary)' }}>km/h</span>
                     </div>
                   )}
                   {liveLocation.accuracy !== null && liveLocation.accuracy !== undefined && (
-                    <p className="text-[#5a6475] text-xs">
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                       ±{Math.round(liveLocation.accuracy)}m accuracy
                     </p>
                   )}
-                  <p className="text-[#5a6475] text-xs font-mono">
+                  <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
                     {liveLocation.lat.toFixed(5)}, {liveLocation.lng.toFixed(5)}
                   </p>
                 </div>
@@ -1557,11 +1607,11 @@ function WaselMapFull(props: WaselMapProps) {
                 style={{
                   background: 'var(--wasel-glass-xl)',
                   backdropFilter: 'blur(16px)',
-                  borderColor: 'rgba(93,150,210,0.3)',
+                  borderColor: 'var(--border)',
                 }}
               >
                 <div className="flex items-start gap-3 p-4">
-                  <div className="mt-0.5 shrink-0 rounded-xl border border-white/10 bg-white/5 p-2 text-slate-100">
+                  <div className="mt-0.5 shrink-0 rounded-xl p-2" style={{ border: '1px solid var(--border)', background: 'var(--surface-muted)', color: 'var(--text-primary)' }}>
                     {selectedPOI.type === 'mosque' ? (
                       <MapPin className="h-5 w-5" />
                     ) : selectedPOI.type === 'radar' ? (
@@ -1571,11 +1621,11 @@ function WaselMapFull(props: WaselMapProps) {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-semibold leading-tight">
+                    <p className="text-sm font-semibold leading-tight" style={{ color: 'var(--text-primary)' }}>
                       {repairLikelyMojibake(selectedPOI.name)}
                     </p>
                     {selectedPOI.vicinity && (
-                      <p className="text-[#8590a2] text-xs mt-0.5 truncate">
+                      <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>
                         {repairLikelyMojibake(selectedPOI.vicinity)}
                       </p>
                     )}
@@ -1635,7 +1685,7 @@ function WaselMapFull(props: WaselMapProps) {
                   <MapPin className="w-3.5 h-3.5" />
                   <span>Mosques</span>
                 </button>
-                <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.08)' }} />
+                <div style={{ width: 1, height: 24, background: 'var(--border)' }} />
                 <button
                   onClick={toggleRadars}
                   style={wideControlButtonStyle(radarsOn)}
@@ -1673,10 +1723,10 @@ function WaselMapFull(props: WaselMapProps) {
                       gap: 10,
                       fontSize: '0.86rem',
                       fontWeight: 800,
-                      color: '#041018',
+                      color: 'var(--text-inverse)',
                       background: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 52%, #65E1FF 100%)',
-                      border: '1px solid rgba(255,255,255,0.18)',
-                      boxShadow: '0 10px 28px rgba(25,231,187,0.28)',
+                      border: '1px solid var(--border-strong)',
+                      boxShadow: 'var(--wasel-shadow-teal)',
                     }
                   : {
                       ...CONTROL_BUTTON_BASE,
@@ -1688,10 +1738,10 @@ function WaselMapFull(props: WaselMapProps) {
                       gap: 10,
                       fontSize: '0.86rem',
                       fontWeight: 800,
-                      color: '#EFF6FF',
-                      background: 'rgba(10,22,40,0.92)',
-                      border: '1px solid rgba(93,150,210,0.18)',
-                      boxShadow: '0 10px 28px rgba(0,0,0,0.22)',
+                      color: 'var(--text-primary)',
+                      background: 'color-mix(in srgb, var(--surface-strong) 94%, transparent)',
+                      border: '1px solid var(--border)',
+                      boxShadow: 'var(--wasel-shadow-sm)',
                     }
               }
             >
@@ -1713,7 +1763,7 @@ function WaselMapFull(props: WaselMapProps) {
           {/* â”€â”€ Wasel watermark â”€â”€ */}
           <div
             className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2 py-1 rounded-lg"
-            style={{ background: 'rgba(12,21,32,0.7)' }}
+            style={{ background: 'color-mix(in srgb, var(--surface-glass) 88%, transparent)', border: '1px solid var(--border)' }}
           >
             <div className="w-3 h-3 rounded-full" style={{ background: MAP_PRIMARY }} />
             <span className="text-[10px] font-bold tracking-wider" style={{ color: MAP_PRIMARY }}>

@@ -24,7 +24,7 @@ export function OfferRideIncomingRequests({
         marginBottom: 18,
       }}
     >
-      <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
+      <div style={{ color: DS.text, fontWeight: 800, marginBottom: 12 }}>
         Incoming booking requests
       </div>
       <div style={{ display: 'grid', gap: 10 }}>
@@ -48,7 +48,7 @@ export function OfferRideIncomingRequests({
               }}
             >
               <div>
-                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>
+                <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.84rem' }}>
                   {request.from} to {request.to}
                 </div>
                 <div style={{ color: DS.sub, fontSize: '0.74rem', marginTop: 4 }}>
@@ -97,7 +97,7 @@ export function OfferRideIncomingRequests({
                     borderRadius: '99px',
                     border: 'none',
                     background: DS.gradG,
-                    color: '#fff',
+                    color: DS.text,
                     fontWeight: 700,
                     cursor: 'pointer',
                   }}

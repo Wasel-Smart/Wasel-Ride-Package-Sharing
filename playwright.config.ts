@@ -18,14 +18,16 @@ const devServerCommand =
     ? `cmd /c "set VITE_APP_ENV=test&& set VITE_ENABLE_DEMO_DATA=false&& set VITE_ENABLE_SYNTHETIC_TRIPS=false&& set VITE_ALLOW_DIRECT_SUPABASE_FALLBACK=false&& set VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK=false&& set VITE_ENABLE_PERSISTED_TEST_AUTH=true&& npm run dev -- --host 127.0.0.1 --port 4173"`
     : `${webServerEnvArgs} npm run dev -- --host 127.0.0.1 --port 4173`;
 
+const isCI = Boolean(process.env['CI']);
+
 export default defineConfig({
   testDir: './tests/e2e',
   testMatch: ['**/*.spec.ts'],
   timeout: 60_000,
   expect: { timeout: 12_000 },
   fullyParallel: true,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : undefined,
+  retries: isCI ? 2 : 0,
+  workers: isCI ? 2 : 1,
   reporter: [
     ['list'],
     ['html', { open: 'never', outputFolder: 'playwright-report' }],

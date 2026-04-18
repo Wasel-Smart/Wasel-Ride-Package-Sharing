@@ -23,17 +23,21 @@ export const CSP_DIRECTIVES = {
   'script-src': [
     "'self'",
     // unsafe-inline/eval only in dev — never in production
-    ...(IS_DEV ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
+    ...(IS_DEV ? ["'unsafe-inline'", "'unsafe-eval'"] : ["'strict-dynamic'"]),
     'https://js.stripe.com',
     'https://maps.googleapis.com',
     'https://maps.gstatic.com',
     'https://va.vercel-scripts.com',
+    // Add nonce support for production
+    ...(IS_DEV ? [] : ["'nonce-wasel-script'"]),
   ],
   'style-src': [
     "'self'",
     // unsafe-inline required for CSS-in-JS (Tailwind v4 + inline styles)
     "'unsafe-inline'",
     'https://fonts.googleapis.com',
+    // Add nonce support for production styles
+    ...(IS_DEV ? [] : ["'nonce-wasel-style'"]),
   ],
   'img-src': [
     "'self'",
@@ -73,6 +77,9 @@ export const CSP_DIRECTIVES = {
   'form-action': ["'self'"],
   'frame-ancestors': ["'none'"],
   'upgrade-insecure-requests': [],
+  // Enhanced security directives
+  'require-trusted-types-for': ["'script'"],
+  'trusted-types': ['default', 'wasel-policy'],
 };
 
 export function getCSPHeader(): string {

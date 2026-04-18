@@ -1,802 +1,440 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation } from 'react-router';
-import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { useLocalAuth } from '../../contexts/LocalAuth';
-import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { useCallback, useEffect, useMemo } from 'react';
+import { ShieldCheck, TimerReset, Zap } from 'lucide-react';
+import { Protected } from '../../pages/waselServiceShared';
+import { parseFindRideParams } from '../../pages/waselCorePageHelpers';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
-import { getCorridorMovementQuote, useCorridorTruth } from '../../services/corridorTruth';
-import { createDemandAlert, getDemandStats, hydrateDemandAlerts } from '../../services/demandCapture';
+import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { useLocalAuth } from '../../contexts/LocalAuth';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { trackGrowthEvent } from '../../services/growthEngine';
-import { getConnectedRides } from '../../services/journeyLogistics';
-import { recordMovementActivity } from '../../services/movementMembership';
-import {
-  createReminderFromSuggestion,
-  formatRouteReminderSchedule,
-  getRecurringRouteSuggestions,
-  getRouteReminders,
-  hydrateRouteReminders,
-  syncRouteReminders,
-} from '../../services/movementRetention';
-import { notificationsAPI } from '../../services/notifications.js';
-import {
-  createRideBooking,
-  getRideBookings,
-  hydrateRideBookings,
-  isRideBookingConfirmed,
-  isRideBookingPending,
-  RIDE_BOOKINGS_CHANGED_EVENT,
-  type RideBookingRecord,
-} from '../../services/rideLifecycle';
-import { getWaselCategoryPosition } from '../../config/wasel-movement-network';
-import {
-  ALL_RIDES,
-  buildRideFromPostedRide,
-  CITIES,
-  RIDE_BOOKINGS_KEY,
-  RIDE_SEARCHES_KEY,
-  type Ride,
-} from '../../pages/waselCoreRideData';
-import {
-  createFindRideCopy,
-  parseFindRideParams,
-} from '../../pages/waselCorePageHelpers';
-import { readStoredStringList, writeStoredStringList } from '../../pages/waselCoreStorage';
-import {
-  ClarityBand,
-  CoreExperienceBanner,
-  DS,
-  PageShell,
-  Protected,
-  r,
-  resolveCityCoord,
-  SectionHead,
-} from '../../pages/waselServiceShared';
-import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
-import { FindRidePackagePanel } from './components/FindRidePackagePanel';
-import { FindRideRideTab } from './components/FindRideRideTab';
-import { FindRideTripDetailModal } from './components/FindRideTripDetailModal';
-import { getFindRideStaticCopy } from './findRideContent';
-import {
-  routeEndpointsAreDistinct,
-  routeMatchesLocationPair,
-  routeTouchesLocation,
-} from '../../utils/jordanLocations';
+import { LandingPageFrame } from '../home/landing/LandingPageFrame';
+import { landingPanel } from '../home/landing/landingTypes';
+import { LANDING_FONT } from '../home/landingConstants';
+import { LandingServiceHero } from '../home/landing/LandingServiceHero';
+import { RideResults, type RideResultsCopy } from '../../components/rides/RideResults';
+import { RideSearchForm, type RideSearchFormCopy } from '../../components/rides/RideSearchForm';
+import { useRideSearch } from '../../modules/rides/ride.hooks';
+import type { RideResult } from '../../modules/rides/ride.types';
+import { useLocation } from 'react-router';
 
-type RideBookingStateSets = {
-  confirmedRideIds: Set<string>;
-  pendingRideIds: Set<string>;
-};
+function buildRidePageCopy(language: 'en' | 'ar') {
+  if (language === 'ar') {
+    const searchForm: RideSearchFormCopy = {
+      badge: 'مطابقة الرحلات',
+      title: 'اعثر على رحلتك فوراً',
+      description: 'بحث سريع وواضح مع سائقين موثوقين ومطابقة تبدأ مباشرة بعد إرسال الطلب.',
+      searchModeLabel: 'وضع البحث',
+      modeNowLabel: 'الآن',
+      modeScheduleLabel: 'جدولة',
+      fromLabel: 'من',
+      fromPlaceholder: 'نقطة الانطلاق',
+      fromHelperText: 'استخدم موقعك الحالي أو اختر نقطة انطلاق رئيسية.',
+      autoDetectLabel: 'استخدم موقعي',
+      toLabel: 'إلى',
+      toPlaceholder: 'الوجهة',
+      toHelperText: 'الاقتراحات تركز على المسارات المباشرة داخل الأردن.',
+      rideTypeLabel: 'نوع الرحلة',
+      rideTypeOptions: [
+        { value: 'any', label: 'أي رحلة' },
+        { value: 'economy', label: 'اقتصادية' },
+        { value: 'comfort', label: 'مريحة' },
+        { value: 'family', label: 'عائلية' },
+      ],
+      departureLabel: 'موعد الانطلاق',
+      searchButton: 'ابحث عن رحلة',
+      searchingButton: 'جارٍ البحث...',
+    };
 
-function buildRideBookingStateSets(
-  bookings: RideBookingRecord[],
-  legacyConfirmedIds: Iterable<string> = [],
-): RideBookingStateSets {
-  const confirmedRideIds = new Set(legacyConfirmedIds);
-  const pendingRideIds = new Set<string>();
+    const results: RideResultsCopy = {
+      idleTitle: 'ابدأ بالمسار المناسب',
+      idleDescription: 'اختر نقطة الانطلاق والوجهة لرؤية أفضل الرحلات المتاحة فوراً.',
+      emptyTitle: 'لا توجد رحلات مباشرة الآن',
+      emptyDescription: 'جرّب توسيع نوع الرحلة أو التبديل إلى الجدولة أو تعديل المسار.',
+      sectionTitle: 'أفضل الرحلات المتاحة',
+      sectionDescription: 'مرتبة حسب الثقة والسرعة وتوفر المقاعد ودقة المسار.',
+      countSuffix: 'رحلة',
+      loadMoreLabel: 'اعرض المزيد',
+      card: {
+        recommendedLabel: 'موصى بها',
+        confirmedLabel: 'تم تأكيد السائق',
+        matchingLabel: 'جارٍ العثور على سائق',
+        priceEstimateLabel: 'تقدير بالدينار',
+        requestButton: 'اطلب الرحلة',
+        requestingButton: 'جارٍ الإرسال...',
+        defaultReason: 'مطابقة موثوقة مع وضوح كامل في السعر والمسار.',
+        etaLabel: 'الوقت',
+        vehicleLabel: 'المركبة',
+        ratingLabel: 'التقييم',
+        seatsLabel: 'المقاعد',
+        seatsOpenSuffix: 'متاح',
+      },
+    };
 
-  for (const booking of bookings) {
-    if (!booking.rideId) {
-      continue;
-    }
-
-    if (isRideBookingConfirmed(booking)) {
-      confirmedRideIds.add(booking.rideId);
-      pendingRideIds.delete(booking.rideId);
-      continue;
-    }
-
-    if (isRideBookingPending(booking) && !confirmedRideIds.has(booking.rideId)) {
-      pendingRideIds.add(booking.rideId);
-    }
+    return {
+      hero: {
+        eyebrow: 'نقطة الدخول الأساسية للتنقل',
+        title: 'اعثر على رحلتك فوراً',
+        description: 'تجربة نقل سريعة وموثوقة داخل Wasel تجمع الوضوح والثقة والاستجابة الفورية.',
+        highlights: [
+          {
+            title: 'بحث فوري',
+            detail: 'اقتراحات سريعة وترتيب ذكي للمسارات في أقل من 300 مللي ثانية.',
+          },
+          {
+            title: 'مخزون موثوق',
+            detail: 'تقييمات السائقين والتحقق والأسعار الواضحة في كل بطاقة.',
+          },
+          {
+            title: 'مطابقة السائق',
+            detail: 'يبدأ طابور المطابقة فور إرسال الطلب.',
+          },
+        ],
+        stats: [
+          { label: 'متوسط بدء المطابقة', value: '< 3 دقائق' },
+          { label: 'وضوح السائقين', value: '100%' },
+          { label: 'حالة الطابور', value: 'نشط' },
+        ],
+        ctaLabel: 'افتح تدفق طلب الرحلة',
+      },
+      searchForm,
+      results,
+      messages: {
+        validation: {
+          from: 'اختر نقطة الانطلاق.',
+          to: 'اختر الوجهة.',
+          distinctRoute: 'يجب أن تكون نقطة الانطلاق والوجهة مختلفتين.',
+          date: 'اختر تاريخ الرحلة المجدولة.',
+        },
+        suggestions: {
+          liveCorridor: (count: number) =>
+            `${count} ${count === 1 ? 'رحلة مباشرة' : 'رحلات مباشرة'} على هذا المسار`,
+          recentSearch: 'اختصار من بحثك الأخير',
+          cityPickup: 'نقطة انطلاق داخل المدينة',
+          regionalCorridor: 'مسار إقليمي',
+        },
+        searchError: 'تعذر البحث عن الرحلات الآن.',
+        requestError: 'تعذر إرسال طلب الرحلة الآن.',
+        requestSuccess: 'تم إرسال طلب الرحلة وبدأت مطابقة السائق.',
+        requestPendingSync: 'تم حفظ الطلب وسيتم مزامنة الحالة المباشرة حال توفرها.',
+      },
+    };
   }
 
+  const searchForm: RideSearchFormCopy = {
+    badge: 'Ride match',
+    title: 'Find Your Ride Instantly',
+    description:
+      'Fast pickup discovery, trusted drivers, and driver matching queued the moment you request a seat.',
+    searchModeLabel: 'Search mode',
+    modeNowLabel: 'Now',
+    modeScheduleLabel: 'Schedule',
+    fromLabel: 'From',
+    fromPlaceholder: 'Pickup point',
+    fromHelperText: 'Auto-detect or choose a major pickup point.',
+    autoDetectLabel: 'Use my location',
+    toLabel: 'To',
+    toPlaceholder: 'Destination',
+    toHelperText: 'Suggestions stay focused on direct Jordan corridors.',
+    rideTypeLabel: 'Ride type',
+    rideTypeOptions: [
+      { value: 'any', label: 'Any ride' },
+      { value: 'economy', label: 'Economy' },
+      { value: 'comfort', label: 'Comfort' },
+      { value: 'family', label: 'Family' },
+    ],
+    departureLabel: 'Departure',
+    searchButton: 'Search rides',
+    searchingButton: 'Searching...',
+  };
+
+  const results: RideResultsCopy = {
+    idleTitle: 'Search a corridor to unlock live ride matches',
+    idleDescription:
+      'Start with pickup and destination to surface the fastest, clearest ride options.',
+    emptyTitle: 'No direct rides yet',
+    emptyDescription:
+      'Try widening the ride type, switching to scheduled time, or adjusting the corridor.',
+    sectionTitle: 'Premium ride matches',
+    sectionDescription: 'Ranked for trust, speed, seat availability, and corridor fit.',
+    countSuffix: 'rides found',
+    loadMoreLabel: 'Load more rides',
+    card: {
+      recommendedLabel: 'Recommended',
+      confirmedLabel: 'Driver confirmed',
+      matchingLabel: 'Matching driver',
+      priceEstimateLabel: 'JOD estimate',
+      requestButton: 'Request ride',
+      requestingButton: 'Sending...',
+      defaultReason: 'Reliable corridor match with live fare visibility.',
+      etaLabel: 'ETA',
+      vehicleLabel: 'Vehicle',
+      ratingLabel: 'Rating',
+      seatsLabel: 'Seats',
+      seatsOpenSuffix: 'open',
+    },
+  };
+
   return {
-    confirmedRideIds,
-    pendingRideIds,
+    hero: {
+      eyebrow: 'Core mobility entry point',
+      title: 'Find Your Ride Instantly',
+      description:
+        'Premium ride search for Wasel: faster than route browsing, clearer than listing feeds, and trusted the second you land.',
+      highlights: [
+        {
+          title: 'Instant search',
+          detail: 'Debounced suggestions and corridor ranking in under 300ms.',
+        },
+        {
+          title: 'Trusted inventory',
+          detail: 'Driver verification, ratings, and clear fare signals on every card.',
+        },
+        {
+          title: 'Driver matching',
+          detail: 'Queue-backed matching starts as soon as a request is submitted.',
+        },
+      ],
+      stats: [
+        { label: 'Median pickup match', value: '< 3 min' },
+        { label: 'Trusted driver visibility', value: '100%' },
+        { label: 'Queue-backed requests', value: 'Active' },
+      ],
+      ctaLabel: 'Open ride request flow',
+    },
+    searchForm,
+    results,
+    messages: {
+      validation: {
+        from: 'Choose a pickup location.',
+        to: 'Choose a destination.',
+        distinctRoute: 'Pickup and destination must be different.',
+        date: 'Choose a scheduled date.',
+      },
+      suggestions: {
+        liveCorridor: (count: number) =>
+          `${count} live ride${count === 1 ? '' : 's'} on this corridor`,
+        recentSearch: 'Recent search shortcut',
+        cityPickup: 'City pickup point',
+        regionalCorridor: 'Regional corridor',
+      },
+      searchError: 'Unable to search rides right now.',
+      requestError: 'Unable to send the ride request right now.',
+      requestSuccess: 'Ride request sent. Driver matching is running now.',
+      requestPendingSync: 'Ride request saved. Live status will sync as soon as it is available.',
+    },
   };
 }
 
 export function FindRidePage() {
-  const nav = useIframeSafeNavigate();
   const location = useLocation();
-  const { user } = useLocalAuth();
+  const initialParams = useMemo(() => parseFindRideParams(location.search), [location.search]);
+  const navigate = useIframeSafeNavigate();
   const { language } = useLanguage();
-  const ar = language === 'ar';
+  const { user } = useLocalAuth();
+  const { notifyTripConfirmed, permission, requestPermission } = usePushNotifications();
+  const copy = useMemo(() => buildRidePageCopy(language === 'ar' ? 'ar' : 'en'), [language]);
   const {
-    notifyBookingRequested,
-    notifyTripConfirmed,
-    requestPermission,
-    permission,
-  } = usePushNotifications();
-  const { initialFrom, initialTo, initialDate, initialSearched } = parseFindRideParams(location.search);
-  const t = createFindRideCopy(ar);
-  const copy = getFindRideStaticCopy(ar);
-
-  const [tab, setTab] = useState<'ride' | 'package'>('ride');
-  const [from, setFrom] = useState(initialFrom);
-  const [to, setTo] = useState(initialTo);
-  const [date, setDate] = useState(initialDate);
-  const [searched, setSearched] = useState(initialSearched);
-  const [loading, setLoading] = useState(false);
-  const [sort, setSort] = useState<'price' | 'time' | 'rating'>('rating');
-  const [selected, setSelected] = useState<Ride | null>(null);
-  const [rideBookingState, setRideBookingState] = useState<RideBookingStateSets>(() =>
-    buildRideBookingStateSets(getRideBookings(), readStoredStringList(RIDE_BOOKINGS_KEY)),
-  );
-  const [recentSearches, setRecentSearches] = useState<string[]>(() => readStoredStringList(RIDE_SEARCHES_KEY));
-  const [searchError, setSearchError] = useState<string | null>(null);
-  const [bookingMessage, setBookingMessage] = useState<string | null>(null);
-  const [waitlistMessage, setWaitlistMessage] = useState<string | null>(null);
-  const [retentionMessage, setRetentionMessage] = useState<string | null>(null);
-  const [savedReminders, setSavedReminders] = useState(() => getRouteReminders());
-  const [pkg, setPkg] = useState({ from: 'Amman', to: 'Aqaba', weight: '<1 kg', note: '', sent: false });
-  const searchTimerRef = useRef<number | null>(null);
-  const previousRideBookingStateRef = useRef<RideBookingStateSets>(rideBookingState);
-  const rideBookingHydrationReadyRef = useRef(false);
-
-  const readCurrentRideBookingState = useCallback(
-    () => buildRideBookingStateSets(getRideBookings(), readStoredStringList(RIDE_BOOKINGS_KEY)),
-    [],
-  );
-  const syncRideBookingStateFromStorage = useCallback(() => {
-    const nextState = readCurrentRideBookingState();
-    setRideBookingState(nextState);
-    return nextState;
-  }, [readCurrentRideBookingState]);
-
-  const category = useMemo(() => getWaselCategoryPosition(), []);
-  const corridorTruth = useCorridorTruth({ from, to, featuredLimit: 4 });
-  const { allSignals, corridorPlan, featuredSignals, membership, selectedPriceQuote, selectedSignal } = corridorTruth;
-  const recurringSuggestions = useMemo(
-    () => getRecurringRouteSuggestions(3),
-    [],
-  );
-  const signalLookup = useMemo(() => {
-    const lookup = new Map<string, (typeof allSignals)[number]>();
-    for (const signal of allSignals) {
-      lookup.set(`${signal.from}::${signal.to}`, signal);
-      lookup.set(`${signal.to}::${signal.from}`, signal);
-    }
-    return lookup;
-  }, [allSignals]);
-  const demandStats = getDemandStats();
-
-  const searchFromCoord = resolveCityCoord(from);
-  const searchToCoord = resolveCityCoord(to);
-  const connectedRides = useMemo(
-    () => getConnectedRides().map(buildRideFromPostedRide),
-    [],
-  );
-  const allAvailableRides = useMemo(
-    () => [...connectedRides, ...ALL_RIDES],
-    [connectedRides],
-  );
-  const corridorRides = useMemo(
-    () => allAvailableRides.filter((ride) => routeMatchesLocationPair(ride.from, ride.to, from, to, { allowReverse: false })),
-    [allAvailableRides, from, to],
-  );
-  const nearbyCorridors = useMemo(
-    () =>
-      allAvailableRides
-        .filter(
-          (ride) =>
-            ride.id &&
-            !routeMatchesLocationPair(ride.from, ride.to, from, to, { allowReverse: false }) &&
-            (routeTouchesLocation(ride.from, ride.to, from) || routeTouchesLocation(ride.from, ride.to, to)),
-        )
-        .slice(0, 3),
-    [allAvailableRides, from, to],
-  );
-
-  const results: Ride[] = useMemo(
-    () =>
-      searched
-        ? allAvailableRides
-            .filter(
-              (ride) =>
-                (!from || routeMatchesLocationPair(ride.from, ride.to, from, ride.to, { allowReverse: false })) &&
-                (!to || routeMatchesLocationPair(ride.from, ride.to, ride.from, to, { allowReverse: false })) &&
-                (!date || ride.date === date),
-            )
-            .sort((left, right) =>
-              sort === 'price'
-                ? left.pricePerSeat - right.pricePerSeat
-                : sort === 'time'
-                  ? left.time.localeCompare(right.time)
-                  : right.driver.rating - left.driver.rating,
-            )
-        : allAvailableRides.slice(0, 4),
-    [allAvailableRides, date, from, searched, sort, to],
-  );
-
-  const routeReadinessLabel = corridorRides.length >= 2 ? t.instantMatch : corridorRides.length === 1 ? t.bookingReady : t.searchHelp;
-  const bookedRides = useMemo(
-    () => allAvailableRides.filter((ride) => rideBookingState.confirmedRideIds.has(ride.id)).slice(0, 3),
-    [allAvailableRides, rideBookingState],
-  );
-  const hasSelectedPriceQuote = typeof selectedPriceQuote?.finalPriceJod === 'number';
-  const savedReminderIds = useMemo(
-    () => new Set(savedReminders.map((reminder) => reminder.corridorId)),
-    [savedReminders],
-  );
-  const bookedRideSummaries = useMemo(
-    () => bookedRides.map((ride) => `${ride.from} to ${ride.to} | ${ride.time} | ${ride.driver.name}`),
-    [bookedRides],
-  );
-
-  const resolveSignalForRoute = useCallback(
-    (routeFrom: string, routeTo: string) =>
-      signalLookup.get(`${routeFrom}::${routeTo}`) ??
-      getCorridorMovementQuote({ from: routeFrom, to: routeTo, basePriceJod: 0, membership }).signal,
-    [membership, signalLookup],
-  );
-  const nearbyCorridorCards = useMemo(
-    () => nearbyCorridors.map((ride) => {
-      const routeQuote = getCorridorMovementQuote({
-        from: ride.from,
-        to: ride.to,
-        basePriceJod: ride.pricePerSeat,
-        membership,
-        signal: resolveSignalForRoute(ride.from, ride.to),
-      });
-      const priceLabel = ride.seatsAvailable > 0
-        ? `${routeQuote.priceQuote.finalPriceJod} JOD`
-        : 'Sold out';
-      return { ride, priceLabel };
-    }),
-    [membership, nearbyCorridors, resolveSignalForRoute],
-  );
+    state,
+    visibleResults,
+    hasMoreResults,
+    minDate,
+    setFromQuery,
+    setToQuery,
+    setFrom,
+    setTo,
+    setDate,
+    setMode,
+    setRideType,
+    loadMoreResults,
+    autoDetectOrigin,
+    submitSearch,
+    requestRide,
+    clearFeedback,
+  } = useRideSearch({
+    from: initialParams.initialFrom,
+    to: initialParams.initialTo,
+    date: initialParams.initialDate,
+    mode: initialParams.initialDate ? 'schedule' : 'now',
+    searched: initialParams.initialSearched,
+    passengerId: user?.id,
+    messages: copy.messages,
+  });
 
   useEffect(() => {
-    let cancelled = false;
-    const initialState = syncRideBookingStateFromStorage();
-    previousRideBookingStateRef.current = initialState;
-    rideBookingHydrationReadyRef.current = !user?.id;
+    if (!state.successMessage || !state.activeRequest) return;
 
-    if (!user?.id) {
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    void hydrateDemandAlerts(user.id);
-    void hydrateRideBookings(user.id, getConnectedRides())
-      .then(() => {
-        if (cancelled) {
-          return;
-        }
-
-        const nextState = syncRideBookingStateFromStorage();
-        previousRideBookingStateRef.current = nextState;
-        rideBookingHydrationReadyRef.current = true;
-      })
-      .catch(() => {
-        if (cancelled) {
-          return;
-        }
-
-        const nextState = readCurrentRideBookingState();
-        setRideBookingState(nextState);
-        previousRideBookingStateRef.current = nextState;
-        rideBookingHydrationReadyRef.current = true;
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [readCurrentRideBookingState, syncRideBookingStateFromStorage, user?.id]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const handleRideBookingsChanged = () => {
-      syncRideBookingStateFromStorage();
-    };
-
-    window.addEventListener(RIDE_BOOKINGS_CHANGED_EVENT, handleRideBookingsChanged);
-    return () => {
-      window.removeEventListener(RIDE_BOOKINGS_CHANGED_EVENT, handleRideBookingsChanged);
-    };
-  }, [syncRideBookingStateFromStorage]);
-
-  useEffect(() => {
-    setSavedReminders(getRouteReminders());
-  }, [selectedSignal?.freshestSignalAt]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    void hydrateRouteReminders(user.id).then((reminders) => {
-      setSavedReminders(reminders);
-    });
-  }, [selectedSignal?.freshestSignalAt, user?.id]);
-
-  useEffect(() => {
-    void syncRouteReminders(user ?? undefined).then((delivered) => {
-      if (delivered.length > 0) {
-        setSavedReminders(getRouteReminders());
-      }
-    });
-  }, [selectedSignal?.freshestSignalAt, user]);
-
-  useEffect(() => {
-    writeStoredStringList(RIDE_BOOKINGS_KEY, Array.from(rideBookingState.confirmedRideIds));
-  }, [rideBookingState.confirmedRideIds]);
-
-  useEffect(() => {
-    writeStoredStringList(RIDE_SEARCHES_KEY, recentSearches);
-  }, [recentSearches]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const fromParam = params.get('from');
-    const toParam = params.get('to');
-    const nextFrom = fromParam && CITIES.includes(fromParam) ? fromParam : 'Amman';
-    const nextTo = toParam && CITIES.includes(toParam) ? toParam : 'Aqaba';
-    const nextDate = params.get('date') ?? '';
-    const nextSearched = params.get('search') === '1';
-    setFrom(nextFrom);
-    setTo(nextTo);
-    setDate(nextDate);
-    setSearched(nextSearched);
-  }, [location.search]);
-
-  useEffect(() => () => {
-    if (searchTimerRef.current !== null) {
-      window.clearTimeout(searchTimerRef.current);
-    }
-  }, []);
-
-  useEffect(() => {
-    const previousState = previousRideBookingStateRef.current;
-    const newlyConfirmedRideIds = Array.from(rideBookingState.confirmedRideIds).filter(
-      (rideId) =>
-        !previousState.confirmedRideIds.has(rideId)
-        && previousState.pendingRideIds.has(rideId),
+    void notifyTripConfirmed(
+      state.activeRequest.driverName,
+      `${state.activeRequest.from} to ${state.activeRequest.to}`,
     );
-
-    previousRideBookingStateRef.current = rideBookingState;
-
-    if (!rideBookingHydrationReadyRef.current || newlyConfirmedRideIds.length === 0) {
-      return;
-    }
-
     if (permission === 'default') {
       requestPermission().catch(() => {});
     }
+  }, [
+    notifyTripConfirmed,
+    permission,
+    requestPermission,
+    state.activeRequest,
+    state.successMessage,
+  ]);
 
-    for (const rideId of newlyConfirmedRideIds) {
-      const confirmedBooking = getRideBookings().find(
-        (booking) => booking.rideId === rideId && isRideBookingConfirmed(booking),
-      );
-      if (!confirmedBooking) {
-        continue;
-      }
+  const heroHighlights = useMemo(
+    () => [
+      {
+        icon: <Zap size={18} color="#20D8FF" />,
+        title: copy.hero.highlights[0].title,
+        detail: copy.hero.highlights[0].detail,
+      },
+      {
+        icon: <ShieldCheck size={18} color="#20D8FF" />,
+        title: copy.hero.highlights[1].title,
+        detail: copy.hero.highlights[1].detail,
+      },
+      {
+        icon: <TimerReset size={18} color="#20D8FF" />,
+        title: copy.hero.highlights[2].title,
+        detail: copy.hero.highlights[2].detail,
+      },
+    ],
+    [copy.hero.highlights],
+  );
 
-      notificationsAPI.createNotification({
-        title: t.bookingStarted,
-        message: `${confirmedBooking.from} to ${confirmedBooking.to} at ${confirmedBooking.time} is now confirmed with ${confirmedBooking.driverName}. Ticket ${confirmedBooking.ticketCode} is ready in your trips.`,
-        type: 'booking',
-        priority: 'high',
-        action_url: '/app/my-trips?tab=rides',
-        channels: ['whatsapp', 'sms', 'email'],
-        contact: {
-          phone: confirmedBooking.driverPhone || null,
-          email: confirmedBooking.driverEmail ?? null,
-        },
-      }).catch(() => {});
+  const handleSearch = useCallback(async () => {
+    clearFeedback();
+    const didSearch = await submitSearch();
+    if (!didSearch) return;
 
-      notifyTripConfirmed(
-        confirmedBooking.driverName,
-        `${confirmedBooking.from} to ${confirmedBooking.to}`,
-      );
-    }
-  }, [notifyTripConfirmed, permission, requestPermission, rideBookingState, t.bookingStarted]);
-
-  const handleSearch = () => {
-    if (!routeEndpointsAreDistinct(from, to)) {
-      setSearchError(t.chooseDifferentCities);
-      setSearched(false);
-      return;
-    }
-
-    setSearchError(null);
-    setBookingMessage(null);
-    setLoading(true);
-
-    if (searchTimerRef.current !== null) {
-      window.clearTimeout(searchTimerRef.current);
-    }
-
-    searchTimerRef.current = window.setTimeout(() => {
-      setLoading(false);
-      setSearched(true);
-      setRecentSearches((previous) => {
-        const label = `${from} to ${to}${date ? ` on ${date}` : ''}`;
-        return [label, ...previous.filter((item) => item !== label)].slice(0, 4);
-      });
-      void trackGrowthEvent({
-        userId: user?.id,
-        eventName: 'ride_search_executed',
-        funnelStage: 'searched',
-        serviceType: 'ride',
-        from,
-        to,
-        metadata: {
-          date: date || null,
-          corridorId: corridorPlan?.id ?? null,
-          demandScore: selectedSignal?.forecastDemandScore ?? corridorPlan?.predictedDemandScore ?? null,
-          priceQuote: selectedPriceQuote,
-          pricePressure: selectedSignal?.pricePressure ?? null,
-        },
-      });
-      searchTimerRef.current = null;
-    }, 700);
-  };
-
-  const handleOpenRide = (ride: Ride) => {
-    const routeQuote = getCorridorMovementQuote({
-      from: ride.from,
-      to: ride.to,
-      basePriceJod: ride.pricePerSeat,
-      membership,
-      signal: resolveSignalForRoute(ride.from, ride.to),
-    });
-    const rideSignal = routeQuote.signal;
-    const priceQuote = routeQuote.priceQuote;
-    setSelected(ride);
     void trackGrowthEvent({
       userId: user?.id,
-      eventName: 'ride_match_opened',
-      funnelStage: 'selected',
+      eventName: 'ride_search_executed',
+      funnelStage: 'searched',
       serviceType: 'ride',
-      from: ride.from,
-      to: ride.to,
-      valueJod: priceQuote.finalPriceJod,
+      from: state.draft.from,
+      to: state.draft.to,
       metadata: {
-        rideId: ride.id,
-        driverName: ride.driver.name,
-        corridorId: rideSignal?.id ?? null,
-        demandScore: rideSignal?.forecastDemandScore ?? null,
-        pricePressure: rideSignal?.pricePressure ?? null,
-        priceQuote,
+        rideType: state.draft.rideType,
+        mode: state.draft.mode,
       },
     });
-  };
+  }, [
+    clearFeedback,
+    state.draft.from,
+    state.draft.mode,
+    state.draft.rideType,
+    state.draft.to,
+    submitSearch,
+    user?.id,
+  ]);
 
-  const handleBook = async (ride: Ride) => {
-    if (!user) {
-      nav('/app/auth');
-      return;
-    }
-    if (ride.seatsAvailable <= 0) {
-      setBookingMessage(`That departure is already full. ${t.openBusFallback} and try the next corridor wave.`);
-      setSelected(null);
-      return;
-    }
+  const handleRequestRide = useCallback(
+    async (ride: RideResult) => {
+      if (!user) {
+        navigate('/app/auth');
+        return;
+      }
 
-    const routeQuote = getCorridorMovementQuote({
-      from: ride.from,
-      to: ride.to,
-      basePriceJod: ride.pricePerSeat,
-      membership,
-      signal: resolveSignalForRoute(ride.from, ride.to),
-    });
-    const ridePriceQuote = routeQuote.priceQuote;
-
-    let booking: RideBookingRecord;
-    try {
-      booking = await createRideBooking({
-        rideId: ride.id,
-        ownerId: ride.ownerId,
-        driverPhone: ride.driver.phone,
-        driverEmail: ride.driver.email,
+      const didRequest = await requestRide({
+        ride,
         passengerId: user.id,
-        from: ride.from,
-        to: ride.to,
-        date: ride.date,
-        time: ride.time,
-        driverName: ride.driver.name,
         passengerName: user.name,
         passengerPhone: user.phone,
         passengerEmail: user.email,
-        seatsRequested: 1,
-        pricePerSeatJod: ridePriceQuote.finalPriceJod,
-        routeMode: ride.routeMode === 'live_post' ? 'live_post' : 'network_inventory',
       });
-    } catch {
-      setBookingMessage(
-        `We could not secure ${ride.from} to ${ride.to} right now. Please try again in a moment.`,
-      );
-      return;
-    }
 
-    const bookingConfirmed = isRideBookingConfirmed(booking);
+      if (!didRequest) return;
 
-    setRideBookingState((previous) => {
-      const confirmedRideIds = new Set(previous.confirmedRideIds);
-      const pendingRideIds = new Set(previous.pendingRideIds);
-
-      if (bookingConfirmed) {
-        confirmedRideIds.add(ride.id);
-        pendingRideIds.delete(ride.id);
-      } else {
-        confirmedRideIds.delete(ride.id);
-        pendingRideIds.add(ride.id);
-      }
-
-      return {
-        confirmedRideIds,
-        pendingRideIds,
-      };
-    });
-    setBookingMessage(
-      booking.status === 'pending_driver'
-        ? `${ride.from} to ${ride.to} was sent to ${ride.driver.name} for approval at ${ridePriceQuote.finalPriceJod} JOD. We will update you as soon as the captain responds.`
-        : bookingConfirmed
-          ? `${ride.from} to ${ride.to} with ${ride.driver.name} is reserved at ${ridePriceQuote.finalPriceJod} JOD. Ticket ${booking.ticketCode} is now saved in your trips.`
-          : `${ride.from} to ${ride.to} with ${ride.driver.name} is being secured at ${ridePriceQuote.finalPriceJod} JOD. Wasel will confirm the seat and unlock the full trip details once sync finishes.`,
-    );
-
-    notificationsAPI.createNotification({
-      title:
-        booking.status === 'pending_driver'
-          ? 'Route request sent'
-          : bookingConfirmed
-            ? t.bookingStarted
-            : 'Seat request received',
-      message:
-        booking.status === 'pending_driver'
-          ? `${ride.from} to ${ride.to} is waiting for driver approval at ${ridePriceQuote.finalPriceJod} JOD.`
-          : bookingConfirmed
-            ? `${ride.from} to ${ride.to} at ${ride.time} is now in your trips at ${ridePriceQuote.finalPriceJod} JOD with boarding reminders.`
-            : `${ride.from} to ${ride.to} at ${ride.time} is being confirmed at ${ridePriceQuote.finalPriceJod} JOD. Wasel will update your trip once the seat is locked.`,
-      type: 'booking',
-      priority: 'high',
-      action_url: '/app/my-trips?tab=rides',
-      channels: ['whatsapp', 'sms', 'email'],
-      contact: {
-        phone: ride.driver.phone || null,
-        email: ride.driver.email ?? null,
-      },
-    }).catch(() => {});
-
-    if (permission === 'default') {
-      requestPermission().catch(() => {});
-    }
-
-    if (bookingConfirmed) {
-      notifyTripConfirmed(ride.driver.name, `${ride.from} to ${ride.to}`);
-    } else {
-      notifyBookingRequested(ride.driver.name, `${ride.from} to ${ride.to}`);
-    }
-    void recordMovementActivity('ride_booked', corridorPlan?.id ?? null);
-    setSelected(null);
-  };
-
-  const handleDemandCapture = () => {
-    const alert = createDemandAlert({
-      from,
-      to,
-      date: date || new Date().toISOString().slice(0, 10),
-      service: 'ride',
-      userId: user?.id,
-    });
-
-    setWaitlistMessage(`Demand alert saved for ${alert.from} to ${alert.to}. Wasel Brain will wake you around ${selectedSignal?.nextWaveWindow ?? 'the next corridor wave'}.`);
-    void trackGrowthEvent({
-      userId: user?.id,
-      eventName: 'route_demand_alert_saved',
-      funnelStage: 'searched',
-      serviceType: 'ride',
-      from: alert.from,
-      to: alert.to,
-    });
-  };
-
-  const handleSaveReminder = (corridorId: string) => {
-    const suggestion = recurringSuggestions.find((item) => item.corridorId === corridorId);
-    if (!suggestion) return;
-
-    const reminder = createReminderFromSuggestion(suggestion, user?.id);
-    setSavedReminders(getRouteReminders());
-    setRetentionMessage(`Reminder saved for ${reminder.label}. ${formatRouteReminderSchedule(reminder)}.`);
-    void trackGrowthEvent({
-      userId: user?.id,
-      eventName: 'route_reminder_saved',
-      funnelStage: 'selected',
-      serviceType: 'ride',
-      from: reminder.from,
-      to: reminder.to,
-    });
-  };
-
-  const handleFocusCorridor = (nextFrom: string, nextTo: string) => {
-    setFrom(nextFrom);
-    setTo(nextTo);
-    setSearched(true);
-  };
-
-  const handleClearDateFilter = () => {
-    setDate('');
-    setSearchError(null);
-    setSearched(true);
-  };
-
-  const handleOpenBusFallback = () => {
-    nav(`/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
-  };
+      void trackGrowthEvent({
+        userId: user.id,
+        eventName: 'ride_request_submitted',
+        funnelStage: 'booked',
+        serviceType: 'ride',
+        from: ride.from,
+        to: ride.to,
+        valueJod: ride.pricePerSeat,
+        metadata: {
+          rideId: ride.id,
+          vehicleType: ride.vehicleType,
+        },
+      });
+    },
+    [navigate, requestRide, user],
+  );
 
   return (
     <Protected>
-      <PageShell>
-        <SectionHead
-          emoji="🛣️"
-          title="Find a Ride"
-          titleAr={copy.tabRide}
-          sub="Choose cities, compare routes, and book fast."
-          action={{ label: 'Offer route', onClick: () => nav('/app/offer-ride') }}
-        />
-
-        <CoreExperienceBanner
-          title="Search, compare, and book fast."
-          detail={`${category.promise} Price, timing, and route readiness stay visible.`}
-          tone={DS.cyan}
-        />
-
-        <ClarityBand
-          title="Pick a route and book."
-          detail="Choose the corridor, compare readiness, then open the ride that fits."
-          tone={DS.cyan}
-          items={[
-            { label: '1. Choose', value: 'Set from, to, and date.' },
-            { label: '2. Compare', value: 'Check readiness, price, and reminders.' },
-            { label: '3. Commit', value: 'Book when the route and price are clear.' },
-          ]}
-        />
-
-        {import.meta.env.DEV && <div style={{ marginBottom: 18 }}>
-          <StakeholderSignalBanner
-            dir={ar ? 'rtl' : 'ltr'}
-            eyebrow={ar ? 'واصل · تواصل الحجز' : 'Wasel · booking comms'}
-            title={
-              ar
-                ? 'اكتشاف الرحلة أصبح لغة مشتركة بين الراكب والطلب الحي والسائق'
-                : 'Ride discovery now reads as a shared language between the rider, live demand, and driver supply'
-            }
-            detail={
-              ar
-                ? 'هذه الصفحة تجمع التسعير والضغط على المسار والتنبيهات والتذكيرات في قرار واحد أوضح للحجز.'
-                : 'This page now pulls pricing, corridor pressure, alerts, and reminders into one clearer booking decision.'
-            }
-            stakeholders={[
-              { label: ar ? 'نتائج' : 'Matches', value: String(results.length), tone: 'teal' },
-              { label: ar ? 'الممرات الحية' : 'Live corridors', value: String(featuredSignals.length), tone: 'blue' },
-              { label: ar ? 'الحجوزات' : 'Booked', value: String(rideBookingState.confirmedRideIds.size), tone: 'green' },
-              { label: ar ? 'تنبيهات الطلب' : 'Demand alerts', value: String(demandStats.active), tone: 'amber' },
-            ]}
-            statuses={[
-              { label: ar ? 'جاهزية المسار' : 'Route readiness', value: routeReadinessLabel, tone: corridorRides.length >= 2 ? 'green' : corridorRides.length === 1 ? 'teal' : 'amber' },
-              { label: ar ? 'التسعير' : 'Price signal', value: hasSelectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : 'Pending', tone: hasSelectedPriceQuote ? 'blue' : 'slate' },
-              { label: ar ? 'التذكيرات المحفوظة' : 'Saved reminders', value: String(savedReminders.length), tone: savedReminders.length > 0 ? 'green' : 'slate' },
-            ]}
-            lanes={[
-              { label: ar ? 'مسار الراكب' : 'Rider lane', detail: ar ? 'البحث والنتائج والحجز أصبحت تظهر في سياق واحد.' : 'Search, results, and booking now stay inside one consistent context.' },
-              { label: ar ? 'مسار الطلب' : 'Demand lane', detail: ar ? 'تنبيهات الانتظار والتذكيرات تجعل الممرات الضعيفة قابلة للمتابعة بدل الضياع.' : 'Waitlist alerts and reminders keep weaker corridors trackable instead of invisible.' },
-              { label: ar ? 'مسار السائق' : 'Driver lane', detail: ar ? 'الإشارة الحية والتسعير المشترك يوضحان متى تكون الرحلة جاهزة للحجز.' : 'Live signal strength and shared pricing show when a route is ready to book.' },
-            ]}
+      <LandingPageFrame>
+        <div style={{ display: 'grid', gap: 28 }}>
+          <LandingServiceHero
+            eyebrow={copy.hero.eyebrow}
+            title={copy.hero.title}
+            description={copy.hero.description}
+            highlights={heroHighlights}
+            stats={copy.hero.stats}
+            ctaLabel={copy.hero.ctaLabel}
           />
-        </div>}
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 24 }} role="tablist" aria-label={ar ? '\u0646\u0648\u0639 \u0627\u0644\u062e\u062f\u0645\u0629' : 'Service type'}>
-          {([
-            ['ride', 'Shared route'],
-            ['package', copy.tabPackage],
-          ] as const).map(([key, label]) => (
-            <button
-              key={key}
-              role="tab"
-              aria-selected={tab === key}
-              onClick={() => setTab(key)}
+          <RideSearchForm
+            state={state}
+            minDate={minDate}
+            copy={copy.searchForm}
+            onFromQueryChange={setFromQuery}
+            onToQueryChange={setToQuery}
+            onFromCommit={setFrom}
+            onToCommit={setTo}
+            onAutoDetectOrigin={autoDetectOrigin}
+            onModeChange={setMode}
+            onDateChange={setDate}
+            onRideTypeChange={setRideType}
+            onSubmit={handleSearch}
+          />
+
+          {state.error ? (
+            <div
+              role="alert"
               style={{
-                flex: 1,
-                height: 44,
-                borderRadius: r(12),
-                border: `1px solid ${tab === key ? DS.cyan : DS.border}`,
-                background: tab === key ? `${DS.cyan}18` : DS.card,
-                color: '#fff',
+                ...landingPanel(24),
+                padding: '16px 20px',
+                border: '1px solid rgba(255,143,143,0.28)',
+                color: '#ffd7d7',
+                fontFamily: LANDING_FONT,
                 fontWeight: 700,
-                cursor: 'pointer',
               }}
             >
-              {label}
-            </button>
-          ))}
+              {state.error}
+            </div>
+          ) : null}
+
+          {state.successMessage ? (
+            <div
+              role="status"
+              style={{
+                ...landingPanel(24),
+                padding: '16px 20px',
+                border: '1px solid rgba(114,255,71,0.24)',
+                color: 'var(--wasel-copy-primary)',
+                fontFamily: LANDING_FONT,
+                fontWeight: 700,
+              }}
+            >
+              {state.successMessage}
+            </div>
+          ) : null}
+
+          <RideResults
+            loading={state.phase === 'searching'}
+            searched={state.searched}
+            results={visibleResults}
+            totalResultsCount={state.results.length}
+            recommendedRideId={state.recommendedRideId}
+            requestsByRideId={state.requestsByRideId}
+            requestingRideId={state.phase === 'submitting' ? state.selectedRideId : undefined}
+            hasMore={hasMoreResults}
+            copy={copy.results}
+            onRequestRide={handleRequestRide}
+            onLoadMore={loadMoreResults}
+          />
         </div>
-
-        {tab === 'ride' && (
-          <FindRideRideTab
-            labels={{
-              from: t.from,
-              to: t.to,
-              date: t.date,
-              searching: t.searching,
-              cheapest: t.cheapest,
-              earliest: t.earliest,
-              topRated: t.topRated,
-              noRidesFound: t.noRidesFound,
-              clearDateFilter: t.clearDateFilter,
-              openBusFallback: t.openBusFallback,
-              nearbyCorridors: t.nearbyCorridors,
-              recentSearches: t.recentSearches,
-              bookedTrips: t.bookedTrips,
-              noTripsYet: t.noTripsYet,
-            }}
-            staticCopy={{
-              noResultsIcon: copy.noResultsIcon,
-              notifyMe: copy.notifyMe,
-            }}
-            from={from}
-            to={to}
-            date={date}
-            loading={loading}
-            searched={searched}
-            sort={sort}
-            searchError={searchError}
-            bookingMessage={bookingMessage}
-            retentionMessage={retentionMessage}
-            waitlistMessage={waitlistMessage}
-            routeReadinessLabel={routeReadinessLabel}
-            corridorRidesCount={corridorRides.length}
-            demandStatsActive={demandStats.active}
-            selectedSignal={selectedSignal}
-            selectedPriceQuote={selectedPriceQuote}
-            corridorPlan={corridorPlan}
-            featuredSignals={featuredSignals}
-            results={results}
-            bookedRideIds={rideBookingState.confirmedRideIds}
-            pendingRideIds={rideBookingState.pendingRideIds}
-            nearbyCorridors={nearbyCorridorCards}
-            recurringSuggestions={recurringSuggestions}
-            savedReminders={savedReminders}
-            savedReminderIds={savedReminderIds}
-            recentSearches={recentSearches}
-            bookedRideSummaries={bookedRideSummaries}
-            searchFromCoord={searchFromCoord}
-            searchToCoord={searchToCoord}
-            onSetFrom={setFrom}
-            onSetTo={setTo}
-            onSetDate={setDate}
-            onSearch={handleSearch}
-            onSetSort={setSort}
-            onOpenRide={handleOpenRide}
-            onFocusCorridor={handleFocusCorridor}
-            onSaveReminder={handleSaveReminder}
-            onClearDateFilter={handleClearDateFilter}
-            onOpenBusFallback={handleOpenBusFallback}
-            onDemandCapture={handleDemandCapture}
-            formatRouteReminderSchedule={formatRouteReminderSchedule}
-            resolveSignalForRide={(ride) => resolveSignalForRoute(ride.from, ride.to)}
-          />
-        )}
-
-        {tab === 'package' && (
-          <FindRidePackagePanel ar={ar} copy={copy} t={t} pkg={pkg} setPkg={setPkg} />
-        )}
-
-        <ServiceFlowPlaybook focusService={tab === 'ride' ? 'find-ride' : 'send-package'} />
-
-        {selected && (
-          <FindRideTripDetailModal
-            ride={selected}
-            booked={rideBookingState.confirmedRideIds.has(selected.id)}
-            pending={rideBookingState.pendingRideIds.has(selected.id)}
-            signal={resolveSignalForRoute(selected.from, selected.to)}
-            onClose={() => setSelected(null)}
-            onBook={() => handleBook(selected)}
-          />
-        )}
-      </PageShell>
+      </LandingPageFrame>
     </Protected>
   );
 }

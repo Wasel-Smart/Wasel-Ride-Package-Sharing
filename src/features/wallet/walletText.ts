@@ -123,6 +123,7 @@ export const walletText = {
     currencyLabel: 'Currency',
     walletTypeLabel: 'Wallet Type',
     createdLabel: 'Created',
+    total: 'Total',
   },
   ar: {
     walletTitle: 'محفظة واصل',
@@ -248,5 +249,6 @@ export const walletText = {
     currencyLabel: 'العملة',
     walletTypeLabel: 'نوع المحفظة',
     createdLabel: 'تاريخ الإنشاء',
+    total: 'الإجمالي',
   },
 } as const;

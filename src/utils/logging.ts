@@ -14,6 +14,10 @@ export interface MonitoringSink {
 
 let monitoringSink: MonitoringSink | null = null;
 
+function isLogContextCandidate(value: unknown): value is LogContext {
+  return typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Error);
+}
+
 function redactContext(context?: LogContext): LogContext | undefined {
   if (!context) {
     return undefined;
@@ -27,13 +31,21 @@ export function registerMonitoringSink(sink: MonitoringSink | null): void {
 }
 
 export const logger = {
-  error: (message: string, error?: Error | unknown, context?: LogContext) => {
-    const sanitizedContext = redactContext(context);
+  error: (
+    message: string,
+    errorOrContext?: Error | unknown | LogContext,
+    context?: LogContext,
+  ) => {
+    const resolvedContext =
+      context ?? (isLogContextCandidate(errorOrContext) ? errorOrContext : undefined);
+    const resolvedError =
+      context === undefined && isLogContextCandidate(errorOrContext) ? undefined : errorOrContext;
+    const sanitizedContext = redactContext(resolvedContext);
     if (import.meta.env.DEV) {
-      console.error('[Wasel]', message, error, sanitizedContext);
+      console.error('[Wasel]', message, resolvedError, sanitizedContext);
     }
 
-    monitoringSink?.captureException(error || new Error(message), {
+    monitoringSink?.captureException(resolvedError || new Error(message), {
       level: 'error',
       tags: { type: 'application_error' },
       ...sanitizedContext,

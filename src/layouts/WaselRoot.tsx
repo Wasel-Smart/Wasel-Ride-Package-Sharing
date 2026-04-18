@@ -6,9 +6,11 @@ import { useLocalAuth } from '../contexts/LocalAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotifications } from '../hooks/useNotifications';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
+import { LANDING_DISPLAY, LANDING_FONT } from '../features/home/landingConstants';
+import { landingPanel } from '../features/home/landing/landingTypes';
 import { F, R, GLOBAL_STYLES } from '../utils/wasel-ds';
 import { buildAuthPagePath } from '../utils/authFlow';
-import { MobileBottomNav } from '../components/MobileBottomNav';
+import { MobileBottomNav } from '../components/EnhancedMobileBottomNav';
 import { AvailabilityBanner } from '../components/system/AvailabilityBanner';
 import { WaselBusinessFooter } from '../components/system/WaselPresence';
 import {
@@ -123,7 +125,7 @@ export default function WaselRoot() {
       style={{
         minHeight: '100vh',
         background: 'var(--wasel-shell-background)',
-        fontFamily: F,
+        fontFamily: LANDING_FONT,
         direction: ar ? 'rtl' : 'ltr',
       }}
     >
@@ -160,10 +162,10 @@ export default function WaselRoot() {
       >
         <div
           style={{
-            maxWidth: 1360,
+            maxWidth: 1380,
             margin: '0 auto',
-            padding: '12px 20px',
-            minHeight: 76,
+            padding: '14px 20px',
+            minHeight: 80,
             display: 'flex',
             alignItems: 'center',
             gap: 16,
@@ -185,6 +187,7 @@ export default function WaselRoot() {
               transition: 'opacity 0.15s',
               minHeight: 52,
               minWidth: 52,
+              fontFamily: LANDING_FONT,
             }}
           >
             <WaselLogo
@@ -547,8 +550,30 @@ export default function WaselRoot() {
       </main>
 
       {/* ── Footer ───────────────────────────────────────────────────── */}
-      <div style={{ maxWidth: 1360, margin: '0 auto', padding: '0 16px 112px' }}>
-        <WaselBusinessFooter ar={ar} />
+      <div style={{ maxWidth: 1380, margin: '0 auto', padding: '0 16px 112px' }}>
+        <div
+          style={{
+            ...landingPanel(28),
+            background:
+              'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+            padding: '18px 18px 8px',
+          }}
+        >
+          <div
+            style={{
+              fontFamily: LANDING_DISPLAY,
+              fontSize: '0.82rem',
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'var(--wasel-copy-soft)',
+              marginBottom: 10,
+            }}
+          >
+            {ar ? 'شبكة واصل الحية' : 'Wasel live network'}
+          </div>
+          <WaselBusinessFooter ar={ar} />
+        </div>
       </div>
 
       <MobileBottomNav language={language} />

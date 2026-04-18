@@ -97,7 +97,7 @@ export const QUERY_KEYS = {
     requests:   (tripId: string) => ['bookings', 'requests', tripId] as const,
   },
 
-  // ── Raje3 / Packages ────────────────────────────────────────────────────────
+  // ── Package Delivery / Packages ────────────────────────────────────────────────────────
   packages: {
     all:        ()               => ['packages'] as const,
     search:     (filters: unknown) => ['packages', 'search', filters] as const,

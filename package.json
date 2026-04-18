@@ -40,6 +40,7 @@
     "cmdk": "^1.1.1",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
+    "inquirer": "^13.4.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.487.0",
     "motion": "^12.0.0",
@@ -60,8 +61,10 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
     "@eslint/js": "^9.22.0",
-    "@lhci/cli": "^0.14.0",
+    "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.58.2",
+    "@size-limit/file": "^11.1.6",
+    "@size-limit/preset-app": "^11.1.6",
     "@tailwindcss/vite": "^4.1.12",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -79,11 +82,21 @@
     "jest-axe": "^9.0.0",
     "jsdom": "^29.0.1",
     "prettier": "^3.5.3",
+    "size-limit": "^11.1.6",
     "tailwindcss": "^4.1.12",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.26.1",
     "vite": "^6.4.2",
     "vitest": "^4.1.2"
+  },
+  "overrides": {
+    "@lhci/cli": {
+      "inquirer": "^8.2.7",
+      "tmp": "^0.2.5"
+    },
+    "external-editor": {
+      "tmp": "^0.2.5"
+    }
   },
   "scripts": {
     "dev": "vite",
@@ -103,6 +116,8 @@
     "test:e2e:mobile": "playwright test --project=mobile-android-chrome --project=mobile-ios-safari",
     "test:e2e:rtl": "playwright test tests/e2e/rtl-arabic.spec.ts",
     "test:lhci": "lhci autorun --config=src/lighthouserc.json",
+    "size": "size-limit",
+    "size:why": "size-limit --why",
     "check:encoding": "node scripts/check-encoding.mjs",
     "report:quality": "node scripts/generate-quality-report.mjs",
     "type-check": "tsc --noEmit",
@@ -113,7 +128,30 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
-    "verify": "npm run type-check && npm run lint && npm run test && npm run build && npm run test:e2e",
-    "verify:full": "npm run verify && npm run test:lhci"
+    "verify": "npm run type-check && npm run lint:strict && npm run test:coverage && npm run build && npm run test:e2e",
+    "verify:full": "npm run verify && npm run test:lhci && npm run test:security",
+    "build:production": "node scripts/build-production.mjs",
+    "build:analyze": "node scripts/analyze-bundle.mjs",
+    "build:secure": "node scripts/fix-log-injections.mjs && npm run build:production",
+    "security:fix": "node scripts/fix-log-injections.mjs",
+    "security:audit": "npm audit --audit-level=high && npm run test:security",
+    "check:deps": "npx depcheck",
+    "check:outdated": "npm outdated",
+    "type-check:watch": "tsc --noEmit --watch",
+    "optimize": "node scripts/optimize-performance.mjs",
+    "clean:optimize": "node scripts/detect-dead-code.mjs && node scripts/optimize-performance.mjs",
+    "clean": "rimraf dist build coverage .nyc_output",
+    "clean:deps": "rimraf node_modules package-lock.json && npm install",
+    "ci:verify": "npm run type-check && npm run lint:strict && npm run test:coverage && npm run build",
+    "precommit": "npm run type-check && npm run lint:strict && npm run format:check",
+    "prepush": "npm run test && npm run build",
+    "production:validate": "node scripts/validate-production-env.mjs",
+    "production:deploy": "npm run production:validate && npm run build && vercel --prod",
+    "production:health": "node scripts/health-check.mjs --url=$npm_config_url",
+    "production:monitor": "node scripts/health-check.mjs --continuous --interval=60",
+    "verify:gaps": "node scripts/verify-gaps-fixed.mjs",
+    "backup:db": "node scripts/backup-database.mjs --type=full",
+    "backup:schema": "node scripts/backup-database.mjs --type=schema",
+    "backup:data": "node scripts/backup-database.mjs --type=data"
   }
 }

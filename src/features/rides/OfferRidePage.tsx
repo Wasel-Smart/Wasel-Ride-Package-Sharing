@@ -226,13 +226,13 @@ export function OfferRidePage() {
         </div>}
 
         {(!offerGate.allowed || (form.acceptsPackages && !packageGate.allowed)) && (
-          <div style={{ marginBottom: 18, background: 'rgba(168,214,20,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: '#fff' }}>
+          <div style={{ marginBottom: 18, background: 'rgba(168,214,20,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: DS.text }}>
             <div style={{ fontWeight: 800, marginBottom: 6 }}>Trust readiness required</div>
             <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>{(!offerGate.allowed ? offerGate.reason : packageGate.reason) ?? 'Complete account checks before opening supply.'}</div>
             <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
               {driverReadiness.steps.filter((step) => !step.complete).slice(0, 3).map((step) => (
                 <div key={step.id} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${DS.border}`, borderRadius: r(12), padding: '10px 12px' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.8rem', color: '#fff' }}>{step.label}</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.8rem', color: DS.text }}>{step.label}</div>
                   <div style={{ color: DS.muted, fontSize: '0.75rem', marginTop: 4, lineHeight: 1.5 }}>{step.description}</div>
                 </div>
               ))}
@@ -273,7 +273,7 @@ export function OfferRidePage() {
           ].map((item) => (
             <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(18), border: `1px solid ${DS.border}`, padding: '18px 18px 16px', boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
               <div style={{ color: item.color, fontWeight: 900, fontSize: '1.2rem', marginBottom: 4 }}>{item.value}</div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>{item.label}</div>
+              <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem' }}>{item.label}</div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>{item.detail}</div>
             </div>
           ))}
@@ -286,7 +286,7 @@ export function OfferRidePage() {
                 <Brain size={18} color={DS.cyan} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Wasel Brain playbook</div>
+                <div style={{ color: DS.text, fontWeight: 800 }}>Wasel Brain playbook</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
                   The route engine should optimize driver earnings before a seat goes live.
                 </div>
@@ -298,7 +298,7 @@ export function OfferRidePage() {
                 selectedSignal ? `Next dense departure window is ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.` : driverPlan?.corridor.autoGroupWindow ?? 'Auto-grouping begins when the corridor gets enough saved demand.',
                 selectedSignal ? `${selectedSignal.productionSources.slice(0, 3).join(' | ')}.` : driverPlan ? `Empty-seat risk on this route is about ${driverPlan.emptySeatCostJod} JOD per unfilled seat.` : 'Fill rate is the lever that keeps the route profitable.',
               ].map((line) => (
-                <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
+                <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: DS.text, fontSize: '0.82rem', lineHeight: 1.65 }}>
                   {line}
                 </div>
               ))}
@@ -311,7 +311,7 @@ export function OfferRidePage() {
                 <Network size={18} color={DS.green} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Marketplace pull</div>
+                <div style={{ color: DS.text, fontWeight: 800 }}>Marketplace pull</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
               This route can now serve more than passengers.
                 </div>
@@ -320,7 +320,7 @@ export function OfferRidePage() {
             <div style={{ display: 'grid', gap: 10 }}>
               {marketplaceNodes.map((node) => (
                 <div key={node.id} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>{node.title}</div>
+                  <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.82rem' }}>{node.title}</div>
                   <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.55 }}>{node.summary}</div>
                 </div>
               ))}
@@ -356,7 +356,7 @@ export function OfferRidePage() {
                 <div style={{ width: 34, height: 34, borderRadius: r(10), background: `${DS.blue}14`, border: `1px solid ${DS.blue}28`, display: 'grid', placeItems: 'center' }}>
                   <Briefcase size={16} color={DS.blue} />
                 </div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>{item.title}</div>
+                <div style={{ color: DS.text, fontWeight: 800 }}>{item.title}</div>
               </div>
               <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>{item.detail}</div>
               <button onClick={item.action} style={{ width: '100%', height: 40, marginTop: 12, borderRadius: '999px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
@@ -377,7 +377,7 @@ export function OfferRidePage() {
             </div>
             <h2 style={{ color: DS.green, fontWeight: 900, fontSize: '1.5rem', margin: '0 0 12px' }}>Route is live</h2>
             <p style={{ color: DS.sub }}>
-              Your route from <strong style={{ color: '#fff' }}>{form.from}</strong> to <strong style={{ color: '#fff' }}>{form.to}</strong> is now part of the Wasel movement network.
+              Your route from <strong style={{ color: DS.text }}>{form.from}</strong> to <strong style={{ color: DS.text }}>{form.to}</strong> is now part of the Wasel movement network.
             </p>
             <p style={{ color: DS.muted, fontSize: '0.85rem', marginTop: 8 }}>
               {form.acceptsPackages ? 'Passengers, packages, and service demand can now attach to this corridor.' : 'Passengers can now discover this route across the network.'}
@@ -390,7 +390,7 @@ export function OfferRidePage() {
               ].map((item) => (
                 <div key={item.label} style={{ background: DS.card2, borderRadius: r(14), padding: '14px 15px', border: `1px solid ${DS.border}` }}>
                   <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem', marginTop: 6 }}>{item.value}</div>
+                  <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.82rem', marginTop: 6 }}>{item.value}</div>
                 </div>
               ))}
             </div>

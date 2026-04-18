@@ -5,6 +5,7 @@ const { mockWalletApi } = vi.hoisted(() => ({
     getWallet: vi.fn(),
     createPaymentIntent: vi.fn(),
     confirmPaymentIntent: vi.fn(),
+    getPaymentIntentStatus: vi.fn(),
   },
 }));
 
@@ -128,17 +129,18 @@ describe('paymentsService', () => {
     mockWalletApi.createPaymentIntent.mockResolvedValue({
       id: 'pi-ride',
       purpose: 'ride_payment',
-      status: 'requires_action',
+      status: 'requires_confirmation',
       amount: 14,
       currency: 'JOD',
       paymentMethodType: 'card',
       provider: 'stripe',
+      clientSecret: 'pi_ride_secret_123',
       createdAt: '2026-04-12T10:00:00.000Z',
       referenceType: 'trip',
       referenceId: 'trip-1',
     });
 
-    const transaction = await paymentsService.initiatePayment('user-123', {
+    const session = await paymentsService.initiatePayment('user-123', {
       purpose: 'ride_payment',
       amount: 14,
       paymentMethodType: 'card',
@@ -162,10 +164,11 @@ describe('paymentsService', () => {
         }),
       }),
     );
-    expect(transaction).toMatchObject({
+    expect(session.clientSecret).toBe('pi_ride_secret_123');
+    expect(session.transaction).toMatchObject({
       id: 'pi-ride',
       kind: 'ride_payment',
-      status: 'requires_action',
+      status: 'requires_confirmation',
       amount: 14,
       description: 'Ride checkout',
     });
@@ -182,6 +185,23 @@ describe('paymentsService', () => {
       id: 'pi-ride',
       status: 'succeeded',
       settled: true,
+      clientSecret: null,
+    });
+  });
+
+  it('reconciles payment intent status through the wallet runtime', async () => {
+    mockWalletApi.getPaymentIntentStatus.mockResolvedValue({
+      id: 'pi-ride',
+      status: 'processing',
+      settled: false,
+      clientSecret: 'pi_ride_secret_123',
+    });
+
+    await expect(paymentsService.syncPayment('pi-ride')).resolves.toEqual({
+      id: 'pi-ride',
+      status: 'processing',
+      settled: false,
+      clientSecret: 'pi_ride_secret_123',
     });
   });
 

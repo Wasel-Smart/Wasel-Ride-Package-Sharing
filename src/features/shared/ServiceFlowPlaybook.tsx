@@ -636,7 +636,7 @@ export function ServiceFlowPlaybook({
           <div style={{ ...pill(active.accent), marginBottom: 10 }}>{active.label} workflow</div>
           <h2
             style={{
-              color: '#fff',
+              color: DS.text,
               fontWeight: 900,
               fontSize: '1.08rem',
               letterSpacing: '-0.02em',
@@ -669,7 +669,7 @@ export function ServiceFlowPlaybook({
                 borderRadius: '999px',
                 border: `1px solid ${selected ? service.accent : DS.border}`,
                 background: selected ? `${service.accent}16` : DS.card2,
-                color: '#fff',
+                color: selected ? service.accent : DS.text,
                 fontWeight: 800,
                 cursor: 'pointer',
                 boxShadow: selected ? `0 10px 24px ${service.accent}16` : 'none',
@@ -695,7 +695,7 @@ export function ServiceFlowPlaybook({
             <div style={{ color: active.accent, fontWeight: 900, fontSize: '0.75rem', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               {role.label}
             </div>
-            <div style={{ color: '#fff', fontSize: '0.8rem', lineHeight: 1.65 }}>{role.detail}</div>
+            <div style={{ color: DS.text, fontSize: '0.8rem', lineHeight: 1.65 }}>{role.detail}</div>
           </div>
         ))}
       </div>
@@ -709,7 +709,7 @@ export function ServiceFlowPlaybook({
             padding: '18px 18px 16px',
           }}
         >
-          <div style={{ color: '#fff', fontWeight: 900, marginBottom: 12 }}>Flowchart in steps</div>
+          <div style={{ color: DS.text, fontWeight: 900, marginBottom: 12 }}>Flowchart in steps</div>
           <div style={{ display: 'grid', gap: 10 }}>
             {active.steps.map((step, index) => (
               <div
@@ -742,7 +742,7 @@ export function ServiceFlowPlaybook({
                   {index + 1}
                 </div>
                 <div>
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginBottom: 5 }}>{step.title}</div>
+                  <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem', marginBottom: 5 }}>{step.title}</div>
                   <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>{step.detail}</div>
                 </div>
               </div>
@@ -758,7 +758,7 @@ export function ServiceFlowPlaybook({
             padding: '18px 18px 16px',
           }}
         >
-          <div style={{ color: '#fff', fontWeight: 900, marginBottom: 12 }}>Status matrix</div>
+          <div style={{ color: DS.text, fontWeight: 900, marginBottom: 12 }}>Status matrix</div>
           <div style={{ display: 'grid', gap: 10 }}>
             {active.statuses.map((row) => (
               <div
@@ -785,7 +785,7 @@ export function ServiceFlowPlaybook({
                       <div style={{ color: DS.muted, fontSize: '0.68rem', fontWeight: 800, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         {label}
                       </div>
-                      <div style={{ color: '#fff', fontSize: '0.78rem', lineHeight: 1.6 }}>{value}</div>
+                      <div style={{ color: DS.text, fontSize: '0.78rem', lineHeight: 1.6 }}>{value}</div>
                     </div>
                   ))}
                 </div>

@@ -5,9 +5,10 @@
 // Sync:     background-sync queue for offline booking actions.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION = 'wasel-v10-20260411';
+const CACHE_VERSION = 'wasel-v11-20260411';
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME  = `${CACHE_VERSION}-runtime`;
+const STATIC   = `${CACHE_VERSION}-static`;
 
 const PRECACHE_URLS = [
   '/',
@@ -31,6 +32,9 @@ const PRECACHE_URLS = [
   '/brand/wasellogo-280.png',
 ];
 
+// Cache static assets for 30 days
+const STATIC_CACHE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
+
 // ─── Install ─────────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -49,7 +53,7 @@ self.addEventListener('activate', (event) => {
       .then((names) =>
         Promise.all(
           names
-            .filter((name) => ![PRECACHE, RUNTIME].includes(name))
+            .filter((name) => ![PRECACHE, RUNTIME, STATIC].includes(name))
             .map((name) => caches.delete(name)),
         ),
       )
@@ -71,8 +75,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (request.destination === 'image' || request.destination === 'font') {
-    event.respondWith(cacheFirst(request));
+  // Handle static assets with long-term caching
+  if (url.pathname.startsWith('/assets/') || url.pathname.includes('-') && (url.pathname.endsWith('.js') || url.pathname.endsWith('.css'))) {
+    event.respondWith(cacheFirstWithExpiry(request));
     return;
   }
 
@@ -239,6 +244,31 @@ async function networkFirst(request) {
     const cached = await caches.match(request);
     if (cached) return cached;
     return new Response('Offline', { status: 503, statusText: 'Offline' });
+  }
+}
+
+async function cacheFirstWithExpiry(request) {
+  const cache = await caches.open(STATIC);
+  const cached = await cache.match(request);
+  
+  if (cached) {
+    const cachedDate = cached.headers.get('date');
+    if (cachedDate) {
+      const age = Date.now() - new Date(cachedDate).getTime();
+      if (age < STATIC_CACHE_MAX_AGE) {
+        return cached;
+      }
+    }
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return cached ?? new Response('Offline', { status: 503, statusText: 'Offline' });
   }
 }
 

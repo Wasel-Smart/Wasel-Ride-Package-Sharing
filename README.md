@@ -47,6 +47,8 @@ npm run dev
 | `npm run test`          | Run unit tests (Vitest)                             |
 | `npm run test:e2e`      | Run end-to-end tests (Playwright)                   |
 | `npm run type-check`    | TypeScript check only                               |
+| `npm run size`          | Check bundle sizes against limits                   |
+| `npm run size:why`      | Analyze bundle composition                          |
 | `npm run verify`        | Full verification: types + unit tests + build + E2E |
 | `npm run test:coverage` | Unit tests with coverage thresholds enforced        |
 
@@ -128,8 +130,9 @@ The repository now includes a GitHub Actions workflow at `.github/workflows/ci.y
 - `npm run lint`
 - `npm run test:coverage`
 - `npm run build`
+- `npm run size` (bundle size limits)
 
-This keeps the shared service layer, runtime config, and production build path verified on every push and pull request.
+This keeps the shared service layer, runtime config, production build path, and bundle sizes verified on every push and pull request.
 
 The repository also includes:
 
@@ -138,6 +141,8 @@ The repository also includes:
 - `.github/workflows/security.yml` for dependency review and CodeQL scanning
 - `.github/dependabot.yml` for weekly dependency and GitHub Actions updates
 - `docs/MONITORING_RUNBOOK.md` for incident response and telemetry ownership
+- `docs/adr/` for Architecture Decision Records documenting major technical choices
+- `.size-limit.js` for automated bundle size tracking and enforcement
 
 ---
 
