@@ -187,8 +187,8 @@ describe('offerRideSchema', () => {
 
 describe('findRideSchema', () => {
   const base = {
-    origin: 'Irbid' as const,
-    destination: 'Amman' as const,
+    from: 'Irbid',
+    to: 'Amman',
     date: '2026-06-15',
     passengers: 2,
   };
@@ -220,15 +220,11 @@ describe('findRideSchema', () => {
 
 describe('sendPackageSchema', () => {
   const base = {
-    senderName: 'Khalid Mansour',
     senderPhone: '+962791234567',
     recipientName: 'Sara Haddad',
     recipientPhone: '+962799876543',
-    origin: 'Amman' as const,
-    destination: 'Aqaba' as const,
     description: 'Books and documents',
-    weightKg: 2.5,
-    fragile: false,
+    weight: 2.5,
   };
 
   it('accepts a complete valid package', () => {
@@ -299,7 +295,7 @@ describe('changePasswordSchema', () => {
   const base = {
     currentPassword: 'OldPass1!',
     newPassword: 'NewPass2@',
-    confirmNewPassword: 'NewPass2@',
+    confirmPassword: 'NewPass2@',
   };
 
   it('accepts a valid password change', () => {
@@ -310,7 +306,7 @@ describe('changePasswordSchema', () => {
     invalid(changePasswordSchema, {
       ...base,
       newPassword: 'newpass2@',
-      confirmNewPassword: 'newpass2@',
+      confirmPassword: 'newpass2@',
     });
   });
 
@@ -318,14 +314,14 @@ describe('changePasswordSchema', () => {
     invalid(changePasswordSchema, {
       ...base,
       newPassword: 'NewPassw!',
-      confirmNewPassword: 'NewPassw!',
+      confirmPassword: 'NewPassw!',
     });
   });
 
   it('rejects mismatched new passwords', () => {
     invalid(changePasswordSchema, {
       ...base,
-      confirmNewPassword: 'DifferentNew2@',
+      confirmPassword: 'DifferentNew2@',
     });
   });
 });

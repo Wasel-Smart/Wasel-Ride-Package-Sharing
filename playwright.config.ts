@@ -15,8 +15,8 @@ const webServerEnvArgs = Object.entries(webServerEnv)
 
 const devServerCommand =
   process.platform === 'win32'
-    ? `cmd /c "set VITE_APP_ENV=test&& set VITE_ENABLE_DEMO_DATA=false&& set VITE_ENABLE_SYNTHETIC_TRIPS=false&& set VITE_ALLOW_DIRECT_SUPABASE_FALLBACK=false&& set VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK=false&& set VITE_ENABLE_PERSISTED_TEST_AUTH=true&& npm run dev -- --host 127.0.0.1 --port 4173"`
-    : `${webServerEnvArgs} npm run dev -- --host 127.0.0.1 --port 4173`;
+    ? `cmd /c "set VITE_APP_ENV=test&& set VITE_ENABLE_DEMO_DATA=false&& set VITE_ENABLE_SYNTHETIC_TRIPS=false&& set VITE_ALLOW_DIRECT_SUPABASE_FALLBACK=false&& set VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK=false&& set VITE_ENABLE_PERSISTED_TEST_AUTH=true&& npx vite build --mode test && npx vite preview --host 127.0.0.1 --port 4173 --strictPort"`
+    : `${webServerEnvArgs} npx vite build --mode test && npx vite preview --host 127.0.0.1 --port 4173 --strictPort`;
 
 const isCI = Boolean(process.env['CI']);
 

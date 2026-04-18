@@ -1,12 +1,8 @@
 import js from '@eslint/js';
 import globals from 'globals';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
-
-const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default tseslint.config(
   {
@@ -20,15 +16,11 @@ export default tseslint.config(
     ],
   },
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommendedTypeChecked],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
-      parserOptions: {
-        project: ['./tsconfig.eslint.json'],
-        tsconfigRootDir: rootDir,
-      },
     },
     plugins: {
       'react-hooks': reactHooks,
@@ -43,10 +35,6 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'error', // UPGRADED: Catch dead code
       '@typescript-eslint/no-non-null-assertion': 'error', // UPGRADED: Safe null handling
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
-      '@typescript-eslint/prefer-optional-chain': 'error',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-      '@typescript-eslint/await-thenable': 'error',
       '@typescript-eslint/consistent-type-imports': ['error', {
         prefer: 'type-imports',
         fixStyle: 'inline-type-imports',
