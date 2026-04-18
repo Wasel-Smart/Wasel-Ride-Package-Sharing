@@ -70,7 +70,7 @@ export function PackageSendPanel({
           style={{
             margin: '20px auto',
             maxWidth: 360,
-            background: 'rgba(255,255,255,0.03)',
+            background: DS.card2,
             borderRadius: r(16),
             padding: '16px 20px',
             border: `1px solid ${DS.border}`,
@@ -133,7 +133,7 @@ export function PackageSendPanel({
   return (
     <div className="sp-2col" style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0, 1.5fr) minmax(320px, 1fr)' }}>
       <div className="pkg-send-form-grid" style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr' }}>
-        <h3 style={{ color: '#fff', fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>
+        <h3 style={{ color: DS.text, fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>
           Send in one clean flow
         </h3>
         {[{ l: 'From', k: 'from' as const }, { l: 'To', k: 'to' as const }].map((field) => (
@@ -144,7 +144,7 @@ export function PackageSendPanel({
             <select
               value={pkg[field.k]}
               onChange={(event) => setPkg((previous) => ({ ...previous, [field.k]: event.target.value }))}
-              style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}
+              style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}
             >
               {CITIES.map((city) => (
                 <option key={city} value={city} style={{ background: DS.card }}>
@@ -161,7 +161,7 @@ export function PackageSendPanel({
           <select
             value={pkg.weight}
             onChange={(event) => setPkg((previous) => ({ ...previous, weight: event.target.value }))}
-            style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}
+            style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}
           >
             {PACKAGE_WEIGHT_OPTIONS.map((weight) => (
               <option key={weight} style={{ background: DS.card }}>
@@ -179,7 +179,7 @@ export function PackageSendPanel({
             placeholder="Full recipient name"
             value={pkg.recipientName}
             onChange={(event) => setPkg((previous) => ({ ...previous, recipientName: event.target.value }))}
-            style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
         <div>
@@ -191,7 +191,7 @@ export function PackageSendPanel({
             placeholder="Recipient phone"
             value={pkg.recipientPhone}
             onChange={(event) => setPkg((previous) => ({ ...previous, recipientPhone: event.target.value }))}
-            style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
         <div>
@@ -202,25 +202,25 @@ export function PackageSendPanel({
             placeholder="Fragile or handling notes"
             value={pkg.note}
             onChange={(event) => setPkg((previous) => ({ ...previous, note: event.target.value }))}
-            style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
-        <div style={{ gridColumn: '1/-1', background: 'rgba(255,255,255,0.03)', borderRadius: r(14), padding: '16px 18px', border: `1px solid ${DS.border}` }}>
-          <div style={{ color: '#fff', fontWeight: 800, marginBottom: 6 }}>Why this stays simple</div>
+        <div style={{ gridColumn: '1/-1', background: DS.card2, borderRadius: r(14), padding: '16px 18px', border: `1px solid ${DS.border}` }}>
+          <div style={{ color: DS.text, fontWeight: 800, marginBottom: 6 }}>Why this stays simple</div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>
             Every request checks live rides first. If a matching route accepts parcels, tracking starts on the same route instead of sending you into a second workflow.
           </div>
         </div>
         <div className="pkg-send-steps-grid" style={{ gridColumn: '1/-1', display: 'grid', gap: 10, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
           {PACKAGE_SEND_STEPS.map((item) => (
-            <div key={item.title} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)' }}>
-              <div style={{ color: '#fff', fontSize: '0.82rem', fontWeight: 700 }}>{item.title}</div>
+            <div key={item.title} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card2 }}>
+              <div style={{ color: DS.text, fontSize: '0.82rem', fontWeight: 700 }}>{item.title}</div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.5 }}>{item.desc}</div>
             </div>
           ))}
         </div>
         {createError && (
-          <div style={{ gridColumn: '1/-1', display: 'flex', gap: 10, alignItems: 'center', background: `${DS.gold}12`, border: `1px solid ${DS.gold}30`, borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}>
+          <div style={{ gridColumn: '1/-1', display: 'flex', gap: 10, alignItems: 'center', background: `${DS.gold}12`, border: `1px solid ${DS.gold}30`, borderRadius: r(14), padding: '12px 14px', color: DS.text, fontSize: '0.84rem' }}>
             <Shield size={16} color={DS.gold} />
             <span>{createError}</span>
           </div>
@@ -236,10 +236,10 @@ export function PackageSendPanel({
       </div>
 
       <div style={{ display: 'grid', gap: 14 }}>
-        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: r(16), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 10px 22px rgba(0,0,0,0.12)' }}>
+        <div style={{ background: DS.card2, borderRadius: r(16), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 10px 22px rgba(0,0,0,0.12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
             <div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem' }}>Route readiness</div>
+              <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.95rem' }}>Route readiness</div>
               <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 4 }}>Live visibility for {pkg.from} to {pkg.to}</div>
             </div>
             <span style={{ ...pill(matchingRideCount > 0 ? DS.green : DS.gold) }}>
@@ -260,50 +260,50 @@ export function PackageSendPanel({
                 gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
               }}
             >
-              <div style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)' }}>
+              <div style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card3 }}>
                 <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Attach rate</div>
-                <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>
+                <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>
                   {corridorPlan ? `${corridorPlan.attachRatePercent}%` : 'Pending'}
                 </div>
               </div>
-              <div style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)' }}>
+              <div style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card3 }}>
                 <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Shared price</div>
-                <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>
+                <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>
                   {selectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : corridorPlan ? `${corridorPlan.sharedPriceJod} JOD` : 'Pending'}
                 </div>
               </div>
-              <div style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)' }}>
+              <div style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card3 }}>
                 <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Next wave</div>
-                <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>
+                <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>
                   {selectedSignal?.nextWaveWindow ?? corridorPlan?.autoGroupWindow ?? 'Waiting for demand'}
                 </div>
               </div>
             </div>
           )}
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: r(16), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 10px 22px rgba(0,0,0,0.12)' }}>
-          <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>What great looks like</div>
+        <div style={{ background: DS.card2, borderRadius: r(16), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 10px 22px rgba(0,0,0,0.12)' }}>
+          <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>What great looks like</div>
           <div style={{ display: 'grid', gap: 10 }}>
           {PACKAGE_EXCELLENCE_POINTS.slice(0, 2).map((item) => (
-            <div key={item.title} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)' }}>
-              <div style={{ color: '#fff', fontSize: '0.84rem', fontWeight: 700 }}>{item.title}</div>
+            <div key={item.title} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card3 }}>
+              <div style={{ color: DS.text, fontSize: '0.84rem', fontWeight: 700 }}>{item.title}</div>
               <div style={{ color: DS.muted, fontSize: '0.75rem', marginTop: 4 }}>{item.desc}</div>
             </div>
           ))}
           </div>
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: r(16), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 10px 22px rgba(0,0,0,0.12)' }}>
-          <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', marginBottom: 10 }}>Recent requests</div>
+        <div style={{ background: DS.card2, borderRadius: r(16), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 10px 22px rgba(0,0,0,0.12)' }}>
+          <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.95rem', marginBottom: 10 }}>Recent requests</div>
           {recentPackages.length > 0 ? (
             <div style={{ display: 'grid', gap: 10 }}>
               {recentPackages.map((item) => (
                 <button
                   key={item.trackingId}
                   onClick={() => onOpenRecent(item)}
-                  style={{ textAlign: 'left', borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)', cursor: 'pointer' }}
+                  style={{ textAlign: 'left', borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card3, cursor: 'pointer' }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                    <span style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>{item.from} to {item.to}</span>
+                    <span style={{ color: DS.text, fontWeight: 700, fontSize: '0.82rem' }}>{item.from} to {item.to}</span>
                     <span style={{ ...pill(item.matchedRideId ? DS.green : DS.gold) }}>{item.trackingId}</span>
                   </div>
                   <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 6 }}>

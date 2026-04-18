@@ -16,10 +16,12 @@ import {
 import { WaselColors } from '../../../tokens/wasel-tokens';
 
 export const TX_ICONS: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
+  deposit: { icon: Plus, color: WaselColors.success, bg: 'bg-green-500/10' },
   topup: { icon: Plus, color: WaselColors.success, bg: 'bg-green-500/10' },
   payment: { icon: CreditCard, color: WaselColors.error, bg: 'bg-red-500/10' },
   earning: { icon: TrendingUp, color: WaselColors.teal, bg: 'bg-teal-500/10' },
   withdrawal: { icon: ArrowUpRight, color: WaselColors.warning, bg: 'bg-orange-500/10' },
+  transfer: { icon: Send, color: WaselColors.bronze, bg: 'bg-amber-500/10' },
   refund: { icon: RefreshCw, color: WaselColors.info, bg: 'bg-blue-500/10' },
   send: { icon: Send, color: WaselColors.bronze, bg: 'bg-amber-500/10' },
   receive: { icon: ArrowDownLeft, color: WaselColors.success, bg: 'bg-green-500/10' },

@@ -10,6 +10,7 @@
 
 import { API_URL, publicAnonKey } from '../services/core';
 import { omitUndefined } from './object';
+import { sanitizeForLog } from './logSanitizer';
 
 // ============================================================================
 // CONFIGURATION
@@ -238,7 +239,7 @@ export async function apiRequest<T = unknown>(
       // Retry on network errors and timeouts
       if (error instanceof NetworkError || error instanceof TimeoutError) {
         const delay = RETRY_CONFIG.retryDelay * Math.pow(2, attempt);
-        console.warn(`⚠️ ${error.message}. Retrying in ${delay}ms... (${attempt + 1}/${retries})`);
+        console.warn(`⚠️ ${sanitizeForLog(error.message)}. Retrying in ${delay}ms... (${attempt + 1}/${retries})`);
         await sleep(delay);
         continue;
       }

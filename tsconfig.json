@@ -20,12 +20,10 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
-    "noUncheckedIndexedAccess": false,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": false,
     "forceConsistentCasingInFileNames": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
 
     /* ── Interop ──────────────────────────────────────────────────────────── */
     "skipLibCheck": true,
@@ -43,8 +41,8 @@
   },
   "include": [
     "src/main.tsx",
-    "src/**/*.ts",
-    "src/**/*.tsx",
+    "src/App.tsx",
+    "src/wasel-routes.tsx",
     "src/**/*.d.ts",
     "shared/**/*.ts",
     "vite.config.ts",

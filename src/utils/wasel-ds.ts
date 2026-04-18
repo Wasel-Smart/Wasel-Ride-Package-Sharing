@@ -1,3 +1,6 @@
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
 /**
  * Wasel brand tokens aligned to the glowing network mark.
  *
@@ -252,6 +255,10 @@ export function pillStyle(color: string): Record<string, string> {
     fontWeight: String(TYPE.weight.bold),
     color,
   };
+}
+
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs));
 }
 
 export const GLOBAL_STYLES = `

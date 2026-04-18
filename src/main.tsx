@@ -14,6 +14,13 @@ import {
   installNonBlockingFonts,
   renderStartupConfigurationError,
 } from './utils/startupDom';
+import { sanitizeForLog } from './utils/logSanitizer';
+import { initializeSentry } from './utils/monitoring';
+
+// Initialize Sentry for error tracking
+if (import.meta.env.PROD) {
+  initializeSentry();
+}
 
 const initialThemePreference = initializeThemeFromStorage();
 const initialLanguage = getInitialLanguage();
@@ -29,7 +36,7 @@ try {
   validateEnvironmentConfig();
   enforceDemoModeSafety();
 } catch (error) {
-  console.error('[Wasel] Failed to initialize application due to configuration error:', error);
+  console.error('[Wasel] Failed to initialize application due to configuration error:', sanitizeForLog(String(error)));
   const isArabic = initialLanguage === 'ar';
   const configurationTitle = isArabic ? '\u0641\u064a \u0645\u0634\u0643\u0644\u0629 \u0628\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a' : 'Configuration Error';
   const configurationBody = error instanceof Error
@@ -75,7 +82,7 @@ scheduleDeferredTask(async () => {
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((error) => {
-      console.warn('[Wasel] Service Worker registration failed:', error);
+      console.warn('[Wasel] Service Worker registration failed:', sanitizeForLog(String(error)));
     });
   });
 }

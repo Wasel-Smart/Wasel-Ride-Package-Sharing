@@ -34,8 +34,11 @@ export async function seedDemoSession(page: Page) {
 }
 
 export async function signInThroughForm(page: Page, baseUrl: string) {
+  const testEmail = process.env.E2E_TEST_EMAIL || 'demo@wasel.jo';
+  const testPassword = process.env.E2E_TEST_PASSWORD || 'demo123';
+  
   await page.goto(`${baseUrl}/app/auth`);
-  await page.getByLabel(/email/i).fill('demo@wasel.jo');
-  await page.getByLabel(/password/i).fill('demo123');
+  await page.getByLabel(/email/i).fill(testEmail);
+  await page.getByLabel(/password/i).fill(testPassword);
   await page.getByRole('button', { name: /submit sign in/i }).click();
 }

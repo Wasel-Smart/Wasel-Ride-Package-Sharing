@@ -46,14 +46,13 @@ type FleetVehicle = {
 const VIEWBOX_WIDTH = 720;
 const VIEWBOX_HEIGHT = 560;
 const FLOW_SPEED_SCALE = 0.42;
-const PASSENGER_COLOR = '#A2FFE7';
-const PASSENGER_GLOW = 'rgba(162, 255, 231, 0.34)';
-const PACKAGE_COLOR = '#19E7BB';
-const PACKAGE_GLOW = 'rgba(25, 231, 187, 0.28)';
+const PASSENGER_COLOR = '#EAF7FF';
+const PASSENGER_GLOW = 'rgba(234, 247, 255, 0.34)';
+const PACKAGE_COLOR = '#8BD8FF';
+const PACKAGE_GLOW = 'rgba(139, 216, 255, 0.3)';
 const VEHICLE_COUNT = 28;
 const TRAFFIC_FREE_SPEED_KPH = 120;
 const TRAFFIC_JAM_DENSITY = 150;
-const TRAFFIC_CRITICAL_DENSITY = 45;
 
 const CITIES: readonly City[] = [
   {
@@ -301,20 +300,25 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+function trafficDensityRatio(density: number) {
+  return clamp(density / TRAFFIC_JAM_DENSITY, 0, 0.98);
+}
+
 function estimateDensity(passengerFlow: number, packageFlow: number, seed: number) {
-  return 16 + passengerFlow / 110 + packageFlow / 230 + seed * 1.2;
+  const directionalImbalance = Math.abs(passengerFlow - packageFlow) / 260;
+  return 14 + passengerFlow / 118 + packageFlow / 244 + seed * 1.08 + directionalImbalance;
 }
 
 function estimateSpeedKph(density: number) {
-  return Math.max(
-    18,
-    TRAFFIC_FREE_SPEED_KPH *
-      (1 - Math.min(density, TRAFFIC_JAM_DENSITY * 0.98) / TRAFFIC_JAM_DENSITY),
-  );
+  const densityRatio = trafficDensityRatio(density);
+  const greenshieldsVelocity = TRAFFIC_FREE_SPEED_KPH * (1 - densityRatio);
+  const shockwaveLoss = 1 - densityRatio ** 1.42 * 0.42;
+  return Math.max(18, greenshieldsVelocity * shockwaveLoss);
 }
 
 function estimateCongestion(density: number) {
-  return clamp(density / TRAFFIC_CRITICAL_DENSITY, 0.08, 0.98);
+  const densityRatio = trafficDensityRatio(density);
+  return clamp(0.08 + densityRatio ** 1.2 * 0.9, 0.08, 0.98);
 }
 
 function buildSyntheticFleet(corridors: readonly Corridor[]): FleetVehicle[] {
@@ -456,8 +460,8 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
     const liveVehicles = (snapshot?.vehicles ?? []).filter(vehicle =>
       geometryMap.has(vehicle.routeId),
     );
-    const liveVehicleIds = new Set(liveVehicles.map(vehicle => vehicle.id));
-    const syntheticVehicles = syntheticFleet.filter(vehicle => !liveVehicleIds.has(vehicle.id));
+    const syntheticBackfillCount = Math.max(0, VEHICLE_COUNT - liveVehicles.length);
+    const syntheticVehicles = syntheticFleet.slice(0, syntheticBackfillCount);
     return { liveVehicles, syntheticVehicles };
   }, [geometryMap, snapshot?.vehicles, syntheticFleet]);
 
@@ -572,10 +576,10 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
           min-height: clamp(440px, 62vw, 720px);
           border-radius: 32px;
           overflow: hidden;
-          border: 1px solid rgba(25, 231, 187, 0.14);
+          border: 1px solid rgba(169, 227, 255, 0.16);
           background:
-            radial-gradient(circle at 18% 12%, rgba(25, 231, 187, 0.18), rgba(4, 18, 30, 0) 22%),
-            radial-gradient(circle at 86% 82%, rgba(101, 225, 255, 0.1), rgba(4, 18, 30, 0) 24%),
+            radial-gradient(circle at 18% 12%, rgba(169, 227, 255, 0.22), rgba(4, 18, 30, 0) 22%),
+            radial-gradient(circle at 86% 82%, rgba(139, 216, 255, 0.12), rgba(4, 18, 30, 0) 24%),
             linear-gradient(180deg, rgba(9, 19, 32, 0.99), rgba(4, 10, 18, 1));
           box-shadow:
             inset 0 1px 0 rgba(220, 255, 248, 0.06),
@@ -586,10 +590,10 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
           position: absolute;
           inset: 14px;
           border-radius: 26px;
-          border: 1px solid rgba(25, 231, 187, 0.08);
+          border: 1px solid rgba(169, 227, 255, 0.1);
           background:
             linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
-            radial-gradient(circle at top, rgba(25, 231, 187, 0.08), rgba(25, 231, 187, 0) 48%);
+            radial-gradient(circle at top, rgba(169, 227, 255, 0.12), rgba(169, 227, 255, 0) 48%);
           pointer-events: none;
         }
         .landing-sim-shell::after {
@@ -597,7 +601,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
           position: absolute;
           inset: 0;
           background:
-            linear-gradient(120deg, rgba(255, 255, 255, 0.06) 0, rgba(255, 255, 255, 0) 24%, rgba(255, 255, 255, 0) 74%, rgba(25, 231, 187, 0.08) 100%);
+            linear-gradient(120deg, rgba(255, 255, 255, 0.06) 0, rgba(255, 255, 255, 0) 24%, rgba(255, 255, 255, 0) 74%, rgba(169, 227, 255, 0.1) 100%);
           pointer-events: none;
           mix-blend-mode: screen;
           opacity: 0.82;
@@ -663,9 +667,9 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
               y2="92"
               gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0" stopColor="#DCFFF8" />
+              <stop offset="0" stopColor="#F7FCFF" />
               <stop offset="0.5" stopColor={PASSENGER_COLOR} />
-              <stop offset="1" stopColor="#65E1FF" />
+              <stop offset="1" stopColor="#A9E3FF" />
             </linearGradient>
             <linearGradient
               id="landing-package-gradient"
@@ -675,9 +679,9 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
               y2="112"
               gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0" stopColor="#65E1FF" />
+              <stop offset="0" stopColor="#A9E3FF" />
               <stop offset="0.54" stopColor={PACKAGE_COLOR} />
-              <stop offset="1" stopColor="#DCFFF8" />
+              <stop offset="1" stopColor="#F7FCFF" />
             </linearGradient>
             <radialGradient
               id="landing-map-scan"
@@ -687,8 +691,8 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
               gradientUnits="userSpaceOnUse"
               gradientTransform="translate(248 138) rotate(42) scale(184 160)"
             >
-              <stop stopColor="rgba(25, 231, 187, 0.2)" />
-              <stop offset="1" stopColor="rgba(25, 231, 187, 0)" />
+              <stop stopColor="rgba(169, 227, 255, 0.24)" />
+              <stop offset="1" stopColor="rgba(169, 227, 255, 0)" />
             </radialGradient>
             <radialGradient
               id="landing-city-wash"
@@ -742,7 +746,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
           <path
             d={borderPath}
             fill="url(#landing-land-surface)"
-            stroke="rgba(25, 231, 187, 0.16)"
+            stroke="rgba(169, 227, 255, 0.18)"
             strokeWidth="1.6"
           />
           <path
@@ -815,7 +819,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                 opacity={corridor.highlighted ? 1 : 0.88}
                 filter={
                   corridor.highlighted
-                    ? 'drop-shadow(0 0 14px rgba(25, 231, 187, 0.34))'
+                    ? 'drop-shadow(0 0 14px rgba(169, 227, 255, 0.34))'
                     : undefined
                 }
               />
@@ -837,7 +841,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
               cx={particle.point.x}
               cy={particle.point.y}
               r={particle.radius}
-              fill="#DCFFF8"
+              fill="#F7FCFF"
               style={{ filter: `drop-shadow(0 0 8px ${PASSENGER_GLOW})` }}
             />
           ))}
@@ -863,7 +867,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                 cx={vehicle.point.x}
                 cy={vehicle.point.y}
                 r="4.9"
-                fill="#DCFFF8"
+                fill="#F7FCFF"
                 opacity="0.95"
                 style={{ filter: `drop-shadow(0 0 10px ${PASSENGER_GLOW})` }}
               />
@@ -875,7 +879,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                 width="6.8"
                 height="6.8"
                 rx="1.8"
-                fill="#DCFFF8"
+                fill="#F7FCFF"
                 opacity="0.94"
                 style={{ filter: `drop-shadow(0 0 10px ${PACKAGE_GLOW})` }}
                 transform={`rotate(45 ${vehicle.point.x} ${vehicle.point.y})`}
@@ -890,7 +894,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                 cy={vehicle.point.y}
                 r={vehicle.fresh ? 10.8 : 9}
                 fill="none"
-                stroke={vehicle.fresh ? 'rgba(162,255,231,0.86)' : 'rgba(25,231,187,0.6)'}
+                stroke={vehicle.fresh ? 'rgba(234,247,255,0.9)' : 'rgba(169,227,255,0.64)'}
                 strokeWidth="1.3"
                 opacity={vehicle.fresh ? 0.92 : 0.7}
               />
@@ -910,7 +914,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                   width="8"
                   height="8"
                   rx="2"
-                  fill="#DCFFF8"
+                  fill="#F7FCFF"
                   opacity={vehicle.fresh ? 1 : 0.76}
                   style={{ filter: `drop-shadow(0 0 12px ${PACKAGE_GLOW})` }}
                   transform={`rotate(45 ${vehicle.point.x} ${vehicle.point.y})`}
@@ -929,34 +933,34 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                 fill="rgba(0, 0, 0, 0.2)"
               />
               {city.featured ? (
-                <circle cx={city.point.x} cy={city.point.y} r="30" fill="rgba(25, 231, 187, 0.1)" />
+                <circle cx={city.point.x} cy={city.point.y} r="30" fill="rgba(169, 227, 255, 0.12)" />
               ) : null}
               <line
                 x1={city.point.x}
                 y1={city.point.y - (city.featured ? 28 : 22)}
                 x2={city.point.x}
                 y2={city.point.y - 5}
-                stroke={city.featured ? 'rgba(25, 231, 187, 0.34)' : 'rgba(220, 255, 248, 0.14)'}
+                stroke={city.featured ? 'rgba(169, 227, 255, 0.4)' : 'rgba(247, 252, 255, 0.16)'}
                 strokeWidth={city.featured ? 1.8 : 1.2}
               />
               <circle
                 cx={city.point.x}
                 cy={city.point.y}
                 r={city.tier === 1 ? 6 : city.tier === 2 ? 5 : 4.4}
-                fill="#DCFFF8"
+                fill="#F7FCFF"
               />
               <circle
                 cx={city.point.x}
                 cy={city.point.y}
                 r={city.featured ? 12 : 9}
                 fill="none"
-                stroke={city.featured ? 'rgba(25, 231, 187, 0.38)' : 'rgba(220, 255, 248, 0.18)'}
+                stroke={city.featured ? 'rgba(169, 227, 255, 0.44)' : 'rgba(247, 252, 255, 0.2)'}
               />
               {LABELED_CITY_IDS.has(city.id) ? (
                 <text
                   x={city.point.x + (city.id === 'aqaba' ? -24 : city.id === 'mafraq' ? -14 : -18)}
                   y={city.point.y + (city.id === 'karak' || city.id === 'aqaba' ? -18 : -16)}
-                  fill={city.featured ? '#DCFFF8' : 'rgba(220, 255, 248, 0.78)'}
+                  fill={city.featured ? '#F7FCFF' : 'rgba(234, 247, 255, 0.82)'}
                   fontSize={city.featured ? 16 : 13.4}
                   fontWeight={city.featured ? 700 : 600}
                   style={{ letterSpacing: '-0.02em' }}

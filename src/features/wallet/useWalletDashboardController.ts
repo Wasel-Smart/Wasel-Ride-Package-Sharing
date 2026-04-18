@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
@@ -85,6 +85,9 @@ export function useWalletDashboardController() {
     walletDataRef.current = walletData;
   }, [walletData]);
 
+  const memoizedWalletData = useMemo(() => walletData, [walletData]);
+  const memoizedInsights = useMemo(() => insights, [insights]);
+
   const guardWalletActionsAvailable = useCallback(() => {
     if (walletActionsLocked) {
       toast.error(walletActionsLockedMessage);
@@ -127,7 +130,8 @@ export function useWalletDashboardController() {
       setAutoTopUpAmount(String(snapshot.data.wallet.autoTopUpAmount || 20));
       setAutoTopUpThreshold(String(snapshot.data.wallet.autoTopUpThreshold || 5));
       return snapshot.data;
-    } catch {
+    } catch (error) {
+      console.error('Wallet fetch error:', error);
       setInsights(null);
       setWalletInsightsHealth(null);
       if (!hasVisibleWalletData) {
@@ -151,7 +155,8 @@ export function useWalletDashboardController() {
       const snapshot = await walletApi.getInsightsSnapshot(effectiveUserId);
       setInsights(snapshot.data);
       setWalletInsightsHealth(snapshot.meta);
-    } catch {
+    } catch (error) {
+      console.error('Insights fetch error:', error);
       setInsights(null);
       setWalletInsightsHealth(null);
     }
@@ -530,7 +535,7 @@ export function useWalletDashboardController() {
     handleTopUp,
     handleWithdraw,
     handleAddPaymentMethod,
-    insights,
+    insights: memoizedInsights,
     isRTL,
     loading,
     pinValue,
@@ -566,7 +571,7 @@ export function useWalletDashboardController() {
     topUpMethod,
     walletActionsLocked,
     walletActionsLockedMessage,
-    walletData,
+    walletData: memoizedWalletData,
     walletHealth,
     walletInsightsHealth,
     walletSubtitle: t.walletSubtitle,

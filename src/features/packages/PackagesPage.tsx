@@ -244,7 +244,7 @@ export function PackagesPage() {
           ].map((item) => (
             <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(18), border: `1px solid ${DS.border}`, padding: '18px 18px 16px', boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
               <div style={{ color: item.color, fontWeight: 900, fontSize: '1.2rem', marginBottom: 4 }}>{item.value}</div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>{item.label}</div>
+              <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem' }}>{item.label}</div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.45 }}>{item.detail}</div>
             </div>
           ))}
@@ -257,7 +257,7 @@ export function PackagesPage() {
                 <Brain size={18} color={DS.cyan} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Package route brief</div>
+                <div style={{ color: DS.text, fontWeight: 800 }}>Package route brief</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
                   Key route details.
                 </div>
@@ -272,7 +272,7 @@ export function PackagesPage() {
                   ? `Pickup: ${corridorPlan.pickupPoints[0] ?? 'Trusted node'}.`
                   : 'Pickup points appear here.',
               ].map((line) => (
-                <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
+                <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: DS.text, fontSize: '0.82rem', lineHeight: 1.65 }}>
                   {line}
                 </div>
               ))}
@@ -280,7 +280,7 @@ export function PackagesPage() {
           </div>
 
           <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-            <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Top corridors</div>
+              <div style={{ color: DS.text, fontWeight: 800, marginBottom: 12 }}>Top corridors</div>
             <div style={{ display: 'grid', gap: 10 }}>
               {featuredCorridors.map((corridor) => (
                 <button
@@ -290,7 +290,7 @@ export function PackagesPage() {
                   style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                    <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>{corridor.label}</div>
+                    <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem' }}>{corridor.label}</div>
                     <span style={{ color: DS.cyan, fontSize: '0.72rem', fontWeight: 700 }}>{corridor.predictedDemandScore}/100</span>
                   </div>
                   <div style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.55, marginTop: 8 }}>

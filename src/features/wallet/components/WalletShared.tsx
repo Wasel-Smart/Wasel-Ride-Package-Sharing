@@ -13,23 +13,27 @@ import { TX_ICONS } from './walletSharedMeta';
 const STATUS_LABEL_KEY: Record<string, string> = {
   pending: 'txStatusPending',
   processing: 'txStatusProcessing',
+  requires_action: 'txStatusProcessing',
   authorized: 'txStatusAuthorized',
   posted: 'txStatusPosted',
   completed: 'txStatusCompleted',
   captured: 'txStatusCaptured',
   refunded: 'txStatusRefunded',
   failed: 'txStatusFailed',
+  cancelled: 'txStatusFailed',
 };
 
 const TX_STATUS_CLASS: Record<string, string> = {
   pending: 'text-amber-300 border-amber-400/30 bg-amber-500/10',
   processing: 'text-sky-300 border-sky-400/30 bg-sky-500/10',
+  requires_action: 'text-amber-300 border-amber-400/30 bg-amber-500/10',
   authorized: 'text-cyan-300 border-cyan-400/30 bg-cyan-500/10',
   posted: 'text-cyan-300 border-cyan-400/30 bg-cyan-500/10',
   completed: 'text-green-300 border-green-400/30 bg-green-500/10',
   captured: 'text-green-300 border-green-400/30 bg-green-500/10',
   refunded: 'text-sky-300 border-sky-400/30 bg-sky-500/10',
   failed: 'text-red-300 border-red-400/30 bg-red-500/10',
+  cancelled: 'text-slate-300 border-slate-400/30 bg-slate-500/10',
 };
 
 // Shared transaction row used across wallet tabs

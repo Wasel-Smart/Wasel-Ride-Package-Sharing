@@ -12,13 +12,16 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { WaselColors } from '../../tokens/wasel-tokens';
 import { useWalletDashboardController } from './useWalletDashboardController';
+import { useOptimizedWallet } from '../../hooks/useOptimizedWallet';
 import { TransactionRow as SharedTransactionRow } from './components/WalletShared';
 import { OverviewTab } from './components/OverviewTab';
 import { SettingsTab } from './components/SettingsTab';
 import { WalletHeroCard } from './components/WalletHeroCard';
 import { WalletActionModals } from './components/WalletActionModals';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import type { RewardItem, WalletTransaction } from '../../services/walletApi';
 
 const LazyInsightsTab = lazy(async () => {
@@ -88,6 +91,8 @@ export function WalletDashboard() {
     withdrawBank,
     withdrawMethod,
   } = useWalletDashboardController();
+
+  const { optimizedTransactions, walletSummary } = useOptimizedWallet(walletData);
 
   const bal = walletData?.balance ?? 0;
   const pending = walletData?.pendingBalance ?? 0;
@@ -224,24 +229,25 @@ export function WalletDashboard() {
   }
 
   return (
-    <div className="space-y-6 pb-8 max-w-4xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <WaselLogo size={34} showWordmark={false} />
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-foreground">{t.walletTitle}</h1>
-              <Badge variant="secondary" className="border border-primary/20 bg-primary/10 text-primary">
-                {t.activeLabel}
-              </Badge>
+    <ErrorBoundary>
+      <div className="space-y-6 pb-8 max-w-4xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <WaselLogo size={34} showWordmark={false} />
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-foreground">{t.walletTitle}</h1>
+                <Badge variant="secondary" className="border border-primary/20 bg-primary/10 text-primary">
+                  {t.activeLabel}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">{t.walletSubtitle}</p>
             </div>
-            <p className="text-xs text-muted-foreground">{t.walletSubtitle}</p>
           </div>
+          <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          </Button>
         </div>
-        <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
-          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-        </Button>
-      </div>
 
       {walletStatusLabel && (
         <Card className="rounded-xl border-primary/10 bg-card/70">
@@ -320,10 +326,10 @@ export function WalletDashboard() {
         <TabsContent value="transactions" className="mt-4">
           <Card className="rounded-xl">
             <CardContent className="pt-4">
-              {(!walletData?.transactions || walletData.transactions.length === 0) ? (
+              {(!optimizedTransactions || optimizedTransactions.length === 0) ? (
                 <div className="text-center py-12 text-muted-foreground text-sm">{t.noTransactions}</div>
               ) : (
-                walletData.transactions.map((tx: WalletTransaction) => (
+                optimizedTransactions.map((tx: WalletTransaction) => (
                   <SharedTransactionRow key={tx.id} tx={tx} isRTL={isRTL} jodLabel={t.jod} t={t} />
                 ))
               )}
@@ -371,11 +377,7 @@ export function WalletDashboard() {
 
         <TabsContent value="insights" className="mt-4 space-y-4">
           <Suspense
-            fallback={(
-              <div className="flex items-center justify-center rounded-2xl border border-border/40 bg-card/40 px-6 py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
-              </div>
-            )}
+            fallback={<LoadingSpinner text="Loading insights..." />}
           >
             <LazyInsightsTab insights={insights} isRTL={isRTL} t={t} />
           </Suspense>
@@ -441,6 +443,7 @@ export function WalletDashboard() {
         onTopUp={handleTopUp}
         onWithdraw={handleWithdraw}
       />
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }

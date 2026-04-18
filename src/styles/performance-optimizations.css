@@ -1,0 +1,496 @@
+/* ============================================================
+   WASEL PERFORMANCE OPTIMIZATIONS
+   Fixes: Scrolling, Navigation, Touch Response
+   ============================================================ */
+
+/* ── Critical Performance Fixes ────────────────────────────── */
+
+/* Force hardware acceleration for smooth scrolling */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+}
+
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  position: relative;
+  min-height: 100vh;
+  max-width: 100vw;
+}
+
+/* Fix root container scrolling */
+#root {
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  isolation: isolate;
+}
+
+/* ── GPU Acceleration for Smooth Performance ───────────────── */
+[data-wasel-nav],
+[data-wasel-bottom-nav],
+.wasel-sticky-header,
+.wasel-app-main,
+.mobile-bottom-nav {
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+}
+
+/* ── Touch Optimization ────────────────────────────────────── */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+button,
+a,
+[role="button"],
+[tabindex="0"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Scrollable areas */
+[data-scrollable],
+.overflow-y-auto,
+.overflow-y-scroll,
+.overflow-x-auto,
+.overflow-x-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Vertical scroll only */
+[data-scroll-y] {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+}
+
+/* Horizontal scroll only */
+[data-scroll-x] {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+}
+
+/* ── Prevent Layout Shifts ─────────────────────────────────── */
+img,
+video,
+iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Smooth Transitions (Performance Optimized) ────────────── */
+.smooth-transition {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Disable transitions during scroll for better performance */
+.scrolling * {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* ── Fix Sticky Header Performance ─────────────────────────── */
+.wasel-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 500;
+  contain: layout style paint;
+  will-change: transform, background-color;
+}
+
+/* ── Mobile Bottom Nav Optimization ────────────────────────── */
+@media (max-width: 767px) {
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 400;
+    contain: layout style paint;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+
+  main.wasel-app-main {
+    padding-bottom: 88px;
+    min-height: calc(100vh - 76px);
+  }
+}
+
+/* ── Reduce Motion for Accessibility ───────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ── Optimize Animations ───────────────────────────────────── */
+@keyframes optimized-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+.fade-in-optimized {
+  animation: optimized-fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: opacity, transform;
+}
+
+/* ── Fix Modal/Overlay Scrolling ───────────────────────────── */
+.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ── Optimize Dropdown/Menu Performance ────────────────────── */
+[role="menu"],
+[role="listbox"],
+.dropdown-menu {
+  contain: layout style paint;
+  will-change: transform, opacity;
+}
+
+/* ── Fix Input Focus Performance ───────────────────────────── */
+input,
+textarea,
+select {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ── Optimize Card Hover Effects ───────────────────────────── */
+.wasel-card {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+@media (hover: hover) {
+  .wasel-card:hover {
+    transform: translateY(-2px) translateZ(0);
+  }
+}
+
+/* Disable hover effects on touch devices */
+@media (hover: none) {
+  .wasel-card:hover {
+    transform: none;
+  }
+}
+
+/* ── Fix Scrollbar Styling ─────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--secondary, rgba(71, 183, 230, 0.3));
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary, rgba(71, 183, 230, 0.5));
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--secondary, rgba(71, 183, 230, 0.3)) transparent;
+}
+
+/* ── Optimize Loading States ───────────────────────────────── */
+.loading-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Contain Layout Shifts ─────────────────────────────────── */
+.contain-layout {
+  contain: layout;
+}
+
+.contain-paint {
+  contain: paint;
+}
+
+.contain-strict {
+  contain: strict;
+}
+
+/* ── Optimize Grid/Flex Layouts ────────────────────────────── */
+.grid-optimized {
+  display: grid;
+  contain: layout style;
+}
+
+.flex-optimized {
+  display: flex;
+  contain: layout style;
+}
+
+/* ── Fix iOS Safari Bounce ─────────────────────────────────── */
+@supports (-webkit-touch-callout: none) {
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  .wasel-app-main {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+  }
+}
+
+/* ── Optimize Button Interactions ──────────────────────────── */
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:active {
+  transform: scale(0.98) translateZ(0);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Fix Navigation Lag ────────────────────────────────────── */
+nav,
+[role="navigation"] {
+  contain: layout style;
+  will-change: transform;
+}
+
+nav a,
+nav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease,
+              color 0.15s ease,
+              transform 0.15s ease;
+}
+
+/* ── Optimize Image Loading ────────────────────────────────── */
+img {
+  content-visibility: auto;
+  contain-intrinsic-size: 300px 200px;
+}
+
+img[loading="lazy"] {
+  content-visibility: auto;
+}
+
+/* ── Fix Form Performance ──────────────────────────────────── */
+form {
+  contain: layout style;
+}
+
+/* ── Optimize List Rendering ───────────────────────────────── */
+ul,
+ol {
+  contain: layout style;
+}
+
+li {
+  contain: layout;
+}
+
+/* ── Virtual Scroll Container ──────────────────────────────── */
+.virtual-scroll-container {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  contain: strict;
+  will-change: scroll-position;
+}
+
+/* ── Prevent Text Selection Lag ────────────────────────────── */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* ── Optimize Backdrop Filters ─────────────────────────────── */
+.glass,
+.glass-card,
+.glass-nav {
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  will-change: backdrop-filter;
+}
+
+/* Reduce blur on lower-end devices */
+@media (prefers-reduced-motion: reduce) {
+  .glass,
+  .glass-card,
+  .glass-nav {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+
+/* ── Fix Drawer/Sidebar Performance ────────────────────────── */
+.drawer,
+.sidebar {
+  contain: layout style paint;
+  will-change: transform;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Optimize Tooltip/Popover ──────────────────────────────── */
+[role="tooltip"],
+.tooltip,
+.popover {
+  contain: layout style paint;
+  will-change: opacity, transform;
+  pointer-events: none;
+}
+
+[role="tooltip"].visible,
+.tooltip.visible,
+.popover.visible {
+  pointer-events: auto;
+}
+
+/* ── Fix Tab Switching Performance ─────────────────────────── */
+[role="tabpanel"] {
+  contain: layout style;
+}
+
+[role="tabpanel"][hidden] {
+  display: none;
+}
+
+/* ── Optimize Accordion Performance ────────────────────────── */
+.accordion-content {
+  overflow: hidden;
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: height;
+}
+
+/* ── Fix Infinite Scroll Performance ───────────────────────── */
+.infinite-scroll-container {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  contain: layout style;
+}
+
+.infinite-scroll-sentinel {
+  height: 1px;
+  visibility: hidden;
+}
+
+/* ── Optimize Map Container ────────────────────────────────── */
+.map-container {
+  contain: strict;
+  will-change: transform;
+  touch-action: pan-x pan-y;
+}
+
+/* ── Performance Monitoring ────────────────────────────────── */
+.perf-marker {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* ── Critical CSS for Above-the-Fold ───────────────────────── */
+.above-fold {
+  content-visibility: visible;
+}
+
+.below-fold {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}

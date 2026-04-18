@@ -1,4 +1,4 @@
-import { startTransition, useDeferredValue, useMemo, useState } from 'react';
+import { startTransition, useDeferredValue, useMemo, useState, useCallback } from 'react';
 import { motion } from 'motion/react';
 import {
   Bell,
@@ -30,6 +30,7 @@ import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotifications } from '../hooks/useNotifications';
+import { useOptimizedNotifications } from '../hooks/useOptimizedNotifications';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import type { Notification } from '../../shared/domain-contracts';
 import {
@@ -168,6 +169,7 @@ export function NotificationCenter() {
   const { language } = useLanguage();
   const isRTL = language === 'ar';
   const locale = isRTL ? 'ar-JO' : 'en';
+  const optimizedNotifications = useOptimizedNotifications(notifications);
   const [filter, setFilter] = useState<NotificationFilter>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const deferredSearchTerm = useDeferredValue(searchTerm);
@@ -277,12 +279,12 @@ export function NotificationCenter() {
 
   const filteredNotifications = useMemo(
     () =>
-      notifications.filter(
+      optimizedNotifications.filter(
         (notification) =>
           matchesNotificationFilter({ notification, filter, archivedIds: archivedSet }) &&
           matchesNotificationSearch(notification, deferredSearchTerm),
       ),
-    [archivedSet, deferredSearchTerm, filter, notifications],
+    [archivedSet, deferredSearchTerm, filter, optimizedNotifications],
   );
 
   const rankedNotifications = useMemo(
@@ -338,22 +340,26 @@ export function NotificationCenter() {
     { value: 'archived', label: labels.archived, icon: Trash2 },
   ];
 
-  const handleOpenAction = async (notification: Notification) => {
-    if (!notification.read) {
-      await markAsRead(notification.id).catch(() => undefined);
-    }
+  const handleOpenAction = useCallback(async (notification: Notification) => {
+    try {
+      if (!notification.read) {
+        await markAsRead(notification.id).catch(() => undefined);
+      }
 
-    if (!notification.action_url) {
-      return;
-    }
+      if (!notification.action_url) {
+        return;
+      }
 
-    if (notification.action_url.startsWith('/')) {
-      await nav(notification.action_url);
-      return;
-    }
+      if (notification.action_url.startsWith('/')) {
+        await nav(notification.action_url);
+        return;
+      }
 
-    window.open(notification.action_url, '_blank', 'noopener,noreferrer');
-  };
+      window.open(notification.action_url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('Failed to handle notification action:', error);
+    }
+  }, [markAsRead, nav]);
 
   if (loading && notifications.length === 0) {
     return (
@@ -680,7 +686,7 @@ export function NotificationCenter() {
 
               <ScrollArea className="max-h-[720px]">
                 <div className="space-y-3 pr-2">
-                  {section.items.map((notification, index) => {
+                  {section.items.slice(0, 50).map((notification, index) => {
                     const category = getNotificationCategory(notification);
                     const Icon = CATEGORY_ICON[category];
                     const accent = CATEGORY_ACCENT[category];

@@ -7,6 +7,7 @@ const PLACEHOLDER_MARKERS = [
   'your-anon-key-here',
   'your-publishable-key',
   'your_publishable_key',
+  'pk_test_or_pk_live_key',
   'your-supabase-url',
   'your_supabase_url',
   'replace_with',

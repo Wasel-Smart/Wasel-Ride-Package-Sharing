@@ -26,6 +26,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const CYAN  = '#47B7E6';
 const GOLD  = '#A8D614';
@@ -76,7 +77,7 @@ function StepDot({ active, done }: { active: boolean; done: boolean }) {
   return (
     <div style={{
       width: 8, height: 8, borderRadius: 4,
-      background: done ? CYAN : active ? GOLD : 'rgba(93,150,210,0.25)',
+      background: done ? CYAN : active ? GOLD : 'var(--border-strong)',
       transition: 'background 0.2s',
     }} />
   );
@@ -84,6 +85,7 @@ function StepDot({ active, done }: { active: boolean; done: boolean }) {
 
 export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
   const { language } = useLanguage();
+  const { resolvedTheme } = useTheme();
   const isAr = language === 'ar';
   const popular = isAr ? POPULAR_AR : POPULAR_EN;
 
@@ -160,7 +162,7 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
             onClick={onClose}
             style={{
               position: 'fixed', inset: 0, zIndex: 800,
-              background: 'rgba(0,8,18,0.72)',
+              background: 'color-mix(in srgb, var(--bg-overlay) 88%, transparent)',
               backdropFilter: 'blur(4px)',
             }}
           />
@@ -182,10 +184,11 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
               bottom: 0, left: 0, right: 0,
               zIndex: 810,
               borderRadius: '24px 24px 0 0',
-              background: 'linear-gradient(180deg, rgba(8,27,43,0.99) 0%, rgba(4,14,28,0.99) 100%)',
-              border: '1px solid rgba(71,183,230,0.12)',
+              background:
+                'linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 98%, transparent) 0%, color-mix(in srgb, var(--surface-glass) 96%, transparent) 100%)',
+              border: '1px solid var(--border)',
               borderBottom: 'none',
-              boxShadow: '0 -16px 64px rgba(0,8,20,0.8)',
+              boxShadow: '0 -16px 64px rgba(15,23,42,0.18)',
               maxHeight: '92dvh',
               overflowY: 'auto',
               overscrollBehavior: 'contain',
@@ -195,12 +198,12 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
           >
             {/* Drag handle */}
             <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px', cursor: 'grab' }}>
-              <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(93,150,210,0.25)' }} />
+              <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--border-strong)' }} />
             </div>
 
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 20px 16px' }}>
-              <h2 style={{ fontFamily: F, fontWeight: 800, fontSize: 18, color: '#EAF7FF', margin: 0 }}>
+              <h2 style={{ fontFamily: F, fontWeight: 800, fontSize: 18, color: 'var(--text-primary)', margin: 0 }}>
                 {isAr ? 'ابحث عن رحلة' : 'Find a Ride'}
               </h2>
               <button
@@ -208,13 +211,13 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
                 onClick={onClose}
                 style={{
                   width: 32, height: 32, borderRadius: 10,
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(93,150,210,0.14)',
+                  background: 'var(--surface-muted)',
+                  border: '1px solid var(--border)',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
-                <X size={15} color="rgba(190,220,240,0.7)" />
+                <X size={15} color="var(--text-secondary)" />
               </button>
             </div>
 
@@ -229,13 +232,13 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
               {/* ── From / To fields ──────────────────────────────── */}
               <div style={{
                 borderRadius: 18,
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(93,150,210,0.14)',
+                background: 'var(--surface-muted)',
+                border: '1px solid var(--border)',
                 overflow: 'hidden',
                 marginBottom: 16,
               }}>
                 {/* From */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: '1px solid rgba(93,150,210,0.1)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: '1px solid var(--surface-divider)' }}>
                   <MapPin size={16} color={CYAN} />
                   <input
                     ref={fromRef}
@@ -247,12 +250,12 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
                     style={{
                       flex: 1, background: 'none', border: 'none', outline: 'none',
                       fontFamily: F, fontSize: 15, fontWeight: 600,
-                      color: from ? '#EAF7FF' : 'rgba(190,220,240,0.45)',
+                      color: from ? 'var(--text-primary)' : 'var(--text-muted)',
                       direction: isAr ? 'rtl' : 'ltr',
                     }}
                   />
                   {from && (
-                    <button type="button" onClick={() => setFrom('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(190,220,240,0.4)', padding: 0 }}>
+                    <button type="button" onClick={() => setFrom('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
                       <X size={13} />
                     </button>
                   )}
@@ -265,8 +268,8 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
                     onClick={() => { const t = from; setFrom(to); setTo(t); }}
                     style={{
                       width: 28, height: 28, borderRadius: 8,
-                      background: `linear-gradient(135deg, ${CYAN}20, #1597FF20)`,
-                      border: `1px solid ${CYAN}30`,
+                      background: 'color-mix(in srgb, var(--surface-muted-strong) 72%, transparent)',
+                      border: '1px solid var(--border-strong)',
                       cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       WebkitTapHighlightColor: 'transparent',
@@ -289,12 +292,12 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
                     style={{
                       flex: 1, background: 'none', border: 'none', outline: 'none',
                       fontFamily: F, fontSize: 15, fontWeight: 600,
-                      color: to ? '#EAF7FF' : 'rgba(190,220,240,0.45)',
+                      color: to ? 'var(--text-primary)' : 'var(--text-muted)',
                       direction: isAr ? 'rtl' : 'ltr',
                     }}
                   />
                   {to && (
-                    <button type="button" onClick={() => setTo('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(190,220,240,0.4)', padding: 0 }}>
+                    <button type="button" onClick={() => setTo('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
                       <X size={13} />
                     </button>
                   )}
@@ -307,8 +310,8 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
                   flex: 1, display: 'flex', alignItems: 'center', gap: 10,
                   padding: '12px 14px',
                   borderRadius: 14,
-                  background: 'rgba(255,255,255,0.04)',
-                  border: step === 2 ? `1px solid ${CYAN}35` : '1px solid rgba(93,150,210,0.14)',
+                  background: 'var(--surface-muted)',
+                  border: step === 2 ? '1px solid var(--border-strong)' : '1px solid var(--border)',
                 }}>
                   <Calendar size={14} color={CYAN} />
                   <input
@@ -320,8 +323,8 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
                     onFocus={() => setStep(2)}
                     style={{
                       flex: 1, background: 'none', border: 'none', outline: 'none',
-                      fontFamily: F, fontSize: 13, color: '#EAF7FF',
-                      colorScheme: 'dark',
+                      fontFamily: F, fontSize: 13, color: 'var(--text-primary)',
+                      colorScheme: resolvedTheme,
                     }}
                   />
                 </div>
@@ -329,12 +332,12 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
                   display: 'flex', alignItems: 'center', gap: 8,
                   padding: '12px 14px',
                   borderRadius: 14,
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(93,150,210,0.14)',
+                  background: 'var(--surface-muted)',
+                  border: '1px solid var(--border)',
                 }}>
-                  <Users size={14} color="rgba(190,220,240,0.6)" />
+                  <Users size={14} color="var(--text-secondary)" />
                   <button type="button" onClick={() => setSeats(s => Math.max(1, s - 1))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: CYAN, fontFamily: F, fontSize: 18, lineHeight: 1, padding: '0 2px' }}>−</button>
-                  <span style={{ fontFamily: F, fontWeight: 700, fontSize: 14, color: '#EAF7FF', minWidth: 14, textAlign: 'center' }}>{seats}</span>
+                  <span style={{ fontFamily: F, fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', minWidth: 14, textAlign: 'center' }}>{seats}</span>
                   <button type="button" onClick={() => setSeats(s => Math.min(8, s + 1))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: CYAN, fontFamily: F, fontSize: 18, lineHeight: 1, padding: '0 2px' }}>+</button>
                 </div>
               </div>
@@ -369,7 +372,7 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
 
               {/* ── Popular routes ────────────────────────────────── */}
               <div>
-                <p style={{ fontFamily: F, fontWeight: 600, fontSize: 12, color: 'rgba(190,220,240,0.5)', marginBottom: 10, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                <p style={{ fontFamily: F, fontWeight: 600, fontSize: 12, color: 'var(--text-muted)', marginBottom: 10, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                   {isAr ? 'وجهات شائعة' : 'Popular routes'}
                 </p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -381,8 +384,8 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
                       style={{
                         padding: '6px 14px',
                         borderRadius: 999,
-                        background: 'rgba(71,183,230,0.08)',
-                        border: '1px solid rgba(71,183,230,0.18)',
+                        background: 'rgb(var(--wasel-button-primary-rgb) / 0.10)',
+                        border: '1px solid var(--wasel-button-primary-border)',
                         cursor: 'pointer',
                         fontFamily: F, fontSize: 12, color: CYAN, fontWeight: 600,
                         display: 'flex', alignItems: 'center', gap: 4,
@@ -398,7 +401,7 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
               {/* ── Recent searches ───────────────────────────────── */}
               {recent.length > 0 && (
                 <div style={{ marginTop: 20 }}>
-                  <p style={{ fontFamily: F, fontWeight: 600, fontSize: 12, color: 'rgba(190,220,240,0.5)', marginBottom: 10, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  <p style={{ fontFamily: F, fontWeight: 600, fontSize: 12, color: 'var(--text-muted)', marginBottom: 10, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                     {isAr ? 'الأخيرة' : 'Recent'}
                   </p>
                   {recent.map((r, i) => (
@@ -411,18 +414,18 @@ export function WaselMobileSearchSheet({ open, onClose, onSearch }: Props) {
                         display: 'flex', alignItems: 'center', gap: 12,
                         padding: '10px 14px',
                         borderRadius: 12,
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(93,150,210,0.08)',
+                        background: 'var(--surface-muted)',
+                        border: '1px solid var(--border)',
                         cursor: 'pointer',
                         marginBottom: 6,
                         WebkitTapHighlightColor: 'transparent',
                       }}
                     >
-                      <Clock size={13} color="rgba(190,220,240,0.4)" />
-                      <span style={{ flex: 1, fontFamily: F, fontSize: 13, color: 'rgba(190,220,240,0.75)', textAlign: isAr ? 'right' : 'left' }}>
+                      <Clock size={13} color="var(--text-muted)" />
+                      <span style={{ flex: 1, fontFamily: F, fontSize: 13, color: 'var(--text-secondary)', textAlign: isAr ? 'right' : 'left' }}>
                         {r.from} → {r.to}
                       </span>
-                      <ChevronRight size={12} color="rgba(190,220,240,0.3)" style={{ transform: isAr ? 'rotate(180deg)' : 'none' }} />
+                      <ChevronRight size={12} color="var(--text-muted)" style={{ transform: isAr ? 'rotate(180deg)' : 'none' }} />
                     </button>
                   ))}
                 </div>

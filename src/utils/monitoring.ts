@@ -1,249 +1,171 @@
-/**
- * Sentry Error Monitoring Integration
- * Version: 1.0.0
- *
- * Comprehensive error tracking and monitoring for production
- */
-
 import * as Sentry from '@sentry/react';
-import {
-  logger,
-  registerMonitoringSink,
-  trackAPICall,
-  trackNavigation,
-  trackUserAction,
-  usePerformanceMonitoring,
-  type LogContext,
-} from './logging';
-import { hasTelemetryConsent } from './consent';
-import { redactSensitiveValue } from './redaction';
-import { omitUndefined } from './object';
 
-let sentryInitialized = false;
-let browserRuntimeMonitoringInitialized = false;
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
+const APP_ENV = import.meta.env.VITE_APP_ENV || 'development';
+const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
 
-function safeStorageGet(key: string): string | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
+type MonitoringContext = Record<string, unknown>;
 
+function sanitizeUrl(url: string): string {
   try {
-    return window.localStorage.getItem(key);
+    const urlObj = new URL(url);
+
+    const sensitiveParams = ['token', 'key', 'secret', 'password', 'api_key', 'access_token'];
+    sensitiveParams.forEach(param => {
+      if (urlObj.searchParams.has(param)) {
+        urlObj.searchParams.set(param, '[REDACTED]');
+      }
+    });
+
+    return urlObj.toString();
   } catch {
-    return null;
+    return url;
   }
 }
 
-function redactContext(context?: LogContext): LogContext | undefined {
-  if (!context) {
-    return undefined;
-  }
-
-  return redactSensitiveValue(context) as LogContext;
-}
-
-function captureRuntimeSignal(
-  message: string,
-  level: 'info' | 'warning' | 'error',
-  extra?: Record<string, unknown>,
-) {
-  Sentry.withScope((scope) => {
-    scope.setLevel(level);
-    scope.setTag('runtime_signal', 'browser');
-    if (extra) {
-      scope.setContext('runtime', redactSensitiveValue(extra) as Record<string, unknown>);
-    }
-    Sentry.captureMessage(message);
-  });
-}
-
-function installBrowserRuntimeMonitoring() {
-  if (browserRuntimeMonitoringInitialized || typeof window === 'undefined') {
-    return;
-  }
-
-  window.addEventListener('error', (event) => {
-    if (!event.error) {
-      return;
-    }
-
-    Sentry.withScope((scope) => {
-      scope.setLevel('error');
-      scope.setTag('runtime_signal', 'window_error');
-      scope.setContext('runtime', {
-        pathname: window.location.pathname,
-        filename: event.filename || null,
-        line: event.lineno || null,
-        column: event.colno || null,
-      });
-      Sentry.captureException(event.error);
-    });
-  });
-
-  window.addEventListener('unhandledrejection', (event) => {
-    const rejection =
-      event.reason instanceof Error
-        ? event.reason
-        : new Error(
-            typeof event.reason === 'string'
-              ? event.reason
-              : 'Unhandled promise rejection',
-          );
-
-    Sentry.withScope((scope) => {
-      scope.setLevel('error');
-      scope.setTag('runtime_signal', 'unhandled_rejection');
-      scope.setContext('runtime', {
-        pathname: window.location.pathname,
-      });
-      Sentry.captureException(rejection);
-    });
-  });
-
-  window.addEventListener('offline', () => {
-    captureRuntimeSignal('Browser went offline', 'warning', {
-      online: navigator.onLine,
-      pathname: window.location.pathname,
-    });
-  });
-
-  window.addEventListener('online', () => {
-    Sentry.addBreadcrumb({
-      category: 'connectivity',
-      message: 'Browser connectivity restored',
-      level: 'info',
-      data: {
-        pathname: window.location.pathname,
-      },
-    });
-  });
-
-  browserRuntimeMonitoringInitialized = true;
-}
-
-export function initSentry() {
-  if (sentryInitialized || !hasTelemetryConsent()) {
-    return;
-  }
-
-  const dsn = import.meta.env.VITE_SENTRY_DSN;
-  const environment = import.meta.env.MODE;
-
-  if (!dsn) {
-    if (import.meta.env.DEV) {
-      console.warn('[Sentry] DSN not configured - error monitoring disabled');
-    }
+export function initializeSentry() {
+  if (!SENTRY_DSN) {
+    console.warn('Sentry DSN not configured. Error tracking disabled.');
     return;
   }
 
   Sentry.init({
-    dsn,
-    environment,
-    integrations: [
-      Sentry.browserTracingIntegration({
-        enableLongAnimationFrame: true,
-        enableLongTask: true,
-        enableInp: true,
-        traceFetch: true,
-        traceXHR: true,
-      }),
-      Sentry.replayIntegration({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
-    ],
-    tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
-    replaysSessionSampleRate: environment === 'production' ? 0.1 : 1.0,
+    dsn: SENTRY_DSN,
+    environment: APP_ENV,
+    release: `wasel@${APP_VERSION}`,
+
+    // Performance sampling
+    tracesSampleRate: APP_ENV === 'production' ? 0.1 : 1.0,
+
+    // Session Replay
+    replaysSessionSampleRate: APP_ENV === 'production' ? 0.1 : 0,
     replaysOnErrorSampleRate: 1.0,
-    release: `wasel@${import.meta.env.VITE_APP_VERSION || '1.0.0'}`,
-    sendDefaultPii: false,
-    tracePropagationTargets: [
-      'localhost',
-      /^https:\/\/([a-z0-9-]+\.)?supabase\.co/i,
-      /^https:\/\/wasel14\.online/i,
-    ],
-    ignoreErrors: [
-      'ResizeObserver loop limit exceeded',
-      'Non-Error promise rejection captured',
-      'Network request failed',
-      'Failed to fetch',
-    ],
-    beforeSend(event) {
-      const raw = safeStorageGet('wasel_local_user_v2');
 
-      if (raw) {
-        try {
-          const userData = JSON.parse(raw) as { id?: string };
-          // Only attach the opaque user ID — never name, email, or phone
-          if (typeof userData.id === 'string') {
-            event.user = { id: userData.id };
-          }
-        } catch {
-          // Ignore malformed local user payloads.
+    // Error filtering
+    beforeSend(event, hint) {
+      const error = hint.originalException;
+
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch') && error.message.includes('ad')) {
+          return null;
         }
-      }
 
-      event.tags = {
-        ...event.tags,
-        language: safeStorageGet('wasel_language') ?? 'ar',
-        theme: safeStorageGet('wasel_theme') ?? 'dark',
-      };
+        if (error.message.includes('ResizeObserver')) {
+          return null;
+        }
 
-      if (event.extra) {
-        event.extra = redactSensitiveValue(event.extra) as Record<string, unknown>;
-      }
-
-      // Strip any request/response bodies that may contain PII
-      if (event.request) {
-        delete event.request.data;
-        delete event.request.cookies;
+        if (error.name === 'AbortError') {
+          return null;
+        }
       }
 
       return event;
     },
+
+    // Breadcrumbs
+    beforeBreadcrumb(breadcrumb) {
+      if (breadcrumb.category === 'console' && breadcrumb.level === 'log' && APP_ENV === 'production') {
+        return null;
+      }
+
+      if (typeof breadcrumb.data?.url === 'string') {
+        breadcrumb.data.url = sanitizeUrl(breadcrumb.data.url);
+      }
+
+      return breadcrumb;
+    },
+
+    // Ignore certain errors
+    ignoreErrors: [
+      'top.GLOBALS',
+      'chrome-extension://',
+      'moz-extension://',
+
+      'NetworkError',
+      'Network request failed',
+
+      'Can\'t find variable: ZiteReader',
+      'jigsaw is not defined',
+      'ComboSearch is not defined',
+
+      'fb_xd_fragment',
+
+      'bmi_SafeAddOnload',
+      'EBCallBackMessageReceived',
+    ],
+
+    // Deny URLs
+    denyUrls: [
+      /extensions\//i,
+      /^chrome:\/\//i,
+      /^moz-extension:\/\//i,
+
+      /graph\.facebook\.com/i,
+
+      /google-analytics\.com/i,
+      /googletagmanager\.com/i,
+    ],
   });
 
-  installBrowserRuntimeMonitoring();
+  if (typeof window !== 'undefined') {
+    window.addEventListener('wasel-user-identified', ((event: Event) => {
+      const customEvent = event as CustomEvent<{ userId?: string; email?: string }>;
+      const { userId, email } = customEvent.detail ?? {};
+      if (!userId) {
+        return;
+      }
 
-  registerMonitoringSink({
-    captureException: (error, context) => {
-      Sentry.captureException(
-        error || new Error('Unknown error'),
-        omitUndefined({
-          extra: redactContext(context),
-        }),
-      );
-    },
-    captureMessage: (message, level, context) => {
-      Sentry.captureMessage(
-        message,
-        omitUndefined({
-          level,
-          extra: redactContext(context),
-        }),
-      );
-    },
-    addBreadcrumb: (message, category, data) => {
-      Sentry.addBreadcrumb(omitUndefined({
-        message,
-        category,
-        level: 'info' as const,
-        data: redactContext(data),
-      }));
-    },
-  });
-
-  sentryInitialized = true;
+      Sentry.setUser({
+        id: userId,
+        email,
+      });
+    }) as EventListener);
+  }
 }
 
-export const ErrorBoundary = Sentry.ErrorBoundary;
+export const initSentry = initializeSentry;
 
-export {
-  logger,
-  trackAPICall,
-  trackNavigation,
-  trackUserAction,
-  usePerformanceMonitoring,
-};
+export function captureException(error: Error, context?: MonitoringContext) {
+  if (APP_ENV === 'development') {
+    console.error('Error captured:', error, context);
+  }
 
-export default Sentry;
+  Sentry.captureException(error, {
+    contexts: context ? { custom: context } : undefined,
+  });
+}
+
+export function startTransaction(name: string, op: string) {
+  const span = Sentry.startInactiveSpan({ name, op });
+  return {
+    finish: () => span?.end(),
+  };
+}
+
+export function addBreadcrumb(
+  message: string,
+  category: string,
+  level: Sentry.SeverityLevel = 'info',
+  data?: MonitoringContext,
+) {
+  Sentry.addBreadcrumb({
+    message,
+    category,
+    level,
+    data,
+  });
+}
+
+export function showReportDialog() {
+  Sentry.showReportDialog();
+}
+
+export function setTag(key: string, value: string) {
+  Sentry.setTag(key, value);
+}
+
+export function setContext(name: string, context: MonitoringContext) {
+  Sentry.setContext(name, context);
+}
+
+export { Sentry };

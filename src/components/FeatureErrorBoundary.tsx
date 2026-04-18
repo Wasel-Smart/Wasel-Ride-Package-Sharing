@@ -39,7 +39,7 @@ export class FeatureErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: unknown): void {
     if (shouldIgnoreError(error)) return;
     // Lazy-load monitoring to avoid circular deps
-    import('../utils/monitoring').then(({ default: Sentry }) => {
+    import('../utils/monitoring').then(({ Sentry }) => {
       Sentry.captureException(error);
     }).catch(() => {});
   }

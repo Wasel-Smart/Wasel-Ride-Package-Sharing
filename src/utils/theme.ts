@@ -6,8 +6,8 @@ export const LEGACY_DISPLAY_STORAGE_KEY = 'wasel.settings.display';
 export const THEME_READY_ATTRIBUTE = 'data-theme-ready';
 
 const THEME_META_COLORS: Record<ResolvedTheme, string> = {
-  light: '#eef4fb',
-  dark: '#eef4fb',
+  light: '#eef6ff',
+  dark: '#081520',
 };
 
 export function sanitizeThemePreference(value: string | null | undefined): ThemePreference {
@@ -36,6 +36,11 @@ function readLegacyDisplayTheme(): ThemePreference | null {
   }
 }
 
+function readLegacyThemeFallback(): ThemePreference | null {
+  const legacyTheme = readLegacyDisplayTheme();
+  return legacyTheme === 'light' ? 'light' : null;
+}
+
 export function getSystemTheme(): ResolvedTheme {
   if (
     typeof window !== 'undefined' &&
@@ -59,10 +64,10 @@ export function getStoredThemePreference(): ThemePreference {
       return sanitizeThemePreference(stored);
     }
   } catch {
-    return readLegacyDisplayTheme() ?? 'light';
+    return readLegacyThemeFallback() ?? 'light';
   }
 
-  return readLegacyDisplayTheme() ?? 'light';
+  return readLegacyThemeFallback() ?? 'light';
 }
 
 export function resolveThemePreference(theme: ThemePreference): ResolvedTheme {

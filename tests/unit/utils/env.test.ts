@@ -17,9 +17,11 @@ import {
   getSupportEmailUrl,
   getSmsSupportUrl,
   getSupportPhoneUrl,
+  resetConfigCache,
 } from '../../../src/utils/env';
 
 const originalAppUrl = process.env.VITE_APP_URL;
+const originalStripeKey = process.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
 afterEach(() => {
   if (originalAppUrl === undefined) {
@@ -28,7 +30,14 @@ afterEach(() => {
     process.env.VITE_APP_URL = originalAppUrl;
   }
 
+  if (originalStripeKey === undefined) {
+    delete process.env.VITE_STRIPE_PUBLISHABLE_KEY;
+  } else {
+    process.env.VITE_STRIPE_PUBLISHABLE_KEY = originalStripeKey;
+  }
+
   window.history.replaceState({}, '', '/');
+  resetConfigCache();
 });
 
 // ── 1. getEnv ─────────────────────────────────────────────────────────────────
@@ -63,6 +72,7 @@ describe('getConfig()', () => {
     expect(config).toHaveProperty('appName');
     expect(config).toHaveProperty('appUrl');
     expect(config).toHaveProperty('authCallbackPath');
+    expect(config).toHaveProperty('stripeEnabled');
     expect(config).toHaveProperty('enableTwoFactorAuth');
     expect(config).toHaveProperty('isProd');
     expect(config).toHaveProperty('isDev');
@@ -98,8 +108,23 @@ describe('getConfig()', () => {
 
   it('prefers the runtime localhost origin over a stale local VITE_APP_URL', () => {
     process.env.VITE_APP_URL = 'http://localhost:5173';
+    resetConfigCache();
 
     expect(getConfig().appUrl).toBe(window.location.origin);
+  });
+
+  it('only enables Stripe when the publishable key is meaningful', () => {
+    process.env.VITE_STRIPE_PUBLISHABLE_KEY = 'pk_live_123456789';
+    resetConfigCache();
+
+    expect(getConfig().stripeEnabled).toBe(true);
+    expect(getConfig().stripePublishableKey).toBe('pk_live_123456789');
+
+    process.env.VITE_STRIPE_PUBLISHABLE_KEY = 'pk_test_or_pk_live_key';
+    resetConfigCache();
+
+    expect(getConfig().stripeEnabled).toBe(false);
+    expect(getConfig().stripePublishableKey).toBe('');
   });
 });
 

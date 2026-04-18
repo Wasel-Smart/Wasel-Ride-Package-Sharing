@@ -6,6 +6,7 @@ import { supabase, isSupabaseConfigured } from '../utils/supabase/client';
 import { getAuthRedirectCandidates } from '../utils/env';
 import { scheduleDeferredTask } from '../utils/runtimeScheduling';
 import { useLocalAuth } from './LocalAuth';
+import { sanitizeForLog } from '../utils/logSanitizer';
 import {
   buildUpdatedLocalUser,
   createLocalAuthProfile,
@@ -104,7 +105,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error: unknown) {
       const err = error as Error;
       if (!shouldIgnoreProfileError(err) && import.meta.env?.DEV) {
-        console.error('Profile fetch error:', err);
+        console.error('Profile fetch error:', sanitizeForLog(String(err)));
       }
       setProfile(null);
     }
@@ -191,7 +192,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       } catch (error: unknown) {
         if (import.meta.env?.DEV) {
-          console.warn('Auth init warning:', (error as Error).message);
+          console.warn('Auth init warning:', sanitizeForLog((error as Error).message));
         }
       } finally {
         if (mounted) {
@@ -214,7 +215,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         void fetchProfile(data.session.user.id, true);
       } catch (error) {
         if (import.meta.env?.DEV) {
-          console.warn('Auth callback sync warning:', error);
+          console.warn('Auth callback sync warning:', sanitizeForLog(String(error)));
         }
       }
     };
@@ -273,7 +274,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setSession(null);
     } catch (error) {
       if (import.meta.env?.DEV) {
-        console.error('Sign out error:', error);
+        console.error('Sign out error:', sanitizeForLog(String(error)));
       }
     }
   }, [localAuth]);

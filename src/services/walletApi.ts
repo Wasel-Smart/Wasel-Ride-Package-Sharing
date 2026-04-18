@@ -88,6 +88,20 @@ export interface AddPaymentMethodInput {
   isDefault?: boolean;
 }
 
+interface WalletBalanceSummary {
+  available: number;
+  pending: number;
+  currency: string;
+}
+
+interface ProcessWalletTransactionInput {
+  amount: number;
+  type: 'credit' | 'debit';
+  description: string;
+  referenceId?: string;
+  referenceType?: string;
+}
+
 type PersistedWalletSnapshot = {
   storedAt: number;
   snapshot: WalletSnapshot;
@@ -287,7 +301,48 @@ function getCachedVerificationToken(purpose: StepUpPurpose): string | null {
   return cachedStepUpVerification.verificationToken;
 }
 
+/**
+ * Wasel Wallet API
+ * 
+ * Provides secure wallet operations including:
+ * - Balance and transaction management
+ * - Payment intent creation and confirmation
+ * - Payment method management
+ * - PIN verification and step-up authentication
+ * - Subscriptions and transfers
+ * 
+ * @remarks
+ * All operations require authentication. Sensitive operations (withdrawals, transfers,
+ * payment method changes) require PIN + OTP verification via step-up authentication.
+ * 
+ * @example
+ * ```typescript
+ * // Get wallet data
+ * const wallet = await walletApi.getWallet(userId);
+ * 
+ * // Create payment intent
+ * const intent = await walletApi.createPaymentIntent(
+ *   'ride_payment',
+ *   25.50,
+ *   'card',
+ *   { referenceType: 'ride', referenceId: 'ride_123' }
+ * );
+ * ```
+ */
 export const walletApi = {
+  /**
+   * Retrieves the complete wallet data for the authenticated user.
+   * 
+   * @param userId - User ID (currently unused, uses authenticated user)
+   * @returns Promise resolving to wallet data including balance, transactions, and payment methods
+   * @throws Error if wallet API is unavailable or authentication fails
+   * 
+   * @example
+   * ```typescript
+   * const wallet = await walletApi.getWallet(userId);
+   * console.log(`Balance: ${wallet.balance} JOD`);
+   * ```
+   */
   async getWallet(userId: string): Promise<WalletData> {
     void userId;
     const { userId: authUserId } = await getAuthDetails();
@@ -295,6 +350,25 @@ export const walletApi = {
     return snapshot.data;
   },
 
+  async getBalance(userId: string): Promise<WalletBalanceSummary> {
+    const wallet = await walletApi.getWallet(userId);
+    return {
+      available: wallet.balance,
+      pending: wallet.pendingBalance,
+      currency: wallet.currency,
+    };
+  },
+
+  /**
+   * Retrieves wallet snapshot with caching and offline fallback.
+   * 
+   * @param userId - User ID for wallet lookup
+   * @returns Promise resolving to wallet snapshot with reliability metadata
+   * @remarks
+   * - Cached for 15 seconds to reduce API calls
+   * - Falls back to localStorage if API is unavailable
+   * - Snapshot includes degradation flag if using fallback data
+   */
   async getWalletSnapshot(userId: string): Promise<WalletSnapshot> {
     return withCache(walletReadCache, userId, 15_000, async () => {
       try {
@@ -347,6 +421,69 @@ export const walletApi = {
     };
   },
 
+  async processTransaction(
+    userId: string,
+    input: ProcessWalletTransactionInput,
+  ): Promise<WalletTransaction> {
+    const wallet = await walletApi.getWallet(userId);
+    const signedAmount = input.type === 'credit' ? Math.abs(input.amount) : -Math.abs(input.amount);
+    const transaction: WalletTransaction = {
+      id: input.referenceId ?? `wallet-tx-${Date.now()}`,
+      type: input.type === 'credit' ? 'deposit' : 'payment',
+      description: input.description,
+      amount: signedAmount,
+      createdAt: new Date().toISOString(),
+      status: 'completed',
+      metadata: {
+        referenceId: input.referenceId ?? null,
+        referenceType: input.referenceType ?? null,
+      },
+    };
+
+    const snapshot = walletApi.getPersistedWalletSnapshot(userId);
+    if (snapshot) {
+      const nextBalance = Number((wallet.balance + signedAmount).toFixed(2));
+      persistWalletSnapshot(userId, {
+        ...snapshot,
+        data: {
+          ...snapshot.data,
+          balance: nextBalance,
+          transactions: [transaction, ...snapshot.data.transactions],
+        },
+      });
+    }
+
+    return transaction;
+  },
+
+  /**
+   * Creates a payment intent for various wallet operations.
+   * 
+   * @param purpose - Payment purpose: 'deposit', 'ride_payment', 'package_payment', 'subscription', or 'withdrawal'
+   * @param amount - Amount in JOD (Jordanian Dinars)
+   * @param paymentMethodType - Payment method: 'card', 'wallet', 'cliq', or 'aman'
+   * @param options - Optional configuration
+   * @param options.referenceType - Type of reference entity (e.g., 'ride', 'package')
+   * @param options.referenceId - ID of reference entity
+   * @param options.metadata - Additional metadata for the payment
+   * @param options.idempotencyKey - Key to prevent duplicate payments
+   * @returns Promise resolving to payment intent with client secret for confirmation
+   * @throws Error if wallet API is unavailable or validation fails
+   * 
+   * @example
+   * ```typescript
+   * const intent = await walletApi.createPaymentIntent(
+   *   'ride_payment',
+   *   25.50,
+   *   'card',
+   *   {
+   *     referenceType: 'ride',
+   *     referenceId: 'ride_abc123',
+   *     idempotencyKey: 'payment_xyz789'
+   *   }
+   * );
+   * ```
+   */
   async createPaymentIntent(
     purpose: 'deposit' | 'ride_payment' | 'package_payment' | 'subscription' | 'withdrawal',
     amount: number,
@@ -459,6 +596,36 @@ export const walletApi = {
     });
   },
 
+  /**
+   * Verifies wallet PIN for step-up authentication.
+   * 
+   * @param userId - User ID (currently unused, uses authenticated user)
+   * @param pin - 4-6 digit wallet PIN
+   * @param purpose - Verification purpose: 'transfer', 'withdrawal', or 'payment_method'
+   * @param otpCode - Optional OTP code for additional verification
+   * @param challengeId - Optional challenge ID from previous verification attempt
+   * @returns Promise resolving to verification result with token if successful
+   * @throws Error if PIN is invalid or verification fails
+   * 
+   * @remarks
+   * Verification tokens are cached for 9 minutes and must match the purpose.
+   * Some operations require both PIN and OTP verification.
+   * 
+   * @example
+   * ```typescript
+   * const verification = await walletApi.verifyPin(
+   *   userId,
+   *   '1234',
+   *   'transfer',
+   *   '123456' // OTP code
+   * );
+   * 
+   * if (verification.verified) {
+   *   // Proceed with sensitive operation
+   *   await walletApi.sendMoney(userId, recipientId, 50);
+   * }
+   * ```
+   */
   async verifyPin(
     userId: string,
     pin: string,

@@ -58,6 +58,11 @@ export default defineConfig({
     tailwindcss(),
   ],
 
+  // Production optimizations
+  define: {
+    __DEV__: JSON.stringify(process.env.NODE_ENV === 'development'),
+  },
+
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
     alias: {
@@ -69,8 +74,22 @@ export default defineConfig({
     target: 'es2020',
     outDir: 'dist',
     sourcemap: 'hidden',
-    minify: 'esbuild',
-    chunkSizeWarningLimit: 600,
+    minify: 'terser',
+    chunkSizeWarningLimit: 400,
+    cssCodeSplit: true,
+    reportCompressedSize: false, // Faster builds
+    
+    // Advanced minification
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info'],
+      },
+      mangle: {
+        safari10: true,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -154,6 +173,20 @@ export default defineConfig({
 
           return undefined;
         },
+        // Optimize asset naming for better caching
+        assetFileNames: (assetInfo) => {
+          const info = (assetInfo.name ?? '').split('.');
+          const ext = info[info.length - 1];
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
+            return `assets/images/[name]-[hash][extname]`;
+          }
+          if (/woff2?|eot|ttf|otf/i.test(ext)) {
+            return `assets/fonts/[name]-[hash][extname]`;
+          }
+          return `assets/[name]-[hash][extname]`;
+        },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
       },
     },
   },
@@ -161,7 +194,7 @@ export default defineConfig({
   server: {
     port: 3000,
     strictPort: false,
-    open: true,
+    open: false,
     host: true,
   },
 

@@ -1,4 +1,5 @@
 import { Shield } from 'lucide-react';
+import { useTheme } from '../../../contexts/ThemeContext';
 import { CITIES } from '../../../pages/waselCoreRideData';
 import { DS, r } from '../../../pages/waselServiceShared';
 import type { PostedRide } from '../../../services/journeyLogistics';
@@ -53,11 +54,13 @@ export function OfferRideFormPanel({
   onStepChange,
   onSubmit,
 }: OfferRideFormPanelProps) {
+  const { resolvedTheme } = useTheme();
+
   return (
     <div style={{ background: DS.card, borderRadius: r(20), padding: '28px 28px', border: `1px solid ${DS.border}` }}>
       <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 20 }}>
         <div style={{ background: DS.card2, borderRadius: r(16), padding: '16px 18px', border: `1px solid ${DS.border}` }}>
-          <div style={{ color: '#fff', fontWeight: 800, marginBottom: 10 }}>Posting confidence</div>
+          <div style={{ color: DS.text, fontWeight: 800, marginBottom: 10 }}>Posting confidence</div>
           <div style={{ display: 'grid', gap: 10 }}>
             {[
               { label: 'Live corridor', value: corridorCount > 0 ? `${corridorCount} rides already posted on this route` : 'No live rides on this route yet' },
@@ -68,18 +71,18 @@ export function OfferRideFormPanel({
             ].map((item) => (
               <div key={item.label} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card }}>
                 <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
-                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>{item.value}</div>
+                <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>{item.value}</div>
               </div>
             ))}
           </div>
         </div>
         <div style={{ background: DS.card2, borderRadius: r(16), padding: '16px 18px', border: `1px solid ${DS.border}` }}>
-          <div style={{ color: '#fff', fontWeight: 800, marginBottom: 10 }}>Recent corridor posts</div>
+          <div style={{ color: DS.text, fontWeight: 800, marginBottom: 10 }}>Recent corridor posts</div>
           {recentPostedRides.length > 0 ? (
             <div style={{ display: 'grid', gap: 10 }}>
               {recentPostedRides.map((ride) => (
                 <div key={ride.id} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card }}>
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>{ride.from} to {ride.to}</div>
+                  <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.82rem' }}>{ride.from} to {ride.to}</div>
                   <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>{ride.date} at {ride.time} · {ride.carModel || 'Vehicle pending'}</div>
                 </div>
               ))}
@@ -97,7 +100,7 @@ export function OfferRideFormPanel({
       </div>
 
       {formError && (
-        <div style={{ marginBottom: 18, display: 'flex', gap: 10, alignItems: 'center', background: `${DS.gold}12`, border: `1px solid ${DS.gold}30`, borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}>
+        <div style={{ marginBottom: 18, display: 'flex', gap: 10, alignItems: 'center', background: `${DS.gold}12`, border: `1px solid ${DS.gold}30`, borderRadius: r(14), padding: '12px 14px', color: DS.text, fontSize: '0.84rem' }}>
           <Shield size={16} color={DS.gold} />
           <span>{formError}</span>
         </div>
@@ -105,11 +108,11 @@ export function OfferRideFormPanel({
 
       {step === 1 && (
         <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr' }}>
-          <h3 style={{ color: '#fff', fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>Route Details</h3>
+          <h3 style={{ color: DS.text, fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>Route Details</h3>
           {[{ label: 'From', key: 'from' as const }, { label: 'To', key: 'to' as const }].map((field) => (
             <div key={field.label}>
               <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>{field.label}</label>
-              <select value={form[field.key]} onChange={(event) => onUpdate(field.key, event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}>
+              <select value={form[field.key]} onChange={(event) => onUpdate(field.key, event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}>
                 {CITIES.map((city) => (
                   <option key={city} value={city} style={{ background: DS.card }}>
                     {city}
@@ -120,11 +123,11 @@ export function OfferRideFormPanel({
           ))}
           <div>
             <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Date</label>
-            <input type="date" value={form.date} onChange={(event) => onUpdate('date', event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', colorScheme: 'dark', boxSizing: 'border-box' }} />
+            <input type="date" value={form.date} onChange={(event) => onUpdate('date', event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', colorScheme: resolvedTheme, boxSizing: 'border-box' }} />
           </div>
           <div>
             <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Time</label>
-            <input type="time" value={form.time} onChange={(event) => onUpdate('time', event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', colorScheme: 'dark', boxSizing: 'border-box' }} />
+            <input type="time" value={form.time} onChange={(event) => onUpdate('time', event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', colorScheme: resolvedTheme, boxSizing: 'border-box' }} />
           </div>
           <button data-testid="offer-ride-step-1" onClick={() => onStepChange(2)} style={{ gridColumn: '1/-1', height: 50, borderRadius: r(14), border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, fontFamily: DS.F, fontSize: '0.95rem', cursor: 'pointer', boxShadow: `0 4px 20px ${DS.cyan}30` }}>
             Continue
@@ -134,7 +137,7 @@ export function OfferRideFormPanel({
 
       {step === 2 && (
         <div style={{ display: 'grid', gap: 14 }}>
-          <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 4px' }}>Seats, Pricing, and Capacity</h3>
+          <h3 style={{ color: DS.text, fontWeight: 800, margin: '0 0 4px' }}>Seats, Pricing, and Capacity</h3>
           {driverPlan && (
             <div className="sp-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
               {[
@@ -144,7 +147,7 @@ export function OfferRideFormPanel({
               ].map((item) => (
                 <div key={item.label} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '13px 14px' }}>
                   <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>{item.value}</div>
+                  <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>{item.value}</div>
                   <div style={{ color: DS.sub, fontSize: '0.73rem', lineHeight: 1.45, marginTop: 5 }}>{item.detail}</div>
                 </div>
               ))}
@@ -153,12 +156,12 @@ export function OfferRideFormPanel({
           {[{ label: 'Available Seats', key: 'seats' as const, min: 1, max: 7 }, { label: 'Price per Seat (JOD)', key: 'price' as const, min: 1, max: 50 }].map((field) => (
             <div key={field.label}>
               <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>{field.label}</label>
-              <input type="number" min={field.min} max={field.max} value={form[field.key]} onChange={(event) => onUpdate(field.key, Number(event.target.value))} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+              <input type="number" min={field.min} max={field.max} value={form[field.key]} onChange={(event) => onUpdate(field.key, Number(event.target.value))} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
             </div>
           ))}
           {driverPlan && (
             <div style={{ borderRadius: r(14), border: `1px solid ${DS.cyan}24`, background: `${DS.cyan}08`, padding: '13px 14px' }}>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem' }}>Wasel Brain recommendation</div>
+              <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.82rem' }}>Wasel Brain recommendation</div>
               <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.6, marginTop: 6 }}>
                 {driverPlan.waselBrainNote} Empty-seat risk is about {driverPlan.emptySeatCostJod} JOD per open seat, and package-ready supply can add about {driverPlan.packageBonusJod} JOD on this route.
                 {liveSignal ? ` Live route proof shows ${liveSignal.routeOwnershipScore}/100 ownership with ${liveSignal.productionSources[0]}.` : ''}
@@ -167,7 +170,7 @@ export function OfferRideFormPanel({
           )}
           <div>
             <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Car Model</label>
-            <input placeholder="e.g. Toyota Camry 2023" value={form.carModel} onChange={(event) => onUpdate('carModel', event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+            <input placeholder="e.g. Toyota Camry 2023" value={form.carModel} onChange={(event) => onUpdate('carModel', event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <button onClick={() => onUpdate('acceptsPackages', !form.acceptsPackages)} style={{ padding: '12px 18px', borderRadius: r(10), border: `1px solid ${form.acceptsPackages ? DS.green : DS.border}`, background: form.acceptsPackages ? `${DS.green}10` : DS.card2, color: form.acceptsPackages ? DS.green : DS.sub, fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>
             Package network: {form.acceptsPackages ? 'Accepting packages on this ride' : 'Passengers only'}
@@ -175,7 +178,7 @@ export function OfferRideFormPanel({
           {form.acceptsPackages && (
             <div>
               <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Package capacity</label>
-              <select value={form.packageCapacity} onChange={(event) => onUpdate('packageCapacity', event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}>
+              <select value={form.packageCapacity} onChange={(event) => onUpdate('packageCapacity', event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}>
                 {OFFER_RIDE_PACKAGE_CAPACITY_OPTIONS.map((size) => (
                   <option key={size} value={size} style={{ background: DS.card }}>
                     {size}
@@ -193,7 +196,7 @@ export function OfferRideFormPanel({
 
       {step === 3 && (
         <div style={{ display: 'grid', gap: 14 }}>
-          <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 4px' }}>Preferences and Connected Delivery</h3>
+          <h3 style={{ color: DS.text, fontWeight: 800, margin: '0 0 4px' }}>Preferences and Connected Delivery</h3>
           <div>
             <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Gender Preference</label>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -210,16 +213,16 @@ export function OfferRideFormPanel({
           {form.acceptsPackages && (
             <div>
               <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Package note</label>
-              <input placeholder="Example: compact parcels only" value={form.packageNote} onChange={(event) => onUpdate('packageNote', event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+              <input placeholder="Example: compact parcels only" value={form.packageNote} onChange={(event) => onUpdate('packageNote', event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
             </div>
           )}
           <div>
             <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Note for passengers</label>
-            <textarea rows={2} placeholder="Anything passengers should know" value={form.note} onChange={(event) => onUpdate('note', event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
+            <textarea rows={2} placeholder="Anything passengers should know" value={form.note} onChange={(event) => onUpdate('note', event.target.value)} style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
           </div>
           <div style={{ background: DS.card2, borderRadius: r(14), padding: '18px 20px', border: `1px solid ${DS.border}` }}>
             <h4 style={{ color: DS.cyan, fontWeight: 700, margin: '0 0 12px', fontSize: '0.85rem' }}>Summary</h4>
-            <div style={{ color: '#fff', fontSize: '0.9rem', lineHeight: 1.8 }}>
+            <div style={{ color: DS.text, fontSize: '0.9rem', lineHeight: 1.8 }}>
               {form.from} to {form.to} - {form.date || 'Choose date'} at {form.time}
               <br />
               {form.seats} seats - {form.price} JOD/seat - {form.carModel || 'Car TBD'}

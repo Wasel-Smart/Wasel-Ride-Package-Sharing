@@ -166,17 +166,17 @@ function SOSPanel() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
           <CheckCircle2 size={28} color="#22c55e" />
           <div>
-            <div style={{ color: '#fff', fontWeight: 900, fontSize: '1.05rem' }}>Emergency alert sent</div>
+            <div style={{ color: DS.text, fontWeight: 900, fontSize: '1.05rem' }}>Emergency alert sent</div>
             <div style={{ color: DS.sub, fontSize: '0.78rem', marginTop: 3 }}>Safety team notified · Trusted contacts alerted</div>
           </div>
         </div>
         {location && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', borderRadius: r(10), padding: '10px 13px', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: DS.card2, borderRadius: r(10), padding: '10px 13px', marginBottom: 12 }}>
             <MapPin size={14} color={DS.cyan} />
-            <span style={{ color: DS.sub, fontSize: '0.76rem' }}>Location shared: <strong style={{ color: '#fff' }}>{location}</strong></span>
+            <span style={{ color: DS.sub, fontSize: '0.76rem' }}>Location shared: <strong style={{ color: DS.text }}>{location}</strong></span>
           </div>
         )}
-        <button onClick={() => { setStep('idle'); setLocation(null); }} style={{ ...buttonBase, background: 'rgba(255,255,255,0.08)', color: '#fff', padding: '0 20px' }}>
+        <button onClick={() => { setStep('idle'); setLocation(null); }} style={{ ...buttonBase, background: DS.card2, color: DS.text, padding: '0 20px' }}>
           Done
         </button>
       </div>
@@ -189,7 +189,7 @@ function SOSPanel() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
           <AlertTriangle size={26} color="#ef4444" />
           <div>
-            <div style={{ color: '#fff', fontWeight: 900, fontSize: '1.05rem' }}>
+            <div style={{ color: DS.text, fontWeight: 900, fontSize: '1.05rem' }}>
               {step === 'locating' ? 'Getting your location…' : 'Send emergency alert?'}
             </div>
             <div style={{ color: DS.sub, fontSize: '0.78rem', marginTop: 3 }}>
@@ -202,7 +202,7 @@ function SOSPanel() {
             <button onClick={handleConfirm} style={{ ...buttonBase, background: '#ef4444', color: '#fff', flex: 1 }}>
               Confirm — Send Alert
             </button>
-            <button onClick={() => setStep('idle')} style={{ ...buttonBase, background: 'rgba(255,255,255,0.08)', color: '#fff', flex: 1 }}>
+            <button onClick={() => setStep('idle')} style={{ ...buttonBase, background: DS.card2, color: DS.text, flex: 1 }}>
               Cancel
             </button>
           </div>
@@ -221,7 +221,7 @@ function SOSPanel() {
           <AlertTriangle size={24} color="#ef4444" />
         </div>
         <div>
-          <div style={{ color: '#fff', fontWeight: 900, fontSize: '1.05rem' }}>SOS Emergency</div>
+          <div style={{ color: DS.text, fontWeight: 900, fontSize: '1.05rem' }}>SOS Emergency</div>
           <div style={{ color: DS.sub, fontSize: '0.78rem', marginTop: 3 }}>One tap to alert safety team and share your live location</div>
         </div>
       </div>
@@ -278,8 +278,8 @@ function EmergencyContacts() {
     height: 42,
     borderRadius: r(10),
     border: `1px solid ${DS.border}`,
-    background: 'rgba(255,255,255,0.04)',
-    color: '#fff',
+    background: DS.card2,
+    color: DS.text,
     padding: '0 12px',
     fontFamily: DS.F,
     outline: 'none',
@@ -291,12 +291,12 @@ function EmergencyContacts() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Heart size={18} color={DS.cyan} />
-          <div style={{ color: '#fff', fontWeight: 900 }}>Emergency Contacts</div>
+          <div style={{ color: DS.text, fontWeight: 900 }}>Emergency Contacts</div>
         </div>
         {!adding && (
           <button
             onClick={() => setAdding(true)}
-            style={{ height: 34, padding: '0 12px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: 'rgba(255,255,255,0.06)', color: '#fff', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: DS.F, fontSize: '0.78rem' }}
+            style={{ height: 34, padding: '0 12px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: DS.F, fontSize: '0.78rem' }}
           >
             <Plus size={13} /> Add Contact
           </button>
@@ -311,12 +311,12 @@ function EmergencyContacts() {
 
       <div style={{ display: 'grid', gap: 10 }}>
         {contacts.map((contact) => (
-          <div key={contact.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.04)', border: `1px solid ${DS.border}`, borderRadius: r(12), padding: '12px 14px' }}>
+          <div key={contact.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: DS.card2, border: `1px solid ${DS.border}`, borderRadius: r(12), padding: '12px 14px' }}>
             <div style={{ width: 36, height: 36, borderRadius: '50%', background: `${DS.cyan}18`, border: `1px solid ${DS.cyan}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DS.cyan, flexShrink: 0 }}>
               <UserCheck size={16} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem' }}>{contact.name}</div>
+              <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.85rem' }}>{contact.name}</div>
               <div style={{ color: DS.sub, fontSize: '0.74rem', marginTop: 3 }}>{contact.relationship} · {contact.phone}</div>
             </div>
             <button onClick={() => handleRemove(contact.id)} style={{ border: 'none', background: 'transparent', color: 'rgba(239,68,68,0.55)', cursor: 'pointer', padding: 4 }}>
@@ -327,12 +327,12 @@ function EmergencyContacts() {
       </div>
 
       {adding && (
-        <div style={{ marginTop: 14, display: 'grid', gap: 10, background: 'rgba(255,255,255,0.03)', borderRadius: r(14), padding: '14px' }}>
+        <div style={{ marginTop: 14, display: 'grid', gap: 10, background: DS.card2, borderRadius: r(14), padding: '14px' }}>
           <input placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} />
           <input placeholder="+962 79 xxx xxxx" value={phone} onChange={(e) => setPhone(e.target.value)} style={inputStyle} type="tel" />
           <select value={relationship} onChange={(e) => setRelationship(e.target.value)} style={{ ...inputStyle, height: 42 }}>
             {['Family', 'Friend', 'Colleague', 'Partner', 'Other'].map((rel) => (
-              <option key={rel} value={rel} style={{ background: '#0F172A' }}>{rel}</option>
+              <option key={rel} value={rel} style={{ background: '#ffffff', color: '#10243d' }}>{rel}</option>
             ))}
           </select>
           {error && <div style={{ color: '#f87171', fontSize: '0.75rem' }}>{error}</div>}
@@ -379,7 +379,7 @@ function SafetyChecklist() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <ShieldCheck size={18} color={DS.green} />
-          <div style={{ color: '#fff', fontWeight: 900 }}>Pre-Trip Safety Checklist</div>
+          <div style={{ color: DS.text, fontWeight: 900 }}>Pre-Trip Safety Checklist</div>
         </div>
         <span style={{ color: completedCount === CHECKLIST_ITEMS.length ? DS.green : DS.gold, fontWeight: 800, fontSize: '0.8rem' }}>
           {completedCount}/{CHECKLIST_ITEMS.length}
@@ -387,7 +387,7 @@ function SafetyChecklist() {
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 4, marginBottom: 14, overflow: 'hidden' }}>
+      <div style={{ height: 4, background: DS.card3, borderRadius: 4, marginBottom: 14, overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${(completedCount / CHECKLIST_ITEMS.length) * 100}%`, background: completedCount === CHECKLIST_ITEMS.length ? DS.green : DS.cyan, borderRadius: 4, transition: 'width 0.3s' }} />
       </div>
 
@@ -396,13 +396,13 @@ function SafetyChecklist() {
           <button
             key={item.id}
             onClick={() => toggle(item.id)}
-            style={{ display: 'flex', alignItems: 'flex-start', gap: 12, background: checked[item.id] ? `${DS.green}0A` : 'rgba(255,255,255,0.03)', border: `1px solid ${checked[item.id] ? `${DS.green}30` : DS.border}`, borderRadius: r(12), padding: '12px 14px', cursor: 'pointer', textAlign: 'left' }}
+            style={{ display: 'flex', alignItems: 'flex-start', gap: 12, background: checked[item.id] ? `${DS.green}0A` : DS.card2, border: `1px solid ${checked[item.id] ? `${DS.green}30` : DS.border}`, borderRadius: r(12), padding: '12px 14px', cursor: 'pointer', textAlign: 'left' }}
           >
             <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${checked[item.id] ? DS.green : DS.border}`, background: checked[item.id] ? DS.green : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
               {checked[item.id] && <CheckCircle2 size={13} color="#041018" />}
             </div>
             <div>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{item.label}</div>
+              <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.84rem' }}>{item.label}</div>
               <div style={{ color: DS.sub, fontSize: '0.73rem', marginTop: 3, lineHeight: 1.5 }}>{item.description}</div>
             </div>
           </button>
@@ -429,7 +429,7 @@ function CulturalSettings() {
     width: 44,
     height: 24,
     borderRadius: 12,
-    background: on ? DS.cyan : 'rgba(255,255,255,0.15)',
+    background: on ? DS.cyan : DS.card3,
     border: 'none',
     cursor: 'pointer',
     position: 'relative',
@@ -461,14 +461,14 @@ function CulturalSettings() {
     <div style={{ background: DS.card, border: `1px solid ${DS.border}`, borderRadius: r(20), padding: '20px', marginBottom: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
         <Moon size={18} color={DS.gold} />
-        <div style={{ color: '#fff', fontWeight: 900 }}>Cultural Comfort Settings</div>
+        <div style={{ color: DS.text, fontWeight: 900 }}>Cultural Comfort Settings</div>
       </div>
 
       <div style={{ display: 'grid', gap: 0, borderRadius: r(12), overflow: 'hidden', border: `1px solid ${DS.border}` }}>
         {/* Prayer stops */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: `1px solid ${DS.border}` }}>
           <div style={{ flex: 1 }}>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>Prayer Stop Requests</div>
+            <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.84rem' }}>Prayer Stop Requests</div>
             <div style={{ color: DS.sub, fontSize: '0.73rem', marginTop: 3 }}>Allow brief stops at mosques on long-distance routes.</div>
           </div>
           <Toggle value={prayerStops} onChange={handlePrayerStops} />
@@ -477,7 +477,7 @@ function CulturalSettings() {
         {/* Ramadan mode */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: `1px solid ${DS.border}` }}>
           <div style={{ flex: 1 }}>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>Ramadan Mode</div>
+            <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.84rem' }}>Ramadan Mode</div>
             <div style={{ color: DS.sub, fontSize: '0.73rem', marginTop: 3 }}>Iftar timing alerts and Suhoor-aware departure windows.</div>
           </div>
           <Toggle value={ramadan} onChange={handleRamadan} />
@@ -485,7 +485,7 @@ function CulturalSettings() {
 
         {/* Gender preference */}
         <div style={{ padding: '14px 16px' }}>
-          <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem', marginBottom: 10 }}>Gender Preference</div>
+          <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.84rem', marginBottom: 10 }}>Gender Preference</div>
           <div style={{ display: 'grid', gap: 8 }}>
             {(
               [
@@ -498,10 +498,10 @@ function CulturalSettings() {
               <button
                 key={value}
                 onClick={() => handleGender(value)}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, background: genderPreference === value ? `${DS.cyan}10` : 'rgba(255,255,255,0.03)', border: `1px solid ${genderPreference === value ? `${DS.cyan}30` : DS.border}`, borderRadius: r(10), padding: '10px 14px', cursor: 'pointer', textAlign: 'left' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, background: genderPreference === value ? `${DS.cyan}10` : DS.card2, border: `1px solid ${genderPreference === value ? `${DS.cyan}30` : DS.border}`, borderRadius: r(10), padding: '10px 14px', cursor: 'pointer', textAlign: 'left' }}
               >
                 <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${genderPreference === value ? DS.cyan : DS.border}`, background: genderPreference === value ? DS.cyan : 'transparent', flexShrink: 0 }} />
-                <span style={{ color: genderPreference === value ? '#fff' : DS.sub, fontWeight: genderPreference === value ? 700 : 400, fontSize: '0.82rem' }}>{label}</span>
+                <span style={{ color: genderPreference === value ? DS.text : DS.sub, fontWeight: genderPreference === value ? 700 : 400, fontSize: '0.82rem' }}>{label}</span>
               </button>
             ))}
           </div>
@@ -540,7 +540,7 @@ function InsurancePanel() {
     <div style={{ background: DS.card, border: `1px solid ${DS.border}`, borderRadius: r(20), padding: '20px', marginBottom: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
         <FileText size={18} color={DS.gold} />
-        <div style={{ color: '#fff', fontWeight: 900 }}>Trip Insurance</div>
+        <div style={{ color: DS.text, fontWeight: 900 }}>Trip Insurance</div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
@@ -560,13 +560,13 @@ function InsurancePanel() {
       {!claimOpen ? (
         <button
           onClick={() => setClaimOpen(true)}
-          style={{ width: '100%', height: 42, borderRadius: r(12), border: `1px solid ${DS.border}`, background: 'rgba(255,255,255,0.06)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontFamily: DS.F, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: '0.84rem' }}
+          style={{ width: '100%', height: 42, borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontWeight: 700, cursor: 'pointer', fontFamily: DS.F, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: '0.84rem' }}
         >
           <FileText size={15} /> File an Insurance Claim
         </button>
       ) : (
-        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: r(14), padding: '14px' }}>
-          <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem', marginBottom: 10 }}>Describe the incident</div>
+        <div style={{ background: DS.card2, borderRadius: r(14), padding: '14px' }}>
+          <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.84rem', marginBottom: 10 }}>Describe the incident</div>
           {submitted ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: DS.green, fontWeight: 700 }}>
               <CheckCircle2 size={16} /> Claim submitted — our team will contact you within 24 hours.
@@ -578,7 +578,7 @@ function InsurancePanel() {
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 placeholder="Briefly describe what happened and which trip it relates to…"
-                style={{ width: '100%', borderRadius: r(10), border: `1px solid ${DS.border}`, background: 'rgba(255,255,255,0.04)', color: '#fff', padding: '10px 12px', fontFamily: DS.F, outline: 'none', resize: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card3, color: DS.text, padding: '10px 12px', fontFamily: DS.F, outline: 'none', resize: 'none', boxSizing: 'border-box' }}
               />
               <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
                 <button onClick={submitClaim} disabled={!description.trim()} style={{ flex: 1, height: 40, borderRadius: r(10), border: 'none', background: description.trim() ? DS.cyan : 'rgba(255,255,255,0.1)', color: description.trim() ? '#041018' : DS.sub, fontWeight: 800, cursor: description.trim() ? 'pointer' : 'not-allowed', fontFamily: DS.F }}>
@@ -647,7 +647,7 @@ function IncidentReport() {
     <div style={{ background: DS.card, border: `1px solid ${DS.border}`, borderRadius: r(20), padding: '20px', marginBottom: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
         <AlertTriangle size={18} color={DS.gold} />
-        <div style={{ color: '#fff', fontWeight: 900 }}>Report an Incident</div>
+        <div style={{ color: DS.text, fontWeight: 900 }}>Report an Incident</div>
       </div>
 
       <div style={{ display: 'grid', gap: 12 }}>
@@ -656,9 +656,9 @@ function IncidentReport() {
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
-            style={{ width: '100%', height: 42, borderRadius: r(10), border: `1px solid ${DS.border}`, background: 'rgba(255,255,255,0.04)', color: '#fff', padding: '0 12px', fontFamily: DS.F, outline: 'none' }}
+            style={{ width: '100%', height: 42, borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, padding: '0 12px', fontFamily: DS.F, outline: 'none' }}
           >
-            {INCIDENT_TYPES.map((t) => <option key={t} value={t} style={{ background: '#0F172A' }}>{t}</option>)}
+            {INCIDENT_TYPES.map((t) => <option key={t} value={t} style={{ background: '#ffffff', color: '#10243d' }}>{t}</option>)}
           </select>
         </div>
         <div>
@@ -668,7 +668,7 @@ function IncidentReport() {
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             placeholder="Describe the incident clearly…"
-            style={{ width: '100%', borderRadius: r(10), border: `1px solid ${DS.border}`, background: 'rgba(255,255,255,0.04)', color: '#fff', padding: '10px 12px', fontFamily: DS.F, outline: 'none', resize: 'none', boxSizing: 'border-box' }}
+            style={{ width: '100%', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, padding: '10px 12px', fontFamily: DS.F, outline: 'none', resize: 'none', boxSizing: 'border-box' }}
           />
         </div>
         {submitted ? (
@@ -691,9 +691,9 @@ function IncidentReport() {
           <div style={{ color: DS.sub, fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Past reports</div>
           <div style={{ display: 'grid', gap: 8 }}>
             {reports.slice(0, 3).map((report) => (
-              <div key={report.id} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${DS.border}`, borderRadius: r(10), padding: '10px 12px' }}>
+              <div key={report.id} style={{ background: DS.card2, border: `1px solid ${DS.border}`, borderRadius: r(10), padding: '10px 12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 4 }}>
-                  <span style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>{report.type}</span>
+                  <span style={{ color: DS.text, fontWeight: 700, fontSize: '0.8rem' }}>{report.type}</span>
                   <span style={{ color: statusColor[report.status], fontSize: '0.72rem', fontWeight: 700 }}>{report.status.replace('_', ' ')}</span>
                 </div>
                 <div style={{ color: DS.sub, fontSize: '0.73rem', lineHeight: 1.5 }}>{report.description.slice(0, 80)}{report.description.length > 80 ? '…' : ''}</div>
@@ -724,7 +724,7 @@ function SafetyScore({ user }: { user: { trustScore: number; verified?: boolean;
     <div style={{ background: DS.card, border: `1px solid ${DS.border}`, borderRadius: r(20), padding: '20px', marginBottom: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
         <Star size={18} color={color} />
-        <div style={{ color: '#fff', fontWeight: 900 }}>Safety Score</div>
+        <div style={{ color: DS.text, fontWeight: 900 }}>Safety Score</div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 14 }}>
@@ -735,7 +735,7 @@ function SafetyScore({ user }: { user: { trustScore: number; verified?: boolean;
         </span>
       </div>
 
-      <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, marginBottom: 16, overflow: 'hidden' }}>
+      <div style={{ height: 6, background: DS.card3, borderRadius: 4, marginBottom: 16, overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${score}%`, background: color, borderRadius: 4, transition: 'width 0.5s' }} />
       </div>
 
@@ -745,7 +745,7 @@ function SafetyScore({ user }: { user: { trustScore: number; verified?: boolean;
             <div style={{ width: 20, height: 20, borderRadius: 6, background: factor.done ? `${DS.green}18` : 'rgba(255,255,255,0.05)', border: `1px solid ${factor.done ? `${DS.green}35` : DS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {factor.done ? <CheckCircle2 size={12} color={DS.green} /> : <X size={11} color={DS.sub} />}
             </div>
-            <div style={{ flex: 1, color: factor.done ? '#fff' : DS.sub, fontSize: '0.8rem' }}>{factor.label}</div>
+            <div style={{ flex: 1, color: factor.done ? DS.text : DS.sub, fontSize: '0.8rem' }}>{factor.label}</div>
             <div style={{ color: factor.done ? DS.green : DS.sub, fontSize: '0.72rem', fontWeight: 700 }}>+{factor.weight}</div>
           </div>
         ))}
@@ -760,13 +760,13 @@ function QuickLink({ icon, label, sub, onClick }: { icon: React.ReactNode; label
   return (
     <button
       onClick={onClick}
-      style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: 'rgba(255,255,255,0.03)', border: `1px solid ${DS.border}`, borderRadius: r(14), padding: '14px 16px', cursor: 'pointer', textAlign: 'left', marginBottom: 10 }}
+      style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: DS.card2, border: `1px solid ${DS.border}`, borderRadius: r(14), padding: '14px 16px', cursor: 'pointer', textAlign: 'left', marginBottom: 10 }}
     >
       <div style={{ width: 38, height: 38, borderRadius: r(10), background: 'rgba(71,183,230,0.1)', border: `1px solid rgba(71,183,230,0.2)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         {icon}
       </div>
       <div style={{ flex: 1 }}>
-        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.85rem' }}>{label}</div>
+        <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.85rem' }}>{label}</div>
         {sub && <div style={{ color: DS.sub, fontSize: '0.73rem', marginTop: 2 }}>{sub}</div>}
       </div>
       <ChevronRight size={15} color={DS.sub} />
@@ -788,13 +788,13 @@ export default function SafetyPage() {
         <div style={{ maxWidth: 820, margin: '0 auto', padding: '28px 16px 0' }}>
 
           {/* Header */}
-          <div style={{ background: `linear-gradient(135deg, ${DS.green}14, rgba(255,255,255,0.02))`, border: `1px solid ${DS.green}22`, borderRadius: r(22), padding: '24px 22px', marginBottom: 22 }}>
+          <div style={{ background: `linear-gradient(135deg, ${DS.green}14, rgba(255,255,255,0.78))`, border: `1px solid ${DS.green}22`, borderRadius: r(22), padding: '24px 22px', marginBottom: 22 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ width: 54, height: 54, borderRadius: r(16), background: `${DS.green}18`, border: `1.5px solid ${DS.green}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Shield size={26} color={DS.green} />
               </div>
               <div>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#fff', margin: 0 }}>Safety Center</h1>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: DS.text, margin: 0 }}>Safety Center</h1>
                 <p style={{ color: DS.sub, margin: '5px 0 0', fontSize: '0.82rem' }}>
                   Emergency tools · Verification · Cultural settings · Insurance
                 </p>
