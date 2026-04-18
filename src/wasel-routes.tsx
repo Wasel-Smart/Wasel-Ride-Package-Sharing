@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { Suspense, type ComponentType } from 'react';
 import {
   createBrowserRouter,
@@ -96,7 +95,9 @@ function RedirectTo({ to }: { to: string }) {
 
 function AppEntryRedirect() {
   const { user, loading } = useLocalAuth();
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return <PageLoader />;
+  }
   return <Navigate to={user ? '/app/find-ride' : buildAuthPagePath('signin')} replace />;
 }
 

@@ -79,7 +79,7 @@ scheduleDeferredTask(async () => {
   initWebVitalsReporter();
 }, 2_500);
 
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+if (import.meta.env.PROD && import.meta.env.MODE !== 'test' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((error) => {
       console.warn('[Wasel] Service Worker registration failed:', sanitizeForLog(String(error)));
