@@ -146,7 +146,7 @@ class ConnectionQualityMonitor {
    * Get connection type
    */
   private getConnectionType(): ConnectionType {
-    if (!navigator.onLine) return 'offline';
+    if (!navigator.onLine) {return 'offline';}
 
     const navigatorWithConnection = navigator as Navigator & {
       connection?: NetworkInformationLike;
@@ -158,13 +158,13 @@ class ConnectionQualityMonitor {
       navigatorWithConnection.mozConnection ||
       navigatorWithConnection.webkitConnection;
 
-    if (!connection) return 'unknown';
+    if (!connection) {return 'unknown';}
 
     const effectiveType = connection.effectiveType; // '4g', '3g', '2g', 'slow-2g'
     const type = connection.type; // 'wifi', 'cellular', 'bluetooth', 'ethernet'
 
-    if (type === 'wifi') return 'wifi';
-    if (type === 'ethernet') return 'ethernet';
+    if (type === 'wifi') {return 'wifi';}
+    if (type === 'ethernet') {return 'ethernet';}
 
     // Map effectiveType to our types
     switch (effectiveType) {
@@ -180,10 +180,10 @@ class ConnectionQualityMonitor {
    * Determine connection quality based on metrics
    */
   private getQuality(latency: number, bandwidth: number): ConnectionQuality {
-    if (!navigator.onLine) return 'offline';
-    if (latency < 50 && bandwidth > 10) return 'excellent';
-    if (latency < 100 && bandwidth > 5) return 'good';
-    if (latency < 200 && bandwidth > 1) return 'fair';
+    if (!navigator.onLine) {return 'offline';}
+    if (latency < 50 && bandwidth > 10) {return 'excellent';}
+    if (latency < 100 && bandwidth > 5) {return 'good';}
+    if (latency < 200 && bandwidth > 1) {return 'fair';}
     return 'poor';
   }
 
@@ -204,7 +204,7 @@ class ConnectionQualityMonitor {
    * Calculate jitter
    */
   private calculateJitter(): number {
-    if (this.metrics.length < 2) return 0;
+    if (this.metrics.length < 2) {return 0;}
 
     const recentMetrics = this.metrics.slice(-10);
     const latencies = recentMetrics.map(m => m.latency);
@@ -218,7 +218,7 @@ class ConnectionQualityMonitor {
    * Get slowest period of connection
    */
   private getSlowestPeriod(): string {
-    if (this.metrics.length === 0) return 'N/A';
+    if (this.metrics.length === 0) {return 'N/A';}
 
     const slowestMetric = this.metrics.reduce((min, current) =>
       current.latency > min.latency ? current : min

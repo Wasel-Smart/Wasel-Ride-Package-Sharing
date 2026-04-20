@@ -73,7 +73,7 @@ export const JORDAN_LOCATION_OPTIONS = ALL_LOCATIONS.map((location) => location.
 export const JORDAN_CITY_OPTIONS = CITY_LOCATIONS.map((location) => location.label);
 
 export function getJordanLocation(value: string | null | undefined): JordanLocation | null {
-  if (!value) return null;
+  if (!value) {return null;}
   return LOCATION_MAP.get(normalizeKey(value)) ?? null;
 }
 
@@ -101,10 +101,10 @@ export function resolveRepresentativeCity(value: string | null | undefined): str
 export function locationsOverlap(left: string | null | undefined, right: string | null | undefined): boolean {
   const leftLocation = getJordanLocation(left);
   const rightLocation = getJordanLocation(right);
-  if (!leftLocation || !rightLocation) return normalizeKey(String(left ?? '')) === normalizeKey(String(right ?? ''));
-  if (leftLocation.label === rightLocation.label) return true;
-  if (leftLocation.kind === 'governorate' && leftLocation.governorate === rightLocation.governorate) return true;
-  if (rightLocation.kind === 'governorate' && rightLocation.governorate === leftLocation.governorate) return true;
+  if (!leftLocation || !rightLocation) {return normalizeKey(String(left ?? '')) === normalizeKey(String(right ?? ''));}
+  if (leftLocation.label === rightLocation.label) {return true;}
+  if (leftLocation.kind === 'governorate' && leftLocation.governorate === rightLocation.governorate) {return true;}
+  if (rightLocation.kind === 'governorate' && rightLocation.governorate === leftLocation.governorate) {return true;}
   return false;
 }
 
@@ -115,9 +115,9 @@ export function routeEndpointsAreDistinct(from: string | null | undefined, to: s
 export function getJordanRouteScope(from: string | null | undefined, to: string | null | undefined): JordanRouteScope {
   const fromKind = getJordanLocationKind(from) ?? 'city';
   const toKind = getJordanLocationKind(to) ?? 'city';
-  if (fromKind === 'governorate' && toKind === 'governorate') return 'governorate_to_governorate';
-  if (fromKind === 'governorate') return 'governorate_to_city';
-  if (toKind === 'governorate') return 'city_to_governorate';
+  if (fromKind === 'governorate' && toKind === 'governorate') {return 'governorate_to_governorate';}
+  if (fromKind === 'governorate') {return 'governorate_to_city';}
+  if (toKind === 'governorate') {return 'city_to_governorate';}
   return 'city_to_city';
 }
 
@@ -134,7 +134,7 @@ export function routeMatchesLocationPair(
 ): boolean {
   const allowReverse = options?.allowReverse !== false;
   const direct = endpointsMatch(leftFrom, rightFrom) && endpointsMatch(leftTo, rightTo);
-  if (direct) return true;
+  if (direct) {return true;}
   return allowReverse && endpointsMatch(leftFrom, rightTo) && endpointsMatch(leftTo, rightFrom);
 }
 

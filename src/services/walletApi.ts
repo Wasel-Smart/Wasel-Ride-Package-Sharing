@@ -134,7 +134,7 @@ function walletSnapshotStorageKey(userId: string) {
 }
 
 function persistWalletSnapshot(userId: string, snapshot: WalletSnapshot): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   const payload: PersistedWalletSnapshot = {
     storedAt: Date.now(),
     snapshot,
@@ -143,13 +143,13 @@ function persistWalletSnapshot(userId: string, snapshot: WalletSnapshot): void {
 }
 
 function readPersistedWalletSnapshot(userId: string): WalletSnapshot | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === 'undefined') {return null;}
   try {
     const raw = window.localStorage.getItem(walletSnapshotStorageKey(userId));
-    if (!raw) return null;
+    if (!raw) {return null;}
     const parsed = JSON.parse(raw) as PersistedWalletSnapshot;
-    if (!parsed?.snapshot || typeof parsed.storedAt !== 'number') return null;
-    if (Date.now() - parsed.storedAt > WALLET_SNAPSHOT_MAX_AGE_MS) return null;
+    if (!parsed?.snapshot || typeof parsed.storedAt !== 'number') {return null;}
+    if (Date.now() - parsed.storedAt > WALLET_SNAPSHOT_MAX_AGE_MS) {return null;}
     return parsed.snapshot;
   } catch {
     return null;
@@ -295,9 +295,9 @@ async function requireVerifiedToken(
 }
 
 function getCachedVerificationToken(purpose: StepUpPurpose): string | null {
-  if (!cachedStepUpVerification?.verificationToken) return null;
-  if (cachedStepUpVerification.purpose !== purpose) return null;
-  if (Date.now() - cachedStepUpVerification.createdAt > 9 * 60_000) return null;
+  if (!cachedStepUpVerification?.verificationToken) {return null;}
+  if (cachedStepUpVerification.purpose !== purpose) {return null;}
+  if (Date.now() - cachedStepUpVerification.createdAt > 9 * 60_000) {return null;}
   return cachedStepUpVerification.verificationToken;
 }
 

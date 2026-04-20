@@ -148,17 +148,17 @@ export function checkPasswordStrength(password: string): PasswordStrength {
   } else {
     score += 1;
   }
-  if (password.length >= 12) score += 1;
+  if (password.length >= 12) {score += 1;}
 
   const hasLowercase = /[a-z]/.test(password);
   const hasUppercase = /[A-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const hasSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
 
-  if (!hasLowercase) feedback.push('Add lowercase letters');
-  if (!hasUppercase) feedback.push('Add uppercase letters');
-  if (!hasNumber) feedback.push('Add numbers');
-  if (!hasSpecial) feedback.push('Add special characters');
+  if (!hasLowercase) {feedback.push('Add lowercase letters');}
+  if (!hasUppercase) {feedback.push('Add uppercase letters');}
+  if (!hasNumber) {feedback.push('Add numbers');}
+  if (!hasSpecial) {feedback.push('Add special characters');}
 
   const diversityScore = [hasLowercase, hasUppercase, hasNumber, hasSpecial].filter(Boolean).length;
   score += Math.min(diversityScore - 1, 2);

@@ -73,8 +73,8 @@ function buildFallbackCode(userId?: string, name?: string) {
 }
 
 function readLocalSnapshots(): Record<string, ReferralSnapshot> {
-  if (!allowLocalPersistenceFallback()) return {};
-  if (typeof window === 'undefined') return {};
+  if (!allowLocalPersistenceFallback()) {return {};}
+  if (typeof window === 'undefined') {return {};}
   try {
     const raw = window.localStorage.getItem(LOCAL_REFERRAL_KEY);
     const parsed = raw ? JSON.parse(raw) : {};
@@ -104,8 +104,8 @@ function readLocalSnapshots(): Record<string, ReferralSnapshot> {
 }
 
 function writeLocalSnapshots(snapshots: Record<string, ReferralSnapshot>) {
-  if (!allowLocalPersistenceFallback()) return;
-  if (typeof window === 'undefined') return;
+  if (!allowLocalPersistenceFallback()) {return;}
+  if (typeof window === 'undefined') {return;}
   try {
     window.localStorage.setItem(LOCAL_REFERRAL_KEY, JSON.stringify(snapshots));
   } catch {
@@ -114,8 +114,8 @@ function writeLocalSnapshots(snapshots: Record<string, ReferralSnapshot>) {
 }
 
 function readLocalGrowthEvents(): GrowthEventRecord[] {
-  if (!allowLocalPersistenceFallback()) return [];
-  if (typeof window === 'undefined') return [];
+  if (!allowLocalPersistenceFallback()) {return [];}
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(LOCAL_GROWTH_EVENTS_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -131,8 +131,8 @@ function readLocalGrowthEvents(): GrowthEventRecord[] {
 }
 
 function writeLocalGrowthEvents(events: GrowthEventRecord[]) {
-  if (!allowLocalPersistenceFallback()) return;
-  if (typeof window === 'undefined') return;
+  if (!allowLocalPersistenceFallback()) {return;}
+  if (typeof window === 'undefined') {return;}
   try {
     window.localStorage.setItem(
       LOCAL_GROWTH_EVENTS_KEY,
@@ -166,8 +166,8 @@ function readLocalDemandAlerts(): Array<{
   status: string;
   service: 'ride' | 'bus' | 'package';
 }> {
-  if (!allowLocalPersistenceFallback()) return [];
-  if (typeof window === 'undefined') return [];
+  if (!allowLocalPersistenceFallback()) {return [];}
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(LOCAL_DEMAND_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -193,10 +193,10 @@ function mapAutomationJobType(input: {
   funnelStage: string;
   serviceType: 'ride' | 'bus' | 'package' | 'referral' | 'wallet';
 }) {
-  if (input.eventName.includes('support') || input.funnelStage === 'cancelled') return 'support_follow_up';
-  if (input.funnelStage === 'searched') return 'demand_recovery';
-  if (input.funnelStage === 'selected') return 'corridor_conversion';
-  if (input.funnelStage === 'booked' || input.funnelStage === 'completed') return 'pricing_refresh';
+  if (input.eventName.includes('support') || input.funnelStage === 'cancelled') {return 'support_follow_up';}
+  if (input.funnelStage === 'searched') {return 'demand_recovery';}
+  if (input.funnelStage === 'selected') {return 'corridor_conversion';}
+  if (input.funnelStage === 'booked' || input.funnelStage === 'completed') {return 'pricing_refresh';}
   return 'revenue_observe';
 }
 
@@ -289,7 +289,7 @@ export async function trackGrowthEvent(input: {
 }
 
 export async function getReferralSnapshot(user?: { id?: string; name?: string } | null): Promise<ReferralSnapshot | null> {
-  if (!user?.id) return null;
+  if (!user?.id) {return null;}
 
   const shareUrlBase =
     typeof window !== 'undefined'
@@ -318,7 +318,7 @@ export async function getReferralSnapshot(user?: { id?: string; name?: string } 
 
     const snapshots = readLocalSnapshots();
     const existing = snapshots[user.id];
-    if (existing) return existing;
+    if (existing) {return existing;}
 
     const fallbackCode = buildFallbackCode(user.id, user.name);
     const fallback = parseContract(

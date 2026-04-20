@@ -211,7 +211,7 @@ const STORAGE_KEY = 'wasel-preferred-currency';
 const CURRENCY_CHANGE_EVENT = 'wasel-currency-change';
 
 function emitCurrencyChange(code: SupportedCurrency): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
 
   window.dispatchEvent(new Event(CURRENCY_CHANGE_EVENT));
 
@@ -263,21 +263,21 @@ export class CurrencyService {
       typeof Intl === 'undefined'
         ? DEFAULT_TIMEZONE
         : Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE;
-    if (lang.includes('-jo') || timezone === DEFAULT_TIMEZONE) return 'JOD';
-    if (lang.startsWith('ar'))                                  return 'JOD';
-    if (lang.startsWith('en-gb'))                            return 'GBP';
-    if (lang.startsWith('ar-ae'))                            return 'AED';
-    if (lang.startsWith('ar-sa'))                            return 'SAR';
-    if (lang.startsWith('ar-eg'))                            return 'EGP';
-    if (lang.startsWith('ar-kw'))                            return 'KWD';
-    if (lang.startsWith('ar-bh'))                            return 'BHD';
-    if (lang.startsWith('ar-qa'))                            return 'QAR';
-    if (lang.startsWith('ar-om'))                            return 'OMR';
-    if (lang.startsWith('ar-ma'))                            return 'MAD';
-    if (lang.startsWith('ar-tn'))                            return 'TND';
-    if (lang.startsWith('ar-iq'))                            return 'IQD';
-    if (lang.startsWith('de') || lang.startsWith('fr'))      return 'EUR';
-    if (lang.startsWith('en'))                               return 'USD';
+    if (lang.includes('-jo') || timezone === DEFAULT_TIMEZONE) {return 'JOD';}
+    if (lang.startsWith('ar'))                                  {return 'JOD';}
+    if (lang.startsWith('en-gb'))                            {return 'GBP';}
+    if (lang.startsWith('ar-ae'))                            {return 'AED';}
+    if (lang.startsWith('ar-sa'))                            {return 'SAR';}
+    if (lang.startsWith('ar-eg'))                            {return 'EGP';}
+    if (lang.startsWith('ar-kw'))                            {return 'KWD';}
+    if (lang.startsWith('ar-bh'))                            {return 'BHD';}
+    if (lang.startsWith('ar-qa'))                            {return 'QAR';}
+    if (lang.startsWith('ar-om'))                            {return 'OMR';}
+    if (lang.startsWith('ar-ma'))                            {return 'MAD';}
+    if (lang.startsWith('ar-tn'))                            {return 'TND';}
+    if (lang.startsWith('ar-iq'))                            {return 'IQD';}
+    if (lang.startsWith('de') || lang.startsWith('fr'))      {return 'EUR';}
+    if (lang.startsWith('en'))                               {return 'USD';}
 
     return PLATFORM_CURRENCY;
   }
@@ -314,7 +314,7 @@ export class CurrencyService {
    * All backend amounts are stored in JOD.
    */
   fromJOD(jodAmount: number, to: SupportedCurrency = this._current): number {
-    if (to === 'JOD') return jodAmount;
+    if (to === 'JOD') {return jodAmount;}
     const rate = EXCHANGE_RATES_FROM_JOD[to];
     return Math.round(jodAmount * rate * 1_000) / 1_000;
   }
@@ -323,7 +323,7 @@ export class CurrencyService {
    * Convert a display-currency amount back to JOD for storage / API calls.
    */
   toJOD(amount: number, from: SupportedCurrency = this._current): number {
-    if (from === 'JOD') return amount;
+    if (from === 'JOD') {return amount;}
     const rate = EXCHANGE_RATES_FROM_JOD[from];
     return Math.round((amount / rate) * 1_000) / 1_000;
   }
@@ -332,7 +332,7 @@ export class CurrencyService {
    * Convert between any two supported currencies via JOD as the pivot.
    */
   convert(amount: number, from: SupportedCurrency, to: SupportedCurrency): number {
-    if (from === to) return amount;
+    if (from === to) {return amount;}
     const inJOD  = this.toJOD(amount, from);
     return this.fromJOD(inJOD, to);
   }
@@ -431,11 +431,11 @@ export function useCurrency() {
   const svc = CurrencyService.getInstance();
   const current = useSyncExternalStore(
     (onStoreChange) => {
-      if (typeof window === 'undefined') return () => {};
+      if (typeof window === 'undefined') {return () => {};}
 
       const handleCurrencyChange = () => onStoreChange();
       const handleStorage = (event: StorageEvent) => {
-        if (event.key === STORAGE_KEY) onStoreChange();
+        if (event.key === STORAGE_KEY) {onStoreChange();}
       };
 
       window.addEventListener(CURRENCY_CHANGE_EVENT, handleCurrencyChange);

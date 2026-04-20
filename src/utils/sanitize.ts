@@ -41,8 +41,8 @@ function stripControlWhitespaceCharacters(value: string): string {
  * Removes dangerous tags and attributes
  */
 export function sanitizeHTML(html: string): string {
-  if (!html) return '';
-  if (typeof document === 'undefined') return sanitizeText(html);
+  if (!html) {return '';}
+  if (typeof document === 'undefined') {return sanitizeText(html);}
 
   // Set as textContent so the browser escapes all HTML — then read innerHTML
   const temp = document.createElement('div');
@@ -55,7 +55,7 @@ export function sanitizeHTML(html: string): string {
  * Removes HTML tags and dangerous characters
  */
 export function sanitizeText(text: string): string {
-  if (!text) return '';
+  if (!text) {return '';}
 
   return text
     .replace(/</g, '&lt;')
@@ -69,10 +69,10 @@ export function sanitizeText(text: string): string {
  * Sanitize URL to prevent javascript: and data: URIs
  */
 export function sanitizeURL(url: string): string {
-  if (!url) return '';
+  if (!url) {return '';}
 
   const trimmed = url.trim();
-  if (!trimmed) return '';
+  if (!trimmed) {return '';}
 
   const normalized = stripControlWhitespaceCharacters(trimmed).toLowerCase();
 
@@ -91,7 +91,7 @@ export function sanitizeURL(url: string): string {
  * Sanitize phone number
  */
 export function sanitizePhone(phone: string): string {
-  if (!phone) return '';
+  if (!phone) {return '';}
 
   // Remove all non-numeric characters except + at start
   return phone.replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '');
@@ -101,7 +101,7 @@ export function sanitizePhone(phone: string): string {
  * Sanitize email
  */
 export function sanitizeEmail(email: string): string {
-  if (!email) return '';
+  if (!email) {return '';}
 
   // Basic email sanitization
   return email.trim().toLowerCase();
@@ -111,7 +111,7 @@ export function sanitizeEmail(email: string): string {
  * Sanitize search query
  */
 export function sanitizeSearchQuery(query: string): string {
-  if (!query) return '';
+  if (!query) {return '';}
 
   return query
     .trim()
@@ -124,7 +124,7 @@ export function sanitizeSearchQuery(query: string): string {
  * Sanitize filename
  */
 export function sanitizeFilename(filename: string): string {
-  if (!filename) return '';
+  if (!filename) {return '';}
 
   const hadInvalid = /[<>:"|?*]/.test(filename);
 
@@ -136,7 +136,7 @@ export function sanitizeFilename(filename: string): string {
     .substring(0, 255);
 
   // If the name starts with a dot, make it non-hidden and non-relative by prefixing.
-  if (safe.startsWith('.')) safe = `_${safe}`;
+  if (safe.startsWith('.')) {safe = `_${safe}`;}
 
   const dot = safe.lastIndexOf('.');
   const base = dot > 0 ? safe.slice(0, dot) : safe;
@@ -159,7 +159,7 @@ export function sanitizeFilename(filename: string): string {
  * Validate and sanitize price/number input
  */
 export function sanitizeNumber(input: string): string {
-  if (!input) return '';
+  if (!input) {return '';}
 
   return input.replace(/[^\d.]/g, '');
 }
@@ -200,7 +200,7 @@ export function safeJSONParse<T = unknown>(json: string, fallback: T): T {
  * Strip all HTML tags
  */
 export function stripHTML(html: string): string {
-  if (!html) return '';
+  if (!html) {return '';}
   if (typeof document === 'undefined') {
     // SSR fallback: strip tags with regex
     return html.replace(/<[^>]*>/g, '');
@@ -215,7 +215,7 @@ export function stripHTML(html: string): string {
  * Validate and sanitize markdown (basic)
  */
 export function sanitizeMarkdown(markdown: string): string {
-  if (!markdown) return '';
+  if (!markdown) {return '';}
 
   // Remove potentially dangerous markdown
   return markdown

@@ -90,9 +90,9 @@ export function getApiHeaders(accessToken?: string): HeadersInit {
   };
 
   if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
+    headers.Authorization = `Bearer ${accessToken}`;
   } else {
-    headers['Authorization'] = `Bearer ${publicAnonKey}`;
+    headers.Authorization = `Bearer ${publicAnonKey}`;
   }
 
   return headers;
@@ -297,11 +297,11 @@ export async function apiGet<T = unknown>(
   accessToken?: string
 ): Promise<T> {
   const queryString = params 
-    ? '?' + new URLSearchParams(
+    ? `?${  new URLSearchParams(
         Object.entries(params)
           .filter(([, value]) => value !== undefined && value !== null)
           .map(([key, value]) => [key, String(value)])
-      ).toString()
+      ).toString()}`
     : '';
 
   return apiRequest<T>(endpoint + queryString, {

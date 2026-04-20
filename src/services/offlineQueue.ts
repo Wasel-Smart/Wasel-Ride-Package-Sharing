@@ -122,7 +122,7 @@ class OfflineQueueManager {
    */
   removeRequest(requestId: string): boolean {
     const request = this.queue.get(requestId);
-    if (!request) return false;
+    if (!request) {return false;}
 
     this.queue.delete(requestId);
 
@@ -197,7 +197,7 @@ class OfflineQueueManager {
       );
 
       for (const request of sortedRequests) {
-        if (!navigator.onLine) break;
+        if (!navigator.onLine) {break;}
 
         try {
           const response = await this.executeRequest(request);
@@ -390,7 +390,7 @@ export async function fetchWithOfflineQueue(
   // Try to fetch immediately
   try {
     const response = await fetch(url, options);
-    if (response.ok) return response;
+    if (response.ok) {return response;}
 
     // Queue on 5xx or 429 errors
     if ((response.status >= 500 || response.status === 429) && canQueueOffline) {

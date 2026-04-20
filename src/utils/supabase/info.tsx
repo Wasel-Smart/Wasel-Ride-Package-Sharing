@@ -12,10 +12,10 @@ const PLACEHOLDER_MARKERS = [
 ];
 
 function isConfiguredValue(value: string | undefined): value is string {
-  if (!value) return false;
+  if (!value) {return false;}
 
   const normalized = value.trim();
-  if (!normalized) return false;
+  if (!normalized) {return false;}
 
   const lower = normalized.toLowerCase();
   return !PLACEHOLDER_MARKERS.some(marker => lower.includes(marker));

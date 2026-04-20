@@ -247,7 +247,7 @@ export function useServiceWorker() {
   return {
     register: registerServiceWorker,
     skipWaiting: skipWaitingServiceWorker,
-    isOnline: isOnline,
+    isOnline,
     subscribeOnline: subscribeToOnlineStatus,
     clear: clearAllCaches,
     stats: getCacheStats,

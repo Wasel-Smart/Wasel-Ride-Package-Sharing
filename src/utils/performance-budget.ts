@@ -130,8 +130,8 @@ export function shouldWarn(_metric: string, value: number, warning: number): boo
 export function assessPerformance(metric: 'LCP' | 'FID' | 'CLS' | 'TTFB' | 'FCP' | 'INP', value: number): 'good' | 'needsImprovement' | 'poor' {
   const thresholds = WEB_VITALS_THRESHOLDS[metric];
 
-  if (value <= thresholds.good) return 'good';
-  if (value <= thresholds.needsImprovement) return 'needsImprovement';
+  if (value <= thresholds.good) {return 'good';}
+  if (value <= thresholds.needsImprovement) {return 'needsImprovement';}
   return 'poor';
 }
 
@@ -156,7 +156,7 @@ export function validateBundleSize(bundleMetrics: Record<string, number>): {
 
   for (const [chunk, size] of Object.entries(bundleMetrics)) {
     const budgetConfig = BUNDLE_SIZE_BUDGET[chunk as keyof typeof BUNDLE_SIZE_BUDGET];
-    if (!budgetConfig) continue;
+    if (!budgetConfig) {continue;}
 
     if (size > budgetConfig.budget) {
       violations.push(`${chunk}: ${(size / 1024).toFixed(2)}KB exceeds budget of ${(budgetConfig.budget / 1024).toFixed(2)}KB`);

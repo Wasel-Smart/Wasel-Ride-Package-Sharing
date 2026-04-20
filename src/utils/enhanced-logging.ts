@@ -82,7 +82,7 @@ class WaselLogger {
   }
 
   private setupGlobalErrorHandling(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
 
     // Capture unhandled errors
     window.addEventListener('error', (event) => {
@@ -151,7 +151,7 @@ class WaselLogger {
   }
 
   private writeToConsole(entry: LogEntry): void {
-    if (!this.config.enableConsole) return;
+    if (!this.config.enableConsole) {return;}
 
     const prefix = `[${entry.timestamp}] [${entry.level.toUpperCase()}]`;
     const message = `${prefix} ${sanitizeForLog(entry.message)}`;
@@ -185,7 +185,7 @@ class WaselLogger {
   }
 
   private async sendToRemote(entry: LogEntry): Promise<void> {
-    if (!this.config.enableRemote || !this.monitoringSink) return;
+    if (!this.config.enableRemote || !this.monitoringSink) {return;}
 
     try {
       if (entry.level === 'error' || entry.level === 'critical') {
@@ -212,7 +212,7 @@ class WaselLogger {
   }
 
   private log(level: LogLevel, message: string, context?: Record<string, unknown>, error?: unknown): void {
-    if (!this.shouldLog(level)) return;
+    if (!this.shouldLog(level)) {return;}
 
     const entry = this.createLogEntry(level, message, context, error);
     
@@ -281,12 +281,12 @@ class WaselLogger {
 
   // Performance tracking
   startTimer(label: string): void {
-    if (!this.config.enablePerformanceTracking) return;
+    if (!this.config.enablePerformanceTracking) {return;}
     this.performanceMarks.set(label, performance.now());
   }
 
   endTimer(label: string, context?: Record<string, unknown>): void {
-    if (!this.config.enablePerformanceTracking) return;
+    if (!this.config.enablePerformanceTracking) {return;}
     
     const startTime = this.performanceMarks.get(label);
     if (startTime === undefined) {

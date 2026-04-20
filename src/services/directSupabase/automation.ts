@@ -103,7 +103,7 @@ export async function getDirectRouteReminders(userId: string) {
     .eq('user_id', context.user.id)
     .order('next_reminder_at', { ascending: true })
     .limit(50);
-  if (error) throw error;
+  if (error) {throw error;}
   return Array.isArray(data) ? (data as RawRouteReminder[]) : [];
 }
 
@@ -135,7 +135,7 @@ export async function upsertDirectRouteReminder(userId: string, input: {
     }, { onConflict: 'user_id,corridor_id' })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
   return data as RawRouteReminder;
 }
 
@@ -152,7 +152,7 @@ export async function markDirectRouteReminderDelivered(reminderId: string, input
       updated_at: new Date().toISOString(),
     })
     .eq('reminder_id', reminderId);
-  if (error) throw error;
+  if (error) {throw error;}
 }
 
 export async function createDirectPricingSnapshot(input: {
@@ -193,7 +193,7 @@ export async function createDirectPricingSnapshot(input: {
         })
         .select('*')
         .single();
-      if (error) throw error;
+      if (error) {throw error;}
       return data as RawPricingSnapshot;
     },
   });
@@ -227,7 +227,7 @@ async function enqueueDirectAutomationJobLegacy(input: {
     })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
   return data as RawAutomationJob;
 }
 
@@ -258,7 +258,7 @@ export async function enqueueDirectAutomationJob(input: {
       p_payload: input.payload ?? {},
       p_run_after: input.runAfter ?? null,
     });
-    if (error) throw error;
+    if (error) {throw error;}
     return parseAutomationJobRpcResult(data);
   } catch (error) {
     if (!isMissingRpcError(error)) {
@@ -278,7 +278,7 @@ export async function getDirectSupportTickets(userId: string) {
     .eq('user_id', context.user.id)
     .order('updated_at', { ascending: false })
     .limit(100);
-  if (error) throw error;
+  if (error) {throw error;}
 
   const tickets = Array.isArray(data) ? (data as RawSupportTicket[]) : [];
   const ticketIds = tickets.map((ticket) => String(ticket.ticket_id ?? '')).filter(Boolean);
@@ -291,7 +291,7 @@ export async function getDirectSupportTickets(userId: string) {
     .select('*')
     .in('ticket_id', ticketIds)
     .order('created_at', { ascending: true });
-  if (eventError) throw eventError;
+  if (eventError) {throw eventError;}
 
   const eventMap = new Map<string, RawSupportTicketEvent[]>();
   for (const event of Array.isArray(eventRows) ? (eventRows as RawSupportTicketEvent[]) : []) {
@@ -342,7 +342,7 @@ async function createDirectSupportTicketLegacy(userId: string, input: {
     })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
 
   const ticket = data as RawSupportTicket;
   const { data: eventData, error: eventError } = await db
@@ -355,7 +355,7 @@ async function createDirectSupportTicketLegacy(userId: string, input: {
     })
     .select('*')
     .single();
-  if (eventError) throw eventError;
+  if (eventError) {throw eventError;}
 
   return {
     ticket,
@@ -388,7 +388,7 @@ export async function createDirectSupportTicket(userId: string, input: {
       p_channel: input.channel,
       p_note: input.note,
     });
-    if (error) throw error;
+    if (error) {throw error;}
 
     const result = parseSupportTicketRpcResult(data);
     return {
@@ -425,7 +425,7 @@ async function updateDirectSupportTicketStatusLegacy(ticketId: string, input: {
     .eq('ticket_id', ticketId)
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
 
   const ticket = data as RawSupportTicket;
   const { data: eventData, error: eventError } = await db
@@ -438,7 +438,7 @@ async function updateDirectSupportTicketStatusLegacy(ticketId: string, input: {
     })
     .select('*')
     .single();
-  if (eventError) throw eventError;
+  if (eventError) {throw eventError;}
 
   return {
     ticket,
@@ -464,7 +464,7 @@ export async function updateDirectSupportTicketStatus(ticketId: string, input: {
       p_priority: input.priority ?? null,
       p_channel: input.channel ?? null,
     });
-    if (error) throw error;
+    if (error) {throw error;}
 
     const result = parseSupportTicketRpcResult(data);
     return {

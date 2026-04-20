@@ -122,7 +122,7 @@ export const ValidationSchemas = {
 
 // Jordanian ID validation algorithm
 function validateJordanianId(id: string): boolean {
-  if (id.length !== 10) return false;
+  if (id.length !== 10) {return false;}
 
   const digits = id.split('').map(Number);
   const weights = [1, 2, 1, 2, 1, 2, 1, 2, 1];
@@ -481,7 +481,7 @@ export const sendPackageSchema = z.object({
 const safeUrl = z
   .string()
   .refine(url => {
-    if (!url) return true;
+    if (!url) {return true;}
     try {
       const parsed = new URL(url);
       return !['javascript:', 'data:'].includes(parsed.protocol);

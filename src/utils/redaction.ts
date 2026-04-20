@@ -1,8 +1,8 @@
 const SENSITIVE_KEY_PATTERN = /(authorization|token|secret|password|cookie|apikey|api_key|key|otp|code|backup|credential|phone|email|ssn|national_id)/i;
 
 function redactString(value: string): string {
-  if (!value) return value;
-  if (value.length <= 8) return '[REDACTED]';
+  if (!value) {return value;}
+  if (value.length <= 8) {return '[REDACTED]';}
   return `${value.slice(0, 2)}...[REDACTED]...${value.slice(-2)}`;
 }
 

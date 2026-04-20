@@ -1080,7 +1080,7 @@ export function getPackageRoutes(iso: CountryCode): CityRoute[] {
 export function findRoute(routeId: string): CityRoute | undefined {
   for (const region of Object.values(REGIONS)) {
     const route = region.routes.find((r) => r.id === routeId);
-    if (route) return route;
+    if (route) {return route;}
   }
   return undefined;
 }

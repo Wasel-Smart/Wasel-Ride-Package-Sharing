@@ -415,7 +415,7 @@ export const authAPI = {
         password,
       });
 
-      if (error) throw new Error(normalizeAuthError(error.message, 'signin'));
+      if (error) {throw new Error(normalizeAuthError(error.message, 'signin'));}
       return data;
     } catch (error) {
       throw normalizeAuthException(error, 'signin');
@@ -425,19 +425,19 @@ export const authAPI = {
   async signOut() {
     const client = requireSupabase();
     const { error } = await client.auth.signOut();
-    if (error) throw error;
+    if (error) {throw error;}
   },
 
   async getSession() {
     const client = requireSupabase();
     const { data, error } = await client.auth.getSession();
-    if (error) throw error;
+    if (error) {throw error;}
     return data;
   },
 
   async getProfile() {
     const { token, userId } = await getAuthDetails();
-    if (!token || !userId) return { profile: null };
+    if (!token || !userId) {return { profile: null };}
 
     if (!canUseEdgeApi()) {
       const profile = await getDirectProfile(userId);

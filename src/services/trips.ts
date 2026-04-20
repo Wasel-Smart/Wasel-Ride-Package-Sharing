@@ -199,10 +199,10 @@ export const tripsAPI = {
     }
 
     const params = new URLSearchParams();
-    if (from) params.append('from', from);
-    if (to) params.append('to', to);
-    if (date) params.append('date', date);
-    if (seats) params.append('seats', seats.toString());
+    if (from) {params.append('from', from);}
+    if (to) {params.append('to', to);}
+    if (date) {params.append('date', date);}
+    if (seats) {params.append('seats', seats.toString());}
 
     let response: Response;
     try {
@@ -265,7 +265,7 @@ export const tripsAPI = {
     if (!canUseEdgeApi()) {
       requireDirectSupabaseFallback('Trip lookup');
       const trip = await getDirectTripById(tripId);
-      if (!trip) throw new Error('Failed to fetch trip');
+      if (!trip) {throw new Error('Failed to fetch trip');}
       return parseContract(tripSearchResultSchema, trip, 'trip.get', TRIPS_CONTRACT_VERSION);
     }
 
@@ -278,7 +278,7 @@ export const tripsAPI = {
     if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
       requireDirectSupabaseFallback('Trip lookup');
       const trip = await getDirectTripById(tripId);
-      if (!trip) throw new Error('Failed to fetch trip');
+      if (!trip) {throw new Error('Failed to fetch trip');}
       return parseContract(tripSearchResultSchema, trip, 'trip.get', TRIPS_CONTRACT_VERSION);
     }
 

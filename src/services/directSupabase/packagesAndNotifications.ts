@@ -46,7 +46,7 @@ export async function createDirectPackage(input: {
     })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
   return data as RawPackage;
 }
 
@@ -57,7 +57,7 @@ export async function getDirectPackageByTrackingId(trackingNumber: string) {
     .select('*')
     .or(`tracking_number.eq.${trackingNumber},package_code.eq.${trackingNumber}`)
     .maybeSingle();
-  if (error) throw error;
+  if (error) {throw error;}
   return (data as RawPackage | null) ?? null;
 }
 
@@ -72,7 +72,7 @@ export async function updateDirectPackageStatus(
     .or(`tracking_number.eq.${trackingNumber},package_code.eq.${trackingNumber}`)
     .select('*')
     .maybeSingle();
-  if (error) throw error;
+  if (error) {throw error;}
   return (data as RawPackage | null) ?? null;
 }
 
@@ -86,7 +86,7 @@ export async function getDirectNotifications(userId: string) {
     .select('*')
     .eq('user_id', context.user.id)
     .order('created_at', { ascending: false });
-  if (error) throw error;
+  if (error) {throw error;}
   return Array.isArray(data) ? (data as RawNotification[]) : [];
 }
 
@@ -100,7 +100,7 @@ export async function markDirectNotificationAsRead(notificationId: string, userI
     .eq('user_id', context.user.id)
     .select('*')
     .maybeSingle();
-  if (error) throw error;
+  if (error) {throw error;}
   return data as RawNotification | null;
 }
 
@@ -127,7 +127,7 @@ export async function createDirectNotification(input: {
     })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
   return data as RawNotification;
 }
 
@@ -139,7 +139,7 @@ export async function getDirectCommunicationPreferences(userId: string) {
     .select('*')
     .eq('user_id', context.user.id)
     .maybeSingle();
-  if (error) throw error;
+  if (error) {throw error;}
   return (data as RawCommunicationPreferences | null) ?? null;
 }
 
@@ -155,7 +155,7 @@ export async function upsertDirectCommunicationPreferences(userId: string, updat
     }, { onConflict: 'user_id' })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
   return data as RawCommunicationPreferences;
 }
 
@@ -185,7 +185,7 @@ export async function queueDirectCommunicationDeliveries(
     .from('communication_deliveries')
     .insert(payload)
     .select('*');
-  if (error) throw error;
+  if (error) {throw error;}
   return Array.isArray(data) ? (data as RawCommunicationDelivery[]) : [];
 }
 
@@ -198,6 +198,6 @@ export async function getDirectCommunicationDeliveries(userId: string) {
     .eq('user_id', context.user.id)
     .order('created_at', { ascending: false })
     .limit(100);
-  if (error) throw error;
+  if (error) {throw error;}
   return Array.isArray(data) ? (data as RawCommunicationDelivery[]) : [];
 }

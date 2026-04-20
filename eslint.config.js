@@ -33,7 +33,7 @@ export default tseslint.config(
       
       // TypeScript - Enhanced Rules
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'error', // UPGRADED: Catch dead code
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }], // UPGRADED: Catch dead code
       '@typescript-eslint/no-non-null-assertion': 'error', // UPGRADED: Safe null handling
       '@typescript-eslint/consistent-type-imports': ['error', {
         prefer: 'type-imports',
@@ -68,6 +68,23 @@ export default tseslint.config(
       'prefer-template': 'error',
       'object-shorthand': 'error',
       'array-callback-return': 'error',
+    },
+  },
+  {
+    files: ['src/utils/enhanced-logging.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
+    files: ['tests/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      }],
     },
   },
 );

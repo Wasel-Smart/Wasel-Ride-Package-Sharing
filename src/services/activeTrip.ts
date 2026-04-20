@@ -78,11 +78,11 @@ export const activeTripAPI = {
         }
         // Using defaults: 1 retry, 500ms backoff, 5s timeout
       );
-      if (!response.ok) return null;
+      if (!response.ok) {return null;}
       const data = await response.json();
       return data.activeTrip ?? null;
     } catch (err) {
-      if ((err as Error).name === 'AbortError') return null;
+      if ((err as Error).name === 'AbortError') {return null;}
       console.error('[activeTripAPI.getActiveTrip]', err);
       return null;
     }
@@ -131,7 +131,7 @@ export const activeTripAPI = {
         }
         // Using defaults: 1 retry, 500ms backoff, 5s timeout
       );
-      if (!response.ok) return null;
+      if (!response.ok) {return null;}
       const data = await response.json();
       return data.activeTrip ?? null;
     } catch (err) {

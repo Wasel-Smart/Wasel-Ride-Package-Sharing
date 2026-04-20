@@ -129,9 +129,9 @@ export async function getQueueMetrics(): Promise<QueueMetrics> {
 
   return Array.from(queuedJobs.values()).reduce<QueueMetrics>(
     (accumulator, job) => {
-      if (job.status === 'PENDING') accumulator.pending += 1;
-      if (job.status === 'PROCESSING') accumulator.processing += 1;
-      if (job.status === 'DEAD') accumulator.dead += 1;
+      if (job.status === 'PENDING') {accumulator.pending += 1;}
+      if (job.status === 'PROCESSING') {accumulator.processing += 1;}
+      if (job.status === 'DEAD') {accumulator.dead += 1;}
       if (job.status === 'COMPLETED' && job.completed_at) {
         if (new Date(job.completed_at) >= startOfDay) {
           accumulator.completed_today += 1;

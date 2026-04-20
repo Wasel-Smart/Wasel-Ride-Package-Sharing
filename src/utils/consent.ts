@@ -49,7 +49,7 @@ export function setConsentDecision(decision: Exclude<ConsentDecision, null>): vo
 
   // Clean up any legacy keys to avoid stale state
   for (const key of LEGACY_CONSENT_STORAGE_KEYS) {
-    if (key === CONSENT_STORAGE_KEY) continue;
+    if (key === CONSENT_STORAGE_KEY) {continue;}
     try {
       window.localStorage.removeItem(key);
     } catch {

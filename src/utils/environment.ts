@@ -112,7 +112,7 @@ export function enforceDemoModeSafety(): void {
 
 export function getEnvironmentDisplayName(): string {
   const { mode, isDemoMode } = getEnvironmentConfig();
-  if (isDemoMode) return 'Demo';
+  if (isDemoMode) {return 'Demo';}
   return mode.charAt(0).toUpperCase() + mode.slice(1);
 }
 
