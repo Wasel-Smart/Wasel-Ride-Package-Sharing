@@ -1,65 +1,102 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchWithRetry, probeBackendHealth, warmUpServer } from '../../../src/services/core';
+import type * as CoreService from '../../../src/services/core';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Mock fetch
-global.fetch = vi.fn();
+type CoreModule = typeof CoreService;
+
+let core: CoreModule;
+
+async function loadCoreModule() {
+  vi.resetModules();
+  vi.stubEnv('VITE_API_URL', 'https://api.test.com');
+  vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'test-anon-key');
+  vi.stubEnv('VITE_SUPABASE_URL', '');
+  global.fetch = vi.fn();
+  core = await import('../../../src/services/core');
+}
+
+function createMockResponse(status: number, body: unknown = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+function createAbortAwareFetch() {
+  return vi.fn((_url: string, init?: RequestInit) => {
+    return new Promise<Response>((_resolve, reject) => {
+      const signal = init?.signal;
+      if (signal?.aborted) {
+        reject(new DOMException('Request aborted', 'AbortError'));
+        return;
+      }
+
+      signal?.addEventListener(
+        'abort',
+        () => reject(new DOMException('Request aborted', 'AbortError')),
+        { once: true },
+      );
+    });
+  });
+}
 
 describe('Core Service', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.resetAllMocks();
+  beforeEach(async () => {
+    Object.defineProperty(navigator, 'onLine', {
+      configurable: true,
+      writable: true,
+      value: true,
+    });
+    await loadCoreModule();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
   });
 
   describe('fetchWithRetry', () => {
     it('should successfully fetch data', async () => {
-      const mockResponse = { ok: true, status: 200, json: async () => ({ data: 'test' }) };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      vi.mocked(global.fetch).mockResolvedValueOnce(createMockResponse(200, { data: 'test' }));
 
-      const response = await fetchWithRetry('https://api.test.com/data');
-      
+      const response = await core.fetchWithRetry('https://api.test.com/data');
+
       expect(response.ok).toBe(true);
       expect(response.status).toBe(200);
     });
 
     it('should retry on 502 error', async () => {
-      const failResponse = { ok: false, status: 502 };
-      const successResponse = { ok: true, status: 200 };
-      
-      (global.fetch as any)
-        .mockResolvedValueOnce(failResponse)
-        .mockResolvedValueOnce(successResponse);
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce(createMockResponse(502))
+        .mockResolvedValueOnce(createMockResponse(200, { ok: true }));
 
-      const response = await fetchWithRetry('https://api.test.com/data', {}, 2, 100);
-      
+      const response = await core.fetchWithRetry('https://api.test.com/data', {}, 2, 10);
+
       expect(response.ok).toBe(true);
       expect(global.fetch).toHaveBeenCalledTimes(2);
     });
 
     it('should handle network errors', async () => {
-      (global.fetch as any).mockRejectedValueOnce(new TypeError('Network error'));
+      vi.mocked(global.fetch).mockRejectedValueOnce(new TypeError('Network error'));
 
-      await expect(
-        fetchWithRetry('https://api.test.com/data', {}, 0)
-      ).rejects.toThrow('Network error');
+      await expect(core.fetchWithRetry('https://api.test.com/data', {}, 0)).rejects.toThrow(
+        'Network error',
+      );
     });
 
     it('should respect timeout', async () => {
-      (global.fetch as any).mockImplementation(() => 
-        new Promise(resolve => setTimeout(resolve, 10000))
-      );
+      vi.mocked(global.fetch).mockImplementation(createAbortAwareFetch());
 
       await expect(
-        fetchWithRetry('https://api.test.com/data', { timeout: 100 }, 0)
+        core.fetchWithRetry('https://api.test.com/data', { timeout: 50 }, 0),
       ).rejects.toThrow();
     });
 
     it('should deduplicate concurrent GET requests', async () => {
-      const mockResponse = { ok: true, status: 200, clone: () => mockResponse };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      vi.mocked(global.fetch).mockResolvedValue(createMockResponse(200, { ok: true }));
 
       const [response1, response2] = await Promise.all([
-        fetchWithRetry('https://api.test.com/data'),
-        fetchWithRetry('https://api.test.com/data'),
+        core.fetchWithRetry('https://api.test.com/data'),
+        core.fetchWithRetry('https://api.test.com/data'),
       ]);
 
       expect(response1.ok).toBe(true);
@@ -68,12 +105,11 @@ describe('Core Service', () => {
     });
 
     it('should not deduplicate POST requests', async () => {
-      const mockResponse = { ok: true, status: 200 };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      vi.mocked(global.fetch).mockResolvedValue(createMockResponse(200, { ok: true }));
 
       await Promise.all([
-        fetchWithRetry('https://api.test.com/data', { method: 'POST', body: '{}' }),
-        fetchWithRetry('https://api.test.com/data', { method: 'POST', body: '{}' }),
+        core.fetchWithRetry('https://api.test.com/data', { method: 'POST', body: '{}' }),
+        core.fetchWithRetry('https://api.test.com/data', { method: 'POST', body: '{}' }),
       ]);
 
       expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -82,59 +118,55 @@ describe('Core Service', () => {
 
   describe('probeBackendHealth', () => {
     it('should return healthy status on successful probe', async () => {
-      const mockResponse = { ok: true, status: 200 };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      vi.mocked(global.fetch).mockResolvedValueOnce(createMockResponse(200, { ok: true }));
 
-      const snapshot = await probeBackendHealth(1000);
-      
+      const snapshot = await core.probeBackendHealth(1000);
+
       expect(snapshot.backendStatus).toBe('healthy');
       expect(snapshot.edgeFunctionAvailable).toBe(true);
     });
 
     it('should return offline status when network is down', async () => {
-      // Mock navigator.onLine
       Object.defineProperty(navigator, 'onLine', {
+        configurable: true,
         writable: true,
         value: false,
       });
 
-      const snapshot = await probeBackendHealth();
-      
+      const snapshot = await core.probeBackendHealth();
+
       expect(snapshot.networkOnline).toBe(false);
       expect(snapshot.backendStatus).toBe('offline');
     });
 
     it('should handle probe timeout', async () => {
-      (global.fetch as any).mockImplementation(() => 
-        new Promise(resolve => setTimeout(resolve, 10000))
-      );
+      vi.mocked(global.fetch).mockImplementation(createAbortAwareFetch());
 
-      const snapshot = await probeBackendHealth(100);
-      
-      expect(snapshot.backendStatus).not.toBe('healthy');
+      const snapshot = await core.probeBackendHealth(50);
+
+      expect(snapshot.backendStatus).toBe('degraded');
     });
   });
 
   describe('warmUpServer', () => {
     it('should warm up server successfully', async () => {
-      const mockResponse = { ok: true, status: 200 };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      vi.mocked(global.fetch).mockResolvedValueOnce(createMockResponse(200, { ok: true }));
 
-      await warmUpServer();
-      
-      expect(global.fetch).toHaveBeenCalled();
+      await core.warmUpServer();
+
+      expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
     it('should retry on failure', async () => {
-      const failResponse = { ok: false, status: 503 };
-      const successResponse = { ok: true, status: 200 };
-      
-      (global.fetch as any)
-        .mockResolvedValueOnce(failResponse)
-        .mockResolvedValueOnce(successResponse);
+      vi.useFakeTimers();
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce(createMockResponse(503, { error: 'retry' }))
+        .mockResolvedValueOnce(createMockResponse(200, { ok: true }));
 
-      await warmUpServer();
-      
+      const warmUpPromise = core.warmUpServer();
+      await vi.advanceTimersByTimeAsync(2_000);
+      await warmUpPromise;
+
       expect(global.fetch).toHaveBeenCalledTimes(2);
     });
   });

@@ -1521,7 +1521,9 @@ export function LandingSlotRows({ rows, slots }: LandingSlotRowsProps) {
         const renderedSlots = row.slots.flatMap(slotId =>
           slots[slotId] ? [{ id: slotId, node: slots[slotId] as ReactNode }] : [],
         );
-        if (renderedSlots.length === 0) return null;
+        if (renderedSlots.length === 0) {
+          return null;
+        }
         return (
           <div key={row.id} className={row.className} style={row.style}>
             {renderedSlots.map(slot => (

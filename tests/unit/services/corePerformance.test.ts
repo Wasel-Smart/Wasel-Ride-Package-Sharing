@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {
   mockCheckSupabaseConnection,
@@ -27,6 +27,11 @@ describe('services/core performance behaviors', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+    vi.stubEnv('VITE_API_URL', 'https://api.wasel.test');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('deduplicates concurrent probeBackendHealth requests', async () => {

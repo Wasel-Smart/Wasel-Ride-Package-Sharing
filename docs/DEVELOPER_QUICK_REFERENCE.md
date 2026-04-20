@@ -379,7 +379,7 @@ SELECT * FROM pg_policies WHERE tablename = 'profiles';
 ## 📚 Documentation
 
 - [Production Deployment Guide](./PRODUCTION_DEPLOYMENT_GUIDE.md)
-- [All Gaps Fixed Summary](./ALL_GAPS_FIXED_SUMMARY.md)
+- [Documentation Index](./FEATURE_INDEX.md)
 - [Monitoring Runbook](./MONITORING_RUNBOOK.md)
 - [Feature Index](./FEATURE_INDEX.md)
 - [Architecture Decisions](./adr/)
