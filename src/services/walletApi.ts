@@ -210,12 +210,14 @@ function buildDemoPaymentIntent(
     metadata?: Record<string, unknown>;
   },
 ): PaymentIntentView {
-  const provider =
+  const provider: PaymentIntentView['provider'] =
     paymentMethodType === 'wallet'
       ? 'wallet'
-      : paymentMethodType === 'bank_transfer'
-        ? 'stripe'
-        : paymentMethodType;
+      : paymentMethodType === 'cliq'
+        ? 'cliq'
+        : paymentMethodType === 'bank_transfer'
+          ? 'aman'
+          : 'stripe';
   const intent: PaymentIntentView = {
     id: `pi_demo_${Date.now()}`,
     purpose,
