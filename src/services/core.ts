@@ -48,6 +48,10 @@ let probeInFlight: Promise<AvailabilitySnapshot> | null = null;
 let probeStartedAt = 0;
 let warmUpInFlight: Promise<void> | null = null;
 
+function cloneResponseSafely(response: Response): Response {
+  return typeof response.clone === 'function' ? response.clone() : response;
+}
+
 async function markSupabaseHealth(): Promise<boolean> {
   if (!supabaseClient) {
     setEdgeFunctionAvailability(false);
@@ -206,37 +210,41 @@ export async function warmUpServer(): Promise<void> {
 
     if (!API_URL || !publicAnonKey) {
       serverWarm = await markSupabaseHealth();
+      if (serverWarm) {
+        warmUpAttempts = 0;
+      }
       return;
     }
 
-    warmUpAttempts += 1;
+    while (warmUpAttempts < MAX_WARMUP_ATTEMPTS && !serverWarm) {
+      warmUpAttempts += 1;
 
-    try {
-      const response = await fetch(`${API_URL}/health`, {
-        signal: AbortSignal.timeout(12_000),
-        headers: { Authorization: `Bearer ${publicAnonKey}` },
-      });
+      try {
+        const response = await fetch(`${API_URL}/health`, {
+          signal: AbortSignal.timeout(12_000),
+          headers: { Authorization: `Bearer ${publicAnonKey}` },
+        });
 
-      if (response.ok) {
+        if (response.ok) {
+          serverWarm = true;
+          warmUpAttempts = 0;
+          setEdgeFunctionAvailability(true);
+          setBackendStatus('healthy');
+          return;
+        }
+      } catch {
+        // Retry loop below handles the final state.
+      }
+
+      if (await markSupabaseHealth()) {
         serverWarm = true;
-        setEdgeFunctionAvailability(true);
-        setBackendStatus('healthy');
+        warmUpAttempts = 0;
         return;
       }
-    } catch {
-      // The retry path below handles the final state.
-    }
 
-    if (await markSupabaseHealth()) {
-      serverWarm = true;
-      return;
-    }
-
-    if (warmUpAttempts < MAX_WARMUP_ATTEMPTS) {
-      setTimeout(() => {
-        void warmUpServer();
-      }, 2_000 * warmUpAttempts);
-      return;
+      if (warmUpAttempts < MAX_WARMUP_ATTEMPTS) {
+        await delay(2_000 * warmUpAttempts);
+      }
     }
 
     markEdgeFunctionUnavailable();
@@ -328,7 +336,7 @@ export async function fetchWithRetry(
   if (shouldDeduplicate) {
     const inFlight = inflightReadRequests.get(requestDeduplicationKey);
     if (inFlight) {
-      return inFlight.then(response => response.clone());
+      return inFlight.then(cloneResponseSafely);
     }
   }
 
@@ -337,13 +345,11 @@ export async function fetchWithRetry(
     return execution;
   }
 
-  inflightReadRequests.set(
-    requestDeduplicationKey,
-    execution.then(response => response.clone()),
-  );
+  const sharedExecution = execution.then(cloneResponseSafely);
+  inflightReadRequests.set(requestDeduplicationKey, sharedExecution);
 
   try {
-    return await execution;
+    return await sharedExecution.then(cloneResponseSafely);
   } finally {
     inflightReadRequests.delete(requestDeduplicationKey);
   }

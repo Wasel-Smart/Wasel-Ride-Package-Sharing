@@ -1,18 +1,12 @@
 /**
  * Payment Flow Integration Tests
- * 
- * Tests critical payment scenarios end-to-end:
- * - Payment intent creation
- * - Payment confirmation
- * - Wallet balance updates
- * - Escrow holds and releases
+ *
+ * Covers the wallet-backed payment service contract used by ride checkout.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { walletApi } from '../../src/services/walletApi';
-import type { WalletData, PaymentIntentView } from '../../shared/wallet-contracts';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { PaymentIntentView, WalletData } from '../../shared/wallet-contracts';
 
-// Mock the core service
 vi.mock('../../src/services/core', () => ({
   API_URL: 'https://test-api.wasel.jo',
   publicAnonKey: 'test-anon-key',
@@ -23,9 +17,53 @@ vi.mock('../../src/services/core', () => ({
   }),
 }));
 
+import { __resetWalletApiCachesForTests, walletApi } from '../../src/services/walletApi';
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+function buildWalletSnapshot(overrides: Partial<WalletData> = {}): WalletData {
+  return {
+    wallet: {
+      id: 'wallet_123',
+      userId: 'test-user-123',
+      walletType: 'custodial',
+      status: 'active',
+      currency: 'JOD',
+      autoTopUp: false,
+      autoTopUpAmount: 20,
+      autoTopUpThreshold: 5,
+      paymentMethods: [],
+      createdAt: new Date().toISOString(),
+    },
+    balance: 100,
+    pendingBalance: 0,
+    rewardsBalance: 0,
+    total_earned: 500,
+    total_spent: 400,
+    total_deposited: 600,
+    currency: 'JOD',
+    pinSet: true,
+    autoTopUp: false,
+    transactions: [],
+    activeEscrows: [],
+    activeRewards: [],
+    subscription: null,
+    ...overrides,
+  };
+}
+
 describe('Payment Flow Integration Tests', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    __resetWalletApiCachesForTests();
+    window.localStorage.clear();
+    const { fetchWithRetry } = await import('../../src/services/core');
+    vi.mocked(fetchWithRetry).mockReset();
   });
 
   describe('Ride Payment Flow', () => {
@@ -33,10 +71,11 @@ describe('Payment Flow Integration Tests', () => {
       const mockIntent: PaymentIntentView = {
         id: 'pi_test_123',
         status: 'requires_confirmation',
-        amount: 25.50,
+        amount: 25.5,
         currency: 'JOD',
         clientSecret: 'pi_test_123_secret',
         paymentMethodType: 'card',
+        provider: 'stripe',
         purpose: 'ride_payment',
         referenceType: 'ride',
         referenceId: 'ride_abc123',
@@ -44,53 +83,40 @@ describe('Payment Flow Integration Tests', () => {
       };
 
       const { fetchWithRetry } = await import('../../src/services/core');
-      vi.mocked(fetchWithRetry).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockIntent,
-      } as Response);
+      vi.mocked(fetchWithRetry).mockResolvedValueOnce(jsonResponse(mockIntent));
 
-      const intent = await walletApi.createPaymentIntent(
-        'ride_payment',
-        25.50,
-        'card',
-        {
-          referenceType: 'ride',
-          referenceId: 'ride_abc123',
-          idempotencyKey: 'payment_xyz789',
-        }
-      );
+      const intent = await walletApi.createPaymentIntent('ride_payment', 25.5, 'card', {
+        referenceType: 'ride',
+        referenceId: 'ride_abc123',
+        idempotencyKey: 'payment_xyz789',
+      });
 
       expect(intent.id).toBe('pi_test_123');
-      expect(intent.amount).toBe(25.50);
+      expect(intent.amount).toBe(25.5);
       expect(intent.purpose).toBe('ride_payment');
       expect(fetchWithRetry).toHaveBeenCalledWith(
         expect.stringContaining('/payments/create-intent'),
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            'Authorization': 'Bearer test-token',
+            Authorization: 'Bearer test-token',
           }),
-        })
+        }),
       );
     });
 
     it('should confirm payment intent with default payment method', async () => {
       const mockConfirmation = {
-        paymentIntentId: 'pi_test_123',
+        id: 'pi_test_123',
         status: 'succeeded',
-        confirmedAt: new Date().toISOString(),
+        settled: true,
+        clientSecret: null,
       };
 
       const { fetchWithRetry } = await import('../../src/services/core');
-      vi.mocked(fetchWithRetry).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockConfirmation,
-      } as Response);
+      vi.mocked(fetchWithRetry).mockResolvedValueOnce(jsonResponse(mockConfirmation));
 
-      const confirmation = await walletApi.confirmPaymentIntent(
-        'pi_test_123',
-        'pm_card_visa'
-      );
+      const confirmation = await walletApi.confirmPaymentIntent('pi_test_123', 'pm_card_visa');
 
       expect(confirmation.status).toBe('succeeded');
       expect(fetchWithRetry).toHaveBeenCalledWith(
@@ -98,67 +124,43 @@ describe('Payment Flow Integration Tests', () => {
         expect.objectContaining({
           method: 'POST',
           body: expect.stringContaining('pi_test_123'),
-        })
+        }),
       );
     });
 
     it('should handle payment failure gracefully', async () => {
       const { fetchWithRetry } = await import('../../src/services/core');
-      vi.mocked(fetchWithRetry).mockResolvedValueOnce({
-        ok: false,
-        status: 402,
-        json: async () => ({ error: 'Insufficient funds' }),
-      } as Response);
+      vi.mocked(fetchWithRetry).mockResolvedValueOnce(
+        jsonResponse({ error: 'Insufficient funds' }, 402),
+      );
 
-      await expect(
-        walletApi.confirmPaymentIntent('pi_test_123', 'pm_card_visa')
-      ).rejects.toThrow('Insufficient funds');
+      await expect(walletApi.confirmPaymentIntent('pi_test_123', 'pm_card_visa')).rejects.toThrow(
+        'Insufficient funds',
+      );
     });
   });
 
   describe('Wallet Balance Payment', () => {
     it('should use wallet balance when sufficient', async () => {
-      const mockWallet: WalletData = {
-        userId: 'test-user-123',
-        balance: 100.00,
-        total_earned: 500.00,
-        total_spent: 400.00,
-        wallet: {
-          id: 'wallet_123',
-          userId: 'test-user-123',
-          balance: 100.00,
-          currency: 'JOD',
-          status: 'active',
-          pinSet: true,
-          paymentMethods: [],
-          escrows: [],
-          subscriptions: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        transactions: [],
-        rewards: [],
-      };
+      const mockWallet = buildWalletSnapshot();
 
       const { fetchWithRetry } = await import('../../src/services/core');
-      vi.mocked(fetchWithRetry).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockWallet,
-      } as Response);
+      vi.mocked(fetchWithRetry).mockResolvedValueOnce(jsonResponse(mockWallet));
 
       const wallet = await walletApi.getWallet('test-user-123');
-      expect(wallet.balance).toBe(100.00);
-      expect(wallet.balance).toBeGreaterThanOrEqual(25.50); // Can afford ride
+      expect(wallet.balance).toBe(100);
+      expect(wallet.balance).toBeGreaterThanOrEqual(25.5);
     });
 
     it('should create wallet payment intent when balance is sufficient', async () => {
       const mockIntent: PaymentIntentView = {
         id: 'pi_wallet_123',
         status: 'requires_confirmation',
-        amount: 25.50,
+        amount: 25.5,
         currency: 'JOD',
         clientSecret: 'pi_wallet_123_secret',
         paymentMethodType: 'wallet',
+        provider: 'wallet',
         purpose: 'ride_payment',
         referenceType: 'ride',
         referenceId: 'ride_abc123',
@@ -166,69 +168,39 @@ describe('Payment Flow Integration Tests', () => {
       };
 
       const { fetchWithRetry } = await import('../../src/services/core');
-      vi.mocked(fetchWithRetry).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockIntent,
-      } as Response);
+      vi.mocked(fetchWithRetry).mockResolvedValueOnce(jsonResponse(mockIntent));
 
-      const intent = await walletApi.createPaymentIntent(
-        'ride_payment',
-        25.50,
-        'wallet'
-      );
+      const intent = await walletApi.createPaymentIntent('ride_payment', 25.5, 'wallet');
 
       expect(intent.paymentMethodType).toBe('wallet');
+      expect(intent.provider).toBe('wallet');
     });
   });
 
   describe('Escrow Flow', () => {
     it('should hold funds in escrow for pending ride', async () => {
-      // This would test the escrow hold mechanism
-      // In production, this is handled by the backend
-      const mockWallet: WalletData = {
-        userId: 'test-user-123',
-        balance: 74.50, // 100 - 25.50 held in escrow
-        total_earned: 500.00,
-        total_spent: 400.00,
-        wallet: {
-          id: 'wallet_123',
-          userId: 'test-user-123',
-          balance: 74.50,
-          currency: 'JOD',
-          status: 'active',
-          pinSet: true,
-          paymentMethods: [],
-          escrows: [
-            {
-              id: 'escrow_123',
-              walletId: 'wallet_123',
-              amount: 25.50,
-              purpose: 'ride_payment',
-              referenceType: 'ride',
-              referenceId: 'ride_abc123',
-              status: 'held',
-              createdAt: new Date().toISOString(),
-              expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            },
-          ],
-          subscriptions: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        transactions: [],
-        rewards: [],
-      };
+      const mockWallet = buildWalletSnapshot({
+        balance: 74.5,
+        pendingBalance: 25.5,
+        activeEscrows: [
+          {
+            id: 'escrow_123',
+            type: 'ride',
+            amount: 25.5,
+            tripId: 'ride_abc123',
+            status: 'held',
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      });
 
       const { fetchWithRetry } = await import('../../src/services/core');
-      vi.mocked(fetchWithRetry).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockWallet,
-      } as Response);
+      vi.mocked(fetchWithRetry).mockResolvedValueOnce(jsonResponse(mockWallet));
 
       const wallet = await walletApi.getWallet('test-user-123');
-      expect(wallet.wallet.escrows).toHaveLength(1);
-      expect(wallet.wallet.escrows[0]?.status).toBe('held');
-      expect(wallet.wallet.escrows[0]?.amount).toBe(25.50);
+      expect(wallet.activeEscrows).toHaveLength(1);
+      expect(wallet.activeEscrows[0]?.status).toBe('held');
+      expect(wallet.activeEscrows[0]?.amount).toBe(25.5);
     });
   });
 
@@ -238,10 +210,11 @@ describe('Payment Flow Integration Tests', () => {
       const mockIntent: PaymentIntentView = {
         id: 'pi_test_123',
         status: 'requires_confirmation',
-        amount: 25.50,
+        amount: 25.5,
         currency: 'JOD',
         clientSecret: 'pi_test_123_secret',
         paymentMethodType: 'card',
+        provider: 'stripe',
         purpose: 'ride_payment',
         referenceType: 'ride',
         referenceId: 'ride_abc123',
@@ -249,34 +222,31 @@ describe('Payment Flow Integration Tests', () => {
       };
 
       const { fetchWithRetry } = await import('../../src/services/core');
-      vi.mocked(fetchWithRetry).mockResolvedValue({
-        ok: true,
-        json: async () => mockIntent,
-      } as Response);
+      vi.mocked(fetchWithRetry).mockImplementation(() => Promise.resolve(jsonResponse(mockIntent)));
 
-      // First call
-      const intent1 = await walletApi.createPaymentIntent(
-        'ride_payment',
-        25.50,
-        'card',
-        { idempotencyKey }
-      );
-
-      // Second call with same key should return same intent
-      const intent2 = await walletApi.createPaymentIntent(
-        'ride_payment',
-        25.50,
-        'card',
-        { idempotencyKey }
-      );
+      const intent1 = await walletApi.createPaymentIntent('ride_payment', 25.5, 'card', {
+        idempotencyKey,
+      });
+      const intent2 = await walletApi.createPaymentIntent('ride_payment', 25.5, 'card', {
+        idempotencyKey,
+      });
 
       expect(intent1.id).toBe(intent2.id);
     });
   });
 
   describe('Error Handling', () => {
+    it('should surface network errors from the wallet transport', async () => {
+      const { fetchWithRetry } = await import('../../src/services/core');
+      vi.mocked(fetchWithRetry).mockRejectedValueOnce(new Error('Network error'));
+
+      await expect(walletApi.createPaymentIntent('ride_payment', 25.5, 'card')).rejects.toThrow(
+        'Network error',
+      );
+    });
+
     it('should throw error when wallet API is unavailable', async () => {
-      // Mock API_URL as empty to simulate unavailable API
+      vi.resetModules();
       vi.doMock('../../src/services/core', () => ({
         API_URL: '',
         publicAnonKey: '',
@@ -284,24 +254,11 @@ describe('Payment Flow Integration Tests', () => {
         getAuthDetails: vi.fn(),
       }));
 
+      const { walletApi: unavailableWalletApi } = await import('../../src/services/walletApi');
+
       await expect(
-        walletApi.createPaymentIntent('ride_payment', 25.50, 'card')
+        unavailableWalletApi.createPaymentIntent('ride_payment', 25.5, 'card'),
       ).rejects.toThrow('Wallet actions are unavailable');
-    });
-
-    it('should handle network errors with retry', async () => {
-      const { fetchWithRetry } = await import('../../src/services/core');
-      
-      // First call fails, second succeeds
-      vi.mocked(fetchWithRetry)
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ balance: 100 }),
-        } as Response);
-
-      // fetchWithRetry should handle the retry internally
-      // This test verifies the service layer handles errors properly
     });
   });
 });

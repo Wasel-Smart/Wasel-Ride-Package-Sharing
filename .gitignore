@@ -22,6 +22,7 @@ test-results/
 playwright-report/
 quality-report*.json
 .lighthouseci/
+vitest-results*.json
 
 # ── OS junk ────────────────────────────────────────────────────
 .DS_Store
@@ -81,6 +82,11 @@ _REMOVED/
 
 # Local Codex worktrees / ad hoc artifacts
 .codex-landing-deploy/
+.codex-review-shots/
+.qa-artifacts/
+.anima/cache/
+.eslintcache
+tsconfig.tsbuildinfo
 mobility-os-current.png
 
 # Temp icon/image generation artifacts
@@ -102,6 +108,7 @@ preview-*.out.log
 .wallet-payments-e2e.log
 .codex-*.log
 .build-verify.log
+firepit-log.txt
 
 # Vitest results
 vitest-results*.json
@@ -111,22 +118,11 @@ vitest.enhanced.config.ts
 
 # Nested duplicate directory
 Wdoubleme/
+Wasel R001_04042026_b001/
+tmp_import_logo/
+tmp_logo_frames/
 
-# Gap analysis documents (keep in docs/)
+# Legacy one-off report names
 COMPREHENSIVE_GAPS_ANALYSIS.md
 CRITICAL_GAPS_QUICK_REF.md
-APPLICATION_GAPS_REPORT.md
-IMPLEMENTATION_GAPS_ANALYSIS.md
-ENTERPRISE_AUDIT_REPORT.md
-SECURITY_ALERT.md
 SECURITY_FIX_SUMMARY.md
-QUICK_WINS_APPLIED.md
-FIXES_SUMMARY.md
-IMPLEMENTATION_COMPLETE.md
-IMPLEMENTATION_PROGRESS.md
-PRODUCTION_READY_SUMMARY.md
-PRODUCTION_READY.md
-FINAL_SUMMARY.md
-PRODUCTION_DEPLOYMENT.md
-DEPLOYMENT_GUIDE.md
-PERFORMANCE_QUICK_REF.md

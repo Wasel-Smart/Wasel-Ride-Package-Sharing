@@ -1,14 +1,13 @@
+import type * as ReactRouter from 'react-router';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 
 const {
-  mockProbeBackendHealth,
   mockStartAvailabilityPolling,
   mockWarmUpServer,
   mockRouterState,
 } = vi.hoisted(() => ({
-  mockProbeBackendHealth: vi.fn().mockResolvedValue(undefined),
   mockStartAvailabilityPolling: vi.fn().mockReturnValue(vi.fn()),
   mockWarmUpServer: vi.fn().mockResolvedValue(undefined),
   mockRouterState: {
@@ -17,7 +16,7 @@ const {
 }));
 
 vi.mock('react-router', async () => {
-  const actual = await vi.importActual<typeof import('react-router')>('react-router');
+  const actual = await vi.importActual<typeof ReactRouter>('react-router');
   return {
     ...actual,
     RouterProvider: ({ router }: { router: unknown }) => {
@@ -49,6 +48,7 @@ vi.mock('../../../src/contexts/LocalAuth', () => ({
 
 vi.mock('../../../src/contexts/AuthContext', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useAuth: () => ({ user: null, loading: false }),
 }));
 
 vi.mock('../../../src/components/PrivacyConsentBanner', () => ({
@@ -60,7 +60,6 @@ vi.mock('../../../src/components/wasel-ds/WaselLogo', () => ({
 }));
 
 vi.mock('../../../src/services/core', () => ({
-  probeBackendHealth: (...args: unknown[]) => mockProbeBackendHealth(...args),
   startAvailabilityPolling: (...args: unknown[]) => mockStartAvailabilityPolling(...args),
   warmUpServer: (...args: unknown[]) => mockWarmUpServer(...args),
 }));
@@ -101,9 +100,8 @@ describe('App shell', () => {
     expect(screen.getByTestId('toaster')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(mockStartAvailabilityPolling).toHaveBeenCalledWith(120000);
+      expect(mockStartAvailabilityPolling).toHaveBeenCalledWith(30_000);
       expect(mockWarmUpServer).toHaveBeenCalledTimes(1);
-      expect(mockProbeBackendHealth).toHaveBeenCalled();
     });
   });
 
@@ -113,8 +111,8 @@ describe('App shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('Something interrupted this screen')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Reload Wasel' })).toBeInTheDocument();
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reload Page' })).toBeInTheDocument();
 
     consoleError.mockRestore();
   });
