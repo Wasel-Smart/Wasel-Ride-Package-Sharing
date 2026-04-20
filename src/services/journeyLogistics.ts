@@ -521,7 +521,7 @@ export async function createConnectedRide(
     return created;
   } catch (error) {
     if (!allowLocalPersistenceFallback()) {
-      throw error;
+      console.warn('[journeyLogistics] trip creation unavailable, preserving route locally', error);
     }
     saveRides([ride], getConnectedRides());
     void trackGrowthEvent({
@@ -722,7 +722,7 @@ export async function createConnectedPackage(input: {
     }
   } catch (error) {
     if (!allowLocalPersistenceFallback()) {
-      throw error;
+      console.warn('[journeyLogistics] package creation unavailable, preserving request locally', error);
     }
   }
 

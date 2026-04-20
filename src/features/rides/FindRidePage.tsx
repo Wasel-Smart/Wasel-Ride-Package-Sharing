@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { ShieldCheck, TimerReset, Zap } from 'lucide-react';
+import { Car, Package, Search } from 'lucide-react';
 import { Protected } from '../../pages/waselServiceShared';
 import { parseFindRideParams } from '../../pages/waselCorePageHelpers';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
@@ -7,10 +7,22 @@ import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { trackGrowthEvent } from '../../services/growthEngine';
+import { buildAuthPagePath } from '../../utils/authFlow';
+import { getWaselPresenceProfile } from '../../domains/trust/waselPresence';
 import { LandingPageFrame } from '../home/landing/LandingPageFrame';
 import { landingPanel } from '../home/landing/landingTypes';
 import { LANDING_FONT } from '../home/landingConstants';
-import { LandingServiceHero } from '../home/landing/LandingServiceHero';
+import {
+  LANDING_COLORS,
+  LandingHeader,
+  LandingHeroSection,
+  LandingMapSection,
+  LandingSignalSection,
+  LandingTrustSection,
+  LandingFooterSlot,
+  type LandingActionCard,
+  type LandingSignalCard,
+} from '../home/LandingSections';
 import { RideResults, type RideResultsCopy } from '../../components/rides/RideResults';
 import { RideSearchForm, type RideSearchFormCopy } from '../../components/rides/RideSearchForm';
 import { useRideSearch } from '../../modules/rides/ride.hooks';
@@ -233,6 +245,127 @@ export function FindRidePage() {
   const { user } = useLocalAuth();
   const { notifyTripConfirmed, permission, requestPermission } = usePushNotifications();
   const copy = useMemo(() => buildRidePageCopy(language === 'ar' ? 'ar' : 'en'), [language]);
+
+  // Wasel Presence profile for contact/business info
+  const profile = useMemo(() => getWaselPresenceProfile(), []);
+  const ar = language === 'ar';
+  const supportLine = profile.supportPhoneDisplay || profile.supportEmail || 'Wasel';
+  const businessAddress = ar ? profile.businessAddressAr : profile.businessAddress;
+
+  // Auth page paths
+  const emailAuthPath = useMemo(() => buildAuthPagePath('signin'), []);
+  const signupAuthPath = useMemo(() => buildAuthPagePath('signup'), []);
+
+  // Static service paths
+  const findRidePath = '/app/find-ride';
+  const mobilityOsPath = '/app/mobility-os';
+  const myTripsPath = '/app/my-trips';
+  const packagesPath = '/app/packages';
+
+  // Hero primary action cards
+  const primaryActions = useMemo((): LandingActionCard[] => {
+    return [
+      {
+        icon: Search,
+        title: ar ? 'ابحث عن رحلة' : 'Find a ride',
+        detail: ar ? 'رحلات حية' : 'Live matches',
+        path: findRidePath,
+        color: LANDING_COLORS.cyan,
+      },
+      {
+        icon: Package,
+        title: ar ? 'أرسل طرداً' : 'Send a package',
+        detail: ar ? 'طرد مع راكب' : 'Package with rider',
+        path: packagesPath,
+        color: LANDING_COLORS.gold,
+      },
+      {
+        icon: Car,
+        title: ar ? 'اعرض رحلتك' : 'Offer your ride',
+        detail: ar ? 'شارك المقاعد' : 'Share seats',
+        path: '/app/offer-ride',
+        color: LANDING_COLORS.blue,
+      },
+    ];
+  }, [ar, LANDING_COLORS, findRidePath, packagesPath]);
+
+  // Bullet points displayed under hero description
+  const heroBullets = useMemo(
+    () => copy.hero.highlights.map(h => h.detail),
+    [copy.hero.highlights],
+  );
+
+  // Platform signal cards for the signals section
+  const signalCards = useMemo((): LandingSignalCard[] => {
+    if (ar) {
+      return [
+        {
+          title: 'مطابقة السائق',
+          detail: 'يبدأ طابور المطابقة فور إرسال الطلب.',
+          accent: LANDING_COLORS.cyan,
+          trendLabel: 'نشط',
+          trendDirection: 'up',
+          intensity: 'عالٍ',
+          sparkline: [72, 68, 74, 80, 78, 85, 90],
+        },
+        {
+          title: 'وضوح المسار',
+          detail: 'مسارات مباشرة داخل المدن وبينها.',
+          accent: LANDING_COLORS.gold,
+          trendLabel: 'مستقر',
+          trendDirection: 'up',
+          intensity: 'متوسط',
+          sparkline: [45, 48, 50, 49, 51, 52, 53],
+        },
+        {
+          title: 'الرحلات المتاحة',
+          detail: 'رحلات حية على المسارات الرئيسية.',
+          accent: LANDING_COLORS.green,
+          trendLabel: 'تزايد',
+          trendDirection: 'up',
+          intensity: 'مرتفع',
+          sparkline: [55, 62, 70, 78, 85, 92, 100],
+        },
+      ];
+    }
+    return [
+      {
+        title: 'Driver matching',
+        detail: 'Queue-backed matching starts immediately.',
+        accent: LANDING_COLORS.cyan,
+        trendLabel: 'Active',
+        trendDirection: 'up',
+        intensity: 'High',
+        sparkline: [72, 68, 74, 80, 78, 85, 90],
+      },
+      {
+        title: 'Corridor clarity',
+        detail: 'Direct routes across and between cities.',
+        accent: LANDING_COLORS.gold,
+        trendLabel: 'Stable',
+        trendDirection: 'up',
+        intensity: 'Medium',
+        sparkline: [45, 48, 50, 49, 51, 52, 53],
+      },
+      {
+        title: 'Available rides',
+        detail: 'Live rides on core corridors.',
+        accent: LANDING_COLORS.green,
+        trendLabel: 'Growing',
+        trendDirection: 'up',
+        intensity: 'High',
+        sparkline: [55, 62, 70, 78, 85, 92, 100],
+      },
+    ];
+  }, [ar, LANDING_COLORS]);
+
+  const handleNavigate = useCallback(
+    (path: string) => {
+      navigate(path);
+    },
+    [navigate],
+  );
+
   const {
     state,
     visibleResults,
@@ -277,27 +410,6 @@ export function FindRidePage() {
     state.activeRequest,
     state.successMessage,
   ]);
-
-  const heroHighlights = useMemo(
-    () => [
-      {
-        icon: <Zap size={18} color="#20D8FF" />,
-        title: copy.hero.highlights[0].title,
-        detail: copy.hero.highlights[0].detail,
-      },
-      {
-        icon: <ShieldCheck size={18} color="#20D8FF" />,
-        title: copy.hero.highlights[1].title,
-        detail: copy.hero.highlights[1].detail,
-      },
-      {
-        icon: <TimerReset size={18} color="#20D8FF" />,
-        title: copy.hero.highlights[2].title,
-        detail: copy.hero.highlights[2].detail,
-      },
-    ],
-    [copy.hero.highlights],
-  );
 
   const handleSearch = useCallback(async () => {
     clearFeedback();
@@ -364,15 +476,28 @@ export function FindRidePage() {
     <Protected>
       <LandingPageFrame>
         <div style={{ display: 'grid', gap: 28 }}>
-          <LandingServiceHero
-            eyebrow={copy.hero.eyebrow}
-            title={copy.hero.title}
-            description={copy.hero.description}
-            highlights={heroHighlights}
+          <LandingHeader
+            ar={ar}
+            signinPath={emailAuthPath}
+            signupPath={signupAuthPath}
+            showAuthActions={false}
+            onNavigate={handleNavigate}
+          />
+          <LandingHeroSection
+            ar={ar}
+            emailAuthPath={emailAuthPath}
+            signupAuthPath={signupAuthPath}
+            findRidePath={findRidePath}
+            mobilityOsPath={mobilityOsPath}
+            myTripsPath={myTripsPath}
+            supportLine={supportLine}
+            businessAddress={businessAddress}
+            heroBullets={heroBullets}
+            primaryActions={primaryActions}
             stats={copy.hero.stats}
             ctaLabel={copy.hero.ctaLabel}
+            onNavigate={handleNavigate}
           />
-
           <RideSearchForm
             state={state}
             minDate={minDate}
@@ -387,7 +512,6 @@ export function FindRidePage() {
             onRideTypeChange={setRideType}
             onSubmit={handleSearch}
           />
-
           {state.error ? (
             <div
               role="alert"
@@ -403,7 +527,6 @@ export function FindRidePage() {
               {state.error}
             </div>
           ) : null}
-
           {state.successMessage ? (
             <div
               role="status"
@@ -419,7 +542,6 @@ export function FindRidePage() {
               {state.successMessage}
             </div>
           ) : null}
-
           <RideResults
             loading={state.phase === 'searching'}
             searched={state.searched}
@@ -433,6 +555,16 @@ export function FindRidePage() {
             onRequestRide={handleRequestRide}
             onLoadMore={loadMoreResults}
           />
+          <LandingMapSection
+            ar={ar}
+            onNavigate={handleNavigate}
+            mobilityOsPath={mobilityOsPath}
+            findRidePath={findRidePath}
+            packagesPath={packagesPath}
+          />
+          <LandingSignalSection cards={signalCards} />
+          <LandingTrustSection ar={ar} />
+          <LandingFooterSlot ar={ar} />
         </div>
       </LandingPageFrame>
     </Protected>

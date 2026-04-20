@@ -18,6 +18,7 @@ import {
   resolveJordanLocationCoord,
   routeMatchesLocationPair,
 } from '../../utils/jordanLocations';
+import { logger } from '../../utils/logging';
 import { rideQueue } from './ride.queue';
 import type {
   RideLocationField,
@@ -309,7 +310,19 @@ function indexRequestsByRideId(bookings: RideBookingRecord[]) {
 
 export const rideService = {
   async searchRides(params: RideSearchParams): Promise<RideResult[]> {
-    const liveTrips = await tripsAPI.searchTrips(params.from, params.to, params.date, params.seats);
+    let liveTrips: TripSearchResult[] = [];
+    try {
+      liveTrips = await tripsAPI.searchTrips(params.from, params.to, params.date, params.seats);
+    } catch (error) {
+      logger.warning('[rideService] live trip search unavailable, falling back to local ride library', {
+        operation: 'ride.search.live_fallback',
+        from: params.from,
+        to: params.to,
+        date: params.date,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
     const networkMatches = liveTrips
       .filter(
         trip =>

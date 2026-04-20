@@ -198,7 +198,7 @@ describe('findRideSchema', () => {
   });
 
   it('rejects same origin and destination', () => {
-    invalid(findRideSchema, { ...base, destination: 'Irbid' });
+    invalid(findRideSchema, { ...base, to: 'Irbid' });
   });
 
   it('rejects passengers < 1', () => {
@@ -232,11 +232,11 @@ describe('sendPackageSchema', () => {
   });
 
   it('rejects weight above 50 kg', () => {
-    invalid(sendPackageSchema, { ...base, weightKg: 51 });
+    invalid(sendPackageSchema, { ...base, weight: 51 });
   });
 
   it('rejects negative weight', () => {
-    invalid(sendPackageSchema, { ...base, weightKg: -1 });
+    invalid(sendPackageSchema, { ...base, weight: -1 });
   });
 
   it('rejects description shorter than 3 chars', () => {

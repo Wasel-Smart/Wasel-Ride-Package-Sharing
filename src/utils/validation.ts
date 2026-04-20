@@ -40,7 +40,8 @@ export const ValidationSchemas = {
     .min(2, 'Name must be at least 2 characters')
     .max(50, 'Name must not exceed 50 characters')
     .regex(/^[a-zA-Z\u0600-\u06FF\s'-]+$/, 'Name contains invalid characters')
-    .transform(name => name.trim()),
+    .transform(name => name.trim())
+    .refine(name => name.length > 0, 'Name cannot be empty or whitespace only'),
 
   // Jordan-specific validations
   jordanianId: z
@@ -459,7 +460,7 @@ export const findRideSchema = z
     from: z.string().min(1),
     to: z.string().min(1),
     date: z.string(),
-    passengers: z.number().int().min(1).max(7).optional(),
+    passengers: z.number().int().min(1).max(7).optional().default(1),
   })
   .refine(data => data.from !== data.to, {
     message: 'Origin and destination must be different',

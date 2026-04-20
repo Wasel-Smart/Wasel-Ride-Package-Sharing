@@ -194,6 +194,7 @@
 }
 
 .app-entry-page__hero-scrim {
+  pointer-events: none;
   background:
     linear-gradient(
       90deg,
@@ -399,6 +400,8 @@
 }
 
 .app-entry-page__action-card {
+  position: relative;
+  z-index: 2;
   align-self: center;
   gap: 18px;
   padding: 36px 38px;
@@ -610,6 +613,8 @@
 
 .app-entry-page__guest-auth-buttons button {
   flex: 1 1 170px;
+  position: relative;
+  z-index: 1;
 }
 
 .app-entry-page__auth-error {

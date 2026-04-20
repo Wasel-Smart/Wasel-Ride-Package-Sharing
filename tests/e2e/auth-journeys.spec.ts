@@ -4,7 +4,7 @@ import { seedDemoSession } from '../../e2e/helpers/session';
 test('app entry redirects unauthenticated users into auth with a return target', async ({ page }) => {
   await page.goto('/app');
   await expect(page).toHaveURL(/\/app\/auth/);
-  await expect(page.getByRole('heading', { name: /^sign in$/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /sign in to wasel/i })).toBeVisible();
   await expect(page).toHaveURL(/returnTo=(%2Fapp%2Ffind-ride|\/app\/find-ride)/);
 });
 
@@ -12,7 +12,7 @@ test('app entry routes authenticated users to find-ride', async ({ page }) => {
   await seedDemoSession(page);
   await page.goto('/app');
   await expect(page).toHaveURL(/\/app\/find-ride/);
-  await expect(page.getByRole('heading', { name: /find a ride|find a shared route/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /find your ride instantly/i })).toBeVisible();
 });
 
 test('sign in page renders accessible form fields', async ({ page }) => {
@@ -32,9 +32,9 @@ test('sign in with empty form shows validation feedback', async ({ page }) => {
 
 test('register tab is accessible from the sign-in page', async ({ page }) => {
   await page.goto('/app/auth?tab=register', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: /^sign up$/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /create your wasel account/i })).toBeVisible();
   await expect(page.getByPlaceholder(/create a secure password/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: /submit sign up/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /create account/i })).toBeVisible();
 });
 
 test('auth page stays simple on a phone viewport', async ({ page }) => {
@@ -42,7 +42,7 @@ test('auth page stays simple on a phone viewport', async ({ page }) => {
   await page.goto('/app/auth', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('button', { name: /submit sign in/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /continue with google/i })).toBeVisible();
-  await expect(page.getByText(/sign in to continue/i)).toBeVisible();
+  await expect(page.getByText(/one account that looks and feels like the landing page/i)).toBeVisible();
 });
 
 test('unknown route renders the 404 page', async ({ page }) => {

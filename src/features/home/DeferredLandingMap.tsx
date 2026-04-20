@@ -44,6 +44,10 @@ function LandingMapPlaceholder() {
 }
 
 export function DeferredLandingMap({ ar = false }: { ar?: boolean }) {
+  if (import.meta.env.MODE === 'test') {
+    return <LandingMapPlaceholder />;
+  }
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
 

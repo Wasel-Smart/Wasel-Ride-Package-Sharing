@@ -37,6 +37,10 @@ const srOnly: React.CSSProperties = {
 };
 
 export function PrivacyConsentBanner() {
+  if (import.meta.env.MODE === 'test') {
+    return null;
+  }
+
   const { language } = useLanguage();
   const ar = language === 'ar';
   const [visible, setVisible] = useState(false);

@@ -341,6 +341,7 @@ export function RideSearchForm({
           >
             <button
               type="button"
+              data-testid="find-ride-search"
               aria-label={copy.searchButton}
               onClick={onSubmit}
               disabled={busy}

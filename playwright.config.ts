@@ -1,23 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const webServerEnv = {
-  VITE_APP_ENV: 'test',
-  VITE_ENABLE_DEMO_DATA: 'false',
-  VITE_ENABLE_SYNTHETIC_TRIPS: 'false',
-  VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'false',
-  VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: 'false',
-  VITE_ENABLE_PERSISTED_TEST_AUTH: 'true',
-};
-
-const webServerEnvArgs = Object.entries(webServerEnv)
-  .map(([key, value]) => `${key}=${value}`)
-  .join(' ');
-
-const devServerCommand =
-  process.platform === 'win32'
-    ? `cmd /c "set VITE_APP_ENV=test&& set VITE_ENABLE_DEMO_DATA=false&& set VITE_ENABLE_SYNTHETIC_TRIPS=false&& set VITE_ALLOW_DIRECT_SUPABASE_FALLBACK=false&& set VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK=false&& set VITE_ENABLE_PERSISTED_TEST_AUTH=true&& npx vite build --mode test && npx vite preview --host 127.0.0.1 --port 4173 --strictPort"`
-    : `${webServerEnvArgs} npx vite build --mode test && npx vite preview --host 127.0.0.1 --port 4173 --strictPort`;
-
 const isCI = Boolean(process.env['CI']);
 
 export default defineConfig({
@@ -36,9 +18,9 @@ export default defineConfig({
 
   use: {
     baseURL: 'http://127.0.0.1:4173',
-    trace: 'retain-on-failure',
+    trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    video: 'off',
     // Bilingual locale coverage (Jordan / English fallback)
     locale: 'en-JO',
     timezoneId: 'Asia/Amman',
@@ -47,10 +29,10 @@ export default defineConfig({
   },
 
   webServer: {
-    command: devServerCommand,
+    command: 'node scripts/playwright-web-server.mjs',
     url: 'http://127.0.0.1:4173',
-    reuseExistingServer: true,
-    timeout: 120_000,
+    reuseExistingServer: !isCI,
+    timeout: 300_000,
     stderr: 'pipe',
   },
 
