@@ -270,6 +270,7 @@ export function RideCard({
 
           <button
             type="button"
+            data-testid={`ride-request-${ride.id}`}
             aria-label={`Request ${ride.from} to ${ride.to}`}
             disabled={requesting}
             onClick={() => onRequest(ride)}

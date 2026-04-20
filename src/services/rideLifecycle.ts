@@ -13,6 +13,7 @@ import {
   triggerRideCompletedEmails,
 } from './transactionalEmailTriggers';
 import { ValidationError } from '../utils/errors';
+import { logger } from '../utils/logging';
 import {
   RIDE_LIFECYCLE_CONTRACT_VERSION,
   rideBookingListSchema,
@@ -497,35 +498,57 @@ export async function createRideBooking(input: {
   }
 
   if (!allowLocalPersistenceFallback()) {
-    const { booking: persisted } = await createDirectBooking({
-      tripId: input.rideId,
-      userId: input.passengerId,
-      seatsRequested: booking.seatsRequested,
-      pickup: input.from,
-      dropoff: input.to,
-      bookingStatus: booking.status,
-      metadata: {
-        total_price: booking.totalPriceJod ?? booking.seatsRequested,
-      },
-    });
-
-    const syncedRecord = buildSyncedRideBooking(booking, persisted as Record<string, unknown>);
-    upsertBookings([syncedRecord]);
-
-    if (
-      syncedRecord.passengerEmail &&
-      (syncedRecord.status === 'pending_driver' || isRideBookingConfirmed(syncedRecord))
-    ) {
-      triggerRideBookingEmails({
-        booking: syncedRecord,
-        passengerEmail: syncedRecord.passengerEmail,
-        driverEmail: syncedRecord.driverEmail,
-        priceJod: syncedRecord.totalPriceJod ?? 0,
-        appUrl: getTransactionalEmailAppUrl(),
+    try {
+      const { booking: persisted } = await createDirectBooking({
+        tripId: input.rideId,
+        userId: input.passengerId,
+        seatsRequested: booking.seatsRequested,
+        pickup: input.from,
+        dropoff: input.to,
+        bookingStatus: booking.status,
+        metadata: {
+          total_price: booking.totalPriceJod ?? booking.seatsRequested,
+        },
       });
-    }
 
-    return syncedRecord;
+      const syncedRecord = buildSyncedRideBooking(booking, persisted as Record<string, unknown>);
+      upsertBookings([syncedRecord]);
+
+      if (
+        syncedRecord.passengerEmail &&
+        (syncedRecord.status === 'pending_driver' || isRideBookingConfirmed(syncedRecord))
+      ) {
+        triggerRideBookingEmails({
+          booking: syncedRecord,
+          passengerEmail: syncedRecord.passengerEmail,
+          driverEmail: syncedRecord.driverEmail,
+          priceJod: syncedRecord.totalPriceJod ?? 0,
+          appUrl: getTransactionalEmailAppUrl(),
+        });
+      }
+
+      return syncedRecord;
+    } catch (error) {
+      logger.warning('[rideLifecycle] direct booking persistence unavailable, preserving local booking state', {
+        operation: 'ride.booking.direct_fallback',
+        rideId: input.rideId,
+        passengerId: input.passengerId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      const fallbackBooking = markRideBookingSyncState(
+        {
+          ...booking,
+          pendingSync: false,
+          syncState: 'sync-error',
+          updatedAt: new Date().toISOString(),
+        },
+        'sync-error',
+      );
+
+      writeBookings([fallbackBooking, ...readBookings()]);
+      return fallbackBooking;
+    }
   }
 
   writeBookings([booking, ...readBookings()]);

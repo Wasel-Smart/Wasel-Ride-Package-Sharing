@@ -75,6 +75,11 @@ type LandingHeroSectionProps = {
   businessAddress: string;
   heroBullets: readonly string[];
   primaryActions: readonly LandingActionCard[];
+  stats?: readonly {
+    label: string;
+    value: string;
+  }[];
+  ctaLabel?: string;
   authError?: string;
   oauthLoadingProvider?: 'google' | 'facebook' | null;
   showQuickAuth?: boolean;
@@ -303,6 +308,8 @@ export function LandingHeroSection({
   businessAddress,
   heroBullets,
   primaryActions,
+  stats,
+  ctaLabel,
   authError,
   oauthLoadingProvider,
   showQuickAuth = false,
@@ -337,6 +344,14 @@ export function LandingHeroSection({
     ar ? '????? ????' : 'Cleaner first view',
     ar ? '????? ????' : 'Sharper brand mark',
   ] as const;
+  const serviceStats = stats?.length
+    ? stats.slice(0, 3)
+    : [
+        { label: ar ? '????? ???? ?????' : 'Live map first', value: ar ? '?????' : 'Enabled' },
+        { label: ar ? '????? ????' : 'Cleaner first view', value: ar ? '????' : 'Stable' },
+        { label: ar ? '????? ????' : 'Sharper brand mark', value: ar ? '????' : 'Live' },
+      ];
+  const serviceCtaLabel = ctaLabel ?? (ar ? '???? ????? ???? ??????' : 'Open service flow');
   return (
     <section style={{ display: 'grid', gap: 16, height: '100%' }}>
       <div
@@ -575,6 +590,52 @@ export function LandingHeroSection({
                 <span>{businessAddress}</span>
               </div>
             </div>
+            <div
+              className="landing-hero-service-stats"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: 12,
+              }}
+            >
+              {serviceStats.map(metric => (
+                <div
+                  key={`${metric.label}-${metric.value}`}
+                  className="landing-glow-card"
+                  style={{
+                    padding: '16px 18px',
+                    borderRadius: 22,
+                    background:
+                      'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02))',
+                    border: `1px solid ${LANDING_COLORS.border}`,
+                    display: 'grid',
+                    gap: 6,
+                    alignContent: 'start',
+                  }}
+                >
+                  <span
+                    style={{
+                      color: LANDING_COLORS.muted,
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {metric.label}
+                  </span>
+                  <span
+                    style={{
+                      color: LANDING_COLORS.text,
+                      fontSize: '1.08rem',
+                      fontWeight: 900,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {metric.value}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="landing-hero-art-column">
             <div
@@ -673,6 +734,21 @@ export function LandingHeroSection({
                     {item}
                   </span>
                 ))}
+              </div>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 10,
+                  color: LANDING_COLORS.cyan,
+                  fontSize: '0.82rem',
+                  fontWeight: 800,
+                  textAlign: 'center',
+                }}
+              >
+                <span>{serviceCtaLabel}</span>
+                <ArrowRight size={16} />
               </div>
               {authError ? (
                 <div

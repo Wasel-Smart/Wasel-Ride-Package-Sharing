@@ -38,8 +38,9 @@ export function LocationInput({
   onAutoDetect,
 }: LocationInputProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [focused, setFocused] = useState(false);
   const listId = `${id}-listbox`;
-  const showSuggestions = suggestions.length > 0 && value.trim().length > 0;
+  const showSuggestions = focused && suggestions.length > 0 && value.trim().length > 0;
 
   const activeSuggestion = useMemo(
     () => suggestions[Math.min(activeIndex, Math.max(0, suggestions.length - 1))],
@@ -114,7 +115,11 @@ export function LocationInput({
             setActiveIndex(0);
             onChange(event.target.value);
           }}
+          onFocus={() => {
+            setFocused(true);
+          }}
           onBlur={() => {
+            setFocused(false);
             const nextValue = value.trim() || committedValue;
             onCommit(nextValue);
           }}
@@ -136,10 +141,12 @@ export function LocationInput({
             }
             if (event.key === 'Enter') {
               event.preventDefault();
+              setFocused(false);
               onCommit(activeSuggestion?.value ?? value.trim() ?? committedValue);
             }
             if (event.key === 'Escape') {
               event.preventDefault();
+              setFocused(false);
               onCommit(committedValue);
             }
           }}
@@ -184,6 +191,7 @@ export function LocationInput({
                   aria-selected={active}
                   onMouseDown={event => {
                     event.preventDefault();
+                    setFocused(false);
                     onCommit(suggestion.value);
                   }}
                   onMouseEnter={() => setActiveIndex(index)}

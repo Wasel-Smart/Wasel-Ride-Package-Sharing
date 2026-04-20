@@ -9,11 +9,13 @@ test.beforeEach(async ({ page }) => {
 
 test('find ride books a seat', async ({ page }) => {
   await page.goto('/app/find-ride', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: /find a ride|find a shared route/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /find your ride instantly/i })).toBeVisible();
   await page.getByTestId('find-ride-search').click();
-  await page.getByRole('button', { name: /book seat/i }).first().click();
-  await page.getByRole('button', { name: /reserve this seat/i }).click();
-  await expect(page.getByText(/saved in your trips|for approval/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: /premium ride matches/i })).toBeVisible();
+  await page.getByTestId(/ride-request-/).first().click();
+  await expect(
+    page.getByText(/ride request sent\. driver matching is running now\.|ride request saved\./i),
+  ).toBeVisible();
 });
 
 test('offer ride posts a connected trip', async ({ page }) => {
@@ -33,7 +35,9 @@ test('bus flow reserves a seat', async ({ page }) => {
   await expect(page.getByText(/showing official jordan schedule data verified on|live bus inventory is synced for this corridor|live route api is unavailable/i)).toBeVisible();
   await expect(page.getByTestId('bus-confirm-booking')).toBeVisible();
   await page.getByTestId('bus-confirm-booking').click({ timeout: 20_000 });
-  await expect(page.getByText(/seat confirmed/i)).toBeVisible();
+  const confirmation = page.getByText(/seat confirmed/i).last();
+  await confirmation.scrollIntoViewIfNeeded();
+  await expect(confirmation).toBeVisible();
 });
 
 test('packages flow creates tracking', async ({ page }) => {

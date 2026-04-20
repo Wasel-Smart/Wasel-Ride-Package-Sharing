@@ -1,298 +1,28 @@
+/**
+ * Wasel Edge Function - Main API Server
+ * Handles profile, rides, packages, and health checks
+ */
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface RequestContext {
-  supabase: ReturnType<typeof createClient>;
-  userId: string | null;
-  isAuthenticated: boolean;
+interface Profile {
+  id: string;
+  full_name: string;
+  email?: string;
+  phone_number?: string;
+  avatar_url?: string;
+  wallet_balance?: number;
+  trust_score?: number;
+  is_verified?: boolean;
 }
 
-// Initialize Supabase client
-function getSupabaseClient(authHeader: string | null) {
-  return createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    {
-      global: {
-        headers: authHeader ? { Authorization: authHeader } : {},
-      },
-    }
-  );
-}
-
-// Extract user from JWT
-async function getRequestContext(req: Request): Promise<RequestContext> {
-  const authHeader = req.headers.get('Authorization');
-  const supabase = getSupabaseClient(authHeader);
-  
-  if (!authHeader) {
-    return { supabase, userId: null, isAuthenticated: false };
-  }
-
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) {
-      return { supabase, userId: null, isAuthenticated: false };
-    }
-    return { supabase, userId: user.id, isAuthenticated: true };
-  } catch {
-    return { supabase, userId: null, isAuthenticated: false };
-  }
-}
-
-// Health check endpoint
-async function handleHealth(): Promise<Response> {
-  return new Response(
-    JSON.stringify({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      service: 'wasel-api',
-      version: '1.0.0',
-    }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-  );
-}
-
-// Find matching trips for a ride request
-async function handleFindTrips(ctx: RequestContext, body: any): Promise<Response> {
-  const { originLat, originLng, destLat, destLng, departureDate, seats } = body;
-
-  if (!originLat || !originLng || !destLat || !destLng) {
-    return new Response(
-      JSON.stringify({ error: 'Missing required location parameters' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    );
-  }
-
-  // Simple distance-based matching (can be enhanced with PostGIS)
-  const { data: trips, error } = await ctx.supabase
-    .from('trips')
-    .select('*, driver:profiles!trips_driver_id_fkey(id, full_name, avatar_url, trust_score)')
-    .eq('status', 'active')
-    .gte('available_seats', seats || 1)
-    .gte('departure_time', departureDate || new Date().toISOString());
-
-  if (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
-  }
-
-  // Filter by distance (simple haversine approximation)
-  const matchedTrips = trips?.filter(trip => {
-    const originDist = calculateDistance(originLat, originLng, trip.origin_lat, trip.origin_lng);
-    const destDist = calculateDistance(destLat, destLng, trip.destination_lat, trip.destination_lng);
-    return originDist < 10 && destDist < 10; // Within 10km
-  }) || [];
-
-  return new Response(
-    JSON.stringify({ trips: matchedTrips, count: matchedTrips.length }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-  );
-}
-
-// Create a ride booking
-async function handleCreateRide(ctx: RequestContext, body: any): Promise<Response> {
-  if (!ctx.isAuthenticated) {
-    return new Response(
-      JSON.stringify({ error: 'Authentication required' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-    );
-  }
-
-  const { tripId, pickupAddress, dropoffAddress, pickupLat, pickupLng, dropoffLat, dropoffLng, seatsRequested, totalPrice } = body;
-
-  // Validate trip availability
-  const { data: trip, error: tripError } = await ctx.supabase
-    .from('trips')
-    .select('available_seats, status')
-    .eq('id', tripId)
-    .single();
-
-  if (tripError || !trip) {
-    return new Response(
-      JSON.stringify({ error: 'Trip not found' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
-    );
-  }
-
-  if (trip.status !== 'active' || trip.available_seats < seatsRequested) {
-    return new Response(
-      JSON.stringify({ error: 'Trip not available' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    );
-  }
-
-  // Create ride
-  const { data: ride, error: rideError } = await ctx.supabase
-    .from('rides')
-    .insert({
-      trip_id: tripId,
-      passenger_id: ctx.userId,
-      pickup_address: pickupAddress,
-      dropoff_address: dropoffAddress,
-      pickup_lat: pickupLat,
-      pickup_lng: pickupLng,
-      dropoff_lat: dropoffLat,
-      dropoff_lng: dropoffLng,
-      seats_requested: seatsRequested,
-      total_price: totalPrice,
-      status: 'REQUESTED',
-    })
-    .select()
-    .single();
-
-  if (rideError) {
-    return new Response(
-      JSON.stringify({ error: rideError.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
-  }
-
-  // Create ride event
-  await ctx.supabase.from('ride_events').insert({
-    ride_id: ride.id,
-    actor_id: ctx.userId,
-    event_type: 'RIDE_REQUESTED',
-    to_status: 'REQUESTED',
-    payload: { trip_id: tripId, seats: seatsRequested },
-  });
-
-  // Enqueue matching job
-  await ctx.supabase.rpc('enqueue_job', {
-    p_type: 'match_ride',
-    p_payload: { ride_id: ride.id },
-    p_priority: 3,
-  });
-
-  return new Response(
-    JSON.stringify({ ride, message: 'Ride request created successfully' }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 201 }
-  );
-}
-
-// Create a trip offer
-async function handleCreateTrip(ctx: RequestContext, body: any): Promise<Response> {
-  if (!ctx.isAuthenticated) {
-    return new Response(
-      JSON.stringify({ error: 'Authentication required' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-    );
-  }
-
-  const { data: trip, error } = await ctx.supabase
-    .from('trips')
-    .insert({
-      driver_id: ctx.userId,
-      ...body,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
-  }
-
-  return new Response(
-    JSON.stringify({ trip, message: 'Trip created successfully' }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 201 }
-  );
-}
-
-// Get user wallet balance
-async function handleGetWallet(ctx: RequestContext): Promise<Response> {
-  if (!ctx.isAuthenticated) {
-    return new Response(
-      JSON.stringify({ error: 'Authentication required' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-    );
-  }
-
-  const { data: profile, error: profileError } = await ctx.supabase
-    .from('profiles')
-    .select('wallet_balance')
-    .eq('id', ctx.userId)
-    .single();
-
-  if (profileError) {
-    return new Response(
-      JSON.stringify({ error: profileError.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
-  }
-
-  const { data: transactions, error: txError } = await ctx.supabase
-    .from('wallet_transactions')
-    .select('*')
-    .eq('user_id', ctx.userId)
-    .order('created_at', { ascending: false })
-    .limit(20);
-
-  if (txError) {
-    return new Response(
-      JSON.stringify({ error: txError.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
-  }
-
-  return new Response(
-    JSON.stringify({ balance: profile.wallet_balance, transactions }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-  );
-}
-
-// Send notification
-async function handleSendNotification(ctx: RequestContext, body: any): Promise<Response> {
-  const { userId, title, message, type, referenceType, referenceId } = body;
-
-  const { error } = await ctx.supabase
-    .from('notifications')
-    .insert({
-      user_id: userId,
-      title,
-      message,
-      type,
-      reference_type: referenceType,
-      reference_id: referenceId,
-    });
-
-  if (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
-  }
-
-  return new Response(
-    JSON.stringify({ message: 'Notification sent' }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-  );
-}
-
-// Calculate distance using Haversine formula
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Earth's radius in km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-// Main request handler
-serve(async (req: Request) => {
+serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -301,58 +31,208 @@ serve(async (req: Request) => {
   try {
     const url = new URL(req.url);
     const path = url.pathname;
-    const ctx = await getRequestContext(req);
 
-    // Health check
+    // Initialize Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
+    );
+
+    // Health check endpoint
     if (path === '/health' || path.endsWith('/health')) {
-      return await handleHealth();
+      return new Response(
+        JSON.stringify({ status: 'healthy', timestamp: new Date().toISOString() }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Parse request body for POST/PUT/PATCH
-    let body = null;
-    if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-      try {
-        body = await req.json();
-      } catch {
-        return new Response(
-          JSON.stringify({ error: 'Invalid JSON body' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        );
+    // Get authenticated user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseClient.auth.getUser();
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Profile endpoints
+    if (path.includes('/profile')) {
+      if (req.method === 'POST') {
+        const body = await req.json();
+        const { userId, email, firstName, lastName, fullName } = body;
+
+        const { data, error } = await supabaseClient
+          .from('profiles')
+          .insert({
+            id: userId,
+            full_name: fullName || `${firstName} ${lastName}`.trim(),
+            email,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (req.method === 'GET') {
+        const userId = path.split('/').pop();
+        const { data, error } = await supabaseClient
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (error) {
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (req.method === 'PATCH') {
+        const userId = path.split('/').pop();
+        const updates = await req.json();
+
+        // Prevent direct wallet manipulation
+        if ('wallet_balance' in updates) {
+          delete updates.wallet_balance;
+        }
+
+        const { data, error } = await supabaseClient
+          .from('profiles')
+          .update(updates)
+          .eq('id', userId)
+          .select()
+          .single();
+
+        if (error) {
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
     }
 
-    // Route handling
-    if (path.includes('/trips/search') && req.method === 'POST') {
-      return await handleFindTrips(ctx, body);
-    }
-    
-    if (path.includes('/trips') && req.method === 'POST') {
-      return await handleCreateTrip(ctx, body);
-    }
-    
-    if (path.includes('/rides') && req.method === 'POST') {
-      return await handleCreateRide(ctx, body);
-    }
-    
-    if (path.includes('/wallet') && req.method === 'GET') {
-      return await handleGetWallet(ctx);
-    }
-    
-    if (path.includes('/notifications') && req.method === 'POST') {
-      return await handleSendNotification(ctx, body);
+    // Rides endpoints
+    if (path.includes('/rides')) {
+      if (req.method === 'POST') {
+        const body = await req.json();
+        const { data, error } = await supabaseClient
+          .from('rides')
+          .insert({ ...body, passenger_id: user.id })
+          .select()
+          .single();
+
+        if (error) {
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (req.method === 'GET') {
+        const { data, error } = await supabaseClient
+          .from('rides')
+          .select('*, trips(*), profiles(*)')
+          .eq('passenger_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
-    // 404 for unknown routes
+    // Trips endpoints
+    if (path.includes('/trips')) {
+      if (req.method === 'POST') {
+        const body = await req.json();
+        const { data, error } = await supabaseClient
+          .from('trips')
+          .insert({ ...body, driver_id: user.id })
+          .select()
+          .single();
+
+        if (error) {
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (req.method === 'GET') {
+        const { data, error } = await supabaseClient
+          .from('trips')
+          .select('*, profiles(*)')
+          .eq('status', 'active')
+          .order('departure_time', { ascending: true });
+
+        if (error) {
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     return new Response(
       JSON.stringify({ error: 'Not found' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
   } catch (error) {
-    console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
