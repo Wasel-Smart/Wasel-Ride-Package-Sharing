@@ -10,6 +10,7 @@ export function resolveWalletRuntimeMode({
   backendReady: boolean;
 }): WalletRuntimeMode {
   if (!localUser) return 'redirect';
+  if (localUser.backendMode === 'demo') return 'live';
   if (!backendReady) return 'unavailable';
   return 'live';
 }

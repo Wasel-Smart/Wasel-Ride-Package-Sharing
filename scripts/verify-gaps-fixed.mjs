@@ -61,7 +61,7 @@ const commandChecks = [
   { name: 'Lint', command: 'npm run lint -- --max-warnings 0' },
   { name: 'Unit tests', command: 'npm test' },
   { name: 'Production build', command: 'npm run build' },
-  { name: 'Bundle budgets', command: 'npx size-limit' },
+  { name: 'Bundle budgets', command: 'npm run size' },
 ];
 
 function logLine(color, symbol, message) {
