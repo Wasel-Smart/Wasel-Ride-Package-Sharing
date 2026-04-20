@@ -92,14 +92,16 @@ function HomeHero({
           </div>
         </motion.div>
         <div className="home-hero-copy">
-          <p className="home-eyebrow">
-            {ar ? 'واصل | شبكة الحركة' : 'WASEL | Mobility Network'}
-          </p>
+          <p className="home-eyebrow">{ar ? 'واصل | شبكة الحركة' : 'WASEL | Mobility Network'}</p>
           <h1 className="home-hero-title hero-title">
-            {ar ? `أهلاً بعودتك${firstName ? `، ${firstName}` : ''}` : `Welcome back${firstName ? `, ${firstName}` : ''}`}
+            {ar
+              ? `أهلاً بعودتك${firstName ? `، ${firstName}` : ''}`
+              : `Welcome back${firstName ? `, ${firstName}` : ''}`}
           </h1>
           <p className="home-subtle">
-            {ar ? 'نقل أشخاص، طرود، وثقة تشغيلية في تجربة واحدة واضحة.' : 'Move people, packages, and operational trust through one unified experience.'}
+            {ar
+              ? 'نقل أشخاص، طرود، وثقة تشغيلية في تجربة واحدة واضحة.'
+              : 'Move people, packages, and operational trust through one unified experience.'}
           </p>
         </div>
       </div>
@@ -110,7 +112,7 @@ function HomeHero({
           {ar ? 'اختر النمط ثم ادخل الشبكة.' : 'Choose the mode, then enter the network.'}
         </p>
         <div className="home-trip-mode-grid">
-          {options.map((option) => {
+          {options.map(option => {
             const Icon = option.icon;
             const isActive = tripMode === option.key;
             return (
@@ -126,7 +128,10 @@ function HomeHero({
               >
                 <Icon size={18} color={isActive ? option.accent : C.textDim} />
                 <div className="home-trip-mode-copy">
-                  <div className="home-trip-mode-title" style={{ color: isActive ? option.accent : C.text }}>
+                  <div
+                    className="home-trip-mode-title"
+                    style={{ color: isActive ? option.accent : C.text }}
+                  >
                     {option.title}
                   </div>
                   <div className="home-trip-mode-description">{option.description}</div>
@@ -150,13 +155,7 @@ export function HomePage() {
   const platformStats = useLivePlatformStats();
   const ar = language === 'ar';
 
-  const {
-    stars,
-    refreshing,
-    handleRefresh,
-    tripMode,
-    setTripMode,
-  } = useHomePageDashboard(user);
+  const { stars, refreshing, handleRefresh, tripMode, setTripMode } = useHomePageDashboard(user);
 
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
   const heroHighlights = buildHeroHighlights(ar);
@@ -167,19 +166,27 @@ export function HomePage() {
 
   return (
     <div className="home-root" dir={dir} style={{ background: C.bg, color: C.text, fontFamily: F }}>
-      <style>{`
-        :root { color-scheme: dark; scroll-behavior: smooth; }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
-
       <HomeBackdrop stars={stars} />
 
       <div className="home-shell">
         <div className="home-toolbar">
-          <button type="button" onClick={handleRefresh} disabled={refreshing} className="home-pill-button">
-            <RefreshCw size={12} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }} />
-            {ar ? (refreshing ? 'جارٍ التحديث...' : 'تحديث') : refreshing ? 'Refreshing...' : 'Refresh'}
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="home-pill-button"
+          >
+            <RefreshCw
+              size={12}
+              style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }}
+            />
+            {ar
+              ? refreshing
+                ? 'جارٍ التحديث...'
+                : 'تحديث'
+              : refreshing
+                ? 'Refreshing...'
+                : 'Refresh'}
           </button>
         </div>
 
@@ -188,7 +195,7 @@ export function HomePage() {
           firstName={firstName}
           tripMode={tripMode}
           options={tripModeOptions}
-          onSelectMode={(option) => {
+          onSelectMode={option => {
             setTripMode(option.key);
             navigate(option.path);
           }}
@@ -203,17 +210,9 @@ export function HomePage() {
 
         <HomeStatsGrid loading={loading} stats={stats} />
 
-        <QuickActionsSection
-          ar={ar}
-          quickActions={quickActions}
-          navigate={navigate}
-        />
+        <QuickActionsSection ar={ar} quickActions={quickActions} navigate={navigate} />
 
-        <ServicePillarsSection
-          ar={ar}
-          pillars={servicePillars}
-          navigate={navigate}
-        />
+        <ServicePillarsSection ar={ar} pillars={servicePillars} navigate={navigate} />
 
         {user ? (
           <UserSnapshotSection

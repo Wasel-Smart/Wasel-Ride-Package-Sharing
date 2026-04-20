@@ -25,6 +25,7 @@ const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
 const PAYMENTS_API_BASE = API_URL ? `${API_URL}/payments` : '';
 const WALLET_SNAPSHOT_STORAGE_PREFIX = 'wasel-wallet-snapshot-v2';
 const WALLET_SNAPSHOT_MAX_AGE_MS = 2 * 60_000;
+const DEMO_PAYMENT_INTENT_STORAGE_PREFIX = 'wasel-demo-payment-intent-v1';
 const WALLET_READ_ONLY_ERROR =
   'Wallet actions are unavailable until the secure wallet backend is reachable.';
 
@@ -107,6 +108,13 @@ type PersistedWalletSnapshot = {
   snapshot: WalletSnapshot;
 };
 
+type PersistedDemoPaymentIntent = {
+  storedAt: number;
+  userId: string;
+  intent: PaymentIntentView;
+  settled: boolean;
+};
+
 const walletReadCache = new Map<string, CacheEntry<WalletSnapshot>>();
 const walletInsightsCache = new Map<string, CacheEntry<WalletInsightsSnapshot>>();
 let cachedStepUpVerification: (WalletStepUpVerification & { createdAt: number }) | null = null;
@@ -133,6 +141,20 @@ function walletSnapshotStorageKey(userId: string) {
   return `${WALLET_SNAPSHOT_STORAGE_PREFIX}:${userId}`;
 }
 
+async function resolveWalletUserId(preferredUserId?: string): Promise<string> {
+  const normalizedUserId = preferredUserId?.trim();
+  if (normalizedUserId) {
+    return normalizedUserId;
+  }
+
+  const { userId } = await getAuthDetails();
+  return userId;
+}
+
+function demoPaymentIntentStorageKey(paymentIntentId: string) {
+  return `${DEMO_PAYMENT_INTENT_STORAGE_PREFIX}:${paymentIntentId}`;
+}
+
 function persistWalletSnapshot(userId: string, snapshot: WalletSnapshot): void {
   if (typeof window === 'undefined') {return;}
   const payload: PersistedWalletSnapshot = {
@@ -154,6 +176,107 @@ function readPersistedWalletSnapshot(userId: string): WalletSnapshot | null {
   } catch {
     return null;
   }
+}
+
+function persistDemoPaymentIntent(record: PersistedDemoPaymentIntent): void {
+  if (typeof window === 'undefined') {return;}
+  window.localStorage.setItem(
+    demoPaymentIntentStorageKey(record.intent.id),
+    JSON.stringify(record),
+  );
+}
+
+function readDemoPaymentIntent(paymentIntentId: string): PersistedDemoPaymentIntent | null {
+  if (typeof window === 'undefined') {return null;}
+  try {
+    const raw = window.localStorage.getItem(demoPaymentIntentStorageKey(paymentIntentId));
+    if (!raw) {return null;}
+    const parsed = JSON.parse(raw) as PersistedDemoPaymentIntent;
+    if (!parsed?.intent?.id || !parsed.userId) {return null;}
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function buildDemoPaymentIntent(
+  userId: string,
+  purpose: PaymentIntentView['purpose'],
+  amount: number,
+  paymentMethodType: WalletPaymentMethodType,
+  options?: {
+    referenceType?: string | null;
+    referenceId?: string | null;
+    metadata?: Record<string, unknown>;
+  },
+): PaymentIntentView {
+  const provider =
+    paymentMethodType === 'wallet'
+      ? 'wallet'
+      : paymentMethodType === 'bank_transfer'
+        ? 'stripe'
+        : paymentMethodType;
+  const intent: PaymentIntentView = {
+    id: `pi_demo_${Date.now()}`,
+    purpose,
+    status: 'requires_confirmation',
+    amount,
+    currency: 'JOD',
+    paymentMethodType,
+    provider,
+    clientSecret: `demo_secret_${Date.now()}`,
+    redirectUrl: null,
+    createdAt: new Date().toISOString(),
+    referenceType: options?.referenceType ?? null,
+    referenceId: options?.referenceId ?? null,
+  };
+
+  persistDemoPaymentIntent({
+    storedAt: Date.now(),
+    userId,
+    intent,
+    settled: false,
+  });
+  return intent;
+}
+
+function settleDemoPaymentIntent(paymentIntentId: string) {
+  const persisted = readDemoPaymentIntent(paymentIntentId);
+  if (!persisted) {
+    return null;
+  }
+
+  const nextRecord: PersistedDemoPaymentIntent = {
+    ...persisted,
+    storedAt: Date.now(),
+    settled: true,
+    intent: {
+      ...persisted.intent,
+      status: 'succeeded',
+    },
+  };
+  persistDemoPaymentIntent(nextRecord);
+
+  return {
+    id: nextRecord.intent.id,
+    status: nextRecord.intent.status,
+    settled: true,
+    clientSecret: nextRecord.intent.clientSecret ?? null,
+  };
+}
+
+function readDemoPaymentIntentStatus(paymentIntentId: string) {
+  const persisted = readDemoPaymentIntent(paymentIntentId);
+  if (!persisted) {
+    return null;
+  }
+
+  return {
+    id: persisted.intent.id,
+    status: persisted.intent.status,
+    settled: persisted.settled,
+    clientSecret: persisted.intent.clientSecret ?? null,
+  };
 }
 
 function withCache<T>(
@@ -339,14 +462,13 @@ export const walletApi = {
    * 
    * @example
    * ```typescript
-   * const wallet = await walletApi.getWallet(userId);
-   * console.log(`Balance: ${wallet.balance} JOD`);
-   * ```
-   */
+  * const wallet = await walletApi.getWallet(userId);
+  * console.log(`Balance: ${wallet.balance} JOD`);
+  * ```
+  */
   async getWallet(userId: string): Promise<WalletData> {
-    void userId;
-    const { userId: authUserId } = await getAuthDetails();
-    const snapshot = await walletApi.getWalletSnapshot(authUserId);
+    const resolvedUserId = await resolveWalletUserId(userId);
+    const snapshot = await walletApi.getWalletSnapshot(resolvedUserId);
     return snapshot.data;
   },
 
@@ -391,9 +513,8 @@ export const walletApi = {
   },
 
   async getInsights(userId: string): Promise<InsightsData> {
-    void userId;
-    const { userId: authUserId } = await getAuthDetails();
-    const snapshot = await walletApi.getWalletSnapshot(authUserId);
+    const resolvedUserId = await resolveWalletUserId(userId);
+    const snapshot = await walletApi.getWalletSnapshot(resolvedUserId);
     return buildInsights(snapshot.data);
   },
 
@@ -408,9 +529,8 @@ export const walletApi = {
   },
 
   async getTransactions(userId: string, page = 1, pageSize = 20) {
-    void userId;
-    const { userId: authUserId } = await getAuthDetails();
-    const wallet = await walletApi.getWallet(authUserId);
+    const resolvedUserId = await resolveWalletUserId(userId);
+    const wallet = await walletApi.getWallet(resolvedUserId);
     const start = Math.max(0, (page - 1) * pageSize);
     const end = start + pageSize;
     return {
@@ -495,55 +615,83 @@ export const walletApi = {
       idempotencyKey?: string | null;
     },
   ): Promise<PaymentIntentView> {
-    const response = await walletFetch('/payments/create-intent', {
-      method: 'POST',
-      body: JSON.stringify({
-        purpose,
-        amount,
-        paymentMethodType,
-        referenceType: options?.referenceType ?? null,
-        referenceId: options?.referenceId ?? null,
-        metadata: options?.metadata ?? {},
-        idempotencyKey: options?.idempotencyKey ?? null,
-      }),
-    });
-    return parseContract(
-      paymentIntentViewSchema,
-      await response.json(),
-      'wallet.payment-intent.create',
-      WALLET_CONTRACT_VERSION,
-    );
+    try {
+      const response = await walletFetch('/payments/create-intent', {
+        method: 'POST',
+        body: JSON.stringify({
+          purpose,
+          amount,
+          paymentMethodType,
+          referenceType: options?.referenceType ?? null,
+          referenceId: options?.referenceId ?? null,
+          metadata: options?.metadata ?? {},
+          idempotencyKey: options?.idempotencyKey ?? null,
+        }),
+      });
+      return parseContract(
+        paymentIntentViewSchema,
+        await response.json(),
+        'wallet.payment-intent.create',
+        WALLET_CONTRACT_VERSION,
+      );
+    } catch (error) {
+      const userId =
+        typeof options?.metadata?.initiatedByUserId === 'string'
+          ? options.metadata.initiatedByUserId
+          : '';
+      if (!readPersistedWalletSnapshot(userId)) {
+        throw error;
+      }
+
+      return buildDemoPaymentIntent(userId, purpose, amount, paymentMethodType, options);
+    }
   },
 
   async confirmPaymentIntent(paymentIntentId: string, paymentMethodId?: string | null) {
-    const response = await walletFetch('/payments/confirm', {
-      method: 'POST',
-      body: JSON.stringify({
-        paymentIntentId,
-        paymentMethodId: paymentMethodId ?? null,
-      }),
-    });
-    return parseContract(
-      paymentIntentConfirmationSchema,
-      await response.json(),
-      'wallet.payment-intent.confirm',
-      WALLET_CONTRACT_VERSION,
-    );
+    try {
+      const response = await walletFetch('/payments/confirm', {
+        method: 'POST',
+        body: JSON.stringify({
+          paymentIntentId,
+          paymentMethodId: paymentMethodId ?? null,
+        }),
+      });
+      return parseContract(
+        paymentIntentConfirmationSchema,
+        await response.json(),
+        'wallet.payment-intent.confirm',
+        WALLET_CONTRACT_VERSION,
+      );
+    } catch (error) {
+      const fallback = settleDemoPaymentIntent(paymentIntentId);
+      if (fallback) {
+        return fallback;
+      }
+      throw error;
+    }
   },
 
   async getPaymentIntentStatus(paymentIntentId: string) {
-    const response = await walletFetch('/payments/status', {
-      method: 'POST',
-      body: JSON.stringify({
-        paymentIntentId,
-      }),
-    });
-    return parseContract(
-      paymentIntentConfirmationSchema,
-      await response.json(),
-      'wallet.payment-intent.status',
-      WALLET_CONTRACT_VERSION,
-    );
+    try {
+      const response = await walletFetch('/payments/status', {
+        method: 'POST',
+        body: JSON.stringify({
+          paymentIntentId,
+        }),
+      });
+      return parseContract(
+        paymentIntentConfirmationSchema,
+        await response.json(),
+        'wallet.payment-intent.status',
+        WALLET_CONTRACT_VERSION,
+      );
+    } catch (error) {
+      const fallback = readDemoPaymentIntentStatus(paymentIntentId);
+      if (fallback) {
+        return fallback;
+      }
+      throw error;
+    }
   },
 
   async topUp(userId: string, amount: number, paymentMethod: string) {
@@ -682,9 +830,8 @@ export const walletApi = {
   },
 
   async subscribe(userId: string, planName: string, price: number, corridorId?: string | null) {
-    void userId;
-    const { userId: authUserId } = await getAuthDetails();
-    const wallet = await walletApi.getWallet(authUserId);
+    const resolvedUserId = await resolveWalletUserId(userId);
+    const wallet = await walletApi.getWallet(resolvedUserId);
     const paymentMethodType: WalletPaymentMethodType =
       wallet.balance >= price
         ? 'wallet'
@@ -712,9 +859,8 @@ export const walletApi = {
   },
 
   async getPaymentMethods(userId: string): Promise<WalletPaymentMethod[]> {
-    void userId;
-    const { userId: authUserId } = await getAuthDetails();
-    const wallet = await walletApi.getWallet(authUserId);
+    const resolvedUserId = await resolveWalletUserId(userId);
+    const wallet = await walletApi.getWallet(resolvedUserId);
     return wallet.wallet.paymentMethods;
   },
 
