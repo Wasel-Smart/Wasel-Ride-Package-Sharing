@@ -4454,64 +4454,6 @@ export default function MobilityOSCore() {
                   </div>
                 ) : null}
               </div>
-              {false ? (
-                <div
-                  style={{
-                    position: 'absolute',
-                    right: 14,
-                    top: 68,
-                    zIndex: 2,
-                    display: 'grid',
-                    gap: 8,
-                  }}
-                >
-                  {[
-                    {
-                      label: `${copy.passengerFlow} · ${getOperationalSourceTag(analytics.sources.activePassengers)}`,
-                      value: numberFormatter.format(analytics.activePassengers),
-                      color: PASSENGER_COLOR,
-                    },
-                    {
-                      label: `${copy.parcelLoad} · ${getOperationalSourceTag(analytics.sources.activePackages)}`,
-                      value: numberFormatter.format(analytics.activePackages),
-                      color: PACKAGE_COLOR,
-                    },
-                  ].map(chip => (
-                    <div
-                      key={chip.label}
-                      style={{
-                        padding: '10px 12px',
-                        borderRadius: 16,
-                        background: 'rgba(7,18,30,0.72)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        backdropFilter: 'blur(12px)',
-                        minWidth: 146,
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: '0.68rem',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.12em',
-                          color: C.textMuted,
-                        }}
-                      >
-                        {formatLabel(chip.label)}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: 4,
-                          color: chip.color,
-                          fontSize: '1rem',
-                          fontWeight: 900,
-                        }}
-                      >
-                        {chip.value}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
               <div
                 style={{
                   position: 'absolute',

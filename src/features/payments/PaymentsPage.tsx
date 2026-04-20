@@ -128,9 +128,9 @@ function PaymentsPageContent() {
           enhancedDashboard.wallet.balance,
         ),
       }));
-    } catch (error) {
-      console.error('Failed to refresh dashboard:', error);
-      throw error;
+    } catch (caughtError) {
+      console.error('Failed to refresh dashboard:', caughtError);
+      throw caughtError;
     }
   }
 

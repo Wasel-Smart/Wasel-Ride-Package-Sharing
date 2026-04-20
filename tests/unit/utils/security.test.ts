@@ -7,7 +7,7 @@
  * Standard: Security primitives must be deterministic and exhaustively tested.
  * Any regression here would be a vulnerability.
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   getCSPHeader,
   CSP_DIRECTIVES,

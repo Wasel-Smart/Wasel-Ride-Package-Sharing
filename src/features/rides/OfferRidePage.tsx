@@ -207,7 +207,7 @@ export function OfferRidePage() {
             title="Route publishing now speaks to drivers, riders, packages, and operations at once"
             detail="This supply flow now makes route readiness, trust gating, earnings logic, and network pull visible in one place so a posted route feels operationally complete from the start."
             stakeholders={[
-              { label: 'Driver readiness', value: `${driverReadiness.steps.filter((step) => step.complete).length}/${driverReadiness.steps.length}`, tone: 'teal' },
+              { label: 'Driver readiness', value: `${driverReadiness.steps.filter((readinessStep) => readinessStep.complete).length}/${driverReadiness.steps.length}`, tone: 'teal' },
               { label: 'Pending requests', value: String(incomingRequests.length), tone: 'amber' },
               { label: 'Live corridor rides', value: String(corridorCount), tone: 'blue' },
               { label: 'Package mode', value: form.acceptsPackages ? 'On' : 'Off', tone: form.acceptsPackages ? 'green' : 'slate' },
@@ -230,10 +230,10 @@ export function OfferRidePage() {
             <div style={{ fontWeight: 800, marginBottom: 6 }}>Trust readiness required</div>
             <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>{(!offerGate.allowed ? offerGate.reason : packageGate.reason) ?? 'Complete account checks before opening supply.'}</div>
             <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
-              {driverReadiness.steps.filter((step) => !step.complete).slice(0, 3).map((step) => (
-                <div key={step.id} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${DS.border}`, borderRadius: r(12), padding: '10px 12px' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.8rem', color: DS.text }}>{step.label}</div>
-                  <div style={{ color: DS.muted, fontSize: '0.75rem', marginTop: 4, lineHeight: 1.5 }}>{step.description}</div>
+              {driverReadiness.steps.filter((readinessStep) => !readinessStep.complete).slice(0, 3).map((readinessStep) => (
+                <div key={readinessStep.id} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${DS.border}`, borderRadius: r(12), padding: '10px 12px' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.8rem', color: DS.text }}>{readinessStep.label}</div>
+                  <div style={{ color: DS.muted, fontSize: '0.75rem', marginTop: 4, lineHeight: 1.5 }}>{readinessStep.description}</div>
                 </div>
               ))}
             </div>

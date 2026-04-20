@@ -165,7 +165,7 @@ export class InputSanitizer {
 
   // Remove potentially dangerous characters
   static sanitizeGeneral(input: string): string {
-    return input.replace(/[<>\"'%;()&+]/g, '').trim();
+    return input.replace(/[<>"'%;()&+]/g, '').trim();
   }
 
   // Sanitize for file names

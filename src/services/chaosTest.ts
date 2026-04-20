@@ -366,6 +366,6 @@ export async function runAllChaosTests(): Promise<ChaosResult[]> {
   }
 
   const passed = results.filter(r => r.passed).length;
-  console.info(`[ChaosTest] ✅ ${passed}/${results.length} scenarios passed`);
+  console.warn(`[ChaosTest] ✅ ${passed}/${results.length} scenarios passed`);
   return results;
 }

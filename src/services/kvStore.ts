@@ -6,18 +6,18 @@
  */
 
 import { supabase } from './directSupabase';
-import type {
-  KVStoreEntry,
-  AppConfig,
-  AppConfigKey,
-  FeatureFlagValue,
-  FeatureFlagKey,
-  KVMetadata,
-  SetKVValueParams,
-  KVAuditLogEntry,
-  Environment,
+import {
+  isValidKVKey,
+  type AppConfig,
+  type AppConfigKey,
+  type Environment,
+  type FeatureFlagKey,
+  type FeatureFlagValue,
+  type KVAuditLogEntry,
+  type KVStoreEntry,
+  type KVMetadata,
+  type SetKVValueParams,
 } from '../types/kv-store.types';
-import { isValidKVKey } from '../types/kv-store.types';
 
 const KV_TABLE = 'kv_store_0b1f4071';
 const AUDIT_TABLE = 'kv_store_audit_log';

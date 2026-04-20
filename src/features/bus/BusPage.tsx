@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import {
   ArrowLeftRight,
@@ -165,10 +165,31 @@ export function BusPage() {
     );
   }, [busRoutes]);
 
-  const activeBus = busRoutes.find(route => route.id === selected) ?? busRoutes[0];
+  const activeBus = busRoutes.find(route => route.id === selected) ?? busRoutes[0] ?? null;
+  const departureTimes = useMemo(
+    () => (activeBus ? getScheduleTimes(activeBus) : []),
+    [activeBus],
+  );
+  const departureKey = useMemo(() => departureTimes.join('|'), [departureTimes]);
+
+  useEffect(() => {
+    if (!activeBus) {
+      return;
+    }
+    setPassengers(value => (activeBus.seats > 0 ? Math.min(value, activeBus.seats) : 1));
+  }, [activeBus]);
+
+  useEffect(() => {
+    if (!activeBus) {
+      return;
+    }
+    setSelectedDeparture(departureTimes[0] ?? activeBus.dep);
+  }, [activeBus, departureKey, departureTimes]);
+
   if (!activeBus) {
     return null;
   }
+
   const pickupCoord = resolveCityCoord(activeBus.from);
   const dropoffCoord = resolveCityCoord(activeBus.to);
   const routeCenter = midpoint(pickupCoord, dropoffCoord);
@@ -183,8 +204,6 @@ export function BusPage() {
     !routeEndpointsAreDistinct(origin, destination) ||
     activeBus.seats === 0 ||
     passengers > activeBus.seats;
-  const departureTimes = getScheduleTimes(activeBus);
-  const departureKey = departureTimes.join('|');
   const departureLabel =
     scheduleMode === 'depart-now'
       ? `Next departure today at ${selectedDeparture}`
@@ -207,14 +226,6 @@ export function BusPage() {
     activeBus.seats === 0
       ? 'This departure is full, but the same corridor filters stay active while you switch to another coach.'
       : `${activeBus.seats} seats are open on the selected coach and the departure plan stays linked to one ticket flow.`;
-
-  useEffect(() => {
-    setPassengers(value => (activeBus.seats > 0 ? Math.min(value, activeBus.seats) : 1));
-  }, [activeBus.id, activeBus.seats]);
-
-  useEffect(() => {
-    setSelectedDeparture(departureTimes[0] ?? activeBus.dep);
-  }, [activeBus.dep, departureKey, departureTimes]);
 
   async function handleBusBooking() {
     if (bookingDisabled) return;

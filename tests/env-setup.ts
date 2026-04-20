@@ -1,5 +1,5 @@
 /**
- * Vitest environment bootstrap — runs before any test module is imported.
+ * Vitest environment bootstrap - runs before any test module is imported.
  *
  * Root cause fix: Vitest's jsdom environment does not inject import.meta.env
  * the same way Vite does at build time. Modules that read import.meta.env at
@@ -38,9 +38,9 @@ const TEST_ENV = {
 // Vitest transforms import.meta.env references but the underlying object may be
 // undefined in the jsdom environment when modules are evaluated at import time.
 if (typeof globalThis !== 'undefined') {
-  // @ts-expect-error — patching import.meta on globalThis for test environment
+  // @ts-expect-error -- test bootstrap injects an importMeta shim on globalThis.
   if (!globalThis.importMeta) {
-    // @ts-expect-error
+    // @ts-expect-error -- globalThis.importMeta does not exist in the standard DOM typings.
     globalThis.importMeta = { env: TEST_ENV };
   }
 
@@ -55,7 +55,7 @@ if (typeof globalThis !== 'undefined') {
         configurable: true,
       });
     } else if (typeof import.meta !== 'undefined' && import.meta.env) {
-      // Merge missing keys without overwriting existing ones
+      // Merge missing keys without overwriting existing ones.
       for (const [key, value] of Object.entries(TEST_ENV)) {
         if (!(key in import.meta.env)) {
           (import.meta.env as Record<string, unknown>)[key] = value;
@@ -63,7 +63,7 @@ if (typeof globalThis !== 'undefined') {
       }
     }
   } catch {
-    // import.meta may not be patchable in all environments — that's fine,
+    // import.meta may not be patchable in all environments - that is fine,
     // Vitest's transform handles the common case.
   }
 }

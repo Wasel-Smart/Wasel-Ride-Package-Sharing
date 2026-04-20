@@ -13,12 +13,13 @@ interface UseBusSearchOptions extends BusSearchDraft {
 }
 
 export function useBusSearch(options: UseBusSearchOptions) {
+  const { date, delayMs = 0, from, searchKey, seats, to } = options;
   const [state, setState] = useState<BusSearchState>(() =>
     createInitialBusSearchState(
       busController.getFallbackRoutes({
-        from: options.from,
-        to: options.to,
-        seats: options.seats,
+        from,
+        to,
+        seats,
       }),
     ),
   );
@@ -27,7 +28,7 @@ export function useBusSearch(options: UseBusSearchOptions) {
     let cancelled = false;
     const timerId = window.setTimeout(() => {
       setState(current => ({ ...current, loading: true, error: null }));
-      void busController.searchRoutes(options).then(next => {
+      void busController.searchRoutes({ date, from, searchKey, seats, to }).then(next => {
         if (cancelled) return;
         setState(current => ({
           ...current,
@@ -37,13 +38,13 @@ export function useBusSearch(options: UseBusSearchOptions) {
           error: next.error,
         }));
       });
-    }, options.delayMs ?? 0);
+    }, delayMs);
 
     return () => {
       cancelled = true;
       window.clearTimeout(timerId);
     };
-  }, [options.date, options.delayMs, options.from, options.searchKey, options.seats, options.to]);
+  }, [date, delayMs, from, searchKey, seats, to]);
 
   const bookRoute = async (payload: BusBookingPayload): Promise<BusBookingResult> => {
     setState(current => ({ ...current, bookingBusy: true }));

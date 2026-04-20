@@ -9,11 +9,9 @@ import { useState } from 'react';
 import {
   useAllAppConfigs,
   useAllFeatureFlags,
-  useSetAppConfig,
-  useSetFeatureFlag,
   useToggleFeatureFlag,
 } from '../../hooks/useKVStore';
-import type { FeatureFlagValue, AppConfig, KVMetadata } from '../../types/kv-store.types';
+import type { FeatureFlagValue, AppConfig } from '../../types/kv-store.types';
 
 export function KVStoreAdmin() {
   const [activeTab, setActiveTab] = useState<'config' | 'flags'>('flags');
