@@ -266,10 +266,10 @@ async function attemptSyncEntry(entry: PendingSyncEntry): Promise<void> {
 
 /** Drain all pending syncs — called on reconnect and on app start */
 export async function drainPendingBookingSyncs(): Promise<void> {
-  if (!allowLocalPersistenceFallback()) return;
-  if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+  if (!allowLocalPersistenceFallback()) {return;}
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {return;}
   const pending = loadPendingSyncs();
-  if (pending.length === 0) return;
+  if (pending.length === 0) {return;}
 
   for (const entry of pending) {
     await attemptSyncEntry(entry);
@@ -297,7 +297,7 @@ const BOOKING_KEY = 'wasel-ride-booking-records';
 export const RIDE_BOOKINGS_CHANGED_EVENT = 'wasel:ride-bookings-changed';
 
 function emitRideBookingsChanged(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
 
   try {
     window.dispatchEvent(new CustomEvent(RIDE_BOOKINGS_CHANGED_EVENT));
@@ -332,7 +332,7 @@ function validateRideBookings(records: unknown): RideBookingRecord[] {
 }
 
 function readBookings(): RideBookingRecord[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(BOOKING_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -343,7 +343,7 @@ function readBookings(): RideBookingRecord[] {
 }
 
 function writeBookings(bookings: RideBookingRecord[]) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(
     BOOKING_KEY,
     JSON.stringify(validateRideBookings(bookings).slice(0, 100)),
@@ -719,7 +719,7 @@ export async function updateRideBooking(
 ): Promise<RideBookingRecord | null> {
   const bookings = readBookings();
   const target = bookings.find(booking => booking.id === bookingId);
-  if (!target) return null;
+  if (!target) {return null;}
 
   if (updates.status && !canTransitionRideBookingStatus(target.status, updates.status)) {
     throw new ValidationError(
@@ -877,9 +877,9 @@ export function syncRideBookingCompletion(referenceDate = Date.now()): RideBooki
   const bookings = readBookings();
   const completedThisPass: RideBookingRecord[] = [];
   const next = bookings.map(booking => {
-    if (booking.status !== 'confirmed') return booking;
+    if (booking.status !== 'confirmed') {return booking;}
     const tripTime = new Date(`${booking.date}T${booking.time || '00:00'}`).getTime();
-    if (!Number.isFinite(tripTime) || tripTime > now) return booking;
+    if (!Number.isFinite(tripTime) || tripTime > now) {return booking;}
     const completedBooking = validateRideBooking(
       {
         ...booking,

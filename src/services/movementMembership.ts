@@ -56,16 +56,16 @@ const DEFAULT_POINTS: Record<MovementActivityType, number> = {
 let cachedSnapshot: MovementMembershipSnapshot = { ...DEFAULT_SNAPSHOT };
 
 function resolveTier(credits: number): LoyaltyTier {
-  if (credits >= 900) return 'infrastructure';
-  if (credits >= 600) return 'network';
-  if (credits >= 300) return 'dense';
+  if (credits >= 900) {return 'infrastructure';}
+  if (credits >= 600) {return 'network';}
+  if (credits >= 300) {return 'dense';}
   return 'starter';
 }
 
 function updateStreak(previousDate: string | null) {
   const today = new Date().toISOString().slice(0, 10);
-  if (!previousDate) return { streakDays: 1, lastActivityDate: today };
-  if (previousDate === today) return { streakDays: null, lastActivityDate: today };
+  if (!previousDate) {return { streakDays: 1, lastActivityDate: today };}
+  if (previousDate === today) {return { streakDays: null, lastActivityDate: today };}
 
   const diffDays = Math.round(
     (new Date(today).getTime() - new Date(previousDate).getTime()) / 86_400_000,
@@ -216,7 +216,7 @@ export function hydrateMovementMembershipFromWallet(wallet: WalletData | null | 
 }
 
 export function getMembershipCorridor(routeId?: string | null): CorridorOpportunity | null {
-  if (!routeId) return getCorridorOpportunityById(DEFAULT_CORRIDOR_ID);
+  if (!routeId) {return getCorridorOpportunityById(DEFAULT_CORRIDOR_ID);}
   return getCorridorOpportunityById(routeId);
 }
 

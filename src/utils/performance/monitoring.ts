@@ -62,7 +62,7 @@ class PerformanceMonitor {
   }
 
   private initialize(): void {
-    if (this.isInitialized || typeof window === 'undefined') return;
+    if (this.isInitialized || typeof window === 'undefined') {return;}
     this.isInitialized = true;
 
     // Initialize all performance observers
@@ -82,7 +82,7 @@ class PerformanceMonitor {
   }
 
   private observePaintMetrics(): void {
-    if (!('PerformanceObserver' in window)) return;
+    if (!('PerformanceObserver' in window)) {return;}
 
     try {
       const observer = new PerformanceObserver((list) => {
@@ -103,7 +103,7 @@ class PerformanceMonitor {
   }
 
   private observeLargestContentfulPaint(): void {
-    if (!('PerformanceObserver' in window)) return;
+    if (!('PerformanceObserver' in window)) {return;}
 
     try {
       const observer = new PerformanceObserver((list) => {
@@ -124,7 +124,7 @@ class PerformanceMonitor {
   }
 
   private observeFirstInputDelay(): void {
-    if (!('PerformanceObserver' in window)) return;
+    if (!('PerformanceObserver' in window)) {return;}
 
     try {
       const observer = new PerformanceObserver((list) => {
@@ -146,7 +146,7 @@ class PerformanceMonitor {
   }
 
   private observeCumulativeLayoutShift(): void {
-    if (!('PerformanceObserver' in window)) return;
+    if (!('PerformanceObserver' in window)) {return;}
 
     try {
       let clsValue = 0;
@@ -170,13 +170,13 @@ class PerformanceMonitor {
   }
 
   private observeNavigationTiming(): void {
-    if (!('performance' in window) || !performance.getEntriesByType) return;
+    if (!('performance' in window) || !performance.getEntriesByType) {return;}
 
     const navigationEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
-    if (navigationEntries.length === 0) return;
+    if (navigationEntries.length === 0) {return;}
 
     const entry = navigationEntries[0];
-    if (!entry) return;
+    if (!entry) {return;}
     
     // Time to First Byte
     const ttfb = entry.responseStart - entry.requestStart;
@@ -200,7 +200,7 @@ class PerformanceMonitor {
   }
 
   private observeMemoryUsage(): void {
-    if (!('performance' in window) || !(performance as any).memory) return;
+    if (!('performance' in window) || !(performance as any).memory) {return;}
 
     const updateMemoryUsage = () => {
       const memory = (performance as any).memory;
@@ -229,7 +229,7 @@ class PerformanceMonitor {
   }
 
   private observeNetworkInformation(): void {
-    if (!('navigator' in window) || !(navigator as any).connection) return;
+    if (!('navigator' in window) || !(navigator as any).connection) {return;}
 
     const connection = (navigator as any).connection;
     this.metrics.connectionType = connection.effectiveType || connection.type || 'unknown';
@@ -243,7 +243,7 @@ class PerformanceMonitor {
   }
 
   private observeResourceTiming(): void {
-    if (!('PerformanceObserver' in window)) return;
+    if (!('PerformanceObserver' in window)) {return;}
 
     try {
       const observer = new PerformanceObserver((list) => {
@@ -284,10 +284,10 @@ class PerformanceMonitor {
     };
 
     const threshold = thresholds[metric as keyof typeof thresholds];
-    if (!threshold) return 'good';
+    if (!threshold) {return 'good';}
 
-    if (value <= threshold.good) return 'good';
-    if (value <= threshold.poor) return 'needs-improvement';
+    if (value <= threshold.good) {return 'good';}
+    if (value <= threshold.poor) {return 'needs-improvement';}
     return 'poor';
   }
 
@@ -310,7 +310,7 @@ class PerformanceMonitor {
   }
 
   private sendToAnalytics(name: string, value: number, rating: string): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
 
     // Google Analytics 4
     if ('gtag' in window) {

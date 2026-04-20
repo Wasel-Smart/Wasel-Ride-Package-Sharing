@@ -151,8 +151,8 @@ export const FEATURE_FLAGS: Record<FeatureFlag, {
  * Get current environment
  */
 function getCurrentEnvironment(): 'development' | 'staging' | 'production' {
-  if (import.meta.env.DEV) return 'development';
-  if (window.location.hostname.includes('staging')) return 'staging';
+  if (import.meta.env.DEV) {return 'development';}
+  if (window.location.hostname.includes('staging')) {return 'staging';}
   return 'production';
 }
 
@@ -258,7 +258,7 @@ export function setFeatureFlagOverride(flag: FeatureFlag, enabled: boolean): voi
  * Get feature flag override (if set in dev)
  */
 export function getFeatureFlagOverride(flag: FeatureFlag): boolean | null {
-  if (!import.meta.env.DEV) return null;
+  if (!import.meta.env.DEV) {return null;}
   const override = sessionStorage.getItem(`ff:${flag}`);
   return override ? override === 'true' : null;
 }

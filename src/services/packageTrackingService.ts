@@ -123,9 +123,9 @@ const TIMELINE_STORAGE_KEY = 'wasel-package-timeline';
 
 function loadMap<T>(key: string): Map<string, T> {
   try {
-    if (typeof window === 'undefined') return new Map();
+    if (typeof window === 'undefined') {return new Map();}
     const raw = window.localStorage.getItem(key);
-    if (!raw) return new Map();
+    if (!raw) {return new Map();}
     const entries: [string, T][] = JSON.parse(raw);
     return new Map(entries);
   } catch {
@@ -135,7 +135,7 @@ function loadMap<T>(key: string): Map<string, T> {
 
 function saveMap<T>(key: string, map: Map<string, T>): void {
   try {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
     window.localStorage.setItem(key, JSON.stringify(Array.from(map.entries())));
   } catch { /* storage unavailable */ }
 }
@@ -395,7 +395,7 @@ export class PackageTrackingService {
       });
     }
 
-    if (pkg.pickupVerificationCode !== verificationCode) return false;
+    if (pkg.pickupVerificationCode !== verificationCode) {return false;}
 
     const updated: PackageTracking = {
       ...pkg,

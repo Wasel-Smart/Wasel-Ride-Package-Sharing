@@ -260,7 +260,7 @@ export function normalizeError(
       ...(typeof error.meta === 'object' && error.meta !== null ? error.meta : {}),
       ...(context ?? {}),
     };
-    if (status) payloadMeta.status = status;
+    if (status) {payloadMeta.status = status;}
 
     if (status >= 400 && status < 500) {
       return new ValidationError(message, payloadMeta);

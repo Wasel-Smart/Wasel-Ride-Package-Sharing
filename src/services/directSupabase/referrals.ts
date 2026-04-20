@@ -15,8 +15,8 @@ export async function processReferralConversionForPassenger(passengerCanonicalUs
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
+  if (error) {throw error;}
+  if (!data) {return null;}
 
   const row = data as RawReferral;
   const reward = toNumber(row.referrer_reward_jod, 2);
@@ -58,7 +58,7 @@ export async function getDirectReferralSnapshot(userId: string) {
     .from('referrals')
     .select('*')
     .eq('referrer_id', context.user.id);
-  if (error) throw error;
+  if (error) {throw error;}
 
   const rows = Array.isArray(referrals) ? (referrals as Array<Record<string, unknown>>) : [];
   return {
@@ -74,15 +74,15 @@ export async function redeemDirectReferralCode(userId: string, referralCode: str
   const context = await buildUserContext(userId);
   const db = getDb();
   const normalizedCode = referralCode.trim().toUpperCase();
-  if (!normalizedCode) throw new Error('Enter a referral code first.');
+  if (!normalizedCode) {throw new Error('Enter a referral code first.');}
 
   const { data: referrer, error: referrerError } = await db
     .from('users')
     .select('id, referral_code, full_name')
     .eq('referral_code', normalizedCode)
     .maybeSingle();
-  if (referrerError) throw referrerError;
-  if (!referrer) throw new Error('Referral code was not found.');
+  if (referrerError) {throw referrerError;}
+  if (!referrer) {throw new Error('Referral code was not found.');}
   if (String((referrer as { id?: string }).id) === context.user.id) {
     throw new Error('You cannot redeem your own referral code.');
   }
@@ -94,8 +94,8 @@ export async function redeemDirectReferralCode(userId: string, referralCode: str
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (existingError) throw existingError;
-  if (existing) return existing as RawReferral;
+  if (existingError) {throw existingError;}
+  if (existing) {return existing as RawReferral;}
 
   const reward = 2;
   const { data, error } = await db
@@ -112,7 +112,7 @@ export async function redeemDirectReferralCode(userId: string, referralCode: str
     })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
 
   await recordDirectGrowthEvent({
     userId,

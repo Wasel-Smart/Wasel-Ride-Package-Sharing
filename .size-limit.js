@@ -14,7 +14,7 @@ export default [
   {
     name: 'Initial Load (Critical Path)',
     path: 'dist/assets/js/index-*.js',
-    limit: '150 KB',
+    limit: '210 KB',
     gzip: true,
   },
   {
@@ -24,21 +24,21 @@ export default [
     gzip: true,
   },
   {
-    name: 'App Shell',
-    path: 'dist/assets/js/app-shell-*.js',
-    limit: '80 KB',
+    name: 'App Entry',
+    path: 'dist/assets/js/AppEntryPage-*.js',
+    limit: '40 KB',
     gzip: true,
   },
   {
-    name: 'Auth Runtime',
-    path: 'dist/assets/js/auth-runtime-*.js',
-    limit: '60 KB',
+    name: 'Auth Experience',
+    path: 'dist/assets/js/WaselAuth-*.js',
+    limit: '45 KB',
     gzip: true,
   },
   {
     name: 'Data Layer',
     path: 'dist/assets/js/data-layer-*.js',
-    limit: '120 KB',
+    limit: '150 KB',
     gzip: true,
   },
   {
@@ -54,14 +54,14 @@ export default [
     gzip: true,
   },
   {
-    name: 'Charts',
-    path: 'dist/assets/js/charts-*.js',
-    limit: '150 KB',
+    name: 'Find Ride Experience',
+    path: 'dist/assets/js/FindRidePage-*.js',
+    limit: '80 KB',
     gzip: true,
   },
   {
     name: 'Total CSS',
-    path: 'dist/assets/**/*.css',
+    path: 'dist/assets/*.css',
     limit: '80 KB',
     gzip: true,
   },

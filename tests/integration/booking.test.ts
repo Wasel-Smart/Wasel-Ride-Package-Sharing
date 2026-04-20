@@ -291,7 +291,7 @@ describe('Integration: Booking Flow', () => {
       );
 
       let response = await fetch('/api/trips/search', { method: 'POST' });
-      let trips = await response.json();
+      const trips = await response.json();
       expect(trips).toHaveLength(1);
 
       // Step 2: Create booking

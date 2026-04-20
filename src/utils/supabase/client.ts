@@ -17,7 +17,7 @@ import {
 } from './info';
 
 function isPlaceholderValue(value: string | undefined): boolean {
-  if (!value) return true;
+  if (!value) {return true;}
 
   const normalized = value.trim().toLowerCase();
   return (
@@ -64,7 +64,7 @@ type GlobalWithSupabaseClient = typeof globalThis & {
 };
 
 function getBrowserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | undefined {
-  if (typeof window === 'undefined') return undefined;
+  if (typeof window === 'undefined') {return undefined;}
 
   try {
     return window[kind];
@@ -77,7 +77,7 @@ function getBrowserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | u
 const requestQueue: Array<QueueTask<unknown>> = [];
 
 function getIsOnline(): boolean {
-  if (typeof navigator === 'undefined') return true;
+  if (typeof navigator === 'undefined') {return true;}
   return navigator.onLine;
 }
 
@@ -189,7 +189,7 @@ let listenersInitialised = false;
 let healthCheckTimer: ReturnType<typeof setInterval> | null = null;
 
 export function initSupabaseListeners(): () => void {
-  if (listenersInitialised || typeof window === 'undefined') return () => {};
+  if (listenersInitialised || typeof window === 'undefined') {return () => {};}
   listenersInitialised = true;
 
   const onOnline = () => { processRequestQueue(); };
@@ -198,7 +198,7 @@ export function initSupabaseListeners(): () => void {
   window.addEventListener('offline', () => {}, { passive: true });
 
   healthCheckTimer = setInterval(() => {
-    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {return;}
     checkSupabaseConnection(false).catch(() => {});
   }, HEALTH_CHECK_INTERVAL);
 
@@ -222,7 +222,7 @@ export async function optimizedQuery<T>(
       const cached = storage?.getItem(`qc-${cacheKey}`);
       if (cached) {
         const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < cacheDuration) return data;
+        if (Date.now() - timestamp < cacheDuration) {return data;}
       }
     } catch { /* ignore cache errors */ }
   }
@@ -243,7 +243,7 @@ let connectionHealthy = true;
 let lastHealthCheck   = 0;
 
 export async function checkSupabaseConnection(force = false): Promise<boolean> {
-  if (!supabase) return false;
+  if (!supabase) {return false;}
 
   const CACHE_TTL = HEALTH_CHECK_INTERVAL;
   if (!force && Date.now() - lastHealthCheck < CACHE_TTL && connectionHealthy) {

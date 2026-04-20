@@ -29,9 +29,9 @@ function roundMoney(value: number) {
 }
 
 function getDensityDiscountPercent(forecastDemandScore: number) {
-  if (forecastDemandScore >= 92) return 4;
-  if (forecastDemandScore >= 84) return 3;
-  if (forecastDemandScore >= 74) return 1.5;
+  if (forecastDemandScore >= 92) {return 4;}
+  if (forecastDemandScore >= 84) {return 3;}
+  if (forecastDemandScore >= 74) {return 1.5;}
   return 0;
 }
 
@@ -43,9 +43,9 @@ function resolvePricePressure(
   forecastDemandScore: number,
   explicitPressure?: MovementPricePressure,
 ): MovementPricePressure {
-  if (explicitPressure) return explicitPressure;
-  if (forecastDemandScore >= 86) return 'surging';
-  if (forecastDemandScore >= 58) return 'balanced';
+  if (explicitPressure) {return explicitPressure;}
+  if (forecastDemandScore >= 86) {return 'surging';}
+  if (forecastDemandScore >= 58) {return 'balanced';}
   return 'value-window';
 }
 

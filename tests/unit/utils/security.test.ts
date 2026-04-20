@@ -90,7 +90,7 @@ describe('checkRateLimit()', () => {
   });
 
   it('blocks the request that exceeds maxRequests', () => {
-    for (let i = 0; i < 5; i++) checkRateLimit(KEY, { maxRequests: 5, windowMs: 60_000 });
+    for (let i = 0; i < 5; i++) {checkRateLimit(KEY, { maxRequests: 5, windowMs: 60_000 });}
     expect(checkRateLimit(KEY, { maxRequests: 5, windowMs: 60_000 })).toBe(false);
   });
 
@@ -101,7 +101,7 @@ describe('checkRateLimit()', () => {
   });
 
   it('different keys are rate-limited independently', () => {
-    for (let i = 0; i < 5; i++) checkRateLimit(KEY, { maxRequests: 5, windowMs: 60_000 });
+    for (let i = 0; i < 5; i++) {checkRateLimit(KEY, { maxRequests: 5, windowMs: 60_000 });}
     // Exceeds limit for KEY
     expect(checkRateLimit(KEY, { maxRequests: 5, windowMs: 60_000 })).toBe(false);
     // Different key should still be allowed
@@ -110,7 +110,7 @@ describe('checkRateLimit()', () => {
   });
 
   it('resetRateLimit() allows requests again', () => {
-    for (let i = 0; i < 6; i++) checkRateLimit(KEY, { maxRequests: 5, windowMs: 60_000 });
+    for (let i = 0; i < 6; i++) {checkRateLimit(KEY, { maxRequests: 5, windowMs: 60_000 });}
     resetRateLimit(KEY);
     expect(checkRateLimit(KEY, { maxRequests: 5, windowMs: 60_000 })).toBe(true);
   });

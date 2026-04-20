@@ -212,7 +212,7 @@ describe('findRideSchema', () => {
   it('defaults passengers to 1 when omitted', () => {
     const result = findRideSchema.safeParse({ ...base, passengers: undefined });
     expect(result.success).toBe(true);
-    if (result.success) expect(result.data.passengers).toBe(1);
+    if (result.success) {expect(result.data.passengers).toBe(1);}
   });
 });
 
@@ -360,7 +360,7 @@ describe('topUpSchema', () => {
   it('defaults payment method to card', () => {
     const result = topUpSchema.safeParse({ amount: 20 });
     expect(result.success).toBe(true);
-    if (result.success) expect(result.data.paymentMethod).toBe('card');
+    if (result.success) {expect(result.data.paymentMethod).toBe('card');}
   });
 });
 

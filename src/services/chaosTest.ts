@@ -12,9 +12,7 @@
  */
 
 import { supabase } from './directSupabase';
-import { rideStateMachine } from './rideStateMachine';
 import { jobs } from './jobQueue';
-import { walletApi } from './walletApi';
 
 // ─── Guard ────────────────────────────────────────────────────────────────────
 
@@ -164,7 +162,6 @@ async function testDbTimeout(start: number): Promise<ChaosResult> {
 
 async function testQueueFailure(start: number): Promise<ChaosResult> {
   const notes: string[] = [];
-  const ikey = `chaos_queue_test_${Date.now()}`;
 
   // Enqueue a job, verify it's in the queue, then complete it
   const jobId = await jobs.sendNotification('test_user', 'push', 'chaos_test', { test: true });

@@ -165,14 +165,14 @@ export function friendlyAuthError(error: unknown, fallback: string): string {
  * Returns score 0-5, label, and colour token from wasel-ds.
  */
 export function pwStrength(password: string): { score: number; label: string; color: string } {
-  if (!password) return { score: 0, label: '', color: C.textMuted };
+  if (!password) {return { score: 0, label: '', color: C.textMuted };}
 
   let score = 0;
-  if (password.length >= 8) score += 1;
-  if (password.length >= 12) score += 1;
-  if (/[A-Z]/.test(password)) score += 1;
-  if (/\d/.test(password)) score += 1;
-  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+  if (password.length >= 8) {score += 1;}
+  if (password.length >= 12) {score += 1;}
+  if (/[A-Z]/.test(password)) {score += 1;}
+  if (/\d/.test(password)) {score += 1;}
+  if (/[^A-Za-z0-9]/.test(password)) {score += 1;}
 
   const map = [
     { score: 0, label: '', color: C.textMuted },

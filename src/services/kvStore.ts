@@ -115,7 +115,7 @@ export async function getAppConfig(
   const key: AppConfigKey = `app_config:${configKey}`;
   const config = await getKVValue<AppConfig>(key);
 
-  if (!config) return null;
+  if (!config) {return null;}
 
   // Filter by environment if specified
   if (environment) {
@@ -169,11 +169,11 @@ export async function isFeatureEnabled(
   const key: FeatureFlagKey = `feature_flag:${featureName}`;
   const flag = await getKVValue<FeatureFlagValue>(key);
 
-  if (!flag) return false;
-  if (!flag.enabled) return false;
+  if (!flag) {return false;}
+  if (!flag.enabled) {return false;}
 
   // No rollout rules - feature is fully enabled
-  if (!flag.rollout) return true;
+  if (!flag.rollout) {return true;}
 
   // Apply rollout rules
   return evaluateRollout(flag.rollout, userId);
@@ -244,7 +244,7 @@ function evaluateRollout(
   rollout: FeatureFlagValue['rollout'],
   userId?: string
 ): boolean {
-  if (!rollout) return true;
+  if (!rollout) {return true;}
 
   switch (rollout.type) {
     case 'percentage':
@@ -263,7 +263,7 @@ function evaluateRollout(
 }
 
 function evaluatePercentageRollout(percentage: number, userId?: string): boolean {
-  if (!userId) return false;
+  if (!userId) {return false;}
   
   // Deterministic hash-based rollout
   const hash = simpleHash(userId);
@@ -271,7 +271,7 @@ function evaluatePercentageRollout(percentage: number, userId?: string): boolean
 }
 
 function evaluateUserListRollout(userIds: string[], userId?: string): boolean {
-  if (!userId) return false;
+  if (!userId) {return false;}
   return userIds.includes(userId);
 }
 

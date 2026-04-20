@@ -16,14 +16,14 @@ export async function resolveCanonicalUser(userKey: string): Promise<UserRow | n
     .select('*')
     .eq('auth_user_id', userKey)
     .maybeSingle();
-  if (byAuth) return byAuth as UserRow;
+  if (byAuth) {return byAuth as UserRow;}
 
   const { data: byId, error } = await db
     .from('users')
     .select('*')
     .eq('id', userKey)
     .maybeSingle();
-  if (error) throw error;
+  if (error) {throw error;}
   return (byId as UserRow | null) ?? null;
 }
 
@@ -74,7 +74,7 @@ export async function ensureCanonicalUser(
   seed?: UserSeed,
 ): Promise<UserRow> {
   const existing = await resolveCanonicalUser(userKey);
-  if (existing) return existing;
+  if (existing) {return existing;}
 
   const resolvedSeed = await resolveAuthSeed(userKey, seed);
   const email = resolvedSeed.email?.trim() || null;
@@ -102,7 +102,7 @@ export async function ensureCanonicalUser(
     })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
   return data as UserRow;
 }
 
@@ -113,7 +113,7 @@ export async function getDriverByCanonicalUserId(userId: string): Promise<Driver
     .select('*')
     .eq('user_id', userId)
     .maybeSingle();
-  if (error) throw error;
+  if (error) {throw error;}
   return (data as DriverRow | null) ?? null;
 }
 
@@ -142,7 +142,7 @@ export async function getLatestVerificationRecord(canonicalUserId: string): Prom
     .order('verification_timestamp', { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (error) throw error;
+  if (error) {throw error;}
   return (data as RawVerificationRecord | null) ?? null;
 }
 

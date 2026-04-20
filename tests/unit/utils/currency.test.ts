@@ -56,7 +56,7 @@ describe('CURRENCIES catalogue', () => {
   });
 
   it('JOD rate is exactly 1.0 (settlement currency)', () => {
-    expect(EXCHANGE_RATES_FROM_JOD['JOD']).toBe(1.0);
+    expect(EXCHANGE_RATES_FROM_JOD.JOD).toBe(1.0);
   });
 
   it('every currency has valid decimal places (0-3)', () => {
@@ -131,7 +131,7 @@ describe('CurrencyService.fromJOD()', () => {
   });
 
   it('converts JOD to USD using the configured rate', () => {
-    const rate = EXCHANGE_RATES_FROM_JOD['USD'];
+    const rate = EXCHANGE_RATES_FROM_JOD.USD;
     const result = svc.fromJOD(1, 'USD');
     expect(result).toBeCloseTo(rate, 2);
   });
@@ -187,8 +187,8 @@ describe('CurrencyService.convert()', () => {
   });
 
   it('USD → AED goes through JOD pivot correctly', () => {
-    const usdToJod = 1 / EXCHANGE_RATES_FROM_JOD['USD'];
-    const jodToAed = EXCHANGE_RATES_FROM_JOD['AED'];
+    const usdToJod = 1 / EXCHANGE_RATES_FROM_JOD.USD;
+    const jodToAed = EXCHANGE_RATES_FROM_JOD.AED;
     const expected = Math.round(1 * usdToJod * jodToAed * 1000) / 1000;
     expect(svc.convert(1, 'USD', 'AED')).toBeCloseTo(expected, 2);
   });
@@ -219,7 +219,7 @@ describe('CurrencyService.setCurrency()', () => {
 
   it('updates minFare after switching currency', () => {
     svc.setCurrency('EGP');
-    expect(svc.minFare).toBe(CURRENCIES['EGP'].minFare);
+    expect(svc.minFare).toBe(CURRENCIES.EGP.minFare);
   });
 });
 
@@ -258,7 +258,7 @@ describe('CurrencyService.formatShort()', () => {
 
   it('includes the currency symbol', () => {
     const result = svc.formatShort(10, 'USD');
-    expect(result).toContain(CURRENCIES['USD'].symbol);
+    expect(result).toContain(CURRENCIES.USD.symbol);
   });
 
   it('includes the formatted amount', () => {
@@ -281,7 +281,7 @@ describe('getCurrencySymbol()', () => {
   it('returns the JOD symbol when no argument given (default currency)', () => {
     freshService(); // ensure JOD default
     const symbol = getCurrencySymbol('JOD');
-    expect(symbol).toBe(CURRENCIES['JOD'].symbol);
+    expect(symbol).toBe(CURRENCIES.JOD.symbol);
   });
 
   it('returns correct symbol for every currency', () => {

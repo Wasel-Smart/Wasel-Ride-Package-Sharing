@@ -109,7 +109,7 @@ function readStoredPreferences(userId?: string | null): CommunicationPreferences
     return defaultCommunicationPreferences;
   }
 
-  if (typeof window === 'undefined') return defaultCommunicationPreferences;
+  if (typeof window === 'undefined') {return defaultCommunicationPreferences;}
 
   try {
     const raw = window.localStorage.getItem(storageKeyFor(userId));
@@ -122,8 +122,8 @@ function readStoredPreferences(userId?: string | null): CommunicationPreferences
 }
 
 function writeStoredPreferences(userId: string | null | undefined, prefs: CommunicationPreferences): void {
-  if (!allowAuthenticatedLocalPersistence(userId)) return;
-  if (typeof window === 'undefined') return;
+  if (!allowAuthenticatedLocalPersistence(userId)) {return;}
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(
     storageKeyFor(userId),
     JSON.stringify(normalizePreferences(prefs)),
@@ -137,7 +137,7 @@ type QueuedDeliveryRecord = DeliveryQueueRequest & {
 };
 
 function readOutbox(): QueuedDeliveryRecord[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(OUTBOX_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -148,7 +148,7 @@ function readOutbox(): QueuedDeliveryRecord[] {
 }
 
 function writeOutbox(records: QueuedDeliveryRecord[]): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(OUTBOX_KEY, JSON.stringify(records.slice(0, 200)));
 }
 
@@ -277,11 +277,11 @@ function toDirectPreferenceUpdate(prefs: Partial<CommunicationPreferences>) {
 
 export function resolveNotificationTopic(type: string): NotificationTopic {
   const normalized = type.toLowerCase();
-  if (normalized.includes('promo') || normalized.includes('offer')) return 'promotions';
-  if (normalized.includes('message') || normalized.includes('chat')) return 'messages';
-  if (normalized.includes('booking') || normalized.includes('request')) return 'booking_requests';
-  if (normalized.includes('prayer')) return 'prayer_reminders';
-  if (normalized.includes('support') || normalized.includes('security') || normalized.includes('wallet')) return 'critical_alerts';
+  if (normalized.includes('promo') || normalized.includes('offer')) {return 'promotions';}
+  if (normalized.includes('message') || normalized.includes('chat')) {return 'messages';}
+  if (normalized.includes('booking') || normalized.includes('request')) {return 'booking_requests';}
+  if (normalized.includes('prayer')) {return 'prayer_reminders';}
+  if (normalized.includes('support') || normalized.includes('security') || normalized.includes('wallet')) {return 'critical_alerts';}
   return 'trip_updates';
 }
 
@@ -317,7 +317,7 @@ export function buildDeliveryPlan(args: {
       : topic === 'prayer_reminders' ? args.preferences.prayerReminders
       : args.preferences.criticalAlerts;
 
-  if (!topicEnabled) return [];
+  if (!topicEnabled) {return [];}
 
   const requestedChannels = args.explicitChannels && args.explicitChannels.length > 0
     ? args.explicitChannels
@@ -325,23 +325,23 @@ export function buildDeliveryPlan(args: {
 
   return requestedChannels.filter((channel) => {
     const forceChannel = Boolean(args.explicitChannels?.includes(channel));
-    if (channel === 'in_app') return args.capabilities.inApp && (forceChannel || args.preferences.inApp);
-    if (channel === 'push') return args.capabilities.push && (forceChannel || args.preferences.push);
-    if (channel === 'email') return args.capabilities.email && (forceChannel || args.preferences.email);
-    if (channel === 'sms') return args.capabilities.sms && (forceChannel || args.preferences.sms);
-    if (channel === 'whatsapp') return args.capabilities.whatsapp && (forceChannel || args.preferences.whatsapp);
+    if (channel === 'in_app') {return args.capabilities.inApp && (forceChannel || args.preferences.inApp);}
+    if (channel === 'push') {return args.capabilities.push && (forceChannel || args.preferences.push);}
+    if (channel === 'email') {return args.capabilities.email && (forceChannel || args.preferences.email);}
+    if (channel === 'sms') {return args.capabilities.sms && (forceChannel || args.preferences.sms);}
+    if (channel === 'whatsapp') {return args.capabilities.whatsapp && (forceChannel || args.preferences.whatsapp);}
     return false;
   });
 }
 
 export async function getCommunicationPreferences(userId?: string | null): Promise<CommunicationPreferences> {
   const localPrefs = readStoredPreferences(userId);
-  if (!userId) return localPrefs;
+  if (!userId) {return localPrefs;}
 
   if (!canUseEdgeApi()) {
     requireDirectSupabaseFallback('Communication preference lookup');
     const direct = await getDirectCommunicationPreferences(userId);
-    if (!direct) return localPrefs;
+    if (!direct) {return localPrefs;}
     const normalized = normalizeDirectPreferences(
       direct as Record<string, unknown> | null,
     );
@@ -354,7 +354,7 @@ export async function getCommunicationPreferences(userId?: string | null): Promi
     const response = await fetchWithRetry(`${API_URL}/communications/preferences`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!response.ok) throw new Error('Failed to load communication preferences');
+    if (!response.ok) {throw new Error('Failed to load communication preferences');}
     const data = await response.json();
     const normalized = normalizePreferences(
       (data?.preferences ?? data) as Partial<CommunicationPreferences>,
@@ -370,7 +370,7 @@ export async function getCommunicationPreferences(userId?: string | null): Promi
     }
 
     const direct = await getDirectCommunicationPreferences(userId);
-    if (!direct) return localPrefs;
+    if (!direct) {return localPrefs;}
     const normalized = normalizeDirectPreferences(
       direct as Record<string, unknown> | null,
     );
@@ -422,7 +422,7 @@ export async function updateCommunicationPreferences(
           }),
           body: JSON.stringify(merged),
         });
-        if (!response.ok) throw new Error('Failed to update communication preferences');
+        if (!response.ok) {throw new Error('Failed to update communication preferences');}
         const payload = await response.json().catch(() => ({ preferences: merged }));
         return normalizePreferences(
           (payload?.preferences ?? payload ?? merged) as Partial<CommunicationPreferences>,
@@ -499,7 +499,7 @@ export async function queueCommunicationDeliveries(args: {
         deliveries: args.requests,
       }),
     });
-    if (!response.ok) throw new Error('Failed to queue communication deliveries');
+    if (!response.ok) {throw new Error('Failed to queue communication deliveries');}
     return { queued: localRecords.length, source: 'server' as const };
   } catch (error) {
     if (!allowDirectSupabaseFallback()) {

@@ -69,8 +69,8 @@ test.describe('Accessibility — guest pages', () => {
         console.error(
           `[A11y] ${page.name} violations:\n`,
           results.violations.map(v =>
-            `  [${v.impact?.toUpperCase()}] ${v.id}: ${v.description}\n` +
-            v.nodes.slice(0, 2).map(n => `    → ${n.html}`).join('\n'),
+            `  [${v.impact?.toUpperCase()}] ${v.id}: ${v.description}\n${ 
+            v.nodes.slice(0, 2).map(n => `    → ${n.html}`).join('\n')}`,
           ).join('\n'),
         );
       }
@@ -101,8 +101,8 @@ test.describe('Accessibility — authenticated pages', () => {
         console.error(
           `[A11y] ${pg.name} violations:\n`,
           results.violations.map(v =>
-            `  [${v.impact?.toUpperCase()}] ${v.id}: ${v.description}\n` +
-            v.nodes.slice(0, 2).map(n => `    → ${n.html}`).join('\n'),
+            `  [${v.impact?.toUpperCase()}] ${v.id}: ${v.description}\n${ 
+            v.nodes.slice(0, 2).map(n => `    → ${n.html}`).join('\n')}`,
           ).join('\n'),
         );
       }

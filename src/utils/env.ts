@@ -290,8 +290,8 @@ export function getSupportEmailUrl(subject = 'Wasel Support', body = ''): string
   }
 
   const search = new URLSearchParams();
-  if (subject) search.set('subject', subject);
-  if (body) search.set('body', body);
+  if (subject) {search.set('subject', subject);}
+  if (body) {search.set('body', body);}
   const suffix = search.toString();
   return `mailto:${supportEmail}${suffix ? `?${suffix}` : ''}`;
 }

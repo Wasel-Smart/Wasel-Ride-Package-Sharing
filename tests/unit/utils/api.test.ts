@@ -118,13 +118,13 @@ describe('getApiHeaders()', () => {
 
   it('returns Authorization header', () => {
     const headers = getApiHeaders() as Record<string, string>;
-    expect(headers['Authorization']).toBeTruthy();
-    expect(headers['Authorization']).toMatch(/^Bearer/);
+    expect(headers.Authorization).toBeTruthy();
+    expect(headers.Authorization).toMatch(/^Bearer/);
   });
 
   it('uses provided access token in Authorization', () => {
     const headers = getApiHeaders('my-custom-token') as Record<string, string>;
-    expect(headers['Authorization']).toBe('Bearer my-custom-token');
+    expect(headers.Authorization).toBe('Bearer my-custom-token');
   });
 
   it('includes X-Client-Info header', () => {
