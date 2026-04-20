@@ -28,7 +28,7 @@ export default defineConfig({
     target: 'es2020',
     outDir: 'dist',
     sourcemap: 'hidden',
-    minify: false,
+    minify: 'esbuild',
     chunkSizeWarningLimit: 400,
     cssCodeSplit: true,
     reportCompressedSize: false, // Faster builds

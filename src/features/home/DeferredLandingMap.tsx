@@ -44,15 +44,12 @@ function LandingMapPlaceholder() {
 }
 
 export function DeferredLandingMap({ ar = false }: { ar?: boolean }) {
-  if (import.meta.env.MODE === 'test') {
-    return <LandingMapPlaceholder />;
-  }
-
+  const isTestEnv = import.meta.env.MODE === 'test';
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
 
   useEffect(() => {
-    if (shouldLoad) {
+    if (isTestEnv || shouldLoad) {
       return undefined;
     }
 
@@ -84,16 +81,16 @@ export function DeferredLandingMap({ ar = false }: { ar?: boolean }) {
       cancelIdleLoad();
       observer.disconnect();
     };
-  }, [shouldLoad]);
+  }, [isTestEnv, shouldLoad]);
 
   return (
-    <div ref={containerRef}>
-      {shouldLoad ? (
+    <div ref={isTestEnv ? undefined : containerRef}>
+      {isTestEnv || !shouldLoad ? (
+        <LandingMapPlaceholder />
+      ) : (
         <Suspense fallback={<LandingMapPlaceholder />}>
           <MobilityOSLandingMap ar={ar} />
         </Suspense>
-      ) : (
-        <LandingMapPlaceholder />
       )}
     </div>
   );

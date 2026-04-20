@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { testDataFactory, createMockApiResponse, resetMocks, setupMockFetch } from './test-utils';
-import { normalizeError, AuthenticationError, NetworkError } from '@/utils/errors';
+import { normalizeError, NetworkError } from '@/utils/errors';
 
 describe('Integration: Booking Flow', () => {
   beforeEach(() => {

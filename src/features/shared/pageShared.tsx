@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+ 
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { Shield } from 'lucide-react';

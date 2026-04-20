@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+ 
 /**
  * Shared page utilities extracted from WaselServicePage.tsx
  *

@@ -10,14 +10,27 @@ export function sanitizeForLog(input: unknown): string {
   
   const str = String(input);
   
-  // Remove or encode dangerous characters that could break log integrity
-  return str
-    .replace(/\r\n/g, '\\r\\n')  // Windows line endings
-    .replace(/\n/g, '\\n')      // Unix line endings
-    .replace(/\r/g, '\\r')      // Mac line endings
-    .replace(/\t/g, '\\t')      // Tabs
-    .replace(/\x00/g, '\\0')    // Null bytes
-    .replace(/[\x01-\x1F\x7F]/g, (char) => `\\x${char.charCodeAt(0).toString(16).padStart(2, '0')}`); // Control characters
+  // Remove or encode dangerous characters that could break log integrity.
+  return Array.from(str, (char) => {
+    switch (char) {
+      case '\r':
+        return '\\r';
+      case '\n':
+        return '\\n';
+      case '\t':
+        return '\\t';
+      default: {
+        const charCode = char.charCodeAt(0);
+        if (charCode === 0) {
+          return '\\0';
+        }
+        if (charCode < 32 || charCode === 127) {
+          return `\\x${charCode.toString(16).padStart(2, '0')}`;
+        }
+        return char;
+      }
+    }
+  }).join('');
 }
 
 export function sanitizeObjectForLog(obj: Record<string, unknown>): Record<string, string> {

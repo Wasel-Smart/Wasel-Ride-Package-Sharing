@@ -287,7 +287,7 @@ export function FindRidePage() {
         color: LANDING_COLORS.blue,
       },
     ];
-  }, [ar, LANDING_COLORS, findRidePath, packagesPath]);
+  }, [ar, findRidePath, packagesPath]);
 
   // Bullet points displayed under hero description
   const heroBullets = useMemo(
@@ -357,7 +357,7 @@ export function FindRidePage() {
         sparkline: [55, 62, 70, 78, 85, 92, 100],
       },
     ];
-  }, [ar, LANDING_COLORS]);
+  }, [ar]);
 
   const handleNavigate = useCallback(
     (path: string) => {

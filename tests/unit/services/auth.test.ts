@@ -2,7 +2,7 @@
  * Unit tests — src/services/auth.ts (logic layer)
  * All Supabase network calls are mocked — no real requests.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // ── Auth URL helpers ──────────────────────────────────────────────────────────
 // These helpers are pure functions and need no mocking.

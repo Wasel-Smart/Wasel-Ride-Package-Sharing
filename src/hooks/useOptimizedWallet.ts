@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from 'react';
-import type { WalletData, WalletTransaction } from '../services/walletApi';
+import type { WalletData } from '../services/walletApi';
 
 const MAX_TRANSACTIONS_DISPLAY = 100;
 

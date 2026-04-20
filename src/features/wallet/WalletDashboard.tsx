@@ -92,7 +92,7 @@ export function WalletDashboard() {
     withdrawMethod,
   } = useWalletDashboardController();
 
-  const { optimizedTransactions, walletSummary } = useOptimizedWallet(walletData);
+  const { optimizedTransactions } = useOptimizedWallet(walletData);
 
   const bal = walletData?.balance ?? 0;
   const pending = walletData?.pendingBalance ?? 0;

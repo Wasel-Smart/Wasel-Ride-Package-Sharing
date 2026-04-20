@@ -16,9 +16,7 @@ import {
   Brain,
   TrendingUp,
   Star,
-  Users,
   ArrowRight,
-  X,
 } from 'lucide-react';
 import { MorphingButton, useHapticFeedback, useAdvancedInView } from '../components/advanced-interactions';
 import { NEURAL_COLORS, SPACING, TYPOGRAPHY, SHADOWS, RADIUS } from '../styles/advanced-design-tokens';
@@ -89,27 +87,6 @@ const useVoiceSearch = () => {
   return { isListening, transcript, startListening, stopListening };
 };
 
-// Smart city suggestions based on user input
-const useSmartSuggestions = (input: string, exclude: string = '') => {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (input.length > 0) {
-      const filtered = CITIES
-        .filter(city => 
-          city.toLowerCase().includes(input.toLowerCase()) && 
-          city !== exclude
-        )
-        .slice(0, 5);
-      setSuggestions(filtered);
-    } else {
-      setSuggestions([]);
-    }
-  }, [input, exclude]);
-
-  return suggestions;
-};
-
 export function IntelligentSearchInterface({
   from,
   to,
@@ -125,12 +102,7 @@ export function IntelligentSearchInterface({
   const { ref, isInView } = useAdvancedInView();
   const { isListening, transcript, startListening, stopListening } = useVoiceSearch();
   
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeField, setActiveField] = useState<'from' | 'to' | null>(null);
-  const [inputValues, setInputValues] = useState({ from: '', to: '' });
-  
-  const fromSuggestions = useSmartSuggestions(inputValues.from, to);
-  const toSuggestions = useSmartSuggestions(inputValues.to, from);
 
   // Handle voice search results
   useEffect(() => {
@@ -162,19 +134,6 @@ export function IntelligentSearchInterface({
     } else {
       startListening();
     }
-  };
-
-  const handleSuggestionClick = (city: string, field: 'from' | 'to') => {
-    triggerHaptic('light');
-    if (field === 'from') {
-      onFromChange(city);
-      setInputValues(prev => ({ ...prev, from: '' }));
-    } else {
-      onToChange(city);
-      setInputValues(prev => ({ ...prev, to: '' }));
-    }
-    setShowSuggestions(false);
-    setActiveField(null);
   };
 
   const handleSwapCities = () => {

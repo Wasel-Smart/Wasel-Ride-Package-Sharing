@@ -63,6 +63,11 @@ const COPY = {
   },
 };
 
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform?: string }>;
+};
+
 export function WaselPWAInstallPrompt() {
   const { language } = useLanguage();
   const isAr = language === 'ar';
@@ -70,8 +75,7 @@ export function WaselPWAInstallPrompt() {
 
   const [show, setShow] = useState(false);
   const [platform, setPlatform] = useState<'ios' | 'android' | 'installed' | 'other'>('other');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
     // Already dismissed or installed
@@ -92,7 +96,7 @@ export function WaselPWAInstallPrompt() {
     // Android / Chrome desktop: wait for browser event
     const handler = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       setTimeout(() => setShow(true), 2000);
     };
     window.addEventListener('beforeinstallprompt', handler);

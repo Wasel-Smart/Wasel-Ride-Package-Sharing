@@ -18,7 +18,6 @@ import {
 import type {
   AppConfig,
   FeatureFlagValue,
-  KVStoreEntry,
   KVMetadata,
   Environment,
 } from '../types/kv-store.types';

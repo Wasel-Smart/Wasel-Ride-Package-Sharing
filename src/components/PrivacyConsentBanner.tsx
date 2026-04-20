@@ -37,23 +37,26 @@ const srOnly: React.CSSProperties = {
 };
 
 export function PrivacyConsentBanner() {
-  if (import.meta.env.MODE === 'test') {
-    return null;
-  }
-
+  const isTestEnv = import.meta.env.MODE === 'test';
   const { language } = useLanguage();
   const ar = language === 'ar';
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (isTestEnv) {
+      return undefined;
+    }
+
     // Defer slightly so the banner doesn't compete with the initial render
     const t = window.setTimeout(() => {
-      if (getConsentDecision() === null) setVisible(true);
+      if (getConsentDecision() === null) {
+        setVisible(true);
+      }
     }, 1_200);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [isTestEnv]);
 
-  if (!visible) return null;
+  if (isTestEnv || !visible) return null;
 
   const handleAccept = () => {
     recordConsentDecision('accepted');

@@ -150,9 +150,11 @@ export function useRideSearch(options: UseRideSearchOptions = {}) {
   }, [hydrateRequests, options.passengerId, state.results]);
 
   useEffect(() => {
+    const fromTimerId = fromTimerRef.current;
+    const toTimerId = toTimerRef.current;
     return () => {
-      if (fromTimerRef.current !== null) window.clearTimeout(fromTimerRef.current);
-      if (toTimerRef.current !== null) window.clearTimeout(toTimerRef.current);
+      if (fromTimerId !== null) window.clearTimeout(fromTimerId);
+      if (toTimerId !== null) window.clearTimeout(toTimerId);
     };
   }, []);
 

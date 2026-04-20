@@ -117,7 +117,7 @@ describe('supportInbox', () => {
       ],
     });
 
-    const created = createSupportTicket({
+    createSupportTicket({
       userId: 'user-123',
       topic: 'package_issue',
       subject: 'Package arrived damaged',

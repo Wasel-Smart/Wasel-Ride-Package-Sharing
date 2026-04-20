@@ -13,8 +13,7 @@
  * that are deterministic and testable.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { cleanup, render, act } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
+import { cleanup, render, act, type RenderResult } from '@testing-library/react';
 import MobilityOSCore from '../../../../src/features/mobility-os/MobilityOSCore';
 
 // ── Minimal mocks required for MobilityOSCore to mount ────────────────────
