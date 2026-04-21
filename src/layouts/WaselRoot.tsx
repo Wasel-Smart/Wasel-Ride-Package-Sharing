@@ -10,6 +10,7 @@ import { LANDING_DISPLAY, LANDING_FONT } from '../features/home/landingConstants
 import { landingPanel } from '../features/home/landing/landingTypes';
 import { F, R, GLOBAL_STYLES } from '../utils/wasel-ds';
 import { buildAuthPagePath } from '../utils/authFlow';
+import { applyAppRouteSeo } from '../utils/seo';
 import { MobileBottomNav } from '../components/EnhancedMobileBottomNav';
 import { AvailabilityBanner } from '../components/system/AvailabilityBanner';
 import { WaselBusinessFooter } from '../components/system/WaselPresence';
@@ -111,6 +112,10 @@ export default function WaselRoot() {
   useEffect(() => {
     setActiveGroup(null);
     setMobileOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    applyAppRouteSeo(location.pathname);
   }, [location.pathname]);
 
   const navigate = nav;

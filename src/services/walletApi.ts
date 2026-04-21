@@ -20,6 +20,7 @@ import {
   walletStepUpVerificationSchema,
 } from '../contracts/wallet';
 import { parseContract } from '../contracts/validation';
+import { getConfig } from '../utils/env';
 
 const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
 const PAYMENTS_API_BASE = API_URL ? `${API_URL}/payments` : '';
@@ -95,6 +96,23 @@ interface WalletBalanceSummary {
   currency: string;
 }
 
+function allowWalletClientFallback(): boolean {
+  const { allowLocalPersistenceFallback, enableDemoAccount, enablePersistedTestAuth } = getConfig();
+  return allowLocalPersistenceFallback || enableDemoAccount || enablePersistedTestAuth;
+}
+
+function getWalletFallbackStorage(): Storage | null {
+  if (typeof window === 'undefined' || !allowWalletClientFallback()) {
+    return null;
+  }
+
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 interface ProcessWalletTransactionInput {
   amount: number;
   type: 'credit' | 'debit';
@@ -156,18 +174,20 @@ function demoPaymentIntentStorageKey(paymentIntentId: string) {
 }
 
 function persistWalletSnapshot(userId: string, snapshot: WalletSnapshot): void {
-  if (typeof window === 'undefined') {return;}
+  const storage = getWalletFallbackStorage();
+  if (!storage) {return;}
   const payload: PersistedWalletSnapshot = {
     storedAt: Date.now(),
     snapshot,
   };
-  window.localStorage.setItem(walletSnapshotStorageKey(userId), JSON.stringify(payload));
+  storage.setItem(walletSnapshotStorageKey(userId), JSON.stringify(payload));
 }
 
 function readPersistedWalletSnapshot(userId: string): WalletSnapshot | null {
-  if (typeof window === 'undefined') {return null;}
+  const storage = getWalletFallbackStorage();
+  if (!storage) {return null;}
   try {
-    const raw = window.localStorage.getItem(walletSnapshotStorageKey(userId));
+    const raw = storage.getItem(walletSnapshotStorageKey(userId));
     if (!raw) {return null;}
     const parsed = JSON.parse(raw) as PersistedWalletSnapshot;
     if (!parsed?.snapshot || typeof parsed.storedAt !== 'number') {return null;}
@@ -179,17 +199,19 @@ function readPersistedWalletSnapshot(userId: string): WalletSnapshot | null {
 }
 
 function persistDemoPaymentIntent(record: PersistedDemoPaymentIntent): void {
-  if (typeof window === 'undefined') {return;}
-  window.localStorage.setItem(
+  const storage = getWalletFallbackStorage();
+  if (!storage) {return;}
+  storage.setItem(
     demoPaymentIntentStorageKey(record.intent.id),
     JSON.stringify(record),
   );
 }
 
 function readDemoPaymentIntent(paymentIntentId: string): PersistedDemoPaymentIntent | null {
-  if (typeof window === 'undefined') {return null;}
+  const storage = getWalletFallbackStorage();
+  if (!storage) {return null;}
   try {
-    const raw = window.localStorage.getItem(demoPaymentIntentStorageKey(paymentIntentId));
+    const raw = storage.getItem(demoPaymentIntentStorageKey(paymentIntentId));
     if (!raw) {return null;}
     const parsed = JSON.parse(raw) as PersistedDemoPaymentIntent;
     if (!parsed?.intent?.id || !parsed.userId) {return null;}
@@ -498,7 +520,9 @@ export const walletApi = {
       try {
         return await getFreshWalletSnapshot(userId);
       } catch (error) {
-        const persisted = readPersistedWalletSnapshot(userId);
+        const persisted = allowWalletClientFallback()
+          ? readPersistedWalletSnapshot(userId)
+          : null;
         if (persisted) {
           return {
             data: persisted.data,
@@ -641,7 +665,7 @@ export const walletApi = {
         typeof options?.metadata?.initiatedByUserId === 'string'
           ? options.metadata.initiatedByUserId
           : '';
-      if (!readPersistedWalletSnapshot(userId)) {
+      if (!allowWalletClientFallback() || !readPersistedWalletSnapshot(userId)) {
         throw error;
       }
 
@@ -665,7 +689,9 @@ export const walletApi = {
         WALLET_CONTRACT_VERSION,
       );
     } catch (error) {
-      const fallback = settleDemoPaymentIntent(paymentIntentId);
+      const fallback = allowWalletClientFallback()
+        ? settleDemoPaymentIntent(paymentIntentId)
+        : null;
       if (fallback) {
         return fallback;
       }
@@ -688,7 +714,9 @@ export const walletApi = {
         WALLET_CONTRACT_VERSION,
       );
     } catch (error) {
-      const fallback = readDemoPaymentIntentStatus(paymentIntentId);
+      const fallback = allowWalletClientFallback()
+        ? readDemoPaymentIntentStatus(paymentIntentId)
+        : null;
       if (fallback) {
         return fallback;
       }

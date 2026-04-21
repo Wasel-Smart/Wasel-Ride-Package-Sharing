@@ -6,8 +6,10 @@ import {
   useRouteError,
 } from 'react-router';
 import { useLocalAuth } from './contexts/LocalAuth';
+import { useAuth } from './contexts/AuthContext';
 import WaselRoot from './layouts/WaselRoot';
 import { buildAuthPagePath } from './utils/authFlow';
+import { getConfig } from './utils/env';
 
 type RouteComponent = ComponentType<Record<string, unknown>>;
 type LazyModule = {
@@ -94,11 +96,23 @@ function RedirectTo({ to }: { to: string }) {
 }
 
 function AppEntryRedirect() {
-  const { user, loading } = useLocalAuth();
+  const { user: localUser, loading: localLoading } = useLocalAuth();
+  const { user: authUser, session, loading: authLoading, isBackendConnected } = useAuth();
+  const { allowLocalPersistenceFallback, enableDemoAccount, enablePersistedTestAuth } = getConfig();
+  const allowLocalFallback =
+    !isBackendConnected ||
+    allowLocalPersistenceFallback ||
+    enableDemoAccount ||
+    enablePersistedTestAuth;
+  const isAuthenticated = allowLocalFallback
+    ? Boolean(localUser)
+    : Boolean(session?.user ?? authUser);
+  const loading = isBackendConnected && !allowLocalFallback ? authLoading : localLoading;
+
   if (loading) {
     return <PageLoader />;
   }
-  return <Navigate to={user ? '/app/find-ride' : buildAuthPagePath('signin')} replace />;
+  return <Navigate to={isAuthenticated ? '/app/find-ride' : buildAuthPagePath('signin')} replace />;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

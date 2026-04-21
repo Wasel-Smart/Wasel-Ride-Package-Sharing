@@ -13,6 +13,10 @@ import { initSupabaseListeners, isSupabaseConfigured, supabase } from '../utils/
 import { getConfig } from '../utils/env';
 import { scheduleDeferredTask } from '../utils/runtimeScheduling';
 import { omitUndefined } from '../utils/object';
+import {
+  getLocalAuthUserStorage,
+  LOCAL_AUTH_USER_STORAGE_KEY,
+} from '../utils/authStorage';
 
 export interface WaselUser {
   id: string;
@@ -242,16 +246,21 @@ interface LocalAuthCtx {
 }
 
 const Ctx = createContext<LocalAuthCtx | null>(null);
-const STORAGE_KEY = 'wasel_local_user_v2';
+const STORAGE_KEY = LOCAL_AUTH_USER_STORAGE_KEY;
 const AUTH_BOOTSTRAP_GUARD_MS = 2500;
 
 function loadUser(): WaselUser | null {
+  const storage = getLocalAuthUserStorage();
+  if (!storage) {
+    return null;
+  }
+
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = normalizeStoredUser(JSON.parse(raw));
     if (!parsed) {
-      localStorage.removeItem(STORAGE_KEY);
+      storage.removeItem(STORAGE_KEY);
       return null;
     }
     return parsed;
@@ -261,9 +270,14 @@ function loadUser(): WaselUser | null {
 }
 
 function saveUser(user: WaselUser | null) {
+  const storage = getLocalAuthUserStorage();
+  if (!storage) {
+    return;
+  }
+
   try {
-    if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    else localStorage.removeItem(STORAGE_KEY);
+    if (user) storage.setItem(STORAGE_KEY, JSON.stringify(user));
+    else storage.removeItem(STORAGE_KEY);
   } catch {
     // Ignore storage errors.
   }
@@ -285,7 +299,7 @@ function toMessage(error: unknown): string {
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<WaselUser | null>(loadUser);
   const [loading, setLoading] = useState(true);
-  const { enableDemoAccount, enablePersistedTestAuth } = getConfig();
+  const { enableDemoAccount, enablePersistedTestAuth, allowLocalPersistenceFallback } = getConfig();
   const isPublicLanding =
     typeof window !== 'undefined' && window.location.pathname === '/';
 
@@ -358,11 +372,14 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         });
         setAndPersist(mapped);
       } catch {
-        const demoUser = getPersistedDemoUser();
-        if (demoUser) {
-          setAndPersist(demoUser);
+        if (allowLocalPersistenceFallback) {
+          const demoUser = getPersistedDemoUser();
+          if (demoUser) {
+            setAndPersist(demoUser);
+          }
+        } else {
+          setAndPersist(null);
         }
-        // Keep any previously stored user if backend sync fails.
       } finally {
         if (bootstrapGuard !== null) {
           window.clearTimeout(bootstrapGuard);
@@ -419,7 +436,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         window.clearTimeout(bootstrapGuard);
       }
     };
-  }, [enableDemoAccount, enablePersistedTestAuth, isPublicLanding]);
+  }, [allowLocalPersistenceFallback, enableDemoAccount, enablePersistedTestAuth, isPublicLanding]);
 
   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
     setLoading(true);

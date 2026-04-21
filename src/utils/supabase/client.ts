@@ -15,6 +15,7 @@ import {
   publicAnonKey,
   publicSupabaseUrl,
 } from './info';
+import { getSupabaseAuthStorage } from '../authStorage';
 
 function isPlaceholderValue(value: string | undefined): boolean {
   if (!value) {return true;}
@@ -164,7 +165,7 @@ const getSupabaseClient = () => {
         autoRefreshToken:   true,
         persistSession:     true,
         detectSessionInUrl: true,
-        storage: getBrowserStorage('localStorage'),
+        storage: getSupabaseAuthStorage(),
       },
       global: {
         headers: { 'X-Client-Info': 'wasel-web' },

@@ -24,6 +24,7 @@
 
 import { onCLS, onFCP, onINP, onLCP, onTTFB, type Metric } from 'web-vitals';
 import { supabase } from '../services/core';
+import { hasTelemetryConsent } from './consent';
 
 type MetricsClient = {
   from: (table: string) => {
@@ -48,6 +49,7 @@ const BUDGETS: Record<string, { good: number; poor: number }> = {
   FCP:  { good: 1800,  poor: 3000  },
   TTFB: { good: 800,   poor: 1800  },
 };
+let webVitalsReporterInitialized = false;
 
 function rating(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
   const budget = BUDGETS[name];
@@ -58,6 +60,10 @@ function rating(name: string, value: number): 'good' | 'needs-improvement' | 'po
 }
 
 async function report(metric: Metric): Promise<void> {
+  if (!hasTelemetryConsent()) {
+    return;
+  }
+
   const r = rating(metric.name, metric.value);
   const isLocalAuditHost =
     typeof window !== 'undefined' &&
@@ -94,6 +100,11 @@ async function report(metric: Metric): Promise<void> {
  * with its final stable value, minimising write volume.
  */
 export function initWebVitalsReporter(): void {
+  if (webVitalsReporterInitialized || !hasTelemetryConsent()) {
+    return;
+  }
+
+  webVitalsReporterInitialized = true;
   onLCP(report);
   onCLS(report);
   onINP(report);
