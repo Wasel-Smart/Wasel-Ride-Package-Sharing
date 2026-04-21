@@ -1,90 +1,66 @@
-/**
- * MobileBottomNav — unified design system
- */
-
-import { Clock, Package, Search, User2, Wallet } from 'lucide-react';
+import { Bus, Clock, MapPin, Package, Search, User2, Wallet } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useLocalAuth } from '../contexts/LocalAuth';
 
-const navItems = [
-  { id: 'find', path: '/', label: 'Find', labelAr: 'ابحث', Icon: Search },
-  { id: 'trips', path: '/app/my-trips', label: 'Trips', labelAr: 'رحلاتي', Icon: Clock },
-  { id: 'packages', path: '/app/packages', label: 'Packages', labelAr: 'طرود', Icon: Package },
-  { id: 'wallet', path: '/app/wallet', label: 'Wallet', labelAr: 'محفظة', Icon: Wallet },
-  { id: 'profile', path: '/app/profile', label: 'Profile', labelAr: 'حسابي', Icon: User2 },
+type NavItem = {
+  icon: typeof Search;
+  id: string;
+  label: string;
+  labelAr: string;
+  path: string;
+  protected?: boolean;
+};
+
+const navItems: NavItem[] = [
+  { icon: Search, id: 'find', label: 'Find', labelAr: 'ابحث', path: '/app/find-ride' },
+  { icon: Bus, id: 'bus', label: 'Bus', labelAr: 'باص', path: '/app/bus' },
+  { icon: Package, id: 'packages', label: 'Packages', labelAr: 'طرود', path: '/app/packages' },
+  { icon: MapPin, id: 'mobility', label: 'Mobility', labelAr: 'الشبكة', path: '/app/mobility-os', protected: true },
+  { icon: Clock, id: 'trips', label: 'Trips', labelAr: 'رحلاتي', path: '/app/my-trips', protected: true },
+  { icon: Wallet, id: 'wallet', label: 'Wallet', labelAr: 'محفظة', path: '/app/wallet', protected: true },
+  { icon: User2, id: 'profile', label: 'Profile', labelAr: 'حسابي', path: '/app/profile', protected: true },
 ];
 
 interface MobileBottomNavProps {
-  language?: 'en' | 'ar';
+  language?: 'ar' | 'en';
+}
+
+function normalizePath(pathname: string) {
+  if (pathname.startsWith('/app/')) {
+    return pathname;
+  }
+
+  return pathname === '/' ? '/app/find-ride' : `/app${pathname}`;
 }
 
 export function MobileBottomNav({ language }: MobileBottomNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const isArabic = language === 'ar';
-
-  const isActive = (path: string) =>
-    location.pathname === path || location.pathname.startsWith(path + '/');
+  const { language: contextLanguage } = useLanguage();
+  const { user } = useLocalAuth();
+  const activeLanguage = language ?? contextLanguage;
+  const pathname = normalizePath(location.pathname);
+  const visibleItems = navItems.filter((item) => (item.protected ? Boolean(user) : true));
 
   return (
-    <>
-      <style>{`
-        .wasel-bottom-nav { display: none; }
-        @media (max-width: 767px) {
-          .wasel-bottom-nav { display: flex; }
-        }
-      `}</style>
-      <nav
-        className="wasel-bottom-nav"
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          background: 'var(--bg-secondary)',
-          borderTop: '1px solid var(--border)',
-          padding: '8px 4px 24px',
-          flexDirection: 'row',
-          justifyContent: 'space-around',
-          alignItems: 'center',
-        }}
-      >
-        {navItems.map(item => {
-          const active = isActive(item.path);
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => navigate(item.path)}
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 4,
-                padding: '8px 4px',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              <item.Icon
-                size={22}
-                style={{ color: active ? 'var(--accent)' : 'var(--text-muted)' }}
-              />
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: active ? 600 : 400,
-                  color: active ? 'var(--accent)' : 'var(--text-muted)',
-                }}
-              >
-                {isArabic ? item.labelAr : item.label}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
-    </>
+    <nav aria-label="Mobile navigation" className="ds-mobile-bottom-nav">
+      {visibleItems.map((item) => {
+        const active = pathname === item.path || pathname.startsWith(`${item.path}/`);
+
+        return (
+          <button
+            className="ds-mobile-bottom-nav__item"
+            data-active={active}
+            key={item.id}
+            onClick={() => navigate(item.path)}
+            type="button"
+          >
+            <item.icon aria-hidden="true" className="ds-mobile-bottom-nav__icon" size={18} />
+            <span>{activeLanguage === 'ar' ? item.labelAr : item.label}</span>
+          </button>
+        );
+      })}
+    </nav>
   );
 }

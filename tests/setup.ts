@@ -14,6 +14,42 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
+if (!('requestIdleCallback' in window)) {
+  Object.defineProperty(window, 'requestIdleCallback', {
+    configurable: true,
+    writable: true,
+    value: (callback: IdleRequestCallback) =>
+      window.setTimeout(
+        () =>
+          callback({
+            didTimeout: false,
+            timeRemaining: () => 0,
+          } as IdleDeadline),
+        1,
+      ),
+  });
+}
+
+if (!('cancelIdleCallback' in window)) {
+  Object.defineProperty(window, 'cancelIdleCallback', {
+    configurable: true,
+    writable: true,
+    value: (handle: number) => window.clearTimeout(handle),
+  });
+}
+
+Object.defineProperty(globalThis, 'requestIdleCallback', {
+  configurable: true,
+  writable: true,
+  value: window.requestIdleCallback,
+});
+
+Object.defineProperty(globalThis, 'cancelIdleCallback', {
+  configurable: true,
+  writable: true,
+  value: window.cancelIdleCallback,
+});
+
 class MockIntersectionObserver implements IntersectionObserver {
   readonly root = null;
   readonly rootMargin = '0px';

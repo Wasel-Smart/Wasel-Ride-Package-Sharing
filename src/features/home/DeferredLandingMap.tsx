@@ -13,9 +13,9 @@ function LandingMapPlaceholder() {
       style={{
         minHeight: 'clamp(440px, 62vw, 720px)',
         borderRadius: 30,
-        border: '1px solid rgba(25,231,187,0.08)',
+        border: '1px solid rgba(245,154,44,0.08)',
         background:
-          'radial-gradient(circle at 50% 14%, rgba(25,231,187,0.16), rgba(4,18,30,0) 20%), radial-gradient(circle at 78% 80%, rgba(101,225,255,0.12), rgba(4,18,30,0) 24%), linear-gradient(180deg, rgba(9,20,34,0.98), rgba(4,11,21,1))',
+          'radial-gradient(circle at 50% 14%, rgba(245,154,44,0.16), rgba(15,17,19,0) 20%), radial-gradient(circle at 78% 80%, rgba(255,179,87,0.12), rgba(15,17,19,0) 24%), linear-gradient(180deg, rgba(32,24,18,0.98), rgba(15,17,19,1))',
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 28px 72px rgba(0,0,0,0.26)',
         overflow: 'hidden',
         position: 'relative',

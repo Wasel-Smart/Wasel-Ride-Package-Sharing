@@ -1,7 +1,7 @@
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router';
-import type { waselRouter } from '../../router';
 import { Toaster } from 'sonner';
+import type { waselRouter } from '../../router';
 import { AuthProvider } from '../../contexts/AuthContext';
 import { LocalAuthProvider } from '../../contexts/LocalAuth';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -10,8 +10,8 @@ import { AppErrorBoundary } from './ErrorBoundary';
 import { AppRuntimeCoordinator } from './RuntimeCoordinator';
 
 interface AppShellProps {
-  queryClient: QueryClient;
   initialLanguage: 'en' | 'ar';
+  queryClient: QueryClient;
   router: typeof waselRouter;
 }
 
@@ -28,14 +28,9 @@ export function AppShell({ queryClient, initialLanguage, router }: AppShellProps
             <PrivacyConsentBanner />
             <Toaster
               position="bottom-center"
+              theme={resolvedTheme}
               toastOptions={{
-                style: {
-                  background: 'var(--surface-glass)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text-primary)',
-                  boxShadow: 'var(--wasel-shadow-md)',
-                  fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
-                },
+                className: 'sonner-toast',
               }}
             />
           </AuthProvider>

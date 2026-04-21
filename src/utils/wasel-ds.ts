@@ -2,61 +2,59 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 /**
- * Wasel brand tokens aligned to the glowing network mark.
+ * Shared Wasel helper tokens aligned to the active landing-page palette.
  *
- * The identity is built around:
- * - luminous teal for primary actions and live signal states
- * - mint and aqua highlights for routes, glows, and focus feedback
- * - deep navy and graphite surfaces for the atmospheric shell
+ * Decorative colors should mirror the current orange/beige Wasel identity,
+ * while semantic state colors still come from the design-system theme.
  */
 
 export const C = {
-  bg: 'var(--bg-primary, #F8FAFC)',
-  bgAlt: 'var(--bg-tertiary, #F1F5F9)',
-  bgDeep: 'var(--bg-primary, #F8FAFC)',
-  card: '#FFFFFF',
-  cardSolid: '#FFFFFF',
-  card2: 'var(--service-card-strong, #F1F5F9)',
-  panel: 'var(--surface-muted, #F8FAFC)',
-  elevated: 'var(--surface-muted-strong, #F1F5F9)',
+  bg: 'var(--ds-page, #0f1113)',
+  bgAlt: 'var(--ds-page-muted, #15181c)',
+  bgDeep: 'var(--ds-page, #0f1113)',
+  card: 'var(--ds-surface, #1a1d22)',
+  cardSolid: 'var(--ds-surface, #1a1d22)',
+  card2: 'var(--ds-surface-raised, #20242a)',
+  panel: 'var(--ds-surface-soft, #262b32)',
+  elevated: 'var(--ds-surface-raised, #20242a)',
 
-  navy: '#0F172A',
-  navyMid: '#1E293B',
-  navyLight: '#475569',
+  navy: '#0f1113',
+  navyMid: '#15181c',
+  navyLight: '#20242a',
 
-  cyan: 'var(--primary, #3A7CA5)',
-  cyanDark: 'var(--primary, #3A7CA5)',
-  cyanDim: 'rgba(58,124,165,0.10)',
-  cyanGlow: 'rgba(58,124,165,0.16)',
-  blue: 'var(--accent-secondary, #5B9BD5)',
-  blueLight: 'rgba(91,155,213,0.12)',
-  blueDim: 'rgba(91,155,213,0.10)',
-  gold: 'var(--warning, #F59E0B)',
-  goldDim: 'rgba(245,158,11,0.10)',
-  green: 'var(--success, #22C55E)',
-  greenDim: 'rgba(34,197,94,0.10)',
-  purple: '#5B9BD5',
-  purpleDim: 'rgba(91,155,213,0.10)',
-  orange: '#F59E0B',
-  orangeDim: 'rgba(245,158,11,0.10)',
+  cyan: 'var(--ds-accent, #f59a2c)',
+  cyanDark: 'var(--ds-accent, #f59a2c)',
+  cyanDim: 'color-mix(in srgb, var(--ds-accent, #f59a2c) 12%, transparent)',
+  cyanGlow: 'color-mix(in srgb, var(--ds-accent-strong, #ffb357) 18%, transparent)',
+  blue: 'var(--ds-accent-strong, #ffb357)',
+  blueLight: 'color-mix(in srgb, var(--ds-accent-strong, #ffb357) 12%, transparent)',
+  blueDim: 'color-mix(in srgb, var(--ds-accent-strong, #ffb357) 10%, transparent)',
+  gold: 'var(--ds-warning, #efb45d)',
+  goldDim: 'color-mix(in srgb, var(--ds-warning, #efb45d) 10%, transparent)',
+  green: 'var(--ds-success, #79c67d)',
+  greenDim: 'color-mix(in srgb, var(--ds-success, #79c67d) 10%, transparent)',
+  purple: 'var(--ds-info, #6bb9df)',
+  purpleDim: 'color-mix(in srgb, var(--ds-info, #6bb9df) 10%, transparent)',
+  orange: 'var(--ds-accent, #f59a2c)',
+  orangeDim: 'color-mix(in srgb, var(--ds-accent, #f59a2c) 10%, transparent)',
 
-  text: 'var(--text-primary, #0F172A)',
-  textSub: 'var(--text-secondary, #475569)',
-  textMuted: 'var(--text-muted, #64748B)',
-  textDim: 'var(--text-muted, #64748B)',
+  text: 'var(--ds-text, #f5efe7)',
+  textSub: 'var(--ds-text-muted, #b9aea0)',
+  textMuted: 'var(--ds-text-soft, #8b8277)',
+  textDim: 'var(--ds-text-soft, #8b8277)',
 
-  border: 'var(--border, #E2E8F0)',
-  borderHov: 'var(--border-strong, #CBD5E1)',
-  borderFaint: 'var(--surface-divider, #E2E8F0)',
+  border: 'var(--ds-border, #313841)',
+  borderHov: 'var(--ds-border-strong, #45505c)',
+  borderFaint: 'color-mix(in srgb, var(--ds-border, #313841) 72%, transparent)',
 
-  error: 'var(--danger, #EF4444)',
-  errorDim: 'rgba(239,68,68,0.10)',
-  warning: 'var(--warning, #F59E0B)',
-  success: 'var(--success, #22C55E)',
-  info: 'var(--accent-secondary, #5B9BD5)',
+  error: 'var(--ds-danger, #ee705d)',
+  errorDim: 'color-mix(in srgb, var(--ds-danger, #ee705d) 10%, transparent)',
+  warning: 'var(--ds-warning, #efb45d)',
+  success: 'var(--ds-success, #79c67d)',
+  info: 'var(--ds-info, #6bb9df)',
 
-  overlay: 'var(--bg-overlay, rgba(15,23,42,0.08))',
-  glass: '#FFFFFF',
+  overlay: 'var(--ds-surface-overlay, rgb(15 17 19 / 0.8))',
+  glass: 'var(--ds-surface, #1a1d22)',
 } as const;
 
 export const F = "var(--wasel-font-sans, 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif)";
@@ -149,15 +147,18 @@ export const SH = {
   inner: 'inset 0 1px 0 rgb(255 255 255 / 0.05)',
 } as const;
 
-export const GRAD = '#3A7CA5';
-export const GRAD_GOLD = '#F59E0B';
-export const GRAD_GREEN = '#22C55E';
-export const GRAD_NAVY = 'linear-gradient(135deg, #1E3A5F 0%, #2D5A8E 54%, #3A7CA5 100%)';
-export const GRAD_PURPLE = '#5B9BD5';
-export const GRAD_HERO = 'linear-gradient(135deg, #1E3A5F 0%, #2D5A8E 54%, #3A7CA5 100%)';
-export const GRAD_SIGNAL = '#3A7CA5';
+export const GRAD = 'var(--ds-accent, #f59a2c)';
+export const GRAD_GOLD = 'var(--ds-warning, #efb45d)';
+export const GRAD_GREEN = 'var(--ds-success, #79c67d)';
+export const GRAD_NAVY =
+  'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted, #15181c) 88%, var(--ds-accent-soft, #3f2a15) 12%) 0%, color-mix(in srgb, var(--ds-page, #0f1113) 92%, var(--ds-accent-soft, #3f2a15) 8%) 54%, var(--ds-page, #0f1113) 100%)';
+export const GRAD_PURPLE = 'var(--ds-info, #6bb9df)';
+export const GRAD_HERO =
+  'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted, #15181c) 88%, var(--ds-accent-soft, #3f2a15) 12%) 0%, color-mix(in srgb, var(--ds-surface, #1a1d22) 92%, var(--ds-accent-soft, #3f2a15) 8%) 54%, var(--ds-page, #0f1113) 100%)';
+export const GRAD_SIGNAL =
+  'linear-gradient(135deg, var(--ds-accent-strong, #ffb357) 0%, var(--ds-accent, #f59a2c) 100%)';
 export const GRAD_AURORA =
-  'radial-gradient(circle at top, rgba(58,124,165,0.14), rgba(91,155,213,0.08) 44%, transparent 74%)';
+  'radial-gradient(circle at top, color-mix(in srgb, var(--ds-accent, #f59a2c) 16%, transparent), color-mix(in srgb, var(--ds-accent-strong, #ffb357) 10%, transparent) 44%, transparent 74%)';
 
 export const ANIM = {
   dur: {
@@ -283,8 +284,8 @@ export const GLOBAL_STYLES = `
   50% { opacity: 0.6; transform: scale(0.92); }
 }
 @keyframes pulse-glow {
-  0%,100% { box-shadow: 0 0 18px rgba(25,231,187,0.18); }
-  50% { box-shadow: 0 0 28px rgba(25,231,187,0.26), 0 0 36px rgba(162,255,231,0.16); }
+  0%,100% { box-shadow: 0 0 18px rgba(245,154,44,0.18); }
+  50% { box-shadow: 0 0 28px rgba(245,154,44,0.26), 0 0 36px rgba(255,179,87,0.16); }
 }
 @keyframes shimmer {
   0% { background-position: -1000px 0; }

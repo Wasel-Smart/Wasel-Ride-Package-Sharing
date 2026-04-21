@@ -46,10 +46,10 @@ type FleetVehicle = {
 const VIEWBOX_WIDTH = 720;
 const VIEWBOX_HEIGHT = 560;
 const FLOW_SPEED_SCALE = 0.42;
-const PASSENGER_COLOR = '#EAF7FF';
-const PASSENGER_GLOW = 'rgba(234, 247, 255, 0.34)';
-const PACKAGE_COLOR = '#8BD8FF';
-const PACKAGE_GLOW = 'rgba(139, 216, 255, 0.3)';
+const PASSENGER_COLOR = '#F5EFE7';
+const PASSENGER_GLOW = 'rgba(245, 239, 231, 0.34)';
+const PACKAGE_COLOR = '#F59A2C';
+const PACKAGE_GLOW = 'rgba(245, 154, 44, 0.3)';
 const VEHICLE_COUNT = 28;
 const TRAFFIC_FREE_SPEED_KPH = 120;
 const TRAFFIC_JAM_DENSITY = 150;
@@ -669,7 +669,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
             >
               <stop offset="0" stopColor="#F7FCFF" />
               <stop offset="0.5" stopColor={PASSENGER_COLOR} />
-              <stop offset="1" stopColor="#A9E3FF" />
+              <stop offset="1" stopColor="#FFB357" />
             </linearGradient>
             <linearGradient
               id="landing-package-gradient"
@@ -679,7 +679,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
               y2="112"
               gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0" stopColor="#A9E3FF" />
+              <stop offset="0" stopColor="#FFB357" />
               <stop offset="0.54" stopColor={PACKAGE_COLOR} />
               <stop offset="1" stopColor="#F7FCFF" />
             </linearGradient>
@@ -894,7 +894,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                 cy={vehicle.point.y}
                 r={vehicle.fresh ? 10.8 : 9}
                 fill="none"
-                stroke={vehicle.fresh ? 'rgba(234,247,255,0.9)' : 'rgba(169,227,255,0.64)'}
+                stroke={vehicle.fresh ? 'rgba(245,239,231,0.9)' : 'rgba(255,179,87,0.64)'}
                 strokeWidth="1.3"
                 opacity={vehicle.fresh ? 0.92 : 0.7}
               />

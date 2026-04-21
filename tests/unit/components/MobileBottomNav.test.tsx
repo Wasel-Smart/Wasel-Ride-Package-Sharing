@@ -9,12 +9,17 @@ const mockUseLocalAuth = vi.fn();
 
 vi.mock('motion/react', () => ({
   motion: {
-    button: ({ children, whileTap: _whileTap, transition: _transition, ...props }: PropsWithChildren<Record<string, unknown>>) => (
-      <button {...props}>{children}</button>
-    ),
-    div: ({ children, layoutId: _layoutId, ...props }: PropsWithChildren<Record<string, unknown>>) => (
-      <div {...props}>{children}</div>
-    ),
+    button: ({
+      children,
+      whileTap: _whileTap,
+      transition: _transition,
+      ...props
+    }: PropsWithChildren<Record<string, unknown>>) => <button {...props}>{children}</button>,
+    div: ({
+      children,
+      layoutId: _layoutId,
+      ...props
+    }: PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>,
   },
 }));
 
@@ -68,6 +73,6 @@ describe('MobileBottomNav', () => {
 
     expect(screen.getByRole('button', { name: 'Wallet', hidden: true })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Profile', hidden: true })).toBeInTheDocument();
-    expect(mockNavigate).toHaveBeenCalledWith('/my-trips');
+    expect(mockNavigate).toHaveBeenCalledWith('/app/my-trips');
   });
 });
