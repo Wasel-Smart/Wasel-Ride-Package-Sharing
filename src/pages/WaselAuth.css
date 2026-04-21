@@ -861,7 +861,7 @@
   }
 
   .auth-landing__hero-panel {
-    min-height: 0;
+    display: none;
   }
 
   .auth-landing__hero-copy {
