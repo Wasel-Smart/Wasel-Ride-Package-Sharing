@@ -70,7 +70,10 @@
     color-mix(in srgb, var(--auth-social-whatsapp) 10%, var(--bg-secondary));
   --auth-social-whatsapp-border:
     color-mix(in srgb, var(--auth-social-whatsapp) 22%, var(--border));
+  min-height: 100vh;
+  background: var(--auth-landing-bg);
   color: var(--auth-landing-text);
+  font-family: var(--wasel-font-sans);
 }
 
 .auth-landing__shell {
@@ -156,6 +159,7 @@
   overflow: hidden;
   min-height: 720px;
   border-radius: 38px;
+  background: var(--auth-landing-hero);
   box-shadow: var(--service-head-shadow);
 }
 
@@ -169,6 +173,10 @@
 .auth-landing__hero-map,
 .auth-landing__hero-scrim {
   inset: 0;
+}
+
+.auth-landing__hero-scrim {
+  background: var(--auth-landing-hero-scrim);
 }
 
 .auth-landing__hero-map {
@@ -211,6 +219,7 @@
 
 .auth-landing__hero-title,
 .auth-landing__form-heading h2 {
+  font-family: var(--wasel-font-display);
   margin: 0;
   line-height: 0.96;
   letter-spacing: -0.06em;
@@ -599,11 +608,43 @@
 .auth-strength__bar {
   height: 4px;
   border-radius: 999px;
+  background: var(--surface-divider);
 }
 
 .auth-strength__label {
   font-size: 0.76rem;
   font-weight: 700;
+}
+
+.auth-strength--weak {
+  --auth-strength-tone: var(--danger);
+}
+
+.auth-strength--fair {
+  --auth-strength-tone: var(--warning);
+}
+
+.auth-strength--good {
+  --auth-strength-tone: var(--accent);
+}
+
+.auth-strength--strong {
+  --auth-strength-tone: var(--success);
+}
+
+.auth-strength--score-1 .auth-strength__bar:nth-child(-n + 1),
+.auth-strength--score-2 .auth-strength__bar:nth-child(-n + 2),
+.auth-strength--score-3 .auth-strength__bar:nth-child(-n + 3),
+.auth-strength--score-4 .auth-strength__bar:nth-child(-n + 4),
+.auth-strength--score-5 .auth-strength__bar:nth-child(-n + 5) {
+  background: var(--auth-strength-tone);
+}
+
+.auth-strength--weak .auth-strength__label,
+.auth-strength--fair .auth-strength__label,
+.auth-strength--good .auth-strength__label,
+.auth-strength--strong .auth-strength__label {
+  color: var(--auth-strength-tone);
 }
 
 .auth-password-checklist {
@@ -731,6 +772,43 @@
 
 .auth-landing__social-copy span {
   font-size: 0.76rem;
+}
+
+.auth-landing__social-button {
+  --auth-social-accent: var(--text-primary);
+  --auth-social-bg: var(--bg-secondary);
+  --auth-social-border: var(--auth-landing-social-border);
+  border-color: var(--auth-social-border);
+  background: linear-gradient(180deg, var(--auth-social-bg), var(--bg-secondary));
+}
+
+.auth-landing__social-button--google {
+  --auth-social-accent: var(--auth-social-google);
+  --auth-social-bg: var(--auth-social-google-bg);
+  --auth-social-border: var(--auth-social-google-border);
+}
+
+.auth-landing__social-button--facebook {
+  --auth-social-accent: var(--auth-social-facebook);
+  --auth-social-bg: var(--auth-social-facebook-bg);
+  --auth-social-border: var(--auth-social-facebook-border);
+}
+
+.auth-landing__social-button--whatsapp {
+  --auth-social-accent: var(--auth-social-whatsapp);
+  --auth-social-bg: var(--auth-social-whatsapp-bg);
+  --auth-social-border: var(--auth-social-whatsapp-border);
+}
+
+.auth-landing__social-icon {
+  border-color: var(--auth-social-border);
+  background: var(--auth-social-bg);
+  color: var(--auth-social-accent);
+}
+
+.auth-landing__social-chevron {
+  color: var(--auth-social-accent);
+  flex-shrink: 0;
 }
 
 .auth-landing__support-bar {
