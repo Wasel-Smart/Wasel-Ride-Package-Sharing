@@ -23,6 +23,12 @@ import { WalletHeroCard } from './components/WalletHeroCard';
 import { WalletActionModals } from './components/WalletActionModals';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import type { RewardItem, WalletTransaction } from '../../services/walletApi';
+import {
+  ClarityBand,
+  CoreExperienceBanner,
+  PageShell,
+  SectionHead,
+} from '../shared/pageShared';
 
 const LazyInsightsTab = lazy(async () => {
   const module = await import('./components/InsightsTab');
@@ -117,34 +123,39 @@ export function WalletDashboard() {
   const walletReadOnlyTitle = t.walletReadOnlyTitle;
   const walletReadOnlyDescription = t.walletReadOnlyDescription;
   const walletReadOnlyHint = t.walletReadOnlyHint;
+  const formatAmount = (amount: number) => `${amount.toFixed(2)} ${t.jod}`;
+
   if (shouldRedirectToAuth) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Lock className="w-12 h-12 text-muted-foreground/60" />
-        <p className="text-muted-foreground text-sm">
-          {t.redirectingToSignIn}
-        </p>
-      </div>
+      <PageShell>
+        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+          <Lock className="h-12 w-12 text-muted-foreground/60" />
+          <p className="text-sm text-muted-foreground">{t.redirectingToSignIn}</p>
+        </div>
+      </PageShell>
     );
   }
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
-        <p className="text-muted-foreground text-sm">{t.processing}</p>
-      </div>
+      <PageShell>
+        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-primary" />
+          <p className="text-sm text-muted-foreground">{t.processing}</p>
+        </div>
+      </PageShell>
     );
   }
 
   if (walletUnavailable) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] px-6">
+      <PageShell>
+      <div className="flex items-center justify-center min-h-[60vh] px-2">
         <div
           className="w-full max-w-xl rounded-3xl border text-center p-8 md:p-10"
           style={{
-            background: `linear-gradient(180deg, ${WaselColors.navyCard} 0%, rgba(4,12,24,0.98) 100%)`,
-            borderColor: `${WaselColors.teal}25`,
+            background: 'linear-gradient(180deg, rgba(220,255,248,0.08) 0%, rgba(220,255,248,0.03) 100%)',
+            borderColor: WaselColors.borderDark,
             boxShadow: '0 24px 80px rgba(0, 0, 0, 0.35)',
           }}
         >
@@ -167,24 +178,26 @@ export function WalletDashboard() {
           </div>
           <div
             className="mt-5 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground"
-            style={{ borderColor: `${WaselColors.teal}22`, background: 'rgba(255,255,255,0.03)' }}
+            style={{ borderColor: WaselColors.borderDark, background: 'rgba(220,255,248,0.05)' }}
           >
             <span className="h-2 w-2 rounded-full" style={{ background: WaselColors.success }} />
             {t.walletUnavailableHint}
           </div>
         </div>
       </div>
+      </PageShell>
     );
   }
 
   if (!walletData) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] px-6">
+      <PageShell>
+      <div className="flex items-center justify-center min-h-[60vh] px-2">
         <div
           className="w-full max-w-2xl rounded-3xl border p-8 md:p-10"
           style={{
-            background: `linear-gradient(180deg, ${WaselColors.navyCard} 0%, rgba(4,12,24,0.98) 100%)`,
-            borderColor: `${WaselColors.teal}25`,
+            background: 'linear-gradient(180deg, rgba(220,255,248,0.08) 0%, rgba(220,255,248,0.03) 100%)',
+            borderColor: WaselColors.borderDark,
             boxShadow: '0 24px 80px rgba(0, 0, 0, 0.35)',
           }}
         >
@@ -205,10 +218,10 @@ export function WalletDashboard() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1.5">
+                <span className="rounded-full px-3 py-1.5" style={{ border: `1px solid ${WaselColors.borderDark}`, background: 'rgba(220,255,248,0.05)' }}>
                   {t.walletSnapshotLabel}: {t.walletSnapshotDescription}
                 </span>
-                <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1.5">
+                <span className="rounded-full px-3 py-1.5" style={{ border: `1px solid ${WaselColors.borderDark}`, background: 'rgba(220,255,248,0.05)' }}>
                   {walletHealth?.degraded ? walletStatusLabel : t.walletEmptyAction}
                 </span>
               </div>
@@ -225,40 +238,69 @@ export function WalletDashboard() {
           </div>
         </div>
       </div>
+      </PageShell>
     );
   }
 
   return (
     <ErrorBoundary>
-      <div className="space-y-6 pb-8 max-w-4xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <WaselLogo size={34} showWordmark={false} />
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-foreground">{t.walletTitle}</h1>
-                <Badge variant="secondary" className="border border-primary/20 bg-primary/10 text-primary">
-                  {t.activeLabel}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">{t.walletSubtitle}</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
+      <PageShell>
+      <div className="mx-auto max-w-4xl space-y-6 pb-8" dir={isRTL ? 'rtl' : 'ltr'}>
+        <SectionHead
+          emoji="💳"
+          title={t.walletTitle}
+          sub={t.walletSubtitle}
+          color={WaselColors.teal}
+          action={{
+            label: refreshing ? t.processing : t.retry,
+            onClick: handleRefresh,
+          }}
+        />
+
+        <CoreExperienceBanner
+          title={walletStatusLabel ?? (isRTL ? 'المحفظة متصلة الآن' : 'Wallet stays connected to the network')}
+          detail={
+            walletActionsLocked
+              ? walletReadOnlyDescription
+              : walletStatusDescription ??
+                (isRTL
+                  ? 'الرصيد والمدفوعات والمكافآت تتحرك داخل نفس واجهة واصل.'
+                  : 'Balance, payments, and rewards now live inside the same Wasel visual system.')
+          }
+          tone={WaselColors.teal}
+        />
+
+        <ClarityBand
+          title={isRTL ? 'إشارات المحفظة الأساسية' : 'Wallet essentials'}
+          detail={
+            isRTL
+              ? 'الرصيد المتاح والمعلّق والمكافآت تظهر بنفس الإيقاع البصري المستخدم في باقي التطبيق.'
+              : 'Available funds, pending value, and rewards now follow the same rhythm as the rest of the product.'
+          }
+          tone={WaselColors.teal}
+          items={[
+            { label: t.availableLabel, value: balanceVisible ? formatAmount(bal) : `${t.maskedShort} ${t.jod}` },
+            { label: t.pending, value: balanceVisible ? formatAmount(pending) : `${t.maskedShort} ${t.jod}` },
+            { label: t.rewards, value: balanceVisible ? formatAmount(rewardsBal) : `${t.maskedShort} ${t.jod}` },
+          ]}
+        />
 
       {walletStatusLabel && (
-        <Card className="rounded-xl border-primary/10 bg-card/70">
+        <Card
+          className="rounded-[1.6rem]"
+          style={{ borderColor: WaselColors.borderDark, background: 'rgba(220,255,248,0.05)' }}
+        >
           <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="border border-primary/20 bg-primary/10 text-primary">
+                <Badge variant="secondary">
                   {walletStatusLabel}
                 </Badge>
                 {insightsStatusLabel && (
-                  <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-500">
+                  <Badge
+                    variant="outline"
+                    style={{ borderColor: 'rgba(248,186,62,0.28)', background: 'rgba(248,186,62,0.12)', color: WaselColors.orange }}
+                  >
                     {insightsStatusLabel}
                   </Badge>
                 )}
@@ -273,11 +315,17 @@ export function WalletDashboard() {
       )}
 
       {walletActionsLocked && (
-        <Card className="rounded-xl border-amber-500/20 bg-amber-500/5">
+        <Card
+          className="rounded-[1.6rem]"
+          style={{ borderColor: 'rgba(248,186,62,0.28)', background: 'rgba(248,186,62,0.08)' }}
+        >
           <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-500">
+                <Badge
+                  variant="outline"
+                  style={{ borderColor: 'rgba(248,186,62,0.28)', background: 'rgba(248,186,62,0.12)', color: WaselColors.orange }}
+                >
                   {walletReadOnlyTitle}
                 </Badge>
               </div>
@@ -303,12 +351,12 @@ export function WalletDashboard() {
       />
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="flex h-auto w-full gap-2 overflow-x-auto rounded-xl bg-card p-1">
-          <TabsTrigger value="overview" className="min-w-[110px] flex-1 rounded-lg text-xs">{t.overview}</TabsTrigger>
-          <TabsTrigger value="transactions" className="min-w-[110px] flex-1 rounded-lg text-xs">{t.transactions}</TabsTrigger>
-          <TabsTrigger value="rewards" className="min-w-[110px] flex-1 rounded-lg text-xs">{t.rewardsTab}</TabsTrigger>
-          <TabsTrigger value="insights" className="min-w-[110px] flex-1 rounded-lg text-xs">{t.insights}</TabsTrigger>
-          <TabsTrigger value="settings" className="min-w-[110px] flex-1 rounded-lg text-xs">{t.settings}</TabsTrigger>
+        <TabsList className="flex h-auto w-full gap-2 overflow-x-auto rounded-[1.6rem] p-1.5">
+          <TabsTrigger value="overview" className="min-w-[110px] flex-1 text-xs">{t.overview}</TabsTrigger>
+          <TabsTrigger value="transactions" className="min-w-[110px] flex-1 text-xs">{t.transactions}</TabsTrigger>
+          <TabsTrigger value="rewards" className="min-w-[110px] flex-1 text-xs">{t.rewardsTab}</TabsTrigger>
+          <TabsTrigger value="insights" className="min-w-[110px] flex-1 text-xs">{t.insights}</TabsTrigger>
+          <TabsTrigger value="settings" className="min-w-[110px] flex-1 text-xs">{t.settings}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-4">
@@ -324,7 +372,7 @@ export function WalletDashboard() {
         </TabsContent>
 
         <TabsContent value="transactions" className="mt-4">
-          <Card className="rounded-xl">
+          <Card className="rounded-[1.6rem]">
             <CardContent className="pt-4">
               {(!optimizedTransactions || optimizedTransactions.length === 0) ? (
                 <div className="text-center py-12 text-muted-foreground text-sm">{t.noTransactions}</div>
@@ -338,10 +386,10 @@ export function WalletDashboard() {
         </TabsContent>
 
         <TabsContent value="rewards" className="mt-4 space-y-4">
-          <Card className="rounded-xl">
+          <Card className="rounded-[1.6rem]">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Gift className="w-4 h-4 text-purple-400" />
+                <Gift className="w-4 h-4" style={{ color: WaselColors.bronze }} />
                 {t.activeRewards}
               </CardTitle>
             </CardHeader>
@@ -361,10 +409,23 @@ export function WalletDashboard() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge className="bg-purple-500/10 text-purple-400 border-purple-500/30 font-bold">
+                      <Badge
+                        className="font-bold"
+                        style={{
+                          background: 'rgba(126,205,249,0.12)',
+                          color: WaselColors.teal,
+                          borderColor: 'rgba(126,205,249,0.28)',
+                        }}
+                      >
                         {r.amount} {t.jod}
                       </Badge>
-                      <Button size="sm" variant="outline" disabled={walletActionsLocked} onClick={() => handleClaimReward(r.id)} className="text-xs border-purple-500/30 text-purple-400 hover:bg-purple-500/10">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={walletActionsLocked}
+                        onClick={() => handleClaimReward(r.id)}
+                        className="text-xs"
+                      >
                         {t.claim}
                       </Button>
                     </div>
@@ -444,6 +505,7 @@ export function WalletDashboard() {
         onWithdraw={handleWithdraw}
       />
       </div>
+      </PageShell>
     </ErrorBoundary>
   );
 }

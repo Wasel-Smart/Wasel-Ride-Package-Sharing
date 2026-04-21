@@ -11,6 +11,7 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Switch } from '../../../components/ui/switch';
 import type { WalletData } from '../../../services/walletApi';
+import { WaselColors } from '../../../tokens/wasel-tokens';
 
 interface SettingsTabProps {
   walletData: WalletData | null;
@@ -48,8 +49,11 @@ export function SettingsTab({
         <CardContent className="pt-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                <ShieldCheck className="w-5 h-5 text-blue-400" />
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-xl"
+                style={{ background: 'rgba(169,227,255,0.12)', border: `1px solid ${WaselColors.borderDark}` }}
+              >
+                <ShieldCheck className="h-5 w-5" style={{ color: WaselColors.teal }} />
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">{t.securityPin}</p>
@@ -68,8 +72,11 @@ export function SettingsTab({
         <CardContent className="pt-4 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                <RefreshCw className="w-5 h-5 text-green-400" />
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-xl"
+                style={{ background: 'rgba(25,231,187,0.12)', border: `1px solid ${WaselColors.borderDark}` }}
+              >
+                <RefreshCw className="h-5 w-5" style={{ color: WaselColors.green }} />
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">{t.autoTopUp}</p>
