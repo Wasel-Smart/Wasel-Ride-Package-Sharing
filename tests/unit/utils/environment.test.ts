@@ -8,16 +8,27 @@ describe('environment config', () => {
     vi.resetModules();
   });
 
-  it('fails validation when the public Supabase env vars are missing', async () => {
-    vi.stubEnv('MODE', 'production');
+  it('fails validation in protected environments when the public Supabase env vars are missing', async () => {
+    vi.stubEnv('VITE_APP_ENV', 'production');
+    vi.stubEnv('VITE_APP_URL', 'https://wasel.jo');
     vi.stubEnv('VITE_ENABLE_DEMO_DATA', 'false');
     vi.stubEnv('VITE_SUPABASE_URL', '');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
+    vi.stubEnv('VITE_EDGE_FUNCTION_NAME', 'production-edge');
 
     const environment = await importEnvironment();
     expect(() => environment.validateEnvironmentConfig()).toThrow(
       'VITE_SUPABASE_URL is not configured',
     );
+  });
+
+  it('allows local development to boot without public Supabase env vars', async () => {
+    vi.stubEnv('VITE_APP_ENV', 'development');
+    vi.stubEnv('VITE_SUPABASE_URL', '');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
+
+    const environment = await importEnvironment();
+    expect(() => environment.validateEnvironmentConfig()).not.toThrow();
   });
 
   it('accepts explicit protected-environment configuration', async () => {

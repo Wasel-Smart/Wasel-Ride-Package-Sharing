@@ -61,9 +61,10 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
         className="landing-shell"
         style={{
           position: 'relative',
-          maxWidth: 1380,
+          maxWidth: 'var(--wasel-layout-max-width)',
           margin: '0 auto',
-          padding: '28px 20px 84px',
+          padding:
+            'var(--wasel-layout-top) var(--wasel-layout-inline) var(--wasel-layout-bottom)',
         }}
       >
         {children}

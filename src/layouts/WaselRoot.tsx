@@ -162,9 +162,9 @@ export default function WaselRoot() {
       >
         <div
           style={{
-            maxWidth: 1380,
+            maxWidth: 'var(--wasel-layout-max-width)',
             margin: '0 auto',
-            padding: '14px 20px',
+            padding: '14px var(--wasel-layout-inline)',
             minHeight: 80,
             display: 'flex',
             alignItems: 'center',
@@ -551,11 +551,18 @@ export default function WaselRoot() {
 
       {/* ── Footer ───────────────────────────────────────────────────── */}
       <div style={{ maxWidth: 1380, margin: '0 auto', padding: '0 16px 112px' }}>
+      <div
+        style={{
+          maxWidth: 'var(--wasel-layout-max-width)',
+          margin: '0 auto',
+          padding: '0 var(--wasel-layout-inline) 112px',
+        }}
+      >
         <div
           style={{
             ...landingPanel(28),
             background:
-              'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+              'linear-gradient(180deg, rgba(220,255,248,0.08) 0%, rgba(220,255,248,0.04) 100%)',
             padding: '18px 18px 8px',
           }}
         >
