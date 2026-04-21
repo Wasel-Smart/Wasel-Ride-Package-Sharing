@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { CheckCircle, Info, X, XCircle } from 'lucide-react';
 import { C, R, TYPE, Z } from '../utils/wasel-ds';
@@ -9,12 +9,6 @@ interface Toast {
   id: string;
   type: ToastType;
   message: string;
-}
-
-interface ToastContextValue {
-  toasts: Toast[];
-  addToast: (type: ToastType, message: string) => void;
-  removeToast: (id: string) => void;
 }
 
 let toastId = 0;
