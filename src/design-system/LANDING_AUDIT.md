@@ -68,3 +68,7 @@ Source of truth: `src/features/home/LandingSections.tsx`, `src/features/home/lan
 - Service pages used light-page constants that drifted from the landing shell.
 - Wallet primitives and shared UI primitives were not consuming the same surface, border, and action styles.
 - Layout widths and page paddings were duplicated instead of centralized.
+- Section headers, page briefs, and clarity bands now share one landing-derived shell rhythm.
+- Buttons, inputs, cards, badges, and tabs now read from the same component radius, focus, and elevation rules.
+- Auth copy and mobile layout were corrected so the form leads on smaller screens instead of the decorative hero.
+- Privacy consent presentation was reduced on mobile to avoid overwhelming the first screen.
