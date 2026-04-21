@@ -1,42 +1,38 @@
-/* ============================================================
-   WASEL | واصل — DESIGN TOKENS v1
-   Unified clarity layer. Applied globally on top of brand-theme.
-   ============================================================ */
-
 :root {
-  /* ── Font ─────────────────────────────────────────────────── */
-  --font-primary: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system,
-    'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-primary: var(--wasel-font-sans);
+  --font-display: var(--wasel-font-display);
+  --font-arabic: var(--wasel-font-arabic);
 
-  /* ── Text colours ─────────────────────────────────────────── */
-  --text-primary:   #0F172A;
-  --text-secondary: #475569;
-  --text-muted:     #64748B;
+  --text-primary: var(--wasel-copy-primary);
+  --text-secondary: var(--wasel-copy-muted);
+  --text-muted: var(--wasel-copy-soft);
 
-  /* ── Surfaces ─────────────────────────────────────────────── */
-  --bg-main:  #F8FAFC;
-  --card-bg:  #FFFFFF;
+  --bg-main: var(--background);
+  --card-bg: var(--wasel-panel-strong);
+  --card-bg-soft: var(--wasel-panel-muted);
 
-  /* ── Borders ──────────────────────────────────────────────── */
-  --border:        #E2E8F0;
-  --border-input:  #CBD5E1;
+  --border: var(--wasel-panel-border);
+  --border-input: var(--wasel-button-primary-border);
 
-  /* ── Brand accent ─────────────────────────────────────────── */
-  --primary:       #3A7CA5;
-  --primary-hover: #5B9BD5;
-  --primary-focus: rgba(58, 124, 165, 0.15);
+  --primary: var(--wasel-button-primary);
+  --primary-hover: var(--accent-secondary);
+  --primary-focus: var(--ring);
+  --secondary-accent: var(--accent);
 
-  /* ── Status ───────────────────────────────────────────────── */
-  --success: #22C55E;
+  --success: var(--success);
+  --warning: var(--warning);
+  --danger: var(--danger);
 
-  /* ── Radius ───────────────────────────────────────────────── */
-  --radius-lg: 14px;
-  --radius-md: 10px;
+  --radius-sm: var(--wasel-radius-sm);
+  --radius-md: var(--wasel-radius-md);
+  --radius-lg: var(--wasel-radius-lg);
+  --radius-xl: var(--wasel-radius-xl);
+  --radius-2xl: var(--wasel-radius-2xl);
 
-  /* ── Shadow ───────────────────────────────────────────────── */
-  --shadow-soft: 0 4px 12px rgba(15, 23, 42, 0.06);
+  --shadow-soft: var(--wasel-shadow-sm);
+  --shadow-card: var(--wasel-shadow-card);
+  --shadow-panel: var(--wasel-shadow-md);
 
-  /* ── Spacing scale ────────────────────────────────────────── */
   --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
@@ -44,4 +40,18 @@
   --sp-5: 20px;
   --sp-6: 24px;
   --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  --wasel-layout-max-width: 1380px;
+  --wasel-layout-content-width: 760px;
+  --wasel-layout-inline: clamp(14px, 3vw, 20px);
+  --wasel-layout-top: clamp(22px, 4vw, 28px);
+  --wasel-layout-bottom: clamp(72px, 8vw, 84px);
+  --wasel-layout-gap: clamp(18px, 2.4vw, 28px);
+  --wasel-card-padding: clamp(18px, 3vw, 30px);
+  --wasel-grid-gap: clamp(12px, 2vw, 18px);
+  --wasel-control-height: 50px;
+  --wasel-control-height-lg: 54px;
 }

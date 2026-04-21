@@ -7,7 +7,7 @@
  * Standard: Environment configuration is the bootstrap contract.
  * Incorrect defaults silently break auth, payments, and support flows.
  */
-import { afterEach, describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect } from 'vitest';
 import {
   getEnv,
   hasEnv,
@@ -22,6 +22,14 @@ import {
 
 const originalAppUrl = process.env.VITE_APP_URL;
 const originalStripeKey = process.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const originalAppEnv = process.env.VITE_APP_ENV;
+const originalSupabaseUrl = process.env.VITE_SUPABASE_URL;
+const originalSupabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+const originalSupabasePublishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+beforeEach(() => {
+  process.env.VITE_APP_ENV = 'test';
+});
 
 afterEach(() => {
   if (originalAppUrl === undefined) {
@@ -34,6 +42,30 @@ afterEach(() => {
     delete process.env.VITE_STRIPE_PUBLISHABLE_KEY;
   } else {
     process.env.VITE_STRIPE_PUBLISHABLE_KEY = originalStripeKey;
+  }
+
+  if (originalAppEnv === undefined) {
+    delete process.env.VITE_APP_ENV;
+  } else {
+    process.env.VITE_APP_ENV = originalAppEnv;
+  }
+
+  if (originalSupabaseUrl === undefined) {
+    delete process.env.VITE_SUPABASE_URL;
+  } else {
+    process.env.VITE_SUPABASE_URL = originalSupabaseUrl;
+  }
+
+  if (originalSupabaseAnonKey === undefined) {
+    delete process.env.VITE_SUPABASE_ANON_KEY;
+  } else {
+    process.env.VITE_SUPABASE_ANON_KEY = originalSupabaseAnonKey;
+  }
+
+  if (originalSupabasePublishableKey === undefined) {
+    delete process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  } else {
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY = originalSupabasePublishableKey;
   }
 
   window.history.replaceState({}, '', '/');
@@ -125,6 +157,16 @@ describe('getConfig()', () => {
 
     expect(getConfig().stripeEnabled).toBe(false);
     expect(getConfig().stripePublishableKey).toBe('');
+  });
+
+  it('enables local persistence fallback in development when Supabase public config is missing', () => {
+    process.env.VITE_APP_ENV = 'development';
+    process.env.VITE_SUPABASE_URL = '';
+    process.env.VITE_SUPABASE_ANON_KEY = '';
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY = '';
+    resetConfigCache();
+
+    expect(getConfig().allowLocalPersistenceFallback).toBe(true);
   });
 });
 

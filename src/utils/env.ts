@@ -124,6 +124,9 @@ let _configCache: ReturnType<typeof buildConfig> | null = null;
 function buildConfig() {
   const environment = resolveEnvironment();
   const appUrl = resolveAppUrl(environment);
+  const hasPublicSupabaseConfig =
+    hasEnv('VITE_SUPABASE_URL') &&
+    (hasEnv('VITE_SUPABASE_ANON_KEY') || hasEnv('VITE_SUPABASE_PUBLISHABLE_KEY'));
   const stripePublishableKey = hasEnv('VITE_STRIPE_PUBLISHABLE_KEY')
     ? getEnv('VITE_STRIPE_PUBLISHABLE_KEY').trim()
     : '';
@@ -175,7 +178,7 @@ function buildConfig() {
   );
   const allowLocalPersistenceFallback = flagAllowedInEnvironment(
     'VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK',
-    isTest,
+    isTest || (environment === 'development' && !hasPublicSupabaseConfig),
     environment,
     ['development', 'test'],
   );

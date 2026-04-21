@@ -20,6 +20,13 @@ import {
 import { buildAuthPagePath, buildAuthReturnTo } from '../../utils/authFlow';
 
 export const DS = PAGE_DS;
+const PAGE_PANEL_BG =
+  'linear-gradient(180deg, rgba(220,255,248,0.055) 0%, rgba(220,255,248,0.02) 100%)';
+const PAGE_PANEL_BG_STRONG =
+  'linear-gradient(180deg, rgba(220,255,248,0.08) 0%, rgba(220,255,248,0.04) 100%)';
+const PAGE_PANEL_BORDER = 'rgba(var(--wasel-border-rgb), 0.18)';
+const PAGE_PANEL_BORDER_STRONG = 'rgba(var(--accent-secondary-rgb), 0.24)';
+const PAGE_PANEL_GLOW = '0 18px 40px rgba(0,0,0,0.18)';
 
 export const r = (px = 12) => `${px}px`;
 
@@ -57,8 +64,7 @@ function authPanelStyle() {
     padding: '32px 28px',
     textAlign: 'center' as const,
     color: LANDING_COLORS.text,
-    background:
-      'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+    background: PAGE_PANEL_BG_STRONG,
   };
 }
 
@@ -232,7 +238,7 @@ export function PageShell({ children }: { children: ReactNode }) {
       >
       <style>{`${LANDING_RESPONSIVE_STYLES}
         :root { color-scheme: inherit; }
-        .w-focus:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(101,225,255,0.24); }
+        .w-focus:focus-visible { outline: none; box-shadow: var(--wasel-focus-ring); }
         @media (max-width: 1140px) {
           .sp-2col,
           .sp-profile-hero,
@@ -262,7 +268,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-brief-label {
             border-right: none !important;
             border-left: none !important;
-            border-bottom: 1px solid rgba(58,124,165,0.16) !important;
+            border-bottom: 1px solid rgba(var(--wasel-border-rgb), 0.16) !important;
             padding-right: 0 !important;
             padding-left: 0 !important;
             padding-bottom: 10px !important;
@@ -291,9 +297,10 @@ export function PageShell({ children }: { children: ReactNode }) {
         className="sp-inner"
         style={{
           position: 'relative',
-          maxWidth: 1380,
+          maxWidth: 'var(--wasel-layout-max-width)',
           margin: '0 auto',
-          padding: '28px 20px 72px',
+          padding:
+            'var(--wasel-layout-top) var(--wasel-layout-inline) var(--wasel-layout-bottom)',
         }}
       >
         <div
@@ -317,9 +324,8 @@ export function PageShell({ children }: { children: ReactNode }) {
             ...landingPanel(34),
             position: 'relative',
             overflow: 'hidden',
-            padding: 30,
-            background:
-              'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+            padding: 'var(--wasel-card-padding)',
+            background: PAGE_PANEL_BG_STRONG,
           }}
         >
           <div
@@ -343,7 +349,7 @@ export function PageShell({ children }: { children: ReactNode }) {
               opacity: 0.1,
               pointerEvents: 'none',
               backgroundImage:
-                'linear-gradient(rgba(157,232,255,0.20) 1px, transparent 1px), linear-gradient(90deg, rgba(157,232,255,0.20) 1px, transparent 1px)',
+                'linear-gradient(rgba(169,227,255,0.14) 1px, transparent 1px), linear-gradient(90deg, rgba(169,227,255,0.14) 1px, transparent 1px)',
               backgroundSize: '56px 56px',
               maskImage: 'radial-gradient(circle at center, black 0%, black 48%, transparent 90%)',
             }}
@@ -354,7 +360,7 @@ export function PageShell({ children }: { children: ReactNode }) {
               position: 'absolute',
               inset: '0 0 auto 0',
               height: 1,
-              background: 'linear-gradient(90deg, transparent, rgba(216,251,255,0.5), transparent)',
+              background: 'linear-gradient(90deg, transparent, rgba(169,227,255,0.42), transparent)',
               pointerEvents: 'none',
             }}
           />
@@ -366,11 +372,20 @@ export function PageShell({ children }: { children: ReactNode }) {
               width: '100%',
               height: 140,
               pointerEvents: 'none',
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.16), transparent)',
+              background: 'linear-gradient(180deg, rgba(220,255,248,0.14), transparent)',
               opacity: 0.7,
             }}
           />
-          <div style={{ position: 'relative', zIndex: 1, display: 'grid', gap: 18 }}>{children}</div>
+          <div
+            style={{
+              position: 'relative',
+              zIndex: 1,
+              display: 'grid',
+              gap: 'var(--wasel-layout-gap)',
+            }}
+          >
+            {children}
+          </div>
         </div>
       </div>
     </div>
@@ -401,12 +416,12 @@ export function SectionHead({
       style={{
         background: DS.sectionHeadBg,
         borderRadius: r(30),
-        padding: '26px 28px',
+        padding: '24px 28px',
         marginBottom: 6,
         position: 'relative',
         overflow: 'hidden',
-        border: `1px solid ${color}28`,
-        boxShadow: `0 24px 54px rgba(8,18,34,0.08), inset 0 1px 0 ${color}18`,
+        border: `1px solid ${PAGE_PANEL_BORDER_STRONG}`,
+        boxShadow: `${PAGE_PANEL_GLOW}, inset 0 1px 0 ${color}18`,
       }}
     >
       <div
@@ -450,7 +465,7 @@ export function SectionHead({
               width: 62,
               height: 62,
               borderRadius: r(20),
-              background: `linear-gradient(180deg, ${color}1d, rgba(255,255,255,0.28))`,
+              background: `linear-gradient(180deg, ${color}1d, rgba(220,255,248,0.12))`,
               border: `1px solid ${color}34`,
               display: 'flex',
               alignItems: 'center',
@@ -519,12 +534,12 @@ export function SectionHead({
               minHeight: 48,
               padding: '0 24px',
               borderRadius: r(999),
-              border: `1px solid ${color}24`,
-              background: 'rgba(255,255,255,0.82)',
-              color,
+              border: `1px solid ${PAGE_PANEL_BORDER_STRONG}`,
+              background: 'var(--theme-gradient-primary)',
+              color: 'var(--wasel-button-primary-foreground)',
               fontWeight: 800,
               fontSize: '0.88rem',
-              boxShadow: `0 12px 28px ${color}12`,
+              boxShadow: 'var(--wasel-button-primary-shadow)',
               cursor: 'pointer',
               flexShrink: 0,
             }}
@@ -556,12 +571,12 @@ export function CoreExperienceBanner({
         display: 'grid',
         gridTemplateColumns: 'minmax(0, 180px) minmax(0, 1fr)',
         gap: 18,
-        background: `linear-gradient(135deg, ${tone}10, rgba(255,255,255,0.06))`,
+        background: `linear-gradient(135deg, ${tone}10, rgba(220,255,248,0.05))`,
         border: `1px solid ${tone}2e`,
         borderRadius: r(24),
         padding: '18px 20px',
         marginBottom: 4,
-        boxShadow: '0 18px 40px rgba(7,25,49,0.1)',
+        boxShadow: PAGE_PANEL_GLOW,
         backdropFilter: 'blur(18px)',
       }}
     >
@@ -624,11 +639,11 @@ export function ClarityBand({
         display: 'grid',
         gap: 14,
         marginBottom: 4,
-        background: `linear-gradient(180deg, ${tone}12, rgba(255,255,255,0.04))`,
+        background: `linear-gradient(180deg, ${tone}12, rgba(220,255,248,0.04))`,
         border: `1px solid ${tone}28`,
         borderRadius: r(24),
         padding: '18px 20px 16px',
-        boxShadow: '0 18px 36px rgba(7,25,49,0.1)',
+        boxShadow: PAGE_PANEL_GLOW,
         backdropFilter: 'blur(18px)',
       }}
     >
@@ -674,7 +689,7 @@ export function ClarityBand({
           <div
             key={item.label}
             style={{
-              background: 'var(--wasel-service-card-3)',
+              background: PAGE_PANEL_BG,
               border: `1px solid ${tone}20`,
               borderRadius: r(18),
               padding: '14px 15px',

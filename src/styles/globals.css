@@ -47,6 +47,20 @@
 
   --wasel-space-section: clamp(4rem, 8vw, 6rem);
   --wasel-space-card:    clamp(1.25rem, 3vw, 2rem);
+  --wasel-layout-max-width: 1380px;
+  --wasel-layout-content-width: 760px;
+  --wasel-layout-inline: clamp(14px, 3vw, 20px);
+  --wasel-layout-top: clamp(22px, 4vw, 28px);
+  --wasel-layout-bottom: clamp(72px, 8vw, 84px);
+  --wasel-layout-gap: clamp(18px, 2.4vw, 28px);
+  --wasel-card-padding: clamp(18px, 3vw, 30px);
+  --wasel-grid-gap: clamp(12px, 2vw, 18px);
+  --wasel-control-height: 50px;
+  --wasel-control-height-lg: 54px;
+  --wasel-focus-ring: 0 0 0 3px rgb(var(--accent-secondary-rgb) / 0.18);
+  --wasel-surface-elevated:
+    linear-gradient(180deg, rgba(220,255,248,0.055), rgba(220,255,248,0.018)),
+    rgba(10,18,28,0.84);
 }
 
 @media (max-width: 479px) {

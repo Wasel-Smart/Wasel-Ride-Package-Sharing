@@ -37,11 +37,11 @@ export function validateEnvironmentConfig(): void {
   const errors: string[] = [];
   const isProtectedEnvironment = config.mode === 'production' || config.mode === 'staging';
 
-  if (!config.supabaseUrl) {
+  if (isProtectedEnvironment && !config.supabaseUrl) {
     errors.push('VITE_SUPABASE_URL is not configured');
   }
 
-  if (!config.supabaseKey) {
+  if (isProtectedEnvironment && !config.supabaseKey) {
     errors.push('VITE_SUPABASE_ANON_KEY is not configured');
   }
 
