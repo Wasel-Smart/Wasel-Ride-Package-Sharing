@@ -1,95 +1,59 @@
 /**
- * WaselCard — design-system surface container.
- *
- * Variants:
- *  - default  : Glass card (translucent, backdrop blur)
- *  - solid    : Opaque dark card (#0A1628)
- *  - brand    : Cyan-tinted hero/feature card
- *  - elevated : Slightly brighter surface, for nested cards
- *
- * All values from design tokens — zero hardcoded hex.
+ * WaselCard — unified design system
+ * Single card design with optional variants
  */
 
 import type { CSSProperties, HTMLAttributes, ReactNode } from 'react';
-import { C, R, SH, F } from '../../utils/wasel-ds';
-
-type CardVariant = 'default' | 'solid' | 'brand' | 'elevated';
 
 interface WaselCardProps extends HTMLAttributes<HTMLDivElement> {
-  variant?:   CardVariant;
-  padding?:   string;
-  radius?:    string;
-  hover?:     boolean;
-  children:   ReactNode;
+  variant?: 'default' | 'elevated';
+  padding?: string;
+  hover?: boolean;
+  children: ReactNode;
 }
 
-const variantMap: Record<CardVariant, CSSProperties> = {
+const variantStyles: Record<string, CSSProperties> = {
   default: {
-    background:    C.card,
-    border:        `1px solid ${C.border}`,
-    backdropFilter:'blur(16px)',
-    WebkitBackdropFilter: 'blur(16px)',
-    boxShadow:     SH.card,
-  },
-  solid: {
-    background: C.cardSolid,
-    border:     `1px solid ${C.border}`,
-    boxShadow:  SH.card,
-  },
-  brand: {
-    background:    `linear-gradient(135deg, ${C.cyanDim} 0%, ${C.greenDim} 100%)`,
-    border:        `1px solid ${C.borderHov}`,
-    backdropFilter:'blur(16px)',
-    WebkitBackdropFilter: 'blur(16px)',
-    boxShadow:     SH.cyan,
+    background: 'var(--bg-secondary)',
+    border: '1px solid var(--border)',
   },
   elevated: {
-    background: C.elevated,
-    border:     `1px solid ${C.borderFaint}`,
-    boxShadow:  SH.sm,
+    background: 'var(--bg-elevated)',
+    border: '1px solid var(--border)',
   },
 };
 
 export function WaselCard({
-  variant  = 'solid',
-  padding  = '20px',
-  radius   = R.xxl,
-  hover    = false,
+  variant = 'default',
+  padding = '16px',
+  hover = false,
   children,
   style,
-  onMouseEnter,
-  onMouseLeave,
   ...rest
 }: WaselCardProps) {
-  const base: CSSProperties = {
-    position:     'relative',
-    borderRadius: radius,
+  const baseStyle: CSSProperties = {
+    borderRadius: 'var(--radius-lg)',
     padding,
-    fontFamily:   F,
-    transition:   hover ? 'transform 200ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 200ms ease, border-color 200ms ease' : undefined,
-    ...variantMap[variant],
+    transition: hover ? 'transform 150ms ease, border-color 150ms ease' : undefined,
+    ...variantStyles[variant],
     ...style,
   };
 
   return (
     <div
       {...rest}
-      style={base}
-      onMouseEnter={(e) => {
+      style={baseStyle}
+      onMouseEnter={e => {
         if (hover) {
-          (e.currentTarget as HTMLDivElement).style.transform   = 'translateY(-3px) scale(1.01)';
-          (e.currentTarget as HTMLDivElement).style.boxShadow  = SH.md;
-          (e.currentTarget as HTMLDivElement).style.borderColor = C.borderHov;
+          (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.01)';
+          (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-hover)';
         }
-        onMouseEnter?.(e);
       }}
-      onMouseLeave={(e) => {
+      onMouseLeave={e => {
         if (hover) {
-          (e.currentTarget as HTMLDivElement).style.transform   = '';
-          (e.currentTarget as HTMLDivElement).style.boxShadow  = variantMap[variant].boxShadow as string ?? '';
-          (e.currentTarget as HTMLDivElement).style.borderColor = '';
+          (e.currentTarget as HTMLDivElement).style.transform = '';
+          (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)';
         }
-        onMouseLeave?.(e);
       }}
     >
       {children}
