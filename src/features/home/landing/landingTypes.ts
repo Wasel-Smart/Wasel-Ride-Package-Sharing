@@ -17,12 +17,13 @@ export const LANDING_COLORS = {
   text: 'var(--wasel-copy-primary)',
   muted: 'var(--wasel-copy-muted)',
   soft: 'var(--wasel-copy-soft)',
-  cyan: '#20D8FF',
-  blue: '#1388D9',
-  gold: '#B7FF2B',
-  green: '#72FF47',
-  border: 'var(--border)',
-  borderStrong: 'rgba(var(--wasel-border-rgb), 0.30)',
+  cyan: 'var(--ds-accent, #f59a2c)',
+  blue: 'var(--ds-accent-strong, #ffb357)',
+  gold: 'var(--ds-warning, #efb45d)',
+  green: 'var(--ds-success, #79c67d)',
+  border: 'var(--ds-border, #313841)',
+  borderStrong:
+    'color-mix(in srgb, var(--ds-accent-strong, #ffb357) 30%, var(--ds-border, #313841))',
 } as const;
 
 // ── Shared types ──────────────────────────────────────────────────────────────

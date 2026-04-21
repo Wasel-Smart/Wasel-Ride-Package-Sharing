@@ -24,12 +24,13 @@ export const LANDING_COLORS = {
   text: 'var(--wasel-copy-primary)',
   muted: 'var(--wasel-copy-muted)',
   soft: 'var(--wasel-copy-soft)',
-  cyan: '#5EF6D8',
-  blue: '#3DD8FF',
-  gold: '#19E7BB',
-  green: '#A7FFE9',
-  border: 'var(--border)',
-  borderStrong: 'rgba(var(--wasel-border-rgb), 0.30)',
+  cyan: 'var(--ds-accent, #f59a2c)',
+  blue: 'var(--ds-accent-strong, #ffb357)',
+  gold: 'var(--ds-warning, #efb45d)',
+  green: 'var(--ds-success, #79c67d)',
+  border: 'var(--ds-border, #313841)',
+  borderStrong:
+    'color-mix(in srgb, var(--ds-accent-strong, #ffb357) 30%, var(--ds-border, #313841))',
 } as const;
 
 export type LandingActionCard = {
@@ -142,7 +143,7 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
         style={{
           position: 'absolute',
           inset: 0,
-          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, rgba(71,183,230,0.18), rgba(4,18,30,0) 26%), radial-gradient(circle at 72% 68%, rgba(168,214,20,0.14), rgba(4,18,30,0) 18%)`,
+          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--ds-accent, #f59a2c) 18%, transparent), transparent 26%), radial-gradient(circle at 72% 68%, color-mix(in srgb, var(--ds-accent-strong, #ffb357) 14%, transparent), transparent 18%)`,
           pointerEvents: 'none',
           opacity: 0.96,
         }}
@@ -216,7 +217,7 @@ export function LandingHeader({
           subtitle="Mobility OS"
           style={{
             filter:
-              'drop-shadow(0 0 18px rgba(169,227,255,0.16)) drop-shadow(0 0 22px rgba(169,227,255,0.12))',
+              'drop-shadow(0 0 18px rgba(255,179,87,0.16)) drop-shadow(0 0 22px rgba(245,154,44,0.12))',
           }}
         />
         <div
@@ -678,7 +679,7 @@ export function LandingHeroSection({
                     style={{
                       justifyContent: 'center',
                       filter:
-                        'drop-shadow(0 0 42px rgba(61,216,255,0.24)) drop-shadow(0 0 56px rgba(25,231,187,0.28)) saturate(1.04)',
+                        'drop-shadow(0 0 42px rgba(255,179,87,0.24)) drop-shadow(0 0 56px rgba(245,154,44,0.28)) saturate(1.04)',
                       transform: 'translateY(12px)',
                     }}
                   />

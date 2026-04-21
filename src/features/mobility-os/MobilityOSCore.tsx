@@ -123,10 +123,10 @@ type Star = { x: number; y: number; size: number; alpha: number; drift: number }
 type Point = { x: number; y: number };
 type CurveGeometry = { start: Point; control: Point; end: Point };
 
-const PASSENGER_COLOR = '#EAF7FF';
-const PACKAGE_COLOR = '#8BD8FF';
-const PASSENGER_GLOW = 'rgba(234,247,255,0.48)';
-const PACKAGE_GLOW = 'rgba(139,216,255,0.42)';
+const PASSENGER_COLOR = '#F5EFE7';
+const PACKAGE_COLOR = '#F59A2C';
+const PASSENGER_GLOW = 'rgba(245,239,231,0.42)';
+const PACKAGE_GLOW = 'rgba(245,154,44,0.36)';
 const TARGET_VEHICLES = 96;
 const BASE_W = 1200;
 const BASE_H = 700;
@@ -137,14 +137,14 @@ const SCROLLING_FRAME_RATE = 20;
 const ANALYTICS_COMMIT_INTERVAL_MS = 320;
 const INTERACTION_COOLDOWN_MS = 180;
 const MAP_VISIBILITY_THRESHOLD = 0.18;
-const SERVICE_TEXT = '#EEF8FF';
-const SERVICE_SUB = 'rgba(220,238,255,0.82)';
-const SERVICE_MUTED = 'rgba(183,206,228,0.72)';
-const SERVICE_BORDER = 'rgba(169,227,255,0.18)';
-const SERVICE_BORDER_STRONG = 'rgba(169,227,255,0.30)';
-const SKY_ACCENT = '#A9E3FF';
-const SKY_SUCCESS = '#79F3D0';
-const SKY_WARNING = '#FFC78D';
+const SERVICE_TEXT = '#F5EFE7';
+const SERVICE_SUB = 'rgba(245,239,231,0.76)';
+const SERVICE_MUTED = 'rgba(185,174,160,0.78)';
+const SERVICE_BORDER = 'rgba(255,179,87,0.18)';
+const SERVICE_BORDER_STRONG = 'rgba(255,179,87,0.32)';
+const SKY_ACCENT = '#FFB357';
+const SKY_SUCCESS = '#79C67D';
+const SKY_WARNING = '#EFB45D';
 const CITY_DATA: City[] = [
   {
     id: 0,
@@ -492,7 +492,7 @@ const sectionLabelStyle: CSSProperties = {
 };
 const glassPanelStyle = (extra: CSSProperties = {}): CSSProperties => ({
   ...panelStyle({
-    background: 'linear-gradient(180deg, rgba(9,24,42,0.96), rgba(4,10,22,0.99))',
+    background: 'linear-gradient(180deg, rgba(32,23,18,0.96), rgba(18,15,13,0.99))',
     border: `1px solid ${SERVICE_BORDER}`,
     boxShadow: '0 26px 70px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.04)',
     ...extra,
@@ -501,12 +501,12 @@ const glassPanelStyle = (extra: CSSProperties = {}): CSSProperties => ({
 
 function hourPalette(hour: number) {
   if (hour >= 6 && hour <= 10) {
-    return { top: '#081523', bottom: '#11283b', glow: 'rgba(101,225,255,0.16)' };
+    return { top: '#17110d', bottom: '#261810', glow: 'rgba(245,154,44,0.16)' };
   }
   if (hour >= 17 && hour <= 20) {
-    return { top: '#071118', bottom: '#0b1827', glow: 'rgba(169,227,255,0.18)' };
+    return { top: '#14100c', bottom: '#1f1510', glow: 'rgba(255,179,87,0.18)' };
   }
-  return { top: '#030914', bottom: '#0a1624', glow: 'rgba(220,255,248,0.12)' };
+  return { top: '#0f0d0b', bottom: '#16120f', glow: 'rgba(245,239,231,0.12)' };
 }
 
 function getCityLabel(city: City, ar: boolean) {
@@ -1697,9 +1697,9 @@ export default function MobilityOSCore() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
     const bg = ctx.createLinearGradient(0, 0, width, height);
-    bg.addColorStop(0, viewMode === 'satellite' ? '#08111a' : palette.top);
-    bg.addColorStop(0.55, viewMode === 'pulse' ? '#140f1d' : '#091624');
-    bg.addColorStop(1, viewMode === 'satellite' ? '#102234' : palette.bottom);
+    bg.addColorStop(0, viewMode === 'satellite' ? '#17110d' : palette.top);
+    bg.addColorStop(0.55, viewMode === 'pulse' ? '#21150f' : '#18110d');
+    bg.addColorStop(1, viewMode === 'satellite' ? '#281a11' : palette.bottom);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, height);
     const skyRibbon = ctx.createLinearGradient(0, 0, width, height * 0.32);
@@ -1718,13 +1718,13 @@ export default function MobilityOSCore() {
     );
     atmosphere.addColorStop(
       0,
-      viewMode === 'pulse' ? 'rgba(167,124,255,0.16)' : 'rgba(101,225,255,0.16)',
+      viewMode === 'pulse' ? 'rgba(239,180,93,0.16)' : 'rgba(245,154,44,0.16)',
     );
     atmosphere.addColorStop(
       0.35,
-      viewMode === 'pulse' ? 'rgba(167,124,255,0.08)' : 'rgba(101,225,255,0.06)',
+      viewMode === 'pulse' ? 'rgba(239,180,93,0.08)' : 'rgba(245,154,44,0.06)',
     );
-    atmosphere.addColorStop(1, 'rgba(101,225,255,0)');
+    atmosphere.addColorStop(1, 'rgba(245,154,44,0)');
     ctx.fillStyle = atmosphere;
     ctx.fillRect(0, 0, width, height);
     const amberGlow = ctx.createRadialGradient(
@@ -1737,9 +1737,9 @@ export default function MobilityOSCore() {
     );
     amberGlow.addColorStop(
       0,
-      viewMode === 'satellite' ? 'rgba(220,255,248,0.08)' : 'rgba(169,227,255,0.14)',
+      viewMode === 'satellite' ? 'rgba(245,239,231,0.08)' : 'rgba(255,179,87,0.14)',
     );
-    amberGlow.addColorStop(1, 'rgba(169,227,255,0)');
+    amberGlow.addColorStop(1, 'rgba(255,179,87,0)');
     ctx.fillStyle = amberGlow;
     ctx.fillRect(0, 0, width, height);
     const polarAurora = ctx.createRadialGradient(
@@ -1752,7 +1752,7 @@ export default function MobilityOSCore() {
     );
     polarAurora.addColorStop(
       0,
-      viewMode === 'satellite' ? 'rgba(220,255,248,0.08)' : 'rgba(101,225,255,0.08)',
+      viewMode === 'satellite' ? 'rgba(245,239,231,0.08)' : 'rgba(245,154,44,0.08)',
     );
     polarAurora.addColorStop(0.45, 'rgba(255,255,255,0.03)');
     polarAurora.addColorStop(1, 'rgba(255,255,255,0)');
@@ -1772,7 +1772,7 @@ export default function MobilityOSCore() {
       celestialY,
       isDay ? 42 : 30,
     );
-    celestial.addColorStop(0, isDay ? 'rgba(220,255,248,0.46)' : 'rgba(222,238,255,0.4)');
+    celestial.addColorStop(0, isDay ? 'rgba(245,239,231,0.46)' : 'rgba(222,238,255,0.4)');
     celestial.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = celestial;
     ctx.beginPath();
@@ -1785,7 +1785,7 @@ export default function MobilityOSCore() {
       ctx.fill();
       ctx.beginPath();
       ctx.arc(celestialX + 4, celestialY - 2, 11, 0, Math.PI * 2);
-      ctx.fillStyle = '#071423';
+      ctx.fillStyle = '#18110d';
       ctx.fill();
     }
     const energyRibbon = ctx.createLinearGradient(
@@ -1795,9 +1795,9 @@ export default function MobilityOSCore() {
       height,
     );
     energyRibbon.addColorStop(0, 'rgba(255,255,255,0)');
-    energyRibbon.addColorStop(0.35, 'rgba(101,225,255,0.03)');
+    energyRibbon.addColorStop(0.35, 'rgba(245,154,44,0.03)');
     energyRibbon.addColorStop(0.55, 'rgba(255,255,255,0.045)');
-    energyRibbon.addColorStop(0.7, 'rgba(169,227,255,0.028)');
+    energyRibbon.addColorStop(0.7, 'rgba(255,179,87,0.028)');
     energyRibbon.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = energyRibbon;
     ctx.fillRect(0, 0, width, height);
@@ -1809,8 +1809,8 @@ export default function MobilityOSCore() {
     ctx.fillStyle = floorGlow;
     ctx.fillRect(0, height * 0.52, width, height * 0.48);
     const horizonShelf = ctx.createLinearGradient(0, height * 0.66, 0, height);
-    horizonShelf.addColorStop(0, 'rgba(101,225,255,0)');
-    horizonShelf.addColorStop(0.5, 'rgba(101,225,255,0.06)');
+    horizonShelf.addColorStop(0, 'rgba(245,154,44,0)');
+    horizonShelf.addColorStop(0.5, 'rgba(245,154,44,0.06)');
     horizonShelf.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = horizonShelf;
     ctx.fillRect(0, height * 0.62, width, height * 0.25);
@@ -1830,7 +1830,7 @@ export default function MobilityOSCore() {
     stageFill.addColorStop(1, 'rgba(3,8,14,0.98)');
     ctx.fillStyle = stageFill;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(220,255,248,0.04)';
+    ctx.strokeStyle = 'rgba(245,239,231,0.04)';
     ctx.lineWidth = 1;
     for (let line = 0; line < 12; line += 1) {
       const startX = stageLeft + line * (stageWidth / 11);
@@ -1846,7 +1846,7 @@ export default function MobilityOSCore() {
       ctx.beginPath();
       ctx.moveTo(stageLeft + inset, y);
       ctx.lineTo(stageRight - inset, y);
-      ctx.strokeStyle = `rgba(169,227,255,${0.055 - row * 0.005})`;
+      ctx.strokeStyle = `rgba(255,179,87,${0.055 - row * 0.005})`;
       ctx.stroke();
     }
     ctx.restore();
@@ -1865,7 +1865,7 @@ export default function MobilityOSCore() {
     if (!reducedEffects) {
       ctx.save();
       ctx.strokeStyle =
-        viewMode === 'satellite' ? 'rgba(220,255,248,0.03)' : 'rgba(255,255,255,0.03)';
+        viewMode === 'satellite' ? 'rgba(245,239,231,0.03)' : 'rgba(255,255,255,0.03)';
       ctx.lineWidth = 1;
       for (let x = 0; x < width; x += 34) {
         ctx.beginPath();
@@ -1879,7 +1879,7 @@ export default function MobilityOSCore() {
         ctx.lineTo(width, y);
         ctx.stroke();
       }
-      ctx.strokeStyle = viewMode === 'pulse' ? 'rgba(167,124,255,0.04)' : 'rgba(101,225,255,0.026)';
+      ctx.strokeStyle = viewMode === 'pulse' ? 'rgba(239,180,93,0.04)' : 'rgba(245,154,44,0.026)';
       for (let x = -height; x < width; x += 58) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
@@ -1901,7 +1901,7 @@ export default function MobilityOSCore() {
     landFill.addColorStop(0.58, 'rgba(9,18,28,0.97)');
     landFill.addColorStop(1, 'rgba(16,35,50,0.98)');
     ctx.fillStyle = landFill;
-    ctx.strokeStyle = 'rgba(220,255,248,0.1)';
+    ctx.strokeStyle = 'rgba(245,239,231,0.1)';
     ctx.lineWidth = 1.2;
     ctx.shadowBlur = 46;
     ctx.shadowColor = 'rgba(0,0,0,0.38)';
@@ -1916,9 +1916,9 @@ export default function MobilityOSCore() {
       width * 0.85,
       height * 0.92,
     );
-    terrain.addColorStop(0, 'rgba(220,255,248,0.08)');
+    terrain.addColorStop(0, 'rgba(245,239,231,0.08)');
     terrain.addColorStop(0.45, 'rgba(255,255,255,0.015)');
-    terrain.addColorStop(1, 'rgba(169,227,255,0.08)');
+    terrain.addColorStop(1, 'rgba(255,179,87,0.08)');
     ctx.fillStyle = terrain;
     ctx.fillRect(0, 0, width, height);
     const reliefWash = ctx.createLinearGradient(
@@ -1928,8 +1928,8 @@ export default function MobilityOSCore() {
       height * 0.9,
     );
     reliefWash.addColorStop(0, 'rgba(255,255,255,0.02)');
-    reliefWash.addColorStop(0.4, 'rgba(101,225,255,0.04)');
-    reliefWash.addColorStop(1, 'rgba(169,227,255,0.04)');
+    reliefWash.addColorStop(0.4, 'rgba(245,154,44,0.04)');
+    reliefWash.addColorStop(1, 'rgba(255,179,87,0.04)');
     ctx.fillStyle = reliefWash;
     ctx.fillRect(0, 0, width, height);
     for (let ridge = 0; ridge < (reducedEffects ? 2 : 5); ridge += 1) {
@@ -1994,8 +1994,8 @@ export default function MobilityOSCore() {
       180,
     );
     scan.addColorStop(0, 'rgba(255,255,255,0.06)');
-    scan.addColorStop(0.45, 'rgba(101,225,255,0.1)');
-    scan.addColorStop(1, 'rgba(101,225,255,0)');
+    scan.addColorStop(0.45, 'rgba(245,154,44,0.1)');
+    scan.addColorStop(1, 'rgba(245,154,44,0)');
     ctx.fillStyle = scan;
     ctx.beginPath();
     ctx.arc(selectedPoint.x, selectedPoint.y, 180 + Math.sin(phase * 0.001) * 6, 0, Math.PI * 2);
@@ -2076,21 +2076,21 @@ export default function MobilityOSCore() {
       );
       passengerGradient.addColorStop(
         0,
-        viewMode === 'pulse' ? 'rgba(198,166,255,0.2)' : 'rgba(220,255,248,0.18)',
+        viewMode === 'pulse' ? 'rgba(198,166,255,0.2)' : 'rgba(245,239,231,0.18)',
       );
       passengerGradient.addColorStop(
         0.5,
         viewMode === 'pulse'
-          ? `rgba(167,124,255,${0.38 + route.passengerFlow / 3400})`
-          : `rgba(234,247,255,${0.34 + route.passengerFlow / 3200})`,
+          ? `rgba(239,180,93,${0.38 + route.passengerFlow / 3400})`
+          : `rgba(245,239,231,${0.34 + route.passengerFlow / 3200})`,
       );
       passengerGradient.addColorStop(
         1,
-        viewMode === 'pulse' ? 'rgba(217,194,255,0.18)' : 'rgba(101,225,255,0.2)',
+        viewMode === 'pulse' ? 'rgba(255,210,148,0.18)' : 'rgba(245,154,44,0.2)',
       );
       ctx.strokeStyle = passengerGradient;
       ctx.shadowBlur = viewMode === 'pulse' ? 28 : 22;
-      ctx.shadowColor = viewMode === 'pulse' ? 'rgba(167,124,255,0.52)' : PASSENGER_GLOW;
+      ctx.shadowColor = viewMode === 'pulse' ? 'rgba(239,180,93,0.52)' : PASSENGER_GLOW;
       ctx.lineWidth = 1.85 + route.passengerFlow / 1280;
       ctx.stroke();
       traceQuadraticCurve(ctx, passengerCurve);
@@ -2102,10 +2102,10 @@ export default function MobilityOSCore() {
       ctx.setLineDash([7, 6]);
       ctx.strokeStyle =
         viewMode === 'satellite'
-          ? `rgba(220,255,248,${0.16 + route.packageFlow / 1500})`
-          : `rgba(139,216,255,${0.22 + route.packageFlow / 1400})`;
+          ? `rgba(245,239,231,${0.16 + route.packageFlow / 1500})`
+          : `rgba(255,179,87,${0.22 + route.packageFlow / 1400})`;
       ctx.shadowBlur = viewMode === 'satellite' ? 20 : 16;
-      ctx.shadowColor = viewMode === 'satellite' ? 'rgba(220,255,248,0.36)' : PACKAGE_GLOW;
+      ctx.shadowColor = viewMode === 'satellite' ? 'rgba(245,239,231,0.36)' : PACKAGE_GLOW;
       ctx.lineWidth = 1.25 + route.packageFlow / 960;
       ctx.stroke();
       ctx.setLineDash([]);
@@ -2132,7 +2132,7 @@ export default function MobilityOSCore() {
           ctx.fillStyle =
             viewMode === 'pulse' ? 'rgba(225,208,255,0.96)' : 'rgba(255, 249, 230, 0.94)';
           ctx.shadowBlur = reducedEffects ? 10 : viewMode === 'pulse' ? 20 : 16;
-          ctx.shadowColor = viewMode === 'pulse' ? 'rgba(167,124,255,0.5)' : PASSENGER_GLOW;
+          ctx.shadowColor = viewMode === 'pulse' ? 'rgba(239,180,93,0.5)' : PASSENGER_GLOW;
           ctx.fill();
         }
 
@@ -2162,9 +2162,9 @@ export default function MobilityOSCore() {
           ctx.translate(point.x, point.y);
           ctx.rotate(Math.atan2(tangent.y, tangent.x) + Math.PI / 4);
           ctx.fillStyle =
-            viewMode === 'satellite' ? 'rgba(220,255,248,0.92)' : 'rgba(139,216,255,0.94)';
+            viewMode === 'satellite' ? 'rgba(245,239,231,0.92)' : 'rgba(255,179,87,0.94)';
           ctx.shadowBlur = reducedEffects ? 8 : 14;
-          ctx.shadowColor = viewMode === 'satellite' ? 'rgba(220,255,248,0.42)' : PACKAGE_GLOW;
+          ctx.shadowColor = viewMode === 'satellite' ? 'rgba(245,239,231,0.42)' : PACKAGE_GLOW;
           ctx.fillRect(-2.2, -2.2, 4.4, 4.4);
           ctx.restore();
         }
@@ -2208,7 +2208,7 @@ export default function MobilityOSCore() {
         ctx.rotate(Math.atan2(to.y - from.y, to.x - from.x));
         ctx.fillStyle = 'rgba(9,22,34,0.78)';
         ctx.fillRect(-18, -8, 36, 16);
-        ctx.strokeStyle = 'rgba(101,225,255,0.24)';
+        ctx.strokeStyle = 'rgba(245,154,44,0.24)';
         ctx.strokeRect(-18, -8, 36, 16);
         ctx.fillStyle = 'rgba(255,247,229,0.9)';
         ctx.font = `600 8px ${F}`;
@@ -2248,10 +2248,10 @@ export default function MobilityOSCore() {
         ctx.shadowColor = 'rgba(0,0,0,0.22)';
         ctx.fill();
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = rank === 0 ? 'rgba(101,225,255,0.42)' : 'rgba(255,255,255,0.16)';
+        ctx.strokeStyle = rank === 0 ? 'rgba(245,154,44,0.42)' : 'rgba(255,255,255,0.16)';
         ctx.lineWidth = 1;
         ctx.stroke();
-        ctx.fillStyle = rank === 0 ? '#DCFFF8' : '#eff6ff';
+        ctx.fillStyle = rank === 0 ? '#F5EFE7' : '#FFF2DF';
         ctx.textAlign = 'center';
         ctx.fillText(label, x + widthLabel / 2, y + 14.5);
       });
@@ -2276,34 +2276,34 @@ export default function MobilityOSCore() {
       ctx.lineTo(0.5, 0);
       ctx.strokeStyle =
         vehicle.type === 'passenger'
-          ? `rgba(220,255,248,${vehicle.isLiveTelemetry ? 0.54 : 0.3})`
-          : `rgba(139,216,255,${vehicle.isLiveTelemetry ? 0.52 : 0.32})`;
+          ? `rgba(245,239,231,${vehicle.isLiveTelemetry ? 0.54 : 0.3})`
+          : `rgba(255,179,87,${vehicle.isLiveTelemetry ? 0.52 : 0.32})`;
       ctx.lineWidth = vehicle.type === 'passenger' ? 1.8 : 1.4;
       ctx.stroke();
       if (!reducedEffects) {
         ctx.beginPath();
         ctx.arc(0, 0, vehicle.isLiveTelemetry ? 8.4 : 6.6, 0, Math.PI * 2);
         ctx.fillStyle =
-          vehicle.type === 'passenger' ? 'rgba(220,255,248,0.1)' : 'rgba(139,216,255,0.12)';
+          vehicle.type === 'passenger' ? 'rgba(245,239,231,0.1)' : 'rgba(255,179,87,0.12)';
         ctx.fill();
       }
       if (vehicle.isLiveTelemetry) {
         ctx.beginPath();
         ctx.arc(0, 0, vehicle.freshness === 'fresh' ? 11 : 9, 0, Math.PI * 2);
         ctx.strokeStyle =
-          vehicle.freshness === 'fresh' ? 'rgba(234,247,255,0.92)' : 'rgba(139,216,255,0.84)';
+          vehicle.freshness === 'fresh' ? 'rgba(245,239,231,0.92)' : 'rgba(255,179,87,0.84)';
         ctx.lineWidth = 1.4;
         ctx.stroke();
       }
       if (vehicle.type === 'passenger') {
-        ctx.fillStyle = '#DCFFF8';
+        ctx.fillStyle = '#F5EFE7';
         ctx.beginPath();
         ctx.roundRect(-6, -3.6, 12, 7.2, 3);
         ctx.fill();
         ctx.fillStyle = PASSENGER_COLOR;
         ctx.fillRect(-3.4, -1.8, 6.8, 3.6);
       } else {
-        ctx.fillStyle = '#EAF7FF';
+        ctx.fillStyle = '#FFF2DF';
         ctx.beginPath();
         ctx.moveTo(0, -5);
         ctx.lineTo(5, 0);
@@ -2336,9 +2336,9 @@ export default function MobilityOSCore() {
       halo.addColorStop(
         0,
         selected
-          ? 'rgba(220,255,248,0.34)'
+          ? 'rgba(245,239,231,0.34)'
           : city.isHub
-            ? 'rgba(169,227,255,0.26)'
+            ? 'rgba(255,179,87,0.26)'
             : 'rgba(255,255,255,0.16)',
       );
       halo.addColorStop(1, 'rgba(255,255,255,0)');
@@ -2350,31 +2350,31 @@ export default function MobilityOSCore() {
       ctx.beginPath();
       ctx.arc(point.x, point.y, selected ? 9 : city.isHub ? 7 : 5.5, 0, Math.PI * 2);
       ctx.fillStyle = selected
-          ? 'rgba(234,247,255,0.98)'
+          ? 'rgba(245,239,231,0.98)'
           : city.isHub
-            ? 'rgba(169,227,255,0.98)'
+            ? 'rgba(255,179,87,0.98)'
           : 'rgba(255,255,255,0.82)';
       ctx.fill();
       ctx.beginPath();
       ctx.moveTo(point.x, point.y - (selected ? 26 : city.isHub ? 22 : 18));
       ctx.lineTo(point.x, point.y - 6);
       ctx.strokeStyle = selected
-        ? 'rgba(169,227,255,0.44)'
+        ? 'rgba(255,179,87,0.44)'
         : city.isHub
-          ? 'rgba(101,225,255,0.28)'
+          ? 'rgba(245,154,44,0.28)'
           : 'rgba(255,255,255,0.12)';
       ctx.lineWidth = selected ? 2 : 1.3;
       ctx.stroke();
       ctx.beginPath();
       ctx.arc(point.x, point.y, selected ? 4.6 : city.isHub ? 3.6 : 2.8, 0, Math.PI * 2);
-      ctx.fillStyle = selected ? 'rgba(139,216,255,0.96)' : 'rgba(255,255,255,0.95)';
+      ctx.fillStyle = selected ? 'rgba(255,179,87,0.96)' : 'rgba(255,255,255,0.95)';
       ctx.fill();
       ctx.beginPath();
       ctx.arc(point.x, point.y, selected ? 14 : city.isHub ? 11 : 8, 0, Math.PI * 2);
       ctx.strokeStyle = selected
-        ? 'rgba(169,227,255,0.86)'
+        ? 'rgba(255,179,87,0.86)'
         : city.isHub
-          ? 'rgba(101,225,255,0.34)'
+          ? 'rgba(245,154,44,0.34)'
           : 'rgba(255,255,255,0.18)';
       ctx.lineWidth = selected ? 1.5 : 1;
       ctx.stroke();
@@ -2400,21 +2400,21 @@ export default function MobilityOSCore() {
         labelFill.addColorStop(1, selected ? 'rgba(9,52,54,0.9)' : 'rgba(7,18,30,0.7)');
         ctx.fillStyle = labelFill;
         ctx.shadowBlur = selected ? 18 : 8;
-        ctx.shadowColor = selected ? 'rgba(169,227,255,0.18)' : 'rgba(101,225,255,0.08)';
+        ctx.shadowColor = selected ? 'rgba(255,179,87,0.18)' : 'rgba(245,154,44,0.08)';
         ctx.fill();
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = selected ? 'rgba(169,227,255,0.42)' : 'rgba(255,255,255,0.1)';
+        ctx.strokeStyle = selected ? 'rgba(255,179,87,0.42)' : 'rgba(255,255,255,0.1)';
         ctx.lineWidth = 1;
         ctx.stroke();
 
         ctx.beginPath();
         ctx.moveTo(point.x, point.y - 8);
         ctx.lineTo(point.x, labelY + labelHeight);
-        ctx.strokeStyle = selected ? 'rgba(169,227,255,0.32)' : 'rgba(255,255,255,0.12)';
+        ctx.strokeStyle = selected ? 'rgba(255,179,87,0.32)' : 'rgba(255,255,255,0.12)';
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        ctx.fillStyle = '#EFF6FF';
+        ctx.fillStyle = '#FFF6EB';
         ctx.textAlign = 'center';
         ctx.fillText(labelText, point.x, labelY + labelHeight / 2 + 4);
       }
@@ -2441,7 +2441,7 @@ export default function MobilityOSCore() {
       ctx.strokeStyle = 'rgba(255,255,255,0.08)';
       ctx.lineWidth = 1;
       ctx.strokeRect(frameLeft, frameTop, frameWidth, frameHeight);
-      ctx.strokeStyle = 'rgba(169,227,255,0.16)';
+      ctx.strokeStyle = 'rgba(255,179,87,0.16)';
       ctx.strokeRect(frameLeft + 8, frameTop + 8, frameWidth - 16, frameHeight - 16);
 
       [
@@ -2482,7 +2482,7 @@ export default function MobilityOSCore() {
         ctx.moveTo(corner[0], corner[1]);
         ctx.lineTo(corner[2], corner[3]);
         ctx.lineTo(corner[4], corner[5]);
-        ctx.strokeStyle = 'rgba(169,227,255,0.3)';
+        ctx.strokeStyle = 'rgba(255,179,87,0.3)';
         ctx.lineWidth = 2;
         ctx.stroke();
       });
@@ -3067,22 +3067,22 @@ export default function MobilityOSCore() {
     : [];
   const formatLabel = (value: string) => value.replace(/\s*·\s*/g, ' · ');
   const surfaceThemeVars: CSSProperties = {
-    '--bg-primary': '#06111d',
+    '--bg-primary': '#0f1113',
     '--text-primary': SERVICE_TEXT,
     '--text-secondary': SERVICE_SUB,
     '--text-muted': SERVICE_MUTED,
     '--border': SERVICE_BORDER,
     '--border-strong': SERVICE_BORDER_STRONG,
-    '--surface-divider': 'rgba(169,227,255,0.12)',
-    '--surface-muted': 'rgba(169,227,255,0.08)',
-    '--surface-muted-strong': 'rgba(169,227,255,0.14)',
+    '--surface-divider': 'rgba(255,179,87,0.12)',
+    '--surface-muted': 'rgba(245,154,44,0.08)',
+    '--surface-muted-strong': 'rgba(245,154,44,0.14)',
     '--primary': SKY_ACCENT,
     '--accent-secondary': SKY_ACCENT,
-    '--accent-secondary-rgb': '169 227 255',
+    '--accent-secondary-rgb': '255 179 87',
     '--success': SKY_SUCCESS,
-    '--success-rgb': '121 243 208',
+    '--success-rgb': '121 198 125',
     '--warning': SKY_WARNING,
-    '--warning-rgb': '255 199 141',
+    '--warning-rgb': '239 180 93',
   } as CSSProperties;
 
   return (
@@ -3091,7 +3091,7 @@ export default function MobilityOSCore() {
       style={{
         ...surfaceThemeVars,
         minHeight: '100vh',
-        background: `${GRAD_AURORA}, radial-gradient(circle at 15% 12%, rgba(169,227,255,0.22), transparent 22%), radial-gradient(circle at 82% 18%, rgba(139,216,255,0.16), transparent 24%), radial-gradient(circle at 50% 100%, rgba(234,247,255,0.08), transparent 28%), #06111d`,
+        background: `${GRAD_AURORA}, radial-gradient(circle at 15% 12%, rgba(245,154,44,0.22), transparent 22%), radial-gradient(circle at 82% 18%, rgba(255,179,87,0.16), transparent 24%), radial-gradient(circle at 50% 100%, rgba(245,239,231,0.08), transparent 28%), #0f1113`,
         color: SERVICE_TEXT,
         fontFamily: F,
         padding: isCompactMobile ? '14px 12px 84px' : '20px 14px 88px',
@@ -3118,7 +3118,7 @@ export default function MobilityOSCore() {
           pointer-events: none;
           border-radius: 999px;
           background:
-            radial-gradient(circle at 28% 50%, rgba(169,227,255,0.18) 0%, rgba(101,225,255,0.12) 26%, rgba(8,18,28,0) 70%),
+            radial-gradient(circle at 28% 50%, rgba(255,179,87,0.18) 0%, rgba(245,154,44,0.12) 26%, rgba(8,18,28,0) 70%),
             linear-gradient(90deg, rgba(7,18,30,0.26), rgba(7,18,30,0));
           contain: layout paint;
           will-change: transform, opacity;
@@ -3128,10 +3128,10 @@ export default function MobilityOSCore() {
           position: absolute;
           inset: 12px -18px;
           border-radius: 999px;
-          border: 1px solid rgba(220,255,248,0.08);
+          border: 1px solid rgba(245,239,231,0.08);
           background:
             linear-gradient(90deg, rgba(8,18,28,0.56), rgba(8,18,28,0.16)),
-            radial-gradient(circle at 20% 50%, rgba(169,227,255,0.16), rgba(169,227,255,0) 44%);
+            radial-gradient(circle at 20% 50%, rgba(255,179,87,0.16), rgba(255,179,87,0) 44%);
           box-shadow:
             inset 0 1px 0 rgba(255,255,255,0.04),
             0 14px 32px rgba(0,0,0,0.16);
@@ -3140,7 +3140,7 @@ export default function MobilityOSCore() {
           position: absolute;
           inset: -18px -30px;
           border-radius: 999px;
-          background: radial-gradient(circle, rgba(25,231,187,0.34) 0%, rgba(101,225,255,0.18) 38%, rgba(4,15,27,0) 74%);
+          background: radial-gradient(circle, rgba(245,154,44,0.34) 0%, rgba(245,154,44,0.18) 38%, rgba(4,15,27,0) 74%);
           filter: blur(16px);
           animation: mobility-os-brand-glow 4.8s ease-in-out infinite;
         }
@@ -3177,10 +3177,10 @@ export default function MobilityOSCore() {
         }
         .mobility-os-focusable:focus-visible {
           outline: none;
-          border-color: rgba(101,225,255,0.9) !important;
+          border-color: rgba(245,154,44,0.9) !important;
           box-shadow:
-            0 0 0 1px rgba(101,225,255,0.8),
-            0 0 0 4px rgba(101,225,255,0.16) !important;
+            0 0 0 1px rgba(245,154,44,0.8),
+            0 0 0 4px rgba(245,154,44,0.16) !important;
         }
         .mobility-os-focusable:hover {
           transform: translateY(-1px);
@@ -3218,7 +3218,7 @@ export default function MobilityOSCore() {
               inset: 0,
               pointerEvents: 'none',
               background:
-                'linear-gradient(135deg, rgba(255,255,255,0.04), transparent 24%, transparent 72%, rgba(169,227,255,0.1))',
+                'linear-gradient(135deg, rgba(255,255,255,0.04), transparent 24%, transparent 72%, rgba(255,179,87,0.1))',
             }}
           />
           <div style={{ position: 'relative', display: 'grid', gap: 18 }}>
@@ -3245,7 +3245,7 @@ export default function MobilityOSCore() {
                       lineHeight: isCompactMobile ? 1.02 : 0.96,
                       letterSpacing: '-0.05em',
                       maxWidth: 920,
-                      textShadow: '0 10px 36px rgba(169,227,255,0.08)',
+                      textShadow: '0 10px 36px rgba(255,179,87,0.08)',
                     }}
                   >
                     {copy.heroTitle}
@@ -3521,7 +3521,7 @@ export default function MobilityOSCore() {
                           border: `1px solid ${viewMode === mode.id ? C.cyan : C.border}`,
                           background:
                             viewMode === mode.id
-                              ? 'rgba(169,227,255,0.14)'
+                              ? 'rgba(255,179,87,0.14)'
                               : 'rgba(255,255,255,0.035)',
                           color: viewMode === mode.id ? C.text : C.textSub,
                           cursor: 'pointer',
@@ -3530,7 +3530,7 @@ export default function MobilityOSCore() {
                           textTransform: 'uppercase',
                           fontSize: '0.72rem',
                           boxShadow:
-                            viewMode === mode.id ? '0 0 24px rgba(169,227,255,0.2)' : 'none',
+                            viewMode === mode.id ? '0 0 24px rgba(255,179,87,0.2)' : 'none',
                         }}
                       >
                         {mode.label}
@@ -3926,7 +3926,7 @@ export default function MobilityOSCore() {
                           border: `1px solid ${routeLens === option.id ? C.cyan : C.border}`,
                           background:
                             routeLens === option.id
-                              ? 'rgba(169,227,255,0.14)'
+                              ? 'rgba(255,179,87,0.14)'
                               : 'rgba(255,255,255,0.03)',
                           color: routeLens === option.id ? C.text : C.textSub,
                           cursor: 'pointer',
@@ -4009,7 +4009,7 @@ export default function MobilityOSCore() {
                   transformOrigin: 'center top',
                 }),
                 background:
-                  'radial-gradient(circle at 78% 14%, rgba(169,227,255,0.12), rgba(169,227,255,0) 24%), linear-gradient(180deg, rgba(6,15,25,0.99), rgba(4,11,20,0.99))',
+                  'radial-gradient(circle at 78% 14%, rgba(255,179,87,0.12), rgba(255,179,87,0) 24%), linear-gradient(180deg, rgba(6,15,25,0.99), rgba(4,11,20,0.99))',
                 border: `1px solid ${SERVICE_BORDER}`,
                 contain: 'layout paint size',
               }}
@@ -4023,7 +4023,7 @@ export default function MobilityOSCore() {
                   inset: 0,
                   pointerEvents: 'none',
                   background:
-                    'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0) 18%, rgba(169,227,255,0.05) 100%)',
+                    'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0) 18%, rgba(255,179,87,0.05) 100%)',
                 }}
               />
               <div
@@ -4032,7 +4032,7 @@ export default function MobilityOSCore() {
                   inset: 0,
                   pointerEvents: 'none',
                   background:
-                    'radial-gradient(circle at 18% 12%, rgba(255,255,255,0.05), transparent 18%), radial-gradient(circle at 82% 20%, rgba(169,227,255,0.08), transparent 22%)',
+                    'radial-gradient(circle at 18% 12%, rgba(255,255,255,0.05), transparent 18%), radial-gradient(circle at 82% 20%, rgba(255,179,87,0.08), transparent 22%)',
                 }}
               />
               <div
@@ -4047,7 +4047,7 @@ export default function MobilityOSCore() {
                   borderRadius: isCompactMobile ? 20 : 28,
                   border: `1px solid ${SERVICE_BORDER}`,
                   background:
-                    'linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0) 18%, rgba(169,227,255,0.05) 100%), radial-gradient(circle at 72% 16%, rgba(169,227,255,0.09), rgba(169,227,255,0) 28%)',
+                    'linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0) 18%, rgba(255,179,87,0.05) 100%), radial-gradient(circle at 72% 16%, rgba(255,179,87,0.09), rgba(255,179,87,0) 28%)',
                   boxShadow:
                     'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 0 0 1px rgba(255,255,255,0.02)',
                 }}
@@ -4187,7 +4187,7 @@ export default function MobilityOSCore() {
                             border: `1px solid ${routeLens === option.id ? SKY_ACCENT : SERVICE_BORDER}`,
                             background:
                               routeLens === option.id
-                                ? 'linear-gradient(180deg, rgba(169,227,255,0.18), rgba(169,227,255,0.08))'
+                                ? 'linear-gradient(180deg, rgba(255,179,87,0.18), rgba(255,179,87,0.08))'
                                 : 'rgba(255,255,255,0.03)',
                             color: routeLens === option.id ? SERVICE_TEXT : SERVICE_SUB,
                             cursor: 'pointer',
@@ -4197,7 +4197,7 @@ export default function MobilityOSCore() {
                             textAlign: ar ? 'right' : 'left',
                             boxShadow:
                               routeLens === option.id
-                                ? '0 10px 24px rgba(169,227,255,0.12)'
+                                ? '0 10px 24px rgba(255,179,87,0.12)'
                                 : 'none',
                           }}
                         >
@@ -4278,7 +4278,7 @@ export default function MobilityOSCore() {
                       height: 8,
                       borderRadius: 999,
                       background: SKY_ACCENT,
-                      boxShadow: '0 0 14px rgba(169,227,255,0.64)',
+                      boxShadow: '0 0 14px rgba(255,179,87,0.64)',
                     }}
                   />
                   <span style={{ fontSize: '0.78rem', fontWeight: 700, color: SERVICE_TEXT }}>
@@ -4413,7 +4413,7 @@ export default function MobilityOSCore() {
                       height: 8,
                       borderRadius: 999,
                       background: SKY_ACCENT,
-                      boxShadow: '0 0 14px rgba(169,227,255,0.64)',
+                      boxShadow: '0 0 14px rgba(255,179,87,0.64)',
                     }}
                   />
                   <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>{copy.liveMesh}</span>
@@ -4557,7 +4557,7 @@ export default function MobilityOSCore() {
                       border: `1px solid ${selectedCityId === city.id ? PACKAGE_COLOR : C.border}`,
                       background:
                         selectedCityId === city.id
-                          ? 'rgba(169,227,255,0.12)'
+                          ? 'rgba(255,179,87,0.12)'
                           : 'rgba(255,255,255,0.03)',
                       color: C.text,
                       cursor: 'pointer',
@@ -4582,7 +4582,7 @@ export default function MobilityOSCore() {
                       padding: '10px 12px',
                       borderRadius: 14,
                       border: '1px solid rgba(255,255,255,0.07)',
-                      background: index === 2 ? 'rgba(169,227,255,0.08)' : 'rgba(255,255,255,0.03)',
+                      background: index === 2 ? 'rgba(255,179,87,0.08)' : 'rgba(255,255,255,0.03)',
                       color: index === 2 ? C.cyan : C.textSub,
                       fontWeight: index === 2 ? 700 : 500,
                     }}
@@ -4617,12 +4617,12 @@ export default function MobilityOSCore() {
                       borderRadius: 16,
                       background:
                         index === 0
-                          ? 'linear-gradient(135deg, rgba(169,227,255,0.14), rgba(255,255,255,0.03))'
+                          ? 'linear-gradient(135deg, rgba(255,179,87,0.14), rgba(255,255,255,0.03))'
                           : 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${index === 0 ? 'rgba(169,227,255,0.24)' : C.borderFaint}`,
+                      border: `1px solid ${index === 0 ? 'rgba(255,179,87,0.24)' : C.borderFaint}`,
                       color: C.textSub,
                       lineHeight: 1.6,
-                      boxShadow: index === 0 ? '0 10px 24px rgba(169,227,255,0.08)' : 'none',
+                      boxShadow: index === 0 ? '0 10px 24px rgba(255,179,87,0.08)' : 'none',
                     }}
                   >
                     {item}
@@ -4706,8 +4706,8 @@ export default function MobilityOSCore() {
                   route.congestion > 0.75
                     ? 'rgba(255,120,92,0.16)'
                     : route.packageFlow > route.passengerFlow * 0.45
-                      ? 'rgba(169,227,255,0.14)'
-                      : 'rgba(234,247,255,0.12)';
+                      ? 'rgba(255,179,87,0.14)'
+                      : 'rgba(245,239,231,0.12)';
                 return (
                   <div
                     key={route.id}
@@ -4719,7 +4719,7 @@ export default function MobilityOSCore() {
                       background: `linear-gradient(180deg, ${pressureTone}, rgba(255,255,255,0.025))`,
                       boxShadow:
                         index === 0
-                          ? '0 18px 40px rgba(169,227,255,0.12)'
+                          ? '0 18px 40px rgba(255,179,87,0.12)'
                           : '0 10px 30px rgba(0,0,0,0.16)',
                     }}
                   >
@@ -4728,7 +4728,7 @@ export default function MobilityOSCore() {
                         position: 'absolute',
                         inset: 0,
                         pointerEvents: 'none',
-                        background: `radial-gradient(circle at top right, ${index === 0 ? 'rgba(169,227,255,0.16)' : 'rgba(255,255,255,0.05)'}, transparent 32%)`,
+                        background: `radial-gradient(circle at top right, ${index === 0 ? 'rgba(255,179,87,0.16)' : 'rgba(255,255,255,0.05)'}, transparent 32%)`,
                       }}
                     />
                     <div
@@ -4765,8 +4765,8 @@ export default function MobilityOSCore() {
                                 height: 34,
                                 borderRadius: 12,
                                 background:
-                                  index === 0 ? 'rgba(169,227,255,0.16)' : 'rgba(255,255,255,0.06)',
-                                border: `1px solid ${index === 0 ? 'rgba(169,227,255,0.24)' : 'rgba(255,255,255,0.08)'}`,
+                                  index === 0 ? 'rgba(255,179,87,0.16)' : 'rgba(255,255,255,0.06)',
+                                border: `1px solid ${index === 0 ? 'rgba(255,179,87,0.24)' : 'rgba(255,255,255,0.08)'}`,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -4859,7 +4859,7 @@ export default function MobilityOSCore() {
                               fontWeight: 900,
                               fontSize: '2rem',
                               lineHeight: 1,
-                              textShadow: index === 0 ? '0 0 18px rgba(25,231,187,0.22)' : 'none',
+                              textShadow: index === 0 ? '0 0 18px rgba(245,154,44,0.22)' : 'none',
                             }}
                           >
                             {routeScore}
@@ -4885,7 +4885,7 @@ export default function MobilityOSCore() {
                             label: `${copy.packageUtilization} · ${copy.estimateTag}`,
                             value: route.packageFlow / Math.max(route.lanes * 820, 1),
                             color: PACKAGE_COLOR,
-                            tone: 'rgba(169,227,255,0.08)',
+                            tone: 'rgba(255,179,87,0.08)',
                           },
                           {
                             label: `${copy.congestionIntensity} · ${copy.estimateTag}`,
@@ -4957,3 +4957,4 @@ export default function MobilityOSCore() {
     </div>
   );
 }
+

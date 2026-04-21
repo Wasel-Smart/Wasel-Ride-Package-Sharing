@@ -5,60 +5,65 @@
 import { F, FA } from '../utils/wasel-ds';
 
 export const PAGE_DS = {
-  bg: 'var(--wasel-shell-background, var(--background, #060D1A))',
+  bg: 'var(--ds-page, #0f1113)',
   card:
-    'var(--wasel-service-card, var(--wasel-panel-strong, rgba(10,18,28,0.84)))',
+    'linear-gradient(180deg, color-mix(in srgb, var(--ds-surface-raised, #20242a) 68%, var(--ds-surface, #1a1d22)) 0%, var(--ds-surface, #1a1d22) 100%)',
   card2:
-    'var(--wasel-service-card-2, var(--wasel-panel-muted, rgba(220,255,248,0.055)))',
+    'color-mix(in srgb, var(--ds-surface-soft, #262b32) 82%, var(--ds-surface, #1a1d22))',
   card3:
-    'var(--wasel-service-card-3, rgba(220,255,248,0.085))',
+    'color-mix(in srgb, var(--ds-accent, #f59a2c) 10%, var(--ds-surface, #1a1d22))',
   panel:
-    'var(--wasel-service-card-2, var(--wasel-panel-muted, rgba(220,255,248,0.055)))',
-  field: 'var(--surface-field, rgba(8,15,26,0.94))',
+    'color-mix(in srgb, var(--ds-surface-raised, #20242a) 78%, var(--ds-surface, #1a1d22))',
+  field: 'var(--ds-surface-raised, #20242a)',
 
-  border:
-    'var(--wasel-service-border, var(--wasel-panel-border, rgba(255,255,255,0.10)))',
+  border: 'var(--ds-border, #313841)',
   borderH:
-    'var(--wasel-service-border-strong, var(--wasel-button-primary-border-strong, rgba(169,227,255,0.26)))',
+    'color-mix(in srgb, var(--ds-accent-strong, #ffb357) 32%, var(--ds-border, #313841))',
 
-  cyan: 'var(--primary, #A9E3FF)',
-  cyanG: 'rgba(169,227,255,0.12)',
-  blue: 'var(--accent-secondary, #7ECDF9)',
-  blueG: 'rgba(126,205,249,0.12)',
-  green: 'var(--success, #19E7BB)',
-  greenG: 'rgba(25,231,187,0.12)',
-  gold: 'var(--warning, #F8BA3E)',
-  goldG: 'rgba(248,186,62,0.12)',
-  red: 'var(--danger, #FF5060)',
-  navy: '#060D1A',
+  cyan: 'var(--ds-accent, #f59a2c)',
+  cyanG: 'color-mix(in srgb, var(--ds-accent, #f59a2c) 12%, transparent)',
+  blue: 'var(--ds-accent-strong, #ffb357)',
+  blueG: 'color-mix(in srgb, var(--ds-accent-strong, #ffb357) 12%, transparent)',
+  green: 'var(--ds-success, #79c67d)',
+  greenG: 'color-mix(in srgb, var(--ds-success, #79c67d) 12%, transparent)',
+  gold: 'var(--ds-warning, #efb45d)',
+  goldG: 'color-mix(in srgb, var(--ds-warning, #efb45d) 12%, transparent)',
+  red: 'var(--ds-danger, #ee705d)',
+  navy: 'var(--ds-page, #0f1113)',
 
-  text:
-    'var(--wasel-service-text, var(--wasel-copy-primary, var(--text-primary, #DCFFF8)))',
-  sub:
-    'var(--wasel-service-sub, var(--wasel-copy-secondary, var(--text-secondary, rgba(220,255,248,0.72))))',
-  muted:
-    'var(--wasel-service-muted, var(--wasel-copy-muted, var(--text-muted, rgba(220,255,248,0.48))))',
+  text: 'var(--ds-text, #f5efe7)',
+  sub: 'var(--ds-text-muted, #b9aea0)',
+  muted: 'var(--ds-text-soft, #8b8277)',
 
   F,
   FA,
   FD: "'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
 
-  gradC: 'var(--theme-gradient-primary, linear-gradient(135deg, #EEF8FF 0%, #D6EEFF 52%, #A9E3FF 100%))',
-  gradG: 'var(--theme-gradient-signal, linear-gradient(135deg, #A9E3FF 0%, #7ECDF9 58%, #19E7BB 100%))',
-  gradGld: 'linear-gradient(135deg, #F8BA3E 0%, #F4D57B 100%)',
-  gradGold: 'linear-gradient(135deg, #F8BA3E 0%, #F4D57B 100%)',
-  gradB: 'linear-gradient(135deg, rgba(8,15,26,0.98) 0%, rgba(11,21,37,0.98) 100%)',
-  gradNav: 'linear-gradient(135deg, rgba(6,13,26,0.98) 0%, rgba(11,21,37,0.98) 52%, rgba(16,31,49,0.98) 100%)',
-  gradHero: 'var(--wasel-service-head-bg, var(--service-head-background))',
-  glowC: 'rgba(169,227,255,0.2)',
-  glowT: 'rgba(25,231,187,0.16)',
+  gradC:
+    'linear-gradient(135deg, color-mix(in srgb, var(--ds-accent-strong, #ffb357) 86%, white 14%) 0%, var(--ds-accent-strong, #ffb357) 48%, var(--ds-accent, #f59a2c) 100%)',
+  gradG:
+    'linear-gradient(135deg, color-mix(in srgb, var(--ds-accent, #f59a2c) 92%, white 8%) 0%, var(--ds-accent, #f59a2c) 100%)',
+  gradGld:
+    'linear-gradient(135deg, color-mix(in srgb, var(--ds-warning, #efb45d) 84%, white 16%) 0%, var(--ds-warning, #efb45d) 100%)',
+  gradGold:
+    'linear-gradient(135deg, color-mix(in srgb, var(--ds-warning, #efb45d) 84%, white 16%) 0%, var(--ds-warning, #efb45d) 100%)',
+  gradB:
+    'linear-gradient(135deg, var(--ds-surface-raised, #20242a) 0%, var(--ds-page, #0f1113) 100%)',
+  gradNav:
+    'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted, #15181c) 88%, var(--ds-accent-soft, #3f2a15) 12%) 0%, var(--ds-page, #0f1113) 100%)',
+  gradHero:
+    'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted, #15181c) 88%, var(--ds-accent-soft, #3f2a15) 12%) 0%, color-mix(in srgb, var(--ds-surface, #1a1d22) 92%, var(--ds-accent-soft, #3f2a15) 8%) 54%, var(--ds-page, #0f1113) 100%)',
+  glowC: 'color-mix(in srgb, var(--ds-accent-strong, #ffb357) 24%, transparent)',
+  glowT: 'color-mix(in srgb, var(--ds-accent, #f59a2c) 18%, transparent)',
 
-  sectionHeadBg: 'var(--wasel-service-head-bg, var(--service-head-background))',
-  cardGrad: 'linear-gradient(180deg, rgba(220,255,248,0.06) 0%, rgba(220,255,248,0.02) 100%)',
+  sectionHeadBg:
+    'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted, #15181c) 88%, var(--ds-accent-soft, #3f2a15) 12%) 0%, color-mix(in srgb, var(--ds-surface, #1a1d22) 92%, var(--ds-accent-soft, #3f2a15) 8%) 54%, var(--ds-page, #0f1113) 100%)',
+  cardGrad:
+    'linear-gradient(180deg, color-mix(in srgb, var(--ds-accent-strong, #ffb357) 8%, var(--ds-surface-raised, #20242a)) 0%, color-mix(in srgb, var(--ds-accent, #f59a2c) 4%, var(--ds-surface, #1a1d22)) 100%)',
 
-  shadowCard: 'var(--wasel-shadow-card, 0 8px 28px rgba(0,0,0,0.38))',
-  shadowMd: 'var(--wasel-shadow-md, 0 16px 48px rgba(0,0,0,0.44))',
-  shadowTeal: 'var(--wasel-shadow-teal, 0 18px 44px rgba(169,227,255,0.22))',
+  shadowCard: 'var(--ds-shadow-md, 0 20px 44px rgb(0 0 0 / 0.24))',
+  shadowMd: 'var(--ds-shadow-lg, 0 32px 72px rgb(0 0 0 / 0.34))',
+  shadowTeal: 'var(--ds-shadow-md, 0 20px 44px rgb(0 0 0 / 0.24))',
 } as const;
 
 export const PAGE_RADIUS = {

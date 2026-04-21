@@ -1,33 +1,32 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  sanitizeThemePreference,
-  getSystemTheme,
-  getStoredThemePreference,
-  resolveThemePreference,
-  persistThemePreference,
   applyThemeToDocument,
-  setThemeTransitionState,
+  getStoredThemePreference,
+  getSystemTheme,
   initializeThemeFromStorage,
-  THEME_STORAGE_KEY,
   LEGACY_DISPLAY_STORAGE_KEY,
+  persistThemePreference,
+  resolveThemePreference,
+  sanitizeThemePreference,
+  setThemeTransitionState,
   THEME_READY_ATTRIBUTE,
+  THEME_STORAGE_KEY,
 } from '@/utils/theme';
 
 describe('sanitizeThemePreference', () => {
   it('accepts "light"', () => expect(sanitizeThemePreference('light')).toBe('light'));
   it('accepts "dark"', () => expect(sanitizeThemePreference('dark')).toBe('dark'));
   it('accepts "system"', () => expect(sanitizeThemePreference('system')).toBe('system'));
-  it('falls back to "light" for unknown value', () => expect(sanitizeThemePreference('auto')).toBe('light'));
-  it('falls back for null', () => expect(sanitizeThemePreference(null)).toBe('light'));
-  it('falls back for undefined', () => expect(sanitizeThemePreference(undefined)).toBe('light'));
-  it('falls back for empty string', () => expect(sanitizeThemePreference('')).toBe('light'));
+  it('falls back to "dark" for unknown value', () => expect(sanitizeThemePreference('auto')).toBe('dark'));
+  it('falls back for null', () => expect(sanitizeThemePreference(null)).toBe('dark'));
+  it('falls back for undefined', () => expect(sanitizeThemePreference(undefined)).toBe('dark'));
+  it('falls back for empty string', () => expect(sanitizeThemePreference('')).toBe('dark'));
 });
 
 describe('resolveThemePreference', () => {
-  it('resolves "light" → "light"', () => expect(resolveThemePreference('light')).toBe('light'));
-  it('resolves "dark" → "dark"', () => expect(resolveThemePreference('dark')).toBe('dark'));
+  it('resolves "light" -> "light"', () => expect(resolveThemePreference('light')).toBe('light'));
+  it('resolves "dark" -> "dark"', () => expect(resolveThemePreference('dark')).toBe('dark'));
   it('resolves "system" using window.matchMedia', () => {
-    // matchMedia is mocked to return matches:false in setup.ts → light
     expect(resolveThemePreference('system')).toBe('light');
   });
 });
@@ -59,8 +58,8 @@ describe('getStoredThemePreference', () => {
     expect(getStoredThemePreference()).toBe('light');
   });
 
-  it('returns "light" when nothing stored', () => {
-    expect(getStoredThemePreference()).toBe('light');
+  it('returns "dark" when nothing stored', () => {
+    expect(getStoredThemePreference()).toBe('dark');
   });
 
   it('handles corrupted legacy key gracefully', () => {
@@ -72,7 +71,7 @@ describe('getStoredThemePreference', () => {
     const spy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('SecurityError');
     });
-    expect(getStoredThemePreference()).toBe('light');
+    expect(getStoredThemePreference()).toBe('dark');
     spy.mockRestore();
   });
 });
@@ -159,7 +158,7 @@ describe('initializeThemeFromStorage', () => {
     expect(document.documentElement.dataset.theme).toBe('dark');
   });
 
-  it('returns "light" when nothing stored', () => {
-    expect(initializeThemeFromStorage()).toBe('light');
+  it('returns "dark" when nothing stored', () => {
+    expect(initializeThemeFromStorage()).toBe('dark');
   });
 });

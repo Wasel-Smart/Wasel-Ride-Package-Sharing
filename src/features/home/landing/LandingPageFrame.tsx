@@ -37,7 +37,7 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
         style={{
           position: 'absolute',
           inset: 0,
-          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, rgba(22,199,242,0.18), rgba(4,18,30,0) 26%), radial-gradient(circle at 72% 68%, rgba(199,255,26,0.14), rgba(4,18,30,0) 18%)`,
+          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--ds-accent, #f59a2c) 18%, transparent), transparent 26%), radial-gradient(circle at 72% 68%, color-mix(in srgb, var(--ds-accent-strong, #ffb357) 14%, transparent), transparent 18%)`,
           pointerEvents: 'none',
           opacity: 0.96,
         }}

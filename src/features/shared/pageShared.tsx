@@ -144,7 +144,14 @@ export function PageShell({ children }: { children: ReactNode }) {
   const ar = language === 'ar';
 
   return (
-    <div className="wasel-page-shell-root" dir={ar ? 'rtl' : 'ltr'}>
+    <div className="wasel-page-shell-root" dir={ar ? 'rtl' : 'ltr'} style={{
+      minHeight: '100vh',
+      background: 'var(--wasel-shell-background)',
+      color: 'var(--wasel-copy-primary)',
+      fontFamily: DS.F,
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
       <style>{`${LANDING_RESPONSIVE_STYLES}
         :root { color-scheme: inherit; }
         .w-focus:focus-visible { outline: none; box-shadow: var(--wasel-focus-ring); }
@@ -202,11 +209,25 @@ export function PageShell({ children }: { children: ReactNode }) {
         }
       `}</style>
 
-      <div className="sp-inner wasel-page-shell">
-        <div aria-hidden="true" className="wasel-page-shell__glow" />
+      {/* Aurora gradient layers matching landing */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(circle at 14% 10%, rgba(71,183,230,0.18), rgba(4,18,30,0) 24%), radial-gradient(circle at 88% 14%, rgba(168,214,20,0.12), rgba(4,18,30,0) 18%)',
+          pointerEvents: 'none',
+          opacity: 0.96,
+        }}
+      />
+
+      <div className="sp-inner wasel-page-shell" style={{
+        position: 'relative',
+        maxWidth: 1380,
+        margin: '0 auto',
+        padding: '28px 20px 84px',
+      }}>
         <div className="sp-frame wasel-page-frame">
-          <div aria-hidden="true" className="wasel-page-frame__top-line" />
-          <div aria-hidden="true" className="wasel-page-frame__top-wash" />
           <div className="wasel-page-stack">{children}</div>
         </div>
       </div>

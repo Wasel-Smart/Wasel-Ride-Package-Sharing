@@ -87,4 +87,25 @@ export default tseslint.config(
       }],
     },
   },
+  {
+    files: [
+      'src/App.tsx',
+      'src/components/app/ErrorBoundary.tsx',
+      'src/components/app/AppShell.tsx',
+      'src/components/MobileBottomNav.tsx',
+      'src/features/profile/ProfilePage.tsx',
+      'src/layouts/WaselRoot.tsx',
+      'src/wasel-routes.tsx',
+      'src/app/**/*.tsx',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "JSXAttribute[name.name='style']",
+          message: 'Inline styles are blocked. Use shared design-system classes and tokens.',
+        },
+      ],
+    },
+  },
 );
