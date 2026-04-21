@@ -1,0 +1,26 @@
+:root[data-theme='dark'] {
+  --ds-page: #0f1113;
+  --ds-page-muted: #15181c;
+  --ds-surface: #1a1d22;
+  --ds-surface-raised: #20242a;
+  --ds-surface-soft: #262b32;
+  --ds-surface-overlay: rgb(15 17 19 / 0.8);
+  --ds-border: #313841;
+  --ds-border-strong: #45505c;
+  --ds-text: #f5efe7;
+  --ds-text-muted: #b9aea0;
+  --ds-text-soft: #8b8277;
+  --ds-accent: #f59a2c;
+  --ds-accent-strong: #ffb357;
+  --ds-accent-soft: #3f2a15;
+  --ds-success: #79c67d;
+  --ds-warning: #efb45d;
+  --ds-danger: #ee705d;
+  --ds-info: #6bb9df;
+  --ds-shadow-sm: 0 12px 28px rgb(0 0 0 / 0.14);
+  --ds-shadow-md: 0 20px 44px rgb(0 0 0 / 0.24);
+  --ds-shadow-lg: 0 32px 72px rgb(0 0 0 / 0.34);
+  --ds-map-opacity: 0.2;
+
+  color-scheme: dark;
+}
