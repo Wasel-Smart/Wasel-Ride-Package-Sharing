@@ -18,7 +18,8 @@ type StaticRouteSeoInput = {
 const APP_ROUTE_SEO: Record<string, StaticRouteSeoInput> = {
   '/app': {
     title: 'Wasel App',
-    description: 'Authenticated Wasel workspace for mobility, payments, logistics, and profile operations.',
+    description:
+      'Authenticated Wasel workspace for mobility, payments, logistics, and profile operations.',
   },
   '/app/auth': {
     title: 'Sign In',
@@ -30,15 +31,18 @@ const APP_ROUTE_SEO: Record<string, StaticRouteSeoInput> = {
   },
   '/app/find-ride': {
     title: 'Find Ride',
-    description: 'Search shared routes, compare seat options, and continue inside the authenticated Wasel rider workspace.',
+    description:
+      'Search shared routes, compare seat options, and continue inside the authenticated Wasel rider workspace.',
   },
   '/app/offer-ride': {
     title: 'Offer Ride',
-    description: 'Publish shared route availability and manage departures inside the authenticated Wasel driver workspace.',
+    description:
+      'Publish shared route availability and manage departures inside the authenticated Wasel driver workspace.',
   },
   '/app/my-trips': {
     title: 'My Trips',
-    description: 'Review ride bookings, package movements, and traveler activity inside the Wasel app.',
+    description:
+      'Review ride bookings, package movements, and traveler activity inside the Wasel app.',
   },
   '/app/live-trip': {
     title: 'Live Trip',
@@ -46,7 +50,8 @@ const APP_ROUTE_SEO: Record<string, StaticRouteSeoInput> = {
   },
   '/app/routes': {
     title: 'Popular Routes',
-    description: 'Review common Wasel corridors and network demand trends inside the authenticated experience.',
+    description:
+      'Review common Wasel corridors and network demand trends inside the authenticated experience.',
   },
   '/app/bus': {
     title: 'Bus Network',
@@ -58,7 +63,8 @@ const APP_ROUTE_SEO: Record<string, StaticRouteSeoInput> = {
   },
   '/app/package-delivery': {
     title: 'Package Delivery',
-    description: 'Secure package delivery coordination with authenticated Wasel logistics workflows.',
+    description:
+      'Secure package delivery coordination with authenticated Wasel logistics workflows.',
   },
   '/app/innovation-hub': {
     title: 'Innovation Hub',
@@ -86,7 +92,8 @@ const APP_ROUTE_SEO: Record<string, StaticRouteSeoInput> = {
   },
   '/app/payments': {
     title: 'Payments',
-    description: 'Backend-managed payment intents, verification, and settlement tracking for Wasel.',
+    description:
+      'Backend-managed payment intents, verification, and settlement tracking for Wasel.',
   },
   '/app/plus': {
     title: 'Wasel Plus',
@@ -114,17 +121,20 @@ const APP_ROUTE_SEO: Record<string, StaticRouteSeoInput> = {
   },
   '/app/safety': {
     title: 'Safety',
-    description: 'Safety procedures, incident readiness, and protective controls inside the Wasel app.',
+    description:
+      'Safety procedures, incident readiness, and protective controls inside the Wasel app.',
   },
   '/app/privacy': {
     title: 'Privacy Policy',
-    description: 'Wasel privacy policy covering data handling, security, and communication practices.',
+    description:
+      'Wasel privacy policy covering data handling, security, and communication practices.',
     robots: 'index, follow',
     indexable: true,
   },
   '/app/terms': {
     title: 'Terms of Service',
-    description: 'Wasel terms of service covering access, usage rules, payments, and account responsibilities.',
+    description:
+      'Wasel terms of service covering access, usage rules, payments, and account responsibilities.',
     robots: 'index, follow',
     indexable: true,
   },
@@ -168,15 +178,16 @@ function buildStructuredData(pathname: string, seo: StaticRouteSeoInput, canonic
     isPartOf: {
       '@id': `${getConfig().appUrl.replace(/\/$/, '')}/#website`,
     },
-    about: pathname === '/app/privacy'
-      ? { '@type': 'Thing', name: 'Privacy Policy' }
-      : pathname === '/app/terms'
-        ? { '@type': 'Thing', name: 'Terms of Service' }
-        : undefined,
+    about:
+      pathname === '/app/privacy'
+        ? { '@type': 'Thing', name: 'Privacy Policy' }
+        : pathname === '/app/terms'
+          ? { '@type': 'Thing', name: 'Terms of Service' }
+          : undefined,
   };
 }
 
-function upsertMeta(selector: string, attribute: 'name' | 'property', value: string): void {
+export function upsertMeta(selector: string, attribute: 'name' | 'property', value: string): void {
   if (typeof document === 'undefined') {
     return;
   }
@@ -184,9 +195,10 @@ function upsertMeta(selector: string, attribute: 'name' | 'property', value: str
   let element = document.head.querySelector<HTMLMetaElement>(selector);
   if (!element) {
     element = document.createElement('meta');
-    element.setAttribute(attribute, selector.includes('"')
-      ? selector.split('"')[1] ?? attribute
-      : attribute);
+    element.setAttribute(
+      attribute,
+      selector.includes('"') ? (selector.split('"')[1] ?? attribute) : attribute,
+    );
     document.head.appendChild(element);
   }
 
