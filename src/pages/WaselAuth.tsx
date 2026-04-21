@@ -28,7 +28,6 @@ import {
 } from 'lucide-react';
 import { WaselHeroMark, WaselLogo } from '../components/wasel-ds/WaselLogo';
 import { DeferredLandingMap } from '../features/home/DeferredLandingMap';
-import { LANDING_DISPLAY, LANDING_FONT } from '../features/home/landingConstants';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { checkRateLimit, validateEmail } from '../utils/security';
@@ -47,13 +46,6 @@ import './WaselAuth.css';
 type Tab = 'signin' | 'signup';
 type PendingAction = 'google' | 'facebook' | 'reset' | 'whatsapp' | null;
 
-const AUTH_LANDING = {
-  bg: 'var(--auth-landing-bg)',
-  hero: 'var(--auth-landing-hero)',
-  heroScrim: 'var(--auth-landing-hero-scrim)',
-  text: 'var(--auth-landing-text)',
-} as const;
-
 const BRAND_FEATURES = [
   { icon: <Shield size={14} />, text: 'Secure access' },
   { icon: <Mail size={14} />, text: 'One account' },
@@ -65,24 +57,6 @@ const SERVICE_TILES = [
   { icon: BusFront, title: 'Buses', detail: 'Keep transit access inside the same account.' },
   { icon: WalletCards, title: 'Wallet', detail: 'Payments and balances stay in one place.' },
 ] as const;
-
-const SOCIAL_META: Record<string, { accent: string; bg: string; border: string }> = {
-  Google: {
-    accent: 'var(--auth-social-google)',
-    bg: 'var(--auth-social-google-bg)',
-    border: 'var(--auth-social-google-border)',
-  },
-  Facebook: {
-    accent: 'var(--auth-social-facebook)',
-    bg: 'var(--auth-social-facebook-bg)',
-    border: 'var(--auth-social-facebook-border)',
-  },
-  WhatsApp: {
-    accent: 'var(--auth-social-whatsapp)',
-    bg: 'var(--auth-social-whatsapp-bg)',
-    border: 'var(--auth-social-whatsapp-border)',
-  },
-};
 
 interface AuthFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   label: string;
@@ -156,17 +130,13 @@ function AuthField({
 
 function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
   return (
-    <div className="auth-landing__hero-panel" style={{ background: AUTH_LANDING.hero }}>
+    <div className="auth-landing__hero-panel">
       <div className="auth-landing__hero-map" aria-hidden="true">
         <div className="auth-landing__hero-map-scale">
           <DeferredLandingMap />
         </div>
       </div>
-      <div
-        className="auth-landing__hero-scrim"
-        aria-hidden="true"
-        style={{ background: AUTH_LANDING.heroScrim }}
-      />
+      <div className="auth-landing__hero-scrim" aria-hidden="true" />
       <div className="auth-landing__hero-orb auth-landing__hero-orb--one" aria-hidden="true" />
       <div className="auth-landing__hero-orb auth-landing__hero-orb--two" aria-hidden="true" />
       <div className="auth-landing__hero-mark" aria-hidden="true">
@@ -181,7 +151,7 @@ function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
 
         <WaselLogo size={50} theme="auto" variant="full" showWordmark subtitle="" framed={false} />
 
-        <h1 className="auth-landing__hero-title" style={{ fontFamily: LANDING_DISPLAY }}>
+        <h1 className="auth-landing__hero-title">
           One account across the full Wasel network.
         </h1>
 
@@ -230,24 +200,23 @@ function StrengthBar({ password }: { password: string }) {
 
   if (!password) return null;
 
+  const toneClass =
+    strength.score <= 1
+      ? 'auth-strength--weak'
+      : strength.score === 2
+        ? 'auth-strength--fair'
+        : strength.score === 3
+          ? 'auth-strength--good'
+          : 'auth-strength--strong';
+
   return (
-    <div className="auth-strength">
+    <div className={`auth-strength auth-strength--score-${strength.score} ${toneClass}`}>
       <div className="auth-strength__bars">
         {[1, 2, 3, 4, 5].map(value => (
-          <div
-            key={value}
-            className="auth-strength__bar"
-            style={{
-              background: value <= strength.score ? strength.color : 'var(--surface-divider)',
-            }}
-          />
+          <div key={value} className="auth-strength__bar" />
         ))}
       </div>
-      {strength.label ? (
-        <span className="auth-strength__label" style={{ color: strength.color }}>
-          {strength.label}
-        </span>
-      ) : null}
+      {strength.label ? <span className="auth-strength__label">{strength.label}</span> : null}
     </div>
   );
 }
@@ -552,15 +521,7 @@ export default function WaselAuth() {
   ] as const;
 
   return (
-    <div
-      className="auth-landing"
-      style={{
-        minHeight: '100vh',
-        background: AUTH_LANDING.bg,
-        color: AUTH_LANDING.text,
-        fontFamily: LANDING_FONT,
-      }}
-    >
+    <div className="auth-landing">
       <div className="auth-landing__shell">
         <header className="auth-landing__header">
           <button type="button" className="auth-landing__brand" onClick={() => nav('/')}>
@@ -597,7 +558,7 @@ export default function WaselAuth() {
                   <Sparkles size={14} />
                   Premium access
                 </div>
-                <h2 style={{ fontFamily: LANDING_DISPLAY }}>
+                <h2>
                   {tab === 'signin' ? 'Sign in to Wasel' : 'Create your Wasel account'}
                 </h2>
                 <p>
@@ -781,7 +742,7 @@ export default function WaselAuth() {
                         type="button"
                         whileHover={{ scale: 1.01, y: -1 }}
                         whileTap={{ scale: 0.98 }}
-                        className="auth-landing__social-button"
+                        className={`auth-landing__social-button auth-landing__social-button--${social.label.toLowerCase()}`}
                         aria-label={
                           social.label === 'WhatsApp' ? 'WhatsApp' : `Continue with ${social.label}`
                         }
@@ -789,19 +750,8 @@ export default function WaselAuth() {
                         onClick={() => {
                           void social.onClick();
                         }}
-                        style={{
-                          borderColor: SOCIAL_META[social.label].border,
-                          background: `linear-gradient(180deg, ${SOCIAL_META[social.label].bg}, var(--bg-secondary))`,
-                        }}
                       >
-                        <div
-                          className="auth-landing__social-icon"
-                          style={{
-                            color: SOCIAL_META[social.label].accent,
-                            borderColor: SOCIAL_META[social.label].border,
-                            background: SOCIAL_META[social.label].bg,
-                          }}
-                        >
+                        <div className="auth-landing__social-icon">
                           {social.label.slice(0, 1)}
                         </div>
                         <div className="auth-landing__social-copy">
@@ -812,7 +762,7 @@ export default function WaselAuth() {
                               : `Continue with ${social.label}`}
                           </span>
                         </div>
-                        <ChevronRight size={14} color={SOCIAL_META[social.label].accent} />
+                        <ChevronRight size={14} className="auth-landing__social-chevron" />
                       </motion.button>
                     ))}
                   </div>
