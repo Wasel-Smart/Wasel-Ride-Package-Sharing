@@ -32,6 +32,43 @@ const PAYMENT_RELEVANT_TRANSACTION_TYPES = new Set([
 const COMPLETED_STATUSES = new Set(['completed', 'posted', 'succeeded', 'refunded']);
 const FINAL_PAYMENT_STATUSES = new Set(['succeeded', 'failed', 'cancelled']);
 
+function createAttemptNonce(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function normalizeIdempotencySegment(value: string | number | null | undefined): string {
+  return String(value ?? 'none')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48) || 'none';
+}
+
+export function createPaymentAttemptIdempotencyKey(
+  userId: string,
+  draft: Pick<
+    PaymentRequestDraft,
+    'purpose' | 'amount' | 'paymentMethodType' | 'referenceType' | 'referenceId'
+  >,
+  nonce = createAttemptNonce(),
+): string {
+  return [
+    'wasel',
+    normalizeIdempotencySegment(userId),
+    normalizeIdempotencySegment(draft.purpose),
+    normalizeIdempotencySegment(draft.paymentMethodType),
+    normalizeIdempotencySegment(Number(draft.amount).toFixed(2)),
+    normalizeIdempotencySegment(draft.referenceType),
+    normalizeIdempotencySegment(draft.referenceId),
+    normalizeIdempotencySegment(nonce),
+  ].join(':');
+}
+
 type PaymentRelevantWalletTransaction = WalletTransaction & {
   type: 'deposit' | 'withdrawal' | 'transfer' | 'payment' | 'refund';
 };
@@ -211,6 +248,7 @@ export const paymentsService = {
         referenceType: draft.referenceType ?? null,
         referenceId: draft.referenceId ?? null,
         metadata,
+        idempotencyKey: draft.idempotencyKey ?? null,
       },
     );
 

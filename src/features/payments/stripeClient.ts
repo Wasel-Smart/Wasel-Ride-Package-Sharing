@@ -4,18 +4,10 @@ import { getConfig } from '../../utils/env';
 let cachedPublishableKey = '';
 let cachedStripePromise: Promise<Stripe | null> | null = null;
 
-interface StripePaymentIntentCreateParams {
-  amount: number;
-  currency: string;
-  metadata?: Record<string, string>;
-  description?: string;
-  receipt_email?: string;
-}
-
-interface StripeRefundCreateParams {
-  payment_intent: string;
-  amount?: number;
-  reason?: 'duplicate' | 'fraudulent' | 'requested_by_customer';
+function throwBackendStripeOperation(operation: string): never {
+  throw new Error(
+    `${operation} must run on the backend. Use Wasel payment intents and verified webhooks instead of client-side Stripe mutations.`,
+  );
 }
 
 export function getStripePublishableKey(): string {
@@ -59,63 +51,20 @@ class StripeClientService {
     return getStripeClient();
   }
 
-  async createPaymentIntent(params: StripePaymentIntentCreateParams) {
-    // This would typically be done on the backend
-    // For now, we'll simulate the response structure
-    const paymentIntentId = `pi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    return {
-      id: paymentIntentId,
-      client_secret: `${paymentIntentId}_secret_${Math.random().toString(36).substr(2, 16)}`,
-      amount: params.amount,
-      currency: params.currency,
-      status: 'requires_payment_method' as const,
-      metadata: params.metadata || {}
-    };
+  async createPaymentIntent() {
+    return throwBackendStripeOperation('createPaymentIntent');
   }
 
-  async retrievePaymentIntent(paymentIntentId: string) {
-    // This would typically call Stripe's API
-    // For now, we'll simulate based on the ID pattern
-    const isSucceeded = paymentIntentId.includes('succeeded') || Math.random() > 0.3;
-    
-    return {
-      id: paymentIntentId,
-      client_secret: `${paymentIntentId}_secret_${Math.random().toString(36).substr(2, 16)}`,
-      status: isSucceeded ? 'succeeded' : 'processing' as const,
-      amount: 1000, // Default amount in cents
-      currency: 'jod'
-    };
+  async retrievePaymentIntent() {
+    return throwBackendStripeOperation('retrievePaymentIntent');
   }
 
-  async retrievePaymentMethod(paymentMethodId: string) {
-    // This would typically call Stripe's API
-    // For now, we'll simulate a card payment method
-    return {
-      id: paymentMethodId,
-      type: 'card' as const,
-      card: {
-        brand: 'visa' as const,
-        last4: '4242',
-        exp_month: 12,
-        exp_year: 2025,
-        funding: 'credit' as const
-      }
-    };
+  async retrievePaymentMethod() {
+    return throwBackendStripeOperation('retrievePaymentMethod');
   }
 
-  async createRefund(params: StripeRefundCreateParams) {
-    // This would typically call Stripe's API
-    const refundId = `re_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    return {
-      id: refundId,
-      payment_intent: params.payment_intent,
-      amount: params.amount,
-      currency: 'jod',
-      status: 'succeeded' as const,
-      reason: params.reason || 'requested_by_customer'
-    };
+  async createRefund() {
+    return throwBackendStripeOperation('createRefund');
   }
 
   async confirmPayment(

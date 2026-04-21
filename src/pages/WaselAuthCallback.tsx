@@ -4,26 +4,9 @@ import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { friendlyAuthError, getPasswordRequirements, validatePassword } from '../utils/authHelpers';
 import { consumePersistedAuthReturnTo } from '../utils/authFlow';
 import { supabase } from '../utils/supabase/client';
+import './WaselAuthCallback.css';
 
 type CallbackState = 'loading' | 'closing' | 'redirecting' | 'recovery' | 'error';
-
-const CALLBACK_BG = 'var(--shell-background)';
-const CALLBACK_TEXT = 'var(--text-primary)';
-const CALLBACK_MUTED = 'var(--text-secondary)';
-const CALLBACK_SOFT = 'var(--surface-muted)';
-const CALLBACK_PANEL = 'var(--surface-strong)';
-const CALLBACK_FIELD = 'var(--surface-field)';
-const CALLBACK_BORDER = 'var(--border)';
-const CALLBACK_PANEL_SHADOW = 'var(--wasel-shadow-lg)';
-const CALLBACK_PRIMARY = 'var(--theme-gradient-primary)';
-const CALLBACK_PRIMARY_TEXT = 'var(--text-inverse)';
-const CALLBACK_ACCENT = 'var(--accent)';
-const CALLBACK_DANGER = 'var(--danger)';
-const CALLBACK_DANGER_BG = 'rgb(var(--danger-rgb) / 0.12)';
-const CALLBACK_DANGER_BORDER = 'rgb(var(--danger-rgb) / 0.28)';
-const CALLBACK_SUCCESS_TEXT = 'rgb(var(--accent-rgb) / 1)';
-const CALLBACK_SPINNER_IDLE = 'rgb(var(--accent-secondary-rgb) / 0.18)';
-const CALLBACK_SPINNER_ERROR = 'rgb(var(--danger-rgb) / 0.3)';
 
 function readCallbackParam(key: string): string {
   if (typeof window === 'undefined') return '';
@@ -261,80 +244,31 @@ export default function WaselAuthCallback() {
 
   if (state === 'recovery') {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: CALLBACK_BG,
-          color: CALLBACK_TEXT,
-          padding: 24,
-          fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
-        }}
-      >
-        <div
-          style={{
-            width: '100%',
-            maxWidth: 420,
-            borderRadius: 20,
-            padding: 28,
-            background: CALLBACK_PANEL,
-            border: `1px solid ${CALLBACK_BORDER}`,
-            boxShadow: CALLBACK_PANEL_SHADOW,
-            display: 'grid',
-            gap: 14,
-          }}
-        >
+      <div className="auth-callback">
+        <div className="auth-callback__panel auth-callback__panel--recovery">
           <div>
-            <h1 style={{ margin: '0 0 8px', fontSize: '1.35rem', lineHeight: 1.2 }}>
-              Reset your password
-            </h1>
-            <p style={{ margin: 0, color: CALLBACK_MUTED, lineHeight: 1.6 }}>{message}</p>
+            <h1 className="auth-callback__title">Reset your password</h1>
+            <p className="auth-callback__body auth-callback__body--spaced">{message}</p>
           </div>
 
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: '0.82rem', color: CALLBACK_MUTED }}>New password</span>
+          <label className="auth-callback__field">
+            <span className="auth-callback__field-label">New password</span>
             <input
               type="password"
               value={password}
               onChange={event => setPassword(event.target.value)}
               placeholder="Enter a new password"
-              style={{
-                width: '100%',
-                minHeight: 46,
-                borderRadius: 12,
-                border: `1px solid ${CALLBACK_BORDER}`,
-                background: CALLBACK_FIELD,
-                color: CALLBACK_TEXT,
-                padding: '0 14px',
-                fontSize: '0.95rem',
-              }}
+              className="auth-callback__input"
             />
           </label>
 
-          <div
-            style={{
-              display: 'grid',
-              gap: 6,
-              padding: '12px 14px',
-              borderRadius: 12,
-              background: CALLBACK_SOFT,
-              border: `1px solid ${CALLBACK_BORDER}`,
-            }}
-          >
-            <span style={{ fontSize: '0.78rem', color: CALLBACK_MUTED, fontWeight: 700 }}>
-              Password requirements
-            </span>
-            <div style={{ display: 'grid', gap: 6 }}>
+          <div className="auth-callback__requirements">
+            <span className="auth-callback__requirements-title">Password requirements</span>
+            <div className="auth-callback__requirements-list">
               {passwordRequirements.map(requirement => (
                 <span
                   key={requirement.key}
-                  style={{
-                    color: requirement.met ? CALLBACK_SUCCESS_TEXT : CALLBACK_MUTED,
-                    fontSize: '0.8rem',
-                    lineHeight: 1.5,
-                  }}
+                  className={`auth-callback__requirement${requirement.met ? ' is-met' : ''}`}
                 >
                   {requirement.met ? '✓' : '•'} {requirement.label}
                 </span>
@@ -342,41 +276,18 @@ export default function WaselAuthCallback() {
             </div>
           </div>
 
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: '0.82rem', color: CALLBACK_MUTED }}>Confirm password</span>
+          <label className="auth-callback__field">
+            <span className="auth-callback__field-label">Confirm password</span>
             <input
               type="password"
               value={confirmPassword}
               onChange={event => setConfirmPassword(event.target.value)}
               placeholder="Re-enter your new password"
-              style={{
-                width: '100%',
-                minHeight: 46,
-                borderRadius: 12,
-                border: `1px solid ${CALLBACK_BORDER}`,
-                background: CALLBACK_FIELD,
-                color: CALLBACK_TEXT,
-                padding: '0 14px',
-                fontSize: '0.95rem',
-              }}
+              className="auth-callback__input"
             />
           </label>
 
-          {formError ? (
-            <div
-              style={{
-                borderRadius: 12,
-                border: `1px solid ${CALLBACK_DANGER_BORDER}`,
-                background: CALLBACK_DANGER_BG,
-                color: CALLBACK_DANGER,
-                padding: '12px 14px',
-                fontSize: '0.85rem',
-                lineHeight: 1.5,
-              }}
-            >
-              {formError}
-            </div>
-          ) : null}
+          {formError ? <div className="auth-callback__error">{formError}</div> : null}
 
           <button
             type="button"
@@ -384,18 +295,7 @@ export default function WaselAuthCallback() {
               void handlePasswordUpdate();
             }}
             disabled={savingPassword}
-            style={{
-              minHeight: 46,
-              borderRadius: 12,
-              border: 'none',
-              background: CALLBACK_PRIMARY,
-              color: CALLBACK_PRIMARY_TEXT,
-              fontSize: '0.95rem',
-              fontWeight: 800,
-              cursor: savingPassword ? 'not-allowed' : 'pointer',
-              opacity: savingPassword ? 0.7 : 1,
-              boxShadow: 'var(--wasel-shadow-blue)',
-            }}
+            className="auth-callback__button auth-callback__button--primary"
           >
             {savingPassword ? 'Updating password...' : 'Save new password'}
           </button>
@@ -403,16 +303,7 @@ export default function WaselAuthCallback() {
           <button
             type="button"
             onClick={() => navigate('/app/auth?tab=signin', { replace: true })}
-            style={{
-              minHeight: 42,
-              borderRadius: 12,
-              border: `1px solid ${CALLBACK_BORDER}`,
-              background: 'transparent',
-              color: CALLBACK_TEXT,
-              fontSize: '0.9rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
+            className="auth-callback__button auth-callback__button--secondary"
           >
             Back to sign in
           </button>
@@ -422,73 +313,24 @@ export default function WaselAuthCallback() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: CALLBACK_BG,
-        color: CALLBACK_TEXT,
-        padding: 24,
-        fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 420,
-          borderRadius: 20,
-          padding: 28,
-          background: CALLBACK_PANEL,
-          border: `1px solid ${CALLBACK_BORDER}`,
-          boxShadow: CALLBACK_PANEL_SHADOW,
-          textAlign: 'center',
-        }}
-      >
+    <div className="auth-callback">
+      <div className="auth-callback__panel auth-callback__panel--status">
         <div
-          style={{
-            width: 42,
-            height: 42,
-            margin: '0 auto 16px',
-            borderRadius: '50%',
-            border:
-              state === 'error'
-                ? `3px solid ${CALLBACK_SPINNER_ERROR}`
-                : `3px solid ${CALLBACK_SPINNER_IDLE}`,
-            borderTop:
-              state === 'error' ? `3px solid ${CALLBACK_DANGER}` : `3px solid ${CALLBACK_ACCENT}`,
-            animation:
-              state === 'redirecting' || state === 'loading' || state === 'closing'
-                ? 'spin 0.8s linear infinite'
-                : 'none',
-          }}
+          className={`auth-callback__spinner${state === 'error' ? ' is-error' : ''}${state === 'redirecting' || state === 'loading' || state === 'closing' ? ' is-active' : ''}`}
         />
-        <h1 style={{ margin: '0 0 8px', fontSize: '1.35rem', lineHeight: 1.2 }}>
+        <h1 className="auth-callback__title">
           {state === 'error' ? 'Sign-in could not finish' : 'Finalizing authentication'}
         </h1>
-        <p style={{ margin: 0, color: CALLBACK_MUTED }}>{message}</p>
+        <p className="auth-callback__body">{message}</p>
         {state === 'error' ? (
           <button
             type="button"
             onClick={() => navigate('/app/auth?tab=signin', { replace: true })}
-            style={{
-              marginTop: 18,
-              minHeight: 42,
-              padding: '0 16px',
-              borderRadius: 12,
-              border: `1px solid ${CALLBACK_BORDER}`,
-              background: 'transparent',
-              color: CALLBACK_TEXT,
-              fontSize: '0.92rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
+            className="auth-callback__button auth-callback__button--secondary auth-callback__button--spaced"
           >
             Back to sign in
           </button>
         ) : null}
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     </div>
   );

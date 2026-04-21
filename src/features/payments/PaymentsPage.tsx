@@ -15,9 +15,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { PageShell, Protected } from '../shared/pageShared';
 import { StripePaymentForm } from './StripePaymentForm';
-import { paymentsService, resolveDefaultPaymentMethodType } from './paymentsService';
+import {
+  createPaymentAttemptIdempotencyKey,
+  paymentsService,
+  resolveDefaultPaymentMethodType,
+} from './paymentsService';
 import { walletApi } from '../../services/walletApi';
-import { notificationsAPI } from '../../services/notifications';
 import { hasStripeClientPaymentsEnabled } from './stripeClient';
 import { PAYMENT_FLOW_PURPOSES, type PaymentIntentSession, type PaymentRequestDraft, type PaymentsDashboardData } from './paymentsTypes';
 import type { PaymentTransaction } from '../../../shared/domain-contracts';
@@ -42,6 +45,8 @@ type PaymentNotice = {
   message: string;
 };
 
+const FINAL_PAYMENT_STATUSES = new Set(['succeeded', 'failed', 'cancelled']);
+
 function formatCurrency(value: number, currency = 'JOD') {
   return new Intl.NumberFormat('en-JO', {
     style: 'currency',
@@ -60,6 +65,7 @@ function PaymentsPageContent() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<PaymentNotice | null>(null);
+  const [paymentAttemptKey, setPaymentAttemptKey] = useState<string | null>(null);
   const [form, setForm] = useState<PaymentRequestDraft>({
     purpose: 'ride_payment',
     amount: 12,
@@ -73,6 +79,10 @@ function PaymentsPageContent() {
   const returnedPaymentIntentId = searchParams.get('payment_intent');
   const redirectStatus = searchParams.get('redirect_status');
   const intent = intentSession?.transaction ?? null;
+
+  useEffect(() => {
+    setPaymentAttemptKey(null);
+  }, [form.amount, form.paymentMethodType, form.purpose, form.referenceId, form.referenceType]);
 
   function updateIntentStatus(paymentIntentId: string, status: string, clientSecret?: string | null) {
     setIntentSession((current) => {
@@ -223,6 +233,9 @@ function PaymentsPageContent() {
 
         updateIntentStatus(returnedPaymentIntentId, String(result.status), result.clientSecret);
         setConfirmationState(result.settled ? 'confirmed' : 'idle');
+        if (result.settled || FINAL_PAYMENT_STATUSES.has(String(result.status))) {
+          setPaymentAttemptKey(null);
+        }
         setNotice(result.settled
           ? {
             tone: 'success',
@@ -284,22 +297,24 @@ function PaymentsPageContent() {
         }
       }
 
+      const idempotencyKey = paymentAttemptKey
+        ?? createPaymentAttemptIdempotencyKey(user.id, {
+          purpose: form.purpose,
+          amount,
+          paymentMethodType: form.paymentMethodType,
+          referenceType: form.referenceType ?? null,
+          referenceId: form.referenceId ?? null,
+        });
+      setPaymentAttemptKey(idempotencyKey);
+
       const session = await paymentsService.initiatePayment(user.id, {
         ...form,
         amount,
+        idempotencyKey,
       });
-      
+
       setIntentSession(session);
-      
-      // Send notification for payment initiation
-      await notificationsAPI.createNotification({
-        title: 'Payment Initiated',
-        message: `Payment of ${formatCurrency(amount)} has been initiated for ${PURPOSE_LABELS[form.purpose]}`,
-        type: 'payment',
-        priority: 'medium',
-        action_url: '/app/payments',
-      });
-      
+
       if (session.redirectUrl) {
         setNotice({
           tone: 'neutral',
@@ -337,35 +352,18 @@ function PaymentsPageContent() {
 
       if (result.settled) {
         setConfirmationState('confirmed');
-        
-        // Update wallet balance if this was a wallet transaction
-        if (intent.paymentMethodType === 'wallet' && user?.id) {
-          await walletApi.processTransaction(user.id, {
-            amount: intent.amount,
-            type: intent.kind === 'deposit' ? 'credit' : 'debit',
-            description: intent.description,
-            referenceId: intent.id,
-            referenceType: 'payment'
-          });
-        }
-        
-        // Send success notification
-        await notificationsAPI.createNotification({
-          title: 'Payment Completed',
-          message: `Payment of ${formatCurrency(intent.amount)} has been successfully processed`,
-          type: 'payment',
-          priority: 'high',
-          action_url: '/app/payments',
-        });
-        
+        setPaymentAttemptKey(null);
         setNotice({
           tone: 'success',
-          message: 'Payment settled successfully and the wallet ledger is updated.',
+          message: 'Payment settled successfully and the server-side wallet ledger is now updated.',
         });
       } else if (intent.provider === 'stripe') {
         const settled = await paymentsService.awaitPaymentSettlement(intent.id);
         updateIntentStatus(intent.id, String(settled.status), settled.clientSecret);
         setConfirmationState(settled.settled ? 'confirmed' : 'idle');
+        if (settled.settled || FINAL_PAYMENT_STATUSES.has(String(settled.status))) {
+          setPaymentAttemptKey(null);
+        }
         setNotice(settled.settled
           ? {
             tone: 'success',
@@ -417,31 +415,14 @@ function PaymentsPageContent() {
       });
       updateIntentStatus(intent.id, String(settled.status), settled.clientSecret);
       setConfirmationState(settled.settled ? 'confirmed' : 'idle');
-      
+      if (settled.settled || FINAL_PAYMENT_STATUSES.has(String(settled.status))) {
+        setPaymentAttemptKey(null);
+      }
+
       if (settled.settled) {
-        // Process wallet transaction for successful Stripe payments
-        if (intent.kind === 'deposit') {
-          await walletApi.processTransaction(user.id, {
-            amount: intent.amount,
-            type: 'credit',
-            description: `Stripe deposit - ${intent.description}`,
-            referenceId: result.paymentIntentId ?? intent.id,
-            referenceType: 'stripe_payment'
-          });
-        }
-        
-        // Send success notification
-        await notificationsAPI.createNotification({
-          title: 'Stripe Payment Successful',
-          message: `Your ${formatCurrency(intent.amount)} payment via Stripe has been processed successfully`,
-          type: 'payment',
-          priority: 'high',
-          action_url: '/app/wallet',
-        });
-        
         setNotice({
           tone: 'success',
-          message: 'Stripe payment settled successfully and Wasel refreshed your wallet.',
+          message: 'Stripe payment settled successfully and Wasel refreshed your server-side wallet state.',
         });
       } else {
         setNotice({

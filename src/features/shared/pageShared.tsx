@@ -5,13 +5,9 @@ import { Shield } from 'lucide-react';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import { Button } from '../../components/ui/button';
 import { useLocalAuth } from '../../contexts/LocalAuth';
+import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import {
-  LANDING_DISPLAY,
-  LANDING_FONT,
-  LANDING_RESPONSIVE_STYLES,
-} from '../home/landingConstants';
-import { LANDING_COLORS, landingPanel } from '../home/landing/landingTypes';
+import { LANDING_RESPONSIVE_STYLES } from '../home/landingConstants';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
 import {
@@ -19,9 +15,9 @@ import {
   resolveJordanLocationCoord,
 } from '../../utils/jordanLocations';
 import { buildAuthPagePath, buildAuthReturnTo } from '../../utils/authFlow';
+import { getConfig } from '../../utils/env';
 
 export const DS = PAGE_DS;
-const PAGE_PANEL_BG_STRONG = 'var(--wasel-page-panel-strong)';
 
 export const r = (px = 12) => `${px}px`;
 
@@ -51,23 +47,25 @@ export function midpoint(
   return { lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 };
 }
 
-function authPanelStyle() {
-  return {
-    ...landingPanel(28),
-    width: '100%',
-    maxWidth: 460,
-    padding: '32px 28px',
-    textAlign: 'center' as const,
-    color: LANDING_COLORS.text,
-    background: PAGE_PANEL_BG_STRONG,
-  };
-}
-
 export function Protected({ children }: { children: ReactNode }) {
-  const { user, loading } = useLocalAuth();
+  const { user: localUser, loading: localLoading } = useLocalAuth();
+  const {
+    user: authUser,
+    session,
+    loading: authLoading,
+    isBackendConnected,
+  } = useAuth();
   const nav = useIframeSafeNavigate();
   const location = useLocation();
   const mountedRef = useRef(true);
+  const { allowLocalPersistenceFallback, enableDemoAccount, enablePersistedTestAuth } = getConfig();
+  const allowLocalFallback =
+    !isBackendConnected ||
+    allowLocalPersistenceFallback ||
+    enableDemoAccount ||
+    enablePersistedTestAuth;
+  const user = allowLocalFallback ? localUser : (session?.user ?? authUser);
+  const loading = isBackendConnected && !allowLocalFallback ? authLoading : localLoading;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -89,49 +87,16 @@ export function Protected({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '60vh',
-          padding: '24px 16px',
-        }}
-      >
-        <div style={authPanelStyle()}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+      <div className="wasel-auth-guard">
+        <div className="wasel-auth-guard__panel">
+          <div className="wasel-auth-guard__logo">
             <WaselLogo size={38} variant="full" showWordmark={false} />
           </div>
-          <div
-            style={{
-              width: 58,
-              height: 58,
-              borderRadius: r(18),
-              margin: '0 auto 18px',
-              background: DS.cyanG,
-              border: `1px solid ${DS.cyan}33`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: DS.cyan,
-              fontSize: '1.1rem',
-              fontWeight: 900,
-            }}
-          >
+          <div className="wasel-auth-guard__icon">
             W
           </div>
-          <div
-            style={{
-              fontFamily: LANDING_DISPLAY,
-              fontSize: '1.05rem',
-              fontWeight: 900,
-              marginBottom: 8,
-              letterSpacing: '-0.03em',
-            }}
-          >
-            Checking access
-          </div>
-          <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.7 }}>
+          <div className="wasel-auth-guard__title">Checking access</div>
+          <div className="wasel-auth-guard__body">
             Loading your Wasel account and restoring the service flow.
           </div>
         </div>
@@ -141,47 +106,16 @@ export function Protected({ children }: { children: ReactNode }) {
 
   if (!user) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '60vh',
-          padding: '24px 16px',
-        }}
-      >
-        <div role="status" aria-live="polite" style={authPanelStyle()}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+      <div className="wasel-auth-guard">
+        <div role="status" aria-live="polite" className="wasel-auth-guard__panel">
+          <div className="wasel-auth-guard__logo">
             <WaselLogo size={38} variant="full" showWordmark={false} />
           </div>
-          <div
-            style={{
-              width: 58,
-              height: 58,
-              borderRadius: r(18),
-              margin: '0 auto 16px',
-              background: DS.cyanG,
-              border: `1px solid ${DS.cyan}33`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: DS.cyan,
-            }}
-          >
+          <div className="wasel-auth-guard__icon wasel-auth-guard__icon--shield">
             <Shield size={24} />
           </div>
-          <div
-            style={{
-              fontFamily: LANDING_DISPLAY,
-              fontSize: '1.05rem',
-              fontWeight: 900,
-              marginBottom: 8,
-              letterSpacing: '-0.03em',
-            }}
-          >
-            Sign in required
-          </div>
-          <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.7, marginBottom: 20 }}>
+          <div className="wasel-auth-guard__title">Sign in required</div>
+          <div className="wasel-auth-guard__body wasel-auth-guard__body--spaced">
             Sign in to continue into the Wasel service network.
           </div>
           <Button
@@ -210,14 +144,7 @@ export function PageShell({ children }: { children: ReactNode }) {
   const ar = language === 'ar';
 
   return (
-    <div
-      style={{
-        minHeight: '100%',
-        background: 'transparent',
-        fontFamily: LANDING_FONT,
-        direction: ar ? 'rtl' : 'ltr',
-      }}
-      >
+    <div className="wasel-page-shell-root" dir={ar ? 'rtl' : 'ltr'}>
       <style>{`${LANDING_RESPONSIVE_STYLES}
         :root { color-scheme: inherit; }
         .w-focus:focus-visible { outline: none; box-shadow: var(--wasel-focus-ring); }
@@ -276,52 +203,11 @@ export function PageShell({ children }: { children: ReactNode }) {
       `}</style>
 
       <div className="sp-inner wasel-page-shell">
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: '10px 8px auto',
-            height: 200,
-            pointerEvents: 'none',
-            background: [
-              `radial-gradient(circle at ${ar ? '92%' : '8%'} 18%, rgba(32,216,255,0.16), transparent 28%)`,
-              'radial-gradient(circle at 78% 28%, rgba(183,255,43,0.10), transparent 24%)',
-              'radial-gradient(circle at 26% 84%, rgba(19,136,217,0.10), transparent 24%)',
-            ].join(','),
-            filter: 'blur(10px)',
-          }}
-        />
-        <div
-          className="sp-frame wasel-page-frame"
-          style={{
-            ...landingPanel(34),
-          }}
-        >
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              inset: '0 0 auto 0',
-              height: 1,
-              background: 'linear-gradient(90deg, transparent, rgba(169,227,255,0.42), transparent)',
-              pointerEvents: 'none',
-            }}
-          />
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              inset: '0 auto auto 0',
-              width: '100%',
-              height: 140,
-              pointerEvents: 'none',
-              background: 'linear-gradient(180deg, rgba(220,255,248,0.14), transparent)',
-              opacity: 0.7,
-            }}
-          />
-          <div className="wasel-page-stack">
-            {children}
-          </div>
+        <div aria-hidden="true" className="wasel-page-shell__glow" />
+        <div className="sp-frame wasel-page-frame">
+          <div aria-hidden="true" className="wasel-page-frame__top-line" />
+          <div aria-hidden="true" className="wasel-page-frame__top-wash" />
+          <div className="wasel-page-stack">{children}</div>
         </div>
       </div>
     </div>

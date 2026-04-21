@@ -16,10 +16,29 @@ import {
 } from './utils/startupDom';
 import { sanitizeForLog } from './utils/logSanitizer';
 import { initializeSentry } from './utils/monitoring';
+import { CONSENT_DECISION_EVENT, hasTelemetryConsent } from './utils/consent';
 
-// Initialize Sentry for error tracking
-if (import.meta.env.PROD) {
-  initializeSentry();
+let telemetryInitialized = false;
+
+function initializeTelemetry() {
+  if (telemetryInitialized || !hasTelemetryConsent()) {
+    return;
+  }
+
+  telemetryInitialized = true;
+
+  if (import.meta.env.PROD) {
+    initializeSentry();
+  }
+
+  scheduleDeferredTask(async () => {
+    const [{ initWebVitalsReporter }, { initPerformanceMonitoring }] = await Promise.all([
+      import('./utils/webVitalsReporter'),
+      import('./utils/performance'),
+    ]);
+    initWebVitalsReporter();
+    initPerformanceMonitoring();
+  }, 2_500);
 }
 
 const initialThemePreference = initializeThemeFromStorage();
@@ -73,11 +92,16 @@ ReactDOM.createRoot(rootElement).render(
   </React.StrictMode>,
 );
 
-// Real Core Web Vitals reported to Supabase `web_vitals` table.
-scheduleDeferredTask(async () => {
-  const { initWebVitalsReporter } = await import('./utils/webVitalsReporter');
-  initWebVitalsReporter();
-}, 2_500);
+initializeTelemetry();
+
+if (typeof window !== 'undefined') {
+  window.addEventListener(CONSENT_DECISION_EVENT, (event: Event) => {
+    const detail = (event as CustomEvent<{ accepted?: boolean }>).detail;
+    if (detail?.accepted) {
+      initializeTelemetry();
+    }
+  });
+}
 
 if (import.meta.env.PROD && import.meta.env.MODE !== 'test' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

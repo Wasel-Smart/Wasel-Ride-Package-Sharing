@@ -22,6 +22,7 @@ export interface PaymentRequestDraft {
   referenceId?: string | null;
   description?: string;
   metadata?: Record<string, unknown>;
+  idempotencyKey?: string | null;
 }
 
 export interface PaymentConfirmationResult {

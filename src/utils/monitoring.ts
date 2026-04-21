@@ -1,8 +1,10 @@
 import * as Sentry from '@sentry/react';
+import { registerMonitoringSink, type LogContext } from './logging';
 
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 const APP_ENV = import.meta.env.VITE_APP_ENV || 'development';
 const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
+let sentryInitialized = false;
 
 type MonitoringContext = Record<string, unknown>;
 
@@ -24,6 +26,10 @@ function sanitizeUrl(url: string): string {
 }
 
 export function initializeSentry() {
+  if (sentryInitialized) {
+    return;
+  }
+
   if (!SENTRY_DSN) {
     console.warn('Sentry DSN not configured. Error tracking disabled.');
     return;
@@ -121,6 +127,41 @@ export function initializeSentry() {
       });
     }) as EventListener);
   }
+
+  registerMonitoringSink({
+    captureException(error, context) {
+      Sentry.withScope((scope) => {
+        applyContext(scope, context);
+
+        if (error instanceof Error) {
+          Sentry.captureException(error);
+          return;
+        }
+
+        const fallbackError =
+          typeof error === 'string'
+            ? new Error(error)
+            : new Error('Unknown application error');
+        Sentry.captureException(fallbackError);
+      });
+    },
+    captureMessage(message, level, context) {
+      Sentry.withScope((scope) => {
+        applyContext(scope, context);
+        Sentry.captureMessage(message, level);
+      });
+    },
+    addBreadcrumb(message, category, data) {
+      Sentry.addBreadcrumb({
+        message,
+        category,
+        level: 'info',
+        data: redactMonitoringContext(data),
+      });
+    },
+  });
+
+  sentryInitialized = true;
 }
 
 export const initSentry = initializeSentry;
@@ -169,3 +210,74 @@ export function setContext(name: string, context: MonitoringContext) {
 }
 
 export { Sentry };
+
+function redactMonitoringContext(context?: LogContext): MonitoringContext | undefined {
+  if (!context) {
+    return undefined;
+  }
+
+  return sanitizeMonitoringValue(context) as MonitoringContext;
+}
+
+function sanitizeMonitoringValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeMonitoringValue(entry));
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, nestedValue]) => {
+        const lowerKey = key.toLowerCase();
+        if (
+          lowerKey.includes('token') ||
+          lowerKey.includes('secret') ||
+          lowerKey.includes('password') ||
+          lowerKey.includes('authorization')
+        ) {
+          return [key, '[REDACTED]'];
+        }
+
+        if (typeof nestedValue === 'string' && lowerKey.includes('url')) {
+          return [key, sanitizeUrl(nestedValue)];
+        }
+
+        return [key, sanitizeMonitoringValue(nestedValue)];
+      }),
+    );
+  }
+
+  if (typeof value === 'string') {
+    return value.length > 800 ? `${value.slice(0, 797)}...` : value;
+  }
+
+  return value;
+}
+
+function applyContext(scope: Sentry.Scope, context?: LogContext): void {
+  const sanitizedContext = redactMonitoringContext(context);
+  if (!sanitizedContext) {
+    return;
+  }
+
+  const tags =
+    sanitizedContext.tags &&
+    typeof sanitizedContext.tags === 'object' &&
+    !Array.isArray(sanitizedContext.tags)
+      ? sanitizedContext.tags as Record<string, unknown>
+      : undefined;
+
+  if (tags) {
+    Object.entries(tags).forEach(([key, value]) => {
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        scope.setTag(key, String(value));
+      }
+    });
+  }
+
+  const level = typeof sanitizedContext.level === 'string' ? sanitizedContext.level : undefined;
+  if (level) {
+    scope.setLevel(level as Sentry.SeverityLevel);
+  }
+
+  scope.setContext('app', sanitizedContext);
+}
