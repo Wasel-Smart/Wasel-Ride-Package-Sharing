@@ -7,6 +7,7 @@
 @import './styles/app-service-theme.css';
 @import './styles/investor-polish.css';
 @import './styles/design-tokens.css';
+@import './styles/landing-consistency.css';
 @import './styles/ui-clarity.css';
 
 @layer base {

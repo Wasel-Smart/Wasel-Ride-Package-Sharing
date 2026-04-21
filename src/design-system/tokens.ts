@@ -155,6 +155,27 @@ export const layout = {
   gridGap: 'clamp(12px, 2vw, 18px)',
 } as const;
 
+export const icon = {
+  sm: '14px',
+  md: '18px',
+  lg: '20px',
+} as const;
+
+export const states = {
+  hover: 'rgba(169,227,255,0.10)',
+  hoverStrong: 'rgba(169,227,255,0.16)',
+  active: 'rgba(169,227,255,0.22)',
+  disabled: 'rgba(220,255,248,0.34)',
+  focusRing: '0 0 0 3px rgb(169 227 255 / 0.18)',
+} as const;
+
+export const surfaces = {
+  page:
+    'linear-gradient(180deg, rgba(220,255,248,0.08) 0%, rgba(220,255,248,0.03) 100%), rgba(8,15,26,0.84)',
+  pageStrong:
+    'linear-gradient(180deg, rgba(220,255,248,0.10) 0%, rgba(220,255,248,0.05) 100%), rgba(8,15,26,0.90)',
+} as const;
+
 export const components = {
   button: {
     height: {
@@ -199,6 +220,9 @@ export const tokens = {
   breakpoints,
   transitions,
   motion,
+  icon,
+  states,
+  surfaces,
   layout,
   components,
 } as const;
@@ -216,6 +240,9 @@ export const cssVariables = `
   --wasel-motion-fast: ${transitions.fast};
   --wasel-motion-base: ${transitions.base};
   --wasel-motion-slow: ${transitions.slow};
+  --wasel-icon-size-sm: ${icon.sm};
+  --wasel-icon-size-md: ${icon.md};
+  --wasel-icon-size-lg: ${icon.lg};
 }
 `;
 

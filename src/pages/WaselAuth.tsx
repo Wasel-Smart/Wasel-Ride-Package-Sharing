@@ -182,13 +182,13 @@ function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
         <WaselLogo size={50} theme="auto" variant="full" showWordmark subtitle="" framed={false} />
 
         <h1 className="auth-landing__hero-title" style={{ fontFamily: LANDING_DISPLAY }}>
-          One account that looks and feels like the landing page.
+          One account across the full Wasel network.
         </h1>
 
         <p className="auth-landing__hero-body">
           {tab === 'signin'
             ? 'Sign back in and continue across rides, packages, buses, and wallet from the same Wasel network shell.'
-            : 'Create one account and step into every Wasel service with the same landing-page experience from the first screen.'}
+            : 'Create one account and move between every Wasel service with the same trusted interface from the first step.'}
         </p>
 
         <div className="auth-landing__hero-signal">
@@ -602,7 +602,7 @@ export default function WaselAuth() {
                 </h2>
                 <p>
                   {tab === 'signin'
-                    ? 'Continue with the same landing-page design across every Wasel service.'
+                    ? 'Continue with the same unified Wasel design across every service.'
                     : 'Start once, then move between rides, packages, buses, and wallet without a design break.'}
                 </p>
                 <div className="auth-landing__switch-copy">

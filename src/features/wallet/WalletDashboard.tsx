@@ -139,9 +139,14 @@ export function WalletDashboard() {
   if (loading) {
     return (
       <PageShell>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-primary" />
-          <p className="text-sm text-muted-foreground">{t.processing}</p>
+        <div className="wasel-empty-state min-h-[60vh]">
+          <div className="wasel-empty-state__icon">
+            <LoadingSpinner size="lg" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-base font-semibold text-foreground">{t.walletTitle}</p>
+            <p className="text-sm text-muted-foreground">{t.processing}</p>
+          </div>
         </div>
       </PageShell>
     );
@@ -151,20 +156,13 @@ export function WalletDashboard() {
     return (
       <PageShell>
       <div className="flex items-center justify-center min-h-[60vh] px-2">
-        <div
-          className="w-full max-w-xl rounded-3xl border text-center p-8 md:p-10"
-          style={{
-            background: 'linear-gradient(180deg, rgba(220,255,248,0.08) 0%, rgba(220,255,248,0.03) 100%)',
-            borderColor: WaselColors.borderDark,
-            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.35)',
-          }}
-        >
+        <div className="wasel-empty-state w-full max-w-xl">
           <div className="flex justify-center mb-5">
             <WaselLogo size={36} theme="dark" variant="full" showWordmark={false} />
           </div>
           <div
-            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl"
-            style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${WaselColors.teal}20` }}
+            className="wasel-empty-state__icon mx-auto mb-5"
+            style={{ borderColor: `${WaselColors.teal}20` }}
           >
             <Wallet className="w-7 h-7" style={{ color: WaselColors.teal }} />
           </div>
@@ -193,14 +191,7 @@ export function WalletDashboard() {
     return (
       <PageShell>
       <div className="flex items-center justify-center min-h-[60vh] px-2">
-        <div
-          className="w-full max-w-2xl rounded-3xl border p-8 md:p-10"
-          style={{
-            background: 'linear-gradient(180deg, rgba(220,255,248,0.08) 0%, rgba(220,255,248,0.03) 100%)',
-            borderColor: WaselColors.borderDark,
-            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.35)',
-          }}
-        >
+        <div className="wasel-empty-state w-full max-w-2xl text-left">
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div className="space-y-3">
               <div className="flex items-center gap-3">

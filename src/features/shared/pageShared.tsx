@@ -1,8 +1,9 @@
  
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { Shield } from 'lucide-react';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
+import { Button } from '../../components/ui/button';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
@@ -20,13 +21,7 @@ import {
 import { buildAuthPagePath, buildAuthReturnTo } from '../../utils/authFlow';
 
 export const DS = PAGE_DS;
-const PAGE_PANEL_BG =
-  'linear-gradient(180deg, rgba(220,255,248,0.055) 0%, rgba(220,255,248,0.02) 100%)';
-const PAGE_PANEL_BG_STRONG =
-  'linear-gradient(180deg, rgba(220,255,248,0.08) 0%, rgba(220,255,248,0.04) 100%)';
-const PAGE_PANEL_BORDER = 'rgba(var(--wasel-border-rgb), 0.18)';
-const PAGE_PANEL_BORDER_STRONG = 'rgba(var(--accent-secondary-rgb), 0.24)';
-const PAGE_PANEL_GLOW = '0 18px 40px rgba(0,0,0,0.18)';
+const PAGE_PANEL_BG_STRONG = 'var(--wasel-page-panel-strong)';
 
 export const r = (px = 12) => `${px}px`;
 
@@ -189,7 +184,7 @@ export function Protected({ children }: { children: ReactNode }) {
           <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.7, marginBottom: 20 }}>
             Sign in to continue into the Wasel service network.
           </div>
-          <button
+          <Button
             type="button"
             onClick={() =>
               nav(
@@ -199,22 +194,9 @@ export function Protected({ children }: { children: ReactNode }) {
                 ),
               )
             }
-            style={{
-              minHeight: 46,
-              padding: '0 24px',
-              borderRadius: r(14),
-              border: 'none',
-              background: DS.gradC,
-              color: 'var(--primary-foreground)',
-              fontWeight: 800,
-              cursor: 'pointer',
-              fontFamily: DS.F,
-              fontSize: '0.88rem',
-              boxShadow: 'var(--wasel-shadow-teal)',
-            }}
           >
             Sign in
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -293,16 +275,7 @@ export function PageShell({ children }: { children: ReactNode }) {
         }
       `}</style>
 
-      <div
-        className="sp-inner"
-        style={{
-          position: 'relative',
-          maxWidth: 'var(--wasel-layout-max-width)',
-          margin: '0 auto',
-          padding:
-            'var(--wasel-layout-top) var(--wasel-layout-inline) var(--wasel-layout-bottom)',
-        }}
-      >
+      <div className="sp-inner wasel-page-shell">
         <div
           aria-hidden="true"
           style={{
@@ -319,41 +292,11 @@ export function PageShell({ children }: { children: ReactNode }) {
           }}
         />
         <div
-          className="sp-frame"
+          className="sp-frame wasel-page-frame"
           style={{
             ...landingPanel(34),
-            position: 'relative',
-            overflow: 'hidden',
-            padding: 'var(--wasel-card-padding)',
-            background: PAGE_PANEL_BG_STRONG,
           }}
         >
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              pointerEvents: 'none',
-              background: [
-                'radial-gradient(circle at 14% 14%, rgba(32,216,255,0.16), transparent 24%)',
-                'radial-gradient(circle at 84% 18%, rgba(25,231,187,0.12), transparent 20%)',
-                'radial-gradient(circle at 72% 88%, rgba(183,255,43,0.10), transparent 18%)',
-              ].join(','),
-            }}
-          />
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              opacity: 0.1,
-              pointerEvents: 'none',
-              backgroundImage:
-                'linear-gradient(rgba(169,227,255,0.14) 1px, transparent 1px), linear-gradient(90deg, rgba(169,227,255,0.14) 1px, transparent 1px)',
-              backgroundSize: '56px 56px',
-              maskImage: 'radial-gradient(circle at center, black 0%, black 48%, transparent 90%)',
-            }}
-          />
           <div
             aria-hidden="true"
             style={{
@@ -376,14 +319,7 @@ export function PageShell({ children }: { children: ReactNode }) {
               opacity: 0.7,
             }}
           />
-          <div
-            style={{
-              position: 'relative',
-              zIndex: 1,
-              display: 'grid',
-              gap: 'var(--wasel-layout-gap)',
-            }}
-          >
+          <div className="wasel-page-stack">
             {children}
           </div>
         </div>
@@ -409,143 +345,32 @@ export function SectionHead({
 }) {
   const { language } = useLanguage();
   const ar = language === 'ar';
+  const toneStyle = { '--wasel-section-tone': color } as CSSProperties;
 
   return (
-    <div
-      className="sp-head"
-      style={{
-        background: DS.sectionHeadBg,
-        borderRadius: r(30),
-        padding: '24px 28px',
-        marginBottom: 6,
-        position: 'relative',
-        overflow: 'hidden',
-        border: `1px solid ${PAGE_PANEL_BORDER_STRONG}`,
-        boxShadow: `${PAGE_PANEL_GLOW}, inset 0 1px 0 ${color}18`,
-      }}
-    >
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          background: [
-            `radial-gradient(ellipse 54% 100% at ${ar ? '92%' : '8%'} 50%, ${color}12, transparent 64%)`,
-            `linear-gradient(135deg, ${color}08, transparent 46%)`,
-          ].join(','),
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 1,
-          pointerEvents: 'none',
-          background: `linear-gradient(90deg, transparent, ${color}46, transparent)`,
-        }}
-      />
-
-      <div
-        className="sp-head-inner"
-        style={{
-          display: 'flex',
-          alignItems: 'stretch',
-          justifyContent: 'space-between',
-          gap: 18,
-          position: 'relative',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18 }}>
-          <div
-            style={{
-              width: 62,
-              height: 62,
-              borderRadius: r(20),
-              background: `linear-gradient(180deg, ${color}1d, rgba(220,255,248,0.12))`,
-              border: `1px solid ${color}34`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.7rem',
-              flexShrink: 0,
-              boxShadow: `0 20px 34px ${color}18`,
-            }}
-          >
+    <div className="sp-head wasel-section-head" style={toneStyle}>
+      <div className="sp-head-inner wasel-section-head__inner">
+        <div className="wasel-section-head__intro">
+          <div className="wasel-section-head__icon">
             {emoji}
           </div>
           <div>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                marginBottom: 10,
-                padding: '6px 12px',
-                borderRadius: r(999),
-                background: `${color}12`,
-                border: `1px solid ${color}26`,
-                color,
-                fontSize: '0.66rem',
-                fontWeight: 900,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-              }}
-            >
+            <div className="wasel-section-head__eyebrow">
               {ar ? 'صفحة واصل' : 'Wasel page'}
             </div>
-            <h1
-              style={{
-                fontFamily: LANDING_DISPLAY,
-                fontSize: 'clamp(1.35rem, 2.4vw, 1.72rem)',
-                fontWeight: 900,
-                color: LANDING_COLORS.text,
-                margin: 0,
-                letterSpacing: '-0.04em',
-              }}
-            >
+            <h1 className="wasel-section-head__title">
               {ar && titleAr ? titleAr : title}
             </h1>
             {sub ? (
-              <div
-                style={{
-                  marginTop: 8,
-                  color: DS.sub,
-                  fontSize: '0.9rem',
-                  lineHeight: 1.72,
-                  maxWidth: 720,
-                }}
-              >
-                {sub}
-              </div>
+              <div className="wasel-section-head__sub">{sub}</div>
             ) : null}
           </div>
         </div>
 
         {action ? (
-          <button
-            type="button"
-            onClick={action.onClick}
-            className="sp-head-btn"
-            style={{
-              minHeight: 48,
-              padding: '0 24px',
-              borderRadius: r(999),
-              border: `1px solid ${PAGE_PANEL_BORDER_STRONG}`,
-              background: 'var(--theme-gradient-primary)',
-              color: 'var(--wasel-button-primary-foreground)',
-              fontWeight: 800,
-              fontSize: '0.88rem',
-              boxShadow: 'var(--wasel-button-primary-shadow)',
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          >
+          <Button type="button" onClick={action.onClick} className="sp-head-btn">
             {action.label}
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>
@@ -563,55 +388,21 @@ export function CoreExperienceBanner({
 }) {
   const { language } = useLanguage();
   const ar = language === 'ar';
+  const toneStyle = { '--wasel-section-tone': tone } as CSSProperties;
 
   return (
-    <div
-      className="sp-brief"
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 180px) minmax(0, 1fr)',
-        gap: 18,
-        background: `linear-gradient(135deg, ${tone}10, rgba(220,255,248,0.05))`,
-        border: `1px solid ${tone}2e`,
-        borderRadius: r(24),
-        padding: '18px 20px',
-        marginBottom: 4,
-        boxShadow: PAGE_PANEL_GLOW,
-        backdropFilter: 'blur(18px)',
-      }}
-    >
-      <div
-        className="sp-brief-label"
-        style={{
-          display: 'grid',
-          alignContent: 'start',
-          gap: 8,
-          paddingRight: ar ? 0 : 10,
-          paddingLeft: ar ? 10 : 0,
-          borderRight: ar ? 'none' : `1px solid ${tone}20`,
-          borderLeft: ar ? `1px solid ${tone}20` : 'none',
-        }}
-      >
-        <div style={{ color: tone, fontSize: '0.7rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+    <div className="sp-brief wasel-page-brief" style={toneStyle}>
+      <div className="sp-brief-label wasel-page-brief__label">
+        <div className="wasel-micro-label">
           {ar ? 'ملخص الصفحة' : 'Page brief'}
         </div>
-        <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>
+        <div className="wasel-copy-subtle">
           {ar ? 'اجعل الخطوة التالية واضحة.' : 'Keep the next action obvious.'}
         </div>
       </div>
-      <div style={{ display: 'grid', gap: 8 }}>
-        <div
-          style={{
-            color: LANDING_COLORS.text,
-            fontFamily: LANDING_DISPLAY,
-            fontWeight: 900,
-            fontSize: '1.02rem',
-            letterSpacing: '-0.02em',
-          }}
-        >
-          {title}
-        </div>
-        <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.72, maxWidth: 820 }}>
+      <div className="wasel-page-brief__copy">
+        <div className="wasel-heading-sm">{title}</div>
+        <div className="wasel-copy-body" style={{ maxWidth: 820 }}>
           {detail}
         </div>
       </div>
@@ -632,101 +423,33 @@ export function ClarityBand({
 }) {
   const { language } = useLanguage();
   const ar = language === 'ar';
+  const toneStyle = { '--wasel-section-tone': tone } as CSSProperties;
 
   return (
-    <div
-      style={{
-        display: 'grid',
-        gap: 14,
-        marginBottom: 4,
-        background: `linear-gradient(180deg, ${tone}12, rgba(220,255,248,0.04))`,
-        border: `1px solid ${tone}28`,
-        borderRadius: r(24),
-        padding: '18px 20px 16px',
-        boxShadow: PAGE_PANEL_GLOW,
-        backdropFilter: 'blur(18px)',
-      }}
-    >
+    <div className="wasel-clarity-band" style={toneStyle}>
       <div>
-        <div
-          style={{
-            color: tone,
-            fontSize: '0.7rem',
-            fontWeight: 900,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            marginBottom: 6,
-          }}
-        >
+        <div className="wasel-micro-label" style={{ marginBottom: 6 }}>
           {ar ? 'مسار واضح' : 'Clear path'}
         </div>
-        <div
-          style={{
-            color: LANDING_COLORS.text,
-            fontFamily: LANDING_DISPLAY,
-            fontWeight: 900,
-            fontSize: '1rem',
-            letterSpacing: '-0.02em',
-            marginBottom: 4,
-          }}
-        >
+        <div className="wasel-heading-sm" style={{ marginBottom: 4 }}>
           {title}
         </div>
-        <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.66, maxWidth: 760 }}>
+        <div className="wasel-copy-subtle" style={{ maxWidth: 760 }}>
           {detail}
         </div>
       </div>
 
-      <div
-        className="sp-clarity-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-          gap: 12,
-        }}
-      >
+      <div className="sp-clarity-grid wasel-clarity-grid">
         {items.map((item, index) => (
-          <div
-            key={item.label}
-            style={{
-              background: PAGE_PANEL_BG,
-              border: `1px solid ${tone}20`,
-              borderRadius: r(18),
-              padding: '14px 15px',
-              display: 'flex',
-              gap: 10,
-              alignItems: 'flex-start',
-              transition: 'border-color 0.16s ease, box-shadow 0.16s ease',
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLDivElement).style.borderColor = `${tone}40`;
-              (e.currentTarget as HTMLDivElement).style.boxShadow = `0 4px 14px ${tone}12`;
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLDivElement).style.borderColor = `${tone}20`;
-              (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
-            }}
-          >
-            <div style={{
-              width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-              background: `${tone}18`, border: `1px solid ${tone}30`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.62rem', fontWeight: 900, color: tone, marginTop: 1,
-            }}>
+          <div key={item.label} className="wasel-clarity-item">
+            <div className="wasel-clarity-item__index">
               {index + 1}
             </div>
             <div>
-              <div style={{
-                color: tone,
-                fontSize: '0.68rem',
-                fontWeight: 800,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                marginBottom: 4,
-              }}>
+              <div className="wasel-clarity-item__label">
                 {item.label}
               </div>
-              <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.82rem', lineHeight: 1.55 }}>
+              <div className="wasel-clarity-item__value">
                 {item.value}
               </div>
             </div>

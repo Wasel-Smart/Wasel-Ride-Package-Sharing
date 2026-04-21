@@ -355,6 +355,7 @@
 .auth-landing__form-column {
   display: flex;
   align-items: stretch;
+  position: relative;
 }
 
 .auth-landing__form-card {
@@ -789,6 +790,10 @@
     grid-template-columns: 1fr;
   }
 
+  .auth-landing__form-column {
+    order: -1;
+  }
+
   .auth-landing__hero-panel,
   .auth-landing__hero-copy {
     min-height: auto;
@@ -800,9 +805,22 @@
     padding-inline: 14px;
   }
 
+  .auth-landing__hero-shell {
+    gap: 18px;
+  }
+
   .auth-landing__hero-copy,
   .auth-landing__form-card {
     padding: 20px;
+  }
+
+  .auth-landing__hero-copy {
+    gap: 16px;
+  }
+
+  .auth-landing__hero-panel {
+    min-height: 0;
+    border-radius: 28px;
   }
 
   .auth-landing__mobile-brand {
@@ -820,6 +838,16 @@
     font-size: clamp(2.4rem, 9vw, 3.3rem);
   }
 
+  .auth-landing__hero-body {
+    max-width: none;
+    font-size: 0.94rem;
+  }
+
+  .auth-landing__service-card {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
   .auth-landing__hero-mark {
     right: 18px;
     bottom: 18px;
@@ -830,6 +858,27 @@
 @media (max-width: 560px) {
   .auth-landing__header {
     align-items: stretch;
+  }
+
+  .auth-landing__hero-panel {
+    min-height: 0;
+  }
+
+  .auth-landing__hero-copy {
+    padding: 18px;
+  }
+
+  .auth-landing__service-grid {
+    display: none;
+  }
+
+  .auth-landing__trust-row {
+    gap: 8px;
+  }
+
+  .auth-landing__trust-chip {
+    width: 100%;
+    justify-content: center;
   }
 
   .auth-landing__header-actions {

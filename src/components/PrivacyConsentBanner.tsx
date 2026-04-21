@@ -113,7 +113,11 @@ export function PrivacyConsentBanner() {
           }
           @media (max-width: 767px) {
             .wasel-consent-root {
-              bottom: max(88px, calc(88px + env(safe-area-inset-bottom, 0px))) !important;
+              bottom: max(14px, calc(14px + env(safe-area-inset-bottom, 0px))) !important;
+              padding-inline: 14px !important;
+            }
+            .wasel-consent-card {
+              max-width: 100% !important;
             }
           }
           @media (min-width: 768px) {
@@ -128,7 +132,7 @@ export function PrivacyConsentBanner() {
           @media (max-width: 639px) {
             .wasel-consent-card {
               border-radius: 18px !important;
-              padding: 16px !important;
+              padding: 14px !important;
             }
             .wasel-consent-actions {
               gap: 8px !important;
@@ -209,7 +213,7 @@ export function PrivacyConsentBanner() {
               onClick={handleAccept}
               style={{
                 minHeight: 44,
-                padding: '0 18px',
+                padding: '0 16px',
                 borderRadius: 12,
                 border: 'none',
                 background:
@@ -232,7 +236,7 @@ export function PrivacyConsentBanner() {
               onClick={handleDecline}
               style={{
                 minHeight: 44,
-                padding: '0 18px',
+                padding: '0 16px',
                 borderRadius: 12,
                 border: '1px solid var(--border, rgba(244,198,81,0.18))',
                 background: 'transparent',
