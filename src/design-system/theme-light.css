@@ -1,0 +1,26 @@
+:root[data-theme='light'] {
+  --ds-page: #eee3d5;
+  --ds-page-muted: #e5d8c7;
+  --ds-surface: #f3e8da;
+  --ds-surface-raised: #f7eddf;
+  --ds-surface-soft: #e9dcc9;
+  --ds-surface-overlay: rgb(243 232 218 / 0.82);
+  --ds-border: #c8b69e;
+  --ds-border-strong: #b19878;
+  --ds-text: #201a15;
+  --ds-text-muted: #6b5f52;
+  --ds-text-soft: #8d7d6d;
+  --ds-accent: #de7b0d;
+  --ds-accent-strong: #f59a2c;
+  --ds-accent-soft: #f0d9bc;
+  --ds-success: #4f8d57;
+  --ds-warning: #b9782a;
+  --ds-danger: #bf5c45;
+  --ds-info: #2e6f8d;
+  --ds-shadow-sm: 0 12px 28px rgb(41 31 21 / 0.08);
+  --ds-shadow-md: 0 20px 44px rgb(41 31 21 / 0.14);
+  --ds-shadow-lg: 0 32px 72px rgb(41 31 21 / 0.18);
+  --ds-map-opacity: 0.16;
+
+  color-scheme: light;
+}
