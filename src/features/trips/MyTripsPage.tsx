@@ -35,24 +35,31 @@ import type { PackageRequest } from '../../services/journeyLogistics';
 import {
   ClarityBand,
   CoreExperienceBanner,
+  DS,
   PageShell,
   Protected,
   SectionHead,
 } from '../shared/pageShared';
 import { useTrips } from '../../modules/trips/trip.hooks';
 
-const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02))';
-const CARD_ALT = 'rgba(255,255,255,0.05)';
-const BORDER = 'rgba(157,232,255,0.18)';
-const CYAN = '#0F73FF';
-const GOLD = '#9DE8FF';
-const GREEN = '#19E7BB';
-const RED = '#EF4444';
-const AMBER = '#F59E0B';
-const TEXT = '#F5FBFF';
-const MUTED = 'rgba(245,251,255,0.78)';
-const DIM = 'rgba(157,232,255,0.56)';
-const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+const CARD = DS.cardGrad;
+const CARD_ALT = DS.card2;
+const BORDER = DS.border;
+const BORDER_STRONG = DS.borderH;
+const CYAN = DS.cyan;
+const BLUE = DS.blue;
+const GOLD = DS.gold;
+const GREEN = DS.green;
+const RED = DS.red;
+const AMBER = DS.gold;
+const TEXT = DS.text;
+const MUTED = DS.sub;
+const DIM = DS.muted;
+const FONT = DS.F;
+
+function tone(color: string, amount = 14) {
+  return `color-mix(in srgb, ${color} ${amount}%, transparent)`;
+}
 
 type TripLifecycle = 'active' | 'attention' | 'completed' | 'cancelled';
 type TripKind = 'rides' | 'packages' | 'buses';
@@ -80,23 +87,23 @@ const lifecycleConfig: Record<
   TripLifecycle,
   { label: string; color: string; bg: string; icon: ReactNode }
 > = {
-  active: { label: 'Active', color: CYAN, bg: 'rgba(71,183,230,0.12)', icon: <Clock size={12} /> },
+  active: { label: 'Active', color: CYAN, bg: tone(CYAN, 14), icon: <Clock size={12} /> },
   attention: {
     label: 'Attention',
     color: AMBER,
-    bg: 'rgba(245,158,11,0.12)',
+    bg: tone(AMBER, 14),
     icon: <ShieldAlert size={12} />,
   },
   completed: {
     label: 'Done',
     color: GREEN,
-    bg: 'rgba(107,181,21,0.12)',
+    bg: tone(GREEN, 14),
     icon: <CheckCircle size={12} />,
   },
   cancelled: {
     label: 'Cancelled',
     color: RED,
-    bg: 'rgba(239,68,68,0.12)',
+    bg: tone(RED, 14),
     icon: <XCircle size={12} />,
   },
 };
@@ -105,20 +112,20 @@ const paymentConfig: Record<
   RidePaymentStatus | 'n/a',
   { label: string; color: string; bg: string }
 > = {
-  pending: { label: 'Payment pending', color: AMBER, bg: 'rgba(245,158,11,0.12)' },
-  authorized: { label: 'Payment authorized', color: CYAN, bg: 'rgba(71,183,230,0.12)' },
-  captured: { label: 'Paid', color: GREEN, bg: 'rgba(107,181,21,0.12)' },
-  refunded: { label: 'Refunded', color: CYAN, bg: 'rgba(59,130,246,0.12)' },
-  failed: { label: 'Payment issue', color: RED, bg: 'rgba(239,68,68,0.12)' },
-  'n/a': { label: 'No payment state', color: MUTED, bg: 'rgba(148,163,184,0.12)' },
+  pending: { label: 'Payment pending', color: AMBER, bg: tone(AMBER, 14) },
+  authorized: { label: 'Payment authorized', color: CYAN, bg: tone(CYAN, 14) },
+  captured: { label: 'Paid', color: GREEN, bg: tone(GREEN, 14) },
+  refunded: { label: 'Refunded', color: BLUE, bg: tone(BLUE, 14) },
+  failed: { label: 'Payment issue', color: RED, bg: tone(RED, 14) },
+  'n/a': { label: 'No payment state', color: MUTED, bg: tone(MUTED, 16) },
 };
 
 const supportStatusConfig: Record<SupportStatus, { label: string; color: string; bg: string }> = {
-  open: { label: 'Open', color: CYAN, bg: 'rgba(71,183,230,0.12)' },
-  investigating: { label: 'Investigating', color: AMBER, bg: 'rgba(245,158,11,0.12)' },
-  waiting_on_user: { label: 'Waiting on you', color: GOLD, bg: 'rgba(168,214,20,0.12)' },
-  resolved: { label: 'Resolved', color: GREEN, bg: 'rgba(107,181,21,0.12)' },
-  closed: { label: 'Closed', color: MUTED, bg: 'rgba(148,163,184,0.12)' },
+  open: { label: 'Open', color: CYAN, bg: tone(CYAN, 14) },
+  investigating: { label: 'Investigating', color: AMBER, bg: tone(AMBER, 14) },
+  waiting_on_user: { label: 'Waiting on you', color: GOLD, bg: tone(GOLD, 14) },
+  resolved: { label: 'Resolved', color: GREEN, bg: tone(GREEN, 14) },
+  closed: { label: 'Closed', color: MUTED, bg: tone(MUTED, 16) },
 };
 
 const supportPriorityConfig: Record<SupportPriority, { label: string; color: string }> = {
@@ -141,8 +148,8 @@ function pill(color: string, bg?: string) {
     gap: 5,
     padding: '4px 10px',
     borderRadius: 999,
-    background: bg ?? `${color}15`,
-    border: `1px solid ${color}30`,
+    background: bg ?? tone(color, 14),
+    border: `1px solid ${tone(color, 24)}`,
     color,
     fontSize: '0.66rem',
     fontWeight: 700,
@@ -300,7 +307,7 @@ function SummaryCard({
           width: 72,
           height: 72,
           borderRadius: '50%',
-          background: `radial-gradient(circle, ${color}16 0%, transparent 72%)`,
+          background: `radial-gradient(circle, ${tone(color, 16)} 0%, transparent 72%)`,
         }}
       />
       <div
@@ -311,8 +318,8 @@ function SummaryCard({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: `${color}16`,
-          border: `1px solid ${color}26`,
+          background: tone(color, 14),
+          border: `1px solid ${tone(color, 24)}`,
           marginBottom: 12,
         }}
       >
@@ -351,6 +358,7 @@ function StatusBadge({ lifecycle }: { lifecycle: TripLifecycle }) {
         borderRadius: 999,
         color: item.color,
         background: item.bg,
+        border: `1px solid ${tone(item.color, 22)}`,
         fontFamily: FONT,
       }}
     >
@@ -362,7 +370,7 @@ function StatusBadge({ lifecycle }: { lifecycle: TripLifecycle }) {
 
 function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
   const [expanded, setExpanded] = useState(false);
-  const routeAccent = trip.kind === 'rides' ? CYAN : trip.kind === 'packages' ? GOLD : '#4F8CFF';
+  const routeAccent = trip.kind === 'rides' ? CYAN : trip.kind === 'packages' ? GOLD : BLUE;
   const payment = paymentConfig[trip.paymentStatus ?? 'n/a'];
 
   return (
@@ -394,8 +402,8 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
             width: 42,
             height: 42,
             borderRadius: 13,
-            background: `${routeAccent}14`,
-            border: `1px solid ${routeAccent}28`,
+            background: tone(routeAccent, 14),
+            border: `1px solid ${tone(routeAccent, 24)}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -415,7 +423,7 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
             <span style={{ fontWeight: 800, color: TEXT, fontFamily: FONT, fontSize: '0.92rem' }}>
               {trip.from}
             </span>
-            <span style={{ color: 'rgba(148,163,184,0.42)', fontSize: '0.78rem' }}>to</span>
+            <span style={{ color: DIM, fontSize: '0.78rem' }}>to</span>
             <span style={{ fontWeight: 800, color: TEXT, fontFamily: FONT, fontSize: '0.92rem' }}>
               {trip.to}
             </span>
@@ -426,7 +434,7 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
           <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <span style={pill(routeAccent)}>{trip.primaryStatus}</span>
             {trip.ticketLabel ? (
-              <span style={pill('#ffffff', 'rgba(255,255,255,0.06)')}>
+              <span style={pill(TEXT, tone(TEXT, 8))}>
                 <Ticket size={12} />
                 {trip.ticketLabel}
               </span>
@@ -449,7 +457,7 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
         </div>
         <ChevronRight
           size={14}
-          color="rgba(148,163,184,0.35)"
+          color={DIM}
           style={{
             flexShrink: 0,
             transform: expanded ? 'rotate(90deg)' : 'none',
@@ -474,13 +482,13 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
               {payment.label}
             </span>
             {trip.supportCount > 0 ? (
-              <span style={pill(AMBER, 'rgba(245,158,11,0.12)')}>
+              <span style={pill(AMBER, tone(AMBER, 14))}>
                 <LifeBuoy size={12} />
                 {trip.supportCount} active support
               </span>
             ) : null}
             {trip.captainLabel ? (
-              <span style={pill(GREEN, 'rgba(34,197,94,0.12)')}>{trip.captainLabel}</span>
+              <span style={pill(GREEN, tone(GREEN, 14))}>{trip.captainLabel}</span>
             ) : null}
           </div>
           {trip.secondaryStatus ? (
@@ -503,13 +511,13 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
             <button
               onClick={onOpen}
               style={{
-                padding: '7px 14px',
-                borderRadius: 10,
-                background: 'transparent',
-                border: `1px solid ${BORDER}`,
-                color: TEXT,
-                fontWeight: 700,
-                fontFamily: FONT,
+              padding: '7px 14px',
+              borderRadius: 10,
+              background: CARD_ALT,
+              border: `1px solid ${BORDER_STRONG}`,
+              color: TEXT,
+              fontWeight: 700,
+              fontFamily: FONT,
                 fontSize: '0.76rem',
                 cursor: 'pointer',
               }}
@@ -822,8 +830,8 @@ export default function MyTripsPage() {
                   flex: 1,
                   padding: '9px 0',
                   borderRadius: 10,
-                  background: tab === key ? 'rgba(71,183,230,0.12)' : 'transparent',
-                  border: tab === key ? '1px solid rgba(71,183,230,0.25)' : '1px solid transparent',
+                  background: tab === key ? tone(CYAN, 14) : 'transparent',
+                  border: tab === key ? `1px solid ${tone(CYAN, 24)}` : '1px solid transparent',
                   color: tab === key ? CYAN : MUTED,
                   fontWeight: tab === key ? 800 : 600,
                   fontFamily: FONT,
@@ -855,7 +863,7 @@ export default function MyTripsPage() {
                   fontFamily: FONT,
                   cursor: 'pointer',
                   border: `1px solid ${filter === filterOption.key ? CYAN : BORDER}`,
-                  background: filter === filterOption.key ? 'rgba(71,183,230,0.12)' : 'transparent',
+                  background: filter === filterOption.key ? tone(CYAN, 14) : 'transparent',
                   color: filter === filterOption.key ? CYAN : MUTED,
                 }}
               >
@@ -891,8 +899,8 @@ export default function MyTripsPage() {
                   marginTop: 16,
                   padding: '10px 18px',
                   borderRadius: 10,
-                  background: 'rgba(71,183,230,0.12)',
-                  border: '1px solid rgba(71,183,230,0.25)',
+                  background: tone(CYAN, 14),
+                  border: `1px solid ${tone(CYAN, 24)}`,
                   color: CYAN,
                   fontWeight: 800,
                   fontFamily: FONT,

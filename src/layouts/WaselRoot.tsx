@@ -550,7 +550,6 @@ export default function WaselRoot() {
       </main>
 
       {/* ── Footer ───────────────────────────────────────────────────── */}
-      <div style={{ maxWidth: 1380, margin: '0 auto', padding: '0 16px 112px' }}>
       <div
         style={{
           maxWidth: 'var(--wasel-layout-max-width)',
