@@ -21,10 +21,12 @@
   --auth-landing-chip-muted: var(--text-secondary);
   --auth-landing-chip-accent: var(--accent-secondary);
   --auth-landing-chip-icon: var(--accent);
-  --auth-landing-orb-one:
-    radial-gradient(circle, rgb(var(--accent-rgb) / 0.22), transparent 70%);
-  --auth-landing-orb-two:
-    radial-gradient(circle, rgb(var(--accent-secondary-rgb) / 0.18), transparent 70%);
+  --auth-landing-orb-one: radial-gradient(circle, rgb(var(--accent-rgb) / 0.22), transparent 70%);
+  --auth-landing-orb-two: radial-gradient(
+    circle,
+    rgb(var(--accent-secondary-rgb) / 0.18),
+    transparent 70%
+  );
   --auth-landing-form-shadow: var(--wasel-shadow-lg);
   --auth-landing-tab-bg: var(--surface-muted);
   --auth-landing-tab-text: var(--text-secondary);
@@ -37,7 +39,7 @@
   --auth-landing-return-label: var(--text-muted);
   --auth-landing-field-focus-bg: var(--bg-secondary);
   --auth-landing-field-focus-border: var(--border-strong);
-  --auth-landing-field-focus-ring: rgb(var(--accent-secondary-rgb) / 0.10);
+  --auth-landing-field-focus-ring: rgb(var(--accent-secondary-rgb) / 0.1);
   --auth-landing-field-error-border: rgb(var(--danger-rgb) / 0.32);
   --auth-landing-field-error-ring: rgb(var(--danger-rgb) / 0.08);
   --auth-landing-error-bg: rgb(var(--danger-rgb) / 0.08);
@@ -46,7 +48,7 @@
   --auth-landing-success-bg: rgb(var(--accent-secondary-rgb) / 0.08);
   --auth-landing-success-border: rgb(var(--accent-secondary-rgb) / 0.16);
   --auth-landing-success-text: var(--accent-secondary);
-  --auth-landing-notice-bg: rgb(var(--accent-rgb) / 0.10);
+  --auth-landing-notice-bg: rgb(var(--accent-rgb) / 0.1);
   --auth-landing-notice-border: rgb(var(--accent-rgb) / 0.18);
   --auth-landing-notice-text: var(--accent);
   --auth-landing-submit-bg: var(--theme-gradient-primary);
@@ -61,15 +63,19 @@
   --auth-social-google-bg: color-mix(in srgb, var(--auth-social-google) 10%, var(--bg-secondary));
   --auth-social-google-border: color-mix(in srgb, var(--auth-social-google) 22%, var(--border));
   --auth-social-facebook: #1877f2;
-  --auth-social-facebook-bg:
-    color-mix(in srgb, var(--auth-social-facebook) 10%, var(--bg-secondary));
-  --auth-social-facebook-border:
-    color-mix(in srgb, var(--auth-social-facebook) 22%, var(--border));
+  --auth-social-facebook-bg: color-mix(
+    in srgb,
+    var(--auth-social-facebook) 10%,
+    var(--bg-secondary)
+  );
+  --auth-social-facebook-border: color-mix(in srgb, var(--auth-social-facebook) 22%, var(--border));
   --auth-social-whatsapp: #25d366;
-  --auth-social-whatsapp-bg:
-    color-mix(in srgb, var(--auth-social-whatsapp) 10%, var(--bg-secondary));
-  --auth-social-whatsapp-border:
-    color-mix(in srgb, var(--auth-social-whatsapp) 22%, var(--border));
+  --auth-social-whatsapp-bg: color-mix(
+    in srgb,
+    var(--auth-social-whatsapp) 10%,
+    var(--bg-secondary)
+  );
+  --auth-social-whatsapp-border: color-mix(in srgb, var(--auth-social-whatsapp) 22%, var(--border));
   min-height: 100vh;
   background: var(--auth-landing-bg);
   color: var(--auth-landing-text);
@@ -680,6 +686,121 @@
 .auth-landing__forgot-row {
   display: flex;
   justify-content: flex-end;
+}
+
+.auth-landing__remember-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+}
+
+.auth-remember-me {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.auth-remember-me__checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.auth-remember-me__checkmark {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  background: var(--surface-field);
+  transition: all 0.15s ease;
+}
+
+.auth-remember-me__checkbox:checked + .auth-remember-me__checkmark {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.auth-remember-me__checkbox:checked + .auth-remember-me__checkmark::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid var(--text-inverse);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.auth-remember-me__label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.auth-password-requirements {
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgb(var(--accent-secondary-rgb) / 0.06);
+  border: 1px solid rgb(var(--accent-secondary-rgb) / 0.12);
+}
+
+.auth-password-requirements__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.auth-password-requirements__list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+}
+
+.auth-password-requirements__item {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  padding-left: 14px;
+  position: relative;
+}
+
+.auth-password-requirements__item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+}
+
+.auth-social-button--biometric {
+  background: rgb(var(--accent-rgb) / 0.08) !important;
+  border-color: rgb(var(--accent-rgb) / 0.2) !important;
+}
+
+.auth-social-button--biometric .auth-landing__social-icon {
+  background: var(--accent) !important;
+  color: var(--text-inverse) !important;
+}
+
+.auth-landing__social-link-hint {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 8px 0 0;
 }
 
 .auth-landing__submit {

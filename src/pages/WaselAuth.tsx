@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  Fingerprint,
   Lock,
   Mail,
   MapPinned,
@@ -45,6 +46,78 @@ import './WaselAuth.css';
 
 type Tab = 'signin' | 'signup';
 type PendingAction = 'google' | 'facebook' | 'reset' | 'whatsapp' | null;
+
+const REMEMBER_ME_STORAGE_KEY = 'wasel_remember_me';
+
+function getRememberMe(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem(REMEMBER_ME_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function setRememberMe(remember: boolean): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (remember) {
+      localStorage.setItem(REMEMBER_ME_STORAGE_KEY, 'true');
+    } else {
+      localStorage.removeItem(REMEMBER_ME_STORAGE_KEY);
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+async function checkBiometricAvailable(): Promise<boolean> {
+  if (typeof window === 'undefined' || !window.PublicKeyCredential) return false;
+  try {
+    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  } catch {
+    return false;
+  }
+}
+
+function PasswordRequirementsVisible() {
+  return (
+    <div className="auth-password-requirements">
+      <div className="auth-password-requirements__title">
+        <Shield size={12} />
+        Password requirements
+      </div>
+      <div className="auth-password-requirements__list">
+        <div className="auth-password-requirements__item">At least 8 characters</div>
+        <div className="auth-password-requirements__item">One uppercase letter</div>
+        <div className="auth-password-requirements__item">One lowercase letter</div>
+        <div className="auth-password-requirements__item">One number</div>
+        <div className="auth-password-requirements__item">One special character (!@#$%^&*)</div>
+      </div>
+    </div>
+  );
+}
+
+function RememberMeCheckbox({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="auth-remember-me">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={e => onChange(e.target.checked)}
+        className="auth-remember-me__checkbox"
+      />
+      <span className="auth-remember-me__checkmark" />
+      <span className="auth-remember-me__label">Remember me</span>
+    </label>
+  );
+}
 
 const BRAND_FEATURES = [
   { icon: <Shield size={14} />, text: 'Secure access' },
@@ -151,9 +224,7 @@ function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
 
         <WaselLogo size={50} theme="auto" variant="full" showWordmark subtitle="" framed={false} />
 
-        <h1 className="auth-landing__hero-title">
-          One account across the full Wasel network.
-        </h1>
+        <h1 className="auth-landing__hero-title">One account across the full Wasel network.</h1>
 
         <p className="auth-landing__hero-body">
           {tab === 'signin'
@@ -281,6 +352,8 @@ export default function WaselAuth() {
   const [notice, setNotice] = useState(
     passwordResetCompleted ? 'Password updated. Sign in with your new password.' : '',
   );
+  const [rememberMe, setRememberMeState] = useState(getRememberMe);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
 
   const { signIn, register, loading, user } = useLocalAuth();
   const { resetPassword, signInWithGoogle, signInWithFacebook } = useAuth();
@@ -347,6 +420,20 @@ export default function WaselAuth() {
   useEffect(() => {
     if (user && mountedRef.current) nav(safeReturnTo);
   }, [user, nav, safeReturnTo]);
+
+  useEffect(() => {
+    checkBiometricAvailable()
+      .then(setBiometricAvailable)
+      .catch(() => setBiometricAvailable(false));
+  }, []);
+
+  useEffect(() => {
+    setRememberMe(rememberMe);
+  }, [rememberMe]);
+
+  const handleRememberMeChange = (value: boolean) => {
+    setRememberMeState(value);
+  };
 
   const pushSuccessRedirect = () => {
     setSuccess(true);
@@ -558,9 +645,7 @@ export default function WaselAuth() {
                   <Sparkles size={14} />
                   Premium access
                 </div>
-                <h2>
-                  {tab === 'signin' ? 'Sign in to Wasel' : 'Create your Wasel account'}
-                </h2>
+                <h2>{tab === 'signin' ? 'Sign in to Wasel' : 'Create your Wasel account'}</h2>
                 <p>
                   {tab === 'signin'
                     ? 'Continue with the same unified Wasel design across every service.'
@@ -677,12 +762,19 @@ export default function WaselAuth() {
                     hint={
                       tab === 'signup' ? (
                         <div>
+                          <PasswordRequirementsVisible />
                           {password ? <StrengthBar password={password} /> : null}
                           <PasswordChecklist password={password} />
                         </div>
                       ) : undefined
                     }
                   />
+
+                  {tab === 'signin' ? (
+                    <div className="auth-landing__remember-row">
+                      <RememberMeCheckbox checked={rememberMe} onChange={handleRememberMeChange} />
+                    </div>
+                  ) : null}
 
                   {tab === 'signup' ? (
                     <AuthField
@@ -736,6 +828,28 @@ export default function WaselAuth() {
                   </div>
 
                   <div className="auth-landing__social-grid">
+                    {biometricAvailable && tab === 'signin' ? (
+                      <motion.button
+                        type="button"
+                        whileHover={{ scale: 1.01, y: -1 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="auth-landing__social-button auth-landing__social-button--biometric"
+                        aria-label="Use biometric authentication"
+                        disabled={isBusy}
+                        onClick={() => {
+                          toast.info('Biometric authentication coming soon');
+                        }}
+                      >
+                        <div className="auth-landing__social-icon">
+                          <Fingerprint size={18} />
+                        </div>
+                        <div className="auth-landing__social-copy">
+                          <strong>Biometric</strong>
+                          <span>Use fingerprint or face ID</span>
+                        </div>
+                        <ChevronRight size={14} className="auth-landing__social-chevron" />
+                      </motion.button>
+                    ) : null}
                     {socialButtons.map(social => (
                       <motion.button
                         key={social.label}
@@ -751,9 +865,7 @@ export default function WaselAuth() {
                           void social.onClick();
                         }}
                       >
-                        <div className="auth-landing__social-icon">
-                          {social.label.slice(0, 1)}
-                        </div>
+                        <div className="auth-landing__social-icon">{social.label.slice(0, 1)}</div>
                         <div className="auth-landing__social-copy">
                           <strong>{social.label}</strong>
                           <span>
@@ -765,6 +877,22 @@ export default function WaselAuth() {
                         <ChevronRight size={14} className="auth-landing__social-chevron" />
                       </motion.button>
                     ))}
+                    {tab === 'signin' ? (
+                      <div className="auth-landing__social-link-hint">
+                        <button
+                          type="button"
+                          className="auth-landing__inline-link"
+                          onClick={() => {
+                            setNotice(
+                              'Link your Google or Facebook account in Profile → Settings → Account after signing in.',
+                            );
+                            setTimeout(() => setNotice(''), 5000);
+                          }}
+                        >
+                          Link social account to existing account
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="auth-landing__support-bar">

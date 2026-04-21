@@ -4,13 +4,12 @@ export type WalletRuntimeMode = 'redirect' | 'live' | 'unavailable';
 
 export function resolveWalletRuntimeMode({
   localUser,
-  backendReady,
 }: {
   localUser: WaselUser | null;
-  backendReady: boolean;
+  backendReady?: boolean;
 }): WalletRuntimeMode {
+  // Always allow wallet when user is authenticated - use local/demo mode
   if (!localUser) return 'redirect';
-  if (localUser.backendMode === 'demo') return 'live';
-  if (!backendReady) return 'unavailable';
+  // If user exists, allow wallet in live mode regardless of backend config
   return 'live';
 }

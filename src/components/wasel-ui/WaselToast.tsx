@@ -1,9 +1,12 @@
+/**
+ * WaselToast — unified design system
+ */
+
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { CheckCircle, Info, X, XCircle } from 'lucide-react';
-import { C, R, TYPE, Z } from '../utils/wasel-ds';
+import { CheckCircle, X, AlertCircle, Info } from 'lucide-react';
 
-type ToastType = 'success' | 'error' | 'info' | 'warning';
+type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 interface Toast {
   id: string;
@@ -53,18 +56,13 @@ export function useToast() {
   return { toasts, addToast, removeToast };
 }
 
-const icons = {
-  success: CheckCircle,
-  error: XCircle,
-  info: Info,
-  warning: Info,
-};
+const icons = { success: CheckCircle, error: AlertCircle, warning: AlertCircle, info: Info };
 
 const colors = {
-  success: C.green,
-  error: C.error,
-  info: C.cyan,
-  warning: C.warning,
+  success: 'var(--success)',
+  error: 'var(--error)',
+  warning: 'var(--warning)',
+  info: 'var(--info)',
 };
 
 export function ToastContainer() {
@@ -83,7 +81,7 @@ export function ToastContainer() {
         position: 'fixed',
         top: 20,
         right: 20,
-        zIndex: Z.toast,
+        zIndex: 400,
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
@@ -97,22 +95,22 @@ export function ToastContainer() {
           return (
             <motion.div
               key={toast.id}
-              initial={{ opacity: 0, x: 50, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 50, scale: 0.95 }}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 50 }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
                 padding: '12px 16px',
-                background: C.navy,
-                border: `1px solid ${color}40`,
-                borderRadius: R.lg,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-lg)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
               }}
             >
               <Icon size={18} style={{ color, flexShrink: 0 }} />
-              <span style={{ flex: 1, fontSize: TYPE.size.sm, color: C.text }}>
+              <span style={{ flex: 1, fontSize: '13px', color: 'var(--text-primary)' }}>
                 {toast.message}
               </span>
               <button
@@ -123,9 +121,15 @@ export function ToastContainer() {
                     broadcastToasts();
                   }
                 }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 4,
+                  color: 'var(--text-muted)',
+                }}
               >
-                <X size={14} style={{ color: C.textMuted }} />
+                <X size={14} />
               </button>
             </motion.div>
           );

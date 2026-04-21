@@ -1,5 +1,3 @@
-import { getConfig } from './env';
-
 export const SUPABASE_AUTH_STORAGE_KEY = 'wasel-auth-token';
 export const LOCAL_AUTH_USER_STORAGE_KEY = 'wasel_local_user_v2';
 
@@ -16,8 +14,8 @@ function getBrowserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | u
 }
 
 export function allowPersistentClientAuthFallback(): boolean {
-  const { allowLocalPersistenceFallback, enableDemoAccount, enablePersistedTestAuth } = getConfig();
-  return allowLocalPersistenceFallback || enableDemoAccount || enablePersistedTestAuth;
+  // Always allow localStorage persistence for better UX - user stays logged in across tabs
+  return true;
 }
 
 export function clearLegacyPersistentAuthArtifacts(): void {

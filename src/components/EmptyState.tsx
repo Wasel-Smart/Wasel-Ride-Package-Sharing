@@ -1,15 +1,18 @@
+/**
+ * EmptyState — unified design system
+ */
+
 import type { ReactNode } from 'react';
-import { Inbox, C, R, TYPE, F } from '../utils/wasel-ds';
+import { Inbox } from 'lucide-react';
 
 interface EmptyStateProps {
   icon?: ReactNode;
   title: string;
   description?: string;
   action?: ReactNode;
-  className?: string;
 }
 
-export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
+export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
     <div
       style={{
@@ -21,49 +24,30 @@ export function EmptyState({ icon, title, description, action, className }: Empt
         padding: '48px 24px',
         textAlign: 'center',
       }}
-      className={className}
     >
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          width: '64px',
-          height: '64px',
-          borderRadius: R.xxl,
-          background: C.cyanDim,
-          color: C.cyan,
+          width: '56px',
+          height: '56px',
+          borderRadius: 'var(--radius-lg)',
+          background: 'var(--bg-tertiary)',
+          color: 'var(--accent)',
         }}
       >
-        {icon ?? <Inbox size={28} />}
+        {icon ?? <Inbox size={24} />}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-        <h3
-          style={{
-            margin: 0,
-            fontSize: TYPE.size.lg,
-            fontWeight: TYPE.weight.bold,
-            color: C.text,
-            fontFamily: F,
-          }}
-        >
-          {title}
-        </h3>
-        {description && (
-          <p
-            style={{
-              margin: 0,
-              fontSize: TYPE.size.sm,
-              color: C.textMuted,
-              fontFamily: F,
-              maxWidth: '280px',
-            }}
-          >
-            {description}
-          </p>
-        )}
-      </div>
-      {action && <div style={{ marginTop: '8px' }}>{action}</div>}
+      <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>
+        {title}
+      </h3>
+      {description && (
+        <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)', maxWidth: '280px' }}>
+          {description}
+        </p>
+      )}
+      {action}
     </div>
   );
 }
