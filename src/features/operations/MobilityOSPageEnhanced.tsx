@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -9,11 +9,9 @@ import {
   Play,
   RotateCcw,
   ShieldCheck,
-  Sparkles,
   TimerReset,
   Users,
 } from 'lucide-react';
-import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import { PageShell, PageHeader, StatCard, DataPanel, ActionButton, InfoCard } from '../../services/pageComponents';
 import { DesignSystem } from '../../services/designSystem';
 
@@ -303,7 +301,7 @@ export default function MobilityOSPageEnhanced() {
               {[
                 `${hottest.fromNode.name} → ${hottest.toNode.name} is carrying the hottest demand wave at ${Math.round(hottest.load * 100)}% load.`,
                 `${weakest.fromNode.name} → ${weakest.toNode.name} is the first corridor to protect if reliability slips further.`,
-              ].map((line, index) => (
+              ].map((line) => (
                 <article key={line} style={{ padding: '14px 16px', borderRadius: 18, border: `1px solid ${DesignSystem.colors.border.base}`, background: 'rgba(255,255,255,0.03)', color: DesignSystem.colors.text.secondary, lineHeight: 1.65, fontSize: DesignSystem.typography.fontSize.sm }}>
                   {line}
                 </article>
@@ -321,8 +319,12 @@ export default function MobilityOSPageEnhanced() {
           { icon: AlertTriangle, title: 'ETA drift', value: `${Math.max(0, weakest.etaLive - weakest.eta)} min`, body: `${weakest.fromNode.name} → ${weakest.toNode.name} is the main watch corridor.`, accent: DesignSystem.colors.purple.base },
           { icon: CarFront, title: 'Fleet pressure', value: `${Math.round(hottest.load * 100)}%`, body: `${hottest.fromNode.name} → ${hottest.toNode.name} is carrying the highest live demand.`, accent: accentColor(hottest.accent) },
           { icon: Activity, title: 'Math core', value: `${network.dispatchIQ}`, body: 'Intelligence score blended from route score, balance, and velocity.', accent: DesignSystem.colors.cyan.base },
-        ].map((card) => (
-          <InfoCard key={card.title} icon={<card.icon size={18} color={card.accent} />} {...card} />
+        ].map(({ icon: Icon, ...card }) => (
+          <InfoCard
+            key={card.title}
+            {...card}
+            icon={<Icon size={18} color={card.accent} />}
+          />
         ))}
       </section>
     </PageShell>

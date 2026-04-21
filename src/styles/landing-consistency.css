@@ -1,28 +1,35 @@
 :root {
-  --wasel-focus-ring: 0 0 0 3px rgb(var(--accent-secondary-rgb) / 0.18);
-  --wasel-state-hover: rgba(169, 227, 255, 0.1);
-  --wasel-state-hover-strong: rgba(169, 227, 255, 0.16);
-  --wasel-state-active: rgba(169, 227, 255, 0.22);
-  --wasel-state-disabled: rgba(220, 255, 248, 0.34);
+  --wasel-focus-ring: 0 0 0 3px color-mix(in srgb, var(--ds-accent) 18%, transparent);
+  --wasel-state-hover: color-mix(in srgb, var(--ds-accent) 10%, transparent);
+  --wasel-state-hover-strong: color-mix(in srgb, var(--ds-accent) 16%, transparent);
+  --wasel-state-active: color-mix(in srgb, var(--ds-accent-strong) 20%, transparent);
+  --wasel-state-disabled: color-mix(in srgb, var(--ds-text-soft) 34%, transparent);
   --wasel-page-panel:
-    linear-gradient(180deg, rgba(220, 255, 248, 0.08) 0%, rgba(220, 255, 248, 0.03) 100%),
-    rgba(8, 15, 26, 0.84);
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-accent-strong) 4%, rgb(255 255 255 / 0.02)) 0%,
+      rgb(255 255 255 / 0.02) 100%
+    ),
+    color-mix(in srgb, var(--ds-surface-raised) 92%, transparent);
   --wasel-page-panel-strong:
-    linear-gradient(180deg, rgba(220, 255, 248, 0.1) 0%, rgba(220, 255, 248, 0.05) 100%),
-    rgba(8, 15, 26, 0.9);
-  --wasel-page-panel-border: rgba(var(--wasel-border-rgb), 0.18);
-  --wasel-page-panel-border-strong: rgba(var(--accent-secondary-rgb), 0.24);
-  --wasel-page-panel-glow: 0 18px 40px rgba(0, 0, 0, 0.18);
-  --wasel-section-tone: var(--primary);
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-accent-strong) 6%, rgb(255 255 255 / 0.03)) 0%,
+      rgb(255 255 255 / 0.03) 100%
+    ),
+    color-mix(in srgb, var(--ds-surface-raised) 96%, transparent);
+  --wasel-page-panel-border: color-mix(in srgb, var(--ds-border) 82%, transparent);
+  --wasel-page-panel-border-strong:
+    color-mix(in srgb, var(--ds-accent-strong) 24%, var(--ds-border));
+  --wasel-page-panel-glow: var(--ds-shadow-md);
+  --wasel-section-tone: var(--ds-accent-strong);
   --wasel-icon-sm: 14px;
   --wasel-icon-md: 18px;
   --wasel-icon-lg: 20px;
 }
 
 .wasel-ui-surface {
-  background:
-    linear-gradient(180deg, rgba(220, 255, 248, 0.055), rgba(220, 255, 248, 0.018)),
-    var(--surface-strong);
+  background: var(--wasel-page-panel);
   border: 1px solid var(--wasel-panel-border);
   box-shadow: var(--wasel-shadow-card);
   backdrop-filter: blur(18px);
@@ -51,7 +58,7 @@
   border-radius: var(--wasel-radius-2xl);
   background: var(--wasel-page-panel-strong);
   border: 1px solid var(--wasel-page-panel-border);
-  box-shadow: var(--wasel-shadow-lg), inset 0 1px 0 rgba(220, 255, 248, 0.06);
+  box-shadow: var(--wasel-shadow-lg), inset 0 1px 0 rgb(255 255 255 / 0.06);
 }
 
 .wasel-page-frame::before {
@@ -60,9 +67,21 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 14% 14%, rgba(32, 216, 255, 0.12), transparent 24%),
-    radial-gradient(circle at 84% 18%, rgba(25, 231, 187, 0.1), transparent 20%),
-    radial-gradient(circle at 72% 88%, rgba(183, 255, 43, 0.06), transparent 18%);
+    radial-gradient(
+      circle at 14% 14%,
+      color-mix(in srgb, var(--ds-accent-strong) 16%, transparent),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 84% 18%,
+      color-mix(in srgb, var(--ds-accent) 12%, transparent),
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 72% 88%,
+      color-mix(in srgb, var(--ds-warning) 10%, transparent),
+      transparent 18%
+    );
 }
 
 .wasel-page-frame::after {
@@ -72,10 +91,62 @@
   pointer-events: none;
   opacity: 0.08;
   background-image:
-    linear-gradient(rgba(169, 227, 255, 0.14) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(169, 227, 255, 0.14) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--ds-accent-strong) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--ds-accent-strong) 14%, transparent) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: radial-gradient(circle at center, black 0%, black 48%, transparent 90%);
+}
+
+.wasel-page-shell__glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 12% 12%,
+      color-mix(in srgb, var(--ds-accent-strong) 16%, transparent),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 86% 10%,
+      color-mix(in srgb, var(--ds-warning) 10%, transparent),
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 54% 94%,
+      color-mix(in srgb, var(--ds-accent) 8%, transparent),
+      transparent 24%
+    );
+  opacity: 0.92;
+}
+
+.wasel-page-frame__top-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--ds-accent-strong) 44%, transparent),
+      transparent
+    );
+}
+
+.wasel-page-frame__top-wash {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 160px;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-accent-strong) 8%, transparent),
+      transparent 72%
+    );
 }
 
 .wasel-page-stack {
@@ -146,7 +217,12 @@
   align-items: center;
   justify-content: center;
   border-radius: 20px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--section-tone) 18%, transparent), rgba(220, 255, 248, 0.12));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--section-tone) 18%, transparent),
+      rgb(255 255 255 / 0.08)
+    );
   border: 1px solid color-mix(in srgb, var(--section-tone) 28%, transparent);
   box-shadow: 0 20px 34px color-mix(in srgb, var(--section-tone) 14%, transparent);
   color: var(--section-tone);
@@ -201,7 +277,12 @@
   padding: 18px 20px;
   border-radius: 24px;
   border: 1px solid color-mix(in srgb, var(--section-tone) 20%, transparent);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--section-tone) 10%, transparent), rgba(220, 255, 248, 0.05));
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--section-tone) 10%, transparent),
+      rgb(255 255 255 / 0.04)
+    );
   box-shadow: var(--wasel-page-panel-glow);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
