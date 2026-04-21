@@ -423,14 +423,14 @@ button, a, [role="button"] {
   background: rgba(6 12 24 / 0.70);
   backdrop-filter: blur(22px) saturate(180%);
   -webkit-backdrop-filter: blur(22px) saturate(180%);
-  border: 1px solid rgba(25 231 187 / 0.09);
+  border: 1px solid rgba(245, 154, 44, 0.09);
 }
 .glass-card {
   background: rgba(6 12 24 / 0.84);
   backdrop-filter: blur(18px) saturate(160%);
   -webkit-backdrop-filter: blur(18px) saturate(160%);
-  border: 1px solid rgba(25 231 187 / 0.09);
-  box-shadow: 0 10px 40px rgba(0 0 0 / 0.46), inset 0 1px 0 rgba(25 231 187 / 0.05);
+  border: 1px solid rgba(245, 154, 44, 0.09);
+  box-shadow: 0 10px 40px rgba(0 0 0 / 0.46), inset 0 1px 0 rgba(245, 154, 44, 0.05);
 }
 .glass-teal { background: rgba(25 231 187 / 0.06); backdrop-filter: blur(16px); border: 1px solid rgba(25 231 187 / 0.15); }
 .glass-blue { background: rgba(101 225 255 / 0.06); backdrop-filter: blur(16px); border: 1px solid rgba(101 225 255 / 0.15); }
@@ -438,7 +438,7 @@ button, a, [role="button"] {
   background: rgba(3 8 18 / 0.94);
   backdrop-filter: blur(30px) saturate(200%);
   -webkit-backdrop-filter: blur(30px) saturate(200%);
-  border-bottom: 1px solid rgba(25 231 187 / 0.08);
+  border-bottom: 1px solid rgba(245, 154, 44, 0.08);
 }
 .glass-dark {
   background: rgba(3 8 18 / 0.72);
@@ -459,7 +459,7 @@ button, a, [role="button"] {
 .wasel-card {
   position: relative; overflow: hidden; border-radius: 20px;
   background: linear-gradient(152deg, #0a1628 0%, #060d1a 100%);
-  border: 1px solid rgba(25 231 187 / 0.08);
+  border: 1px solid rgba(245, 154, 44, 0.08);
   box-shadow: var(--wasel-shadow-card);
   transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1),
               box-shadow 0.28s ease,

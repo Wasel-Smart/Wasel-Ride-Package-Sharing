@@ -144,9 +144,10 @@ img {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: color-mix(in srgb, var(--ds-page) 84%, transparent);
-  backdrop-filter: blur(18px);
-  border-bottom: 1px solid color-mix(in srgb, var(--ds-border) 82%, transparent);
+  background: rgba(3, 8, 18, 0.94);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  border-bottom: 1px solid rgba(245, 154, 44, 0.08);
 }
 
 .ds-container {
@@ -195,10 +196,13 @@ img {
 .ds-nav-link {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   min-height: 2.75rem;
   padding: 0 var(--ds-space-4);
   border-radius: var(--ds-radius-pill);
   color: var(--ds-text-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
   transition:
     background var(--ds-motion-fast),
     color var(--ds-motion-fast),
@@ -210,8 +214,8 @@ img {
 .ds-nav-link:focus-visible,
 .ds-nav-link[data-active='true'] {
   color: var(--ds-text);
-  background: color-mix(in srgb, var(--ds-accent) 12%, var(--ds-surface));
-  border-color: color-mix(in srgb, var(--ds-accent) 22%, var(--ds-border));
+  background: rgba(245, 154, 44, 0.12);
+  border-color: rgba(245, 154, 44, 0.22);
 }
 
 .ds-main {
@@ -408,9 +412,10 @@ img {
 }
 
 .ds-button[data-variant='primary'] {
-  background: linear-gradient(135deg, var(--ds-accent), var(--ds-accent-strong));
-  color: var(--text-inverse);
-  box-shadow: 0 18px 36px color-mix(in srgb, var(--ds-accent) 22%, transparent);
+  background: linear-gradient(135deg, #17C7EA 0%, #1E7CFF 62%, #7EF34B 100%);
+  color: #F8FBFF;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 40px rgba(30,124,255,0.28);
 }
 
 .ds-button[data-variant='secondary'] {
@@ -930,9 +935,10 @@ img {
     grid-template-columns: repeat(auto-fit, minmax(3rem, 1fr));
     gap: var(--ds-space-2);
     padding: var(--ds-space-3) var(--ds-space-4);
-    background: color-mix(in srgb, var(--ds-page) 88%, transparent);
-    backdrop-filter: blur(18px);
-    border-top: 1px solid color-mix(in srgb, var(--ds-border) 82%, transparent);
+    background: rgba(3, 8, 18, 0.94);
+    backdrop-filter: blur(30px) saturate(200%);
+    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    border-top: 1px solid rgba(245, 154, 44, 0.08);
   }
 
   .ds-mobile-nav .ds-nav-link {

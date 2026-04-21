@@ -1,27 +1,108 @@
-.wasel-app-theme {
+:root {
   color-scheme: inherit;
 
-  --background: var(--bg-primary);
-  --foreground: var(--text-primary);
-  --card: var(--surface-strong);
-  --card-foreground: var(--text-primary);
-  --popover: var(--surface-glass);
-  --popover-foreground: var(--text-primary);
-  --primary: rgb(var(--wasel-button-primary-rgb) / 1);
+  --bg-primary: var(--ds-page);
+  --background: var(--ds-page);
+  --foreground: var(--ds-text);
+  --card: var(--ds-surface-raised);
+  --card-foreground: var(--ds-text);
+  --popover: color-mix(in srgb, var(--ds-surface-overlay) 86%, transparent);
+  --popover-foreground: var(--ds-text);
+  --primary: var(--ds-accent-strong);
   --primary-foreground: var(--wasel-button-primary-foreground);
-  --secondary: var(--surface-muted);
-  --secondary-foreground: var(--text-primary);
-  --muted: var(--surface-muted);
-  --muted-foreground: var(--text-secondary);
-  --accent: rgb(var(--accent-rgb) / 1);
+  --secondary: var(--ds-surface-soft);
+  --secondary-foreground: var(--ds-text);
+  --muted: var(--ds-surface-soft);
+  --muted-foreground: var(--ds-text-muted);
+  --accent: var(--ds-accent);
   --accent-foreground: var(--text-inverse);
-  --border: var(--surface-divider);
-  --ring: rgb(var(--wasel-button-primary-rgb) / 0.26);
+  --border: var(--ds-border);
+  --ring: color-mix(in srgb, var(--ds-accent) 26%, transparent);
+
+  --surface-strong:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-surface-raised) 96%, transparent),
+      color-mix(in srgb, var(--ds-surface) 98%, transparent)
+    );
+  --surface-glass: color-mix(in srgb, var(--ds-surface-overlay) 88%, transparent);
+  --surface-field: color-mix(in srgb, var(--ds-surface-raised) 96%, transparent);
+  --surface-muted: color-mix(in srgb, var(--ds-surface-soft) 70%, transparent);
+  --surface-muted-strong:
+    color-mix(in srgb, var(--ds-surface-soft) 72%, var(--ds-surface-raised));
+  --surface-divider: color-mix(in srgb, var(--ds-border) 84%, transparent);
+  --surface-hover: color-mix(in srgb, var(--ds-accent) 10%, var(--ds-surface));
+  --surface-hover-strong: color-mix(in srgb, var(--ds-accent) 16%, var(--ds-surface-soft));
+  --border-strong: color-mix(in srgb, var(--ds-accent-strong) 26%, var(--ds-border));
+  --shell-background:
+    radial-gradient(
+      circle at 12% 10%,
+      color-mix(in srgb, var(--ds-accent-strong) 16%, transparent),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 88% 14%,
+      color-mix(in srgb, var(--ds-warning) 10%, transparent),
+      transparent 22%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-page-muted) 92%, transparent),
+      var(--ds-page) 100%
+    );
 
   --wasel-copy-primary: var(--text-primary);
   --wasel-copy-muted: var(--text-secondary);
   --wasel-copy-soft: var(--text-muted);
   --wasel-shell-background: var(--shell-background);
+  --wasel-font-display: var(--ds-font-display);
+  --wasel-font-sans: var(--ds-font-body);
+  --wasel-panel-radius: var(--ds-radius-lg);
+  --wasel-input-radius: var(--ds-radius-md);
+  --wasel-control-height: 3rem;
+  --wasel-motion-fast: var(--ds-motion-fast);
+  --wasel-shadow-xs: var(--ds-shadow-sm);
+  --wasel-shadow-card: var(--ds-shadow-md);
+  --wasel-shadow-md: var(--ds-shadow-md);
+  --wasel-shadow-lg: var(--ds-shadow-lg);
+  --wasel-layout-max-width: var(--ds-page-width-wide);
+  --wasel-layout-inline: clamp(14px, 3vw, 20px);
+  --wasel-layout-top: clamp(22px, 4vw, 28px);
+  --wasel-layout-bottom: clamp(72px, 8vw, 84px);
+  --wasel-layout-gap: clamp(18px, 2.4vw, 28px);
+  --wasel-card-padding: clamp(18px, 3vw, 30px);
+  --wasel-radius-2xl: 28px;
+
+  --theme-gradient-primary:
+    linear-gradient(135deg, var(--ds-accent-strong) 0%, var(--ds-accent) 100%);
+  --theme-gradient-line:
+    linear-gradient(180deg, var(--ds-accent-strong) 0%, var(--ds-accent) 100%);
+  --wasel-button-primary: var(--ds-accent-strong);
+  --wasel-button-primary-foreground: #20160a;
+  --wasel-button-primary-soft: color-mix(in srgb, var(--ds-accent) 12%, transparent);
+  --wasel-button-primary-soft-strong: color-mix(in srgb, var(--ds-accent) 18%, transparent);
+  --wasel-button-primary-border:
+    color-mix(in srgb, var(--ds-accent-strong) 28%, var(--ds-border));
+  --wasel-button-primary-border-strong:
+    color-mix(in srgb, var(--ds-accent-strong) 42%, var(--ds-border));
+  --wasel-button-primary-shadow:
+    0 16px 40px color-mix(in srgb, var(--ds-accent) 24%, transparent);
+  --wasel-button-primary-shadow-hover:
+    0 22px 56px color-mix(in srgb, var(--ds-accent) 30%, transparent);
+
+  --wasel-panel-border: color-mix(in srgb, var(--ds-border) 84%, transparent);
+  --wasel-panel-border-hover:
+    color-mix(in srgb, var(--ds-accent-strong) 24%, var(--ds-border));
+  --wasel-panel-strong:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-surface-raised) 94%, transparent),
+      color-mix(in srgb, var(--ds-surface) 98%, transparent)
+    );
+  --wasel-panel-soft: color-mix(in srgb, var(--ds-surface-soft) 76%, transparent);
+  --wasel-panel-muted: color-mix(in srgb, var(--ds-surface-soft) 58%, transparent);
+  --wasel-panel-muted-strong:
+    color-mix(in srgb, var(--ds-surface-soft) 74%, transparent);
 
   --wasel-header-bg: color-mix(in srgb, var(--surface-glass) 86%, transparent);
   --wasel-header-bg-scrolled: color-mix(in srgb, var(--surface-glass) 96%, transparent);
@@ -71,23 +152,54 @@
   --wasel-app-button-secondary-shadow: 0 10px 30px rgb(var(--wasel-button-primary-rgb) / 0.10);
 
   --wasel-service-bg:
-    radial-gradient(circle at 12% 10%, rgb(var(--accent-secondary-rgb) / 0.22), transparent 24%),
-    radial-gradient(circle at 88% 14%, rgb(var(--accent-secondary-rgb) / 0.14), transparent 22%),
-    linear-gradient(180deg, #07111d 0%, #091827 54%, #06111d 100%);
+    radial-gradient(circle at 12% 10%, rgb(var(--accent-secondary-rgb) / 0.18), transparent 24%),
+    radial-gradient(circle at 88% 14%, rgb(var(--accent-secondary-rgb) / 0.10), transparent 22%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-page-muted) 94%, transparent) 0%,
+      color-mix(in srgb, var(--ds-surface) 96%, transparent) 54%,
+      var(--ds-page) 100%
+    );
   --wasel-service-card:
-    linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.03)),
-    rgba(8, 18, 31, 0.82);
-  --wasel-service-card-2: rgba(9, 21, 37, 0.78);
-  --wasel-service-card-3: rgba(169, 227, 255, 0.09);
-  --wasel-service-border: rgba(169, 227, 255, 0.18);
-  --wasel-service-border-strong: rgba(169, 227, 255, 0.3);
-  --wasel-service-text: #eef8ff;
-  --wasel-service-sub: rgba(220, 238, 255, 0.82);
-  --wasel-service-muted: rgba(183, 206, 228, 0.72);
-  --wasel-service-chip-bg: rgba(169, 227, 255, 0.08);
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-accent-strong) 5%, rgb(255 255 255 / 0.02)),
+      rgb(255 255 255 / 0.02)
+    ),
+    color-mix(in srgb, var(--ds-surface-raised) 96%, transparent);
+  --wasel-service-card-2: color-mix(in srgb, var(--ds-surface-soft) 68%, var(--ds-surface));
+  --wasel-service-card-3: color-mix(in srgb, var(--ds-accent) 10%, transparent);
+  --wasel-service-border:
+    color-mix(in srgb, var(--ds-accent-strong) 20%, var(--ds-border));
+  --wasel-service-border-strong:
+    color-mix(in srgb, var(--ds-accent-strong) 34%, var(--ds-border));
+  --wasel-service-text: var(--ds-text);
+  --wasel-service-sub: var(--ds-text-muted);
+  --wasel-service-muted: var(--ds-text-soft);
+  --wasel-service-chip-bg: color-mix(in srgb, var(--ds-accent) 10%, transparent);
   --wasel-service-head-bg:
-    radial-gradient(circle at 16% 24%, rgb(var(--accent-secondary-rgb) / 0.18), transparent 28%),
-    radial-gradient(circle at 84% 18%, rgb(var(--accent-secondary-rgb) / 0.12), transparent 24%),
-    linear-gradient(135deg, #0b1e34 0%, #112945 56%, #16324f 100%);
-  --wasel-service-head-shadow: 0 28px 80px rgba(2, 8, 16, 0.42);
+    radial-gradient(circle at 16% 24%, rgb(var(--accent-secondary-rgb) / 0.16), transparent 28%),
+    radial-gradient(circle at 84% 18%, rgb(var(--accent-secondary-rgb) / 0.1), transparent 24%),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--ds-page-muted) 94%, transparent) 0%,
+      color-mix(in srgb, var(--ds-surface) 96%, transparent) 56%,
+      var(--ds-page) 100%
+    );
+  --service-head-background: var(--wasel-service-head-bg);
+  --wasel-service-head-shadow: 0 28px 80px rgb(0 0 0 / 0.34);
+}
+
+:root[data-theme='dark'] {
+  --accent-rgb: 245 154 44;
+  --accent-secondary-rgb: 255 179 87;
+  --wasel-button-primary-rgb: 245 154 44;
+  --wasel-border-rgb: 49 56 65;
+}
+
+:root[data-theme='light'] {
+  --accent-rgb: 222 123 13;
+  --accent-secondary-rgb: 245 154 44;
+  --wasel-button-primary-rgb: 245 154 44;
+  --wasel-border-rgb: 200 182 158;
 }

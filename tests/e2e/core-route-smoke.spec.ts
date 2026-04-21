@@ -2,7 +2,15 @@ import { expect, test, type Page } from '@playwright/test';
 import { seedDemoSession } from '../../e2e/helpers/session';
 
 const guestRoutes = ['/', '/app/privacy', '/app/terms'];
-const authRoutes = ['/app/find-ride', '/app/offer-ride', '/app/packages', '/app/bus', '/app/mobility-os', '/app/profile'];
+const authRoutes = [
+  '/app/find-ride',
+  '/app/offer-ride',
+  '/app/my-trips',
+  '/app/packages',
+  '/app/bus',
+  '/app/mobility-os',
+  '/app/profile',
+];
 
 async function expectHealthySurface(page: Page) {
   await page.waitForTimeout(600);

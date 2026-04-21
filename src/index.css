@@ -3,6 +3,8 @@
 @import './design-system/theme-dark.css';
 @import './design-system/theme-light.css';
 @import './design-system/base.css';
+@import './styles/app-service-theme.css';
+@import './styles/landing-consistency.css';
 
 @layer base {
   html,
