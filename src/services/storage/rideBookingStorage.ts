@@ -8,7 +8,9 @@ function emitChange(): void {
   if (typeof window === 'undefined') return;
   try {
     window.dispatchEvent(new CustomEvent(RIDE_BOOKINGS_CHANGED_EVENT));
-  } catch {}
+  } catch {
+    /* ignore dispatch failures in restricted environments */
+  }
 }
 
 function validate(records: unknown): RideBookingRecord[] {

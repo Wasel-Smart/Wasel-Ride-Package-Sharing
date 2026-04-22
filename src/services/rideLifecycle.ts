@@ -571,8 +571,12 @@ export async function updateRideBooking(
 
   if (isDriverMutation && !allowLocalPersistenceFallback()) {
     const directStatus = updates.status === 'confirmed' ? 'accepted' : updates.status;
+    const backendBookingId = updated.backendBookingId;
+    if (!backendBookingId) {
+      throw new Error('Driver mutation requires a backend booking id.');
+    }
     await updateDirectBookingStatus(
-      updated.backendBookingId!,
+      backendBookingId,
       directStatus as 'accepted' | 'rejected' | 'cancelled',
     );
     const synced = markSyncState(updated, 'synced');
@@ -585,8 +589,12 @@ export async function updateRideBooking(
 
   if (isDriverMutation) {
     const directStatus = updates.status === 'confirmed' ? 'accepted' : updates.status;
+    const backendBookingId = updated.backendBookingId;
+    if (!backendBookingId) {
+      return updated;
+    }
     void updateDirectBookingStatus(
-      updated.backendBookingId!,
+      backendBookingId,
       directStatus as 'accepted' | 'rejected' | 'cancelled',
     )
       .then(() => upsertBookings([markSyncState(updated, 'synced')]))

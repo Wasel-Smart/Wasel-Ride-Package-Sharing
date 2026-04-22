@@ -4,7 +4,6 @@
  * Displays the user's stored-value summary and primary wallet actions.
  * Business logic is handled by walletApi; this component is display-only.
  */
-import { useState } from 'react';
 import { Button, Card, LayoutContainer, SectionWrapper } from '../../../design-system/components';
 import { useLocalAuth } from '../../../contexts/LocalAuth';
 import { MetricGrid, PageHeading, ProtectedPage } from './SharedPageComponents';

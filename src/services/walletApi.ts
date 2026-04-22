@@ -206,8 +206,6 @@ function buildDemoIntent(
     cliq: 'cliq',
     bank_transfer: 'aman',
     card: 'stripe',
-    aman: 'aman',
-    cash: 'stripe',
   };
 
   const intent: PaymentIntentView = {
@@ -226,7 +224,7 @@ function buildDemoIntent(
   };
 
   const record: PersistedPaymentIntent = {
-    intent: { id: intent.id, status: intent.status, clientSecret: intent.clientSecret },
+    intent: { id: intent.id, status: intent.status, clientSecret: intent.clientSecret ?? null },
     settled: false,
     storedAt: Date.now(),
     userId,
@@ -433,8 +431,10 @@ export const walletApi = {
         'wallet.payment-intent.create',
         WALLET_CONTRACT_VERSION,
       );
-    } catch {
-      if (!allowClientFallback()) throw;
+    } catch (error) {
+      if (!allowClientFallback()) {
+        throw error;
+      }
       const uid = String(options?.metadata?.initiatedByUserId ?? '');
       return buildDemoIntent(uid, purpose, amount, paymentMethodType, options);
     }
@@ -451,10 +451,10 @@ export const walletApi = {
         'wallet.payment-intent.confirm',
         WALLET_CONTRACT_VERSION,
       );
-    } catch {
+    } catch (error) {
       const fallback = allowClientFallback() ? settleDemoIntent(paymentIntentId) : null;
       if (fallback) return { id: fallback.id, status: fallback.status, settled: true, clientSecret: fallback.clientSecret ?? null };
-      throw;
+      throw error;
     }
   },
 
@@ -466,10 +466,10 @@ export const walletApi = {
         'wallet.payment-intent.status',
         WALLET_CONTRACT_VERSION,
       );
-    } catch {
+    } catch (error) {
       const fallback = allowClientFallback() ? readDemoIntentStatus(paymentIntentId) : null;
       if (fallback) return fallback;
-      throw;
+      throw error;
     }
   },
 

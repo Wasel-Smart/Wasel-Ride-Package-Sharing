@@ -1,6 +1,6 @@
 import { ArrowRight, CarFront, Clock3, ShieldCheck, Star, Users } from 'lucide-react';
 import { motion } from 'motion/react';
-import { LANDING_COLORS, landingPanel } from '../../features/home/landing/landingTypes';
+import { landingPanel } from '../../features/home/landing/landingTypes';
 import { LANDING_FONT } from '../../features/home/landingConstants';
 import type { RideBookingRecord } from '../../services/rideLifecycle';
 import type { RideResult } from '../../modules/rides/ride.types';
