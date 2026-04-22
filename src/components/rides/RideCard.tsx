@@ -53,8 +53,8 @@ export function RideCard({
           padding: 22,
           display: 'grid',
           gap: 18,
-          border: `1px solid ${recommended ? 'rgba(32,216,255,0.34)' : LANDING_COLORS.border}`,
-          background: recommended ? 'rgba(255,255,255,0.08)' : 'var(--wasel-panel-strong)',
+          border: `1px solid ${recommended ? 'var(--wasel-button-primary-border-strong)' : LANDING_COLORS.border}`,
+          background: recommended ? 'var(--wasel-service-card)' : 'var(--wasel-panel-strong)',
         }}
       >
         <div
@@ -73,9 +73,9 @@ export function RideCard({
                   style={{
                     padding: '7px 12px',
                     borderRadius: 999,
-                    background: 'rgba(32,216,255,0.12)',
-                    border: '1px solid rgba(32,216,255,0.22)',
-                    color: LANDING_COLORS.cyan,
+                    background: 'var(--wasel-button-primary-soft)',
+                    border: '1px solid var(--wasel-button-primary-border)',
+                    color: 'var(--ds-accent-strong)',
                     fontFamily: LANDING_FONT,
                     fontSize: '0.74rem',
                     fontWeight: 800,
@@ -91,8 +91,8 @@ export function RideCard({
                   style={{
                     padding: '7px 12px',
                     borderRadius: 999,
-                    background: 'rgba(114,255,71,0.12)',
-                    border: '1px solid rgba(114,255,71,0.18)',
+                    background: 'color-mix(in srgb, var(--ds-success) 14%, transparent)',
+                    border: '1px solid color-mix(in srgb, var(--ds-success) 22%, transparent)',
                     color: LANDING_COLORS.green,
                     fontFamily: LANDING_FONT,
                     fontSize: '0.74rem',
@@ -161,7 +161,7 @@ export function RideCard({
           <div style={{ textAlign: 'right', display: 'grid', gap: 6 }}>
             <div
               style={{
-                color: LANDING_COLORS.cyan,
+                color: 'var(--ds-accent-strong)',
                 fontFamily: LANDING_FONT,
                 fontSize: '1.8rem',
                 fontWeight: 900,
@@ -205,7 +205,7 @@ export function RideCard({
               style={{
                 borderRadius: 20,
                 border: `1px solid ${LANDING_COLORS.border}`,
-                background: 'rgba(255,255,255,0.05)',
+                background: 'var(--surface-field)',
                 padding: '14px 16px',
                 display: 'grid',
                 gap: 8,
@@ -278,11 +278,11 @@ export function RideCard({
               minWidth: 168,
               minHeight: 48,
               borderRadius: 18,
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid var(--wasel-button-primary-border)',
               background: requesting
-                ? 'rgba(255,255,255,0.12)'
-                : 'linear-gradient(135deg, #20D8FF 0%, #1388D9 100%)',
-              color: '#041521',
+                ? 'var(--wasel-panel-muted)'
+                : 'var(--theme-gradient-primary)',
+              color: 'var(--wasel-button-primary-foreground)',
               fontFamily: LANDING_FONT,
               fontSize: '0.92rem',
               fontWeight: 900,

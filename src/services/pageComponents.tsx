@@ -21,8 +21,55 @@ export function PageShell({ children, maxWidth = 1380, padding = '28px 20px 84px
           opacity: 0.96,
         }}
       />
-      <div style={{ maxWidth, margin: '0 auto', padding, position: 'relative', display: 'grid', gap: 18 }}>
-        {children}
+      <div style={{ maxWidth, margin: '0 auto', padding, position: 'relative' }}>
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            background:
+              'radial-gradient(circle at 14% 10%, color-mix(in srgb, var(--ds-accent-strong, #ffb357) 14%, transparent), transparent 26%), radial-gradient(circle at 84% 12%, color-mix(in srgb, var(--ds-warning, #efb45d) 10%, transparent), transparent 20%), radial-gradient(circle at 56% 94%, color-mix(in srgb, var(--ds-success, #79c67d) 8%, transparent), transparent 24%)',
+            opacity: 0.9,
+          }}
+        />
+        <div
+          style={{
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 32,
+            padding: 'clamp(18px, 2.4vw, 24px)',
+            border: `1px solid ${DesignSystem.colors.border.base}`,
+            background:
+              'linear-gradient(180deg, rgb(255 255 255 / 0.03), rgb(255 255 255 / 0.01)), var(--wasel-service-bg)',
+            boxShadow: 'var(--wasel-shadow-xl)',
+          }}
+        >
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              background:
+                'linear-gradient(180deg, color-mix(in srgb, var(--ds-accent-strong, #ffb357) 8%, transparent), transparent 28%)',
+            }}
+          />
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              inset: '0 0 auto 0',
+              height: 1,
+              pointerEvents: 'none',
+              background:
+                'linear-gradient(90deg, transparent, color-mix(in srgb, var(--ds-accent-strong, #ffb357) 44%, transparent), transparent)',
+            }}
+          />
+          <div style={{ position: 'relative', display: 'grid', gap: 18 }}>
+            {children}
+          </div>
+        </div>
       </div>
     </div>
   );

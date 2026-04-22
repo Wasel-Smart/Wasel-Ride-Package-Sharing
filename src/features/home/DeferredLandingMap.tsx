@@ -11,12 +11,12 @@ function LandingMapPlaceholder() {
     <div
       aria-hidden="true"
       style={{
-        minHeight: 'clamp(440px, 62vw, 720px)',
+        minHeight: 'clamp(400px, 58vw, 660px)',
         borderRadius: 30,
-        border: '1px solid rgba(245,154,44,0.08)',
+        border: '1px solid var(--wasel-service-border-strong)',
         background:
-          'radial-gradient(circle at 50% 14%, rgba(245,154,44,0.16), rgba(15,17,19,0) 20%), radial-gradient(circle at 78% 80%, rgba(255,179,87,0.12), rgba(15,17,19,0) 24%), linear-gradient(180deg, rgba(32,24,18,0.98), rgba(15,17,19,1))',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 28px 72px rgba(0,0,0,0.26)',
+          'radial-gradient(circle at 18% 14%, color-mix(in srgb, var(--ds-accent-strong) 18%, transparent), transparent 22%), radial-gradient(circle at 82% 80%, color-mix(in srgb, var(--ds-success) 12%, transparent), transparent 26%), linear-gradient(180deg, color-mix(in srgb, var(--ds-page-muted) 94%, transparent), var(--ds-page) 100%)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), var(--wasel-shadow-xl)',
         overflow: 'hidden',
         position: 'relative',
       }}

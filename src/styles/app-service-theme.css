@@ -74,11 +74,24 @@
   --wasel-radius-2xl: 28px;
 
   --theme-gradient-primary:
-    linear-gradient(135deg, var(--ds-accent-strong) 0%, var(--ds-accent) 100%);
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--ds-accent-strong) 90%, white) 0%,
+      var(--ds-accent) 48%,
+      color-mix(in srgb, var(--ds-success) 42%, var(--ds-accent)) 100%
+    );
+  --theme-gradient-accent:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, white 88%, var(--ds-accent-strong)) 0%,
+      color-mix(in srgb, white 82%, var(--ds-accent)) 56%,
+      color-mix(in srgb, white 76%, var(--ds-success)) 100%
+    );
   --theme-gradient-line:
     linear-gradient(180deg, var(--ds-accent-strong) 0%, var(--ds-accent) 100%);
   --wasel-button-primary: var(--ds-accent-strong);
   --wasel-button-primary-foreground: #20160a;
+  --wasel-button-pill-radius: var(--ds-radius-pill);
   --wasel-button-primary-soft: color-mix(in srgb, var(--ds-accent) 12%, transparent);
   --wasel-button-primary-soft-strong: color-mix(in srgb, var(--ds-accent) 18%, transparent);
   --wasel-button-primary-border:
@@ -89,6 +102,11 @@
     0 16px 40px color-mix(in srgb, var(--ds-accent) 24%, transparent);
   --wasel-button-primary-shadow-hover:
     0 22px 56px color-mix(in srgb, var(--ds-accent) 30%, transparent);
+  --wasel-shadow-blue:
+    0 18px 44px color-mix(in srgb, var(--ds-info) 20%, transparent);
+  --wasel-shadow-teal:
+    0 16px 42px color-mix(in srgb, var(--ds-success) 18%, transparent);
+  --wasel-shadow-xl: 0 32px 84px rgb(0 0 0 / 0.34);
 
   --wasel-panel-border: color-mix(in srgb, var(--ds-border) 84%, transparent);
   --wasel-panel-border-hover:
@@ -188,6 +206,30 @@
     );
   --service-head-background: var(--wasel-service-head-bg);
   --wasel-service-head-shadow: 0 28px 80px rgb(0 0 0 / 0.34);
+  --wasel-network-panel:
+    radial-gradient(
+      circle at 20% 18%,
+      color-mix(in srgb, var(--ds-accent-strong) 16%, transparent),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 80% 76%,
+      color-mix(in srgb, var(--ds-success) 12%, transparent),
+      transparent 30%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-page-muted) 92%, transparent),
+      color-mix(in srgb, var(--ds-surface) 96%, transparent) 52%,
+      var(--ds-page) 100%
+    );
+  --wasel-network-grid:
+    linear-gradient(color-mix(in srgb, var(--ds-accent-strong) 12%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--ds-accent-strong) 12%, transparent) 1px, transparent 1px);
+  --wasel-network-flow:
+    color-mix(in srgb, var(--ds-accent-strong) 68%, white);
+  --wasel-network-node:
+    color-mix(in srgb, var(--ds-success) 62%, white);
 }
 
 :root[data-theme='dark'] {
@@ -195,6 +237,8 @@
   --accent-secondary-rgb: 255 179 87;
   --wasel-button-primary-rgb: 245 154 44;
   --wasel-border-rgb: 49 56 65;
+  --success-rgb: 121 198 125;
+  --warning-rgb: 239 180 93;
 }
 
 :root[data-theme='light'] {
@@ -202,4 +246,6 @@
   --accent-secondary-rgb: 245 154 44;
   --wasel-button-primary-rgb: 245 154 44;
   --wasel-border-rgb: 200 182 158;
+  --success-rgb: 34 197 94;
+  --warning-rgb: 245 158 11;
 }

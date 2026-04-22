@@ -9,7 +9,7 @@ export const LANDING_RESPONSIVE_STYLES = `
   .landing-shell, .landing-shell * { box-sizing: border-box; }
   .landing-shell > * { min-width: 0; }
   .landing-shell button:focus-visible {
-    outline: 2px solid rgba(71,183,230,0.92);
+    outline: 2px solid color-mix(in srgb, var(--ds-accent-strong) 84%, white);
     outline-offset: 3px;
   }
   .wasel-lift-card { transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
@@ -42,13 +42,13 @@ export const LANDING_RESPONSIVE_STYLES = `
   }
   .landing-hero-orbit--outer {
     width: min(92%, 420px);
-    border: 1px solid rgba(73, 239, 206, 0.14);
+    border: 1px solid color-mix(in srgb, var(--ds-accent-strong) 18%, transparent);
     opacity: 0.58;
     animation: landing-orbit-slow 22s linear infinite;
   }
   .landing-hero-orbit--inner {
     width: min(66%, 310px);
-    border: 1px solid rgba(167, 255, 234, 0.12);
+    border: 1px solid color-mix(in srgb, var(--ds-success) 18%, transparent);
     opacity: 0.48;
     animation: landing-orbit-reverse 16s linear infinite;
   }
@@ -71,14 +71,14 @@ export const LANDING_RESPONSIVE_STYLES = `
   .landing-hero-mark-glow--cyan {
     width: min(76vw, 340px);
     height: min(76vw, 340px);
-    background: radial-gradient(circle, rgba(79, 246, 212, 0.32) 0%, rgba(79, 246, 212, 0.12) 34%, rgba(79, 246, 212, 0) 74%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--ds-accent-strong) 30%, transparent) 0%, color-mix(in srgb, var(--ds-accent) 12%, transparent) 34%, transparent 74%);
     filter: blur(26px);
     transform: translate(-8px, -10px);
   }
   .landing-hero-mark-glow--green {
     width: min(72vw, 320px);
     height: min(72vw, 320px);
-    background: radial-gradient(circle, rgba(25, 231, 187, 0.24) 0%, rgba(25, 231, 187, 0.1) 36%, rgba(25, 231, 187, 0) 74%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--ds-success) 24%, transparent) 0%, color-mix(in srgb, var(--ds-success) 10%, transparent) 36%, transparent 74%);
     filter: blur(24px);
     transform: translate(22px, 28px);
   }
@@ -92,7 +92,7 @@ export const LANDING_RESPONSIVE_STYLES = `
     content: '';
     position: absolute;
     inset: -1px;
-    background: linear-gradient(135deg, rgba(79, 246, 212, 0.18), rgba(79, 246, 212, 0) 36%, rgba(25, 231, 187, 0.16) 100%);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--ds-accent-strong) 18%, transparent), transparent 36%, color-mix(in srgb, var(--ds-success) 16%, transparent) 100%);
     opacity: 0.9;
     pointer-events: none;
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -102,7 +102,7 @@ export const LANDING_RESPONSIVE_STYLES = `
     padding: 1px;
   }
   @keyframes landingPulse { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.04); } }
-  @media (hover: hover) and (pointer: fine) { .wasel-lift-card:hover { transform: translateY(-2px); box-shadow: 0 24px 54px rgba(0,0,0,0.24); } }
+  @media (hover: hover) and (pointer: fine) { .wasel-lift-card:hover { transform: translateY(-2px); box-shadow: var(--wasel-shadow-xl); } }
   @media (max-width: 1240px) { .landing-main-grid { grid-template-columns: 1fr !important; } }
   @media (max-width: 1040px) { .landing-signal-grid, .landing-bottom-grid { grid-template-columns: 1fr !important; } }
   @media (max-width: 780px) {

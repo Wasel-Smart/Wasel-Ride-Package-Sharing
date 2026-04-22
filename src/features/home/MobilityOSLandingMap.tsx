@@ -573,27 +573,27 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
       <style>{`
         .landing-sim-shell {
           position: relative;
-          min-height: clamp(440px, 62vw, 720px);
+          min-height: clamp(400px, 58vw, 660px);
           border-radius: 32px;
           overflow: hidden;
-          border: 1px solid rgba(169, 227, 255, 0.16);
+          border: 1px solid var(--wasel-service-border-strong);
           background:
-            radial-gradient(circle at 18% 12%, rgba(169, 227, 255, 0.22), rgba(4, 18, 30, 0) 22%),
-            radial-gradient(circle at 86% 82%, rgba(139, 216, 255, 0.12), rgba(4, 18, 30, 0) 24%),
-            linear-gradient(180deg, rgba(9, 19, 32, 0.99), rgba(4, 10, 18, 1));
+            radial-gradient(circle at 18% 12%, rgb(var(--accent-secondary-rgb) / 0.20), transparent 22%),
+            radial-gradient(circle at 86% 82%, rgb(var(--success-rgb, 121 198 125) / 0.10), transparent 24%),
+            linear-gradient(180deg, color-mix(in srgb, var(--ds-page-muted) 94%, transparent), var(--ds-page) 100%);
           box-shadow:
             inset 0 1px 0 rgba(220, 255, 248, 0.06),
-            0 30px 96px rgba(1, 5, 10, 0.44);
+            var(--wasel-shadow-xl);
         }
         .landing-sim-shell::before {
           content: '';
           position: absolute;
           inset: 14px;
           border-radius: 26px;
-          border: 1px solid rgba(169, 227, 255, 0.1);
+          border: 1px solid color-mix(in srgb, var(--ds-accent-strong) 16%, transparent);
           background:
             linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
-            radial-gradient(circle at top, rgba(169, 227, 255, 0.12), rgba(169, 227, 255, 0) 48%);
+            radial-gradient(circle at top, rgb(var(--accent-secondary-rgb) / 0.12), transparent 48%);
           pointer-events: none;
         }
         .landing-sim-shell::after {
@@ -601,7 +601,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
           position: absolute;
           inset: 0;
           background:
-            linear-gradient(120deg, rgba(255, 255, 255, 0.06) 0, rgba(255, 255, 255, 0) 24%, rgba(255, 255, 255, 0) 74%, rgba(169, 227, 255, 0.1) 100%);
+            linear-gradient(120deg, rgba(255, 255, 255, 0.06) 0, rgba(255, 255, 255, 0) 24%, rgba(255, 255, 255, 0) 74%, rgb(var(--accent-secondary-rgb) / 0.10) 100%);
           pointer-events: none;
           mix-blend-mode: screen;
           opacity: 0.82;
