@@ -1,139 +1,53 @@
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 512 512"
-  fill="none"
-  role="img"
-  aria-labelledby="title desc"
->
-  <title id="title">Wasel route W badge</title>
-  <desc id="desc">A dark rounded-square Wasel app icon featuring the premium route W mark.</desc>
-  <defs>
-    <linearGradient id="badgeBg" x1="76" y1="64" x2="436" y2="448" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#2A2F36" />
-      <stop offset="0.45" stop-color="#20242A" />
-      <stop offset="1" stop-color="#15181D" />
-    </linearGradient>
-    <linearGradient id="badgeBorder" x1="98" y1="92" x2="418" y2="420" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFF2D8" stop-opacity="0.42" />
-      <stop offset="0.4" stop-color="#FFB357" stop-opacity="0.26" />
-      <stop offset="1" stop-color="#F5EFE7" stop-opacity="0.14" />
-    </linearGradient>
-    <radialGradient id="badgeAura" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(250 202) rotate(90) scale(210)">
-      <stop offset="0" stop-color="#FFB357" stop-opacity="0.26" />
-      <stop offset="0.6" stop-color="#F59A2C" stop-opacity="0.08" />
-      <stop offset="1" stop-color="#F59A2C" stop-opacity="0" />
-    </radialGradient>
-    <linearGradient id="laneGlow" x1="84" y1="68" x2="382" y2="298" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFF2D8" />
-      <stop offset="0.2" stop-color="#FFB357" />
-      <stop offset="0.46" stop-color="#F59A2C" />
-      <stop offset="0.72" stop-color="#E8C58F" />
-      <stop offset="1" stop-color="#F5EFE7" />
-    </linearGradient>
-    <linearGradient id="laneCore" x1="102" y1="88" x2="368" y2="274" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFD08B" />
-      <stop offset="0.32" stop-color="#F59A2C" />
-      <stop offset="0.56" stop-color="#C87919" />
-      <stop offset="0.8" stop-color="#F0D9B6" />
-      <stop offset="1" stop-color="#FFF8F0" />
-    </linearGradient>
-    <linearGradient id="laneHighlight" x1="126" y1="88" x2="354" y2="240" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFFDF8" stop-opacity="0.98" />
-      <stop offset="0.42" stop-color="#FFE8BD" stop-opacity="0.76" />
-      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.28" />
-    </linearGradient>
-    <linearGradient id="metalRing" x1="70" y1="36" x2="112" y2="122" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFFFFF" />
-      <stop offset="0.18" stop-color="#E0E3E8" />
-      <stop offset="0.42" stop-color="#606671" />
-      <stop offset="0.64" stop-color="#161A21" />
-      <stop offset="0.84" stop-color="#BBC0C9" />
-      <stop offset="1" stop-color="#FBFCFD" />
-    </linearGradient>
-    <radialGradient id="nodeCoreWarm" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 -1) rotate(90) scale(18)">
-      <stop offset="0" stop-color="#FFF8ED" />
-      <stop offset="0.5" stop-color="#FFB357" />
-      <stop offset="1" stop-color="#C97A18" />
-    </radialGradient>
-    <radialGradient id="nodeCoreSoft" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 -1) rotate(90) scale(18)">
-      <stop offset="0" stop-color="#FFFFFF" />
-      <stop offset="0.48" stop-color="#F5EFE7" />
-      <stop offset="1" stop-color="#D9B783" />
-    </radialGradient>
-    <filter id="badgeShadow" x="28" y="24" width="456" height="464" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="28" stdDeviation="24" flood-color="#0C0E12" flood-opacity="0.34" />
-      <feDropShadow dx="0" dy="0" stdDeviation="14" flood-color="#F59A2C" flood-opacity="0.16" />
-    </filter>
-    <filter id="symbolShadow" x="24" y="12" width="392" height="320" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#2F1B0A" flood-opacity="0.24" />
-      <feDropShadow dx="0" dy="0" stdDeviation="9" flood-color="#F59A2C" flood-opacity="0.16" />
-    </filter>
-  </defs>
-
-  <g filter="url(#badgeShadow)">
-    <rect x="52" y="52" width="408" height="408" rx="118" fill="url(#badgeBg)" />
-    <rect x="52" y="52" width="408" height="408" rx="118" stroke="url(#badgeBorder)" stroke-width="8" />
-    <rect x="60" y="60" width="392" height="392" rx="110" stroke="rgba(255,255,255,0.06)" stroke-width="2" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 240" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Wasel primary lockup</title>
+  <desc id="desc">The primary Wasel lockup pairing the route W symbol with a custom-led wordmark.</desc>
+  <g transform="translate(6 14) scale(0.72)">
+    
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path
+      d="M84 86C97 129 112 188 142 242C148 253 159 256 166 245L196 145L226 245C233 256 244 253 250 242C280 188 295 129 308 86"
+      stroke="#E59C36"
+      stroke-width="30"
+    />
+    <path
+      d="M84 86C97 129 112 188 142 242C148 253 159 256 166 245L196 145L226 245C233 256 244 253 250 242C280 188 295 129 308 86"
+      stroke="#FFD39A"
+      stroke-opacity="0.72"
+      stroke-width="10"
+    />
+    <path d="M76 64L84 86M196 108L196 130M316 64L308 86" stroke="#28323D" stroke-width="7" />
   </g>
 
-  <circle cx="256" cy="246" r="182" fill="url(#badgeAura)" />
-
-  <g transform="translate(20 60) scale(1.0727272727)">
-    <g filter="url(#symbolShadow)">
-      <path
-        d="M96 78C111 152 128 243 164 286C189 316 218 254 236 154C254 254 283 316 308 286C344 243 361 152 376 78"
-        stroke="#171B22"
-        stroke-opacity="0.18"
-        stroke-width="44"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M96 78C111 152 128 243 164 286C189 316 218 254 236 154C254 254 283 316 308 286C344 243 361 152 376 78"
-        stroke="url(#laneGlow)"
-        stroke-width="34"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M96 78C111 152 128 243 164 286C189 316 218 254 236 154C254 254 283 316 308 286C344 243 361 152 376 78"
-        stroke="url(#laneCore)"
-        stroke-width="24"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M104 84C118 152 136 235 168 279C190 304 216 243 236 162C256 243 282 304 304 279C336 235 354 152 368 84"
-        stroke="url(#laneHighlight)"
-        stroke-width="8.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        opacity="0.9"
-      />
-
-      <g transform="translate(96 78)">
-        <circle r="30" fill="url(#metalRing)" />
-        <circle r="21.5" fill="#13171D" />
-        <circle r="13.5" fill="url(#nodeCoreWarm)" />
-        <circle cx="-5.5" cy="-6" r="4.2" fill="#FFF7EC" opacity="0.72" />
-        <circle r="26.5" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" />
-      </g>
-
-      <g transform="translate(236 154)">
-        <circle r="29" fill="url(#metalRing)" />
-        <circle r="20.5" fill="#13171D" />
-        <circle r="12.5" fill="url(#nodeCoreWarm)" />
-        <circle cx="-5" cy="-5.5" r="3.9" fill="#FFF7EC" opacity="0.72" />
-        <circle r="25.5" stroke="rgba(255,255,255,0.34)" stroke-width="1.5" />
-      </g>
-
-      <g transform="translate(376 78)">
-        <circle r="30" fill="url(#metalRing)" />
-        <circle r="21.5" fill="#13171D" />
-        <circle r="13.5" fill="url(#nodeCoreSoft)" />
-        <circle cx="-5.5" cy="-6" r="4.2" fill="#FFFFFF" opacity="0.7" />
-        <circle r="26.5" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" />
-      </g>
-    </g>
+  <g transform="translate(76 52)">
+    <circle r="12.5" fill="#28323D" />
+    <circle r="7.7" fill="#FFF7EA" />
+    <circle r="2.6" fill="#E59C36" />
   </g>
+
+  <g transform="translate(196 96)">
+    <circle r="15.5" fill="#28323D" />
+    <circle r="9.6" fill="#FFF7EA" />
+    <circle r="4.2" fill="#E59C36" />
+  </g>
+
+  <g transform="translate(316 52)">
+    <circle r="12.5" fill="#28323D" />
+    <circle r="7.7" fill="#FFF7EA" />
+    <circle r="2.6" fill="#E59C36" />
+  </g>
+  </g>
+  <g fill="none" stroke="#17212B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" transform="translate(342 66)">
+    <path d="M10 11C14 24 19 46 28 58C32 63 38 61 42 52L48 30L54 52C58 61 64 63 68 58C77 46 82 24 86 11" />
+  </g>
+  <text
+    x="418"
+    y="126"
+    fill="#17212B"
+    font-family="'Montserrat','Segoe UI',sans-serif"
+    font-size="88"
+    font-weight="800"
+    letter-spacing="-5"
+  >
+    asel
+  </text>
 </svg>

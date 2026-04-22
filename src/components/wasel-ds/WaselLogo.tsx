@@ -80,7 +80,6 @@ export function WaselMark({
   animated?: boolean;
   framed?: boolean;
 }) {
-  const { resolvedTheme } = useTheme();
   const { value } = resolveBrandLogoSize(size);
 
   return (
