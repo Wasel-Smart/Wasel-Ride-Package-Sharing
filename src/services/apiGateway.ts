@@ -119,7 +119,7 @@ async function executeRequest<T>(
 
   try {
     return (await response.json()) as T;
-  } catch (error) {
+  } catch {
     throw new GatewayError(`Failed to parse JSON from ${method} ${path}`, response.status, path);
   }
 }

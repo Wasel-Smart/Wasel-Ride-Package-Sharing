@@ -1,6 +1,6 @@
 import type { RideBookingRecord, RideBookingSyncState } from '../rideLifecycle';
 import { createDirectBooking, updateDirectBookingStatus } from '../directSupabase';
-import { readBookings, writeBookings, upsertBookings } from './rideBookingStorage';
+import { readBookings, writeBookings } from './rideBookingStorage';
 import { loadPendingSyncs, removePendingSync, incrementRetry, type PendingSyncEntry } from './rideSyncQueue';
 import { validateBooking, isConfirmed } from './rideBookingLogic';
 import { triggerRideBookingEmails } from '../transactionalEmailTriggers';

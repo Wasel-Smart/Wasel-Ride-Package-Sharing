@@ -19,7 +19,6 @@
  *  ✗ Any wallet business rules
  */
 
-import type { WalletData } from '../../../shared/wallet-contracts';
 import type { WalletReliabilityMeta, WalletSnapshot } from '../walletApi';
 
 // ─── Keys & constants ─────────────────────────────────────────────────────────

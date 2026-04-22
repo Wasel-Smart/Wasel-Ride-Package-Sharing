@@ -3,34 +3,35 @@ import { useLocalAuth } from './contexts/LocalAuth';
 import WaselRoot from './layouts/WaselRoot';
 import { buildAuthPagePath } from './utils/authFlow';
 import {
-  AnalyticsPage,
-  AuthPage,
-  DriverPage,
-  ExecutionPage,
-  InnovationPage,
-  IntelligencePage,
-  LandingPage,
-  ModerationPage,
   NotFoundPage,
-  NotificationsPage,
-  PaymentsPage,
-  PlusPage,
-  PrivacyPage,
-  ProfilePage,
   RouteErrorPage,
-  SafetyPage,
-  SettingsPage,
-  TermsPage,
-  TrustPage,
-  WalletPage,
 } from './app/pages/AppSurfaces';
-import { BusPage } from './features/bus/BusPage';
-import MobilityPage from './features/mobility-os';
-import { PackagesPage } from './features/packages/PackagesPage';
-import { FindRidePage } from './features/rides/FindRidePage';
-import { OfferRidePage } from './features/rides/OfferRidePage';
-import TripsPage from './features/trips/MyTripsPage';
-import WaselAuthCallback from './pages/WaselAuthCallback';
+
+const loadLandingPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).LandingPage });
+const loadAuthPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).AuthPage });
+const loadFindRidePage = async () => ({ Component: (await import('./features/rides/FindRidePage')).FindRidePage });
+const loadOfferRidePage = async () => ({ Component: (await import('./features/rides/OfferRidePage')).OfferRidePage });
+const loadTripsPage = async () => ({ Component: (await import('./features/trips/MyTripsPage')).default });
+const loadPackagesPage = async () => ({ Component: (await import('./features/packages/PackagesPage')).PackagesPage });
+const loadBusPage = async () => ({ Component: (await import('./features/bus/BusPage')).BusPage });
+const loadWalletPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).WalletPage });
+const loadPaymentsPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).PaymentsPage });
+const loadSettingsPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).SettingsPage });
+const loadProfilePage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).ProfilePage });
+const loadNotificationsPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).NotificationsPage });
+const loadTrustPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).TrustPage });
+const loadSafetyPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).SafetyPage });
+const loadPlusPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).PlusPage });
+const loadDriverPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).DriverPage });
+const loadAnalyticsPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).AnalyticsPage });
+const loadExecutionPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).ExecutionPage });
+const loadMobilityPage = async () => ({ Component: (await import('./features/mobility-os')).default });
+const loadIntelligencePage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).IntelligencePage });
+const loadInnovationPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).InnovationPage });
+const loadModerationPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).ModerationPage });
+const loadPrivacyPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).PrivacyPage });
+const loadTermsPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).TermsPage });
+const loadAuthCallbackPage = async () => ({ Component: (await import('./pages/WaselAuthCallback')).default });
 
 function AppEntryRedirect() {
   const { loading, user } = useLocalAuth();
@@ -69,8 +70,8 @@ function RouteErrorBoundary() {
 
 export const waselRouter = createBrowserRouter([
   {
-    Component: LandingPage,
     errorElement: <RouteErrorBoundary />,
+    lazy: loadLandingPage,
     path: '/',
   },
   {
@@ -79,31 +80,31 @@ export const waselRouter = createBrowserRouter([
     path: '/app',
     children: [
       { Component: AppEntryRedirect, index: true },
-      { Component: AuthPage, path: 'auth' },
-      { Component: WaselAuthCallback, path: 'auth/callback' },
-      { Component: FindRidePage, path: 'find-ride' },
-      { Component: OfferRidePage, path: 'offer-ride' },
+      { lazy: loadAuthPage, path: 'auth' },
+      { lazy: loadAuthCallbackPage, path: 'auth/callback' },
+      { lazy: loadFindRidePage, path: 'find-ride' },
+      { lazy: loadOfferRidePage, path: 'offer-ride' },
       { Component: () => <Navigate replace to="/app/offer-ride" />, path: 'create-ride' },
-      { Component: TripsPage, path: 'my-trips' },
-      { Component: PackagesPage, path: 'packages' },
-      { Component: BusPage, path: 'bus' },
-      { Component: WalletPage, path: 'wallet' },
-      { Component: PaymentsPage, path: 'payments' },
-      { Component: SettingsPage, path: 'settings' },
-      { Component: ProfilePage, path: 'profile' },
-      { Component: NotificationsPage, path: 'notifications' },
-      { Component: TrustPage, path: 'trust' },
-      { Component: SafetyPage, path: 'safety' },
-      { Component: PlusPage, path: 'plus' },
-      { Component: DriverPage, path: 'driver' },
-      { Component: AnalyticsPage, path: 'analytics' },
-      { Component: ExecutionPage, path: 'execution-os' },
-      { Component: MobilityPage, path: 'mobility-os' },
-      { Component: IntelligencePage, path: 'ai-intelligence' },
-      { Component: InnovationPage, path: 'innovation-hub' },
-      { Component: ModerationPage, path: 'moderation' },
-      { Component: PrivacyPage, path: 'privacy' },
-      { Component: TermsPage, path: 'terms' },
+      { lazy: loadTripsPage, path: 'my-trips' },
+      { lazy: loadPackagesPage, path: 'packages' },
+      { lazy: loadBusPage, path: 'bus' },
+      { lazy: loadWalletPage, path: 'wallet' },
+      { lazy: loadPaymentsPage, path: 'payments' },
+      { lazy: loadSettingsPage, path: 'settings' },
+      { lazy: loadProfilePage, path: 'profile' },
+      { lazy: loadNotificationsPage, path: 'notifications' },
+      { lazy: loadTrustPage, path: 'trust' },
+      { lazy: loadSafetyPage, path: 'safety' },
+      { lazy: loadPlusPage, path: 'plus' },
+      { lazy: loadDriverPage, path: 'driver' },
+      { lazy: loadAnalyticsPage, path: 'analytics' },
+      { lazy: loadExecutionPage, path: 'execution-os' },
+      { lazy: loadMobilityPage, path: 'mobility-os' },
+      { lazy: loadIntelligencePage, path: 'ai-intelligence' },
+      { lazy: loadInnovationPage, path: 'innovation-hub' },
+      { lazy: loadModerationPage, path: 'moderation' },
+      { lazy: loadPrivacyPage, path: 'privacy' },
+      { lazy: loadTermsPage, path: 'terms' },
       { Component: () => <Navigate replace to="/app" />, path: 'dashboard' },
       { Component: () => <Navigate replace to="/app/find-ride" />, path: 'home' },
       { Component: () => <Navigate replace to="/app/offer-ride" />, path: 'post-ride' },

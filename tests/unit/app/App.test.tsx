@@ -107,13 +107,15 @@ describe('App shell', () => {
 
   it('shows the recovery boundary when the router crashes during render', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    mockRouterState.shouldThrow = true;
+    try {
+      mockRouterState.shouldThrow = true;
 
-    render(<App />);
+      render(<App />);
 
-    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Reload Page' })).toBeInTheDocument();
-
-    consoleError.mockRestore();
+      expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Reload Page' })).toBeInTheDocument();
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 });

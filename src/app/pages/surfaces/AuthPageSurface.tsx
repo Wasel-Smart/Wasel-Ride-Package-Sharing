@@ -29,10 +29,9 @@ import { BrandLockup } from '../../../components/brand';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useLocalAuth } from '../../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../../hooks/useIframeSafeNavigate';
-import { buildAuthPagePath, normalizeAuthReturnTo } from '../../../utils/authFlow';
+import { normalizeAuthReturnTo } from '../../../utils/authFlow';
 import { BrandPillRow, MapHeroPanel } from './SharedPageComponents';
 import type { BrandPillItem } from './pageTypes';
-import { LANDING_RETURN_TO } from './pageTypes';
 
 export function AuthPage() {
   const [params, setParams] = useSearchParams();

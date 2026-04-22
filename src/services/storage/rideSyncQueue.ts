@@ -31,7 +31,9 @@ export function savePendingSyncs(entries: PendingSyncEntry[]): void {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(PENDING_SYNCS_KEY, JSON.stringify(entries.slice(0, 50)));
     }
-  } catch {}
+  } catch {
+    /* ignore storage write failures in restricted environments */
+  }
 }
 
 export function enqueuePendingSync(entry: Omit<PendingSyncEntry, 'retries' | 'queuedAt'>): void {

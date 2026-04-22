@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Activity, Zap, Wind, Waves, Sparkles } from 'lucide-react';
+import { Activity, Wind, Waves, Sparkles } from 'lucide-react';
 
 const AMBER = '#f59a2c';
 const CYAN = '#47b7e6';

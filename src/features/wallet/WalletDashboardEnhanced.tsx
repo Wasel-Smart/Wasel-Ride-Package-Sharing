@@ -5,6 +5,7 @@ import { DesignSystem } from '../../services/designSystem';
 
 export function WalletDashboardEnhanced() {
   const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'insights'>('overview');
+  const handlePlaceholderAction = () => undefined;
 
   // Mock data
   const balance = 245.50;
@@ -87,13 +88,13 @@ export function WalletDashboardEnhanced() {
           <>
             <ActionButton
               label="Add Funds"
-              onClick={() => console.log('Add funds')}
+              onClick={handlePlaceholderAction}
               variant="primary"
               icon={<CreditCard size={16} />}
             />
             <ActionButton
               label="Transaction History"
-              onClick={() => console.log('History')}
+              onClick={handlePlaceholderAction}
               variant="outline"
               icon={<Clock size={16} />}
             />

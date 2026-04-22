@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, Navigation, Users, Clock, Star, Car, Package } from 'lucide-react';
+import { MapPin, Navigation, Users, Clock, Star, Car } from 'lucide-react';
 import { PageShell, PageHeader, StatCard, DataPanel, ActionButton, GlassCard } from '../../services/pageComponents';
 import { DesignSystem } from '../../services/designSystem';
 
@@ -7,6 +7,7 @@ export function RidesPageEnhanced() {
   const [searchMode, setSearchMode] = useState<'now' | 'schedule'>('now');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+  const handlePlaceholderAction = () => undefined;
 
   const stats = [
     {
@@ -92,13 +93,13 @@ export function RidesPageEnhanced() {
           <>
             <ActionButton
               label="My Trips"
-              onClick={() => console.log('My trips')}
+              onClick={handlePlaceholderAction}
               variant="outline"
               icon={<Clock size={16} />}
             />
             <ActionButton
               label="Offer Ride"
-              onClick={() => console.log('Offer ride')}
+              onClick={handlePlaceholderAction}
               variant="ghost"
               icon={<Car size={16} />}
             />
@@ -241,7 +242,7 @@ export function RidesPageEnhanced() {
 
           <ActionButton
             label="Search Rides"
-            onClick={() => console.log('Search')}
+            onClick={handlePlaceholderAction}
             variant="primary"
             icon={<Navigation size={16} />}
           />

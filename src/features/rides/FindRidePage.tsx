@@ -8,6 +8,7 @@ import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { trackGrowthEvent } from '../../services/growthEngine';
 import { buildAuthPagePath } from '../../utils/authFlow';
+import { normalizeTextTree } from '../../utils/textEncoding';
 import { getWaselPresenceProfile } from '../../domains/trust/waselPresence';
 import { LandingPageFrame } from '../home/landing/LandingPageFrame';
 import { landingPanel } from '../home/landing/landingTypes';
@@ -82,7 +83,7 @@ function buildRidePageCopy(language: 'en' | 'ar') {
       },
     };
 
-    return {
+    return normalizeTextTree({
       hero: {
         eyebrow: 'نقطة الدخول الأساسية للتنقل',
         title: 'اعثر على رحلتك فوراً',
@@ -129,7 +130,7 @@ function buildRidePageCopy(language: 'en' | 'ar') {
         requestSuccess: 'تم إرسال طلب الرحلة وبدأت مطابقة السائق.',
         requestPendingSync: 'تم حفظ الطلب وسيتم مزامنة الحالة المباشرة حال توفرها.',
       },
-    };
+    });
   }
 
   const searchForm: RideSearchFormCopy = {
@@ -264,7 +265,7 @@ export function FindRidePage() {
 
   // Hero primary action cards
   const primaryActions = useMemo((): LandingActionCard[] => {
-    return [
+    const actions = [
       {
         icon: Search,
         title: ar ? 'ابحث عن رحلة' : 'Find a ride',
@@ -287,6 +288,7 @@ export function FindRidePage() {
         color: LANDING_COLORS.blue,
       },
     ];
+    return ar ? normalizeTextTree(actions) : actions;
   }, [ar, findRidePath, packagesPath]);
 
   // Bullet points displayed under hero description
@@ -298,7 +300,7 @@ export function FindRidePage() {
   // Platform signal cards for the signals section
   const signalCards = useMemo((): LandingSignalCard[] => {
     if (ar) {
-      return [
+      return normalizeTextTree([
         {
           title: 'مطابقة السائق',
           detail: 'يبدأ طابور المطابقة فور إرسال الطلب.',
@@ -326,7 +328,7 @@ export function FindRidePage() {
           intensity: 'مرتفع',
           sparkline: [55, 62, 70, 78, 85, 92, 100],
         },
-      ];
+      ]);
     }
     return [
       {

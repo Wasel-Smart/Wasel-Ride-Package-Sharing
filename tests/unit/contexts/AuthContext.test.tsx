@@ -230,8 +230,7 @@ describe('AuthContext — changePassword', () => {
 
 describe('AuthContext — useAuth hook guard', () => {
   it('throws when useAuth is called outside of AuthProvider', () => {
-    const original = console.error;
-    console.error = vi.fn(); // suppress React error boundary noise
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
     function BareConsumer() {
       useAuth();
@@ -239,6 +238,6 @@ describe('AuthContext — useAuth hook guard', () => {
     }
 
     expect(() => render(<BareConsumer />)).toThrow('useAuth must be used within AuthProvider');
-    console.error = original;
+    consoleError.mockRestore();
   });
 });
