@@ -281,9 +281,9 @@ export function FindRidePage() {
       },
       {
         icon: Car,
-        title: ar ? 'اعرض رحلتك' : 'Offer your ride',
+        title: ar ? 'أنشئ رحلة' : 'Create ride',
         detail: ar ? 'شارك المقاعد' : 'Share seats',
-        path: '/app/offer-ride',
+        path: '/app/create-ride',
         color: LANDING_COLORS.blue,
       },
     ];

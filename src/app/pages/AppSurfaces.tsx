@@ -721,8 +721,8 @@ export function LandingPage() {
                 <Button fullWidth onClick={() => navigate(primaryActionPath)}>
                   {primaryActionLabel}
                 </Button>
-                <Button fullWidth onClick={() => navigate('/app/offer-ride')} variant="secondary">
-                  Offer your ride
+                <Button fullWidth onClick={() => navigate('/app/create-ride')} variant="secondary">
+                  Create ride
                 </Button>
               </div>
 
@@ -790,8 +790,8 @@ export function LandingPage() {
               {
                 detail: 'Turn an empty departure into more value.',
                 icon: <Car size={18} />,
-                path: '/app/offer-ride',
-                title: 'Offer your ride',
+                path: '/app/create-ride',
+                title: 'Create ride',
               },
             ]}
             onNavigate={navigate}
@@ -1144,8 +1144,8 @@ export function FindRidePage() {
                 <Button onClick={() => navigate('/app/my-trips')} variant="ghost">
                   Open trips
                 </Button>
-                <Button onClick={() => navigate('/app/offer-ride')} variant="secondary">
-                  Offer your ride
+                <Button onClick={() => navigate('/app/create-ride')} variant="secondary">
+                  Create ride
                 </Button>
               </>
             }

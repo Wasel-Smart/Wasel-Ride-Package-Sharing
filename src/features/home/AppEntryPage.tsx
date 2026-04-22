@@ -59,7 +59,7 @@ const COPY = {
   en: {
     navRide: 'Find a ride',
     navPackage: 'Open packages',
-    navOffer: 'Offer your ride',
+    navOffer: 'Create ride',
     signIn: 'Sign in',
     createAccount: 'Create account',
     heroBadge: 'One live network',
@@ -82,7 +82,7 @@ const COPY = {
     to: 'Going to',
     date: 'When',
     primary: { ride: 'Find a ride', package: 'Open packages' },
-    secondary: 'Offer your ride',
+    secondary: 'Create ride',
     packageHint: 'Packages move through the same corridors. Pick the route first, then continue.',
     guestLead: 'Enter Wasel through the shortest path.',
     email: 'Continue with email',
@@ -108,7 +108,7 @@ const COPY = {
         cta: 'Open packages',
       },
       offer: {
-        title: 'Offer your ride',
+        title: 'Create ride',
         detail: 'Turn an empty departure into more value.',
         cta: 'Open driver flow',
       },
@@ -205,7 +205,7 @@ function trackLandingNavigation(path: string, language: 'en' | 'ar', userId?: st
       serviceType: 'ride' as const,
     },
     {
-      match: '/app/offer-ride',
+      match: '/app/create-ride',
       eventName: 'landing_offer_ride_opened',
       serviceType: 'ride' as const,
     },
@@ -255,9 +255,9 @@ export default function AppEntryPage() {
   const primaryPath = buildAppEntryPrimaryPath(mode, route);
   const contextualSignInPath = buildAuthPagePath('signin', primaryPath);
   const selectedFromLabel =
-    CITY_OPTIONS.find((option) => option.value === route.from)?.[ar ? 'ar' : 'en'] ?? route.from;
+    CITY_OPTIONS.find(option => option.value === route.from)?.[ar ? 'ar' : 'en'] ?? route.from;
   const selectedToLabel =
-    CITY_OPTIONS.find((option) => option.value === route.to)?.[ar ? 'ar' : 'en'] ?? route.to;
+    CITY_OPTIONS.find(option => option.value === route.to)?.[ar ? 'ar' : 'en'] ?? route.to;
   const routePreview = ar
     ? `${selectedFromLabel} ← ${selectedToLabel}`
     : `${selectedFromLabel} → ${selectedToLabel}`;
@@ -267,12 +267,18 @@ export default function AppEntryPage() {
         {
           label: 'الممر',
           value: routePreview,
-          detail: mode === 'ride' ? 'نفس المسار يفتح الرحلات بسرعة.' : 'هذا المسار يفتح تسليم الطرد مباشرة.',
+          detail:
+            mode === 'ride'
+              ? 'نفس المسار يفتح الرحلات بسرعة.'
+              : 'هذا المسار يفتح تسليم الطرد مباشرة.',
         },
         {
           label: 'الوضوح',
           value: mode === 'ride' ? 'السعر والمقعد' : 'الالتقاط والتسليم',
-          detail: mode === 'ride' ? 'التوقيت والسعر يبقيان ظاهرين.' : 'يبقى مسار الطرد واضحاً من البداية.',
+          detail:
+            mode === 'ride'
+              ? 'التوقيت والسعر يبقيان ظاهرين.'
+              : 'يبقى مسار الطرد واضحاً من البداية.',
         },
         {
           label: 'الدعم',
@@ -284,12 +290,18 @@ export default function AppEntryPage() {
         {
           label: 'Corridor',
           value: routePreview,
-          detail: mode === 'ride' ? 'This lane opens the ride flow fast.' : 'This lane opens parcel routing directly.',
+          detail:
+            mode === 'ride'
+              ? 'This lane opens the ride flow fast.'
+              : 'This lane opens parcel routing directly.',
         },
         {
           label: 'Clarity',
           value: mode === 'ride' ? 'Price and seat' : 'Pickup and dropoff',
-          detail: mode === 'ride' ? 'Timing and price stay visible together.' : 'Parcel movement stays clear from the start.',
+          detail:
+            mode === 'ride'
+              ? 'Timing and price stay visible together.'
+              : 'Parcel movement stays clear from the start.',
         },
         {
           label: 'Support',
@@ -339,13 +351,14 @@ export default function AppEntryPage() {
       icon: Car,
       title: copy.flowCards.offer.title,
       detail: copy.flowCards.offer.detail,
-      path: protectedPath('/app/offer-ride'),
+      path: protectedPath('/app/create-ride'),
       cta: copy.flowCards.offer.cta,
     },
   ];
 
   const updateRoute =
-    (field: keyof AppEntryRouteDraft) => (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    (field: keyof AppEntryRouteDraft) =>
+    (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const value = event.target.value;
       setRoute(current => {
         if (field === 'from') {
@@ -460,7 +473,10 @@ export default function AppEntryPage() {
                     {copy.points[2]}
                   </span>
                 </div>
-                <div className="app-entry-page__hero-stats" aria-label={ar ? 'إشارات المنصة' : 'Platform signals'}>
+                <div
+                  className="app-entry-page__hero-stats"
+                  aria-label={ar ? 'إشارات المنصة' : 'Platform signals'}
+                >
                   {heroStats.map(item => (
                     <div key={item.label} className="app-entry-page__hero-stat">
                       <strong>{item.value}</strong>
@@ -497,7 +513,7 @@ export default function AppEntryPage() {
                   role="tablist"
                   aria-label={ar ? '\u0627\u0644\u062e\u062f\u0645\u0627\u062a' : 'Services'}
                 >
-                  {APP_ENTRY_SERVICE_MODES.map((serviceMode) => (
+                  {APP_ENTRY_SERVICE_MODES.map(serviceMode => (
                     <button
                       key={serviceMode}
                       id={APP_ENTRY_SERVICE_MODE_META[serviceMode].tabId}
@@ -538,7 +554,7 @@ export default function AppEntryPage() {
                   className="app-entry-page__guidance-band"
                   aria-label={ar ? 'إشارات البداية' : 'Entry guidance'}
                 >
-                  {guidanceBand.map((item) => (
+                  {guidanceBand.map(item => (
                     <div key={item.label} className="app-entry-page__guidance-item">
                       <span>{item.label}</span>
                       <strong>{item.value}</strong>
@@ -597,7 +613,7 @@ export default function AppEntryPage() {
                   <button
                     type="button"
                     className="app-entry-page__secondary-button"
-                    onClick={() => navigateLanding(protectedPath('/app/offer-ride'))}
+                    onClick={() => navigateLanding(protectedPath('/app/create-ride'))}
                   >
                     {copy.secondary}
                   </button>
