@@ -165,10 +165,7 @@ export function BusPage() {
   }, [busRoutes]);
 
   const activeBus = busRoutes.find(route => route.id === selected) ?? busRoutes[0] ?? null;
-  const departureTimes = useMemo(
-    () => (activeBus ? getScheduleTimes(activeBus) : []),
-    [activeBus],
-  );
+  const departureTimes = useMemo(() => (activeBus ? getScheduleTimes(activeBus) : []), [activeBus]);
   const departureKey = useMemo(() => departureTimes.join('|'), [departureTimes]);
 
   useEffect(() => {
@@ -292,11 +289,14 @@ export function BusPage() {
         >
           <div
             style={{
-              background: DS.card,
+              background: 'var(--wasel-panel-strong)',
+              backdropFilter: 'blur(22px)',
+              WebkitBackdropFilter: 'blur(22px)',
               borderRadius: r(20),
               border: `1px solid ${DS.border}`,
               padding: '18px 18px 16px',
-              boxShadow: '0 14px 34px rgba(0,0,0,0.18)',
+              boxShadow: 'var(--wasel-shadow-lg)',
+              transition: 'transform 0.18s ease, box-shadow 0.18s ease',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -783,13 +783,17 @@ export function BusPage() {
           ].map(item => (
             <div
               key={item.label}
+              className="w-focus"
               style={{
                 background:
                   'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
                 border: `1px solid ${DS.border}`,
                 borderRadius: r(18),
                 padding: '18px 18px 16px',
-                boxShadow: '0 12px 28px rgba(0,0,0,0.16)',
+                boxShadow: 'var(--wasel-shadow-md)',
+                backdropFilter: 'blur(18px)',
+                transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                cursor: 'default',
               }}
             >
               <div
@@ -857,19 +861,38 @@ export function BusPage() {
               return (
                 <div
                   key={route.id}
+                  className="w-focus"
                   style={{
-                    background: DS.card,
+                    background: 'var(--wasel-panel-strong)',
+                    backdropFilter: 'blur(22px)',
+                    WebkitBackdropFilter: 'blur(22px)',
                     borderRadius: r(20),
                     border: `1px solid ${isSelected ? (route.color ?? DS.cyan) : DS.border}`,
                     overflow: 'hidden',
                     cursor: 'pointer',
-                    boxShadow: isSelected ? `0 10px 30px ${route.color ?? DS.cyan}12` : 'none',
+                    boxShadow: isSelected
+                      ? `0 10px 30px ${route.color ?? DS.cyan}12`
+                      : 'var(--wasel-shadow-md)',
                     opacity: soldOut ? 0.8 : 1,
+                    transition:
+                      'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
                   }}
                   onClick={() => {
                     setSelected(String(route.id));
                     setBookingComplete(false);
                     setBookingSource(null);
+                  }}
+                  onMouseEnter={e => {
+                    if (!soldOut) {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = `var(--wasel-shadow-lg), 0 0 20px ${route.color ?? DS.cyan}10`;
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = isSelected
+                      ? `0 10px 30px ${route.color ?? DS.cyan}12`
+                      : 'var(--wasel-shadow-md)';
                   }}
                 >
                   <div
@@ -1797,7 +1820,6 @@ export function BusPage() {
             </div>
           </div>
         </div>
-
       </PageShell>
     </Protected>
   );

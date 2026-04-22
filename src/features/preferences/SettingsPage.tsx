@@ -43,7 +43,6 @@ import { ClarityBand, PageShell, SectionHead } from '../shared/pageShared';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
 
 const DS = PAGE_DS;
-const CARD = DS.card;
 const BORD = DS.border;
 const CYAN = DS.cyan;
 const FONT = DS.F;
@@ -100,12 +99,14 @@ function Section({
       </div>
       <div
         style={{
-          background: CARD,
+          background: 'var(--wasel-panel-strong)',
+          backdropFilter: 'blur(22px)',
+          WebkitBackdropFilter: 'blur(22px)',
           border: `1px solid ${BORD}`,
           borderRadius: 24,
           overflow: 'hidden',
-          boxShadow: 'var(--wasel-shadow-card)',
-          backdropFilter: 'blur(18px)',
+          boxShadow: 'var(--wasel-shadow-lg)',
+          transition: 'box-shadow 0.18s ease',
         }}
       >
         {children}
@@ -121,6 +122,7 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
       role="switch"
       aria-checked={value}
       onClick={() => onChange(!value)}
+      className="w-focus"
       style={{
         width: 44,
         height: 24,
@@ -163,11 +165,29 @@ function ToggleRow({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: `1px solid ${BORD}`, gap: 12 }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: '16px 20px',
+        borderBottom: `1px solid ${BORD}`,
+        gap: 12,
+      }}
+    >
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: TEXT, fontFamily: FONT }}>{label}</div>
+        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: TEXT, fontFamily: FONT }}>
+          {label}
+        </div>
         {sub ? (
-          <div style={{ marginTop: 4, fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.55 }}>
+          <div
+            style={{
+              marginTop: 4,
+              fontSize: '0.72rem',
+              color: SOFT,
+              fontFamily: FONT,
+              lineHeight: 1.55,
+            }}
+          >
             {sub}
           </div>
         ) : null}
@@ -189,8 +209,20 @@ function SelectRow({
   onChange: (v: string) => void;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: `1px solid ${BORD}`, gap: 12 }}>
-      <div style={{ flex: 1, fontSize: '0.875rem', fontWeight: 600, color: TEXT, fontFamily: FONT }}>{label}</div>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: '16px 20px',
+        borderBottom: `1px solid ${BORD}`,
+        gap: 12,
+      }}
+    >
+      <div
+        style={{ flex: 1, fontSize: '0.875rem', fontWeight: 600, color: TEXT, fontFamily: FONT }}
+      >
+        {label}
+      </div>
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -236,9 +268,19 @@ function LinkRow({ label, sub, onClick }: { label: string; sub?: string; onClick
       }}
     >
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: TEXT, fontFamily: FONT }}>{label}</div>
+        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: TEXT, fontFamily: FONT }}>
+          {label}
+        </div>
         {sub ? (
-          <div style={{ marginTop: 4, fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.55 }}>
+          <div
+            style={{
+              marginTop: 4,
+              fontSize: '0.72rem',
+              color: SOFT,
+              fontFamily: FONT,
+              lineHeight: 1.55,
+            }}
+          >
             {sub}
           </div>
         ) : null}
@@ -260,9 +302,23 @@ function ActionButton({
   variant?: 'primary' | 'secondary' | 'danger';
 }) {
   const styles = {
-    primary: { background: DS.gradC, color: 'var(--text-inverse)', border: '1px solid rgb(255 255 255 / 0.18)', boxShadow: 'var(--wasel-shadow-teal)' },
-    secondary: { background: SOFT_SURFACE, color: TEXT, border: `1px solid ${BORD}`, backdropFilter: 'blur(16px)' },
-    danger: { background: 'rgb(var(--danger-rgb) / 0.12)', color: 'var(--danger)', border: '1px solid rgb(var(--danger-rgb) / 0.24)' },
+    primary: {
+      background: DS.gradC,
+      color: 'var(--text-inverse)',
+      border: '1px solid rgb(255 255 255 / 0.18)',
+      boxShadow: 'var(--wasel-shadow-teal)',
+    },
+    secondary: {
+      background: SOFT_SURFACE,
+      color: TEXT,
+      border: `1px solid ${BORD}`,
+      backdropFilter: 'blur(16px)',
+    },
+    danger: {
+      background: 'rgb(var(--danger-rgb) / 0.12)',
+      color: 'var(--danger)',
+      border: '1px solid rgb(var(--danger-rgb) / 0.24)',
+    },
   } as const;
 
   return (
@@ -270,6 +326,7 @@ function ActionButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
+      className="w-focus"
       style={{
         minHeight: 42,
         borderRadius: 999,
@@ -278,6 +335,7 @@ function ActionButton({
         fontWeight: 700,
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.6 : 1,
+        transition: 'transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease',
         ...styles[variant],
       }}
     >
@@ -365,23 +423,27 @@ export default function SettingsPage() {
     preferredLanguage: language === 'ar' ? 'ar' : 'en',
   });
   const [notificationSavingKey, setNotificationSavingKey] = useState<string | null>(null);
-  const [privacy, setPrivacy] = useState(() => readStoredState(STORAGE_KEYS.privacy, {
-    showProfile: true,
-    shareLocation: true,
-    hidePhoto: false,
-    dataAnalytics: false,
-  }));
+  const [privacy, setPrivacy] = useState(() =>
+    readStoredState(STORAGE_KEYS.privacy, {
+      showProfile: true,
+      shareLocation: true,
+      hidePhoto: false,
+      dataAnalytics: false,
+    }),
+  );
   const [display, setDisplay] = useState<{
     language: Language;
     currency: string;
     theme: ThemePreference;
     direction: string;
-  }>(() => readStoredState(STORAGE_KEYS.display, {
-    language,
-    currency: 'JOD',
-    theme,
-    direction: ar ? 'rtl' : 'ltr',
-  }));
+  }>(() =>
+    readStoredState(STORAGE_KEYS.display, {
+      language,
+      currency: 'JOD',
+      theme,
+      direction: ar ? 'rtl' : 'ltr',
+    }),
+  );
 
   const passwordStrength = useMemo(() => checkPasswordStrength(passwordInput), [passwordInput]);
   const twoFactorEnabled = Boolean(user?.twoFactorEnabled ?? profile?.two_factor_enabled);
@@ -440,7 +502,10 @@ export default function SettingsPage() {
     };
   }, [user?.id]);
 
-  const saveNotificationPreferences = async (updates: Partial<CommunicationPreferences>, savingKey: string) => {
+  const saveNotificationPreferences = async (
+    updates: Partial<CommunicationPreferences>,
+    savingKey: string,
+  ) => {
     setNotificationSavingKey(savingKey);
     const next = await updateCommunicationPreferences(user?.id ?? null, updates);
     setNotifs(next);
@@ -448,10 +513,11 @@ export default function SettingsPage() {
     toast.success('Saved.');
   };
 
-  const toggleNotificationPreference = (key: keyof CommunicationPreferences) => (value: boolean) => {
-    setNotifs(previous => ({ ...previous, [key]: value }));
-    void saveNotificationPreferences({ [key]: value } as Partial<CommunicationPreferences>, key);
-  };
+  const toggleNotificationPreference =
+    (key: keyof CommunicationPreferences) => (value: boolean) => {
+      setNotifs(previous => ({ ...previous, [key]: value }));
+      void saveNotificationPreferences({ [key]: value } as Partial<CommunicationPreferences>, key);
+    };
 
   const openSupportLink = (url: string, emptyMessage: string) => {
     if (!url) {
@@ -487,10 +553,12 @@ export default function SettingsPage() {
       return;
     }
 
-    updateUser(omitUndefined({
-      phone: normalized || undefined,
-      phoneVerified: false,
-    }));
+    updateUser(
+      omitUndefined({
+        phone: normalized || undefined,
+        phoneVerified: false,
+      }),
+    );
     toast.success(normalized ? 'Phone number saved.' : 'Phone number removed.');
   };
 
@@ -552,7 +620,9 @@ export default function SettingsPage() {
       const setup = await enable2FA(user.id);
       setTwoFactorSetup(setup);
       setTwoFactorCode('');
-      toast.success('Scan the QR code, save your backup codes, then confirm with a 6-digit authenticator code.');
+      toast.success(
+        'Scan the QR code, save your backup codes, then confirm with a 6-digit authenticator code.',
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
     } finally {
@@ -651,9 +721,7 @@ export default function SettingsPage() {
     toast.success('Account data exported.');
   };
 
-  const sessionSummary = user
-    ? 'Active on this device'
-    : 'Sign in to view sessions';
+  const sessionSummary = user ? 'Active on this device' : 'Sign in to view sessions';
   const activeChannelCount = [
     notifs.inApp,
     notifs.push && notificationCapabilities.push,
@@ -672,30 +740,68 @@ export default function SettingsPage() {
           color={CYAN}
         />
 
-        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 22 }}>
-          <StakeholderSignalBanner
-            dir={ar ? 'rtl' : 'ltr'}
-            eyebrow="Wasel · account comms"
-            title="Account and alert settings in one place"
-            detail="Keep support, trust, and notification choices clear before they matter."
-            stakeholders={[
-              { label: 'Active channels', value: String(activeChannelCount), tone: 'teal' },
-              { label: 'Critical alerts', value: notifs.criticalAlerts ? 'On' : 'Off', tone: notifs.criticalAlerts ? 'green' : 'rose' },
-              { label: 'Preferred language', value: notifs.preferredLanguage.toUpperCase(), tone: 'blue' },
-              { label: 'Phone ready', value: notificationCapabilities.sms ? 'Yes' : 'No', tone: notificationCapabilities.sms ? 'green' : 'amber' },
-            ]}
-            statuses={[
-              { label: 'Push delivery', value: notificationCapabilities.push ? 'Available' : 'Unavailable', tone: notificationCapabilities.push ? 'green' : 'amber' },
-              { label: '2FA', value: twoFactorEnabled ? 'Enabled' : 'Not enabled', tone: twoFactorEnabled ? 'green' : 'rose' },
-              { label: 'Profile visibility', value: privacy.showProfile ? 'Shared' : 'Private', tone: privacy.showProfile ? 'blue' : 'slate' },
-            ]}
-            lanes={[
-              { label: 'Notification routing', detail: 'In-app, email, SMS, and WhatsApp preferences are now treated as one delivery policy.' },
-              { label: 'Support handoff', detail: 'Support email, phone, SMS, and WhatsApp links stay close to the same preference surface.' },
-              { label: 'Trust controls', detail: 'Security settings, 2FA, and account contact details now reinforce the same escalation story.' },
-            ]}
-          />
-        </div>}
+        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && (
+          <div style={{ marginBottom: 22 }}>
+            <StakeholderSignalBanner
+              dir={ar ? 'rtl' : 'ltr'}
+              eyebrow="Wasel · account comms"
+              title="Account and alert settings in one place"
+              detail="Keep support, trust, and notification choices clear before they matter."
+              stakeholders={[
+                { label: 'Active channels', value: String(activeChannelCount), tone: 'teal' },
+                {
+                  label: 'Critical alerts',
+                  value: notifs.criticalAlerts ? 'On' : 'Off',
+                  tone: notifs.criticalAlerts ? 'green' : 'rose',
+                },
+                {
+                  label: 'Preferred language',
+                  value: notifs.preferredLanguage.toUpperCase(),
+                  tone: 'blue',
+                },
+                {
+                  label: 'Phone ready',
+                  value: notificationCapabilities.sms ? 'Yes' : 'No',
+                  tone: notificationCapabilities.sms ? 'green' : 'amber',
+                },
+              ]}
+              statuses={[
+                {
+                  label: 'Push delivery',
+                  value: notificationCapabilities.push ? 'Available' : 'Unavailable',
+                  tone: notificationCapabilities.push ? 'green' : 'amber',
+                },
+                {
+                  label: '2FA',
+                  value: twoFactorEnabled ? 'Enabled' : 'Not enabled',
+                  tone: twoFactorEnabled ? 'green' : 'rose',
+                },
+                {
+                  label: 'Profile visibility',
+                  value: privacy.showProfile ? 'Shared' : 'Private',
+                  tone: privacy.showProfile ? 'blue' : 'slate',
+                },
+              ]}
+              lanes={[
+                {
+                  label: 'Notification routing',
+                  detail:
+                    'In-app, email, SMS, and WhatsApp preferences are now treated as one delivery policy.',
+                },
+                {
+                  label: 'Support handoff',
+                  detail:
+                    'Support email, phone, SMS, and WhatsApp links stay close to the same preference surface.',
+                },
+                {
+                  label: 'Trust controls',
+                  detail:
+                    'Security settings, 2FA, and account contact details now reinforce the same escalation story.',
+                },
+              ]}
+            />
+          </div>
+        )}
 
         <ClarityBand
           title="Keep account controls easy to scan."
@@ -704,37 +810,79 @@ export default function SettingsPage() {
           items={[
             { label: '1. Alerts', value: 'Turn on the channels you actually want to hear from.' },
             { label: '2. Privacy', value: 'Decide what profile and trip data stays visible.' },
-            { label: '3. Security', value: 'Use password health and 2FA before the next critical trip.' },
+            {
+              label: '3. Security',
+              value: 'Use password health and 2FA before the next critical trip.',
+            },
           ]}
         />
 
         <Section icon={<Bell size={16} />} title="Notifications">
-          <ToggleRow label="Trip Updates" sub="Accept, cancel, confirm" value={notifs.tripUpdates} onChange={toggleNotificationPreference('tripUpdates')} />
-          <ToggleRow label="New Booking Requests" sub="Drivers only" value={notifs.bookingRequests} onChange={toggleNotificationPreference('bookingRequests')} />
-          <ToggleRow label="Messages" value={notifs.messages} onChange={toggleNotificationPreference('messages')} />
-          <ToggleRow label="Prayer Time Reminders" sub="On long-distance routes" value={notifs.prayerReminders} onChange={toggleNotificationPreference('prayerReminders')} />
-          <ToggleRow label="Promotions & Offers" value={notifs.promotions} onChange={toggleNotificationPreference('promotions')} />
+          <ToggleRow
+            label="Trip Updates"
+            sub="Accept, cancel, confirm"
+            value={notifs.tripUpdates}
+            onChange={toggleNotificationPreference('tripUpdates')}
+          />
+          <ToggleRow
+            label="New Booking Requests"
+            sub="Drivers only"
+            value={notifs.bookingRequests}
+            onChange={toggleNotificationPreference('bookingRequests')}
+          />
+          <ToggleRow
+            label="Messages"
+            value={notifs.messages}
+            onChange={toggleNotificationPreference('messages')}
+          />
+          <ToggleRow
+            label="Prayer Time Reminders"
+            sub="On long-distance routes"
+            value={notifs.prayerReminders}
+            onChange={toggleNotificationPreference('prayerReminders')}
+          />
+          <ToggleRow
+            label="Promotions & Offers"
+            value={notifs.promotions}
+            onChange={toggleNotificationPreference('promotions')}
+          />
           <ToggleRow
             label="Push Notifications"
-            sub={notificationCapabilities.push ? 'Browser push is available on this device.' : 'Browser push is unavailable on this device.'}
+            sub={
+              notificationCapabilities.push
+                ? 'Browser push is available on this device.'
+                : 'Browser push is unavailable on this device.'
+            }
             value={notifs.push}
             onChange={toggleNotificationPreference('push')}
           />
           <ToggleRow
             label="SMS Alerts"
-            sub={notificationCapabilities.sms ? `Ready for ${user?.phone ?? profile?.phone_number ?? 'your saved phone'}` : 'Add a phone number to enable SMS delivery.'}
+            sub={
+              notificationCapabilities.sms
+                ? `Ready for ${user?.phone ?? profile?.phone_number ?? 'your saved phone'}`
+                : 'Add a phone number to enable SMS delivery.'
+            }
             value={notifs.sms}
             onChange={toggleNotificationPreference('sms')}
           />
           <ToggleRow
             label="Email Notifications"
-            sub={notificationCapabilities.email ? `Ready for ${user?.email ?? profile?.email ?? 'your account email'}` : 'Add an email address to enable email delivery.'}
+            sub={
+              notificationCapabilities.email
+                ? `Ready for ${user?.email ?? profile?.email ?? 'your account email'}`
+                : 'Add an email address to enable email delivery.'
+            }
             value={notifs.email}
             onChange={toggleNotificationPreference('email')}
           />
           <ToggleRow
             label="WhatsApp Alerts"
-            sub={notificationCapabilities.whatsapp ? 'High-priority WhatsApp delivery is available.' : 'Add a phone number and support WhatsApp routing to enable this.'}
+            sub={
+              notificationCapabilities.whatsapp
+                ? 'High-priority WhatsApp delivery is available.'
+                : 'Add a phone number and support WhatsApp routing to enable this.'
+            }
             value={notifs.whatsapp}
             onChange={toggleNotificationPreference('whatsapp')}
           />
@@ -750,22 +898,42 @@ export default function SettingsPage() {
           <LinkRow
             label="Email Support"
             sub="Open your default mail app with a prefilled Wasel support draft"
-            onClick={() => openSupportLink(getSupportEmailUrl('Wasel support request'), 'Support email is not configured for this environment.')}
+            onClick={() =>
+              openSupportLink(
+                getSupportEmailUrl('Wasel support request'),
+                'Support email is not configured for this environment.',
+              )
+            }
           />
           <LinkRow
             label="SMS Support"
             sub="Open your phone’s SMS app for quick support escalation"
-            onClick={() => openSupportLink(getSmsSupportUrl('Hi Wasel support team'), 'Support SMS is not configured for this environment.')}
+            onClick={() =>
+              openSupportLink(
+                getSmsSupportUrl('Hi Wasel support team'),
+                'Support SMS is not configured for this environment.',
+              )
+            }
           />
           <LinkRow
             label="WhatsApp Support"
             sub="Open direct WhatsApp support chat when available"
-            onClick={() => openSupportLink(getWhatsAppSupportUrl('Hi Wasel support team'), 'Support WhatsApp is not configured for this environment.')}
+            onClick={() =>
+              openSupportLink(
+                getWhatsAppSupportUrl('Hi Wasel support team'),
+                'Support WhatsApp is not configured for this environment.',
+              )
+            }
           />
           <LinkRow
             label="Call Support"
             sub="Immediate voice support handoff"
-            onClick={() => openSupportLink(getSupportPhoneUrl(), 'Support phone is not configured for this environment.')}
+            onClick={() =>
+              openSupportLink(
+                getSupportPhoneUrl(),
+                'Support phone is not configured for this environment.',
+              )
+            }
           />
         </Section>
 
@@ -801,42 +969,116 @@ export default function SettingsPage() {
         </Section>
 
         <Section icon={<Eye size={16} />} title="Privacy">
-          <ToggleRow label="Show Profile to Others" sub="Passengers & drivers" value={privacy.showProfile} onChange={value => setPrivacy(previous => ({ ...previous, showProfile: value }))} />
-          <ToggleRow label="Hide Profile Photo" sub="Only name is shown" value={privacy.hidePhoto} onChange={value => setPrivacy(previous => ({ ...previous, hidePhoto: value }))} />
-          <ToggleRow label="Share Live Location" sub="During active trips only" value={privacy.shareLocation} onChange={value => setPrivacy(previous => ({ ...previous, shareLocation: value }))} />
-          <ToggleRow label="Analytics & Improvement" sub="Anonymous usage data" value={privacy.dataAnalytics} onChange={value => setPrivacy(previous => ({ ...previous, dataAnalytics: value }))} />
+          <ToggleRow
+            label="Show Profile to Others"
+            sub="Passengers & drivers"
+            value={privacy.showProfile}
+            onChange={value => setPrivacy(previous => ({ ...previous, showProfile: value }))}
+          />
+          <ToggleRow
+            label="Hide Profile Photo"
+            sub="Only name is shown"
+            value={privacy.hidePhoto}
+            onChange={value => setPrivacy(previous => ({ ...previous, hidePhoto: value }))}
+          />
+          <ToggleRow
+            label="Share Live Location"
+            sub="During active trips only"
+            value={privacy.shareLocation}
+            onChange={value => setPrivacy(previous => ({ ...previous, shareLocation: value }))}
+          />
+          <ToggleRow
+            label="Analytics & Improvement"
+            sub="Anonymous usage data"
+            value={privacy.dataAnalytics}
+            onChange={value => setPrivacy(previous => ({ ...previous, dataAnalytics: value }))}
+          />
         </Section>
 
         <div ref={securityRef}>
           <Section icon={<Shield size={16} />} title="Security">
             <div style={{ padding: 18, display: 'grid', gap: 14 }}>
               <div style={{ display: 'grid', gap: 10 }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: TEXT, fontFamily: FONT }}>Change Password</div>
-                <FormField value={passwordInput} onChange={setPasswordInput} type="password" placeholder="New password" />
-                <FormField value={confirmPassword} onChange={setConfirmPassword} type="password" placeholder="Confirm new password" />
-                <div style={{ fontSize: '0.74rem', color: getPasswordStrengthColor(passwordStrength.score), fontFamily: FONT }}>
+                <div
+                  style={{ fontSize: '0.82rem', fontWeight: 700, color: TEXT, fontFamily: FONT }}
+                >
+                  Change Password
+                </div>
+                <FormField
+                  value={passwordInput}
+                  onChange={setPasswordInput}
+                  type="password"
+                  placeholder="New password"
+                />
+                <FormField
+                  value={confirmPassword}
+                  onChange={setConfirmPassword}
+                  type="password"
+                  placeholder="Confirm new password"
+                />
+                <div
+                  style={{
+                    fontSize: '0.74rem',
+                    color: getPasswordStrengthColor(passwordStrength.score),
+                    fontFamily: FONT,
+                  }}
+                >
                   {passwordInput
                     ? `Strength: ${getPasswordStrengthLabel(passwordStrength.score)}`
                     : 'Use a strong password with at least 8 characters.'}
                 </div>
                 {passwordStrength.feedback.length > 0 && (
-                  <div style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.5 }}>
+                  <div
+                    style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.5 }}
+                  >
                     {passwordStrength.feedback.join(' · ')}
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  <ActionButton label={passwordSaving ? 'Saving...' : 'Update Password'} onClick={() => { void savePassword(); }} disabled={!user || passwordSaving} />
-                  <ActionButton label="Send Reset Link" onClick={() => { void sendResetLink(); }} disabled={!user?.email} variant="secondary" />
+                  <ActionButton
+                    label={passwordSaving ? 'Saving...' : 'Update Password'}
+                    onClick={() => {
+                      void savePassword();
+                    }}
+                    disabled={!user || passwordSaving}
+                  />
+                  <ActionButton
+                    label="Send Reset Link"
+                    onClick={() => {
+                      void sendResetLink();
+                    }}
+                    disabled={!user?.email}
+                    variant="secondary"
+                  />
                 </div>
               </div>
 
               <div style={{ height: 1, background: BORD }} />
 
               <div style={{ display: 'grid', gap: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                  }}
+                >
                   <div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: TEXT, fontFamily: FONT }}>Two-Factor Authentication</div>
-                    <div style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT, marginTop: 4 }}>
+                    <div
+                      style={{
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        color: TEXT,
+                        fontFamily: FONT,
+                      }}
+                    >
+                      Two-Factor Authentication
+                    </div>
+                    <div
+                      style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT, marginTop: 4 }}
+                    >
                       {!twoFactorSupported
                         ? 'Unavailable on this device or in this environment.'
                         : twoFactorEnabled
@@ -867,7 +1109,9 @@ export default function SettingsPage() {
                       }
                       void turnOnTwoFactor();
                     }}
-                    disabled={!user || twoFactorSaving || (!twoFactorSupported && !twoFactorEnabled)}
+                    disabled={
+                      !user || twoFactorSaving || (!twoFactorSupported && !twoFactorEnabled)
+                    }
                     variant={twoFactorEnabled ? 'danger' : 'primary'}
                   />
                 </div>
@@ -877,7 +1121,11 @@ export default function SettingsPage() {
                     <FormField
                       value={twoFactorCode}
                       onChange={setTwoFactorCode}
-                      placeholder={twoFactorEnabled ? 'Authenticator code or backup code' : '6-digit authenticator code to confirm setup'}
+                      placeholder={
+                        twoFactorEnabled
+                          ? 'Authenticator code or backup code'
+                          : '6-digit authenticator code to confirm setup'
+                      }
                     />
                     <div style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT }}>
                       {twoFactorEnabled
@@ -888,18 +1136,55 @@ export default function SettingsPage() {
                 )}
 
                 {twoFactorSetup && (
-                  <div style={{ display: 'grid', gap: 12, background: SOFT_SURFACE, border: `1px solid ${BORD}`, borderRadius: 16, padding: 14 }}>
-                    <div style={{ fontSize: '0.76rem', color: TEXT, fontFamily: FONT, fontWeight: 700 }}>Current setup details</div>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gap: 12,
+                      background: SOFT_SURFACE,
+                      border: `1px solid ${BORD}`,
+                      borderRadius: 16,
+                      padding: 14,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: '0.76rem',
+                        color: TEXT,
+                        fontFamily: FONT,
+                        fontWeight: 700,
+                      }}
+                    >
+                      Current setup details
+                    </div>
                     <a
                       href={twoFactorSetup.otpauthUrl}
-                      style={{ color: CYAN, fontFamily: FONT, fontSize: '0.74rem', wordBreak: 'break-all' }}
+                      style={{
+                        color: CYAN,
+                        fontFamily: FONT,
+                        fontSize: '0.74rem',
+                        wordBreak: 'break-all',
+                      }}
                     >
                       Open your authenticator app with this `otpauth://` link
                     </a>
-                    <div style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.5 }}>
+                    <div
+                      style={{
+                        fontSize: '0.72rem',
+                        color: SOFT,
+                        fontFamily: FONT,
+                        lineHeight: 1.5,
+                      }}
+                    >
                       Secret: <span style={{ color: TEXT }}>{twoFactorSetup.secret}</span>
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.6 }}>
+                    <div
+                      style={{
+                        fontSize: '0.72rem',
+                        color: SOFT,
+                        fontFamily: FONT,
+                        lineHeight: 1.6,
+                      }}
+                    >
                       Backup codes: {twoFactorSetup.backupCodes.join(' · ')}
                     </div>
                   </div>
@@ -917,9 +1202,20 @@ export default function SettingsPage() {
           <Section icon={<Palette size={16} />} title="Account">
             <div style={{ padding: 18, display: 'grid', gap: 14 }}>
               <div style={{ display: 'grid', gap: 10 }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: TEXT, fontFamily: FONT }}>Phone Number</div>
-                <FormField value={phoneInput} onChange={setPhoneInput} type="tel" placeholder="+962791234567" />
-                <div style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.5 }}>
+                <div
+                  style={{ fontSize: '0.82rem', fontWeight: 700, color: TEXT, fontFamily: FONT }}
+                >
+                  Phone Number
+                </div>
+                <FormField
+                  value={phoneInput}
+                  onChange={setPhoneInput}
+                  type="tel"
+                  placeholder="+962791234567"
+                />
+                <div
+                  style={{ fontSize: '0.72rem', color: SOFT, fontFamily: FONT, lineHeight: 1.5 }}
+                >
                   {user?.phoneVerified
                     ? 'Your phone is currently verified.'
                     : user?.phone
@@ -927,8 +1223,18 @@ export default function SettingsPage() {
                       : 'Used for alerts and trip coordination.'}
                 </div>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  <ActionButton label={phoneSaving ? 'Saving...' : 'Save Phone'} onClick={() => { void savePhone(); }} disabled={!user || phoneSaving} />
-                  <ActionButton label="Open Profile" onClick={() => nav('/app/profile')} variant="secondary" />
+                  <ActionButton
+                    label={phoneSaving ? 'Saving...' : 'Save Phone'}
+                    onClick={() => {
+                      void savePhone();
+                    }}
+                    disabled={!user || phoneSaving}
+                  />
+                  <ActionButton
+                    label="Open Profile"
+                    onClick={() => nav('/app/profile')}
+                    variant="secondary"
+                  />
                 </div>
               </div>
 
@@ -945,7 +1251,16 @@ export default function SettingsPage() {
           </Section>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: '0.7rem', color: SOFT, fontFamily: DISPLAY_FONT, marginTop: 8, opacity: 0.72 }}>
+        <p
+          style={{
+            textAlign: 'center',
+            fontSize: '0.7rem',
+            color: SOFT,
+            fontFamily: DISPLAY_FONT,
+            marginTop: 8,
+            opacity: 0.72,
+          }}
+        >
           Wasel v1.0.0 · wasel14.online
         </p>
       </div>

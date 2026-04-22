@@ -35,31 +35,48 @@ import type { PackageRequest } from '../../services/journeyLogistics';
 import {
   ClarityBand,
   CoreExperienceBanner,
-  DS,
   PageShell,
   Protected,
   SectionHead,
 } from '../shared/pageShared';
 import { useTrips } from '../../modules/trips/trip.hooks';
 
-const CARD = DS.cardGrad;
-const CARD_ALT = DS.card2;
-const BORDER = DS.border;
-const BORDER_STRONG = DS.borderH;
-const CYAN = DS.cyan;
-const BLUE = DS.blue;
-const GOLD = DS.gold;
-const GREEN = DS.green;
-const RED = DS.red;
-const AMBER = DS.gold;
-const TEXT = DS.text;
-const MUTED = DS.sub;
-const DIM = DS.muted;
-const FONT = DS.F;
+const CARD: string = 'var(--wasel-panel-strong)';
+const CARD_ALT: string = 'var(--ds-surface-raised)';
+const CARD_GRAD: string =
+  'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.024))';
+const BORDER: string = 'var(--ds-border)';
+const BORDER_STRONG: string = 'var(--wasel-button-primary-border-strong)';
+const CYAN: string = 'var(--ds-accent)';
+const BLUE: string = 'var(--ds-accent-strong)';
+const GOLD: string = 'var(--ds-accent-strong)';
+const GREEN: string = 'var(--ds-accent-strong)';
+const RED: string = 'var(--wasel-brand-hover)';
+const AMBER: string = 'var(--ds-accent-strong)';
+const TEXT: string = 'var(--ds-text)';
+const MUTED: string = 'var(--ds-text-muted)';
+const DIM: string = 'var(--ds-text-soft)';
+const FONT: string = "var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
 
-function tone(color: string, amount = 14) {
+function tone(color: string, amount = 14): string {
   return `color-mix(in srgb, ${color} ${amount}%, transparent)`;
 }
+
+const glassPanel = {
+  background: CARD,
+  backdropFilter: 'blur(22px)',
+  WebkitBackdropFilter: 'blur(22px)',
+  border: `1px solid ${BORDER}`,
+  borderRadius: 18,
+  boxShadow: 'var(--wasel-shadow-md)',
+} as const;
+
+const glassCardHover = {
+  transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
+  cursor: 'pointer',
+} as const;
+
+const noTransition = { transition: 'none' } as const;
 
 type TripLifecycle = 'active' | 'attention' | 'completed' | 'cancelled';
 type TripKind = 'rides' | 'packages' | 'buses';
@@ -289,14 +306,23 @@ function SummaryCard({
 }) {
   return (
     <div
+      className="w-focus"
       style={{
-        background: CARD,
-        border: `1px solid ${BORDER}`,
-        borderRadius: 18,
+        ...glassPanel,
         padding: '18px 18px 16px',
         position: 'relative',
         overflow: 'hidden',
         minWidth: 0,
+        background: CARD_GRAD,
+        transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = `var(--wasel-shadow-lg), 0 0 20px ${tone(color, 10)}`;
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = 'var(--wasel-shadow-md)';
       }}
     >
       <div
@@ -308,6 +334,7 @@ function SummaryCard({
           height: 72,
           borderRadius: '50%',
           background: `radial-gradient(circle, ${tone(color, 16)} 0%, transparent 72%)`,
+          pointerEvents: 'none',
         }}
       />
       <div
@@ -348,6 +375,7 @@ function StatusBadge({ lifecycle }: { lifecycle: TripLifecycle }) {
   const item = lifecycleConfig[lifecycle];
   return (
     <span
+      className="w-focus"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -360,6 +388,7 @@ function StatusBadge({ lifecycle }: { lifecycle: TripLifecycle }) {
         background: item.bg,
         border: `1px solid ${tone(item.color, 22)}`,
         fontFamily: FONT,
+        transition: 'box-shadow 0.18s ease',
       }}
     >
       {item.icon}
@@ -375,16 +404,28 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
 
   return (
     <div
+      className="w-focus"
       style={{
-        background: CARD,
-        border: `1px solid ${BORDER}`,
-        borderRadius: 18,
+        ...glassPanel,
+        ...noTransition,
         overflow: 'hidden',
         marginBottom: 12,
+        ...glassCardHover,
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = `var(--wasel-shadow-lg), 0 0 20px ${tone(routeAccent, 10)}`;
+        e.currentTarget.style.borderColor = tone(routeAccent, 40);
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = 'var(--wasel-shadow-md)';
+        e.currentTarget.style.borderColor = BORDER;
       }}
     >
       <button
         onClick={() => setExpanded(value => !value)}
+        className="w-focus"
         style={{
           width: '100%',
           padding: '16px 18px',
@@ -511,13 +552,13 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
             <button
               onClick={onOpen}
               style={{
-              padding: '7px 14px',
-              borderRadius: 10,
-              background: CARD_ALT,
-              border: `1px solid ${BORDER_STRONG}`,
-              color: TEXT,
-              fontWeight: 700,
-              fontFamily: FONT,
+                padding: '7px 14px',
+                borderRadius: 10,
+                background: CARD_ALT,
+                border: `1px solid ${BORDER_STRONG}`,
+                color: TEXT,
+                fontWeight: 700,
+                fontFamily: FONT,
                 fontSize: '0.76rem',
                 cursor: 'pointer',
               }}
@@ -536,11 +577,10 @@ function SupportQueue({ tickets }: { tickets: SupportTicket[] }) {
   return (
     <div
       style={{
-        background: CARD,
-        border: `1px solid ${BORDER}`,
-        borderRadius: 16,
+        ...glassPanel,
         padding: '16px 18px',
         marginBottom: 16,
+        background: CARD_GRAD,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
@@ -554,6 +594,7 @@ function SupportQueue({ tickets }: { tickets: SupportTicket[] }) {
           return (
             <div
               key={ticket.id}
+              className="w-focus"
               style={{
                 background: CARD_ALT,
                 border: `1px solid ${BORDER}`,
@@ -561,6 +602,16 @@ function SupportQueue({ tickets }: { tickets: SupportTicket[] }) {
                 padding: '12px 14px',
                 display: 'grid',
                 gap: 8,
+                transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateX(2px)';
+                e.currentTarget.style.boxShadow = 'var(--wasel-shadow-sm)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateX(0)';
+                e.currentTarget.style.boxShadow = 'none';
               }}
             >
               <div
@@ -810,10 +861,13 @@ export default function MyTripsPage() {
               display: 'flex',
               gap: 0,
               background: CARD,
+              backdropFilter: 'blur(22px)',
+              WebkitBackdropFilter: 'blur(22px)',
               border: `1px solid ${BORDER}`,
               borderRadius: 14,
               padding: 4,
               marginBottom: 16,
+              boxShadow: 'var(--wasel-shadow-md)',
             }}
           >
             {(
@@ -826,6 +880,7 @@ export default function MyTripsPage() {
               <button
                 key={key}
                 onClick={() => setTab(key)}
+                className="w-focus"
                 style={{
                   flex: 1,
                   padding: '9px 0',
@@ -837,7 +892,7 @@ export default function MyTripsPage() {
                   fontFamily: FONT,
                   fontSize: '0.82rem',
                   cursor: 'pointer',
-                  transition: 'all 0.14s',
+                  transition: 'all 0.14s ease',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -855,6 +910,7 @@ export default function MyTripsPage() {
               <button
                 key={filterOption.key}
                 onClick={() => setFilter(filterOption.key)}
+                className="w-focus"
                 style={{
                   padding: '6px 14px',
                   borderRadius: 999,
@@ -865,6 +921,7 @@ export default function MyTripsPage() {
                   border: `1px solid ${filter === filterOption.key ? CYAN : BORDER}`,
                   background: filter === filterOption.key ? tone(CYAN, 14) : 'transparent',
                   color: filter === filterOption.key ? CYAN : MUTED,
+                  transition: 'all 0.14s ease',
                 }}
               >
                 {filterOption.label}
@@ -874,11 +931,12 @@ export default function MyTripsPage() {
 
           {filtered.length === 0 ? (
             <div
+              className="w-focus"
               style={{
                 textAlign: 'center',
                 padding: '72px 0',
                 color: DIM,
-                background: CARD,
+                background: CARD_GRAD,
                 border: `1px solid ${BORDER}`,
                 borderRadius: 18,
               }}
@@ -895,6 +953,7 @@ export default function MyTripsPage() {
               </p>
               <button
                 onClick={() => nav(createPath)}
+                className="w-focus"
                 style={{
                   marginTop: 16,
                   padding: '10px 18px',
@@ -909,6 +968,15 @@ export default function MyTripsPage() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 8,
+                  transition: 'all 0.18s ease',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = 'var(--wasel-shadow-md)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               >
                 {tab === 'rides'

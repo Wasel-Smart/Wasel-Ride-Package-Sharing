@@ -38,7 +38,7 @@ export default function ProfilePage() {
             title={isArabic ? 'ملفي' : 'Profile'}
           >
             <div className="ds-stack">
-              <div className="ds-list-item">
+              <div className="ds-list-item w-hover">
                 <div className="ds-list-item__icon">
                   <UserRound size={16} />
                 </div>
@@ -81,21 +81,25 @@ export default function ProfilePage() {
           title={isArabic ? 'جاهزية الحساب' : 'Account readiness'}
         >
           <div className="ds-feature-grid">
-            <Card>
-              <h2 className="ds-card__title">{isArabic ? 'اكتمال الملف' : 'Profile completeness'}</h2>
+            <Card className="w-hover">
+              <h2 className="ds-card__title">
+                {isArabic ? 'اكتمال الملف' : 'Profile completeness'}
+              </h2>
               <p className="ds-section-title">{profileCompleteness}%</p>
               <p className="ds-copy ds-copy--tight">
-                {isArabic ? 'كلما زادت البيانات، زادت الثقة.' : 'A more complete account improves trust.'}
+                {isArabic
+                  ? 'كلما زادت البيانات، زادت الثقة.'
+                  : 'A more complete account improves trust.'}
               </p>
             </Card>
-            <Card>
+            <Card className="w-hover">
               <h2 className="ds-card__title">{isArabic ? 'المحفظة' : 'Wallet'}</h2>
               <p className="ds-section-title">{user.walletStatus ?? 'active'}</p>
               <p className="ds-copy ds-copy--tight">
                 {isArabic ? 'الرصيد والمدفوعات جاهزان.' : 'Balance and payments stay ready here.'}
               </p>
             </Card>
-            <Card>
+            <Card className="w-hover">
               <h2 className="ds-card__title">{isArabic ? 'الثقة' : 'Trust'}</h2>
               <p className="ds-section-title">{trustLabel}</p>
               <p className="ds-copy ds-copy--tight">
@@ -106,7 +110,7 @@ export default function ProfilePage() {
         </SectionWrapper>
 
         <div className="ds-feature-grid">
-          <Card>
+          <Card className="w-hover">
             <div className="ds-list-item__icon">
               <CreditCard size={16} />
             </div>
@@ -115,7 +119,7 @@ export default function ProfilePage() {
               Balance, payment state, and payout access stay on the same account.
             </p>
           </Card>
-          <Card>
+          <Card className="w-hover">
             <div className="ds-list-item__icon">
               <Shield size={16} />
             </div>
@@ -124,7 +128,7 @@ export default function ProfilePage() {
               Verified email, phone, and identity signals stay visible without clutter.
             </p>
           </Card>
-          <Card>
+          <Card className="w-hover">
             <div className="ds-list-item__icon">
               <CheckCircle2 size={16} />
             </div>

@@ -1,4 +1,3 @@
- 
 import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { Shield } from 'lucide-react';
@@ -10,10 +9,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { LANDING_RESPONSIVE_STYLES } from '../home/landingConstants';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
-import {
-  JORDAN_LOCATION_OPTIONS,
-  resolveJordanLocationCoord,
-} from '../../utils/jordanLocations';
+import { JORDAN_LOCATION_OPTIONS, resolveJordanLocationCoord } from '../../utils/jordanLocations';
 import { buildAuthPagePath, buildAuthReturnTo } from '../../utils/authFlow';
 import { getConfig } from '../../utils/env';
 
@@ -32,6 +28,7 @@ export const pill = (color: string) => ({
   fontSize: '0.68rem',
   fontWeight: 800,
   color,
+  transition: 'box-shadow 0.18s ease',
 });
 
 export const CITIES = JORDAN_LOCATION_OPTIONS;
@@ -40,21 +37,13 @@ export function resolveCityCoord(city: string) {
   return resolveJordanLocationCoord(city);
 }
 
-export function midpoint(
-  a: { lat: number; lng: number },
-  b: { lat: number; lng: number },
-) {
+export function midpoint(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   return { lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 };
 }
 
 export function Protected({ children }: { children: ReactNode }) {
   const { user: localUser, loading: localLoading } = useLocalAuth();
-  const {
-    user: authUser,
-    session,
-    loading: authLoading,
-    isBackendConnected,
-  } = useAuth();
+  const { user: authUser, session, loading: authLoading, isBackendConnected } = useAuth();
   const nav = useIframeSafeNavigate();
   const location = useLocation();
   const mountedRef = useRef(true);
@@ -92,9 +81,7 @@ export function Protected({ children }: { children: ReactNode }) {
           <div className="wasel-auth-guard__logo">
             <WaselLogo size={38} variant="full" showWordmark={false} />
           </div>
-          <div className="wasel-auth-guard__icon">
-            W
-          </div>
+          <div className="wasel-auth-guard__icon">W</div>
           <div className="wasel-auth-guard__title">Checking access</div>
           <div className="wasel-auth-guard__body">
             Loading your Wasel account and restoring your session.
@@ -144,17 +131,23 @@ export function PageShell({ children }: { children: ReactNode }) {
   const ar = language === 'ar';
 
   return (
-    <div className="wasel-page-shell-root" dir={ar ? 'rtl' : 'ltr'} style={{
-      minHeight: '100vh',
-      background: 'var(--wasel-shell-background)',
-      color: 'var(--wasel-copy-primary)',
-      fontFamily: DS.F,
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
+    <div
+      className="wasel-page-shell-root"
+      dir={ar ? 'rtl' : 'ltr'}
+      style={{
+        minHeight: '100vh',
+        background: 'var(--wasel-shell-background)',
+        color: 'var(--wasel-copy-primary)',
+        fontFamily: DS.F,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
       <style>{`${LANDING_RESPONSIVE_STYLES}
         :root { color-scheme: inherit; }
         .w-focus:focus-visible { outline: none; box-shadow: var(--wasel-focus-ring); }
+        .w-hover { transition: transform 0.18s ease, box-shadow 0.18s ease; }
+        .w-hover:hover { transform: translateY(-2px); }
         @media (max-width: 1140px) {
           .sp-2col,
           .sp-profile-hero,
@@ -222,12 +215,15 @@ export function PageShell({ children }: { children: ReactNode }) {
         }}
       />
 
-      <div className="sp-inner wasel-page-shell" style={{
-        position: 'relative',
-        maxWidth: 1380,
-        margin: '0 auto',
-        padding: '28px 20px 84px',
-      }}>
+      <div
+        className="sp-inner wasel-page-shell"
+        style={{
+          position: 'relative',
+          maxWidth: 1380,
+          margin: '0 auto',
+          padding: '28px 20px 84px',
+        }}
+      >
         <div className="wasel-page-shell__glow" aria-hidden="true" />
         <div className="sp-frame wasel-page-frame">
           <div className="wasel-page-frame__top-line" aria-hidden="true" />
@@ -262,19 +258,11 @@ export function SectionHead({
     <div className="sp-head wasel-section-head" style={toneStyle}>
       <div className="sp-head-inner wasel-section-head__inner">
         <div className="wasel-section-head__intro">
-          <div className="wasel-section-head__icon">
-            {emoji}
-          </div>
+          <div className="wasel-section-head__icon">{emoji}</div>
           <div>
-            <div className="wasel-section-head__eyebrow">
-              {ar ? 'صفحة واصل' : 'Wasel page'}
-            </div>
-            <h1 className="wasel-section-head__title">
-              {ar && titleAr ? titleAr : title}
-            </h1>
-            {sub ? (
-              <div className="wasel-section-head__sub">{sub}</div>
-            ) : null}
+            <div className="wasel-section-head__eyebrow">{ar ? 'صفحة واصل' : 'Wasel page'}</div>
+            <h1 className="wasel-section-head__title">{ar && titleAr ? titleAr : title}</h1>
+            {sub ? <div className="wasel-section-head__sub">{sub}</div> : null}
           </div>
         </div>
 
@@ -304,9 +292,7 @@ export function CoreExperienceBanner({
   return (
     <div className="sp-brief wasel-page-brief" style={toneStyle}>
       <div className="sp-brief-label wasel-page-brief__label">
-        <div className="wasel-micro-label">
-          {ar ? 'ملخص الصفحة' : 'Page brief'}
-        </div>
+        <div className="wasel-micro-label">{ar ? 'ملخص الصفحة' : 'Page brief'}</div>
         <div className="wasel-copy-subtle">
           {ar ? 'اجعل الخطوة التالية واضحة.' : 'Keep the next action obvious.'}
         </div>
@@ -353,16 +339,10 @@ export function ClarityBand({
       <div className="sp-clarity-grid wasel-clarity-grid">
         {items.map((item, index) => (
           <div key={item.label} className="wasel-clarity-item">
-            <div className="wasel-clarity-item__index">
-              {index + 1}
-            </div>
+            <div className="wasel-clarity-item__index">{index + 1}</div>
             <div>
-              <div className="wasel-clarity-item__label">
-                {item.label}
-              </div>
-              <div className="wasel-clarity-item__value">
-                {item.value}
-              </div>
+              <div className="wasel-clarity-item__label">{item.label}</div>
+              <div className="wasel-clarity-item__value">{item.value}</div>
             </div>
           </div>
         ))}
