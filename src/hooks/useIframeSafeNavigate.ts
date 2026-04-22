@@ -10,6 +10,8 @@ const APP_ROUTE_PREFIXES = [
   '/dashboard',
   '/home',
   '/find-ride',
+  '/create-ride',
+  '/new-ride',
   '/offer-ride',
   '/post-ride',
   '/my-trips',
@@ -40,16 +42,12 @@ const APP_ROUTE_PREFIXES = [
 ];
 
 function normalizePathname(pathname: string): string {
-  if (
-    !pathname.startsWith('/') ||
-    pathname.startsWith('/app') ||
-    pathname.startsWith('//')
-  ) {
+  if (!pathname.startsWith('/') || pathname.startsWith('/app') || pathname.startsWith('//')) {
     return pathname;
   }
 
   const shouldPrefix = APP_ROUTE_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    prefix => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 
   return shouldPrefix ? `/app${pathname}` : pathname;

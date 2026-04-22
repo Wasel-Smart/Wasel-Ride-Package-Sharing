@@ -31,6 +31,8 @@ import {
 type Accent = 'cyan' | 'green' | 'gold' | 'purple';
 type UnitType = 'ride' | 'package';
 type TabKey = 'signal' | 'math' | 'fleet' | 'recovery';
+type NodeId = (typeof NODES)[number]['id'];
+type RouteId = (typeof ROUTES)[number]['id'];
 
 const NODES = [
   { id: 'amman', name: 'Amman', subtitle: 'Core hub', x: 46, y: 33, accent: 'cyan', resilience: 0.92 },
@@ -78,6 +80,87 @@ const TABS: Record<TabKey, string> = {
   fleet: 'Fleet Logic',
   recovery: 'Recovery Mode',
 };
+
+const ACCESS_LAYER_PRODUCTS = [
+  { label: 'Rides', accent: DesignSystem.colors.accent.strong },
+  { label: 'Packages', accent: DesignSystem.colors.gold.base },
+  { label: 'Bus', accent: DesignSystem.colors.cyan.base },
+  { label: 'Wallet and recovery', accent: DesignSystem.colors.green.base },
+] as const;
+
+const ACCESS_LAYER_STATUS_PILLS = [
+  'One account live',
+  'Return path saved',
+  'Recovery ready',
+] as const;
+
+const ACCESS_LAYER_NODE_LAYOUT: Record<NodeId, { x: number; y: number; focus?: boolean }> = {
+  amman: { x: 694, y: 214, focus: true },
+  irbid: { x: 646, y: 118, focus: true },
+  zarqa: { x: 858, y: 152 },
+  madaba: { x: 612, y: 300 },
+  karak: { x: 556, y: 418 },
+  aqaba: { x: 392, y: 604 },
+};
+
+const ACCESS_LAYER_ROUTE_CURVES: Record<RouteId, { bend: number; lift: number }> = {
+  r1: { bend: -46, lift: -28 },
+  r2: { bend: 38, lift: -26 },
+  r3: { bend: 18, lift: -12 },
+  r4: { bend: -22, lift: 10 },
+  r5: { bend: 16, lift: 28 },
+  r6: { bend: -114, lift: -18 },
+  r7: { bend: 50, lift: -38 },
+};
+
+const ACCESS_LAYER_POLYGONS = [
+  '474,14 996,170 996,662 716,602 626,384 626,214',
+  '620,88 924,210 924,354 758,324 670,208',
+  '504,236 754,308 754,540 424,616 478,470',
+  '604,346 874,396 996,470 996,662 690,618 606,482',
+];
+
+function buildAccessLayerGeometry(route: Pick<(typeof ROUTES)[number], 'id' | 'from' | 'to'>) {
+  const from = ACCESS_LAYER_NODE_LAYOUT[route.from];
+  const to = ACCESS_LAYER_NODE_LAYOUT[route.to];
+  const curve = ACCESS_LAYER_ROUTE_CURVES[route.id];
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const distance = Math.max(Math.hypot(dx, dy), 1);
+  const normalX = -dy / distance;
+  const normalY = dx / distance;
+  const midX = (from.x + to.x) / 2;
+  const midY = (from.y + to.y) / 2;
+  const controlX = midX + (normalX * curve.bend);
+  const controlY = midY + (normalY * curve.bend) + curve.lift;
+
+  return {
+    from,
+    to,
+    control: { x: controlX, y: controlY },
+    path: `M ${from.x} ${from.y} Q ${controlX} ${controlY} ${to.x} ${to.y}`,
+  };
+}
+
+function pointOnQuadraticCurve(
+  from: { x: number; y: number },
+  control: { x: number; y: number },
+  to: { x: number; y: number },
+  t: number,
+) {
+  const clamped = clamp(t, 0, 1);
+  const inverse = 1 - clamped;
+  return {
+    x:
+      (inverse * inverse * from.x) +
+      (2 * inverse * clamped * control.x) +
+      (clamped * clamped * to.x),
+    y:
+      (inverse * inverse * from.y) +
+      (2 * inverse * clamped * control.y) +
+      (clamped * clamped * to.y),
+  };
+}
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));

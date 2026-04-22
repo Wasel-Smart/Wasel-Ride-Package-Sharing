@@ -48,7 +48,12 @@ function AppEntryRedirect() {
     );
   }
 
-  return <Navigate replace to={user ? '/app/find-ride' : buildAuthPagePath('signin', '/app/find-ride')} />;
+  return (
+    <Navigate
+      replace
+      to={user ? '/app/find-ride' : buildAuthPagePath('signin', '/app/find-ride')}
+    />
+  );
 }
 
 function RouteErrorBoundary() {
@@ -78,6 +83,7 @@ export const waselRouter = createBrowserRouter([
       { Component: WaselAuthCallback, path: 'auth/callback' },
       { Component: FindRidePage, path: 'find-ride' },
       { Component: OfferRidePage, path: 'offer-ride' },
+      { Component: () => <Navigate replace to="/app/offer-ride" />, path: 'create-ride' },
       { Component: TripsPage, path: 'my-trips' },
       { Component: PackagesPage, path: 'packages' },
       { Component: BusPage, path: 'bus' },
@@ -101,6 +107,7 @@ export const waselRouter = createBrowserRouter([
       { Component: () => <Navigate replace to="/app" />, path: 'dashboard' },
       { Component: () => <Navigate replace to="/app/find-ride" />, path: 'home' },
       { Component: () => <Navigate replace to="/app/offer-ride" />, path: 'post-ride' },
+      { Component: () => <Navigate replace to="/app/offer-ride" />, path: 'new-ride' },
       { Component: () => <Navigate replace to="/app/find-ride" />, path: 'routes' },
       { Component: () => <Navigate replace to="/app/packages" />, path: 'package-delivery' },
       { Component: NotFoundPage, path: '*' },
@@ -113,6 +120,14 @@ export const waselRouter = createBrowserRouter([
   {
     Component: () => <Navigate replace to="/app/analytics" />,
     path: '/analytics',
+  },
+  {
+    Component: () => <Navigate replace to="/app/offer-ride" />,
+    path: '/create-ride',
+  },
+  {
+    Component: () => <Navigate replace to="/app/offer-ride" />,
+    path: '/new-ride',
   },
   {
     Component: () => <Navigate replace to="/app/execution-os" />,
