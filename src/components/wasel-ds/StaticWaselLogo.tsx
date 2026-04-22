@@ -17,7 +17,7 @@ export function StaticWaselLogo({
   size = BRAND.logo.sizes.md,
   showWordmark = true,
   theme = 'light',
-  variant = 'full',
+  variant = 'compact',
   style,
   framed = false,
 }: StaticWaselLogoProps) {
@@ -26,7 +26,7 @@ export function StaticWaselLogo({
   if (!showWordmark) {
     return (
       <span style={{ display: 'inline-flex', ...style }}>
-        <ExactLogoMark framed={framed} glow={!framed && theme === 'dark'} size={value} />
+        <ExactLogoMark framed={framed} size={value} />
       </span>
     );
   }

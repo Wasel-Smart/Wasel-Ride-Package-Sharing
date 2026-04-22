@@ -45,6 +45,7 @@ import {
 } from '../../services/journeyLogistics';
 import { createConnectedRide } from '../../services/journeyLogistics';
 import { buildAuthPagePath, normalizeAuthReturnTo } from '../../utils/authFlow';
+import './LandingPage.css';
 
 type OverviewCard = {
   detail: string;
@@ -88,6 +89,8 @@ const RIDE_TYPE_OPTIONS = [
 ] as const;
 
 const LANDING_RETURN_TO = '/app/find-ride?from=Amman&to=Irbid&search=1';
+const LANDING_SUPPORT_PHONE = '+962790000000';
+const LANDING_SUPPORT_EMAIL = 'support@wasel.jo';
 
 const overviewConfigs: Record<string, OverviewConfig> = {
   analytics: {
@@ -317,12 +320,22 @@ function ProtectedPage({ children }: { children: ReactNode }) {
 
 function SupportActions() {
   return (
-    <div className="ds-support-actions">
-      <Button variant="ghost">
+    <div className="ds-support-actions landing-page__support-actions">
+      <Button
+        onClick={() => {
+          window.location.href = `tel:${LANDING_SUPPORT_PHONE}`;
+        }}
+        variant="secondary"
+      >
         <Phone size={16} />
         Call support
       </Button>
-      <Button variant="ghost">
+      <Button
+        onClick={() => {
+          window.location.href = `mailto:${LANDING_SUPPORT_EMAIL}`;
+        }}
+        variant="ghost"
+      >
         <Mail size={16} />
         Email us
       </Button>
@@ -399,10 +412,12 @@ function ActionCards({
 
 function MapHeroPanel({
   children,
+  className,
   mapVariant = 'ambient',
   signals = ['Ride flow live', 'Package lanes active', 'Mobility OS synced'],
 }: {
   children: ReactNode;
+  className?: string;
   mapVariant?: 'ambient' | 'full';
   signals?: string[];
 }) {
@@ -410,7 +425,7 @@ function MapHeroPanel({
   const ar = language === 'ar';
 
   return (
-    <Card className="ds-hero-panel">
+    <Card className={['ds-hero-panel', className].filter(Boolean).join(' ')}>
       <div aria-hidden="true" className="ds-hero-panel__media">
         <div className="ds-map-stage">
           <DeferredLandingMap ar={ar} eager variant={mapVariant} />
@@ -481,186 +496,275 @@ export function LandingPage() {
     {
       icon: <Search size={18} />,
       title: 'Start with the route',
-      detail: 'The first screen shows the corridor clearly before any booking choice takes over.',
+      detail:
+        'Lead with the corridor first so riders understand the trip before product choices appear.',
     },
     {
       icon: <Package size={18} />,
       title: 'One shared service language',
-      detail: 'Rides, packages, and bus all keep the same visual hierarchy and the same account.',
+      detail:
+        'Rides, packages, and bus all stay inside the same hierarchy, spacing, and account shell.',
     },
     {
       icon: <Shield size={18} />,
-      title: 'Support in the same shell',
+      title: 'Trust in the same shell',
       detail:
-        'Recovery, support, and next steps stay visible instead of feeling like separate products.',
+        'Support, sign-in, and recovery stay close to the route instead of becoming separate products.',
+    },
+  ];
+  const landingSummary = [
+    {
+      detail:
+        'Plan the corridor once, then move from discovery to action without losing visual context.',
+      title: 'Route-first entry',
+    },
+    {
+      detail:
+        'Use the same palette, surface depth, and control style across rides, packages, and support.',
+      title: 'One operating theme',
+    },
+  ];
+  const landingStats = [
+    { label: 'Core services', value: '4', detail: 'Rides, bus, packages, and wallet.' },
+    {
+      label: 'Mapped cities',
+      value: '12',
+      detail: 'North-to-south corridor context stays visible.',
+    },
+    {
+      label: 'Live support',
+      value: '24/7',
+      detail: 'Recovery and help stay close to the route.',
     },
   ];
   const landingSignals =
     mode === 'ride'
       ? ['Ride routes live', 'Seats and timings visible', 'Support one tap away']
       : ['Package lanes live', 'Shared corridor handoff', 'Support one tap away'];
+  const plannerSteps = [
+    { detail: 'Pick the corridor you want to move through.', label: 'Select route' },
+    {
+      detail: mode === 'ride' ? 'Choose timing and compare seats.' : 'Choose timing and handoff.',
+      label: 'Set timing',
+    },
+    { detail: 'Continue into the main flow with the same layout.', label: 'Open flow' },
+  ];
 
   return (
     <LayoutContainer width="wide">
-      <main className="ds-page" role="main">
-        <header className="ds-shell-header__inner">
-          <button className="ds-shell-header__brand" onClick={() => navigate('/')} type="button">
-            <BrandLockup showTagline size="lg" surface="dark" tagline="LIVE MOBILITY NETWORK" />
-          </button>
-          <div className="ds-shell-header__actions">
-            <SupportActions />
+      <main className="ds-page landing-page" role="main">
+        <header className="ds-shell-header__inner landing-page__topbar">
+          <div className="landing-page__brand-block">
+            <button
+              className="ds-shell-header__brand landing-page__brand"
+              onClick={() => navigate('/')}
+              type="button"
+            >
+              <BrandLockup showTagline size="lg" surface="light" tagline="LIVE MOBILITY NETWORK" />
+            </button>
+            <div className="landing-page__status-pill">
+              <span aria-hidden="true" className="landing-page__status-dot" />
+              Jordan corridor live
+            </div>
+          </div>
+          <div className="ds-shell-header__actions landing-page__topbar-actions">
+            <div className="landing-page__status-copy">
+              One route system for rides, packages, and support.
+            </div>
             {!user ? (
               <Button onClick={() => navigate(buildAuthPagePath('signin', '/app/find-ride'))}>
                 Sign in
               </Button>
             ) : null}
+            {!user ? (
+              <Button
+                onClick={() => navigate(buildAuthPagePath('signup', '/app/find-ride'))}
+                variant="secondary"
+              >
+                Create account
+              </Button>
+            ) : null}
+            <SupportActions />
           </div>
         </header>
 
-        <section className="ds-landing-grid">
-          <div className="ds-stack ds-hero-stack">
-            <div className="ds-eyebrow">
-              <Sparkles size={14} />
-              Jordan mobility network
-            </div>
-            <h1 className="ds-title ds-title--landing">
-              One clear Wasel route layer for every move.
-            </h1>
-            <p className="ds-copy">
-              Start with the map, then open rides, packages, buses, or support without changing the
-              product language. Wasel keeps the corridor readable from the first glance.
-            </p>
-            <BrandPillRow items={landingHighlights} />
-            <HeroFeatureGrid items={landingFeatures} />
-            <HeroStats
-              items={[
-                { label: 'Core services', value: '4', detail: 'Rides, bus, packages, and wallet.' },
-                {
-                  label: 'Mapped cities',
-                  value: '12',
-                  detail: 'North-to-south corridor context stays visible.',
-                },
-                {
-                  label: 'Live support',
-                  value: '24/7',
-                  detail: 'Recovery and help stay close to the route.',
-                },
-              ]}
-            />
-          </div>
-
-          <MapHeroPanel mapVariant="ambient" signals={landingSignals}>
-            <div className="ds-hero-panel__intro">
-              <div className="ds-panel-kicker">Live route planner</div>
-              <h2 className="ds-section-title">Choose one corridor and open the right flow.</h2>
-              <p className="ds-copy ds-copy--tight">
-                Rides and packages share the same Wasel layout, so the planner feels familiar before
-                and after sign-in.
+        <section className="ds-landing-grid landing-page__hero">
+          <Card className="landing-page__hero-copy-card">
+            <div className="landing-page__hero-intro">
+              <div className="ds-eyebrow landing-page__hero-eyebrow">
+                <Sparkles size={14} />
+                Jordan mobility network
+              </div>
+              <h1 className="ds-title ds-title--landing landing-page__title">
+                Start with one clear corridor for every Wasel move.
+              </h1>
+              <p className="ds-copy landing-page__hero-copy">
+                Start from the live route layer, then move into rides, packages, or buses without
+                changing the page language.
               </p>
             </div>
-            <Tabs
-              items={
-                [
-                  {
-                    content: (
-                      <p className="ds-copy ds-copy--tight">
-                        Choose a corridor, then open the live ride flow.
-                      </p>
-                    ),
-                    label: 'Rides',
-                    value: 'ride',
-                  },
-                  {
-                    content: (
-                      <p className="ds-copy ds-copy--tight">
-                        Start from the same corridor, then open the package flow.
-                      </p>
-                    ),
-                    label: 'Packages',
-                    value: 'package',
-                  },
-                ] satisfies TabItem<'ride' | 'package'>[]
-              }
-              label="Services"
-              onChange={setMode}
-              value={mode}
-            />
 
-            <div className="ds-step-rail">
-              {[
-                { detail: 'Choose the corridor.', label: 'Select route' },
-                {
-                  detail: mode === 'ride' ? 'Pick timing.' : 'Keep the parcel simple.',
-                  label: 'Set timing',
-                },
-                { detail: 'Open the main flow.', label: 'Move now' },
-              ].map((step, index) => (
-                <div className="ds-step-rail__item" data-active={index === 0} key={step.label}>
-                  <span className="ds-step-rail__index">{index + 1}</span>
-                  <div>
-                    <strong>{step.label}</strong>
-                    <div className="ds-caption">{step.detail}</div>
-                  </div>
+            <div className="landing-page__hero-actions">
+              <Button onClick={() => navigate(primaryActionPath)}>Plan this corridor</Button>
+              <Button onClick={() => navigate('/app/mobility-os')} variant="secondary">
+                Open Mobility OS
+              </Button>
+            </div>
+
+            <BrandPillRow items={landingHighlights} />
+
+            <div className="landing-page__summary-grid">
+              {landingSummary.map(item => (
+                <div className="landing-page__summary-card" key={item.title}>
+                  <div className="landing-page__summary-label">{item.title}</div>
+                  <p className="landing-page__summary-detail">{item.detail}</p>
                 </div>
               ))}
             </div>
+          </Card>
 
-            <div className="ds-form-grid">
-              <Select
-                label="Leaving from"
-                onChange={event => setRoute(current => ({ ...current, from: event.target.value }))}
-                options={CITY_OPTIONS.map(city => ({ label: city.label, value: city.value }))}
-                value={route.from}
-              />
-              <Select
-                label="Going to"
-                onChange={event => setRoute(current => ({ ...current, to: event.target.value }))}
-                options={CITY_OPTIONS.map(city => ({ label: city.label, value: city.value }))}
-                value={route.to}
-              />
-              <Input
-                label="When"
-                onChange={event => setRoute(current => ({ ...current, date: event.target.value }))}
-                type="date"
-                value={route.date}
-              />
+          <MapHeroPanel
+            className="landing-page__planner-shell"
+            mapVariant="ambient"
+            signals={landingSignals}
+          >
+            <div className="landing-page__planner-head">
+              <div className="ds-panel-kicker">Live route planner</div>
+              <h2 className="ds-section-title landing-page__planner-title">
+                Choose one corridor and keep every next step familiar.
+              </h2>
+              <p className="ds-copy ds-copy--tight">
+                The planner, sign-in entry, and support actions now use the same surface language,
+                so the landing page reads like one product instead of stacked fragments.
+              </p>
             </div>
 
-            <div className="ds-minor-actions">
-              <Button fullWidth onClick={() => navigate(primaryActionPath)}>
-                {primaryActionLabel}
-              </Button>
-              <Button fullWidth onClick={() => navigate('/app/offer-ride')} variant="secondary">
-                Offer your ride
-              </Button>
-            </div>
+            <div className="landing-page__planner-surface">
+              <div className="landing-page__planner-brief">
+                <span className="ds-badge" data-tone="accent">
+                  Shared route language
+                </span>
+                <p className="ds-caption landing-page__planner-brief-copy">
+                  Rides and packages start from the same corridor shell, then branch only when the
+                  user needs a service-specific action.
+                </p>
+              </div>
 
-            {!user ? (
-              <div className="ds-social-grid">
-                <Button
-                  fullWidth
-                  onClick={() => void signInWithGoogle(LANDING_RETURN_TO)}
-                  variant="secondary"
-                >
-                  Continue with Google
+              <Tabs
+                items={
+                  [
+                    {
+                      content: (
+                        <p className="landing-page__tab-copy">
+                          Compare route, timing, and seat availability from one consistent Wasel
+                          planner.
+                        </p>
+                      ),
+                      label: 'Rides',
+                      value: 'ride',
+                    },
+                    {
+                      content: (
+                        <p className="landing-page__tab-copy">
+                          Start from the same corridor and continue into a lighter package handoff
+                          flow.
+                        </p>
+                      ),
+                      label: 'Packages',
+                      value: 'package',
+                    },
+                  ] satisfies TabItem<'ride' | 'package'>[]
+                }
+                label="Services"
+                onChange={setMode}
+                value={mode}
+              />
+
+              <div className="ds-step-rail landing-page__step-rail">
+                {plannerSteps.map((step, index) => (
+                  <div className="ds-step-rail__item" data-active={index === 0} key={step.label}>
+                    <span className="ds-step-rail__index">{index + 1}</span>
+                    <div>
+                      <strong>{step.label}</strong>
+                      <div className="ds-caption">{step.detail}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="ds-form-grid landing-page__planner-form">
+                <Select
+                  label="Leaving from"
+                  onChange={event =>
+                    setRoute(current => ({ ...current, from: event.target.value }))
+                  }
+                  options={CITY_OPTIONS.map(city => ({ label: city.label, value: city.value }))}
+                  value={route.from}
+                />
+                <Select
+                  label="Going to"
+                  onChange={event => setRoute(current => ({ ...current, to: event.target.value }))}
+                  options={CITY_OPTIONS.map(city => ({ label: city.label, value: city.value }))}
+                  value={route.to}
+                />
+                <Input
+                  label="When"
+                  onChange={event =>
+                    setRoute(current => ({ ...current, date: event.target.value }))
+                  }
+                  type="date"
+                  value={route.date}
+                />
+              </div>
+
+              <div className="landing-page__planner-actions">
+                <Button fullWidth onClick={() => navigate(primaryActionPath)}>
+                  {primaryActionLabel}
                 </Button>
-                <Button
-                  fullWidth
-                  onClick={() => void signInWithFacebook(LANDING_RETURN_TO)}
-                  variant="secondary"
-                >
-                  Continue with Facebook
-                </Button>
-                <Button fullWidth onClick={() => navigate(emailPath)} variant="ghost">
-                  Continue with email
+                <Button fullWidth onClick={() => navigate('/app/offer-ride')} variant="secondary">
+                  Offer your ride
                 </Button>
               </div>
-            ) : null}
+
+              {!user ? (
+                <div className="landing-page__planner-auth">
+                  <div className="landing-page__planner-auth-copy">
+                    Continue with your account to keep support, route history, and payment context
+                    in one place.
+                  </div>
+                  <div className="ds-social-grid landing-page__social-grid">
+                    <Button
+                      fullWidth
+                      onClick={() => void signInWithGoogle(LANDING_RETURN_TO)}
+                      variant="secondary"
+                    >
+                      Continue with Google
+                    </Button>
+                    <Button
+                      fullWidth
+                      onClick={() => void signInWithFacebook(LANDING_RETURN_TO)}
+                      variant="secondary"
+                    >
+                      Continue with Facebook
+                    </Button>
+                    <Button fullWidth onClick={() => navigate(emailPath)} variant="ghost">
+                      Continue with email
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </MapHeroPanel>
         </section>
 
+        <section className="landing-page__proof" aria-label="Landing page proof points">
+          <HeroFeatureGrid items={landingFeatures} />
+          <HeroStats items={landingStats} />
+        </section>
+
         <SectionWrapper
-          description="Three simple ways to understand Wasel in a few seconds."
+          className="landing-page__section"
+          description="Three direct entry points that reuse the same corridor and action language."
           eyebrow={
             <>
               <Sparkles size={14} />
@@ -695,6 +799,7 @@ export function LandingPage() {
         </SectionWrapper>
 
         <SectionWrapper
+          className="landing-page__section"
           description="Bus services and Mobility OS stay visible as first-class Wasel surfaces."
           eyebrow={
             <>
