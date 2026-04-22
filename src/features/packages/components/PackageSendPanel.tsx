@@ -253,11 +253,12 @@ export function PackageSendPanel({
           </div>
           {(selectedSignal || corridorPlan || selectedPriceQuote) && (
             <div
+              className="pkg-send-signal-grid"
               style={{
                 marginTop: 12,
                 display: 'grid',
                 gap: 10,
-                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
               }}
             >
               <div style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card3 }}>

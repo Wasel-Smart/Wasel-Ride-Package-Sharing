@@ -71,7 +71,15 @@ export function PackageTrackPanel({
               ? `Assigned to ${trackedPackage.matchedDriver} on a connected route from ${trackedPackage.from} to ${trackedPackage.to}.`
               : `Still searching for a posted ride from ${trackedPackage.from} to ${trackedPackage.to}.`}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginBottom: 16 }}>
+          <div
+            className="pkg-track-proof-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+              gap: 10,
+              marginBottom: 16,
+            }}
+          >
             {[
               {
                 label: 'OTP shared',
@@ -107,7 +115,15 @@ export function PackageTrackPanel({
               </div>
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginBottom: 16 }}>
+          <div
+            className="pkg-track-meta-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+              gap: 10,
+              marginBottom: 16,
+            }}
+          >
             {[{ label: 'Route', value: `${trackedPackage.from} to ${trackedPackage.to}` }, { label: 'Weight', value: trackedPackage.weight }, { label: 'Mode', value: trackedPackage.packageType === 'return' ? 'Return' : 'Delivery' }].map((item) => (
               <div key={item.label} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card3 }}>
                 <div style={{ color: DS.muted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
