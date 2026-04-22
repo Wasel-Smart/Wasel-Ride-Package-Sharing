@@ -3,18 +3,8 @@
  *
  * Sign-in / Sign-up page. Handles email/password flows and
  * social OAuth (Google, Facebook) via AuthContext.
- *
- * Responsibilities:
- *  - Collect credentials and delegate to localAuth.signIn / localAuth.register
- *  - Initiate OAuth redirects via authContext.signInWithGoogle / signInWithFacebook
- *  - Redirect to `returnTo` once a session is established
- *  - Sync URL search params with active tab so deep-links work
- *
- * NOT responsible for:
- *  - Session management (handled by LocalAuth / AuthContext)
- *  - Route protection (handled by ProtectedPage)
  */
-import { type FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { Bus, Package, Search, Shield } from 'lucide-react';
 import {
@@ -30,6 +20,12 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useLocalAuth } from '../../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../../hooks/useIframeSafeNavigate';
 import { normalizeAuthReturnTo } from '../../../utils/authFlow';
+import {
+  normalizeEmailInput,
+  validateFullName,
+  validatePassword,
+} from '../../../utils/authHelpers';
+import { validateEmail, validatePhone } from '../../../utils/security';
 import { BrandPillRow, MapHeroPanel } from './SharedPageComponents';
 import type { BrandPillItem } from './pageTypes';
 
@@ -40,18 +36,46 @@ export function AuthPage() {
   const returnTo = normalizeAuthReturnTo(params.get('returnTo'), '/app/find-ride');
 
   const navigate = useIframeSafeNavigate();
-  const { signIn, register } = useLocalAuth();
+  const { signIn, register, user } = useLocalAuth();
   const { resetPassword, signInWithFacebook, signInWithGoogle } = useAuth();
-  const { user } = useLocalAuth();
 
   const [tab, setTab] = useState<'signin' | 'signup'>(initialTab);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState<'none' | 'google' | 'facebook' | 'submit' | 'reset'>('none');
+
+  const normalizedEmail = useMemo(() => normalizeEmailInput(email), [email]);
+  const nameError = tab === 'signup' && name.trim() ? validateFullName(name) ?? '' : '';
+  const emailError =
+    normalizedEmail && !validateEmail(normalizedEmail) ? 'Enter a valid email address.' : '';
+  const passwordError =
+    password && (tab === 'signup' || password.length > 0) ? validatePassword(password) ?? '' : '';
+  const confirmPasswordError =
+    tab === 'signup' && confirmPassword && confirmPassword !== password
+      ? 'Passwords do not match.'
+      : '';
+  const phoneError =
+    tab === 'signup' && phone.trim() && !validatePhone(phone.trim())
+      ? 'Enter a valid phone number in international format, for example +962791234567.'
+      : '';
+
+  const isSubmitDisabled =
+    busy !== 'none' ||
+    !normalizedEmail ||
+    !password ||
+    Boolean(emailError) ||
+    (tab === 'signup' &&
+      (!name.trim() ||
+        !confirmPassword ||
+        Boolean(nameError) ||
+        Boolean(passwordError) ||
+        Boolean(confirmPasswordError) ||
+        Boolean(phoneError)));
 
   const authHighlights: BrandPillItem[] = [
     { icon: <Search size={14} />, label: 'Rides' },
@@ -61,12 +85,10 @@ export function AuthPage() {
   ];
   const authSignals = ['One account live', 'Return path saved', 'Recovery ready'];
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (user) navigate(returnTo);
   }, [navigate, returnTo, user]);
 
-  // Keep tab + returnTo in sync with URL params
   useEffect(() => {
     const next = new URLSearchParams(params);
     next.set('tab', tab);
@@ -81,40 +103,83 @@ export function AuthPage() {
     setError('');
     setNotice('');
 
-    if (!email.trim()) { setError('Please enter your email address.'); return; }
-    if (!password.trim()) { setError('Please enter your password.'); return; }
+    if (!normalizedEmail) {
+      setError('Please enter your email address.');
+      return;
+    }
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+    if (!password.trim()) {
+      setError('Please enter your password.');
+      return;
+    }
 
     setBusy('submit');
 
     if (tab === 'signin') {
-      const result = await signIn(email.trim(), password);
+      const result = await signIn(normalizedEmail, password);
       setBusy('none');
-      if (result.error) { setError(result.error); return; }
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
       navigate(returnTo);
       return;
     }
 
-    // signup
-    if (!name.trim()) { setBusy('none'); setError('Please enter your name.'); return; }
-    const result = await register(name.trim(), email.trim(), password, phone.trim() || undefined);
+    if (!name.trim()) {
+      setBusy('none');
+      setError('Please enter your name.');
+      return;
+    }
+    if (nameError || passwordError || confirmPasswordError || phoneError) {
+      setBusy('none');
+      setError(nameError || passwordError || confirmPasswordError || phoneError);
+      return;
+    }
+    if (!confirmPassword) {
+      setBusy('none');
+      setError('Please confirm your password.');
+      return;
+    }
+
+    const result = await register(
+      name.trim(),
+      normalizedEmail,
+      password,
+      phone.trim() || undefined,
+    );
     setBusy('none');
-    if (result.error) { setError(result.error); return; }
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
     if (result.requiresEmailConfirmation) {
-      setNotice(`Check ${result.email ?? email} for a confirmation link.`);
+      setNotice(`Check ${result.email ?? normalizedEmail} for a confirmation link.`);
       return;
     }
     navigate(returnTo);
   };
 
   const handleReset = async () => {
-    if (!email.trim()) { setError('Enter your email address first.'); return; }
+    if (!normalizedEmail) {
+      setError('Enter your email address first.');
+      return;
+    }
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+
     setBusy('reset');
-    const result = await resetPassword(email.trim());
+    const result = await resetPassword(normalizedEmail);
     setBusy('none');
     if (result.error) {
       setError(result.error instanceof Error ? result.error.message : String(result.error));
     } else {
-      setNotice(`Recovery link sent to ${email}.`);
+      setNotice(`Recovery link sent to ${normalizedEmail}.`);
     }
   };
 
@@ -158,6 +223,7 @@ export function AuthPage() {
             <form className="ds-stack" onSubmit={event => void handleSubmit(event)}>
               {tab === 'signup' && (
                 <Input
+                  error={name.trim() ? nameError || undefined : undefined}
                   label="Full name"
                   onChange={e => setName(e.target.value)}
                   placeholder="Your full name"
@@ -166,6 +232,7 @@ export function AuthPage() {
               )}
 
               <Input
+                error={email.trim() ? emailError || undefined : undefined}
                 label="Email"
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@example.com"
@@ -174,6 +241,12 @@ export function AuthPage() {
               />
 
               <Input
+                error={password ? passwordError || undefined : undefined}
+                hint={
+                  tab === 'signup'
+                    ? 'Use at least 8 characters with uppercase, lowercase, a number, and a symbol.'
+                    : undefined
+                }
                 label="Password"
                 onChange={e => setPassword(e.target.value)}
                 placeholder={tab === 'signup' ? 'Create a strong password' : 'Your password'}
@@ -182,13 +255,26 @@ export function AuthPage() {
               />
 
               {tab === 'signup' && (
-                <Input
-                  label="Phone (optional)"
-                  onChange={e => setPhone(e.target.value)}
-                  placeholder="+962791234567"
-                  type="tel"
-                  value={phone}
-                />
+                <>
+                  <Input
+                    error={confirmPassword ? confirmPasswordError || undefined : undefined}
+                    label="Confirm password"
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat your password"
+                    type="password"
+                    value={confirmPassword}
+                  />
+
+                  <Input
+                    error={phone.trim() ? phoneError || undefined : undefined}
+                    hint="Optional, but required for SMS notifications and support."
+                    label="Phone (optional)"
+                    onChange={e => setPhone(e.target.value)}
+                    placeholder="+962791234567"
+                    type="tel"
+                    value={phone}
+                  />
+                </>
               )}
 
               {error ? (
@@ -199,9 +285,9 @@ export function AuthPage() {
                 <div className="ds-inline-feedback" data-tone="success">{notice}</div>
               ) : null}
 
-              <Button disabled={busy !== 'none'} fullWidth type="submit">
+              <Button disabled={isSubmitDisabled} fullWidth type="submit">
                 {busy === 'submit'
-                  ? 'Please wait…'
+                  ? 'Please wait...'
                   : tab === 'signin'
                     ? 'Sign in'
                     : 'Create account'}
@@ -214,7 +300,7 @@ export function AuthPage() {
                   type="button"
                   variant="ghost"
                 >
-                  {busy === 'reset' ? 'Sending…' : 'Forgot password?'}
+                  {busy === 'reset' ? 'Sending...' : 'Forgot password?'}
                 </Button>
               )}
             </form>
@@ -231,7 +317,7 @@ export function AuthPage() {
                 }}
                 variant="secondary"
               >
-                {busy === 'google' ? 'Redirecting…' : 'Google'}
+                {busy === 'google' ? 'Redirecting...' : 'Google'}
               </Button>
               <Button
                 disabled={busy !== 'none'}
@@ -242,7 +328,7 @@ export function AuthPage() {
                 }}
                 variant="secondary"
               >
-                {busy === 'facebook' ? 'Redirecting…' : 'Facebook'}
+                {busy === 'facebook' ? 'Redirecting...' : 'Facebook'}
               </Button>
             </div>
 
