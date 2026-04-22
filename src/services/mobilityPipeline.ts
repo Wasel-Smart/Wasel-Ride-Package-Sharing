@@ -14,6 +14,12 @@ const REFRESH_MS = 15_000;
 const MATCH_THRESHOLD = 52;
 const MIN_VIABLE_SCORE = 40;
 const MAX_MODELED_CORRIDORS = 4;
+const MAX_STAGE_ITEMS = 3;
+
+export const MOBILITY_PIPELINE_THRESHOLDS = {
+  viableCandidateScore: MIN_VIABLE_SCORE,
+  dispatchMatchScore: MATCH_THRESHOLD,
+} as const;
 
 export type MobilityDemandKind = 'passenger' | 'package';
 export type MobilityDemandStatus = 'pending' | 'assigned' | 'completed';
@@ -121,6 +127,24 @@ export interface MobilityPipelineStageSummary {
   summary: string;
 }
 
+export type MobilityPipelineStageTone = 'neutral' | 'positive' | 'attention';
+
+export interface MobilityPipelineStageItem {
+  id: string;
+  title: string;
+  detail: string;
+  metric: string;
+  tone: MobilityPipelineStageTone;
+}
+
+export interface MobilityPipelineStageDrilldown {
+  id: MobilityStageId;
+  label: string;
+  headline: string;
+  explanation: string;
+  items: MobilityPipelineStageItem[];
+}
+
 export interface MobilityPipelineMetrics {
   totalDemand: number;
   pendingDemand: number;
@@ -137,6 +161,7 @@ export interface MobilityPipelineMetrics {
 export interface MobilityPipelineSnapshot {
   updatedAt: string;
   source: MobilityPipelineSource;
+  thresholds: typeof MOBILITY_PIPELINE_THRESHOLDS;
   demand: MobilityDemandRecord[];
   vehicles: MobilityVehicleRecord[];
   scoredCandidates: MobilityVehicleCandidate[];
@@ -144,6 +169,7 @@ export interface MobilityPipelineSnapshot {
   assignments: MobilityAssignment[];
   rebalancing: MobilityRebalancingAction[];
   stages: MobilityPipelineStageSummary[];
+  stageDrilldowns: MobilityPipelineStageDrilldown[];
   metrics: MobilityPipelineMetrics;
   featuredCorridors: LiveCorridorSignal[];
 }
@@ -618,6 +644,10 @@ function buildCandidateLedger(vehicles: MobilityVehicleRecord[]) {
   );
 }
 
+function hasDispatchableCapacity(vehicle: MobilityVehicleRecord) {
+  return vehicle.availablePassengerSeats > 0 || vehicle.availablePackageUnits > 0;
+}
+
 export function selectBestMatches(
   demand: MobilityDemandRecord[],
   vehicles: MobilityVehicleRecord[],
@@ -711,6 +741,165 @@ function buildAssignments(
   });
 
   return [...liveAssignments, ...plannedAssignments];
+}
+
+function formatDemandUnits(demand: MobilityDemandRecord) {
+  if (demand.kind === 'package') {
+    return `${demand.units} parcel unit${demand.units === 1 ? '' : 's'}`;
+  }
+
+  return `${demand.units} seat${demand.units === 1 ? '' : 's'}`;
+}
+
+function formatVehicleCapacity(vehicle: MobilityVehicleRecord) {
+  return `${vehicle.availablePassengerSeats} seats / ${vehicle.availablePackageUnits} parcel units`;
+}
+
+function formatAssignmentStatus(assignment: MobilityAssignment) {
+  if (assignment.status === 'in_trip') {
+    return 'IN TRIP';
+  }
+
+  if (assignment.status === 'active') {
+    return 'LIVE';
+  }
+
+  return 'PLANNED';
+}
+
+function buildStageDrilldowns(args: {
+  demand: MobilityDemandRecord[];
+  vehicles: MobilityVehicleRecord[];
+  scoredCandidates: MobilityVehicleCandidate[];
+  matches: MobilityMatch[];
+  assignments: MobilityAssignment[];
+  rebalancing: MobilityRebalancingAction[];
+}): MobilityPipelineStageDrilldown[] {
+  const demandById = new Map(args.demand.map(item => [item.id, item]));
+  const vehicleById = new Map(args.vehicles.map(vehicle => [vehicle.id, vehicle]));
+  const pendingDemand = args.demand
+    .filter(item => item.status === 'pending')
+    .sort((left, right) => {
+      const scoreDelta = right.forecastDemandScore - left.forecastDemandScore;
+      if (scoreDelta !== 0) {return scoreDelta;}
+      return new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime();
+    });
+  const dispatchableVehicles = args.vehicles
+    .filter(hasDispatchableCapacity)
+    .sort((left, right) => {
+      const rightCapacity =
+        right.availablePassengerSeats + right.availablePackageUnits;
+      const leftCapacity =
+        left.availablePassengerSeats + left.availablePackageUnits;
+      const capacityDelta = rightCapacity - leftCapacity;
+      if (capacityDelta !== 0) {return capacityDelta;}
+      return left.utilizationPercent - right.utilizationPercent;
+    });
+  const viableCandidates = args.scoredCandidates
+    .filter(candidate => candidate.score >= MIN_VIABLE_SCORE)
+    .sort((left, right) => right.score - left.score);
+  const matchedDemandIds = new Set(args.matches.map(match => match.demandId));
+  const unmatchedPending = pendingDemand.filter(item => !matchedDemandIds.has(item.id));
+  const liveAssignments = args.assignments.filter(assignment => assignment.source === 'live').length;
+  const plannedAssignments = args.assignments.length - liveAssignments;
+
+  return [
+    {
+      id: 'demand',
+      label: 'Demand',
+      headline: `${pendingDemand.length} open requests are entering the dispatch pipeline.`,
+      explanation:
+        unmatchedPending.length > 0
+          ? `${unmatchedPending.length} requests are still waiting for a vehicle with enough route fit and capacity.`
+          : 'Every open request already has enough supply pressure behind it to keep the pipeline moving.',
+      items: pendingDemand.slice(0, MAX_STAGE_ITEMS).map(item => ({
+        id: item.id,
+        title: `${item.from.label} -> ${item.to.label}`,
+        detail: `${item.kind === 'package' ? 'Package' : 'Passenger'} demand / ${formatDemandUnits(item)} / ${item.pricePressure} price pressure`,
+        metric: `${item.forecastDemandScore}`,
+        tone: item.pricePressure === 'surging' ? 'attention' : 'neutral',
+      })),
+    },
+    {
+      id: 'candidate-vehicles',
+      label: 'Candidate Vehicles',
+      headline: `${dispatchableVehicles.length} vehicles still have usable seat or parcel capacity.`,
+      explanation: `${args.vehicles.filter(vehicle => vehicle.state === 'idle').length} idle vehicles and ${args.vehicles.filter(vehicle => vehicle.state !== 'idle' && hasDispatchableCapacity(vehicle)).length} moving vehicles can still absorb work.`,
+      items: dispatchableVehicles.slice(0, MAX_STAGE_ITEMS).map(vehicle => ({
+        id: vehicle.id,
+        title: `${vehicle.from.label} -> ${vehicle.to.label}`,
+        detail: `${vehicle.state} / ${formatVehicleCapacity(vehicle)} / ${vehicle.source}`,
+        metric: `${vehicle.availablePassengerSeats + vehicle.availablePackageUnits} open`,
+        tone: vehicle.state === 'idle' ? 'positive' : 'neutral',
+      })),
+    },
+    {
+      id: 'scoring',
+      label: 'Scoring',
+      headline: `${viableCandidates.length} demand-vehicle pairs clear the ${MIN_VIABLE_SCORE}+ viable score band.`,
+      explanation: `${args.scoredCandidates.filter(candidate => candidate.score >= MATCH_THRESHOLD).length} pairs already clear the ${MATCH_THRESHOLD}+ dispatch threshold.`,
+      items: viableCandidates.slice(0, MAX_STAGE_ITEMS).map(candidate => {
+        const demand = demandById.get(candidate.demandId);
+        const vehicle = vehicleById.get(candidate.vehicleId);
+        return {
+          id: `${candidate.demandId}-${candidate.vehicleId}`,
+          title: `${demand?.from.label ?? 'Origin'} -> ${demand?.to.label ?? 'Destination'}`,
+          detail: `${vehicle?.from.label ?? 'Vehicle'} -> ${vehicle?.to.label ?? 'Route'} / ${candidate.rationale.slice(0, 2).join(' ')}`,
+          metric: `${candidate.score}`,
+          tone: candidate.score >= MATCH_THRESHOLD ? 'positive' : 'neutral',
+        } satisfies MobilityPipelineStageItem;
+      }),
+    },
+    {
+      id: 'matching',
+      label: 'Matching',
+      headline: `${args.matches.length} requests clear dispatch right now.`,
+      explanation:
+        unmatchedPending.length > 0
+          ? `${unmatchedPending.length} pending requests still need a better corridor fit, more capacity, or less congestion.`
+          : 'All open requests currently have a dispatch-ready match candidate.',
+      items: args.matches.slice(0, MAX_STAGE_ITEMS).map(match => {
+        const demand = demandById.get(match.demandId);
+        const vehicle = vehicleById.get(match.vehicleId);
+        return {
+          id: `${match.demandId}-${match.vehicleId}`,
+          title: `${demand?.from.label ?? 'Origin'} -> ${demand?.to.label ?? 'Destination'}`,
+          detail: `${match.confidence} confidence on ${vehicle?.from.label ?? 'route'} -> ${vehicle?.to.label ?? 'route'}`,
+          metric: `${match.score}`,
+          tone: match.confidence === 'high' ? 'positive' : match.confidence === 'low' ? 'attention' : 'neutral',
+        } satisfies MobilityPipelineStageItem;
+      }),
+    },
+    {
+      id: 'assignment',
+      label: 'Assignment',
+      headline: `${args.assignments.length} live or planned assignments are visible to operators.`,
+      explanation: `${liveAssignments} live assignments and ${plannedAssignments} planned dispatches are sitting in the same operating stack.`,
+      items: args.assignments.slice(0, MAX_STAGE_ITEMS).map(assignment => ({
+        id: assignment.id,
+        title: assignment.summary,
+        detail: `Demand ${assignment.demandId} / vehicle ${assignment.vehicleId} / ${assignment.source}`,
+        metric: formatAssignmentStatus(assignment),
+        tone: assignment.status === 'planned' ? 'neutral' : 'positive',
+      })),
+    },
+    {
+      id: 'rebalancing',
+      label: 'Rebalancing',
+      headline: `${args.rebalancing.length} idle vehicles should shift toward pressure corridors.`,
+      explanation:
+        args.rebalancing.length > 0
+          ? 'Mobility OS is pushing standby supply toward corridors where unmatched demand is starting to stack.'
+          : 'Idle supply is already close enough to demand, so the system can stay put for this cycle.',
+      items: args.rebalancing.slice(0, MAX_STAGE_ITEMS).map(action => ({
+        id: `${action.vehicleId}-${action.corridorId}`,
+        title: `${action.from} -> ${action.to}`,
+        detail: `Vehicle ${action.vehicleId} / ${action.reason}`,
+        metric: `${action.score}`,
+        tone: 'attention',
+      })),
+    },
+  ];
 }
 
 export function buildRebalancingActions(args: {
@@ -820,9 +1009,7 @@ export function buildMobilityPipeline(
 
   const pendingDemand = inputs.demand.filter(item => item.status === 'pending').length;
   const viableCandidatePairs = scoredCandidates.filter(candidate => candidate.score >= MIN_VIABLE_SCORE).length;
-  const dispatchableVehicles = inputs.vehicles.filter(
-    vehicle => vehicle.availablePassengerSeats > 0 || vehicle.availablePackageUnits > 0,
-  ).length;
+  const dispatchableVehicles = inputs.vehicles.filter(hasDispatchableCapacity).length;
   const averageMatchScore =
     matches.length > 0
       ? Math.round(matches.reduce((sum, match) => sum + match.score, 0) / matches.length)
@@ -883,9 +1070,19 @@ export function buildMobilityPipeline(
     },
   ];
 
+  const stageDrilldowns = buildStageDrilldowns({
+    demand: inputs.demand,
+    vehicles: inputs.vehicles,
+    scoredCandidates,
+    matches,
+    assignments,
+    rebalancing,
+  });
+
   return {
     updatedAt: inputs.updatedAt ?? new Date().toISOString(),
     source: resolvePipelineSource(inputs.demand, inputs.vehicles),
+    thresholds: MOBILITY_PIPELINE_THRESHOLDS,
     demand: inputs.demand,
     vehicles: inputs.vehicles,
     scoredCandidates,
@@ -893,6 +1090,7 @@ export function buildMobilityPipeline(
     assignments,
     rebalancing,
     stages,
+    stageDrilldowns,
     metrics,
     featuredCorridors: inputs.corridorSignals.slice(0, 6),
   };

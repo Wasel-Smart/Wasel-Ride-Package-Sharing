@@ -23,6 +23,8 @@ import {
 import { DesignSystem } from '../../services/designSystem';
 import {
   useMobilityPipeline,
+  type MobilityPipelineStageDrilldown,
+  type MobilityPipelineStageTone,
   type MobilityStageId,
 } from '../../services/mobilityPipeline';
 
@@ -104,6 +106,26 @@ function pipelineAccent(stageId: MobilityStageId) {
   if (stageId === 'matching') {return DesignSystem.colors.cyan.base;}
   if (stageId === 'assignment') {return DesignSystem.colors.accent.strong;}
   return DesignSystem.colors.text.muted;
+}
+
+function pipelineToneColor(tone: MobilityPipelineStageTone, accent: string) {
+  if (tone === 'positive') {return accent;}
+  if (tone === 'attention') {return DesignSystem.colors.gold.base;}
+  return DesignSystem.colors.text.secondary;
+}
+
+function formatUpdatedAt(updatedAt: string) {
+  const timestamp = new Date(updatedAt);
+  if (!Number.isFinite(timestamp.getTime())) {
+    return 'unknown';
+  }
+
+  return new Intl.DateTimeFormat('en-JO', {
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    month: 'short',
+  }).format(timestamp);
 }
 
 export default function MobilityOSPageEnhanced() {
@@ -206,6 +228,48 @@ export default function MobilityOSPageEnhanced() {
 
   const hottest = routeStats[0];
   const weakest = [...routeStats].sort((a, b) => a.reliability - b.reliability)[0];
+  const updatedAtLabel = useMemo(() => formatUpdatedAt(pipeline.updatedAt), [pipeline.updatedAt]);
+  const operatingModelColumns = useMemo(() => {
+    const stageById = new Map(
+      pipeline.stageDrilldowns.map((stage) => [stage.id, stage] satisfies [MobilityStageId, MobilityPipelineStageDrilldown]),
+    );
+
+    return [
+      {
+        id: 'intake',
+        title: 'Demand Intake',
+        description: 'Open ride and package demand is translated into a real candidate supply pool.',
+        icon: <CarFront size={18} color={DesignSystem.colors.green.base} />,
+        accent: DesignSystem.colors.green.base,
+        stages: [
+          stageById.get('demand'),
+          stageById.get('candidate-vehicles'),
+        ].filter(Boolean) as MobilityPipelineStageDrilldown[],
+      },
+      {
+        id: 'dispatch',
+        title: 'Dispatch Logic',
+        description: 'Scoring and matching determine whether a request is actually dispatchable this cycle.',
+        icon: <Brain size={18} color={DesignSystem.colors.cyan.base} />,
+        accent: DesignSystem.colors.cyan.base,
+        stages: [
+          stageById.get('scoring'),
+          stageById.get('matching'),
+        ].filter(Boolean) as MobilityPipelineStageDrilldown[],
+      },
+      {
+        id: 'execution',
+        title: 'Execution Loop',
+        description: 'Assignments and rebalancing convert decisions into live operational moves.',
+        icon: <Gauge size={18} color={DesignSystem.colors.purple.base} />,
+        accent: DesignSystem.colors.purple.base,
+        stages: [
+          stageById.get('assignment'),
+          stageById.get('rebalancing'),
+        ].filter(Boolean) as MobilityPipelineStageDrilldown[],
+      },
+    ];
+  }, [pipeline.stageDrilldowns]);
 
   const stats = [
     {
@@ -239,11 +303,11 @@ export default function MobilityOSPageEnhanced() {
       <PageHeader
         badge="Mobility OS / Dispatch Pipeline"
         title="Demand, candidate vehicles, scoring, matching, assignment, and rebalancing on one control surface."
-        description={`This baseline now reads Mobility OS as an operating model instead of a generic dashboard. Demand alerts, ride bookings, packages, posted rides, and corridor signals all feed the same dispatch mental model. Source blend: ${pipeline.source}.`}
+        description={`This baseline now reads Mobility OS as an operating model instead of a generic dashboard. Demand alerts, ride bookings, packages, posted rides, and corridor signals all feed the same dispatch mental model. Source blend: ${pipeline.source}. Updated ${updatedAtLabel}.`}
         formulas={[
           'Demand -> Candidate Vehicles -> Scoring -> Matching -> Assignment -> Rebalancing',
           'score = 0.40 route + 0.22 capacity + 0.16 service + 0.14 proximity + 0.08 demand - congestion',
-          'rebalance = unmet corridor pressure - idle capacity drag',
+          `dispatch >= ${pipeline.thresholds.dispatchMatchScore} / viable >= ${pipeline.thresholds.viableCandidateScore}`,
         ]}
         actions={
           <>
@@ -350,6 +414,153 @@ export default function MobilityOSPageEnhanced() {
       <section
         style={{
           display: 'grid',
+          gap: 14,
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        }}
+      >
+        {operatingModelColumns.map((column) => (
+          <DataPanel
+            key={column.id}
+            title={column.title}
+            icon={column.icon}
+            accent={column.accent}
+          >
+            <div style={{ display: 'grid', gap: 14 }}>
+              <div
+                style={{
+                  color: DesignSystem.colors.text.secondary,
+                  lineHeight: 1.7,
+                  fontSize: DesignSystem.typography.fontSize.sm,
+                }}
+              >
+                {column.description}
+              </div>
+
+              {column.stages.map((stage) => {
+                const accent = pipelineAccent(stage.id);
+                return (
+                  <article
+                    key={stage.id}
+                    style={{
+                      padding: '14px 14px 12px',
+                      borderRadius: 18,
+                      border: `1px solid ${accent}24`,
+                      background:
+                        `linear-gradient(180deg, color-mix(in srgb, ${accent} 8%, rgb(255 255 255 / 0.03)), rgb(255 255 255 / 0.02))`,
+                      display: 'grid',
+                      gap: 12,
+                    }}
+                  >
+                    <div style={{ display: 'grid', gap: 8 }}>
+                      <div
+                        style={{
+                          fontSize: DesignSystem.typography.fontSize.xs,
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
+                          color: accent,
+                          fontWeight: DesignSystem.typography.fontWeight.black,
+                        }}
+                      >
+                        {stage.label}
+                      </div>
+                      <div
+                        style={{
+                          fontWeight: DesignSystem.typography.fontWeight.bold,
+                          color: DesignSystem.colors.text.primary,
+                        }}
+                      >
+                        {stage.headline}
+                      </div>
+                      <div
+                        style={{
+                          color: DesignSystem.colors.text.secondary,
+                          lineHeight: 1.6,
+                          fontSize: DesignSystem.typography.fontSize.sm,
+                        }}
+                      >
+                        {stage.explanation}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gap: 8 }}>
+                      {stage.items.length > 0 ? (
+                        stage.items.map((item) => {
+                          const metricColor = pipelineToneColor(item.tone, accent);
+                          return (
+                            <div
+                              key={item.id}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'flex-start',
+                                gap: 12,
+                                padding: '10px 12px',
+                                borderRadius: 14,
+                                background: 'rgba(255,255,255,0.03)',
+                                border: `1px solid ${metricColor}22`,
+                              }}
+                            >
+                              <div style={{ minWidth: 0 }}>
+                                <div
+                                  style={{
+                                    fontWeight: DesignSystem.typography.fontWeight.bold,
+                                    color: DesignSystem.colors.text.primary,
+                                  }}
+                                >
+                                  {item.title}
+                                </div>
+                                <div
+                                  style={{
+                                    marginTop: 4,
+                                    color: DesignSystem.colors.text.muted,
+                                    lineHeight: 1.55,
+                                    fontSize: DesignSystem.typography.fontSize.xs,
+                                  }}
+                                >
+                                  {item.detail}
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  flexShrink: 0,
+                                  minWidth: 64,
+                                  textAlign: 'right',
+                                  fontWeight: DesignSystem.typography.fontWeight.black,
+                                  color: metricColor,
+                                }}
+                              >
+                                {item.metric}
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div
+                          style={{
+                            padding: '10px 12px',
+                            borderRadius: 14,
+                            border: `1px solid ${DesignSystem.colors.border.base}`,
+                            background: 'rgba(255,255,255,0.03)',
+                            color: DesignSystem.colors.text.muted,
+                            fontSize: DesignSystem.typography.fontSize.xs,
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          No stage items are active in this cycle.
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </DataPanel>
+        ))}
+      </section>
+
+      <section
+        style={{
+          display: 'grid',
           gap: 18,
           gridTemplateColumns: 'minmax(0, 1.5fr) minmax(320px, 0.9fr)',
         }}
@@ -433,7 +644,8 @@ export default function MobilityOSPageEnhanced() {
                   fontSize: DesignSystem.typography.fontSize.xs,
                 }}
               >
-                {pipeline.metrics.viableCandidatePairs} viable pairs / avg match score {pipeline.metrics.averageMatchScore}
+                {pipeline.metrics.viableCandidatePairs} viable pairs / dispatch {'>='}{' '}
+                {pipeline.thresholds.dispatchMatchScore} / avg {pipeline.metrics.averageMatchScore}
               </div>
             </div>
 
@@ -647,7 +859,7 @@ export default function MobilityOSPageEnhanced() {
 
         <div style={{ display: 'grid', gap: 14 }}>
           <DataPanel
-            title="Pipeline decisions"
+            title="Matching board"
             icon={<Brain size={18} color={DesignSystem.colors.cyan.base} />}
           >
             <div style={{ display: 'grid', gap: 10 }}>
@@ -714,8 +926,7 @@ export default function MobilityOSPageEnhanced() {
                     fontSize: DesignSystem.typography.fontSize.sm,
                   }}
                 >
-                  No demand is clearing the dispatch threshold right now. Mobility OS is waiting
-                  for more supply, stronger route fit, or a lower-pressure corridor.
+                  No demand is clearing the {pipeline.thresholds.dispatchMatchScore}+ dispatch threshold right now. Mobility OS is waiting for more supply, stronger route fit, or a lower-pressure corridor.
                 </article>
               )}
             </div>

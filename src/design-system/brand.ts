@@ -1,15 +1,16 @@
 /**
  * Canonical Wasel brand contract.
  *
- * The attached brand board is the source of truth for:
- * - approved logo variants
- * - approved brand colors
- * - Montserrat typography
- * - fixed spacing and logo sizing
- * - dark/light behavior
+ * The system centers on a premium utility route mark:
+ * - a flatter, more ownable W symbol
+ * - a custom-led wordmark with a secondary tagline
+ * - amber, ivory, and graphite brand tones
+ * - fixed spacing and logo sizing rules
  *
  * Keep new UI work aligned to these tokens instead of page-local values.
  */
+
+const BRAND_ASSET_VERSION = '20260422-premium';
 
 export const BRAND = {
   name: 'Wasel',
@@ -21,24 +22,26 @@ export const BRAND = {
   },
   colors: {
     brand: {
-      gradientStart: '#F5B041',
-      gradientEnd: '#E67E22',
-      solid: '#E67E22',
-      hover: '#D35400',
+      gradientStart: '#FFD39A',
+      gradientEnd: '#E59C36',
+      solid: '#E59C36',
+      hover: '#C97B1D',
+      accentSoft: '#F8E5C1',
+      graphite: '#17212B',
     },
     light: {
-      bg: '#F5EFE6',
+      bg: '#F7F0E6',
       surface: '#FFFDF9',
-      textPrimary: '#0F172A',
-      textMuted: '#6B7280',
-      border: 'rgba(15, 23, 42, 0.08)',
+      textPrimary: '#17212B',
+      textMuted: '#6F6659',
+      border: 'rgba(23, 33, 43, 0.1)',
     },
     dark: {
-      bg: '#0B0F14',
-      surface: '#111827',
-      textPrimary: '#F8FAFC',
-      textMuted: 'rgba(248, 250, 252, 0.72)',
-      border: 'rgba(255, 255, 255, 0.08)',
+      bg: '#0F141B',
+      surface: '#151C24',
+      textPrimary: '#F8F4ED',
+      textMuted: 'rgba(248, 244, 237, 0.72)',
+      border: 'rgba(255, 255, 255, 0.1)',
     },
   },
   spacing: {
@@ -77,19 +80,22 @@ export const BRAND = {
     clearSpaceMinMultiplier: 1,
     clearSpacePreferredMultiplier: 1.5,
     iconWordmarkGap: 16,
-    wordmarkTaglineGap: 6,
+    wordmarkTaglineGap: 4,
     dividerGap: 16,
     dividerWidth: 1,
-    taglineTracking: '0.24em',
+    taglineTracking: '0.18em',
   },
   shadows: {
     soft: '0 18px 36px rgba(15, 23, 42, 0.12)',
     softDark: '0 18px 36px rgba(0, 0, 0, 0.22)',
     brandGlowDark:
-      '0 0 18px rgba(245, 176, 65, 0.28), 0 0 34px rgba(230, 126, 34, 0.18)',
+      '0 0 18px rgba(229, 156, 54, 0.16), 0 0 32px rgba(229, 156, 54, 0.08)',
   },
   logoAssets: {
-    badge: '/brand/wasel-route-w-badge.svg?v=20260422-routew',
+    symbol: `/brand/wasel-route-w-symbol.svg?v=${BRAND_ASSET_VERSION}`,
+    badge: `/brand/wasel-route-w-badge.svg?v=${BRAND_ASSET_VERSION}`,
+    primaryLockup: `/brand/wasel-main-network-logo.svg?v=${BRAND_ASSET_VERSION}`,
+    monochrome: `/brand/wasel-mark-monochrome.svg?v=${BRAND_ASSET_VERSION}`,
   },
 } as const;
 

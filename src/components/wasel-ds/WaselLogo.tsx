@@ -34,7 +34,7 @@ export function WaselLogo({
   showWordmark = true,
   theme = 'auto',
   style,
-  variant = 'full',
+  variant = 'compact',
   framed = false,
   animated = false,
 }: WaselLogoProps) {
@@ -48,7 +48,7 @@ export function WaselLogo({
         <ExactLogoMark
           animated={animated}
           framed={framed}
-          glow={!framed && surface === 'dark'}
+          glow={animated}
           size={value}
         />
       </span>
@@ -88,7 +88,7 @@ export function WaselMark({
       <ExactLogoMark
         animated={animated}
         framed={framed}
-        glow={!framed && resolvedTheme === 'dark'}
+        glow={animated}
         size={value}
       />
     </span>
