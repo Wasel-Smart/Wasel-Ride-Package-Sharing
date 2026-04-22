@@ -19,7 +19,22 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { MorphingButton, useHapticFeedback, useAdvancedInView } from '../components/advanced-interactions';
-import { NEURAL_COLORS, SPACING, TYPOGRAPHY, SHADOWS, RADIUS } from '../styles/advanced-design-tokens';
+
+const NEURAL_COLORS = {
+  primary: { 200: '#99f6e4', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e' },
+  neutral: { 50: '#fafafa', 200: '#e5e5e5', 600: '#525252', 700: '#404040', 900: '#171717' },
+  success: { base: '#10b981' },
+  warning: { base: '#f59e0b' },
+  danger: { base: '#ef4444', dark: '#dc2626' },
+};
+const SPACING: Record<number, string> = { 1: '4px', 2: '8px', 3: '12px', 4: '16px', 6: '24px', 8: '32px' };
+const TYPOGRAPHY = {
+  fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], display: ['Cal Sans', 'Inter', 'sans-serif'] },
+  fontSize: { xs: ['12px'], sm: ['14px'], base: ['16px'], lg: ['18px'], '2xl': ['24px'] },
+  fontWeight: { medium: '500', semibold: '600', bold: '700', black: '900' },
+};
+const SHADOWS = { base: '0 4px 6px -1px rgb(0 0 0/0.1)', '2xl': '0 50px 100px -20px rgb(0 0 0/0.25)', primary: '0 10px 15px -3px rgb(20 184 166/0.4)', danger: '0 10px 15px -3px rgb(239 68 68/0.4)' };
+const RADIUS = { xl: '12px', '2xl': '16px', '3xl': '24px' };
 import { CITIES } from '../pages/waselCoreRideData';
 
 interface SmartSearchProps {

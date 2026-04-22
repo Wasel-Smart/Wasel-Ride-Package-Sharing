@@ -9,12 +9,8 @@ import {
 } from '../../components/system/WaselPresence';
 import { useTheme } from '../../contexts/ThemeContext';
 import { DeferredLandingMap } from './DeferredLandingMap';
-import {
-  LANDING_DISPLAY,
-  LANDING_FONT,
-  LANDING_RESPONSIVE_STYLES,
-} from './landingConstants';
-import { GRAD_AURORA, GRAD_HERO, GRAD_SIGNAL, SH } from '../../utils/wasel-ds';
+import { LANDING_DISPLAY, LANDING_FONT, LANDING_RESPONSIVE_STYLES } from './landingConstants';
+import { GRAD_AURORA, GRAD_HERO, GRAD_SIGNAL } from '../../utils/wasel-ds';
 
 export const LANDING_COLORS = {
   bg: 'var(--background)',
@@ -24,13 +20,12 @@ export const LANDING_COLORS = {
   text: 'var(--wasel-copy-primary)',
   muted: 'var(--wasel-copy-muted)',
   soft: 'var(--wasel-copy-soft)',
-  cyan: 'var(--ds-accent, #E67E22)',
-  blue: 'var(--ds-accent-strong, #F5B041)',
-  gold: 'var(--wasel-brand-gradient-start, #F5B041)',
-  green: 'var(--ds-accent-strong, #F5B041)',
-  border: 'var(--ds-border, #313841)',
-  borderStrong:
-    'color-mix(in srgb, var(--ds-accent-strong, #F5B041) 30%, var(--ds-border, #313841))',
+  cyan: 'var(--ds-accent, #a9e3ff)',
+  blue: 'var(--ds-accent-strong, #5b9bd5)',
+  gold: 'var(--wasel-brand-gradient-start, #ffb357)',
+  green: 'var(--ds-accent-strong, #19e7bb)',
+  border: 'var(--wasel-panel-border)',
+  borderStrong: 'var(--wasel-app-border-strong)',
 } as const;
 
 export type LandingActionCard = {
@@ -102,15 +97,43 @@ type LandingSlotRowsProps = {
   slots: Partial<Record<LandingSlotId, ReactNode>>;
 };
 
-const panel = (radius = 28): CSSProperties => ({
+const panel = (radius = 24): CSSProperties => ({
   borderRadius: radius,
   background: 'var(--wasel-panel-strong)',
-  border: `1px solid ${LANDING_COLORS.border}`,
-  boxShadow: 'var(--wasel-shadow-lg)',
-  backdropFilter: 'blur(22px)',
+  border: '1px solid var(--wasel-panel-border)',
+  boxShadow: 'var(--wasel-shadow-md)',
+  backdropFilter: 'blur(20px)',
 });
 const copy = (value: string) => value;
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const PREMIUM_BUTTON = {
+  primary: {
+    minHeight: 52,
+    padding: '0 28px',
+    borderRadius: 16,
+    fontSize: '0.95rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    border: 'none',
+    background: GRAD_SIGNAL,
+    color: 'var(--wasel-button-primary-foreground)',
+    boxShadow: 'var(--wasel-button-primary-shadow)',
+    transition: 'transform 200ms ease, box-shadow 200ms ease',
+  } as CSSProperties,
+  secondary: {
+    minHeight: 52,
+    padding: '0 24px',
+    borderRadius: 16,
+    fontSize: '0.92rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    border: '1px solid var(--wasel-button-primary-border)',
+    background: 'transparent',
+    color: 'var(--wasel-copy-primary)',
+    transition: 'border-color 180ms ease, background 180ms ease',
+  } as CSSProperties,
+};
 
 export function LandingPageFrame({ children }: LandingPageFrameProps) {
   return (
@@ -130,7 +153,7 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
         @keyframes landing-orbit-reverse { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
         @keyframes landing-mark-float {
           0% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(0, -12px) scale(1.035); }
+          50% { transform: translate(0, -8px) scale(1.02); }
           100% { transform: translate(0, 0) scale(1); }
         }
       `}</style>
@@ -143,9 +166,9 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
         style={{
           position: 'absolute',
           inset: 0,
-          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--ds-accent, #E67E22) 18%, transparent), transparent 26%), radial-gradient(circle at 72% 68%, color-mix(in srgb, var(--ds-accent-strong, #F5B041) 14%, transparent), transparent 18%)`,
+          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--ds-accent, #a9e3ff) 16%, transparent), transparent 24%), radial-gradient(circle at 72% 68%, color-mix(in srgb, var(--ds-accent-strong, #19e7bb) 12%, transparent), transparent 16%)`,
           pointerEvents: 'none',
-          opacity: 0.96,
+          opacity: 0.94,
         }}
       />
       <div
@@ -153,10 +176,8 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
         style={{
           position: 'absolute',
           inset: 0,
-          background:
-            'linear-gradient(90deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0) 16%, rgba(255,255,255,0) 84%, rgba(255,255,255,0.03) 100%)',
-          opacity: 0.28,
-          mixBlendMode: 'screen',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 40%)',
+          opacity: 0.5,
           pointerEvents: 'none',
         }}
       />
@@ -164,9 +185,9 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
         className="landing-shell"
         style={{
           position: 'relative',
-          maxWidth: 1380,
+          maxWidth: 1280,
           margin: '0 auto',
-          padding: '28px 20px 84px',
+          padding: '32px 24px 80px',
         }}
       >
         {children}
@@ -186,17 +207,6 @@ export function LandingHeader({
   const canShowAuthActions = Boolean(showAuthActions && signinPath && signupPath && onNavigate);
   const logoTheme = resolvedTheme === 'light' ? 'dark' : 'light';
 
-  const headerAuthButtonBase: CSSProperties = {
-    minHeight: 46,
-    minWidth: 124,
-    padding: '0 20px',
-    borderRadius: 18,
-    fontSize: '0.9rem',
-    fontWeight: 800,
-    cursor: 'pointer',
-    transition: 'transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease',
-  };
-
   return (
     <div
       className="landing-header-row"
@@ -204,56 +214,46 @@ export function LandingHeader({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        gap: 14,
+        gap: 16,
         flexWrap: 'wrap',
-        marginBottom: 24,
+        marginBottom: 32,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <WaselLogo
-          size={34}
-          theme={logoTheme}
-          variant="full"
-          subtitle="Mobility OS"
-          style={{
-            filter:
-              'drop-shadow(0 0 18px rgba(255,179,87,0.16)) drop-shadow(0 0 22px rgba(245,154,44,0.12))',
-          }}
-        />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <WaselLogo size={36} theme={logoTheme} variant="full" subtitle="Mobility OS" />
         <div
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 10,
-            padding: '8px 14px',
+            gap: 8,
+            padding: '6px 12px',
             borderRadius: 999,
-            background: 'rgba(9,31,48,0.58)',
-            border: `1px solid rgba(79,213,255,0.18)`,
-            color: LANDING_COLORS.muted,
-            fontSize: '0.8rem',
-            fontWeight: 800,
+            background: 'var(--wasel-app-surface)',
+            border: '1px solid var(--wasel-border)',
+            color: 'var(--wasel-copy-muted)',
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            letterSpacing: '0.04em',
           }}
         >
           <span
             className="landing-live-dot"
             style={{
-              width: 8,
-              height: 8,
+              width: 6,
+              height: 6,
               borderRadius: '50%',
               background: LANDING_COLORS.green,
-              boxShadow: `0 0 14px ${LANDING_COLORS.green}`,
+              boxShadow: `0 0 10px ${LANDING_COLORS.green}`,
             }}
           />
-          {copy(ar ? 'شبكة الأردن الحية' : 'Jordan mobility network')}
+          {copy(ar ? 'شبكة الأردن الحية' : 'Jordan Network Live')}
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {canShowAuthActions ? (
           <>
             <button
-              aria-label={copy(
-                ar ? 'تسجيل الدخول من شريط الرأس' : 'Sign in from header',
-              )}
+              aria-label={copy(ar ? 'تسجيل الدخول من شريط الرأس' : 'Sign in from header')}
               type="button"
               onClick={() => {
                 if (signinPath) {
@@ -261,19 +261,13 @@ export function LandingHeader({
                 }
               }}
               style={{
-                ...headerAuthButtonBase,
-                border: `1px solid ${LANDING_COLORS.borderStrong}`,
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025))',
-                color: LANDING_COLORS.text,
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 14px 30px rgba(1,10,18,0.18)',
+                ...PREMIUM_BUTTON.secondary,
               }}
             >
               {copy(ar ? 'تسجيل الدخول' : 'Sign in')}
             </button>
             <button
-              aria-label={copy(
-                ar ? 'إنشاء حساب من شريط الرأس' : 'Sign up from header',
-              )}
+              aria-label={copy(ar ? 'إنشاء حساب من شريط الرأس' : 'Sign up from header')}
               type="button"
               onClick={() => {
                 if (signupPath) {
@@ -281,13 +275,7 @@ export function LandingHeader({
                 }
               }}
               style={{
-                ...headerAuthButtonBase,
-                border: 'none',
-                background:
-                  'linear-gradient(135deg, var(--wasel-brand-gradient-start) 0%, var(--wasel-brand-gradient-end) 100%)',
-                color: '#FFFDF9',
-                boxShadow:
-                  '0 18px 40px color-mix(in srgb, var(--wasel-brand-gradient-end) 26%, transparent)',
+                ...PREMIUM_BUTTON.primary,
               }}
             >
               {copy(ar ? 'إنشاء حساب' : 'Sign up')}
@@ -323,47 +311,22 @@ export function LandingHeroSection({
   const bullets = heroBullets.slice(0, 2);
   const isGoogleLoading = oauthLoadingProvider === 'google';
   const isFacebookLoading = oauthLoadingProvider === 'facebook';
-  const highlights = [
-    {
-      label: ar ? '???? ????' : 'One system',
-      value: ar
-        ? '??????? ??????? ?? ????? ?????.'
-        : 'Map and action in one place.',
-    },
-    {
-      label: ar ? '?????? ???? ?????' : 'Two flows, one language',
-      value: ar
-        ? '??????? ??????? ??? ??? ??????.'
-        : 'Rides and packages share the same lanes.',
-    },
-  ] as const;
-  const heroLogoSignals = [
-    ar ? '?????? ????? ??????' : 'Live network identity',
-    ar ? '???? + ???? + ??????' : 'Rides + packages + routes',
-    ar ? '???? ?????? ??????' : 'Built for mobile and web',
-  ] as const;
-  const heroMetricPills = [
-    ar ? '????? ???? ?????' : 'Live map first',
-    ar ? '????? ????' : 'Cleaner first view',
-    ar ? '????? ????' : 'Sharper brand mark',
-  ] as const;
-  const serviceStats = stats?.length
-    ? stats.slice(0, 3)
-    : [
-        { label: ar ? '????? ???? ?????' : 'Live map first', value: ar ? '?????' : 'Enabled' },
-        { label: ar ? '????? ????' : 'Cleaner first view', value: ar ? '????' : 'Stable' },
-        { label: ar ? '????? ????' : 'Sharper brand mark', value: ar ? '????' : 'Live' },
-      ];
-  const serviceCtaLabel = ctaLabel ?? (ar ? '???? ?????? ??????' : 'Explore services');
+  const heroMetrics = [
+    { label: ar ? 'خريطة مباشرة أولاً' : 'Live map first', value: ar ? 'مفعل' : 'Enabled' },
+    { label: ar ? 'عرض أنظف' : 'Cleaner view', value: ar ? 'مستقر' : 'Stable' },
+    { label: ar ? 'علامة أوضح' : 'Sharper mark', value: ar ? 'حي' : 'Live' },
+  ];
+  const serviceCtaLabel = ctaLabel ?? (ar ? 'استكشف الخدمات' : 'Explore services');
+
   return (
-    <section style={{ display: 'grid', gap: 16, height: '100%' }}>
+    <section style={{ display: 'grid', gap: 24 }}>
       <div
         className="landing-glow-card"
         style={{
-          ...panel(34),
-          padding: '24px',
+          ...panel(28),
+          padding: '32px',
           display: 'grid',
-          gap: 22,
+          gap: 28,
           alignContent: 'start',
           minHeight: '100%',
           overflow: 'hidden',
@@ -376,88 +339,92 @@ export function LandingHeroSection({
             position: 'absolute',
             inset: 0,
             background:
-              'radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--ds-accent) 18%, transparent), transparent 32%), radial-gradient(circle at 82% 26%, color-mix(in srgb, var(--ds-accent-strong) 14%, transparent), transparent 24%), linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
+              'radial-gradient(circle at 16% 16%, color-mix(in srgb, var(--ds-accent) 14%, transparent) 28%, radial-gradient(circle at 84% 24%, color-mix(in srgb, var(--ds-accent-strong) 10%, transparent) 20%)',
             pointerEvents: 'none',
           }}
         />
+
+        {/* Main Hero Content */}
         <div
           className="landing-hero-shell"
           style={{
             position: 'relative',
             display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1.02fr) minmax(340px, 0.98fr)',
-            gap: 20,
-            alignItems: 'stretch',
+            gridTemplateColumns: 'minmax(0, 1fr) minmax(340px, 0.92fr)',
+            gap: 32,
+            alignItems: 'start',
           }}
         >
-          <div style={{ display: 'grid', gap: 18, alignContent: 'start' }}>
+          {/* Left Content Column */}
+          <div style={{ display: 'grid', gap: 24, alignContent: 'start' }}>
+            {/* Badge */}
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 width: 'fit-content',
-                padding: '8px 12px',
+                padding: '6px 14px',
                 borderRadius: 999,
-                background: 'color-mix(in srgb, var(--ds-accent) 12%, transparent)',
-                border: `1px solid ${LANDING_COLORS.borderStrong}`,
-                color: LANDING_COLORS.cyan,
-                fontSize: '0.75rem',
-                fontWeight: 900,
-                letterSpacing: '0.08em',
+                background: 'var(--wasel-button-primary-soft)',
+                border: '1px solid var(--wasel-button-primary-border)',
+                color: 'var(--wasel-cyan)',
+                fontSize: '0.7rem',
+                fontWeight: 800,
+                letterSpacing: '0.1em',
                 textTransform: 'uppercase',
               }}
             >
-              {copy(ar ? 'Mobility OS ??????' : 'Mobility OS for Jordan')}
+              {copy(ar ? 'Mobility OS للأردن' : 'Mobility OS for Jordan')}
             </div>
-            <div style={{ display: 'grid', gap: 14 }}>
+
+            {/* Headline */}
+            <div style={{ display: 'grid', gap: 16 }}>
               <h1
                 style={{
                   margin: 0,
-                  maxWidth: 720,
+                  maxWidth: 680,
                   fontFamily: LANDING_DISPLAY,
-                  fontSize: 'clamp(2.7rem, 5vw, 5.15rem)',
-                  lineHeight: 0.94,
-                  letterSpacing: '-0.06em',
+                  fontSize: 'clamp(2.5rem, 4.8vw, 4.5rem)',
+                  lineHeight: 1.02,
+                  letterSpacing: '-0.04em',
                   fontWeight: 700,
                 }}
               >
                 <span style={{ display: 'block', color: LANDING_COLORS.text }}>
-                  {copy(ar ? '???? ?? ???????.' : 'Move by map.')}
+                  {copy(ar ? 'تحرك بالخريطة.' : 'Move by map.')}
                 </span>
                 <span
                   style={{
                     display: 'block',
-                    marginTop: 10,
+                    marginTop: 8,
                     background: GRAD_SIGNAL,
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
                   }}
                 >
-                  {copy(
-                    ar
-                      ? '????? ????? ??? ???? ?????.'
-                      : 'Rides and packages, one network.',
-                  )}
+                  {copy(ar ? 'رحلات وحزم، شبكة واحدة.' : 'Rides and packages, one network.')}
                 </span>
               </h1>
               <p
                 style={{
                   margin: 0,
-                  maxWidth: 620,
+                  maxWidth: 560,
                   color: LANDING_COLORS.muted,
-                  fontSize: '1rem',
-                  lineHeight: 1.74,
+                  fontSize: '1.05rem',
+                  lineHeight: 1.7,
                 }}
               >
                 {copy(
                   ar
-                    ? '???? ?????? ????? ?? ???? ??????.'
+                    ? 'شاهد الشبكة أولاً، ثم اختر خدمة.'
                     : 'See the network first, then choose a service.',
                 )}
               </p>
             </div>
-            <div style={{ display: 'grid', gap: 10, maxWidth: 620 }}>
+
+            {/* Feature Bullets */}
+            <div style={{ display: 'grid', gap: 12, maxWidth: 540 }}>
               {bullets.map((bullet, index) => (
                 <div
                   key={`hero-bullet-${index}`}
@@ -466,19 +433,19 @@ export function LandingHeroSection({
                     alignItems: 'flex-start',
                     gap: 12,
                     color: LANDING_COLORS.soft,
-                    fontSize: '0.92rem',
-                    lineHeight: 1.65,
+                    fontSize: '0.95rem',
+                    lineHeight: 1.6,
                   }}
                 >
                   <span
                     className="landing-live-dot"
                     style={{
-                      width: 8,
-                      height: 8,
-                      marginTop: 4,
+                      width: 6,
+                      height: 6,
+                      marginTop: 6,
                       borderRadius: '50%',
                       background: LANDING_COLORS.cyan,
-                      boxShadow: `0 0 12px ${LANDING_COLORS.cyan}`,
+                      boxShadow: `0 0 10px ${LANDING_COLORS.cyan}`,
                       flexShrink: 0,
                     }}
                   />
@@ -486,131 +453,59 @@ export function LandingHeroSection({
                 </div>
               ))}
             </div>
+
+            {/* Action Buttons */}
             <div
-              className="landing-hero-highlights"
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}
+              style={{
+                display: 'flex',
+                gap: 14,
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                marginTop: 8,
+              }}
             >
-              {highlights.map((item, index) => (
-                <div
-                  key={`hero-highlight-${index}`}
-                  className="landing-glow-card wasel-lift-card"
-                  style={{
-                    padding: '16px 16px 18px',
-                    borderRadius: 22,
-                    background:
-                      'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02))',
-                    border: `1px solid ${LANDING_COLORS.border}`,
-                    display: 'grid',
-                    gap: 8,
-                  }}
-                >
-                  <span
-                    style={{
-                      color: LANDING_COLORS.cyan,
-                      fontSize: '0.72rem',
-                      fontWeight: 900,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.1em',
-                    }}
-                  >
-                    {item.label}
-                  </span>
-                  <span
-                    style={{
-                      color: LANDING_COLORS.text,
-                      fontSize: '0.93rem',
-                      lineHeight: 1.5,
-                      fontWeight: 800,
-                    }}
-                  >
-                    {item.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
               <button
-                aria-label={copy(ar ? '???? ???????' : 'Open map')}
+                aria-label={copy(ar ? 'افتح الخريطة' : 'Open map')}
                 type="button"
                 onClick={() => onNavigate(mobilityOsPath || findRidePath)}
                 style={{
-                  minHeight: 54,
-                  padding: '0 22px',
-                  borderRadius: 18,
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  background: GRAD_SIGNAL,
-                  color: '#FFFDF9',
-                  fontWeight: 900,
-                  fontSize: '0.95rem',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  boxShadow: SH.cyanL,
+                  ...PREMIUM_BUTTON.primary,
                 }}
               >
-                {copy(ar ? '???? ???????' : 'Open map')}
-                <ArrowRight size={16} />
+                {copy(ar ? 'افتح الخريطة' : 'Open map')}
+                <ArrowRight size={16} style={{ marginLeft: 8 }} />
               </button>
               <button
-                aria-label={copy(ar ? '???? ?? ????' : 'Find rides')}
+                aria-label={copy(ar ? 'ابحث عن رحلات' : 'Find rides')}
                 type="button"
                 onClick={() => onNavigate(findRidePath)}
                 style={{
-                  minHeight: 54,
-                  padding: '0 20px',
-                  borderRadius: 18,
-                  border: `1px solid ${LANDING_COLORS.borderStrong}`,
-                  background: 'rgba(255,255,255,0.04)',
-                  color: LANDING_COLORS.text,
-                  fontWeight: 800,
-                  fontSize: '0.92rem',
-                  cursor: 'pointer',
+                  ...PREMIUM_BUTTON.secondary,
                 }}
               >
-                {copy(ar ? '???? ?? ????' : 'Find rides')}
+                {copy(ar ? 'ابحث عن رحلات' : 'Find rides')}
               </button>
-              <div
-                className="landing-hero-meta"
-                style={{
-                  display: 'flex',
-                  gap: 10,
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  color: LANDING_COLORS.soft,
-                  fontSize: '0.82rem',
-                }}
-              >
-                <span>{supportLine}</span>
-                <span
-                  style={{
-                    width: 4,
-                    height: 4,
-                    borderRadius: '50%',
-                    background: 'rgba(239,246,255,0.26)',
-                  }}
-                />
-                <span>{businessAddress}</span>
-              </div>
             </div>
+
+            {/* Stats Row */}
             <div
               className="landing-hero-service-stats"
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                gap: 12,
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: 16,
+                marginTop: 8,
               }}
             >
-              {serviceStats.map(metric => (
+              {(stats ?? heroMetrics).slice(0, 3).map(metric => (
                 <div
                   key={`${metric.label}-${metric.value}`}
                   className="landing-glow-card"
                   style={{
-                    padding: '16px 18px',
-                    borderRadius: 22,
-                    background:
-                      'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02))',
-                    border: `1px solid ${LANDING_COLORS.border}`,
+                    padding: '16px 20px',
+                    borderRadius: 18,
+                    background: 'var(--wasel-panel-muted)',
+                    border: '1px solid var(--wasel-border)',
                     display: 'grid',
                     gap: 6,
                     alignContent: 'start',
@@ -619,9 +514,10 @@ export function LandingHeroSection({
                   <span
                     style={{
                       color: LANDING_COLORS.muted,
-                      fontSize: '0.78rem',
-                      fontWeight: 700,
-                      lineHeight: 1.5,
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
                     }}
                   >
                     {metric.label}
@@ -629,9 +525,9 @@ export function LandingHeroSection({
                   <span
                     style={{
                       color: LANDING_COLORS.text,
-                      fontSize: '1.08rem',
-                      fontWeight: 900,
-                      lineHeight: 1.2,
+                      fontSize: '1.12rem',
+                      fontWeight: 800,
+                      letterSpacing: '-0.02em',
                     }}
                   >
                     {metric.value}
@@ -640,267 +536,227 @@ export function LandingHeroSection({
               ))}
             </div>
           </div>
+
+          {/* Right Visual Column */}
           <div className="landing-hero-art-column">
             <div
               className="landing-hero-visual"
               style={{
                 position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 20,
               }}
             >
+              {/* Glow Field */}
               <div
                 className="landing-hero-glow-field"
                 aria-hidden="true"
                 style={{
+                  position: 'absolute',
+                  inset: '8% 6% 12%',
                   background:
-                    'radial-gradient(circle at 48% 18%, color-mix(in srgb, var(--ds-accent) 22%, transparent), transparent 24%), radial-gradient(circle at 58% 54%, color-mix(in srgb, var(--ds-accent-strong) 28%, transparent), transparent 30%), radial-gradient(circle at 62% 72%, color-mix(in srgb, var(--ds-accent-strong) 16%, transparent), transparent 22%)',
+                    'radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--ds-accent) 20%, transparent) 30%, radial-gradient(circle at 60% 60%, color-mix(in srgb, var(--ds-accent-strong) 16%, transparent) 24%)',
+                  filter: 'blur(24px)',
                 }}
               />
-              <div
-                className="landing-hero-orbit landing-hero-orbit--outer"
-                aria-hidden="true"
-              />
-              <div
-                className="landing-hero-orbit landing-hero-orbit--inner"
-                aria-hidden="true"
-              />
+
+              {/* Orbital Rings */}
+              <div className="landing-hero-orbit landing-hero-orbit--outer" aria-hidden="true" />
+              <div className="landing-hero-orbit landing-hero-orbit--inner" aria-hidden="true" />
+
+              {/* Brand Mark */}
               <div
                 className="landing-hero-mark-stage"
                 style={{
                   position: 'relative',
+                  display: 'grid',
+                  placeItems: 'center',
                 }}
               >
-                <div className="landing-hero-mark-glow landing-hero-mark-glow--cyan" aria-hidden="true" />
+                <div
+                  className="landing-hero-mark-glow landing-hero-mark-glow--cyan"
+                  aria-hidden="true"
+                />
                 <div
                   className="landing-hero-mark-glow landing-hero-mark-glow--green"
                   aria-hidden="true"
                 />
                 <div className="landing-hero-mark">
                   <WaselMark
-                    size={334}
+                    size={280}
                     animated
                     style={{
                       justifyContent: 'center',
-                      filter:
-                        'drop-shadow(0 0 42px rgba(255,179,87,0.24)) drop-shadow(0 0 56px rgba(245,154,44,0.28)) saturate(1.04)',
-                      transform: 'translateY(12px)',
+                      filter: 'drop-shadow(0 0 32px rgba(169,227,255,0.2))',
                     }}
                   />
                 </div>
               </div>
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 10,
-                  flexWrap: 'wrap',
-                  justifyContent: 'center',
-                  color: LANDING_COLORS.soft,
-                  fontSize: '0.8rem',
-                  textAlign: 'center',
-                }}
-                >
-                {heroLogoSignals.map((signal, index) => (
-                  <span
-                    key={`hero-signal-${index}`}
-                    style={{
-                      whiteSpace: 'nowrap',
-                      padding: '7px 10px',
-                      borderRadius: 999,
-                      background: 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${LANDING_COLORS.border}`,
-                    }}
-                  >
-                    {signal}
-                  </span>
-                ))}
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: 8,
-                  flexWrap: 'wrap',
-                }}
-              >
-                {heroMetricPills.map((item, index) => (
-                  <span
-                    key={`hero-metric-${index}`}
-                    style={{
-                      padding: '7px 12px',
-                      borderRadius: 999,
-                      background: 'rgba(32,216,255,0.08)',
-                      border: '1px solid rgba(32,216,255,0.16)',
-                      color: LANDING_COLORS.text,
-                      fontSize: '0.76rem',
-                      fontWeight: 800,
-                    }}
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
+
+              {/* CTA Pill */}
               <div
                 style={{
                   display: 'inline-flex',
-                  justifyContent: 'center',
                   alignItems: 'center',
-                  gap: 10,
+                  gap: 8,
                   color: LANDING_COLORS.cyan,
-                  fontSize: '0.82rem',
-                  fontWeight: 800,
-                  textAlign: 'center',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
                 }}
               >
                 <span>{serviceCtaLabel}</span>
-                <ArrowRight size={16} />
+                <ArrowRight size={14} />
               </div>
+
+              {/* Auth Error */}
               {authError ? (
                 <div
                   role="alert"
                   style={{
-                    padding: '12px 14px',
-                    borderRadius: 16,
-                    border: '1px solid color-mix(in srgb, var(--wasel-brand-hover) 34%, transparent)',
-                    background: 'color-mix(in srgb, var(--wasel-brand-hover) 10%, transparent)',
+                    padding: '14px 18px',
+                    borderRadius: 14,
+                    border: '1px solid var(--wasel-border)',
+                    background: 'var(--wasel-surface-muted)',
                     color: LANDING_COLORS.text,
-                    fontSize: '0.88rem',
-                    lineHeight: 1.55,
-                    maxWidth: 620,
+                    fontSize: '0.9rem',
+                    lineHeight: 1.5,
+                    maxWidth: 540,
                   }}
                 >
                   {authError}
                 </div>
               ) : null}
+
+              {/* Quick Auth Buttons */}
               {showQuickAuth ? (
-                <div style={{ display: 'grid', gap: 10, marginTop: 4 }}>
+                <div style={{ display: 'grid', gap: 12, marginTop: 4, width: '100%' }}>
                   <div
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                      gap: 10,
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: 12,
                     }}
                   >
                     <button
                       type="button"
-                      aria-label={copy(ar ? '?????? ???????? Google' : 'Continue with Google')}
+                      aria-label={copy(ar ? 'متابعة مع Google' : 'Continue with Google')}
                       onClick={() => onGoogleAuth?.()}
                       disabled={!onGoogleAuth || isGoogleLoading}
                       style={{
                         minHeight: 48,
-                        padding: '0 18px',
-                        borderRadius: 18,
-                        border: `1px solid ${LANDING_COLORS.borderStrong}`,
-                        background: 'rgba(255,255,255,0.04)',
+                        padding: '0 16px',
+                        borderRadius: 14,
+                        border: '1px solid var(--wasel-border)',
+                        background: 'transparent',
                         color: LANDING_COLORS.text,
-                        fontWeight: 800,
-                        fontSize: '0.86rem',
+                        fontWeight: 600,
+                        fontSize: '0.82rem',
                         cursor: onGoogleAuth && !isGoogleLoading ? 'pointer' : 'not-allowed',
-                        opacity: onGoogleAuth ? 1 : 0.66,
+                        opacity: onGoogleAuth ? 1 : 0.6,
                       }}
                     >
                       {copy(
                         isGoogleLoading
                           ? ar
-                            ? '???? ??????? ?? Google...'
-                            : 'Connecting to Google...'
+                            ? 'جاري الاتصال...'
+                            : 'Connecting...'
                           : ar
-                            ? '?????? ???????? Google'
-                            : 'Continue with Google',
+                            ? 'Google'
+                            : 'Google',
                       )}
                     </button>
                     <button
                       type="button"
-                      aria-label={copy(ar ? '?????? ???????? Facebook' : 'Continue with Facebook')}
+                      aria-label={copy(ar ? 'متابعة مع Facebook' : 'Continue with Facebook')}
                       onClick={() => onFacebookAuth?.()}
                       disabled={!onFacebookAuth || isFacebookLoading}
                       style={{
                         minHeight: 48,
-                        padding: '0 18px',
-                        borderRadius: 18,
-                        border: `1px solid ${LANDING_COLORS.borderStrong}`,
-                        background: 'rgba(255,255,255,0.04)',
+                        padding: '0 16px',
+                        borderRadius: 14,
+                        border: '1px solid var(--wasel-border)',
+                        background: 'transparent',
                         color: LANDING_COLORS.text,
-                        fontWeight: 800,
-                        fontSize: '0.86rem',
+                        fontWeight: 600,
+                        fontSize: '0.82rem',
                         cursor: onFacebookAuth && !isFacebookLoading ? 'pointer' : 'not-allowed',
-                        opacity: onFacebookAuth ? 1 : 0.66,
+                        opacity: onFacebookAuth ? 1 : 0.6,
                       }}
                     >
                       {copy(
                         isFacebookLoading
                           ? ar
-                            ? '???? ??????? ?? Facebook...'
-                            : 'Connecting to Facebook...'
+                            ? 'جاري الاتصال...'
+                            : 'Connecting...'
                           : ar
-                            ? '?????? ???????? Facebook'
-                            : 'Continue with Facebook',
+                            ? 'Facebook'
+                            : 'Facebook',
                       )}
                     </button>
                     <button
                       type="button"
-                      aria-label={copy(
-                        ar ? '?????? ???????? ?????? ??????????' : 'Continue with email',
-                      )}
+                      aria-label={copy(ar ? 'متابعة بالبريد الإلكتروني' : 'Continue with email')}
                       onClick={() => onNavigate(emailAuthPath)}
                       style={{
                         minHeight: 48,
-                        padding: '0 18px',
-                        borderRadius: 18,
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        padding: '0 16px',
+                        borderRadius: 14,
+                        border: 'none',
                         background: GRAD_SIGNAL,
-                        color: '#FFFDF9',
-                        fontWeight: 900,
-                        fontSize: '0.86rem',
+                        color: 'var(--wasel-button-primary-foreground)',
+                        fontWeight: 700,
+                        fontSize: '0.82rem',
                         cursor: 'pointer',
-                        boxShadow: SH.cyanL,
                       }}
                     >
-                      {copy(ar ? '?????? ???????? ?????? ??????????' : 'Continue with email')}
+                      {copy(ar ? 'بريد إلكتروني' : 'Email')}
                     </button>
                   </div>
                   <div
                     style={{
                       display: 'flex',
-                      gap: 10,
-                      flexWrap: 'wrap',
+                      gap: 12,
                       justifyContent: 'center',
                     }}
                   >
                     <button
                       type="button"
-                      aria-label={copy(ar ? '????? ??????' : 'Sign in')}
+                      aria-label={copy(ar ? 'تسجيل الدخول' : 'Sign in')}
                       onClick={() => onNavigate(emailAuthPath)}
                       style={{
-                        minHeight: 48,
-                        padding: '0 18px',
-                        borderRadius: 18,
-                        border: `1px solid ${LANDING_COLORS.borderStrong}`,
-                        background: 'rgba(255,255,255,0.04)',
-                        color: LANDING_COLORS.text,
-                        fontWeight: 800,
-                        fontSize: '0.88rem',
+                        minHeight: 44,
+                        padding: '0 20px',
+                        borderRadius: 14,
+                        border: '1px solid var(--wasel-border)',
+                        background: 'transparent',
+                        color: LANDING_COLORS.soft,
+                        fontWeight: 600,
+                        fontSize: '0.85rem',
                         cursor: 'pointer',
                       }}
                     >
-                      {copy(ar ? '????? ??????' : 'Sign in')}
+                      {copy(ar ? 'تسجيل الدخول' : 'Sign in')}
                     </button>
                     <button
                       type="button"
-                      aria-label={copy(ar ? '????? ????' : 'Create account')}
+                      aria-label={copy(ar ? 'إنشاء حساب' : 'Create account')}
                       onClick={() => onNavigate(signupAuthPath)}
                       style={{
-                        minHeight: 48,
-                        padding: '0 18px',
-                        borderRadius: 18,
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        minHeight: 44,
+                        padding: '0 20px',
+                        borderRadius: 14,
+                        border: 'none',
                         background: GRAD_SIGNAL,
-                        color: '#FFFDF9',
-                        fontWeight: 900,
-                        fontSize: '0.88rem',
+                        color: 'var(--wasel-button-primary-foreground)',
+                        fontWeight: 700,
+                        fontSize: '0.85rem',
                         cursor: 'pointer',
-                        boxShadow: SH.cyanL,
                       }}
                     >
-                      {copy(ar ? '????? ????' : 'Create account')}
+                      {copy(ar ? 'إنشاء حساب' : 'Create account')}
                     </button>
                   </div>
                 </div>
@@ -908,13 +764,14 @@ export function LandingHeroSection({
             </div>
           </div>
         </div>
+
+        {/* Action Cards Grid */}
         <div
           className="landing-action-grid"
           style={{
-            position: 'relative',
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-            gap: 12,
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 16,
           }}
         >
           {primaryActions.slice(0, 3).map(card => {
@@ -925,32 +782,31 @@ export function LandingHeroSection({
                 aria-label={card.title}
                 type="button"
                 onClick={() => onNavigate(card.path)}
-                className="landing-glow-card wasel-lift-card"
+                className="wasel-lift-card"
                 style={{
                   display: 'grid',
-                  gap: 10,
+                  gap: 12,
                   alignContent: 'start',
-                  minHeight: 118,
-                  padding: '18px',
-                  borderRadius: 24,
-                  textAlign: 'left',
-                  background:
-                    'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.024))',
-                  border: `1px solid ${card.color}30`,
+                  minHeight: 120,
+                  padding: '20px 24px',
+                  borderRadius: 20,
+                  background: 'var(--wasel-panel-muted)',
+                  border: `1px solid ${card.color}28`,
                   cursor: 'pointer',
-                  boxShadow: '0 18px 36px rgba(1,10,18,0.18)',
+                  textAlign: 'left',
+                  transition:
+                    'transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease',
                 }}
               >
                 <div
                   style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: 15,
+                    width: 44,
+                    height: 44,
+                    borderRadius: 14,
                     display: 'grid',
                     placeItems: 'center',
-                    background: `${card.color}18`,
-                    border: `1px solid ${card.color}42`,
-                    boxShadow: `0 14px 28px ${card.color}18`,
+                    background: `${card.color}14`,
+                    border: `1px solid ${card.color}32`,
                   }}
                 >
                   <Icon size={20} color={card.color} />
@@ -958,69 +814,82 @@ export function LandingHeroSection({
                 <div
                   style={{
                     color: LANDING_COLORS.text,
-                    fontWeight: 900,
-                    fontSize: '0.96rem',
-                    letterSpacing: '-0.03em',
+                    fontWeight: 700,
+                    fontSize: '0.98rem',
+                    letterSpacing: '-0.02em',
                   }}
                 >
                   {card.title}
                 </div>
-                <div style={{ color: LANDING_COLORS.soft, fontSize: '0.82rem', lineHeight: 1.58 }}>
+                <div style={{ color: LANDING_COLORS.soft, fontSize: '0.85rem', lineHeight: 1.5 }}>
                   {card.detail}
                 </div>
               </button>
             );
           })}
         </div>
-      </div>
-      <div
-        className="landing-footer-meta"
-        style={{
-          display: 'flex',
-          gap: 10,
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          color: LANDING_COLORS.soft,
-          fontSize: '0.82rem',
-        }}
-      >
-        <span
+
+        {/* Footer Meta */}
+        <div
+          className="landing-footer-meta"
           style={{
-            display: 'inline-flex',
+            display: 'flex',
+            gap: 12,
             alignItems: 'center',
-            gap: 8,
-            color: LANDING_COLORS.text,
+            flexWrap: 'wrap',
+            color: LANDING_COLORS.soft,
+            fontSize: '0.82rem',
+            paddingTop: 8,
+            borderTop: '1px solid var(--wasel-border)',
           }}
         >
           <span
-            className="landing-live-dot"
             style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: LANDING_COLORS.green,
-              boxShadow: `0 0 12px ${LANDING_COLORS.green}`,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              color: LANDING_COLORS.text,
             }}
+          >
+            <span
+              className="landing-live-dot"
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: LANDING_COLORS.green,
+                boxShadow: `0 0 10px ${LANDING_COLORS.green}`,
+              }}
+            />
+            {copy(ar ? 'تحديث الممر المباشر' : 'Live corridor refresh')}
+          </span>
+          <span
+            style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--wasel-border)' }}
           />
-          {copy(ar ? '????? ?? ???????' : 'Live corridor refresh')}
-        </span>
-        <span
-          style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(239,246,255,0.28)' }}
-        />
-        <button
-          type="button"
-          onClick={() => onNavigate(myTripsPath)}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: LANDING_COLORS.soft,
-            padding: 0,
-            cursor: 'pointer',
-            fontWeight: 700,
-          }}
-        >
-          {copy(ar ? 'تابع رحلاتي' : 'Track my trips')}
-        </button>
+          <button
+            type="button"
+            onClick={() => onNavigate(myTripsPath)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: LANDING_COLORS.soft,
+              padding: 0,
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '0.82rem',
+            }}
+          >
+            {copy(ar ? 'تابع رحلاتي' : 'Track my trips')}
+          </button>
+          <span
+            style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--wasel-border)' }}
+          />
+          <span>{supportLine}</span>
+          <span
+            style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--wasel-border)' }}
+          />
+          <span>{businessAddress}</span>
+        </div>
       </div>
     </section>
   );
@@ -1035,40 +904,32 @@ export function LandingMapSection({
 }: LandingMapSectionProps) {
   const educationCards = [
     {
-      title: ar ? '???? ???????' : 'Ride flow',
-      detail: ar
-        ? '?????? ??????? ??????? ???? ??? ????? ??????? ?????? ??? ?????.'
-        : 'Where rides are moving.',
+      title: ar ? 'تدفق الرحلة' : 'Ride flow',
+      detail: ar ? 'حيث تتحرك الرحلات.' : 'Where rides are moving.',
       accent: LANDING_COLORS.cyan,
     },
     {
-      title: ar ? '???? ??????' : 'Package flow',
-      detail: ar
-        ? '?????? ???????? ???????? ??????? ????? ??? ?????? ?????? ?? ??? ??????.'
-        : 'Where packages are moving.',
+      title: ar ? 'تدفق الحزمة' : 'Package flow',
+      detail: ar ? 'حيث تتحرك الحزم.' : 'Where packages are moving.',
       accent: LANDING_COLORS.gold,
     },
     {
-      title: ar ? '???? ????????' : 'Simulation layer',
-      detail: ar
-        ? '??? ?????? ???? ??????? ???? ???? ???? ?????? ???? ???? Mobility OS ??? ???? ?? Wasel.'
-        : 'Shows the network logic.',
+      title: ar ? 'طبقة المحاكاة' : 'Simulation layer',
+      detail: ar ? 'تعرض منطق الشبكة.' : 'Shows the network logic.',
       accent: LANDING_COLORS.green,
     },
   ] as const;
 
   return (
-    <section style={{ display: 'grid', gap: 14, height: '100%' }}>
+    <section style={{ display: 'grid', gap: 20 }}>
       <div
         className="landing-map-shell wasel-lift-card"
         style={{
           position: 'relative',
-          padding: 16,
-          height: '100%',
-          borderRadius: 32,
-          background:
-            'radial-gradient(circle at 14% 10%, color-mix(in srgb, var(--ds-accent) 20%, transparent), transparent 24%), radial-gradient(circle at 88% 14%, color-mix(in srgb, var(--ds-accent-strong) 14%, transparent), transparent 18%), linear-gradient(165deg, color-mix(in srgb, var(--ds-page-muted) 88%, black 12%) 0%, color-mix(in srgb, var(--ds-page) 94%, black 6%) 42%, var(--ds-page) 100%)',
-          boxShadow: SH.navy,
+          padding: 24,
+          borderRadius: 28,
+          background: 'var(--service-background)',
+          boxShadow: 'var(--wasel-shadow-lg)',
           overflow: 'hidden',
         }}
       >
@@ -1077,59 +938,57 @@ export function LandingMapSection({
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0))',
             pointerEvents: 'none',
           }}
         />
+
+        {/* Header */}
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
-            gap: 12,
-            alignItems: 'center',
+            gap: 16,
+            alignItems: 'flex-start',
             flexWrap: 'wrap',
-            marginBottom: 12,
+            marginBottom: 20,
           }}
         >
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, flex: 1, maxWidth: 560 }}>
             <div
               style={{
-                color: LANDING_COLORS.cyan,
-                fontSize: '0.74rem',
+                color: 'var(--wasel-cyan)',
+                fontSize: '0.7rem',
                 textTransform: 'uppercase',
-                letterSpacing: '0.12em',
-                fontWeight: 900,
+                letterSpacing: '0.14em',
+                fontWeight: 800,
+                marginBottom: 6,
               }}
             >
-              {copy(ar ? '??????? ?????' : 'Live map')}
+              {copy(ar ? 'خريطة مباشرة' : 'Live Map')}
             </div>
             <div
               style={{
-                marginTop: 6,
                 fontFamily: LANDING_DISPLAY,
-                fontSize: '1.12rem',
+                fontSize: '1.4rem',
                 fontWeight: 700,
                 letterSpacing: '-0.03em',
+                color: LANDING_COLORS.text,
               }}
             >
-              {copy(
-                ar
-                  ? 'Mobility OS ?? ?????? ???? ????? ??? ?? ????? Wasel.'
-                  : 'One view for every service.',
-              )}
+              {copy(ar ? 'Mobility OS في لمحة واحدة لكل خدمة.' : 'One view for every service.')}
             </div>
             <p
               style={{
-                margin: '8px 0 0',
+                margin: '10px 0 0',
                 color: LANDING_COLORS.soft,
-                fontSize: '0.88rem',
+                fontSize: '0.95rem',
                 lineHeight: 1.6,
-                maxWidth: 760,
               }}
             >
               {copy(
                 ar
-                  ? '????? ???????? ?????? ?????? ??? ???? ???????? ??? ????? ??????? ??????? ??? ??? ????????? ?? ???? ?? ??????? ???????.'
+                  ? 'الرحلات والحزم تشترك في نفس الممرات.'
                   : 'Rides and packages share the same corridors.',
               )}
             </p>
@@ -1138,118 +997,116 @@ export function LandingMapSection({
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 10,
-              padding: '9px 12px',
-              borderRadius: 16,
-              background: 'rgba(255,255,255,0.03)',
+              gap: 8,
+              padding: '8px 14px',
+              borderRadius: 14,
+              background: 'var(--wasel-app-surface)',
               color: LANDING_COLORS.soft,
-              fontSize: '0.78rem',
+              fontSize: '0.75rem',
+              fontWeight: 600,
             }}
           >
             <span
               className="landing-live-dot"
               style={{
-                width: 8,
-                height: 8,
+                width: 6,
+                height: 6,
                 borderRadius: '50%',
                 background: LANDING_COLORS.green,
-                boxShadow: `0 0 10px ${LANDING_COLORS.green}`,
+                boxShadow: `0 0 8px ${LANDING_COLORS.green}`,
               }}
             />
-            {copy(ar ? '?????? + ?????' : 'Mobile + desktop')}
+            {copy(ar ? 'جوال + سطح مكتب' : 'Mobile + desktop')}
           </div>
         </div>
-        <div style={{ position: 'relative', borderRadius: 28, overflow: 'hidden' }}>
+
+        {/* Map */}
+        <div style={{ position: 'relative', borderRadius: 24, overflow: 'hidden' }}>
           <DeferredLandingMap ar={ar} />
         </div>
+
+        {/* Education Cards */}
         <div
           className="landing-map-education-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-            gap: 12,
-            marginTop: 14,
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 16,
+            marginTop: 20,
           }}
         >
           {educationCards.map(card => (
             <div
               key={card.title}
-              className="landing-glow-card wasel-lift-card"
+              className="wasel-lift-card"
               style={{
-                padding: '18px',
-                borderRadius: 24,
-                background:
-                  'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
-                border: `1px solid ${card.accent}28`,
+                padding: '18px 22px',
+                borderRadius: 20,
+                background: 'var(--wasel-panel-muted)',
+                border: `1px solid ${card.accent}22`,
                 display: 'grid',
-                gap: 8,
+                gap: 10,
+                transition: 'transform 180ms ease, box-shadow 180ms ease',
               }}
             >
               <div
                 style={{
                   color: card.accent,
-                  fontSize: '0.74rem',
-                  fontWeight: 900,
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
                   textTransform: 'uppercase',
                   letterSpacing: '0.12em',
                 }}
               >
                 {card.title}
               </div>
-              <div style={{ color: LANDING_COLORS.soft, fontSize: '0.84rem', lineHeight: 1.62 }}>
+              <div style={{ color: LANDING_COLORS.soft, fontSize: '0.88rem', lineHeight: 1.55 }}>
                 {card.detail}
               </div>
             </div>
           ))}
         </div>
+
+        {/* Action Links */}
         {onNavigate && (mobilityOsPath || findRidePath || packagesPath) ? (
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
-              gap: 12,
+              gap: 16,
               alignItems: 'center',
               flexWrap: 'wrap',
-              marginTop: 14,
+              marginTop: 20,
+              paddingTop: 16,
+              borderTop: '1px solid var(--wasel-border)',
             }}
           >
             <div
               style={{
                 color: LANDING_COLORS.soft,
-                fontSize: '0.84rem',
+                fontSize: '0.88rem',
                 lineHeight: 1.6,
-                maxWidth: 620,
+                maxWidth: 400,
               }}
             >
               {copy(
-                ar
-                  ? '???? ?? ??????? ?? ???? ??????.'
-                  : 'Start here, then open the right flow.',
+                ar ? 'ابدأ هنا، ثم افتح التدفق الصحيح.' : 'Start here, then open the right flow.',
               )}
             </div>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               {mobilityOsPath ? (
                 <button
                   type="button"
                   onClick={() => onNavigate(mobilityOsPath)}
                   style={{
-                    minHeight: 48,
-                    padding: '0 18px',
-                    borderRadius: 18,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    background: GRAD_SIGNAL,
-                    color: '#FFFDF9',
-                    fontWeight: 900,
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    boxShadow: SH.cyanL,
+                    ...PREMIUM_BUTTON.primary,
+                    minHeight: 46,
+                    padding: '0 20px',
+                    fontSize: '0.88rem',
                   }}
                 >
-                  {copy(ar ? '???? Mobility OS' : 'Open Mobility OS')}
-                  <ArrowRight size={15} />
+                  {copy(ar ? 'افتح Mobility OS' : 'Open Mobility OS')}
+                  <ArrowRight size={14} style={{ marginLeft: 8 }} />
                 </button>
               ) : null}
               {findRidePath ? (
@@ -1257,18 +1114,13 @@ export function LandingMapSection({
                   type="button"
                   onClick={() => onNavigate(findRidePath)}
                   style={{
-                    minHeight: 48,
-                    padding: '0 18px',
-                    borderRadius: 18,
-                    border: `1px solid ${LANDING_COLORS.borderStrong}`,
-                    background: 'rgba(255,255,255,0.04)',
-                    color: LANDING_COLORS.text,
-                    fontWeight: 800,
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
+                    ...PREMIUM_BUTTON.secondary,
+                    minHeight: 46,
+                    padding: '0 20px',
+                    fontSize: '0.88rem',
                   }}
                 >
-                  {copy(ar ? '???????' : 'Rides')}
+                  {copy(ar ? 'الرحلات' : 'Rides')}
                 </button>
               ) : null}
               {packagesPath ? (
@@ -1276,18 +1128,13 @@ export function LandingMapSection({
                   type="button"
                   onClick={() => onNavigate(packagesPath)}
                   style={{
-                    minHeight: 48,
-                    padding: '0 18px',
-                    borderRadius: 18,
-                    border: `1px solid ${LANDING_COLORS.border}`,
-                    background: 'rgba(255,255,255,0.03)',
-                    color: LANDING_COLORS.soft,
-                    fontWeight: 800,
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
+                    ...PREMIUM_BUTTON.secondary,
+                    minHeight: 46,
+                    padding: '0 20px',
+                    fontSize: '0.88rem',
                   }}
                 >
-                  {copy(ar ? '??????' : 'Packages')}
+                  {copy(ar ? 'الحزم' : 'Packages')}
                 </button>
               ) : null}
             </div>
@@ -1300,7 +1147,13 @@ export function LandingMapSection({
 
 export function LandingSignalSection({ cards }: LandingSignalSectionProps) {
   return (
-    <>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: 16,
+      }}
+    >
       {cards.map(card => {
         const average = Math.round(
           card.sparkline.reduce((sum, value) => sum + value, 0) / card.sparkline.length,
@@ -1311,12 +1164,12 @@ export function LandingSignalSection({ cards }: LandingSignalSectionProps) {
         return (
           <div
             key={card.title}
-            className="landing-glow-card wasel-lift-card"
+            className="wasel-lift-card"
             style={{
-              ...panel(24),
-              padding: '20px',
+              ...panel(20),
+              padding: '22px',
               display: 'grid',
-              gap: 16,
+              gap: 18,
               position: 'relative',
               overflow: 'hidden',
             }}
@@ -1326,7 +1179,7 @@ export function LandingSignalSection({ cards }: LandingSignalSectionProps) {
               style={{
                 position: 'absolute',
                 inset: 0,
-                background: `radial-gradient(circle at top right, ${card.accent}16, transparent 28%)`,
+                background: `radial-gradient(circle at top right, ${card.accent}12, transparent 24%)`,
                 pointerEvents: 'none',
               }}
             />
@@ -1339,14 +1192,14 @@ export function LandingSignalSection({ cards }: LandingSignalSectionProps) {
                 alignItems: 'flex-start',
               }}
             >
-              <div style={{ display: 'grid', gap: 8 }}>
+              <div style={{ display: 'grid', gap: 6 }}>
                 <div
                   style={{
                     color: card.accent,
-                    fontSize: '0.74rem',
+                    fontSize: '0.7rem',
                     textTransform: 'uppercase',
                     letterSpacing: '0.12em',
-                    fontWeight: 900,
+                    fontWeight: 800,
                   }}
                 >
                   {card.title}
@@ -1355,8 +1208,9 @@ export function LandingSignalSection({ cards }: LandingSignalSectionProps) {
                   style={{
                     margin: 0,
                     color: LANDING_COLORS.soft,
-                    fontSize: '0.86rem',
-                    lineHeight: 1.68,
+                    fontSize: '0.88rem',
+                    lineHeight: 1.6,
+                    maxWidth: 280,
                   }}
                 >
                   {card.detail}
@@ -1364,14 +1218,13 @@ export function LandingSignalSection({ cards }: LandingSignalSectionProps) {
               </div>
               <div
                 style={{
-                  minWidth: 96,
-                  padding: '8px 10px',
-                  borderRadius: 16,
+                  padding: '8px 12px',
+                  borderRadius: 12,
                   background: `${card.accent}12`,
-                  border: `1px solid ${card.accent}30`,
+                  border: `1px solid ${card.accent}28`,
                   color: card.accent,
-                  fontSize: '0.74rem',
-                  fontWeight: 900,
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
                   textAlign: 'center',
@@ -1380,12 +1233,12 @@ export function LandingSignalSection({ cards }: LandingSignalSectionProps) {
                 {card.intensity}
               </div>
             </div>
-            <div style={{ display: 'grid', gap: 10 }}>
+            <div style={{ display: 'grid', gap: 14 }}>
               <div
                 style={{
-                  height: 8,
+                  height: 6,
                   borderRadius: 999,
-                  background: 'rgba(255,255,255,0.08)',
+                  background: 'var(--wasel-surface-muted-strong)',
                   overflow: 'hidden',
                 }}
               >
@@ -1394,31 +1247,31 @@ export function LandingSignalSection({ cards }: LandingSignalSectionProps) {
                     width: `${fill}%`,
                     height: '100%',
                     borderRadius: 999,
-                    background: `linear-gradient(90deg, ${card.accent}, rgba(255,255,255,0.82))`,
-                    boxShadow: `0 0 16px ${card.accent}55`,
+                    background: `linear-gradient(90deg, ${card.accent}, rgba(255,255,255,0.7))`,
+                    boxShadow: `0 0 12px ${card.accent}44`,
                   }}
                 />
               </div>
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                  gap: 10,
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: 12,
                 }}
               >
                 <div style={{ display: 'grid', gap: 4 }}>
                   <span
-                    style={{ color: LANDING_COLORS.soft, fontSize: '0.72rem', fontWeight: 700 }}
+                    style={{ color: LANDING_COLORS.muted, fontSize: '0.7rem', fontWeight: 600 }}
                   >
                     Signal
                   </span>
-                  <span style={{ color: card.accent, fontSize: '1rem', fontWeight: 900 }}>
+                  <span style={{ color: LANDING_COLORS.text, fontSize: '1rem', fontWeight: 800 }}>
                     {average}
                   </span>
                 </div>
                 <div style={{ display: 'grid', gap: 4 }}>
                   <span
-                    style={{ color: LANDING_COLORS.soft, fontSize: '0.72rem', fontWeight: 700 }}
+                    style={{ color: LANDING_COLORS.muted, fontSize: '0.7rem', fontWeight: 600 }}
                   >
                     Trend
                   </span>
@@ -1426,7 +1279,7 @@ export function LandingSignalSection({ cards }: LandingSignalSectionProps) {
                     style={{
                       color: change >= 0 ? card.accent : LANDING_COLORS.text,
                       fontSize: '1rem',
-                      fontWeight: 900,
+                      fontWeight: 800,
                     }}
                   >
                     {change >= 0 ? '+' : ''}
@@ -1435,11 +1288,13 @@ export function LandingSignalSection({ cards }: LandingSignalSectionProps) {
                 </div>
                 <div style={{ display: 'grid', gap: 4 }}>
                   <span
-                    style={{ color: LANDING_COLORS.soft, fontSize: '0.72rem', fontWeight: 700 }}
+                    style={{ color: LANDING_COLORS.muted, fontSize: '0.7rem', fontWeight: 600 }}
                   >
                     Mode
                   </span>
-                  <span style={{ color: LANDING_COLORS.text, fontSize: '0.9rem', fontWeight: 800 }}>
+                  <span
+                    style={{ color: LANDING_COLORS.text, fontSize: '0.92rem', fontWeight: 700 }}
+                  >
                     {card.trendLabel}
                   </span>
                 </div>
@@ -1448,16 +1303,24 @@ export function LandingSignalSection({ cards }: LandingSignalSectionProps) {
           </div>
         );
       })}
-    </>
+    </div>
   );
 }
 
 export function LandingTrustSection({ ar }: LandingTrustSectionProps) {
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
+    <div style={{ display: 'grid', gap: 16 }}>
       <div
-        className="landing-glow-card wasel-lift-card"
-        style={{ ...panel(24), padding: '20px', position: 'relative', overflow: 'hidden' }}
+        className="wasel-lift-card"
+        style={{
+          ...panel(20),
+          padding: '24px',
+          position: 'relative',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+        }}
       >
         <div
           aria-hidden="true"
@@ -1465,50 +1328,48 @@ export function LandingTrustSection({ ar }: LandingTrustSectionProps) {
             position: 'absolute',
             inset: 0,
             background:
-              'radial-gradient(circle at top right, color-mix(in srgb, var(--ds-accent-strong) 18%, transparent), transparent 30%)',
+              'radial-gradient(circle at top right, color-mix(in srgb, var(--ds-accent-strong) 14%, transparent) 24%)',
             pointerEvents: 'none',
           }}
         />
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div
+          style={{
+            position: 'relative',
+            width: 48,
+            height: 48,
+            borderRadius: 14,
+            display: 'grid',
+            placeItems: 'center',
+            background: 'var(--wasel-button-primary-soft)',
+            border: '1px solid var(--wasel-button-primary-border)',
+            boxShadow: 'var(--wasel-shadow-sm)',
+            flexShrink: 0,
+          }}
+        >
+          <ShieldCheck size={22} color="var(--wasel-cyan)" />
+        </div>
+        <div style={{ flex: 1 }}>
           <div
             style={{
-              width: 46,
-              height: 46,
-              borderRadius: 16,
-              display: 'grid',
-              placeItems: 'center',
-              background: `${LANDING_COLORS.green}14`,
-              border: `1px solid ${LANDING_COLORS.green}30`,
-              boxShadow: SH.green,
+              color: LANDING_COLORS.text,
+              fontWeight: 700,
+              fontSize: '1.08rem',
+              letterSpacing: '-0.02em',
             }}
           >
-            <ShieldCheck size={18} color={LANDING_COLORS.green} />
+            {copy(ar ? 'الثقة تظل واضحة' : 'Trust stays clear')}
           </div>
-          <div>
-            <div
-              style={{
-                color: LANDING_COLORS.text,
-                fontWeight: 900,
-                fontSize: '1.02rem',
-                letterSpacing: '-0.03em',
-              }}
-            >
-              {copy(ar ? '????? ???? ?????' : 'Trust stays clear')}
-            </div>
-            <div
-              style={{
-                marginTop: 4,
-                color: LANDING_COLORS.soft,
-                fontSize: '0.84rem',
-                lineHeight: 1.65,
-              }}
-            >
-              {copy(
-                ar
-                  ? '?????? ?????? ?????? ?? ???????.'
-                  : 'Identity and support are easy to find.',
-              )}
-            </div>
+          <div
+            style={{
+              marginTop: 4,
+              color: LANDING_COLORS.soft,
+              fontSize: '0.9rem',
+              lineHeight: 1.6,
+            }}
+          >
+            {copy(
+              ar ? 'الهوية والدعم سهلان العثور عليهما.' : 'Identity and support are easy to find.',
+            )}
           </div>
         </div>
       </div>

@@ -13,7 +13,7 @@ import {
   getWalletByCanonicalUserId,
   toNumber,
 } from './helpers';
-import { buildUserContext, ensureDriverForUser, getLatestVerificationRecord } from './userContext.ts';
+import { buildUserContext, ensureDriverForUser, getLatestVerificationRecord } from './userContext';
 import { recordDirectGrowthEvent } from './growth';
 import { processReferralConversionForPassenger } from './referrals';
 import {

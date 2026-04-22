@@ -1,7 +1,7 @@
 // ─── Referral operations ──────────────────────────────────────────────────────
 
 import { getDb, toNumber, creditWalletBalance } from './helpers';
-import { buildUserContext } from './userContext.ts';
+import { buildUserContext } from './userContext';
 import { recordDirectGrowthEvent } from './growth';
 import type { RawReferral, UserRow } from './types';
 

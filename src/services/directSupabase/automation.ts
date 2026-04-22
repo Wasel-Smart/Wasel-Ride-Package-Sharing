@@ -1,5 +1,5 @@
 import { getDb } from './helpers';
-import { buildUserContext } from './userContext.ts';
+import { buildUserContext } from './userContext';
 import type {
   RawAutomationJob,
   RawPricingSnapshot,

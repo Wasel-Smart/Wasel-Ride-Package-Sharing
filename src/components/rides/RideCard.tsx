@@ -50,11 +50,17 @@ export function RideCard({
         className="wasel-lift-card"
         style={{
           ...landingPanel(28),
-          padding: 22,
+          padding: 24,
           display: 'grid',
-          gap: 18,
-          border: `1px solid ${recommended ? 'var(--wasel-button-primary-border-strong)' : LANDING_COLORS.border}`,
-          background: recommended ? 'var(--wasel-service-card)' : 'var(--wasel-panel-strong)',
+          gap: 20,
+          border: `1px solid ${recommended ? 'rgba(6,182,212,0.4)' : 'rgba(255,255,255,0.08)'}`,
+          background: recommended
+            ? 'linear-gradient(180deg, rgba(6,182,212,0.08) 0%, rgba(6,182,212,0.02) 100%)'
+            : 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+          borderRadius: 24,
+          boxShadow: recommended
+            ? '0 12px 40px -12px rgba(6,182,212,0.15)'
+            : '0 8px 32px -8px rgba(0,0,0,0.2)',
         }}
       >
         <div
@@ -66,18 +72,18 @@ export function RideCard({
             flexWrap: 'wrap',
           }}
         >
-          <div style={{ display: 'grid', gap: 10 }}>
+          <div style={{ display: 'grid', gap: 12, flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               {recommended ? (
                 <span
                   style={{
-                    padding: '7px 12px',
-                    borderRadius: 999,
-                    background: 'var(--wasel-button-primary-soft)',
-                    border: '1px solid var(--wasel-button-primary-border)',
-                    color: 'var(--ds-accent-strong)',
+                    padding: '6px 14px',
+                    borderRadius: 99,
+                    background: 'rgba(6,182,212,0.15)',
+                    border: '1px solid rgba(6,182,212,0.3)',
+                    color: '#06b6d4',
                     fontFamily: LANDING_FONT,
-                    fontSize: '0.74rem',
+                    fontSize: '0.72rem',
                     fontWeight: 800,
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',
@@ -89,13 +95,13 @@ export function RideCard({
               {statusLabel ? (
                 <span
                   style={{
-                    padding: '7px 12px',
-                    borderRadius: 999,
-                    background: 'color-mix(in srgb, var(--ds-success) 14%, transparent)',
-                    border: '1px solid color-mix(in srgb, var(--ds-success) 22%, transparent)',
-                    color: LANDING_COLORS.green,
+                    padding: '6px 14px',
+                    borderRadius: 99,
+                    background: 'rgba(16,185,129,0.15)',
+                    border: '1px solid rgba(16,185,129,0.3)',
+                    color: '#10b981',
                     fontFamily: LANDING_FONT,
-                    fontSize: '0.74rem',
+                    fontSize: '0.72rem',
                     fontWeight: 800,
                   }}
                 >
@@ -104,23 +110,23 @@ export function RideCard({
               ) : null}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <span
                 style={{
-                  color: LANDING_COLORS.text,
+                  color: '#fff',
                   fontFamily: LANDING_FONT,
-                  fontSize: '1.12rem',
+                  fontSize: '1.2rem',
                   fontWeight: 900,
                 }}
               >
                 {ride.from}
               </span>
-              <ArrowRight size={16} color={LANDING_COLORS.cyan} />
+              <ArrowRight size={18} color="#06b6d4" />
               <span
                 style={{
-                  color: LANDING_COLORS.text,
+                  color: '#fff',
                   fontFamily: LANDING_FONT,
-                  fontSize: '1.12rem',
+                  fontSize: '1.2rem',
                   fontWeight: 900,
                 }}
               >
@@ -128,29 +134,29 @@ export function RideCard({
               </span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <div
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 6,
-                  color: LANDING_COLORS.muted,
+                  color: 'rgba(255,255,255,0.6)',
                   fontFamily: LANDING_FONT,
-                  fontSize: '0.82rem',
+                  fontSize: '0.85rem',
                 }}
               >
                 <Clock3 size={14} />
                 {ride.time}
               </div>
-              <span style={{ color: LANDING_COLORS.soft }}>/</span>
+              <span style={{ color: 'rgba(255,255,255,0.3)' }}>/</span>
               <div
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 6,
-                  color: LANDING_COLORS.muted,
+                  color: 'rgba(255,255,255,0.6)',
                   fontFamily: LANDING_FONT,
-                  fontSize: '0.82rem',
+                  fontSize: '0.85rem',
                 }}
               >
                 {ride.estimatedArrivalLabel}
@@ -161,20 +167,30 @@ export function RideCard({
           <div style={{ textAlign: 'right', display: 'grid', gap: 6 }}>
             <div
               style={{
-                color: 'var(--ds-accent-strong)',
+                color: '#06b6d4',
                 fontFamily: LANDING_FONT,
-                fontSize: '1.8rem',
+                fontSize: '2rem',
                 fontWeight: 900,
                 lineHeight: 1,
               }}
             >
               {ride.pricePerSeat}
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.5)',
+                  marginLeft: 2,
+                }}
+              >
+                JOD
+              </span>
             </div>
             <div
               style={{
-                color: LANDING_COLORS.soft,
+                color: 'rgba(255,255,255,0.5)',
                 fontFamily: LANDING_FONT,
-                fontSize: '0.76rem',
+                fontSize: '0.72rem',
                 fontWeight: 700,
               }}
             >
@@ -186,7 +202,7 @@ export function RideCard({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(132px, 1fr))',
+            gridTemplateColumns: 'repeat(4, 1fr)',
             gap: 12,
           }}
         >
@@ -203,22 +219,22 @@ export function RideCard({
             <div
               key={item.label}
               style={{
-                borderRadius: 20,
-                border: `1px solid ${LANDING_COLORS.border}`,
-                background: 'var(--surface-field)',
+                borderRadius: 18,
+                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.03)',
                 padding: '14px 16px',
                 display: 'grid',
                 gap: 8,
               }}
             >
-              <item.icon size={16} color={LANDING_COLORS.cyan} />
+              <item.icon size={16} color="#06b6d4" />
               <div
                 style={{
-                  color: LANDING_COLORS.soft,
+                  color: 'rgba(255,255,255,0.5)',
                   fontFamily: LANDING_FONT,
-                  fontSize: '0.72rem',
+                  fontSize: '0.68rem',
                   fontWeight: 700,
-                  letterSpacing: '0.08em',
+                  letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                 }}
               >
@@ -226,9 +242,9 @@ export function RideCard({
               </div>
               <div
                 style={{
-                  color: LANDING_COLORS.text,
+                  color: '#fff',
                   fontFamily: LANDING_FONT,
-                  fontSize: '0.92rem',
+                  fontSize: '0.9rem',
                   fontWeight: 800,
                 }}
               >
@@ -247,22 +263,28 @@ export function RideCard({
             flexWrap: 'wrap',
           }}
         >
-          <div style={{ display: 'grid', gap: 6 }}>
+          <div style={{ display: 'grid', gap: 6, flex: 1, minWidth: 200 }}>
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
-                color: LANDING_COLORS.text,
+                color: '#fff',
                 fontFamily: LANDING_FONT,
                 fontWeight: 800,
+                fontSize: '1rem',
               }}
             >
-              <ShieldCheck size={16} color={LANDING_COLORS.green} />
+              <ShieldCheck size={18} color="#10b981" />
               {ride.driver.name}
             </div>
             <div
-              style={{ color: LANDING_COLORS.muted, fontFamily: LANDING_FONT, fontSize: '0.84rem' }}
+              style={{
+                color: 'rgba(255,255,255,0.6)',
+                fontFamily: LANDING_FONT,
+                fontSize: '0.85rem',
+                lineHeight: 1.5,
+              }}
             >
               {ride.recommendedReason ?? copy.defaultReason}
             </div>
@@ -275,22 +297,24 @@ export function RideCard({
             disabled={requesting}
             onClick={() => onRequest(ride)}
             style={{
-              minWidth: 168,
-              minHeight: 48,
-              borderRadius: 18,
-              border: '1px solid var(--wasel-button-primary-border)',
+              minWidth: 160,
+              minHeight: 52,
+              borderRadius: 16,
+              border: 'none',
               background: requesting
-                ? 'var(--wasel-panel-muted)'
-                : 'var(--theme-gradient-primary)',
-              color: 'var(--wasel-button-primary-foreground)',
+                ? 'rgba(255,255,255,0.1)'
+                : 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+              color: requesting ? 'rgba(255,255,255,0.5)' : '#fff',
               fontFamily: LANDING_FONT,
-              fontSize: '0.92rem',
+              fontSize: '0.95rem',
               fontWeight: 900,
               cursor: requesting ? 'progress' : 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 8,
+              boxShadow: requesting ? 'none' : '0 8px 25px -5px rgba(6,182,212,0.4)',
+              transition: 'all 0.2s ease',
             }}
           >
             {requesting ? copy.requestingButton : copy.requestButton}

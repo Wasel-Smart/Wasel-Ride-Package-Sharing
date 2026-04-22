@@ -131,7 +131,6 @@ function ResultEmptyState({ title, description }: { title: string; description: 
       </div>
       <p
         style={{
-          margin: 0,
           color: LANDING_COLORS.muted,
           fontFamily: LANDING_FONT,
           fontSize: '1rem',
@@ -253,21 +252,22 @@ export function RideResults({
       </div>
 
       {hasMore ? (
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8 }}>
           <button
             type="button"
             onClick={onLoadMore}
             style={{
-              minHeight: 48,
-              padding: '0 20px',
-              borderRadius: 18,
-              border: `1px solid ${LANDING_COLORS.border}`,
+              minHeight: 52,
+              padding: '0 28px',
+              borderRadius: 16,
+              border: '1px solid rgba(255,255,255,0.12)',
               background: 'rgba(255,255,255,0.05)',
-              color: LANDING_COLORS.text,
+              color: '#fff',
               fontFamily: LANDING_FONT,
               fontSize: '0.92rem',
               fontWeight: 800,
               cursor: 'pointer',
+              transition: 'all 0.2s ease',
             }}
           >
             {copy.loadMoreLabel}

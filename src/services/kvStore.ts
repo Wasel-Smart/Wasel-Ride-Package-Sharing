@@ -5,7 +5,12 @@
  * @module services/kvStore
  */
 
-import { supabase } from './directSupabase';
+import { supabase as _supabase } from './directSupabase';
+
+function getSupabase() {
+  if (!_supabase) {throw new Error('Supabase client is not initialised');}
+  return _supabase;
+}
 import {
   isValidKVKey,
   type AppConfig,
@@ -30,6 +35,7 @@ const AUDIT_TABLE = 'kv_store_audit_log';
  * Get a value from the KV store
  */
 export async function getKVValue<T = unknown>(key: string): Promise<T | null> {
+  const supabase = getSupabase();
   const { data, error } = await supabase.rpc('get_kv_value', { p_key: key });
 
   if (error) {
@@ -49,6 +55,7 @@ export async function setKVValue(params: SetKVValueParams): Promise<boolean> {
     return false;
   }
 
+  const supabase = getSupabase();
   const { error } = await supabase.rpc('set_kv_value', {
     p_key: params.key,
     p_value: params.value,
@@ -68,6 +75,7 @@ export async function setKVValue(params: SetKVValueParams): Promise<boolean> {
  * Delete a value from the KV store (admin/service role only)
  */
 export async function deleteKVValue(key: string): Promise<boolean> {
+  const supabase = getSupabase();
   const { error } = await supabase
     .from(KV_TABLE)
     .delete()
@@ -87,6 +95,7 @@ export async function deleteKVValue(key: string): Promise<boolean> {
 export async function getKVValuesByPrefix<T = unknown>(
   prefix: string
 ): Promise<KVStoreEntry<T>[]> {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from(KV_TABLE)
     .select('*')
@@ -295,6 +304,7 @@ function simpleHash(str: string): number {
 export async function getKVEntry<T = unknown>(
   key: string
 ): Promise<KVStoreEntry<T> | null> {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from(KV_TABLE)
     .select('*')
@@ -317,6 +327,7 @@ export async function getKVAuditLog(
   key: string,
   limit = 50
 ): Promise<KVAuditLogEntry[]> {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from(AUDIT_TABLE)
     .select('*')
@@ -336,6 +347,7 @@ export async function getKVAuditLog(
  * Cleanup expired entries (admin only)
  */
 export async function cleanupExpiredEntries(): Promise<number> {
+  const supabase = getSupabase();
   const { data, error } = await supabase.rpc('cleanup_expired_kv_entries');
 
   if (error) {
