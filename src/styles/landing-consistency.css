@@ -156,6 +156,31 @@
   gap: var(--wasel-layout-gap);
 }
 
+.wasel-page-shell,
+.wasel-page-frame,
+.wasel-page-stack,
+.wasel-section-head,
+.wasel-page-brief,
+.wasel-clarity-band,
+.wasel-section-head__inner,
+.wasel-section-head__intro,
+.wasel-page-brief__label,
+.wasel-page-brief__copy,
+.wasel-clarity-grid,
+.wasel-clarity-item {
+  min-width: 0;
+}
+
+.wasel-page-stack > *,
+.wasel-section-head__inner > *,
+.wasel-section-head__intro > *,
+.wasel-page-brief > *,
+.wasel-clarity-band > *,
+.wasel-clarity-item > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .wasel-section-head {
   --section-tone: var(--wasel-section-tone);
   position: relative;
@@ -328,6 +353,13 @@
   line-height: 1.68;
 }
 
+.wasel-section-head__sub,
+.wasel-copy-body,
+.wasel-copy-subtle,
+.wasel-clarity-item__value {
+  overflow-wrap: anywhere;
+}
+
 .wasel-clarity-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -426,6 +458,12 @@
     padding-bottom: 10px;
     border-inline: none;
     border-bottom: 1px solid color-mix(in srgb, var(--section-tone) 16%, transparent);
+  }
+
+  .wasel-section-head__intro,
+  .wasel-page-brief__copy,
+  .wasel-clarity-band > :first-child {
+    width: 100%;
   }
 
   .wasel-section-head {
