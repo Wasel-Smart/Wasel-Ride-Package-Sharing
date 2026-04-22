@@ -23,6 +23,11 @@ function jsonResponse(body: unknown, status = 200) {
   );
 }
 
+function getRequestBody(callIndex: number) {
+  const [, options] = mockFetchWithRetry.mock.calls[callIndex] as [string, { body?: string }];
+  return JSON.parse(options.body ?? '{}');
+}
+
 const walletPayload = {
   wallet: {
     id: 'wallet-1',
@@ -152,17 +157,17 @@ describe('walletApi secure backend flow', () => {
       'https://api.wasel.test/payments/create-intent',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({
-          purpose: 'deposit',
-          amount: 25,
-          paymentMethodType: 'card',
-          referenceType: null,
-          referenceId: null,
-          metadata: {},
-          idempotencyKey: null,
-        }),
       }),
     );
+    expect(getRequestBody(0)).toEqual({
+      amount: 25,
+      idempotencyKey: null,
+      metadata: {},
+      paymentMethodType: 'card',
+      purpose: 'deposit',
+      referenceId: null,
+      referenceType: null,
+    });
   });
 
   it('requires step-up verification before sending money and forwards the verification token to the backend', async () => {
@@ -184,14 +189,14 @@ describe('walletApi secure backend flow', () => {
       'https://api.wasel.test/wallet/transfer',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({
-          recipientUserId: 'user-456',
-          amount: 20,
-          note: 'Ride split',
-          verificationToken: 'step-up-token',
-        }),
       }),
     );
+    expect(getRequestBody(1)).toEqual({
+      amount: 20,
+      note: 'Ride split',
+      recipientUserId: 'user-456',
+      verificationToken: 'step-up-token',
+    });
   });
 
   it('submits a wallet-funded subscription through the payment-intent and confirm flow', async () => {
@@ -225,31 +230,31 @@ describe('walletApi secure backend flow', () => {
       'https://api.wasel.test/payments/create-intent',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({
-          purpose: 'subscription',
-          amount: 9.99,
-          paymentMethodType: 'wallet',
-          referenceType: null,
-          referenceId: null,
-          metadata: {
-            planName: 'Wasel Plus',
-            planCode: 'wasel-plus',
-            corridorId: null,
-          },
-          idempotencyKey: null,
-        }),
       }),
     );
+    expect(getRequestBody(1)).toEqual({
+      amount: 9.99,
+      idempotencyKey: null,
+      metadata: {
+        corridorId: null,
+        planCode: 'wasel-plus',
+        planName: 'Wasel Plus',
+      },
+      paymentMethodType: 'wallet',
+      purpose: 'subscription',
+      referenceId: null,
+      referenceType: null,
+    });
     expect(mockFetchWithRetry).toHaveBeenNthCalledWith(
       3,
       'https://api.wasel.test/payments/confirm',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({
-          paymentIntentId: 'pi-sub',
-          paymentMethodId: 'pm-1',
-        }),
       }),
     );
+    expect(getRequestBody(2)).toEqual({
+      paymentIntentId: 'pi-sub',
+      paymentMethodId: 'pm-1',
+    });
   });
 });

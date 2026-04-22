@@ -41,7 +41,7 @@ import {
   walletStepUpVerificationSchema,
 } from '../contracts/wallet';
 import { parseContract } from '../contracts/validation';
-import { getConfig } from '../utils/env';
+import { getConfig, getEnv } from '../utils/env';
 import { apiGateway } from './apiGateway';
 import {
   makeReliabilityMeta,
@@ -128,9 +128,20 @@ interface ProcessWalletTransactionInput {
 
 // ─── Fallback eligibility ─────────────────────────────────────────────────────
 
-function allowClientFallback(): boolean {
+function allowSnapshotFallback(): boolean {
   const { allowLocalPersistenceFallback, enableDemoAccount, enablePersistedTestAuth } = getConfig();
   return allowLocalPersistenceFallback || enableDemoAccount || enablePersistedTestAuth;
+}
+
+function allowPaymentIntentFallback(): boolean {
+  const config = getConfig();
+  if (config.isTest) {
+    return ['1', 'true', 'yes', 'on'].includes(
+      getEnv('VITE_WALLET_API_ALLOW_DEMO_INTENTS').trim().toLowerCase(),
+    );
+  }
+
+  return allowSnapshotFallback();
 }
 
 // ─── In-memory cache (TTL-based) ──────────────────────────────────────────────
@@ -188,11 +199,116 @@ function getCachedToken(purpose: StepUpPurpose): string | null {
 function requireStepUpToken(purpose: StepUpPurpose): string {
   const token = getCachedToken(purpose);
   if (!token) {
+    const purposeLabel =
+      purpose === 'payment_method'
+        ? 'changing payment methods'
+        : purpose === 'withdrawal'
+          ? 'withdrawing funds'
+          : purpose === 'subscription'
+            ? 'managing subscriptions'
+            : purpose === 'deposit'
+              ? 'funding your wallet'
+              : 'sending money';
     throw new Error(
-      `Verify your wallet PIN and OTP before performing a ${purpose} operation.`,
+      `Verify your wallet PIN and OTP before ${purposeLabel}.`,
     );
   }
   return token;
+}
+
+function parseTopUpArgs(
+  amountOrUserId: number | string,
+  paymentMethodOrAmount: string | number,
+  maybePaymentMethod?: string,
+) {
+  if (typeof amountOrUserId === 'string') {
+    return {
+      amount: Number(paymentMethodOrAmount),
+      paymentMethod: maybePaymentMethod ?? '',
+    };
+  }
+
+  return {
+    amount: amountOrUserId,
+    paymentMethod: String(paymentMethodOrAmount),
+  };
+}
+
+function parseSendMoneyArgs(
+  recipientOrUserId: string,
+  amountOrRecipient: number | string,
+  noteOrAmount?: string | number,
+  maybeNote?: string,
+) {
+  if (typeof amountOrRecipient === 'string' && typeof noteOrAmount === 'number') {
+    return {
+      amount: noteOrAmount,
+      note: maybeNote,
+      recipientUserId: amountOrRecipient,
+    };
+  }
+
+  return {
+    amount: Number(amountOrRecipient),
+    note: typeof noteOrAmount === 'string' ? noteOrAmount : undefined,
+    recipientUserId: recipientOrUserId,
+  };
+}
+
+function parseAddPaymentMethodArgs(
+  inputOrUserId: AddPaymentMethodInput | string,
+  maybeInput?: AddPaymentMethodInput,
+): AddPaymentMethodInput {
+  return typeof inputOrUserId === 'string' ? (maybeInput as AddPaymentMethodInput) : inputOrUserId;
+}
+
+function parseVerifyPinArgs(
+  userIdOrPin: string,
+  pinOrPurpose: string,
+  purposeOrOtpCode?: string,
+  otpCodeOrChallengeId?: string,
+  maybeChallengeId?: string,
+) {
+  const isLegacySignature =
+    /^\d{4,8}$/.test(pinOrPurpose) &&
+    (purposeOrOtpCode === undefined || isStepUpPurpose(purposeOrOtpCode));
+
+  if (isLegacySignature) {
+    return {
+      challengeId: maybeChallengeId,
+      otpCode: otpCodeOrChallengeId,
+      pin: pinOrPurpose,
+      purpose: purposeOrOtpCode ?? 'transfer',
+    };
+  }
+
+  return {
+    challengeId: maybeChallengeId ?? otpCodeOrChallengeId,
+    otpCode: purposeOrOtpCode,
+    pin: userIdOrPin,
+    purpose: pinOrPurpose || 'transfer',
+  };
+}
+
+function parseAutoTopUpArgs(
+  enabledOrUserId?: boolean | string,
+  amountOrEnabled?: number | boolean,
+  thresholdOrAmount?: number,
+  maybeThreshold?: number,
+) {
+  if (typeof enabledOrUserId === 'string') {
+    return {
+      amount: typeof thresholdOrAmount === 'number' ? thresholdOrAmount : undefined,
+      enabled: typeof amountOrEnabled === 'boolean' ? amountOrEnabled : undefined,
+      threshold: maybeThreshold,
+    };
+  }
+
+  return {
+    amount: typeof amountOrEnabled === 'number' ? amountOrEnabled : undefined,
+    enabled: enabledOrUserId,
+    threshold: thresholdOrAmount,
+  };
 }
 
 // ─── Demo payment intent helpers ─────────────────────────────────────────────
@@ -338,7 +454,7 @@ export const walletApi = {
       try {
         return await fetchFreshSnapshot(uid);
       } catch {
-        const persisted = allowClientFallback() ? readPersistedWalletSnapshot(uid) : null;
+        const persisted = allowSnapshotFallback() ? readPersistedWalletSnapshot(uid) : null;
         if (persisted) return { data: persisted.data, meta: makeReliabilityMeta(true) };
         throw new Error('Wallet is unavailable and no cached snapshot exists.');
       }
@@ -423,6 +539,10 @@ export const walletApi = {
       referenceType?: string | null;
     },
   ): Promise<PaymentIntentView> {
+    if (!apiGateway.isConfigured()) {
+      throw new Error('Wallet actions are unavailable because the backend payment service is not configured.');
+    }
+
     try {
       return parseContract(
         paymentIntentViewSchema,
@@ -439,7 +559,7 @@ export const walletApi = {
         WALLET_CONTRACT_VERSION,
       );
     } catch (error) {
-      if (!allowClientFallback()) {
+      if (!allowPaymentIntentFallback()) {
         throw error;
       }
       const uid = String(options?.metadata?.initiatedByUserId ?? '');
@@ -462,7 +582,7 @@ export const walletApi = {
         WALLET_CONTRACT_VERSION,
       );
     } catch (error) {
-      const fallback = allowClientFallback() ? settleDemoIntent(paymentIntentId) : null;
+      const fallback = allowPaymentIntentFallback() ? settleDemoIntent(paymentIntentId) : null;
       if (fallback) return { id: fallback.id, status: fallback.status, settled: true, clientSecret: fallback.clientSecret ?? null };
       throw error;
     }
@@ -477,7 +597,7 @@ export const walletApi = {
         WALLET_CONTRACT_VERSION,
       );
     } catch (error) {
-      const fallback = allowClientFallback() ? readDemoIntentStatus(paymentIntentId) : null;
+      const fallback = allowPaymentIntentFallback() ? readDemoIntentStatus(paymentIntentId) : null;
       if (fallback) return fallback;
       throw error;
     }
@@ -485,7 +605,16 @@ export const walletApi = {
 
   // ── Funding ──────────────────────────────────────────────────────────────────
 
-  async topUp(amount: number, paymentMethod: string): Promise<PaymentIntentView> {
+  async topUp(
+    amountOrUserId: number | string,
+    paymentMethodOrAmount: string | number,
+    maybePaymentMethod?: string,
+  ): Promise<PaymentIntentView> {
+    const { amount, paymentMethod } = parseTopUpArgs(
+      amountOrUserId,
+      paymentMethodOrAmount,
+      maybePaymentMethod,
+    );
     if (!isWalletPaymentMethodType(paymentMethod)) throw new Error('Unsupported payment method.');
     return walletApi.createPaymentIntent('deposit', amount, paymentMethod);
   },
@@ -495,7 +624,18 @@ export const walletApi = {
     await apiGateway.post('/wallet/withdraw', { amount, bankAccount, providerName, verificationToken: token });
   },
 
-  async sendMoney(recipientUserId: string, amount: number, note?: string): Promise<void> {
+  async sendMoney(
+    recipientOrUserId: string,
+    amountOrRecipient: number | string,
+    noteOrAmount?: string | number,
+    maybeNote?: string,
+  ): Promise<void> {
+    const { amount, note, recipientUserId } = parseSendMoneyArgs(
+      recipientOrUserId,
+      amountOrRecipient,
+      noteOrAmount,
+      maybeNote,
+    );
     const token = requireStepUpToken('transfer');
     await apiGateway.post('/wallet/transfer', { amount, note: note ?? null, recipientUserId, verificationToken: token });
   },
@@ -543,7 +683,11 @@ export const walletApi = {
     return (await walletApi.getWallet(uid)).wallet.paymentMethods;
   },
 
-  async addPaymentMethod(input: AddPaymentMethodInput): Promise<void> {
+  async addPaymentMethod(
+    inputOrUserId: AddPaymentMethodInput | string,
+    maybeInput?: AddPaymentMethodInput,
+  ): Promise<void> {
+    const input = parseAddPaymentMethodArgs(inputOrUserId, maybeInput);
     const token = requireStepUpToken('payment_method');
     await apiGateway.post('/wallet/payment-methods', {
       action: 'add',
@@ -577,11 +721,19 @@ export const walletApi = {
   },
 
   async verifyPin(
-    pin: string,
-    purpose: string = 'transfer',
-    otpCode?: string,
-    challengeId?: string,
+    userIdOrPin: string,
+    pinOrPurpose: string = 'transfer',
+    purposeOrOtpCode?: string,
+    otpCodeOrChallengeId?: string,
+    maybeChallengeId?: string,
   ): Promise<WalletStepUpVerification> {
+    const { challengeId, otpCode, pin, purpose } = parseVerifyPinArgs(
+      userIdOrPin,
+      pinOrPurpose,
+      purposeOrOtpCode,
+      otpCodeOrChallengeId,
+      maybeChallengeId,
+    );
     if (!isStepUpPurpose(purpose)) throw new Error('Unsupported wallet verification purpose.');
 
     const verification = parseContract(
@@ -605,7 +757,18 @@ export const walletApi = {
 
   // ── Misc ────────────────────────────────────────────────────────────────────
 
-  async setAutoTopUp(enabled?: boolean, amount?: number, threshold?: number): Promise<void> {
+  async setAutoTopUp(
+    enabledOrUserId?: boolean | string,
+    amountOrEnabled?: number | boolean,
+    thresholdOrAmount?: number,
+    maybeThreshold?: number,
+  ): Promise<void> {
+    const { amount, enabled, threshold } = parseAutoTopUpArgs(
+      enabledOrUserId,
+      amountOrEnabled,
+      thresholdOrAmount,
+      maybeThreshold,
+    );
     await apiGateway.post('/wallet/settings', {
       autoTopUpAmount: amount ?? 20,
       autoTopUpEnabled: Boolean(enabled),

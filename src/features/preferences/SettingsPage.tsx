@@ -17,10 +17,16 @@ import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import type { Language } from '../../locales/translations';
 import {
   getCommunicationCapabilities,
-  getCommunicationPreferences,
-  updateCommunicationPreferences,
   type CommunicationPreferences,
 } from '../../services/communicationPreferences';
+import {
+  defaultDisplaySettings,
+  defaultPrivacySettings,
+  userSettingsService,
+  type DisplaySettings,
+  type PrivacySettings,
+  type UserSettings,
+} from '../../services/userSettingsService';
 import {
   getSmsSupportUrl,
   getSupportEmailUrl,
@@ -52,23 +58,6 @@ const SOFT = DS.muted;
 const FIELD_BG = 'var(--surface-field)';
 const SOFT_SURFACE = 'var(--surface-muted)';
 const SOFT_SURFACE_STRONG = 'var(--surface-muted-strong)';
-
-const STORAGE_KEYS = {
-  privacy: 'wasel.settings.privacy',
-  display: 'wasel.settings.display',
-} as const;
-
-function readStoredState<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback;
-
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return fallback;
-    return { ...fallback, ...JSON.parse(raw) } as T;
-  } catch {
-    return fallback;
-  }
-}
 
 function Section({
   icon,
@@ -380,7 +369,7 @@ function FormField({
 export default function SettingsPage() {
   const [searchParams] = useSearchParams();
   const { language, setLanguage } = useLanguage();
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { changePassword, profile, refreshProfile, resetPassword, updateProfile } = useAuth();
   const { user, updateUser } = useLocalAuth();
   const nav = useIframeSafeNavigate();
@@ -397,6 +386,7 @@ export default function SettingsPage() {
   );
   const accountRef = useRef<HTMLDivElement | null>(null);
   const securityRef = useRef<HTMLDivElement | null>(null);
+  const hydratedSettingsRef = useRef(false);
   const twoFactorSupported = isTwoFactorAvailable();
 
   const [phoneInput, setPhoneInput] = useState(user?.phone ?? '');
@@ -423,27 +413,13 @@ export default function SettingsPage() {
     preferredLanguage: language === 'ar' ? 'ar' : 'en',
   });
   const [notificationSavingKey, setNotificationSavingKey] = useState<string | null>(null);
-  const [privacy, setPrivacy] = useState(() =>
-    readStoredState(STORAGE_KEYS.privacy, {
-      showProfile: true,
-      shareLocation: true,
-      hidePhoto: false,
-      dataAnalytics: false,
-    }),
-  );
-  const [display, setDisplay] = useState<{
-    language: Language;
-    currency: string;
-    theme: ThemePreference;
-    direction: string;
-  }>(() =>
-    readStoredState(STORAGE_KEYS.display, {
-      language,
-      currency: 'JOD',
-      theme,
-      direction: ar ? 'rtl' : 'ltr',
-    }),
-  );
+  const [privacy, setPrivacy] = useState<PrivacySettings>(defaultPrivacySettings);
+  const [display, setDisplay] = useState<DisplaySettings>({
+    ...defaultDisplaySettings,
+    direction: ar ? 'rtl' : 'ltr',
+    language,
+    theme,
+  });
 
   const passwordStrength = useMemo(() => checkPasswordStrength(passwordInput), [passwordInput]);
   const twoFactorEnabled = Boolean(user?.twoFactorEnabled ?? profile?.two_factor_enabled);
@@ -466,16 +442,6 @@ export default function SettingsPage() {
   }, [language, theme]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(STORAGE_KEYS.privacy, JSON.stringify(privacy));
-  }, [privacy]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(STORAGE_KEYS.display, JSON.stringify(display));
-  }, [display]);
-
-  useEffect(() => {
     const section = searchParams.get('section');
     if (section === 'security') {
       securityRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -489,35 +455,103 @@ export default function SettingsPage() {
   useEffect(() => {
     let cancelled = false;
 
-    const loadPreferences = async () => {
-      const prefs = await getCommunicationPreferences(user?.id ?? null);
-      if (cancelled) return;
-      setNotifs(prefs);
+    const loadSettings = async () => {
+      try {
+        const settings = await userSettingsService.getUserSettings();
+        if (cancelled) return;
+
+        hydratedSettingsRef.current = true;
+        setNotifs(settings.notifications);
+        setPrivacy(settings.privacy);
+        setDisplay(settings.display);
+        if (settings.display.language !== language) {
+          setLanguage(settings.display.language);
+        }
+        if (settings.display.theme !== theme) {
+          setTheme(settings.display.theme);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          toast.error(error instanceof Error ? error.message : 'Settings could not be loaded.');
+        }
+      }
     };
 
-    void loadPreferences();
+    void loadSettings();
 
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
+  }, [language, setLanguage, setTheme, theme, user?.id]);
+
+  const persistSettings = async (
+    patch: Partial<UserSettings>,
+    savingKey: string,
+    options?: { quiet?: boolean },
+  ) => {
+    setNotificationSavingKey(savingKey);
+
+    try {
+      const next = await userSettingsService.updateUserSettings(patch);
+      hydratedSettingsRef.current = true;
+      setNotifs(next.notifications);
+      setPrivacy(next.privacy);
+      setDisplay(next.display);
+      if (next.display.language !== language) {
+        setLanguage(next.display.language);
+      }
+      if (next.display.theme !== theme) {
+        setTheme(next.display.theme);
+      }
+      if (!options?.quiet) {
+        toast.success('Saved.');
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Settings could not be saved.');
+    } finally {
+      setNotificationSavingKey(null);
+    }
+  };
 
   const saveNotificationPreferences = async (
     updates: Partial<CommunicationPreferences>,
     savingKey: string,
   ) => {
-    setNotificationSavingKey(savingKey);
-    const next = await updateCommunicationPreferences(user?.id ?? null, updates);
+    const next = { ...notifs, ...updates };
     setNotifs(next);
-    setNotificationSavingKey(null);
-    toast.success('Saved.');
+    await persistSettings({ notifications: next }, savingKey);
   };
 
   const toggleNotificationPreference =
     (key: keyof CommunicationPreferences) => (value: boolean) => {
-      setNotifs(previous => ({ ...previous, [key]: value }));
       void saveNotificationPreferences({ [key]: value } as Partial<CommunicationPreferences>, key);
     };
+
+  const updatePrivacySetting =
+    (key: keyof PrivacySettings) => (value: boolean) => {
+      const next = { ...privacy, [key]: value };
+      setPrivacy(next);
+      void persistSettings({ privacy: next }, key);
+    };
+
+  const updateDisplaySettings = (updates: Partial<DisplaySettings>, savingKey: string) => {
+    const next = { ...display, ...updates };
+    setDisplay(next);
+    void persistSettings({ display: next }, savingKey);
+  };
+
+  useEffect(() => {
+    if (!hydratedSettingsRef.current || display.theme === theme) {
+      return;
+    }
+
+    const nextDisplay = {
+      ...display,
+      theme,
+    };
+    setDisplay(nextDisplay);
+    void persistSettings({ display: nextDisplay }, 'theme', { quiet: true });
+  }, [display, theme]);
 
   const openSupportLink = (url: string, emptyMessage: string) => {
     if (!url) {
@@ -947,8 +981,14 @@ export default function SettingsPage() {
             value={display.language}
             onChange={value => {
               const nextLanguage = (value === 'ar' ? 'ar' : 'en') as Language;
-              setDisplay(previous => ({ ...previous, language: nextLanguage }));
               setLanguage(nextLanguage);
+              updateDisplaySettings(
+                {
+                  direction: nextLanguage === 'ar' ? 'rtl' : 'ltr',
+                  language: nextLanguage,
+                },
+                'language',
+              );
             }}
           />
           <SelectRow
@@ -960,7 +1000,7 @@ export default function SettingsPage() {
               { value: 'SAR', label: 'SAR - Saudi Riyal' },
             ]}
             value={display.currency}
-            onChange={value => setDisplay(previous => ({ ...previous, currency: value }))}
+            onChange={value => updateDisplaySettings({ currency: value }, 'currency')}
           />
         </Section>
 
@@ -973,25 +1013,25 @@ export default function SettingsPage() {
             label="Show Profile to Others"
             sub="Passengers & drivers"
             value={privacy.showProfile}
-            onChange={value => setPrivacy(previous => ({ ...previous, showProfile: value }))}
+            onChange={updatePrivacySetting('showProfile')}
           />
           <ToggleRow
             label="Hide Profile Photo"
             sub="Only name is shown"
             value={privacy.hidePhoto}
-            onChange={value => setPrivacy(previous => ({ ...previous, hidePhoto: value }))}
+            onChange={updatePrivacySetting('hidePhoto')}
           />
           <ToggleRow
             label="Share Live Location"
             sub="During active trips only"
             value={privacy.shareLocation}
-            onChange={value => setPrivacy(previous => ({ ...previous, shareLocation: value }))}
+            onChange={updatePrivacySetting('shareLocation')}
           />
           <ToggleRow
             label="Analytics & Improvement"
             sub="Anonymous usage data"
             value={privacy.dataAnalytics}
-            onChange={value => setPrivacy(previous => ({ ...previous, dataAnalytics: value }))}
+            onChange={updatePrivacySetting('dataAnalytics')}
           />
         </Section>
 
