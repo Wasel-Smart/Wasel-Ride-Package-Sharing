@@ -30,9 +30,7 @@ import {
 import { notificationsAPI } from '../../services/notifications.js';
 import { recordMovementActivity } from '../../services/movementMembership';
 import { createSupportTicket } from '../../services/supportInbox';
-import {
-  getFeaturedCorridors,
-} from '../../config/wasel-movement-network';
+import { getFeaturedCorridors } from '../../config/wasel-movement-network';
 import { PackageReturnsPanel } from './components/PackageReturnsPanel';
 import { PackageSendPanel } from './components/PackageSendPanel';
 import { PackageTrackPanel } from './components/PackageTrackPanel';
@@ -51,9 +49,13 @@ export function PackagesPage() {
     }),
   );
   const [trackId, setTrackId] = useState('');
-  const [trackedPackage, setTrackedPackage] = useState<PackageRequest | null>(() => getConnectedPackages()[0] ?? null);
+  const [trackedPackage, setTrackedPackage] = useState<PackageRequest | null>(
+    () => getConnectedPackages()[0] ?? null,
+  );
   const [networkStats, setNetworkStats] = useState(() => getConnectedStats());
-  const [recentPackages, setRecentPackages] = useState<PackageRequest[]>(() => getConnectedPackages().slice(0, 4));
+  const [recentPackages, setRecentPackages] = useState<PackageRequest[]>(() =>
+    getConnectedPackages().slice(0, 4),
+  );
   const [createError, setCreateError] = useState<string | null>(null);
   const [trackingMessage, setTrackingMessage] = useState<string | null>(null);
   const [busyState, setBusyState] = useState<'idle' | 'creating' | 'tracking'>('idle');
@@ -62,13 +64,14 @@ export function PackagesPage() {
   const corridorTruth = useCorridorTruth({ from: pkg.from, to: pkg.to });
   const { corridorPlan, packageReadyRideCount, selectedPriceQuote, selectedSignal } = corridorTruth;
   const matchingRideCount = packageReadyRideCount;
-  const trackedStatusColor = trackedPackage?.status === 'delivered'
-    ? DS.green
-    : trackedPackage?.status === 'in_transit'
-      ? DS.cyan
-      : trackedPackage?.status === 'matched'
-        ? DS.gold
-        : DS.muted;
+  const trackedStatusColor =
+    trackedPackage?.status === 'delivered'
+      ? DS.green
+      : trackedPackage?.status === 'in_transit'
+        ? DS.cyan
+        : trackedPackage?.status === 'matched'
+          ? DS.gold
+          : DS.muted;
 
   const refreshPackageSnapshot = () => {
     setNetworkStats(getConnectedStats());
@@ -123,20 +126,24 @@ export function PackagesPage() {
         senderEmail: user?.email,
       });
 
-      setPkg((previous) => ({ ...previous, sent: true, trackingId: created.trackingId }));
+      setPkg(previous => ({ ...previous, sent: true, trackingId: created.trackingId }));
       setTrackedPackage(created);
       setTrackId(created.trackingId);
       setTrackingMessage(`Tracking is live for ${created.trackingId}.`);
       refreshPackageSnapshot();
       void recordMovementActivity('package_created', corridorPlan?.id ?? null);
 
-      notificationsAPI.createNotification({
-        title: packageType === 'return' ? 'Return request started' : 'Package booking started',
-        message: created.matchedRideId ? `Your package was matched to a live ${created.from} to ${created.to} route.` : 'Your package request is live and waiting for the next matching route.',
-        type: 'booking',
-        priority: 'high',
-        action_url: '/app/packages',
-      }).catch(() => {});
+      notificationsAPI
+        .createNotification({
+          title: packageType === 'return' ? 'Return request started' : 'Package booking started',
+          message: created.matchedRideId
+            ? `Your package was matched to a live ${created.from} to ${created.to} route.`
+            : 'Your package request is live and waiting for the next matching route.',
+          type: 'booking',
+          priority: 'high',
+          action_url: '/app/packages',
+        })
+        .catch(() => {});
 
       if (permission === 'default') {
         requestPermission().catch(() => {});
@@ -144,11 +151,17 @@ export function PackagesPage() {
 
       notify({
         title: packageType === 'return' ? 'Return Started' : 'Package request created',
-        body: created.matchedRideId ? `Matched to ${created.matchedDriver || 'a connected route'}. Tracking ID: ${created.trackingId}` : `Tracking ID: ${created.trackingId}. We are searching for the next corridor match now.`,
+        body: created.matchedRideId
+          ? `Matched to ${created.matchedDriver || 'a connected route'}. Tracking ID: ${created.trackingId}`
+          : `Tracking ID: ${created.trackingId}. We are searching for the next corridor match now.`,
         tag: 'package-created',
       });
     } catch (error) {
-      setCreateError(error instanceof Error ? error.message : 'We could not create the package request right now.');
+      setCreateError(
+        error instanceof Error
+          ? error.message
+          : 'We could not create the package request right now.',
+      );
     } finally {
       setBusyState('idle');
     }
@@ -161,14 +174,20 @@ export function PackagesPage() {
     try {
       const found = await getPackageByTrackingId(trackId);
       setTrackedPackage(found);
-      setTrackingMessage(found ? `Tracking loaded for ${found.trackingId}.` : 'No package was found for that tracking ID yet.');
+      setTrackingMessage(
+        found
+          ? `Tracking loaded for ${found.trackingId}.`
+          : 'No package was found for that tracking ID yet.',
+      );
       refreshPackageSnapshot();
     } finally {
       setBusyState('idle');
     }
   };
 
-  const handleVerificationAction = (action: 'share_code' | 'confirm_pickup' | 'confirm_delivery') => {
+  const handleVerificationAction = (
+    action: 'share_code' | 'confirm_pickup' | 'confirm_delivery',
+  ) => {
     if (!trackedPackage) return;
     const updated = updatePackageVerification(trackedPackage.trackingId, action);
     if (!updated) return;
@@ -197,13 +216,15 @@ export function PackagesPage() {
     });
 
     setTrackingMessage(`Support ticket ${ticket.id} was opened for ${trackedPackage.trackingId}.`);
-    notificationsAPI.createNotification({
-      title: 'Package support opened',
-      message: `Support is now following ${trackedPackage.trackingId}.`,
-      type: 'support',
-      priority: 'high',
-      action_url: '/app/profile',
-    }).catch(() => {});
+    notificationsAPI
+      .createNotification({
+        title: 'Package support opened',
+        message: `Support is now following ${trackedPackage.trackingId}.`,
+        type: 'support',
+        priority: 'high',
+        action_url: '/app/profile',
+      })
+      .catch(() => {});
   };
 
   return (
@@ -235,24 +256,93 @@ export function PackagesPage() {
           ]}
         />
 
-        <div className="sp-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
+        <div
+          className="sp-3col"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            gap: 14,
+            marginBottom: 18,
+          }}
+        >
           {[
-            { label: 'Ready routes', value: String(networkStats.packageEnabledRides), detail: 'Accepting packages', color: DS.green },
-            { label: 'Attach rate', value: corridorPlan ? `${corridorPlan.attachRatePercent}%` : '--', detail: 'Chance of a fast match', color: DS.gold },
-            { label: 'Shared price', value: corridorPlan ? `${corridorPlan.sharedPriceJod} JOD` : '--', detail: 'Current reference price', color: DS.cyan },
-          ].map((item) => (
-            <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(18), border: `1px solid ${DS.border}`, padding: '18px 18px 16px', boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
-              <div style={{ color: item.color, fontWeight: 900, fontSize: '1.2rem', marginBottom: 4 }}>{item.value}</div>
-              <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem' }}>{item.label}</div>
-              <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.45 }}>{item.detail}</div>
+            {
+              label: 'Ready routes',
+              value: String(networkStats.packageEnabledRides),
+              detail: 'Accepting packages',
+              color: DS.green,
+            },
+            {
+              label: 'Attach rate',
+              value: corridorPlan ? `${corridorPlan.attachRatePercent}%` : '--',
+              detail: 'Chance of a fast match',
+              color: DS.gold,
+            },
+            {
+              label: 'Shared price',
+              value: corridorPlan ? `${corridorPlan.sharedPriceJod} JOD` : '--',
+              detail: 'Current reference price',
+              color: DS.cyan,
+            },
+          ].map(item => (
+            <div
+              key={item.label}
+              className="w-focus"
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
+                borderRadius: r(18),
+                border: `1px solid ${DS.border}`,
+                padding: '18px 18px 16px',
+                boxShadow: 'var(--wasel-shadow-md)',
+                backdropFilter: 'blur(18px)',
+                transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+              }}
+            >
+              <div
+                style={{ color: item.color, fontWeight: 900, fontSize: '1.2rem', marginBottom: 4 }}
+              >
+                {item.value}
+              </div>
+              <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem' }}>
+                {item.label}
+              </div>
+              <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.45 }}>
+                {item.detail}
+              </div>
             </div>
           ))}
         </div>
 
-        <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
-          <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
+        <div
+          className="sp-2col"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1.15fr 0.85fr',
+            gap: 14,
+            marginBottom: 18,
+          }}
+        >
+          <div
+            style={{
+              background: DS.card,
+              borderRadius: r(18),
+              padding: '18px 18px 16px',
+              border: `1px solid ${DS.border}`,
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}28`, display: 'grid', placeItems: 'center' }}>
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: r(12),
+                  background: `${DS.cyan}12`,
+                  border: `1px solid ${DS.cyan}28`,
+                  display: 'grid',
+                  placeItems: 'center',
+                }}
+              >
                 <Brain size={18} color={DS.cyan} />
               </div>
               <div>
@@ -270,29 +360,73 @@ export function PackagesPage() {
                 corridorPlan
                   ? `Pickup: ${corridorPlan.pickupPoints[0] ?? 'Trusted node'}.`
                   : 'Pickup points appear here.',
-              ].map((line) => (
-                <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: DS.text, fontSize: '0.82rem', lineHeight: 1.65 }}>
+              ].map(line => (
+                <div
+                  key={line}
+                  style={{
+                    borderRadius: r(14),
+                    border: `1px solid ${DS.border}`,
+                    background: DS.card2,
+                    padding: '12px 14px',
+                    color: DS.text,
+                    fontSize: '0.82rem',
+                    lineHeight: 1.65,
+                  }}
+                >
                   {line}
                 </div>
               ))}
             </div>
           </div>
 
-          <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-              <div style={{ color: DS.text, fontWeight: 800, marginBottom: 12 }}>Top corridors</div>
+          <div
+            style={{
+              background: DS.card,
+              borderRadius: r(18),
+              padding: '18px 18px 16px',
+              border: `1px solid ${DS.border}`,
+            }}
+          >
+            <div style={{ color: DS.text, fontWeight: 800, marginBottom: 12 }}>Top corridors</div>
             <div style={{ display: 'grid', gap: 10 }}>
-              {featuredCorridors.map((corridor) => (
+              {featuredCorridors.map(corridor => (
                 <button
                   key={corridor.id}
                   type="button"
-                  onClick={() => setPkg((previous) => ({ ...previous, from: corridor.from, to: corridor.to }))}
-                  style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}
+                  onClick={() =>
+                    setPkg(previous => ({ ...previous, from: corridor.from, to: corridor.to }))
+                  }
+                  className="w-focus"
+                  style={{
+                    textAlign: 'left',
+                    borderRadius: r(14),
+                    border: `1px solid ${DS.border}`,
+                    background: 'var(--wasel-panel-strong)',
+                    backdropFilter: 'blur(18px)',
+                    WebkitBackdropFilter: 'blur(18px)',
+                    padding: '12px 14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.18s ease',
+                  }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                    <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem' }}>{corridor.label}</div>
-                    <span style={{ color: DS.cyan, fontSize: '0.72rem', fontWeight: 700 }}>{corridor.predictedDemandScore}/100</span>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 10,
+                    }}
+                  >
+                    <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem' }}>
+                      {corridor.label}
+                    </div>
+                    <span style={{ color: DS.cyan, fontSize: '0.72rem', fontWeight: 700 }}>
+                      {corridor.predictedDemandScore}/100
+                    </span>
                   </div>
-                  <div style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.55, marginTop: 8 }}>
+                  <div
+                    style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.55, marginTop: 8 }}
+                  >
                     {corridor.routeMoat}
                   </div>
                 </button>
@@ -301,15 +435,57 @@ export function PackagesPage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, background: 'rgba(255,255,255,0.03)', borderRadius: r(16), padding: 6, border: `1px solid ${DS.border}`, marginBottom: 24, boxShadow: '0 10px 22px rgba(0,0,0,0.14)' }}>
-          {([['send', 'Send'], ['track', 'Track'], ['raje3', 'Returns']] as const).map(([key, label]) => (
-            <button key={key} onClick={() => setActiveTab(key)} style={{ flex: 1, height: 44, borderRadius: r(12), border: 'none', cursor: 'pointer', fontFamily: DS.F, fontWeight: activeTab === key ? 800 : 600, fontSize: '0.82rem', letterSpacing: '-0.01em', background: activeTab === key ? DS.gradG : 'transparent', color: activeTab === key ? '#fff' : DS.muted, transition: 'all 0.18s' }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            background: 'rgba(255,255,255,0.03)',
+            borderRadius: r(16),
+            padding: 6,
+            border: `1px solid ${DS.border}`,
+            marginBottom: 24,
+            boxShadow: '0 10px 22px rgba(0,0,0,0.14)',
+          }}
+        >
+          {(
+            [
+              ['send', 'Send'],
+              ['track', 'Track'],
+              ['raje3', 'Returns'],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              style={{
+                flex: 1,
+                height: 44,
+                borderRadius: r(12),
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: DS.F,
+                fontWeight: activeTab === key ? 800 : 600,
+                fontSize: '0.82rem',
+                letterSpacing: '-0.01em',
+                background: activeTab === key ? DS.gradG : 'transparent',
+                color: activeTab === key ? '#fff' : DS.muted,
+                transition: 'all 0.18s',
+              }}
+            >
               {label}
             </button>
           ))}
         </div>
 
-        <div style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(22), padding: '28px 28px', border: `1px solid ${DS.border}`, boxShadow: '0 16px 38px rgba(0,0,0,0.18)' }}>
+        <div
+          style={{
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
+            borderRadius: r(22),
+            padding: '28px 28px',
+            border: `1px solid ${DS.border}`,
+            boxShadow: '0 16px 38px rgba(0,0,0,0.18)',
+          }}
+        >
           {activeTab === 'send' && (
             <PackageSendPanel
               pkg={pkg}
@@ -325,7 +501,7 @@ export function PackagesPage() {
               onCreate={() => handlePackageCreate('delivery')}
               onReset={resetComposer}
               onOpenTracking={() => setActiveTab('track')}
-              onOpenRecent={(item) => focusTrackingItem(item, true)}
+              onOpenRecent={item => focusTrackingItem(item, true)}
             />
           )}
 
@@ -341,7 +517,7 @@ export function PackagesPage() {
               onSearch={handleTrackingSearch}
               onVerificationAction={handleVerificationAction}
               onOpenSupport={handleOpenSupport}
-              onOpenRecent={(item) => focusTrackingItem(item)}
+              onOpenRecent={item => focusTrackingItem(item)}
             />
           )}
 
@@ -353,7 +529,6 @@ export function PackagesPage() {
             />
           )}
         </div>
-
       </PageShell>
     </Protected>
   );
