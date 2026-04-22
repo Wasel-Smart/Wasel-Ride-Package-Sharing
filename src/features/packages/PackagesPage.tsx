@@ -33,7 +33,6 @@ import { createSupportTicket } from '../../services/supportInbox';
 import {
   getFeaturedCorridors,
 } from '../../config/wasel-movement-network';
-import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { PackageReturnsPanel } from './components/PackageReturnsPanel';
 import { PackageSendPanel } from './components/PackageSendPanel';
 import { PackageTrackPanel } from './components/PackageTrackPanel';
@@ -355,15 +354,6 @@ export function PackagesPage() {
           )}
         </div>
 
-        <ServiceFlowPlaybook
-          focusService={
-            activeTab === 'track'
-              ? 'deliver-package'
-              : activeTab === 'raje3'
-                ? 'returns'
-                : 'send-package'
-          }
-        />
       </PageShell>
     </Protected>
   );

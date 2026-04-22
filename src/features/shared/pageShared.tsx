@@ -97,7 +97,7 @@ export function Protected({ children }: { children: ReactNode }) {
           </div>
           <div className="wasel-auth-guard__title">Checking access</div>
           <div className="wasel-auth-guard__body">
-            Loading your Wasel account and restoring the service flow.
+            Loading your Wasel account and restoring your session.
           </div>
         </div>
       </div>
