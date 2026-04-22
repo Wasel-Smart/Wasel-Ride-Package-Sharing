@@ -37,11 +37,11 @@ export function NetworkStatusIndicator({ compact = false, showDetails = false }:
   if (!metrics) return null;
 
   const qualityTone = {
-    excellent: { dotClass: 'bg-green-500', color: '#22c55e', surface: 'rgba(34,197,94,0.10)', border: 'rgba(34,197,94,0.20)' },
-    good: { dotClass: 'bg-blue-500', color: '#3b82f6', surface: 'rgba(59,130,246,0.10)', border: 'rgba(59,130,246,0.20)' },
-    fair: { dotClass: 'bg-yellow-500', color: '#eab308', surface: 'rgba(234,179,8,0.10)', border: 'rgba(234,179,8,0.20)' },
-    poor: { dotClass: 'bg-orange-500', color: '#f97316', surface: 'rgba(249,115,22,0.10)', border: 'rgba(249,115,22,0.20)' },
-    offline: { dotClass: 'bg-red-500', color: '#ef4444', surface: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.20)' },
+    excellent: { dotClass: '', color: 'var(--ds-accent-strong)', surface: 'color-mix(in srgb, var(--ds-accent-strong) 10%, transparent)', border: 'color-mix(in srgb, var(--ds-accent-strong) 20%, transparent)' },
+    good: { dotClass: '', color: 'var(--ds-accent)', surface: 'color-mix(in srgb, var(--ds-accent) 10%, transparent)', border: 'color-mix(in srgb, var(--ds-accent) 20%, transparent)' },
+    fair: { dotClass: '', color: 'var(--wasel-brand-gradient-start)', surface: 'color-mix(in srgb, var(--wasel-brand-gradient-start) 10%, transparent)', border: 'color-mix(in srgb, var(--wasel-brand-gradient-start) 20%, transparent)' },
+    poor: { dotClass: '', color: 'var(--wasel-brand-hover)', surface: 'color-mix(in srgb, var(--wasel-brand-hover) 10%, transparent)', border: 'color-mix(in srgb, var(--wasel-brand-hover) 20%, transparent)' },
+    offline: { dotClass: '', color: 'var(--wasel-brand-hover)', surface: 'color-mix(in srgb, var(--wasel-brand-hover) 10%, transparent)', border: 'color-mix(in srgb, var(--wasel-brand-hover) 20%, transparent)' },
   } as const;
 
   const tone = qualityTone[metrics.quality];
@@ -65,7 +65,7 @@ export function NetworkStatusIndicator({ compact = false, showDetails = false }:
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        <div className={`w-3 h-3 rounded-full ${tone?.dotClass ?? 'bg-gray-500'}`} />
+        <div className="w-3 h-3 rounded-full" style={{ background: tone?.color ?? 'var(--ds-text-soft)' }} />
         
         <AnimatePresence>
           {queuedCount > 0 && (
@@ -73,7 +73,8 @@ export function NetworkStatusIndicator({ compact = false, showDetails = false }:
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
-              className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full text-xs text-white flex items-center justify-center"
+              className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-xs text-white flex items-center justify-center"
+              style={{ background: 'var(--wasel-brand-gradient-start)' }}
             >
               {queuedCount}
             </motion.div>
@@ -86,12 +87,16 @@ export function NetworkStatusIndicator({ compact = false, showDetails = false }:
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="absolute right-0 top-full mt-2 w-64 bg-gray-900 border border-cyan-500/20 rounded-lg p-4 shadow-lg z-50"
+              className="absolute right-0 top-full mt-2 w-64 rounded-lg p-4 shadow-lg z-50"
+              style={{
+                background: 'color-mix(in srgb, var(--ds-page) 94%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--ds-accent) 18%, var(--ds-border))',
+              }}
             >
               <div className="space-y-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-400">Status:</span>
-                  <span className={`font-semibold ${metrics.online ? 'text-green-400' : 'text-red-400'}`}>
+                  <span className="font-semibold" style={{ color: metrics.online ? tone.color : qualityTone.offline.color }}>
                     {metrics.online ? 'Online' : 'Offline'}
                   </span>
                 </div>
@@ -126,9 +131,9 @@ export function NetworkStatusIndicator({ compact = false, showDetails = false }:
                 )}
 
                 {queuedCount > 0 && (
-                  <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded p-2 mt-2">
-                    <AlertCircle size={14} className="text-yellow-500" />
-                    <span className="text-yellow-500 text-xs">{queuedCount} requests queued</span>
+                  <div className="flex items-center gap-2 rounded p-2 mt-2" style={{ background: 'color-mix(in srgb, var(--wasel-brand-gradient-start) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--wasel-brand-gradient-start) 20%, transparent)' }}>
+                    <AlertCircle size={14} style={{ color: 'var(--wasel-brand-gradient-start)' }} />
+                    <span className="text-xs" style={{ color: 'var(--wasel-brand-gradient-start)' }}>{queuedCount} requests queued</span>
                   </div>
                 )}
               </div>
@@ -153,7 +158,7 @@ export function NetworkStatusIndicator({ compact = false, showDetails = false }:
       {metrics.online ? (
         <Wifi size={16} style={{ color: tone.color }} />
       ) : (
-        <WifiOff size={16} className="text-red-500" />
+        <WifiOff size={16} style={{ color: qualityTone.offline.color }} />
       )}
 
       <div className="flex-1">
@@ -165,7 +170,8 @@ export function NetworkStatusIndicator({ compact = false, showDetails = false }:
 
       {queuedCount > 0 && (
         <motion.div
-          className="bg-yellow-500 text-white rounded-full px-2 py-1 text-xs font-semibold"
+          className="text-white rounded-full px-2 py-1 text-xs font-semibold"
+          style={{ background: 'var(--wasel-brand-gradient-start)' }}
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
         >

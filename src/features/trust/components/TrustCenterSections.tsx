@@ -13,14 +13,14 @@ export const TRUST_THEME = {
   card2: 'var(--wasel-service-card-2)',
   border: 'var(--wasel-service-border)',
   cyan: 'var(--wasel-app-blue)',
-  green: 'var(--wasel-app-teal)',
+  green: 'var(--wasel-brand-gradient-start)',
   gold: 'var(--wasel-app-sky)',
-  red: '#EF4444',
+  red: 'var(--wasel-brand-hover)',
   text: 'var(--wasel-service-text)',
   sub: 'var(--wasel-service-sub)',
   muted: 'var(--wasel-service-muted)',
-  font: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
-  display: "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', 'Cairo', sans-serif)",
+  font: "var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)",
+  display: "var(--wasel-font-display, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)",
 } as const;
 
 type VerificationTone = {
@@ -248,7 +248,7 @@ export function TrustHeroCard({
     <div
       style={{
         background: 'linear-gradient(135deg, rgb(var(--accent-secondary-rgb) / 0.16), rgb(var(--accent-rgb) / 0.08))',
-        border: '1px solid rgba(71,183,230,0.22)',
+        border: '1px solid color-mix(in srgb, var(--ds-accent) 20%, transparent)',
         borderRadius: 24,
         padding: '24px 22px',
         marginBottom: 20,
@@ -270,8 +270,8 @@ export function TrustHeroCard({
             width: 52,
             height: 52,
             borderRadius: 16,
-            background: 'rgba(71,183,230,0.15)',
-            border: '1px solid rgba(71,183,230,0.25)',
+            background: 'color-mix(in srgb, var(--ds-accent) 12%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--ds-accent) 22%, transparent)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -494,8 +494,9 @@ export function TrustDriverReadinessCard({
           style={{
             border: 'none',
             borderRadius: 12,
-            background: `linear-gradient(135deg, ${TRUST_THEME.cyan}, #1E5FAE)`,
-            color: 'var(--text-inverse)',
+            background:
+              'linear-gradient(135deg, var(--wasel-brand-gradient-start), var(--wasel-brand-gradient-end))',
+            color: '#FFFDF9',
             fontWeight: 800,
             padding: '11px 16px',
             cursor: 'pointer',

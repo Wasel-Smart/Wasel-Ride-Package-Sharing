@@ -47,8 +47,9 @@ export default function TrustCenterPage() {
           style={{
             border: 'none',
             borderRadius: 12,
-            background: `linear-gradient(135deg, ${TRUST_THEME.cyan}, #1E5FAE)`,
-            color: '#041018',
+            background:
+              'linear-gradient(135deg, var(--wasel-brand-gradient-start), var(--wasel-brand-gradient-end))',
+            color: '#FFFDF9',
             fontWeight: 800,
             padding: '12px 20px',
             cursor: 'pointer',

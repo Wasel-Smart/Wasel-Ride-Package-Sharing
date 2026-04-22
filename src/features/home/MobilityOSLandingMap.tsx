@@ -525,11 +525,18 @@ function radiansToDegrees(value: number) {
   return (value * 180) / Math.PI;
 }
 
-export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
+export function MobilityOSLandingMap({
+  ar = false,
+  variant = 'full',
+}: {
+  ar?: boolean;
+  variant?: 'ambient' | 'full';
+}) {
   const { snapshot } = useMobilityOSLiveData(ar);
   const [phase, setPhase] = useState(0);
   const copy = ar ? COPY.ar : COPY.en;
   const idSeed = useId().replace(/:/g, '');
+  const ambient = variant === 'ambient';
 
   const ids = useMemo<SvgIds>(
     () => ({
@@ -956,12 +963,32 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
             inset 0 24px 80px rgba(119, 229, 255, 0.03);
           pointer-events: none;
         }
+        .landing-sim-shell[data-variant='ambient'] {
+          background:
+            radial-gradient(circle at 16% 14%, rgba(245, 176, 65, 0.12), transparent 26%),
+            radial-gradient(circle at 82% 12%, rgba(230, 126, 34, 0.08), transparent 22%),
+            linear-gradient(180deg, rgba(8, 15, 24, 0.96) 0%, rgba(5, 10, 18, 0.98) 52%, rgba(3, 8, 15, 1) 100%);
+        }
+        .landing-sim-shell[data-variant='ambient']::before {
+          opacity: 0.24;
+        }
+        .landing-sim-shell[data-variant='ambient']::after {
+          inset: 12px;
+          border-color: rgba(245, 176, 65, 0.08);
+          box-shadow:
+            inset 0 0 0 1px rgba(255,255,255,0.018),
+            inset 0 24px 80px rgba(245, 176, 65, 0.02);
+        }
         .landing-sim-svg {
           position: absolute;
           inset: 0;
           width: 100%;
           height: 100%;
           display: block;
+        }
+        .landing-sim-shell[data-variant='ambient'] .landing-sim-svg {
+          opacity: 0.92;
+          filter: saturate(0.88) brightness(0.94);
         }
         .landing-sim-overlay {
           position: absolute;
@@ -973,6 +1000,10 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
           padding: 22px;
           z-index: 1;
           pointer-events: none;
+        }
+        .landing-sim-shell[data-variant='ambient'] .landing-sim-overlay,
+        .landing-sim-shell[data-variant='ambient'] .landing-sim-city-label-group {
+          display: none;
         }
         .landing-sim-top {
           display: flex;
@@ -1281,7 +1312,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
         }
       `}</style>
 
-      <div className="landing-sim-shell">
+      <div className="landing-sim-shell" data-variant={variant}>
         <span
           style={{
             position: 'absolute',
@@ -1731,7 +1762,7 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
                 />
 
                 {LABELED_CITY_IDS.has(city.id) && labelConfig ? (
-                  <g>
+                  <g className="landing-sim-city-label-group">
                     <rect
                       x={
                         labelConfig.anchor === 'end'
@@ -1765,168 +1796,173 @@ export function MobilityOSLandingMap({ ar = false }: { ar?: boolean }) {
           })}
         </svg>
 
-        <div className="landing-sim-overlay">
-          <div className="landing-sim-top">
-            <div className="landing-sim-panel landing-sim-title-panel">
-              <div className="landing-sim-overline">
-                <span className="landing-sim-overline-dot" />
-                {copy.heroEyebrow}
-              </div>
-              <h3 className="landing-sim-title">{copy.heroTitle}</h3>
-              <p className="landing-sim-body">{copy.heroBody}</p>
+        {!ambient ? (
+          <div className="landing-sim-overlay">
+            <div className="landing-sim-top">
+              <div className="landing-sim-panel landing-sim-title-panel">
+                <div className="landing-sim-overline">
+                  <span className="landing-sim-overline-dot" />
+                  {copy.heroEyebrow}
+                </div>
+                <h3 className="landing-sim-title">{copy.heroTitle}</h3>
+                <p className="landing-sim-body">{copy.heroBody}</p>
 
-              <div className="landing-sim-meta-row">
-                <span className="landing-sim-kv">
-                  <strong>{copy.updated}</strong>
-                  {updatedAtLabel}
-                </span>
-                <span className="landing-sim-kv">
-                  <strong>{copy.routeHealth}</strong>
-                  {formatPercent(1 - dashboard.congestion * 0.58, ar)}
-                </span>
-              </div>
-
-              <div className="landing-sim-tag-row">
-                {overlayLabels.map(label => (
-                  <span key={label} className="landing-sim-tag">
-                    {label}
+                <div className="landing-sim-meta-row">
+                  <span className="landing-sim-kv">
+                    <strong>{copy.updated}</strong>
+                    {updatedAtLabel}
                   </span>
-                ))}
+                  <span className="landing-sim-kv">
+                    <strong>{copy.routeHealth}</strong>
+                    {formatPercent(1 - dashboard.congestion * 0.58, ar)}
+                  </span>
+                </div>
+
+                <div className="landing-sim-tag-row">
+                  {overlayLabels.map(label => (
+                    <span key={label} className="landing-sim-tag">
+                      {label}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="landing-sim-legend-row">
+                  <span className="landing-sim-legend-chip">
+                    <span className="landing-sim-legend-dot" style={{ background: '#F7FCFF' }} />
+                    {copy.passengerLegend}
+                  </span>
+                  <span className="landing-sim-legend-chip">
+                    <span
+                      className="landing-sim-legend-dot"
+                      style={{ background: PACKAGE_COLOR }}
+                    />
+                    {copy.packageLegend}
+                  </span>
+                  <span className="landing-sim-legend-chip">
+                    <span className="landing-sim-legend-line" />
+                    {copy.networkLegend}
+                  </span>
+                </div>
               </div>
 
-              <div className="landing-sim-legend-row">
-                <span className="landing-sim-legend-chip">
-                  <span className="landing-sim-legend-dot" style={{ background: '#F7FCFF' }} />
-                  {copy.passengerLegend}
-                </span>
-                <span className="landing-sim-legend-chip">
-                  <span className="landing-sim-legend-dot" style={{ background: PACKAGE_COLOR }} />
-                  {copy.packageLegend}
-                </span>
-                <span className="landing-sim-legend-chip">
-                  <span className="landing-sim-legend-line" />
-                  {copy.networkLegend}
-                </span>
+              <div className="landing-sim-panel landing-sim-telemetry-panel">
+                <p className="landing-sim-telemetry-title">{copy.telemetryTitle}</p>
+                <div className="landing-sim-status-row" style={{ marginTop: 12 }}>
+                  {statusTags.map(tag => (
+                    <span key={tag} className="landing-sim-status-chip">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <h4 className="landing-sim-telemetry-value">{dashboard.topCorridor}</h4>
+                <p className="landing-sim-telemetry-copy">
+                  <strong style={{ color: '#F7FCFF' }}>{copy.dispatchAction}:</strong>{' '}
+                  {dashboard.dispatchAction}
+                </p>
+
+                <div className="landing-sim-meter-group">
+                  <div>
+                    <div className="landing-sim-meter-label">
+                      <span>{copy.utilization}</span>
+                      <strong>{formatPercent(dashboard.networkUtilization, ar)}</strong>
+                    </div>
+                    <div className="landing-sim-meter">
+                      <span
+                        className="landing-sim-meter-fill"
+                        style={{
+                          width: utilizationWidth,
+                          background:
+                            'linear-gradient(90deg, rgba(120, 232, 255, 0.82), rgba(245, 239, 231, 0.94))',
+                          boxShadow: '0 0 18px rgba(120, 232, 255, 0.28)',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="landing-sim-meter-label">
+                      <span>{copy.congestion}</span>
+                      <strong>{formatPercent(dashboard.congestion, ar)}</strong>
+                    </div>
+                    <div className="landing-sim-meter">
+                      <span
+                        className="landing-sim-meter-fill"
+                        style={{
+                          width: congestionWidth,
+                          background:
+                            'linear-gradient(90deg, rgba(255, 179, 87, 0.82), rgba(245, 154, 44, 0.96))',
+                          boxShadow: '0 0 18px rgba(245, 154, 44, 0.24)',
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="landing-sim-panel landing-sim-telemetry-panel">
-              <p className="landing-sim-telemetry-title">{copy.telemetryTitle}</p>
-              <div className="landing-sim-status-row" style={{ marginTop: 12 }}>
-                {statusTags.map(tag => (
-                  <span key={tag} className="landing-sim-status-chip">
-                    {tag}
-                  </span>
+            <div className="landing-sim-bottom">
+              <div className="landing-sim-stat-grid">
+                {summaryCards.map(card => (
+                  <div
+                    key={card.id}
+                    className="landing-sim-panel landing-sim-stat-card"
+                    style={{
+                      borderColor: card.accent,
+                      boxShadow: `inset 0 1px 0 rgba(255,255,255,0.05), 0 20px 48px ${card.glow}`,
+                    }}
+                  >
+                    <div className="landing-sim-stat-label">{card.label}</div>
+                    <div className="landing-sim-stat-value">{card.value}</div>
+                    <div className="landing-sim-stat-detail">{card.detail}</div>
+                  </div>
                 ))}
               </div>
-              <h4 className="landing-sim-telemetry-value">{dashboard.topCorridor}</h4>
-              <p className="landing-sim-telemetry-copy">
-                <strong style={{ color: '#F7FCFF' }}>{copy.dispatchAction}:</strong>{' '}
-                {dashboard.dispatchAction}
-              </p>
 
-              <div className="landing-sim-meter-group">
-                <div>
-                  <div className="landing-sim-meter-label">
-                    <span>{copy.utilization}</span>
-                    <strong>{formatPercent(dashboard.networkUtilization, ar)}</strong>
-                  </div>
-                  <div className="landing-sim-meter">
-                    <span
-                      className="landing-sim-meter-fill"
-                      style={{
-                        width: utilizationWidth,
-                        background:
-                          'linear-gradient(90deg, rgba(120, 232, 255, 0.82), rgba(245, 239, 231, 0.94))',
-                        boxShadow: '0 0 18px rgba(120, 232, 255, 0.28)',
-                      }}
-                    />
-                  </div>
+              <div className="landing-sim-panel landing-sim-hotspots">
+                <div className="landing-sim-hotspots-head">
+                  <h4 className="landing-sim-hotspots-title">{copy.hotCorridors}</h4>
+                  <span className="landing-sim-kv">{copy.routeHealth}</span>
                 </div>
-
-                <div>
-                  <div className="landing-sim-meter-label">
-                    <span>{copy.congestion}</span>
-                    <strong>{formatPercent(dashboard.congestion, ar)}</strong>
-                  </div>
-                  <div className="landing-sim-meter">
-                    <span
-                      className="landing-sim-meter-fill"
-                      style={{
-                        width: congestionWidth,
-                        background:
-                          'linear-gradient(90deg, rgba(255, 179, 87, 0.82), rgba(245, 154, 44, 0.96))',
-                        boxShadow: '0 0 18px rgba(245, 154, 44, 0.24)',
-                      }}
-                    />
-                  </div>
+                <div className="landing-sim-hotspot-list">
+                  {corridorHighlights.map(corridor => (
+                    <div key={corridor.id} className="landing-sim-hotspot-item">
+                      <div className="landing-sim-hotspot-head">
+                        <span>{corridor.name}</span>
+                        <span className="landing-sim-hotspot-total">
+                          {corridor.total} {copy.movements}
+                        </span>
+                      </div>
+                      <div className="landing-sim-track-stack">
+                        <div className="landing-sim-track">
+                          <span
+                            style={{
+                              width: corridor.passengerWidth,
+                              background:
+                                'linear-gradient(90deg, rgba(247,252,255,0.98), rgba(151,236,255,0.92))',
+                            }}
+                          />
+                        </div>
+                        <div className="landing-sim-track">
+                          <span
+                            style={{
+                              width: corridor.packageWidth,
+                              background:
+                                'linear-gradient(90deg, rgba(255,200,116,0.96), rgba(245,154,44,0.98))',
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="landing-sim-hotspot-foot">
+                        <span>{corridor.speed}</span>
+                        <span>{corridor.congestion}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
-
-          <div className="landing-sim-bottom">
-            <div className="landing-sim-stat-grid">
-              {summaryCards.map(card => (
-                <div
-                  key={card.id}
-                  className="landing-sim-panel landing-sim-stat-card"
-                  style={{
-                    borderColor: card.accent,
-                    boxShadow: `inset 0 1px 0 rgba(255,255,255,0.05), 0 20px 48px ${card.glow}`,
-                  }}
-                >
-                  <div className="landing-sim-stat-label">{card.label}</div>
-                  <div className="landing-sim-stat-value">{card.value}</div>
-                  <div className="landing-sim-stat-detail">{card.detail}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="landing-sim-panel landing-sim-hotspots">
-              <div className="landing-sim-hotspots-head">
-                <h4 className="landing-sim-hotspots-title">{copy.hotCorridors}</h4>
-                <span className="landing-sim-kv">{copy.routeHealth}</span>
-              </div>
-              <div className="landing-sim-hotspot-list">
-                {corridorHighlights.map(corridor => (
-                  <div key={corridor.id} className="landing-sim-hotspot-item">
-                    <div className="landing-sim-hotspot-head">
-                      <span>{corridor.name}</span>
-                      <span className="landing-sim-hotspot-total">
-                        {corridor.total} {copy.movements}
-                      </span>
-                    </div>
-                    <div className="landing-sim-track-stack">
-                      <div className="landing-sim-track">
-                        <span
-                          style={{
-                            width: corridor.passengerWidth,
-                            background:
-                              'linear-gradient(90deg, rgba(247,252,255,0.98), rgba(151,236,255,0.92))',
-                          }}
-                        />
-                      </div>
-                      <div className="landing-sim-track">
-                        <span
-                          style={{
-                            width: corridor.packageWidth,
-                            background:
-                              'linear-gradient(90deg, rgba(255,200,116,0.96), rgba(245,154,44,0.98))',
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div className="landing-sim-hotspot-foot">
-                      <span>{corridor.speed}</span>
-                      <span>{corridor.congestion}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        ) : null}
       </div>
     </figure>
   );

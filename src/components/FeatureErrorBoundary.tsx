@@ -78,8 +78,9 @@ export class FeatureErrorBoundary extends Component<Props, State> {
             padding: '10px 24px',
             borderRadius: 12,
             border: 'none',
-            background: 'var(--theme-gradient-accent, linear-gradient(135deg,#47B7E6,#1E5FAE))',
-            color: '#fff',
+            background:
+              'var(--theme-gradient-primary, linear-gradient(135deg,#F5B041,#E67E22))',
+            color: '#FFFDF9',
             fontWeight: 700,
             cursor: 'pointer',
           }}
