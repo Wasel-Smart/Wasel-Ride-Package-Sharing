@@ -1,62 +1,62 @@
 /**
- * Wasel page design tokens — clarity edition.
- * All service flows share identical typography, colour, and spacing.
+ * Shared page adapter for older service surfaces.
+ * Keep this mapping aligned with the canonical Wasel CSS variable contract.
  */
 import { F, FA } from '../utils/wasel-ds';
 
 export const PAGE_DS = {
-  bg: 'var(--ds-page, #0f1113)',
+  bg: 'var(--ds-page)',
   card: 'var(--wasel-panel-strong)',
-  card2: 'rgba(255, 255, 255, 0.03)',
-  card3: 'rgba(245, 154, 44, 0.12)',
+  card2: 'var(--wasel-service-card-2)',
+  card3: 'var(--wasel-service-card-3)',
   panel: 'var(--wasel-panel-strong)',
-  field: 'var(--ds-surface-raised, #20242a)',
+  field: 'var(--surface-field)',
 
-  border: 'var(--ds-border, #313841)',
-  borderH: 'rgba(245, 154, 44, 0.30)',
+  border: 'var(--ds-border)',
+  borderH: 'var(--wasel-button-primary-border-strong)',
 
-  cyan: 'var(--ds-accent, #f59a2c)',
-  cyanG: 'rgba(245, 154, 44, 0.12)',
-  blue: '#47b7e6',
-  blueG: 'rgba(71, 183, 230, 0.12)',
-  green: 'var(--ds-success, #79c67d)',
-  greenG: 'rgba(121, 198, 125, 0.12)',
-  gold: 'var(--ds-warning, #efb45d)',
-  goldG: 'rgba(239, 180, 93, 0.12)',
-  red: 'var(--ds-danger, #ee705d)',
-  navy: 'var(--ds-page, #0f1113)',
+  cyan: 'var(--ds-accent)',
+  cyanG: 'color-mix(in srgb, var(--ds-accent) 12%, transparent)',
+  blue: 'var(--ds-accent-strong)',
+  blueG: 'color-mix(in srgb, var(--ds-accent-strong) 12%, transparent)',
+  green: 'var(--ds-accent-strong)',
+  greenG: 'color-mix(in srgb, var(--ds-accent-strong) 10%, transparent)',
+  gold: 'var(--ds-accent-strong)',
+  goldG: 'color-mix(in srgb, var(--ds-accent-strong) 12%, transparent)',
+  red: 'var(--wasel-brand-hover)',
+  navy: 'var(--ds-page)',
 
-  text: 'var(--ds-text, #f5efe7)',
-  sub: 'var(--ds-text-muted, #b9aea0)',
-  muted: 'var(--ds-text-soft, #8b8277)',
+  text: 'var(--ds-text)',
+  sub: 'var(--ds-text-muted)',
+  muted: 'var(--ds-text-soft)',
 
   F,
   FA,
-  FD: "'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+  FD: "var(--wasel-font-display, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)",
 
-  gradC: 'linear-gradient(135deg, #17C7EA 0%, #1E7CFF 62%, #7EF34B 100%)',
-  gradG: 'linear-gradient(135deg, #17C7EA 0%, #1E7CFF 62%, #7EF34B 100%)',
-  gradGld: 'linear-gradient(135deg, #f59a2c 0%, #ffb357 100%)',
-  gradGold: 'linear-gradient(135deg, #f59a2c 0%, #ffb357 100%)',
-  gradB: 'linear-gradient(135deg, var(--ds-surface-raised, #20242a) 0%, var(--ds-page, #0f1113) 100%)',
-  gradNav: 'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted, #15181c) 88%, var(--ds-accent-soft, #3f2a15) 12%) 0%, var(--ds-page, #0f1113) 100%)',
-  gradHero: 'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted, #15181c) 88%, var(--ds-accent-soft, #3f2a15) 12%) 0%, color-mix(in srgb, var(--ds-surface, #1a1d22) 92%, var(--ds-accent-soft, #3f2a15) 8%) 54%, var(--ds-page, #0f1113) 100%)',
-  glowC: 'rgba(245, 154, 44, 0.24)',
-  glowT: 'rgba(245, 154, 44, 0.18)',
+  gradC: 'var(--theme-gradient-primary)',
+  gradG: 'var(--theme-gradient-primary)',
+  gradGld: 'var(--theme-gradient-primary)',
+  gradGold: 'var(--theme-gradient-primary)',
+  gradB: 'linear-gradient(135deg, var(--ds-surface-raised) 0%, var(--ds-page) 100%)',
+  gradNav: 'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted) 88%, var(--ds-accent-soft) 12%) 0%, var(--ds-page) 100%)',
+  gradHero: 'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted) 88%, var(--ds-accent-soft) 12%) 0%, color-mix(in srgb, var(--ds-surface) 94%, var(--ds-accent-soft) 6%) 52%, var(--ds-page) 100%)',
+  glowC: 'color-mix(in srgb, var(--ds-accent-strong) 26%, transparent)',
+  glowT: 'color-mix(in srgb, var(--ds-accent) 18%, transparent)',
 
-  sectionHeadBg: 'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted, #15181c) 88%, var(--ds-accent-soft, #3f2a15) 12%) 0%, color-mix(in srgb, var(--ds-surface, #1a1d22) 92%, var(--ds-accent-soft, #3f2a15) 8%) 54%, var(--ds-page, #0f1113) 100%)',
-  cardGrad: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.024))',
+  sectionHeadBg: 'var(--wasel-service-head-bg)',
+  cardGrad: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
 
-  shadowCard: 'var(--wasel-shadow-lg, 0 18px 36px rgba(1,10,18,0.18))',
-  shadowMd: 'var(--wasel-shadow-lg, 0 18px 36px rgba(1,10,18,0.18))',
-  shadowTeal: 'var(--wasel-shadow-lg, 0 18px 36px rgba(1,10,18,0.18))',
+  shadowCard: 'var(--wasel-shadow-lg)',
+  shadowMd: 'var(--wasel-shadow-md)',
+  shadowTeal: 'var(--wasel-shadow-teal)',
 } as const;
 
 export const PAGE_RADIUS = {
-  sm:   10,
-  md:   14,
-  lg:   18,
-  xl:   22,
-  xxl:  28,
+  sm: 10,
+  md: 14,
+  lg: 18,
+  xl: 22,
+  xxl: 28,
   full: 9999,
 } as const;

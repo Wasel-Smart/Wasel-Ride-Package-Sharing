@@ -4,7 +4,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import type { ThemePreference } from '../../utils/theme';
 
-const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+const FONT = "var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
 
 const OPTION_META: Record<
   ThemePreference,
@@ -81,10 +81,10 @@ export function ThemeSwitcher() {
                 borderRadius: 20,
                 border: `1px solid ${active ? 'var(--border-strong)' : 'var(--border)'}`,
                 background: active
-                  ? 'linear-gradient(180deg, rgb(var(--accent-rgb) / 0.10), rgb(var(--accent-secondary-rgb) / 0.08))'
+                  ? 'linear-gradient(180deg, rgb(var(--accent-secondary-rgb) / 0.12), rgb(var(--accent-rgb) / 0.08))'
                   : 'var(--surface-muted)',
                 color: 'var(--text-primary)',
-                boxShadow: active ? 'var(--wasel-shadow-teal)' : 'none',
+                boxShadow: active ? 'var(--wasel-button-primary-shadow)' : 'none',
                 cursor: 'pointer',
                 textAlign: isArabic ? 'right' : 'left',
                 fontFamily: FONT,
@@ -98,7 +98,7 @@ export function ThemeSwitcher() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: active ? 'rgb(var(--accent-rgb) / 0.16)' : 'var(--surface-muted-strong)',
+                  background: active ? 'rgb(var(--accent-secondary-rgb) / 0.18)' : 'var(--surface-muted-strong)',
                   color: active ? 'var(--accent)' : 'var(--text-secondary)',
                 }}
               >
