@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { Search } from 'lucide-react';
 import { LANDING_COLORS, landingPanel } from '../../features/home/landing/landingTypes';
 import { LANDING_DISPLAY, LANDING_FONT } from '../../features/home/landingConstants';
 import type { RideBookingRecord } from '../../services/rideLifecycle';
@@ -36,42 +37,53 @@ function RideResultSkeleton() {
     <div
       style={{
         ...landingPanel(28),
-        padding: 22,
+        padding: 24,
         display: 'grid',
         gap: 16,
-        opacity: 0.72,
+        opacity: 0.6,
+        background: 'rgba(255,255,255,0.03)',
+        borderRadius: 24,
+        border: '1px solid rgba(255,255,255,0.06)',
       }}
     >
-      <div
-        style={{
-          height: 18,
-          width: '34%',
-          borderRadius: 999,
-          background: 'rgba(255,255,255,0.08)',
-        }}
-      />
-      <div
-        style={{
-          height: 28,
-          width: '60%',
-          borderRadius: 999,
-          background: 'rgba(255,255,255,0.08)',
-        }}
-      />
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        <div
+          style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(255,255,255,0.08)' }}
+        />
+        <div style={{ flex: 1, display: 'grid', gap: 8 }}>
+          <div
+            style={{
+              height: 16,
+              width: '40%',
+              borderRadius: 8,
+              background: 'rgba(255,255,255,0.08)',
+            }}
+          />
+          <div
+            style={{
+              height: 12,
+              width: '25%',
+              borderRadius: 6,
+              background: 'rgba(255,255,255,0.06)',
+            }}
+          />
+        </div>
+      </div>
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(132px, 1fr))',
+          gridTemplateColumns: 'repeat(4, 1fr)',
           gap: 12,
         }}
       >
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
-            style={{ height: 88, borderRadius: 20, background: 'rgba(255,255,255,0.06)' }}
+            style={{ height: 72, borderRadius: 16, background: 'rgba(255,255,255,0.05)' }}
           />
         ))}
       </div>
+      <div style={{ height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.05)' }} />
     </div>
   );
 }
@@ -81,18 +93,38 @@ function ResultEmptyState({ title, description }: { title: string; description: 
     <section
       style={{
         ...landingPanel(28),
-        padding: '44px clamp(20px, 4vw, 40px)',
+        padding: '56px clamp(24px, 5vw, 48px)',
         textAlign: 'center',
         display: 'grid',
-        gap: 12,
+        gap: 16,
+        background:
+          'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
+        borderRadius: 28,
+        border: '1px solid rgba(255,255,255,0.08)',
       }}
     >
       <div
         style={{
-          color: LANDING_COLORS.cyan,
+          width: 80,
+          height: 80,
+          margin: '0 auto',
+          borderRadius: 24,
+          background: 'linear-gradient(135deg, rgba(6,182,212,0.15) 0%, rgba(6,182,212,0.05) 100%)',
+          border: '1px solid rgba(6,182,212,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Search size={32} color={LANDING_COLORS.cyan} />
+      </div>
+      <div
+        style={{
+          color: '#fff',
           fontFamily: LANDING_DISPLAY,
-          fontSize: '1.7rem',
+          fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)',
           fontWeight: 700,
+          lineHeight: 1.3,
         }}
       >
         {title}
@@ -102,7 +134,10 @@ function ResultEmptyState({ title, description }: { title: string; description: 
           margin: 0,
           color: LANDING_COLORS.muted,
           fontFamily: LANDING_FONT,
-          fontSize: '0.98rem',
+          fontSize: '1rem',
+          maxWidth: 400,
+          margin: '0 auto',
+          lineHeight: 1.6,
         }}
       >
         {description}
@@ -143,7 +178,7 @@ export function RideResults({
   }
 
   return (
-    <section style={{ display: 'grid', gap: 18 }}>
+    <section style={{ display: 'grid', gap: 20 }}>
       <div
         style={{
           display: 'flex',
@@ -151,15 +186,18 @@ export function RideResults({
           alignItems: 'end',
           gap: 16,
           flexWrap: 'wrap',
+          padding: '0 4px',
         }}
       >
-        <div style={{ display: 'grid', gap: 6 }}>
+        <div style={{ display: 'grid', gap: 8 }}>
           <h3
             style={{
               margin: 0,
-              color: LANDING_COLORS.text,
+              color: '#fff',
               fontFamily: LANDING_DISPLAY,
-              fontSize: 'clamp(1.3rem, 2.4vw, 1.8rem)',
+              fontSize: 'clamp(1.4rem, 2.5vw, 1.9rem)',
+              fontWeight: 700,
+              lineHeight: 1.2,
             }}
           >
             {copy.sectionTitle}
@@ -169,7 +207,9 @@ export function RideResults({
               margin: 0,
               color: LANDING_COLORS.muted,
               fontFamily: LANDING_FONT,
-              fontSize: '0.92rem',
+              fontSize: '0.95rem',
+              maxWidth: 480,
+              lineHeight: 1.5,
             }}
           >
             {copy.sectionDescription}
@@ -177,10 +217,15 @@ export function RideResults({
         </div>
         <div
           style={{
-            color: LANDING_COLORS.soft,
+            background: 'rgba(6,182,212,0.12)',
+            border: '1px solid rgba(6,182,212,0.25)',
+            color: LANDING_COLORS.cyan,
             fontFamily: LANDING_FONT,
-            fontSize: '0.9rem',
-            fontWeight: 700,
+            fontSize: '0.85rem',
+            fontWeight: 800,
+            padding: '8px 16px',
+            borderRadius: 99,
+            whiteSpace: 'nowrap',
           }}
         >
           {totalResultsCount} {copy.countSuffix}

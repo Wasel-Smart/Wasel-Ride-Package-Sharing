@@ -70,9 +70,13 @@ export function RideSearchForm({
         className="landing-glow-card"
         style={{
           ...landingPanel(32),
-          padding: '24px clamp(18px, 3vw, 30px)',
+          padding: '32px clamp(24px, 4vw, 40px)',
           display: 'grid',
-          gap: 22,
+          gap: 28,
+          background:
+            'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
         }}
       >
         <div
@@ -80,39 +84,40 @@ export function RideSearchForm({
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'flex-start',
-            gap: 16,
+            gap: 20,
             flexWrap: 'wrap',
           }}
         >
-          <div style={{ display: 'grid', gap: 8 }}>
+          <div style={{ display: 'grid', gap: 12, flex: 1, minWidth: 280 }}>
             <span
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
-                padding: '8px 12px',
+                padding: '6px 14px',
                 borderRadius: 999,
                 width: 'fit-content',
-                border: `1px solid ${LANDING_COLORS.border}`,
-                background: 'rgba(255,255,255,0.04)',
+                border: `1px solid ${LANDING_COLORS.cyan}40`,
+                background: `${LANDING_COLORS.cyan}15`,
                 color: LANDING_COLORS.cyan,
                 fontFamily: LANDING_FONT,
-                fontSize: '0.78rem',
+                fontSize: '0.72rem',
                 fontWeight: 800,
-                letterSpacing: '0.08em',
+                letterSpacing: '0.1em',
                 textTransform: 'uppercase',
               }}
             >
-              <Sparkles size={14} />
+              <Sparkles size={13} />
               {copy.badge}
             </span>
             <h2
               style={{
                 margin: 0,
-                color: LANDING_COLORS.text,
+                color: '#fff',
                 fontFamily: LANDING_DISPLAY,
-                fontSize: 'clamp(1.45rem, 2.8vw, 2.2rem)',
-                lineHeight: 1.05,
+                fontSize: 'clamp(1.6rem, 3vw, 2.4rem)',
+                lineHeight: 1.1,
+                fontWeight: 700,
               }}
             >
               {copy.title}
@@ -122,9 +127,9 @@ export function RideSearchForm({
                 margin: 0,
                 color: LANDING_COLORS.muted,
                 fontFamily: LANDING_FONT,
-                fontSize: '0.98rem',
-                maxWidth: 640,
-                lineHeight: 1.6,
+                fontSize: '1rem',
+                maxWidth: 560,
+                lineHeight: 1.65,
               }}
             >
               {copy.description}
@@ -135,21 +140,22 @@ export function RideSearchForm({
             style={{
               display: 'grid',
               gap: 10,
-              minWidth: 220,
+              minWidth: 200,
             }}
           >
             <div
               style={{
                 color: LANDING_COLORS.soft,
                 fontFamily: LANDING_FONT,
-                fontSize: '0.8rem',
+                fontSize: '0.75rem',
                 fontWeight: 700,
+                letterSpacing: '0.06em',
               }}
             >
               {copy.searchModeLabel}
             </div>
             <div
-              style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}
             >
               {(['now', 'schedule'] as const).map(mode => {
                 const active = state.draft.mode === mode;
@@ -159,19 +165,22 @@ export function RideSearchForm({
                     type="button"
                     onClick={() => onModeChange(mode)}
                     style={{
-                      minHeight: 48,
-                      borderRadius: 16,
-                      border: `1px solid ${active ? 'var(--wasel-button-primary-border-strong)' : LANDING_COLORS.border}`,
-                      background: active ? 'var(--wasel-button-primary-soft-strong)' : 'var(--wasel-panel-muted)',
-                      color: LANDING_COLORS.text,
+                      minHeight: 52,
+                      borderRadius: 14,
+                      border: `1px solid ${active ? LANDING_COLORS.cyan : LANDING_COLORS.border}`,
+                      background: active
+                        ? 'linear-gradient(135deg, rgba(6,182,212,0.2) 0%, rgba(6,182,212,0.1) 100%)'
+                        : 'rgba(255,255,255,0.05)',
+                      color: active ? LANDING_COLORS.cyan : LANDING_COLORS.soft,
                       fontFamily: LANDING_FONT,
-                      fontSize: '0.92rem',
+                      fontSize: '0.9rem',
                       fontWeight: 800,
                       cursor: 'pointer',
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: 8,
+                      transition: 'all 0.2s ease',
                     }}
                   >
                     <Clock3 size={16} />
@@ -238,7 +247,7 @@ export function RideSearchForm({
               style={{
                 color: LANDING_COLORS.soft,
                 fontFamily: LANDING_FONT,
-                fontSize: '0.82rem',
+                fontSize: '0.78rem',
                 fontWeight: 700,
                 letterSpacing: '0.04em',
                 textTransform: 'uppercase',
@@ -254,19 +263,25 @@ export function RideSearchForm({
                 onRideTypeChange(event.target.value as RideSearchState['draft']['rideType'])
               }
               style={{
-                minHeight: 58,
-                borderRadius: 20,
+                minHeight: 56,
+                borderRadius: 16,
                 border: `1px solid ${LANDING_COLORS.border}`,
-                background: 'var(--surface-field)',
-                color: LANDING_COLORS.text,
+                background: 'rgba(255,255,255,0.06)',
+                color: '#fff',
                 padding: '0 18px',
                 fontFamily: LANDING_FONT,
-                fontSize: '0.98rem',
+                fontSize: '0.95rem',
                 fontWeight: 700,
+                cursor: 'pointer',
+                outline: 'none',
               }}
             >
               {copy.rideTypeOptions.map(rideType => (
-                <option key={rideType.value} value={rideType.value}>
+                <option
+                  key={rideType.value}
+                  value={rideType.value}
+                  style={{ background: '#1a1a2e' }}
+                >
                   {rideType.label}
                 </option>
               ))}
@@ -279,7 +294,7 @@ export function RideSearchForm({
               style={{
                 color: LANDING_COLORS.soft,
                 fontFamily: LANDING_FONT,
-                fontSize: '0.82rem',
+                fontSize: '0.78rem',
                 fontWeight: 700,
                 letterSpacing: '0.04em',
                 textTransform: 'uppercase',
@@ -291,7 +306,7 @@ export function RideSearchForm({
               <Calendar
                 size={18}
                 color={LANDING_COLORS.muted}
-                style={{ position: 'absolute', left: 18, top: 20, pointerEvents: 'none' }}
+                style={{ position: 'absolute', left: 16, top: 19, pointerEvents: 'none' }}
               />
               <input
                 id="ride-date"
@@ -303,29 +318,30 @@ export function RideSearchForm({
                 onChange={event => onDateChange(event.target.value)}
                 style={{
                   width: '100%',
-                  minHeight: 58,
-                  borderRadius: 20,
-                  border: `1px solid ${state.validation.date ? '#ff8f8f' : LANDING_COLORS.border}`,
+                  minHeight: 56,
+                  borderRadius: 16,
+                  border: `1px solid ${state.validation.date ? '#ff6b6b' : LANDING_COLORS.border}`,
                   background:
                     state.draft.mode === 'now'
-                      ? 'var(--wasel-panel-muted)'
-                      : 'var(--surface-field)',
-                  color: LANDING_COLORS.text,
+                      ? 'rgba(255,255,255,0.04)'
+                      : 'rgba(255,255,255,0.06)',
+                  color: '#fff',
                   padding: '0 18px 0 48px',
                   fontFamily: LANDING_FONT,
-                  fontSize: '0.98rem',
+                  fontSize: '0.95rem',
                   fontWeight: 700,
-                  opacity: state.draft.mode === 'now' ? 0.66 : 1,
+                  opacity: state.draft.mode === 'now' ? 0.5 : 1,
                   colorScheme: 'dark',
+                  outline: 'none',
                 }}
               />
             </div>
             <div
               style={{
                 minHeight: 18,
-                color: '#ffb3b3',
+                color: '#ff8a8a',
                 fontFamily: LANDING_FONT,
-                fontSize: '0.78rem',
+                fontSize: '0.76rem',
               }}
             >
               {state.validation.date ?? ''}
@@ -347,23 +363,26 @@ export function RideSearchForm({
               disabled={busy}
               style={{
                 width: '100%',
-                minHeight: 58,
-                borderRadius: 20,
-                border: '1px solid var(--wasel-button-primary-border)',
-                background: 'var(--theme-gradient-primary)',
-                color: 'var(--wasel-button-primary-foreground)',
+                minHeight: 56,
+                borderRadius: 16,
+                border: 'none',
+                background: busy
+                  ? 'rgba(255,255,255,0.1)'
+                  : 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                color: busy ? LANDING_COLORS.soft : '#fff',
                 fontFamily: LANDING_FONT,
-                fontSize: '0.98rem',
+                fontSize: '1rem',
                 fontWeight: 900,
                 cursor: busy ? 'progress' : 'pointer',
-                boxShadow: 'var(--wasel-button-primary-shadow-hover)',
+                boxShadow: busy ? 'none' : '0 8px 25px -5px rgba(6,182,212,0.4)',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 10,
+                transition: 'all 0.2s ease',
               }}
             >
-              <Search size={18} />
+              <Search size={20} />
               {busy ? copy.searchingButton : copy.searchButton}
             </button>
           </div>
