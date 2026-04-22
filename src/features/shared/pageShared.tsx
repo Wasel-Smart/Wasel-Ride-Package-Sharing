@@ -49,10 +49,7 @@ export function Protected({ children }: { children: ReactNode }) {
   const mountedRef = useRef(true);
   const { allowLocalPersistenceFallback, enableDemoAccount, enablePersistedTestAuth } = getConfig();
   const allowLocalFallback =
-    !isBackendConnected ||
-    allowLocalPersistenceFallback ||
-    enableDemoAccount ||
-    enablePersistedTestAuth;
+    allowLocalPersistenceFallback || enableDemoAccount || enablePersistedTestAuth;
   const user = allowLocalFallback ? localUser : (session?.user ?? authUser);
   const loading = isBackendConnected && !allowLocalFallback ? authLoading : localLoading;
 

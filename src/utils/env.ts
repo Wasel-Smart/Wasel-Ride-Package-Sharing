@@ -150,6 +150,13 @@ function buildConfig() {
   const isProd = environment === 'production';
   const isStaging = environment === 'staging';
   const isTest = environment === 'test';
+
+  if (isProd && !hasPublicSupabaseConfig) {
+    throw new Error(
+      'Production configuration requires VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY or VITE_SUPABASE_PUBLISHABLE_KEY.',
+    );
+  }
+
   const enableDemoAccount = flagAllowedInEnvironment('VITE_ENABLE_DEMO_DATA', false, environment, [
     'development',
     'test',
