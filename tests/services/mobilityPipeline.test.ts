@@ -1,173 +1,250 @@
 import { describe, expect, it } from 'vitest';
-import type { LiveCorridorSignal } from '../../src/services/routeDemandIntelligence';
 import {
   buildMobilityPipeline,
+  scoreVehicleForDemand,
+  selectBestMatches,
   type MobilityDemandRecord,
   type MobilityVehicleRecord,
 } from '../../src/services/mobilityPipeline';
+import { getMovementPriceQuote } from '../../src/services/movementPricing';
+import type { LiveCorridorSignal } from '../../src/services/routeDemandIntelligence';
 
-function node(label: string, lat: number, lng: number) {
+function buildNode(label: string, lat: number, lng: number) {
   return { label, lat, lng };
 }
 
-function signal(overrides: Partial<LiveCorridorSignal> = {}) {
+function buildDemand(
+  overrides: Partial<MobilityDemandRecord> & Pick<MobilityDemandRecord, 'id' | 'from' | 'to'>,
+): MobilityDemandRecord {
   return {
-    id: 'amman-irbid',
-    from: 'Amman',
-    to: 'Irbid',
-    label: 'Amman -> Irbid',
-    liveDemandScore: 82,
-    forecastDemandScore: 86,
-    activeSupply: 1,
-    activeDemandAlerts: 2,
-    liveSearches: 8,
-    liveBookings: 3,
-    livePackages: 1,
-    seatUtilizationPercent: 64,
+    id: overrides.id,
+    kind: 'passenger',
+    service: 'ride',
+    source: 'demand-alert',
+    status: 'pending',
+    from: overrides.from,
+    to: overrides.to,
+    units: 1,
+    createdAt: '2026-04-22T08:00:00.000Z',
+    corridorId: 'amman-aqaba',
+    forecastDemandScore: 88,
     pricePressure: 'balanced',
-    nextWaveWindow: '07:00 - 09:00',
-    recommendedPickupPoint: 'Abdali gate',
-    routeOwnershipScore: 79,
-    recommendedReason: 'Best corridor for the next wave.',
-    freshestSignalAt: '2026-04-22T06:00:00.000Z',
-    productionSources: ['8 live searches'],
-    priceQuote: {} as LiveCorridorSignal['priceQuote'],
+    note: 'Test demand',
     ...overrides,
-  } satisfies LiveCorridorSignal;
+  };
 }
 
-describe('mobilityPipeline', () => {
-  it('prefers the exact corridor vehicle during matching', () => {
-    const demand: MobilityDemandRecord[] = [
-      {
-        id: 'd1',
-        kind: 'passenger',
-        service: 'ride',
-        source: 'modeled-signal',
-        status: 'pending',
-        from: node('Amman', 31.9539, 35.9106),
-        to: node('Irbid', 32.5568, 35.8479),
-        units: 1,
-        createdAt: '2026-04-22T06:00:00.000Z',
-        corridorId: 'amman-irbid',
-        forecastDemandScore: 88,
-        pricePressure: 'balanced',
-        note: 'Passenger wave',
-      },
-    ];
+function buildVehicle(
+  overrides: Partial<MobilityVehicleRecord> & Pick<MobilityVehicleRecord, 'id' | 'from' | 'to' | 'position'>,
+): MobilityVehicleRecord {
+  return {
+    id: overrides.id,
+    source: 'live-ride',
+    state: 'idle',
+    from: overrides.from,
+    to: overrides.to,
+    position: overrides.position,
+    corridorId: 'amman-aqaba',
+    passengerCapacity: 3,
+    availablePassengerSeats: 3,
+    packageCapacityUnits: 1,
+    availablePackageUnits: 1,
+    utilizationPercent: 20,
+    note: 'Test vehicle',
+    ...overrides,
+  };
+}
 
-    const vehicles: MobilityVehicleRecord[] = [
-      {
-        id: 'v-exact',
-        source: 'live-ride',
-        state: 'idle',
-        from: node('Amman', 31.9539, 35.9106),
-        to: node('Irbid', 32.5568, 35.8479),
-        position: node('Amman', 31.9539, 35.9106),
-        corridorId: 'amman-irbid',
-        passengerCapacity: 3,
-        availablePassengerSeats: 3,
-        packageCapacityUnits: 1,
-        availablePackageUnits: 1,
-        utilizationPercent: 18,
-        note: 'Exact fit',
-      },
-      {
-        id: 'v-off-route',
-        source: 'live-ride',
-        state: 'idle',
-        from: node('Amman', 31.9539, 35.9106),
-        to: node('Aqaba', 29.5321, 35.0060),
-        position: node('Amman', 31.9539, 35.9106),
+function buildSignal(
+  overrides: Partial<LiveCorridorSignal> & Pick<LiveCorridorSignal, 'id' | 'from' | 'to'>,
+): LiveCorridorSignal {
+  const forecastDemandScore = overrides.forecastDemandScore ?? 86;
+  const pricePressure = overrides.pricePressure ?? 'balanced';
+
+  return {
+    id: overrides.id,
+    from: overrides.from,
+    to: overrides.to,
+    label: `${overrides.from} -> ${overrides.to}`,
+    liveDemandScore: overrides.liveDemandScore ?? forecastDemandScore,
+    forecastDemandScore,
+    activeSupply: overrides.activeSupply ?? 1,
+    activeDemandAlerts: overrides.activeDemandAlerts ?? 2,
+    liveSearches: overrides.liveSearches ?? 12,
+    liveBookings: overrides.liveBookings ?? 3,
+    livePackages: overrides.livePackages ?? 1,
+    seatUtilizationPercent: overrides.seatUtilizationPercent ?? 72,
+    pricePressure,
+    nextWaveWindow: overrides.nextWaveWindow ?? '07:00 - 09:00',
+    recommendedPickupPoint: overrides.recommendedPickupPoint ?? `${overrides.from} Central`,
+    routeOwnershipScore: overrides.routeOwnershipScore ?? 82,
+    recommendedReason: overrides.recommendedReason ?? 'Test signal',
+    freshestSignalAt: overrides.freshestSignalAt ?? '2026-04-22T08:00:00.000Z',
+    productionSources: overrides.productionSources ?? ['test'],
+    priceQuote:
+      overrides.priceQuote ??
+      getMovementPriceQuote({
+        basePriceJod: 4.2,
+        corridorId: overrides.id,
+        forecastDemandScore,
+        pricePressure,
+      }),
+  };
+}
+
+const amman = buildNode('Amman', 31.9454, 35.9284);
+const aqaba = buildNode('Aqaba', 29.532, 35.0063);
+const irbid = buildNode('Irbid', 32.5556, 35.85);
+const zarqa = buildNode('Zarqa', 32.0728, 36.088);
+const STAGE_IDS = [
+  'demand',
+  'candidate-vehicles',
+  'scoring',
+  'matching',
+  'assignment',
+  'rebalancing',
+];
+
+describe('mobilityPipeline', () => {
+  it('builds the six-stage operating model with thresholds and drilldowns', () => {
+    const demand = [
+      buildDemand({
+        id: 'd-1',
+        from: amman,
+        to: aqaba,
         corridorId: 'amman-aqaba',
-        passengerCapacity: 4,
-        availablePassengerSeats: 4,
-        packageCapacityUnits: 2,
-        availablePackageUnits: 2,
-        utilizationPercent: 12,
-        note: 'Wrong corridor',
-      },
+        forecastDemandScore: 91,
+        pricePressure: 'surging',
+      }),
+    ];
+    const vehicles = [
+      buildVehicle({
+        id: 'v-1',
+        from: amman,
+        to: aqaba,
+        position: amman,
+        corridorId: 'amman-aqaba',
+        availablePassengerSeats: 2,
+        availablePackageUnits: 0,
+      }),
+    ];
+    const corridorSignals = [
+      buildSignal({
+        id: 'amman-aqaba',
+        from: 'Amman',
+        to: 'Aqaba',
+        forecastDemandScore: 91,
+        pricePressure: 'surging',
+      }),
     ];
 
     const snapshot = buildMobilityPipeline({
+      updatedAt: '2026-04-22T08:00:00.000Z',
       demand,
       vehicles,
-      corridorSignals: [
-        signal(),
-        signal({
-          id: 'amman-aqaba',
-          to: 'Aqaba',
-          label: 'Amman -> Aqaba',
-          forecastDemandScore: 74,
-        }),
-      ],
+      corridorSignals,
     });
 
+    expect(snapshot.thresholds).toEqual({
+      viableCandidateScore: 40,
+      dispatchMatchScore: 52,
+    });
+    expect(snapshot.stages.map((stage) => stage.id)).toEqual(STAGE_IDS);
+    expect(snapshot.stageDrilldowns.map((stage) => stage.id)).toEqual(STAGE_IDS);
     expect(snapshot.matches).toHaveLength(1);
-    expect(snapshot.matches[0]?.vehicleId).toBe('v-exact');
-
-    const exactScore = snapshot.scoredCandidates.find((candidate) => candidate.vehicleId === 'v-exact');
-    const offRouteScore = snapshot.scoredCandidates.find((candidate) => candidate.vehicleId === 'v-off-route');
-
-    expect(exactScore?.score ?? 0).toBeGreaterThan(offRouteScore?.score ?? 0);
+    expect(snapshot.assignments).toHaveLength(1);
+    expect(snapshot.stageDrilldowns.find((stage) => stage.id === 'matching')?.items[0]?.metric).toBe(
+      `${snapshot.matches[0]?.score}`,
+    );
+    expect(snapshot.stageDrilldowns.find((stage) => stage.id === 'assignment')?.items[0]?.metric).toBe(
+      'PLANNED',
+    );
   });
 
-  it('creates rebalancing actions toward unmatched hot corridors', () => {
-    const demand: MobilityDemandRecord[] = [
-      {
-        id: 'd-hot',
+  it('does not over-assign a vehicle beyond its available passenger seats', () => {
+    const signal = buildSignal({
+      id: 'amman-aqaba',
+      from: 'Amman',
+      to: 'Aqaba',
+      forecastDemandScore: 84,
+    });
+    const vehicle = buildVehicle({
+      id: 'v-seat-limited',
+      from: amman,
+      to: aqaba,
+      position: amman,
+      corridorId: 'amman-aqaba',
+      availablePassengerSeats: 1,
+      availablePackageUnits: 0,
+    });
+    const demand = [
+      buildDemand({ id: 'd-seat-1', from: amman, to: aqaba, corridorId: 'amman-aqaba' }),
+      buildDemand({
+        id: 'd-seat-2',
+        from: amman,
+        to: aqaba,
+        corridorId: 'amman-aqaba',
+        createdAt: '2026-04-22T08:05:00.000Z',
+      }),
+    ];
+    const scoredCandidates = demand.map((item) =>
+      scoreVehicleForDemand(item, vehicle, signal),
+    );
+
+    const matches = selectBestMatches(demand, [vehicle], scoredCandidates);
+
+    expect(matches).toHaveLength(1);
+    expect(matches[0]?.vehicleId).toBe('v-seat-limited');
+  });
+
+  it('creates a rebalance move when demand is stranded on a hot corridor', () => {
+    const demand = [
+      buildDemand({
+        id: 'd-package-hot',
         kind: 'package',
         service: 'package',
-        source: 'modeled-signal',
-        status: 'pending',
-        from: node('Amman', 31.9539, 35.9106),
-        to: node('Zarqa', 32.0728, 36.0880),
+        from: irbid,
+        to: zarqa,
+        corridorId: 'irbid-zarqa',
         units: 2,
-        createdAt: '2026-04-22T06:00:00.000Z',
-        corridorId: 'amman-zarqa',
         forecastDemandScore: 94,
         pricePressure: 'surging',
-        note: 'Hot package wave',
-      },
+      }),
     ];
-
-    const vehicles: MobilityVehicleRecord[] = [
-      {
-        id: 'v-idle',
-        source: 'live-ride',
-        state: 'idle',
-        from: node('Aqaba', 29.5321, 35.0060),
-        to: node('Amman', 31.9539, 35.9106),
-        position: node('Amman', 31.9539, 35.9106),
-        corridorId: 'aqaba-amman',
-        passengerCapacity: 3,
-        availablePassengerSeats: 3,
-        packageCapacityUnits: 0,
+    const vehicles = [
+      buildVehicle({
+        id: 'v-standby',
+        from: amman,
+        to: aqaba,
+        position: amman,
+        corridorId: 'amman-aqaba',
+        availablePassengerSeats: 2,
         availablePackageUnits: 0,
-        utilizationPercent: 10,
-        note: 'Idle and empty',
-      },
+      }),
+    ];
+    const corridorSignals = [
+      buildSignal({
+        id: 'irbid-zarqa',
+        from: 'Irbid',
+        to: 'Zarqa',
+        forecastDemandScore: 94,
+        pricePressure: 'surging',
+        activeSupply: 0,
+      }),
     ];
 
     const snapshot = buildMobilityPipeline({
+      updatedAt: '2026-04-22T08:00:00.000Z',
       demand,
       vehicles,
-      corridorSignals: [
-        signal({
-          id: 'amman-zarqa',
-          to: 'Zarqa',
-          label: 'Amman -> Zarqa',
-          forecastDemandScore: 96,
-          pricePressure: 'surging',
-          activeSupply: 0,
-          activeDemandAlerts: 4,
-        }),
-      ],
+      corridorSignals,
     });
 
     expect(snapshot.matches).toHaveLength(0);
     expect(snapshot.rebalancing).toHaveLength(1);
-    expect(snapshot.rebalancing[0]?.corridorId).toBe('amman-zarqa');
-    expect(snapshot.stages.find((stage) => stage.id === 'rebalancing')?.count).toBe(1);
+    expect(snapshot.rebalancing[0]?.corridorId).toBe('irbid-zarqa');
+    expect(snapshot.stageDrilldowns.find((stage) => stage.id === 'rebalancing')?.items[0]?.title).toBe(
+      'Irbid -> Zarqa',
+    );
   });
 });
