@@ -37,7 +37,6 @@ import {
   resolveCityCoord,
   SectionHead,
 } from '../shared/pageShared';
-import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 
 const JOURNEY_PRESETS = [
   { from: 'Amman', to: 'Aqaba', label: 'Amman to Aqaba' },
@@ -1799,7 +1798,6 @@ export function BusPage() {
           </div>
         </div>
 
-        <ServiceFlowPlaybook focusService="bus" />
       </PageShell>
     </Protected>
   );

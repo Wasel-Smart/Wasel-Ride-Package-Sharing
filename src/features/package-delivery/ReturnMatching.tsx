@@ -21,7 +21,6 @@ import {
   getConnectedRides,
   type PackageRequest,
 } from '../../services/journeyLogistics';
-import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 
 const D = {
   bg: 'var(--wasel-service-bg)',
@@ -375,7 +374,6 @@ export function ReturnMatching() {
           </div>
         </div>
 
-        <ServiceFlowPlaybook focusService="returns" />
       </div>
 
       <style>{`

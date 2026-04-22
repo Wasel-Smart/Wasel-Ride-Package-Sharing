@@ -35,7 +35,6 @@ import {
   getMarketplaceNodes,
   getWaselCategoryPosition,
 } from '../../config/wasel-movement-network';
-import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { OfferRideFormPanel } from './components/OfferRideFormPanel';
 import { OfferRideIncomingRequests } from './components/OfferRideIncomingRequests';
 import { routeMatchesLocationPair } from '../../utils/jordanLocations';
@@ -416,7 +415,6 @@ export function OfferRidePage() {
           />
         )}
 
-        <ServiceFlowPlaybook focusService={form.acceptsPackages ? 'deliver-package' : 'share-ride'} />
       </PageShell>
     </Protected>
   );
