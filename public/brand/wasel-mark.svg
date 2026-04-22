@@ -1,70 +1,111 @@
 <svg
   xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 464 360"
+  viewBox="0 0 440 340"
   fill="none"
   role="img"
   aria-labelledby="title desc"
   preserveAspectRatio="xMidYMid meet"
 >
-  <title id="title">Wasel routed W logo</title>
-  <desc id="desc">A transparent Wasel W mark combining travel lanes, a route line, and a location pin.</desc>
+  <title id="title">Wasel route W symbol</title>
+  <desc id="desc">A premium W mark with three metallic nodes and warm amber mobility lanes.</desc>
   <defs>
-    <linearGradient id="wasel-left-lane" x1="110" y1="92" x2="206" y2="316" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#4F7DE7" />
-      <stop offset="0.52" stop-color="#3D8BE8" />
-      <stop offset="1" stop-color="#52C5F0" />
+    <linearGradient id="laneGlow" x1="84" y1="68" x2="382" y2="298" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF2D8" />
+      <stop offset="0.2" stop-color="#FFB357" />
+      <stop offset="0.46" stop-color="#F59A2C" />
+      <stop offset="0.72" stop-color="#E8C58F" />
+      <stop offset="1" stop-color="#F5EFE7" />
     </linearGradient>
-    <linearGradient id="wasel-center-lane" x1="182" y1="312" x2="270" y2="92" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#1D2C91" />
-      <stop offset="0.42" stop-color="#2C6FCA" />
-      <stop offset="1" stop-color="#51D2F1" />
+    <linearGradient id="laneCore" x1="102" y1="88" x2="368" y2="274" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFD08B" />
+      <stop offset="0.32" stop-color="#F59A2C" />
+      <stop offset="0.56" stop-color="#C87919" />
+      <stop offset="0.8" stop-color="#F0D9B6" />
+      <stop offset="1" stop-color="#FFF8F0" />
     </linearGradient>
-    <linearGradient id="wasel-green-lane" x1="246" y1="88" x2="340" y2="314" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#A7F01D" />
-      <stop offset="0.5" stop-color="#6CD532" />
-      <stop offset="1" stop-color="#1A8C41" />
+    <linearGradient id="laneHighlight" x1="126" y1="88" x2="354" y2="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFDF8" stop-opacity="0.98" />
+      <stop offset="0.42" stop-color="#FFE8BD" stop-opacity="0.76" />
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.28" />
     </linearGradient>
-    <linearGradient id="wasel-right-lane" x1="330" y1="312" x2="414" y2="92" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#3E93EF" />
-      <stop offset="0.42" stop-color="#39C7E6" />
-      <stop offset="1" stop-color="#F0FF2B" />
+    <linearGradient id="metalRing" x1="70" y1="36" x2="112" y2="122" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" />
+      <stop offset="0.18" stop-color="#E0E3E8" />
+      <stop offset="0.42" stop-color="#606671" />
+      <stop offset="0.64" stop-color="#161A21" />
+      <stop offset="0.84" stop-color="#BBC0C9" />
+      <stop offset="1" stop-color="#FBFCFD" />
     </linearGradient>
-    <linearGradient id="wasel-route-fill" x1="176" y1="322" x2="432" y2="150" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.98" />
-      <stop offset="1" stop-color="#E5FF7A" stop-opacity="0.98" />
-    </linearGradient>
-    <linearGradient id="wasel-route-glow" x1="184" y1="336" x2="422" y2="154" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#59D8F2" stop-opacity="0.72" />
-      <stop offset="1" stop-color="#F0FF6C" stop-opacity="0.72" />
-    </linearGradient>
-    <linearGradient id="wasel-pin-fill" x1="250" y1="130" x2="298" y2="232" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#D5FF38" />
-      <stop offset="1" stop-color="#4DCB39" />
-    </linearGradient>
-    <linearGradient id="wasel-overlap-shadow" x1="212" y1="160" x2="310" y2="300" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#09122D" stop-opacity="0.02" />
-      <stop offset="0.5" stop-color="#0A1640" stop-opacity="0.38" />
-      <stop offset="1" stop-color="#031128" stop-opacity="0.1" />
-    </linearGradient>
-    <clipPath id="wasel-overlap-clip">
-      <path d="M178 306L258 100L338 306H178Z" />
-    </clipPath>
-    <filter id="wasel-soft-shadow" x="-24" y="-24" width="512" height="408" filterUnits="userSpaceOnUse">
-      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#041018" flood-opacity="0.18" />
+    <radialGradient id="nodeCoreWarm" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 -1) rotate(90) scale(18)">
+      <stop offset="0" stop-color="#FFF8ED" />
+      <stop offset="0.5" stop-color="#FFB357" />
+      <stop offset="1" stop-color="#C97A18" />
+    </radialGradient>
+    <radialGradient id="nodeCoreSoft" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 -1) rotate(90) scale(18)">
+      <stop offset="0" stop-color="#FFFFFF" />
+      <stop offset="0.48" stop-color="#F5EFE7" />
+      <stop offset="1" stop-color="#D9B783" />
+    </radialGradient>
+    <filter id="symbolShadow" x="24" y="12" width="392" height="320" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#2F1B0A" flood-opacity="0.24" />
+      <feDropShadow dx="0" dy="0" stdDeviation="9" flood-color="#F59A2C" flood-opacity="0.16" />
     </filter>
   </defs>
 
-  <g filter="url(#wasel-soft-shadow)">
-    <path d="M112 104L182 308" stroke="url(#wasel-left-lane)" stroke-width="66" stroke-linecap="round" stroke-linejoin="round" />
-    <path d="M182 308L258 102" stroke="url(#wasel-center-lane)" stroke-width="66" stroke-linecap="round" stroke-linejoin="round" />
-    <path d="M258 102L336 308" stroke="url(#wasel-green-lane)" stroke-width="66" stroke-linecap="round" stroke-linejoin="round" />
-    <path d="M336 308L410 104" stroke="url(#wasel-right-lane)" stroke-width="66" stroke-linecap="round" stroke-linejoin="round" />
-    <g clip-path="url(#wasel-overlap-clip)">
-      <path d="M178 306L258 102L338 306L300 306L256 174L218 306Z" fill="url(#wasel-overlap-shadow)" />
+  <g filter="url(#symbolShadow)">
+    <path
+      d="M96 78C111 152 128 243 164 286C189 316 218 254 236 154C254 254 283 316 308 286C344 243 361 152 376 78"
+      stroke="#171B22"
+      stroke-opacity="0.18"
+      stroke-width="44"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M96 78C111 152 128 243 164 286C189 316 218 254 236 154C254 254 283 316 308 286C344 243 361 152 376 78"
+      stroke="url(#laneGlow)"
+      stroke-width="34"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M96 78C111 152 128 243 164 286C189 316 218 254 236 154C254 254 283 316 308 286C344 243 361 152 376 78"
+      stroke="url(#laneCore)"
+      stroke-width="24"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M104 84C118 152 136 235 168 279C190 304 216 243 236 162C256 243 282 304 304 279C336 235 354 152 368 84"
+      stroke="url(#laneHighlight)"
+      stroke-width="8.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      opacity="0.9"
+    />
+
+    <g transform="translate(96 78)">
+      <circle r="30" fill="url(#metalRing)" />
+      <circle r="21.5" fill="#13171D" />
+      <circle r="13.5" fill="url(#nodeCoreWarm)" />
+      <circle cx="-5.5" cy="-6" r="4.2" fill="#FFF7EC" opacity="0.72" />
+      <circle r="26.5" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" />
     </g>
-    <path d="M178 308C166 324 168 342 187 347C216 354 252 334 280 312C303 294 319 279 346 261C373 243 400 223 420 198" stroke="url(#wasel-route-glow)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" opacity="0.28" />
-    <path d="M178 308C166 324 168 342 187 347C216 354 252 334 280 312C303 294 319 279 346 261C373 243 400 223 420 198" stroke="url(#wasel-route-fill)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
-    <path d="M272 138C248 138 228 157 228 181C228 214 264 240 272 257C280 240 316 214 316 181C316 157 296 138 272 138Z" fill="url(#wasel-pin-fill)" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="round" />
-    <circle cx="272" cy="181" r="13" fill="#FFFFFF" />
+
+    <g transform="translate(236 154)">
+      <circle r="29" fill="url(#metalRing)" />
+      <circle r="20.5" fill="#13171D" />
+      <circle r="12.5" fill="url(#nodeCoreWarm)" />
+      <circle cx="-5" cy="-5.5" r="3.9" fill="#FFF7EC" opacity="0.72" />
+      <circle r="25.5" stroke="rgba(255,255,255,0.34)" stroke-width="1.5" />
+    </g>
+
+    <g transform="translate(376 78)">
+      <circle r="30" fill="url(#metalRing)" />
+      <circle r="21.5" fill="#13171D" />
+      <circle r="13.5" fill="url(#nodeCoreSoft)" />
+      <circle cx="-5.5" cy="-6" r="4.2" fill="#FFFFFF" opacity="0.7" />
+      <circle r="26.5" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" />
+    </g>
   </g>
 </svg>

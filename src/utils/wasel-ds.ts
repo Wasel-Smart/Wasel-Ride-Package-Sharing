@@ -1,92 +1,86 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-
-/**
- * Shared Wasel helper tokens aligned to the active landing-page palette.
- *
- * Decorative colors should mirror the current orange/beige Wasel identity,
- * while semantic state colors still come from the design-system theme.
- */
+import { BRAND } from '../design-system/brand';
 
 export const C = {
-  bg: 'var(--ds-page, #0f1113)',
-  bgAlt: 'var(--ds-page-muted, #15181c)',
-  bgDeep: 'var(--ds-page, #0f1113)',
-  card: 'var(--ds-surface, #1a1d22)',
-  cardSolid: 'var(--ds-surface, #1a1d22)',
-  card2: 'var(--ds-surface-raised, #20242a)',
-  panel: 'var(--ds-surface-soft, #262b32)',
-  elevated: 'var(--ds-surface-raised, #20242a)',
+  bg: 'var(--ds-page)',
+  bgAlt: 'var(--ds-page-muted)',
+  bgDeep: 'var(--ds-page)',
+  card: 'var(--ds-surface)',
+  cardSolid: 'var(--ds-surface)',
+  card2: 'var(--ds-surface-raised)',
+  panel: 'var(--ds-surface-soft)',
+  elevated: 'var(--ds-surface-raised)',
 
-  navy: '#0f1113',
-  navyMid: '#15181c',
-  navyLight: '#20242a',
+  navy: 'var(--ds-page)',
+  navyMid: 'var(--ds-page-muted)',
+  navyLight: 'var(--ds-surface-raised)',
 
-  cyan: 'var(--ds-accent, #f59a2c)',
-  cyanDark: 'var(--ds-accent, #f59a2c)',
-  cyanDim: 'color-mix(in srgb, var(--ds-accent, #f59a2c) 12%, transparent)',
-  cyanGlow: 'color-mix(in srgb, var(--ds-accent-strong, #ffb357) 18%, transparent)',
-  blue: 'var(--ds-accent-strong, #ffb357)',
-  blueLight: 'color-mix(in srgb, var(--ds-accent-strong, #ffb357) 12%, transparent)',
-  blueDim: 'color-mix(in srgb, var(--ds-accent-strong, #ffb357) 10%, transparent)',
-  gold: 'var(--ds-warning, #efb45d)',
-  goldDim: 'color-mix(in srgb, var(--ds-warning, #efb45d) 10%, transparent)',
-  green: 'var(--ds-success, #79c67d)',
-  greenDim: 'color-mix(in srgb, var(--ds-success, #79c67d) 10%, transparent)',
-  purple: 'var(--ds-info, #6bb9df)',
-  purpleDim: 'color-mix(in srgb, var(--ds-info, #6bb9df) 10%, transparent)',
-  orange: 'var(--ds-accent, #f59a2c)',
-  orangeDim: 'color-mix(in srgb, var(--ds-accent, #f59a2c) 10%, transparent)',
+  cyan: 'var(--ds-accent)',
+  cyanDark: 'var(--wasel-brand-hover)',
+  cyanDim: 'color-mix(in srgb, var(--ds-accent) 12%, transparent)',
+  cyanGlow: 'color-mix(in srgb, var(--ds-accent-strong) 18%, transparent)',
+  blue: 'var(--ds-accent-strong)',
+  blueLight: 'color-mix(in srgb, var(--ds-accent-strong) 14%, transparent)',
+  blueDim: 'color-mix(in srgb, var(--ds-accent-strong) 10%, transparent)',
+  gold: 'var(--ds-accent-strong)',
+  goldDim: 'color-mix(in srgb, var(--ds-accent-strong) 10%, transparent)',
+  green: 'var(--ds-accent-strong)',
+  greenDim: 'color-mix(in srgb, var(--ds-accent-strong) 10%, transparent)',
+  purple: 'var(--wasel-brand-hover)',
+  purpleDim: 'color-mix(in srgb, var(--wasel-brand-hover) 10%, transparent)',
+  orange: 'var(--ds-accent)',
+  orangeDim: 'color-mix(in srgb, var(--ds-accent) 10%, transparent)',
 
-  text: 'var(--ds-text, #f5efe7)',
-  textSub: 'var(--ds-text-muted, #b9aea0)',
-  textMuted: 'var(--ds-text-soft, #8b8277)',
-  textDim: 'var(--ds-text-soft, #8b8277)',
+  text: 'var(--ds-text)',
+  textSub: 'var(--ds-text-muted)',
+  textMuted: 'var(--ds-text-soft)',
+  textDim: 'var(--ds-text-soft)',
 
-  border: 'var(--ds-border, #313841)',
-  borderHov: 'var(--ds-border-strong, #45505c)',
-  borderFaint: 'color-mix(in srgb, var(--ds-border, #313841) 72%, transparent)',
+  border: 'var(--ds-border)',
+  borderHov: 'var(--ds-border-strong)',
+  borderFaint: 'color-mix(in srgb, var(--ds-border) 72%, transparent)',
 
-  error: 'var(--ds-danger, #ee705d)',
-  errorDim: 'color-mix(in srgb, var(--ds-danger, #ee705d) 10%, transparent)',
-  warning: 'var(--ds-warning, #efb45d)',
-  success: 'var(--ds-success, #79c67d)',
-  info: 'var(--ds-info, #6bb9df)',
+  error: 'var(--wasel-brand-hover)',
+  errorDim: 'color-mix(in srgb, var(--wasel-brand-hover) 10%, transparent)',
+  warning: 'var(--ds-accent)',
+  success: 'var(--ds-accent-strong)',
+  info: 'var(--ds-accent-strong)',
 
-  overlay: 'var(--ds-surface-overlay, rgb(15 17 19 / 0.8))',
-  glass: 'var(--ds-surface, #1a1d22)',
+  overlay: 'var(--ds-surface-overlay)',
+  glass: 'var(--ds-surface)',
 } as const;
 
-export const F = "var(--wasel-font-sans, 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif)";
-export const FA = "var(--wasel-font-arabic, 'Cairo', 'Tajawal', sans-serif)";
+export const F = "var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
+export const FA = "var(--wasel-font-arabic, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
 export const FM = "'JetBrains Mono', 'Fira Mono', monospace";
 
 export const TYPE = {
   size: {
-    xs: '0.66rem',
-    sm: '0.76rem',
-    base: '0.92rem',
+    xs: '0.75rem',
+    sm: '0.8125rem',
+    base: '0.9375rem',
     md: '1rem',
     lg: '1.125rem',
     xl: '1.32rem',
-    '2xl': '1.6rem',
+    '2xl': '1.625rem',
     '3xl': '2rem',
     '4xl': '2.5rem',
     '5xl': '3.25rem',
   },
   weight: {
-    regular: 400,
+    regular: 500,
     medium: 500,
     semibold: 600,
     bold: 700,
-    black: 800,
-    ultra: 900,
+    black: 700,
+    ultra: 800,
   },
   lineHeight: {
-    tight: 1.08,
+    tight: 1.05,
     snug: 1.24,
-    normal: 1.5,
-    relaxed: 1.68,
+    normal: 1.62,
+    relaxed: 1.72,
     loose: 1.84,
   },
   letterSpacing: {
@@ -107,15 +101,15 @@ export const SPACE = {
   4: '16px',
   5: '20px',
   6: '24px',
-  7: '28px',
-  8: '32px',
-  9: '36px',
-  10: '40px',
-  12: '48px',
-  14: '56px',
+  7: '32px',
+  8: '40px',
+  9: '48px',
+  10: '64px',
+  12: '64px',
+  14: '64px',
   16: '64px',
-  20: '80px',
-  24: '96px',
+  20: '64px',
+  24: '64px',
 } as const;
 
 export const R = {
@@ -132,33 +126,32 @@ export const R = {
 
 export const SH = {
   none: 'none',
-  xs: 'var(--wasel-shadow-sm)',
-  sm: 'var(--wasel-shadow-sm)',
+  xs: 'var(--wasel-shadow-xs)',
+  sm: 'var(--wasel-shadow-xs)',
   card: 'var(--wasel-shadow-md)',
-  md: 'var(--wasel-shadow-lg)',
-  lg: 'var(--wasel-shadow-xl)',
+  md: 'var(--wasel-shadow-md)',
+  lg: 'var(--wasel-shadow-lg)',
   xl: 'var(--wasel-shadow-xl)',
-  navy: 'var(--wasel-shadow-md)',
-  cyan: '0 18px 50px rgb(var(--accent-secondary-rgb) / 0.20)',
-  cyanL: '0 24px 64px rgb(var(--accent-secondary-rgb) / 0.28)',
-  blue: '0 18px 50px rgb(var(--accent-secondary-rgb) / 0.16)',
-  green: '0 18px 50px rgb(var(--success-rgb) / 0.18)',
-  gold: '0 18px 50px rgb(var(--warning-rgb) / 0.22)',
+  navy: 'var(--wasel-shadow-lg)',
+  cyan: '0 18px 44px color-mix(in srgb, var(--ds-accent-strong) 18%, transparent)',
+  cyanL: '0 22px 52px color-mix(in srgb, var(--ds-accent) 22%, transparent)',
+  blue: '0 18px 44px color-mix(in srgb, var(--ds-accent) 16%, transparent)',
+  green: '0 18px 44px color-mix(in srgb, var(--ds-accent-strong) 18%, transparent)',
+  gold: '0 18px 44px color-mix(in srgb, var(--ds-accent-strong) 22%, transparent)',
   inner: 'inset 0 1px 0 rgb(255 255 255 / 0.05)',
 } as const;
 
-export const GRAD = 'var(--ds-accent, #f59a2c)';
-export const GRAD_GOLD = 'var(--ds-warning, #efb45d)';
-export const GRAD_GREEN = 'var(--ds-success, #79c67d)';
+export const GRAD = 'var(--ds-accent)';
+export const GRAD_GOLD = 'var(--ds-accent-strong)';
+export const GRAD_GREEN = 'var(--ds-accent-strong)';
 export const GRAD_NAVY =
-  'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted, #15181c) 88%, var(--ds-accent-soft, #3f2a15) 12%) 0%, color-mix(in srgb, var(--ds-page, #0f1113) 92%, var(--ds-accent-soft, #3f2a15) 8%) 54%, var(--ds-page, #0f1113) 100%)';
-export const GRAD_PURPLE = 'var(--ds-info, #6bb9df)';
+  'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted) 88%, var(--ds-accent-soft) 12%) 0%, color-mix(in srgb, var(--ds-page) 92%, var(--ds-accent-soft) 8%) 54%, var(--ds-page) 100%)';
+export const GRAD_PURPLE = 'var(--wasel-brand-hover)';
 export const GRAD_HERO =
-  'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted, #15181c) 88%, var(--ds-accent-soft, #3f2a15) 12%) 0%, color-mix(in srgb, var(--ds-surface, #1a1d22) 92%, var(--ds-accent-soft, #3f2a15) 8%) 54%, var(--ds-page, #0f1113) 100%)';
-export const GRAD_SIGNAL =
-  'linear-gradient(135deg, var(--ds-accent-strong, #ffb357) 0%, var(--ds-accent, #f59a2c) 100%)';
+  'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted) 88%, var(--ds-accent-soft) 12%) 0%, color-mix(in srgb, var(--ds-surface) 92%, var(--ds-accent-soft) 8%) 54%, var(--ds-page) 100%)';
+export const GRAD_SIGNAL = 'var(--theme-gradient-primary)';
 export const GRAD_AURORA =
-  'radial-gradient(circle at top, color-mix(in srgb, var(--ds-accent, #f59a2c) 16%, transparent), color-mix(in srgb, var(--ds-accent-strong, #ffb357) 10%, transparent) 44%, transparent 74%)';
+  'radial-gradient(circle at top, color-mix(in srgb, var(--ds-accent) 16%, transparent), color-mix(in srgb, var(--ds-accent-strong) 10%, transparent) 44%, transparent 74%)';
 
 export const ANIM = {
   dur: {
@@ -235,7 +228,7 @@ export function focusRing(color = C.cyan): string {
 
 export function statusColor(status: 'success' | 'warning' | 'error' | 'info' | 'neutral'): string {
   return {
-    success: C.green,
+    success: C.success,
     warning: C.warning,
     error: C.error,
     info: C.cyan,
@@ -284,8 +277,8 @@ export const GLOBAL_STYLES = `
   50% { opacity: 0.6; transform: scale(0.92); }
 }
 @keyframes pulse-glow {
-  0%,100% { box-shadow: 0 0 18px rgba(245,154,44,0.18); }
-  50% { box-shadow: 0 0 28px rgba(245,154,44,0.26), 0 0 36px rgba(255,179,87,0.16); }
+  0%,100% { box-shadow: ${BRAND.shadows.brandGlowDark}; }
+  50% { box-shadow: 0 0 24px rgba(245,176,65,0.22), 0 0 36px rgba(230,126,34,0.12); }
 }
 @keyframes shimmer {
   0% { background-position: -1000px 0; }

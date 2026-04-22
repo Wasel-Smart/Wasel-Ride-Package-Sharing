@@ -25,7 +25,7 @@ import {
   Tabs,
   type TabItem,
 } from '../../design-system/components';
-import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
+import { BrandLockup, CardShell } from '../../components/brand';
 import ProfilePageSurface from '../../features/profile/ProfilePage';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -424,7 +424,12 @@ export function LandingPage() {
       <main className="ds-page" role="main">
         <header className="ds-shell-header__inner">
           <button className="ds-shell-header__brand" onClick={() => navigate('/')} type="button">
-            <WaselLogo framed={false} showWordmark size={46} subtitle="Live mobility network" />
+            <BrandLockup
+              showTagline
+              size="lg"
+              surface="light"
+              tagline="LIVE MOBILITY NETWORK"
+            />
           </button>
           <div className="ds-shell-header__actions">
             <SupportActions />
@@ -729,7 +734,12 @@ export function AuthPage() {
       <div className="ds-page">
         <header className="ds-shell-header__inner">
           <button className="ds-shell-header__brand" onClick={() => navigate('/')} type="button">
-            <WaselLogo framed={false} showWordmark size={46} subtitle="Premium access" />
+            <BrandLockup
+              showTagline
+              size="lg"
+              surface="light"
+              tagline="LIVE MOBILITY NETWORK"
+            />
           </button>
           <div className="ds-shell-header__actions">
             <Button onClick={() => navigate('/')} variant="ghost">
@@ -757,7 +767,7 @@ export function AuthPage() {
             />
           </MapHeroPanel>
 
-          <Card>
+          <CardShell>
             <Tabs
               items={[
                 { content: <div />, label: 'Sign in', value: 'signin' },
@@ -853,7 +863,7 @@ export function AuthPage() {
                 {busy === 'facebook' ? 'Connecting Facebook...' : 'Continue with Facebook'}
               </Button>
             </div>
-          </Card>
+          </CardShell>
         </section>
       </div>
     </LayoutContainer>

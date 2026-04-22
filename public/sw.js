@@ -5,7 +5,7 @@
 // Sync:     background-sync queue for offline booking actions.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION = 'wasel-v11-20260411';
+const CACHE_VERSION = 'wasel-v12-20260422-routew';
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME  = `${CACHE_VERSION}-runtime`;
 const STATIC   = `${CACHE_VERSION}-static`;
@@ -21,6 +21,9 @@ const PRECACHE_URLS = [
   '/apple-touch-icon.png',
   '/icon-192.png',
   '/icon-512.png',
+  '/brand/wasel-route-w-badge.svg',
+  '/brand/wasel-route-w-symbol.svg',
+  '/brand/wasel-main-network-logo.svg',
   '/brand/wasel-mark-clean.svg',
   '/brand/wasel-mark.svg',
   '/brand/wasel-mark-clean-dark.svg',

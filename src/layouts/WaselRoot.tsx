@@ -1,7 +1,7 @@
-import { NavLink, Outlet, useLocation } from 'react-router';
+import { Outlet } from 'react-router';
 import { Bus, Clock, Globe, MapPin, Moon, Package, Search, Settings, Sun } from 'lucide-react';
 import { Button, LayoutContainer } from '../design-system/components';
-import { WaselLogo } from '../components/wasel-ds/WaselLogo';
+import { AppHeader } from '../components/brand';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useTheme } from '../contexts/ThemeContext';
@@ -18,7 +18,6 @@ const primaryNav = [
 ] as const;
 
 export default function WaselRoot() {
-  const location = useLocation();
   const navigate = useIframeSafeNavigate();
   const { language, setLanguage } = useLanguage();
   const { user, signOut } = useLocalAuth();
@@ -31,58 +30,44 @@ export default function WaselRoot() {
       <a className="ds-skip-link" href="#main-content">
         Skip to content
       </a>
-      <header className="ds-shell-header">
-        <LayoutContainer width="wide">
-          <div className="ds-shell-header__inner">
-            <button className="ds-shell-header__brand" onClick={() => navigate('/')} type="button">
-              <WaselLogo framed={false} showWordmark size={44} subtitle="Live mobility network" />
-            </button>
-
-            <nav aria-label="Main navigation" className="ds-shell-header__nav">
-              {primaryNav.map((item) => (
-                <NavLink
-                  className="ds-nav-link"
-                  data-active={location.pathname.startsWith(item.path)}
-                  key={item.path}
-                  to={item.path}
-                >
-                  {item.icon}
-                  {item.label}
-                </NavLink>
-              ))}
-            </nav>
-
-            <div className="ds-shell-header__actions">
-              <Button onClick={toggleTheme} variant="ghost">
-                {resolvedTheme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-                {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
-              </Button>
+      <AppHeader
+        brandSize="lg"
+        items={primaryNav}
+        onBrandClick={() => navigate('/')}
+        showMobileNav
+        subtitle="LIVE MOBILITY NETWORK"
+        surface={resolvedTheme === 'dark' ? 'dark' : 'light'}
+        actions={
+          <>
+            <Button onClick={toggleTheme} variant="ghost">
+              {resolvedTheme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+              {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
+            </Button>
+            <Button
+              onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
+              variant="ghost"
+            >
+              <Globe size={16} />
+              {language === 'ar' ? 'EN' : 'AR'}
+            </Button>
+            {user ? (
               <Button
-                onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-                variant="ghost"
+                onClick={() => {
+                  void signOut();
+                  navigate('/');
+                }}
+                variant="secondary"
               >
-                <Globe size={16} />
-                {language === 'ar' ? 'EN' : 'AR'}
+                {user.name}
               </Button>
-              {user ? (
-                <Button
-                  onClick={() => {
-                    void signOut();
-                    navigate('/');
-                  }}
-                  variant="secondary"
-                >
-                  {user.name}
-                </Button>
-              ) : (
-                <Button onClick={() => navigate(buildAuthPagePath('signin', '/app/find-ride'))}>
-                  Sign in
-                </Button>
-              )}
-            </div>
-          </div>
-        </LayoutContainer>
-      </header>
+            ) : (
+              <Button onClick={() => navigate(buildAuthPagePath('signin', '/app/find-ride'))}>
+                Sign in
+              </Button>
+            )}
+          </>
+        }
+      />
 
       <main className="ds-main" id="main-content" role="main">
         <Outlet />
@@ -101,19 +86,6 @@ export default function WaselRoot() {
           </div>
         </footer>
       </LayoutContainer>
-
-      <nav aria-label="Mobile navigation" className="ds-mobile-nav">
-        {primaryNav.map((item) => (
-          <NavLink
-            className="ds-nav-link"
-            data-active={location.pathname.startsWith(item.path)}
-            key={item.path}
-            to={item.path}
-          >
-            {item.icon}
-          </NavLink>
-        ))}
-      </nav>
     </div>
   );
 }

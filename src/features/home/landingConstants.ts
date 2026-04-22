@@ -1,15 +1,15 @@
 export const LANDING_FONT =
-  "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+  "var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
 
 export const LANDING_DISPLAY =
-  "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', 'Cairo', sans-serif)";
+  "var(--wasel-font-display, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
 
 export const LANDING_RESPONSIVE_STYLES = `
   :root { color-scheme: inherit; }
   .landing-shell, .landing-shell * { box-sizing: border-box; }
   .landing-shell > * { min-width: 0; }
   .landing-shell button:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--ds-accent-strong) 84%, white);
+    outline: 2px solid color-mix(in srgb, var(--ds-accent-strong) 78%, white);
     outline-offset: 3px;
   }
   .wasel-lift-card { transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
@@ -48,7 +48,7 @@ export const LANDING_RESPONSIVE_STYLES = `
   }
   .landing-hero-orbit--inner {
     width: min(66%, 310px);
-    border: 1px solid color-mix(in srgb, var(--ds-success) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ds-accent) 16%, transparent);
     opacity: 0.48;
     animation: landing-orbit-reverse 16s linear infinite;
   }
@@ -78,7 +78,7 @@ export const LANDING_RESPONSIVE_STYLES = `
   .landing-hero-mark-glow--green {
     width: min(72vw, 320px);
     height: min(72vw, 320px);
-    background: radial-gradient(circle, color-mix(in srgb, var(--ds-success) 24%, transparent) 0%, color-mix(in srgb, var(--ds-success) 10%, transparent) 36%, transparent 74%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--ds-accent) 22%, transparent) 0%, color-mix(in srgb, var(--ds-accent) 8%, transparent) 36%, transparent 74%);
     filter: blur(24px);
     transform: translate(22px, 28px);
   }
@@ -92,7 +92,7 @@ export const LANDING_RESPONSIVE_STYLES = `
     content: '';
     position: absolute;
     inset: -1px;
-    background: linear-gradient(135deg, color-mix(in srgb, var(--ds-accent-strong) 18%, transparent), transparent 36%, color-mix(in srgb, var(--ds-success) 16%, transparent) 100%);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--ds-accent-strong) 18%, transparent), transparent 36%, color-mix(in srgb, var(--ds-accent) 14%, transparent) 100%);
     opacity: 0.9;
     pointer-events: none;
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
