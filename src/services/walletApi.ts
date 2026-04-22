@@ -90,6 +90,13 @@ export interface WalletInsightsSnapshot {
   meta: WalletReliabilityMeta;
 }
 
+export interface PaymentIntentConfirmationView {
+  id: string;
+  status: string;
+  settled: boolean;
+  clientSecret?: string | null;
+}
+
 // ─── Payment method input ─────────────────────────────────────────────────────
 
 export interface AddPaymentMethodInput {
@@ -440,7 +447,10 @@ export const walletApi = {
     }
   },
 
-  async confirmPaymentIntent(paymentIntentId: string, paymentMethodId?: string | null) {
+  async confirmPaymentIntent(
+    paymentIntentId: string,
+    paymentMethodId?: string | null,
+  ): Promise<PaymentIntentConfirmationView> {
     try {
       return parseContract(
         paymentIntentConfirmationSchema,
@@ -458,7 +468,7 @@ export const walletApi = {
     }
   },
 
-  async getPaymentIntentStatus(paymentIntentId: string) {
+  async getPaymentIntentStatus(paymentIntentId: string): Promise<PaymentIntentConfirmationView> {
     try {
       return parseContract(
         paymentIntentConfirmationSchema,
@@ -488,6 +498,18 @@ export const walletApi = {
   async sendMoney(recipientUserId: string, amount: number, note?: string): Promise<void> {
     const token = requireStepUpToken('transfer');
     await apiGateway.post('/wallet/transfer', { amount, note: note ?? null, recipientUserId, verificationToken: token });
+  },
+
+  async invalidateWalletCache(userId?: string): Promise<void> {
+    if (userId?.trim()) {
+      walletReadCache.delete(userId.trim());
+      walletInsightsCache.delete(userId.trim());
+      return;
+    }
+
+    const resolvedUserId = await resolveUserId(userId);
+    walletReadCache.delete(resolvedUserId);
+    walletInsightsCache.delete(resolvedUserId);
   },
 
   // ── Subscriptions ────────────────────────────────────────────────────────────

@@ -1,502 +1,335 @@
-/**
- * WalletDashboard
- *
- * Render-focused wallet screen. Runtime mode selection, demo/live data
- * handling, and wallet mutations now live in `useWalletDashboardController`.
- */
-
-import { Wallet, Gift, RefreshCw, Lock } from 'lucide-react';
-import { lazy, Suspense } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
+import { useMemo, useState } from 'react';
+import { ArrowRightLeft, CreditCard, LoaderCircle, RefreshCw, ShieldCheck, Wallet as WalletIcon } from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
-import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
-import { ErrorBoundary } from '../../components/ErrorBoundary';
-import { WaselColors } from '../../tokens/wasel-tokens';
-import { useWalletDashboardController } from './useWalletDashboardController';
-import { useOptimizedWallet } from '../../hooks/useOptimizedWallet';
-import { TransactionRow as SharedTransactionRow } from './components/WalletShared';
-import { OverviewTab } from './components/OverviewTab';
-import { SettingsTab } from './components/SettingsTab';
-import { WalletHeroCard } from './components/WalletHeroCard';
-import { WalletActionModals } from './components/WalletActionModals';
-import { LoadingSpinner } from '../../components/LoadingSpinner';
-import type { RewardItem, WalletTransaction } from '../../services/walletApi';
-import {
-  ClarityBand,
-  CoreExperienceBanner,
-  PageShell,
-  SectionHead,
-} from '../shared/pageShared';
+import { Button } from '../../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Input } from '../../components/ui/input';
+import { useLocalAuth } from '../../contexts/LocalAuth';
+import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { ClarityBand, CoreExperienceBanner, PageShell, Protected, SectionHead } from '../shared/pageShared';
+import { useWallet, type WalletSendDraft } from './useWallet';
 
-const LazyInsightsTab = lazy(async () => {
-  const module = await import('./components/InsightsTab');
-  return { default: module.InsightsTab };
-});
+function formatCurrency(value: number, currency = 'JOD') {
+  return new Intl.NumberFormat('en-JO', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function formatMetaSource(source: string, degraded: boolean) {
+  if (degraded) {
+    return 'Backup wallet path';
+  }
+  return source === 'edge-api' ? 'Primary wallet service' : 'Direct sync';
+}
 
 export function WalletDashboard() {
+  const { user } = useLocalAuth();
+  const navigate = useIframeSafeNavigate();
   const {
-    actionLoading,
-    autoTopUpAmount,
-    autoTopUpEnabled,
-    autoTopUpThreshold,
-    balanceVisible,
-    handleAddPaymentMethod,
-    handleAutoTopUpToggle,
-    handleClaimReward,
-    handleRefresh,
-    handleRemovePaymentMethod,
-    handleSend,
-    handleSetDefaultPaymentMethod,
-    handleSetPin,
-    handleSubscribe,
-    handleTopUp,
-    handleWithdraw,
-    insights,
-    isRTL,
+    error,
+    hasMoreTransactions,
     loading,
-    pinValue,
-    refreshing,
-    sendAmount,
-    sendNote,
-    sendRecipient,
-    setAutoTopUpAmount,
-    setAutoTopUpThreshold,
-    setBalanceVisible,
-    setPinValue,
-    setSendAmount,
-    setSendNote,
-    setSendRecipient,
-    setShowPinSetup,
-    setShowSend,
-    setShowTopUp,
-    setShowWithdraw,
-    setTab,
-    setTopUpAmount,
-    setTopUpMethod,
-    setWithdrawAmount,
-    setWithdrawBank,
-    setWithdrawMethod,
-    shouldRedirectToAuth,
-    showPinSetup,
-    showSend,
-    showTopUp,
-    showWithdraw,
-    t,
-    tab,
-    topUpAmount,
-    topUpMethod,
-    walletActionsLocked,
-    walletActionsLockedMessage,
-    walletData,
-    walletHealth,
-    walletInsightsHealth,
-    walletUnavailable,
-    withdrawAmount,
-    withdrawBank,
-    withdrawMethod,
-  } = useWalletDashboardController();
+    loadingMore,
+    meta,
+    refresh,
+    sendMoney,
+    setError,
+    submittingTransfer,
+    totalTransactions,
+    transactions,
+    transferChallenge,
+    transferMessage,
+    wallet,
+    loadMoreTransactions,
+  } = useWallet(user?.id ?? null);
+  const [sendDraft, setSendDraft] = useState<WalletSendDraft>({
+    recipientUserId: '',
+    amount: '',
+    note: '',
+    pin: '',
+    otpCode: '',
+  });
 
-  const { optimizedTransactions } = useOptimizedWallet(walletData);
+  const paymentMethods = wallet?.wallet.paymentMethods ?? [];
+  const defaultPaymentMethod = paymentMethods.find(method => method.isDefault) ?? null;
+  const recentTransactions = useMemo(() => transactions.slice(0, transactions.length), [transactions]);
 
-  const bal = walletData?.balance ?? 0;
-  const pending = walletData?.pendingBalance ?? 0;
-  const rewardsBal = walletData?.rewardsBalance ?? 0;
-  const walletStatusLabel = !walletHealth
-    ? null
-    : walletHealth.degraded
-      ? (isRTL ? 'وضع احتياطي' : 'Fallback mode')
-      : walletHealth.source === 'edge-api'
-        ? (isRTL ? 'خدمة مباشرة' : 'Live backend')
-        : (isRTL ? 'مزامنة مباشرة' : 'Direct sync');
-  const walletStatusDescription = !walletHealth
-    ? null
-    : walletHealth.degraded
-      ? (isRTL ? 'البيانات قادمة من Supabase مباشرة بسبب تعطل مسار المحفظة الأساسي.' : 'Using backup data.')
-      : walletHealth.source === 'edge-api'
-        ? (isRTL ? 'المحفظة تقرأ من مسار الخدمة الأساسي.' : 'Using the main service.')
-        : (isRTL ? 'المحفظة تقرأ مباشرة من Supabase.' : 'Using direct sync.');
-  const insightsStatusLabel = walletInsightsHealth?.degraded
-    ? (isRTL ? 'الإحصاءات محلية' : 'Insights fallback')
-    : null;
-  const walletReadOnlyTitle = t.walletReadOnlyTitle;
-  const walletReadOnlyDescription = t.walletReadOnlyDescription;
-  const walletReadOnlyHint = t.walletReadOnlyHint;
-  const formatAmount = (amount: number) => `${amount.toFixed(2)} ${t.jod}`;
-
-  if (shouldRedirectToAuth) {
-    return (
-      <PageShell>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-          <Lock className="h-12 w-12 text-muted-foreground/60" />
-          <p className="text-sm text-muted-foreground">{t.redirectingToSignIn}</p>
-        </div>
-      </PageShell>
-    );
-  }
-
-  if (loading) {
-    return (
-      <PageShell>
-        <div className="wasel-empty-state min-h-[60vh]">
-          <div className="wasel-empty-state__icon">
-            <LoadingSpinner size="lg" />
-          </div>
-          <div className="space-y-2">
-            <p className="text-base font-semibold text-foreground">{t.walletTitle}</p>
-            <p className="text-sm text-muted-foreground">{t.processing}</p>
-          </div>
-        </div>
-      </PageShell>
-    );
-  }
-
-  if (walletUnavailable) {
-    return (
-      <PageShell>
-      <div className="flex items-center justify-center min-h-[60vh] px-2">
-        <div className="wasel-empty-state w-full max-w-xl">
-          <div className="flex justify-center mb-5">
-            <WaselLogo size={36} theme="dark" variant="full" showWordmark={false} />
-          </div>
-          <div
-            className="wasel-empty-state__icon mx-auto mb-5"
-            style={{ borderColor: `${WaselColors.teal}20` }}
-          >
-            <Wallet className="w-7 h-7" style={{ color: WaselColors.teal }} />
-          </div>
-          <div className="space-y-2">
-            <p className="text-foreground text-lg font-semibold">
-              {t.walletUnavailableTitle}
-            </p>
-            <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-6">
-              {t.walletUnavailableDescription}
-            </p>
-          </div>
-          <div
-            className="mt-5 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground"
-            style={{ borderColor: WaselColors.borderDark, background: 'rgba(220,255,248,0.05)' }}
-          >
-            <span className="h-2 w-2 rounded-full" style={{ background: WaselColors.success }} />
-            {t.walletUnavailableHint}
-          </div>
-        </div>
-      </div>
-      </PageShell>
-    );
-  }
-
-  if (!walletData) {
-    return (
-      <PageShell>
-      <div className="flex items-center justify-center min-h-[60vh] px-2">
-        <div className="wasel-empty-state w-full max-w-2xl text-left">
-          <div className="flex flex-wrap items-start justify-between gap-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <WaselLogo size={34} showWordmark={false} />
-                <Badge variant="secondary" className="border border-primary/20 bg-primary/10 text-primary">
-                  {t.walletTitle}
-                </Badge>
-              </div>
-              <div className="space-y-2">
-                <p className="text-foreground text-xl font-semibold">
-                  {t.walletEmptyTitle}
-                </p>
-                <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                  {t.walletEmptyDescription}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span className="rounded-full px-3 py-1.5" style={{ border: `1px solid ${WaselColors.borderDark}`, background: 'rgba(220,255,248,0.05)' }}>
-                  {t.walletSnapshotLabel}: {t.walletSnapshotDescription}
-                </span>
-                <span className="rounded-full px-3 py-1.5" style={{ border: `1px solid ${WaselColors.borderDark}`, background: 'rgba(220,255,248,0.05)' }}>
-                  {walletHealth?.degraded ? walletStatusLabel : t.walletEmptyAction}
-                </span>
-              </div>
-            </div>
-            <Button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="h-11 rounded-xl px-5 text-sm font-semibold"
-              style={{ background: WaselColors.teal }}
-            >
-              <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-              {t.retry}
-            </Button>
-          </div>
-        </div>
-      </div>
-      </PageShell>
-    );
+  async function handleSendMoney() {
+    setError(null);
+    try {
+      const result = await sendMoney(sendDraft);
+      if (result?.status === 'success') {
+        setSendDraft({
+          recipientUserId: '',
+          amount: '',
+          note: '',
+          pin: '',
+          otpCode: '',
+        });
+      }
+    } catch {
+      // The hook already normalizes and stores the user-facing error state.
+    }
   }
 
   return (
-    <ErrorBoundary>
-      <PageShell>
-      <div className="mx-auto max-w-4xl space-y-6 pb-8" dir={isRTL ? 'rtl' : 'ltr'}>
-        <SectionHead
-          emoji="💳"
-          title={t.walletTitle}
-          sub={t.walletSubtitle}
-          color={WaselColors.teal}
-          action={{
-            label: refreshing ? t.processing : t.retry,
-            onClick: handleRefresh,
-          }}
-        />
-
-        <CoreExperienceBanner
-          title={walletStatusLabel ?? (isRTL ? 'المحفظة متصلة الآن' : 'Wallet stays connected to the network')}
-          detail={
-            walletActionsLocked
-              ? walletReadOnlyDescription
-              : walletStatusDescription ??
-                (isRTL
-                  ? 'الرصيد والمدفوعات والمكافآت تتحرك داخل نفس واجهة واصل.'
-                  : 'Balance, payments, and rewards now live inside the same Wasel visual system.')
-          }
-          tone={WaselColors.teal}
-        />
-
-        <ClarityBand
-          title={isRTL ? 'إشارات المحفظة الأساسية' : 'Wallet essentials'}
-          detail={
-            isRTL
-              ? 'الرصيد المتاح والمعلّق والمكافآت تظهر بنفس الإيقاع البصري المستخدم في باقي التطبيق.'
-              : 'Available funds, pending value, and rewards now follow the same rhythm as the rest of the product.'
-          }
-          tone={WaselColors.teal}
-          items={[
-            { label: t.availableLabel, value: balanceVisible ? formatAmount(bal) : `${t.maskedShort} ${t.jod}` },
-            { label: t.pending, value: balanceVisible ? formatAmount(pending) : `${t.maskedShort} ${t.jod}` },
-            { label: t.rewards, value: balanceVisible ? formatAmount(rewardsBal) : `${t.maskedShort} ${t.jod}` },
-          ]}
-        />
-
-      {walletStatusLabel && (
-        <Card
-          className="rounded-[1.6rem]"
-          style={{ borderColor: WaselColors.borderDark, background: 'rgba(220,255,248,0.05)' }}
-        >
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">
-                  {walletStatusLabel}
-                </Badge>
-                {insightsStatusLabel && (
-                  <Badge
-                    variant="outline"
-                    style={{ borderColor: 'rgba(248,186,62,0.28)', background: 'rgba(248,186,62,0.12)', color: WaselColors.orange }}
-                  >
-                    {insightsStatusLabel}
-                  </Badge>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">{walletStatusDescription}</p>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              {isRTL ? 'آخر تحديث' : 'Updated'} {new Date(walletHealth?.fetchedAt ?? Date.now()).toLocaleTimeString(isRTL ? 'ar-JO' : 'en-US')}
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {walletActionsLocked && (
-        <Card
-          className="rounded-[1.6rem]"
-          style={{ borderColor: 'rgba(248,186,62,0.28)', background: 'rgba(248,186,62,0.08)' }}
-        >
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="outline"
-                  style={{ borderColor: 'rgba(248,186,62,0.28)', background: 'rgba(248,186,62,0.12)', color: WaselColors.orange }}
-                >
-                  {walletReadOnlyTitle}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">{walletReadOnlyDescription}</p>
-            </div>
-            <p className="text-[11px] text-amber-500">{walletReadOnlyHint}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      <WalletHeroCard
-        actionsLocked={walletActionsLocked}
-        balanceVisible={balanceVisible}
-        balance={bal}
-        pendingBalance={pending}
-        rewardsBalance={rewardsBal}
-        subscription={walletData?.subscription ?? null}
-        t={t}
-        onToggleBalance={() => setBalanceVisible(!balanceVisible)}
-        onShowTopUp={() => setShowTopUp(true)}
-        onShowWithdraw={() => setShowWithdraw(true)}
-        onShowSend={() => setShowSend(true)}
-      />
-
-      <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="flex h-auto w-full gap-2 overflow-x-auto rounded-[1.6rem] p-1.5">
-          <TabsTrigger value="overview" className="min-w-[110px] flex-1 text-xs">{t.overview}</TabsTrigger>
-          <TabsTrigger value="transactions" className="min-w-[110px] flex-1 text-xs">{t.transactions}</TabsTrigger>
-          <TabsTrigger value="rewards" className="min-w-[110px] flex-1 text-xs">{t.rewardsTab}</TabsTrigger>
-          <TabsTrigger value="insights" className="min-w-[110px] flex-1 text-xs">{t.insights}</TabsTrigger>
-          <TabsTrigger value="settings" className="min-w-[110px] flex-1 text-xs">{t.settings}</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="mt-4 space-y-4">
-          <OverviewTab
-            walletData={walletData}
-            isRTL={isRTL}
-            t={t}
-            onSetTab={setTab}
-            onSubscribe={handleSubscribe}
-            actionLoading={actionLoading}
-            actionsLocked={walletActionsLocked}
+    <PageShell>
+      <Protected>
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-8 pt-4 md:px-6">
+          <SectionHead
+            emoji="💳"
+            title="Wallet"
+            sub="Server-backed balance, payment methods, and verified transfers."
+            color="var(--accent)"
+            action={{
+              label: loading ? 'Loading...' : 'Refresh wallet',
+              onClick: () => {
+                void refresh();
+              },
+            }}
           />
-        </TabsContent>
 
-        <TabsContent value="transactions" className="mt-4">
-          <Card className="rounded-[1.6rem]">
-            <CardContent className="pt-4">
-              {(!optimizedTransactions || optimizedTransactions.length === 0) ? (
-                <div className="text-center py-12 text-muted-foreground text-sm">{t.noTransactions}</div>
-              ) : (
-                optimizedTransactions.map((tx: WalletTransaction) => (
-                  <SharedTransactionRow key={tx.id} tx={tx} isRTL={isRTL} jodLabel={t.jod} t={t} />
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <CoreExperienceBanner
+            title="This route now uses the real wallet domain instead of a shell surface."
+            detail="Balance, payment methods, and transaction history are loaded from the wallet service. Transfers require PIN verification and refresh the ledger after settlement."
+            tone="var(--accent)"
+          />
 
-        <TabsContent value="rewards" className="mt-4 space-y-4">
-          <Card className="rounded-[1.6rem]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Gift className="w-4 h-4" style={{ color: WaselColors.bronze }} />
-                {t.activeRewards}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {(!walletData?.activeRewards || walletData.activeRewards.length === 0) ? (
-                <div className="text-center py-8">
-                  <Gift className="w-12 h-12 mx-auto mb-3 text-muted-foreground/30" />
-                  <p className="text-muted-foreground text-sm">{t.noRewards}</p>
-                </div>
-              ) : (
-                walletData.activeRewards.map((r: RewardItem) => (
-                  <div key={r.id} className="flex items-center justify-between py-3 border-b border-border/30 last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">{r.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {t.expires}: {new Date(r.expirationDate).toLocaleDateString(isRTL ? 'ar-JO' : 'en-US', { month: 'short', day: 'numeric' })}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        className="font-bold"
-                        style={{
-                          background: 'rgba(126,205,249,0.12)',
-                          color: WaselColors.teal,
-                          borderColor: 'rgba(126,205,249,0.28)',
-                        }}
-                      >
-                        {r.amount} {t.jod}
-                      </Badge>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={walletActionsLocked}
-                        onClick={() => handleClaimReward(r.id)}
-                        className="text-xs"
-                      >
-                        {t.claim}
-                      </Button>
-                    </div>
+          <ClarityBand
+            title="Keep stored value and payment movement clearly separated."
+            detail="Use Wallet for balance, history, and secure transfers. Use Payments when you need to create or confirm a payment intent."
+            tone="var(--accent)"
+            items={[
+              { label: 'Balance', value: wallet ? formatCurrency(wallet.balance, wallet.currency) : 'Loading...' },
+              { label: 'Pending', value: wallet ? formatCurrency(wallet.pendingBalance, wallet.currency) : 'Loading...' },
+              { label: 'Rewards', value: wallet ? formatCurrency(wallet.rewardsBalance, wallet.currency) : 'Loading...' },
+            ]}
+          />
+
+          <section className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+            <Card className="border-primary/15 bg-[linear-gradient(140deg,rgba(3,13,28,0.96),rgba(8,34,60,0.92))]">
+              <CardHeader className="gap-3">
+                <Badge className="w-fit border border-primary/20 bg-primary/10 text-primary">
+                  Live wallet
+                </Badge>
+                <CardTitle className="flex items-center gap-3 text-2xl text-foreground">
+                  <WalletIcon className="h-6 w-6 text-primary" />
+                  {wallet ? formatCurrency(wallet.balance, wallet.currency) : 'Loading wallet...'}
+                </CardTitle>
+                <CardDescription className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Stored value is read from the wallet service, not from auth profile fields. The refresh action invalidates local wallet caches before reloading the latest state.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-3 pb-6 md:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <RefreshCw className="h-4 w-4 text-primary" />
+                    Pending balance
                   </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  <p className="text-2xl font-bold text-foreground">
+                    {wallet ? formatCurrency(wallet.pendingBalance, wallet.currency) : '--'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <CreditCard className="h-4 w-4 text-primary" />
+                    Payment methods
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{paymentMethods.length}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {defaultPaymentMethod?.label ?? 'No default method configured'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    Service posture
+                  </div>
+                  <p className="text-lg font-semibold text-foreground">
+                    {meta ? formatMetaSource(meta.source, meta.degraded) : 'Loading...'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {meta ? `Updated ${new Date(meta.fetchedAt).toLocaleString()}` : 'Waiting for first sync'}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-        <TabsContent value="insights" className="mt-4 space-y-4">
-          <Suspense
-            fallback={<LoadingSpinner text="Loading insights..." />}
-          >
-            <LazyInsightsTab insights={insights} isRTL={isRTL} t={t} />
-          </Suspense>
-        </TabsContent>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-foreground">Wallet actions</CardTitle>
+                <CardDescription className="text-sm leading-6 text-muted-foreground">
+                  Use Payments for top-ups and payment intents. Use Settings for account-level preferences. This page only exposes actions backed by the wallet service.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button className="w-full" variant="secondary" onClick={() => navigate('/app/payments')}>
+                  Open payments
+                </Button>
+                <Button className="w-full" variant="secondary" onClick={() => navigate('/app/settings')}>
+                  Open settings
+                </Button>
+                <Button
+                  className="w-full"
+                  disabled={loading}
+                  onClick={() => {
+                    void refresh();
+                  }}
+                >
+                  {loading ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                  Refresh balance and history
+                </Button>
+              </CardContent>
+            </Card>
+          </section>
 
-        <TabsContent value="settings" className="mt-4 space-y-4">
-          <SettingsTab
-            walletData={walletData}
-            isRTL={isRTL}
-            t={t}
-            autoTopUpEnabled={autoTopUpEnabled}
-            autoTopUpAmount={autoTopUpAmount}
-            autoTopUpThreshold={autoTopUpThreshold}
-            onAutoTopUpToggle={handleAutoTopUpToggle}
-            onAutoTopUpAmountChange={setAutoTopUpAmount}
-            onAutoTopUpThresholdChange={setAutoTopUpThreshold}
-            onShowPinSetup={() => setShowPinSetup(true)}
-            onAddPaymentMethod={handleAddPaymentMethod}
-            onRemovePaymentMethod={handleRemovePaymentMethod}
-            onSetDefaultPaymentMethod={handleSetDefaultPaymentMethod}
-            actionsLocked={walletActionsLocked}
-            actionsLockedMessage={walletActionsLockedMessage}
-          />
-        </TabsContent>
-      </Tabs>
+          <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-foreground">Send money</CardTitle>
+                <CardDescription>
+                  Transfers use wallet PIN verification before the ledger move is submitted.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <label className="block space-y-2 text-sm">
+                  <span className="font-medium text-foreground">Recipient user ID</span>
+                  <Input
+                    value={sendDraft.recipientUserId}
+                    onChange={(event) => setSendDraft(current => ({ ...current, recipientUserId: event.target.value }))}
+                    placeholder="user_123"
+                  />
+                </label>
 
-      <WalletActionModals
-        actionLoading={actionLoading}
-        actionsLocked={walletActionsLocked}
-        actionsLockedMessage={walletActionsLockedMessage}
-        balance={bal}
-        isRTL={isRTL}
-        pinValue={pinValue}
-        sendAmount={sendAmount}
-        sendNote={sendNote}
-        sendRecipient={sendRecipient}
-        setPinValue={setPinValue}
-        setSendAmount={setSendAmount}
-        setSendNote={setSendNote}
-        setSendRecipient={setSendRecipient}
-        setShowPinSetup={setShowPinSetup}
-        setShowSend={setShowSend}
-        setShowTopUp={setShowTopUp}
-        setShowWithdraw={setShowWithdraw}
-        setTopUpAmount={setTopUpAmount}
-        setTopUpMethod={setTopUpMethod}
-        setWithdrawAmount={setWithdrawAmount}
-        setWithdrawBank={setWithdrawBank}
-        setWithdrawMethod={setWithdrawMethod}
-        showPinSetup={showPinSetup}
-        showSend={showSend}
-        showTopUp={showTopUp}
-        showWithdraw={showWithdraw}
-        t={t}
-        topUpAmount={topUpAmount}
-        topUpMethod={topUpMethod}
-        walletData={walletData}
-        withdrawAmount={withdrawAmount}
-        withdrawBank={withdrawBank}
-        withdrawMethod={withdrawMethod}
-        onSend={handleSend}
-        onSetPin={handleSetPin}
-        onTopUp={handleTopUp}
-        onWithdraw={handleWithdraw}
-      />
-      </div>
-      </PageShell>
-    </ErrorBoundary>
+                <label className="block space-y-2 text-sm">
+                  <span className="font-medium text-foreground">Amount</span>
+                  <Input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={sendDraft.amount}
+                    onChange={(event) => setSendDraft(current => ({ ...current, amount: event.target.value }))}
+                    placeholder="25.00"
+                  />
+                </label>
+
+                <label className="block space-y-2 text-sm">
+                  <span className="font-medium text-foreground">Note</span>
+                  <Input
+                    value={sendDraft.note}
+                    onChange={(event) => setSendDraft(current => ({ ...current, note: event.target.value }))}
+                    placeholder="Trip reimbursement"
+                  />
+                </label>
+
+                <label className="block space-y-2 text-sm">
+                  <span className="font-medium text-foreground">Wallet PIN</span>
+                  <Input
+                    type="password"
+                    value={sendDraft.pin}
+                    onChange={(event) => setSendDraft(current => ({ ...current, pin: event.target.value }))}
+                    placeholder="Enter your wallet PIN"
+                  />
+                </label>
+
+                {transferChallenge ? (
+                  <label className="block space-y-2 text-sm">
+                    <span className="font-medium text-foreground">One-time verification code</span>
+                    <Input
+                      value={sendDraft.otpCode}
+                      onChange={(event) => setSendDraft(current => ({ ...current, otpCode: event.target.value }))}
+                      placeholder="Enter the OTP code"
+                    />
+                  </label>
+                ) : null}
+
+                {transferMessage ? (
+                  <div className="rounded-2xl border border-primary/20 bg-primary/10 p-3 text-sm text-primary">
+                    {transferMessage}
+                  </div>
+                ) : null}
+
+                {error ? (
+                  <div className="rounded-2xl border border-destructive/25 bg-destructive/10 p-3 text-sm text-destructive">
+                    {error}
+                  </div>
+                ) : null}
+
+                <Button
+                  className="w-full"
+                  disabled={submittingTransfer || loading || !wallet}
+                  onClick={() => {
+                    void handleSendMoney();
+                  }}
+                >
+                  {submittingTransfer ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <ArrowRightLeft className="mr-2 h-4 w-4" />}
+                  {transferChallenge ? 'Verify and complete transfer' : 'Send money'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-foreground">Transaction history</CardTitle>
+                <CardDescription>
+                  Showing {recentTransactions.length} of {totalTransactions} wallet transactions from the wallet service.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {loading && recentTransactions.length === 0 ? (
+                  <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted-foreground">
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    Loading transactions...
+                  </div>
+                ) : null}
+
+                {!loading && recentTransactions.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-5 text-sm text-muted-foreground">
+                    No wallet transactions have been recorded yet.
+                  </div>
+                ) : null}
+
+                {recentTransactions.map((transaction) => {
+                  const isCredit = transaction.amount >= 0;
+                  return (
+                    <div key={transaction.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">{transaction.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {transaction.type.replace('_', ' ')} · {new Date(transaction.createdAt).toLocaleString()} · {transaction.status}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-sm font-semibold ${isCredit ? 'text-emerald-400' : 'text-foreground'}`}>
+                          {isCredit ? '+' : '-'}
+                          {formatCurrency(Math.abs(transaction.amount), wallet?.currency ?? 'JOD')}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{transaction.id}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {hasMoreTransactions ? (
+                  <Button
+                    className="w-full"
+                    disabled={loadingMore}
+                    variant="secondary"
+                    onClick={() => {
+                      void loadMoreTransactions();
+                    }}
+                  >
+                    {loadingMore ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Load more transactions
+                  </Button>
+                ) : null}
+              </CardContent>
+            </Card>
+          </section>
+        </div>
+      </Protected>
+    </PageShell>
   );
 }
