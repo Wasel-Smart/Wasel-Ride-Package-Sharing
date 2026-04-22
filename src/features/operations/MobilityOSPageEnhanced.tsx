@@ -35,22 +35,147 @@ type NodeId = (typeof NODES)[number]['id'];
 type RouteId = (typeof ROUTES)[number]['id'];
 
 const NODES = [
-  { id: 'amman', name: 'Amman', subtitle: 'Core hub', x: 46, y: 33, accent: 'cyan', resilience: 0.92 },
-  { id: 'irbid', name: 'Irbid', subtitle: 'North demand', x: 59, y: 16, accent: 'gold', resilience: 0.85 },
-  { id: 'zarqa', name: 'Zarqa', subtitle: 'Industrial flow', x: 70, y: 33, accent: 'green', resilience: 0.82 },
-  { id: 'madaba', name: 'Madaba', subtitle: 'Connector lane', x: 50, y: 47, accent: 'cyan', resilience: 0.81 },
-  { id: 'karak', name: 'Karak', subtitle: 'South midpoint', x: 52, y: 66, accent: 'gold', resilience: 0.79 },
-  { id: 'aqaba', name: 'Aqaba', subtitle: 'Port sink', x: 44, y: 95, accent: 'green', resilience: 0.88 },
+  {
+    id: 'amman',
+    name: 'Amman',
+    subtitle: 'Core hub',
+    x: 46,
+    y: 33,
+    accent: 'cyan',
+    resilience: 0.92,
+  },
+  {
+    id: 'irbid',
+    name: 'Irbid',
+    subtitle: 'North demand',
+    x: 59,
+    y: 16,
+    accent: 'gold',
+    resilience: 0.85,
+  },
+  {
+    id: 'zarqa',
+    name: 'Zarqa',
+    subtitle: 'Industrial flow',
+    x: 70,
+    y: 33,
+    accent: 'green',
+    resilience: 0.82,
+  },
+  {
+    id: 'madaba',
+    name: 'Madaba',
+    subtitle: 'Connector lane',
+    x: 50,
+    y: 47,
+    accent: 'cyan',
+    resilience: 0.81,
+  },
+  {
+    id: 'karak',
+    name: 'Karak',
+    subtitle: 'South midpoint',
+    x: 52,
+    y: 66,
+    accent: 'gold',
+    resilience: 0.79,
+  },
+  {
+    id: 'aqaba',
+    name: 'Aqaba',
+    subtitle: 'Port sink',
+    x: 44,
+    y: 95,
+    accent: 'green',
+    resilience: 0.88,
+  },
 ] as const;
 
 const ROUTES = [
-  { id: 'r1', from: 'amman', to: 'irbid', distance: 88, eta: 62, demand: 0.82, packageBias: 0.34, importance: 0.84, phase: 0.12, accent: 'cyan' },
-  { id: 'r2', from: 'amman', to: 'zarqa', distance: 26, eta: 28, demand: 0.76, packageBias: 0.42, importance: 0.78, phase: 0.42, accent: 'green' },
-  { id: 'r3', from: 'amman', to: 'madaba', distance: 31, eta: 34, demand: 0.58, packageBias: 0.29, importance: 0.60, phase: 0.68, accent: 'cyan' },
-  { id: 'r4', from: 'madaba', to: 'karak', distance: 111, eta: 73, demand: 0.61, packageBias: 0.38, importance: 0.68, phase: 1.10, accent: 'gold' },
-  { id: 'r5', from: 'karak', to: 'aqaba', distance: 203, eta: 112, demand: 0.72, packageBias: 0.48, importance: 0.74, phase: 1.56, accent: 'green' },
-  { id: 'r6', from: 'amman', to: 'aqaba', distance: 332, eta: 235, demand: 0.93, packageBias: 0.57, importance: 0.95, phase: 2.04, accent: 'gold' },
-  { id: 'r7', from: 'irbid', to: 'zarqa', distance: 79, eta: 67, demand: 0.53, packageBias: 0.31, importance: 0.55, phase: 2.48, accent: 'purple' },
+  {
+    id: 'r1',
+    from: 'amman',
+    to: 'irbid',
+    distance: 88,
+    eta: 62,
+    demand: 0.82,
+    packageBias: 0.34,
+    importance: 0.84,
+    phase: 0.12,
+    accent: 'cyan',
+  },
+  {
+    id: 'r2',
+    from: 'amman',
+    to: 'zarqa',
+    distance: 26,
+    eta: 28,
+    demand: 0.76,
+    packageBias: 0.42,
+    importance: 0.78,
+    phase: 0.42,
+    accent: 'green',
+  },
+  {
+    id: 'r3',
+    from: 'amman',
+    to: 'madaba',
+    distance: 31,
+    eta: 34,
+    demand: 0.58,
+    packageBias: 0.29,
+    importance: 0.6,
+    phase: 0.68,
+    accent: 'cyan',
+  },
+  {
+    id: 'r4',
+    from: 'madaba',
+    to: 'karak',
+    distance: 111,
+    eta: 73,
+    demand: 0.61,
+    packageBias: 0.38,
+    importance: 0.68,
+    phase: 1.1,
+    accent: 'gold',
+  },
+  {
+    id: 'r5',
+    from: 'karak',
+    to: 'aqaba',
+    distance: 203,
+    eta: 112,
+    demand: 0.72,
+    packageBias: 0.48,
+    importance: 0.74,
+    phase: 1.56,
+    accent: 'green',
+  },
+  {
+    id: 'r6',
+    from: 'amman',
+    to: 'aqaba',
+    distance: 332,
+    eta: 235,
+    demand: 0.93,
+    packageBias: 0.57,
+    importance: 0.95,
+    phase: 2.04,
+    accent: 'gold',
+  },
+  {
+    id: 'r7',
+    from: 'irbid',
+    to: 'zarqa',
+    distance: 79,
+    eta: 67,
+    demand: 0.53,
+    packageBias: 0.31,
+    importance: 0.55,
+    phase: 2.48,
+    accent: 'purple',
+  },
 ] as const;
 
 const UNITS: {
@@ -63,15 +188,96 @@ const UNITS: {
   speed: number;
   dir: 1 | -1;
 }[] = [
-  { id: 'u1', routeId: 'r1', type: 'ride', accent: 'cyan', phase: 0.08, lane: -4, speed: 0.017, dir: 1 },
-  { id: 'u2', routeId: 'r1', type: 'package', accent: 'gold', phase: 0.66, lane: 4, speed: 0.013, dir: -1 },
-  { id: 'u3', routeId: 'r2', type: 'ride', accent: 'green', phase: 0.22, lane: -5, speed: 0.021, dir: 1 },
-  { id: 'u4', routeId: 'r3', type: 'ride', accent: 'cyan', phase: 0.34, lane: -4, speed: 0.018, dir: 1 },
-  { id: 'u5', routeId: 'r4', type: 'package', accent: 'gold', phase: 0.58, lane: 5, speed: 0.011, dir: 1 },
-  { id: 'u6', routeId: 'r5', type: 'ride', accent: 'green', phase: 0.17, lane: -6, speed: 0.015, dir: 1 },
-  { id: 'u7', routeId: 'r6', type: 'ride', accent: 'cyan', phase: 0.52, lane: -8, speed: 0.014, dir: 1 },
-  { id: 'u8', routeId: 'r6', type: 'package', accent: 'gold', phase: 0.78, lane: 8, speed: 0.009, dir: -1 },
-  { id: 'u9', routeId: 'r7', type: 'ride', accent: 'purple', phase: 0.26, lane: -5, speed: 0.013, dir: 1 },
+  {
+    id: 'u1',
+    routeId: 'r1',
+    type: 'ride',
+    accent: 'cyan',
+    phase: 0.08,
+    lane: -4,
+    speed: 0.017,
+    dir: 1,
+  },
+  {
+    id: 'u2',
+    routeId: 'r1',
+    type: 'package',
+    accent: 'gold',
+    phase: 0.66,
+    lane: 4,
+    speed: 0.013,
+    dir: -1,
+  },
+  {
+    id: 'u3',
+    routeId: 'r2',
+    type: 'ride',
+    accent: 'green',
+    phase: 0.22,
+    lane: -5,
+    speed: 0.021,
+    dir: 1,
+  },
+  {
+    id: 'u4',
+    routeId: 'r3',
+    type: 'ride',
+    accent: 'cyan',
+    phase: 0.34,
+    lane: -4,
+    speed: 0.018,
+    dir: 1,
+  },
+  {
+    id: 'u5',
+    routeId: 'r4',
+    type: 'package',
+    accent: 'gold',
+    phase: 0.58,
+    lane: 5,
+    speed: 0.011,
+    dir: 1,
+  },
+  {
+    id: 'u6',
+    routeId: 'r5',
+    type: 'ride',
+    accent: 'green',
+    phase: 0.17,
+    lane: -6,
+    speed: 0.015,
+    dir: 1,
+  },
+  {
+    id: 'u7',
+    routeId: 'r6',
+    type: 'ride',
+    accent: 'cyan',
+    phase: 0.52,
+    lane: -8,
+    speed: 0.014,
+    dir: 1,
+  },
+  {
+    id: 'u8',
+    routeId: 'r6',
+    type: 'package',
+    accent: 'gold',
+    phase: 0.78,
+    lane: 8,
+    speed: 0.009,
+    dir: -1,
+  },
+  {
+    id: 'u9',
+    routeId: 'r7',
+    type: 'ride',
+    accent: 'purple',
+    phase: 0.26,
+    lane: -5,
+    speed: 0.013,
+    dir: 1,
+  },
 ];
 
 const TABS: Record<TabKey, string> = {
@@ -81,14 +287,14 @@ const TABS: Record<TabKey, string> = {
   recovery: 'Recovery Mode',
 };
 
-const ACCESS_LAYER_PRODUCTS = [
+const _ACCESS_LAYER_PRODUCTS = [
   { label: 'Rides', accent: DesignSystem.colors.accent.strong },
   { label: 'Packages', accent: DesignSystem.colors.gold.base },
   { label: 'Bus', accent: DesignSystem.colors.cyan.base },
   { label: 'Wallet and recovery', accent: DesignSystem.colors.green.base },
 ] as const;
 
-const ACCESS_LAYER_STATUS_PILLS = [
+const _ACCESS_LAYER_STATUS_PILLS = [
   'One account live',
   'Return path saved',
   'Recovery ready',
@@ -113,14 +319,14 @@ const ACCESS_LAYER_ROUTE_CURVES: Record<RouteId, { bend: number; lift: number }>
   r7: { bend: 50, lift: -38 },
 };
 
-const ACCESS_LAYER_POLYGONS = [
+const _ACCESS_LAYER_POLYGONS = [
   '474,14 996,170 996,662 716,602 626,384 626,214',
   '620,88 924,210 924,354 758,324 670,208',
   '504,236 754,308 754,540 424,616 478,470',
   '604,346 874,396 996,470 996,662 690,618 606,482',
 ];
 
-function buildAccessLayerGeometry(route: Pick<(typeof ROUTES)[number], 'id' | 'from' | 'to'>) {
+function _buildAccessLayerGeometry(route: Pick<(typeof ROUTES)[number], 'id' | 'from' | 'to'>) {
   const from = ACCESS_LAYER_NODE_LAYOUT[route.from];
   const to = ACCESS_LAYER_NODE_LAYOUT[route.to];
   const curve = ACCESS_LAYER_ROUTE_CURVES[route.id];
@@ -131,8 +337,8 @@ function buildAccessLayerGeometry(route: Pick<(typeof ROUTES)[number], 'id' | 'f
   const normalY = dx / distance;
   const midX = (from.x + to.x) / 2;
   const midY = (from.y + to.y) / 2;
-  const controlX = midX + (normalX * curve.bend);
-  const controlY = midY + (normalY * curve.bend) + curve.lift;
+  const controlX = midX + normalX * curve.bend;
+  const controlY = midY + normalY * curve.bend + curve.lift;
 
   return {
     from,
@@ -142,7 +348,7 @@ function buildAccessLayerGeometry(route: Pick<(typeof ROUTES)[number], 'id' | 'f
   };
 }
 
-function pointOnQuadraticCurve(
+function _pointOnQuadraticCurve(
   from: { x: number; y: number },
   control: { x: number; y: number },
   to: { x: number; y: number },
@@ -151,14 +357,8 @@ function pointOnQuadraticCurve(
   const clamped = clamp(t, 0, 1);
   const inverse = 1 - clamped;
   return {
-    x:
-      (inverse * inverse * from.x) +
-      (2 * inverse * clamped * control.x) +
-      (clamped * clamped * to.x),
-    y:
-      (inverse * inverse * from.y) +
-      (2 * inverse * clamped * control.y) +
-      (clamped * clamped * to.y),
+    x: inverse * inverse * from.x + 2 * inverse * clamped * control.x + clamped * clamped * to.x,
+    y: inverse * inverse * from.y + 2 * inverse * clamped * control.y + clamped * clamped * to.y,
   };
 }
 
@@ -172,28 +372,48 @@ function avg(values: number[]) {
 
 function variance(values: number[]) {
   const mean = avg(values);
-  return avg(values.map((value) => (value - mean) ** 2));
+  return avg(values.map(value => (value - mean) ** 2));
 }
 
 function accentColor(accent: Accent) {
-  if (accent === 'green') {return DesignSystem.colors.green.base;}
-  if (accent === 'gold') {return DesignSystem.colors.gold.base;}
-  if (accent === 'purple') {return DesignSystem.colors.purple.base;}
+  if (accent === 'green') {
+    return DesignSystem.colors.green.base;
+  }
+  if (accent === 'gold') {
+    return DesignSystem.colors.gold.base;
+  }
+  if (accent === 'purple') {
+    return DesignSystem.colors.purple.base;
+  }
   return DesignSystem.colors.cyan.base;
 }
 
 function pipelineAccent(stageId: MobilityStageId) {
-  if (stageId === 'demand') {return DesignSystem.colors.gold.base;}
-  if (stageId === 'candidate-vehicles') {return DesignSystem.colors.green.base;}
-  if (stageId === 'scoring') {return DesignSystem.colors.purple.base;}
-  if (stageId === 'matching') {return DesignSystem.colors.cyan.base;}
-  if (stageId === 'assignment') {return DesignSystem.colors.accent.strong;}
+  if (stageId === 'demand') {
+    return DesignSystem.colors.gold.base;
+  }
+  if (stageId === 'candidate-vehicles') {
+    return DesignSystem.colors.green.base;
+  }
+  if (stageId === 'scoring') {
+    return DesignSystem.colors.purple.base;
+  }
+  if (stageId === 'matching') {
+    return DesignSystem.colors.cyan.base;
+  }
+  if (stageId === 'assignment') {
+    return DesignSystem.colors.accent.strong;
+  }
   return DesignSystem.colors.text.muted;
 }
 
 function pipelineToneColor(tone: MobilityPipelineStageTone, accent: string) {
-  if (tone === 'positive') {return accent;}
-  if (tone === 'attention') {return DesignSystem.colors.gold.base;}
+  if (tone === 'positive') {
+    return accent;
+  }
+  if (tone === 'attention') {
+    return DesignSystem.colors.gold.base;
+  }
   return DesignSystem.colors.text.secondary;
 }
 
@@ -219,10 +439,12 @@ export default function MobilityOSPageEnhanced() {
   const pipeline = useMobilityPipeline();
 
   useEffect(() => {
-    if (paused) {return undefined;}
+    if (paused) {
+      return undefined;
+    }
 
     const loop = () => {
-      setTick((prev) => (prev + 0.0035) % 1);
+      setTick(prev => (prev + 0.0035) % 1);
       rafRef.current = requestAnimationFrame(loop);
     };
 
@@ -235,12 +457,12 @@ export default function MobilityOSPageEnhanced() {
   }, [paused]);
 
   const routeStats = useMemo(() => {
-    const nodeMap = Object.fromEntries(NODES.map((node) => [node.id, node]));
+    const nodeMap = Object.fromEntries(NODES.map(node => [node.id, node]));
 
-    return ROUTES.map((route) => {
+    return ROUTES.map(route => {
       const fromNode = nodeMap[route.from];
       const toNode = nodeMap[route.to];
-      const wave = 0.5 + (0.5 * Math.sin((tick + route.phase) * Math.PI * 2.2));
+      const wave = 0.5 + 0.5 * Math.sin((tick + route.phase) * Math.PI * 2.2);
       const load = clamp(
         route.demand * 0.66 +
           route.importance * 0.22 +
@@ -255,7 +477,11 @@ export default function MobilityOSPageEnhanced() {
         0.99,
       );
       const speedIndex = clamp(1.24 - load * 0.48 + reliability * 0.15, 0.58, 1.28);
-      const packageSync = clamp(route.packageBias * 0.58 + wave * 0.22 + reliability * 0.2, 0.12, 0.98);
+      const packageSync = clamp(
+        route.packageBias * 0.58 + wave * 0.22 + reliability * 0.2,
+        0.12,
+        0.98,
+      );
       const score = Math.round(
         clamp(load * 0.38 + reliability * 0.34 + (speedIndex / 1.28) * 0.28, 0, 1) * 100,
       );
@@ -275,14 +501,14 @@ export default function MobilityOSPageEnhanced() {
   }, [tick]);
 
   const network = useMemo(() => {
-    const loads = routeStats.map((route) => route.load);
-    const reliabilities = routeStats.map((route) => route.reliability);
-    const speeds = routeStats.map((route) => route.speedIndex / 1.28);
+    const loads = routeStats.map(route => route.load);
+    const reliabilities = routeStats.map(route => route.reliability);
+    const speeds = routeStats.map(route => route.speedIndex / 1.28);
 
     return {
       dispatchIQ: Math.round(
         clamp(
-          avg(routeStats.map((route) => route.score)) * 0.44 +
+          avg(routeStats.map(route => route.score)) * 0.44 +
             (100 - Math.sqrt(variance(loads)) * 170) * 0.24 +
             avg(speeds) * 100 * 0.32,
           72,
@@ -300,7 +526,7 @@ export default function MobilityOSPageEnhanced() {
       agentSync: Math.round(
         clamp(
           72 +
-            avg(routeStats.map((route) => route.packageSync)) * 16 +
+            avg(routeStats.map(route => route.packageSync)) * 16 +
             (1 - Math.sqrt(variance(reliabilities))) * 9,
           75,
           98,
@@ -314,31 +540,33 @@ export default function MobilityOSPageEnhanced() {
   const updatedAtLabel = useMemo(() => formatUpdatedAt(pipeline.updatedAt), [pipeline.updatedAt]);
   const operatingModelColumns = useMemo(() => {
     const stageById = new Map(
-      pipeline.stageDrilldowns.map((stage) => [stage.id, stage] satisfies [MobilityStageId, MobilityPipelineStageDrilldown]),
+      pipeline.stageDrilldowns.map(
+        stage => [stage.id, stage] satisfies [MobilityStageId, MobilityPipelineStageDrilldown],
+      ),
     );
 
     return [
       {
         id: 'intake',
         title: 'Demand Intake',
-        description: 'Open ride and package demand is translated into a real candidate supply pool.',
+        description:
+          'Open ride and package demand is translated into a real candidate supply pool.',
         icon: <CarFront size={18} color={DesignSystem.colors.green.base} />,
         accent: DesignSystem.colors.green.base,
-        stages: [
-          stageById.get('demand'),
-          stageById.get('candidate-vehicles'),
-        ].filter(Boolean) as MobilityPipelineStageDrilldown[],
+        stages: [stageById.get('demand'), stageById.get('candidate-vehicles')].filter(
+          Boolean,
+        ) as MobilityPipelineStageDrilldown[],
       },
       {
         id: 'dispatch',
         title: 'Dispatch Logic',
-        description: 'Scoring and matching determine whether a request is actually dispatchable this cycle.',
+        description:
+          'Scoring and matching determine whether a request is actually dispatchable this cycle.',
         icon: <Brain size={18} color={DesignSystem.colors.cyan.base} />,
         accent: DesignSystem.colors.cyan.base,
-        stages: [
-          stageById.get('scoring'),
-          stageById.get('matching'),
-        ].filter(Boolean) as MobilityPipelineStageDrilldown[],
+        stages: [stageById.get('scoring'), stageById.get('matching')].filter(
+          Boolean,
+        ) as MobilityPipelineStageDrilldown[],
       },
       {
         id: 'execution',
@@ -346,10 +574,9 @@ export default function MobilityOSPageEnhanced() {
         description: 'Assignments and rebalancing convert decisions into live operational moves.',
         icon: <Gauge size={18} color={DesignSystem.colors.purple.base} />,
         accent: DesignSystem.colors.purple.base,
-        stages: [
-          stageById.get('assignment'),
-          stageById.get('rebalancing'),
-        ].filter(Boolean) as MobilityPipelineStageDrilldown[],
+        stages: [stageById.get('assignment'), stageById.get('rebalancing')].filter(
+          Boolean,
+        ) as MobilityPipelineStageDrilldown[],
       },
     ];
   }, [pipeline.stageDrilldowns]);
@@ -396,7 +623,7 @@ export default function MobilityOSPageEnhanced() {
           <>
             <ActionButton
               label={paused ? 'Resume Field' : 'Pause Field'}
-              onClick={() => setPaused((value) => !value)}
+              onClick={() => setPaused(value => !value)}
               variant={paused ? 'outline' : 'primary'}
               icon={paused ? <Play size={16} /> : <Pause size={16} />}
             />
@@ -411,7 +638,7 @@ export default function MobilityOSPageEnhanced() {
       />
 
       <section style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        {(Object.keys(TABS) as TabKey[]).map((key) => (
+        {(Object.keys(TABS) as TabKey[]).map(key => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -420,8 +647,12 @@ export default function MobilityOSPageEnhanced() {
               padding: '0 18px',
               borderRadius: DesignSystem.radius.full,
               border: `1px solid ${tab === key ? 'var(--wasel-button-primary-border-strong)' : DesignSystem.colors.border.base}`,
-              background: tab === key ? 'var(--wasel-button-primary-soft-strong)' : 'var(--wasel-panel-muted)',
-              color: tab === key ? DesignSystem.colors.accent.strong : DesignSystem.colors.text.muted,
+              background:
+                tab === key
+                  ? 'var(--wasel-button-primary-soft-strong)'
+                  : 'var(--wasel-panel-muted)',
+              color:
+                tab === key ? DesignSystem.colors.accent.strong : DesignSystem.colors.text.muted,
               cursor: 'pointer',
               fontWeight: DesignSystem.typography.fontWeight.black,
               letterSpacing: '0.08em',
@@ -442,7 +673,7 @@ export default function MobilityOSPageEnhanced() {
           gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
         }}
       >
-        {pipeline.stages.map((stage) => {
+        {pipeline.stages.map(stage => {
           const accent = pipelineAccent(stage.id);
           return (
             <article
@@ -453,8 +684,7 @@ export default function MobilityOSPageEnhanced() {
                 padding: '16px 16px 14px',
                 borderRadius: 20,
                 border: `1px solid ${accent}28`,
-                background:
-                  `linear-gradient(180deg, color-mix(in srgb, ${accent} 9%, rgb(255 255 255 / 0.03)), rgb(255 255 255 / 0.02)), var(--wasel-service-card)`,
+                background: `linear-gradient(180deg, color-mix(in srgb, ${accent} 9%, rgb(255 255 255 / 0.03)), rgb(255 255 255 / 0.02)), var(--wasel-service-card)`,
                 boxShadow: `0 16px 34px ${accent}12`,
               }}
             >
@@ -501,13 +731,8 @@ export default function MobilityOSPageEnhanced() {
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         }}
       >
-        {operatingModelColumns.map((column) => (
-          <DataPanel
-            key={column.id}
-            title={column.title}
-            icon={column.icon}
-            accent={column.accent}
-          >
+        {operatingModelColumns.map(column => (
+          <DataPanel key={column.id} title={column.title} icon={column.icon} accent={column.accent}>
             <div style={{ display: 'grid', gap: 14 }}>
               <div
                 style={{
@@ -519,7 +744,7 @@ export default function MobilityOSPageEnhanced() {
                 {column.description}
               </div>
 
-              {column.stages.map((stage) => {
+              {column.stages.map(stage => {
                 const accent = pipelineAccent(stage.id);
                 return (
                   <article
@@ -528,8 +753,7 @@ export default function MobilityOSPageEnhanced() {
                       padding: '14px 14px 12px',
                       borderRadius: 18,
                       border: `1px solid ${accent}24`,
-                      background:
-                        `linear-gradient(180deg, color-mix(in srgb, ${accent} 8%, rgb(255 255 255 / 0.03)), rgb(255 255 255 / 0.02))`,
+                      background: `linear-gradient(180deg, color-mix(in srgb, ${accent} 8%, rgb(255 255 255 / 0.03)), rgb(255 255 255 / 0.02))`,
                       display: 'grid',
                       gap: 12,
                     }}
@@ -567,7 +791,7 @@ export default function MobilityOSPageEnhanced() {
 
                     <div style={{ display: 'grid', gap: 8 }}>
                       {stage.items.length > 0 ? (
-                        stage.items.map((item) => {
+                        stage.items.map(item => {
                           const metricColor = pipelineToneColor(item.tone, accent);
                           return (
                             <div
@@ -699,7 +923,8 @@ export default function MobilityOSPageEnhanced() {
                 }}
               >
                 <CarFront size={14} color={DesignSystem.colors.green.base} />
-                {pipeline.metrics.pendingDemand} open requests / {pipeline.metrics.dispatchableVehicles} dispatchable vehicles
+                {pipeline.metrics.pendingDemand} open requests /{' '}
+                {pipeline.metrics.dispatchableVehicles} dispatchable vehicles
               </div>
               <div
                 style={{
@@ -733,15 +958,15 @@ export default function MobilityOSPageEnhanced() {
             </div>
 
             <svg viewBox="0 0 100 110" style={{ width: '100%', height: '100%', display: 'block' }}>
-              {routeStats.map((route) => {
+              {routeStats.map(route => {
                 const from = route.fromNode;
                 const to = route.toNode;
                 const dx = to.x - from.x;
                 const dy = to.y - from.y;
-                const c1x = from.x + (dx * 0.26);
-                const c1y = from.y + (dy * 0.08);
-                const c2x = from.x + (dx * 0.76);
-                const c2y = from.y + (dy * 0.92);
+                const c1x = from.x + dx * 0.26;
+                const c1y = from.y + dy * 0.08;
+                const c2x = from.x + dx * 0.76;
+                const c2y = from.y + dy * 0.92;
                 const active =
                   tab === 'signal' ||
                   (tab === 'math' && (route.id === hottest.id || route.id === weakest.id)) ||
@@ -791,7 +1016,7 @@ export default function MobilityOSPageEnhanced() {
                 );
               })}
 
-              {NODES.map((node) => (
+              {NODES.map(node => (
                 <g key={node.id}>
                   <circle cx={node.x} cy={node.y} r={7} fill={`${accentColor(node.accent)}18`} />
                   <circle cx={node.x} cy={node.y} r={3.2} fill={accentColor(node.accent)} />
@@ -817,77 +1042,77 @@ export default function MobilityOSPageEnhanced() {
                 </g>
               ))}
 
-              {UNITS
-                .filter(
-                  (unit) =>
-                    tab === 'signal' ||
-                    (tab === 'fleet' && unit.type === 'ride') ||
-                    (tab === 'recovery' && unit.type === 'package') ||
-                    tab === 'math',
-                )
-                .map((unit, index) => {
-                  const route = routeStats.find((entry) => entry.id === unit.routeId);
-                  if (!route) {return null;}
+              {UNITS.filter(
+                unit =>
+                  tab === 'signal' ||
+                  (tab === 'fleet' && unit.type === 'ride') ||
+                  (tab === 'recovery' && unit.type === 'package') ||
+                  tab === 'math',
+              ).map((unit, index) => {
+                const route = routeStats.find(entry => entry.id === unit.routeId);
+                if (!route) {
+                  return null;
+                }
 
-                  const from = route.fromNode;
-                  const to = route.toNode;
-                  const dx = to.x - from.x;
-                  const dy = to.y - from.y;
-                  const c1 = { x: from.x + (dx * 0.26), y: from.y + (dy * 0.08) };
-                  const c2 = { x: from.x + (dx * 0.76), y: from.y + (dy * 0.92) };
-                  const t = (unit.phase + (tick * unit.speed * 100 * unit.dir) + 1) % 1;
-                  const mt = 1 - t;
-                  const x =
-                    (mt ** 3 * from.x) +
-                    (3 * mt ** 2 * t * c1.x) +
-                    (3 * mt * t ** 2 * c2.x) +
-                    (t ** 3 * to.x);
-                  const y =
-                    (mt ** 3 * from.y) +
-                    (3 * mt ** 2 * t * c1.y) +
-                    (3 * mt * t ** 2 * c2.y) +
-                    (t ** 3 * to.y);
-                  const tx =
-                    (3 * mt ** 2 * (c1.x - from.x)) +
-                    (6 * mt * t * (c2.x - c1.x)) +
-                    (3 * t ** 2 * (to.x - c2.x));
-                  const ty =
-                    (3 * mt ** 2 * (c1.y - from.y)) +
-                    (6 * mt * t * (c2.y - c1.y)) +
-                    (3 * t ** 2 * (to.y - c2.y));
-                  const length = Math.max(0.001, Math.hypot(tx, ty));
-                  const nx = (-ty / length) * unit.lane;
-                  const ny = (tx / length) * unit.lane;
-                  const rotation = Math.atan2(ty, tx) * (180 / Math.PI);
+                const from = route.fromNode;
+                const to = route.toNode;
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const c1 = { x: from.x + dx * 0.26, y: from.y + dy * 0.08 };
+                const c2 = { x: from.x + dx * 0.76, y: from.y + dy * 0.92 };
+                const t = (unit.phase + tick * unit.speed * 100 * unit.dir + 1) % 1;
+                const mt = 1 - t;
+                const x =
+                  mt ** 3 * from.x +
+                  3 * mt ** 2 * t * c1.x +
+                  3 * mt * t ** 2 * c2.x +
+                  t ** 3 * to.x;
+                const y =
+                  mt ** 3 * from.y +
+                  3 * mt ** 2 * t * c1.y +
+                  3 * mt * t ** 2 * c2.y +
+                  t ** 3 * to.y;
+                const tx =
+                  3 * mt ** 2 * (c1.x - from.x) +
+                  6 * mt * t * (c2.x - c1.x) +
+                  3 * t ** 2 * (to.x - c2.x);
+                const ty =
+                  3 * mt ** 2 * (c1.y - from.y) +
+                  6 * mt * t * (c2.y - c1.y) +
+                  3 * t ** 2 * (to.y - c2.y);
+                const length = Math.max(0.001, Math.hypot(tx, ty));
+                const nx = (-ty / length) * unit.lane;
+                const ny = (tx / length) * unit.lane;
+                const rotation = Math.atan2(ty, tx) * (180 / Math.PI);
 
-                  return (
-                    <g
-                      key={unit.id}
-                      transform={`translate(${x + nx} ${y + ny}) rotate(${rotation})`}
-                      opacity={clamp(0.52 + Math.sin(tick * 14 + index) * 0.22, 0.36, 0.98)}
-                    >
-                      {unit.type === 'ride' ? (
-                        <rect
-                          x={-2.8}
-                          y={-1.6}
-                          width={5.6}
-                          height={3.2}
-                          rx={1.2}
-                          fill={accentColor(unit.accent)}
-                        />
-                      ) : (
-                        <rect
-                          x={-2}
-                          y={-2}
-                          width={4}
-                          height={4}
-                          rx={1.1}
-                          fill={DesignSystem.colors.gold.base}
-                        />
-                      )}
-                    </g>
-                  );
-                })}
+                return (
+                  <g
+                    key={unit.id}
+                    transform={`translate(${x + nx} ${y + ny}) rotate(${rotation})`}
+                    opacity={clamp(0.52 + Math.sin(tick * 14 + index) * 0.22, 0.36, 0.98)}
+                  >
+                    {unit.type === 'ride' ? (
+                      <rect
+                        x={-2.8}
+                        y={-1.6}
+                        width={5.6}
+                        height={3.2}
+                        rx={1.2}
+                        fill={accentColor(unit.accent)}
+                      />
+                    ) : (
+                      <rect
+                        x={-2}
+                        y={-2}
+                        width={4}
+                        height={4}
+                        rx={1.1}
+                        fill={DesignSystem.colors.gold.base}
+                      />
+                    )}
+                  </g>
+                );
+              })}
             </svg>
 
             <div
@@ -905,8 +1130,11 @@ export default function MobilityOSPageEnhanced() {
               {[
                 { label: 'Ride flow live', color: DesignSystem.colors.cyan.base },
                 { label: 'Package flow live', color: DesignSystem.colors.gold.base },
-                { label: `${pipeline.metrics.rebalancingCount} rebalance moves queued`, color: DesignSystem.colors.purple.base },
-              ].map((item) => (
+                {
+                  label: `${pipeline.metrics.rebalancingCount} rebalance moves queued`,
+                  color: DesignSystem.colors.purple.base,
+                },
+              ].map(item => (
                 <div
                   key={item.label}
                   style={{
@@ -947,9 +1175,9 @@ export default function MobilityOSPageEnhanced() {
           >
             <div style={{ display: 'grid', gap: 10 }}>
               {pipeline.matches.length > 0 ? (
-                pipeline.matches.slice(0, 3).map((match) => {
-                  const demand = pipeline.demand.find((item) => item.id === match.demandId);
-                  const vehicle = pipeline.vehicles.find((item) => item.id === match.vehicleId);
+                pipeline.matches.slice(0, 3).map(match => {
+                  const demand = pipeline.demand.find(item => item.id === match.demandId);
+                  const vehicle = pipeline.vehicles.find(item => item.id === match.vehicleId);
 
                   return (
                     <div
@@ -971,7 +1199,8 @@ export default function MobilityOSPageEnhanced() {
                       >
                         <div>
                           <div style={{ fontWeight: DesignSystem.typography.fontWeight.bold }}>
-                            {demand?.from.label ?? 'Origin'} {'->'} {demand?.to.label ?? 'Destination'}
+                            {demand?.from.label ?? 'Origin'} {'->'}{' '}
+                            {demand?.to.label ?? 'Destination'}
                           </div>
                           <div
                             style={{
@@ -1009,7 +1238,9 @@ export default function MobilityOSPageEnhanced() {
                     fontSize: DesignSystem.typography.fontSize.sm,
                   }}
                 >
-                  No demand is clearing the {pipeline.thresholds.dispatchMatchScore}+ dispatch threshold right now. Mobility OS is waiting for more supply, stronger route fit, or a lower-pressure corridor.
+                  No demand is clearing the {pipeline.thresholds.dispatchMatchScore}+ dispatch
+                  threshold right now. Mobility OS is waiting for more supply, stronger route fit,
+                  or a lower-pressure corridor.
                 </article>
               )}
             </div>
@@ -1021,7 +1252,7 @@ export default function MobilityOSPageEnhanced() {
           >
             <div style={{ display: 'grid', gap: 10 }}>
               {pipeline.rebalancing.length > 0 ? (
-                pipeline.rebalancing.slice(0, 3).map((action) => (
+                pipeline.rebalancing.slice(0, 3).map(action => (
                   <article
                     key={`${action.vehicleId}-${action.corridorId}`}
                     style={{
@@ -1082,7 +1313,7 @@ export default function MobilityOSPageEnhanced() {
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
         }}
       >
-        {stats.map((stat) => (
+        {stats.map(stat => (
           <StatCard key={stat.label} {...stat} />
         ))}
       </section>
@@ -1138,11 +1369,7 @@ export default function MobilityOSPageEnhanced() {
             accent: DesignSystem.colors.cyan.base,
           },
         ].map(({ icon: Icon, ...card }) => (
-          <InfoCard
-            key={card.title}
-            {...card}
-            icon={<Icon size={18} color={card.accent} />}
-          />
+          <InfoCard key={card.title} {...card} icon={<Icon size={18} color={card.accent} />} />
         ))}
       </section>
     </PageShell>

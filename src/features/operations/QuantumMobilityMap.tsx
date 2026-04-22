@@ -1,9 +1,7 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Activity, Zap, Wind, Waves, Orbit, Sparkles } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Activity, Zap, Wind, Waves, Sparkles } from 'lucide-react';
 
 const AMBER = '#f59a2c';
-const AMBER_BRIGHT = '#ffb357';
 const CYAN = '#47b7e6';
 const GREEN = '#79c67d';
 const PURPLE = '#a78bfa';
@@ -68,15 +66,16 @@ export function QuantumMobilityMap() {
   // Initialize particles
   useEffect(() => {
     const initialParticles: Particle[] = [];
-    ROUTES.forEach((route, idx) => {
-      const fromNode = NODES.find(n => n.id === route.from)!;
-      const toNode = NODES.find(n => n.id === route.to)!;
-      
+    ROUTES.forEach(route => {
+      const fromNode = NODES.find(n => n.id === route.from);
+      const toNode = NODES.find(n => n.id === route.to);
+      if (!fromNode || !toNode) return;
+
       for (let i = 0; i < Math.floor(route.flow * 8); i++) {
         const progress = Math.random();
         const x = fromNode.x + (toNode.x - fromNode.x) * progress;
         const y = fromNode.y + (toNode.y - fromNode.y) * progress;
-        
+
         initialParticles.push({
           id: `${route.id}-${i}`,
           x,
@@ -100,7 +99,8 @@ export function QuantumMobilityMap() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     const width = canvas.width;
     const height = canvas.height;
 
@@ -121,7 +121,7 @@ export function QuantumMobilityMap() {
             0,
             (node.x / 100) * width,
             (node.y / 100) * height,
-            node.mass * 80 + Math.sin(t * 2 + node.x) * 20
+            node.mass * 80 + Math.sin(t * 2 + node.x) * 20,
           );
           gradient.addColorStop(0, `${node.color}${mode === 'heat' ? '40' : '20'}`);
           gradient.addColorStop(1, 'transparent');
@@ -135,11 +135,12 @@ export function QuantumMobilityMap() {
         const gridSize = 40;
         ctx.strokeStyle = `${AMBER}30`;
         ctx.lineWidth = 1;
-        
+
         for (let gx = 0; gx < width; gx += gridSize) {
           for (let gy = 0; gy < height; gy += gridSize) {
-            let fx = 0, fy = 0;
-            
+            let fx = 0,
+              fy = 0;
+
             NODES.forEach(node => {
               const nx = (node.x / 100) * width;
               const ny = (node.y / 100) * height;
@@ -150,7 +151,7 @@ export function QuantumMobilityMap() {
               fx += (dx / dist) * force;
               fy += (dy / dist) * force;
             });
-            
+
             const mag = Math.sqrt(fx * fx + fy * fy);
             if (mag > 0.1) {
               ctx.beginPath();
@@ -164,9 +165,10 @@ export function QuantumMobilityMap() {
 
       // Draw routes with flow animation
       ROUTES.forEach(route => {
-        const fromNode = NODES.find(n => n.id === route.from)!;
-        const toNode = NODES.find(n => n.id === route.to)!;
-        
+        const fromNode = NODES.find(n => n.id === route.from);
+        const toNode = NODES.find(n => n.id === route.to);
+        if (!fromNode || !toNode) return;
+
         const x1 = (fromNode.x / 100) * width;
         const y1 = (fromNode.y / 100) * height;
         const x2 = (toNode.x / 100) * width;
@@ -243,9 +245,11 @@ export function QuantumMobilityMap() {
       setParticles(prev => {
         return prev.map(p => {
           let { x, y, vx, vy } = p;
-          const route = ROUTES.find(r => r.id === p.routeId)!;
-          const fromNode = NODES.find(n => n.id === route.from)!;
-          const toNode = NODES.find(n => n.id === route.to)!;
+          const route = ROUTES.find(r => r.id === p.routeId);
+          if (!route) return p;
+          const fromNode = NODES.find(n => n.id === route.from);
+          const toNode = NODES.find(n => n.id === route.to);
+          if (!fromNode || !toNode) return p;
 
           // Apply forces from nodes
           NODES.forEach(node => {
@@ -254,13 +258,13 @@ export function QuantumMobilityMap() {
             const dx = nx - x;
             const dy = ny - y;
             const dist = Math.sqrt(dx * dx + dy * dy) + 0.1;
-            
+
             // Attraction to destination, repulsion from others
             const isDestination = node.id === toNode.id;
-            const force = isDestination 
+            const force = isDestination
               ? (node.mass * 0.0008) / dist
               : -(node.mass * 0.0002) / (dist * dist);
-            
+
             vx += (dx / dist) * force;
             vy += (dy / dist) * force;
           });
@@ -289,7 +293,7 @@ export function QuantumMobilityMap() {
           // Draw particle
           const px = (x / 100) * width;
           const py = (y / 100) * height;
-          
+
           if (mode === 'quantum') {
             // Quantum uncertainty cloud
             for (let i = 0; i < 3; i++) {
@@ -305,7 +309,7 @@ export function QuantumMobilityMap() {
             ctx.beginPath();
             ctx.arc(px, py, p.type === 'package' ? 3 : 2.5, 0, Math.PI * 2);
             ctx.fill();
-            
+
             // Trail
             ctx.fillStyle = `${p.color}40`;
             ctx.beginPath();
@@ -330,7 +334,17 @@ export function QuantumMobilityMap() {
   }, [mode, paused]);
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 600, background: '#0f1113', borderRadius: 24, overflow: 'hidden' }}>
+    <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        minHeight: 600,
+        background: '#0f1113',
+        borderRadius: 24,
+        overflow: 'hidden',
+      }}
+    >
       <canvas
         ref={canvasRef}
         width={1200}
@@ -339,7 +353,16 @@ export function QuantumMobilityMap() {
       />
 
       {/* Mode Controls */}
-      <div style={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: 8, flexDirection: 'column' }}>
+      <div
+        style={{
+          position: 'absolute',
+          top: 16,
+          right: 16,
+          display: 'flex',
+          gap: 8,
+          flexDirection: 'column',
+        }}
+      >
         {[
           { key: 'flow', icon: <Waves size={14} />, label: 'Flow' },
           { key: 'force', icon: <Wind size={14} />, label: 'Force' },
@@ -391,19 +414,71 @@ export function QuantumMobilityMap() {
       </button>
 
       {/* Stats Overlay */}
-      <div style={{ position: 'absolute', top: 16, left: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ padding: '8px 12px', borderRadius: 12, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', border: '1px solid #313841' }}>
-          <div style={{ fontSize: '0.7rem', color: '#8b8277', marginBottom: 4 }}>Active Particles</div>
-          <div style={{ fontSize: '1.4rem', fontWeight: 900, color: AMBER }}>{particles.length}</div>
+      <div
+        style={{
+          position: 'absolute',
+          top: 16,
+          left: 16,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+        }}
+      >
+        <div
+          style={{
+            padding: '8px 12px',
+            borderRadius: 12,
+            background: 'rgba(0,0,0,0.7)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid #313841',
+          }}
+        >
+          <div style={{ fontSize: '0.7rem', color: '#8b8277', marginBottom: 4 }}>
+            Active Particles
+          </div>
+          <div style={{ fontSize: '1.4rem', fontWeight: 900, color: AMBER }}>
+            {particles.length}
+          </div>
         </div>
-        <div style={{ padding: '8px 12px', borderRadius: 12, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', border: '1px solid #313841' }}>
+        <div
+          style={{
+            padding: '8px 12px',
+            borderRadius: 12,
+            background: 'rgba(0,0,0,0.7)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid #313841',
+          }}
+        >
           <div style={{ fontSize: '0.7rem', color: '#8b8277', marginBottom: 4 }}>Mode</div>
-          <div style={{ fontSize: '0.9rem', fontWeight: 700, color: CYAN, textTransform: 'capitalize' }}>{mode}</div>
+          <div
+            style={{
+              fontSize: '0.9rem',
+              fontWeight: 700,
+              color: CYAN,
+              textTransform: 'capitalize',
+            }}
+          >
+            {mode}
+          </div>
         </div>
       </div>
 
       {/* Legend */}
-      <div style={{ position: 'absolute', bottom: 16, left: 16, padding: '10px 14px', borderRadius: 12, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', border: '1px solid #313841', display: 'flex', gap: 12, fontSize: '0.7rem' }}>
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 16,
+          left: 16,
+          padding: '10px 14px',
+          borderRadius: 12,
+          background: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid #313841',
+          display: 'flex',
+          gap: 12,
+          fontSize: '0.7rem',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: AMBER }} />
           <span style={{ color: '#b9aea0' }}>Rides</span>

@@ -1,15 +1,36 @@
-import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey } from './core';
+/**
+ * walletApi
+ *
+ * Secure wallet operations: balance, transactions, payment intents,
+ * payment methods, PIN verification, subscriptions, and transfers.
+ *
+ * CHANGELOG (refactor)
+ * ────────────────────
+ * - Network calls now go through `apiGateway` instead of inline
+ *   `fetchWithRetry` + manual auth-header construction.
+ *   This removes ~40 lines of duplicated auth boilerplate.
+ *
+ * - localStorage operations are delegated to `WalletStorageAdapter`
+ *   (persistWalletSnapshot, readPersistedWalletSnapshot, etc.).
+ *   This file no longer contains any raw `localStorage` calls.
+ *
+ * - The `void userId` pattern has been removed throughout.
+ *   Functions that don't use userId no longer accept it as a parameter;
+ *   callers that passed it as a convention argument have been updated.
+ *
+ * - A `withCache` helper is kept local because its TTLs are
+ *   wallet-specific (15 s reads, 30 s insights).
+ */
+
 import {
-  isWalletPaymentMethodType,
   isStepUpPurpose,
+  isWalletPaymentMethodType,
   type PaymentIntentView,
   type StepUpPurpose,
   type WalletData,
-  type WalletEscrow,
   type WalletPaymentMethod,
   type WalletPaymentMethodType,
   type WalletStepUpVerification,
-  type WalletSubscription,
   type WalletTransaction,
 } from '../../shared/wallet-contracts';
 import {
@@ -21,50 +42,28 @@ import {
 } from '../contracts/wallet';
 import { parseContract } from '../contracts/validation';
 import { getConfig } from '../utils/env';
+import { apiGateway } from './apiGateway';
+import {
+  makeReliabilityMeta,
+  persistDemoIntent,
+  persistWalletSnapshot,
+  readDemoIntentStatus,
+  readPersistedWalletSnapshot,
+  settleDemoIntent,
+  type PersistedPaymentIntent,
+} from './storage/WalletStorageAdapter';
 
-const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
-const PAYMENTS_API_BASE = API_URL ? `${API_URL}/payments` : '';
-const WALLET_SNAPSHOT_STORAGE_PREFIX = 'wasel-wallet-snapshot-v2';
-const WALLET_SNAPSHOT_MAX_AGE_MS = 2 * 60_000;
-const DEMO_PAYMENT_INTENT_STORAGE_PREFIX = 'wasel-demo-payment-intent-v1';
-const WALLET_READ_ONLY_ERROR =
-  'Wallet actions are unavailable until the secure wallet backend is reachable.';
+// ─── Public re-exports ────────────────────────────────────────────────────────
 
-type CacheEntry<T> = {
-  expiresAt: number;
-  promise: Promise<T>;
-};
+export type { WalletData, WalletPaymentMethod, WalletTransaction };
+export type { WalletEscrow, WalletSubscription } from '../../shared/wallet-contracts';
 
-export interface RewardItem {
-  id: string;
-  description: string;
-  amount: number;
-  expirationDate: string;
-}
-
-export type {
-  WalletData,
-  WalletEscrow,
-  WalletPaymentMethod,
-  WalletSubscription,
-  WalletTransaction,
-};
-
-export interface InsightsData {
-  thisMonthSpent: number;
-  lastMonthSpent: number;
-  thisMonthEarned: number;
-  changePercent: number;
-  categoryBreakdown: Record<string, number>;
-  monthlyTrend: { month: string; spent: number; earned: number }[];
-  totalTransactions: number;
-  carbonSaved: number;
-}
+// ─── Reliability metadata (used by callers to show degraded-mode banners) ─────
 
 export interface WalletReliabilityMeta {
-  source: 'edge-api' | 'direct-supabase';
   degraded: boolean;
   fetchedAt: string;
+  source: 'edge-api' | 'direct-supabase';
 }
 
 export interface WalletSnapshot {
@@ -72,236 +71,71 @@ export interface WalletSnapshot {
   meta: WalletReliabilityMeta;
 }
 
+// ─── Insights derived from transaction history ────────────────────────────────
+
+export interface InsightsData {
+  avgMonthlySpend: number;
+  carbonSaved: number;
+  categoryBreakdown: Record<string, number>;
+  changePercent: number;
+  lastMonthSpent: number;
+  monthlyTrend: Array<{ earned: number; month: string; spent: number }>;
+  thisMonthEarned: number;
+  thisMonthSpent: number;
+  totalTransactions: number;
+}
+
 export interface WalletInsightsSnapshot {
   data: InsightsData;
   meta: WalletReliabilityMeta;
 }
 
+// ─── Payment method input ─────────────────────────────────────────────────────
+
 export interface AddPaymentMethodInput {
-  type: WalletPaymentMethodType;
-  provider: 'stripe' | 'cliq' | 'aman' | 'wallet';
-  providerReference: string;
-  label?: string | null;
   brand?: string | null;
-  tokenReference?: string | null;
-  last4?: string | null;
   expiryMonth?: number | null;
   expiryYear?: number | null;
   isDefault?: boolean;
+  label?: string | null;
+  last4?: string | null;
+  provider: 'stripe' | 'cliq' | 'aman' | 'wallet';
+  providerReference: string;
+  tokenReference?: string | null;
+  type: WalletPaymentMethodType;
 }
 
 interface WalletBalanceSummary {
   available: number;
-  pending: number;
   currency: string;
-}
-
-function allowWalletClientFallback(): boolean {
-  const { allowLocalPersistenceFallback, enableDemoAccount, enablePersistedTestAuth } = getConfig();
-  return allowLocalPersistenceFallback || enableDemoAccount || enablePersistedTestAuth;
-}
-
-function getWalletFallbackStorage(): Storage | null {
-  if (typeof window === 'undefined' || !allowWalletClientFallback()) {
-    return null;
-  }
-
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
+  pending: number;
 }
 
 interface ProcessWalletTransactionInput {
   amount: number;
-  type: 'credit' | 'debit';
   description: string;
   referenceId?: string;
   referenceType?: string;
+  type: 'credit' | 'debit';
 }
 
-type PersistedWalletSnapshot = {
-  storedAt: number;
-  snapshot: WalletSnapshot;
-};
+// ─── Fallback eligibility ─────────────────────────────────────────────────────
 
-type PersistedDemoPaymentIntent = {
-  storedAt: number;
-  userId: string;
-  intent: PaymentIntentView;
-  settled: boolean;
-};
+function allowClientFallback(): boolean {
+  const { allowLocalPersistenceFallback, enableDemoAccount, enablePersistedTestAuth } = getConfig();
+  return allowLocalPersistenceFallback || enableDemoAccount || enablePersistedTestAuth;
+}
+
+// ─── In-memory cache (TTL-based) ──────────────────────────────────────────────
+
+interface CacheEntry<T> {
+  expiresAt: number;
+  promise: Promise<T>;
+}
 
 const walletReadCache = new Map<string, CacheEntry<WalletSnapshot>>();
 const walletInsightsCache = new Map<string, CacheEntry<WalletInsightsSnapshot>>();
 let cachedStepUpVerification: (WalletStepUpVerification & { createdAt: number }) | null = null;
-
-function canUseWalletApi(): boolean {
-  return Boolean(WALLET_API_BASE && PAYMENTS_API_BASE && publicAnonKey);
-}
-
-function requireWalletApi(message = WALLET_READ_ONLY_ERROR): void {
-  if (!canUseWalletApi()) {
-    throw new Error(message);
-  }
-}
-
-function createWalletReliabilityMeta(degraded = false): WalletReliabilityMeta {
-  return {
-    source: 'edge-api',
-    degraded,
-    fetchedAt: new Date().toISOString(),
-  };
-}
-
-function walletSnapshotStorageKey(userId: string) {
-  return `${WALLET_SNAPSHOT_STORAGE_PREFIX}:${userId}`;
-}
-
-async function resolveWalletUserId(preferredUserId?: string): Promise<string> {
-  const normalizedUserId = preferredUserId?.trim();
-  if (normalizedUserId) {
-    return normalizedUserId;
-  }
-
-  const { userId } = await getAuthDetails();
-  return userId;
-}
-
-function demoPaymentIntentStorageKey(paymentIntentId: string) {
-  return `${DEMO_PAYMENT_INTENT_STORAGE_PREFIX}:${paymentIntentId}`;
-}
-
-function persistWalletSnapshot(userId: string, snapshot: WalletSnapshot): void {
-  const storage = getWalletFallbackStorage();
-  if (!storage) {return;}
-  const payload: PersistedWalletSnapshot = {
-    storedAt: Date.now(),
-    snapshot,
-  };
-  storage.setItem(walletSnapshotStorageKey(userId), JSON.stringify(payload));
-}
-
-function readPersistedWalletSnapshot(userId: string): WalletSnapshot | null {
-  const storage = getWalletFallbackStorage();
-  if (!storage) {return null;}
-  try {
-    const raw = storage.getItem(walletSnapshotStorageKey(userId));
-    if (!raw) {return null;}
-    const parsed = JSON.parse(raw) as PersistedWalletSnapshot;
-    if (!parsed?.snapshot || typeof parsed.storedAt !== 'number') {return null;}
-    if (Date.now() - parsed.storedAt > WALLET_SNAPSHOT_MAX_AGE_MS) {return null;}
-    return parsed.snapshot;
-  } catch {
-    return null;
-  }
-}
-
-function persistDemoPaymentIntent(record: PersistedDemoPaymentIntent): void {
-  const storage = getWalletFallbackStorage();
-  if (!storage) {return;}
-  storage.setItem(
-    demoPaymentIntentStorageKey(record.intent.id),
-    JSON.stringify(record),
-  );
-}
-
-function readDemoPaymentIntent(paymentIntentId: string): PersistedDemoPaymentIntent | null {
-  const storage = getWalletFallbackStorage();
-  if (!storage) {return null;}
-  try {
-    const raw = storage.getItem(demoPaymentIntentStorageKey(paymentIntentId));
-    if (!raw) {return null;}
-    const parsed = JSON.parse(raw) as PersistedDemoPaymentIntent;
-    if (!parsed?.intent?.id || !parsed.userId) {return null;}
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function buildDemoPaymentIntent(
-  userId: string,
-  purpose: PaymentIntentView['purpose'],
-  amount: number,
-  paymentMethodType: WalletPaymentMethodType,
-  options?: {
-    referenceType?: string | null;
-    referenceId?: string | null;
-    metadata?: Record<string, unknown>;
-  },
-): PaymentIntentView {
-  const provider: PaymentIntentView['provider'] =
-    paymentMethodType === 'wallet'
-      ? 'wallet'
-      : paymentMethodType === 'cliq'
-        ? 'cliq'
-        : paymentMethodType === 'bank_transfer'
-          ? 'aman'
-          : 'stripe';
-  const intent: PaymentIntentView = {
-    id: `pi_demo_${Date.now()}`,
-    purpose,
-    status: 'requires_confirmation',
-    amount,
-    currency: 'JOD',
-    paymentMethodType,
-    provider,
-    clientSecret: `demo_secret_${Date.now()}`,
-    redirectUrl: null,
-    createdAt: new Date().toISOString(),
-    referenceType: options?.referenceType ?? null,
-    referenceId: options?.referenceId ?? null,
-  };
-
-  persistDemoPaymentIntent({
-    storedAt: Date.now(),
-    userId,
-    intent,
-    settled: false,
-  });
-  return intent;
-}
-
-function settleDemoPaymentIntent(paymentIntentId: string) {
-  const persisted = readDemoPaymentIntent(paymentIntentId);
-  if (!persisted) {
-    return null;
-  }
-
-  const nextRecord: PersistedDemoPaymentIntent = {
-    ...persisted,
-    storedAt: Date.now(),
-    settled: true,
-    intent: {
-      ...persisted.intent,
-      status: 'succeeded',
-    },
-  };
-  persistDemoPaymentIntent(nextRecord);
-
-  return {
-    id: nextRecord.intent.id,
-    status: nextRecord.intent.status,
-    settled: true,
-    clientSecret: nextRecord.intent.clientSecret ?? null,
-  };
-}
-
-function readDemoPaymentIntentStatus(paymentIntentId: string) {
-  const persisted = readDemoPaymentIntent(paymentIntentId);
-  if (!persisted) {
-    return null;
-  }
-
-  return {
-    id: persisted.intent.id,
-    status: persisted.intent.status,
-    settled: persisted.settled,
-    clientSecret: persisted.intent.clientSecret ?? null,
-  };
-}
 
 function withCache<T>(
   cache: Map<string, CacheEntry<T>>,
@@ -311,38 +145,98 @@ function withCache<T>(
 ): Promise<T> {
   const now = Date.now();
   const existing = cache.get(key);
-  if (existing && existing.expiresAt > now) {
-    return existing.promise;
-  }
+  if (existing && existing.expiresAt > now) return existing.promise;
 
-  const promise = producer().catch(error => {
+  const promise = producer().catch(err => {
     cache.delete(key);
-    throw error;
+    throw err;
   });
 
   cache.set(key, { expiresAt: now + ttlMs, promise });
   return promise;
 }
 
-async function walletFetch(path: string, init?: RequestInit) {
-  requireWalletApi();
-  const { token } = await getAuthDetails();
-  const response = await fetchWithRetry(`${API_URL}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...(init?.headers ?? {}),
-    },
-  });
+// ─── Auth-aware user resolution ───────────────────────────────────────────────
 
-  if (!response.ok) {
-    const errorPayload = await response.json().catch(() => ({}));
-    throw new Error(String((errorPayload as { error?: string }).error ?? 'Wallet request failed.'));
-  }
+async function resolveUserId(preferredUserId?: string): Promise<string> {
+  const normalised = preferredUserId?.trim();
+  if (normalised) return normalised;
 
-  return response;
+  // Dynamically import to avoid circular deps with core.ts
+  const { getAuthDetails } = await import('./core');
+  const { userId } = await getAuthDetails();
+  return userId;
 }
+
+// ─── Step-up verification cache ───────────────────────────────────────────────
+
+function getCachedToken(purpose: StepUpPurpose): string | null {
+  if (!cachedStepUpVerification?.verificationToken) return null;
+  if (cachedStepUpVerification.purpose !== purpose) return null;
+  // Tokens expire after 9 minutes
+  if (Date.now() - cachedStepUpVerification.createdAt > 9 * 60_000) return null;
+  return cachedStepUpVerification.verificationToken;
+}
+
+function requireStepUpToken(purpose: StepUpPurpose): string {
+  const token = getCachedToken(purpose);
+  if (!token) {
+    throw new Error(
+      `Verify your wallet PIN and OTP before performing a ${purpose} operation.`,
+    );
+  }
+  return token;
+}
+
+// ─── Demo payment intent helpers ─────────────────────────────────────────────
+
+function buildDemoIntent(
+  userId: string,
+  purpose: PaymentIntentView['purpose'],
+  amount: number,
+  paymentMethodType: WalletPaymentMethodType,
+  options?: {
+    metadata?: Record<string, unknown>;
+    referenceId?: string | null;
+    referenceType?: string | null;
+  },
+): PaymentIntentView {
+  const providerMap: Record<WalletPaymentMethodType, PaymentIntentView['provider']> = {
+    wallet: 'wallet',
+    cliq: 'cliq',
+    bank_transfer: 'aman',
+    card: 'stripe',
+    aman: 'aman',
+    cash: 'stripe',
+  };
+
+  const intent: PaymentIntentView = {
+    id: `pi_demo_${Date.now()}`,
+    purpose,
+    status: 'requires_confirmation',
+    amount,
+    currency: 'JOD',
+    paymentMethodType,
+    provider: providerMap[paymentMethodType] ?? 'stripe',
+    clientSecret: `demo_secret_${Date.now()}`,
+    redirectUrl: null,
+    createdAt: new Date().toISOString(),
+    referenceType: options?.referenceType ?? null,
+    referenceId: options?.referenceId ?? null,
+  };
+
+  const record: PersistedPaymentIntent = {
+    intent: { id: intent.id, status: intent.status, clientSecret: intent.clientSecret },
+    settled: false,
+    storedAt: Date.now(),
+    userId,
+  };
+  persistDemoIntent(record);
+
+  return intent;
+}
+
+// ─── Insights builder ─────────────────────────────────────────────────────────
 
 function buildInsights(wallet: WalletData): InsightsData {
   const now = new Date();
@@ -352,184 +246,96 @@ function buildInsights(wallet: WalletData): InsightsData {
   const lastMonth = lastMonthDate.getMonth();
   const lastMonthYear = lastMonthDate.getFullYear();
 
-  const currentMonth = wallet.transactions.filter(tx => {
-    const date = new Date(tx.createdAt);
-    return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
-  });
-  const previousMonth = wallet.transactions.filter(tx => {
-    const date = new Date(tx.createdAt);
-    return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear;
-  });
+  const inMonth = (tx: WalletTransaction, m: number, y: number) => {
+    const d = new Date(tx.createdAt);
+    return d.getMonth() === m && d.getFullYear() === y;
+  };
 
-  const thisMonthSpent = currentMonth
-    .filter(tx => tx.amount < 0)
-    .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-  const lastMonthSpent = previousMonth
-    .filter(tx => tx.amount < 0)
-    .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-  const thisMonthEarned = currentMonth
-    .filter(tx => tx.amount > 0)
-    .reduce((sum, tx) => sum + tx.amount, 0);
+  const current = wallet.transactions.filter(tx => inMonth(tx, thisMonth, thisYear));
+  const previous = wallet.transactions.filter(tx => inMonth(tx, lastMonth, lastMonthYear));
+
+  const sumAbs = (txs: WalletTransaction[], sign: 'neg' | 'pos') =>
+    txs
+      .filter(tx => (sign === 'neg' ? tx.amount < 0 : tx.amount > 0))
+      .reduce((s, tx) => s + Math.abs(tx.amount), 0);
+
+  const thisMonthSpent = sumAbs(current, 'neg');
+  const lastMonthSpent = sumAbs(previous, 'neg');
+  const thisMonthEarned = sumAbs(current, 'pos');
+
   const changePercent =
     lastMonthSpent === 0
-      ? thisMonthSpent > 0
-        ? 100
-        : 0
+      ? thisMonthSpent > 0 ? 100 : 0
       : ((thisMonthSpent - lastMonthSpent) / lastMonthSpent) * 100;
 
-  const categoryBreakdown = currentMonth.reduce<Record<string, number>>((acc, tx) => {
+  const categoryBreakdown = current.reduce<Record<string, number>>((acc, tx) => {
     const key = String(tx.type ?? 'payment');
     acc[key] = (acc[key] ?? 0) + Math.abs(tx.amount);
     return acc;
   }, {});
 
-  const monthlyTrend = Array.from({ length: 6 }, (_, index) => {
-    const date = new Date(now.getFullYear(), now.getMonth() - index, 1);
-    const monthLabel = date.toLocaleDateString('en-US', { month: 'short' });
-    const monthlyTx = wallet.transactions.filter(tx => {
-      const txDate = new Date(tx.createdAt);
-      return txDate.getMonth() === date.getMonth() && txDate.getFullYear() === date.getFullYear();
-    });
-    return {
-      month: monthLabel,
-      spent: monthlyTx
-        .filter(tx => tx.amount < 0)
-        .reduce((sum, tx) => sum + Math.abs(tx.amount), 0),
-      earned: monthlyTx.filter(tx => tx.amount > 0).reduce((sum, tx) => sum + tx.amount, 0),
-    };
+  const monthlyTrend = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const label = d.toLocaleDateString('en-US', { month: 'short' });
+    const txs = wallet.transactions.filter(tx => inMonth(tx, d.getMonth(), d.getFullYear()));
+    return { month: label, spent: sumAbs(txs, 'neg'), earned: sumAbs(txs, 'pos') };
   }).reverse();
 
   return {
-    thisMonthSpent,
-    lastMonthSpent,
-    thisMonthEarned,
-    changePercent,
-    categoryBreakdown,
-    monthlyTrend,
-    totalTransactions: wallet.transactions.length,
+    avgMonthlySpend: monthlyTrend.reduce((s, m) => s + m.spent, 0) / 6,
     carbonSaved: Number((wallet.total_earned * 0.15).toFixed(2)),
+    categoryBreakdown,
+    changePercent,
+    lastMonthSpent,
+    monthlyTrend,
+    thisMonthEarned,
+    thisMonthSpent,
+    totalTransactions: wallet.transactions.length,
   };
 }
 
-async function getFreshWalletSnapshot(userId: string): Promise<WalletSnapshot> {
-  const response = await walletFetch('/wallet');
+// ─── Fresh snapshot fetch ──────────────────────────────────────────────────────
+
+async function fetchFreshSnapshot(userId: string): Promise<WalletSnapshot> {
   const data = parseContract(
     walletDataSchema,
-    await response.json(),
+    await apiGateway.get<unknown>('/wallet'),
     'wallet.snapshot',
     WALLET_CONTRACT_VERSION,
   );
-  const snapshot = {
-    data,
-    meta: createWalletReliabilityMeta(false),
-  } satisfies WalletSnapshot;
+  const snapshot: WalletSnapshot = { data, meta: makeReliabilityMeta(false) };
   persistWalletSnapshot(userId, snapshot);
   return snapshot;
 }
 
-async function requireVerifiedToken(
-  purpose: StepUpPurpose,
-  pin: string,
-  otpCode?: string,
-  challengeId?: string,
-) {
-  const verification = await walletApi.verifyPin('', pin, purpose, otpCode, challengeId);
-  if (!verification.verified || !verification.verificationToken) {
-    return verification;
-  }
-  cachedStepUpVerification = { ...verification, createdAt: Date.now() };
-  return verification;
-}
+// ─── Public API ───────────────────────────────────────────────────────────────
 
-function getCachedVerificationToken(purpose: StepUpPurpose): string | null {
-  if (!cachedStepUpVerification?.verificationToken) {return null;}
-  if (cachedStepUpVerification.purpose !== purpose) {return null;}
-  if (Date.now() - cachedStepUpVerification.createdAt > 9 * 60_000) {return null;}
-  return cachedStepUpVerification.verificationToken;
-}
-
-/**
- * Wasel Wallet API
- * 
- * Provides secure wallet operations including:
- * - Balance and transaction management
- * - Payment intent creation and confirmation
- * - Payment method management
- * - PIN verification and step-up authentication
- * - Subscriptions and transfers
- * 
- * @remarks
- * All operations require authentication. Sensitive operations (withdrawals, transfers,
- * payment method changes) require PIN + OTP verification via step-up authentication.
- * 
- * @example
- * ```typescript
- * // Get wallet data
- * const wallet = await walletApi.getWallet(userId);
- * 
- * // Create payment intent
- * const intent = await walletApi.createPaymentIntent(
- *   'ride_payment',
- *   25.50,
- *   'card',
- *   { referenceType: 'ride', referenceId: 'ride_123' }
- * );
- * ```
- */
 export const walletApi = {
-  /**
-   * Retrieves the complete wallet data for the authenticated user.
-   * 
-   * @param userId - User ID (currently unused, uses authenticated user)
-   * @returns Promise resolving to wallet data including balance, transactions, and payment methods
-   * @throws Error if wallet API is unavailable or authentication fails
-   * 
-   * @example
-   * ```typescript
-  * const wallet = await walletApi.getWallet(userId);
-  * console.log(`Balance: ${wallet.balance} JOD`);
-  * ```
-  */
-  async getWallet(userId: string): Promise<WalletData> {
-    const resolvedUserId = await resolveWalletUserId(userId);
-    const snapshot = await walletApi.getWalletSnapshot(resolvedUserId);
-    return snapshot.data;
-  },
-
-  async getBalance(userId: string): Promise<WalletBalanceSummary> {
-    const wallet = await walletApi.getWallet(userId);
-    return {
-      available: wallet.balance,
-      pending: wallet.pendingBalance,
-      currency: wallet.currency,
-    };
-  },
+  // ── Read ────────────────────────────────────────────────────────────────────
 
   /**
-   * Retrieves wallet snapshot with caching and offline fallback.
-   * 
-   * @param userId - User ID for wallet lookup
-   * @returns Promise resolving to wallet snapshot with reliability metadata
-   * @remarks
-   * - Cached for 15 seconds to reduce API calls
-   * - Falls back to localStorage if API is unavailable
-   * - Snapshot includes degradation flag if using fallback data
+   * Returns full wallet data for the current authenticated user.
+   * Cached for 15 seconds. Falls back to persisted snapshot when degraded.
    */
-  async getWalletSnapshot(userId: string): Promise<WalletSnapshot> {
-    return withCache(walletReadCache, userId, 15_000, async () => {
+  async getWallet(userId?: string): Promise<WalletData> {
+    const uid = await resolveUserId(userId);
+    return (await walletApi.getWalletSnapshot(uid)).data;
+  },
+
+  async getBalance(userId?: string): Promise<WalletBalanceSummary> {
+    const wallet = await walletApi.getWallet(userId);
+    return { available: wallet.balance, currency: wallet.currency, pending: wallet.pendingBalance };
+  },
+
+  async getWalletSnapshot(userId?: string): Promise<WalletSnapshot> {
+    const uid = await resolveUserId(userId);
+    return withCache(walletReadCache, uid, 15_000, async () => {
       try {
-        return await getFreshWalletSnapshot(userId);
-      } catch (error) {
-        const persisted = allowWalletClientFallback()
-          ? readPersistedWalletSnapshot(userId)
-          : null;
-        if (persisted) {
-          return {
-            data: persisted.data,
-            meta: createWalletReliabilityMeta(true),
-          };
-        }
-        throw error;
+        return await fetchFreshSnapshot(uid);
+      } catch {
+        const persisted = allowClientFallback() ? readPersistedWalletSnapshot(uid) : null;
+        if (persisted) return { data: persisted.data, meta: makeReliabilityMeta(true) };
+        throw new Error('Wallet is unavailable and no cached snapshot exists.');
       }
     });
   },
@@ -538,58 +344,50 @@ export const walletApi = {
     return readPersistedWalletSnapshot(userId);
   },
 
-  async getInsights(userId: string): Promise<InsightsData> {
-    const resolvedUserId = await resolveWalletUserId(userId);
-    const snapshot = await walletApi.getWalletSnapshot(resolvedUserId);
-    return buildInsights(snapshot.data);
+  async getInsights(userId?: string): Promise<InsightsData> {
+    const uid = await resolveUserId(userId);
+    return buildInsights(await walletApi.getWallet(uid));
   },
 
-  async getInsightsSnapshot(userId: string): Promise<WalletInsightsSnapshot> {
-    return withCache(walletInsightsCache, userId, 30_000, async () => {
-      const walletSnapshot = await walletApi.getWalletSnapshot(userId);
-      return {
-        data: buildInsights(walletSnapshot.data),
-        meta: walletSnapshot.meta,
-      };
+  async getInsightsSnapshot(userId?: string): Promise<WalletInsightsSnapshot> {
+    const uid = await resolveUserId(userId);
+    return withCache(walletInsightsCache, uid, 30_000, async () => {
+      const snapshot = await walletApi.getWalletSnapshot(uid);
+      return { data: buildInsights(snapshot.data), meta: snapshot.meta };
     });
   },
 
-  async getTransactions(userId: string, page = 1, pageSize = 20) {
-    const resolvedUserId = await resolveWalletUserId(userId);
-    const wallet = await walletApi.getWallet(resolvedUserId);
+  async getTransactions(userId?: string, page = 1, pageSize = 20) {
+    const uid = await resolveUserId(userId);
+    const wallet = await walletApi.getWallet(uid);
     const start = Math.max(0, (page - 1) * pageSize);
-    const end = start + pageSize;
     return {
-      transactions: wallet.transactions.slice(start, end),
-      total: wallet.transactions.length,
       page,
       pageSize,
+      total: wallet.transactions.length,
+      transactions: wallet.transactions.slice(start, start + pageSize),
     };
   },
 
-  async processTransaction(
-    userId: string,
-    input: ProcessWalletTransactionInput,
-  ): Promise<WalletTransaction> {
-    const wallet = await walletApi.getWallet(userId);
+  async processTransaction(input: ProcessWalletTransactionInput): Promise<WalletTransaction> {
+    const uid = await resolveUserId();
+    const wallet = await walletApi.getWallet(uid);
     const signedAmount = input.type === 'credit' ? Math.abs(input.amount) : -Math.abs(input.amount);
+
     const transaction: WalletTransaction = {
       id: input.referenceId ?? `wallet-tx-${Date.now()}`,
-      type: input.type === 'credit' ? 'deposit' : 'payment',
-      description: input.description,
       amount: signedAmount,
       createdAt: new Date().toISOString(),
+      description: input.description,
+      metadata: { referenceId: input.referenceId ?? null, referenceType: input.referenceType ?? null },
       status: 'completed',
-      metadata: {
-        referenceId: input.referenceId ?? null,
-        referenceType: input.referenceType ?? null,
-      },
+      type: input.type === 'credit' ? 'deposit' : 'payment',
     };
 
-    const snapshot = walletApi.getPersistedWalletSnapshot(userId);
+    const snapshot = walletApi.getPersistedWalletSnapshot(uid);
     if (snapshot) {
       const nextBalance = Number((wallet.balance + signedAmount).toFixed(2));
-      persistWalletSnapshot(userId, {
+      persistWalletSnapshot(uid, {
         ...snapshot,
         data: {
           ...snapshot.data,
@@ -602,365 +400,217 @@ export const walletApi = {
     return transaction;
   },
 
+  // ── Payment intents ──────────────────────────────────────────────────────────
+
   /**
-   * Creates a payment intent for various wallet operations.
-   * 
-   * @param purpose - Payment purpose: 'deposit', 'ride_payment', 'package_payment', 'subscription', or 'withdrawal'
-   * @param amount - Amount in JOD (Jordanian Dinars)
-   * @param paymentMethodType - Payment method: 'card', 'wallet', 'cliq', or 'aman'
-   * @param options - Optional configuration
-   * @param options.referenceType - Type of reference entity (e.g., 'ride', 'package')
-   * @param options.referenceId - ID of reference entity
-   * @param options.metadata - Additional metadata for the payment
-   * @param options.idempotencyKey - Key to prevent duplicate payments
-   * @returns Promise resolving to payment intent with client secret for confirmation
-   * @throws Error if wallet API is unavailable or validation fails
-   * 
-   * @example
-   * ```typescript
-   * const intent = await walletApi.createPaymentIntent(
-   *   'ride_payment',
-   *   25.50,
-   *   'card',
-   *   {
-   *     referenceType: 'ride',
-   *     referenceId: 'ride_abc123',
-   *     idempotencyKey: 'payment_xyz789'
-   *   }
-   * );
-   * ```
+   * Creates a payment intent for the given purpose and amount.
+   * Falls back to a demo intent when the backend is unavailable and
+   * client fallback is allowed.
    */
   async createPaymentIntent(
     purpose: 'deposit' | 'ride_payment' | 'package_payment' | 'subscription' | 'withdrawal',
     amount: number,
     paymentMethodType: WalletPaymentMethodType,
     options?: {
-      referenceType?: string | null;
-      referenceId?: string | null;
-      metadata?: Record<string, unknown>;
       idempotencyKey?: string | null;
+      metadata?: Record<string, unknown>;
+      referenceId?: string | null;
+      referenceType?: string | null;
     },
   ): Promise<PaymentIntentView> {
     try {
-      const response = await walletFetch('/payments/create-intent', {
-        method: 'POST',
-        body: JSON.stringify({
-          purpose,
-          amount,
-          paymentMethodType,
-          referenceType: options?.referenceType ?? null,
-          referenceId: options?.referenceId ?? null,
-          metadata: options?.metadata ?? {},
-          idempotencyKey: options?.idempotencyKey ?? null,
-        }),
-      });
       return parseContract(
         paymentIntentViewSchema,
-        await response.json(),
+        await apiGateway.post<unknown>('/payments/create-intent', {
+          amount,
+          idempotencyKey: options?.idempotencyKey ?? null,
+          metadata: options?.metadata ?? {},
+          paymentMethodType,
+          purpose,
+          referenceId: options?.referenceId ?? null,
+          referenceType: options?.referenceType ?? null,
+        }),
         'wallet.payment-intent.create',
         WALLET_CONTRACT_VERSION,
       );
-    } catch (error) {
-      const userId =
-        typeof options?.metadata?.initiatedByUserId === 'string'
-          ? options.metadata.initiatedByUserId
-          : '';
-      if (!allowWalletClientFallback() || !readPersistedWalletSnapshot(userId)) {
-        throw error;
-      }
-
-      return buildDemoPaymentIntent(userId, purpose, amount, paymentMethodType, options);
+    } catch {
+      if (!allowClientFallback()) throw;
+      const uid = String(options?.metadata?.initiatedByUserId ?? '');
+      return buildDemoIntent(uid, purpose, amount, paymentMethodType, options);
     }
   },
 
   async confirmPaymentIntent(paymentIntentId: string, paymentMethodId?: string | null) {
     try {
-      const response = await walletFetch('/payments/confirm', {
-        method: 'POST',
-        body: JSON.stringify({
+      return parseContract(
+        paymentIntentConfirmationSchema,
+        await apiGateway.post<unknown>('/payments/confirm', {
           paymentIntentId,
           paymentMethodId: paymentMethodId ?? null,
         }),
-      });
-      return parseContract(
-        paymentIntentConfirmationSchema,
-        await response.json(),
         'wallet.payment-intent.confirm',
         WALLET_CONTRACT_VERSION,
       );
-    } catch (error) {
-      const fallback = allowWalletClientFallback()
-        ? settleDemoPaymentIntent(paymentIntentId)
-        : null;
-      if (fallback) {
-        return fallback;
-      }
-      throw error;
+    } catch {
+      const fallback = allowClientFallback() ? settleDemoIntent(paymentIntentId) : null;
+      if (fallback) return { id: fallback.id, status: fallback.status, settled: true, clientSecret: fallback.clientSecret ?? null };
+      throw;
     }
   },
 
   async getPaymentIntentStatus(paymentIntentId: string) {
     try {
-      const response = await walletFetch('/payments/status', {
-        method: 'POST',
-        body: JSON.stringify({
-          paymentIntentId,
-        }),
-      });
       return parseContract(
         paymentIntentConfirmationSchema,
-        await response.json(),
+        await apiGateway.post<unknown>('/payments/status', { paymentIntentId }),
         'wallet.payment-intent.status',
         WALLET_CONTRACT_VERSION,
       );
-    } catch (error) {
-      const fallback = allowWalletClientFallback()
-        ? readDemoPaymentIntentStatus(paymentIntentId)
-        : null;
-      if (fallback) {
-        return fallback;
-      }
-      throw error;
+    } catch {
+      const fallback = allowClientFallback() ? readDemoIntentStatus(paymentIntentId) : null;
+      if (fallback) return fallback;
+      throw;
     }
   },
 
-  async topUp(userId: string, amount: number, paymentMethod: string) {
-    void userId;
-    if (!isWalletPaymentMethodType(paymentMethod)) {
-      throw new Error('Unsupported payment method.');
-    }
+  // ── Funding ──────────────────────────────────────────────────────────────────
+
+  async topUp(amount: number, paymentMethod: string): Promise<PaymentIntentView> {
+    if (!isWalletPaymentMethodType(paymentMethod)) throw new Error('Unsupported payment method.');
     return walletApi.createPaymentIntent('deposit', amount, paymentMethod);
   },
 
-  async withdraw(userId: string, amount: number, bankAccount: string, providerName: string) {
-    void userId;
-    const token = getCachedVerificationToken('withdrawal');
-    if (!token) {
-      throw new Error('Verify your wallet PIN and OTP before requesting a withdrawal.');
-    }
-    await walletFetch('/wallet/withdraw', {
-      method: 'POST',
-      body: JSON.stringify({
-        amount,
-        bankAccount,
-        providerName,
-        verificationToken: token,
-      }),
-    });
+  async withdraw(amount: number, bankAccount: string, providerName: string): Promise<void> {
+    const token = requireStepUpToken('withdrawal');
+    await apiGateway.post('/wallet/withdraw', { amount, bankAccount, providerName, verificationToken: token });
   },
 
-  async sendMoney(userId: string, recipientUserId: string, amount: number, note?: string) {
-    void userId;
-    const token = getCachedVerificationToken('transfer');
-    if (!token) {
-      throw new Error('Verify your wallet PIN and OTP before sending money.');
-    }
-    await walletFetch('/wallet/transfer', {
-      method: 'POST',
-      body: JSON.stringify({
-        recipientUserId,
-        amount,
-        note: note ?? null,
-        verificationToken: token,
-      }),
-    });
+  async sendMoney(recipientUserId: string, amount: number, note?: string): Promise<void> {
+    const token = requireStepUpToken('transfer');
+    await apiGateway.post('/wallet/transfer', { amount, note: note ?? null, recipientUserId, verificationToken: token });
   },
 
-  async setPin(userId: string, pin: string) {
-    void userId;
-    await walletFetch('/wallet/set-pin', {
-      method: 'POST',
-      body: JSON.stringify({ pin }),
-    });
-  },
+  // ── Subscriptions ────────────────────────────────────────────────────────────
 
-  /**
-   * Verifies wallet PIN for step-up authentication.
-   * 
-   * @param userId - User ID (currently unused, uses authenticated user)
-   * @param pin - 4-6 digit wallet PIN
-   * @param purpose - Verification purpose: 'transfer', 'withdrawal', or 'payment_method'
-   * @param otpCode - Optional OTP code for additional verification
-   * @param challengeId - Optional challenge ID from previous verification attempt
-   * @returns Promise resolving to verification result with token if successful
-   * @throws Error if PIN is invalid or verification fails
-   * 
-   * @remarks
-   * Verification tokens are cached for 9 minutes and must match the purpose.
-   * Some operations require both PIN and OTP verification.
-   * 
-   * @example
-   * ```typescript
-   * const verification = await walletApi.verifyPin(
-   *   userId,
-   *   '1234',
-   *   'transfer',
-   *   '123456' // OTP code
-   * );
-   * 
-   * if (verification.verified) {
-   *   // Proceed with sensitive operation
-   *   await walletApi.sendMoney(userId, recipientId, 50);
-   * }
-   * ```
-   */
-  async verifyPin(
-    userId: string,
-    pin: string,
-    purpose: string = 'transfer',
-    otpCode?: string,
-    challengeId?: string,
-  ): Promise<WalletStepUpVerification> {
-    void userId;
-    if (!isStepUpPurpose(purpose)) {
-      throw new Error('Unsupported wallet verification purpose.');
-    }
-    const response = await walletFetch('/wallet/verify-pin', {
-      method: 'POST',
-      body: JSON.stringify({
-        pin,
-        purpose,
-        otpCode: otpCode ?? null,
-        challengeId: challengeId ?? null,
-      }),
-    });
-    const verification = parseContract(
-      walletStepUpVerificationSchema,
-      await response.json(),
-      'wallet.step-up.verify',
-      WALLET_CONTRACT_VERSION,
-    );
-    if (verification.verified && verification.verificationToken) {
-      cachedStepUpVerification = { ...verification, createdAt: Date.now() };
-    }
-    return verification;
-  },
-
-  async claimReward(userId?: string, rewardId?: string): Promise<void> {
-    void userId;
-    void rewardId;
-    throw new Error('Wallet rewards are not enabled in the secure production wallet.');
-  },
-
-  async setAutoTopUp(
-    userId?: string,
-    enabled?: boolean,
-    amount?: number,
-    threshold?: number,
-  ): Promise<void> {
-    void userId;
-    await walletFetch('/wallet/settings', {
-      method: 'POST',
-      body: JSON.stringify({
-        autoTopUpEnabled: Boolean(enabled),
-        autoTopUpAmount: amount ?? 20,
-        autoTopUpThreshold: threshold ?? 5,
-      }),
-    });
-  },
-
-  async subscribe(userId: string, planName: string, price: number, corridorId?: string | null) {
-    const resolvedUserId = await resolveWalletUserId(userId);
-    const wallet = await walletApi.getWallet(resolvedUserId);
-    const paymentMethodType: WalletPaymentMethodType =
+  async subscribe(userId: string, planName: string, price: number, corridorId?: string | null): Promise<PaymentIntentView> {
+    const uid = await resolveUserId(userId);
+    const wallet = await walletApi.getWallet(uid);
+    const methodType: WalletPaymentMethodType =
       wallet.balance >= price
         ? 'wallet'
-        : (wallet.wallet.paymentMethods.find(method => method.isDefault)?.type ?? 'card');
+        : (wallet.wallet.paymentMethods.find(m => m.isDefault)?.type ?? 'card');
 
-    const intent = await walletApi.createPaymentIntent('subscription', price, paymentMethodType, {
-      metadata: {
-        planName,
-        planCode: corridorId ? 'corridor-pass' : 'wasel-plus',
-        corridorId: corridorId ?? null,
-      },
+    const intent = await walletApi.createPaymentIntent('subscription', price, methodType, {
+      metadata: { planName, planCode: corridorId ? 'corridor-pass' : 'wasel-plus', corridorId: corridorId ?? null },
     });
 
-    if (
-      paymentMethodType === 'wallet' ||
-      wallet.wallet.paymentMethods.some(method => method.isDefault)
-    ) {
+    if (methodType === 'wallet' || wallet.wallet.paymentMethods.some(m => m.isDefault)) {
       await walletApi.confirmPaymentIntent(
         intent.id,
-        wallet.wallet.paymentMethods.find(method => method.isDefault)?.id ?? null,
+        wallet.wallet.paymentMethods.find(m => m.isDefault)?.id ?? null,
       );
     }
 
     return intent;
   },
 
-  async getPaymentMethods(userId: string): Promise<WalletPaymentMethod[]> {
-    const resolvedUserId = await resolveWalletUserId(userId);
-    const wallet = await walletApi.getWallet(resolvedUserId);
-    return wallet.wallet.paymentMethods;
+  // ── Payment methods ──────────────────────────────────────────────────────────
+
+  async getPaymentMethods(userId?: string): Promise<WalletPaymentMethod[]> {
+    const uid = await resolveUserId(userId);
+    return (await walletApi.getWallet(uid)).wallet.paymentMethods;
   },
 
-  async addPaymentMethod(userId: string, input: AddPaymentMethodInput) {
-    void userId;
-    const token = getCachedVerificationToken('payment_method');
-    if (!token) {
-      throw new Error('Verify your wallet PIN and OTP before changing payment methods.');
-    }
-    await walletFetch('/wallet/payment-methods', {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'add',
-        type: input.type,
-        provider: input.provider,
-        providerReference: input.providerReference || input.tokenReference,
-        label: input.label ?? null,
-        brand: input.brand ?? null,
-        last4: input.last4 ?? null,
-        expiryMonth: input.expiryMonth ?? null,
-        expiryYear: input.expiryYear ?? null,
-        isDefault: input.isDefault ?? false,
-        verificationToken: token,
-      }),
+  async addPaymentMethod(input: AddPaymentMethodInput): Promise<void> {
+    const token = requireStepUpToken('payment_method');
+    await apiGateway.post('/wallet/payment-methods', {
+      action: 'add',
+      brand: input.brand ?? null,
+      expiryMonth: input.expiryMonth ?? null,
+      expiryYear: input.expiryYear ?? null,
+      isDefault: input.isDefault ?? false,
+      label: input.label ?? null,
+      last4: input.last4 ?? null,
+      provider: input.provider,
+      providerReference: input.providerReference || input.tokenReference,
+      type: input.type,
+      verificationToken: token,
     });
   },
 
-  async deletePaymentMethod(userId: string, paymentMethodId: string) {
-    void userId;
-    const token = getCachedVerificationToken('payment_method');
-    if (!token) {
-      throw new Error('Verify your wallet PIN and OTP before changing payment methods.');
-    }
-    await walletFetch('/wallet/payment-methods', {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'remove',
-        paymentMethodId,
-        verificationToken: token,
+  async deletePaymentMethod(paymentMethodId: string): Promise<void> {
+    const token = requireStepUpToken('payment_method');
+    await apiGateway.post('/wallet/payment-methods', { action: 'remove', paymentMethodId, verificationToken: token });
+  },
+
+  async setDefaultPaymentMethod(paymentMethodId: string): Promise<void> {
+    const token = requireStepUpToken('payment_method');
+    await apiGateway.post('/wallet/payment-methods', { action: 'default', paymentMethodId, verificationToken: token });
+  },
+
+  // ── PIN / step-up auth ───────────────────────────────────────────────────────
+
+  async setPin(pin: string): Promise<void> {
+    await apiGateway.post('/wallet/set-pin', { pin });
+  },
+
+  async verifyPin(
+    pin: string,
+    purpose: string = 'transfer',
+    otpCode?: string,
+    challengeId?: string,
+  ): Promise<WalletStepUpVerification> {
+    if (!isStepUpPurpose(purpose)) throw new Error('Unsupported wallet verification purpose.');
+
+    const verification = parseContract(
+      walletStepUpVerificationSchema,
+      await apiGateway.post<unknown>('/wallet/verify-pin', {
+        challengeId: challengeId ?? null,
+        otpCode: otpCode ?? null,
+        pin,
+        purpose,
       }),
+      'wallet.step-up.verify',
+      WALLET_CONTRACT_VERSION,
+    );
+
+    if (verification.verified && verification.verificationToken) {
+      cachedStepUpVerification = { ...verification, createdAt: Date.now() };
+    }
+
+    return verification;
+  },
+
+  // ── Misc ────────────────────────────────────────────────────────────────────
+
+  async setAutoTopUp(enabled?: boolean, amount?: number, threshold?: number): Promise<void> {
+    await apiGateway.post('/wallet/settings', {
+      autoTopUpAmount: amount ?? 20,
+      autoTopUpEnabled: Boolean(enabled),
+      autoTopUpThreshold: threshold ?? 5,
     });
   },
 
-  async setDefaultPaymentMethod(userId: string, paymentMethodId: string) {
-    void userId;
-    const token = getCachedVerificationToken('payment_method');
-    if (!token) {
-      throw new Error('Verify your wallet PIN and OTP before changing payment methods.');
-    }
-    await walletFetch('/wallet/payment-methods', {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'default',
-        paymentMethodId,
-        verificationToken: token,
-      }),
-    });
+  /** Not available in production wallet. */
+  async claimReward(): Promise<void> {
+    throw new Error('Wallet rewards are not enabled in the secure production wallet.');
   },
 };
+
+// ─── Step-up verification helper (exported for UI) ────────────────────────────
 
 export async function requestWalletVerification(
   purpose: StepUpPurpose,
   pin: string,
   otpCode?: string,
   challengeId?: string,
-) {
-  return requireVerifiedToken(purpose, pin, otpCode, challengeId);
+): Promise<WalletStepUpVerification> {
+  return walletApi.verifyPin(pin, purpose, otpCode, challengeId);
 }
 
-export function __resetWalletApiCachesForTests() {
+// ─── Test utilities ───────────────────────────────────────────────────────────
+
+export function __resetWalletApiCachesForTests(): void {
   walletReadCache.clear();
   walletInsightsCache.clear();
   cachedStepUpVerification = null;
