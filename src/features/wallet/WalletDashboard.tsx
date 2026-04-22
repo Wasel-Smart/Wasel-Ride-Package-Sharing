@@ -1,32 +1,47 @@
 import { useMemo, useState } from 'react';
-import { ArrowRightLeft, CreditCard, LoaderCircle, RefreshCw, ShieldCheck, Wallet as WalletIcon } from 'lucide-react';
+import {
+  ArrowRightLeft,
+  CreditCard,
+  LoaderCircle,
+  RefreshCw,
+  ShieldCheck,
+  Wallet as WalletIcon,
+} from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { ClarityBand, CoreExperienceBanner, PageShell, Protected, SectionHead } from '../shared/pageShared';
+import {
+  ClarityBand,
+  CoreExperienceBanner,
+  PageShell,
+  Protected,
+  SectionHead,
+} from '../shared/pageShared';
 import { useWallet, type WalletSendDraft } from './useWallet';
 
-function formatCurrency(value: number, currency = 'JOD') {
-  return new Intl.NumberFormat('en-JO', {
+function formatCurrency(value: number, currency = 'JOD', locale = 'en-JO') {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
     maximumFractionDigits: 2,
   }).format(value);
 }
 
-function formatMetaSource(source: string, degraded: boolean) {
+function formatMetaSource(source: string, degraded: boolean, t: (key: string) => string) {
   if (degraded) {
-    return 'Backup wallet path';
+    return t('walletPage.meta.backup');
   }
-  return source === 'edge-api' ? 'Primary wallet service' : 'Direct sync';
+  return source === 'edge-api' ? t('walletPage.meta.primary') : t('walletPage.meta.direct');
 }
 
 export function WalletDashboard() {
   const { user } = useLocalAuth();
   const navigate = useIframeSafeNavigate();
+  const { formatDate, locale, t } = useLanguage();
   const {
     error,
     hasMoreTransactions,
@@ -53,8 +68,8 @@ export function WalletDashboard() {
   });
 
   const paymentMethods = wallet?.wallet.paymentMethods ?? [];
-  const defaultPaymentMethod = paymentMethods.find(method => method.isDefault) ?? null;
-  const recentTransactions = useMemo(() => transactions.slice(0, transactions.length), [transactions]);
+  const defaultPaymentMethod = paymentMethods.find((method) => method.isDefault) ?? null;
+  const recentTransactions = useMemo(() => transactions.slice(0), [transactions]);
 
   async function handleSendMoney() {
     setError(null);
@@ -70,7 +85,7 @@ export function WalletDashboard() {
         });
       }
     } catch {
-      // The hook already normalizes and stores the user-facing error state.
+      // Errors are normalized and surfaced by the wallet hook.
     }
   }
 
@@ -80,11 +95,11 @@ export function WalletDashboard() {
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-8 pt-4 md:px-6">
           <SectionHead
             emoji="💳"
-            title="Wallet"
-            sub="Server-backed balance, payment methods, and verified transfers."
+            title={t('walletPage.header.title')}
+            sub={t('walletPage.header.subtitle')}
             color="var(--accent)"
             action={{
-              label: loading ? 'Loading...' : 'Refresh wallet',
+              label: loading ? t('common.loading') : t('walletPage.header.refresh'),
               onClick: () => {
                 void refresh();
               },
@@ -92,19 +107,32 @@ export function WalletDashboard() {
           />
 
           <CoreExperienceBanner
-            title="This route now uses the real wallet domain instead of a shell surface."
-            detail="Balance, payment methods, and transaction history are loaded from the wallet service. Transfers require PIN verification and refresh the ledger after settlement."
+            title={t('walletPage.banner.title')}
+            detail={t('walletPage.banner.detail')}
             tone="var(--accent)"
           />
 
           <ClarityBand
-            title="Keep stored value and payment movement clearly separated."
-            detail="Use Wallet for balance, history, and secure transfers. Use Payments when you need to create or confirm a payment intent."
+            title={t('walletPage.clarity.title')}
+            detail={t('walletPage.clarity.detail')}
             tone="var(--accent)"
             items={[
-              { label: 'Balance', value: wallet ? formatCurrency(wallet.balance, wallet.currency) : 'Loading...' },
-              { label: 'Pending', value: wallet ? formatCurrency(wallet.pendingBalance, wallet.currency) : 'Loading...' },
-              { label: 'Rewards', value: wallet ? formatCurrency(wallet.rewardsBalance, wallet.currency) : 'Loading...' },
+              {
+                label: t('walletPage.metrics.balance'),
+                value: wallet ? formatCurrency(wallet.balance, wallet.currency, locale) : t('common.loading'),
+              },
+              {
+                label: t('walletPage.metrics.pending'),
+                value: wallet
+                  ? formatCurrency(wallet.pendingBalance, wallet.currency, locale)
+                  : t('common.loading'),
+              },
+              {
+                label: t('walletPage.metrics.rewards'),
+                value: wallet
+                  ? formatCurrency(wallet.rewardsBalance, wallet.currency, locale)
+                  : t('common.loading'),
+              },
             ]}
           />
 
@@ -112,46 +140,53 @@ export function WalletDashboard() {
             <Card className="border-primary/15 bg-[linear-gradient(140deg,rgba(3,13,28,0.96),rgba(8,34,60,0.92))]">
               <CardHeader className="gap-3">
                 <Badge className="w-fit border border-primary/20 bg-primary/10 text-primary">
-                  Live wallet
+                  {t('walletPage.liveBadge')}
                 </Badge>
                 <CardTitle className="flex items-center gap-3 text-2xl text-foreground">
                   <WalletIcon className="h-6 w-6 text-primary" />
-                  {wallet ? formatCurrency(wallet.balance, wallet.currency) : 'Loading wallet...'}
+                  {wallet
+                    ? formatCurrency(wallet.balance, wallet.currency, locale)
+                    : t('walletPage.loadingWallet')}
                 </CardTitle>
                 <CardDescription className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                  Stored value is read from the wallet service, not from auth profile fields. The refresh action invalidates local wallet caches before reloading the latest state.
+                  {t('walletPage.liveDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3 pb-6 md:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                     <RefreshCw className="h-4 w-4 text-primary" />
-                    Pending balance
+                    {t('walletPage.pendingBalance')}
                   </div>
                   <p className="text-2xl font-bold text-foreground">
-                    {wallet ? formatCurrency(wallet.pendingBalance, wallet.currency) : '--'}
+                    {wallet ? formatCurrency(wallet.pendingBalance, wallet.currency, locale) : '--'}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                     <CreditCard className="h-4 w-4 text-primary" />
-                    Payment methods
+                    {t('walletPage.paymentMethods')}
                   </div>
                   <p className="text-2xl font-bold text-foreground">{paymentMethods.length}</p>
                   <p className="text-xs text-muted-foreground">
-                    {defaultPaymentMethod?.label ?? 'No default method configured'}
+                    {defaultPaymentMethod?.label ?? t('walletPage.noDefaultMethod')}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                     <ShieldCheck className="h-4 w-4 text-primary" />
-                    Service posture
+                    {t('walletPage.servicePosture')}
                   </div>
                   <p className="text-lg font-semibold text-foreground">
-                    {meta ? formatMetaSource(meta.source, meta.degraded) : 'Loading...'}
+                    {meta ? formatMetaSource(meta.source, meta.degraded, t) : t('common.loading')}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {meta ? `Updated ${new Date(meta.fetchedAt).toLocaleString()}` : 'Waiting for first sync'}
+                    {meta
+                      ? `${t('walletPage.updatedAt')} ${formatDate(meta.fetchedAt, {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })}`
+                      : t('walletPage.waitingSync')}
                   </p>
                 </div>
               </CardContent>
@@ -159,17 +194,17 @@ export function WalletDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-foreground">Wallet actions</CardTitle>
+                <CardTitle className="text-lg text-foreground">{t('walletPage.actions.title')}</CardTitle>
                 <CardDescription className="text-sm leading-6 text-muted-foreground">
-                  Use Payments for top-ups and payment intents. Use Settings for account-level preferences. This page only exposes actions backed by the wallet service.
+                  {t('walletPage.actions.description')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button className="w-full" variant="secondary" onClick={() => navigate('/app/payments')}>
-                  Open payments
+                  {t('walletPage.actions.openPayments')}
                 </Button>
                 <Button className="w-full" variant="secondary" onClick={() => navigate('/app/settings')}>
-                  Open settings
+                  {t('walletPage.actions.openSettings')}
                 </Button>
                 <Button
                   className="w-full"
@@ -178,8 +213,12 @@ export function WalletDashboard() {
                     void refresh();
                   }}
                 >
-                  {loading ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                  Refresh balance and history
+                  {loading ? (
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                  )}
+                  {t('walletPage.actions.refresh')}
                 </Button>
               </CardContent>
             </Card>
@@ -188,59 +227,59 @@ export function WalletDashboard() {
           <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-foreground">Send money</CardTitle>
-                <CardDescription>
-                  Transfers use wallet PIN verification before the ledger move is submitted.
-                </CardDescription>
+                <CardTitle className="text-lg text-foreground">{t('walletPage.transfer.title')}</CardTitle>
+                <CardDescription>{t('walletPage.transfer.description')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <label className="block space-y-2 text-sm">
-                  <span className="font-medium text-foreground">Recipient user ID</span>
+                  <span className="font-medium text-foreground">{t('walletPage.transfer.recipient')}</span>
                   <Input
                     value={sendDraft.recipientUserId}
-                    onChange={(event) => setSendDraft(current => ({ ...current, recipientUserId: event.target.value }))}
-                    placeholder="user_123"
+                    onChange={(event) =>
+                      setSendDraft((current) => ({ ...current, recipientUserId: event.target.value }))
+                    }
+                    placeholder={t('walletPage.transfer.recipientPlaceholder')}
                   />
                 </label>
 
                 <label className="block space-y-2 text-sm">
-                  <span className="font-medium text-foreground">Amount</span>
+                  <span className="font-medium text-foreground">{t('walletPage.transfer.amount')}</span>
                   <Input
                     type="number"
                     min="0.01"
                     step="0.01"
                     value={sendDraft.amount}
-                    onChange={(event) => setSendDraft(current => ({ ...current, amount: event.target.value }))}
-                    placeholder="25.00"
+                    onChange={(event) => setSendDraft((current) => ({ ...current, amount: event.target.value }))}
+                    placeholder={t('walletPage.transfer.amountPlaceholder')}
                   />
                 </label>
 
                 <label className="block space-y-2 text-sm">
-                  <span className="font-medium text-foreground">Note</span>
+                  <span className="font-medium text-foreground">{t('walletPage.transfer.note')}</span>
                   <Input
                     value={sendDraft.note}
-                    onChange={(event) => setSendDraft(current => ({ ...current, note: event.target.value }))}
-                    placeholder="Trip reimbursement"
+                    onChange={(event) => setSendDraft((current) => ({ ...current, note: event.target.value }))}
+                    placeholder={t('walletPage.transfer.notePlaceholder')}
                   />
                 </label>
 
                 <label className="block space-y-2 text-sm">
-                  <span className="font-medium text-foreground">Wallet PIN</span>
+                  <span className="font-medium text-foreground">{t('walletPage.transfer.pin')}</span>
                   <Input
                     type="password"
                     value={sendDraft.pin}
-                    onChange={(event) => setSendDraft(current => ({ ...current, pin: event.target.value }))}
-                    placeholder="Enter your wallet PIN"
+                    onChange={(event) => setSendDraft((current) => ({ ...current, pin: event.target.value }))}
+                    placeholder={t('walletPage.transfer.pinPlaceholder')}
                   />
                 </label>
 
                 {transferChallenge ? (
                   <label className="block space-y-2 text-sm">
-                    <span className="font-medium text-foreground">One-time verification code</span>
+                    <span className="font-medium text-foreground">{t('walletPage.transfer.otp')}</span>
                     <Input
                       value={sendDraft.otpCode}
-                      onChange={(event) => setSendDraft(current => ({ ...current, otpCode: event.target.value }))}
-                      placeholder="Enter the OTP code"
+                      onChange={(event) => setSendDraft((current) => ({ ...current, otpCode: event.target.value }))}
+                      placeholder={t('walletPage.transfer.otpPlaceholder')}
                     />
                   </label>
                 ) : null}
@@ -264,47 +303,62 @@ export function WalletDashboard() {
                     void handleSendMoney();
                   }}
                 >
-                  {submittingTransfer ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <ArrowRightLeft className="mr-2 h-4 w-4" />}
-                  {transferChallenge ? 'Verify and complete transfer' : 'Send money'}
+                  {submittingTransfer ? (
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <ArrowRightLeft className="mr-2 h-4 w-4" />
+                  )}
+                  {transferChallenge
+                    ? t('walletPage.transfer.verifyAction')
+                    : t('walletPage.transfer.submit')}
                 </Button>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-foreground">Transaction history</CardTitle>
+                <CardTitle className="text-lg text-foreground">{t('walletPage.history.title')}</CardTitle>
                 <CardDescription>
-                  Showing {recentTransactions.length} of {totalTransactions} wallet transactions from the wallet service.
+                  {t('walletPage.history.summary')
+                    .replace('{visible}', String(recentTransactions.length))
+                    .replace('{total}', String(totalTransactions))}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {loading && recentTransactions.length === 0 ? (
                   <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted-foreground">
                     <LoaderCircle className="h-4 w-4 animate-spin" />
-                    Loading transactions...
+                    {t('walletPage.history.loading')}
                   </div>
                 ) : null}
 
                 {!loading && recentTransactions.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-5 text-sm text-muted-foreground">
-                    No wallet transactions have been recorded yet.
+                    {t('walletPage.history.empty')}
                   </div>
                 ) : null}
 
                 {recentTransactions.map((transaction) => {
                   const isCredit = transaction.amount >= 0;
                   return (
-                    <div key={transaction.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div
+                      key={transaction.id}
+                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4"
+                    >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-foreground">{transaction.description}</p>
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {transaction.description}
+                        </p>
                         <p className="text-xs text-muted-foreground">
-                          {transaction.type.replace('_', ' ')} · {new Date(transaction.createdAt).toLocaleString()} · {transaction.status}
+                          {transaction.type.replace('_', ' ')} ·{' '}
+                          {formatDate(transaction.createdAt, { dateStyle: 'medium', timeStyle: 'short' })} ·{' '}
+                          {transaction.status}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className={`text-sm font-semibold ${isCredit ? 'text-emerald-400' : 'text-foreground'}`}>
                           {isCredit ? '+' : '-'}
-                          {formatCurrency(Math.abs(transaction.amount), wallet?.currency ?? 'JOD')}
+                          {formatCurrency(Math.abs(transaction.amount), wallet?.currency ?? 'JOD', locale)}
                         </p>
                         <p className="text-xs text-muted-foreground">{transaction.id}</p>
                       </div>
@@ -322,7 +376,7 @@ export function WalletDashboard() {
                     }}
                   >
                     {loadingMore ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Load more transactions
+                    {t('walletPage.history.loadMore')}
                   </Button>
                 ) : null}
               </CardContent>
