@@ -86,7 +86,7 @@ function normalizeContact(value: unknown): SafetyEmergencyContact | null {
     relationship:
       typeof record.relationship === 'string' && record.relationship.trim()
         ? record.relationship
-        : 'Other',
+        : 'other',
   };
 }
 

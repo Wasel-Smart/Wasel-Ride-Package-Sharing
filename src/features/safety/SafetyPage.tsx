@@ -1,25 +1,11 @@
-/**
- * SafetyPage — /app/safety
- *
- * Full interactive safety center:
- * - SOS emergency reporting with location capture
- * - Trusted emergency contacts management (add / remove)
- * - Trip safety checklist (pre-departure gate)
- * - Cultural comfort settings (prayer stops, gender preference, Ramadan mode)
- * - Insurance overview with claim initiation
- * - Incident reporting (post-trip)
- * - Safety score with verification-linked breakdown
- */
-
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   BadgeCheck,
   CheckCircle2,
   ChevronRight,
   Clock,
-  FileText,
-  Heart,
+  LoaderCircle,
   MapPin,
   Moon,
   Phone,
@@ -29,1571 +15,800 @@ import {
   Star,
   Trash2,
   UserCheck,
-  X,
 } from 'lucide-react';
-import { useLocalAuth } from '../../contexts/LocalAuth';
+import { Button } from '../../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Input } from '../../components/ui/input';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { buildAuthPagePath } from '../../utils/authFlow';
-import { PAGE_DS } from '../../styles/wasel-page-theme';
 import {
   safetyService,
-  type EmergencyContact,
-  type IncidentReport,
-  type SafetySettings,
   type GenderPreference,
+  type SafetyDashboard,
+  type SafetyEmergencyContact,
+  type SafetySettings,
 } from '../../services/safetyService';
+import { PageShell, Protected } from '../shared/pageShared';
 
-const DS = PAGE_DS;
-const r = (px = 12) => `${px}px`;
+const CHECKLIST_ITEM_KEYS = [
+  'verifyDriver',
+  'plateMatch',
+  'shareTrip',
+  'chargePhone',
+  'contactsReady',
+  'seatBelt',
+] as const;
 
-/* ─── Types ──────────────────────────────────────────────────────────────────── */
+const INCIDENT_TYPE_KEYS = [
+  'driver_behavior',
+  'route_deviation',
+  'vehicle_condition',
+  'package_damage',
+  'insurance_claim',
+  'payment_dispute',
+  'other',
+] as const;
 
-interface EmergencyContact {
-  id: string;
-  name: string;
-  phone: string;
-  relationship: string;
-}
+const CONTACT_RELATIONSHIP_KEYS = ['family', 'friend', 'colleague', 'partner', 'other'] as const;
 
-interface IncidentReport {
-  id: string;
-  type: string;
-  description: string;
-  submittedAt: string;
-  status: 'submitted' | 'under_review' | 'resolved';
-}
-
-type GenderPreference =
-  | 'no_preference'
-  | 'same_gender_only'
-  | 'male_drivers_only'
-  | 'female_drivers_only';
-
-/* ─── Helpers ─────────────────────────────────────────────────────────────────── */
-
-function generateId() {
-  return Math.random().toString(36).slice(2, 9);
-}
-
-/* ─── Auth guard ─────────────────────────────────────────────────────────────── */
-
-function Protected({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useLocalAuth();
-  const navigate = useIframeSafeNavigate();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate(buildAuthPagePath('signin', '/app/safety'));
-    }
-  }, [loading, user, navigate]);
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '60vh',
-          background: DS.bg,
-          fontFamily: DS.F,
-        }}
-      >
-        <div style={{ color: DS.sub }}>Loading safety tools…</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '60vh',
-          background: DS.bg,
-          fontFamily: DS.F,
-        }}
-      >
-        <div style={{ color: DS.sub }}>Redirecting to sign in…</div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-}
-
-/* ─── SOS Panel ──────────────────────────────────────────────────────────────── */
-
-function SOSPanel() {
-  const [step, setStep] = useState<'idle' | 'confirm' | 'locating' | 'sent'>('idle');
-  const [location, setLocation] = useState<string | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function handleSOS() {
-    setStep('confirm');
-  }
-
-  function handleConfirm() {
-    setStep('locating');
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          setLocation(`${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`);
-          finishSend();
-        },
-        () => {
-          setLocation('Location unavailable');
-          finishSend();
-        },
-        { timeout: 4000 },
-      );
-    } else {
-      setLocation('Geolocation not supported');
-      finishSend();
-    }
-  }
-
-  async function finishSend() {
-    try {
-      const request = {
-        location:
-          location &&
-          location !== 'Location unavailable' &&
-          location !== 'Geolocation not supported'
-            ? {
-                latitude: parseFloat(location.split(', ')[0]),
-                longitude: parseFloat(location.split(', ')[1]),
-              }
-            : null,
-        timestamp: new Date().toISOString(),
-      };
-
-      await safetyService.sendSOS(request);
-      setStep('sent');
-    } catch (error) {
-      setStep('idle');
-      setLocation(null);
-    }
-  }
-
-  useEffect(
-    () => () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    },
-    [],
-  );
-
-  const buttonBase: React.CSSProperties = {
-    height: 44,
-    borderRadius: r(12),
-    border: 'none',
-    fontWeight: 800,
-    fontFamily: DS.F,
-    cursor: 'pointer',
-    fontSize: '0.88rem',
+function createContactDraft(): SafetyEmergencyContact {
+  return {
+    id: '',
+    name: '',
+    phone: '',
+    relationship: 'family',
   };
-
-  if (step === 'sent') {
-    return (
-      <div
-        style={{
-          background: 'color-mix(in srgb, var(--wasel-brand-hover) 8%, transparent)',
-          border: '1px solid color-mix(in srgb, var(--wasel-brand-hover) 24%, transparent)',
-          borderRadius: r(20),
-          padding: '22px 20px',
-          marginBottom: 18,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <CheckCircle2 size={28} color={DS.green} />
-          <div>
-            <div style={{ color: DS.text, fontWeight: 900, fontSize: '1.05rem' }}>
-              Emergency alert sent
-            </div>
-            <div style={{ color: DS.sub, fontSize: '0.78rem', marginTop: 3 }}>
-              Safety team notified · Trusted contacts alerted
-            </div>
-          </div>
-        </div>
-        {location && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              background: DS.card2,
-              borderRadius: r(10),
-              padding: '10px 13px',
-              marginBottom: 12,
-            }}
-          >
-            <MapPin size={14} color={DS.cyan} />
-            <span style={{ color: DS.sub, fontSize: '0.76rem' }}>
-              Location shared: <strong style={{ color: DS.text }}>{location}</strong>
-            </span>
-          </div>
-        )}
-        <button
-          onClick={() => {
-            setStep('idle');
-            setLocation(null);
-          }}
-          style={{ ...buttonBase, background: DS.card2, color: DS.text, padding: '0 20px' }}
-        >
-          Done
-        </button>
-      </div>
-    );
-  }
-
-  if (step === 'confirm' || step === 'locating') {
-    return (
-      <div
-        style={{
-          background: 'color-mix(in srgb, var(--wasel-brand-hover) 10%, transparent)',
-          border: '1px solid color-mix(in srgb, var(--wasel-brand-hover) 28%, transparent)',
-          borderRadius: r(20),
-          padding: '22px 20px',
-          marginBottom: 18,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-          <AlertTriangle size={26} color="var(--wasel-brand-hover)" />
-          <div>
-            <div style={{ color: DS.text, fontWeight: 900, fontSize: '1.05rem' }}>
-              {step === 'locating' ? 'Getting your location…' : 'Send emergency alert?'}
-            </div>
-            <div style={{ color: DS.sub, fontSize: '0.78rem', marginTop: 3 }}>
-              This will alert Wasel's safety team and share your location with your trusted
-              contacts.
-            </div>
-          </div>
-        </div>
-        {step === 'confirm' && (
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button
-              onClick={handleConfirm}
-              style={{
-                ...buttonBase,
-                background: 'var(--wasel-brand-hover)',
-                color: '#FFFDF9',
-                flex: 1,
-              }}
-            >
-              Confirm — Send Alert
-            </button>
-            <button
-              onClick={() => setStep('idle')}
-              style={{ ...buttonBase, background: DS.card2, color: DS.text, flex: 1 }}
-            >
-              Cancel
-            </button>
-          </div>
-        )}
-        {step === 'locating' && (
-          <div style={{ color: DS.cyan, fontSize: '0.82rem', fontWeight: 700 }}>
-            Capturing location…
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      style={{
-        background: 'color-mix(in srgb, var(--wasel-brand-hover) 6%, transparent)',
-        border: '1px solid color-mix(in srgb, var(--wasel-brand-hover) 20%, transparent)',
-        borderRadius: r(20),
-        padding: '20px 20px',
-        marginBottom: 18,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
-        <div
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: r(14),
-            background: 'color-mix(in srgb, var(--wasel-brand-hover) 14%, transparent)',
-            border: '1.5px solid color-mix(in srgb, var(--wasel-brand-hover) 28%, transparent)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <AlertTriangle size={24} color="var(--wasel-brand-hover)" />
-        </div>
-        <div>
-          <div style={{ color: DS.text, fontWeight: 900, fontSize: '1.05rem' }}>SOS Emergency</div>
-          <div style={{ color: DS.sub, fontSize: '0.78rem', marginTop: 3 }}>
-            One tap to alert safety team and share your live location
-          </div>
-        </div>
-      </div>
-      <button
-        onClick={handleSOS}
-        style={{
-          ...buttonBase,
-          width: '100%',
-          background: 'var(--wasel-brand-hover)',
-          color: '#FFFDF9',
-          fontSize: '0.92rem',
-          letterSpacing: '0.05em',
-        }}
-      >
-        🆘 Send Emergency Alert
-      </button>
-      <div
-        style={{
-          color: 'var(--wasel-brand-hover)',
-          fontSize: '0.72rem',
-          marginTop: 10,
-          lineHeight: 1.5,
-        }}
-      >
-        Only use in genuine emergencies. Your location will be shared with Wasel's safety team and
-        your trusted contacts.
-      </div>
-    </div>
-  );
 }
 
-/* ─── Emergency Contacts ─────────────────────────────────────────────────────── */
-
-function EmergencyContacts() {
-  const [contacts, setContacts] = useState<EmergencyContact[]>(() =>
-    readStorage<EmergencyContact[]>('wasel.safety.contacts', []),
-  );
-  const [adding, setAdding] = useState(false);
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [relationship, setRelationship] = useState('Family');
-  const [error, setError] = useState<string | null>(null);
-
-  function save(updated: EmergencyContact[]) {
-    setContacts(updated);
-    writeStorage('wasel.safety.contacts', updated);
+function resolveTrustLabel(score: number, t: (key: string) => string) {
+  if (score >= 80) {
+    return t('safetyPage.score.excellent');
   }
+  if (score >= 50) {
+    return t('safetyPage.score.good');
+  }
+  return t('safetyPage.score.needsAttention');
+}
 
-  function handleAdd() {
-    if (!name.trim() || !phone.trim()) {
-      setError('Name and phone are required.');
-      return;
-    }
-    const contact: EmergencyContact = {
-      id: generateId(),
-      name: name.trim(),
-      phone: phone.trim(),
-      relationship,
+function formatIncidentStatus(status: string, t: (key: string) => string) {
+  switch (status) {
+    case 'under_review':
+      return t('safetyPage.incidents.status.underReview');
+    case 'resolved':
+      return t('safetyPage.incidents.status.resolved');
+    default:
+      return t('safetyPage.incidents.status.submitted');
+  }
+}
+
+async function captureGeolocation(): Promise<{
+  latitude: number | null;
+  locationLabel: string;
+  longitude: number | null;
+}> {
+  if (!navigator.geolocation) {
+    return {
+      latitude: null,
+      locationLabel: 'unavailable',
+      longitude: null,
     };
-    save([...contacts, contact]);
-    setName('');
-    setPhone('');
-    setRelationship('Family');
-    setAdding(false);
-    setError(null);
   }
 
-  function handleRemove(id: string) {
-    save(contacts.filter(c => c.id !== id));
-  }
-
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    height: 42,
-    borderRadius: r(10),
-    border: `1px solid ${DS.border}`,
-    background: DS.card2,
-    color: DS.text,
-    padding: '0 12px',
-    fontFamily: DS.F,
-    outline: 'none',
-    boxSizing: 'border-box',
-  };
-
-  return (
-    <div
-      style={{
-        background: DS.card,
-        border: `1px solid ${DS.border}`,
-        borderRadius: r(20),
-        padding: '20px',
-        marginBottom: 18,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 14,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Heart size={18} color={DS.cyan} />
-          <div style={{ color: DS.text, fontWeight: 900 }}>Emergency Contacts</div>
-        </div>
-        {!adding && (
-          <button
-            onClick={() => setAdding(true)}
-            style={{
-              height: 34,
-              padding: '0 12px',
-              borderRadius: r(10),
-              border: `1px solid ${DS.border}`,
-              background: DS.card2,
-              color: DS.text,
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              fontFamily: DS.F,
-              fontSize: '0.78rem',
-            }}
-          >
-            <Plus size={13} /> Add Contact
-          </button>
-        )}
-      </div>
-
-      {contacts.length === 0 && !adding && (
-        <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>
-          No emergency contacts saved. Add at least one person who should be alerted if you trigger
-          SOS.
-        </div>
-      )}
-
-      <div style={{ display: 'grid', gap: 10 }}>
-        {contacts.map(contact => (
-          <div
-            key={contact.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              background: DS.card2,
-              border: `1px solid ${DS.border}`,
-              borderRadius: r(12),
-              padding: '12px 14px',
-            }}
-          >
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                background: `${DS.cyan}18`,
-                border: `1px solid ${DS.cyan}28`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: DS.cyan,
-                flexShrink: 0,
-              }}
-            >
-              <UserCheck size={16} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.85rem' }}>
-                {contact.name}
-              </div>
-              <div style={{ color: DS.sub, fontSize: '0.74rem', marginTop: 3 }}>
-                {contact.relationship} · {contact.phone}
-              </div>
-            </div>
-            <button
-              onClick={() => handleRemove(contact.id)}
-              style={{
-                border: 'none',
-                background: 'transparent',
-                color: 'color-mix(in srgb, var(--wasel-brand-hover) 72%, transparent)',
-                cursor: 'pointer',
-                padding: 4,
-              }}
-            >
-              <Trash2 size={15} />
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {adding && (
-        <div
-          style={{
-            marginTop: 14,
-            display: 'grid',
-            gap: 10,
-            background: DS.card2,
-            borderRadius: r(14),
-            padding: '14px',
-          }}
-        >
-          <input
-            placeholder="Full name"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            style={inputStyle}
-          />
-          <input
-            placeholder="+962 79 xxx xxxx"
-            value={phone}
-            onChange={e => setPhone(e.target.value)}
-            style={inputStyle}
-            type="tel"
-          />
-          <select
-            value={relationship}
-            onChange={e => setRelationship(e.target.value)}
-            style={{ ...inputStyle, height: 42 }}
-          >
-            {['Family', 'Friend', 'Colleague', 'Partner', 'Other'].map(rel => (
-              <option key={rel} value={rel} style={{ background: '#FFFDF9', color: '#0F172A' }}>
-                {rel}
-              </option>
-            ))}
-          </select>
-          {error && (
-            <div style={{ color: 'var(--wasel-brand-hover)', fontSize: '0.75rem' }}>{error}</div>
-          )}
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button
-              onClick={handleAdd}
-              style={{
-                flex: 1,
-                height: 42,
-                borderRadius: r(10),
-                border: 'none',
-                background: DS.cyan,
-                color: '#FFFDF9',
-                fontWeight: 800,
-                cursor: 'pointer',
-                fontFamily: DS.F,
-              }}
-            >
-              Save Contact
-            </button>
-            <button
-              onClick={() => {
-                setAdding(false);
-                setError(null);
-              }}
-              style={{
-                height: 42,
-                padding: '0 14px',
-                borderRadius: r(10),
-                border: `1px solid ${DS.border}`,
-                background: 'transparent',
-                color: DS.sub,
-                cursor: 'pointer',
-                fontFamily: DS.F,
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ─── Pre-Trip Safety Checklist ──────────────────────────────────────────────── */
-
-const CHECKLIST_ITEMS = [
-  {
-    id: 'verify_driver',
-    label: 'Driver verified with Sanad eKYC',
-    description: 'Government identity confirmed before departure.',
-  },
-  {
-    id: 'plate_match',
-    label: 'Vehicle plate matches booking',
-    description: 'Check the plate in your trip confirmation.',
-  },
-  {
-    id: 'share_trip',
-    label: 'Share trip details with a contact',
-    description: 'Send the trip code to a trusted person.',
-  },
-  {
-    id: 'charge_phone',
-    label: 'Phone is sufficiently charged',
-    description: 'Keep enough battery for the full journey.',
-  },
-  {
-    id: 'sos_ready',
-    label: 'Emergency contacts are saved',
-    description: 'At least one contact added to your safety list.',
-  },
-  {
-    id: 'seat_belt',
-    label: 'Seat belt fastened before departure',
-    description: 'Mandatory on all Wasel journeys.',
-  },
-];
-
-function SafetyChecklist() {
-  const [checked, setChecked] = useState<Record<string, boolean>>(() =>
-    readStorage<Record<string, boolean>>('wasel.safety.checklist', {}),
-  );
-
-  function toggle(id: string) {
-    const updated = { ...checked, [id]: !checked[id] };
-    setChecked(updated);
-    writeStorage('wasel.safety.checklist', updated);
-  }
-
-  const completedCount = CHECKLIST_ITEMS.filter(item => checked[item.id]).length;
-
-  return (
-    <div
-      style={{
-        background: DS.card,
-        border: `1px solid ${DS.border}`,
-        borderRadius: r(20),
-        padding: '20px',
-        marginBottom: 18,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 14,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <ShieldCheck size={18} color={DS.green} />
-          <div style={{ color: DS.text, fontWeight: 900 }}>Pre-Trip Safety Checklist</div>
-        </div>
-        <span
-          style={{
-            color: completedCount === CHECKLIST_ITEMS.length ? DS.green : DS.gold,
-            fontWeight: 800,
-            fontSize: '0.8rem',
-          }}
-        >
-          {completedCount}/{CHECKLIST_ITEMS.length}
-        </span>
-      </div>
-
-      {/* Progress bar */}
-      <div
-        style={{
-          height: 4,
-          background: DS.card3,
-          borderRadius: 4,
-          marginBottom: 14,
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            height: '100%',
-            width: `${(completedCount / CHECKLIST_ITEMS.length) * 100}%`,
-            background: completedCount === CHECKLIST_ITEMS.length ? DS.green : DS.cyan,
-            borderRadius: 4,
-            transition: 'width 0.3s',
-          }}
-        />
-      </div>
-
-      <div style={{ display: 'grid', gap: 10 }}>
-        {CHECKLIST_ITEMS.map(item => (
-          <button
-            key={item.id}
-            onClick={() => toggle(item.id)}
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 12,
-              background: checked[item.id] ? `${DS.green}0A` : DS.card2,
-              border: `1px solid ${checked[item.id] ? `${DS.green}30` : DS.border}`,
-              borderRadius: r(12),
-              padding: '12px 14px',
-              cursor: 'pointer',
-              textAlign: 'left',
-            }}
-          >
-            <div
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 6,
-                border: `2px solid ${checked[item.id] ? DS.green : DS.border}`,
-                background: checked[item.id] ? DS.green : 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                marginTop: 1,
-              }}
-            >
-              {checked[item.id] && <CheckCircle2 size={13} color="#0F172A" />}
-            </div>
-            <div>
-              <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.84rem' }}>
-                {item.label}
-              </div>
-              <div style={{ color: DS.sub, fontSize: '0.73rem', marginTop: 3, lineHeight: 1.5 }}>
-                {item.description}
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Cultural Comfort Settings ──────────────────────────────────────────────── */
-
-function CulturalSettings() {
-  const [prayerStops, setPrayerStops] = useState(() =>
-    readStorage('wasel.safety.prayer_stops', true),
-  );
-  const [ramadan, setRamadan] = useState(() => readStorage('wasel.safety.ramadan', false));
-  const [genderPreference, setGenderPreference] = useState<GenderPreference>(() =>
-    readStorage<GenderPreference>('wasel.safety.gender_preference', 'no_preference'),
-  );
-
-  function handlePrayerStops(v: boolean) {
-    setPrayerStops(v);
-    writeStorage('wasel.safety.prayer_stops', v);
-  }
-  function handleRamadan(v: boolean) {
-    setRamadan(v);
-    writeStorage('wasel.safety.ramadan', v);
-  }
-  function handleGender(v: GenderPreference) {
-    setGenderPreference(v);
-    writeStorage('wasel.safety.gender_preference', v);
-  }
-
-  const toggleStyle = (on: boolean): React.CSSProperties => ({
-    width: 44,
-    height: 24,
-    borderRadius: 12,
-    background: on ? DS.cyan : DS.card3,
-    border: 'none',
-    cursor: 'pointer',
-    position: 'relative',
-    transition: 'background 0.2s',
-    flexShrink: 0,
-  });
-
-  const knobStyle = (on: boolean): React.CSSProperties => ({
-    position: 'absolute',
-    top: 3,
-    left: on ? 23 : 3,
-    width: 18,
-    height: 18,
-    borderRadius: '50%',
-    background: '#FFFDF9',
-    transition: 'left 0.2s',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
-  });
-
-  function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
-    return (
-      <button
-        type="button"
-        role="switch"
-        aria-checked={value}
-        onClick={() => onChange(!value)}
-        style={toggleStyle(value)}
-      >
-        <span style={knobStyle(value)} />
-      </button>
-    );
-  }
-
-  return (
-    <div
-      style={{
-        background: DS.card,
-        border: `1px solid ${DS.border}`,
-        borderRadius: r(20),
-        padding: '20px',
-        marginBottom: 18,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <Moon size={18} color={DS.gold} />
-        <div style={{ color: DS.text, fontWeight: 900 }}>Cultural Comfort Settings</div>
-      </div>
-
-      <div
-        style={{
-          display: 'grid',
-          gap: 0,
-          borderRadius: r(12),
-          overflow: 'hidden',
-          border: `1px solid ${DS.border}`,
-        }}
-      >
-        {/* Prayer stops */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '14px 16px',
-            borderBottom: `1px solid ${DS.border}`,
-          }}
-        >
-          <div style={{ flex: 1 }}>
-            <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.84rem' }}>
-              Prayer Stop Requests
-            </div>
-            <div style={{ color: DS.sub, fontSize: '0.73rem', marginTop: 3 }}>
-              Allow brief stops at mosques on long-distance routes.
-            </div>
-          </div>
-          <Toggle value={prayerStops} onChange={handlePrayerStops} />
-        </div>
-
-        {/* Ramadan mode */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '14px 16px',
-            borderBottom: `1px solid ${DS.border}`,
-          }}
-        >
-          <div style={{ flex: 1 }}>
-            <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.84rem' }}>Ramadan Mode</div>
-            <div style={{ color: DS.sub, fontSize: '0.73rem', marginTop: 3 }}>
-              Iftar timing alerts and Suhoor-aware departure windows.
-            </div>
-          </div>
-          <Toggle value={ramadan} onChange={handleRamadan} />
-        </div>
-
-        {/* Gender preference */}
-        <div style={{ padding: '14px 16px' }}>
-          <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.84rem', marginBottom: 10 }}>
-            Gender Preference
-          </div>
-          <div style={{ display: 'grid', gap: 8 }}>
-            {(
-              [
-                ['no_preference', 'No preference'],
-                ['same_gender_only', 'Same gender riders only'],
-                ['male_drivers_only', 'Male drivers only'],
-                ['female_drivers_only', 'Female drivers only'],
-              ] as [GenderPreference, string][]
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                onClick={() => handleGender(value)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  background: genderPreference === value ? `${DS.cyan}10` : DS.card2,
-                  border: `1px solid ${genderPreference === value ? `${DS.cyan}30` : DS.border}`,
-                  borderRadius: r(10),
-                  padding: '10px 14px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                }}
-              >
-                <div
-                  style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: '50%',
-                    border: `2px solid ${genderPreference === value ? DS.cyan : DS.border}`,
-                    background: genderPreference === value ? DS.cyan : 'transparent',
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  style={{
-                    color: genderPreference === value ? DS.text : DS.sub,
-                    fontWeight: genderPreference === value ? 700 : 400,
-                    fontSize: '0.82rem',
-                  }}
-                >
-                  {label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Insurance Panel ────────────────────────────────────────────────────────── */
-
-function InsurancePanel() {
-  const [claimOpen, setClaimOpen] = useState(false);
-  const [description, setDescription] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-
-  function submitClaim() {
-    if (!description.trim()) return;
-    setSubmitted(true);
-    const existing = readStorage<IncidentReport[]>('wasel.safety.claims', []);
-    writeStorage('wasel.safety.claims', [
-      ...existing,
-      {
-        id: generateId(),
-        type: 'insurance_claim',
-        description: description.trim(),
-        submittedAt: new Date().toISOString(),
-        status: 'submitted',
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: position.coords.latitude,
+          locationLabel: `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`,
+          longitude: position.coords.longitude,
+        });
       },
-    ]);
-    setDescription('');
-    setTimeout(() => {
-      setClaimOpen(false);
-      setSubmitted(false);
-    }, 2500);
-  }
-
-  return (
-    <div
-      style={{
-        background: DS.card,
-        border: `1px solid ${DS.border}`,
-        borderRadius: r(20),
-        padding: '20px',
-        marginBottom: 18,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <FileText size={18} color={DS.gold} />
-        <div style={{ color: DS.text, fontWeight: 900 }}>Trip Insurance</div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-        {[
-          { label: 'Coverage per trip', value: 'JOD 1,000', color: DS.gold },
-          { label: 'Medical assistance', value: 'Included', color: DS.green },
-          { label: 'Luggage protection', value: 'Up to JOD 200', color: DS.cyan },
-          { label: 'Cancellation cover', value: 'Up to JOD 50', color: DS.blue },
-        ].map(item => (
-          <div
-            key={item.label}
-            style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: `1px solid ${DS.border}`,
-              borderRadius: r(12),
-              padding: '12px 14px',
-            }}
-          >
-            <div style={{ color: item.color, fontWeight: 800, fontSize: '0.9rem' }}>
-              {item.value}
-            </div>
-            <div style={{ color: DS.sub, fontSize: '0.72rem', marginTop: 3 }}>{item.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {!claimOpen ? (
-        <button
-          onClick={() => setClaimOpen(true)}
-          style={{
-            width: '100%',
-            height: 42,
-            borderRadius: r(12),
-            border: `1px solid ${DS.border}`,
-            background: DS.card2,
-            color: DS.text,
-            fontWeight: 700,
-            cursor: 'pointer',
-            fontFamily: DS.F,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            fontSize: '0.84rem',
-          }}
-        >
-          <FileText size={15} /> File an Insurance Claim
-        </button>
-      ) : (
-        <div style={{ background: DS.card2, borderRadius: r(14), padding: '14px' }}>
-          <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.84rem', marginBottom: 10 }}>
-            Describe the incident
-          </div>
-          {submitted ? (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                color: DS.green,
-                fontWeight: 700,
-              }}
-            >
-              <CheckCircle2 size={16} /> Claim submitted — our team will contact you within 24
-              hours.
-            </div>
-          ) : (
-            <>
-              <textarea
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                rows={3}
-                placeholder="Briefly describe what happened and which trip it relates to…"
-                style={{
-                  width: '100%',
-                  borderRadius: r(10),
-                  border: `1px solid ${DS.border}`,
-                  background: DS.card3,
-                  color: DS.text,
-                  padding: '10px 12px',
-                  fontFamily: DS.F,
-                  outline: 'none',
-                  resize: 'none',
-                  boxSizing: 'border-box',
-                }}
-              />
-              <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-                <button
-                  onClick={submitClaim}
-                  disabled={!description.trim()}
-                  style={{
-                    flex: 1,
-                    height: 40,
-                    borderRadius: r(10),
-                    border: 'none',
-                    background: description.trim() ? DS.cyan : 'rgba(255,255,255,0.1)',
-                    color: description.trim() ? '#FFFDF9' : DS.sub,
-                    fontWeight: 800,
-                    cursor: description.trim() ? 'pointer' : 'not-allowed',
-                    fontFamily: DS.F,
-                  }}
-                >
-                  Submit Claim
-                </button>
-                <button
-                  onClick={() => setClaimOpen(false)}
-                  style={{
-                    height: 40,
-                    padding: '0 14px',
-                    borderRadius: r(10),
-                    border: `1px solid ${DS.border}`,
-                    background: 'transparent',
-                    color: DS.sub,
-                    cursor: 'pointer',
-                    fontFamily: DS.F,
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-    </div>
-  );
+      () => {
+        resolve({
+          latitude: null,
+          locationLabel: 'unavailable',
+          longitude: null,
+        });
+      },
+      { timeout: 5_000 },
+    );
+  });
 }
-
-/* ─── Incident Report ────────────────────────────────────────────────────────── */
-
-const INCIDENT_TYPES = [
-  'Driver behaviour',
-  'Route deviation',
-  'Vehicle condition',
-  'Package damage',
-  'Payment dispute',
-  'Other',
-];
-
-function IncidentReport() {
-  const [type, setType] = useState(INCIDENT_TYPES[0]);
-  const [description, setDescription] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [reports, setReports] = useState<IncidentReport[]>(() =>
-    readStorage<IncidentReport[]>('wasel.safety.incidents', []),
-  );
-
-  function submit() {
-    if (!description.trim()) return;
-    setSubmitting(true);
-    setTimeout(() => {
-      const report: IncidentReport = {
-        id: generateId(),
-        type,
-        description: description.trim(),
-        submittedAt: new Date().toISOString(),
-        status: 'submitted',
-      };
-      const updated = [report, ...reports];
-      setReports(updated);
-      writeStorage('wasel.safety.incidents', updated);
-      setDescription('');
-      setSubmitting(false);
-      setSubmitted(true);
-      setTimeout(() => setSubmitted(false), 3000);
-    }, 900);
-  }
-
-  const statusColor: Record<IncidentReport['status'], string> = {
-    submitted: DS.cyan,
-    under_review: DS.gold,
-    resolved: DS.green,
-  };
-
-  return (
-    <div
-      style={{
-        background: DS.card,
-        border: `1px solid ${DS.border}`,
-        borderRadius: r(20),
-        padding: '20px',
-        marginBottom: 18,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <AlertTriangle size={18} color={DS.gold} />
-        <div style={{ color: DS.text, fontWeight: 900 }}>Report an Incident</div>
-      </div>
-
-      <div style={{ display: 'grid', gap: 12 }}>
-        <div>
-          <label style={{ display: 'block', color: DS.sub, fontSize: '0.74rem', marginBottom: 6 }}>
-            Incident type
-          </label>
-          <select
-            value={type}
-            onChange={e => setType(e.target.value)}
-            style={{
-              width: '100%',
-              height: 42,
-              borderRadius: r(10),
-              border: `1px solid ${DS.border}`,
-              background: DS.card2,
-              color: DS.text,
-              padding: '0 12px',
-              fontFamily: DS.F,
-              outline: 'none',
-            }}
-          >
-            {INCIDENT_TYPES.map(t => (
-              <option key={t} value={t} style={{ background: '#FFFDF9', color: '#0F172A' }}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label style={{ display: 'block', color: DS.sub, fontSize: '0.74rem', marginBottom: 6 }}>
-            Description
-          </label>
-          <textarea
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            rows={3}
-            placeholder="Describe the incident clearly…"
-            style={{
-              width: '100%',
-              borderRadius: r(10),
-              border: `1px solid ${DS.border}`,
-              background: DS.card2,
-              color: DS.text,
-              padding: '10px 12px',
-              fontFamily: DS.F,
-              outline: 'none',
-              resize: 'none',
-              boxSizing: 'border-box',
-            }}
-          />
-        </div>
-        {submitted ? (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              color: DS.green,
-              fontWeight: 700,
-              fontSize: '0.84rem',
-            }}
-          >
-            <CheckCircle2 size={16} /> Report submitted. We will review it within 48 hours.
-          </div>
-        ) : (
-          <button
-            onClick={submit}
-            disabled={submitting || !description.trim()}
-            style={{
-              height: 44,
-              borderRadius: r(12),
-              border: 'none',
-              background: description.trim() && !submitting ? DS.gold : 'rgba(255,255,255,0.08)',
-              color: description.trim() && !submitting ? '#FFFDF9' : DS.sub,
-              fontWeight: 800,
-              cursor: description.trim() && !submitting ? 'pointer' : 'not-allowed',
-              fontFamily: DS.F,
-            }}
-          >
-            {submitting ? 'Submitting…' : 'Submit Report'}
-          </button>
-        )}
-      </div>
-
-      {reports.length > 0 && (
-        <div style={{ marginTop: 18 }}>
-          <div
-            style={{
-              color: DS.sub,
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              marginBottom: 10,
-            }}
-          >
-            Past reports
-          </div>
-          <div style={{ display: 'grid', gap: 8 }}>
-            {reports.slice(0, 3).map(report => (
-              <div
-                key={report.id}
-                style={{
-                  background: DS.card2,
-                  border: `1px solid ${DS.border}`,
-                  borderRadius: r(10),
-                  padding: '10px 12px',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: 10,
-                    marginBottom: 4,
-                  }}
-                >
-                  <span style={{ color: DS.text, fontWeight: 700, fontSize: '0.8rem' }}>
-                    {report.type}
-                  </span>
-                  <span
-                    style={{
-                      color: statusColor[report.status],
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {report.status.replace('_', ' ')}
-                  </span>
-                </div>
-                <div style={{ color: DS.sub, fontSize: '0.73rem', lineHeight: 1.5 }}>
-                  {report.description.slice(0, 80)}
-                  {report.description.length > 80 ? '…' : ''}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ─── Safety Score ───────────────────────────────────────────────────────────── */
-
-function SafetyScore({
-  user,
-}: {
-  user: {
-    trustScore: number;
-    verified?: boolean;
-    emailVerified?: boolean;
-    phoneVerified?: boolean;
-    walletStatus?: string;
-  };
-}) {
-  const score = user.trustScore ?? 0;
-  const color = score >= 80 ? DS.green : score >= 50 ? DS.gold : 'var(--wasel-brand-hover)';
-
-  const factors = [
-    { label: 'Identity verified', done: Boolean(user.verified), weight: 30 },
-    { label: 'Email confirmed', done: Boolean(user.emailVerified), weight: 20 },
-    { label: 'Phone confirmed', done: Boolean(user.phoneVerified), weight: 20 },
-    { label: 'Wallet active', done: user.walletStatus === 'active', weight: 15 },
-    {
-      label: 'Emergency contact saved',
-      done: readStorage<EmergencyContact[]>('wasel.safety.contacts', []).length > 0,
-      weight: 15,
-    },
-  ];
-
-  return (
-    <div
-      style={{
-        background: DS.card,
-        border: `1px solid ${DS.border}`,
-        borderRadius: r(20),
-        padding: '20px',
-        marginBottom: 18,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-        <Star size={18} color={color} />
-        <div style={{ color: DS.text, fontWeight: 900 }}>Safety Score</div>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 14 }}>
-        <span style={{ color, fontWeight: 900, fontSize: '2.4rem', lineHeight: 1 }}>{score}</span>
-        <span style={{ color: DS.sub, fontSize: '0.9rem' }}>/100</span>
-        <span style={{ color, fontSize: '0.78rem', fontWeight: 700, marginLeft: 4 }}>
-          {score >= 80 ? 'Excellent' : score >= 50 ? 'Good' : 'Needs attention'}
-        </span>
-      </div>
-
-      <div
-        style={{
-          height: 6,
-          background: DS.card3,
-          borderRadius: 4,
-          marginBottom: 16,
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            height: '100%',
-            width: `${score}%`,
-            background: color,
-            borderRadius: 4,
-            transition: 'width 0.5s',
-          }}
-        />
-      </div>
-
-      <div style={{ display: 'grid', gap: 8 }}>
-        {factors.map(factor => (
-          <div key={factor.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                width: 20,
-                height: 20,
-                borderRadius: 6,
-                background: factor.done ? `${DS.green}18` : 'rgba(255,255,255,0.05)',
-                border: `1px solid ${factor.done ? `${DS.green}35` : DS.border}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              {factor.done ? (
-                <CheckCircle2 size={12} color={DS.green} />
-              ) : (
-                <X size={11} color={DS.sub} />
-              )}
-            </div>
-            <div style={{ flex: 1, color: factor.done ? DS.text : DS.sub, fontSize: '0.8rem' }}>
-              {factor.label}
-            </div>
-            <div
-              style={{
-                color: factor.done ? DS.green : DS.sub,
-                fontSize: '0.72rem',
-                fontWeight: 700,
-              }}
-            >
-              +{factor.weight}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Quick Links ────────────────────────────────────────────────────────────── */
-
-function QuickLink({
-  icon,
-  label,
-  sub,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  sub?: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        width: '100%',
-        background: DS.card2,
-        border: `1px solid ${DS.border}`,
-        borderRadius: r(14),
-        padding: '14px 16px',
-        cursor: 'pointer',
-        textAlign: 'left',
-        marginBottom: 10,
-      }}
-    >
-      <div
-        style={{
-          width: 38,
-          height: 38,
-          borderRadius: r(10),
-          background: 'color-mix(in srgb, var(--ds-accent) 10%, transparent)',
-          border: '1px solid color-mix(in srgb, var(--ds-accent) 20%, transparent)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
-        {icon}
-      </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.85rem' }}>{label}</div>
-        {sub && <div style={{ color: DS.sub, fontSize: '0.73rem', marginTop: 2 }}>{sub}</div>}
-      </div>
-      <ChevronRight size={15} color={DS.sub} />
-    </button>
-  );
-}
-
-/* ─── Page ───────────────────────────────────────────────────────────────────── */
 
 export default function SafetyPage() {
+  const { formatDate, language, t } = useLanguage();
   const { user } = useLocalAuth();
-  const { language } = useLanguage();
-  const nav = useIframeSafeNavigate();
+  const navigate = useIframeSafeNavigate();
+  const [dashboard, setDashboard] = useState<SafetyDashboard | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [addingContact, setAddingContact] = useState(false);
+  const [contactDraft, setContactDraft] = useState<SafetyEmergencyContact>(createContactDraft());
+  const [incidentType, setIncidentType] = useState(INCIDENT_TYPE_KEYS[0]);
+  const [incidentDescription, setIncidentDescription] = useState('');
+  const [incidentSubmitting, setIncidentSubmitting] = useState(false);
+  const [incidentFeedback, setIncidentFeedback] = useState<string | null>(null);
+  const [sosStage, setSosStage] = useState<'idle' | 'confirm' | 'sending' | 'sent' | 'error'>('idle');
+  const [sosFeedback, setSosFeedback] = useState<string | null>(null);
+  const [locationLabel, setLocationLabel] = useState<string | null>(null);
+
   const ar = language === 'ar';
+  const settings = dashboard?.settings;
+  const incidents = dashboard?.incidents ?? [];
+  const contacts = settings?.emergencyContacts ?? [];
+  const checklist = settings?.checklist ?? {};
+  const completedChecklistCount = CHECKLIST_ITEM_KEYS.filter((key) => checklist[key]).length;
+  const trustScore = user?.trustScore ?? 0;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDashboard = async () => {
+      setLoading(true);
+      setSettingsError(null);
+      try {
+        const next = await safetyService.getDashboard();
+        if (!cancelled) {
+          setDashboard(next);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setSettingsError(error instanceof Error ? error.message : t('safetyPage.errors.load'));
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadDashboard();
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
+
+  const scoreFactors = useMemo(
+    () => [
+      { done: Boolean(user?.verified), label: t('safetyPage.score.identityVerified'), weight: 30 },
+      { done: Boolean(user?.emailVerified), label: t('safetyPage.score.emailConfirmed'), weight: 20 },
+      { done: Boolean(user?.phoneVerified), label: t('safetyPage.score.phoneConfirmed'), weight: 20 },
+      { done: user?.walletStatus === 'active', label: t('safetyPage.score.walletActive'), weight: 15 },
+      { done: contacts.length > 0, label: t('safetyPage.score.contactsSaved'), weight: 15 },
+    ],
+    [contacts.length, t, user?.emailVerified, user?.phoneVerified, user?.verified, user?.walletStatus],
+  );
+
+  async function persistSettings(nextSettings: SafetySettings) {
+    setSavingSettings(true);
+    setSettingsError(null);
+
+    try {
+      const saved = await safetyService.updateSettings(nextSettings);
+      setDashboard((current) =>
+        current
+          ? { ...current, settings: saved }
+          : { incidents: [], settings: saved },
+      );
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : t('safetyPage.errors.save'));
+      throw error;
+    } finally {
+      setSavingSettings(false);
+    }
+  }
+
+  async function handleAddContact() {
+    const name = contactDraft.name.trim();
+    const phone = contactDraft.phone.trim();
+
+    if (!name || !phone || !settings) {
+      setSettingsError(t('safetyPage.contacts.validation'));
+      return;
+    }
+
+    const nextSettings = {
+      ...settings,
+      emergencyContacts: [
+        ...contacts,
+        {
+          ...contactDraft,
+          id: crypto.randomUUID(),
+          name,
+          phone,
+        },
+      ],
+    };
+
+    await persistSettings(nextSettings);
+    setContactDraft(createContactDraft());
+    setAddingContact(false);
+  }
+
+  async function handleRemoveContact(contactId: string) {
+    if (!settings) {
+      return;
+    }
+
+    await persistSettings({
+      ...settings,
+      emergencyContacts: contacts.filter((contact) => contact.id !== contactId),
+    });
+  }
+
+  async function handleChecklistToggle(itemKey: string) {
+    if (!settings) {
+      return;
+    }
+
+    await persistSettings({
+      ...settings,
+      checklist: {
+        ...checklist,
+        [itemKey]: !checklist[itemKey],
+      },
+    });
+  }
+
+  async function handleCulturalUpdate(
+    patch: Partial<SafetySettings['cultural']>,
+  ) {
+    if (!settings) {
+      return;
+    }
+
+    await persistSettings({
+      ...settings,
+      cultural: {
+        ...settings.cultural,
+        ...patch,
+      },
+    });
+  }
+
+  async function handleSubmitIncident() {
+    const description = incidentDescription.trim();
+    if (!description) {
+      setIncidentFeedback(t('safetyPage.incidents.validation'));
+      return;
+    }
+
+    setIncidentSubmitting(true);
+    setIncidentFeedback(null);
+
+    try {
+      const incident = await safetyService.createIncident({
+        description,
+        type: incidentType,
+      });
+      setDashboard((current) =>
+        current
+          ? { ...current, incidents: [incident, ...current.incidents] }
+          : {
+              incidents: [incident],
+              settings: settings ?? {
+                checklist: {},
+                cultural: {
+                  genderPreference: 'no_preference',
+                  prayerStops: true,
+                  ramadanMode: false,
+                },
+                emergencyContacts: [],
+              },
+            },
+      );
+      setIncidentDescription('');
+      setIncidentFeedback(t('safetyPage.incidents.submitted'));
+    } catch (error) {
+      setIncidentFeedback(error instanceof Error ? error.message : t('safetyPage.errors.incident'));
+    } finally {
+      setIncidentSubmitting(false);
+    }
+  }
+
+  async function sendSos() {
+    setSosStage('sending');
+    setSosFeedback(null);
+
+    try {
+      const geolocation = await captureGeolocation();
+      setLocationLabel(geolocation.locationLabel);
+      const result = await safetyService.triggerSos({
+        latitude: geolocation.latitude,
+        locationLabel: geolocation.locationLabel === 'unavailable' ? null : geolocation.locationLabel,
+        longitude: geolocation.longitude,
+        metadata: {
+          trustScore: user?.trustScore ?? null,
+        },
+      });
+
+      if (!result.notified) {
+        throw new Error(t('safetyPage.errors.sos'));
+      }
+
+      setSosStage('sent');
+      setSosFeedback(t('safetyPage.sos.sentBody'));
+    } catch (error) {
+      setSosStage('error');
+      setSosFeedback(error instanceof Error ? error.message : t('safetyPage.errors.sos'));
+    }
+  }
 
   return (
-    <Protected>
-      <div
-        style={{
-          minHeight: '100vh',
-          background: DS.bg,
-          fontFamily: DS.F,
-          direction: ar ? 'rtl' : 'ltr',
-          paddingBottom: 88,
-        }}
-      >
-        <div style={{ maxWidth: 820, margin: '0 auto', padding: '28px 16px 0' }}>
-          {/* Header */}
-          <div
-            style={{
-              background: `linear-gradient(135deg, ${DS.green}14, rgba(255,255,255,0.78))`,
-              border: `1px solid ${DS.green}22`,
-              borderRadius: r(22),
-              padding: '24px 22px',
-              marginBottom: 22,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div
-                style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: r(16),
-                  background: `${DS.green}18`,
-                  border: `1.5px solid ${DS.green}30`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Shield size={26} color={DS.green} />
-              </div>
-              <div>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: DS.text, margin: 0 }}>
-                  Safety Center
-                </h1>
-                <p style={{ color: DS.sub, margin: '5px 0 0', fontSize: '0.82rem' }}>
-                  Emergency tools · Verification · Cultural settings · Insurance
-                </p>
-              </div>
+    <PageShell>
+      <Protected>
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-8 pt-4 md:px-6">
+          <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+            <Card className="border-primary/15 bg-[linear-gradient(140deg,rgba(3,13,28,0.96),rgba(7,40,36,0.92))]">
+              <CardHeader className="gap-3">
+                <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                  <Shield className="h-3.5 w-3.5" />
+                  {t('safetyPage.header.badge')}
+                </div>
+                <CardTitle className="flex items-center gap-3 text-2xl text-foreground">
+                  <ShieldCheck className="h-6 w-6 text-primary" />
+                  {t('safetyPage.header.title')}
+                </CardTitle>
+                <CardDescription className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                  {t('safetyPage.header.subtitle')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-3 pb-6 md:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <Star className="h-4 w-4 text-primary" />
+                    {t('safetyPage.score.title')}
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{trustScore}</p>
+                  <p className="text-xs text-muted-foreground">{resolveTrustLabel(trustScore, t)}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <UserCheck className="h-4 w-4 text-primary" />
+                    {t('safetyPage.contacts.title')}
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{contacts.length}</p>
+                  <p className="text-xs text-muted-foreground">{t('safetyPage.header.contactsSummary')}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    {t('safetyPage.checklist.title')}
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">
+                    {completedChecklistCount}/{CHECKLIST_ITEM_KEYS.length}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t('safetyPage.header.checklistSummary')}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-foreground">{t('safetyPage.score.title')}</CardTitle>
+                <CardDescription>{t('safetyPage.score.description')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {scoreFactors.map((factor) => (
+                  <div key={factor.label} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${factor.done ? 'bg-primary/15 text-primary' : 'bg-white/5 text-muted-foreground'}`}>
+                      {factor.done ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground">{factor.label}</p>
+                    </div>
+                    <div className="text-xs font-semibold text-muted-foreground">+{factor.weight}</div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </section>
+
+          <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+            <Card className="border-rose-500/25 bg-rose-500/10">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-lg text-foreground">
+                  <AlertTriangle className="h-5 w-5 text-rose-300" />
+                  {t('safetyPage.sos.title')}
+                </CardTitle>
+                <CardDescription>{t('safetyPage.sos.subtitle')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {sosStage === 'sent' ? (
+                  <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 text-sm text-primary">
+                    <div className="flex items-center gap-2 font-semibold">
+                      <CheckCircle2 className="h-4 w-4" />
+                      {t('safetyPage.sos.sentTitle')}
+                    </div>
+                    <p className="mt-2 text-primary/90">{sosFeedback}</p>
+                    {locationLabel ? (
+                      <p className="mt-2 flex items-center gap-2 text-primary/90">
+                        <MapPin className="h-4 w-4" />
+                        {locationLabel === 'unavailable'
+                          ? t('safetyPage.sos.locationUnavailable')
+                          : `${t('safetyPage.sos.locationShared')} ${locationLabel}`}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : sosStage === 'error' ? (
+                  <div className="rounded-2xl border border-destructive/25 bg-destructive/10 p-4 text-sm text-destructive">
+                    <div className="font-semibold">{t('safetyPage.sos.errorTitle')}</div>
+                    <p className="mt-2">{sosFeedback}</p>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted-foreground">
+                    {t('safetyPage.sos.body')}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-3">
+                  {sosStage === 'confirm' ? (
+                    <>
+                      <Button
+                        className="bg-rose-500 text-white hover:bg-rose-400"
+                        disabled={sosStage === 'sending'}
+                        onClick={() => {
+                          void sendSos();
+                        }}
+                      >
+                        {sosStage === 'sending' ? (
+                          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <AlertTriangle className="mr-2 h-4 w-4" />
+                        )}
+                        {t('safetyPage.sos.confirm')}
+                      </Button>
+                      <Button variant="secondary" onClick={() => setSosStage('idle')}>
+                        {t('common.cancel')}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        className="bg-rose-500 text-white hover:bg-rose-400"
+                        disabled={sosStage === 'sending'}
+                        onClick={() => setSosStage('confirm')}
+                      >
+                        {sosStage === 'sending' ? (
+                          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <AlertTriangle className="mr-2 h-4 w-4" />
+                        )}
+                        {t('safetyPage.sos.trigger')}
+                      </Button>
+                      {(sosStage === 'error' || sosStage === 'sent') ? (
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            setSosStage('idle');
+                            setSosFeedback(null);
+                          }}
+                        >
+                          {sosStage === 'error' ? t('common.retry') : t('common.done')}
+                        </Button>
+                      ) : null}
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-foreground">{t('safetyPage.quickLinks.title')}</CardTitle>
+                <CardDescription>{t('safetyPage.quickLinks.subtitle')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <button
+                  className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-left"
+                  onClick={() => navigate('/app/trust')}
+                  type="button"
+                >
+                  <BadgeCheck className="h-4 w-4 text-primary" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-foreground">{t('safetyPage.quickLinks.trust')}</p>
+                    <p className="text-xs text-muted-foreground">{t('safetyPage.quickLinks.trustSub')}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+                <button
+                  className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-left"
+                  onClick={() => navigate('/app/driver')}
+                  type="button"
+                >
+                  <Phone className="h-4 w-4 text-primary" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-foreground">{t('safetyPage.quickLinks.driver')}</p>
+                    <p className="text-xs text-muted-foreground">{t('safetyPage.quickLinks.driverSub')}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+                <button
+                  className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-left"
+                  onClick={() => navigate('/app/my-trips')}
+                  type="button"
+                >
+                  <Clock className="h-4 w-4 text-primary" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-foreground">{t('safetyPage.quickLinks.trips')}</p>
+                    <p className="text-xs text-muted-foreground">{t('safetyPage.quickLinks.tripsSub')}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </CardContent>
+            </Card>
+          </section>
+
+          {settingsError ? (
+            <div className="rounded-2xl border border-destructive/25 bg-destructive/10 p-4 text-sm text-destructive">
+              {settingsError}
             </div>
-          </div>
+          ) : null}
 
-          {/* Safety score */}
-          {user && <SafetyScore user={user} />}
+          <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-foreground">{t('safetyPage.contacts.title')}</CardTitle>
+                <CardDescription>{t('safetyPage.contacts.subtitle')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {loading ? (
+                  <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted-foreground">
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    {t('safetyPage.loading')}
+                  </div>
+                ) : null}
 
-          {/* SOS — most important first */}
-          <SOSPanel />
+                {!loading && contacts.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-4 text-sm text-muted-foreground">
+                    {t('safetyPage.contacts.empty')}
+                  </div>
+                ) : null}
 
-          {/* Emergency contacts */}
-          <EmergencyContacts />
+                {contacts.map((contact) => (
+                  <div key={contact.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      <UserCheck className="h-4 w-4" />
+                    </div>
+                  <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground">{contact.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {CONTACT_RELATIONSHIP_KEYS.includes(contact.relationship as (typeof CONTACT_RELATIONSHIP_KEYS)[number])
+                          ? t(`safetyPage.contacts.relationships.${contact.relationship}`)
+                          : contact.relationship}
+                        {' · '}
+                        {contact.phone}
+                      </p>
+                    </div>
+                    <Button
+                      size="icon"
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        void handleRemoveContact(contact.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
 
-          {/* Pre-trip checklist */}
-          <SafetyChecklist />
+                {addingContact ? (
+                  <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <Input
+                      placeholder={t('safetyPage.contacts.namePlaceholder')}
+                      value={contactDraft.name}
+                      onChange={(event) =>
+                        setContactDraft((current) => ({ ...current, name: event.target.value }))
+                      }
+                    />
+                    <Input
+                      placeholder={t('safetyPage.contacts.phonePlaceholder')}
+                      type="tel"
+                      value={contactDraft.phone}
+                      onChange={(event) =>
+                        setContactDraft((current) => ({ ...current, phone: event.target.value }))
+                      }
+                    />
+                    <select
+                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-foreground"
+                      value={contactDraft.relationship}
+                      onChange={(event) =>
+                        setContactDraft((current) => ({ ...current, relationship: event.target.value }))
+                      }
+                    >
+                      {CONTACT_RELATIONSHIP_KEYS.map((key) => (
+                        <option key={key} value={key}>
+                          {t(`safetyPage.contacts.relationships.${key}`)}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex flex-wrap gap-3">
+                      <Button disabled={savingSettings} onClick={() => void handleAddContact()}>
+                        {savingSettings ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        {t('safetyPage.contacts.save')}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => {
+                          setAddingContact(false);
+                          setContactDraft(createContactDraft());
+                        }}
+                      >
+                        {t('common.cancel')}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button type="button" variant="secondary" onClick={() => setAddingContact(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('safetyPage.contacts.add')}
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
 
-          {/* Cultural settings */}
-          <CulturalSettings />
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-foreground">{t('safetyPage.checklist.title')}</CardTitle>
+                <CardDescription>{t('safetyPage.checklist.subtitle')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {CHECKLIST_ITEM_KEYS.map((key) => (
+                  <button
+                    key={key}
+                    className={`flex w-full items-start gap-3 rounded-2xl border p-4 text-left ${checklist[key] ? 'border-primary/25 bg-primary/10' : 'border-white/10 bg-white/5'}`}
+                    onClick={() => {
+                      void handleChecklistToggle(key);
+                    }}
+                    type="button"
+                  >
+                    <div className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-lg ${checklist[key] ? 'bg-primary text-black' : 'bg-white/5 text-muted-foreground'}`}>
+                      {checklist[key] ? <CheckCircle2 className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground">{t(`safetyPage.checklist.items.${key}.label`)}</p>
+                      <p className="text-xs text-muted-foreground">{t(`safetyPage.checklist.items.${key}.description`)}</p>
+                    </div>
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+          </section>
 
-          {/* Insurance */}
-          <InsurancePanel />
+          <section className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-lg text-foreground">
+                  <Moon className="h-5 w-5 text-primary" />
+                  {t('safetyPage.cultural.title')}
+                </CardTitle>
+                <CardDescription>{t('safetyPage.cultural.subtitle')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{t('safetyPage.cultural.prayerStops')}</p>
+                    <p className="text-xs text-muted-foreground">{t('safetyPage.cultural.prayerStopsSub')}</p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant={settings?.cultural.prayerStops ? 'default' : 'secondary'}
+                    onClick={() => {
+                      void handleCulturalUpdate({ prayerStops: !settings?.cultural.prayerStops });
+                    }}
+                  >
+                    {settings?.cultural.prayerStops ? t('common.active') : t('common.inactive')}
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{t('safetyPage.cultural.ramadanMode')}</p>
+                    <p className="text-xs text-muted-foreground">{t('safetyPage.cultural.ramadanModeSub')}</p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant={settings?.cultural.ramadanMode ? 'default' : 'secondary'}
+                    onClick={() => {
+                      void handleCulturalUpdate({ ramadanMode: !settings?.cultural.ramadanMode });
+                    }}
+                  >
+                    {settings?.cultural.ramadanMode ? t('common.active') : t('common.inactive')}
+                  </Button>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm font-semibold text-foreground">{t('safetyPage.cultural.genderPreference')}</p>
+                  <select
+                    className="h-11 w-full rounded-xl border border-border bg-background px-3 text-foreground"
+                    value={settings?.cultural.genderPreference ?? 'no_preference'}
+                    onChange={(event) => {
+                      void handleCulturalUpdate({ genderPreference: event.target.value as GenderPreference });
+                    }}
+                  >
+                    <option value="no_preference">{t('safetyPage.cultural.options.noPreference')}</option>
+                    <option value="same_gender_only">{t('safetyPage.cultural.options.sameGenderOnly')}</option>
+                    <option value="male_drivers_only">{t('safetyPage.cultural.options.maleDriversOnly')}</option>
+                    <option value="female_drivers_only">{t('safetyPage.cultural.options.femaleDriversOnly')}</option>
+                  </select>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Incident report */}
-          <IncidentReport />
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-foreground">{t('safetyPage.incidents.title')}</CardTitle>
+                <CardDescription>{t('safetyPage.incidents.subtitle')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <select
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-foreground"
+                  value={incidentType}
+                  onChange={(event) => setIncidentType(event.target.value)}
+                >
+                  {INCIDENT_TYPE_KEYS.map((key) => (
+                    <option key={key} value={key}>
+                      {t(`safetyPage.incidents.types.${key}`)}
+                    </option>
+                  ))}
+                </select>
+                <textarea
+                  className="min-h-28 w-full rounded-2xl border border-border bg-background px-3 py-3 text-sm text-foreground"
+                  placeholder={t('safetyPage.incidents.placeholder')}
+                  value={incidentDescription}
+                  onChange={(event) => setIncidentDescription(event.target.value)}
+                />
+                <div className="flex flex-wrap gap-3">
+                  <Button disabled={incidentSubmitting} onClick={() => void handleSubmitIncident()}>
+                    {incidentSubmitting ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    {t('safetyPage.incidents.submit')}
+                  </Button>
+                  {incidentFeedback ? (
+                    <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-3 py-2 text-sm text-primary">
+                      <CheckCircle2 className="h-4 w-4" />
+                      {incidentFeedback}
+                    </div>
+                  ) : null}
+                </div>
 
-          {/* Quick links */}
-          <div
-            style={{
-              background: DS.card,
-              border: `1px solid ${DS.border}`,
-              borderRadius: r(20),
-              padding: '20px',
-              marginBottom: 18,
-            }}
-          >
-            <div
-              style={{
-                color: DS.sub,
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                marginBottom: 14,
-              }}
-            >
-              Related
-            </div>
-            <QuickLink
-              icon={<BadgeCheck size={16} color={DS.cyan} />}
-              label="Trust & Verification"
-              sub="Review your identity status and capabilities"
-              onClick={() => nav('/app/trust')}
-            />
-            <QuickLink
-              icon={<Phone size={16} color={DS.cyan} />}
-              label="Driver Readiness"
-              sub="Checklist for offering rides safely"
-              onClick={() => nav('/app/driver')}
-            />
-            <QuickLink
-              icon={<Clock size={16} color={DS.cyan} />}
-              label="My Trips"
-              sub="View active trips and support queue"
-              onClick={() => nav('/app/my-trips')}
-            />
-          </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-foreground">{t('safetyPage.incidents.history')}</h3>
+                    <span className="text-xs text-muted-foreground">{incidents.length}</span>
+                  </div>
+                  {incidents.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-4 text-sm text-muted-foreground">
+                      {t('safetyPage.incidents.empty')}
+                    </div>
+                  ) : (
+                    incidents.map((incident) => (
+                      <div key={incident.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <p className="text-sm font-semibold text-foreground">
+                            {t(`safetyPage.incidents.types.${incident.type}`)}
+                          </p>
+                          <span className="text-xs font-semibold text-primary">
+                            {formatIncidentStatus(incident.status, t)}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-sm text-muted-foreground">{incident.description}</p>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {formatDate(incident.submittedAt, {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          })}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
         </div>
-      </div>
-    </Protected>
+      </Protected>
+    </PageShell>
   );
 }
