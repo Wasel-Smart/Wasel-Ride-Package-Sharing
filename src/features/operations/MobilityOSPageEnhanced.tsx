@@ -138,9 +138,9 @@ export default function MobilityOSPageEnhanced() {
   return (
     <PageShell>
       <PageHeader
-        badge="Mobility OS / Neural Corridor Engine"
-        title="A living operations surface driven by corridor math, visible trust, and Jordan-first network logic."
-        description="Instead of generic dashboard cards, this screen simulates route pressure, reliability, package synchrony, and recovery posture so users feel the system is intelligently coordinating movement."
+        badge="Mobility OS / Live Corridor Field"
+        title="Jordan's ride and package network, rendered as a living control map."
+        description="The core surface now puts active corridors first so route pressure, parcel flow, reliability, and recovery posture all read from the same map before the user scans any supporting metrics."
         formulas={['I(t)=0.44S+0.24B+0.32V', 'B(t)=100-sqrt(variance(load))', 'ETA=f(speed,reliability,drift)']}
         actions={
           <>
@@ -160,12 +160,6 @@ export default function MobilityOSPageEnhanced() {
         }
       />
 
-      <section style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-        {stats.map((stat) => (
-          <StatCard key={stat.label} {...stat} />
-        ))}
-      </section>
-
       <section style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {(Object.keys(TABS) as TabKey[]).map((key) => (
           <button
@@ -175,9 +169,9 @@ export default function MobilityOSPageEnhanced() {
               height: 38,
               padding: '0 18px',
               borderRadius: DesignSystem.radius.full,
-              border: `1px solid ${tab === key ? DesignSystem.colors.accent.base : DesignSystem.colors.border.base}`,
-              background: tab === key ? DesignSystem.colors.accent.dim : 'rgba(255,255,255,0.03)',
-              color: tab === key ? DesignSystem.colors.accent.base : DesignSystem.colors.text.muted,
+              border: `1px solid ${tab === key ? 'var(--wasel-button-primary-border-strong)' : DesignSystem.colors.border.base}`,
+              background: tab === key ? 'var(--wasel-button-primary-soft-strong)' : 'var(--wasel-panel-muted)',
+              color: tab === key ? DesignSystem.colors.accent.strong : DesignSystem.colors.text.muted,
               cursor: 'pointer',
               fontWeight: DesignSystem.typography.fontWeight.black,
               letterSpacing: '0.08em',
@@ -193,16 +187,74 @@ export default function MobilityOSPageEnhanced() {
 
       <section style={{ display: 'grid', gap: 18, gridTemplateColumns: 'minmax(0, 1.5fr) minmax(320px, 0.9fr)' }}>
         <DataPanel
-          title="Jordan corridor constellation"
+          title="Jordan live corridor field"
           icon={<Activity size={18} color={DesignSystem.colors.cyan.base} />}
         >
-          <div style={{ position: 'relative', minHeight: 520, borderRadius: 24, overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
+          <div
+            style={{
+              position: 'relative',
+              minHeight: 560,
+              borderRadius: 24,
+              overflow: 'hidden',
+              background:
+                'linear-gradient(180deg, rgb(255 255 255 / 0.03), rgb(255 255 255 / 0.01)), var(--wasel-network-panel)',
+              border: `1px solid ${DesignSystem.colors.border.strong}`,
+              boxShadow: 'inset 0 1px 0 rgb(255 255 255 / 0.06)',
+            }}
+          >
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: 0.22,
+                backgroundImage: 'var(--wasel-network-grid)',
+                backgroundSize: '56px 56px',
+                maskImage: 'radial-gradient(circle at center, black 0%, black 62%, transparent 100%)',
+              }}
+            />
             <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 2, display: 'grid', gap: 8 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 14, background: 'rgba(4,12,24,0.74)', border: `1px solid ${DesignSystem.colors.border.base}`, fontSize: DesignSystem.typography.fontSize.xs }}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 12px',
+                  borderRadius: 14,
+                  background: 'color-mix(in srgb, var(--ds-surface-overlay) 92%, transparent)',
+                  border: `1px solid ${DesignSystem.colors.border.base}`,
+                  fontSize: DesignSystem.typography.fontSize.xs,
+                }}
+              >
+                <CarFront size={14} color={DesignSystem.colors.green.base} />
+                Ride + package field
+              </div>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 12px',
+                  borderRadius: 14,
+                  background: 'color-mix(in srgb, var(--ds-surface-overlay) 92%, transparent)',
+                  border: `1px solid ${DesignSystem.colors.border.base}`,
+                  fontSize: DesignSystem.typography.fontSize.xs,
+                }}
+              >
                 <Activity size={14} color={DesignSystem.colors.cyan.base} />
                 Live phase {(tick * 100).toFixed(1)}%
               </div>
-              <div style={{ padding: '10px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.72)', border: `1px solid ${DesignSystem.colors.border.faint}`, fontFamily: DesignSystem.typography.fontFamily.mono, color: DesignSystem.colors.text.secondary, fontSize: DesignSystem.typography.fontSize.xs }}>
+              <div
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 16,
+                  background: 'color-mix(in srgb, var(--ds-surface-overlay) 92%, transparent)',
+                  border: `1px solid ${DesignSystem.colors.border.faint}`,
+                  fontFamily: DesignSystem.typography.fontFamily.mono,
+                  color: DesignSystem.colors.text.secondary,
+                  fontSize: DesignSystem.typography.fontSize.xs,
+                }}
+              >
                 score = 0.38 demand + 0.34 reliability + 0.28 velocity
               </div>
             </div>
@@ -270,6 +322,54 @@ export default function MobilityOSPageEnhanced() {
                   );
                 })}
             </svg>
+
+            <div
+              style={{
+                position: 'absolute',
+                right: 14,
+                bottom: 14,
+                zIndex: 2,
+                display: 'flex',
+                gap: 8,
+                flexWrap: 'wrap',
+                justifyContent: 'flex-end',
+              }}
+            >
+              {[
+                { label: 'Ride flow live', color: DesignSystem.colors.cyan.base },
+                { label: 'Package flow live', color: DesignSystem.colors.gold.base },
+                { label: `Recovery watch ${weakest.fromNode.name} -> ${weakest.toNode.name}`, color: DesignSystem.colors.purple.base },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    minHeight: 34,
+                    padding: '0 12px',
+                    borderRadius: 999,
+                    background: 'color-mix(in srgb, var(--ds-surface-overlay) 94%, transparent)',
+                    border: `1px solid ${item.color}28`,
+                    color: DesignSystem.colors.text.primary,
+                    fontSize: DesignSystem.typography.fontSize.xs,
+                    fontWeight: DesignSystem.typography.fontWeight.bold,
+                  }}
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 999,
+                      background: item.color,
+                      boxShadow: `0 0 18px ${item.color}66`,
+                    }}
+                  />
+                  {item.label}
+                </div>
+              ))}
+            </div>
           </div>
         </DataPanel>
 
@@ -309,6 +409,12 @@ export default function MobilityOSPageEnhanced() {
             </div>
           </DataPanel>
         </div>
+      </section>
+
+      <section style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+        {stats.map((stat) => (
+          <StatCard key={stat.label} {...stat} />
+        ))}
       </section>
 
       <section style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>

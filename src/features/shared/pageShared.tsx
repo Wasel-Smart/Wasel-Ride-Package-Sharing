@@ -215,7 +215,8 @@ export function PageShell({ children }: { children: ReactNode }) {
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'radial-gradient(circle at 14% 10%, rgba(71,183,230,0.18), rgba(4,18,30,0) 24%), radial-gradient(circle at 88% 14%, rgba(168,214,20,0.12), rgba(4,18,30,0) 18%)',
+          background:
+            'radial-gradient(circle at 14% 10%, color-mix(in srgb, var(--ds-accent-strong) 18%, transparent), transparent 24%), radial-gradient(circle at 88% 14%, color-mix(in srgb, var(--ds-warning) 12%, transparent), transparent 18%), radial-gradient(circle at 52% 92%, color-mix(in srgb, var(--ds-success) 10%, transparent), transparent 22%)',
           pointerEvents: 'none',
           opacity: 0.96,
         }}
@@ -227,7 +228,10 @@ export function PageShell({ children }: { children: ReactNode }) {
         margin: '0 auto',
         padding: '28px 20px 84px',
       }}>
+        <div className="wasel-page-shell__glow" aria-hidden="true" />
         <div className="sp-frame wasel-page-frame">
+          <div className="wasel-page-frame__top-line" aria-hidden="true" />
+          <div className="wasel-page-frame__top-wash" aria-hidden="true" />
           <div className="wasel-page-stack">{children}</div>
         </div>
       </div>

@@ -25,7 +25,6 @@ import {
   Tabs,
   type TabItem,
 } from '../../design-system/components';
-import networkMap from '../../assets/mobility-os-network-map.svg';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import ProfilePageSurface from '../../features/profile/ProfilePage';
 import { useAuth } from '../../contexts/AuthContext';
@@ -33,6 +32,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { DeferredLandingMap } from '../../features/home/DeferredLandingMap';
 import { useBusSearch } from '../../modules/bus/bus.hooks';
 import { useRideSearch } from '../../modules/rides/ride.hooks';
 import type { RideResult, RideType } from '../../modules/rides/ride.types';
@@ -352,12 +352,27 @@ function ActionCards({
 }
 
 function MapHeroPanel({ children }: { children: ReactNode }) {
+  const { language } = useLanguage();
+  const ar = language === 'ar';
+
   return (
     <Card className="ds-hero-panel">
       <div aria-hidden="true" className="ds-hero-panel__media">
-        <img alt="" className="ds-map-wash" src={networkMap} />
+        <div className="ds-map-stage">
+          <DeferredLandingMap ar={ar} />
+        </div>
       </div>
-      <div className="ds-hero-panel__content">{children}</div>
+      <div className="ds-hero-panel__content">
+        {children}
+        <div className="ds-hero-panel__signals" aria-label="Live network status">
+          {['Ride flow live', 'Package lanes active', 'Mobility OS synced'].map((label) => (
+            <span key={label} className="ds-hero-panel__signal-chip">
+              <span aria-hidden="true" className="ds-hero-panel__signal-bar" />
+              {label}
+            </span>
+          ))}
+        </div>
+      </div>
     </Card>
   );
 }
