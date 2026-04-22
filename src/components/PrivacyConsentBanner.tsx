@@ -15,13 +15,9 @@
 
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import {
-  getConsentDecision,
-  recordConsentDecision,
-} from '../utils/consent';
+import { getConsentDecision, recordConsentDecision } from '../utils/consent';
 
-const SHELL_FONT =
-  "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+const SHELL_FONT = "var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
 
 // Visually hidden utility (accessible, not display:none)
 const srOnly: React.CSSProperties = {
@@ -52,7 +48,7 @@ export function PrivacyConsentBanner() {
       if (getConsentDecision() === null) {
         setVisible(true);
       }
-    }, 1_200);
+    }, 2_200);
     return () => window.clearTimeout(t);
   }, [isTestEnv]);
 
@@ -122,11 +118,11 @@ export function PrivacyConsentBanner() {
           }
           @media (min-width: 768px) {
             .wasel-consent-root {
-              justify-content: flex-end !important;
+              justify-content: flex-start !important;
               padding-inline: 18px !important;
             }
             .wasel-consent-card {
-              max-width: 320px !important;
+              max-width: 280px !important;
             }
           }
           @media (max-width: 639px) {
@@ -154,8 +150,7 @@ export function PrivacyConsentBanner() {
             background: 'var(--card, rgba(15,26,38,0.97))',
             border: '1px solid var(--border, rgba(244,198,81,0.18))',
             borderRadius: 20,
-            boxShadow:
-              'var(--wasel-shadow-lg, 0 24px 64px rgba(1,10,18,0.38))',
+            boxShadow: 'var(--wasel-shadow-lg, 0 24px 64px rgba(1,10,18,0.38))',
             backdropFilter: 'blur(22px)',
             WebkitBackdropFilter: 'blur(22px)',
             padding: '15px 16px 14px',
@@ -181,14 +176,14 @@ export function PrivacyConsentBanner() {
               fontSize: '0.74rem',
               color: 'var(--muted-foreground, rgba(228,214,180,0.82))',
               margin: '0 0 12px',
-              lineHeight: 1.55,
+              lineHeight: 1.48,
             }}
           >
             {copy.body}{' '}
             <a
               href="/app/privacy"
               style={{
-                color: 'var(--primary, #19E7BB)',
+                color: 'var(--primary, #F5B041)',
                 textDecoration: 'underline',
                 textUnderlineOffset: 2,
                 fontWeight: 600,
@@ -217,16 +212,16 @@ export function PrivacyConsentBanner() {
                 borderRadius: 12,
                 border: 'none',
                 background:
-                  'linear-gradient(135deg, #DCFFF8 0%, var(--primary, #19E7BB) 44%, #48CFFF 100%)',
-                color: 'var(--primary-foreground, #041019)',
+                  'linear-gradient(135deg, var(--wasel-brand-gradient-start, #F5B041) 0%, var(--primary, #F5B041) 44%, var(--wasel-brand-gradient-end, #E67E22) 100%)',
+                color: '#FFFDF9',
                 fontWeight: 800,
                 fontSize: '0.78rem',
                 fontFamily: SHELL_FONT,
                 cursor: 'pointer',
                 transition: 'opacity 0.14s ease',
               }}
-              onMouseEnter={(e) => ((e.target as HTMLButtonElement).style.opacity = '0.88')}
-              onMouseLeave={(e) => ((e.target as HTMLButtonElement).style.opacity = '1')}
+              onMouseEnter={e => ((e.target as HTMLButtonElement).style.opacity = '0.88')}
+              onMouseLeave={e => ((e.target as HTMLButtonElement).style.opacity = '1')}
             >
               {copy.accept}
             </button>
@@ -240,20 +235,17 @@ export function PrivacyConsentBanner() {
                 borderRadius: 12,
                 border: '1px solid var(--border, rgba(244,198,81,0.18))',
                 background: 'transparent',
-                color: 'var(--foreground, #F8EFD6)',
+                color: 'var(--foreground, #F8FAFC)',
                 fontWeight: 700,
                 fontSize: '0.78rem',
                 fontFamily: SHELL_FONT,
                 cursor: 'pointer',
                 transition: 'background 0.14s ease',
               }}
-              onMouseEnter={(e) =>
-                ((e.target as HTMLButtonElement).style.background =
-                  'rgba(255,247,229,0.05)')
+              onMouseEnter={e =>
+                ((e.target as HTMLButtonElement).style.background = 'rgba(255,247,229,0.05)')
               }
-              onMouseLeave={(e) =>
-                ((e.target as HTMLButtonElement).style.background = 'transparent')
-              }
+              onMouseLeave={e => ((e.target as HTMLButtonElement).style.background = 'transparent')}
             >
               {copy.decline}
             </button>

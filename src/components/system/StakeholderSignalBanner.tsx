@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+const FONT = "var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
 
 type StakeholderTone = 'teal' | 'blue' | 'green' | 'amber' | 'rose' | 'slate';
 
@@ -32,12 +32,36 @@ export interface StakeholderSignalBannerProps {
 }
 
 const toneMap: Record<StakeholderTone, { color: string; border: string; background: string }> = {
-  teal: { color: '#67E8F9', border: 'rgba(34,211,238,0.28)', background: 'rgba(34,211,238,0.12)' },
-  blue: { color: '#93C5FD', border: 'rgba(96,165,250,0.28)', background: 'rgba(96,165,250,0.12)' },
-  green: { color: '#86EFAC', border: 'rgba(34,197,94,0.28)', background: 'rgba(34,197,94,0.12)' },
-  amber: { color: '#FCD34D', border: 'rgba(245,158,11,0.28)', background: 'rgba(245,158,11,0.12)' },
-  rose: { color: '#FDA4AF', border: 'rgba(244,63,94,0.28)', background: 'rgba(244,63,94,0.12)' },
-  slate: { color: '#CBD5E1', border: 'rgba(148,163,184,0.22)', background: 'rgba(148,163,184,0.1)' },
+  teal: {
+    color: 'var(--ds-accent)',
+    border: 'color-mix(in srgb, var(--ds-accent) 28%, transparent)',
+    background: 'color-mix(in srgb, var(--ds-accent) 12%, transparent)',
+  },
+  blue: {
+    color: 'var(--ds-accent-strong)',
+    border: 'color-mix(in srgb, var(--ds-accent-strong) 28%, transparent)',
+    background: 'color-mix(in srgb, var(--ds-accent-strong) 12%, transparent)',
+  },
+  green: {
+    color: 'var(--wasel-brand-gradient-start)',
+    border: 'color-mix(in srgb, var(--wasel-brand-gradient-start) 28%, transparent)',
+    background: 'color-mix(in srgb, var(--wasel-brand-gradient-start) 12%, transparent)',
+  },
+  amber: {
+    color: 'var(--wasel-brand-gradient-start)',
+    border: 'color-mix(in srgb, var(--wasel-brand-gradient-start) 28%, transparent)',
+    background: 'color-mix(in srgb, var(--wasel-brand-gradient-start) 12%, transparent)',
+  },
+  rose: {
+    color: 'var(--wasel-brand-hover)',
+    border: 'color-mix(in srgb, var(--wasel-brand-hover) 28%, transparent)',
+    background: 'color-mix(in srgb, var(--wasel-brand-hover) 12%, transparent)',
+  },
+  slate: {
+    color: 'var(--ds-text-soft)',
+    border: 'color-mix(in srgb, var(--ds-text-soft) 22%, transparent)',
+    background: 'color-mix(in srgb, var(--ds-text-soft) 10%, transparent)',
+  },
 };
 
 function badgeStyle(tone: StakeholderTone = 'slate'): CSSProperties {
@@ -74,8 +98,8 @@ export function StakeholderSignalBanner({
         borderRadius: 18,
         padding: '14px 16px',
         background:
-          'linear-gradient(135deg, rgba(34,211,238,0.08), rgba(59,130,246,0.05) 42%, rgba(255,255,255,0.02))',
-        border: '1px solid rgba(34,211,238,0.14)',
+          'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted) 88%, var(--ds-accent) 12%), color-mix(in srgb, var(--ds-page) 92%, var(--ds-accent-strong) 8%) 42%, color-mix(in srgb, var(--ds-page) 96%, white 4%))',
+        border: '1px solid color-mix(in srgb, var(--ds-accent) 18%, var(--ds-border))',
         direction: dir,
       }}
     >
@@ -86,7 +110,7 @@ export function StakeholderSignalBanner({
             fontWeight: 800,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
-            color: '#67E8F9',
+            color: 'var(--ds-accent-strong)',
             marginBottom: 6,
             fontFamily: FONT,
           }}
@@ -95,7 +119,7 @@ export function StakeholderSignalBanner({
         </div>
         <div
           style={{
-            color: '#EFF6FF',
+            color: 'var(--ds-text)',
             fontWeight: 900,
             fontSize: '0.94rem',
             marginBottom: 4,
@@ -106,7 +130,7 @@ export function StakeholderSignalBanner({
         </div>
         <div
           style={{
-            color: 'rgba(203,213,225,0.84)',
+            color: 'var(--ds-text-muted)',
             fontSize: '0.78rem',
             lineHeight: 1.55,
             fontFamily: FONT,
@@ -130,14 +154,14 @@ export function StakeholderSignalBanner({
           <div
             style={{
               borderRadius: 14,
-              border: '1px solid rgba(255,255,255,0.08)',
-              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid var(--ds-border)',
+              background: 'color-mix(in srgb, var(--ds-surface) 92%, transparent)',
               padding: '10px 12px',
             }}
           >
             <div
               style={{
-                color: 'rgba(148,163,184,0.76)',
+                color: 'var(--ds-text-soft)',
                 fontSize: '0.68rem',
                 fontWeight: 800,
                 letterSpacing: '0.1em',
@@ -156,7 +180,7 @@ export function StakeholderSignalBanner({
                     display: 'flex',
                     justifyContent: 'space-between',
                     gap: 10,
-                    color: '#CBD5E1',
+                    color: 'var(--ds-text-muted)',
                     fontSize: '0.72rem',
                     fontFamily: FONT,
                   }}
@@ -173,14 +197,14 @@ export function StakeholderSignalBanner({
           <div
             style={{
               borderRadius: 14,
-              border: '1px solid rgba(255,255,255,0.08)',
-              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid var(--ds-border)',
+              background: 'color-mix(in srgb, var(--ds-surface) 92%, transparent)',
               padding: '10px 12px',
             }}
           >
             <div
               style={{
-                color: 'rgba(148,163,184,0.76)',
+                color: 'var(--ds-text-soft)',
                 fontSize: '0.68rem',
                 fontWeight: 800,
                 letterSpacing: '0.1em',
@@ -194,13 +218,13 @@ export function StakeholderSignalBanner({
             <div style={{ display: 'grid', gap: 6 }}>
               {lanes.map((lane) => (
                 <div key={`${lane.label}-${lane.detail ?? ''}`}>
-                  <div style={{ color: '#EFF6FF', fontSize: '0.74rem', fontWeight: 700, fontFamily: FONT }}>
+                  <div style={{ color: 'var(--ds-text)', fontSize: '0.74rem', fontWeight: 700, fontFamily: FONT }}>
                     {lane.label}
                   </div>
                   {lane.detail ? (
                     <div
                       style={{
-                        color: 'rgba(148,163,184,0.74)',
+                        color: 'var(--ds-text-soft)',
                         fontSize: '0.7rem',
                         lineHeight: 1.55,
                         marginTop: 3,

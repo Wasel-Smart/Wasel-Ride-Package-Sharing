@@ -518,8 +518,8 @@ export function FindRidePage() {
               style={{
                 ...landingPanel(24),
                 padding: '16px 20px',
-                border: '1px solid rgba(255,143,143,0.28)',
-                color: '#ffd7d7',
+                border: '1px solid color-mix(in srgb, var(--wasel-brand-hover) 30%, transparent)',
+                color: 'var(--wasel-copy-primary)',
                 fontFamily: LANDING_FONT,
                 fontWeight: 700,
               }}
@@ -533,7 +533,7 @@ export function FindRidePage() {
               style={{
                 ...landingPanel(24),
                 padding: '16px 20px',
-                border: '1px solid rgba(114,255,71,0.24)',
+                border: '1px solid color-mix(in srgb, var(--ds-accent-strong) 28%, transparent)',
                 color: 'var(--wasel-copy-primary)',
                 fontFamily: LANDING_FONT,
                 fontWeight: 700,

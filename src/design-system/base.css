@@ -82,9 +82,21 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--ds-accent-strong) 12%, transparent), transparent 24%),
-    radial-gradient(circle at top right, color-mix(in srgb, var(--ds-accent) 10%, transparent), transparent 24%),
-    linear-gradient(180deg, color-mix(in srgb, var(--ds-page-muted) 96%, transparent), var(--ds-page));
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--ds-accent-strong) 12%, transparent),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--ds-accent) 10%, transparent),
+      transparent 24%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-page-muted) 96%, transparent),
+      var(--ds-page)
+    );
   color: var(--ds-text);
   font-family: var(--ds-font-body);
   line-height: 1.62;
@@ -305,6 +317,14 @@ img {
   max-width: 32rem;
 }
 
+.ds-title--landing {
+  max-width: 11ch;
+}
+
+.ds-title--auth {
+  max-width: 11.5ch;
+}
+
 .ds-caption {
   margin: 0;
   color: var(--ds-text-soft);
@@ -364,11 +384,160 @@ img {
   gap: var(--ds-space-3);
 }
 
+.ds-hero-stack {
+  gap: var(--ds-space-5);
+}
+
+.ds-support-actions,
+.ds-brand-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2);
+}
+
+.ds-support-actions .ds-button[data-variant='ghost'] {
+  background: color-mix(in srgb, var(--ds-surface-soft) 82%, transparent);
+  border-color: color-mix(in srgb, var(--ds-accent-strong) 18%, var(--ds-border));
+  color: var(--ds-text);
+}
+
+.ds-panel-kicker {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 2rem;
+  padding: 0 var(--ds-space-3);
+  border-radius: var(--ds-radius-pill);
+  border: 1px solid color-mix(in srgb, var(--ds-accent-strong) 24%, var(--ds-border));
+  background: color-mix(in srgb, var(--ds-accent-strong) 10%, transparent);
+  color: var(--ds-accent-strong);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ds-brand-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 2.25rem;
+  padding: 0 var(--ds-space-3);
+  border-radius: var(--ds-radius-pill);
+  border: 1px solid color-mix(in srgb, var(--ds-accent-strong) 18%, var(--ds-border));
+  background: color-mix(in srgb, var(--ds-surface-soft) 74%, transparent);
+  color: var(--ds-text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.ds-brand-pill svg {
+  color: var(--ds-accent-strong);
+}
+
+.ds-hero-feature-grid {
+  display: grid;
+  gap: var(--ds-space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ds-hero-feature-card,
+.ds-hero-stat-card {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-surface-raised) 96%, transparent),
+      color-mix(in srgb, var(--ds-surface) 92%, transparent)
+    ),
+    color-mix(in srgb, var(--ds-accent-strong) 4%, transparent);
+  border-color: color-mix(in srgb, var(--ds-accent-strong) 18%, var(--ds-border));
+  box-shadow: var(--ds-shadow-sm);
+}
+
+.ds-hero-feature-card {
+  display: grid;
+  gap: var(--ds-space-3);
+}
+
+.ds-hero-feature-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ds-accent-strong) 12%, transparent);
+  color: var(--ds-accent-strong);
+}
+
+.ds-hero-feature-card__title {
+  color: var(--ds-text);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.ds-hero-feature-card__detail,
+.ds-hero-stat-card__detail,
+.ds-auth-footnote {
+  margin: 0;
+  color: var(--ds-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.66;
+}
+
+.ds-hero-stat-grid {
+  gap: var(--ds-space-3);
+}
+
+.ds-hero-stat-card {
+  display: grid;
+  gap: 10px;
+}
+
+.ds-hero-stat-card__label {
+  color: var(--ds-text-soft);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ds-hero-stat-card__value {
+  color: var(--ds-text);
+  font-family: var(--ds-font-display);
+  font-size: clamp(1.45rem, 2vw, 1.9rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.ds-hero-panel__intro {
+  display: grid;
+  gap: var(--ds-space-3);
+  max-width: 30rem;
+}
+
+.ds-auth-card {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-surface-raised) 98%, transparent),
+      color-mix(in srgb, var(--ds-surface) 94%, transparent)
+    ),
+    color-mix(in srgb, var(--ds-accent-strong) 5%, transparent);
+  border-color: color-mix(in srgb, var(--ds-accent-strong) 22%, var(--ds-border));
+  box-shadow: var(--ds-shadow-md);
+}
+
 .ds-card,
 .ds-section-wrapper {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--ds-surface-raised) 96%, transparent), var(--ds-surface));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ds-surface-raised) 96%, transparent),
+    var(--ds-surface)
+  );
   border: 1px solid var(--ds-border);
   border-radius: var(--ds-radius-lg);
   box-shadow: var(--ds-shadow-sm);
@@ -384,8 +553,16 @@ img {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--ds-accent-strong) 8%, transparent), transparent 28%),
-    linear-gradient(180deg, color-mix(in srgb, var(--ds-surface-soft) 32%, transparent), transparent);
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--ds-accent-strong) 8%, transparent),
+      transparent 28%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-surface-soft) 32%, transparent),
+      transparent
+    );
   pointer-events: none;
 }
 
@@ -436,9 +613,9 @@ img {
 
 .ds-button[data-variant='primary'] {
   background: var(--theme-gradient-primary);
-  color: var(--wasel-button-primary-foreground, #FFFDF9);
+  color: var(--wasel-button-primary-foreground, #fffdf9);
   border: 1px solid var(--wasel-button-primary-border, rgba(255, 255, 255, 0.08));
-  box-shadow: var(--wasel-button-primary-shadow, 0 18px 40px rgba(30,124,255,0.28));
+  box-shadow: var(--wasel-button-primary-shadow, 0 18px 40px rgba(30, 124, 255, 0.28));
 }
 
 .ds-button[data-variant='secondary'] {
@@ -530,7 +707,9 @@ img {
   background-position:
     calc(100% - 1.2rem) calc(50% - 0.15rem),
     calc(100% - 0.9rem) calc(50% - 0.15rem);
-  background-size: 0.35rem 0.35rem, 0.35rem 0.35rem;
+  background-size:
+    0.35rem 0.35rem,
+    0.35rem 0.35rem;
   background-repeat: no-repeat;
   padding-right: 2.5rem;
 }
@@ -562,7 +741,7 @@ img {
 
 .ds-tab-trigger[data-active='true'] {
   background: linear-gradient(135deg, var(--ds-accent), var(--ds-accent-strong));
-  color: #FFFDF9;
+  color: #fffdf9;
   border-color: color-mix(in srgb, var(--ds-accent) 30%, transparent);
 }
 
@@ -982,6 +1161,10 @@ img {
   .ds-action-grid,
   .ds-kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ds-hero-feature-grid {
+    grid-template-columns: 1fr;
   }
 
   .ds-screen-grid,

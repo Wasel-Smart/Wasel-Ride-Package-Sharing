@@ -24,13 +24,13 @@ export const LANDING_COLORS = {
   text: 'var(--wasel-copy-primary)',
   muted: 'var(--wasel-copy-muted)',
   soft: 'var(--wasel-copy-soft)',
-  cyan: 'var(--ds-accent, #f59a2c)',
-  blue: 'var(--ds-accent-strong, #ffb357)',
-  gold: 'var(--ds-warning, #efb45d)',
-  green: 'var(--ds-success, #79c67d)',
+  cyan: 'var(--ds-accent, #E67E22)',
+  blue: 'var(--ds-accent-strong, #F5B041)',
+  gold: 'var(--wasel-brand-gradient-start, #F5B041)',
+  green: 'var(--ds-accent-strong, #F5B041)',
   border: 'var(--ds-border, #313841)',
   borderStrong:
-    'color-mix(in srgb, var(--ds-accent-strong, #ffb357) 30%, var(--ds-border, #313841))',
+    'color-mix(in srgb, var(--ds-accent-strong, #F5B041) 30%, var(--ds-border, #313841))',
 } as const;
 
 export type LandingActionCard = {
@@ -143,7 +143,7 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
         style={{
           position: 'absolute',
           inset: 0,
-          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--ds-accent, #f59a2c) 18%, transparent), transparent 26%), radial-gradient(circle at 72% 68%, color-mix(in srgb, var(--ds-accent-strong, #ffb357) 14%, transparent), transparent 18%)`,
+          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--ds-accent, #E67E22) 18%, transparent), transparent 26%), radial-gradient(circle at 72% 68%, color-mix(in srgb, var(--ds-accent-strong, #F5B041) 14%, transparent), transparent 18%)`,
           pointerEvents: 'none',
           opacity: 0.96,
         }}
@@ -283,9 +283,11 @@ export function LandingHeader({
               style={{
                 ...headerAuthButtonBase,
                 border: 'none',
-                background: 'linear-gradient(135deg, #17C7EA 0%, #1E7CFF 62%, #7EF34B 100%)',
-                color: '#F8FBFF',
-                boxShadow: '0 18px 40px rgba(30,124,255,0.28)',
+                background:
+                  'linear-gradient(135deg, var(--wasel-brand-gradient-start) 0%, var(--wasel-brand-gradient-end) 100%)',
+                color: '#FFFDF9',
+                boxShadow:
+                  '0 18px 40px color-mix(in srgb, var(--wasel-brand-gradient-end) 26%, transparent)',
               }}
             >
               {copy(ar ? 'إنشاء حساب' : 'Sign up')}
@@ -374,7 +376,7 @@ export function LandingHeroSection({
             position: 'absolute',
             inset: 0,
             background:
-              'radial-gradient(circle at 18% 18%, rgba(71,183,230,0.18), rgba(4,18,30,0) 32%), radial-gradient(circle at 82% 26%, rgba(168,214,20,0.12), rgba(4,18,30,0) 24%), linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
+              'radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--ds-accent) 18%, transparent), transparent 32%), radial-gradient(circle at 82% 26%, color-mix(in srgb, var(--ds-accent-strong) 14%, transparent), transparent 24%), linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
             pointerEvents: 'none',
           }}
         />
@@ -396,7 +398,7 @@ export function LandingHeroSection({
                 width: 'fit-content',
                 padding: '8px 12px',
                 borderRadius: 999,
-                background: 'rgba(71,183,230,0.1)',
+                background: 'color-mix(in srgb, var(--ds-accent) 12%, transparent)',
                 border: `1px solid ${LANDING_COLORS.borderStrong}`,
                 color: LANDING_COLORS.cyan,
                 fontSize: '0.75rem',
@@ -537,7 +539,7 @@ export function LandingHeroSection({
                   borderRadius: 18,
                   border: '1px solid rgba(255,255,255,0.08)',
                   background: GRAD_SIGNAL,
-                  color: '#041521',
+                  color: '#FFFDF9',
                   fontWeight: 900,
                   fontSize: '0.95rem',
                   cursor: 'pointer',
@@ -650,7 +652,7 @@ export function LandingHeroSection({
                 aria-hidden="true"
                 style={{
                   background:
-                    'radial-gradient(circle at 48% 18%, rgba(71,183,230,0.2), rgba(71,183,230,0) 24%), radial-gradient(circle at 58% 54%, rgba(107,181,21,0.42), rgba(107,181,21,0) 30%), radial-gradient(circle at 62% 72%, rgba(168,214,20,0.16), rgba(168,214,20,0) 22%)',
+                    'radial-gradient(circle at 48% 18%, color-mix(in srgb, var(--ds-accent) 22%, transparent), transparent 24%), radial-gradient(circle at 58% 54%, color-mix(in srgb, var(--ds-accent-strong) 28%, transparent), transparent 30%), radial-gradient(circle at 62% 72%, color-mix(in srgb, var(--ds-accent-strong) 16%, transparent), transparent 22%)',
                 }}
               />
               <div
@@ -757,9 +759,9 @@ export function LandingHeroSection({
                   style={{
                     padding: '12px 14px',
                     borderRadius: 16,
-                    border: '1px solid rgba(255,123,123,0.24)',
-                    background: 'rgba(255,123,123,0.08)',
-                    color: '#FFE2E2',
+                    border: '1px solid color-mix(in srgb, var(--wasel-brand-hover) 34%, transparent)',
+                    background: 'color-mix(in srgb, var(--wasel-brand-hover) 10%, transparent)',
+                    color: LANDING_COLORS.text,
                     fontSize: '0.88rem',
                     lineHeight: 1.55,
                     maxWidth: 620,
@@ -845,7 +847,7 @@ export function LandingHeroSection({
                         borderRadius: 18,
                         border: '1px solid rgba(255,255,255,0.08)',
                         background: GRAD_SIGNAL,
-                        color: '#041521',
+                        color: '#FFFDF9',
                         fontWeight: 900,
                         fontSize: '0.86rem',
                         cursor: 'pointer',
@@ -891,7 +893,7 @@ export function LandingHeroSection({
                         borderRadius: 18,
                         border: '1px solid rgba(255,255,255,0.08)',
                         background: GRAD_SIGNAL,
-                        color: '#041521',
+                        color: '#FFFDF9',
                         fontWeight: 900,
                         fontSize: '0.88rem',
                         cursor: 'pointer',
@@ -1065,7 +1067,7 @@ export function LandingMapSection({
           height: '100%',
           borderRadius: 32,
           background:
-            'radial-gradient(circle at 14% 10%, rgba(71,183,230,0.18), rgba(4,18,30,0) 24%), radial-gradient(circle at 88% 14%, rgba(168,214,20,0.12), rgba(4,18,30,0) 18%), linear-gradient(165deg, rgba(7,24,39,0.96) 0%, rgba(7,27,43,0.9) 42%, rgba(4,19,31,0.96) 100%)',
+            'radial-gradient(circle at 14% 10%, color-mix(in srgb, var(--ds-accent) 20%, transparent), transparent 24%), radial-gradient(circle at 88% 14%, color-mix(in srgb, var(--ds-accent-strong) 14%, transparent), transparent 18%), linear-gradient(165deg, color-mix(in srgb, var(--ds-page-muted) 88%, black 12%) 0%, color-mix(in srgb, var(--ds-page) 94%, black 6%) 42%, var(--ds-page) 100%)',
           boxShadow: SH.navy,
           overflow: 'hidden',
         }}
@@ -1236,7 +1238,7 @@ export function LandingMapSection({
                     borderRadius: 18,
                     border: '1px solid rgba(255,255,255,0.08)',
                     background: GRAD_SIGNAL,
-                    color: '#041521',
+                    color: '#FFFDF9',
                     fontWeight: 900,
                     fontSize: '0.9rem',
                     cursor: 'pointer',
@@ -1463,7 +1465,7 @@ export function LandingTrustSection({ ar }: LandingTrustSectionProps) {
             position: 'absolute',
             inset: 0,
             background:
-              'radial-gradient(circle at top right, rgba(107,181,21,0.18), rgba(4,18,30,0) 30%)',
+              'radial-gradient(circle at top right, color-mix(in srgb, var(--ds-accent-strong) 18%, transparent), transparent 30%)',
             pointerEvents: 'none',
           }}
         />

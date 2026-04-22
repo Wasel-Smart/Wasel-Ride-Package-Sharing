@@ -64,7 +64,7 @@ function ensureLeafletCSS() {
     style.textContent = `
       .leaflet-container {
         background: var(--surface-strong) !important;
-        font-family: var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif);
+        font-family: var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif);
         width: 100% !important;
         height: 100% !important;
       }
@@ -113,7 +113,7 @@ function ensureLeafletCSS() {
       }
 
       .leaflet-control-attribution a {
-        color: #19e7bb !important;
+        color: var(--wasel-brand-solid, #E67E22) !important;
       }
     `;
     document.head.appendChild(style);
@@ -238,9 +238,9 @@ const FALLBACK_MOSQUES = normalizeTextTree([
   { lat: 30.3, lng: 35.2, name: 'Wadi Rum Mosque | مسجد وادي رم' },
 ]);
 
-const MAP_PRIMARY = '#19E7BB';
-const MAP_PRIMARY_SOFT = '#A2FFE7';
-const MAP_MINT = '#DCFFF8';
+const MAP_PRIMARY = '#E67E22';
+const MAP_PRIMARY_SOFT = '#F5B041';
+const MAP_MINT = '#FFFDF9';
 
 /* â”€â”€â”€ SVG icon strings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const SVG = {
@@ -254,7 +254,7 @@ const SVG = {
   </svg>`,
 
   radar: `<svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
-    <rect x="1" y="1" width="36" height="36" rx="9" fill="#DC2626" stroke="white" stroke-width="1.5"/>
+    <rect x="1" y="1" width="36" height="36" rx="9" fill="#D35400" stroke="white" stroke-width="1.5"/>
     <circle cx="19" cy="19" r="11" fill="none" stroke="white" stroke-width="2.5" stroke-dasharray="4 2"/>
     <circle cx="19" cy="19" r="6"  fill="none" stroke="white" stroke-width="2"/>
     <circle cx="19" cy="19" r="2.5" fill="white"/>
@@ -264,13 +264,13 @@ const SVG = {
   </svg>`,
 
   accident: `<svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="19,2 36,34 2,34" fill="#F59E0B" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+    <polygon points="19,2 36,34 2,34" fill="#F5B041" stroke="white" stroke-width="2" stroke-linejoin="round"/>
     <rect x="17.5" y="14" width="3" height="10" rx="1.5" fill="white"/>
     <circle cx="19" cy="28.5" r="2" fill="white"/>
   </svg>`,
 
   police: `<svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="19" cy="19" r="17" fill="#3B82F6" stroke="white" stroke-width="2"/>
+    <circle cx="19" cy="19" r="17" fill="#E67E22" stroke="white" stroke-width="2"/>
     <rect x="17" y="9"  width="4" height="20" rx="2" fill="white"/>
     <rect x="9"  y="17" width="20" height="4"  rx="2" fill="white"/>
   </svg>`,
@@ -334,7 +334,7 @@ function mapTypeButtonStyle(active: boolean) {
     letterSpacing: '0.02em',
     color: active ? 'var(--text-inverse)' : 'var(--text-secondary)',
     background: active
-      ? 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 52%, #65E1FF 100%)'
+      ? 'linear-gradient(135deg, #F5B041 0%, #E67E22 100%)'
       : 'var(--surface-muted)',
     boxShadow: active ? 'var(--wasel-shadow-teal)' : 'none',
   } as const;
@@ -350,7 +350,7 @@ function compactControlButtonStyle(active = false) {
     alignItems: 'center',
     justifyContent: 'center',
     background: active
-      ? 'linear-gradient(135deg, rgba(220,255,248,0.95), rgba(25,231,187,0.95), rgba(101,225,255,0.95))'
+      ? 'linear-gradient(135deg, rgba(245,176,65,0.96), rgba(230,126,34,0.96))'
       : 'var(--surface-muted)',
     border: active ? '1px solid var(--border-strong)' : '1px solid var(--border)',
     color: active ? 'var(--text-inverse)' : 'var(--text-primary)',
@@ -369,7 +369,7 @@ function wideControlButtonStyle(active = false) {
     justifyContent: 'center',
     gap: 8,
     background: active
-      ? 'linear-gradient(135deg, rgba(220,255,248,0.95), rgba(25,231,187,0.95), rgba(101,225,255,0.95))'
+      ? 'linear-gradient(135deg, rgba(245,176,65,0.96), rgba(230,126,34,0.96))'
       : 'var(--surface-muted)',
     border: active ? '1px solid var(--border-strong)' : '1px solid var(--border)',
     color: active ? 'var(--text-inverse)' : 'var(--text-primary)',
@@ -1487,9 +1487,9 @@ function WaselMapFull(props: WaselMapProps) {
         >
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(239,68,68,0.15)' }}
+            style={{ background: 'color-mix(in srgb, var(--wasel-brand-hover) 14%, transparent)' }}
           >
-            <AlertTriangle className="w-8 h-8 text-red-400" />
+            <AlertTriangle className="w-8 h-8" style={{ color: 'var(--wasel-brand-hover)' }} />
           </div>
           <div className="text-center">
             <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>Map failed to load</p>
@@ -1653,15 +1653,16 @@ function WaselMapFull(props: WaselMapProps) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="absolute bottom-28 left-3 right-3 z-20 rounded-xl border border-red-500/30 px-4 py-2.5"
-                style={{ background: 'rgba(127,29,29,0.9)', backdropFilter: 'blur(8px)' }}
+                className="absolute bottom-28 left-3 right-3 z-20 rounded-xl border px-4 py-2.5"
+                style={{ background: 'color-mix(in srgb, var(--wasel-brand-hover) 22%, var(--ds-page))', borderColor: 'color-mix(in srgb, var(--wasel-brand-hover) 30%, transparent)', backdropFilter: 'blur(8px)' }}
               >
                 <div className="flex items-start gap-2">
-                  <WifiOff className="w-4 h-4 text-red-300 shrink-0 mt-0.5" />
-                  <p className="text-red-200 text-xs">{repairLikelyMojibake(locationError)}</p>
+                  <WifiOff className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#FFFDF9' }} />
+                  <p className="text-xs" style={{ color: '#FFFDF9' }}>{repairLikelyMojibake(locationError)}</p>
                   <button
                     onClick={() => setLocationError(null)}
-                    className="ml-auto shrink-0 text-red-400 hover:text-red-200"
+                    className="ml-auto shrink-0"
+                    style={{ color: '#FFFDF9' }}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -1724,7 +1725,7 @@ function WaselMapFull(props: WaselMapProps) {
                       fontSize: '0.86rem',
                       fontWeight: 800,
                       color: 'var(--text-inverse)',
-                      background: 'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 52%, #65E1FF 100%)',
+                      background: 'linear-gradient(135deg, #F5B041 0%, #E67E22 100%)',
                       border: '1px solid var(--border-strong)',
                       boxShadow: 'var(--wasel-shadow-teal)',
                     }

@@ -1,6 +1,8 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { scheduleDeferredTask } from '../../utils/runtimeScheduling';
 
+type LandingMapVariant = 'ambient' | 'full';
+
 const MobilityOSLandingMap = lazy(async () => {
   const mod = await import('./MobilityOSLandingMap');
   return { default: mod.MobilityOSLandingMap };
@@ -43,13 +45,21 @@ function LandingMapPlaceholder() {
   );
 }
 
-export function DeferredLandingMap({ ar = false }: { ar?: boolean }) {
+export function DeferredLandingMap({
+  ar = false,
+  eager = false,
+  variant = 'full',
+}: {
+  ar?: boolean;
+  eager?: boolean;
+  variant?: LandingMapVariant;
+}) {
   const isTestEnv = import.meta.env.MODE === 'test';
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [shouldLoad, setShouldLoad] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(() => isTestEnv || eager);
 
   useEffect(() => {
-    if (isTestEnv || shouldLoad) {
+    if (isTestEnv || eager || shouldLoad) {
       return undefined;
     }
 
@@ -81,7 +91,7 @@ export function DeferredLandingMap({ ar = false }: { ar?: boolean }) {
       cancelIdleLoad();
       observer.disconnect();
     };
-  }, [isTestEnv, shouldLoad]);
+  }, [eager, isTestEnv, shouldLoad]);
 
   return (
     <div ref={isTestEnv ? undefined : containerRef}>
@@ -89,7 +99,7 @@ export function DeferredLandingMap({ ar = false }: { ar?: boolean }) {
         <LandingMapPlaceholder />
       ) : (
         <Suspense fallback={<LandingMapPlaceholder />}>
-          <MobilityOSLandingMap ar={ar} />
+          <MobilityOSLandingMap ar={ar} variant={variant} />
         </Suspense>
       )}
     </div>

@@ -162,9 +162,9 @@ function SOSPanel() {
 
   if (step === 'sent') {
     return (
-      <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: r(20), padding: '22px 20px', marginBottom: 18 }}>
+      <div style={{ background: 'color-mix(in srgb, var(--wasel-brand-hover) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--wasel-brand-hover) 24%, transparent)', borderRadius: r(20), padding: '22px 20px', marginBottom: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <CheckCircle2 size={28} color="#22c55e" />
+          <CheckCircle2 size={28} color={DS.green} />
           <div>
             <div style={{ color: DS.text, fontWeight: 900, fontSize: '1.05rem' }}>Emergency alert sent</div>
             <div style={{ color: DS.sub, fontSize: '0.78rem', marginTop: 3 }}>Safety team notified · Trusted contacts alerted</div>
@@ -185,9 +185,9 @@ function SOSPanel() {
 
   if (step === 'confirm' || step === 'locating') {
     return (
-      <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: r(20), padding: '22px 20px', marginBottom: 18 }}>
+      <div style={{ background: 'color-mix(in srgb, var(--wasel-brand-hover) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--wasel-brand-hover) 28%, transparent)', borderRadius: r(20), padding: '22px 20px', marginBottom: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-          <AlertTriangle size={26} color="#ef4444" />
+          <AlertTriangle size={26} color="var(--wasel-brand-hover)" />
           <div>
             <div style={{ color: DS.text, fontWeight: 900, fontSize: '1.05rem' }}>
               {step === 'locating' ? 'Getting your location…' : 'Send emergency alert?'}
@@ -199,7 +199,7 @@ function SOSPanel() {
         </div>
         {step === 'confirm' && (
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={handleConfirm} style={{ ...buttonBase, background: '#ef4444', color: '#fff', flex: 1 }}>
+            <button onClick={handleConfirm} style={{ ...buttonBase, background: 'var(--wasel-brand-hover)', color: '#FFFDF9', flex: 1 }}>
               Confirm — Send Alert
             </button>
             <button onClick={() => setStep('idle')} style={{ ...buttonBase, background: DS.card2, color: DS.text, flex: 1 }}>
@@ -215,10 +215,10 @@ function SOSPanel() {
   }
 
   return (
-    <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: r(20), padding: '20px 20px', marginBottom: 18 }}>
+    <div style={{ background: 'color-mix(in srgb, var(--wasel-brand-hover) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--wasel-brand-hover) 20%, transparent)', borderRadius: r(20), padding: '20px 20px', marginBottom: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
-        <div style={{ width: 52, height: 52, borderRadius: r(14), background: 'rgba(239,68,68,0.14)', border: '1.5px solid rgba(239,68,68,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <AlertTriangle size={24} color="#ef4444" />
+        <div style={{ width: 52, height: 52, borderRadius: r(14), background: 'color-mix(in srgb, var(--wasel-brand-hover) 14%, transparent)', border: '1.5px solid color-mix(in srgb, var(--wasel-brand-hover) 28%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <AlertTriangle size={24} color="var(--wasel-brand-hover)" />
         </div>
         <div>
           <div style={{ color: DS.text, fontWeight: 900, fontSize: '1.05rem' }}>SOS Emergency</div>
@@ -227,11 +227,11 @@ function SOSPanel() {
       </div>
       <button
         onClick={handleSOS}
-        style={{ ...buttonBase, width: '100%', background: '#ef4444', color: '#fff', fontSize: '0.92rem', letterSpacing: '0.05em' }}
+        style={{ ...buttonBase, width: '100%', background: 'var(--wasel-brand-hover)', color: '#FFFDF9', fontSize: '0.92rem', letterSpacing: '0.05em' }}
       >
         🆘 Send Emergency Alert
       </button>
-      <div style={{ color: 'rgba(239,68,68,0.7)', fontSize: '0.72rem', marginTop: 10, lineHeight: 1.5 }}>
+      <div style={{ color: 'var(--wasel-brand-hover)', fontSize: '0.72rem', marginTop: 10, lineHeight: 1.5 }}>
         Only use in genuine emergencies. Your location will be shared with Wasel's safety team and your trusted contacts.
       </div>
     </div>
@@ -319,7 +319,7 @@ function EmergencyContacts() {
               <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.85rem' }}>{contact.name}</div>
               <div style={{ color: DS.sub, fontSize: '0.74rem', marginTop: 3 }}>{contact.relationship} · {contact.phone}</div>
             </div>
-            <button onClick={() => handleRemove(contact.id)} style={{ border: 'none', background: 'transparent', color: 'rgba(239,68,68,0.55)', cursor: 'pointer', padding: 4 }}>
+            <button onClick={() => handleRemove(contact.id)} style={{ border: 'none', background: 'transparent', color: 'color-mix(in srgb, var(--wasel-brand-hover) 72%, transparent)', cursor: 'pointer', padding: 4 }}>
               <Trash2 size={15} />
             </button>
           </div>
@@ -332,12 +332,12 @@ function EmergencyContacts() {
           <input placeholder="+962 79 xxx xxxx" value={phone} onChange={(e) => setPhone(e.target.value)} style={inputStyle} type="tel" />
           <select value={relationship} onChange={(e) => setRelationship(e.target.value)} style={{ ...inputStyle, height: 42 }}>
             {['Family', 'Friend', 'Colleague', 'Partner', 'Other'].map((rel) => (
-              <option key={rel} value={rel} style={{ background: '#ffffff', color: '#10243d' }}>{rel}</option>
+              <option key={rel} value={rel} style={{ background: '#FFFDF9', color: '#0F172A' }}>{rel}</option>
             ))}
           </select>
-          {error && <div style={{ color: '#f87171', fontSize: '0.75rem' }}>{error}</div>}
+          {error && <div style={{ color: 'var(--wasel-brand-hover)', fontSize: '0.75rem' }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={handleAdd} style={{ flex: 1, height: 42, borderRadius: r(10), border: 'none', background: DS.cyan, color: '#041018', fontWeight: 800, cursor: 'pointer', fontFamily: DS.F }}>
+            <button onClick={handleAdd} style={{ flex: 1, height: 42, borderRadius: r(10), border: 'none', background: DS.cyan, color: '#FFFDF9', fontWeight: 800, cursor: 'pointer', fontFamily: DS.F }}>
               Save Contact
             </button>
             <button onClick={() => { setAdding(false); setError(null); }} style={{ height: 42, padding: '0 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: 'transparent', color: DS.sub, cursor: 'pointer', fontFamily: DS.F }}>
@@ -399,7 +399,7 @@ function SafetyChecklist() {
             style={{ display: 'flex', alignItems: 'flex-start', gap: 12, background: checked[item.id] ? `${DS.green}0A` : DS.card2, border: `1px solid ${checked[item.id] ? `${DS.green}30` : DS.border}`, borderRadius: r(12), padding: '12px 14px', cursor: 'pointer', textAlign: 'left' }}
           >
             <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${checked[item.id] ? DS.green : DS.border}`, background: checked[item.id] ? DS.green : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-              {checked[item.id] && <CheckCircle2 size={13} color="#041018" />}
+              {checked[item.id] && <CheckCircle2 size={13} color="#0F172A" />}
             </div>
             <div>
               <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.84rem' }}>{item.label}</div>
@@ -444,7 +444,7 @@ function CulturalSettings() {
     width: 18,
     height: 18,
     borderRadius: '50%',
-    background: '#fff',
+    background: '#FFFDF9',
     transition: 'left 0.2s',
     boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
   });
@@ -581,7 +581,7 @@ function InsurancePanel() {
                 style={{ width: '100%', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card3, color: DS.text, padding: '10px 12px', fontFamily: DS.F, outline: 'none', resize: 'none', boxSizing: 'border-box' }}
               />
               <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-                <button onClick={submitClaim} disabled={!description.trim()} style={{ flex: 1, height: 40, borderRadius: r(10), border: 'none', background: description.trim() ? DS.cyan : 'rgba(255,255,255,0.1)', color: description.trim() ? '#041018' : DS.sub, fontWeight: 800, cursor: description.trim() ? 'pointer' : 'not-allowed', fontFamily: DS.F }}>
+                <button onClick={submitClaim} disabled={!description.trim()} style={{ flex: 1, height: 40, borderRadius: r(10), border: 'none', background: description.trim() ? DS.cyan : 'rgba(255,255,255,0.1)', color: description.trim() ? '#FFFDF9' : DS.sub, fontWeight: 800, cursor: description.trim() ? 'pointer' : 'not-allowed', fontFamily: DS.F }}>
                   Submit Claim
                 </button>
                 <button onClick={() => setClaimOpen(false)} style={{ height: 40, padding: '0 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: 'transparent', color: DS.sub, cursor: 'pointer', fontFamily: DS.F }}>
@@ -658,7 +658,7 @@ function IncidentReport() {
             onChange={(e) => setType(e.target.value)}
             style={{ width: '100%', height: 42, borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, padding: '0 12px', fontFamily: DS.F, outline: 'none' }}
           >
-            {INCIDENT_TYPES.map((t) => <option key={t} value={t} style={{ background: '#ffffff', color: '#10243d' }}>{t}</option>)}
+            {INCIDENT_TYPES.map((t) => <option key={t} value={t} style={{ background: '#FFFDF9', color: '#0F172A' }}>{t}</option>)}
           </select>
         </div>
         <div>
@@ -679,7 +679,7 @@ function IncidentReport() {
           <button
             onClick={submit}
             disabled={submitting || !description.trim()}
-            style={{ height: 44, borderRadius: r(12), border: 'none', background: description.trim() && !submitting ? DS.gold : 'rgba(255,255,255,0.08)', color: description.trim() && !submitting ? '#041018' : DS.sub, fontWeight: 800, cursor: description.trim() && !submitting ? 'pointer' : 'not-allowed', fontFamily: DS.F }}
+            style={{ height: 44, borderRadius: r(12), border: 'none', background: description.trim() && !submitting ? DS.gold : 'rgba(255,255,255,0.08)', color: description.trim() && !submitting ? '#FFFDF9' : DS.sub, fontWeight: 800, cursor: description.trim() && !submitting ? 'pointer' : 'not-allowed', fontFamily: DS.F }}
           >
             {submitting ? 'Submitting…' : 'Submit Report'}
           </button>
@@ -710,7 +710,7 @@ function IncidentReport() {
 
 function SafetyScore({ user }: { user: { trustScore: number; verified?: boolean; emailVerified?: boolean; phoneVerified?: boolean; walletStatus?: string } }) {
   const score = user.trustScore ?? 0;
-  const color = score >= 80 ? DS.green : score >= 50 ? DS.gold : '#ef4444';
+  const color = score >= 80 ? DS.green : score >= 50 ? DS.gold : 'var(--wasel-brand-hover)';
 
   const factors = [
     { label: 'Identity verified', done: Boolean(user.verified), weight: 30 },
@@ -762,7 +762,7 @@ function QuickLink({ icon, label, sub, onClick }: { icon: React.ReactNode; label
       onClick={onClick}
       style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', background: DS.card2, border: `1px solid ${DS.border}`, borderRadius: r(14), padding: '14px 16px', cursor: 'pointer', textAlign: 'left', marginBottom: 10 }}
     >
-      <div style={{ width: 38, height: 38, borderRadius: r(10), background: 'rgba(71,183,230,0.1)', border: `1px solid rgba(71,183,230,0.2)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ width: 38, height: 38, borderRadius: r(10), background: 'color-mix(in srgb, var(--ds-accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--ds-accent) 20%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         {icon}
       </div>
       <div style={{ flex: 1 }}>

@@ -11,7 +11,6 @@ import { AnimatePresence, motion } from 'motion/react';
 import { toast } from 'sonner';
 import {
   ArrowRight,
-  BusFront,
   CheckCircle2,
   ChevronRight,
   Eye,
@@ -25,10 +24,8 @@ import {
   Shield,
   Sparkles,
   UserRound,
-  WalletCards,
 } from 'lucide-react';
 import { WaselHeroMark, WaselLogo } from '../components/wasel-ds/WaselLogo';
-import { DeferredLandingMap } from '../features/home/DeferredLandingMap';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { checkRateLimit, validateEmail } from '../utils/security';
@@ -42,6 +39,7 @@ import {
   validateFullName,
   validatePassword,
 } from '../utils/authHelpers';
+import { WaselAuthNetworkMap } from './shared/WaselAuthNetworkMap';
 import './WaselAuth.css';
 
 type Tab = 'signin' | 'signup';
@@ -120,15 +118,15 @@ function RememberMeCheckbox({
 }
 
 const BRAND_FEATURES = [
-  { icon: <Shield size={14} />, text: 'Secure access' },
-  { icon: <Mail size={14} />, text: 'One account' },
+  { icon: <MapPinned size={14} />, text: 'Demand-weighted city pairs' },
+  { icon: <Package size={14} />, text: 'Ride and parcel overlays' },
+  { icon: <Shield size={14} />, text: 'Rebalance-aware routing' },
 ] as const;
 
-const SERVICE_TILES = [
-  { icon: MapPinned, title: 'Rides', detail: 'Resume routes, timing, and seat search.' },
-  { icon: Package, title: 'Packages', detail: 'Use the same corridor for parcel delivery.' },
-  { icon: BusFront, title: 'Buses', detail: 'Keep transit access inside the same account.' },
-  { icon: WalletCards, title: 'Wallet', detail: 'Payments and balances stay in one place.' },
+const HERO_METRICS = [
+  { value: '12', label: 'city nodes' },
+  { value: '27', label: 'smart corridors' },
+  { value: '24/7', label: 'adaptive rebalancing' },
 ] as const;
 
 interface AuthFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
@@ -204,11 +202,6 @@ function AuthField({
 function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
   return (
     <div className="auth-landing__hero-panel">
-      <div className="auth-landing__hero-map" aria-hidden="true">
-        <div className="auth-landing__hero-map-scale">
-          <DeferredLandingMap />
-        </div>
-      </div>
       <div className="auth-landing__hero-scrim" aria-hidden="true" />
       <div className="auth-landing__hero-orb auth-landing__hero-orb--one" aria-hidden="true" />
       <div className="auth-landing__hero-orb auth-landing__hero-orb--two" aria-hidden="true" />
@@ -217,40 +210,50 @@ function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
       </div>
 
       <div className="auth-landing__hero-copy">
-        <div className="auth-landing__eyebrow">
-          <Sparkles size={15} />
-          One Wasel access layer
+        <div className="auth-landing__hero-intro">
+          <div className="auth-landing__eyebrow">
+            <Sparkles size={15} />
+            One Wasel access layer
+          </div>
+
+          <WaselLogo
+            size={50}
+            theme="auto"
+            variant="full"
+            showWordmark
+            subtitle=""
+            framed={false}
+          />
+
+          <h1 className="auth-landing__hero-title">
+            City-to-city routing, drawn as one live Wasel field.
+          </h1>
+
+          <p className="auth-landing__hero-body">
+            {tab === 'signin'
+              ? 'Sign back in and continue through a cleaner corridor map that shows how rides, parcels, and rebalancing move together across the Wasel network.'
+              : 'Create one account and enter a sharper network shell where every city pair, transfer lane, and relay route reads as part of the same system.'}
+          </p>
+
+          <div className="auth-landing__hero-utility">
+            <div className="auth-landing__hero-signal">
+              <MapPinned size={16} />
+              {`Return corridor: ${returnLabel || 'Find ride'}`}
+            </div>
+
+            <div className="auth-landing__hero-metrics">
+              {HERO_METRICS.map(metric => (
+                <div key={metric.label} className="auth-landing__hero-metric">
+                  <strong>{metric.value}</strong>
+                  <span>{metric.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <WaselLogo size={50} theme="auto" variant="full" showWordmark subtitle="" framed={false} />
-
-        <h1 className="auth-landing__hero-title">One account across the full Wasel network.</h1>
-
-        <p className="auth-landing__hero-body">
-          {tab === 'signin'
-            ? 'Sign back in and continue across rides, packages, buses, and wallet from the same Wasel network shell.'
-            : 'Create one account and move between every Wasel service with the same trusted interface from the first step.'}
-        </p>
-
-        <div className="auth-landing__hero-signal">
-          <MapPinned size={16} />
-          {`Returning to ${returnLabel || 'find ride'}`}
-        </div>
-
-        <div className="auth-landing__service-grid">
-          {SERVICE_TILES.map(tile => {
-            const Icon = tile.icon;
-
-            return (
-              <div key={tile.title} className="auth-landing__service-card">
-                <span className="auth-landing__service-icon">
-                  <Icon size={18} />
-                </span>
-                <strong>{tile.title}</strong>
-                <span>{tile.detail}</span>
-              </div>
-            );
-          })}
+        <div className="auth-landing__hero-stage">
+          <WaselAuthNetworkMap />
         </div>
 
         <div className="auth-landing__trust-row">

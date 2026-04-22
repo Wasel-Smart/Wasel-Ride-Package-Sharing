@@ -37,7 +37,12 @@ import { useBusSearch } from '../../modules/bus/bus.hooks';
 import { useRideSearch } from '../../modules/rides/ride.hooks';
 import type { RideResult, RideType } from '../../modules/rides/ride.types';
 import { useTrips } from '../../modules/trips/trip.hooks';
-import { createConnectedPackage, getConnectedStats, getPackageByTrackingId, type PackageRequest } from '../../services/journeyLogistics';
+import {
+  createConnectedPackage,
+  getConnectedStats,
+  getPackageByTrackingId,
+  type PackageRequest,
+} from '../../services/journeyLogistics';
 import { createConnectedRide } from '../../services/journeyLogistics';
 import { buildAuthPagePath, normalizeAuthReturnTo } from '../../utils/authFlow';
 
@@ -52,6 +57,17 @@ type OverviewConfig = {
   ctaPath: string;
   description: string;
   eyebrow: string;
+  title: string;
+};
+
+type BrandPillItem = {
+  icon: ReactNode;
+  label: string;
+};
+
+type HeroFeatureItem = {
+  detail: string;
+  icon: ReactNode;
   title: string;
 };
 
@@ -82,20 +98,27 @@ const overviewConfigs: Record<string, OverviewConfig> = {
     ctaPath: '/app/my-trips',
     cards: [
       { title: 'Demand view', detail: 'See where rides, packages, and supply keep stacking.' },
-      { title: 'Proof loop', detail: 'Watch route clarity, fill rate, and repeat use in one frame.' },
+      {
+        title: 'Proof loop',
+        detail: 'Watch route clarity, fill rate, and repeat use in one frame.',
+      },
       { title: 'Support load', detail: 'Track where customer friction is starting to build.' },
     ],
   },
   execution: {
     eyebrow: 'Operations',
     title: 'Execution OS',
-    description: 'Coordinate field actions, support, and route decisions without changing language.',
+    description:
+      'Coordinate field actions, support, and route decisions without changing language.',
     ctaLabel: 'Open notifications',
     ctaPath: '/app/notifications',
     cards: [
       { title: 'Field queue', detail: 'Keep the next operational move visible.' },
       { title: 'Support handoff', detail: 'Give support one source of truth for urgent cases.' },
-      { title: 'Service rhythm', detail: 'Align riders, drivers, and operations around the same signal.' },
+      {
+        title: 'Service rhythm',
+        detail: 'Align riders, drivers, and operations around the same signal.',
+      },
     ],
   },
   mobility: {
@@ -105,8 +128,14 @@ const overviewConfigs: Record<string, OverviewConfig> = {
     ctaLabel: 'Open bus',
     ctaPath: '/app/bus',
     cards: [
-      { title: 'Live map', detail: 'The route stays in the background instead of taking over the page.' },
-      { title: 'Shared inventory', detail: 'Rides, buses, and packages read from the same network.' },
+      {
+        title: 'Live map',
+        detail: 'The route stays in the background instead of taking over the page.',
+      },
+      {
+        title: 'Shared inventory',
+        detail: 'Rides, buses, and packages read from the same network.',
+      },
       { title: 'Decision clarity', detail: 'The next action stays obvious on every screen.' },
     ],
   },
@@ -244,14 +273,10 @@ function PageHeading({
   );
 }
 
-function MetricGrid({
-  items,
-}: {
-  items: Array<{ detail: string; label: string; value: string }>;
-}) {
+function MetricGrid({ items }: { items: Array<{ detail: string; label: string; value: string }> }) {
   return (
     <div className="ds-kpi-grid">
-      {items.map((item) => (
+      {items.map(item => (
         <Card className="ds-kpi-item" key={item.label}>
           <span>{item.label}</span>
           <strong>{item.value}</strong>
@@ -292,7 +317,7 @@ function ProtectedPage({ children }: { children: ReactNode }) {
 
 function SupportActions() {
   return (
-    <>
+    <div className="ds-support-actions">
       <Button variant="ghost">
         <Phone size={16} />
         Call support
@@ -301,24 +326,45 @@ function SupportActions() {
         <Mail size={16} />
         Email us
       </Button>
-    </>
+    </div>
   );
 }
 
-function HeroStats({
-  items,
-}: {
-  items: Array<{ detail: string; label: string; value: string }>;
-}) {
+function HeroStats({ items }: { items: Array<{ detail: string; label: string; value: string }> }) {
   return (
-    <div className="ds-feature-grid">
-      {items.map((item) => (
-        <Card key={item.label}>
-          <div className="ds-card__meta">
-            <span>{item.label}</span>
-          </div>
-          <h2 className="ds-section-title">{item.value}</h2>
-          <p className="ds-copy ds-copy--tight">{item.detail}</p>
+    <div className="ds-feature-grid ds-hero-stat-grid">
+      {items.map(item => (
+        <Card className="ds-hero-stat-card" key={item.label}>
+          <span className="ds-hero-stat-card__label">{item.label}</span>
+          <strong className="ds-hero-stat-card__value">{item.value}</strong>
+          <span className="ds-hero-stat-card__detail">{item.detail}</span>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function BrandPillRow({ items }: { items: BrandPillItem[] }) {
+  return (
+    <div className="ds-brand-pill-row" aria-label="Brand highlights">
+      {items.map(item => (
+        <span className="ds-brand-pill" key={item.label}>
+          {item.icon}
+          {item.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function HeroFeatureGrid({ items }: { items: HeroFeatureItem[] }) {
+  return (
+    <div className="ds-hero-feature-grid">
+      {items.map(item => (
+        <Card className="ds-hero-feature-card" key={item.title}>
+          <span className="ds-hero-feature-card__icon">{item.icon}</span>
+          <div className="ds-hero-feature-card__title">{item.title}</div>
+          <p className="ds-hero-feature-card__detail">{item.detail}</p>
         </Card>
       ))}
     </div>
@@ -334,7 +380,7 @@ function ActionCards({
 }) {
   return (
     <div className="ds-action-grid">
-      {items.map((item) => (
+      {items.map(item => (
         <Card className="ds-route-card" key={item.title}>
           <div className="ds-list-item__icon">{item.icon}</div>
           <div>
@@ -351,7 +397,15 @@ function ActionCards({
   );
 }
 
-function MapHeroPanel({ children }: { children: ReactNode }) {
+function MapHeroPanel({
+  children,
+  mapVariant = 'ambient',
+  signals = ['Ride flow live', 'Package lanes active', 'Mobility OS synced'],
+}: {
+  children: ReactNode;
+  mapVariant?: 'ambient' | 'full';
+  signals?: string[];
+}) {
   const { language } = useLanguage();
   const ar = language === 'ar';
 
@@ -359,13 +413,13 @@ function MapHeroPanel({ children }: { children: ReactNode }) {
     <Card className="ds-hero-panel">
       <div aria-hidden="true" className="ds-hero-panel__media">
         <div className="ds-map-stage">
-          <DeferredLandingMap ar={ar} />
+          <DeferredLandingMap ar={ar} eager variant={mapVariant} />
         </div>
       </div>
       <div className="ds-hero-panel__content">
         {children}
         <div className="ds-hero-panel__signals" aria-label="Live network status">
-          {['Ride flow live', 'Package lanes active', 'Mobility OS synced'].map((label) => (
+          {signals.map(label => (
             <span key={label} className="ds-hero-panel__signal-chip">
               <span aria-hidden="true" className="ds-hero-panel__signal-bar" />
               {label}
@@ -392,7 +446,7 @@ function SimpleOverviewPage({ configKey }: { configKey: keyof typeof overviewCon
             title={config.title}
           />
           <ActionCards
-            items={config.cards.map((card) => ({
+            items={config.cards.map(card => ({
               ...card,
               icon: <Sparkles size={18} />,
               path: config.ctaPath,
@@ -418,23 +472,45 @@ export function LandingPage() {
       ? `/app/find-ride?from=${encodeURIComponent(route.from)}&to=${encodeURIComponent(route.to)}&search=1`
       : `/app/packages?from=${encodeURIComponent(route.from)}&to=${encodeURIComponent(route.to)}`;
   const emailPath = buildAuthPagePath('signin', LANDING_RETURN_TO);
+  const landingHighlights: BrandPillItem[] = [
+    { icon: <MapPin size={14} />, label: 'Jordan corridor view' },
+    { icon: <Package size={14} />, label: 'Rides and packages together' },
+    { icon: <Shield size={14} />, label: 'Trust stays nearby' },
+  ];
+  const landingFeatures: HeroFeatureItem[] = [
+    {
+      icon: <Search size={18} />,
+      title: 'Start with the route',
+      detail: 'The first screen shows the corridor clearly before any booking choice takes over.',
+    },
+    {
+      icon: <Package size={18} />,
+      title: 'One shared service language',
+      detail: 'Rides, packages, and bus all keep the same visual hierarchy and the same account.',
+    },
+    {
+      icon: <Shield size={18} />,
+      title: 'Support in the same shell',
+      detail:
+        'Recovery, support, and next steps stay visible instead of feeling like separate products.',
+    },
+  ];
+  const landingSignals =
+    mode === 'ride'
+      ? ['Ride routes live', 'Seats and timings visible', 'Support one tap away']
+      : ['Package lanes live', 'Shared corridor handoff', 'Support one tap away'];
 
   return (
     <LayoutContainer width="wide">
       <main className="ds-page" role="main">
         <header className="ds-shell-header__inner">
           <button className="ds-shell-header__brand" onClick={() => navigate('/')} type="button">
-            <BrandLockup
-              showTagline
-              size="lg"
-              surface="light"
-              tagline="LIVE MOBILITY NETWORK"
-            />
+            <BrandLockup showTagline size="lg" surface="dark" tagline="LIVE MOBILITY NETWORK" />
           </button>
           <div className="ds-shell-header__actions">
             <SupportActions />
             {!user ? (
-              <Button onClick={() => navigate(buildAuthPagePath('signin', '/app/find-ride'))} variant="ghost">
+              <Button onClick={() => navigate(buildAuthPagePath('signin', '/app/find-ride'))}>
                 Sign in
               </Button>
             ) : null}
@@ -442,61 +518,69 @@ export function LandingPage() {
         </header>
 
         <section className="ds-landing-grid">
-          <div className="ds-stack">
+          <div className="ds-stack ds-hero-stack">
             <div className="ds-eyebrow">
               <Sparkles size={14} />
-              One live network
+              Jordan mobility network
             </div>
-            <h1 className="ds-title">
-              Open the network first.
-              <br />
-              <span>Travel your way</span>
-              <br />
-              with Wasel.
+            <h1 className="ds-title ds-title--landing">
+              One clear Wasel route layer for every move.
             </h1>
             <p className="ds-copy">
-              Wasel makes the route obvious in seconds. Riders, buses, parcels, and support now sit on the same corridor.
+              Start with the map, then open rides, packages, buses, or support without changing the
+              product language. Wasel keeps the corridor readable from the first glance.
             </p>
-            <div className="ds-list">
-              {[
-                'One route can move people and parcels.',
-                'Bus services now sit inside the same network view.',
-                'The mobility map stays visible in the background.',
-                'Support and trust stay close to the action.',
-              ].map((item) => (
-                <div className="ds-list-item" key={item}>
-                  <div className="ds-list-item__icon">
-                    <MapPin size={16} />
-                  </div>
-                  <div>
-                    <h2 className="ds-card__title">{item}</h2>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <BrandPillRow items={landingHighlights} />
+            <HeroFeatureGrid items={landingFeatures} />
             <HeroStats
               items={[
-                { label: 'Core flows', value: '4', detail: 'Rides, bus, packages, and supply.' },
-                { label: 'Shared network', value: '1', detail: 'The same corridor powers each decision.' },
-                { label: 'Close support', value: '24/7', detail: 'Trust stays near the action.' },
+                { label: 'Core services', value: '4', detail: 'Rides, bus, packages, and wallet.' },
+                {
+                  label: 'Mapped cities',
+                  value: '12',
+                  detail: 'North-to-south corridor context stays visible.',
+                },
+                {
+                  label: 'Live support',
+                  value: '24/7',
+                  detail: 'Recovery and help stay close to the route.',
+                },
               ]}
             />
           </div>
 
-          <MapHeroPanel>
+          <MapHeroPanel mapVariant="ambient" signals={landingSignals}>
+            <div className="ds-hero-panel__intro">
+              <div className="ds-panel-kicker">Live route planner</div>
+              <h2 className="ds-section-title">Choose one corridor and open the right flow.</h2>
+              <p className="ds-copy ds-copy--tight">
+                Rides and packages share the same Wasel layout, so the planner feels familiar before
+                and after sign-in.
+              </p>
+            </div>
             <Tabs
-              items={[
-                {
-                  content: <p className="ds-copy ds-copy--tight">Choose a corridor, then open the live ride flow.</p>,
-                  label: 'Rides',
-                  value: 'ride',
-                },
-                {
-                  content: <p className="ds-copy ds-copy--tight">Start from the same corridor, then open the package flow.</p>,
-                  label: 'Packages',
-                  value: 'package',
-                },
-              ] satisfies TabItem<'ride' | 'package'>[]}
+              items={
+                [
+                  {
+                    content: (
+                      <p className="ds-copy ds-copy--tight">
+                        Choose a corridor, then open the live ride flow.
+                      </p>
+                    ),
+                    label: 'Rides',
+                    value: 'ride',
+                  },
+                  {
+                    content: (
+                      <p className="ds-copy ds-copy--tight">
+                        Start from the same corridor, then open the package flow.
+                      </p>
+                    ),
+                    label: 'Packages',
+                    value: 'package',
+                  },
+                ] satisfies TabItem<'ride' | 'package'>[]
+              }
               label="Services"
               onChange={setMode}
               value={mode}
@@ -505,7 +589,10 @@ export function LandingPage() {
             <div className="ds-step-rail">
               {[
                 { detail: 'Choose the corridor.', label: 'Select route' },
-                { detail: mode === 'ride' ? 'Pick timing.' : 'Keep the parcel simple.', label: 'Set timing' },
+                {
+                  detail: mode === 'ride' ? 'Pick timing.' : 'Keep the parcel simple.',
+                  label: 'Set timing',
+                },
                 { detail: 'Open the main flow.', label: 'Move now' },
               ].map((step, index) => (
                 <div className="ds-step-rail__item" data-active={index === 0} key={step.label}>
@@ -521,19 +608,19 @@ export function LandingPage() {
             <div className="ds-form-grid">
               <Select
                 label="Leaving from"
-                onChange={(event) => setRoute((current) => ({ ...current, from: event.target.value }))}
-                options={CITY_OPTIONS.map((city) => ({ label: city.label, value: city.value }))}
+                onChange={event => setRoute(current => ({ ...current, from: event.target.value }))}
+                options={CITY_OPTIONS.map(city => ({ label: city.label, value: city.value }))}
                 value={route.from}
               />
               <Select
                 label="Going to"
-                onChange={(event) => setRoute((current) => ({ ...current, to: event.target.value }))}
-                options={CITY_OPTIONS.map((city) => ({ label: city.label, value: city.value }))}
+                onChange={event => setRoute(current => ({ ...current, to: event.target.value }))}
+                options={CITY_OPTIONS.map(city => ({ label: city.label, value: city.value }))}
                 value={route.to}
               />
               <Input
                 label="When"
-                onChange={(event) => setRoute((current) => ({ ...current, date: event.target.value }))}
+                onChange={event => setRoute(current => ({ ...current, date: event.target.value }))}
                 type="date"
                 value={route.date}
               />
@@ -548,21 +635,20 @@ export function LandingPage() {
               </Button>
             </div>
 
-            <div className="ds-minor-actions">
-              <Button fullWidth onClick={() => navigate('/app/bus')} variant="secondary">
-                Open bus services
-              </Button>
-              <Button fullWidth onClick={() => navigate('/app/mobility-os')} variant="ghost">
-                Open Mobility OS
-              </Button>
-            </div>
-
             {!user ? (
               <div className="ds-social-grid">
-                <Button fullWidth onClick={() => void signInWithGoogle(LANDING_RETURN_TO)} variant="secondary">
+                <Button
+                  fullWidth
+                  onClick={() => void signInWithGoogle(LANDING_RETURN_TO)}
+                  variant="secondary"
+                >
                   Continue with Google
                 </Button>
-                <Button fullWidth onClick={() => void signInWithFacebook(LANDING_RETURN_TO)} variant="secondary">
+                <Button
+                  fullWidth
+                  onClick={() => void signInWithFacebook(LANDING_RETURN_TO)}
+                  variant="secondary"
+                >
                   Continue with Facebook
                 </Button>
                 <Button fullWidth onClick={() => navigate(emailPath)} variant="ghost">
@@ -597,16 +683,16 @@ export function LandingPage() {
                 path: '/app/packages',
                 title: 'Send a package',
               },
-                {
-                  detail: 'Turn an empty departure into more value.',
-                  icon: <Car size={18} />,
-                  path: '/app/offer-ride',
-                  title: 'Offer your ride',
-                },
-              ]}
-              onNavigate={navigate}
-            />
-          </SectionWrapper>
+              {
+                detail: 'Turn an empty departure into more value.',
+                icon: <Car size={18} />,
+                path: '/app/offer-ride',
+                title: 'Offer your ride',
+              },
+            ]}
+            onNavigate={navigate}
+          />
+        </SectionWrapper>
 
         <SectionWrapper
           description="Bus services and Mobility OS stay visible as first-class Wasel surfaces."
@@ -643,7 +729,8 @@ export function LandingPage() {
 
 export function AuthPage() {
   const [params, setParams] = useSearchParams();
-  const initialTab = params.get('tab') === 'signup' || params.get('tab') === 'register' ? 'signup' : 'signin';
+  const initialTab =
+    params.get('tab') === 'signup' || params.get('tab') === 'register' ? 'signup' : 'signin';
   const returnTo = normalizeAuthReturnTo(params.get('returnTo'), '/app/find-ride');
   const navigate = useIframeSafeNavigate();
   const { signIn, register, user } = useLocalAuth();
@@ -656,6 +743,13 @@ export function AuthPage() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState<'none' | 'google' | 'facebook' | 'submit' | 'reset'>('none');
+  const authHighlights: BrandPillItem[] = [
+    { icon: <Search size={14} />, label: 'Rides' },
+    { icon: <Package size={14} />, label: 'Packages' },
+    { icon: <Bus size={14} />, label: 'Bus' },
+    { icon: <Shield size={14} />, label: 'Wallet and recovery' },
+  ];
+  const authSignals = ['One account live', 'Return path saved', 'Recovery ready'];
 
   useEffect(() => {
     if (user) {
@@ -734,12 +828,7 @@ export function AuthPage() {
       <div className="ds-page">
         <header className="ds-shell-header__inner">
           <button className="ds-shell-header__brand" onClick={() => navigate('/')} type="button">
-            <BrandLockup
-              showTagline
-              size="lg"
-              surface="light"
-              tagline="LIVE MOBILITY NETWORK"
-            />
+            <BrandLockup showTagline size="lg" surface="dark" tagline="LIVE MOBILITY NETWORK" />
           </button>
           <div className="ds-shell-header__actions">
             <Button onClick={() => navigate('/')} variant="ghost">
@@ -749,36 +838,51 @@ export function AuthPage() {
         </header>
 
         <section className="ds-auth-grid">
-          <MapHeroPanel>
+          <MapHeroPanel mapVariant="ambient" signals={authSignals}>
             <div className="ds-eyebrow">
               <Sparkles size={14} />
               One access layer
             </div>
-            <h1 className="ds-title">One account across the full Wasel network.</h1>
+            <h1 className="ds-title ds-title--auth">One Wasel account across every route.</h1>
             <p className="ds-copy">
-              One account that looks and feels like the landing page. Sign in to continue across rides, packages, buses, and wallet.
+              Sign in once, then move between rides, packages, buses, and wallet without switching
+              to a different product language.
             </p>
+            <BrandPillRow items={authHighlights} />
             <HeroStats
               items={[
-                { label: 'One account', value: '4', detail: 'Rides, packages, bus, wallet.' },
-                { label: 'Return path', value: 'Live', detail: `Back to ${returnTo.replace('/app/', '') || 'find ride'}.` },
-                { label: 'Support', value: '24/7', detail: 'Secure recovery stays active.' },
+                {
+                  label: 'Services unlocked',
+                  value: '4',
+                  detail: 'Rides, packages, bus, and wallet.',
+                },
+                {
+                  label: 'Return path',
+                  value: 'Ready',
+                  detail: `Back to ${returnTo.replace('/app/', '') || 'find ride'}.`,
+                },
+                { label: 'Recovery', value: '24/7', detail: 'Secure help stays active.' },
               ]}
             />
           </MapHeroPanel>
 
-          <CardShell>
+          <CardShell className="ds-auth-card">
             <Tabs
-              items={[
-                { content: <div />, label: 'Sign in', value: 'signin' },
-                { content: <div />, label: 'Create account', value: 'signup' },
-              ] satisfies TabItem<'signin' | 'signup'>[]}
+              items={
+                [
+                  { content: <div />, label: 'Sign in', value: 'signin' },
+                  { content: <div />, label: 'Create account', value: 'signup' },
+                ] satisfies TabItem<'signin' | 'signup'>[]
+              }
               label="Authentication tabs"
               onChange={setTab}
               value={tab}
             />
             <div className="ds-stack" data-gap="tight">
-              <h2 className="ds-section-title">{tab === 'signin' ? 'Sign in to Wasel' : 'Create your Wasel account'}</h2>
+              <div className="ds-panel-kicker">Premium access</div>
+              <h2 className="ds-section-title">
+                {tab === 'signin' ? 'Sign in to Wasel' : 'Create your Wasel account'}
+              </h2>
               <p className="ds-copy ds-copy--tight">
                 {tab === 'signin'
                   ? 'Sign in to continue. Keep the essentials visible on every screen.'
@@ -786,15 +890,23 @@ export function AuthPage() {
               </p>
             </div>
 
-            {notice ? <div className="ds-inline-feedback" data-tone="success">{notice}</div> : null}
-            {error ? <div className="ds-inline-feedback" data-tone="error">{error}</div> : null}
+            {notice ? (
+              <div className="ds-inline-feedback" data-tone="success">
+                {notice}
+              </div>
+            ) : null}
+            {error ? (
+              <div className="ds-inline-feedback" data-tone="error">
+                {error}
+              </div>
+            ) : null}
 
             <form className="ds-stack" onSubmit={handleSubmit}>
               {tab === 'signup' ? (
                 <Input
                   id="auth-name"
                   label="Full name"
-                  onChange={(event) => setName(event.target.value)}
+                  onChange={event => setName(event.target.value)}
                   placeholder="Ahmad Al-Rashid"
                   value={name}
                 />
@@ -803,7 +915,7 @@ export function AuthPage() {
               <Input
                 id="auth-email"
                 label="Email address"
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={event => setEmail(event.target.value)}
                 placeholder="you@example.com"
                 type="email"
                 value={email}
@@ -812,7 +924,7 @@ export function AuthPage() {
               <Input
                 id="auth-password"
                 label="Password"
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={event => setPassword(event.target.value)}
                 placeholder={tab === 'signin' ? 'Enter your password' : 'Create a secure password'}
                 type="password"
                 value={password}
@@ -822,7 +934,7 @@ export function AuthPage() {
                 <Input
                   id="auth-phone"
                   label="Phone number"
-                  onChange={(event) => setPhone(event.target.value)}
+                  onChange={event => setPhone(event.target.value)}
                   placeholder="+962 79 123 4567"
                   value={phone}
                 />
@@ -834,8 +946,16 @@ export function AuthPage() {
                 </Button>
               ) : null}
 
-              <Button aria-label={tab === 'signin' ? 'Submit sign in' : 'Create account'} fullWidth type="submit">
-                {busy === 'submit' ? 'Please wait...' : tab === 'signin' ? 'Submit sign in' : 'Create account'}
+              <Button
+                aria-label={tab === 'signin' ? 'Submit sign in' : 'Create account'}
+                fullWidth
+                type="submit"
+              >
+                {busy === 'submit'
+                  ? 'Please wait...'
+                  : tab === 'signin'
+                    ? 'Submit sign in'
+                    : 'Create account'}
               </Button>
             </form>
 
@@ -863,6 +983,10 @@ export function AuthPage() {
                 {busy === 'facebook' ? 'Connecting Facebook...' : 'Continue with Facebook'}
               </Button>
             </div>
+
+            <p className="ds-auth-footnote">
+              One identity across rides, packages, bus, wallet, and recovery.
+            </p>
           </CardShell>
         </section>
       </div>
@@ -949,8 +1073,8 @@ export function FindRidePage() {
                 <Input
                   hint="Use a city or corridor origin."
                   label="From"
-                  onBlur={(event) => setFrom(event.target.value)}
-                  onChange={(event) => {
+                  onBlur={event => setFrom(event.target.value)}
+                  onChange={event => {
                     setFromQuery(event.target.value);
                     setFrom(event.target.value);
                   }}
@@ -960,8 +1084,8 @@ export function FindRidePage() {
                 <Input
                   hint="Choose a clear destination."
                   label="To"
-                  onBlur={(event) => setTo(event.target.value)}
-                  onChange={(event) => {
+                  onBlur={event => setTo(event.target.value)}
+                  onChange={event => {
                     setToQuery(event.target.value);
                     setTo(event.target.value);
                   }}
@@ -970,7 +1094,7 @@ export function FindRidePage() {
                 />
                 <Select
                   label="Search mode"
-                  onChange={(event) => setMode(event.target.value as 'now' | 'schedule')}
+                  onChange={event => setMode(event.target.value as 'now' | 'schedule')}
                   options={[
                     { label: 'Now', value: 'now' },
                     { label: 'Schedule', value: 'schedule' },
@@ -979,7 +1103,7 @@ export function FindRidePage() {
                 />
                 <Select
                   label="Ride type"
-                  onChange={(event) => setRideType(event.target.value as RideType)}
+                  onChange={event => setRideType(event.target.value as RideType)}
                   options={[...RIDE_TYPE_OPTIONS]}
                   value={state.draft.rideType}
                 />
@@ -987,15 +1111,23 @@ export function FindRidePage() {
                   <Input
                     error={state.validation.date}
                     label="Departure"
-                    onChange={(event) => setDate(event.target.value)}
+                    onChange={event => setDate(event.target.value)}
                     type="date"
                     value={state.draft.date}
                   />
                 ) : null}
               </div>
 
-              {state.error ? <div className="ds-inline-feedback" data-tone="error">{state.error}</div> : null}
-              {state.successMessage ? <div className="ds-inline-feedback" data-tone="success">{state.successMessage}</div> : null}
+              {state.error ? (
+                <div className="ds-inline-feedback" data-tone="error">
+                  {state.error}
+                </div>
+              ) : null}
+              {state.successMessage ? (
+                <div className="ds-inline-feedback" data-tone="success">
+                  {state.successMessage}
+                </div>
+              ) : null}
 
               <Button data-testid="find-ride-search" fullWidth onClick={() => void searchRide()}>
                 {state.phase === 'searching' ? 'Searching...' : 'Search rides'}
@@ -1021,10 +1153,10 @@ export function FindRidePage() {
                 </Card>
               ) : null}
 
-              {visibleResults.map((ride) => (
+              {visibleResults.map(ride => (
                 <RideResultCard
                   key={ride.id}
-                  onRequestRide={async (selectedRide) => {
+                  onRequestRide={async selectedRide => {
                     if (!user) {
                       navigate(buildAuthPagePath('signin', '/app/find-ride'));
                       return;
@@ -1133,7 +1265,7 @@ export function OfferRidePage() {
   });
 
   const updateForm = <T extends keyof typeof form>(key: T, value: (typeof form)[T]) => {
-    setForm((current) => ({ ...current, [key]: value }));
+    setForm(current => ({ ...current, [key]: value }));
   };
 
   const submit = async () => {
@@ -1165,7 +1297,11 @@ export function OfferRidePage() {
       });
       setPosted(true);
     } catch (submissionError) {
-      setError(submissionError instanceof Error ? submissionError.message : 'We could not post the route right now.');
+      setError(
+        submissionError instanceof Error
+          ? submissionError.message
+          : 'We could not post the route right now.',
+      );
     } finally {
       setBusy(false);
     }
@@ -1182,26 +1318,48 @@ export function OfferRidePage() {
           />
 
           {posted ? (
-            <SectionWrapper description="Your route is now visible inside the shared network." title="Route is live">
+            <SectionWrapper
+              description="Your route is now visible inside the shared network."
+              title="Route is live"
+            >
               <MetricGrid
                 items={[
-                  { label: 'Corridor', value: `${form.from} to ${form.to}`, detail: 'Your route is live.' },
+                  {
+                    label: 'Corridor',
+                    value: `${form.from} to ${form.to}`,
+                    detail: 'Your route is live.',
+                  },
                   { label: 'Seats', value: `${form.seats}`, detail: 'Shared supply is open.' },
-                  { label: 'Packages', value: form.acceptsPackages ? 'On' : 'Off', detail: 'Parcel mode follows the same route.' },
-                  { label: 'Price', value: `${form.price} JOD`, detail: 'Seat price is visible now.' },
+                  {
+                    label: 'Packages',
+                    value: form.acceptsPackages ? 'On' : 'Off',
+                    detail: 'Parcel mode follows the same route.',
+                  },
+                  {
+                    label: 'Price',
+                    value: `${form.price} JOD`,
+                    detail: 'Seat price is visible now.',
+                  },
                 ]}
               />
             </SectionWrapper>
           ) : (
             <div className="ds-screen-grid">
-              <SectionWrapper description="Three moves keep this route simple." title="Publish steps">
+              <SectionWrapper
+                description="Three moves keep this route simple."
+                title="Publish steps"
+              >
                 <div className="ds-step-rail">
                   {[
                     { label: 'Shape route', detail: 'Set cities and timing.' },
                     { label: 'Add vehicle', detail: 'Keep the route specific.' },
                     { label: 'Go live', detail: 'Open one primary action.' },
                   ].map((item, index) => (
-                    <div className="ds-step-rail__item" data-active={step === index + 1} key={item.label}>
+                    <div
+                      className="ds-step-rail__item"
+                      data-active={step === index + 1}
+                      key={item.label}
+                    >
                       <span className="ds-step-rail__index">{index + 1}</span>
                       <div>
                         <strong>{item.label}</strong>
@@ -1212,31 +1370,40 @@ export function OfferRidePage() {
                 </div>
               </SectionWrapper>
 
-              <SectionWrapper description="The route form stays direct on every step." title="Publish route">
+              <SectionWrapper
+                description="The route form stays direct on every step."
+                title="Publish route"
+              >
                 {step === 1 ? (
                   <div className="ds-stack">
                     <div className="ds-form-grid">
                       <Select
                         label="From"
-                        onChange={(event) => updateForm('from', event.target.value)}
-                        options={CITY_OPTIONS.map((city) => ({ label: city.label, value: city.value }))}
+                        onChange={event => updateForm('from', event.target.value)}
+                        options={CITY_OPTIONS.map(city => ({
+                          label: city.label,
+                          value: city.value,
+                        }))}
                         value={form.from}
                       />
                       <Select
                         label="To"
-                        onChange={(event) => updateForm('to', event.target.value)}
-                        options={CITY_OPTIONS.map((city) => ({ label: city.label, value: city.value }))}
+                        onChange={event => updateForm('to', event.target.value)}
+                        options={CITY_OPTIONS.map(city => ({
+                          label: city.label,
+                          value: city.value,
+                        }))}
                         value={form.to}
                       />
                       <Input
                         label="Date"
-                        onChange={(event) => updateForm('date', event.target.value)}
+                        onChange={event => updateForm('date', event.target.value)}
                         type="date"
                         value={form.date}
                       />
                       <Input
                         label="Departure"
-                        onChange={(event) => updateForm('time', event.target.value)}
+                        onChange={event => updateForm('time', event.target.value)}
                         type="time"
                         value={form.time}
                       />
@@ -1252,27 +1419,32 @@ export function OfferRidePage() {
                     <div className="ds-form-grid">
                       <Input
                         label="Vehicle"
-                        onChange={(event) => updateForm('carModel', event.target.value)}
+                        onChange={event => updateForm('carModel', event.target.value)}
                         placeholder="Toyota Camry 2023"
                         value={form.carModel}
                       />
                       <Input
                         label="Seats"
                         min="1"
-                        onChange={(event) => updateForm('seats', Number(event.target.value) || 1)}
+                        onChange={event => updateForm('seats', Number(event.target.value) || 1)}
                         type="number"
                         value={String(form.seats)}
                       />
                       <Input
                         label="Price"
                         min="1"
-                        onChange={(event) => updateForm('price', Number(event.target.value) || 1)}
+                        onChange={event => updateForm('price', Number(event.target.value) || 1)}
                         type="number"
                         value={String(form.price)}
                       />
                       <Select
                         label="Package lane"
-                        onChange={(event) => updateForm('packageCapacity', event.target.value as 'small' | 'medium' | 'large')}
+                        onChange={event =>
+                          updateForm(
+                            'packageCapacity',
+                            event.target.value as 'small' | 'medium' | 'large',
+                          )
+                        }
                         options={[
                           { label: 'Small', value: 'small' },
                           { label: 'Medium', value: 'medium' },
@@ -1292,18 +1464,26 @@ export function OfferRidePage() {
                     <Card>
                       <div className="ds-card__meta">
                         <span>Corridor</span>
-                        <span>{form.from} to {form.to}</span>
+                        <span>
+                          {form.from} to {form.to}
+                        </span>
                       </div>
                       <h2 className="ds-section-title">{form.carModel || 'Toyota Camry 2024'}</h2>
-                      <p className="ds-copy ds-copy--tight">Seats, price, and package mode are now ready to publish.</p>
+                      <p className="ds-copy ds-copy--tight">
+                        Seats, price, and package mode are now ready to publish.
+                      </p>
                     </Card>
                     <textarea
                       className="ds-textarea"
-                      onChange={(event) => updateForm('note', event.target.value)}
+                      onChange={event => updateForm('note', event.target.value)}
                       placeholder="Add one short note for riders."
                       value={form.note}
                     />
-                    {error ? <div className="ds-inline-feedback" data-tone="error">{error}</div> : null}
+                    {error ? (
+                      <div className="ds-inline-feedback" data-tone="error">
+                        {error}
+                      </div>
+                    ) : null}
                     <Button data-testid="offer-ride-submit" fullWidth onClick={() => void submit()}>
                       {busy ? 'Posting route...' : 'Publish route'}
                     </Button>
@@ -1354,7 +1534,11 @@ export function PackagesPage() {
       setTrackingId(result.trackingId);
       setTab('track');
     } catch (packageError) {
-      setCreateError(packageError instanceof Error ? packageError.message : 'We could not create the package request right now.');
+      setCreateError(
+        packageError instanceof Error
+          ? packageError.message
+          : 'We could not create the package request right now.',
+      );
     }
   };
 
@@ -1381,141 +1565,205 @@ export function PackagesPage() {
 
           <MetricGrid
             items={[
-              { label: 'Ready routes', value: String(stats.packageEnabledRides), detail: 'Corridors ready for parcel attach.' },
-              { label: 'Packages', value: String(stats.packagesCreated), detail: 'Requests already inside the network.' },
-              { label: 'Matches', value: String(stats.matchedPackages), detail: 'Packages attached to live routes.' },
-              { label: 'Network', value: String(stats.ridesPosted), detail: 'Shared routes supporting package flow.' },
+              {
+                label: 'Ready routes',
+                value: String(stats.packageEnabledRides),
+                detail: 'Corridors ready for parcel attach.',
+              },
+              {
+                label: 'Packages',
+                value: String(stats.packagesCreated),
+                detail: 'Requests already inside the network.',
+              },
+              {
+                label: 'Matches',
+                value: String(stats.matchedPackages),
+                detail: 'Packages attached to live routes.',
+              },
+              {
+                label: 'Network',
+                value: String(stats.ridesPosted),
+                detail: 'Shared routes supporting package flow.',
+              },
             ]}
           />
 
-          <SectionWrapper description="Keep send, track, and returns in one clear rhythm." title="Package flow">
+          <SectionWrapper
+            description="Keep send, track, and returns in one clear rhythm."
+            title="Package flow"
+          >
             <Tabs
-              items={[
-                {
-                  content: (
-                    <div className="ds-stack">
-                      <div className="ds-step-rail">
-                        {[
-                          { label: 'Route', detail: 'Pick the corridor.' },
-                          { label: 'Recipient', detail: 'Keep the handoff clear.' },
-                          { label: 'Create', detail: 'Open one package request.' },
-                        ].map((step, index) => (
-                          <div className="ds-step-rail__item" data-active={index === 0} key={step.label}>
-                            <span className="ds-step-rail__index">{index + 1}</span>
-                            <div>
-                              <strong>{step.label}</strong>
-                              <div className="ds-caption">{step.detail}</div>
+              items={
+                [
+                  {
+                    content: (
+                      <div className="ds-stack">
+                        <div className="ds-step-rail">
+                          {[
+                            { label: 'Route', detail: 'Pick the corridor.' },
+                            { label: 'Recipient', detail: 'Keep the handoff clear.' },
+                            { label: 'Create', detail: 'Open one package request.' },
+                          ].map((step, index) => (
+                            <div
+                              className="ds-step-rail__item"
+                              data-active={index === 0}
+                              key={step.label}
+                            >
+                              <span className="ds-step-rail__index">{index + 1}</span>
+                              <div>
+                                <strong>{step.label}</strong>
+                                <div className="ds-caption">{step.detail}</div>
+                              </div>
                             </div>
+                          ))}
+                        </div>
+                        <div className="ds-form-grid">
+                          <Select
+                            label="From"
+                            onChange={event =>
+                              setComposer(current => ({ ...current, from: event.target.value }))
+                            }
+                            options={CITY_OPTIONS.map(city => ({
+                              label: city.label,
+                              value: city.value,
+                            }))}
+                            value={composer.from}
+                          />
+                          <Select
+                            label="To"
+                            onChange={event =>
+                              setComposer(current => ({ ...current, to: event.target.value }))
+                            }
+                            options={CITY_OPTIONS.map(city => ({
+                              label: city.label,
+                              value: city.value,
+                            }))}
+                            value={composer.to}
+                          />
+                          <Input
+                            data-testid="package-recipient-name"
+                            label="Recipient"
+                            onChange={event =>
+                              setComposer(current => ({
+                                ...current,
+                                recipientName: event.target.value,
+                              }))
+                            }
+                            placeholder="Receiver Test"
+                            value={composer.recipientName}
+                          />
+                          <Input
+                            data-testid="package-recipient-phone"
+                            label="Recipient phone"
+                            onChange={event =>
+                              setComposer(current => ({
+                                ...current,
+                                recipientPhone: event.target.value,
+                              }))
+                            }
+                            placeholder="+962790000888"
+                            value={composer.recipientPhone}
+                          />
+                          <Input
+                            label="Weight"
+                            onChange={event =>
+                              setComposer(current => ({ ...current, weight: event.target.value }))
+                            }
+                            value={composer.weight}
+                          />
+                        </div>
+                        <textarea
+                          className="ds-textarea"
+                          onChange={event =>
+                            setComposer(current => ({ ...current, note: event.target.value }))
+                          }
+                          placeholder="Add one short package note."
+                          value={composer.note}
+                        />
+                        {createError ? (
+                          <div className="ds-inline-feedback" data-tone="error">
+                            {createError}
                           </div>
-                        ))}
+                        ) : null}
+                        <Button
+                          data-testid="package-create-request"
+                          fullWidth
+                          onClick={() => void createRequest()}
+                        >
+                          Create package request
+                        </Button>
                       </div>
-                      <div className="ds-form-grid">
-                        <Select
-                          label="From"
-                          onChange={(event) => setComposer((current) => ({ ...current, from: event.target.value }))}
-                          options={CITY_OPTIONS.map((city) => ({ label: city.label, value: city.value }))}
-                          value={composer.from}
-                        />
-                        <Select
-                          label="To"
-                          onChange={(event) => setComposer((current) => ({ ...current, to: event.target.value }))}
-                          options={CITY_OPTIONS.map((city) => ({ label: city.label, value: city.value }))}
-                          value={composer.to}
-                        />
+                    ),
+                    label: 'Send',
+                    value: 'send',
+                  },
+                  {
+                    content: (
+                      <div className="ds-stack">
                         <Input
-                          data-testid="package-recipient-name"
-                          label="Recipient"
-                          onChange={(event) => setComposer((current) => ({ ...current, recipientName: event.target.value }))}
-                          placeholder="Receiver Test"
-                          value={composer.recipientName}
+                          label="Find tracking"
+                          onChange={event => setTrackingId(event.target.value)}
+                          placeholder="PKG-12345"
+                          value={trackingId}
                         />
-                        <Input
-                          data-testid="package-recipient-phone"
-                          label="Recipient phone"
-                          onChange={(event) => setComposer((current) => ({ ...current, recipientPhone: event.target.value }))}
-                          placeholder="+962790000888"
-                          value={composer.recipientPhone}
-                        />
-                        <Input
-                          label="Weight"
-                          onChange={(event) => setComposer((current) => ({ ...current, weight: event.target.value }))}
-                          value={composer.weight}
-                        />
+                        <Button fullWidth onClick={() => void searchTracking()}>
+                          Search tracking
+                        </Button>
+                        {trackingMessage ? (
+                          <div className="ds-inline-feedback" data-tone="success">
+                            {trackingMessage}
+                          </div>
+                        ) : null}
+                        {createdPackage ? (
+                          <Card>
+                            <h2 className="ds-section-title">Package request created</h2>
+                            <div className="ds-list">
+                              <div className="ds-list-item">
+                                <div>
+                                  <strong>Tracking ID</strong>
+                                  <div className="ds-caption">{createdPackage.trackingId}</div>
+                                </div>
+                              </div>
+                              <div className="ds-list-item">
+                                <div>
+                                  <strong>Handoff code</strong>
+                                  <div className="ds-caption">{createdPackage.handoffCode}</div>
+                                </div>
+                              </div>
+                              <div className="ds-list-item">
+                                <div>
+                                  <strong>Status</strong>
+                                  <div className="ds-caption">{createdPackage.status}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        ) : null}
                       </div>
-                      <textarea
-                        className="ds-textarea"
-                        onChange={(event) => setComposer((current) => ({ ...current, note: event.target.value }))}
-                        placeholder="Add one short package note."
-                        value={composer.note}
-                      />
-                      {createError ? <div className="ds-inline-feedback" data-tone="error">{createError}</div> : null}
-                      <Button data-testid="package-create-request" fullWidth onClick={() => void createRequest()}>
-                        Create package request
-                      </Button>
-                    </div>
-                  ),
-                  label: 'Send',
-                  value: 'send',
-                },
-                {
-                  content: (
-                    <div className="ds-stack">
-                      <Input
-                        label="Find tracking"
-                        onChange={(event) => setTrackingId(event.target.value)}
-                        placeholder="PKG-12345"
-                        value={trackingId}
-                      />
-                      <Button fullWidth onClick={() => void searchTracking()}>
-                        Search tracking
-                      </Button>
-                      {trackingMessage ? <div className="ds-inline-feedback" data-tone="success">{trackingMessage}</div> : null}
-                      {createdPackage ? (
+                    ),
+                    label: 'Track',
+                    value: 'track',
+                  },
+                  {
+                    content: (
+                      <div className="ds-stack">
                         <Card>
-                          <h2 className="ds-section-title">Package request created</h2>
-                          <div className="ds-list">
-                            <div className="ds-list-item">
-                              <div>
-                                <strong>Tracking ID</strong>
-                                <div className="ds-caption">{createdPackage.trackingId}</div>
-                              </div>
-                            </div>
-                            <div className="ds-list-item">
-                              <div>
-                                <strong>Handoff code</strong>
-                                <div className="ds-caption">{createdPackage.handoffCode}</div>
-                              </div>
-                            </div>
-                            <div className="ds-list-item">
-                              <div>
-                                <strong>Status</strong>
-                                <div className="ds-caption">{createdPackage.status}</div>
-                              </div>
-                            </div>
-                          </div>
+                          <h2 className="ds-card__title">Returns stay simple.</h2>
+                          <p className="ds-copy ds-copy--tight">
+                            Use the same network. Start from the original corridor and open a return
+                            request when you need it.
+                          </p>
                         </Card>
-                      ) : null}
-                    </div>
-                  ),
-                  label: 'Track',
-                  value: 'track',
-                },
-                {
-                  content: (
-                    <div className="ds-stack">
-                      <Card>
-                        <h2 className="ds-card__title">Returns stay simple.</h2>
-                        <p className="ds-copy ds-copy--tight">Use the same network. Start from the original corridor and open a return request when you need it.</p>
-                      </Card>
-                      <Button fullWidth variant="secondary">
-                        Start return request
-                      </Button>
-                    </div>
-                  ),
-                  label: 'Returns',
-                  value: 'returns',
-                },
-              ] satisfies TabItem<'send' | 'track' | 'returns'>[]}
+                        <Button fullWidth variant="secondary">
+                          Start return request
+                        </Button>
+                      </div>
+                    ),
+                    label: 'Returns',
+                    value: 'returns',
+                  },
+                ] satisfies TabItem<'send' | 'track' | 'returns'>[]
+              }
               label="Package tabs"
               onChange={setTab}
               value={tab}
@@ -1544,11 +1792,12 @@ export function BusPage() {
     to: destination,
   });
 
-  const activeRoute = state.routes.find((route) => route.id === selectedRouteId) ?? state.routes[0] ?? null;
+  const activeRoute =
+    state.routes.find(route => route.id === selectedRouteId) ?? state.routes[0] ?? null;
 
   useEffect(() => {
     if (state.routes[0]) {
-      setSelectedRouteId((current) => current || state.routes[0].id);
+      setSelectedRouteId(current => current || state.routes[0].id);
     }
   }, [state.routes]);
 
@@ -1605,37 +1854,40 @@ export function BusPage() {
               </div>
             </SectionWrapper>
 
-            <SectionWrapper description="Choose route, date, and reserve." title="Reserve a coach seat">
+            <SectionWrapper
+              description="Choose route, date, and reserve."
+              title="Reserve a coach seat"
+            >
               <div className="ds-form-grid">
                 <Select
                   label="From"
-                  onChange={(event) => setOrigin(event.target.value)}
-                  options={CITY_OPTIONS.map((city) => ({ label: city.label, value: city.value }))}
+                  onChange={event => setOrigin(event.target.value)}
+                  options={CITY_OPTIONS.map(city => ({ label: city.label, value: city.value }))}
                   value={origin}
                 />
                 <Select
                   label="To"
-                  onChange={(event) => setDestination(event.target.value)}
-                  options={CITY_OPTIONS.map((city) => ({ label: city.label, value: city.value }))}
+                  onChange={event => setDestination(event.target.value)}
+                  options={CITY_OPTIONS.map(city => ({ label: city.label, value: city.value }))}
                   value={destination}
                 />
                 <Input
                   label="Date"
-                  onChange={(event) => setTripDate(event.target.value)}
+                  onChange={event => setTripDate(event.target.value)}
                   type="date"
                   value={tripDate}
                 />
                 <Input
                   label="Passengers"
                   min="1"
-                  onChange={(event) => setPassengers(Number(event.target.value) || 1)}
+                  onChange={event => setPassengers(Number(event.target.value) || 1)}
                   type="number"
                   value={String(passengers)}
                 />
               </div>
 
               <div className="ds-scroll-stack">
-                {state.routes.map((route) => (
+                {state.routes.map(route => (
                   <button
                     className="ds-list-item"
                     key={route.id}
@@ -1646,8 +1898,12 @@ export function BusPage() {
                       <Bus size={16} />
                     </div>
                     <div className="ds-fill">
-                      <strong>{route.from} to {route.to}</strong>
-                      <div className="ds-caption">{route.company} - {route.dep} - {route.price} JOD</div>
+                      <strong>
+                        {route.from} to {route.to}
+                      </strong>
+                      <div className="ds-caption">
+                        {route.company} - {route.dep} - {route.price} JOD
+                      </div>
                     </div>
                     <span className="ds-badge" data-tone="accent">
                       {route.seats} seats
@@ -1660,12 +1916,17 @@ export function BusPage() {
                 <Card>
                   <h2 className="ds-card__title">{activeRoute.company}</h2>
                   <p className="ds-copy ds-copy--tight">
-                    {activeRoute.from} to {activeRoute.to} - {activeRoute.duration} - {activeRoute.price} JOD
+                    {activeRoute.from} to {activeRoute.to} - {activeRoute.duration} -{' '}
+                    {activeRoute.price} JOD
                   </p>
                 </Card>
               ) : null}
 
-              <Button data-testid="bus-confirm-booking" fullWidth onClick={() => void reserveSeat()}>
+              <Button
+                data-testid="bus-confirm-booking"
+                fullWidth
+                onClick={() => void reserveSeat()}
+              >
                 {state.bookingBusy ? 'Reserving seat...' : 'Reserve seat'}
               </Button>
 
@@ -1689,18 +1950,18 @@ export function TripsPage() {
 
   const listItems = useMemo(() => {
     if (tab === 'packages') {
-      return state.packages.map((item) => ({
+      return state.packages.map(item => ({
         detail: `${item.status} - ${item.trackingId}`,
         title: `${item.from} to ${item.to}`,
       }));
     }
     if (tab === 'buses') {
-      return state.buses.map((item) => ({
+      return state.buses.map(item => ({
         detail: `${item.departureTime} - ${item.ticket_code}`,
         title: `${item.pickupStop} to ${item.dropoffStop}`,
       }));
     }
-    return state.rides.map((item) => ({
+    return state.rides.map(item => ({
       detail: `${item.status} - ${item.ticketCode ?? 'Ticket pending'}`,
       title: `${item.from} to ${item.to}`,
     }));
@@ -1717,64 +1978,87 @@ export function TripsPage() {
           />
           <MetricGrid
             items={[
-              { label: 'Rides', value: String(state.rides.length), detail: 'Ride requests and live matches.' },
-              { label: 'Packages', value: String(state.packages.length), detail: 'Parcel requests and tracking.' },
-              { label: 'Buses', value: String(state.buses.length), detail: 'Coach reservations and tickets.' },
-              { label: 'Support', value: String(state.supportTickets.length), detail: 'Open support follow-up.' },
+              {
+                label: 'Rides',
+                value: String(state.rides.length),
+                detail: 'Ride requests and live matches.',
+              },
+              {
+                label: 'Packages',
+                value: String(state.packages.length),
+                detail: 'Parcel requests and tracking.',
+              },
+              {
+                label: 'Buses',
+                value: String(state.buses.length),
+                detail: 'Coach reservations and tickets.',
+              },
+              {
+                label: 'Support',
+                value: String(state.supportTickets.length),
+                detail: 'Open support follow-up.',
+              },
             ]}
           />
-          <SectionWrapper description="Keep one primary view active at a time." title="Trip overview">
+          <SectionWrapper
+            description="Keep one primary view active at a time."
+            title="Trip overview"
+          >
             <Tabs
-              items={[
-                {
-                  content: (
-                    <div className="ds-scroll-stack">
-                      {listItems.length === 0 ? (
-                        <Card>
-                          <h2 className="ds-card__title">No trips in this view</h2>
-                          <p className="ds-copy ds-copy--tight">The selected lane is empty right now.</p>
-                        </Card>
-                      ) : null}
-                      {listItems.map((item) => (
-                        <Card key={`${item.title}-${item.detail}`}>
-                          <h2 className="ds-card__title">{item.title}</h2>
-                          <p className="ds-copy ds-copy--tight">{item.detail}</p>
-                        </Card>
-                      ))}
-                    </div>
-                  ),
-                  label: 'Rides',
-                  value: 'rides',
-                },
-                {
-                  content: (
-                    <div className="ds-scroll-stack">
-                      {listItems.map((item) => (
-                        <Card key={`${item.title}-${item.detail}`}>
-                          <h2 className="ds-card__title">{item.title}</h2>
-                          <p className="ds-copy ds-copy--tight">{item.detail}</p>
-                        </Card>
-                      ))}
-                    </div>
-                  ),
-                  label: 'Packages',
-                  value: 'packages',
-                },
-                {
-                  content: (
-                    <div className="ds-scroll-stack">
-                      {listItems.map((item) => (
-                        <Card key={`${item.title}-${item.detail}`}>
-                          <h2 className="ds-card__title">{item.title}</h2>
-                          <p className="ds-copy ds-copy--tight">{item.detail}</p>
-                        </Card>
-                      ))}
-                    </div>
-                  ),
-                  label: 'Buses',
-                  value: 'buses',
-                },
-              ] satisfies TabItem<'rides' | 'packages' | 'buses'>[]}
+              items={
+                [
+                  {
+                    content: (
+                      <div className="ds-scroll-stack">
+                        {listItems.length === 0 ? (
+                          <Card>
+                            <h2 className="ds-card__title">No trips in this view</h2>
+                            <p className="ds-copy ds-copy--tight">
+                              The selected lane is empty right now.
+                            </p>
+                          </Card>
+                        ) : null}
+                        {listItems.map(item => (
+                          <Card key={`${item.title}-${item.detail}`}>
+                            <h2 className="ds-card__title">{item.title}</h2>
+                            <p className="ds-copy ds-copy--tight">{item.detail}</p>
+                          </Card>
+                        ))}
+                      </div>
+                    ),
+                    label: 'Rides',
+                    value: 'rides',
+                  },
+                  {
+                    content: (
+                      <div className="ds-scroll-stack">
+                        {listItems.map(item => (
+                          <Card key={`${item.title}-${item.detail}`}>
+                            <h2 className="ds-card__title">{item.title}</h2>
+                            <p className="ds-copy ds-copy--tight">{item.detail}</p>
+                          </Card>
+                        ))}
+                      </div>
+                    ),
+                    label: 'Packages',
+                    value: 'packages',
+                  },
+                  {
+                    content: (
+                      <div className="ds-scroll-stack">
+                        {listItems.map(item => (
+                          <Card key={`${item.title}-${item.detail}`}>
+                            <h2 className="ds-card__title">{item.title}</h2>
+                            <p className="ds-copy ds-copy--tight">{item.detail}</p>
+                          </Card>
+                        ))}
+                      </div>
+                    ),
+                    label: 'Buses',
+                    value: 'buses',
+                  },
+                ] satisfies TabItem<'rides' | 'packages' | 'buses'>[]
+              }
               label="Trip tabs"
               onChange={setTab}
               value={tab}
@@ -1800,17 +2084,34 @@ export function WalletPage() {
           />
           <MetricGrid
             items={[
-              { label: 'Balance', value: `${user?.balance ?? 0} JOD`, detail: 'Available stored value.' },
-              { label: 'Trust score', value: `${user?.trustScore ?? 0}`, detail: 'Account readiness.' },
-              { label: 'Trips', value: String(user?.trips ?? 0), detail: 'Journey history on this account.' },
+              {
+                label: 'Balance',
+                value: `${user?.balance ?? 0} JOD`,
+                detail: 'Available stored value.',
+              },
+              {
+                label: 'Trust score',
+                value: `${user?.trustScore ?? 0}`,
+                detail: 'Account readiness.',
+              },
+              {
+                label: 'Trips',
+                value: String(user?.trips ?? 0),
+                detail: 'Journey history on this account.',
+              },
               { label: 'Status', value: user?.walletStatus ?? 'active', detail: 'Wallet health.' },
             ]}
           />
-          <SectionWrapper description="One primary money surface, three quick actions." title="Stored-value controls">
+          <SectionWrapper
+            description="One primary money surface, three quick actions."
+            title="Stored-value controls"
+          >
             <div className="ds-action-grid">
               <Card>
                 <h2 className="ds-card__title">Add money</h2>
-                <p className="ds-copy ds-copy--tight">Top up before the next ride or package move.</p>
+                <p className="ds-copy ds-copy--tight">
+                  Top up before the next ride or package move.
+                </p>
                 <Button>Add money</Button>
               </Card>
               <Card>
@@ -1820,7 +2121,9 @@ export function WalletPage() {
               </Card>
               <Card>
                 <h2 className="ds-card__title">Send</h2>
-                <p className="ds-copy ds-copy--tight">Transfer value inside the same account system.</p>
+                <p className="ds-copy ds-copy--tight">
+                  Transfer value inside the same account system.
+                </p>
                 <Button variant="ghost">Send</Button>
               </Card>
             </div>
@@ -1844,7 +2147,10 @@ export function PaymentsPage() {
             eyebrow="Payments"
             title="Move value with explicit payment flows"
           />
-          <SectionWrapper description="Create an intent first, then confirm the payment." title="Payment intent">
+          <SectionWrapper
+            description="Create an intent first, then confirm the payment."
+            title="Payment intent"
+          >
             <div className="ds-stack">
               <p className="ds-copy ds-copy--tight">
                 Wallet keeps your balance close, but payment actions should still be deliberate.
@@ -1855,7 +2161,9 @@ export function PaymentsPage() {
                 <>
                   <Card>
                     <h2 className="ds-card__title">Payment lifecycle</h2>
-                    <p className="ds-copy ds-copy--tight">Intent created. Review the amount, then confirm the payment.</p>
+                    <p className="ds-copy ds-copy--tight">
+                      Intent created. Review the amount, then confirm the payment.
+                    </p>
                   </Card>
                   <Button onClick={() => setConfirmed(true)} variant="secondary">
                     Confirm payment
@@ -1893,7 +2201,9 @@ export function SettingsPage() {
           return;
         }
       } catch (passwordError) {
-        setMessage(passwordError instanceof Error ? passwordError.message : 'Unable to update password.');
+        setMessage(
+          passwordError instanceof Error ? passwordError.message : 'Unable to update password.',
+        );
         return;
       }
     }
@@ -1915,10 +2225,16 @@ export function SettingsPage() {
             <Card>
               <h2 className="ds-card__title">Theme</h2>
               <div className="ds-minor-actions">
-                <Button onClick={() => setTheme('dark')} variant={theme === 'dark' ? 'primary' : 'secondary'}>
+                <Button
+                  onClick={() => setTheme('dark')}
+                  variant={theme === 'dark' ? 'primary' : 'secondary'}
+                >
                   Dark
                 </Button>
-                <Button onClick={() => setTheme('light')} variant={theme === 'light' ? 'primary' : 'secondary'}>
+                <Button
+                  onClick={() => setTheme('light')}
+                  variant={theme === 'light' ? 'primary' : 'secondary'}
+                >
                   Light
                 </Button>
               </div>
@@ -1926,10 +2242,16 @@ export function SettingsPage() {
             <Card>
               <h2 className="ds-card__title">Language</h2>
               <div className="ds-minor-actions">
-                <Button onClick={() => setLanguage('en')} variant={language === 'en' ? 'primary' : 'secondary'}>
+                <Button
+                  onClick={() => setLanguage('en')}
+                  variant={language === 'en' ? 'primary' : 'secondary'}
+                >
                   English
                 </Button>
-                <Button onClick={() => setLanguage('ar')} variant={language === 'ar' ? 'primary' : 'secondary'}>
+                <Button
+                  onClick={() => setLanguage('ar')}
+                  variant={language === 'ar' ? 'primary' : 'secondary'}
+                >
                   العربية
                 </Button>
               </div>
@@ -1943,21 +2265,25 @@ export function SettingsPage() {
 
           <SectionWrapper description="Keep the settings form direct." title="Account preferences">
             <div className="ds-form-grid">
-                <Input
-                  label="Phone number"
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder="+962791234567"
+              <Input
+                label="Phone number"
+                onChange={event => setPhone(event.target.value)}
+                placeholder="+962791234567"
                 value={phone}
               />
               <Input
                 label="New password"
-                onChange={(event) => setPasswordValue(event.target.value)}
+                onChange={event => setPasswordValue(event.target.value)}
                 placeholder="Set a stronger password"
                 type="password"
                 value={password}
               />
             </div>
-            {message ? <div className="ds-inline-feedback" data-tone="success">{message}</div> : null}
+            {message ? (
+              <div className="ds-inline-feedback" data-tone="success">
+                {message}
+              </div>
+            ) : null}
             <Button fullWidth onClick={() => void saveSettings()}>
               Save settings
             </Button>
@@ -1977,13 +2303,16 @@ export function PrivacyPage() {
           eyebrow="Legal"
           title="Privacy policy"
         />
-        <SectionWrapper description="What Wasel keeps, why it exists, and where it is used." title="Privacy policy">
+        <SectionWrapper
+          description="What Wasel keeps, why it exists, and where it is used."
+          title="Privacy policy"
+        >
           <div className="ds-list">
             {[
               'Wasel stores account, trip, and support details needed to run the network.',
               'Location and booking context stay tied to the active corridor and support flow.',
               'Security and compliance data stay close to verification and wallet actions.',
-            ].map((item) => (
+            ].map(item => (
               <div className="ds-list-item" key={item}>
                 <div className="ds-list-item__icon">
                   <Shield size={16} />
@@ -2009,13 +2338,16 @@ export function TermsPage() {
           eyebrow="Legal"
           title="Terms of service"
         />
-        <SectionWrapper description="The network terms stay short and direct." title="Terms of service">
+        <SectionWrapper
+          description="The network terms stay short and direct."
+          title="Terms of service"
+        >
           <div className="ds-list">
             {[
               'Use Wasel only with accurate trip, package, and identity details.',
               'Keep support, safety, and payment actions inside the trusted product flows.',
               'Respect route agreements, ticket codes, and delivery handoff steps.',
-            ].map((item) => (
+            ].map(item => (
               <div className="ds-list-item" key={item}>
                 <div className="ds-list-item__icon">
                   <Landmark size={16} />
@@ -2036,7 +2368,10 @@ export function NotFoundPage() {
   return (
     <LayoutContainer>
       <div className="ds-page">
-        <SectionWrapper description="The link may be outdated or the page no longer exists." title="Page not found">
+        <SectionWrapper
+          description="The link may be outdated or the page no longer exists."
+          title="Page not found"
+        >
           <div className="ds-minor-actions">
             <a className="ds-button" data-variant="primary" href="/">
               Back to Wasel

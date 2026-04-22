@@ -4,7 +4,7 @@ import { ChevronRight } from 'lucide-react';
 const CARD = 'var(--surface-strong)';
 const BORD = 'var(--border)';
 const FONT =
-  "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+  "var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
 
 export interface StatCardProps {
   label: string;
@@ -171,7 +171,7 @@ export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
 export function VerificationBadge({
   level,
   ar = false,
-  accent = '#0F73FF',
+  accent = 'var(--wasel-app-blue)',
 }: {
   level: string;
   ar?: boolean;
@@ -184,6 +184,36 @@ export function VerificationBadge({
     level_3: { label: ar ? 'موثوق' : 'Trusted', color: '#6BB515', bg: 'rgba(107,181,21,0.12)' },
   };
   const v = map[level] ?? map.level_0;
+  const normalized = (() => {
+    switch (v.color.toUpperCase()) {
+      case '#94A3B8':
+        return {
+          ...v,
+          color: 'var(--wasel-copy-muted)',
+          bg: 'color-mix(in srgb, var(--wasel-copy-muted) 12%, transparent)',
+        };
+      case '#F59E0B':
+        return {
+          ...v,
+          color: 'var(--wasel-brand-hover)',
+          bg: 'color-mix(in srgb, var(--wasel-brand-hover) 12%, transparent)',
+        };
+      case '#6BB515':
+        return {
+          ...v,
+          color: 'var(--wasel-brand-gradient-start)',
+          bg: 'color-mix(in srgb, var(--wasel-brand-gradient-start) 14%, transparent)',
+        };
+      default:
+        return {
+          ...v,
+          bg:
+            v.color === accent
+              ? 'color-mix(in srgb, var(--wasel-app-blue) 12%, transparent)'
+              : v.bg,
+        };
+    }
+  })();
 
   return (
     <span
@@ -192,14 +222,14 @@ export function VerificationBadge({
         fontWeight: 700,
         padding: '3px 8px',
         borderRadius: 999,
-        color: v.color,
-        background: v.bg,
+        color: normalized.color,
+        background: normalized.bg,
         fontFamily: FONT,
         letterSpacing: '0.05em',
         flexShrink: 0,
       }}
     >
-      {v.label}
+      {normalized.label}
     </span>
   );
 }

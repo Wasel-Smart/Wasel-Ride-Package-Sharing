@@ -10,7 +10,10 @@ import {
 export const PROFILE_BG = 'var(--wasel-service-bg)';
 export const PROFILE_BORDER = 'var(--wasel-service-border)';
 export const PROFILE_CYAN = 'var(--wasel-app-blue)';
-export const PROFILE_FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+export const PROFILE_GOLD = 'var(--wasel-brand-gradient-start)';
+export const PROFILE_HOVER = 'var(--wasel-brand-hover)';
+export const PROFILE_MUTED = 'var(--wasel-copy-muted)';
+export const PROFILE_FONT = "var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
 
 export type SavingField = 'name' | 'phone' | 'photo' | null;
 
@@ -216,6 +219,43 @@ function buildQuickActions(
   ];
 }
 
+function brandizeProfileColor(color: string): string {
+  switch (color.toUpperCase()) {
+    case '#EF4444':
+      return PROFILE_HOVER;
+    case '#F59E0B':
+      return PROFILE_GOLD;
+    case '#22C55E':
+      return PROFILE_CYAN;
+    case '#94A3B8':
+      return PROFILE_MUTED;
+    case '#A78BFA':
+      return PROFILE_HOVER;
+    default:
+      return color;
+  }
+}
+
+function brandizeProfileStatusChip(chip: ProfileStatusChip): ProfileStatusChip {
+  return { ...chip, color: brandizeProfileColor(chip.color) };
+}
+
+function brandizeVerificationItems(
+  items: ProfileVerificationItem[],
+): ProfileVerificationItem[] {
+  return items.map((item) => ({
+    ...item,
+    color: brandizeProfileColor(item.color),
+  }));
+}
+
+function brandizeQuickActions(actions: ProfileQuickAction[]): ProfileQuickAction[] {
+  return actions.map((action) => ({
+    ...action,
+    color: brandizeProfileColor(action.color),
+  }));
+}
+
 export function useProfilePageController({
   user,
   ar,
@@ -405,10 +445,10 @@ export function useProfilePageController({
     handleSignOut,
     joinedText: getJoinedText(user.joinedAt, ar),
     nameInput,
-    permissionStatus: getPermissionStatus(notificationSupport, ar),
+    permissionStatus: brandizeProfileStatusChip(getPermissionStatus(notificationSupport, ar)),
     phoneInput,
     profileCompleteness,
-    quickActions: buildQuickActions(ar, nav, handleNotificationSetup),
+    quickActions: brandizeQuickActions(buildQuickActions(ar, nav, handleNotificationSetup)),
     roleLabel: getRoleLabel(user.role, ar),
     savingField,
     setEditingField,
@@ -417,7 +457,7 @@ export function useProfilePageController({
     setShowDeleteConfirm,
     showDeleteConfirm,
     trustTier: getTrustTier(user.trustScore, ar),
-    verificationItems: buildVerificationItems(user, ar),
-    walletStatus: getWalletStatus(user, ar),
+    verificationItems: brandizeVerificationItems(buildVerificationItems(user, ar)),
+    walletStatus: brandizeProfileStatusChip(getWalletStatus(user, ar)),
   };
 }
