@@ -1,7 +1,11 @@
 import { Calendar, Clock3, Search, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
-import { LANDING_COLORS, landingPanel } from '../../features/home/landing/landingTypes';
-import { LANDING_DISPLAY, LANDING_FONT } from '../../features/home/landingConstants';
+import {
+  panelStyle,
+  LANDING_COLORS,
+  FONT_DISPLAY as LANDING_DISPLAY,
+} from '../../styles/shared-ui';
+import { FONT_DISPLAY as LANDING_FONT } from '../../styles/shared-ui';
 import type { RideSearchState } from '../../modules/rides/ride.types';
 import { LocationInput } from './LocationInput';
 
@@ -69,7 +73,7 @@ export function RideSearchForm({
       <section
         className="landing-glow-card"
         style={{
-          ...landingPanel(32),
+          ...panelStyle(32),
           padding: '32px clamp(24px, 4vw, 40px)',
           display: 'grid',
           gap: 28,

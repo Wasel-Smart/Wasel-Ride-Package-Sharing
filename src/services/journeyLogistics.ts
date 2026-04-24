@@ -57,10 +57,14 @@ export interface PackageRequest {
   weight: string;
   note: string;
   packageType: 'delivery' | 'return';
+  senderName?: string;
+  senderPhone?: string;
+  senderEmail?: string;
   recipientName?: string;
   recipientPhone?: string;
   matchedRideId?: string;
   matchedDriver?: string;
+  matchedDriverPhone?: string;
   status: PackageStatus;
   createdAt: string;
   verification: PackageVerification;
@@ -292,6 +296,14 @@ function normalizeServerPackage(
     weight: sanitizeWeight(String(raw.weight ?? fallback.weight)),
     note: String(raw.description ?? raw.note ?? fallback.note),
     packageType: raw.packageType === 'return' ? 'return' : fallback.packageType,
+    senderName:
+      String(raw.sender_name ?? raw.senderName ?? fallback.senderName ?? '').trim() || undefined,
+    senderPhone: sanitizePhone(
+      String(raw.sender_phone ?? raw.senderPhone ?? fallback.senderPhone ?? ''),
+    ),
+    senderEmail: sanitizeEmail(
+      String(raw.sender_email ?? raw.senderEmail ?? fallback.senderEmail ?? ''),
+    ),
     recipientName:
       String(raw.recipient_name ?? raw.recipientName ?? fallback.recipientName ?? '').trim() ||
       undefined,
@@ -302,6 +314,9 @@ function normalizeServerPackage(
     matchedDriver:
       String(raw.driver_name ?? raw.matchedDriver ?? fallback.matchedDriver ?? '').trim() ||
       fallback.matchedDriver,
+    matchedDriverPhone: sanitizePhone(
+      String(raw.driver_phone ?? raw.matchedDriverPhone ?? fallback.matchedDriverPhone ?? ''),
+    ),
     status,
     createdAt: String(raw.created_at ?? fallback.createdAt),
     verification: {
@@ -379,10 +394,14 @@ function normalizeLocalPackage(raw: Partial<PackageRequest>): PackageRequest | n
     weight: sanitizeWeight(String(raw.weight ?? '<1 kg')),
     note: String(raw.note ?? '').trim(),
     packageType: raw.packageType === 'return' ? 'return' : 'delivery',
+    senderName: String(raw.senderName ?? '').trim() || undefined,
+    senderPhone: sanitizePhone(String(raw.senderPhone ?? '')),
+    senderEmail: sanitizeEmail(String(raw.senderEmail ?? '')),
     recipientName: String(raw.recipientName ?? '').trim() || undefined,
     recipientPhone: sanitizePhone(String(raw.recipientPhone ?? '')),
     matchedRideId,
     matchedDriver: String(raw.matchedDriver ?? '').trim() || undefined,
+    matchedDriverPhone: sanitizePhone(String(raw.matchedDriverPhone ?? '')),
     status,
     createdAt: String(raw.createdAt ?? new Date().toISOString()),
     verification: {
@@ -456,10 +475,25 @@ function saveRides(...lists: PostedRide[][]): PostedRide[] {
 
 function findBestMatchingRide(
   rides: PostedRide[],
-  input: { from: string; to: string; weight: string },
+  input: { from: string; to: string; weight: string; preferredRideId?: string },
 ): PostedRide | undefined {
   const requestedWeight = parseWeight(input.weight);
   const capacityRank = { small: 1, medium: 5, large: 10 };
+  const preferredRide = input.preferredRideId
+    ? rides.find(
+        ride =>
+          ride.id === input.preferredRideId &&
+          ride.acceptsPackages &&
+          routeMatchesLocationPair(ride.from, ride.to, input.from, input.to, {
+            allowReverse: false,
+          }) &&
+          capacityRank[ride.packageCapacity] >= requestedWeight,
+      )
+    : undefined;
+
+  if (preferredRide) {
+    return preferredRide;
+  }
 
   return sortByCreatedAtDesc(rides)
     .filter(
@@ -584,10 +618,12 @@ export async function createConnectedPackage(input: {
   weight: string;
   note: string;
   packageType?: 'delivery' | 'return';
+  senderName?: string;
+  senderPhone?: string;
+  senderEmail?: string;
   recipientName?: string;
   recipientPhone?: string;
-  senderName?: string;
-  senderEmail?: string;
+  preferredRideId?: string;
 }): Promise<PackageRequest> {
   const from = normalizeJordanLocation(input.from, input.from.trim() || 'Amman');
   const to = normalizeJordanLocation(input.to, input.to.trim() || 'Aqaba');
@@ -601,7 +637,12 @@ export async function createConnectedPackage(input: {
   }
 
   const rides = getConnectedRides();
-  const matchedRide = findBestMatchingRide(rides, { from, to, weight: input.weight });
+  const matchedRide = findBestMatchingRide(rides, {
+    from,
+    to,
+    weight: input.weight,
+    preferredRideId: input.preferredRideId,
+  });
   const trackingId = `PKG-${Math.floor(10000 + Math.random() * 90000)}`;
   const status: PackageStatus = matchedRide ? 'matched' : 'searching';
 
@@ -614,10 +655,14 @@ export async function createConnectedPackage(input: {
     weight: sanitizeWeight(input.weight),
     note: input.note.trim(),
     packageType: input.packageType ?? 'delivery',
+    senderName: input.senderName?.trim() || undefined,
+    senderPhone: sanitizePhone(input.senderPhone),
+    senderEmail: sanitizeEmail(input.senderEmail),
     recipientName: input.recipientName?.trim() || undefined,
     recipientPhone: sanitizePhone(input.recipientPhone),
     matchedRideId: matchedRide?.id,
     matchedDriver: matchedRide ? pickDriverName(matchedRide.carModel) : undefined,
+    matchedDriverPhone: matchedRide?.ownerPhone,
     status,
     createdAt: new Date().toISOString(),
     verification: {},
@@ -741,9 +786,9 @@ export async function createConnectedPackage(input: {
     },
   });
   if (input.senderEmail) {
-    triggerPackageConfirmationEmail({
-      senderEmail: input.senderEmail,
-      senderName: input.senderName ?? 'Wasel sender',
+        triggerPackageConfirmationEmail({
+          senderEmail: input.senderEmail,
+          senderName: input.senderName ?? 'Wasel sender',
       trackingId: pkg.trackingId,
       handoffCode: pkg.handoffCode,
       from: pkg.from,
@@ -800,18 +845,22 @@ export async function getPackageByTrackingId(trackingId: string): Promise<Packag
 
     const fallback: PackageRequest = {
       id: String(server.id ?? makeId('pkg')),
-      trackingId: normalizedTrackingId,
-      handoffCode: generateHandoffCode(),
-      from: String(server.from ?? ''),
-      to: String(server.to ?? ''),
-      weight: sanitizeWeight(String(server.weight ?? '<1 kg')),
-      note: String(server.description ?? ''),
-      packageType: 'delivery',
-      recipientName: String(server.recipient_name ?? '').trim() || undefined,
-      recipientPhone: sanitizePhone(String(server.recipient_phone ?? '')),
-      matchedRideId: String(server.trip_id ?? '').trim() || undefined,
-      matchedDriver: String(server.driver_name ?? '').trim() || undefined,
-      status: normalizeStatus(server.status, String(server.trip_id ?? '').trim() || undefined),
+    trackingId: normalizedTrackingId,
+    handoffCode: generateHandoffCode(),
+    from: String(server.from ?? ''),
+    to: String(server.to ?? ''),
+    weight: sanitizeWeight(String(server.weight ?? '<1 kg')),
+    note: String(server.description ?? ''),
+    packageType: 'delivery',
+    senderName: String(server.sender_name ?? '').trim() || undefined,
+    senderPhone: sanitizePhone(String(server.sender_phone ?? '')),
+    senderEmail: sanitizeEmail(String(server.sender_email ?? '')),
+    recipientName: String(server.recipient_name ?? '').trim() || undefined,
+    recipientPhone: sanitizePhone(String(server.recipient_phone ?? '')),
+    matchedRideId: String(server.trip_id ?? '').trim() || undefined,
+    matchedDriver: String(server.driver_name ?? '').trim() || undefined,
+    matchedDriverPhone: sanitizePhone(String(server.driver_phone ?? '')),
+    status: normalizeStatus(server.status, String(server.trip_id ?? '').trim() || undefined),
       createdAt: String(server.created_at ?? new Date().toISOString()),
       verification: {},
       timeline: buildTimeline(

@@ -186,10 +186,15 @@ function toRideResultFromTrip(trip: TripSearchResult): RideResult {
     },
     routeMode: 'network_inventory',
     vehicleType,
+    carModel: vehicleType,
     etaMinutes,
     estimatedArrivalLabel: formatArrivalLabel(etaMinutes),
     recommendedReason: trip.driver.verified ? 'Top verified driver' : undefined,
     rideType: inferRideType(vehicleType),
+    supportsPackages: false,
+    totalSeats: trip.seats,
+    durationLabel: formatArrivalLabel(etaMinutes).replace(' ETA', ''),
+    lastUpdatedAt: new Date().toISOString(),
   };
 }
 
@@ -219,10 +224,25 @@ function toRideResultFromLegacyRide(ride: LegacyRide): RideResult {
     routeMode: ride.routeMode ?? 'live_post',
     ownerId: ride.ownerId,
     vehicleType,
+    carModel: ride.car,
     etaMinutes,
     estimatedArrivalLabel: formatArrivalLabel(etaMinutes),
     recommendedReason: ride.driver.rating >= 4.9 ? 'Highest rated on this corridor' : undefined,
     rideType: inferRideType(vehicleType),
+    supportsPackages: ride.pkgCapacity !== 'none',
+    packageCapacity: ride.pkgCapacity === 'none' ? undefined : ride.pkgCapacity,
+    packageNote: ride.packageNote,
+    postedRideId: ride.sourceRideId,
+    totalSeats: ride.totalSeats,
+    fromPoint: ride.fromPoint,
+    toPoint: ride.toPoint,
+    distanceKm: ride.distance,
+    durationLabel: ride.duration,
+    prayerStops: ride.prayerStops,
+    amenities: ride.amenities,
+    intermediateStops: ride.intermediateStops,
+    carColor: ride.carColor,
+    lastUpdatedAt: ride.createdAt,
   };
 }
 
@@ -513,6 +533,20 @@ export const rideService = {
 
   getRecommendedRideId(results: RideResult[]) {
     return [...results].sort((left, right) => scoreRide(right) - scoreRide(left))[0]?.id;
+  },
+
+  async getRideById(rideId: string): Promise<RideResult | null> {
+    const activeRide = getActiveRideLibrary().find(ride => ride.id === rideId);
+    if (activeRide) {
+      return toRideResultFromLegacyRide(activeRide);
+    }
+
+    try {
+      const trip = await tripsAPI.getTripById(rideId);
+      return toRideResultFromTrip(trip);
+    } catch {
+      return null;
+    }
   },
 
   getActiveRideRequest(rideId: string): RideBookingRecord | null {

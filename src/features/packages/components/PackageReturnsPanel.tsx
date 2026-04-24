@@ -18,7 +18,7 @@ export function PackageReturnsPanel({
       <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>R</div>
       <h3 style={{ color: DS.text, fontWeight: 800, margin: '0 0 8px' }}>Raje3 Returns</h3>
       <p style={{ color: DS.sub, margin: '0 auto 24px', maxWidth: 480 }}>
-        Return e-commerce items through the same shared ride network. Create a return request, match it to a posted route, and keep one tracking ID from pickup to dropoff.
+        Return e-commerce items through the same shared ride network. Create a return request, match it to a posted route, and keep one tracking ID plus WhatsApp-first coordination from pickup to dropoff.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 24, textAlign: 'left' }}>
         {PACKAGE_RETURN_STEPS.map((step) => (

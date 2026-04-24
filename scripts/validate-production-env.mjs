@@ -20,21 +20,21 @@ const REQUIRED_VARS = {
     pattern: /^eyJ/,
     description: 'Supabase publishable anon key (starts with eyJ)',
   },
-  
+
   // Stripe
   VITE_STRIPE_PUBLISHABLE_KEY: {
     required: true,
     pattern: /^pk_live_/,
     description: 'Stripe LIVE publishable key (must start with pk_live_)',
   },
-  
+
   // Sentry
   VITE_SENTRY_DSN: {
     required: true,
     pattern: /^https:\/\/[a-f0-9]+@[a-z0-9]+\.ingest\.sentry\.io\/\d+$/,
     description: 'Sentry DSN for error tracking',
   },
-  
+
   // App Configuration
   VITE_APP_URL: {
     required: true,
@@ -46,7 +46,7 @@ const REQUIRED_VARS = {
     pattern: /^production$/,
     description: 'Must be "production"',
   },
-  
+
   // Google Maps
   VITE_GOOGLE_MAPS_API_KEY: {
     required: true,
@@ -58,7 +58,7 @@ const REQUIRED_VARS = {
     pattern: /\.apps\.googleusercontent\.com$/,
     description: 'Google OAuth client ID',
   },
-  
+
   // Support Contact
   VITE_SUPPORT_WHATSAPP_NUMBER: {
     required: true,
@@ -70,7 +70,7 @@ const REQUIRED_VARS = {
     pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     description: 'Support email address',
   },
-  
+
   // Feature Flags
   VITE_ENABLE_DEMO_DATA: {
     required: true,
@@ -117,15 +117,9 @@ const BACKEND_REQUIRED_VARS = {
   },
 };
 
-interface ValidationResult {
-  valid: boolean;
-  errors: string[];
-  warnings: string[];
-}
-
-function validateEnvironment(envVars: Record<string, string>, schema: typeof REQUIRED_VARS): ValidationResult {
-  const errors: string[] = [];
-  const warnings: string[] = [];
+function validateEnvironment(envVars, schema) {
+  const errors = [];
+  const warnings = [];
 
   for (const [key, config] of Object.entries(schema)) {
     const value = envVars[key];
@@ -155,10 +149,10 @@ function validateEnvironment(envVars: Record<string, string>, schema: typeof REQ
   };
 }
 
-function loadEnvFile(path: string): Record<string, string> {
+function loadEnvFile(path) {
   try {
     const content = readFileSync(path, 'utf-8');
-    const vars: Record<string, string> = {};
+    const vars = {};
 
     content.split('\n').forEach(line => {
       const trimmed = line.trim();
@@ -166,7 +160,10 @@ function loadEnvFile(path: string): Record<string, string> {
 
       const [key, ...valueParts] = trimmed.split('=');
       if (key && valueParts.length > 0) {
-        vars[key.trim()] = valueParts.join('=').trim().replace(/^["']|["']$/g, '');
+        vars[key.trim()] = valueParts
+          .join('=')
+          .trim()
+          .replace(/^["']|["']$/g, '');
       }
     });
 
@@ -182,19 +179,19 @@ function main() {
 
   // Load .env.production if it exists
   const envVars = loadEnvFile('.env.production');
-  
+
   // Also check process.env for CI/CD environments
   const allVars = { ...envVars, ...process.env };
 
   // Validate frontend variables
   console.log('📱 Frontend Variables:');
   const frontendResult = validateEnvironment(allVars, REQUIRED_VARS);
-  
+
   if (frontendResult.errors.length > 0) {
     console.log('\nErrors:');
     frontendResult.errors.forEach(err => console.log(err));
   }
-  
+
   if (frontendResult.warnings.length > 0) {
     console.log('\nWarnings:');
     frontendResult.warnings.forEach(warn => console.log(warn));
@@ -207,12 +204,12 @@ function main() {
   // Validate backend variables
   console.log('\n🔧 Backend Variables (Edge Functions):');
   const backendResult = validateEnvironment(allVars, BACKEND_REQUIRED_VARS);
-  
+
   if (backendResult.errors.length > 0) {
     console.log('\nErrors:');
     backendResult.errors.forEach(err => console.log(err));
   }
-  
+
   if (backendResult.warnings.length > 0) {
     console.log('\nWarnings:');
     backendResult.warnings.forEach(warn => console.log(warn));
@@ -224,7 +221,7 @@ function main() {
 
   // Security checks
   console.log('\n🔒 Security Checks:');
-  const securityIssues: string[] = [];
+  const securityIssues = [];
 
   if (allVars.VITE_SUPABASE_URL?.includes('localhost')) {
     securityIssues.push('❌ VITE_SUPABASE_URL points to localhost');

@@ -1,7 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { Brain, Briefcase, CheckCircle2, Network } from 'lucide-react';
-import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useLocalAuth } from '../../contexts/LocalAuth';
+import { buildCorridorExperienceSnapshot } from '../../domains/corridors/corridorExperience';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { createGenderMeta, OFFER_RIDE_DRAFT_KEY } from '../../pages/waselCoreRideData';
@@ -65,9 +65,7 @@ export function OfferRidePage() {
     [form.from, form.to, form.seats],
   );
   const corridorTruth = useCorridorTruth({ from: form.from, to: form.to });
-  const selectedSignal = corridorTruth.selectedSignal;
-  const hasDemandSignal = typeof selectedSignal?.forecastDemandScore === 'number';
-  const corridorCount = corridorTruth.matchingRideCount;
+  const corridor = useMemo(() => buildCorridorExperienceSnapshot(corridorTruth), [corridorTruth]);
   const recentPostedRides = getConnectedRides().filter((ride) => routeMatchesLocationPair(ride.from, ride.to, form.from, form.to, { allowReverse: false })).slice(0, 3);
   const incomingRequests = user
     ? getBookingsForDriver(user.id, getConnectedRides()).filter((booking) => booking.status === 'pending_driver').slice(0, 4)
@@ -154,17 +152,21 @@ export function OfferRidePage() {
 
       notificationsAPI.createNotification({
         title: 'Route posted',
-        message: form.acceptsPackages ? `Your ${form.from} to ${form.to} route is live for riders and packages.` : `Your ${form.from} to ${form.to} route is now live.`,
+        message: form.acceptsPackages ? `Your ${form.from} to ${form.to} route is live for riders and packages, with WhatsApp as the main coordination lane.` : `Your ${form.from} to ${form.to} route is now live with WhatsApp as the main rider channel.`,
         type: 'booking',
         priority: 'high',
         action_url: '/app/offer-ride',
+        contact: {
+          email: user.email,
+          phone: user.phone,
+        },
       }).catch(() => {});
 
       if (permission === 'default') {
         requestPermission().catch(() => {});
       }
       notifyTripConfirmed('Wasel Network', `${createdRide.from} to ${createdRide.to}`);
-      void recordMovementActivity('route_published', driverPlan?.corridor.id ?? null);
+      void recordMovementActivity('route_published', corridor.corridorId ?? driverPlan?.corridor.id ?? null);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'We could not post the route right now.');
     } finally {
@@ -177,52 +179,28 @@ export function OfferRidePage() {
       <PageShell>
         <SectionHead
           emoji="🚘"
-          title="Offer Route"
-          titleAr="اعرض مساراً"
-          sub="Publish seats and package space in one flow."
+          title="Create ride"
+          titleAr="أنشئ رحلة"
+          sub="Share seats, hold packages, and keep riders on WhatsApp."
           color={DS.blue}
         />
 
         <CoreExperienceBanner
-          title="Post one route and open supply."
-          detail={`${category.promise} Publish the route once so Wasel can price, fill, and reuse it.`}
+          title="Post one route and open a WhatsApp-first lane."
+          detail={`${category.promise} Publish the route once so Wasel can price, fill, reuse it, and keep riders plus package senders coordinated on WhatsApp.`}
           tone={DS.blue}
         />
 
         <ClarityBand
           title="Build the route in three moves."
-          detail="Set the corridor, check the route economics, then publish only when the trust and demand signals are easy to read."
+          detail="Set the corridor, check the route economics, and publish once the route, package holding, and WhatsApp coordination story are clear."
           tone={DS.blue}
           items={[
             { label: '1. Shape', value: 'Set the route, timing, and seat plan.' },
-            { label: '2. Review', value: 'Check earnings, trust gates, and live demand.' },
-            { label: '3. Publish', value: 'Open the route once the signal feels ready.' },
+            { label: '2. Review', value: 'Check earnings, trust gates, demand, and package holding.' },
+            { label: '3. Publish', value: 'Open the route once WhatsApp-led coordination feels ready.' },
           ]}
         />
-
-        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
-          <StakeholderSignalBanner
-            eyebrow="Wasel · supply comms"
-            title="Route publishing now speaks to drivers, riders, packages, and operations at once"
-            detail="This supply flow now makes route readiness, trust gating, earnings logic, and network pull visible in one place so a posted route feels operationally complete from the start."
-            stakeholders={[
-              { label: 'Driver readiness', value: `${driverReadiness.steps.filter((readinessStep) => readinessStep.complete).length}/${driverReadiness.steps.length}`, tone: 'teal' },
-              { label: 'Pending requests', value: String(incomingRequests.length), tone: 'amber' },
-              { label: 'Live corridor rides', value: String(corridorCount), tone: 'blue' },
-              { label: 'Package mode', value: form.acceptsPackages ? 'On' : 'Off', tone: form.acceptsPackages ? 'green' : 'slate' },
-            ]}
-            statuses={[
-              { label: 'Offer gate', value: offerGate.allowed ? 'Open' : 'Blocked', tone: offerGate.allowed ? 'green' : 'rose' },
-              { label: 'Package gate', value: packageGate.allowed ? 'Open' : 'Blocked', tone: packageGate.allowed ? 'green' : 'amber' },
-              { label: 'Demand signal', value: hasDemandSignal ? `${selectedSignal.forecastDemandScore}/100` : 'Pending', tone: hasDemandSignal ? 'blue' : 'slate' },
-            ]}
-            lanes={[
-              { label: 'Supply lane', detail: 'Route publishing, draft state, and incoming requests now point to one live supply story.' },
-              { label: 'Trust lane', detail: 'Posting and package carrying rights stay tied to the same readiness and trust checks.' },
-              { label: 'Revenue lane', detail: 'Seat pricing, package bonus, and marketplace pull explain why this corridor matters before it goes live.' },
-            ]}
-          />
-        </div>}
 
         {(!offerGate.allowed || (form.acceptsPackages && !packageGate.allowed)) && (
           <div style={{ marginBottom: 18, background: 'rgba(168,214,20,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: DS.text }}>
@@ -265,8 +243,8 @@ export function OfferRidePage() {
             },
             {
               label: 'Live demand signal',
-              value: selectedSignal ? `${selectedSignal.forecastDemandScore}/100` : driverPlan ? `${driverPlan.corridor.predictedDemandScore}/100` : String(networkStats.ridesPosted),
-              detail: selectedSignal ? `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings | ${selectedSignal.livePackages} packages` : driverPlan ? 'Wasel Brain route confidence score' : 'Connected network activity',
+              value: corridor.demandScore !== null ? `${corridor.demandScore}/100` : driverPlan ? `${driverPlan.corridor.predictedDemandScore}/100` : String(networkStats.ridesPosted),
+              detail: corridor.liveProofSummary ?? (driverPlan ? 'Wasel Brain route confidence score' : 'Connected network activity'),
               color: DS.blue,
             },
           ].map((item) => (
@@ -293,9 +271,9 @@ export function OfferRidePage() {
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {[
-                selectedSignal?.recommendedReason ?? driverPlan?.waselBrainNote ?? 'Pick a route to unlock a lane-specific earnings recommendation.',
-                selectedSignal ? `Next dense departure window is ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.` : driverPlan?.corridor.autoGroupWindow ?? 'Auto-grouping begins when the corridor gets enough saved demand.',
-                selectedSignal ? `${selectedSignal.productionSources.slice(0, 3).join(' | ')}.` : driverPlan ? `Empty-seat risk on this route is about ${driverPlan.emptySeatCostJod} JOD per unfilled seat.` : 'Fill rate is the lever that keeps the route profitable.',
+                corridor.recommendationReason ?? driverPlan?.waselBrainNote ?? 'Pick a route to unlock a lane-specific earnings recommendation.',
+                corridor.pickupSummary ?? driverPlan?.corridor.autoGroupWindow ?? 'Auto-grouping begins when the corridor gets enough saved demand.',
+                corridor.liveProofSummary ?? (driverPlan ? `Empty-seat risk on this route is about ${driverPlan.emptySeatCostJod} JOD per unfilled seat.` : 'Fill rate is the lever that keeps the route profitable.'),
               ].map((line) => (
                 <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: DS.text, fontSize: '0.82rem', lineHeight: 1.65 }}>
                   {line}
@@ -343,8 +321,8 @@ export function OfferRidePage() {
             },
             {
               title: 'Corridor proof',
-              detail: selectedSignal
-                ? `This route already shows ${selectedSignal.routeOwnershipScore}/100 ownership and ${selectedSignal.priceQuote.finalPriceJod} JOD shared pricing.`
+              detail: corridor.routeOwnershipScore !== null && corridor.quotedPriceJod !== null
+                ? `This route already shows ${corridor.routeOwnershipScore}/100 ownership and ${corridor.quotedPriceJod} JOD shared pricing.`
                 : 'Wasel turns posted supply into proof once searches, bookings, and demand alerts accumulate.',
               action: () => nav('/app/analytics'),
               label: 'Open corridor proof',
@@ -383,7 +361,7 @@ export function OfferRidePage() {
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, maxWidth: 760, margin: '22px auto 0' }}>
               {[
-                { label: 'Corridor readiness', value: corridorCount > 0 ? `${corridorCount + 1} live routes` : 'First live route' },
+                { label: 'Corridor readiness', value: corridor.matchingRideCount > 0 ? `${corridor.matchingRideCount + 1} live routes` : 'First live route' },
                 { label: 'Driver playbook', value: driverPlan ? `${driverPlan.grossWhenFullJod} JOD when full` : 'Fill seats to unlock savings' },
                 { label: 'Delivery mode', value: form.acceptsPackages ? `Packages on (${form.packageCapacity})` : 'Passengers only' },
               ].map((item) => (
@@ -401,14 +379,13 @@ export function OfferRidePage() {
           <OfferRideFormPanel
             form={form}
             step={step}
-            corridorCount={corridorCount}
+            corridor={corridor}
             recentPostedRides={recentPostedRides}
             draftMessage={draftMessage}
             formError={formError}
             busyState={busyState}
             genderMeta={GENDER_META}
             driverPlan={driverPlan}
-            liveSignal={selectedSignal}
             onUpdate={updateForm}
             onStepChange={moveToStep}
             onSubmit={handlePostRide}

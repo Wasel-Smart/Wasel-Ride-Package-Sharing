@@ -1,9 +1,11 @@
 import { Shield } from 'lucide-react';
+import { OperationalConfidencePanel } from '../../../components/trust/OperationalConfidencePanel';
 import { useTheme } from '../../../contexts/ThemeContext';
+import type { CorridorExperienceSnapshot } from '../../../domains/corridors/corridorExperience';
+import { getOfferRideConfidenceSummary } from '../../../domains/trust/operationalConfidence';
 import { CITIES } from '../../../pages/waselCoreRideData';
 import { DS, r } from '../../../pages/waselServiceShared';
 import type { PostedRide } from '../../../services/journeyLogistics';
-import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
 import type { DriverRoutePlan } from '../../../config/wasel-movement-network';
 import { OFFER_RIDE_PACKAGE_CAPACITY_OPTIONS } from '../offerRideContent';
 
@@ -26,14 +28,13 @@ type OfferRideForm = {
 type OfferRideFormPanelProps = {
   form: OfferRideForm;
   step: number;
-  corridorCount: number;
+  corridor: CorridorExperienceSnapshot;
   recentPostedRides: PostedRide[];
   draftMessage: string | null;
   formError: string | null;
   busyState: 'idle' | 'posting';
   genderMeta: Record<string, { label: string; color: string }>;
   driverPlan: DriverRoutePlan | null;
-  liveSignal?: LiveCorridorSignal | null;
   onUpdate: (key: string, value: string | number | boolean) => void;
   onStepChange: (step: number) => void;
   onSubmit: () => void;
@@ -42,19 +43,25 @@ type OfferRideFormPanelProps = {
 export function OfferRideFormPanel({
   form,
   step,
-  corridorCount,
+  corridor,
   recentPostedRides,
   draftMessage,
   formError,
   busyState,
   genderMeta,
   driverPlan,
-  liveSignal = null,
   onUpdate,
   onStepChange,
   onSubmit,
 }: OfferRideFormPanelProps) {
   const { resolvedTheme } = useTheme();
+  const confidenceSummary = getOfferRideConfidenceSummary({
+    corridor,
+    acceptsPackages: form.acceptsPackages,
+    packageCapacity: form.packageCapacity,
+    draftMessage,
+    driverPlan,
+  });
 
   return (
     <div
@@ -70,75 +77,7 @@ export function OfferRideFormPanel({
         className="sp-2col"
         style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 16, marginBottom: 24 }}
       >
-        <div
-          style={{
-            background: 'rgba(255,255,255,0.04)',
-            borderRadius: r(18),
-            padding: '20px 22px',
-            border: '1px solid rgba(255,255,255,0.08)',
-          }}
-        >
-          <div style={{ color: '#fff', fontWeight: 800, marginBottom: 14, fontSize: '1rem' }}>
-            Posting confidence
-          </div>
-          <div style={{ display: 'grid', gap: 12 }}>
-            {[
-              {
-                label: 'Live corridor',
-                value:
-                  corridorCount > 0
-                    ? `${corridorCount} rides already posted on this route`
-                    : 'No live rides on this route yet',
-              },
-              {
-                label: 'Route signal',
-                value: liveSignal
-                  ? `${liveSignal.forecastDemandScore}/100 demand score with ${liveSignal.pricePressure} pricing`
-                  : driverPlan
-                    ? `${driverPlan.corridor.predictedDemandScore}/100 demand score with ${driverPlan.corridor.density} density`
-                    : 'Pick a corridor to unlock route intelligence',
-              },
-              {
-                label: 'Live proof',
-                value: liveSignal
-                  ? `${liveSignal.liveSearches} searches | ${liveSignal.liveBookings} bookings | ${liveSignal.activeDemandAlerts} alerts`
-                  : 'Production proof appears when Wasel sees corridor demand',
-              },
-              {
-                label: 'Package visibility',
-                value: form.acceptsPackages
-                  ? `Eligible for package matching (${form.packageCapacity})`
-                  : 'Passengers only',
-              },
-              { label: 'Draft status', value: draftMessage || 'Draft autosaves on this device.' },
-            ].map(item => (
-              <div
-                key={item.label}
-                style={{
-                  borderRadius: r(12),
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  padding: '14px 16px',
-                  background: 'rgba(255,255,255,0.02)',
-                }}
-              >
-                <div
-                  style={{
-                    color: 'rgba(255,255,255,0.5)',
-                    fontSize: '0.66rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em',
-                    fontWeight: 700,
-                  }}
-                >
-                  {item.label}
-                </div>
-                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem', marginTop: 6 }}>
-                  {item.value}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <OperationalConfidencePanel summary={confidenceSummary} variant="detail" />
         <div
           style={{
             background: 'rgba(255,255,255,0.04)',
@@ -358,7 +297,7 @@ export function OfferRideFormPanel({
               {[
                 { label: 'Recommended seat price', value: `${driverPlan.recommendedSeatPriceJod} JOD`, detail: 'Cheaper than solo movement while protecting fill rate' },
                 { label: 'Full route gross', value: `${driverPlan.grossWhenFullJod} JOD`, detail: `${driverPlan.corridor.fillTargetSeats} seats is the target load for this corridor` },
-                { label: 'Best pickup point', value: liveSignal?.recommendedPickupPoint ?? driverPlan.corridor.pickupPoints[0] ?? 'Trusted corridor node', detail: liveSignal?.nextWaveWindow ?? driverPlan.corridor.autoGroupWindow },
+                { label: 'Best pickup point', value: corridor.recommendedPickupPoint ?? driverPlan.corridor.pickupPoints[0] ?? 'Trusted corridor node', detail: corridor.nextWaveWindow ?? driverPlan.corridor.autoGroupWindow },
               ].map((item) => (
                 <div key={item.label} style={{ borderRadius: r(16), border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', padding: '16px 18px' }}>
                   <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>{item.label}</div>
@@ -379,7 +318,7 @@ export function OfferRideFormPanel({
               <div style={{ color: '#06b6d4', fontWeight: 800, fontSize: '0.9rem' }}>Wasel Brain recommendation</div>
               <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', lineHeight: 1.65, marginTop: 8 }}>
                 {driverPlan.waselBrainNote} Empty-seat risk is about {driverPlan.emptySeatCostJod} JOD per open seat, and package-ready supply can add about {driverPlan.packageBonusJod} JOD on this route.
-                {liveSignal ? ` Live route proof shows ${liveSignal.routeOwnershipScore}/100 ownership with ${liveSignal.productionSources[0]}.` : ''}
+                {corridor.routeOwnershipScore !== null ? ` Live route proof shows ${corridor.routeOwnershipScore}/100 ownership${corridor.liveProofSummary ? ` with ${corridor.liveProofSummary}.` : '.'}` : ''}
               </div>
             </div>
           )}
@@ -388,7 +327,7 @@ export function OfferRideFormPanel({
             <input placeholder="e.g. Toyota Camry 2023" value={form.carModel} onChange={(event) => onUpdate('carModel', event.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: r(14), border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontFamily: DS.F, fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <button onClick={() => onUpdate('acceptsPackages', !form.acceptsPackages)} style={{ padding: '16px 20px', borderRadius: r(14), border: `1px solid ${form.acceptsPackages ? '#10b981' : 'rgba(255,255,255,0.1)'}`, background: form.acceptsPackages ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.05)', color: form.acceptsPackages ? '#10b981' : 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', textAlign: 'left', fontSize: '0.95rem' }}>
-            Package network: {form.acceptsPackages ? 'Accepting packages on this ride' : 'Passengers only'}
+            Package holding: {form.acceptsPackages ? 'Holding packages on this ride' : 'Passengers only'}
           </button>
           {form.acceptsPackages && (
             <div>
@@ -409,9 +348,9 @@ export function OfferRideFormPanel({
         </div>
       )}
 
-{step === 3 && (
+      {step === 3 && (
         <div style={{ display: 'grid', gap: 18 }}>
-          <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 8px', fontSize: '1.2rem' }}>Preferences and Connected Delivery</h3>
+          <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 8px', fontSize: '1.2rem' }}>Preferences, Package Holding, and WhatsApp</h3>
           <div>
             <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Gender Preference</label>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -435,6 +374,12 @@ export function OfferRideFormPanel({
             <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Note for passengers</label>
             <textarea rows={3} placeholder="Anything passengers should know" value={form.note} onChange={(event) => onUpdate('note', event.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: r(14), border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontFamily: DS.F, fontSize: '0.95rem', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
           </div>
+          <div style={{ borderRadius: r(16), border: '1px solid rgba(37,211,102,0.35)', background: 'rgba(37,211,102,0.1)', padding: '16px 18px' }}>
+            <div style={{ color: '#25d366', fontWeight: 800, fontSize: '0.9rem' }}>WhatsApp is the main communication pipeline</div>
+            <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: '0.8rem', lineHeight: 1.65, marginTop: 8 }}>
+              Riders, package senders, package receivers, and holders should coordinate on WhatsApp first. This ride should feel ready for guest updates and package handoff messages the moment it goes live.
+            </div>
+          </div>
           <div style={{ background: 'rgba(6,182,212,0.08)', borderRadius: r(18), padding: '22px 24px', border: '1px solid rgba(6,182,212,0.2)' }}>
             <h4 style={{ color: '#06b6d4', fontWeight: 800, margin: '0 0 16px', fontSize: '0.95rem' }}>Summary</h4>
             <div style={{ color: '#fff', fontSize: '0.95rem', lineHeight: 1.9 }}>
@@ -443,11 +388,13 @@ export function OfferRideFormPanel({
               {form.seats} seats - {form.price} JOD/seat - {form.carModel || 'Car TBD'}
               <br />
               {form.acceptsPackages ? `Packages enabled (${form.packageCapacity})` : 'Passengers only'}
+              <br />
+              WhatsApp is the main rider and package coordination lane.
               {driverPlan && (
                 <>
                   <br />
-                  Wasel Brain target: {driverPlan.recommendedSeatPriceJod} JOD/seat, {driverPlan.corridor.savingsPercent}% cheaper than solo movement, best pickup at {liveSignal?.recommendedPickupPoint ?? driverPlan.corridor.pickupPoints[0] ?? 'the top corridor node'}
-                  {liveSignal ? `, with ${liveSignal.activeDemandAlerts} active alerts and ${liveSignal.nextWaveWindow} as the next dense departure window` : ''}
+                  Wasel Brain target: {driverPlan.recommendedSeatPriceJod} JOD/seat, {driverPlan.corridor.savingsPercent}% cheaper than solo movement, best pickup at {corridor.recommendedPickupPoint ?? driverPlan.corridor.pickupPoints[0] ?? 'the top corridor node'}
+                  {corridor.activeDemandAlerts > 0 || corridor.nextWaveWindow ? `, with ${corridor.activeDemandAlerts} active alerts and ${corridor.nextWaveWindow ?? 'the next grouped departure window'} as the next dense departure window` : ''}
                 </>
               )}
             </div>

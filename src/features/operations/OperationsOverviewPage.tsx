@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Activity, Brain, Briefcase, GraduationCap, LineChart, Shield } from 'lucide-react';
 import { useLocation } from 'react-router';
-import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
   buildCorridorCommercialSnapshot,
@@ -210,53 +209,11 @@ export default function OperationsOverviewPage() {
     };
   }, [pathname]);
 
-  const liveCorridors = routeIntelligence.featuredSignals.slice(0, 5);
-  const operationsStakeholders =
-    pathname === '/app/services/corporate'
-      ? [
-          { label: 'Operations', value: String(serviceSnapshot?.serviceProviders.length ?? 0), tone: 'teal' as const },
-          { label: 'Business accounts', value: String(businessSnapshot?.employees.length ?? 0), tone: 'blue' as const },
-          { label: 'Route proof', value: String(proofSnapshot?.liveOwnedCorridors ?? 0), tone: 'green' as const },
-          { label: 'Dispatch windows', value: String(serviceSnapshot?.dispatchWindows.length ?? 0), tone: 'amber' as const },
-        ]
-      : pathname === '/app/services/school'
-        ? [
-            { label: 'Operations', value: String(schoolSnapshot?.students.length ?? 0), tone: 'teal' as const },
-            { label: 'Guardians', value: `${schoolSnapshot?.guardianCoveragePercent ?? 0}%`, tone: 'green' as const },
-            { label: 'Safety lane', value: String(schoolSnapshot?.safetyChecklist.length ?? 0), tone: 'amber' as const },
-            { label: 'Recurring days', value: String(schoolSnapshot?.operatingDays.length ?? 0), tone: 'blue' as const },
-          ]
-        : [
-            { label: 'Live corridors', value: String(liveCorridors.length), tone: 'teal' as const },
-            { label: 'Bookings', value: String(dashboard?.funnel.booked ?? 0), tone: 'green' as const },
-            { label: 'Growth proof', value: `${proofSnapshot?.averageSavingsPercent ?? 0}%`, tone: 'amber' as const },
-            { label: 'Network revenue', value: `${(commercialSnapshot?.totalRecurringRevenueJod ?? dashboard?.revenueJod ?? 0).toFixed(0)} JOD`, tone: 'blue' as const },
-          ];
+   const liveCorridors = routeIntelligence.featuredSignals.slice(0, 5);
 
-  return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: FONT, direction: ar ? 'rtl' : 'ltr', paddingBottom: 80 }}>
-      <div style={{ maxWidth: 1080, margin: '0 auto', padding: '32px 16px 0' }}>
-        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
-          <StakeholderSignalBanner
-            dir={ar ? 'rtl' : 'ltr'}
-            eyebrow="Wasel · stakeholder command"
-            title="Operations, service teams, and route proof now share one visible control language"
-            detail="Each operational surface now makes the active stakeholders and communication lanes explicit so growth, dispatch, support, and trust teams can read the same signals without translating between pages."
-            stakeholders={operationsStakeholders}
-            statuses={[
-              { label: 'Current surface', value: config.title, tone: 'teal' },
-              { label: 'Featured corridors', value: String(liveCorridors.length), tone: 'blue' },
-              { label: 'Proof coverage', value: String(proofSnapshot?.rows.length ?? 0), tone: 'green' },
-            ]}
-            lanes={[
-              { label: 'Decision lane', detail: 'Live corridor signals drive the priorities shown on this page.' },
-              { label: 'Commercial lane', detail: 'Business, school, and revenue snapshots connect route ownership to stakeholder outcomes.' },
-              { label: 'Evidence lane', detail: 'Regional proof and workflow snapshots explain why Wasel should act on these corridors now.' },
-            ]}
-          />
-        </div>}
-
-        <div
+   return (
+     <>
+       <div
           style={{
             background: `linear-gradient(135deg, ${config.accent}18, rgba(255,255,255,0.03))`,
             border: `1px solid ${config.accent}33`,

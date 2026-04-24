@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
 import { Brain } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
+import { buildCorridorExperienceSnapshot } from '../../domains/corridors/corridorExperience';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import {
@@ -22,10 +23,12 @@ import { useCorridorTruth } from '../../services/corridorTruth';
 import {
   createConnectedPackage,
   getConnectedPackages,
+  getConnectedRides,
   getConnectedStats,
   getPackageByTrackingId,
   updatePackageVerification,
   type PackageRequest,
+  type PostedRide,
 } from '../../services/journeyLogistics';
 import { notificationsAPI } from '../../services/notifications.js';
 import { recordMovementActivity } from '../../services/movementMembership';
@@ -42,6 +45,7 @@ export function PackagesPage() {
   const { notify, requestPermission, permission } = usePushNotifications();
   const initialPackagePrefill = parsePackagePrefillParams(location.search);
   const [activeTab, setActiveTab] = useState<'send' | 'track' | 'raje3'>('send');
+  const [preferredRideId, setPreferredRideId] = useState(initialPackagePrefill.initialRideId);
   const [pkg, setPkg] = useState(() =>
     createPackageComposer({
       from: initialPackagePrefill.initialFrom,
@@ -59,11 +63,14 @@ export function PackagesPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [trackingMessage, setTrackingMessage] = useState<string | null>(null);
   const [busyState, setBusyState] = useState<'idle' | 'creating' | 'tracking'>('idle');
+  const preferredRide = useMemo<PostedRide | null>(
+    () => getConnectedRides().find(ride => ride.id === preferredRideId) ?? null,
+    [preferredRideId],
+  );
 
   const featuredCorridors = useMemo(() => getFeaturedCorridors(3), []);
   const corridorTruth = useCorridorTruth({ from: pkg.from, to: pkg.to });
-  const { corridorPlan, packageReadyRideCount, selectedPriceQuote, selectedSignal } = corridorTruth;
-  const matchingRideCount = packageReadyRideCount;
+  const corridor = useMemo(() => buildCorridorExperienceSnapshot(corridorTruth), [corridorTruth]);
   const trackedStatusColor =
     trackedPackage?.status === 'delivered'
       ? DS.green
@@ -84,6 +91,7 @@ export function PackagesPage() {
 
   useEffect(() => {
     const nextPrefill = parsePackagePrefillParams(location.search);
+    setPreferredRideId(nextPrefill.initialRideId);
     setPkg(previous => ({
       ...previous,
       from: nextPrefill.initialFrom,
@@ -120,10 +128,12 @@ export function PackagesPage() {
         weight: pkg.weight,
         note: pkg.note,
         packageType,
+        senderName: user?.name,
+        senderPhone: user?.phone,
+        senderEmail: user?.email,
         recipientName: pkg.recipientName,
         recipientPhone: pkg.recipientPhone,
-        senderName: user?.name,
-        senderEmail: user?.email,
+        preferredRideId: preferredRideId || undefined,
       });
 
       setPkg(previous => ({ ...previous, sent: true, trackingId: created.trackingId }));
@@ -131,17 +141,21 @@ export function PackagesPage() {
       setTrackId(created.trackingId);
       setTrackingMessage(`Tracking is live for ${created.trackingId}.`);
       refreshPackageSnapshot();
-      void recordMovementActivity('package_created', corridorPlan?.id ?? null);
+      void recordMovementActivity('package_created', corridor.corridorId ?? null);
 
       notificationsAPI
         .createNotification({
           title: packageType === 'return' ? 'Return request started' : 'Package booking started',
           message: created.matchedRideId
-            ? `Your package was matched to a live ${created.from} to ${created.to} route.`
-            : 'Your package request is live and waiting for the next matching route.',
+            ? `Your package was matched to a live ${created.from} to ${created.to} route with WhatsApp as the main coordination lane.`
+            : 'Your package request is live and waiting for the next matching route, with WhatsApp as the main coordination lane.',
           type: 'booking',
           priority: 'high',
           action_url: '/app/packages',
+          contact: {
+            email: user?.email,
+            phone: user?.phone,
+          },
         })
         .catch(() => {});
 
@@ -274,13 +288,13 @@ export function PackagesPage() {
             },
             {
               label: 'Attach rate',
-              value: corridorPlan ? `${corridorPlan.attachRatePercent}%` : '--',
+              value: corridor.attachRatePercent !== null ? `${corridor.attachRatePercent}%` : '--',
               detail: 'Chance of a fast match',
               color: DS.gold,
             },
             {
               label: 'Shared price',
-              value: corridorPlan ? `${corridorPlan.sharedPriceJod} JOD` : '--',
+              value: corridor.quotedPriceJod !== null ? `${corridor.quotedPriceJod} JOD` : '--',
               detail: 'Current reference price',
               color: DS.cyan,
             },
@@ -354,11 +368,11 @@ export function PackagesPage() {
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {[
-                corridorPlan
-                  ? `${corridorPlan.label} saves ${corridorPlan.savingsPercent}%.`
+                corridor.corridorLabel
+                  ? `${corridor.corridorLabel} saves ${corridor.quoteSavingsPercent ?? 0}%.`
                   : 'Choose a route to see package pricing.',
-                corridorPlan
-                  ? `Pickup: ${corridorPlan.pickupPoints[0] ?? 'Trusted node'}.`
+                corridor.recommendedPickupPoint
+                  ? `Pickup: ${corridor.recommendedPickupPoint}.`
                   : 'Pickup points appear here.',
               ].map(line => (
                 <div
@@ -389,12 +403,12 @@ export function PackagesPage() {
           >
             <div style={{ color: DS.text, fontWeight: 800, marginBottom: 12 }}>Top corridors</div>
             <div style={{ display: 'grid', gap: 10 }}>
-              {featuredCorridors.map(corridor => (
+              {featuredCorridors.map((featuredCorridor) => (
                 <button
-                  key={corridor.id}
+                  key={featuredCorridor.id}
                   type="button"
                   onClick={() =>
-                    setPkg(previous => ({ ...previous, from: corridor.from, to: corridor.to }))
+                    setPkg(previous => ({ ...previous, from: featuredCorridor.from, to: featuredCorridor.to }))
                   }
                   className="w-focus"
                   style={{
@@ -418,16 +432,16 @@ export function PackagesPage() {
                     }}
                   >
                     <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem' }}>
-                      {corridor.label}
+                      {featuredCorridor.label}
                     </div>
                     <span style={{ color: DS.cyan, fontSize: '0.72rem', fontWeight: 700 }}>
-                      {corridor.predictedDemandScore}/100
+                      {featuredCorridor.predictedDemandScore}/100
                     </span>
                   </div>
                   <div
                     style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.55, marginTop: 8 }}
                   >
-                    {corridor.routeMoat}
+                    {featuredCorridor.routeMoat}
                   </div>
                 </button>
               ))}
@@ -490,14 +504,12 @@ export function PackagesPage() {
             <PackageSendPanel
               pkg={pkg}
               setPkg={setPkg}
+              corridor={corridor}
               trackedPackage={trackedPackage}
               createError={createError}
               busyState={busyState}
-              matchingRideCount={matchingRideCount}
-              corridorPlan={corridorPlan}
-              selectedSignal={selectedSignal}
-              selectedPriceQuote={selectedPriceQuote}
               recentPackages={recentPackages}
+              preferredRide={preferredRide}
               onCreate={() => handlePackageCreate('delivery')}
               onReset={resetComposer}
               onOpenTracking={() => setActiveTab('track')}

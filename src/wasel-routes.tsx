@@ -2,6 +2,7 @@ import { createBrowserRouter, isRouteErrorResponse, Navigate, useRouteError } fr
 import { useLocalAuth } from './contexts/LocalAuth';
 import WaselRoot from './layouts/WaselRoot';
 import { buildAuthPagePath } from './utils/authFlow';
+import { APP_ROUTES } from './router/paths';
 import {
   NotFoundPage,
   RouteErrorPage,
@@ -10,6 +11,7 @@ import {
 const loadLandingPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).LandingPage });
 const loadAuthPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).AuthPage });
 const loadFindRidePage = async () => ({ Component: (await import('./features/rides/FindRidePage')).FindRidePage });
+const loadRideDetailsPage = async () => ({ Component: (await import('./features/rides/RideDetailsPage')).RideDetailsPage });
 const loadOfferRidePage = async () => ({ Component: (await import('./features/rides/OfferRidePage')).OfferRidePage });
 const loadTripsPage = async () => ({ Component: (await import('./features/trips/MyTripsPage')).default });
 const loadPackagesPage = async () => ({ Component: (await import('./features/packages/PackagesPage')).PackagesPage });
@@ -52,7 +54,11 @@ function AppEntryRedirect() {
   return (
     <Navigate
       replace
-      to={user ? '/app/find-ride' : buildAuthPagePath('signin', '/app/find-ride')}
+      to={
+        user
+          ? APP_ROUTES.findRide.full
+          : buildAuthPagePath('signin', APP_ROUTES.findRide.full)
+      }
     />
   );
 }
@@ -77,105 +83,107 @@ export const waselRouter = createBrowserRouter([
   {
     Component: WaselRoot,
     errorElement: <RouteErrorBoundary />,
-    path: '/app',
+    path: APP_ROUTES.root.full,
     children: [
       { Component: AppEntryRedirect, index: true },
-      { lazy: loadAuthPage, path: 'auth' },
-      { lazy: loadAuthCallbackPage, path: 'auth/callback' },
-      { lazy: loadFindRidePage, path: 'find-ride' },
-      { lazy: loadOfferRidePage, path: 'offer-ride' },
-      { Component: () => <Navigate replace to="/app/offer-ride" />, path: 'create-ride' },
-      { lazy: loadTripsPage, path: 'my-trips' },
-      { lazy: loadPackagesPage, path: 'packages' },
-      { lazy: loadBusPage, path: 'bus' },
-      { lazy: loadWalletPage, path: 'wallet' },
-      { lazy: loadPaymentsPage, path: 'payments' },
-      { lazy: loadSettingsPage, path: 'settings' },
-      { lazy: loadProfilePage, path: 'profile' },
-      { lazy: loadNotificationsPage, path: 'notifications' },
-      { lazy: loadTrustPage, path: 'trust' },
-      { lazy: loadSafetyPage, path: 'safety' },
-      { lazy: loadPlusPage, path: 'plus' },
-      { lazy: loadDriverPage, path: 'driver' },
-      { lazy: loadAnalyticsPage, path: 'analytics' },
-      { lazy: loadExecutionPage, path: 'execution-os' },
-      { lazy: loadMobilityPage, path: 'mobility-os' },
-      { lazy: loadIntelligencePage, path: 'ai-intelligence' },
-      { lazy: loadInnovationPage, path: 'innovation-hub' },
-      { lazy: loadModerationPage, path: 'moderation' },
-      { lazy: loadPrivacyPage, path: 'privacy' },
-      { lazy: loadTermsPage, path: 'terms' },
-      { Component: () => <Navigate replace to="/app" />, path: 'dashboard' },
-      { Component: () => <Navigate replace to="/app/find-ride" />, path: 'home' },
-      { Component: () => <Navigate replace to="/app/offer-ride" />, path: 'post-ride' },
-      { Component: () => <Navigate replace to="/app/offer-ride" />, path: 'new-ride' },
-      { Component: () => <Navigate replace to="/app/find-ride" />, path: 'routes' },
-      { Component: () => <Navigate replace to="/app/packages" />, path: 'package-delivery' },
+      { lazy: loadAuthPage, path: APP_ROUTES.auth.child },
+      { lazy: loadAuthCallbackPage, path: APP_ROUTES.authCallback.child },
+      { lazy: loadFindRidePage, path: APP_ROUTES.findRide.child },
+      { lazy: loadRideDetailsPage, path: APP_ROUTES.rideDetails.child },
+      { lazy: loadOfferRidePage, path: APP_ROUTES.offerRide.child },
+      { Component: () => <Navigate replace to={APP_ROUTES.offerRide.full} />, path: APP_ROUTES.createRide.child },
+      { lazy: loadTripsPage, path: APP_ROUTES.myTrips.child },
+      { Component: () => <Navigate replace to={APP_ROUTES.myTrips.full} />, path: APP_ROUTES.tripsLegacy.child },
+      { lazy: loadPackagesPage, path: APP_ROUTES.packages.child },
+      { lazy: loadBusPage, path: APP_ROUTES.bus.child },
+      { lazy: loadWalletPage, path: APP_ROUTES.wallet.child },
+      { lazy: loadPaymentsPage, path: APP_ROUTES.payments.child },
+      { lazy: loadSettingsPage, path: APP_ROUTES.settings.child },
+      { lazy: loadProfilePage, path: APP_ROUTES.profile.child },
+      { lazy: loadNotificationsPage, path: APP_ROUTES.notifications.child },
+      { lazy: loadTrustPage, path: APP_ROUTES.trust.child },
+      { lazy: loadSafetyPage, path: APP_ROUTES.safety.child },
+      { lazy: loadPlusPage, path: APP_ROUTES.plus.child },
+      { lazy: loadDriverPage, path: APP_ROUTES.driver.child },
+      { lazy: loadAnalyticsPage, path: APP_ROUTES.analytics.child },
+      { lazy: loadExecutionPage, path: APP_ROUTES.executionOs.child },
+      { lazy: loadMobilityPage, path: APP_ROUTES.mobilityOs.child },
+      { lazy: loadIntelligencePage, path: APP_ROUTES.aiIntelligence.child },
+      { lazy: loadInnovationPage, path: APP_ROUTES.innovationHub.child },
+      { lazy: loadModerationPage, path: APP_ROUTES.moderation.child },
+      { lazy: loadPrivacyPage, path: APP_ROUTES.privacy.child },
+      { lazy: loadTermsPage, path: APP_ROUTES.terms.child },
+      { Component: () => <Navigate replace to={APP_ROUTES.root.full} />, path: APP_ROUTES.dashboard.child },
+      { Component: () => <Navigate replace to={APP_ROUTES.findRide.full} />, path: APP_ROUTES.home.child },
+      { Component: () => <Navigate replace to={APP_ROUTES.offerRide.full} />, path: APP_ROUTES.postRide.child },
+      { Component: () => <Navigate replace to={APP_ROUTES.offerRide.full} />, path: APP_ROUTES.newRide.child },
+      { Component: () => <Navigate replace to={APP_ROUTES.findRide.full} />, path: APP_ROUTES.routes.child },
+      { Component: () => <Navigate replace to={APP_ROUTES.packages.full} />, path: APP_ROUTES.packageDelivery.child },
       { Component: NotFoundPage, path: '*' },
     ],
   },
   {
-    Component: () => <Navigate replace to="/app/auth" />,
+    Component: () => <Navigate replace to={APP_ROUTES.auth.full} />,
     path: '/auth',
   },
   {
-    Component: () => <Navigate replace to="/app/analytics" />,
+    Component: () => <Navigate replace to={APP_ROUTES.analytics.full} />,
     path: '/analytics',
   },
   {
-    Component: () => <Navigate replace to="/app/offer-ride" />,
+    Component: () => <Navigate replace to={APP_ROUTES.offerRide.full} />,
     path: '/create-ride',
   },
   {
-    Component: () => <Navigate replace to="/app/offer-ride" />,
+    Component: () => <Navigate replace to={APP_ROUTES.offerRide.full} />,
     path: '/new-ride',
   },
   {
-    Component: () => <Navigate replace to="/app/execution-os" />,
+    Component: () => <Navigate replace to={APP_ROUTES.executionOs.full} />,
     path: '/execution-os',
   },
   {
-    Component: () => <Navigate replace to="/app/mobility-os" />,
+    Component: () => <Navigate replace to={APP_ROUTES.mobilityOs.full} />,
     path: '/mobility-os',
   },
   {
-    Component: () => <Navigate replace to="/app/ai-intelligence" />,
+    Component: () => <Navigate replace to={APP_ROUTES.aiIntelligence.full} />,
     path: '/ai-intelligence',
   },
   {
-    Component: () => <Navigate replace to="/app/wallet" />,
+    Component: () => <Navigate replace to={APP_ROUTES.wallet.full} />,
     path: '/wallet',
   },
   {
-    Component: () => <Navigate replace to="/app/payments" />,
+    Component: () => <Navigate replace to={APP_ROUTES.payments.full} />,
     path: '/payments',
   },
   {
-    Component: () => <Navigate replace to="/app/profile" />,
+    Component: () => <Navigate replace to={APP_ROUTES.profile.full} />,
     path: '/profile',
   },
   {
-    Component: () => <Navigate replace to="/app/settings" />,
+    Component: () => <Navigate replace to={APP_ROUTES.settings.full} />,
     path: '/settings',
   },
   {
-    Component: () => <Navigate replace to="/app/notifications" />,
+    Component: () => <Navigate replace to={APP_ROUTES.notifications.full} />,
     path: '/notifications',
   },
   {
-    Component: () => <Navigate replace to="/app/trust" />,
+    Component: () => <Navigate replace to={APP_ROUTES.trust.full} />,
     path: '/trust',
   },
   {
-    Component: () => <Navigate replace to="/app/driver" />,
+    Component: () => <Navigate replace to={APP_ROUTES.driver.full} />,
     path: '/driver',
   },
   {
-    Component: () => <Navigate replace to="/app/privacy" />,
+    Component: () => <Navigate replace to={APP_ROUTES.privacy.full} />,
     path: '/privacy',
   },
   {
-    Component: () => <Navigate replace to="/app/terms" />,
+    Component: () => <Navigate replace to={APP_ROUTES.terms.full} />,
     path: '/terms',
   },
   {

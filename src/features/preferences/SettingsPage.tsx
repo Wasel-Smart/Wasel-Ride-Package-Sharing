@@ -2,7 +2,7 @@
  * SettingsPage - /app/settings
  * App-wide settings plus real account editing flows.
  */
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { Bell, ChevronRight, Eye, Globe, Palette, Shield } from 'lucide-react';
@@ -10,9 +10,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useTheme } from '../../contexts/ThemeContext';
-import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { ThemeSwitcher } from '../../components/system/ThemeSwitcher';
-import { normalizeProfilePhone } from '../../features/profile/profileUtils';
+import { canonicalizePhoneNumber } from '../../utils/phone';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import type { Language } from '../../locales/translations';
 import {
@@ -43,7 +42,6 @@ import {
   verify2FACode,
   type TwoFactorSetup,
 } from '../../utils/security';
-import type { ThemePreference } from '../../utils/theme';
 import { omitUndefined } from '../../utils/object';
 import { ClarityBand, PageShell, SectionHead } from '../shared/pageShared';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
@@ -484,34 +482,33 @@ export default function SettingsPage() {
     };
   }, [language, setLanguage, setTheme, theme, user?.id]);
 
-  const persistSettings = async (
-    patch: Partial<UserSettings>,
-    savingKey: string,
-    options?: { quiet?: boolean },
-  ) => {
-    setNotificationSavingKey(savingKey);
+  const persistSettings = useCallback(
+    async (patch: Partial<UserSettings>, savingKey: string, options?: { quiet?: boolean }) => {
+      setNotificationSavingKey(savingKey);
 
-    try {
-      const next = await userSettingsService.updateUserSettings(patch);
-      hydratedSettingsRef.current = true;
-      setNotifs(next.notifications);
-      setPrivacy(next.privacy);
-      setDisplay(next.display);
-      if (next.display.language !== language) {
-        setLanguage(next.display.language);
+      try {
+        const next = await userSettingsService.updateUserSettings(patch);
+        hydratedSettingsRef.current = true;
+        setNotifs(next.notifications);
+        setPrivacy(next.privacy);
+        setDisplay(next.display);
+        if (next.display.language !== language) {
+          setLanguage(next.display.language);
+        }
+        if (next.display.theme !== theme) {
+          setTheme(next.display.theme);
+        }
+        if (!options?.quiet) {
+          toast.success('Saved.');
+        }
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Settings could not be saved.');
+      } finally {
+        setNotificationSavingKey(null);
       }
-      if (next.display.theme !== theme) {
-        setTheme(next.display.theme);
-      }
-      if (!options?.quiet) {
-        toast.success('Saved.');
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Settings could not be saved.');
-    } finally {
-      setNotificationSavingKey(null);
-    }
-  };
+    },
+    [language, setLanguage, setTheme, theme],
+  );
 
   const saveNotificationPreferences = async (
     updates: Partial<CommunicationPreferences>,
@@ -527,12 +524,11 @@ export default function SettingsPage() {
       void saveNotificationPreferences({ [key]: value } as Partial<CommunicationPreferences>, key);
     };
 
-  const updatePrivacySetting =
-    (key: keyof PrivacySettings) => (value: boolean) => {
-      const next = { ...privacy, [key]: value };
-      setPrivacy(next);
-      void persistSettings({ privacy: next }, key);
-    };
+  const updatePrivacySetting = (key: keyof PrivacySettings) => (value: boolean) => {
+    const next = { ...privacy, [key]: value };
+    setPrivacy(next);
+    void persistSettings({ privacy: next }, key);
+  };
 
   const updateDisplaySettings = (updates: Partial<DisplaySettings>, savingKey: string) => {
     const next = { ...display, ...updates };
@@ -551,7 +547,7 @@ export default function SettingsPage() {
     };
     setDisplay(nextDisplay);
     void persistSettings({ display: nextDisplay }, 'theme', { quiet: true });
-  }, [display, theme]);
+  }, [display, theme, persistSettings]);
 
   const openSupportLink = (url: string, emptyMessage: string) => {
     if (!url) {
@@ -568,7 +564,7 @@ export default function SettingsPage() {
   };
 
   const savePhone = async () => {
-    const normalized = normalizeProfilePhone(phoneInput);
+    const normalized = canonicalizePhoneNumber(phoneInput);
     if (normalized === null) {
       toast.error('Please enter a valid phone number.');
       return;
@@ -756,14 +752,6 @@ export default function SettingsPage() {
   };
 
   const sessionSummary = user ? 'Active on this device' : 'Sign in to view sessions';
-  const activeChannelCount = [
-    notifs.inApp,
-    notifs.push && notificationCapabilities.push,
-    notifs.email && notificationCapabilities.email,
-    notifs.sms && notificationCapabilities.sms,
-    notifs.whatsapp && notificationCapabilities.whatsapp,
-  ].filter(Boolean).length;
-
   return (
     <PageShell>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
@@ -773,69 +761,6 @@ export default function SettingsPage() {
           sub="Control notifications, privacy, security, and account preferences inside the same Wasel glass system."
           color={CYAN}
         />
-
-        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && (
-          <div style={{ marginBottom: 22 }}>
-            <StakeholderSignalBanner
-              dir={ar ? 'rtl' : 'ltr'}
-              eyebrow="Wasel · account comms"
-              title="Account and alert settings in one place"
-              detail="Keep support, trust, and notification choices clear before they matter."
-              stakeholders={[
-                { label: 'Active channels', value: String(activeChannelCount), tone: 'teal' },
-                {
-                  label: 'Critical alerts',
-                  value: notifs.criticalAlerts ? 'On' : 'Off',
-                  tone: notifs.criticalAlerts ? 'green' : 'rose',
-                },
-                {
-                  label: 'Preferred language',
-                  value: notifs.preferredLanguage.toUpperCase(),
-                  tone: 'blue',
-                },
-                {
-                  label: 'Phone ready',
-                  value: notificationCapabilities.sms ? 'Yes' : 'No',
-                  tone: notificationCapabilities.sms ? 'green' : 'amber',
-                },
-              ]}
-              statuses={[
-                {
-                  label: 'Push delivery',
-                  value: notificationCapabilities.push ? 'Available' : 'Unavailable',
-                  tone: notificationCapabilities.push ? 'green' : 'amber',
-                },
-                {
-                  label: '2FA',
-                  value: twoFactorEnabled ? 'Enabled' : 'Not enabled',
-                  tone: twoFactorEnabled ? 'green' : 'rose',
-                },
-                {
-                  label: 'Profile visibility',
-                  value: privacy.showProfile ? 'Shared' : 'Private',
-                  tone: privacy.showProfile ? 'blue' : 'slate',
-                },
-              ]}
-              lanes={[
-                {
-                  label: 'Notification routing',
-                  detail:
-                    'In-app, email, SMS, and WhatsApp preferences are now treated as one delivery policy.',
-                },
-                {
-                  label: 'Support handoff',
-                  detail:
-                    'Support email, phone, SMS, and WhatsApp links stay close to the same preference surface.',
-                },
-                {
-                  label: 'Trust controls',
-                  detail:
-                    'Security settings, 2FA, and account contact details now reinforce the same escalation story.',
-                },
-              ]}
-            />
-          </div>
-        )}
 
         <ClarityBand
           title="Keep account controls easy to scan."

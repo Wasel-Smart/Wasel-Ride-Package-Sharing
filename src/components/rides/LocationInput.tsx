@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { LoaderCircle, LocateFixed, MapPin } from 'lucide-react';
-import { LANDING_COLORS, landingPanel } from '../../features/home/landing/landingTypes';
-import { LANDING_FONT } from '../../features/home/landingConstants';
+import { panelStyle, LANDING_COLORS } from '../../styles/shared-ui';
+import { FONT_DISPLAY as LANDING_FONT } from '../../styles/shared-ui';
 import type { RideSuggestion } from '../../modules/rides/ride.types';
 
 interface LocationInputProps {
@@ -171,7 +171,7 @@ export function LocationInput({
             id={listId}
             role="listbox"
             style={{
-              ...landingPanel(20),
+              ...panelStyle(20),
               position: 'absolute',
               left: 0,
               right: 0,

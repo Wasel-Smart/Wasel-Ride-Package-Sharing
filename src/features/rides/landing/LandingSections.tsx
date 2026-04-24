@@ -1,16 +1,20 @@
 import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import { ArrowRight, ShieldCheck, type LucideIcon } from 'lucide-react';
-import { WaselLogo, WaselMark } from '../../components/wasel-ds/WaselLogo';
+import { WaselLogo, WaselMark } from '../../../components/wasel-ds/WaselLogo';
 import {
   WaselBusinessFooter,
   WaselContactActionRow,
   WaselProofOfLifeBlock,
   WaselWhyCard,
-} from '../../components/system/WaselPresence';
-import { useTheme } from '../../contexts/ThemeContext';
-import { DeferredLandingMap } from './DeferredLandingMap';
-import { LANDING_DISPLAY, LANDING_FONT, LANDING_RESPONSIVE_STYLES } from './landingConstants';
-import { GRAD_AURORA, GRAD_HERO, GRAD_SIGNAL } from '../../utils/wasel-ds';
+} from '../../../components/system/WaselPresence';
+import { useTheme } from '../../../contexts/ThemeContext';
+import { DeferredLandingMap } from '../../../components/layout/DeferredLandingMap';
+import {
+  LANDING_DISPLAY,
+  LANDING_FONT,
+  LANDING_RESPONSIVE_STYLES,
+} from '../../../styles/shared-ui';
+import { GRAD_AURORA, GRAD_HERO, GRAD_SIGNAL } from '../../../utils/wasel-ds';
 
 export const LANDING_COLORS = {
   bg: 'var(--background)',

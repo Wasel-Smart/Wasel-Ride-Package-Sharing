@@ -1,11 +1,12 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { Shield } from 'lucide-react';
+import { OperationalConfidencePanel } from '../../../components/trust/OperationalConfidencePanel';
+import type { CorridorExperienceSnapshot } from '../../../domains/corridors/corridorExperience';
+import { getPackageConfidenceSummary } from '../../../domains/trust/operationalConfidence';
 import { CITIES } from '../../../pages/waselCoreRideData';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
-import type { CorridorOpportunity } from '../../../config/wasel-movement-network';
-import type { PackageRequest } from '../../../services/journeyLogistics';
-import type { MovementPriceQuote } from '../../../services/movementPricing';
-import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
+import type { PackageRequest, PostedRide } from '../../../services/journeyLogistics';
+import { buildPreferredWhatsAppUrl, hasWhatsAppContact } from '../../../utils/whatsapp';
 import {
   PACKAGE_EXCELLENCE_POINTS,
   PACKAGE_SEND_STEPS,
@@ -26,14 +27,12 @@ type ComposerState = {
 type PackageSendPanelProps = {
   pkg: ComposerState;
   setPkg: Dispatch<SetStateAction<ComposerState>>;
+  corridor: CorridorExperienceSnapshot;
   trackedPackage: PackageRequest | null;
   createError: string | null;
   busyState: 'idle' | 'creating' | 'tracking';
-  matchingRideCount: number;
-  corridorPlan: CorridorOpportunity | null;
-  selectedSignal: LiveCorridorSignal | null;
-  selectedPriceQuote: MovementPriceQuote | null;
   recentPackages: PackageRequest[];
+  preferredRide: PostedRide | null;
   onCreate: () => void;
   onReset: () => void;
   onOpenTracking: () => void;
@@ -43,19 +42,36 @@ type PackageSendPanelProps = {
 export function PackageSendPanel({
   pkg,
   setPkg,
+  corridor,
   trackedPackage,
   createError,
   busyState,
-  matchingRideCount,
-  corridorPlan,
-  selectedSignal,
-  selectedPriceQuote,
   recentPackages,
+  preferredRide,
   onCreate,
   onReset,
   onOpenTracking,
   onOpenRecent,
 }: PackageSendPanelProps) {
+  const confidenceSummary = getPackageConfidenceSummary({
+    corridor,
+    preferredRide,
+    recipientPhone: pkg.recipientPhone,
+  });
+  const recipientWhatsAppUrl = trackedPackage
+    ? buildPreferredWhatsAppUrl({
+        phone: trackedPackage.recipientPhone,
+        message: `Hi ${trackedPackage.recipientName || 'there'}, your Wasel package ${trackedPackage.trackingId} is active from ${trackedPackage.from} to ${trackedPackage.to}.`,
+        fallbackMessage: `Hi Wasel, I need WhatsApp support for package ${trackedPackage.trackingId}.`,
+      })
+    : '';
+  const holderWhatsAppUrl = trackedPackage
+    ? buildPreferredWhatsAppUrl({
+        phone: trackedPackage.matchedDriverPhone,
+        message: `Hi ${trackedPackage.matchedDriver || 'captain'}, I am coordinating package ${trackedPackage.trackingId} on the ${trackedPackage.from} to ${trackedPackage.to} route.`,
+        fallbackMessage: `Hi Wasel, I need holder coordination for package ${trackedPackage.trackingId}.`,
+      })
+    : '';
   if (pkg.sent) {
     return (
       <div style={{ textAlign: 'center', padding: '40px 0' }}>
@@ -91,7 +107,7 @@ export function PackageSendPanel({
               : 'Waiting for route assignment'}
           </p>
           <p style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 10 }}>
-            Share this OTP with the rider at pickup, then confirm pickup and delivery from tracking.
+            Share this OTP on WhatsApp with the holder and receiver, then confirm pickup and delivery from tracking.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -110,6 +126,46 @@ export function PackageSendPanel({
           >
             Open tracking
           </button>
+          <a
+            href={recipientWhatsAppUrl || undefined}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              padding: '10px 24px',
+              borderRadius: '99px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #25d366 0%, #1faa53 100%)',
+              color: '#fff',
+              cursor: 'pointer',
+              fontFamily: DS.F,
+              fontWeight: 700,
+              textDecoration: 'none',
+            }}
+          >
+            {hasWhatsAppContact(trackedPackage?.recipientPhone)
+              ? 'Recipient WhatsApp'
+              : 'Wasel WhatsApp'}
+          </a>
+          <a
+            href={holderWhatsAppUrl || undefined}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              padding: '10px 24px',
+              borderRadius: '99px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #25d366 0%, #1faa53 100%)',
+              color: '#fff',
+              cursor: 'pointer',
+              fontFamily: DS.F,
+              fontWeight: 700,
+              textDecoration: 'none',
+            }}
+          >
+            {hasWhatsAppContact(trackedPackage?.matchedDriverPhone)
+              ? 'Holder WhatsApp'
+              : 'Wasel WhatsApp'}
+          </a>
           <button
             onClick={onReset}
             style={{
@@ -184,11 +240,11 @@ export function PackageSendPanel({
         </div>
         <div>
           <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
-            Phone
+            Recipient WhatsApp
           </label>
           <input
             data-testid="package-recipient-phone"
-            placeholder="Recipient phone"
+            placeholder="Recipient WhatsApp number"
             value={pkg.recipientPhone}
             onChange={(event) => setPkg((previous) => ({ ...previous, recipientPhone: event.target.value }))}
             style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
@@ -208,9 +264,17 @@ export function PackageSendPanel({
         <div style={{ gridColumn: '1/-1', background: DS.card2, borderRadius: r(14), padding: '16px 18px', border: `1px solid ${DS.border}` }}>
           <div style={{ color: DS.text, fontWeight: 800, marginBottom: 6 }}>Why this stays simple</div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>
-            Every request checks live rides first. If a matching route accepts parcels, tracking starts on the same route instead of sending you into a second workflow.
+            Every request checks live rides first. If a matching route accepts parcels, tracking starts on the same route and WhatsApp stays the main sender, holder, and receiver coordination lane.
           </div>
         </div>
+        {preferredRide ? (
+          <div style={{ gridColumn: '1/-1', background: `${DS.green}10`, borderRadius: r(14), padding: '16px 18px', border: `1px solid ${DS.green}30` }}>
+            <div style={{ color: DS.text, fontWeight: 800, marginBottom: 6 }}>Selected ride holder</div>
+            <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>
+              This request will try to attach to the live {preferredRide.from} to {preferredRide.to} ride at {preferredRide.time}. WhatsApp is the main lane between sender, holder, and receiver.
+            </div>
+          </div>
+        ) : null}
         <div className="pkg-send-steps-grid" style={{ gridColumn: '1/-1', display: 'grid', gap: 10, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
           {PACKAGE_SEND_STEPS.map((item) => (
             <div key={item.title} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card2 }}>
@@ -236,52 +300,7 @@ export function PackageSendPanel({
       </div>
 
       <div style={{ display: 'grid', gap: 14 }}>
-        <div style={{ background: DS.card2, borderRadius: r(16), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 10px 22px rgba(0,0,0,0.12)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
-            <div>
-              <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.95rem' }}>Route readiness</div>
-              <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 4 }}>Live visibility for {pkg.from} to {pkg.to}</div>
-            </div>
-            <span style={{ ...pill(matchingRideCount > 0 ? DS.green : DS.gold) }}>
-              {matchingRideCount > 0 ? `${matchingRideCount} rides live` : 'Standby mode'}
-            </span>
-          </div>
-          <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>
-            {matchingRideCount > 0
-              ? 'This corridor already has package-ready rides, so matching should be immediate or near-immediate.'
-              : 'No package-ready ride is live for this route yet. We will still create the request and keep it queued for the next matching captain.'}
-          </div>
-          {(selectedSignal || corridorPlan || selectedPriceQuote) && (
-            <div
-              className="pkg-send-signal-grid"
-              style={{
-                marginTop: 12,
-                display: 'grid',
-                gap: 10,
-                gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-              }}
-            >
-              <div style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card3 }}>
-                <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Attach rate</div>
-                <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>
-                  {corridorPlan ? `${corridorPlan.attachRatePercent}%` : 'Pending'}
-                </div>
-              </div>
-              <div style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card3 }}>
-                <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Shared price</div>
-                <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>
-                  {selectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : corridorPlan ? `${corridorPlan.sharedPriceJod} JOD` : 'Pending'}
-                </div>
-              </div>
-              <div style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card3 }}>
-                <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Next wave</div>
-                <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}>
-                  {selectedSignal?.nextWaveWindow ?? corridorPlan?.autoGroupWindow ?? 'Waiting for demand'}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <OperationalConfidencePanel summary={confidenceSummary} variant="detail" />
         <div style={{ background: DS.card2, borderRadius: r(16), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 10px 22px rgba(0,0,0,0.12)' }}>
           <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>What great looks like</div>
           <div style={{ display: 'grid', gap: 10 }}>
@@ -308,7 +327,7 @@ export function PackageSendPanel({
                     <span style={{ ...pill(item.matchedRideId ? DS.green : DS.gold) }}>{item.trackingId}</span>
                   </div>
                   <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 6 }}>
-                    {item.matchedRideId ? `Assigned to ${item.matchedDriver || 'connected captain'}` : 'Waiting for route assignment'}
+                    {item.matchedRideId ? `Assigned to ${item.matchedDriver || 'connected captain'} · WhatsApp-first handoff` : `Waiting for route assignment${corridor.pickupSummary ? ` · ${corridor.pickupSummary}` : ''}`}
                   </div>
                 </button>
               ))}

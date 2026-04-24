@@ -1,5 +1,6 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { APP_ROUTES } from '@/router/paths';
 
 const { mockCreateBrowserRouter, mockUseRouteError } = vi.hoisted(() => ({
   mockCreateBrowserRouter: vi.fn((routes: unknown) => ({ routes })),
@@ -45,5 +46,6 @@ describe('wasel-routes contract', () => {
     expect(appRoute.children.some((child) => child.path === 'payments')).toBe(true);
     expect(appRoute.children.some((child) => child.path === 'wallet')).toBe(true);
     expect(appRoute.children.some((child) => child.path === 'dashboard')).toBe(true);
+    expect(appRoute.children.some((child) => child.path === APP_ROUTES.tripsLegacy.child)).toBe(true);
   });
 });

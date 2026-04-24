@@ -27,6 +27,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useNotifications } from '../../hooks/useNotifications';
+import { APP_ROUTES } from '../../router/paths';
 
 const BG       = 'var(--surface-glass)';
 const CYAN     = '#47B7E6';
@@ -101,11 +102,11 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'find',     path: '/app/find-ride',  icon: Search,  label: 'Rides',    labelAr: 'الرحلات',  accent: 'cyan' },
-  { id: 'trips',    path: '/app/trips',      icon: Clock,   label: 'History',  labelAr: 'رحلاتي',   accent: 'cyan', badge: 'live' },
-  { id: 'packages', path: '/app/packages',   icon: Package, label: 'Packages', labelAr: 'الطرود',   accent: 'gold' },
-  { id: 'wallet',   path: '/app/wallet',     icon: Wallet,  label: 'Wallet',   labelAr: 'المحفظة',  accent: 'gold' },
-  { id: 'profile',  path: '/app/profile',    icon: User2,   label: 'Profile',  labelAr: 'حسابي',    accent: 'cyan', badge: 'notifications' },
+  { id: 'find',     path: APP_ROUTES.findRide.full, icon: Search,  label: 'Rides',    labelAr: 'الرحلات',  accent: 'cyan' },
+  { id: 'trips',    path: APP_ROUTES.myTrips.full,  icon: Clock,   label: 'History',  labelAr: 'رحلاتي',   accent: 'cyan', badge: 'live' },
+  { id: 'packages', path: APP_ROUTES.packages.full, icon: Package, label: 'Packages', labelAr: 'الطرود',   accent: 'gold' },
+  { id: 'wallet',   path: APP_ROUTES.wallet.full,   icon: Wallet,  label: 'Wallet',   labelAr: 'المحفظة',  accent: 'gold' },
+  { id: 'profile',  path: APP_ROUTES.profile.full,  icon: User2,   label: 'Profile',  labelAr: 'حسابي',    accent: 'cyan', badge: 'notifications' },
 ];
 
 interface WaselMobileBottomNavProps {
@@ -135,7 +136,7 @@ export function WaselMobileBottomNav({ language: langProp, showFAB = true }: Was
 
   const goOffer = useCallback(() => {
     haptic([20, 10, 20]);
-    navigate('/app/offer-ride');
+    navigate(APP_ROUTES.offerRide.full);
   }, [navigate]);
 
   if (!user) return null; // Only show when authenticated

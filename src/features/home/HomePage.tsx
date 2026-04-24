@@ -6,6 +6,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { useLivePlatformStats, useLiveUserStats } from '../../services/liveDataService';
 import { useCurrency } from '../../utils/currency';
+import { getLocalizedCopy } from '../../utils/localizedCopy';
 import { C, F } from './HomePageShared';
 import {
   FocusHeroSection,
@@ -27,6 +28,37 @@ import {
 } from './homePageConfig';
 import { useHomePageDashboard } from './useHomePageDashboard';
 import './HomePage.css';
+
+const HOME_COPY = {
+  eyebrow: {
+    ar: 'واصل | شبكة الحركة',
+    en: 'WASEL | Mobility Network',
+  },
+  heroSubtitle: {
+    ar: 'انقل أشخاصًا وطرودًا وثقة تشغيلية في تجربة واحدة واضحة.',
+    en: 'Move people, packages, and operational trust through one unified experience.',
+  },
+  refresh: {
+    ar: 'تحديث',
+    en: 'Refresh',
+  },
+  refreshing: {
+    ar: 'جارٍ التحديث...',
+    en: 'Refreshing...',
+  },
+  tripModeDetail: {
+    ar: 'اختر النمط ثم ادخل الشبكة.',
+    en: 'Choose the mode, then enter the network.',
+  },
+  tripModeLabel: {
+    ar: 'نوع الرحلة',
+    en: 'TRIP TYPE',
+  },
+  welcomeBack: {
+    ar: 'أهلاً بعودتك',
+    en: 'Welcome back',
+  },
+} as const;
 
 function HomeBackdrop({
   stars,
@@ -55,17 +87,23 @@ function HomeBackdrop({
 }
 
 function HomeHero({
-  ar,
-  firstName,
-  tripMode,
+  eyebrowText,
+  headlineText,
   options,
   onSelectMode,
+  subtitleText,
+  tripMode,
+  tripModeDetail,
+  tripModeLabel,
 }: {
-  ar: boolean;
-  firstName: string;
-  tripMode: 'one-way' | 'round';
+  eyebrowText: string;
+  headlineText: string;
   options: HomeTripModeOption[];
   onSelectMode: (option: HomeTripModeOption) => void;
+  subtitleText: string;
+  tripMode: 'one-way' | 'round';
+  tripModeDetail: string;
+  tripModeLabel: string;
 }) {
   return (
     <motion.section
@@ -92,31 +130,23 @@ function HomeHero({
           </div>
         </motion.div>
         <div className="home-hero-copy">
-          <p className="home-eyebrow">{ar ? 'واصل | شبكة الحركة' : 'WASEL | Mobility Network'}</p>
-          <h1 className="home-hero-title hero-title">
-            {ar
-              ? `أهلاً بعودتك${firstName ? `، ${firstName}` : ''}`
-              : `Welcome back${firstName ? `, ${firstName}` : ''}`}
-          </h1>
-          <p className="home-subtle">
-            {ar
-              ? 'نقل أشخاص، طرود، وثقة تشغيلية في تجربة واحدة واضحة.'
-              : 'Move people, packages, and operational trust through one unified experience.'}
-          </p>
+          <p className="home-eyebrow">{eyebrowText}</p>
+          <h1 className="home-hero-title hero-title">{headlineText}</h1>
+          <p className="home-subtle">{subtitleText}</p>
         </div>
       </div>
 
       <div className="home-panel home-panel-accent">
-        <p className="home-mini-label">{ar ? 'نوع الرحلة' : 'TRIP TYPE'}</p>
-        <p className="home-panel-copy">
-          {ar ? 'اختر النمط ثم ادخل الشبكة.' : 'Choose the mode, then enter the network.'}
-        </p>
+        <p className="home-mini-label">{tripModeLabel}</p>
+        <p className="home-panel-copy">{tripModeDetail}</p>
         <div className="home-trip-mode-grid">
           {options.map(option => {
             const Icon = option.icon;
             const isActive = tripMode === option.key;
             return (
               <button
+                aria-label={option.title}
+                aria-pressed={isActive}
                 key={option.key}
                 type="button"
                 onClick={() => onSelectMode(option)}
@@ -158,6 +188,18 @@ export function HomePage() {
   const { stars, refreshing, handleRefresh, tripMode, setTripMode } = useHomePageDashboard(user);
 
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
+  const eyebrowText = getLocalizedCopy(language, HOME_COPY.eyebrow);
+  const headlinePrefix = getLocalizedCopy(language, HOME_COPY.welcomeBack);
+  const headlineText =
+    language === 'ar'
+      ? `${headlinePrefix}${firstName ? `، ${firstName}` : ''}`
+      : `${headlinePrefix}${firstName ? `, ${firstName}` : ''}`;
+  const subtitleText = getLocalizedCopy(language, HOME_COPY.heroSubtitle);
+  const tripModeLabel = getLocalizedCopy(language, HOME_COPY.tripModeLabel);
+  const tripModeDetail = getLocalizedCopy(language, HOME_COPY.tripModeDetail);
+  const refreshLabel = refreshing
+    ? getLocalizedCopy(language, HOME_COPY.refreshing)
+    : getLocalizedCopy(language, HOME_COPY.refresh);
   const heroHighlights = buildHeroHighlights(ar);
   const quickActions = buildQuickActions(ar);
   const servicePillars = buildServicePillars(ar);
@@ -180,21 +222,18 @@ export function HomePage() {
               size={12}
               style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }}
             />
-            {ar
-              ? refreshing
-                ? 'جارٍ التحديث...'
-                : 'تحديث'
-              : refreshing
-                ? 'Refreshing...'
-                : 'Refresh'}
+            {refreshLabel}
           </button>
         </div>
 
         <HomeHero
-          ar={ar}
-          firstName={firstName}
+          eyebrowText={eyebrowText}
+          headlineText={headlineText}
           tripMode={tripMode}
+          tripModeDetail={tripModeDetail}
+          tripModeLabel={tripModeLabel}
           options={tripModeOptions}
+          subtitleText={subtitleText}
           onSelectMode={option => {
             setTripMode(option.key);
             navigate(option.path);

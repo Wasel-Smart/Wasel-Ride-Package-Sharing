@@ -17,7 +17,13 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
@@ -51,6 +57,16 @@ const INCIDENT_TYPE_KEYS = [
 ] as const;
 
 const CONTACT_RELATIONSHIP_KEYS = ['family', 'friend', 'colleague', 'partner', 'other'] as const;
+type ContactRelationship = (typeof CONTACT_RELATIONSHIP_KEYS)[number];
+type IncidentType = (typeof INCIDENT_TYPE_KEYS)[number];
+
+function isContactRelationship(value: string): value is ContactRelationship {
+  return CONTACT_RELATIONSHIP_KEYS.includes(value as ContactRelationship);
+}
+
+function isIncidentType(value: string): value is IncidentType {
+  return INCIDENT_TYPE_KEYS.includes(value as IncidentType);
+}
 
 function createContactDraft(): SafetyEmergencyContact {
   return {
@@ -95,9 +111,9 @@ async function captureGeolocation(): Promise<{
     };
   }
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      position => {
         resolve({
           latitude: position.coords.latitude,
           locationLabel: `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`,
@@ -117,7 +133,7 @@ async function captureGeolocation(): Promise<{
 }
 
 export default function SafetyPage() {
-  const { formatDate, language, t } = useLanguage();
+  const { formatDate, t } = useLanguage();
   const { user } = useLocalAuth();
   const navigate = useIframeSafeNavigate();
   const [dashboard, setDashboard] = useState<SafetyDashboard | null>(null);
@@ -126,21 +142,23 @@ export default function SafetyPage() {
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [addingContact, setAddingContact] = useState(false);
   const [contactDraft, setContactDraft] = useState<SafetyEmergencyContact>(createContactDraft());
-  const [incidentType, setIncidentType] = useState(INCIDENT_TYPE_KEYS[0]);
+  const [incidentType, setIncidentType] = useState<IncidentType>(INCIDENT_TYPE_KEYS[0]);
   const [incidentDescription, setIncidentDescription] = useState('');
   const [incidentSubmitting, setIncidentSubmitting] = useState(false);
   const [incidentFeedback, setIncidentFeedback] = useState<string | null>(null);
-  const [sosStage, setSosStage] = useState<'idle' | 'confirm' | 'sending' | 'sent' | 'error'>('idle');
+  const [sosStage, setSosStage] = useState<'idle' | 'confirm' | 'sending' | 'sent' | 'error'>(
+    'idle',
+  );
   const [sosFeedback, setSosFeedback] = useState<string | null>(null);
   const [locationLabel, setLocationLabel] = useState<string | null>(null);
 
-  const ar = language === 'ar';
   const settings = dashboard?.settings;
   const incidents = dashboard?.incidents ?? [];
   const contacts = settings?.emergencyContacts ?? [];
   const checklist = settings?.checklist ?? {};
-  const completedChecklistCount = CHECKLIST_ITEM_KEYS.filter((key) => checklist[key]).length;
+  const completedChecklistCount = CHECKLIST_ITEM_KEYS.filter(key => checklist[key]).length;
   const trustScore = user?.trustScore ?? 0;
+  const isSosConfirmStage = sosStage === 'confirm' || sosStage === 'sending';
 
   useEffect(() => {
     let cancelled = false;
@@ -173,12 +191,31 @@ export default function SafetyPage() {
   const scoreFactors = useMemo(
     () => [
       { done: Boolean(user?.verified), label: t('safetyPage.score.identityVerified'), weight: 30 },
-      { done: Boolean(user?.emailVerified), label: t('safetyPage.score.emailConfirmed'), weight: 20 },
-      { done: Boolean(user?.phoneVerified), label: t('safetyPage.score.phoneConfirmed'), weight: 20 },
-      { done: user?.walletStatus === 'active', label: t('safetyPage.score.walletActive'), weight: 15 },
+      {
+        done: Boolean(user?.emailVerified),
+        label: t('safetyPage.score.emailConfirmed'),
+        weight: 20,
+      },
+      {
+        done: Boolean(user?.phoneVerified),
+        label: t('safetyPage.score.phoneConfirmed'),
+        weight: 20,
+      },
+      {
+        done: user?.walletStatus === 'active',
+        label: t('safetyPage.score.walletActive'),
+        weight: 15,
+      },
       { done: contacts.length > 0, label: t('safetyPage.score.contactsSaved'), weight: 15 },
     ],
-    [contacts.length, t, user?.emailVerified, user?.phoneVerified, user?.verified, user?.walletStatus],
+    [
+      contacts.length,
+      t,
+      user?.emailVerified,
+      user?.phoneVerified,
+      user?.verified,
+      user?.walletStatus,
+    ],
   );
 
   async function persistSettings(nextSettings: SafetySettings) {
@@ -187,10 +224,8 @@ export default function SafetyPage() {
 
     try {
       const saved = await safetyService.updateSettings(nextSettings);
-      setDashboard((current) =>
-        current
-          ? { ...current, settings: saved }
-          : { incidents: [], settings: saved },
+      setDashboard(current =>
+        current ? { ...current, settings: saved } : { incidents: [], settings: saved },
       );
     } catch (error) {
       setSettingsError(error instanceof Error ? error.message : t('safetyPage.errors.save'));
@@ -234,7 +269,7 @@ export default function SafetyPage() {
 
     await persistSettings({
       ...settings,
-      emergencyContacts: contacts.filter((contact) => contact.id !== contactId),
+      emergencyContacts: contacts.filter(contact => contact.id !== contactId),
     });
   }
 
@@ -252,9 +287,7 @@ export default function SafetyPage() {
     });
   }
 
-  async function handleCulturalUpdate(
-    patch: Partial<SafetySettings['cultural']>,
-  ) {
+  async function handleCulturalUpdate(patch: Partial<SafetySettings['cultural']>) {
     if (!settings) {
       return;
     }
@@ -283,7 +316,7 @@ export default function SafetyPage() {
         description,
         type: incidentType,
       });
-      setDashboard((current) =>
+      setDashboard(current =>
         current
           ? { ...current, incidents: [incident, ...current.incidents] }
           : {
@@ -317,7 +350,8 @@ export default function SafetyPage() {
       setLocationLabel(geolocation.locationLabel);
       const result = await safetyService.triggerSos({
         latitude: geolocation.latitude,
-        locationLabel: geolocation.locationLabel === 'unavailable' ? null : geolocation.locationLabel,
+        locationLabel:
+          geolocation.locationLabel === 'unavailable' ? null : geolocation.locationLabel,
         longitude: geolocation.longitude,
         metadata: {
           trustScore: user?.trustScore ?? null,
@@ -362,7 +396,9 @@ export default function SafetyPage() {
                     {t('safetyPage.score.title')}
                   </div>
                   <p className="text-2xl font-bold text-foreground">{trustScore}</p>
-                  <p className="text-xs text-muted-foreground">{resolveTrustLabel(trustScore, t)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {resolveTrustLabel(trustScore, t)}
+                  </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -370,7 +406,9 @@ export default function SafetyPage() {
                     {t('safetyPage.contacts.title')}
                   </div>
                   <p className="text-2xl font-bold text-foreground">{contacts.length}</p>
-                  <p className="text-xs text-muted-foreground">{t('safetyPage.header.contactsSummary')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('safetyPage.header.contactsSummary')}
+                  </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -380,26 +418,41 @@ export default function SafetyPage() {
                   <p className="text-2xl font-bold text-foreground">
                     {completedChecklistCount}/{CHECKLIST_ITEM_KEYS.length}
                   </p>
-                  <p className="text-xs text-muted-foreground">{t('safetyPage.header.checklistSummary')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('safetyPage.header.checklistSummary')}
+                  </p>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-foreground">{t('safetyPage.score.title')}</CardTitle>
+                <CardTitle className="text-lg text-foreground">
+                  {t('safetyPage.score.title')}
+                </CardTitle>
                 <CardDescription>{t('safetyPage.score.description')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {scoreFactors.map((factor) => (
-                  <div key={factor.label} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${factor.done ? 'bg-primary/15 text-primary' : 'bg-white/5 text-muted-foreground'}`}>
-                      {factor.done ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+                {scoreFactors.map(factor => (
+                  <div
+                    key={factor.label}
+                    className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"
+                  >
+                    <div
+                      className={`flex h-8 w-8 items-center justify-center rounded-xl ${factor.done ? 'bg-primary/15 text-primary' : 'bg-white/5 text-muted-foreground'}`}
+                    >
+                      {factor.done ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4" />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-foreground">{factor.label}</p>
                     </div>
-                    <div className="text-xs font-semibold text-muted-foreground">+{factor.weight}</div>
+                    <div className="text-xs font-semibold text-muted-foreground">
+                      +{factor.weight}
+                    </div>
                   </div>
                 ))}
               </CardContent>
@@ -417,7 +470,11 @@ export default function SafetyPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {sosStage === 'sent' ? (
-                  <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 text-sm text-primary">
+                  <div
+                    aria-live="polite"
+                    className="rounded-2xl border border-primary/20 bg-primary/10 p-4 text-sm text-primary"
+                    role="status"
+                  >
                     <div className="flex items-center gap-2 font-semibold">
                       <CheckCircle2 className="h-4 w-4" />
                       {t('safetyPage.sos.sentTitle')}
@@ -433,7 +490,10 @@ export default function SafetyPage() {
                     ) : null}
                   </div>
                 ) : sosStage === 'error' ? (
-                  <div className="rounded-2xl border border-destructive/25 bg-destructive/10 p-4 text-sm text-destructive">
+                  <div
+                    className="rounded-2xl border border-destructive/25 bg-destructive/10 p-4 text-sm text-destructive"
+                    role="alert"
+                  >
                     <div className="font-semibold">{t('safetyPage.sos.errorTitle')}</div>
                     <p className="mt-2">{sosFeedback}</p>
                   </div>
@@ -444,7 +504,7 @@ export default function SafetyPage() {
                 )}
 
                 <div className="flex flex-wrap gap-3">
-                  {sosStage === 'confirm' ? (
+                  {isSosConfirmStage ? (
                     <>
                       <Button
                         className="bg-rose-500 text-white hover:bg-rose-400"
@@ -468,17 +528,13 @@ export default function SafetyPage() {
                     <>
                       <Button
                         className="bg-rose-500 text-white hover:bg-rose-400"
-                        disabled={sosStage === 'sending'}
+                        disabled={false}
                         onClick={() => setSosStage('confirm')}
                       >
-                        {sosStage === 'sending' ? (
-                          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <AlertTriangle className="mr-2 h-4 w-4" />
-                        )}
+                        <AlertTriangle className="mr-2 h-4 w-4" />
                         {t('safetyPage.sos.trigger')}
                       </Button>
-                      {(sosStage === 'error' || sosStage === 'sent') ? (
+                      {sosStage === 'error' || sosStage === 'sent' ? (
                         <Button
                           variant="secondary"
                           onClick={() => {
@@ -497,7 +553,9 @@ export default function SafetyPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-foreground">{t('safetyPage.quickLinks.title')}</CardTitle>
+                <CardTitle className="text-lg text-foreground">
+                  {t('safetyPage.quickLinks.title')}
+                </CardTitle>
                 <CardDescription>{t('safetyPage.quickLinks.subtitle')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -508,8 +566,12 @@ export default function SafetyPage() {
                 >
                   <BadgeCheck className="h-4 w-4 text-primary" />
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-foreground">{t('safetyPage.quickLinks.trust')}</p>
-                    <p className="text-xs text-muted-foreground">{t('safetyPage.quickLinks.trustSub')}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {t('safetyPage.quickLinks.trust')}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('safetyPage.quickLinks.trustSub')}
+                    </p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </button>
@@ -520,8 +582,12 @@ export default function SafetyPage() {
                 >
                   <Phone className="h-4 w-4 text-primary" />
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-foreground">{t('safetyPage.quickLinks.driver')}</p>
-                    <p className="text-xs text-muted-foreground">{t('safetyPage.quickLinks.driverSub')}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {t('safetyPage.quickLinks.driver')}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('safetyPage.quickLinks.driverSub')}
+                    </p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </button>
@@ -532,8 +598,12 @@ export default function SafetyPage() {
                 >
                   <Clock className="h-4 w-4 text-primary" />
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-foreground">{t('safetyPage.quickLinks.trips')}</p>
-                    <p className="text-xs text-muted-foreground">{t('safetyPage.quickLinks.tripsSub')}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {t('safetyPage.quickLinks.trips')}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('safetyPage.quickLinks.tripsSub')}
+                    </p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </button>
@@ -550,7 +620,9 @@ export default function SafetyPage() {
           <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-foreground">{t('safetyPage.contacts.title')}</CardTitle>
+                <CardTitle className="text-lg text-foreground">
+                  {t('safetyPage.contacts.title')}
+                </CardTitle>
                 <CardDescription>{t('safetyPage.contacts.subtitle')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -567,15 +639,20 @@ export default function SafetyPage() {
                   </div>
                 ) : null}
 
-                {contacts.map((contact) => (
-                  <div key={contact.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                {contacts.map(contact => (
+                  <div
+                    key={contact.id}
+                    className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"
+                  >
                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                       <UserCheck className="h-4 w-4" />
                     </div>
-                  <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-foreground">{contact.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {CONTACT_RELATIONSHIP_KEYS.includes(contact.relationship as (typeof CONTACT_RELATIONSHIP_KEYS)[number])
+                        {CONTACT_RELATIONSHIP_KEYS.includes(
+                          contact.relationship as (typeof CONTACT_RELATIONSHIP_KEYS)[number],
+                        )
                           ? t(`safetyPage.contacts.relationships.${contact.relationship}`)
                           : contact.relationship}
                         {' · '}
@@ -600,26 +677,32 @@ export default function SafetyPage() {
                     <Input
                       placeholder={t('safetyPage.contacts.namePlaceholder')}
                       value={contactDraft.name}
-                      onChange={(event) =>
-                        setContactDraft((current) => ({ ...current, name: event.target.value }))
+                      onChange={event =>
+                        setContactDraft(current => ({ ...current, name: event.target.value }))
                       }
                     />
                     <Input
                       placeholder={t('safetyPage.contacts.phonePlaceholder')}
                       type="tel"
                       value={contactDraft.phone}
-                      onChange={(event) =>
-                        setContactDraft((current) => ({ ...current, phone: event.target.value }))
+                      onChange={event =>
+                        setContactDraft(current => ({ ...current, phone: event.target.value }))
                       }
                     />
                     <select
                       className="h-11 w-full rounded-xl border border-border bg-background px-3 text-foreground"
                       value={contactDraft.relationship}
-                      onChange={(event) =>
-                        setContactDraft((current) => ({ ...current, relationship: event.target.value }))
-                      }
+                      onChange={event => {
+                        const nextRelationship = event.target.value;
+                        setContactDraft(current => ({
+                          ...current,
+                          relationship: isContactRelationship(nextRelationship)
+                            ? nextRelationship
+                            : current.relationship,
+                        }));
+                      }}
                     >
-                      {CONTACT_RELATIONSHIP_KEYS.map((key) => (
+                      {CONTACT_RELATIONSHIP_KEYS.map(key => (
                         <option key={key} value={key}>
                           {t(`safetyPage.contacts.relationships.${key}`)}
                         </option>
@@ -627,7 +710,9 @@ export default function SafetyPage() {
                     </select>
                     <div className="flex flex-wrap gap-3">
                       <Button disabled={savingSettings} onClick={() => void handleAddContact()}>
-                        {savingSettings ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        {savingSettings ? (
+                          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                        ) : null}
                         {t('safetyPage.contacts.save')}
                       </Button>
                       <Button
@@ -653,11 +738,13 @@ export default function SafetyPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-foreground">{t('safetyPage.checklist.title')}</CardTitle>
+                <CardTitle className="text-lg text-foreground">
+                  {t('safetyPage.checklist.title')}
+                </CardTitle>
                 <CardDescription>{t('safetyPage.checklist.subtitle')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {CHECKLIST_ITEM_KEYS.map((key) => (
+                {CHECKLIST_ITEM_KEYS.map(key => (
                   <button
                     key={key}
                     className={`flex w-full items-start gap-3 rounded-2xl border p-4 text-left ${checklist[key] ? 'border-primary/25 bg-primary/10' : 'border-white/10 bg-white/5'}`}
@@ -666,12 +753,22 @@ export default function SafetyPage() {
                     }}
                     type="button"
                   >
-                    <div className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-lg ${checklist[key] ? 'bg-primary text-black' : 'bg-white/5 text-muted-foreground'}`}>
-                      {checklist[key] ? <CheckCircle2 className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+                    <div
+                      className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-lg ${checklist[key] ? 'bg-primary text-black' : 'bg-white/5 text-muted-foreground'}`}
+                    >
+                      {checklist[key] ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <ShieldCheck className="h-4 w-4" />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground">{t(`safetyPage.checklist.items.${key}.label`)}</p>
-                      <p className="text-xs text-muted-foreground">{t(`safetyPage.checklist.items.${key}.description`)}</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        {t(`safetyPage.checklist.items.${key}.label`)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {t(`safetyPage.checklist.items.${key}.description`)}
+                      </p>
                     </div>
                   </button>
                 ))}
@@ -691,8 +788,12 @@ export default function SafetyPage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">{t('safetyPage.cultural.prayerStops')}</p>
-                    <p className="text-xs text-muted-foreground">{t('safetyPage.cultural.prayerStopsSub')}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {t('safetyPage.cultural.prayerStops')}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('safetyPage.cultural.prayerStopsSub')}
+                    </p>
                   </div>
                   <Button
                     type="button"
@@ -706,8 +807,12 @@ export default function SafetyPage() {
                 </div>
                 <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">{t('safetyPage.cultural.ramadanMode')}</p>
-                    <p className="text-xs text-muted-foreground">{t('safetyPage.cultural.ramadanModeSub')}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {t('safetyPage.cultural.ramadanMode')}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('safetyPage.cultural.ramadanModeSub')}
+                    </p>
                   </div>
                   <Button
                     type="button"
@@ -720,18 +825,30 @@ export default function SafetyPage() {
                   </Button>
                 </div>
                 <div className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-sm font-semibold text-foreground">{t('safetyPage.cultural.genderPreference')}</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {t('safetyPage.cultural.genderPreference')}
+                  </p>
                   <select
                     className="h-11 w-full rounded-xl border border-border bg-background px-3 text-foreground"
                     value={settings?.cultural.genderPreference ?? 'no_preference'}
-                    onChange={(event) => {
-                      void handleCulturalUpdate({ genderPreference: event.target.value as GenderPreference });
+                    onChange={event => {
+                      void handleCulturalUpdate({
+                        genderPreference: event.target.value as GenderPreference,
+                      });
                     }}
                   >
-                    <option value="no_preference">{t('safetyPage.cultural.options.noPreference')}</option>
-                    <option value="same_gender_only">{t('safetyPage.cultural.options.sameGenderOnly')}</option>
-                    <option value="male_drivers_only">{t('safetyPage.cultural.options.maleDriversOnly')}</option>
-                    <option value="female_drivers_only">{t('safetyPage.cultural.options.femaleDriversOnly')}</option>
+                    <option value="no_preference">
+                      {t('safetyPage.cultural.options.noPreference')}
+                    </option>
+                    <option value="same_gender_only">
+                      {t('safetyPage.cultural.options.sameGenderOnly')}
+                    </option>
+                    <option value="male_drivers_only">
+                      {t('safetyPage.cultural.options.maleDriversOnly')}
+                    </option>
+                    <option value="female_drivers_only">
+                      {t('safetyPage.cultural.options.femaleDriversOnly')}
+                    </option>
                   </select>
                 </div>
               </CardContent>
@@ -739,16 +856,23 @@ export default function SafetyPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-foreground">{t('safetyPage.incidents.title')}</CardTitle>
+                <CardTitle className="text-lg text-foreground">
+                  {t('safetyPage.incidents.title')}
+                </CardTitle>
                 <CardDescription>{t('safetyPage.incidents.subtitle')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <select
                   className="h-11 w-full rounded-xl border border-border bg-background px-3 text-foreground"
                   value={incidentType}
-                  onChange={(event) => setIncidentType(event.target.value)}
+                  onChange={event => {
+                    const nextIncidentType = event.target.value;
+                    if (isIncidentType(nextIncidentType)) {
+                      setIncidentType(nextIncidentType);
+                    }
+                  }}
                 >
-                  {INCIDENT_TYPE_KEYS.map((key) => (
+                  {INCIDENT_TYPE_KEYS.map(key => (
                     <option key={key} value={key}>
                       {t(`safetyPage.incidents.types.${key}`)}
                     </option>
@@ -758,15 +882,21 @@ export default function SafetyPage() {
                   className="min-h-28 w-full rounded-2xl border border-border bg-background px-3 py-3 text-sm text-foreground"
                   placeholder={t('safetyPage.incidents.placeholder')}
                   value={incidentDescription}
-                  onChange={(event) => setIncidentDescription(event.target.value)}
+                  onChange={event => setIncidentDescription(event.target.value)}
                 />
                 <div className="flex flex-wrap gap-3">
                   <Button disabled={incidentSubmitting} onClick={() => void handleSubmitIncident()}>
-                    {incidentSubmitting ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    {incidentSubmitting ? (
+                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
                     {t('safetyPage.incidents.submit')}
                   </Button>
                   {incidentFeedback ? (
-                    <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-3 py-2 text-sm text-primary">
+                    <div
+                      aria-live="polite"
+                      className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-3 py-2 text-sm text-primary"
+                      role="status"
+                    >
                       <CheckCircle2 className="h-4 w-4" />
                       {incidentFeedback}
                     </div>
@@ -775,7 +905,9 @@ export default function SafetyPage() {
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">{t('safetyPage.incidents.history')}</h3>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      {t('safetyPage.incidents.history')}
+                    </h3>
                     <span className="text-xs text-muted-foreground">{incidents.length}</span>
                   </div>
                   {incidents.length === 0 ? (
@@ -783,8 +915,11 @@ export default function SafetyPage() {
                       {t('safetyPage.incidents.empty')}
                     </div>
                   ) : (
-                    incidents.map((incident) => (
-                      <div key={incident.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    incidents.map(incident => (
+                      <div
+                        key={incident.id}
+                        className="rounded-2xl border border-white/10 bg-white/5 p-4"
+                      >
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <p className="text-sm font-semibold text-foreground">
                             {t(`safetyPage.incidents.types.${incident.type}`)}

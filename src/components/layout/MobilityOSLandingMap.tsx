@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import {
   useMobilityOSLiveData,
   type LiveMobilityRouteSnapshot,
-} from '../mobility-os/liveMobilityData';
+} from '../../features/mobility-os/liveMobilityData';
 import { allowSyntheticData } from '../../services/runtimePolicy';
 
 type City = {

@@ -5,7 +5,7 @@
  * responsive styles, and the max-width container.
  */
 import type { ReactNode } from 'react';
-import { LANDING_FONT, LANDING_RESPONSIVE_STYLES } from '../landingConstants';
+import { LANDING_FONT, LANDING_RESPONSIVE_STYLES } from '../../../styles/shared-ui';
 import { GRAD_AURORA, GRAD_HERO } from '../../../utils/wasel-ds';
 import { LANDING_COLORS } from './landingTypes';
 
@@ -63,8 +63,7 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
           position: 'relative',
           maxWidth: 'var(--wasel-layout-max-width)',
           margin: '0 auto',
-          padding:
-            'var(--wasel-layout-top) var(--wasel-layout-inline) var(--wasel-layout-bottom)',
+          padding: 'var(--wasel-layout-top) var(--wasel-layout-inline) var(--wasel-layout-bottom)',
         }}
       >
         {children}

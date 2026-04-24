@@ -1,9 +1,78 @@
-export const LANDING_FONT =
+/**
+ * Shared UI styles and constants
+ * Imported by multiple feature modules (rides, home, etc.)
+ * No feature-specific logic — safe for cross-feature use.
+ */
+import type { CSSProperties } from 'react';
+
+// ── Font families ──────────────────────────────────────────────────────────────
+
+export const FONT_SANS =
   "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif)";
+export const FONT_DISPLAY =
+  "var(--wasel-font-display, 'Plus Jakarta Sans', 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
+export const FONT_ARABIC = "var(--wasel-font-arabic, 'Cairo', 'Tajawal', sans-serif)";
 
-export const LANDING_DISPLAY =
-  "var(--wasel-font-display, 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif)";
+// Compatibility aliases for legacy modules (RideCard, RideResults, etc.)
+export const LANDING_FONT = FONT_DISPLAY;
+export const LANDING_DISPLAY = FONT_DISPLAY;
 
+// ── Colour palette ─────────────────────────────────────────────────────────────
+
+export const COLORS = {
+  bg: 'var(--background)',
+  bgDeep: 'var(--wasel-surface-0)',
+  panel: 'var(--wasel-panel-strong)',
+  panelSoft: 'var(--wasel-panel-muted)',
+  text: 'var(--wasel-copy-primary)',
+  muted: 'var(--wasel-copy-muted)',
+  soft: 'var(--wasel-copy-soft)',
+  cyan: 'var(--ds-accent, #f59a2c)',
+  blue: 'var(--ds-accent-strong, #ffb357)',
+  gold: 'var(--ds-warning, #efb45d)',
+  green: 'var(--ds-success, #79c67d)',
+  border: 'var(--ds-border, #313841)',
+  borderStrong:
+    'color-mix(in srgb, var(--ds-accent-strong, #ffb357) 30%, var(--ds-border, #313841))',
+} as const;
+
+// Compatibility aliases for legacy modules
+export const LANDING_COLORS = COLORS;
+
+// ── Style helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * Card/panel container with consistent styling across features.
+ * @param radius Border radius in pixels (default: 28)
+ */
+export const panelStyle = (radius = 28): CSSProperties => ({
+  borderRadius: radius,
+  background: 'var(--wasel-panel-strong)',
+  border: `1px solid ${COLORS.border}`,
+  boxShadow: 'var(--wasel-shadow-lg)',
+  backdropFilter: 'blur(22px)',
+});
+
+/**
+ * Lift-card style for hover/tap interactions.
+ */
+export const liftCardStyle: CSSProperties = {
+  transition: 'transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease',
+};
+
+/**
+ * Identity helper — keeps JSX readable without template literal noise.
+ */
+export const lc = (value: string): string => value;
+
+/**
+ * Clamp a number between min and max.
+ */
+export const clamp = (value: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, value));
+
+// Global CSS styles injected by PageShell / shared surfaces.
+// Extracted from home/landingConstants to break cross-feature dependency.
 export const LANDING_RESPONSIVE_STYLES = `
   :root { color-scheme: inherit; }
   .landing-shell, .landing-shell * { box-sizing: border-box; }
@@ -123,7 +192,7 @@ export const LANDING_RESPONSIVE_STYLES = `
     .wasel-lift-card:hover { 
       transform: translateY(-3px); 
       box-shadow: var(--wasel-shadow-xl); 
-    }
+    } 
   }
   
   /* Tablet */

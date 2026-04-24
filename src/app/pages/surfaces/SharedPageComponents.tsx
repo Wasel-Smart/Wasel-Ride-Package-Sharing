@@ -11,7 +11,7 @@ import { Button, Card, LayoutContainer } from '../../../design-system/components
 import { useLocalAuth } from '../../../contexts/LocalAuth';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../../hooks/useIframeSafeNavigate';
-import { DeferredLandingMap } from '../../../features/home/DeferredLandingMap';
+import { DeferredLandingMap } from '../../../components/layout/DeferredLandingMap';
 import { buildAuthPagePath, normalizeAuthReturnTo } from '../../../utils/authFlow';
 import type { BrandPillItem, HeroFeatureItem } from './pageTypes';
 import { LANDING_SUPPORT_EMAIL, LANDING_SUPPORT_PHONE } from './pageTypes';
@@ -99,14 +99,18 @@ export function SupportActions() {
   return (
     <div className="ds-support-actions landing-page__support-actions">
       <Button
-        onClick={() => { window.location.href = `tel:${LANDING_SUPPORT_PHONE}`; }}
+        onClick={() => {
+          window.location.href = `tel:${LANDING_SUPPORT_PHONE}`;
+        }}
         variant="secondary"
       >
         <Phone size={16} />
         Call support
       </Button>
       <Button
-        onClick={() => { window.location.href = `mailto:${LANDING_SUPPORT_EMAIL}`; }}
+        onClick={() => {
+          window.location.href = `mailto:${LANDING_SUPPORT_EMAIL}`;
+        }}
         variant="ghost"
       >
         <Mail size={16} />
@@ -277,8 +281,12 @@ export function NotFoundPage() {
           <h1 className="ds-title">Page not found</h1>
           <p className="ds-copy">The link may be outdated or the page no longer exists.</p>
           <div className="ds-minor-actions">
-            <a className="ds-button" data-variant="primary" href="/">Back to Wasel</a>
-            <a className="ds-button" data-variant="secondary" href="/app/find-ride">Find a ride</a>
+            <a className="ds-button" data-variant="primary" href="/">
+              Back to Wasel
+            </a>
+            <a className="ds-button" data-variant="secondary" href="/app/find-ride">
+              Find a ride
+            </a>
           </div>
         </div>
       </div>
@@ -294,8 +302,12 @@ export function RouteErrorPage({ message }: { message: string }) {
           <h1 className="ds-title">This page could not be loaded</h1>
           <p className="ds-copy">{message}</p>
           <div className="ds-minor-actions">
-            <a className="ds-button" data-variant="primary" href="/app/find-ride">Find a ride</a>
-            <a className="ds-button" data-variant="secondary" href="/app/auth">Sign in</a>
+            <a className="ds-button" data-variant="primary" href="/app/find-ride">
+              Find a ride
+            </a>
+            <a className="ds-button" data-variant="secondary" href="/app/auth">
+              Sign in
+            </a>
           </div>
         </div>
       </div>
@@ -319,8 +331,12 @@ export function PrivacyPage() {
             'Security and compliance data stay close to verification and wallet actions.',
           ].map(item => (
             <div className="ds-list-item" key={item}>
-              <div className="ds-list-item__icon"><Shield size={16} /></div>
-              <div><h2 className="ds-card__title">{item}</h2></div>
+              <div className="ds-list-item__icon">
+                <Shield size={16} />
+              </div>
+              <div>
+                <h2 className="ds-card__title">{item}</h2>
+              </div>
             </div>
           ))}
         </div>
@@ -345,8 +361,12 @@ export function TermsPage() {
             'Respect route agreements, ticket codes, and delivery handoff steps.',
           ].map(item => (
             <div className="ds-list-item" key={item}>
-              <div className="ds-list-item__icon"><Landmark size={16} /></div>
-              <div><h2 className="ds-card__title">{item}</h2></div>
+              <div className="ds-list-item__icon">
+                <Landmark size={16} />
+              </div>
+              <div>
+                <h2 className="ds-card__title">{item}</h2>
+              </div>
             </div>
           ))}
         </div>

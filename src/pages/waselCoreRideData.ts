@@ -15,6 +15,7 @@ const SECOND_RIDE_DATE = offsetRideDate(2);
 export interface Ride {
   id: string;
   ownerId?: string;
+  sourceRideId?: string;
   routeMode?: 'live_post' | 'network_inventory';
   driver: {
     name: string;
@@ -49,6 +50,9 @@ export interface Ride {
   conversationLevel: 'quiet' | 'normal' | 'talkative';
   intermediateStops?: string[];
   reviews?: { name: string; rating: number; text: string }[];
+  packageNote?: string;
+  createdAt?: string;
+  status?: 'active' | 'cancelled' | 'completed';
 }
 
 export const ALL_RIDES: Ride[] = [
@@ -281,6 +285,7 @@ export function buildRideFromPostedRide(ride: PostedRide): Ride {
   return {
     id: `live-${ride.id}`,
     ownerId: ride.ownerId,
+    sourceRideId: ride.id,
     routeMode: 'live_post',
     driver: {
       name: ride.carModel ? `${ride.carModel.split(' ')[0]} Captain` : 'Wasel Captain',
@@ -317,5 +322,8 @@ export function buildRideFromPostedRide(ride: PostedRide): Ride {
     pkgCapacity: ride.acceptsPackages ? ride.packageCapacity : 'none',
     conversationLevel: 'normal',
     reviews: ride.note ? [{ name: 'Route note', rating: 5, text: ride.note }] : undefined,
+    packageNote: ride.packageNote,
+    createdAt: ride.createdAt,
+    status: ride.status,
   };
 }

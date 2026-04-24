@@ -4,7 +4,6 @@ import {
   FileCheck,
   Wallet,
 } from 'lucide-react';
-import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -183,55 +182,6 @@ export default function TrustCenterPage() {
 
   return (
     <TrustPageScaffold ar={ar}>
-      {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && (
-        <div style={{ marginBottom: 18 }}>
-          <StakeholderSignalBanner
-            dir={ar ? 'rtl' : 'ltr'}
-            eyebrow={ar ? 'واصل · تواصل الثقة' : 'Wasel · trust comms'}
-            title={
-              ar
-                ? 'مركز الثقة الآن يعمل كلوحة مشتركة بين المستخدم والثقة والدعم والعمليات'
-                : 'Trust center now acts as a shared board between the user, trust, support, and operations'
-            }
-            detail={
-              ar
-                ? 'التحقق والجاهزية والصلاحيات التشغيلية لم تعد تبدو رسائل منفصلة. هذه الصفحة الآن تجمعها في لغة واحدة تظهر ما هو مفعّل وما يحتاج خطوة.'
-                : 'Verification, readiness, and operational permissions no longer feel like separate messages. This page now brings them into one language showing what is enabled and what still needs a step.'
-            }
-            stakeholders={[
-              { label: ar ? 'درجة الثقة' : 'Trust score', value: `${user?.trustScore ?? 0}/100`, tone: 'green' },
-              { label: ar ? 'التحقق' : 'Verification', value: verificationTone.label, tone: user?.verified || user?.sanadVerified ? 'green' : 'amber' },
-              { label: ar ? 'جاهزية السائق' : 'Driver readiness', value: `${completedReadinessSteps}/${driverReadiness.steps.length}`, tone: 'teal' },
-              { label: ar ? 'المحفظة' : 'Wallet standing', value: user?.walletStatus === 'active' ? (ar ? 'جاهزة' : 'Ready') : (ar ? 'مقيّدة' : 'Restricted'), tone: user?.walletStatus === 'active' ? 'blue' : 'rose' },
-            ]}
-            statuses={[
-              { label: ar ? 'نشر رحلة' : 'Ride posting', value: capabilityRows[0]?.statusLabel ?? 'Unknown', tone: capabilityRows[0]?.allowed ? 'green' : 'amber' },
-              { label: ar ? 'حمل الطرود' : 'Package carrying', value: capabilityRows[1]?.statusLabel ?? 'Unknown', tone: capabilityRows[1]?.allowed ? 'green' : 'amber' },
-              { label: ar ? 'دعم الأولوية' : 'Priority support', value: capabilityRows[3]?.statusLabel ?? 'Unknown', tone: capabilityRows[3]?.allowed ? 'green' : 'amber' },
-            ]}
-            lanes={[
-              {
-                label: ar ? 'مسار التحقق' : 'Verification lane',
-                detail: ar
-                  ? 'البريد والهاتف والهوية وجاهزية السائق كلها تغذي صلاحيات تشغيلية حقيقية.'
-                  : 'Email, phone, identity, and driver readiness all feed directly into real operating permissions.',
-              },
-              {
-                label: ar ? 'مسار الدعم' : 'Support lane',
-                detail: ar
-                  ? 'الثقة الأعلى تقلل ضجيج التصعيد وتجعل التدخل أسرع عند الحاجة.'
-                  : 'Higher trust reduces escalation noise and makes intervention faster when it is needed.',
-              },
-              {
-                label: ar ? 'مسار العمليات' : 'Operations lane',
-                detail: ar
-                  ? 'الصلاحيات هنا تحدد ما يمكن إطلاقه فعلاً عبر الرحلات والطرود والتحصيلات.'
-                  : 'The capabilities here determine what can actually go live across rides, packages, and payouts.',
-              },
-            ]}
-          />
-        </div>
-      )}
 
       <TrustHeroCard
         title={ar ? 'مركز الثقة والتحقق' : 'Trust & Verification Center'}

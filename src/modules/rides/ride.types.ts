@@ -42,15 +42,30 @@ export interface RideResult {
   date: string;
   time: string;
   seatsAvailable: number;
+  totalSeats?: number;
   pricePerSeat: number;
   driver: RideDriver;
   routeMode: 'live_post' | 'network_inventory';
   ownerId?: string;
   vehicleType: string;
+  carModel?: string;
   etaMinutes: number;
   estimatedArrivalLabel: string;
   recommendedReason?: string;
   rideType: Exclude<RideType, 'any'>;
+  supportsPackages?: boolean;
+  packageCapacity?: 'small' | 'medium' | 'large';
+  packageNote?: string;
+  postedRideId?: string;
+  fromPoint?: string;
+  toPoint?: string;
+  distanceKm?: number;
+  durationLabel?: string;
+  prayerStops?: boolean;
+  amenities?: string[];
+  intermediateStops?: string[];
+  carColor?: string;
+  lastUpdatedAt?: string;
 }
 
 export interface RideRequestPayload {
