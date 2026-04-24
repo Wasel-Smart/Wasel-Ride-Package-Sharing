@@ -10,7 +10,6 @@ import {
   normalizeTripStatus,
   normalizeBookingStatus,
   ensureBookingEligibility,
-  getWalletByCanonicalUserId,
   toNumber,
 } from './helpers';
 import { buildUserContext, ensureDriverForUser, getLatestVerificationRecord } from './userContext';
@@ -109,12 +108,10 @@ export async function updateDirectProfile(userId: string, updates: Record<string
         email: typeof payload.email === 'string' ? payload.email : null,
         full_name: typeof payload.full_name === 'string' ? payload.full_name : null,
         phone_number: nextPhone,
-        role: typeof payload.role === 'string' ? payload.role : null,
       });
 
       const db = getDb();
       const userPatch: Record<string, unknown> = {};
-      const walletPatch: Record<string, unknown> = {};
 
       if (typeof payload.email === 'string') {userPatch.email = payload.email.trim();}
       if (typeof payload.full_name === 'string') {userPatch.full_name = payload.full_name.trim();}
@@ -123,25 +120,14 @@ export async function updateDirectProfile(userId: string, updates: Record<string
       if (payload.phone_number === null || payload.phone === null) {
         userPatch.phone_number = null;
       }
-      if (typeof payload.role === 'string') {userPatch.role = payload.role;}
-      if (typeof payload.verification_level === 'string') {userPatch.verification_level = payload.verification_level;}
       if (typeof payload.avatar_url === 'string') {userPatch.avatar_url = payload.avatar_url;}
       if (payload.phone_number !== undefined || payload.phone !== undefined) {
         userPatch.phone_verified_at = null;
       }
-      if (payload.wallet_balance !== undefined) {walletPatch.balance = toNumber(payload.wallet_balance, 0);}
-      if (typeof payload.wallet_status === 'string') {walletPatch.wallet_status = payload.wallet_status;}
 
       if (Object.keys(userPatch).length > 0) {
         const { error } = await db.from('users').update(userPatch).eq('id', context.user.id);
         if (error) {throw error;}
-      }
-      if (Object.keys(walletPatch).length > 0) {
-        const wallet = context.wallet ?? await getWalletByCanonicalUserId(context.user.id);
-        if (wallet?.wallet_id) {
-          const { error } = await db.from('wallets').update(walletPatch).eq('wallet_id', wallet.wallet_id);
-          if (error) {throw error;}
-        }
       }
       return getDirectProfile(userId);
     },
@@ -319,61 +305,24 @@ export async function createDirectBooking(input: {
         .single();
       if (tripError) {throw tripError;}
 
-      const { data: existingBooking, error: existingBookingError } = await db
-        .from('bookings')
-        .select('*')
-        .eq('trip_id', payload.tripId)
-        .eq('passenger_id', passenger.user.id)
-        .in('booking_status', ['pending', 'pending_driver', 'confirmed'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (existingBookingError) {throw existingBookingError;}
-      if (existingBooking) {
-        return { booking: mapBookingRow(existingBooking as RawBooking) };
-      }
-
       const availableSeats = toNumber(trip?.available_seats, 0);
       if (availableSeats < payload.seatsRequested) {throw new Error('Not enough seats available');}
-
-      const { data: existingSeats } = await db
-        .from('bookings')
-        .select('seat_number')
-        .eq('trip_id', payload.tripId)
-        .neq('booking_status', 'cancelled');
-
-      const usedSeats = new Set(
-        (Array.isArray(existingSeats) ? existingSeats : []).map((item: RawBooking) => toNumber(item.seat_number, 0)),
-      );
       const resolvedSeatNumber =
-        toNumber(payload.metadata?.seat_number, 0) ||
-        Array.from({ length: Math.max(availableSeats + usedSeats.size + 1, 100) }, (_, i) => i + 1).find(
-          (seat) => !usedSeats.has(seat),
-        ) ||
-        1;
+        toNumber(payload.metadata?.seat_number, 0) || 1;
 
       const pricePerSeat = toNumber(trip?.price_per_seat, 0);
       const totalPrice = toNumber(payload.metadata?.total_price, pricePerSeat * payload.seatsRequested);
-      const bookingStatus = payload.bookingStatus ?? 'confirmed';
+      const bookingStatus = payload.bookingStatus === 'pending_driver' ? 'pending_driver' : 'confirmed';
 
-      const { data, error } = await db
-        .from('bookings')
-        .insert({
-          trip_id: payload.tripId,
-          passenger_id: passenger.user.id,
-          seats_requested: payload.seatsRequested,
-          seat_number: resolvedSeatNumber,
-          pickup_location: payload.pickup ?? null,
-          dropoff_location: payload.dropoff ?? null,
-          price_per_seat: pricePerSeat,
-          total_price: totalPrice,
-          amount: totalPrice,
-          booking_status: bookingStatus,
-          status: bookingStatus,
-          confirmed_by_driver: bookingStatus === 'pending_driver' ? false : true,
-        })
-        .select('*')
-        .single();
+      const { data, error } = await db.rpc('app_create_booking_request', {
+        p_trip_id: payload.tripId,
+        p_seats_requested: payload.seatsRequested,
+        p_pickup_location: payload.pickup ?? null,
+        p_dropoff_location: payload.dropoff ?? null,
+        p_runtime_status: bookingStatus,
+        p_total_price: totalPrice,
+        p_seat_number: resolvedSeatNumber,
+      });
       if (error) {throw error;}
 
       await recordDirectGrowthEvent({
@@ -395,22 +344,6 @@ export async function createDirectBooking(input: {
       if (bookingStatus !== 'pending_driver') {
         await processReferralConversionForPassenger(passenger.user.id).catch(() => {});
       }
-
-      await db
-        .from('trips')
-        .update({
-          available_seats:
-            bookingStatus === 'pending_driver'
-              ? availableSeats
-              : Math.max(availableSeats - payload.seatsRequested, 0),
-          trip_status:
-            bookingStatus === 'pending_driver'
-              ? (trip?.trip_status ?? 'open')
-              : availableSeats - payload.seatsRequested <= 0
-                ? 'booked'
-                : (trip?.trip_status ?? 'open'),
-        })
-        .eq('trip_id', payload.tripId);
 
       return {
         booking: mapBookingRow(data as RawBooking),
@@ -444,7 +377,10 @@ export async function getDirectTripBookings(tripId: string) {
 
 export async function updateDirectBookingStatus(bookingId: string, status: 'accepted' | 'rejected' | 'cancelled') {
   const db = getDb();
-  const mappedStatus = normalizeBookingStatus(status);
+  const nextRuntimeStatus =
+    status === 'accepted'
+      ? 'confirmed'
+      : status;
 
   const { data: existing, error: existingError } = await db
     .from('bookings')
@@ -454,54 +390,32 @@ export async function updateDirectBookingStatus(bookingId: string, status: 'acce
   if (existingError) {throw existingError;}
 
   const bookingRow = existing as RawBooking;
-  const { data, error } = await db
-    .from('bookings')
-    .update({ booking_status: mappedStatus, status: mappedStatus, confirmed_by_driver: mappedStatus === 'confirmed' })
-    .eq('booking_id', bookingId)
-    .select('*')
-    .single();
+  const previousStatus =
+    typeof bookingRow.status === 'string' && bookingRow.status.trim().length > 0
+      ? bookingRow.status
+      : normalizeBookingStatus(bookingRow.booking_status);
+
+  const { data, error } = await db.rpc('app_update_booking_runtime_status', {
+    p_booking_id: bookingId,
+    p_runtime_status: nextRuntimeStatus,
+  });
   if (error) {throw error;}
 
-  const { data: trip } = await db
-    .from('trips')
-    .select('trip_id, available_seats, trip_status')
-    .eq('trip_id', bookingRow.trip_id)
-    .maybeSingle();
-
-  const availableSeats = toNumber((trip as TripRow | null)?.available_seats, 0);
-  const seatsRequested = Math.max(1, toNumber(bookingRow.seats_requested, 1));
-
-  if (mappedStatus === 'confirmed' && bookingRow.booking_status === 'pending_driver' && trip) {
-    await db
-      .from('trips')
-      .update({
-        available_seats: Math.max(availableSeats - seatsRequested, 0),
-        trip_status: availableSeats - seatsRequested <= 0 ? 'booked' : ((trip as TripRow).trip_status ?? 'open'),
-      })
-      .eq('trip_id', bookingRow.trip_id);
-    if (bookingRow.passenger_id) {
-      await processReferralConversionForPassenger(String(bookingRow.passenger_id)).catch(() => {});
-    }
-  }
-
-  if ((mappedStatus === 'cancelled' || mappedStatus === 'rejected') && bookingRow.booking_status === 'confirmed' && trip) {
-    await db
-      .from('trips')
-      .update({ available_seats: availableSeats + seatsRequested, trip_status: 'open' })
-      .eq('trip_id', bookingRow.trip_id);
+  if (nextRuntimeStatus === 'confirmed' && previousStatus === 'pending_driver' && bookingRow.passenger_id) {
+    await processReferralConversionForPassenger(String(bookingRow.passenger_id)).catch(() => {});
   }
 
   await recordDirectGrowthEvent({
     userId: String(bookingRow.passenger_id ?? ''),
     eventName: 'ride_booking_status_updated',
-    funnelStage: mappedStatus === 'confirmed' ? 'booked' : mappedStatus,
+    funnelStage: nextRuntimeStatus === 'confirmed' ? 'booked' : nextRuntimeStatus,
     serviceType: 'ride',
     valueJod: toNumber(bookingRow.amount, 0),
     metadata: {
       bookingId,
       tripId: bookingRow.trip_id,
-      previousStatus: bookingRow.booking_status ?? bookingRow.status ?? null,
-      nextStatus: mappedStatus,
+      previousStatus,
+      nextStatus: nextRuntimeStatus,
     },
   }).catch(() => {});
 

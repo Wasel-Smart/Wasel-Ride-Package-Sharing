@@ -507,12 +507,6 @@ export const authAPI = {
             ...(typeof payload.phone === 'string'
               ? { phone: sanitizePhoneNumber(payload.phone) }
               : {}),
-            ...(typeof payload.role === 'string'
-              ? { role: sanitizeTextField(payload.role, 'Role', 32) }
-              : {}),
-            ...(typeof payload.verification_level === 'string'
-              ? { verification_level: sanitizeTextField(payload.verification_level, 'Verification level', 32) }
-              : {}),
             ...(typeof payload.avatar_url === 'string'
               ? { avatar_url: sanitizeOptionalTextField(payload.avatar_url, 500) }
               : {}),
