@@ -81,6 +81,17 @@ function getBooleanEnv(key: string, fallback: boolean): boolean {
   return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
 }
 
+function getBooleanEnvAny(keys: string[], fallback: boolean): boolean {
+  for (const key of keys) {
+    const value = getEnv(key);
+    if (value) {
+      return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
+    }
+  }
+
+  return fallback;
+}
+
 function resolveEnvironment(): AppEnvironment {
   return normalizeEnvironment(
     getEnv('VITE_APP_ENV') ||
@@ -167,6 +178,18 @@ function buildConfig() {
     environment,
     ['test'],
   );
+  const enableGoogleAuth =
+    hasPublicSupabaseConfig && getBooleanEnv('VITE_ENABLE_GOOGLE_AUTH', false);
+  const enableFacebookAuth =
+    hasPublicSupabaseConfig && getBooleanEnv('VITE_ENABLE_FACEBOOK_AUTH', false);
+  const enableFakePayments = getBooleanEnvAny(
+    ['VITE_ENABLE_FAKE_PAYMENTS', 'ENABLE_FAKE_PAYMENTS'],
+    false,
+  );
+  const enableFakeBusBookings = getBooleanEnvAny(
+    ['VITE_ENABLE_FAKE_BUS_BOOKINGS', 'ENABLE_FAKE_BUS_BOOKINGS'],
+    false,
+  );
   const enableTwoFactorAuth = getBooleanEnv('VITE_ENABLE_TWO_FACTOR_AUTH', false);
   const enableEmailNotifications = getBooleanEnv('VITE_ENABLE_EMAIL_NOTIFICATIONS', true);
   const enableSmsNotifications = getBooleanEnv('VITE_ENABLE_SMS_NOTIFICATIONS', true);
@@ -201,6 +224,10 @@ function buildConfig() {
     enableDemoAccount,
     enableSyntheticTrips,
     enablePersistedTestAuth,
+    enableGoogleAuth,
+    enableFacebookAuth,
+    enableFakePayments,
+    enableFakeBusBookings,
     enableTwoFactorAuth,
     enableEmailNotifications,
     enableSmsNotifications,

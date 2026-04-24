@@ -15,7 +15,6 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
-  Fingerprint,
   Lock,
   Mail,
   MapPinned,
@@ -26,19 +25,20 @@ import {
   UserRound,
 } from 'lucide-react';
 import { WaselHeroMark, WaselLogo } from '../components/wasel-ds/WaselLogo';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
+import { useAuthProviderAvailability } from '../hooks/useAuthProviderAvailability';
 import { APP_ROUTES } from '../router/paths';
-import { checkRateLimit, validateEmail } from '../utils/security';
+import { checkPasswordStrength, checkRateLimit, validateEmail } from '../utils/security';
 import { useAuth } from '../contexts/AuthContext';
 import { getConfig, getWhatsAppSupportUrl } from '../utils/env';
 import {
+  type PasswordRequirement,
   friendlyAuthError,
   getPasswordRequirements,
   normalizeEmailInput,
   pwStrength,
-  validateFullName,
-  validatePassword,
 } from '../utils/authHelpers';
 import { normalizeAuthReturnTo } from '../utils/authFlow';
 import { WaselAuthNetworkMap } from './shared/WaselAuthNetworkMap';
@@ -48,6 +48,75 @@ type Tab = 'signin' | 'signup';
 type PendingAction = 'google' | 'facebook' | 'reset' | 'whatsapp' | null;
 
 const REMEMBER_ME_STORAGE_KEY = 'wasel_remember_me';
+
+const PASSWORD_REQUIREMENT_LABEL_KEYS: Record<PasswordRequirement['key'], string> = {
+  length: 'authPage.password.requirements.length',
+  lowercase: 'authPage.password.requirements.lowercase',
+  uppercase: 'authPage.password.requirements.uppercase',
+  number: 'authPage.password.requirements.number',
+  special: 'authPage.password.requirements.special',
+};
+
+const PASSWORD_STRENGTH_LABEL_KEYS = [
+  '',
+  'authPage.password.strength.weak',
+  'authPage.password.strength.fair',
+  'authPage.password.strength.good',
+  'authPage.password.strength.strong',
+  'authPage.password.strength.excellent',
+] as const;
+
+const RETURN_LABEL_KEYS: Array<[string, string]> = [
+  [APP_ROUTES.findRide.full, 'authPage.returnLabels.findRide'],
+  [APP_ROUTES.offerRide.full, 'authPage.returnLabels.offerRide'],
+  [APP_ROUTES.packages.full, 'authPage.returnLabels.packages'],
+  [APP_ROUTES.bus.full, 'authPage.returnLabels.bus'],
+  [APP_ROUTES.wallet.full, 'authPage.returnLabels.wallet'],
+  [APP_ROUTES.payments.full, 'authPage.returnLabels.payments'],
+  [APP_ROUTES.profile.full, 'authPage.returnLabels.profile'],
+  [APP_ROUTES.mobilityOs.full, 'authPage.returnLabels.mobilityOs'],
+];
+
+function interpolate(template: string, values: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => values[key] ?? '');
+}
+
+function translateAuthErrorMessage(t: (key: string) => string, message: string): string {
+  const normalized = message.trim();
+  const map: Record<string, string> = {
+    'Incorrect email or password.': t('authPage.errors.invalidCredentials'),
+    'Please confirm your email before signing in.': t('authPage.errors.confirmEmailBeforeSignIn'),
+    'This account is temporarily locked. Please wait a little and try again, or contact support if this keeps happening.':
+      t('authPage.errors.accountLocked'),
+    'This account is currently disabled. Please contact support for help.':
+      t('authPage.errors.accountDisabled'),
+    'An account with this email already exists. Sign in instead, or reset your password if you need access.':
+      t('authPage.errors.accountAlreadyExists'),
+    'Choose a stronger password with at least 8 characters, plus uppercase, lowercase, a number, and a symbol.':
+      t('authPage.errors.weakPassword'),
+    'Enter a valid email address.': t('authPage.errors.invalidEmail'),
+    'Too many attempts right now. Please wait a moment and try again.':
+      t('authPage.errors.rateLimited'),
+    'Account creation is blocked by the current Supabase signup trigger. Apply the latest auth signup migration, then try again.':
+      t('authPage.errors.signupUnavailable'),
+    'This sign-in option is not available in this environment.':
+      t('authPage.errors.providerUnavailable'),
+    'Sign-in was canceled before it finished. Please try again when you are ready.':
+      t('authPage.errors.signInCancelled'),
+    'Your social account did not share an email address, so we could not finish sign-in.':
+      t('authPage.errors.socialMissingEmail'),
+    'This email is already linked to a different sign-in method. Use the original provider or email sign-in for this account.':
+      t('authPage.errors.differentProvider'),
+    'This sign-in link has expired or is no longer valid. Please start again from the sign-in page.':
+      t('authPage.errors.expiredSignInLink'),
+    'We could not reach the server. Check your connection and try again.':
+      t('authPage.errors.networkUnavailable'),
+    'Authentication is not configured for this environment yet.':
+      t('authPage.errors.authNotConfigured'),
+  };
+
+  return map[normalized] ?? normalized;
+}
 
 function getRememberMe(): boolean {
   if (typeof window === 'undefined') return false;
@@ -71,28 +140,21 @@ function setRememberMe(remember: boolean): void {
   }
 }
 
-async function checkBiometricAvailable(): Promise<boolean> {
-  if (typeof window === 'undefined' || !window.PublicKeyCredential) return false;
-  try {
-    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-  } catch {
-    return false;
-  }
-}
-
 function PasswordRequirementsVisible() {
+  const { t } = useLanguage();
+
   return (
     <div className="auth-password-requirements">
       <div className="auth-password-requirements__title">
         <Shield size={12} />
-        Password requirements
+        {t('authPage.password.title')}
       </div>
       <div className="auth-password-requirements__list">
-        <div className="auth-password-requirements__item">At least 8 characters</div>
-        <div className="auth-password-requirements__item">One uppercase letter</div>
-        <div className="auth-password-requirements__item">One lowercase letter</div>
-        <div className="auth-password-requirements__item">One number</div>
-        <div className="auth-password-requirements__item">One special character (!@#$%^&*)</div>
+        <div className="auth-password-requirements__item">{t('authPage.password.requirements.length')}</div>
+        <div className="auth-password-requirements__item">{t('authPage.password.requirements.uppercase')}</div>
+        <div className="auth-password-requirements__item">{t('authPage.password.requirements.lowercase')}</div>
+        <div className="auth-password-requirements__item">{t('authPage.password.requirements.number')}</div>
+        <div className="auth-password-requirements__item">{t('authPage.password.requirements.special')}</div>
       </div>
     </div>
   );
@@ -105,6 +167,8 @@ function RememberMeCheckbox({
   checked: boolean;
   onChange: (v: boolean) => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <label className="auth-remember-me">
       <input
@@ -114,21 +178,21 @@ function RememberMeCheckbox({
         className="auth-remember-me__checkbox"
       />
       <span className="auth-remember-me__checkmark" />
-      <span className="auth-remember-me__label">Remember me</span>
+      <span className="auth-remember-me__label">{t('auth.rememberMe')}</span>
     </label>
   );
 }
 
 const BRAND_FEATURES = [
-  { icon: <MapPinned size={14} />, text: 'Demand-weighted city pairs' },
-  { icon: <Package size={14} />, text: 'Ride and parcel overlays' },
-  { icon: <Shield size={14} />, text: 'Rebalance-aware routing' },
+  { icon: <MapPinned size={14} />, key: 'authPage.hero.features.cityPairs' },
+  { icon: <Package size={14} />, key: 'authPage.hero.features.overlays' },
+  { icon: <Shield size={14} />, key: 'authPage.hero.features.routing' },
 ] as const;
 
 const HERO_METRICS = [
-  { value: '12', label: 'city nodes' },
-  { value: '27', label: 'smart corridors' },
-  { value: '24/7', label: 'adaptive rebalancing' },
+  { value: '12', key: 'authPage.hero.metrics.cityNodes' },
+  { value: '27', key: 'authPage.hero.metrics.smartCorridors' },
+  { value: '24/7', key: 'authPage.hero.metrics.rebalancing' },
 ] as const;
 
 interface AuthFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
@@ -151,6 +215,7 @@ function AuthField({
   id,
   ...rest
 }: AuthFieldProps) {
+  const { t } = useLanguage();
   const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === 'password';
@@ -187,7 +252,7 @@ function AuthField({
           <button
             type="button"
             className="auth-field__toggle"
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-label={showPassword ? t('authPage.password.hide') : t('authPage.password.show')}
             onClick={() => setShowPassword(current => !current)}
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -202,6 +267,8 @@ function AuthField({
 }
 
 function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
+  const { t } = useLanguage();
+
   return (
     <div className="auth-landing__hero-panel">
       <div className="auth-landing__hero-scrim" aria-hidden="true" />
@@ -211,14 +278,14 @@ function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
         <WaselHeroMark size={136} />
       </div>
 
-      <div className="auth-landing__hero-copy">
-        <div className="auth-landing__hero-intro">
-          <div className="auth-landing__eyebrow">
-            <Sparkles size={15} />
-            One Wasel access layer
-          </div>
+        <div className="auth-landing__hero-copy">
+          <div className="auth-landing__hero-intro">
+            <div className="auth-landing__eyebrow">
+              <Sparkles size={15} />
+              {t('authPage.hero.eyebrow')}
+            </div>
 
-          <WaselLogo
+            <WaselLogo
             size={50}
             theme="auto"
             variant="full"
@@ -228,26 +295,28 @@ function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
           />
 
           <h1 className="auth-landing__hero-title">
-            City-to-city routing, drawn as one live Wasel field.
+            {t('authPage.hero.title')}
           </h1>
 
           <p className="auth-landing__hero-body">
             {tab === 'signin'
-              ? 'Sign back in and continue through a cleaner corridor map that shows how rides, parcels, and rebalancing move together across the Wasel network.'
-              : 'Create one account and enter a sharper network shell where every city pair, transfer lane, and relay route reads as part of the same system.'}
+              ? t('authPage.hero.signInBody')
+              : t('authPage.hero.signUpBody')}
           </p>
 
           <div className="auth-landing__hero-utility">
             <div className="auth-landing__hero-signal">
               <MapPinned size={16} />
-              {`Return corridor: ${returnLabel || 'Find ride'}`}
+              {interpolate(t('authPage.hero.returnCorridor'), {
+                returnLabel: returnLabel || t('authPage.returnLabels.findRide'),
+              })}
             </div>
 
             <div className="auth-landing__hero-metrics">
               {HERO_METRICS.map(metric => (
-                <div key={metric.label} className="auth-landing__hero-metric">
+                <div key={metric.key} className="auth-landing__hero-metric">
                   <strong>{metric.value}</strong>
-                  <span>{metric.label}</span>
+                  <span>{t(metric.key)}</span>
                 </div>
               ))}
             </div>
@@ -260,9 +329,9 @@ function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
 
         <div className="auth-landing__trust-row">
           {BRAND_FEATURES.map(item => (
-            <div key={item.text} className="auth-landing__trust-chip">
+            <div key={item.key} className="auth-landing__trust-chip">
               <span className="auth-landing__trust-icon">{item.icon}</span>
-              <span>{item.text}</span>
+              <span>{t(item.key)}</span>
             </div>
           ))}
         </div>
@@ -272,6 +341,7 @@ function BrandPanel({ tab, returnLabel }: { tab: Tab; returnLabel: string }) {
 }
 
 function StrengthBar({ password }: { password: string }) {
+  const { t } = useLanguage();
   const strength = pwStrength(password);
 
   if (!password) return null;
@@ -292,12 +362,17 @@ function StrengthBar({ password }: { password: string }) {
           <div key={value} className="auth-strength__bar" />
         ))}
       </div>
-      {strength.label ? <span className="auth-strength__label">{strength.label}</span> : null}
+      {strength.score > 0 ? (
+        <span className="auth-strength__label">
+          {t(PASSWORD_STRENGTH_LABEL_KEYS[Math.min(strength.score, 5)])}
+        </span>
+      ) : null}
     </div>
   );
 }
 
 function PasswordChecklist({ password }: { password: string }) {
+  const { t } = useLanguage();
   const requirements = getPasswordRequirements(password);
 
   return (
@@ -308,7 +383,7 @@ function PasswordChecklist({ password }: { password: string }) {
           className={`auth-password-checklist__item${requirement.met ? ' is-met' : ''}`}
         >
           <span className="auth-password-checklist__dot" />
-          <span>{requirement.label}</span>
+          <span>{t(PASSWORD_REQUIREMENT_LABEL_KEYS[requirement.key])}</span>
         </div>
       ))}
     </div>
@@ -316,8 +391,10 @@ function PasswordChecklist({ password }: { password: string }) {
 }
 
 function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
+  const { t } = useLanguage();
+
   return (
-    <div className="auth-landing__tabs" role="tablist" aria-label="Authentication tabs">
+    <div className="auth-landing__tabs" role="tablist" aria-label={t('authPage.tabs.ariaLabel')}>
       {(['signin', 'signup'] as Tab[]).map(value => {
         const active = tab === value;
 
@@ -327,12 +404,16 @@ function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }
             type="button"
             role="tab"
             aria-selected={active}
-            aria-label={value === 'signin' ? 'Switch to sign in' : 'Switch to create account'}
+            aria-label={
+              value === 'signin'
+                ? t('authPage.tabs.switchToSignIn')
+                : t('authPage.tabs.switchToCreateAccount')
+            }
             whileTap={{ scale: 0.98 }}
             className={`auth-landing__tab${active ? ' is-active' : ''}`}
             onClick={() => onChange(value)}
           >
-            {value === 'signin' ? 'Sign in' : 'Create account'}
+            {value === 'signin' ? t('authPage.tabs.signIn') : t('authPage.tabs.createAccount')}
           </motion.button>
         );
       })}
@@ -341,6 +422,7 @@ function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }
 }
 
 export default function WaselAuth() {
+  const { t, dir } = useLanguage();
   const [params, setParams] = useSearchParams();
   const rawTab = params.get('tab')?.toLowerCase();
   const initialTab: Tab = rawTab === 'signup' || rawTab === 'register' ? 'signup' : 'signin';
@@ -354,14 +436,12 @@ export default function WaselAuth() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
-  const [notice, setNotice] = useState(
-    passwordResetCompleted ? 'Password updated. Sign in with your new password.' : '',
-  );
+  const [notice, setNotice] = useState('');
   const [rememberMe, setRememberMeState] = useState(getRememberMe);
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
 
   const { signIn, register, loading, user } = useLocalAuth();
   const { resetPassword, signInWithGoogle, signInWithFacebook } = useAuth();
+  const authProviders = useAuthProviderAvailability();
   const nav = useIframeSafeNavigate();
   const mountedRef = useRef(true);
   const { supportWhatsAppNumber } = getConfig();
@@ -379,25 +459,46 @@ export default function WaselAuth() {
 
     if (!cleaned) return 'find ride';
 
-    return cleaned.replace(/\b\w/g, letter => letter.toUpperCase());
-  }, [safeReturnTo]);
+    const fallbackLabel = cleaned.replace(/\b\w/g, letter => letter.toUpperCase());
+    const matchedKey = RETURN_LABEL_KEYS.find(([route]) => route === path)?.[1];
+    return matchedKey ? t(matchedKey) : fallbackLabel;
+  }, [safeReturnTo, t]);
 
   const normalizedEmail = useMemo(() => normalizeEmailInput(email), [email]);
   const normalizedPhone = useMemo(() => phone.trim().replace(/[^\d+]/g, ''), [phone]);
   const isBusy = loading || pendingAction !== null || success;
+  const supportUrl = useMemo(
+    () => getWhatsAppSupportUrl(t('authPage.social.whatsAppGreeting')),
+    [t],
+  );
 
   const validatePhoneNumber = (value: string): string | null => {
     if (!value) return null;
-    if (value.length < 8) return 'Enter a valid phone number or leave it blank.';
+    if (value.length < 8) return t('authPage.errors.invalidPhone');
     return null;
   };
 
-  const nameError = tab === 'signup' && name.trim() ? validateFullName(name) : '';
+  const validateFullNameField = (value: string): string | null => {
+    const trimmed = value.trim().replace(/\s+/g, ' ');
+    if (!trimmed) return t('authPage.errors.enterFullName');
+    if (trimmed.length < 2) return t('authPage.errors.fullNameTooShort');
+    return null;
+  };
+
+  const validatePasswordField = (value: string): string | null => {
+    if (!value) return t('authPage.errors.enterPassword');
+    if (!checkPasswordStrength(value).isValid) return t('authPage.errors.weakPassword');
+    return null;
+  };
+
+  const nameError = tab === 'signup' && name.trim() ? validateFullNameField(name) : '';
   const emailError =
-    normalizedEmail && !validateEmail(normalizedEmail) ? 'Please enter a valid email address.' : '';
-  const passwordError = tab === 'signup' && password ? (validatePassword(password) ?? '') : '';
+    normalizedEmail && !validateEmail(normalizedEmail) ? t('authPage.errors.invalidEmail') : '';
+  const passwordError = tab === 'signup' && password ? (validatePasswordField(password) ?? '') : '';
   const phoneError =
     tab === 'signup' && phone.trim() ? (validatePhoneNumber(normalizedPhone) ?? '') : '';
+  const hasSocialButtons =
+    authProviders.google.enabled || authProviders.facebook.enabled || authProviders.whatsapp.enabled;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -425,10 +526,10 @@ export default function WaselAuth() {
   }, [user, nav, safeReturnTo]);
 
   useEffect(() => {
-    checkBiometricAvailable()
-      .then(setBiometricAvailable)
-      .catch(() => setBiometricAvailable(false));
-  }, []);
+    if (passwordResetCompleted) {
+      setNotice(t('authPage.messages.passwordUpdated'));
+    }
+  }, [passwordResetCompleted, t]);
 
   useEffect(() => {
     setRememberMe(rememberMe);
@@ -460,24 +561,29 @@ export default function WaselAuth() {
       setNotice('');
     }
     if (!normalizedEmail) {
-      setError('Please enter your email address.');
+      setError(t('authPage.errors.enterEmail'));
       return;
     }
     if (!validateEmail(normalizedEmail)) {
-      setError('Please enter a valid email address.');
+      setError(t('authPage.errors.invalidEmail'));
       return;
     }
     if (!password) {
-      setError('Please enter your password.');
+      setError(t('authPage.errors.enterPassword'));
       return;
     }
     if (!checkRateLimit(`signin:${normalizedEmail}`, { maxRequests: 5, windowMs: 60_000 })) {
-      setError('Too many attempts. Please wait a minute and try again.');
+      setError(t('authPage.errors.tooManyAttempts'));
       return;
     }
     const { error: signInError } = await signIn(normalizedEmail, password);
     if (signInError) {
-      setError(friendlyAuthError(signInError, 'Sign in failed. Please try again.'));
+      setError(
+        translateAuthErrorMessage(
+          t,
+          friendlyAuthError(signInError, t('authPage.errors.signInFailed')),
+        ),
+      );
       return;
     }
     pushSuccessRedirect();
@@ -488,20 +594,20 @@ export default function WaselAuth() {
     if (!passwordResetCompleted) {
       setNotice('');
     }
-    const fullNameError = validateFullName(name);
+    const fullNameError = validateFullNameField(name);
     if (fullNameError) {
       setError(fullNameError);
       return;
     }
     if (!normalizedEmail) {
-      setError('Please enter your email address.');
+      setError(t('authPage.errors.enterEmail'));
       return;
     }
     if (!validateEmail(normalizedEmail)) {
-      setError('Please enter a valid email address.');
+      setError(t('authPage.errors.invalidEmail'));
       return;
     }
-    const nextPasswordError = validatePassword(password);
+    const nextPasswordError = validatePasswordField(password);
     if (nextPasswordError) {
       setError(nextPasswordError);
       return;
@@ -512,7 +618,7 @@ export default function WaselAuth() {
       return;
     }
     if (!checkRateLimit(`signup:${normalizedEmail}`, { maxRequests: 3, windowMs: 60_000 })) {
-      setError('Too many attempts. Please wait a minute and try again.');
+      setError(t('authPage.errors.tooManyAttempts'));
       return;
     }
     const registration = await register(
@@ -522,11 +628,14 @@ export default function WaselAuth() {
       normalizedPhone || undefined,
     );
     if (registration.error) {
-      const friendly = friendlyAuthError(registration.error, 'Sign up failed. Please try again.');
+      const friendly = translateAuthErrorMessage(
+        t,
+        friendlyAuthError(registration.error, t('authPage.errors.signUpFailed')),
+      );
       if (friendly.includes('already exists')) {
         setTab('signin');
         setNotice(
-          `An account already exists for ${normalizedEmail}. Sign in instead or reset your password.`,
+          interpolate(t('authPage.messages.accountExists'), { email: normalizedEmail }),
         );
         setError('');
         return;
@@ -538,7 +647,9 @@ export default function WaselAuth() {
       setPassword('');
       setPhone('');
       setNotice(
-        `Check ${registration.email ?? normalizedEmail} and confirm your email address to finish creating your account.`,
+        interpolate(t('authPage.messages.confirmEmail'), {
+          email: registration.email ?? normalizedEmail,
+        }),
       );
       setTab('signin');
       return;
@@ -548,26 +659,38 @@ export default function WaselAuth() {
 
   const handleForgotPassword = async () => {
     if (!normalizedEmail) {
-      setError('Enter your email address above first.');
+      setError(t('authPage.errors.enterEmailFirst'));
       return;
     }
     if (!validateEmail(normalizedEmail)) {
-      setError('Please enter a valid email address.');
+      setError(t('authPage.errors.invalidEmail'));
       return;
     }
     setPendingAction('reset');
     const { error: resetError } = await resetPassword(normalizedEmail);
     setPendingAction(null);
     if (resetError) {
-      setError(friendlyAuthError(resetError, 'Password reset failed.'));
+      setError(
+        translateAuthErrorMessage(
+          t,
+          friendlyAuthError(resetError, t('authPage.errors.passwordResetFailed')),
+        ),
+      );
       return;
     }
     setError('');
-    setNotice(`If ${normalizedEmail} is registered, a password reset link has been sent.`);
-    toast.success(`If ${normalizedEmail} is registered, a password reset link has been sent.`);
+    const resetNotice = interpolate(t('authPage.messages.resetLinkSent'), {
+      email: normalizedEmail,
+    });
+    setNotice(resetNotice);
+    toast.success(resetNotice);
   };
 
   const handleGoogleSignIn = async () => {
+    if (!authProviders.google.enabled) {
+      setError(t('authPage.errors.googleUnavailable'));
+      return;
+    }
     setError('');
     setPendingAction('google');
     let oauthError: unknown = null;
@@ -576,10 +699,21 @@ export default function WaselAuth() {
     } finally {
       setPendingAction(null);
     }
-    if (oauthError) setError(friendlyAuthError(oauthError, 'Google sign-in failed.'));
+    if (oauthError) {
+      setError(
+        translateAuthErrorMessage(
+          t,
+          friendlyAuthError(oauthError, t('authPage.errors.googleSignInFailed')),
+        ),
+      );
+    }
   };
 
   const handleFacebookSignIn = async () => {
+    if (!authProviders.facebook.enabled) {
+      setError(t('authPage.errors.facebookUnavailable'));
+      return;
+    }
     setError('');
     setPendingAction('facebook');
     let oauthError: unknown = null;
@@ -588,13 +722,19 @@ export default function WaselAuth() {
     } finally {
       setPendingAction(null);
     }
-    if (oauthError) setError(friendlyAuthError(oauthError, 'Facebook sign-in failed.'));
+    if (oauthError) {
+      setError(
+        translateAuthErrorMessage(
+          t,
+          friendlyAuthError(oauthError, t('authPage.errors.facebookSignInFailed')),
+        ),
+      );
+    }
   };
 
   const handleWhatsAppHelp = () => {
-    const supportUrl = getWhatsAppSupportUrl('Hi Wasel');
     if (!supportWhatsAppNumber || !supportUrl) {
-      setError('WhatsApp support is not configured yet.');
+      setError(t('authPage.errors.whatsAppUnavailable'));
       return;
     }
     setPendingAction('whatsapp');
@@ -605,13 +745,19 @@ export default function WaselAuth() {
   };
 
   const socialButtons = [
-    { label: 'Google', onClick: handleGoogleSignIn },
-    { label: 'Facebook', onClick: handleFacebookSignIn },
-    ...(supportWhatsAppNumber ? [{ label: 'WhatsApp', onClick: handleWhatsAppHelp }] : []),
+    ...(authProviders.google.enabled
+      ? [{ key: 'google', label: 'Google', cta: t('auth.continueWithGoogle'), onClick: handleGoogleSignIn }]
+      : []),
+    ...(authProviders.facebook.enabled
+      ? [{ key: 'facebook', label: 'Facebook', cta: t('auth.continueWithFacebook'), onClick: handleFacebookSignIn }]
+      : []),
+    ...(authProviders.whatsapp.enabled
+      ? [{ key: 'whatsapp', label: 'WhatsApp', cta: t('authPage.social.whatsAppCta'), onClick: handleWhatsAppHelp }]
+      : []),
   ] as const;
 
   return (
-    <div className="auth-landing">
+    <div className="auth-landing" dir={dir}>
       <div className="auth-landing__shell">
         <header className="auth-landing__header">
           <button type="button" className="auth-landing__brand" onClick={() => nav('/')}>
@@ -627,7 +773,7 @@ export default function WaselAuth() {
 
           <div className="auth-landing__header-actions">
             <button type="button" className="auth-landing__ghost-action" onClick={() => nav('/')}>
-              Back to landing
+              {t('authPage.actions.backToLanding')}
             </button>
           </div>
         </header>
@@ -646,29 +792,39 @@ export default function WaselAuth() {
               <div className="auth-landing__form-heading">
                 <div className="auth-landing__eyebrow auth-landing__eyebrow--light">
                   <Sparkles size={14} />
-                  Premium access
+                  {t('authPage.heading.eyebrow')}
                 </div>
-                <h2>{tab === 'signin' ? 'Sign in to Wasel' : 'Create your Wasel account'}</h2>
+                <h2>
+                  {tab === 'signin'
+                    ? t('authPage.heading.signInTitle')
+                    : t('authPage.heading.createAccountTitle')}
+                </h2>
                 <p>
                   {tab === 'signin'
-                    ? 'Sign in to continue. One account that looks and feels like the landing page.'
-                    : 'Create one account that looks and feels like the landing page.'}
+                    ? t('authPage.heading.signInBody')
+                    : t('authPage.heading.createAccountBody')}
                 </p>
                 <div className="auth-landing__switch-copy">
-                  <span>{tab === 'signin' ? 'New to Wasel?' : 'Already have an account?'}</span>
+                  <span>
+                    {tab === 'signin'
+                      ? t('authPage.heading.newToWasel')
+                      : t('authPage.heading.alreadyHaveAccount')}
+                  </span>
                   <button
                     type="button"
                     className="auth-landing__inline-link"
                     onClick={() => handleTabChange(tab === 'signin' ? 'signup' : 'signin')}
                   >
-                    {tab === 'signin' ? 'Create account' : 'Sign in'}
+                    {tab === 'signin'
+                      ? t('authPage.actions.createAccount')
+                      : t('authPage.actions.signIn')}
                   </button>
                 </div>
               </div>
 
               <div className="auth-landing__return-chip">
-                <span className="auth-landing__return-label">Return path</span>
-                <strong>{`Back to ${returnLabel}`}</strong>
+                <span className="auth-landing__return-label">{t('authPage.returnPath.label')}</span>
+                <strong>{interpolate(t('authPage.returnPath.value'), { returnLabel })}</strong>
               </div>
 
               <AnimatePresence>
@@ -706,7 +862,7 @@ export default function WaselAuth() {
                     exit={{ opacity: 0, scale: 0.98 }}
                   >
                     <CheckCircle2 size={16} />
-                    <span>Success. Redirecting.</span>
+                    <span>{t('authPage.messages.successRedirecting')}</span>
                   </motion.div>
                 ) : null}
               </AnimatePresence>
@@ -727,11 +883,11 @@ export default function WaselAuth() {
                   {tab === 'signup' ? (
                     <AuthField
                       id="full-name"
-                      label="Full name"
-                      description="Required"
+                      label={t('authPage.fields.fullName.label')}
+                      description={t('common.required')}
                       value={name}
                       onChange={setName}
-                      placeholder="Ahmad Al-Rashid"
+                      placeholder={t('authPage.fields.fullName.placeholder')}
                       icon={<UserRound size={16} />}
                       autoComplete="name"
                       error={nameError || undefined}
@@ -740,11 +896,11 @@ export default function WaselAuth() {
 
                   <AuthField
                     id="auth-email"
-                    label="Email address"
+                    label={t('authPage.fields.email.label')}
                     type="email"
                     value={email}
                     onChange={setEmail}
-                    placeholder="you@example.com"
+                    placeholder={t('authPage.fields.email.placeholder')}
                     icon={<Mail size={16} />}
                     autoComplete="email"
                     error={emailError || undefined}
@@ -752,12 +908,14 @@ export default function WaselAuth() {
 
                   <AuthField
                     id="auth-password"
-                    label="Password"
+                    label={t('auth.password')}
                     type="password"
                     value={password}
                     onChange={setPassword}
                     placeholder={
-                      tab === 'signin' ? 'Enter your password' : 'Create a secure password'
+                      tab === 'signin'
+                        ? t('authPage.fields.password.signInPlaceholder')
+                        : t('authPage.fields.password.signUpPlaceholder')
                     }
                     icon={<Lock size={16} />}
                     autoComplete={tab === 'signin' ? 'current-password' : 'new-password'}
@@ -782,16 +940,16 @@ export default function WaselAuth() {
                   {tab === 'signup' ? (
                     <AuthField
                       id="auth-phone"
-                      label="Phone number"
-                      description="Optional"
+                      label={t('auth.phoneNumber')}
+                      description={t('common.optional')}
                       type="tel"
                       value={phone}
                       onChange={setPhone}
-                      placeholder="+962 79 123 4567"
+                      placeholder={t('authPage.fields.phone.placeholder')}
                       icon={<Phone size={16} />}
                       autoComplete="tel"
                       error={phoneError || undefined}
-                      hint={<span>Add it now or skip it.</span>}
+                      hint={<span>{t('authPage.fields.phone.hint')}</span>}
                     />
                   ) : null}
 
@@ -803,7 +961,9 @@ export default function WaselAuth() {
                         onClick={handleForgotPassword}
                         disabled={isBusy}
                       >
-                        {pendingAction === 'reset' ? 'Sending reset link...' : 'Forgot password?'}
+                        {pendingAction === 'reset'
+                          ? t('authPage.actions.sendingResetLink')
+                          : t('auth.forgotPassword')}
                       </button>
                     </div>
                   ) : null}
@@ -812,47 +972,34 @@ export default function WaselAuth() {
                     type="submit"
                     className="auth-landing__submit"
                     disabled={isBusy}
-                    aria-label={tab === 'signin' ? 'Submit sign in' : 'Create account'}
+                    aria-label={
+                      tab === 'signin'
+                        ? t('authPage.actions.submitSignInAria')
+                        : t('authPage.actions.submitCreateAccountAria')
+                    }
                   >
                     <span>
                       {loading
-                        ? 'Please wait...'
+                        ? t('authPage.actions.pleaseWait')
                         : tab === 'signin'
-                          ? 'Sign in to Wasel'
-                          : 'Create account'}
+                          ? t('authPage.actions.signInToWasel')
+                          : t('authPage.actions.createAccount')}
                     </span>
-                    <ArrowRight size={16} />
+                    <ArrowRight
+                      size={16}
+                      style={{ transform: dir === 'rtl' ? 'scaleX(-1)' : undefined }}
+                    />
                   </button>
 
-                  <div className="auth-landing__divider">
-                    <span />
-                    <p>or continue with</p>
-                    <span />
-                  </div>
+                  {hasSocialButtons ? (
+                    <div className="auth-landing__divider">
+                      <span />
+                      <p>{t('auth.orContinueWith')}</p>
+                      <span />
+                    </div>
+                  ) : null}
 
                   <div className="auth-landing__social-grid">
-                    {biometricAvailable && tab === 'signin' ? (
-                      <motion.button
-                        type="button"
-                        whileHover={{ scale: 1.01, y: -1 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="auth-landing__social-button auth-landing__social-button--biometric"
-                        aria-label="Use biometric authentication"
-                        disabled={isBusy}
-                        onClick={() => {
-                          toast.info('Biometric authentication coming soon');
-                        }}
-                      >
-                        <div className="auth-landing__social-icon">
-                          <Fingerprint size={18} />
-                        </div>
-                        <div className="auth-landing__social-copy">
-                          <strong>Biometric</strong>
-                          <span>Use fingerprint or face ID</span>
-                        </div>
-                        <ChevronRight size={14} className="auth-landing__social-chevron" />
-                      </motion.button>
-                    ) : null}
                     {socialButtons.map(social => (
                       <motion.button
                         key={social.label}

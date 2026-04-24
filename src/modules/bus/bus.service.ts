@@ -5,6 +5,7 @@ import {
   type BusBookingPayload,
 } from '../../services/bus';
 import { routeEndpointsAreDistinct, routeMatchesLocationPair } from '../../utils/jordanLocations';
+import { buildBusRouteInfo } from './bus.copy';
 import type { BusRoute, BusSearchDraft } from './bus.types';
 
 function isExactRoute(route: BusRoute, from: string, to: string) {
@@ -18,7 +19,7 @@ export const busService = {
 
   async searchRoutes(
     draft: BusSearchDraft,
-  ): Promise<{ routes: BusRoute[]; info: string | null; error: string | null }> {
+  ): Promise<{ routes: BusRoute[]; info: ReturnType<typeof buildBusRouteInfo> | null; error: string | null }> {
     const fallbackRoutes = getOfficialBusRoutes({
       from: draft.from,
       to: draft.to,
@@ -28,7 +29,7 @@ export const busService = {
     if (!routeEndpointsAreDistinct(draft.from, draft.to)) {
       return {
         routes: fallbackRoutes,
-        info: 'Choose two different locations to preview the right coach corridor.',
+        info: buildBusRouteInfo('validation'),
         error: null,
       };
     }
@@ -49,8 +50,8 @@ export const busService = {
           routes,
           info:
             routes[0]?.dataSource === 'live'
-              ? 'Live bus inventory is synced for this corridor.'
-              : `Showing official Jordan schedule data verified on ${routes[0]?.lastVerifiedAt ?? draft.date}.`,
+              ? buildBusRouteInfo('live')
+              : buildBusRouteInfo('official', routes[0]?.lastVerifiedAt ?? draft.date),
           error: null,
         };
       }
@@ -58,14 +59,14 @@ export const busService = {
       return {
         routes: fallbackRoutes,
         info: fallbackRoutes.some(route => isExactRoute(route, draft.from, draft.to))
-          ? `Showing official Jordan schedules verified on ${fallbackRoutes[0]?.lastVerifiedAt ?? draft.date}.`
-          : 'No exact coach found yet. Showing the closest official corridors.',
+          ? buildBusRouteInfo('official', fallbackRoutes[0]?.lastVerifiedAt ?? draft.date)
+          : buildBusRouteInfo('nearest'),
         error: null,
       };
     } catch {
       return {
         routes: fallbackRoutes,
-        info: `Live route API is unavailable. Showing official Jordan schedules verified on ${fallbackRoutes[0]?.lastVerifiedAt ?? draft.date}.`,
+        info: buildBusRouteInfo('unavailable', fallbackRoutes[0]?.lastVerifiedAt ?? draft.date),
         error: null,
       };
     }
