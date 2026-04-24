@@ -10,9 +10,9 @@ import { trackGrowthEvent } from '../../services/growthEngine';
 import { buildAuthPagePath } from '../../utils/authFlow';
 import { normalizeTextTree } from '../../utils/textEncoding';
 import { getWaselPresenceProfile } from '../../domains/trust/waselPresence';
-import { LandingPageFrame } from '../home/landing/LandingPageFrame';
-import { landingPanel } from '../home/landing/landingTypes';
-import { LANDING_FONT } from '../home/landingConstants';
+import { LandingPageFrame } from './landing/LandingPageFrame';
+import { panelStyle } from '../../styles/shared-ui';
+import { LANDING_FONT } from '../../styles/shared-ui';
 import {
   LANDING_COLORS,
   LandingHeader,
@@ -23,7 +23,7 @@ import {
   LandingFooterSlot,
   type LandingActionCard,
   type LandingSignalCard,
-} from '../home/LandingSections';
+} from './landing/LandingSections';
 import { RideResults, type RideResultsCopy } from '../../components/rides/RideResults';
 import { RideSearchForm, type RideSearchFormCopy } from '../../components/rides/RideSearchForm';
 import { useRideSearch } from '../../modules/rides/ride.hooks';
@@ -176,9 +176,12 @@ function buildRidePageCopy(language: 'en' | 'ar') {
       confirmedLabel: 'Driver confirmed',
       matchingLabel: 'Matching driver',
       priceEstimateLabel: 'JOD estimate',
-      requestButton: 'Request ride',
-      requestingButton: 'Sending...',
-      defaultReason: 'Reliable corridor match with live fare visibility.',
+      requestButton: 'Book seat',
+      requestingButton: 'Booking...',
+      detailsButton: 'Trip details',
+      whatsappPrimaryLabel: 'WhatsApp is the main coordination lane',
+      defaultReason:
+        'Reliable corridor match with live fare visibility and WhatsApp-first updates.',
       etaLabel: 'ETA',
       vehicleLabel: 'Vehicle',
       ratingLabel: 'Rating',
@@ -474,6 +477,22 @@ export function FindRidePage() {
     [navigate, requestRide, user],
   );
 
+  const handleOpenRide = useCallback(
+    (ride: RideResult) => {
+      const params = new URLSearchParams(location.search);
+      params.set('from', ride.from);
+      params.set('to', ride.to);
+      if (ride.date) {
+        params.set('date', ride.date);
+      }
+
+      navigate(`/app/find-ride/${encodeURIComponent(ride.id)}?${params.toString()}`, {
+        state: { ride },
+      });
+    },
+    [location.search, navigate],
+  );
+
   return (
     <Protected>
       <LandingPageFrame>
@@ -518,7 +537,7 @@ export function FindRidePage() {
             <div
               role="alert"
               style={{
-                ...landingPanel(24),
+                ...panelStyle(24),
                 padding: '16px 20px',
                 border: '1px solid color-mix(in srgb, var(--wasel-brand-hover) 30%, transparent)',
                 color: 'var(--wasel-copy-primary)',
@@ -533,7 +552,7 @@ export function FindRidePage() {
             <div
               role="status"
               style={{
-                ...landingPanel(24),
+                ...panelStyle(24),
                 padding: '16px 20px',
                 border: '1px solid color-mix(in srgb, var(--ds-accent-strong) 28%, transparent)',
                 color: 'var(--wasel-copy-primary)',
@@ -547,6 +566,7 @@ export function FindRidePage() {
           <RideResults
             loading={state.phase === 'searching'}
             searched={state.searched}
+            language={ar ? 'ar' : 'en'}
             results={visibleResults}
             totalResultsCount={state.results.length}
             recommendedRideId={state.recommendedRideId}
@@ -555,6 +575,7 @@ export function FindRidePage() {
             hasMore={hasMoreResults}
             copy={copy.results}
             onRequestRide={handleRequestRide}
+            onOpenRide={handleOpenRide}
             onLoadMore={loadMoreResults}
           />
           <LandingMapSection

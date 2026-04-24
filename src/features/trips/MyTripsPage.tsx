@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import {
   isRideBookingConfirmed,
@@ -716,13 +715,6 @@ export default function MyTripsPage() {
     }),
     [items],
   );
-  const supportWaiting = supportTickets.filter(
-    ticket => ticket.status === 'waiting_on_user',
-  ).length;
-  const highPrioritySupport = supportTickets.filter(
-    ticket => ticket.priority === 'high' || ticket.priority === 'urgent',
-  ).length;
-
   const createPath =
     tab === 'rides' ? '/app/offer-ride' : tab === 'packages' ? '/app/packages' : '/app/bus';
   const filters: Array<{ key: TripLifecycle | 'all'; label: string }> = [
@@ -762,47 +754,6 @@ export default function MyTripsPage() {
             }
             tone={CYAN}
           />
-
-          {Boolean(
-            (globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner,
-          ) && (
-            <div style={{ marginBottom: 18 }}>
-              <StakeholderSignalBanner
-                dir={isRTL ? 'rtl' : 'ltr'}
-                eyebrow="Wasel journey"
-                title="Trips, operators, and support now read from the same playbook"
-                detail="This journey surface keeps riders, drivers, and support aligned around one live trip state so handoffs are clearer and pending actions do not get buried."
-                stakeholders={[
-                  { label: 'Rider items', value: String(stats.total), tone: 'teal' },
-                  { label: 'Driver-facing', value: String(rideItems.length), tone: 'blue' },
-                  { label: 'Support queue', value: String(supportTickets.length), tone: 'amber' },
-                  { label: 'High priority', value: String(highPrioritySupport), tone: 'rose' },
-                ]}
-                statuses={[
-                  { label: 'Needs attention', value: String(stats.attention), tone: 'amber' },
-                  { label: 'Waiting on user', value: String(supportWaiting), tone: 'rose' },
-                  { label: 'Completed', value: String(stats.completed), tone: 'green' },
-                ]}
-                lanes={[
-                  {
-                    label: 'Trip lifecycle',
-                    detail:
-                      'Bookings, package movement, and bus journeys all map into one operational state.',
-                  },
-                  {
-                    label: 'Support escalation',
-                    detail:
-                      'Open cases follow the same route identifiers so operations can step in quickly.',
-                  },
-                  {
-                    label: 'Ticket visibility',
-                    detail:
-                      'Codes, statuses, and payment checkpoints stay visible while the trip is active.',
-                  },
-                ]}
-              />
-            </div>
-          )}
 
           <ClarityBand
             title={isRTL ? 'لقطة سريعة' : 'Quick status'}

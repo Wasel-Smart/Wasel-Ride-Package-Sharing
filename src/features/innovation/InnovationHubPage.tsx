@@ -1,4 +1,4 @@
-﻿import { type ReactNode, useMemo } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import {
   Activity,
   BarChart3,
@@ -15,24 +15,44 @@ import {
   Zap,
 } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { normalizeTextTree } from '../../utils/textEncoding';
+import { getLocalizedCopy, type LocalizedCopy } from '../../utils/localizedCopy';
 import { C, F, GRAD_AURORA, SH } from '../../utils/wasel-ds';
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Design tokens
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const BORD = `1px solid ${C.border}`;
 const CARD_BG = 'linear-gradient(180deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.02) 100%)';
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Copy
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-const COPY = normalizeTextTree({
+type BilingualText = LocalizedCopy;
+
+type Pillar = {
+  icon: ReactNode;
+  title: BilingualText;
+  body: BilingualText;
+  accent: string;
+  tag: BilingualText;
+};
+
+type Metric = {
+  label: BilingualText;
+  value: string;
+  sub: BilingualText;
+  accent: string;
+  icon: ReactNode;
+};
+
+type RoadmapItem = {
+  phase: BilingualText;
+  title: BilingualText;
+  items: BilingualText[];
+  status: 'live' | 'in-progress' | 'next';
+  accent: string;
+};
+
+const COPY = {
   en: {
-    eyebrow: 'Wasel Â· Innovation Hub',
+    eyebrow: 'Wasel · Innovation Hub',
     title: "Where Jordan's mobility future is being built.",
     subtitle:
-      'The innovation layer sits underneath every ride, package, and bus seat on the Wasel network â€” turning corridor data into decisions, and decisions into movement.',
+      'The innovation layer sits underneath every ride, package, and bus seat on the Wasel network, turning corridor data into decisions and decisions into movement.',
     pillars: 'Core innovation pillars',
     metrics: 'Live intelligence metrics',
     roadmap: 'Roadmap signal',
@@ -41,7 +61,7 @@ const COPY = normalizeTextTree({
       "Wasel's demand engine processes corridor signals in real time to predict where supply is needed before riders search. Price recommendations, seat allocation, and backhaul matching are all driven by this layer.",
     trustSection: 'Trust and safety layer',
     trustBody:
-      'Every completed trip contributes to the trust graph. Identity verification, behaviour scoring, and guardian visibility for school routes are first-class features â€” not afterthoughts.',
+      'Every completed trip contributes to the trust graph. Identity verification, behaviour scoring, and guardian visibility for school routes are first-class features, not afterthoughts.',
     networkSection: 'Network compounding',
     networkBody:
       'Each new route added to the Wasel graph increases the value of every existing route. Packages find more carriers, riders find more seats, and the system gets cheaper and faster as it grows.',
@@ -50,306 +70,211 @@ const COPY = normalizeTextTree({
       'WhatsApp-native coordination, Arabic-first UI, JOD pricing, Jordan PDPL compliance, and offline-tolerant architecture for variable connectivity corridors.',
   },
   ar: {
-    eyebrow: 'ÙˆØ§ØµÙ„ Â· Ù…Ø±ÙƒØ² Ø§Ù„Ø§Ø¨ØªÙƒØ§Ø±',
-    title: 'Ù‡Ù†Ø§ ÙŠÙØ¨Ù†Ù‰ Ù…Ø³ØªÙ‚Ø¨Ù„ Ø§Ù„ØªÙ†Ù‚Ù„ ÙÙŠ Ø§Ù„Ø£Ø±Ø¯Ù†.',
+    eyebrow: 'واصل · مركز الابتكار',
+    title: 'هنا يُبنى مستقبل التنقل في الأردن.',
     subtitle:
-      'Ø·Ø¨Ù‚Ø© Ø§Ù„Ø§Ø¨ØªÙƒØ§Ø± ØªØ¹Ù…Ù„ Ø®Ù„Ù ÙƒÙ„ Ø±Ø­Ù„Ø© ÙˆØ·Ø±Ø¯ ÙˆÙ…Ù‚Ø¹Ø¯ Ø­Ø§ÙÙ„Ø© Ø¹Ù„Ù‰ Ø´Ø¨ÙƒØ© ÙˆØ§ØµÙ„ â€” ØªØ­ÙˆÙ‘Ù„ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ù…Ø±Ø§Øª Ø¥Ù„Ù‰ Ù‚Ø±Ø§Ø±Ø§ØªØŒ ÙˆØ§Ù„Ù‚Ø±Ø§Ø±Ø§Øª Ø¥Ù„Ù‰ Ø­Ø±ÙƒØ©.',
-    pillars: 'Ù…Ø­Ø§ÙˆØ± Ø§Ù„Ø§Ø¨ØªÙƒØ§Ø± Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©',
-    metrics: 'Ù…Ù‚Ø§ÙŠÙŠØ³ Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø­ÙŠ',
-    roadmap: 'Ø¥Ø´Ø§Ø±Ø© Ø§Ù„Ø®Ø§Ø±Ø·Ø© Ø§Ù„Ø²Ù…Ù†ÙŠØ©',
-    aiSection: 'Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ ÙˆØ°ÙƒØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨',
+      'طبقة الابتكار تعمل خلف كل رحلة وطرد ومقعد حافلة على شبكة واصل، وتحول بيانات الممرات إلى قرارات، والقرارات إلى حركة.',
+    pillars: 'محاور الابتكار الأساسية',
+    metrics: 'مقاييس الذكاء الحي',
+    roadmap: 'إشارة الخارطة الزمنية',
+    aiSection: 'الذكاء الاصطناعي وذكاء الطلب',
     aiBody:
-      'ØªØ¹Ø§Ù„Ø¬ Ù…Ø­Ø±ÙƒØ© Ø§Ù„Ø·Ù„Ø¨ ÙÙŠ ÙˆØ§ØµÙ„ Ø¥Ø´Ø§Ø±Ø§Øª Ø§Ù„Ù…Ù…Ø±Ø§Øª ÙÙŠ Ø§Ù„ÙˆÙ‚Øª Ø§Ù„ÙØ¹Ù„ÙŠ Ù„Ù„ØªÙ†Ø¨Ø¤ Ø¨Ù…ÙƒØ§Ù† Ø§Ù„Ø­Ø§Ø¬Ø© Ø¥Ù„Ù‰ Ø§Ù„Ø¹Ø±Ø¶ Ù‚Ø¨Ù„ Ø£Ù† ÙŠØ¨Ø­Ø« Ø§Ù„Ø±ÙƒØ§Ø¨. ØªÙˆØµÙŠØ§Øª Ø§Ù„Ø£Ø³Ø¹Ø§Ø± ÙˆØªØ®ØµÙŠØµ Ø§Ù„Ù…Ù‚Ø§Ø¹Ø¯ ÙˆÙ…Ø·Ø§Ø¨Ù‚Ø© Ø§Ù„Ø´Ø­Ù† Ø§Ù„Ø¹Ø§Ø¦Ø¯ ÙƒÙ„Ù‡Ø§ Ù…Ø¯ÙÙˆØ¹Ø© Ø¨Ù‡Ø°Ù‡ Ø§Ù„Ø·Ø¨Ù‚Ø©.',
-    trustSection: 'Ø·Ø¨Ù‚Ø© Ø§Ù„Ø«Ù‚Ø© ÙˆØ§Ù„Ø³Ù„Ø§Ù…Ø©',
+      'تعالج محركة الطلب في واصل إشارات الممرات في الوقت الفعلي للتنبؤ بمكان الحاجة إلى العرض قبل أن يبحث الركاب. توصيات الأسعار وتخصيص المقاعد ومطابقة الشحن العائد كلها مدفوعة بهذه الطبقة.',
+    trustSection: 'طبقة الثقة والسلامة',
     trustBody:
-      'ØªØ³Ø§Ù‡Ù… ÙƒÙ„ Ø±Ø­Ù„Ø© Ù…ÙƒØªÙ…Ù„Ø© ÙÙŠ Ø±Ø³Ù… Ø§Ù„Ø«Ù‚Ø©. Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ù‡ÙˆÙŠØ© ÙˆØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø³Ù„ÙˆÙƒ ÙˆØ±Ø¤ÙŠØ© Ø£ÙˆÙ„ÙŠØ§Ø¡ Ø§Ù„Ø£Ù…ÙˆØ± Ù„Ù…Ø³Ø§Ø±Ø§Øª Ø§Ù„Ù…Ø¯Ø§Ø±Ø³ ÙƒÙ„Ù‡Ø§ Ù…ÙŠØ²Ø§Øª Ù…Ù† Ø§Ù„Ø¯Ø±Ø¬Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰ â€” ÙˆÙ„ÙŠØ³Øª Ø£ÙÙƒØ§Ø±Ø§Ù‹ Ù„Ø§Ø­Ù‚Ø©.',
-    networkSection: 'ØªØ¶Ø§Ø¹Ù Ø§Ù„Ø´Ø¨ÙƒØ©',
+      'تساهم كل رحلة مكتملة في رسم الثقة. التحقق من الهوية وتسجيل السلوك ورؤية أولياء الأمور لمسارات المدارس كلها ميزات من الدرجة الأولى وليست أفكاراً لاحقة.',
+    networkSection: 'تضاعف الشبكة',
     networkBody:
-      'ÙƒÙ„ Ù…Ø³Ø§Ø± Ø¬Ø¯ÙŠØ¯ ÙŠÙØ¶Ø§Ù Ø¥Ù„Ù‰ Ø±Ø³Ù… ÙˆØ§ØµÙ„ ÙŠØ²ÙŠØ¯ Ù…Ù† Ù‚ÙŠÙ…Ø© ÙƒÙ„ Ù…Ø³Ø§Ø± Ù…ÙˆØ¬ÙˆØ¯. ØªØ¬Ø¯ Ø§Ù„Ø·Ø±ÙˆØ¯ Ù…Ø²ÙŠØ¯Ø§Ù‹ Ù…Ù† Ø§Ù„Ù†Ø§Ù‚Ù„ÙŠÙ†ØŒ ÙˆÙŠØ¬Ø¯ Ø§Ù„Ø±ÙƒØ§Ø¨ Ù…Ø²ÙŠØ¯Ø§Ù‹ Ù…Ù† Ø§Ù„Ù…Ù‚Ø§Ø¹Ø¯ØŒ ÙˆØªØµØ¨Ø­ Ø§Ù„Ù…Ù†Ø¸ÙˆÙ…Ø© Ø£Ø±Ø®Øµ ÙˆØ£Ø³Ø±Ø¹ Ù…Ø¹ Ù†Ù…ÙˆÙ‡Ø§.',
-    menaSection: 'ØªØµÙ…ÙŠÙ… ÙŠÙØ¹Ø·ÙŠ Ø§Ù„Ø£ÙˆÙ„ÙˆÙŠØ© Ù„Ù…Ù†Ø·Ù‚Ø© Ø§Ù„Ø´Ø±Ù‚ Ø§Ù„Ø£ÙˆØ³Ø·',
+      'كل مسار جديد يضاف إلى رسم واصل يزيد من قيمة كل مسار موجود. تجد الطرود مزيداً من الناقلين، ويجد الركاب مزيداً من المقاعد، وتصبح المنظومة أرخص وأسرع مع نموها.',
+    menaSection: 'تصميم يعطي الأولوية لمنطقة الشرق الأوسط',
     menaBody:
-      'ØªÙ†Ø³ÙŠÙ‚ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨ Ø¨Ø´ÙƒÙ„ Ø·Ø¨ÙŠØ¹ÙŠØŒ ÙˆØ§Ø¬Ù‡Ø© ØªÙØ¹Ø·ÙŠ Ø§Ù„Ø£ÙˆÙ„ÙˆÙŠØ© Ù„Ù„Ø¹Ø±Ø¨ÙŠØ©ØŒ ØªØ³Ø¹ÙŠØ± Ø¨Ø§Ù„Ø¯ÙŠÙ†Ø§Ø± Ø§Ù„Ø£Ø±Ø¯Ù†ÙŠØŒ Ø§Ù…ØªØ«Ø§Ù„ Ù„Ù‚Ø§Ù†ÙˆÙ† PDPL Ø§Ù„Ø£Ø±Ø¯Ù†ÙŠØŒ ÙˆØ¨Ù†ÙŠØ© ØªØ­ØªÙŠØ© Ù…Ù‚Ø§ÙˆÙ…Ø© Ù„Ù„Ø§Ù†Ù‚Ø·Ø§Ø¹.',
+      'تنسيق عبر واتساب بشكل طبيعي، وواجهة تعطي الأولوية للعربية، وتسعير بالدينار الأردني، وامتثال لقانون PDPL الأردني، وبنية تحتية مقاومة للانقطاع.',
   },
-} as const);
+} as const;
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Pillar data
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-type Pillar = {
-  icon: ReactNode;
-  title: { en: string; ar: string };
-  body: { en: string; ar: string };
-  accent: string;
-  tag: { en: string; ar: string };
-};
-
-const RAW_PILLARS: Pillar[] = [
+const PILLARS: Pillar[] = [
   {
-    icon: <Brain size={20} />,
+    icon: <Brain size={20} aria-hidden="true" />,
     accent: C.cyan,
-    title: { en: 'Demand Prediction', ar: 'Ø§Ù„ØªÙ†Ø¨Ø¤ Ø¨Ø§Ù„Ø·Ù„Ø¨' },
+    title: { en: 'Demand Prediction', ar: 'التنبؤ بالطلب' },
     body: {
       en: 'Route demand is modelled from search patterns, booking history, and time-of-day signals so supply can be positioned before riders ask.',
-      ar: 'ÙŠØªÙ… Ù†Ù…Ø°Ø¬Ø© Ø·Ù„Ø¨ Ø§Ù„Ù…Ø³Ø§Ø± Ù…Ù† Ø£Ù†Ù…Ø§Ø· Ø§Ù„Ø¨Ø­Ø« ÙˆØ³Ø¬Ù„ Ø§Ù„Ø­Ø¬Ø² ÙˆØ¥Ø´Ø§Ø±Ø§Øª Ø§Ù„ÙˆÙ‚Øª Ù„ØªØ­Ø¯ÙŠØ¯ Ù…ÙˆØ¶Ø¹ Ø§Ù„Ø¹Ø±Ø¶ Ù‚Ø¨Ù„ Ø£Ù† ÙŠØ·Ù„Ø¨ Ø§Ù„Ø±ÙƒØ§Ø¨.',
+      ar: 'يتم نمذجة طلب المسار من أنماط البحث وسجل الحجز وإشارات الوقت لتحديد موضع العرض قبل أن يطلب الركاب.',
     },
-    tag: { en: 'AI Layer', ar: 'Ø·Ø¨Ù‚Ø© Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ' },
+    tag: { en: 'AI Layer', ar: 'طبقة الذكاء الاصطناعي' },
   },
   {
-    icon: <TrendingUp size={20} />,
+    icon: <TrendingUp size={20} aria-hidden="true" />,
     accent: C.gold,
-    title: { en: 'Dynamic Pricing', ar: 'Ø§Ù„ØªØ³Ø¹ÙŠØ± Ø§Ù„Ø¯ÙŠÙ†Ø§Ù…ÙŠÙƒÙŠ' },
+    title: { en: 'Dynamic Pricing', ar: 'التسعير الديناميكي' },
     body: {
       en: 'Seat prices and parcel rates adjust in real time based on corridor load, backhaul availability, and competing demand signals.',
-      ar: 'ØªØªØ¹Ø¯Ù„ Ø£Ø³Ø¹Ø§Ø± Ø§Ù„Ù…Ù‚Ø§Ø¹Ø¯ ÙˆØ£Ø³Ø¹Ø§Ø± Ø§Ù„Ø·Ø±ÙˆØ¯ ÙÙŠ Ø§Ù„ÙˆÙ‚Øª Ø§Ù„ÙØ¹Ù„ÙŠ Ø¨Ù†Ø§Ø¡Ù‹ Ø¹Ù„Ù‰ Ø­Ù…Ù„ Ø§Ù„Ù…Ù…Ø± ÙˆØªÙˆØ§ÙØ± Ø§Ù„Ø´Ø­Ù† Ø§Ù„Ø¹Ø§Ø¦Ø¯ ÙˆØ¥Ø´Ø§Ø±Ø§Øª Ø§Ù„Ø·Ù„Ø¨.',
+      ar: 'تتعدل أسعار المقاعد وأسعار الطرود في الوقت الفعلي بناءً على حمل الممر وتوافر الشحن العائد وإشارات الطلب.',
     },
-    tag: { en: 'Pricing Intelligence', ar: 'Ø°ÙƒØ§Ø¡ Ø§Ù„ØªØ³Ø¹ÙŠØ±' },
+    tag: { en: 'Pricing Intelligence', ar: 'ذكاء التسعير' },
   },
   {
-    icon: <Route size={20} />,
+    icon: <Route size={20} aria-hidden="true" />,
     accent: C.green,
-    title: { en: 'Return-Lane Matching', ar: 'Ù…Ø·Ø§Ø¨Ù‚Ø© Ø§Ù„Ù…Ù…Ø± Ø§Ù„Ø¹Ø§Ø¦Ø¯' },
+    title: { en: 'Return-Lane Matching', ar: 'مطابقة الممر العائد' },
     body: {
       en: 'Every offered ride is checked for a return-lane signal. Drivers who commit to both directions unlock Raje3 bonuses and higher seat yields.',
-      ar: 'ÙŠØªÙ… Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† ÙƒÙ„ Ø±Ø­Ù„Ø© Ù…Ù‚Ø¯Ù…Ø© Ø¨Ø­Ø«Ø§Ù‹ Ø¹Ù† Ø¥Ø´Ø§Ø±Ø© Ø§Ù„Ù…Ø³Ø§Ø± Ø§Ù„Ø¹Ø§Ø¦Ø¯. Ø§Ù„Ø³Ø§Ø¦Ù‚ÙˆÙ† Ø§Ù„Ù…Ù„ØªØ²Ù…ÙˆÙ† Ø¨Ø§Ù„Ø§ØªØ¬Ø§Ù‡ÙŠÙ† ÙŠÙØªØ­ÙˆÙ† Ù…ÙƒØ§ÙØ¢Øª Ø±Ø§Ø¬Ø¹.',
+      ar: 'يتم التحقق من كل رحلة مقدمة بحثاً عن إشارة المسار العائد. السائقون الملتزمون بالاتجاهين يفتحون مكافآت راجع وعائداً أعلى للمقاعد.',
     },
-    tag: { en: 'Raje3 Engine', ar: 'Ù…Ø­Ø±Ùƒ Ø±Ø§Ø¬Ø¹' },
+    tag: { en: 'Raje3 Engine', ar: 'محرك راجع' },
   },
   {
-    icon: <Package size={20} />,
+    icon: <Package size={20} aria-hidden="true" />,
     accent: C.cyan,
-    title: { en: 'Backhaul Intelligence', ar: 'Ø°ÙƒØ§Ø¡ Ø§Ù„Ø´Ø­Ù† Ø§Ù„Ø¹Ø§Ø¦Ø¯' },
+    title: { en: 'Backhaul Intelligence', ar: 'ذكاء الشحن العائد' },
     body: {
       en: 'Packages are matched to rides going the same direction. The system prioritises carriers with verified trust scores and available boot space.',
-      ar: 'ØªØªØ·Ø§Ø¨Ù‚ Ø§Ù„Ø·Ø±ÙˆØ¯ Ù…Ø¹ Ø§Ù„Ø±Ø­Ù„Ø§Øª Ø§Ù„ØªÙŠ ØªØ³ÙŠØ± ÙÙŠ Ù†ÙØ³ Ø§Ù„Ø§ØªØ¬Ø§Ù‡. ØªÙØ¹Ø·ÙŠ Ø§Ù„Ù…Ù†Ø¸ÙˆÙ…Ø© Ø§Ù„Ø£ÙˆÙ„ÙˆÙŠØ© Ù„Ù„Ù†Ø§Ù‚Ù„ÙŠÙ† Ø§Ù„Ù…ÙˆØ«ÙˆÙ‚ÙŠÙ†.',
+      ar: 'تتطابق الطرود مع الرحلات التي تسير في نفس الاتجاه. وتمنح المنظومة الأولوية للناقلين ذوي الثقة الموثقة والمساحة المتاحة.',
     },
-    tag: { en: 'Package Network', ar: 'Ø´Ø¨ÙƒØ© Ø§Ù„Ø·Ø±ÙˆØ¯' },
+    tag: { en: 'Package Network', ar: 'شبكة الطرود' },
   },
   {
-    icon: <ShieldCheck size={20} />,
+    icon: <ShieldCheck size={20} aria-hidden="true" />,
     accent: C.green,
-    title: { en: 'Trust Graph', ar: 'Ø±Ø³Ù… Ø§Ù„Ø«Ù‚Ø©' },
+    title: { en: 'Trust Graph', ar: 'رسم الثقة' },
     body: {
       en: 'Each completed trip, verified identity, and resolved dispute updates the trust graph. High-trust profiles unlock better pricing and priority matching.',
-      ar: 'ÙƒÙ„ Ø±Ø­Ù„Ø© Ù…ÙƒØªÙ…Ù„Ø© ÙˆÙ‡ÙˆÙŠØ© Ù…ÙˆØ«Ù‚Ø© ÙŠØ­Ø¯Ù‘Ø« Ø±Ø³Ù… Ø§Ù„Ø«Ù‚Ø©. Ø§Ù„Ù…Ù„ÙØ§Øª Ø¹Ø§Ù„ÙŠØ© Ø§Ù„Ø«Ù‚Ø© ØªÙØªØ­ ØªØ³Ø¹ÙŠØ±Ø§Ù‹ Ø£ÙØ¶Ù„.',
+      ar: 'كل رحلة مكتملة وهوية موثقة ونزاع محلول يحدث رسم الثقة. الملفات عالية الثقة تفتح تسعيراً أفضل وأولوية أعلى في المطابقة.',
     },
-    tag: { en: 'Safety Layer', ar: 'Ø·Ø¨Ù‚Ø© Ø§Ù„Ø£Ù…Ø§Ù†' },
+    tag: { en: 'Safety Layer', ar: 'طبقة الأمان' },
   },
   {
-    icon: <Globe2 size={20} />,
+    icon: <Globe2 size={20} aria-hidden="true" />,
     accent: C.gold,
-    title: { en: 'MENA Localisation', ar: 'Ø§Ù„ØªØ®ØµÙŠØµ Ù„Ù„Ù…Ù†Ø·Ù‚Ø©' },
+    title: { en: 'MENA Localisation', ar: 'التخصيص للمنطقة' },
     body: {
-      en: 'WhatsApp-native messaging, RTL-first UI, Arabic voice prompts, JOD pricing, Jordan PDPL compliance, and offline-queue architecture.',
-      ar: 'Ù…Ø±Ø§Ø³Ù„Ø© Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨ Ø·Ø¨ÙŠØ¹ÙŠØ©ØŒ ÙˆØ§Ø¬Ù‡Ø© RTL Ø£ÙˆÙ„Ø§Ù‹ØŒ Ù…ÙˆØ¬Ù‡Ø§Øª ØµÙˆØªÙŠØ© Ø¹Ø±Ø¨ÙŠØ©ØŒ ØªØ³Ø¹ÙŠØ± Ø¨Ø§Ù„Ø¯ÙŠÙ†Ø§Ø± ÙˆØ§Ù…ØªØ«Ø§Ù„ PDPL.',
+      en: 'WhatsApp-native messaging, RTL-first UI, Arabic voice prompts, JOD pricing, Jordan PDPL compliance, and offline queue architecture.',
+      ar: 'مراسلة عبر واتساب بشكل طبيعي، وواجهة RTL أولاً، وموجهات صوتية عربية، وتسعير بالدينار، وامتثال لقانون PDPL، وبنية طوابير تتحمل الاتصال المتقطع.',
     },
-    tag: { en: 'Regional First', ar: 'Ø§Ù„Ù…Ù†Ø·Ù‚Ø© Ø£ÙˆÙ„Ø§Ù‹' },
+    tag: { en: 'Regional First', ar: 'المنطقة أولاً' },
   },
   {
-    icon: <Layers size={20} />,
+    icon: <Layers size={20} aria-hidden="true" />,
     accent: C.cyan,
-    title: { en: 'Mobility OS', ar: 'Ù†Ø¸Ø§Ù… ØªØ´ØºÙŠÙ„ Ø§Ù„ØªÙ†Ù‚Ù„' },
+    title: { en: 'Mobility OS', ar: 'نظام تشغيل التنقل' },
     body: {
       en: 'A network control layer exposing corridor ownership, route density, and demand compounding so operators can act on signals rather than hunches.',
-      ar: 'Ø·Ø¨Ù‚Ø© ØªØ­ÙƒÙ… ÙÙŠ Ø§Ù„Ø´Ø¨ÙƒØ© ØªÙƒØ´Ù Ø¹Ù† Ù…Ù„ÙƒÙŠØ© Ø§Ù„Ù…Ù…Ø± ÙˆÙƒØ«Ø§ÙØ© Ø§Ù„Ù…Ø³Ø§Ø± ÙˆØªØ¶Ø§Ø¹Ù Ø§Ù„Ø·Ù„Ø¨.',
+      ar: 'طبقة تحكم في الشبكة تكشف عن ملكية الممر وكثافة المسار وتضاعف الطلب حتى يتصرف المشغلون على إشارات واضحة لا على الحدس.',
     },
-    tag: { en: 'Control Layer', ar: 'Ø·Ø¨Ù‚Ø© Ø§Ù„ØªØ­ÙƒÙ…' },
+    tag: { en: 'Control Layer', ar: 'طبقة التحكم' },
   },
   {
-    icon: <Users size={20} />,
+    icon: <Users size={20} aria-hidden="true" />,
     accent: C.green,
-    title: { en: 'School & Corporate', ar: 'Ø§Ù„Ù…Ø¯Ø§Ø±Ø³ ÙˆØ§Ù„Ø´Ø±ÙƒØ§Øª' },
+    title: { en: 'School & Corporate', ar: 'المدارس والشركات' },
     body: {
       en: 'Recurring seat allocation, guardian visibility, managed billing, and service-provider dispatch on the same route graph as the marketplace.',
-      ar: 'ØªØ®ØµÙŠØµ Ù…Ù‚Ø§Ø¹Ø¯ Ù…ØªÙƒØ±Ø±ØŒ Ø±Ø¤ÙŠØ© Ø£ÙˆÙ„ÙŠØ§Ø¡ Ø§Ù„Ø£Ù…ÙˆØ±ØŒ ÙÙˆØªØ±Ø© Ù…ÙØ¯Ø§Ø±Ø©ØŒ ÙˆØ¥Ø±Ø³Ø§Ù„ Ù…Ø²ÙˆØ¯ Ø§Ù„Ø®Ø¯Ù…Ø©.',
+      ar: 'تخصيص مقاعد متكرر، ورؤية أولياء الأمور، وفوترة مُدارة، وإرسال مزود الخدمة على نفس رسم المسارات الخاص بالسوق.',
     },
-    tag: { en: 'Enterprise', ar: 'Ø§Ù„Ù…Ø¤Ø³Ø³Ø§Øª' },
+    tag: { en: 'Enterprise', ar: 'المؤسسات' },
   },
   {
-    icon: <CircuitBoard size={20} />,
+    icon: <CircuitBoard size={20} aria-hidden="true" />,
     accent: C.gold,
-    title: { en: 'Corridor Compounding', ar: 'ØªØ¶Ø§Ø¹Ù Ø§Ù„Ù…Ù…Ø±' },
+    title: { en: 'Corridor Compounding', ar: 'تضاعف الممر' },
     body: {
-      en: 'Every seat, package, and bus stop on a corridor increases the value of every other asset on it â€” creating a defensible flywheel effect over time.',
-      ar: 'ÙƒÙ„ Ù…Ù‚Ø¹Ø¯ ÙˆØ·Ø±Ø¯ ÙˆÙ…Ø­Ø·Ø© Ø­Ø§ÙÙ„Ø© Ø¹Ù„Ù‰ Ù…Ù…Ø± ÙŠØ²ÙŠØ¯ Ù…Ù† Ù‚ÙŠÙ…Ø© ÙƒÙ„ Ø£ØµÙ„ Ø¢Ø®Ø± Ø¹Ù„ÙŠÙ‡ â€” Ù…Ù…Ø§ ÙŠØ®Ù„Ù‚ ØªØ£Ø«ÙŠØ± Ø§Ù„Ø¯ÙˆÙ„Ø§Ø¨ Ø§Ù„Ø¯ÙØ§Ø¹ÙŠ.',
+      en: 'Every seat, package, and bus stop on a corridor increases the value of every other asset on it, creating a defensible flywheel effect over time.',
+      ar: 'كل مقعد وطرد ومحطة حافلة على ممر يزيد من قيمة كل أصل آخر عليه، مما يصنع أثراً تراكمياً دفاعياً مع الوقت.',
     },
-    tag: { en: 'Network Effect', ar: 'Ø£Ø«Ø± Ø§Ù„Ø´Ø¨ÙƒØ©' },
+    tag: { en: 'Network Effect', ar: 'أثر الشبكة' },
   },
 ];
-const PILLARS: Pillar[] = RAW_PILLARS.map(({ icon, ...pillar }) => ({
-  icon,
-  ...normalizeTextTree(pillar),
-}));
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Metrics
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-type Metric = {
-  label: { en: string; ar: string };
-  value: string;
-  sub: { en: string; ar: string };
-  accent: string;
-  icon: ReactNode;
-};
-
-const RAW_METRICS: Metric[] = [
+const METRICS: Metric[] = [
   {
-    icon: <BarChart3 size={16} />,
+    icon: <BarChart3 size={16} aria-hidden="true" />,
     accent: C.cyan,
     value: '18',
-    label: { en: 'Active corridors', ar: 'Ù…Ù…Ø±Ø§Øª Ù†Ø´Ø·Ø©' },
-    sub: {
-      en: 'Modelled Jordan-first lanes',
-      ar: 'Ù…Ù…Ø±Ø§Øª Ø£Ø±Ø¯Ù†ÙŠØ© Ø£ÙˆÙ„Ù‰ Ù…ÙÙ†Ù…Ø°Ø¬Ø©',
-    },
+    label: { en: 'Active corridors', ar: 'ممرات نشطة' },
+    sub: { en: 'Modelled Jordan-first lanes', ar: 'ممرات أردنية أولى مُنمذجة' },
   },
   {
-    icon: <Zap size={16} />,
+    icon: <Zap size={16} aria-hidden="true" />,
     accent: C.gold,
     value: '<3 min',
-    label: { en: 'Avg match time', ar: 'Ù…ØªÙˆØ³Ø· ÙˆÙ‚Øª Ø§Ù„Ù…Ø·Ø§Ø¨Ù‚Ø©' },
-    sub: {
-      en: 'Demand-to-supply signal latency',
-      ar: 'Ø²Ù…Ù† Ø§Ø³ØªØ¬Ø§Ø¨Ø© Ø¥Ø´Ø§Ø±Ø© Ø§Ù„Ø·Ù„Ø¨ Ø¥Ù„Ù‰ Ø§Ù„Ø¹Ø±Ø¶',
-    },
+    label: { en: 'Avg match time', ar: 'متوسط وقت المطابقة' },
+    sub: { en: 'Demand-to-supply signal latency', ar: 'زمن استجابة إشارة الطلب إلى العرض' },
   },
   {
-    icon: <Activity size={16} />,
+    icon: <Activity size={16} aria-hidden="true" />,
     accent: C.green,
     value: '94%',
-    label: { en: 'Backhaul attach rate', ar: 'Ù…Ø¹Ø¯Ù„ Ø¥Ø±ÙØ§Ù‚ Ø§Ù„Ø´Ø­Ù† Ø§Ù„Ø¹Ø§Ø¦Ø¯' },
-    sub: { en: 'Packages matched to live rides', ar: 'Ø·Ø±ÙˆØ¯ Ù…Ø·Ø§Ø¨Ù‚Ø© Ù„Ø±Ø­Ù„Ø§Øª Ø­ÙŠØ©' },
+    label: { en: 'Backhaul attach rate', ar: 'معدل إرفاق الشحن العائد' },
+    sub: { en: 'Packages matched to live rides', ar: 'طرود مطابقة لرحلات حية' },
   },
   {
-    icon: <Sparkles size={16} />,
+    icon: <Sparkles size={16} aria-hidden="true" />,
     accent: C.cyan,
-    value: '3.5Ã—',
-    label: { en: 'WhatsApp conversion lift', ar: 'Ø±ÙØ¹ ØªØ­ÙˆÙŠÙ„ ÙˆØ§ØªØ³Ø§Ø¨' },
-    sub: { en: 'vs standard in-app CTA', ar: 'Ù…Ù‚Ø§Ø±Ù†Ø©Ù‹ Ø¨Ø§Ù„Ø¯Ø¹ÙˆØ© Ø§Ù„Ù‚ÙŠØ§Ø³ÙŠØ©' },
+    value: '3.5x',
+    label: { en: 'WhatsApp conversion lift', ar: 'رفع تحويل واتساب' },
+    sub: { en: 'vs standard in-app CTA', ar: 'مقارنة بالدعوة القياسية داخل التطبيق' },
   },
   {
-    icon: <TrendingUp size={16} />,
+    icon: <TrendingUp size={16} aria-hidden="true" />,
     accent: C.gold,
     value: '28%',
-    label: { en: 'Avg corridor savings', ar: 'Ù…ØªÙˆØ³Ø· ØªÙˆÙÙŠØ± Ø§Ù„Ù…Ù…Ø±' },
-    sub: {
-      en: 'vs solo on-demand alternatives',
-      ar: 'Ù…Ù‚Ø§Ø±Ù†Ø©Ù‹ Ø¨Ø¨Ø¯Ø§Ø¦Ù„ Ø§Ù„Ø·Ù„Ø¨ Ø§Ù„ÙØ±Ø¯ÙŠ',
-    },
+    label: { en: 'Avg corridor savings', ar: 'متوسط توفير الممر' },
+    sub: { en: 'vs solo on-demand alternatives', ar: 'مقارنة ببدائل الطلب الفردي' },
   },
   {
-    icon: <ShieldCheck size={16} />,
+    icon: <ShieldCheck size={16} aria-hidden="true" />,
     accent: C.green,
     value: '99.4%',
-    label: { en: 'Trust graph accuracy', ar: 'Ø¯Ù‚Ø© Ø±Ø³Ù… Ø§Ù„Ø«Ù‚Ø©' },
-    sub: {
-      en: 'Verified identity resolution rate',
-      ar: 'Ù…Ø¹Ø¯Ù„ Ø¯Ù‚Ø© Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ù‡ÙˆÙŠØ©',
-    },
+    label: { en: 'Trust graph accuracy', ar: 'دقة رسم الثقة' },
+    sub: { en: 'Verified identity resolution rate', ar: 'معدل دقة التحقق من الهوية' },
   },
 ];
-const METRICS: Metric[] = RAW_METRICS.map(({ icon, ...metric }) => ({
-  icon,
-  ...normalizeTextTree(metric),
-}));
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Roadmap
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-type RoadmapItem = {
-  phase: { en: string; ar: string };
-  title: { en: string; ar: string };
-  items: { en: string; ar: string }[];
-  status: 'live' | 'in-progress' | 'next';
-  accent: string;
-};
-
-const ROADMAP: RoadmapItem[] = normalizeTextTree([
+const ROADMAP: RoadmapItem[] = [
   {
     status: 'live',
     accent: C.green,
-    phase: { en: 'Phase 1 â€” Live', ar: 'Ø§Ù„Ù…Ø±Ø­Ù„Ø© 1 â€” Ø­ÙŠ' },
-    title: { en: 'Foundation layer', ar: 'Ø·Ø¨Ù‚Ø© Ø§Ù„ØªØ£Ø³ÙŠØ³' },
+    phase: { en: 'Phase 1 - Live', ar: 'المرحلة 1 - مباشر' },
+    title: { en: 'Foundation layer', ar: 'طبقة التأسيس' },
     items: [
-      {
-        en: 'Ride marketplace with seat-level pricing',
-        ar: 'Ø³ÙˆÙ‚ Ø§Ù„Ø±Ø­Ù„Ø§Øª Ù…Ø¹ ØªØ³Ø¹ÙŠØ± Ø¹Ù„Ù‰ Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ù…Ù‚Ø¹Ø¯',
-      },
-      {
-        en: 'Package handoff via ride network',
-        ar: 'ØªØ³Ù„ÙŠÙ… Ø§Ù„Ø·Ø±ÙˆØ¯ Ø¹Ø¨Ø± Ø´Ø¨ÙƒØ© Ø§Ù„Ø±Ø­Ù„Ø§Øª',
-      },
-      { en: 'Bus corridor scheduling', ar: 'Ø¬Ø¯ÙˆÙ„Ø© Ù…Ù…Ø± Ø§Ù„Ø­Ø§ÙÙ„Ø§Øª' },
-      {
-        en: 'Wallet and JOD payments',
-        ar: 'Ø§Ù„Ù…Ø­ÙØ¸Ø© ÙˆØ§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª Ø¨Ø§Ù„Ø¯ÙŠÙ†Ø§Ø± Ø§Ù„Ø£Ø±Ø¯Ù†ÙŠ',
-      },
-      { en: 'Trust + identity verification', ar: 'Ø§Ù„Ø«Ù‚Ø© + Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ù‡ÙˆÙŠØ©' },
-      {
-        en: 'Bilingual AR/EN, GDPR + Jordan PDPL',
-        ar: 'Ø«Ù†Ø§Ø¦ÙŠ Ø§Ù„Ù„ØºØ©ØŒ GDPR + Ù‚Ø§Ù†ÙˆÙ† PDPL',
-      },
+      { en: 'Ride marketplace with seat-level pricing', ar: 'سوق الرحلات مع تسعير على مستوى المقعد' },
+      { en: 'Package handoff via ride network', ar: 'تسليم الطرود عبر شبكة الرحلات' },
+      { en: 'Bus corridor scheduling', ar: 'جدولة ممر الحافلات' },
+      { en: 'Wallet and JOD payments', ar: 'المحفظة والمدفوعات بالدينار الأردني' },
+      { en: 'Trust and identity verification', ar: 'الثقة والتحقق من الهوية' },
+      { en: 'Bilingual AR/EN and Jordan PDPL readiness', ar: 'جاهزية عربية وإنجليزية وامتثال لقانون PDPL الأردني' },
     ],
   },
   {
     status: 'in-progress',
     accent: C.gold,
-    phase: { en: 'Phase 2 â€” In Progress', ar: 'Ø§Ù„Ù…Ø±Ø­Ù„Ø© 2 â€” Ø¬Ø§Ø±Ù Ø§Ù„ØªÙ†ÙÙŠØ°' },
-    title: { en: 'Intelligence layer', ar: 'Ø·Ø¨Ù‚Ø© Ø§Ù„Ø°ÙƒØ§Ø¡' },
+    phase: { en: 'Phase 2 - In Progress', ar: 'المرحلة 2 - قيد التنفيذ' },
+    title: { en: 'Intelligence layer', ar: 'طبقة الذكاء' },
     items: [
-      {
-        en: 'Real-time demand prediction engine',
-        ar: 'Ù…Ø­Ø±Ùƒ Ø§Ù„ØªÙ†Ø¨Ø¤ Ø¨Ø§Ù„Ø·Ù„Ø¨ ÙÙŠ Ø§Ù„ÙˆÙ‚Øª Ø§Ù„ÙØ¹Ù„ÙŠ',
-      },
-      { en: 'Raje3 return-lane matching', ar: 'Ù…Ø·Ø§Ø¨Ù‚Ø© Ø§Ù„Ù…Ø³Ø§Ø± Ø§Ù„Ø¹Ø§Ø¦Ø¯ Ø±Ø§Ø¬Ø¹' },
-      { en: 'Dynamic corridor pricing', ar: 'ØªØ³Ø¹ÙŠØ± Ù…Ù…Ø± Ø¯ÙŠÙ†Ø§Ù…ÙŠÙƒÙŠ' },
-      {
-        en: 'WhatsApp-native booking confirmation',
-        ar: 'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø­Ø¬Ø² Ø§Ù„Ø£ØµÙ„ÙŠ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨',
-      },
-      {
-        en: 'Corporate managed-mobility accounts',
-        ar: 'Ø­Ø³Ø§Ø¨Ø§Øª Ø§Ù„ØªÙ†Ù‚Ù„ Ø§Ù„Ù…ÙØ¯Ø§Ø± Ù„Ù„Ø´Ø±ÙƒØ§Øª',
-      },
-      {
-        en: 'School transport + guardian visibility',
-        ar: 'Ù†Ù‚Ù„ Ù…Ø¯Ø±Ø³ÙŠ + Ø±Ø¤ÙŠØ© Ø£ÙˆÙ„ÙŠØ§Ø¡ Ø§Ù„Ø£Ù…ÙˆØ±',
-      },
+      { en: 'Real-time demand prediction engine', ar: 'محرك التنبؤ بالطلب في الوقت الفعلي' },
+      { en: 'Raje3 return-lane matching', ar: 'مطابقة راجع للمسار العائد' },
+      { en: 'Dynamic corridor pricing', ar: 'تسعير ممر ديناميكي' },
+      { en: 'WhatsApp-native booking confirmation', ar: 'تأكيد الحجز عبر واتساب بشكل أصلي' },
+      { en: 'Corporate managed-mobility accounts', ar: 'حسابات تنقل مُدار للشركات' },
+      { en: 'School transport with guardian visibility', ar: 'نقل مدرسي مع رؤية أولياء الأمور' },
     ],
   },
   {
     status: 'next',
     accent: C.cyan,
-    phase: { en: 'Phase 3 â€” Next', ar: 'Ø§Ù„Ù…Ø±Ø­Ù„Ø© 3 â€” Ø§Ù„Ù‚Ø§Ø¯Ù…' },
-    title: { en: 'Network compounding layer', ar: 'Ø·Ø¨Ù‚Ø© ØªØ¶Ø§Ø¹Ù Ø§Ù„Ø´Ø¨ÙƒØ©' },
+    phase: { en: 'Phase 3 - Next', ar: 'المرحلة 3 - التالي' },
+    title: { en: 'Network compounding layer', ar: 'طبقة تضاعف الشبكة' },
     items: [
-      {
-        en: 'Cross-border MENA corridors (Aqaba â†’ Eilat, Amman â†’ Damascus)',
-        ar: 'Ù…Ù…Ø±Ø§Øª Ø¹Ø§Ø¨Ø±Ø© Ù„Ù„Ø­Ø¯ÙˆØ¯ ÙÙŠ Ø§Ù„Ù…Ù†Ø·Ù‚Ø©',
-      },
-      {
-        en: 'AI-driven credit-adjusted movement pricing',
-        ar: 'ØªØ³Ø¹ÙŠØ± Ø§Ù„Ø­Ø±ÙƒØ© Ø§Ù„Ù…Ø¹Ø¯Ù‘Ù„ Ø¨Ø§Ù„Ø§Ø¦ØªÙ…Ø§Ù†',
-      },
-      {
-        en: 'Autonomous dispatch for corporate fleets',
-        ar: 'Ø§Ù„Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„ØªÙ„Ù‚Ø§Ø¦ÙŠ Ù„Ø£Ø³Ø§Ø·ÙŠÙ„ Ø§Ù„Ø´Ø±ÙƒØ§Øª',
-      },
-      {
-        en: 'Open API for third-party corridor integration',
-        ar: 'ÙˆØ§Ø¬Ù‡Ø© Ù…ÙØªÙˆØ­Ø© Ù„ØªÙƒØ§Ù…Ù„ Ø§Ù„Ù…Ù…Ø±',
-      },
-      {
-        en: 'Carbon accounting per corridor per trip',
-        ar: 'Ù…Ø­Ø§Ø³Ø¨Ø© Ø§Ù„ÙƒØ±Ø¨ÙˆÙ† Ù„ÙƒÙ„ Ù…Ù…Ø± Ù„ÙƒÙ„ Ø±Ø­Ù„Ø©',
-      },
+      { en: 'Cross-border MENA corridors', ar: 'ممرات عابرة للحدود في المنطقة' },
+      { en: 'AI-driven credit-adjusted movement pricing', ar: 'تسعير الحركة المعدل بالائتمان بالذكاء الاصطناعي' },
+      { en: 'Autonomous dispatch for corporate fleets', ar: 'إرسال تلقائي لأساطيل الشركات' },
+      { en: 'Open API for third-party corridor integration', ar: 'واجهة مفتوحة لتكامل الممرات مع الأطراف الأخرى' },
+      { en: 'Carbon accounting per corridor per trip', ar: 'محاسبة الكربون لكل ممر ولكل رحلة' },
     ],
   },
-]) as RoadmapItem[];
+];
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Style helpers
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-function panel(extra: React.CSSProperties = {}): React.CSSProperties {
+function panel(extra: CSSProperties = {}): CSSProperties {
   return {
     position: 'relative',
     background: CARD_BG,
@@ -361,7 +286,7 @@ function panel(extra: React.CSSProperties = {}): React.CSSProperties {
   };
 }
 
-function glassChip(accent: string): React.CSSProperties {
+function glassChip(accent: string): CSSProperties {
   return {
     display: 'inline-flex',
     alignItems: 'center',
@@ -374,17 +299,15 @@ function glassChip(accent: string): React.CSSProperties {
     fontSize: '0.7rem',
     fontWeight: 800,
     letterSpacing: '0.1em',
-    textTransform: 'uppercase' as const,
+    textTransform: 'uppercase',
   };
 }
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Page
-â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export default function InnovationHubPage() {
   const { language, dir } = useLanguage();
-  const ar = language === 'ar';
-  const copy = useMemo(() => (ar ? COPY.ar : COPY.en), [ar]);
+  const copy = COPY[language];
+  const selectText = (value: BilingualText) => getLocalizedCopy(language, value);
+  const isArabic = language === 'ar';
 
   return (
     <div
@@ -398,7 +321,6 @@ export default function InnovationHubPage() {
       }}
     >
       <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gap: 20 }}>
-        {/* Hero */}
         <section
           style={panel({
             padding: '32px 28px',
@@ -432,7 +354,7 @@ export default function InnovationHubPage() {
               style={{
                 margin: 0,
                 fontSize: 'clamp(2rem, 4.5vw, 3.75rem)',
-                lineHeight: 1.0,
+                lineHeight: 1,
                 letterSpacing: '-0.04em',
                 fontWeight: 900,
               }}
@@ -453,50 +375,50 @@ export default function InnovationHubPage() {
           </div>
         </section>
 
-        {/* Metrics bar */}
         <section
+          aria-label={copy.metrics}
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
             gap: 12,
           }}
         >
-          {METRICS.map(m => (
+          {METRICS.map(metric => (
             <div
-              key={m.value + (ar ? m.label.ar : m.label.en)}
+              key={`${metric.value}-${selectText(metric.label)}`}
               style={panel({
                 padding: '16px 18px',
                 borderRadius: 22,
-                border: `1px solid ${m.accent}26`,
-                boxShadow: `0 10px 28px ${m.accent}12`,
+                border: `1px solid ${metric.accent}26`,
+                boxShadow: `0 10px 28px ${metric.accent}12`,
               })}
             >
-              <div style={glassChip(m.accent)}>
-                {m.icon}
-                {ar ? m.label.ar : m.label.en}
+              <div style={glassChip(metric.accent)}>
+                {metric.icon}
+                {selectText(metric.label)}
               </div>
               <div
                 style={{
                   fontSize: '1.95rem',
                   fontWeight: 900,
-                  color: m.accent,
+                  color: metric.accent,
                   lineHeight: 1,
                   margin: '10px 0 6px',
-                  textShadow: `0 0 18px ${m.accent}30`,
+                  textShadow: `0 0 18px ${metric.accent}30`,
                 }}
               >
-                {m.value}
+                {metric.value}
               </div>
               <div style={{ color: C.textMuted, fontSize: '0.78rem', lineHeight: 1.55 }}>
-                {ar ? m.sub.ar : m.sub.en}
+                {selectText(metric.sub)}
               </div>
             </div>
           ))}
         </section>
 
-        {/* Pillars grid */}
-        <section>
+        <section aria-labelledby="innovation-pillars-heading">
           <div
+            id="innovation-pillars-heading"
             style={{
               fontSize: '0.72rem',
               letterSpacing: '0.18em',
@@ -517,7 +439,7 @@ export default function InnovationHubPage() {
           >
             {PILLARS.map(pillar => (
               <article
-                key={ar ? pillar.title.ar : pillar.title.en}
+                key={selectText(pillar.title)}
                 style={panel({
                   padding: '20px 20px 18px',
                   borderRadius: 22,
@@ -534,6 +456,7 @@ export default function InnovationHubPage() {
                   }}
                 >
                   <div
+                    aria-hidden="true"
                     style={{
                       width: 44,
                       height: 44,
@@ -549,7 +472,7 @@ export default function InnovationHubPage() {
                   >
                     {pillar.icon}
                   </div>
-                  <div style={glassChip(pillar.accent)}>{ar ? pillar.tag.ar : pillar.tag.en}</div>
+                  <div style={glassChip(pillar.accent)}>{selectText(pillar.tag)}</div>
                 </div>
                 <h3
                   style={{
@@ -559,66 +482,64 @@ export default function InnovationHubPage() {
                     letterSpacing: '-0.02em',
                   }}
                 >
-                  {ar ? pillar.title.ar : pillar.title.en}
+                  {selectText(pillar.title)}
                 </h3>
                 <p style={{ margin: 0, color: C.textSub, fontSize: '0.86rem', lineHeight: 1.7 }}>
-                  {ar ? pillar.body.ar : pillar.body.en}
+                  {selectText(pillar.body)}
                 </p>
               </article>
             ))}
           </div>
         </section>
 
-        {/* Deep-dive sections */}
-        {(
-          [
-            { title: copy.aiSection, body: copy.aiBody, accent: C.cyan, icon: <Brain size={18} /> },
-            {
-              title: copy.trustSection,
-              body: copy.trustBody,
-              accent: C.green,
-              icon: <ShieldCheck size={18} />,
-            },
-            {
-              title: copy.networkSection,
-              body: copy.networkBody,
-              accent: C.gold,
-              icon: <Activity size={18} />,
-            },
-            {
-              title: copy.menaSection,
-              body: copy.menaBody,
-              accent: C.cyan,
-              icon: <Globe2 size={18} />,
-            },
-          ] as { title: string; body: string; accent: string; icon: ReactNode }[]
-        ).map(s => (
+        {[
+          { title: copy.aiSection, body: copy.aiBody, accent: C.cyan, icon: <Brain size={18} aria-hidden="true" /> },
+          {
+            title: copy.trustSection,
+            body: copy.trustBody,
+            accent: C.green,
+            icon: <ShieldCheck size={18} aria-hidden="true" />,
+          },
+          {
+            title: copy.networkSection,
+            body: copy.networkBody,
+            accent: C.gold,
+            icon: <Activity size={18} aria-hidden="true" />,
+          },
+          {
+            title: copy.menaSection,
+            body: copy.menaBody,
+            accent: C.cyan,
+            icon: <Globe2 size={18} aria-hidden="true" />,
+          },
+        ].map(section => (
           <section
-            key={s.title}
+            key={section.title}
             style={panel({
               padding: '22px 22px 20px',
               borderRadius: 24,
-              border: `1px solid ${s.accent}22`,
+              border: `1px solid ${section.accent}22`,
               display: 'flex',
               alignItems: 'flex-start',
               gap: 18,
             })}
           >
             <div
+              aria-hidden="true"
               style={{
                 width: 46,
                 height: 46,
                 borderRadius: 15,
-                background: `${s.accent}14`,
-                border: `1px solid ${s.accent}28`,
+                background: `${section.accent}14`,
+                border: `1px solid ${section.accent}28`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: s.accent,
+                color: section.accent,
                 flexShrink: 0,
               }}
             >
-              {s.icon}
+              {section.icon}
             </div>
             <div>
               <h2
@@ -629,7 +550,7 @@ export default function InnovationHubPage() {
                   letterSpacing: '-0.02em',
                 }}
               >
-                {s.title}
+                {section.title}
               </h2>
               <p
                 style={{
@@ -640,15 +561,15 @@ export default function InnovationHubPage() {
                   maxWidth: 820,
                 }}
               >
-                {s.body}
+                {section.body}
               </p>
             </div>
           </section>
         ))}
 
-        {/* Roadmap */}
-        <section>
+        <section aria-labelledby="innovation-roadmap-heading">
           <div
+            id="innovation-roadmap-heading"
             style={{
               fontSize: '0.72rem',
               letterSpacing: '0.18em',
@@ -669,7 +590,7 @@ export default function InnovationHubPage() {
           >
             {ROADMAP.map(phase => (
               <article
-                key={ar ? phase.phase.ar : phase.phase.en}
+                key={selectText(phase.phase)}
                 style={panel({
                   padding: '20px 20px 18px',
                   borderRadius: 24,
@@ -697,9 +618,10 @@ export default function InnovationHubPage() {
                       fontWeight: 800,
                     }}
                   >
-                    {ar ? phase.phase.ar : phase.phase.en}
+                    {selectText(phase.phase)}
                   </div>
                   <div
+                    aria-hidden="true"
                     style={{
                       width: 10,
                       height: 10,
@@ -711,22 +633,22 @@ export default function InnovationHubPage() {
                   />
                 </div>
                 <h3 style={{ margin: '0 0 14px', fontSize: '1rem', fontWeight: 900 }}>
-                  {ar ? phase.title.ar : phase.title.en}
+                  {selectText(phase.title)}
                 </h3>
                 <ul
                   style={{
                     margin: 0,
-                    padding: ar ? '0 18px 0 0' : '0 0 0 18px',
+                    padding: isArabic ? '0 18px 0 0' : '0 0 0 18px',
                     display: 'grid',
                     gap: 8,
                   }}
                 >
                   {phase.items.map(item => (
                     <li
-                      key={ar ? item.ar : item.en}
+                      key={selectText(item)}
                       style={{ color: C.textSub, fontSize: '0.84rem', lineHeight: 1.6 }}
                     >
-                      {ar ? item.ar : item.en}
+                      {selectText(item)}
                     </li>
                   ))}
                 </ul>

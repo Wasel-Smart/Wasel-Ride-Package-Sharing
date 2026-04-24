@@ -73,7 +73,7 @@ export const defaultCommunicationPreferences: CommunicationPreferences = {
   push: true,
   email: true,
   sms: true,
-  whatsapp: false,
+  whatsapp: true,
   tripUpdates: true,
   bookingRequests: true,
   messages: true,
@@ -247,7 +247,7 @@ function normalizeDirectPreferences(row: Record<string, unknown> | null | undefi
     push: row?.push_enabled !== false,
     email: row?.email_enabled !== false,
     sms: row?.sms_enabled !== false,
-    whatsapp: row?.whatsapp_enabled === true,
+    whatsapp: row?.whatsapp_enabled !== false,
     tripUpdates: row?.trip_updates_enabled !== false,
     bookingRequests: row?.booking_requests_enabled !== false,
     messages: row?.messages_enabled !== false,
@@ -321,7 +321,7 @@ export function buildDeliveryPlan(args: {
 
   const requestedChannels = args.explicitChannels && args.explicitChannels.length > 0
     ? args.explicitChannels
-    : (['in_app', 'push', 'email', 'sms'] as CommunicationChannel[]);
+    : (['in_app', 'push', 'whatsapp', 'sms', 'email'] as CommunicationChannel[]);
 
   return requestedChannels.filter((channel) => {
     const forceChannel = Boolean(args.explicitChannels?.includes(channel));

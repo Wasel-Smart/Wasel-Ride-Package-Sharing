@@ -6,15 +6,16 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useTheme } from '../contexts/ThemeContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
+import { APP_ROUTES } from '../router/paths';
 import { buildAuthPagePath } from '../utils/authFlow';
 
 const primaryNav = [
-  { icon: <Search size={16} />, label: 'Find ride', path: '/app/find-ride' },
-  { icon: <Bus size={16} />, label: 'Bus services', path: '/app/bus' },
-  { icon: <Package size={16} />, label: 'Packages', path: '/app/packages' },
-  { icon: <MapPin size={16} />, label: 'Mobility OS', path: '/app/mobility-os' },
-  { icon: <Clock size={16} />, label: 'Trips', path: '/app/my-trips' },
-  { icon: <Settings size={16} />, label: 'Settings', path: '/app/settings' },
+  { icon: <Search size={16} />, label: 'Find ride', path: APP_ROUTES.findRide.full },
+  { icon: <Bus size={16} />, label: 'Bus services', path: APP_ROUTES.bus.full },
+  { icon: <Package size={16} />, label: 'Packages', path: APP_ROUTES.packages.full },
+  { icon: <MapPin size={16} />, label: 'Mobility OS', path: APP_ROUTES.mobilityOs.full },
+  { icon: <Clock size={16} />, label: 'Trips', path: APP_ROUTES.myTrips.full },
+  { icon: <Settings size={16} />, label: 'Settings', path: APP_ROUTES.settings.full },
 ] as const;
 
 export default function WaselRoot() {
@@ -61,7 +62,11 @@ export default function WaselRoot() {
                 {user.name}
               </Button>
             ) : (
-              <Button onClick={() => navigate(buildAuthPagePath('signin', '/app/find-ride'))}>
+              <Button
+                onClick={() =>
+                  navigate(buildAuthPagePath('signin', APP_ROUTES.findRide.full))
+                }
+              >
                 Sign in
               </Button>
             )}
@@ -77,10 +82,10 @@ export default function WaselRoot() {
         <footer className="ds-shell-footer">
           <p className="ds-footer-note">Wasel stays visible inside the corridor.</p>
           <div className="ds-shell-header__actions">
-            <Button onClick={() => navigate('/app/privacy')} variant="ghost">
+            <Button onClick={() => navigate(APP_ROUTES.privacy.full)} variant="ghost">
               Privacy
             </Button>
-            <Button onClick={() => navigate('/app/terms')} variant="ghost">
+            <Button onClick={() => navigate(APP_ROUTES.terms.full)} variant="ghost">
               Terms
             </Button>
           </div>

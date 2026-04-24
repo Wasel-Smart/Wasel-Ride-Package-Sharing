@@ -1,4 +1,5 @@
 import { C } from '../utils/wasel-ds';
+import { APP_ROUTES, stripAppRoutePrefix } from '../router/paths';
 
 export type NavItem = {
   emoji: string;
@@ -41,7 +42,7 @@ export const PRODUCT_NAV_GROUPS: readonly NavGroup[] = [
     label: 'Find Ride',
     labelAr: 'ابحث عن رحلة',
     direct: true,
-    path: '/find-ride',
+    path: stripAppRoutePrefix(APP_ROUTES.findRide.full),
     emoji: '🛣️',
     desc: 'Find and book a ride fast.',
     descAr: 'ابحث في المسارات، وقارن أوقات الانطلاق، واحجز أوضح رحلة.',
@@ -54,7 +55,7 @@ export const PRODUCT_NAV_GROUPS: readonly NavGroup[] = [
     label: 'Trips',
     labelAr: 'رحلاتي',
     direct: true,
-    path: '/my-trips',
+    path: stripAppRoutePrefix(APP_ROUTES.myTrips.full),
     emoji: '🎫',
     desc: 'Open your active journeys.',
     descAr: 'تابع الرحلات النشطة والحجوزات والتحركات الأخيرة.',
@@ -67,7 +68,7 @@ export const PRODUCT_NAV_GROUPS: readonly NavGroup[] = [
     label: 'Bus',
     labelAr: 'الباص',
     direct: true,
-    path: '/bus',
+    path: stripAppRoutePrefix(APP_ROUTES.bus.full),
     emoji: '🚌',
     desc: 'Book intercity bus seats.',
     descAr: 'تصفح جداول الباصات الرسمية واحجز مقعدك بين المدن.',
@@ -80,7 +81,7 @@ export const PRODUCT_NAV_GROUPS: readonly NavGroup[] = [
     label: 'Packages',
     labelAr: 'الطرود',
     direct: true,
-    path: '/packages',
+    path: stripAppRoutePrefix(APP_ROUTES.packages.full),
     emoji: '📦',
     desc: 'Send and track packages.',
     descAr: 'أرسل الطرود وتتبعها وأدرها على الممرات الحية.',
@@ -92,7 +93,7 @@ export const PRODUCT_NAV_GROUPS: readonly NavGroup[] = [
     label: 'Wallet',
     labelAr: 'المحفظة',
     direct: true,
-    path: '/wallet',
+    path: stripAppRoutePrefix(APP_ROUTES.wallet.full),
     emoji: '💳',
     desc: 'Balance and money actions.',
     descAr: 'اشحن الرصيد، وأرسل المال، وراجع آخر المعاملات.',
@@ -105,7 +106,7 @@ export const PRODUCT_NAV_GROUPS: readonly NavGroup[] = [
     label: 'Profile',
     labelAr: 'الملف الشخصي',
     direct: true,
-    path: '/profile',
+    path: stripAppRoutePrefix(APP_ROUTES.profile.full),
     emoji: '👤',
     desc: 'Account and preferences.',
     descAr: 'أدر بيانات الحساب والتحقق والتفضيلات.',
@@ -118,7 +119,7 @@ export const PRODUCT_NAV_GROUPS: readonly NavGroup[] = [
     label: 'Network',
     labelAr: 'الشبكة',
     direct: true,
-    path: '/mobility-os',
+    path: stripAppRoutePrefix(APP_ROUTES.mobilityOs.full),
     emoji: '📡',
     desc: 'Live corridor view.',
     descAr: 'اطلع على ذكاء الممرات وضغط المسارات واتجاهات الشبكة.',
@@ -130,7 +131,11 @@ export const PRODUCT_NAV_GROUPS: readonly NavGroup[] = [
 export const DESKTOP_PRIMARY_NAV_IDS = ['find', 'trips', 'bus', 'packages', 'wallet'] as const;
 
 const HIDDEN_NAV_PATHS = new Set<string>();
-const USER_ONLY_NAV_PATHS = new Set<string>(['/my-trips', '/wallet', '/profile']);
+const USER_ONLY_NAV_PATHS = new Set<string>([
+  stripAppRoutePrefix(APP_ROUTES.myTrips.full),
+  stripAppRoutePrefix(APP_ROUTES.wallet.full),
+  stripAppRoutePrefix(APP_ROUTES.profile.full),
+]);
 
 export function isDirectNavGroup(group: NavGroup): group is DirectNavGroup {
   return group.direct === true;

@@ -3,6 +3,7 @@ import { CheckCircle2, Search } from 'lucide-react';
 import { MapWrapper } from '../../../components/MapWrapper';
 import { DS, midpoint, pill, r, resolveCityCoord } from '../../../pages/waselServiceShared';
 import type { PackageRequest } from '../../../services/journeyLogistics';
+import { buildPreferredWhatsAppUrl, hasWhatsAppContact } from '../../../utils/whatsapp';
 
 type PackageTrackPanelProps = {
   trackId: string;
@@ -31,6 +32,21 @@ export function PackageTrackPanel({
   onOpenSupport,
   onOpenRecent,
 }: PackageTrackPanelProps) {
+  const holderWhatsAppUrl = trackedPackage
+    ? buildPreferredWhatsAppUrl({
+        phone: trackedPackage.matchedDriverPhone,
+        message: `Hi ${trackedPackage.matchedDriver || 'captain'}, I am checking package ${trackedPackage.trackingId} on the ${trackedPackage.from} to ${trackedPackage.to} route.`,
+        fallbackMessage: `Hi Wasel, I need holder support for package ${trackedPackage.trackingId}.`,
+      })
+    : '';
+  const receiverWhatsAppUrl = trackedPackage
+    ? buildPreferredWhatsAppUrl({
+        phone: trackedPackage.recipientPhone,
+        message: `Hi ${trackedPackage.recipientName || 'there'}, I am sharing a Wasel update for package ${trackedPackage.trackingId} from ${trackedPackage.from} to ${trackedPackage.to}.`,
+        fallbackMessage: `Hi Wasel, I need receiver coordination for package ${trackedPackage.trackingId}.`,
+      })
+    : '';
+
   return (
     <div style={{ textAlign: 'center', maxWidth: 560, margin: '0 auto', padding: '20px 0' }}>
       <div style={{ fontSize: '2.5rem', marginBottom: 16 }}>TRACK</div>
@@ -70,6 +86,9 @@ export function PackageTrackPanel({
             {trackedPackage.matchedDriver
               ? `Assigned to ${trackedPackage.matchedDriver} on a connected route from ${trackedPackage.from} to ${trackedPackage.to}.`
               : `Still searching for a posted ride from ${trackedPackage.from} to ${trackedPackage.to}.`}
+          </div>
+          <div style={{ color: DS.muted, fontSize: '0.76rem', marginBottom: 16 }}>
+            WhatsApp is the main lane between sender, holder, and receiver for this package.
           </div>
           <div
             className="pkg-track-proof-grid"
@@ -146,6 +165,26 @@ export function PackageTrackPanel({
             <button onClick={onOpenSupport} style={{ padding: '10px 16px', borderRadius: '99px', border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, cursor: 'pointer', fontFamily: DS.F, fontWeight: 700 }}>
               Report an issue
             </button>
+            <a
+              href={holderWhatsAppUrl || undefined}
+              target="_blank"
+              rel="noreferrer"
+              style={{ padding: '10px 16px', borderRadius: '99px', border: 'none', background: 'linear-gradient(135deg, #25d366 0%, #1faa53 100%)', color: '#fff', cursor: 'pointer', fontFamily: DS.F, fontWeight: 700, textDecoration: 'none' }}
+            >
+              {hasWhatsAppContact(trackedPackage.matchedDriverPhone)
+                ? 'Holder WhatsApp'
+                : 'Wasel WhatsApp'}
+            </a>
+            <a
+              href={receiverWhatsAppUrl || undefined}
+              target="_blank"
+              rel="noreferrer"
+              style={{ padding: '10px 16px', borderRadius: '99px', border: 'none', background: 'linear-gradient(135deg, #25d366 0%, #1faa53 100%)', color: '#fff', cursor: 'pointer', fontFamily: DS.F, fontWeight: 700, textDecoration: 'none' }}
+            >
+              {hasWhatsAppContact(trackedPackage.recipientPhone)
+                ? 'Receiver WhatsApp'
+                : 'Wasel WhatsApp'}
+            </a>
           </div>
           {trackedPackage.timeline.map((step, index) => (
             <div key={index} style={{ display: 'flex', gap: 12, marginBottom: 12 }}>

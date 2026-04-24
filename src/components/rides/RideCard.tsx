@@ -1,9 +1,16 @@
-import { ArrowRight, CarFront, Clock3, ShieldCheck, Star, Users } from 'lucide-react';
+import {
+  ArrowRight,
+  CarFront,
+  Clock3,
+  ShieldCheck,
+  Star,
+  Users,
+} from 'lucide-react';
 import { motion } from 'motion/react';
-import { landingPanel } from '../../features/home/landing/landingTypes';
-import { LANDING_FONT } from '../../features/home/landingConstants';
+import { panelStyle, FONT_DISPLAY as LANDING_FONT } from '../../styles/shared-ui';
 import type { RideBookingRecord } from '../../services/rideLifecycle';
 import type { RideResult } from '../../modules/rides/ride.types';
+import { RideTrustPanel } from './RideTrustPanel';
 
 export interface RideCardCopy {
   recommendedLabel: string;
@@ -12,6 +19,8 @@ export interface RideCardCopy {
   priceEstimateLabel: string;
   requestButton: string;
   requestingButton: string;
+  detailsButton?: string;
+  whatsappPrimaryLabel?: string;
   defaultReason: string;
   etaLabel: string;
   vehicleLabel: string;
@@ -25,8 +34,10 @@ interface RideCardProps {
   recommended: boolean;
   booking?: RideBookingRecord | null;
   requesting: boolean;
+  language: 'en' | 'ar';
   copy: RideCardCopy;
   onRequest: (ride: RideResult) => void;
+  onOpenDetails: (ride: RideResult) => void;
 }
 
 export function RideCard({
@@ -34,8 +45,10 @@ export function RideCard({
   recommended,
   booking,
   requesting,
+  language,
   copy,
   onRequest,
+  onOpenDetails,
 }: RideCardProps) {
   const statusLabel =
     booking?.status === 'confirmed'
@@ -49,7 +62,7 @@ export function RideCard({
       <article
         className="wasel-lift-card"
         style={{
-          ...landingPanel(28),
+          ...panelStyle(28),
           padding: 24,
           display: 'grid',
           gap: 20,
@@ -288,37 +301,63 @@ export function RideCard({
             >
               {ride.recommendedReason ?? copy.defaultReason}
             </div>
+            <RideTrustPanel language={language} ride={ride} />
           </div>
 
-          <button
-            type="button"
-            data-testid={`ride-request-${ride.id}`}
-            aria-label={`Request ${ride.from} to ${ride.to}`}
-            disabled={requesting}
-            onClick={() => onRequest(ride)}
-            style={{
-              minWidth: 160,
-              minHeight: 52,
-              borderRadius: 16,
-              border: 'none',
-              background: requesting
-                ? 'rgba(255,255,255,0.1)'
-                : 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-              color: requesting ? 'rgba(255,255,255,0.5)' : '#fff',
-              fontFamily: LANDING_FONT,
-              fontSize: '0.95rem',
-              fontWeight: 900,
-              cursor: requesting ? 'progress' : 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              boxShadow: requesting ? 'none' : '0 8px 25px -5px rgba(6,182,212,0.4)',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            {requesting ? copy.requestingButton : copy.requestButton}
-          </button>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              onClick={() => onOpenDetails(ride)}
+              style={{
+                minWidth: 148,
+                minHeight: 52,
+                borderRadius: 16,
+                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(255,255,255,0.04)',
+                color: '#fff',
+                fontFamily: LANDING_FONT,
+                fontSize: '0.92rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {copy.detailsButton ?? 'Trip details'}
+            </button>
+            <button
+              type="button"
+              data-testid={`ride-request-${ride.id}`}
+              aria-label={`Request ${ride.from} to ${ride.to}`}
+              disabled={requesting}
+              onClick={() => onRequest(ride)}
+              style={{
+                minWidth: 160,
+                minHeight: 52,
+                borderRadius: 16,
+                border: 'none',
+                background: requesting
+                  ? 'rgba(255,255,255,0.1)'
+                  : 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                color: requesting ? 'rgba(255,255,255,0.5)' : '#fff',
+                fontFamily: LANDING_FONT,
+                fontSize: '0.95rem',
+                fontWeight: 900,
+                cursor: requesting ? 'progress' : 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                boxShadow: requesting ? 'none' : '0 8px 25px -5px rgba(6,182,212,0.4)',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {requesting ? copy.requestingButton : copy.requestButton}
+            </button>
+          </div>
         </div>
       </article>
     </motion.div>

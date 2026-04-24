@@ -6,12 +6,13 @@ import { Button } from '../../components/ui/button';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { LANDING_RESPONSIVE_STYLES } from '../home/landingConstants';
+import { LANDING_RESPONSIVE_STYLES } from '../../styles/shared-ui';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
 import { JORDAN_LOCATION_OPTIONS, resolveJordanLocationCoord } from '../../utils/jordanLocations';
 import { buildAuthPagePath, buildAuthReturnTo } from '../../utils/authFlow';
 import { getConfig } from '../../utils/env';
+import { getLocalizedCopy } from '../../utils/localizedCopy';
 
 export const DS = PAGE_DS;
 
@@ -41,9 +42,49 @@ export function midpoint(a: { lat: number; lng: number }, b: { lat: number; lng:
   return { lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 };
 }
 
+const SHARED_COPY = {
+  checkingAccessBody: {
+    ar: 'نحمّل حساب واصل ونعيد استعادة جلستك.',
+    en: 'Loading your Wasel account and restoring your session.',
+  },
+  checkingAccessTitle: {
+    ar: 'جارٍ التحقق من الوصول',
+    en: 'Checking access',
+  },
+  clearPath: {
+    ar: 'مسار واضح',
+    en: 'Clear path',
+  },
+  pageBriefHint: {
+    ar: 'اجعل الخطوة التالية واضحة.',
+    en: 'Keep the next action obvious.',
+  },
+  pageBriefLabel: {
+    ar: 'ملخص الصفحة',
+    en: 'Page brief',
+  },
+  pageEyebrow: {
+    ar: 'صفحة واصل',
+    en: 'Wasel page',
+  },
+  signInBody: {
+    ar: 'سجّل الدخول للمتابعة داخل شبكة خدمات واصل.',
+    en: 'Sign in to continue into the Wasel service network.',
+  },
+  signInButton: {
+    ar: 'تسجيل الدخول',
+    en: 'Sign in',
+  },
+  signInTitle: {
+    ar: 'تسجيل الدخول مطلوب',
+    en: 'Sign in required',
+  },
+} as const;
+
 export function Protected({ children }: { children: ReactNode }) {
   const { user: localUser, loading: localLoading } = useLocalAuth();
   const { user: authUser, session, loading: authLoading, isBackendConnected } = useAuth();
+  const { language } = useLanguage();
   const nav = useIframeSafeNavigate();
   const location = useLocation();
   const mountedRef = useRef(true);
@@ -52,6 +93,11 @@ export function Protected({ children }: { children: ReactNode }) {
     allowLocalPersistenceFallback || enableDemoAccount || enablePersistedTestAuth;
   const user = allowLocalFallback ? localUser : (session?.user ?? authUser);
   const loading = isBackendConnected && !allowLocalFallback ? authLoading : localLoading;
+  const checkingAccessTitle = getLocalizedCopy(language, SHARED_COPY.checkingAccessTitle);
+  const checkingAccessBody = getLocalizedCopy(language, SHARED_COPY.checkingAccessBody);
+  const signInTitle = getLocalizedCopy(language, SHARED_COPY.signInTitle);
+  const signInBody = getLocalizedCopy(language, SHARED_COPY.signInBody);
+  const signInButton = getLocalizedCopy(language, SHARED_COPY.signInButton);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -74,15 +120,13 @@ export function Protected({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <div className="wasel-auth-guard">
-        <div className="wasel-auth-guard__panel">
+        <div aria-live="polite" className="wasel-auth-guard__panel" role="status">
           <div className="wasel-auth-guard__logo">
             <WaselLogo size={38} variant="full" showWordmark={false} />
           </div>
           <div className="wasel-auth-guard__icon">W</div>
-          <div className="wasel-auth-guard__title">Checking access</div>
-          <div className="wasel-auth-guard__body">
-            Loading your Wasel account and restoring your session.
-          </div>
+          <div className="wasel-auth-guard__title">{checkingAccessTitle}</div>
+          <div className="wasel-auth-guard__body">{checkingAccessBody}</div>
         </div>
       </div>
     );
@@ -91,17 +135,15 @@ export function Protected({ children }: { children: ReactNode }) {
   if (!user) {
     return (
       <div className="wasel-auth-guard">
-        <div role="status" aria-live="polite" className="wasel-auth-guard__panel">
+        <div aria-live="polite" className="wasel-auth-guard__panel" role="status">
           <div className="wasel-auth-guard__logo">
             <WaselLogo size={38} variant="full" showWordmark={false} />
           </div>
           <div className="wasel-auth-guard__icon wasel-auth-guard__icon--shield">
             <Shield size={24} />
           </div>
-          <div className="wasel-auth-guard__title">Sign in required</div>
-          <div className="wasel-auth-guard__body wasel-auth-guard__body--spaced">
-            Sign in to continue into the Wasel service network.
-          </div>
+          <div className="wasel-auth-guard__title">{signInTitle}</div>
+          <div className="wasel-auth-guard__body wasel-auth-guard__body--spaced">{signInBody}</div>
           <Button
             type="button"
             onClick={() =>
@@ -113,7 +155,7 @@ export function Protected({ children }: { children: ReactNode }) {
               )
             }
           >
-            Sign in
+            {signInButton}
           </Button>
         </div>
       </div>
@@ -199,7 +241,6 @@ export function PageShell({ children }: { children: ReactNode }) {
         }
       `}</style>
 
-      {/* Aurora gradient layers matching landing */}
       <div
         aria-hidden="true"
         style={{
@@ -248,17 +289,21 @@ export function SectionHead({
   action?: { label: string; onClick: () => void };
 }) {
   const { language } = useLanguage();
-  const ar = language === 'ar';
+  const sectionEyebrow = getLocalizedCopy(language, SHARED_COPY.pageEyebrow);
   const toneStyle = { '--wasel-section-tone': color } as CSSProperties;
 
   return (
     <div className="sp-head wasel-section-head" style={toneStyle}>
       <div className="sp-head-inner wasel-section-head__inner">
         <div className="wasel-section-head__intro">
-          <div className="wasel-section-head__icon">{emoji}</div>
+          <div aria-hidden="true" className="wasel-section-head__icon">
+            {emoji}
+          </div>
           <div>
-            <div className="wasel-section-head__eyebrow">{ar ? 'صفحة واصل' : 'Wasel page'}</div>
-            <h1 className="wasel-section-head__title">{ar && titleAr ? titleAr : title}</h1>
+            <div className="wasel-section-head__eyebrow">{sectionEyebrow}</div>
+            <h1 className="wasel-section-head__title">
+              {language === 'ar' && titleAr ? titleAr : title}
+            </h1>
             {sub ? <div className="wasel-section-head__sub">{sub}</div> : null}
           </div>
         </div>
@@ -283,16 +328,15 @@ export function CoreExperienceBanner({
   tone?: string;
 }) {
   const { language } = useLanguage();
-  const ar = language === 'ar';
+  const briefLabel = getLocalizedCopy(language, SHARED_COPY.pageBriefLabel);
+  const briefHint = getLocalizedCopy(language, SHARED_COPY.pageBriefHint);
   const toneStyle = { '--wasel-section-tone': tone } as CSSProperties;
 
   return (
     <div className="sp-brief wasel-page-brief" style={toneStyle}>
       <div className="sp-brief-label wasel-page-brief__label">
-        <div className="wasel-micro-label">{ar ? 'ملخص الصفحة' : 'Page brief'}</div>
-        <div className="wasel-copy-subtle">
-          {ar ? 'اجعل الخطوة التالية واضحة.' : 'Keep the next action obvious.'}
-        </div>
+        <div className="wasel-micro-label">{briefLabel}</div>
+        <div className="wasel-copy-subtle">{briefHint}</div>
       </div>
       <div className="wasel-page-brief__copy">
         <div className="wasel-heading-sm">{title}</div>
@@ -316,14 +360,14 @@ export function ClarityBand({
   tone?: string;
 }) {
   const { language } = useLanguage();
-  const ar = language === 'ar';
+  const clearPathLabel = getLocalizedCopy(language, SHARED_COPY.clearPath);
   const toneStyle = { '--wasel-section-tone': tone } as CSSProperties;
 
   return (
     <div className="wasel-clarity-band" style={toneStyle}>
       <div>
         <div className="wasel-micro-label" style={{ marginBottom: 6 }}>
-          {ar ? 'مسار واضح' : 'Clear path'}
+          {clearPathLabel}
         </div>
         <div className="wasel-heading-sm" style={{ marginBottom: 4 }}>
           {title}

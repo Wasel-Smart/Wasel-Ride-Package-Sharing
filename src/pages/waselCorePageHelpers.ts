@@ -112,10 +112,12 @@ export function parseFindRideParams(search: string): {
 export function parsePackagePrefillParams(search: string): {
   initialFrom: string;
   initialTo: string;
+  initialRideId: string;
 } {
   const params = new URLSearchParams(search);
   const fromParam = params.get('from');
   const toParam = params.get('to');
+  const rideIdParam = params.get('rideId');
 
   return {
     initialFrom:
@@ -126,6 +128,7 @@ export function parsePackagePrefillParams(search: string): {
       typeof toParam === 'string' && isKnownJordanLocation(toParam)
         ? toParam
         : 'Aqaba',
+    initialRideId: typeof rideIdParam === 'string' ? rideIdParam.trim() : '',
   };
 }
 

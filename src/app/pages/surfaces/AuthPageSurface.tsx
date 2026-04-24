@@ -199,7 +199,7 @@ export function AuthPage() {
         <div className="ds-screen-grid">
           <MapHeroPanel signals={authSignals}>
             <div className="ds-hero-panel__content-inner">
-              <h2 className="ds-section-title">One account for every Wasel move.</h2>
+              <h1 className="ds-section-title">One account for every Wasel move.</h1>
               <p className="ds-copy ds-copy--tight">
                 Rides, packages, bus, and wallet all stay in the same trusted shell.
               </p>

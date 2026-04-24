@@ -16,7 +16,6 @@ import {
   TimerReset,
   Users,
 } from 'lucide-react';
-import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { MapWrapper } from '../../components/MapWrapper';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useBusSearch } from '../../modules/bus/bus.hooks';
@@ -483,61 +482,6 @@ export function BusPage() {
             </button>
           </div>
         </div>
-
-        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && (
-          <div style={{ marginBottom: 18 }}>
-            <StakeholderSignalBanner
-              eyebrow="Wasel · bus comms"
-              title="Bus booking now shows the same shared context as the rest of the app"
-              detail="Passengers, operators, and support can now read one clearer coach story with route status, fallback choices, ticket state, and official schedule context all in one place."
-              stakeholders={[
-                { label: 'Visible routes', value: String(busRoutes.length), tone: 'teal' },
-                { label: 'Operators', value: String(operatorCount), tone: 'blue' },
-                { label: 'Open seats', value: String(totalOpenSeats), tone: 'green' },
-                { label: 'Fallback options', value: String(fallbackBuses.length), tone: 'amber' },
-              ]}
-              statuses={[
-                {
-                  label: 'Active route',
-                  value: `${activeBus.from} to ${activeBus.to}`,
-                  tone: 'teal',
-                },
-                {
-                  label: 'Route status',
-                  value: activeStatus.label,
-                  tone:
-                    activeStatus.label === 'Boarding soon'
-                      ? 'green'
-                      : activeStatus.label === 'Closed today'
-                        ? 'amber'
-                        : 'blue',
-                },
-                {
-                  label: 'Ticket state',
-                  value: bookingComplete ? 'Reserved' : 'Open',
-                  tone: bookingComplete ? 'green' : 'slate',
-                },
-              ]}
-              lanes={[
-                {
-                  label: 'Passenger lane',
-                  detail:
-                    'Schedule, seat preference, and ticket state all stay tied to one route record.',
-                },
-                {
-                  label: 'Operator lane',
-                  detail:
-                    'Official schedules, provider visibility, and route status make coach supply easier to trust.',
-                },
-                {
-                  label: 'Support lane',
-                  detail:
-                    'When a booking changes or fills up, fallback departures and support handoff stay close by.',
-                },
-              ]}
-            />
-          </div>
-        )}
 
         <div
           style={{

@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { Search } from 'lucide-react';
-import { LANDING_COLORS, landingPanel } from '../../features/home/landing/landingTypes';
-import { LANDING_DISPLAY, LANDING_FONT } from '../../features/home/landingConstants';
+import { LANDING_COLORS, panelStyle } from '../../styles/shared-ui';
+import { LANDING_DISPLAY, FONT_DISPLAY as LANDING_FONT } from '../../styles/shared-ui';
 import type { RideBookingRecord } from '../../services/rideLifecycle';
 import type { RideResult } from '../../modules/rides/ride.types';
 import { RideCard, type RideCardCopy } from './RideCard';
@@ -21,6 +21,7 @@ export interface RideResultsCopy {
 interface RideResultsProps {
   loading: boolean;
   searched: boolean;
+  language: 'en' | 'ar';
   results: RideResult[];
   totalResultsCount: number;
   recommendedRideId?: string;
@@ -29,6 +30,7 @@ interface RideResultsProps {
   hasMore: boolean;
   copy: RideResultsCopy;
   onRequestRide: (ride: RideResult) => void;
+  onOpenRide: (ride: RideResult) => void;
   onLoadMore: () => void;
 }
 
@@ -36,7 +38,7 @@ function RideResultSkeleton() {
   return (
     <div
       style={{
-        ...landingPanel(28),
+        ...panelStyle(28),
         padding: 24,
         display: 'grid',
         gap: 16,
@@ -92,7 +94,7 @@ function ResultEmptyState({ title, description }: { title: string; description: 
   return (
     <section
       style={{
-        ...landingPanel(28),
+        ...panelStyle(28),
         padding: '56px clamp(24px, 5vw, 48px)',
         textAlign: 'center',
         display: 'grid',
@@ -148,6 +150,7 @@ function ResultEmptyState({ title, description }: { title: string; description: 
 export function RideResults({
   loading,
   searched,
+  language,
   results,
   totalResultsCount,
   recommendedRideId,
@@ -156,6 +159,7 @@ export function RideResults({
   hasMore,
   copy,
   onRequestRide,
+  onOpenRide,
   onLoadMore,
 }: RideResultsProps) {
   if (loading) {
@@ -244,8 +248,10 @@ export function RideResults({
               recommended={ride.id === recommendedRideId}
               booking={requestsByRideId[ride.id] ?? null}
               requesting={requestingRideId === ride.id}
+              language={language}
               copy={copy.card}
               onRequest={onRequestRide}
+              onOpenDetails={onOpenRide}
             />
           </motion.div>
         ))}
