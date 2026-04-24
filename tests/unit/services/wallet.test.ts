@@ -122,18 +122,17 @@ describe('walletApi secure backend flow', () => {
     );
   });
 
-  it('reuses the last persisted backend snapshot when the wallet API is temporarily unavailable', async () => {
+  it('fails closed when the wallet API is temporarily unavailable, even if a snapshot was cached earlier', async () => {
     mockFetchWithRetry.mockResolvedValueOnce(await jsonResponse(walletPayload));
     await walletApi.getWalletSnapshot('user-123');
     __resetWalletApiCachesForTests();
 
     mockFetchWithRetry.mockRejectedValueOnce(new Error('network down'));
 
-    const degradedSnapshot = await walletApi.getWalletSnapshot('user-123');
-
-    expect(degradedSnapshot.data.balance).toBe(125.5);
-    expect(degradedSnapshot.meta.degraded).toBe(true);
-    expect(degradedSnapshot.meta.source).toBe('edge-api');
+    await expect(walletApi.getWalletSnapshot('user-123')).rejects.toThrow(
+      'Wallet data is unavailable right now. Please try again.',
+    );
+    expect(walletApi.getPersistedWalletSnapshot('user-123')?.data.balance).toBe(125.5);
   });
 
   it('creates a deposit payment intent instead of mutating wallet balances on the client', async () => {
