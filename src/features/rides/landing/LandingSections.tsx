@@ -224,7 +224,7 @@ export function LandingHeader({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <WaselLogo size={36} theme={logoTheme} variant="full" subtitle="Mobility OS" />
+        <WaselLogo size={36} theme={logoTheme} variant="full" subtitle="Ride and package marketplace" />
         <div
           style={{
             display: 'inline-flex',
@@ -316,11 +316,11 @@ export function LandingHeroSection({
   const isGoogleLoading = oauthLoadingProvider === 'google';
   const isFacebookLoading = oauthLoadingProvider === 'facebook';
   const heroMetrics = [
-    { label: ar ? 'خريطة مباشرة أولاً' : 'Live map first', value: ar ? 'مفعل' : 'Enabled' },
-    { label: ar ? 'عرض أنظف' : 'Cleaner view', value: ar ? 'مستقر' : 'Stable' },
-    { label: ar ? 'علامة أوضح' : 'Sharper mark', value: ar ? 'حي' : 'Live' },
+    { label: ar ? 'الرحلات' : 'Rides', value: ar ? 'مباشرة' : 'Live' },
+    { label: ar ? 'الطرود' : 'Packages', value: ar ? 'مباشرة' : 'Live' },
+    { label: ar ? 'التأكيد' : 'Confirmation', value: ar ? 'من الخلفية' : 'Backend' },
   ];
-  const serviceCtaLabel = ctaLabel ?? (ar ? 'استكشف الخدمات' : 'Explore services');
+  const serviceCtaLabel = ctaLabel ?? (ar ? 'احجز رحلة' : 'Book a ride');
 
   return (
     <section style={{ display: 'grid', gap: 24 }}>
@@ -378,7 +378,7 @@ export function LandingHeroSection({
                 textTransform: 'uppercase',
               }}
             >
-              {copy(ar ? 'Mobility OS للأردن' : 'Mobility OS for Jordan')}
+              {copy(ar ? 'سوق الرحلات والطرود' : 'Ride and package marketplace')}
             </div>
 
             {/* Headline */}
@@ -421,8 +421,8 @@ export function LandingHeroSection({
               >
                 {copy(
                   ar
-                    ? 'شاهد الشبكة أولاً، ثم اختر خدمة.'
-                    : 'See the network first, then choose a service.',
+                    ? 'اختر الممر أولاً، ثم احجز رحلة أو أرسل طرداً.'
+                    : 'Choose the corridor first, then book a ride or send a package.',
                 )}
               </p>
             </div>
@@ -469,14 +469,14 @@ export function LandingHeroSection({
               }}
             >
               <button
-                aria-label={copy(ar ? 'افتح الخريطة' : 'Open map')}
+                aria-label={copy(ar ? 'احجز رحلة' : 'Book a ride')}
                 type="button"
-                onClick={() => onNavigate(mobilityOsPath || findRidePath)}
+                onClick={() => onNavigate(findRidePath)}
                 style={{
                   ...PREMIUM_BUTTON.primary,
                 }}
               >
-                {copy(ar ? 'افتح الخريطة' : 'Open map')}
+                {serviceCtaLabel}
                 <ArrowRight size={16} style={{ marginLeft: 8 }} />
               </button>
               <button
@@ -883,7 +883,7 @@ export function LandingHeroSection({
               fontSize: '0.82rem',
             }}
           >
-            {copy(ar ? 'تابع رحلاتي' : 'Track my trips')}
+            {copy(ar ? 'تابع حجوزاتي' : 'Track bookings')}
           </button>
           <span
             style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--wasel-border)' }}
@@ -918,8 +918,8 @@ export function LandingMapSection({
       accent: LANDING_COLORS.gold,
     },
     {
-      title: ar ? 'طبقة المحاكاة' : 'Simulation layer',
-      detail: ar ? 'تعرض منطق الشبكة.' : 'Shows the network logic.',
+      title: ar ? 'تحديثات التتبع' : 'Tracking updates',
+      detail: ar ? 'تعرض حالة الطلب الحالية.' : 'Shows the current trip or package status.',
       accent: LANDING_COLORS.green,
     },
   ] as const;
@@ -980,7 +980,7 @@ export function LandingMapSection({
                 color: LANDING_COLORS.text,
               }}
             >
-              {copy(ar ? 'Mobility OS في لمحة واحدة لكل خدمة.' : 'One view for every service.')}
+              {copy(ar ? 'الممرات المشتركة للرحلات والطرود.' : 'Shared corridors for rides and packages.')}
             </div>
             <p
               style={{
@@ -1109,7 +1109,7 @@ export function LandingMapSection({
                     fontSize: '0.88rem',
                   }}
                 >
-                  {copy(ar ? 'افتح Mobility OS' : 'Open Mobility OS')}
+                  {copy(ar ? 'افتح خريطة الرحلات' : 'Open ride map')}
                   <ArrowRight size={14} style={{ marginLeft: 8 }} />
                 </button>
               ) : null}

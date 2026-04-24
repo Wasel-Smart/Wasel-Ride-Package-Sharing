@@ -1,20 +1,5 @@
-/**
- * LandingPageSurface
- *
- * The public entry point for Wasel. Route: `/`
- *
- * Responsibilities:
- *  - Hero section with route planner and map panel
- *  - Social auth shortcuts (Google / Facebook / email)
- *  - Feature proof section and stats
- *  - Navigation into core flows (Find Ride, Packages, Create Ride, Bus, Mobility OS)
- *
- * NOT responsible for:
- *  - Route matching or auth redirects (handled by WaselRoot / waselRouter)
- *  - Data fetching (all ride/package data is in feature modules)
- */
 import { useState } from 'react';
-import { Bus, Car, MapPin, Package, Search, Shield, Sparkles } from 'lucide-react';
+import { Car, MapPin, Package, Search, Shield, Sparkles } from 'lucide-react';
 import {
   Button,
   Card,
@@ -66,64 +51,105 @@ export function LandingPage() {
 
   const primaryActionPath =
     mode === 'ride' ? buildRideSearchPath(route) : buildPackagePrefillPath(route);
-
   const emailPath = buildAuthPagePath('signin', LANDING_RETURN_TO);
 
   const highlights: BrandPillItem[] = [
-    { icon: <MapPin size={14} />, label: ar ? 'خريطة الأردن' : 'Jordan corridor view' },
-    { icon: <Package size={14} />, label: ar ? 'رحلات وطرود' : 'Rides and packages together' },
-    { icon: <Shield size={14} />, label: ar ? 'الثقة قريبة' : 'Trust stays nearby' },
+    { icon: <MapPin size={14} />, label: ar ? 'ممر الأردن المشترك' : 'Shared Jordan corridor' },
+    { icon: <Package size={14} />, label: ar ? 'رحلة أو طرد' : 'Ride and package flows' },
+    { icon: <Shield size={14} />, label: ar ? 'دعم واضح' : 'Clear support and payment' },
   ];
 
   const features: HeroFeatureItem[] = [
     {
       icon: <Search size={18} />,
-      title: ar ? 'ابدأ بالمسار' : 'Start with the route',
+      title: ar ? 'ابدأ بالممر' : 'Start with the corridor',
       detail: ar
-        ? 'قدّم الممر أولاً حتى يفهم المسافر الرحلة قبل ظهور خيارات المنتج.'
-        : 'Lead with the corridor first so riders understand the trip before product choices appear.',
+        ? 'اختر الممر أولاً ثم افتح الرحلة أو الطرد دون تشتيت.'
+        : 'Choose the corridor first, then open the ride or package flow.',
     },
     {
       icon: <Package size={18} />,
-      title: ar ? 'لغة خدمة موحّدة' : 'One shared service language',
+      title: ar ? 'خدمتان واضحتان' : 'Two clear customer flows',
       detail: ar
-        ? 'الرحلات والطرود والحافلات تبقى داخل نفس التسلسل الهرمي والمسافات وصدفة الحساب.'
-        : 'Rides, packages, and bus all stay inside the same hierarchy, spacing, and account shell.',
+        ? 'الرحلات والطرود فقط. لا توجد أسطح إضافية تربك المستخدم.'
+        : 'Rides and packages stay visible from entry to checkout, without extra product layers.',
     },
     {
       icon: <Shield size={18} />,
-      title: ar ? 'الثقة في نفس الصدفة' : 'Trust in the same shell',
+      title: ar ? 'لا نجاح دون تأكيد' : 'No success without confirmation',
       detail: ar
-        ? 'الدعم وتسجيل الدخول والاسترداد تبقى قريبة من المسار بدلاً من أن تصبح منتجات منفصلة.'
-        : 'Support, sign-in, and recovery stay close to the route instead of becoming separate products.',
+        ? 'لا يظهر الاكتمال إلا بعد تأكيد الخلفية.'
+        : 'Nothing looks complete until the backend confirms it.',
     },
   ];
 
   const stats = [
-    { label: ar ? 'الخدمات الأساسية' : 'Core services', value: '4', detail: ar ? 'رحلات وحافلة وطرود ومحفظة.' : 'Rides, bus, packages, and wallet.' },
-    { label: ar ? 'المدن المرسومة' : 'Mapped cities', value: '12', detail: ar ? 'سياق الممر من الشمال إلى الجنوب.' : 'North-to-south corridor context stays visible.' },
-    { label: ar ? 'الدعم المباشر' : 'Live support', value: '24/7', detail: ar ? 'الاسترداد والمساعدة قريبان من المسار.' : 'Recovery and help stay close to the route.' },
+    {
+      label: ar ? 'الأفعال الأساسية' : 'Core actions',
+      value: '3',
+      detail: ar ? 'احجز، اعرض، أرسل.' : 'Book, offer, and send.',
+    },
+    {
+      label: ar ? 'المدن المرسومة' : 'Mapped cities',
+      value: '12',
+      detail: ar
+        ? 'سياق الممر من الشمال إلى الجنوب.'
+        : 'North-to-south corridor context stays visible.',
+    },
+    {
+      label: ar ? 'الدعم المباشر' : 'Live support',
+      value: '24/7',
+      detail: ar
+        ? 'المساعدة والدفع قريبان من المسار.'
+        : 'Support and payment guidance stay close to the route.',
+    },
   ];
 
   const plannerSteps = [
-    { label: ar ? 'اختر المسار' : 'Select route', detail: ar ? 'اختر الممر الذي تريد المرور عبره.' : 'Pick the corridor you want to move through.' },
+    {
+      label: ar ? 'اختر المسار' : 'Choose corridor',
+      detail: ar ? 'حدد الممر أولاً.' : 'Pick the corridor first.',
+    },
     {
       label: ar ? 'حدد التوقيت' : 'Set timing',
-      detail: mode === 'ride'
-        ? (ar ? 'اختر التوقيت وقارن المقاعد.' : 'Choose timing and compare seats.')
-        : (ar ? 'اختر التوقيت والتسليم.' : 'Choose timing and handoff.'),
+      detail:
+        mode === 'ride'
+          ? ar
+            ? 'قارن الوقت والمقعد.'
+            : 'Compare timing and seat.'
+          : ar
+            ? 'حدد وقت الالتقاط والتسليم.'
+            : 'Set pickup and drop-off timing.',
     },
-    { label: ar ? 'افتح التدفق' : 'Open flow', detail: ar ? 'استمر في التدفق الرئيسي بنفس التخطيط.' : 'Continue into the main flow with the same layout.' },
+    {
+      label: ar ? 'أكمل الطلب' : 'Finish the action',
+      detail:
+        mode === 'ride'
+          ? ar
+            ? 'أكمل حجز الرحلة.'
+            : 'Complete the ride booking.'
+          : ar
+            ? 'أكمل إرسال الطرد.'
+            : 'Complete the package request.',
+    },
   ];
 
-  const signals = mode === 'ride'
-    ? [ar ? 'مسارات الرحلات مباشرة' : 'Ride routes live', ar ? 'المقاعد والتوقيت مرئية' : 'Seats and timings visible', ar ? 'الدعم بنقرة واحدة' : 'Support one tap away']
-    : [ar ? 'ممرات الطرود مباشرة' : 'Package lanes live', ar ? 'تسليم الممر المشترك' : 'Shared corridor handoff', ar ? 'الدعم بنقرة واحدة' : 'Support one tap away'];
+  const signals =
+    mode === 'ride'
+      ? [
+          ar ? 'الرحلات مرئية' : 'Ride routes visible',
+          ar ? 'المقعد والوقت واضحان' : 'Seat and timing visible',
+          ar ? 'الدعم قريب' : 'Support close by',
+        ]
+      : [
+          ar ? 'الطرد على نفس الممر' : 'Package on the same corridor',
+          ar ? 'الاستلام والتسليم واضحان' : 'Pickup and drop-off clear',
+          ar ? 'الدعم قريب' : 'Support close by',
+        ];
 
   return (
     <LayoutContainer width="wide">
       <main className="ds-page landing-page" role="main">
-        {/* ─── Top bar ─────────────────────────────────────────────── */}
         <header className="ds-shell-header__inner landing-page__topbar">
           <div className="landing-page__brand-block">
             <button
@@ -131,69 +157,73 @@ export function LandingPage() {
               onClick={() => navigate('/')}
               type="button"
             >
-              <BrandLockup showTagline size="lg" surface="light" tagline="LIVE MOBILITY NETWORK" />
+              <BrandLockup
+                showTagline
+                size="lg"
+                surface="light"
+                tagline="RIDE AND PACKAGE MARKETPLACE"
+              />
             </button>
             <div className="landing-page__status-pill">
               <span aria-hidden="true" className="landing-page__status-dot" />
-              {ar ? 'ممر الأردن مباشر' : 'Jordan corridor live'}
+              {ar ? 'احجز رحلة أو أرسل طرداً' : 'Book a ride or send a package'}
             </div>
           </div>
 
           <div className="ds-shell-header__actions landing-page__topbar-actions">
             <div className="landing-page__status-copy">
               {ar
-                ? 'نظام مسار واحد للرحلات والطرود والدعم.'
-                : 'One route system for rides, packages, and support.'}
+                ? 'احجز رحلة أو اعرض رحلة أو أرسل طرداً.'
+                : 'Book a ride, offer a ride, or send a package.'}
             </div>
-            {!user && (
+            {!user ? (
               <>
-                <Button
-                  onClick={() =>
-                    navigate(buildAuthPagePath('signin', ENTRY_DEFAULT_AUTH_RETURN_TO))
-                  }
-                >
+                <Button onClick={() => navigate(buildAuthPagePath('signin', ENTRY_DEFAULT_AUTH_RETURN_TO))}>
                   {ar ? 'تسجيل الدخول' : 'Sign in'}
                 </Button>
                 <Button
-                  onClick={() =>
-                    navigate(buildAuthPagePath('signup', ENTRY_DEFAULT_AUTH_RETURN_TO))
-                  }
+                  onClick={() => navigate(buildAuthPagePath('signup', ENTRY_DEFAULT_AUTH_RETURN_TO))}
                   variant="secondary"
                 >
                   {ar ? 'إنشاء حساب' : 'Create account'}
                 </Button>
               </>
-            )}
+            ) : null}
             <SupportActions />
           </div>
         </header>
 
-        {/* ─── Hero ─────────────────────────────────────────────────── */}
         <section className="ds-landing-grid landing-page__hero">
           <Card className="landing-page__hero-copy-card">
             <div className="landing-page__hero-intro">
               <div className="ds-eyebrow landing-page__hero-eyebrow">
                 <Sparkles size={14} />
-                {ar ? 'شبكة التنقل في الأردن' : 'Jordan mobility network'}
+                {ar ? 'سوق الرحلات والطرود' : 'Ride and package marketplace'}
               </div>
               <h1 className="ds-title ds-title--landing landing-page__title">
                 {ar
-                  ? 'ابدأ بممر واضح لكل تحرك في واصل.'
-                  : 'Start with one clear corridor for every Wasel move.'}
+                  ? 'احجز رحلة أو اعرض رحلة أو أرسل طرداً.'
+                  : 'Book a ride, offer a ride, or send a package.'}
               </h1>
               <p className="ds-copy landing-page__hero-copy">
                 {ar
-                  ? 'ابدأ من طبقة المسار المباشر، ثم انتقل إلى الرحلات أو الطرود أو الحافلات دون تغيير لغة الصفحة.'
-                  : 'Start from the live route layer, then move into rides, packages, or buses without changing the page language.'}
+                  ? 'اختر الممر أولاً ثم أكمل طلباً حقيقياً فقط.'
+                  : 'Choose the corridor first, then complete one real action only.'}
               </p>
             </div>
 
             <div className="landing-page__hero-actions">
               <Button onClick={() => navigate(primaryActionPath)}>
-                {ar ? 'خطط هذا الممر' : 'Plan this corridor'}
+                {mode === 'ride'
+                  ? ar
+                    ? 'احجز رحلة'
+                    : 'Book a ride'
+                  : ar
+                    ? 'أرسل طرداً'
+                    : 'Send a package'}
               </Button>
-              <Button onClick={() => navigate(APP_ROUTES.mobilityOs.full)} variant="secondary">
-                {ar ? 'افتح نظام التنقل' : 'Open Mobility OS'}
+              <Button onClick={() => navigate(APP_ROUTES.offerRide.full)} variant="secondary">
+                {ar ? 'اعرض رحلة' : 'Offer a ride'}
               </Button>
             </div>
 
@@ -202,16 +232,16 @@ export function LandingPage() {
             <div className="landing-page__summary-grid">
               {[
                 {
-                  title: ar ? 'الدخول أولاً بالمسار' : 'Route-first entry',
+                  title: ar ? 'اختر الممر أولاً' : 'Choose the corridor first',
                   detail: ar
-                    ? 'خطط الممر مرة واحدة، ثم انتقل من الاكتشاف إلى الإجراء دون فقدان السياق المرئي.'
-                    : 'Plan the corridor once, then move from discovery to action without losing visual context.',
+                    ? 'حدد المسار مرة واحدة ثم افتح الرحلة أو الطرد.'
+                    : 'Pick the corridor once, then move directly into the ride or package flow.',
                 },
                 {
-                  title: ar ? 'سمة تشغيل واحدة' : 'One operating theme',
+                  title: ar ? 'تأكيد من الخلفية' : 'Backend-confirmed only',
                   detail: ar
-                    ? 'استخدم نفس اللوحة وعمق السطح وأسلوب التحكم عبر الرحلات والطرود والدعم.'
-                    : 'Use the same palette, surface depth, and control style across rides, packages, and support.',
+                    ? 'لا يكتمل أي طلب قبل تأكيد الخلفية.'
+                    : 'Nothing looks complete until the backend confirms the action.',
                 },
               ].map(item => (
                 <div className="landing-page__summary-card" key={item.title}>
@@ -222,7 +252,6 @@ export function LandingPage() {
             </div>
           </Card>
 
-          {/* ─── Map planner panel ─────────────────────────────────── */}
           <MapHeroPanel
             className="landing-page__planner-shell"
             mapVariant="ambient"
@@ -230,12 +259,10 @@ export function LandingPage() {
           >
             <div className="ds-hero-panel__intro landing-page__planner-head">
               <div className="ds-panel-kicker">
-                {ar ? 'مخطط المسار المباشر' : 'Live route planner'}
+                {ar ? 'مخطط الممر' : 'Corridor planner'}
               </div>
               <h2 className="ds-section-title landing-page__planner-title">
-                {ar
-                  ? 'اختر ممراً واحداً واجعل كل خطوة تالية مألوفة.'
-                  : 'Choose one corridor and keep every next step familiar.'}
+                {ar ? 'اختر ممراً ثم افتح الرحلة أو الطرد.' : 'Choose a corridor, then book a ride or send a package.'}
               </h2>
             </div>
 
@@ -247,8 +274,8 @@ export function LandingPage() {
                       content: (
                         <p className="landing-page__tab-copy">
                           {ar
-                            ? 'قارن المسار والتوقيت وتوفر المقاعد من مخطط واصل المتسق.'
-                            : 'Compare route, timing, and seat availability from one consistent Wasel planner.'}
+                            ? 'قارن المسار والوقت والمقعد قبل الحجز.'
+                            : 'Compare the route, timing, and seat before you book.'}
                         </p>
                       ),
                       label: ar ? 'رحلات' : 'Rides',
@@ -258,8 +285,8 @@ export function LandingPage() {
                       content: (
                         <p className="landing-page__tab-copy">
                           {ar
-                            ? 'ابدأ من نفس الممر واستمر في تدفق تسليم طرود أخف.'
-                            : 'Start from the same corridor and continue into a lighter package handoff flow.'}
+                            ? 'استخدم نفس الممر لإرسال طرد.'
+                            : 'Use the same corridor to send a package.'}
                         </p>
                       ),
                       label: ar ? 'طرود' : 'Packages',
@@ -313,23 +340,25 @@ export function LandingPage() {
 
               <div className="landing-page__planner-actions">
                 <Button fullWidth onClick={() => navigate(primaryActionPath)}>
-                  {mode === 'ride' ? (ar ? 'ابحث عن رحلة' : 'Find a ride') : (ar ? 'افتح الطرود' : 'Open packages')}
+                  {mode === 'ride'
+                    ? ar
+                      ? 'احجز رحلة'
+                      : 'Book a ride'
+                    : ar
+                      ? 'أرسل طرداً'
+                      : 'Send a package'}
                 </Button>
-                <Button
-                  fullWidth
-                  onClick={() => navigate(APP_ROUTES.offerRide.full)}
-                  variant="secondary"
-                >
-                  {ar ? 'إنشاء رحلة' : 'Create ride'}
+                <Button fullWidth onClick={() => navigate(APP_ROUTES.offerRide.full)} variant="secondary">
+                  {ar ? 'اعرض رحلة' : 'Offer a ride'}
                 </Button>
               </div>
 
-              {!user && (
+              {!user ? (
                 <div className="landing-page__planner-auth">
                   <div className="landing-page__planner-auth-copy">
                     {ar
-                      ? 'استمر بحسابك للاحتفاظ بالدعم وتاريخ المسار وسياق الدفع في مكان واحد.'
-                      : 'Continue with your account to keep support, route history, and payment context in one place.'}
+                      ? 'استمر بحسابك لحفظ الحجوزات والدفع في مكان واحد.'
+                      : 'Continue with your account to keep bookings and payments in one place.'}
                   </div>
                   <div className="ds-social-grid landing-page__social-grid">
                     {authProviders.google.enabled ? (
@@ -347,49 +376,42 @@ export function LandingPage() {
                     </Button>
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
           </MapHeroPanel>
         </section>
 
-        {/* ─── Proof section ────────────────────────────────────────── */}
         <section aria-label="Landing page proof points" className="landing-page__proof">
           <HeroFeatureGrid items={features} />
           <HeroStats items={stats} />
         </section>
 
-        {/* ─── Choose your flow ─────────────────────────────────────── */}
         <SectionWrapper
           className="landing-page__section"
-          description={ar
-            ? 'ثلاث نقاط دخول مباشرة تعيد استخدام نفس لغة الممر والإجراء.'
-            : 'Three direct entry points that reuse the same corridor and action language.'}
-          eyebrow={<><Sparkles size={14} />{ar ? 'اختر تدفقك' : 'Choose your flow'}</>}
-          title={ar ? 'اختر تدفقك' : 'Choose your flow'}
+          description={ar ? 'ثلاثة أفعال مباشرة فقط.' : 'Three direct customer actions only.'}
+          eyebrow={<><Sparkles size={14} />{ar ? 'اختر ما تريد' : 'Choose what to do'}</>}
+          title={ar ? 'اختر ما تريد' : 'Choose what to do'}
         >
           <ActionCards
             items={[
-              { detail: ar ? 'قارن الممر والتوقيت والمقعد.' : 'Compare the corridor, timing, and seat.', icon: <Search size={18} />, path: primaryActionPath, title: ar ? 'ابحث عن رحلة' : 'Find a ride' },
-              { detail: ar ? 'أرفق الطرد بنفس الشبكة.' : 'Attach the parcel to the same network.', icon: <Package size={18} />, path: '/app/packages', title: ar ? 'أرسل طرداً' : 'Send a package' },
-              { detail: ar ? 'حوّل مغادرة فارغة إلى قيمة أكبر.' : 'Turn an empty departure into more value.', icon: <Car size={18} />, path: '/app/create-ride', title: ar ? 'إنشاء رحلة' : 'Create ride' },
-            ]}
-            onNavigate={navigate}
-          />
-        </SectionWrapper>
-
-        {/* ─── Network tools ────────────────────────────────────────── */}
-        <SectionWrapper
-          className="landing-page__section"
-          description={ar
-            ? 'خدمات الحافلات ونظام التنقل تبقى مرئية كأسطح واصل من الدرجة الأولى.'
-            : 'Bus services and Mobility OS stay visible as first-class Wasel surfaces.'}
-          eyebrow={<><Sparkles size={14} />{ar ? 'أدوات الشبكة' : 'Network tools'}</>}
-          title={ar ? 'أدوات الحافلة والممر' : 'Bus and corridor tools'}
-        >
-          <ActionCards
-            items={[
-              { detail: ar ? 'احجز مسارات ممر الأردن الرسمية من سطح مباشر.' : 'Book official Jordan corridor routes from one direct surface.', icon: <Bus size={18} />, path: '/app/bus', title: ar ? 'واصل باص' : 'Wasel Bus' },
-              { detail: ar ? 'افتح خريطة الممر وقم بتبديل التدفقات دون فقدان السياق.' : 'Open the corridor map and switch flows without losing context.', icon: <MapPin size={18} />, path: '/app/mobility-os', title: ar ? 'نظام التنقل' : 'Mobility OS' },
+              {
+                detail: ar ? 'قارن الممر والتوقيت والمقعد.' : 'Compare the corridor, timing, and seat.',
+                icon: <Search size={18} />,
+                path: buildRideSearchPath(route),
+                title: ar ? 'احجز رحلة' : 'Book a ride',
+              },
+              {
+                detail: ar ? 'أرسل طرداً عبر نفس الممر.' : 'Send a package through the same corridor.',
+                icon: <Package size={18} />,
+                path: buildPackagePrefillPath(route),
+                title: ar ? 'أرسل طرداً' : 'Send a package',
+              },
+              {
+                detail: ar ? 'انشر رحلتك وافتح المقاعد.' : 'Post your route and open seats.',
+                icon: <Car size={18} />,
+                path: APP_ROUTES.offerRide.full,
+                title: ar ? 'اعرض رحلة' : 'Offer a ride',
+              },
             ]}
             onNavigate={navigate}
           />
