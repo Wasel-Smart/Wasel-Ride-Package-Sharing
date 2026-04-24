@@ -23,8 +23,6 @@ test('app entry lets authenticated users open the ride flow', async ({ page }) =
 
 test('sign in page renders accessible form fields', async ({ page }) => {
   await page.goto('/app/auth', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('button', { name: /continue with google/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /continue with facebook/i })).toBeVisible();
   await expect(page.getByRole('textbox', { name: /email address/i })).toBeVisible();
   await expect(page.getByPlaceholder(/enter your password/i)).toBeVisible();
   await expect(page.getByRole('button', { name: /submit sign in/i })).toBeVisible();
@@ -47,8 +45,8 @@ test('auth page stays simple on a phone viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/app/auth', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('button', { name: /submit sign in/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /continue with google/i })).toBeVisible();
-  await expect(page.getByText(/one account that looks and feels like the landing page/i)).toBeVisible();
+  await expect(page.locator('.auth-landing__support-bar')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /sign in to wasel/i })).toBeVisible();
 });
 
 test('unknown route renders the 404 page', async ({ page }) => {

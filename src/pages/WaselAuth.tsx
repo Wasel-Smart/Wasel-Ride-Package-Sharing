@@ -457,7 +457,7 @@ export default function WaselAuth() {
       .replace(/\//g, ' ')
       .trim();
 
-    if (!cleaned) return 'find ride';
+    if (!cleaned) return t('authPage.returnLabels.findRide');
 
     const fallbackLabel = cleaned.replace(/\b\w/g, letter => letter.toUpperCase());
     const matchedKey = RETURN_LABEL_KEYS.find(([route]) => route === path)?.[1];
@@ -499,6 +499,7 @@ export default function WaselAuth() {
     tab === 'signup' && phone.trim() ? (validatePhoneNumber(normalizedPhone) ?? '') : '';
   const hasSocialButtons =
     authProviders.google.enabled || authProviders.facebook.enabled || authProviders.whatsapp.enabled;
+  const hasOAuthButtons = authProviders.google.enabled || authProviders.facebook.enabled;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -628,11 +629,15 @@ export default function WaselAuth() {
       normalizedPhone || undefined,
     );
     if (registration.error) {
+      const normalizedFriendly = friendlyAuthError(
+        registration.error,
+        t('authPage.errors.signUpFailed'),
+      );
       const friendly = translateAuthErrorMessage(
         t,
-        friendlyAuthError(registration.error, t('authPage.errors.signUpFailed')),
+        normalizedFriendly,
       );
-      if (friendly.includes('already exists')) {
+      if (normalizedFriendly === 'An account with this email already exists. Sign in instead, or reset your password if you need access.') {
         setTab('signin');
         setNotice(
           interpolate(t('authPage.messages.accountExists'), { email: normalizedEmail }),
@@ -1002,14 +1007,12 @@ export default function WaselAuth() {
                   <div className="auth-landing__social-grid">
                     {socialButtons.map(social => (
                       <motion.button
-                        key={social.label}
+                        key={social.key}
                         type="button"
                         whileHover={{ scale: 1.01, y: -1 }}
                         whileTap={{ scale: 0.98 }}
-                        className={`auth-landing__social-button auth-landing__social-button--${social.label.toLowerCase()}`}
-                        aria-label={
-                          social.label === 'WhatsApp' ? 'WhatsApp' : `Continue with ${social.label}`
-                        }
+                        className={`auth-landing__social-button auth-landing__social-button--${social.key}`}
+                        aria-label={social.key === 'whatsapp' ? t('authPage.social.whatsAppLabel') : social.cta}
                         disabled={isBusy}
                         onClick={() => {
                           void social.onClick();
@@ -1019,27 +1022,29 @@ export default function WaselAuth() {
                         <div className="auth-landing__social-copy">
                           <strong>{social.label}</strong>
                           <span>
-                            {pendingAction === social.label.toLowerCase()
-                              ? 'Opening secure flow...'
-                              : `Continue with ${social.label}`}
+                            {pendingAction === social.key
+                              ? t('authPage.social.openingSecureFlow')
+                              : social.cta}
                           </span>
                         </div>
-                        <ChevronRight size={14} className="auth-landing__social-chevron" />
+                        <ChevronRight
+                          size={14}
+                          className="auth-landing__social-chevron"
+                          style={{ transform: dir === 'rtl' ? 'scaleX(-1)' : undefined }}
+                        />
                       </motion.button>
                     ))}
-                    {tab === 'signin' ? (
+                    {tab === 'signin' && hasOAuthButtons ? (
                       <div className="auth-landing__social-link-hint">
                         <button
                           type="button"
                           className="auth-landing__inline-link"
                           onClick={() => {
-                            setNotice(
-                              'Link your Google or Facebook account in Profile → Settings → Account after signing in.',
-                            );
+                            setNotice(t('authPage.messages.linkSocialAccount'));
                             setTimeout(() => setNotice(''), 5000);
                           }}
                         >
-                          Link social account to existing account
+                          {t('authPage.social.linkAccount')}
                         </button>
                       </div>
                     ) : null}
@@ -1047,36 +1052,34 @@ export default function WaselAuth() {
 
                   <div className="auth-landing__support-bar">
                     <div>
-                      {tab === 'signin'
-                        ? 'One account across Wasel services.'
-                        : 'Name, email, and password are enough to start.'}
+                      {tab === 'signin' ? t('authPage.support.signIn') : t('authPage.support.signUp')}
                     </div>
                     <div className="auth-landing__support-status">
                       <Shield size={12} />
-                      Secure recovery active
+                      {t('authPage.support.status')}
                     </div>
                   </div>
                 </motion.form>
               </AnimatePresence>
 
               <p className="auth-landing__legal">
-                By continuing, you agree to the{' '}
+                {t('authPage.legal.prefix')}{' '}
                 <button
                   type="button"
                   className="auth-landing__legal-link"
                   onClick={() => nav(APP_ROUTES.terms.full)}
                 >
-                  Terms of Service
+                  {t('authPage.legal.terms')}
                 </button>{' '}
-                and{' '}
+                {t('authPage.legal.and')}{' '}
                 <button
                   type="button"
                   className="auth-landing__legal-link"
                   onClick={() => nav(APP_ROUTES.privacy.full)}
                 >
-                  Privacy Policy
+                  {t('authPage.legal.privacy')}
                 </button>
-                .
+                {t('authPage.legal.suffix')}
               </p>
             </div>
           </div>
@@ -1085,3 +1088,4 @@ export default function WaselAuth() {
     </div>
   );
 }
+
