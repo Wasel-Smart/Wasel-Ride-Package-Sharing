@@ -63,6 +63,13 @@ Historical files that predate the current standards remain frozen and explicitly
 | 29 | `20260409153000_runtime_performance_indexes.sql` | performance | Add expression indexes for auth-linked runtime and RLS lookup paths | Ready |
 | 30 | `20260410110000_reassert_auth_signup_user_sync.sql` | security | Reassert canonical auth.users to public.users sync and recover missing phone numbers for signup-triggered users | Ready |
 | 31 | `20260413120000_wallet_fintech_rebuild.sql` | schema | Rebuild the wallet fintech ledger, escrow, payout, subscription, and step-up runtime tables | Ready |
+| 32 | `20260421100000_stripe_subscriptions.sql` | schema | Legacy Stripe subscription mirrors for invoices, webhook events, and subscription lookup helpers | Ready |
+| 33 | `20260422120000_safety_and_user_settings.sql` | runtime-contract | User settings, safety preferences, incident logging, and SOS alert runtime tables | Ready |
+| 34 | `20260424140000_harden_user_owned_rpc_boundaries.sql` | security | Require ownership checks on user-facing RPCs and move direct ride booking fallback onto atomic database functions | Ready |
+| 35 | `20260424153000_database_governance_and_rls_hardening.sql` | security | Tighten legacy KV, wallet, and subscription access controls and align runtime settings tables with audit-safe timestamps | Ready |
+| 36 | `20241201000001_payments_wallet_tables.sql` | schema | Legacy wallet, payment intent, and escrow tables retained for auditability | Applied |
+| 37 | `20241201000002_bus_services_tables.sql` | schema | Legacy bus operations schema retained while canonical runtime contracts evolve | Applied |
+| 38 | `20260324005540_kv_store.sql` | runtime-contract | Production KV store for feature flags and app configuration | Applied |
 
 ## Rollout Sequence
 
@@ -91,6 +98,10 @@ Apply the rollout set in this exact order for production cutover projects:
 19. `20260409153000_runtime_performance_indexes.sql`
 20. `20260410110000_reassert_auth_signup_user_sync.sql`
 21. `20260413120000_wallet_fintech_rebuild.sql`
+22. `20260421100000_stripe_subscriptions.sql`
+23. `20260422120000_safety_and_user_settings.sql`
+24. `20260424140000_harden_user_owned_rpc_boundaries.sql`
+25. `20260424153000_database_governance_and_rls_hardening.sql`
 
 ### Operational seeds
 

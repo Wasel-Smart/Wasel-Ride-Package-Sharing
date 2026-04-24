@@ -219,6 +219,11 @@ export function mapBookingRow(row: RawBooking): RawBooking {
   const seatNumber = toNumber(row.seat_number, 1);
   const amount = toNumber(row.amount ?? row.total_price, 0);
   const pricePerSeat = toNumber(row.price_per_seat, amount);
+  const runtimeStatus =
+    typeof row.status === 'string' && row.status.trim().length > 0
+      ? row.status.trim()
+      : normalizeBookingStatus(row.booking_status);
+
   return {
     ...row,
     id: String(row.booking_id ?? row.id ?? ''),
@@ -228,7 +233,7 @@ export function mapBookingRow(row: RawBooking): RawBooking {
     price_per_seat: pricePerSeat,
     total_price: amount,
     amount,
-    status: normalizeBookingStatus(row.booking_status ?? row.status),
+    status: runtimeStatus,
     booking_status: row.booking_status ?? normalizeBookingStatus(row.status),
   };
 }

@@ -1,12 +1,11 @@
 import { supabase } from '../../utils/supabase/client';
-import { getDb, getWalletByCanonicalUserId, mapCanonicalRole } from './helpers';
+import { getDb, getWalletByCanonicalUserId } from './helpers';
 import type { DriverRow, RawVerificationRecord, UserContext, UserRow } from './types';
 
 type UserSeed = {
   email?: string | null;
   full_name?: string | null;
   phone_number?: string | null;
-  role?: string | null;
 };
 
 export async function resolveCanonicalUser(userKey: string): Promise<UserRow | null> {
@@ -32,7 +31,6 @@ async function resolveAuthSeed(userKey: string, seed?: UserSeed): Promise<UserSe
     email: seed?.email?.trim() || null,
     full_name: seed?.full_name?.trim() || null,
     phone_number: seed?.phone_number?.trim() || null,
-    role: seed?.role ?? null,
   };
 
   if ((!mergedSeed.email || !mergedSeed.full_name || !mergedSeed.phone_number) && supabase) {
@@ -58,10 +56,6 @@ async function resolveAuthSeed(userKey: string, seed?: UserSeed): Promise<UserSe
           authUser.phone ??
           '',
         ).trim() ||
-        null;
-      mergedSeed.role =
-        mergedSeed.role ||
-        String(authUser.user_metadata?.role ?? '').trim() ||
         null;
     }
   }
@@ -98,7 +92,7 @@ export async function ensureCanonicalUser(
       email,
       full_name: fullName,
       phone_number: phoneNumber,
-      role: mapCanonicalRole(resolvedSeed.role) || 'passenger',
+      role: 'passenger',
     })
     .select('*')
     .single();
