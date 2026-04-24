@@ -1,4 +1,3 @@
-import { getStoredBusBookings } from '../../services/bus';
 import { getConnectedPackages } from '../../services/journeyLogistics';
 import { syncRideBookingCompletion } from '../../services/rideLifecycle';
 import { getSupportTickets, hydrateSupportTickets } from '../../services/supportInbox';
@@ -13,7 +12,7 @@ export const tripService = {
     return {
       rides: syncRideBookingCompletion(),
       packages: getConnectedPackages(),
-      buses: getStoredBusBookings(),
+      buses: [],
       supportTickets,
     };
   },

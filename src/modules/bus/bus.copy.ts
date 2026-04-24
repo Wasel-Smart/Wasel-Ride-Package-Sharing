@@ -20,7 +20,7 @@ export const BUS_TEST_IDS = {
 
 export const BUS_PAGE_COPY = {
   bookingConfirmedTitle: 'Seat confirmed',
-  heroDetail: 'Official intercity schedules stay visible, with live inventory when available.',
+  heroDetail: 'Bus service is only shown when live inventory is available.',
   loadingRoutes: 'Syncing live bus routes...',
   officialScheduleLink: (verifiedAt: string) => `Official schedule, verified ${verifiedAt}`,
 } as const;
@@ -50,7 +50,7 @@ export function buildBusRouteInfo(kind: BusRouteInfoKind, verifiedAt?: string): 
     case 'unavailable':
       return {
         kind,
-        message: `Live route API is unavailable. Showing official Jordan schedule data verified on ${verifiedAt ?? 'the selected date'}.`,
+        message: 'Bus service is unavailable right now.',
       };
     default:
       return {
