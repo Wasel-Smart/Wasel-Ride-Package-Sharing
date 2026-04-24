@@ -6,7 +6,7 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'border border-[var(--wasel-button-primary-border)] bg-[var(--theme-gradient-primary)] text-[var(--wasel-button-primary-foreground)] shadow-[var(--wasel-button-primary-shadow)] hover:-translate-y-0.5 hover:brightness-[1.03] hover:shadow-[var(--wasel-button-primary-shadow-hover)]',
+          'border border-[var(--wasel-button-primary-border)] [background:var(--theme-gradient-primary)] text-[var(--wasel-button-primary-foreground)] shadow-[var(--wasel-button-primary-shadow)] hover:-translate-y-0.5 hover:brightness-[1.03] hover:shadow-[var(--wasel-button-primary-shadow-hover)]',
         destructive:
           'bg-destructive text-white shadow-[0_18px_36px_rgba(255,100,106,0.22)] hover:brightness-110 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
         outline:

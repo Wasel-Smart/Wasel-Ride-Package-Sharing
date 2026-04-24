@@ -40,10 +40,10 @@ test('offer ride posts a connected trip', async ({ page }) => {
   await page.goto('/app/offer-ride');
   await expect(page.getByRole('heading', { name: /create ride|offer route/i })).toBeVisible();
   await page.locator('input[type="date"]').fill('2026-05-01');
-  await page.getByTestId('offer-ride-step-1').click();
+  await page.getByTestId('offer-ride-step-1').click({ noWaitAfter: true });
   await page.getByPlaceholder(/toyota camry 2023/i).fill('Toyota Camry 2024');
-  await page.getByTestId('offer-ride-step-2').click();
-  await page.getByTestId('offer-ride-submit').click();
+  await page.getByTestId('offer-ride-step-2').click({ noWaitAfter: true });
+  await page.getByTestId('offer-ride-submit').click({ noWaitAfter: true });
   await expect(page.getByRole('heading', { name: /route is live/i })).toBeVisible();
 });
 

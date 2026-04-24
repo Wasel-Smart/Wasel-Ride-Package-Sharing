@@ -10,6 +10,7 @@ const mockSignInWithGoogle = vi.fn();
 const mockSignInWithFacebook = vi.fn();
 const mockToastSuccess = vi.fn();
 const mockOpen = vi.fn();
+const mockSetSearchParams = vi.fn();
 let mockSearch = '?tab=signup&returnTo=%2Fapp%2Ffind-ride';
 let mockSupportWhatsAppNumber = '962790000000';
 let mockWhatsAppUrl = 'https://wa.me/962790000000?text=Hi%20Wasel';
@@ -42,7 +43,7 @@ vi.mock('react-router', async () => {
   const actual = await vi.importActual<typeof import('react-router')>('react-router');
   return {
     ...actual,
-    useSearchParams: () => [new URLSearchParams(mockSearch)],
+    useSearchParams: () => [new URLSearchParams(mockSearch), mockSetSearchParams],
   };
 });
 
@@ -160,6 +161,7 @@ describe('WaselAuth', () => {
     mockSignInWithGoogle.mockResolvedValue({ error: null });
     mockSignInWithFacebook.mockResolvedValue({ error: null });
     mockToastSuccess.mockReset();
+    mockSetSearchParams.mockReset();
     mockOpen.mockReset();
     vi.stubGlobal('open', mockOpen);
   });
