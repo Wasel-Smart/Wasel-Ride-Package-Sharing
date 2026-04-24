@@ -42,6 +42,7 @@ import {
 } from '../contracts/wallet';
 import { parseContract } from '../contracts/validation';
 import { getConfig } from '../utils/env';
+import { logger } from '../utils/logging';
 import { apiGateway } from './apiGateway';
 import {
   makeReliabilityMeta,
@@ -127,11 +128,6 @@ interface ProcessWalletTransactionInput {
 }
 
 // ─── Fallback eligibility ─────────────────────────────────────────────────────
-
-function allowSnapshotFallback(): boolean {
-  const { allowLocalPersistenceFallback, enableDemoAccount, enablePersistedTestAuth } = getConfig();
-  return allowLocalPersistenceFallback || enableDemoAccount || enablePersistedTestAuth;
-}
 
 function allowPaymentIntentFallback(): boolean {
   return getConfig().enableFakePayments;
@@ -446,10 +442,9 @@ export const walletApi = {
     return withCache(walletReadCache, uid, 15_000, async () => {
       try {
         return await fetchFreshSnapshot(uid);
-      } catch {
-        const persisted = allowSnapshotFallback() ? readPersistedWalletSnapshot(uid) : null;
-        if (persisted) return { data: persisted.data, meta: makeReliabilityMeta(true) };
-        throw new Error('Wallet is unavailable and no cached snapshot exists.');
+      } catch (error) {
+        logger.error('[walletApi] wallet snapshot fetch failed', error, { userId: uid });
+        throw new Error('Wallet data is unavailable right now. Please try again.');
       }
     });
   },
@@ -484,34 +479,14 @@ export const walletApi = {
   },
 
   async processTransaction(input: ProcessWalletTransactionInput): Promise<WalletTransaction> {
-    const uid = await resolveUserId();
-    const wallet = await walletApi.getWallet(uid);
-    const signedAmount = input.type === 'credit' ? Math.abs(input.amount) : -Math.abs(input.amount);
-
-    const transaction: WalletTransaction = {
-      id: input.referenceId ?? `wallet-tx-${Date.now()}`,
-      amount: signedAmount,
-      createdAt: new Date().toISOString(),
+    logger.error('[walletApi] client-side wallet mutation blocked', {
+      amount: input.amount,
       description: input.description,
-      metadata: { referenceId: input.referenceId ?? null, referenceType: input.referenceType ?? null },
-      status: 'completed',
-      type: input.type === 'credit' ? 'deposit' : 'payment',
-    };
-
-    const snapshot = walletApi.getPersistedWalletSnapshot(uid);
-    if (snapshot) {
-      const nextBalance = Number((wallet.balance + signedAmount).toFixed(2));
-      persistWalletSnapshot(uid, {
-        ...snapshot,
-        data: {
-          ...snapshot.data,
-          balance: nextBalance,
-          transactions: [transaction, ...snapshot.data.transactions],
-        },
-      });
-    }
-
-    return transaction;
+      referenceId: input.referenceId ?? null,
+      referenceType: input.referenceType ?? null,
+      type: input.type,
+    });
+    throw new Error('Wallet transactions must be created by the backend.');
   },
 
   // ── Payment intents ──────────────────────────────────────────────────────────

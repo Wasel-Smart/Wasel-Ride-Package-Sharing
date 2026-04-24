@@ -22,14 +22,19 @@ import {
 } from './paymentsService';
 import { walletApi } from '../../services/walletApi';
 import { hasStripeClientPaymentsEnabled } from './stripeClient';
-import { PAYMENT_FLOW_PURPOSES, type PaymentIntentSession, type PaymentRequestDraft, type PaymentsDashboardData } from './paymentsTypes';
+import {
+  type PaymentIntentSession,
+  type PaymentRequestDraft,
+  type PaymentsDashboardData,
+} from './paymentsTypes';
 import type { PaymentTransaction } from '../../../shared/domain-contracts';
 import type { WalletPaymentMethodType } from '../../../shared/wallet-contracts';
 
-const PURPOSE_LABELS: Record<(typeof PAYMENT_FLOW_PURPOSES)[number], string> = {
+const CORE_PAYMENT_PURPOSES = ['ride_payment', 'package_payment', 'deposit'] as const;
+
+const PURPOSE_LABELS: Record<(typeof CORE_PAYMENT_PURPOSES)[number], string> = {
   ride_payment: 'Ride payment',
   package_payment: 'Package payment',
-  subscription: 'Subscription charge',
   deposit: 'Wallet top-up',
 };
 
@@ -236,10 +241,10 @@ function PaymentsPageContent() {
         if (result.settled || FINAL_PAYMENT_STATUSES.has(String(result.status))) {
           setPaymentAttemptKey(null);
         }
-        setNotice(result.settled
+      setNotice(result.settled
           ? {
             tone: 'success',
-            message: 'Payment settled successfully and the wallet dashboard is now updated.',
+            message: 'The backend confirmed this payment and refreshed the wallet dashboard.',
           }
           : {
             tone: 'warning',
@@ -323,11 +328,11 @@ function PaymentsPageContent() {
       } else {
         setNotice({
           tone: 'success',
-          message: 'Payment intent created successfully. Proceed with confirmation.',
+          message: 'Payment started. It is not complete until the backend confirms settlement.',
         });
       }
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : 'Payment initiation failed.');
+      setError(nextError instanceof Error ? nextError.message : 'Payment could not be started. Nothing was charged.');
     } finally {
       setSubmitting(false);
     }
@@ -355,7 +360,7 @@ function PaymentsPageContent() {
         setPaymentAttemptKey(null);
         setNotice({
           tone: 'success',
-          message: 'Payment settled successfully and the server-side wallet ledger is now updated.',
+          message: 'The backend confirmed this payment and refreshed the wallet ledger.',
         });
       } else if (intent.provider === 'stripe') {
         const settled = await paymentsService.awaitPaymentSettlement(intent.id);
@@ -367,7 +372,7 @@ function PaymentsPageContent() {
         setNotice(settled.settled
           ? {
             tone: 'success',
-            message: 'Stripe accepted the payment and Wasel has settled it.',
+            message: 'Stripe returned a settled payment and the backend confirmed it.',
           }
           : {
             tone: 'warning',
@@ -387,7 +392,7 @@ function PaymentsPageContent() {
         await refreshDashboard(user.id);
       }
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : 'Payment confirmation failed.');
+      setError(nextError instanceof Error ? nextError.message : 'Payment confirmation failed. Nothing was completed.');
       setConfirmationState('idle');
     }
   }
@@ -422,7 +427,7 @@ function PaymentsPageContent() {
       if (settled.settled) {
         setNotice({
           tone: 'success',
-          message: 'Stripe payment settled successfully and Wasel refreshed your server-side wallet state.',
+          message: 'Stripe returned a settled payment and the backend refreshed your wallet state.',
         });
       } else {
         setNotice({
@@ -435,6 +440,23 @@ function PaymentsPageContent() {
     } catch (nextError) {
       setConfirmationState('idle');
       setError(nextError instanceof Error ? nextError.message : 'Stripe payment status could not be reconciled.');
+    }
+  }
+
+  async function handleRetryDashboard() {
+    if (!user?.id) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await refreshDashboard(user.id);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Payments could not be loaded.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -463,11 +485,10 @@ function PaymentsPageContent() {
                 </Badge>
                 <CardTitle className="flex items-center gap-3 text-2xl text-foreground">
                   <ArrowRightLeft className="h-6 w-6 text-primary" />
-                  Move value with explicit payment flows
+                  Pay for a ride or package
                 </CardTitle>
                 <CardDescription className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                  Wallet keeps your balance. Payments handles charging, collecting, and confirming movement of value
-                  across rides, packages, subscriptions, and wallet top-ups.
+                  This page only starts and confirms real backend payment intents for rides, packages, and wallet top-ups.
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3 pb-6 md:grid-cols-3">
@@ -506,10 +527,9 @@ function PaymentsPageContent() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-foreground">Movement boundary</CardTitle>
+                <CardTitle className="text-lg text-foreground">Payments only</CardTitle>
                 <CardDescription className="text-sm leading-6 text-muted-foreground">
-                  This page only initiates and confirms payments. Stored value, PIN controls, and long-term balance
-                  settings remain on Wallet.
+                  Use this page to start a real payment, wait for backend confirmation, and retry if it fails.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-muted-foreground">
@@ -517,14 +537,14 @@ function PaymentsPageContent() {
                   <Wallet className="mt-0.5 h-4 w-4 text-primary" />
                   <div>
                     <p className="font-semibold text-foreground">Wallet</p>
-                    <p>Balance, rewards, payout controls, stored methods, and escrow posture.</p>
+                    <p>Balance, payout controls, stored methods, and wallet security.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
                   <ArrowRightLeft className="mt-0.5 h-4 w-4 text-primary" />
                   <div>
                     <p className="font-semibold text-foreground">Payments</p>
-                    <p>Amount, funding source, payment intent state, and confirmation lifecycle.</p>
+                    <p>Amount, funding source, payment intent state, and backend confirmation.</p>
                   </div>
                 </div>
                 <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 text-xs text-primary">
@@ -535,10 +555,34 @@ function PaymentsPageContent() {
             </Card>
           </section>
 
+          {error && !dashboard ? (
+            <div
+              className="flex flex-col gap-3 rounded-3xl border border-destructive/25 bg-destructive/10 p-4 text-sm text-destructive md:flex-row md:items-center md:justify-between"
+              role="alert"
+            >
+              <div className="flex items-start gap-3">
+                <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                <div className="space-y-1">
+                  <p className="font-semibold text-foreground">Payments unavailable</p>
+                  <p>{error}</p>
+                </div>
+              </div>
+              <Button
+                className="w-full md:w-auto"
+                variant="secondary"
+                onClick={() => {
+                  void handleRetryDashboard();
+                }}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : null}
+
           <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-foreground">Initiate payment</CardTitle>
+                <CardTitle className="text-lg text-foreground">Start payment</CardTitle>
                 <CardDescription>
                   Select a payment flow and create a backend-managed payment intent.
                 </CardDescription>
@@ -550,16 +594,16 @@ function PaymentsPageContent() {
                     className="h-11 w-full rounded-xl border border-border bg-background px-3 text-foreground"
                     value={form.purpose}
                     onChange={(event) => {
-                      const purpose = event.target.value as PaymentRequestDraft['purpose'];
+                      const purpose = event.target.value as (typeof CORE_PAYMENT_PURPOSES)[number];
                       setForm((current) => ({
                         ...current,
                         purpose,
-                        referenceType: purpose === 'deposit' ? 'wallet' : purpose === 'subscription' ? 'plan' : 'trip',
+                        referenceType: purpose === 'deposit' ? 'wallet' : 'trip',
                         description: `${PURPOSE_LABELS[purpose]} from Payments`,
                       }));
                     }}
                   >
-                    {PAYMENT_FLOW_PURPOSES.map((purpose) => (
+                    {CORE_PAYMENT_PURPOSES.map((purpose) => (
                       <option key={purpose} value={purpose}>
                         {PURPOSE_LABELS[purpose]}
                       </option>
@@ -629,10 +673,10 @@ function PaymentsPageContent() {
                   onClick={handleInitiatePayment}
                 >
                   {submitting ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Create payment intent
+                  Start payment
                 </Button>
 
-                {error ? (
+                {error && dashboard ? (
                   <div className="flex items-start gap-2 rounded-2xl border border-destructive/25 bg-destructive/10 p-3 text-sm text-destructive">
                     <CircleAlert className="mt-0.5 h-4 w-4" />
                     <span>{error}</span>
@@ -645,7 +689,7 @@ function PaymentsPageContent() {
               <CardHeader>
                 <CardTitle className="text-lg text-foreground">Payment lifecycle</CardTitle>
                 <CardDescription>
-                  Every movement starts as an intent, then moves through confirmation and settlement.
+                  Every payment stays pending until the backend confirms settlement.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -721,7 +765,7 @@ function PaymentsPageContent() {
                       {confirmationState === 'confirmed' ? (
                         <div className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-3 py-2 text-sm text-primary">
                           <CheckCircle2 className="h-4 w-4" />
-                          Payment settled
+                          Backend confirmed
                         </div>
                       ) : null}
                     </div>

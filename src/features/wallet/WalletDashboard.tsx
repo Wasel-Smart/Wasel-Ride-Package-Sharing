@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import {
-  ArrowRightLeft,
+  CircleAlert,
   CreditCard,
   LoaderCircle,
   RefreshCw,
@@ -17,7 +16,6 @@ import {
   CardTitle,
 } from '../../components/ui/card';
 import { OperationalConfidencePanel } from '../../components/trust/OperationalConfidencePanel';
-import { Input } from '../../components/ui/input';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { getWalletConfidenceSummary } from '../../domains/trust/operationalConfidence';
@@ -29,7 +27,7 @@ import {
   Protected,
   SectionHead,
 } from '../shared/pageShared';
-import { useWallet, type WalletSendDraft } from './useWallet';
+import { useWallet } from './useWallet';
 
 function formatCurrency(value: number, currency = 'JOD', locale = 'en-JO') {
   return new Intl.NumberFormat(locale, {
@@ -44,18 +42,18 @@ const WALLET_COPY = {
     loading: 'Loading...',
     header: {
       title: 'Wallet',
-      subtitle: 'Stored value, balance posture, and direct transfers in one surface.',
+      subtitle: 'Check live balance and add money for rides or packages.',
       refresh: 'Refresh wallet',
     },
     banner: {
-      title: 'Stored value stays visible.',
+      title: 'Wallet stays limited.',
       detail:
-        'Balance, payouts, and person-to-person transfers stay close to trust, funding sources, and recent wallet movement.',
+        'Use this page to see live balance, recent activity, and the next payment step for rides or packages.',
     },
     clarity: {
-      title: 'See the live wallet picture before you move money.',
+      title: 'See the live wallet state before you pay.',
       detail:
-        'Balance, pending value, and rewards stay visible together so the next action is obvious.',
+        'Balance, pending value, and payment methods come from the backend before you continue.',
     },
     metrics: {
       balance: 'Available balance',
@@ -65,7 +63,7 @@ const WALLET_COPY = {
     liveBadge: 'Live wallet',
     loadingWallet: 'Loading wallet...',
     liveDescription:
-      'Current balance, pending funds, and payment method posture update from the live wallet service.',
+      'Balance, pending funds, and saved payment methods come from the live wallet service.',
     pendingBalance: 'Pending balance',
     paymentMethods: 'Payment methods',
     noDefaultMethod: 'No default method',
@@ -80,26 +78,10 @@ const WALLET_COPY = {
     actions: {
       title: 'Wallet actions',
       description:
-        'Top up, withdraw, or refresh your wallet state without leaving the stored-value surface.',
+        'Add money, open payments, or refresh the live wallet state.',
       addMoney: 'Add money',
-      withdraw: 'Withdraw',
+      withdraw: 'Open payments',
       refresh: 'Refresh wallet',
-    },
-    transfer: {
-      title: 'Send money',
-      description: 'Move value directly to another Wasel account with PIN and OTP protection.',
-      recipient: 'Recipient user ID',
-      recipientPlaceholder: 'user_123 or wallet handle',
-      amount: 'Amount',
-      amountPlaceholder: '25.00',
-      note: 'Note',
-      notePlaceholder: 'Add a short note',
-      pin: 'Wallet PIN',
-      pinPlaceholder: 'Enter your PIN',
-      otp: 'One-time code',
-      otpPlaceholder: 'Enter the verification code',
-      verifyAction: 'Verify and send',
-      submit: 'Send',
     },
     history: {
       title: 'Recent activity',
@@ -214,23 +196,11 @@ export function WalletDashboard() {
     loadingMore,
     meta,
     refresh,
-    sendMoney,
-    setError,
-    submittingTransfer,
     totalTransactions,
     transactions,
-    transferChallenge,
-    transferMessage,
     wallet,
     loadMoreTransactions,
   } = useWallet(user?.id ?? null);
-  const [sendDraft, setSendDraft] = useState<WalletSendDraft>({
-    recipientUserId: '',
-    amount: '',
-    note: '',
-    pin: '',
-    otpCode: '',
-  });
 
   const paymentMethods = wallet?.wallet.paymentMethods ?? [];
   const defaultPaymentMethod = paymentMethods.find(method => method.isDefault) ?? null;
@@ -238,29 +208,11 @@ export function WalletDashboard() {
   const walletConfidence = getWalletConfidenceSummary({
     wallet,
     meta,
-    transferChallenge,
+    transferChallenge: null,
     totalTransactions,
     defaultPaymentMethodLabel: defaultPaymentMethod?.label ?? null,
     formatMoney: (value, currency) => formatCurrency(value, currency, locale),
   });
-
-  async function handleSendMoney() {
-    setError(null);
-    try {
-      const result = await sendMoney(sendDraft);
-      if (result?.status === 'success') {
-        setSendDraft({
-          recipientUserId: '',
-          amount: '',
-          note: '',
-          pin: '',
-          otpCode: '',
-        });
-      }
-    } catch {
-      // Errors are normalized and surfaced by the wallet hook.
-    }
-  }
 
   return (
     <PageShell>
@@ -310,6 +262,19 @@ export function WalletDashboard() {
               },
             ]}
           />
+
+          {error && !wallet ? (
+            <div
+              className="flex items-start gap-3 rounded-3xl border border-destructive/25 bg-destructive/10 p-4 text-sm text-destructive"
+              role="alert"
+            >
+              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="space-y-1">
+                <p className="font-semibold text-foreground">Wallet service unavailable</p>
+                <p>{error}</p>
+              </div>
+            </div>
+          ) : null}
 
           <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <Card className="border-primary/15 bg-[linear-gradient(140deg,rgba(3,13,28,0.96),rgba(8,34,60,0.92))]">
@@ -388,7 +353,7 @@ export function WalletDashboard() {
                   <Button
                     className="w-full"
                     variant="secondary"
-                    onClick={() => navigate('/app/settings')}
+                    onClick={() => navigate('/app/payments')}
                   >
                     {copy.actions.withdraw}
                   </Button>
@@ -411,112 +376,7 @@ export function WalletDashboard() {
             </div>
           </section>
 
-          <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg text-foreground">{copy.transfer.title}</CardTitle>
-                <CardDescription>{copy.transfer.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <label className="block space-y-2 text-sm">
-                  <span className="font-medium text-foreground">{copy.transfer.recipient}</span>
-                  <Input
-                    value={sendDraft.recipientUserId}
-                    onChange={event =>
-                      setSendDraft(current => ({ ...current, recipientUserId: event.target.value }))
-                    }
-                    placeholder={copy.transfer.recipientPlaceholder}
-                  />
-                </label>
-
-                <label className="block space-y-2 text-sm">
-                  <span className="font-medium text-foreground">{copy.transfer.amount}</span>
-                  <Input
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={sendDraft.amount}
-                    onChange={event =>
-                      setSendDraft(current => ({ ...current, amount: event.target.value }))
-                    }
-                    placeholder={copy.transfer.amountPlaceholder}
-                  />
-                </label>
-
-                <label className="block space-y-2 text-sm">
-                  <span className="font-medium text-foreground">{copy.transfer.note}</span>
-                  <Input
-                    value={sendDraft.note}
-                    onChange={event =>
-                      setSendDraft(current => ({ ...current, note: event.target.value }))
-                    }
-                    placeholder={copy.transfer.notePlaceholder}
-                  />
-                </label>
-
-                <label className="block space-y-2 text-sm">
-                  <span className="font-medium text-foreground">{copy.transfer.pin}</span>
-                  <Input
-                    type="password"
-                    value={sendDraft.pin}
-                    onChange={event =>
-                      setSendDraft(current => ({ ...current, pin: event.target.value }))
-                    }
-                    placeholder={copy.transfer.pinPlaceholder}
-                  />
-                </label>
-
-                {transferChallenge ? (
-                  <label className="block space-y-2 text-sm">
-                    <span className="font-medium text-foreground">{copy.transfer.otp}</span>
-                    <Input
-                      value={sendDraft.otpCode}
-                      onChange={event =>
-                        setSendDraft(current => ({ ...current, otpCode: event.target.value }))
-                      }
-                      placeholder={copy.transfer.otpPlaceholder}
-                    />
-                  </label>
-                ) : null}
-
-                {transferMessage ? (
-                  <div
-                    aria-live="polite"
-                    className="rounded-2xl border border-primary/20 bg-primary/10 p-3 text-sm text-primary"
-                    role="status"
-                  >
-                    {transferMessage}
-                  </div>
-                ) : null}
-
-                {error ? (
-                  <div
-                    className="rounded-2xl border border-destructive/25 bg-destructive/10 p-3 text-sm text-destructive"
-                    role="alert"
-                  >
-                    {error}
-                  </div>
-                ) : null}
-
-                <Button
-                  className="w-full"
-                  disabled={submittingTransfer || loading || !wallet}
-                  onClick={() => {
-                    void handleSendMoney();
-                  }}
-                >
-                  {submittingTransfer ? (
-                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <ArrowRightLeft className="mr-2 h-4 w-4" />
-                  )}
-                  {transferChallenge
-                    ? copy.transfer.verifyAction
-                    : copy.transfer.submit}
-                </Button>
-              </CardContent>
-            </Card>
-
+          <section>
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg text-foreground">{copy.history.title}</CardTitle>
@@ -535,6 +395,15 @@ export function WalletDashboard() {
                   >
                     <LoaderCircle className="h-4 w-4 animate-spin" />
                     {copy.history.loading}
+                  </div>
+                ) : null}
+
+                {error && wallet ? (
+                  <div
+                    className="rounded-2xl border border-destructive/25 bg-destructive/10 p-3 text-sm text-destructive"
+                    role="alert"
+                  >
+                    {error}
                   </div>
                 ) : null}
 
