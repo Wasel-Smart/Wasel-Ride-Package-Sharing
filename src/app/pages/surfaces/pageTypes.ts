@@ -38,7 +38,7 @@ export type HeroFeatureItem = {
 export const CITY_OPTIONS = ENTRY_CITY_OPTIONS.map((option) => ({
   label: option.en,
   value: option.value,
-})) as const;
+}));
 
 export const RIDE_TYPE_OPTIONS = [
   { label: 'Any ride', value: 'any' },

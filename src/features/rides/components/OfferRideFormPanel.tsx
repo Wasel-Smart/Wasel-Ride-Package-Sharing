@@ -268,6 +268,7 @@ export function OfferRideFormPanel({
           </div>
           <button
             data-testid="offer-ride-step-1"
+            type="button"
             onClick={() => onStepChange(2)}
             style={{
               gridColumn: '1/-1',
@@ -326,7 +327,7 @@ export function OfferRideFormPanel({
             <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Car Model</label>
             <input placeholder="e.g. Toyota Camry 2023" value={form.carModel} onChange={(event) => onUpdate('carModel', event.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: r(14), border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontFamily: DS.F, fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }} />
           </div>
-          <button onClick={() => onUpdate('acceptsPackages', !form.acceptsPackages)} style={{ padding: '16px 20px', borderRadius: r(14), border: `1px solid ${form.acceptsPackages ? '#10b981' : 'rgba(255,255,255,0.1)'}`, background: form.acceptsPackages ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.05)', color: form.acceptsPackages ? '#10b981' : 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', textAlign: 'left', fontSize: '0.95rem' }}>
+          <button type="button" onClick={() => onUpdate('acceptsPackages', !form.acceptsPackages)} style={{ padding: '16px 20px', borderRadius: r(14), border: `1px solid ${form.acceptsPackages ? '#10b981' : 'rgba(255,255,255,0.1)'}`, background: form.acceptsPackages ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.05)', color: form.acceptsPackages ? '#10b981' : 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', textAlign: 'left', fontSize: '0.95rem' }}>
             Package holding: {form.acceptsPackages ? 'Holding packages on this ride' : 'Passengers only'}
           </button>
           {form.acceptsPackages && (
@@ -342,8 +343,8 @@ export function OfferRideFormPanel({
             </div>
           )}
           <div style={{ display: 'flex', gap: 12 }}>
-            <button onClick={() => onStepChange(1)} style={{ flex: 1, height: 56, borderRadius: r(16), border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}>Back</button>
-            <button data-testid="offer-ride-step-2" onClick={() => onStepChange(3)} style={{ flex: 2, height: 56, borderRadius: r(16), border: 'none', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: '#fff', fontWeight: 800, fontFamily: DS.F, cursor: 'pointer', boxShadow: '0 8px 25px -5px rgba(6,182,212,0.4)', fontSize: '1rem' }}>Continue</button>
+            <button type="button" onClick={() => onStepChange(1)} style={{ flex: 1, height: 56, borderRadius: r(16), border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}>Back</button>
+            <button type="button" data-testid="offer-ride-step-2" onClick={() => onStepChange(3)} style={{ flex: 2, height: 56, borderRadius: r(16), border: 'none', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: '#fff', fontWeight: 800, fontFamily: DS.F, cursor: 'pointer', boxShadow: '0 8px 25px -5px rgba(6,182,212,0.4)', fontSize: '1rem' }}>Continue</button>
           </div>
         </div>
       )}
@@ -355,13 +356,13 @@ export function OfferRideFormPanel({
             <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Gender Preference</label>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {Object.entries(genderMeta).map(([key, value]) => (
-                <button key={key} onClick={() => onUpdate('gender', key)} style={{ padding: '12px 20px', borderRadius: 99, border: `1px solid ${form.gender === key ? value.color : 'rgba(255,255,255,0.1)'}`, background: form.gender === key ? `${value.color}15` : 'rgba(255,255,255,0.05)', color: form.gender === key ? value.color : 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', transition: 'all 0.2s ease' }}>
+                <button type="button" key={key} onClick={() => onUpdate('gender', key)} style={{ padding: '12px 20px', borderRadius: 99, border: `1px solid ${form.gender === key ? value.color : 'rgba(255,255,255,0.1)'}`, background: form.gender === key ? `${value.color}15` : 'rgba(255,255,255,0.05)', color: form.gender === key ? value.color : 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', transition: 'all 0.2s ease' }}>
                   {value.label}
                 </button>
               ))}
             </div>
           </div>
-          <button onClick={() => onUpdate('prayer', !form.prayer)} style={{ padding: '16px 20px', borderRadius: r(14), border: `1px solid ${form.prayer ? '#f59e0b' : 'rgba(255,255,255,0.1)'}`, background: form.prayer ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.05)', color: form.prayer ? '#f59e0b' : 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', textAlign: 'left', fontSize: '0.95rem' }}>
+          <button type="button" onClick={() => onUpdate('prayer', !form.prayer)} style={{ padding: '16px 20px', borderRadius: r(14), border: `1px solid ${form.prayer ? '#f59e0b' : 'rgba(255,255,255,0.1)'}`, background: form.prayer ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.05)', color: form.prayer ? '#f59e0b' : 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', textAlign: 'left', fontSize: '0.95rem' }}>
             Prayer stops: {form.prayer ? 'Enabled' : 'Optional'}
           </button>
           {form.acceptsPackages && (
@@ -400,8 +401,8 @@ export function OfferRideFormPanel({
             </div>
           </div>
           <div style={{ display: 'flex', gap: 12 }}>
-            <button onClick={() => onStepChange(2)} style={{ flex: 1, height: 56, borderRadius: r(16), border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}>Back</button>
-            <button data-testid="offer-ride-submit" disabled={busyState === 'posting'} onClick={onSubmit} style={{ flex: 2, height: 56, borderRadius: r(16), border: 'none', background: busyState === 'posting' ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: busyState === 'posting' ? 'rgba(255,255,255,0.5)' : '#fff', fontWeight: 800, fontFamily: DS.F, cursor: busyState === 'posting' ? 'wait' : 'pointer', opacity: busyState === 'posting' ? 0.75 : 1, boxShadow: busyState === 'posting' ? 'none' : '0 8px 25px -5px rgba(16,185,129,0.4)', fontSize: '1rem' }}>
+            <button type="button" onClick={() => onStepChange(2)} style={{ flex: 1, height: 56, borderRadius: r(16), border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}>Back</button>
+            <button type="button" data-testid="offer-ride-submit" disabled={busyState === 'posting'} onClick={onSubmit} style={{ flex: 2, height: 56, borderRadius: r(16), border: 'none', background: busyState === 'posting' ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: busyState === 'posting' ? 'rgba(255,255,255,0.5)' : '#fff', fontWeight: 800, fontFamily: DS.F, cursor: busyState === 'posting' ? 'wait' : 'pointer', opacity: busyState === 'posting' ? 0.75 : 1, boxShadow: busyState === 'posting' ? 'none' : '0 8px 25px -5px rgba(16,185,129,0.4)', fontSize: '1rem' }}>
               {busyState === 'posting' ? 'Posting connected ride...' : 'Post Connected Ride'}
             </button>
           </div>
