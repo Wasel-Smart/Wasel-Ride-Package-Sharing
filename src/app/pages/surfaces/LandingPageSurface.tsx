@@ -30,6 +30,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useLocalAuth } from '../../../contexts/LocalAuth';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../../hooks/useIframeSafeNavigate';
+import { useAuthProviderAvailability } from '../../../hooks/useAuthProviderAvailability';
 import { APP_ROUTES } from '../../../router/paths';
 import {
   ENTRY_CITY_OPTIONS,
@@ -55,6 +56,7 @@ import '../LandingPage.css';
 export function LandingPage() {
   const { signInWithFacebook, signInWithGoogle } = useAuth();
   const { user } = useLocalAuth();
+  const authProviders = useAuthProviderAvailability();
   const { language } = useLanguage();
   const navigate = useIframeSafeNavigate();
   const ar = language === 'ar';
@@ -330,12 +332,16 @@ export function LandingPage() {
                       : 'Continue with your account to keep support, route history, and payment context in one place.'}
                   </div>
                   <div className="ds-social-grid landing-page__social-grid">
-                    <Button fullWidth onClick={() => void signInWithGoogle(LANDING_RETURN_TO)} variant="secondary">
-                      {ar ? 'المتابعة مع Google' : 'Continue with Google'}
-                    </Button>
-                    <Button fullWidth onClick={() => void signInWithFacebook(LANDING_RETURN_TO)} variant="secondary">
-                      {ar ? 'المتابعة مع Facebook' : 'Continue with Facebook'}
-                    </Button>
+                    {authProviders.google.enabled ? (
+                      <Button fullWidth onClick={() => void signInWithGoogle(LANDING_RETURN_TO)} variant="secondary">
+                        {ar ? 'المتابعة مع Google' : 'Continue with Google'}
+                      </Button>
+                    ) : null}
+                    {authProviders.facebook.enabled ? (
+                      <Button fullWidth onClick={() => void signInWithFacebook(LANDING_RETURN_TO)} variant="secondary">
+                        {ar ? 'المتابعة مع Facebook' : 'Continue with Facebook'}
+                      </Button>
+                    ) : null}
                     <Button fullWidth onClick={() => navigate(emailPath)} variant="ghost">
                       {ar ? 'المتابعة بالبريد الإلكتروني' : 'Continue with email'}
                     </Button>

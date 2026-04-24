@@ -22,6 +22,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { getWaselPresenceProfile } from '../../domains/trust/waselPresence';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { useAuthProviderAvailability } from '../../hooks/useAuthProviderAvailability';
 import { APP_ROUTES } from '../../router/paths';
 import { trackGrowthEvent } from '../../services/growthEngine';
 import { friendlyAuthError } from '../../utils/authHelpers';
@@ -221,6 +222,7 @@ function trackLandingNavigation(path: string, language: 'en' | 'ar', userId?: st
 export default function AppEntryPage() {
   const { user } = useLocalAuth();
   const { signInWithGoogle, signInWithFacebook } = useAuth();
+  const authProviders = useAuthProviderAvailability();
   const { language } = useLanguage();
   const navigate = useIframeSafeNavigate();
   const [mode, setMode] = useState<AppEntryServiceMode>('ride');
@@ -379,6 +381,10 @@ export default function AppEntryPage() {
   };
 
   const handleOAuth = async (provider: 'google' | 'facebook', returnTo = primaryPath) => {
+    if (!authProviders[provider].enabled) {
+      return;
+    }
+
     setAuthError('');
     setOauthProvider(provider);
 
@@ -615,12 +621,16 @@ export default function AppEntryPage() {
                   <div className="app-entry-page__guest-auth">
                     <p>{copy.guestLead}</p>
                     <div className="app-entry-page__guest-auth-buttons">
-                      <button type="button" onClick={() => void handleOAuth('google')}>
-                        {oauthProvider === 'google' ? copy.googleBusy : copy.google}
-                      </button>
-                      <button type="button" onClick={() => void handleOAuth('facebook')}>
-                        {oauthProvider === 'facebook' ? copy.facebookBusy : copy.facebook}
-                      </button>
+                      {authProviders.google.enabled ? (
+                        <button type="button" onClick={() => void handleOAuth('google')}>
+                          {oauthProvider === 'google' ? copy.googleBusy : copy.google}
+                        </button>
+                      ) : null}
+                      {authProviders.facebook.enabled ? (
+                        <button type="button" onClick={() => void handleOAuth('facebook')}>
+                          {oauthProvider === 'facebook' ? copy.facebookBusy : copy.facebook}
+                        </button>
+                      ) : null}
                       <button type="button" onClick={() => navigateLanding(contextualSignInPath)}>
                         {copy.email}
                       </button>

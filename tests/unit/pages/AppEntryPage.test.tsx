@@ -10,6 +10,11 @@ const mockNavigate = vi.fn();
 const mockUseLocalAuth = vi.fn();
 const mockUseAuth = vi.fn();
 let mockLanguage = 'en';
+let mockAuthProviders = {
+  google: { enabled: false },
+  facebook: { enabled: false },
+  whatsapp: { enabled: false },
+};
 
 vi.mock('motion/react', () => ({
   motion: {
@@ -20,6 +25,10 @@ vi.mock('motion/react', () => ({
 
 vi.mock('@/hooks/useIframeSafeNavigate', () => ({
   useIframeSafeNavigate: () => mockNavigate,
+}));
+
+vi.mock('@/hooks/useAuthProviderAvailability', () => ({
+  useAuthProviderAvailability: () => mockAuthProviders,
 }));
 
 vi.mock('@/contexts/LocalAuth', () => ({
@@ -75,6 +84,11 @@ describe('AppEntryPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLanguage = 'en';
+    mockAuthProviders = {
+      google: { enabled: false },
+      facebook: { enabled: false },
+      whatsapp: { enabled: false },
+    };
     mockUseAuth.mockReturnValue({
       signInWithGoogle: vi.fn().mockResolvedValue({ error: null }),
       signInWithFacebook: vi.fn().mockResolvedValue({ error: null }),
@@ -89,8 +103,8 @@ describe('AppEntryPage', () => {
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Sign in/i }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('button', { name: /Create account/i }).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /Continue with Google/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Continue with Facebook/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Continue with Google/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Continue with Facebook/i })).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Continue with email/i }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /Open packages/i })).toBeInTheDocument();
   });
@@ -119,6 +133,7 @@ describe('AppEntryPage', () => {
 
   it('starts Google auth from the landing gateway', async () => {
     const signInWithGoogle = vi.fn().mockResolvedValue({ error: null });
+    mockAuthProviders.google.enabled = true;
     mockUseAuth.mockReturnValue({
       signInWithGoogle,
       signInWithFacebook: vi.fn().mockResolvedValue({ error: null }),
@@ -138,6 +153,7 @@ describe('AppEntryPage', () => {
 
   it('starts Facebook auth from the landing gateway', async () => {
     const signInWithFacebook = vi.fn().mockResolvedValue({ error: null });
+    mockAuthProviders.facebook.enabled = true;
     mockUseAuth.mockReturnValue({
       signInWithGoogle: vi.fn().mockResolvedValue({ error: null }),
       signInWithFacebook,
