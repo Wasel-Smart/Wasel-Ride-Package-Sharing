@@ -41,9 +41,8 @@ import {
   rideBookingRecordSchema,
 } from '../contracts/rideLifecycle';
 import { parseContract } from '../contracts/validation';
-import { allowLocalPersistenceFallback, requireLocalPersistenceFallback } from './runtimePolicy';
+import { allowLocalPersistenceFallback } from './runtimePolicy';
 import {
-  enqueuePendingSync,
   incrementSyncRetry,
   loadPendingSyncs,
   RIDE_BOOKINGS_CHANGED_EVENT,
@@ -381,14 +380,14 @@ export async function createRideBooking(input: {
       passengerName: input.passengerName,
       passengerPhone: input.passengerPhone,
       paymentStatus: input.routeMode === 'live_post' ? 'pending' : 'authorized',
-      pendingSync: Boolean(input.passengerId),
+      pendingSync: false,
       pricePerSeatJod: input.pricePerSeatJod,
       rideId: input.rideId,
       routeMode: input.routeMode,
       seatsRequested,
       status: input.routeMode === 'live_post' ? 'pending_driver' : 'confirmed',
       supportThreadOpen: false,
-      syncState: input.passengerId ? 'syncing' : 'local-only',
+      syncState: 'syncing',
       syncedAt: undefined,
       ticketCode: makeTicketCode(),
       time: input.time,
@@ -406,35 +405,11 @@ export async function createRideBooking(input: {
 
   // ── Path A: no authenticated user — pure local ─────────────────────────────
   if (!input.passengerId) {
-    requireLocalPersistenceFallback('Ride booking creation');
-    writeBookings([booking, ...readBookings()]);
-
-    if (booking.passengerEmail && shouldSendEmail) {
-      triggerRideBookingEmails({
-        appUrl: getTransactionalEmailAppUrl(),
-        booking,
-        driverEmail: booking.driverEmail,
-        passengerEmail: booking.passengerEmail,
-        priceJod: booking.totalPriceJod ?? 0,
-      });
-    }
-
-    void trackGrowthEvent({
-      eventName: 'ride_booking_started',
-      from: input.from,
-      funnelStage: isRideBookingConfirmed(booking) ? 'booked' : 'selected',
-      metadata: { pricePerSeatJod: input.pricePerSeatJod, rideId: input.rideId, routeMode: input.routeMode, seatsRequested: booking.seatsRequested },
-      serviceType: 'ride',
-      to: input.to,
-      valueJod: totalPriceJod,
-    });
-
-    return booking;
+    throw new Error('Sign in is required to book a ride.');
   }
 
   // ── Path B: no local persistence allowed — direct Supabase only ───────────
-  if (!allowLocalPersistenceFallback()) {
-    try {
+  try {
       const { booking: persisted } = await createDirectBooking({
         bookingStatus: booking.status,
         dropoff: input.to,
@@ -448,7 +423,7 @@ export async function createRideBooking(input: {
       const synced = buildSyncedBooking(booking, persisted as Record<string, unknown>);
       upsertBookings([synced]);
 
-      if (synced.passengerEmail && (synced.status === 'pending_driver' || isRideBookingConfirmed(synced))) {
+      if (synced.passengerEmail && shouldSendEmail) {
         triggerRideBookingEmails({
           appUrl: getTransactionalEmailAppUrl(),
           booking: synced,
@@ -457,90 +432,35 @@ export async function createRideBooking(input: {
           priceJod: synced.totalPriceJod ?? 0,
         });
       }
+
+      void trackGrowthEvent({
+        eventName: 'ride_booking_started',
+        from: input.from,
+        funnelStage: isRideBookingConfirmed(synced) ? 'booked' : 'selected',
+        metadata: {
+          pricePerSeatJod: input.pricePerSeatJod,
+          rideId: input.rideId,
+          routeMode: input.routeMode,
+          seatsRequested: synced.seatsRequested,
+        },
+        serviceType: 'ride',
+        to: input.to,
+        userId: input.passengerId,
+        valueJod: totalPriceJod,
+      });
 
       return synced;
     } catch (error) {
-      logger.warning('[rideLifecycle] Direct booking persistence unavailable; using local fallback.', {
-        error: error instanceof Error ? error.message : String(error),
-        operation: 'ride.booking.direct_fallback',
+      logger.error('[rideLifecycle] ride booking creation failed', error, {
         passengerId: input.passengerId,
         rideId: input.rideId,
+        routeMode: input.routeMode,
+        seatsRequested: booking.seatsRequested,
       });
-
-      const fallback = markSyncState(
-        { ...booking, pendingSync: false, updatedAt: new Date().toISOString() },
-        'sync-error',
-      );
-      writeBookings([fallback, ...readBookings()]);
-      return fallback;
+      throw new Error('Ride could not be booked right now. Please try again.');
     }
-  }
 
   // ── Path C: optimistic local write + async Supabase sync ──────────────────
-  writeBookings([booking, ...readBookings()]);
-
-  if (booking.passengerEmail && shouldSendEmail) {
-    triggerRideBookingEmails({
-      appUrl: getTransactionalEmailAppUrl(),
-      booking,
-      driverEmail: booking.driverEmail,
-      passengerEmail: booking.passengerEmail,
-      priceJod: booking.totalPriceJod ?? 0,
-    });
-  }
-
-  void trackGrowthEvent({
-    eventName: 'ride_booking_started',
-    from: input.from,
-    funnelStage: isRideBookingConfirmed(booking) ? 'booked' : 'selected',
-    metadata: { pricePerSeatJod: input.pricePerSeatJod, rideId: input.rideId, routeMode: input.routeMode, seatsRequested: booking.seatsRequested },
-    serviceType: 'ride',
-    to: input.to,
-    userId: input.passengerId,
-    valueJod: totalPriceJod,
-  });
-
-  const passengerId = input.passengerId;
-  void createDirectBooking({
-    bookingStatus: booking.status,
-    dropoff: input.to,
-    metadata: { total_price: booking.totalPriceJod ?? booking.seatsRequested },
-    pickup: input.from,
-    seatsRequested: booking.seatsRequested,
-    tripId: input.rideId,
-    userId: passengerId,
-  })
-    .then(({ booking: persisted }) => {
-      const synced = buildSyncedBooking(booking, persisted as Record<string, unknown>);
-      upsertBookings([synced]);
-      if (synced.passengerEmail && !shouldSendEmail && isRideBookingConfirmed(synced)) {
-        triggerRideBookingEmails({
-          appUrl: getTransactionalEmailAppUrl(),
-          booking: synced,
-          driverEmail: synced.driverEmail,
-          passengerEmail: synced.passengerEmail,
-          priceJod: synced.totalPriceJod ?? 0,
-        });
-      }
-    })
-    .catch(() => {
-      upsertBookings([
-        markSyncState({ ...booking, updatedAt: new Date().toISOString() }, 'sync-error'),
-      ]);
-      enqueuePendingSync({
-        bookingId: booking.id,
-        from: input.from,
-        passengerId,
-        pricePerSeatJod: booking.pricePerSeatJod,
-        rideId: input.rideId,
-        seatsRequested: booking.seatsRequested,
-        status: booking.status,
-        to: input.to,
-        totalPriceJod: booking.totalPriceJod,
-      });
-    });
-
-  return booking;
 }
 
 export async function updateRideBooking(

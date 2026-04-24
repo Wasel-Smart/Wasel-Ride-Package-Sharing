@@ -46,30 +46,6 @@ function futureDate(days = 1) {
   return local.toISOString().slice(0, 10);
 }
 
-function makeConnectedRide(id: string, from: string, to: string) {
-  return {
-    id,
-    ownerId: 'owner-1',
-    ownerPhone: '+962790000001',
-    ownerEmail: 'driver@wasel.jo',
-    from,
-    to,
-    date: futureDate(),
-    time: '09:00',
-    seats: 3,
-    price: 7,
-    gender: 'mixed',
-    prayer: false,
-    carModel: 'Toyota Camry',
-    note: 'Live ride',
-    acceptsPackages: true,
-    packageCapacity: 'medium',
-    packageNote: 'Small parcels only',
-    createdAt: `${futureDate()}T08:00:00.000Z`,
-    status: 'active',
-  };
-}
-
 function makeBooking(id: string, rideId: string, updatedAt: string) {
   return {
     id,
@@ -103,27 +79,41 @@ describe('ride module service', () => {
     mockMatchDriver.mockResolvedValue('job-1');
   });
 
-  it('reads connected ride inventory live on every search instead of snapshotting it', async () => {
-    connectedRides = [makeConnectedRide('connected-1', 'Amman', 'Zarqa')];
+  it('uses backend trip search results instead of local ride inventory fallbacks', async () => {
+    mockSearchTrips.mockResolvedValue([
+      {
+        id: 'trip-1',
+        from: 'Amman',
+        to: 'Zarqa',
+        date: futureDate(),
+        time: '09:00',
+        seats: 2,
+        price: 8,
+        driver: { id: 'driver-1', name: 'Driver 1', rating: 4.8, verified: true },
+      },
+    ]);
 
-    const first = await rideService.searchRides({
+    const results = await rideService.searchRides({
       from: 'Amman',
       to: 'Zarqa',
       seats: 1,
     });
 
-    expect(first.map(ride => ride.id)).toContain('live-connected-1');
+    expect(results.map(ride => ride.id)).toEqual(['trip-1']);
+    expect(mockSearchTrips).toHaveBeenCalledWith('Amman', 'Zarqa', undefined, 1);
+  });
 
-    connectedRides = [makeConnectedRide('connected-2', 'Amman', 'Zarqa')];
+  it('surfaces ride search failures instead of falling back to local inventory', async () => {
+    connectedRides = [];
+    mockSearchTrips.mockRejectedValueOnce(new Error('search offline'));
 
-    const second = await rideService.searchRides({
-      from: 'Amman',
-      to: 'Zarqa',
-      seats: 1,
-    });
-
-    expect(second.map(ride => ride.id)).toContain('live-connected-2');
-    expect(second.map(ride => ride.id)).not.toContain('live-connected-1');
+    await expect(
+      rideService.searchRides({
+        from: 'Amman',
+        to: 'Zarqa',
+        seats: 1,
+      }),
+    ).rejects.toThrow('Unable to search rides right now.');
   });
 
   it('surfaces recent searches in suggestions instead of relying on static substring matches only', async () => {

@@ -48,7 +48,6 @@ import {
   getBookingsForPassenger,
   getBookingsForRide,
   getRideBookings,
-  isRideBookingConfirmed,
   isRideBookingPending,
   syncRideBookingCompletion,
   updateRideBooking,
@@ -59,7 +58,7 @@ import {
   createDirectBooking,
   updateDirectBookingStatus,
 } from '../../../src/services/directSupabase';
-import { NetworkError, ValidationError } from '../../../src/utils/errors';
+import { ValidationError } from '../../../src/utils/errors';
 
 const mockedCreateDirectBooking = vi.mocked(createDirectBooking);
 const mockedUpdateDirectBookingStatus = vi.mocked(updateDirectBookingStatus);
@@ -81,11 +80,6 @@ const BASE_INPUT = {
   routeMode: 'live_post' as const,
 };
 
-async function flushAsyncWork(): Promise<void> {
-  await Promise.resolve();
-  await Promise.resolve();
-}
-
 beforeEach(() => {
   localStorage.clear();
   vi.clearAllMocks();
@@ -99,16 +93,15 @@ beforeEach(() => {
 });
 
 describe('createRideBooking()', () => {
-  it('creates a persisted booking and syncs it when local fallback is allowed', async () => {
+  it('creates a backend-backed booking and stores the synced record', async () => {
     const booking = await createRideBooking(BASE_INPUT);
 
     expect(booking.rideId).toBe(BASE_INPUT.rideId);
     expect(booking.status).toBe('pending_driver');
     expect(booking.paymentStatus).toBe('pending');
-    expect(booking.syncState).toBe('syncing');
+    expect(booking.syncState).toBe('synced');
+    expect(booking.backendBookingId).toBe(`backend-${BASE_INPUT.rideId}`);
     expect(isRideBookingPending(booking)).toBe(true);
-
-    await flushAsyncWork();
 
     const stored = getRideBookings()[0];
     expect(stored?.backendBookingId).toBe(`backend-${BASE_INPUT.rideId}`);
@@ -125,38 +118,25 @@ describe('createRideBooking()', () => {
     expect(booking.seatsRequested).toBe(1);
   });
 
-  it('creates a local-only booking when no passenger id is available', async () => {
-    const booking = await createRideBooking({
-      ...BASE_INPUT,
-      passengerId: undefined,
-    });
-
-    expect(booking.syncState).toBe('local-only');
-    expect(booking.pendingSync).toBe(false);
-    expect(mockedCreateDirectBooking).not.toHaveBeenCalled();
-  });
-
-  it('fails closed for anonymous local booking creation when local fallback is disabled', async () => {
-    vi.stubEnv('VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK', 'false');
-
+  it('requires authentication before creating a ride booking', async () => {
     await expect(
       createRideBooking({
         ...BASE_INPUT,
         passengerId: undefined,
       }),
-    ).rejects.toBeInstanceOf(NetworkError);
+    ).rejects.toThrow('Sign in is required to book a ride.');
+
+    expect(mockedCreateDirectBooking).not.toHaveBeenCalled();
   });
 
-  it('requires direct persistence immediately when local fallback is disabled', async () => {
-    vi.stubEnv('VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK', 'false');
+  it('surfaces backend booking failures instead of creating local success records', async () => {
+    mockedCreateDirectBooking.mockRejectedValueOnce(new Error('offline'));
 
-    const booking = await createRideBooking(BASE_INPUT);
+    await expect(createRideBooking(BASE_INPUT)).rejects.toThrow(
+      'Ride could not be booked right now. Please try again.',
+    );
 
-    expect(mockedCreateDirectBooking).toHaveBeenCalledTimes(1);
-    expect(booking.backendBookingId).toBe(`backend-${BASE_INPUT.rideId}`);
-    expect(booking.syncState).toBe('synced');
-    expect(isRideBookingConfirmed(booking)).toBe(false);
-    expect(getRideBookings()[0]?.backendBookingId).toBe(`backend-${BASE_INPUT.rideId}`);
+    expect(getRideBookings()).toHaveLength(0);
   });
 });
 
@@ -206,7 +186,6 @@ describe('updateRideBooking()', () => {
 
   it('updates persisted non-status fields', async () => {
     const booking = await createRideBooking(BASE_INPUT);
-    await flushAsyncWork();
 
     const updated = await updateRideBooking(booking.id, {
       paymentStatus: 'captured',
@@ -220,7 +199,6 @@ describe('updateRideBooking()', () => {
 
   it('rejects invalid lifecycle transitions', async () => {
     const booking = await createRideBooking(BASE_INPUT);
-    await flushAsyncWork();
 
     await expect(updateRideBooking(booking.id, { status: 'completed' })).rejects.toBeInstanceOf(
       ValidationError,
@@ -243,22 +221,6 @@ describe('updateRideBooking()', () => {
     expect(updated?.status).toBe('confirmed');
     expect(updated?.syncState).toBe('synced');
   });
-
-  it('marks sync-error when deferred status sync fails in fallback mode', async () => {
-    vi.stubEnv('VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK', 'false');
-    const booking = await createRideBooking(BASE_INPUT);
-    vi.stubEnv('VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK', 'true');
-
-    mockedUpdateDirectBookingStatus.mockRejectedValueOnce(new Error('offline'));
-
-    const updated = await updateRideBooking(booking.id, { status: 'confirmed' });
-
-    expect(updated?.status).toBe('confirmed');
-
-    await flushAsyncWork();
-
-    expect(getRideBookings().find(item => item.id === booking.id)?.syncState).toBe('sync-error');
-  });
 });
 
 describe('syncRideBookingCompletion()', () => {
@@ -267,7 +229,6 @@ describe('syncRideBookingCompletion()', () => {
       ...BASE_INPUT,
       routeMode: 'network_inventory',
     });
-    await flushAsyncWork();
 
     const stored = JSON.parse(localStorage.getItem(BOOKING_KEY) || '[]') as RideBookingRecord[];
     const next = stored.map(item =>

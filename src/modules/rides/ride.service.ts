@@ -1,8 +1,3 @@
-import {
-  buildRideFromPostedRide,
-  type Ride as LegacyRide,
-  ALL_RIDES,
-} from '../../pages/waselCoreRideData';
 import { getConnectedRides } from '../../services/journeyLogistics';
 import {
   createRideBooking,
@@ -50,47 +45,6 @@ interface SuggestionContext {
     cityPickup: string;
     regionalCorridor: string;
   };
-}
-
-function localDateNow() {
-  const now = new Date();
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-  return {
-    date: local.toISOString().slice(0, 10),
-    timeInMinutes: local.getHours() * 60 + local.getMinutes(),
-  };
-}
-
-function parseRideTime(time: string) {
-  const match = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
-  if (!match) return null;
-  const hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
-  return hours * 60 + minutes;
-}
-
-function isUpcomingRide(ride: Pick<LegacyRide, 'date' | 'time'>, requestedDate?: string) {
-  if (requestedDate && ride.date !== requestedDate) {
-    return false;
-  }
-
-  const now = localDateNow();
-  if (!ride.date) return true;
-  if (ride.date > now.date) return true;
-  if (ride.date < now.date) return false;
-
-  const rideMinutes = parseRideTime(ride.time);
-  if (rideMinutes === null) return true;
-  return rideMinutes >= now.timeInMinutes;
-}
-
-function getActiveRideLibrary(): LegacyRide[] {
-  const connectedRides = getConnectedRides()
-    .filter(ride => ride.status !== 'cancelled' && ride.status !== 'completed')
-    .map(buildRideFromPostedRide);
-
-  return [...connectedRides, ...ALL_RIDES].filter(ride => isUpcomingRide(ride));
 }
 
 function loadRecentRideSearches(): RecentRideSearch[] {
@@ -158,12 +112,7 @@ function inferRideType(vehicleType: string): Exclude<RideType, 'any'> {
   return 'economy';
 }
 
-function deriveVehicleType(legacyRide?: LegacyRide, trip?: TripSearchResult) {
-  if (legacyRide?.car) {
-    const [make, model] = legacyRide.car.split(' ');
-    return [make, model].filter(Boolean).join(' ');
-  }
-
+function deriveVehicleType(trip?: TripSearchResult) {
   if (trip?.price && trip.price >= 10) return 'Comfort Sedan';
   if (trip?.price && trip.price >= 7) return 'Executive Ride';
   return 'Standard Sedan';
@@ -171,7 +120,7 @@ function deriveVehicleType(legacyRide?: LegacyRide, trip?: TripSearchResult) {
 
 function toRideResultFromTrip(trip: TripSearchResult): RideResult {
   const etaMinutes = estimateEtaMinutes(trip.from, trip.to);
-  const vehicleType = deriveVehicleType(undefined, trip);
+  const vehicleType = deriveVehicleType(trip);
   return {
     id: trip.id,
     from: trip.from,
@@ -198,54 +147,6 @@ function toRideResultFromTrip(trip: TripSearchResult): RideResult {
   };
 }
 
-function toRideResultFromLegacyRide(ride: LegacyRide): RideResult {
-  const etaMinutes =
-    typeof ride.duration === 'string' && ride.duration.endsWith('h')
-      ? Math.round(Number.parseFloat(ride.duration) * 60)
-      : estimateEtaMinutes(ride.from, ride.to);
-  const vehicleType = deriveVehicleType(ride);
-  return {
-    id: ride.id,
-    from: ride.from,
-    to: ride.to,
-    date: ride.date,
-    time: ride.time,
-    seatsAvailable: ride.seatsAvailable,
-    pricePerSeat: ride.pricePerSeat,
-    driver: {
-      id: ride.ownerId ?? ride.id,
-      name: ride.driver.name,
-      rating: ride.driver.rating,
-      verified: ride.driver.verified,
-      phone: ride.driver.phone,
-      email: ride.driver.email,
-      trips: ride.driver.trips,
-    },
-    routeMode: ride.routeMode ?? 'live_post',
-    ownerId: ride.ownerId,
-    vehicleType,
-    carModel: ride.car,
-    etaMinutes,
-    estimatedArrivalLabel: formatArrivalLabel(etaMinutes),
-    recommendedReason: ride.driver.rating >= 4.9 ? 'Highest rated on this corridor' : undefined,
-    rideType: inferRideType(vehicleType),
-    supportsPackages: ride.pkgCapacity !== 'none',
-    packageCapacity: ride.pkgCapacity === 'none' ? undefined : ride.pkgCapacity,
-    packageNote: ride.packageNote,
-    postedRideId: ride.sourceRideId,
-    totalSeats: ride.totalSeats,
-    fromPoint: ride.fromPoint,
-    toPoint: ride.toPoint,
-    distanceKm: ride.distance,
-    durationLabel: ride.duration,
-    prayerStops: ride.prayerStops,
-    amenities: ride.amenities,
-    intermediateStops: ride.intermediateStops,
-    carColor: ride.carColor,
-    lastUpdatedAt: ride.createdAt,
-  };
-}
-
 function dedupeResults(results: RideResult[]) {
   const seen = new Set<string>();
   return results.filter(ride => {
@@ -264,18 +165,11 @@ function scoreRide(ride: RideResult) {
 }
 
 function getCorridorMatchCount(
-  option: string,
-  counterpart: string | undefined,
-  field: RideLocationField,
+  _option: string,
+  _counterpart: string | undefined,
+  _field: RideLocationField,
 ) {
-  if (!counterpart) return 0;
-
-  const from = field === 'from' ? option : counterpart;
-  const to = field === 'to' ? option : counterpart;
-
-  return getActiveRideLibrary().filter(ride =>
-    routeMatchesLocationPair(ride.from, ride.to, from, to, { allowReverse: false }),
-  ).length;
+  return 0;
 }
 
 function getRecentSearchScore(
@@ -330,49 +224,34 @@ function indexRequestsByRideId(bookings: RideBookingRecord[]) {
 
 export const rideService = {
   async searchRides(params: RideSearchParams): Promise<RideResult[]> {
-    let liveTrips: TripSearchResult[] = [];
     try {
-      liveTrips = await tripsAPI.searchTrips(params.from, params.to, params.date, params.seats);
+      const liveTrips = await tripsAPI.searchTrips(params.from, params.to, params.date, params.seats);
+      return dedupeResults(
+        liveTrips
+          .filter(
+            trip =>
+              routeMatchesLocationPair(trip.from, trip.to, params.from, params.to, {
+                allowReverse: false,
+              }) && trip.seats > 0,
+          )
+          .map(toRideResultFromTrip),
+      )
+        .filter(
+          ride =>
+            params.rideType === undefined ||
+            params.rideType === 'any' ||
+            ride.rideType === params.rideType,
+        )
+        .sort((left, right) => scoreRide(right) - scoreRide(left));
     } catch (error) {
-      logger.warning('[rideService] live trip search unavailable, falling back to local ride library', {
+      logger.error('[rideService] ride search failed', error, {
         operation: 'ride.search.live_fallback',
         from: params.from,
         to: params.to,
         date: params.date,
-        error: error instanceof Error ? error.message : String(error),
       });
+      throw new Error('Unable to search rides right now.');
     }
-
-    const networkMatches = liveTrips
-      .filter(
-        trip =>
-          routeMatchesLocationPair(trip.from, trip.to, params.from, params.to, {
-            allowReverse: false,
-          }) &&
-          trip.seats > 0 &&
-          isUpcomingRide({ date: trip.date, time: trip.time }, params.date),
-      )
-      .map(toRideResultFromTrip);
-
-    const fallbackMatches = getActiveRideLibrary()
-      .filter(
-        ride =>
-          routeMatchesLocationPair(ride.from, ride.to, params.from, params.to, {
-            allowReverse: false,
-          }) &&
-          ride.seatsAvailable > 0 &&
-          isUpcomingRide(ride, params.date),
-      )
-      .map(toRideResultFromLegacyRide);
-
-    return dedupeResults([...networkMatches, ...fallbackMatches])
-      .filter(
-        ride =>
-          params.rideType === undefined ||
-          params.rideType === 'any' ||
-          ride.rideType === params.rideType,
-      )
-      .sort((left, right) => scoreRide(right) - scoreRide(left));
   },
 
   rememberRecentSearch(from: string, to: string) {
@@ -525,7 +404,11 @@ export const rideService = {
       });
     } catch (error) {
       lifecycleSynced = false;
-      console.warn('[rideService] ride lifecycle sync failed', error);
+      logger.warning('[rideService] ride lifecycle sync failed', {
+        error: error instanceof Error ? error.message : String(error),
+        bookingId: booking.id,
+        rideId: payload.ride.id,
+      });
     }
 
     return { booking, queueJobId, lifecycleSynced };
@@ -536,11 +419,6 @@ export const rideService = {
   },
 
   async getRideById(rideId: string): Promise<RideResult | null> {
-    const activeRide = getActiveRideLibrary().find(ride => ride.id === rideId);
-    if (activeRide) {
-      return toRideResultFromLegacyRide(activeRide);
-    }
-
     try {
       const trip = await tripsAPI.getTripById(rideId);
       return toRideResultFromTrip(trip);
