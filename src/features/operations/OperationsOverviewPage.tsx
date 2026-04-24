@@ -209,11 +209,15 @@ export default function OperationsOverviewPage() {
     };
   }, [pathname]);
 
-   const liveCorridors = routeIntelligence.featuredSignals.slice(0, 5);
+  const liveCorridors = routeIntelligence.featuredSignals.slice(0, 5);
 
-   return (
-     <>
-       <div
+  return (
+    <div
+      dir={ar ? 'rtl' : 'ltr'}
+      style={{ background: BG, color: '#E2E8F0', fontFamily: FONT }}
+    >
+      <div style={{ display: 'grid', gap: 18 }}>
+        <div
           style={{
             background: `linear-gradient(135deg, ${config.accent}18, rgba(255,255,255,0.03))`,
             border: `1px solid ${config.accent}33`,

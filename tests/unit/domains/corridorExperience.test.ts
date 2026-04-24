@@ -19,8 +19,32 @@ describe('corridorExperience', () => {
   });
 
   it('returns an empty snapshot when the corridor is unknown', () => {
-    const truth = getCorridorTruth({ from: 'Nowhere', to: 'Elsewhere' });
-    const snapshot = buildCorridorExperienceSnapshot(truth);
+    const snapshot = buildCorridorExperienceSnapshot({
+      from: 'Nowhere',
+      to: 'Elsewhere',
+      corridorPlan: null,
+      selectedSignal: null,
+      selectedPriceQuote: null,
+      featuredSignals: [],
+      allSignals: [],
+      membership: {
+        userId: null,
+        plusActive: false,
+        plusRenewalDate: null,
+        commuterPassRoute: null,
+        movementCredits: 0,
+        rewardsBalanceJod: 0,
+        loyaltyTier: 'starter',
+        activePrograms: [],
+      },
+      matchingRideCount: 0,
+      packageReadyRideCount: 0,
+      matchingPackageCount: 0,
+      recommendedPickupPoint: null,
+      nextWaveWindow: null,
+      routeOwnershipScore: null,
+      recommendationReason: null,
+    });
 
     expect(snapshot.demandSource).toBe('none');
     expect(snapshot.corridorId).toBeNull();

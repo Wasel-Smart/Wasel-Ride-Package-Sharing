@@ -24,15 +24,15 @@ export default [
     gzip: true,
   },
   {
-    name: 'App Entry',
-    path: 'dist/assets/js/AppEntryPage-*.js',
-    limit: '40 KB',
+    name: 'Entry and Auth Surfaces',
+    path: 'dist/assets/js/AppSurfaces-*.js',
+    limit: '50 KB',
     gzip: true,
   },
   {
-    name: 'Auth Experience',
-    path: 'dist/assets/js/WaselAuth-*.js',
-    limit: '45 KB',
+    name: 'Auth Callback',
+    path: 'dist/assets/js/WaselAuthCallback-*.js',
+    limit: '20 KB',
     gzip: true,
   },
   {

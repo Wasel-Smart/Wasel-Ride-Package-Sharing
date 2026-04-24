@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 test('wallet surface exposes stored-value controls', async ({ page }) => {
   await page.goto('/app/wallet', { waitUntil: 'domcontentloaded' });
 
-  await expect(page.getByRole('heading', { name: /wallet/i })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /wallet/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /add money/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /withdraw/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /^send$/i })).toBeVisible();

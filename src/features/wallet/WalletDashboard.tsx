@@ -39,11 +39,156 @@ function formatCurrency(value: number, currency = 'JOD', locale = 'en-JO') {
   }).format(value);
 }
 
-function formatMetaSource(source: string, degraded: boolean, t: (key: string) => string) {
+const WALLET_COPY = {
+  en: {
+    loading: 'Loading...',
+    header: {
+      title: 'Wallet',
+      subtitle: 'Stored value, balance posture, and direct transfers in one surface.',
+      refresh: 'Refresh wallet',
+    },
+    banner: {
+      title: 'Stored value stays visible.',
+      detail:
+        'Balance, payouts, and person-to-person transfers stay close to trust, funding sources, and recent wallet movement.',
+    },
+    clarity: {
+      title: 'See the live wallet picture before you move money.',
+      detail:
+        'Balance, pending value, and rewards stay visible together so the next action is obvious.',
+    },
+    metrics: {
+      balance: 'Available balance',
+      pending: 'Pending balance',
+      rewards: 'Rewards',
+    },
+    liveBadge: 'Live wallet',
+    loadingWallet: 'Loading wallet...',
+    liveDescription:
+      'Current balance, pending funds, and payment method posture update from the live wallet service.',
+    pendingBalance: 'Pending balance',
+    paymentMethods: 'Payment methods',
+    noDefaultMethod: 'No default method',
+    servicePosture: 'Service posture',
+    updatedAt: 'Updated',
+    waitingSync: 'Waiting for the latest wallet sync.',
+    meta: {
+      backup: 'Backup path active',
+      primary: 'Primary edge sync',
+      direct: 'Direct wallet service',
+    },
+    actions: {
+      title: 'Wallet actions',
+      description:
+        'Top up, withdraw, or refresh your wallet state without leaving the stored-value surface.',
+      addMoney: 'Add money',
+      withdraw: 'Withdraw',
+      refresh: 'Refresh wallet',
+    },
+    transfer: {
+      title: 'Send money',
+      description: 'Move value directly to another Wasel account with PIN and OTP protection.',
+      recipient: 'Recipient user ID',
+      recipientPlaceholder: 'user_123 or wallet handle',
+      amount: 'Amount',
+      amountPlaceholder: '25.00',
+      note: 'Note',
+      notePlaceholder: 'Add a short note',
+      pin: 'Wallet PIN',
+      pinPlaceholder: 'Enter your PIN',
+      otp: 'One-time code',
+      otpPlaceholder: 'Enter the verification code',
+      verifyAction: 'Verify and send',
+      submit: 'Send',
+    },
+    history: {
+      title: 'Recent activity',
+      summary: 'Showing {visible} of {total} wallet movements.',
+      loading: 'Loading wallet activity...',
+      empty: 'No wallet activity yet.',
+      loadMore: 'Load more activity',
+    },
+  },
+  ar: {
+    loading: 'جارٍ التحميل...',
+    header: {
+      title: 'المحفظة',
+      subtitle: 'القيمة المخزنة، حالة الرصيد، والتحويلات المباشرة في سطح واحد.',
+      refresh: 'تحديث المحفظة',
+    },
+    banner: {
+      title: 'القيمة المخزنة تبقى واضحة.',
+      detail:
+        'يبقى الرصيد والسحب والتحويل بين الأشخاص قريباً من الثقة ومصادر التمويل وحركة المحفظة الأخيرة.',
+    },
+    clarity: {
+      title: 'شاهد صورة المحفظة المباشرة قبل تحريك المال.',
+      detail:
+        'يبقى الرصيد والقيمة المعلقة والمكافآت ظاهرة معاً حتى تكون الخطوة التالية واضحة.',
+    },
+    metrics: {
+      balance: 'الرصيد المتاح',
+      pending: 'الرصيد المعلّق',
+      rewards: 'المكافآت',
+    },
+    liveBadge: 'محفظة مباشرة',
+    loadingWallet: 'جارٍ تحميل المحفظة...',
+    liveDescription:
+      'يتم تحديث الرصيد الحالي والأموال المعلقة ووضع طرق الدفع من خدمة المحفظة المباشرة.',
+    pendingBalance: 'الرصيد المعلّق',
+    paymentMethods: 'طرق الدفع',
+    noDefaultMethod: 'لا توجد طريقة افتراضية',
+    servicePosture: 'حالة الخدمة',
+    updatedAt: 'آخر تحديث',
+    waitingSync: 'بانتظار آخر مزامنة للمحفظة.',
+    meta: {
+      backup: 'مسار احتياطي نشط',
+      primary: 'مزامنة الحافة الأساسية',
+      direct: 'خدمة المحفظة المباشرة',
+    },
+    actions: {
+      title: 'إجراءات المحفظة',
+      description:
+        'أضف المال أو اسحب أو حدّث حالة المحفظة من دون مغادرة سطح القيمة المخزنة.',
+      addMoney: 'إضافة المال',
+      withdraw: 'سحب',
+      refresh: 'تحديث المحفظة',
+    },
+    transfer: {
+      title: 'إرسال المال',
+      description: 'انقل القيمة مباشرة إلى حساب Wasel آخر مع حماية PIN ورمز التحقق.',
+      recipient: 'معرّف المستخدم المستلم',
+      recipientPlaceholder: 'user_123 أو اسم المحفظة',
+      amount: 'المبلغ',
+      amountPlaceholder: '25.00',
+      note: 'ملاحظة',
+      notePlaceholder: 'أضف ملاحظة قصيرة',
+      pin: 'رقم PIN للمحفظة',
+      pinPlaceholder: 'أدخل رقم PIN',
+      otp: 'رمز لمرة واحدة',
+      otpPlaceholder: 'أدخل رمز التحقق',
+      verifyAction: 'تحقق وأرسل',
+      submit: 'إرسال',
+    },
+    history: {
+      title: 'النشاط الأخير',
+      summary: 'عرض {visible} من أصل {total} من تحركات المحفظة.',
+      loading: 'جارٍ تحميل نشاط المحفظة...',
+      empty: 'لا يوجد نشاط للمحفظة بعد.',
+      loadMore: 'تحميل المزيد من النشاط',
+    },
+  },
+} as const;
+
+function formatMetaSource(
+  source: string,
+  degraded: boolean,
+  copy: { backup: string; primary: string; direct: string },
+) {
   if (degraded) {
-    return t('walletPage.meta.backup');
+    return copy.backup;
   }
-  return source === 'edge-api' ? t('walletPage.meta.primary') : t('walletPage.meta.direct');
+  return source === 'edge-api' ? copy.primary : copy.direct;
 }
 
 function formatTransactionMeta(
@@ -60,7 +205,8 @@ function formatTransactionMeta(
 export function WalletDashboard() {
   const { user } = useLocalAuth();
   const navigate = useIframeSafeNavigate();
-  const { formatDate, locale, t } = useLanguage();
+  const { formatDate, language, locale } = useLanguage();
+  const copy = WALLET_COPY[language];
   const {
     error,
     hasMoreTransactions,
@@ -122,11 +268,11 @@ export function WalletDashboard() {
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-8 pt-4 md:px-6">
           <SectionHead
             emoji={<WalletIcon aria-hidden="true" className="h-5 w-5" />}
-            title={t('walletPage.header.title')}
-            sub={t('walletPage.header.subtitle')}
+            title={copy.header.title}
+            sub={copy.header.subtitle}
             color="var(--accent)"
             action={{
-              label: loading ? t('common.loading') : t('walletPage.header.refresh'),
+              label: loading ? copy.loading : copy.header.refresh,
               onClick: () => {
                 void refresh();
               },
@@ -134,33 +280,33 @@ export function WalletDashboard() {
           />
 
           <CoreExperienceBanner
-            title={t('walletPage.banner.title')}
-            detail={t('walletPage.banner.detail')}
+            title={copy.banner.title}
+            detail={copy.banner.detail}
             tone="var(--accent)"
           />
 
           <ClarityBand
-            title={t('walletPage.clarity.title')}
-            detail={t('walletPage.clarity.detail')}
+            title={copy.clarity.title}
+            detail={copy.clarity.detail}
             tone="var(--accent)"
             items={[
               {
-                label: t('walletPage.metrics.balance'),
+                label: copy.metrics.balance,
                 value: wallet
                   ? formatCurrency(wallet.balance, wallet.currency, locale)
-                  : t('common.loading'),
+                  : copy.loading,
               },
               {
-                label: t('walletPage.metrics.pending'),
+                label: copy.metrics.pending,
                 value: wallet
                   ? formatCurrency(wallet.pendingBalance, wallet.currency, locale)
-                  : t('common.loading'),
+                  : copy.loading,
               },
               {
-                label: t('walletPage.metrics.rewards'),
+                label: copy.metrics.rewards,
                 value: wallet
                   ? formatCurrency(wallet.rewardsBalance, wallet.currency, locale)
-                  : t('common.loading'),
+                  : copy.loading,
               },
             ]}
           />
@@ -169,23 +315,23 @@ export function WalletDashboard() {
             <Card className="border-primary/15 bg-[linear-gradient(140deg,rgba(3,13,28,0.96),rgba(8,34,60,0.92))]">
               <CardHeader className="gap-3">
                 <Badge className="w-fit border border-primary/20 bg-primary/10 text-primary">
-                  {t('walletPage.liveBadge')}
+                  {copy.liveBadge}
                 </Badge>
                 <CardTitle className="flex items-center gap-3 text-2xl text-foreground">
                   <WalletIcon className="h-6 w-6 text-primary" />
                   {wallet
                     ? formatCurrency(wallet.balance, wallet.currency, locale)
-                    : t('walletPage.loadingWallet')}
+                    : copy.loadingWallet}
                 </CardTitle>
                 <CardDescription className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                  {t('walletPage.liveDescription')}
+                  {copy.liveDescription}
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3 pb-6 md:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                     <RefreshCw className="h-4 w-4 text-primary" />
-                    {t('walletPage.pendingBalance')}
+                    {copy.pendingBalance}
                   </div>
                   <p className="text-2xl font-bold text-foreground">
                     {wallet ? formatCurrency(wallet.pendingBalance, wallet.currency, locale) : '--'}
@@ -194,28 +340,28 @@ export function WalletDashboard() {
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                     <CreditCard className="h-4 w-4 text-primary" />
-                    {t('walletPage.paymentMethods')}
+                    {copy.paymentMethods}
                   </div>
                   <p className="text-2xl font-bold text-foreground">{paymentMethods.length}</p>
                   <p className="text-xs text-muted-foreground">
-                    {defaultPaymentMethod?.label ?? t('walletPage.noDefaultMethod')}
+                    {defaultPaymentMethod?.label ?? copy.noDefaultMethod}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                     <ShieldCheck className="h-4 w-4 text-primary" />
-                    {t('walletPage.servicePosture')}
+                    {copy.servicePosture}
                   </div>
                   <p className="text-lg font-semibold text-foreground">
-                    {meta ? formatMetaSource(meta.source, meta.degraded, t) : t('common.loading')}
+                    {meta ? formatMetaSource(meta.source, meta.degraded, copy.meta) : copy.loading}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {meta
-                      ? `${t('walletPage.updatedAt')} ${formatDate(meta.fetchedAt, {
+                      ? `${copy.updatedAt} ${formatDate(meta.fetchedAt, {
                           dateStyle: 'medium',
                           timeStyle: 'short',
                         })}`
-                      : t('walletPage.waitingSync')}
+                      : copy.waitingSync}
                   </p>
                 </div>
               </CardContent>
@@ -226,27 +372,25 @@ export function WalletDashboard() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg text-foreground">
-                    {t('walletPage.actions.title')}
-                  </CardTitle>
+                  <CardTitle className="text-lg text-foreground">{copy.actions.title}</CardTitle>
                   <CardDescription className="text-sm leading-6 text-muted-foreground">
-                    {t('walletPage.actions.description')}
+                    {copy.actions.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Button
                     className="w-full"
                     variant="secondary"
-                    onClick={() => navigate('/app/payments')}
+                    onClick={() => navigate('/app/payments?purpose=deposit')}
                   >
-                    {t('walletPage.actions.openPayments')}
+                    {copy.actions.addMoney}
                   </Button>
                   <Button
                     className="w-full"
                     variant="secondary"
                     onClick={() => navigate('/app/settings')}
                   >
-                    {t('walletPage.actions.openSettings')}
+                    {copy.actions.withdraw}
                   </Button>
                   <Button
                     className="w-full"
@@ -260,7 +404,7 @@ export function WalletDashboard() {
                     ) : (
                       <RefreshCw className="mr-2 h-4 w-4" />
                     )}
-                    {t('walletPage.actions.refresh')}
+                    {copy.actions.refresh}
                   </Button>
                 </CardContent>
               </Card>
@@ -270,29 +414,23 @@ export function WalletDashboard() {
           <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-foreground">
-                  {t('walletPage.transfer.title')}
-                </CardTitle>
-                <CardDescription>{t('walletPage.transfer.description')}</CardDescription>
+                <CardTitle className="text-lg text-foreground">{copy.transfer.title}</CardTitle>
+                <CardDescription>{copy.transfer.description}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <label className="block space-y-2 text-sm">
-                  <span className="font-medium text-foreground">
-                    {t('walletPage.transfer.recipient')}
-                  </span>
+                  <span className="font-medium text-foreground">{copy.transfer.recipient}</span>
                   <Input
                     value={sendDraft.recipientUserId}
                     onChange={event =>
                       setSendDraft(current => ({ ...current, recipientUserId: event.target.value }))
                     }
-                    placeholder={t('walletPage.transfer.recipientPlaceholder')}
+                    placeholder={copy.transfer.recipientPlaceholder}
                   />
                 </label>
 
                 <label className="block space-y-2 text-sm">
-                  <span className="font-medium text-foreground">
-                    {t('walletPage.transfer.amount')}
-                  </span>
+                  <span className="font-medium text-foreground">{copy.transfer.amount}</span>
                   <Input
                     type="number"
                     min="0.01"
@@ -301,48 +439,42 @@ export function WalletDashboard() {
                     onChange={event =>
                       setSendDraft(current => ({ ...current, amount: event.target.value }))
                     }
-                    placeholder={t('walletPage.transfer.amountPlaceholder')}
+                    placeholder={copy.transfer.amountPlaceholder}
                   />
                 </label>
 
                 <label className="block space-y-2 text-sm">
-                  <span className="font-medium text-foreground">
-                    {t('walletPage.transfer.note')}
-                  </span>
+                  <span className="font-medium text-foreground">{copy.transfer.note}</span>
                   <Input
                     value={sendDraft.note}
                     onChange={event =>
                       setSendDraft(current => ({ ...current, note: event.target.value }))
                     }
-                    placeholder={t('walletPage.transfer.notePlaceholder')}
+                    placeholder={copy.transfer.notePlaceholder}
                   />
                 </label>
 
                 <label className="block space-y-2 text-sm">
-                  <span className="font-medium text-foreground">
-                    {t('walletPage.transfer.pin')}
-                  </span>
+                  <span className="font-medium text-foreground">{copy.transfer.pin}</span>
                   <Input
                     type="password"
                     value={sendDraft.pin}
                     onChange={event =>
                       setSendDraft(current => ({ ...current, pin: event.target.value }))
                     }
-                    placeholder={t('walletPage.transfer.pinPlaceholder')}
+                    placeholder={copy.transfer.pinPlaceholder}
                   />
                 </label>
 
                 {transferChallenge ? (
                   <label className="block space-y-2 text-sm">
-                    <span className="font-medium text-foreground">
-                      {t('walletPage.transfer.otp')}
-                    </span>
+                    <span className="font-medium text-foreground">{copy.transfer.otp}</span>
                     <Input
                       value={sendDraft.otpCode}
                       onChange={event =>
                         setSendDraft(current => ({ ...current, otpCode: event.target.value }))
                       }
-                      placeholder={t('walletPage.transfer.otpPlaceholder')}
+                      placeholder={copy.transfer.otpPlaceholder}
                     />
                   </label>
                 ) : null}
@@ -379,19 +511,17 @@ export function WalletDashboard() {
                     <ArrowRightLeft className="mr-2 h-4 w-4" />
                   )}
                   {transferChallenge
-                    ? t('walletPage.transfer.verifyAction')
-                    : t('walletPage.transfer.submit')}
+                    ? copy.transfer.verifyAction
+                    : copy.transfer.submit}
                 </Button>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-foreground">
-                  {t('walletPage.history.title')}
-                </CardTitle>
+                <CardTitle className="text-lg text-foreground">{copy.history.title}</CardTitle>
                 <CardDescription>
-                  {t('walletPage.history.summary')
+                  {copy.history.summary
                     .replace('{visible}', String(recentTransactions.length))
                     .replace('{total}', String(totalTransactions))}
                 </CardDescription>
@@ -404,13 +534,13 @@ export function WalletDashboard() {
                     role="status"
                   >
                     <LoaderCircle className="h-4 w-4 animate-spin" />
-                    {t('walletPage.history.loading')}
+                    {copy.history.loading}
                   </div>
                 ) : null}
 
                 {!loading && recentTransactions.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-5 text-sm text-muted-foreground">
-                    {t('walletPage.history.empty')}
+                    {copy.history.empty}
                   </div>
                 ) : null}
 
@@ -456,7 +586,7 @@ export function WalletDashboard() {
                     }}
                   >
                     {loadingMore ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    {t('walletPage.history.loadMore')}
+                    {copy.history.loadMore}
                   </Button>
                 ) : null}
               </CardContent>

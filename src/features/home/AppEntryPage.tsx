@@ -22,38 +22,28 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { getWaselPresenceProfile } from '../../domains/trust/waselPresence';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { APP_ROUTES } from '../../router/paths';
 import { trackGrowthEvent } from '../../services/growthEngine';
 import { friendlyAuthError } from '../../utils/authHelpers';
 import { buildAuthPagePath } from '../../utils/authFlow';
 import {
+  APP_ENTRY_CITY_OPTIONS,
+  APP_ENTRY_DEFAULT_RETURN_TO,
+  APP_ENTRY_DEFAULT_ROUTE,
   APP_ENTRY_SERVICE_MODE_META,
   APP_ENTRY_SERVICE_MODES,
   buildAppEntryPrimaryPath,
   buildPackagePrefillPath,
   buildRideSearchPath,
+  getAlternateEntryCity,
   type AppEntryRouteDraft,
   type AppEntryServiceMode,
 } from './appEntryContracts';
-import { DeferredLandingMap } from './DeferredLandingMap';
+import { DeferredLandingMap } from '../../components/layout/DeferredLandingMap';
 import { LANDING_FONT } from './landingConstants';
 import './AppEntryPage.css';
 
 type FlowCard = { icon: LucideIcon; title: string; detail: string; path: string; cta: string };
-
-const DEFAULT_RETURN_TO = '/app/find-ride';
-
-const CITY_OPTIONS = [
-  { value: 'Amman', en: 'Amman', ar: '\u0639\u0645\u0627\u0646' },
-  { value: 'Irbid', en: 'Irbid', ar: '\u0625\u0631\u0628\u062f' },
-  { value: 'Aqaba', en: 'Aqaba', ar: '\u0627\u0644\u0639\u0642\u0628\u0629' },
-  { value: 'Zarqa', en: 'Zarqa', ar: '\u0627\u0644\u0632\u0631\u0642\u0627\u0621' },
-  { value: 'Jerash', en: 'Jerash', ar: '\u062c\u0631\u0634' },
-  { value: 'Salt', en: 'Salt', ar: '\u0627\u0644\u0633\u0644\u0637' },
-] as const;
-
-function getAlternateCity(excluded: string) {
-  return CITY_OPTIONS.find(option => option.value !== excluded)?.value ?? excluded;
-}
 
 const COPY = {
   en: {
@@ -200,17 +190,17 @@ const COPY = {
 function trackLandingNavigation(path: string, language: 'en' | 'ar', userId?: string) {
   const eventMap = [
     {
-      match: '/app/find-ride',
+      match: APP_ROUTES.findRide.full,
       eventName: 'landing_find_ride_opened',
       serviceType: 'ride' as const,
     },
     {
-      match: '/app/create-ride',
+      match: APP_ROUTES.offerRide.full,
       eventName: 'landing_offer_ride_opened',
       serviceType: 'ride' as const,
     },
     {
-      match: '/app/packages',
+      match: APP_ROUTES.packages.full,
       eventName: 'landing_packages_opened',
       serviceType: 'package' as const,
     },
@@ -236,15 +226,15 @@ export default function AppEntryPage() {
   const [mode, setMode] = useState<AppEntryServiceMode>('ride');
   const [authError, setAuthError] = useState('');
   const [oauthProvider, setOauthProvider] = useState<'google' | 'facebook' | null>(null);
-  const [route, setRoute] = useState<AppEntryRouteDraft>({ from: 'Amman', to: 'Irbid', date: '' });
+  const [route, setRoute] = useState<AppEntryRouteDraft>({ ...APP_ENTRY_DEFAULT_ROUTE });
 
   const ar = language === 'ar';
   const copy = COPY[language];
   const profile = getWaselPresenceProfile();
   const supportLine = profile.supportPhoneDisplay || profile.supportEmail || 'Wasel';
   const businessAddress = ar ? profile.businessAddressAr : profile.businessAddress;
-  const signInPath = buildAuthPagePath('signin', DEFAULT_RETURN_TO);
-  const signUpPath = buildAuthPagePath('signup', DEFAULT_RETURN_TO);
+  const signInPath = buildAuthPagePath('signin', APP_ENTRY_DEFAULT_RETURN_TO);
+  const signUpPath = buildAuthPagePath('signup', APP_ENTRY_DEFAULT_RETURN_TO);
 
   const navigateLanding = (path: string) => {
     trackLandingNavigation(path, language, user?.id);
@@ -255,9 +245,11 @@ export default function AppEntryPage() {
   const primaryPath = buildAppEntryPrimaryPath(mode, route);
   const contextualSignInPath = buildAuthPagePath('signin', primaryPath);
   const selectedFromLabel =
-    CITY_OPTIONS.find(option => option.value === route.from)?.[ar ? 'ar' : 'en'] ?? route.from;
+    APP_ENTRY_CITY_OPTIONS.find(option => option.value === route.from)?.[ar ? 'ar' : 'en'] ??
+    route.from;
   const selectedToLabel =
-    CITY_OPTIONS.find(option => option.value === route.to)?.[ar ? 'ar' : 'en'] ?? route.to;
+    APP_ENTRY_CITY_OPTIONS.find(option => option.value === route.to)?.[ar ? 'ar' : 'en'] ??
+    route.to;
   const routePreview = ar
     ? `${selectedFromLabel} ← ${selectedToLabel}`
     : `${selectedFromLabel} → ${selectedToLabel}`;
@@ -351,7 +343,7 @@ export default function AppEntryPage() {
       icon: Car,
       title: copy.flowCards.offer.title,
       detail: copy.flowCards.offer.detail,
-      path: protectedPath('/app/create-ride'),
+      path: protectedPath(APP_ROUTES.offerRide.full),
       cta: copy.flowCards.offer.cta,
     },
   ];
@@ -365,14 +357,14 @@ export default function AppEntryPage() {
           return {
             ...current,
             from: value,
-            to: value === current.to ? getAlternateCity(value) : current.to,
+            to: value === current.to ? getAlternateEntryCity(value) : current.to,
           };
         }
 
         if (field === 'to') {
           return {
             ...current,
-            from: value === current.from ? getAlternateCity(value) : current.from,
+            from: value === current.from ? getAlternateEntryCity(value) : current.from,
             to: value,
           };
         }
@@ -406,7 +398,7 @@ export default function AppEntryPage() {
           <button
             type="button"
             className="app-entry-page__brand"
-            onClick={() => navigateLanding(user ? '/app/find-ride' : '/')}
+            onClick={() => navigateLanding(user ? APP_ROUTES.findRide.full : '/')}
           >
             <span className="app-entry-page__brand-mark" aria-hidden="true">
               <WaselMark size={48} />
@@ -567,7 +559,7 @@ export default function AppEntryPage() {
                   <label>
                     <span>{copy.from}</span>
                     <select value={route.from} onChange={updateRoute('from')}>
-                      {CITY_OPTIONS.map(option => (
+                      {APP_ENTRY_CITY_OPTIONS.map(option => (
                         <option
                           key={option.value}
                           value={option.value}
@@ -582,7 +574,7 @@ export default function AppEntryPage() {
                   <label>
                     <span>{copy.to}</span>
                     <select value={route.to} onChange={updateRoute('to')}>
-                      {CITY_OPTIONS.map(option => (
+                      {APP_ENTRY_CITY_OPTIONS.map(option => (
                         <option
                           key={option.value}
                           value={option.value}
@@ -613,7 +605,7 @@ export default function AppEntryPage() {
                   <button
                     type="button"
                     className="app-entry-page__secondary-button"
-                    onClick={() => navigateLanding(protectedPath('/app/create-ride'))}
+                    onClick={() => navigateLanding(protectedPath(APP_ROUTES.offerRide.full))}
                   >
                     {copy.secondary}
                   </button>

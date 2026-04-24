@@ -131,7 +131,7 @@ export function getOfferRideConfidenceSummary({
       {
         id: 'live-corridor',
         label: 'Live corridor',
-        tone: corridorCount > 0 ? 'green' : 'gold',
+        tone: corridor.matchingRideCount > 0 ? 'green' : 'gold',
         value: liveCorridorValue,
       },
       {

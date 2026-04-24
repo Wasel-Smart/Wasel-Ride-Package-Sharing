@@ -5,6 +5,10 @@
  * surface module a single responsibility and a clear import target.
  */
 import type { ReactNode } from 'react';
+import {
+  ENTRY_CITY_OPTIONS,
+  ENTRY_DEFAULT_ROUTE_RETURN_TO,
+} from '../../../contracts/entry';
 
 export type OverviewCard = {
   detail: string;
@@ -31,14 +35,10 @@ export type HeroFeatureItem = {
   title: string;
 };
 
-export const CITY_OPTIONS = [
-  { label: 'Amman', value: 'Amman' },
-  { label: 'Irbid', value: 'Irbid' },
-  { label: 'Aqaba', value: 'Aqaba' },
-  { label: 'Zarqa', value: 'Zarqa' },
-  { label: 'Jerash', value: 'Jerash' },
-  { label: 'Salt', value: 'Salt' },
-] as const;
+export const CITY_OPTIONS = ENTRY_CITY_OPTIONS.map((option) => ({
+  label: option.en,
+  value: option.value,
+})) as const;
 
 export const RIDE_TYPE_OPTIONS = [
   { label: 'Any ride', value: 'any' },
@@ -49,4 +49,4 @@ export const RIDE_TYPE_OPTIONS = [
 
 export const LANDING_SUPPORT_PHONE = '+962790000000';
 export const LANDING_SUPPORT_EMAIL = 'support@wasel.jo';
-export const LANDING_RETURN_TO = '/app/find-ride?from=Amman&to=Irbid&search=1';
+export const LANDING_RETURN_TO = ENTRY_DEFAULT_ROUTE_RETURN_TO;

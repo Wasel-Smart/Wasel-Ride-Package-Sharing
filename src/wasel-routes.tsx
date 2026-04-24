@@ -1,7 +1,5 @@
 import { createBrowserRouter, isRouteErrorResponse, Navigate, useRouteError } from 'react-router';
-import { useLocalAuth } from './contexts/LocalAuth';
 import WaselRoot from './layouts/WaselRoot';
-import { buildAuthPagePath } from './utils/authFlow';
 import { APP_ROUTES } from './router/paths';
 import {
   NotFoundPage,
@@ -9,7 +7,8 @@ import {
 } from './app/pages/AppSurfaces';
 
 const loadLandingPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).LandingPage });
-const loadAuthPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).AuthPage });
+const loadAppEntryPage = async () => ({ Component: (await import('./features/home/AppEntryPage')).default });
+const loadAuthPage = async () => ({ Component: (await import('./pages/WaselAuth')).default });
 const loadFindRidePage = async () => ({ Component: (await import('./features/rides/FindRidePage')).FindRidePage });
 const loadRideDetailsPage = async () => ({ Component: (await import('./features/rides/RideDetailsPage')).RideDetailsPage });
 const loadOfferRidePage = async () => ({ Component: (await import('./features/rides/OfferRidePage')).OfferRidePage });
@@ -35,34 +34,6 @@ const loadPrivacyPage = async () => ({ Component: (await import('./app/pages/App
 const loadTermsPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).TermsPage });
 const loadAuthCallbackPage = async () => ({ Component: (await import('./pages/WaselAuthCallback')).default });
 
-function AppEntryRedirect() {
-  const { loading, user } = useLocalAuth();
-
-  if (loading) {
-    return (
-      <div className="ds-page">
-        <div className="ds-container">
-          <div className="ds-card">
-            <h1 className="ds-section-title">Loading Wasel</h1>
-            <p className="ds-copy ds-copy--tight">Preparing the next route.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <Navigate
-      replace
-      to={
-        user
-          ? APP_ROUTES.findRide.full
-          : buildAuthPagePath('signin', APP_ROUTES.findRide.full)
-      }
-    />
-  );
-}
-
 function RouteErrorBoundary() {
   const error = useRouteError();
   const message = isRouteErrorResponse(error)
@@ -85,7 +56,7 @@ export const waselRouter = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
     path: APP_ROUTES.root.full,
     children: [
-      { Component: AppEntryRedirect, index: true },
+      { lazy: loadAppEntryPage, index: true },
       { lazy: loadAuthPage, path: APP_ROUTES.auth.child },
       { lazy: loadAuthCallbackPage, path: APP_ROUTES.authCallback.child },
       { lazy: loadFindRidePage, path: APP_ROUTES.findRide.child },
@@ -114,7 +85,7 @@ export const waselRouter = createBrowserRouter([
       { lazy: loadPrivacyPage, path: APP_ROUTES.privacy.child },
       { lazy: loadTermsPage, path: APP_ROUTES.terms.child },
       { Component: () => <Navigate replace to={APP_ROUTES.root.full} />, path: APP_ROUTES.dashboard.child },
-      { Component: () => <Navigate replace to={APP_ROUTES.findRide.full} />, path: APP_ROUTES.home.child },
+      { Component: () => <Navigate replace to={APP_ROUTES.root.full} />, path: APP_ROUTES.home.child },
       { Component: () => <Navigate replace to={APP_ROUTES.offerRide.full} />, path: APP_ROUTES.postRide.child },
       { Component: () => <Navigate replace to={APP_ROUTES.offerRide.full} />, path: APP_ROUTES.newRide.child },
       { Component: () => <Navigate replace to={APP_ROUTES.findRide.full} />, path: APP_ROUTES.routes.child },
