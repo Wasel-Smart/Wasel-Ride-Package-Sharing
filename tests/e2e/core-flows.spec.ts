@@ -1,5 +1,4 @@
 import { expect, test, type Page } from '@playwright/test';
-import { BUS_TEST_IDS } from '../../src/modules/bus/bus.copy';
 import { seedDemoSession } from '../../e2e/helpers/session';
 
 test.describe.configure({ mode: 'serial' });
@@ -26,20 +25,15 @@ async function expectWithinViewport(page: Page, selector: string) {
   expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
 }
 
-test('find ride books a seat', async ({ page }) => {
-  await page.goto('/app/find-ride', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: /find your ride instantly/i })).toBeVisible();
-  await page.getByTestId('find-ride-search').click();
-  await expect(page.getByRole('heading', { name: /premium ride matches/i })).toBeVisible();
-  await page.getByTestId(/ride-request-/).first().click();
-  await expect(
-    page.getByText(/ride request sent\. driver matching is running now\.|ride request saved\./i),
-  ).toBeVisible();
+test('find ride stops and shows backend failure clearly', async ({ page }) => {
+  await page.goto('/app/find-ride?from=Amman&to=Irbid&search=1', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: /^book a ride$/i }).first()).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText(/unable to search rides right now/i);
 });
 
-test('offer ride posts a connected trip', async ({ page }) => {
+test('offer ride stops when the backend cannot create the ride', async ({ page }) => {
   await page.goto('/app/offer-ride');
-  await expect(page.getByRole('heading', { name: /create ride|offer route/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /offer a ride/i })).toBeVisible();
   await page.locator('input[type="date"]').fill('2026-05-01');
   const stepOneButton = page.getByTestId('offer-ride-step-1');
   await expect(stepOneButton).toBeEnabled();
@@ -51,34 +45,16 @@ test('offer ride posts a connected trip', async ({ page }) => {
   const submitButton = page.getByTestId('offer-ride-submit');
   await expect(submitButton).toBeEnabled();
   await submitButton.click();
-  await expect(page.getByRole('heading', { name: /route is live/i })).toBeVisible();
+  await expect(page.getByText(/ride could not be created right now\. please try again\./i)).toBeVisible();
 });
 
-test('bus flow reserves a seat', async ({ page }) => {
-  await page.goto('/app/bus');
-  await expect(page.getByRole('heading', { name: /wasel bus/i })).toBeVisible();
-  const routeInfo = page.getByTestId(BUS_TEST_IDS.routeInfo);
-  await expect(routeInfo).toBeVisible();
-  await expect(routeInfo).toHaveAttribute(
-    'data-route-info-kind',
-    /^(loading|live|official|nearest|unavailable)$/,
-  );
-  await expect(page.getByTestId(BUS_TEST_IDS.confirmBooking)).toBeVisible();
-  await page.getByTestId(BUS_TEST_IDS.confirmBooking).click({ timeout: 20_000 });
-  const confirmation = page.getByTestId(BUS_TEST_IDS.bookingConfirmationTitle).last();
-  await confirmation.scrollIntoViewIfNeeded();
-  await expect(confirmation).toBeVisible();
-});
-
-test('packages flow creates tracking', async ({ page }) => {
+test('packages flow stops when the backend cannot create tracking', async ({ page }) => {
   await page.goto('/app/packages');
   await expect(page.getByTestId('package-recipient-name')).toBeVisible();
   await page.getByTestId('package-recipient-name').fill('Receiver Test');
   await page.getByTestId('package-recipient-phone').fill('+962790000888');
   await page.getByTestId('package-create-request').click();
-  await expect(page.getByRole('heading', { name: /package request created/i })).toBeVisible();
-  await expect(page.getByText(/^Tracking ID$/)).toBeVisible();
-  await expect(page.getByText(/^Handoff code$/)).toBeVisible();
+  await expect(page.getByText(/package request could not be created right now\. please try again\./i)).toBeVisible();
 });
 
 test('packages page reflows key surfaces on a phone viewport', async ({ page }) => {

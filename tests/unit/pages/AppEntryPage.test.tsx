@@ -106,7 +106,7 @@ describe('AppEntryPage', () => {
     expect(screen.queryByRole('button', { name: /Continue with Google/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Continue with Facebook/i })).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Continue with email/i }).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /Open packages/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Send a package/i })).toBeInTheDocument();
   });
 
   it('routes guest email entry to the auth page with a return target', () => {
@@ -176,7 +176,7 @@ describe('AppEntryPage', () => {
 
     renderAppEntryPage();
 
-    screen.getAllByRole('button', { name: /Find a ride/i })[0].click();
+    screen.getAllByRole('button', { name: /Book a ride/i })[0].click();
 
     expect(mockNavigate).toHaveBeenCalledWith('/app/find-ride?from=Amman&to=Irbid&search=1');
   });
@@ -189,7 +189,7 @@ describe('AppEntryPage', () => {
     act(() => {
       screen.getByRole('tab', { name: /^Packages$/i }).click();
     });
-    screen.getAllByRole('button', { name: /Open packages/i })[0].click();
+    screen.getAllByRole('button', { name: /Send a package/i })[0].click();
 
     expect(mockNavigate).toHaveBeenCalledWith(
       buildPackagePrefillPath({ from: 'Amman', to: 'Irbid', date: '' }),

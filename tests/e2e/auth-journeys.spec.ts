@@ -4,7 +4,7 @@ import { seedDemoSession } from '../../e2e/helpers/session';
 test('app entry sends guests into auth with a return target', async ({ page }) => {
   await page.goto('/app', { waitUntil: 'domcontentloaded' });
   await expect(page).toHaveURL(/\/app$/);
-  await expect(page.getByRole('heading', { name: /open the network first/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /book a ride, offer a ride, or send a package\./i })).toBeVisible();
   await page.getByRole('button', { name: /^sign in$/i }).first().click();
   await expect(page).toHaveURL(/\/app\/auth/);
   await expect(page).toHaveURL(/returnTo=(%2Fapp%2Ffind-ride|\/app\/find-ride)/);
@@ -15,10 +15,10 @@ test('app entry lets authenticated users open the ride flow', async ({ page }) =
   await seedDemoSession(page);
   await page.goto('/app', { waitUntil: 'domcontentloaded' });
   await expect(page).toHaveURL(/\/app$/);
-  await expect(page.getByRole('heading', { name: /open the network first/i })).toBeVisible();
-  await page.getByRole('button', { name: /^find a ride$/i }).first().click();
+  await expect(page.getByRole('heading', { name: /book a ride, offer a ride, or send a package\./i })).toBeVisible();
+  await page.getByRole('button', { name: /^book a ride$/i }).first().click();
   await expect(page).toHaveURL(/\/app\/find-ride/);
-  await expect(page.getByRole('heading', { name: /find your ride instantly/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^book a ride$/i }).first()).toBeVisible();
 });
 
 test('sign in page renders accessible form fields', async ({ page }) => {

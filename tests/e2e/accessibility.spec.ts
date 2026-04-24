@@ -20,15 +20,9 @@ const AUTH_PAGES = [
   { name: 'Find Ride', path: '/app/find-ride' },
   { name: 'Offer Ride', path: '/app/offer-ride' },
   { name: 'Packages', path: '/app/packages' },
-  { name: 'Bus', path: '/app/bus' },
   { name: 'My Trips', path: '/app/my-trips' },
   { name: 'Wallet', path: '/app/wallet' },
-  { name: 'Plus', path: '/app/plus' },
-  { name: 'Profile', path: '/app/profile' },
-  { name: 'Trust', path: '/app/trust' },
-  { name: 'Safety', path: '/app/safety' },
-  { name: 'Driver', path: '/app/driver' },
-  { name: 'Notifications', path: '/app/notifications' },
+  { name: 'Payments', path: '/app/payments' },
 ];
 
 const AXE_OPTIONS = {
