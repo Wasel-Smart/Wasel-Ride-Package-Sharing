@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockSearchTrips = vi.fn();
 const mockCreateBooking = vi.fn();
+let mockEnableFakeBusBookings = false;
 
 vi.mock('../../../src/services/trips', () => ({
   tripsAPI: {
@@ -15,11 +16,25 @@ vi.mock('../../../src/services/bookings', () => ({
   },
 }));
 
+vi.mock('../../../src/utils/env', async () => {
+  const actual = await vi.importActual<typeof import('../../../src/utils/env')>(
+    '../../../src/utils/env'
+  );
+
+  return {
+    ...actual,
+    getConfig: () => ({
+      enableFakeBusBookings: mockEnableFakeBusBookings,
+    }),
+  };
+});
+
 import { createBusBooking, fetchBusRoutes, getOfficialBusRoutes, normalizeBusRoute } from '../../../src/services/bus';
 
 describe('bus service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockEnableFakeBusBookings = false;
     const store = new Map<string, string>();
     Object.defineProperty(window, 'localStorage', {
       configurable: true,
@@ -93,7 +108,26 @@ describe('bus service', () => {
     expect(routes.length).toBeGreaterThan(0);
   });
 
-  it('stores a local backup booking when the booking API fails', async () => {
+  it('surfaces booking failures when fake bus bookings are disabled', async () => {
+    mockCreateBooking.mockRejectedValue(new Error('offline'));
+
+    await expect(
+      createBusBooking({
+        tripId: 'bus-3',
+        seatsRequested: 2,
+        pickupStop: 'Abdali Intercity Hub',
+        dropoffStop: 'Aqaba Marina Stop',
+        scheduleDate: '2026-04-05',
+        departureTime: '07:00',
+        seatPreference: 'window',
+        scheduleMode: 'schedule-later',
+        totalPrice: 14,
+      }),
+    ).rejects.toThrow('offline');
+  });
+
+  it('stores a local demo booking only when fake bus bookings are explicitly enabled', async () => {
+    mockEnableFakeBusBookings = true;
     mockCreateBooking.mockRejectedValue(new Error('offline'));
     window.localStorage.setItem('wasel-bus-bookings', '{bad json');
 

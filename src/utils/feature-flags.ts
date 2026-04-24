@@ -109,8 +109,8 @@ export const FEATURE_FLAGS: Record<FeatureFlag, {
   trip_insurance: {
     enabled: false,
     rolloutPercentage: 0,
-    environments: ['staging'],
-    description: 'Trip insurance add-on (COMING SOON)',
+    environments: ['development', 'staging', 'production'],
+    description: 'Trip insurance add-on is hidden until backend support is implemented',
   },
 
   scheduled_rides: {
@@ -123,8 +123,8 @@ export const FEATURE_FLAGS: Record<FeatureFlag, {
   corporate_accounts: {
     enabled: false,
     rolloutPercentage: 0,
-    environments: ['staging'],
-    description: 'Corporate accounts and billing',
+    environments: ['development', 'staging', 'production'],
+    description: 'Corporate accounts are hidden until billing and account management are implemented',
   },
 
   accessibility_features: {
