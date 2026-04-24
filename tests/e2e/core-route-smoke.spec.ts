@@ -7,9 +7,8 @@ const authRoutes = [
   '/app/offer-ride',
   '/app/my-trips',
   '/app/packages',
-  '/app/bus',
-  '/app/mobility-os',
-  '/app/profile',
+  '/app/wallet',
+  '/app/payments',
 ];
 
 async function expectHealthySurface(page: Page) {

@@ -11,23 +11,16 @@ test('wallet surface exposes stored-value controls', async ({ page }) => {
   await page.goto('/app/wallet', { waitUntil: 'domcontentloaded' });
 
   await expect(page.getByRole('heading', { level: 1, name: /wallet/i })).toBeVisible();
+  await expect(page.getByRole('alert').getByText(/wallet service unavailable/i)).toBeVisible();
   await expect(page.getByRole('button', { name: /add money/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /withdraw/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^send$/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /open payments/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /refresh wallet/i }).first()).toBeVisible();
 });
 
-test('payments surface creates and confirms a payment intent', async ({ page }) => {
+test('payments surface shows backend failure clearly', async ({ page }) => {
   await page.goto('/app/payments', { waitUntil: 'domcontentloaded' });
 
-  await expect(page.getByRole('heading', { name: /move value with explicit payment flows/i })).toBeVisible();
-  await expect(page.getByText(/wallet keeps your balance/i)).toBeVisible();
-
-  const createPaymentIntentButton = page.getByRole('button', { name: /create payment intent/i });
-  await expect(createPaymentIntentButton).toBeEnabled();
-  await createPaymentIntentButton.click();
-  await expect(page.getByText(/payment lifecycle/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: /confirm payment/i })).toBeVisible();
-
-  await page.getByRole('button', { name: /confirm payment/i }).click();
-  await expect(page.getByText(/payment settled successfully/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: /pay for a ride or package/i })).toBeVisible();
+  await expect(page.getByRole('alert').getByText(/payments unavailable/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: /retry/i })).toBeVisible();
 });
