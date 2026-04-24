@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router';
-import { Bus, Clock, Globe, MapPin, Moon, Package, Search, Settings, Sun } from 'lucide-react';
+import { Globe, Moon, Package, Search, Sun } from 'lucide-react';
 import { Button, LayoutContainer } from '../design-system/components';
 import { AppHeader } from '../components/brand';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -10,12 +10,8 @@ import { APP_ROUTES } from '../router/paths';
 import { buildAuthPagePath } from '../utils/authFlow';
 
 const primaryNav = [
-  { icon: <Search size={16} />, label: 'Find ride', path: APP_ROUTES.findRide.full },
-  { icon: <Bus size={16} />, label: 'Bus services', path: APP_ROUTES.bus.full },
-  { icon: <Package size={16} />, label: 'Packages', path: APP_ROUTES.packages.full },
-  { icon: <MapPin size={16} />, label: 'Mobility OS', path: APP_ROUTES.mobilityOs.full },
-  { icon: <Clock size={16} />, label: 'Trips', path: APP_ROUTES.myTrips.full },
-  { icon: <Settings size={16} />, label: 'Settings', path: APP_ROUTES.settings.full },
+  { icon: <Search size={16} />, label: 'Ride', path: APP_ROUTES.findRide.full },
+  { icon: <Package size={16} />, label: 'Package', path: APP_ROUTES.packages.full },
 ] as const;
 
 export default function WaselRoot() {
@@ -36,7 +32,7 @@ export default function WaselRoot() {
         items={primaryNav}
         onBrandClick={() => navigate('/')}
         showMobileNav
-        subtitle="LIVE MOBILITY NETWORK"
+        subtitle="Book a ride or send a package"
         surface={resolvedTheme === 'dark' ? 'dark' : 'light'}
         actions={
           <>
@@ -80,7 +76,7 @@ export default function WaselRoot() {
 
       <LayoutContainer width="wide">
         <footer className="ds-shell-footer">
-          <p className="ds-footer-note">Wasel stays visible inside the corridor.</p>
+          <p className="ds-footer-note">Book a ride, offer a ride, or send a package.</p>
           <div className="ds-shell-header__actions">
             <Button onClick={() => navigate(APP_ROUTES.privacy.full)} variant="ghost">
               Privacy

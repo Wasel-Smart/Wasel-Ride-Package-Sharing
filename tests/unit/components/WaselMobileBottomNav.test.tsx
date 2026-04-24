@@ -54,11 +54,11 @@ describe('WaselMobileBottomNav', () => {
     mockUseNotifications.mockReturnValue({ unreadCount: 0 });
   });
 
-  it('routes the history tab to the canonical trips surface', () => {
+  it('routes the package tab to the packages surface', () => {
     render(<WaselMobileBottomNav />);
 
-    screen.getByRole('button', { name: 'History', hidden: true }).click();
+    screen.getByRole('button', { name: 'Package', hidden: true }).click();
 
-    expect(mockNavigate).toHaveBeenCalledWith('/app/my-trips');
+    expect(mockNavigate).toHaveBeenCalledWith('/app/packages');
   });
 });

@@ -39,6 +39,7 @@ import {
   SectionHead,
 } from '../shared/pageShared';
 import { useTrips } from '../../modules/trips/trip.hooks';
+import { featureFlags } from '../core/featureFlags';
 
 const CARD: string = 'var(--wasel-panel-strong)';
 const CARD_ALT: string = 'var(--ds-surface-raised)';
@@ -655,10 +656,11 @@ export default function MyTripsPage() {
   const nav = useIframeSafeNavigate();
   const location = useLocation();
   const isRTL = language === 'ar';
+  const busEnabled = featureFlags.core.bus;
 
   const initialTab = new URLSearchParams(location.search).get('tab');
   const [tab, setTab] = useState<TripKind>(
-    initialTab === 'packages' || initialTab === 'buses' ? initialTab : 'rides',
+    initialTab === 'packages' || (busEnabled && initialTab === 'buses') ? initialTab : 'rides',
   );
   const [filter, setFilter] = useState<TripLifecycle | 'all'>('all');
   const { state: tripsState } = useTrips(user?.id);
@@ -688,6 +690,10 @@ export default function MyTripsPage() {
   }, [supportTickets, tripsState.packages]);
 
   const busItems = useMemo(() => {
+    if (!busEnabled) {
+      return [];
+    }
+
     return tripsState.buses.map(booking => {
       const relatedSupport = getSupportForItem(supportTickets, [
         booking.id,
@@ -696,7 +702,7 @@ export default function MyTripsPage() {
       ]);
       return toBusItem(booking, relatedSupport);
     });
-  }, [supportTickets, tripsState.buses]);
+  }, [busEnabled, supportTickets, tripsState.buses]);
 
   const collections: Record<TripKind, TripItem[]> = {
     rides: rideItems,
@@ -715,8 +721,7 @@ export default function MyTripsPage() {
     }),
     [items],
   );
-  const createPath =
-    tab === 'rides' ? '/app/offer-ride' : tab === 'packages' ? '/app/packages' : '/app/bus';
+  const createPath = tab === 'rides' ? '/app/offer-ride' : '/app/packages';
   const filters: Array<{ key: TripLifecycle | 'all'; label: string }> = [
     { key: 'all', label: 'All' },
     { key: 'active', label: 'Active' },
@@ -736,11 +741,11 @@ export default function MyTripsPage() {
             sub={
               isRTL
                 ? 'عرض سريع لكل الرحلات والحجوزات المفتوحة.'
-                : 'One place for rides, packages, and bus bookings.'
+                : 'One place for ride and package bookings.'
             }
             color={CYAN}
             action={{
-              label: tab === 'rides' ? 'New ride' : tab === 'packages' ? 'New package' : 'Book bus',
+              label: tab === 'rides' ? 'Offer ride' : 'Send package',
               onClick: () => nav(createPath),
             }}
           />
@@ -825,7 +830,7 @@ export default function MyTripsPage() {
               [
                 ['rides', <Car key="car" size={14} />, 'Rides'],
                 ['packages', <Package key="pkg" size={14} />, 'Packages'],
-                ['buses', <Bus key="bus" size={14} />, 'Buses'],
+                ...(busEnabled ? ([['buses', <Bus key="bus" size={14} />, 'Buses']] as const) : []),
               ] as const
             ).map(([key, icon, label]) => (
               <button
@@ -931,9 +936,9 @@ export default function MyTripsPage() {
                 }}
               >
                 {tab === 'rides'
-                  ? 'Create ride'
+                  ? 'Offer a ride'
                   : tab === 'packages'
-                    ? 'Create package'
+                    ? 'Send a package'
                     : 'Find a bus'}
                 <ArrowRight size={14} />
               </button>
