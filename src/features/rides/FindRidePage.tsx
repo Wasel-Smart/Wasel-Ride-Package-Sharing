@@ -128,16 +128,16 @@ function buildRidePageCopy(language: 'en' | 'ar') {
         searchError: 'تعذر البحث عن الرحلات الآن.',
         requestError: 'تعذر إرسال طلب الرحلة الآن.',
         requestSuccess: 'تم إرسال طلب الرحلة وبدأت مطابقة السائق.',
-        requestPendingSync: 'تم حفظ الطلب وسيتم مزامنة الحالة المباشرة حال توفرها.',
+        requestPendingSync: 'تم حجز الرحلة، وسيظهر تأكيد السائق هنا عندما يحدّثه النظام.',
       },
     });
   }
 
   const searchForm: RideSearchFormCopy = {
-    badge: 'Ride match',
-    title: 'Find Your Ride Instantly',
+    badge: 'Ride search',
+    title: 'Book a ride',
     description:
-      'Fast pickup discovery, trusted drivers, and driver matching queued the moment you request a seat.',
+      'Search live rides on real corridors with clear timing, seat count, and price.',
     searchModeLabel: 'Search mode',
     modeNowLabel: 'Now',
     modeScheduleLabel: 'Schedule',
@@ -161,14 +161,14 @@ function buildRidePageCopy(language: 'en' | 'ar') {
   };
 
   const results: RideResultsCopy = {
-    idleTitle: 'Search a corridor to unlock live ride matches',
+    idleTitle: 'Search a corridor to find rides',
     idleDescription:
-      'Start with pickup and destination to surface the fastest, clearest ride options.',
+      'Start with pickup and destination to see live ride options.',
     emptyTitle: 'No direct rides yet',
     emptyDescription:
       'Try widening the ride type, switching to scheduled time, or adjusting the corridor.',
-    sectionTitle: 'Premium ride matches',
-    sectionDescription: 'Ranked for trust, speed, seat availability, and corridor fit.',
+    sectionTitle: 'Available rides',
+    sectionDescription: 'Sorted by route fit, timing, trust, and open seats.',
     countSuffix: 'rides found',
     loadMoreLabel: 'Load more rides',
     card: {
@@ -192,30 +192,30 @@ function buildRidePageCopy(language: 'en' | 'ar') {
 
   return {
     hero: {
-      eyebrow: 'Core mobility entry point',
-      title: 'Find Your Ride Instantly',
+      eyebrow: 'Book a ride',
+      title: 'Book a ride',
       description:
-        'Premium ride search for Wasel: faster than route browsing, clearer than listing feeds, and trusted the second you land.',
+        'Search live rides on real corridors with clear seats, timing, and price before you book.',
       highlights: [
         {
-          title: 'Instant search',
-          detail: 'Debounced suggestions and corridor ranking in under 300ms.',
+          title: 'Direct search',
+          detail: 'Pick the corridor and see live ride options quickly.',
         },
         {
-          title: 'Trusted inventory',
-          detail: 'Driver verification, ratings, and clear fare signals on every card.',
+          title: 'Clear details',
+          detail: 'Seat count, driver trust, and fare stay visible on every card.',
         },
         {
-          title: 'Driver matching',
-          detail: 'Queue-backed matching starts as soon as a request is submitted.',
+          title: 'Backend updates only',
+          detail: 'Ride status changes appear only after the backend updates them.',
         },
       ],
       stats: [
-        { label: 'Median pickup match', value: '< 3 min' },
-        { label: 'Trusted driver visibility', value: '100%' },
-        { label: 'Queue-backed requests', value: 'Active' },
+        { label: 'Ride flow', value: 'Live' },
+        { label: 'Driver status', value: 'Verified' },
+        { label: 'Booking source', value: 'Backend' },
       ],
-      ctaLabel: 'Open ride request flow',
+      ctaLabel: 'Book a ride',
     },
     searchForm,
     results,
@@ -235,8 +235,8 @@ function buildRidePageCopy(language: 'en' | 'ar') {
       },
       searchError: 'Unable to search rides right now.',
       requestError: 'Unable to send the ride request right now.',
-      requestSuccess: 'Ride request sent. Driver matching is running now.',
-      requestPendingSync: 'Ride request saved. Live status will sync as soon as it is available.',
+      requestSuccess: 'Ride booked. Driver matching has started.',
+      requestPendingSync: 'Ride booked. Driver confirmation will appear here when the backend updates it.',
     },
   };
 }
@@ -262,7 +262,7 @@ export function FindRidePage() {
 
   // Static service paths
   const findRidePath = '/app/find-ride';
-  const mobilityOsPath = '/app/mobility-os';
+  const mobilityOsPath = '';
   const myTripsPath = '/app/my-trips';
   const packagesPath = '/app/packages';
 
@@ -285,9 +285,9 @@ export function FindRidePage() {
       },
       {
         icon: Car,
-        title: ar ? 'أنشئ رحلة' : 'Create ride',
-        detail: ar ? 'شارك المقاعد' : 'Share seats',
-        path: '/app/create-ride',
+        title: ar ? 'اعرض رحلة' : 'Offer a ride',
+        detail: ar ? 'افتح المقاعد' : 'Share seats on your route',
+        path: '/app/offer-ride',
         color: LANDING_COLORS.blue,
       },
     ];

@@ -49,33 +49,33 @@ type FlowCard = { icon: LucideIcon; title: string; detail: string; path: string;
 const COPY = {
   en: {
     navRide: 'Find a ride',
-    navPackage: 'Open packages',
-    navOffer: 'Create ride',
+    navPackage: 'Send a package',
+    navOffer: 'Offer a ride',
     signIn: 'Sign in',
     createAccount: 'Create account',
-    heroBadge: 'One live network',
-    heroTitle: 'Open the network first. Travel your way with Wasel.',
+    heroBadge: 'Ride and package marketplace',
+    heroTitle: 'Book a ride, offer a ride, or send a package.',
     heroBody:
-      'Wasel makes the idea clear in seconds: the same corridor can carry riders, packages, and sharper decisions.',
-    heroSignal: 'One route can move people and parcels.',
+      'Choose the corridor first, then complete one real action: book a ride, offer a ride, or send a package.',
+    heroSignal: 'Rides and packages move through the same corridor.',
     points: [
-      'The mobility map stays visible in the background.',
-      'Rides and packages share the same operating surface.',
-      'Support and trust stay close to the action.',
+      'Start from the corridor you want.',
+      'Book a ride or send a package from the same route.',
+      'Payment and support stay clear and close.',
     ],
     modes: { ride: 'Rides', package: 'Packages' },
     cardTitle: { ride: 'Find a ride', package: 'Send a package' },
     cardBody: {
-      ride: 'Choose a corridor, then open the live ride flow.',
-      package: 'Start from the same corridor, then open the package flow.',
+      ride: 'Choose a corridor, then book a ride.',
+      package: 'Choose a corridor, then send a package.',
     },
     from: 'Leaving from',
     to: 'Going to',
     date: 'When',
-    primary: { ride: 'Find a ride', package: 'Open packages' },
-    secondary: 'Create ride',
-    packageHint: 'Packages move through the same corridors. Pick the route first, then continue.',
-    guestLead: 'Enter Wasel through the shortest path.',
+    primary: { ride: 'Book a ride', package: 'Send a package' },
+    secondary: 'Offer a ride',
+    packageHint: 'Packages use the same corridors. Pick the route first, then continue.',
+    guestLead: 'Choose your action and continue.',
     email: 'Continue with email',
     google: 'Continue with Google',
     googleBusy: 'Connecting Google...',
@@ -85,23 +85,23 @@ const COPY = {
       google: 'Google sign in failed.',
       facebook: 'Facebook sign in failed.',
     },
-    flowHeading: 'Choose your flow',
-    flowSub: 'Three simple ways to understand Wasel in a few seconds.',
+    flowHeading: 'Choose what to do',
+    flowSub: 'Three direct actions. Nothing else.',
     flowCards: {
       ride: {
-        title: 'Find a ride',
-        detail: 'Compare the corridor, timing, and seat.',
-        cta: 'Open rides',
+        title: 'Book a ride',
+        detail: 'See the route, time, and seat before you continue.',
+        cta: 'Book a ride',
       },
       package: {
         title: 'Send a package',
-        detail: 'Attach the parcel to the same network.',
-        cta: 'Open packages',
+        detail: 'Use the same corridor to move a package.',
+        cta: 'Send a package',
       },
       offer: {
-        title: 'Create ride',
-        detail: 'Turn an empty departure into more value.',
-        cta: 'Open driver flow',
+        title: 'Offer a ride',
+        detail: 'Post your trip and open seats on a real route.',
+        cta: 'Offer a ride',
       },
     },
   },
@@ -310,9 +310,9 @@ export default function AppEntryPage() {
         { value: '24/7', label: 'دعم قريب', detail: 'الثقة والدعم بجوار الحركة' },
       ]
     : [
-        { value: '3', label: 'Core flows', detail: 'Rides, packages, and supply' },
-        { value: '1', label: 'Shared network', detail: 'The same corridor powers the decision' },
-        { value: '24/7', label: 'Close support', detail: 'Trust and help stay near the action' },
+        { value: '3', label: 'Core actions', detail: 'Book, offer, or send' },
+        { value: '1', label: 'Shared corridor', detail: 'The same route powers rides and packages' },
+        { value: '24/7', label: 'Clear support', detail: 'Payment and help stay near the action' },
       ];
   const heroJourney = ar
     ? [
@@ -414,7 +414,7 @@ export default function AppEntryPage() {
               <span className="app-entry-page__brand-meta">
                 {ar
                   ? '\u0634\u0628\u0643\u0629 \u0627\u0644\u062d\u0631\u0643\u0629 \u0627\u0644\u062d\u064a\u0629'
-                  : 'Live mobility network'}
+                  : 'Ride and package marketplace'}
               </span>
             </span>
           </button>

@@ -87,7 +87,7 @@ export function OfferRideFormPanel({
           }}
         >
           <div style={{ color: '#fff', fontWeight: 800, marginBottom: 14, fontSize: '1rem' }}>
-            Recent corridor posts
+            Recent rides on this corridor
           </div>
           {recentPostedRides.length > 0 ? (
             <div style={{ display: 'grid', gap: 12 }}>
@@ -156,7 +156,7 @@ export function OfferRideFormPanel({
               fontSize: '1.2rem',
             }}
           >
-            Route Details
+            Ride details
           </h3>
           {[
             { label: 'From', key: 'from' as const },
@@ -292,7 +292,7 @@ export function OfferRideFormPanel({
 
 {step === 2 && (
         <div style={{ display: 'grid', gap: 18 }}>
-          <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 8px', fontSize: '1.2rem' }}>Seats, Pricing, and Capacity</h3>
+          <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 8px', fontSize: '1.2rem' }}>Seats, price, and package space</h3>
           {driverPlan && (
             <div className="sp-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
               {[
@@ -316,10 +316,10 @@ export function OfferRideFormPanel({
           ))}
           {driverPlan && (
             <div style={{ borderRadius: r(16), border: '1px solid rgba(6,182,212,0.25)', background: 'rgba(6,182,212,0.08)', padding: '16px 18px' }}>
-              <div style={{ color: '#06b6d4', fontWeight: 800, fontSize: '0.9rem' }}>Wasel Brain recommendation</div>
+              <div style={{ color: '#06b6d4', fontWeight: 800, fontSize: '0.9rem' }}>Price guidance</div>
               <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', lineHeight: 1.65, marginTop: 8 }}>
                 {driverPlan.waselBrainNote} Empty-seat risk is about {driverPlan.emptySeatCostJod} JOD per open seat, and package-ready supply can add about {driverPlan.packageBonusJod} JOD on this route.
-                {corridor.routeOwnershipScore !== null ? ` Live route proof shows ${corridor.routeOwnershipScore}/100 ownership${corridor.liveProofSummary ? ` with ${corridor.liveProofSummary}.` : '.'}` : ''}
+                {corridor.routeOwnershipScore !== null ? ` Live route coverage is ${corridor.routeOwnershipScore}/100${corridor.liveProofSummary ? ` with ${corridor.liveProofSummary}.` : '.'}` : ''}
               </div>
             </div>
           )}
@@ -328,7 +328,7 @@ export function OfferRideFormPanel({
             <input data-testid="offer-ride-car-model" placeholder="e.g. Toyota Camry 2023" value={form.carModel} onChange={(event) => onUpdate('carModel', event.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: r(14), border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontFamily: DS.F, fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <button type="button" onClick={() => onUpdate('acceptsPackages', !form.acceptsPackages)} style={{ padding: '16px 20px', borderRadius: r(14), border: `1px solid ${form.acceptsPackages ? '#10b981' : 'rgba(255,255,255,0.1)'}`, background: form.acceptsPackages ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.05)', color: form.acceptsPackages ? '#10b981' : 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', textAlign: 'left', fontSize: '0.95rem' }}>
-            Package holding: {form.acceptsPackages ? 'Holding packages on this ride' : 'Passengers only'}
+            Package option: {form.acceptsPackages ? 'Carry packages on this ride' : 'Passengers only'}
           </button>
           {form.acceptsPackages && (
             <div>
@@ -351,7 +351,7 @@ export function OfferRideFormPanel({
 
       {step === 3 && (
         <div style={{ display: 'grid', gap: 18 }}>
-          <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 8px', fontSize: '1.2rem' }}>Preferences, Package Holding, and WhatsApp</h3>
+          <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 8px', fontSize: '1.2rem' }}>Ride preferences and updates</h3>
           <div>
             <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Gender Preference</label>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -376,9 +376,9 @@ export function OfferRideFormPanel({
             <textarea rows={3} placeholder="Anything passengers should know" value={form.note} onChange={(event) => onUpdate('note', event.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: r(14), border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontFamily: DS.F, fontSize: '0.95rem', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
           </div>
           <div style={{ borderRadius: r(16), border: '1px solid rgba(37,211,102,0.35)', background: 'rgba(37,211,102,0.1)', padding: '16px 18px' }}>
-            <div style={{ color: '#25d366', fontWeight: 800, fontSize: '0.9rem' }}>WhatsApp is the main communication pipeline</div>
+            <div style={{ color: '#25d366', fontWeight: 800, fontSize: '0.9rem' }}>Ride updates stay clear</div>
             <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: '0.8rem', lineHeight: 1.65, marginTop: 8 }}>
-              Riders, package senders, package receivers, and holders should coordinate on WhatsApp first. This ride should feel ready for guest updates and package handoff messages the moment it goes live.
+              Riders and package senders can coordinate on WhatsApp after the backend confirms the ride and any package match.
             </div>
           </div>
           <div style={{ background: 'rgba(6,182,212,0.08)', borderRadius: r(18), padding: '22px 24px', border: '1px solid rgba(6,182,212,0.2)' }}>
@@ -394,7 +394,7 @@ export function OfferRideFormPanel({
               {driverPlan && (
                 <>
                   <br />
-                  Wasel Brain target: {driverPlan.recommendedSeatPriceJod} JOD/seat, {driverPlan.corridor.savingsPercent}% cheaper than solo movement, best pickup at {corridor.recommendedPickupPoint ?? driverPlan.corridor.pickupPoints[0] ?? 'the top corridor node'}
+                  Suggested price: {driverPlan.recommendedSeatPriceJod} JOD/seat, {driverPlan.corridor.savingsPercent}% cheaper than solo movement, best pickup at {corridor.recommendedPickupPoint ?? driverPlan.corridor.pickupPoints[0] ?? 'the top corridor node'}
                   {corridor.activeDemandAlerts > 0 || corridor.nextWaveWindow ? `, with ${corridor.activeDemandAlerts} active alerts and ${corridor.nextWaveWindow ?? 'the next grouped departure window'} as the next dense departure window` : ''}
                 </>
               )}
@@ -403,7 +403,7 @@ export function OfferRideFormPanel({
           <div style={{ display: 'flex', gap: 12 }}>
             <button type="button" onClick={() => onStepChange(2)} style={{ flex: 1, height: 56, borderRadius: r(16), border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}>Back</button>
             <button type="button" data-testid="offer-ride-submit" disabled={busyState === 'posting'} onClick={onSubmit} style={{ flex: 2, height: 56, borderRadius: r(16), border: 'none', background: busyState === 'posting' ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: busyState === 'posting' ? 'rgba(255,255,255,0.5)' : '#fff', fontWeight: 800, fontFamily: DS.F, cursor: busyState === 'posting' ? 'wait' : 'pointer', opacity: busyState === 'posting' ? 0.75 : 1, boxShadow: busyState === 'posting' ? 'none' : '0 8px 25px -5px rgba(16,185,129,0.4)', fontSize: '1rem' }}>
-              {busyState === 'posting' ? 'Posting connected ride...' : 'Post Connected Ride'}
+              {busyState === 'posting' ? 'Posting ride...' : 'Offer ride'}
             </button>
           </div>
         </div>
