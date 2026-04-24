@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { MapWrapper } from '../../components/MapWrapper';
 import { useLocalAuth } from '../../contexts/LocalAuth';
+import { BUS_PAGE_COPY, BUS_TEST_IDS } from '../../modules/bus/bus.copy';
 import { useBusSearch } from '../../modules/bus/bus.hooks';
 import type { BusRoute } from '../../modules/bus/bus.types';
 import { createSupportTicket } from '../../services/supportInbox';
@@ -263,7 +264,7 @@ export function BusPage() {
         />
         <CoreExperienceBanner
           title="Jordan bus schedules with trusted fares"
-          detail="Official intercity schedules stay visible, with live inventory when available."
+          detail={BUS_PAGE_COPY.heroDetail}
           tone={DS.green}
         />
         <ClarityBand
@@ -451,7 +452,7 @@ export function BusPage() {
               </span>
             </div>
             <button
-              data-testid="bus-confirm-booking"
+              data-testid={BUS_TEST_IDS.confirmBooking}
               onClick={handleBusBooking}
               disabled={bookingDisabled}
               type="button"
@@ -773,6 +774,8 @@ export function BusPage() {
 
         {(routesLoading || routesInfo) && (
           <div
+            data-testid={BUS_TEST_IDS.routeInfo}
+            data-route-info-kind={routesLoading ? 'loading' : (routesInfo?.kind ?? 'none')}
             style={{
               marginBottom: 16,
               background: DS.card2,
@@ -783,7 +786,7 @@ export function BusPage() {
               fontSize: '0.8rem',
             }}
           >
-            {routesLoading ? 'Syncing live bus routes...' : routesInfo}
+            {routesLoading ? BUS_PAGE_COPY.loadingRoutes : routesInfo?.message}
           </div>
         )}
 
@@ -1435,6 +1438,7 @@ export function BusPage() {
                     href={activeBus.sourceUrl}
                     target="_blank"
                     rel="noreferrer"
+                    data-testid={BUS_TEST_IDS.officialScheduleLink}
                     style={{
                       color: DS.cyan,
                       fontSize: '0.78rem',
@@ -1445,31 +1449,33 @@ export function BusPage() {
                     }}
                   >
                     <ExternalLink size={14} />
-                    Official schedule, verified {activeBus.lastVerifiedAt}
+                    {BUS_PAGE_COPY.officialScheduleLink(activeBus.lastVerifiedAt ?? tripDate)}
                   </a>
                 )}
                 {bookingComplete && (
                   <div
+                    data-testid={BUS_TEST_IDS.bookingConfirmation}
                     style={{
                       background: 'rgba(107,181,21,0.10)',
                       border: '1px solid rgba(107,181,21,0.28)',
                       borderRadius: r(16),
                       padding: '14px 16px',
                     }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
+                    >
+                      <div
+                        data-testid={BUS_TEST_IDS.bookingConfirmationTitle}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
                         gap: 8,
                         color: DS.green,
                         fontWeight: 800,
                         marginBottom: 6,
                       }}
-                    >
-                      <CheckCircle2 size={16} />
-                      Seat confirmed
-                    </div>
+                      >
+                        <CheckCircle2 size={16} />
+                        {BUS_PAGE_COPY.bookingConfirmedTitle}
+                      </div>
                     <div style={{ color: DS.text, fontSize: '0.86rem', lineHeight: 1.5 }}>
                       {passengers} seat{passengers > 1 ? 's are' : ' is'} reserved for{' '}
                       {departureLabel}. Ticket code {bookingTicketCode ?? 'pending'} was saved for

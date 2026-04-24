@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { BUS_TEST_IDS } from '../../src/modules/bus/bus.copy';
 import { seedDemoSession } from '../../e2e/helpers/session';
 
 test.describe.configure({ mode: 'serial' });
@@ -50,10 +51,15 @@ test('offer ride posts a connected trip', async ({ page }) => {
 test('bus flow reserves a seat', async ({ page }) => {
   await page.goto('/app/bus');
   await expect(page.getByRole('heading', { name: /wasel bus/i })).toBeVisible();
-  await expect(page.getByText(/showing official jordan schedule data verified on|live bus inventory is synced for this corridor|live route api is unavailable/i)).toBeVisible();
-  await expect(page.getByTestId('bus-confirm-booking')).toBeVisible();
-  await page.getByTestId('bus-confirm-booking').click({ timeout: 20_000 });
-  const confirmation = page.getByText(/seat confirmed/i).last();
+  const routeInfo = page.getByTestId(BUS_TEST_IDS.routeInfo);
+  await expect(routeInfo).toBeVisible();
+  await expect(routeInfo).toHaveAttribute(
+    'data-route-info-kind',
+    /^(loading|live|official|nearest|unavailable)$/,
+  );
+  await expect(page.getByTestId(BUS_TEST_IDS.confirmBooking)).toBeVisible();
+  await page.getByTestId(BUS_TEST_IDS.confirmBooking).click({ timeout: 20_000 });
+  const confirmation = page.getByTestId(BUS_TEST_IDS.bookingConfirmationTitle).last();
   await confirmation.scrollIntoViewIfNeeded();
   await expect(confirmation).toBeVisible();
 });

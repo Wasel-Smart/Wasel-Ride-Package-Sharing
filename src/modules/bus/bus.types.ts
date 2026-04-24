@@ -1,4 +1,5 @@
 import type { BusBookingPayload, BusBookingResult, BusRoute } from '../../services/bus';
+import type { BusRouteInfo } from './bus.copy';
 
 export type { BusBookingPayload, BusBookingResult, BusRoute };
 
@@ -13,7 +14,7 @@ export interface BusSearchDraft {
 export interface BusSearchState {
   routes: BusRoute[];
   loading: boolean;
-  info: string | null;
+  info: BusRouteInfo | null;
   error: string | null;
   bookingBusy: boolean;
 }
