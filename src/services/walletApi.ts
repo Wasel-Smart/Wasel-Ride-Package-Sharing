@@ -41,7 +41,7 @@ import {
   walletStepUpVerificationSchema,
 } from '../contracts/wallet';
 import { parseContract } from '../contracts/validation';
-import { getConfig, getEnv } from '../utils/env';
+import { getConfig } from '../utils/env';
 import { apiGateway } from './apiGateway';
 import {
   makeReliabilityMeta,
@@ -134,14 +134,7 @@ function allowSnapshotFallback(): boolean {
 }
 
 function allowPaymentIntentFallback(): boolean {
-  const config = getConfig();
-  if (config.isTest) {
-    return ['1', 'true', 'yes', 'on'].includes(
-      getEnv('VITE_WALLET_API_ALLOW_DEMO_INTENTS').trim().toLowerCase(),
-    );
-  }
-
-  return allowSnapshotFallback();
+  return getConfig().enableFakePayments;
 }
 
 // ─── In-memory cache (TTL-based) ──────────────────────────────────────────────
@@ -562,7 +555,11 @@ export const walletApi = {
       if (!allowPaymentIntentFallback()) {
         throw error;
       }
-      const uid = String(options?.metadata?.initiatedByUserId ?? '');
+      const metadataUserId =
+        typeof options?.metadata?.initiatedByUserId === 'string'
+          ? options.metadata.initiatedByUserId.trim()
+          : '';
+      const uid = metadataUserId || await resolveUserId().catch(() => '');
       return buildDemoIntent(uid, purpose, amount, paymentMethodType, options);
     }
   },

@@ -4,7 +4,7 @@ import { triggerBusBookingConfirmationEmail } from './transactionalEmailTriggers
 import { tripsAPI } from './trips';
 import { OFFICIAL_JORDAN_BUS_ROUTES } from '../data/jordanBusNetwork';
 import { locationsOverlap, routeMatchesLocationPair } from '../utils/jordanLocations';
-import { allowLocalPersistenceFallback, requireLocalPersistenceFallback } from './runtimePolicy';
+import { getConfig } from '../utils/env';
 
 export interface BusRoute {
   id: string;
@@ -222,7 +222,7 @@ function persistLocalBusBooking(payload: BusBookingPayload): StoredBusBooking {
 }
 
 export function getStoredBusBookings(): StoredBusBooking[] {
-  if (!allowLocalPersistenceFallback()) {
+  if (!getConfig().enableFakeBusBookings) {
     return [];
   }
 
@@ -287,8 +287,11 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
       },
     });
     return result;
-  } catch {
-    requireLocalPersistenceFallback('Bus booking persistence');
+  } catch (error) {
+    if (!getConfig().enableFakeBusBookings) {
+      throw error;
+    }
+
     const stored = persistLocalBusBooking(payload);
     void trackGrowthEvent({
       eventName: 'bus_booking_created',

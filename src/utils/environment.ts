@@ -7,12 +7,18 @@ interface EnvironmentConfig {
   isDemoMode: boolean;
   enableDemoData: boolean;
   enableSyntheticTrips: boolean;
+  enableFakePayments: boolean;
+  enableFakeBusBookings: boolean;
   enablePersistedTestAuth: boolean;
   allowDirectSupabaseFallback: boolean;
   allowLocalPersistenceFallback: boolean;
   supabaseUrl: string;
   supabaseKey: string;
   appUrl: string;
+}
+
+function isExplicitlyEnabled(keys: string[]): boolean {
+  return keys.some(key => ['1', 'true', 'yes', 'on'].includes(getEnv(key).trim().toLowerCase()));
 }
 
 export function getEnvironmentConfig(): EnvironmentConfig {
@@ -23,6 +29,8 @@ export function getEnvironmentConfig(): EnvironmentConfig {
     isDemoMode: config.enableDemoAccount,
     enableDemoData: config.enableDemoAccount,
     enableSyntheticTrips: config.enableSyntheticTrips,
+    enableFakePayments: config.enableFakePayments,
+    enableFakeBusBookings: config.enableFakeBusBookings,
     enablePersistedTestAuth: config.enablePersistedTestAuth,
     allowDirectSupabaseFallback: config.allowDirectSupabaseFallback,
     allowLocalPersistenceFallback: config.allowLocalPersistenceFallback,
@@ -36,6 +44,14 @@ export function validateEnvironmentConfig(): void {
   const config = getEnvironmentConfig();
   const errors: string[] = [];
   const isProtectedEnvironment = config.mode === 'production' || config.mode === 'staging';
+  const fakePaymentsRequested = isExplicitlyEnabled([
+    'VITE_ENABLE_FAKE_PAYMENTS',
+    'ENABLE_FAKE_PAYMENTS',
+  ]);
+  const fakeBusBookingsRequested = isExplicitlyEnabled([
+    'VITE_ENABLE_FAKE_BUS_BOOKINGS',
+    'ENABLE_FAKE_BUS_BOOKINGS',
+  ]);
 
   if (isProtectedEnvironment && !config.supabaseUrl) {
     errors.push('VITE_SUPABASE_URL is not configured');
@@ -73,6 +89,14 @@ export function validateEnvironmentConfig(): void {
 
     if (config.allowLocalPersistenceFallback) {
       errors.push('Local persistence fallback must be disabled in staging and production');
+    }
+
+    if (fakePaymentsRequested || config.enableFakePayments) {
+      errors.push('Fake payments must be disabled in staging and production');
+    }
+
+    if (fakeBusBookingsRequested || config.enableFakeBusBookings) {
+      errors.push('Fake bus bookings must be disabled in staging and production');
     }
 
     if (!config.appUrl.startsWith('https://')) {

@@ -111,6 +111,16 @@ function flagAllowedInEnvironment(
   return enabled && allowedEnvironments.includes(environment);
 }
 
+function flagAllowedInEnvironmentAny(
+  keys: string[],
+  fallback: boolean,
+  environment: AppEnvironment,
+  allowedEnvironments: AppEnvironment[],
+): boolean {
+  const enabled = getBooleanEnvAny(keys, fallback);
+  return enabled && allowedEnvironments.includes(environment);
+}
+
 function resolveAppUrl(environment: AppEnvironment): string {
   const configuredAppUrl = getEnv(
     'VITE_APP_URL',
@@ -182,13 +192,17 @@ function buildConfig() {
     hasPublicSupabaseConfig && getBooleanEnv('VITE_ENABLE_GOOGLE_AUTH', false);
   const enableFacebookAuth =
     hasPublicSupabaseConfig && getBooleanEnv('VITE_ENABLE_FACEBOOK_AUTH', false);
-  const enableFakePayments = getBooleanEnvAny(
+  const enableFakePayments = flagAllowedInEnvironmentAny(
     ['VITE_ENABLE_FAKE_PAYMENTS', 'ENABLE_FAKE_PAYMENTS'],
     false,
+    environment,
+    ['development', 'test'],
   );
-  const enableFakeBusBookings = getBooleanEnvAny(
+  const enableFakeBusBookings = flagAllowedInEnvironmentAny(
     ['VITE_ENABLE_FAKE_BUS_BOOKINGS', 'ENABLE_FAKE_BUS_BOOKINGS'],
     false,
+    environment,
+    ['development', 'test'],
   );
   const enableTwoFactorAuth = getBooleanEnv('VITE_ENABLE_TWO_FACTOR_AUTH', false);
   const enableEmailNotifications = getBooleanEnv('VITE_ENABLE_EMAIL_NOTIFICATIONS', true);
