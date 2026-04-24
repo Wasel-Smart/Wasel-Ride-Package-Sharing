@@ -199,23 +199,31 @@ export function PackagesPage() {
     }
   };
 
-  const handleVerificationAction = (
+  const handleVerificationAction = async (
     action: 'share_code' | 'confirm_pickup' | 'confirm_delivery',
   ) => {
     if (!trackedPackage) return;
-    const updated = updatePackageVerification(trackedPackage.trackingId, action);
-    if (!updated) return;
+    try {
+      const updated = await updatePackageVerification(trackedPackage.trackingId, action);
+      if (!updated) return;
 
-    setTrackedPackage(updated);
-    setTrackId(updated.trackingId);
-    setTrackingMessage(
-      action === 'share_code'
-        ? `OTP handoff is now shared for ${updated.trackingId}.`
-        : action === 'confirm_pickup'
-          ? `Rider pickup confirmed for ${updated.trackingId}.`
-          : `Delivery confirmed for ${updated.trackingId}.`,
-    );
-    refreshPackageSnapshot();
+      setTrackedPackage(updated);
+      setTrackId(updated.trackingId);
+      setTrackingMessage(
+        action === 'share_code'
+          ? `OTP handoff is now shared for ${updated.trackingId}.`
+          : action === 'confirm_pickup'
+            ? `Rider pickup confirmed for ${updated.trackingId}.`
+            : `Delivery confirmed for ${updated.trackingId}.`,
+      );
+      refreshPackageSnapshot();
+    } catch (error) {
+      setTrackingMessage(
+        error instanceof Error
+          ? error.message
+          : 'Package status could not be updated right now.',
+      );
+    }
   };
 
   const handleOpenSupport = () => {
@@ -236,7 +244,7 @@ export function PackagesPage() {
         message: `Support is now following ${trackedPackage.trackingId}.`,
         type: 'support',
         priority: 'high',
-        action_url: '/app/profile',
+        action_url: '/app/packages',
       })
       .catch(() => {});
   };

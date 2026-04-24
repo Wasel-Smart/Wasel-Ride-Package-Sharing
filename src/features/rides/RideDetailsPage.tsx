@@ -233,7 +233,7 @@ export function RideDetailsPage() {
       setBookingMessage(
         result.lifecycleSynced
           ? 'Seat booked. WhatsApp coordination is now the main trip channel.'
-          : 'Seat request saved. WhatsApp updates will sync as soon as the ride state refreshes.',
+          : 'Seat booked. Driver confirmation will appear here when the backend updates it.',
       );
       setRide({ ...ride });
 

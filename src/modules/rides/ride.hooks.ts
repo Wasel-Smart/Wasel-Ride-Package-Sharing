@@ -203,7 +203,7 @@ export function useRideSearch(options: UseRideSearchOptions = {}) {
               ? (options.messages?.requestSuccess ??
                 'Ride request sent. Driver matching is running now.')
               : (options.messages?.requestPendingSync ??
-                'Ride request saved. Live status will sync as soon as it is available.'),
+                'Ride booked. Driver confirmation will appear here when the backend updates it.'),
           },
         });
 

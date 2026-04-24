@@ -12,7 +12,8 @@ import {
   routeEndpointsAreDistinct,
   routeMatchesLocationPair,
 } from '../utils/jordanLocations';
-import { allowLocalPersistenceFallback, requireDirectSupabaseFallback } from './runtimePolicy';
+import { logger } from '../utils/logging';
+import { requireDirectSupabaseFallback } from './runtimePolicy';
 
 export type RecordSyncState = 'local-only' | 'syncing' | 'synced' | 'sync-error';
 
@@ -102,11 +103,6 @@ function generateHandoffCode(): string {
   return `HC-${Math.floor(100000 + Math.random() * 900000)}`;
 }
 
-function pickDriverName(carModel: string): string {
-  if (!carModel.trim()) {return 'Wasel Captain';}
-  return `${carModel.split(' ')[0]} Captain`;
-}
-
 function parseWeight(weight: string): number {
   const matches = weight.match(/\d+(?:\.\d+)?/g);
   if (!matches) {return 0.5;}
@@ -140,18 +136,10 @@ function sortByCreatedAtDesc<T extends { createdAt: string }>(items: T[]): T[] {
 }
 
 function isPersistedRideVisible(ride: PostedRide): boolean {
-  if (allowLocalPersistenceFallback()) {
-    return true;
-  }
-
   return ride.syncState === 'synced' || ride.syncState === 'syncing';
 }
 
 function isPersistedPackageVisible(pkg: PackageRequest): boolean {
-  if (allowLocalPersistenceFallback()) {
-    return true;
-  }
-
   return pkg.syncState === 'synced' || pkg.syncState === 'syncing';
 }
 
@@ -197,6 +185,7 @@ function buildTimeline(
 }
 
 function normalizeServerRide(raw: Record<string, unknown>, fallback: PostedRide): PostedRide {
+  const rawStatus = String(raw.status ?? '').toLowerCase();
   return {
     ...fallback,
     id: String(raw.id ?? fallback.id),
@@ -225,9 +214,9 @@ function normalizeServerRide(raw: Record<string, unknown>, fallback: PostedRide)
       String(raw.owner_email ?? raw.ownerEmail ?? raw.email ?? fallback.ownerEmail ?? ''),
     ),
     status:
-      raw.status === 'cancelled' || raw.status === 'completed'
-        ? raw.status
-        : (fallback.status ?? 'active'),
+      rawStatus === 'active' || rawStatus === 'cancelled' || rawStatus === 'completed'
+        ? (rawStatus as PostedRide['status'])
+        : undefined,
     syncState: 'synced',
     syncedAt: new Date().toISOString(),
   };
@@ -275,7 +264,7 @@ function normalizeServerPackage(
   fallback: PackageRequest,
 ): PackageRequest {
   const matchedRideId =
-    String(raw.trip_id ?? raw.matchedRideId ?? fallback.matchedRideId ?? '').trim() || undefined;
+    String(raw.trip_id ?? raw.matchedRideId ?? '').trim() || undefined;
   const status = normalizeStatus(raw.status, matchedRideId);
   const handoffCode =
     String(raw.handoff_code ?? raw.handoffCode ?? fallback.handoffCode ?? '')
@@ -311,11 +300,9 @@ function normalizeServerPackage(
       String(raw.recipient_phone ?? raw.recipientPhone ?? fallback.recipientPhone ?? ''),
     ),
     matchedRideId,
-    matchedDriver:
-      String(raw.driver_name ?? raw.matchedDriver ?? fallback.matchedDriver ?? '').trim() ||
-      fallback.matchedDriver,
+    matchedDriver: String(raw.driver_name ?? raw.matchedDriver ?? '').trim() || undefined,
     matchedDriverPhone: sanitizePhone(
-      String(raw.driver_phone ?? raw.matchedDriverPhone ?? fallback.matchedDriverPhone ?? ''),
+      String(raw.driver_phone ?? raw.matchedDriverPhone ?? ''),
     ),
     status,
     createdAt: String(raw.created_at ?? fallback.createdAt),
@@ -519,8 +506,8 @@ export async function createConnectedRide(
     to: normalizeJordanLocation(input.to, input.to || 'Aqaba'),
     id: makeId('ride'),
     createdAt: new Date().toISOString(),
-    status: input.status ?? 'active',
-    syncState: 'local-only',
+    status: undefined,
+    syncState: 'syncing',
   };
 
   try {
@@ -554,21 +541,14 @@ export async function createConnectedRide(
     });
     return created;
   } catch (error) {
-    if (!allowLocalPersistenceFallback()) {
-      console.warn('[journeyLogistics] trip creation unavailable, preserving route locally', error);
-    }
-    saveRides([ride], getConnectedRides());
-    void trackGrowthEvent({
-      userId: input.ownerId,
-      eventName: 'ride_offer_created',
-      funnelStage: 'selected',
-      serviceType: 'ride',
+    logger.error('[journeyLogistics] ride creation failed', error, {
       from: ride.from,
       to: ride.to,
-      valueJod: ride.price,
-      metadata: { seats: ride.seats, acceptsPackages: ride.acceptsPackages, source: 'local' },
+      ownerId: input.ownerId ?? null,
+      seats: ride.seats,
+      price: ride.price,
     });
-    return ride;
+    throw new Error('Ride could not be created right now. Please try again.');
   }
 }
 
@@ -644,7 +624,6 @@ export async function createConnectedPackage(input: {
     preferredRideId: input.preferredRideId,
   });
   const trackingId = `PKG-${Math.floor(10000 + Math.random() * 90000)}`;
-  const status: PackageStatus = matchedRide ? 'matched' : 'searching';
 
   const pkg: PackageRequest = {
     id: makeId('pkg'),
@@ -660,14 +639,14 @@ export async function createConnectedPackage(input: {
     senderEmail: sanitizeEmail(input.senderEmail),
     recipientName: input.recipientName?.trim() || undefined,
     recipientPhone: sanitizePhone(input.recipientPhone),
-    matchedRideId: matchedRide?.id,
-    matchedDriver: matchedRide ? pickDriverName(matchedRide.carModel) : undefined,
-    matchedDriverPhone: matchedRide?.ownerPhone,
-    status,
+    matchedRideId: undefined,
+    matchedDriver: undefined,
+    matchedDriverPhone: undefined,
+    status: 'searching',
     createdAt: new Date().toISOString(),
     verification: {},
-    timeline: buildTimeline(status, matchedRide?.id, {}),
-    syncState: 'local-only',
+    timeline: buildTimeline('searching', undefined, {}),
+    syncState: 'syncing',
   };
 
   try {
@@ -683,39 +662,41 @@ export async function createConnectedPackage(input: {
         body: JSON.stringify(buildServerPackagePayload(pkg)),
       });
 
-      if (response.ok) {
-        const server = await response.json();
-        const created = normalizeServerPackage(server.package as Record<string, unknown>, pkg);
-        savePackages([created], getConnectedPackages());
-        void trackGrowthEvent({
-          userId,
-          eventName: 'package_request_created',
-          funnelStage: created.matchedRideId ? 'selected' : 'searched',
-          serviceType: 'package',
-          from: created.from,
-          to: created.to,
-          valueJod: 5,
-          metadata: {
-            trackingId: created.trackingId,
-            packageType: created.packageType,
-          },
-        });
-        if (input.senderEmail) {
-          triggerPackageConfirmationEmail({
-            senderEmail: input.senderEmail,
-            senderName: input.senderName ?? 'Wasel sender',
-            trackingId: created.trackingId,
-            handoffCode: created.handoffCode,
-            from: created.from,
-            to_city: created.to,
-            weight: created.weight,
-            recipientName: created.recipientName,
-            matchedDriver: created.matchedDriver,
-            status: created.status === 'matched' ? 'matched' : 'searching',
-          });
-        }
-        return created;
+      if (!response.ok) {
+        throw new Error('Package request could not be created.');
       }
+
+      const server = await response.json();
+      const created = normalizeServerPackage(server.package as Record<string, unknown>, pkg);
+      savePackages([created], getConnectedPackages());
+      void trackGrowthEvent({
+        userId,
+        eventName: 'package_request_created',
+        funnelStage: created.matchedRideId ? 'selected' : 'searched',
+        serviceType: 'package',
+        from: created.from,
+        to: created.to,
+        valueJod: 5,
+        metadata: {
+          trackingId: created.trackingId,
+          packageType: created.packageType,
+        },
+      });
+      if (input.senderEmail) {
+        triggerPackageConfirmationEmail({
+          senderEmail: input.senderEmail,
+          senderName: input.senderName ?? 'Wasel sender',
+          trackingId: created.trackingId,
+          handoffCode: created.handoffCode,
+          from: created.from,
+          to_city: created.to,
+          weight: created.weight,
+          recipientName: created.recipientName,
+          matchedDriver: created.matchedDriver,
+          status: created.status === 'matched' ? 'matched' : 'searching',
+        });
+      }
+      return created;
     } else {
       requireDirectSupabaseFallback('Package creation');
       const createdDirect = await createDirectPackage({
@@ -766,40 +747,17 @@ export async function createConnectedPackage(input: {
       return created;
     }
   } catch (error) {
-    if (!allowLocalPersistenceFallback()) {
-      console.warn('[journeyLogistics] package creation unavailable, preserving request locally', error);
-    }
-  }
-
-  savePackages([pkg], getConnectedPackages());
-  void trackGrowthEvent({
-    eventName: 'package_request_created',
-    funnelStage: pkg.matchedRideId ? 'selected' : 'searched',
-    serviceType: 'package',
-    from: pkg.from,
-    to: pkg.to,
-    valueJod: 5,
-    metadata: {
-      trackingId: pkg.trackingId,
-      packageType: pkg.packageType,
-      source: 'local',
-    },
-  });
-  if (input.senderEmail) {
-        triggerPackageConfirmationEmail({
-          senderEmail: input.senderEmail,
-          senderName: input.senderName ?? 'Wasel sender',
-      trackingId: pkg.trackingId,
-      handoffCode: pkg.handoffCode,
+    logger.error('[journeyLogistics] package creation failed', error, {
       from: pkg.from,
-      to_city: pkg.to,
-      weight: pkg.weight,
-      recipientName: pkg.recipientName,
-      matchedDriver: pkg.matchedDriver,
-      status: pkg.status === 'matched' ? 'matched' : 'searching',
+      to: pkg.to,
+      senderEmail: pkg.senderEmail ?? null,
+      recipientPhone: pkg.recipientPhone ?? null,
+      packageType: pkg.packageType,
+      preferredRideId: input.preferredRideId ?? null,
+      matchedRideCandidateId: matchedRide?.id ?? null,
     });
+    throw new Error('Package request could not be created right now. Please try again.');
   }
-  return pkg;
 }
 
 export async function getPackageByTrackingId(trackingId: string): Promise<PackageRequest | null> {
@@ -892,10 +850,10 @@ export function getConnectedStats() {
 
 export type PackageVerificationAction = 'share_code' | 'confirm_pickup' | 'confirm_delivery';
 
-export function updatePackageVerification(
+export async function updatePackageVerification(
   trackingId: string,
   action: PackageVerificationAction,
-): PackageRequest | null {
+): Promise<PackageRequest | null> {
   const normalizedTrackingId = trackingId.trim().toUpperCase();
   if (!normalizedTrackingId) {return null;}
 
@@ -925,59 +883,55 @@ export function updatePackageVerification(
     status = 'delivered';
   }
 
-  const updated: PackageRequest = {
-    ...target,
-    status,
-    verification,
-    timeline: buildTimeline(status, target.matchedRideId, verification),
-    syncState: target.syncState === 'local-only' ? 'local-only' : 'syncing',
-  };
+  try {
+    const server = await updateDirectPackageStatus(
+      normalizedTrackingId,
+      status === 'searching' ? 'matched' : status,
+    );
+    if (!server) {
+      throw new Error('Package verification update was not acknowledged by the backend.');
+    }
 
-  savePackages(packages.map(item => (item.trackingId === normalizedTrackingId ? updated : item)));
+    const updated = normalizeServerPackage(server as Record<string, unknown>, {
+      ...target,
+      verification,
+      timeline: buildTimeline(status, target.matchedRideId, verification),
+    });
+    const confirmed: PackageRequest = {
+      ...updated,
+      verification,
+      timeline: buildTimeline(updated.status, updated.matchedRideId, verification),
+      syncState: 'synced',
+      syncedAt: new Date().toISOString(),
+    };
 
-  void updateDirectPackageStatus(normalizedTrackingId, status === 'searching' ? 'matched' : status)
-    .then(() => {
-      savePackages(
-        getConnectedPackages().map(item =>
-          item.trackingId === normalizedTrackingId
-            ? {
-                ...item,
-                syncState: 'synced' as const,
-                syncedAt: new Date().toISOString(),
-              }
-            : item,
-        ),
-      );
-    })
-    .catch(() => {
-      savePackages(
-        getConnectedPackages().map(item =>
-          item.trackingId === normalizedTrackingId
-            ? {
-                ...item,
-                syncState:
-                  item.syncState === 'local-only'
-                    ? ('local-only' as const)
-                    : ('sync-error' as const),
-              }
-            : item,
-        ),
-      );
+    savePackages(packages.map(item => (item.trackingId === normalizedTrackingId ? confirmed : item)));
+
+    void trackGrowthEvent({
+      eventName: 'package_verification_updated',
+      funnelStage:
+        confirmed.status === 'delivered'
+          ? 'completed'
+          : confirmed.status === 'in_transit'
+            ? 'booked'
+            : 'selected',
+      serviceType: 'package',
+      from: confirmed.from,
+      to: confirmed.to,
+      metadata: {
+        trackingId: confirmed.trackingId,
+        action,
+        status: confirmed.status,
+      },
     });
 
-  void trackGrowthEvent({
-    eventName: 'package_verification_updated',
-    funnelStage:
-      status === 'delivered' ? 'completed' : status === 'in_transit' ? 'booked' : 'selected',
-    serviceType: 'package',
-    from: updated.from,
-    to: updated.to,
-    metadata: {
-      trackingId: updated.trackingId,
+    return confirmed;
+  } catch (error) {
+    logger.error('[journeyLogistics] package verification update failed', error, {
       action,
-      status,
-    },
-  });
-
-  return updated;
+      trackingId: normalizedTrackingId,
+      nextStatus: status,
+    });
+    throw new Error('Package status could not be updated right now. Please try again.');
+  }
 }

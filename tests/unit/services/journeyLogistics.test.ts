@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockCreateTrip = vi.fn();
 const mockFetchWithRetry = vi.fn();
 const mockGetAuthDetails = vi.fn();
+const mockUpdateDirectPackageStatus = vi.fn();
+const mockGetDirectPackageByTrackingId = vi.fn();
 const memoryStorage = (() => {
   let store: Record<string, string> = {};
   return {
@@ -23,6 +25,12 @@ vi.mock('../../../src/services/core', () => ({
   API_URL: 'https://test.supabase.co/functions/v1/server',
   fetchWithRetry: (...args: any[]) => mockFetchWithRetry(...args),
   getAuthDetails: () => mockGetAuthDetails(),
+}));
+
+vi.mock('../../../src/services/directSupabase', () => ({
+  createDirectPackage: vi.fn(),
+  getDirectPackageByTrackingId: (...args: any[]) => mockGetDirectPackageByTrackingId(...args),
+  updateDirectPackageStatus: (...args: any[]) => mockUpdateDirectPackageStatus(...args),
 }));
 
 import {
@@ -47,6 +55,8 @@ describe('journeyLogistics', () => {
     vi.stubGlobal('window', { localStorage: memoryStorage } as any);
     memoryStorage.clear();
     mockGetAuthDetails.mockResolvedValue({ token: 'token-123', userId: 'user-123' });
+    mockUpdateDirectPackageStatus.mockResolvedValue(null);
+    mockGetDirectPackageByTrackingId.mockResolvedValue(null);
   });
 
   it('creates a ride through the server and stores the normalized result locally', async () => {
@@ -115,6 +125,22 @@ describe('journeyLogistics', () => {
       packageNote: 'Small parcels only',
     });
 
+    mockFetchWithRetry.mockResolvedValueOnce(
+      response({
+        package: {
+          id: 'pkg-match',
+          tracking_code: 'PKG-22222',
+          from: 'Amman',
+          to: 'Irbid',
+          status: 'matched',
+          trip_id: 'trip-2',
+          driver_name: 'Hyundai Captain',
+          driver_phone: '+962790000123',
+          created_at: '2026-03-27T00:00:00Z',
+        },
+      }),
+    );
+
     const created = await createConnectedPackage({
       from: 'Amman',
       to: 'Irbid',
@@ -123,7 +149,7 @@ describe('journeyLogistics', () => {
     });
 
     expect(created.status).toBe('matched');
-    expect(created.syncState).toBe('local-only');
+    expect(created.syncState).toBe('synced');
     expect(created.handoffCode).toMatch(/^HC-\d{6}$/);
     expect(created.timeline.map((step) => step.label)).toEqual([
       'Request received',
@@ -147,6 +173,20 @@ describe('journeyLogistics', () => {
       notes: 'Verification route',
       created_at: '2026-03-27T00:00:00Z',
     });
+
+    mockFetchWithRetry.mockResolvedValueOnce(
+      response({
+        package: {
+          id: 'pkg-verify',
+          tracking_code: 'PKG-33333',
+          from: 'Amman',
+          to: 'Aqaba',
+          status: 'matched',
+          trip_id: 'trip-verify',
+          created_at: '2026-03-27T00:00:00Z',
+        },
+      }),
+    );
 
     await createConnectedRide({
       from: 'Amman',
@@ -173,34 +213,60 @@ describe('journeyLogistics', () => {
       recipientPhone: '+962790000001',
     });
 
-    const codeShared = updatePackageVerification(created.trackingId, 'share_code');
+    mockUpdateDirectPackageStatus.mockResolvedValueOnce({
+      id: 'pkg-verify',
+      tracking_code: 'PKG-33333',
+      from: 'Amman',
+      to: 'Aqaba',
+      status: 'matched',
+      trip_id: 'trip-verify',
+      created_at: '2026-03-27T00:00:00Z',
+    });
+    const codeShared = await updatePackageVerification(created.trackingId, 'share_code');
     expect(codeShared?.verification.senderCodeSharedAt).toBeTruthy();
     expect(codeShared?.timeline[2].complete).toBe(true);
 
-    const pickedUp = updatePackageVerification(created.trackingId, 'confirm_pickup');
+    mockUpdateDirectPackageStatus.mockResolvedValueOnce({
+      id: 'pkg-verify',
+      tracking_code: 'PKG-33333',
+      from: 'Amman',
+      to: 'Aqaba',
+      status: 'in_transit',
+      trip_id: 'trip-verify',
+      created_at: '2026-03-27T00:00:00Z',
+    });
+    const pickedUp = await updatePackageVerification(created.trackingId, 'confirm_pickup');
     expect(pickedUp?.status).toBe('in_transit');
     expect(pickedUp?.verification.riderPickupConfirmedAt).toBeTruthy();
     expect(pickedUp?.timeline[3].complete).toBe(true);
 
-    const delivered = updatePackageVerification(created.trackingId, 'confirm_delivery');
+    mockUpdateDirectPackageStatus.mockResolvedValueOnce({
+      id: 'pkg-verify',
+      tracking_code: 'PKG-33333',
+      from: 'Amman',
+      to: 'Aqaba',
+      status: 'delivered',
+      trip_id: 'trip-verify',
+      created_at: '2026-03-27T00:00:00Z',
+    });
+    const delivered = await updatePackageVerification(created.trackingId, 'confirm_delivery');
     expect(delivered?.status).toBe('delivered');
     expect(delivered?.verification.receiverDeliveryConfirmedAt).toBeTruthy();
     expect(delivered?.timeline[4].complete).toBe(true);
   });
 
-  it('falls back to local package tracking when auth or server is unavailable', async () => {
+  it('fails closed when auth or server is unavailable', async () => {
     mockGetAuthDetails.mockRejectedValue(new Error('not signed in'));
 
-    const created = await createConnectedPackage({
-      from: 'Amman',
-      to: 'Irbid',
-      weight: '<1 kg',
-      note: 'Documents',
-    });
-
-    expect(created.trackingId).toMatch(/^PKG-/);
-    expect(getConnectedPackages()).toHaveLength(1);
-    expect(['searching', 'matched']).toContain(getConnectedPackages()[0].status);
+    await expect(
+      createConnectedPackage({
+        from: 'Amman',
+        to: 'Irbid',
+        weight: '<1 kg',
+        note: 'Documents',
+      }),
+    ).rejects.toThrow('Package request could not be created right now. Please try again.');
+    expect(getConnectedPackages()).toHaveLength(0);
   });
 
   it('rejects packages when sender and receiver cities are the same', async () => {
