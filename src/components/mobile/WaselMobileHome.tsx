@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Bus, MapPin, Package, Search, ArrowRight,
+  MapPin, Package, Search, ArrowRight,
   Star, Clock, ChevronRight, Zap, Shield,
   RotateCcw, WifiOff,
 } from 'lucide-react';
@@ -252,14 +252,9 @@ export function WaselMobileHome() {
       path: '/app/offer-ride', delay: 0.12,
     },
     {
-      icon: Bus, label: copy.bus, description: copy.busDesc,
-      accentVar: 'var(--m-accent)', dimVar: 'var(--m-accent-dim)', borderVar: 'var(--m-accent-border)',
-      path: '/app/bus', delay: 0.16,
-    },
-    {
       icon: Package, label: copy.packages, description: copy.packagesDesc,
       accentVar: 'var(--m-action)', dimVar: 'var(--m-action-dim)', borderVar: 'var(--m-action-border)',
-      path: '/app/packages', delay: 0.20,
+      path: '/app/packages', delay: 0.16,
     },
   ];
 
