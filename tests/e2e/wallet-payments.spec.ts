@@ -23,7 +23,6 @@ test('payments surface creates and confirms a payment intent', async ({ page }) 
   await expect(page.getByText(/wallet keeps your balance/i)).toBeVisible();
 
   const createPaymentIntentButton = page.getByRole('button', { name: /create payment intent/i });
-  await createPaymentIntentButton.scrollIntoViewIfNeeded();
   await expect(createPaymentIntentButton).toBeEnabled();
   await createPaymentIntentButton.click();
   await expect(page.getByText(/payment lifecycle/i)).toBeVisible();

@@ -533,7 +533,16 @@ export const walletApi = {
     },
   ): Promise<PaymentIntentView> {
     if (!apiGateway.isConfigured()) {
-      throw new Error('Wallet actions are unavailable because the backend payment service is not configured.');
+      if (!allowPaymentIntentFallback()) {
+        throw new Error('Wallet actions are unavailable because the backend payment service is not configured.');
+      }
+
+      const metadataUserId =
+        typeof options?.metadata?.initiatedByUserId === 'string'
+          ? options.metadata.initiatedByUserId.trim()
+          : '';
+      const uid = metadataUserId || await resolveUserId().catch(() => '');
+      return buildDemoIntent(uid, purpose, amount, paymentMethodType, options);
     }
 
     try {
