@@ -127,6 +127,20 @@ export async function seedDemoSession(page: Page) {
       walletSnapshot: demoWalletSnapshot,
     },
   );
+
+  await page.goto('/e2e-seed.html', { waitUntil: 'domcontentloaded' });
+  await page.evaluate(
+    ({ key, user, walletSnapshotKey, walletSnapshot }) => {
+      window.localStorage.setItem(key, JSON.stringify(user));
+      window.localStorage.setItem(walletSnapshotKey, JSON.stringify(walletSnapshot));
+    },
+    {
+      key: STORAGE_KEY,
+      user: demoUser,
+      walletSnapshotKey: WALLET_SNAPSHOT_STORAGE_KEY,
+      walletSnapshot: demoWalletSnapshot,
+    },
+  );
 }
 
 export async function signInThroughForm(page: Page, baseUrl: string) {

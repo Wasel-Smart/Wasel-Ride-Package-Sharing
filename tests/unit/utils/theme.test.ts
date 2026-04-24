@@ -17,10 +17,10 @@ describe('sanitizeThemePreference', () => {
   it('accepts "light"', () => expect(sanitizeThemePreference('light')).toBe('light'));
   it('accepts "dark"', () => expect(sanitizeThemePreference('dark')).toBe('dark'));
   it('accepts "system"', () => expect(sanitizeThemePreference('system')).toBe('system'));
-  it('falls back to "dark" for unknown value', () => expect(sanitizeThemePreference('auto')).toBe('dark'));
-  it('falls back for null', () => expect(sanitizeThemePreference(null)).toBe('dark'));
-  it('falls back for undefined', () => expect(sanitizeThemePreference(undefined)).toBe('dark'));
-  it('falls back for empty string', () => expect(sanitizeThemePreference('')).toBe('dark'));
+  it('falls back to "light" for unknown value', () => expect(sanitizeThemePreference('auto')).toBe('light'));
+  it('falls back for null', () => expect(sanitizeThemePreference(null)).toBe('light'));
+  it('falls back for undefined', () => expect(sanitizeThemePreference(undefined)).toBe('light'));
+  it('falls back for empty string', () => expect(sanitizeThemePreference('')).toBe('light'));
 });
 
 describe('resolveThemePreference', () => {
@@ -58,8 +58,8 @@ describe('getStoredThemePreference', () => {
     expect(getStoredThemePreference()).toBe('light');
   });
 
-  it('returns "dark" when nothing stored', () => {
-    expect(getStoredThemePreference()).toBe('dark');
+  it('returns "light" when nothing stored', () => {
+    expect(getStoredThemePreference()).toBe('light');
   });
 
   it('handles corrupted legacy key gracefully', () => {
@@ -71,7 +71,7 @@ describe('getStoredThemePreference', () => {
     const spy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('SecurityError');
     });
-    expect(getStoredThemePreference()).toBe('dark');
+    expect(getStoredThemePreference()).toBe('light');
     spy.mockRestore();
   });
 });
@@ -158,7 +158,7 @@ describe('initializeThemeFromStorage', () => {
     expect(document.documentElement.dataset.theme).toBe('dark');
   });
 
-  it('returns "dark" when nothing stored', () => {
-    expect(initializeThemeFromStorage()).toBe('dark');
+  it('returns "light" when nothing stored', () => {
+    expect(initializeThemeFromStorage()).toBe('light');
   });
 });
