@@ -1,9 +1,9 @@
 import {
   createBusBooking,
   fetchBusRoutes,
-  getOfficialBusRoutes,
   type BusBookingPayload,
 } from '../../services/bus';
+import { isCoreFeatureEnabled } from '../../features/core/featureFlags';
 import { routeEndpointsAreDistinct, routeMatchesLocationPair } from '../../utils/jordanLocations';
 import { buildBusRouteInfo } from './bus.copy';
 import type { BusRoute, BusSearchDraft } from './bus.types';
@@ -13,22 +13,24 @@ function isExactRoute(route: BusRoute, from: string, to: string) {
 }
 
 export const busService = {
-  getFallbackRoutes(draft: Pick<BusSearchDraft, 'from' | 'to' | 'seats'>) {
-    return getOfficialBusRoutes({ from: draft.from, to: draft.to, seats: draft.seats });
+  getFallbackRoutes() {
+    return [];
   },
 
   async searchRoutes(
     draft: BusSearchDraft,
   ): Promise<{ routes: BusRoute[]; info: ReturnType<typeof buildBusRouteInfo> | null; error: string | null }> {
-    const fallbackRoutes = getOfficialBusRoutes({
-      from: draft.from,
-      to: draft.to,
-      seats: draft.seats,
-    });
+    if (!isCoreFeatureEnabled('bus')) {
+      return {
+        routes: [],
+        info: buildBusRouteInfo('unavailable'),
+        error: 'Bus service is unavailable.',
+      };
+    }
 
     if (!routeEndpointsAreDistinct(draft.from, draft.to)) {
       return {
-        routes: fallbackRoutes,
+        routes: [],
         info: buildBusRouteInfo('validation'),
         error: null,
       };
@@ -43,31 +45,25 @@ export const busService = {
       });
 
       const exactLiveRoutes = liveRoutes.filter(route => isExactRoute(route, draft.from, draft.to));
-      const routes = exactLiveRoutes.length ? exactLiveRoutes : liveRoutes;
-
-      if (routes.length > 0) {
+      if (exactLiveRoutes.length > 0 || liveRoutes.length > 0) {
+        const routes = exactLiveRoutes.length ? exactLiveRoutes : liveRoutes;
         return {
           routes,
-          info:
-            routes[0]?.dataSource === 'live'
-              ? buildBusRouteInfo('live')
-              : buildBusRouteInfo('official', routes[0]?.lastVerifiedAt ?? draft.date),
+          info: buildBusRouteInfo('live'),
           error: null,
         };
       }
 
       return {
-        routes: fallbackRoutes,
-        info: fallbackRoutes.some(route => isExactRoute(route, draft.from, draft.to))
-          ? buildBusRouteInfo('official', fallbackRoutes[0]?.lastVerifiedAt ?? draft.date)
-          : buildBusRouteInfo('nearest'),
-        error: null,
+        routes: [],
+        info: buildBusRouteInfo('unavailable'),
+        error: 'Bus service is unavailable.',
       };
     } catch {
       return {
-        routes: fallbackRoutes,
-        info: buildBusRouteInfo('unavailable', fallbackRoutes[0]?.lastVerifiedAt ?? draft.date),
-        error: null,
+        routes: [],
+        info: buildBusRouteInfo('unavailable'),
+        error: 'Bus service is unavailable.',
       };
     }
   },

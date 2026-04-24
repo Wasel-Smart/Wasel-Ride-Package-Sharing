@@ -15,13 +15,7 @@ interface UseBusSearchOptions extends BusSearchDraft {
 export function useBusSearch(options: UseBusSearchOptions) {
   const { date, delayMs = 0, from, searchKey, seats, to } = options;
   const [state, setState] = useState<BusSearchState>(() =>
-    createInitialBusSearchState(
-      busController.getFallbackRoutes({
-        from,
-        to,
-        seats,
-      }),
-    ),
+    createInitialBusSearchState(busController.getFallbackRoutes()),
   );
 
   useEffect(() => {

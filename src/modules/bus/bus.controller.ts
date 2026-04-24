@@ -6,8 +6,8 @@ export const busController = {
     return busService.searchRoutes(draft);
   },
 
-  getFallbackRoutes(draft: Pick<BusSearchDraft, 'from' | 'to' | 'seats'>) {
-    return busService.getFallbackRoutes(draft);
+  getFallbackRoutes() {
+    return busService.getFallbackRoutes();
   },
 
   createBooking(payload: BusBookingPayload) {

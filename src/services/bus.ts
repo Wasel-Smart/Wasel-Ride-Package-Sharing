@@ -1,10 +1,10 @@
-﻿import { bookingsAPI } from './bookings';
+import { bookingsAPI } from './bookings';
 import { trackGrowthEvent } from './growthEngine';
 import { triggerBusBookingConfirmationEmail } from './transactionalEmailTriggers';
 import { tripsAPI } from './trips';
 import { OFFICIAL_JORDAN_BUS_ROUTES } from '../data/jordanBusNetwork';
+import { isCoreFeatureEnabled } from '../features/core/featureFlags';
 import { locationsOverlap, routeMatchesLocationPair } from '../utils/jordanLocations';
-import { getConfig } from '../utils/env';
 
 export interface BusRoute {
   id: string;
@@ -54,7 +54,7 @@ export interface BusBookingPayload {
 }
 
 export interface BusBookingResult {
-  source: 'server' | 'local';
+  source: 'server';
   bookingId: string;
   ticketCode: string;
 }
@@ -86,6 +86,12 @@ function toStringList(value: unknown): string[] {
       .filter(Boolean);
   }
   return [];
+}
+
+function requireBusService(): void {
+  if (!isCoreFeatureEnabled('bus')) {
+    throw new Error('Bus service is unavailable.');
+  }
 }
 
 export function looksLikeBusTrip(item: Record<string, unknown>): boolean {
@@ -176,155 +182,78 @@ export function getOfficialBusRoutes(query: BusRouteQuery = {}): BusRoute[] {
 }
 
 export async function fetchBusRoutes(query: BusRouteQuery): Promise<BusRoute[]> {
-  const officialRoutes = getOfficialBusRoutes(query);
+  requireBusService();
 
   try {
     const response = await tripsAPI.searchTrips(query.from, query.to, query.date, query.seats);
     const list = Array.isArray(response) ? response : [];
 
-    const mapped = list
+    return list
       .filter((item: unknown) => item && typeof item === 'object')
-      .map(item => item as unknown as Record<string, unknown>);
-
-    const busOnly = mapped
+      .map(item => item as unknown as Record<string, unknown>)
       .filter(looksLikeBusTrip)
       .map((item, index) => normalizeBusRoute(item, index));
-
-    return busOnly.length > 0 ? busOnly : officialRoutes;
   } catch {
-    return officialRoutes;
+    throw new Error('Bus service is unavailable.');
   }
-}
-
-function persistLocalBusBooking(payload: BusBookingPayload): StoredBusBooking {
-  const key = 'wasel-bus-bookings';
-  const draft: StoredBusBooking = {
-    id: `local-${Date.now()}`,
-    created_at: new Date().toISOString(),
-    ticket_code: `BUS-${Math.floor(100000 + Math.random() * 900000)}`,
-    status: 'confirmed',
-    ...payload,
-  };
-
-  if (typeof window !== 'undefined') {
-    let current: unknown[] = [];
-    try {
-      const currentRaw = window.localStorage.getItem(key);
-      current = currentRaw ? JSON.parse(currentRaw) : [];
-    } catch {
-      current = [];
-    }
-    const next = Array.isArray(current) ? [draft, ...current].slice(0, 50) : [draft];
-    window.localStorage.setItem(key, JSON.stringify(next));
-  }
-
-  return draft;
 }
 
 export function getStoredBusBookings(): StoredBusBooking[] {
-  if (!getConfig().enableFakeBusBookings) {
-    return [];
-  }
-
-  if (typeof window === 'undefined') {return [];}
-  try {
-    const raw = window.localStorage.getItem('wasel-bus-bookings');
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  return [];
 }
 
 export async function createBusBooking(payload: BusBookingPayload): Promise<BusBookingResult> {
-  try {
-    const server = await bookingsAPI.createBooking(
-      payload.tripId,
-      payload.seatsRequested,
-      payload.pickupStop,
-      payload.dropoffStop,
-      {
-        schedule_date: payload.scheduleDate,
-        departure_time: payload.departureTime,
-        seat_preference: payload.seatPreference,
-        schedule_mode: payload.scheduleMode,
-        total_price: payload.totalPrice,
-      },
-    );
+  requireBusService();
 
-    const bookingId = server?.id ?? `server-${Date.now()}`;
+  const server = await bookingsAPI.createBooking(
+    payload.tripId,
+    payload.seatsRequested,
+    payload.pickupStop,
+    payload.dropoffStop,
+    {
+      schedule_date: payload.scheduleDate,
+      departure_time: payload.departureTime,
+      seat_preference: payload.seatPreference,
+      schedule_mode: payload.scheduleMode,
+      total_price: payload.totalPrice,
+    },
+  );
 
-    const result: BusBookingResult = {
-      source: 'server',
-      bookingId: String(bookingId),
-      ticketCode: `BUS-${String(bookingId).slice(-6).toUpperCase()}`,
-    };
-    if (payload.passengerEmail) {
-      triggerBusBookingConfirmationEmail({
-        passengerEmail: payload.passengerEmail,
-        passengerName: payload.passengerName ?? 'Wasel passenger',
-        ticketCode: result.ticketCode,
-        pickupStop: payload.pickupStop,
-        dropoffStop: payload.dropoffStop,
-        scheduleDate: payload.scheduleDate,
-        departureTime: payload.departureTime,
-        seats: payload.seatsRequested,
-        seatPreference: payload.seatPreference,
-        priceJod: payload.totalPrice,
-      });
-    }
-    void trackGrowthEvent({
-      eventName: 'bus_booking_created',
-      funnelStage: 'booked',
-      serviceType: 'bus',
-      from: payload.pickupStop,
-      to: payload.dropoffStop,
-      valueJod: payload.totalPrice,
-      metadata: {
-        tripId: payload.tripId,
-        source: 'server',
-        scheduleDate: payload.scheduleDate,
-      },
+  const bookingId = server?.id ?? `server-${Date.now()}`;
+  const result: BusBookingResult = {
+    source: 'server',
+    bookingId: String(bookingId),
+    ticketCode: `BUS-${String(bookingId).slice(-6).toUpperCase()}`,
+  };
+
+  if (payload.passengerEmail) {
+    triggerBusBookingConfirmationEmail({
+      passengerEmail: payload.passengerEmail,
+      passengerName: payload.passengerName ?? 'Wasel passenger',
+      ticketCode: result.ticketCode,
+      pickupStop: payload.pickupStop,
+      dropoffStop: payload.dropoffStop,
+      scheduleDate: payload.scheduleDate,
+      departureTime: payload.departureTime,
+      seats: payload.seatsRequested,
+      seatPreference: payload.seatPreference,
+      priceJod: payload.totalPrice,
     });
-    return result;
-  } catch (error) {
-    if (!getConfig().enableFakeBusBookings) {
-      throw error;
-    }
-
-    const stored = persistLocalBusBooking(payload);
-    void trackGrowthEvent({
-      eventName: 'bus_booking_created',
-      funnelStage: 'booked',
-      serviceType: 'bus',
-      from: payload.pickupStop,
-      to: payload.dropoffStop,
-      valueJod: payload.totalPrice,
-      metadata: {
-        tripId: payload.tripId,
-        source: 'local',
-        scheduleDate: payload.scheduleDate,
-      },
-    });
-    const result: BusBookingResult = {
-      source: 'local',
-      bookingId: stored.id,
-      ticketCode: stored.ticket_code,
-    };
-    if (payload.passengerEmail) {
-      triggerBusBookingConfirmationEmail({
-        passengerEmail: payload.passengerEmail,
-        passengerName: payload.passengerName ?? 'Wasel passenger',
-        ticketCode: result.ticketCode,
-        pickupStop: payload.pickupStop,
-        dropoffStop: payload.dropoffStop,
-        scheduleDate: payload.scheduleDate,
-        departureTime: payload.departureTime,
-        seats: payload.seatsRequested,
-        seatPreference: payload.seatPreference,
-        priceJod: payload.totalPrice,
-      });
-    }
-    return result;
   }
+
+  void trackGrowthEvent({
+    eventName: 'bus_booking_created',
+    funnelStage: 'booked',
+    serviceType: 'bus',
+    from: payload.pickupStop,
+    to: payload.dropoffStop,
+    valueJod: payload.totalPrice,
+    metadata: {
+      tripId: payload.tripId,
+      source: 'server',
+      scheduleDate: payload.scheduleDate,
+    },
+  });
+
+  return result;
 }
