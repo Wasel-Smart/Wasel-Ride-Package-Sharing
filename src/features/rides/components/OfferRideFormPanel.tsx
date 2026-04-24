@@ -325,7 +325,7 @@ export function OfferRideFormPanel({
           )}
           <div>
             <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Car Model</label>
-            <input placeholder="e.g. Toyota Camry 2023" value={form.carModel} onChange={(event) => onUpdate('carModel', event.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: r(14), border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontFamily: DS.F, fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }} />
+            <input data-testid="offer-ride-car-model" placeholder="e.g. Toyota Camry 2023" value={form.carModel} onChange={(event) => onUpdate('carModel', event.target.value)} style={{ width: '100%', padding: '14px 16px', borderRadius: r(14), border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontFamily: DS.F, fontSize: '0.95rem', outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <button type="button" onClick={() => onUpdate('acceptsPackages', !form.acceptsPackages)} style={{ padding: '16px 20px', borderRadius: r(14), border: `1px solid ${form.acceptsPackages ? '#10b981' : 'rgba(255,255,255,0.1)'}`, background: form.acceptsPackages ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.05)', color: form.acceptsPackages ? '#10b981' : 'rgba(255,255,255,0.7)', fontFamily: DS.F, fontWeight: 700, cursor: 'pointer', textAlign: 'left', fontSize: '0.95rem' }}>
             Package holding: {form.acceptsPackages ? 'Holding packages on this ride' : 'Passengers only'}
