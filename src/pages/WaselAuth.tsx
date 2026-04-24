@@ -28,6 +28,7 @@ import {
 import { WaselHeroMark, WaselLogo } from '../components/wasel-ds/WaselLogo';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
+import { APP_ROUTES } from '../router/paths';
 import { checkRateLimit, validateEmail } from '../utils/security';
 import { useAuth } from '../contexts/AuthContext';
 import { getConfig, getWhatsAppSupportUrl } from '../utils/env';
@@ -39,6 +40,7 @@ import {
   validateFullName,
   validatePassword,
 } from '../utils/authHelpers';
+import { normalizeAuthReturnTo } from '../utils/authFlow';
 import { WaselAuthNetworkMap } from './shared/WaselAuthNetworkMap';
 import './WaselAuth.css';
 
@@ -364,10 +366,7 @@ export default function WaselAuth() {
   const mountedRef = useRef(true);
   const { supportWhatsAppNumber } = getConfig();
 
-  const safeReturnTo = (() => {
-    const raw = params.get('returnTo') || '/app/find-ride';
-    return raw.startsWith('/') && !raw.startsWith('//') ? raw : '/app/find-ride';
-  })();
+  const safeReturnTo = normalizeAuthReturnTo(params.get('returnTo'), APP_ROUTES.findRide.full);
 
   const returnLabel = useMemo(() => {
     const [path] = safeReturnTo.split('?');
@@ -415,10 +414,11 @@ export default function WaselAuth() {
   useEffect(() => {
     const next = new URLSearchParams(params);
     next.set('tab', tab);
+    next.set('returnTo', safeReturnTo);
     if (next.toString() !== params.toString()) {
       setParams(next, { replace: true });
     }
-  }, [params, setParams, tab]);
+  }, [params, safeReturnTo, setParams, tab]);
 
   useEffect(() => {
     if (user && mountedRef.current) nav(safeReturnTo);
@@ -651,8 +651,8 @@ export default function WaselAuth() {
                 <h2>{tab === 'signin' ? 'Sign in to Wasel' : 'Create your Wasel account'}</h2>
                 <p>
                   {tab === 'signin'
-                    ? 'Continue with the same unified Wasel design across every service.'
-                    : 'Start once, then move between rides, packages, buses, and wallet without a design break.'}
+                    ? 'Sign in to continue. One account that looks and feels like the landing page.'
+                    : 'Create one account that looks and feels like the landing page.'}
                 </p>
                 <div className="auth-landing__switch-copy">
                   <span>{tab === 'signin' ? 'New to Wasel?' : 'Already have an account?'}</span>
@@ -812,7 +812,7 @@ export default function WaselAuth() {
                     type="submit"
                     className="auth-landing__submit"
                     disabled={isBusy}
-                    aria-label={tab === 'signin' ? 'Submit sign in' : 'Submit sign up'}
+                    aria-label={tab === 'signin' ? 'Submit sign in' : 'Create account'}
                   >
                     <span>
                       {loading
@@ -917,7 +917,7 @@ export default function WaselAuth() {
                 <button
                   type="button"
                   className="auth-landing__legal-link"
-                  onClick={() => nav('/app/terms')}
+                  onClick={() => nav(APP_ROUTES.terms.full)}
                 >
                   Terms of Service
                 </button>{' '}
@@ -925,7 +925,7 @@ export default function WaselAuth() {
                 <button
                   type="button"
                   className="auth-landing__legal-link"
-                  onClick={() => nav('/app/privacy')}
+                  onClick={() => nav(APP_ROUTES.privacy.full)}
                 >
                   Privacy Policy
                 </button>

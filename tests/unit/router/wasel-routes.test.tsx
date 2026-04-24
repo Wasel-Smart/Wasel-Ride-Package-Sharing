@@ -43,9 +43,20 @@ describe('wasel-routes contract', () => {
     expect(routeTree.some((route) => route.path === '/')).toBe(true);
     expect(routeTree.some((route) => route.path === '/payments')).toBe(true);
     expect(appRoute).toBeDefined();
+    expect(
+      appRoute.children.some(
+        (child) => child.index === true && typeof child.lazy === 'function',
+      ),
+    ).toBe(true);
     expect(appRoute.children.some((child) => child.path === 'payments')).toBe(true);
     expect(appRoute.children.some((child) => child.path === 'wallet')).toBe(true);
     expect(appRoute.children.some((child) => child.path === 'dashboard')).toBe(true);
     expect(appRoute.children.some((child) => child.path === APP_ROUTES.tripsLegacy.child)).toBe(true);
+
+    const homeRedirect = appRoute.children.find(
+      (child) => child.path === APP_ROUTES.home.child,
+    ) as { Component: () => React.ReactElement };
+
+    expect(homeRedirect.Component().props.to).toBe(APP_ROUTES.root.full);
   });
 });

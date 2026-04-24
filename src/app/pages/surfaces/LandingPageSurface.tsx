@@ -30,6 +30,15 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { useLocalAuth } from '../../../contexts/LocalAuth';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../../hooks/useIframeSafeNavigate';
+import { APP_ROUTES } from '../../../router/paths';
+import {
+  ENTRY_CITY_OPTIONS,
+  ENTRY_DEFAULT_AUTH_RETURN_TO,
+  ENTRY_DEFAULT_ROUTE_DRAFT,
+  buildPackagePrefillPath,
+  buildRideSearchPath,
+  type EntryRouteDraft,
+} from '../../../contracts/entry';
 import { buildAuthPagePath } from '../../../utils/authFlow';
 import {
   ActionCards,
@@ -40,7 +49,8 @@ import {
   SupportActions,
 } from './SharedPageComponents';
 import type { BrandPillItem, HeroFeatureItem } from './pageTypes';
-import { CITY_OPTIONS, LANDING_RETURN_TO } from './pageTypes';
+import { LANDING_RETURN_TO } from './pageTypes';
+import '../LandingPage.css';
 
 export function LandingPage() {
   const { signInWithFacebook, signInWithGoogle } = useAuth();
@@ -50,12 +60,10 @@ export function LandingPage() {
   const ar = language === 'ar';
 
   const [mode, setMode] = useState<'ride' | 'package'>('ride');
-  const [route, setRoute] = useState({ date: '', from: 'Amman', to: 'Irbid' });
+  const [route, setRoute] = useState<EntryRouteDraft>({ ...ENTRY_DEFAULT_ROUTE_DRAFT });
 
   const primaryActionPath =
-    mode === 'ride'
-      ? `/app/find-ride?from=${encodeURIComponent(route.from)}&to=${encodeURIComponent(route.to)}&search=1`
-      : `/app/packages?from=${encodeURIComponent(route.from)}&to=${encodeURIComponent(route.to)}`;
+    mode === 'ride' ? buildRideSearchPath(route) : buildPackagePrefillPath(route);
 
   const emailPath = buildAuthPagePath('signin', LANDING_RETURN_TO);
 
@@ -137,11 +145,17 @@ export function LandingPage() {
             </div>
             {!user && (
               <>
-                <Button onClick={() => navigate(buildAuthPagePath('signin', '/app/find-ride'))}>
+                <Button
+                  onClick={() =>
+                    navigate(buildAuthPagePath('signin', ENTRY_DEFAULT_AUTH_RETURN_TO))
+                  }
+                >
                   {ar ? 'تسجيل الدخول' : 'Sign in'}
                 </Button>
                 <Button
-                  onClick={() => navigate(buildAuthPagePath('signup', '/app/find-ride'))}
+                  onClick={() =>
+                    navigate(buildAuthPagePath('signup', ENTRY_DEFAULT_AUTH_RETURN_TO))
+                  }
                   variant="secondary"
                 >
                   {ar ? 'إنشاء حساب' : 'Create account'}
@@ -176,7 +190,7 @@ export function LandingPage() {
               <Button onClick={() => navigate(primaryActionPath)}>
                 {ar ? 'خطط هذا الممر' : 'Plan this corridor'}
               </Button>
-              <Button onClick={() => navigate('/app/mobility-os')} variant="secondary">
+              <Button onClick={() => navigate(APP_ROUTES.mobilityOs.full)} variant="secondary">
                 {ar ? 'افتح نظام التنقل' : 'Open Mobility OS'}
               </Button>
             </div>
@@ -212,7 +226,7 @@ export function LandingPage() {
             mapVariant="ambient"
             signals={signals}
           >
-            <div className="landing-page__planner-head">
+            <div className="ds-hero-panel__intro landing-page__planner-head">
               <div className="ds-panel-kicker">
                 {ar ? 'مخطط المسار المباشر' : 'Live route planner'}
               </div>
@@ -272,13 +286,19 @@ export function LandingPage() {
                 <Select
                   label={ar ? 'المغادرة من' : 'Leaving from'}
                   onChange={e => setRoute(r => ({ ...r, from: e.target.value }))}
-                  options={CITY_OPTIONS.map(c => ({ label: c.label, value: c.value }))}
+                  options={ENTRY_CITY_OPTIONS.map(c => ({
+                    label: ar ? c.ar : c.en,
+                    value: c.value,
+                  }))}
                   value={route.from}
                 />
                 <Select
                   label={ar ? 'الوصول إلى' : 'Going to'}
                   onChange={e => setRoute(r => ({ ...r, to: e.target.value }))}
-                  options={CITY_OPTIONS.map(c => ({ label: c.label, value: c.value }))}
+                  options={ENTRY_CITY_OPTIONS.map(c => ({
+                    label: ar ? c.ar : c.en,
+                    value: c.value,
+                  }))}
                   value={route.to}
                 />
                 <Input
@@ -293,7 +313,11 @@ export function LandingPage() {
                 <Button fullWidth onClick={() => navigate(primaryActionPath)}>
                   {mode === 'ride' ? (ar ? 'ابحث عن رحلة' : 'Find a ride') : (ar ? 'افتح الطرود' : 'Open packages')}
                 </Button>
-                <Button fullWidth onClick={() => navigate('/app/create-ride')} variant="secondary">
+                <Button
+                  fullWidth
+                  onClick={() => navigate(APP_ROUTES.offerRide.full)}
+                  variant="secondary"
+                >
                   {ar ? 'إنشاء رحلة' : 'Create ride'}
                 </Button>
               </div>

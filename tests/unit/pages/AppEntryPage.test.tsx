@@ -57,7 +57,7 @@ vi.mock('@/domains/trust/waselPresence', () => ({
   }),
 }));
 
-vi.mock('@/features/home/DeferredLandingMap', () => ({
+vi.mock('@/components/layout/DeferredLandingMap', () => ({
   DeferredLandingMap: () => <div>Map</div>,
 }));
 

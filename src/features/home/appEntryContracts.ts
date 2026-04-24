@@ -1,12 +1,25 @@
-export const APP_ENTRY_SERVICE_MODES = ['ride', 'package'] as const;
+import {
+  ENTRY_CITY_OPTIONS,
+  ENTRY_DEFAULT_AUTH_RETURN_TO,
+  ENTRY_DEFAULT_ROUTE_DRAFT,
+  ENTRY_SERVICE_MODES,
+  buildEntryPrimaryPath,
+  buildPackagePrefillPath,
+  buildRideSearchPath,
+  getAlternateEntryCity,
+} from '../../contracts/entry';
+import type { EntryRouteDraft, EntryServiceMode } from '../../contracts/entry';
 
-export type AppEntryServiceMode = (typeof APP_ENTRY_SERVICE_MODES)[number];
+export const APP_ENTRY_CITY_OPTIONS = ENTRY_CITY_OPTIONS;
+export const APP_ENTRY_DEFAULT_RETURN_TO = ENTRY_DEFAULT_AUTH_RETURN_TO;
+export const APP_ENTRY_DEFAULT_ROUTE = ENTRY_DEFAULT_ROUTE_DRAFT;
+export const APP_ENTRY_SERVICE_MODES = ENTRY_SERVICE_MODES;
+export const buildAppEntryPrimaryPath = buildEntryPrimaryPath;
 
-export interface AppEntryRouteDraft {
-  from: string;
-  to: string;
-  date: string;
-}
+export { buildPackagePrefillPath, buildRideSearchPath, getAlternateEntryCity };
+
+export type AppEntryRouteDraft = EntryRouteDraft;
+export type AppEntryServiceMode = EntryServiceMode;
 
 export interface AppEntryServiceModeMeta {
   panelId: string;
@@ -35,36 +48,4 @@ export function isAppEntryServiceMode(value: unknown): value is AppEntryServiceM
     typeof value === 'string' &&
     APP_ENTRY_SERVICE_MODES.includes(value as AppEntryServiceMode)
   );
-}
-
-export function buildRideSearchPath(route: AppEntryRouteDraft): string {
-  const params = new URLSearchParams({
-    from: route.from,
-    to: route.to,
-    search: '1',
-  });
-
-  if (route.date) {
-    params.set('date', route.date);
-  }
-
-  return `/app/find-ride?${params.toString()}`;
-}
-
-export function buildPackagePrefillPath(route: AppEntryRouteDraft): string {
-  const params = new URLSearchParams({
-    from: route.from,
-    to: route.to,
-  });
-
-  return `/app/packages?${params.toString()}`;
-}
-
-export function buildAppEntryPrimaryPath(
-  mode: AppEntryServiceMode,
-  route: AppEntryRouteDraft,
-): string {
-  return mode === 'ride'
-    ? buildRideSearchPath(route)
-    : buildPackagePrefillPath(route);
 }

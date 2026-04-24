@@ -50,9 +50,12 @@
   --wasel-shadow-sm: var(--ds-shadow-sm);
   --wasel-shadow-md: var(--ds-shadow-md);
   --wasel-shadow-lg: var(--ds-shadow-lg);
-  --accent-rgb: 230 126 34;
-  --accent-secondary-rgb: 245 176 65;
-  --danger-rgb: 211 84 0;
+  --accent-rgb: 229 156 54;
+  --accent-secondary-rgb: 255 211 154;
+  --danger-rgb: 201 123 29;
+  --ds-hero-overlay-ink: color-mix(in srgb, #fff9f2 92%, var(--ds-accent-strong) 8%);
+  --ds-hero-overlay-muted: color-mix(in srgb, #fff6ea 76%, var(--ds-accent-strong) 24%);
+  --ds-hero-overlay-soft: color-mix(in srgb, #fff6ea 58%, var(--ds-accent-strong) 42%);
 
   --wasel-logo-size-xs: 20px;
   --wasel-logo-size-sm: 24px;
@@ -285,6 +288,7 @@ img {
 
 .ds-title {
   margin: 0;
+  color: var(--ds-text);
   font-family: var(--ds-font-display);
   font-size: clamp(2.25rem, 4.6vw, 4.25rem);
   line-height: 1.01;
@@ -299,6 +303,7 @@ img {
 
 .ds-section-title {
   margin: 0;
+  color: var(--ds-text);
   font-family: var(--ds-font-display);
   font-size: clamp(1.25rem, 3vw, 1.75rem);
   line-height: 1.14;
@@ -517,6 +522,40 @@ img {
   max-width: 30rem;
 }
 
+.ds-hero-panel__intro,
+.ds-hero-panel__content-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--ds-space-3);
+  max-width: 30rem;
+}
+
+.ds-hero-panel__intro .ds-title,
+.ds-hero-panel__intro .ds-section-title,
+.ds-hero-panel__content-inner .ds-title,
+.ds-hero-panel__content-inner .ds-section-title {
+  color: var(--ds-hero-overlay-ink);
+  text-shadow: 0 1px 20px rgba(15, 20, 27, 0.18);
+}
+
+.ds-hero-panel__intro .ds-copy,
+.ds-hero-panel__content-inner .ds-copy {
+  color: var(--ds-hero-overlay-muted);
+}
+
+.ds-hero-panel__intro .ds-caption,
+.ds-hero-panel__content-inner .ds-caption {
+  color: var(--ds-hero-overlay-soft);
+}
+
+.ds-hero-panel__intro .ds-panel-kicker,
+.ds-hero-panel__content-inner .ds-panel-kicker {
+  border-color: color-mix(in srgb, var(--ds-accent-strong) 32%, transparent);
+  background: color-mix(in srgb, var(--ds-accent) 18%, rgb(255 253 249 / 0.12));
+  color: color-mix(in srgb, #fff6ea 84%, var(--ds-accent-strong));
+}
+
 .ds-auth-card {
   background:
     linear-gradient(
@@ -574,6 +613,7 @@ img {
 
 .ds-card__title {
   margin: 0 0 var(--ds-space-2);
+  color: var(--ds-text);
   font-size: 1rem;
   font-weight: 700;
 }
@@ -625,9 +665,9 @@ img {
 }
 
 .ds-button[data-variant='ghost'] {
-  background: transparent;
-  color: var(--ds-text-muted);
-  border-color: color-mix(in srgb, var(--ds-border) 72%, transparent);
+  background: color-mix(in srgb, var(--ds-surface-soft) 68%, transparent);
+  color: var(--ds-text);
+  border-color: color-mix(in srgb, var(--ds-border) 78%, transparent);
 }
 
 .ds-button[data-full-width='true'] {
@@ -646,7 +686,7 @@ img {
 }
 
 .ds-field__label {
-  color: var(--ds-text-soft);
+  color: var(--ds-text-muted);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;

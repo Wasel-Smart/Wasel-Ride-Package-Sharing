@@ -354,6 +354,62 @@ function formatUpdatedAt(updatedAt: string) {
   }).format(timestamp);
 }
 
+function buildRouteCurve(from: { x: number; y: number }, to: { x: number; y: number }) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const bend = clamp(dx * 0.22 - dy * 0.08, -12, 12);
+  const c1 = {
+    x: from.x + dx * 0.24 + bend * 0.18,
+    y: from.y + dy * 0.08 - bend * 0.34,
+  };
+  const c2 = {
+    x: from.x + dx * 0.76 - bend * 0.1,
+    y: from.y + dy * 0.92 + bend * 0.28,
+  };
+
+  return {
+    c1,
+    c2,
+    path: `M ${from.x} ${from.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${to.x} ${to.y}`,
+  };
+}
+
+function bezierPoint(
+  from: { x: number; y: number },
+  c1: { x: number; y: number },
+  c2: { x: number; y: number },
+  to: { x: number; y: number },
+  t: number,
+) {
+  const mt = 1 - t;
+
+  return {
+    x: mt ** 3 * from.x + 3 * mt ** 2 * t * c1.x + 3 * mt * t ** 2 * c2.x + t ** 3 * to.x,
+    y: mt ** 3 * from.y + 3 * mt ** 2 * t * c1.y + 3 * mt * t ** 2 * c2.y + t ** 3 * to.y,
+  };
+}
+
+function bezierTangent(
+  from: { x: number; y: number },
+  c1: { x: number; y: number },
+  c2: { x: number; y: number },
+  to: { x: number; y: number },
+  t: number,
+) {
+  const mt = 1 - t;
+
+  return {
+    x:
+      3 * mt ** 2 * (c1.x - from.x) +
+      6 * mt * t * (c2.x - c1.x) +
+      3 * t ** 2 * (to.x - c2.x),
+    y:
+      3 * mt ** 2 * (c1.y - from.y) +
+      6 * mt * t * (c2.y - c1.y) +
+      3 * t ** 2 * (to.y - c2.y),
+  };
+}
+
 export default function MobilityOSPageEnhanced() {
   const [tick, setTick] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -530,6 +586,74 @@ export default function MobilityOSPageEnhanced() {
       accent: DesignSystem.colors.purple.base,
     },
   ];
+
+  const modeMeta: Record<
+    TabKey,
+    { eyebrow: string; title: string; description: string; accent: string }
+  > = {
+    signal: {
+      eyebrow: 'Live signal field',
+      title: 'One map that reads like a command theater, not a generic widget.',
+      description:
+        'Demand, moving supply, and corridor pressure all stay readable at once so operators can trust the live field at first glance.',
+      accent: DesignSystem.colors.cyan.base,
+    },
+    math: {
+      eyebrow: 'Corridor math',
+      title: 'Scoring and reliability now sit directly on the routes they influence.',
+      description:
+        'High-value lanes stay bright, weak links stay obvious, and dispatch quality remains visible without leaving the live field.',
+      accent: DesignSystem.colors.accent.strong,
+    },
+    fleet: {
+      eyebrow: 'Fleet logic',
+      title: 'Ride supply is staged as an active circulation system instead of static dots.',
+      description:
+        'Vehicles, package sync, and seat availability all read from the same movement language, so rebalancing decisions feel immediate.',
+      accent: DesignSystem.colors.green.base,
+    },
+    recovery: {
+      eyebrow: 'Recovery mode',
+      title: 'Risk is elevated without turning the whole map into alarm noise.',
+      description:
+        'The weakest corridors, queued rebalances, and recovery posture are surfaced in one consistent operating layer.',
+      accent: DesignSystem.colors.purple.base,
+    },
+  };
+
+  const currentMode = modeMeta[tab];
+  const packageLeader = [...routeStats].sort((a, b) => b.packageSync - a.packageSync)[0];
+  const featuredRouteIds = [hottest.id, weakest.id, routeStats[1]?.id, packageLeader?.id];
+  const visibleUnits = UNITS.filter(
+    unit =>
+      tab === 'signal' ||
+      (tab === 'fleet' && unit.type === 'ride') ||
+      (tab === 'recovery' && unit.type === 'package') ||
+      tab === 'math',
+  );
+  const corridorCards = routeStats.slice(0, 4).map((route, index) => {
+    const emphasis =
+      route.id === hottest.id
+        ? 'Peak load corridor'
+        : route.id === weakest.id
+          ? 'Recovery watch'
+          : route.id === packageLeader?.id
+            ? 'Package sync lead'
+            : index === 0
+              ? 'Top dispatch lane'
+              : 'Live corridor';
+
+    return {
+      ...route,
+      emphasis,
+      accent:
+        route.id === weakest.id
+          ? DesignSystem.colors.purple.base
+          : route.id === packageLeader?.id
+            ? DesignSystem.colors.gold.base
+            : accentColor(route.accent),
+    };
+  });
 
   return (
     <PageShell>
@@ -788,27 +912,25 @@ export default function MobilityOSPageEnhanced() {
         ))}
       </section>
 
-      <section
-        style={{
-          display: 'grid',
-          gap: 18,
-          gridTemplateColumns: 'minmax(0, 1.5fr) minmax(320px, 0.9fr)',
-        }}
-      >
+      <section>
         <DataPanel
-          title="Jordan live corridor field"
-          icon={<Activity size={18} color={DesignSystem.colors.cyan.base} />}
+          title="Mobility OS live command theater"
+          icon={<Activity size={18} color={currentMode.accent} />}
+          accent={currentMode.accent}
         >
           <div
             style={{
               position: 'relative',
-              minHeight: 560,
-              borderRadius: 24,
               overflow: 'hidden',
-              background:
-                'linear-gradient(180deg, rgb(255 255 255 / 0.03), rgb(255 255 255 / 0.01)), var(--wasel-network-panel)',
+              borderRadius: 28,
               border: `1px solid ${DesignSystem.colors.border.strong}`,
-              boxShadow: 'inset 0 1px 0 rgb(255 255 255 / 0.06)',
+              background: `
+                radial-gradient(circle at 12% 18%, color-mix(in srgb, ${currentMode.accent} 22%, transparent), transparent 26%),
+                radial-gradient(circle at 84% 14%, color-mix(in srgb, ${DesignSystem.colors.accent.strong} 18%, transparent), transparent 30%),
+                radial-gradient(circle at 74% 86%, color-mix(in srgb, ${DesignSystem.colors.purple.base} 16%, transparent), transparent 24%),
+                linear-gradient(155deg, rgba(8,16,27,0.98) 0%, rgba(10,19,31,0.98) 46%, rgba(13,22,34,0.96) 100%)
+              `,
+              boxShadow: `0 24px 70px ${currentMode.accent}18`,
             }}
           >
             <div
@@ -816,417 +938,1034 @@ export default function MobilityOSPageEnhanced() {
               style={{
                 position: 'absolute',
                 inset: 0,
-                opacity: 0.22,
-                backgroundImage: 'var(--wasel-network-grid)',
-                backgroundSize: '56px 56px',
-                maskImage:
-                  'radial-gradient(circle at center, black 0%, black 62%, transparent 100%)',
+                opacity: 0.14,
+                backgroundImage:
+                  'linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)',
+                backgroundSize: '64px 64px',
               }}
             />
+
             <div
               style={{
-                position: 'absolute',
-                top: 14,
-                left: 14,
-                zIndex: 2,
+                position: 'relative',
+                zIndex: 1,
                 display: 'grid',
-                gap: 8,
+                gap: 20,
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                padding: 24,
+                alignItems: 'start',
               }}
             >
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 12px',
-                  borderRadius: 14,
-                  background: 'color-mix(in srgb, var(--ds-surface-overlay) 92%, transparent)',
-                  border: `1px solid ${DesignSystem.colors.border.base}`,
-                  fontSize: DesignSystem.typography.fontSize.xs,
-                }}
-              >
-                <CarFront size={14} color={DesignSystem.colors.green.base} />
-                {pipeline.metrics.pendingDemand} open requests /{' '}
-                {pipeline.metrics.dispatchableVehicles} dispatchable vehicles
-              </div>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 12px',
-                  borderRadius: 14,
-                  background: 'color-mix(in srgb, var(--ds-surface-overlay) 92%, transparent)',
-                  border: `1px solid ${DesignSystem.colors.border.base}`,
-                  fontSize: DesignSystem.typography.fontSize.xs,
-                }}
-              >
-                <Activity size={14} color={DesignSystem.colors.cyan.base} />
-                Live phase {(tick * 100).toFixed(1)}% / {pipeline.source} pipeline
-              </div>
-              <div
-                style={{
-                  padding: '10px 12px',
-                  borderRadius: 16,
-                  background: 'color-mix(in srgb, var(--ds-surface-overlay) 92%, transparent)',
-                  border: `1px solid ${DesignSystem.colors.border.faint}`,
-                  fontFamily: DesignSystem.typography.fontFamily.mono,
-                  color: DesignSystem.colors.text.secondary,
-                  fontSize: DesignSystem.typography.fontSize.xs,
-                }}
-              >
-                {pipeline.metrics.viableCandidatePairs} viable pairs / dispatch {'>='}{' '}
-                {pipeline.thresholds.dispatchMatchScore} / avg {pipeline.metrics.averageMatchScore}
-              </div>
-            </div>
-
-            <svg viewBox="0 0 100 110" style={{ width: '100%', height: '100%', display: 'block' }}>
-              {routeStats.map(route => {
-                const from = route.fromNode;
-                const to = route.toNode;
-                const dx = to.x - from.x;
-                const dy = to.y - from.y;
-                const c1x = from.x + dx * 0.26;
-                const c1y = from.y + dy * 0.08;
-                const c2x = from.x + dx * 0.76;
-                const c2y = from.y + dy * 0.92;
-                const active =
-                  tab === 'signal' ||
-                  (tab === 'math' && (route.id === hottest.id || route.id === weakest.id)) ||
-                  (tab === 'fleet' && route.packageSync > 0.35) ||
-                  tab === 'recovery';
-
-                return (
-                  <g key={route.id}>
-                    <path
-                      d={`M ${from.x} ${from.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${to.x} ${to.y}`}
-                      fill="none"
-                      stroke="rgba(255,255,255,0.06)"
-                      strokeWidth={0.85}
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d={`M ${from.x} ${from.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${to.x} ${to.y}`}
-                      fill="none"
-                      stroke={accentColor(route.accent)}
-                      strokeWidth={active ? 1.8 : 1.1}
-                      strokeLinecap="round"
-                      strokeOpacity={active ? 0.44 + route.load * 0.3 : 0.14}
-                    />
-                    {(tab === 'math' || tab === 'recovery') && (
-                      <g>
-                        <rect
-                          x={(from.x + to.x) / 2 - 4.3}
-                          y={(from.y + to.y) / 2 - 10}
-                          width={8.6}
-                          height={4.2}
-                          rx={1.8}
-                          fill="rgba(4,12,24,0.78)"
-                          stroke={`${accentColor(route.accent)}30`}
+              <div style={{ display: 'grid', gap: 18 }}>
+                <div style={{ display: 'grid', gap: 14 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 10,
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {[
+                      {
+                        label: currentMode.eyebrow,
+                        color: currentMode.accent,
+                      },
+                      {
+                        label: `${pipeline.metrics.pendingDemand} open requests`,
+                        color: DesignSystem.colors.gold.base,
+                      },
+                      {
+                        label: `${pipeline.metrics.dispatchableVehicles} dispatchable vehicles`,
+                        color: DesignSystem.colors.green.base,
+                      },
+                      {
+                        label: `${pipeline.metrics.rebalancingCount} rebalances queued`,
+                        color: DesignSystem.colors.purple.base,
+                      },
+                    ].map(item => (
+                      <div
+                        key={item.label}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          minHeight: 34,
+                          padding: '0 14px',
+                          borderRadius: 999,
+                          border: `1px solid ${item.color}30`,
+                          background: 'rgba(255,255,255,0.05)',
+                          color: DesignSystem.colors.text.primary,
+                          fontSize: DesignSystem.typography.fontSize.xs,
+                          fontWeight: DesignSystem.typography.fontWeight.bold,
+                          backdropFilter: 'blur(16px)',
+                        }}
+                      >
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: 999,
+                            background: item.color,
+                            boxShadow: `0 0 18px ${item.color}80`,
+                          }}
                         />
-                        <text
-                          x={(from.x + to.x) / 2}
-                          y={(from.y + to.y) / 2 - 7.1}
-                          textAnchor="middle"
-                          fill={DesignSystem.colors.text.primary}
-                          fontSize="1.7"
+                        {item.label}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ maxWidth: 720 }}>
+                    <div
+                      style={{
+                        color: currentMode.accent,
+                        fontSize: DesignSystem.typography.fontSize.xs,
+                        fontWeight: DesignSystem.typography.fontWeight.black,
+                        letterSpacing: '0.16em',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Jordan Corridor Live Map
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 12,
+                        fontFamily: DesignSystem.typography.fontFamily.display,
+                        fontSize: DesignSystem.typography.fontSize['4xl'],
+                        lineHeight: 0.98,
+                        letterSpacing: '-0.04em',
+                        color: DesignSystem.colors.text.primary,
+                      }}
+                    >
+                      {currentMode.title}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 12,
+                        color: DesignSystem.colors.text.secondary,
+                        lineHeight: 1.72,
+                        fontSize: DesignSystem.typography.fontSize.base,
+                        maxWidth: 660,
+                      }}
+                    >
+                      {currentMode.description} Source blend: {pipeline.source}. Updated{' '}
+                      {updatedAtLabel}. Dispatch threshold stays at{' '}
+                      {pipeline.thresholds.dispatchMatchScore}+ with{' '}
+                      {pipeline.metrics.viableCandidatePairs} viable candidate pairs live.
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gap: 12,
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(148px, 1fr))',
+                    }}
+                  >
+                    {[
+                      {
+                        label: 'Dispatch IQ',
+                        value: `${network.dispatchIQ}`,
+                        detail: 'Operator confidence',
+                        accent: DesignSystem.colors.cyan.base,
+                      },
+                      {
+                        label: 'Corridor balance',
+                        value: `${network.balance}%`,
+                        detail: 'Demand spread stability',
+                        accent: DesignSystem.colors.green.base,
+                      },
+                      {
+                        label: 'Recovery posture',
+                        value: `${network.resilience}%`,
+                        detail: 'Reliability protection',
+                        accent: DesignSystem.colors.gold.base,
+                      },
+                      {
+                        label: 'Throughput',
+                        value: `${network.throughput}`,
+                        detail: 'Weighted corridor km',
+                        accent: DesignSystem.colors.purple.base,
+                      },
+                    ].map(metric => (
+                      <article
+                        key={metric.label}
+                        style={{
+                          padding: '14px 16px',
+                          borderRadius: 20,
+                          border: `1px solid ${metric.accent}28`,
+                          background:
+                            'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03))',
+                          boxShadow: `0 16px 36px ${metric.accent}16`,
+                        }}
+                      >
+                        <div
+                          style={{
+                            color: DesignSystem.colors.text.muted,
+                            fontSize: DesignSystem.typography.fontSize.xs,
+                            letterSpacing: '0.12em',
+                            textTransform: 'uppercase',
+                            fontWeight: DesignSystem.typography.fontWeight.black,
+                          }}
                         >
-                          {route.score}
-                        </text>
-                      </g>
-                    )}
-                  </g>
-                );
-              })}
+                          {metric.label}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 10,
+                            color: DesignSystem.colors.text.primary,
+                            fontSize: DesignSystem.typography.fontSize['3xl'],
+                            lineHeight: 1,
+                            fontWeight: DesignSystem.typography.fontWeight.black,
+                          }}
+                        >
+                          {metric.value}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 8,
+                            color: DesignSystem.colors.text.secondary,
+                            fontSize: DesignSystem.typography.fontSize.sm,
+                          }}
+                        >
+                          {metric.detail}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </div>
 
-              {NODES.map(node => (
-                <g key={node.id}>
-                  <circle cx={node.x} cy={node.y} r={7} fill={`${accentColor(node.accent)}18`} />
-                  <circle cx={node.x} cy={node.y} r={3.2} fill={accentColor(node.accent)} />
-                  <circle cx={node.x} cy={node.y} r={1.1} fill="#fff" />
-                  <text
-                    x={node.x}
-                    y={node.y - 8.4}
-                    textAnchor="middle"
-                    fill={DesignSystem.colors.text.primary}
-                    fontSize="2.5"
-                  >
-                    {node.name}
-                  </text>
-                  <text
-                    x={node.x}
-                    y={node.y + 10.2}
-                    textAnchor="middle"
-                    fill={DesignSystem.colors.text.muted}
-                    fontSize="1.45"
-                  >
-                    {node.subtitle}
-                  </text>
-                </g>
-              ))}
-
-              {UNITS.filter(
-                unit =>
-                  tab === 'signal' ||
-                  (tab === 'fleet' && unit.type === 'ride') ||
-                  (tab === 'recovery' && unit.type === 'package') ||
-                  tab === 'math',
-              ).map((unit, index) => {
-                const route = routeStats.find(entry => entry.id === unit.routeId);
-                if (!route) {
-                  return null;
-                }
-
-                const from = route.fromNode;
-                const to = route.toNode;
-                const dx = to.x - from.x;
-                const dy = to.y - from.y;
-                const c1 = { x: from.x + dx * 0.26, y: from.y + dy * 0.08 };
-                const c2 = { x: from.x + dx * 0.76, y: from.y + dy * 0.92 };
-                const t = (unit.phase + tick * unit.speed * 100 * unit.dir + 1) % 1;
-                const mt = 1 - t;
-                const x =
-                  mt ** 3 * from.x +
-                  3 * mt ** 2 * t * c1.x +
-                  3 * mt * t ** 2 * c2.x +
-                  t ** 3 * to.x;
-                const y =
-                  mt ** 3 * from.y +
-                  3 * mt ** 2 * t * c1.y +
-                  3 * mt * t ** 2 * c2.y +
-                  t ** 3 * to.y;
-                const tx =
-                  3 * mt ** 2 * (c1.x - from.x) +
-                  6 * mt * t * (c2.x - c1.x) +
-                  3 * t ** 2 * (to.x - c2.x);
-                const ty =
-                  3 * mt ** 2 * (c1.y - from.y) +
-                  6 * mt * t * (c2.y - c1.y) +
-                  3 * t ** 2 * (to.y - c2.y);
-                const length = Math.max(0.001, Math.hypot(tx, ty));
-                const nx = (-ty / length) * unit.lane;
-                const ny = (tx / length) * unit.lane;
-                const rotation = Math.atan2(ty, tx) * (180 / Math.PI);
-
-                return (
-                  <g
-                    key={unit.id}
-                    transform={`translate(${x + nx} ${y + ny}) rotate(${rotation})`}
-                    opacity={clamp(0.52 + Math.sin(tick * 14 + index) * 0.22, 0.36, 0.98)}
-                  >
-                    {unit.type === 'ride' ? (
-                      <rect
-                        x={-2.8}
-                        y={-1.6}
-                        width={5.6}
-                        height={3.2}
-                        rx={1.2}
-                        fill={accentColor(unit.accent)}
-                      />
-                    ) : (
-                      <rect
-                        x={-2}
-                        y={-2}
-                        width={4}
-                        height={4}
-                        rx={1.1}
-                        fill={DesignSystem.colors.gold.base}
-                      />
-                    )}
-                  </g>
-                );
-              })}
-            </svg>
-
-            <div
-              style={{
-                position: 'absolute',
-                right: 14,
-                bottom: 14,
-                zIndex: 2,
-                display: 'flex',
-                gap: 8,
-                flexWrap: 'wrap',
-                justifyContent: 'flex-end',
-              }}
-            >
-              {[
-                { label: 'Ride flow live', color: DesignSystem.colors.cyan.base },
-                { label: 'Package flow live', color: DesignSystem.colors.gold.base },
-                {
-                  label: `${pipeline.metrics.rebalancingCount} rebalance moves queued`,
-                  color: DesignSystem.colors.purple.base,
-                },
-              ].map(item => (
                 <div
-                  key={item.label}
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    minHeight: 34,
-                    padding: '0 12px',
-                    borderRadius: 999,
-                    background: 'color-mix(in srgb, var(--ds-surface-overlay) 94%, transparent)',
-                    border: `1px solid ${item.color}28`,
-                    color: DesignSystem.colors.text.primary,
-                    fontSize: DesignSystem.typography.fontSize.xs,
-                    fontWeight: DesignSystem.typography.fontWeight.bold,
+                    position: 'relative',
+                    minHeight: 620,
+                    borderRadius: 28,
+                    overflow: 'hidden',
+                    border: `1px solid ${DesignSystem.colors.border.strong}`,
+                    background:
+                      'radial-gradient(circle at 50% 24%, rgba(255,255,255,0.06), transparent 30%), linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015))',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
                   }}
                 >
-                  <span
-                    aria-hidden="true"
+                  <div
                     style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 999,
-                      background: item.color,
-                      boxShadow: `0 0 18px ${item.color}66`,
+                      position: 'absolute',
+                      top: 16,
+                      left: 16,
+                      right: 16,
+                      zIndex: 2,
+                      display: 'flex',
+                      gap: 10,
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      flexWrap: 'wrap',
                     }}
-                  />
-                  {item.label}
-                </div>
-              ))}
-            </div>
-          </div>
-        </DataPanel>
-
-        <div style={{ display: 'grid', gap: 14 }}>
-          <DataPanel
-            title="Matching board"
-            icon={<Brain size={18} color={DesignSystem.colors.cyan.base} />}
-          >
-            <div style={{ display: 'grid', gap: 10 }}>
-              {pipeline.matches.length > 0 ? (
-                pipeline.matches.slice(0, 3).map(match => {
-                  const demand = pipeline.demand.find(item => item.id === match.demandId);
-                  const vehicle = pipeline.vehicles.find(item => item.id === match.vehicleId);
-
-                  return (
+                  >
                     <div
-                      key={`${match.demandId}-${match.vehicleId}`}
                       style={{
-                        padding: '12px 14px',
-                        borderRadius: 18,
-                        border: `1px solid ${DesignSystem.colors.cyan.base}2a`,
-                        background: 'rgba(255,255,255,0.03)',
+                        display: 'grid',
+                        gap: 8,
+                        padding: '14px 16px',
+                        borderRadius: 20,
+                        border: `1px solid ${currentMode.accent}28`,
+                        background: 'rgba(6,13,22,0.66)',
+                        backdropFilter: 'blur(18px)',
+                        minWidth: 240,
                       }}
                     >
                       <div
                         style={{
                           display: 'flex',
-                          justifyContent: 'space-between',
-                          gap: 12,
-                          alignItems: 'baseline',
+                          alignItems: 'center',
+                          gap: 8,
+                          color: currentMode.accent,
+                          fontSize: DesignSystem.typography.fontSize.xs,
+                          fontWeight: DesignSystem.typography.fontWeight.black,
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
                         }}
                       >
-                        <div>
-                          <div style={{ fontWeight: DesignSystem.typography.fontWeight.bold }}>
-                            {demand?.from.label ?? 'Origin'} {'->'}{' '}
-                            {demand?.to.label ?? 'Destination'}
+                        <Activity size={14} color={currentMode.accent} />
+                        Live mode / {TABS[tab]}
+                      </div>
+                      <div
+                        style={{
+                          color: DesignSystem.colors.text.primary,
+                          fontSize: DesignSystem.typography.fontSize.xl,
+                          fontWeight: DesignSystem.typography.fontWeight.black,
+                          lineHeight: 1.1,
+                        }}
+                      >
+                        {hottest.fromNode.name} {'->'} {hottest.toNode.name} is leading the field.
+                      </div>
+                      <div
+                        style={{
+                          color: DesignSystem.colors.text.secondary,
+                          fontSize: DesignSystem.typography.fontSize.sm,
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        Load {Math.round(hottest.load * 100)}% / live ETA {hottest.etaLive} min /
+                        score {hottest.score}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        gap: 8,
+                        minWidth: 240,
+                        padding: '14px 16px',
+                        borderRadius: 20,
+                        border: `1px solid ${DesignSystem.colors.border.base}`,
+                        background: 'rgba(6,13,22,0.66)',
+                        backdropFilter: 'blur(18px)',
+                      }}
+                    >
+                      {[
+                        {
+                          label: 'Live phase',
+                          value: `${(tick * 100).toFixed(1)}%`,
+                          accent: DesignSystem.colors.cyan.base,
+                        },
+                        {
+                          label: 'Agent sync',
+                          value: `${network.agentSync}%`,
+                          accent: DesignSystem.colors.gold.base,
+                        },
+                        {
+                          label: 'Watch corridor',
+                          value: `${weakest.fromNode.name} -> ${weakest.toNode.name}`,
+                          accent: DesignSystem.colors.purple.base,
+                        },
+                      ].map(item => (
+                        <div
+                          key={item.label}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            alignItems: 'center',
+                            color: DesignSystem.colors.text.secondary,
+                            fontSize: DesignSystem.typography.fontSize.xs,
+                          }}
+                        >
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                            <span
+                              aria-hidden="true"
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: 999,
+                                background: item.accent,
+                                boxShadow: `0 0 14px ${item.accent}88`,
+                              }}
+                            />
+                            {item.label}
                           </div>
                           <div
                             style={{
-                              marginTop: 4,
-                              color: DesignSystem.colors.text.muted,
+                              color: DesignSystem.colors.text.primary,
+                              fontWeight: DesignSystem.typography.fontWeight.bold,
+                              textAlign: 'right',
+                            }}
+                          >
+                            {item.value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <svg viewBox="0 0 100 110" style={{ width: '100%', height: '100%', display: 'block' }}>
+                    <defs>
+                      <linearGradient id="mobility-map-base" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="rgba(255,255,255,0.06)" />
+                        <stop offset="100%" stopColor="rgba(255,255,255,0.015)" />
+                      </linearGradient>
+                      <linearGradient id="mobility-map-land" x1="38%" y1="0%" x2="62%" y2="100%">
+                        <stop offset="0%" stopColor="rgba(255,255,255,0.11)" />
+                        <stop offset="52%" stopColor="rgba(255,255,255,0.05)" />
+                        <stop offset="100%" stopColor="rgba(255,255,255,0.02)" />
+                      </linearGradient>
+                      <radialGradient id="mobility-map-core" cx="50%" cy="30%" r="62%">
+                        <stop offset="0%" stopColor="rgba(107,185,223,0.16)" />
+                        <stop offset="60%" stopColor="rgba(107,185,223,0.03)" />
+                        <stop offset="100%" stopColor="rgba(107,185,223,0)" />
+                      </radialGradient>
+                      <filter id="mobility-map-glow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="1.6" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+
+                    <rect x="0" y="0" width="100" height="110" fill="url(#mobility-map-base)" />
+                    <rect x="0" y="0" width="100" height="110" fill="url(#mobility-map-core)" />
+
+                    {[14, 26, 38, 50, 62, 74, 86].map(x => (
+                      <line
+                        key={`v-${x}`}
+                        x1={x}
+                        y1="0"
+                        x2={x}
+                        y2="110"
+                        stroke="rgba(255,255,255,0.05)"
+                        strokeWidth="0.18"
+                      />
+                    ))}
+                    {[12, 24, 36, 48, 60, 72, 84, 96].map(y => (
+                      <line
+                        key={`h-${y}`}
+                        x1="0"
+                        y1={y}
+                        x2="100"
+                        y2={y}
+                        stroke="rgba(255,255,255,0.05)"
+                        strokeWidth="0.18"
+                      />
+                    ))}
+
+                    <path
+                      d="M 36 7 C 47 5, 59 7, 66 16 C 73 25, 73 36, 69 47 C 65 58, 66 71, 61 84 C 57 95, 54 102, 48 105 C 42 108, 36 104, 34 95 C 32 86, 36 74, 35 61 C 34 47, 39 36, 39 25 C 39 18, 36 12, 36 7 Z"
+                      fill="url(#mobility-map-land)"
+                      stroke="rgba(255,255,255,0.09)"
+                      strokeWidth="0.45"
+                    />
+                    <path
+                      d="M 48 12 C 52 22, 54 31, 52 40 C 50 50, 53 59, 51 70 C 49 82, 46 94, 46 101"
+                      fill="none"
+                      stroke="rgba(255,255,255,0.1)"
+                      strokeWidth="0.5"
+                      strokeDasharray="1.4 3.4"
+                      strokeLinecap="round"
+                    />
+
+                    {routeStats.map(route => {
+                      const from = route.fromNode;
+                      const to = route.toNode;
+                      const curve = buildRouteCurve(from, to);
+                      const labelPoint = bezierPoint(from, curve.c1, curve.c2, to, 0.52);
+                      const routeColor = accentColor(route.accent);
+                      const active =
+                        tab === 'signal' ||
+                        (tab === 'math' && (route.id === hottest.id || route.id === weakest.id)) ||
+                        (tab === 'fleet' && route.packageSync > 0.35) ||
+                        tab === 'recovery';
+                      const highlighted = active || featuredRouteIds.includes(route.id);
+                      const labelVisible = highlighted || route.score >= 82;
+
+                      return (
+                        <g key={route.id}>
+                          <path
+                            d={curve.path}
+                            fill="none"
+                            stroke="rgba(255,255,255,0.08)"
+                            strokeWidth={route.id === hottest.id ? 3.3 : 2.4}
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d={curve.path}
+                            fill="none"
+                            stroke={routeColor}
+                            strokeWidth={route.id === hottest.id ? 2.3 : highlighted ? 1.9 : 1.35}
+                            strokeLinecap="round"
+                            strokeOpacity={highlighted ? 0.68 + route.load * 0.22 : 0.22}
+                            filter={highlighted ? 'url(#mobility-map-glow)' : undefined}
+                          />
+                          <path
+                            d={curve.path}
+                            fill="none"
+                            stroke={routeColor}
+                            strokeWidth={highlighted ? 1.1 : 0.7}
+                            strokeLinecap="round"
+                            strokeOpacity={0.8}
+                            strokeDasharray={highlighted ? '1.8 4.4' : '1.2 5.4'}
+                            strokeDashoffset={-(tick * 140 + route.phase * 22)}
+                          />
+                          {labelVisible && (
+                            <g transform={`translate(${labelPoint.x - 5.4} ${labelPoint.y - 8})`}>
+                              <rect
+                                width="10.8"
+                                height="4.6"
+                                rx="1.8"
+                                fill="rgba(5,12,21,0.82)"
+                                stroke={`${routeColor}40`}
+                              />
+                              <text
+                                x="5.4"
+                                y="2.95"
+                                textAnchor="middle"
+                                fill={DesignSystem.colors.text.primary}
+                                fontSize="1.55"
+                                fontWeight="700"
+                              >
+                                {route.score}
+                              </text>
+                            </g>
+                          )}
+                        </g>
+                      );
+                    })}
+
+                    {NODES.map(node => {
+                      const pulse = clamp(
+                        5.6 + node.resilience * 3.2 + Math.sin(tick * 16 + node.x * 0.22) * 1.1,
+                        4.8,
+                        10.4,
+                      );
+                      const color = accentColor(node.accent);
+
+                      return (
+                        <g key={node.id}>
+                          <circle
+                            cx={node.x}
+                            cy={node.y}
+                            r={pulse}
+                            fill={`${color}16`}
+                            filter="url(#mobility-map-glow)"
+                          />
+                          <circle
+                            cx={node.x}
+                            cy={node.y}
+                            r={3.9}
+                            fill={color}
+                            stroke="rgba(255,255,255,0.72)"
+                            strokeWidth="0.55"
+                          />
+                          <circle cx={node.x} cy={node.y} r={1.15} fill="#fff" />
+                          <text
+                            x={node.x}
+                            y={node.y - 9.2}
+                            textAnchor="middle"
+                            fill={DesignSystem.colors.text.primary}
+                            fontSize="2.25"
+                            fontWeight="700"
+                          >
+                            {node.name}
+                          </text>
+                          <text
+                            x={node.x}
+                            y={node.y + 10.7}
+                            textAnchor="middle"
+                            fill={DesignSystem.colors.text.muted}
+                            fontSize="1.45"
+                          >
+                            {node.subtitle}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    {visibleUnits.map((unit, index) => {
+                      const route = routeStats.find(entry => entry.id === unit.routeId);
+                      if (!route) {
+                        return null;
+                      }
+
+                      const from = route.fromNode;
+                      const to = route.toNode;
+                      const curve = buildRouteCurve(from, to);
+                      const t = (unit.phase + tick * unit.speed * 100 * unit.dir + 1) % 1;
+                      const point = bezierPoint(from, curve.c1, curve.c2, to, t);
+                      const tangent = bezierTangent(from, curve.c1, curve.c2, to, t);
+                      const length = Math.max(0.001, Math.hypot(tangent.x, tangent.y));
+                      const nx = (-tangent.y / length) * unit.lane;
+                      const ny = (tangent.x / length) * unit.lane;
+                      const rotation = Math.atan2(tangent.y, tangent.x) * (180 / Math.PI);
+                      const color =
+                        unit.type === 'package'
+                          ? DesignSystem.colors.gold.base
+                          : accentColor(unit.accent);
+                      const opacity = clamp(
+                        0.58 + Math.sin(tick * 14 + index * 0.8) * 0.24,
+                        0.42,
+                        0.98,
+                      );
+
+                      return (
+                        <g
+                          key={unit.id}
+                          transform={`translate(${point.x + nx} ${point.y + ny}) rotate(${rotation})`}
+                          opacity={opacity}
+                        >
+                          <circle r={3.5} fill={`${color}22`} filter="url(#mobility-map-glow)" />
+                          <line
+                            x1={unit.type === 'ride' ? -6 : -4.6}
+                            y1="0"
+                            x2="1"
+                            y2="0"
+                            stroke={color}
+                            strokeOpacity={0.46}
+                            strokeWidth={0.95}
+                            strokeLinecap="round"
+                          />
+                          {unit.type === 'ride' ? (
+                            <rect
+                              x={-2.9}
+                              y={-1.7}
+                              width={5.8}
+                              height={3.4}
+                              rx={1.35}
+                              fill={color}
+                              stroke="rgba(255,255,255,0.56)"
+                              strokeWidth="0.22"
+                            />
+                          ) : (
+                            <rect
+                              x={-2.2}
+                              y={-2.2}
+                              width={4.4}
+                              height={4.4}
+                              rx={1.2}
+                              fill={color}
+                              stroke="rgba(255,255,255,0.52)"
+                              strokeWidth="0.22"
+                            />
+                          )}
+                        </g>
+                      );
+                    })}
+                  </svg>
+
+                  <div
+                    style={{
+                      position: 'absolute',
+                      right: 16,
+                      bottom: 16,
+                      zIndex: 2,
+                      display: 'flex',
+                      gap: 8,
+                      flexWrap: 'wrap',
+                      justifyContent: 'flex-end',
+                    }}
+                  >
+                    {[
+                      { label: 'Ride circulation', color: DesignSystem.colors.cyan.base },
+                      { label: 'Package circulation', color: DesignSystem.colors.gold.base },
+                      { label: 'Recovery guardrails', color: DesignSystem.colors.purple.base },
+                    ].map(item => (
+                      <div
+                        key={item.label}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          minHeight: 34,
+                          padding: '0 12px',
+                          borderRadius: 999,
+                          background: 'rgba(6,13,22,0.68)',
+                          border: `1px solid ${item.color}30`,
+                          color: DesignSystem.colors.text.primary,
+                          fontSize: DesignSystem.typography.fontSize.xs,
+                          fontWeight: DesignSystem.typography.fontWeight.bold,
+                          backdropFilter: 'blur(16px)',
+                        }}
+                      >
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: 999,
+                            background: item.color,
+                            boxShadow: `0 0 18px ${item.color}72`,
+                          }}
+                        />
+                        {item.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: 12,
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                  }}
+                >
+                  {corridorCards.map(route => (
+                    <article
+                      key={route.id}
+                      style={{
+                        padding: '16px 16px 14px',
+                        borderRadius: 22,
+                        border: `1px solid ${route.accent}2a`,
+                        background:
+                          'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03))',
+                        boxShadow: `0 14px 32px ${route.accent}14`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: route.accent,
+                          fontSize: DesignSystem.typography.fontSize.xs,
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
+                          fontWeight: DesignSystem.typography.fontWeight.black,
+                        }}
+                      >
+                        {route.emphasis}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 8,
+                          color: DesignSystem.colors.text.primary,
+                          fontSize: DesignSystem.typography.fontSize.lg,
+                          fontWeight: DesignSystem.typography.fontWeight.black,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {route.fromNode.name} {'->'} {route.toNode.name}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 8,
+                          display: 'grid',
+                          gap: 6,
+                          color: DesignSystem.colors.text.secondary,
+                          fontSize: DesignSystem.typography.fontSize.sm,
+                        }}
+                      >
+                        <div>Score {route.score} / reliability {Math.round(route.reliability * 100)}%</div>
+                        <div>Load {Math.round(route.load * 100)}% / ETA {route.etaLive} min</div>
+                        <div>Package sync {Math.round(route.packageSync * 100)}%</div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gap: 14 }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: 12,
+                    padding: '18px',
+                    borderRadius: 24,
+                    border: `1px solid ${DesignSystem.colors.cyan.base}28`,
+                    background:
+                      'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025))',
+                    boxShadow: `0 18px 40px ${DesignSystem.colors.cyan.base}12`,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          color: DesignSystem.colors.cyan.base,
+                          fontSize: DesignSystem.typography.fontSize.xs,
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
+                          fontWeight: DesignSystem.typography.fontWeight.black,
+                        }}
+                      >
+                        Matching board
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 6,
+                          color: DesignSystem.colors.text.primary,
+                          fontSize: DesignSystem.typography.fontSize.xl,
+                          fontWeight: DesignSystem.typography.fontWeight.black,
+                        }}
+                      >
+                        Best demand-to-supply pairs this cycle
+                      </div>
+                    </div>
+                    <Brain size={20} color={DesignSystem.colors.cyan.base} />
+                  </div>
+
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {pipeline.matches.length > 0 ? (
+                      pipeline.matches.slice(0, 3).map(match => {
+                        const demand = pipeline.demand.find(item => item.id === match.demandId);
+                        const vehicle = pipeline.vehicles.find(item => item.id === match.vehicleId);
+
+                        return (
+                          <article
+                            key={`${match.demandId}-${match.vehicleId}`}
+                            style={{
+                              padding: '14px 15px',
+                              borderRadius: 18,
+                              border: `1px solid ${DesignSystem.colors.cyan.base}20`,
+                              background: 'rgba(255,255,255,0.03)',
+                              display: 'grid',
+                              gap: 8,
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                gap: 12,
+                                alignItems: 'flex-start',
+                              }}
+                            >
+                              <div>
+                                <div
+                                  style={{
+                                    color: DesignSystem.colors.text.primary,
+                                    fontWeight: DesignSystem.typography.fontWeight.bold,
+                                  }}
+                                >
+                                  {demand?.from.label ?? 'Origin'} {'->'} {demand?.to.label ?? 'Destination'}
+                                </div>
+                                <div
+                                  style={{
+                                    marginTop: 4,
+                                    color: DesignSystem.colors.text.secondary,
+                                    fontSize: DesignSystem.typography.fontSize.sm,
+                                    lineHeight: 1.6,
+                                  }}
+                                >
+                                  {demand?.kind === 'package' ? 'Package wave' : 'Passenger wave'} matched to{' '}
+                                  {vehicle?.from.label ?? 'route'} {'->'} {vehicle?.to.label ?? 'route'}
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  minWidth: 62,
+                                  textAlign: 'right',
+                                  color: DesignSystem.colors.cyan.base,
+                                  fontSize: DesignSystem.typography.fontSize['2xl'],
+                                  fontWeight: DesignSystem.typography.fontWeight.black,
+                                  lineHeight: 1,
+                                }}
+                              >
+                                {match.score}
+                              </div>
+                            </div>
+                          </article>
+                        );
+                      })
+                    ) : (
+                      <article
+                        style={{
+                          padding: '14px 16px',
+                          borderRadius: 18,
+                          border: `1px solid ${DesignSystem.colors.border.base}`,
+                          background: 'rgba(255,255,255,0.03)',
+                          color: DesignSystem.colors.text.secondary,
+                          lineHeight: 1.65,
+                          fontSize: DesignSystem.typography.fontSize.sm,
+                        }}
+                      >
+                        No demand is clearing the {pipeline.thresholds.dispatchMatchScore}+ dispatch
+                        threshold right now. Mobility OS is waiting for stronger route fit or a
+                        lower-pressure corridor.
+                      </article>
+                    )}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: 12,
+                    padding: '18px',
+                    borderRadius: 24,
+                    border: `1px solid ${DesignSystem.colors.purple.base}28`,
+                    background:
+                      'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025))',
+                    boxShadow: `0 18px 40px ${DesignSystem.colors.purple.base}12`,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          color: DesignSystem.colors.purple.base,
+                          fontSize: DesignSystem.typography.fontSize.xs,
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
+                          fontWeight: DesignSystem.typography.fontWeight.black,
+                        }}
+                      >
+                        Rebalancing plan
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 6,
+                          color: DesignSystem.colors.text.primary,
+                          fontSize: DesignSystem.typography.fontSize.xl,
+                          fontWeight: DesignSystem.typography.fontWeight.black,
+                        }}
+                      >
+                        Moves queued before the next demand wave lands
+                      </div>
+                    </div>
+                    <Gauge size={20} color={DesignSystem.colors.purple.base} />
+                  </div>
+
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {pipeline.rebalancing.length > 0 ? (
+                      pipeline.rebalancing.slice(0, 3).map(action => (
+                        <article
+                          key={`${action.vehicleId}-${action.corridorId}`}
+                          style={{
+                            padding: '14px 15px',
+                            borderRadius: 18,
+                            border: `1px solid ${DesignSystem.colors.purple.base}20`,
+                            background: 'rgba(255,255,255,0.03)',
+                            display: 'grid',
+                            gap: 8,
+                          }}
+                        >
+                          <div
+                            style={{
+                              color: DesignSystem.colors.text.primary,
+                              fontWeight: DesignSystem.typography.fontWeight.bold,
+                            }}
+                          >
+                            {action.from} {'->'} {action.to}
+                          </div>
+                          <div
+                            style={{
+                              color: DesignSystem.colors.text.secondary,
+                              fontSize: DesignSystem.typography.fontSize.sm,
+                              lineHeight: 1.62,
+                            }}
+                          >
+                            {action.reason}
+                          </div>
+                          <div
+                            style={{
+                              color: DesignSystem.colors.purple.base,
+                              fontWeight: DesignSystem.typography.fontWeight.bold,
+                            }}
+                          >
+                            Rebalance score {action.score}
+                          </div>
+                        </article>
+                      ))
+                    ) : (
+                      <article
+                        style={{
+                          padding: '14px 16px',
+                          borderRadius: 18,
+                          border: `1px solid ${DesignSystem.colors.border.base}`,
+                          background: 'rgba(255,255,255,0.03)',
+                          color: DesignSystem.colors.text.secondary,
+                          lineHeight: 1.65,
+                          fontSize: DesignSystem.typography.fontSize.sm,
+                        }}
+                      >
+                        Idle supply is already close enough to current demand, so no explicit
+                        repositioning move is required yet.
+                      </article>
+                    )}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: 12,
+                    padding: '18px',
+                    borderRadius: 24,
+                    border: `1px solid ${DesignSystem.colors.gold.base}28`,
+                    background:
+                      'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025))',
+                    boxShadow: `0 18px 40px ${DesignSystem.colors.gold.base}10`,
+                  }}
+                >
+                  <div
+                    style={{
+                      color: DesignSystem.colors.gold.base,
+                      fontSize: DesignSystem.typography.fontSize.xs,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      fontWeight: DesignSystem.typography.fontWeight.black,
+                    }}
+                  >
+                    Corridor watchlist
+                  </div>
+
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {routeStats.slice(0, 4).map(route => {
+                      const accent =
+                        route.id === weakest.id
+                          ? DesignSystem.colors.purple.base
+                          : accentColor(route.accent);
+
+                      return (
+                        <div
+                          key={route.id}
+                          style={{
+                            display: 'grid',
+                            gap: 8,
+                            padding: '12px 14px',
+                            borderRadius: 18,
+                            border: `1px solid ${accent}22`,
+                            background: 'rgba(255,255,255,0.03)',
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              gap: 12,
+                              alignItems: 'center',
+                            }}
+                          >
+                            <div
+                              style={{
+                                color: DesignSystem.colors.text.primary,
+                                fontWeight: DesignSystem.typography.fontWeight.bold,
+                              }}
+                            >
+                              {route.fromNode.name} {'->'} {route.toNode.name}
+                            </div>
+                            <div
+                              style={{
+                                color: accent,
+                                fontWeight: DesignSystem.typography.fontWeight.black,
+                              }}
+                            >
+                              {route.score}
+                            </div>
+                          </div>
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              gap: 12,
+                              color: DesignSystem.colors.text.secondary,
                               fontSize: DesignSystem.typography.fontSize.xs,
                             }}
                           >
-                            {demand?.kind === 'package' ? 'Package wave' : 'Passenger wave'} on{' '}
-                            {vehicle?.from.label ?? 'route'} {'->'} {vehicle?.to.label ?? 'route'}
+                            <span>ETA {route.etaLive} min</span>
+                            <span>Load {Math.round(route.load * 100)}%</span>
+                            <span>Reliability {Math.round(route.reliability * 100)}%</span>
                           </div>
                         </div>
-                        <div
-                          style={{
-                            fontSize: DesignSystem.typography.fontSize.xl,
-                            fontWeight: DesignSystem.typography.fontWeight.black,
-                            color: DesignSystem.colors.cyan.base,
-                          }}
-                        >
-                          {match.score}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <article
-                  style={{
-                    padding: '14px 16px',
-                    borderRadius: 18,
-                    border: `1px solid ${DesignSystem.colors.border.base}`,
-                    background: 'rgba(255,255,255,0.03)',
-                    color: DesignSystem.colors.text.secondary,
-                    lineHeight: 1.65,
-                    fontSize: DesignSystem.typography.fontSize.sm,
-                  }}
-                >
-                  No demand is clearing the {pipeline.thresholds.dispatchMatchScore}+ dispatch
-                  threshold right now. Mobility OS is waiting for more supply, stronger route fit,
-                  or a lower-pressure corridor.
-                </article>
-              )}
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
-          </DataPanel>
-
-          <DataPanel
-            title="Rebalancing plan"
-            icon={<Gauge size={18} color={DesignSystem.colors.purple.base} />}
-          >
-            <div style={{ display: 'grid', gap: 10 }}>
-              {pipeline.rebalancing.length > 0 ? (
-                pipeline.rebalancing.slice(0, 3).map(action => (
-                  <article
-                    key={`${action.vehicleId}-${action.corridorId}`}
-                    style={{
-                      padding: '14px 16px',
-                      borderRadius: 18,
-                      border: `1px solid ${DesignSystem.colors.purple.base}24`,
-                      background: 'rgba(255,255,255,0.03)',
-                      color: DesignSystem.colors.text.secondary,
-                      lineHeight: 1.65,
-                      fontSize: DesignSystem.typography.fontSize.sm,
-                    }}
-                  >
-                    <div
-                      style={{
-                        color: DesignSystem.colors.text.primary,
-                        fontWeight: DesignSystem.typography.fontWeight.bold,
-                      }}
-                    >
-                      {action.from} {'->'} {action.to}
-                    </div>
-                    <div style={{ marginTop: 6 }}>{action.reason}</div>
-                    <div
-                      style={{
-                        marginTop: 8,
-                        color: DesignSystem.colors.purple.base,
-                        fontWeight: DesignSystem.typography.fontWeight.bold,
-                      }}
-                    >
-                      Rebalance score {action.score}
-                    </div>
-                  </article>
-                ))
-              ) : (
-                <article
-                  style={{
-                    padding: '14px 16px',
-                    borderRadius: 18,
-                    border: `1px solid ${DesignSystem.colors.border.base}`,
-                    background: 'rgba(255,255,255,0.03)',
-                    color: DesignSystem.colors.text.secondary,
-                    lineHeight: 1.65,
-                    fontSize: DesignSystem.typography.fontSize.sm,
-                  }}
-                >
-                  Idle supply is already close enough to current demand, so no explicit
-                  repositioning move is required yet.
-                </article>
-              )}
-            </div>
-          </DataPanel>
-        </div>
+          </div>
+        </DataPanel>
       </section>
 
       <section

@@ -173,7 +173,7 @@ describe('WaselAuth', () => {
     });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: '12345678' } });
     fireEvent.change(screen.getByLabelText('Phone number'), { target: { value: '+962792084333' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Submit sign up' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     await waitFor(() => {
       expect(screen.getAllByText(/Choose a stronger password/i).length).toBeGreaterThan(0);
@@ -189,7 +189,7 @@ describe('WaselAuth', () => {
       target: { value: 'laith@example.com' },
     });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'StrongPass1!' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Submit sign up' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledWith(
@@ -210,7 +210,7 @@ describe('WaselAuth', () => {
     });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'StrongPass1!' } });
     fireEvent.change(screen.getByLabelText('Phone number'), { target: { value: '+962792084333' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Submit sign up' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledWith(

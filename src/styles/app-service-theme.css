@@ -194,19 +194,19 @@
 }
 
 :root[data-theme='dark'] {
-  --accent-rgb: 230 126 34;
-  --accent-secondary-rgb: 245 176 65;
-  --wasel-button-primary-rgb: 230 126 34;
+  --accent-rgb: 229 156 54;
+  --accent-secondary-rgb: 255 211 154;
+  --wasel-button-primary-rgb: 229 156 54;
   --wasel-border-rgb: 255 255 255;
-  --success-rgb: 245 176 65;
-  --warning-rgb: 230 126 34;
+  --success-rgb: 255 211 154;
+  --warning-rgb: 229 156 54;
 }
 
 :root[data-theme='light'] {
-  --accent-rgb: 230 126 34;
-  --accent-secondary-rgb: 245 176 65;
-  --wasel-button-primary-rgb: 230 126 34;
+  --accent-rgb: 229 156 54;
+  --accent-secondary-rgb: 255 211 154;
+  --wasel-button-primary-rgb: 229 156 54;
   --wasel-border-rgb: 15 23 42;
-  --success-rgb: 245 176 65;
-  --warning-rgb: 230 126 34;
+  --success-rgb: 255 211 154;
+  --warning-rgb: 229 156 54;
 }
