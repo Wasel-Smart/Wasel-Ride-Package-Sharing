@@ -11,7 +11,7 @@ describe('movementMembership', () => {
     __resetMovementMembershipForTests();
   });
 
-  it('hydrates Wasel Plus state from the backend wallet subscription', () => {
+  it('hydrates travel-plan state from the backend wallet subscription', () => {
     hydrateMovementMembershipFromWallet({
       wallet: {
         id: 'wallet-1',
@@ -49,10 +49,10 @@ describe('movementMembership', () => {
 
     const snapshot = getMovementMembershipSnapshot();
 
-    expect(snapshot.plusActive).toBe(true);
-    expect(snapshot.plusRenewalDate).toBe('2026-05-01T00:00:00.000Z');
-    expect(snapshot.activeSubscription?.type).toBe('plus');
-    expect(snapshot.activeSubscription?.planName).toBe('Wasel Plus');
+    expect(snapshot.planActive).toBe(true);
+    expect(snapshot.planRenewalDate).toBe('2026-05-01T00:00:00.000Z');
+    expect(snapshot.activeSubscription?.type).toBe('travel-plan');
+    expect(snapshot.activeSubscription?.planName).toBe('Travel plan');
   });
 
   it('hydrates commuter pass state from the backend wallet subscription', () => {

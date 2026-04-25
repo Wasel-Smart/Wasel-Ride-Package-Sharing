@@ -1,8 +1,6 @@
 export type BusRouteInfoKind =
   | 'validation'
   | 'live'
-  | 'official'
-  | 'nearest'
   | 'unavailable';
 
 export interface BusRouteInfo {
@@ -22,7 +20,7 @@ export const BUS_PAGE_COPY = {
   bookingConfirmedTitle: 'Seat confirmed',
   heroDetail: 'Bus service is only shown when live inventory is available.',
   loadingRoutes: 'Syncing live bus routes...',
-  officialScheduleLink: (verifiedAt: string) => `Official schedule, verified ${verifiedAt}`,
+  officialScheduleLink: (verifiedAt: string) => `Provider details verified ${verifiedAt}`,
 } as const;
 
 export function buildBusRouteInfo(kind: BusRouteInfoKind, verifiedAt?: string): BusRouteInfo {
@@ -37,16 +35,6 @@ export function buildBusRouteInfo(kind: BusRouteInfoKind, verifiedAt?: string): 
         kind,
         message: 'Live bus inventory is synced for this corridor.',
       };
-    case 'official':
-      return {
-        kind,
-        message: `Showing official Jordan schedule data verified on ${verifiedAt ?? 'the selected date'}.`,
-      };
-    case 'nearest':
-      return {
-        kind,
-        message: 'No exact coach found yet. Showing the closest official corridors.',
-      };
     case 'unavailable':
       return {
         kind,
@@ -54,8 +42,8 @@ export function buildBusRouteInfo(kind: BusRouteInfoKind, verifiedAt?: string): 
       };
     default:
       return {
-        kind: 'official',
-        message: `Showing official Jordan schedule data verified on ${verifiedAt ?? 'the selected date'}.`,
+        kind: 'unavailable',
+        message: 'Bus service is unavailable right now.',
       };
   }
 }

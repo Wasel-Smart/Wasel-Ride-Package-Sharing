@@ -295,7 +295,7 @@ export function PackageSendPanel({
           onClick={onCreate}
           style={{ gridColumn: '1/-1', height: 52, borderRadius: r(14), border: 'none', background: DS.gradG, color: '#fff', fontWeight: 800, fontFamily: DS.F, fontSize: '0.95rem', cursor: busyState === 'creating' ? 'wait' : 'pointer', opacity: busyState === 'creating' ? 0.75 : 1, boxShadow: `0 4px 20px ${DS.gold}30` }}
         >
-          {busyState === 'creating' ? 'Creating package request...' : 'Create connected package request'}
+          {busyState === 'creating' ? 'Sending package request...' : 'Send a package'}
         </button>
       </div>
 

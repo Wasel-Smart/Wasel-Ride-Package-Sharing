@@ -88,11 +88,13 @@ export function Protected({ children }: { children: ReactNode }) {
   const nav = useIframeSafeNavigate();
   const location = useLocation();
   const mountedRef = useRef(true);
-  const { allowLocalPersistenceFallback, enableDemoAccount, enablePersistedTestAuth } = getConfig();
-  const allowLocalFallback =
-    allowLocalPersistenceFallback || enableDemoAccount || enablePersistedTestAuth;
-  const user = allowLocalFallback ? localUser : (session?.user ?? authUser);
-  const loading = isBackendConnected && !allowLocalFallback ? authLoading : localLoading;
+  const { enableLocalAuth } = getConfig();
+  const user = enableLocalAuth ? (localUser ?? session?.user ?? authUser) : (session?.user ?? authUser);
+  const loading = enableLocalAuth
+    ? localLoading
+    : isBackendConnected
+      ? authLoading
+      : localLoading;
   const checkingAccessTitle = getLocalizedCopy(language, SHARED_COPY.checkingAccessTitle);
   const checkingAccessBody = getLocalizedCopy(language, SHARED_COPY.checkingAccessBody);
   const signInTitle = getLocalizedCopy(language, SHARED_COPY.signInTitle);

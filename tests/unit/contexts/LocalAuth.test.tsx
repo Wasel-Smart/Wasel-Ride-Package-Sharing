@@ -28,7 +28,7 @@ vi.mock('@/utils/supabase/client', () => ({
 
 vi.mock('@/utils/env', () => ({
   getConfig: () => ({
-    enableDemoAccount: false,
+    enableLocalAuth: false,
   }),
 }));
 

@@ -60,12 +60,12 @@ export function getExecutionOperatingSystemSnapshot(): ExecutionOperatingSystemS
       'No feature starts without an owner, KPI, source of truth, and acceptance criteria.',
       'No release ships without verification gates and rollback clarity.',
       'No incident closes without root-cause notes and follow-up ownership.',
-      'Leadership reviews execution with the same discipline used for strategy.',
+      'Leadership reviews delivery with the same discipline used for strategy.',
     ],
     owners: [
       {
         domain: 'Rides and corridor liquidity',
-        accountableRole: 'Product + Mobility owner',
+        accountableRole: 'Product + marketplace owner',
         scope: 'Search, booking, route fill rate, corridor activation',
         successMetric: 'Search-to-book conversion and repeat corridor usage',
       },
@@ -78,7 +78,7 @@ export function getExecutionOperatingSystemSnapshot(): ExecutionOperatingSystemS
       {
         domain: 'Wallet and monetization',
         accountableRole: 'Commercial owner',
-        scope: 'Wallet reliability, subscriptions, corridor pass monetization',
+        scope: 'Wallet reliability, corridor passes, and payment health',
         successMetric: 'Recurring corridor revenue',
       },
       {
@@ -88,7 +88,7 @@ export function getExecutionOperatingSystemSnapshot(): ExecutionOperatingSystemS
         successMetric: 'Verification completion and support resolution time',
       },
       {
-        domain: 'Engineering execution',
+        domain: 'Engineering delivery',
         accountableRole: 'Tech owner',
         scope: 'Type safety, release quality, incidents, CI health',
         successMetric: 'Type-check debt count and release failure rate',
@@ -117,7 +117,7 @@ export function getExecutionOperatingSystemSnapshot(): ExecutionOperatingSystemS
         id: 'wallet-fallback-rate',
         title: 'Wallet fallback rate',
         area: 'engineering',
-        definition: 'Wallet reads served from direct Supabase fallback',
+        definition: 'Wallet reads served from direct backend bypasses',
         target: '< 5% weekly',
         cadence: 'weekly',
         source: 'Wallet reliability metadata',
@@ -135,7 +135,7 @@ export function getExecutionOperatingSystemSnapshot(): ExecutionOperatingSystemS
         id: 'recurring-revenue',
         title: 'Recurring corridor revenue',
         area: 'commercial',
-        definition: 'Revenue from Wasel Plus, corridor passes, and managed contracts',
+        definition: 'Revenue from travel plans, corridor passes, and managed contracts',
         target: 'Growing month over month',
         cadence: 'monthly',
         source: 'Wallet subscriptions + commercial corridor engine',
@@ -152,7 +152,7 @@ export function getExecutionOperatingSystemSnapshot(): ExecutionOperatingSystemS
     ],
     cadences: [
       {
-        title: 'Weekly execution review',
+        title: 'Weekly delivery review',
         frequency: 'Every week',
         purpose: 'Inspect progress, blockers, and KPI drift across domains',
         requiredInputs: ['Owner status', 'KPI trend', 'release/incident status'],
@@ -168,7 +168,7 @@ export function getExecutionOperatingSystemSnapshot(): ExecutionOperatingSystemS
       {
         title: 'Monthly commercial review',
         frequency: 'Every month',
-        purpose: 'Track corridor monetization, contracts, and membership growth',
+        purpose: 'Track corridor monetization, contracts, and plan adoption',
         requiredInputs: ['Recurring revenue', 'contract health', 'pass adoption'],
         mandatoryOutputs: ['Commercial priority list', 'contract expansion decisions'],
       },
@@ -189,7 +189,7 @@ export function getExecutionOperatingSystemSnapshot(): ExecutionOperatingSystemS
       {
         title: 'Commercial rollout playbook',
         owner: 'Commercial owner',
-        trigger: 'New subscription, contract lane, or pricing change',
+        trigger: 'New corridor pass, contract lane, or pricing change',
         exitCriteria: ['Revenue metric defined', 'billing path verified', 'owner signoff captured'],
       },
       {
@@ -217,7 +217,7 @@ export function getExecutionOperatingSystemSnapshot(): ExecutionOperatingSystemS
       },
       {
         phase: 'Standardize',
-        objective: 'Turn the fix into repeatable execution behavior',
+        objective: 'Turn the fix into repeatable delivery behavior',
         deliverable: 'Updated playbook or checklist',
       },
     ],

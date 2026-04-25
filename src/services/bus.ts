@@ -2,9 +2,7 @@ import { bookingsAPI } from './bookings';
 import { trackGrowthEvent } from './growthEngine';
 import { triggerBusBookingConfirmationEmail } from './transactionalEmailTriggers';
 import { tripsAPI } from './trips';
-import { OFFICIAL_JORDAN_BUS_ROUTES } from '../data/jordanBusNetwork';
 import { isCoreFeatureEnabled } from '../features/core/featureFlags';
-import { locationsOverlap, routeMatchesLocationPair } from '../utils/jordanLocations';
 
 export interface BusRoute {
   id: string;
@@ -29,7 +27,7 @@ export interface BusRoute {
   serviceLevel?: string;
   sourceUrl?: string;
   lastVerifiedAt?: string;
-  dataSource?: 'live' | 'official';
+  dataSource?: 'live';
 }
 
 export interface BusRouteQuery {
@@ -153,34 +151,6 @@ export function normalizeBusRoute(raw: Record<string, unknown>, index: number): 
   };
 }
 
-function matchOfficialRoute(route: BusRoute, query: BusRouteQuery): boolean {
-  if (query.from && !locationsOverlap(route.from, query.from)) {return false;}
-  if (query.to && !locationsOverlap(route.to, query.to)) {return false;}
-  if (query.seats && route.seats < query.seats) {return false;}
-  return true;
-}
-
-export function getOfficialBusRoutes(query: BusRouteQuery = {}): BusRoute[] {
-  const exact = OFFICIAL_JORDAN_BUS_ROUTES.filter(route => matchOfficialRoute(route, query));
-  if (exact.length > 0) {return exact;}
-
-  if (query.from || query.to) {
-    const close = OFFICIAL_JORDAN_BUS_ROUTES.filter(route => {
-      if (query.seats && route.seats < query.seats) {return false;}
-      return (
-        routeMatchesLocationPair(route.from, route.to, query.from, query.to) ||
-        locationsOverlap(route.from, query.from) ||
-        locationsOverlap(route.to, query.to) ||
-        locationsOverlap(route.to, query.from) ||
-        locationsOverlap(route.from, query.to)
-      );
-    });
-    if (close.length > 0) {return close;}
-  }
-
-  return OFFICIAL_JORDAN_BUS_ROUTES.filter(route => !query.seats || route.seats >= query.seats);
-}
-
 export async function fetchBusRoutes(query: BusRouteQuery): Promise<BusRoute[]> {
   requireBusService();
 
@@ -219,11 +189,15 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
     },
   );
 
-  const bookingId = server?.id ?? `server-${Date.now()}`;
+  const bookingId = server?.id;
+  if (!bookingId) {
+    throw new Error('Bus booking could not be confirmed by the backend.');
+  }
+
   const result: BusBookingResult = {
     source: 'server',
     bookingId: String(bookingId),
-    ticketCode: `BUS-${String(bookingId).slice(-6).toUpperCase()}`,
+    ticketCode: String(bookingId),
   };
 
   if (payload.passengerEmail) {

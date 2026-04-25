@@ -4,12 +4,12 @@ import { publicAnonKey, publicSupabaseUrl } from './supabase/info';
 
 interface EnvironmentConfig {
   mode: AppEnvironment;
+  enableLocalAuth: boolean;
   isDemoMode: boolean;
   enableDemoData: boolean;
   enableSyntheticTrips: boolean;
   enableFakePayments: boolean;
   enableFakeBusBookings: boolean;
-  enablePersistedTestAuth: boolean;
   allowDirectSupabaseFallback: boolean;
   allowLocalPersistenceFallback: boolean;
   supabaseUrl: string;
@@ -26,12 +26,12 @@ export function getEnvironmentConfig(): EnvironmentConfig {
 
   return {
     mode: config.environment,
+    enableLocalAuth: config.enableLocalAuth,
     isDemoMode: config.enableDemoAccount,
     enableDemoData: config.enableDemoAccount,
     enableSyntheticTrips: config.enableSyntheticTrips,
     enableFakePayments: config.enableFakePayments,
     enableFakeBusBookings: config.enableFakeBusBookings,
-    enablePersistedTestAuth: config.enablePersistedTestAuth,
     allowDirectSupabaseFallback: config.allowDirectSupabaseFallback,
     allowLocalPersistenceFallback: config.allowLocalPersistenceFallback,
     supabaseUrl: publicSupabaseUrl || '',
@@ -79,8 +79,8 @@ export function validateEnvironmentConfig(): void {
       errors.push('Synthetic trips cannot be enabled outside development or test environments');
     }
 
-    if (config.enablePersistedTestAuth) {
-      errors.push('Persisted test auth cannot be enabled outside the test environment');
+    if (config.enableLocalAuth) {
+      errors.push('Local auth cannot be enabled outside development or test environments');
     }
 
     if (config.allowDirectSupabaseFallback) {

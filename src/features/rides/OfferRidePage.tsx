@@ -262,8 +262,8 @@ export function OfferRidePage() {
               </div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
-              {[
-                corridor.recommendationReason ?? driverPlan?.waselBrainNote ?? 'Pick a route to see live price guidance.',
+              {[ 
+                corridor.recommendationReason ?? driverPlan?.routeNote ?? 'Pick a route to see live price guidance.',
                 corridor.pickupSummary ?? driverPlan?.corridor.autoGroupWindow ?? 'Pickup guidance appears here when route data is available.',
                 corridor.liveProofSummary ?? (driverPlan ? `Empty-seat risk on this route is about ${driverPlan.emptySeatCostJod} JOD per open seat.` : 'Demand updates appear here when the corridor has live activity.'),
               ].map((line) => (

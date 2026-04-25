@@ -119,8 +119,9 @@ export function BusPage() {
   const [selected, setSelected] = useState('');
   const [selectedDeparture, setSelectedDeparture] = useState('07:00');
   const [bookingComplete, setBookingComplete] = useState(false);
-  const [bookingSource, setBookingSource] = useState<'server' | 'local' | null>(null);
   const [bookingTicketCode, setBookingTicketCode] = useState<string | null>(null);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [searchNonce, setSearchNonce] = useState(0);
   const syncDelayMs =
     !searchParams.toString() &&
     origin === 'Amman' &&
@@ -134,7 +135,7 @@ export function BusPage() {
     to: destination,
     date: tripDate,
     seats: passengers,
-    searchKey: searchParams.toString(),
+    searchKey: `${searchParams.toString()}::${searchNonce}`,
     delayMs: syncDelayMs,
   });
   const busRoutes = busState.routes;
@@ -183,7 +184,51 @@ export function BusPage() {
   }, [activeBus, departureKey, departureTimes]);
 
   if (!activeBus) {
-    return null;
+    return (
+      <Protected>
+        <PageShell>
+          <SectionHead
+            emoji="🚌"
+            title="Wasel Bus"
+            sub="Book intercity seats only when the backend has live availability."
+            color={DS.green}
+          />
+          <CoreExperienceBanner
+            title="Bus service unavailable"
+            detail={routesInfo?.message ?? 'Bus service is unavailable right now.'}
+            tone={DS.green}
+          />
+          <ClarityBand
+            title="No ticket was created."
+            detail="Bus bookings stop when live inventory is unavailable."
+            tone={DS.green}
+            items={[
+              { label: 'Status', value: routesLoading ? BUS_PAGE_COPY.loadingRoutes : (routesInfo?.message ?? 'Bus service is unavailable right now.') },
+              { label: 'Action', value: 'Retry this search after the backend recovers.' },
+              { label: 'Fallback', value: 'Use rides or packages instead of a simulated ticket.' },
+            ]}
+          />
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setSearchNonce((current) => current + 1)}
+              style={{
+                height: 44,
+                padding: '0 16px',
+                borderRadius: r(14),
+                border: `1px solid ${DS.border}`,
+                background: DS.card2,
+                color: DS.text,
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              Try again
+            </button>
+          </div>
+        </PageShell>
+      </Protected>
+    );
   }
 
   const pickupCoord = resolveCityCoord(activeBus.from);
@@ -205,52 +250,62 @@ export function BusPage() {
       ? `Next departure today at ${selectedDeparture}`
       : `${tripDate} at ${selectedDeparture}`;
   const activeStatus = getRouteStatus(activeBus, tripDate, today);
-  const fallbackBuses = busRoutes
+  const otherLiveDepartures = busRoutes
     .filter(route => route.id !== activeBus.id && route.seats > 0)
-    .slice(0, 2);
+    .slice(0, 3);
   const bestFare = busRoutes.length
     ? Math.min(...busRoutes.map(route => route.price))
     : activeBus.price;
   const networkBrief =
     exactRouteCount > 0
       ? `${exactRouteCount} direct coach ${exactRouteCount === 1 ? 'departure is' : 'departures are'} visible for this corridor.`
-      : 'No direct coach is open yet, so Wasel is keeping the closest official alternatives visible.';
+      : 'No direct coach is available for this corridor right now.';
   const corridorSupport = routeEndpointsAreDistinct(origin, destination)
     ? `${operatorCount} operators are contributing inventory across ${busRoutes.length} visible departures.`
     : 'Choose two different cities to unlock the full corridor view.';
   const bookingSignal =
     activeBus.seats === 0
       ? 'This departure is full, but the same corridor filters stay active while you switch to another coach.'
-      : `${activeBus.seats} seats are open on the selected coach and the departure plan stays linked to one ticket flow.`;
+      : `${activeBus.seats} seats are open on the selected coach and booking is confirmed only after the backend responds.`;
 
   async function handleBusBooking() {
     if (bookingDisabled) return;
     setBookingComplete(false);
-    const result = await bookRoute({
-      tripId: activeBus.id,
-      seatsRequested: passengers,
-      pickupStop: activeBus.pickupPoint,
-      dropoffStop: activeBus.dropoffPoint,
-      scheduleDate: scheduleMode === 'depart-now' ? today : tripDate,
-      departureTime: selectedDeparture,
-      seatPreference,
-      scheduleMode,
-      totalPrice,
-      passengerName: user?.name,
-      passengerEmail: user?.email,
-    });
-    setBookingSource(result.source);
-    setBookingTicketCode(result.ticketCode);
-    setBookingComplete(true);
-    notificationsAPI
-      .createNotification({
-        title: 'Bus seat confirmed',
-        message: `${activeBus.from} to ${activeBus.to} is confirmed. Ticket ${result.ticketCode}.`,
-        type: 'booking',
-        priority: 'high',
-        action_url: '/app/bus',
-      })
-      .catch(() => {});
+    setBookingError(null);
+
+    try {
+      const result = await bookRoute({
+        tripId: activeBus.id,
+        seatsRequested: passengers,
+        pickupStop: activeBus.pickupPoint,
+        dropoffStop: activeBus.dropoffPoint,
+        scheduleDate: scheduleMode === 'depart-now' ? today : tripDate,
+        departureTime: selectedDeparture,
+        seatPreference,
+        scheduleMode,
+        totalPrice,
+        passengerName: user?.name,
+        passengerEmail: user?.email,
+      });
+      setBookingTicketCode(result.ticketCode);
+      setBookingComplete(true);
+      notificationsAPI
+        .createNotification({
+          title: 'Bus seat confirmed',
+          message: `${activeBus.from} to ${activeBus.to} is confirmed. Ticket ${result.ticketCode}.`,
+          type: 'booking',
+          priority: 'high',
+          action_url: '/app/bus',
+        })
+        .catch(() => {});
+    } catch (error) {
+      setBookingTicketCode(null);
+      setBookingError(
+        error instanceof Error
+          ? error.message
+          : 'Bus booking could not be completed. Please try again.',
+      );
+    }
   }
 
   return (
@@ -259,7 +314,7 @@ export function BusPage() {
         <SectionHead
           emoji="🚌"
           title="Wasel Bus"
-          sub="Official Jordan schedules and direct booking."
+          sub="Live bus departures and backend-confirmed booking."
           color={DS.green}
         />
         <CoreExperienceBanner
@@ -406,7 +461,7 @@ export function BusPage() {
                 { label: 'Departure', value: selectedDeparture },
                 {
                   label: 'Source',
-                  value: activeBus.dataSource === 'live' ? 'Live feed' : 'Official',
+                  value: 'Backend',
                 },
               ].map(item => (
                 <div
@@ -522,7 +577,7 @@ export function BusPage() {
                 Plan your trip
               </div>
               <div style={{ color: DS.sub, fontSize: '0.82rem', marginTop: 4 }}>
-                Pick your cities first so live inventory and fallback schedules stay relevant.
+                Pick your cities first so live availability stays relevant.
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
                 <span
@@ -532,9 +587,7 @@ export function BusPage() {
                     ? 'Corridor ready'
                     : 'Choose 2 cities'}
                 </span>
-                <span style={pill(activeBus.dataSource === 'live' ? DS.cyan : DS.green)}>
-                  {activeBus.dataSource === 'live' ? 'Live feed active' : 'Official schedule'}
-                </span>
+                <span style={pill(DS.cyan)}>Backend live</span>
               </div>
             </div>
             <button
@@ -542,7 +595,7 @@ export function BusPage() {
                 setOrigin(destination);
                 setDestination(origin);
                 setBookingComplete(false);
-                setBookingSource(null);
+                setBookingError(null);
               }}
               type="button"
               style={{
@@ -579,7 +632,7 @@ export function BusPage() {
                 onChange={event => {
                   setOrigin(event.target.value);
                   setBookingComplete(false);
-                  setBookingSource(null);
+                  setBookingError(null);
                 }}
                 style={{
                   width: '100%',
@@ -610,7 +663,7 @@ export function BusPage() {
                 onChange={event => {
                   setDestination(event.target.value);
                   setBookingComplete(false);
-                  setBookingSource(null);
+                  setBookingError(null);
                 }}
                 style={{
                   width: '100%',
@@ -668,7 +721,7 @@ export function BusPage() {
                     setOrigin(preset.from);
                     setDestination(preset.to);
                     setBookingComplete(false);
-                    setBookingSource(null);
+                    setBookingError(null);
                   }}
                   style={{
                     borderRadius: r(14),
@@ -714,14 +767,14 @@ export function BusPage() {
             {
               label: 'Best fare',
               value: `${bestFare} JOD`,
-              detail: 'Lowest official fare on screen',
+              detail: 'Lowest live fare on screen',
               icon: <CreditCard size={18} />,
               color: DS.cyan,
             },
             {
               label: 'Operators',
               value: `${operatorCount}`,
-              detail: 'Visible schedule providers',
+              detail: 'Visible live operators',
               icon: <TimerReset size={18} />,
               color: DS.gold,
             },
@@ -827,7 +880,7 @@ export function BusPage() {
                   onClick={() => {
                     setSelected(String(route.id));
                     setBookingComplete(false);
-                    setBookingSource(null);
+                    setBookingError(null);
                   }}
                   onMouseEnter={e => {
                     if (!soldOut) {
@@ -920,11 +973,6 @@ export function BusPage() {
                           {!exactMatch && (
                             <span style={{ ...pill(DS.gold), fontSize: '0.64rem' }}>
                               Closest alternative
-                            </span>
-                          )}
-                          {route.dataSource === 'official' && (
-                            <span style={{ ...pill(DS.cyan), fontSize: '0.64rem' }}>
-                              Official schedule
                             </span>
                           )}
                           <span style={{ ...pill(routeStatus.color), fontSize: '0.64rem' }}>
@@ -1428,6 +1476,21 @@ export function BusPage() {
                       ? 'Try another departure'
                       : 'Reserve seat'}
                 </button>
+                {bookingError ? (
+                  <div
+                    style={{
+                      borderRadius: r(14),
+                      border: `1px solid rgba(255,120,120,0.30)`,
+                      background: 'rgba(255,120,120,0.10)',
+                      padding: '12px 14px',
+                      color: DS.text,
+                      fontSize: '0.82rem',
+                      lineHeight: 1.55,
+                    }}
+                  >
+                    {bookingError}
+                  </div>
+                ) : null}
                 <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.55 }}>
                   {activeBus.seats === 0
                     ? 'This coach is full right now. Pick another departure below and keep the same corridor details.'
@@ -1479,10 +1542,8 @@ export function BusPage() {
                     <div style={{ color: DS.text, fontSize: '0.86rem', lineHeight: 1.5 }}>
                       {passengers} seat{passengers > 1 ? 's are' : ' is'} reserved for{' '}
                       {departureLabel}. Ticket code {bookingTicketCode ?? 'pending'} was saved for
-                      the {activeBus.from} to {activeBus.to} corridor.
-                      {bookingSource === 'local'
-                        ? ' Saved locally while server sync completes.'
-                        : ' Saved in your account with departure reminders.'}
+                      the {activeBus.from} to {activeBus.to} corridor. Saved in your account with
+                      departure reminders.
                     </div>
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
                       <button
@@ -1666,11 +1727,11 @@ export function BusPage() {
                       </div>
                       <span
                         style={{
-                          ...pill(route.dataSource === 'official' ? DS.cyan : DS.green),
+                          ...pill(DS.green),
                           fontSize: '0.64rem',
                         }}
                       >
-                        {route.dataSource === 'official' ? 'Official' : 'Live'}
+                        Live
                       </span>
                     </div>
                   );
@@ -1691,9 +1752,9 @@ export function BusPage() {
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
-                  'Jordan corridors now use official provider schedules, fares, and operating days instead of a demo-only list.',
+                  'Jordan bus bookings only proceed when live inventory, fare, and operating details come back from the backend.',
                   'Departure time is selectable, and the page shows today-aware status such as Boarding soon or Closed today.',
-                  'If live inventory is unavailable, Wasel falls back to the verified official schedule instead of hiding the corridor.',
+                  'If live inventory is unavailable, the page stops and shows that bus service is unavailable.',
                 ].map(item => (
                   <div
                     key={item}
@@ -1721,18 +1782,18 @@ export function BusPage() {
               }}
             >
               <div style={{ color: DS.text, fontWeight: 800, marginBottom: 8 }}>
-                If this coach fills up
+                Other live departures
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
-                {fallbackBuses.length > 0 ? (
-                  fallbackBuses.map(route => (
+                {otherLiveDepartures.length > 0 ? (
+                  otherLiveDepartures.map(route => (
                     <button
-                      key={`fallback-${route.id}`}
+                      key={`live-${route.id}`}
                       type="button"
                       onClick={() => {
                         setSelected(route.id);
                         setBookingComplete(false);
-                        setBookingSource(null);
+                        setBookingError(null);
                       }}
                       style={{
                         display: 'flex',
@@ -1762,8 +1823,8 @@ export function BusPage() {
                   ))
                 ) : (
                   <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.55 }}>
-                    More departures will appear here as the corridor refreshes. If the route is
-                    urgent, try another coach or a shared ride on the same day.
+                    No other live departures are available right now. Try again when the backend
+                    refreshes or switch to a shared ride for the same corridor.
                   </div>
                 )}
               </div>

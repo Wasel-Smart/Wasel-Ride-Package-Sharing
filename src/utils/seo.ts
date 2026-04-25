@@ -18,111 +18,39 @@ type StaticRouteSeoInput = {
 const APP_ROUTE_SEO: Record<string, StaticRouteSeoInput> = {
   '/app': {
     title: 'Wasel App',
-    description:
-      'Authenticated Wasel workspace for mobility, payments, logistics, and profile operations.',
+    description: 'Book a ride, offer a ride, or send a package in the Wasel marketplace.',
   },
   '/app/auth': {
     title: 'Sign In',
-    description: 'Secure authentication gateway for Wasel riders, drivers, and operators.',
+    description: 'Secure sign-in for the Wasel ride and package marketplace.',
   },
   '/app/auth/callback': {
     title: 'Authentication Callback',
-    description: 'Completes secure Wasel authentication and restores the intended route.',
+    description: 'Completes secure Wasel sign-in and returns you to your trip or package flow.',
   },
   '/app/find-ride': {
-    title: 'Find Ride',
-    description:
-      'Search shared routes, compare seat options, and continue inside the authenticated Wasel rider workspace.',
+    title: 'Book a Ride',
+    description: 'Search routes, compare trip details, and book a ride in Wasel.',
   },
   '/app/offer-ride': {
-    title: 'Offer Ride',
-    description:
-      'Publish shared route availability and manage departures inside the authenticated Wasel driver workspace.',
+    title: 'Offer a Ride',
+    description: 'Post your trip, share seats, and manage ride requests in Wasel.',
   },
   '/app/my-trips': {
     title: 'My Trips',
-    description:
-      'Review ride bookings, package movements, and traveler activity inside the Wasel app.',
-  },
-  '/app/live-trip': {
-    title: 'Live Trip',
-    description: 'Track an active Wasel trip and related rider coordination details.',
-  },
-  '/app/routes': {
-    title: 'Popular Routes',
-    description:
-      'Review common Wasel corridors and network demand trends inside the authenticated experience.',
-  },
-  '/app/bus': {
-    title: 'Bus Network',
-    description: 'Manage and explore Wasel bus journeys, corridors, and availability.',
+    description: 'Review your booked rides, offered rides, and trip updates in Wasel.',
   },
   '/app/packages': {
-    title: 'Packages',
-    description: 'Coordinate parcel movements, tracking, and delivery states inside Wasel.',
-  },
-  '/app/package-delivery': {
-    title: 'Package Delivery',
-    description:
-      'Secure package delivery coordination with authenticated Wasel logistics workflows.',
-  },
-  '/app/innovation-hub': {
-    title: 'Innovation Hub',
-    description: 'Internal Wasel product and experimentation surface for authenticated operators.',
-  },
-  '/app/analytics': {
-    title: 'Analytics',
-    description: 'Operational analytics dashboard for Wasel internal teams.',
-  },
-  '/app/execution-os': {
-    title: 'Execution OS',
-    description: 'Internal Wasel execution workspace for operations monitoring and response.',
-  },
-  '/app/mobility-os': {
-    title: 'Mobility OS',
-    description: 'Authenticated Wasel mobility orchestration workspace.',
-  },
-  '/app/ai-intelligence': {
-    title: 'AI Intelligence',
-    description: 'Internal Wasel AI and automation control surface for authenticated teams.',
+    title: 'Send a Package',
+    description: 'Create a package delivery, review details, and track status in Wasel.',
   },
   '/app/wallet': {
     title: 'Wallet',
-    description: 'Secure stored-value, payout, and escrow controls for authenticated Wasel users.',
+    description: 'Review backend-confirmed balance, payment methods, and payment status in Wasel.',
   },
   '/app/payments': {
     title: 'Payments',
-    description:
-      'Backend-managed payment intents, verification, and settlement tracking for Wasel.',
-  },
-  '/app/plus': {
-    title: 'Wasel Plus',
-    description: 'Membership and subscription workspace for authenticated Wasel users.',
-  },
-  '/app/profile': {
-    title: 'Profile',
-    description: 'Manage verified identity, contact details, and trust posture inside Wasel.',
-  },
-  '/app/settings': {
-    title: 'Settings',
-    description: 'Adjust Wasel account settings, security preferences, and communication controls.',
-  },
-  '/app/notifications': {
-    title: 'Notifications',
-    description: 'Review alerts, payment notices, and operational messages inside Wasel.',
-  },
-  '/app/trust': {
-    title: 'Trust Center',
-    description: 'Wasel trust, safety, and verification guidance for authenticated users.',
-  },
-  '/app/driver': {
-    title: 'Driver Workspace',
-    description: 'Authenticated driver tools, status, and route readiness controls inside Wasel.',
-  },
-  '/app/safety': {
-    title: 'Safety',
-    description:
-      'Safety procedures, incident readiness, and protective controls inside the Wasel app.',
+    description: 'Review payment status and retry failed payments when needed.',
   },
   '/app/privacy': {
     title: 'Privacy Policy',
@@ -137,10 +65,6 @@ const APP_ROUTE_SEO: Record<string, StaticRouteSeoInput> = {
       'Wasel terms of service covering access, usage rules, payments, and account responsibilities.',
     robots: 'index, follow',
     indexable: true,
-  },
-  '/app/moderation': {
-    title: 'Moderation',
-    description: 'Internal moderation workflow for Wasel trust and abuse response teams.',
   },
 };
 
@@ -255,7 +179,7 @@ export function getAppRouteSeo(pathname: string): RouteSeo {
   const normalizedPath = normalizePath(pathname);
   const staticSeo = APP_ROUTE_SEO[normalizedPath] ?? {
     title: 'Wasel App',
-    description: 'Authenticated Wasel application workspace.',
+    description: 'Book rides and send packages in the Wasel marketplace.',
   };
   const canonicalUrl = toCanonicalUrl(normalizedPath);
   const robots = staticSeo.robots ?? 'noindex, nofollow';

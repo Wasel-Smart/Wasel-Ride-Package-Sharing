@@ -9,11 +9,10 @@ import { buildAuthPagePath } from '../utils/authFlow';
 import type { ThemePreference } from '../utils/theme';
 import { C, F, R } from '../utils/wasel-ds';
 import {
+  getEnabledNavGroups,
   getNavGroupPrimaryPath,
   getVisibleNavItems,
   isDirectNavGroup,
-  isVisibleNavGroup,
-  PRODUCT_NAV_GROUPS,
   type NavGroup,
 } from './waselRootConfig';
 
@@ -627,8 +626,6 @@ export function UserMenu({
   const menuItems = [
     { label: ar ? 'رحلاتي' : 'My Trips', emoji: '🎫', path: '/my-trips' },
     { label: ar ? 'الطرود' : 'Packages', emoji: '📦', path: '/packages' },
-    { label: ar ? 'ملفي الشخصي' : 'Profile', emoji: '👤', path: '/profile' },
-    { label: ar ? 'واصل بلس' : 'Wasel Plus', emoji: '✨', path: '/plus' },
   ];
 
   return (
@@ -1213,9 +1210,7 @@ export function MobileDrawer({
           </div>
         )}
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {PRODUCT_NAV_GROUPS.filter((group) =>
-            isVisibleNavGroup(group, isAuthenticated),
-          ).map((group) => (
+          {getEnabledNavGroups().map((group) => (
             <div
               key={group.id}
               style={{
@@ -1400,3 +1395,5 @@ export function MobileDrawer({
     </div>
   );
 }
+
+

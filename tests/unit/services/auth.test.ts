@@ -39,7 +39,7 @@ describe('getConfig', () => {
     expect(config).toHaveProperty('isProd');
     expect(config).toHaveProperty('isDev');
     expect(config).toHaveProperty('enableTwoFactorAuth');
-    expect(config).toHaveProperty('enableDemoAccount');
+    expect(config).toHaveProperty('enableLocalAuth');
   });
 
   it('authCallbackPath always starts with /', () => {
