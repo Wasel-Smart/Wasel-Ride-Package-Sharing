@@ -69,7 +69,7 @@ const SHARED_COPY = {
   },
   signInBody: {
     ar: 'سجّل الدخول للمتابعة داخل شبكة خدمات واصل.',
-    en: 'Sign in to continue into the Wasel service network.',
+    en: 'Sign in to continue with rides and packages.',
   },
   signInButton: {
     ar: 'تسجيل الدخول',

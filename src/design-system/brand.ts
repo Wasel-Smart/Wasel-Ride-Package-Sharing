@@ -14,7 +14,7 @@ const BRAND_ASSET_VERSION = '20260422-premium';
 
 export const BRAND = {
   name: 'Wasel',
-  tagline: 'LIVE MOBILITY NETWORK',
+  tagline: 'RIDE AND PACKAGE MARKETPLACE',
   fonts: {
     sans: "'Montserrat', 'Cairo', 'Tajawal', 'Segoe UI', sans-serif",
     display: "'Montserrat', 'Cairo', 'Tajawal', 'Segoe UI', sans-serif",

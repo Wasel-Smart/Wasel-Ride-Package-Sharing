@@ -116,7 +116,7 @@ export function AppPill({ ar }: { ar: boolean }) {
           boxShadow: `0 0 10px ${C.green}`,
         }}
       />
-      {ar ? 'منظومة تنقل مترابطة' : 'Linked mobility network'}
+      {ar ? 'منظومة تنقل مترابطة' : 'Ride and package marketplace'}
     </div>
   );
 }
