@@ -26,12 +26,22 @@ vi.mock('../../../src/layouts/WaselRoot', () => ({
   default: () => <div data-testid="wasel-root" />,
 }));
 
+vi.mock('../../../src/app/pages/AppSurfaces', () => ({
+  LandingPage: () => <div data-testid="landing-page" />,
+  NotFoundPage: () => <div data-testid="not-found-page" />,
+  PrivacyPage: () => <div data-testid="privacy-page" />,
+  RouteErrorPage: ({ message }: { message?: string }) => (
+    <div data-testid="route-error-page">{message}</div>
+  ),
+  TermsPage: () => <div data-testid="terms-page" />,
+}));
+
 vi.mock('../../../src/utils/authFlow', () => ({
   buildAuthPagePath: vi.fn(() => '/app/auth?mode=signin'),
 }));
 
 describe('wasel-routes contract', () => {
-  it('builds the canonical route tree with a first-class payments route', async () => {
+  it('builds the core-only route tree with payments and wallet access', async () => {
     const module = await import('../../../src/wasel-routes');
 
     expect(module.waselRouter).toBeDefined();
@@ -50,6 +60,7 @@ describe('wasel-routes contract', () => {
     ).toBe(true);
     expect(appRoute.children.some((child) => child.path === 'payments')).toBe(true);
     expect(appRoute.children.some((child) => child.path === 'wallet')).toBe(true);
+    expect(appRoute.children.some((child) => child.path === 'bus')).toBe(false);
     expect(appRoute.children.some((child) => child.path === 'dashboard')).toBe(true);
     expect(appRoute.children.some((child) => child.path === APP_ROUTES.tripsLegacy.child)).toBe(true);
 

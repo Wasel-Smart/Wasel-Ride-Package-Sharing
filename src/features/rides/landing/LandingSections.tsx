@@ -250,7 +250,7 @@ export function LandingHeader({
               boxShadow: `0 0 10px ${LANDING_COLORS.green}`,
             }}
           />
-          {copy(ar ? 'شبكة الأردن الحية' : 'Jordan Network Live')}
+          {copy(ar ? 'شبكة الأردن الحية' : 'Rides and packages live')}
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
