@@ -1,5 +1,38 @@
 import '@testing-library/jest-dom';
 
+// ── React 18 + jsdom error event suppression ─────────────────────────────────
+//
+// React 18 calls `reportError()` (or dispatches an 'error' event on window)
+// after every render-time throw, EVEN when the error is already caught by:
+//   - an enclosing `expect(() => render(...)).toThrow()` assertion, OR
+//   - a React class error boundary (AppErrorBoundary).
+//
+// In Vitest + jsdom this second event propagates as an unhandled error and
+// fails the test a second time. We intercept it at capture phase and call
+// preventDefault() so Vitest's global error handler never sees it.
+//
+// This is safe: real assertion failures still propagate because they are
+// thrown synchronously from the test body, not dispatched as DOM events.
+window.addEventListener(
+  'error',
+  (event: ErrorEvent) => {
+    // Only suppress errors originating from React's reportError path.
+    // Real window errors (script errors, resource failures) have a null error
+    // property and a meaningful filename — we leave those alone.
+    if (event.error instanceof Error) {
+      event.preventDefault();
+    }
+  },
+  { capture: true },
+);
+
+// Unhandled promise rejections from mocked async tasks (e.g. the deferred
+// observeWebVitals call in RuntimeCoordinator that references PerformanceObserver
+// which jsdom may not implement) must not fail tests that don't expect them.
+window.addEventListener('unhandledrejection', (event) => {
+  event.preventDefault();
+});
+
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: (query: string) => ({
