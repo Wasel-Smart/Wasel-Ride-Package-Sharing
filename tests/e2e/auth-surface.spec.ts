@@ -1,4 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { seedConsentDecision } from '../../e2e/helpers/session';
+
+test.beforeEach(async ({ page }) => {
+  await seedConsentDecision(page);
+});
 
 test('landing page exposes the quick auth gateway for guests', async ({ page }) => {
   await page.goto('/');

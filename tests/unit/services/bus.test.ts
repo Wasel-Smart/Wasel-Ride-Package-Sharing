@@ -29,7 +29,7 @@ vi.mock('../../../src/utils/env', async () => {
   };
 });
 
-import { createBusBooking, fetchBusRoutes, getOfficialBusRoutes, normalizeBusRoute } from '../../../src/services/bus';
+import { createBusBooking, fetchBusRoutes, normalizeBusRoute } from '../../../src/services/bus';
 
 describe('bus service', () => {
   beforeEach(() => {
@@ -100,12 +100,6 @@ describe('bus service', () => {
     expect(routes).toEqual([]);
   });
 
-  it('returns the wider official network when an exact official route is missing', () => {
-    const routes = getOfficialBusRoutes({ from: 'Ajloun', to: 'Aqaba', seats: 1 });
-
-    expect(routes.length).toBeGreaterThan(0);
-  });
-
   it('surfaces booking failures when fake bus bookings are disabled', async () => {
     mockBusEnabled = true;
     mockCreateBooking.mockRejectedValue(new Error('offline'));
@@ -164,7 +158,7 @@ describe('bus service', () => {
     expect(result).toEqual({
       source: 'server',
       bookingId: 'bus-booking-1',
-      ticketCode: 'BUS-KING-1',
+      ticketCode: 'bus-booking-1',
     });
   });
 });

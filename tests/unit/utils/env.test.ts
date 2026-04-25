@@ -26,6 +26,7 @@ const originalAppEnv = process.env.VITE_APP_ENV;
 const originalSupabaseUrl = process.env.VITE_SUPABASE_URL;
 const originalSupabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 const originalSupabasePublishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const originalAllowLocalPersistenceFallback = process.env.VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK;
 
 beforeEach(() => {
   process.env.VITE_APP_ENV = 'test';
@@ -66,6 +67,12 @@ afterEach(() => {
     delete process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   } else {
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY = originalSupabasePublishableKey;
+  }
+
+  if (originalAllowLocalPersistenceFallback === undefined) {
+    delete process.env.VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK;
+  } else {
+    process.env.VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK = originalAllowLocalPersistenceFallback;
   }
 
   window.history.replaceState({}, '', '/');
@@ -159,14 +166,15 @@ describe('getConfig()', () => {
     expect(getConfig().stripePublishableKey).toBe('');
   });
 
-  it('enables local persistence fallback in development when Supabase public config is missing', () => {
+  it('keeps local persistence fallback disabled unless it is explicitly enabled', () => {
     process.env.VITE_APP_ENV = 'development';
     process.env.VITE_SUPABASE_URL = '';
     process.env.VITE_SUPABASE_ANON_KEY = '';
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY = '';
+    process.env.VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK = 'false';
     resetConfigCache();
 
-    expect(getConfig().allowLocalPersistenceFallback).toBe(true);
+    expect(getConfig().allowLocalPersistenceFallback).toBe(false);
   });
 });
 

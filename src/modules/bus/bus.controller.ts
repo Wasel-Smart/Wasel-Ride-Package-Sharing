@@ -6,10 +6,6 @@ export const busController = {
     return busService.searchRoutes(draft);
   },
 
-  getFallbackRoutes() {
-    return busService.getFallbackRoutes();
-  },
-
   createBooking(payload: BusBookingPayload) {
     return busService.createBooking(payload);
   },

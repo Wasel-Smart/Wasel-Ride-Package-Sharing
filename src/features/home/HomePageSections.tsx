@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { ArrowUpRight, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { C, POPULAR_ROUTES, SectionHeader, Skeleton, SOSButton } from './HomePageShared';
 import type {
   HomeFeatureItem,
@@ -73,11 +73,6 @@ interface UserSnapshotSectionProps {
   formatFromJOD: (value: number) => string;
 }
 
-interface MobilityOsSectionProps {
-  ar: boolean;
-  navigate: (path: string) => void;
-}
-
 interface PopularRoutesSectionProps {
   ar: boolean;
   loading: boolean;
@@ -126,16 +121,16 @@ export function FocusHeroSection({ ar, userName, highlights, navigate }: FocusHe
     >
       <div className="home-focus-hero">
         <div className="home-focus-copy">
-          <div className="home-mini-label">{ar ? 'منصة حركة واحدة' : 'One movement platform'}</div>
+          <div className="home-mini-label">{ar ? 'منصة حركة واحدة' : 'Ride and package marketplace'}</div>
           <h2 className="home-focus-title">
             {ar
               ? `كل ما تحتاجه للتنقل والإرسال في واجهة واحدة${userName ? `، ${userName}` : ''}`
-              : `Everything for moving people and packages in one flow${userName ? `, ${userName}` : ''}`}
+              : `Book a ride or send a package in one place${userName ? `, ${userName}` : ''}`}
           </h2>
           <p className="home-focus-description">
             {ar
               ? 'واسِل يجمع الرحلات والطرود والباصات والثقة التشغيلية في تجربة أوضح وأسهل.'
-              : 'Wasel brings rides, packages, buses, and trust operations into a clearer, tighter experience.'}
+              : 'Wasel focuses on rides and packages with a simple, direct customer flow.'}
           </p>
           <div className="home-button-row">
             <button
@@ -143,14 +138,14 @@ export function FocusHeroSection({ ar, userName, highlights, navigate }: FocusHe
               className="home-primary-button"
               onClick={() => navigate('/find-ride')}
             >
-              {ar ? 'ابدأ برحلة' : 'Start a trip'}
+              {ar ? 'ابدأ برحلة' : 'Book a ride'}
             </button>
             <button
               type="button"
               className="home-tertiary-button"
-              onClick={() => navigate('/mobility-os')}
+              onClick={() => navigate('/packages')}
             >
-              {ar ? 'شاهد الشبكة الحية' : 'View live network'}
+              {ar ? 'شاهد الشبكة الحية' : 'Send a package'}
             </button>
           </div>
         </div>
@@ -245,7 +240,7 @@ export function QuickActionsSection({ ar, quickActions, navigate }: QuickActions
           <p className="home-panel-copy home-featured-copy">
             {ar
               ? '\u0631\u062d\u0644\u0629\u060c \u0637\u0631\u062f\u060c \u0623\u0648 \u0628\u0627\u0635.'
-              : 'Ride, package, or bus.'}
+              : 'Ride or package.'}
           </p>
           <div className="home-button-row">
             <button
@@ -363,9 +358,9 @@ export function GrowthSection({
             <button
               type="button"
               className="home-success-button"
-              onClick={() => navigate('/analytics')}
+              onClick={() => navigate('/packages')}
             >
-              {ar ? 'التحليلات' : 'Analytics'}
+              {ar ? 'التحليلات' : 'Packages'}
             </button>
           </div>
           <div className="home-stack-sm">
@@ -506,44 +501,6 @@ export function UserSnapshotSection({
   );
 }
 
-export function MobilityOsSection({ ar, navigate }: MobilityOsSectionProps) {
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.3 }}
-      className="home-section"
-    >
-      <motion.button
-        type="button"
-        onClick={() => navigate('/mobility-os')}
-        whileHover={{ scale: 1.01, y: -2 }}
-        whileTap={{ scale: 0.99 }}
-        className="home-os-button"
-      >
-        <div className="home-os-grid" />
-        <div className="home-os-content">
-          <div>
-            <div className="home-os-header">
-              <span className="home-os-icon">OS</span>
-              <span className="home-os-tag">Mobility OS</span>
-              <span className="home-os-live">LIVE</span>
-            </div>
-            <div className="home-os-title">{ar ? 'شبكة الأردن الحية' : 'Jordan live network'}</div>
-            <div className="home-os-subtitle">
-              {ar ? 'الطلب | السائقون | المسارات' : 'Demand | drivers | routes'}
-            </div>
-          </div>
-          <div className="home-os-open">
-            <span>{ar ? 'افتح' : 'Open'}</span>
-            <ArrowUpRight size={18} />
-          </div>
-        </div>
-      </motion.button>
-    </motion.section>
-  );
-}
-
 export function PopularRoutesSection({
   ar,
   loading,
@@ -658,7 +615,7 @@ export function GuestCtaSection({ ar, navigate }: GuestCtaSectionProps) {
         <div className="home-guest-mark">W</div>
         <h2 className="home-panel-title">{ar ? 'انضم إلى واصل' : 'Join Wasel'}</h2>
         <p className="home-panel-copy">
-          {ar ? 'رحلات وباصات وطرود في تطبيق واحد.' : 'Rides, buses, and packages in one app.'}
+          {ar ? 'رحلات وباصات وطرود في تطبيق واحد.' : 'Rides and packages in one app.'}
         </p>
         <div className="home-button-row home-button-row-center">
           <button
@@ -680,3 +637,4 @@ export function GuestCtaSection({ ar, navigate }: GuestCtaSectionProps) {
     </motion.section>
   );
 }
+

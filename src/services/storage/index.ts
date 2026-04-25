@@ -10,7 +10,7 @@
  *   rideBookingStorage · rideSyncQueue · rideBookingLogic · rideSyncOrchestrator
  *
  * ─── Wallet storage ──────────────────────────────────────────────────────────
- * @see WalletStorageAdapter — snapshot TTL cache + demo payment intent helpers
+ * @see WalletStorageAdapter — wallet reliability metadata helpers
  */
 
 // ─── Booking ──────────────────────────────────────────────────────────────────
@@ -42,12 +42,4 @@ export type { PendingSyncEntry } from './BookingStorageAdapter';
 // ─── Wallet ───────────────────────────────────────────────────────────────────
 export {
   makeReliabilityMeta,
-  persistDemoIntent,
-  persistWalletSnapshot,
-  readDemoIntent,
-  readDemoIntentStatus,
-  readPersistedWalletSnapshot,
-  settleDemoIntent,
 } from './WalletStorageAdapter';
-
-export type { PersistedPaymentIntent } from './WalletStorageAdapter';

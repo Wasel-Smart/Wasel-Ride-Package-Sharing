@@ -889,7 +889,7 @@ function buildStageDrilldowns(args: {
       headline: `${args.rebalancing.length} idle vehicles should shift toward pressure corridors.`,
       explanation:
         args.rebalancing.length > 0
-          ? 'Mobility OS is pushing standby supply toward corridors where unmatched demand is starting to stack.'
+          ? 'Standby vehicles should move toward corridors where unmatched demand is building.'
           : 'Idle supply is already close enough to demand, so the system can stay put for this cycle.',
       items: args.rebalancing.slice(0, MAX_STAGE_ITEMS).map(action => ({
         id: `${action.vehicleId}-${action.corridorId}`,

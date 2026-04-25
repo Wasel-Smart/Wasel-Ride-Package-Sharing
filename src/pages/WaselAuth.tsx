@@ -70,11 +70,8 @@ const RETURN_LABEL_KEYS: Array<[string, string]> = [
   [APP_ROUTES.findRide.full, 'authPage.returnLabels.findRide'],
   [APP_ROUTES.offerRide.full, 'authPage.returnLabels.offerRide'],
   [APP_ROUTES.packages.full, 'authPage.returnLabels.packages'],
-  [APP_ROUTES.bus.full, 'authPage.returnLabels.bus'],
   [APP_ROUTES.wallet.full, 'authPage.returnLabels.wallet'],
   [APP_ROUTES.payments.full, 'authPage.returnLabels.payments'],
-  [APP_ROUTES.profile.full, 'authPage.returnLabels.profile'],
-  [APP_ROUTES.mobilityOs.full, 'authPage.returnLabels.mobilityOs'],
 ];
 
 function interpolate(template: string, values: Record<string, string>): string {

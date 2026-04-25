@@ -12,7 +12,6 @@ import {
   FocusHeroSection,
   GuestCtaSection,
   HomeStatsGrid,
-  MobilityOsSection,
   PopularRoutesSection,
   QuickActionsSection,
   ServicePillarsSection,
@@ -32,11 +31,11 @@ import './HomePage.css';
 const HOME_COPY = {
   eyebrow: {
     ar: 'واصل | شبكة الحركة',
-    en: 'WASEL | Mobility Network',
+    en: 'WASEL | Ride and Package',
   },
   heroSubtitle: {
     ar: 'انقل أشخاصًا وطرودًا وثقة تشغيلية في تجربة واحدة واضحة.',
-    en: 'Move people, packages, and operational trust through one unified experience.',
+    en: 'Book rides and send packages in one clear experience.',
   },
   refresh: {
     ar: 'تحديث',
@@ -48,7 +47,7 @@ const HOME_COPY = {
   },
   tripModeDetail: {
     ar: 'اختر النمط ثم ادخل الشبكة.',
-    en: 'Choose the mode, then enter the network.',
+    en: 'Choose your trip and continue to rides.',
   },
   tripModeLabel: {
     ar: 'نوع الرحلة',
@@ -270,10 +269,9 @@ export function HomePage() {
           navigate={navigate}
         />
 
-        <MobilityOsSection ar={ar} navigate={navigate} />
-
         {!user ? <GuestCtaSection ar={ar} navigate={navigate} /> : null}
       </div>
     </div>
   );
 }
+

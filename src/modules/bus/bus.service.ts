@@ -13,10 +13,6 @@ function isExactRoute(route: BusRoute, from: string, to: string) {
 }
 
 export const busService = {
-  getFallbackRoutes() {
-    return [];
-  },
-
   async searchRoutes(
     draft: BusSearchDraft,
   ): Promise<{ routes: BusRoute[]; info: ReturnType<typeof buildBusRouteInfo> | null; error: string | null }> {

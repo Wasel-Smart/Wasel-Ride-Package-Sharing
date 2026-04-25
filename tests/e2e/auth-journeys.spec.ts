@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { seedDemoSession } from '../../e2e/helpers/session';
+import { seedConsentDecision, seedDemoSession } from '../../e2e/helpers/session';
+
+test.beforeEach(async ({ page }) => {
+  await seedConsentDecision(page);
+});
 
 test('app entry sends guests into auth with a return target', async ({ page }) => {
   await page.goto('/app', { waitUntil: 'domcontentloaded' });
@@ -31,7 +35,7 @@ test('sign in page renders accessible form fields', async ({ page }) => {
 test('sign in with empty form shows validation feedback', async ({ page }) => {
   await page.goto('/app/auth', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: /submit sign in/i }).click();
-  await expect(page.getByText(/please enter/i).first()).toBeVisible();
+  await expect(page.getByText(/please enter your email address\./i)).toBeVisible();
 });
 
 test('register tab is accessible from the sign-in page', async ({ page }) => {

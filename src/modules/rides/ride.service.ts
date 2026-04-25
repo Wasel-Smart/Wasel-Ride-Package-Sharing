@@ -245,7 +245,7 @@ export const rideService = {
         .sort((left, right) => scoreRide(right) - scoreRide(left));
     } catch (error) {
       logger.error('[rideService] ride search failed', error, {
-        operation: 'ride.search.live_fallback',
+        operation: 'ride.search.backend_failure',
         from: params.from,
         to: params.to,
         date: params.date,

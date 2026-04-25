@@ -318,7 +318,7 @@ export function OfferRideFormPanel({
             <div style={{ borderRadius: r(16), border: '1px solid rgba(6,182,212,0.25)', background: 'rgba(6,182,212,0.08)', padding: '16px 18px' }}>
               <div style={{ color: '#06b6d4', fontWeight: 800, fontSize: '0.9rem' }}>Price guidance</div>
               <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', lineHeight: 1.65, marginTop: 8 }}>
-                {driverPlan.waselBrainNote} Empty-seat risk is about {driverPlan.emptySeatCostJod} JOD per open seat, and package-ready supply can add about {driverPlan.packageBonusJod} JOD on this route.
+                {driverPlan.routeNote} Empty-seat risk is about {driverPlan.emptySeatCostJod} JOD per open seat, and package-ready supply can add about {driverPlan.packageBonusJod} JOD on this route.
                 {corridor.routeOwnershipScore !== null ? ` Live route coverage is ${corridor.routeOwnershipScore}/100${corridor.liveProofSummary ? ` with ${corridor.liveProofSummary}.` : '.'}` : ''}
               </div>
             </div>

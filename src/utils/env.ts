@@ -172,6 +172,12 @@ function buildConfig() {
   const isStaging = environment === 'staging';
   const isTest = environment === 'test';
 
+  const enableLocalAuth = flagAllowedInEnvironmentAny(
+    ['VITE_ENABLE_LOCAL_AUTH', 'ENABLE_LOCAL_AUTH'],
+    false,
+    environment,
+    ['development', 'test'],
+  );
   const enableDemoAccount = flagAllowedInEnvironment('VITE_ENABLE_DEMO_DATA', false, environment, [
     'development',
     'test',
@@ -181,12 +187,6 @@ function buildConfig() {
     false,
     environment,
     ['development', 'test'],
-  );
-  const enablePersistedTestAuth = flagAllowedInEnvironment(
-    'VITE_ENABLE_PERSISTED_TEST_AUTH',
-    false,
-    environment,
-    ['test'],
   );
   const enableGoogleAuth =
     hasPublicSupabaseConfig && getBooleanEnv('VITE_ENABLE_GOOGLE_AUTH', false);
@@ -210,13 +210,13 @@ function buildConfig() {
   const enableWhatsAppNotifications = getBooleanEnv('VITE_ENABLE_WHATSAPP_NOTIFICATIONS', true);
   const allowDirectSupabaseFallback = flagAllowedInEnvironment(
     'VITE_ALLOW_DIRECT_SUPABASE_FALLBACK',
-    isTest,
+    false,
     environment,
     ['development', 'test'],
   );
   const allowLocalPersistenceFallback = flagAllowedInEnvironment(
     'VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK',
-    isTest || (environment === 'development' && !hasPublicSupabaseConfig),
+    false,
     environment,
     ['development', 'test'],
   );
@@ -235,9 +235,9 @@ function buildConfig() {
     businessAddressAr,
     founderName,
     authCallbackPath: authCallbackPath.startsWith('/') ? authCallbackPath : `/${authCallbackPath}`,
+    enableLocalAuth,
     enableDemoAccount,
     enableSyntheticTrips,
-    enablePersistedTestAuth,
     enableGoogleAuth,
     enableFacebookAuth,
     enableFakePayments,

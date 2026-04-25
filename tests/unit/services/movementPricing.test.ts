@@ -24,7 +24,7 @@ describe('movementPricing', () => {
     expect(quote.finalPriceJod).toBeLessThanOrEqual(12);
   });
 
-  it('applies backend subscription discounts when a membership is active', () => {
+  it('applies backend plan discounts when a membership is active', () => {
     hydrateMovementMembershipFromWallet({
       wallet: {
         id: 'wallet-1',
@@ -66,7 +66,7 @@ describe('movementPricing', () => {
       forecastDemandScore: 68,
     });
 
-    expect(quote.plusDiscountPercent).toBe(6);
+    expect(quote.planDiscountPercent).toBe(6);
     expect(quote.pricePressure).toBe('balanced');
     expect(quote.totalDiscountPercent).toBeGreaterThan(quote.creditDiscountPercent);
   });

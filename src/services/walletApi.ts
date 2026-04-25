@@ -10,10 +10,6 @@
  *   `fetchWithRetry` + manual auth-header construction.
  *   This removes ~40 lines of duplicated auth boilerplate.
  *
- * - localStorage operations are delegated to `WalletStorageAdapter`
- *   (persistWalletSnapshot, readPersistedWalletSnapshot, etc.).
- *   This file no longer contains any raw `localStorage` calls.
- *
  * - The `void userId` pattern has been removed throughout.
  *   Functions that don't use userId no longer accept it as a parameter;
  *   callers that passed it as a convention argument have been updated.
@@ -41,18 +37,9 @@ import {
   walletStepUpVerificationSchema,
 } from '../contracts/wallet';
 import { parseContract } from '../contracts/validation';
-import { getConfig } from '../utils/env';
 import { logger } from '../utils/logging';
 import { apiGateway } from './apiGateway';
-import {
-  makeReliabilityMeta,
-  persistDemoIntent,
-  persistWalletSnapshot,
-  readDemoIntentStatus,
-  readPersistedWalletSnapshot,
-  settleDemoIntent,
-  type PersistedPaymentIntent,
-} from './storage/WalletStorageAdapter';
+import { makeReliabilityMeta } from './storage/WalletStorageAdapter';
 
 // ─── Public re-exports ────────────────────────────────────────────────────────
 
@@ -125,12 +112,6 @@ interface ProcessWalletTransactionInput {
   referenceId?: string;
   referenceType?: string;
   type: 'credit' | 'debit';
-}
-
-// ─── Fallback eligibility ─────────────────────────────────────────────────────
-
-function allowPaymentIntentFallback(): boolean {
-  return getConfig().enableFakePayments;
 }
 
 // ─── In-memory cache (TTL-based) ──────────────────────────────────────────────
@@ -302,50 +283,6 @@ function parseAutoTopUpArgs(
 
 // ─── Demo payment intent helpers ─────────────────────────────────────────────
 
-function buildDemoIntent(
-  userId: string,
-  purpose: PaymentIntentView['purpose'],
-  amount: number,
-  paymentMethodType: WalletPaymentMethodType,
-  options?: {
-    metadata?: Record<string, unknown>;
-    referenceId?: string | null;
-    referenceType?: string | null;
-  },
-): PaymentIntentView {
-  const providerMap: Record<WalletPaymentMethodType, PaymentIntentView['provider']> = {
-    wallet: 'wallet',
-    cliq: 'cliq',
-    bank_transfer: 'aman',
-    card: 'stripe',
-  };
-
-  const intent: PaymentIntentView = {
-    id: `pi_demo_${Date.now()}`,
-    purpose,
-    status: 'requires_confirmation',
-    amount,
-    currency: 'JOD',
-    paymentMethodType,
-    provider: providerMap[paymentMethodType] ?? 'stripe',
-    clientSecret: `demo_secret_${Date.now()}`,
-    redirectUrl: null,
-    createdAt: new Date().toISOString(),
-    referenceType: options?.referenceType ?? null,
-    referenceId: options?.referenceId ?? null,
-  };
-
-  const record: PersistedPaymentIntent = {
-    intent: { id: intent.id, status: intent.status, clientSecret: intent.clientSecret ?? null },
-    settled: false,
-    storedAt: Date.now(),
-    userId,
-  };
-  persistDemoIntent(record);
-
-  return intent;
-}
-
 // ─── Insights builder ─────────────────────────────────────────────────────────
 
 function buildInsights(wallet: WalletData): InsightsData {
@@ -413,9 +350,8 @@ async function fetchFreshSnapshot(userId: string): Promise<WalletSnapshot> {
     'wallet.snapshot',
     WALLET_CONTRACT_VERSION,
   );
-  const snapshot: WalletSnapshot = { data, meta: makeReliabilityMeta(false) };
-  persistWalletSnapshot(userId, snapshot);
-  return snapshot;
+  void userId;
+  return { data, meta: makeReliabilityMeta(false) };
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -425,7 +361,7 @@ export const walletApi = {
 
   /**
    * Returns full wallet data for the current authenticated user.
-   * Cached for 15 seconds. Falls back to persisted snapshot when degraded.
+   * Cached for 15 seconds.
    */
   async getWallet(userId?: string): Promise<WalletData> {
     const uid = await resolveUserId(userId);
@@ -447,10 +383,6 @@ export const walletApi = {
         throw new Error('Wallet data is unavailable right now. Please try again.');
       }
     });
-  },
-
-  getPersistedWalletSnapshot(userId: string): WalletSnapshot | null {
-    return readPersistedWalletSnapshot(userId);
   },
 
   async getInsights(userId?: string): Promise<InsightsData> {
@@ -493,8 +425,6 @@ export const walletApi = {
 
   /**
    * Creates a payment intent for the given purpose and amount.
-   * Falls back to a demo intent when the backend is unavailable and
-   * client fallback is allowed.
    */
   async createPaymentIntent(
     purpose: 'deposit' | 'ride_payment' | 'package_payment' | 'subscription' | 'withdrawal',
@@ -508,80 +438,47 @@ export const walletApi = {
     },
   ): Promise<PaymentIntentView> {
     if (!apiGateway.isConfigured()) {
-      if (!allowPaymentIntentFallback()) {
-        throw new Error('Wallet actions are unavailable because the backend payment service is not configured.');
-      }
-
-      const metadataUserId =
-        typeof options?.metadata?.initiatedByUserId === 'string'
-          ? options.metadata.initiatedByUserId.trim()
-          : '';
-      const uid = metadataUserId || await resolveUserId().catch(() => '');
-      return buildDemoIntent(uid, purpose, amount, paymentMethodType, options);
+      throw new Error('Wallet actions are unavailable because the backend payment service is not configured.');
     }
 
-    try {
-      return parseContract(
-        paymentIntentViewSchema,
-        await apiGateway.post<unknown>('/payments/create-intent', {
-          amount,
-          idempotencyKey: options?.idempotencyKey ?? null,
-          metadata: options?.metadata ?? {},
-          paymentMethodType,
-          purpose,
-          referenceId: options?.referenceId ?? null,
-          referenceType: options?.referenceType ?? null,
-        }),
-        'wallet.payment-intent.create',
-        WALLET_CONTRACT_VERSION,
-      );
-    } catch (error) {
-      if (!allowPaymentIntentFallback()) {
-        throw error;
-      }
-      const metadataUserId =
-        typeof options?.metadata?.initiatedByUserId === 'string'
-          ? options.metadata.initiatedByUserId.trim()
-          : '';
-      const uid = metadataUserId || await resolveUserId().catch(() => '');
-      return buildDemoIntent(uid, purpose, amount, paymentMethodType, options);
-    }
+    return parseContract(
+      paymentIntentViewSchema,
+      await apiGateway.post<unknown>('/payments/create-intent', {
+        amount,
+        idempotencyKey: options?.idempotencyKey ?? null,
+        metadata: options?.metadata ?? {},
+        paymentMethodType,
+        purpose,
+        referenceId: options?.referenceId ?? null,
+        referenceType: options?.referenceType ?? null,
+      }),
+      'wallet.payment-intent.create',
+      WALLET_CONTRACT_VERSION,
+    );
   },
 
   async confirmPaymentIntent(
     paymentIntentId: string,
     paymentMethodId?: string | null,
   ): Promise<PaymentIntentConfirmationView> {
-    try {
-      return parseContract(
-        paymentIntentConfirmationSchema,
-        await apiGateway.post<unknown>('/payments/confirm', {
-          paymentIntentId,
-          paymentMethodId: paymentMethodId ?? null,
-        }),
-        'wallet.payment-intent.confirm',
-        WALLET_CONTRACT_VERSION,
-      );
-    } catch (error) {
-      const fallback = allowPaymentIntentFallback() ? settleDemoIntent(paymentIntentId) : null;
-      if (fallback) return { id: fallback.id, status: fallback.status, settled: true, clientSecret: fallback.clientSecret ?? null };
-      throw error;
-    }
+    return parseContract(
+      paymentIntentConfirmationSchema,
+      await apiGateway.post<unknown>('/payments/confirm', {
+        paymentIntentId,
+        paymentMethodId: paymentMethodId ?? null,
+      }),
+      'wallet.payment-intent.confirm',
+      WALLET_CONTRACT_VERSION,
+    );
   },
 
   async getPaymentIntentStatus(paymentIntentId: string): Promise<PaymentIntentConfirmationView> {
-    try {
-      return parseContract(
-        paymentIntentConfirmationSchema,
-        await apiGateway.post<unknown>('/payments/status', { paymentIntentId }),
-        'wallet.payment-intent.status',
-        WALLET_CONTRACT_VERSION,
-      );
-    } catch (error) {
-      const fallback = allowPaymentIntentFallback() ? readDemoIntentStatus(paymentIntentId) : null;
-      if (fallback) return fallback;
-      throw error;
-    }
+    return parseContract(
+      paymentIntentConfirmationSchema,
+      await apiGateway.post<unknown>('/payments/status', { paymentIntentId }),
+      'wallet.payment-intent.status',
+      WALLET_CONTRACT_VERSION,
+    );
   },
 
   // ── Funding ──────────────────────────────────────────────────────────────────
@@ -644,7 +541,7 @@ export const walletApi = {
         : (wallet.wallet.paymentMethods.find(m => m.isDefault)?.type ?? 'card');
 
     const intent = await walletApi.createPaymentIntent('subscription', price, methodType, {
-      metadata: { planName, planCode: corridorId ? 'corridor-pass' : 'wasel-plus', corridorId: corridorId ?? null },
+      metadata: { planName, planCode: corridorId ? 'corridor-pass' : 'travel-plan', corridorId: corridorId ?? null },
     });
 
     if (methodType === 'wallet' || wallet.wallet.paymentMethods.some(m => m.isDefault)) {

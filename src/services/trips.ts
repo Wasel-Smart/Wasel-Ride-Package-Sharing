@@ -70,6 +70,8 @@ export interface PriceCalculationResult {
   breakdown?: Record<string, number>;
 }
 
+const TRIP_SEARCH_TIMEOUT_MS = 2_500;
+
 function canUseEdgeApi(): boolean {
   return Boolean(API_URL && publicAnonKey);
 }
@@ -213,7 +215,8 @@ export const tripsAPI = {
         () =>
           fetchWithRetry(`${API_URL}/trips/search?${params}`, {
             headers: { Authorization: `Bearer ${publicAnonKey}` },
-          }),
+            timeout: TRIP_SEARCH_TIMEOUT_MS,
+          }, 0),
       );
     } catch (err) {
       if (!allowDirectSupabaseFallback()) {

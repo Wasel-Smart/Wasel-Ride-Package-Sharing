@@ -216,9 +216,9 @@ describe('operationalConfidence', () => {
     });
 
     expect(summary.score).toBeGreaterThanOrEqual(90);
-    expect(summary.headline).toBe('Publish-ready supply lane');
+    expect(summary.headline).toBe('Ride is ready to post');
     expect(summary.signals.find((signal) => signal.id === 'route-signal')?.value).toContain(
-      'corridor proof',
+      'route match',
     );
   });
 
@@ -254,10 +254,10 @@ describe('operationalConfidence', () => {
       recipientPhone: '',
     });
 
-    expect(summary.headline).toBe('Visible handoff lane');
+    expect(summary.headline).toBe('Delivery can be assigned');
     expect(
       summary.signals.find((signal) => signal.id === 'coordination-lane')?.value,
-    ).toContain('Wasel can keep the WhatsApp handoff lane open');
+    ).toContain('recipient number is added');
   });
 
   it('surfaces degraded wallet posture and missing transfer protection', () => {
@@ -285,7 +285,7 @@ describe('operationalConfidence', () => {
 
     expect(summary.detail).toContain('Set a wallet PIN');
     expect(summary.signals.find((signal) => signal.id === 'source-posture')?.value).toContain(
-      'Backup wallet snapshot',
+      'could not be refreshed',
     );
     expect(
       summary.signals.find((signal) => signal.id === 'transfer-protection')?.value,

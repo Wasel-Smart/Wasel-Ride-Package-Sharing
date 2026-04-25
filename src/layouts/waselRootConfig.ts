@@ -1,5 +1,6 @@
-import { C } from '../utils/wasel-ds';
+import { isCoreFeatureEnabled, type CoreFeatureKey } from '../features/core/featureFlags';
 import { APP_ROUTES, stripAppRoutePrefix } from '../router/paths';
+import { C } from '../utils/wasel-ds';
 
 export type NavItem = {
   emoji: string;
@@ -38,107 +39,57 @@ export type NavGroup = DirectNavGroup | NestedNavGroup;
 
 export const PRODUCT_NAV_GROUPS: readonly NavGroup[] = [
   {
-    id: 'find',
-    label: 'Find Ride',
-    labelAr: 'ابحث عن رحلة',
+    id: 'ride',
+    label: 'Ride',
+    labelAr: 'الرحلة',
     direct: true,
     path: stripAppRoutePrefix(APP_ROUTES.findRide.full),
     emoji: '🛣️',
-    desc: 'Find and book a ride fast.',
-    descAr: 'ابحث في المسارات، وقارن أوقات الانطلاق، واحجز أوضح رحلة.',
+    desc: 'Book a ride or offer a ride.',
+    descAr: 'احجز رحلة أو اعرض رحلتك.',
     color: C.cyan,
     badge: null,
     items: [],
   },
   {
-    id: 'trips',
-    label: 'Trips',
-    labelAr: 'رحلاتي',
-    direct: true,
-    path: stripAppRoutePrefix(APP_ROUTES.myTrips.full),
-    emoji: '🎫',
-    desc: 'Open your active journeys.',
-    descAr: 'تابع الرحلات النشطة والحجوزات والتحركات الأخيرة.',
-    color: C.cyan,
-    badge: null,
-    items: [],
-  },
-  {
-    id: 'bus',
-    label: 'Bus',
-    labelAr: 'الباص',
-    direct: true,
-    path: stripAppRoutePrefix(APP_ROUTES.bus.full),
-    emoji: '🚌',
-    desc: 'Book intercity bus seats.',
-    descAr: 'تصفح جداول الباصات الرسمية واحجز مقعدك بين المدن.',
-    color: C.green,
-    badge: 'NEW',
-    items: [],
-  },
-  {
-    id: 'packages',
-    label: 'Packages',
-    labelAr: 'الطرود',
+    id: 'package',
+    label: 'Package',
+    labelAr: 'الطرد',
     direct: true,
     path: stripAppRoutePrefix(APP_ROUTES.packages.full),
     emoji: '📦',
-    desc: 'Send and track packages.',
-    descAr: 'أرسل الطرود وتتبعها وأدرها على الممرات الحية.',
+    desc: 'Send a package and track delivery.',
+    descAr: 'أرسل طرداً وتابع التسليم.',
     color: C.gold,
-    items: [],
-  },
-  {
-    id: 'wallet',
-    label: 'Wallet',
-    labelAr: 'المحفظة',
-    direct: true,
-    path: stripAppRoutePrefix(APP_ROUTES.wallet.full),
-    emoji: '💳',
-    desc: 'Balance and money actions.',
-    descAr: 'اشحن الرصيد، وأرسل المال، وراجع آخر المعاملات.',
-    color: C.cyan,
     badge: null,
-    items: [],
-  },
-  {
-    id: 'profile',
-    label: 'Profile',
-    labelAr: 'الملف الشخصي',
-    direct: true,
-    path: stripAppRoutePrefix(APP_ROUTES.profile.full),
-    emoji: '👤',
-    desc: 'Account and preferences.',
-    descAr: 'أدر بيانات الحساب والتحقق والتفضيلات.',
-    color: C.cyan,
-    badge: null,
-    items: [],
-  },
-  {
-    id: 'mobility-os',
-    label: 'Network',
-    labelAr: 'الشبكة',
-    direct: true,
-    path: stripAppRoutePrefix(APP_ROUTES.mobilityOs.full),
-    emoji: '📡',
-    desc: 'Live corridor view.',
-    descAr: 'اطلع على ذكاء الممرات وضغط المسارات واتجاهات الشبكة.',
-    color: C.cyan,
-    badge: 'LIVE',
     items: [],
   },
 ];
-export const DESKTOP_PRIMARY_NAV_IDS = ['find', 'trips', 'bus', 'packages', 'wallet'] as const;
+
+export const DESKTOP_PRIMARY_NAV_IDS = ['ride', 'package'] as const;
+
+const NAV_GROUP_FEATURES: Partial<Record<NavGroup['id'], CoreFeatureKey>> = {
+  ride: 'rides',
+  package: 'packages',
+};
 
 const HIDDEN_NAV_PATHS = new Set<string>();
 const USER_ONLY_NAV_PATHS = new Set<string>([
   stripAppRoutePrefix(APP_ROUTES.myTrips.full),
   stripAppRoutePrefix(APP_ROUTES.wallet.full),
-  stripAppRoutePrefix(APP_ROUTES.profile.full),
 ]);
 
 export function isDirectNavGroup(group: NavGroup): group is DirectNavGroup {
   return group.direct === true;
+}
+
+export function isNavGroupFeatureEnabled(group: NavGroup) {
+  const feature = NAV_GROUP_FEATURES[group.id];
+  return feature ? isCoreFeatureEnabled(feature) : false;
+}
+
+export function getEnabledNavGroups() {
+  return PRODUCT_NAV_GROUPS.filter((group) => isNavGroupFeatureEnabled(group));
 }
 
 function doesPathMatch(pathname: string, path: string) {
@@ -152,29 +103,42 @@ function doesPathMatch(pathname: string, path: string) {
 }
 
 export function isVisibleNavGroup(group: NavGroup, isAuthenticated: boolean) {
+  if (!isNavGroupFeatureEnabled(group)) {
+    return false;
+  }
+
   if (isDirectNavGroup(group)) {
     return !HIDDEN_NAV_PATHS.has(group.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(group.path));
   }
-  const items = group.items;
-  return items.some(
+
+  return group.items.some(
     (item) => !HIDDEN_NAV_PATHS.has(item.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(item.path)),
   );
 }
 
 export function getVisibleNavItems(group: NavGroup, isAuthenticated: boolean) {
-  if (isDirectNavGroup(group)) return [];
-  const items = group.items;
-  return items.filter(
+  if (isDirectNavGroup(group)) {
+    return [];
+  }
+
+  return group.items.filter(
     (item) => !HIDDEN_NAV_PATHS.has(item.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(item.path)),
   );
 }
 
 export function getNavGroupPrimaryPath(group: NavGroup, isAuthenticated: boolean) {
-  if (isDirectNavGroup(group)) return group.path;
+  if (isDirectNavGroup(group)) {
+    return group.path;
+  }
+
   return getVisibleNavItems(group, isAuthenticated)[0]?.path ?? null;
 }
 
 export function isNavGroupActive(group: NavGroup, pathname: string, isAuthenticated: boolean) {
+  if (!isNavGroupFeatureEnabled(group)) {
+    return false;
+  }
+
   if (isDirectNavGroup(group)) {
     return doesPathMatch(pathname, group.path);
   }

@@ -87,7 +87,6 @@ beforeEach(() => {
   vi.stubEnv('VITE_APP_ENV', 'test');
   vi.stubEnv('VITE_ENABLE_DEMO_DATA', 'false');
   vi.stubEnv('VITE_ENABLE_SYNTHETIC_TRIPS', 'false');
-  vi.stubEnv('VITE_ENABLE_PERSISTED_TEST_AUTH', 'false');
   vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'true');
   vi.stubEnv('VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK', 'true');
 });

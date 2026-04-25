@@ -71,14 +71,14 @@ function formatMoneyValue(
 
 function getTierLabel(score: number) {
   if (score >= 90) {
-    return 'High confidence';
+    return 'Ready';
   }
 
   if (score >= 78) {
-    return 'Ready now';
+    return 'Almost ready';
   }
 
-  return 'Review lane';
+  return 'Needs review';
 }
 
 export function getOfferRideConfidenceSummary({
@@ -97,66 +97,66 @@ export function getOfferRideConfidenceSummary({
 
   const headline = corridor.demandSource === 'live'
     ? score >= 90
-      ? 'Publish-ready supply lane'
-      : 'Operationally ready route'
+      ? 'Ride is ready to post'
+      : 'Ride details look good'
     : driverPlan
-      ? 'Route plan with visible proof'
-      : 'Build route confidence';
+      ? 'Trip details are ready'
+      : 'Add trip details';
   const detail = corridor.demandSource === 'live'
-    ? 'Live demand, corridor proof, and WhatsApp-led coordination are visible before you publish.'
+    ? 'Ride availability and trip details are visible before you post.'
     : driverPlan
-      ? 'Route economics are already visible. Publish once the route details and coordination lane feel clean.'
-      : 'Choose the corridor first so Wasel can show route intelligence before the lane goes live.';
+      ? 'Trip details are visible. Review the route and post when you are ready.'
+      : 'Choose a route first to see ride availability before you post.';
 
   const routeSignalValue = corridor.demandScore !== null
-    ? `${corridor.demandScore}/100 demand${corridor.routeOwnershipScore !== null ? ` with ${corridor.routeOwnershipScore}/100 corridor proof.` : '.'}`
+    ? `${corridor.demandScore}/100 ride availability${corridor.routeOwnershipScore !== null ? ` with ${corridor.routeOwnershipScore}/100 route match.` : '.'}`
     : driverPlan
-      ? `${driverPlan.corridor.predictedDemandScore}/100 predicted demand with ${driverPlan.corridor.autoGroupWindow}`
-      : 'Choose a corridor to unlock route intelligence.';
+      ? `${driverPlan.corridor.predictedDemandScore}/100 expected ride availability with ${driverPlan.corridor.autoGroupWindow}`
+      : 'Choose a route to see ride availability.';
   const liveCorridorValue =
     corridor.matchingRideCount > 0
-      ? `${pluralize(corridor.matchingRideCount, 'live route')} already posted on this corridor.`
-      : 'This route will open the first visible supply lane on the corridor.';
+      ? `${pluralize(corridor.matchingRideCount, 'active ride')} already posted on this route.`
+      : 'No active rides are posted on this route yet.';
   const laneFitValue = acceptsPackages
-    ? `Passenger seats plus ${packageCapacity ?? 'medium'} parcels can move on the same lane.`
-    : 'Passenger seats only, with WhatsApp as the primary coordination lane.';
+    ? `Passenger seats plus ${packageCapacity ?? 'medium'} package space are available on this trip.`
+    : 'Passenger seats only.';
 
   return {
     score,
-    scoreLabel: 'Operational confidence',
+    scoreLabel: 'Ride availability',
     tierLabel: getTierLabel(score),
     headline,
     detail,
     signals: [
       {
         id: 'live-corridor',
-        label: 'Live corridor',
+        label: 'Ride availability',
         tone: corridor.matchingRideCount > 0 ? 'green' : 'gold',
         value: liveCorridorValue,
       },
       {
         id: 'route-signal',
-        label: 'Route signal',
+        label: 'Trip details',
         tone: corridor.demandScore !== null || driverPlan ? 'cyan' : 'gold',
         value: routeSignalValue,
       },
       {
         id: 'coordination-lane',
-        label: 'Coordination lane',
+        label: 'Coordination',
         tone: 'green',
         value: acceptsPackages
-          ? 'WhatsApp-first coordination for riders, packages, and handoffs.'
-          : 'WhatsApp-first coordination for riders once the route is live.',
+          ? 'WhatsApp stays available for riders, packages, and handoffs.'
+          : 'WhatsApp stays available for rider updates.',
       },
       {
         id: 'lane-fit',
-        label: 'Lane fit',
+        label: 'Capacity',
         tone: 'gold',
         value: laneFitValue,
       },
       {
         id: 'draft-state',
-        label: 'Draft state',
+        label: 'Draft',
         tone: 'cyan',
         value: draftMessage?.trim() || 'Draft autosaves on this device.',
       },
@@ -189,22 +189,22 @@ export function getPackageConfidenceSummary({
 
   return {
     score,
-    scoreLabel: 'Operational confidence',
+    scoreLabel: 'Delivery status',
     tierLabel: getTierLabel(score),
     headline:
       corridor.packageReadyRideCount > 0 && hasRecipientWhatsApp
-        ? 'Package lane ready now'
+        ? 'Package is ready to send'
         : corridor.packageReadyRideCount > 0 || preferredRide
-          ? 'Visible handoff lane'
-          : 'Queue with route proof',
+          ? 'Delivery can be assigned'
+          : 'Waiting for a matching ride',
     detail:
       corridor.packageReadyRideCount > 0
-        ? 'Live package-ready supply is already visible, so sender, holder, and receiver can move through one coordinated lane.'
-        : 'The request can still be created now, but confidence rises once a package-ready captain is visible on the corridor.',
+        ? 'A matching ride is available, so sender and receiver can coordinate delivery now.'
+        : 'Create the request now and retry when a matching ride is available.',
     signals: [
       {
         id: 'route-readiness',
-        label: 'Route readiness',
+        label: 'Ride availability',
         tone: corridor.packageReadyRideCount > 0 ? 'green' : 'gold',
         value:
           corridor.packageReadyRideCount > 0
@@ -213,7 +213,7 @@ export function getPackageConfidenceSummary({
       },
       {
         id: 'coordination-lane',
-        label: 'Coordination lane',
+        label: 'Contact details',
         tone: hasRecipientWhatsApp ? 'green' : 'gold',
         value: hasRecipientWhatsApp
           ? 'Recipient can be reached directly on WhatsApp once the handoff starts.'
@@ -221,7 +221,7 @@ export function getPackageConfidenceSummary({
       },
       {
         id: 'handoff-posture',
-        label: 'Handoff posture',
+        label: 'Assigned ride',
         tone: preferredRide || corridor.packageReadyRideCount > 0 ? 'cyan' : 'gold',
         value: preferredRide
           ? `Pinned to the ${preferredRide.from} to ${preferredRide.to} ride at ${preferredRide.time}.`
@@ -231,7 +231,7 @@ export function getPackageConfidenceSummary({
       },
       {
         id: 'price-clarity',
-        label: 'Price clarity',
+        label: 'Price',
         tone: corridor.quotedPriceJod !== null ? 'cyan' : 'gold',
         value: corridor.quotedPriceJod !== null
           ? `${corridor.quotedPriceJod} JOD shared quote${corridor.quoteSavingsPercent !== null ? ` with ${corridor.quoteSavingsPercent}% corridor savings.` : '.'}`
@@ -281,12 +281,10 @@ export function getWalletConfidenceSummary({
         : `Wallet account is ${wallet.wallet.status}.`
     : 'Waiting for wallet status.';
   const sourceValue = !meta
-    ? 'Waiting for the live wallet feed.'
+    ? 'Waiting for live wallet data from the backend.'
     : meta.degraded
-      ? 'Backup wallet snapshot is active while the primary feed recovers.'
-      : meta.source === 'edge-api'
-        ? 'Primary edge wallet sync is live.'
-        : 'Direct wallet sync is live.';
+      ? 'Wallet data could not be refreshed. Try again.'
+      : 'Live wallet data is available from the backend.';
   const protectionValue = !wallet
     ? 'Wallet protection details appear after the snapshot loads.'
     : !wallet.pinSet
@@ -305,21 +303,21 @@ export function getWalletConfidenceSummary({
 
   return {
     score,
-    scoreLabel: 'Operational confidence',
+    scoreLabel: 'Payment status',
     tierLabel: getTierLabel(score),
     headline:
       wallet && wallet.pinSet && meta && !meta.degraded
-        ? 'Protected wallet lane'
+        ? 'Wallet is ready'
         : wallet
-          ? 'Transfer-ready wallet'
-          : 'Finish wallet setup',
+          ? 'Finish wallet setup'
+          : 'Connect your wallet',
     detail: !wallet
-      ? 'Wallet confidence appears once the balance, transfer protection, and payout rail are visible together.'
+      ? 'Wallet status appears when the backend returns your balance and payment details.'
       : !wallet.pinSet
-        ? 'Set a wallet PIN before sending money so every transfer stays step-up protected.'
+        ? 'Set a wallet PIN before sending money.'
         : meta?.degraded
-          ? 'Transfers stay protected, but this session is reading from a backup wallet snapshot.'
-          : `Balance, payout rail, and step-up protection are visible before money moves. ${pluralize(totalTransactions, 'recorded transaction')} already sit in the live ledger.`,
+          ? 'Wallet data could not be refreshed. Retry before moving money.'
+          : `Balance, payment method, and transfer protection are visible before money moves. ${pluralize(totalTransactions, 'recorded transaction')} already appear in the live ledger.`,
     signals: [
       {
         id: 'wallet-status',
@@ -329,7 +327,7 @@ export function getWalletConfidenceSummary({
       },
       {
         id: 'source-posture',
-        label: 'Source posture',
+        label: 'Live data',
         tone: meta && !meta.degraded ? 'cyan' : 'gold',
         value: sourceValue,
       },
@@ -341,13 +339,13 @@ export function getWalletConfidenceSummary({
       },
       {
         id: 'funds-visibility',
-        label: 'Funds visibility',
+        label: 'Balance',
         tone: wallet ? 'cyan' : 'gold',
         value: fundsVisibilityValue,
       },
       {
         id: 'payout-rail',
-        label: 'Payout rail',
+        label: 'Payment method',
         tone: defaultPaymentMethodLabel ? 'green' : 'gold',
         value: railValue,
       },
