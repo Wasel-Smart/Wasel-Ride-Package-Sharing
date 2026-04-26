@@ -24,6 +24,7 @@ function LandingMapPlaceholder() {
       }}
     >
       <div
+        className="landing-map-placeholder-shimmer"
         style={{
           position: 'absolute',
           inset: 18,
@@ -39,6 +40,12 @@ function LandingMapPlaceholder() {
         @keyframes landing-map-placeholder-shimmer {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .landing-map-placeholder-shimmer {
+            animation: none !important;
+            background-position: 0 0 !important;
+          }
         }
       `}</style>
     </div>
