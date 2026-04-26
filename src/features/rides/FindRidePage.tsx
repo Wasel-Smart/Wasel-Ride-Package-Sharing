@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Car, Package, Search } from 'lucide-react';
 import { Protected } from '../../pages/waselServiceShared';
 import { parseFindRideParams } from '../../pages/waselCorePageHelpers';
@@ -11,19 +11,15 @@ import { buildAuthPagePath } from '../../utils/authFlow';
 import { normalizeTextTree } from '../../utils/textEncoding';
 import { getWaselPresenceProfile } from '../../domains/trust/waselPresence';
 import { LandingPageFrame } from './landing/LandingPageFrame';
-import { panelStyle } from '../../styles/shared-ui';
-import { LANDING_FONT } from '../../styles/shared-ui';
-import {
-  LANDING_COLORS,
-  LandingHeader,
-  LandingHeroSection,
-  LandingMapSection,
-  LandingSignalSection,
-  LandingTrustSection,
-  LandingFooterSlot,
-  type LandingActionCard,
-  type LandingSignalCard,
-} from './landing/LandingSections';
+import { LANDING_FONT, panelStyle } from '../../styles/shared-ui';
+import { LANDING_COLORS } from './landing/landingTypes';
+import type { LandingActionCard, LandingSignalCard } from './landing/landingTypes';
+import { LandingMapSection } from './landing/LandingMapSection';
+import { LandingSignalSection } from './landing/LandingSignalSection';
+import { LandingTrustSection } from './landing/LandingTrustSection';
+import { LandingFooterSlot } from './landing/LandingSlots';
+import { LandingHeader } from './landing/LandingHeader';
+import { LandingHeroSection } from './landing/LandingHeroSection';
 import { RideResults, type RideResultsCopy } from '../../components/rides/RideResults';
 import { RideSearchForm, type RideSearchFormCopy } from '../../components/rides/RideSearchForm';
 import { useRideSearch } from '../../modules/rides/ride.hooks';
@@ -249,6 +245,8 @@ export function FindRidePage() {
   const { user } = useLocalAuth();
   const { notifyTripConfirmed, permission, requestPermission } = usePushNotifications();
   const copy = useMemo(() => buildRidePageCopy(language === 'ar' ? 'ar' : 'en'), [language]);
+  const feedbackRef = useRef<HTMLDivElement | null>(null);
+  const resultsRef = useRef<HTMLDivElement | null>(null);
 
   // Wasel Presence profile for contact/business info
   const profile = useMemo(() => getWaselPresenceProfile(), []);
@@ -259,6 +257,14 @@ export function FindRidePage() {
   // Auth page paths
   const emailAuthPath = useMemo(() => buildAuthPagePath('signin'), []);
   const signupAuthPath = useMemo(() => buildAuthPagePath('signup'), []);
+  const searchContextPath = useMemo(() => {
+    const currentPath = `${location.pathname}${location.search}`;
+    return currentPath.length > 0 ? currentPath : '/app/find-ride';
+  }, [location.pathname, location.search]);
+  const contextualSignInPath = useMemo(
+    () => buildAuthPagePath('signin', searchContextPath),
+    [searchContextPath],
+  );
 
   // Static service paths
   const findRidePath = '/app/find-ride';
@@ -416,6 +422,17 @@ export function FindRidePage() {
     state.successMessage,
   ]);
 
+  useEffect(() => {
+    if (state.error || state.successMessage) {
+      feedbackRef.current?.focus();
+      return;
+    }
+
+    if (state.searched && state.phase !== 'searching') {
+      resultsRef.current?.focus();
+    }
+  }, [state.error, state.phase, state.searched, state.successMessage]);
+
   const handleSearch = useCallback(async () => {
     clearFeedback();
     const didSearch = await submitSearch();
@@ -446,7 +463,7 @@ export function FindRidePage() {
   const handleRequestRide = useCallback(
     async (ride: RideResult) => {
       if (!user) {
-        navigate('/app/auth');
+        navigate(contextualSignInPath);
         return;
       }
 
@@ -474,7 +491,7 @@ export function FindRidePage() {
         },
       });
     },
-    [navigate, requestRide, user],
+    [contextualSignInPath, navigate, requestRide, user],
   );
 
   const handleOpenRide = useCallback(
@@ -535,7 +552,9 @@ export function FindRidePage() {
           />
           {state.error ? (
             <div
+              ref={feedbackRef}
               role="alert"
+              tabIndex={-1}
               style={{
                 ...panelStyle(24),
                 padding: '16px 20px',
@@ -550,7 +569,9 @@ export function FindRidePage() {
           ) : null}
           {state.successMessage ? (
             <div
+              ref={feedbackRef}
               role="status"
+              tabIndex={-1}
               style={{
                 ...panelStyle(24),
                 padding: '16px 20px',
@@ -563,21 +584,23 @@ export function FindRidePage() {
               {state.successMessage}
             </div>
           ) : null}
-          <RideResults
-            loading={state.phase === 'searching'}
-            searched={state.searched}
-            language={ar ? 'ar' : 'en'}
-            results={visibleResults}
-            totalResultsCount={state.results.length}
-            recommendedRideId={state.recommendedRideId}
-            requestsByRideId={state.requestsByRideId}
-            requestingRideId={state.phase === 'submitting' ? state.selectedRideId : undefined}
-            hasMore={hasMoreResults}
-            copy={copy.results}
-            onRequestRide={handleRequestRide}
-            onOpenRide={handleOpenRide}
-            onLoadMore={loadMoreResults}
-          />
+          <div ref={resultsRef} tabIndex={-1}>
+            <RideResults
+              loading={state.phase === 'searching'}
+              searched={state.searched}
+              language={ar ? 'ar' : 'en'}
+              results={visibleResults}
+              totalResultsCount={state.results.length}
+              recommendedRideId={state.recommendedRideId}
+              requestsByRideId={state.requestsByRideId}
+              requestingRideId={state.phase === 'submitting' ? state.selectedRideId : undefined}
+              hasMore={hasMoreResults}
+              copy={copy.results}
+              onRequestRide={handleRequestRide}
+              onOpenRide={handleOpenRide}
+              onLoadMore={loadMoreResults}
+            />
+          </div>
           <LandingMapSection
             ar={ar}
             onNavigate={handleNavigate}
