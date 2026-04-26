@@ -20,7 +20,6 @@ import { MapWrapper } from '../../components/MapWrapper';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { BUS_PAGE_COPY, BUS_TEST_IDS } from '../../modules/bus/bus.copy';
 import { useBusSearch } from '../../modules/bus/bus.hooks';
-import type { BusRoute } from '../../modules/bus/bus.types';
 import { createSupportTicket } from '../../services/supportInbox';
 import { notificationsAPI } from '../../services/notifications.js';
 import { routeEndpointsAreDistinct } from '../../utils/jordanLocations';
@@ -212,6 +211,17 @@ export function BusPage() {
     activeBus.seats === 0
       ? 'This departure is full, but the same corridor filters stay active while you switch to another coach.'
       : `${activeBus.seats} seats are open on the selected coach and booking is confirmed only after the backend responds.`;
+  const routeStatusColors = {
+    cyan: DS.cyan,
+    gold: DS.gold,
+    green: DS.green,
+  };
+
+  function selectRoute(routeId: string) {
+    setSelected(routeId);
+    setBookingComplete(false);
+    setBookingError(null);
+  }
 
   async function handleBusBooking() {
     if (bookingDisabled) return;
@@ -802,11 +812,15 @@ export function BusPage() {
               const isSelected = selected === route.id;
               const soldOut = route.seats === 0;
               const exactMatch = isExactRoute(route, origin, destination);
-              const routeStatus = getRouteStatus(route, tripDate, today);
+              const routeStatus = getRouteStatus(route, tripDate, today, routeStatusColors);
               return (
                 <div
                   key={route.id}
                   className="w-focus"
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isSelected}
+                  aria-label={`${route.from} to ${route.to}, ${route.company}, ${routeStatus.label}`}
                   style={{
                     background: 'var(--wasel-panel-strong)',
                     backdropFilter: 'blur(22px)',
@@ -822,10 +836,12 @@ export function BusPage() {
                     transition:
                       'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
                   }}
-                  onClick={() => {
-                    setSelected(String(route.id));
-                    setBookingComplete(false);
-                    setBookingError(null);
+                  onClick={() => selectRoute(String(route.id))}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      selectRoute(String(route.id));
+                    }
                   }}
                   onMouseEnter={e => {
                     if (!soldOut) {
