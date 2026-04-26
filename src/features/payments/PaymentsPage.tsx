@@ -477,6 +477,7 @@ function PaymentsPageContent() {
     <PageShell>
       <Protected>
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-8 pt-4 md:px-6">
+          <h1 className="sr-only">Payments</h1>
           <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
             <Card className="border-primary/15 bg-[linear-gradient(140deg,rgba(3,13,28,0.96),rgba(8,34,60,0.92))]">
               <CardHeader className="gap-3">

@@ -106,7 +106,9 @@ export function LocationInput({
           aria-invalid={Boolean(error)}
           aria-controls={showSuggestions ? listId : undefined}
           aria-expanded={showSuggestions}
-          aria-activedescendant={activeSuggestion ? `${id}-option-${activeIndex}` : undefined}
+          aria-activedescendant={
+            showSuggestions && activeSuggestion ? `${id}-option-${activeIndex}` : undefined
+          }
           autoComplete="off"
           role="combobox"
           value={value}

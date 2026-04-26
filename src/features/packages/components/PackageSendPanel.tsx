@@ -76,7 +76,7 @@ export function PackageSendPanel({
     return (
       <div style={{ textAlign: 'center', padding: '40px 0' }}>
         <div style={{ fontSize: '3rem', marginBottom: 16 }}>OK</div>
-        <h3 style={{ color: DS.green, fontWeight: 900, margin: '0 0 8px' }}>Package request created</h3>
+        <h2 style={{ color: DS.green, fontWeight: 900, margin: '0 0 8px' }}>Package request created</h2>
         <p style={{ color: DS.sub }}>
           {trackedPackage?.matchedRideId
             ? `Matched to a connected ride from ${pkg.from} to ${pkg.to}.`
@@ -189,15 +189,16 @@ export function PackageSendPanel({
   return (
     <div className="sp-2col" style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(0, 1.5fr) minmax(320px, 1fr)' }}>
       <div className="pkg-send-form-grid" style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr' }}>
-        <h3 style={{ color: DS.text, fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>
+        <h2 style={{ color: DS.text, fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>
           Send in one clean flow
-        </h3>
+        </h2>
         {[{ l: 'From', k: 'from' as const }, { l: 'To', k: 'to' as const }].map((field) => (
           <div key={field.l}>
-            <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
+            <label htmlFor={`package-${field.k}`} style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
               {field.l}
             </label>
             <select
+              id={`package-${field.k}`}
               value={pkg[field.k]}
               onChange={(event) => setPkg((previous) => ({ ...previous, [field.k]: event.target.value }))}
               style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}
@@ -211,10 +212,11 @@ export function PackageSendPanel({
           </div>
         ))}
         <div>
-          <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
+          <label htmlFor="package-weight" style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
             Weight
           </label>
           <select
+            id="package-weight"
             value={pkg.weight}
             onChange={(event) => setPkg((previous) => ({ ...previous, weight: event.target.value }))}
             style={{ width: '100%', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.9rem', outline: 'none', cursor: 'pointer' }}
@@ -227,11 +229,12 @@ export function PackageSendPanel({
           </select>
         </div>
         <div>
-          <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
+          <label htmlFor="package-recipient-name-input" style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
             Recipient
           </label>
           <input
             data-testid="package-recipient-name"
+            id="package-recipient-name-input"
             placeholder="Full recipient name"
             value={pkg.recipientName}
             onChange={(event) => setPkg((previous) => ({ ...previous, recipientName: event.target.value }))}
@@ -239,11 +242,12 @@ export function PackageSendPanel({
           />
         </div>
         <div>
-          <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
+          <label htmlFor="package-recipient-phone-input" style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
             Recipient WhatsApp
           </label>
           <input
             data-testid="package-recipient-phone"
+            id="package-recipient-phone-input"
             placeholder="Recipient WhatsApp number"
             value={pkg.recipientPhone}
             onChange={(event) => setPkg((previous) => ({ ...previous, recipientPhone: event.target.value }))}
@@ -251,10 +255,11 @@ export function PackageSendPanel({
           />
         </div>
         <div>
-          <label style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
+          <label htmlFor="package-note-input" style={{ display: 'block', color: DS.muted, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>
             Note
           </label>
           <input
+            id="package-note-input"
             placeholder="Fragile or handling notes"
             value={pkg.note}
             onChange={(event) => setPkg((previous) => ({ ...previous, note: event.target.value }))}
