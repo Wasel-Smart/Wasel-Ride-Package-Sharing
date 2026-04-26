@@ -47,6 +47,19 @@ function getActionMeta(action: WaselContactAction) {
   return { icon: Mail, color: 'var(--wasel-brand-hover)' };
 }
 
+function getActionAriaLabel(action: WaselContactAction, ar: boolean) {
+  switch (action.id) {
+    case 'call':
+      return ar ? `اتصل عبر ${action.labelAr}` : `Call support via ${action.label}`;
+    case 'whatsapp':
+      return ar
+        ? `افتح ${action.labelAr} في علامة تبويب جديدة`
+        : `Open ${action.label} in a new tab`;
+    default:
+      return ar ? `راسل الدعم عبر ${action.labelAr}` : `Email support via ${action.label}`;
+  }
+}
+
 export function WaselContactActionRow({ ar, compact = false }: { ar: boolean; compact?: boolean }) {
   const profile = getWaselPresenceProfile();
 
@@ -68,7 +81,9 @@ export function WaselContactActionRow({ ar, compact = false }: { ar: boolean; co
             key={action.id}
             href={action.href}
             target={action.id === 'whatsapp' ? '_blank' : undefined}
-            rel={action.id === 'whatsapp' ? 'noreferrer' : undefined}
+            rel={action.id === 'whatsapp' ? 'noreferrer noopener' : undefined}
+            aria-label={getActionAriaLabel(action, ar)}
+            title={ar ? action.labelAr : action.label}
             className="wasel-lift-card"
             style={{
               display: 'inline-flex',
@@ -164,19 +179,19 @@ export function WaselProofOfLifeBlock({ ar, compact = false }: { ar: boolean; co
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-          padding: '8px 12px',
-          borderRadius: 999,
-          background: 'color-mix(in srgb, var(--ds-accent) 8%, transparent)',
-          border: `1px solid ${PRESENCE_BORDER_SOFT}`,
-          color: PRESENCE_TEXT,
+            padding: '8px 12px',
+            borderRadius: 999,
+            background: 'color-mix(in srgb, var(--ds-accent) 8%, transparent)',
+            border: `1px solid ${PRESENCE_BORDER_SOFT}`,
+            color: PRESENCE_TEXT,
             fontSize: '0.76rem',
             fontWeight: 700,
             fontFamily: FONT,
-            }}
-          >
-            <BadgeCheck size={15} color="var(--ds-accent)" />
-            {profile.supportPhoneDisplay || profile.supportEmail}
-          </div>
+          }}
+        >
+          <BadgeCheck size={15} color="var(--ds-accent)" />
+          {profile.supportPhoneDisplay || profile.supportEmail}
+        </div>
       </div>
 
       <div

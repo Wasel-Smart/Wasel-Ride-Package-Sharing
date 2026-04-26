@@ -227,7 +227,7 @@ export const LANDING_RESPONSIVE_STYLES = `
   /* Small Mobile */
   @media (max-width: 480px) { 
     .landing-hero-visual { min-height: 220px; }
-    .landing-hero-mark-stage { minHeight: 160px; }
+    .landing-hero-mark-stage { min-height: 160px; }
     .landing-hero-service-stats { grid-template-columns: 1fr !important; }
   }
   
