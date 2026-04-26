@@ -23,7 +23,7 @@ export const BUS_PAGE_COPY = {
   officialScheduleLink: (verifiedAt: string) => `Provider details verified ${verifiedAt}`,
 } as const;
 
-export function buildBusRouteInfo(kind: BusRouteInfoKind, verifiedAt?: string): BusRouteInfo {
+export function buildBusRouteInfo(kind: BusRouteInfoKind, _verifiedAt?: string): BusRouteInfo {
   switch (kind) {
     case 'validation':
       return {

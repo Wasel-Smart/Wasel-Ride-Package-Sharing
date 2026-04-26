@@ -297,7 +297,7 @@ export function LandingHeroSection({
   emailAuthPath,
   signupAuthPath,
   findRidePath,
-  mobilityOsPath,
+  mobilityOsPath: _mobilityOsPath,
   myTripsPath,
   supportLine,
   businessAddress,

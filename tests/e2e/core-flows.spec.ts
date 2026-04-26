@@ -7,6 +7,25 @@ test.beforeEach(async ({ page }) => {
   await seedDemoSession(page);
 });
 
+async function failSupabaseRestRequest(
+  page: Page,
+  table: 'packages' | 'trips',
+  method: 'GET' | 'POST',
+) {
+  await page.route(`**/rest/v1/${table}*`, async route => {
+    if (route.request().method() === method) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: `Forced ${table} failure for E2E coverage.` }),
+      });
+      return;
+    }
+
+    await route.continue();
+  });
+}
+
 async function expectWithinViewport(page: Page, selector: string) {
   const locator = page.locator(selector).first();
   await expect(locator).toBeVisible();
@@ -26,29 +45,35 @@ async function expectWithinViewport(page: Page, selector: string) {
 }
 
 test('find ride stops and shows backend failure clearly', async ({ page }) => {
+  await failSupabaseRestRequest(page, 'trips', 'GET');
   await page.goto('/app/find-ride?from=Amman&to=Irbid&search=1', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: /^book a ride$/i }).first()).toBeVisible();
   await expect(page.getByRole('alert')).toContainText(/unable to search rides right now/i);
 });
 
 test('offer ride stops when the backend cannot create the ride', async ({ page }) => {
+  await failSupabaseRestRequest(page, 'trips', 'POST');
   await page.goto('/app/offer-ride');
   await expect(page.getByRole('heading', { name: /offer a ride/i })).toBeVisible();
   await page.locator('input[type="date"]').fill('2026-05-01');
   const stepOneButton = page.getByTestId('offer-ride-step-1');
   await expect(stepOneButton).toBeEnabled();
   await stepOneButton.click();
-  await page.getByTestId('offer-ride-car-model').fill('Toyota Camry 2024');
+  const carModelInput = page.getByTestId('offer-ride-car-model');
+  await expect(carModelInput).toBeVisible();
+  await carModelInput.fill('Toyota Camry 2024');
   const stepTwoButton = page.getByTestId('offer-ride-step-2');
   await expect(stepTwoButton).toBeEnabled();
   await stepTwoButton.click();
   const submitButton = page.getByTestId('offer-ride-submit');
+  await expect(submitButton).toBeVisible();
   await expect(submitButton).toBeEnabled();
   await submitButton.click();
   await expect(page.getByText(/ride could not be created right now\. please try again\./i)).toBeVisible();
 });
 
 test('packages flow stops when the backend cannot create tracking', async ({ page }) => {
+  await failSupabaseRestRequest(page, 'packages', 'POST');
   await page.goto('/app/packages');
   await expect(page.getByTestId('package-recipient-name')).toBeVisible();
   await page.getByTestId('package-recipient-name').fill('Receiver Test');

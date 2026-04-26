@@ -87,9 +87,11 @@ export function ResponsiveNav({ items, mobile = false }: ResponsiveNavProps) {
 
         return (
           <NavLink
+            aria-label={item.label}
             className="ds-nav-link"
             data-active={active}
             key={`${mobile ? 'm' : 'd'}-${item.path}`}
+            title={item.label}
             to={item.path}
           >
             {item.icon}
