@@ -132,6 +132,10 @@ tmp_logo_frames/
 
 # Landing page screenshots
 landing-page-*.png
+!tests/e2e/visual-regression.spec.ts-snapshots/
+!tests/e2e/visual-regression.spec.ts-snapshots/landing-page-chromium-desktop-win32.png
+!tests/e2e/visual-regression.spec.ts-snapshots/find-ride-page-chromium-desktop-win32.png
+!tests/e2e/visual-regression.spec.ts-snapshots/settings-page-chromium-desktop-win32.png
 
 # Legacy one-off report names
 COMPREHENSIVE_GAPS_ANALYSIS.md
