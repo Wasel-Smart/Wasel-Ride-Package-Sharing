@@ -22,6 +22,7 @@ const loadPackagesPage = async () => ({ Component: (await import('./features/pac
 const loadBusPage = async () => ({ Component: (await import('./features/bus/BusPage')).BusPage });
 const loadWalletPage = async () => ({ Component: (await import('./features/wallet')).WalletDashboard });
 const loadPaymentsPage = async () => ({ Component: (await import('./features/payments/PaymentsPage')).default });
+const loadSettingsPage = async () => ({ Component: (await import('./features/preferences/SettingsPage')).default });
 const loadPrivacyPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).PrivacyPage });
 const loadTermsPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).TermsPage });
 
@@ -49,6 +50,7 @@ const appChildren: RouteObject[] = [
   { lazy: loadPackagesPage, path: APP_ROUTES.packages.child },
   { lazy: loadWalletPage, path: APP_ROUTES.wallet.child },
   { lazy: loadPaymentsPage, path: APP_ROUTES.payments.child },
+  { lazy: loadSettingsPage, path: APP_ROUTES.settings.child },
   { lazy: loadPrivacyPage, path: APP_ROUTES.privacy.child },
   { lazy: loadTermsPage, path: APP_ROUTES.terms.child },
   { Component: () => <Navigate replace to={APP_ROUTES.root.full} />, path: APP_ROUTES.dashboard.child },
@@ -95,6 +97,10 @@ export const waselRouter = createBrowserRouter([
   {
     Component: () => <Navigate replace to={APP_ROUTES.payments.full} />,
     path: '/payments',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.settings.full} />,
+    path: '/settings',
   },
   {
     Component: () => <Navigate replace to={APP_ROUTES.privacy.full} />,
