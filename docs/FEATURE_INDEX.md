@@ -12,6 +12,7 @@ This repository keeps a small maintained documentation set focused on running, d
 ## Architecture
 
 - [ARCHITECTURE_DECISIONS.md](./ARCHITECTURE_DECISIONS.md)
+- [BUNDLE_OPTIMIZATION.md](./BUNDLE_OPTIMIZATION.md)
 - [adr/README.md](./adr/README.md)
 - [adr/001-react-router-7-lazy-loading.md](./adr/001-react-router-7-lazy-loading.md)
 - [adr/002-supabase-backend.md](./adr/002-supabase-backend.md)

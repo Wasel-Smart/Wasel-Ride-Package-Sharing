@@ -52,9 +52,20 @@ function formatViolations(
     .join('\n');
 }
 
+async function waitForAuditableContent(page: Page) {
+  await page.waitForFunction(() => {
+    const main = document.querySelector('main');
+    if (!(main instanceof HTMLElement)) {
+      return false;
+    }
+
+    return main.childElementCount > 0 && main.querySelector('*') !== null;
+  });
+}
+
 async function expectPageToPassAccessibilityAudit(page: Page, name: string, path: string) {
   await page.goto(path, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(600);
+  await waitForAuditableContent(page);
 
   const results = await new AxeBuilder({ page })
     .options(AXE_OPTIONS)
@@ -149,7 +160,7 @@ test.describe('RTL - Arabic layout accessibility', () => {
       localStorage.setItem('wasel-language', 'ar');
     });
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(500);
+    await waitForAuditableContent(page);
 
     const results = await new AxeBuilder({ page })
       .options(AXE_OPTIONS)

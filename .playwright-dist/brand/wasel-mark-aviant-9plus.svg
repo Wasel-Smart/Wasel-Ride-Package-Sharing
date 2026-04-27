@@ -1,0 +1,85 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512 512"
+  fill="none"
+  role="img"
+  aria-labelledby="title desc"
+  preserveAspectRatio="xMidYMid meet"
+>
+  <title id="title">Wasel aviant signature mark</title>
+  <desc id="desc">A premium Wasel app icon combining a messenger bird silhouette, a route pin, and a forward W wing.</desc>
+  <defs>
+    <linearGradient id="bg" x1="96" y1="80" x2="420" y2="432" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F2740" />
+      <stop offset="0.58" stop-color="#123A5C" />
+      <stop offset="1" stop-color="#0A1A2B" />
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(188 136) rotate(48) scale(250 228)">
+      <stop offset="0" stop-color="#45C7FF" stop-opacity="0.34" />
+      <stop offset="1" stop-color="#45C7FF" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="wingA" x1="144" y1="334" x2="308" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0D7ED1" />
+      <stop offset="0.5" stop-color="#18A9E8" />
+      <stop offset="1" stop-color="#78F2FF" />
+    </linearGradient>
+    <linearGradient id="wingB" x1="270" y1="330" x2="394" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F5A623" />
+      <stop offset="0.48" stop-color="#FFC84B" />
+      <stop offset="1" stop-color="#FFF09A" />
+    </linearGradient>
+    <linearGradient id="beak" x1="302" y1="174" x2="364" y2="250" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F4F8FC" />
+      <stop offset="1" stop-color="#9AA8B8" />
+    </linearGradient>
+    <filter id="shadow" x="56" y="56" width="400" height="408" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="22" flood-color="#04101C" flood-opacity="0.34" />
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <rect x="84" y="84" width="344" height="344" rx="88" fill="url(#bg)" />
+  </g>
+  <rect x="84" y="84" width="344" height="344" rx="88" fill="url(#glow)" />
+  <rect x="84.5" y="84.5" width="343" height="343" rx="87.5" stroke="#FFFFFF" stroke-opacity="0.08" />
+
+  <path
+    d="M164 341C162 314 170 286 189 263C209 239 237 223 269 217C282 215 293 205 300 193C308 180 312 164 311 148C346 162 372 194 375 232C378 278 345 319 298 327L278 331L262 354C245 380 221 394 193 394C176 394 158 388 144 378C154 370 162 357 164 341Z"
+    fill="url(#wingA)"
+  />
+
+  <path
+    d="M230 314L257 263L282 314L308 250L344 314L321 353H293L279 316L262 353H232L214 316L192 353H165L202 289L230 314Z"
+    fill="url(#wingB)"
+  />
+
+  <path
+    d="M241 149C256 134 278 128 299 132C322 137 341 155 349 178C356 198 351 218 337 232C323 246 301 252 280 248C290 235 293 219 291 202C289 184 280 167 266 154C259 148 250 143 241 149Z"
+    fill="url(#beak)"
+  />
+
+  <path
+    d="M208 184C226 155 260 139 295 143C282 154 273 168 271 184C269 205 278 225 294 239C269 249 239 245 217 229C196 214 192 196 208 184Z"
+    fill="#08131F"
+    fill-opacity="0.48"
+  />
+
+  <circle cx="278" cy="176" r="8" fill="#F7FBFF" />
+  <circle cx="279" cy="176" r="3.5" fill="#08131F" />
+
+  <path
+    d="M204 287C228 281 250 267 267 247"
+    stroke="#B7F8FF"
+    stroke-width="7"
+    stroke-linecap="round"
+    opacity="0.8"
+  />
+
+  <path
+    d="M176 376C186 376 195 368 199 359"
+    stroke="#9EE7FF"
+    stroke-width="6"
+    stroke-linecap="round"
+    opacity="0.68"
+  />
+</svg>

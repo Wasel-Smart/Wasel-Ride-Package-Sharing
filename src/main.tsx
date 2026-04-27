@@ -18,6 +18,9 @@ import {
 import { sanitizeForLog } from './utils/logSanitizer';
 import { initializeSentry } from './utils/monitoring';
 import { CONSENT_DECISION_EVENT, hasTelemetryConsent } from './utils/consent';
+import { resourceHints } from './utils/performance/resourceHints';
+import { lazyLoader } from './utils/performance/lazyLoading';
+import { adaptiveLoading } from './utils/performance/adaptiveLoading';
 
 let telemetryInitialized = false;
 
@@ -40,6 +43,21 @@ function initializeTelemetry() {
     initWebVitalsReporter();
     initPerformanceMonitoring();
   }, 2_500);
+}
+
+function initializePerformanceOptimizations() {
+  resourceHints.preconnectCriticalOrigins();
+  lazyLoader.initialize({ rootMargin: '100px', threshold: 0.01 });
+  
+  if (adaptiveLoading.shouldPrefetchRoutes()) {
+    scheduleDeferredTask(() => {
+      resourceHints.prefetchCriticalRoutes();
+    }, 3_000);
+  }
+  
+  if (import.meta.env.DEV) {
+    adaptiveLoading.logCapabilities();
+  }
 }
 
 const initialThemePreference = initializeThemeFromStorage();
@@ -86,6 +104,8 @@ if (!rootElement) {
 }
 
 rootElement.textContent = '';
+
+initializePerformanceOptimizations();
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>

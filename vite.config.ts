@@ -29,78 +29,110 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: 'hidden',
     minify: 'esbuild',
-    chunkSizeWarningLimit: 400,
+    chunkSizeWarningLimit: 200,
     cssCodeSplit: true,
     reportCompressedSize: false, // Faster builds
     
-    // Advanced minification
+    // Aggressive minification settings
+    cssMinify: true,
+    
+    // Advanced minification with aggressive code splitting
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (!id.includes('node_modules')) return undefined;
+          if (!id.includes('node_modules')) {
+            // Split large feature modules
+            if (id.includes('/src/features/rides/')) return 'feature-rides';
+            if (id.includes('/src/features/bus/')) return 'feature-bus';
+            if (id.includes('/src/features/wallet/')) return 'feature-wallet';
+            if (id.includes('/src/features/operations/')) return 'feature-operations';
+            if (id.includes('/src/features/mobility-os/')) return 'feature-mobility';
+            if (id.includes('/src/features/packages/')) return 'feature-packages';
+            if (id.includes('/src/features/payments/')) return 'feature-payments';
+            
+            // Split domains
+            if (id.includes('/src/domains/auth/')) return 'domain-auth';
+            if (id.includes('/src/domains/wallet/')) return 'domain-wallet';
+            if (id.includes('/src/domains/mobility/')) return 'domain-mobility';
+            if (id.includes('/src/domains/mapping/')) return 'domain-mapping';
+            
+            // Split large components
+            if (id.includes('/src/components/wasel-ui/')) return 'wasel-ui';
+            if (id.includes('/src/components/wasel-ds/')) return 'wasel-ds';
+            
+            return undefined;
+          }
 
-          // React core — must be its own chunk for maximum cache hits
-          if (
-            id.includes('/node_modules/react/') ||
-            id.includes('/node_modules/react-dom/') ||
-            id.includes('/node_modules/react-router/') ||
-            id.includes('/node_modules/scheduler/')
-          ) return 'react-core';
+          // React core — ultra-granular splitting
+          if (id.includes('/node_modules/react/') || id.includes('/node_modules/scheduler/')) return 'react-core';
+          if (id.includes('/node_modules/react-dom/client')) return 'react-dom-client';
+          if (id.includes('/node_modules/react-dom/')) return 'react-dom';
+          if (id.includes('/node_modules/react-router/')) return 'react-router';
 
-          // Large shared utility vendor used heavily by charts
-          if (id.includes('/node_modules/lodash/')) return 'lodash';
+          // Supabase - ultra-granular
+          if (id.includes('/node_modules/@supabase/auth-')) return 'supabase-auth';
+          if (id.includes('/node_modules/@supabase/postgrest-')) return 'supabase-postgrest';
+          if (id.includes('/node_modules/@supabase/realtime-')) return 'supabase-realtime';
+          if (id.includes('/node_modules/@supabase/storage-')) return 'supabase-storage';
+          if (id.includes('/node_modules/@supabase/')) return 'supabase-core';
+          
+          // TanStack Query
+          if (id.includes('/node_modules/@tanstack/query-core')) return 'tanstack-core';
+          if (id.includes('/node_modules/@tanstack/react-query')) return 'tanstack-react';
+
+          // Split Radix UI into ultra-granular chunks
+          if (id.includes('/node_modules/@radix-ui/react-dialog')) return 'radix-dialog';
+          if (id.includes('/node_modules/@radix-ui/react-alert-dialog')) return 'radix-alert';
+          if (id.includes('/node_modules/@radix-ui/react-dropdown')) return 'radix-dropdown';
+          if (id.includes('/node_modules/@radix-ui/react-select')) return 'radix-select';
+          if (id.includes('/node_modules/@radix-ui/react-popover')) return 'radix-popover';
+          if (id.includes('/node_modules/@radix-ui/react-tooltip')) return 'radix-tooltip';
+          if (id.includes('/node_modules/@radix-ui/react-tabs')) return 'radix-tabs';
+          if (id.includes('/node_modules/@radix-ui/')) return 'radix-primitives';
+
+          // Icons separate from other UI
+          if (id.includes('/node_modules/lucide-react/')) return 'icons';
+
+          // UI utilities - split further
+          if (id.includes('/node_modules/sonner/')) return 'ui-toast';
+          if (id.includes('/node_modules/vaul/')) return 'ui-drawer';
+          if (id.includes('/node_modules/cmdk/')) return 'ui-command';
+          if (id.includes('/node_modules/embla-carousel')) return 'ui-carousel';
 
           // Animation
           if (id.includes('/node_modules/motion/')) return 'motion';
 
-          // UI primitives
-          if (
-            id.includes('/node_modules/@radix-ui/') ||
-            id.includes('/node_modules/lucide-react/') ||
-            id.includes('/node_modules/sonner/') ||
-            id.includes('/node_modules/vaul/') ||
-            id.includes('/node_modules/cmdk/') ||
-            id.includes('/node_modules/embla-carousel')
-          ) return 'ui-primitives';
-
-          // Data / backend
-          if (
-            id.includes('/node_modules/@supabase/') ||
-            id.includes('/node_modules/@tanstack/')
-          ) return 'data-layer';
-
-          // Maps
+          // Maps - heavy library
           if (id.includes('/node_modules/leaflet/')) return 'maps';
 
-          // Charts
-          if (
-            id.includes('/node_modules/d3-') ||
-            id.includes('/node_modules/internmap/')
-          ) return 'charts-d3';
-          if (
-            id.includes('/node_modules/recharts/') ||
-            id.includes('/node_modules/recharts-scale/') ||
-            id.includes('/node_modules/react-smooth/') ||
-            id.includes('/node_modules/eventemitter3/') ||
-            id.includes('/node_modules/fast-equals/') ||
-            id.includes('/node_modules/prop-types/') ||
-            id.includes('/node_modules/tiny-invariant/') ||
-            id.includes('/node_modules/decimal.js-light/')
-          ) return 'charts';
+          // Charts - ultra-granular
+          if (id.includes('/node_modules/d3-scale')) return 'charts-d3-scale';
+          if (id.includes('/node_modules/d3-shape')) return 'charts-d3-shape';
+          if (id.includes('/node_modules/d3-') || id.includes('/node_modules/internmap/')) return 'charts-d3';
+          if (id.includes('/node_modules/recharts/')) return 'charts-recharts';
+          if (id.includes('/node_modules/recharts-scale/') || id.includes('/node_modules/react-smooth/')) return 'charts-utils';
 
           // Forms
-          if (
-            id.includes('/node_modules/react-hook-form/') ||
-            id.includes('/node_modules/react-day-picker/')
-          ) return 'forms';
+          if (id.includes('/node_modules/react-hook-form/')) return 'forms';
+          if (id.includes('/node_modules/react-day-picker/')) return 'date-picker';
 
-          if (
-            id.includes('/node_modules/@sentry/') ||
-            id.includes('/node_modules/hoist-non-react-statics/')
-          ) return 'monitoring';
+          // Monitoring - split by module
+          if (id.includes('/node_modules/@sentry/browser')) return 'sentry-browser';
+          if (id.includes('/node_modules/@sentry/')) return 'sentry-core';
 
           // Payments
           if (id.includes('/node_modules/@stripe/')) return 'payments';
+
+          // OpenTelemetry - split by module
+          if (id.includes('/node_modules/@opentelemetry/api')) return 'otel-api';
+          if (id.includes('/node_modules/@opentelemetry/')) return 'otel-sdk';
+
+          // Validation
+          if (id.includes('/node_modules/zod/')) return 'validation';
+          
+          // Utilities
+          if (id.includes('/node_modules/clsx') || id.includes('/node_modules/tailwind-merge')) return 'css-utils';
+          if (id.includes('/node_modules/class-variance-authority')) return 'cva';
 
           return undefined;
         },
