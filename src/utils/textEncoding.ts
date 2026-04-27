@@ -1,6 +1,8 @@
-var mojibakePattern: RegExp | undefined;
-var utf8Decoder: TextDecoder | undefined;
-var windows1252Bytes: Map<string, number> | undefined;
+let mojibakePattern: RegExp | undefined;
+let utf8Decoder: TextDecoder | undefined;
+let windows1252ByteByChar: Map<string, number> | undefined;
+
+type UnknownRecord = Record<string, unknown>;
 
 function escapeForRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -9,23 +11,12 @@ function escapeForRegex(value: string): string {
 function getSuspiciousTokens() {
   return [
     '\uFFFD',
-    'Ãƒ',
-    'Ã‚Â©',
-    'Ã‚Â·',
-    'Ã‚Â±',
-    'Ã¢â‚¬Â¦',
-    'Ã¢â‚¬Â¢',
-    'Ã¢Å“â€œ',
-    'Ã¢Å“â€¦',
-    'Ã¢â€ â€™',
-    'Ã¢â‚¬â€œ',
-    'Ã¢â‚¬â€',
-    'Ã¢â‚¬',
-    'Ã°Å¸',
-    'Ã˜',
-    'Ã™',
-    'Ã¢â€â‚¬',
-    'Ã¢Å¡',
+    'Â',
+    'Ã',
+    'Ø',
+    'Ù',
+    'â€',
+    'ðŸ',
   ] as const;
 }
 
@@ -49,40 +40,40 @@ function getUtf8Decoder() {
   return utf8Decoder;
 }
 
-function getWindows1252Bytes() {
-  if (!windows1252Bytes) {
-    windows1252Bytes = new Map<string, number>([
-      ['â‚¬', 0x80],
-      ['â€š', 0x82],
-      ['Æ’', 0x83],
-      ['â€ž', 0x84],
-      ['â€¦', 0x85],
-      ['â€ ', 0x86],
-      ['â€¡', 0x87],
-      ['Ë†', 0x88],
-      ['â€°', 0x89],
-      ['Å ', 0x8a],
-      ['â€¹', 0x8b],
-      ['Å’', 0x8c],
-      ['Å½', 0x8e],
-      ['â€˜', 0x91],
-      ['â€™', 0x92],
-      ['â€œ', 0x93],
-      ['â€', 0x94],
-      ['â€¢', 0x95],
-      ['â€“', 0x96],
-      ['â€”', 0x97],
-      ['Ëœ', 0x98],
-      ['â„¢', 0x99],
-      ['Å¡', 0x9a],
-      ['â€º', 0x9b],
-      ['Å“', 0x9c],
-      ['Å¾', 0x9e],
-      ['Å¸', 0x9f],
+function getWindows1252ByteByChar() {
+  if (!windows1252ByteByChar) {
+    windows1252ByteByChar = new Map<string, number>([
+      ['€', 0x80],
+      ['‚', 0x82],
+      ['ƒ', 0x83],
+      ['„', 0x84],
+      ['…', 0x85],
+      ['†', 0x86],
+      ['‡', 0x87],
+      ['ˆ', 0x88],
+      ['‰', 0x89],
+      ['Š', 0x8a],
+      ['‹', 0x8b],
+      ['Œ', 0x8c],
+      ['Ž', 0x8e],
+      ['‘', 0x91],
+      ['’', 0x92],
+      ['“', 0x93],
+      ['”', 0x94],
+      ['•', 0x95],
+      ['–', 0x96],
+      ['—', 0x97],
+      ['˜', 0x98],
+      ['™', 0x99],
+      ['š', 0x9a],
+      ['›', 0x9b],
+      ['œ', 0x9c],
+      ['ž', 0x9e],
+      ['Ÿ', 0x9f],
     ]);
   }
 
-  return windows1252Bytes;
+  return windows1252ByteByChar;
 }
 
 function getMojibakePattern() {
@@ -95,8 +86,8 @@ function getMojibakePattern() {
 
 function decodeLatin1AsUtf8(value: string): string {
   const bytes = Uint8Array.from(
-    Array.from(value, char => {
-      const mappedByte = getWindows1252Bytes().get(char);
+    Array.from(value, (char) => {
+      const mappedByte = getWindows1252ByteByChar().get(char);
       if (typeof mappedByte === 'number') {
         return mappedByte;
       }
@@ -105,6 +96,7 @@ function decodeLatin1AsUtf8(value: string): string {
       return codePoint <= 0xff ? codePoint : 0x3f;
     }),
   );
+
   return getUtf8Decoder().decode(bytes);
 }
 
@@ -182,12 +174,12 @@ export function normalizeTextTree<T>(value: T): T {
   }
 
   if (Array.isArray(value)) {
-    return value.map(item => normalizeTextTree(item)) as T;
+    return value.map((item) => normalizeTextTree(item)) as T;
   }
 
   if (value && typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).map(([key, item]) => [
+      Object.entries(value as UnknownRecord).map(([key, item]) => [
         key,
         normalizeTextTree(item),
       ]),

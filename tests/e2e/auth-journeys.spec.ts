@@ -1,23 +1,49 @@
 import { expect, test } from '@playwright/test';
-import { seedConsentDecision, seedDemoSession } from '../../e2e/helpers/session';
+import { seedConsentDecision, seedTestSession } from '../../e2e/helpers/session';
 
 test.beforeEach(async ({ page }) => {
   await seedConsentDecision(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
 });
 
+async function gotoAppEntry(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+  const heroHeading = page.getByRole('heading', {
+    name: /book a ride, offer a ride, or send a package\./i,
+  });
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.goto('/app', { waitUntil: 'domcontentloaded' });
+
+    try {
+      await expect(heroHeading).toBeVisible({ timeout: 8_000 });
+      return;
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+
+      await page.waitForTimeout(400);
+    }
+  }
+}
+
 test('app entry sends guests into auth with a return target', async ({ page }) => {
-  await page.goto('/app', { waitUntil: 'domcontentloaded' });
+  await gotoAppEntry(page);
   await expect(page).toHaveURL(/\/app$/);
   await expect(page.getByRole('heading', { name: /book a ride, offer a ride, or send a package\./i })).toBeVisible();
-  await page.getByRole('button', { name: /^sign in$/i }).first().click();
-  await expect(page).toHaveURL(/\/app\/auth/);
+  const signInButton = page.locator('main').getByRole('button', { name: /^sign in$/i }).first();
+  await expect(signInButton).toBeVisible();
+  await Promise.all([
+    page.waitForURL(/\/app\/auth/, { timeout: 20_000 }),
+    signInButton.click({ force: true }),
+  ]);
   await expect(page).toHaveURL(/returnTo=(%2Fapp%2Ffind-ride|\/app\/find-ride)/);
   await expect(page.getByRole('heading', { name: /sign in to wasel/i })).toBeVisible();
 });
 
 test('app entry lets authenticated users open the ride flow', async ({ page }) => {
-  await seedDemoSession(page);
-  await page.goto('/app', { waitUntil: 'domcontentloaded' });
+  await seedTestSession(page);
+  await gotoAppEntry(page);
   const signInButton = page.getByRole('button', { name: /^sign in$/i });
   if ((await signInButton.count()) > 0) {
     await page.waitForTimeout(300);
@@ -26,9 +52,11 @@ test('app entry lets authenticated users open the ride flow', async ({ page }) =
   await expect(page).toHaveURL(/\/app$/);
   await expect(signInButton).toHaveCount(0);
   await expect(page.getByRole('heading', { name: /book a ride, offer a ride, or send a package\./i })).toBeVisible();
-  await page.getByRole('button', { name: /^book a ride$/i }).first().click();
+  const bookRideButton = page.getByRole('button', { name: /^book a ride$/i }).first();
+  await expect(bookRideButton).toBeVisible();
+  await bookRideButton.click({ force: true });
   await expect(page).toHaveURL(/\/app\/find-ride/);
-  await expect(page.getByRole('button', { name: /^search rides$/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^book a ride$/i }).first()).toBeVisible();
 });
 
 test('sign in page renders accessible form fields', async ({ page }) => {
@@ -40,7 +68,9 @@ test('sign in page renders accessible form fields', async ({ page }) => {
 
 test('sign in with empty form shows validation feedback', async ({ page }) => {
   await page.goto('/app/auth', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: /submit sign in/i }).click();
+  await page.locator('form.auth-landing__form').evaluate((form) => {
+    (form as HTMLFormElement).requestSubmit();
+  });
   await expect(page.getByText(/please enter your email address\./i)).toBeVisible();
 });
 

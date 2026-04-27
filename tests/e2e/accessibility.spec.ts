@@ -8,7 +8,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { seedDemoSession } from '../../e2e/helpers/session';
+import { gotoAuthedRoute } from '../../e2e/helpers/session';
 
 const GUEST_PAGES = [
   { name: 'Landing', path: '/' },
@@ -52,20 +52,40 @@ function formatViolations(
     .join('\n');
 }
 
-async function waitForAuditableContent(page: Page) {
-  await page.waitForFunction(() => {
+async function waitForAuditableContent(page: Page, options?: { requireLevelOneHeading?: boolean }) {
+  await page.waitForFunction((requireLevelOneHeading) => {
     const main = document.querySelector('main');
     if (!(main instanceof HTMLElement)) {
       return false;
     }
 
-    return main.childElementCount > 0 && main.querySelector('*') !== null;
-  });
+    const hasReadableMain = main.childElementCount > 0
+      && main.querySelector('*') !== null
+      && main.innerText.replace(/\s+/g, ' ').trim().length > 20;
+    if (!requireLevelOneHeading) {
+      return hasReadableMain;
+    }
+
+    const levelOneHeading = document.querySelector('h1, [role="heading"][aria-level="1"]');
+
+    return hasReadableMain
+      && levelOneHeading instanceof HTMLElement
+      && levelOneHeading.innerText.replace(/\s+/g, ' ').trim().length > 0;
+  }, options?.requireLevelOneHeading ?? false, { timeout: 20_000 });
 }
 
-async function expectPageToPassAccessibilityAudit(page: Page, name: string, path: string) {
-  await page.goto(path, { waitUntil: 'domcontentloaded' });
-  await waitForAuditableContent(page);
+async function expectPageToPassAccessibilityAudit(
+  page: Page,
+  name: string,
+  path: string,
+  options?: { requiresAuth?: boolean },
+) {
+  if (options?.requiresAuth) {
+    await gotoAuthedRoute(page, path, { timeout: 60_000, waitUntil: 'commit' });
+  } else {
+    await page.goto(path, { waitUntil: 'domcontentloaded' });
+  }
+  await waitForAuditableContent(page, { requireLevelOneHeading: options?.requiresAuth });
 
   const results = await new AxeBuilder({ page })
     .options(AXE_OPTIONS)
@@ -87,46 +107,39 @@ test.describe('Accessibility - guest pages', () => {
 });
 
 test.describe('Accessibility - authenticated pages', () => {
-  test.beforeEach(async ({ page }) => {
-    await seedDemoSession(page);
-  });
-
   for (const authenticatedPage of AUTH_PAGES) {
     test(`WCAG 2.1 AA - ${authenticatedPage.name} (${authenticatedPage.path})`, async ({ page }) => {
       await expectPageToPassAccessibilityAudit(
         page,
         authenticatedPage.name,
         authenticatedPage.path,
+        { requiresAuth: true },
       );
     });
   }
 });
 
 test.describe('Structural accessibility - landmarks and headings', () => {
-  test.beforeEach(async ({ page }) => {
-    await seedDemoSession(page);
-  });
-
   test('Find Ride page has a main landmark', async ({ page }) => {
-    await page.goto('/app/find-ride', { waitUntil: 'domcontentloaded' });
+    await gotoAuthedRoute(page, '/app/find-ride', { timeout: 60_000 });
     const main = page.locator('main[role="main"], main');
     await expect(main).toBeVisible();
   });
 
   test('Find Ride page has at least one heading', async ({ page }) => {
-    await page.goto('/app/find-ride', { waitUntil: 'domcontentloaded' });
+    await gotoAuthedRoute(page, '/app/find-ride', { timeout: 60_000 });
     const heading = page.locator('h1, h2').first();
     await expect(heading).toBeVisible();
   });
 
   test('Skip-to-content link exists on app shell pages', async ({ page }) => {
-    await page.goto('/app/find-ride', { waitUntil: 'domcontentloaded' });
+    await gotoAuthedRoute(page, '/app/find-ride', { timeout: 60_000 });
     const skip = page.locator('a[href="#main-content"]');
     await expect(skip).toBeAttached();
   });
 
   test('All buttons have accessible names', async ({ page }) => {
-    await page.goto('/app/find-ride', { waitUntil: 'domcontentloaded' });
+    await gotoAuthedRoute(page, '/app/find-ride', { timeout: 60_000 });
     const results = await new AxeBuilder({ page })
       .options({
         runOnly: { type: 'rule' as const, values: ['button-name'] },

@@ -34,7 +34,9 @@ async function prepareVisualState(
           currency: 'JOD',
         }),
       );
-    } catch {}
+    } catch {
+      // Ignore errors in init script
+    }
   });
 }
 
