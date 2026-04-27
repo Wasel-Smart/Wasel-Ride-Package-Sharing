@@ -57,6 +57,15 @@ jobs:
       - name: Lint (zero warnings)
         run: npm run lint:strict
 
+      - name: Domain boundary enforcement
+        run: npm run check:domain-boundaries
+
+      - name: Translation completeness gate
+        run: npm run check:translations
+
+      - name: OpenAPI contract drift check
+        run: npm run check:openapi
+
       - name: Security audit (critical vulnerabilities)
         run: npm audit --audit-level=critical
 
@@ -148,16 +157,23 @@ jobs:
               }, 0);
             }
 
+            function collectJsFiles(dir) {
+              return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+                const full = path.join(dir, entry.name);
+                return entry.isDirectory() ? collectJsFiles(full) : (entry.name.endsWith('.js') ? [full] : []);
+              });
+            }
+
             const assetsDir = './dist/assets';
             if (!fs.existsSync(assetsDir)) { console.log('No assets dir — skipping'); process.exit(0); }
 
-            const jsFiles = fs.readdirSync(assetsDir).filter(f => f.endsWith('.js'));
-            const large = jsFiles.filter(f => fs.statSync(path.join(assetsDir, f)).size > 200 * 1024);
+            const jsFiles = collectJsFiles(assetsDir);
+            const large = jsFiles.filter(f => fs.statSync(f).size > 200 * 1024);
             
             if (large.length > 0) {
               large.forEach(f => {
-                const kb = (fs.statSync(path.join(assetsDir, f)).size / 1024).toFixed(1);
-                console.error('OVER BUDGET:', f, kb + ' KB (limit: 200 KB)');
+                const kb = (fs.statSync(f).size / 1024).toFixed(1);
+                console.error('OVER BUDGET:', path.relative(assetsDir, f), kb + ' KB (limit: 200 KB)');
               });
               process.exit(1);
             }

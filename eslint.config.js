@@ -108,4 +108,41 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: ['src/domains/*/domain/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [
+          '@/components/*',
+          '@/features/*',
+          '@/layouts/*',
+          '@/pages/*',
+          '@/services/*',
+        ],
+      }],
+    },
+  },
+  {
+    files: ['src/domains/*/application/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [
+          '@/components/*',
+          '@/features/*',
+          '@/layouts/*',
+          '@/pages/*',
+        ],
+      }],
+    },
+  },
+  {
+    files: ['src/domains/*/presentation/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [
+          '@/services/*',
+        ],
+      }],
+    },
+  },
 );

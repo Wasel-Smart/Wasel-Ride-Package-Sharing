@@ -24,12 +24,21 @@ function collectBundleMetrics() {
     return null;
   }
 
-  const chunks = fs.readdirSync(assetsDir)
-    .filter((file) => file.endsWith('.js'))
-    .map((file) => {
-      const size = fs.statSync(path.join(assetsDir, file)).size;
+  function collectJsFiles(directory) {
+    return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+      const fullPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        return collectJsFiles(fullPath);
+      }
+      return entry.name.endsWith('.js') ? [fullPath] : [];
+    });
+  }
+
+  const chunks = collectJsFiles(assetsDir)
+    .map((filePath) => {
+      const size = fs.statSync(filePath).size;
       return {
-        file,
+        file: path.relative(assetsDir, filePath).replace(/\\/g, '/'),
         bytes: size,
         kilobytes: Number((size / 1024).toFixed(2)),
       };
@@ -39,7 +48,7 @@ function collectBundleMetrics() {
   return {
     totalJsBytes: chunks.reduce((sum, chunk) => sum + chunk.bytes, 0),
     largestChunks: chunks.slice(0, 10),
-    overBudgetChunks: chunks.filter((chunk) => chunk.bytes > 250 * 1024),
+    overBudgetChunks: chunks.filter((chunk) => chunk.bytes > 200 * 1024),
   };
 }
 

@@ -1,10 +1,12 @@
 import * as Sentry from '@sentry/react';
+import { initializePlatformTelemetry, subscribeToDomainEvent, trackDomainEvent } from '@/platform';
 import { registerMonitoringSink, type LogContext } from './logging';
 
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 const APP_ENV = import.meta.env.VITE_APP_ENV || 'development';
 const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
 let sentryInitialized = false;
+let eventObserverAttached = false;
 
 type MonitoringContext = Record<string, unknown>;
 
@@ -30,8 +32,23 @@ export function initializeSentry() {
     return;
   }
 
+  initializePlatformTelemetry({
+    environment: APP_ENV,
+    exporterUrl: import.meta.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT,
+    serviceName: 'wasel-web',
+    serviceVersion: APP_VERSION,
+  });
+
+  if (!eventObserverAttached) {
+    subscribeToDomainEvent((event) => {
+      trackDomainEvent(event);
+    });
+    eventObserverAttached = true;
+  }
+
   if (!SENTRY_DSN) {
     console.warn('Sentry DSN not configured. Error tracking disabled.');
+    sentryInitialized = true;
     return;
   }
 

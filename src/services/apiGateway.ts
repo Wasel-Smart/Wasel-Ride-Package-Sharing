@@ -1,47 +1,21 @@
 /**
  * ApiGateway
  *
- * A single, typed façade over all outbound network calls.
- *
- * WHY THIS EXISTS
- * ───────────────
- * Without a gateway, business services (rideLifecycle, walletApi, etc.)
- * each call `fetchWithRetry` / `supabase.*` directly. That means:
- *
- *   - Auth header injection is repeated in every caller
- *   - Request/response logging has no central home
- *   - Mocking the network in tests requires patching many modules
- *   - Changing the backend URL or auth scheme requires touching every file
- *
- * The gateway fixes all four problems by acting as the *only* module
- * allowed to build raw HTTP or Supabase calls.
- *
- * USAGE
- * ─────
- * import { apiGateway } from '@/services/apiGateway';
- *
- * // Authenticated JSON POST
- * const data = await apiGateway.post<MyResponseType>('/wallet/withdraw', { amount: 50 });
- *
- * // Authenticated JSON GET
- * const wallet = await apiGateway.get<WalletData>('/wallet');
- *
- * // Health probe (no auth required)
- * const healthy = await apiGateway.health();
- *
- * DESIGN RULES
- * ────────────
- *  1. This module never imports from feature modules. Dependency
- *     direction is strictly: features → gateway → core/supabase.
- *  2. All public methods are async and return typed values (never raw Response).
- *  3. Network errors surface as typed GatewayError instances, never plain strings.
- *  4. Auth tokens are obtained once per request; no caller manages Bearer headers.
+ * Single typed facade over outbound HTTP traffic.
  */
 
 import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey } from './core';
+import {
+  CircuitBreaker,
+  createRequestContext,
+  createSignedHeaders,
+  recordMetric,
+  startTelemetrySpan,
+  toRequestHeaders,
+  validateJwtClaims,
+  withTimeout,
+} from '@/platform';
 import { logger } from '../utils/logging';
-
-// ─── Gateway error ────────────────────────────────────────────────────────────
 
 export class GatewayError extends Error {
   constructor(
@@ -55,19 +29,71 @@ export class GatewayError extends Error {
   }
 }
 
-// ─── Internal helpers ─────────────────────────────────────────────────────────
+const apiGatewayCircuit = new CircuitBreaker({
+  cooldownMs: 10_000,
+  failureThreshold: 3,
+  successThreshold: 2,
+});
 
 function isConfigured(): boolean {
   return Boolean(API_URL && publicAnonKey);
 }
 
-async function buildHeaders(requireAuth: boolean): Promise<Record<string, string>> {
-  const base: Record<string, string> = { 'Content-Type': 'application/json' };
+function getRequestLocale(): string {
+  if (typeof document !== 'undefined' && document.documentElement.lang) {
+    return document.documentElement.lang;
+  }
+  if (typeof navigator !== 'undefined' && navigator.language) {
+    return navigator.language;
+  }
+  return 'en';
+}
 
-  if (!requireAuth) return base;
+function isStrictJwtValidationEnabled(): boolean {
+  return import.meta.env.MODE !== 'test';
+}
+
+async function buildHeaders(
+  requireAuth: boolean,
+  body?: unknown,
+): Promise<Record<string, string>> {
+  const requestContext = createRequestContext(getRequestLocale());
+  const base: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...toRequestHeaders(requestContext),
+  };
+
+  if (!requireAuth) {
+    return base;
+  }
 
   const { token } = await getAuthDetails();
-  return { ...base, Authorization: `Bearer ${token}` };
+  const validation = validateJwtClaims(token, {
+    issuerIncludes: 'supabase',
+    requiredClaims: ['sub', 'exp'],
+  });
+
+  if (!validation.isValid) {
+    if (!isStrictJwtValidationEnabled()) {
+      return {
+        ...base,
+        ...(body === undefined ? {} : await createSignedHeaders(body, token)),
+        Authorization: `Bearer ${token}`,
+      };
+    }
+
+    throw new GatewayError(
+      validation.reason ?? 'JWT validation failed before request dispatch.',
+      401,
+      'local.jwt.validation',
+    );
+  }
+
+  return {
+    ...base,
+    ...(body === undefined ? {} : await createSignedHeaders(body, token)),
+    Authorization: `Bearer ${token}`,
+  };
 }
 
 async function executeRequest<T>(
@@ -80,26 +106,52 @@ async function executeRequest<T>(
 
   if (!isConfigured()) {
     throw new GatewayError(
-      `API gateway is not configured. Set VITE_API_URL and Supabase keys.`,
+      'API gateway is not configured. Set VITE_API_URL and Supabase keys.',
       0,
       path,
     );
   }
 
+  if (!apiGatewayCircuit.canExecute()) {
+    throw new GatewayError(
+      'Circuit breaker is open for the API gateway. Refusing a risky outbound request.',
+      503,
+      path,
+      { circuit: apiGatewayCircuit.getSnapshot() },
+    );
+  }
+
   const url = `${API_URL}${path}`;
-  const headers = await buildHeaders(requireAuth);
+  const headers = await buildHeaders(requireAuth, body);
+  const span = startTelemetrySpan(`api.${method.toLowerCase()} ${path}`, {
+    method,
+    path,
+    requireAuth,
+  });
+  const startedAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
 
   let response: Response;
 
   try {
-    response = await fetchWithRetry(url, {
-      headers,
-      method,
-      timeout,
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-    });
+    response = await withTimeout(
+      () => fetchWithRetry(url, {
+        headers,
+        method,
+        timeout,
+        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      }),
+      timeout + 1_000,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    apiGatewayCircuit.recordFailure();
+    span.fail(error, { path, stage: 'network' });
+    recordMetric({
+      name: 'api.request.failure',
+      value: 1,
+      unit: 'count',
+      tags: { method, path, reason: 'network' },
+    });
     logger.warning(`[ApiGateway] Network error on ${method} ${path}`, { error: message });
     throw new GatewayError(`Network error: ${message}`, 0, path, { method });
   }
@@ -110,85 +162,80 @@ async function executeRequest<T>(
       const payload = await response.json() as { error?: string; message?: string };
       errorMessage = payload.error ?? payload.message ?? errorMessage;
     } catch {
-      // Non-JSON error body — keep the default message.
+      // Keep the default error message when the body is not JSON.
     }
 
+    apiGatewayCircuit.recordFailure();
+    span.fail(new Error(errorMessage), { path, status: response.status });
+    recordMetric({
+      name: 'api.request.failure',
+      value: 1,
+      unit: 'count',
+      tags: { method, path, reason: 'response', status: response.status },
+    });
     logger.warning(`[ApiGateway] ${errorMessage}`, { method, path, status: response.status });
     throw new GatewayError(errorMessage, response.status, path, { method });
   }
 
   try {
+    const duration = Math.round(
+      (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startedAt,
+    );
+    apiGatewayCircuit.recordSuccess();
+    span.end({ durationMs: duration, status: response.status });
+    recordMetric({
+      name: 'api.request.success',
+      value: duration,
+      unit: 'ms',
+      tags: { method, path, status: response.status },
+    });
     return (await response.json()) as T;
-  } catch {
+  } catch (error) {
+    apiGatewayCircuit.recordFailure();
+    span.fail(error, { path, stage: 'parse' });
     throw new GatewayError(`Failed to parse JSON from ${method} ${path}`, response.status, path);
   }
 }
 
-// ─── Public gateway object ────────────────────────────────────────────────────
-
 export const apiGateway = {
-  /**
-   * Perform an authenticated GET request and return the parsed JSON body.
-   *
-   * @example
-   * const wallet = await apiGateway.get<WalletData>('/wallet');
-   */
   async get<T>(path: string, opts?: { timeout?: number }): Promise<T> {
     return executeRequest<T>('GET', path, undefined, opts);
   },
 
-  /**
-   * Perform an authenticated POST request and return the parsed JSON body.
-   *
-   * @example
-   * const intent = await apiGateway.post<PaymentIntent>('/payments/create-intent', { amount: 50 });
-   */
   async post<T>(path: string, body: unknown, opts?: { timeout?: number }): Promise<T> {
     return executeRequest<T>('POST', path, body, opts);
   },
 
-  /**
-   * Perform an authenticated PUT request.
-   */
   async put<T>(path: string, body: unknown, opts?: { timeout?: number }): Promise<T> {
     return executeRequest<T>('PUT', path, body, opts);
   },
 
-  /**
-   * Perform an authenticated PATCH request.
-   */
   async patch<T>(path: string, body: unknown, opts?: { timeout?: number }): Promise<T> {
     return executeRequest<T>('PATCH', path, body, opts);
   },
 
-  /**
-   * Perform an authenticated DELETE request.
-   */
   async delete<T>(path: string, opts?: { timeout?: number }): Promise<T> {
     return executeRequest<T>('DELETE', path, undefined, opts);
   },
 
-  /**
-   * Probe the backend health endpoint.
-   * Returns true when the backend is reachable and healthy.
-   * Never throws — returns false on any error.
-   *
-   * @example
-   * const healthy = await apiGateway.health();
-   */
   async health(timeout = 5_000): Promise<boolean> {
-    if (!isConfigured()) return false;
+    if (!isConfigured()) {
+      return false;
+    }
 
     try {
       const headers = await buildHeaders(false).catch(() => ({
         Authorization: `Bearer ${publicAnonKey}`,
       }));
 
-      const response = await fetchWithRetry(`${API_URL}/health`, {
-        headers,
-        method: 'GET',
-        timeout,
-      });
+      const response = await withTimeout(
+        () => fetchWithRetry(`${API_URL}/health`, {
+          headers,
+          method: 'GET',
+          timeout,
+        }),
+        timeout + 500,
+      );
 
       return response.ok;
     } catch {
@@ -196,10 +243,6 @@ export const apiGateway = {
     }
   },
 
-  /**
-   * True when the gateway has a configured API_URL and anon key.
-   * Use this to decide whether to attempt network calls at all.
-   */
   isConfigured(): boolean {
     return isConfigured();
   },
