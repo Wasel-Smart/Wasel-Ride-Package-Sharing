@@ -220,7 +220,7 @@ function trackLandingNavigation(path: string, language: 'en' | 'ar', userId?: st
 }
 
 export default function AppEntryPage() {
-  const { user } = useLocalAuth();
+  const { user, loading: authLoading } = useLocalAuth();
   const { signInWithGoogle, signInWithFacebook } = useAuth();
   const authProviders = useAuthProviderAvailability();
   const { language } = useLanguage();
@@ -237,13 +237,15 @@ export default function AppEntryPage() {
   const businessAddress = ar ? profile.businessAddressAr : profile.businessAddress;
   const signInPath = buildAuthPagePath('signin', APP_ENTRY_DEFAULT_RETURN_TO);
   const signUpPath = buildAuthPagePath('signup', APP_ENTRY_DEFAULT_RETURN_TO);
+  const showGuestEntryPoints = !authLoading && !user;
 
   const navigateLanding = (path: string) => {
     trackLandingNavigation(path, language, user?.id);
     navigate(path);
   };
 
-  const protectedPath = (path: string) => (user ? path : buildAuthPagePath('signin', path));
+  const protectedPath = (path: string) =>
+    authLoading || user ? path : buildAuthPagePath('signin', path);
   const primaryPath = buildAppEntryPrimaryPath(mode, route);
   const contextualSignInPath = buildAuthPagePath('signin', primaryPath);
   const selectedFromLabel =
@@ -421,7 +423,7 @@ export default function AppEntryPage() {
 
           <div className="app-entry-page__header-actions">
             <WaselContactActionRow ar={ar} compact />
-            {!user ? (
+            {showGuestEntryPoints ? (
               <div className="app-entry-page__auth-links">
                 <button type="button" onClick={() => navigateLanding(signInPath)}>
                   <LogIn size={16} />
@@ -617,7 +619,7 @@ export default function AppEntryPage() {
                   </button>
                 </div>
 
-                {!user ? (
+                {showGuestEntryPoints ? (
                   <div className="app-entry-page__guest-auth">
                     <p>{copy.guestLead}</p>
                     <div className="app-entry-page__guest-auth-buttons">

@@ -1,6 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const isCI = Boolean(process.env.CI);
+const PLAYWRIGHT_HOST = process.env.PLAYWRIGHT_HOST ?? '127.0.0.1';
+const PLAYWRIGHT_PORT = Number(process.env.PLAYWRIGHT_PORT ?? '4273');
+const PLAYWRIGHT_BASE_URL = `http://${PLAYWRIGHT_HOST}:${PLAYWRIGHT_PORT}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -17,7 +20,7 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: PLAYWRIGHT_BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'off',
@@ -30,8 +33,13 @@ export default defineConfig({
 
   webServer: {
     command: 'node scripts/playwright-web-server.mjs',
-    url: 'http://127.0.0.1:4173',
-    reuseExistingServer: !isCI,
+    env: {
+      ...process.env,
+      PLAYWRIGHT_HOST,
+      PLAYWRIGHT_PORT: String(PLAYWRIGHT_PORT),
+    },
+    url: PLAYWRIGHT_BASE_URL,
+    reuseExistingServer: false,
     timeout: 300_000,
     stderr: 'pipe',
   },
