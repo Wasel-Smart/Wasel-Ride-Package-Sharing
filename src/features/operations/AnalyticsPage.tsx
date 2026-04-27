@@ -27,21 +27,30 @@ import { buildCorridorCommercialSnapshot, type CorridorCommercialSnapshot } from
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
 
 /* ─── Design tokens ──────────────────────────────────────────────────────────── */
-const BG = '#051321';
-const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.052), rgba(255,255,255,0.02))';
-const CARD2 = 'rgba(255,255,255,0.028)';
-const BORDER = 'rgba(93,150,210,0.15)';
-const CYAN = '#47B7E6';
-const GOLD = '#A8D614';
-const GREEN = '#6BB515';
-const BLUE = '#3B82F6';
+const BG = 'var(--wasel-service-bg)';
+const CARD = 'var(--wasel-service-card)';
+const CARD2 = 'var(--wasel-service-card-2)';
+const BORDER = 'var(--wasel-service-border)';
+const TRACK = 'var(--surface-muted-strong)';
+const CYAN = 'var(--wasel-app-blue)';
+const GOLD = 'var(--wasel-app-sky)';
+const GREEN = 'var(--wasel-app-teal)';
+const BLUE = 'var(--wasel-app-blue-strong)';
 const RED = '#F97316';
-const TEXT = '#EFF6FF';
-const SUB = 'rgba(148,163,184,0.82)';
+const TEXT = 'var(--wasel-service-text)';
+const SUB = 'var(--wasel-service-sub)';
 const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 function card(extra?: React.CSSProperties): React.CSSProperties {
-  return { background: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: '20px 20px 18px', ...extra };
+  return {
+    background: CARD,
+    border: `1px solid ${BORDER}`,
+    borderRadius: 24,
+    padding: '20px 20px 18px',
+    boxShadow: 'var(--wasel-shadow-card)',
+    backdropFilter: 'blur(18px)',
+    ...extra,
+  };
 }
 
 /* ─── Subcomponents ──────────────────────────────────────────────────────────── */
@@ -82,7 +91,7 @@ function FunnelBar({
         <span style={{ color: TEXT, fontWeight: 700 }}>{label}</span>
         <span style={{ color, fontWeight: 800 }}>{value} <span style={{ color: SUB, fontWeight: 400 }}>({pct}%)</span></span>
       </div>
-      <div style={{ height: 7, background: 'rgba(255,255,255,0.07)', borderRadius: 4, overflow: 'hidden' }}>
+      <div style={{ height: 7, background: TRACK, borderRadius: 4, overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 4, transition: 'width 0.6s ease' }} />
       </div>
     </div>
@@ -166,7 +175,7 @@ export default function AnalyticsPage() {
       <div style={{ maxWidth: 1160, margin: '0 auto', padding: '32px 16px 0' }}>
 
         {/* Header */}
-        <div style={{ ...card({ background: 'linear-gradient(135deg, rgba(168,214,20,0.14), rgba(71,183,230,0.08))', border: `1px solid ${GOLD}33`, padding: '24px 24px 22px' }), marginBottom: 20 }}>
+        <div style={{ ...card({ background: 'linear-gradient(135deg, rgba(101,225,255,0.16), rgba(25,231,187,0.08))', border: `1px solid ${GOLD}33`, padding: '24px 24px 22px' }), marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ width: 52, height: 52, borderRadius: 16, background: `${GOLD}18`, border: `1.5px solid ${GOLD}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -187,7 +196,7 @@ export default function AnalyticsPage() {
               <button
                 onClick={() => void loadData()}
                 disabled={loading}
-                style={{ height: 36, padding: '0 14px', borderRadius: 10, border: `1px solid ${BORDER}`, background: loading ? 'transparent' : 'rgba(255,255,255,0.06)', color: loading ? SUB : TEXT, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT, fontSize: '0.78rem' }}
+                style={{ height: 36, padding: '0 14px', borderRadius: 10, border: `1px solid ${BORDER}`, background: loading ? 'transparent' : CARD2, color: loading ? SUB : TEXT, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT, fontSize: '0.78rem' }}
               >
                 <RefreshCw size={13} style={{ animation: loading ? 'wasel-spin 0.9s linear infinite' : 'none' }} />
                 Refresh
@@ -245,7 +254,7 @@ export default function AnalyticsPage() {
                       <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: TEXT, fontWeight: 700 }}>{item.icon}{item.label}</span>
                       <span style={{ color: item.color, fontWeight: 800 }}>{item.value} <span style={{ color: SUB, fontWeight: 400 }}>({pct}%)</span></span>
                     </div>
-                    <div style={{ height: 6, background: 'rgba(255,255,255,0.07)', borderRadius: 3, overflow: 'hidden' }}>
+                    <div style={{ height: 6, background: TRACK, borderRadius: 3, overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${pct}%`, background: item.color, borderRadius: 3, transition: 'width 0.6s ease' }} />
                     </div>
                   </div>

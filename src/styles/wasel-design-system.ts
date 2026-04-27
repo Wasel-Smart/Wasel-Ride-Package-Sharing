@@ -6,61 +6,61 @@
 
 export const WaselColors = {
   /* Backgrounds */
-  bg:         '#050b1a',
-  surface:    '#080f1e',
-  card:       '#0c1628',
-  cardSolid:  '#0b1627',
-  card2:      '#111e32',
+  bg:         'var(--bg-primary)',
+  surface:    'var(--surface-soft)',
+  card:       'var(--wasel-service-card)',
+  cardSolid:  'var(--surface-glass)',
+  card2:      'var(--wasel-service-card-2)',
 
   /* Borders */
-  border:     'rgba(25,231,187,0.13)',
-  borderHov:  'rgba(25,231,187,0.28)',
-  borderGlow: 'rgba(162,255,231,0.28)',
-  borderDark: 'rgba(5,11,26,0.72)',
+  border:     'var(--wasel-service-border)',
+  borderHov:  'var(--wasel-service-border-strong)',
+  borderGlow: 'rgb(var(--accent-secondary-rgb) / 0.28)',
+  borderDark: 'color-mix(in srgb, var(--bg-primary) 72%, transparent)',
 
   /* Brand palette */
-  cyan:       '#19e7bb',
-  cyanBright: '#22ffce',
-  cyanDark:   '#0bc3a0',
-  cyanDim:    'rgba(25,231,187,0.12)',
-  cyanGlow:   'rgba(25,231,187,0.20)',
-  teal:       '#a2ffe7',
-  blue:       '#65e1ff',
-  blueDim:    'rgba(101,225,255,0.12)',
-  green:      '#a2ffe7',
-  greenDim:   'rgba(162,255,231,0.12)',
-  gold:       '#48cfff',
-  goldDim:    'rgba(72,207,255,0.12)',
-  orange:     '#65e1ff',
-  navy:       '#0d1e30',
-  purple:     '#8ab4c4',
-  purpleDim:  'rgba(138,180,196,0.12)',
-  error:      '#ff5c63',
-  errorDim:   'rgba(255,92,99,0.10)',
-  amber:      '#f8ba3e',
-  amberDim:   'rgba(248,186,62,0.12)',
+  cyan:       'var(--accent-secondary)',
+  cyanBright: 'color-mix(in srgb, var(--accent-secondary) 72%, white)',
+  cyanDark:   'var(--accent)',
+  cyanDim:    'rgb(var(--accent-secondary-rgb) / 0.12)',
+  cyanGlow:   'rgb(var(--accent-secondary-rgb) / 0.20)',
+  teal:       'var(--accent)',
+  blue:       'color-mix(in srgb, var(--accent-secondary) 72%, white)',
+  blueDim:    'rgb(var(--accent-secondary-rgb) / 0.12)',
+  green:      'var(--success)',
+  greenDim:   'rgb(var(--success-rgb) / 0.12)',
+  gold:       'var(--warning)',
+  goldDim:    'rgb(var(--warning-rgb) / 0.12)',
+  orange:     '#ff9d6c',
+  navy:       'var(--bg-primary)',
+  purple:     '#b4d7e8',
+  purpleDim:  'rgba(180,215,232,0.12)',
+  error:      'var(--danger)',
+  errorDim:   'rgb(var(--danger-rgb) / 0.10)',
+  amber:      'var(--warning)',
+  amberDim:   'rgb(var(--warning-rgb) / 0.12)',
 
   /* Typography */
-  text:       '#e9f5f7',
-  textSub:    'rgba(186,216,222,0.74)',
-  textMuted:  'rgba(148,180,188,0.54)',
+  text:       'var(--wasel-service-text)',
+  textSub:    'var(--wasel-service-sub)',
+  textMuted:  'var(--wasel-service-muted)',
 
-  white:      '#ffffff',
-  black:      '#000000',
+  white:      'var(--bg-secondary)',
+  black:      'var(--text-inverse)',
 } as const;
 
 export const WaselGradients = {
-  primary: 'linear-gradient(135deg, #dcfff8 0%, #19e7bb 42%, #65e1ff 100%)',
-  cyan:    'linear-gradient(135deg, #19e7bb, #65e1ff)',
-  teal:    'linear-gradient(135deg, #19e7bb, #a2ffe7)',
-  card:    'linear-gradient(180deg, rgba(220,255,248,0.055), rgba(220,255,248,0.018)), rgba(10,18,28,0.88)',
-  hero:    'linear-gradient(180deg, rgba(4,18,30,0) 0%, #050b1a 100%)',
-  glow:    'radial-gradient(circle, rgba(25,231,187,0.20), transparent)',
-  gold:    'linear-gradient(135deg, #65e1ff, #a2ffe7)',
-  green:   'linear-gradient(135deg, #19e7bb, #a2ffe7)',
-  navy:    'linear-gradient(180deg, #080f1e, #050b1a)',
-  signal:  'linear-gradient(135deg, #19e7bb 0%, #65e1ff 100%)',
-  hero2:   'radial-gradient(ellipse at 50% 0%, rgba(25,231,187,0.16), transparent 55%), linear-gradient(160deg, #040816, #06101e 40%, #0d1a2e 70%, #050d1a 100%)',
+  primary: 'var(--wasel-app-button-primary)',
+  cyan:    'var(--theme-gradient-primary)',
+  teal:    'var(--theme-gradient-accent)',
+  card:    'var(--wasel-service-card)',
+  hero:    'var(--wasel-service-head-bg)',
+  glow:    'radial-gradient(circle, rgb(var(--accent-secondary-rgb) / 0.20), transparent)',
+  gold:    'var(--theme-gradient-primary)',
+  green:   'var(--theme-gradient-accent)',
+  navy:    'var(--wasel-service-bg)',
+  signal:  'var(--wasel-app-button-primary)',
+  hero2:   'var(--wasel-service-head-bg)',
 } as const;
 
 /* Backwards-compat aliases */
@@ -72,12 +72,12 @@ export const GRAD_SIGNAL = WaselGradients.signal;
 export const GRAD_HERO   = WaselGradients.hero2;
 
 export const WaselShadows = {
-  sm:   '0 8px 20px rgba(0,0,0,0.30)',
-  md:   '0 18px 48px rgba(0,0,0,0.40)',
-  lg:   '0 32px 80px rgba(0,0,0,0.48)',
-  xl:   '0 48px 110px rgba(0,0,0,0.56)',
-  glow: '0 18px 50px rgba(25,231,187,0.20)',
-  blue: '0 18px 50px rgba(101,225,255,0.16)',
+  sm:   'var(--wasel-shadow-sm)',
+  md:   'var(--wasel-shadow-md)',
+  lg:   'var(--wasel-shadow-lg)',
+  xl:   'var(--wasel-shadow-xl)',
+  glow: '0 18px 50px rgb(var(--accent-rgb) / 0.20)',
+  blue: '0 18px 50px rgb(var(--accent-secondary-rgb) / 0.16)',
 } as const;
 
 export const WaselImages = {
@@ -142,7 +142,7 @@ export const WaselBreakpoints = {
 
 /** Glass morphism helper */
 export const glassmorphism = (opacity = 0.84) => ({
-  background: `rgba(9,17,30,${opacity})`,
+  background: `color-mix(in srgb, var(--surface-glass) ${Math.round(opacity * 100)}%, transparent)`,
   backdropFilter: 'blur(22px)',
   WebkitBackdropFilter: 'blur(22px)',
   border: `1px solid ${WaselColors.border}`,
@@ -150,7 +150,7 @@ export const glassmorphism = (opacity = 0.84) => ({
 
 /** Glow effect helper */
 export const glowEffect = (color = WaselColors.cyan) => ({
-  boxShadow: `0 18px 50px ${color}38`,
+  boxShadow: `0 18px 50px color-mix(in srgb, ${color} 22%, transparent)`,
 } as const);
 
 /** Standard card style */

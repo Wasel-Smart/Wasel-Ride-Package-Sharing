@@ -1,6 +1,6 @@
 // ─── Raw DB row types ────────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export type DbClient = any;
 
 export type RawProfile = {

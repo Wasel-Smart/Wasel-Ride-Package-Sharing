@@ -1,0 +1,618 @@
+/* ============================================================
+   WASEL MOBILE SHELL — Unified mobile design layer
+   All values reference brand-theme.css tokens.
+   Target: 9.5+ visual quality, fully token-driven.
+   ============================================================ */
+
+/* ── Mobile breakpoint ───────────────────────────────────────── */
+@media (max-width: 899px) {
+  main.wasel-app-main { padding-bottom: 88px !important; }
+}
+
+/* ── Mobile shell tokens ─────────────────────────────────────── */
+:root {
+  /* Mobile-specific accent (maps to brand cyan/teal) */
+  --m-accent:        var(--accent-secondary);
+  --m-accent-rgb:    var(--accent-secondary-rgb);
+  --m-accent-dim:    rgb(var(--accent-secondary-rgb) / 0.12);
+  --m-accent-border: rgb(var(--accent-secondary-rgb) / 0.22);
+  --m-accent-glow:   rgb(var(--accent-secondary-rgb) / 0.18);
+
+  --m-action:        var(--accent);
+  --m-action-rgb:    var(--accent-rgb);
+  --m-action-dim:    rgb(var(--accent-rgb) / 0.12);
+  --m-action-border: rgb(var(--accent-rgb) / 0.22);
+
+  /* Mobile surfaces */
+  --m-surface:       var(--surface-glass);
+  --m-surface-card:  var(--card);
+  --m-surface-field: var(--surface-field);
+  --m-surface-muted: var(--surface-muted);
+
+  /* Mobile text */
+  --m-text:          var(--text-primary);
+  --m-text-sub:      var(--text-secondary);
+  --m-text-muted:    var(--text-muted);
+
+  /* Mobile border */
+  --m-border:        var(--border);
+  --m-border-strong: var(--border-strong);
+
+  /* Mobile shadows */
+  --m-shadow-card:   var(--wasel-shadow-card);
+  --m-shadow-float:  var(--wasel-shadow-lg);
+
+  /* Mobile radius */
+  --m-radius-card:   20px;
+  --m-radius-input:  16px;
+  --m-radius-pill:   9999px;
+  --m-radius-btn:    14px;
+  --m-radius-sheet:  24px;
+
+  /* Bottom nav height */
+  --m-nav-height:    58px;
+  --m-nav-pb:        max(8px, env(safe-area-inset-bottom, 8px));
+}
+
+/* ── Mobile card ─────────────────────────────────────────────── */
+.m-card {
+  background: var(--m-surface-card);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-card);
+  box-shadow: var(--m-shadow-card);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.m-card:hover {
+  border-color: var(--m-border-strong);
+  box-shadow: var(--wasel-shadow-md);
+}
+
+/* ── Mobile action card (quick-action grid) ──────────────────── */
+.m-action-card {
+  background: var(--m-surface-card);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius-card);
+  box-shadow: var(--m-shadow-card);
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 0.22s ease,
+              border-color 0.22s ease;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.m-action-card:active {
+  transform: scale(0.94);
+  box-shadow: var(--wasel-shadow-sm);
+}
+@media (hover: hover) and (pointer: fine) {
+  .m-action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--wasel-shadow-md);
+    border-color: var(--m-accent-border);
+  }
+}
+
+/* ── Mobile search bar ───────────────────────────────────────── */
+.m-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 13px 16px;
+  border-radius: var(--m-radius-input);
+  background: var(--m-surface-field);
+  border: 1.5px solid var(--m-border);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.m-search-bar:hover,
+.m-search-bar:focus-within {
+  border-color: var(--m-accent-border);
+  box-shadow: 0 0 0 3px var(--m-accent-dim);
+}
+
+/* ── Mobile ride row ─────────────────────────────────────────── */
+.m-ride-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 16px;
+  border-radius: 18px;
+  background: var(--m-surface-card);
+  border: 1px solid var(--m-border);
+  margin-bottom: 8px;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+.m-ride-row:hover {
+  border-color: var(--m-accent-border);
+  box-shadow: var(--m-shadow-card);
+  transform: translateY(-1px);
+}
+
+/* ── Mobile trust strip ──────────────────────────────────────── */
+.m-trust-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgb(var(--success-rgb) / 0.06);
+  border: 1px solid rgb(var(--success-rgb) / 0.14);
+}
+
+/* ── Mobile bottom nav ───────────────────────────────────────── */
+.m-bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 600;
+  background: var(--m-surface);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border-top: 1px solid var(--m-border);
+  box-shadow: var(--m-shadow-float);
+  padding-bottom: var(--m-nav-pb);
+  display: none;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: stretch;
+  will-change: transform;
+  transform: translateZ(0);
+}
+@media (max-width: 899px) {
+  .m-bottom-nav { display: flex !important; }
+}
+
+/* ── Mobile FAB ──────────────────────────────────────────────── */
+.m-fab {
+  position: fixed;
+  bottom: calc(var(--m-nav-pb) + var(--m-nav-height) + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 601;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: var(--theme-gradient-primary);
+  border: 2px solid rgb(255 255 255 / 0.18);
+  box-shadow: var(--wasel-shadow-teal);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s ease;
+}
+.m-fab:active { transform: translateX(-50%) scale(0.88); }
+@media (max-width: 899px) {
+  .m-fab { display: flex !important; }
+}
+
+/* ── Mobile sheet ────────────────────────────────────────────── */
+.m-sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 810;
+  border-radius: var(--m-radius-sheet) var(--m-radius-sheet) 0 0;
+  background: var(--m-surface-card);
+  border: 1px solid var(--m-border);
+  border-bottom: none;
+  box-shadow: var(--m-shadow-float);
+  max-height: 92dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Mobile sheet backdrop ───────────────────────────────────── */
+.m-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ── Mobile swipeable card ───────────────────────────────────── */
+.m-swipe-card {
+  border-radius: var(--m-radius-card);
+  background: var(--m-surface-card);
+  border: 1px solid var(--m-border);
+  box-shadow: var(--m-shadow-card);
+  overflow: hidden;
+  cursor: grab;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* ── Mobile pill tag ─────────────────────────────────────────── */
+.m-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--m-radius-pill);
+  font-size: 0.69rem;
+  font-weight: 700;
+}
+.m-pill-accent {
+  background: var(--m-accent-dim);
+  border: 1px solid var(--m-accent-border);
+  color: var(--m-accent);
+}
+.m-pill-action {
+  background: var(--m-action-dim);
+  border: 1px solid var(--m-action-border);
+  color: var(--m-action);
+}
+
+/* ── Mobile CTA button ───────────────────────────────────────── */
+.m-btn-primary {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--m-radius-btn);
+  background: var(--theme-gradient-primary);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  color: var(--wasel-button-primary-foreground);
+  font-weight: 800;
+  font-size: 0.94rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s ease;
+  box-shadow: var(--wasel-button-primary-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.m-btn-primary:active { transform: scale(0.97); }
+.m-btn-primary:disabled {
+  background: var(--m-accent-dim);
+  color: var(--m-accent);
+  box-shadow: none;
+  cursor: default;
+}
+
+/* ── Mobile input field ──────────────────────────────────────── */
+.m-input-wrap {
+  border-radius: var(--m-radius-input);
+  background: var(--m-surface-field);
+  border: 1px solid var(--m-border);
+  overflow: hidden;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.m-input-wrap:focus-within {
+  border-color: var(--m-accent-border);
+  box-shadow: 0 0 0 3px var(--m-accent-dim);
+}
+
+/* ── Mobile skeleton ─────────────────────────────────────────── */
+.m-skeleton {
+  background: var(--surface-muted);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.m-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0 -100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(var(--accent-secondary-rgb) / 0.06) 40%,
+    rgb(var(--accent-secondary-rgb) / 0.12) 50%,
+    rgb(var(--accent-secondary-rgb) / 0.06) 60%,
+    transparent 100%
+  );
+  animation: shimmer-sweep 1.6s ease-in-out infinite;
+}
+
+/* ── Mobile offline banner ───────────────────────────────────── */
+.m-offline-banner {
+  background: rgb(var(--danger-rgb) / 0.10);
+  border-bottom: 1px solid rgb(var(--danger-rgb) / 0.20);
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Mobile pull-to-refresh pill ─────────────────────────────── */
+.m-ptr-pill {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: var(--m-radius-pill);
+  background: var(--m-surface-card);
+  border: 1px solid var(--m-accent-border);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--m-shadow-float);
+}
+
+/* ── Mobile nav active indicator ────────────────────────────── */
+.m-nav-indicator {
+  position: absolute;
+  top: 0;
+  left: 22%; right: 22%;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+}
+
+/* ── Mobile icon glow ────────────────────────────────────────── */
+.m-icon-glow {
+  position: absolute;
+  inset: -10px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* ── Occupancy bar ───────────────────────────────────────────── */
+.m-occ-bar {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.m-occ-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+.m-occ-dot--taken { background: var(--m-border-strong); }
+.m-occ-dot--free  { background: var(--m-accent); }
+
+/* ── Popular route chip ──────────────────────────────────────── */
+.m-route-chip {
+  padding: 6px 14px;
+  border-radius: var(--m-radius-pill);
+  background: var(--m-accent-dim);
+  border: 1px solid var(--m-accent-border);
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--m-accent);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.m-route-chip:hover {
+  background: rgb(var(--accent-secondary-rgb) / 0.18);
+  border-color: rgb(var(--accent-secondary-rgb) / 0.36);
+}
+
+/* ── Section label ───────────────────────────────────────────── */
+.m-section-label {
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--m-text-muted);
+  margin-bottom: 10px;
+}
+
+/* ── Price display ───────────────────────────────────────────── */
+.m-price {
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--accent);
+  line-height: 1;
+}
+.m-price-unit {
+  font-size: 0.69rem;
+  font-weight: 500;
+  color: var(--m-text-muted);
+}
+
+/* ── Book button (inline) ────────────────────────────────────── */
+.m-book-btn {
+  padding: 5px 14px;
+  min-height: 36px;
+  border-radius: var(--m-radius-pill);
+  background: var(--theme-gradient-primary);
+  border: none;
+  color: var(--wasel-button-primary-foreground);
+  font-weight: 800;
+  font-size: 0.72rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.14s ease;
+}
+.m-book-btn:active { transform: scale(0.9); }
+
+/* ── Driver avatar ───────────────────────────────────────────── */
+.m-driver-avatar {
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--m-accent-dim);
+  border: 1.5px solid var(--m-accent-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--m-accent);
+}
+
+/* ── Drag handle ─────────────────────────────────────────────── */
+.m-drag-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--m-border-strong);
+  margin: 0 auto;
+}
+
+/* ── Step dot ────────────────────────────────────────────────── */
+.m-step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.m-step-dot--done   { background: var(--m-accent); }
+.m-step-dot--active { background: var(--m-action); }
+.m-step-dot--idle   { background: var(--m-border-strong); }
+
+/* ── Swap button ─────────────────────────────────────────────── */
+.m-swap-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--m-accent-dim);
+  border: 1px solid var(--m-accent-border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease;
+}
+.m-swap-btn:hover { background: rgb(var(--accent-secondary-rgb) / 0.18); }
+
+/* ── Seat counter ────────────────────────────────────────────── */
+.m-seat-counter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--m-surface-field);
+  border: 1px solid var(--m-border);
+}
+.m-seat-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--m-accent);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0 2px;
+  min-height: 28px;
+  min-width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── WhatsApp reveal ─────────────────────────────────────────── */
+.m-reveal-whatsapp {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--m-radius-card);
+  background: linear-gradient(135deg, #25D366, #128C7E);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  pointer-events: none;
+}
+
+/* ── Save reveal ─────────────────────────────────────────────── */
+.m-reveal-save {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--m-radius-card);
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 60%, black));
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  pointer-events: none;
+}
+
+/* ── Feature tag ─────────────────────────────────────────────── */
+.m-feature-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--m-radius-pill);
+  font-size: 0.69rem;
+  font-weight: 600;
+}
+
+/* ── Close button ────────────────────────────────────────────── */
+.m-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--m-surface-muted);
+  border: 1px solid var(--m-border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--m-text-sub);
+  transition: background 0.15s ease;
+}
+.m-close-btn:hover { background: var(--m-accent-dim); }
+
+/* ── Rating stars ────────────────────────────────────────────── */
+.m-rating-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+}
+
+/* ── Hero greeting ───────────────────────────────────────────── */
+.m-hero-tagline {
+  font-weight: 800;
+  font-size: clamp(1.4rem, 6vw, 1.75rem);
+  color: var(--m-text);
+  line-height: 1.2;
+  margin: 0;
+}
+.m-hero-greeting {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--m-text-sub);
+  margin-bottom: 4px;
+}
+
+/* ── View all link ───────────────────────────────────────────── */
+.m-view-all {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--m-accent);
+  font-weight: 600;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Section heading row ─────────────────────────────────────── */
+.m-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.m-section-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--m-text);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ── Shimmer keyframe (skeleton loader) ──────────────────────── */
+@keyframes shimmer-sweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}

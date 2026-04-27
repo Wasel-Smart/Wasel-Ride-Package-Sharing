@@ -1,5 +1,7 @@
+import { APP_ROUTES } from '../router/paths';
+
 const AUTH_RETURN_TO_STORAGE_KEY = 'wasel_auth_return_to';
-const DEFAULT_AUTH_RETURN_TO = '/app/find-ride';
+const DEFAULT_AUTH_RETURN_TO: string = APP_ROUTES.findRide.full;
 
 export function normalizeAuthReturnTo(
   value: string | null | undefined,
@@ -19,14 +21,14 @@ export function normalizeAuthReturnTo(
 
 export function buildAuthPagePath(
   tab: 'signin' | 'signup' = 'signin',
-  returnTo = DEFAULT_AUTH_RETURN_TO,
+  returnTo: string = DEFAULT_AUTH_RETURN_TO,
 ): string {
   const params = new URLSearchParams({
     tab,
     returnTo: normalizeAuthReturnTo(returnTo),
   });
 
-  return `/app/auth?${params.toString()}`;
+  return `${APP_ROUTES.auth.full}?${params.toString()}`;
 }
 
 export function buildAuthReturnTo(

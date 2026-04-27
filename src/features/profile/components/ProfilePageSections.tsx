@@ -7,10 +7,17 @@ import {
   PROFILE_BORDER,
   PROFILE_CYAN,
   PROFILE_FONT,
+  PROFILE_GOLD,
+  PROFILE_HOVER,
   type ProfileStatusChip,
   type SavingField,
 } from '../useProfilePageController';
 import { VerificationBadge } from './ProfilePageParts';
+
+const PROFILE_PANEL = 'var(--wasel-service-card-2)';
+const PROFILE_TEXT = 'var(--wasel-service-text)';
+const PROFILE_SUB = 'var(--wasel-service-sub)';
+const PROFILE_MUTED = 'var(--wasel-service-muted)';
 
 type ProfileSignedOutStateProps = {
   ar: boolean;
@@ -69,14 +76,14 @@ function ProfileSummaryStat({
       style={{
         borderRadius: 14,
         padding: '12px 13px',
-        background: 'rgba(255,255,255,0.03)',
+        background: PROFILE_PANEL,
         border: `1px solid ${PROFILE_BORDER}`,
       }}
     >
       <div
         style={{
           fontSize: '0.68rem',
-          color: 'rgba(148,163,184,0.62)',
+          color: PROFILE_MUTED,
           fontWeight: 700,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
@@ -120,7 +127,7 @@ function ProfileOperationalSummary({
       style={{
         width: '100%',
         marginTop: 16,
-        background: 'rgba(255,255,255,0.035)',
+        background: PROFILE_PANEL,
         border: `1px solid ${PROFILE_BORDER}`,
         borderRadius: 18,
         padding: 16,
@@ -128,7 +135,7 @@ function ProfileOperationalSummary({
     >
       <div
         style={{
-          color: '#EFF6FF',
+          color: PROFILE_TEXT,
           fontWeight: 800,
           fontSize: '0.88rem',
           fontFamily: PROFILE_FONT,
@@ -147,7 +154,7 @@ function ProfileOperationalSummary({
         <ProfileSummaryStat
           label={ar ? '?????? ?????' : 'Profile'}
           value={`${profileCompleteness}%`}
-          tone={profileCompleteness >= 80 ? '#22C55E' : PROFILE_CYAN}
+          tone={profileCompleteness >= 80 ? PROFILE_GOLD : PROFILE_CYAN}
         />
         <ProfileSummaryStat
           label={ar ? '?????????' : 'Alerts'}
@@ -162,13 +169,13 @@ function ProfileOperationalSummary({
         <ProfileSummaryStat
           label={ar ? '?????' : 'Trust'}
           value={trustTier}
-          tone="#22C55E"
+          tone={PROFILE_GOLD}
         />
       </div>
       <div
         style={{
           marginTop: 10,
-          color: 'rgba(148,163,184,0.72)',
+          color: PROFILE_SUB,
           fontSize: '0.74rem',
           lineHeight: 1.55,
           fontFamily: PROFILE_FONT,
@@ -197,8 +204,8 @@ export function ProfileSignedOutState({
         fontFamily: PROFILE_FONT,
       }}
     >
-      <User size={40} color="rgba(148,163,184,0.4)" />
-      <p style={{ color: 'rgba(148,163,184,0.6)', fontSize: '0.9rem' }}>
+      <User size={40} color={PROFILE_MUTED} />
+      <p style={{ color: PROFILE_SUB, fontSize: '0.9rem' }}>
         {ar ? '???? ????? ?????? ?????' : 'Please sign in to view your profile'}
       </p>
       <button
@@ -206,9 +213,10 @@ export function ProfileSignedOutState({
         style={{
           padding: '10px 24px',
           borderRadius: 10,
-          background: `linear-gradient(135deg,${PROFILE_CYAN},#1E5FAE)`,
+          background:
+            'linear-gradient(135deg, var(--wasel-brand-gradient-start), var(--wasel-brand-gradient-end))',
           border: 'none',
-          color: '#040C18',
+          color: '#FFFDF9',
           fontWeight: 700,
           cursor: 'pointer',
           fontSize: '0.875rem',
@@ -243,13 +251,13 @@ export function ProfileHeroSection({
 }: ProfileHeroSectionProps) {
   return (
     <div style={{ padding: '40px 0 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-      <WaselLogo size={28} theme="light" variant="full" showWordmark={false} />
+      <WaselLogo size={28} variant="full" showWordmark={false} />
       <div style={{ textAlign: 'center', maxWidth: 420 }}>
         <p
           style={{
-            margin: 0,
-            color: 'rgba(148,163,184,0.82)',
-            fontSize: '0.82rem',
+              margin: 0,
+              color: PROFILE_SUB,
+              fontSize: '0.82rem',
             lineHeight: 1.6,
             fontFamily: PROFILE_FONT,
           }}
@@ -274,14 +282,16 @@ export function ProfileHeroSection({
             width: 88,
             height: 88,
             borderRadius: '50%',
-            background: 'linear-gradient(135deg,#DCFFF8 0%, #19E7BB 48%, #48CFFF 100%)',
+            background:
+              'linear-gradient(135deg, var(--wasel-brand-gradient-start) 0%, var(--wasel-brand-gradient-end) 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '1.8rem',
             fontWeight: 900,
-            color: '#041019',
-            boxShadow: '0 0 0 3px rgba(244,198,81,0.24), 0 8px 32px rgba(197,131,31,0.22)',
+            color: '#FFFDF9',
+            boxShadow:
+              '0 0 0 3px color-mix(in srgb, var(--wasel-brand-gradient-start) 24%, transparent), 0 8px 32px color-mix(in srgb, var(--wasel-brand-gradient-end) 22%, transparent)',
             overflow: 'hidden',
           }}
         >
@@ -302,7 +312,7 @@ export function ProfileHeroSection({
             width: 28,
             height: 28,
             borderRadius: '50%',
-            background: '#1E293B',
+            background: PROFILE_PANEL,
             border: `2px solid ${PROFILE_BG}`,
             display: 'flex',
             alignItems: 'center',
@@ -326,8 +336,8 @@ export function ProfileHeroSection({
               padding: '8px 12px',
               borderRadius: 8,
               border: `1.5px solid ${PROFILE_CYAN}`,
-              background: 'rgba(71,183,230,0.07)',
-              color: '#EFF6FF',
+              background: 'color-mix(in srgb, var(--wasel-app-blue) 8%, transparent)',
+              color: PROFILE_TEXT,
               fontSize: '0.9rem',
               fontFamily: PROFILE_FONT,
               outline: 'none',
@@ -346,7 +356,7 @@ export function ProfileHeroSection({
               borderRadius: 8,
               background: PROFILE_CYAN,
               border: 'none',
-              color: '#040C18',
+              color: '#FFFDF9',
               fontWeight: 700,
               cursor: 'pointer',
               fontSize: '0.8rem',
@@ -360,9 +370,9 @@ export function ProfileHeroSection({
             style={{
               padding: '8px 10px',
               borderRadius: 8,
-              background: 'rgba(255,255,255,0.06)',
+              background: PROFILE_PANEL,
               border: `1px solid ${PROFILE_BORDER}`,
-              color: 'rgba(255,255,255,0.5)',
+              color: PROFILE_SUB,
               cursor: 'pointer',
               fontSize: '0.8rem',
               fontFamily: PROFILE_FONT,
@@ -373,17 +383,17 @@ export function ProfileHeroSection({
         </div>
       ) : (
         <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#EFF6FF', fontFamily: PROFILE_FONT, margin: 0 }}>
+          <h1 style={{ fontSize: '1.4rem', fontWeight: 900, color: PROFILE_TEXT, fontFamily: PROFILE_FONT, margin: 0 }}>
             {user.name}
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-            <span style={{ fontSize: '0.66rem', padding: '4px 9px', borderRadius: 999, color: PROFILE_CYAN, background: 'rgba(71,183,230,0.12)', border: '1px solid rgba(71,183,230,0.25)', fontFamily: PROFILE_FONT, fontWeight: 700 }}>
+            <span style={{ fontSize: '0.66rem', padding: '4px 9px', borderRadius: 999, color: PROFILE_CYAN, background: 'color-mix(in srgb, var(--wasel-app-blue) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--wasel-app-blue) 26%, transparent)', fontFamily: PROFILE_FONT, fontWeight: 700 }}>
               {roleLabel}
             </span>
             <span style={{ fontSize: '0.66rem', padding: '4px 9px', borderRadius: 999, color: walletStatus.color, background: `${walletStatus.color}1A`, border: `1px solid ${walletStatus.color}33`, fontFamily: PROFILE_FONT, fontWeight: 700 }}>
               {ar ? '???????' : 'Wallet'}: {walletStatus.label}
             </span>
-            <span style={{ fontSize: '0.66rem', padding: '4px 9px', borderRadius: 999, color: '#94A3B8', background: 'rgba(148,163,184,0.12)', border: '1px solid rgba(148,163,184,0.2)', fontFamily: PROFILE_FONT, fontWeight: 700 }}>
+            <span style={{ fontSize: '0.66rem', padding: '4px 9px', borderRadius: 999, color: PROFILE_MUTED, background: 'rgba(148,163,184,0.12)', border: '1px solid rgba(148,163,184,0.2)', fontFamily: PROFILE_FONT, fontWeight: 700 }}>
               {ar ? '??? ?????' : 'Profile'}
             </span>
           </div>
@@ -397,8 +407,8 @@ export function ProfileHeroSection({
       )}
 
       <VerificationBadge level={user.verificationLevel ?? 'level_0'} ar={ar} accent={PROFILE_CYAN} />
-      <p style={{ color: 'rgba(148,163,184,0.6)', fontSize: '0.82rem', fontFamily: PROFILE_FONT, margin: 0 }}>{user.email}</p>
-      <p style={{ color: 'rgba(148,163,184,0.72)', fontSize: '0.76rem', fontFamily: PROFILE_FONT, margin: 0, textAlign: 'center', lineHeight: 1.5 }}>
+      <p style={{ color: PROFILE_SUB, fontSize: '0.82rem', fontFamily: PROFILE_FONT, margin: 0 }}>{user.email}</p>
+      <p style={{ color: PROFILE_SUB, fontSize: '0.76rem', fontFamily: PROFILE_FONT, margin: 0, textAlign: 'center', lineHeight: 1.5 }}>
         {ar ? `???? ????? ${user.trustScore}/100` : `Trust score ${user.trustScore}/100`}
       </p>
 
@@ -427,7 +437,7 @@ export function ProfileQuickPhoneEditor({
   return (
     <div style={{ padding: 18, display: 'grid', gap: 14 }}>
       <div style={{ display: 'grid', gap: 8 }}>
-        <div style={{ fontSize: '0.72rem', color: 'rgba(148,163,184,0.72)', fontFamily: PROFILE_FONT, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <div style={{ fontSize: '0.72rem', color: PROFILE_SUB, fontFamily: PROFILE_FONT, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           {ar ? '??? ??????' : 'Phone number'}
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -446,8 +456,8 @@ export function ProfileQuickPhoneEditor({
               padding: '10px 12px',
               borderRadius: 10,
               border: `1px solid ${editingField === 'phone' ? PROFILE_CYAN : PROFILE_BORDER}`,
-              background: 'rgba(71,183,230,0.07)',
-              color: '#EFF6FF',
+              background: 'color-mix(in srgb, var(--wasel-app-blue) 8%, transparent)',
+              color: PROFILE_TEXT,
               fontSize: '0.88rem',
               fontFamily: PROFILE_FONT,
               outline: 'none',
@@ -461,7 +471,7 @@ export function ProfileQuickPhoneEditor({
               borderRadius: 10,
               background: PROFILE_CYAN,
               border: 'none',
-              color: '#040C18',
+              color: '#FFFDF9',
               fontWeight: 700,
               cursor: 'pointer',
               fontSize: '0.8rem',
@@ -471,7 +481,7 @@ export function ProfileQuickPhoneEditor({
             {savingField === 'phone' ? '...' : (ar ? '??? ??????' : 'Save phone')}
           </button>
         </div>
-        <div style={{ fontSize: '0.74rem', color: 'rgba(148,163,184,0.7)', fontFamily: PROFILE_FONT }}>
+        <div style={{ fontSize: '0.74rem', color: PROFILE_SUB, fontFamily: PROFILE_FONT }}>
           {ar ? '??????? ????????? ??????? ?????? ???????.' : 'Used for alerts and verification.'}
         </div>
       </div>
@@ -486,11 +496,11 @@ export function ProfileDeleteConfirmDialog({
 }: ProfileDeleteConfirmDialogProps) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ background: '#0A1628', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 16, padding: 28, maxWidth: 360, width: '100%' }}>
-        <h3 style={{ color: '#EF4444', fontFamily: PROFILE_FONT, fontWeight: 800, fontSize: '1.1rem', marginBottom: 10 }}>
+      <div style={{ background: 'var(--wasel-service-card)', border: '1px solid color-mix(in srgb, var(--wasel-brand-hover) 28%, transparent)', borderRadius: 16, padding: 28, maxWidth: 360, width: '100%' }}>
+        <h3 style={{ color: PROFILE_HOVER, fontFamily: PROFILE_FONT, fontWeight: 800, fontSize: '1.1rem', marginBottom: 10 }}>
           {ar ? '??? ??? ??????' : 'Request Account Deletion'}
         </h3>
-        <p style={{ color: 'rgba(148,163,184,0.8)', fontFamily: PROFILE_FONT, fontSize: '0.85rem', marginBottom: 20 }}>
+        <p style={{ color: PROFILE_SUB, fontFamily: PROFILE_FONT, fontSize: '0.85rem', marginBottom: 20 }}>
           {ar
             ? '????? ?????? ??? ???? ?? ??? ????? ?????. ????? ????? ???? ?????? ??????? ?? ????? ?????? ??? ????? ??? ?????.'
             : 'Full account deletion is not available from this screen yet. We will sign you out now so you can safely continue a deletion request through support.'}
@@ -498,13 +508,13 @@ export function ProfileDeleteConfirmDialog({
         <div style={{ display: 'flex', gap: 10 }}>
           <button
             onClick={onCancel}
-            style={{ flex: 1, height: 40, borderRadius: 10, background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)', fontFamily: PROFILE_FONT, cursor: 'pointer' }}
+            style={{ flex: 1, height: 40, borderRadius: 10, background: 'transparent', border: `1px solid ${PROFILE_BORDER}`, color: PROFILE_SUB, fontFamily: PROFILE_FONT, cursor: 'pointer' }}
           >
             {ar ? '?????' : 'Cancel'}
           </button>
           <button
             onClick={() => void onContinue()}
-            style={{ flex: 1, height: 40, borderRadius: 10, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#EF4444', fontFamily: PROFILE_FONT, fontWeight: 700, cursor: 'pointer' }}
+            style={{ flex: 1, height: 40, borderRadius: 10, background: 'color-mix(in srgb, var(--wasel-brand-hover) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--wasel-brand-hover) 28%, transparent)', color: PROFILE_HOVER, fontFamily: PROFILE_FONT, fontWeight: 700, cursor: 'pointer' }}
           >
             {ar ? '??????' : 'Continue'}
           </button>

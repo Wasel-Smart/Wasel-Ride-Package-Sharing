@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
+import { QuantumMobilityMap } from './QuantumMobilityMap';
 
 type Accent = 'cyan' | 'green' | 'gold' | 'purple';
 type UnitType = 'ride' | 'package';
@@ -66,7 +67,7 @@ const variance = (values: number[]) => {
 };
 
 function accentColor(accent: Accent) {
-  return accent === 'green' ? C.green : accent === 'gold' ? C.gold : accent === 'purple' ? C.purple : C.cyan;
+  return accent === 'green' ? C.green : accent === 'gold' ? '#f59a2c' : accent === 'purple' ? C.purple : '#f59a2c';
 }
 
 function panelStyle(extra: CSSProperties = {}) {
@@ -150,7 +151,7 @@ export default function MobilityOSPage() {
               <div style={{ display: 'inline-flex', padding: '10px 14px', borderRadius: R.full, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.04)', width: 'fit-content' }}>
             <WaselLogo size={44} theme="light" variant="full" showWordmark={false} />
               </div>
-              <div style={{ fontSize: '0.72rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: C.cyan }}>Mobility OS / Neural Corridor Engine</div>
+              <div style={{ fontSize: '0.72rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: '#f59a2c' }}>Mobility OS / Neural Corridor Engine</div>
               <h1 style={{ margin: 0, fontSize: 'clamp(2.2rem, 4vw, 4rem)', lineHeight: 0.98, letterSpacing: '-0.04em' }}>
                 A living operations surface driven by corridor math, visible trust, and Jordan-first network logic.
               </h1>
@@ -166,7 +167,7 @@ export default function MobilityOSPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-              <button onClick={() => setPaused((value) => !value)} style={{ height: 44, padding: '0 18px', borderRadius: R.full, border: `1px solid ${paused ? C.border : C.cyanGlow}`, background: paused ? 'rgba(255,255,255,0.04)' : C.cyanDim, color: paused ? C.text : C.bg, display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 800, cursor: 'pointer' }}>
+              <button onClick={() => setPaused((value) => !value)} style={{ height: 44, padding: '0 18px', borderRadius: R.full, border: `1px solid ${paused ? C.border : 'rgba(245,154,44,0.4)'}`, background: paused ? 'rgba(255,255,255,0.04)' : 'rgba(245,154,44,0.15)', color: paused ? C.text : '#f59a2c', display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 800, cursor: 'pointer' }}>
                 {paused ? <Play size={16} /> : <Pause size={16} />}{paused ? 'Resume Field' : 'Pause Field'}
               </button>
               <button onClick={() => setTick(0)} style={{ height: 44, padding: '0 18px', borderRadius: R.full, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.04)', color: C.text, display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 700, cursor: 'pointer' }}>
@@ -178,10 +179,10 @@ export default function MobilityOSPage() {
 
         <section style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
           {[
-            { label: 'Dispatch IQ', value: `${network.dispatchIQ}`, detail: 'Weighted intelligence score for trust, speed, and balance.', accent: 'cyan' as Accent },
+            { label: 'Dispatch IQ', value: `${network.dispatchIQ}`, detail: 'Weighted intelligence score for trust, speed, and balance.', accent: 'gold' as Accent },
             { label: 'Throughput', value: `${network.throughput} km`, detail: 'Predicted movement capacity across live corridors.', accent: 'green' as Accent },
             { label: 'Balance Index', value: `${network.balance}%`, detail: 'Lower route variance means a calmer system feel.', accent: 'gold' as Accent },
-            { label: 'Carbon Gain', value: `${network.carbonGain} kg`, detail: 'Shared ride + parcel efficiency made visible.', accent: 'purple' as Accent },
+            { label: 'Carbon Gain', value: `${network.carbonGain} kg`, detail: 'Shared ride + parcel efficiency made visible.', accent: 'green' as Accent },
           ].map((card) => (
             <div key={card.label} style={panelStyle({ padding: 18, borderRadius: 22, border: `1px solid ${accentColor(card.accent)}30`, boxShadow: `0 18px 42px ${accentColor(card.accent)}18`, background: 'linear-gradient(180deg, rgba(9,20,36,0.95), rgba(6,14,28,0.96))' })}>
               <div style={{ fontSize: '0.72rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: C.textMuted }}>{card.label}</div>
@@ -203,24 +204,25 @@ export default function MobilityOSPage() {
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {(Object.keys(TABS) as TabKey[]).map((key) => (
-                  <button key={key} onClick={() => setTab(key)} style={{ height: 38, padding: '0 14px', borderRadius: R.full, border: `1px solid ${tab === key ? C.cyan : C.border}`, background: tab === key ? C.cyanDim : 'rgba(255,255,255,0.03)', color: tab === key ? C.text : C.textMuted, cursor: 'pointer', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '0.72rem' }}>
+                  <button key={key} onClick={() => setTab(key)} style={{ height: 38, padding: '0 14px', borderRadius: R.full, border: `1px solid ${tab === key ? '#f59a2c' : C.border}`, background: tab === key ? 'rgba(245,154,44,0.15)' : 'rgba(255,255,255,0.03)', color: tab === key ? '#f59a2c' : C.textMuted, cursor: 'pointer', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '0.72rem' }}>
                     {TABS[key]}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div style={panelStyle({ minHeight: 520, padding: 0, borderRadius: 24, border: `1px solid ${C.borderFaint}` })}>
-              <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 2, display: 'grid', gap: 8 }}>
+            <div style={panelStyle({ minHeight: 520, padding: 0, borderRadius: 24, border: `1px solid ${C.borderFaint}`, position: 'relative' })}>
+              <QuantumMobilityMap />
+              <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 2, display: 'grid', gap: 8, pointerEvents: 'none' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 14, background: 'rgba(4,12,24,0.74)', border: `1px solid ${C.border}`, fontSize: '0.78rem' }}>
-                  <Activity size={14} color={C.cyan} />Live phase {(tick * 100).toFixed(1)}%
+                  <Activity size={14} color="#f59a2c" />Live phase {(tick * 100).toFixed(1)}%
                 </div>
                 <div style={{ padding: '10px 12px', borderRadius: 16, background: 'rgba(4,12,24,0.72)', border: `1px solid ${C.borderFaint}`, fontFamily: FM, color: C.textSub, fontSize: '0.78rem' }}>
                   score = 0.38 demand + 0.34 reliability + 0.28 velocity
                 </div>
               </div>
 
-              <svg viewBox="0 0 100 110" style={{ width: '100%', height: '100%', display: 'block' }}>
+              <svg viewBox="0 0 100 110" style={{ width: '100%', height: '100%', display: 'none' }}>
                 {routeStats.map((route) => {
                   const from = route.fromNode;
                   const to = route.toNode;
@@ -288,7 +290,7 @@ export default function MobilityOSPage() {
 
           <div style={{ display: 'grid', gap: 14 }}>
             <div style={panelStyle({ padding: 18, borderRadius: 24 })}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Gauge size={18} color={C.cyan} /><h3 style={{ margin: 0, fontSize: '1.02rem' }}>Corridor leaderboard</h3></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Gauge size={18} color="#f59a2c" /><h3 style={{ margin: 0, fontSize: '1.02rem' }}>Corridor leaderboard</h3></div>
               <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
                 {routeStats.map((route) => (
                   <div key={route.id} style={{ padding: '12px 14px', borderRadius: 18, border: `1px solid ${accentColor(route.accent)}2a`, background: 'rgba(255,255,255,0.03)' }}>
@@ -300,7 +302,7 @@ export default function MobilityOSPage() {
                       <div style={{ fontSize: '1.2rem', fontWeight: 900, color: accentColor(route.accent) }}>{route.score}</div>
                     </div>
                     <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
-                      {[{ label: 'Load', value: route.load, color: C.cyan }, { label: 'Reliability', value: route.reliability, color: C.green }, { label: 'Package sync', value: route.packageSync, color: C.gold }].map((metric) => (
+                      {[{ label: 'Load', value: route.load, color: '#f59a2c' }, { label: 'Reliability', value: route.reliability, color: C.green }, { label: 'Package sync', value: route.packageSync, color: '#f59a2c' }].map((metric) => (
                         <div key={metric.label}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: C.textMuted }}><span>{metric.label}</span><span>{Math.round(metric.value * 100)}%</span></div>
                           <div style={{ marginTop: 6, height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
@@ -338,7 +340,7 @@ export default function MobilityOSPage() {
             { icon: ShieldCheck, title: 'Recovery posture', value: `${network.resilience}%`, body: 'Risk is framed as control logic instead of generic warning noise.', accent: C.gold },
             { icon: AlertTriangle, title: 'ETA drift', value: `${Math.max(0, weakest.etaLive - weakest.eta)} min`, body: `${weakest.fromNode.name} -> ${weakest.toNode.name} is the main watch corridor.`, accent: C.purple },
             { icon: CarFront, title: 'Fleet pressure', value: `${Math.round(hottest.load * 100)}%`, body: `${hottest.fromNode.name} -> ${hottest.toNode.name} is carrying the highest live demand.`, accent: accentColor(hottest.accent) },
-            { icon: Activity, title: 'Math core', value: `${network.dispatchIQ}`, body: 'Intelligence score blended from route score, balance, and velocity.', accent: C.cyan },
+            { icon: Activity, title: 'Math core', value: `${network.dispatchIQ}`, body: 'Intelligence score blended from route score, balance, and velocity.', accent: '#f59a2c' },
           ].map((card) => (
             <article key={card.title} style={panelStyle({ padding: 18, borderRadius: 22 })}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
@@ -355,8 +357,8 @@ export default function MobilityOSPage() {
 
         <section style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
           {[
-            { title: 'Signal equation', formula: 'dispatchIQ = 0.44 * score + 0.24 * balance + 0.32 * velocity', accent: C.cyan },
-            { title: 'Balance equation', formula: 'balance = 100 - sqrt(variance(load[1..n])) * 170', accent: C.gold },
+            { title: 'Signal equation', formula: 'dispatchIQ = 0.44 * score + 0.24 * balance + 0.32 * velocity', accent: '#f59a2c' },
+            { title: 'Balance equation', formula: 'balance = 100 - sqrt(variance(load[1..n])) * 170', accent: '#f59a2c' },
             { title: 'Recovery equation', formula: 'resilience = nodeStability * 0.76 + (1 - load) * 0.24', accent: C.green },
           ].map((item) => (
             <article key={item.title} style={panelStyle({ padding: 18, borderRadius: 22 })}>

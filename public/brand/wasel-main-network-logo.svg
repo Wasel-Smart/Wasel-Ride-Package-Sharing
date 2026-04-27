@@ -1,89 +1,53 @@
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 512 512"
-  fill="none"
-  role="img"
-  aria-labelledby="title desc"
->
-  <title id="title">Wasel main logo</title>
-  <desc id="desc">A dark circular Wasel badge with a luminous green network mark.</desc>
-  <defs>
-    <radialGradient id="wasel-badge-fill" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 252) rotate(90) scale(132)">
-      <stop offset="0" stop-color="#161C33" />
-      <stop offset="0.58" stop-color="#111A2C" />
-      <stop offset="1" stop-color="#0A1324" />
-    </radialGradient>
-    <radialGradient id="wasel-halo-core" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 248) rotate(90) scale(150)">
-      <stop offset="0" stop-color="#34EFC4" stop-opacity="0.5" />
-      <stop offset="0.48" stop-color="#21E4B8" stop-opacity="0.2" />
-      <stop offset="1" stop-color="#21E4B8" stop-opacity="0" />
-    </radialGradient>
-    <linearGradient id="wasel-link-glow" x1="184" y1="292" x2="338" y2="196" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#12C896" />
-      <stop offset="0.5" stop-color="#34EEBE" />
-      <stop offset="1" stop-color="#68FFE5" />
-    </linearGradient>
-    <linearGradient id="wasel-link-core" x1="188" y1="286" x2="334" y2="202" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#CCFFF2" />
-      <stop offset="0.45" stop-color="#B7FFF0" />
-      <stop offset="1" stop-color="#ECFFFC" />
-    </linearGradient>
-    <radialGradient id="wasel-node-fill" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 0) scale(1)">
-      <stop offset="0" stop-color="#F5FFFD" />
-      <stop offset="0.22" stop-color="#BBFFF2" />
-      <stop offset="0.55" stop-color="#43F4C5" />
-      <stop offset="1" stop-color="#0DBA88" />
-    </radialGradient>
-    <filter id="wasel-halo-blur" x="52" y="44" width="408" height="408" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="32" />
-    </filter>
-    <filter id="wasel-badge-shadow" x="108" y="102" width="296" height="296" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#020A16" flood-opacity="0.3" />
-    </filter>
-    <filter id="wasel-node-glow" x="-84" y="-84" width="168" height="168" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="18" />
-    </filter>
-  </defs>
-
-  <circle cx="256" cy="248" r="108" fill="url(#wasel-halo-core)" filter="url(#wasel-halo-blur)" />
-
-  <g filter="url(#wasel-badge-shadow)">
-    <circle cx="256" cy="252" r="78" fill="url(#wasel-badge-fill)" />
-    <circle cx="256" cy="252" r="76" stroke="#1D3147" stroke-width="2" opacity="0.82" />
-    <circle cx="256" cy="252" r="68" stroke="#35506A" stroke-width="1.5" opacity="0.16" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 240" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Wasel primary lockup</title>
+  <desc id="desc">The primary Wasel lockup pairing the route W symbol with a custom-led wordmark.</desc>
+  <g transform="translate(6 14) scale(0.72)">
+    
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path
+      d="M84 86C97 129 112 188 142 242C148 253 159 256 166 245L196 145L226 245C233 256 244 253 250 242C280 188 295 129 308 86"
+      stroke="#E59C36"
+      stroke-width="30"
+    />
+    <path
+      d="M84 86C97 129 112 188 142 242C148 253 159 256 166 245L196 145L226 245C233 256 244 253 250 242C280 188 295 129 308 86"
+      stroke="#FFD39A"
+      stroke-opacity="0.72"
+      stroke-width="10"
+    />
+    <path d="M76 64L84 86M196 108L196 130M316 64L308 86" stroke="#28323D" stroke-width="7" />
   </g>
 
-  <g stroke-linecap="round" stroke-linejoin="round">
-    <path d="M210 282L256 242L308 208" stroke="url(#wasel-link-glow)" stroke-width="9.5" />
-    <path d="M214 278L256 242L304 212" stroke="url(#wasel-link-core)" stroke-width="2.6" opacity="0.92" />
-    <path d="M244 233L256 242" stroke="#DFFCF8" stroke-width="2.6" opacity="0.56" />
-    <path d="M272 250L283 263" stroke="#CFFAF4" stroke-width="2.4" opacity="0.38" />
+  <g transform="translate(76 52)">
+    <circle r="12.5" fill="#28323D" />
+    <circle r="7.7" fill="#FFF7EA" />
+    <circle r="2.6" fill="#E59C36" />
   </g>
 
-  <g>
-    <g transform="translate(208 282)">
-      <circle cx="0" cy="0" r="28" fill="#19DBA9" opacity="0.42" filter="url(#wasel-node-glow)" />
-      <circle cx="0" cy="0" r="13" fill="url(#wasel-node-fill)" />
-      <circle cx="0" cy="0" r="6.4" fill="#D1FFF7" opacity="0.72" />
-      <circle cx="0" cy="0" r="18" stroke="#34E9BB" stroke-width="2.4" opacity="0.28" />
-    </g>
-    <g transform="translate(256 242)">
-      <circle cx="0" cy="0" r="34" fill="#23E4B6" opacity="0.48" filter="url(#wasel-node-glow)" />
-      <circle cx="0" cy="0" r="15.5" fill="url(#wasel-node-fill)" />
-      <circle cx="0" cy="0" r="7.2" fill="#E4FFFB" opacity="0.76" />
-      <circle cx="0" cy="0" r="21" stroke="#4BF4CA" stroke-width="2.6" opacity="0.34" />
-    </g>
-    <g transform="translate(308 208)">
-      <circle cx="0" cy="0" r="30" fill="#48F6D2" opacity="0.44" filter="url(#wasel-node-glow)" />
-      <circle cx="0" cy="0" r="13.5" fill="url(#wasel-node-fill)" />
-      <circle cx="0" cy="0" r="6.2" fill="#E8FFFD" opacity="0.74" />
-      <circle cx="0" cy="0" r="19" stroke="#6AFAE0" stroke-width="2.4" opacity="0.28" />
-    </g>
-    <g transform="translate(237 229)">
-      <circle cx="0" cy="0" r="4.6" fill="#E6FFFD" opacity="0.62" />
-    </g>
-    <g transform="translate(279 260)">
-      <circle cx="0" cy="0" r="3.8" fill="#E6FFFD" opacity="0.42" />
-    </g>
+  <g transform="translate(196 96)">
+    <circle r="15.5" fill="#28323D" />
+    <circle r="9.6" fill="#FFF7EA" />
+    <circle r="4.2" fill="#E59C36" />
   </g>
+
+  <g transform="translate(316 52)">
+    <circle r="12.5" fill="#28323D" />
+    <circle r="7.7" fill="#FFF7EA" />
+    <circle r="2.6" fill="#E59C36" />
+  </g>
+  </g>
+  <g fill="none" stroke="#17212B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" transform="translate(342 66)">
+    <path d="M10 11C14 24 19 46 28 58C32 63 38 61 42 52L48 30L54 52C58 61 64 63 68 58C77 46 82 24 86 11" />
+  </g>
+  <text
+    x="418"
+    y="126"
+    fill="#17212B"
+    font-family="'Montserrat','Segoe UI',sans-serif"
+    font-size="88"
+    font-weight="800"
+    letter-spacing="-5"
+  >
+    asel
+  </text>
 </svg>

@@ -1,11 +1,19 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import { Brain, Briefcase, Network } from 'lucide-react';
-import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
+import { CheckCircle2, Network } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
+import { buildCorridorExperienceSnapshot } from '../../domains/corridors/corridorExperience';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { createGenderMeta, OFFER_RIDE_DRAFT_KEY } from '../../pages/waselCoreRideData';
-import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
+import {
+  ClarityBand,
+  CoreExperienceBanner,
+  DS,
+  PageShell,
+  Protected,
+  r,
+  SectionHead,
+} from '../../pages/waselServiceShared';
 import { createOfferRideDefaultForm, validateOfferRideStep } from '../../pages/waselCorePageHelpers';
 import { readStoredObject } from '../../pages/waselCoreStorage';
 import { useCorridorTruth } from '../../services/corridorTruth';
@@ -24,10 +32,7 @@ import { evaluateTrustCapability } from '../../services/trustRules';
 import { recordMovementActivity } from '../../services/movementMembership';
 import {
   buildDriverRoutePlan,
-  getMarketplaceNodes,
-  getWaselCategoryPosition,
 } from '../../config/wasel-movement-network';
-import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { OfferRideFormPanel } from './components/OfferRideFormPanel';
 import { OfferRideIncomingRequests } from './components/OfferRideIncomingRequests';
 import { routeMatchesLocationPair } from '../../utils/jordanLocations';
@@ -48,8 +53,6 @@ export function OfferRidePage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [draftMessage, setDraftMessage] = useState<string | null>('Draft autosaves on this device.');
 
-  const category = useMemo(() => getWaselCategoryPosition(), []);
-  const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(2, 5), []);
   const offerGate = evaluateTrustCapability(user, 'offer_ride');
   const packageGate = evaluateTrustCapability(user, 'carry_packages');
   const driverReadiness = getDriverReadinessSummary(user);
@@ -58,9 +61,7 @@ export function OfferRidePage() {
     [form.from, form.to, form.seats],
   );
   const corridorTruth = useCorridorTruth({ from: form.from, to: form.to });
-  const selectedSignal = corridorTruth.selectedSignal;
-  const hasDemandSignal = typeof selectedSignal?.forecastDemandScore === 'number';
-  const corridorCount = corridorTruth.matchingRideCount;
+  const corridor = useMemo(() => buildCorridorExperienceSnapshot(corridorTruth), [corridorTruth]);
   const recentPostedRides = getConnectedRides().filter((ride) => routeMatchesLocationPair(ride.from, ride.to, form.from, form.to, { allowReverse: false })).slice(0, 3);
   const incomingRequests = user
     ? getBookingsForDriver(user.id, getConnectedRides()).filter((booking) => booking.status === 'pending_driver').slice(0, 4)
@@ -147,17 +148,21 @@ export function OfferRidePage() {
 
       notificationsAPI.createNotification({
         title: 'Route posted',
-        message: form.acceptsPackages ? `Your ${form.from} to ${form.to} route is live for riders and packages.` : `Your ${form.from} to ${form.to} route is now live.`,
+        message: form.acceptsPackages ? `Your ${form.from} to ${form.to} route is live for riders and packages, with WhatsApp as the main coordination lane.` : `Your ${form.from} to ${form.to} route is now live with WhatsApp as the main rider channel.`,
         type: 'booking',
         priority: 'high',
         action_url: '/app/offer-ride',
+        contact: {
+          email: user.email,
+          phone: user.phone,
+        },
       }).catch(() => {});
 
       if (permission === 'default') {
         requestPermission().catch(() => {});
       }
       notifyTripConfirmed('Wasel Network', `${createdRide.from} to ${createdRide.to}`);
-      void recordMovementActivity('route_published', driverPlan?.corridor.id ?? null);
+      void recordMovementActivity('route_published', corridor.corridorId ?? driverPlan?.corridor.id ?? null);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'We could not post the route right now.');
     } finally {
@@ -169,58 +174,41 @@ export function OfferRidePage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="??"
-          title="Offer Route"
-          titleAr="Offer Route"
-          sub="Publish seats and package space in one flow."
+          emoji="🚘"
+          title="Offer a ride"
+          titleAr="أنشئ رحلة"
+          sub="Post seats on a real route and optionally carry packages."
           color={DS.blue}
         />
 
         <CoreExperienceBanner
-          title="Post one route and open supply."
-          detail={`${category.promise} Publish the route once so Wasel can price, fill, and reuse it.`}
+          title="Offer one real route."
+          detail="Set the route, timing, seats, and optional package space. The ride only goes live after the backend confirms it."
           tone={DS.blue}
         />
 
-        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
-          <StakeholderSignalBanner
-            eyebrow="Wasel · supply comms"
-            title="Route publishing now speaks to drivers, riders, packages, and operations at once"
-            detail="This supply flow now makes route readiness, trust gating, earnings logic, and network pull visible in one place so a posted route feels operationally complete from the start."
-            stakeholders={[
-              { label: 'Driver readiness', value: `${driverReadiness.steps.filter((step) => step.complete).length}/${driverReadiness.steps.length}`, tone: 'teal' },
-              { label: 'Pending requests', value: String(incomingRequests.length), tone: 'amber' },
-              { label: 'Live corridor rides', value: String(corridorCount), tone: 'blue' },
-              { label: 'Package mode', value: form.acceptsPackages ? 'On' : 'Off', tone: form.acceptsPackages ? 'green' : 'slate' },
-            ]}
-            statuses={[
-              { label: 'Offer gate', value: offerGate.allowed ? 'Open' : 'Blocked', tone: offerGate.allowed ? 'green' : 'rose' },
-              { label: 'Package gate', value: packageGate.allowed ? 'Open' : 'Blocked', tone: packageGate.allowed ? 'green' : 'amber' },
-              { label: 'Demand signal', value: hasDemandSignal ? `${selectedSignal.forecastDemandScore}/100` : 'Pending', tone: hasDemandSignal ? 'blue' : 'slate' },
-            ]}
-            lanes={[
-              { label: 'Supply lane', detail: 'Route publishing, draft state, and incoming requests now point to one live supply story.' },
-              { label: 'Trust lane', detail: 'Posting and package carrying rights stay tied to the same readiness and trust checks.' },
-              { label: 'Revenue lane', detail: 'Seat pricing, package bonus, and marketplace pull explain why this corridor matters before it goes live.' },
-            ]}
-          />
-        </div>}
+        <ClarityBand
+          title="Offer a ride in three steps."
+          detail="Choose the route, review the seat plan, and publish only when everything looks ready."
+          tone={DS.blue}
+          items={[
+            { label: '1. Route', value: 'Set the route, date, time, and seats.' },
+            { label: '2. Review', value: 'Check trust status, price guidance, and package space.' },
+            { label: '3. Publish', value: 'Offer the ride and wait for backend confirmation.' },
+          ]}
+        />
 
         {(!offerGate.allowed || (form.acceptsPackages && !packageGate.allowed)) && (
-          <div style={{ marginBottom: 18, background: 'rgba(168,214,20,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: '#fff' }}>
+          <div style={{ marginBottom: 18, background: 'rgba(168,214,20,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: DS.text }}>
             <div style={{ fontWeight: 800, marginBottom: 6 }}>Trust readiness required</div>
             <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>{(!offerGate.allowed ? offerGate.reason : packageGate.reason) ?? 'Complete account checks before opening supply.'}</div>
             <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
-              {driverReadiness.steps.filter((step) => !step.complete).slice(0, 3).map((step) => (
-                <div key={step.id} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${DS.border}`, borderRadius: r(12), padding: '10px 12px' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.8rem', color: '#fff' }}>{step.label}</div>
-                  <div style={{ color: DS.muted, fontSize: '0.75rem', marginTop: 4, lineHeight: 1.5 }}>{step.description}</div>
+              {driverReadiness.steps.filter((readinessStep) => !readinessStep.complete).slice(0, 3).map((readinessStep) => (
+                <div key={readinessStep.id} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${DS.border}`, borderRadius: r(12), padding: '10px 12px' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.8rem', color: DS.text }}>{readinessStep.label}</div>
+                  <div style={{ color: DS.muted, fontSize: '0.75rem', marginTop: 4, lineHeight: 1.5 }}>{readinessStep.description}</div>
                 </div>
               ))}
-            </div>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
-              <button onClick={() => nav('/app/driver')} style={{ height: 40, padding: '0 16px', borderRadius: '99px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Open driver dashboard</button>
-              <button onClick={() => nav('/app/trust')} style={{ height: 40, padding: '0 16px', borderRadius: '99px', border: 'none', background: DS.gradG, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Open trust center</button>
             </div>
           </div>
         )}
@@ -230,31 +218,31 @@ export function OfferRidePage() {
             {
               label: 'Recommended seat price',
               value: driverPlan ? `${driverPlan.recommendedSeatPriceJod} JOD` : '--',
-              detail: 'Price tuned for fill rate and route density',
+              detail: 'Suggested from the current route and seat plan.',
               color: DS.cyan,
             },
             {
               label: 'Gross when full',
               value: driverPlan ? `${driverPlan.grossWhenFullJod} JOD` : '--',
-              detail: 'Seats filled through shared route economics',
+              detail: 'Estimated total if every seat books.',
               color: DS.green,
             },
             {
               label: 'Package bonus',
               value: driverPlan ? `${driverPlan.packageBonusJod} JOD` : '--',
-              detail: 'Extra lane value from goods moving on the same route',
+              detail: 'Estimated extra if you carry packages.',
               color: DS.gold,
             },
             {
               label: 'Live demand signal',
-              value: selectedSignal ? `${selectedSignal.forecastDemandScore}/100` : driverPlan ? `${driverPlan.corridor.predictedDemandScore}/100` : String(networkStats.ridesPosted),
-              detail: selectedSignal ? `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings | ${selectedSignal.livePackages} packages` : driverPlan ? 'Wasel Brain route confidence score' : 'Connected network activity',
+              value: corridor.demandScore !== null ? `${corridor.demandScore}/100` : driverPlan ? `${driverPlan.corridor.predictedDemandScore}/100` : String(networkStats.ridesPosted),
+              detail: corridor.liveProofSummary ?? (driverPlan ? 'Live route demand for this corridor.' : 'Current ride activity.'),
               color: DS.blue,
             },
           ].map((item) => (
             <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(18), border: `1px solid ${DS.border}`, padding: '18px 18px 16px', boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
               <div style={{ color: item.color, fontWeight: 900, fontSize: '1.2rem', marginBottom: 4 }}>{item.value}</div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>{item.label}</div>
+              <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem' }}>{item.label}</div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>{item.detail}</div>
             </div>
           ))}
@@ -264,22 +252,22 @@ export function OfferRidePage() {
           <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}28`, display: 'grid', placeItems: 'center' }}>
-                <Brain size={18} color={DS.cyan} />
+                <Network size={18} color={DS.cyan} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Wasel Brain playbook</div>
+                <div style={{ color: DS.text, fontWeight: 800 }}>Route summary</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                  The route engine should optimize driver earnings before a seat goes live.
+                  Review the main details before you offer the ride.
                 </div>
               </div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
-              {[
-                selectedSignal?.recommendedReason ?? driverPlan?.waselBrainNote ?? 'Pick a route to unlock a lane-specific earnings recommendation.',
-                selectedSignal ? `Next dense departure window is ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.` : driverPlan?.corridor.autoGroupWindow ?? 'Auto-grouping begins when the corridor gets enough saved demand.',
-                selectedSignal ? `${selectedSignal.productionSources.slice(0, 3).join(' | ')}.` : driverPlan ? `Empty-seat risk on this route is about ${driverPlan.emptySeatCostJod} JOD per unfilled seat.` : 'Fill rate is the lever that keeps the route profitable.',
+              {[ 
+                corridor.recommendationReason ?? driverPlan?.routeNote ?? 'Pick a route to see live price guidance.',
+                corridor.pickupSummary ?? driverPlan?.corridor.autoGroupWindow ?? 'Pickup guidance appears here when route data is available.',
+                corridor.liveProofSummary ?? (driverPlan ? `Empty-seat risk on this route is about ${driverPlan.emptySeatCostJod} JOD per open seat.` : 'Demand updates appear here when the corridor has live activity.'),
               ].map((line) => (
-                <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
+                <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: DS.text, fontSize: '0.82rem', lineHeight: 1.65 }}>
                   {line}
                 </div>
               ))}
@@ -292,17 +280,30 @@ export function OfferRidePage() {
                 <Network size={18} color={DS.green} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Marketplace pull</div>
+                <div style={{ color: DS.text, fontWeight: 800 }}>What this route can do</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-              This route can now serve more than passengers.
+                  Keep the ride focused on passengers, packages, and clear updates.
                 </div>
               </div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
-              {marketplaceNodes.map((node) => (
-                <div key={node.id} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>{node.title}</div>
-                  <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.55 }}>{node.summary}</div>
+              {[
+                {
+                  title: 'Passengers',
+                  detail: 'Riders can book seats once the backend confirms this route.',
+                },
+                {
+                  title: 'Packages',
+                  detail: form.acceptsPackages ? `Packages are enabled for ${form.packageCapacity} items on this route.` : 'Turn on package space only if you want to carry packages.',
+                },
+                {
+                  title: 'Updates',
+                  detail: 'Status changes appear only when the backend updates the route or booking.',
+                },
+              ].map((item) => (
+                <div key={item.title} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
+                  <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.82rem' }}>{item.title}</div>
+                  <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.55 }}>{item.detail}</div>
                 </div>
               ))}
             </div>
@@ -312,37 +313,28 @@ export function OfferRidePage() {
         <div className="sp-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
           {[
             {
-              title: 'Business lanes',
-              detail: 'Recurring employee seats, managed invoicing, and return-lane packages now sit on the same corridor you are opening.',
-              action: () => nav('/app/services/corporate'),
-              label: 'Open corporate workflow',
+              title: 'Route details',
+              detail: 'Set the route once so riders see clear timing, seats, and price.',
             },
             {
-              title: 'Service providers',
-              detail: 'Technicians, installers, and mobile crews can attach dispatch windows and backhauls to this route once density is proven.',
-              action: () => nav('/app/services/corporate'),
-              label: 'Open service workflow',
+              title: 'Ride status',
+              detail: 'The ride does not look live until the backend confirms it.',
             },
             {
-              title: 'Corridor proof',
-              detail: selectedSignal
-                ? `This route already shows ${selectedSignal.routeOwnershipScore}/100 ownership and ${selectedSignal.priceQuote.finalPriceJod} JOD shared pricing.`
-                : 'Wasel turns posted supply into proof once searches, bookings, and demand alerts accumulate.',
-              action: () => nav('/app/analytics'),
-              label: 'Open corridor proof',
+              title: 'Package option',
+              detail: corridor.routeOwnershipScore !== null && corridor.quotedPriceJod !== null
+                ? `This corridor currently shows ${corridor.routeOwnershipScore}/100 route coverage and ${corridor.quotedPriceJod} JOD shared pricing.`
+                : (form.acceptsPackages ? 'Packages can move on this route when space is available.' : 'Enable package space only when you want to carry parcels.'),
             },
           ].map((item) => (
             <div key={item.title} style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <div style={{ width: 34, height: 34, borderRadius: r(10), background: `${DS.blue}14`, border: `1px solid ${DS.blue}28`, display: 'grid', placeItems: 'center' }}>
-                  <Briefcase size={16} color={DS.blue} />
+                  <CheckCircle2 size={16} color={DS.blue} />
                 </div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>{item.title}</div>
+                <div style={{ color: DS.text, fontWeight: 800 }}>{item.title}</div>
               </div>
               <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>{item.detail}</div>
-              <button onClick={item.action} style={{ width: '100%', height: 40, marginTop: 12, borderRadius: '999px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
-                {item.label}
-              </button>
             </div>
           ))}
         </div>
@@ -351,49 +343,51 @@ export function OfferRidePage() {
 
         {submitted ? (
           <div style={{ background: DS.card, borderRadius: r(20), padding: '60px 28px', textAlign: 'center', border: `1px solid ${DS.border}` }}>
-            <div style={{ fontSize: '4rem', marginBottom: 20 }}>OK</div>
-              <h2 style={{ color: DS.green, fontWeight: 900, fontSize: '1.5rem', margin: '0 0 12px' }}>Route is live</h2>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+              <div style={{ width: 84, height: 84, borderRadius: '50%', background: `${DS.green}14`, border: `2px solid ${DS.green}`, display: 'grid', placeItems: 'center' }}>
+                <CheckCircle2 size={40} color={DS.green} />
+              </div>
+            </div>
+            <h2 style={{ color: DS.green, fontWeight: 900, fontSize: '1.5rem', margin: '0 0 12px' }}>Ride is live</h2>
             <p style={{ color: DS.sub }}>
-              Your route from <strong style={{ color: '#fff' }}>{form.from}</strong> to <strong style={{ color: '#fff' }}>{form.to}</strong> is now part of the Wasel movement network.
+              Your ride from <strong style={{ color: DS.text }}>{form.from}</strong> to <strong style={{ color: DS.text }}>{form.to}</strong> is now available to book.
             </p>
             <p style={{ color: DS.muted, fontSize: '0.85rem', marginTop: 8 }}>
-              {form.acceptsPackages ? 'Passengers, packages, and service demand can now attach to this corridor.' : 'Passengers can now discover this route across the network.'}
+              {form.acceptsPackages ? 'Passengers and package senders can now see this route.' : 'Passengers can now see this ride.'}
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, maxWidth: 760, margin: '22px auto 0' }}>
               {[
-                { label: 'Corridor readiness', value: corridorCount > 0 ? `${corridorCount + 1} live routes` : 'First live route' },
-                { label: 'Driver playbook', value: driverPlan ? `${driverPlan.grossWhenFullJod} JOD when full` : 'Fill seats to unlock savings' },
-                { label: 'Delivery mode', value: form.acceptsPackages ? `Packages on (${form.packageCapacity})` : 'Passengers only' },
+                { label: 'Route status', value: corridor.matchingRideCount > 0 ? `${corridor.matchingRideCount + 1} live rides` : 'First live ride' },
+                { label: 'Full ride estimate', value: driverPlan ? `${driverPlan.grossWhenFullJod} JOD when full` : 'Estimate unavailable' },
+                { label: 'Package setting', value: form.acceptsPackages ? `Packages on (${form.packageCapacity})` : 'Passengers only' },
               ].map((item) => (
                 <div key={item.label} style={{ background: DS.card2, borderRadius: r(14), padding: '14px 15px', border: `1px solid ${DS.border}` }}>
                   <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem', marginTop: 6 }}>{item.value}</div>
+                  <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.82rem', marginTop: 6 }}>{item.value}</div>
                 </div>
               ))}
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginTop: 24 }}>
-              <button onClick={() => { setSubmitted(false); setStep(1); setForm(defaultForm); }} style={{ padding: '12px 28px', borderRadius: '99px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 700, fontFamily: DS.F, cursor: 'pointer' }}>Post another route</button>
+              <button onClick={() => { setSubmitted(false); setStep(1); setForm(defaultForm); }} style={{ padding: '12px 28px', borderRadius: '99px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 700, fontFamily: DS.F, cursor: 'pointer' }}>Offer another ride</button>
             </div>
           </div>
         ) : (
           <OfferRideFormPanel
             form={form}
             step={step}
-            corridorCount={corridorCount}
+            corridor={corridor}
             recentPostedRides={recentPostedRides}
             draftMessage={draftMessage}
             formError={formError}
             busyState={busyState}
             genderMeta={GENDER_META}
             driverPlan={driverPlan}
-            liveSignal={selectedSignal}
             onUpdate={updateForm}
             onStepChange={moveToStep}
             onSubmit={handlePostRide}
           />
         )}
 
-        <ServiceFlowPlaybook focusService={form.acceptsPackages ? 'deliver-package' : 'share-ride'} />
       </PageShell>
     </Protected>
   );

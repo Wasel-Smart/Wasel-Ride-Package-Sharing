@@ -7,6 +7,46 @@ export type PasswordRequirement = {
   met: boolean;
 };
 
+export type SupportedAuthProvider = 'google' | 'facebook' | 'whatsapp';
+
+export type AuthProviderWarningReason =
+  | 'disabled_in_environment'
+  | 'missing_backend'
+  | 'missing_support_channel';
+
+export interface AuthProviderWarning {
+  action: 'hide-provider';
+  configKey?: string;
+  environment: string;
+  provider: SupportedAuthProvider;
+  reason: AuthProviderWarningReason;
+  scope: 'auth-provider-config';
+}
+
+export function buildAuthProviderWarning(
+  provider: SupportedAuthProvider,
+  reason: AuthProviderWarningReason,
+  options: {
+    configKey?: string;
+    environment: string;
+  },
+): AuthProviderWarning {
+  return {
+    action: 'hide-provider',
+    configKey: options.configKey,
+    environment: options.environment,
+    provider,
+    reason,
+    scope: 'auth-provider-config',
+  };
+}
+
+export function logAuthProviderWarning(warning: AuthProviderWarning): void {
+  if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+    console.warn('[AuthProviderConfig]', warning);
+  }
+}
+
 function extractAuthMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
@@ -103,7 +143,7 @@ export function friendlyAuthError(error: unknown, fallback: string): string {
     lower.includes('unsupported provider') ||
     lower.includes('oauth provider not supported')
   ) {
-    return 'This social sign-in provider is not enabled yet. Add it in Supabase Auth providers and try again.';
+    return 'This sign-in option is not available in this environment.';
   }
 
   if (
@@ -165,14 +205,14 @@ export function friendlyAuthError(error: unknown, fallback: string): string {
  * Returns score 0-5, label, and colour token from wasel-ds.
  */
 export function pwStrength(password: string): { score: number; label: string; color: string } {
-  if (!password) return { score: 0, label: '', color: C.textMuted };
+  if (!password) {return { score: 0, label: '', color: C.textMuted };}
 
   let score = 0;
-  if (password.length >= 8) score += 1;
-  if (password.length >= 12) score += 1;
-  if (/[A-Z]/.test(password)) score += 1;
-  if (/\d/.test(password)) score += 1;
-  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+  if (password.length >= 8) {score += 1;}
+  if (password.length >= 12) {score += 1;}
+  if (/[A-Z]/.test(password)) {score += 1;}
+  if (/\d/.test(password)) {score += 1;}
+  if (/[^A-Za-z0-9]/.test(password)) {score += 1;}
 
   const map = [
     { score: 0, label: '', color: C.textMuted },

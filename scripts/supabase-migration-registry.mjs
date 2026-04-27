@@ -291,6 +291,73 @@ export const migrationCatalog = [
     category: 'schema',
     naming: 'canonical',
   },
+  {
+    sequence: 32,
+    path: 'src/supabase/migrations/20260421100000_stripe_subscriptions.sql',
+    description:
+      'Legacy Stripe subscription mirrors for invoices, webhook events, and subscription lookup helpers',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'schema',
+    naming: 'canonical',
+  },
+  {
+    sequence: 33,
+    path: 'src/supabase/migrations/20260422120000_safety_and_user_settings.sql',
+    description:
+      'User settings, safety preferences, incident logging, and SOS alert runtime tables',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'runtime-contract',
+    naming: 'canonical',
+  },
+  {
+    sequence: 34,
+    path: 'src/supabase/migrations/20260424140000_harden_user_owned_rpc_boundaries.sql',
+    description:
+      'Require ownership checks on user-facing RPCs and move direct ride booking fallback onto atomic database functions',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'security',
+    naming: 'canonical',
+  },
+  {
+    sequence: 35,
+    path: 'src/supabase/migrations/20260424153000_database_governance_and_rls_hardening.sql',
+    description:
+      'Tighten legacy KV, wallet, and subscription access controls and align runtime settings tables with audit-safe timestamps',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'security',
+    naming: 'canonical',
+  },
+  {
+    sequence: 36,
+    path: 'src/supabase/migrations/20241201000001_payments_wallet_tables.sql',
+    description: 'Legacy wallet, payment intent, and escrow tables retained for auditability',
+    status: 'applied',
+    phase: 'historical',
+    category: 'schema',
+    naming: 'canonical',
+  },
+  {
+    sequence: 37,
+    path: 'src/supabase/migrations/20241201000002_bus_services_tables.sql',
+    description: 'Legacy bus operations schema retained while canonical runtime contracts evolve',
+    status: 'applied',
+    phase: 'historical',
+    category: 'schema',
+    naming: 'canonical',
+  },
+  {
+    sequence: 38,
+    path: 'src/supabase/migrations/20260324005540_kv_store.sql',
+    description: 'Production KV store for feature flags and app configuration',
+    status: 'applied',
+    phase: 'historical',
+    category: 'runtime-contract',
+    naming: 'canonical',
+  },
 ];
 
 export const operationalSeedFiles = [
@@ -302,10 +369,9 @@ export const operationalSeedFiles = [
   'db/seeds/automation.seed.sql',
 ];
 
-export const rolloutSeedFiles = [
-  ...operationalSeedFiles,
-  'src/supabase/seeds/mock_engine_smoke_checks.sql',
-];
+export const smokeCheckSeedFiles = ['src/supabase/seeds/mock_engine_smoke_checks.sql'];
+
+export const rolloutSeedFiles = [...operationalSeedFiles];
 
 export const requiredDocs = [
   'docs/OPERATIONAL_SEEDING.md',
@@ -398,9 +464,13 @@ Apply the rollout set in this exact order for production cutover projects:
 
 ${renderSequence(rolloutMigrations.map(getMigrationFileName))}
 
-### Seeds
+### Operational seeds
 
 ${renderSequence(rolloutSeedFiles)}
+
+### Smoke checks
+
+${renderSequence(smokeCheckSeedFiles)}
 
 ## Seed Packs
 
@@ -413,7 +483,7 @@ Operational bootstrap seed assets live in \`db/seeds/\`:
 - \`core.seed.sql\`
 - \`automation.seed.sql\`
 
-Smoke checks remain in \`src/supabase/seeds/\`.
+Smoke checks remain in \`src/supabase/seeds/\` and are never part of the production rollout seed pack.
 
 ## Commands
 

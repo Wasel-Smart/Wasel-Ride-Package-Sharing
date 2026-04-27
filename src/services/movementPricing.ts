@@ -14,7 +14,7 @@ export interface MovementPriceQuote {
   discountJod: number;
   totalDiscountPercent: number;
   densityDiscountPercent: number;
-  plusDiscountPercent: number;
+  planDiscountPercent: number;
   commuterDiscountPercent: number;
   creditDiscountPercent: number;
   loyaltyTier: MovementMembershipSnapshot['loyaltyTier'];
@@ -29,9 +29,9 @@ function roundMoney(value: number) {
 }
 
 function getDensityDiscountPercent(forecastDemandScore: number) {
-  if (forecastDemandScore >= 92) return 4;
-  if (forecastDemandScore >= 84) return 3;
-  if (forecastDemandScore >= 74) return 1.5;
+  if (forecastDemandScore >= 92) {return 4;}
+  if (forecastDemandScore >= 84) {return 3;}
+  if (forecastDemandScore >= 74) {return 1.5;}
   return 0;
 }
 
@@ -43,9 +43,9 @@ function resolvePricePressure(
   forecastDemandScore: number,
   explicitPressure?: MovementPricePressure,
 ): MovementPricePressure {
-  if (explicitPressure) return explicitPressure;
-  if (forecastDemandScore >= 86) return 'surging';
-  if (forecastDemandScore >= 58) return 'balanced';
+  if (explicitPressure) {return explicitPressure;}
+  if (forecastDemandScore >= 86) {return 'surging';}
+  if (forecastDemandScore >= 58) {return 'balanced';}
   return 'value-window';
 }
 
@@ -78,12 +78,12 @@ export function getMovementPriceQuote(args: {
   const basePriceJod = Math.max(0, args.basePriceJod);
   const forecastDemandScore = Math.max(0, Math.min(100, args.forecastDemandScore ?? 0));
   const densityDiscountPercent = getDensityDiscountPercent(forecastDemandScore);
-  const plusDiscountPercent = membership.plusActive ? 6 : 0;
+  const planDiscountPercent = membership.planActive ? 6 : 0;
   const commuterDiscountPercent = args.corridorId && membership.commuterPassRoute?.id === args.corridorId ? 8 : 0;
   const creditDiscountPercent = getCreditDiscountPercent(membership.movementCredits);
   const totalDiscountPercent = Math.min(
     24,
-    densityDiscountPercent + plusDiscountPercent + commuterDiscountPercent + creditDiscountPercent,
+    densityDiscountPercent + planDiscountPercent + commuterDiscountPercent + creditDiscountPercent,
   );
   const finalPriceJod = roundMoney(basePriceJod * (1 - totalDiscountPercent / 100));
   const discountJod = roundMoney(Math.max(0, basePriceJod - finalPriceJod));
@@ -92,7 +92,7 @@ export function getMovementPriceQuote(args: {
 
   const explanationBits = [
     densityDiscountPercent > 0 ? `${densityDiscountPercent}% route-density discount` : null,
-    plusDiscountPercent > 0 ? `${plusDiscountPercent}% Plus discount` : null,
+    planDiscountPercent > 0 ? `${planDiscountPercent}% travel-plan discount` : null,
     commuterDiscountPercent > 0 ? `${commuterDiscountPercent}% commuter-pass discount` : null,
     `${creditDiscountPercent}% loyalty-credit pricing`,
   ].filter(Boolean);
@@ -103,7 +103,7 @@ export function getMovementPriceQuote(args: {
     discountJod,
     totalDiscountPercent: roundMoney(totalDiscountPercent),
     densityDiscountPercent: roundMoney(densityDiscountPercent),
-    plusDiscountPercent: roundMoney(plusDiscountPercent),
+    planDiscountPercent: roundMoney(planDiscountPercent),
     commuterDiscountPercent: roundMoney(commuterDiscountPercent),
     creditDiscountPercent: roundMoney(creditDiscountPercent),
     loyaltyTier: membership.loyaltyTier,

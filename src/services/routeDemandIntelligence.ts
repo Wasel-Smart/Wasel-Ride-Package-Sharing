@@ -61,24 +61,24 @@ function corridorMatches(corridor: CorridorOpportunity, from?: string | null, to
 
 function recencyWeight(timestamp: string, now = Date.now()) {
   const createdAt = new Date(timestamp).getTime();
-  if (!Number.isFinite(createdAt)) return 0;
+  if (!Number.isFinite(createdAt)) {return 0;}
   const ageMs = Math.max(0, now - createdAt);
-  if (ageMs > LOOKBACK_MS) return 0;
+  if (ageMs > LOOKBACK_MS) {return 0;}
   const ageDays = ageMs / DAY_MS;
   return Math.max(0.12, 1.15 - (ageDays * 0.08));
 }
 
 function inferWaveWindow(hours: number[], density: CorridorOpportunity['density']) {
   if (hours.length === 0) {
-    if (density === 'surging') return '07:00 - 09:00 and 16:30 - 18:30';
-    if (density === 'high-frequency') return '08:00 - 10:00 and 17:00 - 19:00';
+    if (density === 'surging') {return '07:00 - 09:00 and 16:30 - 18:30';}
+    if (density === 'high-frequency') {return '08:00 - 10:00 and 17:00 - 19:00';}
     return 'Next 60-90 minutes once demand clusters';
   }
 
   const averageHour = hours.reduce((sum, hour) => sum + hour, 0) / hours.length;
-  if (averageHour < 11) return '07:00 - 09:30';
-  if (averageHour < 15) return '12:00 - 14:30';
-  if (averageHour < 20) return '16:30 - 19:00';
+  if (averageHour < 11) {return '07:00 - 09:30';}
+  if (averageHour < 15) {return '12:00 - 14:30';}
+  if (averageHour < 20) {return '16:30 - 19:00';}
   return '20:00 - 22:00';
 }
 
@@ -132,7 +132,7 @@ function computeSignal(corridor: CorridorOpportunity, membership = getMovementMe
 
   for (const event of events) {
     const weight = recencyWeight(event.createdAt, now);
-    if (weight <= 0) continue;
+    if (weight <= 0) {continue;}
     const eventTime = new Date(event.createdAt);
     signalHours.push(eventTime.getHours());
     freshestSignalAt = !freshestSignalAt || new Date(event.createdAt).getTime() > new Date(freshestSignalAt).getTime()
@@ -288,7 +288,7 @@ export function useLiveRouteIntelligence(args?: { from?: string | null; to?: str
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
+    if (typeof window === 'undefined') {return undefined;}
     const refresh = () => setTick((value) => value + 1);
     const interval = window.setInterval(refresh, REFRESH_MS);
     window.addEventListener('storage', refresh);

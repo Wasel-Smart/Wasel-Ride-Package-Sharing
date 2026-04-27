@@ -1,5 +1,5 @@
 ﻿/**
- * MapWrapper â€” canonical map entry-point for Wasel
+ * MapWrapper - canonical map entry-point for Wasel
  *
  * All modes ('google', 'static', 'live') now render WaselMap.
  * This preserves the MapWrapper API used across 40+ components
@@ -39,11 +39,16 @@ interface MapWrapperProps {
 function MapLoader({ height }: { height?: string | number }) {
   return (
     <div
-      className="flex flex-col items-center justify-center bg-[#0c1520] rounded-2xl gap-3 text-[#8590a2]"
-      style={{ height: typeof height === 'number' ? `${height}px` : (height ?? '400px') }}
+      className="flex flex-col items-center justify-center rounded-2xl gap-3"
+      style={{
+        height: typeof height === 'number' ? `${height}px` : (height ?? '400px'),
+        background: 'var(--surface-strong)',
+        color: 'var(--text-secondary)',
+        border: '1px solid var(--border)',
+      }}
     >
       <MapPin className="w-8 h-8 animate-pulse" style={{ color: '#19E7BB' }} />
-      <p className="text-sm">Loading mapâ€¦</p>
+      <p className="text-sm">Loading map...</p>
     </div>
   );
 }
@@ -73,11 +78,13 @@ export function MapWrapper({
   const contextualMarkers: WaselMapMarker[] = [
     ...(pickupLocation ? [{ ...pickupLocation, label: 'Pickup', type: 'pickup' as const }] : []),
     ...(driverLocation ? [{ ...driverLocation, label: 'Driver', type: 'waypoint' as const }] : []),
-    ...(dropoffLocation ? [{ ...dropoffLocation, label: 'Dropoff', type: 'dropoff' as const }] : []),
+    ...(dropoffLocation
+      ? [{ ...dropoffLocation, label: 'Dropoff', type: 'dropoff' as const }]
+      : []),
   ];
   const waselMarkers: WaselMapMarker[] = [
     ...contextualMarkers,
-    ...markers.map((m) => ({ lat: m.lat, lng: m.lng, type: 'default' as const })),
+    ...markers.map(m => ({ lat: m.lat, lng: m.lng, type: 'default' as const })),
   ];
 
   return (
@@ -100,4 +107,3 @@ export function MapWrapper({
     </Suspense>
   );
 }
-

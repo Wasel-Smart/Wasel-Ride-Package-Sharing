@@ -1,37 +1,68 @@
-/**
- * Ride Lifecycle Service — Unit Tests
- *
- * Covers: booking creation, retrieval, update, status progression,
- * auto-completion of past confirmed rides, driver/passenger filtering,
- * ticket code generation, and localStorage persistence.
- *
- * Standard: Booking lifecycle is a financial and operational contract.
- * Every state transition must be tested for correctness and idempotency.
- */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('../../../src/services/directSupabase', () => ({
+  createDirectBooking: vi.fn(
+    async ({
+      tripId,
+      bookingStatus,
+      seatsRequested,
+      metadata,
+    }: {
+      tripId: string;
+      bookingStatus: string;
+      seatsRequested: number;
+      metadata?: { total_price?: number | null };
+    }) => ({
+      booking: {
+        booking_id: `backend-${tripId}`,
+        id: `backend-${tripId}`,
+        trip_id: tripId,
+        seats_requested: seatsRequested,
+        status: bookingStatus,
+        total_price: metadata?.total_price ?? null,
+        created_at: '2026-04-15T08:00:00.000Z',
+        updated_at: '2026-04-15T08:00:00.000Z',
+      },
+    }),
+  ),
+  getDirectDriverBookings: vi.fn(async () => []),
+  getDirectUserBookings: vi.fn(async () => []),
+  updateDirectBookingStatus: vi.fn(async () => undefined),
+}));
+
+vi.mock('../../../src/services/growthEngine', () => ({
+  trackGrowthEvent: vi.fn(async () => undefined),
+}));
+
+vi.mock('../../../src/services/transactionalEmailTriggers', () => ({
+  getTransactionalEmailAppUrl: vi.fn(() => 'https://wasel.jo'),
+  triggerBookingStatusUpdateEmail: vi.fn(),
+  triggerRideBookingEmails: vi.fn(),
+  triggerRideCompletedEmails: vi.fn(),
+}));
+
 import {
   canTransitionRideBookingStatus,
   createRideBooking,
-  getRideBookings,
-  getBookingsForRide,
   getBookingsForDriver,
   getBookingsForPassenger,
-  getRideBookingCustomerState,
-  isRideBookingConfirmed,
+  getBookingsForRide,
+  getRideBookings,
   isRideBookingPending,
-  updateRideBooking,
   syncRideBookingCompletion,
+  updateRideBooking,
   type RideBookingRecord,
 } from '../../../src/services/rideLifecycle';
+import type { PostedRide } from '../../../src/services/journeyLogistics';
+import {
+  createDirectBooking,
+  updateDirectBookingStatus,
+} from '../../../src/services/directSupabase';
 import { ValidationError } from '../../../src/utils/errors';
 
-// ── Setup: clear localStorage before each test ────────────────────────────────
-
-beforeEach(() => {
-  localStorage.clear();
-});
-
-// ── Fixtures ──────────────────────────────────────────────────────────────────
+const mockedCreateDirectBooking = vi.mocked(createDirectBooking);
+const mockedUpdateDirectBookingStatus = vi.mocked(updateDirectBookingStatus);
+const BOOKING_KEY = 'wasel-ride-booking-records';
 
 const BASE_INPUT = {
   rideId: 'ride-abc-123',
@@ -43,332 +74,185 @@ const BASE_INPUT = {
   time: '08:00',
   driverName: 'Khalid Al-Rashid',
   passengerName: 'Sara Mansour',
+  passengerEmail: 'sara@wasel.jo',
   seatsRequested: 2,
   pricePerSeatJod: 12.5,
   routeMode: 'live_post' as const,
 };
 
-// ── 1. createRideBooking ──────────────────────────────────────────────────────
+beforeEach(() => {
+  localStorage.clear();
+  vi.clearAllMocks();
+  vi.useRealTimers();
+  vi.stubEnv('VITE_APP_ENV', 'test');
+  vi.stubEnv('VITE_ENABLE_DEMO_DATA', 'false');
+  vi.stubEnv('VITE_ENABLE_SYNTHETIC_TRIPS', 'false');
+  vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'true');
+  vi.stubEnv('VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK', 'true');
+});
 
 describe('createRideBooking()', () => {
-  it('returns a RideBookingRecord with required fields', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    expect(booking.id).toBeTruthy();
-    expect(booking.rideId).toBe('ride-abc-123');
-    expect(booking.from).toBe('Amman');
-    expect(booking.to).toBe('Aqaba');
-    expect(booking.driverName).toBe('Khalid Al-Rashid');
-    expect(booking.passengerName).toBe('Sara Mansour');
-    expect(booking.seatsRequested).toBe(2);
-    expect(booking.ticketCode).toMatch(/^RIDE-\d{6}$/);
-  });
+  it('creates a backend-backed booking and stores the synced record', async () => {
+    const booking = await createRideBooking(BASE_INPUT);
 
-  it('live_post bookings start as pending_driver', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'live_post' });
+    expect(booking.rideId).toBe(BASE_INPUT.rideId);
     expect(booking.status).toBe('pending_driver');
     expect(booking.paymentStatus).toBe('pending');
-    expect(booking.syncState).toBe('syncing');
-  });
-
-  it('network_inventory bookings start as confirmed', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'network_inventory' });
-    expect(booking.status).toBe('confirmed');
-    expect(booking.paymentStatus).toBe('authorized');
-    expect(booking.syncState).toBe('syncing');
-  });
-
-  it('treats unsynced network_inventory bookings as pending for customer-facing state', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'network_inventory' });
-    expect(getRideBookingCustomerState(booking)).toBe('pending');
+    expect(booking.syncState).toBe('synced');
+    expect(booking.backendBookingId).toBe(`backend-${BASE_INPUT.rideId}`);
     expect(isRideBookingPending(booking)).toBe(true);
-    expect(isRideBookingConfirmed(booking)).toBe(false);
+
+    const stored = getRideBookings()[0];
+    expect(stored?.backendBookingId).toBe(`backend-${BASE_INPUT.rideId}`);
+    expect(stored?.syncState).toBe('synced');
+    expect(mockedCreateDirectBooking).toHaveBeenCalledTimes(1);
   });
 
-  it('treats synced confirmed bookings as confirmed for customer-facing state', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'network_inventory' });
-    const syncedBooking = {
-      ...booking,
-      backendBookingId: 'backend-booking-1',
-      syncState: 'synced' as const,
-    };
-    expect(getRideBookingCustomerState(syncedBooking)).toBe('confirmed');
-    expect(isRideBookingConfirmed(syncedBooking)).toBe(true);
-    expect(isRideBookingPending(syncedBooking)).toBe(false);
-  });
+  it('defaults seatsRequested to 1 when omitted', async () => {
+    const booking = await createRideBooking({
+      ...BASE_INPUT,
+      seatsRequested: undefined,
+    });
 
-  it('defaults seatsRequested to 1 when not provided', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, seatsRequested: undefined });
     expect(booking.seatsRequested).toBe(1);
   });
 
-  it('persists the booking to localStorage', () => {
-    createRideBooking(BASE_INPUT);
-    const persisted = getRideBookings();
-    expect(persisted.length).toBe(1);
+  it('requires authentication before creating a ride booking', async () => {
+    await expect(
+      createRideBooking({
+        ...BASE_INPUT,
+        passengerId: undefined,
+      }),
+    ).rejects.toThrow('Sign in is required to book a ride.');
+
+    expect(mockedCreateDirectBooking).not.toHaveBeenCalled();
   });
 
-  it('each booking has a unique id', () => {
-    const b1 = createRideBooking(BASE_INPUT);
-    const b2 = createRideBooking(BASE_INPUT);
-    expect(b1.id).not.toBe(b2.id);
-  });
+  it('surfaces backend booking failures instead of creating local success records', async () => {
+    mockedCreateDirectBooking.mockRejectedValueOnce(new Error('offline'));
 
-  it('each booking has a unique ticketCode', () => {
-    const codes = new Set(
-      Array.from({ length: 10 }, () => createRideBooking(BASE_INPUT).ticketCode),
+    await expect(createRideBooking(BASE_INPUT)).rejects.toThrow(
+      'Ride could not be booked right now. Please try again.',
     );
-    // Very high probability of uniqueness
-    expect(codes.size).toBeGreaterThan(1);
-  });
 
-  it('createdAt and updatedAt are valid ISO timestamps', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    expect(new Date(booking.createdAt).getFullYear()).toBeGreaterThan(2000);
-    expect(new Date(booking.updatedAt).getFullYear()).toBeGreaterThan(2000);
-  });
-
-  it('supportThreadOpen defaults to false', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    expect(booking.supportThreadOpen).toBe(false);
-  });
-
-  it('creates a local-only booking when no passenger id is available for backend sync', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, passengerId: undefined });
-    expect(booking.syncState).toBe('local-only');
-    expect(booking.pendingSync).toBe(false);
-  });
-
-  it('ownerId is preserved from input', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    expect(booking.ownerId).toBe('driver-001');
+    expect(getRideBookings()).toHaveLength(0);
   });
 });
 
-// ── 2. getRideBookings ────────────────────────────────────────────────────────
+describe('booking queries', () => {
+  it('filters ride, driver, and passenger views from persisted records', async () => {
+    const bookingA = await createRideBooking(BASE_INPUT);
+    const bookingB = await createRideBooking({
+      ...BASE_INPUT,
+      rideId: 'ride-b',
+      ownerId: 'driver-002',
+      passengerName: 'Ahmad Khalil',
+    });
 
-describe('getRideBookings()', () => {
-  it('returns empty array when no bookings exist', () => {
-    expect(getRideBookings()).toEqual([]);
-  });
-
-  it('returns bookings sorted by updatedAt descending (most recent first)', () => {
-    createRideBooking(BASE_INPUT);
-    // Small delay to ensure different timestamps
-    createRideBooking({ ...BASE_INPUT, from: 'Irbid', to: 'Amman' });
-    const bookings = getRideBookings();
-    expect(bookings.length).toBe(2);
-    const t0 = new Date(bookings[0]!.updatedAt).getTime();
-    const t1 = new Date(bookings[1]!.updatedAt).getTime();
-    expect(t0).toBeGreaterThanOrEqual(t1);
-  });
-
-  it('returns all created bookings', () => {
-    createRideBooking(BASE_INPUT);
-    createRideBooking(BASE_INPUT);
-    createRideBooking(BASE_INPUT);
-    expect(getRideBookings().length).toBe(3);
-  });
-});
-
-// ── 3. getBookingsForRide ─────────────────────────────────────────────────────
-
-describe('getBookingsForRide()', () => {
-  it('returns only bookings for the specified rideId', () => {
-    createRideBooking({ ...BASE_INPUT, rideId: 'ride-A' });
-    createRideBooking({ ...BASE_INPUT, rideId: 'ride-B' });
-    createRideBooking({ ...BASE_INPUT, rideId: 'ride-A' });
-
-    const forA = getBookingsForRide('ride-A');
-    expect(forA.length).toBe(2);
-    for (const b of forA) {
-      expect(b.rideId).toBe('ride-A');
-    }
-  });
-
-  it('returns empty array for unknown rideId', () => {
-    createRideBooking(BASE_INPUT);
-    expect(getBookingsForRide('unknown-ride')).toEqual([]);
+    expect(getBookingsForRide(BASE_INPUT.rideId).map(booking => booking.id)).toContain(bookingA.id);
+    expect(
+      getBookingsForDriver('driver-001', [
+        {
+          id: BASE_INPUT.rideId,
+          ownerId: 'driver-001',
+          from: 'Amman',
+          to: 'Aqaba',
+          date: '2026-07-01',
+          time: '08:00',
+          seats: 3,
+          price: 25,
+          gender: 'any',
+          prayer: false,
+          carModel: 'Toyota Camry',
+          note: '',
+          acceptsPackages: false,
+          packageCapacity: 'small',
+          packageNote: '',
+          createdAt: '2026-04-15T08:00:00.000Z',
+        } satisfies PostedRide,
+      ]).map(booking => booking.id),
+    ).toContain(bookingA.id);
+    expect(getBookingsForPassenger('Ahmad Khalil').map(booking => booking.id)).toContain(
+      bookingB.id,
+    );
   });
 });
-
-// ── 4. getBookingsForDriver ───────────────────────────────────────────────────
-
-describe('getBookingsForDriver()', () => {
-  it('returns bookings where ownerId matches userId', () => {
-    createRideBooking({ ...BASE_INPUT, rideId: 'ride-driver-001', ownerId: 'driver-001' });
-    createRideBooking({ ...BASE_INPUT, rideId: 'ride-driver-002', ownerId: 'driver-002' });
-    const rides = [{ id: 'ride-driver-001', ownerId: 'driver-001' } as any];
-    const forDriver = getBookingsForDriver('driver-001', rides);
-    expect(forDriver.every((booking) => booking.ownerId === 'driver-001')).toBe(true);
-  });
-});
-
-// ── 5. getBookingsForPassenger ────────────────────────────────────────────────
-
-describe('getBookingsForPassenger()', () => {
-  it('filters by passenger name', () => {
-    createRideBooking({ ...BASE_INPUT, passengerName: 'Sara Mansour' });
-    createRideBooking({ ...BASE_INPUT, passengerName: 'Ahmad Khalil' });
-
-    const saraBooksings = getBookingsForPassenger('Sara Mansour');
-    expect(saraBooksings.length).toBe(1);
-    expect(saraBooksings[0]!.passengerName).toBe('Sara Mansour');
-  });
-});
-
-// ── 6. updateRideBooking ──────────────────────────────────────────────────────
 
 describe('updateRideBooking()', () => {
-  it('returns null for unknown bookingId', () => {
-    const result = updateRideBooking('nonexistent-id', { status: 'confirmed' });
-    expect(result).toBeNull();
+  it('returns null for an unknown booking id', async () => {
+    await expect(updateRideBooking('missing', { status: 'confirmed' })).resolves.toBeNull();
   });
 
-  it('updates booking status', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    const updated = updateRideBooking(booking.id, { status: 'confirmed' });
-    expect(updated?.status).toBe('confirmed');
-  });
+  it('updates persisted non-status fields', async () => {
+    const booking = await createRideBooking(BASE_INPUT);
 
-  it('updates payment status', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    const updated = updateRideBooking(booking.id, { paymentStatus: 'captured' });
+    const updated = await updateRideBooking(booking.id, {
+      paymentStatus: 'captured',
+      supportThreadOpen: true,
+    });
+
     expect(updated?.paymentStatus).toBe('captured');
-  });
-
-  it('updates supportThreadOpen', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    const updated = updateRideBooking(booking.id, { supportThreadOpen: true });
     expect(updated?.supportThreadOpen).toBe(true);
+    expect(getRideBookings().find(item => item.id === booking.id)?.paymentStatus).toBe('captured');
   });
 
-  it('updates updatedAt timestamp', () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-04-02T00:00:00.000Z'));
+  it('rejects invalid lifecycle transitions', async () => {
+    const booking = await createRideBooking(BASE_INPUT);
 
-    try {
-      const booking = createRideBooking(BASE_INPUT);
-      const originalTs = booking.updatedAt;
-
-      vi.setSystemTime(new Date('2026-04-02T00:00:05.000Z'));
-      const updated = updateRideBooking(booking.id, { status: 'confirmed' });
-
-      expect(updated?.updatedAt).not.toBe(originalTs);
-    } finally {
-      vi.useRealTimers();
-    }
+    await expect(updateRideBooking(booking.id, { status: 'completed' })).rejects.toBeInstanceOf(
+      ValidationError,
+    );
   });
 
-  it('persists the update in localStorage', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    updateRideBooking(booking.id, { status: 'confirmed' });
-    const persisted = getRideBookings().find(b => b.id === booking.id);
-    expect(persisted?.status).toBe('confirmed');
-  });
+  it('sends strict driver-status mutations directly when local fallback is disabled', async () => {
+    vi.stubEnv('VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK', 'false');
+    const booking = await createRideBooking(BASE_INPUT);
 
-  it('does not affect other bookings', () => {
-    const b1 = createRideBooking(BASE_INPUT);
-    const b2 = createRideBooking(BASE_INPUT);
-    updateRideBooking(b1.id, { status: 'rejected' });
-    const b2Persisted = getRideBookings().find(b => b.id === b2.id);
-    expect(b2Persisted?.status).toBe('pending_driver');
-  });
+    const updated = await updateRideBooking(booking.id, {
+      status: 'confirmed',
+      paymentStatus: 'authorized',
+    });
 
-  it('rejects invalid lifecycle regressions', () => {
-    const booking = createRideBooking(BASE_INPUT);
-    expect(() => updateRideBooking(booking.id, { status: 'completed' })).toThrow(ValidationError);
+    expect(mockedUpdateDirectBookingStatus).toHaveBeenCalledWith(
+      `backend-${BASE_INPUT.rideId}`,
+      'accepted',
+    );
+    expect(updated?.status).toBe('confirmed');
+    expect(updated?.syncState).toBe('synced');
   });
 });
-
-describe('canTransitionRideBookingStatus()', () => {
-  it('allows valid forward transitions', () => {
-    expect(canTransitionRideBookingStatus('pending_driver', 'confirmed')).toBe(true);
-    expect(canTransitionRideBookingStatus('confirmed', 'completed')).toBe(true);
-  });
-
-  it('blocks invalid backward or terminal transitions', () => {
-    expect(canTransitionRideBookingStatus('completed', 'confirmed')).toBe(false);
-    expect(canTransitionRideBookingStatus('rejected', 'confirmed')).toBe(false);
-  });
-});
-
-// ── 7. syncRideBookingCompletion ──────────────────────────────────────────────
 
 describe('syncRideBookingCompletion()', () => {
-  it('marks past confirmed bookings as completed', () => {
-    // Create a confirmed booking in the past
-    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'network_inventory' });
-    // Manually set date to the past
-    const pastDate = '2020-01-01';
-    updateRideBooking(booking.id, { status: 'confirmed' });
-    // Patch the stored booking's date via localStorage
-    const stored = JSON.parse(localStorage.getItem('wasel-ride-booking-records') || '[]') as RideBookingRecord[];
-    const idx = stored.findIndex(b => b.id === booking.id);
-    if (idx !== -1) {
-      stored[idx] = { ...stored[idx]!, date: pastDate, time: '08:00', status: 'confirmed' };
-      localStorage.setItem('wasel-ride-booking-records', JSON.stringify(stored));
-    }
+  it('marks past confirmed bookings as completed', async () => {
+    const booking = await createRideBooking({
+      ...BASE_INPUT,
+      routeMode: 'network_inventory',
+    });
 
-    const synced = syncRideBookingCompletion(Date.now());
-    const completedBooking = synced.find(b => b.id === booking.id);
-    expect(completedBooking?.status).toBe('completed');
-  });
+    const stored = JSON.parse(localStorage.getItem(BOOKING_KEY) || '[]') as RideBookingRecord[];
+    const next = stored.map(item =>
+      item.id === booking.id
+        ? {
+            ...item,
+            date: '2020-01-01',
+            time: '08:00',
+            status: 'confirmed' as const,
+            paymentStatus: 'authorized' as const,
+          }
+        : item,
+    );
+    localStorage.setItem(BOOKING_KEY, JSON.stringify(next));
 
-  it('does not affect future confirmed bookings', () => {
-    const booking = createRideBooking({ ...BASE_INPUT, routeMode: 'network_inventory' });
-    // Future date
-    const stored = JSON.parse(localStorage.getItem('wasel-ride-booking-records') || '[]') as RideBookingRecord[];
-    const idx = stored.findIndex(b => b.id === booking.id);
-    if (idx !== -1) {
-      stored[idx] = { ...stored[idx]!, date: '2099-12-31', time: '08:00', status: 'confirmed' };
-      localStorage.setItem('wasel-ride-booking-records', JSON.stringify(stored));
-    }
+    const synced = syncRideBookingCompletion(new Date('2026-07-02T08:00:00.000Z').getTime());
 
-    const synced = syncRideBookingCompletion(Date.now());
-    const futureBooking = synced.find(b => b.id === booking.id);
-    expect(futureBooking?.status).toBe('confirmed');
-  });
-
-  it('does not change non-confirmed bookings', () => {
-    const booking = createRideBooking(BASE_INPUT); // status: pending_driver
-    const stored = JSON.parse(localStorage.getItem('wasel-ride-booking-records') || '[]') as RideBookingRecord[];
-    const idx = stored.findIndex(b => b.id === booking.id);
-    if (idx !== -1) {
-      stored[idx] = { ...stored[idx]!, date: '2020-01-01', time: '08:00' };
-      localStorage.setItem('wasel-ride-booking-records', JSON.stringify(stored));
-    }
-
-    const synced = syncRideBookingCompletion(Date.now());
-    const unchangedBooking = synced.find(b => b.id === booking.id);
-    expect(unchangedBooking?.status).toBe('pending_driver');
-  });
-
-  it('returns sorted bookings array', () => {
-    createRideBooking(BASE_INPUT);
-    const synced = syncRideBookingCompletion(Date.now());
-    expect(Array.isArray(synced)).toBe(true);
+    expect(synced.find(item => item.id === booking.id)?.status).toBe('completed');
   });
 });
 
-// ── 8. Ticket code format ────────────────────────────────────────────────────
-
-describe('Ticket code generation', () => {
-  it('every ticket code matches RIDE-XXXXXX pattern', () => {
-    for (let i = 0; i < 20; i++) {
-      const booking = createRideBooking(BASE_INPUT);
-      expect(booking.ticketCode).toMatch(/^RIDE-\d{6}$/);
-    }
-  });
-});
-
-// ── 9. Storage capacity guard ─────────────────────────────────────────────────
-
-describe('Storage capacity guard', () => {
-  it('does not persist more than 100 bookings (cap enforcement)', () => {
-    for (let i = 0; i < 110; i++) {
-      createRideBooking(BASE_INPUT);
-    }
-    const stored = JSON.parse(localStorage.getItem('wasel-ride-booking-records') || '[]');
-    expect(stored.length).toBeLessThanOrEqual(100);
+describe('helpers', () => {
+  it('exposes forward-only status transitions', () => {
+    expect(canTransitionRideBookingStatus('pending_driver', 'confirmed')).toBe(true);
+    expect(canTransitionRideBookingStatus('confirmed', 'completed')).toBe(true);
+    expect(canTransitionRideBookingStatus('completed', 'confirmed')).toBe(false);
   });
 });

@@ -3,6 +3,7 @@ import { CheckCircle2, Search } from 'lucide-react';
 import { MapWrapper } from '../../../components/MapWrapper';
 import { DS, midpoint, pill, r, resolveCityCoord } from '../../../pages/waselServiceShared';
 import type { PackageRequest } from '../../../services/journeyLogistics';
+import { buildPreferredWhatsAppUrl, hasWhatsAppContact } from '../../../utils/whatsapp';
 
 type PackageTrackPanelProps = {
   trackId: string;
@@ -31,17 +32,32 @@ export function PackageTrackPanel({
   onOpenSupport,
   onOpenRecent,
 }: PackageTrackPanelProps) {
+  const holderWhatsAppUrl = trackedPackage
+    ? buildPreferredWhatsAppUrl({
+        phone: trackedPackage.matchedDriverPhone,
+        message: `Hi ${trackedPackage.matchedDriver || 'captain'}, I am checking package ${trackedPackage.trackingId} on the ${trackedPackage.from} to ${trackedPackage.to} route.`,
+        fallbackMessage: `Hi Wasel, I need holder support for package ${trackedPackage.trackingId}.`,
+      })
+    : '';
+  const receiverWhatsAppUrl = trackedPackage
+    ? buildPreferredWhatsAppUrl({
+        phone: trackedPackage.recipientPhone,
+        message: `Hi ${trackedPackage.recipientName || 'there'}, I am sharing a Wasel update for package ${trackedPackage.trackingId} from ${trackedPackage.from} to ${trackedPackage.to}.`,
+        fallbackMessage: `Hi Wasel, I need receiver coordination for package ${trackedPackage.trackingId}.`,
+      })
+    : '';
+
   return (
     <div style={{ textAlign: 'center', maxWidth: 560, margin: '0 auto', padding: '20px 0' }}>
       <div style={{ fontSize: '2.5rem', marginBottom: 16 }}>TRACK</div>
-      <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 8px' }}>Track your package</h3>
+      <h3 style={{ color: DS.text, fontWeight: 800, margin: '0 0 8px' }}>Track your package</h3>
       <p style={{ color: DS.sub, marginBottom: 20 }}>Enter your tracking ID to see ride and package status together.</p>
       <div style={{ display: 'flex', gap: 10 }}>
         <input
           placeholder="PKG-XXXXX"
           value={trackId}
           onChange={(event) => setTrackId(event.target.value)}
-          style={{ flex: 1, padding: '14px 18px', borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontFamily: DS.F, fontSize: '0.95rem', outline: 'none' }}
+          style={{ flex: 1, padding: '14px 18px', borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, fontSize: '0.95rem', outline: 'none' }}
         />
         <button
           disabled={busyState === 'tracking'}
@@ -60,10 +76,10 @@ export function PackageTrackPanel({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          style={{ marginTop: 20, background: 'rgba(255,255,255,0.03)', borderRadius: r(16), padding: '20px', border: `1px solid ${DS.border}`, textAlign: 'left', boxShadow: '0 10px 22px rgba(0,0,0,0.14)' }}
+          style={{ marginTop: 20, background: DS.card2, borderRadius: r(16), padding: '20px', border: `1px solid ${DS.border}`, textAlign: 'left', boxShadow: '0 10px 22px rgba(0,0,0,0.14)' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
-            <span style={{ color: '#fff', fontWeight: 800 }}>Package {trackedPackage.trackingId}</span>
+            <span style={{ color: DS.text, fontWeight: 800 }}>Package {trackedPackage.trackingId}</span>
             <span style={{ ...pill(trackedStatusColor) }}>{trackedPackage.status.replace('_', ' ')}</span>
           </div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', marginBottom: 16 }}>
@@ -71,7 +87,18 @@ export function PackageTrackPanel({
               ? `Assigned to ${trackedPackage.matchedDriver} on a connected route from ${trackedPackage.from} to ${trackedPackage.to}.`
               : `Still searching for a posted ride from ${trackedPackage.from} to ${trackedPackage.to}.`}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginBottom: 16 }}>
+          <div style={{ color: DS.muted, fontSize: '0.76rem', marginBottom: 16 }}>
+            WhatsApp is the main lane between sender, holder, and receiver for this package.
+          </div>
+          <div
+            className="pkg-track-proof-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+              gap: 10,
+              marginBottom: 16,
+            }}
+          >
             {[
               {
                 label: 'OTP shared',
@@ -101,17 +128,25 @@ export function PackageTrackPanel({
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginBottom: 16 }}>
             {[{ label: 'Handoff code', value: trackedPackage.handoffCode }, { label: 'Recipient handoff', value: trackedPackage.recipientName || 'Name pending' }].map((item) => (
-              <div key={item.label} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)' }}>
+              <div key={item.label} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card3 }}>
                 <div style={{ color: DS.muted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
-                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>{item.value}</div>
+                <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>{item.value}</div>
               </div>
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginBottom: 16 }}>
+          <div
+            className="pkg-track-meta-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+              gap: 10,
+              marginBottom: 16,
+            }}
+          >
             {[{ label: 'Route', value: `${trackedPackage.from} to ${trackedPackage.to}` }, { label: 'Weight', value: trackedPackage.weight }, { label: 'Mode', value: trackedPackage.packageType === 'return' ? 'Return' : 'Delivery' }].map((item) => (
-              <div key={item.label} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: 'rgba(255,255,255,0.03)' }}>
+              <div key={item.label} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card3 }}>
                 <div style={{ color: DS.muted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
-                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>{item.value}</div>
+                <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>{item.value}</div>
               </div>
             ))}
           </div>
@@ -127,16 +162,36 @@ export function PackageTrackPanel({
             </button>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
-            <button onClick={onOpenSupport} style={{ padding: '10px 16px', borderRadius: '99px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', cursor: 'pointer', fontFamily: DS.F, fontWeight: 700 }}>
+            <button onClick={onOpenSupport} style={{ padding: '10px 16px', borderRadius: '99px', border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, cursor: 'pointer', fontFamily: DS.F, fontWeight: 700 }}>
               Report an issue
             </button>
+            <a
+              href={holderWhatsAppUrl || undefined}
+              target="_blank"
+              rel="noreferrer"
+              style={{ padding: '10px 16px', borderRadius: '99px', border: 'none', background: 'linear-gradient(135deg, #25d366 0%, #1faa53 100%)', color: '#fff', cursor: 'pointer', fontFamily: DS.F, fontWeight: 700, textDecoration: 'none' }}
+            >
+              {hasWhatsAppContact(trackedPackage.matchedDriverPhone)
+                ? 'Holder WhatsApp'
+                : 'Wasel WhatsApp'}
+            </a>
+            <a
+              href={receiverWhatsAppUrl || undefined}
+              target="_blank"
+              rel="noreferrer"
+              style={{ padding: '10px 16px', borderRadius: '99px', border: 'none', background: 'linear-gradient(135deg, #25d366 0%, #1faa53 100%)', color: '#fff', cursor: 'pointer', fontFamily: DS.F, fontWeight: 700, textDecoration: 'none' }}
+            >
+              {hasWhatsAppContact(trackedPackage.recipientPhone)
+                ? 'Receiver WhatsApp'
+                : 'Wasel WhatsApp'}
+            </a>
           </div>
           {trackedPackage.timeline.map((step, index) => (
             <div key={index} style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
               <div style={{ width: 20, height: 20, borderRadius: '50%', background: step.complete ? DS.gradC : DS.card, border: `2px solid ${step.complete ? DS.cyan : DS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 {step.complete && <CheckCircle2 size={11} color="#fff" />}
               </div>
-              <span style={{ color: step.complete ? '#fff' : DS.muted, fontSize: '0.85rem', alignSelf: 'center' }}>{step.label}</span>
+              <span style={{ color: step.complete ? DS.text : DS.muted, fontSize: '0.85rem', alignSelf: 'center' }}>{step.label}</span>
             </div>
           ))}
           <div style={{ marginTop: 16, borderRadius: r(14), overflow: 'hidden', border: `1px solid ${DS.border}` }}>
@@ -158,12 +213,12 @@ export function PackageTrackPanel({
       )}
       {recentPackages.length > 0 && (
         <div style={{ marginTop: 24, textAlign: 'left' }}>
-          <div style={{ color: '#fff', fontWeight: 800, marginBottom: 10 }}>Recent tracking shortcuts</div>
+          <div style={{ color: DS.text, fontWeight: 800, marginBottom: 10 }}>Recent tracking shortcuts</div>
           <div style={{ display: 'grid', gap: 10 }}>
             {recentPackages.map((item) => (
               <button key={item.trackingId} onClick={() => onOpenRecent(item)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, width: '100%', textAlign: 'left', borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 14px', background: DS.card2, cursor: 'pointer' }}>
                 <div>
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>{item.trackingId}</div>
+                  <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.82rem' }}>{item.trackingId}</div>
                   <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>{item.from} to {item.to}</div>
                 </div>
                 <span style={{ ...pill(item.matchedRideId ? DS.green : DS.gold) }}>{item.status.replace('_', ' ')}</span>

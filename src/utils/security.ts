@@ -22,14 +22,22 @@ export const CSP_DIRECTIVES = {
   'default-src': ["'self'"],
   'script-src': [
     "'self'",
-    ...(IS_DEV ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
+    // unsafe-inline/eval only in dev — never in production
+    ...(IS_DEV ? ["'unsafe-inline'", "'unsafe-eval'"] : ["'strict-dynamic'"]),
     'https://js.stripe.com',
     'https://maps.googleapis.com',
+    'https://maps.gstatic.com',
+    'https://va.vercel-scripts.com',
+    // Add nonce support for production
+    ...(IS_DEV ? [] : ["'nonce-wasel-script'"]),
   ],
   'style-src': [
     "'self'",
+    // unsafe-inline required for CSS-in-JS (Tailwind v4 + inline styles)
     "'unsafe-inline'",
     'https://fonts.googleapis.com',
+    // Add nonce support for production styles
+    ...(IS_DEV ? [] : ["'nonce-wasel-style'"]),
   ],
   'img-src': [
     "'self'",
@@ -51,7 +59,11 @@ export const CSP_DIRECTIVES = {
     'wss://*.supabase.co',
     'https://api.stripe.com',
     'https://maps.googleapis.com',
+    'https://maps.gstatic.com',
     'https://*.sentry.io',
+    'https://o*.ingest.sentry.io',
+    'https://vitals.vercel-insights.com',
+    'https://va.vercel-scripts.com',
     ...(IS_DEV ? ['ws://localhost:*', 'http://localhost:*'] : []),
   ],
   'frame-src': [
@@ -59,11 +71,15 @@ export const CSP_DIRECTIVES = {
     'https://js.stripe.com',
     'https://hooks.stripe.com',
   ],
+  'worker-src': ["'self'", 'blob:'],
   'object-src': ["'none'"],
   'base-uri': ["'self'"],
   'form-action': ["'self'"],
   'frame-ancestors': ["'none'"],
   'upgrade-insecure-requests': [],
+  // Enhanced security directives
+  'require-trusted-types-for': ["'script'"],
+  'trusted-types': ['default', 'wasel-policy'],
 };
 
 export function getCSPHeader(): string {
@@ -105,14 +121,17 @@ export function resetRateLimit(key: string): void {
   rateLimitStore.delete(key);
 }
 
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, record] of rateLimitStore.entries()) {
-    if (now > record.resetAt) {
-      rateLimitStore.delete(key);
+// Use a WeakRef-safe cleanup that doesn't leak in tests or SSR
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, record] of rateLimitStore.entries()) {
+      if (now > record.resetAt) {
+        rateLimitStore.delete(key);
+      }
     }
-  }
-}, 5 * 60 * 1000);
+  }, 5 * 60 * 1000);
+}
 
 export interface PasswordStrength {
   score: 0 | 1 | 2 | 3 | 4;
@@ -129,17 +148,17 @@ export function checkPasswordStrength(password: string): PasswordStrength {
   } else {
     score += 1;
   }
-  if (password.length >= 12) score += 1;
+  if (password.length >= 12) {score += 1;}
 
   const hasLowercase = /[a-z]/.test(password);
   const hasUppercase = /[A-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const hasSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
 
-  if (!hasLowercase) feedback.push('Add lowercase letters');
-  if (!hasUppercase) feedback.push('Add uppercase letters');
-  if (!hasNumber) feedback.push('Add numbers');
-  if (!hasSpecial) feedback.push('Add special characters');
+  if (!hasLowercase) {feedback.push('Add lowercase letters');}
+  if (!hasUppercase) {feedback.push('Add uppercase letters');}
+  if (!hasNumber) {feedback.push('Add numbers');}
+  if (!hasSpecial) {feedback.push('Add special characters');}
 
   const diversityScore = [hasLowercase, hasUppercase, hasNumber, hasSpecial].filter(Boolean).length;
   score += Math.min(diversityScore - 1, 2);

@@ -10,6 +10,7 @@
 
 import { API_URL, publicAnonKey } from '../services/core';
 import { omitUndefined } from './object';
+import { sanitizeForLog } from './logSanitizer';
 
 // ============================================================================
 // CONFIGURATION
@@ -89,9 +90,9 @@ export function getApiHeaders(accessToken?: string): HeadersInit {
   };
 
   if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
+    headers.Authorization = `Bearer ${accessToken}`;
   } else {
-    headers['Authorization'] = `Bearer ${publicAnonKey}`;
+    headers.Authorization = `Bearer ${publicAnonKey}`;
   }
 
   return headers;
@@ -238,7 +239,7 @@ export async function apiRequest<T = unknown>(
       // Retry on network errors and timeouts
       if (error instanceof NetworkError || error instanceof TimeoutError) {
         const delay = RETRY_CONFIG.retryDelay * Math.pow(2, attempt);
-        console.warn(`⚠️ ${error.message}. Retrying in ${delay}ms... (${attempt + 1}/${retries})`);
+        console.warn(`⚠️ ${sanitizeForLog(error.message)}. Retrying in ${delay}ms... (${attempt + 1}/${retries})`);
         await sleep(delay);
         continue;
       }
@@ -296,11 +297,11 @@ export async function apiGet<T = unknown>(
   accessToken?: string
 ): Promise<T> {
   const queryString = params 
-    ? '?' + new URLSearchParams(
+    ? `?${  new URLSearchParams(
         Object.entries(params)
           .filter(([, value]) => value !== undefined && value !== null)
           .map(([key, value]) => [key, String(value)])
-      ).toString()
+      ).toString()}`
     : '';
 
   return apiRequest<T>(endpoint + queryString, {
@@ -409,11 +410,12 @@ export const API_ENDPOINTS = {
   ADMIN_SEED: '/admin/seed-data',
   
   // Health
-  HEALTH: '/',
+  HEALTH: '/health',
   HEALTH_DB: '/health/db',
   HEALTH_AUTH: '/health/auth',
   HEALTH_STORAGE: '/health/storage',
   HEALTH_KV: '/health/kv',
+  JOBS_STATUS: '/jobs/status',
 };
 
 // ============================================================================

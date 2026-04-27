@@ -1,0 +1,484 @@
+:root {
+  --wasel-focus-ring: 0 0 0 3px color-mix(in srgb, var(--ds-accent) 18%, transparent);
+  --wasel-state-hover: color-mix(in srgb, var(--ds-accent) 10%, transparent);
+  --wasel-state-hover-strong: color-mix(in srgb, var(--ds-accent) 16%, transparent);
+  --wasel-state-active: color-mix(in srgb, var(--ds-accent-strong) 20%, transparent);
+  --wasel-state-disabled: color-mix(in srgb, var(--ds-text-soft) 34%, transparent);
+  --wasel-page-panel:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-accent-strong) 4%, rgb(255 255 255 / 0.02)) 0%,
+      rgb(255 255 255 / 0.02) 100%
+    ),
+    color-mix(in srgb, var(--ds-surface-raised) 92%, transparent);
+  --wasel-page-panel-strong:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-accent-strong) 6%, rgb(255 255 255 / 0.03)) 0%,
+      rgb(255 255 255 / 0.03) 100%
+    ),
+    color-mix(in srgb, var(--ds-surface-raised) 96%, transparent);
+  --wasel-page-panel-border: color-mix(in srgb, var(--ds-border) 82%, transparent);
+  --wasel-page-panel-border-strong:
+    color-mix(in srgb, var(--ds-accent-strong) 24%, var(--ds-border));
+  --wasel-page-panel-glow: var(--ds-shadow-md);
+  --wasel-section-tone: var(--ds-accent-strong);
+  --wasel-icon-sm: 14px;
+  --wasel-icon-md: 18px;
+  --wasel-icon-lg: 20px;
+}
+
+.wasel-ui-surface {
+  background: var(--wasel-page-panel);
+  border: 1px solid var(--wasel-panel-border);
+  box-shadow: var(--wasel-shadow-card);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.wasel-ui-surface-strong {
+  background: var(--wasel-page-panel-strong);
+  border: 1px solid var(--wasel-page-panel-border-strong);
+  box-shadow: var(--wasel-page-panel-glow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.wasel-page-shell {
+  position: relative;
+  max-width: var(--wasel-layout-max-width);
+  margin: 0 auto;
+  padding: var(--wasel-layout-top) var(--wasel-layout-inline) var(--wasel-layout-bottom);
+}
+
+.wasel-page-frame {
+  position: relative;
+  overflow: hidden;
+  padding: var(--wasel-card-padding);
+  border-radius: var(--wasel-radius-2xl);
+  background: var(--wasel-page-panel-strong);
+  border: 1px solid var(--wasel-page-panel-border);
+  box-shadow: var(--wasel-shadow-lg), inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+.wasel-page-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 14% 14%,
+      color-mix(in srgb, var(--ds-accent-strong) 16%, transparent),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 84% 18%,
+      color-mix(in srgb, var(--ds-accent) 12%, transparent),
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 72% 88%,
+      color-mix(in srgb, var(--ds-warning) 10%, transparent),
+      transparent 18%
+    );
+}
+
+.wasel-page-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--ds-accent-strong) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--ds-accent-strong) 14%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(circle at center, black 0%, black 48%, transparent 90%);
+}
+
+.wasel-page-shell__glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 12% 12%,
+      color-mix(in srgb, var(--ds-accent-strong) 16%, transparent),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 86% 10%,
+      color-mix(in srgb, var(--ds-warning) 10%, transparent),
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 54% 94%,
+      color-mix(in srgb, var(--ds-accent) 8%, transparent),
+      transparent 24%
+    );
+  opacity: 0.92;
+}
+
+.wasel-page-frame__top-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--ds-accent-strong) 44%, transparent),
+      transparent
+    );
+}
+
+.wasel-page-frame__top-wash {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 160px;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-accent-strong) 8%, transparent),
+      transparent 72%
+    );
+}
+
+.wasel-page-stack {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--wasel-layout-gap);
+}
+
+.wasel-page-shell,
+.wasel-page-frame,
+.wasel-page-stack,
+.wasel-section-head,
+.wasel-page-brief,
+.wasel-clarity-band,
+.wasel-section-head__inner,
+.wasel-section-head__intro,
+.wasel-page-brief__label,
+.wasel-page-brief__copy,
+.wasel-clarity-grid,
+.wasel-clarity-item {
+  min-width: 0;
+}
+
+.wasel-page-stack > *,
+.wasel-section-head__inner > *,
+.wasel-section-head__intro > *,
+.wasel-page-brief > *,
+.wasel-clarity-band > *,
+.wasel-clarity-item > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.wasel-section-head {
+  --section-tone: var(--wasel-section-tone);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 6px;
+  padding: 24px 28px;
+  border-radius: 30px;
+  border: 1px solid color-mix(in srgb, var(--section-tone) 28%, transparent);
+  background: var(--wasel-service-head-bg, var(--service-head-background));
+  box-shadow: var(--wasel-page-panel-glow), inset 0 1px 0 color-mix(in srgb, var(--section-tone) 14%, transparent);
+}
+
+.wasel-section-head::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 54% 100% at 8% 50%, color-mix(in srgb, var(--section-tone) 12%, transparent), transparent 64%),
+    linear-gradient(135deg, color-mix(in srgb, var(--section-tone) 10%, transparent), transparent 46%);
+}
+
+.wasel-section-head::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--section-tone) 42%, transparent), transparent);
+}
+
+[dir='rtl'] .wasel-section-head::before {
+  background:
+    radial-gradient(ellipse 54% 100% at 92% 50%, color-mix(in srgb, var(--section-tone) 12%, transparent), transparent 64%),
+    linear-gradient(135deg, color-mix(in srgb, var(--section-tone) 10%, transparent), transparent 46%);
+}
+
+.wasel-section-head__inner {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.wasel-section-head__intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.wasel-section-head__icon {
+  width: 62px;
+  height: 62px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--section-tone) 18%, transparent),
+      rgb(255 255 255 / 0.08)
+    );
+  border: 1px solid color-mix(in srgb, var(--section-tone) 28%, transparent);
+  box-shadow: 0 20px 34px color-mix(in srgb, var(--section-tone) 14%, transparent);
+  color: var(--section-tone);
+  font-size: 1.4rem;
+}
+
+.wasel-section-head__eyebrow,
+.wasel-micro-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin-bottom: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--section-tone) 22%, transparent);
+  background: color-mix(in srgb, var(--section-tone) 10%, transparent);
+  color: var(--section-tone);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.wasel-section-head__title,
+.wasel-heading-lg {
+  margin: 0;
+  color: var(--wasel-copy-primary);
+  font-family: var(--wasel-font-display);
+  font-size: clamp(1.35rem, 2.4vw, 1.72rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.wasel-section-head__sub,
+.wasel-copy-body {
+  margin-top: 8px;
+  max-width: 720px;
+  color: var(--wasel-copy-muted);
+  font-size: 0.92rem;
+  line-height: 1.72;
+}
+
+.wasel-page-brief,
+.wasel-clarity-band {
+  --section-tone: var(--wasel-section-tone);
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 14px;
+  margin-bottom: 4px;
+  padding: 18px 20px;
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, var(--section-tone) 20%, transparent);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--section-tone) 10%, transparent),
+      rgb(255 255 255 / 0.04)
+    );
+  box-shadow: var(--wasel-page-panel-glow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.wasel-page-brief {
+  grid-template-columns: minmax(0, 180px) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.wasel-page-brief__label {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding-inline-end: 10px;
+  border-inline-end: 1px solid color-mix(in srgb, var(--section-tone) 16%, transparent);
+}
+
+[dir='rtl'] .wasel-page-brief__label {
+  padding-inline-end: 0;
+  padding-inline-start: 10px;
+  border-inline-end: none;
+  border-inline-start: 1px solid color-mix(in srgb, var(--section-tone) 16%, transparent);
+}
+
+.wasel-page-brief__copy,
+.wasel-clarity-band__copy {
+  display: grid;
+  gap: 8px;
+}
+
+.wasel-heading-sm {
+  color: var(--wasel-copy-primary);
+  font-family: var(--wasel-font-display);
+  font-size: 1.02rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.wasel-copy-subtle {
+  color: var(--wasel-copy-muted);
+  font-size: 0.84rem;
+  line-height: 1.68;
+}
+
+.wasel-section-head__sub,
+.wasel-copy-body,
+.wasel-copy-subtle,
+.wasel-clarity-item__value {
+  overflow-wrap: anywhere;
+}
+
+.wasel-clarity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.wasel-clarity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 15px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--section-tone) 16%, transparent);
+  background: var(--wasel-page-panel);
+  transition: border-color var(--wasel-motion-fast), box-shadow var(--wasel-motion-fast), transform var(--wasel-motion-fast);
+}
+
+.wasel-clarity-item:hover {
+  border-color: color-mix(in srgb, var(--section-tone) 34%, transparent);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--section-tone) 10%, transparent);
+  transform: translateY(-1px);
+}
+
+.wasel-clarity-item__index {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--section-tone) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--section-tone) 24%, transparent);
+  color: var(--section-tone);
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.wasel-clarity-item__label {
+  margin-bottom: 4px;
+  color: var(--section-tone);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wasel-clarity-item__value {
+  color: var(--wasel-copy-primary);
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.58;
+}
+
+.wasel-empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  text-align: center;
+  padding: clamp(28px, 5vw, 44px);
+  border-radius: 28px;
+  border: 1px solid var(--wasel-page-panel-border);
+  background: var(--wasel-page-panel);
+  box-shadow: var(--wasel-shadow-md);
+}
+
+.wasel-empty-state__icon {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: var(--wasel-button-primary-soft);
+  border: 1px solid var(--wasel-button-primary-border);
+  color: var(--primary);
+}
+
+@media (max-width: 899px) {
+  .wasel-page-shell {
+    padding-inline: 14px;
+    padding-bottom: 36px;
+  }
+
+  .wasel-page-brief,
+  .wasel-clarity-grid,
+  .wasel-section-head__inner {
+    grid-template-columns: 1fr !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .wasel-page-brief__label {
+    padding-inline: 0;
+    padding-bottom: 10px;
+    border-inline: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--section-tone) 16%, transparent);
+  }
+
+  .wasel-section-head__intro,
+  .wasel-page-brief__copy,
+  .wasel-clarity-band > :first-child {
+    width: 100%;
+  }
+
+  .wasel-section-head {
+    padding: 20px 18px;
+    border-radius: 22px;
+  }
+}
+
+@media (max-width: 640px) {
+  .wasel-page-frame {
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  .wasel-clarity-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -24,6 +24,7 @@
 
 import { onCLS, onFCP, onINP, onLCP, onTTFB, type Metric } from 'web-vitals';
 import { supabase } from '../services/core';
+import { hasTelemetryConsent } from './consent';
 
 type MetricsClient = {
   from: (table: string) => {
@@ -48,16 +49,21 @@ const BUDGETS: Record<string, { good: number; poor: number }> = {
   FCP:  { good: 1800,  poor: 3000  },
   TTFB: { good: 800,   poor: 1800  },
 };
+let webVitalsReporterInitialized = false;
 
 function rating(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
   const budget = BUDGETS[name];
-  if (!budget) return 'good';
-  if (value <= budget.good) return 'good';
-  if (value <= budget.poor) return 'needs-improvement';
+  if (!budget) {return 'good';}
+  if (value <= budget.good) {return 'good';}
+  if (value <= budget.poor) {return 'needs-improvement';}
   return 'poor';
 }
 
 async function report(metric: Metric): Promise<void> {
+  if (!hasTelemetryConsent()) {
+    return;
+  }
+
   const r = rating(metric.name, metric.value);
   const isLocalAuditHost =
     typeof window !== 'undefined' &&
@@ -71,7 +77,7 @@ async function report(metric: Metric): Promise<void> {
 
   // Skip write if Supabase isn't configured
   const metricsClient = supabase as MetricsClient | null;
-  if (!metricsClient || isLocalAuditHost) return;
+  if (!metricsClient || isLocalAuditHost) {return;}
 
   try {
     await metricsClient.from('web_vitals').insert({
@@ -94,6 +100,11 @@ async function report(metric: Metric): Promise<void> {
  * with its final stable value, minimising write volume.
  */
 export function initWebVitalsReporter(): void {
+  if (webVitalsReporterInitialized || !hasTelemetryConsent()) {
+    return;
+  }
+
+  webVitalsReporterInitialized = true;
   onLCP(report);
   onCLS(report);
   onINP(report);
@@ -112,7 +123,7 @@ export async function fetchVitalsSummary(days = 7): Promise<{
   rating: string;
 }[] | null> {
   const metricsClient = supabase as MetricsClient | null;
-  if (!metricsClient) return null;
+  if (!metricsClient) {return null;}
   try {
     const since = new Date(Date.now() - days * 86_400_000).toISOString();
     const { data, error } = await metricsClient
@@ -120,7 +131,7 @@ export async function fetchVitalsSummary(days = 7): Promise<{
       .select('name, value, rating')
       .gte('recorded_at', since);
 
-    if (error || !data) return null;
+    if (error || !data) {return null;}
 
     const grouped = new Map<string, number[]>();
     for (const row of data) {

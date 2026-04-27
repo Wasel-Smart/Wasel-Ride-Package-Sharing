@@ -21,7 +21,10 @@ import {
 
 function valid<T>(schema: { safeParse: (v: unknown) => { success: boolean } }, data: T) {
   const result = schema.safeParse(data);
-  expect(result.success, `Expected valid but got: ${JSON.stringify((result as any).error?.issues)}`).toBe(true);
+  expect(
+    result.success,
+    `Expected valid but got: ${JSON.stringify((result as any).error?.issues)}`,
+  ).toBe(true);
 }
 
 function invalid<T>(schema: { safeParse: (v: unknown) => { success: boolean } }, data: T) {
@@ -63,7 +66,7 @@ describe('signUpSchema — Unicode name support', () => {
   });
 
   it('accepts a name with hyphens and apostrophes (common in Jordan)', () => {
-    valid(signUpSchema, { ...base, fullName: "Khalil Al-Najjar" });
+    valid(signUpSchema, { ...base, fullName: 'Khalil Al-Najjar' });
   });
 
   it('rejects a name that is only whitespace after trim', () => {
@@ -85,8 +88,8 @@ describe('signUpSchema — phone format edge cases', () => {
     valid(signUpSchema, { ...base, phone: '+962799123456' });
   });
 
-  it('accepts UAE number', () => {
-    valid(signUpSchema, { ...base, phone: '+971501234567' });
+  it('rejects non-Jordanian phone numbers', () => {
+    invalid(signUpSchema, { ...base, phone: '+971501234567' });
   });
 
   it('rejects phone starting with 00 (not E.164)', () => {
@@ -124,7 +127,10 @@ describe('updateProfileSchema — avatarUrl safety', () => {
   });
 
   it('rejects data: URI (potential XSS vector)', () => {
-    invalid(updateProfileSchema, { ...base, avatarUrl: 'data:text/html,<script>alert(1)</script>' });
+    invalid(updateProfileSchema, {
+      ...base,
+      avatarUrl: 'data:text/html,<script>alert(1)</script>',
+    });
   });
 
   it('accepts empty string (clearing avatar)', () => {

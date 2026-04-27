@@ -1,4 +1,5 @@
 import { redactSensitiveValue } from './redaction';
+import { recordMetric, startTelemetrySpan } from '@/platform';
 
 export type LogContext = Record<string, unknown>;
 
@@ -14,6 +15,10 @@ export interface MonitoringSink {
 
 let monitoringSink: MonitoringSink | null = null;
 
+function isLogContextCandidate(value: unknown): value is LogContext {
+  return typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Error);
+}
+
 function redactContext(context?: LogContext): LogContext | undefined {
   if (!context) {
     return undefined;
@@ -27,13 +32,21 @@ export function registerMonitoringSink(sink: MonitoringSink | null): void {
 }
 
 export const logger = {
-  error: (message: string, error?: Error | unknown, context?: LogContext) => {
-    const sanitizedContext = redactContext(context);
+  error: (
+    message: string,
+    errorOrContext?: Error | unknown | LogContext,
+    context?: LogContext,
+  ) => {
+    const resolvedContext =
+      context ?? (isLogContextCandidate(errorOrContext) ? errorOrContext : undefined);
+    const resolvedError =
+      context === undefined && isLogContextCandidate(errorOrContext) ? undefined : errorOrContext;
+    const sanitizedContext = redactContext(resolvedContext);
     if (import.meta.env.DEV) {
-      console.error('[Wasel]', message, error, sanitizedContext);
+      console.error('[Wasel]', message, resolvedError, sanitizedContext);
     }
 
-    monitoringSink?.captureException(error || new Error(message), {
+    monitoringSink?.captureException(resolvedError || new Error(message), {
       level: 'error',
       tags: { type: 'application_error' },
       ...sanitizedContext,
@@ -66,7 +79,7 @@ export const logger = {
 
   startTransaction: (name: string, op: string) => {
     logger.addBreadcrumb(`Transaction: ${name}`, 'performance', { op });
-    return { finish: () => undefined };
+    return startTelemetrySpan(name, { op });
   },
 
   addBreadcrumb: (message: string, category: string, data?: LogContext) => {
@@ -80,6 +93,16 @@ export function trackAPICall(endpoint: string, method: string, duration: number,
     method,
     duration,
     status,
+  });
+  recordMetric({
+    name: 'api.request.duration',
+    value: duration,
+    unit: 'ms',
+    tags: {
+      endpoint,
+      method,
+      status,
+    },
   });
 
   if (duration > 3000) {
@@ -106,6 +129,6 @@ export function usePerformanceMonitoring(componentName: string) {
   const transaction = logger.startTransaction(componentName, 'component.render');
 
   return () => {
-    transaction.finish();
+    transaction.end({ componentName });
   };
 }

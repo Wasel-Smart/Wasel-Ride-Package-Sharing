@@ -31,21 +31,30 @@ import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence
 import { buildMiddleEastCorridorProof } from '../../services/middleEastCorridorProof';
 
 /* ─── Design tokens ──────────────────────────────────────────────────────────── */
-const BG = '#050e1b';
-const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.018))';
-const CARD2 = 'rgba(255,255,255,0.026)';
-const BORDER = 'rgba(93,150,210,0.15)';
-const CYAN = '#47B7E6';
-const GOLD = '#A8D614';
-const GREEN = '#6BB515';
+const BG = 'var(--wasel-service-bg)';
+const CARD = 'var(--wasel-service-card)';
+const CARD2 = 'var(--wasel-service-card-2)';
+const BORDER = 'var(--wasel-service-border)';
+const TRACK = 'var(--surface-muted-strong)';
+const CYAN = 'var(--wasel-app-blue)';
+const GOLD = 'var(--wasel-app-sky)';
+const GREEN = 'var(--wasel-app-teal)';
 const RED = '#ef4444';
 const ORANGE = '#f97316';
-const TEXT = '#EFF6FF';
-const SUB = 'rgba(148,163,184,0.82)';
+const TEXT = 'var(--wasel-service-text)';
+const SUB = 'var(--wasel-service-sub)';
 const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 function card(extra?: React.CSSProperties): React.CSSProperties {
-  return { background: CARD, border: `1px solid ${BORDER}`, borderRadius: 20, padding: '20px 20px 18px', ...extra };
+  return {
+    background: CARD,
+    border: `1px solid ${BORDER}`,
+    borderRadius: 24,
+    padding: '20px 20px 18px',
+    boxShadow: 'var(--wasel-shadow-card)',
+    backdropFilter: 'blur(18px)',
+    ...extra,
+  };
 }
 
 /* ─── Types ──────────────────────────────────────────────────────────────────── */
@@ -359,7 +368,7 @@ export default function ModerationPage() {
                         <div style={{ color: TEXT, fontWeight: 700, fontSize: '0.77rem' }}>{rq.corridor}</div>
                         <span style={{ color: sc, fontWeight: 800, fontSize: '0.67rem' }}>{rq.status}</span>
                       </div>
-                      <div style={{ height: 4, background: 'rgba(255,255,255,0.07)', borderRadius: 3, marginBottom: 6 }}>
+                      <div style={{ height: 4, background: TRACK, borderRadius: 3, marginBottom: 6 }}>
                         <div style={{ height: '100%', width: `${rq.ownershipScore}%`, background: sc, borderRadius: 3 }} />
                       </div>
                       {rq.qualityFlags.map((f) => (

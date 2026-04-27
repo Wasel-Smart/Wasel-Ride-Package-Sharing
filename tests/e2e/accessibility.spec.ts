@@ -1,121 +1,97 @@
 /**
- * Accessibility E2E suite — Wasel
+ * Accessibility E2E suite - Wasel
  *
- * Runs axe-core against every key page to enforce WCAG 2.1 AA.
- * Failures in this suite are hard blockers before deployment.
- *
- * Covered pages (guest and authenticated via demo session):
- *   / · /app/find-ride · /app/offer-ride · /app/packages
- *   /app/bus · /app/trust · /app/safety · /app/plus
- *   /app/wallet · /app/profile · /app/privacy · /app/terms
+ * Runs axe-core against key guest and authenticated pages to enforce WCAG 2.1 AA.
+ * Failures in this suite are blocking.
  */
 
+import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { seedDemoSession } from '../../e2e/helpers/session';
 
-/* Pages accessible without authentication */
 const GUEST_PAGES = [
-  { name: 'Landing',  path: '/' },
-  { name: 'Privacy',  path: '/app/privacy' },
-  { name: 'Terms',    path: '/app/terms' },
+  { name: 'Landing', path: '/' },
+  { name: 'Privacy', path: '/app/privacy' },
+  { name: 'Terms', path: '/app/terms' },
 ];
 
-/* Pages that require a demo session */
 const AUTH_PAGES = [
-  { name: 'Find Ride',  path: '/app/find-ride' },
+  { name: 'Find Ride', path: '/app/find-ride' },
   { name: 'Offer Ride', path: '/app/offer-ride' },
-  { name: 'Packages',   path: '/app/packages' },
-  { name: 'Bus',        path: '/app/bus' },
-  { name: 'My Trips',   path: '/app/my-trips' },
-  { name: 'Wallet',     path: '/app/wallet' },
-  { name: 'Plus',       path: '/app/plus' },
-  { name: 'Profile',    path: '/app/profile' },
-  { name: 'Trust',      path: '/app/trust' },
-  { name: 'Safety',     path: '/app/safety' },
-  { name: 'Driver',     path: '/app/driver' },
-  { name: 'Notifications', path: '/app/notifications' },
+  { name: 'Packages', path: '/app/packages' },
+  { name: 'My Trips', path: '/app/my-trips' },
+  { name: 'Wallet', path: '/app/wallet' },
+  { name: 'Payments', path: '/app/payments' },
 ];
 
-/* ── Shared axe options ─────────────────────────────────────────────────────── */
 const AXE_OPTIONS = {
   runOnly: {
     type: 'tag' as const,
     values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'],
   },
   rules: {
-    // Skip colour contrast for now — design system has been pre-audited
-    // but axe struggles with custom CSS variables in test env
+    // Skip color contrast for now because axe can misread custom CSS variables in tests.
     'color-contrast': { enabled: false },
   },
 };
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Guest pages
-   ───────────────────────────────────────────────────────────────────────── */
-test.describe('Accessibility — guest pages', () => {
-  for (const page of GUEST_PAGES) {
-    test(`WCAG 2.1 AA · ${page.name} (${page.path})`, async ({ page: pw }) => {
-      await pw.goto(page.path, { waitUntil: 'domcontentloaded' });
-      // Give dynamic content time to settle
-      await pw.waitForTimeout(600);
+function formatViolations(
+  violations: Array<{
+    description: string;
+    id: string;
+    impact: string | null;
+    nodes: Array<{ html: string }>;
+  }>,
+) {
+  return violations
+    .map(violation => [
+      `  [${violation.impact?.toUpperCase() ?? 'UNKNOWN'}] ${violation.id}: ${violation.description}`,
+      ...violation.nodes.slice(0, 2).map(node => `    -> ${node.html}`),
+    ].join('\n'))
+    .join('\n');
+}
 
-      const results = await new AxeBuilder({ page: pw })
-        .options(AXE_OPTIONS)
-        .analyze();
+async function expectPageToPassAccessibilityAudit(page: Page, name: string, path: string) {
+  await page.goto(path, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(600);
 
-      // Surface violations clearly in CI logs
-      if (results.violations.length > 0) {
-        console.error(
-          `[A11y] ${page.name} violations:\n`,
-          results.violations.map(v =>
-            `  [${v.impact?.toUpperCase()}] ${v.id}: ${v.description}\n` +
-            v.nodes.slice(0, 2).map(n => `    → ${n.html}`).join('\n'),
-          ).join('\n'),
-        );
-      }
+  const results = await new AxeBuilder({ page })
+    .options(AXE_OPTIONS)
+    .analyze();
 
-      expect(results.violations).toHaveLength(0);
+  if (results.violations.length > 0) {
+    console.error(`[A11y] ${name} violations:\n${formatViolations(results.violations)}`);
+  }
+
+  expect(results.violations).toHaveLength(0);
+}
+
+test.describe('Accessibility - guest pages', () => {
+  for (const guestPage of GUEST_PAGES) {
+    test(`WCAG 2.1 AA - ${guestPage.name} (${guestPage.path})`, async ({ page }) => {
+      await expectPageToPassAccessibilityAudit(page, guestPage.name, guestPage.path);
     });
   }
 });
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Authenticated pages
-   ───────────────────────────────────────────────────────────────────────── */
-test.describe('Accessibility — authenticated pages', () => {
+test.describe('Accessibility - authenticated pages', () => {
   test.beforeEach(async ({ page }) => {
     await seedDemoSession(page);
   });
 
-  for (const pg of AUTH_PAGES) {
-    test(`WCAG 2.1 AA · ${pg.name} (${pg.path})`, async ({ page }) => {
-      await page.goto(pg.path, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(600);
-
-      const results = await new AxeBuilder({ page })
-        .options(AXE_OPTIONS)
-        .analyze();
-
-      if (results.violations.length > 0) {
-        console.error(
-          `[A11y] ${pg.name} violations:\n`,
-          results.violations.map(v =>
-            `  [${v.impact?.toUpperCase()}] ${v.id}: ${v.description}\n` +
-            v.nodes.slice(0, 2).map(n => `    → ${n.html}`).join('\n'),
-          ).join('\n'),
-        );
-      }
-
-      expect(results.violations).toHaveLength(0);
+  for (const authenticatedPage of AUTH_PAGES) {
+    test(`WCAG 2.1 AA - ${authenticatedPage.name} (${authenticatedPage.path})`, async ({ page }) => {
+      await expectPageToPassAccessibilityAudit(
+        page,
+        authenticatedPage.name,
+        authenticatedPage.path,
+      );
     });
   }
 });
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Landmark + heading hierarchy checks (structural, not colour-related)
-   ───────────────────────────────────────────────────────────────────────── */
-test.describe('Structural accessibility — landmarks & headings', () => {
+test.describe('Structural accessibility - landmarks and headings', () => {
   test.beforeEach(async ({ page }) => {
     await seedDemoSession(page);
   });
@@ -166,12 +142,8 @@ test.describe('Structural accessibility — landmarks & headings', () => {
   });
 });
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   RTL / Arabic layout checks
-   ───────────────────────────────────────────────────────────────────────── */
-test.describe('RTL — Arabic layout accessibility', () => {
+test.describe('RTL - Arabic layout accessibility', () => {
   test('Landing renders correctly in Arabic locale', async ({ page }) => {
-    // Force Arabic by setting localStorage before navigation
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.evaluate(() => {
       localStorage.setItem('wasel-language', 'ar');

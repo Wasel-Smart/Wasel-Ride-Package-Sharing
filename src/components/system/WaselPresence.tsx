@@ -13,40 +13,51 @@ import {
   type WaselContactAction,
 } from '../../domains/trust/waselPresence';
 
-const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+const FONT = "var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
 const DISPLAY =
-  "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', 'Cairo', sans-serif)";
-const PRESENCE_TEXT = '#0D2948';
-const PRESENCE_TEXT_MUTED = 'rgba(13,41,72,0.74)';
-const PRESENCE_BORDER = 'rgba(16,43,73,0.12)';
-const PRESENCE_BORDER_SOFT = 'rgba(16,43,73,0.16)';
-const PRESENCE_PANEL =
-  'linear-gradient(135deg, rgba(255,255,255,0.96), rgba(243,249,255,0.93) 46%, rgba(231,245,255,0.95) 100%)';
-const PRESENCE_PANEL_SOFT =
-  'linear-gradient(180deg, rgba(255,255,255,0.95), rgba(243,249,255,0.93))';
+  "var(--wasel-font-display, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
+const PRESENCE_TEXT = 'var(--wasel-copy-primary)';
+const PRESENCE_TEXT_MUTED = 'var(--wasel-copy-muted)';
+const PRESENCE_BORDER = 'var(--wasel-panel-border)';
+const PRESENCE_BORDER_SOFT = 'var(--wasel-button-primary-border)';
+const PRESENCE_PANEL = 'var(--wasel-panel-strong)';
+const PRESENCE_PANEL_SOFT = 'var(--wasel-panel-strong)';
 
 const TONE_STYLES = {
   cyan: {
-    border: 'rgba(25,231,187,0.3)',
-    background: 'rgba(25,231,187,0.12)',
-    color: '#0CA586',
+    border: 'color-mix(in srgb, var(--ds-accent) 24%, transparent)',
+    background: 'color-mix(in srgb, var(--ds-accent) 10%, transparent)',
+    color: 'var(--ds-accent)',
   },
   green: {
-    border: 'rgba(15,115,255,0.22)',
-    background: 'rgba(15,115,255,0.09)',
-    color: '#0F73FF',
+    border: 'color-mix(in srgb, var(--ds-accent-strong) 26%, transparent)',
+    background: 'color-mix(in srgb, var(--ds-accent-strong) 10%, transparent)',
+    color: 'var(--ds-accent-strong)',
   },
   gold: {
-    border: 'rgba(72,207,255,0.28)',
-    background: 'rgba(72,207,255,0.13)',
-    color: '#0C8DBE',
+    border: 'color-mix(in srgb, var(--wasel-brand-hover) 24%, transparent)',
+    background: 'color-mix(in srgb, var(--wasel-brand-hover) 10%, transparent)',
+    color: 'var(--wasel-brand-hover)',
   },
 } as const;
 
 function getActionMeta(action: WaselContactAction) {
-  if (action.id === 'call') return { icon: PhoneCall, color: '#0CA586' };
-  if (action.id === 'whatsapp') return { icon: MessageSquareText, color: '#0F73FF' };
-  return { icon: Mail, color: '#0C8DBE' };
+  if (action.id === 'call') return { icon: PhoneCall, color: 'var(--ds-accent)' };
+  if (action.id === 'whatsapp') return { icon: MessageSquareText, color: 'var(--ds-accent-strong)' };
+  return { icon: Mail, color: 'var(--wasel-brand-hover)' };
+}
+
+function getActionAriaLabel(action: WaselContactAction, ar: boolean) {
+  switch (action.id) {
+    case 'call':
+      return ar ? `اتصل عبر ${action.labelAr}` : `Call support via ${action.label}`;
+    case 'whatsapp':
+      return ar
+        ? `افتح ${action.labelAr} في علامة تبويب جديدة`
+        : `Open ${action.label} in a new tab`;
+    default:
+      return ar ? `راسل الدعم عبر ${action.labelAr}` : `Email support via ${action.label}`;
+  }
 }
 
 export function WaselContactActionRow({ ar, compact = false }: { ar: boolean; compact?: boolean }) {
@@ -70,7 +81,9 @@ export function WaselContactActionRow({ ar, compact = false }: { ar: boolean; co
             key={action.id}
             href={action.href}
             target={action.id === 'whatsapp' ? '_blank' : undefined}
-            rel={action.id === 'whatsapp' ? 'noreferrer' : undefined}
+            rel={action.id === 'whatsapp' ? 'noreferrer noopener' : undefined}
+            aria-label={getActionAriaLabel(action, ar)}
+            title={ar ? action.labelAr : action.label}
             className="wasel-lift-card"
             style={{
               display: 'inline-flex',
@@ -79,18 +92,18 @@ export function WaselContactActionRow({ ar, compact = false }: { ar: boolean; co
               minHeight: compact ? 40 : 42,
               padding: compact ? '0 14px' : '0 16px',
               borderRadius: 999,
-              border: `1px solid ${meta.color}30`,
+              border: compact ? '1px solid rgba(191,214,234,0.9)' : `1px solid ${meta.color}26`,
               background: compact
-                ? 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,250,255,0.94))'
-                : `${meta.color}14`,
+                ? 'linear-gradient(180deg, rgba(255,255,255,0.99), rgba(248,252,255,0.96))'
+                : `${meta.color}10`,
               color: PRESENCE_TEXT,
               fontFamily: FONT,
               fontSize: compact ? '0.76rem' : '0.82rem',
               fontWeight: 800,
               textDecoration: 'none',
               boxShadow: compact
-                ? '0 12px 24px rgba(16,50,95,0.14)'
-                : '0 10px 22px rgba(16,50,95,0.12)',
+                ? '0 10px 24px rgba(20,52,89,0.08)'
+                : '0 10px 22px rgba(20,52,89,0.1)',
             }}
           >
             <Icon size={compact ? 14 : 16} color={meta.color} />
@@ -136,9 +149,9 @@ export function WaselProofOfLifeBlock({ ar, compact = false }: { ar: boolean; co
               marginBottom: 6,
               padding: '6px 10px',
               borderRadius: 999,
-              background: 'rgba(15,115,255,0.08)',
+              background: 'color-mix(in srgb, var(--ds-accent-strong) 10%, transparent)',
               border: `1px solid ${PRESENCE_BORDER_SOFT}`,
-              color: '#0F73FF',
+              color: 'var(--ds-accent-strong)',
               fontSize: '0.72rem',
               fontWeight: 900,
               letterSpacing: '0.08em',
@@ -168,7 +181,7 @@ export function WaselProofOfLifeBlock({ ar, compact = false }: { ar: boolean; co
             gap: 8,
             padding: '8px 12px',
             borderRadius: 999,
-            background: 'rgba(16,43,73,0.06)',
+            background: 'color-mix(in srgb, var(--ds-accent) 8%, transparent)',
             border: `1px solid ${PRESENCE_BORDER_SOFT}`,
             color: PRESENCE_TEXT,
             fontSize: '0.76rem',
@@ -176,7 +189,7 @@ export function WaselProofOfLifeBlock({ ar, compact = false }: { ar: boolean; co
             fontFamily: FONT,
           }}
         >
-          <BadgeCheck size={15} color="#0CA586" />
+          <BadgeCheck size={15} color="var(--ds-accent)" />
           {profile.supportPhoneDisplay || profile.supportEmail}
         </div>
       </div>
@@ -256,9 +269,9 @@ export function WaselFounderCard({ ar, compact = false }: { ar: boolean; compact
           gap: 8,
           padding: '6px 10px',
           borderRadius: 999,
-          background: 'rgba(15,115,255,0.08)',
-          border: '1px solid rgba(15,115,255,0.2)',
-          color: '#0F73FF',
+          background: 'color-mix(in srgb, var(--ds-accent-strong) 10%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--ds-accent-strong) 24%, transparent)',
+          color: 'var(--ds-accent-strong)',
           fontSize: '0.72rem',
           fontWeight: 900,
           letterSpacing: '0.08em',
@@ -320,9 +333,9 @@ export function WaselWhyCard({ ar, compact = false }: { ar: boolean; compact?: b
           gap: 8,
           padding: '6px 10px',
           borderRadius: 999,
-          background: 'rgba(25,231,187,0.12)',
-          border: '1px solid rgba(25,231,187,0.22)',
-          color: '#0CA586',
+          background: 'color-mix(in srgb, var(--ds-accent) 10%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--ds-accent) 22%, transparent)',
+          color: 'var(--ds-accent)',
           fontSize: '0.72rem',
           fontWeight: 900,
           letterSpacing: '0.08em',
@@ -396,7 +409,7 @@ export function WaselBusinessFooter({ ar }: { ar: boolean }) {
               fontFamily: FONT,
             }}
           >
-            <MapPin size={14} color="#48CFFF" />
+            <MapPin size={14} color="var(--ds-accent)" />
             {ar ? profile.businessAddressAr : profile.businessAddress}
           </div>
         </div>
@@ -426,7 +439,7 @@ export function WaselPresenceStrip({ ar }: { ar: boolean }) {
         borderRadius: 20,
         padding: '12px 14px',
         background:
-          'linear-gradient(135deg, rgba(162,255,231,0.08), rgba(255,255,255,0.03) 52%, rgba(72,207,255,0.07))',
+          'linear-gradient(135deg, color-mix(in srgb, var(--ds-accent-strong) 12%, transparent), rgba(255,255,255,0.03) 52%, color-mix(in srgb, var(--ds-accent) 8%, transparent))',
         border: `1px solid ${PRESENCE_BORDER}`,
         boxShadow: '0 14px 34px rgba(16,50,95,0.1)',
       }}
@@ -449,9 +462,9 @@ export function WaselPresenceStrip({ ar }: { ar: boolean }) {
               width: 'fit-content',
               padding: '5px 10px',
               borderRadius: 999,
-              background: 'rgba(15,115,255,0.08)',
+              background: 'color-mix(in srgb, var(--ds-accent-strong) 10%, transparent)',
               border: `1px solid ${PRESENCE_BORDER_SOFT}`,
-              color: '#0F73FF',
+              color: 'var(--ds-accent-strong)',
               fontSize: '0.7rem',
               fontWeight: 900,
               letterSpacing: '0.08em',

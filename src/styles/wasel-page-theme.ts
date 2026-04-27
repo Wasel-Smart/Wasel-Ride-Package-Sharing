@@ -1,77 +1,62 @@
 /**
- * Wasel page design tokens — v10 unified investor-grade system.
- * Used by waselServiceShared, all feature pages, and shared components.
+ * Shared page adapter for older service surfaces.
+ * Keep this mapping aligned with the canonical Wasel CSS variable contract.
  */
-import {
-  F,
-  FA,
-  GRAD,
-  GRAD_GOLD,
-  GRAD_GREEN,
-  GRAD_HERO,
-  GRAD_NAVY,
-  GRAD_SIGNAL,
-} from '../utils/wasel-ds';
+import { F, FA } from '../utils/wasel-ds';
 
 export const PAGE_DS = {
-  /* ── Backgrounds ─────────────────────────────────── */
-  bg:    'var(--wasel-surface-0)',
-  card:  'var(--wasel-surface-2)',
-  card2: 'var(--wasel-surface-3)',
+  bg: 'var(--ds-page)',
+  card: 'var(--wasel-panel-strong)',
+  card2: 'var(--wasel-service-card-2)',
+  card3: 'var(--wasel-service-card-3)',
+  panel: 'var(--wasel-panel-strong)',
+  field: 'var(--surface-field)',
 
-  /* ── Borders ─────────────────────────────────────── */
-  border:  'var(--wasel-panel-border)',
-  borderH: 'var(--wasel-panel-border-hover)',
+  border: 'var(--ds-border)',
+  borderH: 'var(--wasel-button-primary-border-strong)',
 
-  /* ── Brand colours ───────────────────────────────── */
-  cyan:   '#19e7bb',
-  cyanG:  'rgba(25,231,187,0.22)',
-  blue:   '#65e1ff',
-  blueG:  'rgba(101,225,255,0.18)',
-  green:  '#a2ffe7',
-  greenG: 'rgba(162,255,231,0.16)',
-  gold:   '#48cfff',
-  goldG:  'rgba(72,207,255,0.16)',
-  red:    '#ff5060',
-  navy:   'var(--wasel-surface-0)',
+  cyan: 'var(--ds-accent)',
+  cyanG: 'color-mix(in srgb, var(--ds-accent) 12%, transparent)',
+  blue: 'var(--ds-accent-strong)',
+  blueG: 'color-mix(in srgb, var(--ds-accent-strong) 12%, transparent)',
+  green: 'var(--ds-accent-strong)',
+  greenG: 'color-mix(in srgb, var(--ds-accent-strong) 10%, transparent)',
+  gold: 'var(--ds-accent-strong)',
+  goldG: 'color-mix(in srgb, var(--ds-accent-strong) 12%, transparent)',
+  red: 'var(--wasel-brand-hover)',
+  navy: 'var(--ds-page)',
 
-  /* ── Copy ────────────────────────────────────────── */
-  text:  'var(--wasel-copy-primary)',
-  sub:   'var(--wasel-copy-muted)',
-  muted: 'var(--wasel-copy-soft)',
+  text: 'var(--ds-text)',
+  sub: 'var(--ds-text-muted)',
+  muted: 'var(--ds-text-soft)',
 
-  /* ── Fonts ───────────────────────────────────────── */
   F,
   FA,
+  FD: "var(--wasel-font-display, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)",
 
-  /* ── Gradients ───────────────────────────────────── */
-  gradC:    GRAD,
-  gradG:    GRAD_GREEN,
-  gradGld:  GRAD_GOLD,
-  gradGold: GRAD_GOLD,
-  gradB:    GRAD_SIGNAL,
-  gradNav:  GRAD_NAVY,
-  gradHero: GRAD_HERO,
+  gradC: 'var(--theme-gradient-primary)',
+  gradG: 'var(--theme-gradient-primary)',
+  gradGld: 'var(--theme-gradient-primary)',
+  gradGold: 'var(--theme-gradient-primary)',
+  gradB: 'linear-gradient(135deg, var(--ds-surface-raised) 0%, var(--ds-page) 100%)',
+  gradNav: 'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted) 88%, var(--ds-accent-soft) 12%) 0%, var(--ds-page) 100%)',
+  gradHero: 'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted) 88%, var(--ds-accent-soft) 12%) 0%, color-mix(in srgb, var(--ds-surface) 94%, var(--ds-accent-soft) 6%) 52%, var(--ds-page) 100%)',
+  glowC: 'color-mix(in srgb, var(--ds-accent-strong) 26%, transparent)',
+  glowT: 'color-mix(in srgb, var(--ds-accent) 18%, transparent)',
 
-  /* ── Section head background ─────────────────────── */
-  sectionHeadBg:
-    'linear-gradient(180deg, rgba(10,20,34,0.96), rgba(7,14,26,0.93))',
+  sectionHeadBg: 'var(--wasel-service-head-bg)',
+  cardGrad: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
 
-  /* ── Card inner gradient ──────────────────────────── */
-  cardGrad:
-    'linear-gradient(152deg, rgba(12,20,34,0.98) 0%, rgba(7,13,24,0.97) 100%)',
-
-  /* ── Shadows ─────────────────────────────────────── */
-  shadowCard:  'var(--wasel-shadow-card)',
-  shadowMd:    'var(--wasel-shadow-md)',
-  shadowTeal:  'var(--wasel-shadow-teal)',
+  shadowCard: 'var(--wasel-shadow-lg)',
+  shadowMd: 'var(--wasel-shadow-md)',
+  shadowTeal: 'var(--wasel-shadow-teal)',
 } as const;
 
 export const PAGE_RADIUS = {
-  sm:   10,
-  md:   14,
-  lg:   18,
-  xl:   22,
-  xxl:  28,
+  sm: 10,
+  md: 14,
+  lg: 18,
+  xl: 22,
+  xxl: 28,
   full: 9999,
 } as const;

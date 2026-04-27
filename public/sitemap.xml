@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-
-  <!-- ── Home / Landing ───────────────────────────────────────────────── -->
   <url>
     <loc>https://wasel14.online/</loc>
-    <lastmod>2026-04-11</lastmod>
+    <lastmod>2026-04-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/"/>
@@ -13,127 +11,21 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://wasel14.online/"/>
   </url>
 
-  <!-- ── Core service pages ────────────────────────────────────────────── -->
-  <url>
-    <loc>https://wasel14.online/app/find-ride</loc>
-    <lastmod>2026-04-11</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/app/find-ride"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/app/find-ride"/>
-  </url>
-
-  <url>
-    <loc>https://wasel14.online/app/offer-ride</loc>
-    <lastmod>2026-04-11</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.90</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/app/offer-ride"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/app/offer-ride"/>
-  </url>
-
-  <url>
-    <loc>https://wasel14.online/app/packages</loc>
-    <lastmod>2026-04-11</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/app/packages"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/app/packages"/>
-  </url>
-
-  <url>
-    <loc>https://wasel14.online/app/bus</loc>
-    <lastmod>2026-04-11</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.80</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/app/bus"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/app/bus"/>
-  </url>
-
-  <url>
-    <loc>https://wasel14.online/app/raje3</loc>
-    <lastmod>2026-04-11</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/app/raje3"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/app/raje3"/>
-  </url>
-
-  <!-- ── Product & intelligence pages ─────────────────────────────────── -->
-  <url>
-    <loc>https://wasel14.online/app/mobility-os</loc>
-    <lastmod>2026-04-11</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.72</priority>
-  </url>
-
-  <url>
-    <loc>https://wasel14.online/app/ai-intelligence</loc>
-    <lastmod>2026-04-11</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.68</priority>
-  </url>
-
-  <url>
-    <loc>https://wasel14.online/app/innovation-hub</loc>
-    <lastmod>2026-04-11</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.65</priority>
-  </url>
-
-  <url>
-    <loc>https://wasel14.online/app/plus</loc>
-    <lastmod>2026-04-11</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.65</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/app/plus"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/app/plus"/>
-  </url>
-
-  <url>
-    <loc>https://wasel14.online/app/driver</loc>
-    <lastmod>2026-04-11</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.65</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/app/driver"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/app/driver"/>
-  </url>
-
-  <url>
-    <loc>https://wasel14.online/app/trust</loc>
-    <lastmod>2026-04-11</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.62</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/app/trust"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/app/trust"/>
-  </url>
-
-  <url>
-    <loc>https://wasel14.online/app/safety</loc>
-    <lastmod>2026-04-11</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.60</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/app/safety"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/app/safety"/>
-  </url>
-
-  <!-- ── Legal pages ───────────────────────────────────────────────────── -->
   <url>
     <loc>https://wasel14.online/app/privacy</loc>
-    <lastmod>2026-04-11</lastmod>
+    <lastmod>2026-04-21</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.40</priority>
+    <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/app/privacy"/>
     <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/app/privacy"/>
   </url>
 
   <url>
     <loc>https://wasel14.online/app/terms</loc>
-    <lastmod>2026-04-11</lastmod>
+    <lastmod>2026-04-21</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.40</priority>
+    <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/app/terms"/>
     <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/app/terms"/>
   </url>
-
 </urlset>

@@ -25,7 +25,7 @@ export interface DemandAlert {
 const DEMAND_KEY = 'wasel-demand-alerts';
 
 function readAlerts(): DemandAlert[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(DEMAND_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -36,7 +36,7 @@ function readAlerts(): DemandAlert[] {
 }
 
 function writeAlerts(alerts: DemandAlert[]) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(DEMAND_KEY, JSON.stringify(alerts.slice(0, 100)));
 }
 
@@ -96,8 +96,8 @@ export async function hydrateDemandAlerts(userId?: string): Promise<DemandAlert[
         ),
       );
 
-      if (index >= 0) merged[index] = { ...merged[index], ...normalized };
-      else merged.unshift(normalized);
+      if (index >= 0) {merged[index] = { ...merged[index], ...normalized };}
+      else {merged.unshift(normalized);}
     }
 
     return syncAlerts(merged.slice(0, 100)).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -127,7 +127,7 @@ export function createDemandAlert(input: {
       item.service === normalized.service &&
       item.status === 'active',
   );
-  if (existing) return existing;
+  if (existing) {return existing;}
 
   const alert: DemandAlert = {
     id: `demand-${Date.now()}-${Math.floor(Math.random() * 1000)}`,

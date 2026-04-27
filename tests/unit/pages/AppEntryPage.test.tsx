@@ -2,11 +2,19 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import {
+  buildPackagePrefillPath,
+} from '@/features/home/appEntryContracts';
 
 const mockNavigate = vi.fn();
 const mockUseLocalAuth = vi.fn();
 const mockUseAuth = vi.fn();
 let mockLanguage = 'en';
+let mockAuthProviders = {
+  google: { enabled: false },
+  facebook: { enabled: false },
+  whatsapp: { enabled: false },
+};
 
 vi.mock('motion/react', () => ({
   motion: {
@@ -17,6 +25,10 @@ vi.mock('motion/react', () => ({
 
 vi.mock('@/hooks/useIframeSafeNavigate', () => ({
   useIframeSafeNavigate: () => mockNavigate,
+}));
+
+vi.mock('@/hooks/useAuthProviderAvailability', () => ({
+  useAuthProviderAvailability: () => mockAuthProviders,
 }));
 
 vi.mock('@/contexts/LocalAuth', () => ({
@@ -54,7 +66,7 @@ vi.mock('@/domains/trust/waselPresence', () => ({
   }),
 }));
 
-vi.mock('@/features/home/DeferredLandingMap', () => ({
+vi.mock('@/components/layout/DeferredLandingMap', () => ({
   DeferredLandingMap: () => <div>Map</div>,
 }));
 
@@ -72,6 +84,11 @@ describe('AppEntryPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLanguage = 'en';
+    mockAuthProviders = {
+      google: { enabled: false },
+      facebook: { enabled: false },
+      whatsapp: { enabled: false },
+    };
     mockUseAuth.mockReturnValue({
       signInWithGoogle: vi.fn().mockResolvedValue({ error: null }),
       signInWithFacebook: vi.fn().mockResolvedValue({ error: null }),
@@ -86,10 +103,10 @@ describe('AppEntryPage', () => {
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Sign in/i }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('button', { name: /Create account/i }).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /Continue with Google/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Continue with Facebook/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Continue with Google/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Continue with Facebook/i })).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Continue with email/i }).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /Open packages/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Send a package/i })).toBeInTheDocument();
   });
 
   it('routes guest email entry to the auth page with a return target', () => {
@@ -116,6 +133,7 @@ describe('AppEntryPage', () => {
 
   it('starts Google auth from the landing gateway', async () => {
     const signInWithGoogle = vi.fn().mockResolvedValue({ error: null });
+    mockAuthProviders.google.enabled = true;
     mockUseAuth.mockReturnValue({
       signInWithGoogle,
       signInWithFacebook: vi.fn().mockResolvedValue({ error: null }),
@@ -135,6 +153,7 @@ describe('AppEntryPage', () => {
 
   it('starts Facebook auth from the landing gateway', async () => {
     const signInWithFacebook = vi.fn().mockResolvedValue({ error: null });
+    mockAuthProviders.facebook.enabled = true;
     mockUseAuth.mockReturnValue({
       signInWithGoogle: vi.fn().mockResolvedValue({ error: null }),
       signInWithFacebook,
@@ -157,7 +176,7 @@ describe('AppEntryPage', () => {
 
     renderAppEntryPage();
 
-    screen.getAllByRole('button', { name: /Find a ride/i })[0].click();
+    screen.getAllByRole('button', { name: /Book a ride/i })[0].click();
 
     expect(mockNavigate).toHaveBeenCalledWith('/app/find-ride?from=Amman&to=Irbid&search=1');
   });
@@ -168,11 +187,13 @@ describe('AppEntryPage', () => {
     renderAppEntryPage();
 
     act(() => {
-      screen.getByRole('button', { name: /^Packages$/i }).click();
+      screen.getByRole('tab', { name: /^Packages$/i }).click();
     });
-    screen.getAllByRole('button', { name: /Open packages/i })[0].click();
+    screen.getAllByRole('button', { name: /Send a package/i })[0].click();
 
-    expect(mockNavigate).toHaveBeenCalledWith('/app/packages?from=Amman&to=Irbid');
+    expect(mockNavigate).toHaveBeenCalledWith(
+      buildPackagePrefillPath({ from: 'Amman', to: 'Irbid', date: '' }),
+    );
   });
 
   it('renders Arabic landing copy when Arabic is active', () => {

@@ -23,20 +23,6 @@ export interface MarketplaceNode {
   moat: string;
 }
 
-export interface HabitLoopProgram {
-  id: 'credits' | 'daily-routes' | 'subscriptions' | 'rewards';
-  title: string;
-  summary: string;
-  outcome: string;
-}
-
-export interface WaselCategoryPosition {
-  categoryLabel: string;
-  infrastructureLabel: string;
-  promise: string;
-  killerAdvantage: string;
-}
-
 export interface CorridorOpportunity {
   id: string;
   from: string;
@@ -68,7 +54,7 @@ export interface DriverRoutePlan {
   grossWhenFullJod: number;
   emptySeatCostJod: number;
   packageBonusJod: number;
-  waselBrainNote: string;
+  routeNote: string;
 }
 
 type CorridorMeta = {
@@ -82,14 +68,6 @@ type CorridorMeta = {
   attachRatePercent: number;
   fillTargetSeats: number;
   intelligenceSignals: string[];
-};
-
-const CATEGORY_POSITION: WaselCategoryPosition = {
-  categoryLabel: 'Routing Economy Platform',
-  infrastructureLabel: 'Shared Mobility Infrastructure for Jordan',
-  promise:
-    'Wasel connects people, goods, services, and route data through shared corridors so movement becomes cheaper, smarter, and predictable.',
-  killerAdvantage: 'Routes plus cost sharing, reinforced by route intelligence.',
 };
 
 const MOVEMENT_LAYERS: MovementLayer[] = [
@@ -149,33 +127,6 @@ const MARKETPLACE_NODES: MarketplaceNode[] = [
     title: 'Service providers',
     summary: 'Installers, technicians, and mobile service teams gain a route-aware way to plan jobs and movement together.',
     moat: 'Service demand adds a third layer on top of riders and drivers.',
-  },
-];
-
-const HABIT_LOOP_PROGRAMS: HabitLoopProgram[] = [
-  {
-    id: 'credits',
-    title: 'Movement credits',
-    summary: 'Every booked seat, posted route, and delivered parcel adds credits back into the network wallet.',
-    outcome: 'Users have a reason to come back before they think about another app.',
-  },
-  {
-    id: 'daily-routes',
-    title: 'Daily routes',
-    summary: 'Frequent corridors become pinned habits with remembered pickup nodes and expected cost bands.',
-    outcome: 'Wasel becomes the default movement ritual for commuters.',
-  },
-  {
-    id: 'subscriptions',
-    title: 'Commuter subscriptions',
-    summary: 'Monthly corridor passes reduce churn for people who move between the same cities every week.',
-    outcome: 'Recurring revenue is tied directly to route ownership.',
-  },
-  {
-    id: 'rewards',
-    title: 'Density rewards',
-    summary: 'Riders and drivers gain better pricing and bonuses when they help fill strategic corridors.',
-    outcome: 'Network behavior reinforces the moat instead of fighting it.',
   },
 ];
 
@@ -460,20 +411,12 @@ function buildOpportunity(route: JordanRoute, from?: string, to?: string): Corri
 
 export const DEFAULT_CORRIDOR_ID = 'amman-irbid';
 
-export function getWaselCategoryPosition() {
-  return CATEGORY_POSITION;
-}
-
 export function getMovementLayers() {
   return MOVEMENT_LAYERS;
 }
 
 export function getMarketplaceNodes() {
   return MARKETPLACE_NODES;
-}
-
-export function getHabitLoopPrograms() {
-  return HABIT_LOOP_PROGRAMS;
 }
 
 export function getAllCorridorOpportunities() {
@@ -513,7 +456,9 @@ export function buildDriverRoutePlan(from: string, to: string, seats: number) {
     (priceModel[Math.min(Math.max(seats - 1, 0), priceModel.length - 1)]?.price ?? corridor.sharedPriceJod) * 0.98,
   );
   const grossWhenFullJod = roundMoney(recommendedSeatPriceJod * Math.max(2, seats));
-  const emptySeatCostJod = roundMoney(Math.max(0, grossWhenFullJod - (recommendedSeatPriceJod * Math.max(1, seats - 1))));
+  const emptySeatCostJod = roundMoney(
+    Math.max(0, grossWhenFullJod - (recommendedSeatPriceJod * Math.max(1, seats - 1))),
+  );
   const packageBonusJod = roundMoney(corridor.driverBoostJod * 0.55);
 
   return {
@@ -522,14 +467,6 @@ export function buildDriverRoutePlan(from: string, to: string, seats: number) {
     grossWhenFullJod,
     emptySeatCostJod,
     packageBonusJod,
-    waselBrainNote: `Wasel Brain recommends ${corridor.fillTargetSeats} seats and package-ready supply on ${corridor.label} to maximize fill rate before price friction appears.`,
+    routeNote: `Recommended for ${corridor.fillTargetSeats} seats on ${corridor.label} so the ride can fill before price pressure starts.`,
   } satisfies DriverRoutePlan;
-}
-
-export function getMovementDefensibilityLines() {
-  return [
-    'Route data compounds every time demand is searched, matched, and fulfilled.',
-    'Pickup-point learning gets stronger as corridor density grows.',
-    'The marketplace deepens because riders, goods, services, and business demand reinforce the same route graph.',
-  ];
 }

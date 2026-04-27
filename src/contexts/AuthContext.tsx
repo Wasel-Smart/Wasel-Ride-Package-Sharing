@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+ 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import { authAPI } from '../services/auth';
@@ -6,6 +6,7 @@ import { supabase, isSupabaseConfigured } from '../utils/supabase/client';
 import { getAuthRedirectCandidates } from '../utils/env';
 import { scheduleDeferredTask } from '../utils/runtimeScheduling';
 import { useLocalAuth } from './LocalAuth';
+import { sanitizeForLog } from '../utils/logSanitizer';
 import {
   buildUpdatedLocalUser,
   createLocalAuthProfile,
@@ -104,7 +105,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error: unknown) {
       const err = error as Error;
       if (!shouldIgnoreProfileError(err) && import.meta.env?.DEV) {
-        console.error('Profile fetch error:', err);
+        console.error('Profile fetch error:', sanitizeForLog(String(err)));
       }
       setProfile(null);
     }
@@ -127,6 +128,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     let mounted = true;
     const supabaseClient = supabase;
+    const pendingTimers: ReturnType<typeof setTimeout>[] = [];
 
     if (!supabaseClient) {
       setLoading(false);
@@ -153,11 +155,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         if (shouldRefreshProfile(event, nextSession)) {
-          setTimeout(() => {
-            if (nextUserId) {
+          const timer = setTimeout(() => {
+            if (mounted && nextUserId) {
               void fetchProfile(nextUserId, isUserSwitch);
             }
           }, 100);
+          // Cleanup is handled by the mounted flag check inside the callback.
+          // Store the timer id so it can be cleared if the component unmounts
+          // before the 100ms fires.
+          pendingTimers.push(timer);
         } else if (!nextSession) {
           setProfile(null);
         }
@@ -179,14 +185,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setProfile(null);
           }
           setTimeout(() => {
-            if (data.session?.user?.id) {
+            if (mounted && data.session?.user?.id) {
               void fetchProfile(data.session.user.id, shouldForceProfileRefresh);
             }
           }, 150);
         }
       } catch (error: unknown) {
         if (import.meta.env?.DEV) {
-          console.warn('Auth init warning:', (error as Error).message);
+          console.warn('Auth init warning:', sanitizeForLog((error as Error).message));
         }
       } finally {
         if (mounted) {
@@ -209,7 +215,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         void fetchProfile(data.session.user.id, true);
       } catch (error) {
         if (import.meta.env?.DEV) {
-          console.warn('Auth callback sync warning:', error);
+          console.warn('Auth callback sync warning:', sanitizeForLog(String(error)));
         }
       }
     };
@@ -230,6 +236,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       cancelDeferredInit();
       window.removeEventListener('message', handleAuthMessage);
       subscription.unsubscribe();
+      for (const t of pendingTimers) clearTimeout(t);
     };
   }, [fetchProfile, isPublicLanding, localAuth.loading, localAuth.user]);
 
@@ -267,7 +274,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setSession(null);
     } catch (error) {
       if (import.meta.env?.DEV) {
-        console.error('Sign out error:', error);
+        console.error('Sign out error:', sanitizeForLog(String(error)));
       }
     }
   }, [localAuth]);

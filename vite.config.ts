@@ -12,6 +12,11 @@ export default defineConfig({
     tailwindcss(),
   ],
 
+  // Production optimizations
+  define: {
+    __DEV__: JSON.stringify(process.env.NODE_ENV === 'development'),
+  },
+
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
     alias: {
@@ -24,7 +29,11 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: 'hidden',
     minify: 'esbuild',
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 400,
+    cssCodeSplit: true,
+    reportCompressedSize: false, // Faster builds
+    
+    // Advanced minification
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -37,6 +46,9 @@ export default defineConfig({
             id.includes('/node_modules/react-router/') ||
             id.includes('/node_modules/scheduler/')
           ) return 'react-core';
+
+          // Large shared utility vendor used heavily by charts
+          if (id.includes('/node_modules/lodash/')) return 'lodash';
 
           // Animation
           if (id.includes('/node_modules/motion/')) return 'motion';
@@ -61,7 +73,20 @@ export default defineConfig({
           if (id.includes('/node_modules/leaflet/')) return 'maps';
 
           // Charts
-          if (id.includes('/node_modules/recharts/')) return 'charts';
+          if (
+            id.includes('/node_modules/d3-') ||
+            id.includes('/node_modules/internmap/')
+          ) return 'charts-d3';
+          if (
+            id.includes('/node_modules/recharts/') ||
+            id.includes('/node_modules/recharts-scale/') ||
+            id.includes('/node_modules/react-smooth/') ||
+            id.includes('/node_modules/eventemitter3/') ||
+            id.includes('/node_modules/fast-equals/') ||
+            id.includes('/node_modules/prop-types/') ||
+            id.includes('/node_modules/tiny-invariant/') ||
+            id.includes('/node_modules/decimal.js-light/')
+          ) return 'charts';
 
           // Forms
           if (
@@ -69,14 +94,30 @@ export default defineConfig({
             id.includes('/node_modules/react-day-picker/')
           ) return 'forms';
 
-          // Monitoring
-          if (id.includes('/node_modules/@sentry/')) return 'monitoring';
+          if (
+            id.includes('/node_modules/@sentry/') ||
+            id.includes('/node_modules/hoist-non-react-statics/')
+          ) return 'monitoring';
 
           // Payments
           if (id.includes('/node_modules/@stripe/')) return 'payments';
 
           return undefined;
         },
+        // Optimize asset naming for better caching
+        assetFileNames: (assetInfo) => {
+          const info = (assetInfo.name ?? '').split('.');
+          const ext = info[info.length - 1];
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
+            return `assets/images/[name]-[hash][extname]`;
+          }
+          if (/woff2?|eot|ttf|otf/i.test(ext)) {
+            return `assets/fonts/[name]-[hash][extname]`;
+          }
+          return `assets/[name]-[hash][extname]`;
+        },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
       },
     },
   },
@@ -84,7 +125,7 @@ export default defineConfig({
   server: {
     port: 3000,
     strictPort: false,
-    open: true,
+    open: false,
     host: true,
   },
 

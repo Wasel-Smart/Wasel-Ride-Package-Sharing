@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { testDataFactory, createMockApiResponse, resetMocks, setupMockFetch } from './test-utils';
-import { normalizeError, AuthenticationError, NetworkError } from '@/utils/errors';
+import { normalizeError, NetworkError } from '@/utils/errors';
 
 describe('Integration: Booking Flow', () => {
   beforeEach(() => {
@@ -291,7 +291,7 @@ describe('Integration: Booking Flow', () => {
       );
 
       let response = await fetch('/api/trips/search', { method: 'POST' });
-      let trips = await response.json();
+      const trips = await response.json();
       expect(trips).toHaveLength(1);
 
       // Step 2: Create booking

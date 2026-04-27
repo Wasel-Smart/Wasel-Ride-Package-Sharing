@@ -1,12 +1,11 @@
 import { supabase } from '../../utils/supabase/client';
-import { getDb, getWalletByCanonicalUserId, mapCanonicalRole } from './helpers';
+import { getDb, getWalletByCanonicalUserId } from './helpers';
 import type { DriverRow, RawVerificationRecord, UserContext, UserRow } from './types';
 
 type UserSeed = {
   email?: string | null;
   full_name?: string | null;
   phone_number?: string | null;
-  role?: string | null;
 };
 
 export async function resolveCanonicalUser(userKey: string): Promise<UserRow | null> {
@@ -16,14 +15,14 @@ export async function resolveCanonicalUser(userKey: string): Promise<UserRow | n
     .select('*')
     .eq('auth_user_id', userKey)
     .maybeSingle();
-  if (byAuth) return byAuth as UserRow;
+  if (byAuth) {return byAuth as UserRow;}
 
   const { data: byId, error } = await db
     .from('users')
     .select('*')
     .eq('id', userKey)
     .maybeSingle();
-  if (error) throw error;
+  if (error) {throw error;}
   return (byId as UserRow | null) ?? null;
 }
 
@@ -32,7 +31,6 @@ async function resolveAuthSeed(userKey: string, seed?: UserSeed): Promise<UserSe
     email: seed?.email?.trim() || null,
     full_name: seed?.full_name?.trim() || null,
     phone_number: seed?.phone_number?.trim() || null,
-    role: seed?.role ?? null,
   };
 
   if ((!mergedSeed.email || !mergedSeed.full_name || !mergedSeed.phone_number) && supabase) {
@@ -59,10 +57,6 @@ async function resolveAuthSeed(userKey: string, seed?: UserSeed): Promise<UserSe
           '',
         ).trim() ||
         null;
-      mergedSeed.role =
-        mergedSeed.role ||
-        String(authUser.user_metadata?.role ?? '').trim() ||
-        null;
     }
   }
 
@@ -74,7 +68,7 @@ export async function ensureCanonicalUser(
   seed?: UserSeed,
 ): Promise<UserRow> {
   const existing = await resolveCanonicalUser(userKey);
-  if (existing) return existing;
+  if (existing) {return existing;}
 
   const resolvedSeed = await resolveAuthSeed(userKey, seed);
   const email = resolvedSeed.email?.trim() || null;
@@ -98,11 +92,11 @@ export async function ensureCanonicalUser(
       email,
       full_name: fullName,
       phone_number: phoneNumber,
-      role: mapCanonicalRole(resolvedSeed.role) || 'passenger',
+      role: 'passenger',
     })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
   return data as UserRow;
 }
 
@@ -113,7 +107,7 @@ export async function getDriverByCanonicalUserId(userId: string): Promise<Driver
     .select('*')
     .eq('user_id', userId)
     .maybeSingle();
-  if (error) throw error;
+  if (error) {throw error;}
   return (data as DriverRow | null) ?? null;
 }
 
@@ -142,7 +136,7 @@ export async function getLatestVerificationRecord(canonicalUserId: string): Prom
     .order('verification_timestamp', { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (error) throw error;
+  if (error) {throw error;}
   return (data as RawVerificationRecord | null) ?? null;
 }
 

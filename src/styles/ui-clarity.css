@@ -1,0 +1,388 @@
+/* ============================================================
+   WASEL | واصل — UI CLARITY v2
+   Unifies all service pages with the dark landing-page theme.
+   Button brand: #A9E3FF. Text: #DCFFF8 on dark surfaces.
+   ============================================================ */
+
+/* ── 1. GLOBAL FONT ──────────────────────────────────────────── */
+html, body {
+  font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system,
+    'Segoe UI', Roboto, Helvetica, Arial, 'Cairo', 'Tajawal', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: 0.2px;
+  line-height: 1.5;
+}
+
+body {
+  background: var(--wasel-shell-background, #eef6ff);
+  color: var(--foreground, #10243d);
+}
+
+/* ── 2. TEXT TOKENS ──────────────────────────────────────────── */
+.wasel-app-theme {
+  --foreground: var(--text-primary);
+  --wasel-copy-primary: var(--text-primary);
+  --wasel-copy-muted: var(--text-secondary);
+  --wasel-copy-soft: var(--text-muted);
+  --wasel-service-bg:
+    radial-gradient(circle at 12% 10%, rgb(var(--accent-secondary-rgb) / 0.22), transparent 24%),
+    radial-gradient(circle at 88% 14%, rgb(var(--accent-secondary-rgb) / 0.14), transparent 22%),
+    linear-gradient(180deg, #07111d 0%, #091827 54%, #06111d 100%);
+  --wasel-service-card:
+    linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.03)),
+    rgba(8, 18, 31, 0.82);
+  --wasel-service-card-2: rgba(9, 21, 37, 0.78);
+  --wasel-service-card-3: rgba(169, 227, 255, 0.09);
+  --wasel-service-border: rgba(169, 227, 255, 0.18);
+  --wasel-service-border-strong: rgba(169, 227, 255, 0.3);
+  --wasel-service-text: #eef8ff;
+  --wasel-service-sub: rgba(220, 238, 255, 0.82);
+  --wasel-service-muted: rgba(183, 206, 228, 0.72);
+  --wasel-service-chip-bg: rgba(169, 227, 255, 0.08);
+  --wasel-service-head-bg:
+    radial-gradient(circle at 16% 24%, rgb(var(--accent-secondary-rgb) / 0.18), transparent 28%),
+    radial-gradient(circle at 84% 18%, rgb(var(--accent-secondary-rgb) / 0.12), transparent 24%),
+    linear-gradient(135deg, #0b1e34 0%, #112945 56%, #16324f 100%);
+  --wasel-service-head-shadow: 0 28px 80px rgba(2, 8, 16, 0.42);
+  --muted-foreground: var(--text-secondary);
+  --card-foreground: var(--text-primary);
+}
+
+/* ── 3. BUTTON SYSTEM — #A9E3FF brand ───────────────────────── */
+.wasel-app-theme button[class*="primary"],
+.wasel-app-theme .btn-wasel-primary,
+.wasel-app-theme .brand-button-primary,
+.wasel-app-theme .wasel-primary-button,
+.wasel-app-theme .home-primary-button {
+  background: var(--theme-gradient-primary) !important;
+  color: var(--wasel-button-primary-foreground) !important;
+  border: 1px solid var(--wasel-button-primary-border) !important;
+  box-shadow: var(--wasel-button-primary-shadow) !important;
+  font-weight: 700 !important;
+  min-height: 44px;
+  border-radius: 10px;
+  font-size: 15px;
+  padding: 0 18px;
+  cursor: pointer;
+  transition: transform 0.20s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.20s ease !important;
+}
+.wasel-app-theme button[class*="primary"]:hover,
+.wasel-app-theme .btn-wasel-primary:hover,
+.wasel-app-theme .brand-button-primary:hover,
+.wasel-app-theme .wasel-primary-button:hover,
+.wasel-app-theme .home-primary-button:hover {
+  transform: translateY(-2px) scale(1.01) !important;
+  box-shadow: var(--wasel-button-primary-shadow-hover) !important;
+}
+
+.wasel-app-theme button[class*="secondary"],
+.wasel-app-theme button[class*="outline"],
+.wasel-app-theme .btn-wasel-outline,
+.wasel-app-theme .brand-button-secondary,
+.wasel-app-theme .wasel-outline-button,
+.wasel-app-theme .home-secondary-button {
+  background: var(--wasel-button-primary-soft) !important;
+  color: var(--wasel-button-primary) !important;
+  border: 1px solid var(--wasel-button-primary-border) !important;
+  min-height: 44px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 0 18px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease !important;
+}
+.wasel-app-theme button[class*="secondary"]:hover,
+.wasel-app-theme button[class*="outline"]:hover,
+.wasel-app-theme .btn-wasel-outline:hover,
+.wasel-app-theme .brand-button-secondary:hover,
+.wasel-app-theme .wasel-outline-button:hover,
+.wasel-app-theme .home-secondary-button:hover {
+  background: var(--wasel-button-primary-soft-strong) !important;
+  border-color: var(--wasel-button-primary-border-strong) !important;
+}
+
+.wasel-app-theme button[class*="ghost"] {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border: none !important;
+}
+.wasel-app-theme button[class*="ghost"]:hover {
+  background: var(--surface-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── 4. INPUT FIELDS ─────────────────────────────────────────── */
+.wasel-app-theme input[type="text"],
+.wasel-app-theme input[type="email"],
+.wasel-app-theme input[type="password"],
+.wasel-app-theme input[type="number"],
+.wasel-app-theme input[type="tel"],
+.wasel-app-theme input[type="date"],
+.wasel-app-theme input[type="search"],
+.wasel-app-theme select,
+.wasel-app-theme textarea,
+.wasel-app-theme .input-premium {
+  height: 48px;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  font-family: inherit !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  background: var(--surface-field) !important;
+  color: var(--text-primary) !important;
+  padding: 0 14px !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+  outline: none !important;
+}
+.wasel-app-theme textarea {
+  height: auto;
+  min-height: 96px;
+  padding: 12px 14px !important;
+}
+.wasel-app-theme input::placeholder,
+.wasel-app-theme textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+.wasel-app-theme input:focus,
+.wasel-app-theme select:focus,
+.wasel-app-theme textarea:focus,
+.wasel-app-theme .input-premium:focus {
+  border-color: var(--border-strong) !important;
+  box-shadow: 0 0 0 3px rgb(var(--wasel-button-primary-rgb) / 0.12) !important;
+}
+.wasel-app-theme select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a9e3ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  padding-right: 40px !important;
+}
+
+/* ── 5. NAVBAR ───────────────────────────────────────────────── */
+.wasel-app-theme header[data-wasel-nav],
+.wasel-app-theme .wasel-sticky-header {
+  background: var(--wasel-header-bg) !important;
+  border-bottom: 1px solid var(--wasel-header-border) !important;
+  min-height: 64px !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  box-shadow: var(--wasel-shadow-sm) !important;
+}
+.wasel-app-theme header[data-wasel-nav] button[aria-current="page"],
+.wasel-app-theme header[data-wasel-nav] button[data-active="true"] {
+  background: var(--wasel-app-nav-active-bg) !important;
+  color: var(--wasel-app-ink) !important;
+  font-weight: 700 !important;
+  border-color: var(--wasel-app-nav-active-border) !important;
+}
+
+/* ── 6. MOBILE BOTTOM NAV ────────────────────────────────────── */
+.wasel-app-theme [data-wasel-bottom-nav] {
+  background: var(--wasel-sidebar-bg) !important;
+  border-top: 1px solid var(--wasel-sidebar-border) !important;
+  backdrop-filter: blur(32px) !important;
+  -webkit-backdrop-filter: blur(32px) !important;
+}
+
+/* ── 7. TABS ─────────────────────────────────────────────────── */
+.wasel-app-theme [data-radix-tabs-list],
+.wasel-app-theme [role="tablist"] {
+  background: var(--surface-muted) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: 4px !important;
+}
+.wasel-app-theme [data-radix-tabs-trigger],
+.wasel-app-theme [role="tab"] {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--text-secondary) !important;
+  border-radius: 8px !important;
+}
+.wasel-app-theme [data-radix-tabs-trigger][data-state="active"],
+.wasel-app-theme [role="tab"][aria-selected="true"] {
+  background: var(--wasel-app-nav-active-bg) !important;
+  color: var(--text-primary) !important;
+  font-weight: 700 !important;
+  box-shadow: var(--wasel-shadow-sm) !important;
+}
+
+/* ── 8. RADIX PRIMITIVES ─────────────────────────────────────── */
+.wasel-app-theme [data-radix-popper-content-wrapper],
+.wasel-app-theme [role="dialog"],
+.wasel-app-theme [role="alertdialog"] {
+  background: var(--surface-strong) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 22px !important;
+  box-shadow: var(--wasel-shadow-lg) !important;
+  backdrop-filter: blur(30px) !important;
+  -webkit-backdrop-filter: blur(30px) !important;
+  color: var(--text-primary) !important;
+}
+.wasel-app-theme [data-radix-dropdown-menu-content],
+.wasel-app-theme [cmdk-root] {
+  background: var(--surface-strong) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--wasel-shadow-md) !important;
+  backdrop-filter: blur(26px) !important;
+  -webkit-backdrop-filter: blur(26px) !important;
+  color: var(--text-primary) !important;
+}
+.wasel-app-theme [data-radix-select-content],
+.wasel-app-theme [data-radix-select-viewport] {
+  background: var(--surface-strong) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 14px !important;
+  color: var(--text-primary) !important;
+}
+.wasel-app-theme [data-radix-tooltip-content] {
+  background: var(--surface-strong) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  color: var(--text-primary) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  box-shadow: var(--wasel-shadow-sm) !important;
+}
+.wasel-app-theme [data-radix-switch-root][data-state="checked"] {
+  background: linear-gradient(135deg, #a9e3ff, #19e7bb) !important;
+  box-shadow: 0 0 11px rgba(169,227,255,0.38) !important;
+}
+.wasel-app-theme [data-radix-switch-root][data-state="unchecked"] {
+  background: var(--surface-muted) !important;
+  border: 1px solid var(--border) !important;
+}
+.wasel-app-theme [data-radix-switch-thumb] {
+  background: #ffffff !important;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.38) !important;
+}
+.wasel-app-theme [data-radix-checkbox-root][data-state="checked"] {
+  background: linear-gradient(135deg, #a9e3ff, #19e7bb) !important;
+  border-color: transparent !important;
+}
+.wasel-app-theme [role="progressbar"] > span,
+.wasel-app-theme [data-radix-progress-indicator] {
+  background: linear-gradient(90deg, #a9e3ff, #19e7bb) !important;
+  box-shadow: 0 0 9px rgba(169,227,255,0.28) !important;
+}
+.wasel-app-theme [data-radix-slider-thumb] {
+  background: linear-gradient(135deg, #a9e3ff, #19e7bb) !important;
+  border: 2px solid var(--surface-strong) !important;
+  box-shadow: 0 0 11px rgba(169,227,255,0.52) !important;
+  width: 18px !important; height: 18px !important;
+}
+.wasel-app-theme [data-radix-slider-track]  { background: var(--surface-muted-strong) !important; }
+.wasel-app-theme [data-radix-slider-range]  { background: linear-gradient(90deg, #a9e3ff, #19e7bb) !important; }
+
+/* ── 9. TOASTS ───────────────────────────────────────────────── */
+.wasel-app-theme [data-sonner-toast] {
+  background: var(--surface-strong) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--wasel-shadow-md) !important;
+  backdrop-filter: blur(26px) !important;
+  -webkit-backdrop-filter: blur(26px) !important;
+  color: var(--text-primary) !important;
+  font-size: 14px !important;
+}
+.wasel-app-theme [data-sonner-toast][data-type="success"] { border-color: rgba(25,231,187,0.22) !important; }
+.wasel-app-theme [data-sonner-toast][data-type="error"]   { border-color: rgba(255,80,96,0.22) !important; }
+.wasel-app-theme [data-sonner-toast][data-type="warning"] { border-color: rgba(169,227,255,0.22) !important; }
+
+/* ── 10. MAP ─────────────────────────────────────────────────── */
+.wasel-app-theme .leaflet-container {
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--wasel-shadow-md) !important;
+  filter: none !important;
+}
+.wasel-app-theme .leaflet-control-zoom {
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+.wasel-app-theme .leaflet-control-zoom-in,
+.wasel-app-theme .leaflet-control-zoom-out {
+  background: var(--surface-strong) !important;
+  color: var(--text-primary) !important;
+  border: none !important;
+  font-weight: 700 !important;
+}
+.wasel-app-theme .leaflet-control-zoom-in:hover,
+.wasel-app-theme .leaflet-control-zoom-out:hover {
+  background: var(--surface-hover) !important;
+}
+
+/* ── 11. FOCUS / SELECTION / SCROLLBAR ──────────────────────── */
+.wasel-app-theme :focus-visible {
+  outline: 2px solid rgba(169,227,255,0.72) !important;
+  outline-offset: 2px !important;
+  border-radius: 6px !important;
+}
+.wasel-app-theme ::selection {
+  background: rgba(169,227,255,0.23);
+  color: #020c07;
+}
+.wasel-app-theme ::-webkit-scrollbar { width: 4px; height: 4px; }
+.wasel-app-theme ::-webkit-scrollbar-track { background: transparent; }
+.wasel-app-theme ::-webkit-scrollbar-thumb {
+  background: rgba(169,227,255,0.16);
+  border-radius: 999px;
+}
+.wasel-app-theme ::-webkit-scrollbar-thumb:hover { background: rgba(169,227,255,0.38); }
+
+/* ── 12. REDUCED MOTION ──────────────────────────────────────── */
+html:not(.dark) .wasel-app-theme [class~="text-white"],
+html:not(.dark) .wasel-app-theme [class~="text-slate-100"],
+html:not(.dark) .wasel-app-theme [class~="text-slate-200"] {
+  color: var(--text-primary) !important;
+}
+
+html:not(.dark) .wasel-app-theme [class~="text-slate-300"],
+html:not(.dark) .wasel-app-theme [class~="text-slate-400"],
+html:not(.dark) .wasel-app-theme [class~="text-slate-500"],
+html:not(.dark) .wasel-app-theme [class~="text-slate-600"] {
+  color: var(--text-secondary) !important;
+}
+
+html:not(.dark) .wasel-app-theme [class~="bg-white/5"],
+html:not(.dark) .wasel-app-theme [class~="bg-white/6"],
+html:not(.dark) .wasel-app-theme [class~="bg-white/8"],
+html:not(.dark) .wasel-app-theme [class~="bg-black/10"],
+html:not(.dark) .wasel-app-theme [class~="bg-black/15"],
+html:not(.dark) .wasel-app-theme [class~="bg-background/40"],
+html:not(.dark) .wasel-app-theme [class~="bg-slate-950/70"] {
+  background: color-mix(in srgb, var(--surface-strong) 94%, transparent) !important;
+}
+
+html:not(.dark) .wasel-app-theme [class~="border-white/8"],
+html:not(.dark) .wasel-app-theme [class~="border-white/10"],
+html:not(.dark) .wasel-app-theme [class~="border-white/15"],
+html:not(.dark) .wasel-app-theme [class~="border-white/20"] {
+  border-color: var(--border) !important;
+}
+
+html:not(.dark) .wasel-app-theme [class~="hover:text-white"]:hover {
+  color: var(--text-primary) !important;
+}
+
+html:not(.dark) .wasel-app-theme [class~="hover:bg-white/8"]:hover,
+html:not(.dark) .wasel-app-theme [class~="hover:bg-white/10"]:hover,
+html:not(.dark) .wasel-app-theme [class~="hover:bg-black/10"]:hover {
+  background: var(--surface-hover) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wasel-app-theme *,
+  .wasel-app-theme *::before,
+  .wasel-app-theme *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -56,7 +56,7 @@ export interface SupportTicket {
 const SUPPORT_KEY = 'wasel-support-tickets';
 
 function readTickets(): SupportTicket[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(SUPPORT_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -67,7 +67,7 @@ function readTickets(): SupportTicket[] {
 }
 
 function writeTickets(tickets: SupportTicket[]) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(SUPPORT_KEY, JSON.stringify(tickets.slice(0, 100)));
 }
 
@@ -132,12 +132,12 @@ function normalizeStatus(value: string | null | undefined): SupportStatus {
 }
 
 function normalizePriority(value: string | null | undefined): SupportPriority {
-  if (value === 'normal' || value === 'high' || value === 'urgent') return value;
+  if (value === 'normal' || value === 'high' || value === 'urgent') {return value;}
   return 'low';
 }
 
 function normalizeChannel(value: string | null | undefined): SupportChannel {
-  if (value === 'operations' || value === 'phone' || value === 'email') return value;
+  if (value === 'operations' || value === 'phone' || value === 'email') {return value;}
   return 'in_app';
 }
 
@@ -215,7 +215,7 @@ export async function hydrateSupportTickets(userId?: string): Promise<SupportTic
 }
 
 export function getSupportTicketsForRelatedId(relatedId?: string): SupportTicket[] {
-  if (!relatedId) return [];
+  if (!relatedId) {return [];}
   return getSupportTickets().filter((ticket) => ticket.relatedId === relatedId);
 }
 
@@ -291,7 +291,7 @@ export function updateSupportTicketStatus(
 ): SupportTicket | null {
   const tickets = readTickets();
   const target = tickets.find((ticket) => ticket.id === id || ticket.backendId === id);
-  if (!target) return null;
+  if (!target) {return null;}
 
   const updated: SupportTicket = {
     ...target,

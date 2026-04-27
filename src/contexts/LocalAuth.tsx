@@ -1,10 +1,10 @@
-/* eslint-disable react-refresh/only-export-components */
+ 
 /**
  * LocalAuth
  *
  * Uses real Supabase auth/session data when configured.
- * Local storage persists authenticated profile state for the active user and
- * supports explicit demo-mode sessions for verification environments.
+ * Local storage is only used when local auth is explicitly enabled for
+ * development or test verification environments.
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
@@ -13,6 +13,10 @@ import { initSupabaseListeners, isSupabaseConfigured, supabase } from '../utils/
 import { getConfig } from '../utils/env';
 import { scheduleDeferredTask } from '../utils/runtimeScheduling';
 import { omitUndefined } from '../utils/object';
+import {
+  getLocalAuthUserStorage,
+  LOCAL_AUTH_USER_STORAGE_KEY,
+} from '../utils/authStorage';
 
 export interface WaselUser {
   id: string;
@@ -33,7 +37,7 @@ export interface WaselUser {
   phoneVerified: boolean;
   twoFactorEnabled: boolean;
   trustScore: number;
-  backendMode: 'supabase' | 'demo';
+  backendMode: 'supabase' | 'local';
 }
 
 type SignInResult = Awaited<ReturnType<typeof authAPI.signIn>>;
@@ -155,7 +159,7 @@ function normalizeStoredUser(raw: unknown): WaselUser | null {
     phoneVerified,
     twoFactorEnabled: Boolean(value.twoFactorEnabled),
     trustScore: 0,
-    backendMode: value.backendMode === 'demo' ? 'demo' : 'supabase',
+    backendMode: value.backendMode === 'local' ? 'local' : 'supabase',
     ...omitUndefined({
       phone,
       avatar:
@@ -178,6 +182,11 @@ function mapBackendProfile({
   authUser: BackendAuthUser | null;
   profile: BackendProfile | null;
 }): WaselUser {
+  const backendId = authUser?.id || profile?.id;
+  if (!backendId) {
+    throw new Error('Backend auth response did not include a user id.');
+  }
+
   const name =
     profile?.full_name ||
     authUser?.user_metadata?.full_name ||
@@ -194,7 +203,7 @@ function mapBackendProfile({
   const role = profile?.role || 'rider';
 
   const baseUser: WaselUser = {
-    id: authUser?.id || profile?.id || `user-${Date.now()}`,
+    id: backendId,
     name,
     email: authUser?.email || profile?.email || '',
     role,
@@ -242,16 +251,21 @@ interface LocalAuthCtx {
 }
 
 const Ctx = createContext<LocalAuthCtx | null>(null);
-const STORAGE_KEY = 'wasel_local_user_v2';
+const STORAGE_KEY = LOCAL_AUTH_USER_STORAGE_KEY;
 const AUTH_BOOTSTRAP_GUARD_MS = 2500;
 
 function loadUser(): WaselUser | null {
+  const storage = getLocalAuthUserStorage();
+  if (!storage) {
+    return null;
+  }
+
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = normalizeStoredUser(JSON.parse(raw));
     if (!parsed) {
-      localStorage.removeItem(STORAGE_KEY);
+      storage.removeItem(STORAGE_KEY);
       return null;
     }
     return parsed;
@@ -261,9 +275,14 @@ function loadUser(): WaselUser | null {
 }
 
 function saveUser(user: WaselUser | null) {
+  const storage = getLocalAuthUserStorage();
+  if (!storage) {
+    return;
+  }
+
   try {
-    if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    else localStorage.removeItem(STORAGE_KEY);
+    if (user) storage.setItem(STORAGE_KEY, JSON.stringify(user));
+    else storage.removeItem(STORAGE_KEY);
   } catch {
     // Ignore storage errors.
   }
@@ -285,7 +304,7 @@ function toMessage(error: unknown): string {
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<WaselUser | null>(loadUser);
   const [loading, setLoading] = useState(true);
-  const { enableDemoAccount } = getConfig();
+  const { enableLocalAuth } = getConfig();
   const isPublicLanding =
     typeof window !== 'undefined' && window.location.pathname === '/';
 
@@ -314,13 +333,13 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
             if (!mounted) return;
             setLoading(false);
             if (import.meta.env?.DEV && !import.meta.env?.TEST) {
-              console.warn('[LocalAuth] Auth bootstrap timed out; continuing with cached access state.');
+              console.warn('[LocalAuth] Auth bootstrap timed out; waiting for a backend-authenticated session.');
             }
           }, AUTH_BOOTSTRAP_GUARD_MS)
         : null;
-    const getPersistedDemoUser = () => {
+    const getPersistedLocalUser = () => {
       const storedUser = loadUser();
-      if (!enableDemoAccount || storedUser?.backendMode !== 'demo') {
+      if (!enableLocalAuth || storedUser?.backendMode !== 'local') {
         return null;
       }
       return storedUser;
@@ -343,7 +362,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         if (error) throw error;
 
         if (!data.session?.user) {
-          setAndPersist(getPersistedDemoUser());
+          setAndPersist(getPersistedLocalUser());
           setLoading(false);
           return;
         }
@@ -352,14 +371,10 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         const mapped = mapBackendProfile({
           authUser: data.session.user,
           profile: profileResult?.profile ?? null,
-        });
-        setAndPersist(mapped);
+          });
+          setAndPersist(mapped);
       } catch {
-        const demoUser = getPersistedDemoUser();
-        if (demoUser) {
-          setAndPersist(demoUser);
-        }
-        // Keep any previously stored user if backend sync fails.
+        setAndPersist(getPersistedLocalUser());
       } finally {
         if (bootstrapGuard !== null) {
           window.clearTimeout(bootstrapGuard);
@@ -382,7 +397,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         if (!mounted) return;
 
         if (!session?.user) {
-          setAndPersist(getPersistedDemoUser());
+          setAndPersist(getPersistedLocalUser());
           return;
         }
 
@@ -394,8 +409,8 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
           });
           setAndPersist(mapped);
         } catch {
-          const fallbackUser = mapBackendProfile({ authUser: session.user, profile: null });
-          setAndPersist(fallbackUser);
+          const mapped = mapBackendProfile({ authUser: session.user, profile: null });
+          setAndPersist(mapped);
         }
       });
 
@@ -416,7 +431,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         window.clearTimeout(bootstrapGuard);
       }
     };
-  }, [enableDemoAccount, isPublicLanding]);
+  }, [enableLocalAuth, isPublicLanding]);
 
   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
     setLoading(true);
@@ -485,11 +500,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         const profileResult = await authAPI.getProfile().catch(() => ({ profile: null }));
         const mapped = mapBackendProfile({
           authUser,
-          profile: profileResult?.profile ?? {
-            full_name: name,
-            phone_number: phone,
-            verification_level: phone ? 'level_1' : 'level_0',
-          },
+          profile: profileResult?.profile ?? null,
         });
         setUser(mapped);
         saveUser(mapped);

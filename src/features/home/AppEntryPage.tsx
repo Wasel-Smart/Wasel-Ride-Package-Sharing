@@ -22,62 +22,60 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { getWaselPresenceProfile } from '../../domains/trust/waselPresence';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { useAuthProviderAvailability } from '../../hooks/useAuthProviderAvailability';
+import { APP_ROUTES } from '../../router/paths';
 import { trackGrowthEvent } from '../../services/growthEngine';
 import { friendlyAuthError } from '../../utils/authHelpers';
 import { buildAuthPagePath } from '../../utils/authFlow';
-import { DeferredLandingMap } from './DeferredLandingMap';
+import {
+  APP_ENTRY_CITY_OPTIONS,
+  APP_ENTRY_DEFAULT_RETURN_TO,
+  APP_ENTRY_DEFAULT_ROUTE,
+  APP_ENTRY_SERVICE_MODE_META,
+  APP_ENTRY_SERVICE_MODES,
+  buildAppEntryPrimaryPath,
+  buildPackagePrefillPath,
+  buildRideSearchPath,
+  getAlternateEntryCity,
+  type AppEntryRouteDraft,
+  type AppEntryServiceMode,
+} from './appEntryContracts';
+import { DeferredLandingMap } from '../../components/layout/DeferredLandingMap';
 import { LANDING_FONT } from './landingConstants';
 import './AppEntryPage.css';
 
-type LandingMode = 'ride' | 'package';
-type RouteDraft = { from: string; to: string; date: string };
 type FlowCard = { icon: LucideIcon; title: string; detail: string; path: string; cta: string };
-
-const DEFAULT_RETURN_TO = '/app/find-ride';
-
-const CITY_OPTIONS = [
-  { value: 'Amman', en: 'Amman', ar: '\u0639\u0645\u0627\u0646' },
-  { value: 'Irbid', en: 'Irbid', ar: '\u0625\u0631\u0628\u062f' },
-  { value: 'Aqaba', en: 'Aqaba', ar: '\u0627\u0644\u0639\u0642\u0628\u0629' },
-  { value: 'Zarqa', en: 'Zarqa', ar: '\u0627\u0644\u0632\u0631\u0642\u0627\u0621' },
-  { value: 'Jerash', en: 'Jerash', ar: '\u062c\u0631\u0634' },
-  { value: 'Salt', en: 'Salt', ar: '\u0627\u0644\u0633\u0644\u0637' },
-] as const;
-
-function getAlternateCity(excluded: string) {
-  return CITY_OPTIONS.find(option => option.value !== excluded)?.value ?? excluded;
-}
 
 const COPY = {
   en: {
     navRide: 'Find a ride',
-    navPackage: 'Open packages',
-    navOffer: 'Offer your ride',
+    navPackage: 'Send a package',
+    navOffer: 'Offer a ride',
     signIn: 'Sign in',
     createAccount: 'Create account',
-    heroBadge: 'One live network',
-    heroTitle: 'Open the network first. Travel your way with Wasel.',
+    heroBadge: 'Ride and package marketplace',
+    heroTitle: 'Book a ride, offer a ride, or send a package.',
     heroBody:
-      'Wasel makes the idea clear in seconds: the same corridor can carry riders, packages, and sharper decisions.',
-    heroSignal: 'One route can move people and parcels.',
+      'Choose the corridor first, then complete one real action: book a ride, offer a ride, or send a package.',
+    heroSignal: 'Rides and packages move through the same corridor.',
     points: [
-      'The mobility map stays visible in the background.',
-      'Rides and packages share the same operating surface.',
-      'Support and trust stay close to the action.',
+      'Start from the corridor you want.',
+      'Book a ride or send a package from the same route.',
+      'Payment and support stay clear and close.',
     ],
     modes: { ride: 'Rides', package: 'Packages' },
     cardTitle: { ride: 'Find a ride', package: 'Send a package' },
     cardBody: {
-      ride: 'Choose a corridor, then open the live ride flow.',
-      package: 'Start from the same corridor, then open the package flow.',
+      ride: 'Choose a corridor, then book a ride.',
+      package: 'Choose a corridor, then send a package.',
     },
     from: 'Leaving from',
     to: 'Going to',
     date: 'When',
-    primary: { ride: 'Find a ride', package: 'Open packages' },
-    secondary: 'Offer your ride',
-    packageHint: 'Packages move through the same corridors. Pick the route first, then continue.',
-    guestLead: 'Enter Wasel through the shortest path.',
+    primary: { ride: 'Book a ride', package: 'Send a package' },
+    secondary: 'Offer a ride',
+    packageHint: 'Packages use the same corridors. Pick the route first, then continue.',
+    guestLead: 'Choose your action and continue.',
     email: 'Continue with email',
     google: 'Continue with Google',
     googleBusy: 'Connecting Google...',
@@ -87,23 +85,23 @@ const COPY = {
       google: 'Google sign in failed.',
       facebook: 'Facebook sign in failed.',
     },
-    flowHeading: 'Choose your flow',
-    flowSub: 'Three simple ways to understand Wasel in a few seconds.',
+    flowHeading: 'Choose what to do',
+    flowSub: 'Three direct actions. Nothing else.',
     flowCards: {
       ride: {
-        title: 'Find a ride',
-        detail: 'Compare the corridor, timing, and seat.',
-        cta: 'Open rides',
+        title: 'Book a ride',
+        detail: 'See the route, time, and seat before you continue.',
+        cta: 'Book a ride',
       },
       package: {
         title: 'Send a package',
-        detail: 'Attach the parcel to the same network.',
-        cta: 'Open packages',
+        detail: 'Use the same corridor to move a package.',
+        cta: 'Send a package',
       },
       offer: {
-        title: 'Offer your ride',
-        detail: 'Turn an empty departure into more value.',
-        cta: 'Open driver flow',
+        title: 'Offer a ride',
+        detail: 'Post your trip and open seats on a real route.',
+        cta: 'Offer a ride',
       },
     },
   },
@@ -193,17 +191,17 @@ const COPY = {
 function trackLandingNavigation(path: string, language: 'en' | 'ar', userId?: string) {
   const eventMap = [
     {
-      match: '/app/find-ride',
+      match: APP_ROUTES.findRide.full,
       eventName: 'landing_find_ride_opened',
       serviceType: 'ride' as const,
     },
     {
-      match: '/app/offer-ride',
+      match: APP_ROUTES.offerRide.full,
       eventName: 'landing_offer_ride_opened',
       serviceType: 'ride' as const,
     },
     {
-      match: '/app/packages',
+      match: APP_ROUTES.packages.full,
       eventName: 'landing_packages_opened',
       serviceType: 'package' as const,
     },
@@ -221,43 +219,114 @@ function trackLandingNavigation(path: string, language: 'en' | 'ar', userId?: st
   void trackGrowthEvent(userId ? { userId, ...payload } : payload);
 }
 
-function buildRideSearchPath(route: RouteDraft) {
-  const params = new URLSearchParams({ from: route.from, to: route.to, search: '1' });
-  if (route.date) params.set('date', route.date);
-  return `/app/find-ride?${params.toString()}`;
-}
-
-function buildPackagePrefillPath(route: RouteDraft) {
-  const params = new URLSearchParams({ from: route.from, to: route.to });
-  return `/app/packages?${params.toString()}`;
-}
-
 export default function AppEntryPage() {
-  const { user } = useLocalAuth();
+  const { user, loading: authLoading } = useLocalAuth();
   const { signInWithGoogle, signInWithFacebook } = useAuth();
+  const authProviders = useAuthProviderAvailability();
   const { language } = useLanguage();
   const navigate = useIframeSafeNavigate();
-  const [mode, setMode] = useState<LandingMode>('ride');
+  const [mode, setMode] = useState<AppEntryServiceMode>('ride');
   const [authError, setAuthError] = useState('');
   const [oauthProvider, setOauthProvider] = useState<'google' | 'facebook' | null>(null);
-  const [route, setRoute] = useState<RouteDraft>({ from: 'Amman', to: 'Irbid', date: '' });
+  const [route, setRoute] = useState<AppEntryRouteDraft>({ ...APP_ENTRY_DEFAULT_ROUTE });
 
   const ar = language === 'ar';
   const copy = COPY[language];
   const profile = getWaselPresenceProfile();
   const supportLine = profile.supportPhoneDisplay || profile.supportEmail || 'Wasel';
   const businessAddress = ar ? profile.businessAddressAr : profile.businessAddress;
-  const signInPath = buildAuthPagePath('signin', DEFAULT_RETURN_TO);
-  const signUpPath = buildAuthPagePath('signup', DEFAULT_RETURN_TO);
+  const signInPath = buildAuthPagePath('signin', APP_ENTRY_DEFAULT_RETURN_TO);
+  const signUpPath = buildAuthPagePath('signup', APP_ENTRY_DEFAULT_RETURN_TO);
+  const showGuestEntryPoints = !authLoading && !user;
 
   const navigateLanding = (path: string) => {
     trackLandingNavigation(path, language, user?.id);
     navigate(path);
   };
 
-  const protectedPath = (path: string) => (user ? path : buildAuthPagePath('signin', path));
-  const primaryPath = mode === 'ride' ? buildRideSearchPath(route) : buildPackagePrefillPath(route);
+  const protectedPath = (path: string) =>
+    authLoading || user ? path : buildAuthPagePath('signin', path);
+  const primaryPath = buildAppEntryPrimaryPath(mode, route);
   const contextualSignInPath = buildAuthPagePath('signin', primaryPath);
+  const selectedFromLabel =
+    APP_ENTRY_CITY_OPTIONS.find(option => option.value === route.from)?.[ar ? 'ar' : 'en'] ??
+    route.from;
+  const selectedToLabel =
+    APP_ENTRY_CITY_OPTIONS.find(option => option.value === route.to)?.[ar ? 'ar' : 'en'] ??
+    route.to;
+  const routePreview = ar
+    ? `${selectedFromLabel} ← ${selectedToLabel}`
+    : `${selectedFromLabel} → ${selectedToLabel}`;
+  const serviceLabel = mode === 'ride' ? copy.cardTitle.ride : copy.cardTitle.package;
+  const guidanceBand = ar
+    ? [
+        {
+          label: 'الممر',
+          value: routePreview,
+          detail:
+            mode === 'ride'
+              ? 'نفس المسار يفتح الرحلات بسرعة.'
+              : 'هذا المسار يفتح تسليم الطرد مباشرة.',
+        },
+        {
+          label: 'الوضوح',
+          value: mode === 'ride' ? 'السعر والمقعد' : 'الالتقاط والتسليم',
+          detail:
+            mode === 'ride'
+              ? 'التوقيت والسعر يبقيان ظاهرين.'
+              : 'يبقى مسار الطرد واضحاً من البداية.',
+        },
+        {
+          label: 'الدعم',
+          value: supportLine,
+          detail: 'الثقة والمساندة تبقيان قريبتين من القرار.',
+        },
+      ]
+    : [
+        {
+          label: 'Corridor',
+          value: routePreview,
+          detail:
+            mode === 'ride'
+              ? 'This lane opens the ride flow fast.'
+              : 'This lane opens parcel routing directly.',
+        },
+        {
+          label: 'Clarity',
+          value: mode === 'ride' ? 'Price and seat' : 'Pickup and dropoff',
+          detail:
+            mode === 'ride'
+              ? 'Timing and price stay visible together.'
+              : 'Parcel movement stays clear from the start.',
+        },
+        {
+          label: 'Support',
+          value: supportLine,
+          detail: 'Trust and help stay close to the decision.',
+        },
+      ];
+  const heroStats = ar
+    ? [
+        { value: '3', label: 'تدفقات أساسية', detail: 'رحلات، طرود، ومسارات عرض' },
+        { value: '1', label: 'شبكة واحدة', detail: 'نفس الممر يحمل القرار والتنفيذ' },
+        { value: '24/7', label: 'دعم قريب', detail: 'الثقة والدعم بجوار الحركة' },
+      ]
+    : [
+        { value: '3', label: 'Core actions', detail: 'Book, offer, or send' },
+        { value: '1', label: 'Shared corridor', detail: 'The same route powers rides and packages' },
+        { value: '24/7', label: 'Clear support', detail: 'Payment and help stay near the action' },
+      ];
+  const heroJourney = ar
+    ? [
+        { label: 'اختر', detail: 'حدد الممر أولاً.' },
+        { label: 'افتح', detail: 'ادخل التدفق الصحيح بسرعة.' },
+        { label: 'تابع', detail: 'ابقَ قريباً من التتبع والدعم.' },
+      ]
+    : [
+        { label: 'Choose', detail: 'Start with the corridor.' },
+        { label: 'Open', detail: 'Enter the right flow quickly.' },
+        { label: 'Track', detail: 'Stay close to support and live status.' },
+      ];
 
   const flowCards: FlowCard[] = [
     {
@@ -278,27 +347,28 @@ export default function AppEntryPage() {
       icon: Car,
       title: copy.flowCards.offer.title,
       detail: copy.flowCards.offer.detail,
-      path: protectedPath('/app/offer-ride'),
+      path: protectedPath(APP_ROUTES.offerRide.full),
       cta: copy.flowCards.offer.cta,
     },
   ];
 
   const updateRoute =
-    (field: keyof RouteDraft) => (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    (field: keyof AppEntryRouteDraft) =>
+    (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const value = event.target.value;
       setRoute(current => {
         if (field === 'from') {
           return {
             ...current,
             from: value,
-            to: value === current.to ? getAlternateCity(value) : current.to,
+            to: value === current.to ? getAlternateEntryCity(value) : current.to,
           };
         }
 
         if (field === 'to') {
           return {
             ...current,
-            from: value === current.from ? getAlternateCity(value) : current.from,
+            from: value === current.from ? getAlternateEntryCity(value) : current.from,
             to: value,
           };
         }
@@ -313,6 +383,10 @@ export default function AppEntryPage() {
   };
 
   const handleOAuth = async (provider: 'google' | 'facebook', returnTo = primaryPath) => {
+    if (!authProviders[provider].enabled) {
+      return;
+    }
+
     setAuthError('');
     setOauthProvider(provider);
 
@@ -332,7 +406,7 @@ export default function AppEntryPage() {
           <button
             type="button"
             className="app-entry-page__brand"
-            onClick={() => navigateLanding(user ? '/app/find-ride' : '/')}
+            onClick={() => navigateLanding(user ? APP_ROUTES.findRide.full : '/')}
           >
             <span className="app-entry-page__brand-mark" aria-hidden="true">
               <WaselMark size={48} />
@@ -342,14 +416,14 @@ export default function AppEntryPage() {
               <span className="app-entry-page__brand-meta">
                 {ar
                   ? '\u0634\u0628\u0643\u0629 \u0627\u0644\u062d\u0631\u0643\u0629 \u0627\u0644\u062d\u064a\u0629'
-                  : 'Live mobility network'}
+                  : 'Ride and package marketplace'}
               </span>
             </span>
           </button>
 
           <div className="app-entry-page__header-actions">
             <WaselContactActionRow ar={ar} compact />
-            {!user ? (
+            {showGuestEntryPoints ? (
               <div className="app-entry-page__auth-links">
                 <button type="button" onClick={() => navigateLanding(signInPath)}>
                   <LogIn size={16} />
@@ -371,7 +445,7 @@ export default function AppEntryPage() {
           <section className="app-entry-page__hero">
             <div className="app-entry-page__hero-map" aria-hidden="true">
               <div className="app-entry-page__hero-map-scale">
-                <DeferredLandingMap ar={ar} />
+                <DeferredLandingMap ar={ar} eager />
               </div>
             </div>
             <div className="app-entry-page__hero-scrim" aria-hidden="true" />
@@ -399,6 +473,34 @@ export default function AppEntryPage() {
                     {copy.points[2]}
                   </span>
                 </div>
+                <div
+                  className="app-entry-page__hero-stats"
+                  aria-label={ar ? 'إشارات المنصة' : 'Platform signals'}
+                >
+                  {heroStats.map(item => (
+                    <div key={item.label} className="app-entry-page__hero-stat">
+                      <strong>{item.value}</strong>
+                      <span>{item.label}</span>
+                      <small>{item.detail}</small>
+                    </div>
+                  ))}
+                </div>
+                <div className="app-entry-page__hero-journey">
+                  <div className="app-entry-page__hero-journey-label">
+                    {ar ? 'كيف تبدأ' : 'How to start'}
+                  </div>
+                  <div className="app-entry-page__hero-journey-steps">
+                    {heroJourney.map((step, index) => (
+                      <div key={step.label} className="app-entry-page__hero-journey-step">
+                        <span className="app-entry-page__hero-journey-index">{index + 1}</span>
+                        <div>
+                          <strong>{step.label}</strong>
+                          <p>{step.detail}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 <div className="app-entry-page__hero-meta">
                   <strong>{supportLine}</strong>
                   <span>{businessAddress}</span>
@@ -411,32 +513,61 @@ export default function AppEntryPage() {
                   role="tablist"
                   aria-label={ar ? '\u0627\u0644\u062e\u062f\u0645\u0627\u062a' : 'Services'}
                 >
-                  <button
-                    type="button"
-                    className={mode === 'ride' ? 'is-active' : undefined}
-                    onClick={() => setMode('ride')}
-                  >
-                    {copy.modes.ride}
-                  </button>
-                  <button
-                    type="button"
-                    className={mode === 'package' ? 'is-active' : undefined}
-                    onClick={() => setMode('package')}
-                  >
-                    {copy.modes.package}
-                  </button>
+                  {APP_ENTRY_SERVICE_MODES.map(serviceMode => (
+                    <button
+                      key={serviceMode}
+                      id={APP_ENTRY_SERVICE_MODE_META[serviceMode].tabId}
+                      type="button"
+                      role="tab"
+                      aria-controls={APP_ENTRY_SERVICE_MODE_META[serviceMode].panelId}
+                      aria-selected={mode === serviceMode}
+                      className={mode === serviceMode ? 'is-active' : undefined}
+                      onClick={() => setMode(serviceMode)}
+                    >
+                      {copy.modes[serviceMode]}
+                    </button>
+                  ))}
                 </div>
 
-                <div className="app-entry-page__action-copy">
+                <div
+                  id={APP_ENTRY_SERVICE_MODE_META[mode].panelId}
+                  className="app-entry-page__action-copy"
+                  role="tabpanel"
+                  aria-labelledby={APP_ENTRY_SERVICE_MODE_META[mode].tabId}
+                >
                   <h2>{mode === 'ride' ? copy.cardTitle.ride : copy.cardTitle.package}</h2>
                   <p>{mode === 'ride' ? copy.cardBody.ride : copy.cardBody.package}</p>
+                </div>
+
+                <div className="app-entry-page__selection-overview">
+                  <div className="app-entry-page__selection-pill">
+                    <span>{ar ? 'الممر المختار' : 'Selected corridor'}</span>
+                    <strong>{routePreview}</strong>
+                  </div>
+                  <div className="app-entry-page__selection-pill">
+                    <span>{ar ? 'التدفق' : 'Flow'}</span>
+                    <strong>{serviceLabel}</strong>
+                  </div>
+                </div>
+
+                <div
+                  className="app-entry-page__guidance-band"
+                  aria-label={ar ? 'إشارات البداية' : 'Entry guidance'}
+                >
+                  {guidanceBand.map(item => (
+                    <div key={item.label} className="app-entry-page__guidance-item">
+                      <span>{item.label}</span>
+                      <strong>{item.value}</strong>
+                      <small>{item.detail}</small>
+                    </div>
+                  ))}
                 </div>
 
                 <div className="app-entry-page__field-grid">
                   <label>
                     <span>{copy.from}</span>
                     <select value={route.from} onChange={updateRoute('from')}>
-                      {CITY_OPTIONS.map(option => (
+                      {APP_ENTRY_CITY_OPTIONS.map(option => (
                         <option
                           key={option.value}
                           value={option.value}
@@ -451,7 +582,7 @@ export default function AppEntryPage() {
                   <label>
                     <span>{copy.to}</span>
                     <select value={route.to} onChange={updateRoute('to')}>
-                      {CITY_OPTIONS.map(option => (
+                      {APP_ENTRY_CITY_OPTIONS.map(option => (
                         <option
                           key={option.value}
                           value={option.value}
@@ -482,22 +613,26 @@ export default function AppEntryPage() {
                   <button
                     type="button"
                     className="app-entry-page__secondary-button"
-                    onClick={() => navigateLanding(protectedPath('/app/offer-ride'))}
+                    onClick={() => navigateLanding(protectedPath(APP_ROUTES.offerRide.full))}
                   >
                     {copy.secondary}
                   </button>
                 </div>
 
-                {!user ? (
+                {showGuestEntryPoints ? (
                   <div className="app-entry-page__guest-auth">
                     <p>{copy.guestLead}</p>
                     <div className="app-entry-page__guest-auth-buttons">
-                      <button type="button" onClick={() => void handleOAuth('google')}>
-                        {oauthProvider === 'google' ? copy.googleBusy : copy.google}
-                      </button>
-                      <button type="button" onClick={() => void handleOAuth('facebook')}>
-                        {oauthProvider === 'facebook' ? copy.facebookBusy : copy.facebook}
-                      </button>
+                      {authProviders.google.enabled ? (
+                        <button type="button" onClick={() => void handleOAuth('google')}>
+                          {oauthProvider === 'google' ? copy.googleBusy : copy.google}
+                        </button>
+                      ) : null}
+                      {authProviders.facebook.enabled ? (
+                        <button type="button" onClick={() => void handleOAuth('facebook')}>
+                          {oauthProvider === 'facebook' ? copy.facebookBusy : copy.facebook}
+                        </button>
+                      ) : null}
                       <button type="button" onClick={() => navigateLanding(contextualSignInPath)}>
                         {copy.email}
                       </button>

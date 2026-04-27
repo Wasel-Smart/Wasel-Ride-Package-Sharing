@@ -7,7 +7,7 @@
  * Standard: Environment configuration is the bootstrap contract.
  * Incorrect defaults silently break auth, payments, and support flows.
  */
-import { afterEach, describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect } from 'vitest';
 import {
   getEnv,
   hasEnv,
@@ -17,9 +17,20 @@ import {
   getSupportEmailUrl,
   getSmsSupportUrl,
   getSupportPhoneUrl,
+  resetConfigCache,
 } from '../../../src/utils/env';
 
 const originalAppUrl = process.env.VITE_APP_URL;
+const originalStripeKey = process.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const originalAppEnv = process.env.VITE_APP_ENV;
+const originalSupabaseUrl = process.env.VITE_SUPABASE_URL;
+const originalSupabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+const originalSupabasePublishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const originalAllowLocalPersistenceFallback = process.env.VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK;
+
+beforeEach(() => {
+  process.env.VITE_APP_ENV = 'test';
+});
 
 afterEach(() => {
   if (originalAppUrl === undefined) {
@@ -28,7 +39,44 @@ afterEach(() => {
     process.env.VITE_APP_URL = originalAppUrl;
   }
 
+  if (originalStripeKey === undefined) {
+    delete process.env.VITE_STRIPE_PUBLISHABLE_KEY;
+  } else {
+    process.env.VITE_STRIPE_PUBLISHABLE_KEY = originalStripeKey;
+  }
+
+  if (originalAppEnv === undefined) {
+    delete process.env.VITE_APP_ENV;
+  } else {
+    process.env.VITE_APP_ENV = originalAppEnv;
+  }
+
+  if (originalSupabaseUrl === undefined) {
+    delete process.env.VITE_SUPABASE_URL;
+  } else {
+    process.env.VITE_SUPABASE_URL = originalSupabaseUrl;
+  }
+
+  if (originalSupabaseAnonKey === undefined) {
+    delete process.env.VITE_SUPABASE_ANON_KEY;
+  } else {
+    process.env.VITE_SUPABASE_ANON_KEY = originalSupabaseAnonKey;
+  }
+
+  if (originalSupabasePublishableKey === undefined) {
+    delete process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  } else {
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY = originalSupabasePublishableKey;
+  }
+
+  if (originalAllowLocalPersistenceFallback === undefined) {
+    delete process.env.VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK;
+  } else {
+    process.env.VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK = originalAllowLocalPersistenceFallback;
+  }
+
   window.history.replaceState({}, '', '/');
+  resetConfigCache();
 });
 
 // ── 1. getEnv ─────────────────────────────────────────────────────────────────
@@ -63,6 +111,7 @@ describe('getConfig()', () => {
     expect(config).toHaveProperty('appName');
     expect(config).toHaveProperty('appUrl');
     expect(config).toHaveProperty('authCallbackPath');
+    expect(config).toHaveProperty('stripeEnabled');
     expect(config).toHaveProperty('enableTwoFactorAuth');
     expect(config).toHaveProperty('isProd');
     expect(config).toHaveProperty('isDev');
@@ -72,9 +121,16 @@ describe('getConfig()', () => {
     expect(getConfig().appName).toBe('Wasel');
   });
 
-  it('isProd and isDev are mutually exclusive', () => {
+  it('activates exactly one environment flag at a time', () => {
     const config = getConfig();
-    expect(config.isProd).toBe(!config.isDev);
+    const activeFlags = [
+      config.isProd,
+      config.isDev,
+      config.isStaging,
+      config.isTest,
+    ].filter(Boolean);
+
+    expect(activeFlags).toHaveLength(1);
   });
 
   it('authCallbackPath starts with /', () => {
@@ -91,8 +147,34 @@ describe('getConfig()', () => {
 
   it('prefers the runtime localhost origin over a stale local VITE_APP_URL', () => {
     process.env.VITE_APP_URL = 'http://localhost:5173';
+    resetConfigCache();
 
     expect(getConfig().appUrl).toBe(window.location.origin);
+  });
+
+  it('only enables Stripe when the publishable key is meaningful', () => {
+    process.env.VITE_STRIPE_PUBLISHABLE_KEY = 'pk_live_123456789';
+    resetConfigCache();
+
+    expect(getConfig().stripeEnabled).toBe(true);
+    expect(getConfig().stripePublishableKey).toBe('pk_live_123456789');
+
+    process.env.VITE_STRIPE_PUBLISHABLE_KEY = 'pk_test_or_pk_live_key';
+    resetConfigCache();
+
+    expect(getConfig().stripeEnabled).toBe(false);
+    expect(getConfig().stripePublishableKey).toBe('');
+  });
+
+  it('keeps local persistence fallback disabled unless it is explicitly enabled', () => {
+    process.env.VITE_APP_ENV = 'development';
+    process.env.VITE_SUPABASE_URL = '';
+    process.env.VITE_SUPABASE_ANON_KEY = '';
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY = '';
+    process.env.VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK = 'false';
+    resetConfigCache();
+
+    expect(getConfig().allowLocalPersistenceFallback).toBe(false);
   });
 });
 

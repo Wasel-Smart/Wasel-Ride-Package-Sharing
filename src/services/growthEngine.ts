@@ -12,6 +12,15 @@ import {
   normalizeJordanLocation,
 } from '../utils/jordanLocations';
 import { getAutomationJobRunAfter } from '../utils/automationScheduling';
+import {
+  GROWTH_CONTRACT_VERSION,
+  growthDashboardSchema,
+  growthEventFeedSchema,
+  growthEventRecordSchema,
+  referralSnapshotSchema,
+} from '../contracts/growth';
+import { parseContract } from '../contracts/validation';
+import { allowLocalPersistenceFallback } from './runtimePolicy';
 
 export interface ReferralSnapshot {
   code: string;
@@ -64,38 +73,88 @@ function buildFallbackCode(userId?: string, name?: string) {
 }
 
 function readLocalSnapshots(): Record<string, ReferralSnapshot> {
-  if (typeof window === 'undefined') return {};
+  if (!allowLocalPersistenceFallback()) {return {};}
+  if (typeof window === 'undefined') {return {};}
   try {
     const raw = window.localStorage.getItem(LOCAL_REFERRAL_KEY);
     const parsed = raw ? JSON.parse(raw) : {};
-    return parsed && typeof parsed === 'object' ? parsed : {};
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {};
+    }
+
+    return Object.entries(parsed as Record<string, unknown>).reduce<Record<string, ReferralSnapshot>>(
+      (acc, [key, value]) => {
+        try {
+          acc[key] = parseContract(
+            referralSnapshotSchema,
+            value,
+            'growth.referral.local',
+            GROWTH_CONTRACT_VERSION,
+          );
+        } catch {
+          // Ignore corrupted local snapshots and keep the valid set.
+        }
+        return acc;
+      },
+      {},
+    );
   } catch {
     return {};
   }
 }
 
 function writeLocalSnapshots(snapshots: Record<string, ReferralSnapshot>) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(LOCAL_REFERRAL_KEY, JSON.stringify(snapshots));
+  if (!allowLocalPersistenceFallback()) {return;}
+  if (typeof window === 'undefined') {return;}
+  try {
+    window.localStorage.setItem(LOCAL_REFERRAL_KEY, JSON.stringify(snapshots));
+  } catch {
+    // Storage can be unavailable in protected environments; fail closed.
+  }
 }
 
 function readLocalGrowthEvents(): GrowthEventRecord[] {
-  if (typeof window === 'undefined') return [];
+  if (!allowLocalPersistenceFallback()) {return [];}
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(LOCAL_GROWTH_EVENTS_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    return parseContract(
+      growthEventFeedSchema,
+      Array.isArray(parsed) ? parsed : [],
+      'growth.events.local',
+      GROWTH_CONTRACT_VERSION,
+    );
   } catch {
     return [];
   }
 }
 
 function writeLocalGrowthEvents(events: GrowthEventRecord[]) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(LOCAL_GROWTH_EVENTS_KEY, JSON.stringify(events.slice(0, 300)));
+  if (!allowLocalPersistenceFallback()) {return;}
+  if (typeof window === 'undefined') {return;}
+  try {
+    window.localStorage.setItem(
+      LOCAL_GROWTH_EVENTS_KEY,
+      JSON.stringify(
+        parseContract(
+          growthEventFeedSchema,
+          events.slice(0, 300),
+          'growth.events.local',
+          GROWTH_CONTRACT_VERSION,
+        ),
+      ),
+    );
+  } catch {
+    // Storage can be unavailable in protected environments; fail closed.
+  }
 }
 
 export function getGrowthEventFeed(): GrowthEventRecord[] {
+  if (!allowLocalPersistenceFallback()) {
+    return [];
+  }
+
   return readLocalGrowthEvents()
     .slice()
     .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
@@ -107,7 +166,8 @@ function readLocalDemandAlerts(): Array<{
   status: string;
   service: 'ride' | 'bus' | 'package';
 }> {
-  if (typeof window === 'undefined') return [];
+  if (!allowLocalPersistenceFallback()) {return [];}
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(LOCAL_DEMAND_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -133,10 +193,10 @@ function mapAutomationJobType(input: {
   funnelStage: string;
   serviceType: 'ride' | 'bus' | 'package' | 'referral' | 'wallet';
 }) {
-  if (input.eventName.includes('support') || input.funnelStage === 'cancelled') return 'support_follow_up';
-  if (input.funnelStage === 'searched') return 'demand_recovery';
-  if (input.funnelStage === 'selected') return 'corridor_conversion';
-  if (input.funnelStage === 'booked' || input.funnelStage === 'completed') return 'pricing_refresh';
+  if (input.eventName.includes('support') || input.funnelStage === 'cancelled') {return 'support_follow_up';}
+  if (input.funnelStage === 'searched') {return 'demand_recovery';}
+  if (input.funnelStage === 'selected') {return 'corridor_conversion';}
+  if (input.funnelStage === 'booked' || input.funnelStage === 'completed') {return 'pricing_refresh';}
   return 'revenue_observe';
 }
 
@@ -151,7 +211,8 @@ export async function trackGrowthEvent(input: {
   metadata?: Record<string, unknown>;
 }) {
   const route = normalizeRouteInput(input.from, input.to);
-  writeLocalGrowthEvents([
+  const localRecord = parseContract(
+    growthEventRecordSchema,
     {
       eventName: input.eventName,
       funnelStage: input.funnelStage,
@@ -161,8 +222,13 @@ export async function trackGrowthEvent(input: {
       valueJod: input.valueJod,
       createdAt: new Date().toISOString(),
     },
-    ...readLocalGrowthEvents(),
-  ]);
+    'growth.event',
+    GROWTH_CONTRACT_VERSION,
+  );
+
+  if (allowLocalPersistenceFallback()) {
+    writeLocalGrowthEvents([localRecord, ...readLocalGrowthEvents()]);
+  }
 
   try {
     await recordDirectGrowthEvent({
@@ -218,12 +284,12 @@ export async function trackGrowthEvent(input: {
       }).catch(() => {});
     }
   } catch {
-    // local fallback is already stored
+    // Protected environments fail closed by skipping local analytics fallback.
   }
 }
 
 export async function getReferralSnapshot(user?: { id?: string; name?: string } | null): Promise<ReferralSnapshot | null> {
-  if (!user?.id) return null;
+  if (!user?.id) {return null;}
 
   const shareUrlBase =
     typeof window !== 'undefined'
@@ -232,28 +298,42 @@ export async function getReferralSnapshot(user?: { id?: string; name?: string } 
 
   try {
     const remote = await getDirectReferralSnapshot(user.id);
-    const snapshot: ReferralSnapshot = {
+    const snapshot = parseContract(
+      referralSnapshotSchema,
+      {
       ...remote,
       shareUrl: `${shareUrlBase}/app/auth?ref=${encodeURIComponent(remote.code)}`,
-    };
+      },
+      'growth.referral.snapshot',
+      GROWTH_CONTRACT_VERSION,
+    );
     const snapshots = readLocalSnapshots();
     snapshots[user.id] = snapshot;
     writeLocalSnapshots(snapshots);
     return snapshot;
   } catch {
+    if (!allowLocalPersistenceFallback()) {
+      return null;
+    }
+
     const snapshots = readLocalSnapshots();
     const existing = snapshots[user.id];
-    if (existing) return existing;
+    if (existing) {return existing;}
 
     const fallbackCode = buildFallbackCode(user.id, user.name);
-    const fallback: ReferralSnapshot = {
-      code: fallbackCode,
-      invited: 0,
-      converted: 0,
-      pendingCredit: 0,
-      earnedCredit: 0,
-      shareUrl: `${shareUrlBase}/app/auth?ref=${encodeURIComponent(fallbackCode)}`,
-    };
+    const fallback = parseContract(
+      referralSnapshotSchema,
+      {
+        code: fallbackCode,
+        invited: 0,
+        converted: 0,
+        pendingCredit: 0,
+        earnedCredit: 0,
+        shareUrl: `${shareUrlBase}/app/auth?ref=${encodeURIComponent(fallbackCode)}`,
+      },
+      'growth.referral.synthetic',
+      GROWTH_CONTRACT_VERSION,
+    );
     snapshots[user.id] = fallback;
     writeLocalSnapshots(snapshots);
     return fallback;
@@ -287,8 +367,17 @@ export async function applyReferralCode(user: { id?: string; name?: string } | n
 
 export async function getGrowthDashboard(userId?: string): Promise<GrowthDashboard> {
   try {
-    return await getDirectGrowthAnalytics(userId);
-  } catch {
+    return parseContract(
+      growthDashboardSchema,
+      await getDirectGrowthAnalytics(userId),
+      'growth.dashboard',
+      GROWTH_CONTRACT_VERSION,
+    );
+  } catch (error) {
+    if (!allowLocalPersistenceFallback()) {
+      throw error;
+    }
+
     const events = readLocalGrowthEvents();
     const alerts = readLocalDemandAlerts();
     const corridorMap = new Map<string, { corridor: string; demand: number; conversions: number }>();
@@ -309,7 +398,9 @@ export async function getGrowthDashboard(userId?: string): Promise<GrowthDashboa
       corridorMap.set(corridor, current);
     }
 
-    return {
+    return parseContract(
+      growthDashboardSchema,
+      {
       funnel: {
         searched: events.filter((event) => event.funnelStage === 'searched').length,
         selected: events.filter((event) => event.funnelStage === 'selected').length,
@@ -325,11 +416,18 @@ export async function getGrowthDashboard(userId?: string): Promise<GrowthDashboa
       revenueJod: events.reduce((sum, event) => sum + Number(event.valueJod ?? 0), 0),
       activeDemand: alerts.filter((alert) => alert.status === 'active').length,
       topCorridors: Array.from(corridorMap.values()).sort((a, b) => (b.demand + b.conversions) - (a.demand + a.conversions)).slice(0, 6),
-    };
+      },
+      'growth.dashboard.local',
+      GROWTH_CONTRACT_VERSION,
+    );
   }
 }
 
 export function getCorridorDemandLeaders(limit = 3) {
+  if (!allowLocalPersistenceFallback()) {
+    return [];
+  }
+
   const alerts = readLocalDemandAlerts();
   const corridorMap = new Map<string, { corridor: string; active: number; serviceLabel: string }>();
 

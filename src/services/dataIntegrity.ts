@@ -48,11 +48,7 @@ export const profileUpdatePayloadSchema = z
     full_name: z.string().trim().min(2).max(120).optional(),
     phone_number: profilePhoneField,
     phone: profilePhoneField,
-    role: z.string().trim().min(1).optional(),
-    verification_level: z.string().trim().min(1).optional(),
     avatar_url: z.string().trim().min(1).optional(),
-    wallet_balance: z.number().finite().optional(),
-    wallet_status: z.enum(['active', 'limited', 'frozen']).optional(),
   })
   .refine(presentKeys, 'At least one profile field must be provided');
 
@@ -184,8 +180,8 @@ export function logDataFlow(entry: DataFlowLogEntry) {
 }
 
 function toErrorMessage(error: unknown) {
-  if (error instanceof Error) return error.message;
-  if (typeof error === 'string') return error;
+  if (error instanceof Error) {return error.message;}
+  if (typeof error === 'string') {return error;}
   return 'Unknown write failure';
 }
 

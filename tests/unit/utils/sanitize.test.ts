@@ -202,7 +202,7 @@ describe('sanitizeFilename()', () => {
   });
 
   it('limits to 255 characters', () => {
-    const long = 'A'.repeat(300) + '.txt';
+    const long = `${'A'.repeat(300)  }.txt`;
     expect(sanitizeFilename(long).length).toBeLessThanOrEqual(255);
   });
 

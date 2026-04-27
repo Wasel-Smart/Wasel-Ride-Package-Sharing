@@ -56,7 +56,7 @@ export default function DriverPage() {
           ].map((item) => (
             <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
               <div style={{ color: item.color, fontWeight: 900, fontSize: '1.18rem', marginBottom: 4 }}>{item.value}</div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>{item.label}</div>
+              <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem' }}>{item.label}</div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.45 }}>{item.detail}</div>
             </div>
           ))}
@@ -66,9 +66,9 @@ export default function DriverPage() {
           <div style={{ background: DS.card, borderRadius: r(20), padding: '24px', border: `1px solid ${DS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <ShieldCheck size={18} color={DS.green} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Driver readiness</div>
+              <div style={{ color: DS.text, fontWeight: 900 }}>Driver readiness</div>
             </div>
-            <h3 style={{ color: '#fff', fontWeight: 900, margin: '0 0 10px', fontSize: '1.15rem' }}>
+            <h3 style={{ color: DS.text, fontWeight: 900, margin: '0 0 10px', fontSize: '1.15rem' }}>
               {readiness.headline}
             </h3>
             <p style={{ color: DS.sub, margin: '0 0 18px', lineHeight: 1.6, fontSize: '0.84rem' }}>
@@ -82,7 +82,7 @@ export default function DriverPage() {
                     {step.complete ? 'OK' : '...'}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>{step.label}</div>
+                    <div style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem' }}>{step.label}</div>
                     <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 4, lineHeight: 1.55 }}>{step.description}</div>
                   </div>
                 </div>
@@ -94,7 +94,7 @@ export default function DriverPage() {
             <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <Brain size={18} color={DS.cyan} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Route guidance</div>
+              <div style={{ color: DS.text, fontWeight: 900 }}>Route guidance</div>
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
@@ -106,7 +106,7 @@ export default function DriverPage() {
                     ? `Package-ready supply can add about ${driverPlan.packageBonusJod} JOD while keeping the route ${driverPlan.corridor.savingsPercent}% cheaper than solo movement.`
                     : 'Package carry becomes a useful earnings boost on the right route.',
                 ].map((item) => (
-                  <div key={item} style={{ background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}`, color: '#fff', fontSize: '0.8rem', lineHeight: 1.55 }}>
+                  <div key={item} style={{ background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}`, color: DS.text, fontSize: '0.8rem', lineHeight: 1.55 }}>
                     {item}
                   </div>
                 ))}
@@ -114,7 +114,7 @@ export default function DriverPage() {
             </div>
 
             <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
-              <div style={{ color: '#fff', fontWeight: 900, marginBottom: 10 }}>What is unlocked</div>
+              <div style={{ color: DS.text, fontWeight: 900, marginBottom: 10 }}>What is unlocked</div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
                   { label: 'Offer route', ready: readiness.canOfferRide },
@@ -122,7 +122,7 @@ export default function DriverPage() {
                   { label: 'Receive payouts', ready: user.emailVerified && (user.verificationLevel === 'level_2' || user.verificationLevel === 'level_3') },
                 ].map((item) => (
                   <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}` }}>
-                    <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>{item.label}</div>
+                    <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.8rem' }}>{item.label}</div>
                     <span style={{ color: item.ready ? DS.green : DS.gold, fontWeight: 800, fontSize: '0.75rem' }}>
                       {item.ready ? 'Ready' : 'Blocked'}
                     </span>
@@ -137,12 +137,12 @@ export default function DriverPage() {
           <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <Network size={18} color={DS.green} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Demand signals</div>
+              <div style={{ color: DS.text, fontWeight: 900 }}>Demand signals</div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {marketplaceNodes.map((node) => (
                 <div key={node.id} style={{ background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}` }}>
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>{node.title}</div>
+                  <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.8rem' }}>{node.title}</div>
                   <div style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.55, marginTop: 4 }}>{node.summary}</div>
                 </div>
               ))}
@@ -152,11 +152,11 @@ export default function DriverPage() {
           <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <Truck size={18} color={DS.gold} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Why this route can work</div>
+              <div style={{ color: DS.text, fontWeight: 900 }}>Why this route can work</div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {defensibility.map((line) => (
-                <div key={line} style={{ background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}`, color: '#fff', fontSize: '0.8rem', lineHeight: 1.55 }}>
+                <div key={line} style={{ background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}`, color: DS.text, fontSize: '0.8rem', lineHeight: 1.55 }}>
                   {line}
                 </div>
               ))}
@@ -165,7 +165,7 @@ export default function DriverPage() {
         </div>
 
         <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
-          <div style={{ color: '#fff', fontWeight: 900, marginBottom: 10 }}>Next actions</div>
+          <div style={{ color: DS.text, fontWeight: 900, marginBottom: 10 }}>Next actions</div>
           <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.6, marginBottom: 14 }}>
             Finish the missing trust steps, review your strongest route, and then publish only when the lane looks healthy enough to support repeat demand.
           </div>
@@ -173,10 +173,10 @@ export default function DriverPage() {
             <button onClick={() => navigate('/app/settings')} style={{ height: 44, borderRadius: '999px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
               Open settings
             </button>
-            <button onClick={() => navigate('/app/trust')} style={{ height: 44, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+            <button onClick={() => navigate('/app/trust')} style={{ height: 44, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontWeight: 800, cursor: 'pointer' }}>
               Open trust center
             </button>
-            <button onClick={() => navigate('/app/offer-ride')} style={{ height: 44, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+            <button onClick={() => navigate('/app/offer-ride')} style={{ height: 44, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontWeight: 800, cursor: 'pointer' }}>
               Offer a ride
             </button>
           </div>

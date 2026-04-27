@@ -16,6 +16,27 @@ import {
   withApiTelemetry,
 } from './http';
 import { ValidationError } from '../utils/errors';
+import { checkRateLimit } from '../utils/security';
+
+const AUTH_RATE_LIMITS = {
+  signIn:  { maxRequests: 10, windowMs: 60_000 },
+  signUp:  { maxRequests: 5,  windowMs: 60_000 },
+  reset:   { maxRequests: 3,  windowMs: 60_000 },
+  resend:  { maxRequests: 3,  windowMs: 60_000 },
+} as const;
+
+function getClientKey(prefix: string): string {
+  // Use a stable per-session key so the limit is per-browser-tab, not global
+  const sessionId =
+    typeof sessionStorage !== 'undefined'
+      ? (sessionStorage.getItem('wasel-session-id') ?? (() => {
+          const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+          try { sessionStorage.setItem('wasel-session-id', id); } catch { /* ignore */ }
+          return id;
+        })())
+      : 'default';
+  return `${prefix}:${sessionId}`;
+}
 
 function canUseEdgeApi(): boolean {
   return Boolean(API_URL && publicAnonKey);
@@ -162,6 +183,9 @@ async function safeGetDirectProfile(userId: string): Promise<Record<string, unkn
 
 export const authAPI = {
   async signUp(email: string, password: string, firstName: string, lastName: string, phone?: string) {
+    if (!checkRateLimit(getClientKey('auth:signup'), AUTH_RATE_LIMITS.signUp)) {
+      throw new ValidationError('Too many sign-up attempts. Please wait a minute and try again.');
+    }
     const client = requireSupabase();
     const sanitizedEmail = sanitizeEmail(normalizeEmailInput(email));
     const sanitizedFirstName = sanitizeTextField(firstName, 'First name', 80);
@@ -225,6 +249,9 @@ export const authAPI = {
   },
 
   async resendSignupConfirmation(email: string) {
+    if (!checkRateLimit(getClientKey('auth:resend'), AUTH_RATE_LIMITS.resend)) {
+      throw new ValidationError('Too many resend attempts. Please wait a minute and try again.');
+    }
     const client = requireSupabase();
     const sanitizedEmail = sanitizeEmail(normalizeEmailInput(email));
     const redirectCandidates = getAuthRedirectCandidates(
@@ -376,6 +403,9 @@ export const authAPI = {
   },
 
   async signIn(email: string, password: string) {
+    if (!checkRateLimit(getClientKey('auth:signin'), AUTH_RATE_LIMITS.signIn)) {
+      throw new ValidationError('Too many sign-in attempts. Please wait a minute and try again.');
+    }
     const client = requireSupabase();
     const sanitizedEmail = sanitizeEmail(normalizeEmailInput(email));
 
@@ -385,7 +415,7 @@ export const authAPI = {
         password,
       });
 
-      if (error) throw new Error(normalizeAuthError(error.message, 'signin'));
+      if (error) {throw new Error(normalizeAuthError(error.message, 'signin'));}
       return data;
     } catch (error) {
       throw normalizeAuthException(error, 'signin');
@@ -394,20 +424,20 @@ export const authAPI = {
 
   async signOut() {
     const client = requireSupabase();
-    const { error } = await client.auth.signOut();
-    if (error) throw error;
+    const { error } = await client.auth.signOut({ scope: 'global' });
+    if (error) {throw error;}
   },
 
   async getSession() {
     const client = requireSupabase();
     const { data, error } = await client.auth.getSession();
-    if (error) throw error;
+    if (error) {throw error;}
     return data;
   },
 
   async getProfile() {
     const { token, userId } = await getAuthDetails();
-    if (!token || !userId) return { profile: null };
+    if (!token || !userId) {return { profile: null };}
 
     if (!canUseEdgeApi()) {
       const profile = await getDirectProfile(userId);
@@ -476,12 +506,6 @@ export const authAPI = {
               : {}),
             ...(typeof payload.phone === 'string'
               ? { phone: sanitizePhoneNumber(payload.phone) }
-              : {}),
-            ...(typeof payload.role === 'string'
-              ? { role: sanitizeTextField(payload.role, 'Role', 32) }
-              : {}),
-            ...(typeof payload.verification_level === 'string'
-              ? { verification_level: sanitizeTextField(payload.verification_level, 'Verification level', 32) }
               : {}),
             ...(typeof payload.avatar_url === 'string'
               ? { avatar_url: sanitizeOptionalTextField(payload.avatar_url, 500) }

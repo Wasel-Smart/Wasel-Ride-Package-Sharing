@@ -20,6 +20,9 @@ node_modules/
 coverage/
 test-results/
 playwright-report/
+quality-report*.json
+.lighthouseci/
+vitest-results*.json
 
 # ── OS junk ────────────────────────────────────────────────────
 .DS_Store
@@ -79,6 +82,11 @@ _REMOVED/
 
 # Local Codex worktrees / ad hoc artifacts
 .codex-landing-deploy/
+.codex-review-shots/
+.qa-artifacts/
+.anima/cache/
+.eslintcache
+tsconfig.tsbuildinfo
 mobility-os-current.png
 
 # Temp icon/image generation artifacts
@@ -87,3 +95,34 @@ tmp-wasel-pin-*.ico
 tmp-wasel-*.ico
 tmp-*.png
 tmp-*.ico
+tmp-*.json
+tmp-*.html
+tmp-*.txt
+tmp-*.headers.txt
+tmp_*
+
+# Preview and development logs
+preview-*.log
+preview-*.err.log
+preview-*.out.log
+.wallet-payments-e2e.log
+.codex-*.log
+.build-verify.log
+firepit-log.txt
+
+# Vitest results
+vitest-results*.json
+
+# Multiple config versions (keep only main ones)
+vitest.enhanced.config.ts
+
+# Nested duplicate directory
+Wdoubleme/
+Wasel R001_04042026_b001/
+tmp_import_logo/
+tmp_logo_frames/
+
+# Legacy one-off report names
+COMPREHENSIVE_GAPS_ANALYSIS.md
+CRITICAL_GAPS_QUICK_REF.md
+SECURITY_FIX_SUMMARY.md

@@ -1,7 +1,7 @@
 const FONT_PRELOAD_SELECTOR = 'link[data-wasel-font-preload="true"]';
 const FONT_STYLESHEET_SELECTOR = 'link[data-wasel-font-stylesheet="true"]';
 const FONT_STYLESHEET_HREF =
-  'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=Cairo:wght@500;600;700;800&display=swap';
+  'https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Cairo:wght@500;600;700;800&display=swap';
 
 function buildStartupMessageNode(
   tagName: 'h1' | 'p',
@@ -70,9 +70,9 @@ export function renderStartupConfigurationError(options: {
     justifyContent: 'center',
     minHeight: '100vh',
     padding: '24px',
-    fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
-    background: isLight ? '#f5faff' : '#061726',
-    color: isLight ? '#10243d' : '#eff6ff',
+    fontFamily: "var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)",
+    background: isLight ? '#F5EFE6' : '#0B0F14',
+    color: isLight ? '#0F172A' : '#F8FAFC',
   } satisfies Partial<CSSStyleDeclaration>);
   shell.dir = direction;
 
@@ -81,27 +81,27 @@ export function renderStartupConfigurationError(options: {
     textAlign: isArabic ? 'right' : 'center',
     maxWidth: '500px',
     padding: '40px',
-    background: isLight ? 'rgba(255,255,255,0.96)' : 'rgba(10,22,40,0.94)',
+    background: isLight ? '#FFFDF9' : '#111827',
     borderRadius: '16px',
-    boxShadow: isLight ? '0 12px 36px rgba(16,36,61,0.10)' : '0 12px 36px rgba(0,0,0,0.28)',
-    border: isLight ? '1px solid rgba(16,36,61,0.08)' : '1px solid rgba(93,150,210,0.14)',
+    boxShadow: isLight ? '0 18px 36px rgba(15, 23, 42, 0.12)' : '0 18px 36px rgba(0, 0, 0, 0.22)',
+    border: isLight ? '1px solid rgba(15, 23, 42, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
   } satisfies Partial<CSSStyleDeclaration>);
 
   card.appendChild(
     buildStartupMessageNode('h1', title, {
-      color: isLight ? '#c2410c' : '#fca5a5',
+      color: isLight ? '#D35400' : '#F5B041',
       margin: '0 0 16px',
     }),
   );
   card.appendChild(
     buildStartupMessageNode('p', body, {
-      color: isLight ? '#33526f' : 'rgba(239,246,255,0.78)',
+      color: isLight ? '#0F172A' : '#F8FAFC',
       margin: '16px 0',
     }),
   );
   card.appendChild(
     buildStartupMessageNode('p', help, {
-      color: isLight ? '#64748b' : 'rgba(239,246,255,0.56)',
+      color: isLight ? '#6B7280' : 'rgba(248, 250, 252, 0.72)',
       fontSize: '14px',
       margin: '0',
     }),
@@ -110,4 +110,3 @@ export function renderStartupConfigurationError(options: {
   shell.appendChild(card);
   document.body.appendChild(shell);
 }
-

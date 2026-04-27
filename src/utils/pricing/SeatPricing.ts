@@ -94,7 +94,7 @@ export class SmartPricingEngine {
     const baseFee = 50; // Fixed monthly operational fee
     
     let monthlyCost = baseFee + (distanceKm * baseRatePerKm * daysPerWeek * 4); // 4 weeks
-    if (isRoundTrip) monthlyCost *= 1.8; // 10% discount on return leg
+    if (isRoundTrip) {monthlyCost *= 1.8;} // 10% discount on return leg
     
     return {
       standard: Math.ceil(monthlyCost),

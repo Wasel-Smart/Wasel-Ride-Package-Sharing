@@ -6,23 +6,58 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { useLivePlatformStats, useLiveUserStats } from '../../services/liveDataService';
 import { useCurrency } from '../../utils/currency';
+import { getLocalizedCopy } from '../../utils/localizedCopy';
 import { C, F } from './HomePageShared';
 import {
+  FocusHeroSection,
   GuestCtaSection,
   HomeStatsGrid,
-  MobilityOsSection,
   PopularRoutesSection,
   QuickActionsSection,
+  ServicePillarsSection,
   UserSnapshotSection,
 } from './HomePageSections';
 import {
+  buildHeroHighlights,
   buildQuickActions,
+  buildServicePillars,
   buildStatsData,
   buildTripModeOptions,
   type HomeTripModeOption,
 } from './homePageConfig';
 import { useHomePageDashboard } from './useHomePageDashboard';
 import './HomePage.css';
+
+const HOME_COPY = {
+  eyebrow: {
+    ar: 'واصل | شبكة الحركة',
+    en: 'WASEL | Ride and Package',
+  },
+  heroSubtitle: {
+    ar: 'انقل أشخاصًا وطرودًا وثقة تشغيلية في تجربة واحدة واضحة.',
+    en: 'Book rides and send packages in one clear experience.',
+  },
+  refresh: {
+    ar: 'تحديث',
+    en: 'Refresh',
+  },
+  refreshing: {
+    ar: 'جارٍ التحديث...',
+    en: 'Refreshing...',
+  },
+  tripModeDetail: {
+    ar: 'اختر النمط ثم ادخل الشبكة.',
+    en: 'Choose your trip and continue to rides.',
+  },
+  tripModeLabel: {
+    ar: 'نوع الرحلة',
+    en: 'TRIP TYPE',
+  },
+  welcomeBack: {
+    ar: 'أهلاً بعودتك',
+    en: 'Welcome back',
+  },
+} as const;
 
 function HomeBackdrop({
   stars,
@@ -51,17 +86,23 @@ function HomeBackdrop({
 }
 
 function HomeHero({
-  ar,
-  firstName,
-  tripMode,
+  eyebrowText,
+  headlineText,
   options,
   onSelectMode,
+  subtitleText,
+  tripMode,
+  tripModeDetail,
+  tripModeLabel,
 }: {
-  ar: boolean;
-  firstName: string;
-  tripMode: 'one-way' | 'round';
+  eyebrowText: string;
+  headlineText: string;
   options: HomeTripModeOption[];
   onSelectMode: (option: HomeTripModeOption) => void;
+  subtitleText: string;
+  tripMode: 'one-way' | 'round';
+  tripModeDetail: string;
+  tripModeLabel: string;
 }) {
   return (
     <motion.section
@@ -82,35 +123,29 @@ function HomeHero({
               size={176}
               style={{
                 filter:
-                  'drop-shadow(0 26px 48px rgba(1,10,18,0.34)) drop-shadow(0 0 34px rgba(25,231,187,0.2))',
+                  'drop-shadow(0 26px 48px rgba(1,10,18,0.34)) drop-shadow(0 0 34px rgba(169,227,255,0.18))',
               }}
             />
           </div>
         </motion.div>
         <div className="home-hero-copy">
-          <p className="home-eyebrow">
-            {ar ? 'واصل | شبكة الحركة' : 'WASEL | Mobility Network'}
-          </p>
-          <h1 className="home-hero-title hero-title">
-            {ar ? `أهلاً بعودتك${firstName ? `، ${firstName}` : ''}` : `Welcome back${firstName ? `, ${firstName}` : ''}`}
-          </h1>
-          <p className="home-subtle">
-            {ar ? 'نقل أشخاص، طرود، وثقة تشغيلية في تجربة واحدة واضحة.' : 'Move people, packages, and operational trust through one unified experience.'}
-          </p>
+          <p className="home-eyebrow">{eyebrowText}</p>
+          <h1 className="home-hero-title hero-title">{headlineText}</h1>
+          <p className="home-subtle">{subtitleText}</p>
         </div>
       </div>
 
       <div className="home-panel home-panel-accent">
-        <p className="home-mini-label">{ar ? 'نوع الرحلة' : 'TRIP TYPE'}</p>
-        <p className="home-panel-copy">
-          {ar ? 'اختر النمط ثم ادخل الشبكة.' : 'Choose the mode, then enter the network.'}
-        </p>
+        <p className="home-mini-label">{tripModeLabel}</p>
+        <p className="home-panel-copy">{tripModeDetail}</p>
         <div className="home-trip-mode-grid">
-          {options.map((option) => {
+          {options.map(option => {
             const Icon = option.icon;
             const isActive = tripMode === option.key;
             return (
               <button
+                aria-label={option.title}
+                aria-pressed={isActive}
                 key={option.key}
                 type="button"
                 onClick={() => onSelectMode(option)}
@@ -122,7 +157,10 @@ function HomeHero({
               >
                 <Icon size={18} color={isActive ? option.accent : C.textDim} />
                 <div className="home-trip-mode-copy">
-                  <div className="home-trip-mode-title" style={{ color: isActive ? option.accent : C.text }}>
+                  <div
+                    className="home-trip-mode-title"
+                    style={{ color: isActive ? option.accent : C.text }}
+                  >
                     {option.title}
                   </div>
                   <div className="home-trip-mode-description">{option.description}</div>
@@ -146,55 +184,73 @@ export function HomePage() {
   const platformStats = useLivePlatformStats();
   const ar = language === 'ar';
 
-  const {
-    stars,
-    refreshing,
-    handleRefresh,
-    tripMode,
-    setTripMode,
-  } = useHomePageDashboard(user);
+  const { stars, refreshing, handleRefresh, tripMode, setTripMode } = useHomePageDashboard(user);
 
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
+  const eyebrowText = getLocalizedCopy(language, HOME_COPY.eyebrow);
+  const headlinePrefix = getLocalizedCopy(language, HOME_COPY.welcomeBack);
+  const headlineText =
+    language === 'ar'
+      ? `${headlinePrefix}${firstName ? `، ${firstName}` : ''}`
+      : `${headlinePrefix}${firstName ? `, ${firstName}` : ''}`;
+  const subtitleText = getLocalizedCopy(language, HOME_COPY.heroSubtitle);
+  const tripModeLabel = getLocalizedCopy(language, HOME_COPY.tripModeLabel);
+  const tripModeDetail = getLocalizedCopy(language, HOME_COPY.tripModeDetail);
+  const refreshLabel = refreshing
+    ? getLocalizedCopy(language, HOME_COPY.refreshing)
+    : getLocalizedCopy(language, HOME_COPY.refresh);
+  const heroHighlights = buildHeroHighlights(ar);
   const quickActions = buildQuickActions(ar);
+  const servicePillars = buildServicePillars(ar);
   const stats = buildStatsData(ar, liveStats, formatFromJOD);
   const tripModeOptions = buildTripModeOptions(ar);
 
   return (
     <div className="home-root" dir={dir} style={{ background: C.bg, color: C.text, fontFamily: F }}>
-      <style>{`
-        :root { color-scheme: dark; scroll-behavior: smooth; }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
-
       <HomeBackdrop stars={stars} />
 
       <div className="home-shell">
         <div className="home-toolbar">
-          <button type="button" onClick={handleRefresh} disabled={refreshing} className="home-pill-button">
-            <RefreshCw size={12} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }} />
-            {ar ? (refreshing ? 'جارٍ التحديث...' : 'تحديث') : refreshing ? 'Refreshing...' : 'Refresh'}
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="home-pill-button"
+          >
+            <RefreshCw
+              size={12}
+              style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }}
+            />
+            {refreshLabel}
           </button>
         </div>
 
         <HomeHero
-          ar={ar}
-          firstName={firstName}
+          eyebrowText={eyebrowText}
+          headlineText={headlineText}
           tripMode={tripMode}
+          tripModeDetail={tripModeDetail}
+          tripModeLabel={tripModeLabel}
           options={tripModeOptions}
-          onSelectMode={(option) => {
+          subtitleText={subtitleText}
+          onSelectMode={option => {
             setTripMode(option.key);
             navigate(option.path);
           }}
         />
 
-        <HomeStatsGrid loading={loading} stats={stats} />
-
-        <QuickActionsSection
+        <FocusHeroSection
           ar={ar}
-          quickActions={quickActions}
+          userName={firstName}
+          highlights={heroHighlights}
           navigate={navigate}
         />
+
+        <HomeStatsGrid loading={loading} stats={stats} />
+
+        <QuickActionsSection ar={ar} quickActions={quickActions} navigate={navigate} />
+
+        <ServicePillarsSection ar={ar} pillars={servicePillars} navigate={navigate} />
 
         {user ? (
           <UserSnapshotSection
@@ -213,10 +269,9 @@ export function HomePage() {
           navigate={navigate}
         />
 
-        <MobilityOsSection ar={ar} navigate={navigate} />
-
         {!user ? <GuestCtaSection ar={ar} navigate={navigate} /> : null}
       </div>
     </div>
   );
 }
+

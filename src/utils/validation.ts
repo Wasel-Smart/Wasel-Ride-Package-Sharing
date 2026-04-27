@@ -1,172 +1,524 @@
 /**
- * Wasel — Zod Validation Schemas
+ * Input Validation & Sanitization - Wasel | واصل
  *
- * Central schema definitions for all forms in the app.
- * Used with react-hook-form via zodResolver.
- *
- * Usage:
- *   import { signInSchema, type SignInFields } from '@/utils/validation';
- *   const form = useForm<SignInFields>({ resolver: zodResolver(signInSchema) });
+ * Comprehensive validation system with:
+ * - Type-safe validation using Zod
+ * - Input sanitization
+ * - Custom validators for Jordan-specific data
+ * - XSS protection
+ * - SQL injection prevention
  */
+
 import { z } from 'zod';
-import { WALLET_PAYMENT_METHOD_TYPES } from '../../shared/wallet-contracts';
+import { logger } from './enhanced-logging';
 
-// ── Reusable field validators ─────────────────────────────────────────────────
+// Common validation schemas
+export const ValidationSchemas = {
+  // Basic types
+  email: z.string().email('Invalid email format').toLowerCase().trim(),
 
-const emailField = z
-  .string({ required_error: 'Email is required' })
-  .email('Please enter a valid email address')
-  .toLowerCase()
-  .trim();
+  phone: z
+    .string()
+    .regex(/^\+962[0-9]{8,9}$/, 'Invalid Jordanian phone number format (+962XXXXXXXX)')
+    .transform(phone => phone.replace(/\s+/g, '')),
 
-const passwordField = z
-  .string({ required_error: 'Password is required' })
-  .min(8, 'Password must be at least 8 characters')
-  .max(128, 'Password is too long');
+  internationalPhone: z
+    .string()
+    .regex(/^\+[1-9]\d{1,14}$/, 'Invalid international phone number format')
+    .transform(phone => phone.replace(/\s+/g, '')),
 
-const phoneField = z
-  .string()
-  .regex(/^\+[1-9]\d{7,14}$/, 'Phone must be in international format: +962xxxxxxxxx')
-  .optional()
-  .or(z.literal(''));
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+      'Password must contain uppercase, lowercase, number, and special character',
+    ),
 
-const nameField = z
-  .string({ required_error: 'Name is required' })
-  .trim()
-  .min(2, 'Name must be at least 2 characters')
-  .max(80, 'Name is too long')
-  .refine((value) => value.length > 0, 'Name is required');
+  name: z
+    .string()
+    .min(2, 'Name must be at least 2 characters')
+    .max(50, 'Name must not exceed 50 characters')
+    .regex(/^[a-zA-Z\u0600-\u06FF\s'-]+$/, 'Name contains invalid characters')
+    .transform(name => name.trim())
+    .refine(name => name.length > 0, 'Name cannot be empty or whitespace only'),
 
-const safeAvatarUrlField = z
-  .string()
-  .url('Invalid image URL')
-  .refine((value) => {
-    try {
-      const url = new URL(value);
-      return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch {
-      return false;
+  // Jordan-specific validations
+  jordanianId: z
+    .string()
+    .regex(/^[0-9]{10}$/, 'Jordanian ID must be exactly 10 digits')
+    .refine(validateJordanianId, 'Invalid Jordanian ID number'),
+
+  jordanianLicense: z
+    .string()
+    .regex(/^[0-9]{7,8}$/, 'Jordanian driving license must be 7-8 digits'),
+
+  // Geographic
+  coordinates: z.object({
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
+  }),
+
+  jordanianCoordinates: z.object({
+    latitude: z.number().min(29.18).max(33.37), // Jordan's approximate bounds
+    longitude: z.number().min(34.88).max(39.3),
+  }),
+
+  // Financial
+  currency: z.number().positive('Amount must be positive').multipleOf(0.01),
+
+  jordanianDinar: z
+    .number()
+    .positive('Amount must be positive')
+    .max(10000, 'Amount exceeds maximum limit')
+    .multipleOf(0.001), // JOD has 3 decimal places
+
+  // URLs and paths
+  url: z.string().url('Invalid URL format'),
+
+  slug: z
+    .string()
+    .regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens')
+    .min(3, 'Slug must be at least 3 characters')
+    .max(50, 'Slug must not exceed 50 characters'),
+
+  // Dates
+  futureDate: z
+    .string()
+    .datetime('Invalid date format')
+    .refine(date => new Date(date) > new Date(), 'Date must be in the future'),
+
+  pastDate: z
+    .string()
+    .datetime('Invalid date format')
+    .refine(date => new Date(date) < new Date(), 'Date must be in the past'),
+
+  // Trip-specific
+  tripCapacity: z.number().int().min(1).max(8),
+
+  tripPrice: z
+    .number()
+    .positive('Price must be positive')
+    .max(1000, 'Price exceeds maximum limit')
+    .multipleOf(0.1),
+
+  // Package-specific
+  packageWeight: z
+    .number()
+    .positive('Weight must be positive')
+    .max(50, 'Weight exceeds 50kg limit'),
+
+  packageDimensions: z
+    .object({
+      length: z.number().positive().max(200), // cm
+      width: z.number().positive().max(200),
+      height: z.number().positive().max(200),
+    })
+    .refine(
+      dims => dims.length * dims.width * dims.height <= 1000000, // 1m³
+      'Package dimensions exceed volume limit',
+    ),
+};
+
+// Jordanian ID validation algorithm
+function validateJordanianId(id: string): boolean {
+  if (id.length !== 10) {return false;}
+
+  const digits = id.split('').map(Number);
+  const weights = [1, 2, 1, 2, 1, 2, 1, 2, 1];
+
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    let product = digits[i] * weights[i];
+    if (product > 9) {
+      product = Math.floor(product / 10) + (product % 10);
     }
-  }, 'Avatar URL must use http or https');
+    sum += product;
+  }
 
-// ── Auth schemas ──────────────────────────────────────────────────────────────
+  const checkDigit = (10 - (sum % 10)) % 10;
+  return checkDigit === digits[9];
+}
 
+// Input sanitization functions
+export class InputSanitizer {
+  // HTML sanitization to prevent XSS
+  static sanitizeHtml(input: string): string {
+    return input
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+  }
+
+  // SQL injection prevention
+  static sanitizeSql(input: string): string {
+    return input
+      .replace(/'/g, "''")
+      .replace(/;/g, '')
+      .replace(/--/g, '')
+      .replace(/\/\*/g, '')
+      .replace(/\*\//g, '');
+  }
+
+  // Remove potentially dangerous characters
+  static sanitizeGeneral(input: string): string {
+    return input.replace(/[<>"'%;()&+]/g, '').trim();
+  }
+
+  // Sanitize for file names
+  static sanitizeFileName(input: string): string {
+    return input
+      .replace(/[^a-zA-Z0-9\u0600-\u06FF._-]/g, '')
+      .replace(/\.{2,}/g, '.')
+      .substring(0, 255);
+  }
+
+  // Sanitize for URLs
+  static sanitizeUrl(input: string): string {
+    try {
+      const url = new URL(input);
+      // Only allow http and https protocols
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        throw new Error('Invalid protocol');
+      }
+      return url.toString();
+    } catch {
+      return '';
+    }
+  }
+
+  // Remove Arabic diacritics for search
+  static normalizeArabicText(input: string): string {
+    return input
+      .replace(/[\u064B-\u0652\u0670\u0640]/g, '') // Remove diacritics and tatweel
+      .replace(/[أإآ]/g, 'ا') // Normalize alef
+      .replace(/[ة]/g, 'ه') // Normalize taa marbouta
+      .replace(/[ي]/g, 'ى') // Normalize yaa
+      .trim();
+  }
+}
+
+// Validation result types
+export interface ValidationResult<T> {
+  success: boolean;
+  data?: T;
+  errors?: string[];
+}
+
+// Main validation class
+export class Validator {
+  // Validate with Zod schema
+  static validate<T>(schema: z.ZodSchema<T>, data: unknown): ValidationResult<T> {
+    try {
+      const result = schema.parse(data);
+      return { success: true, data: result };
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errors = error.errors.map(err => `${err.path.join('.')}: ${err.message}`);
+
+        logger.warning('Validation failed', {
+          errors,
+          data: typeof data === 'object' ? JSON.stringify(data) : data,
+        });
+
+        return { success: false, errors };
+      }
+
+      logger.error('Unexpected validation error', { error });
+      return { success: false, errors: ['Validation failed'] };
+    }
+  }
+
+  // Safe validation that doesn't throw
+  static safeParse<T>(schema: z.ZodSchema<T>, data: unknown): z.SafeParseReturnType<unknown, T> {
+    return schema.safeParse(data);
+  }
+
+  // Validate and sanitize input
+  static validateAndSanitize<T>(
+    schema: z.ZodSchema<T>,
+    data: unknown,
+    sanitizer?: (input: any) => any,
+  ): ValidationResult<T> {
+    try {
+      // Apply sanitization if provided
+      const sanitizedData = sanitizer ? sanitizer(data) : data;
+
+      // Validate with schema
+      const result = schema.parse(sanitizedData);
+
+      return { success: true, data: result };
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errors = error.errors.map(err => `${err.path.join('.')}: ${err.message}`);
+        return { success: false, errors };
+      }
+
+      return { success: false, errors: ['Validation failed'] };
+    }
+  }
+
+  // Batch validation
+  static validateBatch<T>(
+    schema: z.ZodSchema<T>,
+    dataArray: unknown[],
+  ): { valid: T[]; invalid: { index: number; errors: string[] }[] } {
+    const valid: T[] = [];
+    const invalid: { index: number; errors: string[] }[] = [];
+
+    dataArray.forEach((data, index) => {
+      const result = this.validate(schema, data);
+      if (result.success && result.data) {
+        valid.push(result.data);
+      } else {
+        invalid.push({ index, errors: result.errors || [] });
+      }
+    });
+
+    return { valid, invalid };
+  }
+}
+
+// Custom validation rules
+export const CustomValidators = {
+  // Check if string contains only Arabic characters
+  isArabicOnly: (text: string): boolean => {
+    return /^[\u0600-\u06FF\s]+$/.test(text);
+  },
+
+  // Check if string contains only English characters
+  isEnglishOnly: (text: string): boolean => {
+    return /^[a-zA-Z\s]+$/.test(text);
+  },
+
+  // Validate Jordanian postal code
+  isValidJordanianPostalCode: (code: string): boolean => {
+    return /^[0-9]{5}$/.test(code);
+  },
+
+  // Check if coordinates are within Jordan
+  isWithinJordan: (lat: number, lng: number): boolean => {
+    return lat >= 29.18 && lat <= 33.37 && lng >= 34.88 && lng <= 39.3;
+  },
+
+  // Validate IBAN for Jordan
+  isValidJordanianIBAN: (iban: string): boolean => {
+    const cleanIban = iban.replace(/\s/g, '').toUpperCase();
+    return /^JO\d{2}[A-Z]{4}\d{22}$/.test(cleanIban);
+  },
+
+  // Check if time is within business hours
+  isBusinessHours: (time: string): boolean => {
+    const hour = parseInt(time.split(':')[0]);
+    return hour >= 8 && hour <= 18;
+  },
+
+  // Validate that date is not on Friday (weekend in Jordan)
+  isNotFriday: (date: string): boolean => {
+    const day = new Date(date).getDay();
+    return day !== 5; // Friday is 5
+  },
+};
+
+// Form validation helpers
+export class FormValidator {
+  private errors: Record<string, string[]> = {};
+
+  addError(field: string, message: string): void {
+    if (!this.errors[field]) {
+      this.errors[field] = [];
+    }
+    this.errors[field].push(message);
+  }
+
+  validateField<T>(field: string, schema: z.ZodSchema<T>, value: unknown): T | null {
+    const result = Validator.validate(schema, value);
+
+    if (!result.success) {
+      this.errors[field] = result.errors || [];
+      return null;
+    }
+
+    return result.data || null;
+  }
+
+  hasErrors(): boolean {
+    return Object.keys(this.errors).length > 0;
+  }
+
+  getErrors(): Record<string, string[]> {
+    return { ...this.errors };
+  }
+
+  getFieldErrors(field: string): string[] {
+    return this.errors[field] || [];
+  }
+
+  clear(): void {
+    this.errors = {};
+  }
+
+  clearField(field: string): void {
+    delete this.errors[field];
+  }
+}
+
+// Export commonly used schemas
+export const CommonSchemas = {
+  userRegistration: z
+    .object({
+      fullName: ValidationSchemas.name,
+      email: ValidationSchemas.email,
+      phone: ValidationSchemas.phone,
+      password: ValidationSchemas.password,
+      confirmPassword: z.string(),
+    })
+    .refine(data => data.password === data.confirmPassword, {
+      message: "Passwords don't match",
+      path: ['confirmPassword'],
+    }),
+
+  tripCreation: z.object({
+    from: z.string().min(2, 'Origin is required'),
+    to: z.string().min(2, 'Destination is required'),
+    departureTime: ValidationSchemas.futureDate,
+    capacity: ValidationSchemas.tripCapacity,
+    price: ValidationSchemas.tripPrice,
+    description: z.string().max(500, 'Description too long').optional(),
+  }),
+
+  packageSending: z.object({
+    senderName: ValidationSchemas.name,
+    senderPhone: ValidationSchemas.phone,
+    recipientName: ValidationSchemas.name,
+    recipientPhone: ValidationSchemas.phone,
+    weight: ValidationSchemas.packageWeight,
+    dimensions: ValidationSchemas.packageDimensions,
+    description: z.string().max(200, 'Description too long'),
+    value: ValidationSchemas.jordanianDinar.optional(),
+  }),
+};
+
+// Named schema exports for form validation
 export const signInSchema = z.object({
-  email: emailField,
-  password: passwordField,
+  email: ValidationSchemas.email,
+  password: ValidationSchemas.password,
 });
-export type SignInFields = z.infer<typeof signInSchema>;
 
 export const signUpSchema = z
   .object({
-    fullName: nameField,
-    email: emailField,
-    password: passwordField,
-    confirmPassword: z.string({ required_error: 'Please confirm your password' }),
-    phone: phoneField,
+    email: ValidationSchemas.email,
+    password: ValidationSchemas.password,
+    fullName: ValidationSchemas.name,
+    confirmPassword: z.string(),
+    phone: z
+      .string()
+      .refine(v => !v || ValidationSchemas.phone.safeParse(v).success, 'Invalid phone')
+      .optional()
+      .or(z.literal('')),
+    agreedToTerms: z.boolean().optional(),
   })
   .refine(data => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
+    message: "Passwords don't match",
     path: ['confirmPassword'],
-  });
-export type SignUpFields = z.infer<typeof signUpSchema>;
+  })
+  .refine(
+    data =>
+      !data.phone || data.phone === '' || ValidationSchemas.phone.safeParse(data.phone).success,
+    {
+      message: 'Invalid phone format',
+      path: ['phone'],
+    },
+  );
 
 export const resetPasswordSchema = z.object({
-  email: emailField,
+  email: ValidationSchemas.email,
 });
-export type ResetPasswordFields = z.infer<typeof resetPasswordSchema>;
 
-// ── Trip schemas ───────────────────────────────────────────────────────────────
+export const offerRideSchema = z
+  .object({
+    origin: z.string().min(1),
+    destination: z.string().min(1),
+    departureDate: z.string(),
+    departureTime: z.string(),
+    seats: z.number().int().min(1).max(7),
+    pricePerSeat: z.number().positive().max(500),
+    genderPreference: z.enum(['none', 'only', 'preferred', 'any']),
+    allowPackages: z.boolean().optional(),
+    notes: z.string().max(500).optional(),
+  })
+  .refine(data => data.origin !== data.destination, {
+    message: 'Origin and destination must be different',
+    path: ['destination'],
+  });
 
-const JORDAN_CITIES = [
-  'Amman', 'Irbid', 'Zarqa', 'Aqaba', 'Madaba', 'Karak',
-  'Jerash', 'Mafraq', 'Dead Sea', 'Petra', 'Ajloun', 'Salt',
-] as const;
-
-export const offerRideSchema = z.object({
-  origin: z.enum(JORDAN_CITIES, { required_error: 'Please select a departure city' }),
-  destination: z.enum(JORDAN_CITIES, { required_error: 'Please select a destination city' }),
-  departureDate: z.string({ required_error: 'Departure date is required' }),
-  departureTime: z.string({ required_error: 'Departure time is required' }),
-  seats: z.number({ required_error: 'Number of seats is required' }).int().min(1).max(7),
-  pricePerSeat: z.number({ required_error: 'Price is required' }).positive('Price must be greater than 0').max(500, 'Price seems too high'),
-  notes: z.string().max(500, 'Notes too long').optional(),
-  allowPackages: z.boolean().default(false),
-  genderPreference: z.enum(['any', 'male', 'female']).default('any'),
-}).refine(data => data.origin !== data.destination, {
-  message: 'Origin and destination must be different cities',
-  path: ['destination'],
-});
-export type OfferRideFields = z.infer<typeof offerRideSchema>;
-
-export const findRideSchema = z.object({
-  origin: z.enum(JORDAN_CITIES, { required_error: 'Please select a departure city' }),
-  destination: z.enum(JORDAN_CITIES, { required_error: 'Please select a destination city' }),
-  date: z.string({ required_error: 'Date is required' }),
-  passengers: z.number().int().min(1).max(7).default(1),
-}).refine(data => data.origin !== data.destination, {
-  message: 'Origin and destination must be different',
-  path: ['destination'],
-});
-export type FindRideFields = z.infer<typeof findRideSchema>;
-
-// ── Package schemas ───────────────────────────────────────────────────────────
+export const findRideSchema = z
+  .object({
+    from: z.string().min(1),
+    to: z.string().min(1),
+    date: z.string(),
+    passengers: z.number().int().min(1).max(7).optional().default(1),
+  })
+  .refine(data => data.from !== data.to, {
+    message: 'Origin and destination must be different',
+    path: ['to'],
+  });
 
 export const sendPackageSchema = z.object({
-  senderName: nameField,
-  senderPhone: phoneField.pipe(z.string().min(1, 'Sender phone is required')),
-  recipientName: nameField,
-  recipientPhone: phoneField.pipe(z.string().min(1, 'Recipient phone is required')),
-  origin: z.enum(JORDAN_CITIES),
-  destination: z.enum(JORDAN_CITIES),
-  description: z.string().min(3, 'Please describe the package').max(200),
-  weightKg: z.number().positive().max(50, 'Max package weight is 50 kg'),
-  fragile: z.boolean().default(false),
-  declaredValue: z.number().min(0).max(10000).optional(),
+  senderPhone: ValidationSchemas.phone,
+  recipientPhone: ValidationSchemas.phone,
+  recipientName: ValidationSchemas.name,
+  weight: z.number().positive().max(50),
+  description: z.string().min(3).max(200),
+  declaredValue: ValidationSchemas.jordanianDinar.optional(),
+  origin: z.string().min(1).optional(),
+  destination: z.string().min(1).optional(),
 });
-export type SendPackageFields = z.infer<typeof sendPackageSchema>;
 
-// ── Profile / Account schemas ─────────────────────────────────────────────────
+const safeUrl = z
+  .string()
+  .refine(url => {
+    if (!url) {return true;}
+    try {
+      const parsed = new URL(url);
+      return !['javascript:', 'data:'].includes(parsed.protocol);
+    } catch {
+      return false;
+    }
+  }, 'Invalid URL')
+  .or(z.literal(''));
 
 export const updateProfileSchema = z.object({
-  fullName: nameField,
-  phone: phoneField,
-  bio: z.string().max(250, 'Bio too long').optional(),
-  avatarUrl: safeAvatarUrlField.optional().or(z.literal('')),
+  fullName: ValidationSchemas.name.optional(),
+  phone: ValidationSchemas.phone.optional(),
+  bio: z.string().max(250).optional(),
+  avatarUrl: safeUrl.optional(),
 });
-export type UpdateProfileFields = z.infer<typeof updateProfileSchema>;
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: passwordField,
-    newPassword: passwordField.refine(
-      pw => /[A-Z]/.test(pw) && /[0-9]/.test(pw),
-      'New password must contain at least one uppercase letter and one number',
-    ),
-    confirmNewPassword: z.string(),
+    newPassword: ValidationSchemas.password,
+    confirmPassword: z.string(),
+    currentPassword: z.string().optional(),
   })
-  .refine(data => data.newPassword === data.confirmNewPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmNewPassword'],
+  .refine(data => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
   });
-export type ChangePasswordFields = z.infer<typeof changePasswordSchema>;
-
-// ── Wallet schemas ────────────────────────────────────────────────────────────
 
 export const topUpSchema = z.object({
-  amount: z
-    .number({ required_error: 'Amount is required' })
-    .positive('Amount must be positive')
-    .max(500, 'Maximum top-up is JOD 500 per transaction'),
-  paymentMethod: z.enum(WALLET_PAYMENT_METHOD_TYPES).refine((method) => method !== 'wallet', {
-    message: 'Wallet balance cannot be used to fund a deposit.',
-  }).default('card'),
+  amount: z.number().positive().max(500),
+  paymentMethod: z.enum(['card', 'cliq', 'bank_transfer']).default('card'),
 });
-export type TopUpFields = z.infer<typeof topUpSchema>;
 
 export const transferSchema = z.object({
-  recipientPhone: phoneField.pipe(z.string().min(1, 'Recipient phone is required')),
-  amount: z.number().positive('Amount must be positive').max(200, 'Maximum transfer is JOD 200'),
+  recipientPhone: ValidationSchemas.phone,
+  amount: z.number().positive().max(200),
   note: z.string().max(100).optional(),
 });
-export type TransferFields = z.infer<typeof transferSchema>;
+
+// Export types
+export type { ValidationResult };

@@ -4,52 +4,15 @@ import {
   type NavigateOptions,
   type To,
 } from 'react-router';
-
-const APP_ROUTE_PREFIXES = [
-  '/auth',
-  '/dashboard',
-  '/home',
-  '/find-ride',
-  '/offer-ride',
-  '/post-ride',
-  '/my-trips',
-  '/booking-requests',
-  '/live-trip',
-  '/routes',
-  '/bus',
-  '/packages',
-  '/awasel',
-  '/raje3',
-  '/services',
-  '/innovation-hub',
-  '/analytics',
-  '/mobility-os',
-  '/ai-intelligence',
-  '/wallet',
-  '/plus',
-  '/payments',
-  '/profile',
-  '/settings',
-  '/notifications',
-  '/trust',
-  '/driver',
-  '/privacy',
-  '/terms',
-  '/legal',
-  '/moderation',
-];
+import { APP_ROUTE_BARE_PREFIXES } from '../router/paths';
 
 function normalizePathname(pathname: string): string {
-  if (
-    !pathname.startsWith('/') ||
-    pathname.startsWith('/app') ||
-    pathname.startsWith('//')
-  ) {
+  if (!pathname.startsWith('/') || pathname.startsWith('/app') || pathname.startsWith('//')) {
     return pathname;
   }
 
-  const shouldPrefix = APP_ROUTE_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  const shouldPrefix = APP_ROUTE_BARE_PREFIXES.some(
+    prefix => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 
   return shouldPrefix ? `/app${pathname}` : pathname;

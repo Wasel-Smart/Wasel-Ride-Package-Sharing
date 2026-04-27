@@ -16,10 +16,10 @@ export type MovementActivityType =
 export type LoyaltyTier = 'starter' | 'dense' | 'network' | 'infrastructure';
 
 export interface MovementMembershipSnapshot {
-  plusActive: boolean;
-  plusStartedAt: string | null;
-  plusRenewalDate: string | null;
-  plusPriceJod: number;
+  planActive: boolean;
+  planStartedAt: string | null;
+  planRenewalDate: string | null;
+  planPriceJod: number;
   commuterPassRouteId: string | null;
   commuterPassStartedAt: string | null;
   commuterPassRenewalDate: string | null;
@@ -31,10 +31,10 @@ export interface MovementMembershipSnapshot {
 }
 
 const DEFAULT_SNAPSHOT: MovementMembershipSnapshot = {
-  plusActive: false,
-  plusStartedAt: null,
-  plusRenewalDate: null,
-  plusPriceJod: 9.99,
+  planActive: false,
+  planStartedAt: null,
+  planRenewalDate: null,
+  planPriceJod: 9.99,
   commuterPassRouteId: null,
   commuterPassStartedAt: null,
   commuterPassRenewalDate: null,
@@ -56,16 +56,16 @@ const DEFAULT_POINTS: Record<MovementActivityType, number> = {
 let cachedSnapshot: MovementMembershipSnapshot = { ...DEFAULT_SNAPSHOT };
 
 function resolveTier(credits: number): LoyaltyTier {
-  if (credits >= 900) return 'infrastructure';
-  if (credits >= 600) return 'network';
-  if (credits >= 300) return 'dense';
+  if (credits >= 900) {return 'infrastructure';}
+  if (credits >= 600) {return 'network';}
+  if (credits >= 300) {return 'dense';}
   return 'starter';
 }
 
 function updateStreak(previousDate: string | null) {
   const today = new Date().toISOString().slice(0, 10);
-  if (!previousDate) return { streakDays: 1, lastActivityDate: today };
-  if (previousDate === today) return { streakDays: null, lastActivityDate: today };
+  if (!previousDate) {return { streakDays: 1, lastActivityDate: today };}
+  if (previousDate === today) {return { streakDays: null, lastActivityDate: today };}
 
   const diffDays = Math.round(
     (new Date(today).getTime() - new Date(previousDate).getTime()) / 86_400_000,
@@ -82,10 +82,10 @@ function snapshotFromWallet(wallet: WalletData | null | undefined): MovementMemb
   const subscription = wallet?.subscription ?? null;
   const isCommuterPass = subscription?.type === 'commuter-pass';
   return {
-    plusActive: Boolean(subscription),
-    plusStartedAt: subscription ? subscription.renewalDate ?? new Date().toISOString() : null,
-    plusRenewalDate: subscription?.renewalDate ?? null,
-    plusPriceJod: subscription?.price ?? DEFAULT_SNAPSHOT.plusPriceJod,
+    planActive: Boolean(subscription),
+    planStartedAt: subscription ? subscription.renewalDate ?? new Date().toISOString() : null,
+    planRenewalDate: subscription?.renewalDate ?? null,
+    planPriceJod: subscription?.price ?? DEFAULT_SNAPSHOT.planPriceJod,
     commuterPassRouteId: isCommuterPass ? subscription?.corridorId ?? null : null,
     commuterPassStartedAt: isCommuterPass ? new Date().toISOString() : null,
     commuterPassRenewalDate: isCommuterPass ? subscription?.renewalDate ?? null : null,
@@ -119,7 +119,7 @@ export function getMovementMembershipSnapshot() {
             id: `commuter-pass-${snapshot.commuterPassRouteId}`,
             type: 'commuter-pass' as const,
             planName: `${getCorridorOpportunityById(snapshot.commuterPassRouteId)?.label ?? 'Corridor'} Pass`,
-            priceJod: corridor?.subscriptionPriceJod ?? snapshot.plusPriceJod,
+            priceJod: corridor?.subscriptionPriceJod ?? snapshot.planPriceJod,
             renewalDate: snapshot.commuterPassRenewalDate,
             corridorId: snapshot.commuterPassRouteId,
             corridorLabel: getCorridorOpportunityById(snapshot.commuterPassRouteId)?.label ?? null,
@@ -129,19 +129,19 @@ export function getMovementMembershipSnapshot() {
               'Pinned pickup point and route recall',
             ],
           }
-        : snapshot.plusActive
+        : snapshot.planActive
           ? {
-              id: 'wasel-plus',
-              type: 'plus' as const,
-              planName: 'Wasel Plus',
-              priceJod: snapshot.plusPriceJod,
-              renewalDate: snapshot.plusRenewalDate,
+              id: 'travel-plan',
+              type: 'travel-plan' as const,
+              planName: 'Travel plan',
+              priceJod: snapshot.planPriceJod,
+              renewalDate: snapshot.planRenewalDate,
               corridorId: null,
               corridorLabel: corridor?.label ?? null,
               benefits: [
-                'Plus discount on shared movement',
-                'Priority booking in dense route windows',
-                'Faster conversion into corridor passes',
+                'Lower pricing on repeat travel',
+                'Faster booking on busy corridors',
+                'Easier upgrades into corridor passes',
               ],
             }
           : null,
@@ -159,19 +159,13 @@ export async function refreshMovementMembership() {
   return getMovementMembershipSnapshot();
 }
 
-export async function activateWaselPlus(priceJod = DEFAULT_SNAPSHOT.plusPriceJod) {
-  const { userId } = await getAuthDetails();
-  await walletApi.subscribe(userId, 'Wasel Plus', priceJod, null);
-  return refreshMovementMembership();
-}
-
 export async function startCommuterPass(routeId: string) {
   const corridor = getCorridorOpportunityById(routeId);
   const { userId } = await getAuthDetails();
   await walletApi.subscribe(
     userId,
     `${corridor?.label ?? 'Corridor'} Pass`,
-    corridor?.subscriptionPriceJod ?? DEFAULT_SNAPSHOT.plusPriceJod,
+    corridor?.subscriptionPriceJod ?? DEFAULT_SNAPSHOT.planPriceJod,
     routeId,
   );
   const streak = updateStreak(cachedSnapshot.lastActivityDate);
@@ -216,7 +210,7 @@ export function hydrateMovementMembershipFromWallet(wallet: WalletData | null | 
 }
 
 export function getMembershipCorridor(routeId?: string | null): CorridorOpportunity | null {
-  if (!routeId) return getCorridorOpportunityById(DEFAULT_CORRIDOR_ID);
+  if (!routeId) {return getCorridorOpportunityById(DEFAULT_CORRIDOR_ID);}
   return getCorridorOpportunityById(routeId);
 }
 

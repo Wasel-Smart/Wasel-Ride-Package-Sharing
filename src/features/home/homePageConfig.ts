@@ -1,6 +1,5 @@
 import {
   ArrowRight,
-  Bus,
   Car,
   CheckCircle,
   Moon,
@@ -70,8 +69,8 @@ export function buildQuickActions(ar: boolean): HomeQuickAction[] {
     {
       icon: Search,
       badge: 'R',
-      title: ar ? 'ابحث عن رحلة' : 'Find a Ride',
-      description: ar ? 'رحلات حية' : 'Matches',
+      title: ar ? 'احجز رحلة' : 'Book a ride',
+      description: ar ? 'الرحلات المتاحة' : 'Available rides',
       color: C.cyan,
       dim: C.cyanDim,
       border: 'rgba(25,231,187,0.24)',
@@ -80,8 +79,8 @@ export function buildQuickActions(ar: boolean): HomeQuickAction[] {
     {
       icon: Car,
       badge: 'O',
-      title: ar ? 'اعرض رحلتك' : 'Offer a Ride',
-      description: ar ? 'شارك المقاعد' : 'Seats',
+      title: ar ? 'اعرض رحلتك' : 'Offer a ride',
+      description: ar ? 'شارك المقاعد' : 'Share seats',
       color: C.gold,
       dim: C.goldDim,
       border: 'rgba(72,207,255,0.24)',
@@ -90,22 +89,12 @@ export function buildQuickActions(ar: boolean): HomeQuickAction[] {
     {
       icon: Package,
       badge: 'P',
-      title: ar ? 'أرسل طرداً مع رحلة' : 'Packages',
-      description: ar ? 'طرد مع راكب' : 'Delivery',
-      color: C.gold,
-      dim: C.goldDim,
-      border: 'rgba(72,207,255,0.24)',
-      path: '/packages',
-    },
-    {
-      icon: Bus,
-      badge: 'B',
-      title: ar ? 'احجز باص' : 'Bus',
-      description: ar ? 'رحلات بين المدن' : 'Intercity',
+      title: ar ? 'أرسل طرداً' : 'Send a package',
+      description: ar ? 'تسليم سريع' : 'Track delivery',
       color: C.green,
       dim: C.greenDim,
       border: 'rgba(162,255,231,0.24)',
-      path: '/bus',
+      path: '/packages',
     },
   ];
 }
@@ -155,27 +144,21 @@ export function buildFeatureItems(ar: boolean): HomeFeatureItem[] {
   return [
     {
       icon: CheckCircle,
-      title: ar ? 'مستخدمون موثقون' : 'Verified Users',
+      title: ar ? 'مستخدمون موثّقون' : 'Verified users',
       description: ar ? 'تحقق قبل الحجز' : 'Verified before booking',
       color: C.cyan,
     },
     {
       icon: Moon,
-      title: ar ? 'مراعاة أوقات الصلاة' : 'Prayer Stops',
-      description: ar ? 'مواقيت واضحة' : 'Clear prayer timing',
+      title: ar ? 'مواقف الصلاة' : 'Prayer stops',
+      description: ar ? 'مواقيت واضحة' : 'Clear timing on the road',
       color: C.gold,
     },
     {
-      icon: TrendingUp,
-      title: ar ? 'وفّر حتى 70%' : 'Save 70%',
-      description: ar ? 'أقل من التاكسي' : 'Lower than taxis',
-      color: C.green,
-    },
-    {
       icon: Shield,
-      title: ar ? 'آمن وموثوق' : 'Safe & Secure',
-      description: ar ? 'SOS ودعم' : 'SOS and support',
-      color: C.purple,
+      title: ar ? 'دعم واضح' : 'Clear support',
+      description: ar ? 'مساعدة عندما تحتاجها' : 'Help when you need it',
+      color: C.green,
     },
   ];
 }
@@ -183,18 +166,18 @@ export function buildFeatureItems(ar: boolean): HomeFeatureItem[] {
 export function buildHeroHighlights(ar: boolean): HomeHeroHighlight[] {
   return [
     {
-      title: ar ? 'رحلات ومشاوير' : 'Shared rides',
-      description: ar ? 'مطابقة حيّة بين المدن والداخلية.' : 'Live matching for city and corridor trips.',
+      title: ar ? 'احجز رحلة' : 'Book a ride',
+      description: ar ? 'ابحث عن رحلات حيّة بين المدن.' : 'Find live rides for your route.',
       color: C.cyan,
     },
     {
-      title: ar ? 'طرود مع الرحلة' : 'Packages on the move',
-      description: ar ? 'تسليم أسرع عبر المسارات القائمة.' : 'Faster delivery through existing routes.',
+      title: ar ? 'اعرض رحلتك' : 'Offer a ride',
+      description: ar ? 'شارك المقاعد مع المسافرين.' : 'Share seats on your trip.',
       color: C.gold,
     },
     {
-      title: ar ? 'ثقة وتشغيل' : 'Trust and operations',
-      description: ar ? 'دعم، تتبع، ومؤشرات تشغيل في مكان واحد.' : 'Support, tracking, and live operations in one place.',
+      title: ar ? 'أرسل طرداً' : 'Send a package',
+      description: ar ? 'أرسل طردك عبر رحلة متاحة.' : 'Track package delivery on an active route.',
       color: C.green,
     },
   ];
@@ -204,33 +187,33 @@ export function buildServicePillars(ar: boolean): HomeServicePillar[] {
   return [
     {
       icon: Search,
-      title: ar ? 'ابحث واحجز' : 'Find and book',
-      description: ar ? 'رحلات سريعة داخل المدن وبينها.' : 'Fast bookings across city and corridor routes.',
-      metric: ar ? 'رحلات حيّة' : 'Live ride supply',
+      title: ar ? 'احجز رحلة' : 'Book a ride',
+      description: ar ? 'اختر رحلة مناسبة لك.' : 'Choose a ride that fits your trip.',
+      metric: ar ? 'رحلات متاحة' : 'Live ride matches',
       color: C.cyan,
       dim: C.cyanDim,
       border: 'rgba(25,231,187,0.24)',
       path: '/find-ride',
     },
     {
-      icon: Package,
-      title: ar ? 'أرسل طرداً' : 'Send packages',
-      description: ar ? 'اربط الطرود مع رحلات موثوقة.' : 'Attach package delivery to verified trips.',
-      metric: ar ? 'تسليم مرن' : 'Flexible delivery',
+      icon: Car,
+      title: ar ? 'اعرض رحلتك' : 'Offer a ride',
+      description: ar ? 'أضف المقاعد المتاحة للركاب.' : 'Share open seats on your route.',
+      metric: ar ? 'أضف رحلة' : 'Post your trip',
       color: C.gold,
       dim: C.goldDim,
       border: 'rgba(72,207,255,0.24)',
-      path: '/packages',
+      path: '/offer-ride',
     },
     {
-      icon: Bus,
-      title: ar ? 'خطوط مجدولة' : 'Scheduled mobility',
-      description: ar ? 'باصات ومسارات متكررة للحركة اليومية.' : 'Buses and recurring corridors for daily movement.',
-      metric: ar ? 'تغطية وطنية' : 'National coverage',
+      icon: Package,
+      title: ar ? 'أرسل طرداً' : 'Send a package',
+      description: ar ? 'رتّب الإرسال وتابع التسليم.' : 'Send and track a package.',
+      metric: ar ? 'تتبع مباشر' : 'Delivery updates',
       color: C.green,
       dim: C.greenDim,
       border: 'rgba(162,255,231,0.24)',
-      path: '/bus',
+      path: '/packages',
     },
   ];
 }

@@ -1,57 +1,24 @@
 # Launch Rehearsal Checklist
 
-Use this checklist before moving from mock launch into wider rollout.
+## Before Rehearsal
 
-## Supabase Rollout
+1. Confirm `npm run verify:supabase-rollout` passes.
+2. Confirm the rollout migration catalog matches the filesystem and README.
+3. Confirm seed files are present, transactional, and idempotent.
+4. Confirm environment flags that unlock fake flows remain disabled in the rehearsal target.
 
-- Apply [20260401113000_unified_backend_contract.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401113000_unified_backend_contract.sql)
-- Apply [20260401133000_align_canonical_rls_policies.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401133000_align_canonical_rls_policies.sql)
-- Apply [20260401143000_harden_rpc_execute_permissions.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401143000_harden_rpc_execute_permissions.sql)
-- Run [mock_engine_launch_pack.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/seeds/mock_engine_launch_pack.sql)
-- Run [mock_engine_smoke_checks.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/seeds/mock_engine_smoke_checks.sql)
-- Run `node scripts/verify-supabase-rollout.mjs`
+## Rehearsal Steps
 
-## Application Checks
+1. Apply rollout migrations in canonical order.
+2. Apply operational seeds.
+3. Run smoke-check seeds in the rehearsal environment only.
+4. Verify auth signup creates canonical users and wallet records.
+5. Verify booking, payment, communication, and safety writes fail loudly when backend persistence fails.
+6. Verify feature-flag and KV reads return current values without client-side mutation access.
 
-- Confirm sign-in/session restore works
-- Confirm profile fetch returns canonical data
-- Confirm trip search returns seeded mock routes
-- Confirm driver trips load for seeded drivers
-- Confirm booking creation works without RLS failure
-- Confirm package tracking resolves seeded package codes
-- Confirm wallet summary loads
-- Confirm wallet transfer flow works
-- Confirm notifications render
-- Confirm verification state appears correctly in profile/auth flows
+## Exit Criteria
 
-## Security Checks
-
-- Confirm internal RPCs are not callable by normal authenticated users
-- Confirm user-facing RPCs still work after execute hardening
-- Confirm no direct canonical write path fails due to missing `WITH CHECK`
-- Confirm no unexpected `anon` access to privileged functions
-
-## Go / No-Go
-
-Go when:
-
-- migrations apply cleanly
-- seed pack loads cleanly
-- smoke checks return expected rows
-- core user flows work in the app
-- no RLS or RPC permission errors appear in Supabase logs
-
-No-go when:
-
-- any migration fails
-- canonical insert/update flows fail under RLS
-- wallet or booking flows regress after RPC hardening
-- auth-user to canonical-user mapping fails
-
-## Seeding Readiness
-
-After technical go-live, use the founder seeding pack before broad promotion:
-
-- review [e-SOSTAC Founder Seeding Sprint](/C:/Users/user/OneDrive/Desktop/Wdoubleme/docs/E_SOSTAC_FOUNDER_SEEDING_SPRINT.md)
-- use [Seeding Outreach Copy](/C:/Users/user/OneDrive/Desktop/Wdoubleme/docs/SEEDING_OUTREACH_COPY.md)
-- track daily execution in [Seeding Tracker Template](/C:/Users/user/OneDrive/Desktop/Wdoubleme/docs/SEEDING_TRACKER_TEMPLATE.csv)
+1. No migration, seed, or smoke-check step fails.
+2. RLS policies prevent cross-user reads and writes.
+3. Wallet, booking, and subscription state changes are traceable in the database.
+4. Operational dashboards and runbooks are updated with any observed gaps.

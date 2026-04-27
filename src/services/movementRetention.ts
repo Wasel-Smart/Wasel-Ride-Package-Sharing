@@ -49,7 +49,7 @@ export interface RecurringRouteSuggestion {
 }
 
 function readReminders(): RouteReminder[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(REMINDER_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -60,7 +60,7 @@ function readReminders(): RouteReminder[] {
 }
 
 function writeReminders(reminders: RouteReminder[]) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(REMINDER_KEY, JSON.stringify(reminders.slice(0, 30)));
 }
 
@@ -127,10 +127,10 @@ function nextReminderDate(frequency: ReminderFrequency, preferredTime: string, f
 }
 
 function inferReminderTime(hours: number[]) {
-  if (hours.length === 0) return '07:30';
+  if (hours.length === 0) {return '07:30';}
   const averageHour = Math.round(hours.reduce((sum, hour) => sum + hour, 0) / hours.length);
-  if (averageHour <= 10) return '07:30';
-  if (averageHour <= 15) return '12:30';
+  if (averageHour <= 10) {return '07:30';}
+  if (averageHour <= 15) {return '12:30';}
   return '17:30';
 }
 
@@ -172,7 +172,7 @@ export function getRouteReminders() {
 }
 
 export async function hydrateRouteReminders(userId?: string) {
-  if (!userId) return getRouteReminders();
+  if (!userId) {return getRouteReminders();}
   try {
     const remote = await getDirectRouteReminders(userId);
     const mapped = remote.map((row) => mapRemoteReminder(row as unknown as Record<string, unknown>));
@@ -194,7 +194,7 @@ export function getRecurringRouteSuggestions(limit = 4) {
   const usageMap = new Map<string, { count: number; hours: number[] }>();
 
   const addUsage = (signal: LiveCorridorSignal | undefined | null, timestamp?: string) => {
-    if (!signal) return;
+    if (!signal) {return;}
     const current = usageMap.get(signal.id) ?? { count: 0, hours: [] };
     current.count += 1;
     if (timestamp) {
