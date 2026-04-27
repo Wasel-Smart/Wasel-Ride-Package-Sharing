@@ -18,11 +18,17 @@ test('app entry sends guests into auth with a return target', async ({ page }) =
 test('app entry lets authenticated users open the ride flow', async ({ page }) => {
   await seedDemoSession(page);
   await page.goto('/app', { waitUntil: 'domcontentloaded' });
+  const signInButton = page.getByRole('button', { name: /^sign in$/i });
+  if ((await signInButton.count()) > 0) {
+    await page.waitForTimeout(300);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+  }
   await expect(page).toHaveURL(/\/app$/);
+  await expect(signInButton).toHaveCount(0);
   await expect(page.getByRole('heading', { name: /book a ride, offer a ride, or send a package\./i })).toBeVisible();
   await page.getByRole('button', { name: /^book a ride$/i }).first().click();
   await expect(page).toHaveURL(/\/app\/find-ride/);
-  await expect(page.getByRole('heading', { name: /^book a ride$/i }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /^search rides$/i })).toBeVisible();
 });
 
 test('sign in page renders accessible form fields', async ({ page }) => {

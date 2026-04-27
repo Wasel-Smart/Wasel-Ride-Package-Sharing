@@ -1,8 +1,9 @@
+import path from 'node:path';
 import { spawn } from 'node:child_process';
 
-const HOST = '127.0.0.1';
-const PORT = '4173';
-const isWindows = process.platform === 'win32';
+const HOST = process.env.PLAYWRIGHT_HOST ?? '127.0.0.1';
+const PORT = process.env.PLAYWRIGHT_PORT ?? '4273';
+const viteBin = path.join(process.cwd(), 'node_modules', 'vite', 'bin', 'vite.js');
 
 const env = {
   ...process.env,
@@ -27,11 +28,12 @@ const env = {
   VITE_SUPPORT_EMAIL: 'support@wasel.jo',
 };
 
-function runNpx(args) {
+function runVite(args) {
   return new Promise((resolve, reject) => {
-    const child = spawn(isWindows ? process.env.ComSpec ?? 'cmd.exe' : 'npx', isWindows ? ['/d', '/s', '/c', `npx ${args.join(' ')}`] : args, {
+    const child = spawn(process.execPath, [viteBin, ...args], {
       stdio: 'inherit',
       env,
+      cwd: process.cwd(),
       shell: false,
     });
 
@@ -42,7 +44,7 @@ function runNpx(args) {
         return;
       }
 
-      reject(new Error(`npx ${args.join(' ')} exited with code ${code ?? 'unknown'}`));
+      reject(new Error(`vite ${args.join(' ')} exited with code ${code ?? 'unknown'}`));
     });
   });
 }
@@ -60,11 +62,12 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('exit', () => shutdown('SIGTERM'));
 
 async function main() {
-  await runNpx(['vite', 'build', '--mode', 'test']);
+  await runVite(['build', '--mode', 'test']);
 
-  previewChild = spawn(isWindows ? process.env.ComSpec ?? 'cmd.exe' : 'npx', isWindows ? ['/d', '/s', '/c', `npx vite preview --host ${HOST} --port ${PORT} --strictPort`] : ['vite', 'preview', '--host', HOST, '--port', PORT, '--strictPort'], {
+  previewChild = spawn(process.execPath, [viteBin, 'preview', '--host', HOST, '--port', PORT, '--strictPort'], {
     stdio: 'inherit',
     env,
+    cwd: process.cwd(),
     shell: false,
   });
 

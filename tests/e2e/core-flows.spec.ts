@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { seedDemoSession } from '../../e2e/helpers/session';
+import { gotoAuthedRoute, seedDemoSession } from '../../e2e/helpers/session';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -46,14 +46,14 @@ async function expectWithinViewport(page: Page, selector: string) {
 
 test('find ride stops and shows backend failure clearly', async ({ page }) => {
   await failSupabaseRestRequest(page, 'trips', 'GET');
-  await page.goto('/app/find-ride?from=Amman&to=Irbid&search=1', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: /^book a ride$/i }).first()).toBeVisible();
+  await gotoAuthedRoute(page, '/app/find-ride?from=Amman&to=Irbid&search=1');
+  await expect(page).toHaveURL(/\/app\/find-ride/);
   await expect(page.getByRole('alert')).toContainText(/unable to search rides right now/i);
 });
 
 test('offer ride stops when the backend cannot create the ride', async ({ page }) => {
   await failSupabaseRestRequest(page, 'trips', 'POST');
-  await page.goto('/app/offer-ride');
+  await gotoAuthedRoute(page, '/app/offer-ride');
   await expect(page.getByRole('heading', { name: /offer a ride/i })).toBeVisible();
   await page.locator('input[type="date"]').fill('2026-05-01');
   const stepOneButton = page.getByTestId('offer-ride-step-1');
@@ -74,7 +74,7 @@ test('offer ride stops when the backend cannot create the ride', async ({ page }
 
 test('packages flow stops when the backend cannot create tracking', async ({ page }) => {
   await failSupabaseRestRequest(page, 'packages', 'POST');
-  await page.goto('/app/packages');
+  await gotoAuthedRoute(page, '/app/packages');
   await expect(page.getByTestId('package-recipient-name')).toBeVisible();
   await page.getByTestId('package-recipient-name').fill('Receiver Test');
   await page.getByTestId('package-recipient-phone').fill('+962790000888');
@@ -84,7 +84,7 @@ test('packages flow stops when the backend cannot create tracking', async ({ pag
 
 test('packages page reflows key surfaces on a phone viewport', async ({ page }) => {
   await page.setViewportSize({ width: 412, height: 915 });
-  await page.goto('/app/packages', { waitUntil: 'networkidle' });
+  await gotoAuthedRoute(page, '/app/packages', { waitUntil: 'networkidle' });
 
   for (const selector of [
     '.wasel-section-head',

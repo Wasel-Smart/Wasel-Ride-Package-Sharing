@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { seedConsentDecision, seedDemoSession } from '../../e2e/helpers/session';
+import { gotoAuthedRoute, seedConsentDecision } from '../../e2e/helpers/session';
 
 const guestRoutes = ['/', '/app/privacy', '/app/terms'];
 const authRoutes = [
@@ -31,8 +31,7 @@ test.describe('Core route smoke', () => {
 
   for (const route of authRoutes) {
     test(`authenticated route renders without app error: ${route}`, async ({ page }) => {
-      await seedDemoSession(page);
-      await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+      await gotoAuthedRoute(page, route, { timeout: 60_000 });
       await expect(page).not.toHaveURL(/\/app\/auth(?:\?|$)/);
       await expectHealthySurface(page);
     });
