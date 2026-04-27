@@ -139,7 +139,7 @@ export function LandingMapSection({
         </div>
 
         <div style={{ position: 'relative', borderRadius: 24, overflow: 'hidden' }}>
-          <DeferredLandingMap ar={ar} />
+          <DeferredLandingMap ar={ar} eager />
         </div>
 
         <div

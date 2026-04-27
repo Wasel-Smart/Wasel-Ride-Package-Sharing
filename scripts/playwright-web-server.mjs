@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 
 const HOST = process.env.PLAYWRIGHT_HOST ?? '127.0.0.1';
 const PORT = process.env.PLAYWRIGHT_PORT ?? '4273';
+const OUT_DIR = process.env.PLAYWRIGHT_OUT_DIR ?? '.playwright-dist';
 const viteBin = path.join(process.cwd(), 'node_modules', 'vite', 'bin', 'vite.js');
 
 const env = {
@@ -62,14 +63,18 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('exit', () => shutdown('SIGTERM'));
 
 async function main() {
-  await runVite(['build', '--mode', 'test']);
+  await runVite(['build', '--mode', 'test', '--outDir', OUT_DIR, '--emptyOutDir']);
 
-  previewChild = spawn(process.execPath, [viteBin, 'preview', '--host', HOST, '--port', PORT, '--strictPort'], {
-    stdio: 'inherit',
-    env,
-    cwd: process.cwd(),
-    shell: false,
-  });
+  previewChild = spawn(
+    process.execPath,
+    [viteBin, 'preview', '--host', HOST, '--port', PORT, '--strictPort', '--outDir', OUT_DIR],
+    {
+      stdio: 'inherit',
+      env,
+      cwd: process.cwd(),
+      shell: false,
+    },
+  );
 
   previewChild.once('error', error => {
     console.error(error);

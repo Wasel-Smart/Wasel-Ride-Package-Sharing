@@ -23,6 +23,7 @@ export const APP_ROUTES = {
   bus: defineAppRoute('bus'),
   wallet: defineAppRoute('wallet'),
   payments: defineAppRoute('payments'),
+  settings: defineAppRoute('settings'),
   privacy: defineAppRoute('privacy'),
   terms: defineAppRoute('terms'),
   dashboard: defineAppRoute('dashboard'),

@@ -445,7 +445,7 @@ export default function AppEntryPage() {
           <section className="app-entry-page__hero">
             <div className="app-entry-page__hero-map" aria-hidden="true">
               <div className="app-entry-page__hero-map-scale">
-                <DeferredLandingMap ar={ar} />
+                <DeferredLandingMap ar={ar} eager />
               </div>
             </div>
             <div className="app-entry-page__hero-scrim" aria-hidden="true" />
