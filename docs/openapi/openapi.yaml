@@ -1,0 +1,358 @@
+openapi: 3.1.0
+info:
+  title: Wasel Platform API
+  version: v1
+  description: Generated OpenAPI registry for the Wasel platform service contracts.
+servers:
+  - url: https://api.wasel.app
+    description: Production
+  - url: https://staging-api.wasel.app
+    description: Staging
+tags:
+  - name: auth
+    description: identity-platform
+  - name: wallet
+    description: payments-platform
+  - name: trips
+    description: mobility-platform
+  - name: notifications
+    description: communications-platform
+  - name: analytics
+    description: insights-platform
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    requestSignature:
+      type: apiKey
+      in: header
+      name: X-Wasel-Signature
+paths:
+  /v1/analytics/dashboard:
+    get:
+      tags:
+        - analytics
+      operationId: getGrowthDashboard
+      summary: Read growth and corridor metrics.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/analytics/events:
+    post:
+      tags:
+        - analytics
+      operationId: trackGrowthEvent
+      summary: Append a domain analytics event.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/auth/profile:
+    get:
+      tags:
+        - auth
+      operationId: getProfile
+      summary: Resolve the authenticated profile.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/auth/sign-in:
+    post:
+      tags:
+        - auth
+      operationId: signIn
+      summary: Authenticate and issue a session.
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/auth/sign-out:
+    post:
+      tags:
+        - auth
+      operationId: signOut
+      summary: Revoke the current session.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/auth/sign-up:
+    post:
+      tags:
+        - auth
+      operationId: signUp
+      summary: Register a new user account.
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/notifications:
+    get:
+      tags:
+        - notifications
+      operationId: getNotifications
+      summary: List notifications.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+    post:
+      tags:
+        - notifications
+      operationId: createNotification
+      summary: Create an in-app notification and optional deliveries.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/notifications/{id}/read:
+    post:
+      tags:
+        - notifications
+      operationId: markNotificationAsRead
+      summary: Mark a notification as read.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/trips:
+    post:
+      tags:
+        - trips
+      operationId: createTrip
+      summary: Create a trip.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/trips/{id}:
+    get:
+      tags:
+        - trips
+      operationId: getTripById
+      summary: Read a single trip.
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+    put:
+      tags:
+        - trips
+      operationId: updateTrip
+      summary: Update trip state.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/trips/search:
+    get:
+      tags:
+        - trips
+      operationId: searchTrips
+      summary: Search corridor inventory.
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/wallet/payment-intents:
+    post:
+      tags:
+        - wallet
+      operationId: createPaymentIntent
+      summary: Create a payment intent with idempotency.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/wallet/payment-intents/{id}/confirm:
+    post:
+      tags:
+        - wallet
+      operationId: confirmPaymentIntent
+      summary: Confirm a payment intent.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/wallet/snapshot:
+    get:
+      tags:
+        - wallet
+      operationId: getWalletSnapshot
+      summary: Read the wallet and transaction snapshot.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/wallet/transfers:
+    post:
+      tags:
+        - wallet
+      operationId: sendMoney
+      summary: Execute a peer-to-peer transfer after step-up verification.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error

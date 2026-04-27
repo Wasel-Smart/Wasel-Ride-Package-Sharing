@@ -26,9 +26,10 @@ export type {
   WalletRow,
 } from './types';
 
+export { supabase } from '../../utils/supabase/client';
 export { getDb, toNumber, mapProfileFromContext, buildTrustLikeUser } from './helpers';
 
-export { buildUserContext, ensureCanonicalUser, ensureDriverForUser } from './userContext.ts';
+export { buildUserContext, ensureCanonicalUser, ensureDriverForUser } from './userContext';
 
 export {
   getDirectProfile,

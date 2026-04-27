@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+ 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, type ReactNode } from 'react';
 import { translations, type Language } from '../locales/translations';
 import {
@@ -10,6 +10,7 @@ import {
   getLocaleConfig,
   persistLanguage,
 } from '../utils/locale';
+import { repairLikelyMojibake } from '../utils/textEncoding';
 
 interface LanguageContextType {
   language: Language;
@@ -80,7 +81,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
       value = (value as Record<string, unknown>)[k];
     }
 
-    return typeof value === 'string' ? value : key;
+    return typeof value === 'string' ? repairLikelyMojibake(value) : key;
   }, [language]);
 
   const localeConfig = useMemo(() => getLocaleConfig(language), [language]);

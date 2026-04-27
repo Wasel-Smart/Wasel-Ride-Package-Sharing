@@ -1,4 +1,5 @@
 import { API_URL, fetchWithRetry, getAuthDetails } from './core';
+import type { Notification, NotificationPriority } from '../../shared/domain-contracts';
 import {
   buildDeliveryPlan,
   getCommunicationCapabilities,
@@ -15,25 +16,16 @@ import {
 
 const LOCAL_NOTIFICATION_KEY = 'wasel-local-notifications';
 
-type StoredNotification = {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
-  action_url?: string;
-  user_id: string;
+type StoredNotification = Omit<Notification, 'read'> & {
   is_read?: boolean;
   read?: boolean;
-  created_at: string;
-  source?: 'local' | 'server';
 };
 
 type NotificationCreateInput = {
   title: string;
   message: string;
   type: string;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  priority?: NotificationPriority;
   action_url?: string;
   channels?: CommunicationChannel[];
   contact?: {
@@ -55,7 +47,7 @@ function canUseEdgeApi(): boolean {
 }
 
 function readLocalNotifications(): StoredNotification[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
 
   try {
     const raw = window.localStorage.getItem(LOCAL_NOTIFICATION_KEY);
@@ -67,7 +59,7 @@ function readLocalNotifications(): StoredNotification[] {
 }
 
 function writeLocalNotifications(items: StoredNotification[]): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(LOCAL_NOTIFICATION_KEY, JSON.stringify(items.slice(0, 100)));
 }
 
@@ -264,7 +256,7 @@ export const notificationsAPI = {
       return { success: true, source: 'local' };
     }
 
-    if (!token || !userId) return { success: true, source: 'local' };
+    if (!token || !userId) {return { success: true, source: 'local' };}
 
     if (!canUseEdgeApi()) {
       try {
@@ -284,7 +276,7 @@ export const notificationsAPI = {
         },
       );
 
-      if (!response.ok) return { success: false, source: 'server' };
+      if (!response.ok) {return { success: false, source: 'server' };}
       return await response.json();
     } catch {
       try {

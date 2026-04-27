@@ -13,7 +13,7 @@ import type {
 import type { TripCreatePayload, TripSearchResult } from '../trips';
 
 export function getDb(): DbClient {
-  if (!supabase) throw new Error('Supabase client is not initialised');
+  if (!supabase) {throw new Error('Supabase client is not initialised');}
   return supabase as DbClient;
 }
 
@@ -24,7 +24,7 @@ export function toNumber(value: unknown, fallback = 0): number {
 
 export function formatTime(value: unknown): string {
   const text = String(value ?? '').trim();
-  if (!text) return '';
+  if (!text) {return '';}
   const date = new Date(text);
   if (Number.isNaN(date.getTime())) {
     const timeMatch = text.match(/^\d{2}:\d{2}/);
@@ -35,16 +35,16 @@ export function formatTime(value: unknown): string {
 
 export function formatDate(value: unknown, fallback: string): string {
   const text = String(value ?? '').trim();
-  if (!text) return fallback;
+  if (!text) {return fallback;}
   const date = new Date(text);
-  if (Number.isNaN(date.getTime())) return text.slice(0, 10) || fallback;
+  if (Number.isNaN(date.getTime())) {return text.slice(0, 10) || fallback;}
   return date.toISOString().slice(0, 10);
 }
 
 export function mapCanonicalRole(role?: string | null): string | null {
-  if (!role) return null;
-  if (role === 'rider') return 'passenger';
-  if (role === 'both') return 'driver';
+  if (!role) {return null;}
+  if (role === 'rider') {return 'passenger';}
+  if (role === 'both') {return 'driver';}
   return role;
 }
 
@@ -174,7 +174,7 @@ export function mapTripRow(row: TripRow, driverProfile?: RawProfile | null): Tri
 
 export function buildTripNotes(payload: TripCreatePayload): string | null {
   const notes: string[] = [];
-  if (payload.note?.trim()) notes.push(payload.note.trim());
+  if (payload.note?.trim()) {notes.push(payload.note.trim());}
   if (payload.acceptsPackages) {
     const packageLine = [
       `Packages enabled (${payload.packageCapacity ?? 'medium'})`,
@@ -184,8 +184,8 @@ export function buildTripNotes(payload: TripCreatePayload): string | null {
       .join(': ');
     notes.push(packageLine);
   }
-  if (payload.gender && payload.gender !== 'mixed') notes.push(`Preference: ${payload.gender}`);
-  if (payload.prayer) notes.push('Prayer stop requested');
+  if (payload.gender && payload.gender !== 'mixed') {notes.push(`Preference: ${payload.gender}`);}
+  if (payload.prayer) {notes.push('Prayer stop requested');}
   return notes.length > 0 ? notes.join('\n') : null;
 }
 
@@ -219,6 +219,11 @@ export function mapBookingRow(row: RawBooking): RawBooking {
   const seatNumber = toNumber(row.seat_number, 1);
   const amount = toNumber(row.amount ?? row.total_price, 0);
   const pricePerSeat = toNumber(row.price_per_seat, amount);
+  const runtimeStatus =
+    typeof row.status === 'string' && row.status.trim().length > 0
+      ? row.status.trim()
+      : normalizeBookingStatus(row.booking_status);
+
   return {
     ...row,
     id: String(row.booking_id ?? row.id ?? ''),
@@ -228,15 +233,15 @@ export function mapBookingRow(row: RawBooking): RawBooking {
     price_per_seat: pricePerSeat,
     total_price: amount,
     amount,
-    status: normalizeBookingStatus(row.booking_status ?? row.status),
+    status: runtimeStatus,
     booking_status: row.booking_status ?? normalizeBookingStatus(row.status),
   };
 }
 
 export function packageSizeFromWeight(weightKg: number): 'small' | 'medium' | 'large' | 'extra_large' {
-  if (weightKg <= 1) return 'small';
-  if (weightKg <= 5) return 'medium';
-  if (weightKg <= 12) return 'large';
+  if (weightKg <= 1) {return 'small';}
+  if (weightKg <= 5) {return 'medium';}
+  if (weightKg <= 12) {return 'large';}
   return 'extra_large';
 }
 
@@ -247,7 +252,7 @@ export async function getWalletByCanonicalUserId(canonicalUserId: string): Promi
     .select('*')
     .eq('user_id', canonicalUserId)
     .maybeSingle();
-  if (error) throw error;
+  if (error) {throw error;}
   return (data as WalletRow | null) ?? null;
 }
 
@@ -261,7 +266,7 @@ export async function creditWalletBalance(canonicalUserId: string, amountJod: nu
       .from('wallets')
       .update({ balance: nextBalance, pending_balance: nextPending, wallet_status: wallet.wallet_status ?? 'active' })
       .eq('wallet_id', wallet.wallet_id);
-    if (error) throw error;
+    if (error) {throw error;}
     return;
   }
   const { error } = await db.from('wallets').insert({
@@ -271,5 +276,5 @@ export async function creditWalletBalance(canonicalUserId: string, amountJod: nu
     wallet_status: 'active',
     currency_code: 'JOD',
   });
-  if (error) throw error;
+  if (error) {throw error;}
 }

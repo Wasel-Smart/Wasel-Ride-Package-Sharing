@@ -1,133 +1,145 @@
-/**
- * Production Environment Safety Checks
- * Validates that the app is running in the correct environment configuration
- */
-
 import { ConfigError } from './errors';
+import { getConfig, getEnv, type AppEnvironment } from './env';
 import { publicAnonKey, publicSupabaseUrl } from './supabase/info';
 
-/**
- * Environment configuration interface
- */
 interface EnvironmentConfig {
-  mode: 'production' | 'staging' | 'development' | 'test';
+  mode: AppEnvironment;
+  enableLocalAuth: boolean;
   isDemoMode: boolean;
   enableDemoData: boolean;
+  enableSyntheticTrips: boolean;
+  enableFakePayments: boolean;
+  enableFakeBusBookings: boolean;
+  allowDirectSupabaseFallback: boolean;
+  allowLocalPersistenceFallback: boolean;
   supabaseUrl: string;
   supabaseKey: string;
   appUrl: string;
 }
 
-/**
- * Get current environment configuration
- */
+function isExplicitlyEnabled(keys: string[]): boolean {
+  return keys.some(key => ['1', 'true', 'yes', 'on'].includes(getEnv(key).trim().toLowerCase()));
+}
+
 export function getEnvironmentConfig(): EnvironmentConfig {
-  const isDemoMode = import.meta.env.VITE_ENABLE_DEMO_DATA === 'true';
-  const mode = import.meta.env.MODE as EnvironmentConfig['mode'];
+  const config = getConfig();
 
   return {
-    mode,
-    isDemoMode,
-    enableDemoData: isDemoMode,
+    mode: config.environment,
+    enableLocalAuth: config.enableLocalAuth,
+    isDemoMode: config.enableDemoAccount,
+    enableDemoData: config.enableDemoAccount,
+    enableSyntheticTrips: config.enableSyntheticTrips,
+    enableFakePayments: config.enableFakePayments,
+    enableFakeBusBookings: config.enableFakeBusBookings,
+    allowDirectSupabaseFallback: config.allowDirectSupabaseFallback,
+    allowLocalPersistenceFallback: config.allowLocalPersistenceFallback,
     supabaseUrl: publicSupabaseUrl || '',
     supabaseKey: publicAnonKey || '',
-    appUrl: import.meta.env.VITE_APP_URL || window.location.origin,
+    appUrl: config.appUrl,
   };
 }
 
-/**
- * Validate environment configuration
- * Throws ConfigError if configuration is invalid
- */
 export function validateEnvironmentConfig(): void {
   const config = getEnvironmentConfig();
-
-  // Critical validations
   const errors: string[] = [];
+  const isProtectedEnvironment = config.mode === 'production' || config.mode === 'staging';
+  const fakePaymentsRequested = isExplicitlyEnabled([
+    'VITE_ENABLE_FAKE_PAYMENTS',
+    'ENABLE_FAKE_PAYMENTS',
+  ]);
+  const fakeBusBookingsRequested = isExplicitlyEnabled([
+    'VITE_ENABLE_FAKE_BUS_BOOKINGS',
+    'ENABLE_FAKE_BUS_BOOKINGS',
+  ]);
 
-  // Check required environment variables
-  if (!config.supabaseUrl) {
+  if (isProtectedEnvironment && !config.supabaseUrl) {
     errors.push('VITE_SUPABASE_URL is not configured');
   }
-  if (!config.supabaseKey) {
+
+  if (isProtectedEnvironment && !config.supabaseKey) {
     errors.push('VITE_SUPABASE_ANON_KEY is not configured');
   }
 
-  // Production safety checks
-  if (config.mode === 'production') {
-    // Prevent demo data in production
+  const edgeApiConfigured = Boolean(
+    getEnv('VITE_API_URL') ||
+    getEnv('VITE_EDGE_FUNCTION_NAME') ||
+    getEnv('VITE_EDGE_FUNCTIONS_BASE_URL'),
+  );
+  if (isProtectedEnvironment && !edgeApiConfigured) {
+    errors.push('Protected environments must define VITE_API_URL or VITE_EDGE_FUNCTION_NAME');
+  }
+
+  if (isProtectedEnvironment) {
     if (config.isDemoMode) {
-      errors.push('Demo mode cannot be enabled in production environment');
+      errors.push('Demo mode cannot be enabled outside development or test environments');
     }
 
-    // Ensure production URLs
-    if (!config.appUrl.includes('https://') && !config.appUrl.includes('localhost')) {
-      console.warn('[Wasel] Production URL does not use HTTPS:', config.appUrl);
+    if (config.enableSyntheticTrips) {
+      errors.push('Synthetic trips cannot be enabled outside development or test environments');
     }
 
-    // Alert on disabled security features
-    if (!config.supabaseUrl.includes('supabase.co')) {
-      console.warn('[Wasel] Non-Supabase backend detected in production');
+    if (config.enableLocalAuth) {
+      errors.push('Local auth cannot be enabled outside development or test environments');
+    }
+
+    if (config.allowDirectSupabaseFallback) {
+      errors.push('Direct Supabase fallback must be disabled in staging and production');
+    }
+
+    if (config.allowLocalPersistenceFallback) {
+      errors.push('Local persistence fallback must be disabled in staging and production');
+    }
+
+    if (fakePaymentsRequested || config.enableFakePayments) {
+      errors.push('Fake payments must be disabled in staging and production');
+    }
+
+    if (fakeBusBookingsRequested || config.enableFakeBusBookings) {
+      errors.push('Fake bus bookings must be disabled in staging and production');
+    }
+
+    if (!config.appUrl.startsWith('https://')) {
+      errors.push('Protected environments must use an HTTPS VITE_APP_URL');
+    }
+
+    if (!config.supabaseUrl.startsWith('https://')) {
+      errors.push('Protected environments must use an HTTPS Supabase URL');
     }
   }
 
   if (errors.length > 0) {
-    const message = `Environment configuration errors:\n${errors.join('\n')}`;
-    throw new ConfigError(message, { errors, config });
+    throw new ConfigError(`Environment configuration errors:\n${errors.join('\n')}`, {
+      errors,
+      config,
+    });
   }
-
 }
 
-/**
- * Check if running in production
- */
 export function isProduction(): boolean {
-  return import.meta.env.PROD;
+  return getConfig().isProd;
 }
 
-/**
- * Check if running in demo mode
- */
 export function isDemoMode(): boolean {
-  return import.meta.env.VITE_ENABLE_DEMO_DATA === 'true';
+  return getConfig().enableDemoAccount;
 }
 
-/**
- * Prevent demo mode in production (failsafe)
- * Should be called early in app initialization
- */
 export function enforceDemoModeSafety(): void {
   const config = getEnvironmentConfig();
-
-  if (config.mode === 'production' && config.isDemoMode) {
-    // Redact demo data before app loads
-    const error = new ConfigError(
-      'Demo mode is not permitted in production. Aborting app initialization.',
-      { allowedModes: ['staging', 'development'], currentMode: config.mode },
+  if (config.mode !== 'development' && config.mode !== 'test' && config.isDemoMode) {
+    throw new ConfigError(
+      'Demo mode is not permitted in staging or production. Aborting app initialization.',
+      { allowedModes: ['development', 'test'], currentMode: config.mode },
     );
-
-    // Log critical security error
-    console.error('[Wasel SECURITY]', error.message);
-
-    // Prevent app from fully initializing
-    throw error;
   }
 }
 
-/**
- * Get environment display name for user-facing messages
- */
 export function getEnvironmentDisplayName(): string {
-  const config = getEnvironmentConfig();
-  if (config.isDemoMode) return 'Demo';
-  if (config.mode === 'production') return 'Production';
-  if (config.mode === 'staging') return 'Staging';
-  return 'Development';
+  const { mode, isDemoMode: demoModeEnabled } = getEnvironmentConfig();
+  if (demoModeEnabled) {return 'Demo';}
+  return mode.charAt(0).toUpperCase() + mode.slice(1);
 }
 
-/**
- * Assert that we're in the expected environment
- */
 export function assertEnvironment(expectedMode: EnvironmentConfig['mode'] | string[]): void {
   const config = getEnvironmentConfig();
   const modes = typeof expectedMode === 'string' ? [expectedMode] : expectedMode;

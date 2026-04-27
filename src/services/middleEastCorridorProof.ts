@@ -103,7 +103,7 @@ function buildModeledRow(route: CityRoute, region: RegionConfig): MiddleEastCorr
 
 function buildLiveRow(route: CityRoute, region: RegionConfig): MiddleEastCorridorProofRow | null {
   const signal = getLiveCorridorSignal(route.from, route.to);
-  if (!signal) return null;
+  if (!signal) {return null;}
 
   const benchmarkPriceJod = roundMoney(Math.max(signal.priceQuote.basePriceJod, buildBenchmarkPrice(route, region)));
   const predictedMatchMinutes = clamp(

@@ -1,0 +1,32 @@
+:root[data-theme='light'] {
+  --wasel-brand-gradient-start: #FFD39A;
+  --wasel-brand-gradient-end: #E59C36;
+  --wasel-brand-solid: #E59C36;
+  --wasel-brand-hover: #C97B1D;
+
+  --ds-page: #F7F0E6;
+  --ds-page-muted: color-mix(in srgb, #F7F0E6 86%, #FFF7EC 14%);
+  --ds-surface: #FFFDF9;
+  --ds-surface-raised: color-mix(in srgb, #FFFDF9 92%, white 8%);
+  --ds-surface-soft: color-mix(in srgb, #FFFDF9 78%, #F7F0E6 22%);
+  --ds-surface-overlay: rgb(255 253 249 / 0.9);
+  --ds-border: rgba(23, 33, 43, 0.1);
+  --ds-border-strong: rgba(23, 33, 43, 0.16);
+  --ds-text: #17212B;
+  --ds-text-muted: #6F6659;
+  --ds-text-soft: rgba(111, 102, 89, 0.76);
+  --ds-accent: #E59C36;
+  --ds-accent-strong: #FFD39A;
+  --ds-accent-soft: color-mix(in srgb, #E59C36 12%, transparent);
+  --ds-success: #FFD39A;
+  --ds-warning: #E59C36;
+  --ds-danger: #C97B1D;
+  --ds-info: #FFD39A;
+  --ds-shadow-sm: 0 12px 28px rgba(15, 23, 42, 0.08);
+  --ds-shadow-md: 0 18px 36px rgba(15, 23, 42, 0.12);
+  --ds-shadow-lg: 0 28px 56px rgba(15, 23, 42, 0.16);
+  --ds-shadow-xl: 0 34px 72px rgba(15, 23, 42, 0.18);
+  --ds-map-opacity: 0.08;
+
+  color-scheme: light;
+}

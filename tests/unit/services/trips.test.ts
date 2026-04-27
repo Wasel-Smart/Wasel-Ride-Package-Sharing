@@ -8,7 +8,7 @@
  * service falls back to the direct-Supabase helpers — both paths are
  * tested here.  All network and Supabase calls are mocked.
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ── Hoisted mocks ─────────────────────────────────────────────────────────────
 
@@ -110,11 +110,21 @@ function fail(body: unknown = { error: 'Server error' }, status = 500) {
   });
 }
 
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.stubEnv('MODE', 'test');
+  vi.stubEnv('NODE_ENV', 'test');
+  vi.stubEnv('VITE_APP_ENV', 'test');
+  vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'true');
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 // ── createTrip ────────────────────────────────────────────────────────────────
 
 describe('tripsAPI.createTrip()', () => {
-  beforeEach(() => vi.clearAllMocks());
-
   it('returns the new trip from the edge API on success', async () => {
     mockFetch.mockReturnValueOnce(ok(TRIP_RESULT));
     const result = await tripsAPI.createTrip(CREATE_PAYLOAD);
@@ -192,8 +202,6 @@ describe('tripsAPI.createTrip()', () => {
 // ── searchTrips ───────────────────────────────────────────────────────────────
 
 describe('tripsAPI.searchTrips()', () => {
-  beforeEach(() => vi.clearAllMocks());
-
   it('returns trips from the edge API', async () => {
     mockFetch.mockReturnValueOnce(ok([TRIP_RESULT]));
     const results = await tripsAPI.searchTrips('Amman', 'Irbid', '2026-05-01', 2);
@@ -228,8 +236,6 @@ describe('tripsAPI.searchTrips()', () => {
 // ── getTripById ───────────────────────────────────────────────────────────────
 
 describe('tripsAPI.getTripById()', () => {
-  beforeEach(() => vi.clearAllMocks());
-
   it('returns the trip from the edge API', async () => {
     mockFetch.mockReturnValueOnce(ok(TRIP_RESULT));
     const result = await tripsAPI.getTripById('trip-1');
@@ -252,8 +258,6 @@ describe('tripsAPI.getTripById()', () => {
 // ── getDriverTrips ────────────────────────────────────────────────────────────
 
 describe('tripsAPI.getDriverTrips()', () => {
-  beforeEach(() => vi.clearAllMocks());
-
   it('returns the driver\'s trips from the edge API', async () => {
     mockFetch.mockReturnValueOnce(ok([TRIP_RESULT]));
     const results = await tripsAPI.getDriverTrips();
@@ -277,8 +281,6 @@ describe('tripsAPI.getDriverTrips()', () => {
 // ── updateTrip ────────────────────────────────────────────────────────────────
 
 describe('tripsAPI.updateTrip()', () => {
-  beforeEach(() => vi.clearAllMocks());
-
   it('returns the updated trip on success', async () => {
     const updated = { ...TRIP_RESULT, seats: 2 };
     mockFetch.mockReturnValueOnce(ok(updated));
@@ -317,8 +319,6 @@ describe('tripsAPI.updateTrip()', () => {
 // ── deleteTrip ────────────────────────────────────────────────────────────────
 
 describe('tripsAPI.deleteTrip()', () => {
-  beforeEach(() => vi.clearAllMocks());
-
   it('returns success on OK response', async () => {
     mockFetch.mockReturnValueOnce(ok({ success: true }));
     const result = await tripsAPI.deleteTrip('trip-1');
@@ -355,8 +355,6 @@ describe('tripsAPI.deleteTrip()', () => {
 // ── publishTrip ───────────────────────────────────────────────────────────────
 
 describe('tripsAPI.publishTrip()', () => {
-  beforeEach(() => vi.clearAllMocks());
-
   it('returns success on OK response', async () => {
     mockFetch.mockReturnValueOnce(ok({ success: true }));
     const result = await tripsAPI.publishTrip('trip-1');
@@ -386,8 +384,6 @@ describe('tripsAPI.publishTrip()', () => {
 // ── calculatePrice ────────────────────────────────────────────────────────────
 
 describe('tripsAPI.calculatePrice()', () => {
-  beforeEach(() => vi.clearAllMocks());
-
   it('returns calculated price from edge API', async () => {
     mockFetch.mockReturnValueOnce(ok({ price: 12.5, currency: 'JOD' }));
     const result = await tripsAPI.calculatePrice('passenger', undefined, 80);

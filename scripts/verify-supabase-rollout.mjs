@@ -12,6 +12,7 @@ import {
   requiredDocs,
   rolloutMigrations,
   rolloutSeedFiles,
+  smokeCheckSeedFiles,
 } from './supabase-migration-registry.mjs';
 
 const root = process.cwd();
@@ -47,11 +48,12 @@ function validateUnique(values, label) {
 
 printSection('Supabase Rollout Verification');
 
-const migrationPaths = migrationCatalog.map((migration) => migration.path);
+const migrationPaths = migrationCatalog.map(migration => migration.path);
 const migrationNames = migrationPaths.map(getMigrationFileName);
 const requiredFiles = [
   ...migrationPaths,
   ...rolloutSeedFiles,
+  ...smokeCheckSeedFiles,
   ...requiredDocs,
   migrationReadmePath,
 ];
@@ -60,23 +62,23 @@ printSection('Filesystem Coverage');
 const migrationDir = path.join(root, migrationDirectory);
 const actualMigrationFiles = fs
   .readdirSync(migrationDir)
-  .filter((file) => file.endsWith('.sql'))
-  .map((file) => `${migrationDirectory}/${file}`);
+  .filter(file => file.endsWith('.sql'))
+  .map(file => `${migrationDirectory}/${file}`);
 
 validateUnique(migrationPaths, 'registry migration path');
 validateUnique(migrationNames, 'migration filename');
 
-const missingFiles = requiredFiles.filter((file) => !exists(file));
+const missingFiles = requiredFiles.filter(file => !exists(file));
 for (const file of missingFiles) {
   fail(`Missing required rollout artifact: ${file}`);
 }
 
-const untrackedMigrationFiles = actualMigrationFiles.filter((file) => !migrationPaths.includes(file));
+const untrackedMigrationFiles = actualMigrationFiles.filter(file => !migrationPaths.includes(file));
 for (const file of untrackedMigrationFiles) {
   fail(`Migration file exists on disk but is not registered: ${file}`);
 }
 
-const missingMigrationFiles = migrationPaths.filter((file) => !actualMigrationFiles.includes(file));
+const missingMigrationFiles = migrationPaths.filter(file => !actualMigrationFiles.includes(file));
 for (const file of missingMigrationFiles) {
   fail(`Migration is registered but missing from disk: ${file}`);
 }
@@ -86,9 +88,9 @@ if (!process.exitCode) {
 }
 
 printSection('Naming and Ordering');
-const rolloutEntries = migrationCatalog.filter((migration) => migration.phase === 'rollout');
-const rolloutFileNames = rolloutEntries.map((migration) => getMigrationFileName(migration.path));
-const rolloutTimestamps = rolloutEntries.map((migration) => getMigrationTimestamp(migration.path));
+const rolloutEntries = migrationCatalog.filter(migration => migration.phase === 'rollout');
+const rolloutFileNames = rolloutEntries.map(migration => getMigrationFileName(migration.path));
+const rolloutTimestamps = rolloutEntries.map(migration => getMigrationTimestamp(migration.path));
 validateUnique(rolloutTimestamps, 'rollout migration timestamp');
 
 for (const migration of rolloutEntries) {
@@ -106,7 +108,7 @@ if (JSON.stringify(rolloutFileNames) !== JSON.stringify(sortedRolloutNames)) {
 }
 
 printSection('Registry Discipline');
-const sequenceNumbers = migrationCatalog.map((migration) => migration.sequence);
+const sequenceNumbers = migrationCatalog.map(migration => migration.sequence);
 const expectedSequence = Array.from({ length: migrationCatalog.length }, (_, index) => index + 1);
 if (JSON.stringify(sequenceNumbers) !== JSON.stringify(expectedSequence)) {
   fail('Migration registry sequence numbers are not contiguous.');
@@ -163,7 +165,9 @@ if (!process.exitCode) {
 }
 
 printSection('Runtime Expectations');
-const walletHardening = read('src/supabase/migrations/20260409113000_wallet_and_runtime_integrity_hardening.sql');
+const walletHardening = read(
+  'src/supabase/migrations/20260409113000_wallet_and_runtime_integrity_hardening.sql',
+);
 for (const snippet of [
   'chk_wallets_non_negative_balances',
   'chk_transactions_positive_amount',
@@ -174,7 +178,9 @@ for (const snippet of [
   }
 }
 
-const securityHardening = read('src/supabase/migrations/20260409120000_production_security_and_queue_hardening.sql');
+const securityHardening = read(
+  'src/supabase/migrations/20260409120000_production_security_and_queue_hardening.sql',
+);
 for (const snippet of [
   'private.user_two_factor_secrets',
   'public.app_claim_communication_deliveries',
@@ -195,6 +201,9 @@ for (const file of rolloutMigrations) {
 }
 for (const file of rolloutSeedFiles) {
   console.log(`psql "$SUPABASE_DB_URL" -f ${file}`);
+}
+for (const file of smokeCheckSeedFiles) {
+  console.log(`psql "$SUPABASE_DB_URL" -f ${file}   # smoke-check only`);
 }
 
 if (process.exitCode && process.exitCode !== 0) {

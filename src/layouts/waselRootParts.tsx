@@ -1,24 +1,54 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Monitor, Moon, Sun } from 'lucide-react';
 import { WaselLogo } from '../components/wasel-ds/WaselLogo';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { type SupportedCurrency, useCurrency, CurrencyService } from '../utils/currency';
 import { buildAuthPagePath } from '../utils/authFlow';
+import type { ThemePreference } from '../utils/theme';
 import { C, F, R } from '../utils/wasel-ds';
 import {
+  getEnabledNavGroups,
   getNavGroupPrimaryPath,
   getVisibleNavItems,
   isDirectNavGroup,
-  isVisibleNavGroup,
-  PRODUCT_NAV_GROUPS,
   type NavGroup,
 } from './waselRootConfig';
 
-const PANEL_BG = 'linear-gradient(180deg, rgba(12,20,30,0.98), rgba(8,14,22,0.98))';
-const PANEL_BORDER = 'rgba(244,198,81,0.18)';
-const PANEL_MUTED = 'rgba(228,214,180,0.78)';
-const PANEL_SOFT = 'rgba(255,247,229,0.04)';
-const PANEL_SHADOW = '0 28px 64px rgba(2,6,12,0.4)';
+const PANEL_BG = 'var(--wasel-service-card)';
+const PANEL_BORDER = 'var(--wasel-service-border)';
+const PANEL_MUTED = 'var(--wasel-app-muted)';
+const PANEL_SOFT = 'var(--surface-muted)';
+const PANEL_SHADOW = 'var(--wasel-shadow-lg)';
+const PANEL_RING = 'rgb(var(--accent-rgb) / 0.06)';
+const ACCENT_BLUE_SOFT = 'rgb(var(--accent-secondary-rgb) / 0.04)';
+const ACCENT_BLUE_SOFT_STRONG = 'rgb(var(--accent-secondary-rgb) / 0.08)';
+const ACCENT_BLUE_SURFACE = 'rgb(var(--accent-secondary-rgb) / 0.12)';
+const ACCENT_GREEN_SURFACE = 'rgb(var(--accent-rgb) / 0.12)';
+const ACCENT_GREEN_BORDER = 'rgb(var(--accent-rgb) / 0.24)';
+const DANGER_SURFACE = 'rgb(var(--danger-rgb) / 0.08)';
+const DANGER_BORDER = 'rgb(var(--danger-rgb) / 0.28)';
+const DRAWER_OVERLAY = 'var(--bg-overlay)';
+const DRAWER_BG = 'var(--service-head-background)';
+const DRAWER_CLOSE_BG = 'var(--surface-muted)';
+const DRAWER_CLOSE_BORDER = 'var(--border)';
+const DRAWER_CLOSE_TEXT = 'var(--text-secondary)';
+const DRAWER_TEXT = 'var(--text-primary)';
+const DRAWER_MUTED = 'var(--text-secondary)';
+const DRAWER_SOFT = 'var(--text-muted)';
+const DRAWER_SECTION_BG =
+  'linear-gradient(180deg, rgb(var(--accent-secondary-rgb) / 0.08), rgb(var(--accent-rgb) / 0.04))';
+
+const THEME_MODE_OPTIONS: Array<{
+  value: ThemePreference;
+  icon: typeof Sun;
+  label: { en: string; ar: string };
+}> = [
+  { value: 'light', icon: Sun, label: { en: 'Light', ar: 'فاتح' } },
+  { value: 'dark', icon: Moon, label: { en: 'Dark', ar: 'داكن' } },
+  { value: 'system', icon: Monitor, label: { en: 'System', ar: 'النظام' } },
+];
 
 export function Badge({
   label,
@@ -46,9 +76,9 @@ export function Badge({
         letterSpacing: '0.08em',
         padding: '2px 6px',
         borderRadius: R.full,
-        background: `${col}18`,
+        background: `color-mix(in srgb, ${col} 12%, transparent)`,
         color: col,
-        border: `1px solid ${col}30`,
+        border: `1px solid color-mix(in srgb, ${col} 22%, transparent)`,
         flexShrink: 0,
       }}
     >
@@ -67,15 +97,14 @@ export function AppPill({ ar }: { ar: boolean }) {
         height: 30,
         padding: '0 12px',
         borderRadius: R.full,
-        background:
-          'linear-gradient(180deg, rgba(255,247,229,0.05), rgba(255,247,229,0.03))',
-        border: `1px solid ${PANEL_BORDER}`,
-        color: 'rgba(248,239,214,0.82)',
+        background: 'var(--wasel-app-nav-surface)',
+        border: '1px solid var(--wasel-app-border)',
+        color: 'var(--wasel-app-muted)',
         fontSize: '0.72rem',
         fontWeight: 700,
         fontFamily: F,
         whiteSpace: 'nowrap',
-        boxShadow: '0 12px 24px rgba(1,10,18,0.16)',
+        boxShadow: 'var(--wasel-shadow-sm)',
       }}
     >
       <span
@@ -87,7 +116,7 @@ export function AppPill({ ar }: { ar: boolean }) {
           boxShadow: `0 0 10px ${C.green}`,
         }}
       />
-      {ar ? 'منظومة تنقل مترابطة' : 'Linked mobility network'}
+      {ar ? 'منظومة تنقل مترابطة' : 'Ride and package marketplace'}
     </div>
   );
 }
@@ -121,7 +150,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
           height: 34,
           padding: '0 10px',
           borderRadius: R.md,
-          background: open ? 'rgba(244,198,81,0.12)' : PANEL_SOFT,
+          background: open ? ACCENT_BLUE_SURFACE : PANEL_SOFT,
           border: `1px solid ${open ? C.borderHov : C.border}`,
           cursor: 'pointer',
           display: 'flex',
@@ -129,10 +158,10 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
           gap: 5,
           fontSize: '0.75rem',
           fontWeight: 700,
-          color: open ? C.gold : 'rgba(248,239,214,0.8)',
+          color: open ? 'var(--wasel-app-blue)' : 'var(--wasel-app-ink)',
           fontFamily: F,
           transition: 'all 0.14s',
-          boxShadow: open ? '0 10px 24px rgba(244,198,81,0.16)' : 'none',
+          boxShadow: open ? 'var(--wasel-shadow-sm)' : 'none',
         }}
       >
         <span style={{ fontSize: '0.68rem', opacity: 0.7 }}>$</span>
@@ -163,7 +192,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
             background: PANEL_BG,
             backdropFilter: 'blur(24px)',
             border: `1px solid ${PANEL_BORDER}`,
-            borderRadius: 16,
+            borderRadius: 20,
             boxShadow: PANEL_SHADOW,
             overflow: 'hidden',
             zIndex: 1100,
@@ -175,7 +204,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
               padding: '8px 12px 4px',
               fontSize: '0.6rem',
               fontWeight: 700,
-              color: 'rgba(228,214,180,0.6)',
+              color: 'var(--wasel-app-soft)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               fontFamily: F,
@@ -195,12 +224,12 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
                 width: '100%',
                 padding: '8px 12px',
                 background:
-                  current === code ? 'rgba(244,198,81,0.12)' : 'transparent',
+                  current === code ? ACCENT_BLUE_SOFT_STRONG : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 fontSize: '0.8rem',
                 fontWeight: current === code ? 700 : 500,
-                color: current === code ? C.gold : 'rgba(248,239,214,0.78)',
+                color: current === code ? 'var(--wasel-app-blue)' : 'var(--wasel-app-ink)',
                 fontFamily: F,
                 transition: 'background 0.12s',
               }}
@@ -209,7 +238,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
               <span
                 style={{
                   fontSize: '0.7rem',
-                  color: 'rgba(228,214,180,0.5)',
+                  color: 'var(--wasel-app-soft)',
                   fontFamily: F,
                 }}
               >
@@ -243,17 +272,15 @@ export function OnlineToggle({ ar }: { ar: boolean }) {
         height: 34,
         padding: '0 12px',
         borderRadius: R.full,
-        background: online ? 'rgba(255,240,193,0.14)' : PANEL_SOFT,
-        border: `1.5px solid ${
-          online ? 'rgba(255,240,193,0.28)' : 'rgba(255,247,229,0.14)'
-        }`,
+        background: online ? ACCENT_GREEN_SURFACE : PANEL_SOFT,
+        border: `1.5px solid ${online ? ACCENT_GREEN_BORDER : PANEL_BORDER}`,
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
         gap: 6,
         fontSize: '0.72rem',
         fontWeight: 700,
-        color: online ? C.green : 'rgba(248,239,214,0.56)',
+        color: online ? 'var(--wasel-app-teal)' : 'var(--wasel-app-soft)',
         fontFamily: F,
         transition: 'all 0.2s',
       }}
@@ -263,7 +290,7 @@ export function OnlineToggle({ ar }: { ar: boolean }) {
           width: 8,
           height: 8,
           borderRadius: '50%',
-          background: online ? C.green : 'rgba(255,255,255,0.3)',
+          background: online ? C.green : 'var(--border-strong)',
           boxShadow: online ? `0 0 8px ${C.green}` : 'none',
           flexShrink: 0,
           transition: 'all 0.2s',
@@ -314,8 +341,8 @@ export function NavDropdown({
         background: PANEL_BG,
         backdropFilter: 'blur(28px)',
         border: `1px solid ${PANEL_BORDER}`,
-        borderRadius: 18,
-        boxShadow: `${PANEL_SHADOW}, 0 0 0 1px rgba(244,198,81,0.06)`,
+        borderRadius: 22,
+        boxShadow: `${PANEL_SHADOW}, 0 0 0 1px ${PANEL_RING}`,
         padding: 12,
         minWidth: 380,
         display: 'grid',
@@ -344,9 +371,8 @@ export function NavDropdown({
             gap: 4,
             padding: '11px 13px',
             borderRadius: 14,
-            background:
-              'linear-gradient(180deg, rgba(255,247,229,0.05), rgba(255,247,229,0.03))',
-            border: '1px solid rgba(255,255,255,0.07)',
+            background: ACCENT_BLUE_SOFT,
+            border: `1px solid ${PANEL_BORDER}`,
             cursor: 'pointer',
             textAlign: ar ? 'right' : 'left',
             transition: 'all 0.14s ease',
@@ -369,7 +395,7 @@ export function NavDropdown({
           <div
             style={{
               fontSize: '0.7rem',
-              color: 'rgba(228,214,180,0.72)',
+              color: 'var(--wasel-app-soft)',
               fontFamily: F,
               lineHeight: 1.4,
             }}
@@ -420,7 +446,7 @@ export function DesktopOverflowMenu({
           borderRadius: R.full,
           background: open ? PANEL_SOFT : 'transparent',
           border: `1px solid ${open ? PANEL_BORDER : 'transparent'}`,
-          color: open ? C.text : 'rgba(248,239,214,0.72)',
+          color: open ? 'var(--wasel-app-ink)' : 'var(--wasel-app-muted)',
           fontSize: '0.8rem',
           fontWeight: 600,
           fontFamily: F,
@@ -439,8 +465,8 @@ export function DesktopOverflowMenu({
             height: 20,
             padding: '0 6px',
             borderRadius: R.full,
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: ACCENT_BLUE_SOFT,
+            border: `1px solid ${PANEL_BORDER}`,
             color: PANEL_MUTED,
             fontSize: '0.66rem',
             fontWeight: 700,
@@ -478,7 +504,7 @@ export function DesktopOverflowMenu({
             background: PANEL_BG,
             backdropFilter: 'blur(28px)',
             border: `1px solid ${PANEL_BORDER}`,
-            borderRadius: 20,
+            borderRadius: 24,
             boxShadow: PANEL_SHADOW,
             padding: 10,
             display: 'grid',
@@ -492,7 +518,7 @@ export function DesktopOverflowMenu({
               padding: '6px 8px 2px',
               fontSize: '0.62rem',
               fontWeight: 700,
-              color: 'rgba(228,214,180,0.58)',
+              color: 'var(--wasel-app-soft)',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               fontFamily: F,
@@ -520,10 +546,8 @@ export function DesktopOverflowMenu({
                   width: '100%',
                   padding: '12px 14px',
                   borderRadius: 16,
-                  background: isCurrent ? 'rgba(244,198,81,0.11)' : PANEL_SOFT,
-                  border: `1px solid ${
-                    isCurrent ? PANEL_BORDER : 'rgba(255,255,255,0.06)'
-                  }`,
+                  background: isCurrent ? ACCENT_BLUE_SOFT_STRONG : PANEL_SOFT,
+                  border: `1px solid ${isCurrent ? PANEL_BORDER : C.border}`,
                   cursor: 'pointer',
                   textAlign: ar ? 'right' : 'left',
                   transition: 'all 0.16s ease',
@@ -541,7 +565,7 @@ export function DesktopOverflowMenu({
                     style={{
                       fontSize: '0.85rem',
                       fontWeight: 700,
-                      color: isCurrent ? C.text : 'rgba(248,239,214,0.86)',
+                      color: 'var(--wasel-app-ink)',
                       fontFamily: F,
                     }}
                   >
@@ -555,9 +579,7 @@ export function DesktopOverflowMenu({
                   style={{
                     fontSize: '0.72rem',
                     lineHeight: 1.5,
-                    color: isCurrent
-                      ? 'rgba(248,239,214,0.72)'
-                      : 'rgba(228,214,180,0.72)',
+                    color: isCurrent ? 'var(--wasel-app-muted)' : 'var(--wasel-app-soft)',
                     fontFamily: F,
                   }}
                 >
@@ -604,8 +626,6 @@ export function UserMenu({
   const menuItems = [
     { label: ar ? 'رحلاتي' : 'My Trips', emoji: '🎫', path: '/my-trips' },
     { label: ar ? 'الطرود' : 'Packages', emoji: '📦', path: '/packages' },
-    { label: ar ? 'ملفي الشخصي' : 'Profile', emoji: '👤', path: '/profile' },
-    { label: ar ? 'واصل بلس' : 'Wasel Plus', emoji: '✨', path: '/plus' },
   ];
 
   return (
@@ -622,7 +642,7 @@ export function UserMenu({
           gap: 8,
           padding: '5px 12px 5px 5px',
           borderRadius: 9999,
-          background: open ? 'rgba(244,198,81,0.1)' : 'rgba(255,247,229,0.06)',
+          background: open ? ACCENT_BLUE_SOFT_STRONG : ACCENT_BLUE_SOFT,
           border: `1px solid ${open ? C.borderHov : C.border}`,
           cursor: 'pointer',
           transition: 'all 0.15s',
@@ -634,15 +654,14 @@ export function UserMenu({
             width: 28,
             height: 28,
             borderRadius: '50%',
-            background:
-              'linear-gradient(135deg,#DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
-            boxShadow: '0 0 0 1.5px rgba(25,231,187,0.28)',
+            background: 'var(--theme-gradient-primary)',
+            boxShadow: '0 0 0 1.5px rgb(var(--accent-secondary-rgb) / 0.18)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '0.68rem',
             fontWeight: 800,
-            color: '#041018',
+            color: 'var(--text-inverse)',
             flexShrink: 0,
           }}
         >
@@ -672,12 +691,12 @@ export function UserMenu({
             top: 'calc(100% + 8px)',
             right: ar ? 'auto' : 0,
             left: ar ? 0 : 'auto',
-            width: 256,
+            width: 288,
             background: PANEL_BG,
             backdropFilter: 'blur(28px)',
             border: `1px solid ${PANEL_BORDER}`,
             borderRadius: 18,
-            boxShadow: '0 28px 64px rgba(1,10,18,0.42)',
+            boxShadow: PANEL_SHADOW,
             overflow: 'hidden',
             animation: 'fade-in 0.15s ease',
             zIndex: 1000,
@@ -686,8 +705,7 @@ export function UserMenu({
           <div
             style={{
               padding: '14px 16px',
-              background:
-                'linear-gradient(180deg, rgba(244,198,81,0.08), rgba(255,247,229,0.02))',
+              background: DRAWER_SECTION_BG,
               borderBottom: `1px solid ${C.border}`,
             }}
           >
@@ -704,7 +722,7 @@ export function UserMenu({
             <div
               style={{
                 fontSize: '0.68rem',
-                color: 'rgba(228,214,180,0.72)',
+                color: 'var(--wasel-app-muted)',
                 fontFamily: F,
                 marginTop: 1,
               }}
@@ -716,7 +734,7 @@ export function UserMenu({
                 display: 'flex',
                 gap: 0,
                 marginTop: 12,
-                background: 'rgba(255,247,229,0.04)',
+                background: ACCENT_BLUE_SOFT,
                 borderRadius: 12,
                 overflow: 'hidden',
                 border: `1px solid ${C.border}`,
@@ -743,7 +761,7 @@ export function UserMenu({
                 <div
                   style={{
                     fontSize: '0.58rem',
-                    color: 'rgba(228,214,180,0.62)',
+                    color: 'var(--wasel-app-soft)',
                     fontFamily: F,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
@@ -766,7 +784,7 @@ export function UserMenu({
                 <div
                   style={{
                     fontSize: '0.58rem',
-                    color: 'rgba(228,214,180,0.62)',
+                    color: 'var(--wasel-app-soft)',
                     fontFamily: F,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
@@ -797,7 +815,7 @@ export function UserMenu({
                 textAlign: ar ? 'right' : 'left',
                 fontSize: '0.82rem',
                 fontWeight: 500,
-                color: 'rgba(248,239,214,0.78)',
+                color: DRAWER_TEXT,
                 fontFamily: F,
                 cursor: 'pointer',
               }}
@@ -808,6 +826,8 @@ export function UserMenu({
               {item.label}
             </button>
           ))}
+          <div style={{ height: 1, background: C.border, margin: '0 16px' }} />
+          <ThemeModeSection ar={ar} />
           <div style={{ height: 1, background: C.border, margin: '0 16px' }} />
           <button
             type="button"
@@ -841,6 +861,165 @@ export function UserMenu({
   );
 }
 
+function ThemeModeSection({
+  ar,
+  compact = 'menu',
+}: {
+  ar: boolean;
+  compact?: 'menu' | 'drawer';
+}) {
+  const { theme, resolvedTheme, setTheme } = useTheme();
+  const sectionPadding = compact === 'drawer' ? '12px 20px' : '12px 16px';
+  const title = ar ? 'المظهر' : 'Theme mode';
+  const subtitle = ar
+    ? 'غيّر النمط من هنا. الافتراضي: فاتح.'
+    : 'Change mode here. Default: Light.';
+  const currentLabel =
+    theme === 'system'
+      ? `${ar ? 'النظام' : 'System'} · ${
+          resolvedTheme === 'light'
+            ? ar
+              ? 'فاتح'
+              : 'Light'
+            : ar
+              ? 'داكن'
+              : 'Dark'
+        }`
+      : THEME_MODE_OPTIONS.find((option) => option.value === theme)?.label[
+          ar ? 'ar' : 'en'
+        ] ?? 'Light';
+  const helper =
+    theme === 'system'
+      ? ar
+        ? `يتبع الجهاز الآن: ${resolvedTheme === 'light' ? 'فاتح' : 'داكن'}.`
+        : `Following your device: ${resolvedTheme === 'light' ? 'Light' : 'Dark'}.`
+      : ar
+        ? 'يتم تطبيق التغيير فوراً على كل الشاشات.'
+        : 'The change applies instantly across the app.';
+
+  return (
+    <div
+      style={{
+        padding: sectionPadding,
+        display: 'grid',
+        gap: 10,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}
+      >
+        <div style={{ display: 'grid', gap: 3 }}>
+          <div
+            style={{
+              fontSize: '0.8rem',
+              fontWeight: 800,
+              color: 'var(--text-primary)',
+              fontFamily: F,
+            }}
+          >
+            {title}
+          </div>
+          <div
+            style={{
+              fontSize: '0.68rem',
+              lineHeight: 1.45,
+              color: 'var(--text-secondary)',
+              fontFamily: F,
+            }}
+          >
+            {subtitle}
+          </div>
+        </div>
+
+        <span
+          style={{
+            flexShrink: 0,
+            padding: '5px 8px',
+            borderRadius: R.full,
+            border: `1px solid ${C.border}`,
+            background: PANEL_SOFT,
+            color: 'var(--text-secondary)',
+            fontSize: '0.66rem',
+            fontWeight: 700,
+            fontFamily: F,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {currentLabel}
+        </span>
+      </div>
+
+      <div
+        role="radiogroup"
+        aria-label={title}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+          gap: 8,
+        }}
+      >
+        {THEME_MODE_OPTIONS.map(({ value, icon: Icon, label }) => {
+          const active = theme === value;
+
+          return (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => setTheme(value)}
+              style={{
+                minHeight: compact === 'drawer' ? 42 : 38,
+                padding: '8px 6px',
+                borderRadius: 14,
+                border: `1px solid ${active ? 'var(--border-strong)' : 'var(--border)'}`,
+                background: active
+                  ? 'linear-gradient(180deg, rgb(var(--accent-rgb) / 0.10), rgb(var(--accent-secondary-rgb) / 0.08))'
+                  : 'var(--surface-muted)',
+                color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                boxShadow: active ? 'var(--wasel-shadow-teal)' : 'none',
+                cursor: 'pointer',
+                display: 'grid',
+                placeItems: 'center',
+                gap: 6,
+                textAlign: 'center',
+                fontFamily: F,
+              }}
+            >
+              <Icon size={14} />
+              <span
+                style={{
+                  fontSize: '0.7rem',
+                  fontWeight: active ? 800 : 700,
+                  lineHeight: 1.1,
+                }}
+              >
+                {ar ? label.ar : label.en}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div
+        style={{
+          fontSize: '0.68rem',
+          lineHeight: 1.45,
+          color: 'var(--text-secondary)',
+          fontFamily: F,
+        }}
+      >
+        {helper}
+      </div>
+    </div>
+  );
+}
+
 export function LangToggle() {
   const { language, setLanguage } = useLanguage();
   const ar = language === 'ar';
@@ -862,7 +1041,7 @@ export function LangToggle() {
         gap: 5,
         fontSize: '0.75rem',
         fontWeight: 700,
-        color: 'rgba(248,239,214,0.8)',
+        color: 'var(--wasel-app-ink)',
         fontFamily: F,
         transition: 'all 0.14s',
       }}
@@ -915,7 +1094,7 @@ export function MobileDrawer({
         position: 'fixed',
         inset: 0,
         zIndex: 2000,
-        background: 'rgba(3,12,20,0.78)',
+        background: DRAWER_OVERLAY,
         backdropFilter: 'blur(8px)',
       }}
       onClick={onClose}
@@ -932,13 +1111,10 @@ export function MobileDrawer({
           left: ar ? 0 : 'auto',
           width: 300,
           height: '100%',
-          background:
-            'linear-gradient(180deg, rgba(7,27,43,0.98), rgba(6,23,38,0.98))',
+          background: DRAWER_BG,
           borderLeft: ar ? undefined : `1px solid ${PANEL_BORDER}`,
           borderRight: ar ? `1px solid ${PANEL_BORDER}` : undefined,
-          boxShadow: ar
-            ? '20px 0 60px rgba(1,10,18,0.38)'
-            : '-20px 0 60px rgba(1,10,18,0.38)',
+          boxShadow: PANEL_SHADOW,
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
@@ -957,7 +1133,7 @@ export function MobileDrawer({
         >
           <WaselLogo
             size={36}
-            theme="light"
+            theme="auto"
             variant="compact"
             showWordmark
             subtitle=""
@@ -968,14 +1144,14 @@ export function MobileDrawer({
             onClick={onClose}
             aria-label={ar ? 'إغلاق القائمة' : 'Close menu'}
             style={{
-              background: 'rgba(255,247,229,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: DRAWER_CLOSE_BG,
+              border: `1px solid ${DRAWER_CLOSE_BORDER}`,
               borderRadius: R.md,
               width: 32,
               height: 32,
               cursor: 'pointer',
               fontSize: '1.1rem',
-              color: 'rgba(248,239,214,0.72)',
+              color: DRAWER_CLOSE_TEXT,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -991,24 +1167,27 @@ export function MobileDrawer({
             display: 'flex',
             gap: 8,
             alignItems: 'center',
+            flexWrap: 'wrap',
           }}
         >
           <LangToggle />
           {isAuthenticated && <CurrencySwitcher ar={ar} />}
         </div>
+        <div style={{ borderBottom: `1px solid ${C.border}` }}>
+          <ThemeModeSection ar={ar} compact="drawer" />
+        </div>
         {user && (
           <div
             style={{
               padding: '14px 20px',
-              background:
-                'linear-gradient(180deg, rgba(244,198,81,0.08), rgba(255,247,229,0.02))',
+              background: DRAWER_SECTION_BG,
               borderBottom: `1px solid ${C.border}`,
             }}
           >
             <div
               style={{
                 fontWeight: 700,
-                color: '#fff',
+                color: DRAWER_TEXT,
                 fontFamily: F,
                 fontSize: '0.9rem',
               }}
@@ -1018,7 +1197,7 @@ export function MobileDrawer({
             <div
               style={{
                 fontSize: '0.72rem',
-                color: 'rgba(228,214,180,0.62)',
+                color: DRAWER_MUTED,
                 fontFamily: F,
               }}
             >
@@ -1031,9 +1210,7 @@ export function MobileDrawer({
           </div>
         )}
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {PRODUCT_NAV_GROUPS.filter((group) =>
-            isVisibleNavGroup(group, isAuthenticated),
-          ).map((group) => (
+          {getEnabledNavGroups().map((group) => (
             <div
               key={group.id}
               style={{
@@ -1045,7 +1222,7 @@ export function MobileDrawer({
                 style={{
                   fontSize: '0.6rem',
                   fontWeight: 700,
-                  color: 'rgba(228,214,180,0.52)',
+                  color: DRAWER_SOFT,
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   marginBottom: 8,
@@ -1081,7 +1258,7 @@ export function MobileDrawer({
                       style={{
                         fontSize: '0.875rem',
                         fontWeight: 700,
-                        color: '#fff',
+                        color: DRAWER_TEXT,
                         fontFamily: F,
                       }}
                     >
@@ -1090,7 +1267,7 @@ export function MobileDrawer({
                     <span
                       style={{
                         fontSize: '0.72rem',
-                        color: 'rgba(228,214,180,0.68)',
+                        color: DRAWER_MUTED,
                         fontFamily: F,
                         lineHeight: 1.5,
                       }}
@@ -1126,7 +1303,7 @@ export function MobileDrawer({
                       style={{
                         fontSize: '0.84rem',
                         fontWeight: 500,
-                        color: 'rgba(248,239,214,0.78)',
+                        color: DRAWER_TEXT,
                         fontFamily: F,
                       }}
                     >
@@ -1158,8 +1335,8 @@ export function MobileDrawer({
                 width: '100%',
                 height: 42,
                 borderRadius: R.md,
-                background: 'rgba(255,100,106,0.08)',
-                border: '1px solid rgba(255,100,106,0.28)',
+                background: DANGER_SURFACE,
+                border: `1px solid ${DANGER_BORDER}`,
                 color: C.error,
                 fontWeight: 700,
                 fontFamily: F,
@@ -1181,8 +1358,8 @@ export function MobileDrawer({
                   height: 42,
                   borderRadius: R.md,
                   background: 'transparent',
-                  border: '1.5px solid rgba(255,255,255,0.14)',
-                  color: 'rgba(248,239,214,0.84)',
+                  border: `1.5px solid ${PANEL_BORDER}`,
+                  color: DRAWER_TEXT,
                   fontWeight: 600,
                   fontFamily: F,
                   fontSize: '0.875rem',
@@ -1200,10 +1377,9 @@ export function MobileDrawer({
                 style={{
                   height: 42,
                   borderRadius: R.md,
-                  background:
-                    'linear-gradient(135deg,#DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
+                  background: 'var(--theme-gradient-primary)',
                   border: 'none',
-                  color: '#041018',
+                  color: 'var(--text-inverse)',
                   fontWeight: 700,
                   fontFamily: F,
                   fontSize: '0.875rem',
@@ -1219,3 +1395,5 @@ export function MobileDrawer({
     </div>
   );
 }
+
+

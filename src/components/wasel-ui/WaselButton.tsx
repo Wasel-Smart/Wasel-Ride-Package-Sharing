@@ -1,118 +1,87 @@
-﻿/**
- * WaselButton — primary interactive element.
- *
- * Variants:
- *  - primary  : Network teal gradient CTA
- *  - outline  : Transparent with brand border
- *  - ghost    : No border, subtle hover
- *  - gold     : Aqua accent gradient
- *  - danger   : Error red
- *
- * Always pulls from design-system tokens — zero hardcoded hex.
+/**
+ * WaselButton — unified design system
+ * Three variants: primary, secondary, ghost
  */
 
 import { Loader2 } from 'lucide-react';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { C, R, SH, F, TYPE } from '../../utils/wasel-ds';
 
-type ButtonVariant = 'primary' | 'outline' | 'ghost' | 'gold' | 'danger';
-type ButtonSize    = 'sm' | 'md' | 'lg';
+type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+type ButtonSize = 'sm' | 'md';
 
 interface WaselButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?:  ButtonVariant;
-  size?:     ButtonSize;
-  loading?:  boolean;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  loading?: boolean;
   fullWidth?: boolean;
-  icon?:     ReactNode;
-  iconEnd?:  ReactNode;
-  children:  ReactNode;
+  icon?: ReactNode;
+  children: ReactNode;
 }
 
-const variantStyles: Record<ButtonVariant, { background: string; color: string; border: string; boxShadow: string; hoverShadow: string }> = {
+const baseStyles: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '8px',
+  fontFamily: "'Inter', -apple-system, sans-serif",
+  fontWeight: 600,
+  border: 'none',
+  cursor: 'pointer',
+  transition: 'all 150ms ease',
+  userSelect: 'none',
+};
+
+const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
   primary: {
-    background:  'linear-gradient(135deg, #DCFFF8 0%, #19E7BB 44%, #48CFFF 100%)',
-    color:       '#041019',
-    border:      'none',
-    boxShadow:   SH.gold,
-    hoverShadow: '0 24px 60px rgba(25,231,187,0.28)',
+    background: 'var(--accent)',
+    color: '#0B0B0C',
   },
-  outline: {
-    background:  'transparent',
-    color:       C.cyan,
-    border:      `1px solid ${C.border}`,
-    boxShadow:   'none',
-    hoverShadow: SH.cyan,
+  secondary: {
+    background: 'var(--bg-elevated)',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border)',
   },
   ghost: {
-    background:  'transparent',
-    color:       C.textSub,
-    border:      'none',
-    boxShadow:   'none',
-    hoverShadow: 'none',
-  },
-  gold: {
-    background:  'linear-gradient(135deg, #65E1FF 0%, #A2FFE7 100%)',
-    color:       '#041019',
-    border:      'none',
-    boxShadow:   SH.gold,
-    hoverShadow: '0 10px 36px rgba(72,207,255,0.26)',
-  },
-  danger: {
-    background:  C.errorDim,
-    color:       C.error,
-    border:      `1px solid ${C.error}28`,
-    boxShadow:   'none',
-    hoverShadow: '0 4px 20px rgba(255,68,85,0.25)',
+    background: 'transparent',
+    color: 'var(--text-secondary)',
   },
 };
 
-const sizeStyles: Record<ButtonSize, { height: string; padding: string; fontSize: string; borderRadius: string }> = {
-  sm: { height: '36px', padding: '0 14px', fontSize: TYPE.size.sm,   borderRadius: R.lg },
-  md: { height: '46px', padding: '0 20px', fontSize: TYPE.size.base, borderRadius: R.xl },
-  lg: { height: '54px', padding: '0 28px', fontSize: TYPE.size.md,   borderRadius: R.xl },
+const sizeStyles: Record<ButtonSize, React.CSSProperties> = {
+  sm: {
+    height: '36px',
+    padding: '0 14px',
+    fontSize: '13px',
+    borderRadius: 'var(--radius-full)',
+  },
+  md: {
+    height: '44px',
+    padding: '0 20px',
+    fontSize: '14px',
+    borderRadius: 'var(--radius-full)',
+  },
 };
 
 export function WaselButton({
-  variant   = 'primary',
-  size      = 'md',
-  loading   = false,
+  variant = 'primary',
+  size = 'md',
+  loading = false,
   fullWidth = false,
   icon,
-  iconEnd,
   children,
   disabled,
   style,
-  onMouseEnter,
-  onMouseLeave,
   ...rest
 }: WaselButtonProps) {
-  const v = variantStyles[variant];
-  const s = sizeStyles[size];
   const isDisabled = disabled || loading;
 
-  const baseStyle: React.CSSProperties = {
-    display:        'inline-flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:            '8px',
-    width:          fullWidth ? '100%' : undefined,
-    height:         s.height,
-    padding:        s.padding,
-    fontSize:       s.fontSize,
-    fontWeight:     TYPE.weight.black,
-    fontFamily:     F,
-    letterSpacing:  '-0.01em',
-    borderRadius:   s.borderRadius,
-    border:         v.border,
-    background:     v.background,
-    color:          v.color,
-    boxShadow:      v.boxShadow,
-    cursor:         isDisabled ? 'not-allowed' : 'pointer',
-    opacity:        isDisabled ? 0.6 : 1,
-    transition:     'all 160ms cubic-bezier(0.25,0.1,0.25,1)',
-    userSelect:     'none',
-    WebkitUserSelect:'none',
-    outline:        'none',
+  const buttonStyle: React.CSSProperties = {
+    ...baseStyles,
+    ...variantStyles[variant],
+    ...sizeStyles[size],
+    width: fullWidth ? '100%' : undefined,
+    opacity: isDisabled ? 0.5 : 1,
+    cursor: isDisabled ? 'not-allowed' : 'pointer',
     ...style,
   };
 
@@ -120,42 +89,21 @@ export function WaselButton({
     <button
       {...rest}
       disabled={isDisabled}
-      style={baseStyle}
-      onMouseEnter={(e) => {
+      style={buttonStyle}
+      onMouseDown={e => {
         if (!isDisabled) {
-          (e.currentTarget as HTMLButtonElement).style.transform    = 'translateY(-1px) scale(1.01)';
-          (e.currentTarget as HTMLButtonElement).style.boxShadow    = v.hoverShadow;
-          if (variant === 'outline') {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = C.borderHov;
-            (e.currentTarget as HTMLButtonElement).style.background  = C.cyanDim;
-          }
+          (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)';
         }
-        onMouseEnter?.(e);
       }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.transform   = '';
-        (e.currentTarget as HTMLButtonElement).style.boxShadow  = v.boxShadow;
-        (e.currentTarget as HTMLButtonElement).style.borderColor = '';
-        (e.currentTarget as HTMLButtonElement).style.background  = v.background;
-        onMouseLeave?.(e);
+      onMouseUp={e => {
+        (e.currentTarget as HTMLButtonElement).style.transform = '';
       }}
-      onMouseDown={(e) => {
-        if (!isDisabled) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)';
-        rest.onMouseDown?.(e);
-      }}
-      onMouseUp={(e) => {
-        if (!isDisabled) (e.currentTarget as HTMLButtonElement).style.transform = '';
-        rest.onMouseUp?.(e);
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLButtonElement).style.transform = '';
       }}
     >
-      {loading ? (
-        <Loader2 size={size === 'sm' ? 14 : 16} style={{ animation: 'spin 1s linear infinite' }} />
-      ) : icon}
+      {loading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : icon}
       {children}
-      {!loading && iconEnd}
     </button>
   );
 }
-
-
-

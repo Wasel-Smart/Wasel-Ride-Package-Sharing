@@ -1,13 +1,4 @@
-/**
- * Public Supabase credentials.
- *
- * We still prefer deploy-time env vars, but we keep the current public project
- * config as a safe fallback so static production builds do not ship with the
- * placeholder values from `.env.example`.
- */
-
-const DEFAULT_SUPABASE_URL = 'https://djccmatubyyudeosrngm.supabase.co';
-const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE';
+import { getEnv } from '../env';
 
 const PLACEHOLDER_MARKERS = [
   'your-project.supabase.co',
@@ -21,13 +12,13 @@ const PLACEHOLDER_MARKERS = [
 ];
 
 function isConfiguredValue(value: string | undefined): value is string {
-  if (!value) return false;
+  if (!value) {return false;}
 
   const normalized = value.trim();
-  if (!normalized) return false;
+  if (!normalized) {return false;}
 
   const lower = normalized.toLowerCase();
-  return !PLACEHOLDER_MARKERS.some((marker) => lower.includes(marker));
+  return !PLACEHOLDER_MARKERS.some(marker => lower.includes(marker));
 }
 
 function pickConfiguredValue(...candidates: Array<string | undefined>): string {
@@ -35,17 +26,15 @@ function pickConfiguredValue(...candidates: Array<string | undefined>): string {
 }
 
 export const publicSupabaseUrl = pickConfiguredValue(
-  import.meta.env.VITE_SUPABASE_URL as string | undefined,
-  import.meta.env.VITE_SUPABASE_PROJECT_URL as string | undefined,
-  import.meta.env.VITE_PUBLIC_SUPABASE_URL as string | undefined,
-  DEFAULT_SUPABASE_URL,
+  getEnv('VITE_SUPABASE_URL') || undefined,
+  getEnv('VITE_SUPABASE_PROJECT_URL') || undefined,
+  getEnv('VITE_PUBLIC_SUPABASE_URL') || undefined,
 );
 
 export const publicAnonKey = pickConfiguredValue(
-  import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined,
-  import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY as string | undefined,
-  DEFAULT_SUPABASE_ANON_KEY,
+  getEnv('VITE_SUPABASE_ANON_KEY') || undefined,
+  getEnv('VITE_SUPABASE_PUBLISHABLE_KEY') || undefined,
+  getEnv('VITE_PUBLIC_SUPABASE_ANON_KEY') || undefined,
 );
 
 export const projectId: string = publicSupabaseUrl

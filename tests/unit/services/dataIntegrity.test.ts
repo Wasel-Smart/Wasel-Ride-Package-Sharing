@@ -14,6 +14,17 @@ describe('dataIntegrity', () => {
     expect(result.success).toBe(true);
   });
 
+  it('accepts user-editable profile fields', () => {
+    const result = profileUpdatePayloadSchema.safeParse({
+      email: 'nour@example.com',
+      full_name: 'Nour Khalil',
+      phone_number: '+962790123456',
+      avatar_url: 'https://example.com/avatar.png',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it('canonicalizes local and 00-prefixed phone updates before profile validation', () => {
     const localResult = profileUpdatePayloadSchema.safeParse({
       phone_number: '0792084333',
@@ -41,6 +52,29 @@ describe('dataIntegrity', () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it('rejects privileged role-only mutations', () => {
+    const result = profileUpdatePayloadSchema.safeParse({
+      role: 'admin',
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('strips unknown privileged fields when a valid self-service payload is present', () => {
+    const result = profileUpdatePayloadSchema.safeParse({
+      full_name: 'Nour Khalil',
+      verification_level: 'level_3',
+      wallet_balance: 999,
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual({
+        full_name: 'Nour Khalil',
+      });
+    }
   });
 
   it('does not retry unsafe writes unless explicitly enabled', async () => {

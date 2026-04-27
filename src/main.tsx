@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './domains';
 import App from './App';
 import './index.css';
 import {
@@ -14,6 +15,32 @@ import {
   installNonBlockingFonts,
   renderStartupConfigurationError,
 } from './utils/startupDom';
+import { sanitizeForLog } from './utils/logSanitizer';
+import { initializeSentry } from './utils/monitoring';
+import { CONSENT_DECISION_EVENT, hasTelemetryConsent } from './utils/consent';
+
+let telemetryInitialized = false;
+
+function initializeTelemetry() {
+  if (telemetryInitialized || !hasTelemetryConsent()) {
+    return;
+  }
+
+  telemetryInitialized = true;
+
+  if (import.meta.env.PROD) {
+    initializeSentry();
+  }
+
+  scheduleDeferredTask(async () => {
+    const [{ initWebVitalsReporter }, { initPerformanceMonitoring }] = await Promise.all([
+      import('./utils/webVitalsReporter'),
+      import('./utils/performance'),
+    ]);
+    initWebVitalsReporter();
+    initPerformanceMonitoring();
+  }, 2_500);
+}
 
 const initialThemePreference = initializeThemeFromStorage();
 const initialLanguage = getInitialLanguage();
@@ -29,7 +56,7 @@ try {
   validateEnvironmentConfig();
   enforceDemoModeSafety();
 } catch (error) {
-  console.error('[Wasel] Failed to initialize application due to configuration error:', error);
+  console.error('[Wasel] Failed to initialize application due to configuration error:', sanitizeForLog(String(error)));
   const isArabic = initialLanguage === 'ar';
   const configurationTitle = isArabic ? '\u0641\u064a \u0645\u0634\u0643\u0644\u0629 \u0628\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a' : 'Configuration Error';
   const configurationBody = error instanceof Error
@@ -66,16 +93,21 @@ ReactDOM.createRoot(rootElement).render(
   </React.StrictMode>,
 );
 
-// Real Core Web Vitals reported to Supabase `web_vitals` table.
-scheduleDeferredTask(async () => {
-  const { initWebVitalsReporter } = await import('./utils/webVitalsReporter');
-  initWebVitalsReporter();
-}, 2_500);
+initializeTelemetry();
 
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+if (typeof window !== 'undefined') {
+  window.addEventListener(CONSENT_DECISION_EVENT, (event: Event) => {
+    const detail = (event as CustomEvent<{ accepted?: boolean }>).detail;
+    if (detail?.accepted) {
+      initializeTelemetry();
+    }
+  });
+}
+
+if (import.meta.env.PROD && import.meta.env.MODE !== 'test' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((error) => {
-      console.warn('[Wasel] Service Worker registration failed:', error);
+      console.warn('[Wasel] Service Worker registration failed:', sanitizeForLog(String(error)));
     });
   });
 }

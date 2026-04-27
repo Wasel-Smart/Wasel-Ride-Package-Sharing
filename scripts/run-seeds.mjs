@@ -1,11 +1,13 @@
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-import { operationalSeedFiles, rolloutSeedFiles } from './supabase-rollout-manifest.mjs';
+import { operationalSeedFiles, smokeCheckSeedFiles } from './supabase-rollout-manifest.mjs';
 
 const root = process.cwd();
 const connectionString = process.env.SUPABASE_DB_URL;
-const includeSmokeChecks = !process.argv.includes('--skip-smoke-checks');
-const seedFiles = includeSmokeChecks ? rolloutSeedFiles : operationalSeedFiles;
+const includeSmokeChecks = process.argv.includes('--with-smoke-checks');
+const seedFiles = includeSmokeChecks
+  ? [...operationalSeedFiles, ...smokeCheckSeedFiles]
+  : operationalSeedFiles;
 
 if (!connectionString) {
   console.error('SUPABASE_DB_URL is not set. Export it before running the seed pipeline.');
@@ -14,7 +16,9 @@ if (!connectionString) {
 
 const versionCheck = spawnSync('psql', ['--version'], { stdio: 'ignore' });
 if (versionCheck.error) {
-  console.error('psql is not available in PATH. Install the PostgreSQL client or run the SQL files another way.');
+  console.error(
+    'psql is not available in PATH. Install the PostgreSQL client or run the SQL files another way.',
+  );
   process.exit(1);
 }
 

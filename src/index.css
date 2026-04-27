@@ -1,10 +1,16 @@
 @import 'tailwindcss' source(none);
 @source './**/*.{js,ts,jsx,tsx}';
-@import 'tw-animate-css';
-@import './styles/globals.css';
-@import './styles/brand-theme.css';
-@import './styles/investor-polish.css';
+@import './design-system/theme-dark.css';
+@import './design-system/theme-light.css';
+@import './design-system/base.css';
+@import './styles/app-service-theme.css';
+@import './styles/landing-consistency.css';
 
 @layer base {
-  html, body, #root { min-height: 100vh; margin: 0; }
+  html,
+  body,
+  #root {
+    min-height: 100vh;
+    margin: 0;
+  }
 }

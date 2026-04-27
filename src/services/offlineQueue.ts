@@ -51,8 +51,10 @@ class OfflineQueueManager {
 
   constructor() {
     this.loadFromStorage();
-    this.setupNetworkListeners();
-    this.setupPeriodicProcessing();
+    if (typeof window !== 'undefined') {
+      this.setupNetworkListeners();
+      this.setupPeriodicProcessing();
+    }
   }
 
   /**
@@ -122,7 +124,7 @@ class OfflineQueueManager {
    */
   removeRequest(requestId: string): boolean {
     const request = this.queue.get(requestId);
-    if (!request) return false;
+    if (!request) {return false;}
 
     this.queue.delete(requestId);
 
@@ -183,7 +185,7 @@ class OfflineQueueManager {
    * Process queue when connection is back
    */
   async processQueue(): Promise<void> {
-    if (this.isProcessing || !navigator.onLine) {
+    if (this.isProcessing || (typeof navigator !== 'undefined' && !navigator.onLine)) {
       return;
     }
 
@@ -197,7 +199,7 @@ class OfflineQueueManager {
       );
 
       for (const request of sortedRequests) {
-        if (!navigator.onLine) break;
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {break;}
 
         try {
           const response = await this.executeRequest(request);
@@ -256,7 +258,7 @@ class OfflineQueueManager {
       
       // Schedule retry
       setTimeout(() => {
-        if (this.queue.has(request.id) && navigator.onLine) {
+        if (this.queue.has(request.id) && (typeof navigator === 'undefined' || navigator.onLine)) {
           this.executeRequest(request)
             .then(response => {
               if (response.ok) {
@@ -281,6 +283,7 @@ class OfflineQueueManager {
    * Load queue from localStorage
    */
   private loadFromStorage(): void {
+    if (typeof localStorage === 'undefined') {return;}
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -296,6 +299,7 @@ class OfflineQueueManager {
    * Save queue to localStorage
    */
   private saveToStorage(): void {
+    if (typeof localStorage === 'undefined') {return;}
     try {
       const requests = Array.from(this.queue.values());
       localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
@@ -308,24 +312,18 @@ class OfflineQueueManager {
    * Setup network listeners
    */
   private setupNetworkListeners(): void {
-    window.addEventListener('online', () => {
-      this.processQueue();
-    });
-
-    window.addEventListener('offline', () => {
-      this.notifyListeners();
-    });
+    if (typeof window === 'undefined') {return;}
+    window.addEventListener('online', () => { this.processQueue(); });
+    window.addEventListener('offline', () => { this.notifyListeners(); });
   }
 
-  /**
-   * Setup periodic processing
-   */
   private setupPeriodicProcessing(): void {
+    if (typeof setInterval === 'undefined') {return;}
     setInterval(() => {
-      if (navigator.onLine && Date.now() - this.lastProcessAt > 30000) {
+      if ((typeof navigator === 'undefined' || navigator.onLine) && Date.now() - this.lastProcessAt > 30000) {
         this.processQueue();
       }
-    }, 10000); // Check every 10 seconds
+    }, 10000);
   }
 
   /**
@@ -390,7 +388,7 @@ export async function fetchWithOfflineQueue(
   // Try to fetch immediately
   try {
     const response = await fetch(url, options);
-    if (response.ok) return response;
+    if (response.ok) {return response;}
 
     // Queue on 5xx or 429 errors
     if ((response.status >= 500 || response.status === 429) && canQueueOffline) {

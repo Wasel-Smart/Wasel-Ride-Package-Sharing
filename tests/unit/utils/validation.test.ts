@@ -187,8 +187,8 @@ describe('offerRideSchema', () => {
 
 describe('findRideSchema', () => {
   const base = {
-    origin: 'Irbid' as const,
-    destination: 'Amman' as const,
+    from: 'Irbid',
+    to: 'Amman',
     date: '2026-06-15',
     passengers: 2,
   };
@@ -198,7 +198,7 @@ describe('findRideSchema', () => {
   });
 
   it('rejects same origin and destination', () => {
-    invalid(findRideSchema, { ...base, destination: 'Irbid' });
+    invalid(findRideSchema, { ...base, to: 'Irbid' });
   });
 
   it('rejects passengers < 1', () => {
@@ -212,7 +212,7 @@ describe('findRideSchema', () => {
   it('defaults passengers to 1 when omitted', () => {
     const result = findRideSchema.safeParse({ ...base, passengers: undefined });
     expect(result.success).toBe(true);
-    if (result.success) expect(result.data.passengers).toBe(1);
+    if (result.success) {expect(result.data.passengers).toBe(1);}
   });
 });
 
@@ -220,15 +220,11 @@ describe('findRideSchema', () => {
 
 describe('sendPackageSchema', () => {
   const base = {
-    senderName: 'Khalid Mansour',
     senderPhone: '+962791234567',
     recipientName: 'Sara Haddad',
     recipientPhone: '+962799876543',
-    origin: 'Amman' as const,
-    destination: 'Aqaba' as const,
     description: 'Books and documents',
-    weightKg: 2.5,
-    fragile: false,
+    weight: 2.5,
   };
 
   it('accepts a complete valid package', () => {
@@ -236,11 +232,11 @@ describe('sendPackageSchema', () => {
   });
 
   it('rejects weight above 50 kg', () => {
-    invalid(sendPackageSchema, { ...base, weightKg: 51 });
+    invalid(sendPackageSchema, { ...base, weight: 51 });
   });
 
   it('rejects negative weight', () => {
-    invalid(sendPackageSchema, { ...base, weightKg: -1 });
+    invalid(sendPackageSchema, { ...base, weight: -1 });
   });
 
   it('rejects description shorter than 3 chars', () => {
@@ -299,7 +295,7 @@ describe('changePasswordSchema', () => {
   const base = {
     currentPassword: 'OldPass1!',
     newPassword: 'NewPass2@',
-    confirmNewPassword: 'NewPass2@',
+    confirmPassword: 'NewPass2@',
   };
 
   it('accepts a valid password change', () => {
@@ -310,7 +306,7 @@ describe('changePasswordSchema', () => {
     invalid(changePasswordSchema, {
       ...base,
       newPassword: 'newpass2@',
-      confirmNewPassword: 'newpass2@',
+      confirmPassword: 'newpass2@',
     });
   });
 
@@ -318,14 +314,14 @@ describe('changePasswordSchema', () => {
     invalid(changePasswordSchema, {
       ...base,
       newPassword: 'NewPassw!',
-      confirmNewPassword: 'NewPassw!',
+      confirmPassword: 'NewPassw!',
     });
   });
 
   it('rejects mismatched new passwords', () => {
     invalid(changePasswordSchema, {
       ...base,
-      confirmNewPassword: 'DifferentNew2@',
+      confirmPassword: 'DifferentNew2@',
     });
   });
 });
@@ -364,7 +360,7 @@ describe('topUpSchema', () => {
   it('defaults payment method to card', () => {
     const result = topUpSchema.safeParse({ amount: 20 });
     expect(result.success).toBe(true);
-    if (result.success) expect(result.data.paymentMethod).toBe('card');
+    if (result.success) {expect(result.data.paymentMethod).toBe('card');}
   });
 });
 

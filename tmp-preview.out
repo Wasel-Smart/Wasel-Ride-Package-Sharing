@@ -1,0 +1,55 @@
+[36mvite v6.4.2 [32mbuilding for test...[36m[39m
+transforming...
+[32m✓[39m 2552 modules transformed.
+rendering chunks...
+[2mdist/[22m[32mindex.html                                         [39m[1m[2m  9.32 kB[22m[1m[22m
+[2mdist/[22m[35massets/WaselAuthCallback-DwKxVpj0.css              [39m[1m[2m  3.16 kB[22m[1m[22m
+[2mdist/[22m[35massets/AppEntryPage-Dkp1q9Qh.css                   [39m[1m[2m 15.07 kB[22m[1m[22m
+[2mdist/[22m[35massets/index-e1CvpJAC.css                          [39m[1m[2m183.17 kB[22m[1m[22m
+[2mdist/[22m[36massets/js/monitoring-BA36KYWh.js                   [39m[1m[2m  0.03 kB[22m[1m[22m[2m │ map:     0.10 kB[22m
+[2mdist/[22m[36massets/js/whatsapp-DNUDs4I8.js                     [39m[1m[2m  0.28 kB[22m[1m[22m[2m │ map:     1.43 kB[22m
+[2mdist/[22m[36massets/js/runtimePolicy-nDbXxx5-.js                [39m[1m[2m  0.65 kB[22m[1m[22m[2m │ map:     3.18 kB[22m
+[2mdist/[22m[36massets/js/WaselLogo-BLgAKpJB.js                    [39m[1m[2m  0.93 kB[22m[1m[22m[2m │ map:     4.48 kB[22m
+[2mdist/[22m[36massets/js/useAuthProviderAvailability-LbeLDCbI.js  [39m[1m[2m  1.06 kB[22m[1m[22m[2m │ map:     4.08 kB[22m
+[2mdist/[22m[36massets/js/webVitalsReporter-BdX37yRY.js            [39m[1m[2m  1.53 kB[22m[1m[22m[2m │ map:     7.41 kB[22m
+[2mdist/[22m[36massets/js/payments-BS5DzTJm.js                     [39m[1m[2m  1.76 kB[22m[1m[22m[2m │ map:     7.94 kB[22m
+[2mdist/[22m[36massets/js/wallet-BrGLU_ja.js                       [39m[1m[2m  3.16 kB[22m[1m[22m[2m │ map:    14.79 kB[22m
+[2mdist/[22m[36massets/js/waselPresence-QsfuKAwi.js                [39m[1m[2m  3.48 kB[22m[1m[22m[2m │ map:     7.46 kB[22m
+[2mdist/[22m[36massets/js/supportInbox-DnCZfIph.js                 [39m[1m[2m  3.55 kB[22m[1m[22m[2m │ map:    14.88 kB[22m
+[2mdist/[22m[36massets/js/performance-njdPalBr.js                  [39m[1m[2m  3.81 kB[22m[1m[22m[2m │ map:    14.08 kB[22m
+[2mdist/[22m[36massets/js/usePushNotifications-DncGXbPq.js         [39m[1m[2m  4.18 kB[22m[1m[22m[2m │ map:    17.25 kB[22m
+[2mdist/[22m[36massets/js/offlineQueue-DfrjzqBC.js                 [39m[1m[2m  4.91 kB[22m[1m[22m[2m │ map:    18.03 kB[22m
+[2mdist/[22m[36massets/js/WaselPresence-DDlcOBOe.js                [39m[1m[2m  5.47 kB[22m[1m[22m[2m │ map:    20.93 kB[22m
+[2mdist/[22m[36massets/js/WaselAuthCallback-BQUtFr_J.js            [39m[1m[2m  5.82 kB[22m[1m[22m[2m │ map:    17.82 kB[22m
+[2mdist/[22m[36massets/js/web-vitals-BDW9J9rb.js                   [39m[1m[2m  5.99 kB[22m[1m[22m[2m │ map:    14.27 kB[22m
+[2mdist/[22m[36massets/js/shared-ui-BeXjDoNX.js                    [39m[1m[2m  6.46 kB[22m[1m[22m[2m │ map:    11.49 kB[22m
+[2mdist/[22m[36massets/js/operationalConfidence-CoMOvPgu.js        [39m[1m[2m  8.58 kB[22m[1m[22m[2m │ map:    25.46 kB[22m
+[2mdist/[22m[36massets/js/growthEngine-BDSsqbPi.js                 [39m[1m[2m  8.60 kB[22m[1m[22m[2m │ map:    44.42 kB[22m
+[2mdist/[22m[36massets/js/pageShared-DctRhJpO.js                   [39m[1m[2m  9.89 kB[22m[1m[22m[2m │ map:    24.31 kB[22m
+[2mdist/[22m[36massets/js/notifications-BttlraNC.js                [39m[1m[2m 10.73 kB[22m[1m[22m[2m │ map:    49.41 kB[22m
+[2mdist/[22m[36massets/js/badge-DA50PaZ7.js                        [39m[1m[2m 10.91 kB[22m[1m[22m[2m │ map:    47.16 kB[22m
+[2mdist/[22m[36massets/js/AppSurfaces-cjGyiXBP.js                  [39m[1m[2m 12.47 kB[22m[1m[22m[2m │ map:    31.91 kB[22m
+[2mdist/[22m[36massets/js/index-CT1PDQTw.js                        [39m[1m[2m 13.76 kB[22m[1m[22m[2m │ map:    38.37 kB[22m
+[2mdist/[22m[36massets/js/RideDetailsPage-CTQXdXVb.js              [39m[1m[2m 15.32 kB[22m[1m[22m[2m │ map:    41.85 kB[22m
+[2mdist/[22m[36massets/js/AppEntryPage-BsCql-FL.js                 [39m[1m[2m 15.62 kB[22m[1m[22m[2m │ map:    46.34 kB[22m
+[2mdist/[22m[36massets/js/journeyLogistics-w7VKfemx.js             [39m[1m[2m 16.04 kB[22m[1m[22m[2m │ map:    50.92 kB[22m
+[2mdist/[22m[36massets/js/ride.service-ZUrUR-PS.js                 [39m[1m[2m 16.74 kB[22m[1m[22m[2m │ map:    65.12 kB[22m
+[2mdist/[22m[36massets/js/MyTripsPage-CKPbM34u.js                  [39m[1m[2m 17.21 kB[22m[1m[22m[2m │ map:    53.80 kB[22m
+[2mdist/[22m[36massets/js/WaselAuth-Dq7ZfYJP.js                    [39m[1m[2m 20.63 kB[22m[1m[22m[2m │ map:    61.80 kB[22m
+[2mdist/[22m[36massets/js/PaymentsPage-jyet584r.js                 [39m[1m[2m 27.04 kB[22m[1m[22m[2m │ map:    84.70 kB[22m
+[2mdist/[22m[36massets/js/corridorTruth-DdsUCdNu.js                [39m[1m[2m 27.15 kB[22m[1m[22m[2m │ map:   104.61 kB[22m
+[2mdist/[22m[36massets/js/trips-Bx-PZNQw.js                        [39m[1m[2m 27.45 kB[22m[1m[22m[2m │ map:   119.54 kB[22m
+[2mdist/[22m[36massets/js/OfferRidePage-DF_9zmnU.js                [39m[1m[2m 32.65 kB[22m[1m[22m[2m │ map:    83.18 kB[22m
+[2mdist/[22m[36massets/js/PackagesPage-CoF6k5pf.js                 [39m[1m[2m 33.08 kB[22m[1m[22m[2m │ map:    87.40 kB[22m
+[2mdist/[22m[36massets/js/MapWrapper-CzeFY8FO.js                   [39m[1m[2m 37.50 kB[22m[1m[22m[2m │ map:   106.76 kB[22m
+[2mdist/[22m[36massets/js/BusPage-9ZqFK9xA.js                      [39m[1m[2m 40.30 kB[22m[1m[22m[2m │ map:   140.25 kB[22m
+[2mdist/[22m[36massets/js/MobilityOSLandingMap-DVE3Wjs2.js         [39m[1m[2m 53.03 kB[22m[1m[22m[2m │ map:   143.47 kB[22m
+[2mdist/[22m[36massets/js/FindRidePage-CU1aViok.js                 [39m[1m[2m 61.62 kB[22m[1m[22m[2m │ map:   190.60 kB[22m
+[2mdist/[22m[36massets/js/ui-primitives-CoYmBD6a.js                [39m[1m[2m 66.99 kB[22m[1m[22m[2m │ map:   181.39 kB[22m
+[2mdist/[22m[36massets/js/motion-2ZxQZ8-z.js                       [39m[1m[2m125.76 kB[22m[1m[22m[2m │ map:   703.83 kB[22m
+[2mdist/[22m[36massets/js/maps-CE2-ZVdy.js                         [39m[1m[2m150.06 kB[22m[1m[22m[2m │ map:   679.94 kB[22m
+[2mdist/[22m[36massets/js/data-layer-BimkZDii.js                   [39m[1m[2m221.40 kB[22m[1m[22m[2m │ map: 1,184.35 kB[22m
+[2mdist/[22m[36massets/js/react-core-B-acqZko.js                   [39m[1m[2m233.90 kB[22m[1m[22m[2m │ map:   864.95 kB[22m
+[2mdist/[22m[36massets/js/index-DrKklzm7.js                        [39m[1m[2m330.86 kB[22m[1m[22m[2m │ map: 1,094.04 kB[22m
+[32m✓ built in 48.44s[39m
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m4173[22m/[39m

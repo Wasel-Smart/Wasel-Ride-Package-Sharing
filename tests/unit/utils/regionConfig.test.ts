@@ -73,11 +73,11 @@ describe('REGIONS catalogue', () => {
   });
 
   it('Jordan is active (primary market)', () => {
-    expect(REGIONS['JO'].launchStatus).toBe('active');
+    expect(REGIONS.JO.launchStatus).toBe('active');
   });
 
   it('Jordan package delivery is enabled', () => {
-    expect(REGIONS['JO'].packageDeliveryEnabled).toBe(true);
+    expect(REGIONS.JO.packageDeliveryEnabled).toBe(true);
   });
 });
 
@@ -105,11 +105,11 @@ describe('Fuel configuration', () => {
   });
 
   it('Kuwait has world-cheapest fuel (< JOD 0.25)', () => {
-    expect(REGIONS['KW'].fuel.priceInJOD).toBeLessThan(0.25);
+    expect(REGIONS.KW.fuel.priceInJOD).toBeLessThan(0.25);
   });
 
   it('Lebanon fuel is in USD due to economic context', () => {
-    expect(REGIONS['LB'].fuel.currency).toBe('USD');
+    expect(REGIONS.LB.fuel.currency).toBe('USD');
   });
 });
 
@@ -130,15 +130,15 @@ describe('Cultural rules', () => {
   });
 
   it('Saudi Arabia hijri calendar flag is true', () => {
-    expect(REGIONS['SA'].cultural.hijriCalendar).toBe(true);
+    expect(REGIONS.SA.cultural.hijriCalendar).toBe(true);
   });
 
   it('Tunisia does not use Friday weekend (Saturday+Sunday)', () => {
-    expect(REGIONS['TN'].cultural.fridayWeekend).toBe(false);
+    expect(REGIONS.TN.cultural.fridayWeekend).toBe(false);
   });
 
   it('Lebanon prayer stops are not default (mixed religious society)', () => {
-    expect(REGIONS['LB'].cultural.prayerStopsDefault).toBe(false);
+    expect(REGIONS.LB.cultural.prayerStopsDefault).toBe(false);
   });
 
   it('cash on arrival threshold is a positive number', () => {

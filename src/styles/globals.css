@@ -47,6 +47,20 @@
 
   --wasel-space-section: clamp(4rem, 8vw, 6rem);
   --wasel-space-card:    clamp(1.25rem, 3vw, 2rem);
+  --wasel-layout-max-width: 1380px;
+  --wasel-layout-content-width: 760px;
+  --wasel-layout-inline: clamp(14px, 3vw, 20px);
+  --wasel-layout-top: clamp(22px, 4vw, 28px);
+  --wasel-layout-bottom: clamp(72px, 8vw, 84px);
+  --wasel-layout-gap: clamp(18px, 2.4vw, 28px);
+  --wasel-card-padding: clamp(18px, 3vw, 30px);
+  --wasel-grid-gap: clamp(12px, 2vw, 18px);
+  --wasel-control-height: 50px;
+  --wasel-control-height-lg: 54px;
+  --wasel-focus-ring: 0 0 0 3px rgb(var(--accent-secondary-rgb) / 0.18);
+  --wasel-surface-elevated:
+    linear-gradient(180deg, rgba(220,255,248,0.055), rgba(220,255,248,0.018)),
+    rgba(10,18,28,0.84);
 }
 
 @media (max-width: 479px) {
@@ -109,7 +123,17 @@ html { overscroll-behavior-x: none; }
 }
 
 /* ── Touch targets (WCAG 2.1 AA) ────────────────────────────── */
-button, a, input[type="button"], input[type="submit"] {
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+/* Anchor touch targets only when used as standalone interactive elements */
+a[role="button"],
+a.btn,
+a.wasel-btn {
   min-height: 44px;
   min-width: 44px;
 }
@@ -399,14 +423,14 @@ button, a, [role="button"] {
   background: rgba(6 12 24 / 0.70);
   backdrop-filter: blur(22px) saturate(180%);
   -webkit-backdrop-filter: blur(22px) saturate(180%);
-  border: 1px solid rgba(25 231 187 / 0.09);
+  border: 1px solid rgba(245, 154, 44, 0.09);
 }
 .glass-card {
   background: rgba(6 12 24 / 0.84);
   backdrop-filter: blur(18px) saturate(160%);
   -webkit-backdrop-filter: blur(18px) saturate(160%);
-  border: 1px solid rgba(25 231 187 / 0.09);
-  box-shadow: 0 10px 40px rgba(0 0 0 / 0.46), inset 0 1px 0 rgba(25 231 187 / 0.05);
+  border: 1px solid rgba(245, 154, 44, 0.09);
+  box-shadow: 0 10px 40px rgba(0 0 0 / 0.46), inset 0 1px 0 rgba(245, 154, 44, 0.05);
 }
 .glass-teal { background: rgba(25 231 187 / 0.06); backdrop-filter: blur(16px); border: 1px solid rgba(25 231 187 / 0.15); }
 .glass-blue { background: rgba(101 225 255 / 0.06); backdrop-filter: blur(16px); border: 1px solid rgba(101 225 255 / 0.15); }
@@ -414,7 +438,7 @@ button, a, [role="button"] {
   background: rgba(3 8 18 / 0.94);
   backdrop-filter: blur(30px) saturate(200%);
   -webkit-backdrop-filter: blur(30px) saturate(200%);
-  border-bottom: 1px solid rgba(25 231 187 / 0.08);
+  border-bottom: 1px solid rgba(245, 154, 44, 0.08);
 }
 .glass-dark {
   background: rgba(3 8 18 / 0.72);
@@ -435,7 +459,7 @@ button, a, [role="button"] {
 .wasel-card {
   position: relative; overflow: hidden; border-radius: 20px;
   background: linear-gradient(152deg, #0a1628 0%, #060d1a 100%);
-  border: 1px solid rgba(25 231 187 / 0.08);
+  border: 1px solid rgba(245, 154, 44, 0.08);
   box-shadow: var(--wasel-shadow-card);
   transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1),
               box-shadow 0.28s ease,
@@ -458,14 +482,14 @@ button, a, [role="button"] {
 /* ── Premium button ──────────────────────────────────────────── */
 .btn-wasel-primary {
   position: relative; overflow: hidden;
-  background: linear-gradient(135deg, #dcfff8 0%, #19e7bb 44%, #65e1ff 100%);
-  box-shadow: 0 5px 20px rgba(25 231 187 / 0.32), inset 0 1px 0 rgba(255 255 255 / 0.18);
+  background: var(--wasel-app-button-primary);
+  box-shadow: 0 5px 20px rgb(var(--wasel-button-primary-rgb) / 0.28), inset 0 1px 0 rgba(255 255 255 / 0.18);
   transition: all 0.26s cubic-bezier(0.34,1.56,0.64,1);
-  color: #020c07; font-weight: 900; border-radius: 14px; border: none;
+  color: var(--wasel-button-primary-foreground); font-weight: 900; border-radius: 14px; border: 1px solid rgba(255 255 255 / 0.12);
 }
 .btn-wasel-primary:hover {
   transform: translateY(-2px) scale(1.018);
-  box-shadow: 0 10px 34px rgba(25 231 187 / 0.46), inset 0 1px 0 rgba(255 255 255 / 0.22);
+  box-shadow: 0 10px 34px rgb(var(--wasel-button-primary-rgb) / 0.38), inset 0 1px 0 rgba(255 255 255 / 0.22);
 }
 .btn-wasel-primary:active { transform: scale(0.97); }
 .btn-wasel-primary::after {
@@ -476,19 +500,19 @@ button, a, [role="button"] {
 .btn-wasel-primary:hover::after { transform: translateX(100%); }
 
 .btn-wasel-outline {
-  position: relative; background: transparent;
-  border: 1px solid rgba(25 231 187 / 0.26); color: #19e7bb;
+  position: relative; background: var(--wasel-button-primary-soft);
+  border: 1px solid var(--wasel-button-primary-border); color: var(--wasel-button-primary);
   font-weight: 700; border-radius: 14px;
   transition: all 0.20s ease;
 }
 .btn-wasel-outline:hover {
-  background: rgba(25 231 187 / 0.07);
-  border-color: rgba(25 231 187 / 0.50);
-  box-shadow: 0 0 22px rgba(25 231 187 / 0.13);
+  background: var(--wasel-button-primary-soft-strong);
+  border-color: var(--wasel-button-primary-border-strong);
+  box-shadow: 0 0 22px rgb(var(--wasel-button-primary-rgb) / 0.16);
   transform: translateY(-1px);
 }
 .light .btn-wasel-primary {
-  background: linear-gradient(135deg, #a4ffe7 0%, #0aaf8a 44%, #38c4f0 100%);
+  background: var(--wasel-app-button-primary);
 }
 
 /* ── Sidebar ─────────────────────────────────────────────────── */

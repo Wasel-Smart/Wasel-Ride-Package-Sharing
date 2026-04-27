@@ -1,12 +1,18 @@
 import type { CSSProperties } from 'react';
-
-import { TYPE } from '../../utils/wasel-ds';
+import { useTheme } from '../../contexts/ThemeContext';
+import { BRAND, resolveBrandLogoSize, type BrandSurface } from '../../design-system/brand';
+import {
+  BrandLockup,
+  BrandLogoMicro,
+  BrandLogoPrimaryDark,
+  BrandLogoStandardLight,
+} from '../brand';
 import { ExactLogoMark } from './ExactLogoMark';
 
 interface WaselLogoProps {
   size?: number;
   showWordmark?: boolean;
-  theme?: 'dark' | 'light';
+  theme?: 'dark' | 'light' | 'auto';
   style?: CSSProperties;
   variant?: 'full' | 'compact';
   subtitle?: string;
@@ -15,261 +21,109 @@ interface WaselLogoProps {
   animated?: boolean;
 }
 
-const LOGO_MARK_SOURCES = {
-  default: {
-    src: '',
-    aspectRatio: 1,
-  },
-  'attached-primary': {
-    src: '/brand/wasel-mark-attached-primary.svg?v=20260411pin-no-shell',
-    aspectRatio: 0.91,
-  },
-} as const;
+function resolveSurface(theme: WaselLogoProps['theme'], resolvedTheme: 'light' | 'dark'): BrandSurface {
+  if (theme === 'light' || theme === 'dark') {
+    return theme;
+  }
 
-function getLogoMark(markAsset: 'default' | 'attached-primary') {
-  return LOGO_MARK_SOURCES[markAsset];
+  return resolvedTheme;
 }
 
-function LogoImage({
-  width,
-  height,
-  src,
-  alt,
+export function WaselLogo({
+  size = BRAND.logo.sizes.md,
+  showWordmark = true,
+  theme = 'auto',
   style,
-}: {
-  width: number;
-  height: number;
-  src: string;
-  alt: string;
-  style?: CSSProperties;
-}) {
+  variant = 'compact',
+  framed = false,
+  animated = false,
+}: WaselLogoProps) {
+  const { resolvedTheme } = useTheme();
+  const surface = resolveSurface(theme, resolvedTheme);
+  const { value } = resolveBrandLogoSize(size);
+
+  if (!showWordmark) {
+    return (
+      <span style={{ display: 'inline-flex', ...style }}>
+        <ExactLogoMark
+          animated={animated}
+          framed={framed}
+          glow={animated}
+          size={value}
+        />
+      </span>
+    );
+  }
+
   return (
-    <img
-      src={src}
-      alt={alt}
-      width={width}
-      height={height}
-      draggable={false}
-      decoding="async"
-      style={{
-        display: 'block',
-        width,
-        height,
-        flexShrink: 0,
-        objectFit: 'contain',
-        userSelect: 'none',
-        ...style,
-      }}
+    <BrandLockup
+      dense={variant === 'compact'}
+      showTagline={variant === 'full'}
+      size={value}
+      style={style}
+      surface={surface}
+      tagline={BRAND.tagline}
+      variant={variant === 'compact' ? 'compact' : 'default'}
     />
   );
 }
 
-export function WaselLogo({
-  size = 38,
-  showWordmark = true,
-  theme = 'light',
-  style,
-  variant = 'full',
-  subtitle = 'Mobility OS',
-  markAsset = 'default',
-  animated = false,
-}: WaselLogoProps) {
-  const onDarkSurface = theme === 'light';
-  const mark = getLogoMark(markAsset);
-  const markHeight = size;
-  const markWidth = Math.max(1, Math.round(size * mark.aspectRatio));
-  const usesUploadedMark = markAsset === 'default';
-  const titleColor = onDarkSurface ? '#A5FFEA' : '#0E8A6D';
-  const metaColor = onDarkSurface ? 'rgba(197, 236, 233, 0.76)' : 'rgba(16, 112, 101, 0.72)';
-  const titleGradient = onDarkSurface
-    ? 'linear-gradient(180deg, #D8FFF7 0%, #3AE9C2 52%, #099A7C 100%)'
-    : 'linear-gradient(180deg, #0D6C61 0%, #1DD4AF 100%)';
-  const titleSize =
-    variant === 'compact'
-      ? Math.max(12, Math.round(size * 0.34))
-      : Math.max(14, Math.round(size * 0.38));
-  const metaSize = Math.max(9, Math.round(size * 0.2));
-  const markElement = (
-    <div
-      className={animated ? 'wasel-logo-breathe wasel-logo-breathe--inline' : undefined}
-      style={{
-        position: 'relative',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      {animated ? <span className="wasel-logo-breathe__halo" aria-hidden="true" /> : null}
-      {usesUploadedMark ? (
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <ExactLogoMark size={markHeight} animated={animated} />
-        </div>
-      ) : (
-        <LogoImage
-          width={markWidth}
-          height={markHeight}
-          src={mark.src}
-          alt="Wasel main logo"
-          style={{
-            position: 'relative',
-            zIndex: 1,
-            filter: onDarkSurface
-              ? 'drop-shadow(0 18px 28px rgba(4, 8, 14, 0.32)) drop-shadow(0 0 18px rgba(25, 231, 187, 0.16))'
-              : 'drop-shadow(0 14px 22px rgba(7, 36, 33, 0.18))',
-          }}
-        />
-      )}
-    </div>
-  );
-
-  return (
-    <div
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: Math.max(14, Math.round(size * 0.3)),
-        ...style,
-      }}
-    >
-      {markElement}
-
-      {showWordmark ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <span
-            style={{
-              fontFamily:
-                "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
-              fontSize: titleSize,
-              fontWeight: TYPE.weight.black,
-              letterSpacing: variant === 'compact' ? '-0.02em' : '-0.04em',
-              lineHeight: TYPE.lineHeight.tight,
-              background: titleGradient,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              color: titleColor,
-              whiteSpace: 'nowrap',
-              textShadow: onDarkSurface ? '0 12px 28px rgba(4, 16, 22, 0.24)' : 'none',
-            }}
-          >
-            Wasel
-          </span>
-          {variant === 'full' && subtitle ? (
-            <span
-              style={{
-                fontFamily:
-                  "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
-                fontSize: metaSize,
-                fontWeight: TYPE.weight.semibold,
-                letterSpacing: '0.08em',
-                color: metaColor,
-                whiteSpace: 'nowrap',
-                textTransform: 'uppercase',
-              }}
-            >
-              {subtitle}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
 export function WaselMark({
-  size = 38,
+  size = BRAND.logo.sizes.md,
   style,
-  markAsset = 'default',
   animated = false,
+  framed = false,
 }: {
   size?: number;
   style?: CSSProperties;
   markAsset?: 'default' | 'attached-primary';
   animated?: boolean;
+  framed?: boolean;
 }) {
-  const mark = getLogoMark(markAsset);
-  const usesUploadedMark = markAsset === 'default';
+  const { value } = resolveBrandLogoSize(size);
+
   return (
-    <div
-      className={animated ? 'wasel-logo-breathe wasel-logo-breathe--mark' : undefined}
-      style={{ display: 'inline-flex', position: 'relative', alignItems: 'center', justifyContent: 'center', ...style }}
-    >
-      {animated ? <span className="wasel-logo-breathe__halo" aria-hidden="true" /> : null}
-      {usesUploadedMark ? (
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <ExactLogoMark size={size} animated={animated} />
-        </div>
-      ) : (
-        <LogoImage
-          width={Math.max(1, Math.round(size * mark.aspectRatio))}
-          height={size}
-          src={mark.src}
-          alt="Wasel main logo"
-          style={{
-            position: 'relative',
-            zIndex: 1,
-            filter: 'drop-shadow(0 18px 28px rgba(4, 8, 14, 0.24)) drop-shadow(0 0 18px rgba(25, 231, 187, 0.14))',
-          }}
-        />
-      )}
-    </div>
+    <span style={{ display: 'inline-flex', ...style }}>
+      <ExactLogoMark
+        animated={animated}
+        framed={framed}
+        glow={animated}
+        size={value}
+      />
+    </span>
   );
 }
 
 export function WaselHeroMark({
-  size = 120,
-  markAsset = 'default',
+  size = BRAND.logo.sizes.xl,
 }: {
   size?: number;
   markAsset?: 'default' | 'attached-primary';
 }) {
-  const mark = getLogoMark(markAsset);
-  const usesUploadedMark = markAsset === 'default';
-  return (
-    <div
-      style={{
-        width: Math.max(1, Math.round(size * mark.aspectRatio)),
-        height: size,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      {usesUploadedMark ? (
-        <ExactLogoMark size={Math.round(size * 0.92)} animated />
-      ) : (
-        <LogoImage
-          width={Math.max(1, Math.round(size * 0.92 * mark.aspectRatio))}
-          height={Math.round(size * 0.92)}
-          src={mark.src}
-          alt="Wasel main logo"
-          style={{
-            filter: 'drop-shadow(0 22px 36px rgba(7, 10, 17, 0.26)) drop-shadow(0 0 24px rgba(25, 231, 187, 0.18))',
-          }}
-        />
-      )}
-    </div>
-  );
+  const { value } = resolveBrandLogoSize(size);
+  return <ExactLogoMark animated glow size={value} />;
 }
 
 export function WaselIcon({
-  size = 20,
-  markAsset = 'default',
+  size = BRAND.logo.sizes.sm,
+  framed = true,
 }: {
   size?: number;
   markAsset?: 'default' | 'attached-primary';
+  framed?: boolean;
 }) {
-  const mark = getLogoMark(markAsset);
-  if (markAsset === 'default') {
-    return <ExactLogoMark size={size} />;
+  const { value } = resolveBrandLogoSize(size);
+
+  if (framed) {
+    return <ExactLogoMark framed size={value} />;
   }
 
-  return (
-    <LogoImage
-      width={Math.max(1, Math.round(size * mark.aspectRatio))}
-      height={size}
-      src={mark.src}
-      alt="Wasel main logo"
-    />
-  );
+  return <BrandLogoMicro size={value} />;
 }
+
+export {
+  BrandLockup,
+  BrandLogoMicro,
+  BrandLogoPrimaryDark,
+  BrandLogoStandardLight,
+};

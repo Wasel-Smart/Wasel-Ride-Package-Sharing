@@ -1,0 +1,156 @@
+[
+  {
+    "name": "auth",
+    "ownership": "identity-platform",
+    "version": "v1",
+    "operations": [
+      {
+        "authentication": "public",
+        "method": "POST",
+        "operationId": "signUp",
+        "path": "/v1/auth/sign-up",
+        "summary": "Register a new user account."
+      },
+      {
+        "authentication": "public",
+        "method": "POST",
+        "operationId": "signIn",
+        "path": "/v1/auth/sign-in",
+        "summary": "Authenticate and issue a session."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "signOut",
+        "path": "/v1/auth/sign-out",
+        "summary": "Revoke the current session."
+      },
+      {
+        "authentication": "jwt",
+        "method": "GET",
+        "operationId": "getProfile",
+        "path": "/v1/auth/profile",
+        "summary": "Resolve the authenticated profile."
+      }
+    ]
+  },
+  {
+    "name": "wallet",
+    "ownership": "payments-platform",
+    "version": "v1",
+    "operations": [
+      {
+        "authentication": "jwt",
+        "method": "GET",
+        "operationId": "getWalletSnapshot",
+        "path": "/v1/wallet/snapshot",
+        "summary": "Read the wallet and transaction snapshot."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "createPaymentIntent",
+        "path": "/v1/wallet/payment-intents",
+        "summary": "Create a payment intent with idempotency."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "confirmPaymentIntent",
+        "path": "/v1/wallet/payment-intents/{id}/confirm",
+        "summary": "Confirm a payment intent."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "sendMoney",
+        "path": "/v1/wallet/transfers",
+        "summary": "Execute a peer-to-peer transfer after step-up verification."
+      }
+    ]
+  },
+  {
+    "name": "trips",
+    "ownership": "mobility-platform",
+    "version": "v1",
+    "operations": [
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "createTrip",
+        "path": "/v1/trips",
+        "summary": "Create a trip."
+      },
+      {
+        "authentication": "public",
+        "method": "GET",
+        "operationId": "searchTrips",
+        "path": "/v1/trips/search",
+        "summary": "Search corridor inventory."
+      },
+      {
+        "authentication": "public",
+        "method": "GET",
+        "operationId": "getTripById",
+        "path": "/v1/trips/{id}",
+        "summary": "Read a single trip."
+      },
+      {
+        "authentication": "jwt",
+        "method": "PUT",
+        "operationId": "updateTrip",
+        "path": "/v1/trips/{id}",
+        "summary": "Update trip state."
+      }
+    ]
+  },
+  {
+    "name": "notifications",
+    "ownership": "communications-platform",
+    "version": "v1",
+    "operations": [
+      {
+        "authentication": "jwt",
+        "method": "GET",
+        "operationId": "getNotifications",
+        "path": "/v1/notifications",
+        "summary": "List notifications."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "createNotification",
+        "path": "/v1/notifications",
+        "summary": "Create an in-app notification and optional deliveries."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "markNotificationAsRead",
+        "path": "/v1/notifications/{id}/read",
+        "summary": "Mark a notification as read."
+      }
+    ]
+  },
+  {
+    "name": "analytics",
+    "ownership": "insights-platform",
+    "version": "v1",
+    "operations": [
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "trackGrowthEvent",
+        "path": "/v1/analytics/events",
+        "summary": "Append a domain analytics event."
+      },
+      {
+        "authentication": "jwt",
+        "method": "GET",
+        "operationId": "getGrowthDashboard",
+        "path": "/v1/analytics/dashboard",
+        "summary": "Read growth and corridor metrics."
+      }
+    ]
+  }
+]

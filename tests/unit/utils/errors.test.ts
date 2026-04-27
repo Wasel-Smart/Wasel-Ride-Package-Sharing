@@ -1,11 +1,7 @@
-/**
- * Error utilities — Unit Tests
- *
- * Covers: WaselError hierarchy, normalizeError, shouldIgnoreError,
- * formatErrorMessage — all pure functions, no mocks needed.
- */
 import { describe, expect, it } from 'vitest';
 import {
+  APP_ERROR_CODES,
+  ApiError,
   AuthenticationError,
   AuthorizationError,
   ConfigError,
@@ -15,97 +11,109 @@ import {
   TimeoutError,
   ValidationError,
   WaselError,
+  formatErrorDetails,
   formatErrorMessage,
+  getErrorShape,
   normalizeError,
   shouldIgnoreError,
 } from '@/utils/errors';
 
-// ── WaselError base class ─────────────────────────────────────────────────────
-
 describe('WaselError', () => {
-  it('sets message, code, name, and isIgnorable', () => {
-    const err = new WaselError('Something failed', 'CUSTOM_CODE', false);
+  it('stores the strict error shape', () => {
+    const err = new WaselError({
+      code: APP_ERROR_CODES.unknown,
+      message: 'Something failed',
+      meta: { userId: 'u1' },
+      severity: 'critical',
+      isIgnorable: false,
+      name: 'CustomError',
+    });
+
     expect(err.message).toBe('Something failed');
-    expect(err.code).toBe('CUSTOM_CODE');
-    expect(err.name).toBe('WaselError');
-    expect(err.isIgnorable).toBe(false);
-  });
-
-  it('defaults isIgnorable to false', () => {
-    const err = new WaselError('msg', 'CODE');
-    expect(err.isIgnorable).toBe(false);
-  });
-
-  it('stores optional context', () => {
-    const err = new WaselError('msg', 'CODE', false, { userId: 'u1' });
+    expect(err.code).toBe('UNKNOWN_ERROR');
+    expect(err.meta).toEqual({ userId: 'u1' });
     expect(err.context).toEqual({ userId: 'u1' });
+    expect(err.severity).toBe('critical');
+    expect(err.isIgnorable).toBe(false);
+    expect(err.name).toBe('CustomError');
   });
 
-  it('is an instance of Error', () => {
-    expect(new WaselError('msg', 'CODE')).toBeInstanceOf(Error);
+  it('defaults severity and ignorable flags from the code definition', () => {
+    const err = new WaselError({
+      code: APP_ERROR_CODES.api,
+      message: 'Backend unavailable',
+    });
+
+    expect(err.severity).toBe('error');
+    expect(err.isIgnorable).toBe(false);
+    expect(err.meta).toEqual({});
   });
 });
 
-// ── Subclasses ────────────────────────────────────────────────────────────────
-
-describe('Error subclasses', () => {
-  it('AuthenticationError has code AUTH_ERROR and is not ignorable', () => {
-    const err = new AuthenticationError('Bad token');
-    expect(err.code).toBe('AUTH_ERROR');
-    expect(err.isIgnorable).toBe(false);
-    expect(err.name).toBe('AuthenticationError');
+describe('error subclasses', () => {
+  it('expose stable code and severity contracts', () => {
+    expect(new AuthenticationError('Bad token')).toMatchObject({
+      code: 'AUTH_ERROR',
+      severity: 'error',
+      isIgnorable: false,
+      name: 'AuthenticationError',
+    });
+    expect(new AuthorizationError('Forbidden')).toMatchObject({
+      code: 'AUTHORIZATION_ERROR',
+      severity: 'error',
+      isIgnorable: false,
+      name: 'AuthorizationError',
+    });
+    expect(new NetworkError('fetch failed')).toMatchObject({
+      code: 'NETWORK_ERROR',
+      severity: 'warning',
+      isIgnorable: true,
+      name: 'NetworkError',
+    });
+    expect(new ValidationError('Missing field')).toMatchObject({
+      code: 'VALIDATION_ERROR',
+      severity: 'error',
+      isIgnorable: false,
+      name: 'ValidationError',
+    });
+    expect(new PaymentError('Card declined')).toMatchObject({
+      code: 'PAYMENT_ERROR',
+      severity: 'critical',
+      isIgnorable: false,
+      name: 'PaymentError',
+    });
+    expect(new TimeoutError('deadline exceeded')).toMatchObject({
+      code: 'TIMEOUT_ERROR',
+      severity: 'warning',
+      isIgnorable: true,
+      name: 'TimeoutError',
+    });
+    expect(new ConfigError('Missing env var')).toMatchObject({
+      code: 'CONFIG_ERROR',
+      severity: 'critical',
+      isIgnorable: false,
+      name: 'ConfigError',
+    });
+    expect(new IgnorableSystemError('IframeMessageAbortError')).toMatchObject({
+      code: 'IGNORABLE_SYSTEM_ERROR',
+      severity: 'info',
+      isIgnorable: true,
+      name: 'IgnorableSystemError',
+    });
+    expect(new ApiError('Request failed')).toMatchObject({
+      code: 'API_ERROR',
+      severity: 'error',
+      isIgnorable: false,
+      name: 'ApiError',
+    });
   });
 
-  it('AuthorizationError has code AUTHORIZATION_ERROR', () => {
-    const err = new AuthorizationError('Forbidden');
-    expect(err.code).toBe('AUTHORIZATION_ERROR');
-    expect(err.isIgnorable).toBe(false);
-  });
-
-  it('NetworkError is ignorable', () => {
-    const err = new NetworkError('fetch failed');
-    expect(err.code).toBe('NETWORK_ERROR');
-    expect(err.isIgnorable).toBe(true);
-  });
-
-  it('ValidationError is not ignorable', () => {
-    const err = new ValidationError('Missing field');
-    expect(err.code).toBe('VALIDATION_ERROR');
-    expect(err.isIgnorable).toBe(false);
-  });
-
-  it('PaymentError is not ignorable', () => {
-    const err = new PaymentError('Card declined');
-    expect(err.code).toBe('PAYMENT_ERROR');
-    expect(err.isIgnorable).toBe(false);
-  });
-
-  it('TimeoutError is ignorable', () => {
-    const err = new TimeoutError('deadline exceeded');
-    expect(err.code).toBe('TIMEOUT_ERROR');
-    expect(err.isIgnorable).toBe(true);
-  });
-
-  it('ConfigError is not ignorable', () => {
-    const err = new ConfigError('Missing env var');
-    expect(err.code).toBe('CONFIG_ERROR');
-    expect(err.isIgnorable).toBe(false);
-  });
-
-  it('IgnorableSystemError is ignorable', () => {
-    const err = new IgnorableSystemError('IframeMessageAbortError');
-    expect(err.code).toBe('IGNORABLE_SYSTEM_ERROR');
-    expect(err.isIgnorable).toBe(true);
-  });
-
-  it('subclass errors are instanceof WaselError', () => {
+  it('subclasses remain instanceof WaselError', () => {
     expect(new AuthenticationError('x')).toBeInstanceOf(WaselError);
     expect(new NetworkError('x')).toBeInstanceOf(WaselError);
-    expect(new PaymentError('x')).toBeInstanceOf(WaselError);
+    expect(new ApiError('x')).toBeInstanceOf(WaselError);
   });
 });
-
-// ── normalizeError ────────────────────────────────────────────────────────────
 
 describe('normalizeError()', () => {
   it('passes WaselError instances through unchanged', () => {
@@ -113,153 +121,133 @@ describe('normalizeError()', () => {
     expect(normalizeError(original)).toBe(original);
   });
 
-  it('converts ignorable system error messages', () => {
+  it('classifies ignorable system errors deterministically', () => {
     const err = normalizeError(new Error('IframeMessageAbortError from iframe'));
     expect(err).toBeInstanceOf(IgnorableSystemError);
+    expect(getErrorShape(err)).toEqual({
+      code: 'IGNORABLE_SYSTEM_ERROR',
+      message: 'IframeMessageAbortError from iframe',
+      meta: {},
+      severity: 'info',
+      isIgnorable: true,
+    });
   });
 
-  it('converts fetch-related messages to NetworkError', () => {
-    const err = normalizeError(new Error('fetch failed unexpectedly'));
+  it('classifies network, auth, authorization, timeout, payment, validation, and api errors', () => {
+    expect(normalizeError(new Error('fetch failed unexpectedly'))).toBeInstanceOf(NetworkError);
+    expect(normalizeError(new Error('Unauthorized: invalid_jwt'))).toBeInstanceOf(AuthenticationError);
+    expect(normalizeError(new Error('permission denied for table trips'))).toBeInstanceOf(AuthorizationError);
+    expect(normalizeError(new Error('request timed out after 5000ms'))).toBeInstanceOf(TimeoutError);
+    expect(normalizeError(new Error('stripe payment declined'))).toBeInstanceOf(PaymentError);
+    expect(normalizeError(new Error('validation failed: required field missing'))).toBeInstanceOf(ValidationError);
+    expect(
+      normalizeError({ status: 503, message: 'Service unavailable' }),
+    ).toBeInstanceOf(ApiError);
+  });
+
+  it('normalizes plain strings, null, undefined, and objects to unknown errors', () => {
+    expect(normalizeError('something went wrong')).toMatchObject({
+      code: 'UNKNOWN_ERROR',
+      message: 'something went wrong',
+      severity: 'error',
+    });
+    expect(normalizeError(null)).toMatchObject({
+      code: 'UNKNOWN_ERROR',
+      message: 'An unknown error occurred',
+      severity: 'error',
+    });
+    expect(normalizeError(undefined)).toMatchObject({
+      code: 'UNKNOWN_ERROR',
+      message: 'An unknown error occurred',
+      severity: 'error',
+    });
+    expect(normalizeError({ weird: true })).toMatchObject({
+      code: 'UNKNOWN_ERROR',
+      message: 'An unknown error occurred',
+      severity: 'error',
+    });
+  });
+
+  it('uses nested causes when the wrapper is generic', () => {
+    const wrapped = new Error('Outer wrapper') as Error & { cause?: unknown };
+    wrapped.cause = new Error('Failed to fetch');
+
+    const err = normalizeError(wrapped, { route: '/api/trips' });
     expect(err).toBeInstanceOf(NetworkError);
+    expect(err.meta).toEqual({ route: '/api/trips' });
   });
 
-  it('converts ECONNREFUSED to NetworkError', () => {
-    const err = normalizeError(new Error('ECONNREFUSED 127.0.0.1:5432'));
-    expect(err).toBeInstanceOf(NetworkError);
-  });
+  it('extracts API style payload metadata and status codes', () => {
+    const err = normalizeError(
+      {
+        status: 422,
+        error: 'Request body invalid',
+        meta: { field: 'email' },
+      },
+      { operation: 'signup' },
+    );
 
-  it('converts Unauthorized message to AuthenticationError', () => {
-    const err = normalizeError(new Error('Unauthorized: invalid_jwt'));
-    expect(err).toBeInstanceOf(AuthenticationError);
-  });
-
-  it('converts Invalid credentials to AuthenticationError', () => {
-    const err = normalizeError(new Error('Invalid credentials supplied'));
-    expect(err).toBeInstanceOf(AuthenticationError);
-  });
-
-  it('converts permission-related messages to AuthorizationError', () => {
-    const err = normalizeError(new Error('permission denied for table trips'));
-    expect(err).toBeInstanceOf(AuthorizationError);
-  });
-
-  it('converts Forbidden to AuthorizationError', () => {
-    const err = normalizeError(new Error('Forbidden'));
-    expect(err).toBeInstanceOf(AuthorizationError);
-  });
-
-  it('converts payment-related messages to PaymentError', () => {
-    const err = normalizeError(new Error('stripe payment declined'));
-    expect(err).toBeInstanceOf(PaymentError);
-  });
-
-  it('converts timed out messages to TimeoutError', () => {
-    const err = normalizeError(new Error('request timed out after 5000ms'));
-    expect(err).toBeInstanceOf(TimeoutError);
-  });
-
-  it('converts validation-related messages to ValidationError', () => {
-    const err = normalizeError(new Error('validation failed: required field missing'));
     expect(err).toBeInstanceOf(ValidationError);
-  });
-
-  it('handles plain string errors', () => {
-    const err = normalizeError('something went wrong');
-    expect(err.message).toBe('something went wrong');
-  });
-
-  it('handles null gracefully', () => {
-    const err = normalizeError(null);
-    expect(err.message).toBe('An unknown error occurred');
-  });
-
-  it('handles undefined gracefully', () => {
-    const err = normalizeError(undefined);
-    expect(err.message).toBe('An unknown error occurred');
-  });
-
-  it('handles arbitrary objects gracefully', () => {
-    const err = normalizeError({ weird: true });
-    expect(err.message).toBe('An unknown error occurred');
-  });
-
-  it('forwards context to the resulting error', () => {
-    const err = normalizeError(new Error('fetch failed'), { route: '/api/trips' });
-    expect(err.context).toEqual({ route: '/api/trips' });
+    expect(err.meta).toEqual({
+      status: 422,
+      field: 'email',
+      operation: 'signup',
+    });
   });
 });
 
-// ── shouldIgnoreError ─────────────────────────────────────────────────────────
-
 describe('shouldIgnoreError()', () => {
-  it('returns true for NetworkError (ignorable)', () => {
+  it('returns true only for ignorable categories', () => {
     expect(shouldIgnoreError(new NetworkError('failed'))).toBe(true);
-  });
-
-  it('returns true for TimeoutError (ignorable)', () => {
     expect(shouldIgnoreError(new TimeoutError('timed out'))).toBe(true);
-  });
-
-  it('returns true for IgnorableSystemError', () => {
     expect(shouldIgnoreError(new IgnorableSystemError('msg'))).toBe(true);
-  });
-
-  it('returns false for AuthenticationError (not ignorable)', () => {
     expect(shouldIgnoreError(new AuthenticationError('bad token'))).toBe(false);
-  });
-
-  it('returns false for PaymentError (not ignorable)', () => {
     expect(shouldIgnoreError(new PaymentError('declined'))).toBe(false);
-  });
-
-  it('returns false for plain Error', () => {
     expect(shouldIgnoreError(new Error('unknown'))).toBe(false);
-  });
-
-  it('normalizes and checks plain fetch-error strings', () => {
     expect(shouldIgnoreError(new Error('NetworkError: fetch failed'))).toBe(true);
   });
 });
 
-// ── formatErrorMessage ────────────────────────────────────────────────────────
-
 describe('formatErrorMessage()', () => {
-  it('returns user-friendly message for AUTH_ERROR', () => {
+  it('returns exact, deterministic display strings for every code', () => {
     expect(formatErrorMessage(new AuthenticationError('bad token'))).toBe(
       'Authentication failed. Please log in again.',
     );
-  });
-
-  it('returns user-friendly message for NETWORK_ERROR', () => {
+    expect(formatErrorMessage(new AuthorizationError('forbidden'))).toBe(
+      'You do not have permission to perform this action.',
+    );
     expect(formatErrorMessage(new NetworkError('fetch failed'))).toBe(
       'Network connection error. Please check your connection.',
     );
-  });
-
-  it('returns user-friendly message for PAYMENT_ERROR', () => {
-    expect(formatErrorMessage(new PaymentError('stripe error'))).toBe(
-      'Payment processing failed. Please try again.',
-    );
-  });
-
-  it('returns user-friendly message for VALIDATION_ERROR', () => {
     expect(formatErrorMessage(new ValidationError('invalid field'))).toBe(
       'Invalid data provided. Please check your input.',
     );
-  });
-
-  it('returns user-friendly message for TIMEOUT_ERROR', () => {
+    expect(formatErrorMessage(new PaymentError('stripe error'))).toBe(
+      'Payment processing failed. Please try again.',
+    );
     expect(formatErrorMessage(new TimeoutError('timed out'))).toBe(
       'Request timed out. Please try again.',
     );
-  });
-
-  it('returns empty string for IGNORABLE_SYSTEM_ERROR (not user-facing)', () => {
+    expect(formatErrorMessage(new ConfigError('bad config'))).toBe(
+      'Configuration error. Please contact support.',
+    );
     expect(formatErrorMessage(new IgnorableSystemError('iframe error'))).toBe('');
+    expect(formatErrorMessage(new ApiError('server down'))).toBe(
+      'The service is unavailable right now. Please try again.',
+    );
+    expect(formatErrorMessage(new Error('something unusual'))).toBe(
+      'An unexpected error occurred. Please try again.',
+    );
   });
 
-  it('returns generic fallback for UNKNOWN_ERROR', () => {
-    const msg = formatErrorMessage(new Error('something unusual'));
-    expect(msg).toBeTruthy();
+  it('returns strict display details', () => {
+    expect(
+      formatErrorDetails(new PaymentError('Card declined', { paymentIntentId: 'pi-1' })),
+    ).toEqual({
+      code: 'PAYMENT_ERROR',
+      message: 'Payment processing failed. Please try again.',
+      meta: { paymentIntentId: 'pi-1' },
+      severity: 'critical',
+    });
   });
 });

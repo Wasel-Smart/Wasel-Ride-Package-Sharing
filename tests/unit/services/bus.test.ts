@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockSearchTrips = vi.fn();
 const mockCreateBooking = vi.fn();
+let mockBusEnabled = false;
 
 vi.mock('../../../src/services/trips', () => ({
   tripsAPI: {
@@ -15,11 +16,25 @@ vi.mock('../../../src/services/bookings', () => ({
   },
 }));
 
-import { createBusBooking, fetchBusRoutes, getOfficialBusRoutes, normalizeBusRoute } from '../../../src/services/bus';
+vi.mock('../../../src/features/core/featureFlags', () => ({
+  isCoreFeatureEnabled: (feature: string) => feature === 'bus' && mockBusEnabled,
+}));
+
+vi.mock('../../../src/utils/env', async () => {
+  const actual = await vi.importActual<typeof import('../../../src/utils/env')>(
+    '../../../src/utils/env',
+  );
+  return {
+    ...actual,
+  };
+});
+
+import { createBusBooking, fetchBusRoutes, normalizeBusRoute } from '../../../src/services/bus';
 
 describe('bus service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockBusEnabled = false;
     const store = new Map<string, string>();
     Object.defineProperty(window, 'localStorage', {
       configurable: true,
@@ -48,6 +63,7 @@ describe('bus service', () => {
   });
 
   it('returns only real bus inventory from trip search results', async () => {
+    mockBusEnabled = true;
     mockSearchTrips.mockResolvedValue([
       {
         id: 'ride-1',
@@ -75,27 +91,57 @@ describe('bus service', () => {
     expect(routes[0].id).toBe('bus-2');
   });
 
-  it('falls back to the official Jordan schedule network when no live bus inventory is returned', async () => {
+  it('returns no routes when live bus inventory is unavailable', async () => {
+    mockBusEnabled = true;
     mockSearchTrips.mockResolvedValue([]);
 
     const routes = await fetchBusRoutes({ from: 'Amman', to: 'Petra', date: '2026-04-02', seats: 1 });
 
-    expect(routes.length).toBeGreaterThan(0);
-    expect(routes[0].from).toBe('Amman');
-    expect(routes[0].to).toBe('Petra');
-    expect(routes[0].dataSource).toBe('official');
-    expect(routes[0].departureTimes?.length).toBeGreaterThan(0);
+    expect(routes).toEqual([]);
   });
 
-  it('returns the wider official network when an exact official route is missing', () => {
-    const routes = getOfficialBusRoutes({ from: 'Ajloun', to: 'Aqaba', seats: 1 });
-
-    expect(routes.length).toBeGreaterThan(0);
-  });
-
-  it('stores a local backup booking when the booking API fails', async () => {
+  it('surfaces booking failures when fake bus bookings are disabled', async () => {
+    mockBusEnabled = true;
     mockCreateBooking.mockRejectedValue(new Error('offline'));
-    window.localStorage.setItem('wasel-bus-bookings', '{bad json');
+
+    await expect(
+      createBusBooking({
+        tripId: 'bus-3',
+        seatsRequested: 2,
+        pickupStop: 'Abdali Intercity Hub',
+        dropoffStop: 'Aqaba Marina Stop',
+        scheduleDate: '2026-04-05',
+        departureTime: '07:00',
+        seatPreference: 'window',
+        scheduleMode: 'schedule-later',
+        totalPrice: 14,
+      }),
+    ).rejects.toThrow('offline');
+  });
+
+  it('fails closed when the bus feature is disabled', async () => {
+    await expect(
+      createBusBooking({
+        tripId: 'bus-3',
+        seatsRequested: 2,
+        pickupStop: 'Abdali Intercity Hub',
+        dropoffStop: 'Aqaba Marina Stop',
+        scheduleDate: '2026-04-05',
+        departureTime: '07:00',
+        seatPreference: 'window',
+        scheduleMode: 'schedule-later',
+        totalPrice: 14,
+      }),
+    ).rejects.toThrow('Bus service is unavailable.');
+
+    await expect(
+      fetchBusRoutes({ from: 'Amman', to: 'Aqaba', date: '2026-04-05', seats: 1 }),
+    ).rejects.toThrow('Bus service is unavailable.');
+  });
+
+  it('returns a server booking only when the backend succeeds', async () => {
+    mockBusEnabled = true;
+    mockCreateBooking.mockResolvedValue({ id: 'bus-booking-1' });
 
     const result = await createBusBooking({
       tripId: 'bus-3',
@@ -109,15 +155,10 @@ describe('bus service', () => {
       totalPrice: 14,
     });
 
-    expect(result.source).toBe('local');
-
-    const stored = JSON.parse(window.localStorage.getItem('wasel-bus-bookings') ?? '[]');
-    expect(stored).toHaveLength(1);
-    expect(stored[0]).toMatchObject({
-      tripId: 'bus-3',
-      seatsRequested: 2,
-      departureTime: '07:00',
-      seatPreference: 'window',
+    expect(result).toEqual({
+      source: 'server',
+      bookingId: 'bus-booking-1',
+      ticketCode: 'bus-booking-1',
     });
   });
 });

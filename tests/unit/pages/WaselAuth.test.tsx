@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 
 const mockNavigate = vi.fn();
 const mockRegister = vi.fn();
@@ -10,9 +11,15 @@ const mockSignInWithGoogle = vi.fn();
 const mockSignInWithFacebook = vi.fn();
 const mockToastSuccess = vi.fn();
 const mockOpen = vi.fn();
+const mockSetSearchParams = vi.fn();
 let mockSearch = '?tab=signup&returnTo=%2Fapp%2Ffind-ride';
 let mockSupportWhatsAppNumber = '962790000000';
 let mockWhatsAppUrl = 'https://wa.me/962790000000?text=Hi%20Wasel';
+let mockAuthProviders = {
+  google: { enabled: true },
+  facebook: { enabled: true },
+  whatsapp: { enabled: true },
+};
 
 vi.mock('motion/react', () => ({
   AnimatePresence: ({ children }: PropsWithChildren) => <>{children}</>,
@@ -42,7 +49,7 @@ vi.mock('react-router', async () => {
   const actual = await vi.importActual<typeof import('react-router')>('react-router');
   return {
     ...actual,
-    useSearchParams: () => [new URLSearchParams(mockSearch)],
+    useSearchParams: () => [new URLSearchParams(mockSearch), mockSetSearchParams],
   };
 });
 
@@ -71,6 +78,10 @@ vi.mock('@/contexts/AuthContext', () => ({
     signInWithGoogle: mockSignInWithGoogle,
     signInWithFacebook: mockSignInWithFacebook,
   }),
+}));
+
+vi.mock('@/hooks/useAuthProviderAvailability', () => ({
+  useAuthProviderAvailability: () => mockAuthProviders,
 }));
 
 vi.mock('@/utils/env', async () => {
@@ -148,32 +159,46 @@ vi.mock('@/components/wasel-ui/WaselInput', () => ({
 
 import WaselAuth from '@/pages/WaselAuth';
 
+function renderWaselAuth() {
+  return render(
+    <LanguageProvider>
+      <WaselAuth />
+    </LanguageProvider>,
+  );
+}
+
 describe('WaselAuth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSearch = '?tab=signup&returnTo=%2Fapp%2Ffind-ride';
     mockSupportWhatsAppNumber = '962790000000';
     mockWhatsAppUrl = 'https://wa.me/962790000000?text=Hi%20Wasel';
+    mockAuthProviders = {
+      google: { enabled: true },
+      facebook: { enabled: true },
+      whatsapp: { enabled: true },
+    };
     mockRegister.mockResolvedValue({ error: null, requiresEmailConfirmation: false });
     mockSignIn.mockResolvedValue({ error: null });
     mockResetPassword.mockResolvedValue({ error: null });
     mockSignInWithGoogle.mockResolvedValue({ error: null });
     mockSignInWithFacebook.mockResolvedValue({ error: null });
     mockToastSuccess.mockReset();
+    mockSetSearchParams.mockReset();
     mockOpen.mockReset();
     vi.stubGlobal('open', mockOpen);
   });
 
   it('blocks signup when the password is weak', async () => {
-    render(<WaselAuth />);
+    renderWaselAuth();
 
-    fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Laith Nassar' } });
-    fireEvent.change(screen.getByLabelText('Email address'), {
+    fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Laith Nassar' } });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: 'laith@example.com' },
     });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: '12345678' } });
-    fireEvent.change(screen.getByLabelText('Phone number'), { target: { value: '+962792084333' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Submit sign up' }));
+    fireEvent.change(screen.getByLabelText(/password/i, { selector: 'input' }), { target: { value: '12345678' } });
+    fireEvent.change(screen.getByLabelText(/phone number/i, { selector: 'input' }), { target: { value: '+962792084333' } });
+    fireEvent.click(screen.getByRole('button', { name: /submit create account/i }));
 
     await waitFor(() => {
       expect(screen.getAllByText(/Choose a stronger password/i).length).toBeGreaterThan(0);
@@ -182,14 +207,14 @@ describe('WaselAuth', () => {
   });
 
   it('allows signup without a phone number', async () => {
-    render(<WaselAuth />);
+    renderWaselAuth();
 
-    fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Laith Nassar' } });
-    fireEvent.change(screen.getByLabelText('Email address'), {
+    fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Laith Nassar' } });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: 'laith@example.com' },
     });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'StrongPass1!' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Submit sign up' }));
+    fireEvent.change(screen.getByLabelText(/password/i, { selector: 'input' }), { target: { value: 'StrongPass1!' } });
+    fireEvent.click(screen.getByRole('button', { name: /submit create account/i }));
 
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledWith(
@@ -202,15 +227,15 @@ describe('WaselAuth', () => {
   });
 
   it('submits signup with the full backend payload once inputs are valid', async () => {
-    render(<WaselAuth />);
+    renderWaselAuth();
 
-    fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Laith Nassar' } });
-    fireEvent.change(screen.getByLabelText('Email address'), {
+    fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Laith Nassar' } });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: 'laith@example.com' },
     });
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'StrongPass1!' } });
-    fireEvent.change(screen.getByLabelText('Phone number'), { target: { value: '+962792084333' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Submit sign up' }));
+    fireEvent.change(screen.getByLabelText(/password/i, { selector: 'input' }), { target: { value: 'StrongPass1!' } });
+    fireEvent.change(screen.getByLabelText(/phone number/i, { selector: 'input' }), { target: { value: '+962792084333' } });
+    fireEvent.click(screen.getByRole('button', { name: /submit create account/i }));
 
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledWith(
@@ -223,7 +248,7 @@ describe('WaselAuth', () => {
   });
 
   it('passes the return target into Google and Facebook auth', async () => {
-    render(<WaselAuth />);
+    renderWaselAuth();
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
 
@@ -239,9 +264,9 @@ describe('WaselAuth', () => {
   });
 
   it('opens WhatsApp support when configured', async () => {
-    render(<WaselAuth />);
+    renderWaselAuth();
 
-    fireEvent.click(screen.getByRole('button', { name: 'WhatsApp' }));
+    fireEvent.click(screen.getByRole('button', { name: /open whatsapp support/i }));
 
     await waitFor(() => {
       expect(mockOpen).toHaveBeenCalledWith(

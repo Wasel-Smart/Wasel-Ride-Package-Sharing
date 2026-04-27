@@ -23,6 +23,11 @@ function jsonResponse(body: unknown, status = 200) {
   );
 }
 
+function getRequestBody(callIndex: number) {
+  const [, options] = mockFetchWithRetry.mock.calls[callIndex] as [string, { body?: string }];
+  return JSON.parse(options.body ?? '{}');
+}
+
 const walletPayload = {
   wallet: {
     id: 'wallet-1',
@@ -146,21 +151,21 @@ describe('walletApi insights and payment-method controls', () => {
       'https://api.wasel.test/wallet/payment-methods',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({
-          action: 'add',
-          type: 'card',
-          provider: 'stripe',
-          providerReference: 'pm_123',
-          label: 'Visa',
-          brand: null,
-          last4: '4242',
-          expiryMonth: null,
-          expiryYear: null,
-          isDefault: true,
-          verificationToken: 'pm-step-up',
-        }),
       }),
     );
+    expect(getRequestBody(1)).toEqual({
+      action: 'add',
+      brand: null,
+      expiryMonth: null,
+      expiryYear: null,
+      isDefault: true,
+      label: 'Visa',
+      last4: '4242',
+      provider: 'stripe',
+      providerReference: 'pm_123',
+      type: 'card',
+      verificationToken: 'pm-step-up',
+    });
   });
 
   it('posts auto top-up settings to the secure backend', async () => {
@@ -172,12 +177,12 @@ describe('walletApi insights and payment-method controls', () => {
       'https://api.wasel.test/wallet/settings',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({
-          autoTopUpEnabled: true,
-          autoTopUpAmount: 25,
-          autoTopUpThreshold: 7,
-        }),
       }),
     );
+    expect(getRequestBody(0)).toEqual({
+      autoTopUpAmount: 25,
+      autoTopUpEnabled: true,
+      autoTopUpThreshold: 7,
+    });
   });
 });

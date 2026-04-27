@@ -1,7 +1,7 @@
 /* ============================================================
-   WASEL | واصل — BRAND THEME v10
-   Investor-grade design system. 9.5+ visual polish.
-   Deep-space dark (default) + refined light mode.
+   WASEL | واصل — BRAND THEME v12
+   Dark deep-space palette — unified with landing page.
+   Button brand: #A9E3FF (light sky blue).
    ============================================================ */
 
 :root {
@@ -9,215 +9,383 @@
 
   /* ── Fonts ─────────────────────────────────────────────── */
   --wasel-font-sans:
-    'Plus Jakarta Sans', 'Segoe UI Variable Text', 'Segoe UI',
+    'Plus Jakarta Sans', 'Inter', system-ui, -apple-system,
+    'Segoe UI', Roboto, Helvetica, Arial,
     'Cairo', 'Tajawal', sans-serif;
   --wasel-font-display:
-    'Space Grotesk', 'Segoe UI Variable Display', 'Segoe UI',
-    'Cairo', sans-serif;
+    'Space Grotesk', 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system,
+    'Segoe UI', 'Cairo', sans-serif;
   --wasel-font-arabic: 'Cairo', 'Tajawal', 'Segoe UI', sans-serif;
 
-  /* ── Brand palette (dark) ───────────────────────────────── */
-  --wasel-primary-rgb:  25 231 187;
-  --wasel-accent-rgb:   101 225 255;
+  /* ── Brand palette ──────────────────────────────────────── */
+  --wasel-primary-rgb:  169 227 255;
+  --wasel-accent-rgb:   25 231 187;
   --wasel-cream-rgb:    220 255 248;
-  --wasel-ink-rgb:      4 9 20;
-  --wasel-text-rgb:     230 244 247;
-  --wasel-border-rgb:   25 231 187;
+  --wasel-ink-rgb:      220 255 248;
+  --wasel-text-rgb:     220 255 248;
+  --wasel-border-rgb:   255 255 255;
 
-  /* ── Semantic tokens ────────────────────────────────────── */
-  --background:          #04091a;
-  --foreground:          #e6f4f7;
-  --card:                #090f20;
-  --card-foreground:     #e6f4f7;
-  --popover:             #0d1730;
-  --popover-foreground:  #e6f4f7;
-  --primary:             #19e7bb;
-  --primary-foreground:  #020c07;
-  --secondary:           #0e1e30;
-  --secondary-foreground:#c4e0e6;
-  --muted:               #0c1928;
-  --muted-foreground:    rgba(180 212 220 / 0.72);
-  --accent:              #65e1ff;
-  --accent-foreground:   #040e16;
+  /* ── Core semantic tokens ───────────────────────────────── */
+  --background:          #060d1a;
+  --foreground:          #dcfff8;
+  --card:                rgba(10,18,28,0.84);
+  --card-foreground:     #dcfff8;
+  --popover:             rgba(8,15,26,0.98);
+  --popover-foreground:  #dcfff8;
+  --primary:             #a9e3ff;
+  --primary-foreground:  #081520;
+  --secondary:           rgba(255,255,255,0.06);
+  --secondary-foreground:#dcfff8;
+  --muted:               rgba(255,255,255,0.06);
+  --muted-foreground:    rgba(220,255,248,0.56);
+  --accent:              #19e7bb;
+  --accent-foreground:   #060d1a;
   --destructive:         #ff5060;
   --destructive-foreground: #fff;
-  --border:              rgba(25 231 187 / 0.13);
-  --input:               rgba(9 17 30 / 0.97);
-  --input-background:    rgba(8 15 26 / 0.99);
-  --ring:                rgba(101 225 255 / 0.24);
+  --border:              rgba(255,255,255,0.10);
+  --input:               rgba(255,255,255,0.06);
+  --input-background:    rgba(10,18,28,0.92);
+  --ring:                rgba(169,227,255,0.32);
+
+  /* ── Theme contract ─────────────────────────────────────── */
+  --bg-primary:          #060d1a;
+  --bg-secondary:        rgba(10,18,28,0.84);
+  --bg-tertiary:         rgba(255,255,255,0.04);
+  --bg-overlay:          rgba(0,0,0,0.54);
+  --text-primary:        #dcfff8;
+  --text-secondary:      rgba(220,255,248,0.72);
+  --text-muted:          rgba(220,255,248,0.48);
+  --text-inverse:        #081520;
+  --border-strong:       rgba(255,255,255,0.18);
+  --surface-hover:       rgba(169,227,255,0.08);
+  --surface-hover-strong:rgba(169,227,255,0.14);
+  --surface-divider:     rgba(255,255,255,0.08);
+  --accent-rgb:          25 231 187;
+  --accent-secondary:    #a9e3ff;
+  --accent-secondary-rgb:169 227 255;
+  --accent-contrast:     #081520;
+  --success:             #19e7bb;
+  --success-rgb:         25 231 187;
+  --warning:             #a9e3ff;
+  --warning-rgb:         169 227 255;
+  --danger:              #ff5060;
+  --danger-rgb:          255 80 96;
+  --neutral:             rgba(220,255,248,0.48);
+  --neutral-rgb:         220 255 248;
+
+  /* ── Surfaces ───────────────────────────────────────────── */
+  --surface-soft:        rgba(10,18,28,0.84);
+  --surface-strong:      rgba(8,15,26,0.96);
+  --surface-muted:       rgba(220,255,248,0.055);
+  --surface-muted-strong:rgba(220,255,248,0.09);
+  --surface-glass:       rgba(8,15,26,0.84);
+  --surface-field:       rgba(10,18,28,0.92);
+  --shell-background:    #060d1a;
+
+  /* ── Service surfaces ───────────────────────────────────── */
+  --service-background:
+    radial-gradient(circle at 12% 12%, rgba(169,227,255,0.08), transparent 24%),
+    radial-gradient(circle at 86% 16%, rgba(25,231,187,0.06), transparent 22%),
+    linear-gradient(180deg, #060d1a 0%, #080f1c 100%);
+  --service-card:        rgba(10,18,28,0.84);
+  --service-card-muted:  rgba(255,255,255,0.04);
+  --service-card-strong: rgba(255,255,255,0.06);
+  --service-head-background:
+    radial-gradient(circle at 16% 24%, rgba(169,227,255,0.08), transparent 28%),
+    radial-gradient(circle at 84% 18%, rgba(25,231,187,0.06), transparent 24%),
+    linear-gradient(135deg, #0b1c2f 0%, #0f2439 54%, #15304a 100%);
+  --service-head-shadow: 0 26px 72px rgba(0,0,0,0.54);
+  --service-text-primary:   #dcfff8;
+  --service-text-secondary: rgba(220,255,248,0.72);
+  --service-text-muted:     rgba(220,255,248,0.48);
+
+  /* ── Button brand: #A9E3FF ──────────────────────────────── */
+  --wasel-button-primary-rgb: 169 227 255;
+  --wasel-button-primary: #a9e3ff;
+  --wasel-button-primary-foreground: #081520;
+  --wasel-button-primary-soft: rgba(169,227,255,0.09);
+  --wasel-button-primary-soft-strong: rgba(169,227,255,0.14);
+  --wasel-button-primary-border: rgba(169,227,255,0.26);
+  --wasel-button-primary-border-strong: rgba(169,227,255,0.48);
+  --wasel-button-primary-shadow: 0 16px 40px rgba(169,227,255,0.22);
+  --wasel-button-primary-shadow-hover: 0 22px 56px rgba(169,227,255,0.32);
+  --wasel-app-button-primary: linear-gradient(135deg, #eef8ff 0%, #d6eeff 52%, #a9e3ff 100%);
+  --theme-gradient-primary: linear-gradient(135deg, #eef8ff 0%, #d6eeff 52%, #a9e3ff 100%);
+  --theme-gradient-accent:  linear-gradient(135deg, #f4fbff 0%, #dff2ff 52%, #a9e3ff 100%);
+  --theme-gradient-line: linear-gradient(90deg, #e9f6ff, #a9e3ff, #19e7bb);
+  --theme-transition-duration: 180ms;
 
   /* ── Brand colour aliases ───────────────────────────────── */
-  --wasel-cyan:          #19e7bb;
-  --wasel-cyan-bright:   #22ffd1;
-  --wasel-blue:          #65e1ff;
-  --wasel-green:         #a2ffe7;
-  --wasel-teal:          #40f0cc;
+  --wasel-cyan:          #a9e3ff;
+  --wasel-cyan-bright:   #dff2ff;
+  --wasel-blue:          #7ecdf9;
+  --wasel-green:         #19e7bb;
+  --wasel-teal:          #19e7bb;
   --wasel-brand-cream:   #dcfff8;
   --wasel-brand-primary: #19e7bb;
-  --wasel-brand-green:   #a2ffe7;
-  --wasel-brand-bronze:  #48cfff;
-  --wasel-brand-lime:    #65e1ff;
-  --wasel-route-navy:    #0c1c2c;
-  --wasel-route-silver:  #88b2c2;
+  --wasel-brand-green:   #19e7bb;
+  --wasel-brand-bronze:  #a9e3ff;
+  --wasel-brand-lime:    #a9e3ff;
+  --wasel-route-navy:    #dcfff8;
+  --wasel-route-silver:  rgba(220,255,248,0.56);
 
   /* ── Surface stack ──────────────────────────────────────── */
-  --wasel-surface-0:  #04091a;
-  --wasel-surface-1:  #070d1c;
-  --wasel-surface-2:  #0b1424;
-  --wasel-surface-3:  #101c30;
-  --wasel-surface-4:  #18283c;
+  --wasel-surface-0:  #060d1a;
+  --wasel-surface-1:  #080f1c;
+  --wasel-surface-2:  rgba(10,18,28,0.84);
+  --wasel-surface-3:  rgba(255,255,255,0.04);
+  --wasel-surface-4:  rgba(255,255,255,0.06);
 
   /* ── Glass ──────────────────────────────────────────────── */
-  --wasel-glass-sm:    rgba(6 12 24 / 0.54);
-  --wasel-glass-md:    rgba(6 12 24 / 0.72);
-  --wasel-glass-lg:    rgba(4 9 20 / 0.88);
-  --wasel-glass-xl:    rgba(3 7 16 / 0.96);
-  --wasel-glass-brand: rgba(6 11 22 / 0.86);
+  --wasel-glass-sm:    rgba(8,15,26,0.72);
+  --wasel-glass-md:    rgba(8,15,26,0.84);
+  --wasel-glass-lg:    rgba(8,15,26,0.92);
+  --wasel-glass-xl:    rgba(8,15,26,0.98);
+  --wasel-glass-brand: rgba(8,15,26,0.90);
 
   /* ── Shadows ────────────────────────────────────────────── */
-  --wasel-shadow-xs:   0 2px 8px  rgba(0 0 0 / 0.28);
-  --wasel-shadow-sm:   0 6px 18px rgba(0 0 0 / 0.34);
-  --wasel-shadow-md:   0 16px 44px rgba(0 0 0 / 0.44);
-  --wasel-shadow-lg:   0 28px 72px rgba(0 0 0 / 0.52);
-  --wasel-shadow-xl:   0 44px 100px rgba(0 0 0 / 0.60);
-  --wasel-shadow-teal: 0 18px 50px rgba(25 231 187 / 0.24);
-  --wasel-shadow-blue: 0 18px 50px rgba(101 225 255 / 0.18);
-  --wasel-shadow-card: 0 2px 8px rgba(0 0 0 / 0.28), 0 8px 28px rgba(0 0 0 / 0.22);
+  --wasel-shadow-xs:   0 2px 8px  rgba(0,0,0,0.28);
+  --wasel-shadow-sm:   0 4px 16px rgba(0,0,0,0.32);
+  --wasel-shadow-md:   0 8px 28px rgba(0,0,0,0.38);
+  --wasel-shadow-lg:   0 16px 48px rgba(0,0,0,0.44);
+  --wasel-shadow-xl:   0 28px 72px rgba(0,0,0,0.52);
+  --wasel-shadow-teal: 0 16px 42px rgba(25,231,187,0.18);
+  --wasel-shadow-blue: 0 18px 44px rgba(169,227,255,0.18);
+  --wasel-shadow-card: 0 4px 16px rgba(0,0,0,0.32), inset 0 1px 0 rgba(220,255,248,0.04);
 
   /* ── Header ─────────────────────────────────────────────── */
-  --wasel-header-bg:               rgba(4 9 20 / 0.80);
-  --wasel-header-bg-scrolled:      rgba(4 9 20 / 0.96);
-  --wasel-header-border:           rgba(25 231 187 / 0.09);
-  --wasel-header-border-scrolled:  rgba(25 231 187 / 0.18);
-  --wasel-header-icon-bg:          rgba(220 255 248 / 0.05);
-  --wasel-header-icon-hover:       rgba(25 231 187 / 0.12);
-  --wasel-header-search-bg:        rgba(8 14 26 / 0.93);
-  --wasel-header-search-border:    rgba(25 231 187 / 0.13);
+  --wasel-header-bg:               rgba(6,13,26,0.90);
+  --wasel-header-bg-scrolled:      rgba(6,13,26,0.98);
+  --wasel-header-border:           rgba(255,255,255,0.08);
+  --wasel-header-border-scrolled:  rgba(169,227,255,0.14);
+  --wasel-header-icon-bg:          rgba(169,227,255,0.08);
+  --wasel-header-icon-hover:       rgba(169,227,255,0.14);
+  --wasel-header-search-bg:        rgba(10,18,28,0.92);
+  --wasel-header-search-border:    rgba(255,255,255,0.10);
   --wasel-header-avatar-bg:
-    linear-gradient(135deg, rgba(101 225 255 / 0.18), rgba(25 231 187 / 0.16));
+    linear-gradient(135deg, rgba(169,227,255,0.18), rgba(25,231,187,0.10));
 
   /* ── Sidebar ─────────────────────────────────────────────── */
-  --wasel-sidebar-bg:             rgba(4 9 20 / 0.99);
-  --wasel-sidebar-border:         rgba(25 231 187 / 0.09);
-  --wasel-sidebar-item-hover:     rgba(25 231 187 / 0.07);
-  --wasel-sidebar-item-active:    rgba(25 231 187 / 0.12);
+  --wasel-sidebar-bg:             rgba(6,13,26,0.96);
+  --wasel-sidebar-border:         rgba(255,255,255,0.08);
+  --wasel-sidebar-item-hover:     rgba(169,227,255,0.08);
+  --wasel-sidebar-item-active:    rgba(169,227,255,0.14);
   --wasel-sidebar-active-rail:
-    linear-gradient(180deg, #dcfff8 0%, #19e7bb 50%, #65e1ff 100%);
-  --wasel-sidebar-text:           rgba(180 212 220 / 0.66);
+    linear-gradient(180deg, #eef8ff 0%, #a9e3ff 64%, #19e7bb 100%);
+  --wasel-sidebar-text:           rgba(220,255,248,0.60);
   --wasel-sidebar-active-text:    #dcfff8;
 
   /* ── Copy ────────────────────────────────────────────────── */
-  --wasel-copy-primary:  #e6f4f7;
-  --wasel-copy-muted:    rgba(180 212 220 / 0.72);
-  --wasel-copy-soft:     rgba(140 172 182 / 0.52);
-  --wasel-overlay:       rgba(2 5 12 / 0.84);
+  --wasel-copy-primary:  #dcfff8;
+  --wasel-copy-muted:    rgba(220,255,248,0.72);
+  --wasel-copy-soft:     rgba(220,255,248,0.48);
+  --wasel-overlay:       rgba(0,0,0,0.54);
 
   /* ── Panel ────────────────────────────────────────────────── */
-  --wasel-panel-border:       rgba(25 231 187 / 0.12);
-  --wasel-panel-border-hover: rgba(25 231 187 / 0.28);
+  --wasel-panel-border:       rgba(255,255,255,0.10);
+  --wasel-panel-border-hover: rgba(169,227,255,0.22);
   --wasel-panel-strong:
-    linear-gradient(180deg, rgba(220 255 248 / 0.055), rgba(220 255 248 / 0.010)),
-    rgba(8 15 28 / 0.92);
-  --wasel-panel-soft:  rgba(8 15 28 / 0.80);
-  --wasel-panel-muted: rgba(220 255 248 / 0.032);
-  --wasel-panel-muted-strong: rgba(220 255 248 / 0.055);
+    linear-gradient(180deg, rgba(220,255,248,0.055), rgba(220,255,248,0.018)),
+    rgba(10,18,28,0.84);
+  --wasel-panel-soft:  rgba(10,18,28,0.72);
+  --wasel-panel-muted: rgba(220,255,248,0.055);
+  --wasel-panel-muted-strong: rgba(220,255,248,0.09);
 
-  /* ── Shell background (deep space) ─────────────────────── */
+  /* ── Shell background ───────────────────────────────────── */
   --wasel-shell-background:
-    radial-gradient(ellipse 80% 40% at 50% -5%,  rgba(25 231 187 / 0.18) 0%, transparent 100%),
-    radial-gradient(ellipse 50% 40% at 90% 80%,  rgba(101 225 255 / 0.10) 0%, transparent 100%),
-    radial-gradient(ellipse 40% 30% at 10% 90%,  rgba(25 231 187 / 0.07) 0%, transparent 100%),
-    linear-gradient(168deg, #03060f 0%, #05091a 35%, #080f1f 65%, #04091a 100%);
+    radial-gradient(ellipse 68% 36% at 50% -6%, rgba(220,255,248,0.11) 0%, transparent 100%),
+    radial-gradient(ellipse 48% 30% at 92% 12%, rgba(169,227,255,0.08) 0%, transparent 100%),
+    radial-gradient(ellipse 40% 28% at 10% 92%, rgba(25,231,187,0.06) 0%, transparent 100%),
+    linear-gradient(180deg, #060d1a 0%, #080f1c 100%);
+
+  /* ── App nav ─────────────────────────────────────────────── */
+  --wasel-app-nav-surface:
+    linear-gradient(180deg, rgba(220,255,248,0.055), rgba(220,255,248,0.018)),
+    rgba(10,18,28,0.84);
+  --wasel-app-nav-active-bg:
+    linear-gradient(135deg, rgba(169,227,255,0.16), rgba(25,231,187,0.12));
+  --wasel-app-nav-active-border: rgba(169,227,255,0.28);
+  --wasel-app-button-secondary: rgba(169,227,255,0.09);
+  --wasel-app-button-secondary-border: rgba(169,227,255,0.24);
+  --wasel-app-button-secondary-shadow: 0 10px 30px rgba(169,227,255,0.10);
+  --wasel-app-border: rgba(255,255,255,0.10);
+  --wasel-app-border-strong: rgba(169,227,255,0.22);
+  --wasel-app-ink: #dcfff8;
+  --wasel-app-muted: rgba(220,255,248,0.60);
+  --wasel-app-soft: rgba(220,255,248,0.40);
+  --wasel-app-hero: #060d1a;
+  --wasel-app-surface: rgba(220,255,248,0.055);
+  --wasel-app-surface-strong: rgba(220,255,248,0.09);
 
   --input-radius: 14px;
 }
 
-/* ─── LIGHT MODE ─────────────────────────────────────────────── */
-.light {
+:root:not(.dark) {
   color-scheme: light;
 
-  --background:          #edf8f6;
-  --foreground:          #082420;
-  --card:                #ffffff;
-  --card-foreground:     #082420;
-  --popover:             #ffffff;
-  --popover-foreground:  #082420;
-  --primary:             #0aaf8a;
-  --primary-foreground:  #f0fff9;
-  --secondary:           #d8f0ec;
-  --secondary-foreground:#134840;
-  --muted:               #e2f0ee;
-  --muted-foreground:    rgba(22 70 62 / 0.74);
-  --accent:              #38c4f0;
-  --accent-foreground:   #061c28;
-  --border:              rgba(10 175 138 / 0.11);
-  --input:               rgba(10 50 44 / 0.04);
-  --input-background:    rgba(255 255 255 / 0.99);
-  --ring:                rgba(56 196 240 / 0.22);
+  --wasel-ink-rgb:      15 23 42;
+  --wasel-text-rgb:     15 23 42;
+  --wasel-border-rgb:   148 163 184;
 
-  --wasel-header-bg:               rgba(237 248 246 / 0.92);
-  --wasel-header-bg-scrolled:      rgba(255 255 255 / 0.97);
-  --wasel-header-border:           rgba(10 175 138 / 0.08);
-  --wasel-header-border-scrolled:  rgba(10 175 138 / 0.14);
-  --wasel-header-icon-bg:          rgba(10 175 138 / 0.05);
-  --wasel-header-icon-hover:       rgba(10 175 138 / 0.10);
-  --wasel-header-search-bg:        rgba(255 255 255 / 0.90);
-  --wasel-header-search-border:    rgba(10 175 138 / 0.12);
+  --background:          #eef6ff;
+  --foreground:          #10243d;
+  --card:                rgba(255,255,255,0.94);
+  --card-foreground:     #10243d;
+  --popover:             rgba(255,255,255,0.98);
+  --popover-foreground:  #10243d;
+  --primary:             #3a7ca5;
+  --primary-foreground:  #ffffff;
+  --secondary:           rgba(58,124,165,0.06);
+  --secondary-foreground:#10243d;
+  --muted:               rgba(58,124,165,0.06);
+  --muted-foreground:    #5f7288;
+  --accent:              #22b8a0;
+  --accent-foreground:   #082420;
+  --border:              rgba(15,23,42,0.10);
+  --input:               rgba(58,124,165,0.08);
+  --input-background:    rgba(255,255,255,0.96);
+  --ring:                rgba(58,124,165,0.24);
+
+  --bg-primary:          #eef6ff;
+  --bg-secondary:        rgba(255,255,255,0.94);
+  --bg-tertiary:         #f6fbff;
+  --bg-overlay:          rgba(15,23,42,0.14);
+  --text-primary:        #10243d;
+  --text-secondary:      #4f647c;
+  --text-muted:          #71839a;
+  --border-strong:       rgba(58,124,165,0.22);
+  --surface-hover:       rgba(58,124,165,0.08);
+  --surface-hover-strong:rgba(58,124,165,0.14);
+  --surface-divider:     rgba(148,163,184,0.20);
+  --accent-secondary:    #5b9bd5;
+  --accent-secondary-rgb:91 155 213;
+  --success:             #22c55e;
+  --success-rgb:         34 197 94;
+  --warning:             #f59e0b;
+  --warning-rgb:         245 158 11;
+  --neutral:             rgba(79,100,124,0.56);
+  --neutral-rgb:         79 100 124;
+
+  --surface-soft:        rgba(255,255,255,0.88);
+  --surface-strong:      rgba(255,255,255,0.97);
+  --surface-muted:       rgba(58,124,165,0.06);
+  --surface-muted-strong:rgba(58,124,165,0.10);
+  --surface-glass:       rgba(255,255,255,0.84);
+  --surface-field:       rgba(255,255,255,0.96);
+  --shell-background:    #eef6ff;
+
+  --service-background:
+    radial-gradient(circle at 14% 10%, rgba(91,155,213,0.14), transparent 28%),
+    radial-gradient(circle at 84% 14%, rgba(34,197,94,0.10), transparent 26%),
+    linear-gradient(180deg, #f9fcff 0%, #eef6ff 100%);
+  --service-card:        rgba(255,255,255,0.94);
+  --service-card-muted:  rgba(244,249,255,0.96);
+  --service-card-strong: rgba(58,124,165,0.08);
+  --service-head-background:
+    radial-gradient(circle at 16% 24%, rgba(91,155,213,0.16), transparent 28%),
+    radial-gradient(circle at 84% 18%, rgba(34,197,94,0.12), transparent 24%),
+    linear-gradient(135deg, rgba(255,255,255,0.98) 0%, #f7fbff 56%, #eef6ff 100%);
+  --service-head-shadow: 0 26px 72px rgba(15,23,42,0.10);
+  --service-text-primary:   #10243d;
+  --service-text-secondary: #4f647c;
+  --service-text-muted:     #71839a;
+
+  --wasel-cyan:          #3a7ca5;
+  --wasel-cyan-bright:   #d6eeff;
+  --wasel-blue:          #5b9bd5;
+  --wasel-green:         #22c55e;
+  --wasel-teal:          #22b8a0;
+  --wasel-brand-primary: #22b8a0;
+  --wasel-brand-green:   #22c55e;
+  --wasel-brand-bronze:  #5b9bd5;
+  --wasel-brand-lime:    #f59e0b;
+  --wasel-route-navy:    #10243d;
+  --wasel-route-silver:  rgba(79,100,124,0.56);
+
+  --wasel-surface-0:  #eef6ff;
+  --wasel-surface-1:  #f6fbff;
+  --wasel-surface-2:  rgba(255,255,255,0.94);
+  --wasel-surface-3:  rgba(58,124,165,0.04);
+  --wasel-surface-4:  rgba(58,124,165,0.08);
+
+  --wasel-glass-sm:    rgba(255,255,255,0.74);
+  --wasel-glass-md:    rgba(255,255,255,0.84);
+  --wasel-glass-lg:    rgba(255,255,255,0.92);
+  --wasel-glass-xl:    rgba(255,255,255,0.98);
+  --wasel-glass-brand: rgba(245,250,255,0.92);
+
+  --wasel-shadow-xs:   0 2px 8px  rgba(15,23,42,0.05);
+  --wasel-shadow-sm:   0 8px 22px rgba(15,23,42,0.07);
+  --wasel-shadow-md:   0 16px 36px rgba(15,23,42,0.10);
+  --wasel-shadow-lg:   0 24px 52px rgba(15,23,42,0.12);
+  --wasel-shadow-xl:   0 36px 80px rgba(15,23,42,0.16);
+  --wasel-shadow-teal: 0 18px 42px rgba(34,184,160,0.14);
+  --wasel-shadow-blue: 0 18px 44px rgba(91,155,213,0.16);
+  --wasel-shadow-card: 0 10px 30px rgba(15,23,42,0.08), inset 0 1px 0 rgba(255,255,255,0.78);
+
+  --wasel-header-bg:               rgba(255,255,255,0.90);
+  --wasel-header-bg-scrolled:      rgba(255,255,255,0.98);
+  --wasel-header-border:           rgba(148,163,184,0.16);
+  --wasel-header-border-scrolled:  rgba(58,124,165,0.18);
+  --wasel-header-icon-bg:          rgba(58,124,165,0.08);
+  --wasel-header-icon-hover:       rgba(58,124,165,0.14);
+  --wasel-header-search-bg:        rgba(255,255,255,0.94);
+  --wasel-header-search-border:    rgba(148,163,184,0.24);
   --wasel-header-avatar-bg:
-    linear-gradient(135deg, rgba(56 196 240 / 0.16), rgba(10 175 138 / 0.14));
+    linear-gradient(135deg, rgba(91,155,213,0.16), rgba(34,197,94,0.10));
 
-  --wasel-sidebar-bg:              rgba(255 255 255 / 0.99);
-  --wasel-sidebar-border:          rgba(22 70 62 / 0.07);
-  --wasel-sidebar-item-hover:      rgba(10 175 138 / 0.06);
-  --wasel-sidebar-item-active:     rgba(10 175 138 / 0.10);
-  --wasel-sidebar-active-rail:
-    linear-gradient(180deg, #dcfff8 0%, #19e7bb 50%, #65e1ff 100%);
-  --wasel-sidebar-text:            rgba(22 70 62 / 0.70);
-  --wasel-sidebar-active-text:     #082420;
+  --wasel-sidebar-bg:
+    linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244,249,255,0.88)),
+    rgba(255,255,255,0.94);
+  --wasel-sidebar-border:         rgba(148,163,184,0.16);
+  --wasel-sidebar-item-hover:     rgba(58,124,165,0.08);
+  --wasel-sidebar-item-active:    rgba(58,124,165,0.12);
+  --wasel-sidebar-text:           #4f647c;
+  --wasel-sidebar-active-text:    #10243d;
 
-  --wasel-surface-0: #edf8f6;
-  --wasel-surface-1: #e4f4f1;
-  --wasel-surface-2: #ffffff;
-  --wasel-surface-3: #ebf6f3;
-  --wasel-surface-4: #d4ece7;
+  --wasel-copy-primary:  #10243d;
+  --wasel-copy-muted:    #4f647c;
+  --wasel-copy-soft:     #71839a;
+  --wasel-overlay:       rgba(15,23,42,0.14);
 
-  --wasel-shadow-xs:   0 2px 6px  rgba(8 50 44 / 0.05);
-  --wasel-shadow-sm:   0 4px 14px rgba(8 50 44 / 0.07);
-  --wasel-shadow-md:   0 14px 40px rgba(8 50 44 / 0.09);
-  --wasel-shadow-lg:   0 26px 62px rgba(8 50 44 / 0.12);
-  --wasel-shadow-xl:   0 38px 88px rgba(8 50 44 / 0.14);
-  --wasel-shadow-teal: 0 14px 38px rgba(10 175 138 / 0.14);
-  --wasel-shadow-blue: 0 14px 38px rgba(56 196 240 / 0.10);
-  --wasel-shadow-card: 0 2px 6px rgba(8 50 44 / 0.05), 0 6px 22px rgba(8 50 44 / 0.07);
-
-  --wasel-glass-sm:    rgba(255 255 255 / 0.72);
-  --wasel-glass-md:    rgba(255 255 255 / 0.84);
-  --wasel-glass-lg:    rgba(255 255 255 / 0.93);
-  --wasel-glass-xl:    rgba(255 255 255 / 0.98);
-  --wasel-glass-brand: rgba(255 255 255 / 0.88);
+  --wasel-panel-border:       rgba(148,163,184,0.18);
+  --wasel-panel-border-hover: rgba(58,124,165,0.20);
+  --wasel-panel-strong:
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,249,255,0.92)),
+    rgba(255,255,255,0.94);
+  --wasel-panel-soft:  rgba(255,255,255,0.84);
+  --wasel-panel-muted: rgba(58,124,165,0.06);
+  --wasel-panel-muted-strong: rgba(58,124,165,0.10);
 
   --wasel-shell-background:
-    radial-gradient(ellipse 80% 36% at 50% -4%,  rgba(25 231 187 / 0.10) 0%, transparent 100%),
-    radial-gradient(ellipse 50% 36% at 92% 88%,  rgba(56 196 240 / 0.06) 0%, transparent 100%),
-    linear-gradient(180deg, #f4fdfa 0%, #ebf7f4 100%);
+    radial-gradient(ellipse 68% 36% at 50% -6%, rgba(91,155,213,0.12) 0%, transparent 100%),
+    radial-gradient(ellipse 48% 30% at 92% 12%, rgba(34,197,94,0.09) 0%, transparent 100%),
+    radial-gradient(ellipse 40% 28% at 10% 92%, rgba(58,124,165,0.08) 0%, transparent 100%),
+    linear-gradient(180deg, #f9fcff 0%, #eef6ff 100%);
 
-  --wasel-panel-border:       rgba(10 175 138 / 0.11);
-  --wasel-panel-border-hover: rgba(10 175 138 / 0.26);
-  --wasel-panel-strong:
-    linear-gradient(180deg, rgba(255 255 255 / 0.98), rgba(240 255 250 / 0.94)),
-    rgba(255 255 255 / 0.95);
-  --wasel-panel-soft:  rgba(255 255 255 / 0.88);
-  --wasel-panel-muted: rgba(10 175 138 / 0.042);
-  --wasel-panel-muted-strong: rgba(10 175 138 / 0.08);
-
-  --wasel-copy-primary: #082420;
-  --wasel-copy-muted:   rgba(22 70 62 / 0.78);
-  --wasel-copy-soft:    rgba(40 96 86 / 0.58);
-  --wasel-overlay:      rgba(8 36 32 / 0.12);
+  --wasel-app-nav-surface:
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(244,249,255,0.90)),
+    rgba(255,255,255,0.94);
+  --wasel-app-nav-active-bg:
+    linear-gradient(135deg, rgba(91,155,213,0.16), rgba(34,184,160,0.12));
+  --wasel-app-nav-active-border: rgba(58,124,165,0.22);
+  --wasel-app-button-secondary: rgba(58,124,165,0.08);
+  --wasel-app-button-secondary-border: rgba(58,124,165,0.18);
+  --wasel-app-button-secondary-shadow: 0 10px 24px rgba(58,124,165,0.10);
+  --wasel-app-border: rgba(148,163,184,0.18);
+  --wasel-app-border-strong: rgba(58,124,165,0.22);
+  --wasel-app-ink: #10243d;
+  --wasel-app-muted: #4f647c;
+  --wasel-app-soft: #71839a;
+  --wasel-app-hero: #eef6ff;
+  --wasel-app-surface: rgba(58,124,165,0.06);
+  --wasel-app-surface-strong: rgba(58,124,165,0.10);
 }
 
 /* ─── BASE ──────────────────────────────────────────────────── */
-html { color-scheme: inherit; }
+html { color-scheme: light; }
+
+html.dark { color-scheme: dark; }
 
 body {
   background: var(--wasel-shell-background);
@@ -226,23 +394,44 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
-.light body, body.light { background: var(--wasel-shell-background); }
+
+html[data-theme-ready='true'] body,
+html[data-theme-ready='true'] button,
+html[data-theme-ready='true'] input,
+html[data-theme-ready='true'] select,
+html[data-theme-ready='true'] textarea,
+html[data-theme-ready='true'] a,
+html[data-theme-ready='true'] header,
+html[data-theme-ready='true'] footer,
+html[data-theme-ready='true'] nav,
+html[data-theme-ready='true'] main,
+html[data-theme-ready='true'] section,
+html[data-theme-ready='true'] article,
+html[data-theme-ready='true'] aside,
+html[data-theme-ready='true'] div,
+html[data-theme-ready='true'] span,
+html[data-theme-ready='true'] svg,
+html[data-theme-ready='true'] path {
+  transition:
+    background-color var(--theme-transition-duration) ease,
+    color var(--theme-transition-duration) ease,
+    border-color var(--theme-transition-duration) ease,
+    box-shadow var(--theme-transition-duration) ease,
+    fill var(--theme-transition-duration) ease,
+    stroke var(--theme-transition-duration) ease;
+}
 
 /* ─── Selection ─────────────────────────────────────────────── */
 ::selection {
-  background: rgba(25 231 187 / 0.24);
-  color: #020c07;
-}
-.light ::selection {
-  background: rgba(10 175 138 / 0.20);
-  color: #020c07;
+  background: rgba(169,227,255,0.24);
+  color: #081520;
 }
 
 /* ─── Focus ring ────────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid rgba(169,227,255,0.72);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 /* ─── Utility ───────────────────────────────────────────────── */
@@ -250,22 +439,16 @@ body {
 
 /* ─── Brand shell ────────────────────────────────────────────── */
 .brand-shell {
-  background:
-    radial-gradient(ellipse 70% 36% at 50% -4%, rgba(25 231 187 / 0.16), transparent 100%),
-    radial-gradient(ellipse 40% 32% at 86% 82%, rgba(101 225 255 / 0.08), transparent 100%),
-    linear-gradient(180deg, rgba(220 255 248 / 0.022), transparent),
-    var(--background);
+  background: var(--wasel-shell-background);
 }
 
 /* ─── Brand panel ───────────────────────────────────────────── */
 .brand-panel {
-  background:
-    linear-gradient(180deg, rgba(255 255 255 / 0.055), rgba(255 255 255 / 0.018)),
-    var(--wasel-glass-lg);
+  background: var(--wasel-panel-strong);
   border: 1px solid var(--wasel-panel-border);
   box-shadow: var(--wasel-shadow-md);
-  backdrop-filter: blur(26px);
-  -webkit-backdrop-filter: blur(26px);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
   transition: border-color 0.22s ease, box-shadow 0.22s ease;
 }
 .brand-panel:hover {
@@ -273,10 +456,8 @@ body {
   box-shadow: var(--wasel-shadow-lg);
 }
 .brand-panel-muted {
-  background:
-    linear-gradient(180deg, rgba(255 255 255 / 0.032), rgba(255 255 255 / 0.008)),
-    var(--wasel-glass-md);
-  border: 1px solid rgba(var(--wasel-border-rgb) / 0.09);
+  background: var(--wasel-panel-muted);
+  border: 1px solid rgba(255,255,255,0.07);
   box-shadow: var(--wasel-shadow-sm);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -290,41 +471,41 @@ body {
   min-height: 1.875rem;
   padding: 0 0.875rem;
   border-radius: 999px;
-  border: 1px solid rgba(var(--wasel-primary-rgb) / 0.17);
-  background: rgba(220 255 248 / 0.040);
-  color: rgba(var(--wasel-text-rgb) / 0.80);
+  border: 1px solid rgba(169,227,255,0.22);
+  background: rgba(169,227,255,0.08);
+  color: #a9e3ff;
   font-size: 0.71rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  backdrop-filter: blur(8px);
 }
 
 /* ─── Buttons ────────────────────────────────────────────────── */
 .brand-button-primary,
 .wasel-primary-button {
-  background: linear-gradient(135deg, #dcfff8 0%, #19e7bb 42%, #65e1ff 100%);
-  color: #020c07 !important;
-  border: 1px solid rgba(255 255 255 / 0.08);
-  box-shadow: var(--wasel-shadow-teal);
+  background: var(--theme-gradient-primary);
+  color: var(--wasel-button-primary-foreground) !important;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: var(--wasel-button-primary-shadow);
   transition: transform 0.20s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.20s ease;
 }
 .brand-button-primary:hover,
 .wasel-primary-button:hover {
   transform: translateY(-2px) scale(1.015);
-  box-shadow: 0 22px 58px rgba(25 231 187 / 0.34);
+  box-shadow: var(--wasel-button-primary-shadow-hover);
 }
 .brand-button-secondary,
 .wasel-outline-button {
-  background: rgba(255 255 255 / 0.04);
-  color: var(--foreground) !important;
-  border: 1px solid rgba(var(--wasel-border-rgb) / 0.17);
+  background: var(--wasel-button-primary-soft);
+  color: var(--wasel-button-primary) !important;
+  border: 1px solid var(--wasel-button-primary-border);
   box-shadow: var(--wasel-shadow-xs);
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 .brand-button-secondary:hover,
 .wasel-outline-button:hover {
-  border-color: rgba(var(--wasel-border-rgb) / 0.36);
+  border-color: var(--wasel-button-primary-border-strong);
+  background: var(--wasel-button-primary-soft-strong);
   transform: translateY(-1px);
   box-shadow: var(--wasel-shadow-sm);
 }
@@ -354,14 +535,14 @@ body {
 /* ─── Scrollbar ──────────────────────────────────────────────── */
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: rgba(var(--wasel-border-rgb) / 0.25) transparent;
+  scrollbar-color: rgba(169,227,255,0.18) transparent;
 }
 .scrollbar-thin::-webkit-scrollbar        { width: 5px; height: 5px; }
 .scrollbar-thin::-webkit-scrollbar-track  { background: transparent; }
 .scrollbar-thin::-webkit-scrollbar-thumb  {
-  background: rgba(var(--wasel-border-rgb) / 0.25);
+  background: rgba(169,227,255,0.18);
   border-radius: 999px;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: rgba(var(--wasel-border-rgb) / 0.48);
+  background: rgba(169,227,255,0.36);
 }

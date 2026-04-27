@@ -12,11 +12,34 @@ const mockBuildUserContext = vi.fn(async () => ({
   authUserId: 'auth-user-1',
 }));
 
-let insertedBookingPayload: Record<string, unknown> | null = null;
-let tripUpdatePayload: Record<string, unknown> | null = null;
+let bookingRpcPayload: Record<string, unknown> | null = null;
 
 function createDbMock() {
   return {
+    rpc(functionName: string, payload: Record<string, unknown>) {
+      if (functionName !== 'app_create_booking_request') {
+        throw new Error(`Unexpected RPC: ${functionName}`);
+      }
+
+      bookingRpcPayload = payload;
+      return Promise.resolve({
+        data: {
+          booking_id: 'booking-1',
+          trip_id: payload.p_trip_id,
+          passenger_id: 'canonical-user-1',
+          seats_requested: payload.p_seats_requested,
+          pickup_location: payload.p_pickup_location,
+          dropoff_location: payload.p_dropoff_location,
+          price_per_seat: 7,
+          total_price: payload.p_total_price,
+          amount: payload.p_total_price,
+          booking_status: payload.p_runtime_status,
+          status: payload.p_runtime_status,
+          seat_number: payload.p_seat_number,
+        },
+        error: null,
+      });
+    },
     from(table: string) {
       if (table === 'trips') {
         return {
@@ -30,68 +53,6 @@ function createDbMock() {
                       available_seats: 3,
                       price_per_seat: 7,
                       trip_status: 'open',
-                    },
-                    error: null,
-                  }),
-                };
-              },
-            };
-          },
-          update(payload: Record<string, unknown>) {
-            tripUpdatePayload = payload;
-            return {
-              eq: async () => ({ error: null }),
-            };
-          },
-        };
-      }
-
-      if (table === 'bookings') {
-        return {
-          select(selection: string) {
-            if (selection === '*') {
-              return {
-                eq() {
-                  return {
-                    eq() {
-                      return {
-                        in() {
-                          return {
-                            order() {
-                              return {
-                                limit() {
-                                  return {
-                                    maybeSingle: async () => ({ data: null, error: null }),
-                                  };
-                                },
-                              };
-                            },
-                          };
-                        },
-                      };
-                    },
-                  };
-                },
-              };
-            }
-
-            return {
-              eq() {
-                return {
-                  neq: async () => ({ data: [], error: null }),
-                };
-              },
-            };
-          },
-          insert(payload: Record<string, unknown>) {
-            insertedBookingPayload = payload;
-            return {
-              select() {
-                return {
-                  single: async () => ({
-                    data: {
-                      booking_id: 'booking-1',
-                      ...payload,
                     },
                     error: null,
                   }),
@@ -149,11 +110,10 @@ import { createDirectBooking } from '../../../src/services/directSupabase/trips'
 describe('direct Supabase booking integrity', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    insertedBookingPayload = null;
-    tripUpdatePayload = null;
+    bookingRpcPayload = null;
   });
 
-  it('persists all booking fields instead of only returning them in memory', async () => {
+  it('persists all booking fields through the atomic booking RPC instead of only returning them in memory', async () => {
     const result = await createDirectBooking({
       tripId: 'trip-1',
       userId: 'auth-user-1',
@@ -164,20 +124,14 @@ describe('direct Supabase booking integrity', () => {
       bookingStatus: 'confirmed',
     });
 
-    expect(insertedBookingPayload).toMatchObject({
-      trip_id: 'trip-1',
-      passenger_id: 'canonical-user-1',
-      seats_requested: 2,
-      pickup_location: 'University Street',
-      dropoff_location: '7th Circle',
-      price_per_seat: 7,
-      total_price: 14,
-      amount: 14,
-      booking_status: 'confirmed',
-    });
-    expect(tripUpdatePayload).toMatchObject({
-      available_seats: 1,
-      trip_status: 'open',
+    expect(bookingRpcPayload).toMatchObject({
+      p_trip_id: 'trip-1',
+      p_seats_requested: 2,
+      p_pickup_location: 'University Street',
+      p_dropoff_location: '7th Circle',
+      p_runtime_status: 'confirmed',
+      p_total_price: 14,
+      p_seat_number: 1,
     });
     expect(result).toMatchObject({
       booking: {

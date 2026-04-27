@@ -1,4 +1,12 @@
-import { MoveRight, TrendingUp, Timer, CircleDollarSign, UsersRound } from 'lucide-react';
+import {
+  ArrowUpRight,
+  CircleDollarSign,
+  MoveRight,
+  ShieldCheck,
+  Timer,
+  TrendingUp,
+  UsersRound,
+} from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -15,6 +23,10 @@ interface Route {
   availableRides: number;
   duration: string;
   passengers: number;
+  routeNote: string;
+  routeNoteAr: string;
+  pace: string;
+  paceAr: string;
   trending?: boolean;
   discount?: number;
 }
@@ -30,6 +42,10 @@ const popularRoutes: Route[] = [
     availableRides: 289,
     duration: '35m',
     passengers: 5600,
+    routeNote: 'Best for daily commuter demand and frequent morning departures.',
+    routeNoteAr: 'أفضل ممر للتنقل اليومي مع رحلات صباحية متكررة.',
+    pace: 'High-frequency corridor',
+    paceAr: 'ممر عالي التردد',
     trending: true,
   },
   {
@@ -42,6 +58,10 @@ const popularRoutes: Route[] = [
     availableRides: 156,
     duration: '1h 30m',
     passengers: 3200,
+    routeNote: 'Strong student and weekend demand with reliable evening returns.',
+    routeNoteAr: 'طلب قوي للطلاب وعطلة نهاية الأسبوع مع عودة مسائية مستقرة.',
+    pace: 'Dense academic corridor',
+    paceAr: 'ممر جامعي كثيف',
     trending: true,
   },
   {
@@ -54,86 +74,118 @@ const popularRoutes: Route[] = [
     availableRides: 76,
     duration: '4h 00m',
     passengers: 1500,
+    routeNote: 'Long-distance corridor with shared-seat savings and package demand.',
+    routeNoteAr: 'ممر طويل المسافة يوفر في المقاعد المشتركة ويجذب طلب الطرود.',
+    pace: 'Long-haul route',
+    paceAr: 'ممر بعيد المدى',
     trending: true,
     discount: 20,
   },
   {
     from: 'Amman',
-    fromAr: 'دبي',
+    fromAr: 'عمّان',
     to: 'Jerash',
-    toAr: 'أبوظبي',
+    toAr: 'جرش',
     price: 2.5,
     currency: 'JOD',
     availableRides: 156,
     duration: '55m',
     passengers: 3200,
+    routeNote: 'Popular for short leisure trips with flexible pickup windows.',
+    routeNoteAr: 'شائع للرحلات القصيرة مع نوافذ صعود مرنة.',
+    pace: 'Weekend favorite',
+    paceAr: 'مفضل في عطلة الأسبوع',
   },
   {
     from: 'Amman',
-    fromAr: 'الرياض',
+    fromAr: 'عمّان',
     to: 'Madaba',
-    toAr: 'جدة',
+    toAr: 'مادبا',
     price: 2,
     currency: 'JOD',
     availableRides: 124,
     duration: '40m',
     passengers: 2800,
+    routeNote: 'Fast short corridor for regular errands, work, and family visits.',
+    routeNoteAr: 'ممر قصير سريع للمهام المتكررة والعمل والزيارات العائلية.',
+    pace: 'Fast short route',
+    paceAr: 'ممر قصير سريع',
     discount: 10,
   },
   {
     from: 'Amman',
-    fromAr: 'القاهرة',
+    fromAr: 'عمّان',
     to: 'Karak',
-    toAr: 'الإسكندرية',
+    toAr: 'الكرك',
     price: 5,
     currency: 'JOD',
     availableRides: 203,
     duration: '1h 45m',
     passengers: 4100,
+    routeNote: 'A dependable southbound route with strong recurring demand.',
+    routeNoteAr: 'ممر جنوبي موثوق بطلب متكرر ومستقر.',
+    pace: 'Reliable corridor',
+    paceAr: 'ممر موثوق',
   },
   {
     from: 'Irbid',
-    fromAr: 'الرياض',
+    fromAr: 'إربد',
     to: 'Jerash',
-    toAr: 'الدمام',
+    toAr: 'جرش',
     price: 2.5,
     currency: 'JOD',
     availableRides: 98,
     duration: '50m',
     passengers: 1900,
+    routeNote: 'Useful for campus, service, and family traffic across the north.',
+    routeNoteAr: 'مفيد للتنقل الجامعي والخدمي والعائلي في الشمال.',
+    pace: 'North connector',
+    paceAr: 'ممر ربط شمالي',
   },
   {
     from: 'Zarqa',
-    fromAr: 'الدوحة',
+    fromAr: 'الزرقاء',
     to: 'Amman',
-    toAr: 'الخور',
+    toAr: 'عمّان',
     price: 1.5,
     currency: 'JOD',
     availableRides: 112,
     duration: '45m',
     passengers: 2100,
+    routeNote: 'Strong return demand into Amman through work and study hours.',
+    routeNoteAr: 'طلب عودة قوي إلى عمّان في ساعات العمل والدراسة.',
+    pace: 'Inbound peak corridor',
+    paceAr: 'ممر ذروة باتجاه العاصمة',
   },
   {
     from: 'Amman',
-    fromAr: 'مدينة الكويت',
+    fromAr: 'عمّان',
     to: 'Salt',
-    toAr: 'الأحمدي',
+    toAr: 'السلط',
     price: 2,
     currency: 'JOD',
     availableRides: 145,
     duration: '45m',
     passengers: 2600,
+    routeNote: 'A balanced route with steady commuter and family movement.',
+    routeNoteAr: 'ممر متوازن بحركة ثابتة للتنقل اليومي والزيارات العائلية.',
+    pace: 'Balanced corridor',
+    paceAr: 'ممر متوازن',
   },
   {
     from: 'Amman',
-    fromAr: 'مسقط',
+    fromAr: 'عمّان',
     to: 'Mafraq',
-    toAr: 'صلالة',
+    toAr: 'المفرق',
     price: 3.5,
     currency: 'JOD',
     availableRides: 54,
     duration: '1h 10m',
     passengers: 980,
+    routeNote: 'Emerging route with room for saved alerts and early demand capture.',
+    routeNoteAr: 'ممر ناشئ يناسب التنبيهات المبكرة والتقاط الطلب قبل الذروة.',
+    pace: 'Emerging route',
+    paceAr: 'ممر ناشئ',
   },
 ];
 
@@ -146,218 +198,278 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
   const navigate = useNavigate();
   const isRTL = language === 'ar';
   const handleGetStarted = onGetStarted ?? (() => navigate('/app/find-ride'));
-  
+  const handleOfferRide = () => navigate('/app/offer-ride');
+  const handleRouteOpen = (route: Route) => {
+    if (onGetStarted) {
+      onGetStarted();
+      return;
+    }
+
+    navigate(
+      `/app/find-ride?from=${encodeURIComponent(route.from)}&to=${encodeURIComponent(route.to)}&search=1`,
+    );
+  };
+
+  const totalPassengers = popularRoutes.reduce((sum, route) => sum + route.passengers, 0);
+  const totalLiveRides = popularRoutes.reduce((sum, route) => sum + route.availableRides, 0);
+
   return (
-    <section className="py-20 bg-muted">
-      <div className="max-w-7xl mx-auto px-6">
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <TrendingUp className="w-8 h-8 text-primary" />
-            <Badge className="bg-primary/10 text-primary border-primary/20">
-              Most Popular
+    <section
+      className="relative overflow-hidden py-24"
+      style={{
+        background:
+          'linear-gradient(180deg, rgba(8,17,34,0.98) 0%, rgba(12,28,52,0.98) 48%, rgba(7,16,31,1) 100%)',
+      }}
+    >
+      <div
+        aria-hidden="true"
+        className="absolute inset-0"
+        style={{
+          background: [
+            'radial-gradient(circle at 12% 18%, rgba(60, 191, 255, 0.22), transparent 26%)',
+            'radial-gradient(circle at 84% 16%, rgba(245, 158, 11, 0.16), transparent 22%)',
+            'radial-gradient(circle at 64% 82%, rgba(34, 197, 94, 0.14), transparent 20%)',
+          ].join(','),
+        }}
+      />
+
+      <div className="relative mx-auto max-w-7xl px-6">
+        <div className="mx-auto mb-14 max-w-4xl text-center text-white">
+          <div className="mb-5 flex items-center justify-center gap-3">
+            <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/30 bg-cyan-300/10">
+              <TrendingUp className="h-5 w-5 text-cyan-200" />
+            </div>
+            <Badge className="border-cyan-300/30 bg-cyan-300/10 text-cyan-100">
+              {isRTL ? 'الممرات النشطة الآن' : 'Popular right now'}
             </Badge>
           </div>
-          <h2 className="mb-4">{isRTL ? 'أشهر المسارات عبر الأردن' : "Jordan's Hottest Intercity Routes"}</h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            {isRTL 
-              ? 'أفضل المسارات مبيعاً التي تربط المدن الكبرى. انضم لآلاف المسافرين لتوفير المال وتقليل الانبعاثات الكربونية.'
-              : "Top daily corridors linking Amman with Jordan's major cities and destinations. Join the Wasel network for smarter, lower-friction travel across the kingdom."}
+          <h2 className="mb-4 text-4xl font-semibold tracking-tight text-white md:text-5xl">
+            {isRTL ? 'المسارات الأكثر ثقة داخل الأردن' : 'Jordan routes people trust every day'}
+          </h2>
+          <p className="mx-auto max-w-3xl text-lg leading-8 text-slate-300">
+            {isRTL
+              ? 'المسارات هنا ليست أسماء فقط. كل بطاقة توضّح سرعة الحركة، السعر المرجعي، والسبب الذي يجعل هذا الممر مناسباً للحجز الآن.'
+              : 'These are not just city pairs. Each corridor card shows pace, reference price, and why the route is worth opening now.'}
           </p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid md:grid-cols-4 gap-6 mb-12">
-          <Card className="border-primary/10">
-            <CardContent className="p-6 text-center">
-              <div className="text-3xl text-primary mb-2">12</div>
-              <p className="text-sm text-muted-foreground">{isRTL ? 'محافظات مغطاة' : 'Governorates Covered'}</p>
-              {!isRTL && <p className="text-xs text-muted-foreground/70">محافظات مغطاة</p>}
-            </CardContent>
-          </Card>
-          <Card className="border-primary/10">
-            <CardContent className="p-6 text-center">
-              <div className="text-3xl text-primary mb-2">150+</div>
-              <p className="text-sm text-muted-foreground">{isRTL ? 'مسار نشط يومياً' : 'Active Routes Daily'}</p>
-              {!isRTL && <p className="text-xs text-muted-foreground/70">مسار نشط يومياً</p>}
-            </CardContent>
-          </Card>
-          <Card className="bg-white border-primary/10">
-            <CardContent className="p-6 text-center">
-              <div className="text-3xl text-primary mb-2">50K+</div>
-              <p className="text-sm text-muted-foreground">{isRTL ? 'مسافر شهرياً' : 'Monthly Travelers'}</p>
-              {!isRTL && <p className="text-xs text-muted-foreground/70">مسافر شهرياً</p>}
-            </CardContent>
-          </Card>
-          <Card className="border-primary/10">
-            <CardContent className="p-6 text-center">
-              <div className="text-3xl text-primary mb-2">65%</div>
-              <p className="text-sm text-muted-foreground">{isRTL ? 'متوسط التوفير' : 'Average Savings'}</p>
-              {!isRTL && <p className="text-xs text-muted-foreground/70">متوسط التوفير</p>}
-            </CardContent>
-          </Card>
+        <div className="mb-14 grid gap-5 md:grid-cols-4">
+          {[
+            {
+              label: isRTL ? 'محافظات مغطاة' : 'Governorates covered',
+              value: '12',
+              detail: isRTL ? 'من عمّان إلى الشمال والجنوب' : 'From Amman into the north and south',
+            },
+            {
+              label: isRTL ? 'رحلات حية' : 'Live rides',
+              value: `${totalLiveRides}+`,
+              detail: isRTL ? 'معروضة الآن في هذه الممرات' : 'Visible right now on these corridors',
+            },
+            {
+              label: isRTL ? 'مسافرون شهرياً' : 'Monthly travelers',
+              value: `${totalPassengers.toLocaleString()}+`,
+              detail: isRTL ? 'حركة مشتركة عبر أكثر الممرات نشاطاً' : 'Shared movement across the busiest corridors',
+            },
+            {
+              label: isRTL ? 'الثقة والتحقق' : 'Verified confidence',
+              value: 'High',
+              detail: isRTL ? 'الالتزام الواضح بالحجز والصعود والتتبع' : 'Clear booking, boarding, and tracking signals',
+            },
+          ].map((item) => (
+            <Card
+              key={item.label}
+              className="border-white/10 bg-white/6 text-white shadow-[0_18px_40px_rgba(0,0,0,0.24)] backdrop-blur-xl"
+            >
+              <CardContent className="p-6">
+                <div className="mb-2 text-3xl font-semibold text-cyan-100">{item.value}</div>
+                <div className="text-sm font-semibold text-white">{item.label}</div>
+                <p className="mt-2 text-sm leading-6 text-slate-300">{item.detail}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Popular Routes Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {popularRoutes.map((route, index) => (
-            <Card 
-              key={index}
-              className="hover:shadow-xl transition-all duration-300 cursor-pointer group border-border hover:border-primary/30 relative overflow-hidden"
+        <div className="mb-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {popularRoutes.map((route) => (
+            <Card
+              key={`${route.from}-${route.to}`}
+              className="group overflow-hidden border-white/10 bg-white/6 text-white shadow-[0_18px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/35 hover:bg-white/8"
             >
-              {route.trending && (
-                <div className="absolute top-0 right-0 bg-gradient-to-l from-primary to-primary/90 text-primary-foreground px-4 py-1 text-xs flex items-center gap-1 rounded-bl-lg">
-                  <TrendingUp className="w-3 h-3" />
-                  Trending
-                </div>
-              )}
-              
-              {route.discount && (
-                <div className="absolute top-0 left-0 bg-gradient-to-r from-accent to-accent/90 text-accent-foreground px-4 py-1 text-xs rounded-br-lg">
-                  {route.discount}% OFF
-                </div>
-              )}
-
               <CardContent className="p-6">
-                {/* Route Header */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex-1">
-                      <h3 className="text-foreground group-hover:text-primary transition-colors">
-                        {route.from}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">{route.fromAr}</p>
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className="border-cyan-300/30 bg-cyan-300/10 text-cyan-100">
+                      {isRTL ? route.paceAr : route.pace}
+                    </Badge>
+                    {route.trending ? (
+                      <Badge className="border-amber-300/30 bg-amber-300/10 text-amber-100">
+                        {isRTL ? 'نشط' : 'Trending'}
+                      </Badge>
+                    ) : null}
+                  </div>
+                  {route.discount ? (
+                    <div className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-xs font-semibold text-emerald-100">
+                      {route.discount}% {isRTL ? 'خصم' : 'off'}
                     </div>
-                    <MoveRight className="w-6 h-6 text-primary mx-3 group-hover:translate-x-1 transition-transform" />
-                    <div className="flex-1 text-right">
-                      <h3 className="text-foreground group-hover:text-primary transition-colors">
+                  ) : null}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleRouteOpen(route)}
+                  className="w-full text-left"
+                >
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-lg font-semibold text-white transition-colors group-hover:text-cyan-100">
+                        {route.from}
+                      </div>
+                      <div className="text-sm text-slate-300">{route.fromAr}</div>
+                    </div>
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/6">
+                      <MoveRight className="h-5 w-5 text-cyan-100 transition-transform group-hover:translate-x-1" />
+                    </div>
+                    <div className="min-w-0 flex-1 text-right">
+                      <div className="text-lg font-semibold text-white transition-colors group-hover:text-cyan-100">
                         {route.to}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">{route.toAr}</p>
+                      </div>
+                      <div className="text-sm text-slate-300">{route.toAr}</div>
                     </div>
                   </div>
-                </div>
+                </button>
 
-                {/* Route Details */}
-                <div className="space-y-3 mb-4">
+                <p className="mb-5 text-sm leading-6 text-slate-300">
+                  {isRTL ? route.routeNoteAr : route.routeNote}
+                </p>
+
+                <div className="mb-5 grid gap-3 rounded-3xl border border-white/10 bg-black/10 p-4">
                   <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <CircleDollarSign className="w-4 h-4 text-primary" />
-                      <span>{isRTL ? 'ابتداءً من' : 'Starting from'}</span>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <CircleDollarSign className="h-4 w-4 text-cyan-200" />
+                      <span>{isRTL ? 'السعر المرجعي' : 'Reference fare'}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {route.discount && (
-                        <span className="text-gray-400 line-through text-xs">
+                    <div className="flex items-center gap-2 text-white">
+                      {route.discount ? (
+                        <span className="text-xs text-slate-400 line-through">
                           {Math.round(route.price / (1 - route.discount / 100))}
                         </span>
-                      )}
-                      <span className="text-lg text-primary">
+                      ) : null}
+                      <span className="text-lg font-semibold text-cyan-100">
                         {route.price} {route.currency}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Timer className="w-4 h-4 text-primary" />
-                      <span>{isRTL ? 'المدة' : 'Duration'}</span>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <Timer className="h-4 w-4 text-cyan-200" />
+                      <span>{isRTL ? 'المدة' : 'Typical duration'}</span>
                     </div>
-                    <span className="text-foreground">{route.duration}</span>
+                    <span className="font-medium text-white">{route.duration}</span>
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <UsersRound className="w-4 h-4 text-primary" />
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <UsersRound className="h-4 w-4 text-cyan-200" />
                       <span>{isRTL ? 'الرحلات المتاحة' : 'Available rides'}</span>
                     </div>
-                    <Badge variant="secondary" className="bg-primary/10 text-primary">
+                    <Badge className="border-cyan-300/30 bg-cyan-300/10 text-cyan-100">
                       {route.availableRides}
                     </Badge>
                   </div>
                 </div>
 
-                {/* Social Proof */}
-                <div className="pt-3 border-t border-border">
-                  <p className="text-xs text-muted-foreground text-center">
+                <div className="mb-5 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <ShieldCheck className="h-4 w-4 text-emerald-200" />
+                    <span>{isRTL ? 'إشارة الثقة' : 'Trust signal'}</span>
+                  </div>
+                  <span className="font-medium text-white">
                     {route.passengers.toLocaleString()}+ {isRTL ? 'مسافر هذا الشهر' : 'travelers this month'}
-                  </p>
+                  </span>
                 </div>
 
-                {/* Hover CTA */}
-                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button 
-                    onClick={handleGetStarted}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                    size="sm"
-                  >
-                    {isRTL ? 'عرض الرحلات المتاحة' : 'View Available Rides'}
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => handleRouteOpen(route)}
+                  className="w-full justify-between bg-cyan-300 text-slate-950 hover:bg-cyan-200"
+                  size="sm"
+                >
+                  {isRTL ? 'افتح هذا المسار' : 'Open this corridor'}
+                  <ArrowUpRight className="h-4 w-4" />
+                </Button>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* CTA Section */}
-        <div className="text-center">
-          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-            <CardContent className="p-8">
-              <h3 className="mb-3 text-foreground">{isRTL ? 'لم تجد مسارك؟' : "Can't find your route?"}</h3>
-              <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                {isRTL 
-                  ? 'نضيف مسارات جديدة كل يوم. انضم إلى واصل وكن أول من يعرف عند توفر مسارك، أو اعرض رحلتك الخاصة!'
-                  : "We're adding new routes every day. Join Wasel and be the first to know when your route becomes available, or offer your own ride!"}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button 
+        <Card className="border-white/10 bg-white/6 text-white shadow-[0_18px_40px_rgba(0,0,0,0.24)] backdrop-blur-xl">
+          <CardContent className="p-8 md:p-10">
+            <div className="grid gap-8 md:grid-cols-[1.4fr_0.9fr] md:items-center">
+              <div>
+                <h3 className="mb-3 text-2xl font-semibold text-white">
+                  {isRTL ? 'هل تريد ممر غير موجود هنا؟' : "Need a corridor that is not listed yet?"}
+                </h3>
+                <p className="max-w-2xl text-base leading-7 text-slate-300">
+                  {isRTL
+                    ? 'افتح البحث لتلتقط الطلب الحالي، أو اعرض مسارك بنفسك ليبدأ واصل في بناء حركة مشتركة حوله.'
+                    : 'Open search to capture today’s demand, or publish your own route so Wasel can start building shared movement around it.'}
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
+                <Button
                   onClick={handleGetStarted}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  className="bg-cyan-300 text-slate-950 hover:bg-cyan-200"
                   size="lg"
                 >
-                  {isRTL ? 'تصفح جميع المسارات' : 'Browse All Routes'}
+                  {isRTL ? 'تصفح كل المسارات' : 'Browse all routes'}
                 </Button>
-                <Button 
-                  onClick={handleGetStarted}
+                <Button
+                  onClick={handleOfferRide}
                   variant="outline"
-                  className="border-primary text-primary hover:bg-primary/5"
+                  className="border-white/20 bg-transparent text-white hover:bg-white/8"
                   size="lg"
                 >
-                  {isRTL ? 'اعرض رحلة' : 'Offer a Ride'}
+                  {isRTL ? 'اعرض مسارك' : 'Offer your route'}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Route Comparison Info */}
-        <div className="mt-16 grid md:grid-cols-3 gap-8">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CircleDollarSign className="w-8 h-8 text-primary" />
-            </div>
-            <h4 className="mb-2">{isRTL ? 'أفضل الأسعار مضمونة' : 'Best Prices Guaranteed'}</h4>
-            <p className="text-sm text-muted-foreground">
-              {isRTL ? 'قارن الأسعار عبر جميع المسارات ووفر حتى 65% مقارنة بالنقل التقليدي' : 'Compare prices across all routes and save up to 65% compared to traditional transport'}
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Timer className="w-8 h-8 text-primary" />
-            </div>
-            <h4 className="mb-2">{isRTL ? 'التوفر في الوقت الحقيقي' : 'Real-Time Availability'}</h4>
-            <p className="text-sm text-muted-foreground">
-              {isRTL ? 'تحديثات مباشرة على الرحلات المتاحة مع تأكيد فوري للحجز' : 'Live updates on available rides with instant booking confirmation'}
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <UsersRound className="w-8 h-8 text-primary" />
-            </div>
-            <h4 className="mb-2">{isRTL ? 'مجتمع موثق' : 'Verified Community'}</h4>
-            <p className="text-sm text-muted-foreground">
-              {isRTL ? 'سافر بثقة - جميع السائقين والركاب أعضاء موثقون' : 'Travel with confidence - all drivers and passengers are verified members'}
-            </p>
-          </div>
+        <div className="mt-16 grid gap-6 md:grid-cols-3">
+          {[
+            {
+              title: isRTL ? 'سعر واضح قبل الحجز' : 'Price clarity before booking',
+              body: isRTL
+                ? 'كل بطاقة تُظهر السعر المرجعي الحالي بدلاً من الاكتفاء باسم الممر.'
+                : 'Each card surfaces the current reference fare instead of hiding behind corridor names alone.',
+            },
+            {
+              title: isRTL ? 'إيقاع الحركة ظاهر' : 'Movement pace is visible',
+              body: isRTL
+                ? 'الصفحة تشرح لماذا هذا الممر مناسب الآن: ذروة، دراسة، عمل، أو عطلة أسبوع.'
+                : 'The page explains why a route matters now: peak demand, student traffic, work, or weekend flow.',
+            },
+            {
+              title: isRTL ? 'الثقة جزء من الاكتشاف' : 'Trust is part of discovery',
+              body: isRTL
+                ? 'إشارات التحقق وعدد المسافرين وتوفر الرحلات تظهر قبل أن يفتح المستخدم صفحة الحجز.'
+                : 'Verification, traveler volume, and live ride count all show up before the user opens the booking flow.',
+            },
+          ].map((item) => (
+            <Card
+              key={item.title}
+              className="border-white/10 bg-white/5 text-white shadow-[0_14px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl"
+            >
+              <CardContent className="p-6">
+                <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/25 bg-cyan-300/10">
+                  <ShieldCheck className="h-5 w-5 text-cyan-100" />
+                </div>
+                <h4 className="mb-2 text-lg font-semibold text-white">{item.title}</h4>
+                <p className="text-sm leading-6 text-slate-300">{item.body}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </section>

@@ -49,8 +49,12 @@ export function useHomePageDashboard(user: HomeUserShape | null | undefined) {
           id: user.id,
           name: resolvedName,
         }),
-      ).then(setReferral).catch(() => setReferral(null)),
-      getGrowthDashboard(user.id).then(setGrowthDashboard).catch(() => setGrowthDashboard(null)),
+      )
+        .then(setReferral)
+        .catch(() => setReferral(null)),
+      getGrowthDashboard(user.id)
+        .then(setGrowthDashboard)
+        .catch(() => setGrowthDashboard(null)),
     ]);
   }, [user?.email, user?.id, user?.user_metadata?.name]);
 
@@ -84,7 +88,9 @@ export function useHomePageDashboard(user: HomeUserShape | null | undefined) {
         );
         setReferralCode('');
         if (user?.id) {
-          void getGrowthDashboard(user.id).then(setGrowthDashboard).catch(() => undefined);
+          void getGrowthDashboard(user.id)
+            .then(setGrowthDashboard)
+            .catch(() => undefined);
         }
       } catch (error) {
         setReferralMessage(

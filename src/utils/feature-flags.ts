@@ -3,6 +3,8 @@
  * Centralized control for feature rollout, A/B testing, and gradual deployment
  */
 
+import type { ReactNode, ReactElement } from 'react';
+
 /**
  * Feature flag types
  */
@@ -107,8 +109,8 @@ export const FEATURE_FLAGS: Record<FeatureFlag, {
   trip_insurance: {
     enabled: false,
     rolloutPercentage: 0,
-    environments: ['staging'],
-    description: 'Trip insurance add-on (COMING SOON)',
+    environments: ['development', 'staging', 'production'],
+    description: 'Trip insurance add-on is hidden until backend support is implemented',
   },
 
   scheduled_rides: {
@@ -121,8 +123,8 @@ export const FEATURE_FLAGS: Record<FeatureFlag, {
   corporate_accounts: {
     enabled: false,
     rolloutPercentage: 0,
-    environments: ['staging'],
-    description: 'Corporate accounts and billing',
+    environments: ['development', 'staging', 'production'],
+    description: 'Corporate accounts are hidden until billing and account management are implemented',
   },
 
   accessibility_features: {
@@ -151,8 +153,8 @@ export const FEATURE_FLAGS: Record<FeatureFlag, {
  * Get current environment
  */
 function getCurrentEnvironment(): 'development' | 'staging' | 'production' {
-  if (import.meta.env.DEV) return 'development';
-  if (window.location.hostname.includes('staging')) return 'staging';
+  if (import.meta.env.DEV) {return 'development';}
+  if (typeof window !== 'undefined' && window.location.hostname.includes('staging')) {return 'staging';}
   return 'production';
 }
 
@@ -175,9 +177,10 @@ export function isFeatureEnabled(flag: FeatureFlag, userId?: string): boolean {
 
   // Check rollout percentage
   if (config.rolloutPercentage < 100) {
-    // Deterministic rollout based on user ID
+    // Without a userId we cannot make a deterministic decision — deny access
+    // rather than using Math.random() which produces inconsistent UX.
     if (!userId) {
-      return Math.random() * 100 < config.rolloutPercentage;
+      return false;
     }
 
     // Use user ID for consistent rollout via djb2 hash (better distribution than char-code sum)
@@ -247,18 +250,17 @@ export function getFeatureRolloutStatus(): Record<FeatureFlag, {
  */
 export function setFeatureFlagOverride(flag: FeatureFlag, enabled: boolean): void {
   if (import.meta.env.DEV) {
-    // Store override in sessionStorage for testing
-    sessionStorage.setItem(`ff:${flag}`, String(enabled));
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(`ff:${flag}`, String(enabled));
+    }
   } else {
     console.warn('[Feature flags] Cannot override in production');
   }
 }
 
-/**
- * Get feature flag override (if set in dev)
- */
 export function getFeatureFlagOverride(flag: FeatureFlag): boolean | null {
-  if (!import.meta.env.DEV) return null;
+  if (!import.meta.env.DEV) {return null;}
+  if (typeof sessionStorage === 'undefined') {return null;}
   const override = sessionStorage.getItem(`ff:${flag}`);
   return override ? override === 'true' : null;
 }
@@ -281,10 +283,10 @@ export function FeatureGated({
 }: {
   flag: FeatureFlag;
   userId?: string;
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
-}): React.ReactElement | null {
+  children: ReactNode;
+  fallback?: ReactNode;
+}): ReactElement | null {
   return isFeatureEnabled(flag, userId)
-    ? (children as React.ReactElement)
-    : (fallback as React.ReactElement | null) ?? null;
+    ? (children as ReactElement)
+    : (fallback as ReactElement | null) ?? null;
 }

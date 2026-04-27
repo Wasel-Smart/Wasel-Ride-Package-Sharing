@@ -4,7 +4,7 @@
  * Covers: createBooking, getUserBookings, getTripBookings, updateBookingStatus.
  * Both the edge-API path and the direct-Supabase fallback path are exercised.
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ── Hoisted mocks ─────────────────────────────────────────────────────────────
 
@@ -70,7 +70,17 @@ function fail(body: unknown = { error: 'Server error' }) {
   return Promise.resolve({ ok: false, status: 500, json: () => Promise.resolve(body) });
 }
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.stubEnv('MODE', 'test');
+  vi.stubEnv('NODE_ENV', 'test');
+  vi.stubEnv('VITE_APP_ENV', 'test');
+  vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'true');
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 // ── createBooking ─────────────────────────────────────────────────────────────
 

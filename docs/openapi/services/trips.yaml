@@ -1,0 +1,97 @@
+openapi: 3.1.0
+info:
+  title: Wasel Trips Service API
+  version: v1
+  description: Generated OpenAPI contract for the trips bounded domain.
+servers:
+  - url: https://api.wasel.app
+    description: Production
+  - url: https://staging-api.wasel.app
+    description: Staging
+tags:
+  - name: trips
+    description: mobility-platform
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    requestSignature:
+      type: apiKey
+      in: header
+      name: X-Wasel-Signature
+paths:
+  /v1/trips:
+    post:
+      tags:
+        - trips
+      operationId: createTrip
+      summary: Create a trip.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/trips/{id}:
+    get:
+      tags:
+        - trips
+      operationId: getTripById
+      summary: Read a single trip.
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+    put:
+      tags:
+        - trips
+      operationId: updateTrip
+      summary: Update trip state.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/trips/search:
+    get:
+      tags:
+        - trips
+      operationId: searchTrips
+      summary: Search corridor inventory.
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error

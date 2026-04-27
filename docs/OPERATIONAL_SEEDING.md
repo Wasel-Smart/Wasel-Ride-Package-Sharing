@@ -1,82 +1,30 @@
 # Operational Seeding
 
-This project now boots from a modular operational seed pipeline under `db/seeds/`.
-The goal is simple: after migrations and seeding, the platform should be ready to
-exercise real product flows without manual dashboard setup.
+Operational seed execution is governed by `scripts/supabase-migration-registry.mjs`.
+Do not invent ad hoc seed order or manually maintain a second source of truth.
 
-## What Gets Seeded
+## Rules
 
-The seed pipeline is layered and idempotent:
+1. Apply rollout migrations before any operational seed pack.
+2. Keep every operational seed file transactional: start with `BEGIN;` and end with `COMMIT;`.
+3. Every seed must be idempotent and must write to `public.seed_execution_log`.
+4. Smoke-check seeds are not part of production cutover and must stay separate from operational seeds.
+5. After any migration or seed change, run `npm run verify:supabase-rollout`.
 
-1. `roles.seed.sql`
-   Seeds the canonical operational roles: `admin`, `driver`, and `rider`.
-2. `cities.seed.sql`
-   Seeds the launch geography: `Amman`, `Irbid`, `Aqaba`, and `Zarqa`.
-3. `trip_types.seed.sql`
-   Seeds `Wasel` and `Raje3`, including the auto-return planning model.
-4. `pricing.seed.sql`
-   Seeds high-demand corridors plus pricing rules for one-way and return-aware trips.
-5. `core.seed.sql`
-   Seeds realistic users, drivers, vehicles, trips, bookings, packages, wallets, and notifications.
-6. `automation.seed.sql`
-   Seeds route reminders, demand alerts, pricing snapshots, support tickets, referrals, growth events, and worker jobs.
+## Canonical Flow
 
-Each seed file is transaction-wrapped and uses stable keys plus `ON CONFLICT`
-upserts so it can be run repeatedly without duplicating operational data.
+1. Review `src/supabase/migrations/MIGRATIONS_README.md`.
+2. Apply rollout migrations in the registry-defined order.
+3. Apply the operational seeds listed in the same registry.
+4. Run the smoke-check seed only in rehearsal or validation environments.
 
-## Commands
+## Seed Packs
 
-Apply only the modular seed pipeline:
+- Operational seeds: `db/seeds/roles.seed.sql`, `db/seeds/cities.seed.sql`, `db/seeds/trip_types.seed.sql`, `db/seeds/pricing.seed.sql`, `db/seeds/core.seed.sql`, `db/seeds/automation.seed.sql`
+- Smoke checks: `src/supabase/seeds/mock_engine_smoke_checks.sql`
 
-```bash
-npm run seed
-```
+## Guardrails
 
-Apply migrations and then seeds in one rollout:
-
-```bash
-npm run apply:supabase-rollout -- --with-seeds
-```
-
-Run just the operational seeds without smoke-check selects:
-
-```bash
-node scripts/run-seeds.mjs --skip-smoke-checks
-```
-
-## Verification Queries
-
-After seeding, these checks should all return data:
-
-```sql
-select count(*) from public.system_roles;
-select count(*) from public.cities;
-select count(*) from public.trip_types_catalog;
-select count(*) from public.route_corridors;
-select count(*) from public.pricing_rules;
-select count(*) from public.trips where trip_type_key = 'raje3';
-select count(*) from public.automation_jobs where job_status = 'queued';
-select seed_name, seed_status, executed_at
-from public.seed_execution_log
-order by executed_at desc;
-```
-
-## Safe Extension Rules
-
-1. Add schema in a new migration, never by editing an old migration.
-2. Add new reference data to the smallest seed layer that owns it.
-3. Prefer fixed IDs or stable natural keys for seed rows.
-4. Always use `ON CONFLICT` or deterministic update logic.
-5. Keep each seed file internally transactional with `begin` and `commit`.
-6. If a new automation flow needs queue rows, seed both the source record and the derived worker job contract.
-7. If you add a new seed file, update `scripts/supabase-migration-registry.mjs`, regenerate docs with `npm run sync:supabase-migration-docs`, and run `npm run verify:supabase-rollout`.
-
-## Operational Notes
-
-- `trip_type_key = 'wasel'` represents one-way execution.
-- `trip_type_key = 'raje3'` plus a shared `lifecycle_group_id` and `paired_trip_id`
-  represents the return-aware lifecycle.
-- `automation.seed.sql` calls `public.app_backfill_automation_jobs(50)` so reminder
-  and support jobs self-initialize after the source data lands.
-- The legacy mock launch pack under `src/supabase/seeds/` remains in the repo for
-  historical reference, but the operational bootstrap source of truth is now `db/seeds/`.
+- Never edit historical migrations to compensate for bad seed data.
+- Fix data drift with a new migration or a new idempotent seed step.
+- Treat seed failures as rollout failures. Do not continue with partial reference data.

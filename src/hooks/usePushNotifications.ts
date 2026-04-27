@@ -35,7 +35,7 @@ export interface NotifyOptions {
   autoCloseMs?: number;
 }
 
-const BRAND_ASSET_VERSION = '20260413clear';
+const BRAND_ASSET_VERSION = '20260422-premium';
 const DEFAULT_ICON = `/icon-192.png?v=${BRAND_ASSET_VERSION}`;
 const DEFAULT_BADGE = `/favicon-32x32.png?v=${BRAND_ASSET_VERSION}`;
 const DEFAULT_CLOSE_MS = 8_000;

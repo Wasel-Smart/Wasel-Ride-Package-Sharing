@@ -104,19 +104,11 @@ export function subscribeToDriverLocation(
     return () => {};
   }
 
-  // Subscribe to driver_locations table changes
-  const channel = supabase.channel(`driver:${driverId}`) as unknown as {
-    on: (
-      event: string,
-      filter: Record<string, string>,
-      callback: (payload: { new: DriverLocationRecord | null }) => void,
-    ) => {
-      subscribe: () => Parameters<NonNullable<typeof supabase>['removeChannel']>[0];
-    };
-  };
+  const channel = supabase.channel(`driver:${driverId}`);
 
   const subscription = channel
     .on(
+      // @ts-expect-error — postgres_changes is a valid Supabase realtime event
       'postgres_changes',
       {
         event: '*',
@@ -124,9 +116,9 @@ export function subscribeToDriverLocation(
         table: 'driver_locations',
         filter: `driver_id=eq.${driverId}`,
       },
-      (payload) => {
+      (payload: { new: DriverLocationRecord | null }) => {
         try {
-          if (!payload.new) return;
+          if (!payload.new) {return;}
           onUpdate(mapDriverLocationRecord(payload.new));
         } catch (error) {
           onError?.(error instanceof Error ? error : new Error(String(error)));
@@ -146,7 +138,7 @@ export function subscribeToDriverLocation(
 export async function getDriverLocation(
   driverId: string
 ): Promise<DriverLocation | null> {
-  if (!supabase) throw new Error('Supabase not initialized');
+  if (!supabase) {throw new Error('Supabase not initialized');}
 
   try {
     const { data, error } = await supabase
@@ -157,8 +149,8 @@ export async function getDriverLocation(
       .limit(1)
       .single();
 
-    if (error) throw error;
-    if (!data) return null;
+    if (error) {throw error;}
+    if (!data) {return null;}
 
     return mapDriverLocationRecord(data as DriverLocationRecord);
   } catch (error) {
@@ -173,7 +165,7 @@ export async function getDriverLocation(
 export async function getTripDriverLocations(
   tripId: string
 ): Promise<DriverLocation[]> {
-  if (!supabase) throw new Error('Supabase not initialized');
+  if (!supabase) {throw new Error('Supabase not initialized');}
 
   try {
     const { data, error } = await supabase
@@ -183,8 +175,8 @@ export async function getTripDriverLocations(
       .order('updated_at', { ascending: false })
       .limit(10);
 
-    if (error) throw error;
-    if (!data) return [];
+    if (error) {throw error;}
+    if (!data) {return [];}
 
     return (data as DriverLocationRecord[]).map((record: DriverLocationRecord) =>
       mapDriverLocationRecord(record),
@@ -384,7 +376,7 @@ export async function getNearbyTrafficIncidents(
   lng: number,
   radiusKm: number = 5
 ): Promise<TrafficIncident[]> {
-  if (!supabase) return [];
+  if (!supabase) {return [];}
 
   try {
     // This would use PostGIS in a real implementation

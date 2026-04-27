@@ -1,446 +1,468 @@
-/**
- * WalletDashboard
- *
- * Render-focused wallet screen. Runtime mode selection, demo/live data
- * handling, and wallet mutations now live in `useWalletDashboardController`.
- */
-
-import { Wallet, Gift, RefreshCw, Lock } from 'lucide-react';
-import { lazy, Suspense } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
+import {
+  CircleAlert,
+  CreditCard,
+  LoaderCircle,
+  RefreshCw,
+  ShieldCheck,
+  Wallet as WalletIcon,
+} from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
-import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
-import { WaselColors } from '../../tokens/wasel-tokens';
-import { useWalletDashboardController } from './useWalletDashboardController';
-import { TransactionRow as SharedTransactionRow } from './components/WalletShared';
-import { OverviewTab } from './components/OverviewTab';
-import { SettingsTab } from './components/SettingsTab';
-import { WalletHeroCard } from './components/WalletHeroCard';
-import { WalletActionModals } from './components/WalletActionModals';
-import type { RewardItem, WalletTransaction } from '../../services/walletApi';
+import { Button } from '../../components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../../components/ui/card';
+import { OperationalConfidencePanel } from '../../components/trust/OperationalConfidencePanel';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useLocalAuth } from '../../contexts/LocalAuth';
+import { getWalletConfidenceSummary } from '../../domains/trust/operationalConfidence';
+import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import {
+  ClarityBand,
+  CoreExperienceBanner,
+  PageShell,
+  Protected,
+  SectionHead,
+} from '../shared/pageShared';
+import { useWallet } from './useWallet';
 
-const LazyInsightsTab = lazy(async () => {
-  const module = await import('./components/InsightsTab');
-  return { default: module.InsightsTab };
-});
+function formatCurrency(value: number, currency = 'JOD', locale = 'en-JO') {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+const WALLET_COPY = {
+  en: {
+    loading: 'Loading...',
+    header: {
+      title: 'Wallet',
+      subtitle: 'Check live balance and add money for rides or packages.',
+      refresh: 'Refresh wallet',
+    },
+    banner: {
+      title: 'Wallet stays limited.',
+      detail:
+        'Use this page to see live balance, recent activity, and the next payment step for rides or packages.',
+    },
+    clarity: {
+      title: 'See the live wallet state before you pay.',
+      detail:
+        'Balance, pending value, and payment methods come from the backend before you continue.',
+    },
+    metrics: {
+      balance: 'Available balance',
+      pending: 'Pending balance',
+      rewards: 'Rewards',
+    },
+    liveBadge: 'Live wallet',
+    loadingWallet: 'Loading wallet...',
+    liveDescription:
+      'Balance, pending funds, and saved payment methods come from the live wallet service.',
+    pendingBalance: 'Pending balance',
+    paymentMethods: 'Payment methods',
+    noDefaultMethod: 'No default method',
+    servicePosture: 'Service posture',
+    updatedAt: 'Updated',
+    waitingSync: 'Waiting for the latest wallet sync.',
+    meta: {
+      backup: 'Backup path active',
+      primary: 'Primary edge sync',
+      direct: 'Direct wallet service',
+    },
+    actions: {
+      title: 'Wallet actions',
+      description:
+        'Add money, open payments, or refresh the live wallet state.',
+      addMoney: 'Add money',
+      withdraw: 'Open payments',
+      refresh: 'Refresh wallet',
+    },
+    history: {
+      title: 'Recent activity',
+      summary: 'Showing {visible} of {total} wallet movements.',
+      loading: 'Loading wallet activity...',
+      empty: 'No wallet activity yet.',
+      loadMore: 'Load more activity',
+    },
+  },
+  ar: {
+    loading: 'جارٍ التحميل...',
+    header: {
+      title: 'المحفظة',
+      subtitle: 'القيمة المخزنة، حالة الرصيد، والتحويلات المباشرة في سطح واحد.',
+      refresh: 'تحديث المحفظة',
+    },
+    banner: {
+      title: 'القيمة المخزنة تبقى واضحة.',
+      detail:
+        'يبقى الرصيد والسحب والتحويل بين الأشخاص قريباً من الثقة ومصادر التمويل وحركة المحفظة الأخيرة.',
+    },
+    clarity: {
+      title: 'شاهد صورة المحفظة المباشرة قبل تحريك المال.',
+      detail:
+        'يبقى الرصيد والقيمة المعلقة والمكافآت ظاهرة معاً حتى تكون الخطوة التالية واضحة.',
+    },
+    metrics: {
+      balance: 'الرصيد المتاح',
+      pending: 'الرصيد المعلّق',
+      rewards: 'المكافآت',
+    },
+    liveBadge: 'محفظة مباشرة',
+    loadingWallet: 'جارٍ تحميل المحفظة...',
+    liveDescription:
+      'يتم تحديث الرصيد الحالي والأموال المعلقة ووضع طرق الدفع من خدمة المحفظة المباشرة.',
+    pendingBalance: 'الرصيد المعلّق',
+    paymentMethods: 'طرق الدفع',
+    noDefaultMethod: 'لا توجد طريقة افتراضية',
+    servicePosture: 'حالة الخدمة',
+    updatedAt: 'آخر تحديث',
+    waitingSync: 'بانتظار آخر مزامنة للمحفظة.',
+    meta: {
+      backup: 'مسار احتياطي نشط',
+      primary: 'مزامنة الحافة الأساسية',
+      direct: 'خدمة المحفظة المباشرة',
+    },
+    actions: {
+      title: 'إجراءات المحفظة',
+      description:
+        'أضف المال أو اسحب أو حدّث حالة المحفظة من دون مغادرة سطح القيمة المخزنة.',
+      addMoney: 'إضافة المال',
+      withdraw: 'سحب',
+      refresh: 'تحديث المحفظة',
+    },
+    transfer: {
+      title: 'إرسال المال',
+      description: 'انقل القيمة مباشرة إلى حساب Wasel آخر مع حماية PIN ورمز التحقق.',
+      recipient: 'معرّف المستخدم المستلم',
+      recipientPlaceholder: 'user_123 أو اسم المحفظة',
+      amount: 'المبلغ',
+      amountPlaceholder: '25.00',
+      note: 'ملاحظة',
+      notePlaceholder: 'أضف ملاحظة قصيرة',
+      pin: 'رقم PIN للمحفظة',
+      pinPlaceholder: 'أدخل رقم PIN',
+      otp: 'رمز لمرة واحدة',
+      otpPlaceholder: 'أدخل رمز التحقق',
+      verifyAction: 'تحقق وأرسل',
+      submit: 'إرسال',
+    },
+    history: {
+      title: 'النشاط الأخير',
+      summary: 'عرض {visible} من أصل {total} من تحركات المحفظة.',
+      loading: 'جارٍ تحميل نشاط المحفظة...',
+      empty: 'لا يوجد نشاط للمحفظة بعد.',
+      loadMore: 'تحميل المزيد من النشاط',
+    },
+  },
+} as const;
+
+function formatMetaSource(
+  source: string,
+  degraded: boolean,
+  copy: { backup: string; primary: string; direct: string },
+) {
+  if (degraded) {
+    return copy.backup;
+  }
+  return source === 'edge-api' ? copy.primary : copy.direct;
+}
+
+function formatTransactionMeta(
+  transaction: { createdAt: string; status: string; type: string },
+  formatDate: (value: Date | number | string, options?: Intl.DateTimeFormatOptions) => string,
+) {
+  return [
+    transaction.type.replace(/_/g, ' '),
+    formatDate(transaction.createdAt, { dateStyle: 'medium', timeStyle: 'short' }),
+    transaction.status,
+  ].join(' • ');
+}
 
 export function WalletDashboard() {
+  const { user } = useLocalAuth();
+  const navigate = useIframeSafeNavigate();
+  const { formatDate, language, locale } = useLanguage();
+  const copy = WALLET_COPY[language];
   const {
-    actionLoading,
-    autoTopUpAmount,
-    autoTopUpEnabled,
-    autoTopUpThreshold,
-    balanceVisible,
-    handleAddPaymentMethod,
-    handleAutoTopUpToggle,
-    handleClaimReward,
-    handleRefresh,
-    handleRemovePaymentMethod,
-    handleSend,
-    handleSetDefaultPaymentMethod,
-    handleSetPin,
-    handleSubscribe,
-    handleTopUp,
-    handleWithdraw,
-    insights,
-    isRTL,
+    error,
+    hasMoreTransactions,
     loading,
-    pinValue,
-    refreshing,
-    sendAmount,
-    sendNote,
-    sendRecipient,
-    setAutoTopUpAmount,
-    setAutoTopUpThreshold,
-    setBalanceVisible,
-    setPinValue,
-    setSendAmount,
-    setSendNote,
-    setSendRecipient,
-    setShowPinSetup,
-    setShowSend,
-    setShowTopUp,
-    setShowWithdraw,
-    setTab,
-    setTopUpAmount,
-    setTopUpMethod,
-    setWithdrawAmount,
-    setWithdrawBank,
-    setWithdrawMethod,
-    shouldRedirectToAuth,
-    showPinSetup,
-    showSend,
-    showTopUp,
-    showWithdraw,
-    t,
-    tab,
-    topUpAmount,
-    topUpMethod,
-    walletActionsLocked,
-    walletActionsLockedMessage,
-    walletData,
-    walletHealth,
-    walletInsightsHealth,
-    walletUnavailable,
-    withdrawAmount,
-    withdrawBank,
-    withdrawMethod,
-  } = useWalletDashboardController();
+    loadingMore,
+    meta,
+    refresh,
+    totalTransactions,
+    transactions,
+    wallet,
+    loadMoreTransactions,
+  } = useWallet(user?.id ?? null);
 
-  const bal = walletData?.balance ?? 0;
-  const pending = walletData?.pendingBalance ?? 0;
-  const rewardsBal = walletData?.rewardsBalance ?? 0;
-  const walletStatusLabel = !walletHealth
-    ? null
-    : walletHealth.degraded
-      ? (isRTL ? 'وضع احتياطي' : 'Fallback mode')
-      : walletHealth.source === 'edge-api'
-        ? (isRTL ? 'خدمة مباشرة' : 'Live backend')
-        : (isRTL ? 'مزامنة مباشرة' : 'Direct sync');
-  const walletStatusDescription = !walletHealth
-    ? null
-    : walletHealth.degraded
-      ? (isRTL ? 'البيانات قادمة من Supabase مباشرة بسبب تعطل مسار المحفظة الأساسي.' : 'Using backup data.')
-      : walletHealth.source === 'edge-api'
-        ? (isRTL ? 'المحفظة تقرأ من مسار الخدمة الأساسي.' : 'Using the main service.')
-        : (isRTL ? 'المحفظة تقرأ مباشرة من Supabase.' : 'Using direct sync.');
-  const insightsStatusLabel = walletInsightsHealth?.degraded
-    ? (isRTL ? 'الإحصاءات محلية' : 'Insights fallback')
-    : null;
-  const walletReadOnlyTitle = t.walletReadOnlyTitle;
-  const walletReadOnlyDescription = t.walletReadOnlyDescription;
-  const walletReadOnlyHint = t.walletReadOnlyHint;
-  if (shouldRedirectToAuth) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Lock className="w-12 h-12 text-muted-foreground/60" />
-        <p className="text-muted-foreground text-sm">
-          {t.redirectingToSignIn}
-        </p>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
-        <p className="text-muted-foreground text-sm">{t.processing}</p>
-      </div>
-    );
-  }
-
-  if (walletUnavailable) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh] px-6">
-        <div
-          className="w-full max-w-xl rounded-3xl border text-center p-8 md:p-10"
-          style={{
-            background: `linear-gradient(180deg, ${WaselColors.navyCard} 0%, rgba(4,12,24,0.98) 100%)`,
-            borderColor: `${WaselColors.teal}25`,
-            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.35)',
-          }}
-        >
-          <div className="flex justify-center mb-5">
-            <WaselLogo size={36} theme="dark" variant="full" showWordmark={false} />
-          </div>
-          <div
-            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl"
-            style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${WaselColors.teal}20` }}
-          >
-            <Wallet className="w-7 h-7" style={{ color: WaselColors.teal }} />
-          </div>
-          <div className="space-y-2">
-            <p className="text-foreground text-lg font-semibold">
-              {t.walletUnavailableTitle}
-            </p>
-            <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-6">
-              {t.walletUnavailableDescription}
-            </p>
-          </div>
-          <div
-            className="mt-5 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground"
-            style={{ borderColor: `${WaselColors.teal}22`, background: 'rgba(255,255,255,0.03)' }}
-          >
-            <span className="h-2 w-2 rounded-full" style={{ background: WaselColors.success }} />
-            {t.walletUnavailableHint}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!walletData) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh] px-6">
-        <div
-          className="w-full max-w-2xl rounded-3xl border p-8 md:p-10"
-          style={{
-            background: `linear-gradient(180deg, ${WaselColors.navyCard} 0%, rgba(4,12,24,0.98) 100%)`,
-            borderColor: `${WaselColors.teal}25`,
-            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.35)',
-          }}
-        >
-          <div className="flex flex-wrap items-start justify-between gap-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <WaselLogo size={34} showWordmark={false} />
-                <Badge variant="secondary" className="border border-primary/20 bg-primary/10 text-primary">
-                  {t.walletTitle}
-                </Badge>
-              </div>
-              <div className="space-y-2">
-                <p className="text-foreground text-xl font-semibold">
-                  {t.walletEmptyTitle}
-                </p>
-                <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-                  {t.walletEmptyDescription}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1.5">
-                  {t.walletSnapshotLabel}: {t.walletSnapshotDescription}
-                </span>
-                <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1.5">
-                  {walletHealth?.degraded ? walletStatusLabel : t.walletEmptyAction}
-                </span>
-              </div>
-            </div>
-            <Button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="h-11 rounded-xl px-5 text-sm font-semibold"
-              style={{ background: WaselColors.teal }}
-            >
-              <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-              {t.retry}
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const paymentMethods = wallet?.wallet.paymentMethods ?? [];
+  const defaultPaymentMethod = paymentMethods.find(method => method.isDefault) ?? null;
+  const recentTransactions = transactions;
+  const walletConfidence = getWalletConfidenceSummary({
+    wallet,
+    meta,
+    transferChallenge: null,
+    totalTransactions,
+    defaultPaymentMethodLabel: defaultPaymentMethod?.label ?? null,
+    formatMoney: (value, currency) => formatCurrency(value, currency, locale),
+  });
 
   return (
-    <div className="space-y-6 pb-8 max-w-4xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <WaselLogo size={34} showWordmark={false} />
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-foreground">{t.walletTitle}</h1>
-              <Badge variant="secondary" className="border border-primary/20 bg-primary/10 text-primary">
-                {t.activeLabel}
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground">{t.walletSubtitle}</p>
-          </div>
-        </div>
-        <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
-          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-        </Button>
-      </div>
-
-      {walletStatusLabel && (
-        <Card className="rounded-xl border-primary/10 bg-card/70">
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="border border-primary/20 bg-primary/10 text-primary">
-                  {walletStatusLabel}
-                </Badge>
-                {insightsStatusLabel && (
-                  <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-500">
-                    {insightsStatusLabel}
-                  </Badge>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">{walletStatusDescription}</p>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              {isRTL ? 'آخر تحديث' : 'Updated'} {new Date(walletHealth?.fetchedAt ?? Date.now()).toLocaleTimeString(isRTL ? 'ar-JO' : 'en-US')}
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {walletActionsLocked && (
-        <Card className="rounded-xl border-amber-500/20 bg-amber-500/5">
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-500">
-                  {walletReadOnlyTitle}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">{walletReadOnlyDescription}</p>
-            </div>
-            <p className="text-[11px] text-amber-500">{walletReadOnlyHint}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      <WalletHeroCard
-        actionsLocked={walletActionsLocked}
-        balanceVisible={balanceVisible}
-        balance={bal}
-        pendingBalance={pending}
-        rewardsBalance={rewardsBal}
-        subscription={walletData?.subscription ?? null}
-        t={t}
-        onToggleBalance={() => setBalanceVisible(!balanceVisible)}
-        onShowTopUp={() => setShowTopUp(true)}
-        onShowWithdraw={() => setShowWithdraw(true)}
-        onShowSend={() => setShowSend(true)}
-      />
-
-      <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="flex h-auto w-full gap-2 overflow-x-auto rounded-xl bg-card p-1">
-          <TabsTrigger value="overview" className="min-w-[110px] flex-1 rounded-lg text-xs">{t.overview}</TabsTrigger>
-          <TabsTrigger value="transactions" className="min-w-[110px] flex-1 rounded-lg text-xs">{t.transactions}</TabsTrigger>
-          <TabsTrigger value="rewards" className="min-w-[110px] flex-1 rounded-lg text-xs">{t.rewardsTab}</TabsTrigger>
-          <TabsTrigger value="insights" className="min-w-[110px] flex-1 rounded-lg text-xs">{t.insights}</TabsTrigger>
-          <TabsTrigger value="settings" className="min-w-[110px] flex-1 rounded-lg text-xs">{t.settings}</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="mt-4 space-y-4">
-          <OverviewTab
-            walletData={walletData}
-            isRTL={isRTL}
-            t={t}
-            onSetTab={setTab}
-            onSubscribe={handleSubscribe}
-            actionLoading={actionLoading}
-            actionsLocked={walletActionsLocked}
+    <PageShell>
+      <Protected>
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-8 pt-4 md:px-6">
+          <SectionHead
+            emoji={<WalletIcon aria-hidden="true" className="h-5 w-5" />}
+            title={copy.header.title}
+            sub={copy.header.subtitle}
+            color="var(--accent)"
+            action={{
+              label: loading ? copy.loading : copy.header.refresh,
+              onClick: () => {
+                void refresh();
+              },
+            }}
           />
-        </TabsContent>
 
-        <TabsContent value="transactions" className="mt-4">
-          <Card className="rounded-xl">
-            <CardContent className="pt-4">
-              {(!walletData?.transactions || walletData.transactions.length === 0) ? (
-                <div className="text-center py-12 text-muted-foreground text-sm">{t.noTransactions}</div>
-              ) : (
-                walletData.transactions.map((tx: WalletTransaction) => (
-                  <SharedTransactionRow key={tx.id} tx={tx} isRTL={isRTL} jodLabel={t.jod} t={t} />
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <CoreExperienceBanner
+            title={copy.banner.title}
+            detail={copy.banner.detail}
+            tone="var(--accent)"
+          />
 
-        <TabsContent value="rewards" className="mt-4 space-y-4">
-          <Card className="rounded-xl">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Gift className="w-4 h-4 text-purple-400" />
-                {t.activeRewards}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {(!walletData?.activeRewards || walletData.activeRewards.length === 0) ? (
-                <div className="text-center py-8">
-                  <Gift className="w-12 h-12 mx-auto mb-3 text-muted-foreground/30" />
-                  <p className="text-muted-foreground text-sm">{t.noRewards}</p>
-                </div>
-              ) : (
-                walletData.activeRewards.map((r: RewardItem) => (
-                  <div key={r.id} className="flex items-center justify-between py-3 border-b border-border/30 last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">{r.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {t.expires}: {new Date(r.expirationDate).toLocaleDateString(isRTL ? 'ar-JO' : 'en-US', { month: 'short', day: 'numeric' })}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-purple-500/10 text-purple-400 border-purple-500/30 font-bold">
-                        {r.amount} {t.jod}
-                      </Badge>
-                      <Button size="sm" variant="outline" disabled={walletActionsLocked} onClick={() => handleClaimReward(r.id)} className="text-xs border-purple-500/30 text-purple-400 hover:bg-purple-500/10">
-                        {t.claim}
-                      </Button>
-                    </div>
+          <ClarityBand
+            title={copy.clarity.title}
+            detail={copy.clarity.detail}
+            tone="var(--accent)"
+            items={[
+              {
+                label: copy.metrics.balance,
+                value: wallet
+                  ? formatCurrency(wallet.balance, wallet.currency, locale)
+                  : copy.loading,
+              },
+              {
+                label: copy.metrics.pending,
+                value: wallet
+                  ? formatCurrency(wallet.pendingBalance, wallet.currency, locale)
+                  : copy.loading,
+              },
+              {
+                label: copy.metrics.rewards,
+                value: wallet
+                  ? formatCurrency(wallet.rewardsBalance, wallet.currency, locale)
+                  : copy.loading,
+              },
+            ]}
+          />
+
+          {error && !wallet ? (
+            <div
+              className="flex items-start gap-3 rounded-3xl border border-destructive/25 bg-destructive/10 p-4 text-sm text-destructive"
+              role="alert"
+            >
+              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="space-y-1">
+                <p className="font-semibold text-foreground">Wallet service unavailable</p>
+                <p>{error}</p>
+              </div>
+            </div>
+          ) : null}
+
+          <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+            <Card className="border-primary/15 bg-[linear-gradient(140deg,rgba(3,13,28,0.96),rgba(8,34,60,0.92))]">
+              <CardHeader className="gap-3">
+                <Badge className="w-fit border border-primary/20 bg-primary/10 text-primary">
+                  {copy.liveBadge}
+                </Badge>
+                <CardTitle className="flex items-center gap-3 text-2xl text-foreground">
+                  <WalletIcon className="h-6 w-6 text-primary" />
+                  {wallet
+                    ? formatCurrency(wallet.balance, wallet.currency, locale)
+                    : copy.loadingWallet}
+                </CardTitle>
+                <CardDescription className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                  {copy.liveDescription}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-3 pb-6 md:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <RefreshCw className="h-4 w-4 text-primary" />
+                    {copy.pendingBalance}
                   </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  <p className="text-2xl font-bold text-foreground">
+                    {wallet ? formatCurrency(wallet.pendingBalance, wallet.currency, locale) : '--'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <CreditCard className="h-4 w-4 text-primary" />
+                    {copy.paymentMethods}
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{paymentMethods.length}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {defaultPaymentMethod?.label ?? copy.noDefaultMethod}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    {copy.servicePosture}
+                  </div>
+                  <p className="text-lg font-semibold text-foreground">
+                    {meta ? formatMetaSource(meta.source, meta.degraded, copy.meta) : copy.loading}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {meta
+                      ? `${copy.updatedAt} ${formatDate(meta.fetchedAt, {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })}`
+                      : copy.waitingSync}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-        <TabsContent value="insights" className="mt-4 space-y-4">
-          <Suspense
-            fallback={(
-              <div className="flex items-center justify-center rounded-2xl border border-border/40 bg-card/40 px-6 py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary" />
-              </div>
-            )}
-          >
-            <LazyInsightsTab insights={insights} isRTL={isRTL} t={t} />
-          </Suspense>
-        </TabsContent>
+            <div className="grid gap-4">
+              <OperationalConfidencePanel summary={walletConfidence} variant="detail" />
 
-        <TabsContent value="settings" className="mt-4 space-y-4">
-          <SettingsTab
-            walletData={walletData}
-            isRTL={isRTL}
-            t={t}
-            autoTopUpEnabled={autoTopUpEnabled}
-            autoTopUpAmount={autoTopUpAmount}
-            autoTopUpThreshold={autoTopUpThreshold}
-            onAutoTopUpToggle={handleAutoTopUpToggle}
-            onAutoTopUpAmountChange={setAutoTopUpAmount}
-            onAutoTopUpThresholdChange={setAutoTopUpThreshold}
-            onShowPinSetup={() => setShowPinSetup(true)}
-            onAddPaymentMethod={handleAddPaymentMethod}
-            onRemovePaymentMethod={handleRemovePaymentMethod}
-            onSetDefaultPaymentMethod={handleSetDefaultPaymentMethod}
-            actionsLocked={walletActionsLocked}
-            actionsLockedMessage={walletActionsLockedMessage}
-          />
-        </TabsContent>
-      </Tabs>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg text-foreground">{copy.actions.title}</CardTitle>
+                  <CardDescription className="text-sm leading-6 text-muted-foreground">
+                    {copy.actions.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button
+                    className="w-full"
+                    variant="secondary"
+                    onClick={() => navigate('/app/payments?purpose=deposit')}
+                  >
+                    {copy.actions.addMoney}
+                  </Button>
+                  <Button
+                    className="w-full"
+                    variant="secondary"
+                    onClick={() => navigate('/app/payments')}
+                  >
+                    {copy.actions.withdraw}
+                  </Button>
+                  <Button
+                    className="w-full"
+                    disabled={loading}
+                    onClick={() => {
+                      void refresh();
+                    }}
+                  >
+                    {loading ? (
+                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                    )}
+                    {copy.actions.refresh}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
 
-      <WalletActionModals
-        actionLoading={actionLoading}
-        actionsLocked={walletActionsLocked}
-        actionsLockedMessage={walletActionsLockedMessage}
-        balance={bal}
-        isRTL={isRTL}
-        pinValue={pinValue}
-        sendAmount={sendAmount}
-        sendNote={sendNote}
-        sendRecipient={sendRecipient}
-        setPinValue={setPinValue}
-        setSendAmount={setSendAmount}
-        setSendNote={setSendNote}
-        setSendRecipient={setSendRecipient}
-        setShowPinSetup={setShowPinSetup}
-        setShowSend={setShowSend}
-        setShowTopUp={setShowTopUp}
-        setShowWithdraw={setShowWithdraw}
-        setTopUpAmount={setTopUpAmount}
-        setTopUpMethod={setTopUpMethod}
-        setWithdrawAmount={setWithdrawAmount}
-        setWithdrawBank={setWithdrawBank}
-        setWithdrawMethod={setWithdrawMethod}
-        showPinSetup={showPinSetup}
-        showSend={showSend}
-        showTopUp={showTopUp}
-        showWithdraw={showWithdraw}
-        t={t}
-        topUpAmount={topUpAmount}
-        topUpMethod={topUpMethod}
-        walletData={walletData}
-        withdrawAmount={withdrawAmount}
-        withdrawBank={withdrawBank}
-        withdrawMethod={withdrawMethod}
-        onSend={handleSend}
-        onSetPin={handleSetPin}
-        onTopUp={handleTopUp}
-        onWithdraw={handleWithdraw}
-      />
-    </div>
+          <section>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-foreground">{copy.history.title}</CardTitle>
+                <CardDescription>
+                  {copy.history.summary
+                    .replace('{visible}', String(recentTransactions.length))
+                    .replace('{total}', String(totalTransactions))}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {loading && recentTransactions.length === 0 ? (
+                  <div
+                    aria-live="polite"
+                    className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-muted-foreground"
+                    role="status"
+                  >
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    {copy.history.loading}
+                  </div>
+                ) : null}
+
+                {error && wallet ? (
+                  <div
+                    className="rounded-2xl border border-destructive/25 bg-destructive/10 p-3 text-sm text-destructive"
+                    role="alert"
+                  >
+                    {error}
+                  </div>
+                ) : null}
+
+                {!loading && recentTransactions.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-5 text-sm text-muted-foreground">
+                    {copy.history.empty}
+                  </div>
+                ) : null}
+
+                {recentTransactions.map(transaction => {
+                  const isCredit = transaction.amount >= 0;
+                  return (
+                    <div
+                      key={transaction.id}
+                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {transaction.description}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatTransactionMeta(transaction, formatDate)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p
+                          className={`text-sm font-semibold ${isCredit ? 'text-emerald-400' : 'text-foreground'}`}
+                        >
+                          {isCredit ? '+' : '-'}
+                          {formatCurrency(
+                            Math.abs(transaction.amount),
+                            wallet?.currency ?? 'JOD',
+                            locale,
+                          )}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{transaction.id}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {hasMoreTransactions ? (
+                  <Button
+                    className="w-full"
+                    disabled={loadingMore}
+                    variant="secondary"
+                    onClick={() => {
+                      void loadMoreTransactions();
+                    }}
+                  >
+                    {loadingMore ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    {copy.history.loadMore}
+                  </Button>
+                ) : null}
+              </CardContent>
+            </Card>
+          </section>
+        </div>
+      </Protected>
+    </PageShell>
   );
 }

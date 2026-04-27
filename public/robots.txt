@@ -1,18 +1,12 @@
 User-agent: *
 Allow: /
+Allow: /app/privacy
+Allow: /app/terms
 
-# ── Disallow authenticated / operational app-shell routes ─────────────────────
-Disallow: /app/auth
-Disallow: /app/auth/callback
-Disallow: /app/wallet
-Disallow: /app/notifications
-Disallow: /app/settings
-Disallow: /app/moderation
-Disallow: /app/live-trip
-Disallow: /app/execution-os
-Disallow: /app/analytics
+# Block authenticated and operational application surfaces from indexing.
+Disallow: /app/
 
-# ── Block legacy redirect aliases (301 anyway, but save crawl budget) ─────────
+# Block legacy redirect aliases and common sensitive paths.
 Disallow: /auth
 Disallow: /dashboard
 Disallow: /home
@@ -23,8 +17,6 @@ Disallow: /awasel/track
 Disallow: /payments
 Disallow: /legal/privacy
 Disallow: /legal/terms
-
-# ── Block common scanner paths ─────────────────────────────────────────────────
 Disallow: /.env
 Disallow: /.git/
 Disallow: /node_modules/

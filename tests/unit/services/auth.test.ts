@@ -2,7 +2,7 @@
  * Unit tests — src/services/auth.ts (logic layer)
  * All Supabase network calls are mocked — no real requests.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // ── Auth URL helpers ──────────────────────────────────────────────────────────
 // These helpers are pure functions and need no mocking.
@@ -39,7 +39,7 @@ describe('getConfig', () => {
     expect(config).toHaveProperty('isProd');
     expect(config).toHaveProperty('isDev');
     expect(config).toHaveProperty('enableTwoFactorAuth');
-    expect(config).toHaveProperty('enableDemoAccount');
+    expect(config).toHaveProperty('enableLocalAuth');
   });
 
   it('authCallbackPath always starts with /', () => {
@@ -75,8 +75,8 @@ describe('auth token validation rules', () => {
 
 describe('auth error normalisation', () => {
   const toMessage = (error: unknown): string => {
-    if (error instanceof Error) return error.message;
-    if (typeof error === 'string') return error;
+    if (error instanceof Error) {return error.message;}
+    if (typeof error === 'string') {return error;}
     return 'An unknown error occurred';
   };
 

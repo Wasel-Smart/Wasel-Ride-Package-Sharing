@@ -1,91 +1,86 @@
-/**
- * Wasel brand tokens aligned to the glowing network mark.
- *
- * The identity is built around:
- * - luminous teal for primary actions and live signal states
- * - mint and aqua highlights for routes, glows, and focus feedback
- * - deep navy and graphite surfaces for the atmospheric shell
- */
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+import { BRAND } from '../design-system/brand';
 
 export const C = {
-  bg: 'var(--background)',
-  bgAlt: 'var(--wasel-surface-1)',
-  bgDeep: 'var(--wasel-surface-0)',
-  card: 'var(--wasel-panel-soft)',
-  cardSolid: 'var(--card)',
-  card2: 'var(--wasel-surface-3)',
-  panel: 'var(--wasel-panel-muted)',
-  elevated: 'var(--wasel-panel-muted-strong)',
+  bg: 'var(--ds-page)',
+  bgAlt: 'var(--ds-page-muted)',
+  bgDeep: 'var(--ds-page)',
+  card: 'var(--ds-surface)',
+  cardSolid: 'var(--ds-surface)',
+  card2: 'var(--ds-surface-raised)',
+  panel: 'var(--ds-surface-soft)',
+  elevated: 'var(--ds-surface-raised)',
 
-  navy: '#050B1A',
-  navyMid: '#122235',
-  navyLight: '#25394E',
+  navy: 'var(--ds-page)',
+  navyMid: 'var(--ds-page-muted)',
+  navyLight: 'var(--ds-surface-raised)',
 
-  cyan: '#19E7BB',
-  cyanDark: '#0FA588',
-  cyanDim: 'rgba(25,231,187,0.16)',
-  cyanGlow: 'rgba(25,231,187,0.24)',
-  blue: '#65E1FF',
-  blueLight: '#D8FBFF',
-  blueDim: 'rgba(101,225,255,0.18)',
-  gold: '#48CFFF',
-  goldDim: 'rgba(72,207,255,0.18)',
-  green: '#A2FFE7',
-  greenDim: 'rgba(162,255,231,0.18)',
-  purple: '#96B7C6',
-  purpleDim: 'rgba(150,183,198,0.16)',
-  orange: '#0BC3A0',
-  orangeDim: 'rgba(11,195,160,0.16)',
+  cyan: 'var(--ds-accent)',
+  cyanDark: 'var(--wasel-brand-hover)',
+  cyanDim: 'color-mix(in srgb, var(--ds-accent) 12%, transparent)',
+  cyanGlow: 'color-mix(in srgb, var(--ds-accent-strong) 18%, transparent)',
+  blue: 'var(--ds-accent-strong)',
+  blueLight: 'color-mix(in srgb, var(--ds-accent-strong) 14%, transparent)',
+  blueDim: 'color-mix(in srgb, var(--ds-accent-strong) 10%, transparent)',
+  gold: 'var(--ds-accent-strong)',
+  goldDim: 'color-mix(in srgb, var(--ds-accent-strong) 10%, transparent)',
+  green: 'var(--ds-accent-strong)',
+  greenDim: 'color-mix(in srgb, var(--ds-accent-strong) 10%, transparent)',
+  purple: 'var(--wasel-brand-hover)',
+  purpleDim: 'color-mix(in srgb, var(--wasel-brand-hover) 10%, transparent)',
+  orange: 'var(--ds-accent)',
+  orangeDim: 'color-mix(in srgb, var(--ds-accent) 10%, transparent)',
 
-  text: 'var(--wasel-copy-primary)',
-  textSub: 'var(--wasel-copy-muted)',
-  textMuted: 'var(--wasel-copy-muted)',
-  textDim: 'var(--wasel-copy-soft)',
+  text: 'var(--ds-text)',
+  textSub: 'var(--ds-text-muted)',
+  textMuted: 'var(--ds-text-soft)',
+  textDim: 'var(--ds-text-soft)',
 
-  border: 'var(--border)',
-  borderHov: 'rgba(var(--wasel-border-rgb), 0.34)',
-  borderFaint: 'rgba(var(--wasel-border-rgb), 0.10)',
+  border: 'var(--ds-border)',
+  borderHov: 'var(--ds-border-strong)',
+  borderFaint: 'color-mix(in srgb, var(--ds-border) 72%, transparent)',
 
-  error: '#FF646A',
-  errorDim: 'rgba(255,100,106,0.12)',
-  warning: '#8CF7E4',
-  success: '#19E7BB',
-  info: '#65E1FF',
+  error: 'var(--wasel-brand-hover)',
+  errorDim: 'color-mix(in srgb, var(--wasel-brand-hover) 10%, transparent)',
+  warning: 'var(--ds-accent)',
+  success: 'var(--ds-accent-strong)',
+  info: 'var(--ds-accent-strong)',
 
-  overlay: 'var(--wasel-overlay)',
-  glass: 'var(--wasel-glass-xl)',
+  overlay: 'var(--ds-surface-overlay)',
+  glass: 'var(--ds-surface)',
 } as const;
 
-export const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
-export const FA = "var(--wasel-font-arabic, 'Cairo', 'Tajawal', sans-serif)";
+export const F = "var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
+export const FA = "var(--wasel-font-arabic, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
 export const FM = "'JetBrains Mono', 'Fira Mono', monospace";
 
 export const TYPE = {
   size: {
-    xs: '0.66rem',
-    sm: '0.76rem',
-    base: '0.92rem',
+    xs: '0.75rem',
+    sm: '0.8125rem',
+    base: '0.9375rem',
     md: '1rem',
     lg: '1.125rem',
     xl: '1.32rem',
-    '2xl': '1.6rem',
+    '2xl': '1.625rem',
     '3xl': '2rem',
     '4xl': '2.5rem',
     '5xl': '3.25rem',
   },
   weight: {
-    regular: 400,
+    regular: 500,
     medium: 500,
     semibold: 600,
     bold: 700,
-    black: 800,
-    ultra: 900,
+    black: 700,
+    ultra: 800,
   },
   lineHeight: {
-    tight: 1.08,
+    tight: 1.05,
     snug: 1.24,
-    normal: 1.5,
-    relaxed: 1.68,
+    normal: 1.62,
+    relaxed: 1.72,
     loose: 1.84,
   },
   letterSpacing: {
@@ -106,15 +101,15 @@ export const SPACE = {
   4: '16px',
   5: '20px',
   6: '24px',
-  7: '28px',
-  8: '32px',
-  9: '36px',
-  10: '40px',
-  12: '48px',
-  14: '56px',
+  7: '32px',
+  8: '40px',
+  9: '48px',
+  10: '64px',
+  12: '64px',
+  14: '64px',
   16: '64px',
-  20: '80px',
-  24: '96px',
+  20: '64px',
+  24: '64px',
 } as const;
 
 export const R = {
@@ -131,30 +126,32 @@ export const R = {
 
 export const SH = {
   none: 'none',
-  xs: 'var(--wasel-shadow-sm)',
-  sm: 'var(--wasel-shadow-sm)',
+  xs: 'var(--wasel-shadow-xs)',
+  sm: 'var(--wasel-shadow-xs)',
   card: 'var(--wasel-shadow-md)',
-  md: 'var(--wasel-shadow-lg)',
-  lg: 'var(--wasel-shadow-xl)',
+  md: 'var(--wasel-shadow-md)',
+  lg: 'var(--wasel-shadow-lg)',
   xl: 'var(--wasel-shadow-xl)',
-  navy: 'var(--wasel-shadow-md)',
-  cyan: '0 18px 50px rgba(25,231,187,0.2)',
-  cyanL: '0 24px 64px rgba(25,231,187,0.28)',
-  blue: '0 18px 50px rgba(101,225,255,0.2)',
-  green: '0 18px 50px rgba(162,255,231,0.18)',
-  gold: '0 18px 50px rgba(72,207,255,0.22)',
-  inner: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+  navy: 'var(--wasel-shadow-lg)',
+  cyan: '0 18px 44px color-mix(in srgb, var(--ds-accent-strong) 18%, transparent)',
+  cyanL: '0 22px 52px color-mix(in srgb, var(--ds-accent) 22%, transparent)',
+  blue: '0 18px 44px color-mix(in srgb, var(--ds-accent) 16%, transparent)',
+  green: '0 18px 44px color-mix(in srgb, var(--ds-accent-strong) 18%, transparent)',
+  gold: '0 18px 44px color-mix(in srgb, var(--ds-accent-strong) 22%, transparent)',
+  inner: 'inset 0 1px 0 rgb(255 255 255 / 0.05)',
 } as const;
 
-export const GRAD = 'linear-gradient(135deg, #D9FFF8 0%, #1AE7BB 44%, #0C9F85 100%)';
-export const GRAD_GOLD = 'linear-gradient(135deg, #48CFFF 0%, #A2FFE7 100%)';
-export const GRAD_GREEN = 'linear-gradient(135deg, #19E7BB 0%, #A2FFE7 100%)';
-export const GRAD_NAVY = 'linear-gradient(135deg, #050B1A 0%, #25394E 100%)';
-export const GRAD_PURPLE = 'linear-gradient(135deg, #2DBFDF 0%, #D8FBFF 100%)';
-export const GRAD_HERO = 'linear-gradient(160deg, #040917 0%, #0A1225 40%, #1B2942 68%, #65717A 100%)';
-export const GRAD_SIGNAL = 'linear-gradient(135deg, #65E1FF 0%, #1AE7BB 44%, #0BC3A0 100%)';
+export const GRAD = 'var(--ds-accent)';
+export const GRAD_GOLD = 'var(--ds-accent-strong)';
+export const GRAD_GREEN = 'var(--ds-accent-strong)';
+export const GRAD_NAVY =
+  'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted) 88%, var(--ds-accent-soft) 12%) 0%, color-mix(in srgb, var(--ds-page) 92%, var(--ds-accent-soft) 8%) 54%, var(--ds-page) 100%)';
+export const GRAD_PURPLE = 'var(--wasel-brand-hover)';
+export const GRAD_HERO =
+  'linear-gradient(135deg, color-mix(in srgb, var(--ds-page-muted) 88%, var(--ds-accent-soft) 12%) 0%, color-mix(in srgb, var(--ds-surface) 92%, var(--ds-accent-soft) 8%) 54%, var(--ds-page) 100%)';
+export const GRAD_SIGNAL = 'var(--theme-gradient-primary)';
 export const GRAD_AURORA =
-  'radial-gradient(circle at top, rgba(101,225,255,0.24), rgba(25,231,187,0.18) 44%, rgba(4,18,30,0) 74%)';
+  'radial-gradient(circle at top, color-mix(in srgb, var(--ds-accent) 16%, transparent), color-mix(in srgb, var(--ds-accent-strong) 10%, transparent) 44%, transparent 74%)';
 
 export const ANIM = {
   dur: {
@@ -226,12 +223,12 @@ export function solidCard({
 }
 
 export function focusRing(color = C.cyan): string {
-  return `0 0 0 3px ${color}2E`;
+  return `0 0 0 3px color-mix(in srgb, ${color} 18%, transparent)`;
 }
 
 export function statusColor(status: 'success' | 'warning' | 'error' | 'info' | 'neutral'): string {
   return {
-    success: C.green,
+    success: C.success,
     warning: C.warning,
     error: C.error,
     info: C.cyan,
@@ -246,12 +243,16 @@ export function pillStyle(color: string): Record<string, string> {
     gap: '4px',
     padding: '3px 10px',
     borderRadius: R.full,
-    background: `${color}16`,
-    border: `1px solid ${color}30`,
+    background: `color-mix(in srgb, ${color} 12%, transparent)`,
+    border: `1px solid color-mix(in srgb, ${color} 22%, transparent)`,
     fontSize: TYPE.size.xs,
     fontWeight: String(TYPE.weight.bold),
     color,
   };
+}
+
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs));
 }
 
 export const GLOBAL_STYLES = `
@@ -276,8 +277,8 @@ export const GLOBAL_STYLES = `
   50% { opacity: 0.6; transform: scale(0.92); }
 }
 @keyframes pulse-glow {
-  0%,100% { box-shadow: 0 0 18px rgba(25,231,187,0.18); }
-  50% { box-shadow: 0 0 28px rgba(25,231,187,0.26), 0 0 36px rgba(162,255,231,0.16); }
+  0%,100% { box-shadow: ${BRAND.shadows.brandGlowDark}; }
+  50% { box-shadow: 0 0 24px rgba(245,176,65,0.22), 0 0 36px rgba(230,126,34,0.12); }
 }
 @keyframes shimmer {
   0% { background-position: -1000px 0; }

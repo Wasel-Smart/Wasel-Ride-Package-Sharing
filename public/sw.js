@@ -5,9 +5,10 @@
 // Sync:     background-sync queue for offline booking actions.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION = 'wasel-v10-20260411';
+const CACHE_VERSION = 'wasel-v13-20260422-premium';
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME  = `${CACHE_VERSION}-runtime`;
+const STATIC   = `${CACHE_VERSION}-static`;
 
 const PRECACHE_URLS = [
   '/',
@@ -20,16 +21,23 @@ const PRECACHE_URLS = [
   '/apple-touch-icon.png',
   '/icon-192.png',
   '/icon-512.png',
+  '/brand/wasel-route-w-badge.svg',
+  '/brand/wasel-route-w-symbol.svg',
+  '/brand/wasel-main-network-logo.svg',
   '/brand/wasel-mark-clean.svg',
   '/brand/wasel-mark.svg',
   '/brand/wasel-mark-clean-dark.svg',
   '/brand/wasel-mark-clean-light.svg',
+  '/brand/wasel-mark-monochrome.svg',
   '/brand/og-social-card.png',
   '/brand/wasellogo-64.png',
   '/brand/wasellogo-96.png',
   '/brand/wasellogo-160.png',
   '/brand/wasellogo-280.png',
 ];
+
+// Cache static assets for 30 days
+const STATIC_CACHE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // ─── Install ─────────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
@@ -49,7 +57,7 @@ self.addEventListener('activate', (event) => {
       .then((names) =>
         Promise.all(
           names
-            .filter((name) => ![PRECACHE, RUNTIME].includes(name))
+            .filter((name) => ![PRECACHE, RUNTIME, STATIC].includes(name))
             .map((name) => caches.delete(name)),
         ),
       )
@@ -71,8 +79,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (request.destination === 'image' || request.destination === 'font') {
-    event.respondWith(cacheFirst(request));
+  // Handle static assets with long-term caching
+  if (url.pathname.startsWith('/assets/') || url.pathname.includes('-') && (url.pathname.endsWith('.js') || url.pathname.endsWith('.css'))) {
+    event.respondWith(cacheFirstWithExpiry(request));
     return;
   }
 
@@ -163,8 +172,21 @@ async function drainOfflineQueue() {
         const cached = await cache.match(req);
         if (!cached) return;
 
-        const body = await cached.text();
-        const { url, method, headers: hdrs, payload } = JSON.parse(body);
+        let parsed;
+        try {
+          const body = await cached.text();
+          parsed = JSON.parse(body);
+        } catch {
+          // Malformed queue entry — remove it so it doesn't block future syncs
+          await cache.delete(req);
+          return;
+        }
+
+        const { url, method, headers: hdrs, payload } = parsed;
+        if (!url || typeof url !== 'string') {
+          await cache.delete(req);
+          return;
+        }
 
         const response = await fetch(url, {
           method: method ?? 'POST',
@@ -229,17 +251,45 @@ async function networkFirst(request) {
   }
 }
 
+async function cacheFirstWithExpiry(request) {
+  const cache = await caches.open(STATIC);
+  const cached = await cache.match(request);
+  
+  if (cached) {
+    const cachedDate = cached.headers.get('date');
+    if (cachedDate) {
+      const age = Date.now() - new Date(cachedDate).getTime();
+      if (age < STATIC_CACHE_MAX_AGE) {
+        return cached;
+      }
+    }
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return cached ?? new Response('Offline', { status: 503, statusText: 'Offline' });
+  }
+}
+
 async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
 
-  const response = await fetch(request);
-  if (response && response.ok) {
-    const cache = await caches.open(RUNTIME);
-    cache.put(request, response.clone());
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      const cache = await caches.open(RUNTIME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return new Response('Offline', { status: 503, statusText: 'Offline' });
   }
-
-  return response;
 }
 
 async function staleWhileRevalidate(request) {
@@ -255,5 +305,8 @@ async function staleWhileRevalidate(request) {
     })
     .catch(() => null);
 
-  return cached ?? networkPromise ?? new Response('Unavailable', { status: 503, statusText: 'Unavailable' });
+  if (cached) return cached;
+
+  const networkResponse = await networkPromise;
+  return networkResponse ?? new Response('Unavailable', { status: 503, statusText: 'Unavailable' });
 }

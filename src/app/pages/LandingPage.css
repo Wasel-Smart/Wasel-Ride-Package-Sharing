@@ -1,0 +1,291 @@
+.landing-page {
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  padding-bottom: clamp(2rem, 4vw, 4rem);
+}
+
+.landing-page__topbar {
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-block: clamp(1rem, 2vw, 1.4rem);
+}
+
+.landing-page__brand-block {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.landing-page__brand {
+  min-height: auto;
+}
+
+.landing-page__status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.3rem;
+  padding: 0 0.95rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ds-accent-strong) 18%, var(--ds-border));
+  background: color-mix(in srgb, var(--ds-accent-strong) 10%, transparent);
+  color: var(--ds-text);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.landing-page__status-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--ds-accent);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--ds-accent) 18%, transparent);
+}
+
+.landing-page__topbar-actions {
+  gap: 0.75rem;
+}
+
+.landing-page__status-copy {
+  max-width: 18rem;
+  color: var(--ds-text-muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.landing-page__support-actions {
+  gap: 0.5rem;
+}
+
+.landing-page__hero {
+  position: relative;
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.landing-page__hero-copy-card,
+.landing-page__planner-shell,
+.landing-page__section {
+  border-color: color-mix(in srgb, var(--ds-accent-strong) 20%, var(--ds-border));
+  box-shadow: var(--ds-shadow-md);
+}
+
+.landing-page__hero-copy-card {
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  align-content: start;
+  padding: clamp(1.25rem, 2vw, 1.9rem);
+  background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--ds-accent-strong) 12%, transparent),
+      transparent 24%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-surface-raised) 96%, transparent),
+      color-mix(in srgb, var(--ds-surface) 92%, transparent)
+    );
+}
+
+.landing-page__hero-intro {
+  display: grid;
+  gap: 1rem;
+}
+
+.landing-page__hero-eyebrow {
+  width: fit-content;
+}
+
+.landing-page__title {
+  max-width: 12ch;
+  font-size: clamp(2.6rem, 4.7vw, 4.8rem);
+}
+
+.landing-page__hero-copy {
+  max-width: 36rem;
+}
+
+.landing-page__hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.landing-page__summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.landing-page__summary-card {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem 1rem 1.1rem;
+  border-radius: var(--ds-radius-md);
+  border: 1px solid color-mix(in srgb, var(--ds-accent-strong) 14%, var(--ds-border));
+  background: color-mix(in srgb, var(--ds-surface-soft) 78%, transparent);
+}
+
+.landing-page__summary-label {
+  color: var(--ds-text);
+  font-size: 0.83rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.landing-page__summary-detail {
+  margin: 0;
+  color: var(--ds-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.landing-page__planner-shell {
+  padding: clamp(1rem, 1.8vw, 1.35rem);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.02)),
+    var(--wasel-network-panel);
+  overflow: hidden;
+}
+
+.landing-page__planner-shell .ds-hero-panel__content {
+  gap: 1rem;
+}
+
+.landing-page__planner-head {
+  display: grid;
+  gap: 0.8rem;
+  max-width: 28rem;
+}
+
+.landing-page__planner-title {
+  max-width: 18ch;
+}
+
+.landing-page__planner-surface {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: calc(var(--ds-radius-lg) - 0.35rem);
+  border: 1px solid color-mix(in srgb, var(--ds-accent-strong) 18%, var(--ds-border));
+  background: color-mix(in srgb, var(--ds-surface-overlay) 94%, transparent);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.14);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.landing-page__planner-brief {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.landing-page__planner-brief-copy,
+.landing-page__tab-copy {
+  margin: 0;
+  color: var(--ds-text-muted);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.landing-page__step-rail {
+  gap: 0.7rem;
+}
+
+.landing-page__planner-form label:last-child {
+  grid-column: 1 / -1;
+}
+
+.landing-page__planner-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.landing-page__planner-auth {
+  display: grid;
+  gap: 0.85rem;
+  padding-top: 0.95rem;
+  border-top: 1px solid color-mix(in srgb, var(--ds-border) 76%, transparent);
+}
+
+.landing-page__planner-auth-copy {
+  color: var(--ds-text-muted);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.landing-page__social-grid {
+  gap: 0.75rem;
+}
+
+.landing-page__proof {
+  display: grid;
+  gap: 1rem;
+}
+
+.landing-page__proof .ds-hero-feature-card,
+.landing-page__proof .ds-hero-stat-card,
+.landing-page__section .ds-route-card {
+  min-height: 100%;
+}
+
+.landing-page__section {
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--ds-accent-strong) 8%, transparent),
+      transparent 26%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-surface-raised) 96%, transparent),
+      var(--ds-surface)
+    );
+}
+
+@media (max-width: 72rem) {
+  .landing-page__summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 56rem) {
+  .landing-page__topbar {
+    align-items: flex-start;
+  }
+
+  .landing-page__topbar-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .landing-page__status-copy {
+    max-width: none;
+    width: 100%;
+  }
+
+  .landing-page__planner-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 42rem) {
+  .landing-page__hero-copy-card,
+  .landing-page__planner-shell {
+    padding: 1rem;
+  }
+
+  .landing-page__planner-surface {
+    padding: 0.9rem;
+  }
+
+  .landing-page__hero-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .landing-page__hero-actions .ds-button {
+    width: 100%;
+  }
+}

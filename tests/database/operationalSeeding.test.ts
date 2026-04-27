@@ -53,7 +53,7 @@ describe('operational seeding rollout', () => {
       'db/seeds/core.seed.sql',
       'db/seeds/automation.seed.sql',
     ]);
-    expect(rolloutSeedFiles.at(-1)).toBe('src/supabase/seeds/mock_engine_smoke_checks.sql');
+    expect(rolloutSeedFiles).toEqual(operationalSeedFiles);
   });
 
   it('creates the operational reference tables and paired-trip lifecycle support', () => {

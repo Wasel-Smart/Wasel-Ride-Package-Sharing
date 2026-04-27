@@ -6,22 +6,18 @@
  * on the user's explicit choice.
  *
  * Architecture:
- *  - First visit → banner appears at bottom
- *  - Accept / Decline → stores in localStorage, banner dismissed forever
- *  - Window event "wasel:consent-granted" is emitted on accept so
+ *  - First visit -> banner appears at bottom
+ *  - Accept / Decline -> stores in localStorage, banner dismissed forever
+ *  - Window event "wasel:consent-decision" is emitted on accept so
  *    App.tsx / monitoring.ts can initialise analytics without a page reload
  *  - Respects prefers-reduced-motion
  */
 
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import {
-  getConsentDecision,
-  recordConsentDecision,
-} from '../utils/consent';
+import { getConsentDecision, recordConsentDecision } from '../utils/consent';
 
-const SHELL_FONT =
-  "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+const SHELL_FONT = "var(--wasel-font-sans, 'Montserrat', 'Cairo', 'Tajawal', sans-serif)";
 
 // Visually hidden utility (accessible, not display:none)
 const srOnly: React.CSSProperties = {
@@ -37,19 +33,26 @@ const srOnly: React.CSSProperties = {
 };
 
 export function PrivacyConsentBanner() {
+  const isTestEnv = import.meta.env.MODE === 'test';
   const { language } = useLanguage();
   const ar = language === 'ar';
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (isTestEnv) {
+      return undefined;
+    }
+
     // Defer slightly so the banner doesn't compete with the initial render
     const t = window.setTimeout(() => {
-      if (getConsentDecision() === null) setVisible(true);
-    }, 1_200);
+      if (getConsentDecision() === null) {
+        setVisible(true);
+      }
+    }, 2_200);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [isTestEnv]);
 
-  if (!visible) return null;
+  if (isTestEnv || !visible) return null;
 
   const handleAccept = () => {
     recordConsentDecision('accepted');
@@ -106,22 +109,26 @@ export function PrivacyConsentBanner() {
           }
           @media (max-width: 767px) {
             .wasel-consent-root {
-              bottom: max(88px, calc(88px + env(safe-area-inset-bottom, 0px))) !important;
+              bottom: max(14px, calc(14px + env(safe-area-inset-bottom, 0px))) !important;
+              padding-inline: 14px !important;
+            }
+            .wasel-consent-card {
+              max-width: 100% !important;
             }
           }
           @media (min-width: 768px) {
             .wasel-consent-root {
-              justify-content: flex-end !important;
+              justify-content: flex-start !important;
               padding-inline: 18px !important;
             }
             .wasel-consent-card {
-              max-width: 320px !important;
+              max-width: 280px !important;
             }
           }
           @media (max-width: 639px) {
             .wasel-consent-card {
               border-radius: 18px !important;
-              padding: 16px !important;
+              padding: 14px !important;
             }
             .wasel-consent-actions {
               gap: 8px !important;
@@ -143,8 +150,7 @@ export function PrivacyConsentBanner() {
             background: 'var(--card, rgba(15,26,38,0.97))',
             border: '1px solid var(--border, rgba(244,198,81,0.18))',
             borderRadius: 20,
-            boxShadow:
-              'var(--wasel-shadow-lg, 0 24px 64px rgba(1,10,18,0.38))',
+            boxShadow: 'var(--wasel-shadow-lg, 0 24px 64px rgba(1,10,18,0.38))',
             backdropFilter: 'blur(22px)',
             WebkitBackdropFilter: 'blur(22px)',
             padding: '15px 16px 14px',
@@ -170,14 +176,14 @@ export function PrivacyConsentBanner() {
               fontSize: '0.74rem',
               color: 'var(--muted-foreground, rgba(228,214,180,0.82))',
               margin: '0 0 12px',
-              lineHeight: 1.55,
+              lineHeight: 1.48,
             }}
           >
             {copy.body}{' '}
             <a
               href="/app/privacy"
               style={{
-                color: 'var(--primary, #19E7BB)',
+                color: 'var(--primary, #F5B041)',
                 textDecoration: 'underline',
                 textUnderlineOffset: 2,
                 fontWeight: 600,
@@ -201,21 +207,21 @@ export function PrivacyConsentBanner() {
               type="button"
               onClick={handleAccept}
               style={{
-                minHeight: 36,
-                padding: '0 18px',
+                minHeight: 44,
+                padding: '0 16px',
                 borderRadius: 12,
                 border: 'none',
                 background:
-                  'linear-gradient(135deg, #DCFFF8 0%, var(--primary, #19E7BB) 44%, #48CFFF 100%)',
-                color: 'var(--primary-foreground, #041019)',
+                  'linear-gradient(135deg, var(--wasel-brand-gradient-start, #F5B041) 0%, var(--primary, #F5B041) 44%, var(--wasel-brand-gradient-end, #E67E22) 100%)',
+                color: '#FFFDF9',
                 fontWeight: 800,
                 fontSize: '0.78rem',
                 fontFamily: SHELL_FONT,
                 cursor: 'pointer',
                 transition: 'opacity 0.14s ease',
               }}
-              onMouseEnter={(e) => ((e.target as HTMLButtonElement).style.opacity = '0.88')}
-              onMouseLeave={(e) => ((e.target as HTMLButtonElement).style.opacity = '1')}
+              onMouseEnter={e => ((e.target as HTMLButtonElement).style.opacity = '0.88')}
+              onMouseLeave={e => ((e.target as HTMLButtonElement).style.opacity = '1')}
             >
               {copy.accept}
             </button>
@@ -224,25 +230,22 @@ export function PrivacyConsentBanner() {
               type="button"
               onClick={handleDecline}
               style={{
-                minHeight: 36,
-                padding: '0 18px',
+                minHeight: 44,
+                padding: '0 16px',
                 borderRadius: 12,
                 border: '1px solid var(--border, rgba(244,198,81,0.18))',
                 background: 'transparent',
-                color: 'var(--foreground, #F8EFD6)',
+                color: 'var(--foreground, #F8FAFC)',
                 fontWeight: 700,
                 fontSize: '0.78rem',
                 fontFamily: SHELL_FONT,
                 cursor: 'pointer',
                 transition: 'background 0.14s ease',
               }}
-              onMouseEnter={(e) =>
-                ((e.target as HTMLButtonElement).style.background =
-                  'rgba(255,247,229,0.05)')
+              onMouseEnter={e =>
+                ((e.target as HTMLButtonElement).style.background = 'rgba(255,247,229,0.05)')
               }
-              onMouseLeave={(e) =>
-                ((e.target as HTMLButtonElement).style.background = 'transparent')
-              }
+              onMouseLeave={e => ((e.target as HTMLButtonElement).style.background = 'transparent')}
             >
               {copy.decline}
             </button>

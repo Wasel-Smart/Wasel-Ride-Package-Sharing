@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+ 
 /**
  * Shared page utilities extracted from WaselServicePage.tsx
  *
@@ -142,7 +142,7 @@ export function PageShell({ children }: { children: ReactNode }) {
         }}
       />
       <style>{`
-        :root { color-scheme: dark; }
+        :root { color-scheme: inherit; }
         .w-focus:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(71,183,230,0.28); }
         .w-focus-gold:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(168,214,20,0.24); }
         @media(max-width:899px){
@@ -255,7 +255,7 @@ export function SectionHead({
               borderRadius: r(10),
               background: DS.gradC,
               border: 'none',
-              color: '#040C18',
+              color: 'var(--primary-foreground)',
               fontWeight: 800,
               cursor: 'pointer',
               fontSize: '0.85rem',

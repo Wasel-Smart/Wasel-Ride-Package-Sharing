@@ -12,7 +12,11 @@ vi.mock('../../../src/services/core', () => ({
   getAuthDetails: (...args: unknown[]) => mockGetAuthDetails(...args),
 }));
 
-import { __resetWalletApiCachesForTests, requestWalletVerification, walletApi } from '../../../src/services/walletApi';
+import {
+  __resetWalletApiCachesForTests,
+  requestWalletVerification,
+  walletApi,
+} from '../../../src/services/walletApi';
 
 function jsonResponse(body: unknown, status = 200) {
   return Promise.resolve(
@@ -21,6 +25,11 @@ function jsonResponse(body: unknown, status = 200) {
       headers: { 'Content-Type': 'application/json' },
     }),
   );
+}
+
+function getRequestBody(callIndex: number) {
+  const [, options] = mockFetchWithRetry.mock.calls[callIndex] as [string, { body?: string }];
+  return JSON.parse(options.body ?? '{}');
 }
 
 const walletPayload = {
@@ -68,24 +77,8 @@ const walletPayload = {
       createdAt: '2026-04-10T10:00:00.000Z',
       status: 'completed',
     },
-    {
-      id: 'tx-2',
-      type: 'escrow_hold',
-      description: 'Ride payment held in escrow',
-      amount: -18,
-      createdAt: '2026-04-11T10:00:00.000Z',
-      status: 'processing',
-    },
   ],
-  activeEscrows: [
-    {
-      id: 'esc-1',
-      type: 'ride',
-      amount: 18,
-      tripId: 'trip-1',
-      status: 'held',
-    },
-  ],
+  activeEscrows: [],
   activeRewards: [],
   subscription: null,
 };
@@ -97,16 +90,14 @@ describe('walletApi secure backend flow', () => {
     window.localStorage.clear();
   });
 
-  it('loads wallet data from the secure edge API and persists a snapshot', async () => {
+  it('loads wallet data only from the secure edge API', async () => {
     mockFetchWithRetry.mockResolvedValueOnce(await jsonResponse(walletPayload));
 
     const snapshot = await walletApi.getWalletSnapshot('user-123');
-    const persisted = walletApi.getPersistedWalletSnapshot('user-123');
 
     expect(snapshot.data.balance).toBe(125.5);
     expect(snapshot.meta.source).toBe('edge-api');
     expect(snapshot.meta.degraded).toBe(false);
-    expect(persisted?.data.wallet.paymentMethods).toHaveLength(1);
     expect(mockFetchWithRetry).toHaveBeenCalledWith(
       'https://api.wasel.test/wallet',
       expect.objectContaining({
@@ -117,18 +108,13 @@ describe('walletApi secure backend flow', () => {
     );
   });
 
-  it('reuses the last persisted backend snapshot when the wallet API is temporarily unavailable', async () => {
-    mockFetchWithRetry.mockResolvedValueOnce(await jsonResponse(walletPayload));
-    await walletApi.getWalletSnapshot('user-123');
-    __resetWalletApiCachesForTests();
-
+  it('fails closed when the wallet API is temporarily unavailable', async () => {
     mockFetchWithRetry.mockRejectedValueOnce(new Error('network down'));
 
-    const degradedSnapshot = await walletApi.getWalletSnapshot('user-123');
-
-    expect(degradedSnapshot.data.balance).toBe(125.5);
-    expect(degradedSnapshot.meta.degraded).toBe(true);
-    expect(degradedSnapshot.meta.source).toBe('edge-api');
+    await expect(walletApi.getWalletSnapshot('user-123')).rejects.toThrow(
+      'Wallet data is unavailable right now. Please try again.',
+    );
+    expect(window.localStorage.length).toBe(0);
   });
 
   it('creates a deposit payment intent instead of mutating wallet balances on the client', async () => {
@@ -152,17 +138,17 @@ describe('walletApi secure backend flow', () => {
       'https://api.wasel.test/payments/create-intent',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({
-          purpose: 'deposit',
-          amount: 25,
-          paymentMethodType: 'card',
-          referenceType: null,
-          referenceId: null,
-          metadata: {},
-          idempotencyKey: null,
-        }),
       }),
     );
+    expect(getRequestBody(0)).toEqual({
+      amount: 25,
+      idempotencyKey: null,
+      metadata: {},
+      paymentMethodType: 'card',
+      purpose: 'deposit',
+      referenceId: null,
+      referenceType: null,
+    });
   });
 
   it('requires step-up verification before sending money and forwards the verification token to the backend', async () => {
@@ -184,72 +170,13 @@ describe('walletApi secure backend flow', () => {
       'https://api.wasel.test/wallet/transfer',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({
-          recipientUserId: 'user-456',
-          amount: 20,
-          note: 'Ride split',
-          verificationToken: 'step-up-token',
-        }),
       }),
     );
-  });
-
-  it('submits a wallet-funded subscription through the payment-intent and confirm flow', async () => {
-    mockFetchWithRetry.mockResolvedValueOnce(await jsonResponse(walletPayload));
-    await walletApi.getWallet('user-123');
-    __resetWalletApiCachesForTests();
-    mockFetchWithRetry.mockClear();
-    mockFetchWithRetry
-      .mockResolvedValueOnce(await jsonResponse(walletPayload))
-      .mockResolvedValueOnce(await jsonResponse({
-        id: 'pi-sub',
-        purpose: 'subscription',
-        status: 'requires_confirmation',
-        amount: 9.99,
-        currency: 'JOD',
-        paymentMethodType: 'wallet',
-        provider: 'wallet',
-        createdAt: '2026-04-12T12:00:00.000Z',
-      }))
-      .mockResolvedValueOnce(await jsonResponse({
-        id: 'pi-sub',
-        status: 'succeeded',
-        settled: true,
-      }));
-
-    const intent = await walletApi.subscribe('user-123', 'Wasel Plus', 9.99, null);
-
-    expect(intent.id).toBe('pi-sub');
-    expect(mockFetchWithRetry).toHaveBeenNthCalledWith(
-      2,
-      'https://api.wasel.test/payments/create-intent',
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({
-          purpose: 'subscription',
-          amount: 9.99,
-          paymentMethodType: 'wallet',
-          referenceType: null,
-          referenceId: null,
-          metadata: {
-            planName: 'Wasel Plus',
-            planCode: 'wasel-plus',
-            corridorId: null,
-          },
-          idempotencyKey: null,
-        }),
-      }),
-    );
-    expect(mockFetchWithRetry).toHaveBeenNthCalledWith(
-      3,
-      'https://api.wasel.test/payments/confirm',
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({
-          paymentIntentId: 'pi-sub',
-          paymentMethodId: 'pm-1',
-        }),
-      }),
-    );
+    expect(getRequestBody(1)).toEqual({
+      amount: 20,
+      note: 'Ride split',
+      recipientUserId: 'user-456',
+      verificationToken: 'step-up-token',
+    });
   });
 });

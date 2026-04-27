@@ -3,13 +3,19 @@ export type ResolvedTheme = 'light' | 'dark';
 
 export const THEME_STORAGE_KEY = 'wasel-theme';
 export const LEGACY_DISPLAY_STORAGE_KEY = 'wasel.settings.display';
+export const THEME_READY_ATTRIBUTE = 'data-theme-ready';
+
+const THEME_META_COLORS: Record<ResolvedTheme, string> = {
+  light: '#F7F0E6',
+  dark: '#0F141B',
+};
 
 export function sanitizeThemePreference(value: string | null | undefined): ThemePreference {
   if (value === 'light' || value === 'dark' || value === 'system') {
     return value;
   }
 
-  return 'dark';
+  return 'light';
 }
 
 function readLegacyDisplayTheme(): ThemePreference | null {
@@ -30,21 +36,26 @@ function readLegacyDisplayTheme(): ThemePreference | null {
   }
 }
 
+function readLegacyThemeFallback(): ThemePreference | null {
+  const legacyTheme = readLegacyDisplayTheme();
+  return legacyTheme === 'light' ? 'light' : null;
+}
+
 export function getSystemTheme(): ResolvedTheme {
   if (
     typeof window !== 'undefined' &&
     typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-color-scheme: light)').matches
+    window.matchMedia('(prefers-color-scheme: dark)').matches
   ) {
-    return 'light';
+    return 'dark';
   }
 
-  return 'dark';
+  return 'light';
 }
 
 export function getStoredThemePreference(): ThemePreference {
   if (typeof window === 'undefined') {
-    return 'dark';
+    return 'light';
   }
 
   try {
@@ -53,10 +64,10 @@ export function getStoredThemePreference(): ThemePreference {
       return sanitizeThemePreference(stored);
     }
   } catch {
-    return readLegacyDisplayTheme() ?? 'dark';
+    return readLegacyThemeFallback() ?? 'light';
   }
 
-  return readLegacyDisplayTheme() ?? 'dark';
+  return readLegacyThemeFallback() ?? 'light';
 }
 
 export function resolveThemePreference(theme: ThemePreference): ResolvedTheme {
@@ -133,12 +144,26 @@ export function applyThemeToDocument(
 
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) {
-    themeMeta.setAttribute('content', isLight ? '#f6f9fc' : '#081c36');
+    themeMeta.setAttribute('content', THEME_META_COLORS[resolvedTheme]);
   }
+
+  const colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
+  if (colorSchemeMeta) {
+    colorSchemeMeta.setAttribute('content', 'light dark');
+  }
+}
+
+export function setThemeTransitionState(enabled: boolean): void {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  document.documentElement.setAttribute(THEME_READY_ATTRIBUTE, enabled ? 'true' : 'false');
 }
 
 export function initializeThemeFromStorage(): ThemePreference {
   const preference = getStoredThemePreference();
+  setThemeTransitionState(false);
   applyThemeToDocument(resolveThemePreference(preference), preference);
   return preference;
 }
