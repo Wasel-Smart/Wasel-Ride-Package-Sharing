@@ -1,4 +1,5 @@
 import { redactSensitiveValue } from './redaction';
+import { recordMetric, startTelemetrySpan } from '@/platform';
 
 export type LogContext = Record<string, unknown>;
 
@@ -78,7 +79,7 @@ export const logger = {
 
   startTransaction: (name: string, op: string) => {
     logger.addBreadcrumb(`Transaction: ${name}`, 'performance', { op });
-    return { finish: () => undefined };
+    return startTelemetrySpan(name, { op });
   },
 
   addBreadcrumb: (message: string, category: string, data?: LogContext) => {
@@ -92,6 +93,16 @@ export function trackAPICall(endpoint: string, method: string, duration: number,
     method,
     duration,
     status,
+  });
+  recordMetric({
+    name: 'api.request.duration',
+    value: duration,
+    unit: 'ms',
+    tags: {
+      endpoint,
+      method,
+      status,
+    },
   });
 
   if (duration > 3000) {
@@ -118,6 +129,6 @@ export function usePerformanceMonitoring(componentName: string) {
   const transaction = logger.startTransaction(componentName, 'component.render');
 
   return () => {
-    transaction.finish();
+    transaction.end({ componentName });
   };
 }

@@ -1,0 +1,98 @@
+openapi: 3.1.0
+info:
+  title: Wasel Auth Service API
+  version: v1
+  description: Generated OpenAPI contract for the auth bounded domain.
+servers:
+  - url: https://api.wasel.app
+    description: Production
+  - url: https://staging-api.wasel.app
+    description: Staging
+tags:
+  - name: auth
+    description: identity-platform
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    requestSignature:
+      type: apiKey
+      in: header
+      name: X-Wasel-Signature
+paths:
+  /v1/auth/profile:
+    get:
+      tags:
+        - auth
+      operationId: getProfile
+      summary: Resolve the authenticated profile.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/auth/sign-in:
+    post:
+      tags:
+        - auth
+      operationId: signIn
+      summary: Authenticate and issue a session.
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/auth/sign-out:
+    post:
+      tags:
+        - auth
+      operationId: signOut
+      summary: Revoke the current session.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/auth/sign-up:
+    post:
+      tags:
+        - auth
+      operationId: signUp
+      summary: Register a new user account.
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error

@@ -6,7 +6,7 @@ type TranslationTree = {
   [key: string]: string | TranslationTree;
 };
 
-export const rawTranslations: Record<Language, TranslationTree> = {
+const translationSource: Record<Language, TranslationTree> = {
   en: {
     common: {
       wasel: 'Wasel',
@@ -3248,6 +3248,36 @@ export const rawTranslations: Record<Language, TranslationTree> = {
       pageNotFound: 'الصفحة غير موجودة',
     },
   },
+};
+
+function mergeTranslationTrees(
+  primary: TranslationTree,
+  fallback: TranslationTree,
+): TranslationTree {
+  const merged: TranslationTree = { ...primary };
+
+  for (const [key, fallbackValue] of Object.entries(fallback)) {
+    const primaryValue = merged[key];
+
+    if (typeof primaryValue === 'string' || typeof fallbackValue === 'string') {
+      merged[key] = typeof primaryValue === 'string' && primaryValue.trim()
+        ? primaryValue
+        : fallbackValue;
+      continue;
+    }
+
+    merged[key] = mergeTranslationTrees(
+      (primaryValue as TranslationTree | undefined) ?? {},
+      fallbackValue,
+    );
+  }
+
+  return merged;
+}
+
+export const rawTranslations: Record<Language, TranslationTree> = {
+  en: mergeTranslationTrees(translationSource.en, translationSource.ar),
+  ar: mergeTranslationTrees(translationSource.ar, translationSource.en),
 };
 
 export const translations: Record<Language, TranslationTree> =

@@ -1,0 +1,104 @@
+openapi: 3.1.0
+info:
+  title: Wasel Wallet Service API
+  version: v1
+  description: Generated OpenAPI contract for the wallet bounded domain.
+servers:
+  - url: https://api.wasel.app
+    description: Production
+  - url: https://staging-api.wasel.app
+    description: Staging
+tags:
+  - name: wallet
+    description: payments-platform
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    requestSignature:
+      type: apiKey
+      in: header
+      name: X-Wasel-Signature
+paths:
+  /v1/wallet/payment-intents:
+    post:
+      tags:
+        - wallet
+      operationId: createPaymentIntent
+      summary: Create a payment intent with idempotency.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/wallet/payment-intents/{id}/confirm:
+    post:
+      tags:
+        - wallet
+      operationId: confirmPaymentIntent
+      summary: Confirm a payment intent.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/wallet/snapshot:
+    get:
+      tags:
+        - wallet
+      operationId: getWalletSnapshot
+      summary: Read the wallet and transaction snapshot.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/wallet/transfers:
+    post:
+      tags:
+        - wallet
+      operationId: sendMoney
+      summary: Execute a peer-to-peer transfer after step-up verification.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error

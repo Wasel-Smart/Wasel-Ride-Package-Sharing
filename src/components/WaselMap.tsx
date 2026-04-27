@@ -44,6 +44,7 @@ import {
   Satellite,
   Mountain,
 } from 'lucide-react';
+import { mapApplicationService } from '@/domains/mapping';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { getLocalizedCopy, type LocalizedCopy } from '../utils/localizedCopy';
@@ -126,20 +127,6 @@ function ensureLeafletCSS() {
 type LeafletModule = typeof LeafletNamespace;
 type LeafletImportModule = LeafletModule & { default?: LeafletModule };
 type LeafletMapWithPanes = LeafletMap & { _panes?: Record<string, unknown> };
-type OverpassResponse = {
-  elements?: Array<{
-    lat: number;
-    lon: number;
-    tags?: Record<string, string | undefined>;
-  }>;
-};
-type OsrmRouteResponse = {
-  routes?: Array<{
-    geometry?: {
-      coordinates?: [number, number][];
-    };
-  }>;
-};
 
 let _leafletPromise: Promise<LeafletModule> | null = null;
 function loadLeaflet(): Promise<LeafletModule> {
@@ -157,52 +144,8 @@ function loadLeaflet(): Promise<LeafletModule> {
 type MapTileKind = 'roadmap' | 'satellite' | 'terrain';
 type MapTheme = 'light' | 'dark';
 
-const ROADMAP_TILES = normalizeTextTree({
-  light: {
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution:
-      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19,
-    subdomains: 'abc',
-  },
-  dark: {
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution:
-      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>',
-    maxZoom: 19,
-    subdomains: 'abcd',
-  },
-} as const);
-
-const SATELLITE_TILE = normalizeTextTree({
-  // Use Google Maps satellite tiles when key is available, else Esri fallback
-  url: (() => {
-    const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    if (key) return `https://maps.googleapis.com/maps/vt?lyrs=s&x={x}&y={y}&z={z}&key=${key}`;
-    return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-  })(),
-  attribution: '© Google Maps | © Esri, DigitalGlobe',
-  maxZoom: 21,
-  subdomains: 'abc',
-} as const);
-
-const TERRAIN_TILE = normalizeTextTree({
-  url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-  attribution: '© OpenStreetMap contributors, SRTM © OpenTopoMap (CC-BY-SA)',
-  maxZoom: 17,
-  subdomains: 'abc',
-} as const);
-
 function getTileConfig(type: MapTileKind, theme: MapTheme) {
-  if (type === 'roadmap') {
-    return ROADMAP_TILES[theme];
-  }
-
-  if (type === 'satellite') {
-    return SATELLITE_TILE;
-  }
-
-  return TERRAIN_TILE;
+  return normalizeTextTree(mapApplicationService.resolveTiles(type, theme));
 }
 
 const MAP_TILE_LABELS: Record<MapTileKind, LocalizedCopy> = {
@@ -635,6 +578,7 @@ function WaselMapCompact({
     const tile = getTileConfig('roadmap', resolvedTheme);
     tileLayerRef.current?.remove();
     tileLayerRef.current = LRef.current.tileLayer(tile.url, {
+      attribution: tile.attribution,
       maxZoom: tile.maxZoom,
       subdomains: tile.subdomains,
     }).addTo(mapRef.current);
@@ -668,7 +612,6 @@ function WaselMapCompact({
 
         L.control
           .attribution({ position: 'bottomright', prefix: false })
-          .addAttribution('© OpenStreetMap contributors © CARTO')
           .addTo(map);
 
         if (containerRef.current && !roRef.current) {
@@ -984,6 +927,7 @@ function WaselMapFull(props: WaselMapProps) {
     const tile = getTileConfig(type, resolvedTheme);
     tileLayerRef.current?.remove();
     tileLayerRef.current = LRef.current.tileLayer(tile.url, {
+      attribution: tile.attribution,
       maxZoom: tile.maxZoom,
       subdomains: tile.subdomains,
     }).addTo(mapRef.current);
@@ -1048,20 +992,16 @@ function WaselMapFull(props: WaselMapProps) {
     let mosquesToShow = FALLBACK_MOSQUES;
 
     try {
-      const query = `[out:json][timeout:10];node["amenity"="place_of_worship"]["religion"="muslim"](around:8000,${lat},${lng});out 20;`;
-      const res = await fetch(
-        `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
+      const points = await mapApplicationService.fetchPointsOfInterest(
+        'mosque',
+        `around:8000,${lat},${lng}`,
       );
-      if (res.ok) {
-        const data = (await res.json()) as OverpassResponse;
-        const elements = data.elements ?? [];
-        if (elements.length > 0) {
-          mosquesToShow = elements.map(el => ({
-            lat: el.lat,
-            lng: el.lon,
-            name: el.tags?.name || el.tags?.['name:ar'] || 'Mosque | مسجد',
-          }));
-        }
+      if (points.length > 0) {
+        mosquesToShow = points.map((point) => ({
+          lat: point.latitude,
+          lng: point.longitude,
+          name: point.label,
+        }));
       }
     } catch {
       // Use fallback silently
@@ -1160,17 +1100,14 @@ function WaselMapFull(props: WaselMapProps) {
       // Try OSRM for road-following route
       let latlngs: [number, number][] = route.map(p => [p.lat, p.lng]);
       try {
-        const coords = route.map(p => `${p.lng},${p.lat}`).join(';');
-        const res = await fetch(
-          `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,
-          { signal: AbortSignal.timeout(5000) },
+        const path = await mapApplicationService.fetchRoutePath(
+          route.map((point) => ({
+            latitude: point.lat,
+            longitude: point.lng,
+          })),
         );
-        if (res.ok) {
-          const data = (await res.json()) as OsrmRouteResponse;
-          const coords2 = data.routes?.[0]?.geometry?.coordinates;
-          if (coords2?.length) {
-            latlngs = coords2.map(([lng, lat]: [number, number]) => [lat, lng]);
-          }
+        if (path.length > 0) {
+          latlngs = path.map((point) => [point.latitude, point.longitude]);
         }
       } catch {
         // Use straight-line polyline fallback
@@ -1353,7 +1290,6 @@ function WaselMapFull(props: WaselMapProps) {
         // Attribution (small, bottom-right)
         L.control
           .attribution({ position: 'bottomright', prefix: false })
-          .addAttribution('© OpenStreetMap contributors © CARTO')
           .addTo(map);
 
         // Reload mosques when map moves significantly
