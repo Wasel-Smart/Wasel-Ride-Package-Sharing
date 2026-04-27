@@ -206,7 +206,7 @@ const MAP_COPY = {
 } as const;
 
 /* ─── Pre-defined data ───────────────────────────────────────────────── */
-const JORDAN_RADARS = normalizeTextTree([
+const RAW_JORDAN_RADARS = [
   { lat: 31.9539, lng: 35.9106, name: 'Radar – Amman 7th Circle', limit: 60 },
   { lat: 31.9786, lng: 35.8444, name: 'Radar – Queen Alia Airport Rd', limit: 80 },
   { lat: 31.7854, lng: 35.9771, name: 'Radar – Madaba Highway', limit: 80 },
@@ -219,9 +219,9 @@ const JORDAN_RADARS = normalizeTextTree([
   { lat: 32.0408, lng: 36.0899, name: 'Radar – Zarqa Highway', limit: 80 },
   { lat: 32.61, lng: 35.99, name: 'Radar – Ramtha Border', limit: 60 },
   { lat: 31.87, lng: 35.94, name: 'Radar – South Amman Ring Rd', limit: 80 },
-]);
+];
 
-const FALLBACK_MOSQUES = normalizeTextTree([
+const RAW_FALLBACK_MOSQUES = [
   {
     lat: 31.9554,
     lng: 35.91,
@@ -238,7 +238,26 @@ const FALLBACK_MOSQUES = normalizeTextTree([
   { lat: 31.22, lng: 35.93, name: "Ma'an Mosque | مسجد معان" },
   { lat: 31.0, lng: 35.5, name: 'Shoubak Rest Stop Mosque | مسجد استراحة الشوبك' },
   { lat: 30.3, lng: 35.2, name: 'Wadi Rum Mosque | مسجد وادي رم' },
-]);
+];
+
+let jordanRadarsCache: typeof RAW_JORDAN_RADARS | null = null;
+let fallbackMosquesCache: typeof RAW_FALLBACK_MOSQUES | null = null;
+
+function getJordanRadars() {
+  if (!jordanRadarsCache) {
+    jordanRadarsCache = normalizeTextTree(RAW_JORDAN_RADARS);
+  }
+
+  return jordanRadarsCache;
+}
+
+function getFallbackMosques() {
+  if (!fallbackMosquesCache) {
+    fallbackMosquesCache = normalizeTextTree(RAW_FALLBACK_MOSQUES);
+  }
+
+  return fallbackMosquesCache;
+}
 
 const MAP_PRIMARY = '#E67E22';
 const MAP_PRIMARY_SOFT = '#F5B041';
@@ -989,7 +1008,7 @@ function WaselMapFull(props: WaselMapProps) {
     const lat = mapCenter.lat;
     const lng = mapCenter.lng;
 
-    let mosquesToShow = FALLBACK_MOSQUES;
+    let mosquesToShow = getFallbackMosques();
 
     try {
       const points = await mapApplicationService.fetchPointsOfInterest(
@@ -1034,7 +1053,7 @@ function WaselMapFull(props: WaselMapProps) {
       radarLayerRef.current = [];
 
       const radarIcon = makeDivIcon(L, SVG.radar, 38, 38, 19, 19);
-      JORDAN_RADARS.forEach(r => {
+      getJordanRadars().forEach(r => {
         try {
           const marker = safeAddTo(L.marker([r.lat, r.lng], { icon: radarIcon }), mapInstance).on(
             'click',

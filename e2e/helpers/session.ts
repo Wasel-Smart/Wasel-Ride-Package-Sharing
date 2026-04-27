@@ -34,25 +34,15 @@ export const demoUser = {
 export async function seedDemoSession(page: Page) {
   await page.addInitScript(
     ({ authKey, consentKey, consentDecision, supabaseAuthKey, user }) => {
-      window.localStorage.setItem(consentKey, consentDecision);
-      window.localStorage.setItem(authKey, JSON.stringify(user));
-      window.localStorage.removeItem(supabaseAuthKey);
-    },
-    {
-      authKey: STORAGE_KEY,
-      consentKey: CONSENT_STORAGE_KEY,
-      consentDecision: DEFAULT_CONSENT_DECISION,
-      supabaseAuthKey: SUPABASE_AUTH_STORAGE_KEY,
-      user: demoUser,
-    },
-  );
+      try {
+        if (window.location.protocol !== 'http:' && window.location.protocol !== 'https:') {
+          return;
+        }
 
-  await page.goto('/e2e-seed.html', { waitUntil: 'domcontentloaded' });
-  await page.evaluate(
-    ({ authKey, consentKey, consentDecision, supabaseAuthKey, user }) => {
-      window.localStorage.setItem(consentKey, consentDecision);
-      window.localStorage.setItem(authKey, JSON.stringify(user));
-      window.localStorage.removeItem(supabaseAuthKey);
+        window.localStorage.setItem(consentKey, consentDecision);
+        window.localStorage.setItem(authKey, JSON.stringify(user));
+        window.localStorage.removeItem(supabaseAuthKey);
+      } catch {}
     },
     {
       authKey: STORAGE_KEY,
@@ -103,7 +93,13 @@ export async function gotoAuthedRoute(
 export async function seedConsentDecision(page: Page, decision = DEFAULT_CONSENT_DECISION) {
   await page.addInitScript(
     ({ consentKey, consentDecision }) => {
-      window.localStorage.setItem(consentKey, consentDecision);
+      try {
+        if (window.location.protocol !== 'http:' && window.location.protocol !== 'https:') {
+          return;
+        }
+
+        window.localStorage.setItem(consentKey, consentDecision);
+      } catch {}
     },
     {
       consentKey: CONSENT_STORAGE_KEY,

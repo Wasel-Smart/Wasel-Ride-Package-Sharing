@@ -127,8 +127,16 @@ jobs:
       - name: Coverage gate
         run: npm run test:coverage
 
+      - name: Verify coverage artifacts
+        run: |
+          if [ ! -f coverage/coverage-summary.json ]; then
+            echo "❌ coverage-summary.json not generated"
+            exit 1
+          fi
+          echo "✅ Coverage summary exists"
+
       - name: Production build
-        run: npm run build
+        run: npm run build:optimized
 
       - name: Bundle size check (size-limit)
         run: npm run size
@@ -209,6 +217,9 @@ jobs:
 
       - name: Generate quality report
         run: npm run report:quality -- --test-status=passed --output=quality-report.verify.json
+
+      - name: Verify quality metrics
+        run: npm run verify:quality
 
       - name: Upload coverage artifacts
         if: always()

@@ -1,0 +1,85 @@
+{
+  "generatedAt": "2026-04-27T02:15:00.312Z",
+  "testStatus": "passed",
+  "coverage": null,
+  "bundle": {
+    "totalJsBytes": 1776864,
+    "largestChunks": [
+      {
+        "file": "js/index-blbWtM8i.js",
+        "bytes": 382930,
+        "kilobytes": 373.96
+      },
+      {
+        "file": "js/react-core-B-acqZko.js",
+        "bytes": 233898,
+        "kilobytes": 228.42
+      },
+      {
+        "file": "js/data-layer-8XKpTdGk.js",
+        "bytes": 221399,
+        "kilobytes": 216.21
+      },
+      {
+        "file": "js/maps-CE2-ZVdy.js",
+        "bytes": 150058,
+        "kilobytes": 146.54
+      },
+      {
+        "file": "js/motion-2ZxQZ8-z.js",
+        "bytes": 125763,
+        "kilobytes": 122.82
+      },
+      {
+        "file": "js/ui-primitives-CoYmBD6a.js",
+        "bytes": 66991,
+        "kilobytes": 65.42
+      },
+      {
+        "file": "js/FindRidePage-DqKTa_V3.js",
+        "bytes": 61665,
+        "kilobytes": 60.22
+      },
+      {
+        "file": "js/MobilityOSLandingMap-ymneKVJw.js",
+        "bytes": 53063,
+        "kilobytes": 51.82
+      },
+      {
+        "file": "js/BusPage-Cf-r3wXl.js",
+        "bytes": 40375,
+        "kilobytes": 39.43
+      },
+      {
+        "file": "js/MapWrapper-Cn7MhXkN.js",
+        "bytes": 40006,
+        "kilobytes": 39.07
+      }
+    ],
+    "overBudgetChunks": [
+      {
+        "file": "js/index-blbWtM8i.js",
+        "bytes": 382930,
+        "kilobytes": 373.96
+      },
+      {
+        "file": "js/react-core-B-acqZko.js",
+        "bytes": 233898,
+        "kilobytes": 228.42
+      },
+      {
+        "file": "js/data-layer-8XKpTdGk.js",
+        "bytes": 221399,
+        "kilobytes": 216.21
+      }
+    ]
+  },
+  "playwright": {
+    "status": "unknown",
+    "expected": 22,
+    "unexpected": 0,
+    "flaky": 0,
+    "skipped": 0
+  },
+  "lighthouse": null
+}

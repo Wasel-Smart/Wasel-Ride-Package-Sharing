@@ -4,6 +4,12 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 const FILE_PATTERN = /\.(ts|tsx|js|mjs|json|md|ya?ml|css)$/i;
+const EXCLUDED_FILES = [
+  'src/utils/textEncoding.ts',
+  'src\\utils\\textEncoding.ts',
+  'scripts/check-encoding.mjs',
+  'scripts\\check-encoding.mjs',
+];
 const SUSPICIOUS_PATTERNS = [
   /Ã./u,
   /Â./u,
@@ -42,6 +48,7 @@ const files = Array.from(new Set([
   ...readGitFileList(['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD']),
 ]))
   .filter((filePath) => FILE_PATTERN.test(filePath))
+  .filter((filePath) => !EXCLUDED_FILES.includes(filePath))
   .map((filePath) => path.join(ROOT, filePath))
   .filter((filePath) => fs.existsSync(filePath));
 

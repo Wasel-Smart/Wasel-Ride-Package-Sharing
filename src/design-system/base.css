@@ -259,6 +259,10 @@ img {
   padding: var(--ds-space-7) 0 var(--ds-space-9);
 }
 
+.ds-main__pending {
+  margin-bottom: var(--ds-space-6);
+}
+
 .ds-page {
   display: grid;
   gap: var(--ds-space-6);

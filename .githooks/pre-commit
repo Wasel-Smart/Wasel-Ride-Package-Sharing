@@ -1,3 +1,19 @@
 #!/bin/sh
 
+# Check for temporary files that should not be committed
+echo "Checking for temporary files..."
+
+TEMP_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '(tmp-.*\.(png|json|txt|html|err|out)|\.(out|err)$|^\.codex-.*\.(out|err)$)')
+
+if [ -n "$TEMP_FILES" ]; then
+  echo "❌ Error: Attempting to commit temporary files:"
+  echo "$TEMP_FILES"
+  echo ""
+  echo "These files should not be committed. Please unstage them:"
+  echo "  git reset HEAD <file>"
+  exit 1
+fi
+
+echo "✅ No temporary files detected"
+
 npm run check:encoding

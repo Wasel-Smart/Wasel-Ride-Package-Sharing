@@ -13,6 +13,33 @@ interface PerformanceMetrics {
   ttfb: number | null; // Time to First Byte
 }
 
+type FirstInputPerformanceEntry = PerformanceEntry & {
+  processingStart: number;
+};
+
+type LayoutShiftPerformanceEntry = PerformanceEntry & {
+  hadRecentInput?: boolean;
+  value?: number;
+};
+
+type PerformanceWithMemory = Performance & {
+  memory?: {
+    jsHeapSizeLimit: number;
+    totalJSHeapSize: number;
+    usedJSHeapSize: number;
+  };
+};
+
+type WindowWithAnalytics = Window & {
+  gtag?: (command: 'event', name: string, params: Record<string, unknown>) => void;
+};
+
+function supportsPerformanceObserver(entryType: string) {
+  return typeof PerformanceObserver !== 'undefined'
+    && Array.isArray(PerformanceObserver.supportedEntryTypes)
+    && PerformanceObserver.supportedEntryTypes.includes(entryType);
+}
+
 export function AppRuntimeCoordinator() {
   const { user, loading } = useAuth();
   const initializationRef = useRef(false);
@@ -68,66 +95,88 @@ export function AppRuntimeCoordinator() {
         userId: user?.id,
       });
 
-      // Track user session metrics
       if (user) {
-        trackUserSession(user.id);
+        return trackUserSession(user.id);
       }
     }
+
+    return undefined;
   }, [user, loading]);
 
-  // Performance monitoring initialization
   const initializePerformanceMonitoring = (): (() => void) | undefined => {
-    if (typeof window === 'undefined' || !('performance' in window)) return;
+    if (typeof window === 'undefined' || !('performance' in window)) {
+      return;
+    }
 
-    // Web Vitals monitoring
+    const observers: PerformanceObserver[] = [];
+    const cleanupFns: Array<() => void> = [];
+
     const observeWebVitals = () => {
-      // First Contentful Paint
-      new PerformanceObserver((list) => {
-        const entries = list.getEntries();
-        const fcp = entries.find(entry => entry.name === 'first-contentful-paint');
-        if (fcp) {
-          performanceMetricsRef.current.fcp = fcp.startTime;
-          logger.info('Performance: First Contentful Paint', { fcp: fcp.startTime });
-        }
-      }).observe({ entryTypes: ['paint'] });
-
-      // Largest Contentful Paint
-      new PerformanceObserver((list) => {
-        const entries = list.getEntries();
-        const lastEntry = entries[entries.length - 1];
-        if (lastEntry) {
-          performanceMetricsRef.current.lcp = lastEntry.startTime;
-          logger.info('Performance: Largest Contentful Paint', { lcp: lastEntry.startTime });
-        }
-      }).observe({ entryTypes: ['largest-contentful-paint'] });
-
-      // First Input Delay
-      new PerformanceObserver((list) => {
-        const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          if (entry.processingStart && entry.startTime) {
-            const fid = entry.processingStart - entry.startTime;
-            performanceMetricsRef.current.fid = fid;
-            logger.info('Performance: First Input Delay', { fid });
+      if (supportsPerformanceObserver('paint')) {
+        const paintObserver = new PerformanceObserver((list) => {
+          const fcp = list.getEntries().find((entry) => entry.name === 'first-contentful-paint');
+          if (fcp) {
+            performanceMetricsRef.current.fcp = fcp.startTime;
+            logger.info('Performance: First Contentful Paint', { fcp: fcp.startTime });
           }
         });
-      }).observe({ entryTypes: ['first-input'] });
+        paintObserver.observe({ entryTypes: ['paint'] });
+        observers.push(paintObserver);
+      }
 
-      // Cumulative Layout Shift
-      let clsValue = 0;
-      new PerformanceObserver((list) => {
-        const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          if (!entry.hadRecentInput) {
-            clsValue += entry.value;
+      if (supportsPerformanceObserver('largest-contentful-paint')) {
+        const lcpObserver = new PerformanceObserver((list) => {
+          const entries = list.getEntries();
+          const lastEntry = entries[entries.length - 1];
+          if (lastEntry) {
+            performanceMetricsRef.current.lcp = lastEntry.startTime;
+            logger.info('Performance: Largest Contentful Paint', { lcp: lastEntry.startTime });
           }
         });
-        performanceMetricsRef.current.cls = clsValue;
-        logger.info('Performance: Cumulative Layout Shift', { cls: clsValue });
-      }).observe({ entryTypes: ['layout-shift'] });
+        lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+        observers.push(lcpObserver);
 
-      // Navigation timing
-      const navigationEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+        const stopLcpTracking = () => lcpObserver.disconnect();
+        document.addEventListener('visibilitychange', stopLcpTracking, { once: true });
+        cleanupFns.push(() => {
+          document.removeEventListener('visibilitychange', stopLcpTracking);
+        });
+      }
+
+      if (supportsPerformanceObserver('first-input')) {
+        const fidObserver = new PerformanceObserver((list) => {
+          list.getEntries().forEach((entry) => {
+            const firstInputEntry = entry as FirstInputPerformanceEntry;
+            if (firstInputEntry.processingStart && firstInputEntry.startTime) {
+              const fid = firstInputEntry.processingStart - firstInputEntry.startTime;
+              performanceMetricsRef.current.fid = fid;
+              logger.info('Performance: First Input Delay', { fid });
+            }
+          });
+        });
+        fidObserver.observe({ entryTypes: ['first-input'] });
+        observers.push(fidObserver);
+      }
+
+      if (supportsPerformanceObserver('layout-shift')) {
+        let clsValue = 0;
+        const clsObserver = new PerformanceObserver((list) => {
+          list.getEntries().forEach((entry) => {
+            const layoutShiftEntry = entry as LayoutShiftPerformanceEntry;
+            if (!layoutShiftEntry.hadRecentInput && typeof layoutShiftEntry.value === 'number') {
+              clsValue += layoutShiftEntry.value;
+            }
+          });
+          performanceMetricsRef.current.cls = clsValue;
+          logger.info('Performance: Cumulative Layout Shift', { cls: clsValue });
+        });
+        clsObserver.observe({ entryTypes: ['layout-shift'] });
+        observers.push(clsObserver);
+      }
+
+      const navigationEntry = performance.getEntriesByType('navigation')[0] as
+        | PerformanceNavigationTiming
+        | undefined;
       if (navigationEntry) {
         const ttfb = navigationEntry.responseStart - navigationEntry.requestStart;
         performanceMetricsRef.current.ttfb = ttfb;
@@ -135,13 +184,11 @@ export function AppRuntimeCoordinator() {
       }
     };
 
-    // Defer performance observation to avoid blocking initial render
-    scheduleDeferredTask(observeWebVitals, 100);
+    const cancelObserveWebVitals = scheduleDeferredTask(observeWebVitals, 100);
 
-    // Report performance metrics periodically
     const reportMetrics = () => {
       const metrics = performanceMetricsRef.current;
-      if (Object.values(metrics).some(value => value !== null)) {
+      if (Object.values(metrics).some((value) => value !== null)) {
         logger.info('Performance metrics report', {
           fcp: metrics.fcp,
           lcp: metrics.lcp,
@@ -149,10 +196,10 @@ export function AppRuntimeCoordinator() {
           cls: metrics.cls,
           ttfb: metrics.ttfb,
         });
-        
-        // Send to analytics if available
-        if (typeof window !== 'undefined' && 'gtag' in window) {
-          (window as any).gtag('event', 'web_vitals', {
+
+        const analyticsWindow = window as WindowWithAnalytics;
+        if (typeof analyticsWindow.gtag === 'function') {
+          analyticsWindow.gtag('event', 'web_vitals', {
             custom_map: {
               metric_fcp: metrics.fcp,
               metric_lcp: metrics.lcp,
@@ -165,16 +212,19 @@ export function AppRuntimeCoordinator() {
       }
     };
 
-    // Report metrics after 10 seconds and then every 30 seconds
-    scheduleDeferredTask(reportMetrics, 10_000);
+    const cancelInitialReport = scheduleDeferredTask(reportMetrics, 10_000);
     const metricsInterval = setInterval(reportMetrics, 30_000);
 
-    return () => clearInterval(metricsInterval);
+    return () => {
+      cancelObserveWebVitals();
+      cancelInitialReport();
+      cleanupFns.forEach((cleanup) => cleanup());
+      observers.forEach((observer) => observer.disconnect());
+      clearInterval(metricsInterval);
+    };
   };
 
-  // Error reporting initialization
   const initializeErrorReporting = () => {
-    // Global error handler
     const handleGlobalError = (event: ErrorEvent) => {
       logger.error('Global JavaScript error', {
         message: event.message,
@@ -185,7 +235,6 @@ export function AppRuntimeCoordinator() {
       });
     };
 
-    // Unhandled promise rejection handler
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       logger.error('Unhandled promise rejection', {
         reason: event.reason,
@@ -202,10 +251,9 @@ export function AppRuntimeCoordinator() {
     };
   };
 
-  // Track user session metrics
   const trackUserSession = (userId: string) => {
     const sessionStart = Date.now();
-    
+
     logger.info('User session started', {
       userId: sanitizeForLog(userId),
       sessionStart,
@@ -214,14 +262,21 @@ export function AppRuntimeCoordinator() {
         width: window.innerWidth,
         height: window.innerHeight,
       },
-      connection: (navigator as any).connection ? {
-        effectiveType: (navigator as any).connection.effectiveType,
-        downlink: (navigator as any).connection.downlink,
-        rtt: (navigator as any).connection.rtt,
-      } : null,
+      connection: 'connection' in navigator
+        ? {
+            downlink: (navigator as Navigator & {
+              connection?: { downlink?: number; effectiveType?: string; rtt?: number };
+            }).connection?.downlink,
+            effectiveType: (navigator as Navigator & {
+              connection?: { downlink?: number; effectiveType?: string; rtt?: number };
+            }).connection?.effectiveType,
+            rtt: (navigator as Navigator & {
+              connection?: { downlink?: number; effectiveType?: string; rtt?: number };
+            }).connection?.rtt,
+          }
+        : null,
     });
 
-    // Track session duration on page unload
     const handleBeforeUnload = () => {
       const sessionDuration = Date.now() - sessionStart;
       logger.info('User session ended', {
@@ -243,12 +298,17 @@ export function AppRuntimeCoordinator() {
 
   // Monitor memory usage (if available)
   useEffect(() => {
-    if (typeof window === 'undefined' || !('performance' in window) || !(performance as any).memory) {
+    const runtimePerformance = performance as PerformanceWithMemory;
+    if (typeof window === 'undefined' || !('performance' in window) || !runtimePerformance.memory) {
       return;
     }
 
     const monitorMemory = () => {
-      const memory = (performance as any).memory;
+      const memory = runtimePerformance.memory;
+      if (!memory) {
+        return;
+      }
+
       const memoryInfo = {
         usedJSHeapSize: memory.usedJSHeapSize,
         totalJSHeapSize: memory.totalJSHeapSize,
@@ -264,11 +324,9 @@ export function AppRuntimeCoordinator() {
       }
     };
 
-    // Monitor memory every 60 seconds
     const memoryInterval = setInterval(monitorMemory, 60_000);
     return () => clearInterval(memoryInterval);
   }, []);
 
-  // This component doesn't render anything
   return null;
 }
