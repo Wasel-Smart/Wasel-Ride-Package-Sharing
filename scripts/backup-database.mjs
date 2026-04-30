@@ -299,11 +299,12 @@ function runSupabaseCliDump(type) {
   }
 
   console.log(`  Creating ${type} backup via Supabase CLI...`);
+  const runWithShell = cli.toLowerCase().endsWith('.cmd');
   const result = spawnSync(cli, args, {
     cwd: ROOT_DIR,
     encoding: 'utf8',
     stdio: 'pipe',
-    shell: false,
+    shell: runWithShell,
   });
 
   if (result.status === 0 && existsSync(outputPath)) {
@@ -312,7 +313,18 @@ function runSupabaseCliDump(type) {
     return outputPath;
   }
 
-  const errorText = [result.stderr, result.stdout].filter(Boolean).join('\n').trim();
+  const errorText = [result.error?.message, result.stderr, result.stdout]
+    .filter(Boolean)
+    .join('\n')
+    .trim();
+
+  if (errorText.includes('Cannot find project ref. Have you run supabase link?')) {
+    console.warn(
+      `  Supabase CLI backup failed for ${type}: project is not linked. Run \`npx supabase login\` and \`npx supabase link --project-ref ${projectRef || '<ref>'}\`.`,
+    );
+    return null;
+  }
+
   console.warn(`  Supabase CLI backup failed for ${type}: ${errorText || 'unknown error'}`);
   return null;
 }
@@ -429,11 +441,14 @@ function writeBackupMetadata(metadata) {
 function printFailureGuidance() {
   console.error('\nNo backup artifact was created.');
   console.error(
-    'To create logical backups, set DATABASE_URL or SUPABASE_DB_URL, or run `supabase login` and `supabase link --project-ref <ref>` first.',
+    'To create logical backups, set DATABASE_URL or SUPABASE_DB_URL, or run `npx supabase login` and `npx supabase link --project-ref <ref>` first.',
   );
   console.error(
     'To trigger Supabase managed backups through the Management API, also set SUPABASE_ACCESS_TOKEN.',
   );
+  if (projectRef) {
+    console.error(`Detected project ref: ${projectRef}`);
+  }
 }
 
 async function main() {
