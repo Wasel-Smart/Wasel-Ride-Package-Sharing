@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20.10.0",
+    "npm": ">=10.0.0"
+  },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
@@ -86,6 +90,7 @@
     "preview": "vite preview",
     "sync:build-output": "node scripts/sync-build-output.mjs",
     "test": "vitest run",
+    "test:unit": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
@@ -95,6 +100,7 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
+    "verify:ci": "npm run type-check && npm run lint && npm run test:unit && npm run build",
     "verify": "npm run type-check && npm run lint && npm run test && npm run build && npm run test:e2e"
   }
 }

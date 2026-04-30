@@ -1,0 +1,30 @@
+name: Feature request
+description: Propose a product, platform, or developer-experience improvement for Wasel.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What user or business problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the preferred solution or flow.
+    validations:
+      required: true
+  - type: textarea
+    id: success
+    attributes:
+      label: Success criteria
+      description: What would make this change done and measurable?
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context
+      description: Dependencies, mockups, metrics, or rollout concerns.
