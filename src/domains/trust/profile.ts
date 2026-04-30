@@ -1,7 +1,7 @@
 export type WaselUserRole = 'passenger' | 'driver' | 'both' | 'admin';
 export type WaselVerificationLevel = 'level_0' | 'level_1' | 'level_2' | 'level_3';
 export type WaselWalletStatus = 'active' | 'limited' | 'frozen';
-export type WaselBackendMode = 'supabase' | 'demo';
+export type WaselBackendMode = 'supabase' | 'local';
 
 export interface WaselUserProfile {
   id: string;
@@ -24,7 +24,7 @@ export interface WaselUserProfile {
   backendMode: WaselBackendMode;
 }
 
-type DemoProfileInput = {
+type LocalProfileInput = {
   id: string;
   name: string;
   email: string;
@@ -96,7 +96,7 @@ export function deriveTrustScore(input: {
   return Math.min(99, baseByLevel[input.verificationLevel] + ratingBonus + tripBonus);
 }
 
-export function createDemoUserProfile(input: DemoProfileInput): WaselUserProfile {
+export function createLocalUserProfile(input: LocalProfileInput): WaselUserProfile {
   const role = input.role ?? 'passenger';
   const sanadVerified = Boolean(input.verified);
   const phoneVerified = Boolean(input.phone);
@@ -126,7 +126,7 @@ export function createDemoUserProfile(input: DemoProfileInput): WaselUserProfile
     verificationLevel,
     trustScore: deriveTrustScore({ verificationLevel, rating, trips }),
     walletStatus: 'active',
-    backendMode: 'demo',
+    backendMode: 'local',
     ...(input.phone ? { phone: input.phone } : {}),
     ...(input.avatar ? { avatar: input.avatar } : {}),
   };

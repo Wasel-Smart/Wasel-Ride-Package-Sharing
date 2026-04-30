@@ -439,6 +439,144 @@
   color: var(--primary);
 }
 
+.wasel-auth-guard {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px 18px;
+  background:
+    radial-gradient(
+      circle at 14% 12%,
+      color-mix(in srgb, var(--ds-accent-strong) 14%, transparent),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 82% 16%,
+      color-mix(in srgb, var(--ds-warning) 10%, transparent),
+      transparent 22%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-page-muted) 96%, transparent),
+      var(--ds-page)
+    );
+}
+
+.wasel-auth-guard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--ds-accent-strong) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--ds-accent-strong) 14%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(circle at center, black 0%, black 52%, transparent 92%);
+}
+
+.wasel-auth-guard__panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 30rem);
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+  padding: clamp(24px, 4vw, 34px);
+  border-radius: 30px;
+  border: 1px solid color-mix(in srgb, var(--ds-accent-strong) 20%, var(--ds-border));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-accent-strong) 7%, rgb(255 255 255 / 0.03)) 0%,
+      rgb(255 255 255 / 0.03) 100%
+    ),
+    color-mix(in srgb, var(--ds-surface-raised) 96%, transparent);
+  box-shadow: var(--wasel-shadow-lg), inset 0 1px 0 rgb(255 255 255 / 0.06);
+  overflow: hidden;
+}
+
+.wasel-auth-guard__panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--ds-accent-strong) 12%, transparent),
+      transparent 30%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-surface-soft) 28%, transparent),
+      transparent
+    );
+}
+
+.wasel-auth-guard__panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.wasel-auth-guard__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--ds-surface-soft) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ds-accent-strong) 18%, var(--ds-border));
+}
+
+.wasel-auth-guard__icon {
+  width: 62px;
+  height: 62px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ds-accent-strong) 20%, transparent),
+      rgb(255 255 255 / 0.08)
+    );
+  border: 1px solid color-mix(in srgb, var(--ds-accent-strong) 30%, transparent);
+  color: var(--ds-accent-strong);
+  font-family: var(--wasel-font-display);
+  font-size: 1.55rem;
+  font-weight: 900;
+  box-shadow: 0 18px 34px color-mix(in srgb, var(--ds-accent-strong) 16%, transparent);
+}
+
+.wasel-auth-guard__icon--shield {
+  color: var(--ds-accent);
+}
+
+.wasel-auth-guard__title {
+  margin: 0;
+  color: var(--wasel-copy-primary);
+  font-family: var(--wasel-font-display);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.wasel-auth-guard__body {
+  max-width: 30rem;
+  color: var(--wasel-copy-muted);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.wasel-auth-guard__body--spaced {
+  margin-bottom: 2px;
+}
+
 @media (max-width: 899px) {
   .wasel-page-shell {
     padding-inline: 14px;

@@ -1,6 +1,4 @@
-import path from 'node:path';
 import process from 'node:process';
-
 import ts from 'typescript';
 
 function fail(message) {
@@ -8,32 +6,28 @@ function fail(message) {
   process.exit(1);
 }
 
-function formatDiagnostic(diagnostic) {
-  return ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+const configPath = ts.findConfigFile(process.cwd(), ts.sys.fileExists, 'tsconfig.json');
+
+if (!configPath) {
+  fail('Unable to locate tsconfig.json');
 }
 
-const configFilePath = ts.findConfigFile(process.cwd(), ts.sys.fileExists, 'tsconfig.json');
+const diagnostics = [];
+const parsedConfig = ts.getParsedCommandLineOfConfigFile(configPath, {}, {
+  ...ts.sys,
+  onUnRecoverableConfigFileDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+});
 
-if (!configFilePath) {
-  fail('Could not find tsconfig.json');
-}
-
-const readResult = ts.readConfigFile(configFilePath, ts.sys.readFile);
-
-if (readResult.error) {
-  fail(formatDiagnostic(readResult.error));
-}
-
-const parsedConfig = ts.parseJsonConfigFileContent(
-  readResult.config,
-  ts.sys,
-  path.dirname(configFilePath),
-  undefined,
-  configFilePath,
-);
-
-if (parsedConfig.errors.length > 0) {
-  fail(parsedConfig.errors.map(formatDiagnostic).join('\n'));
+if (!parsedConfig) {
+  const message =
+    diagnostics.length > 0
+      ? ts.formatDiagnosticsWithColorAndContext(diagnostics, {
+          getCanonicalFileName: (fileName) => fileName,
+          getCurrentDirectory: () => process.cwd(),
+          getNewLine: () => '\n',
+        })
+      : 'Failed to parse tsconfig.json';
+  fail(message);
 }
 
 const requiredOptions = ['strict', 'noImplicitAny', 'strictNullChecks'];

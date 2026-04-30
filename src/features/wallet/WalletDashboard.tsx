@@ -28,6 +28,7 @@ import {
   SectionHead,
 } from '../shared/pageShared';
 import { useWallet } from './useWallet';
+import '../../styles/finance-surfaces.css';
 
 function formatCurrency(value: number, currency = 'JOD', locale = 'en-JO') {
   return new Intl.NumberFormat(locale, {
@@ -46,9 +47,9 @@ const WALLET_COPY = {
       refresh: 'Refresh wallet',
     },
     banner: {
-      title: 'Wallet stays limited.',
+      title: 'Wallet stays live.',
       detail:
-        'Use this page to see live balance, recent activity, and the next payment step for rides or packages.',
+        'Use this page to review live balance, recent activity, and the next payment step for rides or packages.',
     },
     clarity: {
       title: 'See the live wallet state before you pay.',
@@ -217,7 +218,7 @@ export function WalletDashboard() {
   return (
     <PageShell>
       <Protected>
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-8 pt-4 md:px-6">
+        <div className="wasel-finance-shell mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-8 pt-4 md:px-6">
           <SectionHead
             emoji={<WalletIcon aria-hidden="true" className="h-5 w-5" />}
             title={copy.header.title}
@@ -277,7 +278,7 @@ export function WalletDashboard() {
           ) : null}
 
           <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-            <Card className="border-primary/15 bg-[linear-gradient(140deg,rgba(3,13,28,0.96),rgba(8,34,60,0.92))]">
+            <Card className="wasel-finance-hero border-primary/15 bg-[linear-gradient(140deg,rgba(3,13,28,0.96),rgba(8,34,60,0.92))]">
               <CardHeader className="gap-3">
                 <Badge className="w-fit border border-primary/20 bg-primary/10 text-primary">
                   {copy.liveBadge}
@@ -293,7 +294,7 @@ export function WalletDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3 pb-6 md:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="wasel-finance-stat rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                     <RefreshCw className="h-4 w-4 text-primary" />
                     {copy.pendingBalance}
@@ -302,7 +303,7 @@ export function WalletDashboard() {
                     {wallet ? formatCurrency(wallet.pendingBalance, wallet.currency, locale) : '--'}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="wasel-finance-stat rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                     <CreditCard className="h-4 w-4 text-primary" />
                     {copy.paymentMethods}
@@ -312,7 +313,7 @@ export function WalletDashboard() {
                     {defaultPaymentMethod?.label ?? copy.noDefaultMethod}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="wasel-finance-stat rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                     <ShieldCheck className="h-4 w-4 text-primary" />
                     {copy.servicePosture}
@@ -332,10 +333,10 @@ export function WalletDashboard() {
               </CardContent>
             </Card>
 
-            <div className="grid gap-4">
+            <div className="wasel-finance-actions grid gap-4">
               <OperationalConfidencePanel summary={walletConfidence} variant="detail" />
 
-              <Card>
+              <Card className="wasel-finance-panel">
                 <CardHeader>
                   <CardTitle className="text-lg text-foreground">{copy.actions.title}</CardTitle>
                   <CardDescription className="text-sm leading-6 text-muted-foreground">
@@ -377,7 +378,7 @@ export function WalletDashboard() {
           </section>
 
           <section>
-            <Card>
+            <Card className="wasel-finance-panel">
               <CardHeader>
                 <CardTitle className="text-lg text-foreground">{copy.history.title}</CardTitle>
                 <CardDescription>
@@ -418,7 +419,7 @@ export function WalletDashboard() {
                   return (
                     <div
                       key={transaction.id}
-                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4"
+                      className="wasel-finance-activity-item flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4"
                     >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-foreground">

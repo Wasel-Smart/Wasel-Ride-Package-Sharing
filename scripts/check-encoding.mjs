@@ -10,6 +10,12 @@ const EXCLUDED_FILES = [
   'scripts/check-encoding.mjs',
   'scripts\\check-encoding.mjs',
 ];
+const EXCLUDED_PATH_PREFIXES = [
+  '.eval-dist/',
+  '.playwright-dist/',
+  'dist/',
+  'coverage/',
+];
 const SUSPICIOUS_PATTERNS = [
   /Ã./u,
   /Â./u,
@@ -42,13 +48,23 @@ function getOffendingLines(filePath) {
     .filter(({ line }) => SUSPICIOUS_PATTERNS.some((pattern) => pattern.test(line)));
 }
 
+function normalizeGitPath(filePath) {
+  return filePath.replaceAll('\\', '/');
+}
+
+function isExcludedFile(filePath) {
+  const normalizedPath = normalizeGitPath(filePath);
+  return EXCLUDED_FILES.includes(filePath)
+    || EXCLUDED_FILES.includes(normalizedPath)
+    || EXCLUDED_PATH_PREFIXES.some((prefix) => normalizedPath.startsWith(prefix));
+}
+
 const files = Array.from(new Set([
   ...readGitFileList(['diff', '--cached', '--name-only', '--diff-filter=ACMR']),
   ...readGitFileList(['diff', '--name-only', '--diff-filter=ACMR']),
-  ...readGitFileList(['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD']),
 ]))
   .filter((filePath) => FILE_PATTERN.test(filePath))
-  .filter((filePath) => !EXCLUDED_FILES.includes(filePath))
+  .filter((filePath) => !isExcludedFile(filePath))
   .map((filePath) => path.join(ROOT, filePath))
   .filter((filePath) => fs.existsSync(filePath));
 

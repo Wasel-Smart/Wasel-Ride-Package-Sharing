@@ -5,7 +5,7 @@
  */
 
 import type { ServiceRegistry } from './serviceRegistry';
-import { SERVICE_REGISTRY, getServiceHealthUrl } from './serviceRegistry';
+import { SERVICE_REGISTRY } from './serviceRegistry';
 import { apiGateway } from './apiGateway';
 
 export interface ServiceHealth {

@@ -287,12 +287,12 @@ const ENABLE_MOBILITY_OS_LIVE_DATA =
 
 function shouldUseMobilityLiveData() {
   if (!supabase) return false;
-  if (import.meta.env.VITE_ENABLE_DEMO_DATA === 'true') return false;
+  if (import.meta.env.VITE_ENABLE_SYNTHETIC_DATA === 'true') return false;
   if (typeof window === 'undefined') return ENABLE_MOBILITY_OS_LIVE_DATA;
 
   const hostname = window.location.hostname;
-  const isLocalPreview = hostname === 'localhost' || hostname === '127.0.0.1';
-  return ENABLE_MOBILITY_OS_LIVE_DATA || !isLocalPreview;
+  const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
+  return ENABLE_MOBILITY_OS_LIVE_DATA || !isLocalHost;
 }
 
 function normalizeCity(value: string | null | undefined): string | null {

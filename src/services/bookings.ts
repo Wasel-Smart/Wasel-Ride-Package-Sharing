@@ -139,11 +139,25 @@ export const bookingsAPI = {
       );
     }
 
-    const response = await fetchWithRetry(`${API_URL}/bookings/user/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    let response: Response;
+    try {
+      response = await fetchWithRetry(`${API_URL}/bookings/user/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch (error) {
+      if (!allowDirectSupabaseFallback()) {
+        throw error;
+      }
+
+      return parseContract(
+        bookingListSchema,
+        await getDirectUserBookings(userId),
+        'booking.user.list',
+        BOOKINGS_CONTRACT_VERSION,
+      );
+    }
 
     if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
       requireDirectSupabaseFallback('User booking lookup');
@@ -180,11 +194,25 @@ export const bookingsAPI = {
       );
     }
 
-    const response = await fetchWithRetry(`${API_URL}/trips/${tripId}/bookings`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    let response: Response;
+    try {
+      response = await fetchWithRetry(`${API_URL}/trips/${tripId}/bookings`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch (error) {
+      if (!allowDirectSupabaseFallback()) {
+        throw error;
+      }
+
+      return parseContract(
+        bookingListSchema,
+        await getDirectTripBookings(tripId),
+        'booking.trip.list',
+        BOOKINGS_CONTRACT_VERSION,
+      );
+    }
 
     if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
       requireDirectSupabaseFallback('Trip booking lookup');
@@ -226,14 +254,30 @@ export const bookingsAPI = {
       );
     }
 
-    const response = await fetchWithRetry(`${API_URL}/bookings/${bookingId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ status }),
-    });
+    let response: Response;
+    try {
+      response = await fetchWithRetry(`${API_URL}/bookings/${bookingId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status }),
+      });
+    } catch (error) {
+      if (!allowDirectSupabaseFallback()) {
+        throw error;
+      }
+
+      return normalizeBookingMutationResult(
+        parseContract(
+          bookingMutationEnvelopeSchema,
+          await updateDirectBookingStatus(bookingId, status),
+          'booking.update',
+          BOOKINGS_CONTRACT_VERSION,
+        ),
+      );
+    }
 
     if (!response.ok && shouldFallbackToDirectOnResponse(response)) {
       requireDirectSupabaseFallback('Booking status update');

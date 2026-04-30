@@ -424,7 +424,7 @@ export const authAPI = {
 
   async signOut() {
     const client = requireSupabase();
-    const { error } = await client.auth.signOut({ scope: 'global' });
+    const { error } = await client.auth.signOut({ scope: 'local' });
     if (error) {throw error;}
   },
 

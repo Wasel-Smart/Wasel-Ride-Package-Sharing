@@ -228,7 +228,6 @@ export function createCommunicationHandlers(
   ) {
     const now = new Date().toISOString();
     const env = { ...deliveryEnv, functionBaseUrl };
-    const payload = delivery.payload ?? {};
     const attemptsCount = Number(delivery.attempts_count ?? 1);
 
     try {
@@ -313,7 +312,6 @@ export function createCommunicationHandlers(
     functionBaseUrl: string,
   ) {
     const dueDeliveries = await claimQueuedDeliveries(admin, 'edge:communications-process', 25);
-    const startedAt = Date.now();
 
     let sent = 0;
     let failed = 0;
@@ -325,13 +323,6 @@ export function createCommunicationHandlers(
         else failed += 1;
       }
     }
-
-    console.info('[communications] processed queue batch', {
-      processed: dueDeliveries.length,
-      sent,
-      failed,
-      durationMs: Date.now() - startedAt,
-    });
 
     return {
       processed: dueDeliveries.length,

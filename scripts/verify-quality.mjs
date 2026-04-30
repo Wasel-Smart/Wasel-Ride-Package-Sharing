@@ -1,31 +1,14 @@
 #!/usr/bin/env node
 
-/**
- * Comprehensive Quality Verification
- * 
- * Ensures all quality metrics are properly collected and meet standards:
- * - Coverage data exists
- * - Bundle sizes are within budget
- * - Lighthouse data is available (if run)
- * - Playwright tests passed
- */
-
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 
 const ROOT = process.cwd();
-const REQUIRED_COVERAGE_FILES = [
-  'coverage/coverage-summary.json',
-];
-
-const REQUIRED_BUILD_ARTIFACTS = [
-  'dist/index.html',
-  'dist/assets',
-];
+const REQUIRED_BUILD_ARTIFACTS = ['dist/index.html', 'dist/assets'];
 
 function checkExists(relativePath) {
-  const fullPath = path.join(ROOT, relativePath);
-  return fs.existsSync(fullPath);
+  return fs.existsSync(path.join(ROOT, relativePath));
 }
 
 function readJson(relativePath) {
@@ -33,6 +16,7 @@ function readJson(relativePath) {
   if (!fs.existsSync(fullPath)) {
     return null;
   }
+
   try {
     return JSON.parse(fs.readFileSync(fullPath, 'utf8'));
   } catch {
@@ -40,85 +24,98 @@ function readJson(relativePath) {
   }
 }
 
-function verifyQuality() {
-  console.log('\n🔍 Quality Verification\n');
-  
-  let allPassed = true;
-
-  // Check build artifacts
-  console.log('📦 Build Artifacts:');
-  for (const artifact of REQUIRED_BUILD_ARTIFACTS) {
-    const exists = checkExists(artifact);
-    console.log(`  ${exists ? '✅' : '❌'} ${artifact}`);
-    if (!exists) allPassed = false;
+function getLighthouseArtifacts() {
+  const manifest = readJson('.lighthouseci/manifest.json');
+  if (Array.isArray(manifest) && manifest.length > 0) {
+    return {
+      hasResults: true,
+      count: manifest.length,
+      source: 'manifest.json',
+    };
   }
 
-  // Check coverage
-  console.log('\n📊 Coverage:');
+  const lighthouseDir = path.join(ROOT, '.lighthouseci');
+  if (!fs.existsSync(lighthouseDir)) {
+    return { hasResults: false, count: 0, source: null };
+  }
+
+  const reportFiles = fs.readdirSync(lighthouseDir).filter((fileName) => /^lhr-.*\.json$/i.test(fileName));
+  return {
+    hasResults: reportFiles.length > 0,
+    count: reportFiles.length,
+    source: reportFiles.length > 0 ? 'lhr-*.json' : null,
+  };
+}
+
+async function verifyQuality() {
+  console.log('\nQuality Verification\n');
+
+  let allPassed = true;
+
+  console.log('Build Artifacts:');
+  for (const artifact of REQUIRED_BUILD_ARTIFACTS) {
+    const exists = checkExists(artifact);
+    console.log(`  ${exists ? 'OK' : 'MISSING'} ${artifact}`);
+    if (!exists) {
+      allPassed = false;
+    }
+  }
+
+  console.log('\nCoverage:');
   const coverageSummary = readJson('coverage/coverage-summary.json');
   if (coverageSummary?.total) {
-    console.log('  ✅ coverage-summary.json exists');
+    console.log('  OK coverage-summary.json exists');
     console.log(`     Lines: ${coverageSummary.total.lines.pct}%`);
     console.log(`     Branches: ${coverageSummary.total.branches.pct}%`);
     console.log(`     Functions: ${coverageSummary.total.functions.pct}%`);
     console.log(`     Statements: ${coverageSummary.total.statements.pct}%`);
   } else {
-    console.log('  ⚠️  coverage-summary.json missing or invalid');
+    console.log('  WARN coverage-summary.json missing or invalid');
     console.log('     Run: npm run test:coverage');
   }
 
-  // Check Playwright results
-  console.log('\n🎭 Playwright:');
+  console.log('\nPlaywright:');
   const playwrightResults = readJson('playwright-report/results.json');
   if (playwrightResults) {
-    const stats = playwrightResults.stats || {};
-    console.log('  ✅ results.json exists');
-    console.log(`     Expected: ${stats.expected || 0}`);
-    console.log(`     Unexpected: ${stats.unexpected || 0}`);
-    console.log(`     Flaky: ${stats.flaky || 0}`);
-    if (stats.unexpected > 0) {
-      console.log('  ⚠️  Some tests failed');
+    const stats = playwrightResults.stats ?? {};
+    console.log('  OK results.json exists');
+    console.log(`     Expected: ${stats.expected ?? 0}`);
+    console.log(`     Unexpected: ${stats.unexpected ?? 0}`);
+    console.log(`     Flaky: ${stats.flaky ?? 0}`);
+    if ((stats.unexpected ?? 0) > 0) {
+      console.log('  WARN some Playwright tests failed');
       allPassed = false;
     }
   } else {
-    console.log('  ⚠️  results.json missing');
+    console.log('  WARN results.json missing');
     console.log('     Run: npm run test:e2e');
   }
 
-  // Check Lighthouse
-  console.log('\n💡 Lighthouse:');
-  const lighthouseManifest = readJson('.lighthouseci/manifest.json');
-  if (lighthouseManifest && Array.isArray(lighthouseManifest) && lighthouseManifest.length > 0) {
-    console.log('  ✅ manifest.json exists');
-    console.log(`     Reports: ${lighthouseManifest.length}`);
+  console.log('\nLighthouse:');
+  const lighthouseArtifacts = getLighthouseArtifacts();
+  if (lighthouseArtifacts.hasResults) {
+    console.log(`  OK ${lighthouseArtifacts.source} exists`);
+    console.log(`     Reports: ${lighthouseArtifacts.count}`);
   } else {
-    console.log('  ⚠️  manifest.json missing or empty');
+    console.log('  WARN no Lighthouse artifacts found');
     console.log('     Run: npm run test:lhci');
   }
 
-  // Generate quality report
-  console.log('\n📝 Generating quality report...');
-  const { execSync } = await import('node:child_process');
+  console.log('\nGenerating quality report...');
   try {
-    execSync('node scripts/generate-quality-report.mjs --test-status=passed --output=quality-report.json', {
+    execSync('node scripts/generate-quality-report.mjs --output=quality-report.json', {
       stdio: 'inherit',
       cwd: ROOT,
     });
-    console.log('  ✅ quality-report.json generated');
-  } catch (error) {
-    console.log('  ❌ Failed to generate quality report');
+    console.log('  OK quality-report.json generated');
+  } catch {
+    console.log('  FAIL failed to generate quality report');
     allPassed = false;
   }
 
-  console.log('\n' + '='.repeat(50));
-  if (allPassed) {
-    console.log('✅ All quality checks passed!\n');
-  } else {
-    console.log('⚠️  Some quality checks need attention\n');
-  }
-
-  return allPassed;
+  console.log(`\n${'='.repeat(50)}`);
+  console.log(allPassed ? 'All quality checks passed.\n' : 'Some quality checks need attention.\n');
 }
 
-const success = await verifyQuality();
-process.exit(success ? 0 : 0); // Don't fail, just warn
+await verifyQuality();
+process.exit(0);

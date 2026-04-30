@@ -92,11 +92,11 @@ class PerformanceMonitor {
 
   logDashboard(): void {
     const dashboard = this.generateDashboard();
-    console.log('=== Performance Dashboard ===');
-    console.log(`API: ${dashboard.api.totalRequests} requests, ${dashboard.api.successRate.toFixed(1)}% success`);
-    console.log(`Response Time: avg ${dashboard.api.avgResponseTime.toFixed(0)}ms, p95 ${dashboard.api.p95ResponseTime.toFixed(0)}ms`);
-    console.log(`Services: ${dashboard.services.healthy} healthy, ${dashboard.services.down} down`);
-    console.log(`User Actions: ${dashboard.user.totalActions} total`);
+    console.warn('=== Performance Dashboard ===');
+    console.warn(`API: ${dashboard.api.totalRequests} requests, ${dashboard.api.successRate.toFixed(1)}% success`);
+    console.warn(`Response Time: avg ${dashboard.api.avgResponseTime.toFixed(0)}ms, p95 ${dashboard.api.p95ResponseTime.toFixed(0)}ms`);
+    console.warn(`Services: ${dashboard.services.healthy} healthy, ${dashboard.services.down} down`);
+    console.warn(`User Actions: ${dashboard.user.totalActions} total`);
   }
 }
 

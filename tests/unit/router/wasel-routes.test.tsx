@@ -41,7 +41,7 @@ vi.mock('../../../src/utils/authFlow', () => ({
 }));
 
 describe('wasel-routes contract', () => {
-  it('builds the core-only route tree with payments and wallet access', async () => {
+  it('builds the app route tree with payments, wallet, and bus access', async () => {
     const module = await import('../../../src/wasel-routes');
 
     expect(module.waselRouter).toBeDefined();
@@ -60,7 +60,7 @@ describe('wasel-routes contract', () => {
     ).toBe(true);
     expect(appRoute.children.some((child) => child.path === 'payments')).toBe(true);
     expect(appRoute.children.some((child) => child.path === 'wallet')).toBe(true);
-    expect(appRoute.children.some((child) => child.path === 'bus')).toBe(false);
+    expect(appRoute.children.some((child) => child.path === 'bus')).toBe(true);
     expect(appRoute.children.some((child) => child.path === 'dashboard')).toBe(true);
     expect(appRoute.children.some((child) => child.path === APP_ROUTES.tripsLegacy.child)).toBe(true);
 

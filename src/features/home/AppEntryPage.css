@@ -1,28 +1,28 @@
 .app-entry-page {
   --landing-bg:
-    radial-gradient(circle at 18% 0%, rgba(199, 232, 224, 0.66), transparent 32%),
-    radial-gradient(circle at 100% 10%, rgba(205, 234, 251, 0.72), transparent 28%),
-    linear-gradient(180deg, #ddebf6 0%, #e9f1f0 18%, #eef4fb 100%);
-  --landing-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 252, 255, 0.95));
-  --landing-border: rgba(180, 206, 228, 0.72);
-  --landing-text: #143459;
-  --landing-muted: #647b95;
-  --landing-blue: #97ddff;
-  --landing-teal: #22c2aa;
-  --landing-button-brand-rgb: 20, 52, 89;
-  --landing-button-bg: linear-gradient(135deg, #143459 0%, #244c78 100%);
-  --landing-button-foreground: #f7fbff;
-  --landing-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 251, 255, 0.95));
-  --landing-panel-shadow: 0 20px 56px rgba(20, 52, 89, 0.1);
+    radial-gradient(circle at 18% 0%, rgba(255, 156, 66, 0.08), transparent 24%),
+    radial-gradient(circle at 100% 100%, rgba(255, 156, 66, 0.1), transparent 26%),
+    linear-gradient(180deg, #060709 0%, #07090b 48%, #090806 100%);
+  --landing-surface: linear-gradient(180deg, rgba(30, 31, 33, 0.96), rgba(22, 23, 26, 0.96));
+  --landing-border: rgba(255, 255, 255, 0.08);
+  --landing-text: #f7f3ee;
+  --landing-muted: rgba(213, 207, 199, 0.72);
+  --landing-blue: #f4a043;
+  --landing-teal: #ffd39a;
+  --landing-button-brand-rgb: 242, 138, 36;
+  --landing-button-bg: linear-gradient(180deg, #f9a43f 0%, #f28a24 100%);
+  --landing-button-foreground: #fff7ec;
+  --landing-panel-bg: linear-gradient(180deg, rgba(30, 31, 33, 0.96), rgba(22, 23, 26, 0.96));
+  --landing-panel-shadow: 0 24px 56px rgba(0, 0, 0, 0.34);
   --landing-hero:
-    radial-gradient(circle at 70% 36%, rgba(40, 104, 142, 0.18), transparent 22%),
-    radial-gradient(circle at 18% 50%, rgba(29, 140, 160, 0.12), transparent 26%),
-    linear-gradient(135deg, #0b1c2f 0%, #0e2237 54%, #122b45 100%);
-  --landing-hero-text: #f7fbff;
-  --landing-hero-muted: rgba(224, 236, 247, 0.8);
-  --landing-soft-surface: rgba(214, 226, 240, 0.14);
-  --landing-soft-surface-strong: rgba(221, 234, 247, 0.2);
-  --landing-input-bg: rgba(247, 251, 255, 0.98);
+    radial-gradient(circle at 70% 36%, rgba(242, 138, 36, 0.12), transparent 22%),
+    radial-gradient(circle at 18% 50%, rgba(255, 211, 154, 0.08), transparent 26%),
+    linear-gradient(135deg, #0b0d0f 0%, #0a0d10 54%, #0c0d0f 100%);
+  --landing-hero-text: #f7f3ee;
+  --landing-hero-muted: rgba(213, 207, 199, 0.8);
+  --landing-soft-surface: rgba(242, 138, 36, 0.08);
+  --landing-soft-surface-strong: rgba(242, 138, 36, 0.14);
+  --landing-input-bg: rgba(30, 33, 38, 0.92);
   min-height: 100vh;
   background: var(--landing-bg);
   color: var(--landing-text);
@@ -40,6 +40,7 @@
 
 .app-entry-page__header,
 .app-entry-page__header-actions,
+.app-entry-page__menu,
 .app-entry-page__auth-links,
 .app-entry-page__hero-points,
 .app-entry-page__action-buttons,
@@ -61,6 +62,12 @@
   background: var(--landing-panel-bg);
   box-shadow: var(--landing-panel-shadow);
   backdrop-filter: blur(24px);
+}
+
+.app-entry-page__menu {
+  flex: 1;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .app-entry-page__brand {
@@ -117,6 +124,20 @@
   flex-wrap: wrap;
 }
 
+.app-entry-page__menu-link {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(17, 19, 23, 0.82);
+  color: rgba(244, 239, 232, 0.84);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
 .app-entry-page__auth-links button,
 .app-entry-page__mode-switch button,
 .app-entry-page__guest-auth-buttons button,
@@ -132,7 +153,7 @@
   padding: 0 16px;
   border: 1px solid var(--landing-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(17, 19, 23, 0.82);
   color: var(--landing-text);
   font-size: 0.88rem;
   font-weight: 800;
@@ -146,8 +167,8 @@
 .app-entry-page__auth-primary {
   background: var(--landing-button-bg) !important;
   color: var(--landing-button-foreground) !important;
-  border: 1px solid rgba(19, 47, 79, 0.14) !important;
-  box-shadow: 0 18px 36px rgba(var(--landing-button-brand-rgb), 0.2);
+  border: 1px solid rgba(242, 138, 36, 0.2) !important;
+  box-shadow: 0 18px 36px rgba(var(--landing-button-brand-rgb), 0.22);
 }
 
 .app-entry-page__main,
@@ -229,8 +250,8 @@
   gap: 8px;
   padding: 8px 14px;
   border-radius: 999px;
-  background: rgba(167, 205, 233, 0.18);
-  color: #9adfff;
+  background: rgba(117, 67, 24, 0.22);
+  color: #f79a35;
   font-size: 0.76rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -258,11 +279,11 @@
   width: fit-content;
   padding: 10px 16px;
   border-radius: 999px;
-  background: rgba(219, 229, 241, 0.12);
+  background: rgba(17, 19, 23, 0.74);
   color: var(--landing-hero-text);
   font-size: 0.9rem;
   font-weight: 800;
-  border: 1px solid rgba(220, 232, 243, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -272,7 +293,7 @@
   gap: 8px;
   padding: 10px 14px;
   border-radius: 999px;
-  background: rgba(214, 226, 240, 0.12);
+  background: rgba(17, 19, 23, 0.76);
   color: var(--landing-hero-text);
   font-size: 0.84rem;
   font-weight: 700;
@@ -289,20 +310,20 @@
   gap: 4px;
   padding: 14px 15px;
   border-radius: 20px;
-  background: rgba(214, 226, 240, 0.1);
-  border: 1px solid rgba(220, 232, 243, 0.08);
+  background: rgba(16, 18, 22, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .app-entry-page__hero-stat strong {
   font-size: 1.2rem;
   font-weight: 900;
-  color: #ffffff;
+  color: #f28a24;
 }
 
 .app-entry-page__hero-stat span {
   font-size: 0.76rem;
   font-weight: 800;
-  color: #cfe8fb;
+  color: #ece5dc;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -317,12 +338,12 @@
   gap: 12px;
   padding: 16px 18px;
   border-radius: 24px;
-  background: rgba(214, 226, 240, 0.08);
-  border: 1px solid rgba(220, 232, 243, 0.08);
+  background: rgba(16, 18, 22, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .app-entry-page__hero-journey-label {
-  color: #9adfff;
+  color: #f79a35;
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.16em;
@@ -346,9 +367,9 @@
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: rgba(154, 223, 255, 0.14);
-  border: 1px solid rgba(154, 223, 255, 0.2);
-  color: #9adfff;
+  background: rgba(242, 138, 36, 0.12);
+  border: 1px solid rgba(242, 138, 36, 0.2);
+  color: #f79a35;
   font-size: 0.76rem;
   font-weight: 900;
 }
@@ -374,8 +395,8 @@
   width: fit-content;
   padding: 14px 16px;
   border-radius: 20px;
-  background: rgba(214, 226, 240, 0.12);
-  border: 1px solid rgba(220, 232, 243, 0.08);
+  background: rgba(17, 19, 23, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .app-entry-page__hero-meta strong {
@@ -418,8 +439,8 @@
   gap: 6px;
   padding: 14px 16px;
   border-radius: 18px;
-  background: #f2f7fc;
-  border: 1px solid rgba(209, 224, 238, 0.82);
+  background: rgba(30, 33, 38, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .app-entry-page__selection-pill span {
@@ -446,10 +467,9 @@
   gap: 6px;
   padding: 14px 16px;
   border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(247, 251, 255, 0.98), rgba(238, 246, 252, 0.92));
-  border: 1px solid rgba(209, 224, 238, 0.88);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  background: rgba(26, 28, 32, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .app-entry-page__guidance-item span {
@@ -478,7 +498,8 @@
   gap: 8px;
   padding: 6px;
   border-radius: 18px;
-  background: #e7edf4;
+  background: rgba(20, 22, 25, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .app-entry-page__mode-switch button {
@@ -497,10 +518,10 @@
 }
 
 .app-entry-page__mode-switch button.is-active {
-  background: #ffffff;
-  border: 1px solid rgba(195, 214, 232, 0.78);
-  color: var(--landing-text);
-  box-shadow: 0 8px 20px rgba(20, 52, 89, 0.1);
+  background: linear-gradient(180deg, #8f5a23 0%, #f28a24 100%);
+  border: 1px solid rgba(242, 138, 36, 0.22);
+  color: #fff7ec;
+  box-shadow: 0 10px 26px rgba(242, 138, 36, 0.22);
 }
 
 .app-entry-page__action-copy h2,
@@ -539,12 +560,12 @@
   width: 100%;
   min-height: 54px;
   padding: 0 16px;
-  border: 1px solid rgba(209, 224, 238, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   background: var(--landing-input-bg);
   color: var(--landing-text);
   font: inherit;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(16px);
 }
 
@@ -559,9 +580,10 @@
 .app-entry-page__field-note {
   padding: 14px 16px;
   border-radius: 16px;
-  background: #f5f9fd;
+  background: rgba(20, 22, 25, 0.9);
   color: var(--landing-muted);
   line-height: 1.65;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .app-entry-page__action-buttons {
@@ -591,8 +613,8 @@
 
 .app-entry-page__secondary-button,
 .app-entry-page__guest-auth-buttons button {
-  border: 1px solid rgba(209, 224, 238, 0.92);
-  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(20, 22, 25, 0.92);
   color: var(--landing-text);
 }
 
@@ -604,7 +626,7 @@
   display: grid;
   gap: 12px;
   padding-top: 14px;
-  border-top: 1px solid rgba(209, 224, 238, 0.78);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .app-entry-page__guest-auth-buttons {
@@ -651,8 +673,8 @@
   display: grid;
   place-items: center;
   border-radius: 16px;
-  background: #f2f7fc;
-  color: #43ade9;
+  background: rgba(242, 138, 36, 0.18);
+  color: #f28a24;
 }
 
 .app-entry-page__flow-card strong {
@@ -680,6 +702,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .app-entry-page__auth-links button:hover,
+  .app-entry-page__menu-link:hover,
   .app-entry-page__mode-switch button:hover,
   .app-entry-page__secondary-button:hover,
   .app-entry-page__guest-auth-buttons button:hover {
@@ -722,6 +745,11 @@
     border-radius: 22px;
     margin-bottom: 16px;
     gap: 10px;
+  }
+
+  .app-entry-page__menu {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .app-entry-page__brand-mark {

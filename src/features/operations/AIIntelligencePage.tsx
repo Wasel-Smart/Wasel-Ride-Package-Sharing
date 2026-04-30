@@ -26,6 +26,7 @@ import { buildMiddleEastCorridorProof } from '../../services/middleEastCorridorP
 import { getGrowthDashboard, type GrowthDashboard } from '../../services/growthEngine';
 import { getCorridorMovementQuote } from '../../services/corridorTruth';
 import { getMovementMembershipSnapshot } from '../../services/movementMembership';
+import { getLiveRideFlowOptimization, type RideFlowRuntimeSnapshot } from '../../services/rideFlowRuntime';
 
 /* ─── Design tokens ──────────────────────────────────────────────────────────── */
 const BG = 'var(--wasel-service-bg)';
@@ -228,10 +229,39 @@ export default function AIIntelligencePage() {
   const proof = useMemo(() => buildMiddleEastCorridorProof(6), []);
   const membership = useMemo(() => getMovementMembershipSnapshot(), []);
   const [dashboard, setDashboard] = useState<GrowthDashboard | null>(null);
+  const [rideFlowSnapshot, setRideFlowSnapshot] = useState<RideFlowRuntimeSnapshot | null>(null);
 
   useEffect(() => {
     void getGrowthDashboard(user?.id).then(setDashboard).catch(() => {});
   }, [user?.id]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadRideFlow = async () => {
+      try {
+        const snapshot = await getLiveRideFlowOptimization({ refreshHealth: true });
+        if (active) {
+          setRideFlowSnapshot(snapshot);
+        }
+      } catch {
+        if (active) {
+          setRideFlowSnapshot(null);
+        }
+      }
+    };
+
+    void loadRideFlow();
+
+    const intervalId = window.setInterval(() => {
+      void loadRideFlow();
+    }, 30000);
+
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   // Build corridor intelligence data from live signals
   const corridorIntelligence = useMemo(() => {
@@ -265,13 +295,32 @@ export default function AIIntelligencePage() {
       formatMembershipActiveDetail({
         activeSince:
           membership.commuterPassStartedAt
-          ?? membership.plusStartedAt
+          ?? membership.planStartedAt
           ?? membership.lastActivityDate,
         movementCredits: membership.movementCredits,
         locale,
       }),
-    [locale, membership.commuterPassStartedAt, membership.lastActivityDate, membership.movementCredits, membership.plusStartedAt],
+    [locale, membership.commuterPassStartedAt, membership.lastActivityDate, membership.movementCredits, membership.planStartedAt],
   );
+
+  const rideOpsSummary = useMemo(() => {
+    if (!rideFlowSnapshot) {
+      return null;
+    }
+
+    const surgeCount = rideFlowSnapshot.output.dynamic_prices.filter(price => price.price_tier === 'surge').length;
+    const criticalAlerts = rideFlowSnapshot.output.system_alerts.filter(alert => alert.severity === 'critical').length;
+
+    return {
+      optimizedMatches: rideFlowSnapshot.output.optimized_matches.length,
+      surgeCount,
+      alertCount: rideFlowSnapshot.output.system_alerts.length,
+      criticalAlerts,
+      completedRides: rideFlowSnapshot.output.completed_rides.length,
+      topMatches: rideFlowSnapshot.output.optimized_matches.slice(0, 3),
+      alerts: rideFlowSnapshot.output.system_alerts.slice(0, 3),
+    };
+  }, [rideFlowSnapshot]);
 
   return (
     <div style={{ minHeight: '100vh', background: BG, fontFamily: FONT, color: TEXT, direction: ar ? 'rtl' : 'ltr', paddingBottom: 88 }}>
@@ -305,12 +354,66 @@ export default function AIIntelligencePage() {
           <InsightCard label="Bookings modeled" value={String(dashboard?.funnel.booked ?? 0)} detail="Conversion events feeding the match learning loop" color={CYAN} />
         </div>
 
+        {rideOpsSummary && (
+          <div style={{ ...card({ marginBottom: 20, background: 'linear-gradient(135deg, rgba(74,168,255,0.12), rgba(40,200,160,0.06))' }) }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <Zap size={16} color={CYAN} />
+              <div style={{ color: TEXT, fontWeight: 900 }}>Live Ride Flow Optimization</div>
+              <span style={{ marginLeft: 'auto', color: SUB, fontSize: '0.71rem' }}>
+                {new Date(rideFlowSnapshot?.generatedAt ?? Date.now()).toLocaleTimeString(locale, {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
+              <InsightCard label="Optimized matches" value={String(rideOpsSummary.optimizedMatches)} detail="Requests scored and assigned by proximity plus acceptance rate" color={CYAN} />
+              <InsightCard label="Surge corridors" value={String(rideOpsSummary.surgeCount)} detail="Requests currently priced above the standard demand window" color={GOLD} />
+              <InsightCard label="System alerts" value={String(rideOpsSummary.alertCount)} detail={`${rideOpsSummary.criticalAlerts} critical signals need intervention`} color={rideOpsSummary.criticalAlerts > 0 ? '#f87171' : GREEN} />
+              <InsightCard label="Completed rides" value={String(rideOpsSummary.completedRides)} detail="Trips closed with payment and feedback follow-up state" color={GREEN} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+              <div style={{ background: CARD2, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px' }}>
+                <div style={{ color: TEXT, fontWeight: 800, marginBottom: 10 }}>Top dispatch decisions</div>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {rideOpsSummary.topMatches.length > 0 ? rideOpsSummary.topMatches.map((match) => (
+                    <div key={match.request_id} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
+                      <div>
+                        <div style={{ color: TEXT, fontWeight: 700, fontSize: '0.76rem' }}>{match.request_id}</div>
+                        <div style={{ color: SUB, fontSize: '0.69rem', lineHeight: 1.45 }}>{match.reason}</div>
+                      </div>
+                      <div style={{ color: CYAN, fontWeight: 800, fontSize: '0.72rem', flexShrink: 0 }}>
+                        {match.driver_id ?? 'Manual'}
+                      </div>
+                    </div>
+                  )) : (
+                    <div style={{ color: SUB, fontSize: '0.72rem' }}>No active ride requests in the optimizer window.</div>
+                  )}
+                </div>
+              </div>
+              <div style={{ background: CARD2, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 16px' }}>
+                <div style={{ color: TEXT, fontWeight: 800, marginBottom: 10 }}>Operational alerts</div>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {rideOpsSummary.alerts.length > 0 ? rideOpsSummary.alerts.map((alert, index) => (
+                    <div key={`${alert.type}-${alert.request_id ?? index}`} style={{ borderLeft: `3px solid ${alert.severity === 'critical' ? '#f87171' : alert.severity === 'warning' ? GOLD : GREEN}`, paddingLeft: 10 }}>
+                      <div style={{ color: TEXT, fontWeight: 700, fontSize: '0.76rem' }}>{alert.type}</div>
+                      <div style={{ color: SUB, fontSize: '0.69rem', lineHeight: 1.45 }}>{alert.message}</div>
+                    </div>
+                  )) : (
+                    <div style={{ color: SUB, fontSize: '0.72rem' }}>No active ride-flow alerts right now.</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Pricing intelligence spotlight */}
         {priceQuote && (
           <div style={{ ...card({ background: 'linear-gradient(135deg, rgba(168,214,20,0.09), rgba(71,183,230,0.05))', border: `1px solid ${GOLD}28` }), marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
               <Sparkles size={16} color={GOLD} />
-              <div style={{ color: TEXT, fontWeight: 900 }}>Credit-Adjusted Pricing · Amman → Aqaba (sample)</div>
+              <div style={{ color: TEXT, fontWeight: 900 }}>Credit-Adjusted Pricing · Amman → Aqaba</div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
               {[

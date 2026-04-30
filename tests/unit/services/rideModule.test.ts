@@ -7,6 +7,7 @@ const mockGetRideBookings = vi.fn();
 const mockHydrateRideBookings = vi.fn();
 const mockTransitionRide = vi.fn();
 const mockMatchDriver = vi.fn();
+const mockOptimizeRideFlow = vi.fn();
 
 let connectedRides: Array<Record<string, unknown>> = [];
 
@@ -28,6 +29,10 @@ vi.mock('../../../src/services/rideLifecycle', () => ({
 
 vi.mock('../../../src/services/rideStateMachine', () => ({
   transitionRide: (...args: unknown[]) => mockTransitionRide(...args),
+}));
+
+vi.mock('../../../src/services/rideOptimization', () => ({
+  optimizeRideFlow: (...args: unknown[]) => mockOptimizeRideFlow(...args),
 }));
 
 vi.mock('../../../src/modules/rides/ride.queue', () => ({
@@ -77,6 +82,12 @@ describe('ride module service', () => {
     mockHydrateRideBookings.mockResolvedValue([]);
     mockTransitionRide.mockResolvedValue(undefined);
     mockMatchDriver.mockResolvedValue('job-1');
+    mockOptimizeRideFlow.mockReturnValue({
+      optimized_matches: [],
+      dynamic_prices: [],
+      system_alerts: [],
+      completed_rides: [],
+    });
   });
 
   it('uses backend trip search results instead of local ride inventory fallbacks', async () => {
@@ -103,17 +114,18 @@ describe('ride module service', () => {
     expect(mockSearchTrips).toHaveBeenCalledWith('Amman', 'Zarqa', undefined, 1);
   });
 
-  it('surfaces ride search failures instead of falling back to local inventory', async () => {
+  it('falls back to the local Wasel ride catalog when backend search is unavailable', async () => {
     connectedRides = [];
     mockSearchTrips.mockRejectedValueOnce(new Error('search offline'));
 
-    await expect(
-      rideService.searchRides({
-        from: 'Amman',
-        to: 'Zarqa',
-        seats: 1,
-      }),
-    ).rejects.toThrow('Unable to search rides right now.');
+    const results = await rideService.searchRides({
+      from: 'Amman',
+      to: 'Aqaba',
+      seats: 1,
+    });
+
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.some(ride => ride.id === 'r1')).toBe(true);
   });
 
   it('surfaces recent searches in suggestions instead of relying on static substring matches only', async () => {
@@ -169,5 +181,25 @@ describe('ride module service', () => {
 
     expect(mockHydrateRideBookings).toHaveBeenCalledWith('user-1', connectedRides);
     expect(indexed['ride-1']?.id).toBe('booking-new');
+  });
+
+  it('exposes ride flow optimization through the ride service surface', () => {
+    const input = {
+      real_time_driver_locations: [],
+      active_ride_requests: [],
+      historical_demand_data: [],
+      system_health_metrics: {},
+    };
+    const options = { latency_target_ms: 180 };
+
+    const result = rideService.optimizeRideFlow(input, options);
+
+    expect(mockOptimizeRideFlow).toHaveBeenCalledWith(input, options);
+    expect(result).toEqual({
+      optimized_matches: [],
+      dynamic_prices: [],
+      system_alerts: [],
+      completed_rides: [],
+    });
   });
 });

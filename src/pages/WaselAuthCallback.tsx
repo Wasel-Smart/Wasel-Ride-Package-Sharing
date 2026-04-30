@@ -85,6 +85,14 @@ export default function WaselAuthCallback() {
       rawCallbackError ? friendlyAuthError(rawCallbackError, 'Unable to complete sign-in.') : '',
     [rawCallbackError],
   );
+  const statusEyebrow =
+    state === 'error'
+      ? 'Recovery needed'
+      : state === 'redirecting'
+        ? 'Route handoff'
+        : state === 'closing'
+          ? 'Secure window'
+          : 'Account sync';
   const passwordRequirements = getPasswordRequirements(password);
 
   useEffect(() => {
@@ -246,9 +254,14 @@ export default function WaselAuthCallback() {
     return (
       <div className="auth-callback">
         <div className="auth-callback__panel auth-callback__panel--recovery">
-          <div>
+          <div className="auth-callback__intro">
+            <div className="auth-callback__eyebrow">Recovery flow</div>
             <h1 className="auth-callback__title">Reset your password</h1>
             <p className="auth-callback__body auth-callback__body--spaced">{message}</p>
+            <div className="auth-callback__note">
+              Your new password protects rides, packages, wallet access, and support history on
+              this account.
+            </div>
           </div>
 
           <label className="auth-callback__field">
@@ -315,6 +328,7 @@ export default function WaselAuthCallback() {
   return (
     <div className="auth-callback">
       <div className="auth-callback__panel auth-callback__panel--status">
+        <div className="auth-callback__eyebrow">{statusEyebrow}</div>
         <div
           className={`auth-callback__spinner${state === 'error' ? ' is-error' : ''}${state === 'redirecting' || state === 'loading' || state === 'closing' ? ' is-active' : ''}`}
         />
@@ -322,6 +336,10 @@ export default function WaselAuthCallback() {
           {state === 'error' ? 'Sign-in could not finish' : 'Finalizing authentication'}
         </h1>
         <p className="auth-callback__body">{message}</p>
+        <div className="auth-callback__status-row">
+          <span className="auth-callback__status-chip">Session corridor protected</span>
+          <span className="auth-callback__status-chip">Wallet and trip access unchanged</span>
+        </div>
         {state === 'error' ? (
           <button
             type="button"
@@ -331,6 +349,9 @@ export default function WaselAuthCallback() {
             Back to sign in
           </button>
         ) : null}
+        <div className="auth-callback__footnote">
+          Wasel only reopens account actions after this callback flow completes cleanly.
+        </div>
       </div>
     </div>
   );

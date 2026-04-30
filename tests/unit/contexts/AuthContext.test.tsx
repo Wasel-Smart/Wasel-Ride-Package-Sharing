@@ -46,11 +46,14 @@ vi.mock('../../../src/contexts/LocalAuth', () => ({
   LocalAuthProvider: ({ children }: { children: React.ReactNode }) => children,
   useLocalAuth: () => ({
     user: null,
+    authUser: null,
+    session: null,
     loading: false,
     signIn: mockLocalSignIn,
     register: mockLocalRegister,
     signOut: mockLocalSignOut,
     updateUser: mockLocalUpdateUser,
+    refreshAuthState: vi.fn(),
   }),
 }));
 
@@ -141,7 +144,12 @@ describe('AuthContext — signUp', () => {
     });
 
     await waitFor(() => expect(result).not.toBeNull());
-    expect(mockLocalRegister).toHaveBeenCalledWith('Ahmad Wasel', 'user@example.com', 'ValidPass1!');
+    expect(mockLocalRegister).toHaveBeenCalledWith(
+      'Ahmad Wasel',
+      'user@example.com',
+      'ValidPass1!',
+      undefined,
+    );
     expect(result?.error).toBeNull();
   });
 

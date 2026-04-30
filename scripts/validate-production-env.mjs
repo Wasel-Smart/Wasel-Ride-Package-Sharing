@@ -72,7 +72,7 @@ const REQUIRED_VARS = {
   },
 
   // Feature Flags
-  VITE_ENABLE_DEMO_DATA: {
+  VITE_ENABLE_SYNTHETIC_DATA: {
     required: true,
     pattern: /^false$/,
     description: 'Must be "false" in production',

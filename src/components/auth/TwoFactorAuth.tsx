@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Shield, Copy, Check, Download, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { enable2FA, verify2FACode, disable2FA } from '../../utils/security';
+import { enable2FA, verify2FACode } from '../../utils/security';
 import { toast } from 'sonner';
 
 interface TwoFactorSetupProps {

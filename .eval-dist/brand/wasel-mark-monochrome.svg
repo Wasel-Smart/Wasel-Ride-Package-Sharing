@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 392 288" fill="none" role="img" aria-labelledby="title desc" preserveAspectRatio="xMidYMid meet">
+  <title id="title">Wasel monochrome symbol</title>
+  <desc id="desc">A one-color version of the Wasel route W mark for print, embossing, and low-fidelity reproduction.</desc>
+  
+  <g fill="none" stroke="#17212B" stroke-linecap="round" stroke-linejoin="round">
+    <path
+      d="M84 86C97 129 112 188 142 242C148 253 159 256 166 245L196 145L226 245C233 256 244 253 250 242C280 188 295 129 308 86"
+      stroke-width="30"
+    />
+    <path d="M76 64L84 86M196 108L196 130M316 64L308 86" stroke-width="7" />
+    <circle cx="76" cy="52" r="12.5" stroke-width="6" />
+    <circle cx="196" cy="96" r="15.5" stroke-width="6" />
+    <circle cx="316" cy="52" r="12.5" stroke-width="6" />
+  </g>
+</svg>

@@ -1,422 +1,494 @@
-import { useState } from 'react';
-import { Car, MapPin, Package, Search, Shield, Sparkles } from 'lucide-react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import {
-  Button,
-  Card,
-  Input,
-  LayoutContainer,
-  SectionWrapper,
-  Select,
-  Tabs,
-  type TabItem,
-} from '../../../design-system/components';
-import { BrandLockup } from '../../../components/brand';
-import { useAuth } from '../../../contexts/AuthContext';
-import { useLocalAuth } from '../../../contexts/LocalAuth';
-import { useLanguage } from '../../../contexts/LanguageContext';
-import { useIframeSafeNavigate } from '../../../hooks/useIframeSafeNavigate';
-import { useAuthProviderAvailability } from '../../../hooks/useAuthProviderAvailability';
-import { APP_ROUTES } from '../../../router/paths';
+  ArrowRight,
+  Calendar,
+  CarFront,
+  ChevronDown,
+  Facebook,
+  Globe,
+  Headphones,
+  Instagram,
+  Mail,
+  MapPin,
+  Package2,
+  Phone,
+  Search,
+  ShieldCheck,
+  UsersRound,
+} from 'lucide-react';
+import landingMapReference from '../../../assets/landing-map-reference.png';
 import {
   ENTRY_CITY_OPTIONS,
-  ENTRY_DEFAULT_AUTH_RETURN_TO,
   ENTRY_DEFAULT_ROUTE_DRAFT,
   buildPackagePrefillPath,
   buildRideSearchPath,
+  getAlternateEntryCity,
   type EntryRouteDraft,
 } from '../../../contracts/entry';
-import { buildAuthPagePath } from '../../../utils/authFlow';
-import {
-  ActionCards,
-  BrandPillRow,
-  HeroFeatureGrid,
-  HeroStats,
-  MapHeroPanel,
-  SupportActions,
-} from './SharedPageComponents';
-import type { BrandPillItem, HeroFeatureItem } from './pageTypes';
-import { LANDING_RETURN_TO } from './pageTypes';
+import { useIframeSafeNavigate } from '../../../hooks/useIframeSafeNavigate';
+import { APP_ROUTES } from '../../../router/paths';
+import { LANDING_SUPPORT_EMAIL, LANDING_SUPPORT_PHONE } from './pageTypes';
+import { scheduleDeferredTask } from '../../../utils/runtimeScheduling';
 import '../LandingPage.css';
 
-export function LandingPage() {
-  const { signInWithFacebook, signInWithGoogle } = useAuth();
-  const { user } = useLocalAuth();
-  const authProviders = useAuthProviderAvailability();
-  const { language } = useLanguage();
-  const navigate = useIframeSafeNavigate();
-  const ar = language === 'ar';
+type LandingMode = 'ride' | 'package';
 
-  const [mode, setMode] = useState<'ride' | 'package'>('ride');
-  const [route, setRoute] = useState<EntryRouteDraft>({ ...ENTRY_DEFAULT_ROUTE_DRAFT });
+const SUPPORT_PHONE_DISPLAY = '+962 79 000 0000';
 
-  const primaryActionPath =
-    mode === 'ride' ? buildRideSearchPath(route) : buildPackagePrefillPath(route);
-  const emailPath = buildAuthPagePath('signin', LANDING_RETURN_TO);
+function LandingBrandBadge({ size = 46 }: { size?: number }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="landing-page__brand-badge"
+      viewBox="0 0 56 56"
+      width={size}
+      height={size}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect x="4" y="4" width="48" height="48" rx="14" fill="#F28A24" />
+      <path
+        d="M18 36.5L28.7 20.2C30 18.2 32.2 17 34.6 17H38.2L27.4 33.4C26.1 35.4 23.9 36.5 21.5 36.5H18ZM35 20.4C35 21.7 36 22.7 37.3 22.7C38.6 22.7 39.6 21.7 39.6 20.4C39.6 19.1 38.6 18.1 37.3 18.1C36 18.1 35 19.1 35 20.4Z"
+        fill="#0F1115"
+      />
+    </svg>
+  );
+}
 
-  const highlights: BrandPillItem[] = [
-    { icon: <MapPin size={14} />, label: ar ? 'ممر الأردن المشترك' : 'Shared Jordan corridor' },
-    { icon: <Package size={14} />, label: ar ? 'رحلة أو طرد' : 'Ride and package flows' },
-    { icon: <Shield size={14} />, label: ar ? 'دعم واضح' : 'Clear support and payment' },
-  ];
+function NetworkMapHero() {
+  const [showImage, setShowImage] = useState(false);
 
-  const features: HeroFeatureItem[] = [
-    {
-      icon: <Search size={18} />,
-      title: ar ? 'ابدأ بالممر' : 'Start with the corridor',
-      detail: ar
-        ? 'اختر الممر أولاً ثم افتح الرحلة أو الطرد دون تشتيت.'
-        : 'Choose the corridor first, then open the ride or package flow.',
-    },
-    {
-      icon: <Package size={18} />,
-      title: ar ? 'خدمتان واضحتان' : 'Two clear customer flows',
-      detail: ar
-        ? 'الرحلات والطرود فقط. لا توجد أسطح إضافية تربك المستخدم.'
-        : 'Rides and packages stay visible from entry to checkout, without extra product layers.',
-    },
-    {
-      icon: <Shield size={18} />,
-      title: ar ? 'لا نجاح دون تأكيد' : 'No success without confirmation',
-      detail: ar
-        ? 'لا يظهر الاكتمال إلا بعد تأكيد الخلفية.'
-        : 'Nothing looks complete until the backend confirms it.',
-    },
-  ];
+  useEffect(() => {
+    const cancelDeferredLoad = scheduleDeferredTask(() => {
+      setShowImage(true);
+    }, 1_800);
 
-  const stats = [
-    {
-      label: ar ? 'الأفعال الأساسية' : 'Core actions',
-      value: '3',
-      detail: ar ? 'احجز، اعرض، أرسل.' : 'Book, offer, and send.',
-    },
-    {
-      label: ar ? 'المدن المرسومة' : 'Mapped cities',
-      value: '12',
-      detail: ar
-        ? 'سياق الممر من الشمال إلى الجنوب.'
-        : 'North-to-south corridor context stays visible.',
-    },
-    {
-      label: ar ? 'الدعم المباشر' : 'Live support',
-      value: '24/7',
-      detail: ar
-        ? 'المساعدة والدفع قريبان من المسار.'
-        : 'Support and payment guidance stay close to the route.',
-    },
-  ];
-
-  const plannerSteps = [
-    {
-      label: ar ? 'اختر المسار' : 'Choose corridor',
-      detail: ar ? 'حدد الممر أولاً.' : 'Pick the corridor first.',
-    },
-    {
-      label: ar ? 'حدد التوقيت' : 'Set timing',
-      detail:
-        mode === 'ride'
-          ? ar
-            ? 'قارن الوقت والمقعد.'
-            : 'Compare timing and seat.'
-          : ar
-            ? 'حدد وقت الالتقاط والتسليم.'
-            : 'Set pickup and drop-off timing.',
-    },
-    {
-      label: ar ? 'أكمل الطلب' : 'Finish the action',
-      detail:
-        mode === 'ride'
-          ? ar
-            ? 'أكمل حجز الرحلة.'
-            : 'Complete the ride booking.'
-          : ar
-            ? 'أكمل إرسال الطرد.'
-            : 'Complete the package request.',
-    },
-  ];
-
-  const signals =
-    mode === 'ride'
-      ? [
-          ar ? 'الرحلات مرئية' : 'Ride routes visible',
-          ar ? 'المقعد والوقت واضحان' : 'Seat and timing visible',
-          ar ? 'الدعم قريب' : 'Support close by',
-        ]
-      : [
-          ar ? 'الطرد على نفس الممر' : 'Package on the same corridor',
-          ar ? 'الاستلام والتسليم واضحان' : 'Pickup and drop-off clear',
-          ar ? 'الدعم قريب' : 'Support close by',
-        ];
+    return () => {
+      cancelDeferredLoad();
+    };
+  }, []);
 
   return (
-    <LayoutContainer width="wide">
-      <main className="ds-page landing-page" role="main">
-        <header className="ds-shell-header__inner landing-page__topbar">
-          <div className="landing-page__brand-block">
-            <button
-              className="ds-shell-header__brand landing-page__brand"
-              onClick={() => navigate('/')}
-              type="button"
-            >
-              <BrandLockup
-                showTagline
-                size="lg"
-                surface="light"
-                tagline="RIDE AND PACKAGE MARKETPLACE"
-              />
+    <div aria-hidden="true" className="landing-page__network-map">
+      {showImage ? (
+        <img
+          alt=""
+          className="landing-page__network-map-image"
+          decoding="async"
+          draggable={false}
+          fetchPriority="low"
+          loading="lazy"
+          src={landingMapReference}
+        />
+      ) : null}
+      <div className="landing-page__network-map-shade" />
+    </div>
+  );
+}
+
+export function LandingPage() {
+  const navigate = useIframeSafeNavigate();
+  const [mode, setMode] = useState<LandingMode>('ride');
+  const [route, setRoute] = useState<EntryRouteDraft>({ ...ENTRY_DEFAULT_ROUTE_DRAFT });
+
+  const routePreview = `${route.from} \u2192 ${route.to}`;
+  const primaryPath =
+    mode === 'ride' ? buildRideSearchPath(route) : buildPackagePrefillPath(route);
+  const primaryLabel = mode === 'ride' ? 'Find a ride' : 'Send a package';
+  const plannerTitle = mode === 'ride' ? 'Find a ride' : 'Send a package';
+  const plannerCopy =
+    mode === 'ride'
+      ? 'Choose a corridor, then open the live ride flow.'
+      : 'Choose a corridor, then open the live package flow.';
+  const clarityTitle = mode === 'ride' ? 'Price and seat' : 'Pickup and dropoff';
+  const clarityCopy =
+    mode === 'ride'
+      ? 'Timing and price stay visible together.'
+      : 'Pickup and handoff stay visible together.';
+
+  const flowCards = [
+    {
+      cta: 'Open rides',
+      detail: 'Compare the corridor, timing, and seat.',
+      icon: Search,
+      path: buildRideSearchPath(route),
+      title: 'Find a ride',
+    },
+    {
+      cta: 'Open packages',
+      detail: 'Attach the parcel to the same network.',
+      icon: Package2,
+      path: buildPackagePrefillPath(route),
+      title: 'Send a package',
+    },
+    {
+      cta: 'Open driver flow',
+      detail: 'Turn an empty departure into more value.',
+      icon: CarFront,
+      path: APP_ROUTES.offerRide.full,
+      title: 'Offer your ride',
+    },
+  ] as const;
+  const updateRoute =
+    (field: keyof EntryRouteDraft) =>
+    (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const value = event.target.value;
+      setRoute(current => {
+        if (field === 'from') {
+          return {
+            ...current,
+            from: value,
+            to: value === current.to ? getAlternateEntryCity(value) : current.to,
+          };
+        }
+
+        if (field === 'to') {
+          return {
+            ...current,
+            from: value === current.from ? getAlternateEntryCity(value) : current.from,
+            to: value,
+          };
+        }
+
+        return { ...current, [field]: value };
+      });
+    };
+
+  const openSupport = () => {
+    window.location.href = `tel:${LANDING_SUPPORT_PHONE}`;
+  };
+
+  const openEmail = () => {
+    window.location.href = `mailto:${LANDING_SUPPORT_EMAIL}`;
+  };
+
+  return (
+    <div className="landing-page-frame" dir="ltr">
+      <main className="landing-page" role="main">
+        <section className="landing-page__hero">
+          <header className="landing-page__header">
+            <button className="landing-page__brand" onClick={() => navigate('/')} type="button">
+              <span className="landing-page__brand-mark">
+                <LandingBrandBadge size={46} />
+              </span>
+              <span className="landing-page__brand-copy">
+                <span className="landing-page__brand-title">Wasel</span>
+                <span className="landing-page__brand-subtitle">Live mobility network</span>
+              </span>
             </button>
-            <div className="landing-page__status-pill">
-              <span aria-hidden="true" className="landing-page__status-dot" />
-              {ar ? 'احجز رحلة أو أرسل طرداً' : 'Book a ride or send a package'}
+
+            <div className="landing-page__header-actions">
+              <button className="landing-page__contact-button" onClick={openSupport} type="button">
+                <Phone size={16} />
+                Call support
+              </button>
+              <button className="landing-page__contact-button" onClick={openEmail} type="button">
+                <Mail size={16} />
+                Email us
+              </button>
             </div>
+          </header>
+
+          <div className="landing-page__map-wrap">
+            <NetworkMapHero />
           </div>
 
-          <div className="ds-shell-header__actions landing-page__topbar-actions">
-            <div className="landing-page__status-copy">
-              {ar
-                ? 'احجز رحلة أو اعرض رحلة أو أرسل طرداً.'
-                : 'Book a ride, offer a ride, or send a package.'}
-            </div>
-            {!user ? (
-              <>
-                <Button onClick={() => navigate(buildAuthPagePath('signin', ENTRY_DEFAULT_AUTH_RETURN_TO))}>
-                  {ar ? 'تسجيل الدخول' : 'Sign in'}
-                </Button>
-                <Button
-                  onClick={() => navigate(buildAuthPagePath('signup', ENTRY_DEFAULT_AUTH_RETURN_TO))}
-                  variant="secondary"
-                >
-                  {ar ? 'إنشاء حساب' : 'Create account'}
-                </Button>
-              </>
-            ) : null}
-            <SupportActions />
-          </div>
-        </header>
-
-        <section className="ds-landing-grid landing-page__hero">
-          <Card className="landing-page__hero-copy-card">
-            <div className="landing-page__hero-intro">
-              <div className="ds-eyebrow landing-page__hero-eyebrow">
-                <Sparkles size={14} />
-                {ar ? 'سوق الرحلات والطرود' : 'Ride and package marketplace'}
+          <div className="landing-page__hero-grid">
+            <div className="landing-page__hero-copy">
+              <div className="landing-page__eyebrow">
+                <span className="landing-page__eyebrow-dot" />
+                One live network
               </div>
-              <h1 className="ds-title ds-title--landing landing-page__title">
-                {ar
-                  ? 'احجز رحلة أو اعرض رحلة أو أرسل طرداً.'
-                  : 'Book a ride, offer a ride, or send a package.'}
+
+              <h1 className="landing-page__hero-title">
+                <span>Open the</span>
+                <span>network first.</span>
+                <span className="landing-page__hero-title-accent">Travel your way</span>
+                <span>
+                  <em>with</em> Wasel.
+                </span>
               </h1>
-              <p className="ds-copy landing-page__hero-copy">
-                {ar
-                  ? 'اختر الممر أولاً ثم أكمل طلباً حقيقياً فقط.'
-                  : 'Choose the corridor first, then complete one real action only.'}
+
+              <p className="landing-page__hero-description">
+                Wasel makes the idea clear in seconds: the same corridor can carry riders,
+                packages, and sharper decisions.
               </p>
-            </div>
 
-            <div className="landing-page__hero-actions">
-              <Button onClick={() => navigate(primaryActionPath)}>
-                {mode === 'ride'
-                  ? ar
-                    ? 'احجز رحلة'
-                    : 'Book a ride'
-                  : ar
-                    ? 'أرسل طرداً'
-                    : 'Send a package'}
-              </Button>
-              <Button onClick={() => navigate(APP_ROUTES.offerRide.full)} variant="secondary">
-                {ar ? 'اعرض رحلة' : 'Offer a ride'}
-              </Button>
-            </div>
-
-            <BrandPillRow items={highlights} />
-
-            <div className="landing-page__summary-grid">
-              {[
-                {
-                  title: ar ? 'اختر الممر أولاً' : 'Choose the corridor first',
-                  detail: ar
-                    ? 'حدد المسار مرة واحدة ثم افتح الرحلة أو الطرد.'
-                    : 'Pick the corridor once, then move directly into the ride or package flow.',
-                },
-                {
-                  title: ar ? 'تأكيد من الخلفية' : 'Backend-confirmed only',
-                  detail: ar
-                    ? 'لا يكتمل أي طلب قبل تأكيد الخلفية.'
-                    : 'Nothing looks complete until the backend confirms the action.',
-                },
-              ].map(item => (
-                <div className="landing-page__summary-card" key={item.title}>
-                  <div className="landing-page__summary-label">{item.title}</div>
-                  <p className="landing-page__summary-detail">{item.detail}</p>
+              <div className="landing-page__signal-list" aria-label="Landing signals">
+                <div className="landing-page__signal-pill">
+                  <UsersRound size={15} />
+                  One route can move people and parcels.
                 </div>
-              ))}
-            </div>
-          </Card>
-
-          <MapHeroPanel
-            className="landing-page__planner-shell"
-            mapVariant="ambient"
-            signals={signals}
-          >
-            <div className="ds-hero-panel__intro landing-page__planner-head">
-              <div className="ds-panel-kicker">
-                {ar ? 'مخطط الممر' : 'Corridor planner'}
+                <div className="landing-page__signal-pill">
+                  <MapPin size={15} />
+                  The mobility map stays visible in the background.
+                </div>
+                <div className="landing-page__signal-pill">
+                  <Package2 size={15} />
+                  Rides and packages share the same operating surface.
+                </div>
+                <div className="landing-page__signal-pill">
+                  <ShieldCheck size={15} />
+                  Support and trust stay close to the action.
+                </div>
               </div>
-              <h2 className="ds-section-title landing-page__planner-title">
-                {ar ? 'اختر ممراً ثم افتح الرحلة أو الطرد.' : 'Choose a corridor, then book a ride or send a package.'}
-              </h2>
+
+              <div className="landing-page__stat-grid" aria-label="Wasel summary">
+                <article className="landing-page__stat-card">
+                  <strong>3</strong>
+                  <span>Core flows</span>
+                  <p>Rides, packages, and supply.</p>
+                </article>
+                <article className="landing-page__stat-card">
+                  <strong>1</strong>
+                  <span>Shared network</span>
+                  <p>The same corridor powers the decision.</p>
+                </article>
+                <article className="landing-page__stat-card">
+                  <strong>24/7</strong>
+                  <span>Close support</span>
+                  <p>Trust and help near the action.</p>
+                </article>
+              </div>
             </div>
 
-            <div className="landing-page__planner-surface">
-              <Tabs
-                items={
-                  [
-                    {
-                      content: (
-                        <p className="landing-page__tab-copy">
-                          {ar
-                            ? 'قارن المسار والوقت والمقعد قبل الحجز.'
-                            : 'Compare the route, timing, and seat before you book.'}
-                        </p>
-                      ),
-                      label: ar ? 'رحلات' : 'Rides',
-                      value: 'ride',
-                    },
-                    {
-                      content: (
-                        <p className="landing-page__tab-copy">
-                          {ar
-                            ? 'استخدم نفس الممر لإرسال طرد.'
-                            : 'Use the same corridor to send a package.'}
-                        </p>
-                      ),
-                      label: ar ? 'طرود' : 'Packages',
-                      value: 'package',
-                    },
-                  ] satisfies TabItem<'ride' | 'package'>[]
-                }
-                label={ar ? 'الخدمات' : 'Services'}
-                onChange={setMode}
-                value={mode}
-              />
+            <aside className="landing-page__planner">
+              <div
+                aria-label="Service mode"
+                className="landing-page__tablist"
+                role="tablist"
+              >
+                <button
+                  aria-selected={mode === 'ride'}
+                  className={mode === 'ride' ? 'is-active' : undefined}
+                  onClick={() => setMode('ride')}
+                  role="tab"
+                  type="button"
+                >
+                  Rides
+                </button>
+                <button
+                  aria-selected={mode === 'package'}
+                  className={mode === 'package' ? 'is-active' : undefined}
+                  onClick={() => setMode('package')}
+                  role="tab"
+                  type="button"
+                >
+                  Packages
+                </button>
+              </div>
 
-              <div className="ds-step-rail landing-page__step-rail">
-                {plannerSteps.map((step, i) => (
-                  <div className="ds-step-rail__item" data-active={i === 0} key={step.label}>
-                    <span className="ds-step-rail__index">{i + 1}</span>
-                    <div>
-                      <strong>{step.label}</strong>
-                      <div className="ds-caption">{step.detail}</div>
-                    </div>
+              <div className="landing-page__planner-copy">
+                <h2>{plannerTitle}</h2>
+                <p>{plannerCopy}</p>
+              </div>
+
+              <div className="landing-page__planner-summary">
+                <div className="landing-page__summary-box">
+                  <span>Selected corridor</span>
+                  <strong>{routePreview}</strong>
+                  <ChevronDown aria-hidden="true" size={16} />
+                </div>
+                <div className="landing-page__summary-box">
+                  <span>Flow</span>
+                  <strong>{primaryLabel}</strong>
+                  <ChevronDown aria-hidden="true" size={16} />
+                </div>
+              </div>
+
+              <div className="landing-page__fact-grid">
+                <article className="landing-page__fact-card">
+                  <span>Corridor</span>
+                  <strong>{routePreview}</strong>
+                  <p>The same corridor opens the flow fast.</p>
+                  <MapPin aria-hidden="true" size={18} />
+                </article>
+                <article className="landing-page__fact-card">
+                  <span>Clarity</span>
+                  <strong>{clarityTitle}</strong>
+                  <p>{clarityCopy}</p>
+                  <ShieldCheck aria-hidden="true" size={18} />
+                </article>
+                <article className="landing-page__fact-card">
+                  <span>Support</span>
+                  <strong>{SUPPORT_PHONE_DISPLAY}</strong>
+                  <p>Real people, real support, real solutions.</p>
+                  <Headphones aria-hidden="true" size={18} />
+                </article>
+              </div>
+
+              <div className="landing-page__field-grid">
+                <label className="landing-page__field">
+                  <span>Leaving from</span>
+                  <div className="landing-page__control">
+                    <select onChange={updateRoute('from')} value={route.from}>
+                      {ENTRY_CITY_OPTIONS.map(option => (
+                        <option
+                          disabled={option.value === route.to}
+                          key={option.value}
+                          value={option.value}
+                        >
+                          {option.en}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      aria-hidden="true"
+                      className="landing-page__control-icon"
+                      size={16}
+                    />
                   </div>
-                ))}
-              </div>
+                </label>
 
-              <div className="ds-form-grid landing-page__planner-form">
-                <Select
-                  label={ar ? 'المغادرة من' : 'Leaving from'}
-                  onChange={e => setRoute(r => ({ ...r, from: e.target.value }))}
-                  options={ENTRY_CITY_OPTIONS.map(c => ({
-                    label: ar ? c.ar : c.en,
-                    value: c.value,
-                  }))}
-                  value={route.from}
-                />
-                <Select
-                  label={ar ? 'الوصول إلى' : 'Going to'}
-                  onChange={e => setRoute(r => ({ ...r, to: e.target.value }))}
-                  options={ENTRY_CITY_OPTIONS.map(c => ({
-                    label: ar ? c.ar : c.en,
-                    value: c.value,
-                  }))}
-                  value={route.to}
-                />
-                <Input
-                  label={ar ? 'متى' : 'When'}
-                  onChange={e => setRoute(r => ({ ...r, date: e.target.value }))}
-                  type="date"
-                  value={route.date}
-                />
+                <label className="landing-page__field">
+                  <span>Going to</span>
+                  <div className="landing-page__control">
+                    <select onChange={updateRoute('to')} value={route.to}>
+                      {ENTRY_CITY_OPTIONS.map(option => (
+                        <option
+                          disabled={option.value === route.from}
+                          key={option.value}
+                          value={option.value}
+                        >
+                          {option.en}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      aria-hidden="true"
+                      className="landing-page__control-icon"
+                      size={16}
+                    />
+                  </div>
+                </label>
+
+                <label className="landing-page__field landing-page__field--full">
+                  <span>When</span>
+                  <div className="landing-page__control">
+                    <Calendar
+                      aria-hidden="true"
+                      className="landing-page__control-icon landing-page__control-icon--leading"
+                      size={16}
+                    />
+                    <input
+                      onChange={updateRoute('date')}
+                      placeholder="mm/dd/yyyy"
+                      type="text"
+                      value={route.date}
+                    />
+                  </div>
+                </label>
               </div>
 
               <div className="landing-page__planner-actions">
-                <Button fullWidth onClick={() => navigate(primaryActionPath)}>
-                  {mode === 'ride'
-                    ? ar
-                      ? 'احجز رحلة'
-                      : 'Book a ride'
-                    : ar
-                      ? 'أرسل طرداً'
-                      : 'Send a package'}
-                </Button>
-                <Button fullWidth onClick={() => navigate(APP_ROUTES.offerRide.full)} variant="secondary">
-                  {ar ? 'اعرض رحلة' : 'Offer a ride'}
-                </Button>
+                <button
+                  className="landing-page__primary-button"
+                  onClick={() => navigate(primaryPath)}
+                  type="button"
+                >
+                  {primaryLabel}
+                  <ArrowRight size={18} />
+                </button>
+                <button
+                  className="landing-page__secondary-button"
+                  onClick={() => navigate(APP_ROUTES.offerRide.full)}
+                  type="button"
+                >
+                  Offer your ride
+                </button>
               </div>
+            </aside>
+          </div>
+        </section>
 
-              {!user ? (
-                <div className="landing-page__planner-auth">
-                  <div className="landing-page__planner-auth-copy">
-                    {ar
-                      ? 'استمر بحسابك لحفظ الحجوزات والدفع في مكان واحد.'
-                      : 'Continue with your account to keep bookings and payments in one place.'}
-                  </div>
-                  <div className="ds-social-grid landing-page__social-grid">
-                    {authProviders.google.enabled ? (
-                      <Button fullWidth onClick={() => void signInWithGoogle(LANDING_RETURN_TO)} variant="secondary">
-                        {ar ? 'المتابعة مع Google' : 'Continue with Google'}
-                      </Button>
-                    ) : null}
-                    {authProviders.facebook.enabled ? (
-                      <Button fullWidth onClick={() => void signInWithFacebook(LANDING_RETURN_TO)} variant="secondary">
-                        {ar ? 'المتابعة مع Facebook' : 'Continue with Facebook'}
-                      </Button>
-                    ) : null}
-                    <Button fullWidth onClick={() => navigate(emailPath)} variant="ghost">
-                      {ar ? 'المتابعة بالبريد الإلكتروني' : 'Continue with email'}
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
+        <section className="landing-page__section">
+          <div className="landing-page__section-copy">
+            <span>Choose your flow</span>
+            <h2>Three simple ways to understand Wasel in a few seconds.</h2>
+          </div>
+
+          <div className="landing-page__flow-grid">
+            {flowCards.map(card => {
+              const Icon = card.icon;
+              return (
+                <button
+                  className="landing-page__flow-card"
+                  key={card.title}
+                  onClick={() => navigate(card.path)}
+                  type="button"
+                >
+                  <span className="landing-page__flow-icon">
+                    <Icon size={22} />
+                  </span>
+                  <strong>{card.title}</strong>
+                  <p>{card.detail}</p>
+                  <span className="landing-page__flow-cta">
+                    {card.cta}
+                    <ArrowRight size={16} />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="landing-page__proof" aria-label="Proof of life">
+          <div className="landing-page__proof-head">
+            <div className="landing-page__proof-copy">
+              <span>Proof of life</span>
+              <p>Book, track, offer rides, and move packages from one dashboard.</p>
             </div>
-          </MapHeroPanel>
+            <button className="landing-page__proof-support" onClick={openSupport} type="button">
+              <Headphones size={16} />
+              {SUPPORT_PHONE_DISPLAY}
+            </button>
+          </div>
+
+          <div className="landing-page__proof-grid">
+            <article className="landing-page__proof-card landing-page__proof-card--green">
+              <span>Live network</span>
+              <strong>Routes, trust, and tracking are active.</strong>
+              <MapPin aria-hidden="true" size={18} />
+            </article>
+            <article className="landing-page__proof-card landing-page__proof-card--blue">
+              <span>Real actions</span>
+              <strong>Book, track, offer rides, send package.</strong>
+              <Package2 aria-hidden="true" size={18} />
+            </article>
+            <article className="landing-page__proof-card landing-page__proof-card--amber">
+              <span>Human support</span>
+              <strong>Call or email available 24/7.</strong>
+              <Headphones aria-hidden="true" size={18} />
+            </article>
+          </div>
         </section>
 
-        <section aria-label="Landing page proof points" className="landing-page__proof">
-          <HeroFeatureGrid items={features} />
-          <HeroStats items={stats} />
-        </section>
+        <footer className="landing-page__footer">
+          <div className="landing-page__footer-brand">
+            <LandingBrandBadge size={28} />
+            <span>Wasel stays visible inside the corridor.</span>
+          </div>
 
-        <SectionWrapper
-          className="landing-page__section"
-          description={ar ? 'ثلاثة أفعال مباشرة فقط.' : 'Three direct customer actions only.'}
-          eyebrow={<><Sparkles size={14} />{ar ? 'اختر ما تريد' : 'Choose what to do'}</>}
-          title={ar ? 'اختر ما تريد' : 'Choose what to do'}
-        >
-          <ActionCards
-            items={[
-              {
-                detail: ar ? 'قارن الممر والتوقيت والمقعد.' : 'Compare the corridor, timing, and seat.',
-                icon: <Search size={18} />,
-                path: buildRideSearchPath(route),
-                title: ar ? 'احجز رحلة' : 'Book a ride',
-              },
-              {
-                detail: ar ? 'أرسل طرداً عبر نفس الممر.' : 'Send a package through the same corridor.',
-                icon: <Package size={18} />,
-                path: buildPackagePrefillPath(route),
-                title: ar ? 'أرسل طرداً' : 'Send a package',
-              },
-              {
-                detail: ar ? 'انشر رحلتك وافتح المقاعد.' : 'Post your route and open seats.',
-                icon: <Car size={18} />,
-                path: APP_ROUTES.offerRide.full,
-                title: ar ? 'اعرض رحلة' : 'Offer a ride',
-              },
-            ]}
-            onNavigate={navigate}
-          />
-        </SectionWrapper>
+          <div className="landing-page__footer-actions">
+            <button aria-label="Facebook" className="landing-page__social-button" type="button">
+              <Facebook size={16} />
+            </button>
+            <button aria-label="Instagram" className="landing-page__social-button" type="button">
+              <Instagram size={16} />
+            </button>
+            <button aria-label="X" className="landing-page__social-button" type="button">
+              <span className="landing-page__social-x">X</span>
+            </button>
+
+            <div className="landing-page__footer-divider" />
+
+            <button className="landing-page__language-button" type="button">
+              <Globe size={16} />
+              EN
+              <ChevronDown size={16} />
+            </button>
+          </div>
+        </footer>
       </main>
-    </LayoutContainer>
+    </div>
   );
 }

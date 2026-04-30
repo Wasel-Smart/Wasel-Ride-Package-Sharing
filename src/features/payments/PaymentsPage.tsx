@@ -29,6 +29,7 @@ import {
 } from './paymentsTypes';
 import type { PaymentTransaction } from '../../../shared/domain-contracts';
 import type { WalletPaymentMethodType } from '../../../shared/wallet-contracts';
+import '../../styles/finance-surfaces.css';
 
 const CORE_PAYMENT_PURPOSES = ['ride_payment', 'package_payment', 'deposit'] as const;
 
@@ -476,10 +477,10 @@ function PaymentsPageContent() {
   return (
     <PageShell>
       <Protected>
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-8 pt-4 md:px-6">
+        <div className="wasel-finance-shell mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-8 pt-4 md:px-6">
           <h1 className="sr-only">Payments</h1>
           <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
-            <Card className="border-primary/15 bg-[linear-gradient(140deg,rgba(3,13,28,0.96),rgba(8,34,60,0.92))]">
+            <Card className="wasel-finance-hero border-primary/15 bg-[linear-gradient(140deg,rgba(3,13,28,0.96),rgba(8,34,60,0.92))]">
               <CardHeader className="gap-3">
                 <Badge className="w-fit border border-primary/20 bg-primary/10 text-primary">
                   Payments
@@ -493,7 +494,7 @@ function PaymentsPageContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3 pb-6 md:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="wasel-finance-stat rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                     <Wallet className="h-4 w-4 text-primary" />
                     Available balance
@@ -502,7 +503,7 @@ function PaymentsPageContent() {
                     {formatCurrency(dashboard?.summary.availableBalance ?? 0)}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="wasel-finance-stat rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                     <BadgeCent className="h-4 w-4 text-primary" />
                     Settled this month
@@ -511,7 +512,7 @@ function PaymentsPageContent() {
                     {formatCurrency(dashboard?.summary.settledThisMonth ?? 0)}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="wasel-finance-stat rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
                     <CreditCard className="h-4 w-4 text-primary" />
                     Primary source
@@ -526,7 +527,7 @@ function PaymentsPageContent() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="wasel-finance-panel">
               <CardHeader>
                 <CardTitle className="text-lg text-foreground">Payments only</CardTitle>
                 <CardDescription className="text-sm leading-6 text-muted-foreground">
@@ -534,14 +535,14 @@ function PaymentsPageContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="wasel-finance-mini-panel flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
                   <Wallet className="mt-0.5 h-4 w-4 text-primary" />
                   <div>
                     <p className="font-semibold text-foreground">Wallet</p>
                     <p>Balance, payout controls, stored methods, and wallet security.</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="wasel-finance-mini-panel flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
                   <ArrowRightLeft className="mt-0.5 h-4 w-4 text-primary" />
                   <div>
                     <p className="font-semibold text-foreground">Payments</p>
@@ -558,7 +559,7 @@ function PaymentsPageContent() {
 
           {error && !dashboard ? (
             <div
-              className="flex flex-col gap-3 rounded-3xl border border-destructive/25 bg-destructive/10 p-4 text-sm text-destructive md:flex-row md:items-center md:justify-between"
+              className="wasel-finance-notice flex flex-col gap-3 rounded-3xl border border-destructive/25 bg-destructive/10 p-4 text-sm text-destructive md:flex-row md:items-center md:justify-between"
               role="alert"
             >
               <div className="flex items-start gap-3">
@@ -581,14 +582,14 @@ function PaymentsPageContent() {
           ) : null}
 
           <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-            <Card>
+            <Card className="wasel-finance-form-card">
               <CardHeader>
                 <CardTitle className="text-lg text-foreground">Start payment</CardTitle>
                 <CardDescription>
                   Select a payment flow and create a backend-managed payment intent.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="wasel-finance-form-grid space-y-4">
                 <label className="block space-y-2 text-sm">
                   <span className="font-medium text-foreground">Purpose</span>
                   <select
@@ -678,7 +679,7 @@ function PaymentsPageContent() {
                 </Button>
 
                 {error && dashboard ? (
-                  <div className="flex items-start gap-2 rounded-2xl border border-destructive/25 bg-destructive/10 p-3 text-sm text-destructive">
+                  <div className="wasel-finance-notice flex items-start gap-2 rounded-2xl border border-destructive/25 bg-destructive/10 p-3 text-sm text-destructive">
                     <CircleAlert className="mt-0.5 h-4 w-4" />
                     <span>{error}</span>
                   </div>
@@ -686,7 +687,7 @@ function PaymentsPageContent() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="wasel-finance-panel">
               <CardHeader>
                 <CardTitle className="text-lg text-foreground">Payment lifecycle</CardTitle>
                 <CardDescription>
@@ -702,7 +703,7 @@ function PaymentsPageContent() {
                 ) : null}
 
                 {notice ? (
-                  <div className={`flex items-start gap-2 rounded-2xl border p-3 text-sm ${noticeClassName}`}>
+                  <div className={`wasel-finance-notice flex items-start gap-2 rounded-2xl border p-3 text-sm ${noticeClassName}`}>
                     {notice.tone === 'success' ? (
                       <CheckCircle2 className="mt-0.5 h-4 w-4" />
                     ) : (
@@ -713,7 +714,7 @@ function PaymentsPageContent() {
                 ) : null}
 
                 {intent ? (
-                  <div className="space-y-3 rounded-3xl border border-primary/15 bg-primary/5 p-5">
+                  <div className="wasel-finance-intent-card space-y-3 rounded-3xl border border-primary/15 bg-primary/5 p-5">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-foreground">{intent.description}</p>
@@ -745,7 +746,7 @@ function PaymentsPageContent() {
 
                     <div className="flex flex-wrap gap-3">
                       {isStripeCardIntent ? (
-                        <div className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100">
+                        <div className="wasel-finance-chip inline-flex items-center gap-2 rounded-xl border border-cyan-400/20 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100">
                           <CreditCard className="h-4 w-4 text-cyan-300" />
                           Complete the secure Stripe form below to finish this payment.
                         </div>
@@ -764,7 +765,7 @@ function PaymentsPageContent() {
                       )}
 
                       {confirmationState === 'confirmed' ? (
-                        <div className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-3 py-2 text-sm text-primary">
+                        <div className="wasel-finance-chip inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-3 py-2 text-sm text-primary">
                           <CheckCircle2 className="h-4 w-4" />
                           Backend confirmed
                         </div>
@@ -797,7 +798,7 @@ function PaymentsPageContent() {
                   </div>
                   <div className="space-y-3">
                     {(dashboard?.recentPayments ?? []).slice(0, 6).map((payment) => (
-                      <div key={payment.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <div key={payment.id} className="wasel-finance-activity-item flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-4">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-foreground">{payment.description}</p>
                           <p className="text-xs text-muted-foreground">

@@ -88,7 +88,7 @@ export function getCircuitBreaker(
   if (!circuitBreakers.has(serviceName)) {
     circuitBreakers.set(serviceName, new CircuitBreaker(serviceName, config));
   }
-  return circuitBreakers.get(serviceName)!;
+  return circuitBreakers.get(serviceName) as CircuitBreaker;
 }
 
 export function resetAllCircuitBreakers(): void {

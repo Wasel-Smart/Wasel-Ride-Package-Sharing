@@ -10,6 +10,7 @@ import { trackGrowthEvent } from '../../services/growthEngine';
 import { buildAuthPagePath } from '../../utils/authFlow';
 import { normalizeTextTree } from '../../utils/textEncoding';
 import { getWaselPresenceProfile } from '../../domains/trust/waselPresence';
+import { APP_ROUTES } from '../../router/paths';
 import { LandingPageFrame } from './landing/LandingPageFrame';
 import { LANDING_FONT, panelStyle } from '../../styles/shared-ui';
 import { LANDING_COLORS } from './landing/landingTypes';
@@ -50,6 +51,8 @@ function buildRidePageCopy(language: 'en' | 'ar') {
         { value: 'family', label: 'عائلية' },
       ],
       departureLabel: 'موعد الانطلاق',
+      liveDepartureTitle: 'انطلاقات حية',
+      liveDepartureHint: 'أوقات الانطلاق تُحدّث عند ظهور الرحلات. بدّل إلى الجدولة لاختيار تاريخ محدد.',
       searchButton: 'ابحث عن رحلة',
       searchingButton: 'جارٍ البحث...',
     };
@@ -152,6 +155,8 @@ function buildRidePageCopy(language: 'en' | 'ar') {
       { value: 'family', label: 'Family' },
     ],
     departureLabel: 'Departure',
+    liveDepartureTitle: 'Live departures',
+    liveDepartureHint: 'Departure timing follows live ride availability. Switch to Schedule to choose a specific date.',
     searchButton: 'Search rides',
     searchingButton: 'Searching...',
   };
@@ -267,10 +272,10 @@ export function FindRidePage() {
   );
 
   // Static service paths
-  const findRidePath = '/app/find-ride';
-  const mobilityOsPath = '';
-  const myTripsPath = '/app/my-trips';
-  const packagesPath = '/app/packages';
+  const findRidePath = APP_ROUTES.findRide.full;
+  const mobilityOsPath = APP_ROUTES.mobilityOs.full;
+  const myTripsPath = APP_ROUTES.myTrips.full;
+  const packagesPath = APP_ROUTES.packages.full;
 
   // Hero primary action cards
   const primaryActions = useMemo((): LandingActionCard[] => {
@@ -289,13 +294,13 @@ export function FindRidePage() {
         path: packagesPath,
         color: LANDING_COLORS.gold,
       },
-      {
-        icon: Car,
-        title: ar ? 'اعرض رحلة' : 'Offer a ride',
-        detail: ar ? 'افتح المقاعد' : 'Share seats on your route',
-        path: '/app/offer-ride',
-        color: LANDING_COLORS.blue,
-      },
+        {
+          icon: Car,
+          title: ar ? 'اعرض رحلة' : 'Offer a ride',
+          detail: ar ? 'افتح المقاعد' : 'Share seats on your route',
+          path: APP_ROUTES.offerRide.full,
+          color: LANDING_COLORS.blue,
+        },
     ];
     return ar ? normalizeTextTree(actions) : actions;
   }, [ar, findRidePath, packagesPath]);
@@ -398,11 +403,32 @@ export function FindRidePage() {
     from: initialParams.initialFrom,
     to: initialParams.initialTo,
     date: initialParams.initialDate,
-    mode: initialParams.initialDate ? 'schedule' : 'now',
+    mode: initialParams.initialMode,
+    rideType: initialParams.initialRideType,
     searched: initialParams.initialSearched,
     passengerId: user?.id,
     messages: copy.messages,
   });
+
+  const buildSearchParams = useCallback(
+    (
+      draft: typeof state.draft,
+      overrides?: Partial<Pick<typeof state.draft, 'from' | 'to' | 'date' | 'mode' | 'rideType'>>,
+    ) => {
+      const nextDraft = { ...draft, ...overrides };
+      const params = new URLSearchParams();
+      params.set('from', nextDraft.from);
+      params.set('to', nextDraft.to);
+      params.set('search', '1');
+      params.set('mode', nextDraft.mode);
+      params.set('rideType', nextDraft.rideType);
+      if (nextDraft.mode === 'schedule' && nextDraft.date) {
+        params.set('date', nextDraft.date);
+      }
+      return params;
+    },
+    [state.draft],
+  );
 
   useEffect(() => {
     if (!state.successMessage || !state.activeRequest) return;
@@ -438,6 +464,14 @@ export function FindRidePage() {
     const didSearch = await submitSearch();
     if (!didSearch) return;
 
+    navigate(
+      {
+        pathname: location.pathname,
+        search: `?${buildSearchParams(state.draft).toString()}`,
+      },
+      { replace: true },
+    );
+
     void trackGrowthEvent({
       userId: user?.id,
       eventName: 'ride_search_executed',
@@ -457,6 +491,9 @@ export function FindRidePage() {
     state.draft.rideType,
     state.draft.to,
     submitSearch,
+    buildSearchParams,
+    location.pathname,
+    navigate,
     user?.id,
   ]);
 
@@ -496,18 +533,16 @@ export function FindRidePage() {
 
   const handleOpenRide = useCallback(
     (ride: RideResult) => {
-      const params = new URLSearchParams(location.search);
-      params.set('from', ride.from);
-      params.set('to', ride.to);
-      if (ride.date) {
-        params.set('date', ride.date);
-      }
+      const params = buildSearchParams(state.draft, {
+        from: ride.from,
+        to: ride.to,
+      });
 
       navigate(`/app/find-ride/${encodeURIComponent(ride.id)}?${params.toString()}`, {
         state: { ride },
       });
     },
-    [location.search, navigate],
+    [buildSearchParams, navigate, state.draft],
   );
 
   return (

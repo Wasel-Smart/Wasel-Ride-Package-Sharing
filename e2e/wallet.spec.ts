@@ -2,7 +2,7 @@
  * E2E: Wallet feature flows
  */
 import { test, expect } from '@playwright/test';
-import { seedDemoSession } from './helpers/session';
+import { seedTestSession } from './helpers/session';
 
 const BASE = 'http://127.0.0.1:4173';
 
@@ -13,15 +13,15 @@ test.describe('Wallet', () => {
   });
 
   test('authenticated users can view the wallet overview', async ({ page }) => {
-    await seedDemoSession(page);
+    await seedTestSession(page);
     await page.goto(`${BASE}/app/wallet`);
     await expect(page.getByText(/wasel wallet|available balance/i).first()).toBeVisible();
     await expect(page.getByRole('button', { name: /add money/i })).toBeVisible();
     await expect(page.getByText(/recent transactions/i)).toBeVisible();
   });
 
-  test('top-up modal opens and supports a demo top-up flow', async ({ page }) => {
-    await seedDemoSession(page);
+  test('top-up modal opens and supports a local top-up flow', async ({ page }) => {
+    await seedTestSession(page);
     await page.goto(`${BASE}/app/wallet`);
 
     await page.getByRole('button', { name: /add money/i }).click();
@@ -33,7 +33,7 @@ test.describe('Wallet', () => {
   });
 
   test('transactions tab is reachable from the wallet shell', async ({ page }) => {
-    await seedDemoSession(page);
+    await seedTestSession(page);
     await page.goto(`${BASE}/app/wallet`);
     await page.getByRole('tab', { name: /transactions/i }).click();
     await expect(page.getByText(/trip to aqaba|wasel delivery fee/i).first()).toBeVisible();

@@ -419,6 +419,10 @@ export function getMarketplaceNodes() {
   return MARKETPLACE_NODES;
 }
 
+export function getMovementDefensibilityLines() {
+  return MOVEMENT_LAYERS.map((layer) => layer.valueLine);
+}
+
 export function getAllCorridorOpportunities() {
   return JORDAN_MOBILITY_NETWORK.map((route) => buildOpportunity(route)).sort(
     (left, right) => right.predictedDemandScore - left.predictedDemandScore,

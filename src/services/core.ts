@@ -16,9 +16,10 @@ const configuredFunctionsBaseUrl = (
 const configuredFunctionName = (
   import.meta.env.VITE_EDGE_FUNCTION_NAME as string | undefined
 )?.trim();
+const DEFAULT_EDGE_FUNCTION_NAME = 'make-server-0b1f4071';
 const defaultFunctionsBaseUrl = supabaseUrl ? `${supabaseUrl}/functions/v1` : '';
 const resolvedFunctionsBaseUrl = configuredFunctionsBaseUrl || defaultFunctionsBaseUrl;
-const resolvedFunctionName = configuredFunctionName || '';
+const resolvedFunctionName = configuredFunctionName || DEFAULT_EDGE_FUNCTION_NAME;
 
 export const API_URL = configuredApiUrl
   ? configuredApiUrl.replace(/\/$/, '')

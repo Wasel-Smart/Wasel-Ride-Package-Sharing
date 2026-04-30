@@ -5,8 +5,7 @@ import { publicAnonKey, publicSupabaseUrl } from './supabase/info';
 interface EnvironmentConfig {
   mode: AppEnvironment;
   enableLocalAuth: boolean;
-  isDemoMode: boolean;
-  enableDemoData: boolean;
+  enableSyntheticData: boolean;
   enableSyntheticTrips: boolean;
   enableFakePayments: boolean;
   enableFakeBusBookings: boolean;
@@ -27,8 +26,7 @@ export function getEnvironmentConfig(): EnvironmentConfig {
   return {
     mode: config.environment,
     enableLocalAuth: config.enableLocalAuth,
-    isDemoMode: config.enableDemoAccount,
-    enableDemoData: config.enableDemoAccount,
+    enableSyntheticData: config.enableSyntheticData,
     enableSyntheticTrips: config.enableSyntheticTrips,
     enableFakePayments: config.enableFakePayments,
     enableFakeBusBookings: config.enableFakeBusBookings,
@@ -71,8 +69,8 @@ export function validateEnvironmentConfig(): void {
   }
 
   if (isProtectedEnvironment) {
-    if (config.isDemoMode) {
-      errors.push('Demo mode cannot be enabled outside development or test environments');
+    if (config.enableSyntheticData) {
+      errors.push('Synthetic data cannot be enabled outside development or test environments');
     }
 
     if (config.enableSyntheticTrips) {
@@ -120,23 +118,22 @@ export function isProduction(): boolean {
   return getConfig().isProd;
 }
 
-export function isDemoMode(): boolean {
-  return getConfig().enableDemoAccount;
+export function isSyntheticDataEnabled(): boolean {
+  return getConfig().enableSyntheticData;
 }
 
-export function enforceDemoModeSafety(): void {
+export function enforceSyntheticDataSafety(): void {
   const config = getEnvironmentConfig();
-  if (config.mode !== 'development' && config.mode !== 'test' && config.isDemoMode) {
+  if (config.mode !== 'development' && config.mode !== 'test' && config.enableSyntheticData) {
     throw new ConfigError(
-      'Demo mode is not permitted in staging or production. Aborting app initialization.',
+      'Synthetic data is not permitted in staging or production. Aborting app initialization.',
       { allowedModes: ['development', 'test'], currentMode: config.mode },
     );
   }
 }
 
 export function getEnvironmentDisplayName(): string {
-  const { mode, isDemoMode: demoModeEnabled } = getEnvironmentConfig();
-  if (demoModeEnabled) {return 'Demo';}
+  const { mode } = getEnvironmentConfig();
   return mode.charAt(0).toUpperCase() + mode.slice(1);
 }
 

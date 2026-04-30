@@ -351,6 +351,12 @@ export default function AppEntryPage() {
       cta: copy.flowCards.offer.cta,
     },
   ];
+  const headerMenuItems = [
+    { label: 'Ride', path: APP_ROUTES.findRide.full },
+    { label: 'Packages', path: APP_ROUTES.packages.full },
+    { label: 'Bus service', path: APP_ROUTES.bus.full },
+    { label: 'Mobility OS', path: APP_ROUTES.mobilityOs.full },
+  ] as const;
 
   const updateRoute =
     (field: keyof AppEntryRouteDraft) =>
@@ -421,6 +427,19 @@ export default function AppEntryPage() {
             </span>
           </button>
 
+          <nav aria-label="Main menu" className="app-entry-page__menu">
+            {headerMenuItems.map(item => (
+              <button
+                key={item.path}
+                type="button"
+                className="app-entry-page__menu-link"
+                onClick={() => navigateLanding(item.path)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
           <div className="app-entry-page__header-actions">
             <WaselContactActionRow ar={ar} compact />
             {showGuestEntryPoints ? (
@@ -445,7 +464,7 @@ export default function AppEntryPage() {
           <section className="app-entry-page__hero">
             <div className="app-entry-page__hero-map" aria-hidden="true">
               <div className="app-entry-page__hero-map-scale">
-                <DeferredLandingMap ar={ar} eager />
+                <DeferredLandingMap ar={ar} />
               </div>
             </div>
             <div className="app-entry-page__hero-scrim" aria-hidden="true" />

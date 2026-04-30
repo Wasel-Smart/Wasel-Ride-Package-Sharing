@@ -1,0 +1,1 @@
+import{b as e,j as o}from"./react-core-DNL0QBtm.js";var u=e.createContext(void 0),s=({client:r,children:t})=>(e.useEffect(()=>(r.mount(),()=>{r.unmount()}),[r]),o.jsx(u.Provider,{value:r,children:t}));export{s as Q};

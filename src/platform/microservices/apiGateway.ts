@@ -9,7 +9,7 @@
  */
 
 import type { ServiceRegistry } from './serviceRegistry';
-import { getServiceEndpoint, buildServiceUrl, isMicroservicesMode } from './serviceRegistry';
+import { getServiceEndpoint, buildServiceUrl } from './serviceRegistry';
 import { getCircuitBreaker } from './circuitBreaker';
 
 export interface RequestOptions extends RequestInit {

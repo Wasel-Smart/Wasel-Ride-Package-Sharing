@@ -75,6 +75,17 @@ export function ProgressivePasswordRequirements({
     };
   }, [password, t]);
 
+  const feedbackItems = useMemo(
+    () =>
+      analysis.strength.feedback.filter((feedback) => {
+        const normalizedFeedback = feedback.trim().toLowerCase();
+        return !analysis.requirements.some(
+          (req) => req.label.trim().toLowerCase() === normalizedFeedback,
+        );
+      }),
+    [analysis.requirements, analysis.strength.feedback],
+  );
+
   const shouldShow = !showOnFocus || (showOnFocus && isFocused && password.length > 0);
 
   if (!shouldShow) return null;
@@ -103,10 +114,10 @@ export function ProgressivePasswordRequirements({
         <div className="progressive-password-requirements__progress">
           <motion.div
             className="progressive-password-requirements__progress-bar"
-            initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.3 }}
             style={{
+              width: `${progress}%`,
               backgroundColor: 
                 progress === 100 ? '#10b981' :
                 progress >= 60 ? '#eab308' :
@@ -146,9 +157,9 @@ export function ProgressivePasswordRequirements({
           ))}
         </div>
 
-        {analysis.strength.feedback.length > 0 && password.length > 0 && (
+        {feedbackItems.length > 0 && password.length > 0 && (
           <div className="progressive-password-requirements__feedback">
-            {analysis.strength.feedback.map((feedback, i) => (
+            {feedbackItems.map((feedback, i) => (
               <div key={i} className="progressive-password-requirements__feedback-item">
                 <AlertCircle size={12} />
                 {feedback}

@@ -10,63 +10,12 @@ interface BiometricAuthProps {
   onError: (error: string) => void;
 }
 
-export function BiometricAuth({ userId, onSuccess, onError }: BiometricAuthProps) {
+export function BiometricAuth({ userId: _userId, onSuccess, onError }: BiometricAuthProps) {
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
-  const [isSupported, setIsSupported] = useState(
-    typeof window !== 'undefined' && 
+  const isSupported = typeof window !== 'undefined' && 
     'credentials' in navigator && 
-    'PublicKeyCredential' in window
-  );
-
-  const handleEnableBiometric = async () => {
-    if (!isSupported) {
-      onError(t('auth.biometric.notSupported'));
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Create credential for WebAuthn
-      const credential = await navigator.credentials.create({
-        publicKey: {
-          challenge: new Uint8Array(32),
-          rp: {
-            name: 'Wasel',
-            id: window.location.hostname,
-          },
-          user: {
-            id: new TextEncoder().encode(userId),
-            name: userId,
-            displayName: 'Wasel User',
-          },
-          pubKeyCredParams: [
-            { alg: -7, type: 'public-key' },  // ES256
-            { alg: -257, type: 'public-key' }, // RS256
-          ],
-          authenticatorSelection: {
-            authenticatorAttachment: 'platform',
-            userVerification: 'required',
-          },
-          timeout: 60000,
-          attestation: 'none',
-        },
-      });
-
-      if (credential) {
-        // Store credential ID for future authentication
-        localStorage.setItem(`wasel_biometric_${userId}`, 'enabled');
-        toast.success(t('auth.biometric.enabled'));
-        onSuccess();
-      }
-    } catch (err) {
-      const error = err instanceof Error ? err.message : 'Biometric setup failed';
-      onError(error);
-      toast.error(t('auth.biometric.setupFailed'));
-    } finally {
-      setLoading(false);
-    }
-  };
+    'PublicKeyCredential' in window;
 
   const handleBiometricSignIn = async () => {
     if (!isSupported) {
@@ -154,7 +103,7 @@ export function BiometricSetup({ userId, onComplete }: { userId: string; onCompl
         toast.success(t('auth.biometric.setupComplete'));
         onComplete();
       }
-    } catch (err) {
+    } catch {
       toast.error(t('auth.biometric.setupFailed'));
     } finally {
       setLoading(false);

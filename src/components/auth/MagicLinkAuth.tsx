@@ -61,7 +61,7 @@ export function MagicLinkAuth({ onSuccess, returnTo }: MagicLinkAuthProps) {
         {t('auth.magicLink.description')}
       </p>
       
-      <form onSubmit={handleSendMagicLink} className="auth-magic-link__form">
+      <form onSubmit={handleSendMagicLink} noValidate className="auth-magic-link__form">
         <div className="auth-field">
           <input
             type="email"
