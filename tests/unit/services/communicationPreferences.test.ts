@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const memoryStorage = (() => {
   let store: Record<string, string> = {};
@@ -36,11 +36,19 @@ import {
 describe('communicationPreferences', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('VITE_ENABLE_EMAIL_NOTIFICATIONS', 'true');
+    vi.stubEnv('VITE_ENABLE_SMS_NOTIFICATIONS', 'true');
+    vi.stubEnv('VITE_ENABLE_WHATSAPP_NOTIFICATIONS', 'true');
+    vi.stubEnv('VITE_SUPPORT_WHATSAPP_NUMBER', '962790000000');
     vi.stubGlobal('window', {
       localStorage: memoryStorage,
       Notification: class NotificationMock {},
     } as any);
     memoryStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('maps notification types to delivery topics', () => {

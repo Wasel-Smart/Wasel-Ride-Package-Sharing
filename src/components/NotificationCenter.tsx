@@ -26,6 +26,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotifications, type Notification } from '../hooks/useNotifications';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
+import { normalizeTextTree } from '../utils/textEncoding';
 import {
   buildNotificationSections,
   getNotificationCategory,
@@ -99,6 +100,7 @@ export function NotificationCenter() {
     archivedIds,
     loading,
     connectionStatus,
+    errorMessage,
     markAsRead,
     markAllAsRead,
     archiveNotification,
@@ -111,7 +113,7 @@ export function NotificationCenter() {
   const [searchTerm, setSearchTerm] = useState('');
   const deferredSearchTerm = useDeferredValue(searchTerm);
 
-  const labels = {
+  const labels = normalizeTextTree({
     title: isRTL ? 'مركز الإشعارات' : 'Notification Center',
     subtitle: isRTL
       ? 'رتّب التنبيهات المهمة، تابع الحجوزات، وأبقِ العمليات تحت السيطرة.'
@@ -149,7 +151,7 @@ export function NotificationCenter() {
     localDraft: isRTL ? 'محلي' : 'Local',
     urgentBadge: isRTL ? 'عاجل' : 'Urgent',
     highBadge: isRTL ? 'مرتفع' : 'High',
-  };
+  });
 
   const archivedSet = useMemo(() => new Set(archivedIds), [archivedIds]);
 
@@ -264,6 +266,31 @@ export function NotificationCenter() {
           <NotificationMetric label={labels.archivedCount} value={summary.archived} tone="border-slate-400/20 text-slate-100" />
         </CardContent>
       </Card>
+
+      {errorMessage ? (
+        <Card className="border-amber-400/25 bg-amber-400/10">
+          <CardContent className="flex flex-col gap-3 pt-6 text-sm text-amber-50 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              <div className="space-y-1">
+                <p className="font-semibold">
+                  {isRTL ? 'خدمة الإشعارات غير متاحة' : 'Notification service unavailable'}
+                </p>
+                <p className="text-amber-100/90">{errorMessage}</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void refresh()}
+              className="border-amber-200/30 bg-transparent text-amber-50 hover:bg-amber-300/10"
+            >
+              <RefreshCw className="size-4" />
+              {labels.refresh}
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card className="border-white/10 bg-card/80 backdrop-blur">
         <CardContent className="space-y-4 pt-6">

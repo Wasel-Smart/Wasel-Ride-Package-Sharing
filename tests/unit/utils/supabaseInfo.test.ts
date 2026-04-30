@@ -11,6 +11,10 @@ describe('supabase public config', () => {
   it('falls back to the shipped public project config when env vars are placeholders', async () => {
     vi.stubEnv('VITE_SUPABASE_URL', 'https://your-project.supabase.co');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'your-anon-key-here');
+    vi.stubEnv('VITE_SUPABASE_PROJECT_URL', 'https://your-project.supabase.co');
+    vi.stubEnv('VITE_PUBLIC_SUPABASE_URL', 'https://your-project.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_PUBLISHABLE_KEY', 'your-anon-key-here');
+    vi.stubEnv('VITE_PUBLIC_SUPABASE_ANON_KEY', 'your-anon-key-here');
 
     const info = await importInfo();
 

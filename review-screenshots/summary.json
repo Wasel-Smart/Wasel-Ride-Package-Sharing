@@ -1,0 +1,582 @@
+[
+  {
+    "route": "/",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\home.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [
+      "The operating system of movement in Jordanroutes, intelligence, and shared economics in one network"
+    ],
+    "h2": [],
+    "h3": [
+      "Wasel is no longer \"a ride-sharing app.\""
+    ],
+    "buttons": [
+      "Get started",
+      "Open Movement OS",
+      "Amman -> ZarqaAuto-group micro departures every 10 minutes around shift changes.70%cheaper than solo movementDemand 98From 2.3 JOD",
+      "Amman -> IrbidGroup departures every 15 minutes during commute peaks.70%cheaper than solo movementDemand 96From 4.2 JOD",
+      "Amman -> AqabaBundle long-haul travelers into larger departure waves twice each day.69%cheaper than solo movementDemand 88From 16.2 JOD",
+      "Amman -> MadabaRefresh auto-grouping every 12 minutes around airport and city movement.69%cheaper than solo movementDemand 84From 2.7 JOD"
+    ],
+    "bodyChars": 6142
+  },
+  {
+    "route": "/app/find-ride",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__find-ride.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [],
+    "h2": [],
+    "h3": [],
+    "buttons": [],
+    "bodyChars": 0
+  },
+  {
+    "route": "/app/offer-ride",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__offer-ride.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [],
+    "h2": [],
+    "h3": [],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Route",
+      "Supply",
+      "Goods",
+      "Fixed"
+    ],
+    "bodyChars": 352
+  },
+  {
+    "route": "/app/my-trips",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__my-trips.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [
+      "My Trips"
+    ],
+    "h2": [],
+    "h3": [],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "New ride",
+      "Rides",
+      "Packages",
+      "Buses",
+      "All",
+      "Active",
+      "Needs attention",
+      "Completed",
+      "Cancelled",
+      "Create ride"
+    ],
+    "bodyChars": 818
+  },
+  {
+    "route": "/app/bus",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__bus.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [],
+    "h2": [
+      "WaselMove smarter",
+      "Wasel Move smarter"
+    ],
+    "h3": [
+      "Welcome back"
+    ],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Sign in",
+      "Create account",
+      "Forgot password?",
+      "Sign in",
+      "Google",
+      "Facebook",
+      "Terms of Service",
+      "Privacy Policy",
+      "Route",
+      "Supply"
+    ],
+    "bodyChars": 844
+  },
+  {
+    "route": "/app/packages",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__packages.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [],
+    "h2": [
+      "WaselMove smarter",
+      "Wasel Move smarter"
+    ],
+    "h3": [
+      "Welcome back"
+    ],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Sign in",
+      "Create account",
+      "Forgot password?",
+      "Sign in",
+      "Google",
+      "Facebook",
+      "Terms of Service",
+      "Privacy Policy",
+      "Route",
+      "Supply"
+    ],
+    "bodyChars": 844
+  },
+  {
+    "route": "/app/raje3",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__raje3.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [
+      "Raje3 Smart Returns"
+    ],
+    "h2": [
+      "Select your retailer",
+      "Service Flow and Communication Matrix"
+    ],
+    "h3": [],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Next — Return details →",
+      "Ride",
+      "Supply",
+      "Send",
+      "Deliver",
+      "Bus",
+      "Returns",
+      "Route",
+      "Supply",
+      "Goods"
+    ],
+    "bodyChars": 3734
+  },
+  {
+    "route": "/app/services/corporate",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__services__corporate.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [],
+    "h2": [],
+    "h3": [],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Route",
+      "Supply",
+      "Goods",
+      "Fixed"
+    ],
+    "bodyChars": 2921
+  },
+  {
+    "route": "/app/mobility-os",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__mobility-os.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [
+      "A unified live command layer for Jordan mobility, passenger flow, and parcel intelligence."
+    ],
+    "h2": [
+      "Jordan with 12 cities and 15 intercity corridors"
+    ],
+    "h3": [
+      "Selected city reference",
+      "Modeled operational recommendations",
+      "Live corridor ranking deck"
+    ],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Pause",
+      "Command",
+      "Satellite",
+      "Pulse",
+      "Amman",
+      "Aqaba",
+      "Irbid",
+      "Zarqa",
+      "Mafraq",
+      "Jerash"
+    ],
+    "bodyChars": 4383
+  },
+  {
+    "route": "/app/wallet",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__wallet.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [],
+    "h2": [],
+    "h3": [],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Route",
+      "Supply",
+      "Goods",
+      "Fixed"
+    ],
+    "bodyChars": 211
+  },
+  {
+    "route": "/app/plus",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__plus.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [],
+    "h2": [
+      "WaselMove smarter",
+      "Wasel Move smarter"
+    ],
+    "h3": [
+      "Welcome back"
+    ],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Sign in",
+      "Create account",
+      "Forgot password?",
+      "Sign in",
+      "Google",
+      "Facebook",
+      "Terms of Service",
+      "Privacy Policy",
+      "Route",
+      "Supply"
+    ],
+    "bodyChars": 844
+  },
+  {
+    "route": "/app/profile",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__profile.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [],
+    "h2": [],
+    "h3": [],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Sign In",
+      "Route",
+      "Supply",
+      "Goods",
+      "Fixed"
+    ],
+    "bodyChars": 229
+  },
+  {
+    "route": "/app/settings",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__settings.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [
+      "Settings"
+    ],
+    "h2": [
+      "Notifications",
+      "Display & Language",
+      "Privacy",
+      "Security",
+      "Account"
+    ],
+    "h3": [],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Email SupportOpen your default mail app with a prefilled Wasel support draft",
+      "SMS SupportOpen your phone’s SMS app for quick support escalation",
+      "WhatsApp SupportOpen direct WhatsApp support chat when available",
+      "Call SupportImmediate voice support handoff",
+      "Update Password",
+      "Send Reset Link",
+      "Start 2FA Setup",
+      "Save Phone",
+      "Open Profile",
+      "Privacy Policy"
+    ],
+    "bodyChars": 1907
+  },
+  {
+    "route": "/app/notifications",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__notifications.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [],
+    "h2": [],
+    "h3": [
+      "No results"
+    ],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Refresh",
+      "All",
+      "Unread",
+      "Urgent",
+      "Rides",
+      "Messages",
+      "Wallet",
+      "Trust",
+      "Support",
+      "System"
+    ],
+    "bodyChars": 490
+  },
+  {
+    "route": "/app/trust",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__trust.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [],
+    "h2": [],
+    "h3": [],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Sign in to open Trust Center",
+      "Route",
+      "Supply",
+      "Goods",
+      "Fixed"
+    ],
+    "bodyChars": 214
+  },
+  {
+    "route": "/app/driver",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__driver.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [],
+    "h2": [],
+    "h3": [],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Route",
+      "Supply",
+      "Goods",
+      "Fixed"
+    ],
+    "bodyChars": 185
+  },
+  {
+    "route": "/app/safety",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__safety.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [],
+    "h2": [
+      "WaselMove smarter",
+      "Wasel Move smarter"
+    ],
+    "h3": [
+      "Welcome back"
+    ],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Sign in",
+      "Create account",
+      "Forgot password?",
+      "Sign in",
+      "Google",
+      "Facebook",
+      "Terms of Service",
+      "Privacy Policy",
+      "Route",
+      "Supply"
+    ],
+    "bodyChars": 844
+  },
+  {
+    "route": "/app/privacy",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__privacy.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [
+      "Privacy Policy"
+    ],
+    "h2": [
+      "1. Information We Collect",
+      "2. How We Use Your Information",
+      "3. Data Protection",
+      "4. Data Sharing",
+      "5. Your Rights",
+      "Contact Us",
+      "Legal Compliance"
+    ],
+    "h3": [],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "privacy@wasel.jo",
+      "+962 79 000 0000",
+      "Route",
+      "Supply",
+      "Goods",
+      "Fixed"
+    ],
+    "bodyChars": 1983
+  },
+  {
+    "route": "/app/terms",
+    "screenshot": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\review-screenshots\\app__terms.png",
+    "title": "Wasel | Shared Routes That Reduce Travel Cost",
+    "h1": [
+      "Terms of Service"
+    ],
+    "h2": [
+      "1. Eligibility & Accounts",
+      "2. Services Provided",
+      "3. Payments & Commissions",
+      "4. Safety & Conduct",
+      "5. Liability & Warranties",
+      "6. Dispute Resolution",
+      "Strictly Prohibited",
+      "Account Termination"
+    ],
+    "h3": [],
+    "buttons": [
+      "Skip to main content",
+      "WaselJordan Mobility Network",
+      "RFind RouteAI",
+      "+Route Supply",
+      "PGoods NetworkLIVE",
+      "BFixed Corridors",
+      "MMovement OSLIVE",
+      "ع",
+      "Sign in",
+      "Get started",
+      "Route",
+      "Supply",
+      "Goods",
+      "Fixed"
+    ],
+    "bodyChars": 2459
+  }
+]

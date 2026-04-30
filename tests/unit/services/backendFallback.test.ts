@@ -39,6 +39,7 @@ vi.mock('../../../src/services/directSupabase', () => ({
 
 vi.mock('../../../src/utils/env', () => ({
   getConfig: () => mockGetConfig(),
+  getAuthCallbackUrl: () => 'https://wasel.test/app/auth/callback',
 }));
 
 import { authAPI } from '../../../src/services/auth';
@@ -65,6 +66,7 @@ describe('backend fallback services', () => {
       email: 'sara@example.com',
       password: 'secret123',
       options: {
+        emailRedirectTo: 'https://wasel.test/app/auth/callback',
         data: {
           full_name: 'Sara Ali',
           phone: '+962790000000',

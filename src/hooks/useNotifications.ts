@@ -76,19 +76,16 @@ export function useNotifications() {
     data: notifications = [],
     isLoading: loading,
     isFetching,
+    error,
     refetch,
   } = useQuery({
     queryKey: notificationsQueryKey(user?.id),
     queryFn: async () => {
       if (!user) return [];
 
-      try {
-        const response = await notificationsAPI.getNotifications();
-        const items = Array.isArray(response.notifications) ? response.notifications : [];
-        return items.map((item: RawNotification) => normalizeNotification(item));
-      } catch {
-        return [];
-      }
+      const response = await notificationsAPI.getNotifications();
+      const items = Array.isArray(response.notifications) ? response.notifications : [];
+      return items.map((item: RawNotification) => normalizeNotification(item));
     },
     enabled: !!user,
     staleTime: 30 * 1000,
@@ -115,6 +112,11 @@ export function useNotifications() {
   const unreadCount = notifications.filter((notification) => !notification.read && !archivedIds.includes(notification.id)).length;
   const connectionStatus: ConnectionStatus =
     !isOnline ? 'offline' : isFetching ? 'syncing' : 'online';
+  const errorMessage = error instanceof Error
+    ? error.message
+    : error
+      ? 'Notification service unavailable.'
+      : null;
 
   const markAsRead = async (notificationId: string) => {
     const queryKey = notificationsQueryKey(user?.id);
@@ -192,6 +194,7 @@ export function useNotifications() {
     archivedIds,
     loading,
     connectionStatus,
+    errorMessage,
     markAsRead,
     markAllAsRead,
     archiveNotification,

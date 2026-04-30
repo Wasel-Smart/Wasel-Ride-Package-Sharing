@@ -25,6 +25,7 @@ function isPlaceholderValue(value: string | undefined): boolean {
   return (
     normalized.length === 0 ||
     normalized.includes('your-project.supabase.co') ||
+    normalized.includes('your-anon-key') ||
     normalized.includes('your-anon-key-here') ||
     normalized.includes('replace_with') ||
     normalized.includes('example.com')
