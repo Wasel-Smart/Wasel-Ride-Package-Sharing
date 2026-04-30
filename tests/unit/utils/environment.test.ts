@@ -11,7 +11,7 @@ describe('environment config', () => {
   it('fails validation in protected environments when the public Supabase env vars are missing', async () => {
     vi.stubEnv('VITE_APP_ENV', 'production');
     vi.stubEnv('VITE_APP_URL', 'https://wasel.jo');
-    vi.stubEnv('VITE_ENABLE_DEMO_DATA', 'false');
+    vi.stubEnv('VITE_ENABLE_SYNTHETIC_DATA', 'false');
     vi.stubEnv('VITE_SUPABASE_URL', '');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '');
     vi.stubEnv('VITE_EDGE_FUNCTION_NAME', 'production-edge');
@@ -37,7 +37,7 @@ describe('environment config', () => {
     vi.stubEnv('VITE_SUPABASE_URL', 'https://staging-project.supabase.co');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'staging-anon-key');
     vi.stubEnv('VITE_EDGE_FUNCTION_NAME', 'staging-edge');
-    vi.stubEnv('VITE_ENABLE_DEMO_DATA', 'false');
+    vi.stubEnv('VITE_ENABLE_SYNTHETIC_DATA', 'false');
     vi.stubEnv('VITE_ENABLE_SYNTHETIC_TRIPS', 'false');
     vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'false');
     vi.stubEnv('VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK', 'false');

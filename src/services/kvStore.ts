@@ -27,6 +27,13 @@ import {
 const KV_TABLE = 'kv_store_0b1f4071';
 const AUDIT_TABLE = 'kv_store_audit_log';
 
+type KvRpcClient = {
+  rpc<T = unknown>(
+    fn: string,
+    args?: Record<string, unknown>,
+  ): Promise<{ data: T | null; error: { message: string } | null }>;
+};
+
 // ============================================================================
 // Core KV Operations
 // ============================================================================
@@ -35,8 +42,8 @@ const AUDIT_TABLE = 'kv_store_audit_log';
  * Get a value from the KV store
  */
 export async function getKVValue<T = unknown>(key: string): Promise<T | null> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase.rpc('get_kv_value', { p_key: key });
+  const supabase = getSupabase() as unknown as KvRpcClient;
+  const { data, error } = await supabase.rpc<T>('get_kv_value', { p_key: key });
 
   if (error) {
     console.error('[KV Store] Error getting value:', error);
@@ -55,7 +62,7 @@ export async function setKVValue(params: SetKVValueParams): Promise<boolean> {
     return false;
   }
 
-  const supabase = getSupabase();
+  const supabase = getSupabase() as unknown as KvRpcClient;
   const { error } = await supabase.rpc('set_kv_value', {
     p_key: params.key,
     p_value: params.value,
@@ -347,8 +354,8 @@ export async function getKVAuditLog(
  * Cleanup expired entries (admin only)
  */
 export async function cleanupExpiredEntries(): Promise<number> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase.rpc('cleanup_expired_kv_entries');
+  const supabase = getSupabase() as unknown as KvRpcClient;
+  const { data, error } = await supabase.rpc<number>('cleanup_expired_kv_entries');
 
   if (error) {
     console.error('[KV Store] Error cleaning up expired entries:', error);

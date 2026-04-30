@@ -30,7 +30,7 @@ export function allowAuthenticatedLocalPersistence(
 
 export function allowSyntheticData(): boolean {
   const config = getConfig();
-  return config.enableDemoAccount || config.enableSyntheticTrips;
+  return config.enableSyntheticData || config.enableSyntheticTrips;
 }
 
 export function requireDirectSupabaseFallback(operation: string): void {

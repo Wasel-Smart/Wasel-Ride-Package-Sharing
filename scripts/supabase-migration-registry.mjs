@@ -367,6 +367,9 @@ export const operationalSeedFiles = [
   'db/seeds/pricing.seed.sql',
   'db/seeds/core.seed.sql',
   'db/seeds/automation.seed.sql',
+  // Always-future trip inventory — re-run whenever trips expire to keep
+  // search results populated. Safe to run multiple times (ON CONFLICT UPDATE).
+  'db/seeds/rolling_trips.seed.sql',
 ];
 
 export const smokeCheckSeedFiles = ['src/supabase/seeds/mock_engine_smoke_checks.sql'];

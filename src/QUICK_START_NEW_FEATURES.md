@@ -196,7 +196,7 @@ await EscrowService.releasePayment(escrow.id);
 ### Customize It
 ```typescript
 // File: /pages/EnhancedLandingShowcase.tsx
-// Edit content, stats, or sample trips
+// Edit content, stats, or featured trips
 ```
 
 **✅ Done! Your landing page is live.**

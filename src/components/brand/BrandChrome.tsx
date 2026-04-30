@@ -9,6 +9,8 @@ export type AppNavItem = {
   end?: boolean;
   icon?: ReactNode;
   label: string;
+  onFocus?: () => void;
+  onPointerEnter?: () => void;
   path: string;
 };
 
@@ -91,6 +93,8 @@ export function ResponsiveNav({ items, mobile = false }: ResponsiveNavProps) {
             className="ds-nav-link"
             data-active={active}
             key={`${mobile ? 'm' : 'd'}-${item.path}`}
+            onFocus={item.onFocus}
+            onPointerEnter={item.onPointerEnter}
             title={item.label}
             to={item.path}
           >

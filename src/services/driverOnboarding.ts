@@ -1,5 +1,5 @@
 import type { WaselUser } from '../contexts/LocalAuth';
-import { evaluateTrustCapability } from './trustRules';
+import { evaluateTrustCapability, isApprovedDriverStatus } from './trustRules';
 
 export type DriverReadinessStep = {
   id: 'account_role' | 'phone' | 'email' | 'identity' | 'driver_clearance';
@@ -12,6 +12,7 @@ export type DriverReadinessStatus =
   | 'not_started'
   | 'complete_profile'
   | 'complete_verification'
+  | 'action_required'
   | 'pending_review'
   | 'ready';
 
@@ -58,7 +59,7 @@ export function getDriverReadinessSummary(user: WaselUser | null | undefined): D
       id: 'driver_clearance',
       label: 'Driver clearance',
       description: 'Driver operations unlock once the account reaches the highest verification readiness.',
-      complete: Boolean(user?.verificationLevel === 'level_3'),
+      complete: Boolean(isApprovedDriverStatus(user?.driverStatus) || user?.verificationLevel === 'level_3'),
     },
   ];
 
@@ -114,6 +115,28 @@ export function getDriverReadinessSummary(user: WaselUser | null | undefined): D
       status: 'pending_review',
       headline: 'Driver review is in progress',
       detail: 'Your account is verified enough for review. Final driver clearance unlocks live ride supply and package carrying.',
+      steps,
+      canOfferRide: false,
+      canCarryPackages: false,
+    };
+  }
+
+  if (user.driverStatus === 'rejected' || user.driverStatus === 'suspended') {
+    return {
+      status: 'action_required',
+      headline: 'Driver account needs trust review',
+      detail: 'Operations are paused until Trust completes a follow-up review on this driver profile.',
+      steps,
+      canOfferRide: false,
+      canCarryPackages: false,
+    };
+  }
+
+  if (user.driverStatus === 'pending_approval' || user.driverStatus === 'draft') {
+    return {
+      status: 'pending_review',
+      headline: 'Driver review is in progress',
+      detail: 'Your driver application is in the approval queue. Live ride posting unlocks after admin approval completes.',
       steps,
       canOfferRide: false,
       canCarryPackages: false,

@@ -4,3 +4,7 @@ dist/
 *.min.js
 public/sw.js
 src/**/*.d.ts
+.playwright-dist/
+.playwright-dist-debug/
+test-results/
+playwright-report/

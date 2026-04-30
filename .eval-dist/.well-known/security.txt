@@ -1,0 +1,5 @@
+Contact: mailto:support@wasel.jo
+Expires: 2027-04-13T00:00:00.000Z
+Preferred-Languages: en, ar
+Policy: https://github.com/Wasel-Smart/Wdoubleme/security/policy
+Canonical: https://wasel14.online/.well-known/security.txt

@@ -1,4 +1,4 @@
-import { getConfig, getEnv } from '../../utils/env';
+import { getEnv } from '../../utils/env';
 
 export type CoreFeatureKey = 'rides' | 'packages' | 'bus' | 'wallet' | 'admin';
 export type CoreFeatureState = boolean | 'limited';
@@ -7,19 +7,14 @@ function isExplicitlyEnabled(keys: string[]): boolean {
   return keys.some((key) => ['1', 'true', 'yes', 'on'].includes(getEnv(key).trim().toLowerCase()));
 }
 
-function isInternalFeatureEnabled(keys: string[]): boolean {
-  const config = getConfig();
-  return isExplicitlyEnabled(keys) && (config.isDev || config.isTest);
-}
-
 export const featureFlags = {
   get core(): Record<CoreFeatureKey, CoreFeatureState> {
     return {
       rides: true,
       packages: true,
-      bus: isInternalFeatureEnabled(['VITE_ENABLE_BUS', 'ENABLE_BUS']),
-      wallet: 'limited',
-      admin: isInternalFeatureEnabled(['VITE_ENABLE_ADMIN', 'ENABLE_ADMIN']),
+      bus: true,
+      wallet: true,
+      admin: isExplicitlyEnabled(['VITE_ENABLE_ADMIN', 'ENABLE_ADMIN']),
     };
   },
 };

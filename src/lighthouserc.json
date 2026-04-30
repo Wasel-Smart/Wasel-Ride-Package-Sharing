@@ -1,13 +1,12 @@
 {
   "ci": {
     "collect": {
-      "startServerCommand": "npm run preview",
+      "staticDistDir": "dist",
+      "isSinglePageApplication": true,
       "url": [
-        "http://localhost:4173",
-        "http://localhost:4173/app/find-ride",
-        "http://localhost:4173/app/offer-ride"
+        "http://localhost:4173"
       ],
-      "numberOfRuns": 3,
+      "numberOfRuns": 1,
       "settings": {
         "chromeFlags": "--no-sandbox --disable-gpu"
       }

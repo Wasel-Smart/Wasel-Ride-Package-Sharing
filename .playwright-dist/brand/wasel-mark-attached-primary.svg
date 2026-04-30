@@ -1,0 +1,78 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 320 320"
+  fill="none"
+  role="img"
+  aria-labelledby="title desc"
+  preserveAspectRatio="xMidYMid meet"
+>
+  <title id="title">Wasel primary bird mark</title>
+  <desc id="desc">A transparent Wasel bird mark derived from the attached logo, optimized for in-app branding.</desc>
+  <defs>
+    <linearGradient id="metal" x1="106" y1="173" x2="247" y2="264" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F7F8FB" />
+      <stop offset="0.27" stop-color="#DCE3EA" />
+      <stop offset="0.66" stop-color="#B0BECF" />
+      <stop offset="1" stop-color="#F3F6FA" />
+    </linearGradient>
+    <linearGradient id="metalEdge" x1="123" y1="136" x2="229" y2="272" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" />
+      <stop offset="1" stop-color="#9AA8B8" />
+    </linearGradient>
+    <linearGradient id="bird" x1="116" y1="71" x2="212" y2="167" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#68F0F2" />
+      <stop offset="0.5" stop-color="#2EB8D1" />
+      <stop offset="1" stop-color="#1172AE" />
+    </linearGradient>
+    <linearGradient id="wing" x1="137" y1="117" x2="192" y2="190" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#90FBF6" />
+      <stop offset="1" stop-color="#1A86C2" />
+    </linearGradient>
+    <filter id="shadow" x="54" y="40" width="212" height="242" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#020913" flood-opacity="0.28" />
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <path
+      d="M106 256L137 154H157L172 209L188 154H210L225 209L241 154H262L231 256H212L199 202L184 256H161L145 202L125 256H106Z"
+      fill="url(#metal)"
+    />
+    <path
+      d="M116 244L140 166H151L172 230L195 166H205L227 230L250 166"
+      stroke="url(#metalEdge)"
+      stroke-width="5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      opacity="0.9"
+    />
+
+    <path
+      d="M144 86C157 78 174 78 188 85C200 92 209 105 212 120C215 141 202 160 182 166C162 173 139 166 128 148C121 138 119 125 122 113C124 102 132 92 144 86Z"
+      fill="url(#bird)"
+    />
+    <path
+      d="M152 117C164 112 176 114 184 124C175 126 167 131 163 141C159 151 161 163 166 173C151 167 139 154 136 140C135 130 139 121 152 117Z"
+      fill="url(#wing)"
+      opacity="0.98"
+    />
+    <path
+      d="M184 96C198 96 211 105 216 117C220 126 218 135 213 142C208 149 199 153 190 152C199 145 201 136 200 127C198 117 192 105 184 96Z"
+      fill="#091524"
+    />
+    <path
+      d="M203 113C214 112 223 120 224 131C226 140 220 149 211 153C214 144 213 137 210 129C208 123 205 117 203 113Z"
+      fill="#6C7788"
+    />
+    <circle cx="189" cy="112" r="4.5" fill="#F5F7FA" />
+    <circle cx="189.5" cy="112" r="2" fill="#0A1320" />
+
+    <path
+      d="M137 175C151 168 162 159 170 148"
+      stroke="#A7F6F4"
+      stroke-width="4.5"
+      stroke-linecap="round"
+      opacity="0.75"
+    />
+  </g>
+</svg>

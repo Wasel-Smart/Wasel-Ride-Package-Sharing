@@ -81,7 +81,7 @@ export function groupChunksByCategory(files: string[]): Record<string, string[]>
     else groups['other'].push(file);
   }
 
-  return Object.fromEntries(Object.entries(groups).filter(([_, files]) => files.length > 0));
+  return Object.fromEntries(Object.entries(groups).filter(([_, groupFiles]) => groupFiles.length > 0));
 }
 
 /**
@@ -104,9 +104,9 @@ export function generateBundleReport(buildDir: string = './dist'): string {
   report += '─'.repeat(50) + '\n';
 
   for (const [category, categoryFiles] of Object.entries(groups)) {
-    const categorySize = categoryFiles.reduce((total, file) => total + sizes[file], 0);
-    const percentage = ((categorySize / total) * 100).toFixed(1);
-    report += `${category.padEnd(20)} ${formatBytes(categorySize).padStart(12)} (${percentage}%)\n`;
+    const categoryTotal = categoryFiles.reduce((sum, file) => sum + sizes[file], 0);
+    const percentage = ((categoryTotal / total) * 100).toFixed(1);
+    report += `${category.padEnd(20)} ${formatBytes(categoryTotal).padStart(12)} (${percentage}%)\n`;
   }
 
   // Top 10 largest
@@ -184,5 +184,5 @@ export function exportBundleMetrics(buildDir: string = './dist', outputFile: str
   };
 
   fs.writeFileSync(outputFile, JSON.stringify(metrics, null, 2));
-  console.info(`Bundle metrics exported to ${outputFile}`);
+  // Bundle metrics exported successfully
 }

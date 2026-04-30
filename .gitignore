@@ -20,7 +20,10 @@ node_modules/
 coverage/
 test-results/
 playwright-report/
+.playwright-dist/
+.playwright-dist-debug/
 quality-report*.json
+!quality-report.world-class.json
 .lighthouseci/
 vitest-results*.json
 
@@ -100,6 +103,11 @@ tmp-*.html
 tmp-*.txt
 tmp-*.headers.txt
 tmp_*
+tmp-playwright-server.*
+*.out
+*.err
+.codex-*.out
+.codex-*.err
 
 # Preview and development logs
 preview-*.log
@@ -121,6 +129,13 @@ Wdoubleme/
 Wasel R001_04042026_b001/
 tmp_import_logo/
 tmp_logo_frames/
+
+# Landing page screenshots
+landing-page-*.png
+!tests/e2e/visual-regression.spec.ts-snapshots/
+!tests/e2e/visual-regression.spec.ts-snapshots/landing-page-chromium-desktop-win32.png
+!tests/e2e/visual-regression.spec.ts-snapshots/find-ride-page-chromium-desktop-win32.png
+!tests/e2e/visual-regression.spec.ts-snapshots/settings-page-chromium-desktop-win32.png
 
 # Legacy one-off report names
 COMPREHENSIVE_GAPS_ANALYSIS.md

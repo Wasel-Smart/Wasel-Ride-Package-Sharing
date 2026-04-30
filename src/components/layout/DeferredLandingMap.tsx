@@ -64,17 +64,38 @@ export function DeferredLandingMap({
   const isTestEnv = import.meta.env.MODE === 'test';
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [shouldLoad, setShouldLoad] = useState(() => isTestEnv || eager);
+  const prefersDeferredLoad = (() => {
+    if (typeof navigator === 'undefined') {
+      return false;
+    }
+
+    const networkNavigator = navigator as Navigator & {
+      connection?: { effectiveType?: string; saveData?: boolean };
+    };
+    const effectiveType = networkNavigator.connection?.effectiveType ?? '';
+
+    return networkNavigator.connection?.saveData === true
+      || effectiveType === 'slow-2g'
+      || effectiveType === '2g'
+      || effectiveType === '3g';
+  })();
 
   useEffect(() => {
     if (isTestEnv || eager || shouldLoad) {
       return undefined;
     }
 
-    const cancelIdleLoad = scheduleDeferredTask(() => {
-      setShouldLoad(true);
-    }, 3_200);
+    const cancelIdleLoad = prefersDeferredLoad
+      ? () => {}
+      : scheduleDeferredTask(() => {
+          setShouldLoad(true);
+        }, 3_200);
 
     if (typeof IntersectionObserver !== 'function') {
+      if (prefersDeferredLoad) {
+        setShouldLoad(true);
+      }
+
       return () => {
         cancelIdleLoad();
       };
@@ -98,7 +119,7 @@ export function DeferredLandingMap({
       cancelIdleLoad();
       observer.disconnect();
     };
-  }, [eager, isTestEnv, shouldLoad]);
+  }, [eager, isTestEnv, prefersDeferredLoad, shouldLoad]);
 
   return (
     <div ref={isTestEnv ? undefined : containerRef}>

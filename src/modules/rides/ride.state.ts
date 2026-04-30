@@ -45,17 +45,46 @@ export type RideSearchAction =
   | { type: 'LOAD_MORE_RESULTS' }
   | { type: 'CLEAR_FEEDBACK' };
 
+/**
+ * FIX [Issue 1 – defence-in-depth]: Returns the local calendar date string
+ * (YYYY-MM-DD) so that past-date checks are consistent with the minDate
+ * produced by todayIsoDate() in ride.hooks.ts (both subtract timezone offset).
+ */
+function localTodayIsoDate(): string {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}
+
+/**
+ * Returns the date string only if it is today or in the future; otherwise
+ * returns an empty string.  This prevents a stale date from URL params or
+ * any other source from pre-populating the date field with a past value,
+ * which would leave the input below its own `min` attribute and block the
+ * user from switching to schedule mode without manually clearing the field.
+ */
+function guardDate(date: string | undefined): string {
+  if (!date) return '';
+  return date >= localTodayIsoDate() ? date : '';
+}
+
 export function createInitialRideSearchState(
   initial?: Partial<RideSearchState['draft']> & Pick<RideSearchState, 'searched'>,
 ): RideSearchState {
+  // FIX [Issue 1]: discard past dates before they reach state.
+  const safeDate = guardDate(initial?.date);
+
   return {
     draft: {
       fromQuery: initial?.from ?? 'Amman',
       toQuery: initial?.to ?? 'Aqaba',
       from: initial?.from ?? 'Amman',
       to: initial?.to ?? 'Aqaba',
-      date: initial?.date ?? '',
-      mode: initial?.mode ?? (initial?.date ? 'schedule' : 'now'),
+      date: safeDate,
+      // If the sanitised date is now empty (was in the past), default to
+      // 'now' mode rather than 'schedule' so the form isn't left in a broken
+      // state where schedule mode is active but the date field is blank.
+      mode: initial?.mode ?? (safeDate ? 'schedule' : 'now'),
       rideType: initial?.rideType ?? 'any',
     },
     phase: initial?.searched ? 'results' : 'idle',

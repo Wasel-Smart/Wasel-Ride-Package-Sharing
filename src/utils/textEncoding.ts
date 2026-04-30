@@ -1,68 +1,93 @@
-const SUSPICIOUS_TOKENS = [
-  '\uFFFD',
-  'Ã',
-  'Â©',
-  'Â·',
-  'Â±',
-  'â€¦',
-  'â€¢',
-  'âœ“',
-  'âœ…',
-  'â†’',
-  'â€“',
-  'â€”',
-  'â€',
-  'ðŸ',
-  'Ø',
-  'Ù',
-  'â”€',
-  'âš',
-] as const;
+let mojibakePattern: RegExp | undefined;
+let utf8Decoder: TextDecoder | undefined;
+let windows1252ByteByChar: Map<string, number> | undefined;
 
-const WELL_FORMED_TOKENS = /[“”‘’–—…•✓©±·]/u;
-const ARABIC_PATTERN = /[\u0600-\u06FF]/u;
-const EMOJI_PATTERN = /[\u{1F300}-\u{1FAFF}]/u;
-const UTF8_DECODER = new TextDecoder('utf-8', { fatal: false });
-const WINDOWS_1252_BYTES = new Map<string, number>([
-  ['€', 0x80],
-  ['‚', 0x82],
-  ['ƒ', 0x83],
-  ['„', 0x84],
-  ['…', 0x85],
-  ['†', 0x86],
-  ['‡', 0x87],
-  ['ˆ', 0x88],
-  ['‰', 0x89],
-  ['Š', 0x8a],
-  ['‹', 0x8b],
-  ['Œ', 0x8c],
-  ['Ž', 0x8e],
-  ['‘', 0x91],
-  ['’', 0x92],
-  ['“', 0x93],
-  ['”', 0x94],
-  ['•', 0x95],
-  ['–', 0x96],
-  ['—', 0x97],
-  ['˜', 0x98],
-  ['™', 0x99],
-  ['š', 0x9a],
-  ['›', 0x9b],
-  ['œ', 0x9c],
-  ['ž', 0x9e],
-  ['Ÿ', 0x9f],
-]);
+type UnknownRecord = Record<string, unknown>;
 
 function escapeForRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-const MOJIBAKE_PATTERN = new RegExp(SUSPICIOUS_TOKENS.map(escapeForRegex).join('|'), 'u');
+function getSuspiciousTokens() {
+  return [
+    '\uFFFD',
+    'Â',
+    'Ã',
+    'Ø',
+    'Ù',
+    'â€',
+    'ðŸ',
+  ] as const;
+}
+
+function getWellFormedTokensPattern() {
+  return /[\u201C\u201D\u2018\u2019\u2013\u2014\u2026\u2022\u2713\u00A9\u00B1\u00B7]/u;
+}
+
+function getArabicPattern() {
+  return /[\u0600-\u06FF]/u;
+}
+
+function getEmojiPattern() {
+  return /[\u{1F300}-\u{1FAFF}]/u;
+}
+
+function getUtf8Decoder() {
+  if (!utf8Decoder) {
+    utf8Decoder = new TextDecoder('utf-8', { fatal: false });
+  }
+
+  return utf8Decoder;
+}
+
+function getWindows1252ByteByChar() {
+  if (!windows1252ByteByChar) {
+    windows1252ByteByChar = new Map<string, number>([
+      ['€', 0x80],
+      ['‚', 0x82],
+      ['ƒ', 0x83],
+      ['„', 0x84],
+      ['…', 0x85],
+      ['†', 0x86],
+      ['‡', 0x87],
+      ['ˆ', 0x88],
+      ['‰', 0x89],
+      ['Š', 0x8a],
+      ['‹', 0x8b],
+      ['Œ', 0x8c],
+      ['Ž', 0x8e],
+      ['‘', 0x91],
+      ['’', 0x92],
+      ['“', 0x93],
+      ['”', 0x94],
+      ['•', 0x95],
+      ['–', 0x96],
+      ['—', 0x97],
+      ['˜', 0x98],
+      ['™', 0x99],
+      ['š', 0x9a],
+      ['›', 0x9b],
+      ['œ', 0x9c],
+      ['ž', 0x9e],
+      ['Ÿ', 0x9f],
+    ]);
+  }
+
+  return windows1252ByteByChar;
+}
+
+function getMojibakePattern() {
+  if (!mojibakePattern) {
+    mojibakePattern = new RegExp(getSuspiciousTokens().map(escapeForRegex).join('|'), 'u');
+  }
+
+  return mojibakePattern;
+}
 
 function decodeLatin1AsUtf8(value: string): string {
   const bytes = Uint8Array.from(
-    Array.from(value, char => {
-      const mappedByte = WINDOWS_1252_BYTES.get(char);
+    Array.from(value, (char) => {
+      const mappedByte = getWindows1252ByteByChar().get(char);
       if (typeof mappedByte === 'number') {
         return mappedByte;
       }
@@ -71,7 +96,8 @@ function decodeLatin1AsUtf8(value: string): string {
       return codePoint <= 0xff ? codePoint : 0x3f;
     }),
   );
-  return UTF8_DECODER.decode(bytes);
+
+  return getUtf8Decoder().decode(bytes);
 }
 
 function containsControlCharacters(value: string): boolean {
@@ -87,20 +113,21 @@ function containsControlCharacters(value: string): boolean {
 
 function scoreTextQuality(value: string): number {
   let score = 0;
+  const pattern = getMojibakePattern();
 
-  if (!MOJIBAKE_PATTERN.test(value)) {
+  if (!pattern.test(value)) {
     score += 4;
   }
 
-  if (ARABIC_PATTERN.test(value)) {
+  if (getArabicPattern().test(value)) {
     score += 3;
   }
 
-  if (WELL_FORMED_TOKENS.test(value)) {
+  if (getWellFormedTokensPattern().test(value)) {
     score += 2;
   }
 
-  if (EMOJI_PATTERN.test(value)) {
+  if (getEmojiPattern().test(value)) {
     score += 2;
   }
 
@@ -108,14 +135,14 @@ function scoreTextQuality(value: string): number {
     score -= 4;
   }
 
-  const mojibakeHits = value.match(MOJIBAKE_PATTERN)?.length ?? 0;
+  const mojibakeHits = value.match(pattern)?.length ?? 0;
   score -= mojibakeHits * 3;
 
   return score;
 }
 
 export function containsLikelyMojibake(value: string): boolean {
-  return MOJIBAKE_PATTERN.test(value);
+  return getMojibakePattern().test(value);
 }
 
 export function repairLikelyMojibake(value: string): string {
@@ -147,12 +174,12 @@ export function normalizeTextTree<T>(value: T): T {
   }
 
   if (Array.isArray(value)) {
-    return value.map(item => normalizeTextTree(item)) as T;
+    return value.map((item) => normalizeTextTree(item)) as T;
   }
 
   if (value && typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).map(([key, item]) => [
+      Object.entries(value as UnknownRecord).map(([key, item]) => [
         key,
         normalizeTextTree(item),
       ]),

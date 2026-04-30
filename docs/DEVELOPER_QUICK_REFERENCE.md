@@ -41,7 +41,7 @@ VITE_SENTRY_DSN=https://...@sentry.io/...
 
 # Features
 VITE_ENABLE_TWO_FACTOR_AUTH=true
-VITE_ENABLE_DEMO_DATA=false
+VITE_ENABLE_SYNTHETIC_DATA=false
 ```
 
 ## 🔧 Supabase Commands

@@ -29,6 +29,8 @@ export interface RideSearchFormCopy {
     label: string;
   }>;
   departureLabel: string;
+  liveDepartureTitle: string;
+  liveDepartureHint: string;
   searchButton: string;
   searchingButton: string;
 }
@@ -294,7 +296,7 @@ export function RideSearchForm({
 
           <div style={{ display: 'grid', gap: 10 }}>
             <label
-              htmlFor="ride-date"
+              htmlFor={state.draft.mode === 'schedule' ? 'ride-date' : undefined}
               style={{
                 color: LANDING_COLORS.soft,
                 fontFamily: LANDING_FONT,
@@ -306,40 +308,76 @@ export function RideSearchForm({
             >
               {copy.departureLabel}
             </label>
-            <div style={{ position: 'relative' }}>
-              <Calendar
-                size={18}
-                color={LANDING_COLORS.muted}
-                style={{ position: 'absolute', left: 16, top: 19, pointerEvents: 'none' }}
-              />
-              <input
-                id="ride-date"
-                aria-label="Departure date"
-                type="date"
-                min={minDate}
-                disabled={state.draft.mode === 'now'}
-                value={state.draft.date}
-                onChange={event => onDateChange(event.target.value)}
+            {state.draft.mode === 'now' ? (
+              <div
+                role="note"
                 style={{
-                  width: '100%',
                   minHeight: 56,
                   borderRadius: 16,
-                  border: `1px solid ${state.validation.date ? '#ff6b6b' : LANDING_COLORS.border}`,
-                  background:
-                    state.draft.mode === 'now'
-                      ? 'rgba(255,255,255,0.04)'
-                      : 'rgba(255,255,255,0.06)',
-                  color: '#fff',
-                  padding: '0 18px 0 48px',
-                  fontFamily: LANDING_FONT,
-                  fontSize: '0.95rem',
-                  fontWeight: 700,
-                  opacity: state.draft.mode === 'now' ? 0.5 : 1,
-                  colorScheme: 'dark',
-                  outline: 'none',
+                  border: `1px solid ${LANDING_COLORS.border}`,
+                  background: 'rgba(255,255,255,0.05)',
+                  padding: '14px 16px',
+                  display: 'grid',
+                  gap: 6,
+                  alignContent: 'center',
                 }}
-              />
-            </div>
+              >
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    color: '#fff',
+                    fontFamily: LANDING_FONT,
+                    fontSize: '0.92rem',
+                    fontWeight: 800,
+                  }}
+                >
+                  <Clock3 size={16} color={LANDING_COLORS.cyan} />
+                  {copy.liveDepartureTitle}
+                </div>
+                <div
+                  style={{
+                    color: LANDING_COLORS.muted,
+                    fontFamily: LANDING_FONT,
+                    fontSize: '0.8rem',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {copy.liveDepartureHint}
+                </div>
+              </div>
+            ) : (
+              <div style={{ position: 'relative' }}>
+                <Calendar
+                  size={18}
+                  color={LANDING_COLORS.muted}
+                  style={{ position: 'absolute', left: 16, top: 19, pointerEvents: 'none' }}
+                />
+                <input
+                  id="ride-date"
+                  aria-label="Departure date"
+                  type="date"
+                  min={minDate}
+                  value={state.draft.date}
+                  onChange={event => onDateChange(event.target.value)}
+                  style={{
+                    width: '100%',
+                    minHeight: 56,
+                    borderRadius: 16,
+                    border: `1px solid ${state.validation.date ? '#ff6b6b' : LANDING_COLORS.border}`,
+                    background: 'rgba(255,255,255,0.06)',
+                    color: '#fff',
+                    padding: '0 18px 0 48px',
+                    fontFamily: LANDING_FONT,
+                    fontSize: '0.95rem',
+                    fontWeight: 700,
+                    colorScheme: 'dark',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+            )}
             <div
               style={{
                 minHeight: 18,
@@ -348,7 +386,7 @@ export function RideSearchForm({
                 fontSize: '0.76rem',
               }}
             >
-              {state.validation.date ?? ''}
+              {state.draft.mode === 'schedule' ? (state.validation.date ?? '') : ''}
             </div>
           </div>
 

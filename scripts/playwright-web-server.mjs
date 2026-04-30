@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 
 const HOST = process.env.PLAYWRIGHT_HOST ?? '127.0.0.1';
 const PORT = process.env.PLAYWRIGHT_PORT ?? '4273';
@@ -14,7 +14,7 @@ const env = {
   VITE_SUPABASE_ANON_KEY: 'playwright-e2e-anon-key',
   VITE_EDGE_FUNCTION_NAME: '',
   VITE_API_URL: '',
-  VITE_ENABLE_DEMO_DATA: 'false',
+  VITE_ENABLE_SYNTHETIC_DATA: 'false',
   VITE_ENABLE_SYNTHETIC_TRIPS: 'false',
   VITE_ENABLE_LOCAL_AUTH: 'true',
   VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true',
@@ -51,16 +51,38 @@ function runVite(args) {
 }
 
 let previewChild = null;
+let shuttingDown = false;
 
-function shutdown(signal) {
+function terminateProcessTree(child) {
+  if (!child?.pid) {
+    return;
+  }
+
+  if (process.platform === 'win32') {
+    try {
+      execFileSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+      return;
+    } catch {}
+  }
+
+  child.kill('SIGTERM');
+}
+
+function shutdown() {
+  if (shuttingDown) {
+    return;
+  }
+
+  shuttingDown = true;
+
   if (previewChild && !previewChild.killed) {
-    previewChild.kill(signal);
+    terminateProcessTree(previewChild);
   }
 }
 
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('exit', () => shutdown('SIGTERM'));
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+process.on('exit', shutdown);
 
 async function main() {
   await runVite(['build', '--mode', 'test', '--outDir', OUT_DIR, '--emptyOutDir']);
@@ -69,7 +91,7 @@ async function main() {
     process.execPath,
     [viteBin, 'preview', '--host', HOST, '--port', PORT, '--strictPort', '--outDir', OUT_DIR],
     {
-      stdio: 'inherit',
+      stdio: ['ignore', 'inherit', 'inherit'],
       env,
       cwd: process.cwd(),
       shell: false,

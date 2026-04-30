@@ -9,7 +9,7 @@ users and live operational traffic.
 - Set `VITE_SUPABASE_ANON_KEY`
 - Confirm the frontend points at the intended Supabase project
 - Confirm the edge function name and base URL resolve through the shared backend contract
-- Confirm the project is not still using demo/local auth fallback
+- Confirm the project is not still using synthetic/local auth fallback
 
 ## 2. Database Rollout
 

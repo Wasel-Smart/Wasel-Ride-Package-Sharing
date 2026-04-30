@@ -14,6 +14,7 @@ export type Profile = {
   phone_verified?: boolean | null;
   email_verified?: boolean | null;
   role?: string | null;
+  driver_status?: string | null;
   wallet_balance?: number | null;
   rating?: number | null;
   trip_count?: number | null;
@@ -46,6 +47,7 @@ export function createLocalAuthProfile(localUser: WaselUser): Profile {
     full_name: localUser.name,
     phone_number: localUser.phone ?? null,
     wallet_balance: localUser.balance,
+    driver_status: localUser.driverStatus ?? null,
     rating: localUser.rating,
     trip_count: localUser.trips,
     verified: localUser.verified,

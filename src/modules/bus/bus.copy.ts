@@ -28,7 +28,7 @@ export function buildBusRouteInfo(kind: BusRouteInfoKind, _verifiedAt?: string):
     case 'validation':
       return {
         kind,
-        message: 'Choose two different locations to preview the right coach corridor.',
+        message: 'Choose two different locations to load the right coach corridor.',
       };
     case 'live':
       return {

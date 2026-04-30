@@ -177,4 +177,60 @@ describe('bookingsAPI.getUserBookings()', () => {
     mockFetch.mockReturnValueOnce(fail());
     await expect(bookingsAPI.getUserBookings()).rejects.toThrow();
   });
+
+  it('falls back to directSupabase on network error', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network down'));
+    mockGetDirectUserBookings.mockResolvedValueOnce([BOOKING_RESULT]);
+
+    const result = await bookingsAPI.getUserBookings();
+
+    expect(mockGetDirectUserBookings).toHaveBeenCalledWith('u1');
+    expect(result[0]!.id).toBe('bk-1');
+  });
+});
+
+describe('bookingsAPI.getTripBookings()', () => {
+  it('returns the trip bookings from the edge API', async () => {
+    mockFetch.mockReturnValueOnce(ok([BOOKING_RESULT]));
+
+    const result = await bookingsAPI.getTripBookings('trip-1');
+
+    expect(result).toHaveLength(1);
+    expect(result[0]!.id).toBe('bk-1');
+  });
+
+  it('falls back to directSupabase on network error', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network down'));
+    mockGetDirectTripBookings.mockResolvedValueOnce([BOOKING_RESULT]);
+
+    const result = await bookingsAPI.getTripBookings('trip-1');
+
+    expect(mockGetDirectTripBookings).toHaveBeenCalledWith('trip-1');
+    expect(result[0]!.id).toBe('bk-1');
+  });
+});
+
+describe('bookingsAPI.updateBookingStatus()', () => {
+  it('updates the booking through the edge API', async () => {
+    mockFetch.mockReturnValueOnce(ok({ ...BOOKING_RESULT, id: 'bk-1', status: 'accepted' }));
+
+    const result = await bookingsAPI.updateBookingStatus('bk-1', 'accepted');
+
+    expect(result.id).toBe('bk-1');
+    expect(result.status).toBe('accepted');
+  });
+
+  it('falls back to directSupabase on network error', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network down'));
+    mockUpdateDirectBookingStatus.mockResolvedValueOnce({
+      ...BOOKING_RESULT,
+      id: 'bk-1',
+      status: 'cancelled',
+    });
+
+    const result = await bookingsAPI.updateBookingStatus('bk-1', 'cancelled');
+
+    expect(mockUpdateDirectBookingStatus).toHaveBeenCalledWith('bk-1', 'cancelled');
+    expect(result.status).toBe('cancelled');
+  });
 });

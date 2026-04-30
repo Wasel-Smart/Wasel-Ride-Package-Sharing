@@ -1,0 +1,98 @@
+{
+  "name": "Wasel",
+  "short_name": "Wasel",
+  "description": "Wasel is the live mobility network for rides, buses, packages, and corridor-first mobility across Jordan.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "display": "standalone",
+  "display_override": ["standalone", "browser"],
+  "background_color": "#F5EFE6",
+  "theme_color": "#0B0F14",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-JO",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icon-192.png?v=20260422-premium",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png?v=20260422-premium",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png?v=20260422-premium",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png?v=20260422-premium",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["travel", "navigation", "transportation"],
+  "shortcuts": [
+    {
+      "name": "Find Ride",
+      "short_name": "Find",
+      "description": "Search for available rides",
+      "url": "/app/find-ride",
+      "icons": [{ "src": "/icon-192.png?v=20260422-premium", "sizes": "192x192" }]
+    },
+    {
+      "name": "Offer Ride",
+      "short_name": "Offer",
+      "description": "Create a new trip",
+      "url": "/app/offer-ride",
+      "icons": [{ "src": "/icon-192.png?v=20260422-premium", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Trips",
+      "short_name": "Trips",
+      "description": "View your trips",
+      "url": "/app/my-trips",
+      "icons": [{ "src": "/icon-192.png?v=20260422-premium", "sizes": "192x192" }]
+    },
+    {
+      "name": "Wallet",
+      "short_name": "Wallet",
+      "description": "Manage your wallet",
+      "url": "/app/wallet",
+      "icons": [{ "src": "/icon-192.png?v=20260422-premium", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/brand/og-social-card.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Wasel — Find rides and send packages across Jordan"
+    }
+  ],
+  "share_target": {
+    "action": "/app/packages",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+wasel",
+      "url": "/app/find-ride?ref=%s"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}
