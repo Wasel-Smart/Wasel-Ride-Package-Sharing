@@ -36,7 +36,7 @@ describe('AppEntryPage', () => {
 
     render(<AppEntryPage />);
 
-    expect(screen.getByText(/Move smarter with Wasel/i)).toBeInTheDocument();
+    expect(screen.getByText(/Find a ride, move a package, and trust the network/i)).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Get started/i }).length).toBeGreaterThan(0);
   });
 

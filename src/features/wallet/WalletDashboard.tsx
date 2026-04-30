@@ -94,9 +94,12 @@ export function WalletDashboard() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
-        <p className="text-muted-foreground text-sm">{t.processing}</p>
+        <div className="space-y-1">
+          <p className="text-foreground text-sm font-medium">{t.loadingTitle}</p>
+          <p className="text-muted-foreground text-sm">{t.loadingDescription}</p>
+        </div>
       </div>
     );
   }

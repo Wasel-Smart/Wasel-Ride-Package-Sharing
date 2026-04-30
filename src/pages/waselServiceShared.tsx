@@ -82,9 +82,9 @@ export function Protected({ children }: { children: ReactNode }) {
           <div style={{ width: 58, height: 58, borderRadius: r(18), margin: '0 auto 14px', background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}24`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DS.cyan }}>
             <Shield size={24} />
           </div>
-          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Protected Wasel experience</div>
+          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Protected Wasel account</div>
           <div style={{ color: DS.sub, fontFamily: DS.F, fontSize: '0.85rem', lineHeight: 1.7 }}>
-            We are taking you to sign in so your routes, packages, and movement history stay tied to one trusted account.
+            Sign in to keep your routes, packages, wallet activity, and trip history in one trusted place.
           </div>
         </div>
       </div>
@@ -139,7 +139,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           <WaselLogo size={34} theme="light" variant="full" />
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: '999px', background: 'rgba(0,200,232,0.08)', border: '1px solid rgba(0,200,232,0.16)', color: 'rgba(239,246,255,0.78)', fontSize: '0.72rem', fontWeight: 700 }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: DS.green, boxShadow: `0 0 10px ${DS.green}` }} />
-            {ar ? 'شبكة واصل للحركة والطرود' : 'Wasel movement network for people, goods, and services'}
+            {ar ? 'واصل للحركة اليومية والطرود في الأردن' : 'Wasel for daily movement and parcels across Jordan'}
           </div>
         </div>
         {children}
@@ -222,9 +222,9 @@ export function CoreExperienceBanner({
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', alignContent: 'flex-start', gap: 8 }}>
         {[
-          { label: 'People and trust layer', color: DS.green },
-          { label: 'Goods and services layer', color: DS.gold },
-          { label: 'Route intelligence layer', color: DS.cyan },
+          { label: 'Live routes', color: DS.cyan },
+          { label: 'Trusted accounts', color: DS.green },
+          { label: 'Package-ready lanes', color: DS.gold },
         ].map((item) => (
           <span key={item.label} style={pill(item.color)}>
             {item.label}

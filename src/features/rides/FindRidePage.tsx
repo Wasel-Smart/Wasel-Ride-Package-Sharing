@@ -36,7 +36,6 @@ import { createRideBooking, hydrateRideBookings } from '../../services/rideLifec
 import {
   getCorridorOpportunity,
   getMarketplaceNodes,
-  getWaselCategoryPosition,
 } from '../../config/wasel-movement-network';
 import {
   ALL_RIDES,
@@ -97,7 +96,6 @@ export function FindRidePage() {
   const [savedReminders, setSavedReminders] = useState(() => getRouteReminders());
   const [pkg, setPkg] = useState({ from: 'Amman', to: 'Aqaba', weight: '<1 kg', note: '', sent: false });
 
-  const category = useMemo(() => getWaselCategoryPosition(), []);
   const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(0, 3), []);
   const corridorPlan = useMemo(() => getCorridorOpportunity(from, to), [from, to]);
   const routeIntelligence = useLiveRouteIntelligence({ from, to });
@@ -330,7 +328,7 @@ export function FindRidePage() {
       userId: user?.id,
     });
 
-    setWaitlistMessage(`Demand alert saved for ${alert.from} to ${alert.to}. Wasel Brain will wake you around ${selectedSignal?.nextWaveWindow ?? 'the next corridor wave'}.`);
+    setWaitlistMessage(`Demand alert saved for ${alert.from} to ${alert.to}. We will alert you around ${selectedSignal?.nextWaveWindow ?? 'the next corridor wave'}.`);
     void trackGrowthEvent({
       userId: user?.id,
       eventName: 'route_demand_alert_saved',
@@ -363,15 +361,15 @@ export function FindRidePage() {
       <PageShell>
         <SectionHead
           emoji="Route"
-          title="Find a Shared Route"
-          titleAr={copy.tabRide}
-          sub="Search corridors, unlock cost sharing, and let Wasel Brain propose the best match."
-          action={{ label: 'Open route supply', onClick: () => nav('/app/offer-ride') }}
+          title="Book a Ride"
+          titleAr="احجز مشوار"
+          sub="Choose your cities and date. Wasel brings the best live ride, fare, and pickup options first."
+          action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Wasel is now organized around route intelligence, not random ride requests."
-          detail={`${category.promise} Search one corridor and the platform responds with shared-price targets, pickup nodes, auto-grouping, and the best available supply.`}
+          title="Live routes, shared fares, and pickup points on one screen."
+          detail="Search once and compare confirmed drivers, grouped departures, and the strongest route options for this corridor."
           tone={DS.cyan}
         />
 
@@ -429,17 +427,17 @@ export function FindRidePage() {
 
               <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={handleSearch} data-testid="find-ride-search" style={{ width: '100%', height: 52, borderRadius: r(14), border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                 {loading ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }} style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%' }} /> : <Search size={18} />}
-                {loading ? t.searching : 'Let Wasel Brain search this route'}
+                {loading ? t.searching : 'Search this route'}
               </motion.button>
 
               <div style={{ marginTop: 14, background: DS.card2, borderRadius: r(14), padding: 12, border: `1px solid ${DS.border}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
                   <div>
-                    <p style={{ color: DS.muted, fontSize: '0.72rem', fontWeight: 700, margin: '0 0 4px' }}>Corridor preview</p>
+                    <p style={{ color: DS.muted, fontSize: '0.72rem', fontWeight: 700, margin: '0 0 4px' }}>Route preview</p>
                     <p style={{ color: DS.sub, fontSize: '0.8rem', margin: 0 }}>
                       {selectedSignal
-                        ? `Production data is live on this lane. Wasel sees ${selectedSignal.liveSearches} searches, ${selectedSignal.liveBookings} bookings, and ${selectedSignal.activeDemandAlerts} active alerts.`
-                        : 'See the movement corridor before Wasel Brain suggests seats, pickup points, and grouped departures.'}
+                        ? `Live demand is visible on this route: ${selectedSignal.liveSearches} searches, ${selectedSignal.liveBookings} bookings, and ${selectedSignal.activeDemandAlerts} active alerts.`
+                        : 'Check the route before you compare seats, pickup points, and grouped departures.'}
                     </p>
                   </div>
                   <span style={{ ...pill(DS.green), fontSize: '0.72rem' }}>
@@ -496,9 +494,9 @@ export function FindRidePage() {
                     <Brain size={18} color={DS.cyan} />
                   </div>
                   <div>
-                    <div style={{ color: '#fff', fontWeight: 800 }}>Wasel Brain briefing</div>
+                    <div style={{ color: '#fff', fontWeight: 800 }}>Why this route fits</div>
                     <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                      The system should suggest, not make the rider guess.
+                      Quick reasons before you book.
                     </div>
                   </div>
                 </div>
@@ -537,9 +535,9 @@ export function FindRidePage() {
                       <TrendingUp size={18} color={DS.gold} />
                     </div>
                     <div>
-                      <div style={{ color: '#fff', fontWeight: 800 }}>Priority corridors</div>
+                      <div style={{ color: '#fff', fontWeight: 800 }}>Popular right now</div>
                       <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                        Routes the network wants to fill next.
+                        Routes with the strongest live activity.
                       </div>
                     </div>
                   </div>
@@ -574,9 +572,9 @@ export function FindRidePage() {
                       <Network size={18} color={DS.green} />
                     </div>
                     <div>
-                      <div style={{ color: '#fff', fontWeight: 800 }}>Marketplace layers</div>
+                      <div style={{ color: '#fff', fontWeight: 800 }}>Package-ready lanes</div>
                       <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                        This route graph serves more than riders.
+                        Some ride routes can also carry parcels.
                       </div>
                     </div>
                   </div>
@@ -594,7 +592,7 @@ export function FindRidePage() {
 
             <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
               <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Auto-suggested recurring routes</div>
+                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Recurring ride suggestions</div>
                 {recurringSuggestions.length > 0 ? (
                   <div style={{ display: 'grid', gap: 10 }}>
                     {recurringSuggestions.map((suggestion) => {
@@ -653,7 +651,7 @@ export function FindRidePage() {
 
             <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
               <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Recommended corridor matches</div>
+                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Best ride matches</div>
                 <div style={{ display: 'grid', gap: 10 }}>
                   {recommendedRides.map((ride) => {
                     const rideSignal = resolveSignalForRoute(ride.from, ride.to);
@@ -695,7 +693,7 @@ export function FindRidePage() {
               <h2 style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
                 {searched
                   ? `${from} to ${to} | ${results.length} route match${results.length !== 1 ? 'es' : ''}`
-                  : `Priority corridors | showing ${results.length} departures`}
+                  : `Popular routes | showing ${results.length} departures`}
               </h2>
               {selectedSignal ? (
                 <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
@@ -716,7 +714,7 @@ export function FindRidePage() {
                     <div style={{ fontSize: '3rem', marginBottom: 16 }}>{copy.noResultsIcon}</div>
                     <h3 style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>{t.noRidesFound}</h3>
                     <p style={{ color: DS.sub, fontSize: '0.875rem' }}>
-                      No live corridor match appeared yet. Save the route and let Wasel Brain wake you when density is ready{selectedSignal ? ` around ${selectedSignal.nextWaveWindow}` : ''}.
+                      No live ride match appeared yet. Save this route and we will alert you when the next good option opens{selectedSignal ? ` around ${selectedSignal.nextWaveWindow}` : ''}.
                     </p>
                     <div className="sp-empty-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 18 }}>
                       <button onClick={() => { setDate(''); setSearchError(null); setSearched(true); }} style={{ height: 44, borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{t.clearDateFilter}</button>

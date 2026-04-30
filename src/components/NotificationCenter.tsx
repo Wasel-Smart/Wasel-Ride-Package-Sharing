@@ -210,7 +210,15 @@ export function NotificationCenter() {
   if (loading && notifications.length === 0) {
     return (
       <div className="flex min-h-[360px] items-center justify-center">
-        <div className="size-9 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="size-9 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+          <div className="space-y-1">
+            <div className="text-sm font-medium text-foreground">{isRTL ? 'جار تحميل الإشعارات' : 'Loading notifications'}</div>
+            <div className="text-xs text-muted-foreground">
+              {isRTL ? 'نجهز آخر التنبيهات والحجوزات والعمليات.' : 'Pulling the latest alerts, bookings, and operational updates.'}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

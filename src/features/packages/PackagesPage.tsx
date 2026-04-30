@@ -20,7 +20,6 @@ import {
   getCorridorOpportunity,
   getFeaturedCorridors,
   getMarketplaceNodes,
-  getWaselCategoryPosition,
 } from '../../config/wasel-movement-network';
 import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { PackageReturnsPanel } from './components/PackageReturnsPanel';
@@ -40,7 +39,6 @@ export function PackagesPage() {
   const [trackingMessage, setTrackingMessage] = useState<string | null>(null);
   const [busyState, setBusyState] = useState<'idle' | 'creating' | 'tracking'>('idle');
 
-  const category = useMemo(() => getWaselCategoryPosition(), []);
   const featuredCorridors = useMemo(() => getFeaturedCorridors(3), []);
   const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(2), []);
   const corridorPlan = useMemo(
@@ -187,16 +185,16 @@ export function PackagesPage() {
       <PageShell>
         <SectionHead
           emoji="Goods"
-          title="Goods Network"
-          titleAr="شبكة البضائع"
-          sub="Attach packages, returns, and route-linked logistics to the same Wasel corridors."
+          title="Send a Package"
+          titleAr="أرسل طرداً"
+          sub="Book delivery, track progress, or start a return on live Wasel routes."
           color={DS.gold}
           action={{ label: 'Open route supply', onClick: () => nav('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Goods should ride on top of the movement network, not beside it."
-          detail={`${category.infrastructureLabel} means every package request learns from live corridor density, package-ready drivers, and repeat business demand on the same routes used by commuters.`}
+          title="Send, track, and return parcels from one route-based flow."
+          detail="Wasel matches parcels to live drivers first, then falls back to the next trusted route on the same corridor."
           tone={DS.gold}
         />
 
@@ -222,9 +220,9 @@ export function PackagesPage() {
                 <Brain size={18} color={DS.cyan} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Wasel Brain for goods</div>
+                <div style={{ color: '#fff', fontWeight: 800 }}>Route fit for this package</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                  Predict the best lane before a sender starts searching.
+                  See the likely match, pickup point, and savings before you send.
                 </div>
               </div>
             </div>
@@ -235,7 +233,7 @@ export function PackagesPage() {
                   : 'Choose a route to see its predicted goods economics.',
                 corridorPlan
                   ? `Best pickup point: ${corridorPlan.pickupPoints[0] ?? 'Trusted corridor node'}. ${corridorPlan.autoGroupWindow}`
-                  : 'Wasel Brain recommends trusted pickup points to reduce handoff friction.',
+                  : 'Wasel recommends trusted pickup points to reduce handoff friction.',
                 corridorPlan
                   ? `Business demand already attached here: ${corridorPlan.businessDemand.join(', ')}.`
                   : 'Returns, documents, and same-day service demand can reinforce weaker package corridors.',
@@ -253,9 +251,9 @@ export function PackagesPage() {
                 <Network size={18} color={DS.green} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Three-layer marketplace</div>
+                <div style={{ color: '#fff', fontWeight: 800 }}>Business demand on this lane</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                  Packages get stronger when businesses and service routes join the same map.
+                  Returns, documents, and repeat lanes help package routes stay stronger.
                 </div>
               </div>
             </div>
@@ -345,10 +343,10 @@ export function PackagesPage() {
           <div style={{ borderRadius: r(16), border: `1px solid ${DS.border}`, background: DS.card, padding: '16px 18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
               <Boxes size={18} color={DS.gold} />
-              <div style={{ color: '#fff', fontWeight: 800 }}>Why this becomes defensible</div>
+              <div style={{ color: '#fff', fontWeight: 800 }}>Why this works</div>
             </div>
             <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.65 }}>
-              Every package request improves route economics, handoff intelligence, and the business-demand map. That means Wasel is not only shipping parcels; it is learning how Jordan moves goods on the same corridors it already owns for people.
+              Every package request improves route matching, handoff clarity, and corridor coverage. Senders get simpler delivery, and the network gets better at moving parcels on real daily routes.
             </div>
           </div>
         </div>

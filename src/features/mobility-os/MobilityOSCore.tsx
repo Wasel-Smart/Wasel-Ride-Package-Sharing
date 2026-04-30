@@ -2,6 +2,7 @@ import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState }
 import { Activity, Gauge, MapPinned, Package, Pause, Play, Route, Users } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
+import { normalizeTextTree } from '../../utils/textEncoding';
 import { type LiveMobilityVehicleSnapshot, useMobilityOSLiveData } from './liveMobilityData';
 
 type FlowType = 'passenger' | 'package';
@@ -35,7 +36,7 @@ const BASE_W = 1200;
 const BASE_H = 700;
 const FLOW_SPEED_SCALE = 0.42;
 const HERO_MAP_ASPECT = 1.42;
-const CITY_DATA: City[] = [
+const CITY_DATA: City[] = normalizeTextTree([
   { id: 0, name: 'Amman', nameAr: 'عمّان', lat: 31.9454, lon: 35.9284, populationK: 5004.6, officialPopulation: 5004600, officialArea: 'Amman Governorate', officialAreaAr: 'محافظة العاصمة', attractiveness: 1, isHub: true, tier: 1 },
   { id: 1, name: 'Aqaba', nameAr: 'العقبة', lat: 29.532, lon: 35.0063, populationK: 250.9, officialPopulation: 250900, officialArea: 'Aqaba Governorate', officialAreaAr: 'محافظة العقبة', attractiveness: 0.92, isHub: true, tier: 1 },
   { id: 2, name: 'Irbid', nameAr: 'إربد', lat: 32.5556, lon: 35.85, populationK: 2210.5, officialPopulation: 2210500, officialArea: 'Irbid Governorate', officialAreaAr: 'محافظة إربد', attractiveness: 0.88, isHub: true, tier: 1 },
@@ -48,8 +49,8 @@ const CITY_DATA: City[] = [
   { id: 9, name: 'Tafila', nameAr: 'الطفيلة', lat: 30.8375, lon: 35.6042, populationK: 120.3, officialPopulation: 120300, officialArea: 'Tafilah Governorate', officialAreaAr: 'محافظة الطفيلة', attractiveness: 0.48, isHub: false, tier: 3 },
   { id: 10, name: "Ma'an", nameAr: 'معان', lat: 30.1962, lon: 35.736, populationK: 197.9, officialPopulation: 197900, officialArea: "Ma'an Governorate", officialAreaAr: 'محافظة معان', attractiveness: 0.54, isHub: false, tier: 3 },
   { id: 11, name: 'Salt', nameAr: 'السلط', lat: 32.0392, lon: 35.7272, populationK: 614, officialPopulation: 614000, officialArea: 'Balqa Governorate', officialAreaAr: 'محافظة البلقاء', attractiveness: 0.57, isHub: false, tier: 2 },
-];
-const ROUTES: RouteBase[] = [
+]);
+const ROUTES: RouteBase[] = normalizeTextTree([
   { id: 'amman-aqaba', from: 0, to: 1, distanceKm: 335, lanes: 2, highway: 'Desert Highway', highwayAr: 'الطريق الصحراوي' },
   { id: 'amman-irbid', from: 0, to: 2, distanceKm: 85, lanes: 2, highway: 'Jordan Valley Highway', highwayAr: 'طريق وادي الأردن' },
   { id: 'amman-zarqa', from: 0, to: 3, distanceKm: 25, lanes: 3, highway: 'Amman-Zarqa Expressway', highwayAr: 'أوتوستراد عمّان الزرقاء' },
@@ -65,7 +66,7 @@ const ROUTES: RouteBase[] = [
   { id: 'amman-salt', from: 0, to: 11, distanceKm: 32, lanes: 2, highway: 'Salt Corridor', highwayAr: 'ممر السلط' },
   { id: 'salt-jerash', from: 11, to: 5, distanceKm: 38, lanes: 1, highway: 'Hill Connector', highwayAr: 'الواصل الجبلي' },
   { id: 'ajloun-jerash', from: 6, to: 5, distanceKm: 24, lanes: 1, highway: 'Forest Road', highwayAr: 'طريق الغابات' },
-];
+]);
 const BORDER = [{ lat: 33.37, lon: 35.55 }, { lat: 32.58, lon: 36.42 }, { lat: 31.24, lon: 37.12 }, { lat: 29.62, lon: 36.22 }, { lat: 29.2, lon: 35.03 }, { lat: 31.2, lon: 35.5 }, { lat: 32.56, lon: 35.55 }];
 const TRAFFIC = { FREE: 120, JAM: 150, CRITICAL: 45 };
 const cityMap = new Map(CITY_DATA.map((city) => [city.id, city]));
@@ -98,7 +99,7 @@ function getCityLabel(city: City, ar: boolean) {
 }
 
 function createMobilityOSCopy(ar: boolean) {
-  return {
+  return normalizeTextTree({
     heroLabel: ar ? 'نظام الحركة / سطح التحكم الوطني' : 'Mobility OS / Jordan Control Surface',
     heroTitle: ar ? 'منصة تشغيل موحّدة لحركة الأردن، وتدفق الركاب، وذكاء الطرود.' : 'A unified live command layer for Jordan mobility, passenger flow, and parcel intelligence.',
     heroBody: ar ? 'سطح تشغيلي واحد بمشهد بصري متماسك يعرض المحاكاة الحية، وذكاء المسارات، وقرارات إعادة التوزيع، وضغط الممرات بلغة واضحة وممتازة ومناسبة للسوق الأردني.' : 'Mobility OS now behaves like one premium operating surface: real-time simulation, cinematic route intelligence, dispatch-aware analytics, and scientifically modeled corridor pressure all presented in a single coherent visual system.',
@@ -151,7 +152,7 @@ function createMobilityOSCopy(ar: boolean) {
     parcelCadence: ar ? 'وتيرة الطرود' : 'Parcel cadence',
     depthField: ar ? 'طبقة العمق' : 'Depth field',
     structuredTiers: ar ? 'عدد طبقات الخدمة المنظمة' : 'Structured service tiers',
-  };
+  });
 }
 
 function project(lat: number, lon: number, width: number, height: number) {
@@ -321,6 +322,21 @@ export default function MobilityOSCore() {
   const telemetryCoverageLabel = ar ? 'ØªØºØ·ÙŠØ© Ø§Ù„ØªÙ„Ù…ØªØ±ÙŠØ§' : 'Telemetry coverage';
   const realtimeVerifiedLabel = ar ? 'Ù…ØªØ­Ù‚Ù‚ Ù…Ø¨Ø§Ø´Ø±Ø§Ù‹' : 'Verified live';
   const estimatedFromLoadLabel = ar ? 'Ù…Ù‚Ø¯Ù‘Ø± Ù…Ù† Ø§Ù„Ø­Ù…ÙˆÙ„Ø©' : 'Estimated from load';
+  const normalizedTelemetry = normalizeTextTree({
+    liveTag,
+    liveOpsTag,
+    hybridTag,
+    telemetryFreshLabel,
+    telemetryStaleLabel,
+    telemetryNoneLabel,
+    telemetryLabel,
+    sourceMatrixLabel,
+    sourceMatrixBody,
+    telemetryHeartbeatLabel,
+    telemetryCoverageLabel,
+    realtimeVerifiedLabel,
+    estimatedFromLoadLabel,
+  });
   const numberFormatter = useMemo(() => new Intl.NumberFormat(ar ? 'ar-JO' : 'en-US'), [ar]);
   const dateTimeFormatter = useMemo(() => new Intl.DateTimeFormat(ar ? 'ar-JO' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }), [ar]);
   const [paused, setPaused] = useState(false);
@@ -351,10 +367,10 @@ export default function MobilityOSCore() {
     [liveSnapshot],
   );
   const telemetryStatus = liveSnapshot?.telemetry.freshTripsWithTelemetry
-    ? telemetryFreshLabel
+    ? normalizedTelemetry.telemetryFreshLabel
     : liveSnapshot?.telemetry.staleTripsWithTelemetry
-      ? telemetryStaleLabel
-      : telemetryNoneLabel;
+      ? normalizedTelemetry.telemetryStaleLabel
+      : normalizedTelemetry.telemetryNoneLabel;
   const telemetryTone = liveSnapshot?.telemetry.freshTripsWithTelemetry
     ? C.green
     : liveSnapshot?.telemetry.staleTripsWithTelemetry
@@ -362,7 +378,7 @@ export default function MobilityOSCore() {
       : C.textMuted;
   const latestHeartbeatValue = liveSnapshot?.telemetry.latestHeartbeatAt
     ? dateTimeFormatter.format(new Date(liveSnapshot.telemetry.latestHeartbeatAt))
-    : (ar ? 'Ù„Ø§ ÙŠÙˆØ¬Ø¯' : 'Unavailable');
+    : (ar ? 'غير متاح' : 'Unavailable');
 
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -1012,12 +1028,12 @@ export default function MobilityOSCore() {
   }[viewMode];
   const heroSignals = [
     { label: copy.controlState, value: paused ? (ar ? 'متوقف مؤقتاً' : 'Paused') : copy.liveSync, tone: paused ? C.orange : C.green },
-    { label: `${copy.topCorridor} · ${liveTag}`, value: analytics.topCorridor || (ar ? 'عمّان ← الزرقاء' : 'Amman -> Zarqa'), tone: C.gold },
-    { label: `${copy.dispatch} · ${liveTag}`, value: analytics.dispatchAction || (ar ? 'موازنة العرض' : 'Balance supply'), tone: C.text },
+    { label: `${copy.topCorridor} · ${normalizedTelemetry.liveTag}`, value: analytics.topCorridor || (ar ? 'عمّان ← الزرقاء' : 'Amman -> Zarqa'), tone: C.gold },
+    { label: `${copy.dispatch} · ${normalizedTelemetry.liveTag}`, value: analytics.dispatchAction || (ar ? 'موازنة العرض' : 'Balance supply'), tone: C.text },
   ];
   const systemBands = [
-    { label: `${ar ? 'الركاب' : 'Passengers'} · ${liveSnapshot ? liveTag : copy.simulationTag}`, value: numberFormatter.format(analytics.activePassengers), sub: ar ? `${numberFormatter.format(analytics.seatAvailability)} مقعد متاح` : `${analytics.seatAvailability} seats open`, color: PASSENGER_COLOR },
-    { label: `${ar ? 'الطرود' : 'Packages'} · ${liveSnapshot ? liveTag : copy.simulationTag}`, value: numberFormatter.format(analytics.activePackages), sub: ar ? `${numberFormatter.format(analytics.packageCapacity)} خانة متاحة` : `${analytics.packageCapacity} slots open`, color: PACKAGE_COLOR },
+    { label: `${ar ? 'الركاب' : 'Passengers'} · ${liveSnapshot ? normalizedTelemetry.liveTag : copy.simulationTag}`, value: numberFormatter.format(analytics.activePassengers), sub: ar ? `${numberFormatter.format(analytics.seatAvailability)} مقعد متاح` : `${analytics.seatAvailability} seats open`, color: PASSENGER_COLOR },
+    { label: `${ar ? 'الطرود' : 'Packages'} · ${liveSnapshot ? normalizedTelemetry.liveTag : copy.simulationTag}`, value: numberFormatter.format(analytics.activePackages), sub: ar ? `${numberFormatter.format(analytics.packageCapacity)} خانة متاحة` : `${analytics.packageCapacity} slots open`, color: PACKAGE_COLOR },
     { label: `${ar ? 'السرعة' : 'Velocity'} · ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(analytics.avgSpeed))} ${ar ? 'كم/س' : 'km/h'}`, sub: ar ? `${numberFormatter.format(Math.round(analytics.networkUtilization * 100))}% استخدام` : `${Math.round(analytics.networkUtilization * 100)}% utilization`, color: C.green },
     { label: `${ar ? 'الضغط' : 'Pressure'} · ${copy.estimateTag}`, value: `${numberFormatter.format(Math.round(analytics.congestionLevel * 100))}%`, sub: activeMode.title, color: C.orange },
   ];
@@ -1109,8 +1125,8 @@ export default function MobilityOSCore() {
             <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
               {systemBands.map((band, index) => {
                 const displayLabel = index <= 1
-                  ? band.label.replace(liveTag, liveOpsTag)
-                  : band.label.replace(copy.estimateTag, estimatedFromLoadLabel);
+                  ? band.label.replace(normalizedTelemetry.liveTag, normalizedTelemetry.liveOpsTag)
+                  : band.label.replace(copy.estimateTag, normalizedTelemetry.estimatedFromLoadLabel);
                 return (
                 <div key={band.label} style={{ padding: '16px 18px', borderRadius: 22, border: `1px solid ${C.borderFaint}`, background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
@@ -1127,19 +1143,19 @@ export default function MobilityOSCore() {
             </div>
             <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'minmax(0, 1.3fr) minmax(280px, 0.7fr)' }}>
               <div style={{ padding: '14px 16px', borderRadius: 20, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)' }}>
-                <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{sourceMatrixLabel}</div>
-                <div style={{ marginTop: 8, color: C.textSub, fontSize: '0.88rem', lineHeight: 1.7 }}>{sourceMatrixBody}</div>
+                <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{normalizedTelemetry.sourceMatrixLabel}</div>
+                <div style={{ marginTop: 8, color: C.textSub, fontSize: '0.88rem', lineHeight: 1.7 }}>{normalizedTelemetry.sourceMatrixBody}</div>
               </div>
               <div style={{ padding: '14px 16px', borderRadius: 20, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', display: 'grid', gap: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
-                  <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{telemetryLabel}</div>
+                  <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{normalizedTelemetry.telemetryLabel}</div>
                   <div style={{ color: telemetryTone, fontWeight: 800, fontSize: '0.82rem' }}>{telemetryStatus}</div>
                 </div>
                 <div style={{ color: C.textSub, fontSize: '0.84rem' }}>
-                  {telemetryCoverageLabel}: {numberFormatter.format(liveSnapshot?.telemetry.freshTripsWithTelemetry ?? 0)} / {numberFormatter.format(liveSnapshot?.telemetry.totalTripsWithTelemetry ?? 0)}
+                  {normalizedTelemetry.telemetryCoverageLabel}: {numberFormatter.format(liveSnapshot?.telemetry.freshTripsWithTelemetry ?? 0)} / {numberFormatter.format(liveSnapshot?.telemetry.totalTripsWithTelemetry ?? 0)}
                 </div>
                 <div style={{ color: C.textSub, fontSize: '0.84rem' }}>
-                  {telemetryHeartbeatLabel}: {latestHeartbeatValue}
+                  {normalizedTelemetry.telemetryHeartbeatLabel}: {latestHeartbeatValue}
                 </div>
                 <div style={{ color: C.textSub, fontSize: '0.84rem' }}>
                   {ar ? 'حركة المرور' : 'Traffic feed'}: {liveSnapshot?.traffic.enabled ? (ar ? `متصل عبر Google Routes (${numberFormatter.format(liveSnapshot.traffic.liveCorridors)} ممرات)` : `Connected via Google Routes (${liveSnapshot.traffic.liveCorridors} corridors)`) : (ar ? 'غير متاح حتى تهيئة مفتاح خرائط حقيقي' : 'Unavailable until a real Maps key is configured')}

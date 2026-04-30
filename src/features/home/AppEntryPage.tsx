@@ -196,7 +196,7 @@ export default function AppEntryPage() {
                 }}
               >
                 <ShieldCheck size={14} color={C.gold} />
-                Routes plus cost sharing is the moat
+                Trusted shared movement across Jordan
               </span>
             </div>
 
@@ -210,7 +210,7 @@ export default function AppEntryPage() {
                 textTransform: 'uppercase',
               }}
             >
-              Move smarter with Wasel
+              Wasel for daily movement
             </div>
 
             <h1
@@ -233,16 +233,15 @@ export default function AppEntryPage() {
                   backgroundClip: 'text',
                 }}
               >
-                The operating system of movement in Jordan
+                Find a ride, move a package, and trust the network
               </span>
               <span style={{ display: 'block', color: C.text, marginTop: 10 }}>
-                routes, intelligence, and shared economics in one network
+                one premium movement layer built for Jordan
               </span>
             </h1>
 
             <p style={{ maxWidth: 760, fontSize: '1.02rem', lineHeight: 1.82, color: C.muted, margin: 0 }}>
-              {category.promise} Instead of competing as another ride app, Wasel now owns corridors,
-              predicts demand, auto-groups riders, opens logistics and service capacity, and keeps learning how Jordan moves.
+              Wasel helps people book smarter rides, gives drivers better route demand, and turns the same trusted network into parcel and repeat-use capacity.
             </p>
 
             <div
@@ -256,10 +255,10 @@ export default function AppEntryPage() {
               }}
             >
               {[
-                { value: '12', label: 'priority corridors', tone: C.cyan },
-                { value: '4', label: 'movement layers', tone: C.green },
-                { value: '5', label: 'marketplace nodes', tone: C.gold },
-                { value: `${membership.movementCredits}`, label: 'movement credits ready', tone: C.cyan },
+                { value: '12', label: 'live corridors', tone: C.cyan },
+                { value: '4', label: 'core services', tone: C.green },
+                { value: '5', label: 'network nodes', tone: C.gold },
+                { value: `${membership.movementCredits}`, label: 'credits available', tone: C.cyan },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -316,7 +315,7 @@ export default function AppEntryPage() {
                   cursor: 'pointer',
                 }}
               >
-                Open Movement OS
+                View live network
               </button>
             </div>
           </motion.div>
@@ -352,7 +351,7 @@ export default function AppEntryPage() {
                   Wasel Brain
                 </div>
                 <div style={{ marginTop: 4, fontSize: '1.15rem', fontWeight: 900 }}>
-                  Demand is predicted before a rider searches
+                  The best next corridor appears before demand peaks
                 </div>
               </div>
             </div>
@@ -382,7 +381,7 @@ export default function AppEntryPage() {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ color: C.green, fontWeight: 900, fontSize: '1.1rem' }}>{corridor.savingsPercent}%</div>
-                      <div style={{ color: C.soft, fontSize: '0.72rem' }}>cheaper than solo movement</div>
+                      <div style={{ color: C.soft, fontSize: '0.72rem' }}>lower than solo travel</div>
                     </div>
                   </div>
                   <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -398,12 +397,12 @@ export default function AppEntryPage() {
             </div>
 
             <div style={{ marginTop: 16, borderRadius: 18, padding: '16px 18px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.borderSoft}` }}>
-              <div style={{ color: C.soft, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Current daily route</div>
+              <div style={{ color: C.soft, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Daily proof point</div>
               <div style={{ marginTop: 8, fontWeight: 800, fontSize: '1rem' }}>
                 {membership.dailyRoute?.label ?? 'Amman -> Irbid'}
               </div>
               <div style={{ marginTop: 6, color: C.muted, fontSize: '0.82rem', lineHeight: 1.7 }}>
-                Credits, subscriptions, and repeat corridors are what make Wasel sticky enough to become a movement habit.
+                Repeat routes, credits, and reliable timing are what turn Wasel from a useful app into a daily habit.
               </div>
             </div>
           </motion.div>
@@ -416,7 +415,7 @@ export default function AppEntryPage() {
           style={{ marginTop: 34 }}
         >
           <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.cyan }}>
-            Movement layers
+            How Wasel works
           </div>
           <div className="landing-layer-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginTop: 14 }}>
             {movementLayers.map((layer) => {
@@ -463,7 +462,7 @@ export default function AppEntryPage() {
           style={{ marginTop: 22 }}
         >
           <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.gold }}>
-            Route intelligence engine
+            Live corridor intelligence
           </div>
           <div className="landing-corridor-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginTop: 14 }}>
             {featuredCorridors.map((corridor) => (
@@ -486,7 +485,7 @@ export default function AppEntryPage() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ color: C.cyan, fontWeight: 900, fontSize: '1.05rem' }}>{corridor.sharedPriceJod} JOD</div>
-                    <div style={{ color: C.soft, fontSize: '0.72rem' }}>shared seat target</div>
+                    <div style={{ color: C.soft, fontSize: '0.72rem' }}>typical shared fare</div>
                   </div>
                 </div>
 

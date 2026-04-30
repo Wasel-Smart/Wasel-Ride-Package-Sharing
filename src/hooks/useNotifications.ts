@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
+import { useLocalAuth } from '../contexts/LocalAuth';
 import { notificationsAPI } from '../services/notifications.js';
 
 export interface Notification {
@@ -62,15 +63,17 @@ function writeArchivedNotificationIds(userId: string | undefined, ids: string[])
 
 export function useNotifications() {
   const { user } = useAuth();
+  const { user: localUser } = useLocalAuth();
+  const effectiveUserId = user?.id ?? localUser?.id;
   const queryClient = useQueryClient();
   const [isOnline, setIsOnline] = useState(() => (
     typeof navigator === 'undefined' ? true : navigator.onLine
   ));
-  const [archivedIds, setArchivedIds] = useState<string[]>(() => readArchivedNotificationIds(user?.id));
+  const [archivedIds, setArchivedIds] = useState<string[]>(() => readArchivedNotificationIds(effectiveUserId));
 
   useEffect(() => {
-    setArchivedIds(readArchivedNotificationIds(user?.id));
-  }, [user?.id]);
+    setArchivedIds(readArchivedNotificationIds(effectiveUserId));
+  }, [effectiveUserId]);
 
   const {
     data: notifications = [],
@@ -79,15 +82,13 @@ export function useNotifications() {
     error,
     refetch,
   } = useQuery({
-    queryKey: notificationsQueryKey(user?.id),
+    queryKey: notificationsQueryKey(effectiveUserId),
     queryFn: async () => {
-      if (!user) return [];
-
       const response = await notificationsAPI.getNotifications();
       const items = Array.isArray(response.notifications) ? response.notifications : [];
       return items.map((item: RawNotification) => normalizeNotification(item));
     },
-    enabled: !!user,
+    enabled: Boolean(effectiveUserId),
     staleTime: 30 * 1000,
     refetchInterval: 30 * 1000,
     refetchIntervalInBackground: false,
@@ -119,7 +120,7 @@ export function useNotifications() {
       : null;
 
   const markAsRead = async (notificationId: string) => {
-    const queryKey = notificationsQueryKey(user?.id);
+    const queryKey = notificationsQueryKey(effectiveUserId);
     const previous = queryClient.getQueryData<Notification[]>(queryKey) ?? [];
 
     queryClient.setQueryData<Notification[]>(queryKey, (current = []) => (
@@ -142,7 +143,7 @@ export function useNotifications() {
     const unread = notifications.filter((notification) => !notification.read && !archivedIds.includes(notification.id));
     if (unread.length === 0) return;
 
-    const queryKey = notificationsQueryKey(user?.id);
+    const queryKey = notificationsQueryKey(effectiveUserId);
     const previous = queryClient.getQueryData<Notification[]>(queryKey) ?? [];
 
     queryClient.setQueryData<Notification[]>(queryKey, (current = []) => (
@@ -164,7 +165,7 @@ export function useNotifications() {
     setArchivedIds((current) => {
       if (current.includes(notificationId)) return current;
       const next = [...current, notificationId];
-      writeArchivedNotificationIds(user?.id, next);
+      writeArchivedNotificationIds(effectiveUserId, next);
       return next;
     });
     toast.success('Notification archived');
@@ -172,16 +173,16 @@ export function useNotifications() {
 
   const restoreArchivedNotifications = () => {
     setArchivedIds([]);
-    writeArchivedNotificationIds(user?.id, []);
+    writeArchivedNotificationIds(effectiveUserId, []);
     toast.success('Archived notifications restored');
   };
 
   const createNotification = async (data: Parameters<typeof notificationsAPI.createNotification>[0]) => {
-    if (!user) return;
+    if (!effectiveUserId) return;
 
     try {
       await notificationsAPI.createNotification(data);
-      await queryClient.invalidateQueries({ queryKey: notificationsQueryKey(user.id) });
+      await queryClient.invalidateQueries({ queryKey: notificationsQueryKey(effectiveUserId) });
     } catch (error) {
       toast.error('Failed to send notification');
       throw error;

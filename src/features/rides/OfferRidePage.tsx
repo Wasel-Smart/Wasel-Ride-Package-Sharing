@@ -24,7 +24,6 @@ import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence
 import {
   buildDriverRoutePlan,
   getMarketplaceNodes,
-  getWaselCategoryPosition,
 } from '../../config/wasel-movement-network';
 import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { OfferRideFormPanel } from './components/OfferRideFormPanel';
@@ -46,7 +45,6 @@ export function OfferRidePage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [draftMessage, setDraftMessage] = useState<string | null>('Draft autosaves on this device.');
 
-  const category = useMemo(() => getWaselCategoryPosition(), []);
   const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(2, 5), []);
   const offerGate = evaluateTrustCapability(user, 'offer_ride');
   const packageGate = evaluateTrustCapability(user, 'carry_packages');
@@ -165,21 +163,21 @@ export function OfferRidePage() {
       <PageShell>
         <SectionHead
           emoji="Supply"
-          title="Open Route Supply"
-          titleAr="Route Supply"
-          sub="Publish seats, package space, and corridor capacity in one flow."
+          title="Offer a Ride"
+          titleAr="اعرض مشوار"
+          sub="Publish seats, price, and package space in one post."
           color={DS.blue}
         />
 
         <CoreExperienceBanner
-          title="One route post should unlock people, goods, and service demand together."
-          detail={`${category.promise} Drivers are no longer posting isolated rides. They are opening supply on a route graph that Wasel Brain can price, fill, and reuse across the network.`}
+          title="Open one route and let riders find it fast."
+          detail="Drivers should be able to post a lane once, see the suggested fare, and fill the trip with clear demand signals before departure."
           tone={DS.blue}
         />
 
         {(!offerGate.allowed || (form.acceptsPackages && !packageGate.allowed)) && (
           <div style={{ marginBottom: 18, background: 'rgba(240,168,48,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: '#fff' }}>
-            <div style={{ fontWeight: 800, marginBottom: 6 }}>Trust readiness required</div>
+            <div style={{ fontWeight: 800, marginBottom: 6 }}>Finish trust checks first</div>
             <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>{(!offerGate.allowed ? offerGate.reason : packageGate.reason) ?? 'Complete account checks before opening supply.'}</div>
             <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
               {driverReadiness.steps.filter((step) => !step.complete).slice(0, 3).map((step) => (
@@ -219,7 +217,7 @@ export function OfferRidePage() {
             {
               label: 'Live demand signal',
               value: selectedSignal ? `${selectedSignal.forecastDemandScore}/100` : driverPlan ? `${driverPlan.corridor.predictedDemandScore}/100` : String(networkStats.ridesPosted),
-              detail: selectedSignal ? `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings | ${selectedSignal.livePackages} packages` : driverPlan ? 'Wasel Brain route confidence score' : 'Connected network activity',
+              detail: selectedSignal ? `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings | ${selectedSignal.livePackages} packages` : driverPlan ? 'Demand score on this route' : 'Connected network activity',
               color: DS.blue,
             },
           ].map((item) => (
@@ -238,9 +236,9 @@ export function OfferRidePage() {
                 <Brain size={18} color={DS.cyan} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Wasel Brain playbook</div>
+                <div style={{ color: '#fff', fontWeight: 800 }}>Route guidance</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                  The route engine should optimize driver earnings before a seat goes live.
+                  Price, timing, and fill-rate guidance before you post.
                 </div>
               </div>
             </div>
@@ -263,9 +261,9 @@ export function OfferRidePage() {
                 <Network size={18} color={DS.green} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Marketplace pull</div>
+                <div style={{ color: '#fff', fontWeight: 800 }}>Extra earning on this route</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                  Route supply can now serve more than passengers.
+                  Packages and business demand can add margin once the lane is trusted.
                 </div>
               </div>
             </div>
@@ -283,22 +281,22 @@ export function OfferRidePage() {
         <div className="sp-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
           {[
             {
-              title: 'Business lanes',
-              detail: 'Recurring employee seats, managed invoicing, and return-lane packages now sit on the same corridor you are opening.',
+              title: 'Company demand',
+              detail: 'Recurring employee seats, managed invoicing, and return-lane packages can attach to this route once it proves reliable.',
               action: () => nav('/app/services/corporate'),
               label: 'Open corporate workflow',
             },
             {
-              title: 'Service providers',
-              detail: 'Technicians, installers, and mobile crews can attach dispatch windows and backhauls to this route once density is proven.',
+              title: 'Field teams',
+              detail: 'Technicians, installers, and mobile crews can use this lane when the timing and trust record are strong.',
               action: () => nav('/app/services/corporate'),
               label: 'Open service workflow',
             },
             {
-              title: 'Corridor proof',
+              title: 'Live proof',
               detail: selectedSignal
                 ? `This route already shows ${selectedSignal.routeOwnershipScore}/100 ownership and ${selectedSignal.priceQuote.finalPriceJod} JOD shared pricing.`
-                : 'Wasel turns posted supply into proof once searches, bookings, and demand alerts accumulate.',
+                : 'Searches, bookings, and saved alerts turn a new route into a proven lane.',
               action: () => nav('/app/analytics'),
               label: 'Open corridor proof',
             },
@@ -323,7 +321,7 @@ export function OfferRidePage() {
         {submitted ? (
           <div style={{ background: DS.card, borderRadius: r(20), padding: '60px 28px', textAlign: 'center', border: `1px solid ${DS.border}` }}>
             <div style={{ fontSize: '4rem', marginBottom: 20 }}>OK</div>
-            <h2 style={{ color: DS.green, fontWeight: 900, fontSize: '1.5rem', margin: '0 0 12px' }}>Route supply is live</h2>
+            <h2 style={{ color: DS.green, fontWeight: 900, fontSize: '1.5rem', margin: '0 0 12px' }}>Ride offer is live</h2>
             <p style={{ color: DS.sub }}>
               Your route from <strong style={{ color: '#fff' }}>{form.from}</strong> to <strong style={{ color: '#fff' }}>{form.to}</strong> is now part of the Wasel movement network.
             </p>

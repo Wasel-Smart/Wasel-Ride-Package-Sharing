@@ -1,4 +1,6 @@
-export const walletText = {
+import { normalizeTextTree } from '../../utils/textEncoding';
+
+const walletTextSource = {
   en: {
     walletTitle: 'Wasel Wallet',
     balance: 'Available Balance',
@@ -61,6 +63,8 @@ export const walletText = {
     escrow: 'Active Escrows',
     held: 'Held',
     processing: 'Processing...',
+    loadingTitle: 'Loading your wallet',
+    loadingDescription: 'Bringing in your balance, rewards, and recent activity.',
     pinDigits: 'Enter 4-digit PIN',
     carbonSaved: 'CO2 Saved',
     totalTx: 'Total Transactions',
@@ -155,6 +159,8 @@ export const walletText = {
     escrow: 'عمليات الضمان النشطة',
     held: 'محجوز',
     processing: 'جارٍ المعالجة...',
+    loadingTitle: 'جارٍ تحميل المحفظة',
+    loadingDescription: 'نجمع الرصيد والمكافآت وآخر النشاطات.',
     pinDigits: 'أدخل رمزاً من 4 أرقام',
     carbonSaved: 'انبعاثات CO2 التي تم توفيرها',
     totalTx: 'إجمالي المعاملات',
@@ -165,7 +171,7 @@ export const walletText = {
     walletUnavailableTitle: 'المحفظة قيد الإطلاق',
     walletUnavailableDescription: 'نجهز تدفق المدفوعات والأمان والتسوية. أكمل إعداد الخلفية لرؤية تجربة المحفظة الكاملة.',
     walletUnavailableHint: 'تجربة مالية أكثر تنسيقاً قريباً',
-    rewardsEmptyHint: 'أكمل رحلات لربح مكافآت',
+    rewardsEmptyHint: 'أكمل رحلات لتربح مكافآت',
     availableLabel: 'الرصيد المتاح',
     freeLabel: 'مجاني',
     userIdPlaceholder: 'معرف المستلم',
@@ -188,3 +194,5 @@ export const walletText = {
     pinSetSuccess: 'تم تعيين PIN بنجاح',
   },
 } as const;
+
+export const walletText = normalizeTextTree(walletTextSource);

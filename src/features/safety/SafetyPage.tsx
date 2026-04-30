@@ -1,137 +1,117 @@
-/**
- * SafetyPage — /app/safety
- * ID verification · SOS · Insurance · Cultural intelligence
- *
- * Fix: Protected now calls useIframeSafeNavigate so unauthenticated
- * users are actually redirected to /app/auth instead of stuck on
- * the lock screen forever.
- */
-import { useEffect, type ReactNode } from 'react';
-import { useLocalAuth } from '../../contexts/LocalAuth';
-import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { PAGE_DS } from '../../styles/wasel-page-theme';
-
-const DS = PAGE_DS;
-const r = (px = 12) => `${px}px`;
-
-function Protected({ children }: { children: ReactNode }) {
-  const { user } = useLocalAuth();
-  const navigate = useIframeSafeNavigate();
-
-  useEffect(() => {
-    if (!user) {
-      navigate('/app/auth?returnTo=/app/safety');
-    }
-  }, [user, navigate]);
-
-  if (!user) {
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '60vh', gap: 16, background: DS.bg,
-      }}>
-        <div style={{ fontSize: '3rem' }}>🔒</div>
-        <div style={{ color: DS.sub, fontFamily: DS.F }}>Redirecting to sign in…</div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-}
+import { Headphones, Shield, ShieldCheck, Siren, Umbrella } from 'lucide-react';
+import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
 
 const SAFETY_FEATURES = [
   {
-    emoji: '🪪',
-    title: 'Gov-ID Verification',
-    desc: 'All drivers verified with Jordan Sanad eKYC system',
+    icon: ShieldCheck,
+    title: 'Verified identity',
+    desc: 'Driver identity, account checks, and trust rules are reviewed before higher-risk actions unlock.',
     color: DS.cyan,
   },
   {
-    emoji: '🆘',
-    title: 'SOS Emergency',
-    desc: 'One tap to share location with emergency contacts',
+    icon: Siren,
+    title: 'Emergency support',
+    desc: 'SOS shortcuts, live trip context, and emergency-contact sharing are ready during active trips.',
     color: '#EF4444',
   },
   {
-    emoji: '📋',
-    title: 'Trip Insurance',
-    desc: 'Up to JOD 1,000 coverage per trip',
+    icon: Umbrella,
+    title: 'Trip protection',
+    desc: 'Coverage, handoff records, and support history make incidents easier to resolve with proof.',
     color: DS.gold,
   },
   {
-    emoji: '🕌',
-    title: 'Cultural Intelligence',
-    desc: 'Prayer stops, gender preferences, Ramadan mode',
-    color: DS.blue,
+    icon: Shield,
+    title: 'Comfort settings',
+    desc: 'Gender preferences, prayer-stop context, and calmer handoff choices help riders feel in control.',
+    color: DS.green,
   },
 ];
 
 export default function SafetyPage() {
   return (
     <Protected>
-      <div style={{ minHeight: '100vh', background: DS.bg, fontFamily: DS.F }}>
-        <div style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 16px' }}>
+      <PageShell>
+        <SectionHead
+          emoji="Safe"
+          title="Safety Center"
+          titleAr="مركز الأمان"
+          sub="See the protections that support every ride, package handoff, and scheduled trip."
+          color={DS.green}
+        />
 
-          {/* Header */}
-          <div style={{
-            background: DS.gradNav, borderRadius: r(20), padding: '24px',
-            marginBottom: 20, border: `1px solid ${DS.green}18`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{
-                width: 56, height: 56, borderRadius: r(16),
-                background: `${DS.green}18`, border: `1.5px solid ${DS.green}30`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '1.9rem',
-              }}>
-                🛡️
-              </div>
-              <div>
-                <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>
-                  Safety Center
-                </h1>
-                <p style={{ color: DS.sub, margin: '4px 0 0', fontSize: '0.82rem' }}>
-                  ID-verified drivers · SOS · Trip insurance
-                </p>
-              </div>
+        <CoreExperienceBanner
+          title="Safety should be visible before a trip starts."
+          detail="Wasel brings identity checks, emergency support, trip protection, and comfort settings into one calm surface so trust is clear before you book."
+          tone={DS.green}
+        />
+
+        <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
+          {[
+            { label: 'Verified accounts', value: 'Required', detail: 'Before higher-trust driver actions unlock', color: DS.green },
+            { label: 'Emergency layer', value: 'Live', detail: 'Trip-aware support and SOS access', color: '#EF4444' },
+            { label: 'Coverage', value: 'Included', detail: 'Protection and support records per trip', color: DS.gold },
+            { label: 'Comfort tools', value: 'Active', detail: 'Preferences and handoff clarity built in', color: DS.cyan },
+          ].map((item) => (
+            <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(18), border: `1px solid ${DS.border}`, padding: '18px 18px 16px' }}>
+              <div style={{ color: item.color, fontWeight: 900, fontSize: '1.16rem', marginBottom: 4 }}>{item.value}</div>
+              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>{item.label}</div>
+              <div style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.45, marginTop: 4 }}>{item.detail}</div>
             </div>
-          </div>
-
-          {/* Info banner */}
-          <div style={{
-            background: `${DS.green}08`, border: `1px solid ${DS.green}20`,
-            borderRadius: r(18), padding: '16px 20px', marginBottom: 20,
-          }}>
-            <div style={{ color: DS.green, fontWeight: 700, fontSize: '0.9rem', marginBottom: 4 }}>
-              Trust should feel built in, not added later
-            </div>
-            <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>
-              Safety is presented here as a system-wide product layer: verified identity,
-              emergency support, insurance, and cultural comfort cues that support every
-              ride, package, and scheduled trip.
-            </div>
-          </div>
-
-          {/* Feature cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            {SAFETY_FEATURES.map(f => (
-              <div key={f.title} style={{
-                background: DS.card, borderRadius: r(20), padding: '24px 22px',
-                border: `1px solid ${DS.border}`,
-              }}>
-                <div style={{ fontSize: '2rem', marginBottom: 12 }}>{f.emoji}</div>
-                <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 8px', fontSize: '1rem' }}>
-                  {f.title}
-                </h3>
-                <p style={{ color: DS.sub, fontSize: '0.82rem', margin: 0, lineHeight: 1.6 }}>
-                  {f.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-
+          ))}
         </div>
-      </div>
+
+        <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 14, marginBottom: 18 }}>
+          <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
+            <div style={{ color: '#fff', fontWeight: 900, marginBottom: 10 }}>What riders should notice first</div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              {[
+                'Trust signals should be easy to scan before payment, not hidden after a trip starts.',
+                'The safest route is the one with a clear driver, clear handoff, and clear support path.',
+                'Safety language should stay calm, practical, and specific instead of sounding like policy filler.',
+              ].map((line) => (
+                <div key={line} style={{ background: DS.card2, borderRadius: r(14), border: `1px solid ${DS.border}`, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.6 }}>
+                  {line}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <Headphones size={18} color={DS.cyan} />
+              <div style={{ color: '#fff', fontWeight: 900 }}>Support standards</div>
+            </div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              {[
+                { label: 'Identity checks', value: 'Account and trust rules gate sensitive actions' },
+                { label: 'During-trip help', value: 'Emergency access stays close to the active trip context' },
+                { label: 'After-trip proof', value: 'Tickets, notifications, and handoff events support resolution' },
+              ].map((item) => (
+                <div key={item.label} style={{ background: DS.card2, borderRadius: r(14), border: `1px solid ${DS.border}`, padding: '12px 14px' }}>
+                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem' }}>{item.label}</div>
+                  <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 4 }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          {SAFETY_FEATURES.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <div key={feature.title} style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
+                <div style={{ width: 48, height: 48, borderRadius: r(14), background: `${feature.color}14`, border: `1px solid ${feature.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                  <Icon size={22} color={feature.color} />
+                </div>
+                <div style={{ color: '#fff', fontWeight: 800, fontSize: '1rem', marginBottom: 8 }}>{feature.title}</div>
+                <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>{feature.desc}</div>
+              </div>
+            );
+          })}
+        </div>
+      </PageShell>
     </Protected>
   );
 }

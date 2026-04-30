@@ -6,7 +6,8 @@ export const demoUser = {
   id: 'demo-e2e-user',
   name: 'Demo Rider',
   email: 'demo.rider@wasel.jo',
-  role: 'rider',
+  phone: '+962790000999',
+  role: 'both',
   balance: 145.75,
   rating: 4.8,
   trips: 18,
@@ -17,8 +18,9 @@ export const demoUser = {
   joinedAt: '2026-03-01',
   emailVerified: true,
   phoneVerified: true,
+  twoFactorEnabled: false,
   trustScore: 92,
-  backendMode: 'demo',
+  backendMode: 'supabase',
 };
 
 export async function seedDemoSession(page: Page) {

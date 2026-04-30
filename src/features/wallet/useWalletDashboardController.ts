@@ -18,12 +18,13 @@ export function useWalletDashboardController() {
   const navigate = useIframeSafeNavigate();
   const isRTL = language === 'ar';
   const t = walletText[isRTL ? 'ar' : 'en'];
-  const effectiveUserId = user?.id ?? localUser?.id ?? '';
+  const effectiveUserId = localUser?.id ?? user?.id ?? '';
   const runtimeMode = resolveWalletRuntimeMode({
-    localUser,
+    hasUser: Boolean(localUser || user),
     backendReady: WALLET_BACKEND_READY,
   });
-  const walletUnavailable = runtimeMode === 'unavailable';
+  const [walletError, setWalletError] = useState<string | null>(null);
+  const walletUnavailable = runtimeMode === 'unavailable' || walletError === 'unavailable';
   const shouldRedirectToAuth = runtimeMode === 'redirect';
 
   const [tab, setTab] = useState('overview');
@@ -54,11 +55,21 @@ export function useWalletDashboardController() {
     if (shouldRedirectToAuth) {
       setWalletData(null);
       setInsights(null);
+      setWalletError(null);
+      setLoading(false);
+      return;
+    }
+
+    if (!effectiveUserId) {
+      setWalletData(null);
+      setInsights(null);
+      setWalletError('unavailable');
       setLoading(false);
       return;
     }
 
     try {
+      setWalletError(null);
       const data = await walletApi.getWallet(effectiveUserId);
       setWalletData(data);
       setAutoTopUpEnabled(data.wallet.autoTopUp || false);
@@ -68,11 +79,11 @@ export function useWalletDashboardController() {
       console.error('[Wallet] fetch error:', err);
       setWalletData(null);
       setInsights(null);
-      toast.error(t.walletLoadError);
+      setWalletError('unavailable');
     } finally {
       setLoading(false);
     }
-  }, [effectiveUserId, shouldRedirectToAuth, t.walletLoadError]);
+  }, [effectiveUserId, shouldRedirectToAuth]);
 
   const fetchInsights = useCallback(async () => {
     if (shouldRedirectToAuth) {
@@ -105,10 +116,13 @@ export function useWalletDashboardController() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
+    setLoading(true);
     await fetchWallet();
     if (tab === 'insights') await fetchInsights();
     setRefreshing(false);
-    toast.success(t.refreshed);
+    if (!walletUnavailable) {
+      toast.success(t.refreshed);
+    }
   };
 
   const handleTopUp = async () => {

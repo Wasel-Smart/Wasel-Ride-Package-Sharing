@@ -209,14 +209,14 @@ export function BusPage() {
   return (
     <Protected>
       <PageShell>
-        <SectionHead emoji="🚌" title="Wasel Bus" sub="Official Jordan intercity schedules, route-aware booking, and provider-backed fare visibility." color={DS.green} />
-        <CoreExperienceBanner title="Jordan-wide bus schedules with provider-backed fares" detail="Wasel Bus now uses official intercity coach schedules as the baseline network across Jordan, while still allowing live inventory to take over when a real bus feed is available." tone={DS.green} />
+        <SectionHead emoji="Bus" title="Book a Bus" sub="Compare official schedules, fares, and open seats across Jordan." color={DS.green} />
+        <CoreExperienceBanner title="Official schedules first, live operator inventory when available." detail="Choose a corridor once and Wasel shows the best verified departures, fares, and fallback options for the same trip." tone={DS.green} />
 
         <div style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', border: `1px solid ${DS.border}`, borderRadius: r(22), padding: 18, marginBottom: 18, boxShadow: '0 14px 34px rgba(0,0,0,0.18)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
             <div>
               <div style={{ color: '#fff', fontWeight: 900, letterSpacing: '-0.02em' }}>Plan your trip</div>
-              <div style={{ color: DS.sub, fontSize: '0.82rem', marginTop: 4 }}>Pick your cities first so live inventory and fallback schedules stay relevant.</div>
+              <div style={{ color: DS.sub, fontSize: '0.82rem', marginTop: 4 }}>Choose cities and date to load the most relevant departures first.</div>
             </div>
             <button onClick={() => { setOrigin(destination); setDestination(origin); setBookingComplete(false); setBookingSource(null); }} type="button" style={{ height: 42, padding: '0 16px', borderRadius: '99px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: '0 8px 18px rgba(0,0,0,0.14)' }}>
               <ArrowLeftRight size={16} />
@@ -269,7 +269,7 @@ export function BusPage() {
           ))}
         </div>
 
-        {(routesLoading || routesInfo) && <div style={{ marginBottom: 16, background: DS.card2, border: `1px solid ${DS.border}`, borderRadius: r(14), padding: '12px 14px', color: DS.sub, fontSize: '0.8rem' }}>{routesLoading ? 'Syncing live bus routes...' : routesInfo}</div>}
+        {(routesLoading || routesInfo) && <div style={{ marginBottom: 16, background: DS.card2, border: `1px solid ${DS.border}`, borderRadius: r(14), padding: '12px 14px', color: DS.sub, fontSize: '0.8rem' }}>{routesLoading ? 'Refreshing live departures...' : routesInfo}</div>}
 
         <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr', gap: 16, alignItems: 'start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

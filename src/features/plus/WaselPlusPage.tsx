@@ -21,7 +21,6 @@ import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence
 import {
   getFeaturedCorridors,
   getHabitLoopPrograms,
-  getWaselCategoryPosition,
 } from '../../config/wasel-movement-network';
 
 function tierLabel(tier: MovementMembershipSnapshot['loyaltyTier']) {
@@ -34,7 +33,6 @@ function tierLabel(tier: MovementMembershipSnapshot['loyaltyTier']) {
 export default function WaselPlusPage() {
   const nav = useIframeSafeNavigate();
   const { user } = useLocalAuth();
-  const category = useMemo(() => getWaselCategoryPosition(), []);
   const habitPrograms = useMemo(() => getHabitLoopPrograms(), []);
   const featuredCorridors = useMemo(() => getFeaturedCorridors(4), []);
   const [membership, setMembership] = useState(() => getMovementMembershipSnapshot());
@@ -86,16 +84,16 @@ export default function WaselPlusPage() {
       <PageShell>
         <SectionHead
           emoji="Plus"
-          title="My Movement"
-          titleAr="حركتي"
-          sub="Credits, commuter passes, and loyalty programs that make Wasel the default way to move."
+          title="Wasel Plus"
+          titleAr="واصل بلس"
+          sub="Credits, commuter passes, and reminders for your daily routes."
           color={DS.gold}
           action={{ label: 'Find a route', onClick: () => nav('/app/find-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Behavior lock-in happens when every route gets easier, cheaper, and more automatic."
-          detail={`${category.promise} Wasel Plus is no longer just a discount plan. It is the habit loop layer that ties credits, commuter passes, and route intelligence into one movement membership.`}
+          title="Save more when your daily routes stay in one place."
+          detail="Wasel Plus brings credits, passes, and reminders together so repeat movement feels cheaper and easier every week."
           tone={DS.gold}
         />
 
@@ -118,10 +116,10 @@ export default function WaselPlusPage() {
           <div style={{ background: DS.card, borderRadius: r(20), padding: '24px', border: `1px solid ${DS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <BadgeDollarSign size={18} color={DS.gold} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Movement membership</div>
+              <div style={{ color: '#fff', fontWeight: 900 }}>Your membership</div>
             </div>
             <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.65, marginBottom: 18 }}>
-              Membership should make Wasel the cheapest and smartest default way to move. Credits increase with every useful action, commuter passes tie users to strategic corridors, and savings improve when the network gets denser.
+              Membership should make daily travel simpler. Credits grow with useful activity, commuter passes reduce repeat costs, and reminders keep your usual route easy to reopen.
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {[ 
@@ -130,7 +128,7 @@ export default function WaselPlusPage() {
                   : 'Activate Wasel Plus to start stacking credits, route savings, and priority matching.',
                 membership.commuterPassRoute
                   ? `Your commuter pass is pinned to ${membership.commuterPassRoute.label} at about ${membership.commuterPassRoute.subscriptionPriceJod} JOD for dense monthly movement.`
-                  : 'Choose a commuter corridor to turn repeat movement into a habit loop.',
+                  : 'Choose a commuter corridor to make repeat travel easier to reopen.',
                 membership.dailyRoute
                   ? `Daily route memory is centered on ${membership.dailyRoute.label}, currently ${dailySignal?.priceQuote.finalPriceJod ?? membership.dailyRoute.sharedPriceJod} JOD after credits and ${membership.dailyRoute.savingsPercent}% cheaper than solo movement when shared demand is healthy.`
                   : 'Once you start moving more often, Wasel will remember your preferred corridor.',
@@ -148,7 +146,7 @@ export default function WaselPlusPage() {
           <div style={{ background: DS.card, borderRadius: r(20), padding: '24px', border: `1px solid ${DS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <Brain size={18} color={DS.cyan} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Habit loop programs</div>
+              <div style={{ color: '#fff', fontWeight: 900 }}>Membership benefits</div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {habitPrograms.map((program) => (
@@ -207,7 +205,7 @@ export default function WaselPlusPage() {
           <div style={{ background: DS.card, borderRadius: r(20), padding: '24px', border: `1px solid ${DS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <Route size={18} color={DS.cyan} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Recurring route suggestions</div>
+              <div style={{ color: '#fff', fontWeight: 900 }}>Suggested recurring routes</div>
             </div>
             {retentionMessage ? (
               <div style={{ marginBottom: 12, borderRadius: r(12), border: `1px solid ${DS.cyan}35`, background: `${DS.cyan}12`, padding: '11px 12px', color: '#fff', fontSize: '0.78rem' }}>
@@ -266,10 +264,10 @@ export default function WaselPlusPage() {
         <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <Sparkles size={18} color={DS.blue} />
-            <div style={{ color: '#fff', fontWeight: 900 }}>Why this creates lock-in</div>
+            <div style={{ color: '#fff', fontWeight: 900 }}>Why Plus matters</div>
           </div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.65 }}>
-            Once users have credits, a saved corridor, a commuter pass, and lower shared-route pricing, they stop thinking in terms of individual rides. They start thinking in terms of movement managed by Wasel, which is exactly the behavior loop a category-defining platform needs.
+            Credits, saved routes, and commuter passes make the next trip faster to book and easier to justify. That is what turns occasional riders into regular Wasel users.
           </div>
         </div>
       </PageShell>

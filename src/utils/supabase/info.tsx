@@ -8,6 +8,7 @@
 
 const DEFAULT_SUPABASE_URL = 'https://djccmatubyyudeosrngm.supabase.co';
 const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE';
+const FORCE_LOCAL_E2E_AUTH = (import.meta.env.VITE_E2E_LOCAL_AUTH as string | undefined) === 'true';
 
 const PLACEHOLDER_MARKERS = [
   'your-project.supabase.co',
@@ -32,17 +33,25 @@ function pickConfiguredValue(...candidates: Array<string | undefined>): string {
 }
 
 export const publicSupabaseUrl = pickConfiguredValue(
-  import.meta.env.VITE_SUPABASE_URL as string | undefined,
-  import.meta.env.VITE_SUPABASE_PROJECT_URL as string | undefined,
-  import.meta.env.VITE_PUBLIC_SUPABASE_URL as string | undefined,
-  DEFAULT_SUPABASE_URL,
+  ...(FORCE_LOCAL_E2E_AUTH
+    ? []
+    : [
+        import.meta.env.VITE_SUPABASE_URL as string | undefined,
+        import.meta.env.VITE_SUPABASE_PROJECT_URL as string | undefined,
+        import.meta.env.VITE_PUBLIC_SUPABASE_URL as string | undefined,
+        DEFAULT_SUPABASE_URL,
+      ]),
 );
 
 export const publicAnonKey = pickConfiguredValue(
-  import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined,
-  import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY as string | undefined,
-  DEFAULT_SUPABASE_ANON_KEY,
+  ...(FORCE_LOCAL_E2E_AUTH
+    ? []
+    : [
+        import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
+        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined,
+        import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY as string | undefined,
+        DEFAULT_SUPABASE_ANON_KEY,
+      ]),
 );
 
 export const projectId: string = publicSupabaseUrl
