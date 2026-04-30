@@ -1,0 +1,27 @@
+User-agent: *
+Allow: /
+Allow: /app/privacy
+Allow: /app/terms
+
+# Block authenticated and operational application surfaces from indexing.
+Disallow: /app/
+
+# Block legacy redirect aliases and common sensitive paths.
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /home
+Disallow: /post-ride
+Disallow: /booking-requests
+Disallow: /awasel/send
+Disallow: /awasel/track
+Disallow: /payments
+Disallow: /legal/privacy
+Disallow: /legal/terms
+Disallow: /.env
+Disallow: /.git/
+Disallow: /node_modules/
+Disallow: /src/
+
+Crawl-delay: 2
+
+Sitemap: https://wasel14.online/sitemap.xml

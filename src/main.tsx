@@ -9,7 +9,7 @@ import {
   getLocaleForLanguage,
 } from './utils/locale';
 import { initializeThemeFromStorage } from './utils/theme';
-import { enforceDemoModeSafety, validateEnvironmentConfig } from './utils/environment';
+import { enforceSyntheticDataSafety, validateEnvironmentConfig } from './utils/environment';
 import { scheduleDeferredTask } from './utils/runtimeScheduling';
 import {
   installNonBlockingFonts,
@@ -72,7 +72,7 @@ installNonBlockingFonts();
 // Validate environment configuration early
 try {
   validateEnvironmentConfig();
-  enforceDemoModeSafety();
+  enforceSyntheticDataSafety();
 } catch (error) {
   console.error('[Wasel] Failed to initialize application due to configuration error:', sanitizeForLog(String(error)));
   const isArabic = initialLanguage === 'ar';

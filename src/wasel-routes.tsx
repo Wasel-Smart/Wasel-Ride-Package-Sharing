@@ -8,23 +8,39 @@ import {
 import WaselRoot from './layouts/WaselRoot';
 import { featureFlags } from './features/core/featureFlags';
 import { APP_ROUTES } from './router/paths';
-import { NotFoundPage, RouteErrorPage } from './app/pages/AppSurfaces';
+import {
+  NotFoundPage,
+  PrivacyPage,
+  RouteErrorPage,
+  TermsPage,
+} from './app/pages/surfaces/SharedPageComponents';
 
-const loadLandingPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).LandingPage });
+const loadLandingPage = async () => ({ Component: (await import('./app/pages/surfaces/LandingPageSurface')).LandingPage });
 const loadAppEntryPage = async () => ({ Component: (await import('./features/home/AppEntryPage')).default });
 const loadAuthPage = async () => ({ Component: (await import('./pages/WaselAuth')).default });
 const loadAuthCallbackPage = async () => ({ Component: (await import('./pages/WaselAuthCallback')).default });
+const loadProfilePage = async () => ({ Component: (await import('./features/profile/ProfilePage')).default });
+const loadNotificationsPage = async () => ({ Component: (await import('./features/notifications/NotificationsPage')).NotificationsPage });
 const loadFindRidePage = async () => ({ Component: (await import('./features/rides/FindRidePage')).FindRidePage });
 const loadRideDetailsPage = async () => ({ Component: (await import('./features/rides/RideDetailsPage')).RideDetailsPage });
 const loadOfferRidePage = async () => ({ Component: (await import('./features/rides/OfferRidePage')).OfferRidePage });
 const loadTripsPage = async () => ({ Component: (await import('./features/trips/MyTripsPage')).default });
 const loadPackagesPage = async () => ({ Component: (await import('./features/packages/PackagesPage')).PackagesPage });
 const loadBusPage = async () => ({ Component: (await import('./features/bus/BusPage')).BusPage });
+const loadDriverPage = async () => ({ Component: (await import('./features/driver/DriverPage')).default });
+const loadTrustPage = async () => ({ Component: (await import('./features/trust/TrustCenterPage')).default });
+const loadSafetyPage = async () => ({ Component: (await import('./features/safety/SafetyPage')).default });
+const loadMobilityOsPage = async () => ({ Component: (await import('./features/mobility-os')).default });
 const loadWalletPage = async () => ({ Component: (await import('./features/wallet')).WalletDashboard });
 const loadPaymentsPage = async () => ({ Component: (await import('./features/payments/PaymentsPage')).default });
 const loadSettingsPage = async () => ({ Component: (await import('./features/preferences/SettingsPage')).default });
-const loadPrivacyPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).PrivacyPage });
-const loadTermsPage = async () => ({ Component: (await import('./app/pages/AppSurfaces')).TermsPage });
+const loadAnalyticsPage = async () => ({ Component: (await import('./features/operations/AnalyticsPage')).default });
+const loadModerationPage = async () => ({ Component: (await import('./features/operations/ModerationPage')).default });
+const loadAiIntelligencePage = async () => ({ Component: (await import('./features/operations/AIIntelligencePage')).default });
+const loadExecutionOsPage = async () => ({ Component: (await import('./features/operations/ExecutionOSPage')).default });
+const loadCorporateServicesPage = async () => ({ Component: (await import('./features/operations/OperationsOverviewPage')).default });
+const loadSchoolServicesPage = async () => ({ Component: (await import('./features/operations/OperationsOverviewPage')).default });
+const loadAdminPage = async () => ({ Component: (await import('./features/admin/AdminPage')).default });
 
 function RouteErrorBoundary() {
   const error = useRouteError();
@@ -41,6 +57,8 @@ const appChildren: RouteObject[] = [
   { lazy: loadAppEntryPage, index: true },
   { lazy: loadAuthPage, path: APP_ROUTES.auth.child },
   { lazy: loadAuthCallbackPage, path: APP_ROUTES.authCallback.child },
+  { lazy: loadProfilePage, path: APP_ROUTES.profile.child },
+  { lazy: loadNotificationsPage, path: APP_ROUTES.notifications.child },
   { lazy: loadFindRidePage, path: APP_ROUTES.findRide.child },
   { lazy: loadRideDetailsPage, path: APP_ROUTES.rideDetails.child },
   { lazy: loadOfferRidePage, path: APP_ROUTES.offerRide.child },
@@ -48,11 +66,23 @@ const appChildren: RouteObject[] = [
   { lazy: loadTripsPage, path: APP_ROUTES.myTrips.child },
   { Component: () => <Navigate replace to={APP_ROUTES.myTrips.full} />, path: APP_ROUTES.tripsLegacy.child },
   { lazy: loadPackagesPage, path: APP_ROUTES.packages.child },
+  { lazy: loadDriverPage, path: APP_ROUTES.driver.child },
+  { lazy: loadTrustPage, path: APP_ROUTES.trust.child },
+  { lazy: loadSafetyPage, path: APP_ROUTES.safety.child },
+  { lazy: loadMobilityOsPage, path: APP_ROUTES.mobilityOs.child },
   { lazy: loadWalletPage, path: APP_ROUTES.wallet.child },
   { lazy: loadPaymentsPage, path: APP_ROUTES.payments.child },
   { lazy: loadSettingsPage, path: APP_ROUTES.settings.child },
-  { lazy: loadPrivacyPage, path: APP_ROUTES.privacy.child },
-  { lazy: loadTermsPage, path: APP_ROUTES.terms.child },
+  { lazy: loadAnalyticsPage, path: APP_ROUTES.analytics.child },
+  { lazy: loadModerationPage, path: APP_ROUTES.moderation.child },
+  { lazy: loadAiIntelligencePage, path: APP_ROUTES.aiIntelligence.child },
+  { lazy: loadExecutionOsPage, path: APP_ROUTES.executionOs.child },
+  { Component: () => <Navigate replace to={APP_ROUTES.servicesCorporate.full} />, path: 'services' },
+  { lazy: loadCorporateServicesPage, path: APP_ROUTES.servicesCorporate.child },
+  { lazy: loadSchoolServicesPage, path: APP_ROUTES.servicesSchool.child },
+  { lazy: loadAdminPage, path: APP_ROUTES.admin.child },
+  { Component: PrivacyPage, path: APP_ROUTES.privacy.child },
+  { Component: TermsPage, path: APP_ROUTES.terms.child },
   { Component: () => <Navigate replace to={APP_ROUTES.root.full} />, path: APP_ROUTES.dashboard.child },
   { Component: () => <Navigate replace to={APP_ROUTES.root.full} />, path: APP_ROUTES.home.child },
   { Component: () => <Navigate replace to={APP_ROUTES.offerRide.full} />, path: APP_ROUTES.postRide.child },
@@ -63,7 +93,9 @@ const appChildren: RouteObject[] = [
 ];
 
 if (featureFlags.core.bus === true) {
-  appChildren.splice(9, 0, { lazy: loadBusPage, path: APP_ROUTES.bus.child });
+  const mobilityOsIndex = appChildren.findIndex((route) => route.path === APP_ROUTES.mobilityOs.child);
+  const insertIndex = mobilityOsIndex >= 0 ? mobilityOsIndex : appChildren.length;
+  appChildren.splice(insertIndex, 0, { lazy: loadBusPage, path: APP_ROUTES.bus.child });
 }
 
 export const waselRouter = createBrowserRouter([
@@ -95,12 +127,72 @@ export const waselRouter = createBrowserRouter([
     path: '/wallet',
   },
   {
+    Component: () => <Navigate replace to={APP_ROUTES.profile.full} />,
+    path: '/profile',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.notifications.full} />,
+    path: '/notifications',
+  },
+  {
     Component: () => <Navigate replace to={APP_ROUTES.payments.full} />,
     path: '/payments',
   },
   {
     Component: () => <Navigate replace to={APP_ROUTES.settings.full} />,
     path: '/settings',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.driver.full} />,
+    path: '/driver',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.trust.full} />,
+    path: '/trust',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.safety.full} />,
+    path: '/safety',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.bus.full} />,
+    path: '/bus',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.mobilityOs.full} />,
+    path: '/mobility-os',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.analytics.full} />,
+    path: '/analytics',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.moderation.full} />,
+    path: '/moderation',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.aiIntelligence.full} />,
+    path: '/ai-intelligence',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.executionOs.full} />,
+    path: '/execution-os',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.servicesCorporate.full} />,
+    path: '/services',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.servicesCorporate.full} />,
+    path: '/services/corporate',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.servicesSchool.full} />,
+    path: '/services/school',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.admin.full} />,
+    path: '/admin',
   },
   {
     Component: () => <Navigate replace to={APP_ROUTES.privacy.full} />,

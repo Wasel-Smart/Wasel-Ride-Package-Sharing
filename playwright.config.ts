@@ -39,7 +39,7 @@ export default defineConfig({
       PLAYWRIGHT_PORT: String(PLAYWRIGHT_PORT),
     },
     url: PLAYWRIGHT_BASE_URL,
-    reuseExistingServer: false,
+    reuseExistingServer: !isCI,
     timeout: 300_000,
     stderr: 'pipe',
   },

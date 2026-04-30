@@ -6,7 +6,7 @@ import type {
   WalletTransactionStatus,
 } from './wallet-contracts';
 
-export interface Wallet extends WalletData {}
+export type Wallet = WalletData;
 
 export const PAYMENT_TRANSACTION_KINDS = [
   'deposit',

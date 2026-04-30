@@ -4,6 +4,40 @@ import { fileURLToPath } from 'node:url';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
+const sharedExcludes = [
+  'node_modules',
+  'build',
+  'dist',
+  'src/features/testing/**',
+  'tests/database/**',
+];
+
+const domOnlyTsTests = [
+  'tests/integration/**/*.test.ts',
+  'tests/unit/services/bus.test.ts',
+  'tests/unit/services/communicationPreferences.test.ts',
+  'tests/unit/services/corePerformance.test.ts',
+  'tests/unit/services/demandCapture.test.ts',
+  'tests/unit/services/journeyLogistics.test.ts',
+  'tests/unit/services/movementMembership.test.ts',
+  'tests/unit/services/notifications.test.ts',
+  'tests/unit/services/packageTrackingService.test.ts',
+  'tests/unit/services/rideLifecycle.test.ts',
+  'tests/unit/services/rideModule.test.ts',
+  'tests/unit/services/supportInbox.test.ts',
+  'tests/unit/services/wallet.test.ts',
+  'tests/unit/services/walletInsights.test.ts',
+  'tests/unit/utils/authFlow.test.ts',
+  'tests/unit/utils/clipboard.test.ts',
+  'tests/unit/utils/consent.test.ts',
+  'tests/unit/utils/env.test.ts',
+  'tests/unit/utils/locale.test.ts',
+  'tests/unit/utils/sanitize.test.ts',
+  'tests/unit/utils/service-worker.test.ts',
+  'tests/unit/utils/startupDom.test.ts',
+  'tests/unit/utils/theme.test.ts',
+];
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -34,11 +68,6 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./tests/env-setup.ts', './tests/setup.ts'],
-    environmentOptions: {
-      jsdom: { url: 'http://localhost/' },
-    },
     env: {
       NODE_ENV: 'test',
       VITE_APP_NAME: 'Wasel',
@@ -55,18 +84,7 @@ export default defineConfig({
     },
     testTimeout: 15000,
     hookTimeout: 15000,
-    include: [
-      'tests/**/*.test.ts',
-      'tests/**/*.test.tsx',
-    ],
-    exclude: [
-      'node_modules',
-      'build',
-      'dist',
-      'src/features/testing/**',
-      // Database tests require a live Supabase connection — run separately
-      'tests/database/**',
-    ],
+    passWithNoTests: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov', 'json-summary'],
@@ -90,5 +108,30 @@ export default defineConfig({
       },
     },
     reporters: ['default'],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'dom',
+          environment: 'jsdom',
+          setupFiles: ['./tests/env-setup.ts', './tests/setup.ts'],
+          environmentOptions: {
+            jsdom: { url: 'http://localhost/' },
+          },
+          include: ['tests/**/*.test.tsx', ...domOnlyTsTests],
+          exclude: sharedExcludes,
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'node',
+          environment: 'node',
+          setupFiles: ['./tests/env-setup.ts'],
+          include: ['tests/**/*.test.ts'],
+          exclude: [...sharedExcludes, ...domOnlyTsTests],
+        },
+      },
+    ],
   },
 });

@@ -30,7 +30,7 @@ serve(async req => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    console.log(`Processing subscription event: ${event.type}`);
+    // Processing subscription event
 
     switch (event.type) {
       case 'customer.subscription.created': {
@@ -60,7 +60,7 @@ serve(async req => {
           payload: subscription,
         });
 
-        console.log(`Subscription created: ${subscription.id}`);
+        // Subscription created
         break;
       }
 
@@ -90,7 +90,7 @@ serve(async req => {
           payload: subscription,
         });
 
-        console.log(`Subscription updated: ${subscription.id}`);
+        // Subscription updated
         break;
       }
 
@@ -113,7 +113,7 @@ serve(async req => {
           payload: subscription,
         });
 
-        console.log(`Subscription deleted: ${subscription.id}`);
+        // Subscription deleted
         break;
       }
 
@@ -153,7 +153,7 @@ serve(async req => {
           payload: invoice,
         });
 
-        console.log(`Invoice paid: ${invoice.id}`);
+        // Invoice paid
         break;
       }
 
@@ -192,12 +192,12 @@ serve(async req => {
           payload: invoice,
         });
 
-        console.log(`Invoice payment failed: ${invoice.id}`);
+        // Invoice payment failed
         break;
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        // Unhandled event type
     }
 
     return new Response(JSON.stringify({ received: true }), { status: 200 });

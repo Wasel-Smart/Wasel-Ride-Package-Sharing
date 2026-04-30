@@ -1,5 +1,5 @@
 import type { RideBookingRecord, RideBookingSyncState } from '../rideLifecycle';
-import { createDirectBooking, updateDirectBookingStatus } from '../directSupabase';
+import { bookingsAPI } from '../bookings';
 import { readBookings, writeBookings } from './rideBookingStorage';
 import { loadPendingSyncs, removePendingSync, incrementRetry, type PendingSyncEntry } from './rideSyncQueue';
 import { validateBooking, isConfirmed } from './rideBookingLogic';
@@ -12,7 +12,7 @@ export function markSyncState(booking: RideBookingRecord, syncState: RideBooking
     {
       ...booking,
       syncState,
-      pendingSync: syncState === 'syncing' || syncState === 'sync-error',
+      pendingSync: syncState !== 'synced',
       syncedAt: syncState === 'synced' ? new Date().toISOString() : booking.syncedAt,
     },
     'ride.booking.state',
@@ -21,15 +21,13 @@ export function markSyncState(booking: RideBookingRecord, syncState: RideBooking
 
 async function attemptSync(entry: PendingSyncEntry): Promise<void> {
   try {
-    const { booking: persisted } = await createDirectBooking({
-      tripId: entry.rideId,
-      userId: entry.passengerId,
-      seatsRequested: entry.seatsRequested,
-      pickup: entry.from,
-      dropoff: entry.to,
-      bookingStatus: entry.status,
-      metadata: { total_price: entry.totalPriceJod ?? entry.seatsRequested },
-    });
+    const persisted = await bookingsAPI.createBooking(
+      entry.rideId,
+      entry.seatsRequested,
+      entry.from,
+      entry.to,
+      { total_price: entry.totalPriceJod ?? entry.seatsRequested },
+    );
 
     const backendId = String(persisted.booking_id ?? persisted.id ?? '');
     const bookings = readBookings();
@@ -84,16 +82,16 @@ export async function syncToBackend(
   booking: RideBookingRecord,
   passengerId: string,
 ): Promise<RideBookingRecord> {
+  void passengerId;
+
   try {
-    const { booking: persisted } = await createDirectBooking({
-      tripId: booking.rideId,
-      userId: passengerId,
-      seatsRequested: booking.seatsRequested,
-      pickup: booking.from,
-      dropoff: booking.to,
-      bookingStatus: booking.status,
-      metadata: { total_price: booking.totalPriceJod ?? booking.seatsRequested },
-    });
+    const persisted = await bookingsAPI.createBooking(
+      booking.rideId,
+      booking.seatsRequested,
+      booking.from,
+      booking.to,
+      { total_price: booking.totalPriceJod ?? booking.seatsRequested },
+    );
 
     return markSyncState(
       {
@@ -112,7 +110,7 @@ export async function syncStatusUpdate(
   backendBookingId: string,
   status: 'accepted' | 'rejected' | 'cancelled',
 ): Promise<void> {
-  await updateDirectBookingStatus(backendBookingId, status);
+  await bookingsAPI.updateBookingStatus(backendBookingId, status);
 }
 
 if (typeof window !== 'undefined') {

@@ -15,7 +15,11 @@ function readJsonIfExists(relativePath) {
     return null;
   }
 
-  return JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+  try {
+    return JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+  } catch {
+    return null;
+  }
 }
 
 function collectBundleMetrics() {
@@ -66,6 +70,32 @@ function collectCoverageMetrics() {
   };
 }
 
+function collectVitestMetrics() {
+  const results = readJsonIfExists('vitest-results.json');
+  if (!results) {
+    return null;
+  }
+
+  return {
+    status: typeof results.success === 'boolean'
+      ? (results.success ? 'passed' : 'failed')
+      : 'unknown',
+    suites: {
+      total: results.numTotalTestSuites ?? null,
+      passed: results.numPassedTestSuites ?? null,
+      failed: results.numFailedTestSuites ?? null,
+      pending: results.numPendingTestSuites ?? null,
+    },
+    tests: {
+      total: results.numTotalTests ?? null,
+      passed: results.numPassedTests ?? null,
+      failed: results.numFailedTests ?? null,
+      pending: results.numPendingTests ?? null,
+      todo: results.numTodoTests ?? null,
+    },
+  };
+}
+
 function collectPlaywrightMetrics() {
   const results = readJsonIfExists('playwright-report/results.json');
   if (!results) {
@@ -73,8 +103,14 @@ function collectPlaywrightMetrics() {
   }
 
   const stats = results.stats ?? {};
+  const status = typeof results.status === 'string'
+    ? results.status
+    : typeof stats.unexpected === 'number'
+      ? (stats.unexpected > 0 ? 'failed' : 'passed')
+      : 'unknown';
+
   return {
-    status: results.status ?? 'unknown',
+    status,
     expected: stats.expected ?? null,
     unexpected: stats.unexpected ?? null,
     flaky: stats.flaky ?? null,
@@ -84,20 +120,55 @@ function collectPlaywrightMetrics() {
 
 function collectLighthouseMetrics() {
   const manifest = readJsonIfExists('.lighthouseci/manifest.json');
-  if (!Array.isArray(manifest)) {
+  if (Array.isArray(manifest) && manifest.length > 0) {
+    return manifest.map((entry) => ({
+      url: entry.url ?? null,
+      isRepresentativeRun: Boolean(entry.isRepresentativeRun),
+      summary: entry.summary ?? null,
+    }));
+  }
+
+  const lighthouseDir = path.join(ROOT, '.lighthouseci');
+  if (!fs.existsSync(lighthouseDir)) {
     return null;
   }
 
-  return manifest.map((entry) => ({
-    url: entry.url ?? null,
-    isRepresentativeRun: Boolean(entry.isRepresentativeRun),
-    summary: entry.summary ?? null,
+  const lhrReports = fs.readdirSync(lighthouseDir)
+    .filter((fileName) => /^lhr-.*\.json$/i.test(fileName))
+    .map((fileName) => readJsonIfExists(path.join('.lighthouseci', fileName)))
+    .filter(Boolean);
+
+  if (lhrReports.length === 0) {
+    return null;
+  }
+
+  return lhrReports.map((report, index) => ({
+    url: report.finalDisplayedUrl ?? report.requestedUrl ?? null,
+    isRepresentativeRun: index === 0,
+    summary: {
+      performance: report.categories?.performance?.score ?? null,
+      accessibility: report.categories?.accessibility?.score ?? null,
+      bestPractices: report.categories?.['best-practices']?.score ?? null,
+      seo: report.categories?.seo?.score ?? null,
+      pwa: report.categories?.pwa?.score ?? null,
+    },
   }));
 }
 
+function inferTestStatus(explicitStatus, vitestMetrics) {
+  if (explicitStatus) {
+    return explicitStatus;
+  }
+
+  return vitestMetrics?.status ?? 'unknown';
+}
+
+const vitest = collectVitestMetrics();
+
 const report = {
   generatedAt: new Date().toISOString(),
-  testStatus: args.get('test-status') ?? 'unknown',
+  testStatus: inferTestStatus(args.get('test-status'), vitest),
+  vitest,
   coverage: collectCoverageMetrics(),
   bundle: collectBundleMetrics(),
   playwright: collectPlaywrightMetrics(),

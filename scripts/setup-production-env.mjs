@@ -137,7 +137,7 @@ async function main() {
   log('✓ Secrets generated', 'green');
 
   // Production safety
-  config.VITE_ENABLE_DEMO_DATA = 'false';
+  config.VITE_ENABLE_SYNTHETIC_DATA = 'false';
   config.VITE_ENABLE_SYNTHETIC_TRIPS = 'false';
   config.VITE_ALLOW_DIRECT_SUPABASE_FALLBACK = 'false';
   config.VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK = 'false';

@@ -9,6 +9,7 @@ export type RawProfile = {
   email?: string | null;
   full_name?: string | null;
   role?: string | null;
+  driver_status?: string | null;
   phone?: string | null;
   phone_number?: string | null;
   phone_verified?: boolean | null;

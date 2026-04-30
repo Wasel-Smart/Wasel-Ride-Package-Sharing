@@ -145,7 +145,7 @@ export function BusPage() {
             items={[
               { label: 'Status', value: routesLoading ? BUS_PAGE_COPY.loadingRoutes : (routesInfo?.message ?? 'Bus service is unavailable right now.') },
               { label: 'Action', value: 'Retry this search after the backend recovers.' },
-              { label: 'Fallback', value: 'Use rides or packages instead of a simulated ticket.' },
+              { label: 'Alternative', value: 'Use rides or packages while coach inventory is unavailable.' },
             ]}
           />
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>

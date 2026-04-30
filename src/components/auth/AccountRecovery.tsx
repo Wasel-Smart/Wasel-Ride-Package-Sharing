@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Shield, HelpCircle, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -38,13 +38,17 @@ export function AccountRecoverySetup({ userId, onComplete, onSkip }: AccountReco
 
     setLoading(true);
     try {
+      const questions = await Promise.all(
+        selectedQuestions.map(async (question, index) => ({
+          question,
+          answerHash: await hashAnswer(answers[index]),
+        })),
+      );
+
       // Store recovery options (in production, this would be encrypted and stored server-side)
       const recoveryData = {
         userId,
-        questions: selectedQuestions.map((q, i) => ({
-          question: q,
-          answerHash: await hashAnswer(answers[i]),
-        })),
+        questions,
         backupEmail: backupEmail || undefined,
         createdAt: new Date().toISOString(),
       };
@@ -52,7 +56,7 @@ export function AccountRecoverySetup({ userId, onComplete, onSkip }: AccountReco
       localStorage.setItem(`wasel_recovery_${userId}`, JSON.stringify(recoveryData));
       toast.success(t('auth.recovery.setupComplete'));
       onComplete();
-    } catch (err) {
+    } catch {
       toast.error(t('auth.recovery.setupFailed'));
     } finally {
       setLoading(false);
@@ -184,16 +188,16 @@ export function AccountRecoveryVerify({
   const [error, setError] = useState('');
   const [questions, setQuestions] = useState<SecurityQuestion[]>([]);
 
-  useState(() => {
+  useEffect(() => {
     const recoveryData = localStorage.getItem(`wasel_recovery_${userId}`);
     if (recoveryData) {
       const parsed = JSON.parse(recoveryData);
-      const qs = parsed.questions.map((q: { question: string }) => 
+      const qs = parsed.questions.map((q: { question: string }) =>
         SECURITY_QUESTIONS.find(sq => sq.id === q.question)
       ).filter(Boolean);
       setQuestions(qs);
     }
-  });
+  }, [userId]);
 
   const hashAnswer = async (answer: string): Promise<string> => {
     const normalized = answer.toLowerCase().trim();
@@ -226,7 +230,7 @@ export function AccountRecoveryVerify({
       } else {
         setError(t('auth.recovery.incorrectAnswers'));
       }
-    } catch (err) {
+    } catch {
       setError(t('auth.recovery.verificationFailed'));
     } finally {
       setLoading(false);

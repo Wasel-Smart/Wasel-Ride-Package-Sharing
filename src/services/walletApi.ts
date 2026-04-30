@@ -281,7 +281,7 @@ function parseAutoTopUpArgs(
   };
 }
 
-// ─── Demo payment intent helpers ─────────────────────────────────────────────
+// ─── Payment intent helpers ──────────────────────────────────────────────────
 
 // ─── Insights builder ─────────────────────────────────────────────────────────
 

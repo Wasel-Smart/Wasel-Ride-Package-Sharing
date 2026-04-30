@@ -40,7 +40,7 @@ serve(async (req) => {
       .single();
 
     if (existingWebhook) {
-      console.log(`Webhook ${event.id} already processed`);
+      // Webhook already processed
       return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 

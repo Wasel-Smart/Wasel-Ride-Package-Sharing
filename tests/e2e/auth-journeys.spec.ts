@@ -91,6 +91,7 @@ test('auth page stays simple on a phone viewport', async ({ page }) => {
 
 test('unknown route renders the 404 page', async ({ page }) => {
   await page.goto('/app/this-route-does-not-exist-xyz', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: /page not found/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /back to wasel/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /this page is off the live network\./i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /back to wasel/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /find a ride/i })).toBeVisible();
 });

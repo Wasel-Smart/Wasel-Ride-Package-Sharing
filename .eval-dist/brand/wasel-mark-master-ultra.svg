@@ -1,0 +1,41 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 492 372"
+  fill="none"
+  role="img"
+  aria-labelledby="title desc"
+  preserveAspectRatio="xMidYMid meet"
+>
+  <title id="title">Wasel ultra master logo</title>
+  <desc id="desc">An ultra-minimal Wasel W mark built for iconic clarity.</desc>
+  <defs>
+    <linearGradient id="laneA" x1="104" y1="82" x2="232" y2="310" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#67E5FF" />
+      <stop offset="0.52" stop-color="#2C8AF4" />
+      <stop offset="1" stop-color="#2347E2" />
+    </linearGradient>
+    <linearGradient id="laneB" x1="206" y1="306" x2="266" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2757E7" />
+      <stop offset="0.52" stop-color="#2E95EC" />
+      <stop offset="1" stop-color="#6CEBFF" />
+    </linearGradient>
+    <linearGradient id="laneC" x1="260" y1="96" x2="406" y2="300" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E4FF69" />
+      <stop offset="0.46" stop-color="#63DC6C" />
+      <stop offset="1" stop-color="#14B2B8" />
+    </linearGradient>
+  </defs>
+
+  <path
+    d="M118 108C118 88 134 72 154 72C170 72 184 82 189 97L229 209C237 231 268 231 276 209L313 100C319 82 336 70 355 70C378 70 396 88 396 111C396 117 395 123 393 129L346 264C336 293 309 312 279 312C248 312 220 293 210 264L121 129C119 123 118 117 118 108Z"
+    fill="url(#laneA)"
+  />
+  <path
+    d="M200 118C200 100 214 86 232 86C248 86 261 96 266 111L278 147C284 165 308 165 314 147L327 110C332 95 346 84 362 84C381 84 396 99 396 118C396 123 395 128 393 133L350 266C341 294 314 312 285 312C256 312 229 295 220 267L202 133C201 128 200 123 200 118Z"
+    fill="url(#laneB)"
+  />
+  <path
+    d="M284 164C290 182 316 182 322 164L337 118C342 102 357 92 374 92H383C406 92 424 110 424 133C424 139 423 145 421 151L378 267C368 295 342 312 312 312C282 312 256 294 246 265L234 231L284 164Z"
+    fill="url(#laneC)"
+  />
+</svg>

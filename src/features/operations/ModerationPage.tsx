@@ -82,9 +82,9 @@ interface RouteQualitySignal {
   lastActivity: string;
 }
 
-/* ─── Seed data (realistic demo queue) ──────────────────────────────────────── */
+/* ─── Initial incident queue ────────────────────────────────────────────────── */
 
-const SEED_INCIDENTS: ModerationIncident[] = [
+const INITIAL_INCIDENTS: ModerationIncident[] = [
   { id: 'inc-001', category: 'behaviour', description: 'Rider reported driver was using phone while driving on Amman–Aqaba corridor.', reportedAt: '2026-04-11T07:14:00Z', corridor: 'Amman → Aqaba', severity: 'high', status: 'under_review', trustScoreImpact: -15 },
   { id: 'inc-002', category: 'route_deviation', description: 'Driver deviated from agreed corridor — took a 22-minute detour not communicated to passengers.', reportedAt: '2026-04-10T18:42:00Z', corridor: 'Amman → Irbid', severity: 'medium', status: 'open', trustScoreImpact: -8 },
   { id: 'inc-003', category: 'package', description: 'Package arrived with visible damage. Sender filed claim within 12 hours of delivery.', reportedAt: '2026-04-10T12:05:00Z', corridor: 'Zarqa → Aqaba', severity: 'medium', status: 'open', trustScoreImpact: -6 },
@@ -213,7 +213,7 @@ export default function ModerationPage() {
   const routeIntel = useLiveRouteIntelligence();
   const proof = useMemo(() => buildMiddleEastCorridorProof(6), []);
 
-  const [incidents, setIncidents] = useState<ModerationIncident[]>(SEED_INCIDENTS);
+  const [incidents, setIncidents] = useState<ModerationIncident[]>(INITIAL_INCIDENTS);
   const [filterStatus, setFilterStatus] = useState<IncidentStatus | 'all'>('all');
   const [filterSeverity, setFilterSeverity] = useState<Severity | 'all'>('all');
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);

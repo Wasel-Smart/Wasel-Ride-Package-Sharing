@@ -1,12 +1,11 @@
 import { useEffect, useMemo } from 'react';
 import { Outlet, useNavigation } from 'react-router';
-import { Globe, Moon, Package, Search, Sun } from 'lucide-react';
+import { BusFront, Globe, Package, Search, Waypoints } from 'lucide-react';
 import { RouteLoadingFallback } from '../components/app/RouteLoadingFallback';
 import { Button, LayoutContainer } from '../design-system/components';
 import { AppHeader } from '../components/brand';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
-import { useTheme } from '../contexts/ThemeContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { APP_ROUTES } from '../router/paths';
 import { prefetchRouteModule, prefetchRouteModules } from '../router/prefetch';
@@ -18,9 +17,6 @@ export default function WaselRoot() {
   const navigation = useNavigation();
   const { language, setLanguage } = useLanguage();
   const { user, signOut } = useLocalAuth();
-  const { resolvedTheme, setTheme } = useTheme();
-
-  const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   const signInPath = buildAuthPagePath('signin', APP_ROUTES.findRide.full);
 
   const primaryNav = useMemo(() => [
@@ -37,7 +33,7 @@ export default function WaselRoot() {
     },
     {
       icon: <Package size={16} />,
-      label: 'Package',
+      label: 'Packages',
       onFocus: () => {
         void prefetchRouteModule('packages');
       },
@@ -46,14 +42,36 @@ export default function WaselRoot() {
       },
       path: APP_ROUTES.packages.full,
     },
+    {
+      icon: <BusFront size={16} />,
+      label: 'Bus service',
+      onFocus: () => {
+        void prefetchRouteModule('bus');
+      },
+      onPointerEnter: () => {
+        void prefetchRouteModule('bus');
+      },
+      path: APP_ROUTES.bus.full,
+    },
+    {
+      icon: <Waypoints size={16} />,
+      label: 'Mobility OS',
+      onFocus: () => {
+        void prefetchRouteModule('mobilityOs');
+      },
+      onPointerEnter: () => {
+        void prefetchRouteModule('mobilityOs');
+      },
+      path: APP_ROUTES.mobilityOs.full,
+    },
   ] as const, []);
 
   useEffect(() => {
     const cancelPrefetch = scheduleDeferredTask(async () => {
       await prefetchRouteModules(
         user
-          ? ['findRide', 'packages', 'wallet', 'payments', 'settings']
-          : ['auth', 'findRide', 'packages', 'offerRide'],
+          ? ['findRide', 'packages', 'bus', 'mobilityOs', 'wallet', 'payments', 'settings']
+          : ['auth', 'findRide', 'packages', 'bus', 'mobilityOs', 'offerRide'],
       );
     }, 1_800);
 
@@ -71,13 +89,9 @@ export default function WaselRoot() {
         onBrandClick={() => navigate('/')}
         showMobileNav
         subtitle="Book a ride or send a package"
-        surface={resolvedTheme === 'dark' ? 'dark' : 'light'}
+        surface="dark"
         actions={
           <>
-            <Button onClick={toggleTheme} variant="ghost">
-              {resolvedTheme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-              {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
-            </Button>
             <Button
               onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
               variant="ghost"

@@ -97,7 +97,7 @@ class AdaptiveLoadingManager {
 
   logCapabilities(): void {
     const caps = this.getDeviceCapabilities();
-    console.log('Device Capabilities:', {
+    console.warn('Device Capabilities:', {
       network: caps.networkSpeed,
       dataSaver: caps.dataSaver,
       memory: `${caps.deviceMemory}GB`,

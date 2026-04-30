@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0B0F14" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="application-name" content="Wasel" />
+    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
+    <script>
+      (() => {
+        const STORAGE_KEY = 'wasel-theme';
+        const LEGACY_KEY = 'wasel.settings.display';
+        const FALLBACK_THEME = 'light';
+        const LIGHT_THEME_COLOR = '#F5EFE6';
+        const DARK_THEME_COLOR = '#0B0F14';
+
+        const sanitize = value =>
+          value === 'light' || value === 'dark' || value === 'system' ? value : FALLBACK_THEME;
+
+        let preference = FALLBACK_THEME;
+
+        try {
+          const stored = window.localStorage.getItem(STORAGE_KEY);
+          if (stored) {
+            preference = sanitize(stored);
+          } else {
+            const legacy = window.localStorage.getItem(LEGACY_KEY);
+            if (legacy) {
+              preference = sanitize(JSON.parse(legacy)?.theme);
+            }
+          }
+        } catch {
+          preference = FALLBACK_THEME;
+        }
+
+        const resolved =
+          preference === 'system'
+            ? window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light'
+            : preference;
+
+        const root = document.documentElement;
+        root.classList.toggle('light', resolved === 'light');
+        root.classList.toggle('dark', resolved === 'dark');
+        root.dataset.theme = resolved;
+        root.dataset.themePreference = preference;
+        root.dataset.themeReady = 'false';
+        root.style.colorScheme = resolved;
+
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeMeta) {
+          themeMeta.setAttribute(
+            'content',
+            resolved === 'light' ? LIGHT_THEME_COLOR : DARK_THEME_COLOR,
+          );
+        }
+      })();
+    </script>
+
+    <title>Wasel | Live Mobility Network</title>
+    <meta
+      name="description"
+      content="Wasel is the live mobility network for rides, buses, packages, and mobility operations across Jordan."
+    />
+    <meta
+      name="keywords"
+      content="Wasel, Jordan mobility, intercity rides, package delivery, Raje3, Amman, Aqaba, Irbid, trusted travel"
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://wasel14.online" />
+
+    <!-- ── Open Graph ───────────────────────────────────────────────────── -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Wasel" />
+    <meta property="og:title" content="Wasel | Live Mobility Network" />
+    <meta
+      property="og:description"
+      content="Wasel is the live mobility network for rides, buses, packages, and mobility operations across Jordan."
+    />
+    <meta property="og:url" content="https://wasel14.online" />
+    <meta property="og:locale" content="en_JO" />
+    <meta property="og:locale:alternate" content="ar_JO" />
+    <meta property="og:image" content="https://wasel14.online/brand/og-social-card.png?v=20260422-premium" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Wasel — Shared Routes That Reduce Travel Cost across Jordan" />
+
+    <!-- ── Twitter / X Card ─────────────────────────────────────────────── -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@wasel_jo" />
+    <meta name="twitter:title" content="Wasel | Live Mobility Network" />
+    <meta
+      name="twitter:description"
+      content="Wasel is the live mobility network for rides, buses, packages, and mobility operations across Jordan."
+    />
+    <meta name="twitter:image" content="https://wasel14.online/brand/og-social-card.png?v=20260422-premium" />
+    <meta name="twitter:image:alt" content="Wasel — Shared Routes across Jordan" />
+
+    <!-- ── PWA / Apple ───────────────────────────────────────────────────── -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Wasel" />
+
+    <!-- ── Favicons ──────────────────────────────────────────────────────── -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20260422-premium" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=20260422-premium" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=20260422-premium" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=20260422-premium" />
+    <link rel="manifest" href="/manifest.json?v=20260422-premium" />
+
+    <!-- ── Critical image preload ────────────────────────────────────────── -->
+    <link rel="preload" as="image" href="/brand/wasel-route-w-symbol.svg?v=20260422-premium" />
+
+    <!-- ── Connection hints ───────────────────────────────────────────────── -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://maps.googleapis.com" />
+    <link rel="preconnect" href="https://js.stripe.com" />
+    <link rel="preconnect" href="https://api.supabase.co" />
+    <link rel="dns-prefetch" href="https://supabase.co" />
+    <link rel="dns-prefetch" href="https://sentry.io" />
+    <link rel="dns-prefetch" href="https://vercel-insights.com" />
+
+    <!--
+      Non-blocking font strategy — full weight range for 9.5+ typographic quality:
+      - Space Grotesk 400–900 for display headings
+      - Plus Jakarta Sans 300–900 for body / UI
+      - Cairo 300–900 for Arabic RTL
+    -->
+    <link
+      id="wasel-font-preload"
+      data-wasel-font-preload="true"
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Cairo:wght@500;600;700;800&display=swap"
+      onload="this.onload=null;this.rel='stylesheet';"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Cairo:wght@500;600;700;800&display=swap"
+      />
+    </noscript>
+
+    <!-- ── Structured data (JSON-LD) ─────────────────────────────────────── -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://wasel14.online/#organization",
+            "name": "Wasel",
+            "url": "https://wasel14.online",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://wasel14.online/brand/wasel-main-network-logo.svg?v=20260422-premium"
+            },
+            "sameAs": [],
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer support",
+              "availableLanguage": ["English", "Arabic"]
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://wasel14.online/#website",
+            "url": "https://wasel14.online",
+            "name": "Wasel",
+            "description": "Jordan's shared ride, bus, and parcel delivery marketplace.",
+            "publisher": { "@id": "https://wasel14.online/#organization" },
+            "inLanguage": ["en-JO", "ar-JO"],
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://wasel14.online/app/find-ride?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
+      }
+    </script>
+    <script type="module" crossorigin src="/assets/js/index-Dcodq6_S.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/js/supabase-postgrest-C4rBWbCx.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/supabase-realtime-DT9zNtKT.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/supabase-storage-CI7dLUiR.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/supabase-auth-B6aeF5KH.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/supabase-core-BViE_X_7.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/otel-api-BErZ_VAT.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/otel-sdk-Cfa6rYyw.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/react-core-DNL0QBtm.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/sentry-core-Bf_CinDQ.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/validation-DGGRSYbU.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/domain-auth-CMcsj6Gd.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/react-dom-CgenQkdY.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/react-dom-client-BJnfjULs.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/css-utils-Ce1ZTWB2.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/react-router-WeB3QFbZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/motion-Cvla0EDA.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/wasel-ds-Dbydl4ZM.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/icons-BQp1gGt8.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/domain-mobility-CZ1Qq9Hv.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/domain-wallet-FMgIgQzU.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/domain-mapping-D3qAAJ-z.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/feature-packages-v2ewClXe.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/radix-primitives-DAkxrny0.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/cva-CKM8ozc-.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/feature-rides-kGWRfLPD.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/tanstack-react-B9iDWl2j.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/ui-toast-B1RTzoyE.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/payments-BS5DzTJm.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/feature-payments-CsSwyCML.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/feature-bus-BRwu9ylG.js">
+    <link rel="modulepreload" crossorigin href="/assets/js/tanstack-core-B3uv9bgt.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-BocQF0JS.css">
+  </head>
+
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

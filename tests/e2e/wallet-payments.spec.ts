@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { gotoAuthedRoute, seedDemoSession } from '../../e2e/helpers/session';
+import { gotoAuthedRoute, seedTestSession } from '../../e2e/helpers/session';
 
 test.describe.configure({ mode: 'serial' });
 
 test.beforeEach(async ({ page }) => {
-  await seedDemoSession(page);
+  await seedTestSession(page);
 });
 
 test('wallet surface exposes stored-value controls', async ({ page }) => {

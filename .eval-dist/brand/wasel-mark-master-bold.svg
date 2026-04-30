@@ -1,0 +1,46 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 492 372"
+  fill="none"
+  role="img"
+  aria-labelledby="title desc"
+  preserveAspectRatio="xMidYMid meet"
+>
+  <title id="title">Wasel bold master logo</title>
+  <desc id="desc">A premium bold Wasel W mark with more presence and depth.</desc>
+  <defs>
+    <linearGradient id="laneA" x1="98" y1="78" x2="224" y2="314" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7BEDFF" />
+      <stop offset="0.46" stop-color="#33A0F7" />
+      <stop offset="1" stop-color="#223FDD" />
+    </linearGradient>
+    <linearGradient id="laneB" x1="198" y1="310" x2="262" y2="92" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2649DE" />
+      <stop offset="0.5" stop-color="#3097EE" />
+      <stop offset="1" stop-color="#79F0FF" />
+    </linearGradient>
+    <linearGradient id="laneC" x1="256" y1="92" x2="410" y2="302" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F0FF73" />
+      <stop offset="0.44" stop-color="#6BE06C" />
+      <stop offset="1" stop-color="#11A9B6" />
+    </linearGradient>
+    <filter id="shadow" x="30" y="28" width="414" height="314" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#07131E" flood-opacity="0.16" />
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <path
+      d="M108 108C108 86 126 68 148 68C165 68 180 79 186 95L228 213C236 236 268 236 276 213L314 98C320 79 338 66 359 66C384 66 404 86 404 111C404 117 403 124 401 130L353 270C342 300 314 320 282 320C249 320 220 300 209 270L111 130C109 124 108 117 108 108Z"
+      fill="url(#laneA)"
+    />
+    <path
+      d="M190 116C190 97 205 82 224 82C241 82 255 93 260 109L273 148C279 167 305 167 311 148L324 108C329 92 344 81 361 81C381 81 397 97 397 117C397 122 396 128 394 133L349 271C339 300 311 320 280 320C249 320 221 302 211 273L192 133C191 128 190 122 190 116Z"
+      fill="url(#laneB)"
+    />
+    <path
+      d="M275 163C281 182 309 182 315 163L331 114C336 97 352 87 370 87H380C405 87 424 107 424 132C424 138 423 145 421 151L376 271C366 301 339 320 307 320C275 320 247 301 237 271L224 232L275 163Z"
+      fill="url(#laneC)"
+    />
+  </g>
+</svg>

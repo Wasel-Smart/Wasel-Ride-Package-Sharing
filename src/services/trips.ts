@@ -76,6 +76,13 @@ function canUseEdgeApi(): boolean {
   return Boolean(API_URL && publicAnonKey);
 }
 
+function getPublicEdgeHeaders(): HeadersInit {
+  return {
+    Authorization: `Bearer ${publicAnonKey}`,
+    apikey: publicAnonKey,
+  };
+}
+
 function shouldFallbackToDirectOnResponse(response: Response): boolean {
   return response.status === 404 || response.status === 405 || response.status === 501;
 }
@@ -214,7 +221,7 @@ export const tripsAPI = {
         'GET',
         () =>
           fetchWithRetry(`${API_URL}/trips/search?${params}`, {
-            headers: { Authorization: `Bearer ${publicAnonKey}` },
+            headers: getPublicEdgeHeaders(),
             timeout: TRIP_SEARCH_TIMEOUT_MS,
           }, 0),
       );
@@ -274,7 +281,7 @@ export const tripsAPI = {
 
     const response = await withApiTelemetry('trip.get', `${API_URL}/trips/${tripId}`, 'GET', () =>
       fetchWithRetry(`${API_URL}/trips/${tripId}`, {
-        headers: { Authorization: `Bearer ${publicAnonKey}` },
+        headers: getPublicEdgeHeaders(),
       }),
     );
 
