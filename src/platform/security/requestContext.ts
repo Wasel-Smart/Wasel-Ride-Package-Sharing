@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 export interface PlatformRequestContext {
   correlationId: string;
   idempotencyKey: string;
@@ -8,7 +10,12 @@ export interface PlatformRequestContext {
 }
 
 function randomId(prefix: string): string {
-  return globalThis.crypto?.randomUUID?.() ?? `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const uuid = globalThis.crypto?.randomUUID?.();
+  if (uuid) {
+    return uuid;
+  }
+
+  return `${prefix}-${Date.now()}-${randomBytes(16).toString('hex')}`;
 }
 
 function getOrCreateSessionId(): string {
