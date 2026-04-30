@@ -44,14 +44,16 @@ async function expectWithinViewport(page: Page, selector: string) {
   expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
 }
 
-test('find ride stops and shows backend failure clearly', async ({ page }) => {
+test('find ride falls back to local catalog results when backend search fails in test mode', async ({ page }) => {
   await failSupabaseRestRequest(page, 'trips', 'GET');
   await gotoAuthedRoute(page, '/app/find-ride?from=Amman&to=Irbid&search=1');
   await expect(page).toHaveURL(/\/app\/find-ride/);
   const searchButton = page.getByRole('button', { name: /^search rides$/i });
   await expect(searchButton).toBeVisible();
   await searchButton.click({ force: true });
-  await expect(page.getByRole('alert')).toContainText(/unable to search rides right now/i);
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: /available rides/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /request amman to irbid/i })).toBeVisible();
 });
 
 test('offer ride stops when the backend cannot create the ride', async ({ page }) => {

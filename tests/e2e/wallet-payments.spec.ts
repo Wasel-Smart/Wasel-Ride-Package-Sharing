@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
-import { gotoAuthedRoute, seedTestSession } from '../../e2e/helpers/session';
+import { expect, test, type Page } from '@playwright/test';
+import { seedTestSession } from '../../e2e/helpers/session';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -7,8 +7,14 @@ test.beforeEach(async ({ page }) => {
   await seedTestSession(page);
 });
 
+async function gotoAuthedSurface(page: Page, route: string) {
+  await seedTestSession(page);
+  await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  await page.waitForTimeout(1_000);
+}
+
 test('wallet surface exposes stored-value controls', async ({ page }) => {
-  await gotoAuthedRoute(page, '/app/wallet');
+  await gotoAuthedSurface(page, '/app/wallet');
 
   await expect(page.getByRole('heading', { level: 1, name: /wallet/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /add money/i })).toBeVisible();
@@ -25,7 +31,7 @@ test('wallet surface exposes stored-value controls', async ({ page }) => {
 });
 
 test('payments surface shows backend failure clearly', async ({ page }) => {
-  await gotoAuthedRoute(page, '/app/payments');
+  await gotoAuthedSurface(page, '/app/payments');
 
   await expect(page.getByRole('heading', { name: /pay for a ride or package/i })).toBeVisible();
   const paymentsFailureAlert = page.getByRole('alert').getByText(/payments unavailable/i);

@@ -24,7 +24,7 @@ import { LandingHeroSection } from './landing/LandingHeroSection';
 import { RideResults, type RideResultsCopy } from '../../components/rides/RideResults';
 import { RideSearchForm, type RideSearchFormCopy } from '../../components/rides/RideSearchForm';
 import { useRideSearch } from '../../modules/rides/ride.hooks';
-import type { RideResult } from '../../modules/rides/ride.types';
+import type { RideResult, RideSearchDraft } from '../../modules/rides/ride.types';
 import { useLocation } from 'react-router';
 
 function buildRidePageCopy(language: 'en' | 'ar') {
@@ -412,8 +412,8 @@ export function FindRidePage() {
 
   const buildSearchParams = useCallback(
     (
-      draft: typeof state.draft,
-      overrides?: Partial<Pick<typeof state.draft, 'from' | 'to' | 'date' | 'mode' | 'rideType'>>,
+      draft: RideSearchDraft,
+      overrides?: Partial<Pick<RideSearchDraft, 'from' | 'to' | 'date' | 'mode' | 'rideType'>>,
     ) => {
       const nextDraft = { ...draft, ...overrides };
       const params = new URLSearchParams();
@@ -427,7 +427,7 @@ export function FindRidePage() {
       }
       return params;
     },
-    [state.draft],
+    [],
   );
 
   useEffect(() => {
@@ -486,12 +486,9 @@ export function FindRidePage() {
     });
   }, [
     clearFeedback,
-    state.draft.from,
-    state.draft.mode,
-    state.draft.rideType,
-    state.draft.to,
-    submitSearch,
     buildSearchParams,
+    state.draft,
+    submitSearch,
     location.pathname,
     navigate,
     user?.id,
