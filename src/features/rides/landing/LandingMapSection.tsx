@@ -218,7 +218,7 @@ export function LandingMapSection({
                     fontSize: '0.88rem',
                   }}
                 >
-                  {lc(ar ? 'افتح خريطة الرحلات' : 'Open ride map')}
+                  {lc(ar ? 'Mobility OS' : 'Mobility OS')}
                   <ArrowRight size={14} style={{ marginLeft: 8 }} />
                 </button>
               ) : null}

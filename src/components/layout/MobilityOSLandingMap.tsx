@@ -274,7 +274,7 @@ const COPY = {
     activeFleet: 'Active fleet',
     avgSpeed: 'Avg speed',
     liveFeed: 'Live feed',
-    previewMode: 'Preview mode',
+    modeledNetwork: 'Modeled network',
     citiesMapped: 'cities mapped',
     corridorsSynced: 'corridors synced',
     freshPings: 'fresh pings',
@@ -310,7 +310,7 @@ const COPY = {
     activeFleet: 'الأسطول النشط',
     avgSpeed: 'متوسط السرعة',
     liveFeed: 'تغذية حية',
-    previewMode: 'وضع المعاينة',
+    modeledNetwork: 'شبكة مُنمذجة',
     citiesMapped: 'مدن على الخريطة',
     corridorsSynced: 'مسارات متزامنة',
     freshPings: 'إشارات حديثة',
@@ -842,7 +842,7 @@ export function MobilityOSLandingMap({
 
   const statusTags = useMemo(
     () => [
-      dashboard.hasRenderableLocations ? copy.liveFeed : copy.previewMode,
+      dashboard.hasRenderableLocations ? copy.liveFeed : copy.modeledNetwork,
       `${formatCompactNumber(dashboard.liveCorridors, ar)} ${copy.corridorsSynced}`,
       `${formatCompactNumber(CITIES.length, ar)} ${copy.citiesMapped}`,
     ],
@@ -851,7 +851,7 @@ export function MobilityOSLandingMap({
       copy.citiesMapped,
       copy.corridorsSynced,
       copy.liveFeed,
-      copy.previewMode,
+      copy.modeledNetwork,
       dashboard.hasRenderableLocations,
       dashboard.liveCorridors,
     ],

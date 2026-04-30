@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 
 const mockNavigate = vi.fn();
-const mockRegister = vi.fn();
 const mockSignIn = vi.fn();
+const mockSignUp = vi.fn();
 const mockResetPassword = vi.fn();
 const mockSignInWithGoogle = vi.fn();
 const mockSignInWithFacebook = vi.fn();
@@ -63,20 +63,15 @@ vi.mock('@/hooks/useIframeSafeNavigate', () => ({
   useIframeSafeNavigate: () => mockNavigate,
 }));
 
-vi.mock('@/contexts/LocalAuth', () => ({
-  useLocalAuth: () => ({
-    signIn: mockSignIn,
-    register: mockRegister,
-    loading: false,
-    user: null,
-  }),
-}));
-
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
+    signIn: mockSignIn,
+    signUp: mockSignUp,
     resetPassword: mockResetPassword,
     signInWithGoogle: mockSignInWithGoogle,
     signInWithFacebook: mockSignInWithFacebook,
+    loading: false,
+    user: null,
   }),
 }));
 
@@ -178,7 +173,7 @@ describe('WaselAuth', () => {
       facebook: { enabled: true },
       whatsapp: { enabled: true },
     };
-    mockRegister.mockResolvedValue({ error: null, requiresEmailConfirmation: false });
+    mockSignUp.mockResolvedValue({ error: null, requiresEmailConfirmation: false });
     mockSignIn.mockResolvedValue({ error: null });
     mockResetPassword.mockResolvedValue({ error: null });
     mockSignInWithGoogle.mockResolvedValue({ error: null });
@@ -203,7 +198,7 @@ describe('WaselAuth', () => {
     await waitFor(() => {
       expect(screen.getAllByText(/Choose a stronger password/i).length).toBeGreaterThan(0);
     });
-    expect(mockRegister).not.toHaveBeenCalled();
+    expect(mockSignUp).not.toHaveBeenCalled();
   });
 
   it('allows signup without a phone number', async () => {
@@ -217,10 +212,10 @@ describe('WaselAuth', () => {
     fireEvent.click(screen.getByRole('button', { name: /submit create account/i }));
 
     await waitFor(() => {
-      expect(mockRegister).toHaveBeenCalledWith(
-        'Laith Nassar',
+      expect(mockSignUp).toHaveBeenCalledWith(
         'laith@example.com',
         'StrongPass1!',
+        'Laith Nassar',
         undefined,
       );
     });
@@ -238,10 +233,10 @@ describe('WaselAuth', () => {
     fireEvent.click(screen.getByRole('button', { name: /submit create account/i }));
 
     await waitFor(() => {
-      expect(mockRegister).toHaveBeenCalledWith(
-        'Laith Nassar',
+      expect(mockSignUp).toHaveBeenCalledWith(
         'laith@example.com',
         'StrongPass1!',
+        'Laith Nassar',
         '+962792084333',
       );
     });

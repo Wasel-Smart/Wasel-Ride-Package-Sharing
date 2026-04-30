@@ -1,4 +1,9 @@
 import type { RideBookingRecord } from '../../services/rideLifecycle';
+import type {
+  OptimizeRideFlowInput,
+  OptimizeRideFlowOptions,
+  OptimizeRideFlowOutput,
+} from '../../services/rideOptimization';
 
 export type RideSearchMode = 'now' | 'schedule';
 export type RideType = 'any' | 'economy' | 'comfort' | 'family';
@@ -117,3 +122,7 @@ export interface RideSearchState {
   successMessage?: string | null;
   error?: string | null;
 }
+
+export type RideFlowOptimizationInput = OptimizeRideFlowInput;
+export type RideFlowOptimizationOptions = OptimizeRideFlowOptions;
+export type RideFlowOptimizationOutput = OptimizeRideFlowOutput;

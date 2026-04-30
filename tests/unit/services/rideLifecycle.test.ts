@@ -1,33 +1,37 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../../src/services/directSupabase', () => ({
-  createDirectBooking: vi.fn(
-    async ({
-      tripId,
-      bookingStatus,
-      seatsRequested,
-      metadata,
-    }: {
-      tripId: string;
-      bookingStatus: string;
-      seatsRequested: number;
-      metadata?: { total_price?: number | null };
-    }) => ({
-      booking: {
+  getDirectDriverBookings: vi.fn(async () => []),
+  getDirectUserBookings: vi.fn(async () => []),
+}));
+
+vi.mock('../../../src/services/bookings', () => ({
+  bookingsAPI: {
+    createBooking: vi.fn(
+      async (
+        tripId: string,
+        seatsRequested: number,
+        _pickup?: string,
+        _dropoff?: string,
+        metadata?: { total_price?: number | null },
+      ) => ({
         booking_id: `backend-${tripId}`,
         id: `backend-${tripId}`,
         trip_id: tripId,
         seats_requested: seatsRequested,
-        status: bookingStatus,
+        status: 'pending',
         total_price: metadata?.total_price ?? null,
         created_at: '2026-04-15T08:00:00.000Z',
         updated_at: '2026-04-15T08:00:00.000Z',
-      },
-    }),
-  ),
-  getDirectDriverBookings: vi.fn(async () => []),
-  getDirectUserBookings: vi.fn(async () => []),
-  updateDirectBookingStatus: vi.fn(async () => undefined),
+      }),
+    ),
+    updateBookingStatus: vi.fn(async (bookingId: string, status: string) => ({
+      booking_id: bookingId,
+      id: bookingId,
+      status,
+      updated_at: '2026-04-15T08:00:00.000Z',
+    })),
+  },
 }));
 
 vi.mock('../../../src/services/growthEngine', () => ({
@@ -53,15 +57,12 @@ import {
   updateRideBooking,
   type RideBookingRecord,
 } from '../../../src/services/rideLifecycle';
+import { bookingsAPI } from '../../../src/services/bookings';
 import type { PostedRide } from '../../../src/services/journeyLogistics';
-import {
-  createDirectBooking,
-  updateDirectBookingStatus,
-} from '../../../src/services/directSupabase';
 import { ValidationError } from '../../../src/utils/errors';
 
-const mockedCreateDirectBooking = vi.mocked(createDirectBooking);
-const mockedUpdateDirectBookingStatus = vi.mocked(updateDirectBookingStatus);
+const mockedCreateBooking = vi.mocked(bookingsAPI.createBooking);
+const mockedUpdateBookingStatus = vi.mocked(bookingsAPI.updateBookingStatus);
 const BOOKING_KEY = 'wasel-ride-booking-records';
 
 const BASE_INPUT = {
@@ -85,7 +86,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.useRealTimers();
   vi.stubEnv('VITE_APP_ENV', 'test');
-  vi.stubEnv('VITE_ENABLE_DEMO_DATA', 'false');
+  vi.stubEnv('VITE_ENABLE_SYNTHETIC_DATA', 'false');
   vi.stubEnv('VITE_ENABLE_SYNTHETIC_TRIPS', 'false');
   vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'true');
   vi.stubEnv('VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK', 'true');
@@ -105,7 +106,7 @@ describe('createRideBooking()', () => {
     const stored = getRideBookings()[0];
     expect(stored?.backendBookingId).toBe(`backend-${BASE_INPUT.rideId}`);
     expect(stored?.syncState).toBe('synced');
-    expect(mockedCreateDirectBooking).toHaveBeenCalledTimes(1);
+    expect(mockedCreateBooking).toHaveBeenCalledTimes(1);
   });
 
   it('defaults seatsRequested to 1 when omitted', async () => {
@@ -125,11 +126,11 @@ describe('createRideBooking()', () => {
       }),
     ).rejects.toThrow('Sign in is required to book a ride.');
 
-    expect(mockedCreateDirectBooking).not.toHaveBeenCalled();
+    expect(mockedCreateBooking).not.toHaveBeenCalled();
   });
 
   it('surfaces backend booking failures instead of creating local success records', async () => {
-    mockedCreateDirectBooking.mockRejectedValueOnce(new Error('offline'));
+    mockedCreateBooking.mockRejectedValueOnce(new Error('offline'));
 
     await expect(createRideBooking(BASE_INPUT)).rejects.toThrow(
       'Ride could not be booked right now. Please try again.',
@@ -213,7 +214,7 @@ describe('updateRideBooking()', () => {
       paymentStatus: 'authorized',
     });
 
-    expect(mockedUpdateDirectBookingStatus).toHaveBeenCalledWith(
+    expect(mockedUpdateBookingStatus).toHaveBeenCalledWith(
       `backend-${BASE_INPUT.rideId}`,
       'accepted',
     );

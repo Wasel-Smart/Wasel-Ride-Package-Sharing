@@ -1,20 +1,16 @@
- 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
+import type { Session, User } from '@supabase/supabase-js';
 import { authAPI } from '../services/auth';
 import { supabase, isSupabaseConfigured } from '../utils/supabase/client';
 import { getAuthRedirectCandidates } from '../utils/env';
-import { scheduleDeferredTask } from '../utils/runtimeScheduling';
-import { useLocalAuth } from './LocalAuth';
 import { sanitizeForLog } from '../utils/logSanitizer';
+import { useLocalAuth } from './LocalAuth';
 import {
   buildUpdatedLocalUser,
-  createLocalAuthProfile,
   createLocalAuthUser,
   loadProfile,
   normalizeOperationError,
   shouldIgnoreProfileError,
-  shouldRefreshProfile,
   signInWithOAuthProvider,
   type Profile,
   type AuthOperationError,
@@ -26,7 +22,16 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isBackendConnected: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: AuthOperationError }>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    phone?: string,
+  ) => Promise<{
+    error: AuthOperationError;
+    requiresEmailConfirmation?: boolean;
+    email?: string;
+  }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthOperationError }>;
   signInWithGoogle: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
   signInWithFacebook: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
@@ -77,186 +82,89 @@ function shouldRetryResetPasswordForRedirect(error: unknown): boolean {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const localAuth = useLocalAuth();
-  const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isBackendConnected, setIsBackendConnected] = useState(true);
-  const profileUserIdRef = useRef<string | null>(null);
-  const isPublicLanding =
-    typeof window !== 'undefined' && window.location.pathname === '/';
+  const profileRequestIdRef = useRef(0);
 
-  useEffect(() => {
-    profileUserIdRef.current = profile?.id ?? null;
-  }, [profile?.id]);
+  const user = useMemo(
+    () => localAuth.authUser ?? (localAuth.user ? createLocalAuthUser(localAuth.user) : null),
+    [localAuth.authUser, localAuth.user],
+  );
+  const session = localAuth.session;
+  const loading = localAuth.loading;
+  const isBackendConnected = isSupabaseConfigured;
 
-  const fetchProfile = useCallback(async (userId: string, force = false) => {
+  const refreshProfile = useCallback(async () => {
+    if (!user?.id || !isSupabaseConfigured || !supabase) {
+      setProfile(null);
+      return;
+    }
+
+    const requestId = ++profileRequestIdRef.current;
+
     try {
-      if (!userId || !supabase) {
-        setProfile(null);
+      const nextProfile = await loadProfile();
+      if (requestId !== profileRequestIdRef.current) {
         return;
       }
-
-      if (!force && profileUserIdRef.current === userId) {
-        return;
-      }
-
-      setProfile(await loadProfile());
+      setProfile(nextProfile);
     } catch (error: unknown) {
       const err = error as Error;
       if (!shouldIgnoreProfileError(err) && import.meta.env?.DEV) {
         console.error('Profile fetch error:', sanitizeForLog(String(err)));
       }
-      setProfile(null);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isSupabaseConfigured || !supabase) {
-      if (localAuth.user) {
-        setUser(createLocalAuthUser(localAuth.user));
-        setProfile(createLocalAuthProfile(localAuth.user));
-      } else {
-        setUser(null);
+      if (requestId === profileRequestIdRef.current) {
         setProfile(null);
       }
-      setSession(null);
-      setLoading(localAuth.loading);
-      setIsBackendConnected(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id || !isSupabaseConfigured || !supabase) {
+      setProfile(null);
       return;
     }
 
-    let mounted = true;
-    const supabaseClient = supabase;
-    const pendingTimers: ReturnType<typeof setTimeout>[] = [];
+    void refreshProfile();
+  }, [refreshProfile, session?.access_token, user?.id]);
 
-    if (!supabaseClient) {
-      setLoading(false);
-      setIsBackendConnected(false);
-      return;
-    }
-
-    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, nextSession: Session | null) => {
-        if (!mounted) return;
-
-        const nextUserId = nextSession?.user?.id ?? null;
-        const isUserSwitch = Boolean(
-          nextUserId &&
-          profileUserIdRef.current &&
-          profileUserIdRef.current !== nextUserId,
-        );
-
-        setSession(nextSession);
-        setUser(nextSession?.user ?? null);
-
-        if (isUserSwitch) {
-          setProfile(null);
-        }
-
-        if (shouldRefreshProfile(event, nextSession)) {
-          const timer = setTimeout(() => {
-            if (mounted && nextUserId) {
-              void fetchProfile(nextUserId, isUserSwitch);
-            }
-          }, 100);
-          // Cleanup is handled by the mounted flag check inside the callback.
-          // Store the timer id so it can be cleared if the component unmounts
-          // before the 100ms fires.
-          pendingTimers.push(timer);
-        } else if (!nextSession) {
-          setProfile(null);
-        }
-
-        setLoading(false);
-      },
-    );
-
-    const initializeAuth = async () => {
+  const signUp = useCallback(
+    async (
+      email: string,
+      password: string,
+      fullName: string,
+      phone?: string,
+    ): Promise<{
+      error: AuthOperationError;
+      requiresEmailConfirmation?: boolean;
+      email?: string;
+    }> => {
       try {
-        const { data, error } = await supabaseClient.auth.getSession();
-        if (error) throw error;
-
-        if (mounted && data.session) {
-          setSession(data.session);
-          setUser(data.session.user);
-          const shouldForceProfileRefresh = profileUserIdRef.current !== data.session.user.id;
-          if (shouldForceProfileRefresh) {
-            setProfile(null);
-          }
-          setTimeout(() => {
-            if (mounted && data.session?.user?.id) {
-              void fetchProfile(data.session.user.id, shouldForceProfileRefresh);
-            }
-          }, 150);
-        }
+        const result = await localAuth.register(fullName, email, password, phone);
+        return {
+          error: result.error ? new Error(result.error) : null,
+          requiresEmailConfirmation: result.requiresEmailConfirmation,
+          email: result.email,
+        };
       } catch (error: unknown) {
-        if (import.meta.env?.DEV) {
-          console.warn('Auth init warning:', sanitizeForLog((error as Error).message));
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        return {
+          error: normalizeOperationError(error, 'Signup failed'),
+        };
       }
-    };
+    },
+    [localAuth],
+  );
 
-    const handleAuthMessage = async (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-      if (event.data?.type !== 'wasel-auth-complete') return;
-
+  const signIn = useCallback(
+    async (email: string, password: string): Promise<{ error: AuthOperationError }> => {
       try {
-        const { data, error } = await supabaseClient.auth.getSession();
-        if (error) throw error;
-        if (!mounted || !data.session) return;
-
-        setSession(data.session);
-        setUser(data.session.user);
-        void fetchProfile(data.session.user.id, true);
-      } catch (error) {
-        if (import.meta.env?.DEV) {
-          console.warn('Auth callback sync warning:', sanitizeForLog(String(error)));
-        }
+        const result = await localAuth.signIn(email, password);
+        return { error: result.error ? new Error(result.error) : null };
+      } catch (error: unknown) {
+        return { error: normalizeOperationError(error, 'Login failed') };
       }
-    };
-
-    const shouldDeferAuthInit = isPublicLanding && import.meta.env.MODE !== 'test';
-    const cancelDeferredInit = shouldDeferAuthInit
-      ? scheduleDeferredTask(() => {
-          void initializeAuth();
-        }, 1_600)
-      : (() => {
-          void initializeAuth();
-          return () => undefined;
-        })();
-    window.addEventListener('message', handleAuthMessage);
-
-    return () => {
-      mounted = false;
-      cancelDeferredInit();
-      window.removeEventListener('message', handleAuthMessage);
-      subscription.unsubscribe();
-      for (const t of pendingTimers) clearTimeout(t);
-    };
-  }, [fetchProfile, isPublicLanding, localAuth.loading, localAuth.user]);
-
-  const signUp = useCallback(async (email: string, password: string, fullName: string): Promise<{ error: AuthOperationError }> => {
-    try {
-      const result = await localAuth.register(fullName, email, password);
-      return { error: result.error ? new Error(result.error) : null };
-    } catch (error: unknown) {
-      return { error: normalizeOperationError(error, 'Signup failed') };
-    }
-  }, [localAuth]);
-
-  const signIn = useCallback(async (email: string, password: string): Promise<{ error: AuthOperationError }> => {
-    try {
-      const result = await localAuth.signIn(email, password);
-      return { error: result.error ? new Error(result.error) : null };
-    } catch (error: unknown) {
-      return { error: normalizeOperationError(error, 'Login failed') };
-    }
-  }, [localAuth]);
+    },
+    [localAuth],
+  );
 
   const signInWithGoogle = useCallback(async (returnTo?: string): Promise<{ error: AuthOperationError }> => {
     return signInWithOAuthProvider(supabase, 'google', returnTo);
@@ -269,9 +177,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = useCallback(async () => {
     try {
       await localAuth.signOut();
-      setUser(null);
       setProfile(null);
-      setSession(null);
     } catch (error) {
       if (import.meta.env?.DEV) {
         console.error('Sign out error:', sanitizeForLog(String(error)));
@@ -279,59 +185,57 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [localAuth]);
 
-  const updateProfile = useCallback(async (updates: Partial<Profile>): Promise<{ error: AuthOperationError }> => {
-    if (!user && !localAuth.user) {
-      return { error: new Error('No user logged in') };
-    }
+  const updateProfile = useCallback(
+    async (updates: Partial<Profile>): Promise<{ error: AuthOperationError }> => {
+      if (!user && !localAuth.user) {
+        return { error: new Error('No user logged in') };
+      }
 
-    try {
-      if (!isSupabaseConfigured || !supabase) {
+      try {
+        if (!isSupabaseConfigured || !supabase) {
+          if (localAuth.user) {
+            localAuth.updateUser(buildUpdatedLocalUser(localAuth.user, updates));
+          }
+          return { error: null };
+        }
+
+        const result = await authAPI.updateProfile(updates);
+        if (!result.success) {
+          return {
+            error: new Error(
+              typeof result.error === 'string' ? result.error : 'Failed to update profile',
+            ),
+          };
+        }
+
         if (localAuth.user) {
           localAuth.updateUser(buildUpdatedLocalUser(localAuth.user, updates));
         }
+        await refreshProfile();
         return { error: null };
+      } catch (error: unknown) {
+        return { error: normalizeOperationError(error, 'Update failed') };
       }
+    },
+    [localAuth, refreshProfile, user],
+  );
 
-      const result = await authAPI.updateProfile(updates);
-      if (result.success) {
-        if (user) await fetchProfile(user.id, true);
-        if (localAuth.user) {
-          localAuth.updateUser(buildUpdatedLocalUser(localAuth.user, updates));
-        }
+  const resendSignupConfirmation = useCallback(
+    async (email: string): Promise<{ error: AuthOperationError }> => {
+      try {
+        await authAPI.resendSignupConfirmation(email);
         return { error: null };
+      } catch (error: unknown) {
+        return {
+          error: normalizeOperationError(
+            error,
+            'Confirmation email could not be sent.',
+          ),
+        };
       }
-
-      return {
-        error: new Error(
-          typeof result.error === 'string'
-            ? result.error
-            : 'Failed to update profile',
-        ),
-      };
-    } catch (error: unknown) {
-      return { error: normalizeOperationError(error, 'Update failed') };
-    }
-  }, [fetchProfile, localAuth, user]);
-
-  const refreshProfile = useCallback(async () => {
-    if (user) {
-      await fetchProfile(user.id, true);
-    }
-  }, [fetchProfile, user]);
-
-  const resendSignupConfirmation = useCallback(async (email: string): Promise<{ error: AuthOperationError }> => {
-    try {
-      await authAPI.resendSignupConfirmation(email);
-      return { error: null };
-    } catch (error: unknown) {
-      return {
-        error: normalizeOperationError(
-          error,
-          'Confirmation email could not be sent.',
-        ),
-      };
-    }
-  }, []);
+    },
+    [],
+  );
 
   const resetPassword = useCallback(async (email: string): Promise<{ error: AuthOperationError }> => {
     if (!supabase) return { error: new Error('Backend not configured') };
@@ -378,27 +282,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  const value = useMemo(() => ({
-    user,
-    profile,
-    session,
-    loading,
-    isBackendConnected,
-    signUp,
-    signIn,
-    signInWithGoogle,
-    signInWithFacebook,
-    signOut,
-    updateProfile,
-    refreshProfile,
-    resendSignupConfirmation,
-    resetPassword,
-    changePassword,
-  }), [
-    user, profile, session, loading, isBackendConnected,
-    signUp, signIn, signInWithGoogle, signInWithFacebook, signOut,
-    updateProfile, refreshProfile, resendSignupConfirmation, resetPassword, changePassword,
-  ]);
+  const value = useMemo(
+    () => ({
+      user,
+      profile,
+      session,
+      loading,
+      isBackendConnected,
+      signUp,
+      signIn,
+      signInWithGoogle,
+      signInWithFacebook,
+      signOut,
+      updateProfile,
+      refreshProfile,
+      resendSignupConfirmation,
+      resetPassword,
+      changePassword,
+    }),
+    [
+      user,
+      profile,
+      session,
+      loading,
+      isBackendConnected,
+      signUp,
+      signIn,
+      signInWithGoogle,
+      signInWithFacebook,
+      signOut,
+      updateProfile,
+      refreshProfile,
+      resendSignupConfirmation,
+      resetPassword,
+      changePassword,
+    ],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

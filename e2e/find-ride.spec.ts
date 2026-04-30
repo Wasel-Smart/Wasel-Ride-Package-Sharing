@@ -2,7 +2,7 @@
  * E2E: Find Ride feature flows
  */
 import { test, expect } from '@playwright/test';
-import { seedDemoSession } from './helpers/session';
+import { seedTestSession } from './helpers/session';
 
 const BASE = 'http://127.0.0.1:4173';
 
@@ -18,7 +18,7 @@ test.describe('Find Ride', () => {
   });
 
   test('authenticated users can search rides and open details', async ({ page }) => {
-    await seedDemoSession(page);
+    await seedTestSession(page);
     await page.goto(`${BASE}/app/find-ride`, { waitUntil: 'networkidle' });
 
     // Wait for page to load with heading
@@ -48,7 +48,7 @@ test.describe('Find Ride', () => {
   });
 
   test('same-city search shows route validation', async ({ page }) => {
-    await seedDemoSession(page);
+    await seedTestSession(page);
     await page.goto(`${BASE}/app/find-ride`, { waitUntil: 'networkidle' });
 
     const selects = page.locator('select');
@@ -69,7 +69,7 @@ test.describe('Find Ride', () => {
   });
 
   test('page loads with expected elements', async ({ page }) => {
-    await seedDemoSession(page);
+    await seedTestSession(page);
     await page.goto(`${BASE}/app/find-ride`, { waitUntil: 'networkidle' });
 
     // Check for main interactive elements

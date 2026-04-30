@@ -178,10 +178,12 @@ function buildConfig() {
     environment,
     ['development', 'test'],
   );
-  const enableDemoAccount = flagAllowedInEnvironment('VITE_ENABLE_DEMO_DATA', false, environment, [
-    'development',
-    'test',
-  ]);
+  const enableSyntheticData = flagAllowedInEnvironment(
+    'VITE_ENABLE_SYNTHETIC_DATA',
+    false,
+    environment,
+    ['development', 'test'],
+  );
   const enableSyntheticTrips = flagAllowedInEnvironment(
     'VITE_ENABLE_SYNTHETIC_TRIPS',
     false,
@@ -236,7 +238,7 @@ function buildConfig() {
     founderName,
     authCallbackPath: authCallbackPath.startsWith('/') ? authCallbackPath : `/${authCallbackPath}`,
     enableLocalAuth,
-    enableDemoAccount,
+    enableSyntheticData,
     enableSyntheticTrips,
     enableGoogleAuth,
     enableFacebookAuth,

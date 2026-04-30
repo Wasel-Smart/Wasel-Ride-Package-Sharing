@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  createDemoUserProfile,
+  createLocalUserProfile,
   deriveTrustScore,
   deriveVerificationLevel,
   mapBackendProfile,
@@ -21,11 +21,11 @@ describe('trust profile derivation', () => {
     expect(high).toBeLessThanOrEqual(99);
   });
 
-  it('builds a consistent demo profile', () => {
-    const profile = createDemoUserProfile({
+  it('builds a consistent local profile', () => {
+    const profile = createLocalUserProfile({
       id: 'u1',
-      name: 'Demo User',
-      email: 'demo@example.com',
+      name: 'Local User',
+      email: 'local@example.com',
       phone: '+962700000000',
       role: 'driver',
       verified: true,
@@ -33,7 +33,7 @@ describe('trust profile derivation', () => {
 
     expect(profile.verificationLevel).toBe('level_3');
     expect(profile.sanadVerified).toBe(true);
-    expect(profile.backendMode).toBe('demo');
+    expect(profile.backendMode).toBe('local');
     expect(profile.walletStatus).toBe('active');
   });
 

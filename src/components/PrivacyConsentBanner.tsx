@@ -37,9 +37,10 @@ export function PrivacyConsentBanner() {
   const { language } = useLanguage();
   const ar = language === 'ar';
   const [visible, setVisible] = useState(false);
+  const isLandingRoute = typeof window !== 'undefined' && window.location.pathname === '/';
 
   useEffect(() => {
-    if (isTestEnv) {
+    if (isTestEnv || isLandingRoute) {
       return undefined;
     }
 
@@ -50,9 +51,9 @@ export function PrivacyConsentBanner() {
       }
     }, 2_200);
     return () => window.clearTimeout(t);
-  }, [isTestEnv]);
+  }, [isLandingRoute, isTestEnv]);
 
-  if (isTestEnv || !visible) return null;
+  if (isTestEnv || isLandingRoute || !visible) return null;
 
   const handleAccept = () => {
     recordConsentDecision('accepted');
@@ -89,7 +90,7 @@ export function PrivacyConsentBanner() {
         className="wasel-consent-root"
         style={{
           position: 'fixed',
-          bottom: 'max(20px, calc(20px + env(safe-area-inset-bottom, 0px)))',
+          bottom: 'max(16px, calc(16px + env(safe-area-inset-bottom, 0px)))',
           left: 0,
           right: 0,
           zIndex: 900,
@@ -118,11 +119,11 @@ export function PrivacyConsentBanner() {
           }
           @media (min-width: 768px) {
             .wasel-consent-root {
-              justify-content: flex-start !important;
+              justify-content: flex-end !important;
               padding-inline: 18px !important;
             }
             .wasel-consent-card {
-              max-width: 280px !important;
+              max-width: 304px !important;
             }
           }
           @media (max-width: 639px) {
@@ -146,14 +147,14 @@ export function PrivacyConsentBanner() {
           className="wasel-consent-card"
           style={{
             width: '100%',
-            maxWidth: 360,
+            maxWidth: 320,
             background: 'var(--card, rgba(15,26,38,0.97))',
             border: '1px solid var(--border, rgba(244,198,81,0.18))',
             borderRadius: 20,
             boxShadow: 'var(--wasel-shadow-lg, 0 24px 64px rgba(1,10,18,0.38))',
             backdropFilter: 'blur(22px)',
             WebkitBackdropFilter: 'blur(22px)',
-            padding: '15px 16px 14px',
+            padding: '14px 15px 13px',
             pointerEvents: 'auto',
           }}
         >
@@ -161,7 +162,7 @@ export function PrivacyConsentBanner() {
           <p
             style={{
               fontWeight: 800,
-              fontSize: '0.84rem',
+              fontSize: '0.8rem',
               color: 'var(--foreground, #F8EFD6)',
               margin: '0 0 4px',
               lineHeight: 1.4,
@@ -173,9 +174,9 @@ export function PrivacyConsentBanner() {
           {/* Body copy */}
           <p
             style={{
-              fontSize: '0.74rem',
+              fontSize: '0.72rem',
               color: 'var(--muted-foreground, rgba(228,214,180,0.82))',
-              margin: '0 0 12px',
+              margin: '0 0 10px',
               lineHeight: 1.48,
             }}
           >
@@ -207,15 +208,15 @@ export function PrivacyConsentBanner() {
               type="button"
               onClick={handleAccept}
               style={{
-                minHeight: 44,
-                padding: '0 16px',
+                minHeight: 40,
+                padding: '0 14px',
                 borderRadius: 12,
                 border: 'none',
                 background:
                   'linear-gradient(135deg, var(--wasel-brand-gradient-start, #F5B041) 0%, var(--primary, #F5B041) 44%, var(--wasel-brand-gradient-end, #E67E22) 100%)',
                 color: '#FFFDF9',
                 fontWeight: 800,
-                fontSize: '0.78rem',
+                fontSize: '0.75rem',
                 fontFamily: SHELL_FONT,
                 cursor: 'pointer',
                 transition: 'opacity 0.14s ease',
@@ -230,14 +231,14 @@ export function PrivacyConsentBanner() {
               type="button"
               onClick={handleDecline}
               style={{
-                minHeight: 44,
-                padding: '0 16px',
+                minHeight: 40,
+                padding: '0 14px',
                 borderRadius: 12,
                 border: '1px solid var(--border, rgba(244,198,81,0.18))',
                 background: 'transparent',
                 color: 'var(--foreground, #F8FAFC)',
                 fontWeight: 700,
-                fontSize: '0.78rem',
+                fontSize: '0.75rem',
                 fontFamily: SHELL_FONT,
                 cursor: 'pointer',
                 transition: 'background 0.14s ease',

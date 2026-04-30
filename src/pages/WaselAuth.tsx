@@ -26,12 +26,12 @@ import {
 } from 'lucide-react';
 import { WaselHeroMark, WaselLogo } from '../components/wasel-ds/WaselLogo';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { useAuthProviderAvailability } from '../hooks/useAuthProviderAvailability';
 import { APP_ROUTES } from '../router/paths';
 import { checkPasswordStrength, checkRateLimit, validateEmail } from '../utils/security';
 import { useAuth } from '../contexts/AuthContext';
+import { getAuthPersistencePreference, setAuthPersistencePreference } from '../utils/authStorage';
 import { getConfig, getWhatsAppSupportUrl } from '../utils/env';
 import {
   type PasswordRequirement,
@@ -46,8 +46,6 @@ import './WaselAuth.css';
 
 type Tab = 'signin' | 'signup';
 type PendingAction = 'google' | 'facebook' | 'reset' | 'whatsapp' | null;
-
-const REMEMBER_ME_STORAGE_KEY = 'wasel_remember_me';
 
 const PASSWORD_REQUIREMENT_LABEL_KEYS: Record<PasswordRequirement['key'], string> = {
   length: 'authPage.password.requirements.length',
@@ -116,25 +114,11 @@ function translateAuthErrorMessage(t: (key: string) => string, message: string):
 }
 
 function getRememberMe(): boolean {
-  if (typeof window === 'undefined') return false;
-  try {
-    return localStorage.getItem(REMEMBER_ME_STORAGE_KEY) === 'true';
-  } catch {
-    return false;
-  }
+  return getAuthPersistencePreference();
 }
 
 function setRememberMe(remember: boolean): void {
-  if (typeof window === 'undefined') return;
-  try {
-    if (remember) {
-      localStorage.setItem(REMEMBER_ME_STORAGE_KEY, 'true');
-    } else {
-      localStorage.removeItem(REMEMBER_ME_STORAGE_KEY);
-    }
-  } catch {
-    /* ignore */
-  }
+  setAuthPersistencePreference(remember);
 }
 
 function PasswordRequirementsVisible() {
@@ -436,8 +420,15 @@ export default function WaselAuth() {
   const [notice, setNotice] = useState('');
   const [rememberMe, setRememberMeState] = useState(getRememberMe);
 
-  const { signIn, register, loading, user } = useLocalAuth();
-  const { resetPassword, signInWithGoogle, signInWithFacebook } = useAuth();
+  const {
+    signIn,
+    signUp,
+    resetPassword,
+    signInWithGoogle,
+    signInWithFacebook,
+    loading,
+    user,
+  } = useAuth();
   const authProviders = useAuthProviderAvailability();
   const nav = useIframeSafeNavigate();
   const mountedRef = useRef(true);
@@ -574,6 +565,7 @@ export default function WaselAuth() {
       setError(t('authPage.errors.tooManyAttempts'));
       return;
     }
+    setAuthPersistencePreference(rememberMe);
     const { error: signInError } = await signIn(normalizedEmail, password);
     if (signInError) {
       setError(
@@ -619,12 +611,8 @@ export default function WaselAuth() {
       setError(t('authPage.errors.tooManyAttempts'));
       return;
     }
-    const registration = await register(
-      name.trim(),
-      normalizedEmail,
-      password,
-      normalizedPhone || undefined,
-    );
+    setAuthPersistencePreference(true);
+    const registration = await signUp(normalizedEmail, password, name.trim(), normalizedPhone || undefined);
     if (registration.error) {
       const normalizedFriendly = friendlyAuthError(
         registration.error,

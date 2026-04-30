@@ -26,12 +26,12 @@ interface HomeCopy {
   viewAll: string; trustLabel: string;
 }
 
-const SAMPLE_ROUTES: QuickRoute[] = [
+const FEATURED_ROUTES: QuickRoute[] = [
   { from: 'عمّان', to: 'العقبة', price: 18, seats: 3, time: '08:00' },
   { from: 'عمّان', to: 'إربد', price: 6, seats: 2, time: '09:30' },
   { from: 'عمّان', to: 'البحر الميت', price: 12, seats: 4, time: '10:00' },
 ];
-const SAMPLE_ROUTES_EN: QuickRoute[] = [
+const FEATURED_ROUTES_EN: QuickRoute[] = [
   { from: 'Amman', to: 'Aqaba', price: 18, seats: 3, time: '08:00' },
   { from: 'Amman', to: 'Irbid', price: 6, seats: 2, time: '09:30' },
   { from: 'Amman', to: 'Dead Sea', price: 12, seats: 4, time: '10:00' },
@@ -123,7 +123,7 @@ function ActionCard({ icon: Icon, label, description, accentVar, dimVar, borderV
   );
 }
 
-/* ─── Ride preview row ────────────────────────────────────────── */
+/* ─── Ride row ────────────────────────────────────────────────── */
 function RideRow({ route, copy, index, onBook }: {
   route: QuickRoute; copy: HomeCopy; index: number; onBook: () => void;
 }) {
@@ -214,7 +214,7 @@ export function WaselMobileHome() {
   const { language } = useLanguage();
   const isAr = language === 'ar';
   const copy = isAr ? AR : EN;
-  const routes = isAr ? SAMPLE_ROUTES : SAMPLE_ROUTES_EN;
+  const routes = isAr ? FEATURED_ROUTES : FEATURED_ROUTES_EN;
 
   const [loading, setLoading] = useState(true);
   const [online, setOnline] = useState(getOnlineState);

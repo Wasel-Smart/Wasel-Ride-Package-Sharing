@@ -1,0 +1,70 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512 512"
+  fill="none"
+  role="img"
+  aria-labelledby="title desc"
+  preserveAspectRatio="xMidYMid meet"
+>
+  <title id="title">Wasel partnership pin logo</title>
+  <desc id="desc">A location pin with a handshake, refined for Wasel's trust and mobility brand.</desc>
+  <defs>
+    <linearGradient id="pinGradient" x1="118" y1="92" x2="394" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#72D0EF" />
+      <stop offset="0.46" stop-color="#2F92CF" />
+      <stop offset="1" stop-color="#1E5FAE" />
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="284" y1="150" x2="390" y2="274" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A8D614" />
+      <stop offset="1" stop-color="#6BB515" />
+    </linearGradient>
+    <filter id="pinShadow" x="78" y="66" width="356" height="380" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#08131E" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <g filter="url(#pinShadow)">
+    <path
+      d="M256 84C176.471 84 112 148.471 112 228C112 258.755 122.068 287.354 139.104 310.508L239.056 425.848C247.81 435.95 264.19 435.95 272.944 425.848L372.896 310.508C389.932 287.354 400 258.755 400 228C400 148.471 335.529 84 256 84Z"
+      fill="url(#pinGradient)"
+    />
+  </g>
+
+  <circle cx="256" cy="220" r="104" fill="#F6FBFF" fill-opacity="0.98" />
+
+  <path
+    d="M311.5 181.5C324.551 181.5 336.663 186.946 344.976 196.014L369.369 222.614C372.837 226.396 372.582 232.247 368.801 235.716L362.4 241.587L319.774 198.961C318.176 197.362 316.041 196.415 313.782 196.297L292.748 195.194L311.5 181.5Z"
+    fill="url(#accentGradient)"
+    fill-opacity="0.92"
+  />
+
+  <path
+    d="M200.625 180.938C208.095 180.938 215.259 183.906 220.541 189.188L233.144 201.79C235.78 204.426 239.529 205.734 243.245 205.33L274.894 201.89C280.467 201.284 285.925 203.719 289.207 208.264L296.754 218.716C299.944 223.134 299.482 229.242 295.657 233.128L283.502 245.478C279.885 249.154 274.249 249.997 269.704 247.537L251.342 237.599C248.179 235.887 244.286 236.35 241.621 238.74L213.815 263.687C208.313 268.624 199.94 268.576 194.495 263.576L166.979 238.305C163.096 234.738 162.739 228.717 166.185 224.714L191.153 195.704C196.241 189.793 203.644 185.982 211.666 185.066L200.625 180.938Z"
+    fill="#F6FBFF"
+  />
+
+  <path
+    d="M207.888 186.283C216.163 186.283 224.099 189.571 229.951 195.422L239.248 204.719C241.116 206.588 243.696 207.521 246.324 207.265L276.319 204.344C282.739 203.719 288.985 206.649 292.647 212.001L297.029 218.408C299.299 221.725 298.948 226.191 296.186 229.11L285.096 240.826C282.236 243.849 277.749 244.55 274.11 242.545L253.664 231.273C249.866 229.179 245.178 229.711 241.931 232.596L217.076 254.674C213.54 257.815 208.194 257.811 204.663 254.665L177.327 230.307C174.547 227.83 174.236 223.608 176.624 220.751L200.823 191.805C202.518 189.778 204.921 188.463 207.554 188.126L207.888 186.283Z"
+    stroke="#2F92CF"
+    stroke-width="8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <path d="M225 249L204 268" stroke="#2F92CF" stroke-width="8" stroke-linecap="round" />
+  <path d="M247 258L226 279" stroke="#2F92CF" stroke-width="8" stroke-linecap="round" />
+  <path d="M271 266L251 287" stroke="#2F92CF" stroke-width="8" stroke-linecap="round" />
+  <path d="M293 260L278 277" stroke="#2F92CF" stroke-width="8" stroke-linecap="round" />
+  <path d="M306 244L321 261" stroke="#2F92CF" stroke-width="8" stroke-linecap="round" />
+  <path d="M324 233L342 253" stroke="#2F92CF" stroke-width="8" stroke-linecap="round" />
+  <path d="M340 220L357 239" stroke="#2F92CF" stroke-width="8" stroke-linecap="round" />
+
+  <path
+    d="M217 160C229.604 151.294 245.011 147.027 260.704 147.906L286.45 149.349C293.534 149.746 300.269 152.522 305.557 157.219L314.487 165.149C317.595 167.909 317.953 172.633 315.311 175.842C312.855 178.827 308.527 179.482 305.288 177.377L297.475 172.298C293.921 169.987 289.714 168.885 285.482 169.161L253.297 171.26C248.681 171.561 244.268 173.245 240.64 176.093L219.464 192.718C215.962 195.468 210.903 194.977 208.007 191.595C205.037 188.127 205.404 182.885 208.824 179.868L217 160Z"
+    fill="#F6FBFF"
+    stroke="#2F92CF"
+    stroke-width="8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

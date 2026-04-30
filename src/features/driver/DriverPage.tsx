@@ -98,7 +98,7 @@ export default function DriverPage() {
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
-                  driverPlan?.waselBrainNote ?? 'Pick a daily route to unlock route-specific earnings guidance.',
+                  driverPlan?.routeNote ?? 'Pick a daily route to unlock route-specific earnings guidance.',
                   driverPlan
                     ? `Best pickup point: ${driverPlan.corridor.pickupPoints[0] ?? 'Trusted corridor node'}. ${driverPlan.corridor.autoGroupWindow}`
                     : 'A clear pickup point matters once demand is strong enough to predict the next departure window.',
@@ -155,7 +155,7 @@ export default function DriverPage() {
               <div style={{ color: DS.text, fontWeight: 900 }}>Why this route can work</div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
-              {defensibility.map((line) => (
+              {defensibility.map((line: string) => (
                 <div key={line} style={{ background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}`, color: DS.text, fontSize: '0.8rem', lineHeight: 1.55 }}>
                   {line}
                 </div>

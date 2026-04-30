@@ -1,5 +1,7 @@
 import '@testing-library/jest-dom';
 
+if (typeof window !== 'undefined') {
+
 // ── React 18 + jsdom error event suppression ─────────────────────────────────
 //
 // React 18 calls `reportError()` (or dispatches an 'error' event on window)
@@ -149,8 +151,9 @@ try {
     configurable: true,
     value: storage,
   });
-  Object.defineProperty(globalThis, 'localStorage', {
+Object.defineProperty(globalThis, 'localStorage', {
     configurable: true,
     value: storage,
   });
+}
 }

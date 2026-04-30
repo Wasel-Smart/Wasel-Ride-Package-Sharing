@@ -1,0 +1,60 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="88" y1="76" x2="424" y2="436" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F9FCFF"/>
+      <stop offset="1" stop-color="#E8F2FB"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="116" y1="116" x2="396" y2="396" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#63ECFF"/>
+      <stop offset="0.48" stop-color="#1E9FFF"/>
+      <stop offset="1" stop-color="#1AD6C6"/>
+    </linearGradient>
+    <linearGradient id="river" x1="256" y1="150" x2="256" y2="374" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3ADAFE"/>
+      <stop offset="1" stop-color="#197DDA"/>
+    </linearGradient>
+    <linearGradient id="green" x1="164" y1="164" x2="348" y2="346" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9FEB40"/>
+      <stop offset="1" stop-color="#45B950"/>
+    </linearGradient>
+    <filter id="shadow" x="42" y="42" width="428" height="428" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#07213A" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <circle cx="256" cy="256" r="194" fill="url(#bg)"/>
+  </g>
+
+  <circle cx="256" cy="256" r="194" stroke="#FFFFFF" stroke-width="8"/>
+
+  <circle cx="256" cy="256" r="146" stroke="url(#ring)" stroke-width="40"/>
+
+  <path
+    d="M204 160C176 173 154 199 147 232C172 222 197 222 218 232C236 242 247 257 256 273C265 256 276 240 294 230C316 219 341 220 365 232C358 199 337 173 308 160H204Z"
+    fill="url(#green)"
+  />
+
+  <path
+    d="M256 151C230 179 219 198 219 221C219 245 234 263 256 286C278 263 293 245 293 221C293 198 282 179 256 151Z"
+    fill="url(#river)"
+  />
+
+  <path
+    d="M255 286C222 308 195 330 178 359C202 370 228 375 256 375C284 375 309 370 334 359C316 330 289 308 255 286Z"
+    fill="url(#river)"
+  />
+
+  <path d="M255 214L272 246L255 239L238 246L255 214Z" fill="#F59A23"/>
+
+  <g fill="#0E8DDB">
+    <rect x="160" y="154" width="16" height="56" rx="4"/>
+    <rect x="182" y="142" width="18" height="68" rx="4"/>
+    <rect x="206" y="129" width="20" height="81" rx="4"/>
+    <rect x="232" y="116" width="20" height="94" rx="4"/>
+    <rect x="259" y="108" width="18" height="102" rx="4"/>
+    <rect x="284" y="121" width="20" height="89" rx="4"/>
+    <rect x="310" y="136" width="18" height="74" rx="4"/>
+    <rect x="334" y="150" width="16" height="60" rx="4"/>
+  </g>
+</svg>

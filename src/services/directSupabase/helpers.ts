@@ -66,6 +66,7 @@ export function mapProfileFromContext(
     email: context.user.email ?? null,
     full_name: context.user.full_name ?? null,
     role: context.user.role ?? null,
+    driver_status: context.driver?.driver_status ?? null,
     phone: context.user.phone_number ?? null,
     phone_number: context.user.phone_number ?? null,
     phone_verified: Boolean(context.user.phone_verified_at),
@@ -114,6 +115,17 @@ export function buildTrustLikeUser(profile: RawProfile) {
   );
   return {
     role,
+    driverStatus:
+      profile.driver_status === 'draft' ||
+      profile.driver_status === 'pending_approval' ||
+      profile.driver_status === 'approved' ||
+      profile.driver_status === 'rejected' ||
+      profile.driver_status === 'suspended' ||
+      profile.driver_status === 'offline' ||
+      profile.driver_status === 'online' ||
+      profile.driver_status === 'busy'
+        ? profile.driver_status
+        : undefined,
     verificationLevel,
     walletStatus:
       profile.wallet_status === 'frozen' || profile.wallet_status === 'limited'

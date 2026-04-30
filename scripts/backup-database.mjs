@@ -2,183 +2,480 @@
 /**
  * Wasel Supabase Backup Script
  *
- * Performs automated backups via Supabase Management API:
- *  - Triggers a point-in-time backup
- *  - Verifies backup was created
- *  - Logs backup metadata
- *  - Rotates old backups (keeps last 30)
- *  - Optionally uploads to S3-compatible storage
+ * Supports:
+ *  - Supabase managed backup trigger via Management API when a personal access token is available
+ *  - Logical dumps via Supabase CLI (`db dump`) using either a linked project or a direct DB URL
+ *  - Fallback to `pg_dump` when a DB URL is available and the CLI path is unavailable
  *
  * Usage:
- *   SUPABASE_ACCESS_TOKEN=<tok> SUPABASE_PROJECT_ID=<id> node scripts/backup-database.mjs
+ *   node scripts/backup-database.mjs --type=full
+ *   node scripts/backup-database.mjs --type=schema
+ *   node scripts/backup-database.mjs --type=data
  */
 
-import { createWriteStream, mkdirSync, readdirSync, unlinkSync, statSync } from 'fs';
-import { join } from 'path';
-import { execSync } from 'child_process';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { join, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
 
-const ACCESS_TOKEN  = process.env.SUPABASE_ACCESS_TOKEN;
-const PROJECT_ID    = process.env.SUPABASE_PROJECT_ID;
-const DB_URL        = process.env.DATABASE_URL;
-const BACKUP_DIR    = process.env.BACKUP_DIR ?? './backups';
-const MAX_BACKUPS   = parseInt(process.env.MAX_BACKUPS ?? '30', 10);
-const SUPABASE_API  = 'https://api.supabase.com/v1';
+const ROOT_DIR = process.cwd();
 
-if (!ACCESS_TOKEN || !PROJECT_ID) {
-  console.error('❌ Missing SUPABASE_ACCESS_TOKEN or SUPABASE_PROJECT_ID');
-  process.exit(1);
+loadEnvFile(resolve(ROOT_DIR, '.env'));
+loadEnvFile(resolve(ROOT_DIR, '.env.local'));
+
+const requestedType = parseRequestedType(process.argv);
+const backupDir = process.env.BACKUP_DIR ?? './backups';
+const maxBackups = parseInt(process.env.MAX_BACKUPS ?? '30', 10);
+const accessToken = process.env.SUPABASE_ACCESS_TOKEN ?? '';
+const dbUrl =
+  process.env.DATABASE_URL ??
+  process.env.SUPABASE_DB_URL ??
+  process.env.SUPABASE_DIRECT_CONNECTION_STRING ??
+  '';
+const projectRef = inferProjectRef();
+const supabaseApi = 'https://api.supabase.com/v1';
+
+const managedBackupEnabled = Boolean(accessToken && projectRef);
+
+if (!projectRef) {
+  console.warn('Warning: could not infer Supabase project ref from env or linked config.');
 }
 
-const headers = {
-  Authorization: `Bearer ${ACCESS_TOKEN}`,
+if (!accessToken) {
+  console.warn(
+    'Warning: SUPABASE_ACCESS_TOKEN is not set. Managed Supabase backups will be skipped.',
+  );
+}
+
+const managedHeaders = {
+  Authorization: `Bearer ${accessToken}`,
   'Content-Type': 'application/json',
 };
 
-function ensureBackupDir() {
-  mkdirSync(BACKUP_DIR, { recursive: true });
-  mkdirSync(join(BACKUP_DIR, 'full'),   { recursive: true });
-  mkdirSync(join(BACKUP_DIR, 'schema'), { recursive: true });
+function loadEnvFile(filePath) {
+  if (!existsSync(filePath)) {
+    return;
+  }
+
+  const content = readTextFile(filePath);
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) {
+      continue;
+    }
+
+    const separatorIndex = line.indexOf('=');
+    if (separatorIndex === -1) {
+      continue;
+    }
+
+    const key = line.slice(0, separatorIndex).trim();
+    let value = line.slice(separatorIndex + 1).trim();
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    if (!(key in process.env)) {
+      process.env[key] = value;
+    }
+  }
+}
+
+function readTextFile(filePath) {
+  return readFileSync(filePath, 'utf8');
+}
+
+function parseRequestedType(argv) {
+  const rawType = argv
+    .find(argument => argument.startsWith('--type='))
+    ?.split('=')[1]
+    ?.toLowerCase();
+
+  if (!rawType) {
+    return 'full';
+  }
+
+  if (!['full', 'schema', 'data'].includes(rawType)) {
+    console.error(`Unsupported backup type "${rawType}". Use full, schema, or data.`);
+    process.exit(1);
+  }
+
+  return rawType;
+}
+
+function inferProjectRef() {
+  const candidates = [
+    process.env.SUPABASE_PROJECT_ID,
+    process.env.SUPABASE_PROJECT_REF,
+    extractProjectRefFromUrl(process.env.SUPABASE_PROJECT_URL),
+    extractProjectRefFromUrl(process.env.VITE_SUPABASE_URL),
+    extractProjectRefFromUrl(process.env.NEXT_PUBLIC_SUPABASE_URL),
+    extractProjectRefFromConnectionString(dbUrl),
+    extractProjectRefFromJwt(process.env.VITE_SUPABASE_ANON_KEY),
+    extractProjectRefFromJwt(process.env.VITE_SUPABASE_PUBLISHABLE_KEY),
+    extractProjectRefFromJwt(process.env.SUPABASE_PROJECT_PUBLISHABLE_KEY),
+    extractProjectRefFromJwt(process.env.SUPABASE_PUBLISHABLE_KEY),
+    extractProjectRefFromJwt(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY),
+  ];
+
+  return candidates.find(Boolean) ?? '';
+}
+
+function extractProjectRefFromUrl(value) {
+  if (!value) {
+    return '';
+  }
+
+  try {
+    const { hostname } = new URL(value);
+    const match = hostname.match(/^([a-z0-9-]+)\.supabase\.co$/i);
+    return match?.[1] ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function extractProjectRefFromConnectionString(value) {
+  if (!value) {
+    return '';
+  }
+
+  try {
+    const parsed = new URL(value);
+    const directHostMatch = parsed.hostname.match(/^db\.([a-z0-9-]+)\.supabase\.co$/i);
+    if (directHostMatch?.[1]) {
+      return directHostMatch[1];
+    }
+
+    const poolerUserMatch = parsed.username.match(/^postgres\.([a-z0-9-]+)$/i);
+    return poolerUserMatch?.[1] ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function extractProjectRefFromJwt(value) {
+  if (!value || !value.includes('.')) {
+    return '';
+  }
+
+  try {
+    const [, payload] = value.split('.');
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const decoded = JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
+    return typeof decoded.ref === 'string' ? decoded.ref : '';
+  } catch {
+    return '';
+  }
+}
+
+function ensureBackupDirs() {
+  mkdirSync(backupDir, { recursive: true });
+  mkdirSync(join(backupDir, 'full'), { recursive: true });
+  mkdirSync(join(backupDir, 'schema'), { recursive: true });
+  mkdirSync(join(backupDir, 'data'), { recursive: true });
 }
 
 function timestamp() {
   return new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 }
 
-async function triggerSupabaseBackup() {
-  console.log('📦 Triggering Supabase managed backup...');
-  const res = await fetch(`${SUPABASE_API}/projects/${PROJECT_ID}/database/backups`, {
-    method: 'POST',
-    headers,
-  });
-
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Backup API failed (${res.status}): ${body}`);
-  }
-
-  const data = await res.json();
-  console.log(`  ✅ Managed backup triggered: ${data.id ?? 'unknown'}`);
-  return data;
-}
-
-async function listBackups() {
-  const res = await fetch(`${SUPABASE_API}/projects/${PROJECT_ID}/database/backups`, {
-    headers,
-  });
-  if (!res.ok) throw new Error(`Failed to list backups: ${res.status}`);
-  return res.json();
+function buildDumpPath(type) {
+  ensureBackupDirs();
+  return join(backupDir, type, `${type}_${timestamp()}.sql`);
 }
 
 function rotateOldBackups(dir) {
   try {
     const files = readdirSync(dir)
-      .filter(f => f.endsWith('.sql.gz') || f.endsWith('.sql'))
-      .map(f => ({ name: f, mtime: statSync(join(dir, f)).mtimeMs }))
-      .sort((a, b) => b.mtime - a.mtime);
+      .filter(file => file.endsWith('.sql') || file.endsWith('.sql.gz'))
+      .map(file => ({ name: file, mtime: statSync(join(dir, file)).mtimeMs }))
+      .sort((left, right) => right.mtime - left.mtime);
 
-    if (files.length > MAX_BACKUPS) {
-      const toDelete = files.slice(MAX_BACKUPS);
-      for (const f of toDelete) {
-        unlinkSync(join(dir, f.name));
-        console.log(`  🗑  Rotated old backup: ${f.name}`);
-      }
+    if (files.length <= maxBackups) {
+      return;
+    }
+
+    for (const file of files.slice(maxBackups)) {
+      unlinkSync(join(dir, file.name));
+      console.log(`  Rotated old backup: ${file.name}`);
     }
   } catch {
-    // Rotation failure is non-fatal
+    // Rotation failure is non-fatal.
   }
 }
 
-function pgDump(type = 'full') {
-  if (!DB_URL) {
-    console.log('  ⚠️  DATABASE_URL not set — skipping local pg_dump');
+function resolveSupabaseCli() {
+  const localWindowsCli = resolve(ROOT_DIR, 'node_modules', '.bin', 'supabase.cmd');
+  if (existsSync(localWindowsCli)) {
+    return localWindowsCli;
+  }
+
+  const localPosixCli = resolve(ROOT_DIR, 'node_modules', '.bin', 'supabase');
+  if (existsSync(localPosixCli)) {
+    return localPosixCli;
+  }
+
+  const globalCliCheck = spawnSync('supabase', ['--version'], {
+    stdio: 'ignore',
+    shell: process.platform === 'win32',
+  });
+
+  if (globalCliCheck.status === 0) {
+    return 'supabase';
+  }
+
+  return '';
+}
+
+function hasPgDump() {
+  const result = spawnSync('pg_dump', ['--version'], {
+    stdio: 'ignore',
+    shell: process.platform === 'win32',
+  });
+  return result.status === 0;
+}
+
+function dumpFlagsForType(type) {
+  switch (type) {
+    case 'schema':
+      return [];
+    case 'data':
+      return [
+        '--data-only',
+        '--use-copy',
+        '-x',
+        'storage.buckets_vectors',
+        '-x',
+        'storage.vector_indexes',
+      ];
+    case 'full':
+    default:
+      return [];
+  }
+}
+
+function pgDumpFlagsForType(type) {
+  switch (type) {
+    case 'schema':
+      return ['--schema-only'];
+    case 'data':
+      return ['--data-only'];
+    case 'full':
+    default:
+      return [];
+  }
+}
+
+function runSupabaseCliDump(type) {
+  const cli = resolveSupabaseCli();
+  if (!cli) {
     return null;
   }
 
-  ensureBackupDir();
-  const ts       = timestamp();
-  const filename = `${type}_${ts}.sql.gz`;
-  const subdir   = type === 'full' ? 'full' : 'schema';
-  const filepath = join(BACKUP_DIR, subdir, filename);
+  const outputPath = buildDumpPath(type);
+  const args = ['db', 'dump', '-f', outputPath, ...dumpFlagsForType(type)];
 
-  const schemaOnly = type === 'schema' ? '--schema-only' : '';
+  if (dbUrl) {
+    args.push('--db-url', dbUrl);
+  } else {
+    args.push('--linked');
+  }
 
-  try {
-    execSync(
-      `pg_dump "${DB_URL}" ${schemaOnly} | gzip > "${filepath}"`,
-      { stdio: 'pipe' },
+  if (process.env.SUPABASE_DB_PASSWORD) {
+    args.push('--password', process.env.SUPABASE_DB_PASSWORD);
+  }
+
+  console.log(`  Creating ${type} backup via Supabase CLI...`);
+  const runWithShell = cli.toLowerCase().endsWith('.cmd');
+  const result = spawnSync(cli, args, {
+    cwd: ROOT_DIR,
+    encoding: 'utf8',
+    stdio: 'pipe',
+    shell: runWithShell,
+  });
+
+  if (result.status === 0 && existsSync(outputPath)) {
+    console.log(`  ${type} backup: ${outputPath}`);
+    rotateOldBackups(join(backupDir, type));
+    return outputPath;
+  }
+
+  const errorText = [result.error?.message, result.stderr, result.stdout]
+    .filter(Boolean)
+    .join('\n')
+    .trim();
+
+  if (errorText.includes('Cannot find project ref. Have you run supabase link?')) {
+    console.warn(
+      `  Supabase CLI backup failed for ${type}: project is not linked. Run \`npx supabase login\` and \`npx supabase link --project-ref ${projectRef || '<ref>'}\`.`,
     );
-    console.log(`  ✅ ${type} backup: ${filepath}`);
-    rotateOldBackups(join(BACKUP_DIR, subdir));
-    return filepath;
-  } catch (err) {
-    console.warn(`  ⚠️  pg_dump failed (pg_dump may not be installed): ${err.message}`);
     return null;
   }
+
+  console.warn(`  Supabase CLI backup failed for ${type}: ${errorText || 'unknown error'}`);
+  return null;
 }
 
-async function writeBackupMetadata(backupInfo) {
-  ensureBackupDir();
-  const metaPath = join(BACKUP_DIR, `backup_log_${timestamp()}.json`);
-  const { writeFileSync } = await import('fs');
+function runPgDumpBackup(type) {
+  if (!dbUrl || !hasPgDump()) {
+    return null;
+  }
+
+  const outputPath = buildDumpPath(type);
+  const args = [dbUrl, ...pgDumpFlagsForType(type), '-f', outputPath];
+
+  console.log(`  Creating ${type} backup via pg_dump...`);
+  const result = spawnSync('pg_dump', args, {
+    cwd: ROOT_DIR,
+    encoding: 'utf8',
+    stdio: 'pipe',
+    shell: process.platform === 'win32',
+  });
+
+  if (result.status === 0 && existsSync(outputPath)) {
+    console.log(`  ${type} backup: ${outputPath}`);
+    rotateOldBackups(join(backupDir, type));
+    return outputPath;
+  }
+
+  const errorText = [result.stderr, result.stdout].filter(Boolean).join('\n').trim();
+  console.warn(`  pg_dump backup failed for ${type}: ${errorText || 'unknown error'}`);
+  return null;
+}
+
+function createLogicalBackup(type) {
+  if (type === 'full') {
+    return runPgDumpBackup(type) ?? runSupabaseCliDump(type);
+  }
+
+  return runSupabaseCliDump(type) ?? runPgDumpBackup(type);
+}
+
+async function triggerManagedBackup() {
+  if (!managedBackupEnabled) {
+    console.log('  Skipping managed backup trigger because token or project ref is missing.');
+    return null;
+  }
+
+  console.log('  Triggering Supabase managed backup...');
+  const response = await fetch(`${supabaseApi}/projects/${projectRef}/database/backups`, {
+    method: 'POST',
+    headers: managedHeaders,
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Backup API failed (${response.status}): ${body}`);
+  }
+
+  const payload = await response.json();
+  console.log(`  Managed backup triggered: ${payload.id ?? 'unknown'}`);
+  return payload;
+}
+
+async function listManagedBackups() {
+  if (!managedBackupEnabled) {
+    return null;
+  }
+
+  const response = await fetch(`${supabaseApi}/projects/${projectRef}/database/backups`, {
+    headers: managedHeaders,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to list backups (${response.status})`);
+  }
+
+  return response.json();
+}
+
+async function verifyRecentManagedBackup() {
+  const backups = await listManagedBackups().catch(() => null);
+  if (!backups) {
+    return;
+  }
+
+  const recent = Array.isArray(backups) ? backups[0] : backups.backups?.[0];
+  if (!recent) {
+    console.warn('  No managed backups found in Supabase project.');
+    return;
+  }
+
+  console.log(
+    `  Most recent managed backup: ${recent.inserted_at ?? recent.created_at ?? 'unknown'}`,
+  );
+}
+
+function writeBackupMetadata(metadata) {
+  ensureBackupDirs();
+  const metadataPath = join(backupDir, `backup_log_${timestamp()}.json`);
   writeFileSync(
-    metaPath,
+    metadataPath,
     JSON.stringify(
       {
-        timestamp:  new Date().toISOString(),
-        projectId:  PROJECT_ID,
-        ...backupInfo,
+        timestamp: new Date().toISOString(),
+        requestedType,
+        projectRef: projectRef || null,
+        ...metadata,
       },
       null,
       2,
     ),
   );
-  console.log(`  📋 Metadata written: ${metaPath}`);
+  console.log(`  Metadata written: ${metadataPath}`);
 }
 
-async function verifyRecentBackup() {
-  const backups = await listBackups().catch(() => null);
-  if (!backups) return;
-
-  const recent = Array.isArray(backups)
-    ? backups[0]
-    : (backups.backups ?? [])[0];
-
-  if (!recent) {
-    console.warn('  ⚠️  No backups found in Supabase project');
-    return;
+function printFailureGuidance() {
+  console.error('\nNo backup artifact was created.');
+  console.error(
+    'To create logical backups, set DATABASE_URL or SUPABASE_DB_URL, or run `npx supabase login` and `npx supabase link --project-ref <ref>` first.',
+  );
+  console.error(
+    'To trigger Supabase managed backups through the Management API, also set SUPABASE_ACCESS_TOKEN.',
+  );
+  if (projectRef) {
+    console.error(`Detected project ref: ${projectRef}`);
   }
-
-  console.log(`  ✅ Most recent backup: ${recent.inserted_at ?? recent.created_at ?? 'unknown'}`);
 }
 
 async function main() {
-  console.log(`\n🗄  Wasel Database Backup — ${new Date().toISOString()}\n`);
+  console.log(`\nWasel Database Backup - ${new Date().toISOString()}\n`);
 
-  // 1. Trigger managed Supabase backup
-  const backupResult = await triggerSupabaseBackup().catch(err => {
-    console.warn(`  ⚠️  Managed backup failed: ${err.message}`);
+  const logicalBackupPath = createLogicalBackup(requestedType);
+  const managedBackup = await triggerManagedBackup().catch(error => {
+    console.warn(`  Managed backup failed: ${error.message}`);
     return null;
   });
 
-  // 2. Local pg_dump if DATABASE_URL is available
-  const fullPath   = pgDump('full');
-  const schemaPath = pgDump('schema');
+  await verifyRecentManagedBackup();
 
-  // 3. Verify most recent backup
-  await verifyRecentBackup();
-
-  // 4. Write metadata log
-  await writeBackupMetadata({
-    managedBackup: backupResult?.id ?? null,
-    localFullBackup:   fullPath,
-    localSchemaBackup: schemaPath,
+  writeBackupMetadata({
+    managedBackupId: managedBackup?.id ?? null,
+    logicalBackupPath,
   });
 
-  console.log('\n✅ Backup process complete.\n');
-  console.log('Run `npm run backup:restore` to test restoration.');
+  if (!logicalBackupPath && !managedBackup) {
+    printFailureGuidance();
+    process.exit(1);
+  }
+
+  console.log('\nBackup process complete.\n');
 }
 
-main().catch(err => {
-  console.error('❌ Fatal backup error:', err.message);
+main().catch(error => {
+  console.error('Fatal backup error:', error.message);
   process.exit(1);
 });

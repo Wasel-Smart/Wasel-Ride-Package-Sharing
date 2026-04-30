@@ -5,8 +5,14 @@ import {
   hydrateRideBookings,
   type RideBookingRecord,
 } from '../../services/rideLifecycle';
+import {
+  optimizeRideFlow,
+  type OptimizeRideFlowOptions,
+  type OptimizeRideFlowOutput,
+} from '../../services/rideOptimization';
 import { transitionRide } from '../../services/rideStateMachine';
 import { tripsAPI, type TripSearchResult } from '../../services/trips';
+import { ALL_RIDES, type Ride as CatalogRide } from '../../pages/waselCoreRideData';
 import {
   JORDAN_CITY_OPTIONS,
   JORDAN_LOCATION_OPTIONS,
@@ -14,12 +20,14 @@ import {
   routeMatchesLocationPair,
 } from '../../utils/jordanLocations';
 import { logger } from '../../utils/logging';
+import { getConfig } from '../../utils/env';
 import { rideQueue } from './ride.queue';
 import type {
   RideLocationField,
   RideRequestPayload,
   RideRequestResult,
   RideResult,
+  RideFlowOptimizationInput,
   RideSearchParams,
   RideSuggestion,
   RideType,
@@ -147,6 +155,77 @@ function toRideResultFromTrip(trip: TripSearchResult): RideResult {
   };
 }
 
+function toRideResultFromCatalogRide(ride: CatalogRide): RideResult {
+  const etaMinutes = estimateEtaMinutes(ride.from, ride.to);
+  return {
+    id: ride.id,
+    from: ride.from,
+    to: ride.to,
+    date: ride.date,
+    time: ride.time,
+    seatsAvailable: ride.seatsAvailable,
+    totalSeats: ride.totalSeats,
+    pricePerSeat: ride.pricePerSeat,
+    driver: {
+      id: ride.ownerId ?? `catalog-driver-${ride.id}`,
+      name: ride.driver.name,
+      rating: ride.driver.rating,
+      verified: ride.driver.verified,
+      trips: ride.driver.trips,
+      phone: ride.driver.phone,
+      email: ride.driver.email,
+    },
+    routeMode: ride.routeMode ?? 'network_inventory',
+    ownerId: ride.ownerId,
+    vehicleType: ride.car,
+    carModel: ride.car,
+    etaMinutes,
+    estimatedArrivalLabel: formatArrivalLabel(etaMinutes),
+    recommendedReason: ride.driver.verified ? 'Trusted Wasel corridor ride' : undefined,
+    rideType: inferRideType(ride.car),
+    supportsPackages: ride.pkgCapacity !== 'none',
+    packageCapacity: ride.pkgCapacity === 'none' ? undefined : ride.pkgCapacity,
+    packageNote: ride.packageNote,
+    postedRideId: ride.sourceRideId,
+    fromPoint: ride.fromPoint,
+    toPoint: ride.toPoint,
+    distanceKm: ride.distance,
+    durationLabel: ride.duration,
+    prayerStops: ride.prayerStops,
+    amenities: ride.amenities,
+    intermediateStops: ride.intermediateStops,
+    carColor: ride.carColor,
+    lastUpdatedAt: ride.createdAt ?? new Date().toISOString(),
+  };
+}
+
+function isCatalogFallbackEnabled() {
+  const { isDev, isTest } = getConfig();
+  return isDev || isTest;
+}
+
+function filterAndSortRideResults(results: RideResult[], params: RideSearchParams) {
+  return dedupeResults(results)
+    .filter(
+      ride =>
+        routeMatchesLocationPair(ride.from, ride.to, params.from, params.to, {
+          allowReverse: false,
+        }) && ride.seatsAvailable > 0,
+    )
+    .filter(ride => !params.date || ride.date === params.date)
+    .filter(
+      ride =>
+        params.rideType === undefined ||
+        params.rideType === 'any' ||
+        ride.rideType === params.rideType,
+    )
+    .sort((left, right) => scoreRide(right) - scoreRide(left));
+}
+
+function searchCatalogRides(params: RideSearchParams): RideResult[] {
+  return filterAndSortRideResults(ALL_RIDES.map(toRideResultFromCatalogRide), params);
+}
+
 function dedupeResults(results: RideResult[]) {
   const seen = new Set<string>();
   return results.filter(ride => {
@@ -226,23 +305,7 @@ export const rideService = {
   async searchRides(params: RideSearchParams): Promise<RideResult[]> {
     try {
       const liveTrips = await tripsAPI.searchTrips(params.from, params.to, params.date, params.seats);
-      return dedupeResults(
-        liveTrips
-          .filter(
-            trip =>
-              routeMatchesLocationPair(trip.from, trip.to, params.from, params.to, {
-                allowReverse: false,
-              }) && trip.seats > 0,
-          )
-          .map(toRideResultFromTrip),
-      )
-        .filter(
-          ride =>
-            params.rideType === undefined ||
-            params.rideType === 'any' ||
-            ride.rideType === params.rideType,
-        )
-        .sort((left, right) => scoreRide(right) - scoreRide(left));
+      return filterAndSortRideResults(liveTrips.map(toRideResultFromTrip), params);
     } catch (error) {
       logger.error('[rideService] ride search failed', error, {
         operation: 'ride.search.backend_failure',
@@ -250,6 +313,15 @@ export const rideService = {
         to: params.to,
         date: params.date,
       });
+      if (isCatalogFallbackEnabled()) {
+        logger.warning('[rideService] falling back to local Wasel ride catalog', {
+          operation: 'ride.search.catalog_fallback',
+          from: params.from,
+          to: params.to,
+          date: params.date,
+        });
+        return searchCatalogRides(params);
+      }
       throw new Error('Unable to search rides right now.');
     }
   },
@@ -382,6 +454,10 @@ export const rideService = {
       routeMode: payload.ride.routeMode,
     });
 
+    if (payload.ride.routeMode === 'network_inventory') {
+      return { booking, queueJobId: null, lifecycleSynced: true };
+    }
+
     const queueJobId = await rideQueue.matchDriver(payload.ride.id, booking.id);
 
     let lifecycleSynced = true;
@@ -418,11 +494,22 @@ export const rideService = {
     return [...results].sort((left, right) => scoreRide(right) - scoreRide(left))[0]?.id;
   },
 
+  optimizeRideFlow(
+    input: RideFlowOptimizationInput,
+    options?: OptimizeRideFlowOptions,
+  ): OptimizeRideFlowOutput {
+    return optimizeRideFlow(input, options);
+  },
+
   async getRideById(rideId: string): Promise<RideResult | null> {
     try {
       const trip = await tripsAPI.getTripById(rideId);
       return toRideResultFromTrip(trip);
     } catch {
+      if (isCatalogFallbackEnabled()) {
+        const ride = ALL_RIDES.find(candidate => candidate.id === rideId);
+        return ride ? toRideResultFromCatalogRide(ride) : null;
+      }
       return null;
     }
   },

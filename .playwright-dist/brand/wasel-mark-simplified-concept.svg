@@ -1,0 +1,77 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="92" y1="64" x2="420" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F7FBFF"/>
+      <stop offset="1" stop-color="#E8F5FF"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="112" y1="110" x2="400" y2="402" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5DEBFF"/>
+      <stop offset="0.55" stop-color="#189DFF"/>
+      <stop offset="1" stop-color="#12D4C6"/>
+    </linearGradient>
+    <linearGradient id="river" x1="254" y1="144" x2="254" y2="392" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#35D7FF"/>
+      <stop offset="1" stop-color="#1387E3"/>
+    </linearGradient>
+    <linearGradient id="park" x1="150" y1="170" x2="354" y2="362" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8DEB3D"/>
+      <stop offset="1" stop-color="#35B44A"/>
+    </linearGradient>
+    <filter id="shadow" x="36" y="36" width="440" height="440" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#08233D" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <circle cx="256" cy="256" r="196" fill="url(#bg)"/>
+    <circle cx="256" cy="256" r="196" stroke="white" stroke-width="8"/>
+  </g>
+
+  <path
+    d="M256 118C334 118 394 179 394 256C394 333 334 394 256 394C178 394 118 333 118 256C118 179 178 118 256 118Z"
+    stroke="url(#ring)"
+    stroke-width="34"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <path
+    d="M208 160C174 174 150 206 144 244C170 228 198 224 222 236C239 245 248 259 256 274C264 258 273 243 290 234C317 220 351 225 378 245C373 208 349 175 314 160H208Z"
+    fill="url(#park)"
+    opacity="0.96"
+  />
+
+  <path
+    d="M256 152C231 176 218 195 218 219C218 244 234 262 256 285C278 262 294 244 294 219C294 195 281 176 256 152Z"
+    fill="url(#river)"
+  />
+  <path
+    d="M254 284C223 307 196 329 178 362C204 373 229 378 256 378C283 378 309 373 334 362C315 329 286 307 254 284Z"
+    fill="url(#river)"
+  />
+
+  <path
+    d="M254 214L270 246L254 238L238 246L254 214Z"
+    fill="#F59A23"
+  />
+
+  <g fill="#0E88D8" opacity="0.92">
+    <rect x="154" y="157" width="18" height="74" rx="4"/>
+    <rect x="178" y="145" width="20" height="86" rx="4"/>
+    <rect x="205" y="131" width="22" height="100" rx="4"/>
+    <rect x="233" y="117" width="22" height="114" rx="4"/>
+    <rect x="261" y="109" width="20" height="122" rx="4"/>
+    <rect x="287" y="123" width="22" height="108" rx="4"/>
+    <rect x="315" y="139" width="20" height="92" rx="4"/>
+    <rect x="340" y="154" width="18" height="77" rx="4"/>
+  </g>
+
+  <g fill="#F7FBFF">
+    <circle cx="165" cy="318" r="7"/>
+    <circle cx="347" cy="315" r="7"/>
+    <circle cx="119" cy="256" r="7"/>
+    <circle cx="393" cy="256" r="7"/>
+  </g>
+
+  <circle cx="256" cy="256" r="194" stroke="#08233D" stroke-opacity="0.08" stroke-width="2"/>
+</svg>

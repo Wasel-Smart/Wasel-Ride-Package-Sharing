@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 240" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Wasel primary lockup</title>
+  <desc id="desc">The primary Wasel lockup pairing the route W symbol with a custom-led wordmark.</desc>
+  <g transform="translate(6 14) scale(0.72)">
+    
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path
+      d="M84 86C97 129 112 188 142 242C148 253 159 256 166 245L196 145L226 245C233 256 244 253 250 242C280 188 295 129 308 86"
+      stroke="#E59C36"
+      stroke-width="30"
+    />
+    <path
+      d="M84 86C97 129 112 188 142 242C148 253 159 256 166 245L196 145L226 245C233 256 244 253 250 242C280 188 295 129 308 86"
+      stroke="#FFD39A"
+      stroke-opacity="0.72"
+      stroke-width="10"
+    />
+    <path d="M76 64L84 86M196 108L196 130M316 64L308 86" stroke="#28323D" stroke-width="7" />
+  </g>
+
+  <g transform="translate(76 52)">
+    <circle r="12.5" fill="#28323D" />
+    <circle r="7.7" fill="#FFF7EA" />
+    <circle r="2.6" fill="#E59C36" />
+  </g>
+
+  <g transform="translate(196 96)">
+    <circle r="15.5" fill="#28323D" />
+    <circle r="9.6" fill="#FFF7EA" />
+    <circle r="4.2" fill="#E59C36" />
+  </g>
+
+  <g transform="translate(316 52)">
+    <circle r="12.5" fill="#28323D" />
+    <circle r="7.7" fill="#FFF7EA" />
+    <circle r="2.6" fill="#E59C36" />
+  </g>
+  </g>
+  <g fill="none" stroke="#17212B" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" transform="translate(342 66)">
+    <path d="M10 11C14 24 19 46 28 58C32 63 38 61 42 52L48 30L54 52C58 61 64 63 68 58C77 46 82 24 86 11" />
+  </g>
+  <text
+    x="418"
+    y="126"
+    fill="#17212B"
+    font-family="'Montserrat','Segoe UI',sans-serif"
+    font-size="88"
+    font-weight="800"
+    letter-spacing="-5"
+  >
+    asel
+  </text>
+</svg>

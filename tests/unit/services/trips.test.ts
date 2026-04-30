@@ -219,6 +219,16 @@ describe('tripsAPI.searchTrips()', () => {
     expect(url).toContain('seats=2');
   });
 
+  it('sends public auth headers for ride search', async () => {
+    mockFetch.mockReturnValueOnce(ok([TRIP_RESULT]));
+    await tripsAPI.searchTrips('Amman', 'Irbid', '2026-05-01', 2);
+    const [, init] = mockFetch.mock.calls[0]!;
+    expect((init as RequestInit).headers).toMatchObject({
+      Authorization: 'Bearer anon-key',
+      apikey: 'anon-key',
+    });
+  });
+
   it('throws when API returns non-OK response', async () => {
     mockFetch.mockReturnValueOnce(fail({ error: 'Failed to search trips' }));
     await expect(tripsAPI.searchTrips('Amman', 'Irbid')).rejects.toThrow('Failed to search trips');
@@ -247,6 +257,16 @@ describe('tripsAPI.getTripById()', () => {
     await tripsAPI.getTripById('trip-1');
     const [url] = mockFetch.mock.calls[0]!;
     expect(url).toContain('trip-1');
+  });
+
+  it('uses public auth headers for trip lookup', async () => {
+    mockFetch.mockReturnValueOnce(ok(TRIP_RESULT));
+    await tripsAPI.getTripById('trip-1');
+    const [, init] = mockFetch.mock.calls[0]!;
+    expect((init as RequestInit).headers).toMatchObject({
+      Authorization: 'Bearer anon-key',
+      apikey: 'anon-key',
+    });
   });
 
   it('throws on non-OK response', async () => {

@@ -22,11 +22,10 @@
 
 import type { PostedRide } from './journeyLogistics';
 import {
-  createDirectBooking,
   getDirectDriverBookings,
   getDirectUserBookings,
-  updateDirectBookingStatus,
 } from './directSupabase';
+import { bookingsAPI } from './bookings';
 import { trackGrowthEvent } from './growthEngine';
 import {
   getTransactionalEmailAppUrl,
@@ -153,7 +152,7 @@ function markSyncState(
     {
       ...booking,
       syncState,
-      pendingSync: syncState === 'syncing' || syncState === 'sync-error',
+      pendingSync: syncState !== 'synced',
       syncedAt: syncState === 'synced' ? new Date().toISOString() : booking.syncedAt,
     },
     'ride.booking.state',
@@ -168,15 +167,13 @@ function makeTicketCode(): string {
 
 async function attemptSyncEntry(entry: PendingSyncEntry): Promise<void> {
   try {
-    const { booking: persisted } = await createDirectBooking({
-      bookingStatus: entry.status,
-      dropoff: entry.to,
-      metadata: { total_price: entry.totalPriceJod ?? entry.seatsRequested },
-      pickup: entry.from,
-      seatsRequested: entry.seatsRequested,
-      tripId: entry.rideId,
-      userId: entry.passengerId,
-    });
+    const persisted = await bookingsAPI.createBooking(
+      entry.rideId,
+      entry.seatsRequested,
+      entry.from,
+      entry.to,
+      { total_price: entry.totalPriceJod ?? entry.seatsRequested },
+    );
 
     const backendId = String(persisted.booking_id ?? persisted.id ?? '');
     const bookings = readBookings();
@@ -403,64 +400,61 @@ export async function createRideBooking(input: {
     (booking.status === 'pending_driver' || isRideBookingConfirmed(booking)),
   );
 
-  // ── Path A: no authenticated user — pure local ─────────────────────────────
+  // Require an authenticated passenger so booking records stay attached to a user.
   if (!input.passengerId) {
     throw new Error('Sign in is required to book a ride.');
   }
 
-  // ── Path B: no local persistence allowed — direct Supabase only ───────────
+  // Create the canonical booking through the shared bookings service.
   try {
-      const { booking: persisted } = await createDirectBooking({
-        bookingStatus: booking.status,
-        dropoff: input.to,
-        metadata: { total_price: booking.totalPriceJod ?? booking.seatsRequested },
-        pickup: input.from,
-        seatsRequested: booking.seatsRequested,
-        tripId: input.rideId,
-        userId: input.passengerId,
+    const persisted = await bookingsAPI.createBooking(
+      input.rideId,
+      booking.seatsRequested,
+      input.from,
+      input.to,
+      totalPriceJod !== undefined ? { total_price: totalPriceJod } : undefined,
+    );
+
+    const synced = buildSyncedBooking(booking, persisted as Record<string, unknown>);
+    upsertBookings([synced]);
+
+    if (synced.passengerEmail && shouldSendEmail) {
+      triggerRideBookingEmails({
+        appUrl: getTransactionalEmailAppUrl(),
+        booking: synced,
+        driverEmail: synced.driverEmail,
+        passengerEmail: synced.passengerEmail,
+        priceJod: synced.totalPriceJod ?? 0,
       });
-
-      const synced = buildSyncedBooking(booking, persisted as Record<string, unknown>);
-      upsertBookings([synced]);
-
-      if (synced.passengerEmail && shouldSendEmail) {
-        triggerRideBookingEmails({
-          appUrl: getTransactionalEmailAppUrl(),
-          booking: synced,
-          driverEmail: synced.driverEmail,
-          passengerEmail: synced.passengerEmail,
-          priceJod: synced.totalPriceJod ?? 0,
-        });
-      }
-
-      void trackGrowthEvent({
-        eventName: 'ride_booking_started',
-        from: input.from,
-        funnelStage: isRideBookingConfirmed(synced) ? 'booked' : 'selected',
-        metadata: {
-          pricePerSeatJod: input.pricePerSeatJod,
-          rideId: input.rideId,
-          routeMode: input.routeMode,
-          seatsRequested: synced.seatsRequested,
-        },
-        serviceType: 'ride',
-        to: input.to,
-        userId: input.passengerId,
-        valueJod: totalPriceJod,
-      });
-
-      return synced;
-    } catch (error) {
-      logger.error('[rideLifecycle] ride booking creation failed', error, {
-        passengerId: input.passengerId,
-        rideId: input.rideId,
-        routeMode: input.routeMode,
-        seatsRequested: booking.seatsRequested,
-      });
-      throw new Error('Ride could not be booked right now. Please try again.');
     }
 
-  // ── Path C: optimistic local write + async Supabase sync ──────────────────
+    void trackGrowthEvent({
+      eventName: 'ride_booking_started',
+      from: input.from,
+      funnelStage: isRideBookingConfirmed(synced) ? 'booked' : 'selected',
+      metadata: {
+        pricePerSeatJod: input.pricePerSeatJod,
+        rideId: input.rideId,
+        routeMode: input.routeMode,
+        seatsRequested: synced.seatsRequested,
+      },
+      serviceType: 'ride',
+      to: input.to,
+      userId: input.passengerId,
+      valueJod: totalPriceJod,
+    });
+
+    return synced;
+  } catch (error) {
+    logger.error('[rideLifecycle] ride booking creation failed', error, {
+      passengerId: input.passengerId,
+      rideId: input.rideId,
+      routeMode: input.routeMode,
+      seatsRequested: booking.seatsRequested,
+    });
+    throw new Error('Ride could not be booked right now. Please try again.');
+  }
+
 }
 
 export async function updateRideBooking(
@@ -495,7 +489,7 @@ export async function updateRideBooking(
     if (!backendBookingId) {
       throw new Error('Driver mutation requires a backend booking id.');
     }
-    await updateDirectBookingStatus(
+    await bookingsAPI.updateBookingStatus(
       backendBookingId,
       directStatus as 'accepted' | 'rejected' | 'cancelled',
     );
@@ -513,7 +507,7 @@ export async function updateRideBooking(
     if (!backendBookingId) {
       return updated;
     }
-    void updateDirectBookingStatus(
+    void bookingsAPI.updateBookingStatus(
       backendBookingId,
       directStatus as 'accepted' | 'rejected' | 'cancelled',
     )

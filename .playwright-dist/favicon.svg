@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Wasel app badge</title>
+  <desc id="desc">A graphite app badge built from the Wasel route W symbol.</desc>
+  <rect x="52" y="52" width="408" height="408" rx="112" fill="#10161D" />
+  <rect x="52" y="52" width="408" height="408" rx="112" stroke="#F8E5C1" stroke-opacity="0.2" stroke-width="8" />
+  <rect x="63" y="63" width="386" height="386" rx="101" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="2" />
+  <g transform="translate(96 138) scale(0.82)">
+    
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path
+      d="M84 86C97 129 112 188 142 242C148 253 159 256 166 245L196 145L226 245C233 256 244 253 250 242C280 188 295 129 308 86"
+      stroke="#E59C36"
+      stroke-width="30"
+    />
+    <path
+      d="M84 86C97 129 112 188 142 242C148 253 159 256 166 245L196 145L226 245C233 256 244 253 250 242C280 188 295 129 308 86"
+      stroke="#FFD39A"
+      stroke-opacity="0.72"
+      stroke-width="10"
+    />
+    <path d="M76 64L84 86M196 108L196 130M316 64L308 86" stroke="#28323D" stroke-width="7" />
+  </g>
+
+  <g transform="translate(76 52)">
+    <circle r="12.5" fill="#28323D" />
+    <circle r="7.7" fill="#FFF7EA" />
+    <circle r="2.6" fill="#E59C36" />
+  </g>
+
+  <g transform="translate(196 96)">
+    <circle r="15.5" fill="#28323D" />
+    <circle r="9.6" fill="#FFF7EA" />
+    <circle r="4.2" fill="#E59C36" />
+  </g>
+
+  <g transform="translate(316 52)">
+    <circle r="12.5" fill="#28323D" />
+    <circle r="7.7" fill="#FFF7EA" />
+    <circle r="2.6" fill="#E59C36" />
+  </g>
+  </g>
+</svg>

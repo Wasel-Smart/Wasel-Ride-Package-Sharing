@@ -1,0 +1,92 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512 512"
+  fill="none"
+  role="img"
+  aria-labelledby="title desc"
+  preserveAspectRatio="xMidYMid meet"
+>
+  <title id="title">Wasel luxury signature mark</title>
+  <desc id="desc">A premium Wasel monogram with a simplified parrot silhouette integrated into a refined W.</desc>
+  <defs>
+    <linearGradient id="plate" x1="98" y1="84" x2="414" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#14263C" />
+      <stop offset="0.52" stop-color="#0D1B2E" />
+      <stop offset="1" stop-color="#08121F" />
+    </linearGradient>
+    <radialGradient id="plateGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(190 132) rotate(48) scale(234 202)">
+      <stop offset="0" stop-color="#355B83" stop-opacity="0.34" />
+      <stop offset="1" stop-color="#355B83" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="metal" x1="170" y1="260" x2="360" y2="384" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F7F8FB" />
+      <stop offset="0.27" stop-color="#DCE3EA" />
+      <stop offset="0.66" stop-color="#B0BECF" />
+      <stop offset="1" stop-color="#F3F6FA" />
+    </linearGradient>
+    <linearGradient id="metalEdge" x1="190" y1="210" x2="328" y2="396" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" />
+      <stop offset="1" stop-color="#9AA8B8" />
+    </linearGradient>
+    <linearGradient id="bird" x1="180" y1="122" x2="306" y2="250" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#68F0F2" />
+      <stop offset="0.5" stop-color="#2EB8D1" />
+      <stop offset="1" stop-color="#1172AE" />
+    </linearGradient>
+    <linearGradient id="wing" x1="208" y1="184" x2="280" y2="280" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#90FBF6" />
+      <stop offset="1" stop-color="#1A86C2" />
+    </linearGradient>
+    <filter id="shadow" x="56" y="58" width="400" height="406" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#020913" flood-opacity="0.36" />
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <rect x="84" y="84" width="344" height="344" rx="82" fill="url(#plate)" />
+  </g>
+  <rect x="84" y="84" width="344" height="344" rx="82" fill="url(#plateGlow)" />
+  <rect x="84.5" y="84.5" width="343" height="343" rx="81.5" stroke="#FFFFFF" stroke-opacity="0.10" />
+  <path d="M118 355C176 323 252 307 394 319" stroke="#7CA9D6" stroke-opacity="0.12" stroke-width="2" />
+
+  <path
+    d="M166 358L208 224H236L256 298L278 224H307L328 298L350 224H378L336 358H310L292 286L272 358H242L220 286L194 358H166Z"
+    fill="url(#metal)"
+  />
+  <path
+    d="M179 342L212 240H227L256 324L287 240H300L330 324L361 240"
+    stroke="url(#metalEdge)"
+    stroke-width="7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    opacity="0.9"
+  />
+
+  <path
+    d="M219 143C236 132 259 132 278 142C294 151 306 168 309 187C313 214 296 239 269 248C243 257 212 248 197 225C188 211 185 194 189 177C192 163 202 151 219 143Z"
+    fill="url(#bird)"
+  />
+  <path
+    d="M230 184C246 177 263 180 274 194C262 196 252 203 247 216C242 230 245 245 252 258C232 250 216 233 212 214C210 201 216 190 230 184Z"
+    fill="url(#wing)"
+    opacity="0.98"
+  />
+  <path
+    d="M274 156C293 156 311 168 318 184C323 196 321 208 314 217C307 226 295 231 282 229C294 219 298 206 296 193C293 180 285 168 274 156Z"
+    fill="#091524"
+  />
+  <path
+    d="M300 178C315 177 327 187 329 201C331 214 323 226 311 232C315 220 314 209 310 198C307 190 303 183 300 178Z"
+    fill="#6C7788"
+  />
+  <circle cx="281" cy="177" r="6" fill="#F5F7FA" />
+  <circle cx="282" cy="177" r="2.5" fill="#0A1320" />
+
+  <path
+    d="M210 259C229 250 244 238 254 224"
+    stroke="#A7F6F4"
+    stroke-width="6"
+    stroke-linecap="round"
+    opacity="0.75"
+  />
+</svg>

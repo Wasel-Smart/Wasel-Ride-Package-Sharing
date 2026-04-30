@@ -6,7 +6,22 @@
  */
 import { type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router';
-import { ChevronRight, Landmark, Mail, Phone, Shield, Sparkles } from 'lucide-react';
+import {
+  ChevronRight,
+  Compass,
+  FileText,
+  Landmark,
+  LifeBuoy,
+  Mail,
+  MapPinned,
+  Phone,
+  Route,
+  Scale,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  Wallet,
+} from 'lucide-react';
 import { Button, Card, LayoutContainer } from '../../../design-system/components';
 import { useLocalAuth } from '../../../contexts/LocalAuth';
 import { useLanguage } from '../../../contexts/LanguageContext';
@@ -274,41 +289,212 @@ export function SimpleOverviewPage({ configKey }: { configKey: OverviewConfigKey
 // ─── Utility pages ────────────────────────────────────────────────────────────
 
 export function NotFoundPage() {
+  const navigate = useIframeSafeNavigate();
+
   return (
     <LayoutContainer>
       <div className="ds-page">
-        <div className="ds-page__header">
-          <h1 className="ds-title">Page not found</h1>
-          <p className="ds-copy">The link may be outdated or the page no longer exists.</p>
-          <div className="ds-minor-actions">
-            <a className="ds-button" data-variant="primary" href="/">
-              Back to Wasel
-            </a>
-            <a className="ds-button" data-variant="secondary" href="/app/find-ride">
-              Find a ride
-            </a>
-          </div>
+        <PageHeading
+          action={
+            <>
+              <Button onClick={() => navigate('/')} variant="primary">
+                Back to Wasel
+              </Button>
+              <Button onClick={() => navigate('/app/find-ride')} variant="secondary">
+                Find a ride
+              </Button>
+            </>
+          }
+          description="The link may be outdated, the route may have moved, or the app may have redirected you out of the active corridor."
+          eyebrow="Route recovery"
+          title="This page is off the live network."
+        />
+
+        <BrandPillRow
+          items={[
+            { icon: <Compass size={14} />, label: 'Landing route available' },
+            { icon: <Route size={14} />, label: 'Ride flow still live' },
+            { icon: <LifeBuoy size={14} />, label: 'Support stays reachable' },
+          ]}
+        />
+
+        <MetricGrid
+          items={[
+            {
+              label: 'Fallback path',
+              value: 'Landing',
+              detail: 'Return to the public Wasel surface first.',
+            },
+            {
+              label: 'Fastest recovery',
+              value: 'Find ride',
+              detail: 'Jump straight into the live ride flow.',
+            },
+            {
+              label: 'Navigation status',
+              value: 'Safe',
+              detail: 'No bookings or payments were changed.',
+            },
+          ]}
+        />
+
+        <div className="ds-split-grid">
+          <Card className="ds-section-wrapper">
+            <div className="ds-section-wrapper__header">
+              <div className="ds-panel-kicker">What happened</div>
+              <h2 className="ds-section-title">The route is no longer valid.</h2>
+              <p className="ds-copy ds-copy--tight">
+                Wasel keeps live links short and direct. If the path changed, the safest next step
+                is to return to a known page and reopen the flow from there.
+              </p>
+            </div>
+            <div className="ds-list">
+              {[
+                'The page may have been renamed or replaced by a newer route.',
+                'The link may point to a route that only exists during an active session.',
+                'A ride, package, or wallet step may require returning through the main app shell.',
+              ].map(item => (
+                <div className="ds-list-item" key={item}>
+                  <div className="ds-list-item__icon">
+                    <Route size={16} />
+                  </div>
+                  <div>
+                    <h2 className="ds-card__title">{item}</h2>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <MapHeroPanel
+            mapVariant="ambient"
+            signals={['Landing available', 'Ride search live', 'Support line active']}
+          >
+            <div className="ds-hero-panel__content-inner">
+              <div className="ds-panel-kicker">Recovery lane</div>
+              <h2 className="ds-section-title">Return to the active Wasel path.</h2>
+              <p className="ds-copy">
+                Start from landing if you need the full network view, or jump straight into
+                `Find a ride` if you want the fastest recovery back into a live service flow.
+              </p>
+            </div>
+          </MapHeroPanel>
         </div>
+
+        <ActionCards
+          items={[
+            {
+              detail: 'Open the public network view and re-enter from the top.',
+              icon: <Compass size={18} />,
+              path: '/',
+              title: 'Back to landing',
+            },
+            {
+              detail: 'Jump into the main rider flow immediately.',
+              icon: <Route size={18} />,
+              path: '/app/find-ride',
+              title: 'Find a ride',
+            },
+            {
+              detail: 'Open account access if this route required authentication.',
+              icon: <Shield size={18} />,
+              path: '/app/auth',
+              title: 'Sign in',
+            },
+          ]}
+          onNavigate={navigate}
+        />
       </div>
     </LayoutContainer>
   );
 }
 
 export function RouteErrorPage({ message }: { message: string }) {
+  const navigate = useIframeSafeNavigate();
+
   return (
     <LayoutContainer>
       <div className="ds-page">
-        <div className="ds-page__header">
-          <h1 className="ds-title">This page could not be loaded</h1>
-          <p className="ds-copy">{message}</p>
-          <div className="ds-minor-actions">
-            <a className="ds-button" data-variant="primary" href="/app/find-ride">
-              Find a ride
-            </a>
-            <a className="ds-button" data-variant="secondary" href="/app/auth">
-              Sign in
-            </a>
-          </div>
+        <PageHeading
+          action={
+            <>
+              <Button onClick={() => navigate('/app/find-ride')} variant="primary">
+                Find a ride
+              </Button>
+              <Button onClick={() => navigate('/app/auth')} variant="secondary">
+                Sign in
+              </Button>
+            </>
+          }
+          description="The app could not restore this view cleanly, but the main Wasel flows are still available."
+          eyebrow="System recovery"
+          title="This screen could not finish loading."
+        />
+
+        <MetricGrid
+          items={[
+            {
+              label: 'Route status',
+              value: 'Interrupted',
+              detail: 'This page stopped before it could finish rendering.',
+            },
+            {
+              label: 'Booking state',
+              value: 'Safe',
+              detail: 'No payment or trip change is implied by this error alone.',
+            },
+            {
+              label: 'Next step',
+              value: 'Recover',
+              detail: 'Re-enter through a stable ride, auth, or landing route.',
+            },
+          ]}
+        />
+
+        <div className="ds-split-grid">
+          <Card className="ds-section-wrapper">
+            <div className="ds-section-wrapper__header">
+              <div className="ds-panel-kicker">Error details</div>
+              <h2 className="ds-section-title">The app returned this message.</h2>
+              <p className="ds-copy ds-copy--tight">
+                If this keeps happening on the same route, the quickest recovery is to reopen the
+                flow from landing, auth, or the service page directly.
+              </p>
+            </div>
+            <div className="ds-inline-feedback" data-tone="error">
+              {message}
+            </div>
+            <div className="ds-list">
+              {[
+                'Retry from the main route instead of reusing the broken URL.',
+                'Use sign in again if the page depends on an active session.',
+                'Return to landing if you want the broadest recovery path.',
+              ].map(item => (
+                <div className="ds-list-item" key={item}>
+                  <div className="ds-list-item__icon">
+                    <Shield size={16} />
+                  </div>
+                  <div>
+                    <h2 className="ds-card__title">{item}</h2>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <MapHeroPanel
+            mapVariant="ambient"
+            signals={['Error isolated', 'Ride flow live', 'Auth flow ready']}
+          >
+            <div className="ds-hero-panel__content-inner">
+              <div className="ds-panel-kicker">Fallback route</div>
+              <h2 className="ds-section-title">Recover through the stable entry points.</h2>
+              <p className="ds-copy">
+                Wasel keeps the primary ride, auth, and landing routes available even when a
+                secondary surface fails to load.
+              </p>
+            </div>
+          </MapHeroPanel>
         </div>
       </div>
     </LayoutContainer>
@@ -316,60 +502,234 @@ export function RouteErrorPage({ message }: { message: string }) {
 }
 
 export function PrivacyPage() {
+  const navigate = useIframeSafeNavigate();
+
   return (
     <LayoutContainer>
       <div className="ds-page">
         <PageHeading
-          description="Simple privacy guidance in the same Wasel language."
-          eyebrow="Legal"
-          title="Privacy policy"
+          action={
+            <>
+              <Button onClick={() => navigate('/app/terms')} variant="secondary">
+                Terms
+              </Button>
+              <Button onClick={() => navigate('/app/auth')} variant="ghost">
+                Account access
+              </Button>
+            </>
+          }
+          description="How Wasel handles account, trip, wallet, and support data inside one live mobility network."
+          eyebrow="Legal clarity"
+          title="Privacy stays inside the corridor."
         />
-        <div className="ds-list">
-          {[
-            'Wasel stores account, trip, and support details needed to run the network.',
-            'Location and booking context stay tied to the active corridor and support flow.',
-            'Security and compliance data stay close to verification and wallet actions.',
-          ].map(item => (
-            <div className="ds-list-item" key={item}>
-              <div className="ds-list-item__icon">
-                <Shield size={16} />
-              </div>
-              <div>
-                <h2 className="ds-card__title">{item}</h2>
-              </div>
+
+        <BrandPillRow
+          items={[
+            { icon: <ShieldCheck size={14} />, label: 'Account protection' },
+            { icon: <MapPinned size={14} />, label: 'Trip context only' },
+            { icon: <Wallet size={14} />, label: 'Wallet-safe actions' },
+          ]}
+        />
+
+        <MetricGrid
+          items={[
+            {
+              label: 'Core data groups',
+              value: '4',
+              detail: 'Account, trip, wallet, and support context.',
+            },
+            {
+              label: 'Location use',
+              value: 'Trip-bound',
+              detail: 'Used around active routes and handoff decisions.',
+            },
+            {
+              label: 'Security posture',
+              value: 'Protected',
+              detail: 'Verification and payment actions stay inside trusted flows.',
+            },
+          ]}
+        />
+
+        <div className="ds-split-grid">
+          <MapHeroPanel
+            mapVariant="ambient"
+            signals={['Trip context only', 'Wallet-safe actions', 'Support trail retained']}
+          >
+            <div className="ds-hero-panel__content-inner">
+              <div className="ds-panel-kicker">Privacy posture</div>
+              <h2 className="ds-section-title">Data follows the live service path.</h2>
+              <p className="ds-copy">
+                Wasel keeps trip context close to the route, wallet context close to payment
+                actions, and support context close to the issue being resolved.
+              </p>
             </div>
-          ))}
+          </MapHeroPanel>
+
+          <Card className="ds-section-wrapper">
+            <div className="ds-section-wrapper__header">
+              <div className="ds-panel-kicker">What we keep</div>
+              <h2 className="ds-section-title">Only the data needed to operate the network.</h2>
+            </div>
+            <div className="ds-list">
+              {[
+                'Account identity, verification, and support history needed to operate Wasel safely.',
+                'Route, timing, and handoff context tied to the current ride or package flow.',
+                'Wallet, payment, and compliance details tied to the movement they support.',
+              ].map(item => (
+                <div className="ds-list-item" key={item}>
+                  <div className="ds-list-item__icon">
+                    <Shield size={16} />
+                  </div>
+                  <div>
+                    <h2 className="ds-card__title">{item}</h2>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
         </div>
+
+        <ActionCards
+          items={[
+            {
+              detail: 'See the service rules that govern riders, packages, and stored value.',
+              icon: <Scale size={18} />,
+              path: '/app/terms',
+              title: 'Open terms',
+            },
+            {
+              detail: 'Review the main rider flow where trip context is created and used.',
+              icon: <Route size={18} />,
+              path: '/app/find-ride',
+              title: 'Ride flow',
+            },
+            {
+              detail: 'Open sign in and account access for profile-linked controls.',
+              icon: <ShieldCheck size={18} />,
+              path: '/app/auth',
+              title: 'Account access',
+            },
+          ]}
+          onNavigate={navigate}
+        />
       </div>
     </LayoutContainer>
   );
 }
 
 export function TermsPage() {
+  const navigate = useIframeSafeNavigate();
+
   return (
     <LayoutContainer>
       <div className="ds-page">
         <PageHeading
-          description="Direct terms for riders, drivers, packages, and stored value."
-          eyebrow="Legal"
-          title="Terms of service"
+          action={
+            <>
+              <Button onClick={() => navigate('/app/privacy')} variant="secondary">
+                Privacy
+              </Button>
+              <Button onClick={() => navigate('/app/find-ride')} variant="ghost">
+                Ride flow
+              </Button>
+            </>
+          }
+          description="The operating rules for riders, drivers, packages, support, and stored value inside Wasel."
+          eyebrow="Service rules"
+          title="One network. Clear operating terms."
         />
-        <div className="ds-list">
-          {[
-            'Use Wasel only with accurate trip, package, and identity details.',
-            'Keep support, safety, and payment actions inside the trusted product flows.',
-            'Respect route agreements, ticket codes, and delivery handoff steps.',
-          ].map(item => (
-            <div className="ds-list-item" key={item}>
-              <div className="ds-list-item__icon">
-                <Landmark size={16} />
-              </div>
-              <div>
-                <h2 className="ds-card__title">{item}</h2>
-              </div>
+
+        <BrandPillRow
+          items={[
+            { icon: <Landmark size={14} />, label: 'Rider and driver rules' },
+            { icon: <FileText size={14} />, label: 'Package handoff discipline' },
+            { icon: <Wallet size={14} />, label: 'Stored value controls' },
+          ]}
+        />
+
+        <MetricGrid
+          items={[
+            {
+              label: 'Core rule areas',
+              value: '4',
+              detail: 'Trips, packages, payments, and support behavior.',
+            },
+            {
+              label: 'Identity standard',
+              value: 'Accurate',
+              detail: 'Use real and current account or booking details.',
+            },
+            {
+              label: 'Trusted path',
+              value: 'In-app',
+              detail: 'Safety, payment, and support actions belong in trusted flows.',
+            },
+          ]}
+        />
+
+        <div className="ds-split-grid">
+          <Card className="ds-section-wrapper">
+            <div className="ds-section-wrapper__header">
+              <div className="ds-panel-kicker">Core terms</div>
+              <h2 className="ds-section-title">What keeps the network usable.</h2>
             </div>
-          ))}
+            <div className="ds-list">
+              {[
+                'Use Wasel with accurate rider, route, package, and identity details.',
+                'Keep payments, support, and trust actions inside the official product surfaces.',
+                'Respect route timing, ticket codes, pickup windows, and package handoff steps.',
+              ].map(item => (
+                <div className="ds-list-item" key={item}>
+                  <div className="ds-list-item__icon">
+                    <Landmark size={16} />
+                  </div>
+                  <div>
+                    <h2 className="ds-card__title">{item}</h2>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <MapHeroPanel
+            mapVariant="ambient"
+            signals={['Trip terms active', 'Package rules aligned', 'Support lane retained']}
+          >
+            <div className="ds-hero-panel__content-inner">
+              <div className="ds-panel-kicker">Operating posture</div>
+              <h2 className="ds-section-title">Trips, packages, and value use the same rules.</h2>
+              <p className="ds-copy">
+                The network works best when route agreements, payment actions, and support
+                escalations all stay inside the same trusted Wasel flow.
+              </p>
+            </div>
+          </MapHeroPanel>
         </div>
+
+        <ActionCards
+          items={[
+            {
+              detail: 'Review how data and route context are handled across the product.',
+              icon: <ShieldCheck size={18} />,
+              path: '/app/privacy',
+              title: 'Open privacy',
+            },
+            {
+              detail: 'Open the live ride flow where route and booking rules apply.',
+              icon: <Route size={18} />,
+              path: '/app/find-ride',
+              title: 'Ride flow',
+            },
+            {
+              detail: 'Open packages and review handoff steps in the live logistics flow.',
+              icon: <FileText size={18} />,
+              path: '/app/packages',
+              title: 'Package flow',
+            },
+          ]}
+          onNavigate={navigate}
+        />
       </div>
     </LayoutContainer>
   );

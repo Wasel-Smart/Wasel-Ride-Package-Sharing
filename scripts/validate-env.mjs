@@ -16,7 +16,7 @@ const REQUIRED_PROD_VARS = [
 ];
 
 const SECURITY_CHECKS = [
-  { key: 'VITE_ENABLE_DEMO_DATA', expected: 'false' },
+  { key: 'VITE_ENABLE_SYNTHETIC_DATA', expected: 'false' },
   { key: 'VITE_ENABLE_SYNTHETIC_TRIPS', expected: 'false' },
   { key: 'VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK', expected: 'false' },
 ];

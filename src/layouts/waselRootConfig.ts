@@ -64,13 +64,40 @@ export const PRODUCT_NAV_GROUPS: readonly NavGroup[] = [
     badge: null,
     items: [],
   },
+  {
+    id: 'bus',
+    label: 'Bus service',
+    labelAr: 'خدمة الحافلات',
+    direct: true,
+    path: stripAppRoutePrefix(APP_ROUTES.bus.full),
+    emoji: '🚌',
+    desc: 'Open bus corridors, seats, and departures.',
+    descAr: 'افتح مسارات الحافلات والمقاعد والانطلاقات.',
+    color: C.green,
+    badge: null,
+    items: [],
+  },
+  {
+    id: 'mobilityOs',
+    label: 'Mobility OS',
+    labelAr: 'نظام التنقل',
+    direct: true,
+    path: stripAppRoutePrefix(APP_ROUTES.mobilityOs.full),
+    emoji: '🎛️',
+    desc: 'Watch the live operating view across the network.',
+    descAr: 'راقب العرض التشغيلي الحي عبر الشبكة.',
+    color: C.cyan,
+    badge: null,
+    items: [],
+  },
 ];
 
-export const DESKTOP_PRIMARY_NAV_IDS = ['ride', 'package'] as const;
+export const DESKTOP_PRIMARY_NAV_IDS = ['ride', 'package', 'bus', 'mobilityOs'] as const;
 
 const NAV_GROUP_FEATURES: Partial<Record<NavGroup['id'], CoreFeatureKey>> = {
   ride: 'rides',
   package: 'packages',
+  bus: 'bus',
 };
 
 const HIDDEN_NAV_PATHS = new Set<string>();
@@ -85,7 +112,7 @@ export function isDirectNavGroup(group: NavGroup): group is DirectNavGroup {
 
 export function isNavGroupFeatureEnabled(group: NavGroup) {
   const feature = NAV_GROUP_FEATURES[group.id];
-  return feature ? isCoreFeatureEnabled(feature) : false;
+  return feature ? isCoreFeatureEnabled(feature) : true;
 }
 
 export function getEnabledNavGroups() {

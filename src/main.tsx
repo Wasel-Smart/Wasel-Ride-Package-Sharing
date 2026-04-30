@@ -9,7 +9,7 @@ import {
   getLocaleForLanguage,
 } from './utils/locale';
 import { initializeThemeFromStorage } from './utils/theme';
-import { enforceDemoModeSafety, validateEnvironmentConfig } from './utils/environment';
+import { enforceSyntheticDataSafety, validateEnvironmentConfig } from './utils/environment';
 import { scheduleDeferredTask } from './utils/runtimeScheduling';
 import {
   installNonBlockingFonts,
@@ -18,6 +18,9 @@ import {
 import { sanitizeForLog } from './utils/logSanitizer';
 import { initializeSentry } from './utils/monitoring';
 import { CONSENT_DECISION_EVENT, hasTelemetryConsent } from './utils/consent';
+import { resourceHints } from './utils/performance/resourceHints';
+import { lazyLoader } from './utils/performance/lazyLoading';
+import { adaptiveLoading } from './utils/performance/adaptiveLoading';
 
 let telemetryInitialized = false;
 
@@ -42,6 +45,21 @@ function initializeTelemetry() {
   }, 2_500);
 }
 
+function initializePerformanceOptimizations() {
+  resourceHints.preconnectCriticalOrigins();
+  lazyLoader.initialize({ rootMargin: '100px', threshold: 0.01 });
+  
+  if (adaptiveLoading.shouldPrefetchRoutes()) {
+    scheduleDeferredTask(() => {
+      resourceHints.prefetchCriticalRoutes();
+    }, 3_000);
+  }
+  
+  if (import.meta.env.DEV) {
+    adaptiveLoading.logCapabilities();
+  }
+}
+
 const initialThemePreference = initializeThemeFromStorage();
 const initialLanguage = getInitialLanguage();
 const initialDirection = getDirectionForLanguage(initialLanguage);
@@ -54,7 +72,7 @@ installNonBlockingFonts();
 // Validate environment configuration early
 try {
   validateEnvironmentConfig();
-  enforceDemoModeSafety();
+  enforceSyntheticDataSafety();
 } catch (error) {
   console.error('[Wasel] Failed to initialize application due to configuration error:', sanitizeForLog(String(error)));
   const isArabic = initialLanguage === 'ar';
@@ -86,6 +104,8 @@ if (!rootElement) {
 }
 
 rootElement.textContent = '';
+
+initializePerformanceOptimizations();
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>

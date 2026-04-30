@@ -9,7 +9,6 @@ import {
   STEP_UP_PURPOSES,
   WALLET_PAYMENT_METHOD_TYPES,
   WALLET_PROVIDER_NAMES,
-  WALLET_TRANSACTION_TYPES,
   type PaymentIntentPurpose,
   type StepUpPurpose,
   type WalletProviderName,
@@ -40,10 +39,6 @@ interface WalletRuntime {
   getAdminClient: () => SupabaseClient;
   json: (data: unknown, status?: number) => Response;
 }
-
-type WalletRouteContext = AuthenticatedRequest & {
-  request: Request;
-};
 
 const OTP_TTL_MS = 10 * 60_000;
 const STEP_UP_TOKEN_TTL_MS = 10 * 60_000;
@@ -2233,7 +2228,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         .single();
 
       if (error) throw new Error(error.message);
-      if (Boolean(body.isDefault)) {
+      if (body.isDefault) {
         await auth.admin
           .from('wallet_payment_methods')
           .update({ is_default: false, updated_at: now })
