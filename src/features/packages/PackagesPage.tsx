@@ -189,7 +189,7 @@ export function PackagesPage() {
           titleAr="أرسل طرداً"
           sub="Book delivery, track progress, or start a return on live Wasel routes."
           color={DS.gold}
-          action={{ label: 'Open route supply', onClick: () => nav('/app/offer-ride') }}
+          action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner

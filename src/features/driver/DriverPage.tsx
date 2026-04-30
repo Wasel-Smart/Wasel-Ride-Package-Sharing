@@ -38,7 +38,7 @@ export default function DriverPage() {
           titleAr="جاهزية السائق"
           sub="Finish trust checks, unlock package carry, and open your strongest route."
           color={DS.blue}
-          action={{ label: 'Open route supply', onClick: () => navigate('/app/offer-ride') }}
+          action={{ label: 'Offer a ride', onClick: () => navigate('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
@@ -117,7 +117,7 @@ export default function DriverPage() {
               <div style={{ color: '#fff', fontWeight: 900, marginBottom: 10 }}>Capability matrix</div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
-                  { label: 'Post route supply', ready: readiness.canOfferRide },
+                  { label: 'Post ride', ready: readiness.canOfferRide },
                   { label: 'Carry packages', ready: readiness.canCarryPackages },
                   { label: 'Receive payouts', ready: user.emailVerified && (user.verificationLevel === 'level_2' || user.verificationLevel === 'level_3') },
                 ].map((item) => (
@@ -177,7 +177,7 @@ export default function DriverPage() {
               Open trust center
             </button>
             <button onClick={() => navigate('/app/offer-ride')} style={{ height: 44, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
-              Publish route supply
+              Offer a ride
             </button>
           </div>
         </div>

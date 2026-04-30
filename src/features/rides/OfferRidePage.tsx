@@ -95,7 +95,7 @@ export function OfferRidePage() {
       return;
     }
     if (!offerGate.allowed) {
-      setFormError(offerGate.reason || 'Your account is not ready to post route supply yet.');
+      setFormError(offerGate.reason || 'Your account is not ready to offer a ride yet.');
       return;
     }
     if (form.acceptsPackages && !packageGate.allowed) {
@@ -132,14 +132,14 @@ export function OfferRidePage() {
       });
 
       setSubmitted(true);
-      setDraftMessage('Route supply posted and draft cleared.');
+      setDraftMessage('Ride offer posted and draft cleared.');
       setNetworkStats(getConnectedStats());
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem(OFFER_RIDE_DRAFT_KEY);
       }
 
       notificationsAPI.createNotification({
-        title: 'Route supply posted',
+        title: 'Ride offer posted',
         message: form.acceptsPackages ? `Your ${form.from} to ${form.to} route is live for riders and packages.` : `Your ${form.from} to ${form.to} route is now live.`,
         type: 'booking',
         priority: 'high',
