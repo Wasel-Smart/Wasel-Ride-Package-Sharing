@@ -94,9 +94,19 @@ export default function WaselRoot() {
                     onMouseEnter={() => !isDirect && setActiveGroup(group.id)}
                     aria-haspopup={!isDirect ? 'true' : undefined}
                     aria-expanded={!isDirect ? isActive : undefined}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: R.sm, background: isActive ? 'rgba(0,200,232,0.10)' : 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.82rem', fontWeight: isActive ? 700 : 500, color: isActive ? '#00C8E8' : 'rgba(255,255,255,0.72)', fontFamily: F, transition: 'all 0.14s ease', whiteSpace: 'nowrap' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: R.sm, background: isActive ? 'rgba(0,200,232,0.10)' : 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.82rem', fontWeight: isActive ? 700 : 500, color: isActive ? '#00C8E8' : 'rgba(255,255,255,0.72)', fontFamily: F, transition: 'all 0.14s ease', whiteSpace: 'nowrap' }}
                   >
-                    {isDirect && (group as any).emoji && <span style={{ fontSize: '0.85rem' }}>{(group as any).emoji}</span>}
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: '50%',
+                        background: (group as any).color,
+                        boxShadow: `0 0 12px ${(group as any).color}55`,
+                        flexShrink: 0,
+                      }}
+                    />
                     {ar ? group.labelAr : group.label}
                     {isDirect && (group as any).badge && <Badge label={(group as any).badge} color={(group as any).color} />}
                     {!isDirect && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ transform: isActive ? 'rotate(180deg)' : 'none', transition: 'transform 0.14s', opacity: 0.5 }}><path d="M6 9l6 6 6-6" /></svg>}
@@ -125,7 +135,7 @@ export default function WaselRoot() {
               </>
             ) : (
               <>
-                <button onClick={() => navigate('/auth')} style={{ height: 36, padding: '0 16px', borderRadius: R.md, fontSize: '0.82rem', fontWeight: 600, background: 'transparent', border: '1.5px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.85)', fontFamily: F, cursor: 'pointer', transition: 'all 0.14s', whiteSpace: 'nowrap' }}>{ar ? 'دخول' : 'Sign in'}</button>
+                <button onClick={() => navigate('/auth')} style={{ height: 36, padding: '0 16px', borderRadius: R.md, fontSize: '0.82rem', fontWeight: 600, background: 'transparent', border: '1.5px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.85)', fontFamily: F, cursor: 'pointer', transition: 'all 0.14s', whiteSpace: 'nowrap' }}>{ar ? 'تسجيل الدخول' : 'Sign in'}</button>
                 <button onClick={() => navigate('/auth?tab=register')} style={{ height: 36, padding: '0 18px', borderRadius: R.md, fontSize: '0.82rem', fontWeight: 700, background: 'linear-gradient(135deg,#00C8E8,#0095B8)', border: 'none', color: '#040C18', fontFamily: F, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.14s', boxShadow: '0 4px 16px rgba(0,200,232,0.25)' }}>{ar ? 'ابدأ الآن' : 'Get started'}</button>
               </>
             )}
