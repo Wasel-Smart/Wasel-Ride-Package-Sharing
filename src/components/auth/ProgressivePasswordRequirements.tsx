@@ -86,7 +86,7 @@ export function ProgressivePasswordRequirements({
     [analysis.requirements, analysis.strength.feedback],
   );
 
-  const shouldShow = !showOnFocus || (showOnFocus && isFocused && password.length > 0);
+  const shouldShow = !showOnFocus || (isFocused && password.length > 0);
 
   if (!shouldShow) return null;
 
