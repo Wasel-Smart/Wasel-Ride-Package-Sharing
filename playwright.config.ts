@@ -1,11 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const useDemoData = process.env.PLAYWRIGHT_USE_DEMO_DATA === 'true';
-
 export default defineConfig({
   testDir: './tests/e2e',
   testMatch: ['**/*.spec.ts'],
   timeout: 60_000,
+  workers: 1,
+  fullyParallel: false,
   expect: {
     timeout: 10_000,
   },
@@ -14,7 +14,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: `cmd /c "set VITE_ENABLE_DEMO_DATA=${useDemoData ? 'true' : 'false'}&& set VITE_E2E_LOCAL_AUTH=true&& npm run dev -- --host 127.0.0.1 --port 4173"`,
+    command: 'node scripts/start-playwright-dev.mjs',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: true,
     timeout: 120_000,

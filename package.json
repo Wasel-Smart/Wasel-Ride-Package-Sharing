@@ -82,7 +82,8 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.26.1",
     "vite": "^6.4.1",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.2",
+    "yaml": "^2.8.3"
   },
   "scripts": {
     "dev": "vite",
@@ -94,13 +95,15 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:load:smoke": "k6 run tests/load/k6-smoke.js",
+    "verify:contracts": "node scripts/validate-openapi.mjs && node scripts/validate-infra.mjs && node scripts/validate-topology.mjs && node scripts/validate-env-example.mjs",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
     "verify:supabase-rollout": "node scripts/verify-supabase-rollout.mjs",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
-    "verify:ci": "npm run type-check && npm run lint && npm run test:unit && npm run build",
-    "verify": "npm run type-check && npm run lint && npm run test && npm run build && npm run test:e2e"
+    "verify:ci": "npm run type-check && npm run lint && npm run verify:contracts && npm run test:unit && npm run build",
+    "verify": "npm run type-check && npm run lint && npm run verify:contracts && npm run test && npm run build && npm run test:e2e"
   }
 }

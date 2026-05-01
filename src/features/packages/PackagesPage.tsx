@@ -73,7 +73,7 @@ export function PackagesPage() {
     if (activateTrack) setActiveTab('track');
     setTrackId(item.trackingId);
     setTrackedPackage(item);
-    setTrackingMessage(`Tracking ready for ${item.trackingId}.`);
+    setTrackingMessage(`Tracking ready: ${item.trackingId}.`);
   };
 
   const handlePackageCreate = async (packageType: 'delivery' | 'return' = 'delivery') => {
@@ -100,7 +100,7 @@ export function PackagesPage() {
       setPkg((previous) => ({ ...previous, sent: true, trackingId: created.trackingId }));
       setTrackedPackage(created);
       setTrackId(created.trackingId);
-      setTrackingMessage(`Tracking is live for ${created.trackingId}.`);
+      setTrackingMessage(`Tracking live: ${created.trackingId}.`);
       refreshPackageSnapshot();
       void recordMovementActivity('package_created', corridorPlan?.id ?? null);
 
@@ -135,7 +135,7 @@ export function PackagesPage() {
     try {
       const found = await getPackageByTrackingId(trackId);
       setTrackedPackage(found);
-      setTrackingMessage(found ? `Tracking loaded for ${found.trackingId}.` : 'No package was found for that tracking ID yet.');
+      setTrackingMessage(found ? `Tracking loaded: ${found.trackingId}.` : 'No package found.');
       refreshPackageSnapshot();
     } finally {
       setBusyState('idle');
@@ -151,10 +151,10 @@ export function PackagesPage() {
     setTrackId(updated.trackingId);
     setTrackingMessage(
       action === 'share_code'
-        ? `OTP handoff is now shared for ${updated.trackingId}.`
+        ? `Code shared for ${updated.trackingId}.`
         : action === 'confirm_pickup'
-          ? `Rider pickup confirmed for ${updated.trackingId}.`
-          : `Delivery confirmed for ${updated.trackingId}.`,
+          ? `Pickup confirmed for ${updated.trackingId}.`
+          : `Delivered: ${updated.trackingId}.`,
     );
     refreshPackageSnapshot();
   };
@@ -170,7 +170,7 @@ export function PackagesPage() {
       routeLabel: `${trackedPackage.from} to ${trackedPackage.to}`,
     });
 
-    setTrackingMessage(`Support ticket ${ticket.id} was opened for ${trackedPackage.trackingId}.`);
+    setTrackingMessage(`Support opened: ${ticket.id}.`);
     notificationsAPI.createNotification({
       title: 'Package support opened',
       message: `Support is now following ${trackedPackage.trackingId}.`,
@@ -187,23 +187,23 @@ export function PackagesPage() {
           emoji="Goods"
           title="Send a Package"
           titleAr="أرسل طرداً"
-          sub="Book delivery, track progress, or start a return on live Wasel routes."
+          sub="Send, track, or return a package."
           color={DS.gold}
           action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Send, track, and return parcels from one route-based flow."
+          title="Send and track packages fast."
           detail="Wasel matches parcels to live drivers first, then falls back to the next trusted route on the same corridor."
           tone={DS.gold}
         />
 
         <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
           {[
-            { label: 'Package-ready routes', value: String(networkStats.packageEnabledRides), detail: 'Live route posts currently accepting goods', color: DS.green },
-            { label: 'Corridor attach rate', value: corridorPlan ? `${corridorPlan.attachRatePercent}%` : '--', detail: 'Probability that goods can piggyback on route density', color: DS.gold },
-            { label: 'Shared delivery anchor', value: corridorPlan ? `${corridorPlan.sharedPriceJod} JOD` : '--', detail: 'Reference price for low-friction route matching', color: DS.cyan },
-            { label: 'Matched packages', value: String(networkStats.matchedPackages), detail: 'Requests already connected to a live ride', color: DS.blue },
+            { label: 'Ready routes', value: String(networkStats.packageEnabledRides), detail: 'Routes accepting packages', color: DS.green },
+            { label: 'Match rate', value: corridorPlan ? `${corridorPlan.attachRatePercent}%` : '--', detail: 'Chance of a fast match', color: DS.gold },
+            { label: 'Shared price', value: corridorPlan ? `${corridorPlan.sharedPriceJod} JOD` : '--', detail: 'Expected route price', color: DS.cyan },
+            { label: 'Matched', value: String(networkStats.matchedPackages), detail: 'Already linked to rides', color: DS.blue },
           ].map((item) => (
             <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(18), border: `1px solid ${DS.border}`, padding: '18px 18px 16px', boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
               <div style={{ color: item.color, fontWeight: 900, fontSize: '1.2rem', marginBottom: 4 }}>{item.value}</div>
@@ -220,23 +220,23 @@ export function PackagesPage() {
                 <Brain size={18} color={DS.cyan} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Route fit for this package</div>
+                <div style={{ color: '#fff', fontWeight: 800 }}>Route fit</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                  See the likely match, pickup point, and savings before you send.
+                  Match, pickup, and price.
                 </div>
               </div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {[
                 corridorPlan
-                  ? `${corridorPlan.label} is ${corridorPlan.savingsPercent}% cheaper than solo movement when goods attach to shared route density.`
-                  : 'Choose a route to see its predicted goods economics.',
+                  ? `${corridorPlan.label} is ${corridorPlan.savingsPercent}% cheaper than solo delivery.`
+                  : 'Choose a route to see price and match details.',
                 corridorPlan
-                  ? `Best pickup point: ${corridorPlan.pickupPoints[0] ?? 'Trusted corridor node'}. ${corridorPlan.autoGroupWindow}`
-                  : 'Wasel recommends trusted pickup points to reduce handoff friction.',
+                  ? `Pickup: ${corridorPlan.pickupPoints[0] ?? 'Trusted point'}. ${corridorPlan.autoGroupWindow}`
+                  : 'Pickup points show here.',
                 corridorPlan
-                  ? `Business demand already attached here: ${corridorPlan.businessDemand.join(', ')}.`
-                  : 'Returns, documents, and same-day service demand can reinforce weaker package corridors.',
+                  ? `Demand: ${corridorPlan.businessDemand.join(', ')}.`
+                  : 'Returns and documents can improve weak routes.',
               ].map((line) => (
                 <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
                   {line}
@@ -251,9 +251,9 @@ export function PackagesPage() {
                 <Network size={18} color={DS.green} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Business demand on this lane</div>
+                <div style={{ color: '#fff', fontWeight: 800 }}>Extra demand</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                  Returns, documents, and repeat lanes help package routes stay stronger.
+                  Returns and repeat lanes help.
                 </div>
               </div>
             </div>

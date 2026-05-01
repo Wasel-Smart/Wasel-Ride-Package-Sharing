@@ -31,13 +31,13 @@ type Tab = 'signin' | 'signup';
 
 // ─── Feature list for the brand panel ────────────────────────────────────────
 const BRAND_FEATURES = [
-  { icon: <Zap  size={14} />, text: 'Live ride discovery with real route visibility', color: C.cyan   },
-  { icon: <Package size={14} />, text: 'Parcel movement through active trips',        color: C.gold   },
-  { icon: <Bus  size={14} />, text: 'Scheduled corridors with clean booking flows',   color: C.green  },
-  { icon: <Shield size={14} />, text: 'Verified-first trust signals from the first tap', color: C.purple },
+  { icon: <Zap  size={14} />, text: 'Find rides fast', color: C.cyan   },
+  { icon: <Package size={14} />, text: 'Send packages', color: C.gold   },
+  { icon: <Bus  size={14} />, text: 'Book buses', color: C.green  },
+  { icon: <Shield size={14} />, text: 'Verified accounts', color: C.purple },
 ] as const;
 
-const BRAND_PILLS = ['Secure sign-in', 'Jordan-first UX', 'Low-friction onboarding'] as const;
+const BRAND_PILLS = ['Secure', 'Simple', 'Jordan-first'] as const;
 
 // ─── Brand panel (left column) ────────────────────────────────────────────────
 function BrandPanel() {
@@ -73,7 +73,7 @@ function BrandPanel() {
         </h2>
 
         <p style={{ fontSize: TYPE.size.base, color: C.textMuted, lineHeight: TYPE.lineHeight.loose, marginBottom: SPACE[6] }}>
-          Sign in once and move through rides, parcels, trust, and live corridors from the same experience.
+          Sign in to use rides, packages, and buses.
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3], textAlign: 'left' }}>

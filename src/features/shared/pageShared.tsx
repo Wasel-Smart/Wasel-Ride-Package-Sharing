@@ -213,6 +213,10 @@ export function SectionHead({
   emoji: string; title: string; titleAr?: string; sub?: string; color?: string;
   action?: { label: string; onClick: () => void };
 }) {
+  const { language } = useLanguage();
+  const ar = language === 'ar';
+  const displayTitle = ar && titleAr ? titleAr : title;
+
   return (
     <div className="sp-head" style={{
       background: `linear-gradient(135deg, rgba(11,29,69,0.96), rgba(13,31,56,0.94))`,
@@ -240,16 +244,10 @@ export function SectionHead({
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <h1 style={{ fontSize: '1.62rem', fontWeight: 950, color: '#fff', margin: 0, letterSpacing: '-0.03em' }}>{title}</h1>
+              <h1 style={{ fontSize: '1.62rem', fontWeight: 950, color: '#fff', margin: 0, letterSpacing: '-0.03em' }}>{displayTitle}</h1>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-              {titleAr && (
-                <p dir="rtl" style={{
-                  fontSize: '0.9rem', fontWeight: 800, color, margin: 0,
-                  fontFamily: "'Cairo',sans-serif",
-                }}>{titleAr}</p>
-              )}
-              {sub && <span style={{ color: 'rgba(255,255,255,0.48)', fontSize: '0.82rem' }}>{sub}</span>}
+              {sub && <span style={{ color: 'rgba(255,255,255,0.48)', fontSize: '0.78rem' }}>{sub}</span>}
             </div>
           </div>
         </div>
@@ -270,36 +268,21 @@ export function SectionHead({
 
 // ── Core experience banner ────────────────────────────────────────────────────
 export function CoreExperienceBanner({
-  title, detail, tone = DS.cyan,
+  title, detail: _detail, tone = DS.cyan,
 }: {
   title: string; detail: string; tone?: string;
 }) {
   return (
     <div style={{
-      display: 'grid', gap: 14,
-      gridTemplateColumns: 'minmax(0, 1.4fr) minmax(260px, 0.8fr)',
+      display: 'flex', gap: 10,
+      alignItems: 'center',
       background: `linear-gradient(135deg, ${tone}12, rgba(255,255,255,0.02))`,
-      border: `1px solid ${tone}30`, borderRadius: r(20),
-      padding: '20px 20px', marginBottom: 18,
+      border: `1px solid ${tone}30`, borderRadius: r(16),
+      padding: '12px 14px', marginBottom: 18,
       boxShadow: '0 14px 34px rgba(0,0,0,0.22)',
     }}>
-      <div>
-        <div style={{ display:'inline-flex', alignItems:'center', gap:6, marginBottom:8, padding:'4px 10px', borderRadius:'999px', background:`${tone}14`, border:`1px solid ${tone}24`, color:tone, fontSize:'0.68rem', fontWeight:900, letterSpacing:'0.08em', textTransform:'uppercase' }}>
-          Core flow
-        </div>
-        <div style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', marginBottom: 6, letterSpacing: '-0.02em' }}>{title}</div>
-        <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.65 }}>{detail}</div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, alignContent:'start' }}>
-        {[
-          { label: 'Verified identity', color: DS.green },
-          { label: 'Shared rides', color: DS.cyan },
-          { label: 'Bus corridors', color: DS.green },
-          { label: 'Rider parcel handoff', color: DS.gold },
-        ].map((item) => (
-          <span key={item.label} style={pill(item.color)}>{item.label}</span>
-        ))}
-      </div>
+      <span style={pill(tone)}>Info</span>
+      <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.92rem', letterSpacing: '-0.02em' }}>{title}</div>
     </div>
   );
 }

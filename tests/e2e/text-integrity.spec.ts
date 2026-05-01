@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { seedDemoSession } from '../../e2e/helpers/session';
 
-const suspiciousTextPattern = /Ã|Â·|â€¢|ðŸ|Ø§Ù|Ù…Ø|â†’|â€”|â”€/u;
+const suspiciousTextPattern =
+  /Ãƒ|Ã‚Â·|Ã¢â‚¬Â¢|Ã°Å¸|Ã˜Â§Ã™|Ã™â€¦Ã˜|Ã¢â€ â€™|Ã¢â‚¬â€|Ã¢â€â‚¬/u;
 
 async function setArabic(page: import('@playwright/test').Page) {
   await page.addInitScript(() => {
@@ -9,7 +10,10 @@ async function setArabic(page: import('@playwright/test').Page) {
   });
 }
 
-async function gotoAuthedSurface(page: import('@playwright/test').Page, route: string) {
+async function gotoAuthedSurface(
+  page: import('@playwright/test').Page,
+  route: string,
+) {
   await seedDemoSession(page);
   await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await page.waitForTimeout(1_000);

@@ -10,7 +10,7 @@ test('find ride books a seat', async ({ page }) => {
   await page.getByTestId('find-ride-search').click();
   await page.getByRole('button', { name: /book seat/i }).first().click();
   await page.getByRole('button', { name: /reserve this seat/i }).click();
-  await expect(page.getByText(/saved in your trips|for approval/i)).toBeVisible();
+  await expect(page.getByText(/ride reserved for|request sent to/i)).toBeVisible();
 });
 
 test('offer ride posts a connected trip', async ({ page }) => {
@@ -20,12 +20,13 @@ test('offer ride posts a connected trip', async ({ page }) => {
   await page.getByPlaceholder(/toyota camry 2023/i).fill('Toyota Camry 2024');
   await page.getByTestId('offer-ride-step-2').click();
   await page.getByTestId('offer-ride-submit').click();
-  await expect(page.getByRole('heading', { name: /route supply is live/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /ride offer is live/i })).toBeVisible();
 });
 
 test('bus flow reserves a seat', async ({ page }) => {
   await page.goto('/app/bus');
-  await page.getByTestId('bus-confirm-booking').click();
+  await expect(page.getByText(/reserve your seat/i)).toBeVisible();
+  await page.getByRole('button', { name: /reserve seat/i }).click();
   await expect(page.getByText(/seat confirmed/i)).toBeVisible();
 });
 

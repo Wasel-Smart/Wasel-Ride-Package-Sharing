@@ -8,12 +8,12 @@ import { motion } from 'motion/react';
 import { useLocation, useNavigate } from 'react-router';
 import { CORE_NAV_ITEMS } from '../config/user-navigation';
 
-const BG = 'rgba(4,12,24,0.97)';
-const CYAN = '#00C8E8';
-const GOLD = '#F0A830';
-const INACTIVE = 'rgba(148,163,184,0.50)';
-const BORDER = 'rgba(0,200,232,0.12)';
-const F = "-apple-system,'Inter','Cairo',sans-serif";
+const BG = 'rgba(17,19,22,0.97)';
+const CYAN = '#F4EFE8';
+const GOLD = '#B88A52';
+const INACTIVE = 'rgba(223,215,205,0.48)';
+const BORDER = 'rgba(244,239,232,0.10)';
+const F = "'Plus Jakarta Sans','Inter','Cairo',sans-serif";
 
 const ICONS = {
   find: Search,
@@ -60,7 +60,7 @@ export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
           backdropFilter: 'blur(28px)',
           WebkitBackdropFilter: 'blur(28px)',
           borderTop: `1px solid ${BORDER}`,
-          boxShadow: '0 -8px 32px rgba(0,0,0,0.6), 0 -1px 0 rgba(0,200,232,0.08)',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.56), 0 -1px 0 rgba(244,239,232,0.06)',
           paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))',
           flexDirection: 'row',
           justifyContent: 'space-around',
@@ -122,19 +122,19 @@ export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
                     height: 48,
                     borderRadius: 16,
                     background: active
-                      ? `linear-gradient(135deg,${GOLD},#E89200)`
-                      : 'linear-gradient(135deg,rgba(240,168,48,0.22),rgba(232,146,0,0.18))',
-                    border: `1.5px solid ${active ? GOLD : 'rgba(240,168,48,0.35)'}`,
+                      ? `linear-gradient(135deg,${GOLD},#8D6842)`
+                      : 'linear-gradient(135deg,rgba(184,138,82,0.24),rgba(141,104,66,0.18))',
+                    border: `1.5px solid ${active ? GOLD : 'rgba(184,138,82,0.35)'}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     boxShadow: active
-                      ? '0 4px 20px rgba(240,168,48,0.45)'
-                      : '0 2px 12px rgba(240,168,48,0.15)',
+                      ? '0 4px 20px rgba(184,138,82,0.42)'
+                      : '0 2px 12px rgba(184,138,82,0.16)',
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  <Icon size={22} strokeWidth={active ? 2.5 : 2} color={active ? '#040C18' : GOLD} />
+                  <Icon size={22} strokeWidth={active ? 2.5 : 2} color={active ? '#111316' : GOLD} />
                 </div>
               ) : (
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

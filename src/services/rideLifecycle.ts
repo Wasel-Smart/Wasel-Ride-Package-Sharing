@@ -1,3 +1,9 @@
+import {
+  mapBookingStatusToRideLifecycleState,
+  projectRideLifecycleState,
+  type RideLifecycleState,
+} from '../domain/rides/lifecycle';
+import { createDomainEvent, domainEventBus } from '../platform/event-bus';
 import type { PostedRide } from './journeyLogistics';
 import {
   createDirectBooking,
@@ -33,6 +39,7 @@ export interface RideBookingRecord {
   passengerName: string;
   seatsRequested: number;
   status: RideBookingStatus;
+  lifecycleStatus: RideLifecycleState;
   paymentStatus: RidePaymentStatus;
   routeMode: 'live_post' | 'network_inventory';
   supportThreadOpen: boolean;
@@ -46,35 +53,135 @@ export interface RideBookingRecord {
 const BOOKING_KEY = 'wasel-ride-booking-records';
 
 function readBookings(): RideBookingRecord[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
   try {
     const raw = window.localStorage.getItem(BOOKING_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
+    const parsed = raw ? (JSON.parse(raw) as RideBookingRecord[]) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
 }
 
-function writeBookings(bookings: RideBookingRecord[]) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(BOOKING_KEY, JSON.stringify(bookings.slice(0, 100)));
+function sortBookings(items: RideBookingRecord[]): RideBookingRecord[] {
+  return [...items].sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+  );
 }
 
-function upsertBookings(records: RideBookingRecord[]) {
-  const current = new Map(readBookings().map((booking) => [booking.id, booking]));
-  for (const record of records) {
-    current.set(record.id, record);
+function writeBookings(bookings: RideBookingRecord[]): void {
+  if (typeof window === 'undefined') {
+    return;
   }
-  writeBookings(sortBookings(Array.from(current.values())));
+
+  window.localStorage.setItem(BOOKING_KEY, JSON.stringify(sortBookings(bookings).slice(0, 100)));
 }
 
-function sortBookings(items: RideBookingRecord[]) {
-  return [...items].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+function upsertBookings(records: RideBookingRecord[]): void {
+  const current = new Map(readBookings().map((booking) => [booking.id, booking]));
+  records.forEach((record) => {
+    current.set(record.id, record);
+  });
+  writeBookings(Array.from(current.values()));
 }
 
-function makeTicketCode() {
+function makeTicketCode(): string {
   return `RIDE-${Math.floor(100000 + Math.random() * 900000)}`;
+}
+
+function publishLifecycleEvent(booking: RideBookingRecord): void {
+  switch (booking.lifecycleStatus) {
+    case 'requested':
+      domainEventBus.publish(
+        createDomainEvent(
+          'RideRequested',
+          {
+            bookingId: booking.id,
+            rideId: booking.rideId,
+            routeMode: booking.routeMode,
+            origin: booking.from,
+            destination: booking.to,
+          },
+          'rideLifecycle',
+        ),
+      );
+      break;
+    case 'matched':
+      domainEventBus.publish(
+        createDomainEvent(
+          'DriverAssigned',
+          {
+            bookingId: booking.id,
+            rideId: booking.rideId,
+            driverName: booking.driverName,
+          },
+          'rideLifecycle',
+        ),
+      );
+      break;
+    case 'accepted':
+      domainEventBus.publish(
+        createDomainEvent(
+          'RideAccepted',
+          {
+            bookingId: booking.id,
+            rideId: booking.rideId,
+          },
+          'rideLifecycle',
+        ),
+      );
+      break;
+    case 'in_progress':
+      domainEventBus.publish(
+        createDomainEvent(
+          'RideStarted',
+          {
+            bookingId: booking.id,
+            rideId: booking.rideId,
+          },
+          'rideLifecycle',
+        ),
+      );
+      break;
+    case 'completed':
+      domainEventBus.publish(
+        createDomainEvent(
+          'RideCompleted',
+          {
+            bookingId: booking.id,
+            rideId: booking.rideId,
+          },
+          'rideLifecycle',
+        ),
+      );
+      break;
+    case 'cancelled':
+      domainEventBus.publish(
+        createDomainEvent(
+          'RideCancelled',
+          {
+            bookingId: booking.id,
+            rideId: booking.rideId,
+          },
+          'rideLifecycle',
+        ),
+      );
+      break;
+    default:
+      break;
+  }
+}
+
+function resolveLifecycleStatus(
+  current: RideLifecycleState,
+  nextStatus: RideBookingStatus,
+): RideLifecycleState {
+  const target = mapBookingStatusToRideLifecycleState(nextStatus);
+
+  return projectRideLifecycleState(current, target);
 }
 
 export function getRideBookings(): RideBookingRecord[] {
@@ -96,6 +203,11 @@ export function createRideBooking(input: {
   routeMode: 'live_post' | 'network_inventory';
 }): RideBookingRecord {
   const now = new Date().toISOString();
+  const status: RideBookingStatus =
+    input.routeMode === 'live_post' ? 'pending_driver' : 'confirmed';
+  const lifecycleStatus: RideLifecycleState =
+    input.routeMode === 'live_post' ? 'requested' : 'accepted';
+
   const booking: RideBookingRecord = {
     id: `ride-booking-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     rideId: input.rideId,
@@ -107,7 +219,8 @@ export function createRideBooking(input: {
     driverName: input.driverName,
     passengerName: input.passengerName,
     seatsRequested: Math.max(1, input.seatsRequested ?? 1),
-    status: input.routeMode === 'live_post' ? 'pending_driver' : 'confirmed',
+    status,
+    lifecycleStatus,
     paymentStatus: input.routeMode === 'live_post' ? 'pending' : 'authorized',
     routeMode: input.routeMode,
     supportThreadOpen: false,
@@ -117,6 +230,8 @@ export function createRideBooking(input: {
   };
 
   writeBookings([booking, ...readBookings()]);
+  publishLifecycleEvent(booking);
+
   void trackGrowthEvent({
     userId: input.passengerId,
     eventName: 'ride_booking_started',
@@ -132,8 +247,10 @@ export function createRideBooking(input: {
       routeMode: input.routeMode,
       seatsRequested: booking.seatsRequested,
       pricePerSeatJod: input.pricePerSeatJod,
+      lifecycleStatus: booking.lifecycleStatus,
     },
   });
+
   if (input.passengerId) {
     void createDirectBooking({
       tripId: input.rideId,
@@ -147,25 +264,30 @@ export function createRideBooking(input: {
       },
     })
       .then(({ booking: persisted }) => {
-        const synced: RideBookingRecord = {
-          ...booking,
-          id: String(persisted.booking_id ?? persisted.id ?? booking.id),
-          backendBookingId: String(persisted.booking_id ?? persisted.id ?? booking.id),
-          status:
-            persisted.status === 'confirmed' || persisted.status === 'cancelled' || persisted.status === 'completed'
-              ? persisted.status
-              : booking.status,
-          paymentStatus:
-            persisted.status === 'confirmed'
-              ? 'authorized'
-              : booking.paymentStatus,
-          syncedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        upsertBookings([synced]);
+        const persistedId = String(persisted.booking_id ?? persisted.id ?? booking.id);
+        const remoteStatus =
+          persisted.status === 'confirmed' ||
+          persisted.status === 'cancelled' ||
+          persisted.status === 'completed'
+            ? persisted.status
+            : booking.status;
+
+        upsertBookings([
+          {
+            ...booking,
+            id: persistedId,
+            backendBookingId: persistedId,
+            status: remoteStatus,
+            lifecycleStatus: mapBookingStatusToRideLifecycleState(remoteStatus),
+            paymentStatus: persisted.status === 'confirmed' ? 'authorized' : booking.paymentStatus,
+            syncedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ]);
       })
-      .catch(() => {});
+      .catch(() => undefined);
   }
+
   return booking;
 }
 
@@ -173,41 +295,100 @@ export function getBookingsForRide(rideId: string): RideBookingRecord[] {
   return getRideBookings().filter((booking) => booking.rideId === rideId);
 }
 
-export function getBookingsForDriver(userId: string, rides: PostedRide[]): RideBookingRecord[] {
-  const rideIds = new Set(rides.filter((ride) => ride.ownerId === userId).map((ride) => ride.id));
-  return getRideBookings().filter((booking) => booking.ownerId === userId || rideIds.has(booking.rideId));
+export function getBookingsForDriver(
+  userId: string,
+  rides: PostedRide[],
+): RideBookingRecord[] {
+  const rideIds = new Set(
+    rides.filter((ride) => ride.ownerId === userId).map((ride) => ride.id),
+  );
+
+  return getRideBookings().filter(
+    (booking) => booking.ownerId === userId || rideIds.has(booking.rideId),
+  );
 }
 
 export function getBookingsForPassenger(passengerName: string): RideBookingRecord[] {
-  return getRideBookings().filter((booking) => booking.passengerName === passengerName);
+  return getRideBookings().filter(
+    (booking) => booking.passengerName === passengerName,
+  );
 }
 
 export function updateRideBooking(
   bookingId: string,
-  updates: Partial<Pick<RideBookingRecord, 'status' | 'paymentStatus' | 'supportThreadOpen'>>,
+  updates: Partial<
+    Pick<RideBookingRecord, 'status' | 'paymentStatus' | 'supportThreadOpen'>
+  >,
 ): RideBookingRecord | null {
   const bookings = readBookings();
   const target = bookings.find((booking) => booking.id === bookingId);
-  if (!target) return null;
+
+  if (!target) {
+    return null;
+  }
+
+  const lifecycleStatus = updates.status
+    ? resolveLifecycleStatus(target.lifecycleStatus, updates.status)
+    : target.lifecycleStatus;
 
   const updated: RideBookingRecord = {
     ...target,
     ...updates,
+    lifecycleStatus,
     updatedAt: new Date().toISOString(),
   };
 
   writeBookings(bookings.map((booking) => (booking.id === bookingId ? updated : booking)));
 
-  if (updated.backendBookingId && updates.status && (updates.status === 'rejected' || updates.status === 'cancelled' || updates.status === 'confirmed')) {
-    const directStatus = updates.status === 'confirmed' ? 'accepted' : updates.status;
-    void updateDirectBookingStatus(updated.backendBookingId, directStatus as 'accepted' | 'rejected' | 'cancelled')
+  if (
+    updated.backendBookingId &&
+    updates.status &&
+    (updates.status === 'rejected' ||
+      updates.status === 'cancelled' ||
+      updates.status === 'confirmed')
+  ) {
+    const directStatus =
+      updates.status === 'confirmed' ? 'accepted' : updates.status;
+
+    void updateDirectBookingStatus(
+      updated.backendBookingId,
+      directStatus as 'accepted' | 'rejected' | 'cancelled',
+    )
       .then(() => {
         upsertBookings([{ ...updated, syncedAt: new Date().toISOString() }]);
       })
-      .catch(() => {});
+      .catch(() => undefined);
   }
 
   if (updates.status) {
+    if (updates.status === 'confirmed' && target.lifecycleStatus === 'requested') {
+      domainEventBus.publish(
+        createDomainEvent(
+          'DriverAssigned',
+          {
+            bookingId: updated.id,
+            rideId: updated.rideId,
+            driverName: updated.driverName,
+          },
+          'rideLifecycle',
+        ),
+      );
+    }
+
+    if (updates.status === 'completed' && target.lifecycleStatus === 'accepted') {
+      domainEventBus.publish(
+        createDomainEvent(
+          'RideStarted',
+          {
+            bookingId: updated.id,
+            rideId: updated.rideId,
+          },
+          'rideLifecycle',
+        ),
+      );
+    }
+
+    publishLifecycleEvent(updated);
     void trackGrowthEvent({
       eventName: 'ride_booking_updated',
       funnelStage:
@@ -222,6 +403,7 @@ export function updateRideBooking(
       metadata: {
         bookingId,
         paymentStatus: updated.paymentStatus,
+        lifecycleStatus: updated.lifecycleStatus,
       },
     });
   }
@@ -229,7 +411,10 @@ export function updateRideBooking(
   return updated;
 }
 
-export async function hydrateRideBookings(userId: string, rides: PostedRide[] = []): Promise<RideBookingRecord[]> {
+export async function hydrateRideBookings(
+  userId: string,
+  rides: PostedRide[] = [],
+): Promise<RideBookingRecord[]> {
   const [passengerBookings, driverBookings] = await Promise.allSettled([
     getDirectUserBookings(userId),
     getDirectDriverBookings(userId),
@@ -240,6 +425,16 @@ export async function hydrateRideBookings(userId: string, rides: PostedRide[] = 
     const rideId = String(raw.trip_id ?? '');
     const ride = knownRides.get(rideId);
     const status = String(raw.status ?? raw.booking_status ?? 'pending');
+    const normalizedStatus: RideBookingStatus =
+      status === 'completed' ||
+      status === 'cancelled' ||
+      status === 'rejected' ||
+      status === 'confirmed'
+        ? status
+        : status === 'accepted'
+          ? 'confirmed'
+          : 'pending_driver';
+
     return {
       id: String(raw.booking_id ?? raw.id ?? ''),
       backendBookingId: String(raw.booking_id ?? raw.id ?? ''),
@@ -247,17 +442,17 @@ export async function hydrateRideBookings(userId: string, rides: PostedRide[] = 
       ownerId: ride?.ownerId,
       from: String(raw.pickup_location ?? ride?.from ?? ''),
       to: String(raw.dropoff_location ?? ride?.to ?? ''),
-      date: ride?.date ?? new Date(String(raw.created_at ?? new Date().toISOString())).toISOString().slice(0, 10),
+      date:
+        ride?.date ??
+        new Date(String(raw.created_at ?? new Date().toISOString()))
+          .toISOString()
+          .slice(0, 10),
       time: ride?.time ?? '08:00',
       driverName: ride ? ride.carModel || 'Wasel Captain' : 'Wasel Captain',
       passengerName: 'Passenger',
       seatsRequested: Number(raw.seats_requested ?? 1) || 1,
-      status:
-        status === 'completed' || status === 'cancelled' || status === 'rejected' || status === 'confirmed'
-          ? status
-          : status === 'accepted'
-            ? 'confirmed'
-            : 'pending_driver',
+      status: normalizedStatus,
+      lifecycleStatus: mapBookingStatusToRideLifecycleState(normalizedStatus),
       paymentStatus:
         status === 'completed'
           ? 'captured'
@@ -287,19 +482,31 @@ export async function hydrateRideBookings(userId: string, rides: PostedRide[] = 
   return getRideBookings();
 }
 
-export function syncRideBookingCompletion(referenceDate = Date.now()): RideBookingRecord[] {
-  const now = referenceDate;
+export function syncRideBookingCompletion(
+  referenceDate = Date.now(),
+): RideBookingRecord[] {
   const bookings = readBookings();
   const next = bookings.map((booking) => {
-    if (booking.status !== 'confirmed') return booking;
+    if (booking.status !== 'confirmed') {
+      return booking;
+    }
+
     const tripTime = new Date(`${booking.date}T${booking.time || '00:00'}`).getTime();
-    if (!Number.isFinite(tripTime) || tripTime > now) return booking;
-    return {
+    if (!Number.isFinite(tripTime) || tripTime > referenceDate) {
+      return booking;
+    }
+
+    const updated: RideBookingRecord = {
       ...booking,
-      status: 'completed' as RideBookingStatus,
-      paymentStatus: booking.paymentStatus === 'authorized' ? 'captured' as RidePaymentStatus : booking.paymentStatus,
-      updatedAt: new Date(now).toISOString(),
+      status: 'completed',
+      lifecycleStatus: 'completed',
+      paymentStatus:
+        booking.paymentStatus === 'authorized' ? 'captured' : booking.paymentStatus,
+      updatedAt: new Date(referenceDate).toISOString(),
     };
+
+    publishLifecycleEvent(updated);
+    return updated;
   });
 
   writeBookings(next);

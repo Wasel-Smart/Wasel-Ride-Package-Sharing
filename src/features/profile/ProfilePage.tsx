@@ -165,7 +165,7 @@ function ProfilePageContent({
           <WaselLogo size={34} theme="light" variant="full" />
           <div style={{ textAlign: 'center', maxWidth: 420 }}>
             <p style={{ margin: 0, color: 'rgba(148,163,184,0.82)', fontSize: '0.82rem', lineHeight: 1.6, fontFamily: FONT }}>
-              {ar ? 'مركز الهوية والثقة والإعدادات داخل شبكة واصل.' : 'Identity, trust, and account controls inside the Wasel network.'}
+              {ar ? 'مركز الهوية والثقة والإعدادات داخل شبكة واصل.' : 'Profile, trust, and settings.'}
             </p>
           </div>
           <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoSelection} style={{ display: 'none' }} />
@@ -256,7 +256,7 @@ function ProfilePageContent({
           <SharedStatCard label={ar ? 'الرصيد' : 'Balance'} value={`JOD ${(user.balance ?? 0).toFixed(1)}`} icon={<CreditCard size={16} />} color="#A78BFA" />
         </div>
 
-        <SharedSection title={ar ? 'مركز الحساب' : 'Account Command Center'}>
+        <SharedSection title={ar ? 'مركز الحساب' : 'Account'}>
           <div style={{ padding: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
             {quickActions.map((action) => (
               <SharedQuickActionCard

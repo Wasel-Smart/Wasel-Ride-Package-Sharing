@@ -624,43 +624,43 @@ export default function SettingsPage() {
         </h1>
 
         <Section icon={<Bell size={16} />} title="Notifications">
-          <ToggleRow label="Trip Updates" sub="Accept, cancel, confirm" value={notifs.tripUpdates} onChange={toggleNotificationPreference('tripUpdates')} />
+          <ToggleRow label="Trip Updates" sub="Booking changes" value={notifs.tripUpdates} onChange={toggleNotificationPreference('tripUpdates')} />
           <ToggleRow label="New Booking Requests" sub="Drivers only" value={notifs.bookingRequests} onChange={toggleNotificationPreference('bookingRequests')} />
           <ToggleRow label="Messages" value={notifs.messages} onChange={toggleNotificationPreference('messages')} />
           <ToggleRow label="Prayer Time Reminders" sub="On long-distance routes" value={notifs.prayerReminders} onChange={toggleNotificationPreference('prayerReminders')} />
           <ToggleRow label="Promotions & Offers" value={notifs.promotions} onChange={toggleNotificationPreference('promotions')} />
           <ToggleRow
             label="Push Notifications"
-            sub={notificationCapabilities.push ? 'Browser push is available on this device.' : 'Browser push is unavailable on this device.'}
+            sub={notificationCapabilities.push ? 'Available on this device' : 'Not available on this device'}
             value={notifs.push}
             onChange={toggleNotificationPreference('push')}
           />
           <ToggleRow
             label="SMS Alerts"
-            sub={notificationCapabilities.sms ? `Ready for ${user?.phone ?? profile?.phone_number ?? 'your saved phone'}` : 'Add a phone number to enable SMS delivery.'}
+            sub={notificationCapabilities.sms ? `Ready for ${user?.phone ?? profile?.phone_number ?? 'your phone'}` : 'Add a phone number'}
             value={notifs.sms}
             onChange={toggleNotificationPreference('sms')}
           />
           <ToggleRow
             label="Email Notifications"
-            sub={notificationCapabilities.email ? `Ready for ${user?.email ?? profile?.email ?? 'your account email'}` : 'Add an email address to enable email delivery.'}
+            sub={notificationCapabilities.email ? `Ready for ${user?.email ?? profile?.email ?? 'your email'}` : 'Add an email address'}
             value={notifs.email}
             onChange={toggleNotificationPreference('email')}
           />
           <ToggleRow
             label="WhatsApp Alerts"
-            sub={notificationCapabilities.whatsapp ? 'High-priority WhatsApp delivery is available.' : 'Add a phone number and support WhatsApp routing to enable this.'}
+            sub={notificationCapabilities.whatsapp ? 'Available' : 'Add a phone number'}
             value={notifs.whatsapp}
             onChange={toggleNotificationPreference('whatsapp')}
           />
           <ToggleRow
             label="Critical Safety Alerts"
-            sub="Security, wallet, verification, and urgent operations updates"
+            sub="Security and urgent updates"
             value={notifs.criticalAlerts}
             onChange={toggleNotificationPreference('criticalAlerts')}
           />
           <div style={{ padding: '14px 18px', fontSize: '0.72rem', color: 'rgba(148,163,184,0.65)', fontFamily: FONT }}>
-            {notificationSavingKey ? `Saving ${notificationSavingKey} preference...` : 'Notification channels now sync to your backend communication profile.'}
+            {notificationSavingKey ? `Saving ${notificationSavingKey}...` : 'Notification settings sync automatically.'}
           </div>
           <LinkRow
             label="Email Support"
@@ -721,10 +721,10 @@ export default function SettingsPage() {
         </Section>
 
         <Section icon={<Eye size={16} />} title="Privacy">
-          <ToggleRow label="Show Profile to Others" sub="Passengers & drivers" value={privacy.showProfile} onChange={value => setPrivacy(previous => ({ ...previous, showProfile: value }))} />
-          <ToggleRow label="Hide Profile Photo" sub="Only name is shown" value={privacy.hidePhoto} onChange={value => setPrivacy(previous => ({ ...previous, hidePhoto: value }))} />
-          <ToggleRow label="Share Live Location" sub="During active trips only" value={privacy.shareLocation} onChange={value => setPrivacy(previous => ({ ...previous, shareLocation: value }))} />
-          <ToggleRow label="Analytics & Improvement" sub="Anonymous usage data" value={privacy.dataAnalytics} onChange={value => setPrivacy(previous => ({ ...previous, dataAnalytics: value }))} />
+          <ToggleRow label="Show Profile to Others" sub="Passengers and drivers" value={privacy.showProfile} onChange={value => setPrivacy(previous => ({ ...previous, showProfile: value }))} />
+          <ToggleRow label="Hide Profile Photo" sub="Show name only" value={privacy.hidePhoto} onChange={value => setPrivacy(previous => ({ ...previous, hidePhoto: value }))} />
+          <ToggleRow label="Share Live Location" sub="Active trips only" value={privacy.shareLocation} onChange={value => setPrivacy(previous => ({ ...previous, shareLocation: value }))} />
+          <ToggleRow label="Analytics & Improvement" sub="Anonymous usage" value={privacy.dataAnalytics} onChange={value => setPrivacy(previous => ({ ...previous, dataAnalytics: value }))} />
         </Section>
 
         <div ref={securityRef}>

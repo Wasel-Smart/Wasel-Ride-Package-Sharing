@@ -82,9 +82,9 @@ export function Protected({ children }: { children: ReactNode }) {
           <div style={{ width: 58, height: 58, borderRadius: r(18), margin: '0 auto 14px', background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}24`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DS.cyan }}>
             <Shield size={24} />
           </div>
-          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Protected Wasel account</div>
+          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Sign in required</div>
           <div style={{ color: DS.sub, fontFamily: DS.F, fontSize: '0.85rem', lineHeight: 1.7 }}>
-            Sign in to keep your routes, packages, wallet activity, and trip history in one trusted place.
+            Sign in to continue.
           </div>
         </div>
       </div>
@@ -156,6 +156,10 @@ export function SectionHead({ emoji, title, titleAr, sub, color = DS.cyan, actio
   color?: string;
   action?: { label: string; onClick: () => void };
 }) {
+  const { language } = useLanguage();
+  const ar = language === 'ar';
+  const displayTitle = ar && titleAr ? titleAr : title;
+
   return (
     <div
       className="sp-head"
@@ -178,10 +182,9 @@ export function SectionHead({ emoji, title, titleAr, sub, color = DS.cyan, actio
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>{title}</h1>
+              <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>{displayTitle}</h1>
             </div>
-            {titleAr && <p dir="rtl" style={{ fontSize: '0.9rem', fontWeight: 700, color, margin: '0 0 2px', fontFamily: "'Cairo',sans-serif" }}>{titleAr}</p>}
-            {sub && <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>{sub}</p>}
+            {sub && <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.46)', margin: 0 }}>{sub}</p>}
           </div>
         </div>
         {action && (
@@ -196,7 +199,7 @@ export function SectionHead({ emoji, title, titleAr, sub, color = DS.cyan, actio
 
 export function CoreExperienceBanner({
   title,
-  detail,
+  detail: _detail,
   tone = DS.cyan,
 }: {
   title: string;
@@ -206,31 +209,18 @@ export function CoreExperienceBanner({
   return (
     <div
       style={{
-        display: 'grid',
-        gap: 14,
-        gridTemplateColumns: 'minmax(0, 1.4fr) minmax(260px, 0.8fr)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
         background: `linear-gradient(135deg, ${tone}10, rgba(255,255,255,0.02))`,
         border: `1px solid ${tone}28`,
-        borderRadius: r(18),
-        padding: '18px 20px',
+        borderRadius: r(16),
+        padding: '12px 14px',
         marginBottom: 18,
       }}
     >
-      <div>
-        <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.98rem', marginBottom: 6 }}>{title}</div>
-        <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.6 }}>{detail}</div>
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', alignContent: 'flex-start', gap: 8 }}>
-        {[
-          { label: 'Live routes', color: DS.cyan },
-          { label: 'Trusted accounts', color: DS.green },
-          { label: 'Package-ready lanes', color: DS.gold },
-        ].map((item) => (
-          <span key={item.label} style={pill(item.color)}>
-            {item.label}
-          </span>
-        ))}
-      </div>
+      <Shield size={16} color={tone} style={{ flexShrink: 0 }} />
+      <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>{title}</div>
     </div>
   );
 }

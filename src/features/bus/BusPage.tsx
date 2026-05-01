@@ -115,7 +115,7 @@ export function BusPage() {
       if (origin === destination) {
         setBusRoutes(fallbackRoutes);
         setSelected(fallbackRoutes[0]?.id ?? '');
-        setRoutesInfo('Choose two different cities to preview the right coach corridor.');
+        setRoutesInfo('Choose two different cities.');
         setRoutesLoading(false);
         return;
       }
@@ -131,19 +131,19 @@ export function BusPage() {
           setSelected((prev) => (nextRoutes.some((route) => route.id === prev) ? prev : nextRoutes[0].id));
           setRoutesInfo(
             nextRoutes[0]?.dataSource === 'live'
-              ? 'Live bus inventory is synced for this corridor.'
-              : `Showing official Jordan schedule data verified on ${nextRoutes[0]?.lastVerifiedAt ?? today}.`,
+              ? 'Live departures loaded.'
+              : `Official schedule shown. Verified ${nextRoutes[0]?.lastVerifiedAt ?? today}.`,
           );
         } else {
           setBusRoutes(fallbackRoutes);
           setSelected((prev) => (fallbackRoutes.some((route) => route.id === prev) ? prev : fallbackRoutes[0]?.id ?? ''));
-          setRoutesInfo(fallbackRoutes.some((route) => isExactRoute(route, origin, destination)) ? `Showing official Jordan schedules verified on ${fallbackRoutes[0]?.lastVerifiedAt ?? today}.` : 'No exact coach found yet. Showing the closest official corridors.');
+          setRoutesInfo(fallbackRoutes.some((route) => isExactRoute(route, origin, destination)) ? `Official schedule shown. Verified ${fallbackRoutes[0]?.lastVerifiedAt ?? today}.` : 'No exact route yet. Showing close matches.');
         }
       } catch {
         if (cancelled) return;
         setBusRoutes(fallbackRoutes);
         setSelected((prev) => (fallbackRoutes.some((route) => route.id === prev) ? prev : fallbackRoutes[0]?.id ?? ''));
-        setRoutesInfo(`Live route API is unavailable. Showing official Jordan schedules verified on ${fallbackRoutes[0]?.lastVerifiedAt ?? today}.`);
+        setRoutesInfo(`Live routes unavailable. Official schedule shown. Verified ${fallbackRoutes[0]?.lastVerifiedAt ?? today}.`);
       } finally {
         if (!cancelled) setRoutesLoading(false);
       }
@@ -209,14 +209,14 @@ export function BusPage() {
   return (
     <Protected>
       <PageShell>
-        <SectionHead emoji="Bus" title="Book a Bus" sub="Compare official schedules, fares, and open seats across Jordan." color={DS.green} />
-        <CoreExperienceBanner title="Official schedules first, live operator inventory when available." detail="Choose a corridor once and Wasel shows the best verified departures, fares, and fallback options for the same trip." tone={DS.green} />
+        <SectionHead emoji="Bus" title="Book a Bus" sub="See schedules, fares, and seats." color={DS.green} />
+        <CoreExperienceBanner title="Official schedules first." detail="Choose a route and book the best departure." tone={DS.green} />
 
         <div style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', border: `1px solid ${DS.border}`, borderRadius: r(22), padding: 18, marginBottom: 18, boxShadow: '0 14px 34px rgba(0,0,0,0.18)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
             <div>
-              <div style={{ color: '#fff', fontWeight: 900, letterSpacing: '-0.02em' }}>Plan your trip</div>
-              <div style={{ color: DS.sub, fontSize: '0.82rem', marginTop: 4 }}>Choose cities and date to load the most relevant departures first.</div>
+              <div style={{ color: '#fff', fontWeight: 900, letterSpacing: '-0.02em' }}>Trip details</div>
+              <div style={{ color: DS.sub, fontSize: '0.82rem', marginTop: 4 }}>Choose route and date.</div>
             </div>
             <button onClick={() => { setOrigin(destination); setDestination(origin); setBookingComplete(false); setBookingSource(null); }} type="button" style={{ height: 42, padding: '0 16px', borderRadius: '99px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: '0 8px 18px rgba(0,0,0,0.14)' }}>
               <ArrowLeftRight size={16} />
@@ -255,10 +255,10 @@ export function BusPage() {
 
         <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 18 }}>
           {[ 
-            { label: 'Matching routes', value: `${exactRouteCount}/${busRoutes.length}`, detail: 'Exact corridor coaches first', icon: <Route size={18} />, color: DS.green },
-            { label: 'Open seats', value: `${totalOpenSeats}`, detail: 'Across the visible schedules', icon: <Users size={18} />, color: activeBus.color ?? DS.cyan },
-            { label: 'Best fare', value: `${Math.min(...busRoutes.map((route) => route.price))} JOD`, detail: 'Lowest official fare on screen', icon: <CreditCard size={18} />, color: DS.cyan },
-            { label: 'Operators', value: `${operatorCount}`, detail: 'Visible schedule providers', icon: <TimerReset size={18} />, color: DS.gold },
+            { label: 'Routes', value: `${exactRouteCount}/${busRoutes.length}`, detail: 'Exact matches first', icon: <Route size={18} />, color: DS.green },
+            { label: 'Seats', value: `${totalOpenSeats}`, detail: 'Visible now', icon: <Users size={18} />, color: activeBus.color ?? DS.cyan },
+            { label: 'Best fare', value: `${Math.min(...busRoutes.map((route) => route.price))} JOD`, detail: 'Lowest on screen', icon: <CreditCard size={18} />, color: DS.cyan },
+            { label: 'Operators', value: `${operatorCount}`, detail: 'Shown now', icon: <TimerReset size={18} />, color: DS.gold },
           ].map((item) => (
             <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', border: `1px solid ${DS.border}`, borderRadius: r(18), padding: '18px 18px 16px', boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
               <div style={{ width: 42, height: 42, borderRadius: r(12), background: `${item.color}16`, border: `1px solid ${item.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color, marginBottom: 14 }}>{item.icon}</div>
@@ -269,7 +269,7 @@ export function BusPage() {
           ))}
         </div>
 
-        {(routesLoading || routesInfo) && <div style={{ marginBottom: 16, background: DS.card2, border: `1px solid ${DS.border}`, borderRadius: r(14), padding: '12px 14px', color: DS.sub, fontSize: '0.8rem' }}>{routesLoading ? 'Refreshing live departures...' : routesInfo}</div>}
+        {(routesLoading || routesInfo) && <div style={{ marginBottom: 16, background: DS.card2, border: `1px solid ${DS.border}`, borderRadius: r(14), padding: '12px 14px', color: DS.sub, fontSize: '0.8rem' }}>{routesLoading ? 'Refreshing departures...' : routesInfo}</div>}
 
         <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr', gap: 16, alignItems: 'start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

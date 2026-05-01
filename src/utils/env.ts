@@ -1,5 +1,11 @@
 type EnvSource = Record<string, string | undefined>;
 
+export interface RuntimeConfigIssue {
+  key: string;
+  message: string;
+  severity: 'warning' | 'error';
+}
+
 function readEnvSource(): EnvSource {
   const importMetaEnv =
     typeof import.meta !== 'undefined' && typeof import.meta.env === 'object'
@@ -12,6 +18,19 @@ function readEnvSource(): EnvSource {
       : {};
 
   return { ...processEnv, ...importMetaEnv };
+}
+
+function isTruthy(value: string | undefined): boolean {
+  return typeof value === 'string' && value.toLowerCase() === 'true';
+}
+
+function isAbsoluteHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
 
 export function getEnv(key: string, fallback = ''): string {
@@ -30,6 +49,118 @@ function getBooleanEnv(key: string, fallback: boolean): boolean {
   }
 
   return value.toLowerCase() === 'true';
+}
+
+export function getRuntimeConfigIssues(envSource: EnvSource = readEnvSource()): RuntimeConfigIssue[] {
+  const issues: RuntimeConfigIssue[] = [];
+  const apiUrl = envSource.VITE_API_URL?.trim() || '';
+  const supabaseUrl = envSource.VITE_SUPABASE_URL?.trim() || '';
+  const supabaseAnonKey = envSource.VITE_SUPABASE_ANON_KEY?.trim() || '';
+  const appUrl = envSource.VITE_APP_URL?.trim() || '';
+  const sentryDsn = envSource.VITE_SENTRY_DSN?.trim() || '';
+  const mode = envSource.MODE || envSource.VITE_MODE || envSource.NODE_ENV || 'development';
+  const isProd = mode === 'production';
+  const hasApiTransport = Boolean(apiUrl) || (Boolean(supabaseUrl) && Boolean(supabaseAnonKey));
+
+  if (!appUrl) {
+    issues.push({
+      key: 'VITE_APP_URL',
+      message: 'VITE_APP_URL should be set so auth callbacks and support links resolve correctly.',
+      severity: 'error',
+    });
+  } else if (!isAbsoluteHttpUrl(appUrl)) {
+    issues.push({
+      key: 'VITE_APP_URL',
+      message: 'VITE_APP_URL must be an absolute http(s) URL.',
+      severity: 'error',
+    });
+  }
+
+  if (!hasApiTransport) {
+    issues.push({
+      key: 'VITE_API_URL',
+      message:
+        'Set VITE_API_URL or provide both VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY so ride and package flows have a backend transport.',
+      severity: 'error',
+    });
+  }
+
+  if (apiUrl && !isAbsoluteHttpUrl(apiUrl)) {
+    issues.push({
+      key: 'VITE_API_URL',
+      message: 'VITE_API_URL must be an absolute http(s) URL when provided.',
+      severity: 'error',
+    });
+  }
+
+  if (supabaseUrl && !isAbsoluteHttpUrl(supabaseUrl)) {
+    issues.push({
+      key: 'VITE_SUPABASE_URL',
+      message: 'VITE_SUPABASE_URL must be an absolute http(s) URL when provided.',
+      severity: 'error',
+    });
+  }
+
+  if (isProd && isTruthy(envSource.VITE_ALLOW_DIRECT_SUPABASE_FALLBACK)) {
+    issues.push({
+      key: 'VITE_ALLOW_DIRECT_SUPABASE_FALLBACK',
+      message: 'Production should fail closed. Disable direct Supabase fallback before shipping.',
+      severity: 'error',
+    });
+  }
+
+  if (isProd && !sentryDsn) {
+    issues.push({
+      key: 'VITE_SENTRY_DSN',
+      message: 'Production should set VITE_SENTRY_DSN so failures are traceable.',
+      severity: 'warning',
+    });
+  }
+
+  if (isTruthy(envSource.VITE_ENABLE_EMAIL_NOTIFICATIONS) && !envSource.VITE_SUPPORT_EMAIL?.trim()) {
+    issues.push({
+      key: 'VITE_SUPPORT_EMAIL',
+      message: 'Email notifications are enabled but no support email is configured.',
+      severity: 'warning',
+    });
+  }
+
+  if (isTruthy(envSource.VITE_ENABLE_SMS_NOTIFICATIONS) && !envSource.VITE_SUPPORT_SMS_NUMBER?.trim()) {
+    issues.push({
+      key: 'VITE_SUPPORT_SMS_NUMBER',
+      message: 'SMS notifications are enabled but no support SMS number is configured.',
+      severity: 'warning',
+    });
+  }
+
+  if (
+    isTruthy(envSource.VITE_ENABLE_WHATSAPP_NOTIFICATIONS) &&
+    !envSource.VITE_SUPPORT_WHATSAPP_NUMBER?.trim()
+  ) {
+    issues.push({
+      key: 'VITE_SUPPORT_WHATSAPP_NUMBER',
+      message: 'WhatsApp notifications are enabled but no support WhatsApp number is configured.',
+      severity: 'warning',
+    });
+  }
+
+  if (isTruthy(envSource.VITE_ENABLE_TWO_FACTOR_AUTH) && !hasApiTransport) {
+    issues.push({
+      key: 'VITE_ENABLE_TWO_FACTOR_AUTH',
+      message: 'Two-factor auth requires a backend transport. Configure the API path before enabling it.',
+      severity: 'error',
+    });
+  }
+
+  return issues;
+}
+
+export function validateRuntimeConfiguration(envSource: EnvSource = readEnvSource()) {
+  const issues = getRuntimeConfigIssues(envSource);
+  return {
+    ok: issues.every((issue) => issue.severity !== 'error'),
+    issues,
+  };
 }
 
 export function getConfig() {

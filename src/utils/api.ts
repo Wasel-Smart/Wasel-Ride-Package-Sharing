@@ -1,50 +1,23 @@
-/**
- * Wasel API Client Utilities v2.0
- * Provides centralized API endpoint configuration with:
- * - Automatic retry logic
- * - Request/response interceptors
- * - Error handling
- * - Request caching
- * - Performance monitoring
- */
-
+import { unwrapApiEnvelope } from '../platform/api-envelope';
+import { createCorrelationId } from '../platform/observability';
 import { API_URL, publicAnonKey } from '../services/core';
+import { logger, trackAPICall } from './monitoring';
 
-// ============================================================================
-// CONFIGURATION
-// ============================================================================
-
-/**
- * Base URL for all API calls.
- * This reuses the shared backend resolution from services/core so the app only
- * has one edge-function/backend contract.
- */
 export const API_BASE_URL = API_URL;
+export const REQUEST_TIMEOUT = 30_000;
 
-/**
- * Request timeout (30 seconds)
- */
-export const REQUEST_TIMEOUT = 30000;
-
-/**
- * Retry configuration
- */
 export const RETRY_CONFIG = {
   maxRetries: 3,
-  retryDelay: 1000,
+  retryDelay: 1_000,
   retryableStatusCodes: [408, 429, 500, 502, 503, 504],
 };
-
-// ============================================================================
-// ERROR CLASSES
-// ============================================================================
 
 export class APIError extends Error {
   constructor(
     message: string,
     public statusCode: number = 500,
     public code?: string,
-    public details?: any
+    public details?: unknown,
   ) {
     super(message);
     this.name = 'APIError';
@@ -74,193 +47,184 @@ export class TimeoutError extends Error {
   }
 }
 
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-/**
- * Get default headers for API requests
- */
-export function getApiHeaders(accessToken?: string): HeadersInit {
-  const headers: HeadersInit = {
+export function getApiHeaders(accessToken?: string, requestId?: string): HeadersInit {
+  return {
     'Content-Type': 'application/json',
     'X-Client-Info': 'wasel-web',
+    'X-Request-Id': requestId ?? createCorrelationId(),
+    'X-Api-Version': 'v1',
+    Authorization: `Bearer ${accessToken || publicAnonKey}`,
   };
-
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
-  } else {
-    headers['Authorization'] = `Bearer ${publicAnonKey}`;
-  }
-
-  return headers;
 }
 
-/**
- * Sleep utility for retry delays
- */
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * Lightweight ID generator for client-side optimistic objects.
- */
 export function generateId(prefix: string = 'id'): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-/**
- * Check if status code is retryable
- */
 function isRetryable(statusCode: number): boolean {
   return RETRY_CONFIG.retryableStatusCodes.includes(statusCode);
 }
 
-/**
- * Fetch with timeout
- */
 async function fetchWithTimeout(
   url: string,
   options: RequestInit,
-  timeout: number = REQUEST_TIMEOUT
+  timeout: number = REQUEST_TIMEOUT,
 ): Promise<Response> {
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
+  const timer = setTimeout(() => controller.abort(), timeout);
 
   try {
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
     });
-    clearTimeout(id);
     return response;
-  } catch (error: any) {
-    clearTimeout(id);
-    if (error.name === 'AbortError') {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
       throw new TimeoutError(`Request timeout after ${timeout}ms`);
     }
+
+    if (error instanceof TypeError) {
+      throw new NetworkError(error.message);
+    }
+
     throw error;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
-// ============================================================================
-// MAIN API REQUEST FUNCTION
-// ============================================================================
-
-/**
- * Make an API request to the Wasel backend with automatic retry
- */
-export async function apiRequest<T = any>(
+export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {},
-  retries: number = RETRY_CONFIG.maxRetries
+  retries: number = RETRY_CONFIG.maxRetries,
 ): Promise<T> {
   if (!API_BASE_URL && !endpoint.startsWith('http')) {
     throw new APIError('Backend API base URL is not configured.', 500, 'api_not_configured');
   }
 
+  const method = options.method || 'GET';
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
-  
+  const requestId = createCorrelationId();
   let lastError: Error | null = null;
 
-  for (let attempt = 0; attempt <= retries; attempt++) {
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    const startedAt = performance.now();
+
     try {
       const response = await fetchWithTimeout(url, {
         ...options,
         headers: {
-          ...getApiHeaders(),
+          ...getApiHeaders(undefined, requestId),
           ...options.headers,
         },
       });
 
-      // Success - return data
+      const duration = Math.round(performance.now() - startedAt);
+      trackAPICall(endpoint, method, duration, response.status);
+
+      const contentType = response.headers.get('content-type') || '';
+      const hasJson = contentType.includes('application/json');
+      const payload = hasJson ? await response.json().catch(() => ({})) : await response.text();
+
       if (response.ok) {
-        // Handle empty responses
-        const contentType = response.headers.get('content-type');
-        if (contentType?.includes('application/json')) {
-          return await response.json();
-        }
-        return {} as T;
+        return unwrapApiEnvelope<T>(payload as T);
       }
 
-      // Error response
-      const contentType = response.headers.get('content-type');
-      let errorData: any = { error: 'Request failed' };
-      
-      if (contentType?.includes('application/json')) {
-        try {
-          errorData = await response.json();
-        } catch {
-          errorData = { error: response.statusText };
-        }
-      } else {
-        errorData = { error: await response.text() || response.statusText };
-      }
+      const normalizedError =
+        typeof payload === 'object' && payload !== null
+          ? {
+              message:
+                String(
+                  (payload as { error?: string; message?: string }).error ||
+                    (payload as { message?: string }).message ||
+                    response.statusText,
+                ) || 'Request failed',
+              code: (payload as { code?: string }).code,
+              details: (payload as { details?: unknown }).details,
+            }
+          : {
+              message: String(payload || response.statusText || 'Request failed'),
+              code: undefined,
+              details: undefined,
+            };
 
-      // Check if we should retry
       if (isRetryable(response.status) && attempt < retries) {
         const delay = RETRY_CONFIG.retryDelay * Math.pow(2, attempt);
-        console.warn(`⚠️ Request failed (${response.status}). Retrying in ${delay}ms... (${attempt + 1}/${retries})`);
+        logger.warning(`Retrying API request after ${response.status}`, {
+          endpoint,
+          method,
+          attempt: attempt + 1,
+          delay,
+          requestId,
+        });
         await sleep(delay);
         continue;
       }
 
-      // No more retries - throw error
       throw new APIError(
-        errorData.error || errorData.message || `API request failed: ${response.statusText}`,
+        normalizedError.message,
         response.status,
-        errorData.code,
-        errorData.details
+        normalizedError.code,
+        normalizedError.details,
       );
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
 
-    } catch (error: any) {
-      lastError = error;
+      const retryableRuntimeError =
+        lastError instanceof NetworkError || lastError instanceof TimeoutError;
 
-      // Don't retry on client errors (except timeout)
-      if (error instanceof APIError && error.statusCode >= 400 && error.statusCode < 500 && error.statusCode !== 429) {
-        throw error;
+      if (
+        lastError instanceof APIError &&
+        lastError.statusCode >= 400 &&
+        lastError.statusCode < 500 &&
+        lastError.statusCode !== 429
+      ) {
+        throw lastError;
       }
 
-      // Don't retry if no more attempts
-      if (attempt >= retries) {
+      if (attempt >= retries || !retryableRuntimeError) {
+        if (!(lastError instanceof APIError)) {
+          logger.error('API request failed', lastError, {
+            endpoint,
+            method,
+            requestId,
+          });
+        }
         break;
       }
 
-      // Retry on network errors and timeouts
-      if (error instanceof NetworkError || error instanceof TimeoutError) {
-        const delay = RETRY_CONFIG.retryDelay * Math.pow(2, attempt);
-        console.warn(`⚠️ ${error.message}. Retrying in ${delay}ms... (${attempt + 1}/${retries})`);
-        await sleep(delay);
-        continue;
-      }
-
-      // Unknown error - don't retry
-      throw error;
+      const delay = RETRY_CONFIG.retryDelay * Math.pow(2, attempt);
+      logger.warning('Retrying failed network call', {
+        endpoint,
+        method,
+        attempt: attempt + 1,
+        delay,
+        requestId,
+        error: lastError.message,
+      });
+      await sleep(delay);
     }
   }
 
-  // All retries exhausted
-  console.error('❌ All retry attempts exhausted');
   throw lastError || new NetworkError('Request failed after all retries');
 }
 
-// ============================================================================
-// CONVENIENCE METHODS
-// ============================================================================
-
-/**
- * GET request
- */
-export async function apiGet<T = any>(
+export async function apiGet<T = unknown>(
   endpoint: string,
-  params?: Record<string, any>,
-  accessToken?: string
+  params?: Record<string, string | number | boolean | null | undefined>,
+  accessToken?: string,
 ): Promise<T> {
-  const queryString = params 
-    ? '?' + new URLSearchParams(
-        Object.entries(params).filter(([_, v]) => v !== undefined && v !== null) as [string, string][]
-      ).toString()
+  const queryString = params
+    ? `?${new URLSearchParams(
+        Object.entries(params)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => [key, String(value)]),
+      ).toString()}`
     : '';
 
   return apiRequest<T>(endpoint + queryString, {
@@ -269,13 +233,10 @@ export async function apiGet<T = any>(
   });
 }
 
-/**
- * POST request
- */
-export async function apiPost<T = any>(
+export async function apiPost<T = unknown>(
   endpoint: string,
-  body?: any,
-  accessToken?: string
+  body?: unknown,
+  accessToken?: string,
 ): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'POST',
@@ -284,13 +245,10 @@ export async function apiPost<T = any>(
   });
 }
 
-/**
- * PUT request
- */
-export async function apiPut<T = any>(
+export async function apiPut<T = unknown>(
   endpoint: string,
-  body?: any,
-  accessToken?: string
+  body?: unknown,
+  accessToken?: string,
 ): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'PUT',
@@ -299,13 +257,10 @@ export async function apiPut<T = any>(
   });
 }
 
-/**
- * PATCH request
- */
-export async function apiPatch<T = any>(
+export async function apiPatch<T = unknown>(
   endpoint: string,
-  body?: any,
-  accessToken?: string
+  body?: unknown,
+  accessToken?: string,
 ): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'PATCH',
@@ -314,12 +269,9 @@ export async function apiPatch<T = any>(
   });
 }
 
-/**
- * DELETE request
- */
-export async function apiDelete<T = any>(
+export async function apiDelete<T = unknown>(
   endpoint: string,
-  accessToken?: string
+  accessToken?: string,
 ): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'DELETE',
@@ -327,20 +279,10 @@ export async function apiDelete<T = any>(
   });
 }
 
-// ============================================================================
-// API ENDPOINTS
-// ============================================================================
-
-/**
- * API endpoints
- */
 export const API_ENDPOINTS = {
-  // Auth
   SIGNUP: '/auth/signup',
   SIGNIN: '/auth/signin',
   SIGNOUT: '/auth/signout',
-  
-  // Trips
   TRIPS: '/trips',
   MY_TRIPS: '/my-trips',
   ACTIVE_TRIP: '/active-trip',
@@ -348,49 +290,31 @@ export const API_ENDPOINTS = {
   POST_RIDE: '/rides/post',
   BOOK_RIDE: '/rides/book',
   RATE_RIDE: '/rides/rate',
-  
-  // Packages
   PACKAGES: '/packages',
   SEND_PACKAGE: '/packages/send',
   AVAILABLE_PACKAGES: '/packages/available',
   TRACK_PACKAGE: (id: string) => `/packages/${id}/track`,
-  
-  // Cultural
   MOSQUES: '/cultural/mosques',
   PRAYER_TIMES: '/cultural/prayer-times',
   GENDER_PREFERENCES: '/cultural/gender-preferences',
-  
-  // Profile
   PROFILE: '/profile',
   TRUST_SCORE: '/trust-score',
   REVIEWS: '/reviews',
-  
-  // Wallet
   WALLET: '/wallet',
   WALLET_BALANCE: '/wallet/balance',
   WALLET_TRANSACTIONS: '/wallet/transactions',
   WALLET_DEPOSIT: '/wallet/deposit',
   WALLET_WITHDRAW: '/wallet/withdraw',
-  
-  // Community
   COMMUNITY: '/community',
   COMMUNITY_POSTS: '/community/posts',
-  
-  // Admin
   ADMIN_STATS: '/admin/liquidity-stats',
   ADMIN_SEED: '/admin/seed-data',
-  
-  // Health
   HEALTH: '/',
   HEALTH_DB: '/health/db',
   HEALTH_AUTH: '/health/auth',
   HEALTH_STORAGE: '/health/storage',
   HEALTH_KV: '/health/kv',
 };
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 export default {
   baseUrl: API_BASE_URL,

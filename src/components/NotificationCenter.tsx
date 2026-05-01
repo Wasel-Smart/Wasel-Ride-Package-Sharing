@@ -117,7 +117,7 @@ export function NotificationCenter() {
     title: isRTL ? 'مركز الإشعارات' : 'Notification Center',
     subtitle: isRTL
       ? 'رتّب التنبيهات المهمة، تابع الحجوزات، وأبقِ العمليات تحت السيطرة.'
-      : 'Triage what matters, follow booking movement, and keep operations under control.',
+      : 'See important updates fast.',
     all: isRTL ? 'الكل' : 'All',
     unread: isRTL ? 'غير المقروءة' : 'Unread',
     urgent: isRTL ? 'عاجلة' : 'Urgent',
@@ -146,8 +146,8 @@ export function NotificationCenter() {
     offline: isRTL ? 'غير متصل' : 'Offline',
     syncing: isRTL ? 'مزامنة' : 'Syncing',
     noResults: isRTL ? 'لا توجد نتائج' : 'No results',
-    emptyAll: isRTL ? 'لم تصل أي إشعارات بعد.' : 'No notifications have landed yet.',
-    emptyFiltered: isRTL ? 'هذا العرض هادئ الآن.' : 'This view is quiet right now.',
+    emptyAll: isRTL ? 'لم تصل أي إشعارات بعد.' : 'No notifications yet.',
+    emptyFiltered: isRTL ? 'هذا العرض هادئ الآن.' : 'Nothing here right now.',
     localDraft: isRTL ? 'محلي' : 'Local',
     urgentBadge: isRTL ? 'عاجل' : 'Urgent',
     highBadge: isRTL ? 'مرتفع' : 'High',
@@ -215,7 +215,7 @@ export function NotificationCenter() {
           <div className="space-y-1">
             <div className="text-sm font-medium text-foreground">{isRTL ? 'جار تحميل الإشعارات' : 'Loading notifications'}</div>
             <div className="text-xs text-muted-foreground">
-              {isRTL ? 'نجهز آخر التنبيهات والحجوزات والعمليات.' : 'Pulling the latest alerts, bookings, and operational updates.'}
+              {isRTL ? 'نجهز آخر التنبيهات والحجوزات والعمليات.' : 'Loading latest updates.'}
             </div>
           </div>
         </div>

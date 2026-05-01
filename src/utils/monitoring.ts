@@ -1,15 +1,38 @@
-/**
- * Sentry Error Monitoring Integration
- * Version: 1.0.0
- *
- * Comprehensive error tracking and monitoring for production
- */
-
 import * as Sentry from '@sentry/react';
+import type { DomainEventEnvelope } from '../domain/events';
+import {
+  createCorrelationId,
+  createStructuredLogEntry,
+} from '../platform/observability';
 
 let sentryInitialized = false;
 
-export function initSentry() {
+function writeConsole(
+  level: 'info' | 'warning' | 'error',
+  message: string,
+  context?: Record<string, unknown>,
+): void {
+  if (!import.meta.env.DEV) {
+    return;
+  }
+
+  const entry = createStructuredLogEntry(level, message, 'wasel-web', context);
+  const serialized = JSON.stringify(entry);
+
+  if (level === 'error') {
+    console.error(serialized);
+    return;
+  }
+
+  if (level === 'warning') {
+    console.warn(serialized);
+    return;
+  }
+
+  console.info(serialized);
+}
+
+export function initSentry(): void {
   if (sentryInitialized) {
     return;
   }
@@ -18,9 +41,7 @@ export function initSentry() {
   const environment = import.meta.env.MODE;
 
   if (!dsn) {
-    if (import.meta.env.DEV) {
-      console.warn('[Sentry] DSN not configured - error monitoring disabled');
-    }
+    writeConsole('warning', 'Sentry DSN is not configured; remote error capture is disabled.');
     return;
   }
 
@@ -28,9 +49,9 @@ export function initSentry() {
     dsn,
     environment,
     integrations: [],
-    tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
-    replaysSessionSampleRate: environment === 'production' ? 0.1 : 1.0,
-    replaysOnErrorSampleRate: 1.0,
+    tracesSampleRate: environment === 'production' ? 0.1 : 1,
+    replaysSessionSampleRate: environment === 'production' ? 0.1 : 1,
+    replaysOnErrorSampleRate: 1,
     release: `wasel@${import.meta.env.VITE_APP_VERSION || '1.0.0'}`,
     ignoreErrors: [
       'ResizeObserver loop limit exceeded',
@@ -43,10 +64,10 @@ export function initSentry() {
 
       if (raw) {
         try {
-          const userData = JSON.parse(raw);
-          event.user = { id: userData.id };
+          const userData = JSON.parse(raw) as { id?: string };
+          event.user = userData.id ? { id: userData.id } : event.user;
         } catch {
-          // Ignore malformed local user payloads.
+          // Ignore malformed local state.
         }
       }
 
@@ -61,18 +82,12 @@ export function initSentry() {
   });
 
   sentryInitialized = true;
-
-  if (import.meta.env.DEV) {
-    console.log('[Sentry] Initialized');
-  }
+  writeConsole('info', 'Sentry initialized.');
 }
 
 export const logger = {
-  error: (message: string, error?: Error | unknown, context?: Record<string, any>) => {
-    if (import.meta.env.DEV) {
-      console.error('[Wasel]', message, error, context);
-    }
-
+  error(message: string, error?: unknown, context?: Record<string, unknown>): void {
+    writeConsole('error', message, context);
     Sentry.captureException(error || new Error(message), {
       level: 'error',
       tags: { type: 'application_error' },
@@ -80,11 +95,8 @@ export const logger = {
     });
   },
 
-  warning: (message: string, context?: Record<string, any>) => {
-    if (import.meta.env.DEV) {
-      console.warn('[Wasel]', message, context);
-    }
-
+  warning(message: string, context?: Record<string, unknown>): void {
+    writeConsole('warning', message, context);
     Sentry.captureMessage(message, {
       level: 'warning',
       tags: { type: 'application_warning' },
@@ -92,11 +104,8 @@ export const logger = {
     });
   },
 
-  info: (message: string, context?: Record<string, any>) => {
-    if (import.meta.env.DEV) {
-      console.info('[Wasel]', message);
-    }
-
+  info(message: string, context?: Record<string, unknown>): void {
+    writeConsole('info', message, context);
     if (context?.important) {
       Sentry.captureMessage(message, {
         level: 'info',
@@ -106,22 +115,51 @@ export const logger = {
     }
   },
 
-  startTransaction: (name: string, op: string) => {
-    logger.addBreadcrumb(`Transaction: ${name}`, 'performance', { op });
+  metric(name: string, value: number, tags?: Record<string, string>): void {
+    writeConsole('info', `metric:${name}`, { value, tags });
+    Sentry.addBreadcrumb({
+      category: 'metric',
+      message: name,
+      level: 'info',
+      data: {
+        value,
+        ...tags,
+      },
+    });
+  },
+
+  startTransaction(name: string, op: string) {
+    const requestId = createCorrelationId('txn');
+    logger.addBreadcrumb(`Transaction:${name}`, 'performance', { op, requestId });
     return { finish: () => undefined };
   },
 
-  addBreadcrumb: (message: string, category: string, data?: Record<string, any>) => {
+  addBreadcrumb(
+    message: string,
+    category: string,
+    data?: Record<string, unknown>,
+  ): void {
     Sentry.addBreadcrumb({ message, category, level: 'info', data });
   },
 };
 
-export function trackAPICall(endpoint: string, method: string, duration: number, status: number) {
+export function trackAPICall(
+  endpoint: string,
+  method: string,
+  duration: number,
+  status: number,
+): void {
   logger.addBreadcrumb(`API ${method} ${endpoint}`, 'api', {
     endpoint,
     method,
     duration,
     status,
+  });
+
+  logger.metric('api.duration_ms', duration, {
+    endpoint,
+    method,
+    status: String(status),
   });
 
   if (duration > 3000) {
@@ -133,22 +171,32 @@ export function trackAPICall(endpoint: string, method: string, duration: number,
   }
 }
 
-export function trackUserAction(action: string, data?: Record<string, any>) {
+export function trackUserAction(
+  action: string,
+  data?: Record<string, unknown>,
+): void {
   logger.addBreadcrumb(action, 'user_action', data);
 }
 
-export function trackNavigation(from: string, to: string) {
+export function trackNavigation(from: string, to: string): void {
   logger.addBreadcrumb(`Navigation: ${from} -> ${to}`, 'navigation', {
     from,
     to,
   });
 }
 
+export function trackDomainEvent(event: DomainEventEnvelope): void {
+  logger.addBreadcrumb(`DomainEvent:${event.type}`, 'domain_event', {
+    eventId: event.id,
+    traceId: event.traceId,
+    producer: event.producer,
+  });
+}
+
 export const ErrorBoundary = Sentry.ErrorBoundary;
 
-export function usePerformanceMonitoring(componentName: string) {
+export function usePerformanceMonitoring(componentName: string): () => void {
   const transaction = logger.startTransaction(componentName, 'component.render');
-
   return () => {
     transaction.finish();
   };

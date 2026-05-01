@@ -214,7 +214,7 @@ export function SectionHead({
               {displayTitle}
             </h1>
             {sub && (
-              <p style={{ color: DS.sub, margin: '4px 0 0', fontSize: '0.8rem' }}>{sub}</p>
+              <p style={{ color: DS.sub, margin: '4px 0 0', fontSize: '0.76rem' }}>{sub}</p>
             )}
           </div>
         </div>
@@ -254,27 +254,22 @@ interface CoreBannerProps {
   tone?: string;
 }
 
-export function CoreExperienceBanner({ title, detail, tone = DS.cyan }: CoreBannerProps) {
+export function CoreExperienceBanner({ title, detail: _detail, tone = DS.cyan }: CoreBannerProps) {
   return (
     <div
       style={{
         background: `${tone}08`,
         border: `1px solid ${tone}20`,
         borderRadius: r(14),
-        padding: '14px 18px',
+        padding: '12px 14px',
         marginBottom: 16,
         display: 'flex',
-        gap: 12,
-        alignItems: 'flex-start',
+        gap: 10,
+        alignItems: 'center',
       }}
     >
-      <CheckCircle2 size={16} color={tone} style={{ marginTop: 2, flexShrink: 0 }} />
-      <div>
-        <div style={{ color: tone, fontWeight: 700, fontSize: '0.82rem', marginBottom: 3 }}>
-          {title}
-        </div>
-        <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55 }}>{detail}</div>
-      </div>
+      <CheckCircle2 size={16} color={tone} style={{ flexShrink: 0 }} />
+      <div style={{ color: tone, fontWeight: 700, fontSize: '0.84rem' }}>{title}</div>
     </div>
   );
 }

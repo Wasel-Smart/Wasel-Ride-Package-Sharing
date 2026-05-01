@@ -43,7 +43,7 @@ export function OfferRidePage() {
   const [networkStats, setNetworkStats] = useState(() => getConnectedStats());
   const [busyState, setBusyState] = useState<'idle' | 'posting'>('idle');
   const [formError, setFormError] = useState<string | null>(null);
-  const [draftMessage, setDraftMessage] = useState<string | null>('Draft autosaves on this device.');
+  const [draftMessage, setDraftMessage] = useState<string | null>('Draft saved on this device.');
 
   const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(2, 5), []);
   const offerGate = evaluateTrustCapability(user, 'offer_ride');
@@ -132,7 +132,7 @@ export function OfferRidePage() {
       });
 
       setSubmitted(true);
-      setDraftMessage('Ride offer posted and draft cleared.');
+      setDraftMessage('Ride posted. Draft cleared.');
       setNetworkStats(getConnectedStats());
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem(OFFER_RIDE_DRAFT_KEY);
@@ -165,19 +165,19 @@ export function OfferRidePage() {
           emoji="Supply"
           title="Offer a Ride"
           titleAr="اعرض مشوار"
-          sub="Publish seats, price, and package space in one post."
+          sub="Post seats and price fast."
           color={DS.blue}
         />
 
         <CoreExperienceBanner
-          title="Open one route and let riders find it fast."
+          title="Post one route fast."
           detail="Drivers should be able to post a lane once, see the suggested fare, and fill the trip with clear demand signals before departure."
           tone={DS.blue}
         />
 
         {(!offerGate.allowed || (form.acceptsPackages && !packageGate.allowed)) && (
           <div style={{ marginBottom: 18, background: 'rgba(240,168,48,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: '#fff' }}>
-            <div style={{ fontWeight: 800, marginBottom: 6 }}>Finish trust checks first</div>
+            <div style={{ fontWeight: 800, marginBottom: 6 }}>Complete trust checks</div>
             <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>{(!offerGate.allowed ? offerGate.reason : packageGate.reason) ?? 'Complete account checks before opening supply.'}</div>
             <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
               {driverReadiness.steps.filter((step) => !step.complete).slice(0, 3).map((step) => (
@@ -197,27 +197,27 @@ export function OfferRidePage() {
         <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 18 }}>
           {[
             {
-              label: 'Recommended seat price',
+              label: 'Seat price',
               value: driverPlan ? `${driverPlan.recommendedSeatPriceJod} JOD` : '--',
-              detail: 'Price tuned for fill rate and route density',
+              detail: 'Suggested price',
               color: DS.cyan,
             },
             {
-              label: 'Gross when full',
+              label: 'Full trip',
               value: driverPlan ? `${driverPlan.grossWhenFullJod} JOD` : '--',
-              detail: 'Seats filled through shared route economics',
+              detail: 'If all seats sell',
               color: DS.green,
             },
             {
-              label: 'Package bonus',
+              label: 'Package add-on',
               value: driverPlan ? `${driverPlan.packageBonusJod} JOD` : '--',
-              detail: 'Extra lane value from goods moving on the same route',
+              detail: 'Extra package income',
               color: DS.gold,
             },
             {
-              label: 'Live demand signal',
+              label: 'Demand',
               value: selectedSignal ? `${selectedSignal.forecastDemandScore}/100` : driverPlan ? `${driverPlan.corridor.predictedDemandScore}/100` : String(networkStats.ridesPosted),
-              detail: selectedSignal ? `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings | ${selectedSignal.livePackages} packages` : driverPlan ? 'Demand score on this route' : 'Connected network activity',
+              detail: selectedSignal ? `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings | ${selectedSignal.livePackages} packages` : driverPlan ? 'Route demand score' : 'Network activity',
               color: DS.blue,
             },
           ].map((item) => (
@@ -236,17 +236,17 @@ export function OfferRidePage() {
                 <Brain size={18} color={DS.cyan} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Route guidance</div>
+                <div style={{ color: '#fff', fontWeight: 800 }}>Route tips</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                  Price, timing, and fill-rate guidance before you post.
+                  Price and timing before posting.
                 </div>
               </div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {[
-                selectedSignal?.recommendedReason ?? driverPlan?.waselBrainNote ?? 'Pick a route to unlock a lane-specific earnings recommendation.',
-                selectedSignal ? `Next dense departure window is ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.` : driverPlan?.corridor.autoGroupWindow ?? 'Auto-grouping begins when the corridor gets enough saved demand.',
-                selectedSignal ? `${selectedSignal.productionSources.slice(0, 3).join(' | ')}.` : driverPlan ? `Empty-seat risk on this route is about ${driverPlan.emptySeatCostJod} JOD per unfilled seat.` : 'Fill rate is the lever that keeps the route profitable.',
+                selectedSignal?.recommendedReason ?? driverPlan?.waselBrainNote ?? 'Pick a route to see pricing tips.',
+                selectedSignal ? `Best window: ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.` : driverPlan?.corridor.autoGroupWindow ?? 'Shared matching starts when demand builds.',
+                selectedSignal ? `${selectedSignal.productionSources.slice(0, 3).join(' | ')}.` : driverPlan ? `${driverPlan.emptySeatCostJod} JOD lost per empty seat.` : 'Full seats matter most.',
               ].map((line) => (
                 <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
                   {line}
@@ -261,9 +261,9 @@ export function OfferRidePage() {
                 <Network size={18} color={DS.green} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Extra earning on this route</div>
+                <div style={{ color: '#fff', fontWeight: 800 }}>Extra income</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                  Packages and business demand can add margin once the lane is trusted.
+                  Packages and repeat demand can add more.
                 </div>
               </div>
             </div>
@@ -281,24 +281,24 @@ export function OfferRidePage() {
         <div className="sp-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
           {[
             {
-              title: 'Company demand',
-              detail: 'Recurring employee seats, managed invoicing, and return-lane packages can attach to this route once it proves reliable.',
+              title: 'Company riders',
+              detail: 'Repeat team trips can join this route.',
               action: () => nav('/app/services/corporate'),
-              label: 'Open corporate workflow',
+              label: 'Open corporate',
             },
             {
               title: 'Field teams',
-              detail: 'Technicians, installers, and mobile crews can use this lane when the timing and trust record are strong.',
+              detail: 'Mobile crews can use trusted routes.',
               action: () => nav('/app/services/corporate'),
-              label: 'Open service workflow',
+              label: 'Open services',
             },
             {
               title: 'Live proof',
               detail: selectedSignal
-                ? `This route already shows ${selectedSignal.routeOwnershipScore}/100 ownership and ${selectedSignal.priceQuote.finalPriceJod} JOD shared pricing.`
-                : 'Searches, bookings, and saved alerts turn a new route into a proven lane.',
+                ? `${selectedSignal.routeOwnershipScore}/100 route score | ${selectedSignal.priceQuote.finalPriceJod} JOD shared price.`
+                : 'Searches and bookings make the route stronger.',
               action: () => nav('/app/analytics'),
-              label: 'Open corridor proof',
+              label: 'Open analytics',
             },
           ].map((item) => (
             <div key={item.title} style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>

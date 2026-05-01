@@ -264,7 +264,7 @@ export function FindRidePage() {
       return;
     }
     if (ride.seatsAvailable <= 0) {
-      setBookingMessage(`That departure is already full. ${t.openBusFallback} and try the next corridor wave.`);
+      setBookingMessage(`That ride is full. ${t.openBusFallback}.`);
       setSelected(null);
       return;
     }
@@ -295,8 +295,8 @@ export function FindRidePage() {
     setBooked((previous) => new Set(previous).add(ride.id));
     setBookingMessage(
       booking.status === 'pending_driver'
-        ? `${ride.from} to ${ride.to} was sent to ${ride.driver.name} for approval at ${ridePriceQuote.finalPriceJod} JOD. We will update you as soon as the captain responds.`
-        : `${ride.from} to ${ride.to} with ${ride.driver.name} is reserved at ${ridePriceQuote.finalPriceJod} JOD. Ticket ${booking.ticketCode} is now saved in your trips.`,
+        ? `Request sent to ${ride.driver.name} for ${ridePriceQuote.finalPriceJod} JOD.`
+        : `Ride reserved for ${ridePriceQuote.finalPriceJod} JOD. Ticket ${booking.ticketCode}.`,
     );
 
     notificationsAPI.createNotification({
@@ -328,7 +328,7 @@ export function FindRidePage() {
       userId: user?.id,
     });
 
-    setWaitlistMessage(`Demand alert saved for ${alert.from} to ${alert.to}. We will alert you around ${selectedSignal?.nextWaveWindow ?? 'the next corridor wave'}.`);
+    setWaitlistMessage(`Alert saved for ${alert.from} to ${alert.to}.`);
     void trackGrowthEvent({
       userId: user?.id,
       eventName: 'route_demand_alert_saved',
@@ -345,7 +345,7 @@ export function FindRidePage() {
 
     const reminder = createReminderFromSuggestion(suggestion);
     setSavedReminders(getRouteReminders());
-    setRetentionMessage(`Reminder saved for ${reminder.label}. ${formatRouteReminderSchedule(reminder)}.`);
+    setRetentionMessage(`Reminder saved. ${formatRouteReminderSchedule(reminder)}.`);
     void trackGrowthEvent({
       userId: user?.id,
       eventName: 'route_reminder_saved',
@@ -363,12 +363,12 @@ export function FindRidePage() {
           emoji="Route"
           title="Book a Ride"
           titleAr="احجز مشوار"
-          sub="Choose your cities and date. Wasel brings the best live ride, fare, and pickup options first."
+          sub="Choose route and date."
           action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Live routes, shared fares, and pickup points on one screen."
+          title="Compare rides for one route."
           detail="Search once and compare confirmed drivers, grouped departures, and the strongest route options for this corridor."
           tone={DS.cyan}
         />
@@ -427,17 +427,17 @@ export function FindRidePage() {
 
               <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={handleSearch} data-testid="find-ride-search" style={{ width: '100%', height: 52, borderRadius: r(14), border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                 {loading ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }} style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%' }} /> : <Search size={18} />}
-                {loading ? t.searching : 'Search this route'}
+                {loading ? t.searching : 'Search rides'}
               </motion.button>
 
               <div style={{ marginTop: 14, background: DS.card2, borderRadius: r(14), padding: 12, border: `1px solid ${DS.border}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
                   <div>
-                    <p style={{ color: DS.muted, fontSize: '0.72rem', fontWeight: 700, margin: '0 0 4px' }}>Route preview</p>
+                    <p style={{ color: DS.muted, fontSize: '0.72rem', fontWeight: 700, margin: '0 0 4px' }}>Route</p>
                     <p style={{ color: DS.sub, fontSize: '0.8rem', margin: 0 }}>
                       {selectedSignal
-                        ? `Live demand is visible on this route: ${selectedSignal.liveSearches} searches, ${selectedSignal.liveBookings} bookings, and ${selectedSignal.activeDemandAlerts} active alerts.`
-                        : 'Check the route before you compare seats, pickup points, and grouped departures.'}
+                        ? `${selectedSignal.liveSearches} searches, ${selectedSignal.liveBookings} bookings, ${selectedSignal.activeDemandAlerts} alerts.`
+                        : 'Check the route before booking.'}
                     </p>
                   </div>
                   <span style={{ ...pill(DS.green), fontSize: '0.72rem' }}>
@@ -456,25 +456,25 @@ export function FindRidePage() {
                   {
                     label: 'Route readiness',
                     value: selectedSignal ? `${selectedSignal.activeSupply} live departures` : routeReadinessLabel,
-                    sub: selectedSignal ? `${selectedSignal.liveBookings} bookings and ${selectedSignal.activeDemandAlerts} active alerts` : `${corridorRides.length} live departures`,
+                    sub: selectedSignal ? `${selectedSignal.liveBookings} bookings | ${selectedSignal.activeDemandAlerts} alerts` : `${corridorRides.length} live departures`,
                     tone: DS.cyan,
                   },
                   {
                     label: 'Shared price now',
                     value: selectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : '--',
-                    sub: selectedPriceQuote ? `${selectedPriceQuote.discountJod} JOD saved via ${selectedPriceQuote.explanation}` : 'Cost sharing unlocks the best price',
+                    sub: selectedPriceQuote ? `${selectedPriceQuote.discountJod} JOD saved` : 'Best shared fare',
                     tone: DS.green,
                   },
                   {
                     label: 'Next wave',
-                    value: selectedSignal?.nextWaveWindow ?? corridorPlan?.autoGroupWindow ?? 'Grouping begins when demand clusters',
-                    sub: selectedSignal?.recommendedPickupPoint ?? corridorPlan?.pickupPoints[0] ?? 'Pickup points appear once a corridor is selected',
+                    value: selectedSignal?.nextWaveWindow ?? corridorPlan?.autoGroupWindow ?? 'Next shared wave',
+                    sub: selectedSignal?.recommendedPickupPoint ?? corridorPlan?.pickupPoints[0] ?? 'Pickup point shown here',
                     tone: DS.gold,
                   },
                   {
                     label: 'Route ownership',
-                    value: selectedSignal ? `${selectedSignal.routeOwnershipScore}/100` : corridorPlan?.routeMoat ?? 'Route data compounds on every search',
-                    sub: selectedSignal ? selectedSignal.productionSources.slice(0, 2).join(' | ') : `Demand alerts: ${demandStats.active}`,
+                    value: selectedSignal ? `${selectedSignal.routeOwnershipScore}/100` : corridorPlan?.routeMoat ?? 'Growing route data',
+                    sub: selectedSignal ? selectedSignal.productionSources.slice(0, 2).join(' | ') : `${demandStats.active} saved alerts`,
                     tone: DS.cyan,
                   },
                 ].map((item) => (
@@ -494,9 +494,9 @@ export function FindRidePage() {
                     <Brain size={18} color={DS.cyan} />
                   </div>
                   <div>
-                    <div style={{ color: '#fff', fontWeight: 800 }}>Why this route fits</div>
+                    <div style={{ color: '#fff', fontWeight: 800 }}>Why it fits</div>
                     <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                      Quick reasons before you book.
+                      Quick route signals.
                     </div>
                   </div>
                 </div>
@@ -505,13 +505,13 @@ export function FindRidePage() {
                     selectedSignal
                       ? [
                           selectedSignal.recommendedReason,
-                          `Next wave is ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.`,
+                          `Next wave: ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.`,
                           `Live feed: ${selectedSignal.productionSources.slice(0, 3).join(' | ')}.`,
                         ]
                       : corridorPlan?.intelligenceSignals ?? [
-                          'Predict demand before the next rider opens search.',
-                          'Recommend pickup points based on dense corridor behavior.',
-                          'Use cost sharing to keep the shared route cheaper than solo movement.',
+                          'Demand builds before departure.',
+                          'Pickup points stay simple.',
+                          'Shared rides stay cheaper.',
                         ]
                   ).map((line) => (
                     <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
@@ -535,9 +535,9 @@ export function FindRidePage() {
                       <TrendingUp size={18} color={DS.gold} />
                     </div>
                     <div>
-                      <div style={{ color: '#fff', fontWeight: 800 }}>Popular right now</div>
-                      <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                        Routes with the strongest live activity.
+                    <div style={{ color: '#fff', fontWeight: 800 }}>Popular now</div>
+                    <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
+                        Routes with strong live activity.
                       </div>
                     </div>
                   </div>
@@ -572,9 +572,9 @@ export function FindRidePage() {
                       <Network size={18} color={DS.green} />
                     </div>
                     <div>
-                      <div style={{ color: '#fff', fontWeight: 800 }}>Package-ready lanes</div>
-                      <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                        Some ride routes can also carry parcels.
+                    <div style={{ color: '#fff', fontWeight: 800 }}>Package-ready rides</div>
+                    <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
+                        Some rides also carry packages.
                       </div>
                     </div>
                   </div>
@@ -592,7 +592,7 @@ export function FindRidePage() {
 
             <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
               <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Recurring ride suggestions</div>
+                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Suggested reminders</div>
                 {recurringSuggestions.length > 0 ? (
                   <div style={{ display: 'grid', gap: 10 }}>
                     {recurringSuggestions.map((suggestion) => {
@@ -603,15 +603,15 @@ export function FindRidePage() {
                             <div>
                               <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{suggestion.label}</div>
                               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                                {suggestion.confidenceScore}/100 confidence | {suggestion.priceQuote.finalPriceJod} JOD now | {suggestion.weeklyFrequency} recent signals
+                                {suggestion.confidenceScore}/100 | {suggestion.priceQuote.finalPriceJod} JOD | {suggestion.weeklyFrequency} signals
                               </div>
                             </div>
                             <span style={pill(DS.green)}>{suggestion.recommendedFrequency}</span>
                           </div>
-                          <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 8 }}>{suggestion.reason}</div>
+                            <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 8 }}>{suggestion.reason}</div>
                           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
                             <button onClick={() => { setFrom(suggestion.from); setTo(suggestion.to); setSearched(true); }} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
-                              Search lane
+                              Search route
                             </button>
                             <button onClick={() => handleSaveReminder(suggestion.corridorId)} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: 'none', background: alreadySaved ? DS.gradG : DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
                               {alreadySaved ? 'Reminder active' : 'Save reminder'}
@@ -623,7 +623,7 @@ export function FindRidePage() {
                   </div>
                 ) : (
                   <div style={{ color: DS.muted, fontSize: '0.8rem' }}>
-                    Search and book a few more lanes and Wasel will start proposing recurring corridors automatically.
+                    Book more rides to unlock reminders.
                   </div>
                 )}
               </div>
@@ -643,7 +643,7 @@ export function FindRidePage() {
                   </div>
                 ) : (
                   <div style={{ color: DS.muted, fontSize: '0.8rem', lineHeight: 1.55 }}>
-                    Save a recurring route and Wasel will turn it into reminder-driven demand before the next commute wave.
+                    Save a route to see reminders here.
                   </div>
                 )}
               </div>
@@ -714,14 +714,14 @@ export function FindRidePage() {
                     <div style={{ fontSize: '3rem', marginBottom: 16 }}>{copy.noResultsIcon}</div>
                     <h3 style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>{t.noRidesFound}</h3>
                     <p style={{ color: DS.sub, fontSize: '0.875rem' }}>
-                      No live ride match appeared yet. Save this route and we will alert you when the next good option opens{selectedSignal ? ` around ${selectedSignal.nextWaveWindow}` : ''}.
+                      No ride found yet. Save this route and get alerted when one opens{selectedSignal ? ` around ${selectedSignal.nextWaveWindow}` : ''}.
                     </p>
                     <div className="sp-empty-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 18 }}>
                       <button onClick={() => { setDate(''); setSearchError(null); setSearched(true); }} style={{ height: 44, borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{t.clearDateFilter}</button>
                       <button onClick={() => nav(`/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)} style={{ height: 44, borderRadius: r(12), border: 'none', background: DS.gradG, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{t.openBusFallback}</button>
                     </div>
                     <button onClick={handleDemandCapture} style={{ marginTop: 10, width: '100%', height: 44, borderRadius: r(12), border: `1px solid ${DS.cyan}35`, background: `${DS.cyan}12`, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{copy.notifyMe}</button>
-                    {(waitlistMessage || demandStats.active > 0) && <div style={{ marginTop: 12, color: DS.sub, fontSize: '0.78rem', lineHeight: 1.5 }}>{waitlistMessage ?? `You currently have ${demandStats.active} active demand alert${demandStats.active === 1 ? '' : 's'}.`}</div>}
+                    {(waitlistMessage || demandStats.active > 0) && <div style={{ marginTop: 12, color: DS.sub, fontSize: '0.78rem', lineHeight: 1.5 }}>{waitlistMessage ?? `${demandStats.active} active alert${demandStats.active === 1 ? '' : 's'}.`}</div>}
                     {nearbyCorridors.length > 0 && <div style={{ marginTop: 20, textAlign: 'left' }}><div style={{ color: '#fff', fontWeight: 800, marginBottom: 10 }}>{t.nearbyCorridors}</div><div style={{ display: 'grid', gap: 10 }}>{nearbyCorridors.map((ride) => <button key={ride.id} onClick={() => handleOpenRide(ride)} style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}><div><div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{ride.from} to {ride.to}</div><div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>{ride.time} | {ride.driver.name}</div></div><span style={{ ...pill(ride.seatsAvailable > 0 ? DS.cyan : DS.gold) }}>{ride.seatsAvailable > 0 ? `${getMovementPriceQuote({ basePriceJod: ride.pricePerSeat, corridorId: resolveSignalForRoute(ride.from, ride.to)?.id, forecastDemandScore: resolveSignalForRoute(ride.from, ride.to)?.forecastDemandScore, membership: routeIntelligence.membership }).finalPriceJod} JOD` : 'Sold out'}</span></div></button>)}</div></div>}
                   </motion.div>
                 ) : results.map((ride, index) => <FindRideCard key={ride.id} ride={ride} idx={index} booked={booked.has(ride.id)} signal={resolveSignalForRoute(ride.from, ride.to)} onOpen={() => handleOpenRide(ride)} />)}

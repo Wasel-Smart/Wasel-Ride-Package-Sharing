@@ -1,21 +1,28 @@
-/**
- * Package Tracking Service
- * Secure package delivery system with QR codes and escrow payments
- * Links packages to rides with full transparency for sender
- */
-
+import { mapLegacyPackageStatusToLifecycle } from '../domain/packages/lifecycle';
+import { createDomainEvent, domainEventBus } from '../platform/event-bus';
+import {
+  DEFAULT_GEO_STREAM_CONFIG,
+  evaluateGeoStreamUpdate,
+  type GeoPoint,
+  type GeoStreamState,
+} from '../platform/geo-stream';
 import { generateId } from '../utils/api';
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// TYPES
-// ═══════════════════════════════════════════════════════════════════════════════
+export type PackageStatus =
+  | 'created'
+  | 'matched'
+  | 'pickup_scheduled'
+  | 'picked_up'
+  | 'in_transit'
+  | 'near_destination'
+  | 'delivered'
+  | 'cancelled'
+  | 'disputed';
 
 export interface PackageTracking {
   id: string;
-  trackingCode: string; // QR code content
-  qrCodeUrl: string; // QR code image URL
-  
-  // Package details
+  trackingCode: string;
+  qrCodeUrl: string;
   senderId: string;
   receiverId?: string;
   from: string;
@@ -25,63 +32,45 @@ export interface PackageTracking {
   value: number;
   insurance: boolean;
   description?: string;
-  
-  // Linked ride
   rideId?: string;
   driverId?: string;
   driverName?: string;
   driverPhone?: string;
   driverPhoto?: string;
   vehicleInfo?: string;
-  
-  // Financial
   price: number;
   insuranceCost: number;
   totalCost: number;
   paymentStatus: 'pending' | 'escrowed' | 'released' | 'refunded';
   paymentMethod?: string;
-  
-  // Tracking
   status: PackageStatus;
-  currentLocation?: { lat: number; lng: number };
-  
-  // Timestamps
+  lifecycleStatus:
+    | 'created'
+    | 'assigned'
+    | 'picked_up'
+    | 'in_transit'
+    | 'delivered'
+    | 'cancelled';
+  currentLocation?: GeoPoint;
   createdAt: Date;
   pickedUpAt?: Date;
   inTransitAt?: Date;
   deliveredAt?: Date;
-  
-  // Security
-  pickupVerificationCode: string; // 6-digit code for pickup
-  deliveryVerificationCode: string; // 6-digit code for delivery
+  pickupVerificationCode: string;
+  deliveryVerificationCode: string;
   pickupVerified: boolean;
   deliveryVerified: boolean;
-  
-  // Photos
   pickupPhoto?: string;
   deliveryPhoto?: string;
-  
-  // Communication
   senderCanContactDriver: boolean;
   lastUpdated: Date;
 }
-
-export type PackageStatus =
-  | 'created' // Package registered, waiting for traveler
-  | 'matched' // Matched with a traveler/ride
-  | 'pickup_scheduled' // Pickup time scheduled
-  | 'picked_up' // Package picked up by traveler (QR verified)
-  | 'in_transit' // Package is traveling
-  | 'near_destination' // Package is near destination
-  | 'delivered' // Package delivered (QR verified)
-  | 'cancelled' // Package delivery cancelled
-  | 'disputed'; // Dispute raised
 
 export interface PackageStatusUpdate {
   packageId: string;
   status: PackageStatus;
   timestamp: Date;
-  location?: { lat: number; lng: number };
+  location?: GeoPoint;
   note?: string;
   photo?: string;
 }
@@ -99,16 +88,43 @@ export interface PackagePaymentEscrow {
   };
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// PACKAGE TRACKING SERVICE
-// ═══════════════════════════════════════════════════════════════════════════════
+function generateTrackingCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = 'WSL-PKG-';
+  for (let index = 0; index < 6; index += 1) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+function generateVerificationCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function generateQRCodeUrl(trackingCode: string): string {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(trackingCode)}`;
+}
+
+function calculateBasePrice(size: 'small' | 'medium' | 'large'): number {
+  switch (size) {
+    case 'small':
+      return 3;
+    case 'medium':
+      return 5;
+    case 'large':
+      return 8;
+    default:
+      return 3;
+  }
+}
 
 export class PackageTrackingService {
   private static instance: PackageTrackingService;
-  private packages: Map<string, PackageTracking> = new Map();
-  private escrows: Map<string, PackagePaymentEscrow> = new Map();
 
-  private constructor() {}
+  private packages = new Map<string, PackageTracking>();
+  private escrows = new Map<string, PackagePaymentEscrow>();
+  private locationStreams = new Map<string, GeoStreamState>();
+  private statusHistory = new Map<string, PackageStatusUpdate[]>();
 
   static getInstance(): PackageTrackingService {
     if (!PackageTrackingService.instance) {
@@ -117,9 +133,6 @@ export class PackageTrackingService {
     return PackageTrackingService.instance;
   }
 
-  /**
-   * Create a new package with tracking code
-   */
   async createPackage(params: {
     senderId: string;
     from: string;
@@ -130,20 +143,14 @@ export class PackageTrackingService {
     description?: string;
   }): Promise<PackageTracking> {
     const packageId = generateId('pkg');
-    const trackingCode = this.generateTrackingCode();
-    const pickupCode = this.generateVerificationCode();
-    const deliveryCode = this.generateVerificationCode();
-
-    // Calculate pricing
-    const basePrice = this.calculateBasePrice(params.size);
-    const insuranceCost = params.insurance ? params.value * 0.01 : 0; // 1% of value
-    const totalCost = basePrice + insuranceCost;
+    const trackingCode = generateTrackingCode();
+    const basePrice = calculateBasePrice(params.size);
+    const insuranceCost = params.insurance ? Number((params.value * 0.01).toFixed(2)) : 0;
 
     const pkg: PackageTracking = {
       id: packageId,
       trackingCode,
-      qrCodeUrl: this.generateQRCodeUrl(trackingCode),
-      
+      qrCodeUrl: generateQRCodeUrl(trackingCode),
       senderId: params.senderId,
       from: params.from,
       to: params.to,
@@ -151,42 +158,57 @@ export class PackageTrackingService {
       value: params.value,
       insurance: params.insurance,
       description: params.description,
-      
       price: basePrice,
       insuranceCost,
-      totalCost,
+      totalCost: Number((basePrice + insuranceCost).toFixed(2)),
       paymentStatus: 'pending',
-      
       status: 'created',
-      
+      lifecycleStatus: 'created',
       createdAt: new Date(),
       lastUpdated: new Date(),
-      
-      pickupVerificationCode: pickupCode,
-      deliveryVerificationCode: deliveryCode,
+      pickupVerificationCode: generateVerificationCode(),
+      deliveryVerificationCode: generateVerificationCode(),
       pickupVerified: false,
       deliveryVerified: false,
-      
       senderCanContactDriver: false,
     };
 
     this.packages.set(packageId, pkg);
+    this.locationStreams.set(packageId, { lastAcceptedAt: null, lastPoint: null });
+    this.recordStatusUpdate({
+      packageId,
+      status: pkg.status,
+      timestamp: pkg.createdAt,
+    });
+
+    domainEventBus.publish(
+      createDomainEvent(
+        'PackageCreated',
+        {
+          packageId: pkg.id,
+          trackingCode: pkg.trackingCode,
+          origin: pkg.from,
+          destination: pkg.to,
+        },
+        'packageTrackingService',
+      ),
+    );
+
     return pkg;
   }
 
-  /**
-   * Link package to a ride
-   */
-  async linkPackageToRide(packageId: string, rideDetails: {
-    rideId: string;
-    driverId: string;
-    driverName: string;
-    driverPhone: string;
-    driverPhoto?: string;
-    vehicleInfo?: string;
-  }): Promise<PackageTracking> {
-    const pkg = this.packages.get(packageId);
-    if (!pkg) throw new Error('Package not found');
+  async linkPackageToRide(
+    packageId: string,
+    rideDetails: {
+      rideId: string;
+      driverId: string;
+      driverName: string;
+      driverPhone: string;
+      driverPhoto?: string;
+      vehicleInfo?: string;
+    },
+  ): Promise<PackageTracking> {
+    const pkg = this.requirePackage(packageId);
 
     pkg.rideId = rideDetails.rideId;
     pkg.driverId = rideDetails.driverId;
@@ -195,21 +217,38 @@ export class PackageTrackingService {
     pkg.driverPhoto = rideDetails.driverPhoto;
     pkg.vehicleInfo = rideDetails.vehicleInfo;
     pkg.status = 'matched';
+    pkg.lifecycleStatus = 'assigned';
     pkg.senderCanContactDriver = true;
     pkg.lastUpdated = new Date();
 
     this.packages.set(packageId, pkg);
+    this.recordStatusUpdate({
+      packageId,
+      status: pkg.status,
+      timestamp: pkg.lastUpdated,
+    });
+
+    domainEventBus.publish(
+      createDomainEvent(
+        'PackageAssigned',
+        {
+          packageId: pkg.id,
+          rideId: rideDetails.rideId,
+          driverId: rideDetails.driverId,
+        },
+        'packageTrackingService',
+      ),
+    );
+
     return pkg;
   }
 
-  /**
-   * Process payment and hold in escrow
-   */
-  async processPayment(packageId: string, paymentMethod: string): Promise<PackagePaymentEscrow> {
-    const pkg = this.packages.get(packageId);
-    if (!pkg) throw new Error('Package not found');
+  async processPayment(
+    packageId: string,
+    paymentMethod: string,
+  ): Promise<PackagePaymentEscrow> {
+    const pkg = this.requirePackage(packageId);
 
-    // Create escrow
     const escrow: PackagePaymentEscrow = {
       packageId,
       amount: pkg.totalCost,
@@ -230,15 +269,27 @@ export class PackageTrackingService {
     this.packages.set(packageId, pkg);
     this.escrows.set(packageId, escrow);
 
+    domainEventBus.publish(
+      createDomainEvent(
+        'PaymentAuthorized',
+        {
+          entityId: pkg.id,
+          entityType: 'package',
+          amount: pkg.totalCost,
+        },
+        'packageTrackingService',
+      ),
+    );
+
     return escrow;
   }
 
-  /**
-   * Verify pickup with QR code
-   */
-  async verifyPickup(packageId: string, verificationCode: string, photo?: string): Promise<boolean> {
-    const pkg = this.packages.get(packageId);
-    if (!pkg) throw new Error('Package not found');
+  async verifyPickup(
+    packageId: string,
+    verificationCode: string,
+    photo?: string,
+  ): Promise<boolean> {
+    const pkg = this.requirePackage(packageId);
 
     if (pkg.pickupVerificationCode !== verificationCode) {
       return false;
@@ -246,163 +297,203 @@ export class PackageTrackingService {
 
     pkg.pickupVerified = true;
     pkg.status = 'picked_up';
+    pkg.lifecycleStatus = 'picked_up';
     pkg.pickedUpAt = new Date();
     pkg.pickupPhoto = photo;
     pkg.lastUpdated = new Date();
 
     this.packages.set(packageId, pkg);
+    this.recordStatusUpdate({
+      packageId,
+      status: pkg.status,
+      timestamp: pkg.lastUpdated,
+      photo,
+    });
+
+    domainEventBus.publish(
+      createDomainEvent(
+        'PackagePickedUp',
+        {
+          packageId: pkg.id,
+          rideId: pkg.rideId,
+        },
+        'packageTrackingService',
+      ),
+    );
+
     return true;
   }
 
-  /**
-   * Update package location during transit
-   */
-  async updateLocation(packageId: string, location: { lat: number; lng: number }): Promise<void> {
-    const pkg = this.packages.get(packageId);
-    if (!pkg) throw new Error('Package not found');
+  async updateLocation(packageId: string, location: GeoPoint): Promise<void> {
+    const pkg = this.requirePackage(packageId);
+    const stream = this.locationStreams.get(packageId) ?? {
+      lastAcceptedAt: null,
+      lastPoint: null,
+    };
 
-    pkg.currentLocation = location;
-    
-    // Check if near destination
-    if (this.isNearDestination(location, pkg.to)) {
-      pkg.status = 'near_destination';
-    } else if (pkg.status === 'picked_up') {
-      pkg.status = 'in_transit';
-      pkg.inTransitAt = new Date();
+    const decision = evaluateGeoStreamUpdate(
+      stream,
+      location,
+      Date.now(),
+      DEFAULT_GEO_STREAM_CONFIG,
+    );
+
+    if (!decision.accepted) {
+      return;
     }
 
+    pkg.currentLocation = location;
+    if (pkg.status === 'picked_up') {
+      pkg.status = 'in_transit';
+      pkg.lifecycleStatus = 'in_transit';
+      pkg.inTransitAt = pkg.inTransitAt ?? new Date();
+    }
     pkg.lastUpdated = new Date();
+
     this.packages.set(packageId, pkg);
+    this.locationStreams.set(packageId, {
+      lastAcceptedAt: Date.now(),
+      lastPoint: location,
+    });
+    this.recordStatusUpdate({
+      packageId,
+      status: pkg.status,
+      timestamp: pkg.lastUpdated,
+      location,
+      note: decision.reason,
+    });
+
+    domainEventBus.publish(
+      createDomainEvent(
+        'PackageLocationUpdated',
+        {
+          packageId: pkg.id,
+          latitude: location.lat,
+          longitude: location.lng,
+        },
+        'packageTrackingService',
+      ),
+    );
   }
 
-  /**
-   * Verify delivery with QR code and release payment
-   */
   async verifyDelivery(
-    packageId: string, 
-    verificationCode: string, 
-    photo?: string
+    packageId: string,
+    verificationCode: string,
+    photo?: string,
   ): Promise<{ verified: boolean; paymentReleased: boolean }> {
-    const pkg = this.packages.get(packageId);
-    if (!pkg) throw new Error('Package not found');
+    const pkg = this.requirePackage(packageId);
 
     if (pkg.deliveryVerificationCode !== verificationCode) {
       return { verified: false, paymentReleased: false };
     }
 
-    // Verify delivery
     pkg.deliveryVerified = true;
     pkg.status = 'delivered';
+    pkg.lifecycleStatus = 'delivered';
     pkg.deliveredAt = new Date();
     pkg.deliveryPhoto = photo;
     pkg.lastUpdated = new Date();
 
-    // Release payment from escrow to driver
     const escrow = this.escrows.get(packageId);
     if (escrow && escrow.heldInEscrow) {
       escrow.releaseConditions.deliveryVerified = true;
-      escrow.releaseConditions.photoProvided = !!photo;
-      escrow.releaseConditions.noDisputes = true; // Check for disputes in real system
+      escrow.releaseConditions.photoProvided = Boolean(photo);
+      escrow.releaseConditions.noDisputes = true;
 
-      // Check if all conditions met
       if (this.canReleasePayment(escrow)) {
         escrow.releasedToDriver = true;
         escrow.heldInEscrow = false;
         pkg.paymentStatus = 'released';
-        
         this.escrows.set(packageId, escrow);
+
+        domainEventBus.publish(
+          createDomainEvent(
+            'PaymentCaptured',
+            {
+              entityId: pkg.id,
+              entityType: 'package',
+              amount: pkg.totalCost,
+            },
+            'packageTrackingService',
+          ),
+        );
       }
     }
 
     this.packages.set(packageId, pkg);
+    this.recordStatusUpdate({
+      packageId,
+      status: pkg.status,
+      timestamp: pkg.lastUpdated,
+      photo,
+    });
 
-    return { 
-      verified: true, 
-      paymentReleased: pkg.paymentStatus === 'released' 
+    domainEventBus.publish(
+      createDomainEvent(
+        'PackageDelivered',
+        {
+          packageId: pkg.id,
+          rideId: pkg.rideId,
+          paymentReleased: pkg.paymentStatus === 'released',
+        },
+        'packageTrackingService',
+      ),
+    );
+
+    return {
+      verified: true,
+      paymentReleased: pkg.paymentStatus === 'released',
     };
   }
 
-  /**
-   * Get package tracking info
-   */
   getPackage(packageId: string): PackageTracking | undefined {
     return this.packages.get(packageId);
   }
 
-  /**
-   * Get package by tracking code
-   */
   getPackageByTrackingCode(trackingCode: string): PackageTracking | undefined {
     return Array.from(this.packages.values()).find(
-      pkg => pkg.trackingCode === trackingCode
+      (pkg) => pkg.trackingCode === trackingCode,
     );
   }
 
-  /**
-   * Get all packages for a sender
-   */
   getSenderPackages(senderId: string): PackageTracking[] {
     return Array.from(this.packages.values()).filter(
-      pkg => pkg.senderId === senderId
+      (pkg) => pkg.senderId === senderId,
     );
   }
 
-  /**
-   * Get all packages for a driver
-   */
   getDriverPackages(driverId: string): PackageTracking[] {
     return Array.from(this.packages.values()).filter(
-      pkg => pkg.driverId === driverId
+      (pkg) => pkg.driverId === driverId,
     );
   }
 
-  /**
-   * Get escrow status
-   */
   getEscrowStatus(packageId: string): PackagePaymentEscrow | undefined {
     return this.escrows.get(packageId);
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // PRIVATE HELPERS
-  // ═══════════════════════════════════════════════════════════════════════════════
+  getStatusHistory(packageId: string): PackageStatusUpdate[] {
+    return [...(this.statusHistory.get(packageId) ?? [])];
+  }
 
-  private generateTrackingCode(): string {
-    // Format: WSL-PKG-XXXXXX (e.g., WSL-PKG-A1B2C3)
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = 'WSL-PKG-';
-    for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
+  resetRuntimeState(): void {
+    this.packages.clear();
+    this.escrows.clear();
+    this.locationStreams.clear();
+    this.statusHistory.clear();
+  }
+
+  private requirePackage(packageId: string): PackageTracking {
+    const pkg = this.packages.get(packageId);
+    if (!pkg) {
+      throw new Error('Package not found');
     }
-    return code;
+    return pkg;
   }
 
-  private generateVerificationCode(): string {
-    // 6-digit numeric code
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  }
-
-  private generateQRCodeUrl(trackingCode: string): string {
-    // Use QR code API (e.g., qrcode.react or external service)
-    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(trackingCode)}`;
-  }
-
-  private calculateBasePrice(size: 'small' | 'medium' | 'large'): number {
-    switch (size) {
-      case 'small': return 3.0; // JOD
-      case 'medium': return 5.0;
-      case 'large': return 8.0;
-      default: return 3.0;
-    }
-  }
-
-  private isNearDestination(
-    currentLocation: { lat: number; lng: number },
-    destination: string
-  ): boolean {
-    // Simple distance check (would use actual coordinates in production)
-    // For now, return false (would need geocoding)
-    return false;
+  private recordStatusUpdate(update: PackageStatusUpdate): void {
+    const current = this.statusHistory.get(update.packageId) ?? [];
+    this.statusHistory.set(update.packageId, [update, ...current].slice(0, 50));
   }
 
   private canReleasePayment(escrow: PackagePaymentEscrow): boolean {
@@ -414,8 +505,10 @@ export class PackageTrackingService {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// EXPORT SINGLETON
-// ═══════════════════════════════════════════════════════════════════════════════
-
 export const packageTrackingService = PackageTrackingService.getInstance();
+
+export function getCanonicalPackageLifecycle(
+  status: PackageStatus,
+): PackageTracking['lifecycleStatus'] {
+  return mapLegacyPackageStatusToLifecycle(status);
+}

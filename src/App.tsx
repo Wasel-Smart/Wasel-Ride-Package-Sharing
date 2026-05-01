@@ -10,12 +10,14 @@ import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { LocalAuthProvider } from './contexts/LocalAuth';
 import { WaselLogo } from './components/wasel-ds/WaselLogo';
+import { domainEventBus } from './platform/event-bus';
 import {
   probeBackendHealth,
   startAvailabilityPolling,
   warmUpServer,
 } from './services/core';
-import { initSentry } from './utils/monitoring';
+import { validateRuntimeConfiguration } from './utils/env';
+import { initSentry, logger, trackDomainEvent } from './utils/monitoring';
 import {
   detectLongTasks,
   initPerformanceMonitoring,
@@ -172,12 +174,26 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
 function AppRuntimeCoordinator() {
   useEffect(() => {
     initSentry();
+    const runtimeValidation = validateRuntimeConfiguration();
+
+    runtimeValidation.issues.forEach((issue) => {
+      const context = { key: issue.key, valid: runtimeValidation.ok };
+      if (issue.severity === 'error') {
+        logger.error(issue.message, undefined, context);
+        return;
+      }
+
+      logger.warning(issue.message, context);
+    });
     initPerformanceMonitoring();
     detectLongTasks();
     void warmUpServer();
     void probeBackendHealth();
 
     const stopPolling = startAvailabilityPolling();
+    const stopEventTelemetry = domainEventBus.subscribeAll((event) => {
+      trackDomainEvent(event);
+    });
     const syncOnlineState = () => {
       const online = typeof navigator === 'undefined' ? true : navigator.onLine;
       onlineManager.setOnline(online);
@@ -193,6 +209,7 @@ function AppRuntimeCoordinator() {
 
     return () => {
       stopPolling();
+      stopEventTelemetry();
       if (typeof window !== 'undefined') {
         window.removeEventListener('online', syncOnlineState);
         window.removeEventListener('offline', syncOnlineState);
