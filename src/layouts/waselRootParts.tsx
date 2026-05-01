@@ -154,7 +154,7 @@ export function UserMenu({ user, onSignOut, ar }: { user: { name: string; email:
           </div>
           {menuItems.map((item) => (
             <button key={item.label} role="menuitem" onClick={() => { nav(item.path); setOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 16px', background: 'transparent', border: 'none', textAlign: 'left', fontSize: '0.82rem', fontWeight: 500, color: C.textSub, fontFamily: F, cursor: 'pointer' }}>
-              <span style={{ fontSize: '1rem', width: 20, flexShrink: 0 }}>{item.emoji}</span>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.cyan, boxShadow: `0 0 12px ${C.cyan}66`, flexShrink: 0 }} />
               {item.label}
             </button>
           ))}

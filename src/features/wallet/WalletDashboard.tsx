@@ -11,7 +11,7 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
-import { WaselColors } from '../../tokens/wasel-tokens';
+import { WaselStateCard } from '../../components/system/WaselStateCard';
 import { useWalletDashboardController } from './useWalletDashboardController.js';
 import { TransactionRow as SharedTransactionRow } from './components/WalletShared';
 import { OverviewTab } from './components/OverviewTab';
@@ -83,64 +83,42 @@ export function WalletDashboard() {
 
   if (shouldRedirectToAuth) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Lock className="w-12 h-12 text-muted-foreground/60" />
-        <p className="text-muted-foreground text-sm">
-          {t.redirectingToSignIn}
-        </p>
-      </div>
+      <WaselStateCard
+        eyebrow={t.walletTitle}
+        title={t.redirectingToSignIn}
+        description={t.walletUnavailableDescription}
+        icon={Lock}
+        tone="warning"
+        minHeight="60vh"
+      />
     );
   }
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
-        <div className="space-y-1">
-          <p className="text-foreground text-sm font-medium">{t.loadingTitle}</p>
-          <p className="text-muted-foreground text-sm">{t.loadingDescription}</p>
-        </div>
-      </div>
+      <WaselStateCard
+        eyebrow={t.walletTitle}
+        title={t.loadingTitle}
+        description={t.loadingDescription}
+        icon={Wallet}
+        loading
+        minHeight="60vh"
+        footer={t.activeLabel}
+      />
     );
   }
 
   if (walletUnavailable) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] px-6">
-        <div
-          className="w-full max-w-xl rounded-3xl border text-center p-8 md:p-10"
-          style={{
-            background: `linear-gradient(180deg, ${WaselColors.navyCard} 0%, rgba(4,12,24,0.98) 100%)`,
-            borderColor: `${WaselColors.teal}25`,
-            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.35)',
-          }}
-        >
-          <div className="flex justify-center mb-5">
-            <WaselLogo size={44} theme="dark" variant="full" />
-          </div>
-          <div
-            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl"
-            style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${WaselColors.teal}20` }}
-          >
-            <Wallet className="w-7 h-7" style={{ color: WaselColors.teal }} />
-          </div>
-          <div className="space-y-2">
-            <p className="text-foreground text-lg font-semibold">
-              {t.walletUnavailableTitle}
-            </p>
-            <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-6">
-              {t.walletUnavailableDescription}
-            </p>
-          </div>
-          <div
-            className="mt-5 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground"
-            style={{ borderColor: `${WaselColors.teal}22`, background: 'rgba(255,255,255,0.03)' }}
-          >
-            <span className="h-2 w-2 rounded-full" style={{ background: WaselColors.success }} />
-            {t.walletUnavailableHint}
-          </div>
-        </div>
-      </div>
+      <WaselStateCard
+        eyebrow={t.walletTitle}
+        title={t.walletUnavailableTitle}
+        description={t.walletUnavailableDescription}
+        icon={Wallet}
+        tone="warning"
+        minHeight="60vh"
+        footer={t.walletUnavailableHint}
+      />
     );
   }
 

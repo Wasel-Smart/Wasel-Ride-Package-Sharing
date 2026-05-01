@@ -8,83 +8,83 @@
 /* ── Wasel Brand Color Palette (universal) ────────────────────────────────── */
 :root {
   /* Brand primaries — never change */
-  --wasel-cyan:   #00C8E8;
-  --wasel-gold:   #F0A830;
-  --wasel-green:  #00C875;
-  --wasel-lime:   #A8E63D;
+  --wasel-cyan:   #58DDFF;
+  --wasel-gold:   #FFBE5C;
+  --wasel-green:  #47D69E;
+  --wasel-lime:   #9AF1CF;
   /* Legacy aliases */
-  --wasel-teal:   #00C8E8;
-  --wasel-bronze: #F0A830;
+  --wasel-teal:   #58DDFF;
+  --wasel-bronze: #FFBE5C;
 
   /* ── DARK THEME (default — Deep Space) ─── */
-  --background:        #040C18;
-  --foreground:        #EFF6FF;
-  --card:              #0A1628;
-  --card-foreground:   #E2E8F0;
-  --popover:           #070F1F;
-  --popover-foreground:#E2E8F0;
-  --primary:           #00C8E8;
-  --primary-foreground:#040C18;
-  --secondary:         #0F1F38;
-  --secondary-foreground:#94A3B8;
-  --muted:             #0F1F38;
-  --muted-foreground:  #4D6A8A;
-  --accent:            #F0A830;
-  --accent-foreground: #040C18;
-  --destructive:       #FF4455;
+  --background:        #06131F;
+  --foreground:        #EEF8FF;
+  --card:              #10253A;
+  --card-foreground:   #EAF7FF;
+  --popover:           #0B1D2D;
+  --popover-foreground:#EAF7FF;
+  --primary:           #58DDFF;
+  --primary-foreground:#041018;
+  --secondary:         #11283D;
+  --secondary-foreground:#9AB7CC;
+  --muted:             #11283D;
+  --muted-foreground:  #6F90AA;
+  --accent:            #FFBE5C;
+  --accent-foreground: #041018;
+  --destructive:       #FF7C8B;
   --destructive-foreground:#FFFFFF;
-  --border:            rgba(0,200,232,0.08);
-  --input:             rgba(0,200,232,0.05);
-  --ring:              rgba(0,200,232,0.35);
+  --border:            rgba(88,221,255,0.12);
+  --input:             rgba(88,221,255,0.06);
+  --ring:              rgba(88,221,255,0.35);
 
   /* Header tokens — dark */
-  --wasel-header-bg:              rgba(4,12,24,0.85);
-  --wasel-header-bg-scrolled:     rgba(4,12,24,0.97);
-  --wasel-header-border:          rgba(0,200,232,0.05);
-  --wasel-header-border-scrolled: rgba(0,200,232,0.1);
+  --wasel-header-bg:              rgba(6,19,31,0.82);
+  --wasel-header-bg-scrolled:     rgba(6,19,31,0.96);
+  --wasel-header-border:          rgba(88,221,255,0.06);
+  --wasel-header-border-scrolled: rgba(88,221,255,0.12);
   --wasel-header-icon-bg:         rgba(255,255,255,0.04);
-  --wasel-header-icon-hover:      rgba(0,200,232,0.08);
-  --wasel-header-search-bg:       rgba(0,200,232,0.06);
-  --wasel-header-search-border:   rgba(0,200,232,0.1);
-  --wasel-header-avatar-bg:       linear-gradient(135deg, rgba(0,200,232,0.2), rgba(0,200,117,0.15));
+  --wasel-header-icon-hover:      rgba(88,221,255,0.08);
+  --wasel-header-search-bg:       rgba(88,221,255,0.06);
+  --wasel-header-search-border:   rgba(88,221,255,0.1);
+  --wasel-header-avatar-bg:       linear-gradient(135deg, rgba(88,221,255,0.2), rgba(71,214,158,0.16));
 
   /* Sidebar */
-  --wasel-sidebar-bg:          rgba(4,10,22,0.98);
-  --wasel-sidebar-border:      rgba(0,200,232,0.07);
-  --wasel-sidebar-item-hover:  rgba(0,200,232,0.04);
-  --wasel-sidebar-item-active: rgba(0,200,232,0.1);
-  --wasel-sidebar-active-rail: linear-gradient(180deg, #00C8E8, #00C875);
-  --wasel-sidebar-text:        rgba(77,106,138,1);
-  --wasel-sidebar-active-text: #00C8E8;
+  --wasel-sidebar-bg:          rgba(5,15,25,0.98);
+  --wasel-sidebar-border:      rgba(88,221,255,0.08);
+  --wasel-sidebar-item-hover:  rgba(88,221,255,0.05);
+  --wasel-sidebar-item-active: rgba(88,221,255,0.11);
+  --wasel-sidebar-active-rail: linear-gradient(180deg, #58DDFF, #47D69E);
+  --wasel-sidebar-text:        rgba(111,144,170,1);
+  --wasel-sidebar-active-text: #58DDFF;
 
   /* Surfaces (5-level elevation) */
-  --wasel-surface-0: #040C18;
-  --wasel-surface-1: #070F1F;
-  --wasel-surface-2: #0A1628;
-  --wasel-surface-3: #10203A;
-  --wasel-surface-4: #182E4E;
+  --wasel-surface-0: #06131F;
+  --wasel-surface-1: #0B1D2D;
+  --wasel-surface-2: #10253A;
+  --wasel-surface-3: #16314C;
+  --wasel-surface-4: #1D4061;
 
   /* Brand token aliases */
-  --wasel-brand-primary: #00C8E8;
-  --wasel-brand-green:   #00C875;
-  --wasel-brand-bronze:  #F0A830;
-  --wasel-brand-lime:    #A8E63D;
+  --wasel-brand-primary: #58DDFF;
+  --wasel-brand-green:   #47D69E;
+  --wasel-brand-bronze:  #FFBE5C;
+  --wasel-brand-lime:    #9AF1CF;
 
   /* Shadows */
   --wasel-shadow-sm:     0 1px 4px rgba(0,0,0,0.5);
   --wasel-shadow-md:     0 4px 20px rgba(0,0,0,0.55);
   --wasel-shadow-lg:     0 8px 40px rgba(0,0,0,0.6);
   --wasel-shadow-xl:     0 16px 60px rgba(0,0,0,0.65);
-  --wasel-shadow-teal:   0 4px 28px rgba(0,200,232,0.22);
-  --wasel-shadow-green:  0 4px 28px rgba(0,200,117,0.22);
-  --wasel-shadow-bronze: 0 4px 28px rgba(240,168,48,0.22);
+  --wasel-shadow-teal:   0 4px 28px rgba(88,221,255,0.22);
+  --wasel-shadow-green:  0 4px 28px rgba(71,214,158,0.22);
+  --wasel-shadow-bronze: 0 4px 28px rgba(255,190,92,0.22);
 
   /* ── Glassmorphism surfaces (replaces all rgba(17,27,46,…) hardcoding) ── */
-  --wasel-glass-sm:    rgba(10,22,40,0.50);   /* light overlay / translucent cards */
-  --wasel-glass-md:    rgba(10,22,40,0.68);   /* medium glass  / feature cards     */
-  --wasel-glass-lg:    rgba(10,22,40,0.92);   /* heavy glass   / map controls      */
-  --wasel-glass-xl:    rgba(10,22,40,0.97);   /* near-opaque   / dropdowns         */
-  --wasel-glass-brand: rgba(10,22,40,0.80);   /* brand showcase / logo panels      */
+  --wasel-glass-sm:    rgba(11,29,45,0.52);   /* light overlay / translucent cards */
+  --wasel-glass-md:    rgba(11,29,45,0.72);   /* medium glass  / feature cards     */
+  --wasel-glass-lg:    rgba(11,29,45,0.92);   /* heavy glass   / map controls      */
+  --wasel-glass-xl:    rgba(11,29,45,0.97);   /* near-opaque   / dropdowns         */
+  --wasel-glass-brand: rgba(11,29,45,0.82);   /* brand showcase / logo panels      */
 }
 
 /* ── Wasel Logo Animations ────────────────────────────────────────────────── */
@@ -220,25 +220,25 @@ button, a, input[type="button"], input[type="submit"] {
 
 /* ── LIGHT THEME ─────────────────────────────────────────────────────────── */
 .light {
-  --background:        #F0F6FF;
-  --foreground:        #060F1E;
+  --background:        #F5FBFF;
+  --foreground:        #081523;
   --card:              #FFFFFF;
-  --card-foreground:   #0A1628;
+  --card-foreground:   #0C2132;
   --popover:           #FFFFFF;
-  --popover-foreground:#0A1628;
-  --primary:           #0078A8;
+  --popover-foreground:#0C2132;
+  --primary:           #149BCB;
   --primary-foreground:#FFFFFF;
-  --secondary:         #E8F3FF;
-  --secondary-foreground:#2D4A6A;
-  --muted:             #EBF2FF;
-  --muted-foreground:  #4D6A8A;
-  --accent:            #D4841A;
+  --secondary:         #EAF7FF;
+  --secondary-foreground:#35556D;
+  --muted:             #EEF8FF;
+  --muted-foreground:  #5D7D96;
+  --accent:            #F3A83D;
   --accent-foreground: #FFFFFF;
   --destructive:       #DC2626;
   --destructive-foreground:#FFFFFF;
-  --border:            rgba(0,120,168,0.1);
-  --input:             rgba(0,120,168,0.07);
-  --ring:              rgba(0,120,168,0.3);
+  --border:            rgba(20,155,203,0.1);
+  --input:             rgba(20,155,203,0.07);
+  --ring:              rgba(20,155,203,0.3);
 
   /* Glassmorphism — light mode: frosted white panels */
   --wasel-glass-sm:    rgba(255,255,255,0.65);
@@ -248,15 +248,15 @@ button, a, input[type="button"], input[type="submit"] {
   --wasel-glass-brand: rgba(255,255,255,0.90);
 
   /* Header tokens — light */
-  --wasel-header-bg:              rgba(240,246,255,0.92);
+  --wasel-header-bg:              rgba(245,251,255,0.92);
   --wasel-header-bg-scrolled:     rgba(255,255,255,0.97);
-  --wasel-header-border:          rgba(0,120,168,0.08);
-  --wasel-header-border-scrolled: rgba(0,120,168,0.15);
-  --wasel-header-icon-bg:         rgba(0,120,168,0.05);
-  --wasel-header-icon-hover:      rgba(0,120,168,0.1);
-  --wasel-header-search-bg:       rgba(0,120,168,0.06);
-  --wasel-header-search-border:   rgba(0,120,168,0.15);
-  --wasel-header-avatar-bg:       linear-gradient(135deg, rgba(0,120,168,0.15), rgba(0,200,117,0.1));
+  --wasel-header-border:          rgba(20,155,203,0.08);
+  --wasel-header-border-scrolled: rgba(20,155,203,0.15);
+  --wasel-header-icon-bg:         rgba(20,155,203,0.05);
+  --wasel-header-icon-hover:      rgba(20,155,203,0.1);
+  --wasel-header-search-bg:       rgba(20,155,203,0.06);
+  --wasel-header-search-border:   rgba(20,155,203,0.15);
+  --wasel-header-avatar-bg:       linear-gradient(135deg, rgba(20,155,203,0.15), rgba(71,214,158,0.1));
 
   /* Sidebar — light */
   --wasel-sidebar-bg:          rgba(255,255,255,0.98);
@@ -1083,11 +1083,11 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .glass-card {
-  background: rgba(10, 22, 40, 0.85);
+  background: linear-gradient(180deg, rgba(16,37,58,0.92), rgba(11,29,45,0.9));
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid rgba(0,200,232,0.08);
-  box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(0,200,232,0.05);
+  border: 1px solid rgba(88,221,255,0.12);
+  box-shadow: 0 12px 44px rgba(0,0,0,0.42), inset 0 1px 0 rgba(88,221,255,0.05);
 }
 
 .glass-teal {
@@ -1126,21 +1126,23 @@ input[type="range"]::-moz-range-thumb {
   position: relative;
   overflow: hidden;
   border-radius: 20px;
-  background: linear-gradient(145deg, #0A1628 0%, #07101E 100%);
-  border: 1px solid rgba(0,200,232,0.07);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(0,200,232,0.04);
+  background:
+    radial-gradient(circle at top left, rgba(88,221,255,0.07), transparent 34%),
+    linear-gradient(145deg, #10253A 0%, #0B1D2D 100%);
+  border: 1px solid rgba(88,221,255,0.09);
+  box-shadow: 0 10px 32px rgba(0,0,0,0.34), inset 0 1px 0 rgba(88,221,255,0.04);
   transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease, border-color 0.3s ease;
 }
 .wasel-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+  box-shadow: 0 18px 56px rgba(0,0,0,0.42);
 }
-.wasel-card-orange { border-color: rgba(240,168,48,0.15); }
-.wasel-card-orange:hover { border-color: rgba(240,168,48,0.35); box-shadow: 0 12px 40px rgba(240,168,48,0.12); }
-.wasel-card-green  { border-color: rgba(0,200,117,0.15); }
-.wasel-card-green:hover  { border-color: rgba(0,200,117,0.35);  box-shadow: 0 12px 40px rgba(0,200,117,0.12); }
-.wasel-card-cyan   { border-color: rgba(0,200,232,0.15); }
-.wasel-card-cyan:hover   { border-color: rgba(0,200,232,0.35);  box-shadow: 0 12px 40px rgba(0,200,232,0.12); }
+.wasel-card-orange { border-color: rgba(255,190,92,0.18); }
+.wasel-card-orange:hover { border-color: rgba(255,190,92,0.38); box-shadow: 0 12px 40px rgba(255,190,92,0.14); }
+.wasel-card-green  { border-color: rgba(71,214,158,0.18); }
+.wasel-card-green:hover  { border-color: rgba(71,214,158,0.38);  box-shadow: 0 12px 40px rgba(71,214,158,0.14); }
+.wasel-card-cyan   { border-color: rgba(88,221,255,0.18); }
+.wasel-card-cyan:hover   { border-color: rgba(88,221,255,0.38);  box-shadow: 0 12px 40px rgba(88,221,255,0.14); }
 .wasel-card-purple { border-color: rgba(139,92,246,0.15); }
 .wasel-card-purple:hover { border-color: rgba(139,92,246,0.35); box-shadow: 0 12px 40px rgba(139,92,246,0.12); }
 
@@ -1151,16 +1153,16 @@ input[type="range"]::-moz-range-thumb {
 .btn-wasel-primary {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #00C8E8 0%, #0095b8 100%);
-  box-shadow: 0 4px 20px rgba(0,200,232,0.35), 0 1px 0 rgba(255,255,255,0.15) inset;
+  background: linear-gradient(135deg, #67E8FF 0%, #38BEFF 55%, #32D8A6 100%);
+  box-shadow: 0 10px 28px rgba(56,190,255,0.28), 0 1px 0 rgba(255,255,255,0.15) inset;
   transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
-  color: #040C18;
+  color: #041018;
   font-weight: 800;
   border-radius: 14px;
 }
 .btn-wasel-primary:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 32px rgba(0,200,232,0.5), 0 1px 0 rgba(255,255,255,0.2) inset;
+  box-shadow: 0 14px 36px rgba(56,190,255,0.36), 0 1px 0 rgba(255,255,255,0.2) inset;
 }
 .btn-wasel-primary:active {
   transform: scale(0.97);
@@ -1180,16 +1182,16 @@ input[type="range"]::-moz-range-thumb {
 .btn-wasel-outline {
   position: relative;
   background: transparent;
-  border: 1px solid rgba(0,200,232,0.3);
-  color: #00C8E8;
+  border: 1px solid rgba(88,221,255,0.3);
+  color: #58DDFF;
   font-weight: 700;
   border-radius: 14px;
   transition: all 0.25s ease;
 }
 .btn-wasel-outline:hover {
-  background: rgba(0,200,232,0.07);
-  border-color: rgba(0,200,232,0.55);
-  box-shadow: 0 0 20px rgba(0,200,232,0.15);
+  background: rgba(88,221,255,0.08);
+  border-color: rgba(88,221,255,0.55);
+  box-shadow: 0 0 20px rgba(88,221,255,0.16);
   transform: translateY(-1px);
 }
 

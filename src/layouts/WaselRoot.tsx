@@ -10,7 +10,6 @@ import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { C, F, GLOBAL_STYLES, GRAD, R } from '../utils/wasel-ds';
 import { isVisibleNavGroup, PRODUCT_NAV_GROUPS } from './waselRootConfig';
 import {
-  AppPill,
   Badge,
   CurrencySwitcher,
   LangToggle,
@@ -19,6 +18,8 @@ import {
   OnlineToggle,
   UserMenu,
 } from './waselRootParts';
+
+const PRIMARY_HEADER_GROUP_IDS = new Set(['find', 'offer', 'packages', 'bus', 'mobility-os']);
 
 export default function WaselRoot() {
   const { user, signOut } = useLocalAuth();
@@ -72,22 +73,33 @@ export default function WaselRoot() {
           position: 'sticky',
           top: 0,
           zIndex: 500,
-          background: scrolled ? 'rgba(17,19,22,0.99)' : 'rgba(17,19,22,0.95)',
-          backdropFilter: 'blur(24px)',
+          background: scrolled
+            ? 'linear-gradient(180deg, rgba(6,19,31,0.98), rgba(6,19,31,0.95))'
+            : 'linear-gradient(180deg, rgba(6,19,31,0.88), rgba(6,19,31,0.84))',
+          backdropFilter: 'blur(24px) saturate(150%)',
           borderBottom: `1px solid ${scrolled ? C.borderHov : C.border}`,
-          boxShadow: scrolled ? '0 4px 32px rgba(0,0,0,0.52)' : '0 2px 16px rgba(0,0,0,0.28)',
+          boxShadow: scrolled
+            ? '0 12px 40px rgba(0,0,0,0.34)'
+            : '0 6px 22px rgba(0,0,0,0.18)',
           transition: 'all 0.25s ease',
         }}
       >
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px', height: 62, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', flexShrink: 0, transition: 'opacity 0.15s' }}>
+        <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 20px', minHeight: 70, display: 'flex', alignItems: 'center', gap: 18 }}>
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              flexShrink: 0,
+              transition: 'opacity 0.15s',
+            }}
+          >
             <WaselLogo size={32} theme="light" variant="full" />
           </button>
-
-          <div className="wrl-brand-pill" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-            <style>{`@media (max-width: 1180px) { .wrl-brand-pill { display: none !important; } }`}</style>
-            <AppPill ar={ar} />
-          </div>
 
           <nav style={{ display: 'flex', alignItems: 'center', flex: 1 }} className="wrl-desk-nav">
             <style>{`
@@ -96,7 +108,10 @@ export default function WaselRoot() {
               @media (min-width: 900px) { .wrl-mobile-burger { display: none !important; } }
             `}</style>
 
-            {PRODUCT_NAV_GROUPS.filter((group) => isVisibleNavGroup(group, isAuthenticated)).map((group, index) => {
+            {PRODUCT_NAV_GROUPS.filter((group) => (
+              isVisibleNavGroup(group, isAuthenticated) &&
+              PRIMARY_HEADER_GROUP_IDS.has(group.id)
+            )).map((group, index) => {
               const isDirect = 'direct' in group && group.direct;
               const isActive = activeGroup === group.id;
 
@@ -111,12 +126,13 @@ export default function WaselRoot() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 8,
-                      padding: '6px 12px',
-                      borderRadius: R.sm,
-                      background: isActive ? C.cyanDim : 'transparent',
+                      minHeight: 42,
+                      padding: '0 14px',
+                      borderRadius: 999,
+                      background: isActive ? 'rgba(88,221,255,0.12)' : 'transparent',
                       border: 'none',
                       cursor: 'pointer',
-                      fontSize: '0.82rem',
+                      fontSize: '0.84rem',
                       fontWeight: isActive ? 700 : 500,
                       color: isActive ? C.text : C.textSub,
                       fontFamily: F,
@@ -127,11 +143,11 @@ export default function WaselRoot() {
                     <span
                       aria-hidden="true"
                       style={{
-                        width: 7,
-                        height: 7,
+                        width: 8,
+                        height: 8,
                         borderRadius: '50%',
                         background: (group as { color?: string }).color,
-                        boxShadow: `0 0 12px ${((group as { color?: string }).color ?? C.gold)}55`,
+                        boxShadow: `0 0 14px ${((group as { color?: string }).color ?? C.gold)}66`,
                         flexShrink: 0,
                       }}
                     />
@@ -154,14 +170,40 @@ export default function WaselRoot() {
             })}
           </nav>
 
-          <div className="wrl-desk-actions" style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+          <div
+            className="wrl-desk-actions"
+            style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              flexShrink: 0,
+              paddingLeft: 8,
+              borderLeft: `1px solid ${C.borderFaint}`,
+            }}
+          >
             <LangToggle />
             {user && <CurrencySwitcher ar={ar} />}
             {user && isDriverMode && <OnlineToggle ar={ar} />}
 
             {user ? (
               <>
-                <button onClick={() => navigate('/notifications')} title={ar ? 'Notifications' : 'Notifications'} style={{ position: 'relative', width: 36, height: 36, borderRadius: R.md, background: C.card, border: `1px solid ${C.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.14s' }}>
+                <button
+                  onClick={() => navigate('/notifications')}
+                  title={ar ? 'Notifications' : 'Notifications'}
+                  style={{
+                    position: 'relative',
+                    width: 38,
+                    height: 38,
+                    borderRadius: 12,
+                    background: C.card,
+                    border: `1px solid ${C.border}`,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.14s',
+                  }}
+                >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={C.textSub} strokeWidth="2" strokeLinecap="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
                   </svg>
@@ -171,17 +213,17 @@ export default function WaselRoot() {
               </>
             ) : (
               <>
-                <button onClick={() => navigate('/auth')} style={{ height: 36, padding: '0 16px', borderRadius: R.md, fontSize: '0.82rem', fontWeight: 600, background: 'transparent', border: `1.5px solid ${C.border}`, color: C.text, fontFamily: F, cursor: 'pointer', transition: 'all 0.14s', whiteSpace: 'nowrap' }}>
+                <button onClick={() => navigate('/auth')} style={{ height: 38, padding: '0 16px', borderRadius: 12, fontSize: '0.82rem', fontWeight: 600, background: 'transparent', border: `1.5px solid ${C.border}`, color: C.text, fontFamily: F, cursor: 'pointer', transition: 'all 0.14s', whiteSpace: 'nowrap' }}>
                   {ar ? 'Sign in' : 'Sign in'}
                 </button>
-                <button onClick={() => navigate('/auth?tab=register')} style={{ height: 36, padding: '0 18px', borderRadius: R.md, fontSize: '0.82rem', fontWeight: 700, background: GRAD, border: 'none', color: C.bg, fontFamily: F, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.14s', boxShadow: '0 4px 16px rgba(184,138,82,0.24)' }}>
+                <button onClick={() => navigate('/auth?tab=register')} style={{ height: 40, padding: '0 18px', borderRadius: 12, fontSize: '0.82rem', fontWeight: 800, background: GRAD, border: 'none', color: C.bg, fontFamily: F, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.14s', boxShadow: '0 10px 24px rgba(56,190,255,0.22)' }}>
                   {ar ? 'Get started' : 'Get started'}
                 </button>
               </>
             )}
           </div>
 
-          <button className="wrl-mobile-burger" onClick={() => setMobileOpen((t) => !t)} aria-label={ar ? 'Open menu' : 'Open menu'} style={{ marginLeft: 'auto', width: 38, height: 38, borderRadius: R.md, background: C.card, border: `1px solid ${C.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.14s' }}>
+          <button className="wrl-mobile-burger" onClick={() => setMobileOpen((t) => !t)} aria-label={ar ? 'Open menu' : 'Open menu'} style={{ marginLeft: 'auto', width: 40, height: 40, borderRadius: 12, background: C.card, border: `1px solid ${C.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.14s' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2" strokeLinecap="round">
               {mobileOpen ? <><path d="M18 6 6 18" /><path d="M6 6l12 12" /></> : <><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></>}
             </svg>

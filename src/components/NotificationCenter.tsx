@@ -23,6 +23,7 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
+import { WaselStateCard } from './system/WaselStateCard';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotifications, type Notification } from '../hooks/useNotifications';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
@@ -209,6 +210,19 @@ export function NotificationCenter() {
 
   if (loading && notifications.length === 0) {
     return (
+      <WaselStateCard
+        eyebrow={isRTL ? 'Notification Center' : 'Notification Center'}
+        title={isRTL ? 'Preparing your notification stream' : 'Preparing your notification stream'}
+        description={isRTL ? 'Pulling bookings, support messages, and wallet activity into one clear feed.' : 'Pulling bookings, support messages, and wallet activity into one clear feed.'}
+        icon={Inbox}
+        loading
+        footer={isRTL ? 'This view will fill in as soon as the sync completes.' : 'This view will fill in as soon as the sync completes.'}
+      />
+    );
+  }
+
+  if (loading && notifications.length < 0) {
+    return (
       <div className="flex min-h-[360px] items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="size-9 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
@@ -335,19 +349,34 @@ export function NotificationCenter() {
 
       <div className="space-y-4">
         {sections.length === 0 ? (
-          <Card className="border-dashed border-white/10 bg-card/70">
-            <CardContent className="flex min-h-[280px] flex-col items-center justify-center gap-4 text-center">
-              <div className="rounded-full border border-white/10 bg-white/5 p-4">
-                {filter === 'archived' ? <Trash2 className="size-8 text-muted-foreground" /> : <BellOff className="size-8 text-muted-foreground" />}
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold">{labels.noResults}</h3>
-                <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-                  {searchTerm || filter !== 'all' ? labels.emptyFiltered : labels.emptyAll}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <WaselStateCard
+            eyebrow={filter === 'archived' ? labels.archived : labels.title}
+            title={labels.noResults}
+            description={searchTerm || filter !== 'all' ? labels.emptyFiltered : labels.emptyAll}
+            icon={filter === 'archived' ? Trash2 : BellOff}
+            minHeight={280}
+            actions={searchTerm || filter !== 'all' ? (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilter('all');
+                }}
+                className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+              >
+                {isRTL ? 'Reset view' : 'Reset view'}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => void refresh()}
+                className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+              >
+                <RefreshCw className="size-4" />
+                {labels.refresh}
+              </Button>
+            )}
+          />
         ) : (
           sections.map((section) => (
             <div key={section.key} className="space-y-3">

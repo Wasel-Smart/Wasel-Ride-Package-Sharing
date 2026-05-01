@@ -11,38 +11,28 @@
  *    until those are individually migrated; BusPage is now fully standalone.
  */
 import { Suspense } from 'react';
+import { AlertTriangle, LoaderCircle, SearchX } from 'lucide-react';
 import {
   createBrowserRouter,
   isRouteErrorResponse,
   Navigate,
   useRouteError,
 } from 'react-router';
+import { Button } from './components/ui/button';
+import { WaselStateCard } from './components/system/WaselStateCard';
 import WaselRoot from './layouts/WaselRoot';
 
 // ── Page loader fallback ──────────────────────────────────────────────────────
 function PageLoader() {
   return (
-    <div
-      style={{
-        minHeight: '60vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#040C18',
-      }}
-    >
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: '50%',
-          border: '3px solid rgba(0,200,232,0.15)',
-          borderTop: '3px solid #00C8E8',
-          animation: 'spin 0.8s linear infinite',
-        }}
-      />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
+    <WaselStateCard
+      eyebrow="Loading"
+      title="Opening the next Wasel view"
+      description="We are preparing the route, loading the screen data, and restoring your last context."
+      icon={LoaderCircle}
+      loading
+      minHeight="60vh"
+    />
   );
 }
 
@@ -112,56 +102,18 @@ const LEGACY_APP_ALIASES = [
 // ── 404 ───────────────────────────────────────────────────────────────────────
 function NotFound() {
   return (
-    <div
-      style={{
-        minHeight: '80vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#040C18',
-        color: '#fff',
-        fontFamily: "-apple-system,'Inter',sans-serif",
-        padding: 24,
-      }}
-    >
-      <div
-        style={{
-          fontSize: '0.75rem',
-          marginBottom: 16,
-          letterSpacing: '0.18em',
-          textTransform: 'uppercase',
-          color: '#00C8E8',
-          fontWeight: 800,
-        }}
-      >
-        404
-      </div>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: 8 }}>Page not found</h2>
-      <p
-        style={{
-          color: 'rgba(255,255,255,0.45)',
-          marginBottom: 24,
-          maxWidth: 420,
-          textAlign: 'center',
-        }}
-      >
-        The page you requested is unavailable or the link is outdated.
-      </p>
-      <a
-        href="/"
-        style={{
-          padding: '10px 24px',
-          borderRadius: 12,
-          background: 'linear-gradient(135deg,#00C8E8,#0095B8)',
-          color: '#040C18',
-          fontWeight: 700,
-          textDecoration: 'none',
-        }}
-      >
-        Back to Wasel
-      </a>
-    </div>
+    <WaselStateCard
+      eyebrow="404"
+      title="Page not found"
+      description="The page you requested is unavailable or the link is outdated."
+      icon={SearchX}
+      minHeight="80vh"
+      actions={(
+        <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <a href="/">Back to Wasel</a>
+        </Button>
+      )}
+    />
   );
 }
 
@@ -175,74 +127,25 @@ function RouteErrorFallback() {
       : 'This page could not be loaded.';
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#040C18',
-        color: '#EFF6FF',
-        padding: 24,
-        fontFamily: "-apple-system,'Inter',sans-serif",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 560,
-          width: '100%',
-          borderRadius: 20,
-          padding: 28,
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(0,200,232,0.14)',
-        }}
-      >
-        <div
-          style={{
-            fontSize: '0.7rem',
-            color: '#00C8E8',
-            fontWeight: 800,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            marginBottom: 10,
-          }}
-        >
-          App Error
-        </div>
-        <h1 style={{ margin: '0 0 12px', fontSize: '1.5rem', lineHeight: 1.2 }}>
-          This page could not be loaded.
-        </h1>
-        <p style={{ color: 'rgba(239,246,255,0.65)', marginBottom: 20 }}>{message}</p>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <a
-            href="/app/find-ride"
-            style={{
-              padding: '10px 18px',
-              borderRadius: 12,
-              background: 'linear-gradient(135deg,#00C8E8,#0095B8)',
-              color: '#041018',
-              textDecoration: 'none',
-              fontWeight: 800,
-            }}
-          >
-            Find a Ride
-          </a>
-          <a
-            href="/"
-            style={{
-              padding: '10px 18px',
-              borderRadius: 12,
-              border: '1px solid rgba(0,200,232,0.22)',
-              color: '#EFF6FF',
-              textDecoration: 'none',
-              fontWeight: 700,
-            }}
-          >
-            Go home
-          </a>
-        </div>
-      </div>
-    </div>
+    <WaselStateCard
+      eyebrow="App Error"
+      title="This page could not be loaded"
+      description={message}
+      icon={AlertTriangle}
+      tone="danger"
+      minHeight="100vh"
+      actions={(
+        <>
+          <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <a href="/app/find-ride">Find a ride</a>
+          </Button>
+          <Button asChild variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
+            <a href="/">Go home</a>
+          </Button>
+        </>
+      )}
+      footer="If this repeats, reload the app shell or reopen the flow from the home screen."
+    />
   );
 }
 

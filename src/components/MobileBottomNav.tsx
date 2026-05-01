@@ -7,13 +7,13 @@ import { Bus, Clock, Search, PlusCircle, Package } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLocation, useNavigate } from 'react-router';
 import { CORE_NAV_ITEMS } from '../config/user-navigation';
+import { C, F, GRAD_GOLD } from '../utils/wasel-ds';
 
-const BG = 'rgba(17,19,22,0.97)';
-const CYAN = '#F4EFE8';
-const GOLD = '#B88A52';
-const INACTIVE = 'rgba(223,215,205,0.48)';
-const BORDER = 'rgba(244,239,232,0.10)';
-const F = "'Plus Jakarta Sans','Inter','Cairo',sans-serif";
+const BG = 'rgba(6,19,31,0.96)';
+const CYAN = C.cyan;
+const GOLD = C.gold;
+const INACTIVE = C.textDim;
+const BORDER = C.border;
 
 const ICONS = {
   find: Search,
@@ -60,7 +60,7 @@ export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
           backdropFilter: 'blur(28px)',
           WebkitBackdropFilter: 'blur(28px)',
           borderTop: `1px solid ${BORDER}`,
-          boxShadow: '0 -8px 32px rgba(0,0,0,0.56), 0 -1px 0 rgba(244,239,232,0.06)',
+          boxShadow: '0 -12px 36px rgba(0,0,0,0.42), 0 -1px 0 rgba(88,221,255,0.08)',
           paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))',
           flexDirection: 'row',
           justifyContent: 'space-around',
@@ -122,15 +122,15 @@ export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
                     height: 48,
                     borderRadius: 16,
                     background: active
-                      ? `linear-gradient(135deg,${GOLD},#8D6842)`
-                      : 'linear-gradient(135deg,rgba(184,138,82,0.24),rgba(141,104,66,0.18))',
-                    border: `1.5px solid ${active ? GOLD : 'rgba(184,138,82,0.35)'}`,
+                      ? GRAD_GOLD
+                      : 'linear-gradient(135deg,rgba(255,190,92,0.2),rgba(255,147,106,0.16))',
+                    border: `1.5px solid ${active ? GOLD : 'rgba(255,190,92,0.34)'}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     boxShadow: active
-                      ? '0 4px 20px rgba(184,138,82,0.42)'
-                      : '0 2px 12px rgba(184,138,82,0.16)',
+                      ? '0 10px 24px rgba(255,190,92,0.28)'
+                      : '0 4px 14px rgba(255,190,92,0.14)',
                     transition: 'all 0.2s ease',
                   }}
                 >
