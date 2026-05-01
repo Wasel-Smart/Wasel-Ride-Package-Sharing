@@ -8,7 +8,6 @@ import {
   Route,
   ShieldCheck,
   Sparkles,
-  Ticket,
   Truck,
   Users,
 } from 'lucide-react';
@@ -214,27 +213,22 @@ export default function AppEntryPage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {['Route-first', 'Trusted actions', 'Clear pricing'].map((label) => (
-              <span
-                key={label}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  padding: '8px 12px',
-                  borderRadius: 9999,
-                  background: 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${C.border}`,
-                  color: C.soft,
-                  fontSize: '0.74rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.05em',
-                }}
-              >
-                {label}
-              </span>
-            ))}
-          </div>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '8px 12px',
+              borderRadius: 9999,
+              background: 'rgba(255,255,255,0.03)',
+              border: `1px solid ${C.border}`,
+              color: C.soft,
+              fontSize: '0.74rem',
+              fontWeight: 800,
+              letterSpacing: '0.05em',
+            }}
+          >
+            Jordan-first mobility
+          </span>
         </motion.div>
 
         <div className="landing-hero-grid" style={{ display: 'grid', gridTemplateColumns: '0.98fr 1.02fr', gap: 28, alignItems: 'stretch', marginTop: 34 }}>
@@ -281,13 +275,9 @@ export default function AppEntryPage() {
                   }}
                 >
                   <Sparkles size={14} />
-                  Calmer mobility starts here
+                  One road, many moves
                 </span>
 
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: C.soft, fontSize: '0.84rem', fontWeight: 700 }}>
-                  <ShieldCheck size={14} color={C.gold} />
-                  Faster decisions, less friction
-                </span>
               </div>
 
               <h1
@@ -310,15 +300,15 @@ export default function AppEntryPage() {
                     backgroundClip: 'text',
                   }}
                 >
-                  Jordan moves better
+                  One road,
                 </span>
                 <span style={{ display: 'block', color: C.text, marginTop: 10 }}>
-                  when one route can do more.
+                  many moves.
                 </span>
               </h1>
 
-              <p style={{ maxWidth: 620, fontSize: '1rem', lineHeight: 1.8, color: C.muted, margin: 0 }}>
-                Wasel keeps rides, parcels, and bus fallback inside one route-first system, so the page answers what matters before the user has to think twice.
+              <p style={{ maxWidth: 560, fontSize: '1rem', lineHeight: 1.8, color: C.muted, margin: 0 }}>
+                Open one corridor. Ride it, ship on it, or fall back to the bus line around it.
               </p>
 
               <div className="landing-cta" style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 28, flexWrap: 'wrap' }}>
@@ -363,45 +353,23 @@ export default function AppEntryPage() {
                 </button>
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 20 }}>
-                {['Live corridors', 'Transparent fares', 'Bus fallback included'].map((label) => (
-                  <span
-                    key={label}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      padding: '8px 12px',
-                      borderRadius: 9999,
-                      background: 'rgba(255,255,255,0.035)',
-                      border: `1px solid ${C.borderSoft}`,
-                      color: C.soft,
-                      fontSize: '0.76rem',
-                      fontWeight: 800,
-                    }}
-                  >
-                    {label}
-                  </span>
-                ))}
-              </div>
-
-              <div className="landing-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, marginTop: 26 }}>
+              <div className="landing-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginTop: 22 }}>
                 {[
-                  { value: `${membership.movementCredits}`, label: 'movement credits', tone: C.cyanSoft },
-                  { value: `${membership.streakDays} days`, label: 'route streak', tone: C.green },
-                  { value: tierLabel(membership.loyaltyTier), label: 'loyalty tier', tone: C.gold },
+                  { value: `${membership.movementCredits}`, label: 'Credits', tone: C.cyanSoft },
+                  { value: `${membership.streakDays}d`, label: 'Streak', tone: C.green },
+                  { value: tierLabel(membership.loyaltyTier), label: 'Tier', tone: C.gold },
                 ].map((item) => (
                   <div
                     key={item.label}
                     style={{
-                      borderRadius: 22,
-                      padding: '15px 16px 14px',
-                      background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
-                      border: `1px solid ${C.border}`,
-                      boxShadow: SH.navy,
+                      borderRadius: 18,
+                      padding: '12px 14px',
+                      background: 'rgba(255,255,255,0.035)',
+                      border: `1px solid ${C.borderSoft}`,
                     }}
                   >
-                    <div style={{ fontSize: '1.22rem', fontWeight: 950, color: item.tone, letterSpacing: '-0.03em' }}>{item.value}</div>
-                    <div style={{ marginTop: 5, fontSize: '0.74rem', color: C.soft, textTransform: 'uppercase', letterSpacing: '0.09em' }}>{item.label}</div>
+                    <div style={{ color: C.soft, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
+                    <div style={{ marginTop: 6, fontSize: '1rem', fontWeight: 900, color: item.tone }}>{item.value}</div>
                   </div>
                 ))}
               </div>
@@ -423,13 +391,13 @@ export default function AppEntryPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
               <div>
                 <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.cyan }}>
-                  Corridor pulse
+                  Route thread
                 </div>
                 <div style={{ marginTop: 8, fontSize: '1.58rem', fontWeight: 900, lineHeight: 1.02 }}>
                   {spotlightCorridor?.label ?? 'Live corridor'}
                 </div>
                 <div style={{ marginTop: 8, color: C.muted, lineHeight: 1.7, fontSize: '0.92rem', maxWidth: 440 }}>
-                  Open one route and Wasel makes the next decision obvious: ride now, attach a parcel, or switch to a scheduled fallback.
+                  The whole product should make sense from one corridor.
                 </div>
               </div>
 
@@ -472,7 +440,7 @@ export default function AppEntryPage() {
               <div style={{ position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                   <div style={{ color: C.cyanSoft, fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                    Signature route view
+                    Route thread
                   </div>
                   <span
                     style={{
@@ -489,6 +457,10 @@ export default function AppEntryPage() {
                   >
                     Daily route active
                   </span>
+                </div>
+
+                <div style={{ marginTop: 10, color: C.soft, fontSize: '0.82rem', lineHeight: 1.6 }}>
+                  {routeLayers.length > 0 ? routeLayers.join(' | ') : 'Riders | parcels | daily errands'}
                 </div>
 
                 <div style={{ position: 'relative', marginTop: 18 }}>
@@ -543,7 +515,7 @@ export default function AppEntryPage() {
                   </div>
                 </div>
 
-                <div className="landing-signal-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginTop: 18 }}>
+                <div className="landing-signal-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 18 }}>
                   {[
                     {
                       icon: Clock3,
@@ -554,11 +526,6 @@ export default function AppEntryPage() {
                       icon: MapPinned,
                       label: 'Pickup anchor',
                       value: spotlightCorridor?.pickupPoints?.[0] ?? 'Closest active stop',
-                    },
-                    {
-                      icon: Ticket,
-                      label: 'Route layers',
-                      value: routeLayers.length > 0 ? routeLayers.join(' | ') : 'Riders | parcels | daily errands',
                     },
                   ].map((item) => {
                     const Icon = item.icon;
@@ -587,47 +554,34 @@ export default function AppEntryPage() {
             <div
               style={{
                 marginTop: 14,
-                borderRadius: 22,
-                padding: '14px 16px',
+                borderRadius: 20,
+                padding: '12px 14px',
                 background: 'rgba(255,255,255,0.03)',
                 border: `1px solid ${C.borderSoft}`,
                 display: 'flex',
-                justifyContent: 'space-between',
-                gap: 12,
-                alignItems: 'center',
+                gap: 10,
                 flexWrap: 'wrap',
               }}
             >
-              <div>
-                <div style={{ color: C.gold, fontSize: '0.74rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                  Account signal
+              {[
+                { label: membership.plusActive ? 'Plus active' : 'Starter ready', value: tierLabel(membership.loyaltyTier), color: C.gold },
+                { label: 'Credits', value: `${membership.movementCredits}`, color: C.cyanSoft },
+                { label: 'Streak', value: `${membership.streakDays}d`, color: C.green },
+              ].map((item) => (
+                <div
+                  key={`${item.label}-${item.value}`}
+                  style={{
+                    flex: '1 1 120px',
+                    borderRadius: 16,
+                    padding: '10px 12px',
+                    background: 'rgba(255,255,255,0.025)',
+                    border: `1px solid ${C.borderSoft}`,
+                  }}
+                >
+                  <div style={{ color: C.soft, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
+                  <div style={{ marginTop: 5, color: item.color, fontWeight: 900, fontSize: '0.9rem' }}>{item.value}</div>
                 </div>
-                <div style={{ marginTop: 6, fontWeight: 900, fontSize: '1rem' }}>
-                  {membership.plusActive ? 'Wasel Plus active' : 'Starter account ready'}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {[
-                  { label: 'Tier', value: tierLabel(membership.loyaltyTier), color: C.gold },
-                  { label: 'Credits', value: `${membership.movementCredits}`, color: C.cyanSoft },
-                  { label: 'Streak', value: `${membership.streakDays} days`, color: C.green },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    style={{
-                      borderRadius: 16,
-                      padding: '10px 12px',
-                      background: 'rgba(255,255,255,0.025)',
-                      border: `1px solid ${C.borderSoft}`,
-                      minWidth: 116,
-                    }}
-                  >
-                    <div style={{ color: C.soft, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
-                    <div style={{ marginTop: 5, color: item.color, fontWeight: 900, fontSize: '0.9rem' }}>{item.value}</div>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </motion.div>
         </div>

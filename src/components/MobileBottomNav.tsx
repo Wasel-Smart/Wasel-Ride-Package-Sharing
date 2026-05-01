@@ -3,10 +3,11 @@
  * Shared with the app's core navigation model for consistent UX.
  */
 
-import { Bus, Clock, Search, PlusCircle, Package } from 'lucide-react';
+import { Bus, Clock, Package, PlusCircle, Search } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLocation, useNavigate } from 'react-router';
 import { CORE_NAV_ITEMS } from '../config/user-navigation';
+import { useLanguage } from '../contexts/LanguageContext';
 import { C, F, GRAD_GOLD } from '../utils/wasel-ds';
 
 const BG = 'rgba(6,19,31,0.96)';
@@ -27,10 +28,12 @@ interface MobileBottomNavProps {
   language?: 'en' | 'ar';
 }
 
-export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
+export function MobileBottomNav({ language }: MobileBottomNavProps) {
+  const { language: activeLanguage } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
-  const isArabic = language === 'ar';
+  const resolvedLanguage = language ?? activeLanguage;
+  const isArabic = resolvedLanguage === 'ar';
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/' || location.pathname === '/app' || location.pathname === '/app/';
@@ -49,7 +52,7 @@ export function MobileBottomNav({ language = 'en' }: MobileBottomNavProps) {
 
       <nav
         className="wasel-bottom-nav"
-        aria-label="Main navigation"
+        aria-label={isArabic ? 'التنقل الرئيسي' : 'Main navigation'}
         style={{
           position: 'fixed',
           bottom: 0,
