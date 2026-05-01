@@ -1,17 +1,15 @@
-import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey, supabase } from './core';
+import { API_URL, fetchWithRetry, getAuthDetails, supabase } from './core';
+import {
+  getSecureBackendFallbackError,
+  hasConfiguredEdgeTransport,
+  requestEdgeJson,
+  runBackendWorkflow,
+} from './backendWorkflow';
 import { getDirectProfile, getDirectVerificationRecord, updateDirectProfile } from './directSupabase';
 import { getAuthCallbackUrl, getConfig } from '../utils/env';
 
-function canUseEdgeApi(): boolean {
-  return Boolean(API_URL && publicAnonKey);
-}
-
-function canUseDirectFallbackForWrites(): boolean {
-  return getConfig().allowDirectSupabaseFallback;
-}
-
 function getDirectFallbackError(operation: string): Error {
-  return new Error(`${operation} is temporarily unavailable while the secure backend is degraded. Please try again shortly.`);
+  return getSecureBackendFallbackError(operation);
 }
 
 function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'generic'): string {
@@ -102,6 +100,12 @@ async function enrichProfileWithVerification(userId: string, profile: Record<str
   }
 }
 
+async function loadProfileViaFallback(userId: string) {
+  const profile = await getDirectProfile(userId).catch(() => null);
+  const enrichedProfile = await enrichProfileWithVerification(userId, profile as Record<string, unknown> | null);
+  return { profile: enrichedProfile };
+}
+
 export const authAPI = {
   async signUp(email: string, password: string, firstName: string, lastName: string, phone: string) {
     const client = requireSupabase();
@@ -129,8 +133,8 @@ export const authAPI = {
   },
 
   async createProfile(userId: string, email: string, firstName: string, lastName: string) {
-    if (!canUseEdgeApi()) {
-      if (!canUseDirectFallbackForWrites()) {
+    if (!hasConfiguredEdgeTransport('required')) {
+      if (!getConfig().allowDirectSupabaseFallback) {
         throw getDirectFallbackError('Profile creation');
       }
 
@@ -248,116 +252,58 @@ export const authAPI = {
   },
 
   async getProfile() {
-    const { token, userId } = await getAuthDetails();
-    if (!token || !userId) return { profile: null };
-
-    if (!canUseEdgeApi()) {
-      const profile = await getDirectProfile(userId);
-      const enrichedProfile = await enrichProfileWithVerification(userId, profile as Record<string, unknown> | null);
-      return { profile: enrichedProfile };
-    }
-
     try {
-      const response = await fetchWithRetry(
-        `${API_URL}/profile/${userId}`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const context = await getAuthDetails();
 
-      if (!response.ok) {
-        const profile = await getDirectProfile(userId).catch(() => null);
-        const enrichedProfile = await enrichProfileWithVerification(userId, profile as Record<string, unknown> | null);
-        return { profile: enrichedProfile };
+      if (!hasConfiguredEdgeTransport('required')) {
+        return loadProfileViaFallback(context.userId);
       }
 
-      const data = await response.json();
-      const enrichedProfile = await enrichProfileWithVerification(
-        userId,
-        data as Record<string, unknown>,
-      );
-      return { profile: enrichedProfile };
+      try {
+        const data = await requestEdgeJson<Record<string, unknown>>({
+          path: `/profile/${context.userId}`,
+          authMode: 'required',
+          context,
+          operation: 'Failed to load profile',
+        });
+        const enrichedProfile = await enrichProfileWithVerification(
+          context.userId,
+          data,
+        );
+        return { profile: enrichedProfile };
+      } catch {
+        return loadProfileViaFallback(context.userId);
+      }
     } catch {
-      const profile = await getDirectProfile(userId).catch(() => null);
-      const enrichedProfile = await enrichProfileWithVerification(userId, profile as Record<string, unknown> | null);
-      return { profile: enrichedProfile };
+      return { profile: null };
     }
   },
 
   async updateProfile(updates: Record<string, unknown>) {
-    const { token, userId } = await getAuthDetails();
-    if (!token || !userId) return { success: false, error: 'Not authenticated' };
-
-    if (!canUseEdgeApi()) {
-      if (!canUseDirectFallbackForWrites()) {
-        return { success: false, error: getDirectFallbackError('Profile update').message };
-      }
-
-      try {
-        const profile = await updateDirectProfile(userId, updates);
-        return { success: true, profile };
-      } catch (error) {
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to update profile',
-        };
-      }
-    }
-
     try {
-      const response = await fetchWithRetry(`${API_URL}/profile/${userId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(updates),
+      const profile = await runBackendWorkflow({
+        operation: 'Profile update',
+        authMode: 'required',
+        fallbackPolicy: 'writes-if-enabled',
+        fallback: ({ userId }) => updateDirectProfile(userId!, updates),
+        edge: (context) => requestEdgeJson<Record<string, unknown>>({
+          path: `/profile/${context.userId}`,
+          method: 'PATCH',
+          authMode: 'required',
+          context,
+          body: updates,
+          operation: 'Failed to update profile',
+        }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: `Server error: ${response.status}` }));
-        if (!canUseDirectFallbackForWrites()) {
-          console.error('[authAPI.updateProfile] Server error:', response.status, errorData);
-          return {
-            success: false,
-            error: errorData.error || getDirectFallbackError('Profile update').message,
-          };
-        }
-
-        try {
-          const profile = await updateDirectProfile(userId, updates);
-          return { success: true, profile };
-        } catch (fallbackError) {
-          console.error('[authAPI.updateProfile] Server error:', response.status, errorData);
-          return {
-            success: false,
-            error:
-              fallbackError instanceof Error
-                ? fallbackError.message
-                : errorData.error || `Failed to update profile: ${response.status}`,
-          };
-        }
-      }
-
-      const data = await response.json();
-      return { success: true, profile: data };
+      return { success: true, profile };
     } catch (error) {
-      if (!canUseDirectFallbackForWrites()) {
-        console.error('[authAPI.updateProfile] Network/fetch error:', error);
-        return {
-          success: false,
-          error: getDirectFallbackError('Profile update').message,
-        };
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[authAPI.updateProfile] Error:', error);
       }
-
-      try {
-        const profile = await updateDirectProfile(userId, updates);
-        return { success: true, profile };
-      } catch (fallbackError) {
-        console.error('[authAPI.updateProfile] Network/fetch error:', error);
-        return {
-          success: false,
-          error: fallbackError instanceof Error ? fallbackError.message : 'Network error updating profile',
-        };
-      }
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : getDirectFallbackError('Profile update').message,
+      };
     }
   },
 };

@@ -1,4 +1,4 @@
-import { API_URL, fetchWithRetry, getAuthDetails } from './core';
+import { requestEdgeJson, runBackendWorkflow } from './backendWorkflow';
 import {
   getDirectCommunicationPreferences,
   getDirectCommunicationDeliveries,
@@ -65,10 +65,6 @@ export const defaultCommunicationPreferences: CommunicationPreferences = {
   criticalAlerts: true,
   preferredLanguage: 'en',
 };
-
-function canUseEdgeApi(): boolean {
-  return Boolean(API_URL);
-}
 
 function normalizePreferences(value: Partial<CommunicationPreferences> | null | undefined): CommunicationPreferences {
   return {
@@ -216,38 +212,28 @@ export async function getCommunicationPreferences(userId?: string | null): Promi
   const localPrefs = readStoredPreferences(userId);
   if (!userId) return localPrefs;
 
-  if (!canUseEdgeApi()) {
-    try {
-      const direct = await getDirectCommunicationPreferences(userId);
-      if (!direct) return localPrefs;
-      const normalized = normalizeDirectPreferences(direct as Record<string, unknown> | null);
-      writeStoredPreferences(userId, normalized);
-      return normalized;
-    } catch {
-      return localPrefs;
-    }
-  }
-
   try {
-    const { token } = await getAuthDetails();
-    const response = await fetchWithRetry(`${API_URL}/communications/preferences`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const normalized = await runBackendWorkflow({
+      operation: 'Communication preferences loading',
+      authMode: 'required',
+      fallback: async () => {
+        const direct = await getDirectCommunicationPreferences(userId);
+        if (!direct) return localPrefs;
+        return normalizeDirectPreferences(direct as Record<string, unknown> | null);
+      },
+      edge: (context) => requestEdgeJson<{
+        preferences?: Partial<CommunicationPreferences>;
+      }>({
+        path: '/communications/preferences',
+        authMode: 'required',
+        context,
+        operation: 'Failed to load communication preferences',
+      }).then((data) => normalizePreferences(data?.preferences)),
     });
-    if (!response.ok) throw new Error('Failed to load communication preferences');
-    const data = await response.json();
-    const normalized = normalizePreferences(data?.preferences as Partial<CommunicationPreferences>);
     writeStoredPreferences(userId, normalized);
     return normalized;
   } catch {
-    try {
-      const direct = await getDirectCommunicationPreferences(userId);
-      if (!direct) return localPrefs;
-      const normalized = normalizeDirectPreferences(direct as Record<string, unknown> | null);
-      writeStoredPreferences(userId, normalized);
-      return normalized;
-    } catch {
-      return localPrefs;
-    }
+    return localPrefs;
   }
 }
 
@@ -260,32 +246,23 @@ export async function updateCommunicationPreferences(
 
   if (!userId) return merged;
 
-  if (!canUseEdgeApi()) {
-    try {
-      await upsertDirectCommunicationPreferences(userId, toDirectPreferenceUpdate(updates));
-    } catch {
-      // local-first fallback
-    }
-    return merged;
-  }
-
   try {
-    const { token } = await getAuthDetails();
-    const response = await fetchWithRetry(`${API_URL}/communications/preferences`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(merged),
+    await runBackendWorkflow({
+      operation: 'Communication preferences update',
+      authMode: 'required',
+      fallbackPolicy: 'writes-if-enabled',
+      fallback: () => upsertDirectCommunicationPreferences(userId, toDirectPreferenceUpdate(updates)).then(() => merged),
+      edge: (context) => requestEdgeJson<CommunicationPreferences>({
+        path: '/communications/preferences',
+        method: 'PATCH',
+        authMode: 'required',
+        context,
+        body: merged,
+        operation: 'Failed to update communication preferences',
+      }),
     });
-    if (!response.ok) throw new Error('Failed to update communication preferences');
   } catch {
-    try {
-      await upsertDirectCommunicationPreferences(userId, toDirectPreferenceUpdate(updates));
-    } catch {
-      // keep local copy
-    }
+    // keep local copy even if backend sync is unavailable
   }
 
   return merged;
@@ -314,43 +291,30 @@ export async function queueCommunicationDeliveries(args: {
     return { queued: localRecords.length, source: 'local' as const };
   }
 
-  if (!canUseEdgeApi()) {
-    try {
-      await queueDirectCommunicationDeliveries(args.userId, args.requests.map((request) => ({
+  try {
+    await runBackendWorkflow({
+      operation: 'Communication delivery queueing',
+      authMode: 'required',
+      fallbackPolicy: 'writes-if-enabled',
+      fallback: () => queueDirectCommunicationDeliveries(args.userId!, args.requests.map((request) => ({
         ...request,
         notification_id: args.notificationId ?? null,
-      })));
-      return { queued: localRecords.length, source: 'server' as const };
-    } catch {
-      return { queued: localRecords.length, source: 'local' as const };
-    }
-  }
-
-  try {
-    const { token } = await getAuthDetails();
-    const response = await fetchWithRetry(`${API_URL}/communications/deliver`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        notificationId: args.notificationId ?? null,
-        deliveries: args.requests,
+      }))).then(() => undefined),
+      edge: (context) => requestEdgeJson<void>({
+        path: '/communications/deliver',
+        method: 'POST',
+        authMode: 'required',
+        context,
+        body: {
+          notificationId: args.notificationId ?? null,
+          deliveries: args.requests,
+        },
+        operation: 'Failed to queue communication deliveries',
       }),
     });
-    if (!response.ok) throw new Error('Failed to queue communication deliveries');
     return { queued: localRecords.length, source: 'server' as const };
   } catch {
-    try {
-      await queueDirectCommunicationDeliveries(args.userId, args.requests.map((request) => ({
-        ...request,
-        notification_id: args.notificationId ?? null,
-      })));
-      return { queued: localRecords.length, source: 'server' as const };
-    } catch {
-      return { queued: localRecords.length, source: 'local' as const };
-    }
+    return { queued: localRecords.length, source: 'local' as const };
   }
 }
 
