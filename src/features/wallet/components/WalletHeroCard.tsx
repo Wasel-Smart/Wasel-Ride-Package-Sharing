@@ -1,5 +1,5 @@
 import { ArrowUpRight, Clock, Eye, EyeOff, Gift, Plus, Send } from 'lucide-react';
-import { motion } from 'motion/react';
+import * as motion from 'motion/react-m';
 import { Button } from '../../../components/ui/button';
 import { WaselColors } from '../../../tokens/wasel-tokens';
 

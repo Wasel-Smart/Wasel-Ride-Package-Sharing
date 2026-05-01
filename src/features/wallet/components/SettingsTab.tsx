@@ -3,7 +3,7 @@
  * Extracted from WalletDashboard to reduce file size
  */
 
-import { motion } from 'motion/react';
+import * as motion from 'motion/react-m';
 import { ShieldCheck, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';

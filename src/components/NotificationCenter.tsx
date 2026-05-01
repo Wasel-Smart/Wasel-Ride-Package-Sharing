@@ -152,6 +152,12 @@ export function NotificationCenter() {
     localDraft: isRTL ? 'محلي' : 'Local',
     urgentBadge: isRTL ? 'عاجل' : 'Urgent',
     highBadge: isRTL ? 'مرتفع' : 'High',
+    loadingEyebrow: isRTL ? 'مركز الإشعارات' : 'Notification Center',
+    loadingTitle: isRTL ? 'نجهز تدفق الإشعارات الآن' : 'Preparing your notification stream',
+    loadingDescription: isRTL ? 'نجمع الحجوزات ورسائل الدعم ونشاط المحفظة في موجز واحد واضح.' : 'Pulling bookings, support messages, and wallet activity into one clear feed.',
+    loadingFooter: isRTL ? 'سيمتلئ هذا العرض بمجرد اكتمال المزامنة.' : 'This view will fill in as soon as the sync completes.',
+    serviceUnavailable: isRTL ? 'خدمة الإشعارات غير متاحة' : 'Notification service unavailable',
+    resetView: isRTL ? 'إعادة ضبط العرض' : 'Reset view',
   });
 
   const archivedSet = useMemo(() => new Set(archivedIds), [archivedIds]);
@@ -211,12 +217,12 @@ export function NotificationCenter() {
   if (loading && notifications.length === 0) {
     return (
       <WaselStateCard
-        eyebrow={isRTL ? 'Notification Center' : 'Notification Center'}
-        title={isRTL ? 'Preparing your notification stream' : 'Preparing your notification stream'}
-        description={isRTL ? 'Pulling bookings, support messages, and wallet activity into one clear feed.' : 'Pulling bookings, support messages, and wallet activity into one clear feed.'}
+        eyebrow={labels.loadingEyebrow}
+        title={labels.loadingTitle}
+        description={labels.loadingDescription}
         icon={Inbox}
         loading
-        footer={isRTL ? 'This view will fill in as soon as the sync completes.' : 'This view will fill in as soon as the sync completes.'}
+        footer={labels.loadingFooter}
       />
     );
   }
@@ -296,7 +302,7 @@ export function NotificationCenter() {
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
               <div className="space-y-1">
                 <p className="font-semibold">
-                  {isRTL ? 'خدمة الإشعارات غير متاحة' : 'Notification service unavailable'}
+                  {labels.serviceUnavailable}
                 </p>
                 <p className="text-amber-100/90">{errorMessage}</p>
               </div>
@@ -364,7 +370,7 @@ export function NotificationCenter() {
                 }}
                 className="border-white/15 bg-white/5 text-white hover:bg-white/10"
               >
-                {isRTL ? 'Reset view' : 'Reset view'}
+                {labels.resetView}
               </Button>
             ) : (
               <Button

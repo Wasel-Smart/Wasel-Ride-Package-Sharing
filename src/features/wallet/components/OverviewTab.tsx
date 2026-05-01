@@ -3,7 +3,7 @@
  * Extracted from WalletDashboard to reduce file size
  */
 
-import { motion } from 'motion/react';
+import * as motion from 'motion/react-m';
 import {
   ArrowDownLeft, ArrowUpRight, TrendingUp, Lock, Crown, ChevronRight,
   Car, Package,

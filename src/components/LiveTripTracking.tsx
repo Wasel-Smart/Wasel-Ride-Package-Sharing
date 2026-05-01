@@ -10,7 +10,7 @@
  * ✅ Full dark Wasel design system
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { Suspense, lazy, useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Navigation, Phone, MessageSquare, Shield, Share2, ChevronDown,
@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { WaselMap } from './WaselMap';
+import type { WaselMapProps } from './WaselMap';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
 import { WaselBadge } from './wasel-ui/WaselBadge';
@@ -28,6 +28,11 @@ import { usePushNotifications } from '../hooks/usePushNotifications';
 import { activeTripAPI } from '../services/activeTrip';
 import { API_URL, fetchWithRetry, getAuthDetails } from '../services/core';
 import { shareContent } from '../hooks/useShare';
+
+const WaselMap = lazy(async () => {
+  const mod = await import('./WaselMap');
+  return { default: mod.WaselMap };
+});
 
 // ─── Trip data ────────────────────────────────────────────────────────────────
 
@@ -121,6 +126,22 @@ function ETACard({ eta, timeLeft }: { eta: string; timeLeft: number }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function LiveMapLoader() {
+  return (
+    <div className="flex h-full min-h-[320px] items-center justify-center bg-[#081220] text-sm text-slate-400">
+      Loading map...
+    </div>
+  );
+}
+
+function LiveMap(props: WaselMapProps) {
+  return (
+    <Suspense fallback={<LiveMapLoader />}>
+      <WaselMap {...props} />
+    </Suspense>
   );
 }
 
@@ -575,7 +596,7 @@ export function LiveTripTracking() {
     <div className="flex flex-col lg:flex-row h-[calc(100dvh-4rem)] bg-background relative">
       {/* ── MAP ── */}
       <div className="flex-1 relative">
-        <WaselMap
+        <LiveMap
           className="w-full h-full"
           center={mapCenter}
           zoom={13}

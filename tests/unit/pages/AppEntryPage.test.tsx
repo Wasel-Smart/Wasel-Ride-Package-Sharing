@@ -36,8 +36,12 @@ describe('AppEntryPage', () => {
 
     render(<AppEntryPage />);
 
-    expect(screen.getByText(/Move simply\./i)).toBeInTheDocument();
-    expect(screen.getByText(/Ride, parcel, and bus in one calm flow\./i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /One road,\s*many moves\./i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Open one corridor\. Ride it, ship on it, or fall back to the bus line around it\./i),
+    ).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Get started/i }).length).toBeGreaterThan(0);
   });
 
@@ -46,7 +50,7 @@ describe('AppEntryPage', () => {
 
     render(<AppEntryPage />);
 
-    screen.getAllByRole('button', { name: /Open app/i })[0].click();
+    screen.getAllByRole('button', { name: /Open the network/i })[0].click();
 
     expect(mockNavigate).toHaveBeenCalledWith('/app/find-ride');
   });

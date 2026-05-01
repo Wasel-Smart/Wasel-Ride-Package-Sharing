@@ -5,6 +5,7 @@
  * handling, and wallet mutations now live in `useWalletDashboardController`.
  */
 
+import { Suspense, lazy } from 'react';
 import { Wallet, Gift, RefreshCw, Lock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -15,10 +16,14 @@ import { WaselStateCard } from '../../components/system/WaselStateCard';
 import { useWalletDashboardController } from './useWalletDashboardController.js';
 import { TransactionRow as SharedTransactionRow } from './components/WalletShared';
 import { OverviewTab } from './components/OverviewTab';
-import { InsightsTab } from './components/InsightsTab';
 import { SettingsTab } from './components/SettingsTab';
 import { WalletHeroCard } from './components/WalletHeroCard';
 import { WalletActionModals } from './components/WalletActionModals';
+
+const InsightsTab = lazy(async () => {
+  const mod = await import('./components/InsightsTab');
+  return { default: mod.InsightsTab };
+});
 
 export function WalletDashboard() {
   const {
@@ -80,6 +85,13 @@ export function WalletDashboard() {
   const bal = walletData?.balance ?? 0;
   const pending = walletData?.pendingBalance ?? 0;
   const rewardsBal = walletData?.rewardsBalance ?? 0;
+  const insightsFallback = (
+    <Card className="rounded-xl">
+      <CardContent className="py-10 text-center text-sm text-muted-foreground">
+        {t.processing}
+      </CardContent>
+    </Card>
+  );
 
   if (shouldRedirectToAuth) {
     return (
@@ -232,7 +244,9 @@ export function WalletDashboard() {
         </TabsContent>
 
         <TabsContent value="insights" className="mt-4 space-y-4">
-          <InsightsTab insights={insights} isRTL={isRTL} t={t} />
+          <Suspense fallback={insightsFallback}>
+            <InsightsTab insights={insights} isRTL={isRTL} t={t} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="settings" className="mt-4 space-y-4">

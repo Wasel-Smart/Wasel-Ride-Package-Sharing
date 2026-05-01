@@ -6,9 +6,14 @@
  * while giving every caller a real, live Google Map.
  */
 
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import { MapPin } from 'lucide-react';
-import { WaselMap, type WaselMapRoute } from './WaselMap';
+import type { WaselMapProps, WaselMapRoute } from './WaselMap';
+
+const WaselMap = lazy(async () => {
+  const mod = await import('./WaselMap');
+  return { default: mod.WaselMap };
+});
 
 export type MapMode = 'google' | 'static' | 'live';
 
@@ -47,6 +52,10 @@ function MapLoader({ height }: { height?: string | number }) {
   );
 }
 
+function LazyWaselMap(props: WaselMapProps) {
+  return <WaselMap {...props} />;
+}
+
 export function MapWrapper({
   mode = 'google',
   center,
@@ -75,7 +84,7 @@ export function MapWrapper({
 
   return (
     <Suspense fallback={<MapLoader height={height} />}>
-      <WaselMap
+      <LazyWaselMap
         center={center}
         zoom={zoom}
         height={height}

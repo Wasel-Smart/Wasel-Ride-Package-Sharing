@@ -20,15 +20,19 @@ import {
 } from 'react-router';
 import { Button } from './components/ui/button';
 import { WaselStateCard } from './components/system/WaselStateCard';
+import { useLanguage } from './contexts/LanguageContext';
 import WaselRoot from './layouts/WaselRoot';
 
 // ── Page loader fallback ──────────────────────────────────────────────────────
 function PageLoader() {
+  const { language } = useLanguage();
+  const ar = language === 'ar';
+
   return (
     <WaselStateCard
-      eyebrow="Loading"
-      title="Opening the next Wasel view"
-      description="We are preparing the route, loading the screen data, and restoring your last context."
+      eyebrow={ar ? 'تحميل' : 'Loading'}
+      title={ar ? 'نفتح شاشة واصل التالية' : 'Opening the next Wasel view'}
+      description={ar ? 'نجهز المسار ونحمل بيانات الشاشة ونستعيد آخر سياق لك.' : 'We are preparing the route, loading the screen data, and restoring your last context.'}
       icon={LoaderCircle}
       loading
       minHeight="60vh"
@@ -101,16 +105,19 @@ const LEGACY_APP_ALIASES = [
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 function NotFound() {
+  const { language } = useLanguage();
+  const ar = language === 'ar';
+
   return (
     <WaselStateCard
       eyebrow="404"
-      title="Page not found"
-      description="The page you requested is unavailable or the link is outdated."
+      title={ar ? 'الصفحة غير موجودة' : 'Page not found'}
+      description={ar ? 'الصفحة المطلوبة غير متاحة أو أن الرابط قديم.' : 'The page you requested is unavailable or the link is outdated.'}
       icon={SearchX}
       minHeight="80vh"
       actions={(
         <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-          <a href="/">Back to Wasel</a>
+          <a href="/">{ar ? 'العودة إلى واصل' : 'Back to Wasel'}</a>
         </Button>
       )}
     />
@@ -119,17 +126,21 @@ function NotFound() {
 
 // ── Route Error Fallback ──────────────────────────────────────────────────────
 function RouteErrorFallback() {
+  const { language } = useLanguage();
+  const ar = language === 'ar';
   const error = useRouteError();
   const message = isRouteErrorResponse(error)
     ? `${error.status} ${error.statusText}`
     : error instanceof Error
       ? error.message
-      : 'This page could not be loaded.';
+      : ar
+        ? 'تعذر تحميل هذه الصفحة.'
+        : 'This page could not be loaded.';
 
   return (
     <WaselStateCard
-      eyebrow="App Error"
-      title="This page could not be loaded"
+      eyebrow={ar ? 'خطأ في التطبيق' : 'App Error'}
+      title={ar ? 'تعذر تحميل هذه الصفحة' : 'This page could not be loaded'}
       description={message}
       icon={AlertTriangle}
       tone="danger"
@@ -137,14 +148,14 @@ function RouteErrorFallback() {
       actions={(
         <>
           <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <a href="/app/find-ride">Find a ride</a>
+            <a href="/app/find-ride">{ar ? 'ابحث عن مشوار' : 'Find a ride'}</a>
           </Button>
           <Button asChild variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
-            <a href="/">Go home</a>
+            <a href="/">{ar ? 'العودة للرئيسية' : 'Go home'}</a>
           </Button>
         </>
       )}
-      footer="If this repeats, reload the app shell or reopen the flow from the home screen."
+      footer={ar ? 'إذا تكرر هذا، فأعد تحميل التطبيق أو افتح التدفق مرة أخرى من الشاشة الرئيسية.' : 'If this repeats, reload the app shell or reopen the flow from the home screen.'}
     />
   );
 }
