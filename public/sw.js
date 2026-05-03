@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'wasel-v3';
+const CACHE_VERSION = 'wasel-v4';
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -7,12 +7,12 @@ const PRECACHE_URLS = [
   '/index.html',
   '/offline.html',
   '/manifest.json',
-  '/favicon.svg',
   '/favicon-16x16.png',
   '/favicon-32x32.png',
   '/apple-touch-icon.png',
   '/icon-192.png',
   '/icon-512.png',
+  '/brand/wasel-w-mark.png',
   '/brand/wasellogo-64.png',
   '/brand/wasellogo-96.png',
   '/brand/wasellogo-160.png',

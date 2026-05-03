@@ -22,6 +22,7 @@ import {
   Car, Radio, AlertTriangle, X, Navigation2,
   Wifi, WifiOff, MapPin, Map, Satellite, Mountain,
 } from 'lucide-react';
+import { WaselLogo } from './wasel-ds/WaselLogo';
 
 /* ─── Inject Leaflet CSS (once, dynamically) ─────────────────────────── */
 function ensureLeafletCSS() {
@@ -623,8 +624,7 @@ function WaselMapCompact({
           className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5 px-2 py-1 rounded-lg"
           style={{ background: 'rgba(12,21,32,0.72)', border: '1px solid rgba(0,200,232,0.12)' }}
         >
-          <div className="w-2.5 h-2.5 rounded-full bg-[#04ADBF]" />
-          <span className="text-[#04ADBF] text-[10px] font-bold tracking-wider">WASEL</span>
+          <WaselLogo size={14} theme="light" variant="full" />
         </div>
       </div>
     );
@@ -648,8 +648,7 @@ function WaselMapCompact({
         className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5 px-2 py-1 rounded-lg"
         style={{ background: 'rgba(12,21,32,0.72)', border: '1px solid rgba(0,200,232,0.12)' }}
       >
-        <div className="w-2.5 h-2.5 rounded-full bg-[#04ADBF]" />
-        <span className="text-[#04ADBF] text-[10px] font-bold tracking-wider">WASEL</span>
+        <WaselLogo size={14} theme="light" variant="full" />
       </div>
     </div>
   );
@@ -1363,8 +1362,7 @@ function WaselMapFull(props: WaselMapProps) {
             className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2 py-1 rounded-lg"
             style={{ background: 'rgba(12,21,32,0.7)' }}
           >
-            <div className="w-3 h-3 rounded-full bg-[#04ADBF]" />
-            <span className="text-[#04ADBF] text-[10px] font-bold tracking-wider">WASEL</span>
+            <WaselLogo size={14} theme="light" variant="full" />
           </div>
         </>
       )}

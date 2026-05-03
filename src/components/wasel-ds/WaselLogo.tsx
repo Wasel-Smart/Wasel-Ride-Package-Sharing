@@ -1,5 +1,5 @@
-import { useId, type CSSProperties } from 'react';
-import { C, F, SH } from '../../utils/wasel-ds';
+import type { CSSProperties } from 'react';
+import { SH } from '../../utils/wasel-ds';
 
 interface WaselLogoProps {
   size?: number;
@@ -10,72 +10,85 @@ interface WaselLogoProps {
   framed?: boolean;
 }
 
-interface LogoPalette {
-  mark: string;
-  nodeStroke: string;
-  nodeFill: string;
-  word: string;
-  shadow: string;
+const WASEL_W_SRC = '/brand/wasel-w-mark.png';
+const WASEL_W_RATIO = 540 / 462;
+
+function getMarkShadow(theme: 'dark' | 'light') {
+  return theme === 'dark'
+    ? 'drop-shadow(0 5px 10px rgba(17, 24, 31, 0.12))'
+    : 'drop-shadow(0 10px 22px rgba(4, 17, 28, 0.22))';
 }
 
-function getLogoPalette(theme: 'dark' | 'light'): LogoPalette {
+function getWordStyle(theme: 'dark' | 'light', size: number): CSSProperties {
+  const common: CSSProperties = {
+    display: 'inline-block',
+    fontFamily: "'Segoe UI Black', 'Arial Black', 'Plus Jakarta Sans', sans-serif",
+    fontWeight: 900,
+    fontSize: Math.max(18, size * 0.84),
+    lineHeight: 0.88,
+    letterSpacing: '-0.06em',
+    whiteSpace: 'nowrap',
+    userSelect: 'none',
+    transform: `translateY(${Math.max(1, size * 0.045)}px)`,
+    textRendering: 'geometricPrecision',
+  };
+
   if (theme === 'dark') {
     return {
-      mark: '#1D667F',
-      nodeStroke: '#2C7D98',
-      nodeFill: '#14394B',
-      word: '#121418',
-      shadow: 'drop-shadow(0 6px 12px rgba(17, 24, 31, 0.14))',
+      ...common,
+      background: 'linear-gradient(180deg, #1A1F27 0%, #2D3743 100%)',
+      backgroundClip: 'text',
+      WebkitBackgroundClip: 'text',
+      color: 'transparent',
+      WebkitTextFillColor: 'transparent',
+      WebkitTextStroke: '0.6px rgba(28, 34, 40, 0.12)',
+      textShadow: '0 1px 0 rgba(255,255,255,0.14)',
     };
   }
 
   return {
-    mark: '#9CEEFF',
-    nodeStroke: '#ECFCFF',
-    nodeFill: '#F9FFFF',
-    word: C.text,
-    shadow: SH.cyan,
+    ...common,
+    background: 'linear-gradient(180deg, #FBFDFF 0%, #EEF4FB 52%, #DEE7F6 100%)',
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    color: 'transparent',
+    WebkitTextFillColor: 'transparent',
+    WebkitTextStroke: '0.8px rgba(255, 245, 226, 0.24)',
+    textShadow: '0 4px 16px rgba(4, 17, 28, 0.22)',
+    filter: SH.cyan,
   };
 }
 
-function sanitizeId(value: string) {
-  return value.replace(/:/g, '');
-}
-
-function LogoGlyph({
-  mark,
-  nodeStroke,
-  nodeFill,
+function BrandImage({
+  src,
+  alt,
+  size,
+  ratio,
+  framed = false,
+  theme,
 }: {
-  mark: string;
-  nodeStroke: string;
-  nodeFill: string;
+  src: string;
+  alt: string;
+  size: number;
+  ratio: number;
+  framed?: boolean;
+  theme: 'dark' | 'light';
 }) {
-  const nodes = [
-    { cx: 8, cy: 10 },
-    { cx: 24, cy: 10 },
-    { cx: 40, cy: 10 },
-    { cx: 56, cy: 10 },
-  ];
-
   return (
-    <>
-      <g fill="none" stroke={mark} strokeWidth="4.75" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M8 10 Q16 41 24 10" />
-        <path d="M24 10 Q32 49 40 10" />
-        <path d="M40 10 Q48 41 56 10" />
-      </g>
-      <g fill="none" stroke={nodeStroke} strokeWidth="1.7">
-        {nodes.map((node) => (
-          <circle key={`${node.cx}-${node.cy}`} cx={node.cx} cy={node.cy} r="4.7" />
-        ))}
-      </g>
-      <g fill={nodeFill}>
-        {nodes.map((node) => (
-          <circle key={`inner-${node.cx}-${node.cy}`} cx={node.cx} cy={node.cy} r="1.9" />
-        ))}
-      </g>
-    </>
+    <img
+      src={src}
+      alt={alt}
+      width={Math.round(size * ratio)}
+      height={Math.round(size)}
+      style={{
+        display: 'block',
+        width: size * ratio,
+        height: size,
+        objectFit: 'contain',
+        flexShrink: 0,
+        filter: framed ? getMarkShadow(theme) : undefined,
+      }}
+    />
   );
 }
 
@@ -88,27 +101,16 @@ function LogoMonogram({
   theme: 'dark' | 'light';
   framed?: boolean;
 }) {
-  const palette = getLogoPalette(theme);
-
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        lineHeight: 0,
-        filter: framed ? palette.shadow : undefined,
-      }}
-    >
-      <svg
-        viewBox="0 0 64 56"
-        width={size * (64 / 56)}
-        height={size}
-        role="img"
-        aria-label="Wasel mark"
-        style={{ display: 'block', flexShrink: 0 }}
-      >
-        <LogoGlyph mark={palette.mark} nodeStroke={palette.nodeStroke} nodeFill={palette.nodeFill} />
-      </svg>
+    <span style={{ display: 'inline-flex', alignItems: 'center', lineHeight: 0 }}>
+      <BrandImage
+        src={WASEL_W_SRC}
+        alt="Wasel W mark"
+        size={size}
+        ratio={WASEL_W_RATIO}
+        framed={framed}
+        theme={theme}
+      />
     </span>
   );
 }
@@ -122,43 +124,33 @@ function LogoWordmark({
   theme: 'dark' | 'light';
   framed?: boolean;
 }) {
-  const palette = getLogoPalette(theme);
-  const svgId = sanitizeId(useId());
-
   return (
     <span
+      aria-label="Wasel"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
+        gap: Math.max(0, size * 0.006),
         lineHeight: 0,
-        filter: framed ? palette.shadow : undefined,
       }}
     >
-      <svg
-        viewBox="0 0 224 64"
-        width={size * 3.5}
-        height={size}
-        role="img"
-        aria-label="Wasel"
-        style={{ display: 'block', flexShrink: 0 }}
+      <BrandImage
+        src={WASEL_W_SRC}
+        alt=""
+        size={size}
+        ratio={WASEL_W_RATIO}
+        framed={framed}
+        theme={theme}
+      />
+      <span
+        aria-hidden="true"
+        style={{
+          ...getWordStyle(theme, size),
+          marginInlineStart: Math.max(-6, size * -0.085),
+        }}
       >
-        <g transform="translate(2 4)">
-          <LogoGlyph mark={palette.mark} nodeStroke={palette.nodeStroke} nodeFill={palette.nodeFill} />
-        </g>
-        <text
-          x="76"
-          y="45"
-          fill={palette.word}
-          fontFamily="'Arial Black', 'Plus Jakarta Sans', 'Inter', sans-serif"
-          fontWeight="900"
-          fontSize="46"
-          letterSpacing="-3.6"
-          textRendering="geometricPrecision"
-        >
-          asel
-        </text>
-        <title id={`${svgId}-title`}>Wasel</title>
-      </svg>
+        asel
+      </span>
     </span>
   );
 }
@@ -172,33 +164,13 @@ export function WaselLogo({
   framed,
 }: WaselLogoProps) {
   const compact = variant === 'compact' || !showWordmark;
-  const logoSize = compact ? size : Math.max(size, 34);
-  const title = compact ? (
-    <LogoMonogram size={logoSize} theme={theme} framed={framed} />
-  ) : (
-    <LogoWordmark size={logoSize} theme={theme} framed={framed} />
-  );
-  const tagline = variant === 'full' && showWordmark ? 'Move simply across Jordan' : null;
 
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, ...style }}>
-      {title}
-      {tagline && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <span
-            style={{
-              fontFamily: F,
-              fontSize: Math.max(11, size * 0.18),
-              fontWeight: 800,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: theme === 'light' ? C.gold : '#6C5A48',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {tagline}
-          </span>
-        </div>
+    <div style={{ display: 'inline-flex', alignItems: 'center', ...style }}>
+      {compact ? (
+        <LogoMonogram size={size} theme={theme} framed={framed} />
+      ) : (
+        <LogoWordmark size={size} theme={theme} framed={framed} />
       )}
     </div>
   );
@@ -222,7 +194,7 @@ export function WaselHeroMark({ size = 120 }: { size?: number }) {
         filter: 'drop-shadow(0 14px 28px rgba(4, 17, 28, 0.28))',
       }}
     >
-      <LogoWordmark size={size * 0.44} theme="light" framed />
+      <LogoWordmark size={Math.max(36, size * 0.46)} theme="light" framed />
     </div>
   );
 }

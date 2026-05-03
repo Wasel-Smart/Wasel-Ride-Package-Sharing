@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Activity, Briefcase, Brain, GraduationCap, LineChart, Shield } from 'lucide-react';
+import { MetricCard, PageHero, PageShell, SectionCard, StatusBadge } from '../../components/wasel-ui/WaselPagePrimitives';
 import { useLocation } from 'react-router';
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
@@ -18,15 +19,11 @@ import {
   type ServiceProviderWorkflowSnapshot,
 } from '../../services/serviceProviderWorkflows';
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
-
-const BG = '#040C18';
-const CARD = 'rgba(255,255,255,0.04)';
-const BORD = 'rgba(255,255,255,0.09)';
+import { C, F, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 const CYAN = '#00C8E8';
 const GOLD = '#F59E0B';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
-const FONT = "-apple-system,'Inter',sans-serif";
 
 type SurfaceConfig = {
   title: string;
@@ -76,10 +73,12 @@ const CONFIG: Record<string, SurfaceConfig> = {
 
 function cardStyle() {
   return {
-    background: CARD,
-    border: `1px solid ${BORD}`,
-    borderRadius: 18,
+    background:
+      'radial-gradient(circle at top left, rgba(88,221,255,0.06), transparent 32%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)',
+    border: `1px solid ${C.border}`,
+    borderRadius: 20,
     padding: '18px 18px 16px',
+    boxShadow: SH.card,
   } as const;
 }
 
@@ -95,11 +94,7 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div style={cardStyle()}>
-      <div style={{ color, fontWeight: 900, fontSize: '1.3rem', marginBottom: 6 }}>{value}</div>
-      <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.84rem' }}>{label}</div>
-      <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.76rem', lineHeight: 1.55, marginTop: 6 }}>{detail}</div>
-    </div>
+    <MetricCard label={label} value={value} detail={detail} accent={color} />
   );
 }
 
@@ -111,10 +106,9 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <div style={{ marginTop: 18 }}>
-      <div style={{ color: '#EFF6FF', fontWeight: 900, fontSize: '1rem', marginBottom: 10 }}>{title}</div>
+    <SectionCard title={title} contentPadding={SPACE[4]}>
       {children}
-    </div>
+    </SectionCard>
   );
 }
 
@@ -198,45 +192,23 @@ export default function OperationsOverviewPage() {
   const liveCorridors = routeIntelligence.featuredSignals.slice(0, 5);
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: FONT, direction: ar ? 'rtl' : 'ltr', paddingBottom: 80 }}>
-      <div style={{ maxWidth: 1080, margin: '0 auto', padding: '32px 16px 0' }}>
-        <div
-          style={{
-            background: `linear-gradient(135deg, ${config.accent}18, rgba(255,255,255,0.03))`,
-            border: `1px solid ${config.accent}33`,
-            borderRadius: 22,
-            padding: '24px 22px',
-            marginBottom: 18,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
-            <div
-              style={{
-                width: 50,
-                height: 50,
-                borderRadius: 16,
-                background: `${config.accent}18`,
-                border: `1px solid ${config.accent}33`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: config.accent,
-                flexShrink: 0,
-              }}
-            >
-              {config.icon}
-            </div>
-            <div>
-              <div style={{ color: '#EFF6FF', fontSize: '1.35rem', fontWeight: 900 }}>{config.title}</div>
-              <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.84rem', lineHeight: 1.6, marginTop: 4 }}>
-                {config.detail}
+    <PageShell maxWidth={1120} dir={ar ? 'rtl' : 'ltr'}>
+      <div style={{ paddingInline: SPACE[4] }}>
+        <PageHero
+          eyebrow="Wasel Operations"
+          icon={config.icon}
+          title={config.title}
+          description={config.detail}
+          accent={config.accent}
+          aside={
+            <div style={{ display: 'grid', gap: SPACE[3] }}>
+              <StatusBadge label={pathname === '/app/services/corporate' ? 'Recurring lanes' : 'Live corridor graph'} accent={config.accent} />
+              <div style={{ color: C.textSub, fontFamily: F, fontSize: TYPE.size.sm, lineHeight: TYPE.lineHeight.relaxed }}>
+                Wasel is no longer framed as a ride request app here. This surface is driven by live corridor signals, recurring workflow snapshots, and route-level proof.
               </div>
             </div>
-          </div>
-          <div style={{ color: '#CBD5E1', fontSize: '0.8rem', lineHeight: 1.7 }}>
-            Wasel is no longer framed as a ride request app here. This surface is driven by live corridor signals, recurring workflow snapshots, and route-level proof.
-          </div>
-        </div>
+          }
+        />
 
         {pathname === '/app/services/corporate' && businessSnapshot && serviceSnapshot ? (
           <>
@@ -260,7 +232,7 @@ export default function OperationsOverviewPage() {
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 14 }}>
                     {businessSnapshot.employees.slice(0, 4).map((employee) => (
-                      <div key={employee.id} style={{ borderRadius: 14, border: `1px solid ${BORD}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
+                      <div key={employee.id} style={{ borderRadius: 14, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
                         <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.82rem' }}>{employee.name}</div>
                         <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.74rem', marginTop: 4 }}>
                           {employee.department} | {employee.monthlyTrips} trips | {employee.monthlySpendJOD.toFixed(0)} JOD
@@ -281,7 +253,7 @@ export default function OperationsOverviewPage() {
                   </div>
                   <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
                     {serviceSnapshot.dispatchWindows.map((window) => (
-                      <div key={window.label} style={{ borderRadius: 14, border: `1px solid ${BORD}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
+                      <div key={window.label} style={{ borderRadius: 14, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
                         <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.82rem' }}>{window.label}</div>
                         <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.74rem', lineHeight: 1.55, marginTop: 4 }}>
                           {window.serviceMix}
@@ -320,7 +292,7 @@ export default function OperationsOverviewPage() {
                   <div style={{ color: '#EFF6FF', fontWeight: 800, marginBottom: 10 }}>Provider roster</div>
                   <div style={{ display: 'grid', gap: 10 }}>
                     {serviceSnapshot.serviceProviders.map((provider) => (
-                      <div key={provider.name} style={{ borderRadius: 14, border: `1px solid ${BORD}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
+                      <div key={provider.name} style={{ borderRadius: 14, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
                           <div>
                             <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.82rem' }}>{provider.name}</div>
@@ -375,7 +347,7 @@ export default function OperationsOverviewPage() {
                   <div style={{ color: '#EFF6FF', fontWeight: 800, marginBottom: 10 }}>Guardian and student roster</div>
                   <div style={{ display: 'grid', gap: 10 }}>
                     {schoolSnapshot.students.map((student) => (
-                      <div key={student.id} style={{ borderRadius: 14, border: `1px solid ${BORD}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
+                      <div key={student.id} style={{ borderRadius: 14, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
                         <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.82rem' }}>{student.name}</div>
                         <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.74rem', marginTop: 4 }}>
                           {student.grade} | {student.guardians.map((guardian) => guardian.name).join(', ')}
@@ -461,15 +433,15 @@ export default function OperationsOverviewPage() {
                         </div>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginTop: 12 }}>
-                        <div style={{ borderRadius: 14, border: `1px solid ${BORD}`, background: 'rgba(255,255,255,0.03)', padding: '10px 11px' }}>
+                        <div style={{ borderRadius: 14, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '10px 11px' }}>
                           <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.68rem' }}>Wasel</div>
                           <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.8rem', marginTop: 5 }}>{row.waselSharedPriceJod} JOD</div>
                         </div>
-                        <div style={{ borderRadius: 14, border: `1px solid ${BORD}`, background: 'rgba(255,255,255,0.03)', padding: '10px 11px' }}>
+                        <div style={{ borderRadius: 14, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '10px 11px' }}>
                           <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.68rem' }}>Benchmark</div>
                           <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.8rem', marginTop: 5 }}>{row.benchmarkPriceJod} JOD</div>
                         </div>
-                        <div style={{ borderRadius: 14, border: `1px solid ${BORD}`, background: 'rgba(255,255,255,0.03)', padding: '10px 11px' }}>
+                        <div style={{ borderRadius: 14, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '10px 11px' }}>
                           <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.68rem' }}>Ownership</div>
                           <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.8rem', marginTop: 5 }}>{row.ownershipScore}/100</div>
                         </div>
@@ -493,6 +465,6 @@ export default function OperationsOverviewPage() {
           </>
         ) : null}
       </div>
-    </div>
+    </PageShell>
   );
 }

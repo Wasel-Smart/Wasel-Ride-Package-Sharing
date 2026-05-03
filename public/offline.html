@@ -67,16 +67,17 @@
 
     .brand {
       display: flex;
-      align-items: center;
-      gap: 16px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
       position: relative;
       z-index: 1;
     }
 
     .brand img {
-      width: 72px;
-      height: 72px;
-      object-fit: cover;
+      width: min(220px, 46vw);
+      height: auto;
+      object-fit: contain;
       display: block;
       filter: drop-shadow(0 0 18px rgba(85, 233, 255, 0.18));
     }
@@ -198,21 +199,19 @@
       }
 
       .brand img {
-        width: 60px;
-        height: 60px;
+        width: min(180px, 58vw);
       }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <div class="brand">
-      <img src="/brand/wasellogo-160.png" alt="Wasel logo">
-      <div>
-        <div class="eyebrow">Jordan Mobility Network</div>
-        <div style="font-size: 1.5rem; font-weight: 900;">Wasel</div>
+    <div class="shell">
+      <div class="brand">
+        <img src="/brand/wasellogo-280.png" alt="Wasel logo">
+        <div>
+          <div class="eyebrow">Jordan Mobility Network</div>
+        </div>
       </div>
-    </div>
 
     <h1>You are offline, but your route is still here.</h1>
     <p class="lead">
