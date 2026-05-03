@@ -1,21 +1,20 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { authAPI } from '../services/auth';
-import { supabase, isSupabaseConfigured } from '../utils/supabase/client';
 import { getAuthCallbackUrl } from '../utils/env';
-import { useLocalAuth } from './LocalAuth';
+import { isSupabaseConfigured, supabase } from '../utils/supabase/client';
 import {
-  AuthOperationError,
-  buildUpdatedLocalUser,
-  createLocalAuthProfile,
-  createLocalAuthUser,
-  loadProfile,
   normalizeOperationError,
-  shouldIgnoreProfileError,
-  shouldRefreshProfile,
   signInWithOAuthProvider,
+  type AuthOperationError,
   type Profile,
 } from './authContextHelpers';
+
+type SignUpResult = {
+  error: AuthOperationError;
+  requiresEmailConfirmation?: boolean;
+  user?: User | null;
+};
 
 interface AuthContextType {
   user: User | null;
@@ -23,7 +22,12 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isBackendConnected: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: AuthOperationError }>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    phone?: string,
+  ) => Promise<SignUpResult>;
   signIn: (email: string, password: string) => Promise<{ error: AuthOperationError }>;
   signInWithGoogle: () => Promise<{ error: AuthOperationError }>;
   signInWithFacebook: () => Promise<{ error: AuthOperationError }>;
@@ -51,6 +55,30 @@ const AuthContext = createContext<AuthContextType>({
   changePassword: async () => ({ error: null }),
 });
 
+function splitFullName(fullName: string) {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] ?? 'Wasel',
+    lastName: parts.slice(1).join(' ') || 'User',
+  };
+}
+
+function getProfileDisplayName(authUser: User) {
+  const metadata = authUser.user_metadata ?? {};
+  const fullName = String(metadata.full_name ?? metadata.name ?? '').trim();
+  if (fullName) {
+    return splitFullName(fullName);
+  }
+
+  const emailLocalPart = authUser.email?.split('@')[0]?.trim() || 'Wasel User';
+  return splitFullName(emailLocalPart);
+}
+
+async function loadProfileFromBackend(): Promise<Profile | null> {
+  const profileData = await authAPI.getProfile();
+  return (profileData?.profile as Profile | null) ?? null;
+}
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -64,97 +92,101 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const localAuth = useLocalAuth();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isBackendConnected, setIsBackendConnected] = useState(true);
+  const [initializing, setInitializing] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [isBackendConnected, setIsBackendConnected] = useState(isSupabaseConfigured);
 
-  const fetchProfile = useCallback(async (userId: string, force = false) => {
-    try {
-      if (!userId || !supabase) {
-        setProfile(null);
-        return;
-      }
-
-      if (!force) {
-        let hasProfile = false;
-        setProfile((previous) => {
-          hasProfile = !!previous;
-          return previous;
-        });
-        if (hasProfile) return;
-      }
-
-      setProfile(await loadProfile());
-    } catch (error: unknown) {
-      const err = error as Error;
-      if (!shouldIgnoreProfileError(err) && import.meta.env?.DEV) {
-        console.error('Profile fetch error:', err);
-      }
+  const fetchProfile = useCallback(async (forceCreate = false, authUser?: User | null) => {
+    const activeUser = authUser ?? user;
+    if (!activeUser || !supabase) {
       setProfile(null);
+      return null;
     }
-  }, []);
+
+    let nextProfile = await loadProfileFromBackend();
+
+    if (!nextProfile && forceCreate) {
+      const { firstName, lastName } = getProfileDisplayName(activeUser);
+
+      try {
+        await authAPI.createProfile(
+          activeUser.id,
+          activeUser.email ?? '',
+          firstName,
+          lastName,
+        );
+        nextProfile = await loadProfileFromBackend();
+      } catch (error) {
+        if (import.meta.env?.DEV) {
+          console.warn('[Auth] Profile bootstrap skipped:', error);
+        }
+      }
+    }
+
+    setProfile(nextProfile);
+    return nextProfile;
+  }, [user]);
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) {
-      if (localAuth.user) {
-        setUser(createLocalAuthUser(localAuth.user));
-        setProfile(createLocalAuthProfile(localAuth.user));
-      } else {
-        setUser(null);
-        setProfile(null);
-      }
+      setUser(null);
+      setProfile(null);
       setSession(null);
-      setLoading(localAuth.loading);
+      setInitializing(false);
       setIsBackendConnected(false);
       return;
     }
 
     let mounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, nextSession) => {
-        if (!mounted) return;
+    const syncFromSession = (event: string, nextSession: Session | null) => {
+      if (!mounted) return;
 
-        setSession(nextSession);
-        setUser(nextSession?.user ?? null);
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      setIsBackendConnected(true);
 
-        if (shouldRefreshProfile(event, nextSession)) {
-          setTimeout(() => {
-            void fetchProfile(nextSession!.user.id);
-          }, 100);
-        } else if (!nextSession) {
-          setProfile(null);
-        }
-
-        setLoading(false);
-      },
-    );
-
-    const initializeAuth = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        if (mounted && data.session) {
-          setSession(data.session);
-          setUser(data.session.user);
-          setTimeout(() => {
-            void fetchProfile(data.session!.user.id);
-          }, 150);
-        }
-      } catch (error: unknown) {
-        if (import.meta.env?.DEV) {
-          console.warn('Auth init warning:', (error as Error).message);
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+      if (!nextSession?.user) {
+        setProfile(null);
+        setInitializing(false);
+        return;
       }
+
+      const shouldEnsureProfile = event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED';
+      const shouldRefreshProfile =
+        event === 'INITIAL_SESSION' ||
+        event === 'SIGNED_IN' ||
+        event === 'USER_UPDATED' ||
+        event === 'TOKEN_REFRESHED';
+
+      if (!shouldRefreshProfile) {
+        setInitializing(false);
+        return;
+      }
+
+      setTimeout(() => {
+        void fetchProfile(shouldEnsureProfile, nextSession.user)
+          .catch((error) => {
+            if (import.meta.env?.DEV) {
+              console.warn('[Auth] Profile refresh warning:', error);
+            }
+          })
+          .finally(() => {
+            if (mounted) {
+              setInitializing(false);
+            }
+          });
+      }, 0);
     };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      syncFromSession(event, nextSession);
+    });
 
     const handleAuthMessage = async (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
@@ -167,15 +199,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         setSession(data.session);
         setUser(data.session.user);
-        void fetchProfile(data.session.user.id, true);
+        await fetchProfile(true, data.session.user);
       } catch (error) {
         if (import.meta.env?.DEV) {
           console.warn('Auth callback sync warning:', error);
         }
+      } finally {
+        if (mounted) {
+          setInitializing(false);
+        }
       }
     };
 
-    void initializeAuth();
     window.addEventListener('message', handleAuthMessage);
 
     return () => {
@@ -183,25 +218,62 @@ export function AuthProvider({ children }: AuthProviderProps) {
       window.removeEventListener('message', handleAuthMessage);
       subscription.unsubscribe();
     };
-  }, [fetchProfile, localAuth.loading, localAuth.user]);
+  }, [fetchProfile]);
 
-  const signUp = useCallback(async (email: string, password: string, fullName: string): Promise<{ error: AuthOperationError }> => {
+  const signUp = useCallback(async (
+    email: string,
+    password: string,
+    fullName: string,
+    phone?: string,
+  ): Promise<SignUpResult> => {
+    if (!supabase) {
+      return { error: new Error('Backend not configured') };
+    }
+
+    const { firstName, lastName } = splitFullName(fullName);
+
+    setBusy(true);
     try {
-      const result = await localAuth.register(fullName, email, password);
-      return { error: result.error ? new Error(result.error) : null };
+      const data = await authAPI.signUp(email, password, firstName, lastName, phone ?? '');
+      const authUser = data.user ?? data.session?.user ?? null;
+
+      if (authUser && data.session) {
+        setSession(data.session);
+        setUser(authUser);
+        await fetchProfile(true, authUser);
+      }
+
+      return {
+        error: null,
+        requiresEmailConfirmation: !authUser,
+        user: authUser,
+      };
     } catch (error: unknown) {
       return { error: normalizeOperationError(error, 'Signup failed') };
+    } finally {
+      setBusy(false);
     }
-  }, [localAuth]);
+  }, [fetchProfile]);
 
   const signIn = useCallback(async (email: string, password: string): Promise<{ error: AuthOperationError }> => {
+    setBusy(true);
     try {
-      const result = await localAuth.signIn(email, password);
-      return { error: result.error ? new Error(result.error) : null };
+      const data = await authAPI.signIn(email, password);
+      const authUser = data.user ?? data.session?.user ?? null;
+
+      if (authUser && data.session) {
+        setSession(data.session);
+        setUser(authUser);
+        await fetchProfile(true, authUser);
+      }
+
+      return { error: null };
     } catch (error: unknown) {
       return { error: normalizeOperationError(error, 'Login failed') };
+    } finally {
+      setBusy(false);
     }
-  }, [localAuth]);
+  }, [fetchProfile]);
 
   const signInWithGoogle = useCallback(async (): Promise<{ error: AuthOperationError }> => {
     return signInWithOAuthProvider(supabase, 'google');
@@ -212,8 +284,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const signOut = useCallback(async () => {
+    setBusy(true);
     try {
-      await localAuth.signOut();
+      await authAPI.signOut();
       setUser(null);
       setProfile(null);
       setSession(null);
@@ -221,28 +294,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (import.meta.env?.DEV) {
         console.error('Sign out error:', error);
       }
+    } finally {
+      setBusy(false);
     }
-  }, [localAuth]);
+  }, []);
 
   const updateProfile = useCallback(async (updates: Partial<Profile>): Promise<{ error: AuthOperationError }> => {
-    if (!user && !localAuth.user) {
+    if (!user) {
       return { error: new Error('No user logged in') };
     }
 
+    setBusy(true);
     try {
-      if (!isSupabaseConfigured || !supabase) {
-        if (localAuth.user) {
-          localAuth.updateUser(buildUpdatedLocalUser(localAuth.user, updates));
-        }
-        return { error: null };
-      }
-
       const result = await authAPI.updateProfile(updates);
       if (result.success) {
-        if (user) await fetchProfile(user.id, true);
-        if (localAuth.user) {
-          localAuth.updateUser(buildUpdatedLocalUser(localAuth.user, updates));
-        }
+        await fetchProfile(false, user);
         return { error: null };
       }
 
@@ -255,17 +321,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       };
     } catch (error: unknown) {
       return { error: normalizeOperationError(error, 'Update failed') };
+    } finally {
+      setBusy(false);
     }
-  }, [fetchProfile, localAuth, user]);
+  }, [fetchProfile, user]);
 
   const refreshProfile = useCallback(async () => {
-    if (user) {
-      await fetchProfile(user.id);
-    }
+    if (!user) return;
+    await fetchProfile(false, user);
   }, [fetchProfile, user]);
 
   const resetPassword = useCallback(async (email: string): Promise<{ error: AuthOperationError }> => {
     if (!supabase) return { error: new Error('Backend not configured') };
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: getAuthCallbackUrl(window.location.origin),
@@ -279,11 +347,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const changePassword = useCallback(async (nextPassword: string): Promise<{ error: AuthOperationError }> => {
     if (!supabase) return { error: new Error('Backend not configured') };
 
+    setBusy(true);
     try {
       const { error } = await supabase.auth.updateUser({ password: nextPassword });
       return { error: error ?? null };
     } catch (error: unknown) {
       return { error: normalizeOperationError(error, 'Password update failed') };
+    } finally {
+      setBusy(false);
     }
   }, []);
 
@@ -291,7 +362,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     profile,
     session,
-    loading,
+    loading: initializing || busy,
     isBackendConnected,
     signUp,
     signIn,
@@ -303,9 +374,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     resetPassword,
     changePassword,
   }), [
-    user, profile, session, loading, isBackendConnected,
-    signUp, signIn, signInWithGoogle, signInWithFacebook, signOut,
-    updateProfile, refreshProfile, resetPassword, changePassword,
+    busy,
+    changePassword,
+    initializing,
+    isBackendConnected,
+    profile,
+    refreshProfile,
+    resetPassword,
+    session,
+    signIn,
+    signInWithFacebook,
+    signInWithGoogle,
+    signOut,
+    signUp,
+    updateProfile,
+    user,
   ]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

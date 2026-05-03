@@ -270,8 +270,8 @@ export default function App() {
     <AppErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <LanguageProvider>
-          <LocalAuthProvider>
-            <AuthProvider>
+          <AuthProvider>
+            <LocalAuthProvider>
               <AppRuntimeCoordinator />
               <RouterProvider router={waselRouter} />
               <Toaster
@@ -285,8 +285,8 @@ export default function App() {
                   },
                 }}
               />
-            </AuthProvider>
-          </LocalAuthProvider>
+            </LocalAuthProvider>
+          </AuthProvider>
         </LanguageProvider>
       </QueryClientProvider>
     </AppErrorBoundary>

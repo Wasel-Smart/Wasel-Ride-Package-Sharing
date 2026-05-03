@@ -20,7 +20,7 @@ export function useWalletDashboardController() {
   const { language } = useLanguage();
   const navigate = useIframeSafeNavigate();
   const isRTL = language === 'ar';
-  const t = walletText[isRTL ? 'ar' : 'en'];
+  const t: Record<string, string> = walletText[isRTL ? 'ar' : 'en'] as Record<string, string>;
   const effectiveUserId = localUser?.id ?? user?.id ?? '';
   const runtimeMode = resolveWalletRuntimeMode({
     hasUser: Boolean(localUser || user),

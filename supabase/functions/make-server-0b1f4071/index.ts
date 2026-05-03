@@ -272,7 +272,7 @@ async function authenticateRequest(request: Request) {
 
   const { data: byAuthUser, error: byAuthError } = await admin
     .from('users')
-    .select('id, auth_user_id, email, phone_number')
+    .select('id, auth_user_id, email, phone_number, full_name')
     .eq('auth_user_id', authData.user.id)
     .maybeSingle();
 
@@ -285,7 +285,7 @@ async function authenticateRequest(request: Request) {
   if (!canonicalUser) {
     const fallback = await admin
       .from('users')
-      .select('id, auth_user_id, email, phone_number')
+      .select('id, auth_user_id, email, phone_number, full_name')
       .eq('id', authData.user.id)
       .maybeSingle();
     canonicalUser = fallback.data;
@@ -380,6 +380,231 @@ function buildCliqCheckoutUrl(template: string, values: Record<string, string>):
   return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (_, key: string) => (
     encodeURIComponent(values[key] ?? '')
   ));
+}
+
+function mapSubscriptionPlan(planName: string): 'basic' | 'premium' | 'enterprise' {
+  const normalized = planName.trim().toLowerCase();
+  if (normalized.includes('enterprise')) return 'enterprise';
+  if (normalized.includes('basic') || normalized.includes('starter')) return 'basic';
+  return 'premium';
+}
+
+function toIsoFromUnix(value: unknown): string | null {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds <= 0) return null;
+  return new Date(seconds * 1000).toISOString();
+}
+
+async function stripeApiRequest(
+  path: string,
+  init?: {
+    method?: 'GET' | 'POST';
+    params?: URLSearchParams;
+  },
+) {
+  if (!STRIPE_SECRET_KEY) {
+    throw new Error('Stripe is not configured on the server');
+  }
+
+  const method = init?.method ?? 'POST';
+  const params = init?.params;
+  const body = method === 'POST' ? params : undefined;
+  const query = method === 'GET' && params ? `?${params.toString()}` : '';
+  const response = await fetch(`https://api.stripe.com${path}${query}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+      'Stripe-Version': STRIPE_API_VERSION,
+      ...(method === 'POST' ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}),
+    },
+    body,
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message =
+      typeof payload?.error?.message === 'string'
+        ? payload.error.message
+        : `Stripe returned HTTP ${response.status}`;
+    throw new Error(message);
+  }
+
+  return payload;
+}
+
+async function getExistingStripeCustomerId(
+  admin: ReturnType<typeof getAdminClient>,
+  userId: string,
+): Promise<string | null> {
+  const { data, error } = await admin
+    .from('subscriptions')
+    .select('stripe_customer_id')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data?.stripe_customer_id ? String(data.stripe_customer_id) : null;
+}
+
+async function ensureStripeCustomer(input: {
+  admin: ReturnType<typeof getAdminClient>;
+  canonicalUser: { id: string; email?: string | null; full_name?: string | null; phone_number?: string | null };
+}): Promise<string> {
+  const existingCustomerId = await getExistingStripeCustomerId(input.admin, input.canonicalUser.id);
+  if (existingCustomerId) {
+    return existingCustomerId;
+  }
+
+  const params = new URLSearchParams();
+  if (input.canonicalUser.email) params.set('email', input.canonicalUser.email);
+  if (input.canonicalUser.full_name) params.set('name', input.canonicalUser.full_name);
+  if (input.canonicalUser.phone_number) params.set('phone', input.canonicalUser.phone_number);
+  params.set('metadata[user_id]', input.canonicalUser.id);
+
+  const payload = await stripeApiRequest('/v1/customers', { params });
+  if (!payload?.id) {
+    throw new Error('Stripe customer creation did not return an id');
+  }
+
+  return String(payload.id);
+}
+
+async function fetchStripeSubscription(subscriptionId: string) {
+  const params = new URLSearchParams();
+  params.append('expand[]', 'items.data.price.product');
+  return stripeApiRequest(`/v1/subscriptions/${encodeURIComponent(subscriptionId)}`, {
+    method: 'GET',
+    params,
+  });
+}
+
+function buildSubscriptionRecord(
+  userId: string,
+  subscription: Record<string, unknown>,
+  planOverride?: string | null,
+) {
+  const items = Array.isArray((subscription.items as { data?: unknown[] } | undefined)?.data)
+    ? (subscription.items as { data: Array<Record<string, unknown>> }).data
+    : [];
+  const firstItem = items[0] ?? {};
+  const price = (firstItem.price as Record<string, unknown> | undefined) ?? {};
+  const metadata = (subscription.metadata as Record<string, unknown> | undefined) ?? {};
+  const plan = mapSubscriptionPlan(
+    String(planOverride ?? metadata.plan ?? metadata.plan_name ?? 'premium'),
+  );
+
+  return {
+    user_id: userId,
+    stripe_subscription_id: String(subscription.id ?? ''),
+    stripe_customer_id: String(subscription.customer ?? ''),
+    stripe_price_id: String(price.id ?? ''),
+    stripe_product_id:
+      typeof price.product === 'string'
+        ? price.product
+        : typeof (price.product as Record<string, unknown> | undefined)?.id === 'string'
+          ? String((price.product as Record<string, unknown>).id)
+          : null,
+    status: String(subscription.status ?? 'incomplete'),
+    plan,
+    current_period_start: toIsoFromUnix(subscription.current_period_start),
+    current_period_end: toIsoFromUnix(subscription.current_period_end),
+    cancel_at_period_end: Boolean(subscription.cancel_at_period_end),
+    cancelled_at: toIsoFromUnix(subscription.canceled_at),
+    ended_at: toIsoFromUnix(subscription.ended_at),
+    trial_start: toIsoFromUnix(subscription.trial_start),
+    trial_end: toIsoFromUnix(subscription.trial_end),
+    updated_at: new Date().toISOString(),
+  };
+}
+
+async function getCanonicalUserIdForSubscription(
+  admin: ReturnType<typeof getAdminClient>,
+  subscription: Record<string, unknown>,
+): Promise<string | null> {
+  const metadata = (subscription.metadata as Record<string, unknown> | undefined) ?? {};
+  if (typeof metadata.user_id === 'string' && metadata.user_id.trim()) {
+    return metadata.user_id.trim();
+  }
+
+  const subscriptionId = String(subscription.id ?? '');
+  if (!subscriptionId) return null;
+
+  const { data, error } = await admin
+    .from('subscriptions')
+    .select('user_id')
+    .eq('stripe_subscription_id', subscriptionId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data?.user_id ? String(data.user_id) : null;
+}
+
+async function syncStripeSubscriptionRecord(input: {
+  admin: ReturnType<typeof getAdminClient>;
+  subscription: Record<string, unknown>;
+  planOverride?: string | null;
+}) {
+  const userId = await getCanonicalUserIdForSubscription(input.admin, input.subscription);
+  if (!userId) {
+    return { synced: false, reason: 'missing_user_id' as const };
+  }
+
+  const record = buildSubscriptionRecord(userId, input.subscription, input.planOverride ?? null);
+  if (!record.stripe_subscription_id || !record.stripe_customer_id || !record.stripe_price_id) {
+    return { synced: false, reason: 'missing_subscription_fields' as const };
+  }
+
+  const { error } = await input.admin
+    .from('subscriptions')
+    .upsert(record, { onConflict: 'stripe_subscription_id' });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { synced: true, userId, subscriptionId: record.stripe_subscription_id };
+}
+
+async function getWalletSubscription(
+  admin: ReturnType<typeof getAdminClient>,
+  userId: string,
+) {
+  const { data, error } = await admin
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('current_period_end', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) return null;
+
+  return {
+    id: String(data.stripe_subscription_id ?? data.id ?? ''),
+    status: String(data.status ?? 'inactive'),
+    plan: String(data.plan ?? 'premium'),
+    stripeCustomerId: data.stripe_customer_id ? String(data.stripe_customer_id) : null,
+    stripePriceId: data.stripe_price_id ? String(data.stripe_price_id) : null,
+    stripeProductId: data.stripe_product_id ? String(data.stripe_product_id) : null,
+    cancelAtPeriodEnd: Boolean(data.cancel_at_period_end),
+    currentPeriodStart: data.current_period_start ? String(data.current_period_start) : null,
+    currentPeriodEnd: data.current_period_end ? String(data.current_period_end) : null,
+    cancelledAt: data.cancelled_at ? String(data.cancelled_at) : null,
+    trialStart: data.trial_start ? String(data.trial_start) : null,
+    trialEnd: data.trial_end ? String(data.trial_end) : null,
+  };
 }
 
 async function createPendingTopUpTransaction(
@@ -584,26 +809,41 @@ async function createStripeCheckoutSession(input: {
   params.set('metadata[wallet_id]', input.walletId);
   params.set('metadata[requested_method]', input.paymentMethod);
 
-  const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
-      'Stripe-Version': STRIPE_API_VERSION,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: params,
-  });
+  return stripeApiRequest('/v1/checkout/sessions', { params });
+}
 
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const message =
-      typeof payload?.error?.message === 'string'
-        ? payload.error.message
-        : `Stripe returned HTTP ${response.status}`;
-    throw new Error(message);
+async function createStripeSubscriptionCheckoutSession(input: {
+  admin: ReturnType<typeof getAdminClient>;
+  canonicalUser: { id: string; email?: string | null; full_name?: string | null; phone_number?: string | null };
+  planName: string;
+  request: Request;
+}) {
+  if (!STRIPE_WASEL_PLUS_PRICE_ID) {
+    throw new Error('Stripe Wasel Plus price is not configured on the server');
   }
 
-  return payload;
+  const customerId = await ensureStripeCustomer({
+    admin: input.admin,
+    canonicalUser: input.canonicalUser,
+  });
+
+  const baseUrl = getAppBaseUrl(input.request);
+  const params = new URLSearchParams();
+  params.set('mode', 'subscription');
+  params.set('customer', customerId);
+  params.set('success_url', `${baseUrl}/app/wallet?subscription=success&session_id={CHECKOUT_SESSION_ID}`);
+  params.set('cancel_url', `${baseUrl}/app/wallet?subscription=cancelled`);
+  params.set('line_items[0][price]', STRIPE_WASEL_PLUS_PRICE_ID);
+  params.set('line_items[0][quantity]', '1');
+  params.set('allow_promotion_codes', 'true');
+  params.set('metadata[user_id]', input.canonicalUser.id);
+  params.set('metadata[plan]', mapSubscriptionPlan(input.planName));
+  params.set('metadata[plan_name]', input.planName);
+  params.set('subscription_data[metadata][user_id]', input.canonicalUser.id);
+  params.set('subscription_data[metadata][plan]', mapSubscriptionPlan(input.planName));
+  params.set('subscription_data[metadata][plan_name]', input.planName);
+
+  return stripeApiRequest('/v1/checkout/sessions', { params });
 }
 
 function constantTimeEquals(left: string, right: string): boolean {
@@ -678,6 +918,7 @@ async function handleHealth() {
       stripeConfigured: Boolean(STRIPE_SECRET_KEY),
       stripeWebhookConfigured: Boolean(STRIPE_WEBHOOK_SECRET),
       cliqConfigured: Boolean(CLIQ_CHECKOUT_URL_TEMPLATE),
+      waselPlusPriceConfigured: Boolean(STRIPE_WASEL_PLUS_PRICE_ID),
     },
   });
 }
@@ -1274,6 +1515,21 @@ async function handleApplyModerationMigrations(request: Request) {
   });
 }
 
+async function handleGetWalletSubscription(request: Request, requestedUserId: string) {
+  const auth = await authenticateRequest(request);
+  if ('error' in auth) return auth.error;
+  if (!matchesAuthenticatedUser(auth, requestedUserId)) {
+    return json({ error: 'Wallet route is not authorized for this user.' }, 403);
+  }
+
+  try {
+    const subscription = await getWalletSubscription(auth.admin, auth.canonicalUser.id);
+    return json({ subscription });
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+}
+
 async function handleWalletTopUp(request: Request, requestedUserId: string) {
   const auth = await authenticateRequest(request);
   if ('error' in auth) return auth.error;
@@ -1385,6 +1641,53 @@ async function handleWalletTopUp(request: Request, requestedUserId: string) {
   }
 }
 
+async function handleWalletSubscribe(request: Request, requestedUserId: string) {
+  const auth = await authenticateRequest(request);
+  if ('error' in auth) return auth.error;
+  if (!matchesAuthenticatedUser(auth, requestedUserId)) {
+    return json({ error: 'Wallet route is not authorized for this user.' }, 403);
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const planName = String(body.planName ?? 'Wasel Plus').trim() || 'Wasel Plus';
+
+  try {
+    const existingSubscription = await getWalletSubscription(auth.admin, auth.canonicalUser.id);
+    if (existingSubscription && ['active', 'trialing', 'past_due'].includes(existingSubscription.status)) {
+      return json({
+        subscription: {
+          ...existingSubscription,
+          provider: 'stripe',
+        },
+      });
+    }
+
+    const session = await createStripeSubscriptionCheckoutSession({
+      admin: auth.admin,
+      canonicalUser: {
+        id: auth.canonicalUser.id,
+        email: auth.canonicalUser.email ?? auth.authUser.email ?? null,
+        full_name: auth.canonicalUser.full_name ?? null,
+        phone_number: auth.canonicalUser.phone_number ?? null,
+      },
+      planName,
+      request,
+    });
+
+    return json({
+      subscription: {
+        provider: 'stripe',
+        status: 'requires_action',
+        checkoutUrl: session.url ?? null,
+        sessionId: session.id,
+        plan: mapSubscriptionPlan(planName),
+      },
+    }, 202);
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 502);
+  }
+}
+
 async function handleStripeWebhook(request: Request) {
   if (!STRIPE_WEBHOOK_SECRET) {
     return json({ error: 'Stripe webhook secret is not configured.' }, 503);
@@ -1405,21 +1708,36 @@ async function handleStripeWebhook(request: Request) {
 
   if (event?.type === 'checkout.session.completed') {
     const session = event?.data?.object ?? {};
+    if (String(session?.mode ?? '') === 'subscription') {
+      const subscriptionId = String(session?.subscription ?? '');
+      if (!subscriptionId) {
+        return json({ received: true, ignored: true, reason: 'missing_subscription_id' });
+      }
+
+      const subscription = await fetchStripeSubscription(subscriptionId);
+      const synced = await syncStripeSubscriptionRecord({
+        admin,
+        subscription,
+        planOverride: String(session?.metadata?.plan ?? session?.metadata?.plan_name ?? 'premium'),
+      });
+      return json({ received: true, subscriptionId, synced });
+    }
+
     const transactionId = String(session?.metadata?.transaction_id ?? session?.client_reference_id ?? '');
     if (!transactionId) {
       return json({ received: true, ignored: true });
     }
 
-    await finalizeTopUpTransaction(
-      transactionId,
-      String(session?.id ?? ''),
-      event,
-    );
+    await finalizeTopUpTransaction(transactionId, String(session?.id ?? ''), event);
     return json({ received: true, transactionId, finalized: true });
   }
 
   if (event?.type === 'checkout.session.expired') {
     const session = event?.data?.object ?? {};
+    if (String(session?.mode ?? '') === 'subscription') {
+      return json({ received: true, sessionId: String(session?.id ?? ''), expired: true });
+    }
+
     const transactionId = String(session?.metadata?.transaction_id ?? session?.client_reference_id ?? '');
     if (transactionId) {
       await markTopUpTransactionFailed(
@@ -1432,6 +1750,40 @@ async function handleStripeWebhook(request: Request) {
       );
     }
     return json({ received: true, transactionId, expired: true });
+  }
+
+  if (event?.type === 'customer.subscription.created' || event?.type === 'customer.subscription.updated') {
+    const subscription = event?.data?.object ?? {};
+    const synced = await syncStripeSubscriptionRecord({ admin, subscription });
+    return json({ received: true, subscriptionId: String(subscription?.id ?? ''), synced });
+  }
+
+  if (event?.type === 'customer.subscription.deleted') {
+    const subscription = event?.data?.object ?? {};
+    const synced = await syncStripeSubscriptionRecord({ admin, subscription });
+    return json({ received: true, subscriptionId: String(subscription?.id ?? ''), deleted: true, synced });
+  }
+
+  if (event?.type === 'invoice.paid' || event?.type === 'invoice.payment_failed') {
+    const invoice = event?.data?.object ?? {};
+    const subscriptionId = String(invoice?.subscription ?? '');
+    if (!subscriptionId) {
+      return json({ received: true, ignored: true, reason: 'missing_subscription_id' });
+    }
+
+    const subscription = await fetchStripeSubscription(subscriptionId);
+    const synced = await syncStripeSubscriptionRecord({ admin, subscription });
+    return json({
+      received: true,
+      subscriptionId,
+      invoiceId: String(invoice?.id ?? ''),
+      synced,
+      invoiceStatus: String(invoice?.status ?? ''),
+    });
+  }
+
+  if (event?.type === 'invoice.created') {
+    return json({ received: true, invoiceId: String(event?.data?.object?.id ?? ''), acknowledged: true });
   }
 
   if (event?.type === 'payment_intent.payment_failed') {
@@ -1539,8 +1891,16 @@ Deno.serve(async (request) => {
     }
 
     const walletRoute = parseWalletRoute(path);
-    if (request.method === 'POST' && walletRoute) {
-      return await handleWalletTopUp(request, walletRoute.userId);
+    if (walletRoute) {
+      if (request.method === 'GET' && walletRoute.action === 'subscription') {
+        return await handleGetWalletSubscription(request, walletRoute.userId);
+      }
+      if (request.method === 'POST' && walletRoute.action === 'top-up') {
+        return await handleWalletTopUp(request, walletRoute.userId);
+      }
+      if (request.method === 'POST' && walletRoute.action === 'subscribe') {
+        return await handleWalletSubscribe(request, walletRoute.userId);
+      }
     }
 
     if (request.method === 'GET' && path === '/communications/preferences') {

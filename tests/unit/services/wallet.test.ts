@@ -251,4 +251,103 @@ describe('walletApi', () => {
     );
     expect(mockRpc).not.toHaveBeenCalled();
   });
+
+  it('returns the secure subscription checkout URL from the wallet backend', async () => {
+    vi.resetModules();
+    mockCoreConfig.API_URL = 'https://api.wasel.test';
+    mockCoreConfig.publicAnonKey = 'anon-key';
+    mockFetchWithRetry.mockResolvedValue({
+      ok: true,
+      status: 202,
+      json: async () => ({
+        subscription: {
+          provider: 'stripe',
+          status: 'requires_action',
+          checkoutUrl: 'https://checkout.stripe.com/pay/cs_test_123',
+          sessionId: 'cs_test_123',
+          plan: 'premium',
+        },
+      }),
+    });
+    const { walletApi: walletApiWithEdge } = await import('../../../src/services/walletApi');
+
+    const result = await walletApiWithEdge.subscribe('user-123', 'Wasel Plus', 9.99) as {
+      subscription: { checkoutUrl: string; plan: string };
+    };
+
+    expect(result.subscription.checkoutUrl).toBe('https://checkout.stripe.com/pay/cs_test_123');
+    expect(mockFetchWithRetry).toHaveBeenCalledWith(
+      'https://api.wasel.test/wallet/user-123/subscribe',
+      expect.objectContaining({
+        method: 'POST',
+      }),
+    );
+  });
+
+  it('merges subscription state from the backend when direct wallet reads are used', async () => {
+    vi.resetModules();
+    mockCoreConfig.API_URL = 'https://api.wasel.test';
+    mockCoreConfig.publicAnonKey = 'anon-key';
+    mockFetchWithRetry.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      json: async () => ({ error: 'Route not found' }),
+    });
+    mockFetchWithRetry.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        subscription: {
+          id: 'sub_123',
+          status: 'active',
+          plan: 'premium',
+          currentPeriodEnd: '2026-06-01T00:00:00.000Z',
+        },
+      }),
+    });
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: {
+        wallet_id: 'wallet-1',
+        user_id: 'user-123',
+        balance: 145.5,
+        pending_balance: 12,
+        wallet_status: 'active',
+        currency_code: 'JOD',
+        auto_top_up_enabled: true,
+        auto_top_up_amount: 25,
+        auto_top_up_threshold: 8,
+      },
+      error: null,
+    });
+    mockOrder
+      .mockResolvedValueOnce({
+        data: [],
+        error: null,
+      })
+      .mockImplementationOnce(() => ({
+        select: mockSelect,
+        eq: mockEq,
+        order: mockOrder,
+        limit: mockLimit,
+        single: mockSingle,
+        maybeSingle: mockMaybeSingle,
+        insert: mockInsert,
+        update: mockUpdate,
+        delete: mockDelete,
+      }))
+      .mockResolvedValueOnce({
+        data: [{ payment_method_id: 'pm-1', provider: 'stripe', method_type: 'card' }],
+        error: null,
+      });
+    const { walletApi: walletApiWithEdge } = await import('../../../src/services/walletApi');
+
+    const wallet = await walletApiWithEdge.getWallet('user-123');
+
+    expect(wallet.subscription).toEqual({
+      id: 'sub_123',
+      status: 'active',
+      plan: 'premium',
+      currentPeriodEnd: '2026-06-01T00:00:00.000Z',
+    });
+  });
 });
