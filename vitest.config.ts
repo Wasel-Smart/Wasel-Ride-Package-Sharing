@@ -10,6 +10,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    fileParallelism: false,
+    maxWorkers: 1,
+    minWorkers: 1,
     setupFiles: ['./tests/setup.ts'],
     environmentOptions: {
       jsdom: { url: 'http://localhost/' },
