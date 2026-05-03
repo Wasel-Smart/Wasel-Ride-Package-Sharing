@@ -50,8 +50,6 @@ export function initSentry(): void {
     environment,
     integrations: [],
     tracesSampleRate: environment === 'production' ? 0.1 : 1,
-    replaysSessionSampleRate: environment === 'production' ? 0.1 : 1,
-    replaysOnErrorSampleRate: 1,
     release: `wasel@${import.meta.env.VITE_APP_VERSION || '1.0.0'}`,
     ignoreErrors: [
       'ResizeObserver loop limit exceeded',
@@ -60,21 +58,28 @@ export function initSentry(): void {
       'Failed to fetch',
     ],
     beforeSend(event) {
-      const raw = localStorage.getItem('wasel_local_user_v2');
-
-      if (raw) {
-        try {
+      try {
+        const raw = localStorage.getItem('wasel_local_user_v2');
+        if (raw) {
           const userData = JSON.parse(raw) as { id?: string };
-          event.user = userData.id ? { id: userData.id } : event.user;
-        } catch {
-          // Ignore malformed local state.
+          // Only attach the opaque user ID — never PII
+          if (userData.id && typeof userData.id === 'string') {
+            event.user = { id: userData.id };
+          }
         }
+      } catch {
+        // Ignore malformed local state.
       }
+
+      const allowedLanguages = ['ar', 'en'];
+      const allowedThemes = ['dark', 'light'];
+      const lang = localStorage.getItem('wasel_language') || 'ar';
+      const theme = localStorage.getItem('wasel_theme') || 'dark';
 
       event.tags = {
         ...event.tags,
-        language: localStorage.getItem('wasel_language') || 'ar',
-        theme: localStorage.getItem('wasel_theme') || 'dark',
+        language: allowedLanguages.includes(lang) ? lang : 'ar',
+        theme: allowedThemes.includes(theme) ? theme : 'dark',
       };
 
       return event;

@@ -191,6 +191,7 @@ export function getConfig() {
   return {
     appName: getEnv('VITE_APP_NAME', 'Wasel'),
     appUrl,
+    allowedApiDomain: getEnv('VITE_ALLOWED_API_DOMAIN', 'wasel14.online').trim(),
     supportWhatsAppNumber,
     supportEmail,
     supportPhoneNumber,

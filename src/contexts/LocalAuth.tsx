@@ -170,6 +170,12 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (!auth.user) {
+      if (!auth.isBackendConnected) {
+        const storedUser = loadUser();
+        setUser(storedUser);
+        return;
+      }
+
       setUser(null);
       setOptimisticUpdates(null);
       saveUser(null);
@@ -183,13 +189,15 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     const nextUser = optimisticUpdates ? applyUserUpdates(mapped, optimisticUpdates) : mapped;
     setUser(nextUser);
     saveUser(nextUser);
-  }, [auth.loading, auth.profile, auth.user, optimisticUpdates]);
+  }, [auth.isBackendConnected, auth.loading, auth.profile, auth.user, optimisticUpdates]);
+
+  const authUserId = auth.user?.id;
 
   useEffect(() => {
-    if (!auth.user) {
+    if (!authUserId) {
       setOptimisticUpdates(null);
     }
-  }, [auth.user?.id]);
+  }, [authUserId]);
 
   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
     const result = await auth.signIn(email, password);

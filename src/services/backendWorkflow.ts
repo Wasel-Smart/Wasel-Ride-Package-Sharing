@@ -1,5 +1,6 @@
 import { API_URL, createEdgeHeaders, fetchWithRetry, getAuthDetails, publicAnonKey } from './core';
 import { getConfig } from '../utils/env';
+import { validateApiUrl } from '../utils/sanitization';
 
 export type BackendAuthMode = 'none' | 'public' | 'required';
 export type FallbackPolicy = 'always' | 'writes-if-enabled' | 'never';
@@ -95,6 +96,22 @@ function getPayloadMessage(payload: unknown): string | null {
   return typeof message === 'string' ? message : null;
 }
 
+function getTrustedApiDomains(): string[] {
+  const configuredDomain = getConfig().allowedApiDomain || 'wasel14.online';
+  const domains = ['supabase.co', 'supabase.net', configuredDomain].filter(Boolean);
+
+  try {
+    const hostname = new URL(API_URL).hostname;
+    if (hostname) {
+      domains.push(hostname);
+    }
+  } catch {
+    // Ignore invalid API_URL here; requestEdgeJson will reject it below.
+  }
+
+  return Array.from(new Set(domains));
+}
+
 async function resolveContext(authMode: BackendAuthMode): Promise<BackendWorkflowContext> {
   if (authMode !== 'required') {
     return {};
@@ -118,6 +135,15 @@ export async function requestEdgeJson<T>({
   if (!hasConfiguredEdgeTransport(authMode)) {
     throw new BackendRequestError(`${operation} is unavailable because the backend transport is not configured.`, {
       recoverable: true,
+    });
+  }
+
+  // Validate API_URL to prevent SSRF
+  const allowedDomains = getTrustedApiDomains();
+
+  if (!validateApiUrl(API_URL, allowedDomains)) {
+    throw new BackendRequestError(`${operation} failed: Invalid or untrusted API URL`, {
+      recoverable: false,
     });
   }
 

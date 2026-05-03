@@ -68,11 +68,6 @@ export default function WaselAuthCallback() {
       });
 
       try {
-        const { error: initializeError } = await supabase.auth.initialize();
-        if (initializeError) {
-          throw initializeError;
-        }
-
         await new Promise((resolve) => setTimeout(resolve, 50));
 
         if (isRecoveryFlow) {

@@ -101,7 +101,12 @@ async function enrichProfileWithVerification(userId: string, profile: Record<str
 }
 
 async function loadProfileViaFallback(userId: string) {
-  const profile = await getDirectProfile(userId).catch(() => null);
+  let profile: Record<string, unknown> | null = null;
+  try {
+    profile = await getDirectProfile(userId) as Record<string, unknown> | null;
+  } catch {
+    profile = null;
+  }
   const enrichedProfile = await enrichProfileWithVerification(userId, profile as Record<string, unknown> | null);
   return { profile: enrichedProfile };
 }

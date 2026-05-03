@@ -11,6 +11,7 @@
  */
 
 import { API_URL, fetchWithRetry, getAuthDetails, supabase } from './core';
+import { sanitizeLogMessage } from '../utils/sanitization';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -105,7 +106,7 @@ export const activeTripAPI = {
       );
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        console.error('[activeTripAPI.setActiveTrip] Server error:', response.status, body);
+        console.error('[activeTripAPI.setActiveTrip] Server error:', response.status, sanitizeLogMessage(JSON.stringify(body)));
         return null;
       }
       const data = await response.json();

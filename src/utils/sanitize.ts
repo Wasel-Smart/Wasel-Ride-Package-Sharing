@@ -3,33 +3,15 @@
  * Protects against XSS and injection attacks
  */
 
-/**
- * Sanitize HTML content to prevent XSS
- * Removes dangerous tags and attributes
- */
-export function sanitizeHTML(html: string): string {
-  if (!html) return '';
+// Re-export shared HTML sanitization from canonical module
+export { sanitizeHtml as sanitizeHTML, sanitizeHtml as sanitizeText } from './sanitization';
 
-  // Create a temporary div to parse HTML
+// DOM-based HTML sanitizer (strips tags entirely via browser parser)
+export function sanitizeHTMLStrict(html: string): string {
+  if (!html) return '';
   const temp = document.createElement('div');
   temp.textContent = html;
-  
   return temp.innerHTML;
-}
-
-/**
- * Sanitize text input
- * Removes HTML tags and dangerous characters
- */
-export function sanitizeText(text: string): string {
-  if (!text) return '';
-
-  return text
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;');
 }
 
 /**

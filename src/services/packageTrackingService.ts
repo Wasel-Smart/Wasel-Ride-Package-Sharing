@@ -7,6 +7,7 @@ import {
   type GeoStreamState,
 } from '../platform/geo-stream';
 import { generateId } from '../utils/api';
+import { sanitizeEventPayload } from '../utils/sanitization';
 
 export type PackageStatus =
   | 'created'
@@ -184,12 +185,12 @@ export class PackageTrackingService {
     domainEventBus.publish(
       createDomainEvent(
         'PackageCreated',
-        {
+        sanitizeEventPayload({
           packageId: pkg.id,
           trackingCode: pkg.trackingCode,
           origin: pkg.from,
           destination: pkg.to,
-        },
+        }),
         'packageTrackingService',
       ),
     );
@@ -231,11 +232,11 @@ export class PackageTrackingService {
     domainEventBus.publish(
       createDomainEvent(
         'PackageAssigned',
-        {
+        sanitizeEventPayload({
           packageId: pkg.id,
           rideId: rideDetails.rideId,
           driverId: rideDetails.driverId,
-        },
+        }),
         'packageTrackingService',
       ),
     );
@@ -272,11 +273,11 @@ export class PackageTrackingService {
     domainEventBus.publish(
       createDomainEvent(
         'PaymentAuthorized',
-        {
+        sanitizeEventPayload({
           entityId: pkg.id,
           entityType: 'package',
           amount: pkg.totalCost,
-        },
+        }),
         'packageTrackingService',
       ),
     );
@@ -313,10 +314,10 @@ export class PackageTrackingService {
     domainEventBus.publish(
       createDomainEvent(
         'PackagePickedUp',
-        {
+        sanitizeEventPayload({
           packageId: pkg.id,
           rideId: pkg.rideId,
-        },
+        }),
         'packageTrackingService',
       ),
     );
@@ -366,11 +367,11 @@ export class PackageTrackingService {
     domainEventBus.publish(
       createDomainEvent(
         'PackageLocationUpdated',
-        {
+        sanitizeEventPayload({
           packageId: pkg.id,
           latitude: location.lat,
           longitude: location.lng,
-        },
+        }),
         'packageTrackingService',
       ),
     );
@@ -409,11 +410,11 @@ export class PackageTrackingService {
         domainEventBus.publish(
           createDomainEvent(
             'PaymentCaptured',
-            {
+            sanitizeEventPayload({
               entityId: pkg.id,
               entityType: 'package',
               amount: pkg.totalCost,
-            },
+            }),
             'packageTrackingService',
           ),
         );
@@ -431,11 +432,11 @@ export class PackageTrackingService {
     domainEventBus.publish(
       createDomainEvent(
         'PackageDelivered',
-        {
+        sanitizeEventPayload({
           packageId: pkg.id,
           rideId: pkg.rideId,
           paymentReleased: pkg.paymentStatus === 'released',
-        },
+        }),
         'packageTrackingService',
       ),
     );

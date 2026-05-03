@@ -67,6 +67,7 @@ describe('LocalAuthProvider', () => {
         two_factor_enabled: true,
       },
       loading: false,
+      isBackendConnected: true,
       signIn: vi.fn(),
       signUp: vi.fn(),
       signOut: vi.fn(),
@@ -110,6 +111,7 @@ describe('LocalAuthProvider', () => {
         wallet_status: 'active',
       },
       loading: false,
+      isBackendConnected: true,
       signIn: vi.fn(),
       signUp,
       signOut: vi.fn(),
@@ -137,5 +139,48 @@ describe('LocalAuthProvider', () => {
     });
 
     expect(screen.getByText('+962790000001')).toBeInTheDocument();
+  });
+
+  it('keeps the stored local session when the backend is unavailable', () => {
+    window.localStorage.setItem('wasel_local_user_v2', JSON.stringify({
+      id: 'demo-e2e-user',
+      name: 'Demo Rider',
+      email: 'demo.rider@wasel.jo',
+      phone: '+962790000999',
+      role: 'both',
+      balance: 145.75,
+      rating: 4.8,
+      trips: 18,
+      verified: true,
+      sanadVerified: true,
+      verificationLevel: 'level_3',
+      walletStatus: 'active',
+      joinedAt: '2026-03-01',
+      emailVerified: true,
+      phoneVerified: true,
+      twoFactorEnabled: false,
+      trustScore: 92,
+      backendMode: 'supabase',
+    }));
+
+    mockUseAuth.mockReturnValue({
+      user: null,
+      profile: null,
+      loading: false,
+      isBackendConnected: false,
+      signIn: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+    });
+
+    render(
+      <LocalAuthProvider>
+        <Consumer />
+      </LocalAuthProvider>,
+    );
+
+    expect(screen.getByText('ready')).toBeInTheDocument();
+    expect(screen.getByText('Demo Rider')).toBeInTheDocument();
+    expect(screen.getByText('+962790000999')).toBeInTheDocument();
   });
 });

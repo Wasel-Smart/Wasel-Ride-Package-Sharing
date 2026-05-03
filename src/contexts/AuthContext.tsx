@@ -100,11 +100,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isBackendConnected, setIsBackendConnected] = useState(isSupabaseConfigured);
 
   const fetchProfile = useCallback(async (forceCreate = false, authUser?: User | null) => {
-    const activeUser = authUser ?? user;
-    if (!activeUser || !supabase) {
+    if (!authUser || !supabase) {
       setProfile(null);
       return null;
     }
+    const activeUser = authUser;
 
     let nextProfile = await loadProfileFromBackend();
 
@@ -128,7 +128,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     setProfile(nextProfile);
     return nextProfile;
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) {

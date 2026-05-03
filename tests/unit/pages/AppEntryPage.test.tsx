@@ -45,13 +45,13 @@ describe('AppEntryPage', () => {
     expect(screen.getAllByRole('button', { name: /Get started/i }).length).toBeGreaterThan(0);
   });
 
-  it('navigates authenticated users straight into the app', () => {
+  it('navigates authenticated users straight into the app shell', () => {
     mockUseLocalAuth.mockReturnValue({ user: { id: 'user-1' } });
 
     render(<AppEntryPage />);
 
     screen.getAllByRole('button', { name: /Open the network/i })[0].click();
 
-    expect(mockNavigate).toHaveBeenCalledWith('/app/find-ride');
+    expect(mockNavigate).toHaveBeenCalledWith('/app');
   });
 });

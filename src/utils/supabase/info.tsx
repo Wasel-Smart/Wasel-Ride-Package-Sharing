@@ -1,13 +1,10 @@
 /**
  * Public Supabase credentials.
  *
- * We still prefer deploy-time env vars, but we keep the current public project
- * config as a safe fallback so static production builds do not ship with the
- * placeholder values from `.env.example`.
+ * All credentials must be supplied via environment variables.
+ * No hardcoded fallback values — missing config will surface clearly at runtime.
  */
 
-const DEFAULT_SUPABASE_URL = 'https://djccmatubyyudeosrngm.supabase.co';
-const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE';
 const FORCE_LOCAL_E2E_AUTH = (import.meta.env.VITE_E2E_LOCAL_AUTH as string | undefined) === 'true';
 
 const PLACEHOLDER_MARKERS = [
@@ -39,7 +36,6 @@ export const publicSupabaseUrl = pickConfiguredValue(
         import.meta.env.VITE_SUPABASE_URL as string | undefined,
         import.meta.env.VITE_SUPABASE_PROJECT_URL as string | undefined,
         import.meta.env.VITE_PUBLIC_SUPABASE_URL as string | undefined,
-        DEFAULT_SUPABASE_URL,
       ]),
 );
 
@@ -50,7 +46,6 @@ export const publicAnonKey = pickConfiguredValue(
         import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
         import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined,
         import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY as string | undefined,
-        DEFAULT_SUPABASE_ANON_KEY,
       ]),
 );
 
