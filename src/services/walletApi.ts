@@ -4,7 +4,8 @@
  * Supabase reads/RPCs so the wallet stays connected to persisted backend data.
  */
 
-import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey, supabase } from './core';
+import { API_URL, supabase } from './core';
+import { BackendRequestError, requestEdgeJson } from './backendWorkflow';
 
 const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
 
@@ -132,7 +133,7 @@ function getDb(): DbClient {
 }
 
 function canUseEdgeApi(): boolean {
-  return Boolean(WALLET_API_BASE && publicAnonKey);
+  return Boolean(WALLET_API_BASE);
 }
 
 function toNumber(value: unknown, fallback = 0): number {
@@ -359,21 +360,6 @@ async function findWalletByUserId(userId: string): Promise<WalletRow | null> {
   }
 
   return (data as WalletRow | null) ?? null;
-}
-
-async function getAuthHeaders() {
-  try {
-    const { token } = await getAuthDetails();
-    return {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    };
-  } catch {
-    return {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${publicAnonKey}`,
-    };
-  }
 }
 
 async function fetchWalletDirect(userId: string): Promise<WalletData> {
@@ -654,25 +640,39 @@ async function getTrustScoreDirect(userId: string) {
   };
 }
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const headers = await getAuthHeaders();
-  const response = await fetchWithRetry(path, {
-    ...init,
-    headers: {
-      ...headers,
-      ...(init?.headers ?? {}),
-    },
+function getWalletPath(userId: string, suffix = ''): string {
+  return `/wallet/${userId}${suffix}`;
+}
+
+async function requestWalletJson<T>(
+  userId: string,
+  suffix: string,
+  operation: string,
+  init?: {
+    method?: string;
+    body?: unknown;
+    headers?: HeadersInit;
+    timeout?: number;
+    retries?: number;
+  },
+): Promise<T> {
+  return requestEdgeJson<T>({
+    path: getWalletPath(userId, suffix),
+    operation,
+    authMode: 'required',
+    method: init?.method,
+    body: init?.body,
+    headers: init?.headers,
+    timeout: init?.timeout,
+    retries: init?.retries,
   });
-
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.error || `Wallet request failed: ${response.status}`);
-  }
-
-  return response.json();
 }
 
 function isWalletTopUpConnectivityError(error: unknown): boolean {
+  if (error instanceof BackendRequestError) {
+    return error.status === 404;
+  }
+
   const message = error instanceof Error ? error.message : String(error);
   return message.includes('Route not found') || message.includes('Wallet request failed: 404');
 }
@@ -684,6 +684,10 @@ function buildWalletTopUpBackendError(): Error {
 }
 
 function isWalletSubscriptionConnectivityError(error: unknown): boolean {
+  if (error instanceof BackendRequestError) {
+    return error.status === 404;
+  }
+
   const message = error instanceof Error ? error.message : String(error);
   return message.includes('Route not found') || message.includes('Wallet request failed: 404');
 }
@@ -695,8 +699,10 @@ function buildWalletSubscriptionBackendError(): Error {
 }
 
 async function fetchSubscriptionViaBackend(userId: string): Promise<WalletSubscription | null> {
-  const result = await requestJson<{ subscription?: WalletSubscription | null }>(
-    `${WALLET_API_BASE}/${userId}/subscription`,
+  const result = await requestWalletJson<{ subscription?: WalletSubscription | null }>(
+    userId,
+    '/subscription',
+    'Load wallet subscription',
   );
   return result.subscription ?? null;
 }
@@ -705,7 +711,7 @@ export const walletApi = {
   async getWallet(userId: string): Promise<WalletData> {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson<WalletData>(`${WALLET_API_BASE}/${userId}`);
+        return await requestWalletJson<WalletData>(userId, '', 'Load wallet');
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -732,7 +738,11 @@ export const walletApi = {
           limit: String(limit),
         });
         if (type) params.set('type', type);
-        return await requestJson(`${WALLET_API_BASE}/${userId}/transactions?${params.toString()}`);
+        return await requestWalletJson(
+          userId,
+          `/transactions?${params.toString()}`,
+          'Load wallet transactions',
+        );
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -754,9 +764,9 @@ export const walletApi = {
   async topUp(userId: string, amount: number, paymentMethod: string) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/top-up`, {
+        return await requestWalletJson(userId, '/top-up', 'Create wallet top-up', {
           method: 'POST',
-          body: JSON.stringify({ amount, paymentMethod }),
+          body: { amount, paymentMethod },
         });
       } catch (error) {
         if (isWalletTopUpConnectivityError(error)) {
@@ -773,9 +783,9 @@ export const walletApi = {
   async withdraw(userId: string, amount: number, bankAccount: string, method = 'bank_transfer') {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/withdraw`, {
+        return await requestWalletJson(userId, '/withdraw', 'Withdraw wallet funds', {
           method: 'POST',
-          body: JSON.stringify({ amount, bankAccount, method }),
+          body: { amount, bankAccount, method },
         });
       } catch {
         // Fall back to direct Supabase below.
@@ -788,9 +798,9 @@ export const walletApi = {
   async sendMoney(userId: string, recipientId: string, amount: number, note?: string) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/send`, {
+        return await requestWalletJson(userId, '/send', 'Send wallet funds', {
           method: 'POST',
-          body: JSON.stringify({ recipientId, amount, note }),
+          body: { recipientId, amount, note },
         });
       } catch {
         // Fall back to direct Supabase below.
@@ -808,7 +818,7 @@ export const walletApi = {
   async getRewards(userId: string) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/rewards`);
+        return await requestWalletJson(userId, '/rewards', 'Load wallet rewards');
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -819,9 +829,9 @@ export const walletApi = {
 
   async claimReward(userId: string, rewardId: string) {
     if (canUseEdgeApi()) {
-      return requestJson(`${WALLET_API_BASE}/${userId}/rewards/claim`, {
+      return requestWalletJson(userId, '/rewards/claim', 'Claim wallet reward', {
         method: 'POST',
-        body: JSON.stringify({ rewardId }),
+        body: { rewardId },
       });
     }
 
@@ -843,9 +853,9 @@ export const walletApi = {
   async subscribe(userId: string, planName: string, price: number) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/subscribe`, {
+        return await requestWalletJson(userId, '/subscribe', 'Create wallet subscription checkout', {
           method: 'POST',
-          body: JSON.stringify({ planName, price }),
+          body: { planName, price },
         });
       } catch (error) {
         if (isWalletSubscriptionConnectivityError(error)) {
@@ -862,7 +872,7 @@ export const walletApi = {
   async getInsights(userId: string): Promise<InsightsData> {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson<InsightsData>(`${WALLET_API_BASE}/${userId}/insights`);
+        return await requestWalletJson<InsightsData>(userId, '/insights', 'Load wallet insights');
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -877,9 +887,9 @@ export const walletApi = {
       throw new Error('Wallet PIN management requires the wallet backend.');
     }
 
-    return requestJson(`${WALLET_API_BASE}/${userId}/pin/set`, {
+    return requestWalletJson(userId, '/pin/set', 'Set wallet PIN', {
       method: 'POST',
-      body: JSON.stringify({ pin }),
+      body: { pin },
     });
   },
 
@@ -888,18 +898,18 @@ export const walletApi = {
       throw new Error('Wallet PIN verification requires the wallet backend.');
     }
 
-    return requestJson(`${WALLET_API_BASE}/${userId}/pin/verify`, {
+    return requestWalletJson(userId, '/pin/verify', 'Verify wallet PIN', {
       method: 'POST',
-      body: JSON.stringify({ pin }),
+      body: { pin },
     });
   },
 
   async setAutoTopUp(userId: string, enabled: boolean, amount: number, threshold: number) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/auto-topup`, {
+        return await requestWalletJson(userId, '/auto-topup', 'Update wallet auto top-up', {
           method: 'POST',
-          body: JSON.stringify({ enabled, amount, threshold }),
+          body: { enabled, amount, threshold },
         });
       } catch {
         // Fall back to direct Supabase below.
@@ -916,7 +926,11 @@ export const walletApi = {
   async getPaymentMethods(userId: string): Promise<{ methods: any[] }> {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson<{ methods: any[] }>(`${WALLET_API_BASE}/${userId}/payment-methods`);
+        return await requestWalletJson<{ methods: any[] }>(
+          userId,
+          '/payment-methods',
+          'Load wallet payment methods',
+        );
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -928,9 +942,9 @@ export const walletApi = {
   async addPaymentMethod(userId: string, method: { type: string; provider: string; [key: string]: any }) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/payment-methods`, {
+        return await requestWalletJson(userId, '/payment-methods', 'Add wallet payment method', {
           method: 'POST',
-          body: JSON.stringify(method),
+          body: method,
         });
       } catch {
         // Fall back to direct Supabase below.
@@ -943,9 +957,14 @@ export const walletApi = {
   async deletePaymentMethod(userId: string, methodId: string) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/payment-methods/${methodId}`, {
-          method: 'DELETE',
-        });
+        return await requestWalletJson(
+          userId,
+          `/payment-methods/${methodId}`,
+          'Delete wallet payment method',
+          {
+            method: 'DELETE',
+          },
+        );
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -957,7 +976,7 @@ export const walletApi = {
   async getTrustScore(userId: string): Promise<{ totalTrips: number; cashRating: number; onTimePayments: number; deposit: number }> {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/trust-score`);
+        return await requestWalletJson(userId, '/trust-score', 'Load wallet trust score');
       } catch {
         // Fall back to direct Supabase below.
       }

@@ -1,4 +1,4 @@
-import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey } from './core';
+import { API_URL, createEdgeHeaders, fetchWithRetry, getAuthDetails, publicAnonKey } from './core';
 import { getConfig } from '../utils/env';
 
 export type BackendAuthMode = 'none' | 'public' | 'required';
@@ -122,12 +122,13 @@ export async function requestEdgeJson<T>({
   }
 
   const resolvedContext = authMode === 'required' ? (context ?? await resolveContext(authMode)) : (context ?? {});
-  const finalHeaders = new Headers(headers ?? {});
+  const finalHeaders = createEdgeHeaders(
+    headers,
+    authMode === 'required' ? resolvedContext.token : undefined,
+  );
 
-  if (authMode === 'required') {
-    finalHeaders.set('Authorization', `Bearer ${resolvedContext.token}`);
-  } else if (authMode === 'public') {
-    finalHeaders.set('Authorization', `Bearer ${publicAnonKey}`);
+  if (authMode === 'none' && !publicAnonKey) {
+    finalHeaders.delete('apikey');
   }
 
   if (body !== undefined && !finalHeaders.has('Content-Type')) {

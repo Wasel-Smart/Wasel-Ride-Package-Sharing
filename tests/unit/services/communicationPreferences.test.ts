@@ -12,6 +12,13 @@ const memoryStorage = (() => {
 
 vi.mock('../../../src/services/core', () => ({
   API_URL: '',
+  createEdgeHeaders: (headers?: HeadersInit, userToken?: string) => {
+    const finalHeaders = new Headers(headers ?? {});
+    if (userToken) {
+      finalHeaders.set('Authorization', `Bearer ${userToken}`);
+    }
+    return finalHeaders;
+  },
   fetchWithRetry: vi.fn(),
   getAuthDetails: vi.fn(),
 }));

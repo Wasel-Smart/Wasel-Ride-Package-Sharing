@@ -30,6 +30,20 @@ export interface AvailabilitySnapshot {
   lastCheckedAt: number | null;
 }
 
+export function createEdgeHeaders(headers?: HeadersInit, userToken?: string): Headers {
+  const finalHeaders = new Headers(headers ?? {});
+
+  if (publicAnonKey && !finalHeaders.has('apikey')) {
+    finalHeaders.set('apikey', publicAnonKey);
+  }
+
+  if (userToken) {
+    finalHeaders.set('Authorization', `Bearer ${userToken}`);
+  }
+
+  return finalHeaders;
+}
+
 type AvailabilityListener = (snapshot: AvailabilitySnapshot) => void;
 
 let edgeFunctionAvailable = Boolean(supabaseClient || API_URL);
@@ -152,7 +166,7 @@ export async function probeBackendHealth(timeout = 8_000): Promise<AvailabilityS
   try {
     const response = await fetch(`${API_URL}/health`, {
       signal: AbortSignal.timeout(timeout),
-      headers: { Authorization: `Bearer ${publicAnonKey}` },
+      headers: createEdgeHeaders(),
     });
 
     if (response.ok) {
@@ -188,7 +202,7 @@ export async function warmUpServer(): Promise<void> {
   try {
     const response = await fetch(`${API_URL}/health`, {
       signal: AbortSignal.timeout(12_000),
-      headers: { Authorization: `Bearer ${publicAnonKey}` },
+      headers: createEdgeHeaders(),
     });
 
     if (response.ok) {
@@ -254,7 +268,9 @@ export async function fetchWithRetry(
   backoff = 500,
 ): Promise<Response> {
   if (!url) {
-    throw new Error('Backend API is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+    throw new Error(
+      'Backend API is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.',
+    );
   }
 
   const {

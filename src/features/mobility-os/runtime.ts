@@ -14,6 +14,7 @@ import {
   type MobilityEventType,
   type MobilitySystemSnapshot,
 } from './model';
+import { buildMobilitySnapshot } from './snapshot';
 
 type EventListener<TType extends MobilityEventType> = (
   event: MobilityEventEnvelope<TType>,
@@ -399,43 +400,11 @@ export class RealtimeGateway {
 
   private buildSnapshot(): MobilitySystemSnapshot {
     const corridors = this.corridorService.buildProjections();
-    const totalSeatsAvailable = corridors.reduce((sum, corridor) => sum + corridor.seats_available, 0);
-    const totalCargoAvailable = corridors.reduce((sum, corridor) => sum + corridor.cargo_available_kg, 0);
-    const averageUtilization = corridors.reduce((sum, corridor) => sum + corridor.utilization, 0) / Math.max(corridors.length, 1);
-    const hottestCorridor = corridors[0]?.corridor.origin && corridors[0]?.corridor.destination
-      ? `${corridors[0].corridor.origin} -> ${corridors[0].corridor.destination}`
-      : '';
-    const seatRevenueRunRate = corridors.reduce(
-      (sum, corridor) => sum + corridor.dynamic_seat_price * Math.max(corridor.corridor.seats_booked, 1),
-      0,
-    );
-    const cargoRevenueRunRate = corridors.reduce(
-      (sum, corridor) => sum + corridor.dynamic_cargo_price * Math.max(corridor.corridor.cargo_booked_kg, 1),
-      0,
-    );
-
-    return {
+    return buildMobilitySnapshot({
       corridors,
-      metrics: {
-        total_seats_available: totalSeatsAvailable,
-        total_cargo_available_kg: totalCargoAvailable,
-        average_utilization: averageUtilization,
-        hottest_corridor: hottestCorridor,
-        seat_revenue_run_rate: roundTo(seatRevenueRunRate, 2),
-        cargo_revenue_run_rate: roundTo(cargoRevenueRunRate, 2),
-        event_latency_target_ms: 200,
-      },
-      recent_events: this.bus.getRecentEvents(),
-      narrative: {
-        platform_statement: 'Mobility OS is a capacity exchange where corridors are market instruments and every screen is a projection of server state.',
-        business_model: [
-          'Monetize both seats and kilos on the same corridor instead of running separate ride and parcel products.',
-          'Use demand-indexed pricing to capture upside when utilization compresses available capacity.',
-          'Compound the moat with recurring enterprise volume, corridor histories, and realtime control of supply allocation.',
-        ],
-      },
-      updated_at: nowIso(),
-    };
+      recentEvents: this.bus.getRecentEvents(),
+      updatedAt: nowIso(),
+    });
   }
 
   connect(listener: SnapshotListener): () => void {

@@ -74,6 +74,16 @@ vi.mock('../../../src/services/core', () => ({
   get publicAnonKey() {
     return mockCoreConfig.publicAnonKey;
   },
+  createEdgeHeaders: (headers?: HeadersInit, userToken?: string) => {
+    const finalHeaders = new Headers(headers ?? {});
+    if (mockCoreConfig.publicAnonKey) {
+      finalHeaders.set('apikey', mockCoreConfig.publicAnonKey);
+    }
+    if (userToken) {
+      finalHeaders.set('Authorization', `Bearer ${userToken}`);
+    }
+    return finalHeaders;
+  },
   fetchWithRetry: (...args: any[]) => mockFetchWithRetry(...args),
   getAuthDetails: vi.fn().mockResolvedValue({ token: 'token-123', userId: 'user-123' }),
   supabase: mockDb,
@@ -248,7 +258,11 @@ describe('walletApi', () => {
       expect.objectContaining({
         method: 'POST',
       }),
+      undefined,
     );
+    const headers = mockFetchWithRetry.mock.calls[0][1].headers as Headers;
+    expect(headers.get('Authorization')).toBe('Bearer token-123');
+    expect(headers.get('apikey')).toBe('anon-key');
     expect(mockRpc).not.toHaveBeenCalled();
   });
 
@@ -281,7 +295,11 @@ describe('walletApi', () => {
       expect.objectContaining({
         method: 'POST',
       }),
+      undefined,
     );
+    const headers = mockFetchWithRetry.mock.calls[0][1].headers as Headers;
+    expect(headers.get('Authorization')).toBe('Bearer token-123');
+    expect(headers.get('apikey')).toBe('anon-key');
   });
 
   it('merges subscription state from the backend when direct wallet reads are used', async () => {

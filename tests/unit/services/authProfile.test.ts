@@ -8,6 +8,14 @@ const mockGetDirectVerificationRecord = vi.fn();
 vi.mock('../../../src/services/core', () => ({
   API_URL: 'https://api.wasel.test',
   publicAnonKey: 'anon-key',
+  createEdgeHeaders: (headers?: HeadersInit, userToken?: string) => {
+    const finalHeaders = new Headers(headers ?? {});
+    finalHeaders.set('apikey', 'anon-key');
+    if (userToken) {
+      finalHeaders.set('Authorization', `Bearer ${userToken}`);
+    }
+    return finalHeaders;
+  },
   fetchWithRetry: (...args: any[]) => mockFetchWithRetry(...args),
   getAuthDetails: () => mockGetAuthDetails(),
   supabase: {

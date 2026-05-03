@@ -21,6 +21,13 @@ vi.mock('../../../src/services/trips', () => ({
 
 vi.mock('../../../src/services/core', () => ({
   API_URL: 'https://test.supabase.co/functions/v1/server',
+  createEdgeHeaders: (headers?: HeadersInit, userToken?: string) => {
+    const finalHeaders = new Headers(headers ?? {});
+    if (userToken) {
+      finalHeaders.set('Authorization', `Bearer ${userToken}`);
+    }
+    return finalHeaders;
+  },
   fetchWithRetry: (...args: any[]) => mockFetchWithRetry(...args),
   getAuthDetails: () => mockGetAuthDetails(),
 }));

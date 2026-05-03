@@ -1,8 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { requestEdgeJson, runBackendWorkflow } from '../../services/backendWorkflow';
 import { supabase } from '../../services/core';
 import type { BookingRequest, MobilitySystemSnapshot } from './model';
 import { mobilityOSRuntime } from './runtime';
+import {
+  MOBILITY_OS_NARRATIVE,
+  applyMobilityEventToSnapshot,
+  normalizeMobilityOutboxRow,
+  type MobilityOutboxRow,
+} from './snapshot';
 
 type ServerBookingResponse = {
   booking_id: string;
@@ -22,14 +28,7 @@ async function fetchMobilityServerSnapshot(): Promise<MobilitySystemSnapshot> {
 
   return {
     ...payload,
-    narrative: {
-      platform_statement: 'Mobility OS is a capacity exchange where corridors are market instruments and every screen is a projection of backend state.',
-      business_model: [
-        'Monetize seats and parcel kilos on the same corridor book.',
-        'Price corridors dynamically as utilization and demand pressure rise.',
-        'Harden route ownership with recurring enterprise and consumer movement on the same lanes.',
-      ],
-    },
+    narrative: MOBILITY_OS_NARRATIVE,
   };
 }
 
@@ -72,59 +71,86 @@ export function useMobilityOSServerState() {
   const [snapshot, setSnapshot] = useState<MobilitySystemSnapshot>(() => mobilityOSRuntime.getSnapshot());
   const [loading, setLoading] = useState(true);
   const [source, setSource] = useState<'server' | 'fallback'>('fallback');
+  const activeRef = useRef(true);
+  const reconcileTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearReconcileTimer = useCallback(() => {
+    if (!reconcileTimerRef.current) {
+      return;
+    }
+
+    clearTimeout(reconcileTimerRef.current);
+    reconcileTimerRef.current = null;
+  }, []);
+
+  const loadSnapshot = useCallback(async () => {
+    try {
+      let usedFallback = false;
+      const next = await runBackendWorkflow<MobilitySystemSnapshot>({
+        operation: 'Load Mobility OS snapshot',
+        authMode: 'required',
+        fallbackPolicy: 'always',
+        edge: async () => fetchMobilityServerSnapshot(),
+        fallback: async () => {
+          usedFallback = true;
+          return fetchFallbackSnapshot();
+        },
+      });
+
+      if (!activeRef.current) return;
+      setSnapshot(next);
+      setSource(usedFallback ? 'fallback' : 'server');
+    } catch {
+      if (!activeRef.current) return;
+      setSnapshot(mobilityOSRuntime.getSnapshot());
+      setSource('fallback');
+    } finally {
+      if (activeRef.current) setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let active = true;
-
-    const refresh = async () => {
-      try {
-        let usedFallback = false;
-        const next = await runBackendWorkflow<MobilitySystemSnapshot>({
-          operation: 'Load Mobility OS snapshot',
-          authMode: 'required',
-          fallbackPolicy: 'always',
-          edge: async () => fetchMobilityServerSnapshot(),
-          fallback: async () => {
-            usedFallback = true;
-            return fetchFallbackSnapshot();
-          },
-        });
-
-        if (!active) return;
-        setSnapshot(next);
-        setSource(usedFallback ? 'fallback' : 'server');
-      } catch {
-        if (!active) return;
-        setSnapshot(mobilityOSRuntime.getSnapshot());
-        setSource('fallback');
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    void refresh();
+    activeRef.current = true;
+    void loadSnapshot();
 
     if (!supabase) {
       return () => {
-        active = false;
+        activeRef.current = false;
+        clearReconcileTimer();
       };
     }
 
     const channel = supabase
       .channel('mobility-os-server-state')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'mobility_corridors' }, () => {
-        void refresh();
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mobility_corridors' }, () => {
+        clearReconcileTimer();
+        void loadSnapshot();
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'mobility_event_outbox' }, () => {
-        void refresh();
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'mobility_corridors' }, () => {
+        clearReconcileTimer();
+        void loadSnapshot();
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mobility_event_outbox' }, (payload) => {
+        const event = normalizeMobilityOutboxRow(payload.new as MobilityOutboxRow);
+        if (!event) {
+          clearReconcileTimer();
+          void loadSnapshot();
+          return;
+        }
+
+        clearReconcileTimer();
+        setSnapshot((current) => applyMobilityEventToSnapshot(current, event));
+        setSource('server');
+        setLoading(false);
       })
       .subscribe();
 
     return () => {
-      active = false;
+      activeRef.current = false;
+      clearReconcileTimer();
       void supabase.removeChannel(channel);
     };
-  }, []);
+  }, [clearReconcileTimer, loadSnapshot]);
 
   const createBooking = async (request: BookingRequest) => {
     let response: ServerBookingResponse;
@@ -145,25 +171,19 @@ export function useMobilityOSServerState() {
       response = await createFallbackBooking(request);
     }
 
-    let nextSnapshot: MobilitySystemSnapshot;
-    try {
-      nextSnapshot = await runBackendWorkflow<MobilitySystemSnapshot>({
-        operation: 'Reload Mobility OS snapshot',
-        authMode: 'required',
-        fallbackPolicy: 'always',
-        edge: async () => fetchMobilityServerSnapshot(),
-        fallback: async () => fetchFallbackSnapshot(),
-      });
-    } catch (error) {
-      if (!isMobilityFallbackEligible(error)) {
-        throw error;
-      }
-
-      nextSnapshot = await fetchFallbackSnapshot();
+    if (response.trace_id.startsWith('local-')) {
+      setSnapshot(await fetchFallbackSnapshot());
+      setSource('fallback');
+      clearReconcileTimer();
+      return response;
     }
 
-    setSnapshot(nextSnapshot);
-    setSource(response.trace_id.startsWith('local-') ? 'fallback' : 'server');
+    setSource('server');
+    clearReconcileTimer();
+    reconcileTimerRef.current = setTimeout(() => {
+      reconcileTimerRef.current = null;
+      void loadSnapshot();
+    }, 1500);
 
     return response;
   };

@@ -7,6 +7,14 @@ const mockGetConfig = vi.fn();
 vi.mock('../../../src/services/core', () => ({
   API_URL: 'https://api.wasel.test',
   publicAnonKey: 'anon-key',
+  createEdgeHeaders: (headers?: HeadersInit, userToken?: string) => {
+    const finalHeaders = new Headers(headers ?? {});
+    finalHeaders.set('apikey', 'anon-key');
+    if (userToken) {
+      finalHeaders.set('Authorization', `Bearer ${userToken}`);
+    }
+    return finalHeaders;
+  },
   fetchWithRetry: (...args: unknown[]) => mockFetchWithRetry(...args),
   getAuthDetails: () => mockGetAuthDetails(),
 }));
@@ -56,6 +64,21 @@ describe('backendWorkflow', () => {
 
     const headers = mockFetchWithRetry.mock.calls[0][1].headers as Headers;
     expect(headers.get('Authorization')).toBe('Bearer token-123');
+    expect(headers.get('apikey')).toBe('anon-key');
+  });
+
+  it('uses the apikey header for public edge requests', async () => {
+    mockFetchWithRetry.mockResolvedValue(response({ ok: true }));
+
+    await requestEdgeJson({
+      path: '/health',
+      authMode: 'public',
+      operation: 'Probe backend health',
+    });
+
+    const headers = mockFetchWithRetry.mock.calls[0][1].headers as Headers;
+    expect(headers.get('apikey')).toBe('anon-key');
+    expect(headers.get('Authorization')).toBeNull();
   });
 
   it('falls back when the edge request fails with a recoverable backend error', async () => {

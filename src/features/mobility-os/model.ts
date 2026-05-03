@@ -91,14 +91,17 @@ export interface MobilityEventPayloadMap {
   };
 }
 
-export interface MobilityEventEnvelope<TType extends MobilityEventType = MobilityEventType> {
-  id: string;
-  type: TType;
-  occurred_at: string;
-  trace_id: string;
-  producer: string;
-  payload: MobilityEventPayloadMap[TType];
-}
+export type MobilityEventEnvelope<TType extends MobilityEventType = MobilityEventType> =
+  TType extends MobilityEventType
+    ? {
+        id: string;
+        type: TType;
+        occurred_at: string;
+        trace_id: string;
+        producer: string;
+        payload: MobilityEventPayloadMap[TType];
+      }
+    : never;
 
 export interface MobilitySystemSnapshot {
   corridors: CorridorProjection[];
