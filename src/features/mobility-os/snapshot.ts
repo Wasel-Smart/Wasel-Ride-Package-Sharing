@@ -134,14 +134,47 @@ export function normalizeMobilityOutboxRow(
     return null;
   }
 
-  return {
+  const baseEvent = {
     id: row.id,
-    type: row.event_type,
     occurred_at: row.occurred_at,
     trace_id: row.trace_id,
     producer: EVENT_PRODUCER_BY_TYPE[row.event_type],
-    payload: row.payload as MobilityEventPayloadMap[typeof row.event_type],
   };
+
+  switch (row.event_type) {
+    case 'BookingCreated':
+      return {
+        ...baseEvent,
+        type: row.event_type,
+        payload: row.payload as MobilityEventPayloadMap['BookingCreated'],
+      };
+    case 'CapacityUpdated':
+      return {
+        ...baseEvent,
+        type: row.event_type,
+        payload: row.payload as MobilityEventPayloadMap['CapacityUpdated'],
+      };
+    case 'DemandUpdated':
+      return {
+        ...baseEvent,
+        type: row.event_type,
+        payload: row.payload as MobilityEventPayloadMap['DemandUpdated'],
+      };
+    case 'PriceRecalculated':
+      return {
+        ...baseEvent,
+        type: row.event_type,
+        payload: row.payload as MobilityEventPayloadMap['PriceRecalculated'],
+      };
+    case 'CorridorUpdated':
+      return {
+        ...baseEvent,
+        type: row.event_type,
+        payload: row.payload as MobilityEventPayloadMap['CorridorUpdated'],
+      };
+    default:
+      return null;
+  }
 }
 
 export function applyMobilityEventToSnapshot(

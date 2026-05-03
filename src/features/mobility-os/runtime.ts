@@ -43,7 +43,7 @@ function createEvent<TType extends MobilityEventType>(
     trace_id: traceId,
     producer,
     payload,
-  };
+  } as MobilityEventEnvelope<TType>;
 }
 
 export class MobilityEventBus {
