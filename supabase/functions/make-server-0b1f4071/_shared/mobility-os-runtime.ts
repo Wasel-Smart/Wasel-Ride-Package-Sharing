@@ -207,6 +207,71 @@ create index if not exists idx_mobility_bookings_corridor_created
 create index if not exists idx_mobility_event_outbox_unpublished
   on public.mobility_event_outbox(published_at)
   where published_at is null;
+
+alter table public.mobility_corridors enable row level security;
+alter table public.mobility_bookings enable row level security;
+alter table public.mobility_event_outbox enable row level security;
+
+drop policy if exists mobility_corridors_authenticated_select on public.mobility_corridors;
+create policy mobility_corridors_authenticated_select
+  on public.mobility_corridors
+  for select
+  to authenticated
+  using (true);
+
+drop policy if exists mobility_event_outbox_authenticated_select on public.mobility_event_outbox;
+create policy mobility_event_outbox_authenticated_select
+  on public.mobility_event_outbox
+  for select
+  to authenticated
+  using (true);
+
+drop policy if exists mobility_bookings_owner_select on public.mobility_bookings;
+create policy mobility_bookings_owner_select
+  on public.mobility_bookings
+  for select
+  to authenticated
+  using (
+    user_id in (
+      select id
+      from public.users
+      where auth_user_id::text = auth.uid()::text
+    )
+  );
+
+do $$
+begin
+  if exists (
+    select 1
+    from pg_publication
+    where pubname = 'supabase_realtime'
+  ) and not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'mobility_corridors'
+  ) then
+    alter publication supabase_realtime add table public.mobility_corridors;
+  end if;
+end $$;
+
+do $$
+begin
+  if exists (
+    select 1
+    from pg_publication
+    where pubname = 'supabase_realtime'
+  ) and not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'mobility_event_outbox'
+  ) then
+    alter publication supabase_realtime add table public.mobility_event_outbox;
+  end if;
+end $$;
 `;
 
 export const MOBILITY_OS_SEED_SQL = `

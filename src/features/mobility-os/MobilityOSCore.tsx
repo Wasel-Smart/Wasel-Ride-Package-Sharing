@@ -108,7 +108,7 @@ function networkPath(projection: CorridorProjection): { from: CityNode; to: City
 }
 
 export default function MobilityOSCore() {
-  const { snapshot, source, createBooking } = useMobilityOSServerState();
+  const { snapshot, loading, source, createBooking } = useMobilityOSServerState();
   const [selectedCorridorId, setSelectedCorridorId] = useState<string>('');
   const [bookingMode, setBookingMode] = useState<BookingType>(INITIAL_MODE);
   const [quantity, setQuantity] = useState(1);
@@ -166,6 +166,11 @@ export default function MobilityOSCore() {
     : 0;
 
   const corridorNodes = selectedCorridor ? networkPath(selectedCorridor) : null;
+  const runtimeModeLabel = source === 'server' ? 'server-backed stream' : 'local fallback runtime';
+  const runtimeModeBody =
+    source === 'server'
+      ? 'Corridor state is being projected from the backend snapshot and realtime table updates.'
+      : 'Backend auth or stream delivery is unavailable, so the page is using the local event runtime without breaking the booking loop.';
 
   const submitBooking = async () => {
     if (!selectedCorridor) return;
@@ -274,8 +279,11 @@ export default function MobilityOSCore() {
                   {subheading('Realtime Projection')}
                   <div style={{ marginTop: 6, fontSize: '1.2rem', fontWeight: 900 }}>Jordan corridor signal field</div>
                 </div>
-                <div style={{ padding: '8px 10px', borderRadius: R.full, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.03)', fontFamily: FM, color: C.green, fontSize: '0.78rem' }}>
-                  {source === 'server' ? 'server-backed stream' : 'local fallback runtime'}
+                <div
+                  data-testid="mobility-os-runtime-chip"
+                  style={{ padding: '8px 10px', borderRadius: R.full, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.03)', fontFamily: FM, color: source === 'server' ? C.green : C.gold, fontSize: '0.78rem' }}
+                >
+                  {runtimeModeLabel}
                 </div>
               </div>
 
@@ -345,6 +353,41 @@ export default function MobilityOSCore() {
                   <div style={{ marginTop: 6, fontWeight: 800 }}>{snapshot.metrics.event_latency_target_ms}ms projection target</div>
                 </div>
               </div>
+
+              <div
+                data-testid="mobility-os-runtime-status"
+                style={{
+                  marginTop: 10,
+                  borderRadius: 18,
+                  border: `1px solid ${source === 'server' ? `${C.green}30` : `${C.gold}30`}`,
+                  background: source === 'server' ? 'rgba(71,214,158,0.08)' : 'rgba(255,190,92,0.08)',
+                  padding: '12px 13px',
+                }}
+              >
+                <div
+                  style={{
+                    color: C.textMuted,
+                    fontSize: '0.72rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.12em',
+                  }}
+                >
+                  Runtime Mode
+                </div>
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontWeight: 900,
+                    color: source === 'server' ? C.green : C.gold,
+                  }}
+                >
+                  {runtimeModeLabel}
+                  {loading ? ' / synchronizing' : ''}
+                </div>
+                <div style={{ marginTop: 6, color: C.textSub, fontSize: '0.83rem', lineHeight: 1.6 }}>
+                  {runtimeModeBody}
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -379,7 +422,7 @@ export default function MobilityOSCore() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: 14 }}>
+            <div data-testid="mobility-os-corridor-book" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: 14 }}>
               {snapshot.corridors.map((projection) => (
                 <CorridorCard
                   key={projection.corridor.id}
@@ -410,10 +453,10 @@ export default function MobilityOSCore() {
                     <div style={{ color: C.textMuted, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                       Selected Instrument
                     </div>
-                    <div style={{ marginTop: 8, fontSize: '1.08rem', fontWeight: 900 }}>
+                    <div data-testid="mobility-os-selected-instrument" style={{ marginTop: 8, fontSize: '1.08rem', fontWeight: 900 }}>
                       {selectedCorridor.corridor.origin} {'->'} {selectedCorridor.corridor.destination}
                     </div>
-                    <div style={{ marginTop: 6, color: C.textSub, fontSize: '0.86rem' }}>
+                    <div data-testid="mobility-os-selected-availability" style={{ marginTop: 6, color: C.textSub, fontSize: '0.86rem' }}>
                       {selectedCorridor.seats_available} seats / {selectedCorridor.cargo_available_kg} kg remain.
                     </div>
                   </div>
@@ -506,6 +549,7 @@ export default function MobilityOSCore() {
                   </div>
 
                   <button
+                    data-testid="mobility-os-booking-submit"
                     type="button"
                     onClick={submitBooking}
                     disabled={!selectedMaxQuantity}
@@ -587,7 +631,7 @@ export default function MobilityOSCore() {
           <section style={panelStyle({ padding: 18, borderRadius: 30 })}>
             {subheading('Event Tape')}
             <div style={{ marginTop: 8, fontSize: '1.22rem', fontWeight: 900 }}>Recent corridor events</div>
-            <div style={{ marginTop: 14, display: 'grid', gap: 10, maxHeight: 460, overflow: 'auto', paddingRight: 6 }}>
+            <div data-testid="mobility-os-event-tape" style={{ marginTop: 14, display: 'grid', gap: 10, maxHeight: 460, overflow: 'auto', paddingRight: 6 }}>
               {snapshot.recent_events.map((event) => (
                 <article key={event.id} style={{ borderRadius: 18, border: `1px solid ${eventTone(event)}30`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>

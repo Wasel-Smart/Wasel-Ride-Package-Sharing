@@ -57,6 +57,17 @@ async function createFallbackBooking(request: BookingRequest): Promise<ServerBoo
   };
 }
 
+function isMobilityFallbackEligible(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return (
+    error.message === 'Not authenticated' ||
+    error.message === 'Supabase client is not initialised'
+  );
+}
+
 export function useMobilityOSServerState() {
   const [snapshot, setSnapshot] = useState<MobilitySystemSnapshot>(() => mobilityOSRuntime.getSnapshot());
   const [loading, setLoading] = useState(true);
@@ -116,21 +127,40 @@ export function useMobilityOSServerState() {
   }, []);
 
   const createBooking = async (request: BookingRequest) => {
-    const response = await runBackendWorkflow<ServerBookingResponse>({
-      operation: 'Create Mobility OS booking',
-      authMode: 'required',
-      fallbackPolicy: 'always',
-      edge: async () => createMobilityServerBooking(request),
-      fallback: async () => createFallbackBooking(request),
-    });
+    let response: ServerBookingResponse;
 
-    const nextSnapshot = await runBackendWorkflow<MobilitySystemSnapshot>({
-      operation: 'Reload Mobility OS snapshot',
-      authMode: 'required',
-      fallbackPolicy: 'always',
-      edge: async () => fetchMobilityServerSnapshot(),
-      fallback: async () => fetchFallbackSnapshot(),
-    });
+    try {
+      response = await runBackendWorkflow<ServerBookingResponse>({
+        operation: 'Create Mobility OS booking',
+        authMode: 'required',
+        fallbackPolicy: 'always',
+        edge: async () => createMobilityServerBooking(request),
+        fallback: async () => createFallbackBooking(request),
+      });
+    } catch (error) {
+      if (!isMobilityFallbackEligible(error)) {
+        throw error;
+      }
+
+      response = await createFallbackBooking(request);
+    }
+
+    let nextSnapshot: MobilitySystemSnapshot;
+    try {
+      nextSnapshot = await runBackendWorkflow<MobilitySystemSnapshot>({
+        operation: 'Reload Mobility OS snapshot',
+        authMode: 'required',
+        fallbackPolicy: 'always',
+        edge: async () => fetchMobilityServerSnapshot(),
+        fallback: async () => fetchFallbackSnapshot(),
+      });
+    } catch (error) {
+      if (!isMobilityFallbackEligible(error)) {
+        throw error;
+      }
+
+      nextSnapshot = await fetchFallbackSnapshot();
+    }
 
     setSnapshot(nextSnapshot);
     setSource(response.trace_id.startsWith('local-') ? 'fallback' : 'server');
