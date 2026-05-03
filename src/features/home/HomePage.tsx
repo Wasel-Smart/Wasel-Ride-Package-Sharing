@@ -6,11 +6,7 @@ import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { useLiveUserStats } from '../../services/liveDataService';
 import { getCorridorDemandLeaders } from '../../services/growthEngine';
 import { CurrencyService } from '../../utils/currency';
-import {
-  C,
-  F,
-  POPULAR_ROUTES,
-} from './HomePageShared';
+import { C, F, POPULAR_ROUTES } from './HomePageShared';
 import {
   CorridorsSection,
   HomeHeroSection,
@@ -34,10 +30,7 @@ export function HomePage() {
 
   const ar = language === 'ar';
   const svc = CurrencyService.getInstance();
-  const firstName =
-    user?.user_metadata?.name?.split(' ')[0] ||
-    user?.email?.split('@')[0] ||
-    '';
+  const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
 
   const quickActions = useMemo<QuickAction[]>(
     () => [
@@ -153,7 +146,7 @@ export function HomePage() {
   const corridorCards = useMemo<CorridorCard[]>(() => {
     const leaders = getCorridorDemandLeaders().slice(0, 3);
     if (leaders.length > 0) {
-      return leaders.map((item) => ({
+      return leaders.map(item => ({
         key: item.corridor,
         title: item.corridor,
         detail: item.serviceLabel,
@@ -166,7 +159,7 @@ export function HomePage() {
       }));
     }
 
-    return POPULAR_ROUTES.slice(0, 3).map((route) => ({
+    return POPULAR_ROUTES.slice(0, 3).map(route => ({
       key: `${route.from}-${route.to}`,
       title: ar ? `${route.fromAr} ← ${route.toAr}` : `${route.from} → ${route.to}`,
       detail: ar
@@ -182,8 +175,7 @@ export function HomePage() {
     ? Math.max(78, Math.min(96, Math.round(72 + liveStats.totalTrips / 5 + liveStats.rating * 2)))
     : 87;
 
-  const primaryTripPath =
-    tripMode === 'round' ? '/find-ride?mode=round' : '/find-ride';
+  const primaryTripPath = tripMode === 'round' ? '/find-ride?mode=round' : '/find-ride';
 
   return (
     <div
@@ -204,10 +196,7 @@ export function HomePage() {
         }}
       />
 
-      <div
-        className="relative z-10 mx-auto px-4 py-8"
-        style={{ maxWidth: 1140 }}
-      >
+      <div className="relative z-10 mx-auto px-4 py-8" style={{ maxWidth: 1140 }}>
         <HomeHeroSection
           ar={ar}
           user={user}
@@ -216,22 +205,11 @@ export function HomePage() {
           onTripModeChange={setTripMode}
           onNavigate={navigate}
           primaryTripPath={primaryTripPath}
-          headlineStats={headlineStats}
-          proofPoints={proofPoints}
-          loading={loading}
         />
 
-        <QuickActionsSection
-          ar={ar}
-          quickActions={quickActions}
-          onNavigate={navigate}
-        />
+        <QuickActionsSection ar={ar} quickActions={quickActions} onNavigate={navigate} />
 
-        <CorridorsSection
-          ar={ar}
-          corridorCards={corridorCards}
-          onNavigate={navigate}
-        />
+        <CorridorsSection ar={ar} corridorCards={corridorCards} onNavigate={navigate} />
 
         {user ? (
           <SignedInUtilitySection
@@ -241,10 +219,7 @@ export function HomePage() {
             trustScore={trustScore}
           />
         ) : (
-          <SignedOutCtaSection
-            ar={ar}
-            onNavigate={navigate}
-          />
+          <SignedOutCtaSection ar={ar} onNavigate={navigate} />
         )}
       </div>
     </div>

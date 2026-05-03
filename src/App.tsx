@@ -4,6 +4,7 @@ import {
   QueryClientProvider,
   onlineManager,
 } from '@tanstack/react-query';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { RouterProvider } from 'react-router';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
@@ -285,6 +286,7 @@ export default function App() {
                   },
                 }}
               />
+              <SpeedInsights />
             </LocalAuthProvider>
           </AuthProvider>
         </LanguageProvider>

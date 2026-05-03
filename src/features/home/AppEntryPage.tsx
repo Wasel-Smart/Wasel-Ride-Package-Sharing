@@ -11,13 +11,18 @@ import {
   Truck,
   Users,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
-import { getFeaturedCorridors, type CorridorOpportunity } from '../../config/wasel-movement-network';
+import {
+  getFeaturedCorridors,
+  type CorridorOpportunity,
+} from '../../config/wasel-movement-network';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { getMovementMembershipSnapshot } from '../../services/movementMembership';
 import { C as DS, F, GRAD, GRAD_GOLD, SH } from '../../utils/wasel-ds';
+import { MobilityOSLandingMap } from './MobilityOSLandingMap';
 
 const C = {
   bg: DS.bg,
@@ -35,96 +40,311 @@ const C = {
 
 const FONT = F;
 
-const SERVICES = [
-  {
-    title: 'Find a ride',
-    detail: 'Grouped seats, cleaner pickup decisions, and less back-and-forth before you book.',
-    icon: Users,
-    tone: DS.cyan,
-    path: '/app/find-ride',
-    signal: 'Live seat waves',
-  },
-  {
-    title: 'Offer a ride',
-    detail: 'Open supply fast, fill seats clearly, and keep route economics visible from the start.',
-    icon: Truck,
-    tone: DS.green,
-    path: '/app/offer-ride',
-    signal: 'Driver-side clarity',
-  },
-  {
-    title: 'Send a package',
-    detail: 'Turn the same corridor into parcel movement without adding a second product to learn.',
-    icon: Package,
-    tone: DS.gold,
-    path: '/app/packages',
-    signal: 'Route-linked parcels',
-  },
-  {
-    title: 'Book a bus',
-    detail: 'Official departures, timing confidence, and a calmer fallback when shared supply is full.',
-    icon: Bus,
-    tone: DS.cyanDark,
-    path: '/app/bus',
-    signal: 'Scheduled departures',
-  },
-] as const;
-
-const PROOF_CARDS = [
-  {
-    title: 'One surface, not four disconnected tools',
-    detail: 'Wasel keeps rides, bus departures, and parcels inside one route logic, so the product feels coherent immediately.',
-    icon: Sparkles,
-    tone: DS.cyan,
-  },
-  {
-    title: 'Route-first decisions',
-    detail: 'The important answer shows up first: where the corridor is moving, what it costs, and how confident the next departure looks.',
-    icon: Route,
-    tone: DS.green,
-  },
-  {
-    title: 'Trust at the point of action',
-    detail: 'Pricing, route behavior, and the next step stay visible before the user commits, which lowers hesitation everywhere.',
-    icon: ShieldCheck,
-    tone: DS.gold,
-  },
-] as const;
-
 function tierLabel(tier: string) {
   return tier.charAt(0).toUpperCase() + tier.slice(1);
 }
 
-function buildRouteStops(corridor?: CorridorOpportunity | null) {
-  if (!corridor) return [];
+function corridorMeta(corridor?: CorridorOpportunity | null) {
+  if (!corridor) {
+    return {
+      fare: '--',
+      savings: '--',
+      pickup: 'Closest active stop',
+      grouping: 'Demand-based grouping',
+    };
+  }
 
-  const labels = [corridor.from, ...(corridor.pickupPoints ?? []).slice(0, 2), corridor.to];
-  const unique = labels.filter((label, index) => label && labels.indexOf(label) === index).slice(0, 4);
-
-  return unique.map((label, index) => ({
-    label,
-    role: index === 0 ? 'Origin' : index === unique.length - 1 ? 'Arrival' : 'Pickup',
-  }));
+  return {
+    fare: `${corridor.sharedPriceJod} JOD`,
+    savings: `${corridor.savingsPercent}%`,
+    pickup: corridor.pickupPoints?.[0] ?? 'Closest active stop',
+    grouping: corridor.autoGroupWindow,
+  };
 }
 
 export default function AppEntryPage() {
   const { user } = useLocalAuth();
   const navigate = useIframeSafeNavigate();
+  const { language, dir } = useLanguage();
   const corridors = useMemo(() => getFeaturedCorridors(3), []);
   const membership = useMemo(() => getMovementMembershipSnapshot(), []);
 
-  const primaryLabel = user ? 'Open the network' : 'Get started';
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById('root');
+
+    const prevHtmlHeight = html.style.height;
+    const prevBodyHeight = body.style.height;
+    const prevRootHeight = root?.style.height ?? '';
+    const prevRootMinHeight = root?.style.minHeight ?? '';
+
+    html.style.height = 'auto';
+    body.style.height = 'auto';
+
+    if (root) {
+      root.style.height = 'auto';
+      root.style.minHeight = '100vh';
+    }
+
+    return () => {
+      html.style.height = prevHtmlHeight;
+      body.style.height = prevBodyHeight;
+
+      if (root) {
+        root.style.height = prevRootHeight;
+        root.style.minHeight = prevRootMinHeight;
+      }
+    };
+  }, []);
+
+  const ar = language === 'ar';
+  const primaryLabel = user
+    ? ar
+      ? 'افتح الشبكة'
+      : 'Open the network'
+    : ar
+      ? 'ابدأ الآن'
+      : 'Get started';
   const primaryPath = user ? '/app' : '/app/auth?returnTo=/app';
 
   const spotlightCorridor = membership.dailyRoute ?? corridors[0];
   const corridorCards = spotlightCorridor
-    ? [spotlightCorridor, ...corridors.filter((corridor) => corridor.id !== spotlightCorridor.id)].slice(0, 3)
+    ? [
+        spotlightCorridor,
+        ...corridors.filter(corridor => corridor.id !== spotlightCorridor.id),
+      ].slice(0, 3)
     : corridors;
-  const routeLayers = spotlightCorridor?.movementLayers?.slice(0, 3) ?? [];
-  const routeStops = buildRouteStops(spotlightCorridor);
+
+  const heroCopy = ar
+    ? {
+        topbarEyebrow: 'طبقة الحركة في الأردن',
+        topbarBody: 'مسار واحد يربط الرحلات والطرود وخط الباص.',
+        topbarPill: 'حركة مصممة للأردن',
+        heroBadge: 'مسار واحد، حركات متعددة',
+        heroTitleA: 'مسار واحد،',
+        heroTitleB: 'لكل حركة.',
+        heroBody:
+          'افتح نفس الممر ثم قرر: احجز مقعداً، اعرض مقعداً، أرسل طرداً، أو انتقل إلى الباص بدون تبديل المنطق.',
+        secondaryCta: 'اطلع على رحلات الباص',
+        stats: [
+          { value: `${membership.movementCredits}`, label: 'الرصيد', tone: C.cyanSoft },
+          { value: `${membership.streakDays}d`, label: 'التتابع', tone: C.green },
+          { value: tierLabel(membership.loyaltyTier), label: 'الفئة', tone: C.gold },
+        ],
+        mapEyebrow: 'خريطة Mobility OS',
+        mapTitle: 'الذكاء يظهر على المسار نفسه',
+        mapBody:
+          'بدلاً من بطاقة شرح ثابتة، يرى المستخدم سطحاً حياً يوضح كيف تتحرك الرحلات والتسليمات عبر الأردن.',
+        corridorLabel: 'ممر اليوم',
+        fareLabel: 'السعر المشترك',
+        savingsLabel: 'التوفير',
+        pickupLabel: 'نقطة الالتقاط',
+        groupingLabel: 'التجميع',
+        servicesEyebrow: 'الخدمات الأساسية',
+        servicesTitle: 'كل إجراء يجب أن يشعر أنه من نفس المنتج.',
+        servicesBody:
+          'الواجهة تبقى متمحورة حول المسار في كل وضع، لذلك يتنقل المستخدم بين الركوب والعرض والطرود والباص بدون فقدان السياق.',
+        proofEyebrow: 'لماذا يهبط هذا بسرعة',
+        proofTitle: 'الصفحة تشرح النظام في مرور واحد.',
+        proofBody:
+          'الشاشة الأولى تقود بالممر نفسه، ثم تأتي بقية البطاقات لتقوي الفهم بدلاً من منافسة البطل.',
+        corridorsEyebrow: 'الممرات الحية',
+        corridorsTitle: 'المسارات المحددة تجعل المنتج واقعياً.',
+        corridorsBody:
+          'بعد أن يفهم الزائر الفكرة من الخريطة، يرى كيف يتحول ذلك إلى ممرات فعلية قابلة للفتح مباشرة.',
+        routeFocus: 'تركيز اليوم',
+        routeFocusBody:
+          'عندما يعود الناس إلى نفس الممر، تصبح الحركة المشتركة عادة لا تجربة معزولة.',
+        finalEyebrow: 'الخطوة التالية',
+        finalTitle: 'ابدأ من المسار ثم دع النمط يتبع.',
+        finalBody: 'هذا هو الفرق بين صفحة تبدو جيدة وصفحة تشرح المنتج فوراً.',
+        finalCta: 'افتح واصل',
+        openService: 'افتح الخدمة',
+        openCorridor: 'استكشف هذا الممر',
+        belowSolo: 'أقل من الخيار الفردي',
+        serviceCards: [
+          {
+            title: 'ابحث عن رحلة',
+            detail: 'مقاعد مجمعة ونقاط التقاط أوضح وقرار أسرع قبل الحجز.',
+            icon: Users,
+            tone: DS.cyan,
+            path: '/app/find-ride',
+            signal: 'موجات المقاعد الحية',
+          },
+          {
+            title: 'اعرض رحلة',
+            detail: 'افتح العرض بسرعة واملأ المقاعد مع اقتصاد واضح للمسار.',
+            icon: Truck,
+            tone: DS.green,
+            path: '/app/offer-ride',
+            signal: 'وضوح السائق',
+          },
+          {
+            title: 'أرسل طرداً',
+            detail: 'حوّل نفس الممر إلى حركة طرود بدون منتج منفصل.',
+            icon: Package,
+            tone: DS.gold,
+            path: '/app/packages',
+            signal: 'طرود مرتبطة بالمسار',
+          },
+          {
+            title: 'احجز باص',
+            detail: 'مغادرات رسمية وخيار هادئ عندما تمتلئ المشاركة.',
+            icon: Bus,
+            tone: DS.cyanDark,
+            path: '/app/bus',
+            signal: 'مغادرات مجدولة',
+          },
+        ],
+        proofCards: [
+          {
+            title: 'سطح واحد لا أربع أدوات منفصلة',
+            detail:
+              'واصل يبقي الركوب والباص والطرود داخل منطق مسار واحد، لذلك يشعر المنتج بالتماسك فوراً.',
+            icon: Sparkles,
+            tone: DS.cyan,
+          },
+          {
+            title: 'القرار يبدأ من الممر',
+            detail:
+              'الإجابة المهمة تظهر أولاً: أين يتحرك الممر، ما تكلفته، ومدى ثقة المغادرة التالية.',
+            icon: Route,
+            tone: DS.green,
+          },
+          {
+            title: 'الثقة عند نقطة الفعل',
+            detail: 'السعر وسلوك المسار والخطوة التالية تبقى مرئية قبل الالتزام، وهذا يقلل التردد.',
+            icon: ShieldCheck,
+            tone: DS.gold,
+          },
+        ],
+      }
+    : {
+        topbarEyebrow: 'Jordan mobility layer',
+        topbarBody: 'One route graph for rides, parcels, and bus planning.',
+        topbarPill: 'Jordan-first mobility',
+        heroBadge: 'One corridor, every mode',
+        heroTitleA: 'One corridor,',
+        heroTitleB: 'every move.',
+        heroBody:
+          'Open the same route and decide from there: book a seat, offer one, send a parcel, or fall back to the bus without changing mental models.',
+        secondaryCta: 'See bus departures',
+        stats: [
+          { value: `${membership.movementCredits}`, label: 'Credits', tone: C.cyanSoft },
+          { value: `${membership.streakDays}d`, label: 'Streak', tone: C.green },
+          { value: tierLabel(membership.loyaltyTier), label: 'Tier', tone: C.gold },
+        ],
+        mapEyebrow: 'Mobility OS field',
+        mapTitle: 'The intelligence should show up on the route itself',
+        mapBody:
+          'Instead of a static explanation card, users see a live surface that makes ride and parcel movement across Jordan feel coordinated.',
+        corridorLabel: 'Daily corridor',
+        fareLabel: 'Shared fare',
+        savingsLabel: 'Savings',
+        pickupLabel: 'Pickup anchor',
+        groupingLabel: 'Auto-group',
+        servicesEyebrow: 'Core services',
+        servicesTitle: 'Every action should feel like the same product.',
+        servicesBody:
+          'The interface stays corridor-first across all four modes, so users can move between rides, supply, parcels, and buses without losing context.',
+        proofEyebrow: 'Why this lands fast',
+        proofTitle: 'The page should explain the system in one pass.',
+        proofBody:
+          'The first screen now leads with the live field, and the supporting sections reinforce that logic instead of repeating it.',
+        corridorsEyebrow: 'Live corridors',
+        corridorsTitle: 'Specific routes make the product feel real.',
+        corridorsBody:
+          'Once the map makes the operating model legible, these cards show how that turns into real corridors users can open immediately.',
+        routeFocus: 'Daily route focus',
+        routeFocusBody: 'Shared movement compounds when the same corridor stays easy to reopen.',
+        finalEyebrow: 'Fast next step',
+        finalTitle: 'Start with the corridor, then let the mode follow.',
+        finalBody:
+          'That is the difference between a landing page that only looks polished and one that explains the product at a glance.',
+        finalCta: 'Launch Wasel',
+        openService: 'Open service',
+        openCorridor: 'Explore this corridor',
+        belowSolo: 'below solo reference',
+        serviceCards: [
+          {
+            title: 'Find a ride',
+            detail:
+              'Grouped seats, cleaner pickup decisions, and less back-and-forth before you book.',
+            icon: Users,
+            tone: DS.cyan,
+            path: '/app/find-ride',
+            signal: 'Live seat waves',
+          },
+          {
+            title: 'Offer a ride',
+            detail:
+              'Open supply fast, fill seats clearly, and keep route economics visible from the start.',
+            icon: Truck,
+            tone: DS.green,
+            path: '/app/offer-ride',
+            signal: 'Driver-side clarity',
+          },
+          {
+            title: 'Send a package',
+            detail:
+              'Turn the same corridor into parcel movement without adding a second product to learn.',
+            icon: Package,
+            tone: DS.gold,
+            path: '/app/packages',
+            signal: 'Route-linked parcels',
+          },
+          {
+            title: 'Book a bus',
+            detail:
+              'Official departures, timing confidence, and a calmer fallback when shared supply is full.',
+            icon: Bus,
+            tone: DS.cyanDark,
+            path: '/app/bus',
+            signal: 'Scheduled departures',
+          },
+        ],
+        proofCards: [
+          {
+            title: 'One surface, not four disconnected tools',
+            detail:
+              'Wasel keeps rides, bus departures, and parcels inside one corridor logic, so the product feels coherent immediately.',
+            icon: Sparkles,
+            tone: DS.cyan,
+          },
+          {
+            title: 'Route-first decisions',
+            detail:
+              'The important answer shows up first: where the corridor is moving, what it costs, and how confident the next departure looks.',
+            icon: Route,
+            tone: DS.green,
+          },
+          {
+            title: 'Trust at the point of action',
+            detail:
+              'Pricing, route behavior, and the next step stay visible before the user commits, which lowers hesitation everywhere.',
+            icon: ShieldCheck,
+            tone: DS.gold,
+          },
+        ],
+      };
+
+  const meta = corridorMeta(spotlightCorridor);
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: FONT, position: 'relative', overflowX: 'hidden' }}>
+    <div
+      dir={dir}
+      style={{
+        minHeight: '100vh',
+        background: C.bg,
+        color: C.text,
+        fontFamily: FONT,
+        position: 'relative',
+        overflowX: 'hidden',
+      }}
+    >
       <style>{`
         :root { color-scheme: dark; }
         @media (max-width: 1140px) {
@@ -133,7 +353,8 @@ export default function AppEntryPage() {
           .landing-corridor-grid {
             grid-template-columns: 1fr !important;
           }
-          .landing-service-grid {
+          .landing-service-grid,
+          .landing-meta-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           }
         }
@@ -142,22 +363,26 @@ export default function AppEntryPage() {
           .landing-proof-grid,
           .landing-corridor-grid,
           .landing-stats-grid,
-          .landing-route-track,
-          .landing-signal-grid {
+          .landing-meta-grid {
             grid-template-columns: 1fr !important;
           }
-          .landing-cta {
+          .landing-cta,
+          .landing-topbar,
+          .landing-section-head {
             flex-direction: column !important;
             align-items: stretch !important;
           }
-          .landing-topbar {
-            align-items: flex-start !important;
+          .landing-hero-copy,
+          .landing-hero-map-shell,
+          .landing-corridor-shell {
+            padding: 22px !important;
+            border-radius: 28px !important;
           }
           .landing-hero-title {
-            font-size: clamp(2.7rem, 15vw, 4.35rem) !important;
+            font-size: clamp(2.7rem, 15vw, 4.1rem) !important;
           }
-          .landing-route-line {
-            display: none !important;
+          .landing-hero-map-caption {
+            max-width: none !important;
           }
         }
       `}</style>
@@ -193,20 +418,41 @@ export default function AppEntryPage() {
         }}
       />
 
-      <div style={{ position: 'relative', maxWidth: 1240, margin: '0 auto', padding: '32px 24px 88px' }}>
+      <div
+        style={{
+          position: 'relative',
+          maxWidth: 1240,
+          margin: '0 auto',
+          padding: '32px 24px 88px',
+        }}
+      >
         <motion.div
           className="landing-topbar"
           initial={false}
-          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 20,
+            flexWrap: 'wrap',
+          }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <WaselLogo size={44} theme="light" />
             <div>
-              <div style={{ fontSize: '0.74rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.cyan }}>
-                Jordan mobility layer
+              <div
+                style={{
+                  fontSize: '0.74rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  color: C.cyan,
+                }}
+              >
+                {heroCopy.topbarEyebrow}
               </div>
-              <div style={{ color: C.soft, fontSize: '0.88rem' }}>
-                One route graph for rides, parcels, and bus planning.
+              <div style={{ color: C.soft, fontSize: '0.88rem', maxWidth: 420 }}>
+                {heroCopy.topbarBody}
               </div>
             </div>
           </div>
@@ -225,12 +471,22 @@ export default function AppEntryPage() {
               letterSpacing: '0.05em',
             }}
           >
-            Jordan-first mobility
+            {heroCopy.topbarPill}
           </span>
         </motion.div>
 
-        <div className="landing-hero-grid" style={{ display: 'grid', gridTemplateColumns: '0.98fr 1.02fr', gap: 28, alignItems: 'stretch', marginTop: 34 }}>
+        <div
+          className="landing-hero-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '0.94fr 1.06fr',
+            gap: 28,
+            alignItems: 'stretch',
+            marginTop: 34,
+          }}
+        >
           <motion.div
+            className="landing-hero-copy"
             initial={false}
             style={{
               borderRadius: 36,
@@ -247,34 +503,32 @@ export default function AppEntryPage() {
               style={{
                 position: 'absolute',
                 inset: 0,
-                background: 'linear-gradient(135deg, rgba(88,221,255,0.08), rgba(255,190,92,0.03) 50%, rgba(71,214,158,0.08))',
+                background:
+                  'linear-gradient(135deg, rgba(88,221,255,0.08), rgba(255,190,92,0.03) 50%, rgba(71,214,158,0.08))',
                 pointerEvents: 'none',
               }}
             />
 
             <div style={{ position: 'relative' }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '8px 14px',
-                    borderRadius: 9999,
-                    background: 'rgba(88,221,255,0.1)',
-                    border: `1px solid ${C.border}`,
-                    color: C.cyanSoft,
-                    fontSize: '0.76rem',
-                    fontWeight: 900,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  <Sparkles size={14} />
-                  One road, many moves
-                </span>
-
-              </div>
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 14px',
+                  borderRadius: 9999,
+                  background: 'rgba(88,221,255,0.1)',
+                  border: `1px solid ${C.border}`,
+                  color: C.cyanSoft,
+                  fontSize: '0.76rem',
+                  fontWeight: 900,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                <Sparkles size={14} />
+                {heroCopy.heroBadge}
+              </span>
 
               <h1
                 className="landing-hero-title"
@@ -290,24 +544,42 @@ export default function AppEntryPage() {
                 <span
                   style={{
                     display: 'block',
-                    background: 'linear-gradient(135deg, #FFFFFF 0%, #D2F7FF 25%, #67E8FF 58%, #6BF0C8 100%)',
+                    background:
+                      'linear-gradient(135deg, #FFFFFF 0%, #D2F7FF 25%, #67E8FF 58%, #6BF0C8 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
                   }}
                 >
-                  One road,
+                  {heroCopy.heroTitleA}
                 </span>
                 <span style={{ display: 'block', color: C.text, marginTop: 10 }}>
-                  many moves.
+                  {heroCopy.heroTitleB}
                 </span>
               </h1>
 
-              <p style={{ maxWidth: 560, fontSize: '1rem', lineHeight: 1.8, color: C.muted, margin: 0 }}>
-                Open one corridor. Ride it, ship on it, or fall back to the bus line around it.
+              <p
+                style={{
+                  maxWidth: 560,
+                  fontSize: '1rem',
+                  lineHeight: 1.8,
+                  color: C.muted,
+                  margin: 0,
+                }}
+              >
+                {heroCopy.heroBody}
               </p>
 
-              <div className="landing-cta" style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 28, flexWrap: 'wrap' }}>
+              <div
+                className="landing-cta"
+                style={{
+                  display: 'flex',
+                  gap: 14,
+                  alignItems: 'center',
+                  marginTop: 28,
+                  flexWrap: 'wrap',
+                }}
+              >
                 <button
                   onClick={() => navigate(primaryPath)}
                   style={{
@@ -345,16 +617,20 @@ export default function AppEntryPage() {
                     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
                   }}
                 >
-                  See bus departures
+                  {heroCopy.secondaryCta}
                 </button>
               </div>
 
-              <div className="landing-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginTop: 22 }}>
-                {[
-                  { value: `${membership.movementCredits}`, label: 'Credits', tone: C.cyanSoft },
-                  { value: `${membership.streakDays}d`, label: 'Streak', tone: C.green },
-                  { value: tierLabel(membership.loyaltyTier), label: 'Tier', tone: C.gold },
-                ].map((item) => (
+              <div
+                className="landing-stats-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gap: 10,
+                  marginTop: 22,
+                }}
+              >
+                {heroCopy.stats.map(item => (
                   <div
                     key={item.label}
                     style={{
@@ -364,8 +640,26 @@ export default function AppEntryPage() {
                       border: `1px solid ${C.borderSoft}`,
                     }}
                   >
-                    <div style={{ color: C.soft, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
-                    <div style={{ marginTop: 6, fontSize: '1rem', fontWeight: 900, color: item.tone }}>{item.value}</div>
+                    <div
+                      style={{
+                        color: C.soft,
+                        fontSize: '0.68rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                      }}
+                    >
+                      {item.label}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 6,
+                        fontSize: '1rem',
+                        fontWeight: 900,
+                        color: item.tone,
+                      }}
+                    >
+                      {item.value}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -373,230 +667,219 @@ export default function AppEntryPage() {
           </motion.div>
 
           <motion.div
+            className="landing-hero-map-shell"
             initial={false}
             style={{
               borderRadius: 36,
-              padding: 26,
+              padding: 24,
               background: 'linear-gradient(180deg, rgba(16,37,58,0.97), rgba(6,19,31,0.98))',
               border: `1px solid ${C.border}`,
               boxShadow: SH.xl,
+              display: 'grid',
+              gap: 16,
+              alignContent: 'start',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-              <div>
-                <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.cyan }}>
-                  Route thread
-                </div>
-                <div style={{ marginTop: 8, fontSize: '1.58rem', fontWeight: 900, lineHeight: 1.02 }}>
-                  {spotlightCorridor?.label ?? 'Live corridor'}
-                </div>
-                <div style={{ marginTop: 8, color: C.muted, lineHeight: 1.7, fontSize: '0.92rem', maxWidth: 440 }}>
-                  The whole product should make sense from one corridor.
-                </div>
-              </div>
-
-              <div
-                style={{
-                  minWidth: 154,
-                  borderRadius: 20,
-                  padding: '14px 16px',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${C.borderSoft}`,
-                }}
-              >
-                <div style={{ color: C.soft, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.09em' }}>Shared fare</div>
-                <div style={{ marginTop: 6, fontSize: '1.38rem', fontWeight: 950, color: C.gold }}>{spotlightCorridor?.sharedPriceJod ?? '--'} JOD</div>
-                <div style={{ marginTop: 4, color: C.soft, fontSize: '0.78rem' }}>{spotlightCorridor?.savingsPercent ?? '--'}% below solo reference</div>
-              </div>
-            </div>
-
             <div
+              className="landing-section-head"
               style={{
-                marginTop: 20,
-                borderRadius: 28,
-                padding: '22px 20px 18px',
-                background: 'linear-gradient(180deg, rgba(88,221,255,0.08), rgba(255,255,255,0.02))',
-                border: `1px solid ${C.border}`,
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'radial-gradient(circle at 18% 20%, rgba(88,221,255,0.18), transparent 26%), radial-gradient(circle at 82% 78%, rgba(255,190,92,0.12), transparent 24%)',
-                  pointerEvents: 'none',
-                }}
-              />
-
-              <div style={{ position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <div style={{ color: C.cyanSoft, fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                    Route thread
-                  </div>
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      padding: '7px 12px',
-                      borderRadius: 9999,
-                      background: 'rgba(255,255,255,0.05)',
-                      border: `1px solid ${C.borderSoft}`,
-                      color: C.soft,
-                      fontSize: '0.74rem',
-                      fontWeight: 800,
-                    }}
-                  >
-                    Daily route active
-                  </span>
-                </div>
-
-                <div style={{ marginTop: 10, color: C.soft, fontSize: '0.82rem', lineHeight: 1.6 }}>
-                  {routeLayers.length > 0 ? routeLayers.join(' | ') : 'Riders | parcels | daily errands'}
-                </div>
-
-                <div style={{ position: 'relative', marginTop: 18 }}>
-                  <div
-                    className="landing-route-line"
-                    aria-hidden="true"
-                    style={{
-                      position: 'absolute',
-                      left: '9%',
-                      right: '9%',
-                      top: 52,
-                      height: 2,
-                      background: 'linear-gradient(90deg, rgba(88,221,255,0.16), rgba(255,190,92,0.26), rgba(71,214,158,0.16))',
-                    }}
-                  />
-
-                  <div
-                    className="landing-route-track"
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: `repeat(${Math.max(routeStops.length, 1)}, minmax(0, 1fr))`,
-                      gap: 12,
-                    }}
-                  >
-                    {routeStops.map((stop, index) => (
-                      <div
-                        key={`${stop.role}-${stop.label}`}
-                        style={{
-                          position: 'relative',
-                          zIndex: 1,
-                          borderRadius: 22,
-                          padding: '12px 12px 13px',
-                          background: index === 0 ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.045)',
-                          border: `1px solid ${index === routeStops.length - 1 ? 'rgba(255,190,92,0.2)' : C.borderSoft}`,
-                          minHeight: 92,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: 9999,
-                            background: index === routeStops.length - 1 ? C.gold : index === 0 ? C.cyan : C.green,
-                            boxShadow: index === routeStops.length - 1 ? SH.gold : SH.cyan,
-                            marginBottom: 14,
-                          }}
-                        />
-                        <div style={{ color: C.soft, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.09em' }}>{stop.role}</div>
-                        <div style={{ marginTop: 6, fontWeight: 900, lineHeight: 1.2, fontSize: '0.92rem' }}>{stop.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="landing-signal-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 18 }}>
-                  {[
-                    {
-                      icon: Clock3,
-                      label: 'Auto-group',
-                      value: spotlightCorridor?.autoGroupWindow ?? 'Demand-based grouping',
-                    },
-                    {
-                      icon: MapPinned,
-                      label: 'Pickup anchor',
-                      value: spotlightCorridor?.pickupPoints?.[0] ?? 'Closest active stop',
-                    },
-                  ].map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <div
-                        key={item.label}
-                        style={{
-                          borderRadius: 18,
-                          padding: '12px 12px 11px',
-                          background: 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${C.borderSoft}`,
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: C.cyanSoft, fontSize: '0.74rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                          <Icon size={14} />
-                          {item.label}
-                        </div>
-                        <div style={{ marginTop: 8, color: C.muted, fontSize: '0.84rem', lineHeight: 1.6 }}>{item.value}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                marginTop: 14,
-                borderRadius: 20,
-                padding: '12px 14px',
-                background: 'rgba(255,255,255,0.03)',
-                border: `1px solid ${C.borderSoft}`,
                 display: 'flex',
-                gap: 10,
+                justifyContent: 'space-between',
+                gap: 14,
+                alignItems: 'flex-start',
                 flexWrap: 'wrap',
               }}
             >
-              {[
-                { label: membership.plusActive ? 'Plus active' : 'Starter ready', value: tierLabel(membership.loyaltyTier), color: C.gold },
-                { label: 'Credits', value: `${membership.movementCredits}`, color: C.cyanSoft },
-                { label: 'Streak', value: `${membership.streakDays}d`, color: C.green },
-              ].map((item) => (
+              <div>
                 <div
-                  key={`${item.label}-${item.value}`}
                   style={{
-                    flex: '1 1 120px',
-                    borderRadius: 16,
-                    padding: '10px 12px',
-                    background: 'rgba(255,255,255,0.025)',
-                    border: `1px solid ${C.borderSoft}`,
+                    fontSize: '0.76rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    color: C.cyan,
                   }}
                 >
-                  <div style={{ color: C.soft, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
-                  <div style={{ marginTop: 5, color: item.color, fontWeight: 900, fontSize: '0.9rem' }}>{item.value}</div>
+                  {heroCopy.mapEyebrow}
                 </div>
-              ))}
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: '1.5rem',
+                    fontWeight: 900,
+                    lineHeight: 1.06,
+                    maxWidth: 520,
+                  }}
+                >
+                  {heroCopy.mapTitle}
+                </div>
+              </div>
+
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '8px 12px',
+                  borderRadius: 9999,
+                  background: 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${C.borderSoft}`,
+                  color: C.soft,
+                  fontSize: '0.74rem',
+                  fontWeight: 800,
+                }}
+              >
+                {spotlightCorridor?.label ?? 'Jordan corridor'}
+              </span>
+            </div>
+
+            <div
+              className="landing-hero-map-caption"
+              style={{
+                color: C.muted,
+                lineHeight: 1.7,
+                fontSize: '0.92rem',
+                maxWidth: 600,
+              }}
+            >
+              {heroCopy.mapBody}
+            </div>
+
+            <MobilityOSLandingMap />
+
+            <div
+              className="landing-meta-grid"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                gap: 10,
+              }}
+            >
+              {[
+                {
+                  icon: Route,
+                  label: heroCopy.corridorLabel,
+                  value: spotlightCorridor?.label ?? 'Amman -> Irbid',
+                  tone: C.cyanSoft,
+                },
+                {
+                  icon: Sparkles,
+                  label: heroCopy.fareLabel,
+                  value: meta.fare,
+                  tone: C.gold,
+                },
+                {
+                  icon: Clock3,
+                  label: heroCopy.groupingLabel,
+                  value: meta.grouping,
+                  tone: C.green,
+                },
+                {
+                  icon: MapPinned,
+                  label: heroCopy.pickupLabel,
+                  value: meta.pickup,
+                  tone: C.cyanSoft,
+                },
+              ].map(item => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.label}
+                    style={{
+                      borderRadius: 18,
+                      padding: '12px 13px',
+                      background: 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${C.borderSoft}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        color: item.tone,
+                        fontSize: '0.7rem',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                      }}
+                    >
+                      <Icon size={13} />
+                      {item.label}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 8,
+                        fontWeight: 850,
+                        lineHeight: 1.45,
+                        fontSize: '0.86rem',
+                        color: C.text,
+                      }}
+                    >
+                      {item.value}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
         </div>
 
-        <motion.div initial={false} style={{ marginTop: 32 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'end', flexWrap: 'wrap' }}>
+        <motion.div initial={false} style={{ marginTop: 34 }}>
+          <div
+            className="landing-section-head"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 16,
+              alignItems: 'end',
+              flexWrap: 'wrap',
+            }}
+          >
             <div>
-              <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.gold }}>
-                Core services
+              <div
+                style={{
+                  fontSize: '0.76rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: C.gold,
+                }}
+              >
+                {heroCopy.servicesEyebrow}
               </div>
-              <h2 style={{ margin: '10px 0 0', fontSize: 'clamp(1.8rem, 3vw, 2.7rem)', lineHeight: 1.02, letterSpacing: '-0.05em' }}>
-                Every action should feel like the same product.
+              <h2
+                style={{
+                  margin: '10px 0 0',
+                  fontSize: 'clamp(1.8rem, 3vw, 2.7rem)',
+                  lineHeight: 1.02,
+                  letterSpacing: '-0.05em',
+                }}
+              >
+                {heroCopy.servicesTitle}
               </h2>
             </div>
-            <div style={{ maxWidth: 430, color: C.muted, lineHeight: 1.75, fontSize: '0.94rem' }}>
-              The interface stays route-first across all four modes, so users can switch context without losing their place.
+            <div
+              style={{
+                maxWidth: 430,
+                color: C.muted,
+                lineHeight: 1.75,
+                fontSize: '0.94rem',
+              }}
+            >
+              {heroCopy.servicesBody}
             </div>
           </div>
 
-          <div className="landing-service-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16, marginTop: 18 }}>
-            {SERVICES.map((service) => {
+          <div
+            className="landing-service-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+              gap: 16,
+              marginTop: 18,
+            }}
+          >
+            {heroCopy.serviceCards.map(service => {
               const Icon = service.icon;
               return (
                 <button
@@ -613,8 +896,25 @@ export default function AppEntryPage() {
                     boxShadow: SH.card,
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'start' }}>
-                    <div style={{ width: 46, height: 46, borderRadius: 16, display: 'grid', placeItems: 'center', background: `${service.tone}14`, border: `1px solid ${service.tone}28` }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: 10,
+                      alignItems: 'start',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 46,
+                        height: 46,
+                        borderRadius: 16,
+                        display: 'grid',
+                        placeItems: 'center',
+                        background: `${service.tone}14`,
+                        border: `1px solid ${service.tone}28`,
+                      }}
+                    >
                       <Icon size={19} color={service.tone} />
                     </div>
                     <span
@@ -635,11 +935,39 @@ export default function AppEntryPage() {
                     </span>
                   </div>
 
-                  <div style={{ marginTop: 18, fontWeight: 900, fontSize: '1.06rem', lineHeight: 1.18 }}>{service.title}</div>
-                  <div style={{ marginTop: 9, color: C.muted, fontSize: '0.88rem', lineHeight: 1.74 }}>{service.detail}</div>
+                  <div
+                    style={{
+                      marginTop: 18,
+                      fontWeight: 900,
+                      fontSize: '1.06rem',
+                      lineHeight: 1.18,
+                    }}
+                  >
+                    {service.title}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 9,
+                      color: C.muted,
+                      fontSize: '0.88rem',
+                      lineHeight: 1.74,
+                    }}
+                  >
+                    {service.detail}
+                  </div>
 
-                  <div style={{ marginTop: 18, display: 'inline-flex', alignItems: 'center', gap: 8, color: service.tone, fontWeight: 800, fontSize: '0.84rem' }}>
-                    Open service
+                  <div
+                    style={{
+                      marginTop: 18,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      color: service.tone,
+                      fontWeight: 800,
+                      fontSize: '0.84rem',
+                    }}
+                  >
+                    {heroCopy.openService}
                     <ArrowRight size={15} />
                   </div>
                 </button>
@@ -648,23 +976,62 @@ export default function AppEntryPage() {
           </div>
         </motion.div>
 
-        <motion.div initial={false} style={{ marginTop: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'end', flexWrap: 'wrap' }}>
+        <motion.div initial={false} style={{ marginTop: 28 }}>
+          <div
+            className="landing-section-head"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 16,
+              alignItems: 'end',
+              flexWrap: 'wrap',
+            }}
+          >
             <div>
-              <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.cyan }}>
-                Why this lands fast
+              <div
+                style={{
+                  fontSize: '0.76rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: C.cyan,
+                }}
+              >
+                {heroCopy.proofEyebrow}
               </div>
-              <h2 style={{ margin: '10px 0 0', fontSize: 'clamp(1.65rem, 2.8vw, 2.4rem)', lineHeight: 1.04, letterSpacing: '-0.045em' }}>
-                The page explains the system in one pass.
+              <h2
+                style={{
+                  margin: '10px 0 0',
+                  fontSize: 'clamp(1.65rem, 2.8vw, 2.4rem)',
+                  lineHeight: 1.04,
+                  letterSpacing: '-0.045em',
+                }}
+              >
+                {heroCopy.proofTitle}
               </h2>
             </div>
-            <div style={{ maxWidth: 410, color: C.muted, lineHeight: 1.7, fontSize: '0.92rem' }}>
-              The first screen leads with route clarity. These cards explain why that feels better without competing with the hero.
+            <div
+              style={{
+                maxWidth: 430,
+                color: C.muted,
+                lineHeight: 1.7,
+                fontSize: '0.92rem',
+              }}
+            >
+              {heroCopy.proofBody}
             </div>
           </div>
 
-          <div className="landing-proof-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, marginTop: 16 }}>
-            {PROOF_CARDS.map((card) => {
+          <div
+            className="landing-proof-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gap: 14,
+              marginTop: 16,
+            }}
+          >
+            {heroCopy.proofCards.map(card => {
               const Icon = card.icon;
               return (
                 <div
@@ -677,11 +1044,40 @@ export default function AppEntryPage() {
                     boxShadow: SH.navy,
                   }}
                 >
-                  <div style={{ width: 42, height: 42, borderRadius: 14, display: 'grid', placeItems: 'center', background: `${card.tone}16`, border: `1px solid ${card.tone}26`, color: card.tone }}>
+                  <div
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 14,
+                      display: 'grid',
+                      placeItems: 'center',
+                      background: `${card.tone}16`,
+                      border: `1px solid ${card.tone}26`,
+                      color: card.tone,
+                    }}
+                  >
                     <Icon size={18} />
                   </div>
-                  <div style={{ marginTop: 14, fontWeight: 900, fontSize: '1rem', lineHeight: 1.25 }}>{card.title}</div>
-                  <div style={{ marginTop: 8, color: C.muted, fontSize: '0.86rem', lineHeight: 1.72 }}>{card.detail}</div>
+                  <div
+                    style={{
+                      marginTop: 14,
+                      fontWeight: 900,
+                      fontSize: '1rem',
+                      lineHeight: 1.25,
+                    }}
+                  >
+                    {card.title}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      color: C.muted,
+                      fontSize: '0.86rem',
+                      lineHeight: 1.72,
+                    }}
+                  >
+                    {card.detail}
+                  </div>
                 </div>
               );
             })}
@@ -690,6 +1086,7 @@ export default function AppEntryPage() {
 
         <motion.div initial={false} style={{ marginTop: 34 }}>
           <div
+            className="landing-corridor-shell"
             style={{
               borderRadius: 34,
               padding: '24px 24px 26px',
@@ -698,75 +1095,184 @@ export default function AppEntryPage() {
               boxShadow: SH.xl,
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 18, alignItems: 'end', flexWrap: 'wrap' }}>
+            <div
+              className="landing-section-head"
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 18,
+                alignItems: 'end',
+                flexWrap: 'wrap',
+              }}
+            >
               <div>
-                <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.cyan }}>
-                  Live corridors
+                <div
+                  style={{
+                    fontSize: '0.76rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: C.cyan,
+                  }}
+                >
+                  {heroCopy.corridorsEyebrow}
                 </div>
-                <h2 style={{ margin: '10px 0 0', fontSize: 'clamp(1.85rem, 3vw, 2.8rem)', lineHeight: 1.02, letterSpacing: '-0.05em' }}>
-                  Specific routes make the product feel real.
+                <h2
+                  style={{
+                    margin: '10px 0 0',
+                    fontSize: 'clamp(1.85rem, 3vw, 2.8rem)',
+                    lineHeight: 1.02,
+                    letterSpacing: '-0.05em',
+                  }}
+                >
+                  {heroCopy.corridorsTitle}
                 </h2>
               </div>
 
               <div
                 style={{
-                  borderRadius: 22,
-                  padding: '14px 16px',
-                  minWidth: 220,
-                  background: 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${C.borderSoft}`,
+                  maxWidth: 430,
+                  color: C.muted,
+                  lineHeight: 1.7,
+                  fontSize: '0.92rem',
                 }}
               >
-                <div style={{ color: C.soft, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Daily route focus</div>
-                <div style={{ marginTop: 6, fontWeight: 900, fontSize: '1.02rem' }}>{spotlightCorridor?.label ?? 'Amman -> Irbid'}</div>
-                <div style={{ marginTop: 4, color: C.muted, fontSize: '0.82rem' }}>
-                  Shared movement compounds when the same corridor stays easy to reopen.
-                </div>
+                {heroCopy.corridorsBody}
               </div>
             </div>
 
-            <div className="landing-corridor-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16, marginTop: 20 }}>
+            <div
+              style={{
+                marginTop: 18,
+                borderRadius: 22,
+                padding: '14px 16px',
+                minWidth: 220,
+                background: 'rgba(255,255,255,0.04)',
+                border: `1px solid ${C.borderSoft}`,
+              }}
+            >
+              <div
+                style={{
+                  color: C.soft,
+                  fontSize: '0.72rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                }}
+              >
+                {heroCopy.routeFocus}
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  fontWeight: 900,
+                  fontSize: '1.02rem',
+                }}
+              >
+                {spotlightCorridor?.label ?? 'Amman -> Irbid'}
+              </div>
+              <div style={{ marginTop: 4, color: C.muted, fontSize: '0.82rem' }}>
+                {heroCopy.routeFocusBody}
+              </div>
+            </div>
+
+            <div
+              className="landing-corridor-grid"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: 16,
+                marginTop: 20,
+              }}
+            >
               {corridorCards.map((corridor, index) => (
                 <button
                   key={corridor.id}
-                  onClick={() => navigate(`/app/find-ride?from=${encodeURIComponent(corridor.from)}&to=${encodeURIComponent(corridor.to)}&search=1`)}
+                  onClick={() =>
+                    navigate(
+                      `/app/find-ride?from=${encodeURIComponent(
+                        corridor.from,
+                      )}&to=${encodeURIComponent(corridor.to)}&search=1`,
+                    )
+                  }
                   style={{
                     textAlign: 'left',
                     borderRadius: 28,
                     padding: '20px 18px 18px',
-                    background: index === 0 ? 'linear-gradient(180deg, rgba(88,221,255,0.12), rgba(255,255,255,0.03))' : 'rgba(255,255,255,0.03)',
+                    background:
+                      index === 0
+                        ? 'linear-gradient(180deg, rgba(88,221,255,0.12), rgba(255,255,255,0.03))'
+                        : 'rgba(255,255,255,0.03)',
                     border: `1px solid ${index === 0 ? C.border : C.borderSoft}`,
                     cursor: 'pointer',
                     boxShadow: SH.navy,
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      alignItems: 'start',
+                    }}
+                  >
                     <div>
-                      <div style={{ color: index === 0 ? C.cyanSoft : C.soft, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.09em' }}>
-                        {index === 0 ? 'Spotlight corridor' : 'Featured corridor'}
+                      <div
+                        style={{
+                          color: index === 0 ? C.cyanSoft : C.soft,
+                          fontSize: '0.72rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.09em',
+                        }}
+                      >
+                        {index === 0 ? heroCopy.routeFocus : ar ? 'ممر مميز' : 'Featured corridor'}
                       </div>
-                      <div style={{ marginTop: 8, fontSize: '1.12rem', fontWeight: 900, lineHeight: 1.14 }}>{corridor.label}</div>
+                      <div
+                        style={{
+                          marginTop: 8,
+                          fontSize: '1.12rem',
+                          fontWeight: 900,
+                          lineHeight: 1.14,
+                        }}
+                      >
+                        {corridor.label}
+                      </div>
                     </div>
                     <div
                       style={{
                         padding: '8px 10px',
                         borderRadius: 9999,
-                        background: index === 0 ? 'rgba(255,190,92,0.12)' : 'rgba(255,255,255,0.05)',
+                        background:
+                          index === 0 ? 'rgba(255,190,92,0.12)' : 'rgba(255,255,255,0.05)',
                         color: index === 0 ? C.gold : C.soft,
                         fontSize: '0.76rem',
                         fontWeight: 800,
                       }}
                     >
-                      {corridor.savingsPercent}% saved
+                      {corridor.savingsPercent}% {ar ? 'توفير' : 'saved'}
                     </div>
                   </div>
 
-                  <div style={{ marginTop: 16, display: 'grid', gap: 10 }}>
+                  <div
+                    style={{
+                      marginTop: 16,
+                      display: 'grid',
+                      gap: 10,
+                    }}
+                  >
                     {[
-                      { label: 'Shared fare', value: `${corridor.sharedPriceJod} JOD` },
-                      { label: 'Driver boost', value: `+${corridor.driverBoostJod} JOD` },
-                      { label: 'Confidence', value: `${corridor.attachRatePercent}% attach rate` },
-                    ].map((row) => (
+                      {
+                        label: heroCopy.fareLabel,
+                        value: `${corridor.sharedPriceJod} JOD`,
+                      },
+                      {
+                        label: ar ? 'دعم السائق' : 'Driver boost',
+                        value: `+${corridor.driverBoostJod} JOD`,
+                      },
+                      {
+                        label: ar ? 'الثقة' : 'Confidence',
+                        value: `${corridor.attachRatePercent}% ${ar ? 'ربط' : 'attach rate'}`,
+                      },
+                    ].map(row => (
                       <div
                         key={row.label}
                         style={{
@@ -780,16 +1286,52 @@ export default function AppEntryPage() {
                           border: `1px solid ${C.borderSoft}`,
                         }}
                       >
-                        <span style={{ color: C.soft, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{row.label}</span>
-                        <span style={{ color: C.text, fontWeight: 850, fontSize: '0.86rem' }}>{row.value}</span>
+                        <span
+                          style={{
+                            color: C.soft,
+                            fontSize: '0.78rem',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.08em',
+                          }}
+                        >
+                          {row.label}
+                        </span>
+                        <span
+                          style={{
+                            color: C.text,
+                            fontWeight: 850,
+                            fontSize: '0.86rem',
+                          }}
+                        >
+                          {row.value}
+                        </span>
                       </div>
                     ))}
                   </div>
 
-                  <div style={{ marginTop: 16, color: C.muted, fontSize: '0.84rem', lineHeight: 1.68 }}>{corridor.autoGroupWindow}</div>
+                  <div
+                    style={{
+                      marginTop: 16,
+                      color: C.muted,
+                      fontSize: '0.84rem',
+                      lineHeight: 1.68,
+                    }}
+                  >
+                    {corridor.autoGroupWindow}
+                  </div>
 
-                  <div style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 8, color: index === 0 ? C.gold : C.cyanSoft, fontWeight: 800, fontSize: '0.84rem' }}>
-                    Explore this corridor
+                  <div
+                    style={{
+                      marginTop: 16,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      color: index === 0 ? C.gold : C.cyanSoft,
+                      fontWeight: 800,
+                      fontSize: '0.84rem',
+                    }}
+                  >
+                    {heroCopy.openCorridor}
                     <ArrowRight size={15} />
                   </div>
                 </button>
@@ -801,7 +1343,8 @@ export default function AppEntryPage() {
                 marginTop: 18,
                 borderRadius: 24,
                 padding: '18px 18px 16px',
-                background: 'linear-gradient(135deg, rgba(255,190,92,0.14), rgba(255,147,106,0.08))',
+                background:
+                  'linear-gradient(135deg, rgba(255,190,92,0.14), rgba(255,147,106,0.08))',
                 border: `1px solid rgba(255,190,92,0.18)`,
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -811,14 +1354,36 @@ export default function AppEntryPage() {
               }}
             >
               <div>
-                <div style={{ color: C.gold, fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.11em', textTransform: 'uppercase' }}>
-                  Fast next step
+                <div
+                  style={{
+                    color: C.gold,
+                    fontSize: '0.76rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.11em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {heroCopy.finalEyebrow}
                 </div>
-                <div style={{ marginTop: 8, fontSize: '1.1rem', fontWeight: 900 }}>
-                  Start with the route, then let the mode follow.
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: '1.1rem',
+                    fontWeight: 900,
+                  }}
+                >
+                  {heroCopy.finalTitle}
                 </div>
-                <div style={{ marginTop: 6, color: C.muted, lineHeight: 1.65, fontSize: '0.88rem', maxWidth: 620 }}>
-                  That is the difference between a landing page that only looks polished and one that explains the product at a glance.
+                <div
+                  style={{
+                    marginTop: 6,
+                    color: C.muted,
+                    lineHeight: 1.65,
+                    fontSize: '0.88rem',
+                    maxWidth: 620,
+                  }}
+                >
+                  {heroCopy.finalBody}
                 </div>
               </div>
 
@@ -840,7 +1405,7 @@ export default function AppEntryPage() {
                   boxShadow: SH.gold,
                 }}
               >
-                Launch Wasel
+                {heroCopy.finalCta}
                 <ArrowRight size={16} />
               </button>
             </div>

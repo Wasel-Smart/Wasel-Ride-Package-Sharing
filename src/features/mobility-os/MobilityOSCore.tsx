@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
-  Activity,
   ArrowRightLeft,
   Binary,
   Boxes,
@@ -20,24 +19,10 @@ import {
 import { toast } from 'sonner';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
+import { MobilityOSLandingMap } from '../home/MobilityOSLandingMap';
 import { CorridorCard } from './CorridorCard';
 import { useMobilityOSServerState } from './serverState';
-import type { BookingType, CorridorProjection, MobilityEventEnvelope } from './model';
-
-type CityNode = {
-  id: string;
-  x: number;
-  y: number;
-};
-
-const NODES: CityNode[] = [
-  { id: 'Amman', x: 46, y: 39 },
-  { id: 'Irbid', x: 57, y: 18 },
-  { id: 'Zarqa', x: 69, y: 33 },
-  { id: 'Madaba', x: 42, y: 50 },
-  { id: 'Karak', x: 49, y: 67 },
-  { id: 'Aqaba', x: 39, y: 92 },
-];
+import type { BookingType, MobilityEventEnvelope } from './model';
 
 const INITIAL_MODE: BookingType = 'seat';
 
@@ -100,13 +85,6 @@ function quantityStep(mode: BookingType): number {
   return mode === 'seat' ? 1 : 5;
 }
 
-function networkPath(projection: CorridorProjection): { from: CityNode; to: CityNode } | null {
-  const from = NODES.find((node) => node.id === projection.corridor.origin);
-  const to = NODES.find((node) => node.id === projection.corridor.destination);
-  if (!from || !to) return null;
-  return { from, to };
-}
-
 export default function MobilityOSCore() {
   const { snapshot, loading, source, createBooking } = useMobilityOSServerState();
   const [selectedCorridorId, setSelectedCorridorId] = useState<string>('');
@@ -165,7 +143,6 @@ export default function MobilityOSCore() {
       : selectedCorridor.cargo_available_kg
     : 0;
 
-  const corridorNodes = selectedCorridor ? networkPath(selectedCorridor) : null;
   const runtimeModeLabel = source === 'server' ? 'server-backed stream' : 'local fallback runtime';
   const runtimeModeBody =
     source === 'server'
@@ -287,55 +264,7 @@ export default function MobilityOSCore() {
                 </div>
               </div>
 
-              <svg viewBox="0 0 100 100" style={{ width: '100%', height: 300, display: 'block' }}>
-                {snapshot.corridors.map((projection) => {
-                  const path = networkPath(projection);
-                  if (!path) return null;
-                  const active = projection.corridor.id === selectedCorridorId;
-                  const demandTone = projection.demand_pressure > 1 ? C.gold : C.cyan;
-                  const cx = (path.from.x + path.to.x) / 2;
-                  const cy = (path.from.y + path.to.y) / 2 - 6;
-                  return (
-                    <g key={projection.corridor.id}>
-                      <line
-                        x1={path.from.x}
-                        y1={path.from.y}
-                        x2={path.to.x}
-                        y2={path.to.y}
-                        stroke={demandTone}
-                        strokeOpacity={active ? 0.9 : 0.35}
-                        strokeWidth={active ? 2.8 : 1.6 + projection.utilization * 1.2}
-                        strokeLinecap="round"
-                      />
-                      <rect
-                        x={cx - 8}
-                        y={cy - 3}
-                        width={16}
-                        height={6}
-                        rx={3}
-                        fill="rgba(4,11,20,0.84)"
-                        stroke={`${demandTone}40`}
-                      />
-                      <text x={cx} y={cy + 1.8} fill={C.text} textAnchor="middle" fontSize="3">
-                        {projection.demand_pressure.toFixed(2)}
-                      </text>
-                    </g>
-                  );
-                })}
-
-                {NODES.map((node) => {
-                  const active = node.id === selectedCorridor?.corridor.origin || node.id === selectedCorridor?.corridor.destination;
-                  return (
-                    <g key={node.id}>
-                      <circle cx={node.x} cy={node.y} r={active ? 4.4 : 3.2} fill={active ? C.cyan : C.green} />
-                      <circle cx={node.x} cy={node.y} r={active ? 8.2 : 6} fill={`${active ? C.cyan : C.green}18`} />
-                      <text x={node.x} y={node.y - 7} fill={C.text} textAnchor="middle" fontSize="3.2">
-                        {node.id}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
+              <MobilityOSLandingMap />
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
                 <div style={{ borderRadius: 18, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>

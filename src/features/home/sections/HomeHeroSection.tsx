@@ -2,14 +2,9 @@ import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle, Shield } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { WaselMark } from '../../../components/wasel-ds/WaselLogo';
-import {
-  C,
-  InlineCurrencySwitcher,
-  SectionHeader,
-  Skeleton,
-  glass,
-} from '../HomePageShared';
-import type { HeadlineStat, ProofPoint, TripMode } from './types';
+import { C, InlineCurrencySwitcher } from '../HomePageShared';
+import { MobilityOSLandingMap } from '../MobilityOSLandingMap';
+import type { TripMode } from './types';
 
 interface HomeHeroSectionProps {
   ar: boolean;
@@ -19,9 +14,6 @@ interface HomeHeroSectionProps {
   onTripModeChange: (mode: TripMode) => void;
   onNavigate: (path: string) => void;
   primaryTripPath: string;
-  headlineStats: HeadlineStat[];
-  proofPoints: ProofPoint[];
-  loading: boolean;
 }
 
 interface TripModeCardProps {
@@ -30,13 +22,6 @@ interface TripModeCardProps {
   onTripModeChange: (mode: TripMode) => void;
   onNavigate: (path: string) => void;
   primaryTripPath: string;
-}
-
-interface SnapshotPanelProps {
-  ar: boolean;
-  headlineStats: HeadlineStat[];
-  proofPoints: ProofPoint[];
-  loading: boolean;
 }
 
 function TripModeCard({
@@ -51,8 +36,7 @@ function TripModeCard({
       style={{
         borderRadius: 22,
         padding: '16px 18px',
-        background:
-          'linear-gradient(135deg, rgba(0,200,232,0.06), rgba(0,200,117,0.04))',
+        background: 'linear-gradient(135deg, rgba(0,200,232,0.06), rgba(0,200,117,0.04))',
         border: '1px solid rgba(0,200,232,0.14)',
       }}
     >
@@ -88,7 +72,7 @@ function TripModeCard({
             desc: ar ? 'احتفظ بسياق الاتجاهين' : 'Keep both directions in context',
             accent: C.green,
           },
-        ].map((option) => (
+        ].map(option => (
           <button
             key={option.key}
             onClick={() => onTripModeChange(option.key)}
@@ -97,14 +81,9 @@ function TripModeCard({
               padding: '14px 16px',
               borderRadius: 18,
               textAlign: 'left',
-              background:
-                tripMode === option.key
-                  ? `${option.accent}18`
-                  : 'rgba(255,255,255,0.04)',
+              background: tripMode === option.key ? `${option.accent}18` : 'rgba(255,255,255,0.04)',
               border: `1.5px solid ${
-                tripMode === option.key
-                  ? option.accent
-                  : 'rgba(255,255,255,0.1)'
+                tripMode === option.key ? option.accent : 'rgba(255,255,255,0.1)'
               }`,
               color: C.text,
               cursor: 'pointer',
@@ -118,12 +97,8 @@ function TripModeCard({
                 alignItems: 'center',
               }}
             >
-              <div style={{ fontSize: '0.86rem', fontWeight: 800 }}>
-                {option.title}
-              </div>
-              {tripMode === option.key && (
-                <CheckCircle size={15} color={option.accent} />
-              )}
+              <div style={{ fontSize: '0.86rem', fontWeight: 800 }}>{option.title}</div>
+              {tripMode === option.key && <CheckCircle size={15} color={option.accent} />}
             </div>
             <div
               style={{
@@ -154,8 +129,7 @@ function TripModeCard({
             padding: '0 18px',
             borderRadius: 14,
             border: 'none',
-            background:
-              'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 55%, #18D7C8 100%)',
+            background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 55%, #18D7C8 100%)',
             color: '#041018',
             fontWeight: 900,
             cursor: 'pointer',
@@ -187,164 +161,6 @@ function TripModeCard({
   );
 }
 
-function SnapshotPanel({
-  ar,
-  headlineStats,
-  proofPoints,
-  loading,
-}: SnapshotPanelProps) {
-  return (
-    <div
-      style={{
-        borderRadius: 28,
-        padding: '24px 22px',
-        background:
-          'linear-gradient(180deg, rgba(10,22,40,0.92), rgba(10,22,40,0.82))',
-        border: '1px solid rgba(0,200,232,0.14)',
-        boxShadow: '0 20px 48px rgba(0,0,0,0.2)',
-      }}
-    >
-      <SectionHeader
-        title={ar ? 'لقطة سريعة' : 'Quick snapshot'}
-        icon="•"
-      />
-      <div
-        className="wasel-home-stats"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-          gap: 10,
-        }}
-      >
-        {headlineStats.map((item) => {
-          const Icon = item.icon;
-          return (
-            <div
-              key={item.label}
-              style={{
-                borderRadius: 18,
-                padding: '14px 14px 13px',
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(0,200,232,0.09)',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  gap: 8,
-                  alignItems: 'center',
-                }}
-              >
-                <div
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 12,
-                    display: 'grid',
-                    placeItems: 'center',
-                    background: `${item.accent}16`,
-                  }}
-                >
-                  <Icon size={16} color={item.accent} />
-                </div>
-                <div
-                  style={{
-                    fontSize: '0.68rem',
-                    color: C.textDim,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                  }}
-                >
-                  {item.label}
-                </div>
-              </div>
-              <div
-                style={{
-                  marginTop: 12,
-                  fontSize: '1.08rem',
-                  fontWeight: 900,
-                  color: item.accent,
-                }}
-              >
-                {loading ? <Skeleton w={84} h={22} radius={6} /> : item.value}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div
-        style={{
-          marginTop: 14,
-          borderRadius: 20,
-          padding: '16px 16px 14px',
-          background: glass(0.48),
-          border: '1px solid rgba(0,200,232,0.1)',
-        }}
-      >
-        <div
-          style={{
-            fontSize: '0.72rem',
-            fontWeight: 800,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            color: C.cyan,
-          }}
-        >
-          {ar ? 'ما الذي يميز واصل؟' : 'Why Wasel works'}
-        </div>
-        <div
-          className="wasel-home-proof-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr',
-            gap: 10,
-            marginTop: 12,
-          }}
-        >
-          {proofPoints.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={item.title}
-                style={{
-                  borderRadius: 16,
-                  padding: '12px 13px',
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    fontWeight: 800,
-                  }}
-                >
-                  <Icon size={15} color={C.gold} />
-                  {item.title}
-                </div>
-                <div
-                  style={{
-                    marginTop: 7,
-                    fontSize: '0.78rem',
-                    color: C.textMuted,
-                    lineHeight: 1.65,
-                  }}
-                >
-                  {item.desc}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function HomeHeroSection({
   ar,
   user,
@@ -353,9 +169,6 @@ export function HomeHeroSection({
   onTripModeChange,
   onNavigate,
   primaryTripPath,
-  headlineStats,
-  proofPoints,
-  loading,
 }: HomeHeroSectionProps) {
   return (
     <motion.section
@@ -372,8 +185,7 @@ export function HomeHeroSection({
         style={{
           borderRadius: 28,
           padding: '28px 26px',
-          background:
-            'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03))',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03))',
           border: '1px solid rgba(0,200,232,0.16)',
           boxShadow: '0 20px 48px rgba(0,0,0,0.2)',
         }}
@@ -464,9 +276,7 @@ export function HomeHeroSection({
           >
             <Shield size={15} color={C.green} />
             <span style={{ fontSize: '0.78rem', color: C.textMuted }}>
-              {ar
-                ? 'ثقة وتسعير واضحان قبل الحجز'
-                : 'Trust and pricing stay clear before booking'}
+              {ar ? 'ثقة وتسعير واضحان قبل الحجز' : 'Trust and pricing stay clear before booking'}
             </span>
           </div>
           {user && <InlineCurrencySwitcher ar={ar} />}
@@ -481,12 +291,7 @@ export function HomeHeroSection({
         />
       </div>
 
-      <SnapshotPanel
-        ar={ar}
-        headlineStats={headlineStats}
-        proofPoints={proofPoints}
-        loading={loading}
-      />
+      <MobilityOSLandingMap />
     </motion.section>
   );
 }
