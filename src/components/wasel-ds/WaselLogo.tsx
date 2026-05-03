@@ -1,5 +1,5 @@
-import type { CSSProperties } from 'react';
-import { C, F, R, SH } from '../../utils/wasel-ds';
+import { useId, type CSSProperties } from 'react';
+import { C, F, SH } from '../../utils/wasel-ds';
 
 interface WaselLogoProps {
   size?: number;
@@ -7,122 +7,159 @@ interface WaselLogoProps {
   theme?: 'dark' | 'light';
   style?: CSSProperties;
   variant?: 'full' | 'compact';
+  framed?: boolean;
 }
 
-function LogoStroke({ color }: { color: string }) {
+interface LogoPalette {
+  mark: string;
+  nodeStroke: string;
+  nodeFill: string;
+  word: string;
+  shadow: string;
+}
+
+function getLogoPalette(theme: 'dark' | 'light'): LogoPalette {
+  if (theme === 'dark') {
+    return {
+      mark: '#1D667F',
+      nodeStroke: '#2C7D98',
+      nodeFill: '#14394B',
+      word: '#121418',
+      shadow: 'drop-shadow(0 6px 12px rgba(17, 24, 31, 0.14))',
+    };
+  }
+
+  return {
+    mark: '#9CEEFF',
+    nodeStroke: '#ECFCFF',
+    nodeFill: '#F9FFFF',
+    word: C.text,
+    shadow: SH.cyan,
+  };
+}
+
+function sanitizeId(value: string) {
+  return value.replace(/:/g, '');
+}
+
+function LogoGlyph({
+  mark,
+  nodeStroke,
+  nodeFill,
+}: {
+  mark: string;
+  nodeStroke: string;
+  nodeFill: string;
+}) {
+  const nodes = [
+    { cx: 8, cy: 10 },
+    { cx: 24, cy: 10 },
+    { cx: 40, cy: 10 },
+    { cx: 56, cy: 10 },
+  ];
+
   return (
-    <path
-      d="M18 18c6 26 11 39 18 39 6 0 11-12 16-31 3 20 9 31 16 31 6 0 11-13 18-39"
-      fill="none"
-      stroke={color}
-      strokeWidth="10"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+    <>
+      <g fill="none" stroke={mark} strokeWidth="4.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 10 Q16 41 24 10" />
+        <path d="M24 10 Q32 49 40 10" />
+        <path d="M40 10 Q48 41 56 10" />
+      </g>
+      <g fill="none" stroke={nodeStroke} strokeWidth="1.7">
+        {nodes.map((node) => (
+          <circle key={`${node.cx}-${node.cy}`} cx={node.cx} cy={node.cy} r="4.7" />
+        ))}
+      </g>
+      <g fill={nodeFill}>
+        {nodes.map((node) => (
+          <circle key={`inner-${node.cx}-${node.cy}`} cx={node.cx} cy={node.cy} r="1.9" />
+        ))}
+      </g>
+    </>
   );
 }
 
-function LogoMonogram({ size, color }: { size: number; color: string }) {
+function LogoMonogram({
+  size,
+  theme,
+  framed = false,
+}: {
+  size: number;
+  theme: 'dark' | 'light';
+  framed?: boolean;
+}) {
+  const palette = getLogoPalette(theme);
+
   return (
-    <svg
-      viewBox="0 0 86 72"
-      width={size}
-      height={size * (72 / 86)}
-      role="img"
-      aria-label="Wasel mark"
-      style={{ display: 'block', flexShrink: 0 }}
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        lineHeight: 0,
+        filter: framed ? palette.shadow : undefined,
+      }}
     >
-      <LogoStroke color={color} />
-    </svg>
+      <svg
+        viewBox="0 0 64 56"
+        width={size * (64 / 56)}
+        height={size}
+        role="img"
+        aria-label="Wasel mark"
+        style={{ display: 'block', flexShrink: 0 }}
+      >
+        <LogoGlyph mark={palette.mark} nodeStroke={palette.nodeStroke} nodeFill={palette.nodeFill} />
+      </svg>
+    </span>
   );
 }
 
 function LogoWordmark({
   size,
-  color,
-  compact,
+  theme,
+  framed = false,
 }: {
   size: number;
-  color: string;
-  compact?: boolean;
+  theme: 'dark' | 'light';
+  framed?: boolean;
 }) {
-  const viewBox = compact ? '0 0 86 72' : '0 0 378 88';
+  const palette = getLogoPalette(theme);
+  const svgId = sanitizeId(useId());
 
   return (
-    <svg
-      viewBox={viewBox}
-      width={compact ? size * 0.88 : size * 2.86}
-      height={size}
-      role="img"
-      aria-label="Wasel"
-      style={{ display: 'block', flexShrink: 0 }}
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        lineHeight: 0,
+        filter: framed ? palette.shadow : undefined,
+      }}
     >
-      <LogoStroke color={color} />
-      {!compact && (
+      <svg
+        viewBox="0 0 224 64"
+        width={size * 3.5}
+        height={size}
+        role="img"
+        aria-label="Wasel"
+        style={{ display: 'block', flexShrink: 0 }}
+      >
+        <g transform="translate(2 4)">
+          <LogoGlyph mark={palette.mark} nodeStroke={palette.nodeStroke} nodeFill={palette.nodeFill} />
+        </g>
         <text
-          x="118"
-          y="63"
-          fill={color}
+          x="76"
+          y="45"
+          fill={palette.word}
           fontFamily="'Arial Black', 'Plus Jakarta Sans', 'Inter', sans-serif"
           fontWeight="900"
-          fontSize="78"
-          letterSpacing="-5"
+          fontSize="46"
+          letterSpacing="-3.6"
+          textRendering="geometricPrecision"
         >
           asel
         </text>
-      )}
-    </svg>
-  );
-}
-
-function LogoPlate({
-  size,
-  children,
-  theme,
-}: {
-  size: number;
-  children: React.ReactNode;
-  theme: 'dark' | 'light';
-}) {
-  const onDark = theme === 'light';
-  const halo = Math.max(8, Math.round(size * 0.16));
-
-  return (
-    <div
-      style={{
-        position: 'relative',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: size,
-      }}
-    >
-      <span
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: -halo,
-          borderRadius: Math.round(size * 0.52),
-          background: onDark
-            ? 'radial-gradient(circle, rgba(184,138,82,0.16) 0%, rgba(244,239,232,0.06) 38%, rgba(17,19,22,0) 74%)'
-            : 'radial-gradient(circle, rgba(184,138,82,0.10) 0%, rgba(17,19,22,0) 72%)',
-          filter: 'blur(16px)',
-          opacity: onDark ? 0.9 : 0.55,
-        }}
-      />
-      <span
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: Math.round(size * 0.44),
-          background: onDark ? 'rgba(247,241,232,0.03)' : 'rgba(17,19,22,0.04)',
-          border: `1px solid ${onDark ? 'rgba(244,239,232,0.10)' : 'rgba(17,19,22,0.08)'}`,
-          boxShadow: onDark ? SH.card : 'none',
-        }}
-      />
-      <span style={{ position: 'relative', zIndex: 1, display: 'inline-flex', alignItems: 'center' }}>{children}</span>
-    </div>
+        <title id={`${svgId}-title`}>Wasel</title>
+      </svg>
+    </span>
   );
 }
 
@@ -132,22 +169,20 @@ export function WaselLogo({
   theme = 'dark',
   style,
   variant = 'full',
+  framed,
 }: WaselLogoProps) {
-  const logoColor = theme === 'light' ? C.text : '#121418';
   const compact = variant === 'compact' || !showWordmark;
-  const shellSize = compact ? size : Math.max(size, 34);
+  const logoSize = compact ? size : Math.max(size, 34);
   const title = compact ? (
-    <LogoMonogram size={shellSize} color={logoColor} />
+    <LogoMonogram size={logoSize} theme={theme} framed={framed} />
   ) : (
-    <LogoWordmark size={shellSize} color={logoColor} compact={false} />
+    <LogoWordmark size={logoSize} theme={theme} framed={framed} />
   );
   const tagline = variant === 'full' && showWordmark ? 'Move simply across Jordan' : null;
 
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, ...style }}>
-      <LogoPlate size={shellSize} theme={theme}>
-        {title}
-      </LogoPlate>
+      {title}
       {tagline && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <span
@@ -172,9 +207,7 @@ export function WaselLogo({
 export function WaselMark({ size = 38, style }: { size?: number; style?: CSSProperties }) {
   return (
     <div style={{ display: 'inline-flex', ...style }}>
-      <LogoPlate size={size} theme="light">
-        <LogoMonogram size={size} color={C.text} />
-      </LogoPlate>
+      <LogoMonogram size={size} theme="light" />
     </div>
   );
 }
@@ -183,22 +216,17 @@ export function WaselHeroMark({ size = 120 }: { size?: number }) {
   return (
     <div
       style={{
-        position: 'relative',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: Math.round(size * 0.18),
-        borderRadius: R.xxl,
-        background: 'linear-gradient(160deg, rgba(247,241,232,0.07), rgba(184,138,82,0.06))',
-        border: `1px solid ${C.border}`,
-        boxShadow: SH.lg,
+        filter: 'drop-shadow(0 14px 28px rgba(4, 17, 28, 0.28))',
       }}
     >
-      <LogoWordmark size={size * 0.44} color={C.text} />
+      <LogoWordmark size={size * 0.44} theme="light" framed />
     </div>
   );
 }
 
 export function WaselIcon({ size = 20 }: { size?: number }) {
-  return <LogoMonogram size={size} color={C.text} />;
+  return <LogoMonogram size={size} theme="light" />;
 }

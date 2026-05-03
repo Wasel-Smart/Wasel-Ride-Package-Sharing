@@ -19,6 +19,13 @@ export default defineConfig({
     },
     env: {
       NODE_ENV: 'test',
+      VITE_SUPABASE_URL: '',
+      VITE_SUPABASE_PROJECT_URL: '',
+      VITE_PUBLIC_SUPABASE_URL: '',
+      VITE_SUPABASE_ANON_KEY: '',
+      VITE_SUPABASE_PUBLISHABLE_KEY: '',
+      VITE_PUBLIC_SUPABASE_ANON_KEY: '',
+      VITE_E2E_LOCAL_AUTH: 'false',
     },
     include: [
       'tests/**/*.test.ts',

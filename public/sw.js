@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'wasel-v2';
+const CACHE_VERSION = 'wasel-v3';
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 

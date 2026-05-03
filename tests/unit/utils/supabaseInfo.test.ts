@@ -8,7 +8,7 @@ describe('supabase public config', () => {
     vi.resetModules();
   });
 
-  it('falls back to the shipped public project config when env vars are placeholders', async () => {
+  it('treats placeholder env values as not configured', async () => {
     vi.stubEnv('VITE_SUPABASE_URL', 'https://your-project.supabase.co');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'your-anon-key-here');
     vi.stubEnv('VITE_SUPABASE_PROJECT_URL', 'https://your-project.supabase.co');
@@ -18,10 +18,10 @@ describe('supabase public config', () => {
 
     const info = await importInfo();
 
-    expect(info.publicSupabaseUrl).toBe('https://djccmatubyyudeosrngm.supabase.co');
-    expect(info.projectId).toBe('djccmatubyyudeosrngm');
-    expect(info.publicAnonKey).toBe('sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE');
-    expect(info.hasSupabasePublicConfig).toBe(true);
+    expect(info.publicSupabaseUrl).toBe('');
+    expect(info.projectId).toBe('');
+    expect(info.publicAnonKey).toBe('');
+    expect(info.hasSupabasePublicConfig).toBe(false);
   });
 
   it('prefers explicit env values when they are present', async () => {
@@ -33,5 +33,17 @@ describe('supabase public config', () => {
     expect(info.publicSupabaseUrl).toBe('https://custom-project.supabase.co');
     expect(info.projectId).toBe('custom-project');
     expect(info.publicAnonKey).toBe('custom-anon-key');
+  });
+
+  it('rejects malformed Supabase urls even when a key is present', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'not-a-url');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'custom-anon-key');
+
+    const info = await importInfo();
+
+    expect(info.publicSupabaseUrl).toBe('');
+    expect(info.projectId).toBe('');
+    expect(info.publicAnonKey).toBe('custom-anon-key');
+    expect(info.hasSupabasePublicConfig).toBe(false);
   });
 });

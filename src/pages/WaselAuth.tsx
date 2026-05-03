@@ -60,13 +60,14 @@ function BrandPanel() {
       <div style={{ position: 'absolute', bottom: -100, left: -80, width: 420, height: 420, borderRadius: '50%', background: `radial-gradient(circle, ${C.blueDim}cc, transparent 66%)`, filter: 'blur(80px)', pointerEvents: 'none' }} />
 
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 380 }}>
-        <WaselLogo size={44} theme="light" variant="full" />
-        <div style={{ margin: `${SPACE[8]} 0 ${SPACE[6]}` }}>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <WaselLogo size={44} theme="light" variant="full" />
+        </div>
+        <div style={{ margin: `${SPACE[8]} 0 ${SPACE[6]}`, display: 'flex', justifyContent: 'center' }}>
           <WaselHeroMark size={92} />
         </div>
 
         <h2 style={{ fontSize: TYPE.size['3xl'], fontWeight: TYPE.weight.ultra, color: C.text, letterSpacing: '-0.04em', margin: `0 0 ${SPACE[3]}`, lineHeight: 1.12 }}>
-          Wasel
           <span style={{ display: 'block', background: 'linear-gradient(90deg, #55E9FF, #60A5FA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Move smarter
           </span>
@@ -311,7 +312,7 @@ export default function WaselAuth() {
           >
             <WaselLogo size={38} theme="light" variant="full" />
             <h2 style={{ fontSize: TYPE.size.xl, fontWeight: TYPE.weight.ultra, color: C.text, marginTop: SPACE[4], marginBottom: SPACE[2], letterSpacing: '-0.03em' }}>
-              Wasel <span style={{ color: C.cyan }}>Move smarter</span>
+              <span style={{ color: C.cyan }}>Move smarter</span>
             </h2>
             <p style={{ fontSize: TYPE.size.sm, color: C.textMuted, marginBottom: SPACE[3] }}>
               Sign in to continue into the mobility experience.

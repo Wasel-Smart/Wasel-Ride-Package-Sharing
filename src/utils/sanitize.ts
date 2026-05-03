@@ -3,8 +3,13 @@
  * Protects against XSS and injection attacks
  */
 
-// Re-export shared HTML sanitization from canonical module
-export { sanitizeHtml as sanitizeHTML, sanitizeHtml as sanitizeText } from './sanitization';
+// Re-export shared HTML sanitization from canonical module and keep a local binding
+// for recursive helpers in this module.
+import { sanitizeHtml } from './sanitization';
+
+const sanitizeText = sanitizeHtml;
+
+export { sanitizeHtml as sanitizeHTML, sanitizeText };
 
 // DOM-based HTML sanitizer (strips tags entirely via browser parser)
 export function sanitizeHTMLStrict(html: string): string {

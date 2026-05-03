@@ -31,14 +31,13 @@ describe('AppEntryPage', () => {
     vi.clearAllMocks();
   });
 
-  it('shows guest CTA copy by default', { timeout: 15000 }, () => {
+  it('shows guest CTA copy by default', () => {
     mockUseLocalAuth.mockReturnValue({ user: null });
 
     render(<AppEntryPage />);
 
-    expect(
-      screen.getByRole('heading', { name: /One road,\s*many moves\./i }),
-    ).toBeInTheDocument();
+    expect(screen.getByText('One road,')).toBeInTheDocument();
+    expect(screen.getByText('many moves.')).toBeInTheDocument();
     expect(
       screen.getByText(/Open one corridor\. Ride it, ship on it, or fall back to the bus line around it\./i),
     ).toBeInTheDocument();

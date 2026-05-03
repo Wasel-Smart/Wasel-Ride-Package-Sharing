@@ -11,6 +11,7 @@ const PLACEHOLDER_MARKERS = [
   'your-project.supabase.co',
   'your-anon-key',
   'your-anon-key-here',
+  'your-publishable-key-or-anon-key',
   'replace_with',
   'example.com',
 ];
@@ -25,11 +26,27 @@ function isConfiguredValue(value: string | undefined): value is string {
   return !PLACEHOLDER_MARKERS.some((marker) => lower.includes(marker));
 }
 
-function pickConfiguredValue(...candidates: Array<string | undefined>): string {
+function isValidPublicSupabaseUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return (
+      (parsed.protocol === 'https:' || parsed.protocol === 'http:') &&
+      parsed.hostname.endsWith('.supabase.co')
+    );
+  } catch {
+    return false;
+  }
+}
+
+function pickConfiguredUrl(...candidates: Array<string | undefined>): string {
+  return candidates.find((candidate) => isConfiguredValue(candidate) && isValidPublicSupabaseUrl(candidate)) ?? '';
+}
+
+function pickConfiguredKey(...candidates: Array<string | undefined>): string {
   return candidates.find(isConfiguredValue) ?? '';
 }
 
-export const publicSupabaseUrl = pickConfiguredValue(
+export const publicSupabaseUrl = pickConfiguredUrl(
   ...(FORCE_LOCAL_E2E_AUTH
     ? []
     : [
@@ -39,7 +56,7 @@ export const publicSupabaseUrl = pickConfiguredValue(
       ]),
 );
 
-export const publicAnonKey = pickConfiguredValue(
+export const publicAnonKey = pickConfiguredKey(
   ...(FORCE_LOCAL_E2E_AUTH
     ? []
     : [
