@@ -360,9 +360,7 @@ export function HomeHeroSection({
   return (
     <motion.section
       className="wasel-home-hero"
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      initial={false}
       style={{
         display: 'grid',
         gridTemplateColumns: '1.1fr 0.9fr',

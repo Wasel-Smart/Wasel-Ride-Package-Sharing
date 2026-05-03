@@ -16,9 +16,7 @@ export function QuickActionsSection({
 }: QuickActionsSectionProps) {
   return (
     <motion.section
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: 0.08 }}
+      initial={false}
       style={{ marginTop: 30 }}
     >
       <SectionHeader
@@ -39,9 +37,6 @@ export function QuickActionsSection({
             <motion.button
               key={action.path}
               onClick={() => onNavigate(action.path)}
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.04 * index }}
               whileHover={{ y: -3 }}
               style={{
                 textAlign: 'left',

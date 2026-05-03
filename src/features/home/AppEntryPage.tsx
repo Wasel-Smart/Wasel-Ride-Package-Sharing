@@ -124,7 +124,7 @@ export default function AppEntryPage() {
   const routeStops = buildRouteStops(spotlightCorridor);
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: FONT, position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: FONT, position: 'relative', overflowX: 'hidden' }}>
       <style>{`
         :root { color-scheme: dark; }
         @media (max-width: 1140px) {
@@ -196,9 +196,7 @@ export default function AppEntryPage() {
       <div style={{ position: 'relative', maxWidth: 1240, margin: '0 auto', padding: '32px 24px 88px' }}>
         <motion.div
           className="landing-topbar"
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          initial={false}
           style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -233,9 +231,7 @@ export default function AppEntryPage() {
 
         <div className="landing-hero-grid" style={{ display: 'grid', gridTemplateColumns: '0.98fr 1.02fr', gap: 28, alignItems: 'stretch', marginTop: 34 }}>
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55 }}
+            initial={false}
             style={{
               borderRadius: 36,
               padding: '32px 32px 30px',
@@ -377,9 +373,7 @@ export default function AppEntryPage() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
+            initial={false}
             style={{
               borderRadius: 36,
               padding: 26,
@@ -586,7 +580,7 @@ export default function AppEntryPage() {
           </motion.div>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.12 }} style={{ marginTop: 32 }}>
+        <motion.div initial={false} style={{ marginTop: 32 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'end', flexWrap: 'wrap' }}>
             <div>
               <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.gold }}>
@@ -654,7 +648,7 @@ export default function AppEntryPage() {
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.16 }} style={{ marginTop: 24 }}>
+        <motion.div initial={false} style={{ marginTop: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'end', flexWrap: 'wrap' }}>
             <div>
               <div style={{ fontSize: '0.76rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.cyan }}>
@@ -694,7 +688,7 @@ export default function AppEntryPage() {
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.2 }} style={{ marginTop: 34 }}>
+        <motion.div initial={false} style={{ marginTop: 34 }}>
           <div
             style={{
               borderRadius: 34,

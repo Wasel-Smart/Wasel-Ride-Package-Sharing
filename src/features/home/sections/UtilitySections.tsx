@@ -28,9 +28,7 @@ export function SignedInUtilitySection({
 }: SignedInUtilitySectionProps) {
   return (
     <motion.section
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: 0.16 }}
+      initial={false}
       style={{ marginTop: 34 }}
     >
       <SectionHeader
@@ -131,9 +129,7 @@ export function SignedOutCtaSection({
 }: SignedOutCtaSectionProps) {
   return (
     <motion.section
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: 0.16 }}
+      initial={false}
       style={{ marginTop: 36, marginBottom: 24 }}
     >
       <div
