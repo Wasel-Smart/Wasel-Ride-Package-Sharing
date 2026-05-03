@@ -26,10 +26,16 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('VITE_SUPABASE_ANON_KEY') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const SUPABASE_DB_URL = Deno.env.get('SUPABASE_DB_URL') ?? '';
+const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
+const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? '';
+const STRIPE_API_VERSION = Deno.env.get('STRIPE_API_VERSION') ?? '2026-02-25.clover';
+const APP_BASE_URL = (Deno.env.get('APP_BASE_URL') ?? 'https://wasel14.online').replace(/\/$/, '');
+const CLIQ_CHECKOUT_URL_TEMPLATE = Deno.env.get('CLIQ_CHECKOUT_URL_TEMPLATE') ?? '';
+const STRIPE_WASEL_PLUS_PRICE_ID = Deno.env.get('STRIPE_WASEL_PLUS_PRICE_ID') ?? '';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-communication-worker-secret',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-communication-worker-secret, stripe-signature',
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
 };
 
@@ -156,6 +162,74 @@ create index if not exists communication_deliveries_provider_ref_idx
   where external_reference is not null;
 `;
 
+const CONTENT_MODERATION_SQL = `
+create or replace function public.moderate_text_input(raw_value text)
+returns text
+language plpgsql
+immutable
+as $$
+declare
+  cleaned text := coalesce(raw_value, '');
+begin
+  cleaned := regexp_replace(cleaned, '<[^>]*>', '', 'g');
+  cleaned := regexp_replace(cleaned, '(?i)(javascript:|data:|vbscript:)', '', 'g');
+  cleaned := regexp_replace(cleaned, '[\\u0000-\\u001F\\u007F]', ' ', 'g');
+  cleaned := regexp_replace(cleaned, '\\s+', ' ', 'g');
+  cleaned := regexp_replace(cleaned, '(?i)\\b(damn|shit|fuck|bitch|asshole|bastard)\\b', '[redacted]', 'g');
+  cleaned := btrim(cleaned);
+  return nullif(cleaned, '');
+end;
+$$;
+
+create or replace function public.apply_content_moderation()
+returns trigger
+language plpgsql
+as $$
+begin
+  if tg_table_name = 'users' then
+    new.full_name := coalesce(public.moderate_text_input(new.full_name), new.full_name);
+  elsif tg_table_name = 'trips' then
+    new.origin_name := public.moderate_text_input(new.origin_name);
+    new.destination_name := public.moderate_text_input(new.destination_name);
+    new.notes := public.moderate_text_input(new.notes);
+  elsif tg_table_name = 'packages' then
+    new.receiver_name := coalesce(public.moderate_text_input(new.receiver_name), new.receiver_name);
+    new.origin_name := coalesce(public.moderate_text_input(new.origin_name), new.origin_name);
+    new.destination_name := coalesce(public.moderate_text_input(new.destination_name), new.destination_name);
+    new.description := public.moderate_text_input(new.description);
+    new.return_reason := public.moderate_text_input(new.return_reason);
+  elsif tg_table_name = 'bookings' then
+    new.pickup_name := public.moderate_text_input(new.pickup_name);
+    new.dropoff_name := public.moderate_text_input(new.dropoff_name);
+    new.driver_review := public.moderate_text_input(new.driver_review);
+    new.passenger_review := public.moderate_text_input(new.passenger_review);
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists users_content_moderation on public.users;
+create trigger users_content_moderation
+before insert or update on public.users
+for each row execute function public.apply_content_moderation();
+
+drop trigger if exists trips_content_moderation on public.trips;
+create trigger trips_content_moderation
+before insert or update on public.trips
+for each row execute function public.apply_content_moderation();
+
+drop trigger if exists packages_content_moderation on public.packages;
+create trigger packages_content_moderation
+before insert or update on public.packages
+for each row execute function public.apply_content_moderation();
+
+drop trigger if exists bookings_content_moderation on public.bookings;
+create trigger bookings_content_moderation
+before insert or update on public.bookings
+for each row execute function public.apply_content_moderation();
+`;
+
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -254,6 +328,333 @@ async function executeSqlStatements(sql: string) {
   }
 }
 
+function getAppBaseUrl(request: Request): string {
+  const origin = request.headers.get('origin')?.trim();
+  if (origin) {
+    return origin.replace(/\/$/, '');
+  }
+  return APP_BASE_URL;
+}
+
+function matchesAuthenticatedUser(
+  auth: Awaited<ReturnType<typeof authenticateRequest>>,
+  requestedUserId: string,
+): boolean {
+  if ('error' in auth) return false;
+  return requestedUserId === auth.canonicalUser.id || requestedUserId === auth.authUser.id;
+}
+
+function parseWalletRoute(path: string) {
+  const match = /^\/wallet\/([^/]+)\/([^/]+)$/.exec(path);
+  if (!match) return null;
+  return {
+    userId: decodeURIComponent(match[1]),
+    action: decodeURIComponent(match[2]),
+  };
+}
+
+function mapWalletPaymentMethod(paymentMethod: string): string {
+  switch (paymentMethod) {
+    case 'card':
+    case 'apple_pay':
+    case 'google_pay':
+      return 'card_payment';
+    case 'cliq':
+    case 'bank_transfer':
+      return 'local_gateway';
+    default:
+      return 'card_payment';
+  }
+}
+
+function toMoneyNumber(value: unknown): number {
+  const amount = Number(value);
+  return Number.isFinite(amount) ? Number(amount.toFixed(3)) : 0;
+}
+
+function toStripeMinorAmount(amountJod: number): string {
+  return String(Math.round(amountJod * 1000));
+}
+
+function buildCliqCheckoutUrl(template: string, values: Record<string, string>): string {
+  return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (_, key: string) => (
+    encodeURIComponent(values[key] ?? '')
+  ));
+}
+
+async function createPendingTopUpTransaction(
+  admin: ReturnType<typeof getAdminClient>,
+  walletId: string,
+  amountJod: number,
+  paymentMethod: string,
+) {
+  const { data, error } = await admin
+    .from('transactions')
+    .insert({
+      wallet_id: walletId,
+      amount: amountJod,
+      transaction_type: 'add_funds',
+      payment_method: mapWalletPaymentMethod(paymentMethod),
+      transaction_status: 'pending',
+      direction: 'credit',
+      reference_type: 'payment_session',
+      metadata: {
+        top_up_flow: 'hosted_checkout',
+        requested_method: paymentMethod,
+      },
+    })
+    .select('transaction_id, metadata')
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return {
+    transactionId: String(data.transaction_id),
+    metadata: data.metadata ?? {},
+  };
+}
+
+async function updateTopUpTransactionMetadata(
+  admin: ReturnType<typeof getAdminClient>,
+  transactionId: string,
+  metadataPatch: Record<string, unknown>,
+) {
+  const { data: existing } = await admin
+    .from('transactions')
+    .select('metadata')
+    .eq('transaction_id', transactionId)
+    .maybeSingle();
+
+  const mergedMetadata = {
+    ...((existing?.metadata && typeof existing.metadata === 'object') ? existing.metadata : {}),
+    ...metadataPatch,
+  };
+
+  const { error } = await admin
+    .from('transactions')
+    .update({
+      metadata: mergedMetadata,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('transaction_id', transactionId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+async function markTopUpTransactionFailed(
+  admin: ReturnType<typeof getAdminClient>,
+  transactionId: string,
+  externalReference: string | null,
+  provider: string,
+  reason: string,
+  providerPayload: unknown,
+) {
+  const now = new Date().toISOString();
+  const { data: existing } = await admin
+    .from('transactions')
+    .select('metadata, transaction_status')
+    .eq('transaction_id', transactionId)
+    .maybeSingle();
+
+  if (!existing || existing.transaction_status === 'posted') {
+    return;
+  }
+
+  const metadata = {
+    ...((existing.metadata && typeof existing.metadata === 'object') ? existing.metadata : {}),
+    provider,
+    failure_reason: reason,
+    provider_payload: providerPayload,
+  };
+
+  const { error } = await admin
+    .from('transactions')
+    .update({
+      transaction_status: 'failed',
+      reference_id: externalReference,
+      metadata,
+      updated_at: now,
+    })
+    .eq('transaction_id', transactionId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+async function finalizeTopUpTransaction(
+  transactionId: string,
+  externalReference: string,
+  providerPayload: unknown,
+) {
+  if (!SUPABASE_DB_URL) {
+    throw new Error('SUPABASE_DB_URL is not configured');
+  }
+
+  const client = new Client(SUPABASE_DB_URL);
+  await client.connect();
+
+  try {
+    await client.queryArray('begin');
+
+    const transactionResult = await client.queryObject<{
+      wallet_id: string;
+      amount: number;
+      transaction_status: string;
+      metadata: unknown;
+    }>(
+      'select wallet_id, amount, transaction_status, metadata from public.transactions where transaction_id = $1 for update',
+      [transactionId],
+    );
+
+    const transaction = transactionResult.rows[0];
+    if (!transaction) {
+      throw new Error(`Transaction ${transactionId} was not found`);
+    }
+
+    if (transaction.transaction_status === 'posted') {
+      await client.queryArray('commit');
+      return { applied: false, reason: 'already_posted' };
+    }
+
+    if (transaction.transaction_status === 'failed') {
+      await client.queryArray('commit');
+      return { applied: false, reason: 'already_failed' };
+    }
+
+    await client.queryObject(
+      'update public.wallets set balance = balance + $1, updated_at = timezone(\'utc\', now()) where wallet_id = $2',
+      [transaction.amount, transaction.wallet_id],
+    );
+
+    const nextMetadata = {
+      ...((transaction.metadata && typeof transaction.metadata === 'object') ? transaction.metadata as Record<string, unknown> : {}),
+      provider: 'stripe',
+      provider_payload: providerPayload,
+      credited_via: 'stripe_webhook',
+    };
+
+    await client.queryObject(
+      'update public.transactions set transaction_status = $1, reference_id = $2, metadata = $3::jsonb, updated_at = timezone(\'utc\', now()) where transaction_id = $4',
+      ['posted', externalReference, JSON.stringify(nextMetadata), transactionId],
+    );
+
+    await client.queryArray('commit');
+    return { applied: true };
+  } catch (error) {
+    await client.queryArray('rollback').catch(() => undefined);
+    throw error;
+  } finally {
+    await client.end();
+  }
+}
+
+async function createStripeCheckoutSession(input: {
+  amountJod: number;
+  paymentMethod: string;
+  transactionId: string;
+  canonicalUserId: string;
+  walletId: string;
+  request: Request;
+}) {
+  if (!STRIPE_SECRET_KEY) {
+    throw new Error('Stripe is not configured on the server');
+  }
+
+  const baseUrl = getAppBaseUrl(input.request);
+  const successUrl = `${baseUrl}/app/wallet?payment=success&tx=${encodeURIComponent(input.transactionId)}`;
+  const cancelUrl = `${baseUrl}/app/wallet?payment=cancelled&tx=${encodeURIComponent(input.transactionId)}`;
+  const params = new URLSearchParams();
+
+  params.set('mode', 'payment');
+  params.set('success_url', successUrl);
+  params.set('cancel_url', cancelUrl);
+  params.set('client_reference_id', input.transactionId);
+  params.set('line_items[0][quantity]', '1');
+  params.set('line_items[0][price_data][currency]', 'jod');
+  params.set('line_items[0][price_data][unit_amount]', toStripeMinorAmount(input.amountJod));
+  params.set('line_items[0][price_data][product_data][name]', 'Wasel Wallet Top-Up');
+  params.set('line_items[0][price_data][product_data][description]', `Wallet credit via ${input.paymentMethod}`);
+  params.set('metadata[transaction_id]', input.transactionId);
+  params.set('metadata[user_id]', input.canonicalUserId);
+  params.set('metadata[wallet_id]', input.walletId);
+  params.set('metadata[requested_method]', input.paymentMethod);
+
+  const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+      'Stripe-Version': STRIPE_API_VERSION,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params,
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message =
+      typeof payload?.error?.message === 'string'
+        ? payload.error.message
+        : `Stripe returned HTTP ${response.status}`;
+    throw new Error(message);
+  }
+
+  return payload;
+}
+
+function constantTimeEquals(left: string, right: string): boolean {
+  if (left.length !== right.length) return false;
+  let mismatch = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    mismatch |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  }
+  return mismatch === 0;
+}
+
+async function computeStripeSignature(secret: string, payload: string, timestamp: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(`${timestamp}.${payload}`));
+  return Array.from(new Uint8Array(signature))
+    .map((value) => value.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function verifyStripeWebhookSignature(payload: string, signatureHeader: string | null): Promise<boolean> {
+  if (!STRIPE_WEBHOOK_SECRET || !signatureHeader) {
+    return false;
+  }
+
+  const parts = signatureHeader.split(',').map((segment) => segment.trim());
+  const timestamp = parts.find((segment) => segment.startsWith('t='))?.slice(2) ?? '';
+  const candidates = parts
+    .filter((segment) => segment.startsWith('v1='))
+    .map((segment) => segment.slice(3))
+    .filter(Boolean);
+
+  if (!timestamp || candidates.length === 0) {
+    return false;
+  }
+
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  if (Math.abs(nowSeconds - Number(timestamp)) > 300) {
+    return false;
+  }
+
+  const expected = await computeStripeSignature(STRIPE_WEBHOOK_SECRET, payload, timestamp);
+  return candidates.some((candidate) => constantTimeEquals(candidate, expected));
+}
+
 async function handleHealth() {
   return json({
     ok: true,
@@ -272,6 +673,11 @@ async function handleHealth() {
       ),
       workerSecretConfigured: Boolean(getWorkerSecret()),
       webhookTokenConfigured: Boolean(deliveryEnv.communicationWebhookToken),
+    },
+    payments: {
+      stripeConfigured: Boolean(STRIPE_SECRET_KEY),
+      stripeWebhookConfigured: Boolean(STRIPE_WEBHOOK_SECRET),
+      cliqConfigured: Boolean(CLIQ_CHECKOUT_URL_TEMPLATE),
     },
   });
 }
@@ -854,6 +1260,199 @@ async function handleApplyCommunicationMigrations(request: Request) {
   });
 }
 
+async function handleApplyModerationMigrations(request: Request) {
+  if (!hasWorkerAccess(request)) {
+    return json({ error: 'Missing worker secret' }, 401);
+  }
+
+  await executeSqlStatements(CONTENT_MODERATION_SQL);
+
+  return json({
+    applied: [
+      '20260503010000_content_moderation_runtime.sql',
+    ],
+  });
+}
+
+async function handleWalletTopUp(request: Request, requestedUserId: string) {
+  const auth = await authenticateRequest(request);
+  if ('error' in auth) return auth.error;
+  if (!matchesAuthenticatedUser(auth, requestedUserId)) {
+    return json({ error: 'Wallet route is not authorized for this user.' }, 403);
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const amountJod = toMoneyNumber(body.amount);
+  const paymentMethod = String(body.paymentMethod ?? 'card').trim() || 'card';
+
+  if (amountJod <= 0) {
+    return json({ error: 'Amount must be greater than zero.' }, 400);
+  }
+
+  const { data: wallet, error: walletError } = await auth.admin
+    .from('wallets')
+    .select('wallet_id, user_id, currency_code')
+    .eq('user_id', auth.canonicalUser.id)
+    .maybeSingle();
+
+  if (walletError) {
+    return json({ error: walletError.message }, 500);
+  }
+  if (!wallet?.wallet_id) {
+    return json({ error: 'Wallet not found.' }, 404);
+  }
+
+  const pending = await createPendingTopUpTransaction(
+    auth.admin,
+    String(wallet.wallet_id),
+    amountJod,
+    paymentMethod,
+  );
+
+  if (paymentMethod === 'cliq') {
+    if (!CLIQ_CHECKOUT_URL_TEMPLATE) {
+      await markTopUpTransactionFailed(
+        auth.admin,
+        pending.transactionId,
+        null,
+        'cliq',
+        'CliQ provider is not configured on the server',
+        { requested_method: paymentMethod },
+      );
+      return json({ error: 'CliQ provider is not configured on the server.' }, 503);
+    }
+
+    const checkoutUrl = buildCliqCheckoutUrl(CLIQ_CHECKOUT_URL_TEMPLATE, {
+      transactionId: pending.transactionId,
+      amount: amountJod.toFixed(3),
+      currency: String(wallet.currency_code ?? 'JOD').toUpperCase(),
+      returnUrl: `${getAppBaseUrl(request)}/app/wallet?payment=success&tx=${encodeURIComponent(pending.transactionId)}`,
+    });
+
+    await updateTopUpTransactionMetadata(auth.admin, pending.transactionId, {
+      provider: 'cliq',
+      checkout_url: checkoutUrl,
+      provider_status: 'requires_action',
+    });
+
+    return json({
+      payment: {
+        transactionId: pending.transactionId,
+        provider: 'cliq',
+        status: 'requires_action',
+        checkoutUrl,
+      },
+    }, 202);
+  }
+
+  try {
+    const session = await createStripeCheckoutSession({
+      amountJod,
+      paymentMethod,
+      transactionId: pending.transactionId,
+      canonicalUserId: auth.canonicalUser.id,
+      walletId: String(wallet.wallet_id),
+      request,
+    });
+
+    await updateTopUpTransactionMetadata(auth.admin, pending.transactionId, {
+      provider: 'stripe',
+      provider_status: 'requires_action',
+      checkout_session_id: session.id,
+      checkout_url: session.url ?? null,
+    });
+
+    return json({
+      payment: {
+        transactionId: pending.transactionId,
+        provider: 'stripe',
+        status: 'requires_action',
+        checkoutUrl: session.url ?? null,
+        sessionId: session.id,
+      },
+    }, 202);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await markTopUpTransactionFailed(
+      auth.admin,
+      pending.transactionId,
+      null,
+      'stripe',
+      message,
+      { requested_method: paymentMethod },
+    ).catch(() => undefined);
+    return json({ error: message }, 502);
+  }
+}
+
+async function handleStripeWebhook(request: Request) {
+  if (!STRIPE_WEBHOOK_SECRET) {
+    return json({ error: 'Stripe webhook secret is not configured.' }, 503);
+  }
+
+  const rawPayload = await request.text();
+  const signatureOk = await verifyStripeWebhookSignature(
+    rawPayload,
+    request.headers.get('stripe-signature'),
+  );
+
+  if (!signatureOk) {
+    return json({ error: 'Invalid Stripe signature.' }, 401);
+  }
+
+  const event = JSON.parse(rawPayload);
+  const admin = getAdminClient();
+
+  if (event?.type === 'checkout.session.completed') {
+    const session = event?.data?.object ?? {};
+    const transactionId = String(session?.metadata?.transaction_id ?? session?.client_reference_id ?? '');
+    if (!transactionId) {
+      return json({ received: true, ignored: true });
+    }
+
+    await finalizeTopUpTransaction(
+      transactionId,
+      String(session?.id ?? ''),
+      event,
+    );
+    return json({ received: true, transactionId, finalized: true });
+  }
+
+  if (event?.type === 'checkout.session.expired') {
+    const session = event?.data?.object ?? {};
+    const transactionId = String(session?.metadata?.transaction_id ?? session?.client_reference_id ?? '');
+    if (transactionId) {
+      await markTopUpTransactionFailed(
+        admin,
+        transactionId,
+        String(session?.id ?? ''),
+        'stripe',
+        'Checkout session expired',
+        event,
+      );
+    }
+    return json({ received: true, transactionId, expired: true });
+  }
+
+  if (event?.type === 'payment_intent.payment_failed') {
+    const intent = event?.data?.object ?? {};
+    const transactionId = String(intent?.metadata?.transaction_id ?? '');
+    if (transactionId) {
+      await markTopUpTransactionFailed(
+        admin,
+        transactionId,
+        String(intent?.id ?? ''),
+        'stripe',
+        String(intent?.last_payment_error?.message ?? 'Payment failed'),
+        event,
+      );
+    }
+    return json({ received: true, transactionId, failed: true });
+  }
+
+  return json({ received: true, ignored: true });
+}
+
 async function handleResendWebhook(request: Request) {
   const url = new URL(request.url);
   if (!hasValidWebhookToken(url, deliveryEnv.communicationWebhookToken)) {
@@ -939,6 +1538,11 @@ Deno.serve(async (request) => {
       return await handleHealth();
     }
 
+    const walletRoute = parseWalletRoute(path);
+    if (request.method === 'POST' && walletRoute) {
+      return await handleWalletTopUp(request, walletRoute.userId);
+    }
+
     if (request.method === 'GET' && path === '/communications/preferences') {
       return await handleGetCommunicationPreferences(request);
     }
@@ -977,6 +1581,14 @@ Deno.serve(async (request) => {
 
     if (request.method === 'POST' && path === '/communications/admin/apply-migrations') {
       return await handleApplyCommunicationMigrations(request);
+    }
+
+    if (request.method === 'POST' && path === '/moderation/admin/apply-migrations') {
+      return await handleApplyModerationMigrations(request);
+    }
+
+    if (request.method === 'POST' && path === '/payments/webhooks/stripe') {
+      return await handleStripeWebhook(request);
     }
 
     if (request.method === 'POST' && path === '/communications/webhooks/resend') {

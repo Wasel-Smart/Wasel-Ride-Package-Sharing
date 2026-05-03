@@ -7,7 +7,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { authAPI } from '../services/auth';
 import { initSupabaseListeners, isSupabaseConfigured, supabase } from '../utils/supabase/client';
-import { getConfig } from '../utils/env';
 
 export interface WaselUser {
   id: string;
@@ -198,7 +197,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     hydrateFromSession();
 
     if (isSupabaseConfigured && supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const syncUserFromSession = async (session: { user?: unknown } | null) => {
         if (!mounted) return;
 
         if (!session?.user) {
@@ -217,6 +216,10 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
           const fallbackUser = mapBackendProfile({ authUser: session.user, profile: null });
           setAndPersist(fallbackUser);
         }
+      };
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        void syncUserFromSession(session);
       });
 
       return () => {
@@ -250,7 +253,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
         return { error: null };
       }
 
-      return { error: 'Backend auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
+      return { error: 'Backend auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.' };
     } catch (error) {
       return { error: toMessage(error) };
     } finally {
@@ -309,7 +312,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       }
 
       return {
-        error: 'Backend auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+        error: 'Backend auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.',
       };
     } catch (error) {
       return { error: toMessage(error) };

@@ -115,7 +115,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     let mounted = true;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, nextSession) => {
+      (event, nextSession) => {
         if (!mounted) return;
 
         setSession(nextSession);

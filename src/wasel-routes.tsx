@@ -22,6 +22,7 @@ import { Button } from './components/ui/button';
 import { WaselStateCard } from './components/system/WaselStateCard';
 import { useLanguage } from './contexts/LanguageContext';
 import WaselRoot from './layouts/WaselRoot';
+import ProtectedOutlet from './router/ProtectedOutlet';
 
 // ── Page loader fallback ──────────────────────────────────────────────────────
 function PageLoader() {
@@ -166,7 +167,7 @@ const buildMainChildren = () => [
   // ── Landing ──────────────────────────────────────────────────────────────
   {
     index: true,
-    Component: () => <RedirectTo to="/app/find-ride" />,
+    lazy: lazy(() => import('./features/home/HomePage'), 'HomePage'),
   },
 
   // ── Auth ─────────────────────────────────────────────────────────────────
@@ -177,36 +178,48 @@ const buildMainChildren = () => [
   { path: 'dashboard', Component: () => <RedirectTo to="/app" /> },
   { path: 'home',      Component: () => <RedirectTo to="/app" /> },
 
+  {
+    Component: ProtectedOutlet,
+    children: [
+      { path: 'find-ride',  lazy: lazy(() => import('./features/rides/FindRidePage')) },
+      { path: 'offer-ride', lazy: lazy(() => import('./features/rides/OfferRidePage')) },
+      { path: 'post-ride',  Component: () => <RedirectTo to="/app/offer-ride" /> },
+      { path: 'my-trips', lazy: lazy(() => import('./features/trips/MyTripsPage')) },
+      { path: 'booking-requests', Component: () => <RedirectTo to="/app/my-trips?tab=rides" /> },
+      { path: 'live-trip', lazy: lazy(() => import('./components/LiveTripTracking'), 'LiveTripTracking') },
+    ],
+  },
+
   // ── Rides — FindRidePage & OfferRidePage still live in WaselServicePage
   //            until they are individually migrated (they share type Ride and
   //            a lot of internal state logic that benefits from a separate pass).
-  { path: 'find-ride',  lazy: lazy(() => import('./features/rides/FindRidePage')) },
-  { path: 'offer-ride', lazy: lazy(() => import('./features/rides/OfferRidePage')) },
-  { path: 'post-ride',  Component: () => <RedirectTo to="/app/offer-ride" /> },
 
   // ── My Trips ──────────────────────────────────────────────────────────────
-  { path: 'my-trips', lazy: lazy(() => import('./features/trips/MyTripsPage')) },
 
   // ── Booking Requests ──────────────────────────────────────────────────────
-  { path: 'booking-requests', Component: () => <RedirectTo to="/app/my-trips?tab=rides" /> },
 
   // ── Live Trip ─────────────────────────────────────────────────────────────
-  { path: 'live-trip', lazy: lazy(() => import('./components/LiveTripTracking'), 'LiveTripTracking') },
 
   // ── Routes / Popular ──────────────────────────────────────────────────────
   { path: 'routes', lazy: lazy(() => import('./components/PopularRoutes'), 'PopularRoutes') },
 
+  {
+    Component: ProtectedOutlet,
+    children: [
+      { path: 'bus', lazy: lazy(() => import('./features/bus/BusPage'), 'BusPage') },
+      { path: 'packages',     lazy: lazy(() => import('./features/packages/PackagesPage')) },
+      { path: 'awasel/send',  Component: () => <RedirectTo to="/app/packages" /> },
+      { path: 'awasel/track', Component: () => <RedirectTo to="/app/packages" /> },
+      { path: 'raje3',          lazy: lazy(() => import('./features/raje3/ReturnMatching')) },
+      { path: 'services/raje3', Component: () => <RedirectTo to="/app/raje3" /> },
+    ],
+  },
+
   // ── Bus — now its own dedicated file ─────────────────────────────────────
-  { path: 'bus', lazy: lazy(() => import('./features/bus/BusPage'), 'BusPage') },
 
   // ── Packages / Awasel — still in WaselServicePage pending migration ───────
-  { path: 'packages',     lazy: lazy(() => import('./features/packages/PackagesPage')) },
-  { path: 'awasel/send',  Component: () => <RedirectTo to="/app/packages" /> },
-  { path: 'awasel/track', Component: () => <RedirectTo to="/app/packages" /> },
 
   // ── Raje3 Returns ─────────────────────────────────────────────────────────
-  { path: 'raje3',          lazy: lazy(() => import('./features/raje3/ReturnMatching')) },
-  { path: 'services/raje3', Component: () => <RedirectTo to="/app/raje3" /> },
 
   // ── B2B / B2S ─────────────────────────────────────────────────────────────
   { path: 'services/corporate', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
@@ -217,32 +230,38 @@ const buildMainChildren = () => [
   { path: 'ai-intelligence',    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
 
   // ── Wallet ────────────────────────────────────────────────────────────────
-  { path: 'wallet',   lazy: lazy(() => import('./features/wallet'), 'WalletDashboard') },
-  { path: 'payments', Component: () => <RedirectTo to="/app/wallet" /> },
 
   // ── Plus ──────────────────────────────────────────────────────────────────
-  { path: 'plus', lazy: lazy(() => import('./features/plus/WaselPlusPage')) },
 
   // ── Profile ───────────────────────────────────────────────────────────────
-  { path: 'profile', lazy: lazy(() => import('./features/profile/ProfilePage')) },
 
   // ── Settings ──────────────────────────────────────────────────────────────
-  { path: 'settings', lazy: lazy(() => import('./features/preferences/SettingsPage')) },
 
   // ── Notifications ─────────────────────────────────────────────────────────
-  {
-    path: 'notifications',
-    lazy: lazy(() => import('./features/notifications/NotificationsPage'), 'NotificationsPage'),
-  },
 
   // ── Trust Center ──────────────────────────────────────────────────────────
-  { path: 'trust', lazy: lazy(() => import('./features/trust/TrustCenterPage')) },
 
   // ── Driver ────────────────────────────────────────────────────────────────
-  { path: 'driver', lazy: lazy(() => import('./features/driver/DriverPage')) },
 
   // ── Safety ────────────────────────────────────────────────────────────────
-  { path: 'safety', lazy: lazy(() => import('./features/safety/SafetyPage')) },
+
+  {
+    Component: ProtectedOutlet,
+    children: [
+      { path: 'wallet',   lazy: lazy(() => import('./features/wallet'), 'WalletDashboard') },
+      { path: 'payments', Component: () => <RedirectTo to="/app/wallet" /> },
+      { path: 'plus', lazy: lazy(() => import('./features/plus/WaselPlusPage')) },
+      { path: 'profile', lazy: lazy(() => import('./features/profile/ProfilePage')) },
+      { path: 'settings', lazy: lazy(() => import('./features/preferences/SettingsPage')) },
+      {
+        path: 'notifications',
+        lazy: lazy(() => import('./features/notifications/NotificationsPage'), 'NotificationsPage'),
+      },
+      { path: 'trust', lazy: lazy(() => import('./features/trust/TrustCenterPage')) },
+      { path: 'driver', lazy: lazy(() => import('./features/driver/DriverPage')) },
+      { path: 'safety', lazy: lazy(() => import('./features/safety/SafetyPage')) },
+    ],
+  },
 
   // ── Legal ─────────────────────────────────────────────────────────────────
   { path: 'privacy',        lazy: lazy(() => import('./features/legal/PrivacyPolicy'), 'PrivacyPolicy') },

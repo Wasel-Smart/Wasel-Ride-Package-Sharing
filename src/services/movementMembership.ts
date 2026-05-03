@@ -127,6 +127,16 @@ export function activateWaselPlus() {
   return writeSnapshot(next);
 }
 
+export function setWaselPlusActive(active: boolean) {
+  const current = readSnapshot();
+  const next = {
+    ...current,
+    plusActive: active,
+    loyaltyTier: resolveTier(current.movementCredits),
+  };
+  return writeSnapshot(next);
+}
+
 export function startCommuterPass(routeId: string) {
   const current = readSnapshot();
   const streak = updateStreak(current.lastActivityDate);

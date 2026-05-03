@@ -1,9 +1,7 @@
 import { Settings, ShieldCheck, Wallet } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
-import { MobileBottomNav } from '../components/MobileBottomNav';
 import { SkipToContent } from '../components/SkipToContent';
-import { AvailabilityBanner } from '../components/system/AvailabilityBanner';
 import { WaselLogo } from '../components/wasel-ds/WaselLogo';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -21,6 +19,11 @@ import {
 } from './waselRootParts';
 
 const PRIMARY_HEADER_GROUP_IDS = new Set(['find', 'offer', 'packages', 'bus', 'mobility-os']);
+const AvailabilityBanner = lazy(() => import('../components/system/AvailabilityBanner'));
+const MobileBottomNav = lazy(async () => {
+  const module = await import('../components/MobileBottomNav');
+  return { default: module.MobileBottomNav };
+});
 
 export default function WaselRoot() {
   const { user, signOut } = useLocalAuth();
@@ -104,7 +107,7 @@ export default function WaselRoot() {
       >
         <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 20px', minHeight: 70, display: 'flex', alignItems: 'center', gap: 18 }}>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
             style={{
               background: 'none',
               border: 'none',
@@ -284,7 +287,9 @@ export default function WaselRoot() {
         </div>
       </header>
 
-      <AvailabilityBanner ar={ar} />
+      <Suspense fallback={null}>
+        <AvailabilityBanner ar={ar} />
+      </Suspense>
       <MobileDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} onNavigate={navigate} user={user} onSignOut={signOut} ar={ar} />
 
       <main id="main-content" role="main" aria-label={shellCopy.mainContent} tabIndex={-1} style={{ position: 'relative', isolation: 'isolate' }}>
@@ -292,7 +297,9 @@ export default function WaselRoot() {
         <Outlet />
       </main>
 
-      <MobileBottomNav language={language} />
+      <Suspense fallback={null}>
+        <MobileBottomNav language={language} />
+      </Suspense>
     </div>
   );
 }

@@ -46,6 +46,24 @@ export interface GrowthEventRecord {
   createdAt: string;
 }
 
+const EMPTY_GROWTH_DASHBOARD: GrowthDashboard = {
+  funnel: {
+    searched: 0,
+    selected: 0,
+    booked: 0,
+    completed: 0,
+  },
+  serviceMix: {
+    rides: 0,
+    buses: 0,
+    packages: 0,
+    referrals: 0,
+  },
+  revenueJod: 0,
+  activeDemand: 0,
+  topCorridors: [],
+};
+
 const LOCAL_REFERRAL_KEY = 'wasel-referral-snapshot';
 const LOCAL_GROWTH_EVENTS_KEY = 'wasel-growth-events';
 const LOCAL_DEMAND_KEY = 'wasel-demand-alerts';
@@ -206,43 +224,7 @@ export async function getGrowthDashboard(userId?: string): Promise<GrowthDashboa
   try {
     return await getDirectGrowthAnalytics(userId);
   } catch {
-    const events = readLocalGrowthEvents();
-    const alerts = readLocalDemandAlerts();
-    const corridorMap = new Map<string, { corridor: string; demand: number; conversions: number }>();
-
-    for (const event of events) {
-      const corridor = [event.from, event.to].filter(Boolean).join(' to ');
-      if (corridor) {
-        const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
-        current.conversions += event.funnelStage === 'booked' ? 1 : 0;
-        corridorMap.set(corridor, current);
-      }
-    }
-
-    for (const alert of alerts) {
-      const corridor = `${alert.from} to ${alert.to}`;
-      const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
-      current.demand += 1;
-      corridorMap.set(corridor, current);
-    }
-
-    return {
-      funnel: {
-        searched: events.filter((event) => event.funnelStage === 'searched').length,
-        selected: events.filter((event) => event.funnelStage === 'selected').length,
-        booked: events.filter((event) => event.funnelStage === 'booked').length,
-        completed: events.filter((event) => event.funnelStage === 'completed').length,
-      },
-      serviceMix: {
-        rides: events.filter((event) => event.serviceType === 'ride').length,
-        buses: events.filter((event) => event.serviceType === 'bus').length,
-        packages: events.filter((event) => event.serviceType === 'package').length,
-        referrals: events.filter((event) => event.serviceType === 'referral').length,
-      },
-      revenueJod: events.reduce((sum, event) => sum + Number(event.valueJod ?? 0), 0),
-      activeDemand: alerts.filter((alert) => alert.status === 'active').length,
-      topCorridors: Array.from(corridorMap.values()).sort((a, b) => (b.demand + b.conversions) - (a.demand + a.conversions)).slice(0, 6),
-    };
+    return EMPTY_GROWTH_DASHBOARD;
   }
 }
 

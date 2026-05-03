@@ -44,7 +44,7 @@ function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'gen
 
 function requireSupabase() {
   if (!supabase) {
-    throw new Error('Supabase auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+    throw new Error('Supabase auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.');
   }
 
   return supabase;

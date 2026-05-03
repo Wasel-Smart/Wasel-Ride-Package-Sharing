@@ -24,6 +24,16 @@ describe('runtime environment validation', () => {
     expect(validateRuntimeConfiguration(baseEnv).ok).toBe(true);
   });
 
+  it('accepts the publishable key env without the legacy anon key', () => {
+    const { VITE_SUPABASE_ANON_KEY: _unused, ...rest } = baseEnv;
+    const result = validateRuntimeConfiguration({
+      ...rest,
+      VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_example',
+    });
+
+    expect(result.ok).toBe(true);
+  });
+
   it('fails when no backend transport is configured', () => {
     const result = validateRuntimeConfiguration({
       MODE: 'production',

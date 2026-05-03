@@ -31,8 +31,13 @@ import {
   syncRouteReminders,
 } from '../../services/movementRetention';
 import { notificationsAPI } from '../../services/notifications.js';
+import { subscribeToRideBookingRealtime } from '../../services/rideRealtime';
 import { getLiveCorridorSignal, useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
-import { createRideBooking, hydrateRideBookings } from '../../services/rideLifecycle';
+import {
+  createRideBooking,
+  getRideBookings,
+  type RideBookingRecord,
+} from '../../services/rideLifecycle';
 import {
   getCorridorOpportunity,
   getMarketplaceNodes,
@@ -68,6 +73,14 @@ import { FindRidePackagePanel } from './components/FindRidePackagePanel';
 import { FindRideTripDetailModal } from './components/FindRideTripDetailModal';
 import { getFindRideStaticCopy } from './findRideContent';
 
+type BookingSuccessState = {
+  status: 'pending_driver' | 'confirmed';
+  routeLabel: string;
+  driverName: string;
+  priceJod: number;
+  ticketCode?: string;
+};
+
 export function FindRidePage() {
   const nav = useIframeSafeNavigate();
   const location = useLocation();
@@ -87,10 +100,12 @@ export function FindRidePage() {
   const [loading, setLoading] = useState(false);
   const [sort, setSort] = useState<'price' | 'time' | 'rating'>('rating');
   const [selected, setSelected] = useState<Ride | null>(null);
-  const [booked, setBooked] = useState<Set<string>>(() => new Set(readStoredStringList(RIDE_BOOKINGS_KEY)));
+  const [bookingInFlightId, setBookingInFlightId] = useState<string | null>(null);
+  const [rideBookings, setRideBookings] = useState<RideBookingRecord[]>(() => getRideBookings());
   const [recentSearches, setRecentSearches] = useState<string[]>(() => readStoredStringList(RIDE_SEARCHES_KEY));
   const [searchError, setSearchError] = useState<string | null>(null);
   const [bookingMessage, setBookingMessage] = useState<string | null>(null);
+  const [bookingSuccess, setBookingSuccess] = useState<BookingSuccessState | null>(null);
   const [waitlistMessage, setWaitlistMessage] = useState<string | null>(null);
   const [retentionMessage, setRetentionMessage] = useState<string | null>(null);
   const [savedReminders, setSavedReminders] = useState(() => getRouteReminders());
@@ -105,6 +120,23 @@ export function FindRidePage() {
     () => getRecurringRouteSuggestions(3),
     [routeIntelligence.updatedAt],
   );
+  const bookingByRideId = useMemo(() => {
+    const next = new Map<string, RideBookingRecord>();
+
+    for (const booking of rideBookings) {
+      if (booking.status !== 'pending_driver' && booking.status !== 'confirmed') {
+        continue;
+      }
+
+      const current = next.get(booking.rideId);
+      if (!current || new Date(current.updatedAt).getTime() < new Date(booking.updatedAt).getTime()) {
+        next.set(booking.rideId, booking);
+      }
+    }
+
+    return next;
+  }, [rideBookings]);
+  const bookedRideIds = useMemo(() => new Set(bookingByRideId.keys()), [bookingByRideId]);
   const signalLookup = useMemo(() => {
     const lookup = new Map<string, ReturnType<typeof getLiveCorridorSignal>>();
     for (const signal of routeIntelligence.allSignals) {
@@ -152,7 +184,7 @@ export function FindRidePage() {
   const recommendedRides = [...results]
     .sort((left, right) => scoreRideForRecommendation(right) - scoreRideForRecommendation(left))
     .slice(0, 2);
-  const bookedRides = allAvailableRides.filter((ride) => booked.has(ride.id)).slice(0, 3);
+  const bookedRides = allAvailableRides.filter((ride) => bookedRideIds.has(ride.id)).slice(0, 3);
   const selectedPriceQuote = selectedSignal?.priceQuote
     ?? (corridorPlan
       ? getMovementPriceQuote({
@@ -165,11 +197,22 @@ export function FindRidePage() {
 
   const resolveSignalForRoute = (routeFrom: string, routeTo: string) =>
     signalLookup.get(`${routeFrom}::${routeTo}`) ?? getLiveCorridorSignal(routeFrom, routeTo, routeIntelligence.membership);
+  const openMyTrips = () => nav('/app/my-trips?tab=rides');
+  const selectedBooking = selected ? bookingByRideId.get(selected.id) ?? null : null;
+  const getRideBookingStatus = (rideId: string): 'pending_driver' | 'confirmed' | null => {
+    const status = bookingByRideId.get(rideId)?.status;
+    return status === 'pending_driver' || status === 'confirmed' ? status : null;
+  };
 
   useEffect(() => {
     if (!user?.id) return;
-    void hydrateRideBookings(user.id, getConnectedRides());
+    const unsubscribe = subscribeToRideBookingRealtime({
+      userId: user.id,
+      rides: getConnectedRides(),
+      onBookingsChange: setRideBookings,
+    });
     void hydrateDemandAlerts(user.id);
+    return unsubscribe;
   }, [user?.id]);
 
   useEffect(() => {
@@ -185,8 +228,8 @@ export function FindRidePage() {
   }, [routeIntelligence.updatedAt, user?.email, user?.phone]);
 
   useEffect(() => {
-    writeStoredStringList(RIDE_BOOKINGS_KEY, Array.from(booked));
-  }, [booked]);
+    writeStoredStringList(RIDE_BOOKINGS_KEY, Array.from(bookedRideIds));
+  }, [bookedRideIds]);
 
   useEffect(() => {
     writeStoredStringList(RIDE_SEARCHES_KEY, recentSearches);
@@ -213,6 +256,7 @@ export function FindRidePage() {
 
     setSearchError(null);
     setBookingMessage(null);
+    setBookingSuccess(null);
     setLoading(true);
 
     setTimeout(() => {
@@ -259,6 +303,17 @@ export function FindRidePage() {
   };
 
   const handleBook = (ride: Ride) => {
+    const existingBooking = bookingByRideId.get(ride.id);
+    if (existingBooking) {
+      setBookingMessage(
+        existingBooking.status === 'pending_driver'
+          ? `${ride.from} to ${ride.to} is already waiting for driver confirmation in My Trips.`
+          : `${ride.from} to ${ride.to} is already confirmed in My Trips.`,
+      );
+      openMyTrips();
+      return;
+    }
+
     if (!user) {
       nav('/app/auth');
       return;
@@ -277,46 +332,58 @@ export function FindRidePage() {
       membership: routeIntelligence.membership,
     });
 
-    const booking = createRideBooking({
-      rideId: ride.id,
-      ownerId: ride.ownerId,
-      passengerId: user.id,
-      from: ride.from,
-      to: ride.to,
-      date: ride.date,
-      time: ride.time,
-      driverName: ride.driver.name,
-      passengerName: user.name,
-      seatsRequested: 1,
-      pricePerSeatJod: ridePriceQuote.finalPriceJod,
-      routeMode: ride.routeMode === 'live_post' ? 'live_post' : 'network_inventory',
-    });
+    setBookingInFlightId(ride.id);
 
-    setBooked((previous) => new Set(previous).add(ride.id));
-    setBookingMessage(
-      booking.status === 'pending_driver'
-        ? `Request sent to ${ride.driver.name} for ${ridePriceQuote.finalPriceJod} JOD.`
-        : `Ride reserved for ${ridePriceQuote.finalPriceJod} JOD. Ticket ${booking.ticketCode}.`,
-    );
+    try {
+      const booking = createRideBooking({
+        rideId: ride.id,
+        ownerId: ride.ownerId,
+        passengerId: user.id,
+        from: ride.from,
+        to: ride.to,
+        date: ride.date,
+        time: ride.time,
+        driverName: ride.driver.name,
+        passengerName: user.name,
+        seatsRequested: 1,
+        pricePerSeatJod: ridePriceQuote.finalPriceJod,
+        routeMode: ride.routeMode === 'live_post' ? 'live_post' : 'network_inventory',
+      });
 
-    notificationsAPI.createNotification({
-      title: booking.status === 'pending_driver' ? 'Route request sent' : t.bookingStarted,
-      message:
+      setRideBookings(getRideBookings());
+      setBookingSuccess({
+        status: booking.status === 'pending_driver' ? 'pending_driver' : 'confirmed',
+        routeLabel: `${ride.from} to ${ride.to}`,
+        driverName: ride.driver.name,
+        priceJod: ridePriceQuote.finalPriceJod,
+        ticketCode: booking.ticketCode,
+      });
+      setBookingMessage(
         booking.status === 'pending_driver'
-          ? `${ride.from} to ${ride.to} is waiting for driver approval at ${ridePriceQuote.finalPriceJod} JOD.`
-          : `${ride.from} to ${ride.to} at ${ride.time} is now in your trips at ${ridePriceQuote.finalPriceJod} JOD with boarding reminders.`,
-      type: 'booking',
-      priority: 'high',
-      action_url: '/app/my-trips?tab=rides',
-    }).catch(() => {});
+          ? `Request sent for ${ride.from} to ${ride.to}.`
+          : `Seat confirmed for ${ride.from} to ${ride.to}.`,
+      );
 
-    if (permission === 'default') {
-      requestPermission().catch(() => {});
+      notificationsAPI.createNotification({
+        title: booking.status === 'pending_driver' ? 'Route request sent' : t.bookingStarted,
+        message:
+          booking.status === 'pending_driver'
+            ? `${ride.from} to ${ride.to} is waiting for driver approval at ${ridePriceQuote.finalPriceJod} JOD.`
+            : `${ride.from} to ${ride.to} at ${ride.time} is now in your trips at ${ridePriceQuote.finalPriceJod} JOD with boarding reminders.`,
+        type: 'booking',
+        priority: 'high',
+        action_url: '/app/my-trips?tab=rides',
+      }).catch(() => {});
+
+      if (permission === 'default') {
+        requestPermission().catch(() => {});
+      }
+
+      notifyTripConfirmed(ride.driver.name, `${ride.from} to ${ride.to}`);
+      void recordMovementActivity('ride_booked', corridorPlan?.id ?? null);
+    } finally {
+      setBookingInFlightId(null);
     }
-
-    notifyTripConfirmed(ride.driver.name, `${ride.from} to ${ride.to}`);
-    void recordMovementActivity('ride_booked', corridorPlan?.id ?? null);
-    setSelected(null);
   };
 
   const handleDemandCapture = () => {
@@ -449,6 +516,56 @@ export function FindRidePage() {
 
               {searchError && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: `${DS.gold}12`, border: `1px solid ${DS.gold}30`, borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}><Shield size={16} color={DS.gold} /><span>{searchError}</span></div>}
               {bookingMessage && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: 'rgba(0,200,117,0.10)', border: '1px solid rgba(0,200,117,0.28)', borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}><CheckCircle2 size={16} color={DS.green} /><span>{bookingMessage}</span></div>}
+              {bookingSuccess && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    background: 'linear-gradient(135deg, rgba(0,200,117,0.16), rgba(0,200,232,0.10))',
+                    border: '1px solid rgba(0,200,117,0.28)',
+                    borderRadius: r(16),
+                    padding: '16px 18px',
+                    display: 'grid',
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                    <div>
+                      <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem' }}>
+                        {bookingSuccess.status === 'pending_driver' ? 'Request sent' : 'Seat confirmed'}
+                      </div>
+                      <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.6, marginTop: 6 }}>
+                        {bookingSuccess.status === 'pending_driver'
+                          ? `${bookingSuccess.routeLabel} is now waiting on ${bookingSuccess.driverName}. Wasel will update My Trips as soon as the driver confirms.`
+                          : `${bookingSuccess.routeLabel} is secured at ${bookingSuccess.priceJod} JOD. Boarding details and ticket tracking are now ready in My Trips.`}
+                      </div>
+                    </div>
+                    <span style={{ ...pill(bookingSuccess.status === 'pending_driver' ? DS.gold : DS.green), fontSize: '0.72rem' }}>
+                      {bookingSuccess.status === 'pending_driver'
+                        ? `${bookingSuccess.priceJod} JOD pending`
+                        : `${bookingSuccess.priceJod} JOD confirmed`}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <button
+                      onClick={openMyTrips}
+                      style={{ height: 42, padding: '0 16px', borderRadius: '999px', border: 'none', background: DS.gradG, color: '#fff', fontWeight: 800, cursor: 'pointer' }}
+                    >
+                      Open My Trips
+                    </button>
+                    <button
+                      onClick={() => setBookingSuccess(null)}
+                      style={{ height: 42, padding: '0 16px', borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Keep browsing
+                    </button>
+                  </div>
+                  {bookingSuccess.ticketCode ? (
+                    <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
+                      Ticket {bookingSuccess.ticketCode}
+                    </div>
+                  ) : null}
+                </div>
+              )}
               {retentionMessage && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}30`, borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}><Sparkles size={16} color={DS.cyan} /><span>{retentionMessage}</span></div>}
 
               <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginTop: 14 }}>
@@ -485,6 +602,55 @@ export function FindRidePage() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="sp-results-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+              <h2 style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
+                {searched
+                  ? `${from} to ${to} | ${results.length} route match${results.length !== 1 ? 'es' : ''}`
+                  : `Popular routes | showing ${results.length} departures`}
+              </h2>
+              {selectedSignal ? (
+                <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
+                  Live lane price {selectedSignal.priceQuote.finalPriceJod} JOD | Next wave {selectedSignal.nextWaveWindow}
+                </div>
+              ) : null}
+              <div className="sp-sort-bar" style={{ display: 'flex', gap: 6 }}>
+                {([['price', t.cheapest], ['time', t.earliest], ['rating', t.topRated]] as const).map(([key, label]) => (
+                  <button key={key} onClick={() => setSort(key)} style={{ padding: '6px 14px', borderRadius: '99px', border: `1px solid ${sort === key ? DS.cyan : DS.border}`, background: sort === key ? `${DS.cyan}15` : DS.card2, color: sort === key ? DS.cyan : DS.sub, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>{label}</button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
+              <AnimatePresence>
+                {results.length === 0 ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: DS.card, borderRadius: r(20), padding: '60px 24px', textAlign: 'center', border: `1px solid ${DS.border}` }}>
+                    <div style={{ fontSize: '3rem', marginBottom: 16 }}>{copy.noResultsIcon}</div>
+                    <h3 style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>{t.noRidesFound}</h3>
+                    <p style={{ color: DS.sub, fontSize: '0.875rem' }}>
+                      No ride found yet. Save this route and get alerted when one opens{selectedSignal ? ` around ${selectedSignal.nextWaveWindow}` : ''}.
+                    </p>
+                    <div className="sp-empty-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 18 }}>
+                      <button onClick={() => { setDate(''); setSearchError(null); setSearched(true); }} style={{ height: 44, borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{t.clearDateFilter}</button>
+                      <button onClick={() => nav(`/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)} style={{ height: 44, borderRadius: r(12), border: 'none', background: DS.gradG, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{t.openBusFallback}</button>
+                    </div>
+                    <button onClick={handleDemandCapture} style={{ marginTop: 10, width: '100%', height: 44, borderRadius: r(12), border: `1px solid ${DS.cyan}35`, background: `${DS.cyan}12`, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{copy.notifyMe}</button>
+                    {(waitlistMessage || demandStats.active > 0) && <div style={{ marginTop: 12, color: DS.sub, fontSize: '0.78rem', lineHeight: 1.5 }}>{waitlistMessage ?? `${demandStats.active} active alert${demandStats.active === 1 ? '' : 's'}.`}</div>}
+                    {nearbyCorridors.length > 0 && <div style={{ marginTop: 20, textAlign: 'left' }}><div style={{ color: '#fff', fontWeight: 800, marginBottom: 10 }}>{t.nearbyCorridors}</div><div style={{ display: 'grid', gap: 10 }}>{nearbyCorridors.map((ride) => <button key={ride.id} onClick={() => handleOpenRide(ride)} style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}><div><div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{ride.from} to {ride.to}</div><div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>{ride.time} | {ride.driver.name}</div></div><span style={{ ...pill(ride.seatsAvailable > 0 ? DS.cyan : DS.gold) }}>{ride.seatsAvailable > 0 ? `${getMovementPriceQuote({ basePriceJod: ride.pricePerSeat, corridorId: resolveSignalForRoute(ride.from, ride.to)?.id, forecastDemandScore: resolveSignalForRoute(ride.from, ride.to)?.forecastDemandScore, membership: routeIntelligence.membership }).finalPriceJod} JOD` : 'Sold out'}</span></div></button>)}</div></div>}
+                  </motion.div>
+                ) : results.map((ride, index) => (
+                  <FindRideCard
+                    key={ride.id}
+                    ride={ride}
+                    idx={index}
+                    bookingStatus={getRideBookingStatus(ride.id)}
+                    signal={resolveSignalForRoute(ride.from, ride.to)}
+                    onOpen={() => handleOpenRide(ride)}
+                    onOpenBooking={openMyTrips}
+                  />
+                ))}
+              </AnimatePresence>
             </div>
 
             <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
@@ -671,7 +837,9 @@ export function FindRidePage() {
                               {ride.time} | {ride.driver.name} | {rideSignal ? `${rideSignal.routeOwnershipScore}/100 ownership` : ride.car}
                             </div>
                           </div>
-                          <span style={{ ...pill(booked.has(ride.id) ? DS.green : DS.cyan) }}>{booked.has(ride.id) ? 'Booked' : `${ridePriceQuote.finalPriceJod} JOD`}</span>
+                          <span style={{ ...pill(bookedRideIds.has(ride.id) ? DS.green : DS.cyan) }}>
+                            {bookedRideIds.has(ride.id) ? 'Booked' : `${ridePriceQuote.finalPriceJod} JOD`}
+                          </span>
                         </div>
                       </button>
                     );
@@ -689,44 +857,6 @@ export function FindRidePage() {
               </div>
             </div>
 
-            <div className="sp-results-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-              <h2 style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
-                {searched
-                  ? `${from} to ${to} | ${results.length} route match${results.length !== 1 ? 'es' : ''}`
-                  : `Popular routes | showing ${results.length} departures`}
-              </h2>
-              {selectedSignal ? (
-                <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
-                  Live lane price {selectedSignal.priceQuote.finalPriceJod} JOD | Next wave {selectedSignal.nextWaveWindow}
-                </div>
-              ) : null}
-              <div className="sp-sort-bar" style={{ display: 'flex', gap: 6 }}>
-                {([['price', t.cheapest], ['time', t.earliest], ['rating', t.topRated]] as const).map(([key, label]) => (
-                  <button key={key} onClick={() => setSort(key)} style={{ padding: '6px 14px', borderRadius: '99px', border: `1px solid ${sort === key ? DS.cyan : DS.border}`, background: sort === key ? `${DS.cyan}15` : DS.card2, color: sort === key ? DS.cyan : DS.sub, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>{label}</button>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <AnimatePresence>
-                {results.length === 0 ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: DS.card, borderRadius: r(20), padding: '60px 24px', textAlign: 'center', border: `1px solid ${DS.border}` }}>
-                    <div style={{ fontSize: '3rem', marginBottom: 16 }}>{copy.noResultsIcon}</div>
-                    <h3 style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>{t.noRidesFound}</h3>
-                    <p style={{ color: DS.sub, fontSize: '0.875rem' }}>
-                      No ride found yet. Save this route and get alerted when one opens{selectedSignal ? ` around ${selectedSignal.nextWaveWindow}` : ''}.
-                    </p>
-                    <div className="sp-empty-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 18 }}>
-                      <button onClick={() => { setDate(''); setSearchError(null); setSearched(true); }} style={{ height: 44, borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{t.clearDateFilter}</button>
-                      <button onClick={() => nav(`/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)} style={{ height: 44, borderRadius: r(12), border: 'none', background: DS.gradG, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{t.openBusFallback}</button>
-                    </div>
-                    <button onClick={handleDemandCapture} style={{ marginTop: 10, width: '100%', height: 44, borderRadius: r(12), border: `1px solid ${DS.cyan}35`, background: `${DS.cyan}12`, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{copy.notifyMe}</button>
-                    {(waitlistMessage || demandStats.active > 0) && <div style={{ marginTop: 12, color: DS.sub, fontSize: '0.78rem', lineHeight: 1.5 }}>{waitlistMessage ?? `${demandStats.active} active alert${demandStats.active === 1 ? '' : 's'}.`}</div>}
-                    {nearbyCorridors.length > 0 && <div style={{ marginTop: 20, textAlign: 'left' }}><div style={{ color: '#fff', fontWeight: 800, marginBottom: 10 }}>{t.nearbyCorridors}</div><div style={{ display: 'grid', gap: 10 }}>{nearbyCorridors.map((ride) => <button key={ride.id} onClick={() => handleOpenRide(ride)} style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}><div><div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{ride.from} to {ride.to}</div><div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>{ride.time} | {ride.driver.name}</div></div><span style={{ ...pill(ride.seatsAvailable > 0 ? DS.cyan : DS.gold) }}>{ride.seatsAvailable > 0 ? `${getMovementPriceQuote({ basePriceJod: ride.pricePerSeat, corridorId: resolveSignalForRoute(ride.from, ride.to)?.id, forecastDemandScore: resolveSignalForRoute(ride.from, ride.to)?.forecastDemandScore, membership: routeIntelligence.membership }).finalPriceJod} JOD` : 'Sold out'}</span></div></button>)}</div></div>}
-                  </motion.div>
-                ) : results.map((ride, index) => <FindRideCard key={ride.id} ride={ride} idx={index} booked={booked.has(ride.id)} signal={resolveSignalForRoute(ride.from, ride.to)} onOpen={() => handleOpenRide(ride)} />)}
-              </AnimatePresence>
-            </div>
           </>
         )}
 
@@ -736,7 +866,17 @@ export function FindRidePage() {
 
         <ServiceFlowPlaybook focusService={tab === 'ride' ? 'find-ride' : 'send-package'} />
 
-        {selected && <FindRideTripDetailModal ride={selected} booked={booked.has(selected.id)} signal={resolveSignalForRoute(selected.from, selected.to)} onClose={() => setSelected(null)} onBook={() => handleBook(selected)} />}
+        {selected && (
+          <FindRideTripDetailModal
+            ride={selected}
+            bookingStatus={selectedBooking && (selectedBooking.status === 'pending_driver' || selectedBooking.status === 'confirmed') ? selectedBooking.status : null}
+            signal={resolveSignalForRoute(selected.from, selected.to)}
+            isBooking={bookingInFlightId === selected.id}
+            onClose={() => setSelected(null)}
+            onBook={() => handleBook(selected)}
+            onOpenBooking={openMyTrips}
+          />
+        )}
       </PageShell>
     </Protected>
   );

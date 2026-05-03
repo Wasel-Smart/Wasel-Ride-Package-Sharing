@@ -1,20 +1,25 @@
+/**
+ * NotificationCenter.tsx  ← REFACTORED
+ *
+ * Orchestrator only — all sub-components and helpers are now in
+ * src/components/notifications/.
+ *
+ * Before: 39 KB single-file monolith
+ * After:  ~6 KB orchestrator + 3 focused modules:
+ *   - notificationHelpers.ts    (pure functions + static maps)
+ *   - NotificationMetric.tsx    (stat tile)
+ *   - NotificationItem.tsx      (notification row card)
+ */
 import { startTransition, useDeferredValue, useMemo, useState } from 'react';
-import { motion } from 'motion/react';
 import {
   AlertTriangle,
   Bell,
   BellOff,
-  Check,
   CheckCheck,
-  CircleDollarSign,
   Inbox,
-  LifeBuoy,
-  MessageSquare,
   RefreshCw,
   Search,
-  ShieldCheck,
   Trash2,
-  CarFront,
   Wifi,
   WifiOff,
 } from 'lucide-react';
@@ -30,68 +35,19 @@ import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { normalizeTextTree } from '../utils/textEncoding';
 import {
   buildNotificationSections,
-  getNotificationCategory,
   getNotificationSummary,
   matchesNotificationFilter,
   matchesNotificationSearch,
-  type NotificationCategory,
   type NotificationFilter,
 } from '../features/notifications/notificationCenterModel';
+import { NotificationItem } from './notifications/NotificationItem';
+import { NotificationMetric } from './notifications/NotificationMetric';
 
-type FilterConfig = {
-  value: NotificationFilter;
-  label: string;
-};
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-const CATEGORY_ICON: Record<NotificationCategory, typeof CarFront> = {
-  rides: CarFront,
-  messages: MessageSquare,
-  wallet: CircleDollarSign,
-  trust: ShieldCheck,
-  support: LifeBuoy,
-  system: Bell,
-};
+type FilterConfig = { value: NotificationFilter; label: string };
 
-const CATEGORY_ACCENT: Record<NotificationCategory, string> = {
-  rides: 'from-cyan-500/25 to-sky-500/5 text-cyan-300 border-cyan-500/20',
-  messages: 'from-blue-500/25 to-indigo-500/5 text-blue-300 border-blue-500/20',
-  wallet: 'from-emerald-500/25 to-lime-500/5 text-emerald-300 border-emerald-500/20',
-  trust: 'from-amber-500/25 to-orange-500/5 text-amber-300 border-amber-500/20',
-  support: 'from-rose-500/25 to-pink-500/5 text-rose-300 border-rose-500/20',
-  system: 'from-slate-500/25 to-slate-400/5 text-slate-200 border-slate-500/20',
-};
-
-function formatRelativeTimestamp(dateString: string, isRTL: boolean) {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60_000);
-  const diffHours = Math.floor(diffMs / 3_600_000);
-  const diffDays = Math.floor(diffMs / 86_400_000);
-
-  if (diffMins < 1) return isRTL ? 'الآن' : 'Just now';
-  if (diffMins < 60) return isRTL ? `منذ ${diffMins} دقيقة` : `${diffMins}m ago`;
-  if (diffHours < 24) return isRTL ? `منذ ${diffHours} ساعة` : `${diffHours}h ago`;
-  if (diffDays < 7) return isRTL ? `منذ ${diffDays} يوم` : `${diffDays}d ago`;
-  return date.toLocaleDateString();
-}
-
-function NotificationMetric({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string | number;
-  tone: string;
-}) {
-  return (
-    <div className={`rounded-2xl border bg-gradient-to-br p-4 ${tone}`}>
-      <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">{label}</div>
-      <div className="mt-2 text-2xl font-semibold text-foreground">{value}</div>
-    </div>
-  );
-}
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export function NotificationCenter() {
   const nav = useIframeSafeNavigate();
@@ -108,12 +64,15 @@ export function NotificationCenter() {
     restoreArchivedNotifications,
     refresh,
   } = useNotifications();
+
   const { language } = useLanguage();
   const isRTL = language === 'ar';
+
   const [filter, setFilter] = useState<NotificationFilter>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const deferredSearchTerm = useDeferredValue(searchTerm);
 
+  // ── Labels (bilingual) ──────────────────────────────────────────────────────
   const labels = normalizeTextTree({
     title: isRTL ? 'مركز الإشعارات' : 'Notification Center',
     subtitle: isRTL
@@ -154,12 +113,17 @@ export function NotificationCenter() {
     highBadge: isRTL ? 'مرتفع' : 'High',
     loadingEyebrow: isRTL ? 'مركز الإشعارات' : 'Notification Center',
     loadingTitle: isRTL ? 'نجهز تدفق الإشعارات الآن' : 'Preparing your notification stream',
-    loadingDescription: isRTL ? 'نجمع الحجوزات ورسائل الدعم ونشاط المحفظة في موجز واحد واضح.' : 'Pulling bookings, support messages, and wallet activity into one clear feed.',
-    loadingFooter: isRTL ? 'سيمتلئ هذا العرض بمجرد اكتمال المزامنة.' : 'This view will fill in as soon as the sync completes.',
+    loadingDescription: isRTL
+      ? 'نجمع الحجوزات ورسائل الدعم ونشاط المحفظة في موجز واحد واضح.'
+      : 'Pulling bookings, support messages, and wallet activity into one clear feed.',
+    loadingFooter: isRTL
+      ? 'سيمتلئ هذا العرض بمجرد اكتمال المزامنة.'
+      : 'This view will fill in as soon as the sync completes.',
     serviceUnavailable: isRTL ? 'خدمة الإشعارات غير متاحة' : 'Notification service unavailable',
     resetView: isRTL ? 'إعادة ضبط العرض' : 'Reset view',
   });
 
+  // ── Derived state ───────────────────────────────────────────────────────────
   const archivedSet = useMemo(() => new Set(archivedIds), [archivedIds]);
 
   const summary = useMemo(
@@ -168,19 +132,22 @@ export function NotificationCenter() {
   );
 
   const filteredNotifications = useMemo(
-    () => notifications.filter((notification) => (
-      matchesNotificationFilter({ notification, filter, archivedIds: archivedSet }) &&
-      matchesNotificationSearch(notification, deferredSearchTerm)
-    )),
+    () =>
+      notifications.filter(
+        n =>
+          matchesNotificationFilter({ notification: n, filter, archivedIds: archivedSet }) &&
+          matchesNotificationSearch(n, deferredSearchTerm),
+      ),
     [archivedSet, deferredSearchTerm, filter, notifications],
   );
 
   const sections = useMemo(
-    () => buildNotificationSections(filteredNotifications, new Date(), {
-      today: labels.today,
-      week: labels.week,
-      earlier: labels.earlier,
-    }),
+    () =>
+      buildNotificationSections(filteredNotifications, new Date(), {
+        today: labels.today,
+        week: labels.week,
+        earlier: labels.earlier,
+      }),
     [filteredNotifications, labels.earlier, labels.today, labels.week],
   );
 
@@ -197,23 +164,29 @@ export function NotificationCenter() {
     { value: 'archived', label: labels.archived },
   ];
 
+  // ── Handlers ────────────────────────────────────────────────────────────────
   const handleOpenAction = async (notification: Notification) => {
     if (!notification.read) {
       await markAsRead(notification.id).catch(() => undefined);
     }
-
-    if (!notification.action_url) {
-      return;
-    }
-
+    if (!notification.action_url) return;
     if (notification.action_url.startsWith('/')) {
       await nav(notification.action_url);
       return;
     }
-
     window.open(notification.action_url, '_blank', 'noopener,noreferrer');
   };
 
+  const itemLabels = {
+    view: labels.view,
+    markRead: labels.markRead,
+    archive: labels.archive,
+    urgentBadge: labels.urgentBadge,
+    highBadge: labels.highBadge,
+    localDraft: labels.localDraft,
+  };
+
+  // ── Loading states ──────────────────────────────────────────────────────────
   if (loading && notifications.length === 0) {
     return (
       <WaselStateCard
@@ -227,24 +200,10 @@ export function NotificationCenter() {
     );
   }
 
-  if (loading && notifications.length < 0) {
-    return (
-      <div className="flex min-h-[360px] items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <div className="size-9 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-          <div className="space-y-1">
-            <div className="text-sm font-medium text-foreground">{isRTL ? 'جار تحميل الإشعارات' : 'Loading notifications'}</div>
-            <div className="text-xs text-muted-foreground">
-              {isRTL ? 'نجهز آخر التنبيهات والحجوزات والعمليات.' : 'Loading latest updates.'}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="mx-auto max-w-5xl space-y-5">
+      {/* ── Summary card ── */}
       <Card className="overflow-hidden border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_32%),linear-gradient(135deg,rgba(4,12,24,0.96),rgba(8,15,28,0.98))] shadow-[0_28px_80px_-48px_rgba(34,211,238,0.6)]">
         <CardHeader className="border-b border-white/8 pb-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -254,7 +213,9 @@ export function NotificationCenter() {
                 {labels.title}
               </div>
               <div>
-                <CardTitle className="text-3xl font-semibold tracking-tight text-white">{labels.title}</CardTitle>
+                <CardTitle className="text-3xl font-semibold tracking-tight text-white">
+                  {labels.title}
+                </CardTitle>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">{labels.subtitle}</p>
               </div>
             </div>
@@ -263,23 +224,47 @@ export function NotificationCenter() {
               <Badge variant="outline" className="gap-1 border-white/15 bg-white/5">
                 {connectionStatus === 'online' && <Wifi className="size-3 text-emerald-400" />}
                 {connectionStatus === 'offline' && <WifiOff className="size-3 text-rose-400" />}
-                {connectionStatus === 'syncing' && <RefreshCw className="size-3 animate-spin text-cyan-300" />}
+                {connectionStatus === 'syncing' && (
+                  <RefreshCw className="size-3 animate-spin text-cyan-300" />
+                )}
                 <span className="text-slate-200">
-                  {connectionStatus === 'online' ? labels.online : connectionStatus === 'offline' ? labels.offline : labels.syncing}
+                  {connectionStatus === 'online'
+                    ? labels.online
+                    : connectionStatus === 'offline'
+                      ? labels.offline
+                      : labels.syncing}
                 </span>
               </Badge>
-              <Button variant="outline" size="sm" onClick={() => void refresh()} disabled={connectionStatus === 'offline'} className="border-white/15 bg-white/5 text-white hover:bg-white/10">
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void refresh()}
+                disabled={connectionStatus === 'offline'}
+                className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+              >
                 <RefreshCw className={`size-4 ${connectionStatus === 'syncing' ? 'animate-spin' : ''}`} />
                 {labels.refresh}
               </Button>
+
               {unreadCount > 0 && (
-                <Button size="sm" onClick={() => void markAllAsRead()} className="bg-cyan-400 text-slate-950 hover:bg-cyan-300">
+                <Button
+                  size="sm"
+                  onClick={() => void markAllAsRead()}
+                  className="bg-cyan-400 text-slate-950 hover:bg-cyan-300"
+                >
                   <CheckCheck className="size-4" />
                   {labels.markAllRead}
                 </Button>
               )}
+
               {summary.archived > 0 && (
-                <Button variant="outline" size="sm" onClick={restoreArchivedNotifications} className="border-white/15 bg-white/5 text-white hover:bg-white/10">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={restoreArchivedNotifications}
+                  className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+                >
                   {labels.restoreArchived}
                 </Button>
               )}
@@ -295,15 +280,14 @@ export function NotificationCenter() {
         </CardContent>
       </Card>
 
-      {errorMessage ? (
+      {/* ── Error banner ── */}
+      {errorMessage && (
         <Card className="border-amber-400/25 bg-amber-400/10">
           <CardContent className="flex flex-col gap-3 pt-6 text-sm text-amber-50 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-3">
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
               <div className="space-y-1">
-                <p className="font-semibold">
-                  {labels.serviceUnavailable}
-                </p>
+                <p className="font-semibold">{labels.serviceUnavailable}</p>
                 <p className="text-amber-100/90">{errorMessage}</p>
               </div>
             </div>
@@ -318,19 +302,18 @@ export function NotificationCenter() {
             </Button>
           </CardContent>
         </Card>
-      ) : null}
+      )}
 
+      {/* ── Search + filters ── */}
       <Card className="border-white/10 bg-card/80 backdrop-blur">
         <CardContent className="space-y-4 pt-6">
           <div className="relative">
             <Search className="pointer-events-none absolute inset-y-0 left-3 my-auto size-4 text-muted-foreground" />
             <Input
               value={searchTerm}
-              onChange={(event) => {
+              onChange={event => {
                 const nextValue = event.target.value;
-                startTransition(() => {
-                  setSearchTerm(nextValue);
-                });
+                startTransition(() => setSearchTerm(nextValue));
               }}
               placeholder={labels.searchPlaceholder}
               className="h-11 rounded-2xl border-white/10 bg-background/60 pl-10"
@@ -338,13 +321,17 @@ export function NotificationCenter() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {filters.map((entry) => (
+            {filters.map(entry => (
               <Button
                 key={entry.value}
                 variant={filter === entry.value ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilter(entry.value)}
-                className={filter === entry.value ? 'bg-primary text-primary-foreground' : 'border-white/10 bg-background/40'}
+                className={
+                  filter === entry.value
+                    ? 'bg-primary text-primary-foreground'
+                    : 'border-white/10 bg-background/40'
+                }
               >
                 {entry.label}
               </Button>
@@ -353,6 +340,7 @@ export function NotificationCenter() {
         </CardContent>
       </Card>
 
+      {/* ── Notification list ── */}
       <div className="space-y-4">
         {sections.length === 0 ? (
           <WaselStateCard
@@ -361,30 +349,29 @@ export function NotificationCenter() {
             description={searchTerm || filter !== 'all' ? labels.emptyFiltered : labels.emptyAll}
             icon={filter === 'archived' ? Trash2 : BellOff}
             minHeight={280}
-            actions={searchTerm || filter !== 'all' ? (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSearchTerm('');
-                  setFilter('all');
-                }}
-                className="border-white/15 bg-white/5 text-white hover:bg-white/10"
-              >
-                {labels.resetView}
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                onClick={() => void refresh()}
-                className="border-white/15 bg-white/5 text-white hover:bg-white/10"
-              >
-                <RefreshCw className="size-4" />
-                {labels.refresh}
-              </Button>
-            )}
+            actions={
+              searchTerm || filter !== 'all' ? (
+                <Button
+                  variant="outline"
+                  onClick={() => { setSearchTerm(''); setFilter('all'); }}
+                  className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+                >
+                  {labels.resetView}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => void refresh()}
+                  className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+                >
+                  <RefreshCw className="size-4" />
+                  {labels.refresh}
+                </Button>
+              )
+            }
           />
         ) : (
-          sections.map((section) => (
+          sections.map(section => (
             <div key={section.key} className="space-y-3">
               <div className="px-1 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                 {section.title}
@@ -392,86 +379,20 @@ export function NotificationCenter() {
 
               <ScrollArea className="max-h-[720px]">
                 <div className="space-y-3 pr-2">
-                  {section.items.map((notification, index) => {
-                    const category = getNotificationCategory(notification);
-                    const Icon = CATEGORY_ICON[category];
-                    const accent = CATEGORY_ACCENT[category];
-
-                    return (
-                      <motion.div
-                        key={notification.id}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03, duration: 0.18 }}
-                      >
-                        <Card className={`overflow-hidden border-white/10 bg-gradient-to-br ${accent}`}>
-                          <CardContent className="p-0">
-                            <div className="grid gap-4 p-5 md:grid-cols-[auto,1fr,auto]">
-                              <div className="flex items-start">
-                                <div className="rounded-2xl border border-white/10 bg-black/15 p-3">
-                                  <Icon className="size-5" />
-                                </div>
-                              </div>
-
-                              <div className="space-y-3">
-                                <div className="flex flex-wrap items-start gap-2">
-                                  <div className="space-y-1">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <h3 className="text-base font-semibold text-white">{notification.title}</h3>
-                                      {!notification.read && (
-                                        <span className="inline-flex size-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.9)]" />
-                                      )}
-                                      {notification.priority === 'urgent' && (
-                                        <Badge variant="destructive">{labels.urgentBadge}</Badge>
-                                      )}
-                                      {notification.priority === 'high' && (
-                                        <Badge variant="outline" className="border-amber-400/30 bg-amber-400/10 text-amber-100">
-                                          {labels.highBadge}
-                                        </Badge>
-                                      )}
-                                      {notification.source === 'local' && (
-                                        <Badge variant="outline" className="border-white/15 bg-white/5 text-slate-100">
-                                          {labels.localDraft}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    <p className="max-w-3xl text-sm leading-6 text-slate-200/90">{notification.message}</p>
-                                  </div>
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
-                                  <Badge variant="outline" className="border-white/10 bg-black/10 text-slate-200">
-                                    {filters.find((entry) => entry.value === category)?.label ?? category}
-                                  </Badge>
-                                  <span>{formatRelativeTimestamp(notification.created_at, isRTL)}</span>
-                                </div>
-                              </div>
-
-                              <div className="flex flex-wrap items-start justify-end gap-2">
-                                {notification.action_url && (
-                                  <Button size="sm" onClick={() => void handleOpenAction(notification)}>
-                                    {labels.view}
-                                  </Button>
-                                )}
-                                {!notification.read && (
-                                  <Button variant="outline" size="sm" onClick={() => void markAsRead(notification.id)} className="border-white/15 bg-white/5 text-white hover:bg-white/10">
-                                    <Check className="size-4" />
-                                    {labels.markRead}
-                                  </Button>
-                                )}
-                                {filter !== 'archived' && (
-                                  <Button variant="ghost" size="sm" onClick={() => archiveNotification(notification.id)} className="text-slate-200 hover:bg-black/10 hover:text-white">
-                                    <Trash2 className="size-4" />
-                                    {labels.archive}
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    );
-                  })}
+                  {section.items.map((notification, index) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      index={index}
+                      isRTL={isRTL}
+                      filter={filter}
+                      filters={filters}
+                      labels={itemLabels}
+                      onOpen={n => void handleOpenAction(n)}
+                      onMarkRead={id => void markAsRead(id)}
+                      onArchive={id => archiveNotification(id)}
+                    />
+                  ))}
                 </div>
               </ScrollArea>
             </div>

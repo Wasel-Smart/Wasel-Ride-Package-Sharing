@@ -21,9 +21,9 @@ test.describe('Find Ride', () => {
     await page.locator('select').nth(1).selectOption('Aqaba');
     await page.getByRole('button', { name: /search rides/i }).click();
 
-    const bookButton = page.getByRole('button', { name: /book seat/i }).first();
-    await expect(bookButton).toBeVisible();
-    await bookButton.click();
+    const detailsButton = page.getByRole('button', { name: /view details/i }).first();
+    await expect(detailsButton).toBeVisible();
+    await detailsButton.click();
     await expect(page.getByText(/trip details/i)).toBeVisible();
     await page.keyboard.press('Escape');
   });

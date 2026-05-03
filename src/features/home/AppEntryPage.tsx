@@ -114,7 +114,7 @@ export default function AppEntryPage() {
   const membership = useMemo(() => getMovementMembershipSnapshot(), []);
 
   const primaryLabel = user ? 'Open the network' : 'Get started';
-  const primaryPath = user ? '/app/find-ride' : '/app/auth?returnTo=/app/find-ride';
+  const primaryPath = user ? '/app' : '/app/auth?returnTo=/app';
 
   const spotlightCorridor = membership.dailyRoute ?? corridors[0];
   const corridorCards = spotlightCorridor

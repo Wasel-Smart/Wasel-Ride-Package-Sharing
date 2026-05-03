@@ -14,9 +14,10 @@ import {
 } from '../../services/journeyLogistics';
 import {
   getBookingsForDriver,
-  hydrateRideBookings,
+  type RideBookingRecord,
 } from '../../services/rideLifecycle';
 import { notificationsAPI } from '../../services/notifications.js';
+import { subscribeToRideBookingRealtime } from '../../services/rideRealtime';
 import { getDriverReadinessSummary } from '../../services/driverOnboarding';
 import { evaluateTrustCapability } from '../../services/trustRules';
 import { recordMovementActivity } from '../../services/movementMembership';
@@ -40,6 +41,7 @@ export function OfferRidePage() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(() => readStoredObject(OFFER_RIDE_DRAFT_KEY, defaultForm));
   const [submitted, setSubmitted] = useState(false);
+  const [rideBookings, setRideBookings] = useState<RideBookingRecord[]>([]);
   const [networkStats, setNetworkStats] = useState(() => getConnectedStats());
   const [busyState, setBusyState] = useState<'idle' | 'posting'>('idle');
   const [formError, setFormError] = useState<string | null>(null);
@@ -58,7 +60,12 @@ export function OfferRidePage() {
   const corridorCount = getConnectedRides().filter((ride) => ride.from === form.from && ride.to === form.to).length;
   const recentPostedRides = getConnectedRides().filter((ride) => ride.from === form.from && ride.to === form.to).slice(0, 3);
   const incomingRequests = user
-    ? getBookingsForDriver(user.id, getConnectedRides()).filter((booking) => booking.status === 'pending_driver').slice(0, 4)
+    ? getBookingsForDriver(user.id, getConnectedRides())
+        .filter((booking) => {
+          const liveBooking = rideBookings.find((item) => item.id === booking.id);
+          return (liveBooking ?? booking).status === 'pending_driver';
+        })
+        .slice(0, 4)
     : [];
 
   useEffect(() => {
@@ -67,7 +74,11 @@ export function OfferRidePage() {
 
   useEffect(() => {
     if (!user?.id) return;
-    void hydrateRideBookings(user.id, getConnectedRides());
+    return subscribeToRideBookingRealtime({
+      userId: user.id,
+      rides: getConnectedRides(),
+      onBookingsChange: setRideBookings,
+    });
   }, [user?.id]);
 
   useEffect(() => {

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useLocation } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { walletApi, type InsightsData, type WalletData } from '../../services/walletApi';
+import { setWaselPlusActive } from '../../services/movementMembership';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import { walletText } from './walletText';
 import { resolveWalletRuntimeMode } from './walletRuntime';
@@ -12,6 +14,7 @@ import { resolveWalletRuntimeMode } from './walletRuntime';
 const WALLET_BACKEND_READY = Boolean(projectId && publicAnonKey);
 
 export function useWalletDashboardController() {
+  const location = useLocation();
   const { user } = useAuth();
   const { user: localUser } = useLocalAuth();
   const { language } = useLanguage();
@@ -71,6 +74,7 @@ export function useWalletDashboardController() {
     try {
       setWalletError(null);
       const data = await walletApi.getWallet(effectiveUserId);
+      setWaselPlusActive(Boolean(data.subscription));
       setWalletData(data);
       setAutoTopUpEnabled(data.wallet.autoTopUp || false);
       setAutoTopUpAmount(String(data.wallet.autoTopUpAmount || 20));
@@ -114,6 +118,26 @@ export function useWalletDashboardController() {
     if (tab === 'insights') fetchInsights();
   }, [tab, fetchInsights]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const paymentState = params.get('payment');
+    const subscriptionState = params.get('subscription');
+    if (paymentState === 'success') {
+      toast.success('Payment completed. Wallet balance is refreshing.');
+      void fetchWallet();
+    }
+    if (paymentState === 'cancelled') {
+      toast.info('Payment was cancelled before completion.');
+    }
+    if (subscriptionState === 'success') {
+      toast.success(t.subscriptionCheckoutCompleted ?? 'Subscription checkout completed. Membership is refreshing.');
+      void fetchWallet();
+    }
+    if (subscriptionState === 'cancelled') {
+      toast.info(t.subscriptionCheckoutCancelled ?? 'Subscription checkout was cancelled before completion.');
+    }
+  }, [fetchWallet, location.search]);
+
   const handleRefresh = async () => {
     setRefreshing(true);
     setLoading(true);
@@ -131,7 +155,22 @@ export function useWalletDashboardController() {
 
     setActionLoading(true);
     try {
-      await walletApi.topUp(effectiveUserId, amt, topUpMethod);
+      const result = await walletApi.topUp(effectiveUserId, amt, topUpMethod) as
+        | { payment?: { checkoutUrl?: string | null; provider?: string } }
+        | WalletData;
+
+      const checkoutUrl =
+        typeof result === 'object' && result && 'payment' in result
+          ? result.payment?.checkoutUrl ?? null
+          : null;
+
+      if (checkoutUrl) {
+        toast.success('Redirecting to secure payment checkout');
+        setShowTopUp(false);
+        window.location.assign(checkoutUrl);
+        return;
+      }
+
       toast.success(`JOD ${amt} added successfully`);
       setShowTopUp(false);
       setTopUpAmount('');
@@ -234,7 +273,25 @@ export function useWalletDashboardController() {
   const handleSubscribe = async () => {
     setActionLoading(true);
     try {
-      await walletApi.subscribe(effectiveUserId, 'Wasel Plus', 9.99);
+      const result = await walletApi.subscribe(effectiveUserId, 'Wasel Plus', 9.99) as
+        | { subscription?: { checkoutUrl?: string | null; provider?: string } }
+        | { payment?: { checkoutUrl?: string | null; provider?: string } };
+
+      const checkoutUrl =
+        typeof result === 'object' && result
+          ? 'subscription' in result
+            ? result.subscription?.checkoutUrl ?? null
+            : 'payment' in result
+              ? result.payment?.checkoutUrl ?? null
+              : null
+          : null;
+
+      if (checkoutUrl) {
+        toast.success(t.redirectingToSubscriptionCheckout ?? 'Redirecting to secure subscription checkout');
+        window.location.assign(checkoutUrl);
+        return;
+      }
+
       toast.success(t.welcomeToPlus);
       await fetchWallet();
     } catch (err: any) {

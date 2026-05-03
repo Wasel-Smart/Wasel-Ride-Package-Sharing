@@ -30,10 +30,12 @@ const GENDER_META = createGenderMeta(DS);
 
 type FindRideTripDetailModalProps = {
   ride: Ride;
-  booked: boolean;
+  bookingStatus?: 'pending_driver' | 'confirmed' | null;
   signal?: LiveCorridorSignal | null;
+  isBooking?: boolean;
   onClose: () => void;
   onBook: () => void;
+  onOpenBooking: () => void;
 };
 
 function getConversationMeta(level: Ride['conversationLevel']) {
@@ -49,12 +51,15 @@ function getConversationMeta(level: Ride['conversationLevel']) {
 
 export function FindRideTripDetailModal({
   ride,
-  booked,
+  bookingStatus = null,
   signal = null,
+  isBooking = false,
   onClose,
   onBook,
+  onOpenBooking,
 }: FindRideTripDetailModalProps) {
   const soldOut = ride.seatsAvailable <= 0;
+  const hasBooking = bookingStatus === 'pending_driver' || bookingStatus === 'confirmed';
   const conversationMeta = getConversationMeta(ride.conversationLevel);
   const pickupCoord = resolveCityCoord(ride.from);
   const dropoffCoord = resolveCityCoord(ride.to);
@@ -532,28 +537,44 @@ export function FindRideTripDetailModal({
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
-                  onClick={onBook}
-                  disabled={booked || soldOut}
+                  onClick={hasBooking ? onOpenBooking : onBook}
+                  disabled={soldOut || isBooking}
                   style={{
                     height: 50,
                     padding: '0 32px',
                     borderRadius: '99px',
                     border: 'none',
-                    cursor: 'pointer',
-                    background: booked
-                      ? DS.gradG
+                    cursor: soldOut || isBooking ? 'not-allowed' : 'pointer',
+                    background: hasBooking
+                      ? bookingStatus === 'pending_driver'
+                        ? DS.gradGold
+                        : DS.gradG
                       : soldOut
                         ? 'linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))'
                         : DS.gradC,
                     color: '#fff',
                     fontWeight: 800,
                     fontSize: '0.95rem',
-                    boxShadow: `0 8px 24px ${booked ? DS.green : soldOut ? 'rgba(255,255,255,0.14)' : DS.cyan}40`,
-                    opacity: booked || soldOut ? 0.9 : 1,
+                    boxShadow: `0 8px 24px ${
+                      hasBooking
+                        ? bookingStatus === 'pending_driver'
+                          ? DS.gold
+                          : DS.green
+                        : soldOut
+                          ? 'rgba(255,255,255,0.14)'
+                          : DS.cyan
+                    }40`,
+                    opacity: soldOut || isBooking ? 0.9 : 1,
                     width: '100%',
                   }}
                 >
-                  {booked ? 'Seat reserved' : soldOut ? 'Sold out for this departure' : 'Reserve this seat'}
+                  {hasBooking
+                    ? 'Open in My Trips'
+                    : isBooking
+                      ? 'Reserving seat...'
+                      : soldOut
+                        ? 'Sold out for this departure'
+                        : 'Reserve seat'}
                 </motion.button>
                 <div
                   style={{
@@ -564,8 +585,10 @@ export function FindRideTripDetailModal({
                     maxWidth: 320,
                   }}
                 >
-                  {booked
-                    ? 'Your seat is stored in your trips. If the departure shifts, Wasel sends an update before departure.'
+                  {hasBooking
+                    ? bookingStatus === 'pending_driver'
+                      ? 'Your request is already saved in My Trips. Wasel will update you when the driver confirms the seat and boarding details.'
+                      : 'Your seat is stored in My Trips. If the departure shifts, Wasel sends an update before departure.'
                     : soldOut
                       ? 'This departure is full right now. Open bus fallback or try another nearby corridor while this route refreshes.'
                       : 'Your booking saves the seat and boarding details. If the route changes, Wasel updates you and support can help.'}

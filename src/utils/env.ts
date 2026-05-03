@@ -55,12 +55,15 @@ export function getRuntimeConfigIssues(envSource: EnvSource = readEnvSource()): 
   const issues: RuntimeConfigIssue[] = [];
   const apiUrl = envSource.VITE_API_URL?.trim() || '';
   const supabaseUrl = envSource.VITE_SUPABASE_URL?.trim() || '';
-  const supabaseAnonKey = envSource.VITE_SUPABASE_ANON_KEY?.trim() || '';
+  const supabasePublicKey =
+    envSource.VITE_SUPABASE_PUBLISHABLE_KEY?.trim() ||
+    envSource.VITE_SUPABASE_ANON_KEY?.trim() ||
+    '';
   const appUrl = envSource.VITE_APP_URL?.trim() || '';
   const sentryDsn = envSource.VITE_SENTRY_DSN?.trim() || '';
   const mode = envSource.MODE || envSource.VITE_MODE || envSource.NODE_ENV || 'development';
   const isProd = mode === 'production';
-  const hasApiTransport = Boolean(apiUrl) || (Boolean(supabaseUrl) && Boolean(supabaseAnonKey));
+  const hasApiTransport = Boolean(apiUrl) || (Boolean(supabaseUrl) && Boolean(supabasePublicKey));
 
   if (!appUrl) {
     issues.push({
@@ -80,7 +83,7 @@ export function getRuntimeConfigIssues(envSource: EnvSource = readEnvSource()): 
     issues.push({
       key: 'VITE_API_URL',
       message:
-        'Set VITE_API_URL or provide both VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY so ride and package flows have a backend transport.',
+        'Set VITE_API_URL or provide both VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY so ride and package flows have a backend transport.',
       severity: 'error',
     });
   }

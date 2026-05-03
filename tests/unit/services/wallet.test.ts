@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {
+  mockCoreConfig,
   mockFetchWithRetry,
   mockRpc,
   mockSingle,
@@ -14,6 +15,10 @@ const {
   mockDelete,
   mockDb,
 } = vi.hoisted(() => {
+  const mockCoreConfig = {
+    API_URL: '',
+    publicAnonKey: '',
+  };
   const mockFetchWithRetry = vi.fn();
   const mockRpc = vi.fn();
   const mockSingle = vi.fn();
@@ -46,6 +51,7 @@ const {
   };
 
   return {
+    mockCoreConfig,
     mockFetchWithRetry,
     mockRpc,
     mockSingle,
@@ -62,8 +68,12 @@ const {
 });
 
 vi.mock('../../../src/services/core', () => ({
-  API_URL: '',
-  publicAnonKey: '',
+  get API_URL() {
+    return mockCoreConfig.API_URL;
+  },
+  get publicAnonKey() {
+    return mockCoreConfig.publicAnonKey;
+  },
   fetchWithRetry: (...args: any[]) => mockFetchWithRetry(...args),
   getAuthDetails: vi.fn().mockResolvedValue({ token: 'token-123', userId: 'user-123' }),
   supabase: mockDb,
@@ -74,6 +84,8 @@ import { walletApi } from '../../../src/services/walletApi';
 describe('walletApi', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCoreConfig.API_URL = '';
+    mockCoreConfig.publicAnonKey = '';
 
     const createQueryBuilder = () => {
       const builder = {
@@ -205,5 +217,38 @@ describe('walletApi', () => {
       p_payment_method: 'wallet',
     });
     expect(result.success).toBe(true);
+  });
+
+  it('fails closed for wallet top-ups when the secure checkout backend is unavailable', async () => {
+    await expect(walletApi.topUp('user-123', 25, 'card')).rejects.toThrow(
+      'Secure wallet top-up is unavailable because the checkout backend is not configured.',
+    );
+
+    expect(mockRpc).not.toHaveBeenCalled();
+    expect(mockFetchWithRetry).not.toHaveBeenCalled();
+  });
+
+  it('does not bypass Stripe when the wallet top-up route is missing', async () => {
+    vi.resetModules();
+    mockCoreConfig.API_URL = 'https://api.wasel.test';
+    mockCoreConfig.publicAnonKey = 'anon-key';
+    mockFetchWithRetry.mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({ error: 'Route not found' }),
+    });
+    const { walletApi: walletApiWithEdge } = await import('../../../src/services/walletApi');
+
+    await expect(walletApiWithEdge.topUp('user-123', 25, 'card')).rejects.toThrow(
+      'Secure wallet top-up is unavailable because the checkout backend is not configured.',
+    );
+
+    expect(mockFetchWithRetry).toHaveBeenCalledWith(
+      'https://api.wasel.test/wallet/user-123/top-up',
+      expect.objectContaining({
+        method: 'POST',
+      }),
+    );
+    expect(mockRpc).not.toHaveBeenCalled();
   });
 });

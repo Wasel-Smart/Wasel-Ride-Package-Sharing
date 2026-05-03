@@ -8,9 +8,9 @@ test.beforeEach(async ({ page }) => {
 test('find ride books a seat', async ({ page }) => {
   await page.goto('/app/find-ride');
   await page.getByTestId('find-ride-search').click();
-  await page.getByRole('button', { name: /book seat/i }).first().click();
-  await page.getByRole('button', { name: /reserve this seat/i }).click();
-  await expect(page.getByText(/ride reserved for|request sent to/i)).toBeVisible();
+  await page.getByRole('button', { name: /view details/i }).first().click();
+  await page.getByRole('button', { name: /^reserve seat$/i }).click();
+  await expect(page.getByRole('button', { name: /open my trips/i })).toBeVisible();
 });
 
 test('offer ride posts a connected trip', async ({ page }) => {

@@ -118,7 +118,15 @@ export const updateProfileSchema = z.object({
   fullName: nameField,
   phone: phoneField,
   bio: z.string().max(250, 'Bio too long').optional(),
-  avatarUrl: z.string().url('Invalid image URL').optional().or(z.literal('')),
+  avatarUrl: z
+    .string()
+    .url('Invalid image URL')
+    .refine(
+      url => url === '' || /^https?:\/\//i.test(url),
+      'Avatar URL must use http or https',
+    )
+    .optional()
+    .or(z.literal('')),
 });
 export type UpdateProfileFields = z.infer<typeof updateProfileSchema>;
 

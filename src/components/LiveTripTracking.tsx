@@ -2,7 +2,7 @@
  * LiveTripTracking — Real-time trip progress screen
  *
  * ✅ Animated progress tracker
- * ✅ Driver location simulation (fake position updates)
+ * ✅ Supabase-backed trip presence tracking
  * ✅ Bilingual (EN / AR)
  * ✅ Emergency SOS button
  * ✅ Share location with trusted contact
@@ -27,7 +27,10 @@ import { WaselBadge } from './wasel-ui/WaselBadge';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import { activeTripAPI } from '../services/activeTrip';
 import { API_URL, fetchWithRetry, getAuthDetails } from '../services/core';
+import { updateDirectBookingStatus } from '../services/directSupabase';
+import { subscribeToLiveTripPresence, type LiveTripSnapshot } from '../services/liveTripTracking';
 import { shareContent } from '../hooks/useShare';
+import { useLocalAuth } from '../contexts/LocalAuth';
 
 const WaselMap = lazy(async () => {
   const mod = await import('./WaselMap');
@@ -36,7 +39,7 @@ const WaselMap = lazy(async () => {
 
 // ─── Trip data ────────────────────────────────────────────────────────────────
 
-const TRIP = {
+const DEFAULT_TRIP = {
   id: 'WA-9124',
   from: '7th Circle, Amman',
   fromAr: 'الدوار السابع، عمّان',
@@ -58,35 +61,46 @@ const TRIP = {
   price: 1.850,
   startedAt: '7:42 AM',
   estimatedArrival: '8:04 AM',
-  totalDistance: '9.4 km',
+  totalDistanceKm: 9.4,
   passengers: 2,
   shareCode: 'WA-9124',
+  status: 'en_route' as const,
 };
 
-const WAYPOINTS = [
-  { label: 'Pickup', labelAr: 'نقطة التقاط', done: true, coord: { lat: 31.9562, lng: 35.8637 } },
-  { label: 'Tlaa Al Ali', labelAr: 'تلاع العلي', done: true, coord: { lat: 31.9808, lng: 35.8436 } },
-  { label: 'Khalda', labelAr: 'خلدا', done: false, coord: { lat: 31.9976, lng: 35.8579 } },
-  { label: 'University of Jordan', labelAr: 'جامعة الأردن', done: false, coord: { lat: 32.0156, lng: 35.8696 } },
+const DEFAULT_WAYPOINTS = [
+  { label: 'Pickup', coord: { lat: 31.9562, lng: 35.8637 } },
+  { label: 'Tlaa Al Ali', coord: { lat: 31.9808, lng: 35.8436 } },
+  { label: 'Khalda', coord: { lat: 31.9976, lng: 35.8579 } },
+  { label: 'University of Jordan', coord: { lat: 32.0156, lng: 35.8696 } },
 ];
 
 // ─── Progress timeline ──────────────────────────────────────────────────────
 
-function ProgressTimeline({ progress }: { progress: number }) {
-  const wpProgress = [100, 100, Math.max(0, (progress - 40) * 3.3), 0];
-
+function ProgressTimeline({
+  progress,
+  waypoints,
+}: {
+  progress: number;
+  waypoints: Array<{ label: string }>;
+}) {
+  const activeIndex = Math.min(
+    Math.max(Math.floor((progress / 100) * Math.max(waypoints.length - 1, 1)), 0),
+    Math.max(waypoints.length - 1, 0),
+  );
   return (
     <div className="flex items-start gap-2">
-      {WAYPOINTS.map((wp, i) => (
+      {waypoints.map((wp, i) => {
+        const reached = progress >= (i / Math.max(waypoints.length - 1, 1)) * 100;
+        return (
         <div key={i} className="flex flex-col items-center flex-1">
           <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-            wp.done || progress >= (i / (WAYPOINTS.length - 1)) * 100
+            reached
               ? 'bg-primary border-primary shadow-md shadow-primary/30'
               : 'bg-background border-border'
           }`}>
-            {wp.done ? (
+            {reached ? (
               <CheckCircle className="w-3.5 h-3.5 text-white" />
-            ) : i === 2 ? (
+            ) : i === activeIndex ? (
               <motion.div
                 className="w-2 h-2 rounded-full bg-primary"
                 animate={{ scale: [1, 1.4, 1] }}
@@ -99,18 +113,30 @@ function ProgressTimeline({ progress }: { progress: number }) {
           <div className="mt-1 text-center px-0.5">
             <p className="text-[9px] text-slate-400 leading-tight font-medium">{wp.label}</p>
           </div>
-          {i < WAYPOINTS.length - 1 && (
+          {i < waypoints.length - 1 && (
             <div className="absolute" style={{ display: 'none' }} />
           )}
         </div>
-      ))}
+      )})}
     </div>
   );
 }
 
 // ─── ETA card ─────────────────────────────────────────────────────────────────
 
-function ETACard({ eta, timeLeft }: { eta: string; timeLeft: number }) {
+function ETACard({
+  eta,
+  timeLeft,
+  totalDistanceKm,
+  price,
+  telemetryFresh,
+}: {
+  eta: string;
+  timeLeft: number;
+  totalDistanceKm: number;
+  price: number;
+  telemetryFresh: boolean;
+}) {
   return (
     <div className="flex items-center gap-3">
       <div className="text-center bg-primary/10 border border-primary/20 rounded-2xl px-4 py-2.5 flex-shrink-0">
@@ -119,10 +145,12 @@ function ETACard({ eta, timeLeft }: { eta: string; timeLeft: number }) {
       </div>
       <div className="flex-1">
         <div className="text-white font-bold">ETA: {eta}</div>
-        <div className="text-slate-500 text-xs mt-0.5">{TRIP.totalDistance} total • {TRIP.price.toFixed(3)} JOD</div>
+        <div className="text-slate-500 text-xs mt-0.5">{totalDistanceKm.toFixed(1)} km total • {price.toFixed(3)} JOD</div>
         <div className="flex items-center gap-1 mt-1">
           <Leaf className="w-3 h-3 text-emerald-400" />
-          <span className="text-[10px] text-emerald-400">–42% CO₂ vs solo taxi</span>
+          <span className="text-[10px] text-emerald-400">
+            {telemetryFresh ? 'Live telemetry active' : 'Waiting for fresh telemetry'}
+          </span>
         </div>
       </div>
     </div>
@@ -463,68 +491,73 @@ function CancelConfirmDialog({
 
 export function LiveTripTracking() {
   const navigate = useNavigate();
+  const { user } = useLocalAuth();
   const { notifyDriverApproaching, notifyDriverArrived, notifyTripStarted, notifyTripCompleted } = usePushNotifications();
-  const [progress, setProgress] = useState(42);
-  const [timeLeft, setTimeLeft] = useState(14);
+  const [liveTrip, setLiveTrip] = useState<LiveTripSnapshot | null>(null);
+  const [tripLoaded, setTripLoaded] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showSOS, setShowSOS] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [showRating, setShowRating] = useState(false);
   const [aiTip, setAiTip] = useState(true);
-  const driverPhoneDigits = TRIP.driver.phone.replace(/[^\d]/g, '');
+  const trip = liveTrip ?? DEFAULT_TRIP;
+  const waypoints = liveTrip?.waypoints ?? DEFAULT_WAYPOINTS;
+  const progress = liveTrip?.progress ?? 42;
+  const timeLeft = liveTrip?.timeLeftMinutes ?? 14;
+  const driverPhoneDigits = trip.driver.phone.replace(/[^\d]/g, '');
 
   // Track which milestones we've already notified about
   const notifiedRef = useRef({ approaching: false, arrived: false, started: false, completed: false });
 
-  // Simulate trip progress
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 100) { clearInterval(interval); return 100; }
-        return p + 0.5;
-      });
-      setTimeLeft((t) => Math.max(0, t - 0.1));
-    }, 800);
-    return () => clearInterval(interval);
-  }, []);
+    if (!user?.id) {
+      setLiveTrip(null);
+      setTripLoaded(true);
+      return () => {};
+    }
+
+    const unsubscribe = subscribeToLiveTripPresence(user.id, (snapshot) => {
+      setLiveTrip(snapshot);
+      setTripLoaded(true);
+    });
+
+    return unsubscribe;
+  }, [user?.id]);
 
   // Push notification milestones
   useEffect(() => {
     // ~30% → driver approaching pickup
     if (progress >= 30 && !notifiedRef.current.approaching) {
       notifiedRef.current.approaching = true;
-      notifyDriverApproaching(TRIP.driver.name);
-      activeTripAPI.patchActiveTrip({ status: 'driver_arrived' }).catch(() => {});
+      notifyDriverApproaching(trip.driver.name);
     }
     // ~45% → driver arrived at pickup
     if (progress >= 45 && !notifiedRef.current.arrived) {
       notifiedRef.current.arrived = true;
-      notifyDriverArrived(TRIP.driver.name);
+      notifyDriverArrived(trip.driver.name);
     }
     // ~50% → trip started
     if (progress >= 50 && !notifiedRef.current.started) {
       notifiedRef.current.started = true;
       notifyTripStarted();
-      activeTripAPI.patchActiveTrip({ status: 'en_route' }).catch(() => {});
     }
     // ~90% → arriving soon
     if (progress >= 90 && !notifiedRef.current.completed) {
       notifiedRef.current.completed = true;
-      notifyTripCompleted(TRIP.price.toFixed(3));
-      activeTripAPI.patchActiveTrip({ status: 'arriving' }).catch(() => {});
+      notifyTripCompleted(trip.price.toFixed(3));
     }
-  }, [progress, notifyDriverApproaching, notifyDriverArrived, notifyTripStarted, notifyTripCompleted]);
+  }, [notifyDriverApproaching, notifyDriverArrived, notifyTripCompleted, notifyTripStarted, progress, trip.driver.name, trip.price]);
 
   // Auto-complete at 100% → show rating sheet instead of immediately navigating
   useEffect(() => {
-    if (progress >= 100) {
+    if ((trip.status === 'completed' || progress >= 100) && !showRating) {
       activeTripAPI.clearActiveTrip().catch(() => {});
       // Brief delay so the "You've Arrived" overlay can be seen, then show rating
       const t = setTimeout(() => setShowRating(true), 2500);
       return () => clearTimeout(t);
     }
-  }, [progress]);
+  }, [progress, showRating, trip.status]);
 
   const handleRatingSubmit = useCallback(async (stars: number, comment: string) => {
     try {
@@ -533,11 +566,11 @@ export function LiveTripTracking() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          reviewee_id: TRIP.driver.id,
+          reviewee_id: trip.driver.id,
           role: 'driver',
           overall_rating: stars,
           comment,
-          trip_id: TRIP.id,
+          trip_id: liveTrip?.tripId ?? trip.shareCode,
         }),
       });
     } catch {
@@ -546,7 +579,7 @@ export function LiveTripTracking() {
     toast.success("Thanks for rating! · شكراً على تقييمك", { description: '+10 Wasel Points earned 🌟' });
     setShowRating(false);
     navigate('/app/my-trips');
-  }, [navigate]);
+  }, [liveTrip?.tripId, navigate, trip.driver.id, trip.shareCode]);
 
   const handleRatingSkip = useCallback(() => {
     setShowRating(false);
@@ -555,42 +588,65 @@ export function LiveTripTracking() {
 
   const handleCancelConfirm = useCallback(async () => {
     setCancelling(true);
-    await activeTripAPI.clearActiveTrip();
+    if (liveTrip?.bookingId) {
+      await updateDirectBookingStatus(liveTrip.bookingId, 'cancelled').catch(() => undefined);
+    }
+    await activeTripAPI.clearActiveTrip().catch(() => false);
     setCancelling(false);
     setShowCancel(false);
     toast.info('Ride cancelled · تم إلغاء الرحلة');
     navigate('/app/dashboard');
-  }, [navigate]);
+  }, [liveTrip?.bookingId, navigate]);
 
   const copyShareCode = useCallback(() => {
-    navigator.clipboard?.writeText(TRIP.shareCode).then(() => {
+    navigator.clipboard?.writeText(trip.shareCode).then(() => {
       toast.success('Safety code copied!');
     });
-  }, []);
+  }, [trip.shareCode]);
 
-  const arrived = progress >= 100;
+  const arrived = trip.status === 'completed' || progress >= 100;
   const currentLegIndex = Math.min(
-    Math.max(Math.floor((progress / 100) * (WAYPOINTS.length - 1)), 0),
-    WAYPOINTS.length - 2,
+    Math.max(Math.floor((progress / 100) * (waypoints.length - 1)), 0),
+    Math.max(waypoints.length - 2, 0),
   );
-  const currentLegProgress = ((progress / 100) * (WAYPOINTS.length - 1)) - currentLegIndex;
-  const currentStart = WAYPOINTS[currentLegIndex].coord;
-  const currentEnd = WAYPOINTS[currentLegIndex + 1].coord;
-  const driverPosition = {
+  const currentLegProgress = ((progress / 100) * Math.max(waypoints.length - 1, 1)) - currentLegIndex;
+  const currentStart = waypoints[currentLegIndex]?.coord ?? trip.fromCoord;
+  const currentEnd = waypoints[currentLegIndex + 1]?.coord ?? trip.toCoord;
+  const fallbackDriverPosition = {
     lat: currentStart.lat + ((currentEnd.lat - currentStart.lat) * Math.max(0, Math.min(currentLegProgress, 1))),
     lng: currentStart.lng + ((currentEnd.lng - currentStart.lng) * Math.max(0, Math.min(currentLegProgress, 1))),
   };
+  const driverPosition = liveTrip?.driverPosition ?? fallbackDriverPosition;
   const mapCenter = driverPosition;
-  const mapRoute = WAYPOINTS.map((waypoint) => ({
+  const mapRoute = waypoints.map((waypoint) => ({
     lat: waypoint.coord.lat,
     lng: waypoint.coord.lng,
     label: waypoint.label,
   }));
   const mapMarkers = [
-    { lat: TRIP.fromCoord.lat, lng: TRIP.fromCoord.lng, label: 'Pickup', type: 'pickup' as const },
+    { lat: trip.fromCoord.lat, lng: trip.fromCoord.lng, label: 'Pickup', type: 'pickup' as const },
     { lat: driverPosition.lat, lng: driverPosition.lng, label: 'Driver', type: 'waypoint' as const },
-    { lat: TRIP.toCoord.lat, lng: TRIP.toCoord.lng, label: 'Dropoff', type: 'dropoff' as const },
+    { lat: trip.toCoord.lat, lng: trip.toCoord.lng, label: 'Dropoff', type: 'dropoff' as const },
   ];
+
+  if (tripLoaded && !liveTrip) {
+    return (
+      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-background p-6">
+        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center shadow-2xl">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+            <Navigation className="h-7 w-7 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold text-white">No active trip right now</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Live tracking appears here once a confirmed trip starts streaming location updates from the driver.
+          </p>
+          <Button className="mt-6 h-11 rounded-xl px-5 font-semibold" onClick={() => navigate('/app/my-trips')}>
+            Open My Trips
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100dvh-4rem)] bg-background relative">
@@ -611,11 +667,16 @@ export function LiveTripTracking() {
         <div className="absolute top-4 left-4 z-10 flex flex-wrap items-center gap-2">
           <WaselBadge variant="live" label="LIVE TRACKING" />
           <div className="rounded-full border border-cyan-400/20 bg-slate-950/70 px-3 py-1.5 text-[11px] font-semibold text-slate-100 backdrop-blur-md">
-            {TRIP.from} to {TRIP.to}
+            {trip.from} to {trip.to}
           </div>
           <div className="rounded-full border border-white/10 bg-slate-950/70 px-3 py-1.5 text-[11px] font-semibold text-cyan-300 backdrop-blur-md">
-            Driver near {WAYPOINTS[Math.min(currentLegIndex + 1, WAYPOINTS.length - 1)].label}
+            Driver near {waypoints[Math.min(currentLegIndex + 1, waypoints.length - 1)]?.label ?? trip.to}
           </div>
+          {liveTrip && !liveTrip.telemetryFresh ? (
+            <div className="rounded-full border border-amber-400/20 bg-slate-950/70 px-3 py-1.5 text-[11px] font-semibold text-amber-300 backdrop-blur-md">
+              Waiting for fresh GPS heartbeat
+            </div>
+          ) : null}
         </div>
 
         {/* Progress bar overlay */}
@@ -660,7 +721,7 @@ export function LiveTripTracking() {
               animate={{ scale: [1, 1.5, 1], opacity: [1, 0.4, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             />
-            <span className="text-sm text-white font-bold">Trip {TRIP.id}</span>
+            <span className="text-sm text-white font-bold">Trip {liveTrip?.tripId ?? trip.shareCode}</span>
           </div>
           <button
             onClick={() => navigate(-1)}
@@ -672,7 +733,13 @@ export function LiveTripTracking() {
 
         <div className="flex-1 p-4 space-y-4 overflow-y-auto">
           {/* ETA */}
-          <ETACard eta={TRIP.estimatedArrival} timeLeft={Math.round(timeLeft)} />
+          <ETACard
+            eta={trip.estimatedArrival}
+            timeLeft={Math.round(timeLeft)}
+            totalDistanceKm={trip.totalDistanceKm}
+            price={trip.price}
+            telemetryFresh={liveTrip?.telemetryFresh ?? false}
+          />
 
           {/* Progress bar */}
           <div className="space-y-1.5">
@@ -691,34 +758,34 @@ export function LiveTripTracking() {
 
           {/* Waypoints */}
           <div className="relative">
-            <ProgressTimeline progress={progress} />
+            <ProgressTimeline progress={progress} waypoints={waypoints} />
           </div>
 
           {/* Driver card */}
           <div className="rounded-2xl bg-card border border-border p-3">
             <div className="flex items-center gap-3">
-              <Avatar className="w-12 h-12 border-2 border-primary/20">
-                <AvatarImage src={TRIP.driver.img} />
-                <AvatarFallback className="bg-muted text-white">{TRIP.driver.initials}</AvatarFallback>
+                <Avatar className="w-12 h-12 border-2 border-primary/20">
+                <AvatarImage src={trip.driver.img} />
+                <AvatarFallback className="bg-muted text-white">{trip.driver.initials}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-white font-bold text-sm">{TRIP.driver.name}</span>
+                  <span className="text-white font-bold text-sm">{trip.driver.name}</span>
                   <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                 </div>
-                <p className="text-xs text-slate-500">{TRIP.vehicle.model} · {TRIP.vehicle.plate}</p>
+                <p className="text-xs text-slate-500">{trip.vehicle.model} · {trip.vehicle.plate}</p>
                 <div className="flex items-center gap-1 mt-0.5">
                   <Star className="w-3 h-3 text-amber-400 fill-current" />
-                  <span className="text-xs text-amber-400 font-semibold">{TRIP.driver.rating}</span>
-                  <span className="text-xs text-slate-600">· {TRIP.driver.trips.toLocaleString()} trips</span>
+                  <span className="text-xs text-amber-400 font-semibold">{trip.driver.rating}</span>
+                  <span className="text-xs text-slate-600">· {trip.driver.trips.toLocaleString()} trips</span>
                 </div>
               </div>
               {/* Quick contact */}
               <div className="flex gap-1.5 flex-shrink-0">
                 <button
                   onClick={() => {
-                    window.open(`tel:${TRIP.driver.phone}`, '_self');
-                    toast.info(`Calling ${TRIP.driver.name}…`);
+                    window.open(`tel:${trip.driver.phone}`, '_self');
+                    toast.info(`Calling ${trip.driver.name}…`);
                   }}
                   className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/30 transition-all"
                 >
@@ -726,7 +793,7 @@ export function LiveTripTracking() {
                 </button>
                 <button
                   onClick={() => {
-                    window.open(`https://wa.me/${driverPhoneDigits}?text=${encodeURIComponent(`Hi ${TRIP.driver.name}, I'm on trip ${TRIP.id} with Wasel.`)}`, '_blank', 'noopener,noreferrer');
+                    window.open(`https://wa.me/${driverPhoneDigits}?text=${encodeURIComponent(`Hi ${trip.driver.name}, I'm on trip ${liveTrip?.tripId ?? trip.shareCode} with Wasel.`)}`, '_blank', 'noopener,noreferrer');
                   }}
                   className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center text-slate-400 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"
                 >
@@ -742,7 +809,7 @@ export function LiveTripTracking() {
             className="w-full flex items-center gap-2 bg-card border border-border rounded-xl px-3 py-2.5 hover:border-muted-foreground/30 transition-all group"
           >
             <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-            <span className="text-xs text-slate-500 flex-1 text-left">Safety code: <strong className="text-white font-mono">{TRIP.shareCode}</strong></span>
+            <span className="text-xs text-slate-500 flex-1 text-left">Safety code: <strong className="text-white font-mono">{trip.shareCode}</strong></span>
             <Copy className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" />
           </button>
 
@@ -765,13 +832,13 @@ export function LiveTripTracking() {
               >
                 <div className="rounded-xl bg-card border border-border overflow-hidden">
                   {[
-                    { label: 'From', value: TRIP.from, valueAr: TRIP.fromAr },
-                    { label: 'To', value: TRIP.to, valueAr: TRIP.toAr },
-                    { label: 'Started', value: TRIP.startedAt },
-                    { label: 'ETA', value: TRIP.estimatedArrival },
-                    { label: 'Distance', value: TRIP.totalDistance },
-                    { label: 'Passengers', value: `${TRIP.passengers}` },
-                    { label: 'Fare', value: `${TRIP.price.toFixed(3)} JOD` },
+                    { label: 'From', value: trip.from, valueAr: trip.fromAr },
+                    { label: 'To', value: trip.to, valueAr: trip.toAr },
+                    { label: 'Started', value: trip.startedAt },
+                    { label: 'ETA', value: trip.estimatedArrival },
+                    { label: 'Distance', value: `${trip.totalDistanceKm.toFixed(1)} km` },
+                    { label: 'Passengers', value: `${trip.passengers}` },
+                    { label: 'Fare', value: `${trip.price.toFixed(3)} JOD` },
                   ].map(({ label, value, valueAr }, i) => (
                     <div key={label} className={`flex justify-between items-start px-3 py-2 text-xs ${i > 0 ? 'border-t border-border' : ''}`}>
                       <span className="text-slate-500">{label}</span>
@@ -798,7 +865,9 @@ export function LiveTripTracking() {
                 <Brain className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-slate-500 flex-1">
                   <span className="text-cyan-400 font-semibold">AI tip: </span>
-                  You're on track to save <span className="text-emerald-400 font-semibold">0.730 JOD</span> vs solo taxi. Keep it up! 🎉
+                  {liveTrip?.telemetryFresh
+                    ? <>Your driver heartbeat is fresh and this trip is tracking live against the route corridor.</>
+                    : <>Telemetry is catching up. We will refresh the route state as soon as the next GPS heartbeat lands.</>}
                 </p>
                 <button onClick={() => setAiTip(false)} className="text-slate-700 hover:text-slate-500">
                   <X className="w-3 h-3" />
@@ -812,9 +881,9 @@ export function LiveTripTracking() {
         <div className="p-4 border-t border-border space-y-2.5 bg-background">
           <Button
             onClick={() => shareContent({
-              title: `Wasel Trip ${TRIP.id} — Live Location`,
-              text: `Track my trip from ${TRIP.from} to ${TRIP.to} on Wasel. Safety code: ${TRIP.shareCode}`,
-              url: `${window.location.origin}/track/${TRIP.id}`,
+              title: `Wasel Trip ${liveTrip?.tripId ?? trip.shareCode} — Live Location`,
+              text: `Track my trip from ${trip.from} to ${trip.to} on Wasel. Safety code: ${trip.shareCode}`,
+              url: `${window.location.origin}/track/${liveTrip?.tripId ?? trip.shareCode}`,
               successMessage: 'Live trip link copied!',
               successMessageAr: 'تم نسخ رابط الرحلة!',
             })}
@@ -861,10 +930,10 @@ export function LiveTripTracking() {
       {/* Post-trip Rating Sheet */}
       <TripRatingSheet
         open={showRating}
-        driverName={TRIP.driver.name}
-        driverImg={TRIP.driver.img}
-        driverInitials={TRIP.driver.initials}
-        fare={TRIP.price.toFixed(3)}
+        driverName={trip.driver.name}
+        driverImg={trip.driver.img}
+        driverInitials={trip.driver.initials}
+        fare={trip.price.toFixed(3)}
         onSubmit={handleRatingSubmit}
         onSkip={handleRatingSkip}
       />

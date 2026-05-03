@@ -2,12 +2,12 @@
  * Supabase Client — Production
  *
  * Credentials resolved in priority order:
- *   1. VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY  (from .env)
+ *   1. VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY  (from .env)
  *   2. info.tsx fallback (checked-in public project config)
  *
  * Set these in your .env file for full portability:
  *   VITE_SUPABASE_URL=https://<project-id>.supabase.co
- *   VITE_SUPABASE_ANON_KEY=<your-anon-key>
+ *   VITE_SUPABASE_PUBLISHABLE_KEY=<your-publishable-key-or-anon-key>
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -118,7 +118,7 @@ function queueIfOffline<T>(fn: () => Promise<T>): Promise<T> {
 const getSupabaseClient = () => {
   if (!isSupabaseConfigured) {
     console.error(
-      '[Supabase] Missing valid credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.',
+      '[Supabase] Missing valid credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in your .env file.',
     );
     return null;
   }

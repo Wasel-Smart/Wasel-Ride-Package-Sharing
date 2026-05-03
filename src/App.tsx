@@ -11,17 +11,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { LocalAuthProvider } from './contexts/LocalAuth';
 import { WaselLogo } from './components/wasel-ds/WaselLogo';
 import { domainEventBus } from './platform/event-bus';
-import {
-  probeBackendHealth,
-  startAvailabilityPolling,
-  warmUpServer,
-} from './services/core';
 import { validateRuntimeConfiguration } from './utils/env';
-import { initSentry, logger, trackDomainEvent } from './utils/monitoring';
-import {
-  detectLongTasks,
-  initPerformanceMonitoring,
-} from './utils/performance';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
 
@@ -173,31 +163,16 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
 
 function AppRuntimeCoordinator() {
   useEffect(() => {
-    initSentry();
     const runtimeValidation = validateRuntimeConfiguration();
+    let cancelled = false;
+    let stopPolling = () => undefined;
+    let stopEventTelemetry = () => undefined;
+    let probeHealth: null | (() => Promise<unknown>) = null;
 
-    runtimeValidation.issues.forEach((issue) => {
-      const context = { key: issue.key, valid: runtimeValidation.ok };
-      if (issue.severity === 'error') {
-        logger.error(issue.message, undefined, context);
-        return;
-      }
-
-      logger.warning(issue.message, context);
-    });
-    initPerformanceMonitoring();
-    detectLongTasks();
-    void warmUpServer();
-    void probeBackendHealth();
-
-    const stopPolling = startAvailabilityPolling();
-    const stopEventTelemetry = domainEventBus.subscribeAll((event) => {
-      trackDomainEvent(event);
-    });
     const syncOnlineState = () => {
       const online = typeof navigator === 'undefined' ? true : navigator.onLine;
       onlineManager.setOnline(online);
-      if (online) void probeBackendHealth();
+      if (online && probeHealth) void probeHealth();
     };
 
     syncOnlineState();
@@ -207,7 +182,73 @@ function AppRuntimeCoordinator() {
       window.addEventListener('offline', syncOnlineState);
     }
 
+    const scheduleBackgroundBootstrap = () => {
+      const runner = async () => {
+        try {
+          const [
+            monitoring,
+            performance,
+            core,
+          ] = await Promise.all([
+            import('./utils/monitoring'),
+            import('./utils/performance'),
+            import('./services/core'),
+          ]);
+
+          if (cancelled) return;
+
+          monitoring.initSentry();
+
+          runtimeValidation.issues.forEach((issue) => {
+            const context = { key: issue.key, valid: runtimeValidation.ok };
+            if (issue.severity === 'error') {
+              monitoring.logger.error(issue.message, undefined, context);
+              return;
+            }
+
+            monitoring.logger.warning(issue.message, context);
+          });
+
+          performance.initPerformanceMonitoring();
+          performance.detectLongTasks();
+
+          probeHealth = () => core.probeBackendHealth();
+          void core.warmUpServer();
+          void probeHealth();
+
+          stopPolling = core.startAvailabilityPolling();
+          stopEventTelemetry = domainEventBus.subscribeAll((event) => {
+            monitoring.trackDomainEvent(event);
+          });
+
+          syncOnlineState();
+        } catch (error) {
+          if (import.meta.env.DEV) {
+            console.warn('[Wasel] Runtime bootstrap deferred import failed.', error);
+          }
+        }
+      };
+
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        const handle = window.requestIdleCallback(() => {
+          void runner();
+        }, { timeout: 1500 });
+
+        return () => window.cancelIdleCallback(handle);
+      }
+
+      const handle = globalThis.setTimeout(() => {
+        void runner();
+      }, 0);
+
+      return () => globalThis.clearTimeout(handle);
+    };
+
+    const cancelBootstrap = scheduleBackgroundBootstrap();
+
     return () => {
+      cancelled = true;
+      cancelBootstrap();
       stopPolling();
       stopEventTelemetry();
       if (typeof window !== 'undefined') {

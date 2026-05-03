@@ -38,6 +38,33 @@ export interface Ride {
   reviews?: { name: string; rating: number; text: string }[];
 }
 
+function formatDateISO(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function createUpcomingDate(offsetDays: number) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + offsetDays);
+  return formatDateISO(date);
+}
+
+function normalizeRideDate(date?: string, fallbackOffset = 1) {
+  if (!date) {
+    return createUpcomingDate(fallbackOffset);
+  }
+
+  const parsed = new Date(`${date}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (!Number.isFinite(parsed.getTime()) || parsed < today) {
+    return createUpcomingDate(fallbackOffset);
+  }
+
+  return date;
+}
+
 export const ALL_RIDES: Ride[] = [
   {
     id: 'r1',
@@ -48,7 +75,7 @@ export const ALL_RIDES: Ride[] = [
     to: 'Aqaba',
     toAr: 'العقبة',
     toPoint: 'City Center',
-    date: '2026-03-25',
+    date: normalizeRideDate('2026-03-25', 1),
     time: '07:00',
     seatsAvailable: 2,
     totalSeats: 4,
@@ -75,7 +102,7 @@ export const ALL_RIDES: Ride[] = [
     to: 'Irbid',
     toAr: 'إربد',
     toPoint: 'University District',
-    date: '2026-03-25',
+    date: normalizeRideDate('2026-03-25', 1),
     time: '08:30',
     seatsAvailable: 3,
     totalSeats: 3,
@@ -100,7 +127,7 @@ export const ALL_RIDES: Ride[] = [
     to: 'Dead Sea',
     toAr: 'البحر الميت',
     toPoint: 'Zara Resort',
-    date: '2026-03-25',
+    date: normalizeRideDate('2026-03-25', 1),
     time: '09:00',
     seatsAvailable: 1,
     totalSeats: 4,
@@ -124,7 +151,7 @@ export const ALL_RIDES: Ride[] = [
     to: 'Petra',
     toAr: 'البتراء',
     toPoint: 'Visitor Center',
-    date: '2026-03-26',
+    date: normalizeRideDate('2026-03-26', 2),
     time: '06:30',
     seatsAvailable: 2,
     totalSeats: 4,
@@ -148,7 +175,7 @@ export const ALL_RIDES: Ride[] = [
     to: 'Amman',
     toAr: 'عمّان',
     toPoint: '7th Circle',
-    date: '2026-03-25',
+    date: normalizeRideDate('2026-03-25', 1),
     time: '14:00',
     seatsAvailable: 3,
     totalSeats: 4,
@@ -172,7 +199,7 @@ export const ALL_RIDES: Ride[] = [
     to: 'Aqaba',
     toAr: 'العقبة',
     toPoint: 'South Beach',
-    date: '2026-03-25',
+    date: normalizeRideDate('2026-03-25', 1),
     time: '06:00',
     seatsAvailable: 1,
     totalSeats: 3,
@@ -230,7 +257,7 @@ export function buildRideFromPostedRide(ride: PostedRide): Ride {
     to: ride.to,
     toAr: ride.to,
     toPoint: 'Shared dropoff point',
-    date: ride.date || new Date().toISOString().slice(0, 10),
+    date: normalizeRideDate(ride.date, 1),
     time: ride.time || 'Flexible',
     seatsAvailable: Math.max(1, ride.seats),
     totalSeats: Math.max(1, ride.seats),

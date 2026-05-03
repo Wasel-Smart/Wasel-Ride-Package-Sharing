@@ -80,6 +80,21 @@ export interface WalletTransaction {
   status?: string;
 };
 
+export interface WalletSubscription {
+  id: string;
+  status: string;
+  plan: string;
+  stripeCustomerId?: string | null;
+  stripePriceId?: string | null;
+  stripeProductId?: string | null;
+  cancelAtPeriodEnd?: boolean;
+  currentPeriodStart?: string | null;
+  currentPeriodEnd?: string | null;
+  cancelledAt?: string | null;
+  trialStart?: string | null;
+  trialEnd?: string | null;
+}
+
 export interface WalletData {
   wallet: WalletSummary;
   balance: number;
@@ -94,7 +109,7 @@ export interface WalletData {
   transactions: WalletTransaction[];
   activeEscrows: any[];
   activeRewards: RewardItem[];
-  subscription: any | null;
+  subscription: WalletSubscription | null;
 }
 
 export interface InsightsData {
@@ -657,6 +672,35 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json();
 }
 
+function isWalletTopUpConnectivityError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('Route not found') || message.includes('Wallet request failed: 404');
+}
+
+function buildWalletTopUpBackendError(): Error {
+  return new Error(
+    'Secure wallet top-up is unavailable because the checkout backend is not configured. Deploy the wallet edge function and configure Stripe server secrets before adding funds.',
+  );
+}
+
+function isWalletSubscriptionConnectivityError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('Route not found') || message.includes('Wallet request failed: 404');
+}
+
+function buildWalletSubscriptionBackendError(): Error {
+  return new Error(
+    'Secure subscription checkout is unavailable because the billing backend is not configured. Deploy the wallet edge function and configure Stripe Billing before subscribing.',
+  );
+}
+
+async function fetchSubscriptionViaBackend(userId: string): Promise<WalletSubscription | null> {
+  const result = await requestJson<{ subscription?: WalletSubscription | null }>(
+    `${WALLET_API_BASE}/${userId}/subscription`,
+  );
+  return result.subscription ?? null;
+}
+
 export const walletApi = {
   async getWallet(userId: string): Promise<WalletData> {
     if (canUseEdgeApi()) {
@@ -667,7 +711,17 @@ export const walletApi = {
       }
     }
 
-    return fetchWalletDirect(userId);
+    const wallet = await fetchWalletDirect(userId);
+
+    if (canUseEdgeApi()) {
+      try {
+        wallet.subscription = await fetchSubscriptionViaBackend(userId);
+      } catch {
+        // Keep the direct wallet payload if the subscription route is unavailable.
+      }
+    }
+
+    return wallet;
   },
 
   async getTransactions(userId: string, page = 1, limit = 20, type?: string) {
@@ -704,12 +758,16 @@ export const walletApi = {
           method: 'POST',
           body: JSON.stringify({ amount, paymentMethod }),
         });
-      } catch {
-        // Fall back to direct Supabase below.
+      } catch (error) {
+        if (isWalletTopUpConnectivityError(error)) {
+          throw buildWalletTopUpBackendError();
+        }
+
+        throw error;
       }
     }
 
-    return addWalletFundsDirect(userId, amount, paymentMethod);
+    throw buildWalletTopUpBackendError();
   },
 
   async withdraw(userId: string, amount: number, bankAccount: string, method = 'bank_transfer') {
@@ -770,10 +828,10 @@ export const walletApi = {
     throw new Error('Reward claiming requires the wallet backend.');
   },
 
-  async getSubscription(userId: string) {
+  async getSubscription(userId: string): Promise<{ subscription: WalletSubscription | null }> {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/subscription`);
+        return { subscription: await fetchSubscriptionViaBackend(userId) };
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -784,13 +842,21 @@ export const walletApi = {
 
   async subscribe(userId: string, planName: string, price: number) {
     if (canUseEdgeApi()) {
-      return requestJson(`${WALLET_API_BASE}/${userId}/subscribe`, {
-        method: 'POST',
-        body: JSON.stringify({ planName, price }),
-      });
+      try {
+        return await requestJson(`${WALLET_API_BASE}/${userId}/subscribe`, {
+          method: 'POST',
+          body: JSON.stringify({ planName, price }),
+        });
+      } catch (error) {
+        if (isWalletSubscriptionConnectivityError(error)) {
+          throw buildWalletSubscriptionBackendError();
+        }
+
+        throw error;
+      }
     }
 
-    throw new Error('Subscription changes require the wallet backend.');
+    throw buildWalletSubscriptionBackendError();
   },
 
   async getInsights(userId: string): Promise<InsightsData> {

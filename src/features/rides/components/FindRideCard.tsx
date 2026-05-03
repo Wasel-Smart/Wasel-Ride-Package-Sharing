@@ -21,20 +21,23 @@ const GENDER_META = createGenderMeta(DS);
 type FindRideCardProps = {
   ride: Ride;
   idx: number;
-  booked?: boolean;
+  bookingStatus?: 'pending_driver' | 'confirmed' | null;
   signal?: LiveCorridorSignal | null;
   onOpen: () => void;
+  onOpenBooking: () => void;
 };
 
 export function FindRideCard({
   ride,
   idx,
-  booked = false,
+  bookingStatus = null,
   signal = null,
   onOpen,
+  onOpenBooking,
 }: FindRideCardProps) {
   const genderMeta = GENDER_META[ride.genderPref];
   const soldOut = ride.seatsAvailable <= 0;
+  const hasBooking = bookingStatus === 'pending_driver' || bookingStatus === 'confirmed';
   const corridorPlan = getCorridorOpportunity(ride.from, ride.to);
   const priceQuote = getMovementPriceQuote({
     basePriceJod: ride.pricePerSeat,
@@ -255,49 +258,81 @@ export function FindRideCard({
             {signal && <span style={pill(DS.green)}>Demand {signal.forecastDemandScore}</span>}
             {signal && <span style={pill(DS.cyan)}>Owns {signal.routeOwnershipScore}</span>}
             {!signal && corridorPlan && <span style={pill(DS.green)}>Demand {corridorPlan.predictedDemandScore}</span>}
-            {booked && (
-              <span style={pill(DS.green)}>
+            {hasBooking && (
+              <span style={pill(bookingStatus === 'pending_driver' ? DS.gold : DS.green)}>
                 <CheckCircle2 size={9} /> Booked
               </span>
             )}
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            <span style={{ color: booked ? DS.green : soldOut ? DS.gold : DS.muted, fontSize: '0.75rem' }}>
-              {booked
-                ? 'Reserved'
+            <span
+              style={{
+                color: hasBooking
+                  ? bookingStatus === 'pending_driver'
+                    ? DS.gold
+                    : DS.green
+                  : soldOut
+                    ? DS.gold
+                    : DS.muted,
+                fontSize: '0.75rem',
+              }}
+            >
+              {hasBooking
+                ? bookingStatus === 'pending_driver'
+                  ? 'Request sent'
+                  : 'Seat confirmed'
                 : soldOut
                   ? 'Bus fallback available'
                   : signal
                     ? `${signal.nextWaveWindow} next`
-                    : 'View details'}
+                    : 'Ready to reserve'}
             </span>
             <motion.button
               whileTap={{ scale: 0.94 }}
               onClick={(event) => {
                 event.stopPropagation();
+                if (hasBooking) {
+                  onOpenBooking();
+                  return;
+                }
+
                 onOpen();
               }}
               className="sp-book-btn"
-              disabled={booked || soldOut}
+              disabled={soldOut}
               style={{
                 height: 44,
                 padding: '0 18px',
                 borderRadius: '99px',
                 border: 'none',
-                background: booked
-                  ? DS.gradG
+                background: hasBooking
+                  ? bookingStatus === 'pending_driver'
+                    ? DS.gradGold
+                    : DS.gradG
                   : soldOut
                     ? 'linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))'
                     : DS.gradC,
                 color: '#fff',
                 fontWeight: 800,
                 fontSize: '0.82rem',
-                boxShadow: `0 4px 16px ${booked ? DS.green : soldOut ? 'rgba(255,255,255,0.14)' : DS.cyan}30`,
-                cursor: booked || soldOut ? 'not-allowed' : 'pointer',
-                opacity: booked || soldOut ? 0.88 : 1,
+                boxShadow: `0 4px 16px ${
+                  hasBooking
+                    ? bookingStatus === 'pending_driver'
+                      ? DS.gold
+                      : DS.green
+                    : soldOut
+                      ? 'rgba(255,255,255,0.14)'
+                      : DS.cyan
+                }30`,
+                cursor: soldOut ? 'not-allowed' : 'pointer',
+                opacity: soldOut ? 0.88 : 1,
               }}
             >
-              {booked ? 'Booked' : soldOut ? 'Sold out' : 'Book seat'}
+              {hasBooking
+                ? 'Open in My Trips'
+                : soldOut
+                  ? 'Sold out'
+                  : 'View details'}
             </motion.button>
           </div>
         </div>
