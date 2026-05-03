@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
 import { CorridorCard } from './CorridorCard';
-import { mobilityOSRuntime, useMobilityOSProjection } from './runtime';
+import { useMobilityOSServerState } from './serverState';
 import type { BookingType, CorridorProjection, MobilityEventEnvelope } from './model';
 
 type CityNode = {
@@ -108,17 +108,10 @@ function networkPath(projection: CorridorProjection): { from: CityNode; to: City
 }
 
 export default function MobilityOSCore() {
-  const snapshot = useMobilityOSProjection();
+  const { snapshot, source, createBooking } = useMobilityOSServerState();
   const [selectedCorridorId, setSelectedCorridorId] = useState<string>('');
   const [bookingMode, setBookingMode] = useState<BookingType>(INITIAL_MODE);
   const [quantity, setQuantity] = useState(1);
-
-  useEffect(() => {
-    mobilityOSRuntime.start();
-    return () => {
-      mobilityOSRuntime.stop();
-    };
-  }, []);
 
   useEffect(() => {
     if (!snapshot.corridors.length) return;
@@ -174,18 +167,18 @@ export default function MobilityOSCore() {
 
   const corridorNodes = selectedCorridor ? networkPath(selectedCorridor) : null;
 
-  const submitBooking = () => {
+  const submitBooking = async () => {
     if (!selectedCorridor) return;
 
     try {
-      const bookingId = mobilityOSRuntime.createBooking({
+      const response = await createBooking({
         corridor_id: selectedCorridor.corridor.id,
         type: bookingMode,
         quantity,
         timestamp: new Date().toISOString(),
       });
       toast.success(
-        `${bookingMode === 'seat' ? 'Seat' : 'Cargo'} booking ${bookingId} accepted on ${selectedCorridor.corridor.origin} -> ${selectedCorridor.corridor.destination}.`,
+        `${bookingMode === 'seat' ? 'Seat' : 'Cargo'} booking ${response.booking_id} accepted on ${selectedCorridor.corridor.origin} -> ${selectedCorridor.corridor.destination}.`,
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Booking failed.');
@@ -282,7 +275,7 @@ export default function MobilityOSCore() {
                   <div style={{ marginTop: 6, fontSize: '1.2rem', fontWeight: 900 }}>Jordan corridor signal field</div>
                 </div>
                 <div style={{ padding: '8px 10px', borderRadius: R.full, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.03)', fontFamily: FM, color: C.green, fontSize: '0.78rem' }}>
-                  ws://mobility-os/corridors
+                  {source === 'server' ? 'server-backed stream' : 'local fallback runtime'}
                 </div>
               </div>
 
