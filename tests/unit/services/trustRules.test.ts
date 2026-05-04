@@ -27,4 +27,19 @@ describe('trustRules', () => {
     }, 'carry_packages');
     expect(result.allowed).toBe(true);
   });
+
+  it('blocks payouts when the wallet is closed', () => {
+    const result = evaluateTrustCapability({
+      ...baseUser,
+      verificationLevel: 'level_3',
+      phoneVerified: true,
+      emailVerified: true,
+      trustScore: 72,
+      role: 'driver',
+      walletStatus: 'closed',
+    }, 'receive_payouts');
+
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe('Wallet needs review.');
+  });
 });

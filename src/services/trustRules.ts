@@ -49,7 +49,7 @@ export function evaluateTrustCapability(
   }
 
   const level = verificationRank(user.verificationLevel);
-  const walletBlocked = user.walletStatus === 'frozen';
+  const walletBlocked = user.walletStatus === 'frozen' || user.walletStatus === 'closed';
 
   if (walletBlocked && capability !== 'priority_support') {
     return {

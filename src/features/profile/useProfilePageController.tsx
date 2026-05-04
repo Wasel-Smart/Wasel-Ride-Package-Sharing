@@ -2,12 +2,13 @@ import { useState, type ChangeEvent, type ReactNode, type RefObject } from 'reac
 import { Bell, Car, CreditCard, Settings } from 'lucide-react';
 import type { WaselUser } from '../../contexts/LocalAuth';
 import { sanitizeText } from '../../utils/sanitize';
+import { C, F } from '../../utils/wasel-ds';
 import { buildProfileExportPayload, normalizeProfilePhone } from './profileUtils';
 
-export const PROFILE_BG = '#040C18';
-export const PROFILE_BORDER = 'rgba(255,255,255,0.09)';
-export const PROFILE_CYAN = '#00C8E8';
-export const PROFILE_FONT = "-apple-system,'Inter',sans-serif";
+export const PROFILE_BG = C.bg;
+export const PROFILE_BORDER = C.border;
+export const PROFILE_CYAN = C.cyan;
+export const PROFILE_FONT = F;
 
 export type SavingField = 'name' | 'phone' | 'photo' | null;
 
@@ -65,6 +66,10 @@ async function readAvatarFile(file: File): Promise<string> {
 }
 
 function getWalletStatus(user: WaselUser, ar: boolean): ProfileStatusChip {
+  if (user.walletStatus === 'closed') {
+    return { label: ar ? 'مغلقة' : 'Closed', color: '#EF4444' };
+  }
+
   if (user.walletStatus === 'frozen') {
     return { label: ar ? 'مجمّد' : 'Frozen', color: '#EF4444' };
   }
@@ -210,6 +215,7 @@ export function useProfilePageController({
   signOut,
   photoInputRef,
 }: UseProfilePageControllerArgs) {
+  void photoInputRef;
   const [editingField, setEditingField] = useState<'name' | 'phone' | null>(null);
   const [nameInput, setNameInput] = useState(user.name ?? '');
   const [phoneInput, setPhoneInput] = useState(user.phone ?? '');

@@ -4,7 +4,6 @@ import { supabase } from '../../utils/supabase/client';
 import { evaluateTrustCapability } from '../trustRules';
 import type {
   DbClient,
-  DriverRow,
   RawBooking,
   RawProfile,
   TripRow,
@@ -70,7 +69,8 @@ export function mapProfileFromContext(
     phone: context.user.phone_number ?? null,
     phone_number: context.user.phone_number ?? null,
     phone_verified: Boolean(context.user.phone_verified_at),
-    email_verified: Boolean(context.user.email),
+    // Email confirmation lives in auth, not the canonical user row.
+    email_verified: null,
     wallet_balance: walletBalance,
     rating,
     rating_as_driver: rating,
@@ -97,7 +97,7 @@ export function buildTrustLikeUser(profile: RawProfile) {
   const rating = toNumber(profile.rating ?? profile.rating_as_driver, 5);
   const verificationLevel = String(profile.verification_level ?? 'level_0');
   const phoneVerified = Boolean(profile.phone_verified);
-  const emailVerified = Boolean(profile.email_verified ?? profile.email);
+  const emailVerified = profile.email_verified === true;
   const role = profile.role === 'driver' || profile.role === 'both' ? profile.role : 'rider';
   const trustScore = Math.max(
     0,
@@ -117,7 +117,9 @@ export function buildTrustLikeUser(profile: RawProfile) {
     role,
     verificationLevel,
     walletStatus:
-      profile.wallet_status === 'frozen' || profile.wallet_status === 'limited'
+      profile.wallet_status === 'frozen' ||
+      profile.wallet_status === 'limited' ||
+      profile.wallet_status === 'closed'
         ? profile.wallet_status
         : 'active',
     trustScore,

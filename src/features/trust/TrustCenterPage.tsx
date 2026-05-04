@@ -1,90 +1,61 @@
 import {
-  Shield,
-  CheckCircle2,
+  Activity,
   AlertTriangle,
-  ChevronRight,
-  Wallet,
   BadgeCheck,
+  CarFront,
+  CheckCircle2,
   FileCheck,
+  Shield,
+  Wallet,
 } from 'lucide-react';
+import { Button } from '../../components/ui/button';
+import { WaselStateCard } from '../../components/system/WaselStateCard';
+import {
+  DataRow,
+  MetricCard,
+  PageHero,
+  PageShell,
+  SectionCard,
+  StatusBadge,
+} from '../../components/wasel-ui/WaselPagePrimitives';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { getDriverReadinessSummary } from '../../services/driverOnboarding';
 import { evaluateTrustCapability } from '../../services/trustRules';
+import { C, SPACE } from '../../utils/wasel-ds';
 
-const BG = '#040C18';
-const CARD = 'rgba(255,255,255,0.04)';
-const BORD = 'rgba(255,255,255,0.09)';
-const CYAN = '#00C8E8';
-const GREEN = '#22C55E';
-const GOLD = '#F59E0B';
-const RED = '#EF4444';
-const FONT = "-apple-system,'Inter',sans-serif";
-
-function Row({
-  label,
-  sub,
-  icon,
-  accent,
-  onClick,
-}: {
-  label: string;
-  sub: string;
-  icon: React.ReactNode;
-  accent: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-        width: '100%',
-        textAlign: 'left',
-        background: 'transparent',
-        border: 'none',
-        borderBottom: `1px solid ${BORD}`,
-        padding: '16px 18px',
-        cursor: 'pointer',
-      }}
-    >
-      <div
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 12,
-          background: `${accent}18`,
-          border: `1px solid ${accent}33`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: accent,
-          flexShrink: 0,
-        }}
-      >
-        {icon}
-      </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ color: '#EFF6FF', fontWeight: 700, fontFamily: FONT, fontSize: '0.92rem' }}>
-          {label}
-        </div>
-        <div
-          style={{
-            color: 'rgba(148,163,184,0.72)',
-            fontFamily: FONT,
-            fontSize: '0.78rem',
-            marginTop: 4,
-          }}
-        >
-          {sub}
-        </div>
-      </div>
-      <ChevronRight size={16} color="rgba(148,163,184,0.45)" />
-    </button>
-  );
+function getTrustStepCopy(
+  id: 'account_role' | 'phone' | 'email' | 'identity' | 'driver_clearance',
+  ar: boolean,
+) {
+  switch (id) {
+    case 'account_role':
+      return {
+        label: ar ? 'تفعيل وضع السائق' : 'Driver mode',
+        description: ar ? 'ابدأ من دور السائق قبل أي خطوة أخرى.' : 'Turn on Driver mode first.',
+      };
+    case 'phone':
+      return {
+        label: ar ? 'تأكيد الهاتف' : 'Phone verified',
+        description: ar ? 'الهاتف يفتح التنبيهات والتنسيق المباشر.' : 'Required for live trip alerts.',
+      };
+    case 'email':
+      return {
+        label: ar ? 'تأكيد البريد' : 'Email verified',
+        description: ar ? 'البريد يحمي الاسترداد والفواتير.' : 'Needed for receipts and recovery.',
+      };
+    case 'identity':
+      return {
+        label: ar ? 'الهوية أو سند' : 'Identity verified',
+        description: ar ? 'مستوى 2 يفتح مراجعة الرحلات.' : 'Level 2 unlocks ride review.',
+      };
+    default:
+      return {
+        label: ar ? 'تصريح السائق' : 'Driver clearance',
+        description: ar ? 'الاعتماد النهائي للرحلات المباشرة.' : 'Final approval for live rides.',
+      };
+  }
 }
 
 export default function TrustCenterPage() {
@@ -95,54 +66,38 @@ export default function TrustCenterPage() {
 
   if (!user) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: BG,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 24,
-          fontFamily: FONT,
-        }}
-      >
-        <button
-          onClick={() => nav('/app/auth')}
-          style={{
-            border: 'none',
-            borderRadius: 12,
-            background: `linear-gradient(135deg,${CYAN},#0095B8)`,
-            color: '#041018',
-            fontWeight: 800,
-            padding: '12px 20px',
-            cursor: 'pointer',
-          }}
-        >
-          {ar ? 'سجّل الدخول لعرض مركز الثقة' : 'Sign in to open Trust Center'}
-        </button>
-      </div>
+      <WaselStateCard
+        eyebrow={ar ? 'الثقة' : 'Trust'}
+        title={ar ? 'سجل الدخول لفتح مركز الثقة' : 'Sign in to open Trust Center'}
+        description={
+          ar
+            ? 'التحقق والجاهزية والقدرات المفتوحة تظهر هنا في شاشة واحدة.'
+            : 'Verification, readiness, and unlocked actions appear here in one view.'
+        }
+        icon={Shield}
+        minHeight="60vh"
+        actions={
+          <Button
+            onClick={() => nav('/app/auth')}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {ar ? 'تسجيل الدخول' : 'Sign in'}
+          </Button>
+        }
+      />
     );
   }
 
   const verificationTone =
     user.verificationLevel === 'level_3' || user.verificationLevel === 'level_2'
-      ? { color: GREEN, label: ar ? 'مكتمل' : 'Verified' }
+      ? { color: C.green, label: ar ? 'موثق' : 'Verified' }
       : user.verificationLevel === 'level_1'
-        ? { color: GOLD, label: ar ? 'جزئي' : 'Partial' }
-        : { color: RED, label: ar ? 'بحاجة لإكمال' : 'Action needed' };
+        ? { color: C.gold, label: ar ? 'جزئي' : 'Partial' }
+        : { color: C.error, label: ar ? 'يحتاج إكمال' : 'Action needed' };
 
   const driverReadiness = getDriverReadinessSummary(user);
   const incompleteSteps = driverReadiness.steps.filter(step => !step.complete);
-  const nextAction =
-    driverReadiness.status === 'ready'
-      ? { label: ar ? 'فتح لوحة السائق' : 'Open Driver', to: '/app/driver' }
-      : driverReadiness.status === 'complete_profile'
-        ? { label: ar ? 'تأكيد الحساب' : 'Verify account', to: '/app/settings' }
-        : driverReadiness.status === 'complete_verification'
-          ? { label: ar ? 'إكمال التحقق' : 'Finish verification', to: '/app/settings' }
-          : driverReadiness.status === 'pending_review'
-            ? { label: ar ? 'مراجعة الحالة' : 'Review status', to: '/app/driver' }
-            : { label: ar ? 'بدء الإعداد' : 'Start setup', to: '/app/settings' };
+  const completedSteps = driverReadiness.steps.length - incompleteSteps.length;
   const capabilityRows = [
     { title: ar ? 'نشر رحلة' : 'Post rides', gate: evaluateTrustCapability(user, 'offer_ride') },
     {
@@ -158,436 +113,250 @@ export default function TrustCenterPage() {
       gate: evaluateTrustCapability(user, 'priority_support'),
     },
   ];
+  const unlockedCount = capabilityRows.filter(item => item.gate.allowed).length;
+  const nextAction =
+    driverReadiness.status === 'ready'
+      ? { label: ar ? 'فتح لوحة السائق' : 'Open Driver', to: '/app/driver' }
+      : driverReadiness.status === 'complete_profile'
+        ? { label: ar ? 'تأكيد الحساب' : 'Verify account', to: '/app/settings' }
+        : driverReadiness.status === 'complete_verification'
+          ? { label: ar ? 'إكمال التحقق' : 'Finish verification', to: '/app/settings' }
+          : driverReadiness.status === 'pending_review'
+            ? { label: ar ? 'مراجعة الحالة' : 'Review status', to: '/app/driver' }
+            : { label: ar ? 'بدء الإعداد' : 'Start setup', to: '/app/settings' };
+  const heroDescription =
+    driverReadiness.status === 'ready'
+      ? ar
+        ? 'الهوية والثقة والدفع جاهزة. المستخدم يفهم وضعه مباشرة من الأرقام.'
+        : 'Identity, trust, and payouts are ready. Users can understand account status from the numbers alone.'
+      : ar
+        ? `أكمل ${incompleteSteps.length} خطوات لفتح الرحلات والطرود والمدفوعات بثقة واضحة.`
+        : `Complete ${incompleteSteps.length} more checks to unlock rides, packages, and payouts with clear confidence.`;
+  const localizedSteps = driverReadiness.steps.map(step => ({
+    ...step,
+    ...getTrustStepCopy(step.id, ar),
+  }));
+  const trustSignals = [
+    {
+      title: ar ? 'هوية واضحة' : 'Visible identity',
+      detail: ar ? 'التحقق يظهر كحالة مباشرة بدل شرح طويل.' : 'Verification reads like a direct state, not a paragraph.',
+      accent: C.cyan,
+    },
+    {
+      title: ar ? 'قدرات مفتوحة' : 'Unlocked actions',
+      detail: ar ? 'الرحلات والطرود والمدفوعات تظهر كجاهزة أو غير جاهزة.' : 'Rides, parcels, and payouts show as open or blocked.',
+      accent: C.gold,
+    },
+    {
+      title: ar ? 'خطوة تالية واحدة' : 'One next step',
+      detail: ar ? 'المستخدم يرى ما الذي ينقصه فوراً.' : 'The missing requirement is visible immediately.',
+      accent: C.green,
+    },
+  ];
+  const walletTone =
+    user.walletStatus === 'closed'
+      ? { label: ar ? 'مغلقة' : 'Closed', color: C.error }
+      : user.walletStatus === 'frozen'
+      ? { label: ar ? 'مجمدة' : 'Frozen', color: C.error }
+      : user.walletStatus === 'limited'
+        ? { label: ar ? 'محدودة' : 'Limited', color: C.gold }
+        : { label: ar ? 'نشطة' : 'Active', color: C.green };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: BG,
-        fontFamily: FONT,
-        direction: ar ? 'rtl' : 'ltr',
-        paddingBottom: 80,
-      }}
-    >
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 16px 0' }}>
-        <div
-          style={{
-            background: 'linear-gradient(135deg, rgba(0,200,232,0.16), rgba(255,255,255,0.03))',
-            border: '1px solid rgba(0,200,232,0.22)',
-            borderRadius: 20,
-            padding: '24px 22px',
-            marginBottom: 20,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-            <div
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 16,
-                background: 'rgba(0,200,232,0.15)',
-                border: '1px solid rgba(0,200,232,0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: CYAN,
-              }}
-            >
-              <Shield size={24} />
-            </div>
-            <div>
-              <div style={{ color: '#EFF6FF', fontSize: '1.35rem', fontWeight: 900 }}>
-                {ar ? 'مركز الثقة والتحقق' : 'Trust Center'}
+    <PageShell maxWidth={760} dir={ar ? 'rtl' : 'ltr'}>
+      <div style={{ paddingInline: SPACE[4] }}>
+        <PageHero
+          eyebrow={ar ? 'مؤشر الثقة' : 'Trust Index'}
+          icon={<StatusBadge label={verificationTone.label} accent={verificationTone.color} />}
+          title={
+            ar ? 'الثقة تصبح أسهل عندما تتحول إلى أرقام' : 'Trust becomes easier when it turns into numbers'
+          }
+          description={heroDescription}
+          accent={verificationTone.color}
+          actions={
+            <>
+              <Button
+                onClick={() => nav(nextAction.to)}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {nextAction.label}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => nav('/app/settings')}
+                className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+              >
+                {ar ? 'الإعدادات' : 'Settings'}
+              </Button>
+            </>
+          }
+          aside={
+            <div style={{ display: 'grid', gap: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <StatusBadge
+                  label={ar ? `${completedSteps}/5 مكتمل` : `${completedSteps}/5 complete`}
+                  accent={C.cyan}
+                />
+                <StatusBadge
+                  label={ar ? `${unlockedCount}/4 مفتوح` : `${unlockedCount}/4 open`}
+                  accent={C.green}
+                />
               </div>
-              <div style={{ color: 'rgba(148,163,184,0.72)', fontSize: '0.82rem', marginTop: 4 }}>
-                {driverReadiness.status === 'ready'
-                  ? ar
-                    ? 'حسابك جاهز داخل واصل.'
-                    : 'Your account is ready in Wasel.'
-                  : ar
-                    ? `أكمل ${incompleteSteps.length} خطوات لفتح الميزات الموثوقة.`
-                    : `Complete ${incompleteSteps.length} checks to unlock trusted actions.`}
+              <div style={{ color: '#FFFFFF', fontSize: '1.8rem', fontWeight: 900 }}>
+                {user.trustScore}/100
+              </div>
+              <div style={{ color: C.textMuted, fontSize: '0.88rem', lineHeight: 1.7 }}>
+                {ar
+                  ? 'كل نقطة توضح للمستخدم ما الذي يعمل الآن وما الذي يحتاجه بعد ذلك.'
+                  : 'Each point tells users what works now and what they still need next.'}
               </div>
             </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <span
-              style={{
-                padding: '5px 10px',
-                borderRadius: 999,
-                background: `${verificationTone.color}1A`,
-                border: `1px solid ${verificationTone.color}33`,
-                color: verificationTone.color,
-                fontSize: '0.72rem',
-                fontWeight: 800,
-              }}
-            >
-              {verificationTone.label}
-            </span>
-            <span
-              style={{
-                padding: '5px 10px',
-                borderRadius: 999,
-                background: 'rgba(255,255,255,0.04)',
-                border: `1px solid ${BORD}`,
-                color: '#CBD5E1',
-                fontSize: '0.72rem',
-                fontWeight: 700,
-              }}
-            >
-              {ar ? `درجة الثقة ${user.trustScore}/100` : `Trust score ${user.trustScore}/100`}
-            </span>
-            <span
-              style={{
-                padding: '5px 10px',
-                borderRadius: 999,
-                background: 'rgba(255,255,255,0.04)',
-                border: `1px solid ${BORD}`,
-                color: '#CBD5E1',
-                fontSize: '0.72rem',
-                fontWeight: 700,
-              }}
-            >
-              {ar
-                ? `${driverReadiness.steps.filter(step => step.complete).length}/5 مكتمل`
-                : `${driverReadiness.steps.filter(step => step.complete).length}/5 done`}
-            </span>
-          </div>
-        </div>
+          }
+        />
 
         <div
           style={{
-            background: CARD,
-            border: `1px solid ${BORD}`,
-            borderRadius: 18,
-            overflow: 'hidden',
-            marginBottom: 18,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+            gap: SPACE[4],
+            marginBottom: SPACE[6],
           }}
         >
-          <Row
-            label={ar ? 'الهوية / سند' : 'Identity / Sanad'}
-            sub={
-              user.sanadVerified || user.verified
-                ? ar
-                  ? 'تم التحقق.'
-                  : 'Verified.'
-                : ar
-                  ? 'أكمل التحقق.'
-                  : 'Finish verification.'
-            }
-            icon={<BadgeCheck size={18} />}
-            accent={user.sanadVerified || user.verified ? GREEN : GOLD}
-            onClick={() => nav('/app/settings')}
+          <MetricCard
+            label={ar ? 'درجة الثقة' : 'Trust score'}
+            value={`${user.trustScore}/100`}
+            detail={ar ? 'الرقم الذي يترجم الثقة داخل التطبيق.' : 'The number behind in-app trust.'}
+            icon={<Shield size={18} />}
+            accent={verificationTone.color}
           />
-          <Row
-            label={ar ? 'البريد والهاتف' : 'Email and phone'}
-            sub={
-              user.emailVerified && user.phoneVerified
-                ? ar
-                  ? 'تم التأكيد.'
-                  : 'Confirmed.'
-                : ar
-                  ? 'أكمل التأكيد.'
-                  : 'Needs confirmation.'
-            }
+          <MetricCard
+            label={ar ? 'التحقق المكتمل' : 'Checks done'}
+            value={`${completedSteps}/${driverReadiness.steps.length}`}
+            detail={ar ? 'هوية واتصال واعتماد.' : 'Identity, contact, and clearance.'}
             icon={<CheckCircle2 size={18} />}
-            accent={user.emailVerified && user.phoneVerified ? GREEN : GOLD}
-            onClick={() => nav('/app/settings')}
+            accent={C.cyan}
           />
-          <Row
-            label={ar ? 'وثائق السائق' : 'Driver documents'}
-            sub={
-              user.verificationLevel === 'level_3'
-                ? ar
-                  ? 'جاهز للتشغيل.'
-                  : 'Ready.'
-                : ar
-                  ? 'أكمل جاهزية السائق.'
-                  : 'Finish setup.'
-            }
-            icon={<FileCheck size={18} />}
-            accent={user.verificationLevel === 'level_3' ? GREEN : GOLD}
-            onClick={() => nav('/app/driver')}
+          <MetricCard
+            label={ar ? 'القدرات المفتوحة' : 'Actions open'}
+            value={`${unlockedCount}/${capabilityRows.length}`}
+            detail={ar ? 'رحلات وطرود ومدفوعات ودعم.' : 'Rides, parcels, payouts, and support.'}
+            icon={<BadgeCheck size={18} />}
+            accent={C.green}
           />
-          <Row
-            label={ar ? 'حالة المحفظة' : 'Wallet standing'}
-            sub={
-              user.walletStatus === 'active'
-                ? ar
-                  ? 'جاهزة.'
-                  : 'Ready.'
-                : ar
-                  ? 'تحتاج مراجعة.'
-                  : 'Needs review.'
-            }
+          <MetricCard
+            label={ar ? 'حالة المحفظة' : 'Wallet status'}
+            value={walletTone.label}
+            detail={ar ? 'المحفظة السليمة تحافظ على تدفق العمليات.' : 'Healthy wallet status keeps operations available.'}
             icon={<Wallet size={18} />}
-            accent={user.walletStatus === 'active' ? GREEN : RED}
-            onClick={() => nav('/app/wallet')}
+            accent={walletTone.color}
           />
         </div>
 
-        <div
-          style={{
-            background: CARD,
-            border: `1px solid ${BORD}`,
-            borderRadius: 18,
-            padding: '18px',
-            marginBottom: 18,
-          }}
+        <SectionCard
+          title={ar ? 'مصفوفة القدرات' : 'Capability matrix'}
+          subtitle={
+            ar
+              ? 'هذه الشاشة تعرض ما هو مفتوح الآن بشكل مباشر.'
+              : 'This screen shows exactly what is available right now.'
+          }
+          icon={<Activity size={16} color={C.cyan} />}
+          contentPadding="0"
         >
-          <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>
-            {driverReadiness.status === 'ready'
-              ? ar
-                ? 'جاهز الآن'
-                : 'Ready now'
-              : ar
-                ? 'الخطوات التالية'
-                : 'Next checks'}
-          </div>
+          {capabilityRows.map(item => (
+            <DataRow
+              key={item.title}
+              label={item.title}
+              value={
+                item.gate.allowed
+                  ? ar
+                    ? 'جاهز الآن'
+                    : 'Ready now'
+                  : item.gate.recommendation ?? (ar ? 'خطوة إضافية' : 'One more step')
+              }
+              icon={item.gate.allowed ? <BadgeCheck size={16} /> : <AlertTriangle size={16} />}
+              badge={
+                <StatusBadge
+                  label={item.gate.allowed ? (ar ? 'مفتوح' : 'Open') : ar ? 'مغلق' : 'Locked'}
+                  accent={item.gate.allowed ? C.green : C.gold}
+                />
+              }
+              onClick={() => nav(item.gate.allowed ? '/app/driver' : '/app/settings')}
+            />
+          ))}
+        </SectionCard>
+
+        <SectionCard
+          title={ar ? 'جاهزية السائق' : 'Driver readiness'}
+          subtitle={
+            ar
+              ? 'كل خطوة تقود المستخدم مباشرة إلى الإجراء التالي.'
+              : 'Each step points directly to the next action.'
+          }
+          icon={<CarFront size={16} color={C.gold} />}
+          contentPadding="0"
+        >
+          {localizedSteps.map(step => (
+            <DataRow
+              key={step.id}
+              label={step.label}
+              value={step.description}
+              icon={step.complete ? <CheckCircle2 size={16} /> : <FileCheck size={16} />}
+              badge={
+                <StatusBadge
+                  label={step.complete ? (ar ? 'مكتمل' : 'Done') : ar ? 'مطلوب' : 'Needed'}
+                  accent={step.complete ? C.green : C.gold}
+                />
+              }
+              onClick={() => nav(step.complete ? '/app/driver' : '/app/settings')}
+            />
+          ))}
+        </SectionCard>
+
+        <SectionCard
+          title={ar ? 'إشارات الثقة التي يراها المستخدم' : 'Trust signals users can read fast'}
+          subtitle={
+            ar
+              ? 'هوية واضحة، قدرات واضحة، ومسار واحد للخطوة التالية.'
+              : 'Clear identity, clear capabilities, and one direct next step.'
+          }
+          icon={<Shield size={16} color={C.green} />}
+        >
           <div
             style={{
-              color: 'rgba(148,163,184,0.78)',
-              fontSize: '0.8rem',
-              lineHeight: 1.6,
-              marginBottom: 14,
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: SPACE[4],
             }}
           >
-            {driverReadiness.headline}
-          </div>
-          <div style={{ display: 'grid', gap: 10 }}>
-            {(driverReadiness.status === 'ready'
-              ? driverReadiness.steps.slice(-2)
-              : incompleteSteps.slice(0, 3)
-            ).map(step => (
+            {trustSignals.map(signal => (
               <div
-                key={step.id}
+                key={signal.title}
                 style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 12,
-                  background: 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${step.complete ? `${GREEN}33` : BORD}`,
-                  borderRadius: 14,
-                  padding: '12px 13px',
+                  minWidth: 0,
+                  padding: `${SPACE[4]} ${SPACE[4]}`,
+                  borderRadius: 18,
+                  border: `1px solid ${signal.accent}24`,
+                  background: `radial-gradient(circle at top left, ${signal.accent}14, transparent 32%), rgba(255,255,255,0.03)`,
                 }}
               >
                 <div
                   style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: 8,
-                    background: step.complete ? `${GREEN}18` : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${step.complete ? `${GREEN}33` : BORD}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: step.complete ? GREEN : '#CBD5E1',
-                    fontSize: '0.72rem',
-                    fontWeight: 800,
-                    flexShrink: 0,
-                  }}
-                >
-                  {step.complete
-                    ? 'OK'
-                    : `${incompleteSteps.findIndex(item => item.id === step.id) + 1}`}
-                </div>
-                <div>
-                  <div style={{ color: '#EFF6FF', fontWeight: 700, fontSize: '0.82rem' }}>
-                    {step.label}
-                  </div>
-                  <div
-                    style={{
-                      color: 'rgba(148,163,184,0.78)',
-                      fontSize: '0.75rem',
-                      marginTop: 4,
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {step.description}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
-            <button
-              onClick={() => nav(nextAction.to)}
-              style={{
-                border: 'none',
-                borderRadius: 12,
-                background: `linear-gradient(135deg,${CYAN},#0095B8)`,
-                color: '#041018',
-                fontWeight: 800,
-                padding: '11px 16px',
-                cursor: 'pointer',
-              }}
-            >
-              {nextAction.label}
-            </button>
-            <button
-              onClick={() => nav('/app/settings')}
-              style={{
-                border: `1px solid ${BORD}`,
-                borderRadius: 12,
-                background: 'transparent',
-                color: '#EFF6FF',
-                fontWeight: 700,
-                padding: '11px 16px',
-                cursor: 'pointer',
-              }}
-            >
-              {ar ? 'الإعدادات' : 'Settings'}
-            </button>
-          </div>
-        </div>
-
-        <div
-          style={{
-            background: CARD,
-            border: `1px solid ${BORD}`,
-            borderRadius: 18,
-            padding: '18px',
-            marginBottom: 18,
-          }}
-        >
-          <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>
-            {ar ? 'المتاح الآن' : 'Unlocked now'}
-          </div>
-          <div style={{ display: 'grid', gap: 10 }}>
-            {capabilityRows.map(item => (
-              <div
-                key={item.title}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  background: 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${BORD}`,
-                  borderRadius: 14,
-                  padding: '12px 13px',
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <div style={{ color: '#EFF6FF', fontWeight: 700, fontSize: '0.82rem' }}>
-                    {item.title}
-                  </div>
-                  <div
-                    style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.74rem', marginTop: 4 }}
-                  >
-                    {item.gate.allowed
-                      ? ar
-                        ? 'جاهز'
-                        : 'Ready'
-                      : (item.gate.recommendation ?? (ar ? 'خطوة إضافية' : 'One more step'))}
-                  </div>
-                </div>
-                <span
-                  style={{
-                    padding: '5px 10px',
-                    borderRadius: 999,
-                    background: item.gate.allowed ? `${GREEN}1A` : `${GOLD}1A`,
-                    border: `1px solid ${item.gate.allowed ? `${GREEN}33` : `${GOLD}33`}`,
-                    color: item.gate.allowed ? GREEN : GOLD,
-                    fontSize: '0.72rem',
-                    fontWeight: 800,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {item.gate.allowed ? (ar ? 'مفتوح' : 'Open') : ar ? 'مغلق' : 'Locked'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div
-          style={{
-            background: CARD,
-            border: `1px solid ${BORD}`,
-            borderRadius: 18,
-            padding: '18px',
-            marginBottom: 18,
-          }}
-        >
-          <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>
-            {ar ? 'ما يراه المستخدم' : 'What riders see'}
-          </div>
-          <div
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}
-          >
-            {[
-              {
-                title: ar ? 'الهوية' : 'Identity',
-                desc: ar ? 'حالة التحقق.' : 'Verification status.',
-                accent: CYAN,
-              },
-              {
-                title: ar ? 'التتبع' : 'Tracking',
-                desc: ar ? 'تأكيد واضح للحجز أو الطرد.' : 'Clear trip or package proof.',
-                accent: GOLD,
-              },
-              {
-                title: ar ? 'المسار' : 'Route',
-                desc: ar ? 'تفاصيل الانطلاق والوجهة.' : 'Departure and destination details.',
-                accent: GREEN,
-              },
-            ].map(item => (
-              <div
-                key={item.title}
-                style={{
-                  borderRadius: 14,
-                  padding: '12px 13px',
-                  background: 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${item.accent}22`,
-                }}
-              >
-                <div
-                  style={{
-                    color: item.accent,
-                    fontWeight: 800,
+                    color: signal.accent,
                     fontSize: '0.84rem',
-                    marginBottom: 4,
+                    fontWeight: 800,
+                    marginBottom: 8,
                   }}
                 >
-                  {item.title}
+                  {signal.title}
                 </div>
-                <div
-                  style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.76rem', lineHeight: 1.5 }}
-                >
-                  {item.desc}
+                <div style={{ color: C.textMuted, fontSize: '0.84rem', lineHeight: 1.65 }}>
+                  {signal.detail}
                 </div>
               </div>
             ))}
           </div>
-        </div>
-
-        <div
-          style={{
-            background: CARD,
-            border: `1px solid ${BORD}`,
-            borderRadius: 18,
-            padding: '20px 18px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <AlertTriangle size={16} color={GOLD} />
-            <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.95rem' }}>
-              {ar ? 'ملخص واصل' : 'Wasel summary'}
-            </div>
-          </div>
-          <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.82rem', lineHeight: 1.7 }}>
-            {driverReadiness.status === 'ready'
-              ? ar
-                ? 'أكملت المطلوب. حافظ على حالة المحفظة والتنبيهات.'
-                : 'All core checks are done. Keep wallet and alerts healthy.'
-              : ar
-                ? 'أدخل المعلومات الصحيحة مرة واحدة، وواصل يحدّث الثقة تلقائياً.'
-                : 'Add the right info once. Wasel updates trust automatically.'}
-          </div>
-        </div>
+        </SectionCard>
       </div>
-    </div>
+    </PageShell>
   );
 }

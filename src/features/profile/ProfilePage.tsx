@@ -15,12 +15,15 @@ import {
   Star,
   User,
 } from 'lucide-react';
+import { Button } from '../../components/ui/button';
+import { WaselStateCard } from '../../components/system/WaselStateCard';
+import { PageHero, PageShell, StatusBadge } from '../../components/wasel-ui/WaselPagePrimitives';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
-import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
+import { SPACE } from '../../utils/wasel-ds';
 import { getProfileInitials } from './profileUtils';
 import {
   InsightCard as SharedInsightCard,
@@ -66,43 +69,29 @@ export default function ProfilePage() {
   const nav = useIframeSafeNavigate();
   const { isSupported, permission, requestPermission } = usePushNotifications();
   const ar = language === 'ar';
-  const photoInputRef = useRef<HTMLInputElement | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   if (!user) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          background: BG,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          gap: 16,
-          fontFamily: FONT,
-        }}
-      >
-        <User size={40} color="rgba(148,163,184,0.4)" />
-        <p style={{ color: 'rgba(148,163,184,0.6)', fontSize: '0.9rem' }}>
-          {ar ? 'يرجى تسجيل الدخول أولاً' : 'Please sign in to view your profile'}
-        </p>
-        <button
-          onClick={() => nav('/app/auth')}
-          style={{
-            padding: '10px 24px',
-            borderRadius: 10,
-            background: `linear-gradient(135deg,${CYAN},#0095B8)`,
-            border: 'none',
-            color: '#040C18',
-            fontWeight: 700,
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-            fontFamily: FONT,
-          }}
-        >
-          {ar ? 'تسجيل الدخول' : 'Sign In'}
-        </button>
-      </div>
+      <WaselStateCard
+        eyebrow={ar ? 'الملف الشخصي' : 'Profile'}
+        title={ar ? 'سجل الدخول لعرض ملفك' : 'Sign in to view your profile'}
+        description={
+          ar
+            ? 'الهوية والثقة والإعدادات تظهر هنا في سطح واحد واضح.'
+            : 'Identity, trust, and settings appear here in one clear surface.'
+        }
+        icon={User}
+        minHeight="60vh"
+        actions={
+          <Button
+            onClick={() => nav('/app/auth')}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {ar ? 'تسجيل الدخول' : 'Sign in'}
+          </Button>
+        }
+      />
     );
   }
 
@@ -130,7 +119,7 @@ interface ProfilePageContentProps {
   isSupported: boolean;
   permission: NotificationPermission;
   requestPermission: () => Promise<NotificationPermission>;
-  photoInputRef: React.RefObject<HTMLInputElement | null>;
+  photoInputRef: React.RefObject<HTMLInputElement>;
 }
 
 function ProfilePageContent({
@@ -185,6 +174,13 @@ function ProfilePageContent({
   });
 
   const initials = getProfileInitials(user.name);
+  const memberLabel = user.joinedAt
+    ? ar
+      ? `عضو منذ ${joinedText}`
+      : `Member since ${joinedText}`
+    : ar
+      ? 'عضو في واصل'
+      : 'Wasel member';
 
   useEffect(() => {
     if (editingField !== 'name') setNameInput(user.name ?? '');
@@ -192,111 +188,131 @@ function ProfilePageContent({
   }, [editingField, setNameInput, setPhoneInput, user.name, user.phone]);
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: BG,
-        fontFamily: FONT,
-        direction: ar ? 'rtl' : 'ltr',
-        paddingBottom: 80,
-      }}
-    >
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 16px' }}>
-        <div
-          style={{
-            padding: '40px 0 32px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 16,
-          }}
-        >
-          <WaselLogo size={34} theme="light" variant="full" />
-          <div style={{ textAlign: 'center', maxWidth: 420 }}>
-            <p
-              style={{
-                margin: 0,
-                color: 'rgba(148,163,184,0.82)',
-                fontSize: '0.82rem',
-                lineHeight: 1.6,
-                fontFamily: FONT,
-              }}
-            >
-              {ar
-                ? 'مركز الهوية والثقة والإعدادات داخل شبكة واصل.'
-                : 'Profile, trust, and settings.'}
-            </p>
-          </div>
-          <input
-            ref={photoInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handlePhotoSelection}
-            style={{ display: 'none' }}
-          />
-          <div style={{ position: 'relative' }}>
-            <div
-              style={{
-                width: 88,
-                height: 88,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg,#00C8E8,#0060D8)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.8rem',
-                fontWeight: 900,
-                color: '#040C18',
-                boxShadow: '0 0 0 3px rgba(0,200,232,0.35), 0 8px 32px rgba(0,200,232,0.2)',
-                overflow: 'hidden',
-              }}
-            >
-              {user.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                initials
-              )}
-            </div>
-            <button
-              title={ar ? 'تغيير الصورة' : 'Change photo'}
-              onClick={() => photoInputRef.current?.click()}
-              disabled={savingField === 'photo'}
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                right: 0,
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                background: '#1E293B',
-                border: `2px solid ${BG}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: savingField === 'photo' ? 'not-allowed' : 'pointer',
-                opacity: savingField === 'photo' ? 0.65 : 1,
-              }}
-            >
-              {savingField === 'photo' ? (
-                <Clock size={12} color={CYAN} />
-              ) : (
-                <Camera size={12} color={CYAN} />
-              )}
-            </button>
-          </div>
+    <PageShell maxWidth={820} dir={ar ? 'rtl' : 'ltr'}>
+      <div style={{ paddingInline: SPACE[4] }}>
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoSelection}
+          style={{ display: 'none' }}
+        />
 
-          {editingField === 'name' ? (
+        <PageHero
+          eyebrow={ar ? 'هوية الحساب' : 'Account Identity'}
+          icon={<StatusBadge label={roleLabel} accent={CYAN} />}
+          title={user.name}
+          description={
+            ar
+              ? `${user.email} · درجة الثقة ${user.trustScore}/100 · ${memberLabel}`
+              : `${user.email} · Trust score ${user.trustScore}/100 · ${memberLabel}`
+          }
+          accent={CYAN}
+          actions={
+            <>
+              <Button
+                onClick={() => {
+                  setNameInput(user.name);
+                  setEditingField('name');
+                }}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {ar ? 'تعديل الاسم' : 'Edit name'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => nav('/app/trust')}
+                className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+              >
+                {ar ? 'مركز الثقة' : 'Trust Center'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => nav('/app/settings?section=account')}
+                className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+              >
+                {ar ? 'الإعدادات' : 'Settings'}
+              </Button>
+            </>
+          }
+          aside={
+            <div style={{ display: 'grid', justifyItems: 'center', gap: 12 }}>
+              <div style={{ position: 'relative' }}>
+                <div
+                  style={{
+                    width: 92,
+                    height: 92,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg,#00C8E8,#0060D8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.9rem',
+                    fontWeight: 900,
+                    color: '#040C18',
+                    boxShadow: '0 0 0 3px rgba(0,200,232,0.35), 0 8px 32px rgba(0,200,232,0.2)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    initials
+                  )}
+                </div>
+                <button
+                  title={ar ? 'تغيير الصورة' : 'Change photo'}
+                  onClick={() => photoInputRef.current?.click()}
+                  disabled={savingField === 'photo'}
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    width: 30,
+                    height: 30,
+                    borderRadius: '50%',
+                    background: '#1E293B',
+                    border: `2px solid ${BG}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: savingField === 'photo' ? 'not-allowed' : 'pointer',
+                    opacity: savingField === 'photo' ? 0.65 : 1,
+                  }}
+                >
+                  {savingField === 'photo' ? (
+                    <Clock size={12} color={CYAN} />
+                  ) : (
+                    <Camera size={12} color={CYAN} />
+                  )}
+                </button>
+              </div>
+              <SharedVerificationBadge
+                level={user.verificationLevel ?? 'level_0'}
+                ar={ar}
+                accent={CYAN}
+              />
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <StatusBadge label={`${walletStatus.label}`} accent={walletStatus.color} />
+                <StatusBadge label={permissionStatus.label} accent={permissionStatus.color} />
+              </div>
+            </div>
+          }
+        />
+
+        {editingField === 'name' ? (
+          <SharedSection title={ar ? 'تعديل سريع' : 'Quick Edit'}>
             <div
               style={{
+                padding: 18,
                 display: 'flex',
                 gap: 8,
                 alignItems: 'center',
-                width: '100%',
-                maxWidth: 320,
+                flexWrap: 'wrap',
               }}
             >
               <input
@@ -304,9 +320,10 @@ function ProfilePageContent({
                 onChange={event => setNameInput(event.target.value)}
                 autoFocus
                 style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  borderRadius: 8,
+                  flex: '1 1 240px',
+                  minWidth: 0,
+                  padding: '10px 12px',
+                  borderRadius: 10,
                   border: `1.5px solid ${CYAN}`,
                   background: 'rgba(0,200,232,0.07)',
                   color: '#EFF6FF',
@@ -324,8 +341,8 @@ function ProfilePageContent({
                 onClick={() => void handleSaveName()}
                 disabled={savingField !== null}
                 style={{
-                  padding: '8px 14px',
-                  borderRadius: 8,
+                  padding: '10px 14px',
+                  borderRadius: 10,
                   background: CYAN,
                   border: 'none',
                   color: '#040C18',
@@ -340,11 +357,11 @@ function ProfilePageContent({
               <button
                 onClick={() => setEditingField(null)}
                 style={{
-                  padding: '8px 10px',
-                  borderRadius: 8,
+                  padding: '10px 12px',
+                  borderRadius: 10,
                   background: 'rgba(255,255,255,0.06)',
                   border: `1px solid ${BORD}`,
-                  color: 'rgba(255,255,255,0.5)',
+                  color: 'rgba(255,255,255,0.7)',
                   cursor: 'pointer',
                   fontSize: '0.8rem',
                   fontFamily: FONT,
@@ -353,122 +370,8 @@ function ProfilePageContent({
                 {ar ? 'إلغاء' : 'Cancel'}
               </button>
             </div>
-          ) : (
-            <div style={{ textAlign: 'center' }}>
-              <h1
-                style={{
-                  fontSize: '1.4rem',
-                  fontWeight: 900,
-                  color: '#EFF6FF',
-                  fontFamily: FONT,
-                  margin: 0,
-                }}
-              >
-                {user.name}
-              </h1>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  flexWrap: 'wrap',
-                  marginTop: 8,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: '0.66rem',
-                    padding: '4px 9px',
-                    borderRadius: 999,
-                    color: CYAN,
-                    background: 'rgba(0,200,232,0.12)',
-                    border: '1px solid rgba(0,200,232,0.25)',
-                    fontFamily: FONT,
-                    fontWeight: 700,
-                  }}
-                >
-                  {roleLabel}
-                </span>
-                <span
-                  style={{
-                    fontSize: '0.66rem',
-                    padding: '4px 9px',
-                    borderRadius: 999,
-                    color: walletStatus.color,
-                    background: `${walletStatus.color}1A`,
-                    border: `1px solid ${walletStatus.color}33`,
-                    fontFamily: FONT,
-                    fontWeight: 700,
-                  }}
-                >
-                  {ar ? 'المحفظة' : 'Wallet'}: {walletStatus.label}
-                </span>
-                <span
-                  style={{
-                    fontSize: '0.66rem',
-                    padding: '4px 9px',
-                    borderRadius: 999,
-                    color: '#94A3B8',
-                    background: 'rgba(148,163,184,0.12)',
-                    border: '1px solid rgba(148,163,184,0.2)',
-                    fontFamily: FONT,
-                    fontWeight: 700,
-                  }}
-                >
-                  {ar ? 'ملف مباشر' : 'Live profile'}
-                </span>
-              </div>
-              <button
-                onClick={() => {
-                  setNameInput(user.name);
-                  setEditingField('name');
-                }}
-                style={{
-                  fontSize: '0.72rem',
-                  color: CYAN,
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  marginTop: 8,
-                  fontFamily: FONT,
-                }}
-              >
-                {ar ? 'تعديل الاسم' : 'Edit name'}
-              </button>
-            </div>
-          )}
-
-          <SharedVerificationBadge
-            level={user.verificationLevel ?? 'level_0'}
-            ar={ar}
-            accent={CYAN}
-          />
-          <p
-            style={{
-              color: 'rgba(148,163,184,0.6)',
-              fontSize: '0.82rem',
-              fontFamily: FONT,
-              margin: 0,
-            }}
-          >
-            {user.email}
-          </p>
-          <p
-            style={{
-              color: 'rgba(148,163,184,0.72)',
-              fontSize: '0.76rem',
-              fontFamily: FONT,
-              margin: 0,
-              textAlign: 'center',
-              lineHeight: 1.5,
-            }}
-          >
-            {ar
-              ? `درجة الثقة ${user.trustScore}/100 - ${trustTier}`
-              : `Trust score ${user.trustScore}/100 - ${trustTier}`}
-          </p>
-        </div>
+          </SharedSection>
+        ) : null}
 
         <div
           style={{
@@ -540,7 +443,7 @@ function ProfilePageContent({
               value={`${profileCompleteness}%`}
               detail={
                 ar
-                  ? 'كلما اكتمل الملف تحسنت الثقة وسهُل الحجز.'
+                  ? 'كلما اكتمل الملف تحسنت الثقة وسهولة الحجز.'
                   : 'A more complete account improves trust and booking confidence.'
               }
               color={profileCompleteness >= 80 ? '#22C55E' : CYAN}
@@ -606,9 +509,7 @@ function ProfilePageContent({
           <SharedRow
             label={ar ? 'الوضع التشغيلي' : 'Operational standing'}
             value={
-              ar
-                ? `${trustTier} - عضو منذ ${joinedText}`
-                : `${trustTier} - Member since ${joinedText}`
+              ar ? `${trustTier} - ${memberLabel}` : `${trustTier} - ${memberLabel}`
             }
             icon={<CheckCircle size={15} />}
             onClick={() => nav('/app/my-trips')}
@@ -674,60 +575,11 @@ function ProfilePageContent({
                 style={{ fontSize: '0.74rem', color: 'rgba(148,163,184,0.7)', fontFamily: FONT }}
               >
                 {ar
-                  ? 'يُستخدم للتنبيهات والتحقق وتنسيق الرحلات.'
+                  ? 'يستخدم للتنبيهات والتحقق وتنسيق الرحلات.'
                   : 'Used for alerts, verification, and ride coordination.'}
               </div>
             </div>
           </div>
-        </SharedSection>
-
-        <SharedSection title={ar ? 'الحساب' : 'Account'}>
-          <SharedRow
-            label={ar ? 'الهاتف' : 'Phone number'}
-            value={user.phone ?? (ar ? 'لم يُضف بعد' : 'Not added')}
-            icon={<span>📱</span>}
-            onClick={() => nav('/app/settings?section=phone')}
-          />
-          <SharedRow
-            label={ar ? 'التحقق من الهوية' : 'ID Verification'}
-            value={ar ? 'سند eKYC' : 'Sanad eKYC'}
-            icon={<Shield size={15} />}
-            badge={
-              <SharedVerificationBadge
-                level={user.verificationLevel ?? 'level_0'}
-                ar={ar}
-                accent={CYAN}
-              />
-            }
-            onClick={() => nav('/app/trust')}
-          />
-          <SharedRow
-            label={ar ? 'اللغة' : 'Language'}
-            value={ar ? 'العربية' : 'English'}
-            icon={<span>🌐</span>}
-            onClick={() => nav('/app/settings?section=account')}
-          />
-          <SharedRow
-            label={ar ? 'الإشعارات' : 'Notifications'}
-            value={permissionStatus.label}
-            icon={<Bell size={15} />}
-            badge={
-              <span
-                style={{
-                  fontSize: '0.65rem',
-                  color: permissionStatus.color,
-                  background: `${permissionStatus.color}1A`,
-                  padding: '3px 8px',
-                  borderRadius: 999,
-                  fontFamily: FONT,
-                  fontWeight: 700,
-                }}
-              >
-                {permissionStatus.label}
-              </span>
-            }
-            onClick={() => void handleNotificationSetup()}
-          />
         </SharedSection>
 
         {(user.role === 'driver' || user.role === 'both') && (
@@ -741,13 +593,13 @@ function ProfilePageContent({
             <SharedRow
               label={ar ? 'المستندات' : 'Documents'}
               value={ar ? 'رخصة + تأمين + ترخيص' : 'License · Insurance · Registration'}
-              icon={<span>📄</span>}
+              icon={<span>DOC</span>}
               badge={<CheckCircle size={14} color="#22C55E" />}
               onClick={() => nav('/app/trust')}
             />
             <SharedRow
               label={ar ? 'الأرباح' : 'Earnings'}
-              icon={<span>💰</span>}
+              icon={<span>JOD</span>}
               onClick={() => nav('/app/wallet')}
             />
           </SharedSection>
@@ -757,13 +609,13 @@ function ProfilePageContent({
           <SharedRow
             label={ar ? 'تفضيل الجنس' : 'Gender Preference'}
             value={ar ? 'مختلط (افتراضي)' : 'Mixed (default)'}
-            icon={<span>👥</span>}
+            icon={<span>UX</span>}
             onClick={() => nav('/app/settings?section=account')}
           />
           <SharedRow
             label={ar ? 'العملة' : 'Currency'}
             value="JOD"
-            icon={<span>💱</span>}
+            icon={<span>JOD</span>}
             onClick={() => nav('/app/settings?section=account')}
           />
           <SharedRow
@@ -776,7 +628,7 @@ function ProfilePageContent({
         <SharedSection title={ar ? 'الأمان' : 'Security'}>
           <SharedRow
             label={ar ? 'تغيير كلمة المرور' : 'Change Password'}
-            icon={<span>🔑</span>}
+            icon={<span>KEY</span>}
             onClick={() => nav('/app/settings?section=security')}
           />
           <SharedRow
@@ -796,25 +648,35 @@ function ProfilePageContent({
                 {user.twoFactorEnabled ? (ar ? 'مفعل' : 'On') : ar ? 'غير مفعل' : 'Off'}
               </span>
             }
-            icon={<span>🛡️</span>}
+            icon={<span>2FA</span>}
             onClick={() => nav('/app/settings?section=security')}
           />
           <SharedRow
             label={ar ? 'الأجهزة المسجلة' : 'Active Sessions'}
-            icon={<span>💻</span>}
+            icon={<span>WEB</span>}
             onClick={() => nav('/app/settings?section=security')}
+          />
+        </SharedSection>
+
+        <SharedSection title={ar ? 'التنبيهات' : 'Alerts'}>
+          <SharedRow
+            label={ar ? 'مركز الإشعارات' : 'Notification Center'}
+            value={permissionStatus.label}
+            icon={<Bell size={15} />}
+            badge={<StatusBadge label={permissionStatus.label} accent={permissionStatus.color} />}
+            onClick={() => void handleNotificationSetup()}
           />
         </SharedSection>
 
         <SharedSection title={ar ? 'القانوني' : 'Legal'}>
           <SharedRow
             label={ar ? 'سياسة الخصوصية' : 'Privacy Policy'}
-            icon={<span>📋</span>}
+            icon={<span>PRIV</span>}
             onClick={() => nav('/app/privacy')}
           />
           <SharedRow
             label={ar ? 'شروط الخدمة' : 'Terms of Service'}
-            icon={<span>📜</span>}
+            icon={<span>TERMS</span>}
             onClick={() => nav('/app/terms')}
           />
         </SharedSection>
@@ -822,13 +684,13 @@ function ProfilePageContent({
         <SharedSection title={ar ? 'منطقة الخطر' : 'Danger Zone'}>
           <SharedRow
             label={ar ? 'تصدير بياناتي' : 'Export My Data'}
-            icon={<span>📦</span>}
+            icon={<span>DATA</span>}
             onClick={handleExportData}
           />
           <SharedRow
             label={ar ? 'طلب حذف الحساب' : 'Request Account Deletion'}
             danger
-            icon={<span>🗑️</span>}
+            icon={<span>DEL</span>}
             onClick={() => setShowDeleteConfirm(true)}
           />
           <SharedRow
@@ -848,13 +710,7 @@ function ProfilePageContent({
           }}
         >
           <Clock size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
-          {user.joinedAt
-            ? ar
-              ? `عضو منذ ${joinedText}`
-              : `Member since ${joinedText}`
-            : ar
-              ? 'عضو في واصل'
-              : 'Wasel member'}
+          {memberLabel}
         </p>
       </div>
 
@@ -940,6 +796,6 @@ function ProfilePageContent({
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

@@ -1,6 +1,6 @@
 export type WaselUserRole = 'passenger' | 'driver' | 'both' | 'admin';
 export type WaselVerificationLevel = 'level_0' | 'level_1' | 'level_2' | 'level_3';
-export type WaselWalletStatus = 'active' | 'limited' | 'frozen';
+export type WaselWalletStatus = 'active' | 'limited' | 'frozen' | 'closed';
 export type WaselBackendMode = 'supabase' | 'demo';
 
 export interface WaselUserProfile {
@@ -198,7 +198,9 @@ export function mapBackendProfile(args: {
     verificationLevel,
     trustScore: deriveTrustScore({ verificationLevel, rating, trips }),
     walletStatus:
-      profile?.wallet_status === 'limited' || profile?.wallet_status === 'frozen'
+      profile?.wallet_status === 'limited' ||
+      profile?.wallet_status === 'frozen' ||
+      profile?.wallet_status === 'closed'
         ? profile.wallet_status
         : 'active',
     backendMode: 'supabase',

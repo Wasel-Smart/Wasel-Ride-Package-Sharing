@@ -22,7 +22,7 @@ export interface WaselUser {
   verified: boolean;
   sanadVerified: boolean;
   verificationLevel: string;
-  walletStatus: 'active' | 'limited' | 'frozen';
+  walletStatus: 'active' | 'limited' | 'frozen' | 'closed';
   avatar?: string;
   joinedAt: string;
   emailVerified: boolean;
@@ -74,14 +74,22 @@ function mapBackendProfile({
   const sanadVerified = Boolean(profile?.sanad_verified ?? verified);
   const emailVerified = Boolean(profile?.email_verified ?? authUser?.email_confirmed_at ?? false);
   const phoneVerified = Boolean(profile?.phone_verified ?? authUser?.phone_confirmed_at ?? false);
+  const role = profile?.role === 'driver' || profile?.role === 'both' ? profile.role : 'rider';
   const verificationLevel =
     profile?.verification_level ||
-    (sanadVerified ? 'level_3' : phoneVerified ? 'level_1' : 'level_0');
+    (sanadVerified
+      ? role === 'driver' || role === 'both'
+        ? 'level_3'
+        : 'level_2'
+      : phoneVerified
+        ? 'level_1'
+        : 'level_0');
   const walletStatus: WaselUser['walletStatus'] =
-    profile?.wallet_status === 'limited' || profile?.wallet_status === 'frozen'
+    profile?.wallet_status === 'limited' ||
+    profile?.wallet_status === 'frozen' ||
+    profile?.wallet_status === 'closed'
       ? profile.wallet_status
       : 'active';
-  const role = profile?.role === 'driver' || profile?.role === 'both' ? profile.role : 'rider';
 
   const baseUser: WaselUser = {
     id: authUser?.id || `user-${Date.now()}`,

@@ -1,10 +1,23 @@
-/**
- * Privacy Policy Page - Wasel | واصل
- * GDPR & MENA-compliant privacy policy
- */
-
+import { Eye, FileText, Lock, Mail, Phone, Shield } from 'lucide-react';
+import {
+  MetricCard,
+  PageHero,
+  PageShell,
+  SectionCard,
+  StatusBadge,
+} from '../../components/wasel-ui/WaselPagePrimitives';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Shield, Lock, Eye, FileText, Mail, Phone } from 'lucide-react';
+import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+
+function policyCardStyle(accent: string) {
+  return {
+    borderRadius: R.xxl,
+    border: `1px solid ${accent}24`,
+    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)`,
+    boxShadow: SH.md,
+    padding: SPACE[5],
+  } as const;
+}
 
 export function PrivacyPolicy() {
   const { language, dir } = useLanguage();
@@ -185,94 +198,255 @@ export function PrivacyPolicy() {
   const t = content[language as 'ar' | 'en'];
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
-      dir={dir}
-    >
-      {/* Header */}
-      <div className="border-b border-white/10 bg-white/5 backdrop-blur-xl">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-teal-500/20 to-emerald-500/20 border border-teal-500/30">
-              <Shield className="w-6 h-6 text-teal-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">{t.title}</h1>
-              <p className="text-sm text-slate-400 mt-1">{t.subtitle}</p>
-            </div>
-          </div>
-          <p className="text-slate-300 leading-relaxed">{t.intro}</p>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        {/* Sections */}
-        <div className="space-y-8 mb-12">
-          {t.sections.map((section, idx) => (
-            <div
-              key={idx}
-              className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm"
-            >
-              <div className="flex items-start gap-4">
-                <div className="p-2 rounded-lg bg-teal-500/20 border border-teal-500/30 shrink-0">
-                  <section.icon className="w-5 h-5 text-teal-400" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-white mb-4">{section.title}</h2>
-                  <ul className="space-y-2">
-                    {section.content.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2 text-slate-300">
-                        <span className="text-teal-400 mt-1.5">•</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+    <PageShell maxWidth={1120} dir={dir === 'rtl' ? 'rtl' : 'ltr'}>
+      <div style={{ paddingInline: SPACE[4] }}>
+        <PageHero
+          eyebrow="Legal"
+          icon={<Shield size={18} />}
+          title={t.title}
+          description={t.intro}
+          accent={C.cyan}
+          aside={
+            <div style={{ display: 'grid', gap: SPACE[3] }}>
+              <StatusBadge label={t.subtitle} accent={C.cyan} />
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: SPACE[3],
+                }}
+              >
+                {[
+                  { label: 'Data groups', value: '5', accent: C.cyan },
+                  { label: 'User rights', value: '6', accent: C.green },
+                  { label: 'Ad resale', value: '0', accent: C.gold },
+                  { label: 'Sensitive storage', value: 'AES-256', accent: '#60A5FA' },
+                ].map(item => (
+                  <div
+                    key={item.label}
+                    style={{
+                      borderRadius: R.xl,
+                      border: `1px solid ${item.accent}24`,
+                      background: `${item.accent}12`,
+                      padding: `${SPACE[3]} ${SPACE[4]}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: '#FFFFFF',
+                        fontSize: TYPE.size.lg,
+                        fontWeight: TYPE.weight.ultra,
+                        lineHeight: TYPE.lineHeight.tight,
+                      }}
+                    >
+                      {item.value}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        color: C.textMuted,
+                        fontSize: TYPE.size.xs,
+                        textTransform: 'uppercase',
+                        letterSpacing: TYPE.letterSpacing.wide,
+                      }}
+                    >
+                      {item.label}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          }
+        />
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 12,
+            marginBottom: SPACE[6],
+          }}
+        >
+          <MetricCard
+            label="Data categories"
+            value={t.sections.length}
+            detail="Collected data is grouped into clear categories."
+            accent={C.cyan}
+            icon={<FileText size={18} />}
+          />
+          <MetricCard
+            label="Security layer"
+            value="TLS + AES"
+            detail="Transport and sensitive storage stay encrypted."
+            accent={C.green}
+            icon={<Lock size={18} />}
+          />
+          <MetricCard
+            label="Sharing rule"
+            value="Need to know"
+            detail="We limit what is shared and with whom."
+            accent={C.gold}
+            icon={<Eye size={18} />}
+          />
+          <MetricCard
+            label="Your control"
+            value="6 rights"
+            detail="Access, correction, export, deletion, objection, withdrawal."
+            accent="#60A5FA"
+            icon={<Shield size={18} />}
+          />
         </div>
 
-        {/* Contact */}
-        <div className="bg-gradient-to-br from-teal-500/10 to-emerald-500/10 border border-teal-500/30 rounded-2xl p-6 mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Mail className="w-6 h-6 text-teal-400" />
-            <h2 className="text-xl font-bold text-white">{t.contact.title}</h2>
+        <SectionCard
+          title="Policy Overview"
+          subtitle="Short, scannable blocks make the privacy model easier to understand."
+          icon={<Shield size={18} color={C.cyan} />}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {t.sections.map(section => {
+              const Icon = section.icon;
+              return (
+                <div key={section.title} style={policyCardStyle(C.cyan)}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: SPACE[3],
+                      marginBottom: SPACE[4],
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 40,
+                        height: 40,
+                        borderRadius: R.lg,
+                        background: `${C.cyan}18`,
+                        border: `1px solid ${C.cyan}28`,
+                        color: C.cyan,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Icon size={18} />
+                    </span>
+                    <div
+                      style={{
+                        color: '#FFFFFF',
+                        fontSize: TYPE.size.base,
+                        fontWeight: TYPE.weight.black,
+                        lineHeight: TYPE.lineHeight.snug,
+                      }}
+                    >
+                      {section.title}
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {section.content.map(item => (
+                      <div
+                        key={item}
+                        style={{
+                          borderRadius: R.xl,
+                          border: `1px solid ${C.borderFaint}`,
+                          background: 'rgba(255,255,255,0.03)',
+                          padding: `${SPACE[3]} ${SPACE[4]}`,
+                          color: '#FFFFFF',
+                          fontSize: TYPE.size.sm,
+                          lineHeight: TYPE.lineHeight.relaxed,
+                        }}
+                      >
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <p className="text-slate-300 mb-4">{t.contact.subtitle}</p>
-          <div className="space-y-2">
-            <a
-              href={`mailto:${t.contact.email}`}
-              className="flex items-center gap-2 text-teal-400 hover:text-teal-300"
-            >
-              <Mail className="w-4 h-4" />
-              <span>{t.contact.email}</span>
-            </a>
-            <a
-              href={`tel:${t.contact.phone.replace(/\s/g, '')}`}
-              className="flex items-center gap-2 text-teal-400 hover:text-teal-300"
-            >
-              <Phone className="w-4 h-4" />
-              <span>{t.contact.phone}</span>
-            </a>
-            <p className="text-slate-400 text-sm">{t.contact.address}</p>
-          </div>
-        </div>
+        </SectionCard>
 
-        {/* Compliance */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-white mb-4">{t.compliance.title}</h2>
-          <ul className="space-y-2">
-            {t.compliance.items.map((item, i) => (
-              <li key={i} className="flex items-center gap-2 text-slate-300">
-                <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 0.95fr) minmax(0, 1.05fr)',
+            gap: 12,
+          }}
+        >
+          <SectionCard
+            title={t.contact.title}
+            subtitle={t.contact.subtitle}
+            icon={<Mail size={18} color={C.cyan} />}
+          >
+            <div style={{ display: 'grid', gap: 12 }}>
+              <a
+                href={`mailto:${t.contact.email}`}
+                style={{
+                  ...policyCardStyle(C.cyan),
+                  textDecoration: 'none',
+                  color: 'inherit',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+                  <Mail size={18} color={C.cyan} />
+                  <div>
+                    <div style={{ color: '#FFFFFF', fontWeight: TYPE.weight.black }}>
+                      {t.contact.email}
+                    </div>
+                    <div style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>Email</div>
+                  </div>
+                </div>
+              </a>
+              <a
+                href={`tel:${t.contact.phone.replace(/\s/g, '')}`}
+                style={{
+                  ...policyCardStyle(C.green),
+                  textDecoration: 'none',
+                  color: 'inherit',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+                  <Phone size={18} color={C.green} />
+                  <div>
+                    <div style={{ color: '#FFFFFF', fontWeight: TYPE.weight.black }}>
+                      {t.contact.phone}
+                    </div>
+                    <div style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>{t.contact.address}</div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            title={t.compliance.title}
+            subtitle="Trust improves when legal expectations are easy to scan."
+            icon={<Shield size={18} color={C.green} />}
+          >
+            <div style={{ display: 'grid', gap: 10 }}>
+              {t.compliance.items.map(item => (
+                <div key={item} style={policyCardStyle(C.green)}>
+                  <div
+                    style={{
+                      color: '#FFFFFF',
+                      fontSize: TYPE.size.sm,
+                      lineHeight: TYPE.lineHeight.relaxed,
+                    }}
+                  >
+                    {item}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

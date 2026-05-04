@@ -17,6 +17,7 @@ function Consumer() {
       <div>{loading ? 'loading' : 'ready'}</div>
       <div>{user?.name ?? 'no-user'}</div>
       <div>{user?.phone ?? 'no-phone'}</div>
+      <div>{user?.verificationLevel ?? 'no-level'}</div>
       <button
         type="button"
         onClick={() => {
@@ -82,6 +83,7 @@ describe('LocalAuthProvider', () => {
     expect(screen.getByText('ready')).toBeInTheDocument();
     expect(screen.getByText('Sara Ali')).toBeInTheDocument();
     expect(screen.getByText('+962790000000')).toBeInTheDocument();
+    expect(screen.getByText('level_3')).toBeInTheDocument();
   });
 
   it('delegates registration to AuthContext and preserves optimistic updates', async () => {
@@ -182,5 +184,42 @@ describe('LocalAuthProvider', () => {
     expect(screen.getByText('ready')).toBeInTheDocument();
     expect(screen.getByText('Demo Rider')).toBeInTheDocument();
     expect(screen.getByText('+962790000999')).toBeInTheDocument();
+  });
+
+  it('falls back to level_2 for Sanad-verified riders without driver clearance', () => {
+    mockUseAuth.mockReturnValue({
+      user: {
+        id: 'user-1',
+        email: 'sara@example.com',
+        phone: '+962790000000',
+        created_at: '2026-05-01T08:00:00.000Z',
+        email_confirmed_at: '2026-05-01T08:05:00.000Z',
+        phone_confirmed_at: '2026-05-01T08:10:00.000Z',
+        user_metadata: { full_name: 'Sara Ali' },
+      },
+      profile: {
+        full_name: 'Sara Ali',
+        phone_number: '+962790000000',
+        role: 'rider',
+        wallet_balance: 12,
+        rating: 4.9,
+        trip_count: 18,
+        sanad_verified: true,
+        wallet_status: 'active',
+      },
+      loading: false,
+      isBackendConnected: true,
+      signIn: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+    });
+
+    render(
+      <LocalAuthProvider>
+        <Consumer />
+      </LocalAuthProvider>,
+    );
+
+    expect(screen.getByText('level_2')).toBeInTheDocument();
   });
 });
