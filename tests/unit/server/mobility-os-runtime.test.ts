@@ -72,5 +72,6 @@ describe('mobility os server runtime helpers', () => {
     const snapshot = buildMobilitySnapshot([colder.corridor, hotter.corridor], []);
     expect(snapshot.corridors[0].corridor.id).toBe('amman-irbid');
     expect(snapshot.metrics.hottest_corridor).toBe('Amman -> Irbid');
+    expect('recent_events' in snapshot).toBe(false);
   });
 });

@@ -95,6 +95,17 @@ export default function TrustCenterPage() {
         : { color: RED, label: ar ? 'بحاجة لإكمال' : 'Action needed' };
 
   const driverReadiness = getDriverReadinessSummary(user);
+  const incompleteSteps = driverReadiness.steps.filter((step) => !step.complete);
+  const nextAction =
+    driverReadiness.status === 'ready'
+      ? { label: ar ? 'فتح لوحة السائق' : 'Open Driver', to: '/app/driver' }
+      : driverReadiness.status === 'complete_profile'
+        ? { label: ar ? 'تأكيد الحساب' : 'Verify account', to: '/app/settings' }
+        : driverReadiness.status === 'complete_verification'
+          ? { label: ar ? 'إكمال التحقق' : 'Finish verification', to: '/app/settings' }
+          : driverReadiness.status === 'pending_review'
+            ? { label: ar ? 'مراجعة الحالة' : 'Review status', to: '/app/driver' }
+            : { label: ar ? 'بدء الإعداد' : 'Start setup', to: '/app/settings' };
   const capabilityRows = [
     { title: ar ? 'نشر رحلة' : 'Post rides', gate: evaluateTrustCapability(user, 'offer_ride') },
     { title: ar ? 'حمل الطرود' : 'Carry packages', gate: evaluateTrustCapability(user, 'carry_packages') },
@@ -135,7 +146,11 @@ export default function TrustCenterPage() {
                 {ar ? 'مركز الثقة والتحقق' : 'Trust Center'}
               </div>
               <div style={{ color: 'rgba(148,163,184,0.72)', fontSize: '0.82rem', marginTop: 4 }}>
-                {ar ? 'راجع حالة التحقق والجاهزية.' : 'Check verification and account status.'}
+                {driverReadiness.status === 'ready'
+                  ? (ar ? 'حسابك جاهز داخل واصل.' : 'Your account is ready in Wasel.')
+                  : ar
+                    ? `أكمل ${incompleteSteps.length} خطوات لفتح الميزات الموثوقة.`
+                    : `Complete ${incompleteSteps.length} checks to unlock trusted actions.`}
               </div>
             </div>
           </div>
@@ -148,7 +163,7 @@ export default function TrustCenterPage() {
               {ar ? `درجة الثقة ${user.trustScore}/100` : `Trust score ${user.trustScore}/100`}
             </span>
             <span style={{ padding: '5px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORD}`, color: '#CBD5E1', fontSize: '0.72rem', fontWeight: 700 }}>
-              {ar ? 'ملف مباشر' : 'Live profile'}
+              {ar ? `${driverReadiness.steps.filter((step) => step.complete).length}/5 مكتمل` : `${driverReadiness.steps.filter((step) => step.complete).length}/5 done`}
             </span>
           </div>
         </div>
@@ -158,8 +173,8 @@ export default function TrustCenterPage() {
             label={ar ? 'الهوية / سند' : 'Identity / Sanad'}
             sub={
               user.sanadVerified || user.verified
-                ? (ar ? 'تم تأكيد الهوية لهذا الحساب.' : 'Identity verified.')
-                : (ar ? 'يلزم إكمال التحقق من إعدادات الحساب.' : 'Finish identity verification.')
+                ? (ar ? 'تم التحقق.' : 'Verified.')
+                : (ar ? 'أكمل التحقق.' : 'Finish verification.')
             }
             icon={<BadgeCheck size={18} />}
             accent={user.sanadVerified || user.verified ? GREEN : GOLD}
@@ -169,8 +184,8 @@ export default function TrustCenterPage() {
             label={ar ? 'البريد والهاتف' : 'Email and phone'}
             sub={
               user.emailVerified && user.phoneVerified
-                ? (ar ? 'تم تأكيد البريد الإلكتروني ورقم الهاتف.' : 'Email and phone confirmed.')
-                : (ar ? 'أكمل البريد الإلكتروني والهاتف لرفع الثقة.' : 'Confirm email and phone.')
+                ? (ar ? 'تم التأكيد.' : 'Confirmed.')
+                : (ar ? 'أكمل التأكيد.' : 'Needs confirmation.')
             }
             icon={<CheckCircle2 size={18} />}
             accent={user.emailVerified && user.phoneVerified ? GREEN : GOLD}
@@ -180,8 +195,8 @@ export default function TrustCenterPage() {
             label={ar ? 'وثائق السائق' : 'Driver documents'}
             sub={
               user.verificationLevel === 'level_3'
-                ? (ar ? 'جاهز لتشغيل الرحلات وحمل الطرود.' : 'Ready for rides and packages.')
-                : (ar ? 'أكمل جاهزية السائق قبل تفعيل تشغيل الرحلات.' : 'Complete driver readiness.')
+                ? (ar ? 'جاهز للتشغيل.' : 'Ready.')
+                : (ar ? 'أكمل جاهزية السائق.' : 'Finish setup.')
             }
             icon={<FileCheck size={18} />}
             accent={user.verificationLevel === 'level_3' ? GREEN : GOLD}
@@ -191,8 +206,8 @@ export default function TrustCenterPage() {
             label={ar ? 'حالة المحفظة' : 'Wallet standing'}
             sub={
               user.walletStatus === 'active'
-                ? (ar ? 'المحفظة جاهزة للدفع والتحصيل.' : 'Wallet ready.')
-                : (ar ? 'هناك قيود على المحفظة وتحتاج مراجعة.' : 'Wallet needs review.')
+                ? (ar ? 'جاهزة.' : 'Ready.')
+                : (ar ? 'تحتاج مراجعة.' : 'Needs review.')
             }
             icon={<Wallet size={18} />}
             accent={user.walletStatus === 'active' ? GREEN : RED}
@@ -202,16 +217,18 @@ export default function TrustCenterPage() {
 
         <div style={{ background: CARD, border: `1px solid ${BORD}`, borderRadius: 18, padding: '18px', marginBottom: 18 }}>
           <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>
-            {ar ? 'جاهزية السائق' : 'Driver readiness'}
+            {driverReadiness.status === 'ready'
+              ? (ar ? 'جاهز الآن' : 'Ready now')
+              : (ar ? 'الخطوات التالية' : 'Next checks')}
           </div>
           <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.8rem', lineHeight: 1.6, marginBottom: 14 }}>
             {driverReadiness.headline}
           </div>
           <div style={{ display: 'grid', gap: 10 }}>
-            {driverReadiness.steps.map((step) => (
+            {(driverReadiness.status === 'ready' ? driverReadiness.steps.slice(-2) : incompleteSteps.slice(0, 3)).map((step) => (
               <div key={step.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, background: 'rgba(255,255,255,0.03)', border: `1px solid ${step.complete ? `${GREEN}33` : BORD}`, borderRadius: 14, padding: '12px 13px' }}>
                 <div style={{ width: 26, height: 26, borderRadius: 8, background: step.complete ? `${GREEN}18` : 'rgba(255,255,255,0.05)', border: `1px solid ${step.complete ? `${GREEN}33` : BORD}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: step.complete ? GREEN : '#CBD5E1', fontSize: '0.72rem', fontWeight: 800, flexShrink: 0 }}>
-                  {step.complete ? 'OK' : '...'}
+                  {step.complete ? 'OK' : `${incompleteSteps.findIndex((item) => item.id === step.id) + 1}`}
                 </div>
                 <div>
                   <div style={{ color: '#EFF6FF', fontWeight: 700, fontSize: '0.82rem' }}>{step.label}</div>
@@ -221,18 +238,18 @@ export default function TrustCenterPage() {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
-            <button onClick={() => nav('/app/driver')} style={{ border: 'none', borderRadius: 12, background: `linear-gradient(135deg,${CYAN},#0095B8)`, color: '#041018', fontWeight: 800, padding: '11px 16px', cursor: 'pointer' }}>
-              {ar ? 'فتح لوحة السائق' : 'Open Driver'}
+            <button onClick={() => nav(nextAction.to)} style={{ border: 'none', borderRadius: 12, background: `linear-gradient(135deg,${CYAN},#0095B8)`, color: '#041018', fontWeight: 800, padding: '11px 16px', cursor: 'pointer' }}>
+              {nextAction.label}
             </button>
             <button onClick={() => nav('/app/settings')} style={{ border: `1px solid ${BORD}`, borderRadius: 12, background: 'transparent', color: '#EFF6FF', fontWeight: 700, padding: '11px 16px', cursor: 'pointer' }}>
-              {ar ? 'إعدادات الحساب' : 'Account settings'}
+              {ar ? 'الإعدادات' : 'Settings'}
             </button>
           </div>
         </div>
 
         <div style={{ background: CARD, border: `1px solid ${BORD}`, borderRadius: 18, padding: '18px', marginBottom: 18 }}>
           <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>
-            {ar ? 'مصفوفة الصلاحيات' : 'Capability matrix'}
+            {ar ? 'المتاح الآن' : 'Unlocked now'}
           </div>
           <div style={{ display: 'grid', gap: 10 }}>
             {capabilityRows.map((item) => (
@@ -240,11 +257,11 @@ export default function TrustCenterPage() {
                 <div>
                   <div style={{ color: '#EFF6FF', fontWeight: 700, fontSize: '0.82rem' }}>{item.title}</div>
                   <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.74rem', marginTop: 4 }}>
-                    {item.gate.allowed ? (ar ? 'جاهز الآن' : 'Ready now') : item.gate.recommendation ?? (ar ? 'يتطلب خطوة إضافية' : 'Needs one more step')}
+                    {item.gate.allowed ? (ar ? 'جاهز' : 'Ready') : item.gate.recommendation ?? (ar ? 'خطوة إضافية' : 'One more step')}
                   </div>
                 </div>
                 <span style={{ padding: '5px 10px', borderRadius: 999, background: item.gate.allowed ? `${GREEN}1A` : `${GOLD}1A`, border: `1px solid ${item.gate.allowed ? `${GREEN}33` : `${GOLD}33`}`, color: item.gate.allowed ? GREEN : GOLD, fontSize: '0.72rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
-                  {item.gate.allowed ? (ar ? 'مفعل' : 'Enabled') : (ar ? 'محجوب' : 'Blocked')}
+                  {item.gate.allowed ? (ar ? 'مفتوح' : 'Open') : (ar ? 'مغلق' : 'Locked')}
                 </span>
               </div>
             ))}
@@ -253,13 +270,13 @@ export default function TrustCenterPage() {
 
         <div style={{ background: CARD, border: `1px solid ${BORD}`, borderRadius: 18, padding: '18px', marginBottom: 18 }}>
           <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>
-            {ar ? 'إشارات الثقة اليومية' : 'Trust signals'}
+            {ar ? 'ما يراه المستخدم' : 'What riders see'}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
             {[
-              { title: ar ? 'إثبات الرحلة' : 'Trip proof', desc: ar ? 'احفظ تفاصيل الحجز والوقت والمركبة.' : 'Keep booking and vehicle details visible.', accent: CYAN },
-              { title: ar ? 'تسليم الطرد' : 'Package handoff', desc: ar ? 'استخدم التتبع لتأكيد المرسل والراكب والمستلم.' : 'Use tracking to confirm handoff.', accent: GOLD },
-              { title: ar ? 'ركوب الباص' : 'Bus boarding', desc: ar ? 'اعرض تفاصيل الانطلاق والوجهة قبل الصعود.' : 'Show route details before boarding.', accent: GREEN },
+              { title: ar ? 'الهوية' : 'Identity', desc: ar ? 'حالة التحقق.' : 'Verification status.', accent: CYAN },
+              { title: ar ? 'التتبع' : 'Tracking', desc: ar ? 'تأكيد واضح للحجز أو الطرد.' : 'Clear trip or package proof.', accent: GOLD },
+              { title: ar ? 'المسار' : 'Route', desc: ar ? 'تفاصيل الانطلاق والوجهة.' : 'Departure and destination details.', accent: GREEN },
             ].map((item) => (
               <div key={item.title} style={{ borderRadius: 14, padding: '12px 13px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${item.accent}22` }}>
                 <div style={{ color: item.accent, fontWeight: 800, fontSize: '0.84rem', marginBottom: 4 }}>{item.title}</div>
@@ -273,13 +290,13 @@ export default function TrustCenterPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
             <AlertTriangle size={16} color={GOLD} />
             <div style={{ color: '#EFF6FF', fontWeight: 800, fontSize: '0.95rem' }}>
-              {ar ? 'الخطوات التالية' : 'Next steps'}
+              {ar ? 'ملخص واصل' : 'Wasel summary'}
             </div>
           </div>
           <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.82rem', lineHeight: 1.7 }}>
             {driverReadiness.status === 'ready'
-              ? (ar ? 'حسابك جاهز للتشغيل. راقب المحفظة، الإشعارات، وصفحة السائق للحفاظ على الجاهزية.' : 'Your account is ready. Keep wallet, notifications, and driver status healthy.')
-              : (ar ? 'ابدأ من الإعدادات لتأكيد البريد والهاتف، ثم أكمل جاهزية السائق من صفحة السائق قبل تفعيل نشر الرحلات.' : 'Confirm email and phone, then finish driver readiness.')}
+              ? (ar ? 'أكملت المطلوب. حافظ على حالة المحفظة والتنبيهات.' : 'All core checks are done. Keep wallet and alerts healthy.')
+              : (ar ? 'أدخل المعلومات الصحيحة مرة واحدة، وواصل يحدّث الثقة تلقائياً.' : 'Add the right info once. Wasel updates trust automatically.')}
           </div>
         </div>
       </div>

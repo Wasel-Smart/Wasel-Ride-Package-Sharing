@@ -3,33 +3,21 @@ import { requestEdgeJson, runBackendWorkflow } from '../../services/backendWorkf
 import { supabase } from '../../services/core';
 import type { BookingRequest, MobilitySystemSnapshot } from './model';
 import { mobilityOSRuntime } from './runtime';
-import {
-  MOBILITY_OS_NARRATIVE,
-  applyMobilityEventToSnapshot,
-  normalizeMobilityOutboxRow,
-  type MobilityOutboxRow,
-} from './snapshot';
 
 type ServerBookingResponse = {
   booking_id: string;
   status: 'accepted';
   trace_id: string;
-  queued_events: string[];
 };
 
 const MOBILITY_OS_BASE = '/mobility-os';
 
 async function fetchMobilityServerSnapshot(): Promise<MobilitySystemSnapshot> {
-  const payload = await requestEdgeJson<MobilitySystemSnapshot>({
+  return requestEdgeJson<MobilitySystemSnapshot>({
     path: `${MOBILITY_OS_BASE}/snapshot`,
     operation: 'Load Mobility OS snapshot',
     authMode: 'required',
   });
-
-  return {
-    ...payload,
-    narrative: MOBILITY_OS_NARRATIVE,
-  };
 }
 
 async function createMobilityServerBooking(request: BookingRequest): Promise<ServerBookingResponse> {
@@ -52,7 +40,6 @@ async function createFallbackBooking(request: BookingRequest): Promise<ServerBoo
     booking_id: bookingId,
     status: 'accepted',
     trace_id: `local-${bookingId}`,
-    queued_events: ['BookingCreated', 'CapacityUpdated', 'DemandUpdated', 'PriceRecalculated', 'CorridorUpdated'],
   };
 }
 
@@ -122,26 +109,10 @@ export function useMobilityOSServerState() {
 
     const channel = supabase
       .channel('mobility-os-server-state')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mobility_corridors' }, () => {
-        clearReconcileTimer();
-        void loadSnapshot();
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'mobility_corridors' }, () => {
-        clearReconcileTimer();
-        void loadSnapshot();
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mobility_event_outbox' }, (payload) => {
-        const event = normalizeMobilityOutboxRow(payload.new as MobilityOutboxRow);
-        if (!event) {
-          clearReconcileTimer();
-          void loadSnapshot();
-          return;
-        }
-
-        clearReconcileTimer();
-        setSnapshot((current) => applyMobilityEventToSnapshot(current, event));
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mobility_corridors' }, () => {
         setSource('server');
-        setLoading(false);
+        clearReconcileTimer();
+        void loadSnapshot();
       })
       .subscribe();
 

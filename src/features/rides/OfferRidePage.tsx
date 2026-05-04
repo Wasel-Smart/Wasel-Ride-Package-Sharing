@@ -182,14 +182,14 @@ export function OfferRidePage() {
 
         <CoreExperienceBanner
           title="Post one route fast."
-          detail="Drivers should be able to post a lane once, see the suggested fare, and fill the trip with clear demand signals before departure."
+          detail="Set the route once, check the suggested fare, and go live."
           tone={DS.blue}
         />
 
         {(!offerGate.allowed || (form.acceptsPackages && !packageGate.allowed)) && (
           <div style={{ marginBottom: 18, background: 'rgba(240,168,48,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: '#fff' }}>
-            <div style={{ fontWeight: 800, marginBottom: 6 }}>Complete trust checks</div>
-            <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>{(!offerGate.allowed ? offerGate.reason : packageGate.reason) ?? 'Complete account checks before opening supply.'}</div>
+            <div style={{ fontWeight: 800, marginBottom: 6 }}>Finish trust setup</div>
+            <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>{(!offerGate.allowed ? offerGate.reason : packageGate.reason) ?? 'Finish account checks before going live.'}</div>
             <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
               {driverReadiness.steps.filter((step) => !step.complete).slice(0, 3).map((step) => (
                 <div key={step.id} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${DS.border}`, borderRadius: r(12), padding: '10px 12px' }}>
@@ -199,8 +199,8 @@ export function OfferRidePage() {
               ))}
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
-              <button onClick={() => nav('/app/driver')} style={{ height: 40, padding: '0 16px', borderRadius: '99px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Open driver dashboard</button>
-              <button onClick={() => nav('/app/trust')} style={{ height: 40, padding: '0 16px', borderRadius: '99px', border: 'none', background: DS.gradG, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Open trust center</button>
+              <button onClick={() => nav('/app/trust')} style={{ height: 40, padding: '0 16px', borderRadius: '99px', border: 'none', background: DS.gradG, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Finish checks</button>
+              <button onClick={() => nav('/app/driver')} style={{ height: 40, padding: '0 16px', borderRadius: '99px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Open driver</button>
             </div>
           </div>
         )}

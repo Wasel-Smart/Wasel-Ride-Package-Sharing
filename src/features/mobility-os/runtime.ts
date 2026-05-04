@@ -10,11 +10,12 @@ import {
   type Corridor,
   type CorridorProjection,
   type MobilityEventEnvelope,
+  type MobilityInternalSystemSnapshot,
   type MobilityEventPayloadMap,
   type MobilityEventType,
   type MobilitySystemSnapshot,
 } from './model';
-import { buildMobilitySnapshot } from './snapshot';
+import { buildMobilityInternalSnapshot, toPublicMobilitySnapshot } from './snapshot';
 
 type EventListener<TType extends MobilityEventType> = (
   event: MobilityEventEnvelope<TType>,
@@ -382,7 +383,7 @@ export class BookingService {
 
 export class RealtimeGateway {
   private listeners = new Set<SnapshotListener>();
-  private snapshot: MobilitySystemSnapshot;
+  private snapshot: MobilityInternalSystemSnapshot;
 
   constructor(
     private readonly bus: MobilityEventBus,
@@ -398,9 +399,9 @@ export class RealtimeGateway {
     this.listeners.forEach((listener) => listener());
   };
 
-  private buildSnapshot(): MobilitySystemSnapshot {
+  private buildSnapshot(): MobilityInternalSystemSnapshot {
     const corridors = this.corridorService.buildProjections();
-    return buildMobilitySnapshot({
+    return buildMobilityInternalSnapshot({
       corridors,
       recentEvents: this.bus.getRecentEvents(),
       updatedAt: nowIso(),
@@ -415,7 +416,23 @@ export class RealtimeGateway {
   }
 
   getSnapshot(): MobilitySystemSnapshot {
-    return this.snapshot;
+    return toPublicMobilitySnapshot(this.snapshot);
+  }
+
+  getInternalSnapshot(): MobilityInternalSystemSnapshot {
+    return {
+      ...this.snapshot,
+      corridors: this.snapshot.corridors.map((projection) => ({
+        ...projection,
+        corridor: cloneCorridor(projection.corridor),
+      })),
+      metrics: { ...this.snapshot.metrics },
+      recent_events: [...this.snapshot.recent_events],
+      narrative: {
+        platform_statement: this.snapshot.narrative.platform_statement,
+        business_model: [...this.snapshot.narrative.business_model],
+      },
+    };
   }
 
   refresh(): void {
@@ -502,6 +519,10 @@ export class MobilityOSRuntime {
 
   getSnapshot(): MobilitySystemSnapshot {
     return this.realtimeGateway.getSnapshot();
+  }
+
+  getInternalSnapshot(): MobilityInternalSystemSnapshot {
+    return this.realtimeGateway.getInternalSnapshot();
   }
 }
 

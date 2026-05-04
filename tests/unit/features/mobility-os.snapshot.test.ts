@@ -20,7 +20,6 @@ function buildSnapshotFixture(): MobilitySystemSnapshot {
 
   return buildMobilitySnapshot({
     corridors,
-    recentEvents: [],
     updatedAt: '2026-05-03T00:00:00.000Z',
   });
 }
@@ -76,7 +75,7 @@ describe('Mobility OS snapshot helpers', () => {
 
     expect(projected.corridors[0].corridor.id).toBe(nextProjection.corridor.id);
     expect(projected.corridors[0].dynamic_seat_price).toBe(14.2);
-    expect(projected.recent_events[0].id).toBe(event.id);
+    expect('recent_events' in projected).toBe(false);
     expect(projected.updated_at).toBe('2026-05-03T09:00:00.000Z');
   });
 

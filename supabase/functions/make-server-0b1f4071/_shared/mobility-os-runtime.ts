@@ -129,7 +129,10 @@ export function advanceCorridorAfterBooking(input: {
   return corridor;
 }
 
-export function buildMobilitySnapshot(corridors: MobilityCorridorRow[], recentEvents: Array<Record<string, unknown>>) {
+export function buildMobilitySnapshot(
+  corridors: MobilityCorridorRow[],
+  _recentEvents: Array<Record<string, unknown>> = [],
+) {
   const projections = corridors.map(projectCorridor).sort((left, right) => right.demand_pressure - left.demand_pressure);
   const totalSeatsAvailable = projections.reduce((sum, item) => sum + item.seats_available, 0);
   const totalCargoAvailable = projections.reduce((sum, item) => sum + item.cargo_available_kg, 0);
@@ -153,7 +156,6 @@ export function buildMobilitySnapshot(corridors: MobilityCorridorRow[], recentEv
       ),
       event_latency_target_ms: 200,
     },
-    recent_events: recentEvents,
     updated_at: new Date().toISOString(),
   };
 }

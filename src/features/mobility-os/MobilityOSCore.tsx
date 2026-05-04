@@ -1,28 +1,12 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
-import {
-  ArrowRightLeft,
-  Binary,
-  Boxes,
-  Cable,
-  ChartNoAxesCombined,
-  Clock3,
-  Coins,
-  Database,
-  Gauge,
-  Network,
-  Package,
-  Radio,
-  ServerCog,
-  TrendingUp,
-  Users,
-} from 'lucide-react';
+import { Activity, Gauge, Network, Package, Radio, TimerReset, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
 import { MobilityOSLandingMap } from '../home/MobilityOSLandingMap';
 import { CorridorCard } from './CorridorCard';
 import { useMobilityOSServerState } from './serverState';
-import type { BookingType, MobilityEventEnvelope } from './model';
+import type { BookingType } from './model';
 
 const INITIAL_MODE: BookingType = 'seat';
 
@@ -73,14 +57,6 @@ function subheading(text: string): JSX.Element {
   );
 }
 
-function eventTone(event: MobilityEventEnvelope): string {
-  if (event.type === 'BookingCreated') return C.gold;
-  if (event.type === 'CapacityUpdated') return C.cyan;
-  if (event.type === 'DemandUpdated') return C.orange;
-  if (event.type === 'PriceRecalculated') return C.green;
-  return C.purple;
-}
-
 function quantityStep(mode: BookingType): number {
   return mode === 'seat' ? 1 : 5;
 }
@@ -108,32 +84,32 @@ export default function MobilityOSCore() {
 
   const marketMetrics = [
     {
-      label: 'Seats Unbooked',
+      label: 'Seats Available',
       value: String(snapshot.metrics.total_seats_available),
-      detail: 'Instantly consumable passenger inventory across the live corridor book.',
+      detail: 'Passenger inventory currently open across the corridor network.',
       accent: C.cyan,
       icon: Users,
     },
     {
       label: 'Cargo Capacity',
       value: `${snapshot.metrics.total_cargo_available_kg} kg`,
-      detail: 'Kilo inventory available to absorb parcels without launching a second marketplace.',
+      detail: 'Parcel headroom that can still be absorbed into active movement.',
       accent: C.gold,
       icon: Package,
     },
     {
       label: 'Average Utilization',
       value: percent(snapshot.metrics.average_utilization),
-      detail: 'Utilization is derived in the engine, never stored in UI state.',
+      detail: 'Utilization stays engine-derived and stream-driven.',
       accent: C.green,
       icon: Gauge,
     },
     {
-      label: 'Seat Run Rate',
-      value: money(snapshot.metrics.seat_revenue_run_rate),
-      detail: 'Projected seat-side GMV flowing through the priced corridor book.',
+      label: 'Projection Target',
+      value: `${snapshot.metrics.event_latency_target_ms} ms`,
+      detail: 'Current target for refreshed corridor projections.',
       accent: C.purple,
-      icon: Coins,
+      icon: TimerReset,
     },
   ];
 
@@ -146,8 +122,8 @@ export default function MobilityOSCore() {
   const runtimeModeLabel = source === 'server' ? 'server-backed stream' : 'local fallback runtime';
   const runtimeModeBody =
     source === 'server'
-      ? 'Corridor state is being projected from the backend snapshot and realtime table updates.'
-      : 'Backend auth or stream delivery is unavailable, so the page is using the local event runtime without breaking the booking loop.';
+      ? 'Corridor state is projected from backend snapshots and live corridor updates.'
+      : 'Backend auth or delivery is unavailable, so the page is reading from the local simulation runtime.';
 
   const submitBooking = async () => {
     if (!selectedCorridor) return;
@@ -187,19 +163,18 @@ export default function MobilityOSCore() {
               </div>
               {subheading('Mobility Operating System')}
               <h1 style={{ margin: 0, fontSize: 'clamp(2.4rem, 4vw, 4.25rem)', lineHeight: 0.95, letterSpacing: '-0.05em', maxWidth: 760 }}>
-                Corridor capacity exchange for Jordan, priced and updated as a realtime market.
+                Corridor capacity exchange for Jordan, projected from live demand and availability.
               </h1>
               <p style={{ margin: 0, color: C.textSub, fontSize: '1rem', lineHeight: 1.76, maxWidth: 780 }}>
-                This page no longer behaves like a dashboard or a request form. Corridors are the product. Seats and kilos are the inventory.
-                Dynamic prices are derived in the engine. The UI only renders streamed corridor state and lets operators consume capacity.
+                The page stays focused on corridor state, capacity pressure, and active availability. The interface only renders projection data that the simulation runtime has already resolved.
               </p>
 
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 {[
-                  'capacity-first marketplace',
-                  'event-driven transport exchange',
-                  'dual yield: seats + cargo',
-                  '< 200ms corridor projection target',
+                  'live corridor projection',
+                  'continuous capacity updates',
+                  'seat and cargo visibility',
+                  'Jordan network coverage',
                 ].map((item) => (
                   <div
                     key={item}
@@ -221,21 +196,21 @@ export default function MobilityOSCore() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
                 {[
                   {
-                    title: 'Mobility OS Idea',
-                    body: 'Own recurring intercity movement as corridor inventory instead of waiting for fragmented ride requests.',
-                    icon: Network,
+                    title: 'Signal Field',
+                    body: 'The map focus stays anchored to pressure, utilization, and remaining capacity on the selected corridor.',
+                    icon: Activity,
                     accent: C.cyan,
                   },
                   {
-                    title: 'Business Model',
-                    body: 'Capture value from every occupied seat and every booked kilo on the same route book, then reinforce it with enterprise lane volume.',
-                    icon: Coins,
+                    title: 'Capacity Book',
+                    body: 'Operators act on live corridor inventory instead of manually assembling movement from separate screens.',
+                    icon: Network,
                     accent: C.gold,
                   },
                   {
-                    title: 'Design Language',
-                    body: 'Dark command surfaces, signal cyan, monetization gold, healthy throughput green, and precise terminal copy instead of playful labels.',
-                    icon: ChartNoAxesCombined,
+                    title: 'Runtime Sync',
+                    body: 'Corridor state reconciles automatically as the backend or local simulation advances the network.',
+                    icon: TimerReset,
                     accent: C.green,
                   },
                 ].map((item) => (
@@ -264,7 +239,19 @@ export default function MobilityOSCore() {
                 </div>
               </div>
 
-              <MobilityOSLandingMap />
+              <MobilityOSLandingMap
+                focusRouteId={selectedCorridor?.corridor.id}
+                focusOrigin={selectedCorridor?.corridor.origin}
+                focusDestination={selectedCorridor?.corridor.destination}
+                focusLabel={
+                  selectedCorridor
+                    ? `${selectedCorridor.corridor.origin} -> ${selectedCorridor.corridor.destination}`
+                    : undefined
+                }
+                runtimeMode={source}
+                demandPressure={selectedCorridor?.demand_pressure}
+                utilization={selectedCorridor?.utilization}
+              />
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
                 <div style={{ borderRadius: 18, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
@@ -277,9 +264,9 @@ export default function MobilityOSCore() {
                 </div>
                 <div style={{ borderRadius: 18, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
                   <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
-                    Latency Contract
+                    Projection Target
                   </div>
-                  <div style={{ marginTop: 6, fontWeight: 800 }}>{snapshot.metrics.event_latency_target_ms}ms projection target</div>
+                  <div style={{ marginTop: 6, fontWeight: 800 }}>{snapshot.metrics.event_latency_target_ms}ms refresh target</div>
                 </div>
               </div>
 
@@ -343,11 +330,11 @@ export default function MobilityOSCore() {
                 {subheading('Live Market')}
                 <div style={{ marginTop: 8, fontSize: '1.28rem', fontWeight: 900 }}>Corridor order book</div>
                 <p style={{ margin: '8px 0 0', color: C.textSub, lineHeight: 1.68, maxWidth: 760 }}>
-                  Every card below is a live instrument. Availability, utilization, demand pressure, and dynamic prices are derived in the pricing engine and streamed here.
+                  Each corridor card renders live availability, utilization, pressure, and dynamic prices from the active simulation state.
                 </p>
               </div>
               <div style={{ padding: '10px 12px', borderRadius: R.full, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.03)', fontSize: '0.78rem', color: C.textSub }}>
-                {snapshot.metrics.hottest_corridor || 'No active corridor'} is leading the book
+                {snapshot.metrics.hottest_corridor || 'No active corridor'} is the highest-pressure lane
               </div>
             </div>
 
@@ -493,180 +480,69 @@ export default function MobilityOSCore() {
                       boxShadow: !selectedMaxQuantity ? 'none' : SH.cyan,
                     }}
                   >
-                    POST /booking/create
+                    Confirm Capacity Booking
                   </button>
 
                   <div style={{ color: C.textMuted, fontSize: '0.78rem', lineHeight: 1.65 }}>
-                    Flow enforced: BookingService emits <span style={{ color: C.gold }}>BookingCreated</span>, CorridorService updates capacity, DemandEngine recalculates pressure, PricingEngine emits market prices, RealtimeGateway pushes the new projection.
+                    Bookings feed back into corridor availability, pressure, and price before the next projection arrives.
                   </div>
                 </div>
               ) : null}
             </section>
 
-            <section style={panelStyle({ padding: 18, borderRadius: 30 })}>
-              {subheading('Business Model')}
-              <div style={{ marginTop: 8, fontSize: '1.18rem', fontWeight: 900 }}>How Mobility OS makes money</div>
-              <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
-                {snapshot.narrative.business_model.map((line) => (
-                  <div key={line} style={{ borderRadius: 18, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px', color: C.textSub, lineHeight: 1.6, fontSize: '0.88rem' }}>
-                    {line}
-                  </div>
-                ))}
-              </div>
-            </section>
+            {selectedCorridor ? (
+              <section style={panelStyle({ padding: 18, borderRadius: 30 })}>
+                {subheading('Corridor Readout')}
+                <div style={{ marginTop: 8, fontSize: '1.18rem', fontWeight: 900 }}>Selected corridor signal</div>
+                <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
+                  {[
+                    ['Pressure', `${selectedCorridor.demand_pressure.toFixed(2)}x`],
+                    ['Utilization', percent(selectedCorridor.utilization)],
+                    ['Seat price', money(selectedCorridor.dynamic_seat_price)],
+                    ['Cargo price', money(selectedCorridor.dynamic_cargo_price)],
+                  ].map(([label, value]) => (
+                    <div key={label} style={{ borderRadius: 18, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
+                      <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                        {label}
+                      </div>
+                      <div style={{ marginTop: 6, fontWeight: 900 }}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </div>
         </section>
 
-        <section style={{ display: 'grid', gap: 18, gridTemplateColumns: 'minmax(0, 0.95fr) minmax(0, 1.05fr)' }}>
-          <section style={panelStyle({ padding: 18, borderRadius: 30 })}>
-            {subheading('Event Flow')}
-            <div style={{ marginTop: 8, fontSize: '1.22rem', fontWeight: 900 }}>Server responsibilities rendered as a live chain</div>
-            <div style={{ marginTop: 16, display: 'grid', gap: 10 }}>
-              {[
-                ['BookingService', 'Accepts POST /booking/create and emits BookingCreated.'],
-                ['CorridorService', 'Owns corridor state and updates booked seats or kilos atomically.'],
-                ['DemandEngine', 'Transforms new capacity pressure into the next demand index.'],
-                ['PricingEngine', 'Applies the mandatory equations and emits recalculated prices.'],
-                ['RealtimeGateway', 'Streams CorridorUpdated without polling or manual refresh.'],
-              ].map(([title, body]) => (
-                <div key={title} style={{ borderRadius: 18, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '13px 14px' }}>
-                  <div style={{ color: C.text, fontWeight: 800 }}>{title}</div>
-                  <div style={{ marginTop: 6, color: C.textSub, fontSize: '0.86rem', lineHeight: 1.6 }}>{body}</div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
-              {[
-                { label: 'Pricing Equation', value: 'P = P_base * (1 + D_p * U)', icon: Binary, accent: C.cyan },
-                { label: 'Demand Pressure', value: 'D_p = demand_index * (1 + U)', icon: TrendingUp, accent: C.gold },
-                { label: 'Utilization', value: 'U = (S_booked + K_booked) / (S_total + K_total)', icon: Boxes, accent: C.green },
-              ].map((item) => (
-                <div key={item.label} style={{ borderRadius: 20, border: `1px solid ${item.accent}28`, background: `${item.accent}10`, padding: '14px 15px' }}>
-                  <div style={{ display: 'inline-flex', width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center', background: `${item.accent}18`, border: `1px solid ${item.accent}28` }}>
-                    <item.icon size={16} color={item.accent} />
-                  </div>
-                  <div style={{ marginTop: 10, color: C.textMuted, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                    {item.label}
-                  </div>
-                  <div style={{ marginTop: 6, fontFamily: FM, color: item.accent, fontWeight: 800, lineHeight: 1.6 }}>
-                    {item.value}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section style={panelStyle({ padding: 18, borderRadius: 30 })}>
-            {subheading('Event Tape')}
-            <div style={{ marginTop: 8, fontSize: '1.22rem', fontWeight: 900 }}>Recent corridor events</div>
-            <div data-testid="mobility-os-event-tape" style={{ marginTop: 14, display: 'grid', gap: 10, maxHeight: 460, overflow: 'auto', paddingRight: 6 }}>
-              {snapshot.recent_events.map((event) => (
-                <article key={event.id} style={{ borderRadius: 18, border: `1px solid ${eventTone(event)}30`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
-                    <div>
-                      <div style={{ fontWeight: 800, color: eventTone(event) }}>{event.type}</div>
-                      <div style={{ marginTop: 4, color: C.textMuted, fontSize: '0.74rem' }}>
-                        {event.producer} / {new Date(event.occurred_at).toLocaleTimeString()}
-                      </div>
-                    </div>
-                    <div style={{ fontFamily: FM, fontSize: '0.72rem', color: C.textMuted }}>{event.trace_id}</div>
-                  </div>
-                  <pre style={{ margin: '10px 0 0', color: C.textSub, fontFamily: FM, fontSize: '0.73rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-                    {JSON.stringify(event.payload, null, 2)}
-                  </pre>
-                </article>
-              ))}
-            </div>
-          </section>
-        </section>
-
-        <section style={{ display: 'grid', gap: 18, gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)' }}>
-          <section style={panelStyle({ padding: 18, borderRadius: 30 })}>
-            {subheading('Production Contract')}
-            <div style={{ marginTop: 8, fontSize: '1.2rem', fontWeight: 900 }}>API and WebSocket shape</div>
-            <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
-              {[
-                {
-                  title: 'POST /booking/create',
-                  code: `{
-  "corridor_id": "${selectedCorridor?.corridor.id ?? 'amman-irbid'}",
-  "type": "${bookingMode}",
-  "quantity": ${quantity},
-  "timestamp": "${new Date(snapshot.updated_at).toISOString()}"
-}`,
-                },
-                {
-                  title: 'socket.on("CorridorUpdated")',
-                  code: `{
-  "corridor_id": "${selectedCorridor?.corridor.id ?? 'amman-irbid'}",
-  "projection": {
-    "seats_available": ${selectedCorridor?.seats_available ?? 0},
-    "cargo_available_kg": ${selectedCorridor?.cargo_available_kg ?? 0},
-    "dynamic_seat_price": ${selectedCorridor?.dynamic_seat_price ?? 0},
-    "dynamic_cargo_price": ${selectedCorridor?.dynamic_cargo_price ?? 0}
-  }
-}`,
-                },
-              ].map((block) => (
-                <div key={block.title} style={{ borderRadius: 20, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '14px 15px' }}>
-                  <div style={{ fontWeight: 800 }}>{block.title}</div>
-                  <pre style={{ margin: '10px 0 0', fontFamily: FM, color: C.cyanDark, fontSize: '0.76rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-                    {block.code}
-                  </pre>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section style={panelStyle({ padding: 18, borderRadius: 30 })}>
-            {subheading('Design Standard')}
-            <div style={{ marginTop: 8, fontSize: '1.2rem', fontWeight: 900 }}>Seriousness, pattern, and operating posture</div>
-            <div style={{ marginTop: 14, display: 'grid', gap: 12 }}>
-              {[
-                {
-                  icon: Database,
-                  title: 'Source of truth first',
-                  body: 'The UI stops inventing its own analytics. Every primary value comes from corridor state or engine derivation.',
-                  accent: C.cyan,
-                },
-                {
-                  icon: ServerCog,
-                  title: 'Operational tone, not lifestyle tone',
-                  body: 'Replace labels like "good", "low", and "stable" with numeric pressure, utilization, availability, and price movement.',
-                  accent: C.gold,
-                },
-                {
-                  icon: ArrowRightLeft,
-                  title: 'Exchange pattern',
-                  body: 'Interaction begins at the corridor market, not a search form. Operators browse inventory, choose a mode, and consume capacity.',
-                  accent: C.green,
-                },
-                {
-                  icon: Cable,
-                  title: 'Streamed control surface',
-                  body: 'The right metaphor is a terminal receiving pushes from an event bus, not a dashboard re-fetching on load.',
-                  accent: C.purple,
-                },
-                {
-                  icon: Clock3,
-                  title: 'Latency promise',
-                  body: 'This surface is visually calm but architecturally urgent. Every layer is designed around sub-second projection updates.',
-                  accent: C.orange,
-                },
-              ].map((item) => (
-                <article key={item.title} style={{ borderRadius: 18, border: `1px solid ${item.accent}28`, background: `${item.accent}10`, padding: '13px 14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 12, background: `${item.accent}18`, border: `1px solid ${item.accent}30`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <item.icon size={16} color={item.accent} />
-                    </div>
-                    <div style={{ fontWeight: 800 }}>{item.title}</div>
-                  </div>
-                  <div style={{ marginTop: 8, color: C.textSub, lineHeight: 1.62, fontSize: '0.87rem' }}>{item.body}</div>
-                </article>
-              ))}
-            </div>
-          </section>
+        <section style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+          {[
+            {
+              title: 'Hottest corridor',
+              value: snapshot.metrics.hottest_corridor || 'No active corridor',
+              body: 'The lead corridor is recalculated from live demand pressure across the active book.',
+              accent: C.cyan,
+            },
+            {
+              title: 'Runtime source',
+              value: runtimeModeLabel,
+              body: 'The map and corridor book stay bound to the same projection source.',
+              accent: source === 'server' ? C.green : C.gold,
+            },
+            {
+              title: 'Snapshot updated',
+              value: new Date(snapshot.updated_at).toLocaleTimeString(),
+              body: 'Visible state is refreshed from the current corridor snapshot only.',
+              accent: C.purple,
+            },
+          ].map((item) => (
+            <article key={item.title} style={panelStyle({ padding: 18, borderRadius: 22 })}>
+              <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                {item.title}
+              </div>
+              <div style={{ marginTop: 10, fontSize: '1.12rem', fontWeight: 900, color: item.accent }}>{item.value}</div>
+              <p style={{ margin: '10px 0 0', color: C.textSub, lineHeight: 1.62, fontSize: '0.9rem' }}>{item.body}</p>
+            </article>
+          ))}
         </section>
       </div>
     </div>

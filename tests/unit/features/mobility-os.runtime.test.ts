@@ -35,12 +35,14 @@ describe('Mobility OS runtime', () => {
     });
 
     const snapshot = runtime.getSnapshot();
+    const internalSnapshot = runtime.getInternalSnapshot();
     const corridor = snapshot.corridors[0];
-    const eventTypes = snapshot.recent_events.map((event) => event.type);
+    const eventTypes = internalSnapshot.recent_events.map((event) => event.type);
 
     expect(bookingId).toMatch(/^booking-/);
     expect(corridor.corridor.seats_booked).toBe(31);
     expect(corridor.seats_available).toBe(13);
+    expect('recent_events' in snapshot).toBe(false);
     expect(eventTypes).toEqual([
       'CorridorUpdated',
       'PriceRecalculated',

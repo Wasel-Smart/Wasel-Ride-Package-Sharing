@@ -180,7 +180,7 @@ function buildQuickActions(
       label: ar ? 'مركز رحلاتي' : 'My Trips Hub',
       detail: ar
         ? 'أدر حجوزاتك والرحلات القادمة من مكان واحد.'
-        : 'Manage upcoming bookings and travel activity in one place.',
+        : 'Trips and bookings in one place.',
       icon: <Car size={18} />,
       color: PROFILE_CYAN,
       onClick: () => nav('/app/my-trips'),
@@ -189,7 +189,7 @@ function buildQuickActions(
       label: ar ? 'المحفظة والدفع' : 'Wallet & Payments',
       detail: ar
         ? 'راقب الرصيد والمدفوعات وميزات واصل.'
-        : 'Track balance, payments, and wallet access.',
+        : 'Balance and payments.',
       icon: <CreditCard size={18} />,
       color: '#F59E0B',
       onClick: () => nav('/app/wallet'),
@@ -198,7 +198,7 @@ function buildQuickActions(
       label: ar ? 'مركز الإشعارات' : 'Notification Center',
       detail: ar
         ? 'ثبت التنبيهات المهمة للحجوزات والرحلات والطرود.'
-        : 'Keep ride, package, and account alerts under control.',
+        : 'Trip and account alerts.',
       icon: <Bell size={18} />,
       color: '#22C55E',
       onClick: () => {
@@ -209,7 +209,7 @@ function buildQuickActions(
       label: ar ? 'إعدادات الحساب' : 'Account Settings',
       detail: ar
         ? 'حدّث لغتك وتفضيلاتك وأمان حسابك.'
-        : 'Update preferences, language, and security controls.',
+        : 'Language, preferences, and security.',
       icon: <Settings size={18} />,
       color: '#A78BFA',
       onClick: () => nav('/app/settings?section=account'),

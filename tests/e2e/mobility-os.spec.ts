@@ -22,7 +22,10 @@ test('mobility os renders a corridor book and accepts a capacity booking', async
     /(server-backed stream|local fallback runtime)/i,
   );
   await expect(page.getByTestId('mobility-os-selected-instrument')).toContainText(/.+->.+/i);
-  await expect(page.getByText(/recent corridor events/i)).toBeVisible();
+  await expect(page.getByText(/recent corridor events/i)).toHaveCount(0);
+  await expect(page.getByText(/business model/i)).toHaveCount(0);
+  await expect(page.getByText(/api and websocket shape/i)).toHaveCount(0);
+  await expect(page.getByText(/seriousness, pattern, and operating posture/i)).toHaveCount(0);
 
   const availability = page.getByTestId('mobility-os-selected-availability');
   const seatsBefore = extractSeatAvailability(await availability.innerText());
@@ -35,10 +38,6 @@ test('mobility os renders a corridor book and accepts a capacity booking', async
       timeout: 10_000,
     })
     .toBe(Math.max(0, seatsBefore - 1));
-  await page.getByTestId('mobility-os-event-tape').scrollIntoViewIfNeeded();
-  await expect(page.getByTestId('mobility-os-event-tape')).toContainText(
-    /(BookingCreated|CapacityUpdated|DemandUpdated|PriceRecalculated|CorridorUpdated)/,
-  );
   await expect(page.getByTestId('mobility-os-runtime-chip')).toContainText(
     /(server-backed stream|local fallback runtime)/i,
   );

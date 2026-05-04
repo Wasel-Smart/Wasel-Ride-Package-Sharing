@@ -18,6 +18,16 @@ type Corridor = {
   distanceKm: number;
 };
 
+interface MobilityOSLandingMapProps {
+  focusRouteId?: string;
+  focusOrigin?: string;
+  focusDestination?: string;
+  focusLabel?: string;
+  runtimeMode?: 'server' | 'fallback';
+  demandPressure?: number;
+  utilization?: number;
+}
+
 const FLOW = '#62f5ef';
 const GHOST = '#d7feff';
 const PULSE = '#b2fff7';
@@ -129,11 +139,51 @@ function withAlpha(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-export function MobilityOSLandingMap() {
+function normalizeToken(value?: string | null) {
+  return (value ?? '')
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[^a-z0-9]+/g, '');
+}
+
+function matchesFocusedRoute(
+  route: Corridor,
+  focusRouteId?: string,
+  focusOrigin?: string,
+  focusDestination?: string,
+) {
+  if (focusRouteId && route.id === focusRouteId) return true;
+  if (!focusOrigin || !focusDestination) return false;
+  const fromName = CITIES[route.from]?.name;
+  const toName = CITIES[route.to]?.name;
+  return (
+    normalizeToken(fromName) === normalizeToken(focusOrigin) &&
+    normalizeToken(toName) === normalizeToken(focusDestination)
+  );
+}
+
+function lerp(start: number, end: number, t: number) {
+  return start + (end - start) * t;
+}
+
+export function MobilityOSLandingMap({
+  focusRouteId,
+  focusOrigin,
+  focusDestination,
+  focusLabel,
+  runtimeMode = 'server',
+  demandPressure,
+  utilization,
+}: MobilityOSLandingMapProps = {}) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const [size, setSize] = useState({ width: 720, height: 560 });
+  const uiFocusStroke = runtimeMode === 'fallback' ? '#ffbe5c' : FLOW;
+  const uiFocusStrength = Math.max(
+    0.28,
+    Math.min(1, Math.max(0, Math.min(utilization ?? 0.45, 1)) * 0.62 + ((Math.max(0.85, Math.min(demandPressure ?? 1, 2.4)) - 0.85) / 1.55) * 0.64),
+  );
 
   useEffect(() => {
     const update = () => {
@@ -162,9 +212,10 @@ export function MobilityOSLandingMap() {
           riderFlow,
           parcelFlow,
           weight,
+          focused: matchesFocusedRoute(route, focusRouteId, focusOrigin, focusDestination),
         };
       }),
-    [],
+    [focusDestination, focusOrigin, focusRouteId],
   );
 
   useEffect(() => {
@@ -179,6 +230,15 @@ export function MobilityOSLandingMap() {
       const width = size.width;
       const height = size.height;
       const compact = width < 480;
+      const focusedRoute = routes.find(route => route.focused) ?? null;
+      const focusStroke = runtimeMode === 'fallback' ? '#ffbe5c' : FLOW;
+      const focusGhost = runtimeMode === 'fallback' ? '#ffd38c' : GHOST;
+      const focusPressure = Math.max(0.85, Math.min(demandPressure ?? 1, 2.4));
+      const focusUtilization = Math.max(0, Math.min(utilization ?? 0.45, 1));
+      const focusStrength = Math.max(
+        0.28,
+        Math.min(1, focusUtilization * 0.62 + ((focusPressure - 0.85) / 1.55) * 0.64),
+      );
 
       if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
         canvas.width = Math.round(width * dpr);
@@ -354,6 +414,47 @@ export function MobilityOSLandingMap() {
         const from = project(CITIES[route.from].lat, CITIES[route.from].lon, width, height);
         const to = project(CITIES[route.to].lat, CITIES[route.to].lon, width, height);
         const control = getCurve(from, to, index, route.weight);
+        const isFocused = route.focused;
+        const muted = focusedRoute && !isFocused;
+        const routeAlpha = muted ? 0.22 : 1;
+        const focusMid = pointOnCurve(from, control, to, 0.5);
+        const riderLineWidth = isFocused
+          ? 4.1 + route.riderFlow * 3.2 + focusUtilization * 2.4 + focusStrength * 1.2
+          : 1.4 + route.riderFlow * 2.4;
+        const riderStroke = isFocused
+          ? withAlpha(focusStroke, 0.8 + focusUtilization * 0.16)
+          : withAlpha(FLOW, (0.24 + route.riderFlow * 0.45) * routeAlpha);
+        const dashedStroke = isFocused
+          ? withAlpha(focusGhost, 0.72)
+          : withAlpha(GHOST, (0.34 + route.parcelFlow * 0.28) * routeAlpha);
+
+        if (isFocused) {
+          ctx.beginPath();
+          ctx.moveTo(from.x, from.y);
+          ctx.quadraticCurveTo(control.x, control.y, to.x, to.y);
+          ctx.strokeStyle = withAlpha(focusStroke, 0.18 + focusStrength * 0.16);
+          ctx.lineWidth = riderLineWidth + 7 + focusStrength * 5;
+          ctx.shadowBlur = 34 + focusPressure * 10;
+          ctx.shadowColor = withAlpha(focusStroke, 0.34 + focusStrength * 0.18);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          const pulseRadius = 18 + Math.sin(time * 0.004 + index) * 3 + focusStrength * 8;
+          const midGradient = ctx.createRadialGradient(
+            focusMid.x,
+            focusMid.y,
+            pulseRadius * 0.1,
+            focusMid.x,
+            focusMid.y,
+            pulseRadius,
+          );
+          midGradient.addColorStop(0, withAlpha(focusStroke, 0.28 + focusStrength * 0.18));
+          midGradient.addColorStop(1, withAlpha(focusStroke, 0));
+          ctx.beginPath();
+          ctx.arc(focusMid.x, focusMid.y, pulseRadius, 0, Math.PI * 2);
+          ctx.fillStyle = midGradient;
+          ctx.fill();
+        }
 
         ctx.beginPath();
         ctx.ellipse(
@@ -365,23 +466,25 @@ export function MobilityOSLandingMap() {
           0,
           Math.PI * 2,
         );
-        ctx.fillStyle = 'rgba(0,0,0,0.14)';
+        ctx.fillStyle = isFocused ? 'rgba(0,0,0,0.22)' : 'rgba(0,0,0,0.14)';
         ctx.fill();
 
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);
         ctx.quadraticCurveTo(control.x, control.y, to.x, to.y);
-        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+        ctx.strokeStyle = isFocused ? withAlpha(focusStroke, 0.24) : 'rgba(255,255,255,0.05)';
         ctx.lineWidth = 1;
         ctx.stroke();
 
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);
         ctx.quadraticCurveTo(control.x, control.y, to.x, to.y);
-        ctx.strokeStyle = withAlpha(FLOW, 0.24 + route.riderFlow * 0.45);
-        ctx.lineWidth = 1.4 + route.riderFlow * 2.4;
-        ctx.shadowBlur = 16;
-        ctx.shadowColor = withAlpha(FLOW, 0.42);
+        ctx.strokeStyle = riderStroke;
+        ctx.lineWidth = riderLineWidth;
+        ctx.shadowBlur = isFocused ? 24 + focusPressure * 8 : 16;
+        ctx.shadowColor = isFocused
+          ? withAlpha(focusStroke, 0.68)
+          : withAlpha(FLOW, 0.42 * routeAlpha);
         ctx.stroke();
         ctx.shadowBlur = 0;
 
@@ -389,42 +492,63 @@ export function MobilityOSLandingMap() {
         ctx.moveTo(from.x, from.y);
         ctx.quadraticCurveTo(control.x, control.y, to.x, to.y);
         ctx.setLineDash([4, 6]);
-        ctx.strokeStyle = withAlpha(GHOST, 0.34 + route.parcelFlow * 0.28);
-        ctx.lineWidth = 1 + route.parcelFlow * 1.6;
+        ctx.strokeStyle = dashedStroke;
+        ctx.lineWidth = isFocused ? 1.8 + route.parcelFlow : 1 + route.parcelFlow * 1.6;
         ctx.stroke();
         ctx.setLineDash([]);
 
-        const riderCount = Math.max(2, Math.round(2 + route.riderFlow * 7));
+        const riderCount = Math.max(
+          2,
+          Math.round(2 + route.riderFlow * 7 + (isFocused ? focusPressure * 3 + focusUtilization * 2 : 0)),
+        );
         for (let i = 0; i < riderCount; i += 1) {
           const t = (time * 0.000055 * (1 + i * 0.08) + i / riderCount + index * 0.06) % 1;
           const point = pointOnCurve(from, control, to, t);
           ctx.beginPath();
-          ctx.arc(point.x, point.y, 2.4, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(231,255,253,0.98)';
-          ctx.shadowBlur = 14;
-          ctx.shadowColor = withAlpha(FLOW, 0.66);
+          ctx.arc(point.x, point.y, isFocused ? 2.9 : 2.4, 0, Math.PI * 2);
+          ctx.fillStyle = isFocused ? 'rgba(255,248,232,0.98)' : 'rgba(231,255,253,0.98)';
+          ctx.shadowBlur = isFocused ? 18 : 14;
+          ctx.shadowColor = withAlpha(isFocused ? focusStroke : FLOW, isFocused ? 0.8 : 0.66);
           ctx.fill();
           ctx.shadowBlur = 0;
         }
 
-        const parcelCount = Math.max(1, Math.round(1 + route.parcelFlow * 4));
+        const parcelCount = Math.max(
+          1,
+          Math.round(1 + route.parcelFlow * 4 + (isFocused ? focusUtilization * 3 + focusStrength * 1.4 : 0)),
+        );
         for (let i = 0; i < parcelCount; i += 1) {
           const t = 1 - ((time * 0.000038 * (1 + i * 0.08) + i / parcelCount + index * 0.05) % 1);
           const point = pointOnCurve(from, control, to, t);
-          ctx.fillStyle = 'rgba(180,255,246,0.92)';
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = withAlpha(PULSE, 0.48);
-          ctx.fillRect(point.x - 1.8, point.y - 1.8, 3.6, 3.6);
+          ctx.fillStyle = isFocused ? 'rgba(255,218,151,0.96)' : 'rgba(180,255,246,0.92)';
+          ctx.shadowBlur = isFocused ? 14 : 10;
+          ctx.shadowColor = withAlpha(isFocused ? focusGhost : PULSE, isFocused ? 0.62 : 0.48);
+          const parcelSize = isFocused ? 4.4 : 3.6;
+          ctx.fillRect(point.x - parcelSize / 2, point.y - parcelSize / 2, parcelSize, parcelSize);
           ctx.shadowBlur = 0;
         }
       });
 
       CITIES.forEach(city => {
         const point = project(city.lat, city.lon, width, height);
+        const cityFocused =
+          normalizeToken(city.name) === normalizeToken(focusOrigin) ||
+          normalizeToken(city.name) === normalizeToken(focusDestination);
         const pulse = 0.5 + 0.5 * Math.sin(time * 0.0022 + city.id * 0.9);
-        const halo = city.hub ? 16 + pulse * 5 : 9 + pulse * 2.2;
+        const halo = cityFocused
+          ? 22 + pulse * 8 + focusStrength * 10
+          : city.hub
+            ? 16 + pulse * 5
+            : 9 + pulse * 2.2;
         const gradient = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, halo);
-        gradient.addColorStop(0, city.hub ? 'rgba(94,255,240,0.28)' : 'rgba(240,255,255,0.16)');
+        gradient.addColorStop(
+          0,
+          cityFocused
+            ? withAlpha(focusStroke, 0.34)
+            : city.hub
+              ? 'rgba(94,255,240,0.28)'
+              : 'rgba(240,255,255,0.16)',
+        );
         gradient.addColorStop(1, 'rgba(255,255,255,0)');
 
         ctx.beginPath();
@@ -439,11 +563,19 @@ export function MobilityOSLandingMap() {
 
         ctx.beginPath();
         ctx.arc(point.x, point.y, city.hub ? 6.4 : 4.8, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(227,255,252,0.98)';
+        ctx.fillStyle = cityFocused ? 'rgba(255,245,226,0.98)' : 'rgba(227,255,252,0.98)';
         ctx.fill();
-        ctx.strokeStyle = withAlpha(FLOW, 0.42);
-        ctx.lineWidth = city.hub ? 1.8 : 1.2;
+        ctx.strokeStyle = withAlpha(cityFocused ? focusStroke : FLOW, cityFocused ? 0.78 : 0.42);
+        ctx.lineWidth = cityFocused ? 2.4 : city.hub ? 1.8 : 1.2;
         ctx.stroke();
+
+        if (cityFocused) {
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, lerp(11, 18, focusStrength) + Math.sin(time * 0.004 + city.id) * 1.2, 0, Math.PI * 2);
+          ctx.strokeStyle = withAlpha(focusStroke, 0.22 + focusStrength * 0.18);
+          ctx.lineWidth = 1.4;
+          ctx.stroke();
+        }
 
         if (
           city.name === 'Amman' ||
@@ -499,6 +631,144 @@ export function MobilityOSLandingMap() {
         boxShadow: '0 24px 60px rgba(0,0,0,0.32), inset 0 0 0 1px rgba(255,255,255,0.03)',
       }}
     >
+      {(focusLabel || runtimeMode || demandPressure !== undefined || utilization !== undefined) && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 18,
+            right: 18,
+            zIndex: 2,
+            display: 'grid',
+            gap: 10,
+            minWidth: size.width < 540 ? 0 : 196,
+            pointerEvents: 'none',
+          }}
+        >
+          {(focusLabel || runtimeMode) && (
+            <div
+              style={{
+                borderRadius: 18,
+                padding: '10px 12px',
+                background: 'rgba(5,16,26,0.76)',
+                border: `1px solid ${withAlpha(runtimeMode === 'fallback' ? '#ffbe5c' : FLOW, 0.26)}`,
+                boxShadow: '0 14px 34px rgba(0,0,0,0.24)',
+                backdropFilter: 'blur(12px)',
+              }}
+            >
+              <div
+                style={{
+                  color: withAlpha(runtimeMode === 'fallback' ? '#ffd38c' : '#aefdf5', 0.96),
+                  fontSize: '0.66rem',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  fontWeight: 800,
+                }}
+              >
+                {runtimeMode === 'fallback' ? 'Fallback focus' : 'Live corridor focus'}
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  color: 'rgba(236,247,255,0.96)',
+                  fontSize: '0.92rem',
+                  fontWeight: 800,
+                  lineHeight: 1.35,
+                }}
+              >
+                {focusLabel ?? 'Jordan network'}
+              </div>
+              {focusLabel && (
+                <div
+                  style={{
+                    marginTop: 6,
+                    height: 5,
+                    borderRadius: 999,
+                    overflow: 'hidden',
+                    background: 'rgba(255,255,255,0.08)',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${Math.round(46 + uiFocusStrength * 48)}%`,
+                      height: '100%',
+                      borderRadius: 999,
+                      background:
+                        runtimeMode === 'fallback'
+                          ? 'linear-gradient(90deg, rgba(255,190,92,0.86), rgba(255,220,152,1))'
+                          : 'linear-gradient(90deg, rgba(98,245,239,0.82), rgba(178,255,247,1))',
+                      boxShadow: `0 0 18px ${withAlpha(uiFocusStroke, 0.42)}`,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {(demandPressure !== undefined || utilization !== undefined) && (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                gap: 8,
+              }}
+            >
+              {demandPressure !== undefined && (
+                <div
+                  style={{
+                    borderRadius: 16,
+                    padding: '9px 10px',
+                    background: 'rgba(5,16,26,0.7)',
+                    border: `1px solid ${withAlpha(runtimeMode === 'fallback' ? '#ffbe5c' : FLOW, 0.22)}`,
+                    backdropFilter: 'blur(12px)',
+                  }}
+                >
+                  <div
+                    style={{
+                      color: 'rgba(190,214,226,0.76)',
+                      fontSize: '0.6rem',
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      fontWeight: 800,
+                    }}
+                  >
+                    Pressure
+                  </div>
+                  <div style={{ marginTop: 4, color: '#f4fbff', fontWeight: 900, fontSize: '0.82rem' }}>
+                    {demandPressure.toFixed(2)}x
+                  </div>
+                </div>
+              )}
+              {utilization !== undefined && (
+                <div
+                  style={{
+                    borderRadius: 16,
+                    padding: '9px 10px',
+                    background: 'rgba(5,16,26,0.7)',
+                    border: `1px solid ${withAlpha('#47d69e', 0.22)}`,
+                    backdropFilter: 'blur(12px)',
+                  }}
+                >
+                  <div
+                    style={{
+                      color: 'rgba(190,214,226,0.76)',
+                      fontSize: '0.6rem',
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      fontWeight: 800,
+                    }}
+                  >
+                    Utilization
+                  </div>
+                  <div style={{ marginTop: 4, color: '#f4fbff', fontWeight: 900, fontSize: '0.82rem' }}>
+                    {Math.round(utilization * 100)}%
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <div
         aria-hidden="true"
         style={{

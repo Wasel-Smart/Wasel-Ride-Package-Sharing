@@ -103,23 +103,30 @@ export type MobilityEventEnvelope<TType extends MobilityEventType = MobilityEven
       }
     : never;
 
+export interface MobilitySystemMetrics {
+  total_seats_available: number;
+  total_cargo_available_kg: number;
+  average_utilization: number;
+  hottest_corridor: string;
+  seat_revenue_run_rate: number;
+  cargo_revenue_run_rate: number;
+  event_latency_target_ms: number;
+}
+
+export interface MobilityNarrative {
+  platform_statement: string;
+  business_model: string[];
+}
+
 export interface MobilitySystemSnapshot {
   corridors: CorridorProjection[];
-  metrics: {
-    total_seats_available: number;
-    total_cargo_available_kg: number;
-    average_utilization: number;
-    hottest_corridor: string;
-    seat_revenue_run_rate: number;
-    cargo_revenue_run_rate: number;
-    event_latency_target_ms: number;
-  };
-  recent_events: MobilityEventEnvelope[];
-  narrative: {
-    platform_statement: string;
-    business_model: string[];
-  };
+  metrics: MobilitySystemMetrics;
   updated_at: string;
+}
+
+export interface MobilityInternalSystemSnapshot extends MobilitySystemSnapshot {
+  recent_events: MobilityEventEnvelope[];
+  narrative: MobilityNarrative;
 }
 
 export function clamp(value: number, min: number, max: number): number {

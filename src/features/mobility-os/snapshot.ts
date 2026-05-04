@@ -3,8 +3,11 @@ import {
   roundTo,
   type CorridorProjection,
   type MobilityEventEnvelope,
+  type MobilityInternalSystemSnapshot,
+  type MobilityNarrative,
   type MobilityEventPayloadMap,
   type MobilityEventType,
+  type MobilitySystemMetrics,
   type MobilitySystemSnapshot,
 } from './model';
 
@@ -27,7 +30,7 @@ const EVENT_PRODUCER_BY_TYPE: Record<MobilityEventType, string> = {
   CorridorUpdated: 'RealtimeGateway',
 };
 
-export const MOBILITY_OS_NARRATIVE: MobilitySystemSnapshot['narrative'] = {
+export const MOBILITY_OS_NARRATIVE: MobilityNarrative = {
   platform_statement:
     'Mobility OS is a capacity exchange where corridors are market instruments and every screen is a projection of backend state.',
   business_model: [
@@ -60,7 +63,7 @@ export function sortCorridorProjections(corridors: CorridorProjection[]): Corrid
 
 export function buildMobilityMetrics(
   corridors: CorridorProjection[],
-): MobilitySystemSnapshot['metrics'] {
+): MobilitySystemMetrics {
   const ranked = sortCorridorProjections(corridors);
   const hottest = ranked[0];
 
@@ -92,18 +95,42 @@ export function buildMobilityMetrics(
 
 export function buildMobilitySnapshot(input: {
   corridors: CorridorProjection[];
-  recentEvents: MobilityEventEnvelope[];
   updatedAt?: string;
-  narrative?: MobilitySystemSnapshot['narrative'];
 }): MobilitySystemSnapshot {
   const corridors = sortCorridorProjections(input.corridors).map(cloneProjection);
 
   return {
     corridors,
     metrics: buildMobilityMetrics(corridors),
+    updated_at: input.updatedAt ?? new Date().toISOString(),
+  };
+}
+
+export function buildMobilityInternalSnapshot(input: {
+  corridors: CorridorProjection[];
+  recentEvents: MobilityEventEnvelope[];
+  updatedAt?: string;
+  narrative?: MobilityNarrative;
+}): MobilityInternalSystemSnapshot {
+  const snapshot = buildMobilitySnapshot({
+    corridors: input.corridors,
+    updatedAt: input.updatedAt,
+  });
+
+  return {
+    ...snapshot,
     recent_events: [...input.recentEvents],
     narrative: input.narrative ?? MOBILITY_OS_NARRATIVE,
-    updated_at: input.updatedAt ?? new Date().toISOString(),
+  };
+}
+
+export function toPublicMobilitySnapshot(
+  snapshot: MobilitySystemSnapshot | MobilityInternalSystemSnapshot,
+): MobilitySystemSnapshot {
+  return {
+    corridors: snapshot.corridors.map(cloneProjection),
+    metrics: { ...snapshot.metrics },
+    updated_at: snapshot.updated_at,
   };
 }
 
@@ -181,17 +208,8 @@ export function applyMobilityEventToSnapshot(
   snapshot: MobilitySystemSnapshot,
   event: MobilityEventEnvelope,
 ): MobilitySystemSnapshot {
-  const recentEvents = [
-    event,
-    ...snapshot.recent_events.filter((current) => current.id !== event.id),
-  ].slice(0, 60);
-
   if (event.type !== 'CorridorUpdated') {
-    return {
-      ...snapshot,
-      recent_events: recentEvents,
-      updated_at: event.occurred_at,
-    };
+    return snapshot;
   }
 
   const corridorEvent = event as MobilityEventEnvelope<'CorridorUpdated'>;
@@ -207,7 +225,6 @@ export function applyMobilityEventToSnapshot(
     ...snapshot,
     corridors,
     metrics: buildMobilityMetrics(corridors),
-    recent_events: recentEvents,
     updated_at: corridorEvent.payload.updated_at,
   };
 }
