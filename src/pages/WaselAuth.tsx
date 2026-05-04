@@ -31,13 +31,19 @@ type Tab = 'signin' | 'signup';
 
 // ─── Feature list for the brand panel ────────────────────────────────────────
 const BRAND_FEATURES = [
-  { icon: <Zap size={14} />, text: 'Find rides fast', color: C.cyan },
-  { icon: <Package size={14} />, text: 'Send packages', color: C.gold },
-  { icon: <Bus size={14} />, text: 'Book buses', color: C.green },
-  { icon: <Shield size={14} />, text: 'Verified accounts', color: C.purple },
+  { icon: <Zap size={14} />, text: 'Live route graph', color: C.cyan },
+  { icon: <Package size={14} />, text: 'Parcels on route', color: C.gold },
+  { icon: <Bus size={14} />, text: 'Scheduled lanes', color: C.green },
+  { icon: <Shield size={14} />, text: 'Trust by default', color: C.purple },
 ] as const;
 
-const BRAND_PILLS = ['Secure', 'Simple', 'Jordan-first'] as const;
+const BRAND_METRICS = [
+  { value: '3', label: 'mobility surfaces', accent: C.cyan },
+  { value: '1', label: 'trusted account', accent: C.gold },
+  { value: 'Live', label: 'route intelligence', accent: C.green },
+] as const;
+
+const BRAND_PILLS = ['Verified', 'Fast', 'Clear'] as const;
 
 // ─── Brand panel (left column) ────────────────────────────────────────────────
 function BrandPanel() {
@@ -103,6 +109,7 @@ function BrandPanel() {
             lineHeight: 1.12,
           }}
         >
+          <span style={{ display: 'block' }}>One identity</span>
           <span
             style={{
               display: 'block',
@@ -111,7 +118,7 @@ function BrandPanel() {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            Move smarter
+            for every route
           </span>
         </h2>
 
@@ -123,8 +130,52 @@ function BrandPanel() {
             marginBottom: SPACE[6],
           }}
         >
-          Sign in to use rides, packages, and buses.
+          Rides, parcels, buses, trust, and support stay under one clear account.
         </p>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            gap: SPACE[3],
+            marginBottom: SPACE[6],
+          }}
+        >
+          {BRAND_METRICS.map(item => (
+            <div
+              key={item.label}
+              style={{
+                borderRadius: R.xl,
+                border: `1px solid ${item.accent}24`,
+                background: `${item.accent}12`,
+                padding: `${SPACE[3]} ${SPACE[4]}`,
+                textAlign: 'left',
+              }}
+            >
+              <div
+                style={{
+                  color: C.text,
+                  fontSize: TYPE.size.lg,
+                  fontWeight: TYPE.weight.ultra,
+                  lineHeight: TYPE.lineHeight.tight,
+                }}
+              >
+                {item.value}
+              </div>
+              <div
+                style={{
+                  marginTop: 4,
+                  color: C.textMuted,
+                  fontSize: TYPE.size.xs,
+                  textTransform: 'uppercase',
+                  letterSpacing: TYPE.letterSpacing.wide,
+                }}
+              >
+                {item.label}
+              </div>
+            </div>
+          ))}
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3], textAlign: 'left' }}>
           {BRAND_FEATURES.map(item => (
@@ -488,10 +539,10 @@ export default function WaselAuth() {
                 letterSpacing: '-0.03em',
               }}
             >
-              <span style={{ color: C.cyan }}>Move smarter</span>
+              <span style={{ color: C.cyan }}>One identity</span>
             </h2>
             <p style={{ fontSize: TYPE.size.sm, color: C.textMuted, marginBottom: SPACE[3] }}>
-              Sign in to continue into the mobility experience.
+              Sign in once for rides, parcels, buses, and trust.
             </p>
           </div>
 
@@ -508,7 +559,7 @@ export default function WaselAuth() {
                 letterSpacing: '-0.02em',
               }}
             >
-              {tab === 'signin' ? 'Welcome back' : 'Join Wasel'}
+              {tab === 'signin' ? 'Back into Wasel' : 'Create your Wasel account'}
             </h3>
             <p
               style={{
@@ -519,8 +570,8 @@ export default function WaselAuth() {
               }}
             >
               {tab === 'signin'
-                ? 'Use your Wasel account to continue where you left off.'
-                : 'Create your account to unlock rides, parcels, and trust in one place.'}
+                ? 'Open your routes, wallet, and trip state from one sign-in.'
+                : 'Unlock rides, parcels, buses, and trust with one account.'}
             </p>
           </div>
 

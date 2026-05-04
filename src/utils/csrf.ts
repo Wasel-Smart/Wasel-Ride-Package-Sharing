@@ -1,255 +1,139 @@
 /**
- * CSRF Protection Utility
- *
- * Implements Cross-Site Request Forgery protection for all state-changing operations.
- * Uses double-submit cookie pattern with additional validation.
+ * CSRF (Cross-Site Request Forgery) Protection
+ * Implements token-based CSRF protection for state-changing operations
  */
 
-const CSRF_TOKEN_KEY = 'wasel-csrf-token';
-const CSRF_HEADER_NAME = 'X-CSRF-Token';
-const TOKEN_LENGTH = 32;
+import { generateSecureId } from './encryption';
+
+const CSRF_TOKEN_KEY = 'wasel_csrf_token';
+const CSRF_TOKEN_HEADER = 'X-CSRF-Token';
 const TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 
-interface CsrfTokenData {
+interface CSRFTokenData {
   token: string;
-  createdAt: number;
   expiresAt: number;
 }
 
 /**
- * Generate cryptographically secure random token
+ * Generate a new CSRF token
  */
-function generateSecureToken(): string {
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    const array = new Uint8Array(TOKEN_LENGTH);
-    crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-  }
-
-  // Fallback for environments without crypto API (should not happen in modern browsers)
-  console.warn('crypto.getRandomValues not available, using less secure fallback');
-  return Array.from({ length: TOKEN_LENGTH }, () =>
-    Math.floor(Math.random() * 16).toString(16),
-  ).join('');
+export function generateCSRFToken(): string {
+  const token = generateSecureId(32);
+  const tokenData: CSRFTokenData = {
+    token,
+    expiresAt: Date.now() + TOKEN_EXPIRY_MS,
+  };
+  
+  sessionStorage.setItem(CSRF_TOKEN_KEY, JSON.stringify(tokenData));
+  return token;
 }
 
 /**
- * Store CSRF token in sessionStorage
+ * Get current CSRF token, generate new one if expired or missing
  */
-function storeToken(tokenData: CsrfTokenData): void {
-  if (typeof sessionStorage === 'undefined') return;
-
-  try {
-    sessionStorage.setItem(CSRF_TOKEN_KEY, JSON.stringify(tokenData));
-  } catch (error) {
-    console.error('Failed to store CSRF token:', error);
+export function getCSRFToken(): string {
+  const stored = sessionStorage.getItem(CSRF_TOKEN_KEY);
+  
+  if (!stored) {
+    return generateCSRFToken();
   }
-}
-
-/**
- * Retrieve CSRF token from sessionStorage
- */
-function retrieveToken(): CsrfTokenData | null {
-  if (typeof sessionStorage === 'undefined') return null;
-
+  
   try {
-    const stored = sessionStorage.getItem(CSRF_TOKEN_KEY);
-    if (!stored) return null;
-
-    const tokenData = JSON.parse(stored) as CsrfTokenData;
-
+    const tokenData: CSRFTokenData = JSON.parse(stored);
+    
     // Check if token is expired
     if (Date.now() > tokenData.expiresAt) {
-      sessionStorage.removeItem(CSRF_TOKEN_KEY);
-      return null;
+      return generateCSRFToken();
     }
-
-    return tokenData;
-  } catch (error) {
-    console.error('Failed to retrieve CSRF token:', error);
-    return null;
+    
+    return tokenData.token;
+  } catch {
+    return generateCSRFToken();
   }
 }
 
 /**
- * Generate or retrieve existing CSRF token
+ * Validate CSRF token from request
  */
-export function getCsrfToken(): string {
-  let tokenData = retrieveToken();
-
-  if (!tokenData) {
-    const now = Date.now();
-    tokenData = {
-      token: generateSecureToken(),
-      createdAt: now,
-      expiresAt: now + TOKEN_EXPIRY_MS,
-    };
-    storeToken(tokenData);
-  }
-
-  return tokenData.token;
-}
-
-/**
- * Validate CSRF token
- */
-export function validateCsrfToken(token: string): boolean {
-  const stored = retrieveToken();
-
+export function validateCSRFToken(token: string): boolean {
+  const stored = sessionStorage.getItem(CSRF_TOKEN_KEY);
+  
   if (!stored) {
-    console.warn('No CSRF token found in storage');
     return false;
   }
-
-  if (stored.token !== token) {
-    console.warn('CSRF token mismatch');
+  
+  try {
+    const tokenData: CSRFTokenData = JSON.parse(stored);
+    
+    // Check expiry
+    if (Date.now() > tokenData.expiresAt) {
+      return false;
+    }
+    
+    // Constant-time comparison to prevent timing attacks
+    return constantTimeCompare(token, tokenData.token);
+  } catch {
     return false;
   }
-
-  if (Date.now() > stored.expiresAt) {
-    console.warn('CSRF token expired');
-    return false;
-  }
-
-  return true;
 }
 
 /**
- * Refresh CSRF token (generate new one)
+ * Constant-time string comparison to prevent timing attacks
  */
-export function refreshCsrfToken(): string {
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.removeItem(CSRF_TOKEN_KEY);
+function constantTimeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false;
   }
-  return getCsrfToken();
-}
-
-/**
- * Clear CSRF token (on logout)
- */
-export function clearCsrfToken(): void {
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.removeItem(CSRF_TOKEN_KEY);
+  
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
   }
+  
+  return result === 0;
 }
 
 /**
  * Add CSRF token to request headers
  */
-export function addCsrfHeader(headers: HeadersInit = {}): Headers {
-  const finalHeaders = new Headers(headers);
-  const token = getCsrfToken();
-
-  finalHeaders.set(CSRF_HEADER_NAME, token);
-
-  return finalHeaders;
-}
-
-/**
- * Add CSRF token to fetch options
- */
-export function withCsrfProtection(options: RequestInit = {}): RequestInit {
-  const headers = addCsrfHeader(options.headers);
-
+export function addCSRFHeader(headers: HeadersInit = {}): HeadersInit {
+  const token = getCSRFToken();
+  
   return {
-    ...options,
-    headers,
+    ...headers,
+    [CSRF_TOKEN_HEADER]: token,
   };
 }
 
 /**
- * Validate CSRF token from request headers (server-side)
+ * Clear CSRF token (on logout)
  */
-export function validateCsrfFromHeaders(headers: Headers): boolean {
-  const token = headers.get(CSRF_HEADER_NAME);
-
-  if (!token) {
-    return false;
-  }
-
-  return validateCsrfToken(token);
+export function clearCSRFToken(): void {
+  sessionStorage.removeItem(CSRF_TOKEN_KEY);
 }
 
 /**
- * CSRF-protected fetch wrapper
+ * Refresh CSRF token (extend expiry)
  */
-export async function csrfFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  // Only add CSRF protection for state-changing methods
-  const method = (options.method || 'GET').toUpperCase();
-  const requiresCsrf = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
-
-  if (requiresCsrf) {
-    return fetch(url, withCsrfProtection(options));
-  }
-
-  return fetch(url, options);
+export function refreshCSRFToken(): string {
+  return generateCSRFToken();
 }
 
 /**
- * Initialize CSRF protection (call on app startup)
+ * Get CSRF token header name
  */
-export function initializeCsrfProtection(): void {
-  // Generate initial token
-  getCsrfToken();
-
-  // Refresh token periodically
-  if (typeof setInterval !== 'undefined') {
-    setInterval(
-      () => {
-        const tokenData = retrieveToken();
-        if (tokenData) {
-          const timeUntilExpiry = tokenData.expiresAt - Date.now();
-          // Refresh if less than 10 minutes remaining
-          if (timeUntilExpiry < 10 * 60 * 1000) {
-            refreshCsrfToken();
-          }
-        }
-      },
-      5 * 60 * 1000,
-    ); // Check every 5 minutes
-  }
-
-  // Clear token on page unload
-  if (typeof window !== 'undefined') {
-    window.addEventListener('beforeunload', () => {
-      // Don't clear on normal navigation, only on actual close
-      // Token will expire naturally
-    });
-  }
+export function getCSRFHeaderName(): string {
+  return CSRF_TOKEN_HEADER;
 }
 
-/**
- * CSRF middleware for form submissions
- */
-export function csrfFormMiddleware(formData: FormData): FormData {
-  const token = getCsrfToken();
-  formData.append('_csrf', token);
-  return formData;
-}
-
-/**
- * Get CSRF token for form hidden input
- */
-export function getCsrfTokenForForm(): { name: string; value: string } {
-  return {
-    name: '_csrf',
-    value: getCsrfToken(),
-  };
-}
-
-export const CsrfProtection = {
-  getCsrfToken,
-  validateCsrfToken,
-  refreshCsrfToken,
-  clearCsrfToken,
-  addCsrfHeader,
-  withCsrfProtection,
-  validateCsrfFromHeaders,
-  csrfFetch,
-  initializeCsrfProtection,
-  csrfFormMiddleware,
-  getCsrfTokenForForm,
-  CSRF_HEADER_NAME,
+export const CSRF = {
+  generateToken: generateCSRFToken,
+  getToken: getCSRFToken,
+  validateToken: validateCSRFToken,
+  addHeader: addCSRFHeader,
+  clearToken: clearCSRFToken,
+  refreshToken: refreshCSRFToken,
+  getHeaderName: getCSRFHeaderName,
 };
 
-export default CsrfProtection;
+export default CSRF;
