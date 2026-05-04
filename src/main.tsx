@@ -2,6 +2,20 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import { initializeCsrfProtection } from './utils/csrf';
+import { initializeSessionManagement } from './utils/session';
+import { clearMasterKey } from './utils/encryption';
+
+// Initialize security features
+initializeCsrfProtection();
+initializeSessionManagement();
+
+// Clear encryption key on logout
+window.addEventListener('storage', (e) => {
+  if (e.key === 'wasel-auth-state' && !e.newValue) {
+    clearMasterKey();
+  }
+});
 
 const rootElement = document.getElementById('root');
 
