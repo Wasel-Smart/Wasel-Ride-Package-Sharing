@@ -14,6 +14,7 @@ import type { WalletData } from '../../../services/walletApi';
 
 interface SettingsTabProps {
   walletData: WalletData | null;
+  canManagePin: boolean;
   isRTL: boolean;
   t: Record<string, string>;
   autoTopUpEnabled: boolean;
@@ -26,7 +27,7 @@ interface SettingsTabProps {
 }
 
 export function SettingsTab({
-  walletData, isRTL, t,
+  walletData, canManagePin, isRTL, t,
   autoTopUpEnabled, autoTopUpAmount, autoTopUpThreshold,
   onAutoTopUpToggle, onAutoTopUpAmountChange, onAutoTopUpThresholdChange,
   onShowPinSetup,
@@ -44,9 +45,12 @@ export function SettingsTab({
               <div>
                 <p className="text-sm font-medium text-foreground">{t.securityPin}</p>
                 <p className="text-xs text-muted-foreground">{t.pinDescription}</p>
+                {!canManagePin ? (
+                  <p className="mt-1 text-xs text-muted-foreground">{t.pinUnavailableHint}</p>
+                ) : null}
               </div>
             </div>
-            <Button size="sm" variant="outline" onClick={onShowPinSetup} className="text-xs">
+            <Button size="sm" variant="outline" onClick={onShowPinSetup} disabled={!canManagePin} className="text-xs">
               {walletData?.pinSet ? t.changePin : t.setPin}
             </Button>
           </div>

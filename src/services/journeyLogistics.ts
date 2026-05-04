@@ -430,10 +430,7 @@ export async function createConnectedPackage(input: {
     throw new Error('Sender and receiver cities must be different.');
   }
 
-  const rides = getConnectedRides();
-  const matchedRide = findBestMatchingRide(rides, { from, to, weight: input.weight });
   const trackingId = `PKG-${Math.floor(10000 + Math.random() * 90000)}`;
-  const status: PackageStatus = matchedRide ? 'matched' : 'searching';
 
   const pkg: PackageRequest = {
     id: makeId('pkg'),
@@ -446,12 +443,12 @@ export async function createConnectedPackage(input: {
     packageType: input.packageType ?? 'delivery',
     recipientName: input.recipientName?.trim() || undefined,
     recipientPhone: sanitizePhone(input.recipientPhone),
-    matchedRideId: matchedRide?.id,
-    matchedDriver: matchedRide ? pickDriverName(matchedRide.carModel) : undefined,
-    status,
+    matchedRideId: undefined,
+    matchedDriver: undefined,
+    status: 'searching',
     createdAt: new Date().toISOString(),
     verification: {},
-    timeline: buildTimeline(status, matchedRide?.id, {}),
+    timeline: buildTimeline('searching', undefined, {}),
   };
 
   try {
@@ -524,21 +521,32 @@ export async function createConnectedPackage(input: {
     // Fall back to local storage below.
   }
 
-  savePackages([pkg], getConnectedPackages());
+  const rides = getConnectedRides();
+  const matchedRide = findBestMatchingRide(rides, { from, to, weight: input.weight });
+  const fallbackStatus: PackageStatus = matchedRide ? 'matched' : 'searching';
+  const fallbackPackage: PackageRequest = {
+    ...pkg,
+    matchedRideId: matchedRide?.id,
+    matchedDriver: matchedRide ? pickDriverName(matchedRide.carModel) : undefined,
+    status: fallbackStatus,
+    timeline: buildTimeline(fallbackStatus, matchedRide?.id, pkg.verification),
+  };
+
+  savePackages([fallbackPackage], getConnectedPackages());
   void trackGrowthEvent({
     eventName: 'package_request_created',
-    funnelStage: pkg.matchedRideId ? 'selected' : 'searched',
+    funnelStage: fallbackPackage.matchedRideId ? 'selected' : 'searched',
     serviceType: 'package',
-    from: pkg.from,
-    to: pkg.to,
+    from: fallbackPackage.from,
+    to: fallbackPackage.to,
     valueJod: 5,
     metadata: {
-      trackingId: pkg.trackingId,
-      packageType: pkg.packageType,
+      trackingId: fallbackPackage.trackingId,
+      packageType: fallbackPackage.packageType,
       source: 'local',
     },
   });
-  return pkg;
+  return fallbackPackage;
 }
 
 export async function getPackageByTrackingId(trackingId: string): Promise<PackageRequest | null> {

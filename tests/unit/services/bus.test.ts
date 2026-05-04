@@ -93,11 +93,11 @@ describe('bus service', () => {
     expect(routes.length).toBeGreaterThan(0);
   });
 
-  it('stores a local backup booking when the booking API fails', async () => {
+  it('surfaces booking failures instead of inventing a local confirmation', async () => {
     mockCreateBooking.mockRejectedValue(new Error('offline'));
     window.localStorage.setItem('wasel-bus-bookings', '{bad json');
 
-    const result = await createBusBooking({
+    await expect(createBusBooking({
       tripId: 'bus-3',
       seatsRequested: 2,
       pickupStop: 'Abdali Intercity Hub',
@@ -107,17 +107,8 @@ describe('bus service', () => {
       seatPreference: 'window',
       scheduleMode: 'schedule-later',
       totalPrice: 14,
-    });
+    })).rejects.toThrow('offline');
 
-    expect(result.source).toBe('local');
-
-    const stored = JSON.parse(window.localStorage.getItem('wasel-bus-bookings') ?? '[]');
-    expect(stored).toHaveLength(1);
-    expect(stored[0]).toMatchObject({
-      tripId: 'bus-3',
-      seatsRequested: 2,
-      departureTime: '07:00',
-      seatPreference: 'window',
-    });
+    expect(window.localStorage.getItem('wasel-bus-bookings')).toBe('{bad json');
   });
 });

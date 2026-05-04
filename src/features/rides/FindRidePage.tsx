@@ -38,6 +38,7 @@ import {
   getRideBookings,
   type RideBookingRecord,
 } from '../../services/rideLifecycle';
+import { tripsAPI } from '../../services/trips';
 import {
   getCorridorOpportunity,
   getMarketplaceNodes,
@@ -45,6 +46,7 @@ import {
 import {
   ALL_RIDES,
   buildRideFromPostedRide,
+  buildRideFromTripSearchResult,
   CITIES,
   RIDE_BOOKINGS_KEY,
   RIDE_SEARCHES_KEY,
@@ -103,6 +105,7 @@ export function FindRidePage() {
   const [bookingInFlightId, setBookingInFlightId] = useState<string | null>(null);
   const [rideBookings, setRideBookings] = useState<RideBookingRecord[]>(() => getRideBookings());
   const [recentSearches, setRecentSearches] = useState<string[]>(() => readStoredStringList(RIDE_SEARCHES_KEY));
+  const [searchResults, setSearchResults] = useState<Ride[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [bookingMessage, setBookingMessage] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState<BookingSuccessState | null>(null);
@@ -110,6 +113,11 @@ export function FindRidePage() {
   const [retentionMessage, setRetentionMessage] = useState<string | null>(null);
   const [savedReminders, setSavedReminders] = useState(() => getRouteReminders());
   const [pkg, setPkg] = useState({ from: 'Amman', to: 'Aqaba', weight: '<1 kg', note: '', sent: false });
+  const [submittedSearch, setSubmittedSearch] = useState(() => ({
+    from: initialFrom,
+    to: initialTo,
+    date: initialDate,
+  }));
 
   const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(0, 3), []);
   const corridorPlan = useMemo(() => getCorridorOpportunity(from, to), [from, to]);
@@ -146,15 +154,21 @@ export function FindRidePage() {
     return lookup;
   }, [routeIntelligence.updatedAt]);
   const demandStats = getDemandStats();
+  const searchCriteriaDirty =
+    from !== submittedSearch.from ||
+    to !== submittedSearch.to ||
+    date !== submittedSearch.date;
+  const activeSearch = searched && !searchCriteriaDirty;
 
   const searchFromCoord = resolveCityCoord(from);
   const searchToCoord = resolveCityCoord(to);
   const connectedRides = getConnectedRides().map(buildRideFromPostedRide);
-  const allAvailableRides = [...connectedRides, ...ALL_RIDES];
-  const corridorRides = allAvailableRides.filter((ride) => ride.from === from && ride.to === to);
+  const previewRides = [...connectedRides, ...ALL_RIDES];
+  const activeCatalog = activeSearch ? searchResults : previewRides;
+  const corridorRides = activeCatalog.filter((ride) => ride.from === from && ride.to === to);
   const availableCorridorRides = corridorRides.filter((ride) => ride.seatsAvailable > 0);
   const soldOutCorridorRides = corridorRides.filter((ride) => ride.seatsAvailable <= 0);
-  const nearbyCorridors = allAvailableRides
+  const nearbyCorridors = activeCatalog
     .filter(
       (ride) =>
         ride.id &&
@@ -163,28 +177,21 @@ export function FindRidePage() {
     )
     .slice(0, 3);
 
-  const results: Ride[] = searched
-    ? allAvailableRides
-        .filter(
-          (ride) =>
-            (!from || ride.from.toLowerCase().includes(from.toLowerCase()) || ride.fromAr === from) &&
-            (!to || ride.to.toLowerCase().includes(to.toLowerCase()) || ride.toAr === to) &&
-            (!date || ride.date === date),
-        )
-        .sort((left, right) =>
-          sort === 'price'
-            ? left.pricePerSeat - right.pricePerSeat
-            : sort === 'time'
-              ? left.time.localeCompare(right.time)
-              : right.driver.rating - left.driver.rating,
-        )
-    : allAvailableRides.slice(0, 4);
+  const results: Ride[] = activeSearch
+    ? [...searchResults].sort((left, right) =>
+        sort === 'price'
+          ? left.pricePerSeat - right.pricePerSeat
+          : sort === 'time'
+            ? left.time.localeCompare(right.time)
+            : right.driver.rating - left.driver.rating,
+      )
+    : previewRides.slice(0, 4);
 
   const routeReadinessLabel = corridorRides.length >= 2 ? t.instantMatch : corridorRides.length === 1 ? t.bookingReady : t.searchHelp;
   const recommendedRides = [...results]
     .sort((left, right) => scoreRideForRecommendation(right) - scoreRideForRecommendation(left))
     .slice(0, 2);
-  const bookedRides = allAvailableRides.filter((ride) => bookedRideIds.has(ride.id)).slice(0, 3);
+  const bookedRides = activeCatalog.filter((ride) => bookedRideIds.has(ride.id)).slice(0, 3);
   const selectedPriceQuote = selectedSignal?.priceQuote
     ?? (corridorPlan
       ? getMovementPriceQuote({
@@ -244,13 +251,52 @@ export function FindRidePage() {
     setFrom(nextFrom);
     setTo(nextTo);
     setDate(nextDate);
-    setSearched(nextSearched);
+    setSearched(false);
+    setSubmittedSearch({ from: nextFrom, to: nextTo, date: nextDate });
+    if (nextSearched) {
+      void handleSearch({ from: nextFrom, to: nextTo, date: nextDate });
+    } else {
+      setSearchResults([]);
+    }
   }, [location.search]);
 
-  const handleSearch = () => {
-    if (from === to) {
+  const sortRideResults = (rides: Ride[]) => rides.sort((left, right) =>
+    sort === 'price'
+      ? left.pricePerSeat - right.pricePerSeat
+      : sort === 'time'
+        ? left.time.localeCompare(right.time)
+        : right.driver.rating - left.driver.rating,
+  );
+
+  const filterLocalRides = (searchFrom: string, searchTo: string, searchDate: string) =>
+    sortRideResults(
+      connectedRides.filter(
+        (ride) =>
+          (!searchFrom || ride.from.toLowerCase().includes(searchFrom.toLowerCase()) || ride.fromAr === searchFrom) &&
+          (!searchTo || ride.to.toLowerCase().includes(searchTo.toLowerCase()) || ride.toAr === searchTo) &&
+          (!searchDate || ride.date === searchDate),
+      ),
+    );
+
+  const mergeSearchResults = (remote: Ride[], local: Ride[]) => {
+    const merged = new Map<string, Ride>();
+
+    for (const ride of [...remote, ...local]) {
+      merged.set(ride.id, ride);
+    }
+
+    return sortRideResults(Array.from(merged.values()));
+  };
+
+  const handleSearch = async (overrides?: Partial<{ from: string; to: string; date: string }>) => {
+    const searchFrom = overrides?.from ?? from;
+    const searchTo = overrides?.to ?? to;
+    const searchDate = overrides?.date ?? date;
+
+    if (searchFrom === searchTo) {
       setSearchError(t.chooseDifferentCities);
       setSearched(false);
+      setSearchResults([]);
       return;
     }
 
@@ -259,11 +305,28 @@ export function FindRidePage() {
     setBookingSuccess(null);
     setLoading(true);
 
-    setTimeout(() => {
+    const localMatches = filterLocalRides(searchFrom, searchTo, searchDate);
+
+    try {
+      const remoteResults = await tripsAPI.searchTrips(searchFrom, searchTo, searchDate || undefined);
+      const mappedRemote = Array.isArray(remoteResults)
+        ? remoteResults.map(buildRideFromTripSearchResult)
+        : [];
+
+      setSearchResults(mergeSearchResults(mappedRemote, localMatches));
+    } catch {
+      setSearchResults(localMatches);
+      setSearchError(
+        localMatches.length > 0
+          ? 'Live route search is temporarily unavailable. Showing locally posted rides only.'
+          : 'Live route search is temporarily unavailable. Try again shortly or switch to the official bus schedule.',
+      );
+    } finally {
       setLoading(false);
       setSearched(true);
+      setSubmittedSearch({ from: searchFrom, to: searchTo, date: searchDate });
       setRecentSearches((previous) => {
-        const label = `${from} to ${to}${date ? ` on ${date}` : ''}`;
+        const label = `${searchFrom} to ${searchTo}${searchDate ? ` on ${searchDate}` : ''}`;
         return [label, ...previous.filter((item) => item !== label)].slice(0, 4);
       });
       void trackGrowthEvent({
@@ -271,11 +334,11 @@ export function FindRidePage() {
         eventName: 'ride_search_executed',
         funnelStage: 'searched',
         serviceType: 'ride',
-        from,
-        to,
-        metadata: { date: date || null },
+        from: searchFrom,
+        to: searchTo,
+        metadata: { date: searchDate || null },
       });
-    }, 700);
+    }
   };
 
   const handleOpenRide = (ride: Ride) => {
@@ -492,7 +555,7 @@ export function FindRidePage() {
                 </div>
               </div>
 
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={handleSearch} data-testid="find-ride-search" style={{ width: '100%', height: 52, borderRadius: r(14), border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={() => { void handleSearch(); }} data-testid="find-ride-search" style={{ width: '100%', height: 52, borderRadius: r(14), border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                 {loading ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }} style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%' }} /> : <Search size={18} />}
                 {loading ? t.searching : 'Search rides'}
               </motion.button>
@@ -606,7 +669,7 @@ export function FindRidePage() {
 
             <div className="sp-results-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
               <h2 style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
-                {searched
+                {activeSearch
                   ? `${from} to ${to} | ${results.length} route match${results.length !== 1 ? 'es' : ''}`
                   : `Popular routes | showing ${results.length} departures`}
               </h2>
@@ -632,7 +695,7 @@ export function FindRidePage() {
                       No ride found yet. Save this route and get alerted when one opens{selectedSignal ? ` around ${selectedSignal.nextWaveWindow}` : ''}.
                     </p>
                     <div className="sp-empty-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 18 }}>
-                      <button onClick={() => { setDate(''); setSearchError(null); setSearched(true); }} style={{ height: 44, borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{t.clearDateFilter}</button>
+                      <button onClick={() => { setDate(''); setSearchError(null); void handleSearch({ date: '' }); }} style={{ height: 44, borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{t.clearDateFilter}</button>
                       <button onClick={() => nav(`/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)} style={{ height: 44, borderRadius: r(12), border: 'none', background: DS.gradG, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{t.openBusFallback}</button>
                     </div>
                     <button onClick={handleDemandCapture} style={{ marginTop: 10, width: '100%', height: 44, borderRadius: r(12), border: `1px solid ${DS.cyan}35`, background: `${DS.cyan}12`, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{copy.notifyMe}</button>
@@ -714,7 +777,7 @@ export function FindRidePage() {
                         onClick={() => {
                           setFrom(corridor.from);
                           setTo(corridor.to);
-                          setSearched(true);
+                          void handleSearch({ from: corridor.from, to: corridor.to, date: '' });
                         }}
                         style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}
                       >
@@ -774,9 +837,9 @@ export function FindRidePage() {
                             </div>
                             <span style={pill(DS.green)}>{suggestion.recommendedFrequency}</span>
                           </div>
-                            <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 8 }}>{suggestion.reason}</div>
+                          <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 8 }}>{suggestion.reason}</div>
                           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-                            <button onClick={() => { setFrom(suggestion.from); setTo(suggestion.to); setSearched(true); }} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+                            <button onClick={() => { setFrom(suggestion.from); setTo(suggestion.to); void handleSearch({ from: suggestion.from, to: suggestion.to, date: '' }); }} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
                               Search route
                             </button>
                             <button onClick={() => handleSaveReminder(suggestion.corridorId)} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: 'none', background: alreadySaved ? DS.gradG : DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>

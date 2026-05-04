@@ -17,6 +17,7 @@ import type { WalletData } from '../../../services/walletApi';
 
 interface OverviewTabProps {
   walletData: WalletData | null;
+  canSubscribe: boolean;
   isRTL: boolean;
   t: Record<string, string>;
   onSetTab: (tab: string) => void;
@@ -24,7 +25,7 @@ interface OverviewTabProps {
   actionLoading: boolean;
 }
 
-export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actionLoading }: OverviewTabProps) {
+export function OverviewTab({ walletData, canSubscribe, isRTL, t, onSetTab, onSubscribe, actionLoading }: OverviewTabProps) {
   const transactions = walletData?.transactions ?? [];
   const pendingCount = transactions.filter((tx: any) => ['pending', 'processing', 'authorized', 'posted'].includes(String(tx.status ?? '').toLowerCase())).length;
   const failedCount = transactions.filter((tx: any) => ['failed'].includes(String(tx.status ?? '').toLowerCase())).length;
@@ -124,14 +125,16 @@ export function OverviewTab({ walletData, isRTL, t, onSetTab, onSubscribe, actio
                 <p className="text-xs text-muted-foreground">
                   {walletData?.subscription
                     ? t.activeSubscription
-                    : isRTL ? '10% \u062E\u0635\u0645 \u0639\u0644\u0649 \u0627\u0644\u0631\u062D\u0644\u0627\u062A \u2022 \u062D\u062C\u0632 \u0623\u0648\u0644\u0648\u064A\u0629' : '10% off rides \u2022 Priority booking'}
+                    : canSubscribe
+                      ? isRTL ? '10% \u062E\u0635\u0645 \u0639\u0644\u0649 \u0627\u0644\u0631\u062D\u0644\u0627\u062A \u2022 \u062D\u062C\u0632 \u0623\u0648\u0644\u0648\u064A\u0629' : '10% off rides \u2022 Priority booking'
+                      : t.subscriptionUnavailableHint}
                 </p>
               </div>
             </div>
             {walletData?.subscription ? (
               <Badge className="bg-green-500/10 text-green-400 border-green-500/30">{isRTL ? '\u0641\u0639\u0651\u0627\u0644' : 'Active'}</Badge>
             ) : (
-              <Button size="sm" onClick={onSubscribe} disabled={actionLoading} style={{ background: WaselColors.bronze }}>
+              <Button size="sm" onClick={onSubscribe} disabled={!canSubscribe || actionLoading} style={{ background: WaselColors.bronze }}>
                 {t.subscribeNow}
               </Button>
             )}

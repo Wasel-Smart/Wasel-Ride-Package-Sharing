@@ -1,4 +1,5 @@
 import type { PostedRide } from '../services/journeyLogistics';
+import type { TripSearchResult } from '../services/trips';
 
 export interface Ride {
   id: string;
@@ -271,5 +272,49 @@ export function buildRideFromPostedRide(ride: PostedRide): Ride {
     pkgCapacity: ride.acceptsPackages ? ride.packageCapacity : 'none',
     conversationLevel: 'normal',
     reviews: ride.note ? [{ name: 'Route note', rating: 5, text: ride.note }] : undefined,
+  };
+}
+
+export function buildRideFromTripSearchResult(ride: TripSearchResult): Ride {
+  const normalizedDate = normalizeRideDate(ride.date, 1);
+  const normalizedSeats = Math.max(0, Number(ride.seats) || 0);
+  const driverInitials = ride.driver.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('') || 'WD';
+
+  return {
+    id: String(ride.id),
+    routeMode: 'network_inventory',
+    driver: {
+      name: ride.driver.name,
+      nameAr: ride.driver.name,
+      rating: ride.driver.rating,
+      verified: ride.driver.verified,
+      trips: 0,
+      phone: '+962790000000',
+      avatar: driverInitials,
+    },
+    from: ride.from,
+    fromAr: ride.from,
+    fromPoint: 'Verified pickup point',
+    to: ride.to,
+    toAr: ride.to,
+    toPoint: 'Verified dropoff point',
+    date: normalizedDate,
+    time: ride.time || 'Flexible',
+    seatsAvailable: normalizedSeats,
+    totalSeats: Math.max(normalizedSeats, 1),
+    pricePerSeat: Math.max(0, Number(ride.price) || 0),
+    distance: 0,
+    duration: 'Scheduled route',
+    genderPref: 'mixed',
+    amenities: ['Verified route', ride.driver.verified ? 'Verified driver' : 'Driver profile'],
+    prayerStops: false,
+    car: 'Wasel vehicle',
+    pkgCapacity: 'none',
+    conversationLevel: 'normal',
   };
 }

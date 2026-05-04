@@ -12,10 +12,10 @@ interface WaselLogoProps {
 const WASEL_FULL_SRC = '/brand/wasellogo-512.png';
 const WASEL_FULL_SRCSET =
   '/brand/wasellogo-64.png 64w, /brand/wasellogo-96.png 96w, /brand/wasellogo-160.png 160w, /brand/wasellogo-280.png 280w, /brand/wasellogo-512.png 512w';
-const WASEL_FULL_RATIO = 945 / 233;
+const WASEL_FULL_RATIO = 1005 / 316;
 
 const WASEL_W_SRC = '/brand/wasel-w-mark.png';
-const WASEL_W_RATIO = 328 / 233;
+const WASEL_W_RATIO = 400 / 316;
 
 function getImageFilter(theme: 'dark' | 'light', framed: boolean) {
   if (theme === 'dark') {

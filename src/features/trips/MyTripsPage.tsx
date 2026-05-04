@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import {
   ArrowRight,
@@ -360,7 +360,23 @@ export default function MyTripsPage() {
   );
   const [filter, setFilter] = useState<TripLifecycle | 'all'>('all');
 
-  const supportTickets = useMemo(() => getSupportTickets().slice(0, 5), []);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSupportTickets = async () => {
+      const tickets = await getSupportTickets(user?.id);
+      if (cancelled) return;
+      setSupportTickets(tickets.slice(0, 5));
+    };
+
+    void loadSupportTickets();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const rideItems = useMemo(() => {
     return syncRideBookingCompletion().map((booking) => {

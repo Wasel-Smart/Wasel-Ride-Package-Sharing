@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Brain, Boxes, Network } from 'lucide-react';
+import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
@@ -28,6 +29,7 @@ import { PackageTrackPanel } from './components/PackageTrackPanel';
 
 export function PackagesPage() {
   const nav = useIframeSafeNavigate();
+  const { user } = useLocalAuth();
   const { notify, requestPermission, permission } = usePushNotifications();
   const [activeTab, setActiveTab] = useState<'send' | 'track' | 'raje3'>('send');
   const [pkg, setPkg] = useState(() => createPackageComposer());
@@ -162,22 +164,24 @@ export function PackagesPage() {
   const handleOpenSupport = () => {
     if (!trackedPackage) return;
 
-    const ticket = createSupportTicket({
-      topic: 'package_issue',
-      subject: `Package tracking help for ${trackedPackage.trackingId}`,
-      detail: `Support requested for ${trackedPackage.from} to ${trackedPackage.to}. Current status: ${trackedPackage.status}.`,
-      relatedId: trackedPackage.trackingId,
-      routeLabel: `${trackedPackage.from} to ${trackedPackage.to}`,
-    });
+    void (async () => {
+      const ticket = await createSupportTicket(user?.id, {
+        topic: 'package_issue',
+        subject: `Package tracking help for ${trackedPackage.trackingId}`,
+        detail: `Support requested for ${trackedPackage.from} to ${trackedPackage.to}. Current status: ${trackedPackage.status}.`,
+        relatedId: trackedPackage.trackingId,
+        routeLabel: `${trackedPackage.from} to ${trackedPackage.to}`,
+      });
 
-    setTrackingMessage(`Support opened: ${ticket.id}.`);
-    notificationsAPI.createNotification({
-      title: 'Package support opened',
-      message: `Support is now following ${trackedPackage.trackingId}.`,
-      type: 'support',
-      priority: 'high',
-      action_url: '/app/profile',
-    }).catch(() => {});
+      setTrackingMessage(`Support opened: ${ticket.id}.`);
+      notificationsAPI.createNotification({
+        title: 'Package support opened',
+        message: `Support is now following ${trackedPackage.trackingId}.`,
+        type: 'support',
+        priority: 'high',
+        action_url: '/app/profile',
+      }).catch(() => {});
+    })();
   };
 
   return (

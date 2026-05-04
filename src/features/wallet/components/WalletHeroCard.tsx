@@ -6,6 +6,7 @@ import { WaselColors } from '../../../tokens/wasel-tokens';
 type WalletHeroCardProps = {
   balance: number;
   balanceVisible: boolean;
+  canTopUp: boolean;
   pendingBalance: number;
   rewardsBalance: number;
   t: Record<string, string>;
@@ -18,6 +19,7 @@ type WalletHeroCardProps = {
 export function WalletHeroCard({
   balance,
   balanceVisible,
+  canTopUp,
   pendingBalance,
   rewardsBalance,
   t,
@@ -74,7 +76,7 @@ export function WalletHeroCard({
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          <Button onClick={onShowTopUp} className="h-12 rounded-xl text-sm font-semibold" style={{ background: WaselColors.teal }}>
+          <Button onClick={onShowTopUp} disabled={!canTopUp} className="h-12 rounded-xl text-sm font-semibold disabled:opacity-60" style={{ background: WaselColors.teal }}>
             <Plus className="mr-1.5 h-4 w-4" />
             {t.addMoney}
           </Button>
@@ -87,6 +89,11 @@ export function WalletHeroCard({
             {t.sendMoney}
           </Button>
         </div>
+        {!canTopUp ? (
+          <p className="mt-3 text-xs text-slate-400">
+            {t.topUpUnavailableHint}
+          </p>
+        ) : null}
       </div>
     </motion.div>
   );

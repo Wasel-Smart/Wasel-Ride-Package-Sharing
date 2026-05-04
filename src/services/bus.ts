@@ -49,7 +49,7 @@ export interface BusBookingPayload {
 }
 
 export interface BusBookingResult {
-  source: 'server' | 'local';
+  source: 'server';
   bookingId: string;
   ticketCode: string;
 }
@@ -59,6 +59,8 @@ export interface StoredBusBooking extends BusBookingPayload {
   created_at: string;
   ticket_code: string;
   status: 'confirmed' | 'cancelled' | 'completed';
+  source?: 'server';
+  backend_booking_id?: string;
 }
 
 function toText(value: unknown, fallback: string): string {
@@ -180,29 +182,23 @@ export async function fetchBusRoutes(query: BusRouteQuery): Promise<BusRoute[]> 
   }
 }
 
-function persistLocalBusBooking(payload: BusBookingPayload): StoredBusBooking {
+function persistBusBooking(booking: StoredBusBooking): StoredBusBooking {
   const key = 'wasel-bus-bookings';
-  const draft: StoredBusBooking = {
-    id: `local-${Date.now()}`,
-    created_at: new Date().toISOString(),
-    ticket_code: `BUS-${Math.floor(100000 + Math.random() * 900000)}`,
-    status: 'confirmed',
-    ...payload,
-  };
 
   if (typeof window !== 'undefined') {
-    let current: unknown[] = [];
+    let current: StoredBusBooking[] = [];
     try {
       const currentRaw = window.localStorage.getItem(key);
-      current = currentRaw ? JSON.parse(currentRaw) : [];
+      const parsed = currentRaw ? JSON.parse(currentRaw) : [];
+      current = Array.isArray(parsed) ? parsed as StoredBusBooking[] : [];
     } catch {
       current = [];
     }
-    const next = Array.isArray(current) ? [draft, ...current].slice(0, 50) : [draft];
+    const next = [booking, ...current.filter((item) => item.id !== booking.id)].slice(0, 50);
     window.localStorage.setItem(key, JSON.stringify(next));
   }
 
-  return draft;
+  return booking;
 }
 
 export function getStoredBusBookings(): StoredBusBooking[] {
@@ -242,6 +238,17 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
       bookingId: String(bookingId),
       ticketCode: `BUS-${String(bookingId).slice(-6).toUpperCase()}`,
     };
+
+    persistBusBooking({
+      ...payload,
+      id: String(bookingId),
+      backend_booking_id: String(bookingId),
+      created_at: new Date().toISOString(),
+      ticket_code: result.ticketCode,
+      status: 'confirmed',
+      source: 'server',
+    });
+
     void trackGrowthEvent({
       eventName: 'bus_booking_created',
       funnelStage: 'booked',
@@ -256,25 +263,9 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
       },
     });
     return result;
-  } catch {
-    const stored = persistLocalBusBooking(payload);
-    void trackGrowthEvent({
-      eventName: 'bus_booking_created',
-      funnelStage: 'booked',
-      serviceType: 'bus',
-      from: payload.pickupStop,
-      to: payload.dropoffStop,
-      valueJod: payload.totalPrice,
-      metadata: {
-        tripId: payload.tripId,
-        source: 'local',
-        scheduleDate: payload.scheduleDate,
-      },
-    });
-    return {
-      source: 'local',
-      bookingId: stored.id,
-      ticketCode: stored.ticket_code,
-    };
+  } catch (error) {
+    throw error instanceof Error
+      ? error
+      : new Error('Bus booking is temporarily unavailable because the secure booking backend could not confirm the seat.');
   }
 }

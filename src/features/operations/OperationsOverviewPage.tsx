@@ -204,7 +204,7 @@ export default function OperationsOverviewPage() {
             <div style={{ display: 'grid', gap: SPACE[3] }}>
               <StatusBadge label={pathname === '/app/services/corporate' ? 'Recurring lanes' : 'Live corridor graph'} accent={config.accent} />
               <div style={{ color: C.textSub, fontFamily: F, fontSize: TYPE.size.sm, lineHeight: TYPE.lineHeight.relaxed }}>
-                Wasel is no longer framed as a ride request app here. This surface is driven by live corridor signals, recurring workflow snapshots, and route-level proof.
+                Live corridor metrics appear here when available. The business, school, and workflow cards are clearly generated planning snapshots until those operating datasets are connected end-to-end.
               </div>
             </div>
           }

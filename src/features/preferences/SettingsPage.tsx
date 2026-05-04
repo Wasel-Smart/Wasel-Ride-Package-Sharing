@@ -14,6 +14,11 @@ import { normalizeProfilePhone } from '../../features/profile/profileUtils';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import type { Language } from '../../locales/translations';
 import {
+  getAccountSettings,
+  getDefaultAccountSettings,
+  updateAccountSettings,
+} from '../../services/accountSettings';
+import {
   getCommunicationCapabilities,
   getCommunicationPreferences,
   updateCommunicationPreferences,
@@ -36,23 +41,6 @@ import {
   type TwoFactorSetup,
 } from '../../utils/security';
 import { C, F, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
-
-const STORAGE_KEYS = {
-  privacy: 'wasel.settings.privacy',
-  display: 'wasel.settings.display',
-} as const;
-
-function readStoredState<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback;
-
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return fallback;
-    return { ...fallback, ...JSON.parse(raw) } as T;
-  } catch {
-    return fallback;
-  }
-}
 
 function Section({
   icon,
@@ -287,7 +275,12 @@ export default function SettingsPage() {
   );
   const accountRef = useRef<HTMLDivElement | null>(null);
   const securityRef = useRef<HTMLDivElement | null>(null);
+  const settingsHydratedRef = useRef(false);
   const twoFactorSupported = isTwoFactorAvailable();
+  const defaultAccountSettings = useMemo(
+    () => getDefaultAccountSettings(language, ar ? 'rtl' : 'ltr'),
+    [ar, language],
+  );
 
   const [phoneInput, setPhoneInput] = useState(user?.phone ?? '');
   const [phoneSaving, setPhoneSaving] = useState(false);
@@ -313,23 +306,13 @@ export default function SettingsPage() {
     preferredLanguage: language === 'ar' ? 'ar' : 'en',
   });
   const [notificationSavingKey, setNotificationSavingKey] = useState<string | null>(null);
-  const [privacy, setPrivacy] = useState(() => readStoredState(STORAGE_KEYS.privacy, {
-    showProfile: true,
-    shareLocation: true,
-    hidePhoto: false,
-    dataAnalytics: false,
-  }));
+  const [privacy, setPrivacy] = useState(defaultAccountSettings.privacy);
   const [display, setDisplay] = useState<{
     language: Language;
     currency: string;
     theme: string;
     direction: string;
-  }>(() => readStoredState(STORAGE_KEYS.display, {
-    language,
-    currency: 'JOD',
-    theme: 'dark',
-    direction: ar ? 'rtl' : 'ltr',
-  }));
+  }>(defaultAccountSettings.display);
 
   const passwordStrength = useMemo(() => checkPasswordStrength(passwordInput), [passwordInput]);
   const twoFactorEnabled = Boolean(user?.twoFactorEnabled ?? profile?.two_factor_enabled);
@@ -351,14 +334,47 @@ export default function SettingsPage() {
   }, [language]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(STORAGE_KEYS.privacy, JSON.stringify(privacy));
-  }, [privacy]);
+    settingsHydratedRef.current = false;
+    let cancelled = false;
+
+    const loadSettings = async () => {
+      const settings = await getAccountSettings(user?.id ?? null, defaultAccountSettings);
+      if (cancelled) return;
+
+      setPrivacy(settings.privacy);
+      setDisplay({
+        ...settings.display,
+        language,
+        direction: ar ? 'rtl' : 'ltr',
+      });
+      settingsHydratedRef.current = true;
+    };
+
+    void loadSettings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ar, defaultAccountSettings, language, user?.id]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(STORAGE_KEYS.display, JSON.stringify(display));
-  }, [display]);
+    if (!settingsHydratedRef.current) return;
+
+    const handle = window.setTimeout(() => {
+      void updateAccountSettings(user?.id ?? null, {
+        privacy,
+        display: {
+          ...display,
+          language,
+          direction: ar ? 'rtl' : 'ltr',
+        },
+      });
+    }, 250);
+
+    return () => {
+      window.clearTimeout(handle);
+    };
+  }, [ar, display, language, privacy, user?.id]);
 
   useEffect(() => {
     const section = searchParams.get('section');

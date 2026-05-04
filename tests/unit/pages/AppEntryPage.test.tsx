@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 
 const mockNavigate = vi.fn();
 const mockUseLocalAuth = vi.fn();
@@ -26,6 +27,10 @@ vi.mock('@/components/wasel-ds/WaselLogo', () => ({
 
 import AppEntryPage from '@/features/home/AppEntryPage';
 
+function renderWithProviders(ui: JSX.Element) {
+  return render(<LanguageProvider>{ui}</LanguageProvider>);
+}
+
 describe('AppEntryPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -34,12 +39,12 @@ describe('AppEntryPage', () => {
   it('shows guest CTA copy by default', () => {
     mockUseLocalAuth.mockReturnValue({ user: null });
 
-    render(<AppEntryPage />);
+    renderWithProviders(<AppEntryPage />);
 
-    expect(screen.getByText('One road,')).toBeInTheDocument();
-    expect(screen.getByText('many moves.')).toBeInTheDocument();
+    expect(screen.getByText('One corridor,')).toBeInTheDocument();
+    expect(screen.getByText('every move.')).toBeInTheDocument();
     expect(
-      screen.getByText(/Open one corridor\. Ride it, ship on it, or fall back to the bus line around it\./i),
+      screen.getByText(/Open the same route and decide from there: book a seat, offer one, send a parcel, or fall back to the bus without changing mental models\./i),
     ).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Get started/i }).length).toBeGreaterThan(0);
   });
@@ -47,7 +52,7 @@ describe('AppEntryPage', () => {
   it('navigates authenticated users straight into the app shell', () => {
     mockUseLocalAuth.mockReturnValue({ user: { id: 'user-1' } });
 
-    render(<AppEntryPage />);
+    renderWithProviders(<AppEntryPage />);
 
     screen.getAllByRole('button', { name: /Open the network/i })[0].click();
 

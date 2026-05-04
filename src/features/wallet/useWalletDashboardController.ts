@@ -5,7 +5,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { walletApi, type InsightsData, type WalletData } from '../../services/walletApi';
+import {
+  getWalletCapabilities,
+  walletApi,
+  type InsightsData,
+  type WalletData,
+} from '../../services/walletApi';
 import { setWaselPlusActive } from '../../services/movementMembership';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import { walletText } from './walletText';
@@ -26,6 +31,7 @@ export function useWalletDashboardController() {
     hasUser: Boolean(localUser || user),
     backendReady: WALLET_BACKEND_READY,
   });
+  const walletCapabilities = getWalletCapabilities();
   const [walletError, setWalletError] = useState<string | null>(null);
   const walletUnavailable = runtimeMode === 'unavailable' || walletError === 'unavailable';
   const shouldRedirectToAuth = runtimeMode === 'redirect';
@@ -150,6 +156,11 @@ export function useWalletDashboardController() {
   };
 
   const handleTopUp = async () => {
+    if (!walletCapabilities.topUp) {
+      toast.error(t.topUpUnavailableHint);
+      return;
+    }
+
     const amt = parseFloat(topUpAmount);
     if (!amt || amt <= 0) return toast.error(t.invalidAmount);
 
@@ -224,6 +235,11 @@ export function useWalletDashboardController() {
   };
 
   const handleSetPin = async () => {
+    if (!walletCapabilities.pin) {
+      toast.error(t.pinUnavailableHint);
+      return;
+    }
+
     if (pinValue.length !== 4 || !/^\d{4}$/.test(pinValue)) {
       return toast.error(t.pinMustBeFourDigits);
     }
@@ -243,6 +259,11 @@ export function useWalletDashboardController() {
   };
 
   const handleClaimReward = async (rewardId: string) => {
+    if (!walletCapabilities.rewardClaim) {
+      toast.error(t.rewardClaimUnavailableHint);
+      return;
+    }
+
     try {
       await walletApi.claimReward(effectiveUserId, rewardId);
       toast.success(t.rewardClaimed);
@@ -271,6 +292,11 @@ export function useWalletDashboardController() {
   };
 
   const handleSubscribe = async () => {
+    if (!walletCapabilities.subscription) {
+      toast.error(t.subscriptionUnavailableHint);
+      return;
+    }
+
     setActionLoading(true);
     try {
       const result = await walletApi.subscribe(effectiveUserId, 'Wasel Plus', 9.99) as
@@ -353,6 +379,7 @@ export function useWalletDashboardController() {
     topUpAmount,
     topUpMethod,
     walletData,
+    walletCapabilities,
     walletSubtitle: t.walletSubtitle,
     walletUnavailable,
     withdrawAmount,

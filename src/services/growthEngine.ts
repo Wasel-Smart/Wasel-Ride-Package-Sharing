@@ -111,6 +111,48 @@ export function getGrowthEventFeed(): GrowthEventRecord[] {
     .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 }
 
+function buildGrowthDashboardFromLocal(): GrowthDashboard {
+  const events = readLocalGrowthEvents();
+  const alerts = readLocalDemandAlerts();
+  const corridorMap = new Map<string, { corridor: string; demand: number; conversions: number }>();
+
+  for (const event of events) {
+    const corridor = [event.from, event.to].filter(Boolean).join(' to ');
+    if (!corridor) continue;
+
+    const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
+    current.conversions += event.funnelStage === 'booked' ? 1 : 0;
+    corridorMap.set(corridor, current);
+  }
+
+  for (const alert of alerts) {
+    const corridor = `${alert.from} to ${alert.to}`;
+    const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
+    current.demand += alert.status === 'active' ? 1 : 0;
+    corridorMap.set(corridor, current);
+  }
+
+  return {
+    funnel: {
+      searched: events.filter((event) => event.funnelStage === 'searched').length,
+      selected: events.filter((event) => event.funnelStage === 'selected').length,
+      booked: events.filter((event) => event.funnelStage === 'booked').length,
+      completed: events.filter((event) => event.funnelStage === 'completed').length,
+    },
+    serviceMix: {
+      rides: events.filter((event) => event.serviceType === 'ride').length,
+      buses: events.filter((event) => event.serviceType === 'bus').length,
+      packages: events.filter((event) => event.serviceType === 'package').length,
+      referrals: events.filter((event) => event.serviceType === 'referral').length,
+    },
+    revenueJod: Number(events.reduce((sum, event) => sum + (event.valueJod ?? 0), 0).toFixed(2)),
+    activeDemand: alerts.filter((alert) => alert.status === 'active').length,
+    topCorridors: Array.from(corridorMap.values())
+      .sort((left, right) => right.demand + right.conversions - (left.demand + left.conversions))
+      .slice(0, 6),
+  };
+}
+
 function readLocalDemandAlerts(): Array<{
   from: string;
   to: string;
@@ -224,7 +266,10 @@ export async function getGrowthDashboard(userId?: string): Promise<GrowthDashboa
   try {
     return await getDirectGrowthAnalytics(userId);
   } catch {
-    return EMPTY_GROWTH_DASHBOARD;
+    const fallback = buildGrowthDashboardFromLocal();
+    return JSON.stringify(fallback) === JSON.stringify(EMPTY_GROWTH_DASHBOARD)
+      ? EMPTY_GROWTH_DASHBOARD
+      : fallback;
   }
 }
 

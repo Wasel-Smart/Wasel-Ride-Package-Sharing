@@ -75,6 +75,7 @@ export function WalletDashboard() {
     topUpAmount,
     topUpMethod,
     walletData,
+    walletCapabilities,
     walletSubtitle,
     walletUnavailable,
     withdrawAmount,
@@ -159,6 +160,7 @@ export function WalletDashboard() {
       <WalletHeroCard
         balanceVisible={balanceVisible}
         balance={bal}
+        canTopUp={walletCapabilities.topUp}
         pendingBalance={pending}
         rewardsBalance={rewardsBal}
         t={t}
@@ -180,6 +182,7 @@ export function WalletDashboard() {
         <TabsContent value="overview" className="mt-4 space-y-4">
           <OverviewTab
             walletData={walletData}
+            canSubscribe={walletCapabilities.subscription}
             isRTL={isRTL}
             t={t}
             onSetTab={setTab}
@@ -220,24 +223,31 @@ export function WalletDashboard() {
                   </p>
                 </div>
               ) : (
-                walletData.activeRewards.map((r: any) => (
-                  <div key={r.id} className="flex items-center justify-between py-3 border-b border-border/30 last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">{r.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {t.expires}: {new Date(r.expirationDate).toLocaleDateString(isRTL ? 'ar-JO' : 'en-US', { month: 'short', day: 'numeric' })}
-                      </p>
+                <>
+                  {!walletCapabilities.rewardClaim ? (
+                    <p className="mb-3 text-xs text-muted-foreground">
+                      {t.rewardClaimUnavailableHint}
+                    </p>
+                  ) : null}
+                  {walletData.activeRewards.map((r: any) => (
+                    <div key={r.id} className="flex items-center justify-between py-3 border-b border-border/30 last:border-0">
+                      <div>
+                        <p className="text-sm font-medium">{r.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t.expires}: {new Date(r.expirationDate).toLocaleDateString(isRTL ? 'ar-JO' : 'en-US', { month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-purple-500/10 text-purple-400 border-purple-500/30 font-bold">
+                          {r.amount} {t.jod}
+                        </Badge>
+                        <Button size="sm" variant="outline" onClick={() => handleClaimReward(r.id)} disabled={!walletCapabilities.rewardClaim} className="text-xs border-purple-500/30 text-purple-400 hover:bg-purple-500/10 disabled:opacity-60">
+                          {t.claim}
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-purple-500/10 text-purple-400 border-purple-500/30 font-bold">
-                        {r.amount} {t.jod}
-                      </Badge>
-                      <Button size="sm" variant="outline" onClick={() => handleClaimReward(r.id)} className="text-xs border-purple-500/30 text-purple-400 hover:bg-purple-500/10">
-                        {t.claim}
-                      </Button>
-                    </div>
-                  </div>
-                ))
+                  ))}
+                </>
               )}
             </CardContent>
           </Card>
@@ -252,6 +262,7 @@ export function WalletDashboard() {
         <TabsContent value="settings" className="mt-4 space-y-4">
           <SettingsTab
             walletData={walletData}
+            canManagePin={walletCapabilities.pin}
             isRTL={isRTL}
             t={t}
             autoTopUpEnabled={autoTopUpEnabled}

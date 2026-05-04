@@ -113,6 +113,16 @@ export interface WalletData {
   subscription: WalletSubscription | null;
 }
 
+export interface WalletCapabilities {
+  topUp: boolean;
+  rewardClaim: boolean;
+  subscription: boolean;
+  pin: boolean;
+  send: boolean;
+  withdraw: boolean;
+  autoTopUp: boolean;
+}
+
 export interface InsightsData {
   thisMonthSpent: number;
   lastMonthSpent: number;
@@ -134,6 +144,20 @@ function getDb(): DbClient {
 
 function canUseEdgeApi(): boolean {
   return Boolean(WALLET_API_BASE);
+}
+
+export function getWalletCapabilities(): WalletCapabilities {
+  const secureEdgeReady = canUseEdgeApi();
+
+  return {
+    topUp: secureEdgeReady,
+    rewardClaim: secureEdgeReady,
+    subscription: secureEdgeReady,
+    pin: secureEdgeReady,
+    send: true,
+    withdraw: true,
+    autoTopUp: true,
+  };
 }
 
 function toNumber(value: unknown, fallback = 0): number {

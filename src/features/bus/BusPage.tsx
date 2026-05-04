@@ -17,6 +17,7 @@ import {
   Users,
 } from 'lucide-react';
 import { MapWrapper } from '../../components/MapWrapper';
+import { useLocalAuth } from '../../contexts/LocalAuth';
 import { createBusBooking, fetchBusRoutes, getOfficialBusRoutes, type BusRoute } from '../../services/bus';
 import { createSupportTicket } from '../../services/supportInbox';
 import { notificationsAPI } from '../../services/notifications.js';
@@ -87,6 +88,7 @@ function getRouteStatus(route: BusRoute, tripDate: string, today: string) {
 }
 
 export function BusPage() {
+  const { user } = useLocalAuth();
   const today = getTodayIsoDate();
   const [origin, setOrigin] = useState('Amman');
   const [destination, setDestination] = useState('Aqaba');
@@ -201,10 +203,39 @@ export function BusPage() {
         priority: 'high',
         action_url: '/app/bus',
       }).catch(() => {});
+      setRoutesInfo('Seat confirmed and saved to your account.');
+    } catch (error) {
+      setBookingSource(null);
+      setBookingTicketCode(null);
+      setRoutesInfo(
+        error instanceof Error
+          ? error.message
+          : 'Bus booking could not be confirmed right now. Please try again shortly.',
+      );
     } finally {
       setBookingBusy(false);
     }
   }
+
+  const openBusSupport = () => {
+    void (async () => {
+      const ticket = await createSupportTicket(user?.id, {
+        topic: 'bus_booking',
+        subject: `Bus help for ${activeBus.from} to ${activeBus.to}`,
+        detail: `Support requested for bus ticket ${bookingTicketCode ?? 'pending'} on ${departureLabel}.`,
+        relatedId: bookingTicketCode ?? activeBus.id,
+        routeLabel: `${activeBus.from} to ${activeBus.to}`,
+      });
+      setRoutesInfo(`Support opened: ${ticket.id}.`);
+      notificationsAPI.createNotification({
+        title: 'Bus support opened',
+        message: `Support ticket ${ticket.id} is following your bus booking.`,
+        type: 'support',
+        priority: 'high',
+        action_url: '/app/profile',
+      }).catch(() => {});
+    })();
+  };
 
   return (
     <Protected>
@@ -407,7 +438,7 @@ export function BusPage() {
                     Official schedule, verified {activeBus.lastVerifiedAt}
                   </a>
                 )}
-                {bookingComplete && <div style={{ background: 'rgba(0,200,117,0.10)', border: '1px solid rgba(0,200,117,0.28)', borderRadius: r(16), padding: '14px 16px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 8, color: DS.green, fontWeight: 800, marginBottom: 6 }}><CheckCircle2 size={16} />Seat confirmed</div><div style={{ color: '#fff', fontSize: '0.86rem', lineHeight: 1.5 }}>{passengers} seat{passengers > 1 ? 's are' : ' is'} reserved for {departureLabel}. Ticket code {bookingTicketCode ?? 'pending'} was saved for the {activeBus.from} to {activeBus.to} corridor.{bookingSource === 'local' ? ' Saved locally while server sync completes.' : ' Saved in your account with departure reminders.'}</div><div style={{ display:'flex', gap:10, flexWrap:'wrap', marginTop:10 }}><button type="button" onClick={() => { const ticket = createSupportTicket({ topic: 'bus_booking', subject: `Bus help for ${activeBus.from} to ${activeBus.to}`, detail: `Support requested for bus ticket ${bookingTicketCode ?? 'pending'} on ${departureLabel}.`, relatedId: bookingTicketCode ?? activeBus.id, routeLabel: `${activeBus.from} to ${activeBus.to}` }); notificationsAPI.createNotification({ title: 'Bus support opened', message: `Support ticket ${ticket.id} is following your bus booking.`, type: 'support', priority: 'high', action_url: '/app/profile' }).catch(() => {}); }} style={{ height:38, padding:'0 14px', borderRadius:'99px', border:`1px solid ${DS.border}`, background:DS.card2, color:'#fff', fontWeight:700, cursor:'pointer' }}>Open support</button></div></div>}
+                {bookingComplete && <div style={{ background: 'rgba(0,200,117,0.10)', border: '1px solid rgba(0,200,117,0.28)', borderRadius: r(16), padding: '14px 16px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 8, color: DS.green, fontWeight: 800, marginBottom: 6 }}><CheckCircle2 size={16} />Seat confirmed</div><div style={{ color: '#fff', fontSize: '0.86rem', lineHeight: 1.5 }}>{passengers} seat{passengers > 1 ? 's are' : ' is'} reserved for {departureLabel}. Ticket code {bookingTicketCode ?? 'pending'} was saved for the {activeBus.from} to {activeBus.to} corridor. Saved in your account with departure reminders.</div><div style={{ display:'flex', gap:10, flexWrap:'wrap', marginTop:10 }}><button type="button" onClick={openBusSupport} style={{ height:38, padding:'0 14px', borderRadius:'99px', border:`1px solid ${DS.border}`, background:DS.card2, color:'#fff', fontWeight:700, cursor:'pointer' }}>Open support</button></div></div>}
               </div>
             </div>
 

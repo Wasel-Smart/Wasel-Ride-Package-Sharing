@@ -68,6 +68,14 @@ export {
   upsertDirectCommunicationPreferences,
 } from './packagesAndNotifications';
 
+export {
+  createDirectSupportTicket,
+  getDirectSupportTickets,
+  getDirectUserSettings,
+  updateDirectSupportTicketStatus,
+  upsertDirectUserSettings,
+} from './accountAndSupport';
+
 // Price calculator (pure, no Supabase dependency)
 import type { PriceCalculationResult } from '../trips';
 import { toNumber } from './helpers';

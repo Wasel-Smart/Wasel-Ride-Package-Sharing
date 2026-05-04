@@ -99,8 +99,16 @@ const walletTextSource = {
     subscriptionCheckoutCancelled: 'Subscription checkout was cancelled before completion.',
     rewardClaimed: 'Reward claimed!',
     pinSetSuccess: 'PIN set successfully',
+    topUpUnavailableHint: 'Secure wallet top-up is not configured in this environment yet.',
+    subscriptionUnavailableHint: 'Subscription checkout is disabled until wallet billing is configured.',
+    rewardClaimUnavailableHint: 'Rewards are visible, but claiming stays disabled until the wallet backend is configured.',
+    pinUnavailableHint: 'PIN setup is disabled until the secure wallet backend is configured.',
   },
-  ar: {
+ar: {
+    topUpUnavailableHint: 'شحن المحفظة الآمن غير مفعّل في هذه البيئة بعد.',
+    subscriptionUnavailableHint: 'الاشتراك معطّل حتى يكتمل إعداد فوترة المحفظة.',
+    rewardClaimUnavailableHint: 'المكافآت مرئية، لكن استلامها معطّل حتى يكتمل إعداد خلفية المحفظة.',
+    pinUnavailableHint: 'تعيين PIN معطّل حتى يكتمل إعداد خلفية المحفظة الآمنة.',
     walletTitle: 'محفظة واصل',
     balance: 'الرصيد المتاح',
     pending: 'معلق',

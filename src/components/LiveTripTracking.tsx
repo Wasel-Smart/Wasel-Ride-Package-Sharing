@@ -503,8 +503,8 @@ export function LiveTripTracking() {
   const [aiTip, setAiTip] = useState(true);
   const trip = liveTrip ?? DEFAULT_TRIP;
   const waypoints = liveTrip?.waypoints ?? DEFAULT_WAYPOINTS;
-  const progress = liveTrip?.progress ?? 42;
-  const timeLeft = liveTrip?.timeLeftMinutes ?? 14;
+  const progress = liveTrip?.progress ?? 0;
+  const timeLeft = liveTrip?.timeLeftMinutes ?? 0;
   const driverPhoneDigits = trip.driver.phone.replace(/[^\d]/g, '');
 
   // Track which milestones we've already notified about
@@ -604,6 +604,41 @@ export function LiveTripTracking() {
     });
   }, [trip.shareCode]);
 
+  if (!tripLoaded) {
+    return (
+      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-background p-6">
+        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center shadow-2xl">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+            <Navigation className="h-7 w-7 animate-pulse text-primary" />
+          </div>
+          <h2 className="text-xl font-bold text-white">Loading live trip</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Wasel is checking the active booking and driver telemetry for this account.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!liveTrip) {
+    return (
+      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-background p-6">
+        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center shadow-2xl">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+            <Navigation className="h-7 w-7 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold text-white">No active trip right now</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Live tracking appears here once a confirmed trip starts streaming location updates from the driver.
+          </p>
+          <Button className="mt-6 h-11 rounded-xl px-5 font-semibold" onClick={() => navigate('/app/my-trips')}>
+            Open My Trips
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const arrived = trip.status === 'completed' || progress >= 100;
   const currentLegIndex = Math.min(
     Math.max(Math.floor((progress / 100) * (waypoints.length - 1)), 0),
@@ -628,25 +663,6 @@ export function LiveTripTracking() {
     { lat: driverPosition.lat, lng: driverPosition.lng, label: 'Driver', type: 'waypoint' as const },
     { lat: trip.toCoord.lat, lng: trip.toCoord.lng, label: 'Dropoff', type: 'dropoff' as const },
   ];
-
-  if (tripLoaded && !liveTrip) {
-    return (
-      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-background p-6">
-        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center shadow-2xl">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
-            <Navigation className="h-7 w-7 text-primary" />
-          </div>
-          <h2 className="text-xl font-bold text-white">No active trip right now</h2>
-          <p className="mt-2 text-sm text-slate-400">
-            Live tracking appears here once a confirmed trip starts streaming location updates from the driver.
-          </p>
-          <Button className="mt-6 h-11 rounded-xl px-5 font-semibold" onClick={() => navigate('/app/my-trips')}>
-            Open My Trips
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100dvh-4rem)] bg-background relative">

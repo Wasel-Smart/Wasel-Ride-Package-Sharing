@@ -1,3 +1,9 @@
+import {
+  createDirectSupportTicket,
+  getDirectSupportTickets,
+  updateDirectSupportTicketStatus,
+} from './directSupabase';
+
 export type SupportTopic =
   | 'ride_booking'
   | 'ride_issue'
@@ -43,35 +49,208 @@ export interface SupportTicket {
   history: SupportTicketEvent[];
 }
 
+type DirectSupportTicketRow = {
+  id?: string;
+  topic?: string | null;
+  subject?: string | null;
+  detail?: string | null;
+  related_id?: string | null;
+  route_label?: string | null;
+  status?: string | null;
+  priority?: string | null;
+  channel?: string | null;
+  resolution_summary?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+type DirectSupportTicketEventRow = {
+  id?: string;
+  ticket_id?: string;
+  status?: string | null;
+  note?: string | null;
+  created_at?: string | null;
+};
+
 const SUPPORT_KEY = 'wasel-support-tickets';
 
-function readTickets(): SupportTicket[] {
+function storageKeyFor(userId?: string | null) {
+  return `${SUPPORT_KEY}:${userId || 'guest'}`;
+}
+
+function generateId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+}
+
+function readTicketArray(key: string): SupportTicket[] {
   if (typeof window === 'undefined') return [];
+
   try {
-    const raw = window.localStorage.getItem(SUPPORT_KEY);
+    const raw = window.localStorage.getItem(key);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed as SupportTicket[] : [];
   } catch {
     return [];
   }
 }
 
-function writeTickets(tickets: SupportTicket[]) {
+function readTickets(userId?: string | null): SupportTicket[] {
+  const scoped = readTicketArray(storageKeyFor(userId));
+  if (scoped.length > 0) {
+    return scoped;
+  }
+
+  return readTicketArray(SUPPORT_KEY);
+}
+
+function writeTickets(userId: string | null | undefined, tickets: SupportTicket[]) {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(SUPPORT_KEY, JSON.stringify(tickets.slice(0, 100)));
+
+  const trimmed = sortTickets(tickets).slice(0, 100);
+  window.localStorage.setItem(storageKeyFor(userId), JSON.stringify(trimmed));
+
+  if (!userId) {
+    window.localStorage.setItem(SUPPORT_KEY, JSON.stringify(trimmed));
+  }
 }
 
 function sortTickets(items: SupportTicket[]) {
   return [...items].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 }
 
-function makeEvent(status: SupportStatus, note: string): SupportTicketEvent {
+function makeEvent(
+  status: SupportStatus,
+  note: string,
+  options?: { id?: string; createdAt?: string },
+): SupportTicketEvent {
   return {
-    id: `support-event-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    id: options?.id ?? generateId('support-event'),
     status,
     note,
-    createdAt: new Date().toISOString(),
+    createdAt: options?.createdAt ?? new Date().toISOString(),
   };
+}
+
+function normalizeTopic(value: string | null | undefined): SupportTopic {
+  switch (value) {
+    case 'ride_booking':
+    case 'ride_issue':
+    case 'bus_booking':
+    case 'package_issue':
+    case 'package_dispute':
+    case 'verification':
+    case 'payment':
+    case 'refund':
+    case 'cancellation':
+      return value;
+    default:
+      return 'general';
+  }
+}
+
+function normalizeStatus(value: string | null | undefined): SupportStatus {
+  switch (value) {
+    case 'investigating':
+    case 'waiting_on_user':
+    case 'resolved':
+    case 'closed':
+      return value;
+    default:
+      return 'open';
+  }
+}
+
+function normalizePriority(value: string | null | undefined, fallbackTopic?: SupportTopic): SupportPriority {
+  switch (value) {
+    case 'normal':
+    case 'high':
+    case 'urgent':
+      return value;
+    case 'low':
+      return 'low';
+    default:
+      return defaultPriority(fallbackTopic ?? 'general');
+  }
+}
+
+function normalizeChannel(value: string | null | undefined): SupportChannel {
+  switch (value) {
+    case 'operations':
+    case 'phone':
+    case 'email':
+      return value;
+    default:
+      return 'in_app';
+  }
+}
+
+function upsertLocalTicket(userId: string | null | undefined, ticket: SupportTicket): SupportTicket {
+  const existing = readTickets(userId);
+  writeTickets(
+    userId,
+    [ticket, ...existing.filter((item) => item.id !== ticket.id)],
+  );
+  return ticket;
+}
+
+function mapDirectEvent(row: DirectSupportTicketEventRow): SupportTicketEvent {
+  const status = normalizeStatus(row.status);
+  return makeEvent(
+    status,
+    typeof row.note === 'string' && row.note.trim().length > 0
+      ? row.note
+      : `Ticket moved to ${status}.`,
+    {
+      id: row.id ? String(row.id) : undefined,
+      createdAt: row.created_at ?? undefined,
+    },
+  );
+}
+
+function mapDirectTicket(
+  row: DirectSupportTicketRow,
+  history: SupportTicketEvent[],
+): SupportTicket {
+  const topic = normalizeTopic(row.topic);
+  const status = normalizeStatus(row.status);
+  const safeHistory = history.length > 0
+    ? [...history].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    : [makeEvent(status, 'Support ticket created and waiting for review.', { createdAt: row.created_at ?? undefined })];
+
+  return {
+    id: row.id ? String(row.id) : generateId('support'),
+    topic,
+    subject: typeof row.subject === 'string' && row.subject.trim().length > 0 ? row.subject.trim() : 'Support request',
+    detail: typeof row.detail === 'string' ? row.detail.trim() : '',
+    relatedId: row.related_id ?? undefined,
+    routeLabel: row.route_label ?? undefined,
+    status,
+    priority: normalizePriority(row.priority, topic),
+    channel: normalizeChannel(row.channel),
+    resolutionSummary: row.resolution_summary ?? undefined,
+    createdAt: row.created_at ?? safeHistory[0]?.createdAt ?? new Date().toISOString(),
+    updatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+    history: safeHistory,
+  };
+}
+
+function buildDirectTicketList(payload: Awaited<ReturnType<typeof getDirectSupportTickets>>): SupportTicket[] {
+  const eventsByTicketId = new Map<string, SupportTicketEvent[]>();
+
+  for (const event of payload.events as DirectSupportTicketEventRow[]) {
+    const ticketId = String(event.ticket_id ?? '');
+    if (!ticketId) continue;
+    const history = eventsByTicketId.get(ticketId) ?? [];
+    history.push(mapDirectEvent(event));
+    eventsByTicketId.set(ticketId, history);
+  }
+
+  const tickets = (payload.tickets as DirectSupportTicketRow[]).map((ticket) => {
+    const ticketId = String(ticket.id ?? '');
+    return mapDirectTicket(ticket, eventsByTicketId.get(ticketId) ?? []);
+  });
+
+  return sortTickets(tickets);
 }
 
 function defaultPriority(topic: SupportTopic): SupportPriority {
@@ -88,50 +267,97 @@ function defaultPriority(topic: SupportTopic): SupportPriority {
   }
 }
 
-export function getSupportTickets(): SupportTicket[] {
-  return sortTickets(readTickets());
+export async function getSupportTickets(userId?: string | null): Promise<SupportTicket[]> {
+  const local = sortTickets(readTickets(userId));
+  if (!userId) {
+    return local;
+  }
+
+  try {
+    const payload = await getDirectSupportTickets(userId);
+    const remote = buildDirectTicketList(payload);
+    writeTickets(userId, remote);
+    return remote;
+  } catch {
+    return local;
+  }
 }
 
-export function getSupportTicketsForRelatedId(relatedId?: string): SupportTicket[] {
+export async function getSupportTicketsForRelatedId(
+  userId?: string | null,
+  relatedId?: string,
+): Promise<SupportTicket[]> {
   if (!relatedId) return [];
-  return getSupportTickets().filter((ticket) => ticket.relatedId === relatedId);
+  const tickets = await getSupportTickets(userId);
+  return tickets.filter((ticket) => ticket.relatedId === relatedId);
 }
 
-export function createSupportTicket(input: {
-  topic: SupportTopic;
-  subject: string;
-  detail: string;
-  relatedId?: string;
-  routeLabel?: string;
-  priority?: SupportPriority;
-  channel?: SupportChannel;
-}): SupportTicket {
+export async function createSupportTicket(
+  userId: string | null | undefined,
+  input: {
+    topic: SupportTopic;
+    subject: string;
+    detail: string;
+    relatedId?: string;
+    routeLabel?: string;
+    priority?: SupportPriority;
+    channel?: SupportChannel;
+  },
+): Promise<SupportTicket> {
   const now = new Date().toISOString();
-  const initialStatus: SupportStatus = input.priority === 'urgent' ? 'investigating' : 'open';
-  const ticket: SupportTicket = {
-    id: `support-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+  const priority = input.priority ?? defaultPriority(input.topic);
+  const initialStatus: SupportStatus = priority === 'urgent' ? 'investigating' : 'open';
+  const fallbackTicket: SupportTicket = {
+    id: generateId('support'),
     topic: input.topic,
     subject: input.subject.trim(),
     detail: input.detail.trim(),
     relatedId: input.relatedId,
     routeLabel: input.routeLabel,
     status: initialStatus,
-    priority: input.priority ?? defaultPriority(input.topic),
+    priority,
     channel: input.channel ?? 'in_app',
     createdAt: now,
     updatedAt: now,
     history: [
-      makeEvent(initialStatus, input.priority === 'urgent'
-        ? 'Operations accepted this ticket immediately.'
-        : 'Support ticket created and waiting for review.'),
+      makeEvent(
+        initialStatus,
+        priority === 'urgent'
+          ? 'Operations accepted this ticket immediately.'
+          : 'Support ticket created and waiting for review.',
+        { createdAt: now },
+      ),
     ],
   };
 
-  writeTickets([ticket, ...readTickets()]);
-  return ticket;
+  if (!userId) {
+    return upsertLocalTicket(userId, fallbackTicket);
+  }
+
+  try {
+    const direct = await createDirectSupportTicket(userId, {
+      topic: input.topic,
+      subject: input.subject,
+      detail: input.detail,
+      relatedId: input.relatedId,
+      routeLabel: input.routeLabel,
+      priority: input.priority,
+      channel: input.channel,
+    });
+    return upsertLocalTicket(
+      userId,
+      mapDirectTicket(
+        direct.ticket as DirectSupportTicketRow,
+        [mapDirectEvent(direct.event as DirectSupportTicketEventRow)],
+      ),
+    );
+  } catch {
+    return upsertLocalTicket(userId, fallbackTicket);
+  }
 }
 
-export function updateSupportTicketStatus(
+export async function updateSupportTicketStatus(
+  userId: string | null | undefined,
   id: string,
   status: SupportStatus,
   options?: {
@@ -140,24 +366,40 @@ export function updateSupportTicketStatus(
     priority?: SupportPriority;
     channel?: SupportChannel;
   },
-): SupportTicket | null {
-  const tickets = readTickets();
-  const target = tickets.find((ticket) => ticket.id === id);
-  if (!target) return null;
+): Promise<SupportTicket | null> {
+  const existing = readTickets(userId);
+  const current = existing.find((ticket) => ticket.id === id);
+  const fallbackUpdated = current
+    ? {
+        ...current,
+        status,
+        priority: options?.priority ?? current.priority,
+        channel: options?.channel ?? current.channel,
+        resolutionSummary: options?.resolutionSummary ?? current.resolutionSummary,
+        updatedAt: new Date().toISOString(),
+        history: [
+          ...current.history,
+          makeEvent(status, options?.note ?? `Ticket moved to ${status}.`),
+        ],
+      }
+    : null;
 
-  const updated: SupportTicket = {
-    ...target,
-    status,
-    priority: options?.priority ?? target.priority,
-    channel: options?.channel ?? target.channel,
-    resolutionSummary: options?.resolutionSummary ?? target.resolutionSummary,
-    updatedAt: new Date().toISOString(),
-    history: [
-      ...target.history,
-      makeEvent(status, options?.note ?? `Ticket moved to ${status}.`),
-    ],
-  };
+  if (!userId) {
+    if (!fallbackUpdated) return null;
+    return upsertLocalTicket(userId, fallbackUpdated);
+  }
 
-  writeTickets(tickets.map((ticket) => (ticket.id === id ? updated : ticket)));
-  return updated;
+  try {
+    const direct = await updateDirectSupportTicketStatus(userId, id, status, options);
+    const history = current
+      ? [...current.history, mapDirectEvent(direct.event as DirectSupportTicketEventRow)]
+      : [mapDirectEvent(direct.event as DirectSupportTicketEventRow)];
+    return upsertLocalTicket(
+      userId,
+      mapDirectTicket(direct.ticket as DirectSupportTicketRow, history),
+    );
+  } catch {
+    if (!fallbackUpdated) return null;
+    return upsertLocalTicket(userId, fallbackUpdated);
+  }
 }
