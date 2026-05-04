@@ -272,7 +272,9 @@ async function authenticateRequest(request: Request) {
 
   const { data: byAuthUser, error: byAuthError } = await admin
     .from('users')
-    .select('id, auth_user_id, email, phone_number, full_name')
+    .select(
+      'id, auth_user_id, email, phone_number, full_name, role, verification_level, sanad_verified_status, phone_verified_at, profile_status, updated_at',
+    )
     .eq('auth_user_id', authData.user.id)
     .maybeSingle();
 
@@ -285,7 +287,9 @@ async function authenticateRequest(request: Request) {
   if (!canonicalUser) {
     const fallback = await admin
       .from('users')
-      .select('id, auth_user_id, email, phone_number, full_name')
+      .select(
+        'id, auth_user_id, email, phone_number, full_name, role, verification_level, sanad_verified_status, phone_verified_at, profile_status, updated_at',
+      )
       .eq('id', authData.user.id)
       .maybeSingle();
     canonicalUser = fallback.data;
@@ -393,6 +397,415 @@ function toIsoFromUnix(value: unknown): string | null {
   const seconds = Number(value);
   if (!Number.isFinite(seconds) || seconds <= 0) return null;
   return new Date(seconds * 1000).toISOString();
+}
+
+const PHONE_VERIFICATION_TTL_MINUTES = 10;
+const IDENTITY_PENDING_TIMEOUT_HOURS = 24;
+const DRIVER_DOCUMENT_TIMEOUT_HOURS = 72;
+
+function normalizePhoneNumber(value: unknown): string {
+  return String(value ?? '')
+    .trim()
+    .replace(/\s+/g, '');
+}
+
+function isValidE164Phone(value: string): boolean {
+  return /^\+[1-9]\d{7,14}$/.test(value);
+}
+
+function generateOtpCode(): string {
+  const random = crypto.getRandomValues(new Uint32Array(1))[0] % 900000;
+  return String(random + 100000).padStart(6, '0');
+}
+
+async function hashOtpCode(code: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
+  return Array.from(new Uint8Array(digest))
+    .map((chunk) => chunk.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function isExpired(isoValue?: string | null): boolean {
+  if (!isoValue) return false;
+  const expiresAt = new Date(isoValue).getTime();
+  if (Number.isNaN(expiresAt)) return false;
+  return expiresAt <= Date.now();
+}
+
+function isOlderThanHours(isoValue: string | null | undefined, hours: number): boolean {
+  if (!isoValue) return false;
+  const timestamp = new Date(isoValue).getTime();
+  if (Number.isNaN(timestamp)) return false;
+  return Date.now() - timestamp >= hours * 60 * 60 * 1000;
+}
+
+function computeTrustStepSummary(steps: Record<string, { id: string; state: string }>) {
+  const orderedSteps = [
+    steps.phone,
+    steps.email,
+    steps.identity,
+    steps.driverDocuments,
+    steps.walletStanding,
+  ];
+  const completedSteps = orderedSteps.filter((step) => step.state === 'completed').length;
+  return {
+    completedSteps,
+    totalSteps: orderedSteps.length,
+    nextStepId: orderedSteps.find((step) => step.state !== 'completed')?.id ?? null,
+    blockedSteps: orderedSteps
+      .filter((step) => step.state === 'failed')
+      .map((step) => step.id),
+  };
+}
+
+function buildTrustStep(id: string, state: string, detail: string, meta: Record<string, unknown>, options?: {
+  failureReason?: string | null;
+  updatedAt?: string | null;
+}) {
+  return {
+    id,
+    state,
+    detail,
+    failureReason: options?.failureReason ?? null,
+    updatedAt: options?.updatedAt ?? null,
+    meta,
+  };
+}
+
+async function buildTrustStatus(
+  auth: Awaited<ReturnType<typeof authenticateRequest>>,
+) {
+  if ('error' in auth) {
+    return null;
+  }
+
+  const [verificationResult, driverResult, walletResult, otpResult] = await Promise.all([
+    auth.admin
+      .from('verification_records')
+      .select(
+        'verification_id, sanad_status, document_status, verification_level, verification_timestamp, provider_reference, document_reference, failure_reason, updated_at',
+      )
+      .eq('user_id', auth.canonicalUser.id)
+      .order('verification_timestamp', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    auth.admin
+      .from('drivers')
+      .select(
+        'driver_id, license_number, driver_status, verification_level, sanad_identity_linked, background_check_status, created_at, updated_at',
+      )
+      .eq('user_id', auth.canonicalUser.id)
+      .maybeSingle(),
+    auth.admin
+      .from('wallets')
+      .select('wallet_id, wallet_status, updated_at')
+      .eq('user_id', auth.canonicalUser.id)
+      .maybeSingle(),
+    auth.admin
+      .from('otp_sessions')
+      .select(
+        'otp_session_id, phone_number, attempts, max_attempts, expires_at, consumed_at, created_at',
+      )
+      .eq('user_id', auth.canonicalUser.id)
+      .eq('purpose', 'driver_action')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  if (verificationResult.error) throw new Error(verificationResult.error.message);
+  if (driverResult.error) throw new Error(driverResult.error.message);
+  if (walletResult.error) throw new Error(walletResult.error.message);
+  if (otpResult.error) throw new Error(otpResult.error.message);
+
+  const verification = verificationResult.data;
+  const driver = driverResult.data;
+  const wallet = walletResult.data;
+  const otpSession = otpResult.data;
+  const verificationLevel = String(
+    verification?.verification_level ?? auth.canonicalUser.verification_level ?? 'level_0',
+  );
+  const canonicalRole = String(auth.canonicalUser.role ?? 'passenger');
+  const emailAddress = auth.authUser.email ?? auth.canonicalUser.email ?? null;
+  const emailVerified = Boolean(auth.authUser.email_confirmed_at);
+  const phoneVerified = Boolean(auth.canonicalUser.phone_verified_at);
+
+  const identityUpdatedAt =
+    String(
+      verification?.updated_at ??
+        verification?.verification_timestamp ??
+        auth.canonicalUser.updated_at ??
+        '',
+    ) || null;
+  const staleIdentity =
+    verification?.sanad_status === 'pending' &&
+    isOlderThanHours(identityUpdatedAt, IDENTITY_PENDING_TIMEOUT_HOURS);
+  const identityFailureReason =
+    staleIdentity
+      ? 'Sanad verification timed out. Submit the request again.'
+      : verification?.failure_reason ?? null;
+  const identity =
+    verification?.sanad_status === 'verified' ||
+    verificationLevel === 'level_2' ||
+    verificationLevel === 'level_3'
+      ? buildTrustStep(
+          'identity',
+          'completed',
+          'Identity verification is complete.',
+          {
+            providerReference: verification?.provider_reference ?? null,
+            documentReference: verification?.document_reference ?? null,
+          },
+          {
+            updatedAt: identityUpdatedAt,
+          },
+        )
+      : verification?.sanad_status === 'rejected' ||
+          verification?.sanad_status === 'expired' ||
+          staleIdentity
+        ? buildTrustStep(
+            'identity',
+            'failed',
+            'Identity verification did not complete.',
+            {
+              providerReference: verification?.provider_reference ?? null,
+              documentReference: verification?.document_reference ?? null,
+            },
+            {
+              failureReason:
+                identityFailureReason ??
+                'Sanad verification was rejected. Review the reason and try again.',
+              updatedAt: identityUpdatedAt,
+            },
+          )
+        : verification?.sanad_status === 'pending'
+          ? buildTrustStep(
+              'identity',
+              'in_progress',
+              'Sanad verification is under review.',
+              {
+                providerReference: verification?.provider_reference ?? null,
+                documentReference: verification?.document_reference ?? null,
+              },
+              {
+                updatedAt: identityUpdatedAt,
+              },
+            )
+          : buildTrustStep(
+              'identity',
+              'not_started',
+              'Submit Sanad verification to continue.',
+              {
+                providerReference: null,
+                documentReference: null,
+              },
+            );
+
+  const email = buildTrustStep(
+    'email',
+    emailVerified ? 'completed' : emailAddress ? 'in_progress' : 'not_started',
+    emailVerified
+      ? 'Email is verified.'
+      : emailAddress
+        ? 'Email confirmation is still required.'
+        : 'Add an email address to continue.',
+    {
+      email: emailAddress,
+    },
+  );
+
+  const phoneFailureReason =
+    otpSession && !otpSession.consumed_at && isExpired(otpSession.expires_at)
+      ? 'The verification code expired. Send a new code.'
+      : otpSession &&
+          Number(otpSession.attempts ?? 0) >= Number(otpSession.max_attempts ?? 5)
+        ? 'Too many incorrect verification attempts. Send a new code.'
+        : null;
+  const phoneState =
+    phoneVerified
+      ? 'completed'
+      : phoneFailureReason
+        ? 'failed'
+        : otpSession && !otpSession.consumed_at && !isExpired(otpSession.expires_at)
+          ? 'in_progress'
+          : auth.canonicalUser.phone_number
+            ? 'not_started'
+            : 'not_started';
+  const phone = buildTrustStep(
+    'phone',
+    phoneState,
+    phoneVerified
+      ? 'Phone number is verified.'
+      : otpSession && !otpSession.consumed_at && !isExpired(otpSession.expires_at)
+        ? 'Enter the latest code sent to your phone.'
+        : auth.canonicalUser.phone_number
+          ? 'Send a verification code to confirm this phone number.'
+          : 'Add a phone number to receive a verification code.',
+    {
+      phone: otpSession?.phone_number ?? auth.canonicalUser.phone_number ?? null,
+      expiresAt:
+        otpSession && !otpSession.consumed_at && !isExpired(otpSession.expires_at)
+          ? otpSession.expires_at
+          : null,
+    },
+    {
+      failureReason: phoneFailureReason,
+      updatedAt: otpSession?.created_at ?? auth.canonicalUser.phone_verified_at ?? null,
+    },
+  );
+
+  const driverReviewUpdatedAt = String(
+    driver?.updated_at ??
+      verification?.updated_at ??
+      verification?.verification_timestamp ??
+      '',
+  ) || null;
+  const staleDriverReview =
+    (driver?.background_check_status === 'pending' ||
+      verification?.document_status === 'pending' ||
+      driver?.driver_status === 'pending_approval') &&
+    isOlderThanHours(driverReviewUpdatedAt, DRIVER_DOCUMENT_TIMEOUT_HOURS);
+  const driverFailureReason =
+    staleDriverReview
+      ? 'Driver document review timed out. Resubmit the documents.'
+      : driver?.background_check_status === 'rejected' || driver?.driver_status === 'rejected'
+        ? 'Driver documents were rejected. Review the failed items and resubmit.'
+        : driver?.background_check_status === 'expired'
+          ? 'Driver documents expired and must be submitted again.'
+          : driver?.driver_status === 'suspended'
+            ? 'Driver account is suspended and cannot be approved until reviewed.'
+            : verification?.document_status === 'rejected'
+              ? verification?.failure_reason ?? 'Driver documents were rejected.'
+              : null;
+  const driverDocuments =
+    canonicalRole !== 'driver'
+      ? buildTrustStep(
+          'driver_documents',
+          'not_started',
+          'Enable Driver mode before submitting driver documents.',
+          {
+            role: canonicalRole === 'admin' ? 'driver' : 'rider',
+            licenseNumber: driver?.license_number ?? null,
+          },
+        )
+      : (driver?.background_check_status === 'verified' &&
+            ['approved', 'offline', 'online', 'busy'].includes(String(driver?.driver_status))) ||
+          verificationLevel === 'level_3'
+        ? buildTrustStep(
+            'driver_documents',
+            'completed',
+            'Driver documents are approved.',
+            {
+              role: 'driver',
+              licenseNumber: driver?.license_number ?? null,
+            },
+            {
+              updatedAt: driverReviewUpdatedAt,
+            },
+          )
+        : driverFailureReason
+          ? buildTrustStep(
+              'driver_documents',
+              'failed',
+              'Driver documents need attention before approval can continue.',
+              {
+                role: 'driver',
+                licenseNumber: driver?.license_number ?? null,
+              },
+              {
+                failureReason: driverFailureReason,
+                updatedAt: driverReviewUpdatedAt,
+              },
+            )
+          : driver?.background_check_status === 'pending' ||
+              verification?.document_status === 'pending' ||
+              driver?.driver_status === 'pending_approval'
+            ? buildTrustStep(
+                'driver_documents',
+                'in_progress',
+                'Driver documents are under review.',
+                {
+                  role: 'driver',
+                  licenseNumber: driver?.license_number ?? null,
+                },
+                {
+                  updatedAt: driverReviewUpdatedAt,
+                },
+              )
+            : buildTrustStep(
+                'driver_documents',
+                'not_started',
+                'Submit driver license and compliance documents.',
+                {
+                  role: 'driver',
+                  licenseNumber: driver?.license_number ?? null,
+                },
+              );
+
+  const walletStatus = String(wallet?.wallet_status ?? 'unavailable');
+  const walletStanding =
+    walletStatus === 'active'
+      ? buildTrustStep(
+          'wallet_standing',
+          'completed',
+          'Wallet standing is healthy.',
+          {
+            walletStatus: 'active',
+          },
+          {
+            updatedAt: wallet?.updated_at ?? null,
+          },
+        )
+      : walletStatus === 'limited'
+        ? buildTrustStep(
+            'wallet_standing',
+            'in_progress',
+            'Wallet standing is limited and may block some actions.',
+            {
+              walletStatus: 'limited',
+            },
+            {
+              updatedAt: wallet?.updated_at ?? null,
+            },
+          )
+        : buildTrustStep(
+            'wallet_standing',
+            'failed',
+            walletStatus === 'unavailable'
+              ? 'Wallet is not provisioned yet.'
+              : `Wallet standing is ${walletStatus}.`,
+            {
+              walletStatus:
+                walletStatus === 'frozen' || walletStatus === 'closed'
+                  ? walletStatus
+                  : 'unavailable',
+            },
+            {
+              failureReason:
+                walletStatus === 'closed'
+                  ? 'Wallet is closed and must be restored before payouts can continue.'
+                  : walletStatus === 'frozen'
+                    ? 'Wallet is frozen and needs review before payouts can continue.'
+                    : 'Wallet provisioning is missing for this account.',
+              updatedAt: wallet?.updated_at ?? null,
+            },
+          );
+
+  const steps = {
+    identity,
+    email,
+    phone,
+    driverDocuments,
+    walletStanding,
+  };
+  const summary = computeTrustStepSummary(steps);
+
+  return {
+    fetchedAt: new Date().toISOString(),
+    verificationLevel,
+    ...summary,
+    steps,
+  };
 }
 
 async function stripeApiRequest(
@@ -1072,6 +1485,360 @@ async function handleTwoFactorDisable(request: Request) {
   }
 
   return json({ disabled: true });
+}
+
+async function handleGetTrustStatus(request: Request) {
+  const auth = await authenticateRequest(request);
+  if ('error' in auth) return auth.error;
+
+  const status = await buildTrustStatus(auth);
+  return json({ status });
+}
+
+async function handleStartPhoneVerification(request: Request) {
+  const auth = await authenticateRequest(request);
+  if ('error' in auth) return auth.error;
+
+  const body = await request.json().catch(() => ({}));
+  const phoneNumber = normalizePhoneNumber(body.phoneNumber);
+  if (!isValidE164Phone(phoneNumber)) {
+    return json({ error: 'Enter a valid E.164 phone number such as +962791234567.' }, 400);
+  }
+
+  const now = new Date().toISOString();
+  const expiresAt = new Date(
+    Date.now() + PHONE_VERIFICATION_TTL_MINUTES * 60 * 1000,
+  ).toISOString();
+  const code = generateOtpCode();
+  const otpHash = await hashOtpCode(code);
+
+  const { error: invalidateError } = await auth.admin
+    .from('otp_sessions')
+    .update({ consumed_at: now })
+    .eq('user_id', auth.canonicalUser.id)
+    .eq('purpose', 'driver_action')
+    .is('consumed_at', null);
+  if (invalidateError) {
+    return json({ error: invalidateError.message }, 500);
+  }
+
+  const { error: userError } = await auth.admin
+    .from('users')
+    .update({
+      phone_number: phoneNumber,
+      phone_verified_at: null,
+    })
+    .eq('id', auth.canonicalUser.id);
+  if (userError) {
+    return json({ error: userError.message }, 500);
+  }
+
+  const { data: otpSession, error: otpError } = await auth.admin
+    .from('otp_sessions')
+    .insert({
+      user_id: auth.canonicalUser.id,
+      phone_number: phoneNumber,
+      purpose: 'driver_action',
+      otp_hash: otpHash,
+      attempts: 0,
+      max_attempts: 5,
+      expires_at: expiresAt,
+    })
+    .select('otp_session_id')
+    .single();
+  if (otpError) {
+    return json({ error: otpError.message }, 500);
+  }
+
+  const message = `Your Wasel verification code is ${code}. It expires in ${PHONE_VERIFICATION_TTL_MINUTES} minutes.`;
+  const deliveryRow = {
+    user_id: auth.canonicalUser.id,
+    channel: 'sms',
+    delivery_status: 'queued',
+    destination: phoneNumber,
+    subject: 'Wasel phone verification',
+    payload: {
+      body: message,
+      metadata: {
+        category: 'trust_phone_verification',
+      },
+    },
+    provider_name: determineProviderName('sms'),
+    queued_at: now,
+    updated_at: now,
+    idempotency_key: buildIdempotencyKey({
+      deliveryId: `phone-verification-${otpSession.otp_session_id}`,
+      channel: 'sms',
+      destination: phoneNumber,
+      body: message,
+    }),
+  };
+
+  const { data: delivery, error: deliveryError } = await auth.admin
+    .from('communication_deliveries')
+    .insert(deliveryRow)
+    .select('*')
+    .single();
+  if (deliveryError) {
+    await auth.admin.from('otp_sessions').delete().eq('otp_session_id', otpSession.otp_session_id);
+    return json({ error: deliveryError.message }, 500);
+  }
+
+  const deliveryResult = await sendDelivery(auth.admin, delivery, getFunctionBaseUrl(request));
+  if (!deliveryResult.ok) {
+    await auth.admin.from('otp_sessions').delete().eq('otp_session_id', otpSession.otp_session_id);
+    return json(
+      {
+        error:
+          deliveryResult.error ??
+          'Phone verification could not be delivered. Check SMS provider configuration.',
+      },
+      502,
+    );
+  }
+
+  return json(
+    {
+      started: true,
+      phoneNumber,
+      expiresAt,
+    },
+    202,
+  );
+}
+
+async function handleConfirmPhoneVerification(request: Request) {
+  const auth = await authenticateRequest(request);
+  if ('error' in auth) return auth.error;
+
+  const body = await request.json().catch(() => ({}));
+  const code = String(body.code ?? '').trim();
+  if (!/^\d{6}$/.test(code)) {
+    return json({ error: 'Enter the 6-digit verification code.' }, 400);
+  }
+
+  const { data: otpSession, error: otpError } = await auth.admin
+    .from('otp_sessions')
+    .select(
+      'otp_session_id, phone_number, otp_hash, attempts, max_attempts, expires_at, consumed_at',
+    )
+    .eq('user_id', auth.canonicalUser.id)
+    .eq('purpose', 'driver_action')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (otpError) {
+    return json({ error: otpError.message }, 500);
+  }
+  if (!otpSession || otpSession.consumed_at) {
+    return json({ error: 'Start phone verification before entering a code.' }, 400);
+  }
+  if (isExpired(otpSession.expires_at)) {
+    return json({ error: 'That verification code expired. Send a new one.' }, 400);
+  }
+
+  const attempts = Number(otpSession.attempts ?? 0);
+  const maxAttempts = Number(otpSession.max_attempts ?? 5);
+  if (attempts >= maxAttempts) {
+    return json({ error: 'Too many incorrect attempts. Send a new code.' }, 429);
+  }
+
+  const nextAttempts = attempts + 1;
+  const hashedCode = await hashOtpCode(code);
+  if (hashedCode !== otpSession.otp_hash) {
+    const { error: attemptError } = await auth.admin
+      .from('otp_sessions')
+      .update({ attempts: nextAttempts })
+      .eq('otp_session_id', otpSession.otp_session_id);
+    if (attemptError) {
+      return json({ error: attemptError.message }, 500);
+    }
+
+    return json(
+      {
+        error:
+          nextAttempts >= maxAttempts
+            ? 'Too many incorrect attempts. Send a new code.'
+            : 'That verification code is incorrect.',
+      },
+      400,
+    );
+  }
+
+  const now = new Date().toISOString();
+  const { error: consumeError } = await auth.admin
+    .from('otp_sessions')
+    .update({
+      attempts: nextAttempts,
+      consumed_at: now,
+    })
+    .eq('otp_session_id', otpSession.otp_session_id);
+  if (consumeError) {
+    return json({ error: consumeError.message }, 500);
+  }
+
+  const nextVerificationLevel =
+    String(auth.canonicalUser.verification_level ?? 'level_0') === 'level_0'
+      ? 'level_1'
+      : auth.canonicalUser.verification_level;
+  const { error: userError } = await auth.admin
+    .from('users')
+    .update({
+      phone_number: otpSession.phone_number,
+      phone_verified_at: now,
+      verification_level: nextVerificationLevel,
+    })
+    .eq('id', auth.canonicalUser.id);
+  if (userError) {
+    return json({ error: userError.message }, 500);
+  }
+
+  return json({
+    verified: true,
+    phoneNumber: otpSession.phone_number,
+  });
+}
+
+async function handleSubmitIdentityVerification(request: Request) {
+  const auth = await authenticateRequest(request);
+  if ('error' in auth) return auth.error;
+
+  const body = await request.json().catch(() => ({}));
+  const providerReference = String(body.providerReference ?? '').trim();
+  const documentReference = String(body.documentReference ?? '').trim() || null;
+  if (providerReference.length < 4) {
+    return json({ error: 'Enter the Sanad reference before submitting verification.' }, 400);
+  }
+
+  const latestStatus = await buildTrustStatus(auth);
+  if (latestStatus?.steps.identity.state === 'in_progress') {
+    return json({ error: 'Identity verification is already under review.' }, 409);
+  }
+
+  const { data, error } = await auth.admin.rpc('app_submit_sanad_verification', {
+    p_user_id: auth.canonicalUser.id,
+    p_provider_reference: providerReference,
+    p_document_reference: documentReference,
+  });
+  if (error) {
+    return json({ error: error.message }, 500);
+  }
+
+  return json(
+    {
+      submitted: true,
+      verificationId: String(data ?? ''),
+    },
+    202,
+  );
+}
+
+async function handleEnableDriverMode(request: Request) {
+  const auth = await authenticateRequest(request);
+  if ('error' in auth) return auth.error;
+
+  const { error } = await auth.admin
+    .from('users')
+    .update({
+      role: 'driver',
+    })
+    .eq('id', auth.canonicalUser.id);
+  if (error) {
+    return json({ error: error.message }, 500);
+  }
+
+  return json({
+    enabled: true,
+    role: 'driver',
+  });
+}
+
+async function handleSubmitDriverDocuments(request: Request) {
+  const auth = await authenticateRequest(request);
+  if ('error' in auth) return auth.error;
+
+  if (String(auth.canonicalUser.role ?? 'passenger') !== 'driver') {
+    return json({ error: 'Enable Driver mode before submitting driver documents.' }, 400);
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const licenseNumber = String(body.licenseNumber ?? '').trim();
+  const documentReference = String(body.documentReference ?? '').trim() || null;
+  if (licenseNumber.length < 4) {
+    return json({ error: 'Enter the driver license number before submitting.' }, 400);
+  }
+
+  const { data: existingDriver, error: driverLookupError } = await auth.admin
+    .from('drivers')
+    .select('driver_id, verification_level')
+    .eq('user_id', auth.canonicalUser.id)
+    .maybeSingle();
+  if (driverLookupError) {
+    return json({ error: driverLookupError.message }, 500);
+  }
+
+  const baseDriverPatch = {
+    license_number: licenseNumber,
+    driver_status: 'pending_approval',
+    background_check_status: 'pending',
+    verification_level: String(auth.canonicalUser.verification_level ?? 'level_0'),
+    sanad_identity_linked:
+      String(auth.canonicalUser.verification_level ?? 'level_0') === 'level_2' ||
+      String(auth.canonicalUser.verification_level ?? 'level_0') === 'level_3' ||
+      String(auth.canonicalUser.sanad_verified_status ?? 'unverified') === 'verified',
+  };
+
+  let driverId = String(existingDriver?.driver_id ?? '');
+  if (existingDriver?.driver_id) {
+    const { error: updateDriverError } = await auth.admin
+      .from('drivers')
+      .update(baseDriverPatch)
+      .eq('driver_id', existingDriver.driver_id);
+    if (updateDriverError) {
+      return json({ error: updateDriverError.message }, 500);
+    }
+  } else {
+    const { data: insertedDriver, error: insertDriverError } = await auth.admin
+      .from('drivers')
+      .insert({
+        user_id: auth.canonicalUser.id,
+        ...baseDriverPatch,
+      })
+      .select('driver_id')
+      .single();
+    if (insertDriverError) {
+      return json({ error: insertDriverError.message }, 500);
+    }
+    driverId = String(insertedDriver.driver_id ?? '');
+  }
+
+  const sanadStatus = String(auth.canonicalUser.sanad_verified_status ?? 'unverified');
+  const { error: verificationError } = await auth.admin.from('verification_records').insert({
+    user_id: auth.canonicalUser.id,
+    sanad_status:
+      sanadStatus === 'verified' ||
+      sanadStatus === 'pending' ||
+      sanadStatus === 'rejected' ||
+      sanadStatus === 'expired'
+        ? sanadStatus
+        : 'unverified',
+    document_status: 'pending',
+    verification_level: String(auth.canonicalUser.verification_level ?? 'level_0'),
+    provider_reference: 'driver_documents',
+    document_reference: documentReference,
+    failure_reason: null,
+  });
+  if (verificationError) {
+    return json({ error: verificationError.message }, 500);
+  }
+
+  return json(
+    {
+      submitted: true,
+      driverId,
+    },
+    202,
+  );
 }
 
 async function handlePatchCommunicationPreferences(request: Request) {
@@ -1905,6 +2672,30 @@ Deno.serve(async (request) => {
 
     if (request.method === 'GET' && path === '/communications/preferences') {
       return await handleGetCommunicationPreferences(request);
+    }
+
+    if (request.method === 'GET' && path === '/trust/status') {
+      return await handleGetTrustStatus(request);
+    }
+
+    if (request.method === 'POST' && path === '/trust/phone/start') {
+      return await handleStartPhoneVerification(request);
+    }
+
+    if (request.method === 'POST' && path === '/trust/phone/confirm') {
+      return await handleConfirmPhoneVerification(request);
+    }
+
+    if (request.method === 'POST' && path === '/trust/identity/submit') {
+      return await handleSubmitIdentityVerification(request);
+    }
+
+    if (request.method === 'POST' && path === '/trust/driver-mode/enable') {
+      return await handleEnableDriverMode(request);
+    }
+
+    if (request.method === 'POST' && path === '/trust/driver-documents/submit') {
+      return await handleSubmitDriverDocuments(request);
     }
 
     if (request.method === 'POST' && path === '/auth/2fa/setup') {

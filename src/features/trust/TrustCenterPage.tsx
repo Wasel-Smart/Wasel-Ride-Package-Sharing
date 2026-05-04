@@ -1,68 +1,255 @@
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { toast } from 'sonner';
 import {
   Activity,
   AlertTriangle,
   BadgeCheck,
-  CarFront,
   CheckCircle2,
   FileCheck,
+  LoaderCircle,
+  MailCheck,
   Shield,
   Wallet,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { WaselStateCard } from '../../components/system/WaselStateCard';
 import {
-  DataRow,
   MetricCard,
   PageHero,
   PageShell,
   SectionCard,
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
+import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { getDriverReadinessSummary } from '../../services/driverOnboarding';
+import {
+  confirmTrustPhoneVerification,
+  enableTrustDriverMode,
+  getTrustCenterStatus,
+  resendTrustEmailConfirmation,
+  startTrustPhoneVerification,
+  submitTrustDriverDocuments,
+  submitTrustIdentityVerification,
+} from '../../services/trustCenter';
+import {
+  buildFallbackTrustCenterStatus,
+  type TrustCenterStatus,
+  type TrustStepState,
+} from '../../services/trustCenterModel';
 import { evaluateTrustCapability } from '../../services/trustRules';
-import { C, SPACE } from '../../utils/wasel-ds';
+import { C, F, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 
-function getTrustStepCopy(
-  id: 'account_role' | 'phone' | 'email' | 'identity' | 'driver_clearance',
-  ar: boolean,
-) {
-  switch (id) {
-    case 'account_role':
-      return {
-        label: ar ? 'تفعيل وضع السائق' : 'Driver mode',
-        description: ar ? 'ابدأ من دور السائق قبل أي خطوة أخرى.' : 'Turn on Driver mode first.',
-      };
-    case 'phone':
-      return {
-        label: ar ? 'تأكيد الهاتف' : 'Phone verified',
-        description: ar ? 'الهاتف يفتح التنبيهات والتنسيق المباشر.' : 'Required for live trip alerts.',
-      };
-    case 'email':
-      return {
-        label: ar ? 'تأكيد البريد' : 'Email verified',
-        description: ar ? 'البريد يحمي الاسترداد والفواتير.' : 'Needed for receipts and recovery.',
-      };
-    case 'identity':
-      return {
-        label: ar ? 'الهوية أو سند' : 'Identity verified',
-        description: ar ? 'مستوى 2 يفتح مراجعة الرحلات.' : 'Level 2 unlocks ride review.',
-      };
+function toErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return 'Trust Center request failed.';
+}
+
+function getStepBadge(state: TrustStepState, ar: boolean) {
+  switch (state) {
+    case 'completed':
+      return { label: ar ? 'مكتمل' : 'Completed', accent: C.green };
+    case 'in_progress':
+      return { label: ar ? 'قيد التنفيذ' : 'In Progress', accent: C.cyan };
+    case 'failed':
+      return { label: ar ? 'فشل' : 'Failed', accent: C.error };
     default:
-      return {
-        label: ar ? 'تصريح السائق' : 'Driver clearance',
-        description: ar ? 'الاعتماد النهائي للرحلات المباشرة.' : 'Final approval for live rides.',
-      };
+      return { label: ar ? 'لم يبدأ' : 'Not Started', accent: C.gold };
   }
+}
+
+function getPanelAccent(state: TrustStepState) {
+  switch (state) {
+    case 'completed':
+      return C.green;
+    case 'in_progress':
+      return C.cyan;
+    case 'failed':
+      return C.error;
+    default:
+      return C.gold;
+  }
+}
+
+function formatTimestamp(value?: string | null): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString();
+}
+
+function FormField({
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  type?: string;
+}) {
+  return (
+    <input
+      type={type}
+      value={value}
+      onChange={event => onChange(event.target.value)}
+      placeholder={placeholder}
+      style={{
+        width: '100%',
+        minHeight: 42,
+        padding: '0 12px',
+        borderRadius: R.md,
+        border: `1px solid ${C.border}`,
+        background: 'rgba(255,255,255,0.04)',
+        color: '#EFF6FF',
+        fontFamily: F,
+        outline: 'none',
+        boxShadow: SH.none,
+      }}
+    />
+  );
+}
+
+function StepCard({
+  title,
+  subtitle,
+  state,
+  icon,
+  children,
+  footer,
+}: {
+  title: string;
+  subtitle: string;
+  state: TrustStepState;
+  icon: ReactNode;
+  children?: ReactNode;
+  footer?: ReactNode;
+}) {
+  const accent = getPanelAccent(state);
+
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gap: SPACE[4],
+        padding: SPACE[4],
+        borderRadius: 20,
+        border: `1px solid ${accent}24`,
+        background: `radial-gradient(circle at top left, ${accent}12, transparent 32%), rgba(255,255,255,0.03)`,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: 12,
+          alignItems: 'flex-start',
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'grid', gap: 6, minWidth: 0 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              color: '#EFF6FF',
+              fontWeight: TYPE.weight.bold,
+              fontFamily: F,
+            }}
+          >
+            {icon}
+            <span>{title}</span>
+          </div>
+          <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: 1.6 }}>
+            {subtitle}
+          </div>
+        </div>
+        <StatusBadge label={getStepBadge(state, false).label} accent={getStepBadge(state, false).accent} />
+      </div>
+      {children}
+      {footer}
+    </div>
+  );
 }
 
 export default function TrustCenterPage() {
   const { language } = useLanguage();
-  const { user } = useLocalAuth();
+  const { refreshProfile } = useAuth();
+  const { user, updateUser } = useLocalAuth();
   const nav = useIframeSafeNavigate();
   const ar = language === 'ar';
+  const workflowRef = useRef<HTMLDivElement | null>(null);
+  const identityRef = useRef<HTMLDivElement | null>(null);
+  const contactRef = useRef<HTMLDivElement | null>(null);
+  const documentsRef = useRef<HTMLDivElement | null>(null);
+  const walletRef = useRef<HTMLDivElement | null>(null);
+
+  const [trustStatus, setTrustStatus] = useState<TrustCenterStatus | null>(null);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [actionKey, setActionKey] = useState<string | null>(null);
+  const [phoneInput, setPhoneInput] = useState(user?.phone ?? '');
+  const [phoneCode, setPhoneCode] = useState('');
+  const [identityReference, setIdentityReference] = useState('');
+  const [identityDocumentReference, setIdentityDocumentReference] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState('');
+  const [driverDocumentReference, setDriverDocumentReference] = useState('');
+
+  const fallbackStatus = useMemo(
+    () => (user ? buildFallbackTrustCenterStatus(user) : null),
+    [user],
+  );
+  const effectiveStatus = trustStatus ?? fallbackStatus;
+
+  useEffect(() => {
+    setPhoneInput(user?.phone ?? '');
+  }, [user?.phone]);
+
+  useEffect(() => {
+    if (!effectiveStatus) return;
+
+    const providerReference = effectiveStatus.steps.identity.meta.providerReference;
+    const documentReference = effectiveStatus.steps.identity.meta.documentReference;
+    const existingLicense = effectiveStatus.steps.driverDocuments.meta.licenseNumber;
+
+    if (providerReference && !identityReference) setIdentityReference(providerReference);
+    if (documentReference && !identityDocumentReference) {
+      setIdentityDocumentReference(documentReference);
+    }
+    if (existingLicense && !licenseNumber) setLicenseNumber(existingLicense);
+  }, [
+    effectiveStatus,
+    identityDocumentReference,
+    identityReference,
+    licenseNumber,
+  ]);
+
+  const reloadTrustStatus = async (silent = false) => {
+    if (!user) return;
+    if (!silent) setStatusLoading(true);
+
+    try {
+      const nextStatus = await getTrustCenterStatus(user);
+      setTrustStatus(nextStatus);
+    } catch (error) {
+      if (!silent) {
+        toast.error(toErrorMessage(error));
+      }
+      setTrustStatus(buildFallbackTrustCenterStatus(user));
+    } finally {
+      if (!silent) setStatusLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user) {
+      setTrustStatus(null);
+      return;
+    }
+    void reloadTrustStatus();
+  }, [user?.id]);
 
   if (!user) {
     return (
@@ -88,16 +275,6 @@ export default function TrustCenterPage() {
     );
   }
 
-  const verificationTone =
-    user.verificationLevel === 'level_3' || user.verificationLevel === 'level_2'
-      ? { color: C.green, label: ar ? 'موثق' : 'Verified' }
-      : user.verificationLevel === 'level_1'
-        ? { color: C.gold, label: ar ? 'جزئي' : 'Partial' }
-        : { color: C.error, label: ar ? 'يحتاج إكمال' : 'Action needed' };
-
-  const driverReadiness = getDriverReadinessSummary(user);
-  const incompleteSteps = driverReadiness.steps.filter(step => !step.complete);
-  const completedSteps = driverReadiness.steps.length - incompleteSteps.length;
   const capabilityRows = [
     { title: ar ? 'نشر رحلة' : 'Post rides', gate: evaluateTrustCapability(user, 'offer_ride') },
     {
@@ -114,79 +291,210 @@ export default function TrustCenterPage() {
     },
   ];
   const unlockedCount = capabilityRows.filter(item => item.gate.allowed).length;
-  const nextAction =
-    driverReadiness.status === 'ready'
-      ? { label: ar ? 'فتح لوحة السائق' : 'Open Driver', to: '/app/driver' }
-      : driverReadiness.status === 'complete_profile'
-        ? { label: ar ? 'تأكيد الحساب' : 'Verify account', to: '/app/settings' }
-        : driverReadiness.status === 'complete_verification'
-          ? { label: ar ? 'إكمال التحقق' : 'Finish verification', to: '/app/settings' }
-          : driverReadiness.status === 'pending_review'
-            ? { label: ar ? 'مراجعة الحالة' : 'Review status', to: '/app/driver' }
-            : { label: ar ? 'بدء الإعداد' : 'Start setup', to: '/app/settings' };
-  const heroDescription =
-    driverReadiness.status === 'ready'
-      ? ar
-        ? 'الهوية والثقة والدفع جاهزة. المستخدم يفهم وضعه مباشرة من الأرقام.'
-        : 'Identity, trust, and payouts are ready. Users can understand account status from the numbers alone.'
-      : ar
-        ? `أكمل ${incompleteSteps.length} خطوات لفتح الرحلات والطرود والمدفوعات بثقة واضحة.`
-        : `Complete ${incompleteSteps.length} more checks to unlock rides, packages, and payouts with clear confidence.`;
-  const localizedSteps = driverReadiness.steps.map(step => ({
-    ...step,
-    ...getTrustStepCopy(step.id, ar),
-  }));
-  const trustSignals = [
-    {
-      title: ar ? 'هوية واضحة' : 'Visible identity',
-      detail: ar ? 'التحقق يظهر كحالة مباشرة بدل شرح طويل.' : 'Verification reads like a direct state, not a paragraph.',
-      accent: C.cyan,
-    },
-    {
-      title: ar ? 'قدرات مفتوحة' : 'Unlocked actions',
-      detail: ar ? 'الرحلات والطرود والمدفوعات تظهر كجاهزة أو غير جاهزة.' : 'Rides, parcels, and payouts show as open or blocked.',
-      accent: C.gold,
-    },
-    {
-      title: ar ? 'خطوة تالية واحدة' : 'One next step',
-      detail: ar ? 'المستخدم يرى ما الذي ينقصه فوراً.' : 'The missing requirement is visible immediately.',
-      accent: C.green,
-    },
-  ];
+  const walletStep = effectiveStatus?.steps.walletStanding;
   const walletTone =
-    user.walletStatus === 'closed'
+    walletStep?.meta.walletStatus === 'closed'
       ? { label: ar ? 'مغلقة' : 'Closed', color: C.error }
-      : user.walletStatus === 'frozen'
-      ? { label: ar ? 'مجمدة' : 'Frozen', color: C.error }
-      : user.walletStatus === 'limited'
-        ? { label: ar ? 'محدودة' : 'Limited', color: C.gold }
-        : { label: ar ? 'نشطة' : 'Active', color: C.green };
+      : walletStep?.meta.walletStatus === 'frozen'
+        ? { label: ar ? 'مجمدة' : 'Frozen', color: C.error }
+        : walletStep?.meta.walletStatus === 'limited'
+          ? { label: ar ? 'محدودة' : 'Limited', color: C.gold }
+          : walletStep?.meta.walletStatus === 'unavailable'
+            ? { label: ar ? 'غير متاحة' : 'Unavailable', color: C.error }
+            : { label: ar ? 'نشطة' : 'Active', color: C.green };
+  const heroAccent =
+    effectiveStatus?.blockedSteps.length
+      ? C.error
+      : effectiveStatus?.nextStepId
+        ? C.gold
+        : C.green;
+  const heroLabel =
+    effectiveStatus?.blockedSteps.length
+      ? ar
+        ? 'تحتاج متابعة'
+        : 'Needs review'
+      : effectiveStatus?.nextStepId
+        ? ar
+          ? 'إجراء مطلوب'
+          : 'Action needed'
+        : ar
+          ? 'جاهز'
+          : 'Ready';
+
+  const runAction = async (key: string, work: () => Promise<void>) => {
+    setActionKey(key);
+    try {
+      await work();
+    } catch (error) {
+      toast.error(toErrorMessage(error));
+    } finally {
+      setActionKey(null);
+    }
+  };
+
+  const handleNextAction = () => {
+    switch (effectiveStatus?.nextStepId) {
+      case 'identity':
+        identityRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        break;
+      case 'email':
+      case 'phone':
+        contactRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        break;
+      case 'driver_documents':
+        documentsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        break;
+      case 'wallet_standing':
+        walletRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        break;
+      default:
+        workflowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        break;
+    }
+  };
+
+  const handleResendEmail = async () => {
+    if (!user.email) {
+      toast.error('No email is associated with this account.');
+      return;
+    }
+
+    await runAction('email', async () => {
+      await resendTrustEmailConfirmation(user.email);
+      toast.success(`Confirmation email sent to ${user.email}.`);
+      await reloadTrustStatus(true);
+    });
+  };
+
+  const handleStartPhone = async () => {
+    const normalizedPhone = phoneInput.trim();
+    if (!normalizedPhone) {
+      toast.error('Enter a phone number before requesting a code.');
+      return;
+    }
+
+    await runAction('phone-start', async () => {
+      const result = await startTrustPhoneVerification({ phoneNumber: normalizedPhone });
+      updateUser({ phone: result.phoneNumber, phoneVerified: false });
+      await refreshProfile();
+      await reloadTrustStatus(true);
+      toast.success(`Verification code sent to ${result.phoneNumber}.`);
+    });
+  };
+
+  const handleConfirmPhone = async () => {
+    if (!phoneCode.trim()) {
+      toast.error('Enter the verification code first.');
+      return;
+    }
+
+    await runAction('phone-confirm', async () => {
+      const result = await confirmTrustPhoneVerification({ code: phoneCode.trim() });
+      setPhoneCode('');
+      updateUser({
+        phone: result.phoneNumber,
+        phoneVerified: true,
+      });
+      await refreshProfile();
+      await reloadTrustStatus(true);
+      toast.success('Phone verification completed.');
+    });
+  };
+
+  const handleSubmitIdentity = async () => {
+    if (identityReference.trim().length < 4) {
+      toast.error('Enter the Sanad reference before submitting.');
+      return;
+    }
+
+    await runAction('identity', async () => {
+      await submitTrustIdentityVerification({
+        providerReference: identityReference.trim(),
+        documentReference: identityDocumentReference.trim() || undefined,
+      });
+      await reloadTrustStatus(true);
+      toast.success('Identity verification submitted for review.');
+    });
+  };
+
+  const handleEnableDriverMode = async () => {
+    await runAction('driver-mode', async () => {
+      await enableTrustDriverMode();
+      updateUser({ role: 'both' });
+      await refreshProfile();
+      await reloadTrustStatus(true);
+      toast.success('Driver mode enabled. You can now submit driver documents.');
+    });
+  };
+
+  const handleSubmitDriverDocuments = async () => {
+    if (licenseNumber.trim().length < 4) {
+      toast.error('Enter the driver license number before submitting.');
+      return;
+    }
+
+    await runAction('driver-documents', async () => {
+      await submitTrustDriverDocuments({
+        licenseNumber: licenseNumber.trim(),
+        documentReference: driverDocumentReference.trim() || undefined,
+      });
+      await reloadTrustStatus(true);
+      toast.success('Driver documents submitted for review.');
+    });
+  };
 
   return (
-    <PageShell maxWidth={760} dir={ar ? 'rtl' : 'ltr'}>
+    <PageShell maxWidth={880} dir={ar ? 'rtl' : 'ltr'}>
       <div style={{ paddingInline: SPACE[4] }}>
         <PageHero
-          eyebrow={ar ? 'مؤشر الثقة' : 'Trust Index'}
-          icon={<StatusBadge label={verificationTone.label} accent={verificationTone.color} />}
-          title={
-            ar ? 'الثقة تصبح أسهل عندما تتحول إلى أرقام' : 'Trust becomes easier when it turns into numbers'
+          eyebrow={ar ? 'مركز الثقة' : 'Trust Center'}
+          icon={<StatusBadge label={heroLabel} accent={heroAccent} />}
+          title={ar ? 'كل خطوة يجب أن تنتهي بحالة واضحة' : 'Every trust check should end in a clear state'}
+          description={
+            effectiveStatus
+              ? effectiveStatus.nextStepId
+                ? ar
+                  ? `أكمل ${effectiveStatus.totalSteps - effectiveStatus.completedSteps} خطوات متبقية وتجنب أي حالة معلقة.`
+                  : `Complete ${effectiveStatus.totalSteps - effectiveStatus.completedSteps} remaining checks and avoid any stuck state.`
+                : ar
+                  ? 'جميع خطوات الثقة الآن محسومة ويمكن للمستخدم فهم وضع الحساب فوراً.'
+                  : 'Every trust step is now resolved clearly and the account state is readable at a glance.'
+              : ar
+                ? 'تحميل حالة الثقة الحالية...'
+                : 'Loading the current trust state...'
           }
-          description={heroDescription}
-          accent={verificationTone.color}
+          accent={heroAccent}
           actions={
             <>
               <Button
-                onClick={() => nav(nextAction.to)}
+                onClick={handleNextAction}
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                {nextAction.label}
+                {effectiveStatus?.nextStepId
+                  ? ar
+                    ? 'افتح الخطوة التالية'
+                    : 'Open next step'
+                  : ar
+                    ? 'راجع الخطوات'
+                    : 'Review checks'}
               </Button>
               <Button
                 variant="outline"
-                onClick={() => nav('/app/settings')}
+                onClick={() => {
+                  void reloadTrustStatus();
+                }}
                 className="border-white/15 bg-white/5 text-white hover:bg-white/10"
               >
-                {ar ? 'الإعدادات' : 'Settings'}
+                {statusLoading ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    <LoaderCircle size={14} className="animate-spin" />
+                    {ar ? 'يتم التحديث' : 'Refreshing'}
+                  </span>
+                ) : ar ? (
+                  'تحديث الحالة'
+                ) : (
+                  'Refresh status'
+                )}
               </Button>
             </>
           }
@@ -194,7 +502,11 @@ export default function TrustCenterPage() {
             <div style={{ display: 'grid', gap: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                 <StatusBadge
-                  label={ar ? `${completedSteps}/5 مكتمل` : `${completedSteps}/5 complete`}
+                  label={
+                    effectiveStatus
+                      ? `${effectiveStatus.completedSteps}/${effectiveStatus.totalSteps} ${ar ? 'مكتمل' : 'complete'}`
+                      : `0/5 ${ar ? 'مكتمل' : 'complete'}`
+                  }
                   accent={C.cyan}
                 />
                 <StatusBadge
@@ -207,8 +519,8 @@ export default function TrustCenterPage() {
               </div>
               <div style={{ color: C.textMuted, fontSize: '0.88rem', lineHeight: 1.7 }}>
                 {ar
-                  ? 'كل نقطة توضح للمستخدم ما الذي يعمل الآن وما الذي يحتاجه بعد ذلك.'
-                  : 'Each point tells users what works now and what they still need next.'}
+                  ? 'كل بطاقة أدناه توضح ما إذا كانت الخطوة لم تبدأ أو قيد التنفيذ أو مكتملة أو فاشلة، مع سبب واضح.'
+                  : 'Each card below shows whether a step is Not Started, In Progress, Completed, or Failed, with a clear reason.'}
               </div>
             </div>
           }
@@ -217,7 +529,7 @@ export default function TrustCenterPage() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
             gap: SPACE[4],
             marginBottom: SPACE[6],
           }}
@@ -227,131 +539,494 @@ export default function TrustCenterPage() {
             value={`${user.trustScore}/100`}
             detail={ar ? 'الرقم الذي يترجم الثقة داخل التطبيق.' : 'The number behind in-app trust.'}
             icon={<Shield size={18} />}
-            accent={verificationTone.color}
+            accent={heroAccent}
           />
           <MetricCard
             label={ar ? 'التحقق المكتمل' : 'Checks done'}
-            value={`${completedSteps}/${driverReadiness.steps.length}`}
-            detail={ar ? 'هوية واتصال واعتماد.' : 'Identity, contact, and clearance.'}
+            value={
+              effectiveStatus
+                ? `${effectiveStatus.completedSteps}/${effectiveStatus.totalSteps}`
+                : '0/5'
+            }
+            detail={ar ? 'هوية واتصال ووثائق ومحفظة.' : 'Identity, contact, documents, and wallet.'}
             icon={<CheckCircle2 size={18} />}
             accent={C.cyan}
           />
           <MetricCard
-            label={ar ? 'القدرات المفتوحة' : 'Actions open'}
-            value={`${unlockedCount}/${capabilityRows.length}`}
-            detail={ar ? 'رحلات وطرود ومدفوعات ودعم.' : 'Rides, parcels, payouts, and support.'}
-            icon={<BadgeCheck size={18} />}
-            accent={C.green}
+            label={ar ? 'الخطوات المحظورة' : 'Blocked checks'}
+            value={`${effectiveStatus?.blockedSteps.length ?? 0}`}
+            detail={
+              ar
+                ? 'أي خطوة فاشلة تظهر بسبب واضح ولا تبقى معلقة.'
+                : 'Failed steps show a reason instead of staying stuck.'
+            }
+            icon={<AlertTriangle size={18} />}
+            accent={(effectiveStatus?.blockedSteps.length ?? 0) > 0 ? C.error : C.green}
           />
           <MetricCard
             label={ar ? 'حالة المحفظة' : 'Wallet status'}
             value={walletTone.label}
-            detail={ar ? 'المحفظة السليمة تحافظ على تدفق العمليات.' : 'Healthy wallet status keeps operations available.'}
+            detail={
+              ar
+                ? 'المحفظة السليمة تحافظ على تدفق العمليات.'
+                : 'Healthy wallet standing keeps operations available.'
+            }
             icon={<Wallet size={18} />}
             accent={walletTone.color}
           />
         </div>
 
+        <div ref={workflowRef} style={{ display: 'grid', gap: SPACE[5], marginBottom: SPACE[6] }}>
+          <SectionCard
+            title={ar ? 'سير التحقق العملي' : 'Actionable verification flow'}
+            subtitle={
+              ar
+                ? 'كل خطوة لديها إجراء واضح ولا يسمح لأي حالة أن تبقى غير محسومة.'
+                : 'Each step has a direct action and no state is allowed to remain indeterminate.'
+            }
+            icon={<Activity size={16} color={C.cyan} />}
+          >
+            <div style={{ display: 'grid', gap: SPACE[4] }}>
+              <div ref={identityRef}>
+                <StepCard
+                  title={ar ? 'الهوية / سند' : 'Identity / Sanad'}
+                  subtitle={
+                    effectiveStatus?.steps.identity.detail ??
+                    'Submit Sanad verification to continue.'
+                  }
+                  state={effectiveStatus?.steps.identity.state ?? 'not_started'}
+                  icon={<Shield size={16} color={getPanelAccent(effectiveStatus?.steps.identity.state ?? 'not_started')} />}
+                  footer={
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <Button
+                        onClick={() => {
+                          void handleSubmitIdentity();
+                        }}
+                        disabled={
+                          actionKey === 'identity' ||
+                          effectiveStatus?.steps.identity.state === 'in_progress'
+                        }
+                        className="bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        {actionKey === 'identity'
+                          ? ar
+                            ? 'جارٍ الإرسال'
+                            : 'Submitting'
+                          : effectiveStatus?.steps.identity.state === 'failed'
+                            ? ar
+                              ? 'إعادة الإرسال'
+                              : 'Resubmit'
+                            : ar
+                              ? 'إرسال للمراجعة'
+                              : 'Submit for review'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          void reloadTrustStatus();
+                        }}
+                        className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+                      >
+                        {ar ? 'تحديث' : 'Refresh'}
+                      </Button>
+                    </div>
+                  }
+                >
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {effectiveStatus?.steps.identity.failureReason ? (
+                      <div
+                        style={{
+                          borderRadius: 14,
+                          border: `1px solid ${C.error}33`,
+                          background: `${C.error}12`,
+                          padding: '12px 14px',
+                          color: '#FECACA',
+                          fontSize: TYPE.size.sm,
+                          fontFamily: F,
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        {effectiveStatus.steps.identity.failureReason}
+                      </div>
+                    ) : null}
+                    <FormField
+                      value={identityReference}
+                      onChange={setIdentityReference}
+                      placeholder={ar ? 'مرجع سند أو رقم الجلسة' : 'Sanad reference or session id'}
+                    />
+                    <FormField
+                      value={identityDocumentReference}
+                      onChange={setIdentityDocumentReference}
+                      placeholder={ar ? 'مرجع المستند (اختياري)' : 'Document reference (optional)'}
+                    />
+                    {formatTimestamp(effectiveStatus?.steps.identity.updatedAt) ? (
+                      <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}>
+                        {ar ? 'آخر تحديث:' : 'Last update:'}{' '}
+                        {formatTimestamp(effectiveStatus?.steps.identity.updatedAt)}
+                      </div>
+                    ) : null}
+                  </div>
+                </StepCard>
+              </div>
+
+              <div ref={contactRef}>
+                <StepCard
+                  title={ar ? 'البريد والهاتف' : 'Email and phone'}
+                  subtitle={
+                    ar
+                      ? 'تأكيد البريد والهاتف يجب أن يغيّر الحالة مباشرة.'
+                      : 'Email and phone verification should move state immediately.'
+                  }
+                  state={
+                    effectiveStatus?.steps.phone.state === 'failed' ||
+                    effectiveStatus?.steps.email.state === 'failed'
+                      ? 'failed'
+                      : effectiveStatus?.steps.phone.state === 'completed' &&
+                          effectiveStatus?.steps.email.state === 'completed'
+                        ? 'completed'
+                        : effectiveStatus?.steps.phone.state === 'in_progress' ||
+                            effectiveStatus?.steps.email.state === 'in_progress'
+                          ? 'in_progress'
+                          : 'not_started'
+                  }
+                  icon={<MailCheck size={16} color={C.cyan} />}
+                >
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                      gap: SPACE[4],
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'grid',
+                        gap: 10,
+                        padding: SPACE[4],
+                        borderRadius: 16,
+                        border: `1px solid ${getPanelAccent(effectiveStatus?.steps.email.state ?? 'not_started')}24`,
+                        background: 'rgba(255,255,255,0.02)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                        <div style={{ color: '#EFF6FF', fontWeight: TYPE.weight.bold, fontFamily: F }}>
+                          {ar ? 'تأكيد البريد' : 'Email confirmation'}
+                        </div>
+                        <StatusBadge
+                          label={getStepBadge(effectiveStatus?.steps.email.state ?? 'not_started', ar).label}
+                          accent={getStepBadge(effectiveStatus?.steps.email.state ?? 'not_started', ar).accent}
+                        />
+                      </div>
+                      <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: 1.6 }}>
+                        {effectiveStatus?.steps.email.detail}
+                      </div>
+                      <div style={{ color: '#EFF6FF', fontSize: TYPE.size.sm, fontFamily: F }}>
+                        {user.email || effectiveStatus?.steps.email.meta.email || 'No email'}
+                      </div>
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                        <Button
+                          onClick={() => {
+                            void handleResendEmail();
+                          }}
+                          disabled={actionKey === 'email' || effectiveStatus?.steps.email.state === 'completed'}
+                          className="bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                          {actionKey === 'email'
+                            ? ar
+                              ? 'يتم الإرسال'
+                              : 'Sending'
+                            : effectiveStatus?.steps.email.state === 'completed'
+                              ? ar
+                                ? 'تم التأكيد'
+                                : 'Confirmed'
+                              : ar
+                                ? 'إرسال رابط التأكيد'
+                                : 'Send confirmation'}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        gap: 10,
+                        padding: SPACE[4],
+                        borderRadius: 16,
+                        border: `1px solid ${getPanelAccent(effectiveStatus?.steps.phone.state ?? 'not_started')}24`,
+                        background: 'rgba(255,255,255,0.02)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                        <div style={{ color: '#EFF6FF', fontWeight: TYPE.weight.bold, fontFamily: F }}>
+                          {ar ? 'تأكيد الهاتف' : 'Phone confirmation'}
+                        </div>
+                        <StatusBadge
+                          label={getStepBadge(effectiveStatus?.steps.phone.state ?? 'not_started', ar).label}
+                          accent={getStepBadge(effectiveStatus?.steps.phone.state ?? 'not_started', ar).accent}
+                        />
+                      </div>
+                      <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: 1.6 }}>
+                        {effectiveStatus?.steps.phone.detail}
+                      </div>
+                      {effectiveStatus?.steps.phone.failureReason ? (
+                        <div
+                          style={{
+                            borderRadius: 14,
+                            border: `1px solid ${C.error}33`,
+                            background: `${C.error}12`,
+                            padding: '12px 14px',
+                            color: '#FECACA',
+                            fontSize: TYPE.size.sm,
+                            fontFamily: F,
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          {effectiveStatus.steps.phone.failureReason}
+                        </div>
+                      ) : null}
+                      <FormField
+                        value={phoneInput}
+                        onChange={setPhoneInput}
+                        placeholder="+962791234567"
+                        type="tel"
+                      />
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                        <Button
+                          onClick={() => {
+                            void handleStartPhone();
+                          }}
+                          disabled={actionKey === 'phone-start'}
+                          className="bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                          {actionKey === 'phone-start'
+                            ? ar
+                              ? 'يتم الإرسال'
+                              : 'Sending'
+                            : effectiveStatus?.steps.phone.state === 'in_progress'
+                              ? ar
+                                ? 'إعادة إرسال الكود'
+                                : 'Resend code'
+                              : ar
+                                ? 'إرسال الكود'
+                                : 'Send code'}
+                        </Button>
+                      </div>
+                      {(effectiveStatus?.steps.phone.state === 'in_progress' ||
+                        effectiveStatus?.steps.phone.state === 'failed') && (
+                        <div style={{ display: 'grid', gap: 10 }}>
+                          <FormField
+                            value={phoneCode}
+                            onChange={setPhoneCode}
+                            placeholder={ar ? 'أدخل كود التحقق' : 'Enter verification code'}
+                          />
+                          <Button
+                            onClick={() => {
+                              void handleConfirmPhone();
+                            }}
+                            disabled={actionKey === 'phone-confirm'}
+                            className="bg-white text-slate-900 hover:bg-white/90"
+                          >
+                            {actionKey === 'phone-confirm'
+                              ? ar
+                                ? 'جارٍ التأكيد'
+                                : 'Confirming'
+                              : ar
+                                ? 'تأكيد الهاتف'
+                                : 'Confirm phone'}
+                          </Button>
+                          {formatTimestamp(effectiveStatus?.steps.phone.meta.expiresAt) ? (
+                            <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}>
+                              {ar ? 'ينتهي الكود:' : 'Code expires:'}{' '}
+                              {formatTimestamp(effectiveStatus?.steps.phone.meta.expiresAt)}
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </StepCard>
+              </div>
+
+              <div ref={documentsRef}>
+                <StepCard
+                  title={ar ? 'وثائق السائق' : 'Driver documents'}
+                  subtitle={
+                    effectiveStatus?.steps.driverDocuments.detail ??
+                    'Submit driver license and compliance documents.'
+                  }
+                  state={effectiveStatus?.steps.driverDocuments.state ?? 'not_started'}
+                  icon={<FileCheck size={16} color={getPanelAccent(effectiveStatus?.steps.driverDocuments.state ?? 'not_started')} />}
+                >
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {effectiveStatus?.steps.driverDocuments.failureReason ? (
+                      <div
+                        style={{
+                          borderRadius: 14,
+                          border: `1px solid ${C.error}33`,
+                          background: `${C.error}12`,
+                          padding: '12px 14px',
+                          color: '#FECACA',
+                          fontSize: TYPE.size.sm,
+                          fontFamily: F,
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        {effectiveStatus.steps.driverDocuments.failureReason}
+                      </div>
+                    ) : null}
+                    {effectiveStatus?.steps.driverDocuments.meta.role === 'rider' ? (
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                        <Button
+                          onClick={() => {
+                            void handleEnableDriverMode();
+                          }}
+                          disabled={actionKey === 'driver-mode'}
+                          className="bg-primary text-primary-foreground hover:bg-primary/90"
+                        >
+                          {actionKey === 'driver-mode'
+                            ? ar
+                              ? 'يتم التفعيل'
+                              : 'Enabling'
+                            : ar
+                              ? 'تفعيل وضع السائق'
+                              : 'Enable Driver mode'}
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <FormField
+                          value={licenseNumber}
+                          onChange={setLicenseNumber}
+                          placeholder={ar ? 'رقم رخصة السائق' : 'Driver license number'}
+                        />
+                        <FormField
+                          value={driverDocumentReference}
+                          onChange={setDriverDocumentReference}
+                          placeholder={ar ? 'مرجع المستند (اختياري)' : 'Document reference (optional)'}
+                        />
+                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                          <Button
+                            onClick={() => {
+                              void handleSubmitDriverDocuments();
+                            }}
+                            disabled={
+                              actionKey === 'driver-documents' ||
+                              effectiveStatus?.steps.driverDocuments.state === 'in_progress'
+                            }
+                            className="bg-primary text-primary-foreground hover:bg-primary/90"
+                          >
+                            {actionKey === 'driver-documents'
+                              ? ar
+                                ? 'جارٍ الإرسال'
+                                : 'Submitting'
+                              : effectiveStatus?.steps.driverDocuments.state === 'failed'
+                                ? ar
+                                  ? 'إعادة الإرسال'
+                                  : 'Resubmit'
+                                : ar
+                                  ? 'إرسال الوثائق'
+                                  : 'Submit documents'}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                    {formatTimestamp(effectiveStatus?.steps.driverDocuments.updatedAt) ? (
+                      <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}>
+                        {ar ? 'آخر تحديث:' : 'Last update:'}{' '}
+                        {formatTimestamp(effectiveStatus?.steps.driverDocuments.updatedAt)}
+                      </div>
+                    ) : null}
+                  </div>
+                </StepCard>
+              </div>
+
+              <div ref={walletRef}>
+                <StepCard
+                  title={ar ? 'سلامة المحفظة' : 'Wallet standing'}
+                  subtitle={effectiveStatus?.steps.walletStanding.detail ?? 'Wallet status unavailable.'}
+                  state={effectiveStatus?.steps.walletStanding.state ?? 'failed'}
+                  icon={<Wallet size={16} color={getPanelAccent(effectiveStatus?.steps.walletStanding.state ?? 'failed')} />}
+                  footer={
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <Button
+                        onClick={() => nav('/app/wallet')}
+                        className="bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        {ar ? 'افتح المحفظة' : 'Open wallet'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => nav('/app/settings?section=account')}
+                        className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+                      >
+                        {ar ? 'إعدادات الحساب' : 'Account settings'}
+                      </Button>
+                    </div>
+                  }
+                >
+                  {effectiveStatus?.steps.walletStanding.failureReason ? (
+                    <div
+                      style={{
+                        borderRadius: 14,
+                        border: `1px solid ${C.error}33`,
+                        background: `${C.error}12`,
+                        padding: '12px 14px',
+                        color: '#FECACA',
+                        fontSize: TYPE.size.sm,
+                        fontFamily: F,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {effectiveStatus.steps.walletStanding.failureReason}
+                    </div>
+                  ) : null}
+                </StepCard>
+              </div>
+            </div>
+          </SectionCard>
+        </div>
+
         <SectionCard
-          title={ar ? 'مصفوفة القدرات' : 'Capability matrix'}
+          title={ar ? 'القدرات المفتوحة الآن' : 'Capability matrix'}
           subtitle={
             ar
-              ? 'هذه الشاشة تعرض ما هو مفتوح الآن بشكل مباشر.'
-              : 'This screen shows exactly what is available right now.'
+              ? 'الحالة النهائية للثقة يجب أن تظهر كقدرات مفتوحة أو مغلقة بوضوح.'
+              : 'Final trust state should read as open or blocked capabilities.'
           }
-          icon={<Activity size={16} color={C.cyan} />}
-          contentPadding="0"
+          icon={<BadgeCheck size={16} color={C.green} />}
         >
-          {capabilityRows.map(item => (
-            <DataRow
-              key={item.title}
-              label={item.title}
-              value={
-                item.gate.allowed
-                  ? ar
-                    ? 'جاهز الآن'
-                    : 'Ready now'
-                  : item.gate.recommendation ?? (ar ? 'خطوة إضافية' : 'One more step')
-              }
-              icon={item.gate.allowed ? <BadgeCheck size={16} /> : <AlertTriangle size={16} />}
-              badge={
+          <div style={{ display: 'grid', gap: SPACE[3] }}>
+            {capabilityRows.map(item => (
+              <div
+                key={item.title}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  alignItems: 'center',
+                  padding: `${SPACE[4]} ${SPACE[4]}`,
+                  borderRadius: 16,
+                  border: `1px solid ${item.gate.allowed ? C.green : C.gold}24`,
+                  background: 'rgba(255,255,255,0.03)',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ display: 'grid', gap: 6, minWidth: 0 }}>
+                  <div style={{ color: '#EFF6FF', fontWeight: TYPE.weight.bold, fontFamily: F }}>
+                    {item.title}
+                  </div>
+                  <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: 1.6 }}>
+                    {item.gate.allowed
+                      ? ar
+                        ? 'الشرط مكتمل ويمكن تنفيذ الإجراء الآن.'
+                        : 'This action is available right now.'
+                      : item.gate.reason ?? item.gate.recommendation ?? (ar ? 'خطوة إضافية مطلوبة.' : 'One more step is required.')}
+                  </div>
+                </div>
                 <StatusBadge
                   label={item.gate.allowed ? (ar ? 'مفتوح' : 'Open') : ar ? 'مغلق' : 'Locked'}
                   accent={item.gate.allowed ? C.green : C.gold}
                 />
-              }
-              onClick={() => nav(item.gate.allowed ? '/app/driver' : '/app/settings')}
-            />
-          ))}
-        </SectionCard>
-
-        <SectionCard
-          title={ar ? 'جاهزية السائق' : 'Driver readiness'}
-          subtitle={
-            ar
-              ? 'كل خطوة تقود المستخدم مباشرة إلى الإجراء التالي.'
-              : 'Each step points directly to the next action.'
-          }
-          icon={<CarFront size={16} color={C.gold} />}
-          contentPadding="0"
-        >
-          {localizedSteps.map(step => (
-            <DataRow
-              key={step.id}
-              label={step.label}
-              value={step.description}
-              icon={step.complete ? <CheckCircle2 size={16} /> : <FileCheck size={16} />}
-              badge={
-                <StatusBadge
-                  label={step.complete ? (ar ? 'مكتمل' : 'Done') : ar ? 'مطلوب' : 'Needed'}
-                  accent={step.complete ? C.green : C.gold}
-                />
-              }
-              onClick={() => nav(step.complete ? '/app/driver' : '/app/settings')}
-            />
-          ))}
-        </SectionCard>
-
-        <SectionCard
-          title={ar ? 'إشارات الثقة التي يراها المستخدم' : 'Trust signals users can read fast'}
-          subtitle={
-            ar
-              ? 'هوية واضحة، قدرات واضحة، ومسار واحد للخطوة التالية.'
-              : 'Clear identity, clear capabilities, and one direct next step.'
-          }
-          icon={<Shield size={16} color={C.green} />}
-        >
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-              gap: SPACE[4],
-            }}
-          >
-            {trustSignals.map(signal => (
-              <div
-                key={signal.title}
-                style={{
-                  minWidth: 0,
-                  padding: `${SPACE[4]} ${SPACE[4]}`,
-                  borderRadius: 18,
-                  border: `1px solid ${signal.accent}24`,
-                  background: `radial-gradient(circle at top left, ${signal.accent}14, transparent 32%), rgba(255,255,255,0.03)`,
-                }}
-              >
-                <div
-                  style={{
-                    color: signal.accent,
-                    fontSize: '0.84rem',
-                    fontWeight: 800,
-                    marginBottom: 8,
-                  }}
-                >
-                  {signal.title}
-                </div>
-                <div style={{ color: C.textMuted, fontSize: '0.84rem', lineHeight: 1.65 }}>
-                  {signal.detail}
-                </div>
               </div>
             ))}
           </div>

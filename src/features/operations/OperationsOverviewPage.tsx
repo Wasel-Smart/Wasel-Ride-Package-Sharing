@@ -53,6 +53,13 @@ const CONFIG: Record<string, SurfaceConfig> = {
     accent: GREEN,
     icon: <GraduationCap size={22} />,
   },
+  '/app/innovation-hub': {
+    title: 'Innovation Hub',
+    detail:
+      'New corridor logic, pricing experiments, and operational ideas that can graduate into production lanes.',
+    accent: CYAN,
+    icon: <Brain size={22} />,
+  },
   '/app/analytics': {
     title: 'Operations Analytics',
     detail:
@@ -113,6 +120,52 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
     <SectionCard title={title} contentPadding={SPACE[4]}>
       {children}
     </SectionCard>
+  );
+}
+
+function HeroMetric({
+  label,
+  value,
+  detail,
+  accent,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  accent: string;
+}) {
+  return (
+    <div
+      style={{
+        borderRadius: 16,
+        border: `1px solid ${accent}24`,
+        background: `${accent}12`,
+        padding: '12px 14px',
+      }}
+    >
+      <div style={{ color: '#FFFFFF', fontSize: TYPE.size.lg, fontWeight: 900 }}>{value}</div>
+      <div
+        style={{
+          marginTop: 4,
+          color: C.textMuted,
+          fontSize: TYPE.size.xs,
+          textTransform: 'uppercase',
+          letterSpacing: TYPE.letterSpacing.wide,
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          marginTop: 6,
+          color: 'rgba(226,232,240,0.78)',
+          fontSize: TYPE.size.xs,
+          lineHeight: TYPE.lineHeight.relaxed,
+        }}
+      >
+        {detail}
+      </div>
+    </div>
   );
 }
 
@@ -197,6 +250,92 @@ export default function OperationsOverviewPage() {
   }, [pathname]);
 
   const liveCorridors = routeIntelligence.featuredSignals.slice(0, 5);
+  const heroMetrics = useMemo(() => {
+    if (pathname === '/app/services/corporate' && businessSnapshot && serviceSnapshot) {
+      return [
+        {
+          label: 'Managed accounts',
+          value: String(serviceSnapshot.activeAccounts),
+          detail: 'Recurring business lanes',
+          accent: CYAN,
+        },
+        {
+          label: 'Lane revenue',
+          value: `${serviceSnapshot.monthlyRouteRevenueJod.toFixed(0)} JOD`,
+          detail: 'Per active corridor month',
+          accent: GOLD,
+        },
+        {
+          label: 'Savings',
+          value: `${businessSnapshot.estimatedSavingsPercent}%`,
+          detail: 'Versus fragmented solo dispatch',
+          accent: GREEN,
+        },
+        {
+          label: 'Ownership',
+          value: `${serviceSnapshot.liveSignal?.routeOwnershipScore ?? businessSnapshot.liquidity.healthScore}/100`,
+          detail: 'Live confidence on the route',
+          accent: BLUE,
+        },
+      ];
+    }
+
+    if (pathname === '/app/services/school' && schoolSnapshot) {
+      return [
+        {
+          label: 'Guardian coverage',
+          value: `${schoolSnapshot.guardianCoveragePercent}%`,
+          detail: 'Families visible in the flow',
+          accent: GREEN,
+        },
+        {
+          label: 'Students',
+          value: String(schoolSnapshot.students.length),
+          detail: 'Recurring seat roster',
+          accent: CYAN,
+        },
+        {
+          label: 'Readiness',
+          value: `${schoolSnapshot.liquidity.healthScore}/100`,
+          detail: 'Consistency of route discipline',
+          accent: BLUE,
+        },
+        {
+          label: 'Morning wave',
+          value: schoolSnapshot.morningWindow,
+          detail: 'Primary departure window',
+          accent: GOLD,
+        },
+      ];
+    }
+
+    return [
+      {
+        label: 'Searches',
+        value: String(dashboard?.funnel.searched ?? 0),
+        detail: 'Live route discovery',
+        accent: CYAN,
+      },
+      {
+        label: 'Bookings',
+        value: String(dashboard?.funnel.booked ?? 0),
+        detail: 'Confirmed conversions',
+        accent: GREEN,
+      },
+      {
+        label: 'Savings',
+        value: `${proofSnapshot?.averageSavingsPercent ?? 0}%`,
+        detail: 'Shared advantage',
+        accent: GOLD,
+      },
+      {
+        label: 'Owned lanes',
+        value: String(proofSnapshot?.liveOwnedCorridors ?? 0),
+        detail: 'Production-backed corridors',
+        accent: BLUE,
+      },
+    ];
+  }, [businessSnapshot, dashboard, pathname, proofSnapshot, schoolSnapshot, serviceSnapshot]);
 
   return (
     <PageShell maxWidth={1120} dir={ar ? 'rtl' : 'ltr'}>
@@ -217,15 +356,31 @@ export default function OperationsOverviewPage() {
               />
               <div
                 style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: SPACE[3],
+                }}
+              >
+                {heroMetrics.map(item => (
+                  <HeroMetric
+                    key={item.label}
+                    label={item.label}
+                    value={item.value}
+                    detail={item.detail}
+                    accent={item.accent}
+                  />
+                ))}
+              </div>
+              <div
+                style={{
                   color: C.textSub,
                   fontFamily: F,
                   fontSize: TYPE.size.sm,
                   lineHeight: TYPE.lineHeight.relaxed,
                 }}
               >
-                Live corridor metrics appear here when available. The business, school, and workflow
-                cards are clearly generated planning snapshots until those operating datasets are
-                connected end-to-end.
+                Live routes, booking conversions, package flow, and growth events are merged into
+                the same operating surface so each page explains itself faster.
               </div>
             </div>
           }
@@ -673,6 +828,57 @@ export default function OperationsOverviewPage() {
                     </div>
                     <div
                       style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                        gap: 10,
+                        marginTop: 12,
+                      }}
+                    >
+                      {[
+                        {
+                          label: 'Demand score',
+                          value: `${signal.forecastDemandScore}/100`,
+                        },
+                        {
+                          label: 'Seat fill',
+                          value: `${signal.seatUtilizationPercent}%`,
+                        },
+                        {
+                          label: 'Price pressure',
+                          value: signal.pricePressure,
+                        },
+                        {
+                          label: 'Next wave',
+                          value: signal.nextWaveWindow,
+                        },
+                      ].map(metric => (
+                        <div
+                          key={metric.label}
+                          style={{
+                            borderRadius: 14,
+                            border: `1px solid ${C.borderFaint}`,
+                            background: 'rgba(255,255,255,0.03)',
+                            padding: '10px 11px',
+                          }}
+                        >
+                          <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.68rem' }}>
+                            {metric.label}
+                          </div>
+                          <div
+                            style={{
+                              color: '#EFF6FF',
+                              fontWeight: 800,
+                              fontSize: '0.8rem',
+                              marginTop: 5,
+                            }}
+                          >
+                            {metric.value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div
+                      style={{
                         color: '#CBD5E1',
                         fontSize: '0.78rem',
                         lineHeight: 1.6,
@@ -726,7 +932,7 @@ export default function OperationsOverviewPage() {
                       <div
                         style={{
                           display: 'grid',
-                          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                          gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
                           gap: 10,
                           marginTop: 12,
                         }}
@@ -795,6 +1001,28 @@ export default function OperationsOverviewPage() {
                             }}
                           >
                             {row.ownershipScore}/100
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            borderRadius: 14,
+                            border: `1px solid ${C.borderFaint}`,
+                            background: 'rgba(255,255,255,0.03)',
+                            padding: '10px 11px',
+                          }}
+                        >
+                          <div style={{ color: 'rgba(148,163,184,0.78)', fontSize: '0.68rem' }}>
+                            Mode
+                          </div>
+                          <div
+                            style={{
+                              color: row.proofMode === 'live-production' ? GREEN : GOLD,
+                              fontWeight: 800,
+                              fontSize: '0.8rem',
+                              marginTop: 5,
+                            }}
+                          >
+                            {row.proofMode === 'live-production' ? 'Live' : 'Launch'}
                           </div>
                         </div>
                       </div>

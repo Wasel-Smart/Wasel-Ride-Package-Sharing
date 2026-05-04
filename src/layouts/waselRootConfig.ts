@@ -14,7 +14,7 @@ export type NavItem = {
 export const PRODUCT_NAV_GROUPS = [
   {
     id: 'find',
-    label: 'Rides',
+    label: 'Ride',
     labelAr: 'الرحلات',
     direct: true,
     path: '/find-ride',
@@ -40,7 +40,7 @@ export const PRODUCT_NAV_GROUPS = [
   },
   {
     id: 'packages',
-    label: 'Packages',
+    label: 'Send',
     labelAr: 'الطرود',
     direct: true,
     path: '/packages',
@@ -53,7 +53,7 @@ export const PRODUCT_NAV_GROUPS = [
   },
   {
     id: 'my-trips',
-    label: 'Activity',
+    label: 'Trips',
     labelAr: 'نشاطي',
     direct: true,
     path: '/my-trips',

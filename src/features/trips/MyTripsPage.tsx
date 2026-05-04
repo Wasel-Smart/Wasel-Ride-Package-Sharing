@@ -16,6 +16,12 @@ import {
   Wallet,
   XCircle,
 } from 'lucide-react';
+import {
+  PageHero,
+  PageShell,
+  SectionCard,
+  StatusBadge as PageStatusBadge,
+} from '../../components/wasel-ui/WaselPagePrimitives';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -32,8 +38,8 @@ import {
   type SupportStatus,
   type SupportTicket,
 } from '../../services/supportInbox';
+import { R, SPACE, TYPE } from '../../utils/wasel-ds';
 
-const BG = '#040C18';
 const CARD = 'rgba(255,255,255,0.04)';
 const CARD_ALT = 'rgba(255,255,255,0.03)';
 const BORDER = 'rgba(255,255,255,0.09)';
@@ -323,7 +329,7 @@ function SummaryCard({
   );
 }
 
-function StatusBadge({ lifecycle }: { lifecycle: TripLifecycle }) {
+function LifecycleBadge({ lifecycle }: { lifecycle: TripLifecycle }) {
   const item = lifecycleConfig[lifecycle];
   return (
     <span
@@ -431,7 +437,7 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
           <span style={{ fontWeight: 900, color: TEXT, fontFamily: FONT, fontSize: '0.9rem' }}>
             {trip.valueLabel}
           </span>
-          <StatusBadge lifecycle={trip.lifecycle} />
+          <LifecycleBadge lifecycle={trip.lifecycle} />
         </div>
         <ChevronRight
           size={14}
@@ -660,6 +666,7 @@ export default function MyTripsPage() {
     }),
     [items],
   );
+  const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
   const createPath =
     tab === 'rides' ? '/app/offer-ride' : tab === 'packages' ? '/app/packages' : '/app/bus';
@@ -672,19 +679,95 @@ export default function MyTripsPage() {
   ];
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: BG,
-        fontFamily: FONT,
-        direction: isRTL ? 'rtl' : 'ltr',
-        paddingBottom: 88,
-      }}
-    >
-      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '32px 16px 0' }}>
+    <PageShell maxWidth={1040} dir={isRTL ? 'rtl' : 'ltr'}>
+      <div style={{ paddingInline: SPACE[4] }}>
+        <PageHero
+          eyebrow="Journey Control"
+          icon={<MapPin size={18} />}
+          title="My Trips"
+          description={`Welcome ${user?.name ?? 'traveler'}. See what is moving, what needs action, and what is already settled across rides, parcels, and buses.`}
+          accent={CYAN}
+          actions={
+            <button
+              onClick={() => nav(createPath)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 16px',
+                borderRadius: 12,
+                background: `linear-gradient(135deg,${CYAN},#0095B8)`,
+                border: 'none',
+                color: '#041018',
+                fontWeight: 800,
+                fontFamily: FONT,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+              }}
+            >
+              <Plus size={14} />
+              {tab === 'rides' ? 'New ride' : tab === 'packages' ? 'New package' : 'Book bus'}
+            </button>
+          }
+          aside={
+            <div style={{ display: 'grid', gap: SPACE[3] }}>
+              <PageStatusBadge
+                label={`${filtered.length} live item${filtered.length === 1 ? '' : 's'}`}
+                accent={stats.attention > 0 ? AMBER : CYAN}
+              />
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: SPACE[3],
+                }}
+              >
+                {[
+                  { label: 'Active', value: String(stats.active), accent: CYAN },
+                  { label: 'Attention', value: String(stats.attention), accent: AMBER },
+                  { label: 'Support', value: String(supportTickets.length), accent: GREEN },
+                  { label: 'Completion', value: `${completionRate}%`, accent: GOLD },
+                ].map(item => (
+                  <div
+                    key={item.label}
+                    style={{
+                      borderRadius: R.xl,
+                      border: `1px solid ${item.accent}24`,
+                      background: `${item.accent}12`,
+                      padding: `${SPACE[3]} ${SPACE[4]}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: '#FFFFFF',
+                        fontSize: TYPE.size.xl,
+                        fontWeight: 900,
+                        lineHeight: 1.1,
+                      }}
+                    >
+                      {item.value}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        color: MUTED,
+                        fontSize: '0.68rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.12em',
+                      }}
+                    >
+                      {item.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          }
+        />
+
         <div
           style={{
-            display: 'flex',
+            display: 'none',
             alignItems: 'flex-start',
             justifyContent: 'space-between',
             gap: 14,
@@ -746,7 +829,7 @@ export default function MyTripsPage() {
 
         <div
           style={{
-            display: 'grid',
+            display: 'none',
             gridTemplateColumns: 'minmax(0, 1.35fr) minmax(240px, 0.9fr)',
             gap: 14,
             borderRadius: 18,
@@ -829,17 +912,22 @@ export default function MyTripsPage() {
 
         <SupportQueue tickets={supportTickets} />
 
-        <div
-          style={{
-            display: 'flex',
-            gap: 0,
-            background: CARD,
-            border: `1px solid ${BORDER}`,
-            borderRadius: 14,
-            padding: 4,
-            marginBottom: 16,
-          }}
+        <SectionCard
+          title="Journey Lanes"
+          subtitle="Switch lanes without losing lifecycle, payment, or support context."
+          icon={<Ticket size={18} color={CYAN} />}
         >
+          <div
+            style={{
+              display: 'flex',
+              gap: 0,
+              background: CARD,
+              border: `1px solid ${BORDER}`,
+              borderRadius: 14,
+              padding: 4,
+              marginBottom: 16,
+            }}
+          >
           {(
             [
               ['rides', <Car key="car" size={14} />, 'Rides'],
@@ -872,9 +960,9 @@ export default function MyTripsPage() {
               {label}
             </button>
           ))}
-        </div>
+          </div>
 
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
           {filters.map(filterOption => (
             <button
               key={filterOption.key}
@@ -894,19 +982,19 @@ export default function MyTripsPage() {
               {filterOption.label}
             </button>
           ))}
-        </div>
+          </div>
 
-        {filtered.length === 0 ? (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '72px 0',
-              color: DIM,
-              background: CARD,
-              border: `1px solid ${BORDER}`,
-              borderRadius: 18,
-            }}
-          >
+          {filtered.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '72px 0',
+                color: DIM,
+                background: CARD,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 18,
+              }}
+            >
             {tab === 'rides' ? (
               <Car size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
             ) : tab === 'packages' ? (
@@ -942,17 +1030,18 @@ export default function MyTripsPage() {
                   : 'Find a bus'}
               <ArrowRight size={14} />
             </button>
-          </div>
-        ) : (
-          filtered.map(trip => (
-            <TripCard
-              key={`${trip.kind}-${trip.id}`}
-              trip={trip}
-              onOpen={() => nav(trip.openPath)}
-            />
-          ))
-        )}
+            </div>
+          ) : (
+            filtered.map(trip => (
+              <TripCard
+                key={`${trip.kind}-${trip.id}`}
+                trip={trip}
+                onOpen={() => nav(trip.openPath)}
+              />
+            ))
+          )}
+        </SectionCard>
       </div>
-    </div>
+    </PageShell>
   );
 }
