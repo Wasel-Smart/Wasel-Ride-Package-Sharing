@@ -36,7 +36,10 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
   const isArabic = resolvedLanguage === 'ar';
 
   const isActive = (path: string) => {
-    if (path === '/') return location.pathname === '/' || location.pathname === '/app' || location.pathname === '/app/';
+    if (path === '/')
+      return (
+        location.pathname === '/' || location.pathname === '/app' || location.pathname === '/app/'
+      );
     return location.pathname.startsWith(path) || location.pathname.startsWith('/app' + path);
   };
 
@@ -70,7 +73,7 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
           alignItems: 'stretch',
         }}
       >
-        {CORE_NAV_ITEMS.map((item) => {
+        {CORE_NAV_ITEMS.map(item => {
           const active = isActive(item.path);
           const Icon = ICONS[item.id as keyof typeof ICONS];
           const isPost = item.id === 'post';
@@ -137,10 +140,21 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  <Icon size={22} strokeWidth={active ? 2.5 : 2} color={active ? '#111316' : GOLD} />
+                  <Icon
+                    size={22}
+                    strokeWidth={active ? 2.5 : 2}
+                    color={active ? '#111316' : GOLD}
+                  />
                 </div>
               ) : (
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div
+                  style={{
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   {Icon && (
                     <Icon
                       size={22}

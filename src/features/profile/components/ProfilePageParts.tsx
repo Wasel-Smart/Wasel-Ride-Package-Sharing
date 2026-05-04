@@ -42,7 +42,16 @@ export interface RowProps {
 }
 
 export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
-  return <DataRow label={label} value={value} icon={icon} onClick={onClick} danger={danger} badge={badge} />;
+  return (
+    <DataRow
+      label={label}
+      value={value}
+      icon={icon}
+      onClick={onClick}
+      danger={danger}
+      badge={badge}
+    />
+  );
 }
 
 export function VerificationBadge({

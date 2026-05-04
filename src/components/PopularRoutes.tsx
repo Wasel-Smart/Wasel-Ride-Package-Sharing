@@ -146,7 +146,7 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
   const navigate = useNavigate();
   const isRTL = language === 'ar';
   const handleGetStarted = onGetStarted ?? (() => navigate('/app/find-ride'));
-  
+
   return (
     <section className="py-20 bg-muted">
       <div className="max-w-7xl mx-auto px-6">
@@ -154,13 +154,13 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-2 mb-4">
             <TrendingUp className="w-8 h-8 text-primary" />
-            <Badge className="bg-primary/10 text-primary border-primary/20">
-              Most Popular
-            </Badge>
+            <Badge className="bg-primary/10 text-primary border-primary/20">Most Popular</Badge>
           </div>
-          <h2 className="mb-4">{isRTL ? 'أشهر المسارات عبر الأردن' : "Jordan's Hottest Intercity Routes"}</h2>
+          <h2 className="mb-4">
+            {isRTL ? 'أشهر المسارات عبر الأردن' : "Jordan's Hottest Intercity Routes"}
+          </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            {isRTL 
+            {isRTL
               ? 'أفضل المسارات مبيعاً التي تربط المدن الكبرى. انضم لآلاف المسافرين لتوفير المال وتقليل الانبعاثات الكربونية.'
               : "Top daily corridors linking Amman with Jordan's major cities and destinations. Join the Wasel network for smarter, lower-friction travel across the kingdom."}
           </p>
@@ -171,28 +171,36 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
           <Card className="border-primary/10">
             <CardContent className="p-6 text-center">
               <div className="text-3xl text-primary mb-2">12</div>
-              <p className="text-sm text-muted-foreground">{isRTL ? 'محافظات مغطاة' : 'Governorates Covered'}</p>
+              <p className="text-sm text-muted-foreground">
+                {isRTL ? 'محافظات مغطاة' : 'Governorates Covered'}
+              </p>
               {!isRTL && <p className="text-xs text-muted-foreground/70">محافظات مغطاة</p>}
             </CardContent>
           </Card>
           <Card className="border-primary/10">
             <CardContent className="p-6 text-center">
               <div className="text-3xl text-primary mb-2">150+</div>
-              <p className="text-sm text-muted-foreground">{isRTL ? 'مسار نشط يومياً' : 'Active Routes Daily'}</p>
+              <p className="text-sm text-muted-foreground">
+                {isRTL ? 'مسار نشط يومياً' : 'Active Routes Daily'}
+              </p>
               {!isRTL && <p className="text-xs text-muted-foreground/70">مسار نشط يومياً</p>}
             </CardContent>
           </Card>
           <Card className="bg-white border-primary/10">
             <CardContent className="p-6 text-center">
               <div className="text-3xl text-primary mb-2">50K+</div>
-              <p className="text-sm text-muted-foreground">{isRTL ? 'مسافر شهرياً' : 'Monthly Travelers'}</p>
+              <p className="text-sm text-muted-foreground">
+                {isRTL ? 'مسافر شهرياً' : 'Monthly Travelers'}
+              </p>
               {!isRTL && <p className="text-xs text-muted-foreground/70">مسافر شهرياً</p>}
             </CardContent>
           </Card>
           <Card className="border-primary/10">
             <CardContent className="p-6 text-center">
               <div className="text-3xl text-primary mb-2">65%</div>
-              <p className="text-sm text-muted-foreground">{isRTL ? 'متوسط التوفير' : 'Average Savings'}</p>
+              <p className="text-sm text-muted-foreground">
+                {isRTL ? 'متوسط التوفير' : 'Average Savings'}
+              </p>
               {!isRTL && <p className="text-xs text-muted-foreground/70">متوسط التوفير</p>}
             </CardContent>
           </Card>
@@ -201,7 +209,7 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
         {/* Popular Routes Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {popularRoutes.map((route, index) => (
-            <Card 
+            <Card
               key={index}
               className="hover:shadow-xl transition-all duration-300 cursor-pointer group border-border hover:border-primary/30 relative overflow-hidden"
             >
@@ -211,7 +219,7 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
                   Trending
                 </div>
               )}
-              
+
               {route.discount && (
                 <div className="absolute top-0 left-0 bg-gradient-to-r from-accent to-accent/90 text-accent-foreground px-4 py-1 text-xs rounded-br-lg">
                   {route.discount}% OFF
@@ -279,13 +287,14 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
                 {/* Social Proof */}
                 <div className="pt-3 border-t border-border">
                   <p className="text-xs text-muted-foreground text-center">
-                    {route.passengers.toLocaleString()}+ {isRTL ? 'مسافر هذا الشهر' : 'travelers this month'}
+                    {route.passengers.toLocaleString()}+{' '}
+                    {isRTL ? 'مسافر هذا الشهر' : 'travelers this month'}
                   </p>
                 </div>
 
                 {/* Hover CTA */}
                 <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button 
+                  <Button
                     onClick={handleGetStarted}
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                     size="sm"
@@ -302,21 +311,23 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
         <div className="text-center">
           <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
             <CardContent className="p-8">
-              <h3 className="mb-3 text-foreground">{isRTL ? 'لم تجد مسارك؟' : "Can't find your route?"}</h3>
+              <h3 className="mb-3 text-foreground">
+                {isRTL ? 'لم تجد مسارك؟' : "Can't find your route?"}
+              </h3>
               <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                {isRTL 
+                {isRTL
                   ? 'نضيف مسارات جديدة كل يوم. انضم إلى واصل وكن أول من يعرف عند توفر مسارك، أو اعرض رحلتك الخاصة!'
                   : "We're adding new routes every day. Join Wasel and be the first to know when your route becomes available, or offer your own ride!"}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button 
+                <Button
                   onClick={handleGetStarted}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   size="lg"
                 >
                   {isRTL ? 'تصفح جميع المسارات' : 'Browse All Routes'}
                 </Button>
-                <Button 
+                <Button
                   onClick={handleGetStarted}
                   variant="outline"
                   className="border-primary text-primary hover:bg-primary/5"
@@ -337,7 +348,9 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
             </div>
             <h4 className="mb-2">{isRTL ? 'أفضل الأسعار مضمونة' : 'Best Prices Guaranteed'}</h4>
             <p className="text-sm text-muted-foreground">
-              {isRTL ? 'قارن الأسعار عبر جميع المسارات ووفر حتى 65% مقارنة بالنقل التقليدي' : 'Compare prices across all routes and save up to 65% compared to traditional transport'}
+              {isRTL
+                ? 'قارن الأسعار عبر جميع المسارات ووفر حتى 65% مقارنة بالنقل التقليدي'
+                : 'Compare prices across all routes and save up to 65% compared to traditional transport'}
             </p>
           </div>
           <div className="text-center">
@@ -346,7 +359,9 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
             </div>
             <h4 className="mb-2">{isRTL ? 'التوفر في الوقت الحقيقي' : 'Real-Time Availability'}</h4>
             <p className="text-sm text-muted-foreground">
-              {isRTL ? 'تحديثات مباشرة على الرحلات المتاحة مع تأكيد فوري للحجز' : 'Live updates on available rides with instant booking confirmation'}
+              {isRTL
+                ? 'تحديثات مباشرة على الرحلات المتاحة مع تأكيد فوري للحجز'
+                : 'Live updates on available rides with instant booking confirmation'}
             </p>
           </div>
           <div className="text-center">
@@ -355,7 +370,9 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
             </div>
             <h4 className="mb-2">{isRTL ? 'مجتمع موثق' : 'Verified Community'}</h4>
             <p className="text-sm text-muted-foreground">
-              {isRTL ? 'سافر بثقة - جميع السائقين والركاب أعضاء موثقون' : 'Travel with confidence - all drivers and passengers are verified members'}
+              {isRTL
+                ? 'سافر بثقة - جميع السائقين والركاب أعضاء موثقون'
+                : 'Travel with confidence - all drivers and passengers are verified members'}
             </p>
           </div>
         </div>

@@ -26,7 +26,18 @@ function verificationRank(level?: string): number {
 }
 
 export function evaluateTrustCapability(
-  user: Pick<WaselUser, 'role' | 'verificationLevel' | 'walletStatus' | 'trustScore' | 'phoneVerified' | 'emailVerified'> | null | undefined,
+  user:
+    | Pick<
+        WaselUser,
+        | 'role'
+        | 'verificationLevel'
+        | 'walletStatus'
+        | 'trustScore'
+        | 'phoneVerified'
+        | 'emailVerified'
+      >
+    | null
+    | undefined,
   capability: TrustCapability,
 ): TrustGateResult {
   if (!user) {
@@ -107,7 +118,18 @@ export function evaluateTrustCapability(
 }
 
 export function getTrustReadinessSummary(
-  user: Pick<WaselUser, 'role' | 'verificationLevel' | 'walletStatus' | 'trustScore' | 'phoneVerified' | 'emailVerified'> | null | undefined,
+  user:
+    | Pick<
+        WaselUser,
+        | 'role'
+        | 'verificationLevel'
+        | 'walletStatus'
+        | 'trustScore'
+        | 'phoneVerified'
+        | 'emailVerified'
+      >
+    | null
+    | undefined,
 ) {
   return {
     canOfferRide: evaluateTrustCapability(user, 'offer_ride').allowed,

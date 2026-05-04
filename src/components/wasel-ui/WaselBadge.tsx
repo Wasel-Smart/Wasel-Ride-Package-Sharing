@@ -20,14 +20,17 @@ interface WaselBadgeProps {
   className?: string;
 }
 
-const variants: Record<BadgeVariant, {
-  bg: string;
-  text: string;
-  border: string;
-  dot?: string;
-  defaultIcon?: ReactNode;
-  defaultLabel: string;
-}> = {
+const variants: Record<
+  BadgeVariant,
+  {
+    bg: string;
+    text: string;
+    border: string;
+    dot?: string;
+    defaultIcon?: ReactNode;
+    defaultLabel: string;
+  }
+> = {
   live: {
     bg: 'bg-emerald-500/10',
     text: 'text-emerald-400',
@@ -69,15 +72,15 @@ export function WaselBadge({ variant = 'live', label, icon, className = '' }: Wa
   const v = variants[variant];
 
   return (
-    <span className={`
+    <span
+      className={`
       inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
       text-[10px] font-bold uppercase tracking-widest
       ${v.bg} ${v.text} border ${v.border}
       ${className}
-    `}>
-      {v.dot && (
-        <span className={`w-1.5 h-1.5 rounded-full ${v.dot} live-dot`} />
-      )}
+    `}
+    >
+      {v.dot && <span className={`w-1.5 h-1.5 rounded-full ${v.dot} live-dot`} />}
       {icon || v.defaultIcon}
       {label || v.defaultLabel}
     </span>

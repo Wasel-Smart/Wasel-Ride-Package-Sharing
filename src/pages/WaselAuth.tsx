@@ -15,25 +15,25 @@ import {
   Zap,
 } from 'lucide-react';
 import { WaselHeroMark, WaselLogo } from '../components/wasel-ds/WaselLogo';
-import { WaselButton }               from '../components/wasel-ui/WaselButton';
-import { WaselInput }                from '../components/wasel-ui/WaselInput';
-import { WaselCard }                 from '../components/wasel-ui/WaselCard';
-import { useLocalAuth }              from '../contexts/LocalAuth';
-import { useIframeSafeNavigate }     from '../hooks/useIframeSafeNavigate';
+import { WaselButton } from '../components/wasel-ui/WaselButton';
+import { WaselInput } from '../components/wasel-ui/WaselInput';
+import { WaselCard } from '../components/wasel-ui/WaselCard';
+import { useLocalAuth } from '../contexts/LocalAuth';
+import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { checkRateLimit, validateEmail } from '../utils/security';
-import { useAuth }                   from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { getConfig, getWhatsAppSupportUrl } from '../utils/env';
-import { friendlyAuthError, pwStrength }    from '../utils/authHelpers';
-import { C, R, TYPE, F, SPACE }      from '../utils/wasel-ds';
+import { friendlyAuthError, pwStrength } from '../utils/authHelpers';
+import { C, R, TYPE, F, SPACE } from '../utils/wasel-ds';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = 'signin' | 'signup';
 
 // ─── Feature list for the brand panel ────────────────────────────────────────
 const BRAND_FEATURES = [
-  { icon: <Zap  size={14} />, text: 'Find rides fast', color: C.cyan   },
-  { icon: <Package size={14} />, text: 'Send packages', color: C.gold   },
-  { icon: <Bus  size={14} />, text: 'Book buses', color: C.green  },
+  { icon: <Zap size={14} />, text: 'Find rides fast', color: C.cyan },
+  { icon: <Package size={14} />, text: 'Send packages', color: C.gold },
+  { icon: <Bus size={14} />, text: 'Book buses', color: C.green },
   { icon: <Shield size={14} />, text: 'Verified accounts', color: C.purple },
 ] as const;
 
@@ -46,41 +46,103 @@ function BrandPanel() {
       className="auth-brand-panel"
       style={{
         background: `linear-gradient(145deg, ${C.navy} 0%, ${C.navyMid} 48%, ${C.cardSolid} 100%)`,
-        display:        'flex',
-        flexDirection:  'column',
-        alignItems:     'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
         justifyContent: 'center',
-        padding:        `${SPACE[16]} ${SPACE[12]}`,
-        position:       'relative',
-        overflow:       'hidden',
+        padding: `${SPACE[16]} ${SPACE[12]}`,
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
       {/* Ambient glows */}
-      <div style={{ position: 'absolute', top: -110, right: -80, width: 460, height: 460, borderRadius: '50%', background: `radial-gradient(circle, ${C.cyanGlow}, transparent 66%)`, filter: 'blur(80px)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: -100, left: -80, width: 420, height: 420, borderRadius: '50%', background: `radial-gradient(circle, ${C.blueDim}cc, transparent 66%)`, filter: 'blur(80px)', pointerEvents: 'none' }} />
+      <div
+        style={{
+          position: 'absolute',
+          top: -110,
+          right: -80,
+          width: 460,
+          height: 460,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${C.cyanGlow}, transparent 66%)`,
+          filter: 'blur(80px)',
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: -100,
+          left: -80,
+          width: 420,
+          height: 420,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${C.blueDim}cc, transparent 66%)`,
+          filter: 'blur(80px)',
+          pointerEvents: 'none',
+        }}
+      />
 
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 380 }}>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <WaselLogo size={44} theme="light" variant="full" />
         </div>
-        <div style={{ margin: `${SPACE[8]} 0 ${SPACE[6]}`, display: 'flex', justifyContent: 'center' }}>
+        <div
+          style={{ margin: `${SPACE[8]} 0 ${SPACE[6]}`, display: 'flex', justifyContent: 'center' }}
+        >
           <WaselHeroMark size={92} />
         </div>
 
-        <h2 style={{ fontSize: TYPE.size['3xl'], fontWeight: TYPE.weight.ultra, color: C.text, letterSpacing: '-0.04em', margin: `0 0 ${SPACE[3]}`, lineHeight: 1.12 }}>
-          <span style={{ display: 'block', background: 'linear-gradient(90deg, #55E9FF, #60A5FA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        <h2
+          style={{
+            fontSize: TYPE.size['3xl'],
+            fontWeight: TYPE.weight.ultra,
+            color: C.text,
+            letterSpacing: '-0.04em',
+            margin: `0 0 ${SPACE[3]}`,
+            lineHeight: 1.12,
+          }}
+        >
+          <span
+            style={{
+              display: 'block',
+              background: 'linear-gradient(90deg, #55E9FF, #60A5FA)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
             Move smarter
           </span>
         </h2>
 
-        <p style={{ fontSize: TYPE.size.base, color: C.textMuted, lineHeight: TYPE.lineHeight.loose, marginBottom: SPACE[6] }}>
+        <p
+          style={{
+            fontSize: TYPE.size.base,
+            color: C.textMuted,
+            lineHeight: TYPE.lineHeight.loose,
+            marginBottom: SPACE[6],
+          }}
+        >
           Sign in to use rides, packages, and buses.
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3], textAlign: 'left' }}>
-          {BRAND_FEATURES.map((item) => (
+          {BRAND_FEATURES.map(item => (
             <div key={item.text} style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-              <div style={{ width: 30, height: 30, borderRadius: R.sm, background: `${item.color}15`, border: `1px solid ${item.color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color, flexShrink: 0 }}>
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: R.sm,
+                  background: `${item.color}15`,
+                  border: `1px solid ${item.color}28`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: item.color,
+                  flexShrink: 0,
+                }}
+              >
                 {item.icon}
               </div>
               <span style={{ fontSize: TYPE.size.sm, color: `${C.text}99` }}>{item.text}</span>
@@ -88,9 +150,27 @@ function BrandPanel() {
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: SPACE[3], justifyContent: 'center', marginTop: SPACE[8], flexWrap: 'wrap' }}>
-          {BRAND_PILLS.map((label) => (
-            <span key={label} style={{ fontSize: TYPE.size.xs, color: `${C.text}66`, background: `${C.text}0a`, border: `1px solid ${C.text}18`, borderRadius: R.full, padding: '4px 10px' }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: SPACE[3],
+            justifyContent: 'center',
+            marginTop: SPACE[8],
+            flexWrap: 'wrap',
+          }}
+        >
+          {BRAND_PILLS.map(label => (
+            <span
+              key={label}
+              style={{
+                fontSize: TYPE.size.xs,
+                color: `${C.text}66`,
+                background: `${C.text}0a`,
+                border: `1px solid ${C.text}18`,
+                borderRadius: R.full,
+                padding: '4px 10px',
+              }}
+            >
               {label}
             </span>
           ))}
@@ -107,8 +187,17 @@ function StrengthBar({ password }: { password: string }) {
   return (
     <div>
       <div style={{ display: 'flex', gap: SPACE[1], marginBottom: SPACE[1] }}>
-        {[1, 2, 3, 4, 5].map((n) => (
-          <div key={n} style={{ flex: 1, height: 3, borderRadius: R.full, background: n <= strength.score ? strength.color : `${C.text}14`, transition: 'background 200ms ease' }} />
+        {[1, 2, 3, 4, 5].map(n => (
+          <div
+            key={n}
+            style={{
+              flex: 1,
+              height: 3,
+              borderRadius: R.full,
+              background: n <= strength.score ? strength.color : `${C.text}14`,
+              transition: 'background 200ms ease',
+            }}
+          />
         ))}
       </div>
       {strength.label && (
@@ -123,8 +212,17 @@ function StrengthBar({ password }: { password: string }) {
 // ─── Tab switcher ─────────────────────────────────────────────────────────────
 function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
   return (
-    <div style={{ display: 'flex', background: C.cardSolid, borderRadius: R.xl, padding: 4, marginBottom: SPACE[7], border: `1px solid ${C.border}` }}>
-      {(['signin', 'signup'] as Tab[]).map((value) => {
+    <div
+      style={{
+        display: 'flex',
+        background: C.cardSolid,
+        borderRadius: R.xl,
+        padding: 4,
+        marginBottom: SPACE[7],
+        border: `1px solid ${C.border}`,
+      }}
+    >
+      {(['signin', 'signup'] as Tab[]).map(value => {
         const active = tab === value;
         return (
           <motion.button
@@ -133,18 +231,20 @@ function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }
             aria-label={value === 'signin' ? 'Switch to sign in' : 'Switch to create account'}
             whileTap={{ scale: 0.97 }}
             style={{
-              flex:         1,
-              height:       42,
+              flex: 1,
+              height: 42,
               borderRadius: R.lg,
-              border:       'none',
-              cursor:       'pointer',
-              fontSize:     TYPE.size.sm,
-              fontWeight:   active ? TYPE.weight.black : TYPE.weight.semibold,
-              fontFamily:   F,
-              background:   active ? 'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)' : 'transparent',
-              color:        active ? C.bg : C.textMuted,
-              boxShadow:    active ? `0 2px 12px ${C.cyanGlow}` : 'none',
-              transition:   'all 150ms ease',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: TYPE.size.sm,
+              fontWeight: active ? TYPE.weight.black : TYPE.weight.semibold,
+              fontFamily: F,
+              background: active
+                ? 'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)'
+                : 'transparent',
+              color: active ? C.bg : C.textMuted,
+              boxShadow: active ? `0 2px 12px ${C.cyanGlow}` : 'none',
+              transition: 'all 150ms ease',
             }}
           >
             {value === 'signin' ? 'Sign in' : 'Create account'}
@@ -157,25 +257,25 @@ function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function WaselAuth() {
-  const [params]      = useSearchParams();
-  const rawTab        = params.get('tab')?.toLowerCase();
+  const [params] = useSearchParams();
+  const rawTab = params.get('tab')?.toLowerCase();
   const initialTab: Tab = rawTab === 'signup' || rawTab === 'register' ? 'signup' : 'signin';
   const passwordResetCompleted = params.get('reset') === 'success';
 
-  const [tab,      setTab]      = useState<Tab>(initialTab);
-  const [email,    setEmail]    = useState('');
+  const [tab, setTab] = useState<Tab>(initialTab);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name,     setName]     = useState('');
-  const [phone,    setPhone]    = useState('');
-  const [error,    setError]    = useState('');
-  const [success,  setSuccess]  = useState(false);
-  const [notice,   setNotice]   = useState(
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [notice, setNotice] = useState(
     passwordResetCompleted ? 'Password updated. Sign in with your new password.' : '',
   );
 
   const { signIn, register, loading, user } = useLocalAuth();
   const { resetPassword, signInWithGoogle, signInWithFacebook } = useAuth();
-  const nav        = useIframeSafeNavigate();
+  const nav = useIframeSafeNavigate();
   const mountedRef = useRef(true);
   const { supportWhatsAppNumber } = getConfig();
 
@@ -186,7 +286,9 @@ export default function WaselAuth() {
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -195,7 +297,9 @@ export default function WaselAuth() {
 
   const pushSuccessRedirect = () => {
     setSuccess(true);
-    setTimeout(() => { if (mountedRef.current) nav(safeReturnTo); }, 700);
+    setTimeout(() => {
+      if (mountedRef.current) nav(safeReturnTo);
+    }, 700);
   };
 
   const handleTabChange = (next: Tab) => {
@@ -212,14 +316,27 @@ export default function WaselAuth() {
     if (!passwordResetCompleted) {
       setNotice('');
     }
-    if (!email.trim())            { setError('Please enter your email address.'); return; }
-    if (!validateEmail(email))    { setError('Please enter a valid email address.'); return; }
-    if (!password)                { setError('Please enter your password.'); return; }
+    if (!email.trim()) {
+      setError('Please enter your email address.');
+      return;
+    }
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
     if (!checkRateLimit(`signin:${email}`, { maxRequests: 5, windowMs: 60_000 })) {
-      setError('Too many attempts. Please wait a minute and try again.'); return;
+      setError('Too many attempts. Please wait a minute and try again.');
+      return;
     }
     const { error: signInError } = await signIn(email, password);
-    if (signInError) { setError(friendlyAuthError(signInError, 'Sign in failed. Please try again.')); return; }
+    if (signInError) {
+      setError(friendlyAuthError(signInError, 'Sign in failed. Please try again.'));
+      return;
+    }
     pushSuccessRedirect();
   };
 
@@ -228,12 +345,25 @@ export default function WaselAuth() {
     if (!passwordResetCompleted) {
       setNotice('');
     }
-    if (!name.trim())             { setError('Please enter your full name.'); return; }
-    if (!email.trim())            { setError('Please enter your email address.'); return; }
-    if (!validateEmail(email))    { setError('Please enter a valid email address.'); return; }
-    if (password.length < 8)      { setError('Password must be at least 8 characters long.'); return; }
+    if (!name.trim()) {
+      setError('Please enter your full name.');
+      return;
+    }
+    if (!email.trim()) {
+      setError('Please enter your email address.');
+      return;
+    }
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
     if (!checkRateLimit(`signup:${email}`, { maxRequests: 3, windowMs: 60_000 })) {
-      setError('Too many attempts. Please wait a minute and try again.'); return;
+      setError('Too many attempts. Please wait a minute and try again.');
+      return;
     }
     const registration = await register(name, email, password, phone);
     if (registration.error) {
@@ -242,7 +372,9 @@ export default function WaselAuth() {
     }
     if (registration.requiresEmailConfirmation) {
       setPassword('');
-      setNotice(`Check ${registration.email ?? email} and confirm your email address to finish creating your account.`);
+      setNotice(
+        `Check ${registration.email ?? email} and confirm your email address to finish creating your account.`,
+      );
       setTab('signin');
       return;
     }
@@ -250,10 +382,19 @@ export default function WaselAuth() {
   };
 
   const handleForgotPassword = async () => {
-    if (!email.trim())            { setError('Enter your email address above first.'); return; }
-    if (!validateEmail(email))    { setError('Please enter a valid email address.'); return; }
+    if (!email.trim()) {
+      setError('Enter your email address above first.');
+      return;
+    }
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
     const { error: resetError } = await resetPassword(email);
-    if (resetError) { setError(friendlyAuthError(resetError, 'Password reset failed.')); return; }
+    if (resetError) {
+      setError(friendlyAuthError(resetError, 'Password reset failed.'));
+      return;
+    }
     setError('');
     toast.success(`If ${email} is registered, a password reset link has been sent.`);
   };
@@ -271,20 +412,32 @@ export default function WaselAuth() {
   };
 
   const handleWhatsAppHelp = () => {
-    if (!supportWhatsAppNumber) { setError('WhatsApp support is not configured yet.'); return; }
+    if (!supportWhatsAppNumber) {
+      setError('WhatsApp support is not configured yet.');
+      return;
+    }
     window.open(getWhatsAppSupportUrl('Hi Wasel'), '_blank', 'noopener,noreferrer');
   };
 
   const socialButtons = [
-    { label: 'Google',    color: '#4285F4', onClick: handleGoogleSignIn   },
-    { label: 'Facebook',  color: '#1877F2', onClick: handleFacebookSignIn },
-    ...(supportWhatsAppNumber ? [{ label: 'WhatsApp', color: '#25D366', onClick: handleWhatsAppHelp }] : []),
+    { label: 'Google', color: '#4285F4', onClick: handleGoogleSignIn },
+    { label: 'Facebook', color: '#1877F2', onClick: handleFacebookSignIn },
+    ...(supportWhatsAppNumber
+      ? [{ label: 'WhatsApp', color: '#25D366', onClick: handleWhatsAppHelp }]
+      : []),
   ] as const;
 
   return (
     <div
       className="auth-grid"
-      style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: F, display: 'grid', gridTemplateColumns: '1fr 1fr' }}
+      style={{
+        minHeight: '100vh',
+        background: C.bg,
+        color: C.text,
+        fontFamily: F,
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+      }}
     >
       <style>{`
         @media(max-width:768px){
@@ -301,17 +454,40 @@ export default function WaselAuth() {
       {/* ── Form panel ─────────────────────────────────────────────────── */}
       <div
         className="auth-form-panel"
-        style={{ background: `linear-gradient(180deg, ${C.bg} 0%, ${C.bgAlt} 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: `${SPACE[16]} ${SPACE[12]}`, overflowY: 'auto' }}
+        style={{
+          background: `linear-gradient(180deg, ${C.bg} 0%, ${C.bgAlt} 100%)`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: `${SPACE[16]} ${SPACE[12]}`,
+          overflowY: 'auto',
+        }}
       >
         <div style={{ width: '100%', maxWidth: 440 }}>
-
           {/* Mobile header (hidden on desktop) */}
           <div
             className="auth-mobile-header"
-            style={{ display: 'none', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: SPACE[7], paddingBottom: SPACE[6], borderBottom: `1px solid ${C.border}` }}
+            style={{
+              display: 'none',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              marginBottom: SPACE[7],
+              paddingBottom: SPACE[6],
+              borderBottom: `1px solid ${C.border}`,
+            }}
           >
             <WaselLogo size={38} theme="light" variant="full" />
-            <h2 style={{ fontSize: TYPE.size.xl, fontWeight: TYPE.weight.ultra, color: C.text, marginTop: SPACE[4], marginBottom: SPACE[2], letterSpacing: '-0.03em' }}>
+            <h2
+              style={{
+                fontSize: TYPE.size.xl,
+                fontWeight: TYPE.weight.ultra,
+                color: C.text,
+                marginTop: SPACE[4],
+                marginBottom: SPACE[2],
+                letterSpacing: '-0.03em',
+              }}
+            >
               <span style={{ color: C.cyan }}>Move smarter</span>
             </h2>
             <p style={{ fontSize: TYPE.size.sm, color: C.textMuted, marginBottom: SPACE[3] }}>
@@ -323,10 +499,25 @@ export default function WaselAuth() {
 
           {/* Heading */}
           <div style={{ marginBottom: SPACE[6] }}>
-            <h3 style={{ fontSize: TYPE.size['2xl'], fontWeight: TYPE.weight.ultra, color: C.text, margin: `0 0 ${SPACE[2]}`, letterSpacing: '-0.02em' }}>
+            <h3
+              style={{
+                fontSize: TYPE.size['2xl'],
+                fontWeight: TYPE.weight.ultra,
+                color: C.text,
+                margin: `0 0 ${SPACE[2]}`,
+                letterSpacing: '-0.02em',
+              }}
+            >
               {tab === 'signin' ? 'Welcome back' : 'Join Wasel'}
             </h3>
-            <p style={{ fontSize: TYPE.size.sm, color: C.textMuted, margin: 0, lineHeight: TYPE.lineHeight.relaxed }}>
+            <p
+              style={{
+                fontSize: TYPE.size.sm,
+                color: C.textMuted,
+                margin: 0,
+                lineHeight: TYPE.lineHeight.relaxed,
+              }}
+            >
               {tab === 'signin'
                 ? 'Use your Wasel account to continue where you left off.'
                 : 'Create your account to unlock rides, parcels, and trust in one place.'}
@@ -342,8 +533,15 @@ export default function WaselAuth() {
                 exit={{ opacity: 0, height: 0 }}
                 style={{ overflow: 'hidden', marginBottom: SPACE[5] }}
               >
-                <WaselCard variant="solid" padding={`${SPACE[3]} ${SPACE[4]}`} radius={R.lg} style={{ background: C.greenDim, border: `1px solid ${C.green}40` }}>
-                  <span style={{ fontSize: TYPE.size.sm, color: C.green, fontFamily: F }}>{notice}</span>
+                <WaselCard
+                  variant="solid"
+                  padding={`${SPACE[3]} ${SPACE[4]}`}
+                  radius={R.lg}
+                  style={{ background: C.greenDim, border: `1px solid ${C.green}40` }}
+                >
+                  <span style={{ fontSize: TYPE.size.sm, color: C.green, fontFamily: F }}>
+                    {notice}
+                  </span>
                 </WaselCard>
               </motion.div>
             )}
@@ -357,8 +555,15 @@ export default function WaselAuth() {
                 exit={{ opacity: 0, height: 0 }}
                 style={{ overflow: 'hidden', marginBottom: SPACE[5] }}
               >
-                <WaselCard variant="solid" padding={`${SPACE[3]} ${SPACE[4]}`} radius={R.lg} style={{ background: C.errorDim, border: `1px solid ${C.error}40` }}>
-                  <span style={{ fontSize: TYPE.size.sm, color: C.error, fontFamily: F }}>{error}</span>
+                <WaselCard
+                  variant="solid"
+                  padding={`${SPACE[3]} ${SPACE[4]}`}
+                  radius={R.lg}
+                  style={{ background: C.errorDim, border: `1px solid ${C.error}40` }}
+                >
+                  <span style={{ fontSize: TYPE.size.sm, color: C.error, fontFamily: F }}>
+                    {error}
+                  </span>
                 </WaselCard>
               </motion.div>
             )}
@@ -372,7 +577,12 @@ export default function WaselAuth() {
                 animate={{ opacity: 1, scale: 1 }}
                 style={{ marginBottom: SPACE[5] }}
               >
-                <WaselCard variant="solid" padding={`${SPACE[3]} ${SPACE[4]}`} radius={R.lg} style={{ background: C.greenDim, border: `1px solid ${C.green}40` }}>
+                <WaselCard
+                  variant="solid"
+                  padding={`${SPACE[3]} ${SPACE[4]}`}
+                  radius={R.lg}
+                  style={{ background: C.greenDim, border: `1px solid ${C.green}40` }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2] }}>
                     <CheckCircle2 size={16} color={C.green} />
                     <span style={{ fontSize: TYPE.size.sm, color: C.green, fontFamily: F }}>
@@ -394,7 +604,6 @@ export default function WaselAuth() {
               transition={{ duration: 0.15 }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[4] }}>
-
                 {tab === 'signup' && (
                   <WaselInput
                     id="full-name"
@@ -425,9 +634,15 @@ export default function WaselAuth() {
                   type="password"
                   value={password}
                   onChange={setPassword}
-                  placeholder={tab === 'signin' ? 'Enter your password' : 'Create a secure password'}
+                  placeholder={
+                    tab === 'signin' ? 'Enter your password' : 'Create a secure password'
+                  }
                   icon={<Lock size={16} />}
-                  hint={tab === 'signup' && password.length > 0 ? <StrengthBar password={password} /> : undefined}
+                  hint={
+                    tab === 'signup' && password.length > 0 ? (
+                      <StrengthBar password={password} />
+                    ) : undefined
+                  }
                 />
 
                 {tab === 'signup' && (
@@ -448,7 +663,15 @@ export default function WaselAuth() {
                     <button
                       type="button"
                       onClick={handleForgotPassword}
-                      style={{ background: 'none', border: 'none', color: C.cyan, fontSize: TYPE.size.xs, cursor: 'pointer', fontFamily: F, padding: 0 }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: C.cyan,
+                        fontSize: TYPE.size.xs,
+                        cursor: 'pointer',
+                        fontFamily: F,
+                        padding: 0,
+                      }}
                     >
                       Forgot password?
                     </button>
@@ -471,37 +694,88 @@ export default function WaselAuth() {
                 {/* Divider */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
                   <div style={{ flex: 1, height: 1, background: C.border }} />
-                  <span style={{ fontSize: TYPE.size.xs, color: C.textMuted }}>or continue with</span>
+                  <span style={{ fontSize: TYPE.size.xs, color: C.textMuted }}>
+                    or continue with
+                  </span>
                   <div style={{ flex: 1, height: 1, background: C.border }} />
                 </div>
 
                 {/* Social buttons */}
                 <div style={{ display: 'flex', gap: SPACE[2], flexWrap: 'wrap' }}>
-                  {socialButtons.map((social) => (
+                  {socialButtons.map(social => (
                     <motion.button
                       key={social.label}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.97 }}
-                    type="button"
-                    disabled={loading || success}
-                    onClick={() => { void social.onClick(); }}
-                    style={{ flex: '1 1 120px', height: 44, borderRadius: R.lg, border: `1px solid ${social.color}30`, background: `${social.color}0C`, color: social.color, fontWeight: TYPE.weight.black, fontSize: TYPE.size.sm, fontFamily: F, cursor: loading || success ? 'not-allowed' : 'pointer', opacity: loading || success ? 0.55 : 1, transition: 'all 150ms ease' }}
-                  >
-                    {social.label}
-                  </motion.button>
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
+                      type="button"
+                      disabled={loading || success}
+                      onClick={() => {
+                        void social.onClick();
+                      }}
+                      style={{
+                        flex: '1 1 120px',
+                        height: 44,
+                        borderRadius: R.lg,
+                        border: `1px solid ${social.color}30`,
+                        background: `${social.color}0C`,
+                        color: social.color,
+                        fontWeight: TYPE.weight.black,
+                        fontSize: TYPE.size.sm,
+                        fontFamily: F,
+                        cursor: loading || success ? 'not-allowed' : 'pointer',
+                        opacity: loading || success ? 0.55 : 1,
+                        transition: 'all 150ms ease',
+                      }}
+                    >
+                      {social.label}
+                    </motion.button>
                   ))}
                 </div>
-
               </div>
             </motion.div>
           </AnimatePresence>
 
           {/* Legal */}
-          <p style={{ fontSize: TYPE.size.xs, color: C.textMuted, textAlign: 'center', marginTop: SPACE[6], lineHeight: TYPE.lineHeight.relaxed }}>
+          <p
+            style={{
+              fontSize: TYPE.size.xs,
+              color: C.textMuted,
+              textAlign: 'center',
+              marginTop: SPACE[6],
+              lineHeight: TYPE.lineHeight.relaxed,
+            }}
+          >
             By continuing, you agree to our{' '}
-            <button type="button" onClick={() => nav('/terms')} style={{ color: C.cyan, cursor: 'pointer', background: 'none', border: 'none', padding: 0, font: 'inherit' }}>Terms of Service</button>
-            {' '}and{' '}
-            <button type="button" onClick={() => nav('/privacy')} style={{ color: C.cyan, cursor: 'pointer', background: 'none', border: 'none', padding: 0, font: 'inherit' }}>Privacy Policy</button>.
+            <button
+              type="button"
+              onClick={() => nav('/terms')}
+              style={{
+                color: C.cyan,
+                cursor: 'pointer',
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                font: 'inherit',
+              }}
+            >
+              Terms of Service
+            </button>{' '}
+            and{' '}
+            <button
+              type="button"
+              onClick={() => nav('/privacy')}
+              style={{
+                color: C.cyan,
+                cursor: 'pointer',
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                font: 'inherit',
+              }}
+            >
+              Privacy Policy
+            </button>
+            .
           </p>
         </div>
       </div>

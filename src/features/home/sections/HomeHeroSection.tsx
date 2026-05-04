@@ -1,8 +1,8 @@
 import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle, Shield } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
-import { WaselMark } from '../../../components/wasel-ds/WaselLogo';
-import { C, InlineCurrencySwitcher } from '../HomePageShared';
+import { WaselLogo } from '../../../components/wasel-ds/WaselLogo';
+import { C, F, InlineCurrencySwitcher } from '../HomePageShared';
 import { MobilityOSLandingMap } from '../MobilityOSLandingMap';
 import type { TripMode } from './types';
 
@@ -31,111 +31,130 @@ function TripModeCard({
   onNavigate,
   primaryTripPath,
 }: TripModeCardProps) {
+  const options = [
+    {
+      key: 'one-way' as const,
+      title: ar ? 'ذهاب فقط' : 'One way',
+      desc: ar ? 'بحث مباشر على نفس الاتجاه' : 'Direct search on one corridor',
+    },
+    {
+      key: 'round' as const,
+      title: ar ? 'ذهاب وعودة' : 'Round trip',
+      desc: ar ? 'احتفظ بالسياق في الاتجاهين' : 'Keep both directions in one flow',
+    },
+  ];
+
   return (
     <div
       style={{
         borderRadius: 22,
-        padding: '16px 18px',
-        background: 'linear-gradient(135deg, rgba(0,200,232,0.06), rgba(0,200,117,0.04))',
-        border: '1px solid rgba(0,200,232,0.14)',
+        padding: '18px',
+        background: 'rgba(255,255,255,0.03)',
+        border: `1px solid ${C.border}`,
       }}
     >
       <div
         style={{
-          fontSize: '0.7rem',
-          fontWeight: 800,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          color: C.textDim,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          flexWrap: 'wrap',
         }}
       >
-        {ar ? 'نوع الرحلة' : 'Trip mode'}
-      </div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-          gap: 10,
-          marginTop: 12,
-        }}
-      >
-        {[
-          {
-            key: 'one-way' as const,
-            title: ar ? 'ذهاب فقط' : 'One way',
-            desc: ar ? 'بحث مباشر في اتجاه واحد' : 'Direct one-way search',
-            accent: C.cyan,
-          },
-          {
-            key: 'round' as const,
-            title: ar ? 'ذهاب وعودة' : 'Round trip',
-            desc: ar ? 'احتفظ بسياق الاتجاهين' : 'Keep both directions in context',
-            accent: C.green,
-          },
-        ].map(option => (
-          <button
-            key={option.key}
-            onClick={() => onTripModeChange(option.key)}
+        <div>
+          <div
             style={{
-              minHeight: 94,
-              padding: '14px 16px',
-              borderRadius: 18,
-              textAlign: 'left',
-              background: tripMode === option.key ? `${option.accent}18` : 'rgba(255,255,255,0.04)',
-              border: `1.5px solid ${
-                tripMode === option.key ? option.accent : 'rgba(255,255,255,0.1)'
-              }`,
-              color: C.text,
-              cursor: 'pointer',
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: C.textDim,
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                gap: 8,
-                alignItems: 'center',
-              }}
-            >
-              <div style={{ fontSize: '0.86rem', fontWeight: 800 }}>{option.title}</div>
-              {tripMode === option.key && <CheckCircle size={15} color={option.accent} />}
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                color: C.textDim,
-                fontSize: '0.73rem',
-                lineHeight: 1.5,
-              }}
-            >
-              {option.desc}
-            </div>
-          </button>
-        ))}
+            {ar ? 'نوع الرحلة' : 'Trip mode'}
+          </div>
+          <div style={{ marginTop: 6, fontSize: '0.86rem', color: C.textMuted, lineHeight: 1.55 }}>
+            {ar
+              ? 'اختر طريقة البحث ثم افتح المسار المناسب فوراً.'
+              : 'Choose the search mode, then jump directly into the corridor.'}
+          </div>
+        </div>
+        <div
+          style={{
+            display: 'inline-grid',
+            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+            gap: 8,
+            padding: 6,
+            borderRadius: 18,
+            background: 'rgba(255,255,255,0.03)',
+            border: `1px solid ${C.borderFaint}`,
+            minWidth: 280,
+          }}
+        >
+          {options.map(option => {
+            const selected = tripMode === option.key;
+            return (
+              <button
+                key={option.key}
+                onClick={() => onTripModeChange(option.key)}
+                style={{
+                  minHeight: 76,
+                  padding: '12px 14px',
+                  borderRadius: 14,
+                  textAlign: 'left',
+                  background: selected ? 'rgba(88,221,255,0.14)' : 'transparent',
+                  border: `1px solid ${selected ? 'rgba(88,221,255,0.32)' : 'transparent'}`,
+                  color: C.text,
+                  cursor: 'pointer',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ fontSize: '0.84rem', fontWeight: 800 }}>{option.title}</div>
+                  {selected ? <CheckCircle size={14} color={C.cyan} /> : null}
+                </div>
+                <div
+                  style={{ marginTop: 6, color: C.textDim, fontSize: '0.72rem', lineHeight: 1.5 }}
+                >
+                  {option.desc}
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div
+        className="wasel-home-primary-actions"
         style={{
           display: 'flex',
           gap: 10,
           flexWrap: 'wrap',
-          marginTop: 14,
+          marginTop: 16,
         }}
       >
         <button
           onClick={() => onNavigate(primaryTripPath)}
           style={{
-            height: 48,
-            padding: '0 18px',
+            height: 50,
+            padding: '0 20px',
             borderRadius: 14,
             border: 'none',
-            background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 55%, #18D7C8 100%)',
+            background: 'linear-gradient(135deg, #58DDFF 0%, #25B6FF 55%, #47D69E 100%)',
             color: '#041018',
             fontWeight: 900,
             cursor: 'pointer',
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
+            boxShadow: '0 14px 30px rgba(37,182,255,0.22)',
           }}
         >
           {ar ? 'ابدأ البحث' : 'Start search'}
@@ -144,7 +163,7 @@ function TripModeCard({
         <button
           onClick={() => onNavigate('/offer-ride')}
           style={{
-            height: 48,
+            height: 50,
             padding: '0 18px',
             borderRadius: 14,
             border: '1px solid rgba(255,255,255,0.12)',
@@ -176,122 +195,144 @@ export function HomeHeroSection({
       initial={false}
       style={{
         display: 'grid',
-        gridTemplateColumns: '1.1fr 0.9fr',
+        gridTemplateColumns: 'minmax(0, 1.02fr) minmax(340px, 0.98fr)',
         gap: 18,
         alignItems: 'stretch',
       }}
     >
       <div
+        className="wasel-home-hero-copy"
         style={{
-          borderRadius: 28,
-          padding: '28px 26px',
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03))',
-          border: '1px solid rgba(0,200,232,0.16)',
-          boxShadow: '0 20px 48px rgba(0,0,0,0.2)',
+          borderRadius: 30,
+          padding: '30px 28px',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025))',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 22px 54px rgba(0,0,0,0.26)',
         }}
       >
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
+            justifyContent: 'space-between',
+            gap: 16,
             flexWrap: 'wrap',
             marginBottom: 18,
           }}
         >
-          <div
-            style={{
-              width: 68,
-              height: 68,
-              borderRadius: '50%',
-              display: 'grid',
-              placeItems: 'center',
-              background: 'rgba(0,200,232,0.08)',
-              border: '1px solid rgba(0,200,232,0.18)',
-              boxShadow: '0 0 30px rgba(0,200,232,0.16)',
-            }}
-          >
-            <WaselMark size={44} />
-          </div>
-          <div style={{ flex: 1, minWidth: 220 }}>
+          <div style={{ display: 'grid', gap: 10 }}>
             <div
               style={{
-                fontSize: '0.72rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '6px 12px',
+                borderRadius: 999,
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                width: 'fit-content',
+                fontSize: '0.68rem',
                 fontWeight: 800,
-                letterSpacing: '0.14em',
+                letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                color: C.cyan,
-              }}
-            >
-              {ar ? 'واصل | منطق واحد للحركة' : 'WASEL | ONE ROUTE LOGIC'}
-            </div>
-            <h1
-              style={{
-                margin: '8px 0 0',
-                fontSize: 'clamp(1.8rem, 4vw, 3rem)',
-                lineHeight: 1.02,
-                letterSpacing: '-0.05em',
-                fontWeight: 950,
-              }}
-            >
-              {ar
-                ? `اختر المسار ثم تحرك${firstName ? `، ${firstName}` : ''}`
-                : `Pick the corridor, then move${firstName ? `, ${firstName}` : ''}`}
-            </h1>
-            <p
-              style={{
-                margin: '10px 0 0',
                 color: C.textMuted,
-                lineHeight: 1.7,
-                maxWidth: 560,
               }}
             >
-              {ar
-                ? 'ابدأ من نفس المسار سواء أردت رحلة أو مشاركة مقعد أو إرسال طرد أو التحول إلى الباص.'
-                : 'Start from the same route whether you need a seat, want to offer one, need to send a parcel, or want the bus fallback.'}
-            </p>
+              <Shield size={12} color={C.cyan} />
+              {ar ? 'منطق واحد للحركة' : 'One route logic'}
+            </div>
+            <WaselLogo size={34} theme="light" variant="full" />
           </div>
+          {user ? <InlineCurrencySwitcher ar={ar} /> : null}
         </div>
+
+        <h1
+          style={{
+            margin: 0,
+            fontSize: 'clamp(2rem, 4.5vw, 3.25rem)',
+            lineHeight: 0.98,
+            letterSpacing: '-0.05em',
+            fontWeight: 900,
+            maxWidth: 620,
+          }}
+        >
+          {ar
+            ? `اختر المسار ثم تحرك${firstName ? `، ${firstName}` : ''}`
+            : `Pick the corridor, then move${firstName ? `, ${firstName}` : ''}`}
+        </h1>
+
+        <p
+          style={{
+            margin: '14px 0 0',
+            color: C.textMuted,
+            lineHeight: 1.78,
+            maxWidth: 600,
+            fontSize: '0.97rem',
+          }}
+        >
+          {ar
+            ? 'سواء أردت مقعداً أو أردت عرض مقعد أو إرسال طرد أو التحول إلى الباص، تبدأ كل خطوة من نفس منطق المسار حتى تبقى التجربة أوضح وأسرع.'
+            : 'Whether you need a seat, want to offer one, need to send a parcel, or need the bus fallback, every move starts from the same corridor logic so the product stays clear and fast.'}
+        </p>
 
         <div
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
-            gap: 12,
-            alignItems: 'center',
+            gap: 10,
             flexWrap: 'wrap',
-            marginBottom: 18,
+            marginTop: 18,
           }}
         >
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '8px 12px',
-              borderRadius: 999,
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(0,200,232,0.14)',
-            }}
-          >
-            <Shield size={15} color={C.green} />
-            <span style={{ fontSize: '0.78rem', color: C.textMuted }}>
-              {ar ? 'ثقة وتسعير واضحان قبل الحجز' : 'Trust and pricing stay clear before booking'}
-            </span>
-          </div>
-          {user && <InlineCurrencySwitcher ar={ar} />}
+          {[
+            ar ? 'ثقة واضحة قبل الحجز' : 'Trust visible before booking',
+            ar ? 'تسعير أوضح على مستوى المسار' : 'Corridor-level pricing clarity',
+            ar ? 'الرحلات والطرود والباص في شبكة واحدة' : 'Rides, parcels, and bus in one network',
+          ].map(item => (
+            <div
+              key={item}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                height: 34,
+                padding: '0 12px',
+                borderRadius: 999,
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                color: C.textSub,
+                fontSize: '0.76rem',
+                fontWeight: 600,
+                fontFamily: F,
+              }}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  background: C.cyan,
+                  boxShadow: `0 0 12px ${C.cyan}66`,
+                }}
+              />
+              {item}
+            </div>
+          ))}
         </div>
 
-        <TripModeCard
-          ar={ar}
-          tripMode={tripMode}
-          onTripModeChange={onTripModeChange}
-          onNavigate={onNavigate}
-          primaryTripPath={primaryTripPath}
-        />
+        <div style={{ marginTop: 22 }}>
+          <TripModeCard
+            ar={ar}
+            tripMode={tripMode}
+            onTripModeChange={onTripModeChange}
+            onNavigate={onNavigate}
+            primaryTripPath={primaryTripPath}
+          />
+        </div>
       </div>
 
-      <MobilityOSLandingMap />
+      <div className="wasel-home-hero-aside">
+        <MobilityOSLandingMap />
+      </div>
     </motion.section>
   );
 }

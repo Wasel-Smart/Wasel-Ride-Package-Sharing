@@ -45,13 +45,7 @@ export interface PackageTracking {
   paymentStatus: 'pending' | 'escrowed' | 'released' | 'refunded';
   paymentMethod?: string;
   status: PackageStatus;
-  lifecycleStatus:
-    | 'created'
-    | 'assigned'
-    | 'picked_up'
-    | 'in_transit'
-    | 'delivered'
-    | 'cancelled';
+  lifecycleStatus: 'created' | 'assigned' | 'picked_up' | 'in_transit' | 'delivered' | 'cancelled';
   currentLocation?: GeoPoint;
   createdAt: Date;
   pickedUpAt?: Date;
@@ -244,10 +238,7 @@ export class PackageTrackingService {
     return pkg;
   }
 
-  async processPayment(
-    packageId: string,
-    paymentMethod: string,
-  ): Promise<PackagePaymentEscrow> {
+  async processPayment(packageId: string, paymentMethod: string): Promise<PackagePaymentEscrow> {
     const pkg = this.requirePackage(packageId);
 
     const escrow: PackagePaymentEscrow = {
@@ -452,21 +443,15 @@ export class PackageTrackingService {
   }
 
   getPackageByTrackingCode(trackingCode: string): PackageTracking | undefined {
-    return Array.from(this.packages.values()).find(
-      (pkg) => pkg.trackingCode === trackingCode,
-    );
+    return Array.from(this.packages.values()).find(pkg => pkg.trackingCode === trackingCode);
   }
 
   getSenderPackages(senderId: string): PackageTracking[] {
-    return Array.from(this.packages.values()).filter(
-      (pkg) => pkg.senderId === senderId,
-    );
+    return Array.from(this.packages.values()).filter(pkg => pkg.senderId === senderId);
   }
 
   getDriverPackages(driverId: string): PackageTracking[] {
-    return Array.from(this.packages.values()).filter(
-      (pkg) => pkg.driverId === driverId,
-    );
+    return Array.from(this.packages.values()).filter(pkg => pkg.driverId === driverId);
   }
 
   getEscrowStatus(packageId: string): PackagePaymentEscrow | undefined {

@@ -112,11 +112,14 @@ const USER_ONLY_NAV_PATHS = new Set<string>(['/my-trips', '/profile']);
 
 export function isVisibleNavGroup(group: NavGroup, isAuthenticated: boolean) {
   if ('direct' in group && group.direct) {
-    return !HIDDEN_NAV_PATHS.has(group.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(group.path));
+    return (
+      !HIDDEN_NAV_PATHS.has(group.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(group.path))
+    );
   }
   const items = ('items' in group ? group.items : []) as unknown as readonly NavItem[];
   return items.some(
-    (item) => !HIDDEN_NAV_PATHS.has(item.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(item.path)),
+    item =>
+      !HIDDEN_NAV_PATHS.has(item.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(item.path)),
   );
 }
 
@@ -124,6 +127,7 @@ export function getVisibleNavItems(group: NavGroup, isAuthenticated: boolean) {
   if ('direct' in group && group.direct) return [];
   const items = ('items' in group ? group.items : []) as unknown as readonly NavItem[];
   return items.filter(
-    (item) => !HIDDEN_NAV_PATHS.has(item.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(item.path)),
+    item =>
+      !HIDDEN_NAV_PATHS.has(item.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(item.path)),
   );
 }

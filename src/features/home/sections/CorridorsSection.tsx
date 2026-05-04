@@ -9,16 +9,9 @@ interface CorridorsSectionProps {
   onNavigate: (path: string) => void;
 }
 
-export function CorridorsSection({
-  ar,
-  corridorCards,
-  onNavigate,
-}: CorridorsSectionProps) {
+export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSectionProps) {
   return (
-    <motion.section
-      initial={false}
-      style={{ marginTop: 34 }}
-    >
+    <motion.section initial={false} style={{ marginTop: 38 }}>
       <SectionHeader
         title={ar ? 'مسارات جاهزة الآن' : 'Corridors ready now'}
         icon="R"
@@ -30,42 +23,70 @@ export function CorridorsSection({
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-          gap: 12,
+          gap: 14,
         }}
       >
-        {corridorCards.map((card, index) => (
+        {corridorCards.map(card => (
           <button
             key={card.key}
             onClick={() => onNavigate(card.path)}
             style={{
               textAlign: 'left',
-              borderRadius: 22,
-              padding: '18px 16px 16px',
-              background:
-                index === 0
-                  ? 'linear-gradient(180deg, rgba(0,200,232,0.12), rgba(255,255,255,0.03))'
-                  : glass(0.44),
-              border: `1px solid ${index === 0 ? 'rgba(0,200,232,0.22)' : C.border}`,
+              borderRadius: 26,
+              padding: '20px 18px 18px',
+              background: card.featured
+                ? 'linear-gradient(180deg, rgba(88,221,255,0.12), rgba(255,255,255,0.03))'
+                : glass(0.52),
+              border: `1px solid ${card.featured ? 'rgba(88,221,255,0.22)' : C.border}`,
               cursor: 'pointer',
+              boxShadow: card.featured ? '0 18px 36px rgba(0,0,0,0.18)' : 'none',
             }}
           >
             <div
               style={{
-                fontSize: '0.68rem',
-                fontWeight: 800,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: card.accent,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
               }}
             >
-              {card.meta}
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  height: 30,
+                  padding: '0 10px',
+                  borderRadius: 999,
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: card.accent,
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    background: card.accent,
+                    boxShadow: `0 0 12px ${card.accent}55`,
+                  }}
+                />
+                {card.featured ? (ar ? 'أفضل الآن' : 'Best now') : card.meta}
+              </div>
             </div>
             <div
               style={{
-                marginTop: 10,
-                fontSize: '1rem',
+                marginTop: 14,
+                fontSize: '1.05rem',
                 fontWeight: 900,
-                lineHeight: 1.2,
+                lineHeight: 1.18,
+                letterSpacing: '-0.02em',
+                color: C.text,
               }}
             >
               {card.title}
@@ -75,20 +96,34 @@ export function CorridorsSection({
                 marginTop: 8,
                 color: C.textMuted,
                 lineHeight: 1.65,
-                fontSize: '0.8rem',
+                fontSize: '0.84rem',
               }}
             >
               {card.detail}
             </div>
+            {card.insight ? (
+              <div
+                style={{
+                  marginTop: 14,
+                  paddingTop: 14,
+                  borderTop: `1px solid ${C.borderFaint}`,
+                  color: C.textSub,
+                  fontSize: '0.76rem',
+                  lineHeight: 1.55,
+                }}
+              >
+                {card.insight}
+              </div>
+            ) : null}
             <div
               style={{
-                marginTop: 14,
+                marginTop: 16,
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
                 color: card.accent,
                 fontWeight: 800,
-                fontSize: '0.75rem',
+                fontSize: '0.78rem',
               }}
             >
               {ar ? 'افتح هذا المسار' : 'Open this corridor'}

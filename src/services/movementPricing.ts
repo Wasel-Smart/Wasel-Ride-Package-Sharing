@@ -42,7 +42,8 @@ export function getMovementPriceQuote(args: {
   const forecastDemandScore = Math.max(0, Math.min(100, args.forecastDemandScore ?? 0));
   const densityDiscountPercent = getDensityDiscountPercent(forecastDemandScore);
   const plusDiscountPercent = membership.plusActive ? 6 : 0;
-  const commuterDiscountPercent = args.corridorId && membership.commuterPassRoute?.id === args.corridorId ? 8 : 0;
+  const commuterDiscountPercent =
+    args.corridorId && membership.commuterPassRoute?.id === args.corridorId ? 8 : 0;
   const creditDiscountPercent = getCreditDiscountPercent(membership.movementCredits);
   const totalDiscountPercent = Math.min(
     24,

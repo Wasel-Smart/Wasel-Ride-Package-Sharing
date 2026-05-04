@@ -31,14 +31,14 @@ export interface TripSummary {
   originCity: string;
   destinationCity: string;
   country: CountryCode;
-  departureTime: string;       // ISO timestamp
+  departureTime: string; // ISO timestamp
   availableSeats: number;
   totalSeats: number;
   allowsPackages: boolean;
   maxPackageWeightKg: number;
   genderPreference: 'mixed' | 'women_only' | 'men_only' | 'family_only';
-  driverRating: number;        // 0-5
-  driverTrustScore: number;    // 0-100
+  driverRating: number; // 0-5
+  driverTrustScore: number; // 0-100
   pricePerSeatJOD: number;
   estimatedArrivalTime: string;
   waypoints?: string[];
@@ -49,7 +49,7 @@ export interface PassengerRequest {
   originCity: string;
   destinationCity: string;
   country: CountryCode;
-  date: string;                // YYYY-MM-DD
+  date: string; // YYYY-MM-DD
   passengersCount: number;
   genderPreference: 'mixed' | 'women_only' | 'men_only' | 'family_only';
   maxPriceJOD?: number;
@@ -64,7 +64,7 @@ export interface PackageSummary {
   destinationCity: string;
   country: CountryCode;
   weightKg: number;
-  neededBy: string;            // ISO timestamp
+  neededBy: string; // ISO timestamp
   category: string;
   fragile: boolean;
   declaredValueJOD: number;
@@ -95,8 +95,8 @@ export interface TripOptimizationScore {
 
 export interface PackageCompatibilityResult {
   compatible: boolean;
-  score: number;               // 0-100
-  blockers: string[];          // Why it's incompatible
+  score: number; // 0-100
+  blockers: string[]; // Why it's incompatible
   blockersAr: string[];
   estimatedDeliveryTime?: string;
   detourKm: number;
@@ -107,7 +107,7 @@ export interface RouteOptimizationResult {
   totalDistanceKm: number;
   estimatedDurationMin: number;
   prayerStopsSuggested: number;
-  optimizationSaving: number;  // km saved vs naive order
+  optimizationSaving: number; // km saved vs naive order
 }
 
 export interface LiquidityMetrics {
@@ -115,22 +115,22 @@ export interface LiquidityMetrics {
   availableTrips: number;
   bookedSeats: number;
   totalSeats: number;
-  utilizationRate: number;     // 0-1
+  utilizationRate: number; // 0-1
   averagePriceJOD: number;
-  healthScore: number;         // 0-100
+  healthScore: number; // 0-100
   status: 'healthy' | 'low' | 'critical' | 'oversupply';
 }
 
 // ─── Weight coefficients (tuneable) ──────────────────────────────────────────
 
 const WEIGHTS = {
-  routeMatch:           0.30,  // Route accuracy is most important
-  seatAvailability:     0.20,  // Must have seats
-  priceMatch:           0.15,  // Price within budget
-  driverRating:         0.15,  // Trust matters
-  genderCompatibility:  0.10,  // Cultural safety
-  packageFit:           0.05,  // Package carriage
-  timeFlexibility:      0.05,  // Departure time match
+  routeMatch: 0.3, // Route accuracy is most important
+  seatAvailability: 0.2, // Must have seats
+  priceMatch: 0.15, // Price within budget
+  driverRating: 0.15, // Trust matters
+  genderCompatibility: 0.1, // Cultural safety
+  packageFit: 0.05, // Package carriage
+  timeFlexibility: 0.05, // Departure time match
 } as const;
 
 // ─── Core Scoring: Trip vs Passenger ─────────────────────────────────────────
@@ -162,11 +162,14 @@ export function scoreTripForPassenger(
   }
 
   // ── 2. Seat availability ────────────────────────────────────────────────────
-  const seatScore =
-    trip.availableSeats >= request.passengersCount ? 100 : 0;
+  const seatScore = trip.availableSeats >= request.passengersCount ? 100 : 0;
   if (seatScore === 0) {
-    warnings.push(`Not enough seats (need ${request.passengersCount}, available ${trip.availableSeats})`);
-    warningsAr.push(`مقاعد غير كافية (تحتاج ${request.passengersCount}، متاح ${trip.availableSeats})`);
+    warnings.push(
+      `Not enough seats (need ${request.passengersCount}, available ${trip.availableSeats})`,
+    );
+    warningsAr.push(
+      `مقاعد غير كافية (تحتاج ${request.passengersCount}، متاح ${trip.availableSeats})`,
+    );
   }
 
   // ── 3. Price match ──────────────────────────────────────────────────────────
@@ -192,10 +195,7 @@ export function scoreTripForPassenger(
   }
 
   // ── 5. Gender compatibility ─────────────────────────────────────────────────
-  const genderScore = scoreGenderCompatibility(
-    trip.genderPreference,
-    request.genderPreference,
-  );
+  const genderScore = scoreGenderCompatibility(trip.genderPreference, request.genderPreference);
   if (genderScore === 100) {
     reasons.push('Gender preference matched');
     reasonsAr.push('تفضيلات الجنس متطابقة');
@@ -216,13 +216,13 @@ export function scoreTripForPassenger(
 
   // ── Weighted overall score ──────────────────────────────────────────────────
   const overall = Math.round(
-    routeMatch      * WEIGHTS.routeMatch +
-    seatScore       * WEIGHTS.seatAvailability +
-    priceScore      * WEIGHTS.priceMatch +
-    ratingScore     * WEIGHTS.driverRating +
-    genderScore     * WEIGHTS.genderCompatibility +
-    pkgScore        * WEIGHTS.packageFit +
-    timeScore       * WEIGHTS.timeFlexibility,
+    routeMatch * WEIGHTS.routeMatch +
+      seatScore * WEIGHTS.seatAvailability +
+      priceScore * WEIGHTS.priceMatch +
+      ratingScore * WEIGHTS.driverRating +
+      genderScore * WEIGHTS.genderCompatibility +
+      pkgScore * WEIGHTS.packageFit +
+      timeScore * WEIGHTS.timeFlexibility,
   );
 
   // ── Post-booking seat utilization ───────────────────────────────────────────
@@ -263,10 +263,8 @@ export function checkPackageCompatibility(
   let score = 100;
 
   // 1. Route match
-  const sameOrigin =
-    trip.originCity.toLowerCase() === pkg.originCity.toLowerCase();
-  const sameDest =
-    trip.destinationCity.toLowerCase() === pkg.destinationCity.toLowerCase();
+  const sameOrigin = trip.originCity.toLowerCase() === pkg.originCity.toLowerCase();
+  const sameDest = trip.destinationCity.toLowerCase() === pkg.destinationCity.toLowerCase();
   if (!sameOrigin || !sameDest) {
     blockers.push('Route does not match package pickup/delivery cities');
     blockersAr.push('المسار لا يتطابق مع مدن الاستلام والتسليم');
@@ -336,7 +334,7 @@ export function optimizeMultiStopRoute(
     return {
       orderedStops: [origin, destination],
       totalDistanceKm: direct,
-      estimatedDurationMin: Math.round(direct * 1.2),  // ~50 km/h average
+      estimatedDurationMin: Math.round(direct * 1.2), // ~50 km/h average
       prayerStopsSuggested: Math.floor((direct * 1.2) / 120),
       optimizationSaving: 0,
     };
@@ -371,7 +369,7 @@ export function optimizeMultiStopRoute(
 
   const optimizedDistance = calcOrderedDistance(optimized, distanceMatrix);
   const durationMin = Math.round(optimizedDistance * 1.4); // incl. stop time
-  const prayerStops = Math.floor(durationMin / 120);       // every 2 hours
+  const prayerStops = Math.floor(durationMin / 120); // every 2 hours
 
   return {
     orderedStops: optimized,
@@ -388,16 +386,13 @@ export function optimizeMultiStopRoute(
  * Score seat utilization for platform liquidity.
  * High utilization = good for driver and platform.
  */
-export function scoreSeatUtilization(
-  bookedSeats: number,
-  totalSeats: number,
-): number {
+export function scoreSeatUtilization(bookedSeats: number, totalSeats: number): number {
   if (totalSeats === 0) return 0;
   const rate = bookedSeats / totalSeats;
   // Reward high utilization non-linearly
   if (rate >= 1.0) return 100;
   if (rate >= 0.75) return 90;
-  if (rate >= 0.50) return 70;
+  if (rate >= 0.5) return 70;
   if (rate >= 0.25) return 45;
   return Math.round(rate * 100);
 }
@@ -409,19 +404,24 @@ export function scoreSeatUtilization(
  * Target: 10+ trips/week per route, 1:10 driver-to-passenger ratio.
  */
 export function calculateLiquidityHealth(
-  availableTripsOrMetrics: number | {
-    activeTrips: number;
-    pendingRequests: number;
-    averageMatchTime: number;
-  },
+  availableTripsOrMetrics:
+    | number
+    | {
+        activeTrips: number;
+        pendingRequests: number;
+        averageMatchTime: number;
+      },
   totalSeats?: number,
   bookedSeats?: number,
 ): (LiquidityMetrics & { routeId: string; averagePriceJOD: number }) | number {
   if (typeof availableTripsOrMetrics === 'object') {
     const { activeTrips, pendingRequests, averageMatchTime } = availableTripsOrMetrics;
-    const balanceRatio = pendingRequests === 0 ? activeTrips : Math.min(activeTrips, pendingRequests) / Math.max(activeTrips, pendingRequests);
+    const balanceRatio =
+      pendingRequests === 0
+        ? activeTrips
+        : Math.min(activeTrips, pendingRequests) / Math.max(activeTrips, pendingRequests);
     const speedScore = Math.max(0, 100 - averageMatchTime);
-    return Math.round((balanceRatio * 70) + (speedScore * 0.3));
+    return Math.round(balanceRatio * 70 + speedScore * 0.3);
   }
 
   const availableTrips = availableTripsOrMetrics;
@@ -471,8 +471,8 @@ export function rankTripsForPassenger(
   request: PassengerRequest,
 ): Array<{ trip: TripSummary; score: TripOptimizationScore }> {
   const scored = trips
-    .map((trip) => ({ trip, score: scoreTripForPassenger(trip, request) }))
-    .filter(({ score }) => score.overall > 30);  // Filter out poor matches
+    .map(trip => ({ trip, score: scoreTripForPassenger(trip, request) }))
+    .filter(({ score }) => score.overall > 30); // Filter out poor matches
 
   return scored.sort((a, b) => b.score.overall - a.score.overall);
 }
@@ -485,7 +485,7 @@ export function rankTripsForPackage(
   pkg: PackageSummary,
 ): Array<{ trip: TripSummary; result: PackageCompatibilityResult }> {
   const results = trips
-    .map((trip) => ({ trip, result: checkPackageCompatibility(trip, pkg) }))
+    .map(trip => ({ trip, result: checkPackageCompatibility(trip, pkg) }))
     .filter(({ result }) => result.compatible);
 
   return results.sort((a, b) => b.result.score - a.result.score);
@@ -497,7 +497,7 @@ export interface PrayerStop {
   name: string;
   nameAr: string;
   city: string;
-  prayerTime: string;         // ISO timestamp
+  prayerTime: string; // ISO timestamp
   waitMinutes: number;
 }
 
@@ -516,11 +516,11 @@ export function calculatePrayerStops(
 
   // Simplified prayer windows (minutes from midnight, local approximate)
   const prayerWindowsMinutesFromMidnight: { name: string; nameAr: string; minute: number }[] = [
-    { name: 'Fajr',    nameAr: 'الفجر',   minute: 330  },  // ~5:30 AM
-    { name: 'Dhuhr',   nameAr: 'الظهر',   minute: 780  },  // ~1:00 PM
-    { name: 'Asr',     nameAr: 'العصر',   minute: 930  },  // ~3:30 PM
-    { name: 'Maghrib', nameAr: 'المغرب',  minute: 1080 },  // ~6:00 PM
-    { name: 'Isha',    nameAr: 'العشاء',  minute: 1200 },  // ~8:00 PM
+    { name: 'Fajr', nameAr: 'الفجر', minute: 330 }, // ~5:30 AM
+    { name: 'Dhuhr', nameAr: 'الظهر', minute: 780 }, // ~1:00 PM
+    { name: 'Asr', nameAr: 'العصر', minute: 930 }, // ~3:30 PM
+    { name: 'Maghrib', nameAr: 'المغرب', minute: 1080 }, // ~6:00 PM
+    { name: 'Isha', nameAr: 'العشاء', minute: 1200 }, // ~8:00 PM
   ];
 
   const endTime = dep + totalDurationMin * 60_000;
@@ -543,10 +543,7 @@ export function calculatePrayerStops(
   return stops;
 }
 
-export function scoreTripMatch(
-  trip: TripSummary,
-  request: PassengerRequest,
-): number {
+export function scoreTripMatch(trip: TripSummary, request: PassengerRequest): number {
   const score = scoreTripForPassenger(trip, request);
   const routeMismatch =
     trip.originCity.toLowerCase() !== request.originCity.toLowerCase() ||
@@ -570,10 +567,7 @@ export function calculateDetourTolerance(routeDistanceKm: number): number {
   return Math.round(Math.max(10, routeDistanceKm * 0.12));
 }
 
-export function suggestPrayerStops(
-  departureISO: string,
-  totalDurationMin: number,
-): PrayerStop[] {
+export function suggestPrayerStops(departureISO: string, totalDurationMin: number): PrayerStop[] {
   return calculatePrayerStops(departureISO, totalDurationMin, 'JO');
 }
 
@@ -581,19 +575,19 @@ export function suggestPrayerStops(
 
 function scoreRouteMatch(trip: TripSummary, req: PassengerRequest): number {
   const originMatch = trip.originCity.toLowerCase() === req.originCity.toLowerCase();
-  const destMatch   = trip.destinationCity.toLowerCase() === req.destinationCity.toLowerCase();
+  const destMatch = trip.destinationCity.toLowerCase() === req.destinationCity.toLowerCase();
 
   if (originMatch && destMatch) return 100;
   // Check waypoints
-  if (trip.waypoints?.some((w) => w.toLowerCase() === req.destinationCity.toLowerCase())) {
-    return 75;   // Destination is a waypoint
+  if (trip.waypoints?.some(w => w.toLowerCase() === req.destinationCity.toLowerCase())) {
+    return 75; // Destination is a waypoint
   }
   if (originMatch || destMatch) return 40;
   return 0;
 }
 
 function scorePriceMatch(tripPriceJOD: number, maxPriceJOD?: number): number {
-  if (!maxPriceJOD) return 80;  // No budget constraint = mostly ok
+  if (!maxPriceJOD) return 80; // No budget constraint = mostly ok
   if (tripPriceJOD <= maxPriceJOD) return 100;
   const overshoot = (tripPriceJOD - maxPriceJOD) / maxPriceJOD;
   return Math.max(0, Math.round(100 - overshoot * 200));
@@ -603,8 +597,8 @@ function scoreGenderCompatibility(
   tripPref: TripSummary['genderPreference'],
   reqPref: PassengerRequest['genderPreference'],
 ): number {
-  if (tripPref === 'mixed') return 100;               // Driver accepts all
-  if (tripPref === reqPref) return 100;               // Exact match
+  if (tripPref === 'mixed') return 100; // Driver accepts all
+  if (tripPref === reqPref) return 100; // Exact match
   if (tripPref === 'women_only' && reqPref !== 'women_only') return 0;
   if (tripPref === 'men_only' && reqPref !== 'men_only') return 0;
   if (tripPref === 'family_only' && reqPref !== 'family_only') return 0;
@@ -622,9 +616,7 @@ function scoreTimeMatch(tripDepartureISO: string, reqDate: string): number {
   const tripDate = tripDepartureISO.substring(0, 10);
   if (tripDate === reqDate) return 100;
   // Allow 1 day flexibility
-  const diff = Math.abs(
-    new Date(tripDate).getTime() - new Date(reqDate).getTime(),
-  ) / 86_400_000;
+  const diff = Math.abs(new Date(tripDate).getTime() - new Date(reqDate).getTime()) / 86_400_000;
   if (diff <= 1) return 60;
   return 0;
 }
@@ -634,7 +626,8 @@ function estimateDetourKm(trip: TripSummary, req: PassengerRequest): number {
   if (
     trip.originCity.toLowerCase() === req.originCity.toLowerCase() &&
     trip.destinationCity.toLowerCase() === req.destinationCity.toLowerCase()
-  ) return 0;
+  )
+    return 0;
   // Rough estimate for partial matches
   return 25;
 }

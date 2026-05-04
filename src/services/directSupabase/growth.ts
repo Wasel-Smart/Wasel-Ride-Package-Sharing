@@ -63,7 +63,11 @@ export async function createDirectDemandAlert(input: {
 
 export async function getDirectDemandAlerts(userId?: string) {
   const db = getDb();
-  let query = db.from('demand_alerts').select('*').order('created_at', { ascending: false }).limit(100);
+  let query = db
+    .from('demand_alerts')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100);
   if (userId) {
     const context = await buildUserContext(userId).catch(() => null);
     if (context?.user.id) query = query.eq('user_id', context.user.id);
@@ -77,11 +81,19 @@ export async function getDirectGrowthAnalytics(userId?: string) {
   const db = getDb();
   const context = userId ? await buildUserContext(userId).catch(() => null) : null;
 
-  let eventsQuery = db.from('growth_events').select('*').order('created_at', { ascending: false }).limit(500);
+  let eventsQuery = db
+    .from('growth_events')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(500);
   if (context?.user.id) eventsQuery = eventsQuery.eq('user_id', context.user.id);
   const { data: events } = await eventsQuery;
 
-  let demandQuery = db.from('demand_alerts').select('*').order('created_at', { ascending: false }).limit(200);
+  let demandQuery = db
+    .from('demand_alerts')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(200);
   if (context?.user.id) demandQuery = demandQuery.eq('user_id', context.user.id);
   const { data: alerts } = await demandQuery;
 
@@ -89,16 +101,16 @@ export async function getDirectGrowthAnalytics(userId?: string) {
   const alertRows = Array.isArray(alerts) ? (alerts as RawDemandAlert[]) : [];
 
   const funnel = {
-    searched: rows.filter((r) => r.funnel_stage === 'searched').length,
-    selected: rows.filter((r) => r.funnel_stage === 'selected').length,
-    booked: rows.filter((r) => r.funnel_stage === 'booked').length,
-    completed: rows.filter((r) => r.funnel_stage === 'completed').length,
+    searched: rows.filter(r => r.funnel_stage === 'searched').length,
+    selected: rows.filter(r => r.funnel_stage === 'selected').length,
+    booked: rows.filter(r => r.funnel_stage === 'booked').length,
+    completed: rows.filter(r => r.funnel_stage === 'completed').length,
   };
   const serviceMix = {
-    rides: rows.filter((r) => r.service_type === 'ride').length,
-    buses: rows.filter((r) => r.service_type === 'bus').length,
-    packages: rows.filter((r) => r.service_type === 'package').length,
-    referrals: rows.filter((r) => r.service_type === 'referral').length,
+    rides: rows.filter(r => r.service_type === 'ride').length,
+    buses: rows.filter(r => r.service_type === 'bus').length,
+    packages: rows.filter(r => r.service_type === 'package').length,
+    referrals: rows.filter(r => r.service_type === 'referral').length,
   };
   const revenueJod = rows.reduce((sum, r) => sum + toNumber(r.monetary_value_jod, 0), 0);
 
@@ -111,7 +123,8 @@ export async function getDirectGrowthAnalytics(userId?: string) {
     corridorMap.set(corridor, current);
   }
   for (const row of alertRows) {
-    const corridor = `${String(row.origin_city ?? '')} to ${String(row.destination_city ?? '')}`.trim();
+    const corridor =
+      `${String(row.origin_city ?? '')} to ${String(row.destination_city ?? '')}`.trim();
     if (!corridor || corridor === 'to') continue;
     const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
     current.demand += 1;
@@ -122,7 +135,7 @@ export async function getDirectGrowthAnalytics(userId?: string) {
     funnel,
     serviceMix,
     revenueJod,
-    activeDemand: alertRows.filter((r) => String(r.status ?? 'active') === 'active').length,
+    activeDemand: alertRows.filter(r => String(r.status ?? 'active') === 'active').length,
     topCorridors: Array.from(corridorMap.values())
       .sort((a, b) => b.demand + b.conversions - (a.demand + a.conversions))
       .slice(0, 6),

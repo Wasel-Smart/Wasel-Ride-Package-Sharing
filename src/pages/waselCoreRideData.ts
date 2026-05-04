@@ -69,7 +69,15 @@ function normalizeRideDate(date?: string, fallbackOffset = 1) {
 export const ALL_RIDES: Ride[] = [
   {
     id: 'r1',
-    driver: { name: 'Ahmad Hassan', nameAr: 'أحمد حسن', rating: 4.9, verified: true, trips: 1240, phone: '+962790000001', avatar: 'AH' },
+    driver: {
+      name: 'Ahmad Hassan',
+      nameAr: 'أحمد حسن',
+      rating: 4.9,
+      verified: true,
+      trips: 1240,
+      phone: '+962790000001',
+      avatar: 'AH',
+    },
     from: 'Amman',
     fromAr: 'عمّان',
     fromPoint: '8th Circle',
@@ -92,11 +100,21 @@ export const ALL_RIDES: Ride[] = [
     pkgCapacity: 'medium',
     conversationLevel: 'normal',
     intermediateStops: ['Karak (brief stop)'],
-    reviews: [{ name: 'Khalid N.', rating: 5, text: 'Very professional driver, on time and clean car.' }],
+    reviews: [
+      { name: 'Khalid N.', rating: 5, text: 'Very professional driver, on time and clean car.' },
+    ],
   },
   {
     id: 'r2',
-    driver: { name: 'Sara Al-Khalidi', nameAr: 'سارة الخالدي', rating: 4.8, verified: true, trips: 876, phone: '+962790000002', avatar: 'SK' },
+    driver: {
+      name: 'Sara Al-Khalidi',
+      nameAr: 'سارة الخالدي',
+      rating: 4.8,
+      verified: true,
+      trips: 876,
+      phone: '+962790000002',
+      avatar: 'SK',
+    },
     from: 'Amman',
     fromAr: 'عمّان',
     fromPoint: 'Abdali Terminal',
@@ -117,11 +135,21 @@ export const ALL_RIDES: Ride[] = [
     carColor: '#FFFFFF',
     pkgCapacity: 'small',
     conversationLevel: 'quiet',
-    reviews: [{ name: 'Hana M.', rating: 5, text: 'Great driver, felt very safe. Will use again!' }],
+    reviews: [
+      { name: 'Hana M.', rating: 5, text: 'Great driver, felt very safe. Will use again!' },
+    ],
   },
   {
     id: 'r3',
-    driver: { name: 'Khalid Nabulsi', nameAr: 'خالد النابلسي', rating: 4.7, verified: true, trips: 543, phone: '+962790000003', avatar: 'KN' },
+    driver: {
+      name: 'Khalid Nabulsi',
+      nameAr: 'خالد النابلسي',
+      rating: 4.7,
+      verified: true,
+      trips: 543,
+      phone: '+962790000003',
+      avatar: 'KN',
+    },
     from: 'Amman',
     fromAr: 'عمّان',
     fromPoint: 'Sweifieh',
@@ -145,7 +173,15 @@ export const ALL_RIDES: Ride[] = [
   },
   {
     id: 'r4',
-    driver: { name: 'Lina Al-Masri', nameAr: 'لينا المصري', rating: 5.0, verified: true, trips: 320, phone: '+962790000004', avatar: 'LM' },
+    driver: {
+      name: 'Lina Al-Masri',
+      nameAr: 'لينا المصري',
+      rating: 5.0,
+      verified: true,
+      trips: 320,
+      phone: '+962790000004',
+      avatar: 'LM',
+    },
     from: 'Amman',
     fromAr: 'عمّان',
     fromPoint: 'Gardens',
@@ -169,7 +205,15 @@ export const ALL_RIDES: Ride[] = [
   },
   {
     id: 'r5',
-    driver: { name: 'Omar Zaid', nameAr: 'عمر زيد', rating: 4.6, verified: true, trips: 189, phone: '+962790000005', avatar: 'OZ' },
+    driver: {
+      name: 'Omar Zaid',
+      nameAr: 'عمر زيد',
+      rating: 4.6,
+      verified: true,
+      trips: 189,
+      phone: '+962790000005',
+      avatar: 'OZ',
+    },
     from: 'Irbid',
     fromAr: 'إربد',
     fromPoint: 'University Gate',
@@ -193,7 +237,15 @@ export const ALL_RIDES: Ride[] = [
   },
   {
     id: 'r6',
-    driver: { name: 'Nour Awamleh', nameAr: 'نور العواملة', rating: 4.9, verified: true, trips: 710, phone: '+962790000006', avatar: 'NA' },
+    driver: {
+      name: 'Nour Awamleh',
+      nameAr: 'نور العواملة',
+      rating: 4.9,
+      verified: true,
+      trips: 710,
+      phone: '+962790000006',
+      avatar: 'NA',
+    },
     from: 'Amman',
     fromAr: 'عمّان',
     fromPoint: 'Mecca Mall',
@@ -218,7 +270,19 @@ export const ALL_RIDES: Ride[] = [
   },
 ];
 
-export const CITIES = ['Amman', 'Aqaba', 'Irbid', 'Zarqa', 'Dead Sea', 'Karak', 'Madaba', 'Petra', 'Jerash', 'Mafraq', 'Salt'];
+export const CITIES = [
+  'Amman',
+  'Aqaba',
+  'Irbid',
+  'Zarqa',
+  'Dead Sea',
+  'Karak',
+  'Madaba',
+  'Petra',
+  'Jerash',
+  'Mafraq',
+  'Salt',
+];
 
 export const RIDE_BOOKINGS_KEY = 'wasel-find-ride-bookings';
 export const RIDE_SEARCHES_KEY = 'wasel-find-ride-searches';
@@ -233,11 +297,12 @@ export function createGenderMeta(theme: { cyan: string; gold: string }) {
 }
 
 export function buildRideFromPostedRide(ride: PostedRide): Ride {
-  const capacityLabel = ride.packageCapacity === 'large'
-    ? 'Large trunk'
-    : ride.packageCapacity === 'small'
-      ? 'Compact package lane'
-      : 'Package lane ready';
+  const capacityLabel =
+    ride.packageCapacity === 'large'
+      ? 'Large trunk'
+      : ride.packageCapacity === 'small'
+        ? 'Compact package lane'
+        : 'Package lane ready';
 
   return {
     id: `live-${ride.id}`,
@@ -265,7 +330,12 @@ export function buildRideFromPostedRide(ride: PostedRide): Ride {
     pricePerSeat: Math.max(0, ride.price),
     distance: 0,
     duration: 'Live route',
-    genderPref: ride.gender === 'women_only' ? 'women_only' : ride.gender === 'family_only' ? 'family_only' : 'mixed',
+    genderPref:
+      ride.gender === 'women_only'
+        ? 'women_only'
+        : ride.gender === 'family_only'
+          ? 'family_only'
+          : 'mixed',
     amenities: ['Live post', ride.carModel || 'Private vehicle', capacityLabel],
     prayerStops: ride.prayer,
     car: ride.carModel || 'Private vehicle',
@@ -278,12 +348,13 @@ export function buildRideFromPostedRide(ride: PostedRide): Ride {
 export function buildRideFromTripSearchResult(ride: TripSearchResult): Ride {
   const normalizedDate = normalizeRideDate(ride.date, 1);
   const normalizedSeats = Math.max(0, Number(ride.seats) || 0);
-  const driverInitials = ride.driver.name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('') || 'WD';
+  const driverInitials =
+    ride.driver.name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(part => part[0]?.toUpperCase() ?? '')
+      .join('') || 'WD';
 
   return {
     id: String(ride.id),

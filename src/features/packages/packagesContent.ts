@@ -7,13 +7,25 @@ export const PACKAGE_SEND_STEPS = [
 ] as const;
 
 export const PACKAGE_EXCELLENCE_POINTS = [
-  { title: 'Recipient-ready handoff', desc: 'Name, phone, and the handoff code are captured before pickup starts.' },
-  { title: 'Connected ride matching', desc: 'Existing rides are checked before a new logistics lane is created.' },
-  { title: 'Single tracking story', desc: 'One tracking ID follows the request from creation to delivery.' },
+  {
+    title: 'Recipient-ready handoff',
+    desc: 'Name, phone, and the handoff code are captured before pickup starts.',
+  },
+  {
+    title: 'Connected ride matching',
+    desc: 'Existing rides are checked before a new logistics lane is created.',
+  },
+  {
+    title: 'Single tracking story',
+    desc: 'One tracking ID follows the request from creation to delivery.',
+  },
 ] as const;
 
 export const PACKAGE_RETURN_STEPS = [
   { title: 'Create the return', desc: 'Add pickup city, return destination, and package notes.' },
   { title: 'Match to a ride', desc: 'We prioritize posted rides already accepting packages.' },
-  { title: 'Track every handoff', desc: 'Use one tracking ID for pickup, transit, and return delivery.' },
+  {
+    title: 'Track every handoff',
+    desc: 'Use one tracking ID for pickup, transit, and return delivery.',
+  },
 ] as const;

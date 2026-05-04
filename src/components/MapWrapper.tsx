@@ -75,8 +75,8 @@ export function MapWrapper({
 
   // Build route from location props (live mode)
   const route: WaselMapRoute[] = [];
-  if (pickupLocation)  route.push({ ...pickupLocation,  label: 'Pickup' });
-  if (driverLocation)  route.push({ ...driverLocation,  label: 'Driver' });
+  if (pickupLocation) route.push({ ...pickupLocation, label: 'Pickup' });
+  if (driverLocation) route.push({ ...driverLocation, label: 'Driver' });
   if (dropoffLocation) route.push({ ...dropoffLocation, label: 'Dropoff' });
 
   // Convert generic markers to WaselMap markers

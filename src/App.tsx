@@ -1,9 +1,5 @@
 import { Component, useEffect, useState, type ReactNode } from 'react';
-import {
-  QueryClient,
-  QueryClientProvider,
-  onlineManager,
-} from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { RouterProvider } from 'react-router';
 import { Toaster } from 'sonner';
@@ -37,7 +33,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
       'figma_app-',
     ];
 
-    if (ignoredPatterns.some((pattern) => message.includes(pattern))) {
+    if (ignoredPatterns.some(pattern => message.includes(pattern))) {
       return { hasError: false, error: '' };
     }
 
@@ -53,7 +49,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
       'setupMessageChannel',
     ];
 
-    if (ignoredPatterns.some((pattern) => message.includes(pattern))) return;
+    if (ignoredPatterns.some(pattern => message.includes(pattern))) return;
 
     console.error('[Wasel ErrorBoundary]', message, info?.componentStack ?? '');
   }
@@ -86,7 +82,8 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
             width: 'min(100%, 560px)',
             borderRadius: 28,
             padding: 28,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), rgba(10,22,40,0.94)',
+            background:
+              'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), rgba(10,22,40,0.94)',
             border: '1px solid rgba(85,233,255,0.14)',
             boxShadow: '0 28px 70px rgba(0,0,0,0.42)',
             backdropFilter: 'blur(18px)',
@@ -110,11 +107,28 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
           <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#EFF6FF', margin: '0 0 10px' }}>
             Something interrupted this screen
           </h2>
-          <p style={{ color: 'rgba(239,246,255,0.72)', fontSize: '0.92rem', margin: '0 auto 16px', maxWidth: 420, lineHeight: 1.7 }}>
+          <p
+            style={{
+              color: 'rgba(239,246,255,0.72)',
+              fontSize: '0.92rem',
+              margin: '0 auto 16px',
+              maxWidth: 420,
+              lineHeight: 1.7,
+            }}
+          >
             {this.state.error || 'An unexpected error occurred while loading this part of Wasel.'}
           </p>
-          <p style={{ color: 'rgba(239,246,255,0.52)', fontSize: '0.84rem', margin: '0 auto 22px', maxWidth: 440, lineHeight: 1.7 }}>
-            Refresh this experience to continue. If the issue repeats, return to the home screen and reopen the flow.
+          <p
+            style={{
+              color: 'rgba(239,246,255,0.52)',
+              fontSize: '0.84rem',
+              margin: '0 auto 22px',
+              maxWidth: 440,
+              lineHeight: 1.7,
+            }}
+          >
+            Refresh this experience to continue. If the issue repeats, return to the home screen and
+            reopen the flow.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
@@ -186,11 +200,7 @@ function AppRuntimeCoordinator() {
     const scheduleBackgroundBootstrap = () => {
       const runner = async () => {
         try {
-          const [
-            monitoring,
-            performance,
-            core,
-          ] = await Promise.all([
+          const [monitoring, performance, core] = await Promise.all([
             import('./utils/monitoring'),
             import('./utils/performance'),
             import('./services/core'),
@@ -200,7 +210,7 @@ function AppRuntimeCoordinator() {
 
           monitoring.initSentry();
 
-          runtimeValidation.issues.forEach((issue) => {
+          runtimeValidation.issues.forEach(issue => {
             const context = { key: issue.key, valid: runtimeValidation.ok };
             if (issue.severity === 'error') {
               monitoring.logger.error(issue.message, undefined, context);
@@ -218,7 +228,7 @@ function AppRuntimeCoordinator() {
           void probeHealth();
 
           stopPolling = core.startAvailabilityPolling();
-          stopEventTelemetry = domainEventBus.subscribeAll((event) => {
+          stopEventTelemetry = domainEventBus.subscribeAll(event => {
             monitoring.trackDomainEvent(event);
           });
 
@@ -231,9 +241,12 @@ function AppRuntimeCoordinator() {
       };
 
       if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-        const handle = window.requestIdleCallback(() => {
-          void runner();
-        }, { timeout: 1500 });
+        const handle = window.requestIdleCallback(
+          () => {
+            void runner();
+          },
+          { timeout: 1500 },
+        );
 
         return () => window.cancelIdleCallback(handle);
       }
@@ -263,9 +276,7 @@ function AppRuntimeCoordinator() {
 }
 
 export default function App() {
-  const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: DEFAULT_QUERY_OPTIONS }),
-  );
+  const [queryClient] = useState(() => new QueryClient({ defaultOptions: DEFAULT_QUERY_OPTIONS }));
 
   return (
     <AppErrorBoundary>

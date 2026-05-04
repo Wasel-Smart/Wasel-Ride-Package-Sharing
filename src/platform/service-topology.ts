@@ -39,7 +39,12 @@ export const PLATFORM_SERVICES: readonly PlatformServiceDefinition[] = [
       'Gateway auth enforcement',
       'Rate limiting and request tracing',
     ],
-    dependencies: ['identity-service', 'ride-matching-service', 'package-delivery-service', 'payment-service'],
+    dependencies: [
+      'identity-service',
+      'ride-matching-service',
+      'package-delivery-service',
+      'payment-service',
+    ],
     dataStores: ['none'],
     slo: { availability: '99.9%', p95Latency: '<250ms' },
   },
@@ -116,11 +121,7 @@ export const PLATFORM_SERVICES: readonly PlatformServiceDefinition[] = [
     name: 'matching-worker',
     workload: 'worker',
     boundedContext: 'rides',
-    responsibilities: [
-      'Driver supply scoring',
-      'Match execution',
-      'Assignment retries',
-    ],
+    responsibilities: ['Driver supply scoring', 'Match execution', 'Assignment retries'],
     dependencies: ['ride-matching-service'],
     dataStores: ['redis-geo', 'postgres'],
     consumesTopics: ['rides.requested'],
@@ -130,11 +131,7 @@ export const PLATFORM_SERVICES: readonly PlatformServiceDefinition[] = [
     name: 'package-worker',
     workload: 'worker',
     boundedContext: 'packages',
-    responsibilities: [
-      'Package assignment',
-      'Tracking normalization',
-      'Delivery closeout',
-    ],
+    responsibilities: ['Package assignment', 'Tracking normalization', 'Delivery closeout'],
     dependencies: ['package-delivery-service'],
     dataStores: ['postgres', 'postgis', 'redis-geo'],
     consumesTopics: ['packages.created', 'packages.location-updated'],
@@ -172,11 +169,7 @@ export const PLATFORM_SERVICES: readonly PlatformServiceDefinition[] = [
     name: 'ops-worker',
     workload: 'worker',
     boundedContext: 'operations',
-    responsibilities: [
-      'Operational aggregates',
-      'Settlement reporting',
-      'Corridor intelligence',
-    ],
+    responsibilities: ['Operational aggregates', 'Settlement reporting', 'Corridor intelligence'],
     dependencies: ['ride-matching-service', 'payment-service'],
     dataStores: ['postgres'],
     consumesTopics: ['rides.completed', 'payments.captured'],
@@ -187,5 +180,5 @@ export const PLATFORM_SERVICES: readonly PlatformServiceDefinition[] = [
 export function getServiceDefinition(
   name: PlatformServiceName,
 ): PlatformServiceDefinition | undefined {
-  return PLATFORM_SERVICES.find((service) => service.name === name);
+  return PLATFORM_SERVICES.find(service => service.name === name);
 }

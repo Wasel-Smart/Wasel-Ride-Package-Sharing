@@ -1,6 +1,6 @@
 /**
  * Secrets Management Utility
- * 
+ *
  * Provides secure access to sensitive credentials without exposing them in code.
  * Supports multiple backends: AWS Secrets Manager, environment variables, and encrypted storage.
  */
@@ -35,7 +35,7 @@ const SERVER_ONLY_SECRETS = [
   'TWILIO_AUTH_TOKEN',
 ] as const;
 
-type ServerSecretKey = typeof SERVER_ONLY_SECRETS[number];
+type ServerSecretKey = (typeof SERVER_ONLY_SECRETS)[number];
 
 /**
  * Check if code is running on server-side
@@ -51,7 +51,7 @@ function validateSecretAccess(key: string): void {
   if (!isServerSide() && SERVER_ONLY_SECRETS.includes(key as ServerSecretKey)) {
     throw new Error(
       `Security violation: Attempted to access server-only secret "${key}" from client-side code. ` +
-      `This secret must only be accessed in server-side contexts (edge functions, API routes).`
+        `This secret must only be accessed in server-side contexts (edge functions, API routes).`,
     );
   }
 }
@@ -62,12 +62,12 @@ function validateSecretAccess(key: string): void {
 function getCachedSecret(key: string): string | null {
   const cached = secretsCache[key];
   if (!cached) return null;
-  
+
   if (Date.now() > cached.expiresAt) {
     delete secretsCache[key];
     return null;
   }
-  
+
   return cached.value;
 }
 
@@ -90,13 +90,13 @@ function getSecretFromEnv(key: string): string | null {
     const value = process.env[key];
     if (value) return value;
   }
-  
+
   // Try import.meta.env (Vite)
   if (typeof import.meta !== 'undefined' && import.meta.env) {
     const value = import.meta.env[key];
     if (value) return String(value);
   }
-  
+
   return null;
 }
 
@@ -107,7 +107,7 @@ async function fetchFromAWSSecretsManager(secretName: string): Promise<string | 
   if (!isServerSide()) {
     return null;
   }
-  
+
   try {
     // This would be implemented in edge functions with AWS SDK
     // For now, return null to fall back to environment variables
@@ -120,7 +120,7 @@ async function fetchFromAWSSecretsManager(secretName: string): Promise<string | 
 
 /**
  * Get a secret value securely
- * 
+ *
  * @param key - Secret key name
  * @param config - Configuration options
  * @returns Secret value or null if not found
@@ -128,17 +128,17 @@ async function fetchFromAWSSecretsManager(secretName: string): Promise<string | 
  */
 export async function getSecret(
   key: string,
-  config: Partial<SecretConfig> = {}
+  config: Partial<SecretConfig> = {},
 ): Promise<string | null> {
   const { required = false, fallbackEnvVar } = config;
-  
+
   // Validate access
   validateSecretAccess(key);
-  
+
   // Check cache first
   const cached = getCachedSecret(key);
   if (cached) return cached;
-  
+
   // Try AWS Secrets Manager (server-side only)
   if (isServerSide()) {
     const awsSecret = await fetchFromAWSSecretsManager(key);
@@ -147,28 +147,28 @@ export async function getSecret(
       return awsSecret;
     }
   }
-  
+
   // Try environment variable
   let value = getSecretFromEnv(key);
-  
+
   // Try fallback environment variable
   if (!value && fallbackEnvVar) {
     value = getSecretFromEnv(fallbackEnvVar);
   }
-  
+
   if (value) {
     cacheSecret(key, value);
     return value;
   }
-  
+
   // Handle missing required secret
   if (required) {
     throw new Error(
       `Required secret "${key}" not found. ` +
-      `Ensure it's set in environment variables or AWS Secrets Manager.`
+        `Ensure it's set in environment variables or AWS Secrets Manager.`,
     );
   }
-  
+
   return null;
 }
 
@@ -177,16 +177,16 @@ export async function getSecret(
  */
 export async function getSecrets(
   keys: string[],
-  required = false
+  required = false,
 ): Promise<Record<string, string | null>> {
   const results: Record<string, string | null> = {};
-  
+
   await Promise.all(
-    keys.map(async (key) => {
+    keys.map(async key => {
       results[key] = await getSecret(key, { required });
-    })
+    }),
   );
-  
+
   return results;
 }
 
@@ -206,11 +206,11 @@ export function maskSecret(secret: string): string {
   if (!secret || secret.length < 8) {
     return '****';
   }
-  
+
   const first = secret.slice(0, 4);
   const last = secret.slice(-4);
   const masked = '*'.repeat(Math.min(secret.length - 8, 20));
-  
+
   return `${first}${masked}${last}`;
 }
 
@@ -218,19 +218,19 @@ export function maskSecret(secret: string): string {
  * Validate that all required secrets are available
  */
 export async function validateRequiredSecrets(
-  requiredSecrets: string[]
+  requiredSecrets: string[],
 ): Promise<{ valid: boolean; missing: string[] }> {
   const missing: string[] = [];
-  
+
   await Promise.all(
-    requiredSecrets.map(async (key) => {
+    requiredSecrets.map(async key => {
       const value = await getSecret(key, { required: false });
       if (!value) {
         missing.push(key);
       }
-    })
+    }),
   );
-  
+
   return {
     valid: missing.length === 0,
     missing,

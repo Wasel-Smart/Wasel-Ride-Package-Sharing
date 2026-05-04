@@ -19,10 +19,7 @@ interface HomeButtonOptions {
   fontWeight?: number;
 }
 
-export function homeSectionMargin(
-  marginTop: number,
-  marginBottom?: number,
-): CSSProperties {
+export function homeSectionMargin(marginTop: number, marginBottom?: number): CSSProperties {
   return {
     marginTop,
     ...(marginBottom === undefined ? null : { marginBottom }),

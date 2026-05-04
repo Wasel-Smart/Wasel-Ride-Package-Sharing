@@ -50,7 +50,9 @@ function readArchivedNotificationIds(userId?: string): string[] {
   try {
     const raw = window.localStorage.getItem(archiveStorageKey(userId));
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === 'string')
+      : [];
   } catch {
     return [];
   }
@@ -66,10 +68,12 @@ export function useNotifications() {
   const { user: localUser } = useLocalAuth();
   const effectiveUserId = user?.id ?? localUser?.id;
   const queryClient = useQueryClient();
-  const [isOnline, setIsOnline] = useState(() => (
-    typeof navigator === 'undefined' ? true : navigator.onLine
-  ));
-  const [archivedIds, setArchivedIds] = useState<string[]>(() => readArchivedNotificationIds(effectiveUserId));
+  const [isOnline, setIsOnline] = useState(() =>
+    typeof navigator === 'undefined' ? true : navigator.onLine,
+  );
+  const [archivedIds, setArchivedIds] = useState<string[]>(() =>
+    readArchivedNotificationIds(effectiveUserId),
+  );
 
   useEffect(() => {
     setArchivedIds(readArchivedNotificationIds(effectiveUserId));
@@ -110,24 +114,26 @@ export function useNotifications() {
     };
   }, []);
 
-  const unreadCount = notifications.filter((notification) => !notification.read && !archivedIds.includes(notification.id)).length;
-  const connectionStatus: ConnectionStatus =
-    !isOnline ? 'offline' : isFetching ? 'syncing' : 'online';
-  const errorMessage = error instanceof Error
-    ? error.message
-    : error
-      ? 'Notification service unavailable.'
-      : null;
+  const unreadCount = notifications.filter(
+    notification => !notification.read && !archivedIds.includes(notification.id),
+  ).length;
+  const connectionStatus: ConnectionStatus = !isOnline
+    ? 'offline'
+    : isFetching
+      ? 'syncing'
+      : 'online';
+  const errorMessage =
+    error instanceof Error ? error.message : error ? 'Notification service unavailable.' : null;
 
   const markAsRead = async (notificationId: string) => {
     const queryKey = notificationsQueryKey(effectiveUserId);
     const previous = queryClient.getQueryData<Notification[]>(queryKey) ?? [];
 
-    queryClient.setQueryData<Notification[]>(queryKey, (current = []) => (
-      current.map((notification) => (
-        notification.id === notificationId ? { ...notification, read: true } : notification
-      ))
-    ));
+    queryClient.setQueryData<Notification[]>(queryKey, (current = []) =>
+      current.map(notification =>
+        notification.id === notificationId ? { ...notification, read: true } : notification,
+      ),
+    );
 
     try {
       await notificationsAPI.markAsRead(notificationId);
@@ -140,18 +146,20 @@ export function useNotifications() {
   };
 
   const markAllAsRead = async () => {
-    const unread = notifications.filter((notification) => !notification.read && !archivedIds.includes(notification.id));
+    const unread = notifications.filter(
+      notification => !notification.read && !archivedIds.includes(notification.id),
+    );
     if (unread.length === 0) return;
 
     const queryKey = notificationsQueryKey(effectiveUserId);
     const previous = queryClient.getQueryData<Notification[]>(queryKey) ?? [];
 
-    queryClient.setQueryData<Notification[]>(queryKey, (current = []) => (
-      current.map((notification) => ({ ...notification, read: true }))
-    ));
+    queryClient.setQueryData<Notification[]>(queryKey, (current = []) =>
+      current.map(notification => ({ ...notification, read: true })),
+    );
 
     try {
-      await Promise.all(unread.map((notification) => notificationsAPI.markAsRead(notification.id)));
+      await Promise.all(unread.map(notification => notificationsAPI.markAsRead(notification.id)));
       toast.success('All notifications marked as read');
     } catch (error) {
       queryClient.setQueryData(queryKey, previous);
@@ -162,7 +170,7 @@ export function useNotifications() {
   };
 
   const archiveNotification = (notificationId: string) => {
-    setArchivedIds((current) => {
+    setArchivedIds(current => {
       if (current.includes(notificationId)) return current;
       const next = [...current, notificationId];
       writeArchivedNotificationIds(effectiveUserId, next);
@@ -177,7 +185,9 @@ export function useNotifications() {
     toast.success('Archived notifications restored');
   };
 
-  const createNotification = async (data: Parameters<typeof notificationsAPI.createNotification>[0]) => {
+  const createNotification = async (
+    data: Parameters<typeof notificationsAPI.createNotification>[0],
+  ) => {
     if (!effectiveUserId) return;
 
     try {

@@ -53,18 +53,24 @@ export const tripsAPI = {
       authMode: 'required',
       fallbackPolicy: 'writes-if-enabled',
       fallback: ({ userId }) => createDirectTrip(userId!, tripData),
-      edge: (context) => requestEdgeJson<TripSearchResult>({
-        path: '/trips',
-        method: 'POST',
-        authMode: 'required',
-        context,
-        body: tripData,
-        operation: 'Failed to create trip',
-      }),
+      edge: context =>
+        requestEdgeJson<TripSearchResult>({
+          path: '/trips',
+          method: 'POST',
+          authMode: 'required',
+          context,
+          body: tripData,
+          operation: 'Failed to create trip',
+        }),
     });
   },
 
-  async searchTrips(from?: string, to?: string, date?: string, seats?: number): Promise<TripSearchResult[]> {
+  async searchTrips(
+    from?: string,
+    to?: string,
+    date?: string,
+    seats?: number,
+  ): Promise<TripSearchResult[]> {
     const params = new URLSearchParams();
     if (from) params.append('from', from);
     if (to) params.append('to', to);
@@ -76,11 +82,12 @@ export const tripsAPI = {
       authMode: 'public',
       edgeAvailable: hasConfiguredEdgeTransport('public'),
       fallback: () => searchDirectTrips(from, to, date, seats),
-      edge: () => requestEdgeJson<TripSearchResult[]>({
-        path: `/trips/search?${params.toString()}`,
-        authMode: 'public',
-        operation: 'Failed to search trips',
-      }),
+      edge: () =>
+        requestEdgeJson<TripSearchResult[]>({
+          path: `/trips/search?${params.toString()}`,
+          authMode: 'public',
+          operation: 'Failed to search trips',
+        }),
     });
   },
 
@@ -94,11 +101,12 @@ export const tripsAPI = {
         if (!trip) throw new Error('Failed to fetch trip');
         return trip;
       },
-      edge: () => requestEdgeJson<TripSearchResult>({
-        path: `/trips/${tripId}`,
-        authMode: 'public',
-        operation: 'Failed to fetch trip',
-      }),
+      edge: () =>
+        requestEdgeJson<TripSearchResult>({
+          path: `/trips/${tripId}`,
+          authMode: 'public',
+          operation: 'Failed to fetch trip',
+        }),
     });
   },
 
@@ -107,12 +115,13 @@ export const tripsAPI = {
       operation: 'Driver trip loading',
       authMode: 'required',
       fallback: ({ userId }) => getDirectDriverTrips(userId!),
-      edge: (context) => requestEdgeJson<TripSearchResult[]>({
-        path: `/trips/user/${context.userId}`,
-        authMode: 'required',
-        context,
-        operation: 'Failed to fetch driver trips',
-      }),
+      edge: context =>
+        requestEdgeJson<TripSearchResult[]>({
+          path: `/trips/user/${context.userId}`,
+          authMode: 'required',
+          context,
+          operation: 'Failed to fetch driver trips',
+        }),
     });
   },
 
@@ -122,14 +131,15 @@ export const tripsAPI = {
       authMode: 'required',
       fallbackPolicy: 'writes-if-enabled',
       fallback: () => updateDirectTrip(tripId, updates),
-      edge: (context) => requestEdgeJson<TripSearchResult>({
-        path: `/trips/${tripId}`,
-        method: 'PUT',
-        authMode: 'required',
-        context,
-        body: updates,
-        operation: 'Failed to update trip',
-      }),
+      edge: context =>
+        requestEdgeJson<TripSearchResult>({
+          path: `/trips/${tripId}`,
+          method: 'PUT',
+          authMode: 'required',
+          context,
+          body: updates,
+          operation: 'Failed to update trip',
+        }),
     });
   },
 
@@ -139,13 +149,14 @@ export const tripsAPI = {
       authMode: 'required',
       fallbackPolicy: 'writes-if-enabled',
       fallback: () => deleteDirectTrip(tripId),
-      edge: (context) => requestEdgeJson<{ success: boolean }>({
-        path: `/trips/${tripId}`,
-        method: 'DELETE',
-        authMode: 'required',
-        context,
-        operation: 'Failed to delete trip',
-      }),
+      edge: context =>
+        requestEdgeJson<{ success: boolean }>({
+          path: `/trips/${tripId}`,
+          method: 'DELETE',
+          authMode: 'required',
+          context,
+          operation: 'Failed to delete trip',
+        }),
     });
   },
 
@@ -158,13 +169,14 @@ export const tripsAPI = {
         await updateDirectTrip(tripId, { status: 'active' });
         return { success: true };
       },
-      edge: (context) => requestEdgeJson<{ success: boolean }>({
-        path: `/trips/${tripId}/publish`,
-        method: 'POST',
-        authMode: 'required',
-        context,
-        operation: 'Failed to publish trip',
-      }),
+      edge: context =>
+        requestEdgeJson<{ success: boolean }>({
+          path: `/trips/${tripId}/publish`,
+          method: 'POST',
+          authMode: 'required',
+          context,
+          operation: 'Failed to publish trip',
+        }),
     });
   },
 
@@ -178,12 +190,13 @@ export const tripsAPI = {
       operation: 'Price calculation',
       authMode: 'none',
       fallback: async () => calculateDirectPrice(type, weight, distance_km, base_price),
-      edge: () => requestEdgeJson<PriceCalculationResult>({
-        path: '/trips/calculate-price',
-        method: 'POST',
-        body: { type, weight, distance_km, base_price },
-        operation: 'Failed to calculate price',
-      }),
+      edge: () =>
+        requestEdgeJson<PriceCalculationResult>({
+          path: '/trips/calculate-price',
+          method: 'POST',
+          body: { type, weight, distance_km, base_price },
+          operation: 'Failed to calculate price',
+        }),
     });
   },
 };

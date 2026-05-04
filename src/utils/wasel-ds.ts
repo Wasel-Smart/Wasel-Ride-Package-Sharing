@@ -4,14 +4,14 @@
  */
 
 export const C = {
-  bg: '#06131F',
-  bgAlt: '#0B1D2D',
-  bgDeep: '#040B12',
-  card: 'rgba(11,29,45,0.76)',
-  cardSolid: '#10253A',
-  card2: '#17314C',
-  panel: 'rgba(88,221,255,0.06)',
-  elevated: 'rgba(255,255,255,0.08)',
+  bg: '#071521',
+  bgAlt: '#0C1A28',
+  bgDeep: '#050B12',
+  card: 'rgba(10,24,37,0.78)',
+  cardSolid: '#122538',
+  card2: '#193249',
+  panel: 'rgba(88,221,255,0.05)',
+  elevated: 'rgba(255,255,255,0.06)',
 
   navy: '#234763',
   navyMid: '#366786',
@@ -19,28 +19,28 @@ export const C = {
 
   cyan: '#58DDFF',
   cyanDark: '#B9F4FF',
-  cyanDim: 'rgba(88,221,255,0.12)',
-  cyanGlow: 'rgba(88,221,255,0.24)',
+  cyanDim: 'rgba(88,221,255,0.1)',
+  cyanGlow: 'rgba(88,221,255,0.2)',
   blue: '#7DE7CB',
   blueLight: '#C9FFF1',
   blueDim: 'rgba(125,231,203,0.12)',
   gold: '#FFBE5C',
-  goldDim: 'rgba(255,190,92,0.16)',
+  goldDim: 'rgba(255,190,92,0.14)',
   green: '#47D69E',
-  greenDim: 'rgba(71,214,158,0.14)',
-  purple: '#A999FF',
-  purpleDim: 'rgba(169,153,255,0.14)',
-  orange: '#FF936A',
-  orangeDim: 'rgba(255,147,106,0.14)',
+  greenDim: 'rgba(71,214,158,0.12)',
+  purple: '#8FA6FF',
+  purpleDim: 'rgba(143,166,255,0.12)',
+  orange: '#FF9A74',
+  orangeDim: 'rgba(255,154,116,0.12)',
 
   text: '#EEF8FF',
-  textSub: 'rgba(238,248,255,0.84)',
-  textMuted: 'rgba(194,220,238,0.62)',
-  textDim: 'rgba(149,178,201,0.5)',
+  textSub: 'rgba(238,248,255,0.86)',
+  textMuted: 'rgba(196,220,238,0.68)',
+  textDim: 'rgba(149,178,201,0.56)',
 
-  border: 'rgba(103,205,255,0.16)',
-  borderHov: 'rgba(103,205,255,0.3)',
-  borderFaint: 'rgba(103,205,255,0.08)',
+  border: 'rgba(141,184,218,0.16)',
+  borderHov: 'rgba(88,221,255,0.26)',
+  borderFaint: 'rgba(141,184,218,0.08)',
 
   error: '#FF7C8B',
   errorDim: 'rgba(255,124,139,0.14)',
@@ -48,22 +48,22 @@ export const C = {
   success: '#47D69E',
   info: '#58DDFF',
 
-  overlay: 'rgba(4,10,18,0.82)',
+  overlay: 'rgba(4,10,18,0.8)',
   glass: 'rgba(8,22,35,0.9)',
 } as const;
 
-export const F = "'Plus Jakarta Sans', 'Inter', 'Cairo', 'Tajawal', sans-serif";
-export const FA = "'Cairo', 'Tajawal', sans-serif";
+export const F = "'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif";
+export const FA = "'Cairo', 'Tajawal', 'Plus Jakarta Sans', sans-serif";
 export const FM = "'JetBrains Mono', 'Fira Mono', monospace";
 
 export const TYPE = {
   size: {
-    xs: '0.65rem',
-    sm: '0.75rem',
-    base: '0.875rem',
+    xs: '0.6875rem',
+    sm: '0.8125rem',
+    base: '0.9375rem',
     md: '1rem',
-    lg: '1.125rem',
-    xl: '1.25rem',
+    lg: '1.15rem',
+    xl: '1.35rem',
     '2xl': '1.5rem',
     '3xl': '1.875rem',
     '4xl': '2.25rem',
@@ -74,8 +74,8 @@ export const TYPE = {
     medium: 500,
     semibold: 600,
     bold: 700,
-    black: 800,
-    ultra: 900,
+    black: 780,
+    ultra: 880,
   },
   lineHeight: {
     tight: 1.1,
@@ -88,9 +88,9 @@ export const TYPE = {
     tighter: '-0.04em',
     tight: '-0.02em',
     normal: '0',
-    wide: '0.06em',
-    wider: '0.1em',
-    widest: '0.14em',
+    wide: '0.03em',
+    wider: '0.06em',
+    widest: '0.1em',
   },
 } as const;
 
@@ -117,28 +117,28 @@ export const R = {
   none: '0px',
   xs: '4px',
   sm: '8px',
-  md: '10px',
-  lg: '12px',
-  xl: '16px',
-  xxl: '20px',
-  '3xl': '28px',
+  md: '12px',
+  lg: '14px',
+  xl: '18px',
+  xxl: '24px',
+  '3xl': '32px',
   full: '9999px',
 } as const;
 
 export const SH = {
   none: 'none',
   xs: '0 1px 2px rgba(0,0,0,0.25)',
-  sm: '0 1px 4px rgba(0,0,0,0.3)',
-  card: '0 8px 30px rgba(0,0,0,0.32)',
-  md: '0 12px 34px rgba(0,0,0,0.38)',
-  lg: '0 18px 48px rgba(0,0,0,0.46)',
-  xl: '0 24px 70px rgba(0,0,0,0.54)',
-  navy: '0 8px 32px rgba(0,0,0,0.34)',
-  cyan: '0 4px 20px rgba(88,221,255,0.2)',
-  cyanL: '0 10px 36px rgba(88,221,255,0.26)',
-  blue: '0 8px 22px rgba(125,231,203,0.22)',
-  green: '0 8px 22px rgba(71,214,158,0.24)',
-  gold: '0 8px 24px rgba(255,190,92,0.28)',
+  sm: '0 2px 8px rgba(0,0,0,0.28)',
+  card: '0 10px 28px rgba(0,0,0,0.28)',
+  md: '0 14px 32px rgba(0,0,0,0.32)',
+  lg: '0 18px 42px rgba(0,0,0,0.38)',
+  xl: '0 26px 58px rgba(0,0,0,0.46)',
+  navy: '0 8px 26px rgba(0,0,0,0.28)',
+  cyan: '0 4px 18px rgba(88,221,255,0.16)',
+  cyanL: '0 10px 28px rgba(88,221,255,0.2)',
+  blue: '0 8px 20px rgba(125,231,203,0.18)',
+  green: '0 8px 20px rgba(71,214,158,0.2)',
+  gold: '0 8px 22px rgba(255,190,92,0.22)',
   inner: 'inset 0 1px 3px rgba(0,0,0,0.3)',
 } as const;
 
@@ -188,7 +188,10 @@ export const Z = {
   tooltip: 500,
 } as const;
 
-export function card({ padding = '20px', radius = R.xl }: { padding?: string; radius?: string } = {}) {
+export function card({
+  padding = '20px',
+  radius = R.xl,
+}: { padding?: string; radius?: string } = {}) {
   return {
     background: C.card,
     border: `1px solid ${C.border}`,
@@ -199,7 +202,10 @@ export function card({ padding = '20px', radius = R.xl }: { padding?: string; ra
   };
 }
 
-export function solidCard({ padding = '20px', radius = R.xl }: { padding?: string; radius?: string } = {}) {
+export function solidCard({
+  padding = '20px',
+  radius = R.xl,
+}: { padding?: string; radius?: string } = {}) {
   return {
     background: C.cardSolid,
     border: `1px solid ${C.border}`,

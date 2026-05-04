@@ -1,4 +1,3 @@
-import { Settings, ShieldCheck, Wallet } from 'lucide-react';
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { SkipToContent } from '../components/SkipToContent';
@@ -6,7 +5,7 @@ import { WaselLogo } from '../components/wasel-ds/WaselLogo';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
-import { C, F, GLOBAL_STYLES, GRAD } from '../utils/wasel-ds';
+import { C, F, FA, GLOBAL_STYLES, GRAD } from '../utils/wasel-ds';
 import { isVisibleNavGroup, PRODUCT_NAV_GROUPS } from './waselRootConfig';
 import {
   Badge,
@@ -45,16 +44,7 @@ export default function WaselRoot() {
     getStarted: ar ? 'ابدأ الآن' : 'Get started',
     openMenu: ar ? 'افتح القائمة' : 'Open menu',
     mainContent: ar ? 'المحتوى الرئيسي' : 'Main content',
-    wallet: ar ? 'المحفظة' : 'Wallet',
-    trust: ar ? 'الثقة' : 'Trust',
-    settings: ar ? 'الإعدادات' : 'Settings',
   };
-
-  const quickLinks = [
-    { label: shellCopy.wallet, path: '/wallet', icon: Wallet, accent: C.gold },
-    { label: shellCopy.trust, path: '/trust', icon: ShieldCheck, accent: C.green },
-    { label: shellCopy.settings, path: '/settings', icon: Settings, accent: C.cyan },
-  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -63,11 +53,11 @@ export default function WaselRoot() {
   }, []);
 
   useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (navRef.current && !navRef.current.contains(e.target as Node)) setActiveGroup(null);
+    const handleMouseDown = (event: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(event.target as Node)) setActiveGroup(null);
     };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => document.removeEventListener('mousedown', handleMouseDown);
   }, []);
 
   useEffect(() => {
@@ -78,7 +68,14 @@ export default function WaselRoot() {
   const navigate = useCallback((path: string) => nav(path), [nav]);
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: F, direction: ar ? 'rtl' : 'ltr' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: C.bg,
+        fontFamily: ar ? FA : F,
+        direction: ar ? 'rtl' : 'ltr',
+      }}
+    >
       <SkipToContent targetId="main-content" />
       <style>{GLOBAL_STYLES + `
         @keyframes fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
@@ -95,17 +92,27 @@ export default function WaselRoot() {
           top: 0,
           zIndex: 500,
           background: scrolled
-            ? 'linear-gradient(180deg, rgba(6,19,31,0.98), rgba(6,19,31,0.95))'
-            : 'linear-gradient(180deg, rgba(6,19,31,0.88), rgba(6,19,31,0.84))',
+            ? 'linear-gradient(180deg, rgba(7,21,33,0.98), rgba(7,21,33,0.95))'
+            : 'linear-gradient(180deg, rgba(7,21,33,0.9), rgba(7,21,33,0.84))',
           backdropFilter: 'blur(24px) saturate(150%)',
           borderBottom: `1px solid ${scrolled ? C.borderHov : C.border}`,
           boxShadow: scrolled
-            ? '0 12px 40px rgba(0,0,0,0.34)'
-            : '0 6px 22px rgba(0,0,0,0.18)',
+            ? '0 12px 34px rgba(0,0,0,0.28)'
+            : '0 6px 18px rgba(0,0,0,0.14)',
           transition: 'all 0.25s ease',
         }}
       >
-        <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 20px', minHeight: 70, display: 'flex', alignItems: 'center', gap: 18 }}>
+        <div
+          style={{
+            maxWidth: 1320,
+            margin: '0 auto',
+            padding: '0 20px',
+            minHeight: 72,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 18,
+          }}
+        >
           <button
             onClick={() => navigate('/app')}
             style={{
@@ -119,7 +126,7 @@ export default function WaselRoot() {
               transition: 'opacity 0.15s',
             }}
           >
-            <WaselLogo size={32} theme="light" variant="full" />
+            <WaselLogo size={34} theme="light" variant="full" />
           </button>
 
           <nav style={{ display: 'flex', alignItems: 'center', flex: 1 }} className="wrl-desk-nav">
@@ -127,10 +134,6 @@ export default function WaselRoot() {
               @media (max-width: 899px) { .wrl-desk-nav { display: none !important; } }
               @media (max-width: 899px) { .wrl-desk-actions { display: none !important; } }
               @media (min-width: 900px) { .wrl-mobile-burger { display: none !important; } }
-              @media (max-width: 1180px) {
-                .wrl-shell-shortcuts-label { display: none !important; }
-                .wrl-shell-shortcuts button { width: 36px !important; padding: 0 !important; justify-content: center !important; }
-              }
             `}</style>
 
             {PRODUCT_NAV_GROUPS.filter((group) => (
@@ -143,7 +146,11 @@ export default function WaselRoot() {
               return (
                 <div key={group.id} style={{ position: 'relative' }}>
                   <button
-                    onClick={() => isDirect ? navigate((group as { path: string }).path) : setActiveGroup(isActive ? null : group.id)}
+                    onClick={() =>
+                      isDirect
+                        ? navigate((group as { path: string }).path)
+                        : setActiveGroup(isActive ? null : group.id)
+                    }
                     onMouseEnter={() => !isDirect && setActiveGroup(group.id)}
                     aria-haspopup={!isDirect ? 'true' : undefined}
                     aria-expanded={!isDirect ? isActive : undefined}
@@ -151,16 +158,16 @@ export default function WaselRoot() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 8,
-                      minHeight: 42,
-                      padding: '0 14px',
+                      minHeight: 40,
+                      padding: '0 13px',
                       borderRadius: 999,
-                      background: isActive ? 'rgba(88,221,255,0.12)' : 'transparent',
+                      background: isActive ? 'rgba(255,255,255,0.04)' : 'transparent',
                       border: 'none',
                       cursor: 'pointer',
-                      fontSize: '0.84rem',
+                      fontSize: '0.82rem',
                       fontWeight: isActive ? 700 : 500,
                       color: isActive ? C.text : C.textSub,
-                      fontFamily: F,
+                      fontFamily: ar ? FA : F,
                       transition: 'all 0.14s ease',
                       whiteSpace: 'nowrap',
                     }}
@@ -168,28 +175,52 @@ export default function WaselRoot() {
                     <span
                       aria-hidden="true"
                       style={{
-                        width: 8,
-                        height: 8,
+                        width: 7,
+                        height: 7,
                         borderRadius: '50%',
                         background: (group as { color?: string }).color,
-                        boxShadow: `0 0 14px ${((group as { color?: string }).color ?? C.gold)}66`,
+                        boxShadow: `0 0 10px ${((group as { color?: string }).color ?? C.gold)}55`,
                         flexShrink: 0,
                       }}
                     />
                     {ar ? group.labelAr : group.label}
-                    {isDirect && (group as { badge?: string; color?: string }).badge && (
-                      <Badge label={(group as { badge?: string }).badge ?? ''} color={(group as { color?: string }).color} />
-                    )}
-                    {!isDirect && (
-                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ transform: isActive ? 'rotate(180deg)' : 'none', transition: 'transform 0.14s', opacity: 0.5 }}>
+                    {isDirect && (group as { badge?: string; color?: string }).badge ? (
+                      <Badge
+                        label={(group as { badge?: string }).badge ?? ''}
+                        color={(group as { color?: string }).color}
+                      />
+                    ) : null}
+                    {!isDirect ? (
+                      <svg
+                        width="9"
+                        height="9"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        style={{
+                          transform: isActive ? 'rotate(180deg)' : 'none',
+                          transition: 'transform 0.14s',
+                          opacity: 0.5,
+                        }}
+                      >
                         <path d="M6 9l6 6 6-6" />
                       </svg>
-                    )}
+                    ) : null}
                   </button>
 
-                  {!isDirect && isActive && (
-                    <NavDropdown group={group} onNavigate={(p) => { navigate(p); setActiveGroup(null); }} align={index === 0 ? 'left' : 'center'} ar={ar} isAuthenticated={isAuthenticated} />
-                  )}
+                  {!isDirect && isActive ? (
+                    <NavDropdown
+                      group={group}
+                      onNavigate={(path) => {
+                        navigate(path);
+                        setActiveGroup(null);
+                      }}
+                      align={index === 0 ? 'left' : 'center'}
+                      ar={ar}
+                      isAuthenticated={isAuthenticated}
+                    />
+                  ) : null}
                 </div>
               );
             })}
@@ -202,43 +233,13 @@ export default function WaselRoot() {
               gap: 8,
               alignItems: 'center',
               flexShrink: 0,
-              paddingInlineStart: 8,
+              paddingInlineStart: 10,
               borderInlineStart: `1px solid ${C.borderFaint}`,
             }}
           >
             <LangToggle />
-            {user && <CurrencySwitcher ar={ar} />}
-            {user && isDriverMode && <OnlineToggle ar={ar} />}
-            {user && (
-              <div className="wrl-shell-shortcuts" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {quickLinks.map(({ label, path, icon: Icon, accent }) => (
-                  <button
-                    key={path}
-                    onClick={() => navigate(path)}
-                    title={label}
-                    aria-label={label}
-                    style={{
-                      height: 36,
-                      padding: '0 10px',
-                      borderRadius: 12,
-                      background: C.card,
-                      border: `1px solid ${C.border}`,
-                      color: C.textSub,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 7,
-                      cursor: 'pointer',
-                      transition: 'all 0.14s',
-                    }}
-                  >
-                    <Icon size={15} color={accent} />
-                    <span className="wrl-shell-shortcuts-label" style={{ fontSize: '0.76rem', fontWeight: 700, fontFamily: F, whiteSpace: 'nowrap' }}>
-                      {label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
+            {user ? <CurrencySwitcher ar={ar} /> : null}
+            {user && isDriverMode ? <OnlineToggle ar={ar} /> : null}
 
             {user ? (
               <>
@@ -260,28 +261,109 @@ export default function WaselRoot() {
                     transition: 'all 0.14s',
                   }}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={C.textSub} strokeWidth="2" strokeLinecap="round">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={C.textSub}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
                   </svg>
-                  <div style={{ position: 'absolute', top: 6, insetInlineEnd: 6, width: 7, height: 7, borderRadius: '50%', background: C.error, border: `1.5px solid ${C.bg}` }} />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 6,
+                      insetInlineEnd: 6,
+                      width: 7,
+                      height: 7,
+                      borderRadius: '50%',
+                      background: C.error,
+                      border: `1.5px solid ${C.bg}`,
+                    }}
+                  />
                 </button>
                 <UserMenu user={user} onSignOut={signOut} ar={ar} />
               </>
             ) : (
               <>
-                <button onClick={() => navigate('/auth')} style={{ height: 38, padding: '0 16px', borderRadius: 12, fontSize: '0.82rem', fontWeight: 600, background: 'transparent', border: `1.5px solid ${C.border}`, color: C.text, fontFamily: F, cursor: 'pointer', transition: 'all 0.14s', whiteSpace: 'nowrap' }}>
+                <button
+                  onClick={() => navigate('/auth')}
+                  style={{
+                    height: 38,
+                    padding: '0 16px',
+                    borderRadius: 12,
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    background: 'transparent',
+                    border: `1.5px solid ${C.border}`,
+                    color: C.text,
+                    fontFamily: ar ? FA : F,
+                    cursor: 'pointer',
+                    transition: 'all 0.14s',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   {shellCopy.signIn}
                 </button>
-                <button onClick={() => navigate('/auth?tab=register')} style={{ height: 40, padding: '0 18px', borderRadius: 12, fontSize: '0.82rem', fontWeight: 800, background: GRAD, border: 'none', color: C.bg, fontFamily: F, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.14s', boxShadow: '0 10px 24px rgba(56,190,255,0.22)' }}>
+                <button
+                  onClick={() => navigate('/auth?tab=register')}
+                  style={{
+                    height: 40,
+                    padding: '0 18px',
+                    borderRadius: 12,
+                    fontSize: '0.82rem',
+                    fontWeight: 800,
+                    background: GRAD,
+                    border: 'none',
+                    color: C.bg,
+                    fontFamily: ar ? FA : F,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.14s',
+                    boxShadow: '0 10px 24px rgba(56,190,255,0.22)',
+                  }}
+                >
                   {shellCopy.getStarted}
                 </button>
               </>
             )}
           </div>
 
-          <button className="wrl-mobile-burger" onClick={() => setMobileOpen((t) => !t)} aria-label={shellCopy.openMenu} style={{ marginInlineStart: 'auto', width: 40, height: 40, borderRadius: 12, background: C.card, border: `1px solid ${C.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.14s' }}>
+          <button
+            className="wrl-mobile-burger"
+            onClick={() => setMobileOpen((value) => !value)}
+            aria-label={shellCopy.openMenu}
+            style={{
+              marginInlineStart: 'auto',
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              background: C.card,
+              border: `1px solid ${C.border}`,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              transition: 'all 0.14s',
+            }}
+          >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2" strokeLinecap="round">
-              {mobileOpen ? <><path d="M18 6 6 18" /><path d="M6 6l12 12" /></> : <><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></>}
+              {mobileOpen ? (
+                <>
+                  <path d="M18 6 6 18" />
+                  <path d="M6 6l12 12" />
+                </>
+              ) : (
+                <>
+                  <path d="M4 6h16" />
+                  <path d="M4 12h16" />
+                  <path d="M4 18h16" />
+                </>
+              )}
             </svg>
           </button>
         </div>
@@ -290,10 +372,33 @@ export default function WaselRoot() {
       <Suspense fallback={null}>
         <AvailabilityBanner ar={ar} />
       </Suspense>
-      <MobileDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} onNavigate={navigate} user={user} onSignOut={signOut} ar={ar} />
+      <MobileDrawer
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        onNavigate={navigate}
+        user={user}
+        onSignOut={signOut}
+        ar={ar}
+      />
 
-      <main id="main-content" role="main" aria-label={shellCopy.mainContent} tabIndex={-1} style={{ position: 'relative', isolation: 'isolate' }}>
-        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at top center, rgba(88,221,255,0.08), transparent 30%), radial-gradient(circle at 80% 20%, rgba(71,214,158,0.08), transparent 24%)', zIndex: -1 }} />
+      <main
+        id="main-content"
+        role="main"
+        aria-label={shellCopy.mainContent}
+        tabIndex={-1}
+        style={{ position: 'relative', isolation: 'isolate' }}
+      >
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            background:
+              'radial-gradient(circle at top center, rgba(88,221,255,0.07), transparent 30%), radial-gradient(circle at 80% 20%, rgba(71,214,158,0.06), transparent 24%)',
+            zIndex: -1,
+          }}
+        />
         <Outlet />
       </main>
 

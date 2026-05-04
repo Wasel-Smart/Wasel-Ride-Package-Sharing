@@ -15,9 +15,7 @@ type NotificationMetricProps = {
 export function NotificationMetric({ label, value, tone }: NotificationMetricProps) {
   return (
     <div className={`rounded-2xl border bg-gradient-to-br p-4 ${tone}`}>
-      <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-        {label}
-      </div>
+      <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">{label}</div>
       <div className="mt-2 text-2xl font-semibold text-foreground">{value}</div>
     </div>
   );

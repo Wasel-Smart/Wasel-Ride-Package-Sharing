@@ -9,18 +9,7 @@ function escapeForRegex(value: string): string {
 }
 
 function getSuspiciousTokens() {
-  return [
-    '\uFFFD',
-    'Â·',
-    'Ã‚',
-    'Ãƒ',
-    'Ã˜',
-    'Ã™',
-    'Ã¢â‚¬',
-    'Ã°Å¸',
-    'â€¢',
-    'ðŸ',
-  ] as const;
+  return ['\uFFFD', 'Â·', 'Ã‚', 'Ãƒ', 'Ã˜', 'Ã™', 'Ã¢â‚¬', 'Ã°Å¸', 'â€¢', 'ðŸ'] as const;
 }
 
 function getWellFormedTokensPattern() {
@@ -93,7 +82,7 @@ function getArabicMojibakePattern() {
 
 function decodeLatin1AsUtf8(value: string): string {
   const bytes = Uint8Array.from(
-    Array.from(value, (char) => {
+    Array.from(value, char => {
       const mappedByte = getWindows1252ByteByChar().get(char);
       if (typeof mappedByte === 'number') {
         return mappedByte;
@@ -181,15 +170,12 @@ export function normalizeTextTree<T>(value: T): T {
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => normalizeTextTree(item)) as T;
+    return value.map(item => normalizeTextTree(item)) as T;
   }
 
   if (value && typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value as UnknownRecord).map(([key, item]) => [
-        key,
-        normalizeTextTree(item),
-      ]),
+      Object.entries(value as UnknownRecord).map(([key, item]) => [key, normalizeTextTree(item)]),
     ) as T;
   }
 

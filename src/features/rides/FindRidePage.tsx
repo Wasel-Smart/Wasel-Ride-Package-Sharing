@@ -17,7 +17,11 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
-import { createDemandAlert, getDemandStats, hydrateDemandAlerts } from '../../services/demandCapture';
+import {
+  createDemandAlert,
+  getDemandStats,
+  hydrateDemandAlerts,
+} from '../../services/demandCapture';
 import { trackGrowthEvent } from '../../services/growthEngine';
 import { getConnectedRides } from '../../services/journeyLogistics';
 import { getMovementPriceQuote } from '../../services/movementPricing';
@@ -32,17 +36,17 @@ import {
 } from '../../services/movementRetention';
 import { notificationsAPI } from '../../services/notifications.js';
 import { subscribeToRideBookingRealtime } from '../../services/rideRealtime';
-import { getLiveCorridorSignal, useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
+import {
+  getLiveCorridorSignal,
+  useLiveRouteIntelligence,
+} from '../../services/routeDemandIntelligence';
 import {
   createRideBooking,
   getRideBookings,
   type RideBookingRecord,
 } from '../../services/rideLifecycle';
 import { tripsAPI } from '../../services/trips';
-import {
-  getCorridorOpportunity,
-  getMarketplaceNodes,
-} from '../../config/wasel-movement-network';
+import { getCorridorOpportunity, getMarketplaceNodes } from '../../config/wasel-movement-network';
 import {
   ALL_RIDES,
   buildRideFromPostedRide,
@@ -90,7 +94,9 @@ export function FindRidePage() {
   const { language } = useLanguage();
   const ar = language === 'ar';
   const { notifyTripConfirmed, requestPermission, permission } = usePushNotifications();
-  const { initialFrom, initialTo, initialDate, initialSearched } = parseFindRideParams(location.search);
+  const { initialFrom, initialTo, initialDate, initialSearched } = parseFindRideParams(
+    location.search,
+  );
   const t = createFindRideCopy(ar);
   const copy = getFindRideStaticCopy(ar);
 
@@ -104,7 +110,9 @@ export function FindRidePage() {
   const [selected, setSelected] = useState<Ride | null>(null);
   const [bookingInFlightId, setBookingInFlightId] = useState<string | null>(null);
   const [rideBookings, setRideBookings] = useState<RideBookingRecord[]>(() => getRideBookings());
-  const [recentSearches, setRecentSearches] = useState<string[]>(() => readStoredStringList(RIDE_SEARCHES_KEY));
+  const [recentSearches, setRecentSearches] = useState<string[]>(() =>
+    readStoredStringList(RIDE_SEARCHES_KEY),
+  );
   const [searchResults, setSearchResults] = useState<Ride[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [bookingMessage, setBookingMessage] = useState<string | null>(null);
@@ -112,7 +120,13 @@ export function FindRidePage() {
   const [waitlistMessage, setWaitlistMessage] = useState<string | null>(null);
   const [retentionMessage, setRetentionMessage] = useState<string | null>(null);
   const [savedReminders, setSavedReminders] = useState(() => getRouteReminders());
-  const [pkg, setPkg] = useState({ from: 'Amman', to: 'Aqaba', weight: '<1 kg', note: '', sent: false });
+  const [pkg, setPkg] = useState({
+    from: 'Amman',
+    to: 'Aqaba',
+    weight: '<1 kg',
+    note: '',
+    sent: false,
+  });
   const [submittedSearch, setSubmittedSearch] = useState(() => ({
     from: initialFrom,
     to: initialTo,
@@ -137,7 +151,10 @@ export function FindRidePage() {
       }
 
       const current = next.get(booking.rideId);
-      if (!current || new Date(current.updatedAt).getTime() < new Date(booking.updatedAt).getTime()) {
+      if (
+        !current ||
+        new Date(current.updatedAt).getTime() < new Date(booking.updatedAt).getTime()
+      ) {
         next.set(booking.rideId, booking);
       }
     }
@@ -155,9 +172,7 @@ export function FindRidePage() {
   }, [routeIntelligence.updatedAt]);
   const demandStats = getDemandStats();
   const searchCriteriaDirty =
-    from !== submittedSearch.from ||
-    to !== submittedSearch.to ||
-    date !== submittedSearch.date;
+    from !== submittedSearch.from || to !== submittedSearch.to || date !== submittedSearch.date;
   const activeSearch = searched && !searchCriteriaDirty;
 
   const searchFromCoord = resolveCityCoord(from);
@@ -165,12 +180,12 @@ export function FindRidePage() {
   const connectedRides = getConnectedRides().map(buildRideFromPostedRide);
   const previewRides = [...connectedRides, ...ALL_RIDES];
   const activeCatalog = activeSearch ? searchResults : previewRides;
-  const corridorRides = activeCatalog.filter((ride) => ride.from === from && ride.to === to);
-  const availableCorridorRides = corridorRides.filter((ride) => ride.seatsAvailable > 0);
-  const soldOutCorridorRides = corridorRides.filter((ride) => ride.seatsAvailable <= 0);
+  const corridorRides = activeCatalog.filter(ride => ride.from === from && ride.to === to);
+  const availableCorridorRides = corridorRides.filter(ride => ride.seatsAvailable > 0);
+  const soldOutCorridorRides = corridorRides.filter(ride => ride.seatsAvailable <= 0);
   const nearbyCorridors = activeCatalog
     .filter(
-      (ride) =>
+      ride =>
         ride.id &&
         !(ride.from === from && ride.to === to) &&
         (ride.from === from || ride.to === to || ride.to === from || ride.from === to),
@@ -187,13 +202,19 @@ export function FindRidePage() {
       )
     : previewRides.slice(0, 4);
 
-  const routeReadinessLabel = corridorRides.length >= 2 ? t.instantMatch : corridorRides.length === 1 ? t.bookingReady : t.searchHelp;
+  const routeReadinessLabel =
+    corridorRides.length >= 2
+      ? t.instantMatch
+      : corridorRides.length === 1
+        ? t.bookingReady
+        : t.searchHelp;
   const recommendedRides = [...results]
     .sort((left, right) => scoreRideForRecommendation(right) - scoreRideForRecommendation(left))
     .slice(0, 2);
-  const bookedRides = activeCatalog.filter((ride) => bookedRideIds.has(ride.id)).slice(0, 3);
-  const selectedPriceQuote = selectedSignal?.priceQuote
-    ?? (corridorPlan
+  const bookedRides = activeCatalog.filter(ride => bookedRideIds.has(ride.id)).slice(0, 3);
+  const selectedPriceQuote =
+    selectedSignal?.priceQuote ??
+    (corridorPlan
       ? getMovementPriceQuote({
           basePriceJod: corridorPlan.sharedPriceJod,
           corridorId: corridorPlan.id,
@@ -203,9 +224,10 @@ export function FindRidePage() {
       : null);
 
   const resolveSignalForRoute = (routeFrom: string, routeTo: string) =>
-    signalLookup.get(`${routeFrom}::${routeTo}`) ?? getLiveCorridorSignal(routeFrom, routeTo, routeIntelligence.membership);
+    signalLookup.get(`${routeFrom}::${routeTo}`) ??
+    getLiveCorridorSignal(routeFrom, routeTo, routeIntelligence.membership);
   const openMyTrips = () => nav('/app/my-trips?tab=rides');
-  const selectedBooking = selected ? bookingByRideId.get(selected.id) ?? null : null;
+  const selectedBooking = selected ? (bookingByRideId.get(selected.id) ?? null) : null;
   const getRideBookingStatus = (rideId: string): 'pending_driver' | 'confirmed' | null => {
     const status = bookingByRideId.get(rideId)?.status;
     return status === 'pending_driver' || status === 'confirmed' ? status : null;
@@ -227,7 +249,7 @@ export function FindRidePage() {
   }, [routeIntelligence.updatedAt]);
 
   useEffect(() => {
-    void syncRouteReminders(user ?? undefined).then((delivered) => {
+    void syncRouteReminders(user ?? undefined).then(delivered => {
       if (delivered.length > 0) {
         setSavedReminders(getRouteReminders());
       }
@@ -260,20 +282,25 @@ export function FindRidePage() {
     }
   }, [location.search]);
 
-  const sortRideResults = (rides: Ride[]) => rides.sort((left, right) =>
-    sort === 'price'
-      ? left.pricePerSeat - right.pricePerSeat
-      : sort === 'time'
-        ? left.time.localeCompare(right.time)
-        : right.driver.rating - left.driver.rating,
-  );
+  const sortRideResults = (rides: Ride[]) =>
+    rides.sort((left, right) =>
+      sort === 'price'
+        ? left.pricePerSeat - right.pricePerSeat
+        : sort === 'time'
+          ? left.time.localeCompare(right.time)
+          : right.driver.rating - left.driver.rating,
+    );
 
   const filterLocalRides = (searchFrom: string, searchTo: string, searchDate: string) =>
     sortRideResults(
       connectedRides.filter(
-        (ride) =>
-          (!searchFrom || ride.from.toLowerCase().includes(searchFrom.toLowerCase()) || ride.fromAr === searchFrom) &&
-          (!searchTo || ride.to.toLowerCase().includes(searchTo.toLowerCase()) || ride.toAr === searchTo) &&
+        ride =>
+          (!searchFrom ||
+            ride.from.toLowerCase().includes(searchFrom.toLowerCase()) ||
+            ride.fromAr === searchFrom) &&
+          (!searchTo ||
+            ride.to.toLowerCase().includes(searchTo.toLowerCase()) ||
+            ride.toAr === searchTo) &&
           (!searchDate || ride.date === searchDate),
       ),
     );
@@ -308,7 +335,11 @@ export function FindRidePage() {
     const localMatches = filterLocalRides(searchFrom, searchTo, searchDate);
 
     try {
-      const remoteResults = await tripsAPI.searchTrips(searchFrom, searchTo, searchDate || undefined);
+      const remoteResults = await tripsAPI.searchTrips(
+        searchFrom,
+        searchTo,
+        searchDate || undefined,
+      );
       const mappedRemote = Array.isArray(remoteResults)
         ? remoteResults.map(buildRideFromTripSearchResult)
         : [];
@@ -325,9 +356,9 @@ export function FindRidePage() {
       setLoading(false);
       setSearched(true);
       setSubmittedSearch({ from: searchFrom, to: searchTo, date: searchDate });
-      setRecentSearches((previous) => {
+      setRecentSearches(previous => {
         const label = `${searchFrom} to ${searchTo}${searchDate ? ` on ${searchDate}` : ''}`;
-        return [label, ...previous.filter((item) => item !== label)].slice(0, 4);
+        return [label, ...previous.filter(item => item !== label)].slice(0, 4);
       });
       void trackGrowthEvent({
         userId: user?.id,
@@ -427,16 +458,18 @@ export function FindRidePage() {
           : `Seat confirmed for ${ride.from} to ${ride.to}.`,
       );
 
-      notificationsAPI.createNotification({
-        title: booking.status === 'pending_driver' ? 'Route request sent' : t.bookingStarted,
-        message:
-          booking.status === 'pending_driver'
-            ? `${ride.from} to ${ride.to} is waiting for driver approval at ${ridePriceQuote.finalPriceJod} JOD.`
-            : `${ride.from} to ${ride.to} at ${ride.time} is now in your trips at ${ridePriceQuote.finalPriceJod} JOD with boarding reminders.`,
-        type: 'booking',
-        priority: 'high',
-        action_url: '/app/my-trips?tab=rides',
-      }).catch(() => {});
+      notificationsAPI
+        .createNotification({
+          title: booking.status === 'pending_driver' ? 'Route request sent' : t.bookingStarted,
+          message:
+            booking.status === 'pending_driver'
+              ? `${ride.from} to ${ride.to} is waiting for driver approval at ${ridePriceQuote.finalPriceJod} JOD.`
+              : `${ride.from} to ${ride.to} at ${ride.time} is now in your trips at ${ridePriceQuote.finalPriceJod} JOD with boarding reminders.`,
+          type: 'booking',
+          priority: 'high',
+          action_url: '/app/my-trips?tab=rides',
+        })
+        .catch(() => {});
 
       if (permission === 'default') {
         requestPermission().catch(() => {});
@@ -470,7 +503,7 @@ export function FindRidePage() {
   };
 
   const handleSaveReminder = (corridorId: string) => {
-    const suggestion = recurringSuggestions.find((item) => item.corridorId === corridorId);
+    const suggestion = recurringSuggestions.find(item => item.corridorId === corridorId);
     if (!suggestion) return;
 
     const reminder = createReminderFromSuggestion(suggestion);
@@ -504,10 +537,12 @@ export function FindRidePage() {
         />
 
         <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-          {([
-            ['ride', 'Shared route'],
-            ['package', copy.tabPackage],
-          ] as const).map(([key, label]) => (
+          {(
+            [
+              ['ride', 'Shared route'],
+              ['package', copy.tabPackage],
+            ] as const
+          ).map(([key, label]) => (
             <button
               key={key}
               onClick={() => setTab(key)}
@@ -529,15 +564,67 @@ export function FindRidePage() {
 
         {tab === 'ride' && (
           <>
-            <div style={{ background: DS.card, borderRadius: r(20), padding: 24, border: `1px solid ${DS.border}`, marginBottom: 24 }}>
-              <div className="sp-search-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 180px', gap: 12, marginBottom: 14 }}>
-                {[{ label: t.from, value: from, setter: setFrom, icon: DS.green }, { label: t.to, value: to, setter: setTo, icon: DS.cyan }].map((field) => (
+            <div
+              style={{
+                background: DS.card,
+                borderRadius: r(20),
+                padding: 24,
+                border: `1px solid ${DS.border}`,
+                marginBottom: 24,
+              }}
+            >
+              <div
+                className="sp-search-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr 180px',
+                  gap: 12,
+                  marginBottom: 14,
+                }}
+              >
+                {[
+                  { label: t.from, value: from, setter: setFrom, icon: DS.green },
+                  { label: t.to, value: to, setter: setTo, icon: DS.cyan },
+                ].map(field => (
                   <div key={field.label}>
-                    <label style={{ display: 'block', fontSize: '0.7rem', color: DS.muted, fontWeight: 700, marginBottom: 6 }}>{field.label}</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: DS.card2, borderRadius: r(12), padding: '0 14px', border: `1px solid ${DS.border}`, height: 46 }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.7rem',
+                        color: DS.muted,
+                        fontWeight: 700,
+                        marginBottom: 6,
+                      }}
+                    >
+                      {field.label}
+                    </label>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        background: DS.card2,
+                        borderRadius: r(12),
+                        padding: '0 14px',
+                        border: `1px solid ${DS.border}`,
+                        height: 46,
+                      }}
+                    >
                       <MapPin size={15} color={field.icon} />
-                      <select value={field.value} onChange={(event) => field.setter(event.target.value)} style={{ background: 'transparent', border: 'none', color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', flex: 1, outline: 'none' }}>
-                        {CITIES.map((city) => (
+                      <select
+                        value={field.value}
+                        onChange={event => field.setter(event.target.value)}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#fff',
+                          fontFamily: DS.F,
+                          fontSize: '0.9rem',
+                          flex: 1,
+                          outline: 'none',
+                        }}
+                      >
+                        {CITIES.map(city => (
                           <option key={city} value={city} style={{ background: DS.card }}>
                             {city}
                           </option>
@@ -547,23 +634,121 @@ export function FindRidePage() {
                   </div>
                 ))}
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.7rem', color: DS.muted, fontWeight: 700, marginBottom: 6 }}>{t.date}</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: DS.card2, borderRadius: r(12), padding: '0 14px', border: `1px solid ${DS.border}`, height: 46 }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.7rem',
+                      color: DS.muted,
+                      fontWeight: 700,
+                      marginBottom: 6,
+                    }}
+                  >
+                    {t.date}
+                  </label>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      background: DS.card2,
+                      borderRadius: r(12),
+                      padding: '0 14px',
+                      border: `1px solid ${DS.border}`,
+                      height: 46,
+                    }}
+                  >
                     <Calendar size={15} color={DS.muted} />
-                    <input type="date" value={date} onChange={(event) => setDate(event.target.value)} min={new Date().toISOString().split('T')[0]} style={{ background: 'transparent', border: 'none', color: '#fff', fontFamily: DS.F, fontSize: '0.85rem', flex: 1, outline: 'none', colorScheme: 'dark' }} />
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={event => setDate(event.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#fff',
+                        fontFamily: DS.F,
+                        fontSize: '0.85rem',
+                        flex: 1,
+                        outline: 'none',
+                        colorScheme: 'dark',
+                      }}
+                    />
                   </div>
                 </div>
               </div>
 
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={() => { void handleSearch(); }} data-testid="find-ride-search" style={{ width: '100%', height: 52, borderRadius: r(14), border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                {loading ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }} style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%' }} /> : <Search size={18} />}
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  void handleSearch();
+                }}
+                data-testid="find-ride-search"
+                style={{
+                  width: '100%',
+                  height: 52,
+                  borderRadius: r(14),
+                  border: 'none',
+                  background: DS.gradC,
+                  color: '#fff',
+                  fontWeight: 800,
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                }}
+              >
+                {loading ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                    style={{
+                      width: 20,
+                      height: 20,
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderTop: '2px solid #fff',
+                      borderRadius: '50%',
+                    }}
+                  />
+                ) : (
+                  <Search size={18} />
+                )}
                 {loading ? t.searching : 'Search rides'}
               </motion.button>
 
-              <div style={{ marginTop: 14, background: DS.card2, borderRadius: r(14), padding: 12, border: `1px solid ${DS.border}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
+              <div
+                style={{
+                  marginTop: 14,
+                  background: DS.card2,
+                  borderRadius: r(14),
+                  padding: 12,
+                  border: `1px solid ${DS.border}`,
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    marginBottom: 10,
+                    flexWrap: 'wrap',
+                  }}
+                >
                   <div>
-                    <p style={{ color: DS.muted, fontSize: '0.72rem', fontWeight: 700, margin: '0 0 4px' }}>Route</p>
+                    <p
+                      style={{
+                        color: DS.muted,
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        margin: '0 0 4px',
+                      }}
+                    >
+                      Route
+                    </p>
                     <p style={{ color: DS.sub, fontSize: '0.8rem', margin: 0 }}>
                       {selectedSignal
                         ? `${selectedSignal.liveSearches} searches, ${selectedSignal.liveBookings} bookings, ${selectedSignal.activeDemandAlerts} alerts.`
@@ -571,19 +756,66 @@ export function FindRidePage() {
                     </p>
                   </div>
                   <span style={{ ...pill(DS.green), fontSize: '0.72rem' }}>
-                    {selectedSignal ? `${selectedSignal.forecastDemandScore}/100 forecast` : corridorPlan?.density ?? 'steady density'}
+                    {selectedSignal
+                      ? `${selectedSignal.forecastDemandScore}/100 forecast`
+                      : (corridorPlan?.density ?? 'steady density')}
                   </span>
                 </div>
-                <MapWrapper mode="static" center={midpoint(searchFromCoord, searchToCoord)} pickupLocation={searchFromCoord} dropoffLocation={searchToCoord} height={180} showMosques={false} showRadars={false} />
+                <MapWrapper
+                  mode="static"
+                  center={midpoint(searchFromCoord, searchToCoord)}
+                  pickupLocation={searchFromCoord}
+                  dropoffLocation={searchToCoord}
+                  height={180}
+                  showMosques={false}
+                  showRadars={false}
+                />
               </div>
 
-              {searchError && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: `${DS.gold}12`, border: `1px solid ${DS.gold}30`, borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}><Shield size={16} color={DS.gold} /><span>{searchError}</span></div>}
-              {bookingMessage && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: 'rgba(0,200,117,0.10)', border: '1px solid rgba(0,200,117,0.28)', borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}><CheckCircle2 size={16} color={DS.green} /><span>{bookingMessage}</span></div>}
+              {searchError && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'center',
+                    background: `${DS.gold}12`,
+                    border: `1px solid ${DS.gold}30`,
+                    borderRadius: r(14),
+                    padding: '12px 14px',
+                    color: '#fff',
+                    fontSize: '0.84rem',
+                  }}
+                >
+                  <Shield size={16} color={DS.gold} />
+                  <span>{searchError}</span>
+                </div>
+              )}
+              {bookingMessage && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'center',
+                    background: 'rgba(0,200,117,0.10)',
+                    border: '1px solid rgba(0,200,117,0.28)',
+                    borderRadius: r(14),
+                    padding: '12px 14px',
+                    color: '#fff',
+                    fontSize: '0.84rem',
+                  }}
+                >
+                  <CheckCircle2 size={16} color={DS.green} />
+                  <span>{bookingMessage}</span>
+                </div>
+              )}
               {bookingSuccess && (
                 <div
                   style={{
                     marginTop: 14,
-                    background: 'linear-gradient(135deg, rgba(0,200,117,0.16), rgba(0,200,232,0.10))',
+                    background:
+                      'linear-gradient(135deg, rgba(0,200,117,0.16), rgba(0,200,232,0.10))',
                     border: '1px solid rgba(0,200,117,0.28)',
                     borderRadius: r(16),
                     padding: '16px 18px',
@@ -591,18 +823,35 @@ export function FindRidePage() {
                     gap: 12,
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      flexWrap: 'wrap',
+                    }}
+                  >
                     <div>
                       <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem' }}>
-                        {bookingSuccess.status === 'pending_driver' ? 'Request sent' : 'Seat confirmed'}
+                        {bookingSuccess.status === 'pending_driver'
+                          ? 'Request sent'
+                          : 'Seat confirmed'}
                       </div>
-                      <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.6, marginTop: 6 }}>
+                      <div
+                        style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.6, marginTop: 6 }}
+                      >
                         {bookingSuccess.status === 'pending_driver'
                           ? `${bookingSuccess.routeLabel} is now waiting on ${bookingSuccess.driverName}. Wasel will update My Trips as soon as the driver confirms.`
                           : `${bookingSuccess.routeLabel} is secured at ${bookingSuccess.priceJod} JOD. Boarding details and ticket tracking are now ready in My Trips.`}
                       </div>
                     </div>
-                    <span style={{ ...pill(bookingSuccess.status === 'pending_driver' ? DS.gold : DS.green), fontSize: '0.72rem' }}>
+                    <span
+                      style={{
+                        ...pill(bookingSuccess.status === 'pending_driver' ? DS.gold : DS.green),
+                        fontSize: '0.72rem',
+                      }}
+                    >
                       {bookingSuccess.status === 'pending_driver'
                         ? `${bookingSuccess.priceJod} JOD pending`
                         : `${bookingSuccess.priceJod} JOD confirmed`}
@@ -611,13 +860,31 @@ export function FindRidePage() {
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <button
                       onClick={openMyTrips}
-                      style={{ height: 42, padding: '0 16px', borderRadius: '999px', border: 'none', background: DS.gradG, color: '#fff', fontWeight: 800, cursor: 'pointer' }}
+                      style={{
+                        height: 42,
+                        padding: '0 16px',
+                        borderRadius: '999px',
+                        border: 'none',
+                        background: DS.gradG,
+                        color: '#fff',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                      }}
                     >
                       Open My Trips
                     </button>
                     <button
                       onClick={() => setBookingSuccess(null)}
-                      style={{ height: 42, padding: '0 16px', borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+                      style={{
+                        height: 42,
+                        padding: '0 16px',
+                        borderRadius: '999px',
+                        border: `1px solid ${DS.border}`,
+                        background: DS.card2,
+                        color: '#fff',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
                     >
                       Keep browsing
                     </button>
@@ -629,45 +896,129 @@ export function FindRidePage() {
                   ) : null}
                 </div>
               )}
-              {retentionMessage && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}30`, borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}><Sparkles size={16} color={DS.cyan} /><span>{retentionMessage}</span></div>}
+              {retentionMessage && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'center',
+                    background: `${DS.cyan}12`,
+                    border: `1px solid ${DS.cyan}30`,
+                    borderRadius: r(14),
+                    padding: '12px 14px',
+                    color: '#fff',
+                    fontSize: '0.84rem',
+                  }}
+                >
+                  <Sparkles size={16} color={DS.cyan} />
+                  <span>{retentionMessage}</span>
+                </div>
+              )}
 
-              <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginTop: 14 }}>
+              <div
+                className="sp-4col"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                  gap: 12,
+                  marginTop: 14,
+                }}
+              >
                 {[
                   {
                     label: 'Route readiness',
-                    value: selectedSignal ? `${selectedSignal.activeSupply} live departures` : routeReadinessLabel,
-                    sub: selectedSignal ? `${selectedSignal.liveBookings} bookings | ${selectedSignal.activeDemandAlerts} alerts` : `${corridorRides.length} live departures`,
+                    value: selectedSignal
+                      ? `${selectedSignal.activeSupply} live departures`
+                      : routeReadinessLabel,
+                    sub: selectedSignal
+                      ? `${selectedSignal.liveBookings} bookings | ${selectedSignal.activeDemandAlerts} alerts`
+                      : `${corridorRides.length} live departures`,
                     tone: DS.cyan,
                   },
                   {
                     label: 'Shared price now',
                     value: selectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : '--',
-                    sub: selectedPriceQuote ? `${selectedPriceQuote.discountJod} JOD saved` : 'Best shared fare',
+                    sub: selectedPriceQuote
+                      ? `${selectedPriceQuote.discountJod} JOD saved`
+                      : 'Best shared fare',
                     tone: DS.green,
                   },
                   {
                     label: 'Next wave',
-                    value: selectedSignal?.nextWaveWindow ?? corridorPlan?.autoGroupWindow ?? 'Next shared wave',
-                    sub: selectedSignal?.recommendedPickupPoint ?? corridorPlan?.pickupPoints[0] ?? 'Pickup point shown here',
+                    value:
+                      selectedSignal?.nextWaveWindow ??
+                      corridorPlan?.autoGroupWindow ??
+                      'Next shared wave',
+                    sub:
+                      selectedSignal?.recommendedPickupPoint ??
+                      corridorPlan?.pickupPoints[0] ??
+                      'Pickup point shown here',
                     tone: DS.gold,
                   },
                   {
                     label: 'Route ownership',
-                    value: selectedSignal ? `${selectedSignal.routeOwnershipScore}/100` : corridorPlan?.routeMoat ?? 'Growing route data',
-                    sub: selectedSignal ? selectedSignal.productionSources.slice(0, 2).join(' | ') : `${demandStats.active} saved alerts`,
+                    value: selectedSignal
+                      ? `${selectedSignal.routeOwnershipScore}/100`
+                      : (corridorPlan?.routeMoat ?? 'Growing route data'),
+                    sub: selectedSignal
+                      ? selectedSignal.productionSources.slice(0, 2).join(' | ')
+                      : `${demandStats.active} saved alerts`,
                     tone: DS.cyan,
                   },
-                ].map((item) => (
-                  <div key={item.label} style={{ background: DS.card2, borderRadius: r(14), padding: '14px 15px', border: `1px solid ${DS.border}` }}>
-                    <div style={{ color: DS.muted, fontSize: '0.68rem', fontWeight: 800, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
-                    <div style={{ color: item.tone, fontWeight: 800, fontSize: '0.88rem', lineHeight: 1.55 }}>{item.value}</div>
-                    <div style={{ color: DS.sub, fontSize: '0.76rem', marginTop: 6, lineHeight: 1.55 }}>{item.sub}</div>
+                ].map(item => (
+                  <div
+                    key={item.label}
+                    style={{
+                      background: DS.card2,
+                      borderRadius: r(14),
+                      padding: '14px 15px',
+                      border: `1px solid ${DS.border}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: DS.muted,
+                        fontSize: '0.68rem',
+                        fontWeight: 800,
+                        marginBottom: 6,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                      }}
+                    >
+                      {item.label}
+                    </div>
+                    <div
+                      style={{
+                        color: item.tone,
+                        fontWeight: 800,
+                        fontSize: '0.88rem',
+                        lineHeight: 1.55,
+                      }}
+                    >
+                      {item.value}
+                    </div>
+                    <div
+                      style={{ color: DS.sub, fontSize: '0.76rem', marginTop: 6, lineHeight: 1.55 }}
+                    >
+                      {item.sub}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="sp-results-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+            <div
+              className="sp-results-header"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 16,
+                flexWrap: 'wrap',
+                gap: 10,
+              }}
+            >
               <h2 style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
                 {activeSearch
                   ? `${from} to ${to} | ${results.length} route match${results.length !== 1 ? 'es' : ''}`
@@ -675,12 +1026,34 @@ export function FindRidePage() {
               </h2>
               {selectedSignal ? (
                 <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
-                  Live lane price {selectedSignal.priceQuote.finalPriceJod} JOD | Next wave {selectedSignal.nextWaveWindow}
+                  Live lane price {selectedSignal.priceQuote.finalPriceJod} JOD | Next wave{' '}
+                  {selectedSignal.nextWaveWindow}
                 </div>
               ) : null}
               <div className="sp-sort-bar" style={{ display: 'flex', gap: 6 }}>
-                {([['price', t.cheapest], ['time', t.earliest], ['rating', t.topRated]] as const).map(([key, label]) => (
-                  <button key={key} onClick={() => setSort(key)} style={{ padding: '6px 14px', borderRadius: '99px', border: `1px solid ${sort === key ? DS.cyan : DS.border}`, background: sort === key ? `${DS.cyan}15` : DS.card2, color: sort === key ? DS.cyan : DS.sub, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>{label}</button>
+                {(
+                  [
+                    ['price', t.cheapest],
+                    ['time', t.earliest],
+                    ['rating', t.topRated],
+                  ] as const
+                ).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setSort(key)}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '99px',
+                      border: `1px solid ${sort === key ? DS.cyan : DS.border}`,
+                      background: sort === key ? `${DS.cyan}15` : DS.card2,
+                      color: sort === key ? DS.cyan : DS.sub,
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {label}
+                  </button>
                 ))}
               </div>
             </div>
@@ -688,38 +1061,199 @@ export function FindRidePage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
               <AnimatePresence>
                 {results.length === 0 ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: DS.card, borderRadius: r(20), padding: '60px 24px', textAlign: 'center', border: `1px solid ${DS.border}` }}>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    style={{
+                      background: DS.card,
+                      borderRadius: r(20),
+                      padding: '60px 24px',
+                      textAlign: 'center',
+                      border: `1px solid ${DS.border}`,
+                    }}
+                  >
                     <div style={{ fontSize: '3rem', marginBottom: 16 }}>{copy.noResultsIcon}</div>
-                    <h3 style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>{t.noRidesFound}</h3>
+                    <h3 style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>
+                      {t.noRidesFound}
+                    </h3>
                     <p style={{ color: DS.sub, fontSize: '0.875rem' }}>
-                      No ride found yet. Save this route and get alerted when one opens{selectedSignal ? ` around ${selectedSignal.nextWaveWindow}` : ''}.
+                      No ride found yet. Save this route and get alerted when one opens
+                      {selectedSignal ? ` around ${selectedSignal.nextWaveWindow}` : ''}.
                     </p>
-                    <div className="sp-empty-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 18 }}>
-                      <button onClick={() => { setDate(''); setSearchError(null); void handleSearch({ date: '' }); }} style={{ height: 44, borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{t.clearDateFilter}</button>
-                      <button onClick={() => nav(`/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)} style={{ height: 44, borderRadius: r(12), border: 'none', background: DS.gradG, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{t.openBusFallback}</button>
+                    <div
+                      className="sp-empty-actions"
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: 10,
+                        marginTop: 18,
+                      }}
+                    >
+                      <button
+                        onClick={() => {
+                          setDate('');
+                          setSearchError(null);
+                          void handleSearch({ date: '' });
+                        }}
+                        style={{
+                          height: 44,
+                          borderRadius: r(12),
+                          border: `1px solid ${DS.border}`,
+                          background: DS.card2,
+                          color: '#fff',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {t.clearDateFilter}
+                      </button>
+                      <button
+                        onClick={() =>
+                          nav(
+                            `/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+                          )
+                        }
+                        style={{
+                          height: 44,
+                          borderRadius: r(12),
+                          border: 'none',
+                          background: DS.gradG,
+                          color: '#fff',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {t.openBusFallback}
+                      </button>
                     </div>
-                    <button onClick={handleDemandCapture} style={{ marginTop: 10, width: '100%', height: 44, borderRadius: r(12), border: `1px solid ${DS.cyan}35`, background: `${DS.cyan}12`, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{copy.notifyMe}</button>
-                    {(waitlistMessage || demandStats.active > 0) && <div style={{ marginTop: 12, color: DS.sub, fontSize: '0.78rem', lineHeight: 1.5 }}>{waitlistMessage ?? `${demandStats.active} active alert${demandStats.active === 1 ? '' : 's'}.`}</div>}
-                    {nearbyCorridors.length > 0 && <div style={{ marginTop: 20, textAlign: 'left' }}><div style={{ color: '#fff', fontWeight: 800, marginBottom: 10 }}>{t.nearbyCorridors}</div><div style={{ display: 'grid', gap: 10 }}>{nearbyCorridors.map((ride) => <button key={ride.id} onClick={() => handleOpenRide(ride)} style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}><div><div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{ride.from} to {ride.to}</div><div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>{ride.time} | {ride.driver.name}</div></div><span style={{ ...pill(ride.seatsAvailable > 0 ? DS.cyan : DS.gold) }}>{ride.seatsAvailable > 0 ? `${getMovementPriceQuote({ basePriceJod: ride.pricePerSeat, corridorId: resolveSignalForRoute(ride.from, ride.to)?.id, forecastDemandScore: resolveSignalForRoute(ride.from, ride.to)?.forecastDemandScore, membership: routeIntelligence.membership }).finalPriceJod} JOD` : 'Sold out'}</span></div></button>)}</div></div>}
+                    <button
+                      onClick={handleDemandCapture}
+                      style={{
+                        marginTop: 10,
+                        width: '100%',
+                        height: 44,
+                        borderRadius: r(12),
+                        border: `1px solid ${DS.cyan}35`,
+                        background: `${DS.cyan}12`,
+                        color: '#fff',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {copy.notifyMe}
+                    </button>
+                    {(waitlistMessage || demandStats.active > 0) && (
+                      <div
+                        style={{
+                          marginTop: 12,
+                          color: DS.sub,
+                          fontSize: '0.78rem',
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {waitlistMessage ??
+                          `${demandStats.active} active alert${demandStats.active === 1 ? '' : 's'}.`}
+                      </div>
+                    )}
+                    {nearbyCorridors.length > 0 && (
+                      <div style={{ marginTop: 20, textAlign: 'left' }}>
+                        <div style={{ color: '#fff', fontWeight: 800, marginBottom: 10 }}>
+                          {t.nearbyCorridors}
+                        </div>
+                        <div style={{ display: 'grid', gap: 10 }}>
+                          {nearbyCorridors.map(ride => (
+                            <button
+                              key={ride.id}
+                              onClick={() => handleOpenRide(ride)}
+                              style={{
+                                textAlign: 'left',
+                                borderRadius: r(14),
+                                border: `1px solid ${DS.border}`,
+                                background: DS.card2,
+                                padding: '12px 14px',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  gap: 12,
+                                  flexWrap: 'wrap',
+                                }}
+                              >
+                                <div>
+                                  <div
+                                    style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}
+                                  >
+                                    {ride.from} to {ride.to}
+                                  </div>
+                                  <div
+                                    style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}
+                                  >
+                                    {ride.time} | {ride.driver.name}
+                                  </div>
+                                </div>
+                                <span
+                                  style={{ ...pill(ride.seatsAvailable > 0 ? DS.cyan : DS.gold) }}
+                                >
+                                  {ride.seatsAvailable > 0
+                                    ? `${getMovementPriceQuote({ basePriceJod: ride.pricePerSeat, corridorId: resolveSignalForRoute(ride.from, ride.to)?.id, forecastDemandScore: resolveSignalForRoute(ride.from, ride.to)?.forecastDemandScore, membership: routeIntelligence.membership }).finalPriceJod} JOD`
+                                    : 'Sold out'}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
-                ) : results.map((ride, index) => (
-                  <FindRideCard
-                    key={ride.id}
-                    ride={ride}
-                    idx={index}
-                    bookingStatus={getRideBookingStatus(ride.id)}
-                    signal={resolveSignalForRoute(ride.from, ride.to)}
-                    onOpen={() => handleOpenRide(ride)}
-                    onOpenBooking={openMyTrips}
-                  />
-                ))}
+                ) : (
+                  results.map((ride, index) => (
+                    <FindRideCard
+                      key={ride.id}
+                      ride={ride}
+                      idx={index}
+                      bookingStatus={getRideBookingStatus(ride.id)}
+                      signal={resolveSignalForRoute(ride.from, ride.to)}
+                      onOpen={() => handleOpenRide(ride)}
+                      onOpenBooking={openMyTrips}
+                    />
+                  ))
+                )}
               </AnimatePresence>
             </div>
 
-            <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
-              <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
+            <div
+              className="sp-2col"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.15fr 0.85fr',
+                gap: 14,
+                marginBottom: 18,
+              }}
+            >
+              <div
+                style={{
+                  background: DS.card,
+                  borderRadius: r(18),
+                  padding: '18px 18px 16px',
+                  border: `1px solid ${DS.border}`,
+                }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}28`, display: 'grid', placeItems: 'center' }}>
+                  <div
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: r(12),
+                      background: `${DS.cyan}12`,
+                      border: `1px solid ${DS.cyan}28`,
+                      display: 'grid',
+                      placeItems: 'center',
+                    }}
+                  >
                     <Brain size={18} color={DS.cyan} />
                   </div>
                   <div>
@@ -730,26 +1264,36 @@ export function FindRidePage() {
                   </div>
                 </div>
                 <div style={{ display: 'grid', gap: 10 }}>
-                  {(
-                    selectedSignal
-                      ? [
-                          selectedSignal.recommendedReason,
-                          `Next wave: ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.`,
-                          `Live feed: ${selectedSignal.productionSources.slice(0, 3).join(' | ')}.`,
-                        ]
-                      : corridorPlan?.intelligenceSignals ?? [
-                          'Demand builds before departure.',
-                          'Pickup points stay simple.',
-                          'Shared rides stay cheaper.',
-                        ]
-                  ).map((line) => (
-                    <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
+                  {(selectedSignal
+                    ? [
+                        selectedSignal.recommendedReason,
+                        `Next wave: ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.`,
+                        `Live feed: ${selectedSignal.productionSources.slice(0, 3).join(' | ')}.`,
+                      ]
+                    : (corridorPlan?.intelligenceSignals ?? [
+                        'Demand builds before departure.',
+                        'Pickup points stay simple.',
+                        'Shared rides stay cheaper.',
+                      ])
+                  ).map(line => (
+                    <div
+                      key={line}
+                      style={{
+                        borderRadius: r(14),
+                        border: `1px solid ${DS.border}`,
+                        background: DS.card2,
+                        padding: '12px 14px',
+                        color: '#fff',
+                        fontSize: '0.82rem',
+                        lineHeight: 1.65,
+                      }}
+                    >
                       {line}
                     </div>
                   ))}
                 </div>
                 <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {(corridorPlan?.movementLayers ?? ['people', 'goods', 'services']).map((layer) => (
+                  {(corridorPlan?.movementLayers ?? ['people', 'goods', 'services']).map(layer => (
                     <span key={layer} style={pill(DS.green)}>
                       <Sparkles size={10} /> {layer}
                     </span>
@@ -758,20 +1302,37 @@ export function FindRidePage() {
               </div>
 
               <div style={{ display: 'grid', gap: 14 }}>
-                <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
+                <div
+                  style={{
+                    background: DS.card,
+                    borderRadius: r(18),
+                    padding: '18px 18px 16px',
+                    border: `1px solid ${DS.border}`,
+                  }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.gold}12`, border: `1px solid ${DS.gold}28`, display: 'grid', placeItems: 'center' }}>
+                    <div
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: r(12),
+                        background: `${DS.gold}12`,
+                        border: `1px solid ${DS.gold}28`,
+                        display: 'grid',
+                        placeItems: 'center',
+                      }}
+                    >
                       <TrendingUp size={18} color={DS.gold} />
                     </div>
                     <div>
-                    <div style={{ color: '#fff', fontWeight: 800 }}>Popular now</div>
-                    <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
+                      <div style={{ color: '#fff', fontWeight: 800 }}>Popular now</div>
+                      <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
                         Routes with strong live activity.
                       </div>
                     </div>
                   </div>
                   <div style={{ display: 'grid', gap: 10 }}>
-                    {featuredSignals.map((corridor) => (
+                    {featuredSignals.map(corridor => (
                       <button
                         key={corridor.id}
                         onClick={() => {
@@ -779,13 +1340,32 @@ export function FindRidePage() {
                           setTo(corridor.to);
                           void handleSearch({ from: corridor.from, to: corridor.to, date: '' });
                         }}
-                        style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}
+                        style={{
+                          textAlign: 'left',
+                          borderRadius: r(14),
+                          border: `1px solid ${DS.border}`,
+                          background: DS.card2,
+                          padding: '12px 14px',
+                          cursor: 'pointer',
+                        }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            flexWrap: 'wrap',
+                          }}
+                        >
                           <div>
-                            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{corridor.label}</div>
+                            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>
+                              {corridor.label}
+                            </div>
                             <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                              Demand {corridor.forecastDemandScore} | {corridor.priceQuote.finalPriceJod} JOD | Owns {corridor.routeOwnershipScore}
+                              Demand {corridor.forecastDemandScore} |{' '}
+                              {corridor.priceQuote.finalPriceJod} JOD | Owns{' '}
+                              {corridor.routeOwnershipScore}
                             </div>
                           </div>
                           <span style={pill(DS.cyan)}>{corridor.pricePressure}</span>
@@ -795,23 +1375,59 @@ export function FindRidePage() {
                   </div>
                 </div>
 
-                <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
+                <div
+                  style={{
+                    background: DS.card,
+                    borderRadius: r(18),
+                    padding: '18px 18px 16px',
+                    border: `1px solid ${DS.border}`,
+                  }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.green}12`, border: `1px solid ${DS.green}28`, display: 'grid', placeItems: 'center' }}>
+                    <div
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: r(12),
+                        background: `${DS.green}12`,
+                        border: `1px solid ${DS.green}28`,
+                        display: 'grid',
+                        placeItems: 'center',
+                      }}
+                    >
                       <Network size={18} color={DS.green} />
                     </div>
                     <div>
-                    <div style={{ color: '#fff', fontWeight: 800 }}>Package-ready rides</div>
-                    <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
+                      <div style={{ color: '#fff', fontWeight: 800 }}>Package-ready rides</div>
+                      <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
                         Some rides also carry packages.
                       </div>
                     </div>
                   </div>
                   <div style={{ display: 'grid', gap: 10 }}>
-                    {marketplaceNodes.map((node) => (
-                      <div key={node.id} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>{node.title}</div>
-                        <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.55 }}>{node.summary}</div>
+                    {marketplaceNodes.map(node => (
+                      <div
+                        key={node.id}
+                        style={{
+                          borderRadius: r(14),
+                          border: `1px solid ${DS.border}`,
+                          background: DS.card2,
+                          padding: '12px 14px',
+                        }}
+                      >
+                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>
+                          {node.title}
+                        </div>
+                        <div
+                          style={{
+                            color: DS.muted,
+                            fontSize: '0.74rem',
+                            marginTop: 4,
+                            lineHeight: 1.55,
+                          }}
+                        >
+                          {node.summary}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -819,30 +1435,110 @@ export function FindRidePage() {
               </div>
             </div>
 
-            <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
-              <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Suggested reminders</div>
+            <div
+              className="sp-2col"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.15fr 0.85fr',
+                gap: 14,
+                marginBottom: 18,
+              }}
+            >
+              <div
+                style={{
+                  background: DS.card,
+                  borderRadius: r(18),
+                  padding: '18px 18px 16px',
+                  border: `1px solid ${DS.border}`,
+                }}
+              >
+                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
+                  Suggested reminders
+                </div>
                 {recurringSuggestions.length > 0 ? (
                   <div style={{ display: 'grid', gap: 10 }}>
-                    {recurringSuggestions.map((suggestion) => {
-                      const alreadySaved = Boolean(getRouteReminderForCorridor(suggestion.corridorId));
+                    {recurringSuggestions.map(suggestion => {
+                      const alreadySaved = Boolean(
+                        getRouteReminderForCorridor(suggestion.corridorId),
+                      );
                       return (
-                        <div key={suggestion.corridorId} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                        <div
+                          key={suggestion.corridorId}
+                          style={{
+                            borderRadius: r(14),
+                            border: `1px solid ${DS.border}`,
+                            background: DS.card2,
+                            padding: '12px 14px',
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: 12,
+                              flexWrap: 'wrap',
+                            }}
+                          >
                             <div>
-                              <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{suggestion.label}</div>
+                              <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>
+                                {suggestion.label}
+                              </div>
                               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                                {suggestion.confidenceScore}/100 | {suggestion.priceQuote.finalPriceJod} JOD | {suggestion.weeklyFrequency} signals
+                                {suggestion.confidenceScore}/100 |{' '}
+                                {suggestion.priceQuote.finalPriceJod} JOD |{' '}
+                                {suggestion.weeklyFrequency} signals
                               </div>
                             </div>
                             <span style={pill(DS.green)}>{suggestion.recommendedFrequency}</span>
                           </div>
-                          <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 8 }}>{suggestion.reason}</div>
+                          <div
+                            style={{
+                              color: DS.sub,
+                              fontSize: '0.76rem',
+                              lineHeight: 1.55,
+                              marginTop: 8,
+                            }}
+                          >
+                            {suggestion.reason}
+                          </div>
                           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-                            <button onClick={() => { setFrom(suggestion.from); setTo(suggestion.to); void handleSearch({ from: suggestion.from, to: suggestion.to, date: '' }); }} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+                            <button
+                              onClick={() => {
+                                setFrom(suggestion.from);
+                                setTo(suggestion.to);
+                                void handleSearch({
+                                  from: suggestion.from,
+                                  to: suggestion.to,
+                                  date: '',
+                                });
+                              }}
+                              style={{
+                                height: 38,
+                                padding: '0 14px',
+                                borderRadius: '999px',
+                                border: `1px solid ${DS.border}`,
+                                background: DS.card,
+                                color: '#fff',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                              }}
+                            >
                               Search route
                             </button>
-                            <button onClick={() => handleSaveReminder(suggestion.corridorId)} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: 'none', background: alreadySaved ? DS.gradG : DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+                            <button
+                              onClick={() => handleSaveReminder(suggestion.corridorId)}
+                              style={{
+                                height: 38,
+                                padding: '0 14px',
+                                borderRadius: '999px',
+                                border: 'none',
+                                background: alreadySaved ? DS.gradG : DS.gradC,
+                                color: '#fff',
+                                fontWeight: 800,
+                                cursor: 'pointer',
+                              }}
+                            >
                               {alreadySaved ? 'Reminder active' : 'Save reminder'}
                             </button>
                           </div>
@@ -857,13 +1553,32 @@ export function FindRidePage() {
                 )}
               </div>
 
-              <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Saved reminders</div>
+              <div
+                style={{
+                  background: DS.card,
+                  borderRadius: r(18),
+                  padding: '18px 18px 16px',
+                  border: `1px solid ${DS.border}`,
+                }}
+              >
+                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
+                  Saved reminders
+                </div>
                 {savedReminders.length > 0 ? (
                   <div style={{ display: 'grid', gap: 10 }}>
-                    {savedReminders.slice(0, 4).map((reminder) => (
-                      <div key={reminder.id} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, padding: '11px 12px' }}>
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>{reminder.label}</div>
+                    {savedReminders.slice(0, 4).map(reminder => (
+                      <div
+                        key={reminder.id}
+                        style={{
+                          borderRadius: r(12),
+                          border: `1px solid ${DS.border}`,
+                          background: DS.card2,
+                          padding: '11px 12px',
+                        }}
+                      >
+                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>
+                          {reminder.label}
+                        </div>
                         <div style={{ color: DS.muted, fontSize: '0.73rem', marginTop: 4 }}>
                           {formatRouteReminderSchedule(reminder)}
                         </div>
@@ -878,11 +1593,28 @@ export function FindRidePage() {
               </div>
             </div>
 
-            <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
-              <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Best ride matches</div>
+            <div
+              className="sp-2col"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.15fr 0.85fr',
+                gap: 14,
+                marginBottom: 18,
+              }}
+            >
+              <div
+                style={{
+                  background: DS.card,
+                  borderRadius: r(18),
+                  padding: '18px 18px 16px',
+                  border: `1px solid ${DS.border}`,
+                }}
+              >
+                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
+                  Best ride matches
+                </div>
                 <div style={{ display: 'grid', gap: 10 }}>
-                  {recommendedRides.map((ride) => {
+                  {recommendedRides.map(ride => {
                     const rideSignal = resolveSignalForRoute(ride.from, ride.to);
                     const ridePriceQuote = getMovementPriceQuote({
                       basePriceJod: ride.pricePerSeat,
@@ -892,16 +1624,44 @@ export function FindRidePage() {
                     });
 
                     return (
-                      <button key={ride.id} onClick={() => handleOpenRide(ride)} style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                      <button
+                        key={ride.id}
+                        onClick={() => handleOpenRide(ride)}
+                        style={{
+                          textAlign: 'left',
+                          borderRadius: r(14),
+                          border: `1px solid ${DS.border}`,
+                          background: DS.card2,
+                          padding: '12px 14px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            flexWrap: 'wrap',
+                          }}
+                        >
                           <div>
-                            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{ride.from} to {ride.to}</div>
+                            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>
+                              {ride.from} to {ride.to}
+                            </div>
                             <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                              {ride.time} | {ride.driver.name} | {rideSignal ? `${rideSignal.routeOwnershipScore}/100 ownership` : ride.car}
+                              {ride.time} | {ride.driver.name} |{' '}
+                              {rideSignal
+                                ? `${rideSignal.routeOwnershipScore}/100 ownership`
+                                : ride.car}
                             </div>
                           </div>
-                          <span style={{ ...pill(bookedRideIds.has(ride.id) ? DS.green : DS.cyan) }}>
-                            {bookedRideIds.has(ride.id) ? 'Booked' : `${ridePriceQuote.finalPriceJod} JOD`}
+                          <span
+                            style={{ ...pill(bookedRideIds.has(ride.id) ? DS.green : DS.cyan) }}
+                          >
+                            {bookedRideIds.has(ride.id)
+                              ? 'Booked'
+                              : `${ridePriceQuote.finalPriceJod} JOD`}
                           </span>
                         </div>
                       </button>
@@ -911,15 +1671,53 @@ export function FindRidePage() {
               </div>
 
               <div style={{ display: 'grid', gap: 14 }}>
-                {[{ title: t.recentSearches, items: recentSearches, empty: t.searchHelp }, { title: t.bookedTrips, items: bookedRides.map((ride) => `${ride.from} to ${ride.to} | ${ride.time} | ${ride.driver.name}`), empty: t.noTripsYet }].map((card) => (
-                  <div key={card.title} style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                    <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>{card.title}</div>
-                    {card.items.length > 0 ? <div style={{ display: 'grid', gap: 10 }}>{card.items.map((item) => <div key={item} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, padding: '11px 12px', color: '#fff', fontSize: '0.78rem' }}>{item}</div>)}</div> : <div style={{ color: DS.muted, fontSize: '0.8rem' }}>{card.empty}</div>}
+                {[
+                  { title: t.recentSearches, items: recentSearches, empty: t.searchHelp },
+                  {
+                    title: t.bookedTrips,
+                    items: bookedRides.map(
+                      ride => `${ride.from} to ${ride.to} | ${ride.time} | ${ride.driver.name}`,
+                    ),
+                    empty: t.noTripsYet,
+                  },
+                ].map(card => (
+                  <div
+                    key={card.title}
+                    style={{
+                      background: DS.card,
+                      borderRadius: r(18),
+                      padding: '18px 18px 16px',
+                      border: `1px solid ${DS.border}`,
+                    }}
+                  >
+                    <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
+                      {card.title}
+                    </div>
+                    {card.items.length > 0 ? (
+                      <div style={{ display: 'grid', gap: 10 }}>
+                        {card.items.map(item => (
+                          <div
+                            key={item}
+                            style={{
+                              borderRadius: r(12),
+                              border: `1px solid ${DS.border}`,
+                              background: DS.card2,
+                              padding: '11px 12px',
+                              color: '#fff',
+                              fontSize: '0.78rem',
+                            }}
+                          >
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ color: DS.muted, fontSize: '0.8rem' }}>{card.empty}</div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
-
           </>
         )}
 
@@ -932,7 +1730,13 @@ export function FindRidePage() {
         {selected && (
           <FindRideTripDetailModal
             ride={selected}
-            bookingStatus={selectedBooking && (selectedBooking.status === 'pending_driver' || selectedBooking.status === 'confirmed') ? selectedBooking.status : null}
+            bookingStatus={
+              selectedBooking &&
+              (selectedBooking.status === 'pending_driver' ||
+                selectedBooking.status === 'confirmed')
+                ? selectedBooking.status
+                : null
+            }
             signal={resolveSignalForRoute(selected.from, selected.to)}
             isBooking={bookingInFlightId === selected.id}
             onClose={() => setSelected(null)}

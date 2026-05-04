@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { ChevronRight, type LucideIcon } from 'lucide-react';
-import { ANIM, C, F, GRAD, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import { ANIM, C, F, FA, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 
 interface PageShellProps {
   children: ReactNode;
@@ -68,15 +68,15 @@ export function PageShell({
         minHeight: '100vh',
         background: `
           radial-gradient(circle at 14% 12%, rgba(88,221,255,0.12), transparent 24%),
-          radial-gradient(circle at 82% 16%, rgba(255,190,92,0.1), transparent 20%),
-          radial-gradient(circle at 70% 82%, rgba(71,214,158,0.08), transparent 22%),
+          radial-gradient(circle at 76% 20%, rgba(255,190,92,0.08), transparent 18%),
+          radial-gradient(circle at 66% 84%, rgba(71,214,158,0.06), transparent 20%),
           ${C.bg}
         `,
         color: C.text,
-        fontFamily: F,
+        fontFamily: dir === 'rtl' ? FA : F,
         direction: dir,
         position: 'relative',
-        paddingBottom: 80,
+        paddingBottom: 96,
         ...style,
       }}
     >
@@ -87,10 +87,10 @@ export function PageShell({
           inset: 0,
           pointerEvents: 'none',
           backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
-          backgroundSize: '54px 54px',
+            'linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)',
+          backgroundSize: '72px 72px',
           maskImage: 'radial-gradient(circle at center, black 0%, black 48%, transparent 84%)',
-          opacity: 0.18,
+          opacity: 0.08,
         }}
       />
       <div
@@ -124,16 +124,16 @@ export function PageHero({
         position: 'relative',
         overflow: 'hidden',
         display: 'grid',
-        gridTemplateColumns: aside ? 'minmax(0, 1.25fr) minmax(280px, 0.75fr)' : '1fr',
+        gridTemplateColumns: aside ? 'minmax(0, 1.12fr) minmax(320px, 0.88fr)' : '1fr',
         gap: SPACE[6],
-        padding: `${SPACE[7]} ${SPACE[7]}`,
+        padding: `${SPACE[8]} ${SPACE[7]}`,
         borderRadius: R['3xl'],
         background: `
-          radial-gradient(circle at top left, ${accent}22, transparent 34%),
-          linear-gradient(145deg, rgba(16,37,58,0.96) 0%, rgba(11,29,45,0.94) 56%, rgba(4,11,18,0.96) 100%)
+          radial-gradient(circle at top left, ${accent}16, transparent 32%),
+          linear-gradient(145deg, rgba(16,37,58,0.96) 0%, rgba(11,29,45,0.94) 62%, rgba(4,11,18,0.96) 100%)
         `,
-        border: `1px solid ${accent}26`,
-        boxShadow: SH.xl,
+        border: `1px solid ${C.border}`,
+        boxShadow: SH.lg,
         marginBottom: SPACE[6],
       }}
     >
@@ -142,7 +142,8 @@ export function PageHero({
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(120deg, rgba(255,255,255,0.04), transparent 30%, transparent 70%, rgba(255,255,255,0.02))',
+          background:
+            'linear-gradient(120deg, rgba(255,255,255,0.04), transparent 30%, transparent 70%, rgba(255,255,255,0.02))',
           pointerEvents: 'none',
         }}
       />
@@ -161,7 +162,7 @@ export function PageHero({
               fontSize: TYPE.size.xs,
               fontWeight: TYPE.weight.bold,
               textTransform: 'uppercase',
-              letterSpacing: TYPE.letterSpacing.widest,
+              letterSpacing: TYPE.letterSpacing.wider,
               marginBottom: SPACE[4],
             }}
           >
@@ -172,7 +173,7 @@ export function PageHero({
         <h1
           style={{
             margin: 0,
-            fontSize: 'clamp(1.9rem, 5vw, 2.8rem)',
+            fontSize: 'clamp(2rem, 5vw, 3rem)',
             lineHeight: TYPE.lineHeight.tight,
             letterSpacing: TYPE.letterSpacing.tighter,
             fontWeight: TYPE.weight.ultra,
@@ -188,7 +189,7 @@ export function PageHero({
               margin: `${SPACE[4]} 0 0`,
               maxWidth: 760,
               color: C.textMuted,
-              fontSize: TYPE.size.base,
+              fontSize: TYPE.size.md,
               lineHeight: TYPE.lineHeight.loose,
             }}
           >
@@ -207,9 +208,9 @@ export function PageHero({
             position: 'relative',
             minWidth: 0,
             borderRadius: R.xxl,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02))',
             border: `1px solid ${C.border}`,
-            boxShadow: SH.card,
+            boxShadow: SH.md,
             padding: SPACE[5],
             alignSelf: 'stretch',
           }}
@@ -273,10 +274,10 @@ export function SectionCard({
       <div
         style={{
           background:
-            'radial-gradient(circle at top left, rgba(88,221,255,0.06), transparent 32%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)',
+            'radial-gradient(circle at top left, rgba(88,221,255,0.05), transparent 28%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)',
           border: `1px solid ${C.border}`,
           borderRadius: R.xxl,
-          boxShadow: SH.card,
+          boxShadow: SH.md,
           overflow: 'hidden',
         }}
       >
@@ -286,24 +287,30 @@ export function SectionCard({
   );
 }
 
-export function MetricCard({
-  label,
-  value,
-  detail,
-  accent = C.cyan,
-  icon,
-}: MetricCardProps) {
+export function MetricCard({ label, value, detail, accent = C.cyan, icon }: MetricCardProps) {
   return (
     <div
       className="wasel-card"
       style={{
         minWidth: 0,
-        padding: `${SPACE[4]} ${SPACE[4]}`,
-        borderColor: `${accent}30`,
-        background: `radial-gradient(circle at top left, ${accent}14, transparent 34%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)`,
+        padding: `${SPACE[5]} ${SPACE[4]}`,
+        borderColor: `${accent}24`,
+        borderStyle: 'solid',
+        borderWidth: 1,
+        borderRadius: R.xxl,
+        background: `radial-gradient(circle at top left, ${accent}10, transparent 30%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)`,
+        boxShadow: SH.md,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: SPACE[3], marginBottom: SPACE[3] }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: SPACE[3],
+          marginBottom: SPACE[3],
+        }}
+      >
         <span
           style={{
             display: 'inline-flex',
@@ -324,7 +331,7 @@ export function MetricCard({
           style={{
             fontSize: TYPE.size.xs,
             fontWeight: TYPE.weight.bold,
-            letterSpacing: TYPE.letterSpacing.wider,
+            letterSpacing: TYPE.letterSpacing.wide,
             textTransform: 'uppercase',
             color: C.textMuted,
           }}
@@ -332,11 +339,25 @@ export function MetricCard({
           {label}
         </span>
       </div>
-      <div style={{ color: '#FFFFFF', fontSize: TYPE.size['3xl'], fontWeight: TYPE.weight.ultra, lineHeight: TYPE.lineHeight.tight }}>
+      <div
+        style={{
+          color: '#FFFFFF',
+          fontSize: TYPE.size['3xl'],
+          fontWeight: TYPE.weight.ultra,
+          lineHeight: TYPE.lineHeight.tight,
+        }}
+      >
         {value}
       </div>
       {detail ? (
-        <div style={{ marginTop: SPACE[2], color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: TYPE.lineHeight.relaxed }}>
+        <div
+          style={{
+            marginTop: SPACE[2],
+            color: C.textMuted,
+            fontSize: TYPE.size.sm,
+            lineHeight: TYPE.lineHeight.relaxed,
+          }}
+        >
           {detail}
         </div>
       ) : null}
@@ -344,13 +365,7 @@ export function MetricCard({
   );
 }
 
-export function ActionTile({
-  label,
-  detail,
-  icon,
-  accent = C.cyan,
-  onClick,
-}: ActionTileProps) {
+export function ActionTile({ label, detail, icon, accent = C.cyan, onClick }: ActionTileProps) {
   const clickable = Boolean(onClick);
   return (
     <button
@@ -359,29 +374,36 @@ export function ActionTile({
       disabled={!clickable}
       style={{
         width: '100%',
-        padding: `${SPACE[4]} ${SPACE[4]}`,
+        padding: `${SPACE[5]} ${SPACE[4]}`,
         borderRadius: R.xxl,
-        border: `1px solid ${accent}24`,
+        border: `1px solid ${accent}1f`,
         background: `linear-gradient(145deg, rgba(16,37,58,0.9) 0%, rgba(11,29,45,0.94) 100%)`,
         color: C.text,
         cursor: clickable ? 'pointer' : 'default',
         textAlign: 'left',
         transition: `transform ${ANIM.dur.normal} ${ANIM.ease.default}, border-color ${ANIM.dur.normal} ${ANIM.ease.default}, box-shadow ${ANIM.dur.normal} ${ANIM.ease.default}`,
-        boxShadow: SH.card,
+        boxShadow: SH.md,
       }}
-      onMouseEnter={(event) => {
+      onMouseEnter={event => {
         if (!clickable) return;
         event.currentTarget.style.transform = 'translateY(-2px)';
-        event.currentTarget.style.borderColor = `${accent}44`;
+        event.currentTarget.style.borderColor = `${accent}36`;
+        event.currentTarget.style.boxShadow = SH.lg;
+      }}
+      onMouseLeave={event => {
+        event.currentTarget.style.transform = '';
+        event.currentTarget.style.borderColor = `${accent}1f`;
         event.currentTarget.style.boxShadow = SH.md;
       }}
-      onMouseLeave={(event) => {
-        event.currentTarget.style.transform = '';
-        event.currentTarget.style.borderColor = `${accent}24`;
-        event.currentTarget.style.boxShadow = SH.card;
-      }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: SPACE[3] }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: SPACE[3],
+        }}
+      >
         <span
           style={{
             display: 'inline-flex',
@@ -400,9 +422,25 @@ export function ActionTile({
         </span>
         <ChevronRight size={16} color={C.textDim} />
       </div>
-      <div style={{ marginTop: SPACE[4], fontSize: TYPE.size.base, fontWeight: TYPE.weight.bold, color: '#FFFFFF' }}>{label}</div>
+      <div
+        style={{
+          marginTop: SPACE[4],
+          fontSize: TYPE.size.base,
+          fontWeight: TYPE.weight.bold,
+          color: '#FFFFFF',
+        }}
+      >
+        {label}
+      </div>
       {detail ? (
-        <div style={{ marginTop: SPACE[2], fontSize: TYPE.size.sm, lineHeight: TYPE.lineHeight.relaxed, color: C.textMuted }}>
+        <div
+          style={{
+            marginTop: SPACE[2],
+            fontSize: TYPE.size.sm,
+            lineHeight: TYPE.lineHeight.relaxed,
+            color: C.textMuted,
+          }}
+        >
           {detail}
         </div>
       ) : null}
@@ -410,15 +448,7 @@ export function ActionTile({
   );
 }
 
-export function DataRow({
-  label,
-  value,
-  sub,
-  icon,
-  badge,
-  onClick,
-  danger = false,
-}: DataRowProps) {
+export function DataRow({ label, value, sub, icon, badge, onClick, danger = false }: DataRowProps) {
   const accent = danger ? C.error : C.cyan;
   return (
     <button
@@ -438,10 +468,10 @@ export function DataRow({
         cursor: onClick ? 'pointer' : 'default',
         transition: `background ${ANIM.dur.normal} ${ANIM.ease.default}`,
       }}
-      onMouseEnter={(event) => {
+      onMouseEnter={event => {
         if (onClick) event.currentTarget.style.background = 'rgba(255,255,255,0.03)';
       }}
-      onMouseLeave={(event) => {
+      onMouseLeave={event => {
         event.currentTarget.style.background = 'transparent';
       }}
     >
@@ -464,11 +494,30 @@ export function DataRow({
         </span>
       ) : null}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ color: danger ? C.error : '#FFFFFF', fontSize: TYPE.size.base, fontWeight: TYPE.weight.semibold }}>
+        <div
+          style={{
+            color: danger ? C.error : '#FFFFFF',
+            fontSize: TYPE.size.base,
+            fontWeight: TYPE.weight.semibold,
+          }}
+        >
           {label}
         </div>
-        {value ? <div style={{ marginTop: 3, color: C.textMuted, fontSize: TYPE.size.sm }}>{value}</div> : null}
-        {sub ? <div style={{ marginTop: 4, color: C.textDim, fontSize: TYPE.size.xs, lineHeight: TYPE.lineHeight.relaxed }}>{sub}</div> : null}
+        {value ? (
+          <div style={{ marginTop: 3, color: C.textMuted, fontSize: TYPE.size.sm }}>{value}</div>
+        ) : null}
+        {sub ? (
+          <div
+            style={{
+              marginTop: 4,
+              color: C.textDim,
+              fontSize: TYPE.size.xs,
+              lineHeight: TYPE.lineHeight.relaxed,
+            }}
+          >
+            {sub}
+          </div>
+        ) : null}
       </div>
       {badge}
       {onClick ? <ChevronRight size={16} color={C.textDim} style={{ flexShrink: 0 }} /> : null}
@@ -476,13 +525,7 @@ export function DataRow({
   );
 }
 
-export function StatusBadge({
-  label,
-  accent = C.cyan,
-}: {
-  label: string;
-  accent?: string;
-}) {
+export function StatusBadge({ label, accent = C.cyan }: { label: string; accent?: string }) {
   return (
     <span
       style={{
@@ -491,12 +534,12 @@ export function StatusBadge({
         gap: 6,
         padding: '4px 10px',
         borderRadius: R.full,
-        background: `${accent}14`,
+        background: `${accent}12`,
         border: `1px solid ${accent}24`,
         color: accent,
         fontSize: TYPE.size.xs,
         fontWeight: TYPE.weight.bold,
-        letterSpacing: TYPE.letterSpacing.wide,
+        letterSpacing: TYPE.letterSpacing.normal,
         whiteSpace: 'nowrap',
       }}
     >

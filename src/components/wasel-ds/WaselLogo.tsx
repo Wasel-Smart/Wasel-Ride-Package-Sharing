@@ -100,7 +100,10 @@ function LogoWordmark({
   framed?: boolean;
 }) {
   return (
-    <span aria-label="Wasel" style={{ display: 'inline-flex', alignItems: 'center', lineHeight: 0 }}>
+    <span
+      aria-label="Wasel"
+      style={{ display: 'inline-flex', alignItems: 'center', lineHeight: 0 }}
+    >
       <BrandImage
         src={WASEL_FULL_SRC}
         srcSet={WASEL_FULL_SRCSET}

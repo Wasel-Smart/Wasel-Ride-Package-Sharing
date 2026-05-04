@@ -1,4 +1,10 @@
-import type { AuthChangeEvent, AuthError, Session, SupabaseClient, User } from '@supabase/supabase-js';
+import type {
+  AuthChangeEvent,
+  AuthError,
+  Session,
+  SupabaseClient,
+  User,
+} from '@supabase/supabase-js';
 import type { WaselUser } from './LocalAuth';
 import { authAPI } from '../services/auth';
 import { getAuthCallbackUrl } from '../utils/env';
@@ -65,10 +71,7 @@ export async function loadProfile(): Promise<Profile | null> {
   return (profileData?.profile as Profile | null) || null;
 }
 
-export function normalizeOperationError(
-  error: unknown,
-  fallback: string,
-): Error {
+export function normalizeOperationError(error: unknown, fallback: string): Error {
   return error instanceof Error ? error : new Error(fallback);
 }
 
@@ -106,9 +109,7 @@ export function buildUpdatedLocalUser(
   updates: Partial<Profile>,
 ): Partial<WaselUser> {
   const normalizedPhone =
-    typeof updates.phone_number === 'string'
-      ? updates.phone_number.trim()
-      : undefined;
+    typeof updates.phone_number === 'string' ? updates.phone_number.trim() : undefined;
   const currentPhone = String(localUser.phone ?? '').trim();
   const shouldResetPhoneVerification =
     normalizedPhone !== undefined && normalizedPhone !== currentPhone;
@@ -122,9 +123,6 @@ export function buildUpdatedLocalUser(
   };
 }
 
-export function shouldRefreshProfile(
-  event: AuthChangeEvent,
-  session: Session | null,
-): boolean {
+export function shouldRefreshProfile(event: AuthChangeEvent, session: Session | null): boolean {
   return Boolean(session?.user) && event === 'SIGNED_IN';
 }

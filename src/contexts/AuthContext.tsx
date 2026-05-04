@@ -112,12 +112,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const { firstName, lastName } = getProfileDisplayName(activeUser);
 
       try {
-        await authAPI.createProfile(
-          activeUser.id,
-          activeUser.email ?? '',
-          firstName,
-          lastName,
-        );
+        await authAPI.createProfile(activeUser.id, activeUser.email ?? '', firstName, lastName);
         nextProfile = await loadProfileFromBackend();
       } catch (error) {
         if (import.meta.env?.DEV) {
@@ -155,7 +150,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
-      const shouldEnsureProfile = event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED';
+      const shouldEnsureProfile =
+        event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED';
       const shouldRefreshProfile =
         event === 'INITIAL_SESSION' ||
         event === 'SIGNED_IN' ||
@@ -169,7 +165,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setTimeout(() => {
         void fetchProfile(shouldEnsureProfile, nextSession.user)
-          .catch((error) => {
+          .catch(error => {
             if (import.meta.env?.DEV) {
               console.warn('[Auth] Profile refresh warning:', error);
             }
@@ -220,60 +216,66 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [fetchProfile]);
 
-  const signUp = useCallback(async (
-    email: string,
-    password: string,
-    fullName: string,
-    phone?: string,
-  ): Promise<SignUpResult> => {
-    if (!supabase) {
-      return { error: new Error('Backend not configured') };
-    }
-
-    const { firstName, lastName } = splitFullName(fullName);
-
-    setBusy(true);
-    try {
-      const data = await authAPI.signUp(email, password, firstName, lastName, phone ?? '');
-      const authUser = data.user ?? data.session?.user ?? null;
-
-      if (authUser && data.session) {
-        setSession(data.session);
-        setUser(authUser);
-        await fetchProfile(true, authUser);
+  const signUp = useCallback(
+    async (
+      email: string,
+      password: string,
+      fullName: string,
+      phone?: string,
+    ): Promise<SignUpResult> => {
+      if (!supabase) {
+        return { error: new Error('Backend not configured') };
       }
 
-      return {
-        error: null,
-        requiresEmailConfirmation: !authUser,
-        user: authUser,
-      };
-    } catch (error: unknown) {
-      return { error: normalizeOperationError(error, 'Signup failed') };
-    } finally {
-      setBusy(false);
-    }
-  }, [fetchProfile]);
+      const { firstName, lastName } = splitFullName(fullName);
 
-  const signIn = useCallback(async (email: string, password: string): Promise<{ error: AuthOperationError }> => {
-    setBusy(true);
-    try {
-      const data = await authAPI.signIn(email, password);
-      const authUser = data.user ?? data.session?.user ?? null;
+      setBusy(true);
+      try {
+        const data = await authAPI.signUp(email, password, firstName, lastName, phone ?? '');
+        const authUser = data.user ?? data.session?.user ?? null;
 
-      if (authUser && data.session) {
-        setSession(data.session);
-        setUser(authUser);
-        await fetchProfile(true, authUser);
+        if (authUser && data.session) {
+          setSession(data.session);
+          setUser(authUser);
+          await fetchProfile(true, authUser);
+        }
+
+        return {
+          error: null,
+          requiresEmailConfirmation: !authUser,
+          user: authUser,
+        };
+      } catch (error: unknown) {
+        return { error: normalizeOperationError(error, 'Signup failed') };
+      } finally {
+        setBusy(false);
       }
+    },
+    [fetchProfile],
+  );
 
-      return { error: null };
-    } catch (error: unknown) {
-      return { error: normalizeOperationError(error, 'Login failed') };
-    } finally {
-      setBusy(false);
-    }
-  }, [fetchProfile]);
+  const signIn = useCallback(
+    async (email: string, password: string): Promise<{ error: AuthOperationError }> => {
+      setBusy(true);
+      try {
+        const data = await authAPI.signIn(email, password);
+        const authUser = data.user ?? data.session?.user ?? null;
+
+        if (authUser && data.session) {
+          setSession(data.session);
+          setUser(authUser);
+          await fetchProfile(true, authUser);
+        }
+
+        return { error: null };
+      } catch (error: unknown) {
+        return { error: normalizeOperationError(error, 'Login failed') };
+      } finally {
+        setBusy(false);
+      }
+    },
+    [fetchProfile],
+  );
 
   const signInWithGoogle = useCallback(async (): Promise<{ error: AuthOperationError }> => {
     return signInWithOAuthProvider(supabase, 'google');
@@ -299,97 +301,107 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  const updateProfile = useCallback(async (updates: Partial<Profile>): Promise<{ error: AuthOperationError }> => {
-    if (!user) {
-      return { error: new Error('No user logged in') };
-    }
-
-    setBusy(true);
-    try {
-      const result = await authAPI.updateProfile(updates);
-      if (result.success) {
-        await fetchProfile(false, user);
-        return { error: null };
+  const updateProfile = useCallback(
+    async (updates: Partial<Profile>): Promise<{ error: AuthOperationError }> => {
+      if (!user) {
+        return { error: new Error('No user logged in') };
       }
 
-      return {
-        error: new Error(
-          typeof result.error === 'string'
-            ? result.error
-            : 'Failed to update profile',
-        ),
-      };
-    } catch (error: unknown) {
-      return { error: normalizeOperationError(error, 'Update failed') };
-    } finally {
-      setBusy(false);
-    }
-  }, [fetchProfile, user]);
+      setBusy(true);
+      try {
+        const result = await authAPI.updateProfile(updates);
+        if (result.success) {
+          await fetchProfile(false, user);
+          return { error: null };
+        }
+
+        return {
+          error: new Error(
+            typeof result.error === 'string' ? result.error : 'Failed to update profile',
+          ),
+        };
+      } catch (error: unknown) {
+        return { error: normalizeOperationError(error, 'Update failed') };
+      } finally {
+        setBusy(false);
+      }
+    },
+    [fetchProfile, user],
+  );
 
   const refreshProfile = useCallback(async () => {
     if (!user) return;
     await fetchProfile(false, user);
   }, [fetchProfile, user]);
 
-  const resetPassword = useCallback(async (email: string): Promise<{ error: AuthOperationError }> => {
-    if (!supabase) return { error: new Error('Backend not configured') };
+  const resetPassword = useCallback(
+    async (email: string): Promise<{ error: AuthOperationError }> => {
+      if (!supabase) return { error: new Error('Backend not configured') };
 
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: getAuthCallbackUrl(window.location.origin),
-      });
-      return { error: error ?? null };
-    } catch (error: unknown) {
-      return { error: normalizeOperationError(error, 'Password reset failed') };
-    }
-  }, []);
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: getAuthCallbackUrl(window.location.origin),
+        });
+        return { error: error ?? null };
+      } catch (error: unknown) {
+        return { error: normalizeOperationError(error, 'Password reset failed') };
+      }
+    },
+    [],
+  );
 
-  const changePassword = useCallback(async (nextPassword: string): Promise<{ error: AuthOperationError }> => {
-    if (!supabase) return { error: new Error('Backend not configured') };
+  const changePassword = useCallback(
+    async (nextPassword: string): Promise<{ error: AuthOperationError }> => {
+      if (!supabase) return { error: new Error('Backend not configured') };
 
-    setBusy(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password: nextPassword });
-      return { error: error ?? null };
-    } catch (error: unknown) {
-      return { error: normalizeOperationError(error, 'Password update failed') };
-    } finally {
-      setBusy(false);
-    }
-  }, []);
+      setBusy(true);
+      try {
+        const { error } = await supabase.auth.updateUser({ password: nextPassword });
+        return { error: error ?? null };
+      } catch (error: unknown) {
+        return { error: normalizeOperationError(error, 'Password update failed') };
+      } finally {
+        setBusy(false);
+      }
+    },
+    [],
+  );
 
-  const value = useMemo(() => ({
-    user,
-    profile,
-    session,
-    loading: initializing || busy,
-    isBackendConnected,
-    signUp,
-    signIn,
-    signInWithGoogle,
-    signInWithFacebook,
-    signOut,
-    updateProfile,
-    refreshProfile,
-    resetPassword,
-    changePassword,
-  }), [
-    busy,
-    changePassword,
-    initializing,
-    isBackendConnected,
-    profile,
-    refreshProfile,
-    resetPassword,
-    session,
-    signIn,
-    signInWithFacebook,
-    signInWithGoogle,
-    signOut,
-    signUp,
-    updateProfile,
-    user,
-  ]);
+  const value = useMemo(
+    () => ({
+      user,
+      profile,
+      session,
+      loading: initializing || busy,
+      isBackendConnected,
+      signUp,
+      signIn,
+      signInWithGoogle,
+      signInWithFacebook,
+      signOut,
+      updateProfile,
+      refreshProfile,
+      resetPassword,
+      changePassword,
+    }),
+    [
+      busy,
+      changePassword,
+      initializing,
+      isBackendConnected,
+      profile,
+      refreshProfile,
+      resetPassword,
+      session,
+      signIn,
+      signInWithFacebook,
+      signInWithGoogle,
+      signOut,
+      signUp,
+      updateProfile,
+      user,
+    ],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

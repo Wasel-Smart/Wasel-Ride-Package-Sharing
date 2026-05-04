@@ -84,5 +84,5 @@ export const QUEUE_CONTRACTS: readonly QueueContractDefinition[] = [
 ] as const;
 
 export function getQueueContract(topic: QueueTopic): QueueContractDefinition | undefined {
-  return QUEUE_CONTRACTS.find((contract) => contract.topic === topic);
+  return QUEUE_CONTRACTS.find(contract => contract.topic === topic);
 }

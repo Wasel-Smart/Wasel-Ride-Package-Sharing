@@ -1,9 +1,6 @@
 import * as Sentry from '@sentry/react';
 import type { DomainEventEnvelope } from '../domain/events';
-import {
-  createCorrelationId,
-  createStructuredLogEntry,
-} from '../platform/observability';
+import { createCorrelationId, createStructuredLogEntry } from '../platform/observability';
 
 let sentryInitialized = false;
 
@@ -139,11 +136,7 @@ export const logger = {
     return { finish: () => undefined };
   },
 
-  addBreadcrumb(
-    message: string,
-    category: string,
-    data?: Record<string, unknown>,
-  ): void {
+  addBreadcrumb(message: string, category: string, data?: Record<string, unknown>): void {
     Sentry.addBreadcrumb({ message, category, level: 'info', data });
   },
 };
@@ -176,10 +169,7 @@ export function trackAPICall(
   }
 }
 
-export function trackUserAction(
-  action: string,
-  data?: Record<string, unknown>,
-): void {
+export function trackUserAction(action: string, data?: Record<string, unknown>): void {
   logger.addBreadcrumb(action, 'user_action', data);
 }
 

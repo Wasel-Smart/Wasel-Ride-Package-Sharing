@@ -1,12 +1,6 @@
 import { motion } from 'motion/react';
 import { Wallet } from 'lucide-react';
-import {
-  C,
-  SectionHeader,
-  Skeleton,
-  SOSButton,
-  TrustScoreCard,
-} from '../HomePageShared';
+import { C, SectionHeader, Skeleton, SOSButton, TrustScoreCard } from '../HomePageShared';
 
 interface SignedInUtilitySectionProps {
   ar: boolean;
@@ -27,31 +21,25 @@ export function SignedInUtilitySection({
   trustScore,
 }: SignedInUtilitySectionProps) {
   return (
-    <motion.section
-      initial={false}
-      style={{ marginTop: 34 }}
-    >
-      <SectionHeader
-        title={ar ? 'الجاهزية قبل الانطلاق' : 'Ready before you move'}
-        icon="T"
-      />
+    <motion.section initial={false} style={{ marginTop: 38 }}>
+      <SectionHeader title={ar ? 'الجاهزية قبل الانطلاق' : 'Readiness before you move'} icon="T" />
       <div
         className="wasel-home-utility-grid"
         style={{
           display: 'grid',
-          gridTemplateColumns: '0.9fr 1.1fr',
+          gridTemplateColumns: '0.92fr 1.08fr',
           gap: 14,
           alignItems: 'start',
         }}
       >
-        <div style={{ display: 'grid', gap: 12 }}>
+        <div style={{ display: 'grid', gap: 14 }}>
           <div
             style={{
-              borderRadius: 20,
-              padding: '18px 18px 16px',
-              background:
-                'linear-gradient(135deg, rgba(0,200,232,0.1), rgba(0,200,117,0.06))',
-              border: '1px solid rgba(0,200,232,0.16)',
+              borderRadius: 24,
+              padding: '20px 20px 18px',
+              background: 'linear-gradient(135deg, rgba(88,221,255,0.08), rgba(71,214,158,0.05))',
+              border: '1px solid rgba(88,221,255,0.16)',
+              boxShadow: '0 14px 32px rgba(0,0,0,0.16)',
             }}
           >
             <div
@@ -59,7 +47,7 @@ export function SignedInUtilitySection({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                fontSize: '0.72rem',
+                fontSize: '0.7rem',
                 fontWeight: 800,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
@@ -67,51 +55,59 @@ export function SignedInUtilitySection({
               }}
             >
               <Wallet size={14} color={C.gold} />
-              {ar ? 'المحفظة' : 'Wallet'}
+              {ar ? 'المحفظة الجاهزة' : 'Wallet ready'}
             </div>
             <div
               style={{
-                marginTop: 10,
-                fontSize: '1.5rem',
+                marginTop: 12,
+                fontSize: '1.6rem',
                 fontWeight: 950,
-                color: C.cyan,
+                color: C.text,
+                letterSpacing: '-0.03em',
               }}
             >
-              {loading ? <Skeleton w={120} h={28} radius={6} /> : walletBalance}
+              {loading ? <Skeleton w={126} h={30} radius={8} /> : walletBalance}
             </div>
             <div
               style={{
-                marginTop: 6,
-                fontSize: '0.74rem',
+                marginTop: 8,
+                fontSize: '0.8rem',
                 color: C.textMuted,
-                lineHeight: 1.6,
+                lineHeight: 1.65,
               }}
             >
               {ar
-                ? 'رصيدك جاهز للحجز أو لتأكيد الطلبات القادمة.'
-                : 'Your balance is ready for bookings and upcoming confirmations.'}
+                ? 'رصيدك حاضر للحجز وتأكيد الطلبات القادمة من نفس سطح الحركة.'
+                : 'Your balance is ready for bookings and upcoming confirmations from the same mobility surface.'}
             </div>
           </div>
 
           <div
             style={{
-              borderRadius: 20,
-              padding: '18px 18px 16px',
-              background: 'rgba(255,68,85,0.05)',
-              border: '1px solid rgba(255,68,85,0.16)',
+              borderRadius: 24,
+              padding: '20px 20px 18px',
+              background: 'rgba(255,255,255,0.03)',
+              border: `1px solid ${C.border}`,
             }}
           >
             <div
               style={{
-                fontSize: '0.72rem',
+                fontSize: '0.7rem',
                 fontWeight: 800,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
                 color: C.textDim,
-                marginBottom: 12,
+                marginBottom: 10,
               }}
             >
-              {ar ? 'طوارئ' : 'Emergency'}
+              {ar ? 'تصعيد سريع عند الحاجة' : 'Fast escalation when needed'}
+            </div>
+            <div
+              style={{ fontSize: '0.82rem', color: C.textMuted, lineHeight: 1.6, marginBottom: 14 }}
+            >
+              {ar
+                ? 'اختصار واضح للطوارئ بدون تحويل هذه المساحة إلى عنصر بصري صاخب.'
+                : 'A clear emergency path without turning the whole surface into visual noise.'}
             </div>
             <SOSButton ar={ar} />
           </div>
@@ -123,28 +119,22 @@ export function SignedInUtilitySection({
   );
 }
 
-export function SignedOutCtaSection({
-  ar,
-  onNavigate,
-}: SignedOutCtaSectionProps) {
+export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps) {
   return (
-    <motion.section
-      initial={false}
-      style={{ marginTop: 36, marginBottom: 24 }}
-    >
+    <motion.section initial={false} style={{ marginTop: 40, marginBottom: 24 }}>
       <div
         style={{
-          borderRadius: 26,
-          padding: '28px 24px',
+          borderRadius: 28,
+          padding: '30px 26px',
           textAlign: 'center',
-          background:
-            'linear-gradient(135deg, rgba(0,200,232,0.09), rgba(0,200,117,0.05))',
-          border: '1px solid rgba(0,200,232,0.18)',
+          background: 'linear-gradient(135deg, rgba(88,221,255,0.09), rgba(71,214,158,0.05))',
+          border: '1px solid rgba(88,221,255,0.18)',
+          boxShadow: '0 20px 42px rgba(0,0,0,0.2)',
         }}
       >
         <div
           style={{
-            fontSize: '0.72rem',
+            fontSize: '0.7rem',
             fontWeight: 800,
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
@@ -155,9 +145,10 @@ export function SignedOutCtaSection({
         </div>
         <h2
           style={{
-            margin: '12px 0 8px',
-            fontSize: 'clamp(1.4rem, 3vw, 2.2rem)',
-            lineHeight: 1.05,
+            margin: '14px 0 10px',
+            fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
+            lineHeight: 1.02,
+            letterSpacing: '-0.04em',
           }}
         >
           {ar ? 'أنشئ حسابك وافتح نفس الشبكة' : 'Create an account and open the same network'}
@@ -165,13 +156,14 @@ export function SignedOutCtaSection({
         <p
           style={{
             margin: '0 auto',
-            maxWidth: 560,
+            maxWidth: 580,
             color: C.textMuted,
-            lineHeight: 1.75,
+            lineHeight: 1.8,
+            fontSize: '0.94rem',
           }}
         >
           {ar
-            ? 'عند التسجيل ستحفظ مساراتك المفضلة وتبني سجل الثقة وتدير الحجوزات والطرود من مكان واحد.'
+            ? 'عند التسجيل ستحتفظ بمساراتك المفضلة، وتبني سجل الثقة، وتدير الحجوزات والطرود من مكان واحد.'
             : 'When you sign up, you keep favorite corridors, build trust history, and manage rides and parcels in one place.'}
         </p>
         <div
@@ -180,21 +172,21 @@ export function SignedOutCtaSection({
             gap: 12,
             justifyContent: 'center',
             flexWrap: 'wrap',
-            marginTop: 22,
+            marginTop: 24,
           }}
         >
           <button
             onClick={() => onNavigate('/auth?tab=register')}
             style={{
-              height: 48,
+              height: 50,
               padding: '0 22px',
               borderRadius: 14,
               border: 'none',
-              background:
-                'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 55%, #18D7C8 100%)',
+              background: 'linear-gradient(135deg, #58DDFF 0%, #25B6FF 55%, #47D69E 100%)',
               color: '#041018',
               fontWeight: 900,
               cursor: 'pointer',
+              boxShadow: '0 14px 30px rgba(37,182,255,0.22)',
             }}
           >
             {ar ? 'ابدأ الآن' : 'Get started'}
@@ -202,7 +194,7 @@ export function SignedOutCtaSection({
           <button
             onClick={() => onNavigate('/find-ride')}
             style={{
-              height: 48,
+              height: 50,
               padding: '0 22px',
               borderRadius: 14,
               border: '1px solid rgba(255,255,255,0.12)',

@@ -16,13 +16,13 @@ import { type InputHTMLAttributes, type ReactNode, useState } from 'react';
 import { C, R, TYPE, F } from '../../utils/wasel-ds';
 
 interface WaselInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
-  label?:       string;
+  label?: string;
   description?: string;
-  error?:       string;
-  hint?:        ReactNode;
-  icon?:        ReactNode;
-  trailing?:    ReactNode;
-  onChange?:    (value: string) => void;
+  error?: string;
+  hint?: ReactNode;
+  icon?: ReactNode;
+  trailing?: ReactNode;
+  onChange?: (value: string) => void;
 }
 
 export function WaselInput({
@@ -32,23 +32,19 @@ export function WaselInput({
   hint,
   icon,
   trailing,
-  type     = 'text',
+  type = 'text',
   onChange,
   id,
   style,
   ...rest
 }: WaselInputProps) {
-  const [focused,      setFocused]      = useState(false);
+  const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const isPassword   = type === 'password';
+  const isPassword = type === 'password';
   const resolvedType = isPassword && showPassword ? 'text' : type;
-  const hasError     = Boolean(error);
+  const hasError = Boolean(error);
 
-  const borderColor = hasError
-    ? C.error
-    : focused
-      ? C.borderHov
-      : C.border;
+  const borderColor = hasError ? C.error : focused ? C.borderHov : C.border;
 
   const boxShadow = hasError
     ? `0 0 0 3px ${C.errorDim}`
@@ -59,11 +55,24 @@ export function WaselInput({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       {(label || description) && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+            gap: '8px',
+          }}
+        >
           {label && (
             <label
               htmlFor={id}
-              style={{ fontSize: TYPE.size.sm, fontWeight: TYPE.weight.bold, color: C.textSub, fontFamily: F, lineHeight: 1.4 }}
+              style={{
+                fontSize: TYPE.size.sm,
+                fontWeight: TYPE.weight.bold,
+                color: C.textSub,
+                fontFamily: F,
+                lineHeight: 1.4,
+              }}
             >
               {label}
             </label>
@@ -78,20 +87,22 @@ export function WaselInput({
 
       <div
         style={{
-          display:      'flex',
-          alignItems:   'center',
-          gap:          '10px',
-          padding:      '0 14px',
-          minHeight:    '50px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          padding: '0 14px',
+          minHeight: '50px',
           borderRadius: R.lg,
-          background:   focused ? C.card2 : C.cardSolid,
-          border:       `1.5px solid ${borderColor}`,
+          background: focused ? C.card2 : C.cardSolid,
+          border: `1.5px solid ${borderColor}`,
           boxShadow,
-          transition:   'border-color 150ms ease, box-shadow 150ms ease, background 150ms ease',
+          transition: 'border-color 150ms ease, box-shadow 150ms ease, background 150ms ease',
         }}
       >
         {icon && (
-          <span style={{ flexShrink: 0, color: C.textMuted, display: 'inline-flex', fontSize: '16px' }}>
+          <span
+            style={{ flexShrink: 0, color: C.textMuted, display: 'inline-flex', fontSize: '16px' }}
+          >
             {icon}
           </span>
         )}
@@ -100,18 +111,24 @@ export function WaselInput({
           {...rest}
           id={id}
           type={resolvedType}
-          onChange={(e) => onChange?.(e.target.value)}
-          onFocus={(e) => { setFocused(true); rest.onFocus?.(e); }}
-          onBlur={(e)  => { setFocused(false); rest.onBlur?.(e); }}
+          onChange={e => onChange?.(e.target.value)}
+          onFocus={e => {
+            setFocused(true);
+            rest.onFocus?.(e);
+          }}
+          onBlur={e => {
+            setFocused(false);
+            rest.onBlur?.(e);
+          }}
           style={{
-            flex:       1,
-            border:     'none',
-            outline:    'none',
+            flex: 1,
+            border: 'none',
+            outline: 'none',
             background: 'transparent',
-            fontSize:   TYPE.size.base,
+            fontSize: TYPE.size.base,
             fontFamily: F,
-            color:      C.text,
-            minWidth:   0,
+            color: C.text,
+            minWidth: 0,
             ...style,
           }}
         />
@@ -119,9 +136,17 @@ export function WaselInput({
         {isPassword && (
           <button
             type="button"
-            onClick={() => setShowPassword((v) => !v)}
+            onClick={() => setShowPassword(v => !v)}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.textMuted, display: 'inline-flex', padding: 0, flexShrink: 0 }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: C.textMuted,
+              display: 'inline-flex',
+              padding: 0,
+              flexShrink: 0,
+            }}
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>

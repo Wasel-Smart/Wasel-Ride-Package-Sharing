@@ -12,11 +12,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
-import {
-  hasSupabasePublicConfig,
-  publicAnonKey,
-  publicSupabaseUrl,
-} from './info';
+import { hasSupabasePublicConfig, publicAnonKey, publicSupabaseUrl } from './info';
 
 function isPlaceholderValue(value: string | undefined): boolean {
   if (!value) return true;
@@ -33,11 +29,9 @@ function isPlaceholderValue(value: string | undefined): boolean {
 }
 
 // ── Credentials ───────────────────────────────────────────────────────────────
-export const supabaseUrl =
-  publicSupabaseUrl;
+export const supabaseUrl = publicSupabaseUrl;
 
-export const supabaseAnonKey =
-  publicAnonKey;
+export const supabaseAnonKey = publicAnonKey;
 
 export const isSupabaseConfigured =
   hasSupabasePublicConfig &&
@@ -46,9 +40,9 @@ export const isSupabaseConfigured =
 
 // ── Retry config ──────────────────────────────────────────────────────────────
 const RETRY_CONFIG = {
-  maxRetries:        3,
-  initialDelay:      1000,
-  maxDelay:          8000,
+  maxRetries: 3,
+  initialDelay: 1000,
+  maxDelay: 8000,
   backoffMultiplier: 2,
 };
 
@@ -79,8 +73,11 @@ function getIsOnline(): boolean {
 async function processRequestQueue(): Promise<void> {
   while (requestQueue.length > 0 && getIsOnline()) {
     const { fn, resolve, reject } = requestQueue.shift()!;
-    try   { resolve(await fn()); }
-    catch (e) { reject(e); }
+    try {
+      resolve(await fn());
+    } catch (e) {
+      reject(e);
+    }
   }
 }
 
@@ -91,8 +88,9 @@ async function retryWithBackoff<T>(
 ): Promise<T> {
   let lastError: any;
   for (let i = 0; i < retries; i++) {
-    try { return await fn(); }
-    catch (error: any) {
+    try {
+      return await fn();
+    } catch (error: any) {
       lastError = error;
       if (error?.status >= 400 && error?.status < 500 && error?.status !== 429) throw error;
       const delay = Math.min(
@@ -124,22 +122,22 @@ const getSupabaseClient = () => {
   }
 
   const CLIENT_KEY = Symbol.for('supabase.client.instance.v4');
-  const globalAny  = typeof window !== 'undefined' ? window : globalThis;
+  const globalAny = typeof window !== 'undefined' ? window : globalThis;
   if ((globalAny as any)[CLIENT_KEY]) return (globalAny as any)[CLIENT_KEY];
 
   try {
     const client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
-        storageKey:         'wasel-auth-token',
-        autoRefreshToken:   true,
-        persistSession:     true,
+        storageKey: 'wasel-auth-token',
+        autoRefreshToken: true,
+        persistSession: true,
         detectSessionInUrl: true,
         storage: getBrowserStorage('localStorage'),
       },
       global: {
         headers: { 'X-Client-Info': 'wasel-web' },
       },
-      db:       { schema: 'public' },
+      db: { schema: 'public' },
       realtime: { params: { eventsPerSecond: 10 } },
     });
     (globalAny as any)[CLIENT_KEY] = client;
@@ -162,9 +160,11 @@ export function initSupabaseListeners(): () => void {
   if (listenersInitialised || typeof window === 'undefined') return () => {};
   listenersInitialised = true;
 
-  const onOnline = () => { processRequestQueue(); };
+  const onOnline = () => {
+    processRequestQueue();
+  };
 
-  window.addEventListener('online',  onOnline,  { passive: true });
+  window.addEventListener('online', onOnline, { passive: true });
   window.addEventListener('offline', () => {}, { passive: true });
 
   healthCheckTimer = setInterval(() => {
@@ -174,7 +174,10 @@ export function initSupabaseListeners(): () => void {
 
   return () => {
     window.removeEventListener('online', onOnline);
-    if (healthCheckTimer) { clearInterval(healthCheckTimer); healthCheckTimer = null; }
+    if (healthCheckTimer) {
+      clearInterval(healthCheckTimer);
+      healthCheckTimer = null;
+    }
     listenersInitialised = false;
   };
 }
@@ -194,7 +197,9 @@ export async function optimizedQuery<T>(
         const { data, timestamp } = JSON.parse(cached);
         if (Date.now() - timestamp < cacheDuration) return data;
       }
-    } catch { /* ignore cache errors */ }
+    } catch {
+      /* ignore cache errors */
+    }
   }
 
   const result = await queueIfOffline(() => retryWithBackoff(queryFn));
@@ -203,14 +208,16 @@ export async function optimizedQuery<T>(
     try {
       const storage = getBrowserStorage('sessionStorage');
       storage?.setItem(`qc-${cacheKey}`, JSON.stringify({ data: result, timestamp: Date.now() }));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
   return result;
 }
 
 // ── Connection health check ───────────────────────────────────────────────────
 let connectionHealthy = true;
-let lastHealthCheck   = 0;
+let lastHealthCheck = 0;
 
 export async function checkSupabaseConnection(force = false): Promise<boolean> {
   if (!supabase) return false;
@@ -222,12 +229,12 @@ export async function checkSupabaseConnection(force = false): Promise<boolean> {
 
   try {
     const sessionPromise = supabase.auth.getSession();
-    const timeout        = new Promise<never>((_, reject) =>
+    const timeout = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('timeout')), 5000),
     );
     await Promise.race([sessionPromise, timeout]);
     connectionHealthy = true;
-    lastHealthCheck   = Date.now();
+    lastHealthCheck = Date.now();
     return true;
   } catch {
     connectionHealthy = false;
@@ -237,9 +244,9 @@ export async function checkSupabaseConnection(force = false): Promise<boolean> {
 
 export function getConnectionMetrics() {
   return {
-    isOnline:        getIsOnline(),
+    isOnline: getIsOnline(),
     connectionHealthy,
-    queuedRequests:  requestQueue.length,
+    queuedRequests: requestQueue.length,
     lastHealthCheck: lastHealthCheck ? new Date(lastHealthCheck).toISOString() : 'never',
   };
 }

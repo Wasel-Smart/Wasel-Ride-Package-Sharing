@@ -13,8 +13,9 @@ export function TermsOfService() {
     ar: {
       title: 'شروط الخدمة',
       subtitle: 'آخر تحديث: 16 مارس 2026',
-      intro: 'بقبولك لهذه الشروط، تدخل في اتفاقية ملزمة قانوناً مع واصل. يُرجى قراءة هذه الشروط بعناية قبل استخدام خدماتنا.',
-      
+      intro:
+        'بقبولك لهذه الشروط، تدخل في اتفاقية ملزمة قانوناً مع واصل. يُرجى قراءة هذه الشروط بعناية قبل استخدام خدماتنا.',
+
       sections: [
         {
           icon: Users,
@@ -25,8 +26,8 @@ export function TermsOfService() {
             'التحقق الإلزامي عبر سند (رقم البطاقة الوطنية)',
             'حساب واحد لكل مستخدم',
             'معلومات دقيقة وحديثة مطلوبة',
-            'يحق لنا تعليق الحسابات المخالفة'
-          ]
+            'يحق لنا تعليق الحسابات المخالفة',
+          ],
         },
         {
           icon: FileText,
@@ -37,8 +38,8 @@ export function TermsOfService() {
             'إرجاع المنتجات عبر راجع',
             'حاسبة تقاسم التكاليف',
             'ميزات ثقافية (أوقات الصلاة، تفضيلات الجنس، وضع رمضان)',
-            'واصل منصة، وليست شركة نقل مباشرة'
-          ]
+            'واصل منصة، وليست شركة نقل مباشرة',
+          ],
         },
         {
           icon: DollarSign,
@@ -49,8 +50,8 @@ export function TermsOfService() {
             'الدفع: نقداً عند الوصول أو رقمياً',
             'استرداد الأموال: خلال 24 ساعة من الإلغاء',
             'سياسة إلغاء صارمة للحجوزات المتأخرة',
-            'رسوم معالجة 1 JOD للاستردادات'
-          ]
+            'رسوم معالجة 1 JOD للاستردادات',
+          ],
         },
         {
           icon: ShieldCheck,
@@ -61,8 +62,8 @@ export function TermsOfService() {
             'التزم بقوانين المرور',
             'أبلغ عن السلوك المشبوه فوراً',
             'وضع الطوارئ SOS متاح',
-            'نحتفظ بالحق في حظر المستخدمين الخطرين'
-          ]
+            'نحتفظ بالحق في حظر المستخدمين الخطرين',
+          ],
         },
         {
           icon: AlertCircle,
@@ -73,8 +74,8 @@ export function TermsOfService() {
             'التحقق من الطرود مسؤولية المستخدم',
             'نقدم المنصة "كما هي" دون ضمانات',
             'تأمين اختياري متاح للطرود',
-            'استخدمها على مسؤوليتك الخاصة'
-          ]
+            'استخدمها على مسؤوليتك الخاصة',
+          ],
         },
         {
           icon: Scale,
@@ -85,11 +86,11 @@ export function TermsOfService() {
             'يحكم القانون الأردني',
             'الاختصاص القضائي: محاكم عمان، الأردن',
             'لا دعاوى جماعية',
-            'فترة 30 يوماً للمطالبات'
-          ]
-        }
+            'فترة 30 يوماً للمطالبات',
+          ],
+        },
       ],
-      
+
       prohibited: {
         title: 'محظور بشدة',
         items: [
@@ -98,20 +99,22 @@ export function TermsOfService() {
           'استخدام تجاري للحسابات الشخصية',
           'كشط البيانات أو الهندسة العكسية',
           'التلاعب بالتقييمات أو المراجعات',
-          'تجاوز ميزات الأمان'
-        ]
+          'تجاوز ميزات الأمان',
+        ],
       },
-      
+
       termination: {
         title: 'إنهاء الحساب',
-        content: 'يحق لنا تعليق أو إنهاء حسابك في حالة: (1) انتهاك هذه الشروط، (2) نشاط احتيالي، (3) شكاوى متكررة، (4) طلب قانوني. يمكنك حذف حسابك في أي وقت من إعدادات الملف الشخصي.'
-      }
+        content:
+          'يحق لنا تعليق أو إنهاء حسابك في حالة: (1) انتهاك هذه الشروط، (2) نشاط احتيالي، (3) شكاوى متكررة، (4) طلب قانوني. يمكنك حذف حسابك في أي وقت من إعدادات الملف الشخصي.',
+      },
     },
     en: {
       title: 'Terms of Service',
       subtitle: 'Last Updated: March 16, 2026',
-      intro: 'By accepting these terms, you enter into a legally binding agreement with Wasel. Please read these terms carefully before using our services.',
-      
+      intro:
+        'By accepting these terms, you enter into a legally binding agreement with Wasel. Please read these terms carefully before using our services.',
+
       sections: [
         {
           icon: Users,
@@ -122,8 +125,8 @@ export function TermsOfService() {
             'Mandatory verification via Sanad (National ID)',
             'One account per user',
             'Accurate and up-to-date information required',
-            'We reserve the right to suspend violating accounts'
-          ]
+            'We reserve the right to suspend violating accounts',
+          ],
         },
         {
           icon: FileText,
@@ -134,8 +137,8 @@ export function TermsOfService() {
             'E-commerce returns via Raje3',
             'Cost-sharing calculator',
             'Cultural features (prayer times, gender preferences, Ramadan mode)',
-            'Wasel is a platform, not a direct transport company'
-          ]
+            'Wasel is a platform, not a direct transport company',
+          ],
         },
         {
           icon: DollarSign,
@@ -146,8 +149,8 @@ export function TermsOfService() {
             'Payments: Cash on arrival or digital',
             'Refunds: Within 24h of cancellation',
             'Strict cancellation policy for late bookings',
-            'JOD 1 processing fee for refunds'
-          ]
+            'JOD 1 processing fee for refunds',
+          ],
         },
         {
           icon: ShieldCheck,
@@ -158,8 +161,8 @@ export function TermsOfService() {
             'Follow traffic laws',
             'Report suspicious behavior immediately',
             'SOS emergency mode available',
-            'We reserve the right to ban dangerous users'
-          ]
+            'We reserve the right to ban dangerous users',
+          ],
         },
         {
           icon: AlertCircle,
@@ -170,8 +173,8 @@ export function TermsOfService() {
             'Package verification is user responsibility',
             'We provide the platform "as-is" without warranties',
             'Optional insurance available for packages',
-            'Use at your own risk'
-          ]
+            'Use at your own risk',
+          ],
         },
         {
           icon: Scale,
@@ -182,11 +185,11 @@ export function TermsOfService() {
             'Governed by Jordanian law',
             'Jurisdiction: Amman, Jordan courts',
             'No class action lawsuits',
-            '30-day period for claims'
-          ]
-        }
+            '30-day period for claims',
+          ],
+        },
       ],
-      
+
       prohibited: {
         title: 'Strictly Prohibited',
         items: [
@@ -195,21 +198,25 @@ export function TermsOfService() {
           'Commercial use of personal accounts',
           'Data scraping or reverse engineering',
           'Manipulating ratings or reviews',
-          'Bypassing security features'
-        ]
+          'Bypassing security features',
+        ],
       },
-      
+
       termination: {
         title: 'Account Termination',
-        content: 'We reserve the right to suspend or terminate your account for: (1) violating these terms, (2) fraudulent activity, (3) repeated complaints, (4) legal request. You may delete your account anytime from profile settings.'
-      }
-    }
+        content:
+          'We reserve the right to suspend or terminate your account for: (1) violating these terms, (2) fraudulent activity, (3) repeated complaints, (4) legal request. You may delete your account anytime from profile settings.',
+      },
+    },
   };
 
   const t = content[language as 'ar' | 'en'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir={dir}>
+    <div
+      className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
+      dir={dir}
+    >
       {/* Header */}
       <div className="border-b border-white/10 bg-white/5 backdrop-blur-xl">
         <div className="max-w-4xl mx-auto px-4 py-8">

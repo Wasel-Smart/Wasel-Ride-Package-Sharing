@@ -16,12 +16,7 @@ export type SupportTopic =
   | 'cancellation'
   | 'general';
 
-export type SupportStatus =
-  | 'open'
-  | 'investigating'
-  | 'waiting_on_user'
-  | 'resolved'
-  | 'closed';
+export type SupportStatus = 'open' | 'investigating' | 'waiting_on_user' | 'resolved' | 'closed';
 
 export type SupportPriority = 'low' | 'normal' | 'high' | 'urgent';
 export type SupportChannel = 'in_app' | 'operations' | 'phone' | 'email';
@@ -88,7 +83,7 @@ function readTicketArray(key: string): SupportTicket[] {
   try {
     const raw = window.localStorage.getItem(key);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed as SupportTicket[] : [];
+    return Array.isArray(parsed) ? (parsed as SupportTicket[]) : [];
   } catch {
     return [];
   }
@@ -115,7 +110,9 @@ function writeTickets(userId: string | null | undefined, tickets: SupportTicket[
 }
 
 function sortTickets(items: SupportTicket[]) {
-  return [...items].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  return [...items].sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+  );
 }
 
 function makeEvent(
@@ -160,7 +157,10 @@ function normalizeStatus(value: string | null | undefined): SupportStatus {
   }
 }
 
-function normalizePriority(value: string | null | undefined, fallbackTopic?: SupportTopic): SupportPriority {
+function normalizePriority(
+  value: string | null | undefined,
+  fallbackTopic?: SupportTopic,
+): SupportPriority {
   switch (value) {
     case 'normal':
     case 'high':
@@ -184,12 +184,12 @@ function normalizeChannel(value: string | null | undefined): SupportChannel {
   }
 }
 
-function upsertLocalTicket(userId: string | null | undefined, ticket: SupportTicket): SupportTicket {
+function upsertLocalTicket(
+  userId: string | null | undefined,
+  ticket: SupportTicket,
+): SupportTicket {
   const existing = readTickets(userId);
-  writeTickets(
-    userId,
-    [ticket, ...existing.filter((item) => item.id !== ticket.id)],
-  );
+  writeTickets(userId, [ticket, ...existing.filter(item => item.id !== ticket.id)]);
   return ticket;
 }
 
@@ -213,14 +213,24 @@ function mapDirectTicket(
 ): SupportTicket {
   const topic = normalizeTopic(row.topic);
   const status = normalizeStatus(row.status);
-  const safeHistory = history.length > 0
-    ? [...history].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-    : [makeEvent(status, 'Support ticket created and waiting for review.', { createdAt: row.created_at ?? undefined })];
+  const safeHistory =
+    history.length > 0
+      ? [...history].sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        )
+      : [
+          makeEvent(status, 'Support ticket created and waiting for review.', {
+            createdAt: row.created_at ?? undefined,
+          }),
+        ];
 
   return {
     id: row.id ? String(row.id) : generateId('support'),
     topic,
-    subject: typeof row.subject === 'string' && row.subject.trim().length > 0 ? row.subject.trim() : 'Support request',
+    subject:
+      typeof row.subject === 'string' && row.subject.trim().length > 0
+        ? row.subject.trim()
+        : 'Support request',
     detail: typeof row.detail === 'string' ? row.detail.trim() : '',
     relatedId: row.related_id ?? undefined,
     routeLabel: row.route_label ?? undefined,
@@ -234,7 +244,9 @@ function mapDirectTicket(
   };
 }
 
-function buildDirectTicketList(payload: Awaited<ReturnType<typeof getDirectSupportTickets>>): SupportTicket[] {
+function buildDirectTicketList(
+  payload: Awaited<ReturnType<typeof getDirectSupportTickets>>,
+): SupportTicket[] {
   const eventsByTicketId = new Map<string, SupportTicketEvent[]>();
 
   for (const event of payload.events as DirectSupportTicketEventRow[]) {
@@ -245,7 +257,7 @@ function buildDirectTicketList(payload: Awaited<ReturnType<typeof getDirectSuppo
     eventsByTicketId.set(ticketId, history);
   }
 
-  const tickets = (payload.tickets as DirectSupportTicketRow[]).map((ticket) => {
+  const tickets = (payload.tickets as DirectSupportTicketRow[]).map(ticket => {
     const ticketId = String(ticket.id ?? '');
     return mapDirectTicket(ticket, eventsByTicketId.get(ticketId) ?? []);
   });
@@ -289,7 +301,7 @@ export async function getSupportTicketsForRelatedId(
 ): Promise<SupportTicket[]> {
   if (!relatedId) return [];
   const tickets = await getSupportTickets(userId);
-  return tickets.filter((ticket) => ticket.relatedId === relatedId);
+  return tickets.filter(ticket => ticket.relatedId === relatedId);
 }
 
 export async function createSupportTicket(
@@ -346,10 +358,9 @@ export async function createSupportTicket(
     });
     return upsertLocalTicket(
       userId,
-      mapDirectTicket(
-        direct.ticket as DirectSupportTicketRow,
-        [mapDirectEvent(direct.event as DirectSupportTicketEventRow)],
-      ),
+      mapDirectTicket(direct.ticket as DirectSupportTicketRow, [
+        mapDirectEvent(direct.event as DirectSupportTicketEventRow),
+      ]),
     );
   } catch {
     return upsertLocalTicket(userId, fallbackTicket);
@@ -368,7 +379,7 @@ export async function updateSupportTicketStatus(
   },
 ): Promise<SupportTicket | null> {
   const existing = readTickets(userId);
-  const current = existing.find((ticket) => ticket.id === id);
+  const current = existing.find(ticket => ticket.id === id);
   const fallbackUpdated = current
     ? {
         ...current,

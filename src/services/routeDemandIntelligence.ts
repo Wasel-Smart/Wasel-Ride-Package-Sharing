@@ -65,8 +65,7 @@ function corridorMatches(corridor: CorridorOpportunity, from?: string | null, to
   const rightFrom = normalizeCity(corridor.from);
   const rightTo = normalizeCity(corridor.to);
   return (
-    (leftFrom === rightFrom && leftTo === rightTo) ||
-    (leftFrom === rightTo && leftTo === rightFrom)
+    (leftFrom === rightFrom && leftTo === rightTo) || (leftFrom === rightTo && leftTo === rightFrom)
   );
 }
 
@@ -76,7 +75,7 @@ function recencyWeight(timestamp: string, now = Date.now()) {
   const ageMs = Math.max(0, now - createdAt);
   if (ageMs > LOOKBACK_MS) return 0;
   const ageDays = ageMs / DAY_MS;
-  return Math.max(0.12, 1.15 - (ageDays * 0.08));
+  return Math.max(0.12, 1.15 - ageDays * 0.08);
 }
 
 function inferWaveWindow(hours: number[], density: CorridorOpportunity['density']) {
@@ -127,13 +126,29 @@ function buildRecommendedReason(args: {
   return 'The corridor is building repeat demand and should be nudged with reminders, credits, and suggested departures.';
 }
 
-function computeSignal(corridor: CorridorOpportunity, membership = getMovementMembershipSnapshot()): LiveCorridorSignal {
+function computeSignal(
+  corridor: CorridorOpportunity,
+  membership = getMovementMembershipSnapshot(),
+): LiveCorridorSignal {
   const now = Date.now();
-  const rides = getConnectedRides().filter((ride) => corridorMatches(corridor, ride.from, ride.to) && ride.status !== 'cancelled');
-  const bookings = getRideBookings().filter((booking) => corridorMatches(corridor, booking.from, booking.to) && booking.status !== 'rejected' && booking.status !== 'cancelled');
-  const packages = getConnectedPackages().filter((item) => corridorMatches(corridor, item.from, item.to));
-  const alerts = getDemandAlerts().filter((alert) => corridorMatches(corridor, alert.from, alert.to) && alert.status === 'active');
-  const events = getGrowthEventFeed().filter((event) => corridorMatches(corridor, event.from, event.to));
+  const rides = getConnectedRides().filter(
+    ride => corridorMatches(corridor, ride.from, ride.to) && ride.status !== 'cancelled',
+  );
+  const bookings = getRideBookings().filter(
+    booking =>
+      corridorMatches(corridor, booking.from, booking.to) &&
+      booking.status !== 'rejected' &&
+      booking.status !== 'cancelled',
+  );
+  const packages = getConnectedPackages().filter(item =>
+    corridorMatches(corridor, item.from, item.to),
+  );
+  const alerts = getDemandAlerts().filter(
+    alert => corridorMatches(corridor, alert.from, alert.to) && alert.status === 'active',
+  );
+  const events = getGrowthEventFeed().filter(event =>
+    corridorMatches(corridor, event.from, event.to),
+  );
 
   let weightedSearches = 0;
   let weightedBookings = 0;
@@ -146,14 +161,19 @@ function computeSignal(corridor: CorridorOpportunity, membership = getMovementMe
     if (weight <= 0) continue;
     const eventTime = new Date(event.createdAt);
     signalHours.push(eventTime.getHours());
-    freshestSignalAt = !freshestSignalAt || new Date(event.createdAt).getTime() > new Date(freshestSignalAt).getTime()
-      ? event.createdAt
-      : freshestSignalAt;
+    freshestSignalAt =
+      !freshestSignalAt ||
+      new Date(event.createdAt).getTime() > new Date(freshestSignalAt).getTime()
+        ? event.createdAt
+        : freshestSignalAt;
 
     if (event.serviceType === 'ride' && event.funnelStage === 'searched') {
       weightedSearches += weight;
     }
-    if (event.serviceType === 'ride' && (event.funnelStage === 'booked' || event.funnelStage === 'completed')) {
+    if (
+      event.serviceType === 'ride' &&
+      (event.funnelStage === 'booked' || event.funnelStage === 'completed')
+    ) {
       weightedBookings += weight;
     }
     if (event.serviceType === 'package') {
@@ -168,7 +188,7 @@ function computeSignal(corridor: CorridorOpportunity, membership = getMovementMe
   );
   const livePackages = Math.max(
     Math.round(weightedPackages),
-    packages.filter((item) => item.status !== 'delivered').length,
+    packages.filter(item => item.status !== 'delivered').length,
   );
   const activeSupply = rides.length;
   const activeDemandAlerts = alerts.length;
@@ -177,37 +197,35 @@ function computeSignal(corridor: CorridorOpportunity, membership = getMovementMe
     0,
     bookings.reduce((sum, booking) => sum + Math.max(1, booking.seatsRequested || 1), 0),
   );
-  const seatUtilizationPercent = totalSeats > 0
-    ? clamp(Math.round((bookedSeats / totalSeats) * 100), 0, 100)
-    : corridor.fillTargetSeats * 18;
+  const seatUtilizationPercent =
+    totalSeats > 0
+      ? clamp(Math.round((bookedSeats / totalSeats) * 100), 0, 100)
+      : corridor.fillTargetSeats * 18;
 
-  const demandWeight = (liveSearches * 1.4) + (activeDemandAlerts * 2.2) + (liveBookings * 2.8) + (livePackages * 1.6);
-  const supplyWeight = Math.max(1, (activeSupply * 1.9) + (totalSeats * 0.35));
+  const demandWeight =
+    liveSearches * 1.4 + activeDemandAlerts * 2.2 + liveBookings * 2.8 + livePackages * 1.6;
+  const supplyWeight = Math.max(1, activeSupply * 1.9 + totalSeats * 0.35);
   const pressureRatio = demandWeight / supplyWeight;
   const liveDemandScore = clamp(
-    Math.round((corridor.predictedDemandScore * 0.56) + (demandWeight * 3.4) + (pressureRatio * 12)),
+    Math.round(corridor.predictedDemandScore * 0.56 + demandWeight * 3.4 + pressureRatio * 12),
     38,
     99,
   );
 
   const hour = new Date().getHours();
-  const timePulse = (hour >= 7 && hour <= 9) || (hour >= 16 && hour <= 19)
-    ? 6
-    : (hour >= 11 && hour <= 14 ? 3 : 0);
+  const timePulse =
+    (hour >= 7 && hour <= 9) || (hour >= 16 && hour <= 19) ? 6 : hour >= 11 && hour <= 14 ? 3 : 0;
   const forecastDemandScore = clamp(
-    Math.round((liveDemandScore * 0.72) + (seatUtilizationPercent * 0.12) + timePulse),
+    Math.round(liveDemandScore * 0.72 + seatUtilizationPercent * 0.12 + timePulse),
     40,
     99,
   );
 
-  const pricePressure = pressureRatio > 1.15
-    ? 'surging'
-    : pressureRatio >= 0.82
-      ? 'balanced'
-      : 'value-window';
+  const pricePressure =
+    pressureRatio > 1.15 ? 'surging' : pressureRatio >= 0.82 ? 'balanced' : 'value-window';
   const recommendedSharedPriceJod = roundMoney(
-    corridor.sharedPriceJod
-      * (pricePressure === 'surging' ? 1.04 : pricePressure === 'balanced' ? 1 : 0.96),
+    corridor.sharedPriceJod *
+      (pricePressure === 'surging' ? 1.04 : pricePressure === 'balanced' ? 1 : 0.96),
   );
   const priceQuote = getMovementPriceQuote({
     basePriceJod: recommendedSharedPriceJod,
@@ -216,7 +234,11 @@ function computeSignal(corridor: CorridorOpportunity, membership = getMovementMe
     membership,
   });
   const routeOwnershipScore = clamp(
-    Math.round((forecastDemandScore * 0.48) + (seatUtilizationPercent * 0.24) + (Math.min(100, demandWeight * 6.2) * 0.28)),
+    Math.round(
+      forecastDemandScore * 0.48 +
+        seatUtilizationPercent * 0.24 +
+        Math.min(100, demandWeight * 6.2) * 0.28,
+    ),
     32,
     99,
   );
@@ -263,18 +285,17 @@ export function buildRouteIntelligenceSnapshot(args?: {
 }) {
   const membership = args?.membership ?? getMovementMembershipSnapshot();
   const allSignals = getAllCorridorOpportunities()
-    .map((corridor) => computeSignal(corridor, membership))
+    .map(corridor => computeSignal(corridor, membership))
     .sort((left, right) => {
       const leftScore = left.forecastDemandScore + left.routeOwnershipScore;
       const rightScore = right.forecastDemandScore + right.routeOwnershipScore;
       return rightScore - leftScore;
     });
 
-  const selectedCorridor = args?.from && args?.to
-    ? getCorridorOpportunity(args.from, args.to)
-    : membership.dailyRoute;
+  const selectedCorridor =
+    args?.from && args?.to ? getCorridorOpportunity(args.from, args.to) : membership.dailyRoute;
   const selectedSignal = selectedCorridor
-    ? allSignals.find((signal) => signal.id === selectedCorridor.id) ?? null
+    ? (allSignals.find(signal => signal.id === selectedCorridor.id) ?? null)
     : null;
 
   return {
@@ -299,7 +320,7 @@ export function useLiveRouteIntelligence(args?: { from?: string | null; to?: str
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
-    const refresh = () => setTick((value) => value + 1);
+    const refresh = () => setTick(value => value + 1);
     const interval = window.setInterval(refresh, REFRESH_MS);
     window.addEventListener('storage', refresh);
     return () => {
@@ -308,8 +329,5 @@ export function useLiveRouteIntelligence(args?: { from?: string | null; to?: str
     };
   }, []);
 
-  return useMemo(
-    () => buildRouteIntelligenceSnapshot(args),
-    [args?.from, args?.to, tick],
-  );
+  return useMemo(() => buildRouteIntelligenceSnapshot(args), [args?.from, args?.to, tick]);
 }

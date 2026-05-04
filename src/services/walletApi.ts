@@ -79,7 +79,7 @@ export interface WalletTransaction {
   amount: number;
   createdAt: string;
   status?: string;
-};
+}
 
 export interface WalletSubscription {
   id: string;
@@ -184,16 +184,19 @@ function normalizePaymentMethod(method: string): string {
 }
 
 function currencyFromWallet(wallet: WalletRow | null): string {
-  const code = String(wallet?.currency_code ?? 'JOD').trim().toUpperCase();
+  const code = String(wallet?.currency_code ?? 'JOD')
+    .trim()
+    .toUpperCase();
   return code || 'JOD';
 }
 
 function describeTransaction(row: TransactionRow): string {
-  const metadataLabel = typeof row.metadata?.description === 'string'
-    ? row.metadata.description
-    : typeof row.metadata?.note === 'string'
-      ? row.metadata.note
-      : '';
+  const metadataLabel =
+    typeof row.metadata?.description === 'string'
+      ? row.metadata.description
+      : typeof row.metadata?.note === 'string'
+        ? row.metadata.note
+        : '';
 
   if (metadataLabel) {
     return metadataLabel;
@@ -245,24 +248,25 @@ function buildInsightsFromTransactions(transactions: WalletTransaction[]): Insig
   const previousMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
   const previousMonthKey = `${previousMonthDate.getUTCFullYear()}-${String(previousMonthDate.getUTCMonth() + 1).padStart(2, '0')}`;
 
-  const thisMonth = transactions.filter((tx) => tx.createdAt.startsWith(currentMonthKey));
-  const lastMonth = transactions.filter((tx) => tx.createdAt.startsWith(previousMonthKey));
+  const thisMonth = transactions.filter(tx => tx.createdAt.startsWith(currentMonthKey));
+  const lastMonth = transactions.filter(tx => tx.createdAt.startsWith(previousMonthKey));
 
   const thisMonthSpent = thisMonth
-    .filter((tx) => tx.amount < 0)
+    .filter(tx => tx.amount < 0)
     .reduce((total, tx) => total + Math.abs(tx.amount), 0);
   const lastMonthSpent = lastMonth
-    .filter((tx) => tx.amount < 0)
+    .filter(tx => tx.amount < 0)
     .reduce((total, tx) => total + Math.abs(tx.amount), 0);
   const thisMonthEarned = thisMonth
-    .filter((tx) => tx.amount > 0)
+    .filter(tx => tx.amount > 0)
     .reduce((total, tx) => total + tx.amount, 0);
 
-  const changePercent = lastMonthSpent > 0
-    ? Number((((thisMonthSpent - lastMonthSpent) / lastMonthSpent) * 100).toFixed(1))
-    : thisMonthSpent > 0
-      ? 100
-      : 0;
+  const changePercent =
+    lastMonthSpent > 0
+      ? Number((((thisMonthSpent - lastMonthSpent) / lastMonthSpent) * 100).toFixed(1))
+      : thisMonthSpent > 0
+        ? 100
+        : 0;
 
   const categoryBreakdown = transactions.reduce<Record<string, number>>((acc, tx) => {
     const key = tx.type || 'wallet';
@@ -310,7 +314,7 @@ function buildWalletPayload(
     .filter(isDebit)
     .reduce((total, row) => total + toNumber(row.amount, 0), 0);
   const totalDeposited = transactions
-    .filter((row) => row.transaction_type === 'add_funds' && isCredit(row))
+    .filter(row => row.transaction_type === 'add_funds' && isCredit(row))
     .reduce((total, row) => total + toNumber(row.amount, 0), 0);
 
   return {
@@ -354,11 +358,7 @@ async function resolveCanonicalUserId(userKey: string): Promise<string> {
     return String(byAuth.id);
   }
 
-  const { data: byId, error } = await db
-    .from('users')
-    .select('id')
-    .eq('id', userKey)
-    .maybeSingle();
+  const { data: byId, error } = await db.from('users').select('id').eq('id', userKey).maybeSingle();
 
   if (error) {
     throw error;
@@ -373,11 +373,7 @@ async function resolveCanonicalUserId(userKey: string): Promise<string> {
 
 async function findWalletByUserId(userId: string): Promise<WalletRow | null> {
   const db = getDb();
-  const { data, error } = await db
-    .from('wallets')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
+  const { data, error } = await db.from('wallets').select('*').eq('user_id', userId).maybeSingle();
 
   if (error) {
     throw error;
@@ -429,7 +425,7 @@ async function fetchWalletDirect(userId: string): Promise<WalletData> {
 
 async function getWalletTransactionRows(userId: string): Promise<TransactionRow[]> {
   const wallet = await fetchWalletDirect(userId);
-  return wallet.transactions.map((tx) => ({
+  return wallet.transactions.map(tx => ({
     transaction_id: tx.id,
     amount: Math.abs(tx.amount),
     direction: tx.amount < 0 ? 'debit' : 'credit',
@@ -499,7 +495,12 @@ async function transferWalletFundsDirect(userId: string, recipientId: string, am
   return fetchWalletDirect(userId);
 }
 
-async function withdrawWalletFundsDirect(userId: string, amount: number, bankAccount: string, method: string) {
+async function withdrawWalletFundsDirect(
+  userId: string,
+  amount: number,
+  bankAccount: string,
+  method: string,
+) {
   const db = getDb();
   let wallet = await findWalletByUserId(userId);
   if (!wallet?.wallet_id) {
@@ -517,21 +518,19 @@ async function withdrawWalletFundsDirect(userId: string, amount: number, bankAcc
     throw new Error('Insufficient wallet balance');
   }
 
-  const { error } = await db
-    .from('transactions')
-    .insert({
-      wallet_id: wallet.wallet_id,
-      amount,
-      transaction_type: 'withdrawal',
-      payment_method: method === 'instant' ? 'bank_transfer' : normalizePaymentMethod(method),
-      transaction_status: 'posted',
-      direction: 'debit',
-      reference_type: 'bank_account',
-      metadata: {
-        bank_account: bankAccount,
-        requested_via: method,
-      },
-    });
+  const { error } = await db.from('transactions').insert({
+    wallet_id: wallet.wallet_id,
+    amount,
+    transaction_type: 'withdrawal',
+    payment_method: method === 'instant' ? 'bank_transfer' : normalizePaymentMethod(method),
+    transaction_status: 'posted',
+    direction: 'debit',
+    reference_type: 'bank_account',
+    metadata: {
+      bank_account: bankAccount,
+      requested_via: method,
+    },
+  });
 
   if (error) {
     throw error;
@@ -554,18 +553,12 @@ async function updateWalletPreferencesDirect(
   patch: Record<string, unknown>,
 ): Promise<WalletData> {
   const db = getDb();
-  let { error } = await db
-    .from('wallets')
-    .update(patch)
-    .eq('user_id', userId);
+  let { error } = await db.from('wallets').update(patch).eq('user_id', userId);
 
   if (error) {
     const canonicalUserId = await resolveCanonicalUserId(userId);
     if (canonicalUserId !== userId) {
-      const retry = await db
-        .from('wallets')
-        .update(patch)
-        .eq('user_id', canonicalUserId);
+      const retry = await db.from('wallets').update(patch).eq('user_id', canonicalUserId);
       error = retry.error;
     }
   }
@@ -579,7 +572,9 @@ async function updateWalletPreferencesDirect(
 
 async function getPaymentMethodsDirect(userId: string): Promise<{ methods: any[] }> {
   const wallet = await fetchWalletDirect(userId);
-  return { methods: Array.isArray(wallet.wallet.paymentMethods) ? wallet.wallet.paymentMethods : [] };
+  return {
+    methods: Array.isArray(wallet.wallet.paymentMethods) ? wallet.wallet.paymentMethods : [],
+  };
 }
 
 async function addPaymentMethodDirect(
@@ -774,7 +769,7 @@ export const walletApi = {
 
     const wallet = await fetchWalletDirect(userId);
     const filtered = type
-      ? wallet.transactions.filter((tx) => tx.type === type)
+      ? wallet.transactions.filter(tx => tx.type === type)
       : wallet.transactions;
     const start = (page - 1) * limit;
     return {
@@ -877,10 +872,15 @@ export const walletApi = {
   async subscribe(userId: string, planName: string, price: number) {
     if (canUseEdgeApi()) {
       try {
-        return await requestWalletJson(userId, '/subscribe', 'Create wallet subscription checkout', {
-          method: 'POST',
-          body: { planName, price },
-        });
+        return await requestWalletJson(
+          userId,
+          '/subscribe',
+          'Create wallet subscription checkout',
+          {
+            method: 'POST',
+            body: { planName, price },
+          },
+        );
       } catch (error) {
         if (isWalletSubscriptionConnectivityError(error)) {
           throw buildWalletSubscriptionBackendError();
@@ -963,7 +963,10 @@ export const walletApi = {
     return getPaymentMethodsDirect(userId);
   },
 
-  async addPaymentMethod(userId: string, method: { type: string; provider: string; [key: string]: any }) {
+  async addPaymentMethod(
+    userId: string,
+    method: { type: string; provider: string; [key: string]: any },
+  ) {
     if (canUseEdgeApi()) {
       try {
         return await requestWalletJson(userId, '/payment-methods', 'Add wallet payment method', {
@@ -997,7 +1000,9 @@ export const walletApi = {
     return deletePaymentMethodDirect(userId, methodId);
   },
 
-  async getTrustScore(userId: string): Promise<{ totalTrips: number; cashRating: number; onTimePayments: number; deposit: number }> {
+  async getTrustScore(
+    userId: string,
+  ): Promise<{ totalTrips: number; cashRating: number; onTimePayments: number; deposit: number }> {
     if (canUseEdgeApi()) {
       try {
         return await requestWalletJson(userId, '/trust-score', 'Load wallet trust score');

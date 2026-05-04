@@ -25,20 +25,8 @@ const ROLE_PERMISSIONS: Record<AccessRole, readonly AccessPermission[]> = {
     'operations:read',
     'trust:moderate',
   ],
-  driver: [
-    'rides:read',
-    'rides:write',
-    'packages:read',
-    'packages:write',
-    'payments:read',
-  ],
-  user: [
-    'rides:read',
-    'rides:write',
-    'packages:read',
-    'packages:write',
-    'payments:read',
-  ],
+  driver: ['rides:read', 'rides:write', 'packages:read', 'packages:write', 'payments:read'],
+  user: ['rides:read', 'rides:write', 'packages:read', 'packages:write', 'payments:read'],
   operator: [
     'rides:read',
     'rides:assign',

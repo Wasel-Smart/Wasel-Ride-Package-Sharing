@@ -150,18 +150,20 @@ export function mapBackendProfile(args: {
   const role = toRole(profile?.role ?? metadata.role);
   const phone = profile?.phone_number ?? profile?.phone ?? authUser.phone ?? undefined;
   const rating = typeof profile?.rating === 'number' ? profile.rating : 4.7;
-  const trips = typeof profile?.trip_count === 'number'
-    ? profile.trip_count
-    : typeof profile?.trips === 'number'
-      ? profile.trips
-      : 0;
+  const trips =
+    typeof profile?.trip_count === 'number'
+      ? profile.trip_count
+      : typeof profile?.trips === 'number'
+        ? profile.trips
+        : 0;
   const verified = Boolean(profile?.verified);
   const phoneVerified = Boolean(profile?.phone_verified ?? authUser.phone_confirmed_at ?? false);
   const emailVerified = Boolean(profile?.email_verified ?? authUser.email_confirmed_at ?? false);
   const sanadVerified = Boolean(profile?.sanad_verified ?? metadata.sanad_verified ?? verified);
   const verificationLevel = ((): WaselVerificationLevel => {
     const raw = profile?.verification_level;
-    if (raw === 'level_0' || raw === 'level_1' || raw === 'level_2' || raw === 'level_3') return raw;
+    if (raw === 'level_0' || raw === 'level_1' || raw === 'level_2' || raw === 'level_3')
+      return raw;
     return deriveVerificationLevel({ phoneVerified, sanadVerified, role, verified });
   })();
 
@@ -169,23 +171,24 @@ export function mapBackendProfile(args: {
     id: authUser.id,
     name: String(
       profile?.full_name ??
-      profile?.fullName ??
-      profile?.name ??
-      metadata.full_name ??
-      metadata.name ??
-      authUser.email?.split('@')[0] ??
-      'Wasel User',
+        profile?.fullName ??
+        profile?.name ??
+        metadata.full_name ??
+        metadata.name ??
+        authUser.email?.split('@')[0] ??
+        'Wasel User',
     ),
     email: authUser.email ?? '',
     role,
     verified: sanadVerified || verificationLevel === 'level_2' || verificationLevel === 'level_3',
     rating,
     trips,
-    balance: typeof profile?.wallet_balance === 'number'
-      ? profile.wallet_balance
-      : typeof profile?.balance === 'number'
-        ? profile.balance
-        : 0,
+    balance:
+      typeof profile?.wallet_balance === 'number'
+        ? profile.wallet_balance
+        : typeof profile?.balance === 'number'
+          ? profile.balance
+          : 0,
     phone,
     avatar: typeof profile?.avatar_url === 'string' ? profile.avatar_url : undefined,
     joinedAt: profile?.created_at ?? profile?.joined_at ?? authUser.created_at?.slice(0, 10),

@@ -1,28 +1,28 @@
 export type Corridor = {
-  id: string
+  id: string;
 
-  origin: string
-  destination: string
+  origin: string;
+  destination: string;
 
-  distance_km: number
-  travel_time_min: number
+  distance_km: number;
+  travel_time_min: number;
 
-  seats_total: number
-  seats_booked: number
+  seats_total: number;
+  seats_booked: number;
 
-  cargo_total_kg: number
-  cargo_booked_kg: number
+  cargo_total_kg: number;
+  cargo_booked_kg: number;
 
-  base_price_seat: number
-  base_price_kg: number
+  base_price_seat: number;
+  base_price_kg: number;
 
-  demand_index: number
+  demand_index: number;
 
-  demand_history: number[]
-  price_history: number[]
+  demand_history: number[];
+  price_history: number[];
 
-  updated_at: string
-}
+  updated_at: string;
+};
 
 export type BookingType = 'seat' | 'cargo';
 export type PriceDirection = 'up' | 'down' | 'flat';
@@ -150,7 +150,10 @@ export function cloneCorridor(corridor: Corridor): Corridor {
   };
 }
 
-export function getPriceDirection(current: number, previous: number | null | undefined): PriceDirection {
+export function getPriceDirection(
+  current: number,
+  previous: number | null | undefined,
+): PriceDirection {
   if (previous === null || previous === undefined || Number.isNaN(previous)) return 'flat';
   if (current > previous) return 'up';
   if (current < previous) return 'down';

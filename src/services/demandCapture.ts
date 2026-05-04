@@ -41,7 +41,7 @@ function syncAlerts(alerts: DemandAlert[]) {
 }
 
 function updateLocalAlert(id: string, updates: Partial<DemandAlert>) {
-  const next = readAlerts().map((alert) => (alert.id === id ? { ...alert, ...updates } : alert));
+  const next = readAlerts().map(alert => (alert.id === id ? { ...alert, ...updates } : alert));
   syncAlerts(next);
 }
 
@@ -57,35 +57,41 @@ export async function hydrateDemandAlerts(userId?: string): Promise<DemandAlert[
         from: String(item.origin_city ?? ''),
         to: String(item.destination_city ?? ''),
         date: String(item.requested_date ?? '').slice(0, 10),
-        service: item.service_type === 'bus' || item.service_type === 'package' ? item.service_type : 'ride',
+        service:
+          item.service_type === 'bus' || item.service_type === 'package'
+            ? item.service_type
+            : 'ride',
         seatsOrSlots: Number(item.seats_or_slots ?? 1) || 1,
         status: item.status === 'matched' || item.status === 'expired' ? item.status : 'active',
         createdAt: String(item.created_at ?? new Date().toISOString()),
         syncedAt: new Date().toISOString(),
       };
 
-      const index = merged.findIndex((alert) =>
-        alert.backendId === normalized.backendId ||
-        (
-          alert.from === normalized.from &&
-          alert.to === normalized.to &&
-          alert.date === normalized.date &&
-          alert.service === normalized.service
-        ),
+      const index = merged.findIndex(
+        alert =>
+          alert.backendId === normalized.backendId ||
+          (alert.from === normalized.from &&
+            alert.to === normalized.to &&
+            alert.date === normalized.date &&
+            alert.service === normalized.service),
       );
 
       if (index >= 0) merged[index] = { ...merged[index], ...normalized };
       else merged.unshift(normalized);
     }
 
-    return syncAlerts(merged.slice(0, 100)).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return syncAlerts(merged.slice(0, 100)).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
   } catch {
     return getDemandAlerts();
   }
 }
 
 export function getDemandAlerts(): DemandAlert[] {
-  return [...readAlerts()].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return [...readAlerts()].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 }
 
 export function createDemandAlert(input: {
@@ -98,7 +104,7 @@ export function createDemandAlert(input: {
 }): DemandAlert {
   const alerts = readAlerts();
   const existing = alerts.find(
-    (item) =>
+    item =>
       item.from === input.from &&
       item.to === input.to &&
       item.date === input.date &&
@@ -127,7 +133,7 @@ export function createDemandAlert(input: {
     seatsOrSlots: alert.seatsOrSlots,
     userId: input.userId,
   })
-    .then((remote) => {
+    .then(remote => {
       updateLocalAlert(alert.id, {
         backendId: String(remote.id ?? ''),
         syncedAt: new Date().toISOString(),
@@ -152,9 +158,9 @@ export function createDemandAlert(input: {
 export function getDemandStats() {
   const alerts = getDemandAlerts();
   return {
-    active: alerts.filter((item) => item.status === 'active').length,
-    rides: alerts.filter((item) => item.service === 'ride' && item.status === 'active').length,
-    buses: alerts.filter((item) => item.service === 'bus' && item.status === 'active').length,
-    packages: alerts.filter((item) => item.service === 'package' && item.status === 'active').length,
+    active: alerts.filter(item => item.status === 'active').length,
+    rides: alerts.filter(item => item.service === 'ride' && item.status === 'active').length,
+    buses: alerts.filter(item => item.service === 'bus' && item.status === 'active').length,
+    packages: alerts.filter(item => item.service === 'package' && item.status === 'active').length,
   };
 }

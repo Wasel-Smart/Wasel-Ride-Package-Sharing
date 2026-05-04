@@ -11,7 +11,7 @@ initializeCsrfProtection();
 initializeSessionManagement();
 
 // Clear encryption key on logout
-window.addEventListener('storage', (e) => {
+window.addEventListener('storage', e => {
   if (e.key === 'wasel-auth-state' && !e.newValue) {
     clearMasterKey();
   }

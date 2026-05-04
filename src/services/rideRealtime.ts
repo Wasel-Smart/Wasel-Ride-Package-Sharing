@@ -1,9 +1,6 @@
 import { supabase } from '../utils/supabase/client';
 import type { PostedRide } from './journeyLogistics';
-import {
-  hydrateRideBookings,
-  type RideBookingRecord,
-} from './rideLifecycle';
+import { hydrateRideBookings, type RideBookingRecord } from './rideLifecycle';
 
 interface RideBookingRealtimeOptions {
   userId: string;
@@ -35,7 +32,7 @@ export function subscribeToRideBookingRealtime({
     }
 
     refreshing = hydrateRideBookings(userId, rides)
-      .then((bookings) => {
+      .then(bookings => {
         if (active) {
           onBookingsChange?.(bookings);
         }

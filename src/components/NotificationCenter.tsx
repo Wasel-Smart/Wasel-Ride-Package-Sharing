@@ -92,7 +92,9 @@ export function NotificationCenter() {
     unreadCount: isRTL ? 'تحتاج انتباهاً' : 'Need attention',
     urgentCount: isRTL ? 'أولوية عالية' : 'High priority',
     archivedCount: isRTL ? 'مخفية' : 'Archived',
-    searchPlaceholder: isRTL ? 'ابحث في العنوان أو الرسالة أو النوع' : 'Search title, message, or type',
+    searchPlaceholder: isRTL
+      ? 'ابحث في العنوان أو الرسالة أو النوع'
+      : 'Search title, message, or type',
     markAllRead: isRTL ? 'تعيين الكل كمقروء' : 'Mark all read',
     restoreArchived: isRTL ? 'استعادة المؤرشفة' : 'Restore archived',
     refresh: isRTL ? 'تحديث' : 'Refresh',
@@ -243,7 +245,9 @@ export function NotificationCenter() {
                 disabled={connectionStatus === 'offline'}
                 className="border-white/15 bg-white/5 text-white hover:bg-white/10"
               >
-                <RefreshCw className={`size-4 ${connectionStatus === 'syncing' ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`size-4 ${connectionStatus === 'syncing' ? 'animate-spin' : ''}`}
+                />
                 {labels.refresh}
               </Button>
 
@@ -273,10 +277,26 @@ export function NotificationCenter() {
         </CardHeader>
 
         <CardContent className="grid gap-3 pt-6 md:grid-cols-4">
-          <NotificationMetric label={labels.total} value={summary.total} tone="border-white/10 text-white" />
-          <NotificationMetric label={labels.unreadCount} value={summary.unread} tone="border-cyan-400/20 text-cyan-50" />
-          <NotificationMetric label={labels.urgentCount} value={summary.urgent} tone="border-amber-400/20 text-amber-50" />
-          <NotificationMetric label={labels.archivedCount} value={summary.archived} tone="border-slate-400/20 text-slate-100" />
+          <NotificationMetric
+            label={labels.total}
+            value={summary.total}
+            tone="border-white/10 text-white"
+          />
+          <NotificationMetric
+            label={labels.unreadCount}
+            value={summary.unread}
+            tone="border-cyan-400/20 text-cyan-50"
+          />
+          <NotificationMetric
+            label={labels.urgentCount}
+            value={summary.urgent}
+            tone="border-amber-400/20 text-amber-50"
+          />
+          <NotificationMetric
+            label={labels.archivedCount}
+            value={summary.archived}
+            tone="border-slate-400/20 text-slate-100"
+          />
         </CardContent>
       </Card>
 
@@ -353,7 +373,10 @@ export function NotificationCenter() {
               searchTerm || filter !== 'all' ? (
                 <Button
                   variant="outline"
-                  onClick={() => { setSearchTerm(''); setFilter('all'); }}
+                  onClick={() => {
+                    setSearchTerm('');
+                    setFilter('all');
+                  }}
                   className="border-white/15 bg-white/5 text-white hover:bg-white/10"
                 >
                   {labels.resetView}

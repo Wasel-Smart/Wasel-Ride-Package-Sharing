@@ -1,11 +1,6 @@
 import { type TransitionMap, canTransition } from '../shared/stateMachine';
 
-export type DriverAvailabilityState =
-  | 'offline'
-  | 'available'
-  | 'reserved'
-  | 'on_trip'
-  | 'cooldown';
+export type DriverAvailabilityState = 'offline' | 'available' | 'reserved' | 'on_trip' | 'cooldown';
 
 export const DRIVER_AVAILABILITY_TRANSITIONS: TransitionMap<DriverAvailabilityState> = {
   offline: ['available'],

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Bus, Car, CheckCircle, Package, Search, Shield, Star, TrendingUp } from 'lucide-react';
+import { Bus, Car, Package, Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -15,8 +15,6 @@ import {
   SignedInUtilitySection,
   SignedOutCtaSection,
   type CorridorCard,
-  type HeadlineStat,
-  type ProofPoint,
   type QuickAction,
   type TripMode,
 } from './HomePageSections';
@@ -35,109 +33,64 @@ export function HomePage() {
   const quickActions = useMemo<QuickAction[]>(
     () => [
       {
-        badge: 'R',
         icon: Search,
+        kicker: ar ? 'للحجز السريع' : 'For immediate booking',
         title: ar ? 'ابحث عن رحلة' : 'Find a ride',
         desc: ar
-          ? 'ابدأ من المسار وشاهد المقاعد المتاحة بسرعة.'
-          : 'Start from the corridor and see available seats fast.',
+          ? 'ابدأ من المسار وشاهد المقاعد المتاحة والسعر بوضوح قبل الحجز.'
+          : 'Start from the corridor and compare available seats before you commit.',
+        outcome: ar
+          ? 'عرض حي للمقاعد والأسعار على نفس المسار'
+          : 'Live seat supply and price on the same corridor',
         color: C.cyan,
         dim: C.cyanDim,
-        border: 'rgba(0,200,232,0.25)',
+        border: 'rgba(88,221,255,0.24)',
         path: '/find-ride',
       },
       {
-        badge: 'O',
         icon: Car,
+        kicker: ar ? 'للسائقين' : 'For drivers',
         title: ar ? 'اعرض رحلتك' : 'Offer a ride',
         desc: ar
-          ? 'شارك المقاعد وخفف تكلفة المشوار بوضوح.'
-          : 'Open seats and lower the trip cost clearly.',
+          ? 'افتح المقاعد الفارغة وخفف تكلفة المشوار من نفس واجهة الحركة.'
+          : 'Open empty seats and offset trip cost from the same mobility surface.',
+        outcome: ar
+          ? 'إدارة المقاعد والسعر والوضوح من شاشة واحدة'
+          : 'Manage seat supply, pricing, and clarity in one flow',
         color: C.gold,
         dim: C.goldDim,
-        border: 'rgba(240,168,48,0.25)',
+        border: 'rgba(255,190,92,0.24)',
         path: '/offer-ride',
       },
       {
-        badge: 'P',
         icon: Package,
+        kicker: ar ? 'للطرود' : 'For parcels',
         title: ar ? 'أرسل طرداً' : 'Send a package',
         desc: ar
-          ? 'حرّك الطرد على نفس المسار بدون منتج منفصل.'
-          : 'Move a parcel on the same corridor without a separate flow.',
+          ? 'حرّك الطرد على نفس المسار بدون منتج منفصل أو منطق مختلف.'
+          : 'Move a parcel on the same corridor without a separate product logic.',
+        outcome: ar
+          ? 'تتبع واضح وتسليم ضمن شبكة الرحلات نفسها'
+          : 'Clear tracking inside the same route network',
         color: '#D9965B',
         dim: 'rgba(217,149,91,0.12)',
-        border: 'rgba(217,149,91,0.25)',
+        border: 'rgba(217,149,91,0.24)',
         path: '/packages',
       },
       {
-        badge: 'B',
         icon: Bus,
+        kicker: ar ? 'الخيار الاحتياطي' : 'The fallback',
         title: ar ? 'احجز باص' : 'Book a bus',
         desc: ar
-          ? 'اختر المغادرة المجدولة عندما لا تناسبك المشاركة.'
-          : 'Use scheduled departures when shared supply is not the fit.',
+          ? 'اختر المغادرة المجدولة عندما لا تكون المشاركة هي الخيار الأنسب.'
+          : 'Use scheduled departures when shared supply is not the right fit.',
+        outcome: ar
+          ? 'استمر في الحركة حتى عندما يضعف العرض المشترك'
+          : 'Keep moving even when shared supply is thin',
         color: C.green,
         dim: C.greenDim,
-        border: 'rgba(0,200,117,0.25)',
+        border: 'rgba(71,214,158,0.24)',
         path: '/bus',
-      },
-    ],
-    [ar],
-  );
-
-  const headlineStats = useMemo<HeadlineStat[]>(
-    () => [
-      {
-        icon: Car,
-        label: ar ? 'إجمالي الرحلات' : 'Trips',
-        value: liveStats?.totalTrips?.toString() ?? '...',
-        accent: C.cyan,
-      },
-      {
-        icon: TrendingUp,
-        label: ar ? 'إجمالي التوفير' : 'Savings',
-        value: liveStats ? svc.formatFromJOD(liveStats.totalSaved) : '...',
-        accent: C.green,
-      },
-      {
-        icon: Star,
-        label: ar ? 'التقييم' : 'Rating',
-        value: liveStats ? String(liveStats.rating) : '...',
-        accent: C.gold,
-      },
-      {
-        icon: Package,
-        label: ar ? 'طرود مكتملة' : 'Packages',
-        value: liveStats?.pkgsDelivered?.toString() ?? '...',
-        accent: C.purple,
-      },
-    ],
-    [ar, liveStats, svc],
-  );
-
-  const proofPoints = useMemo<ProofPoint[]>(
-    () => [
-      {
-        icon: Shield,
-        title: ar ? 'ثقة قبل الحجز' : 'Trust before booking',
-        desc: ar
-          ? 'التحقق والتسعير والخطوة التالية كلها ظاهرة قبل القرار.'
-          : 'Verification, pricing, and the next step stay visible before commitment.',
-      },
-      {
-        icon: CheckCircle,
-        title: ar ? 'منتج واحد لا أربعة' : 'One product, not four',
-        desc: ar
-          ? 'الرحلات والطرود والباصات تبدأ من نفس منطق المسار.'
-          : 'Rides, parcels, and buses all begin from the same corridor logic.',
-      },
-      {
-        icon: Bus,
-        title: ar ? 'خيار احتياطي واضح' : 'Clear fallback',
-        desc: ar
-          ? 'عندما لا يوجد تطابق مناسب، يبقى الباص خياراً مفهوماً فوراً.'
-          : 'When shared supply is thin, the bus path stays obvious.',
       },
     ],
     [ar],
@@ -146,26 +99,44 @@ export function HomePage() {
   const corridorCards = useMemo<CorridorCard[]>(() => {
     const leaders = getCorridorDemandLeaders().slice(0, 3);
     if (leaders.length > 0) {
-      return leaders.map(item => ({
+      return leaders.map((item, index) => ({
         key: item.corridor,
         title: item.corridor,
         detail: item.serviceLabel,
         meta: `${item.active} ${ar ? 'نشط الآن' : 'active now'}`,
+        insight:
+          index === 0
+            ? ar
+              ? 'أفضل توازن بين العرض والطلب اليوم'
+              : 'Best balance of supply and demand today'
+            : ar
+              ? 'حركة واضحة على هذا المسار الآن'
+              : 'Visible live movement on this corridor',
+        featured: index === 0,
         path: (() => {
           const [from, to] = item.corridor.split(' to ');
-          return `/find-ride?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&search=1`;
+          return `/find-ride?from=${encodeURIComponent(from ?? '')}&to=${encodeURIComponent(to ?? '')}&search=1`;
         })(),
         accent: C.cyan,
       }));
     }
 
-    return POPULAR_ROUTES.slice(0, 3).map(route => ({
+    return POPULAR_ROUTES.slice(0, 3).map((route, index) => ({
       key: `${route.from}-${route.to}`,
       title: ar ? `${route.fromAr} ← ${route.toAr}` : `${route.from} → ${route.to}`,
       detail: ar
         ? `${route.dist} كم • ${svc.formatFromJOD(route.priceJod)}`
         : `${route.dist} km • ${svc.formatFromJOD(route.priceJod)}`,
       meta: ar ? 'مسار شائع' : 'Popular corridor',
+      insight:
+        index === 0
+          ? ar
+            ? 'خيار متوازن للسعر وطول المسار'
+            : 'Balanced pick for price and distance'
+          : ar
+            ? 'جاهز للمقارنة والبحث الفوري'
+            : 'Ready for quick comparison and search',
+      featured: index === 0,
       path: `/find-ride?from=${encodeURIComponent(route.from)}&to=${encodeURIComponent(route.to)}`,
       accent: route.color,
     }));
@@ -192,7 +163,7 @@ export function HomePage() {
           inset: 0,
           pointerEvents: 'none',
           background:
-            'radial-gradient(circle at 16% 16%, rgba(0,200,232,0.09), transparent 24%), radial-gradient(circle at 82% 18%, rgba(240,168,48,0.08), transparent 20%), radial-gradient(circle at 72% 76%, rgba(0,200,117,0.08), transparent 22%)',
+            'radial-gradient(circle at 14% 14%, rgba(88,221,255,0.12), transparent 24%), radial-gradient(circle at 84% 20%, rgba(255,190,92,0.08), transparent 18%), radial-gradient(circle at 72% 78%, rgba(71,214,158,0.09), transparent 22%)',
         }}
       />
 

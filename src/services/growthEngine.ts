@@ -69,7 +69,10 @@ const LOCAL_GROWTH_EVENTS_KEY = 'wasel-growth-events';
 const LOCAL_DEMAND_KEY = 'wasel-demand-alerts';
 
 function buildFallbackCode(userId?: string, name?: string) {
-  const seed = (name || userId || 'wasel').replace(/[^a-z0-9]/gi, '').slice(0, 6).toUpperCase();
+  const seed = (name || userId || 'wasel')
+    .replace(/[^a-z0-9]/gi, '')
+    .slice(0, 6)
+    .toUpperCase();
   return `WASEL-${seed || 'MOVE'}`;
 }
 
@@ -108,7 +111,9 @@ function writeLocalGrowthEvents(events: GrowthEventRecord[]) {
 export function getGrowthEventFeed(): GrowthEventRecord[] {
   return readLocalGrowthEvents()
     .slice()
-    .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+    .sort(
+      (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+    );
 }
 
 function buildGrowthDashboardFromLocal(): GrowthDashboard {
@@ -134,19 +139,19 @@ function buildGrowthDashboardFromLocal(): GrowthDashboard {
 
   return {
     funnel: {
-      searched: events.filter((event) => event.funnelStage === 'searched').length,
-      selected: events.filter((event) => event.funnelStage === 'selected').length,
-      booked: events.filter((event) => event.funnelStage === 'booked').length,
-      completed: events.filter((event) => event.funnelStage === 'completed').length,
+      searched: events.filter(event => event.funnelStage === 'searched').length,
+      selected: events.filter(event => event.funnelStage === 'selected').length,
+      booked: events.filter(event => event.funnelStage === 'booked').length,
+      completed: events.filter(event => event.funnelStage === 'completed').length,
     },
     serviceMix: {
-      rides: events.filter((event) => event.serviceType === 'ride').length,
-      buses: events.filter((event) => event.serviceType === 'bus').length,
-      packages: events.filter((event) => event.serviceType === 'package').length,
-      referrals: events.filter((event) => event.serviceType === 'referral').length,
+      rides: events.filter(event => event.serviceType === 'ride').length,
+      buses: events.filter(event => event.serviceType === 'bus').length,
+      packages: events.filter(event => event.serviceType === 'package').length,
+      referrals: events.filter(event => event.serviceType === 'referral').length,
     },
     revenueJod: Number(events.reduce((sum, event) => sum + (event.valueJod ?? 0), 0).toFixed(2)),
-    activeDemand: alerts.filter((alert) => alert.status === 'active').length,
+    activeDemand: alerts.filter(alert => alert.status === 'active').length,
     topCorridors: Array.from(corridorMap.values())
       .sort((left, right) => right.demand + right.conversions - (left.demand + left.conversions))
       .slice(0, 6),
@@ -199,13 +204,13 @@ export async function trackGrowthEvent(input: {
   }
 }
 
-export async function getReferralSnapshot(user?: { id?: string; name?: string } | null): Promise<ReferralSnapshot | null> {
+export async function getReferralSnapshot(
+  user?: { id?: string; name?: string } | null,
+): Promise<ReferralSnapshot | null> {
   if (!user?.id) return null;
 
   const shareUrlBase =
-    typeof window !== 'undefined'
-      ? window.location.origin
-      : 'https://wasel14.online';
+    typeof window !== 'undefined' ? window.location.origin : 'https://wasel14.online';
 
   try {
     const remote = await getDirectReferralSnapshot(user.id);
@@ -237,7 +242,10 @@ export async function getReferralSnapshot(user?: { id?: string; name?: string } 
   }
 }
 
-export async function applyReferralCode(user: { id?: string; name?: string } | null | undefined, code: string) {
+export async function applyReferralCode(
+  user: { id?: string; name?: string } | null | undefined,
+  code: string,
+) {
   if (!user?.id) {
     throw new Error('Sign in to redeem a referral code.');
   }
@@ -277,7 +285,7 @@ export function getCorridorDemandLeaders(limit = 3) {
   const alerts = readLocalDemandAlerts();
   const corridorMap = new Map<string, { corridor: string; active: number; serviceLabel: string }>();
 
-  for (const alert of alerts.filter((item) => item.status === 'active')) {
+  for (const alert of alerts.filter(item => item.status === 'active')) {
     const key = `${alert.from} to ${alert.to}`;
     const existing = corridorMap.get(key);
     corridorMap.set(key, {

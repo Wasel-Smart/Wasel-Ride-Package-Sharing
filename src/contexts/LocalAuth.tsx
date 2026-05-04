@@ -32,7 +32,12 @@ export interface WaselUser {
   backendMode: 'supabase';
 }
 
-function computeTrustScore(user: Pick<WaselUser, 'verified' | 'sanadVerified' | 'emailVerified' | 'phoneVerified' | 'trips' | 'rating'>) {
+function computeTrustScore(
+  user: Pick<
+    WaselUser,
+    'verified' | 'sanadVerified' | 'emailVerified' | 'phoneVerified' | 'trips' | 'rating'
+  >,
+) {
   let score = 45;
   if (user.emailVerified) score += 10;
   if (user.phoneVerified) score += 10;
@@ -46,7 +51,16 @@ function mapBackendProfile({
   authUser,
   profile,
 }: {
-  authUser: Pick<User, 'id' | 'email' | 'phone' | 'created_at' | 'email_confirmed_at' | 'phone_confirmed_at' | 'user_metadata'>;
+  authUser: Pick<
+    User,
+    | 'id'
+    | 'email'
+    | 'phone'
+    | 'created_at'
+    | 'email_confirmed_at'
+    | 'phone_confirmed_at'
+    | 'user_metadata'
+  >;
   profile: Profile | null;
 }): WaselUser {
   const name =
@@ -60,13 +74,14 @@ function mapBackendProfile({
   const sanadVerified = Boolean(profile?.sanad_verified ?? verified);
   const emailVerified = Boolean(profile?.email_verified ?? authUser?.email_confirmed_at ?? false);
   const phoneVerified = Boolean(profile?.phone_verified ?? authUser?.phone_confirmed_at ?? false);
-  const verificationLevel = profile?.verification_level || (sanadVerified ? 'level_3' : phoneVerified ? 'level_1' : 'level_0');
-  const walletStatus: WaselUser['walletStatus'] = profile?.wallet_status === 'limited' || profile?.wallet_status === 'frozen'
-    ? profile.wallet_status
-    : 'active';
-  const role = profile?.role === 'driver' || profile?.role === 'both'
-    ? profile.role
-    : 'rider';
+  const verificationLevel =
+    profile?.verification_level ||
+    (sanadVerified ? 'level_3' : phoneVerified ? 'level_1' : 'level_0');
+  const walletStatus: WaselUser['walletStatus'] =
+    profile?.wallet_status === 'limited' || profile?.wallet_status === 'frozen'
+      ? profile.wallet_status
+      : 'active';
+  const role = profile?.role === 'driver' || profile?.role === 'both' ? profile.role : 'rider';
 
   const baseUser: WaselUser = {
     id: authUser?.id || `user-${Date.now()}`,
@@ -233,8 +248,8 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUser = (updates: Partial<WaselUser>) => {
-    setOptimisticUpdates((previous) => ({ ...(previous ?? {}), ...updates }));
-    setUser((previous) => {
+    setOptimisticUpdates(previous => ({ ...(previous ?? {}), ...updates }));
+    setUser(previous => {
       if (!previous) return previous;
       const next = applyUserUpdates(previous, updates);
       saveUser(next);

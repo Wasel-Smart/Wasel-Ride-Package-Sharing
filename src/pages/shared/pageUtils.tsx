@@ -50,10 +50,7 @@ export function resolveCityCoord(city: string) {
   return CITY_COORDS[city] ?? CITY_COORDS.Amman;
 }
 
-export function midpoint(
-  a: { lat: number; lng: number },
-  b: { lat: number; lng: number },
-) {
+export function midpoint(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   return { lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 };
 }
 
@@ -213,9 +210,7 @@ export function SectionHead({
             >
               {displayTitle}
             </h1>
-            {sub && (
-              <p style={{ color: DS.sub, margin: '4px 0 0', fontSize: '0.76rem' }}>{sub}</p>
-            )}
+            {sub && <p style={{ color: DS.sub, margin: '4px 0 0', fontSize: '0.76rem' }}>{sub}</p>}
           </div>
         </div>
         {action && (

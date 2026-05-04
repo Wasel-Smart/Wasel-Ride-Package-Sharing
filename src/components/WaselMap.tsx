@@ -18,9 +18,22 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Locate, ZoomIn, ZoomOut, Maximize2, Minimize2,
-  Car, Radio, AlertTriangle, X, Navigation2,
-  Wifi, WifiOff, MapPin, Map, Satellite, Mountain,
+  Locate,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Minimize2,
+  Car,
+  Radio,
+  AlertTriangle,
+  X,
+  Navigation2,
+  Wifi,
+  WifiOff,
+  MapPin,
+  Map,
+  Satellite,
+  Mountain,
 } from 'lucide-react';
 import { WaselLogo } from './wasel-ds/WaselLogo';
 
@@ -101,7 +114,7 @@ let _leafletPromise: Promise<any> | null = null;
 function loadLeaflet(): Promise<any> {
   if (!_leafletPromise) {
     ensureLeafletCSS();
-    _leafletPromise = import('leaflet').then((mod) => mod.default ?? mod);
+    _leafletPromise = import('leaflet').then(mod => mod.default ?? mod);
   }
   return _leafletPromise;
 }
@@ -110,7 +123,8 @@ function loadLeaflet(): Promise<any> {
 const TILES = {
   roadmap: {
     url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>',
+    attribution:
+      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/">CARTO</a>',
     maxZoom: 19,
   },
   satellite: {
@@ -132,33 +146,33 @@ const TILES = {
 
 /* ─── Pre-defined data ───────────────────────────────────────────────── */
 const JORDAN_RADARS = [
-  { lat: 31.9539, lng: 35.9106, name: 'Radar – Amman 7th Circle',      limit: 60  },
-  { lat: 31.9786, lng: 35.8444, name: 'Radar – Queen Alia Airport Rd', limit: 80  },
-  { lat: 31.7854, lng: 35.9771, name: 'Radar – Madaba Highway',        limit: 80  },
-  { lat: 31.4500, lng: 35.9800, name: 'Radar – Desert Hwy km 110',     limit: 100 },
-  { lat: 31.2001, lng: 35.9311, name: 'Radar – Desert Hwy km 200',     limit: 110 },
-  { lat: 30.8500, lng: 35.7000, name: 'Radar – Desert Hwy km 270',     limit: 110 },
-  { lat: 30.5284, lng: 35.4078, name: 'Radar – Desert Hwy km 330',     limit: 110 },
-  { lat: 29.5321, lng: 35.0060, name: 'Radar – Aqaba Entry',           limit: 60  },
-  { lat: 32.5568, lng: 35.8486, name: 'Radar – Irbid South',           limit: 80  },
-  { lat: 32.0408, lng: 36.0899, name: 'Radar – Zarqa Highway',         limit: 80  },
-  { lat: 32.6100, lng: 35.9900, name: 'Radar – Ramtha Border',         limit: 60  },
-  { lat: 31.8700, lng: 35.9400, name: 'Radar – South Amman Ring Rd',   limit: 80  },
+  { lat: 31.9539, lng: 35.9106, name: 'Radar – Amman 7th Circle', limit: 60 },
+  { lat: 31.9786, lng: 35.8444, name: 'Radar – Queen Alia Airport Rd', limit: 80 },
+  { lat: 31.7854, lng: 35.9771, name: 'Radar – Madaba Highway', limit: 80 },
+  { lat: 31.45, lng: 35.98, name: 'Radar – Desert Hwy km 110', limit: 100 },
+  { lat: 31.2001, lng: 35.9311, name: 'Radar – Desert Hwy km 200', limit: 110 },
+  { lat: 30.85, lng: 35.7, name: 'Radar – Desert Hwy km 270', limit: 110 },
+  { lat: 30.5284, lng: 35.4078, name: 'Radar – Desert Hwy km 330', limit: 110 },
+  { lat: 29.5321, lng: 35.006, name: 'Radar – Aqaba Entry', limit: 60 },
+  { lat: 32.5568, lng: 35.8486, name: 'Radar – Irbid South', limit: 80 },
+  { lat: 32.0408, lng: 36.0899, name: 'Radar – Zarqa Highway', limit: 80 },
+  { lat: 32.61, lng: 35.99, name: 'Radar – Ramtha Border', limit: 60 },
+  { lat: 31.87, lng: 35.94, name: 'Radar – South Amman Ring Rd', limit: 80 },
 ];
 
 const FALLBACK_MOSQUES = [
-  { lat: 31.9554, lng: 35.9100, name: 'King Abdullah I Mosque | مسجد الملك عبدالله الأول' },
+  { lat: 31.9554, lng: 35.91, name: 'King Abdullah I Mosque | مسجد الملك عبدالله الأول' },
   { lat: 31.9515, lng: 35.9219, name: 'Al-Hussein Mosque | مسجد الحسين' },
   { lat: 31.9609, lng: 35.8895, name: 'Abu Darwish Mosque | مسجد أبو درويش' },
   { lat: 31.9657, lng: 35.8982, name: 'Al-Kalouti Mosque | مسجد الكلوتي' },
-  { lat: 31.9500, lng: 35.8952, name: 'Al-Thaqafeh Mosque | مسجد الثقافة' },
-  { lat: 31.9440, lng: 35.9210, name: 'Al-Manar Mosque | مسجد المنار' },
+  { lat: 31.95, lng: 35.8952, name: 'Al-Thaqafeh Mosque | مسجد الثقافة' },
+  { lat: 31.944, lng: 35.921, name: 'Al-Manar Mosque | مسجد المنار' },
   { lat: 32.5568, lng: 35.8486, name: 'Irbid Grand Mosque | مسجد إربد الكبير' },
-  { lat: 29.5321, lng: 35.0060, name: 'Aqaba Central Mosque | مسجد العقبة' },
-  { lat: 31.7167, lng: 35.9500, name: 'Madaba Mosque | مسجد مأدبا' },
-  { lat: 31.2200, lng: 35.9300, name: "Ma'an Mosque | مسجد معان" },
-  { lat: 31.0000, lng: 35.5000, name: 'Shoubak Rest Stop Mosque | مسجد استراحة الشوبك' },
-  { lat: 30.3000, lng: 35.2000, name: 'Wadi Rum Mosque | مسجد وادي رم' },
+  { lat: 29.5321, lng: 35.006, name: 'Aqaba Central Mosque | مسجد العقبة' },
+  { lat: 31.7167, lng: 35.95, name: 'Madaba Mosque | مسجد مأدبا' },
+  { lat: 31.22, lng: 35.93, name: "Ma'an Mosque | مسجد معان" },
+  { lat: 31.0, lng: 35.5, name: 'Shoubak Rest Stop Mosque | مسجد استراحة الشوبك' },
+  { lat: 30.3, lng: 35.2, name: 'Wadi Rum Mosque | مسجد وادي رم' },
 ];
 
 /* ─── SVG icon strings ───────────────────────────────────────────────── */
@@ -305,7 +319,7 @@ function makeDivIcon(L: any, html: string, w: number, h: number, anchorX: number
   return L.divIcon({
     html,
     className: '',
-    iconSize:   [w, h],
+    iconSize: [w, h],
     iconAnchor: [anchorX, anchorY],
     popupAnchor: [0, -anchorY],
   });
@@ -392,8 +406,8 @@ function WaselMapCompact({
   const cssHeight = typeof height === 'number' ? `${height}px` : (height ?? '500px');
 
   const pts = [
-    ...(route ?? []).map((p) => ({ lat: p.lat, lng: p.lng })),
-    ...(markers ?? []).map((m) => ({ lat: m.lat, lng: m.lng })),
+    ...(route ?? []).map(p => ({ lat: p.lat, lng: p.lng })),
+    ...(markers ?? []).map(m => ({ lat: m.lat, lng: m.lng })),
     ...(center ? [{ lat: center.lat, lng: center.lng }] : []),
   ];
 
@@ -432,7 +446,7 @@ function WaselMapCompact({
     if (!mapDivRef.current || mapRef.current) return;
 
     loadLeaflet()
-      .then((L) => {
+      .then(L => {
         if (!mapDivRef.current || mapRef.current) return;
         LRef.current = L;
 
@@ -457,7 +471,8 @@ function WaselMapCompact({
           subdomains: 'abcd',
         }).addTo(map);
 
-        L.control.attribution({ position: 'bottomright', prefix: false })
+        L.control
+          .attribution({ position: 'bottomright', prefix: false })
           .addAttribution('© OpenStreetMap contributors © CARTO')
           .addTo(map);
 
@@ -468,7 +483,7 @@ function WaselMapCompact({
 
         requestAnimationFrame(() => invalidate());
       })
-      .catch((err) => {
+      .catch(err => {
         console.error('[WaselMapCompact] Failed to load Leaflet:', err);
         setFallbackSvg(true);
       });
@@ -490,8 +505,12 @@ function WaselMapCompact({
     const L = LRef.current;
     if (!map || !L) return;
 
-    drawnLayersRef.current.forEach((l) => {
-      try { l.remove(); } catch { /* ignore */ }
+    drawnLayersRef.current.forEach(l => {
+      try {
+        l.remove();
+      } catch {
+        /* ignore */
+      }
     });
     drawnLayersRef.current = [];
 
@@ -499,20 +518,48 @@ function WaselMapCompact({
     const mPts = (markers ?? []).filter(Boolean);
 
     if (rPts.length >= 2) {
-      const latlngs = rPts.map((p) => [p.lat, p.lng] as [number, number]);
-      const shadow = L.polyline(latlngs, { color: 'rgba(0,0,0,0.35)', weight: 8, opacity: 1, lineCap: 'round' }).addTo(map);
-      const line = L.polyline(latlngs, { color: '#00C8E8', weight: 5, opacity: 0.95, lineCap: 'round' }).addTo(map);
+      const latlngs = rPts.map(p => [p.lat, p.lng] as [number, number]);
+      const shadow = L.polyline(latlngs, {
+        color: 'rgba(0,0,0,0.35)',
+        weight: 8,
+        opacity: 1,
+        lineCap: 'round',
+      }).addTo(map);
+      const line = L.polyline(latlngs, {
+        color: '#00C8E8',
+        weight: 5,
+        opacity: 0.95,
+        lineCap: 'round',
+      }).addTo(map);
       drawnLayersRef.current.push(shadow, line);
 
       const start = rPts[0];
       const end = rPts[rPts.length - 1];
-      const startM = L.circleMarker([start.lat, start.lng], { radius: 6, color: '#00C875', weight: 2, fillColor: '#00C875', fillOpacity: 1 }).addTo(map);
-      const endM = L.circleMarker([end.lat, end.lng], { radius: 6, color: '#F0A830', weight: 2, fillColor: '#F0A830', fillOpacity: 1 }).addTo(map);
+      const startM = L.circleMarker([start.lat, start.lng], {
+        radius: 6,
+        color: '#00C875',
+        weight: 2,
+        fillColor: '#00C875',
+        fillOpacity: 1,
+      }).addTo(map);
+      const endM = L.circleMarker([end.lat, end.lng], {
+        radius: 6,
+        color: '#F0A830',
+        weight: 2,
+        fillColor: '#F0A830',
+        fillOpacity: 1,
+      }).addTo(map);
       drawnLayersRef.current.push(startM, endM);
     }
 
-    mPts.forEach((m) => {
-      const cm = L.circleMarker([m.lat, m.lng], { radius: 5, color: '#04ADBF', weight: 2, fillColor: '#04ADBF', fillOpacity: 0.8 }).addTo(map);
+    mPts.forEach(m => {
+      const cm = L.circleMarker([m.lat, m.lng], {
+        radius: 5,
+        color: '#04ADBF',
+        weight: 2,
+        fillColor: '#04ADBF',
+        fillOpacity: 0.8,
+      }).addTo(map);
       drawnLayersRef.current.push(cm);
     });
 
@@ -553,13 +600,13 @@ function WaselMapCompact({
       return { x, y };
     };
 
-    const routePts = (route ?? []).map((p) => project(p.lat, p.lng));
+    const routePts = (route ?? []).map(p => project(p.lat, p.lng));
     const pathD =
       routePts.length >= 2
         ? `M ${routePts[0].x} ${routePts[0].y} ` +
           routePts
             .slice(1)
-            .map((p) => `L ${p.x} ${p.y}`)
+            .map(p => `L ${p.x} ${p.y}`)
             .join(' ')
         : '';
 
@@ -593,7 +640,12 @@ function WaselMapCompact({
               <stop offset="100%" stopColor="#F0A830" stopOpacity="0.95" />
             </linearGradient>
             <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
-              <path d="M 36 0 L 0 0 0 36" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+              <path
+                d="M 36 0 L 0 0 0 36"
+                fill="none"
+                stroke="rgba(255,255,255,0.06)"
+                strokeWidth="1"
+              />
             </pattern>
           </defs>
 
@@ -601,8 +653,20 @@ function WaselMapCompact({
 
           {pathD && (
             <>
-              <path d={pathD} fill="none" stroke="rgba(0,0,0,0.35)" strokeWidth="10" strokeLinecap="round" />
-              <path d={pathD} fill="none" stroke="url(#waselRoute)" strokeWidth="6" strokeLinecap="round" />
+              <path
+                d={pathD}
+                fill="none"
+                stroke="rgba(0,0,0,0.35)"
+                strokeWidth="10"
+                strokeLinecap="round"
+              />
+              <path
+                d={pathD}
+                fill="none"
+                stroke="url(#waselRoute)"
+                strokeWidth="6"
+                strokeLinecap="round"
+              />
             </>
           )}
 
@@ -670,31 +734,36 @@ function WaselMapFull(props: WaselMapProps) {
     compact = false,
   } = props;
 
-  const containerRef  = useRef<HTMLDivElement>(null);
-  const mapDivRef     = useRef<HTMLDivElement>(null);
-  const mapRef        = useRef<any>(null);
-  const tileLayerRef  = useRef<any>(null);
-  const routeLineRef  = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapDivRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
+  const tileLayerRef = useRef<any>(null);
+  const routeLineRef = useRef<any>(null);
   const liveMarkerRef = useRef<any>(null);
   const liveCircleRef = useRef<any>(null);
   const mosqueLayerRef = useRef<any[]>([]);
-  const radarLayerRef  = useRef<any[]>([]);
+  const radarLayerRef = useRef<any[]>([]);
   const routeMarkersRef = useRef<any[]>([]);
   const customMarkersRef = useRef<any[]>([]);
-  const watchIdRef    = useRef<number | null>(null);
-  const initDone      = useRef(false);
-  const LRef          = useRef<any>(null); // Leaflet instance
+  const watchIdRef = useRef<number | null>(null);
+  const initDone = useRef(false);
+  const LRef = useRef<any>(null); // Leaflet instance
 
-  const [isLoaded,      setIsLoaded]      = useState(false);
-  const [loadError,     setLoadError]     = useState<string | null>(null);
-  const [mapType,       setMapType]       = useState<'roadmap' | 'satellite' | 'terrain'>('roadmap');
-  const [mosquesOn,     setMosquesOn]     = useState(showMosques);
-  const [radarsOn,      setRadarsOn]      = useState(showRadars);
-  const [isTracking,    setIsTracking]    = useState(false);
-  const [liveLocation,  setLiveLocation]  = useState<{ lat: number; lng: number; accuracy?: number; speed?: number | null } | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [mapType, setMapType] = useState<'roadmap' | 'satellite' | 'terrain'>('roadmap');
+  const [mosquesOn, setMosquesOn] = useState(showMosques);
+  const [radarsOn, setRadarsOn] = useState(showRadars);
+  const [isTracking, setIsTracking] = useState(false);
+  const [liveLocation, setLiveLocation] = useState<{
+    lat: number;
+    lng: number;
+    accuracy?: number;
+    speed?: number | null;
+  } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
-  const [isFullscreen,  setIsFullscreen]  = useState(false);
-  const [selectedPOI,   setSelectedPOI]   = useState<POI | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
 
   // Leaflet often renders blank space if its container size changes after mount
   // (tabs, responsive layout, fullscreen). Keep it always correct.
@@ -744,7 +813,9 @@ function WaselMapFull(props: WaselMapProps) {
 
     try {
       const query = `[out:json][timeout:10];node["amenity"="place_of_worship"]["religion"="muslim"](around:8000,${lat},${lng});out 20;`;
-      const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
+      const res = await fetch(
+        `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
+      );
       if (res.ok) {
         const data = await res.json();
         if (data.elements?.length > 0) {
@@ -766,125 +837,150 @@ function WaselMapFull(props: WaselMapProps) {
     const icon = makeDivIcon(L, SVG.mosque, 40, 40, 20, 20);
     mosquesToShow.forEach(m => {
       try {
-        const marker = safeAddTo(L.marker([m.lat, m.lng], { icon }), mapInstance)
-          .on('click', () => setSelectedPOI({ type: 'mosque', name: m.name }));
+        const marker = safeAddTo(L.marker([m.lat, m.lng], { icon }), mapInstance).on('click', () =>
+          setSelectedPOI({ type: 'mosque', name: m.name }),
+        );
         mosqueLayerRef.current.push(marker);
-      } catch { /* skip if pane not ready */ }
+      } catch {
+        /* skip if pane not ready */
+      }
     });
   }, []);
 
   /* ── Radar markers ── */
-  const loadRadars = useCallback((mapInstance: any) => {
-    if (!LRef.current) return;
-    const L = LRef.current;
+  const loadRadars = useCallback(
+    (mapInstance: any) => {
+      if (!LRef.current) return;
+      const L = LRef.current;
 
-    radarLayerRef.current.forEach(m => m.remove());
-    radarLayerRef.current = [];
+      radarLayerRef.current.forEach(m => m.remove());
+      radarLayerRef.current = [];
 
-    const radarIcon = makeDivIcon(L, SVG.radar, 38, 38, 19, 19);
-    JORDAN_RADARS.forEach(r => {
-      try {
-        const marker = safeAddTo(L.marker([r.lat, r.lng], { icon: radarIcon }), mapInstance)
-          .on('click', () => setSelectedPOI({
-            type: 'radar',
-            name: r.name,
-            info: `Speed limit: ${r.limit} km/h | الحد المسموح: ${r.limit} كم/س`,
-          }));
-        radarLayerRef.current.push(marker);
-      } catch { /* skip */ }
-    });
+      const radarIcon = makeDivIcon(L, SVG.radar, 38, 38, 19, 19);
+      JORDAN_RADARS.forEach(r => {
+        try {
+          const marker = safeAddTo(L.marker([r.lat, r.lng], { icon: radarIcon }), mapInstance).on(
+            'click',
+            () =>
+              setSelectedPOI({
+                type: 'radar',
+                name: r.name,
+                info: `Speed limit: ${r.limit} km/h | الحد المسموح: ${r.limit} كم/س`,
+              }),
+          );
+          radarLayerRef.current.push(marker);
+        } catch {
+          /* skip */
+        }
+      });
 
-    // Extra hazards
-    extraHazards.forEach(h => {
-      try {
-        const svg = h.type === 'accident' ? SVG.accident : h.type === 'police' ? SVG.police : SVG.radar;
-        const icon = makeDivIcon(L, svg, 38, 38, 19, 19);
-        const marker = safeAddTo(L.marker([h.lat, h.lng], { icon }), mapInstance)
-          .on('click', () => setSelectedPOI({ type: h.type, name: h.name }));
-        radarLayerRef.current.push(marker);
-      } catch { /* skip */ }
-    });
-  }, [extraHazards]);
+      // Extra hazards
+      extraHazards.forEach(h => {
+        try {
+          const svg =
+            h.type === 'accident' ? SVG.accident : h.type === 'police' ? SVG.police : SVG.radar;
+          const icon = makeDivIcon(L, svg, 38, 38, 19, 19);
+          const marker = safeAddTo(L.marker([h.lat, h.lng], { icon }), mapInstance).on(
+            'click',
+            () => setSelectedPOI({ type: h.type, name: h.name }),
+          );
+          radarLayerRef.current.push(marker);
+        } catch {
+          /* skip */
+        }
+      });
+    },
+    [extraHazards],
+  );
 
   /* ── Draw route ── */
-  const drawRoute = useCallback(async (mapInstance: any) => {
-    if (!LRef.current || route.length < 2) return;
-    const L = LRef.current;
+  const drawRoute = useCallback(
+    async (mapInstance: any) => {
+      if (!LRef.current || route.length < 2) return;
+      const L = LRef.current;
 
-    // Clear old
-    routeMarkersRef.current.forEach(m => m.remove());
-    routeMarkersRef.current = [];
-    routeLineRef.current?.remove();
-    routeLineRef.current = null;
+      // Clear old
+      routeMarkersRef.current.forEach(m => m.remove());
+      routeMarkersRef.current = [];
+      routeLineRef.current?.remove();
+      routeLineRef.current = null;
 
-    // Place endpoint markers
-    route.forEach((pt, i) => {
-      const isFirst = i === 0;
-      const isLast  = i === route.length - 1;
-      const svg     = isFirst ? SVG.pinGreen : isLast ? SVG.pinOrange : SVG.pinTeal;
-      const icon    = makeDivIcon(L, svg, 30, 42, 15, 42);
-      try {
-        const m = safeAddTo(L.marker([pt.lat, pt.lng], { icon }), mapInstance);
-        if (pt.label) m.bindTooltip(pt.label, { permanent: false, direction: 'top' });
-        routeMarkersRef.current.push(m);
-      } catch { /* skip */ }
-    });
-
-    // Try OSRM for road-following route
-    let latlngs: [number, number][] = route.map(p => [p.lat, p.lng]);
-    try {
-      const coords = route.map(p => `${p.lng},${p.lat}`).join(';');
-      const res = await fetch(
-        `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,
-        { signal: AbortSignal.timeout(5000) }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        const coords2 = data.routes?.[0]?.geometry?.coordinates;
-        if (coords2?.length) {
-          latlngs = coords2.map(([lng, lat]: [number, number]) => [lat, lng]);
+      // Place endpoint markers
+      route.forEach((pt, i) => {
+        const isFirst = i === 0;
+        const isLast = i === route.length - 1;
+        const svg = isFirst ? SVG.pinGreen : isLast ? SVG.pinOrange : SVG.pinTeal;
+        const icon = makeDivIcon(L, svg, 30, 42, 15, 42);
+        try {
+          const m = safeAddTo(L.marker([pt.lat, pt.lng], { icon }), mapInstance);
+          if (pt.label) m.bindTooltip(pt.label, { permanent: false, direction: 'top' });
+          routeMarkersRef.current.push(m);
+        } catch {
+          /* skip */
         }
+      });
+
+      // Try OSRM for road-following route
+      let latlngs: [number, number][] = route.map(p => [p.lat, p.lng]);
+      try {
+        const coords = route.map(p => `${p.lng},${p.lat}`).join(';');
+        const res = await fetch(
+          `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,
+          { signal: AbortSignal.timeout(5000) },
+        );
+        if (res.ok) {
+          const data = await res.json();
+          const coords2 = data.routes?.[0]?.geometry?.coordinates;
+          if (coords2?.length) {
+            latlngs = coords2.map(([lng, lat]: [number, number]) => [lat, lng]);
+          }
+        }
+      } catch {
+        // Use straight-line polyline fallback
       }
-    } catch {
-      // Use straight-line polyline fallback
-    }
 
-    // After the async OSRM await, the map may have been destroyed — guard before drawing
-    if (!isMapAlive(mapInstance)) return;
+      // After the async OSRM await, the map may have been destroyed — guard before drawing
+      if (!isMapAlive(mapInstance)) return;
 
-    routeLineRef.current = L.polyline(latlngs, {
-      color: '#04ADBF',
-      weight: 5,
-      opacity: 0.85,
-      lineJoin: 'round',
-      lineCap: 'round',
-    }).addTo(mapInstance);
+      routeLineRef.current = L.polyline(latlngs, {
+        color: '#04ADBF',
+        weight: 5,
+        opacity: 0.85,
+        lineJoin: 'round',
+        lineCap: 'round',
+      }).addTo(mapInstance);
 
-    // Fit bounds
-    const bounds = L.latLngBounds(route.map(p => [p.lat, p.lng]));
-    mapInstance.fitBounds(bounds, { padding: [50, 50] });
-  }, [route]);
+      // Fit bounds
+      const bounds = L.latLngBounds(route.map(p => [p.lat, p.lng]));
+      mapInstance.fitBounds(bounds, { padding: [50, 50] });
+    },
+    [route],
+  );
 
   /* ── Custom prop markers ── */
-  const drawCustomMarkers = useCallback((mapInstance: any) => {
-    if (!LRef.current) return;
-    const L = LRef.current;
+  const drawCustomMarkers = useCallback(
+    (mapInstance: any) => {
+      if (!LRef.current) return;
+      const L = LRef.current;
 
-    customMarkersRef.current.forEach(m => m.remove());
-    customMarkersRef.current = [];
+      customMarkersRef.current.forEach(m => m.remove());
+      customMarkersRef.current = [];
 
-    markers.forEach(mk => {
-      const svg  = mk.type === 'pickup'  ? SVG.pinGreen
-                 : mk.type === 'dropoff' ? SVG.pinOrange
-                 : SVG.pinTeal;
-      const icon = makeDivIcon(L, svg, 30, 42, 15, 42);
-      try {
-        const m = safeAddTo(L.marker([mk.lat, mk.lng], { icon }), mapInstance);
-        if (mk.label) m.bindTooltip(mk.label, { permanent: false, direction: 'top' });
-        customMarkersRef.current.push(m);
-      } catch { /* skip */ }
-    });
-  }, [markers]);
+      markers.forEach(mk => {
+        const svg =
+          mk.type === 'pickup' ? SVG.pinGreen : mk.type === 'dropoff' ? SVG.pinOrange : SVG.pinTeal;
+        const icon = makeDivIcon(L, svg, 30, 42, 15, 42);
+        try {
+          const m = safeAddTo(L.marker([mk.lat, mk.lng], { icon }), mapInstance);
+          if (mk.label) m.bindTooltip(mk.label, { permanent: false, direction: 'top' });
+          customMarkersRef.current.push(m);
+        } catch {
+          /* skip */
+        }
+      });
+    },
+    [markers],
+  );
 
   /* ── GPS tracking ── */
   const startTracking = useCallback(() => {
@@ -897,10 +993,10 @@ function WaselMapFull(props: WaselMapProps) {
     const id = navigator.geolocation.watchPosition(
       pos => {
         const loc = {
-          lat:      pos.coords.latitude,
-          lng:      pos.coords.longitude,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
           accuracy: pos.coords.accuracy,
-          speed:    pos.coords.speed,
+          speed: pos.coords.speed,
         };
         setLiveLocation(loc);
         setIsTracking(true);
@@ -911,15 +1007,16 @@ function WaselMapFull(props: WaselMapProps) {
 
           if (!liveMarkerRef.current) {
             const icon = makeDivIcon(L, SVG.live, 52, 52, 26, 26);
-            liveMarkerRef.current = L.marker(latlng, { icon, zIndexOffset: 9999 })
-              .addTo(mapRef.current);
+            liveMarkerRef.current = L.marker(latlng, { icon, zIndexOffset: 9999 }).addTo(
+              mapRef.current,
+            );
             liveCircleRef.current = L.circle(latlng, {
-              radius:      loc.accuracy || 20,
-              color:       '#04ADBF',
-              fillColor:   '#04ADBF',
+              radius: loc.accuracy || 20,
+              color: '#04ADBF',
+              fillColor: '#04ADBF',
               fillOpacity: 0.08,
-              weight:      1,
-              opacity:     0.35,
+              weight: 1,
+              opacity: 0.35,
             }).addTo(mapRef.current);
           } else {
             liveMarkerRef.current.setLatLng(latlng);
@@ -964,14 +1061,14 @@ function WaselMapFull(props: WaselMapProps) {
     initDone.current = true;
 
     loadLeaflet()
-      .then((L) => {
+      .then(L => {
         if (!mapDivRef.current || mapRef.current) return;
         LRef.current = L;
 
         const map = L.map(mapDivRef.current, {
-          center:           [center.lat, center.lng],
+          center: [center.lat, center.lng],
           zoom,
-          zoomControl:      false,
+          zoomControl: false,
           attributionControl: false,
         });
         mapRef.current = map;
@@ -986,7 +1083,8 @@ function WaselMapFull(props: WaselMapProps) {
         }).addTo(map);
 
         // Attribution (small, bottom-right)
-        L.control.attribution({ position: 'bottomright', prefix: false })
+        L.control
+          .attribution({ position: 'bottomright', prefix: false })
           .addAttribution('© OpenStreetMap contributors © CARTO')
           .addTo(map);
 
@@ -1013,9 +1111,9 @@ function WaselMapFull(props: WaselMapProps) {
               if (!m) return;
               // Guard: ensure markerPane DOM node exists
               if (!m.getPane('markerPane')) return;
-              if (radarsOn)           loadRadars(m);
-              if (mosquesOn)          loadMosques(m);
-              if (route.length >= 2)  drawRoute(m);
+              if (radarsOn) loadRadars(m);
+              if (mosquesOn) loadMosques(m);
+              if (route.length >= 2) drawRoute(m);
               if (markers.length > 0) drawCustomMarkers(m);
             });
           });
@@ -1070,7 +1168,7 @@ function WaselMapFull(props: WaselMapProps) {
   }, [radarsOn, loadRadars]);
 
   /* ── Zoom ── */
-  const zoomIn  = () => mapRef.current?.setZoom((mapRef.current.getZoom() ?? 13) + 1);
+  const zoomIn = () => mapRef.current?.setZoom((mapRef.current.getZoom() ?? 13) + 1);
   const zoomOut = () => mapRef.current?.setZoom((mapRef.current.getZoom() ?? 13) - 1);
 
   /* ── Center on live location ── */
@@ -1086,11 +1184,13 @@ function WaselMapFull(props: WaselMapProps) {
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
     if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen()
+      containerRef.current
+        .requestFullscreen()
         .then(() => setIsFullscreen(true))
         .catch(() => setIsFullscreen(f => !f));
     } else {
-      document.exitFullscreen()
+      document
+        .exitFullscreen()
         .then(() => setIsFullscreen(false))
         .catch(() => setIsFullscreen(f => !f));
     }
@@ -1127,10 +1227,22 @@ function WaselMapFull(props: WaselMapProps) {
             style={{ background: '#0c1520' }}
           >
             <div className="relative w-20 h-20">
-              <svg viewBox="0 0 80 80" className="w-full h-full animate-spin" style={{ animationDuration: '2s' }}>
-                <circle cx="40" cy="40" r="34" fill="none" stroke="#1e2f4a" strokeWidth="6"/>
-                <circle cx="40" cy="40" r="34" fill="none" stroke="#04ADBF" strokeWidth="6"
-                  strokeDasharray="80 134" strokeLinecap="round"/>
+              <svg
+                viewBox="0 0 80 80"
+                className="w-full h-full animate-spin"
+                style={{ animationDuration: '2s' }}
+              >
+                <circle cx="40" cy="40" r="34" fill="none" stroke="#1e2f4a" strokeWidth="6" />
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="34"
+                  fill="none"
+                  stroke="#04ADBF"
+                  strokeWidth="6"
+                  strokeDasharray="80 134"
+                  strokeLinecap="round"
+                />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <MapPin className="w-7 h-7 text-[#04ADBF]" />
@@ -1146,8 +1258,14 @@ function WaselMapFull(props: WaselMapProps) {
 
       {/* ── Error overlay ── */}
       {loadError && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 p-6" style={{ background: '#0c1520' }}>
-          <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.15)' }}>
+        <div
+          className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 p-6"
+          style={{ background: '#0c1520' }}
+        >
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(239,68,68,0.15)' }}
+          >
             <AlertTriangle className="w-8 h-8 text-red-400" />
           </div>
           <div className="text-center">
@@ -1170,7 +1288,13 @@ function WaselMapFull(props: WaselMapProps) {
                   onClick={() => changeMapType(t)}
                   style={mapTypeButtonStyle(mapType === t)}
                 >
-                  {t === 'roadmap' ? <Map className="w-3.5 h-3.5" /> : t === 'satellite' ? <Satellite className="w-3.5 h-3.5" /> : <Mountain className="w-3.5 h-3.5" />}
+                  {t === 'roadmap' ? (
+                    <Map className="w-3.5 h-3.5" />
+                  ) : t === 'satellite' ? (
+                    <Satellite className="w-3.5 h-3.5" />
+                  ) : (
+                    <Mountain className="w-3.5 h-3.5" />
+                  )}
                   <span>{t === 'roadmap' ? 'City' : t === 'satellite' ? 'Aerial' : 'Terrain'}</span>
                 </button>
               ))}
@@ -1201,12 +1325,18 @@ function WaselMapFull(props: WaselMapProps) {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 className="absolute top-3 left-3 z-20 rounded-2xl border shadow-xl"
-                style={{ background: 'var(--wasel-glass-xl)', backdropFilter: 'blur(12px)', borderColor: 'rgba(4,173,191,0.35)' }}
+                style={{
+                  background: 'var(--wasel-glass-xl)',
+                  backdropFilter: 'blur(12px)',
+                  borderColor: 'rgba(4,173,191,0.35)',
+                }}
               >
                 <div className="px-4 py-3 space-y-1.5">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-[#04ADBF] animate-pulse" />
-                    <span className="text-[#04ADBF] text-xs font-bold uppercase tracking-widest">Live</span>
+                    <span className="text-[#04ADBF] text-xs font-bold uppercase tracking-widest">
+                      Live
+                    </span>
                     <Wifi className="w-3 h-3 text-[#04ADBF]" />
                   </div>
                   {liveLocation.speed !== null && liveLocation.speed !== undefined && (
@@ -1218,7 +1348,9 @@ function WaselMapFull(props: WaselMapProps) {
                     </div>
                   )}
                   {liveLocation.accuracy !== null && liveLocation.accuracy !== undefined && (
-                    <p className="text-[#5a6475] text-xs">±{Math.round(liveLocation.accuracy)}m accuracy</p>
+                    <p className="text-[#5a6475] text-xs">
+                      ±{Math.round(liveLocation.accuracy)}m accuracy
+                    </p>
                   )}
                   <p className="text-[#5a6475] text-xs font-mono">
                     {liveLocation.lat.toFixed(5)}, {liveLocation.lng.toFixed(5)}
@@ -1236,19 +1368,34 @@ function WaselMapFull(props: WaselMapProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
                 className="absolute top-3 left-1/2 -translate-x-1/2 z-30 w-[300px] max-w-[calc(100%-80px)] rounded-2xl border shadow-2xl"
-                style={{ background: 'var(--wasel-glass-xl)', backdropFilter: 'blur(16px)', borderColor: 'rgba(4,173,191,0.3)' }}
+                style={{
+                  background: 'var(--wasel-glass-xl)',
+                  backdropFilter: 'blur(16px)',
+                  borderColor: 'rgba(4,173,191,0.3)',
+                }}
               >
                 <div className="flex items-start gap-3 p-4">
                   <span className="text-2xl mt-0.5 shrink-0">
-                    {selectedPOI.type === 'mosque'  ? '🕌'
-                     : selectedPOI.type === 'radar'  ? '📸'
-                     : selectedPOI.type === 'police' ? '🚔'
-                     : '⚠️'}
+                    {selectedPOI.type === 'mosque'
+                      ? '🕌'
+                      : selectedPOI.type === 'radar'
+                        ? '📸'
+                        : selectedPOI.type === 'police'
+                          ? '🚔'
+                          : '⚠️'}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-semibold leading-tight">{selectedPOI.name}</p>
-                    {selectedPOI.vicinity && <p className="text-[#8590a2] text-xs mt-0.5 truncate">{selectedPOI.vicinity}</p>}
-                    {selectedPOI.info     && <p className="text-[#04ADBF] text-xs mt-1 font-medium">{selectedPOI.info}</p>}
+                    <p className="text-white text-sm font-semibold leading-tight">
+                      {selectedPOI.name}
+                    </p>
+                    {selectedPOI.vicinity && (
+                      <p className="text-[#8590a2] text-xs mt-0.5 truncate">
+                        {selectedPOI.vicinity}
+                      </p>
+                    )}
+                    {selectedPOI.info && (
+                      <p className="text-[#04ADBF] text-xs mt-1 font-medium">{selectedPOI.info}</p>
+                    )}
                   </div>
                   <button
                     onClick={() => setSelectedPOI(null)}
@@ -1274,7 +1421,10 @@ function WaselMapFull(props: WaselMapProps) {
                 <div className="flex items-start gap-2">
                   <WifiOff className="w-4 h-4 text-red-300 shrink-0 mt-0.5" />
                   <p className="text-red-200 text-xs">{locationError}</p>
-                  <button onClick={() => setLocationError(null)} className="ml-auto shrink-0 text-red-400 hover:text-red-200">
+                  <button
+                    onClick={() => setLocationError(null)}
+                    className="ml-auto shrink-0 text-red-400 hover:text-red-200"
+                  >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -1285,13 +1435,24 @@ function WaselMapFull(props: WaselMapProps) {
           {/* -- Bottom: Layer controls -- */}
           {!compact && (
             <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-20">
-              <div className="flex items-center gap-1 rounded-2xl px-3 py-2" style={CONTROL_PANEL_STYLE}>
-                <button onClick={toggleMosques} style={wideControlButtonStyle(mosquesOn)} title="Mosques">
+              <div
+                className="flex items-center gap-1 rounded-2xl px-3 py-2"
+                style={CONTROL_PANEL_STYLE}
+              >
+                <button
+                  onClick={toggleMosques}
+                  style={wideControlButtonStyle(mosquesOn)}
+                  title="Mosques"
+                >
                   <MapPin className="w-3.5 h-3.5" />
                   <span>Mosques</span>
                 </button>
                 <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.08)' }} />
-                <button onClick={toggleRadars} style={wideControlButtonStyle(radarsOn)} title="Radars">
+                <button
+                  onClick={toggleRadars}
+                  style={wideControlButtonStyle(radarsOn)}
+                  title="Radars"
+                >
                   <Radio className="w-3.5 h-3.5" />
                   <span>Radars</span>
                 </button>
@@ -1301,47 +1462,51 @@ function WaselMapFull(props: WaselMapProps) {
           {/* -- Bottom: GPS controls -- */}
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
             {isTracking && (
-	              <button
-	                onClick={centerOnMe}
-	                style={compactControlButtonStyle()}
-	                title="Center on my location"
-	              >
+              <button
+                onClick={centerOnMe}
+                style={compactControlButtonStyle()}
+                title="Center on my location"
+              >
                 <Navigation2 className="w-4 h-4" />
               </button>
             )}
 
-	            <button
-	              onClick={isTracking ? stopTracking : startTracking}
-	              style={isTracking ? {
-	                ...CONTROL_BUTTON_BASE,
-	                minHeight: 44,
-	                padding: '0 18px',
-	                borderRadius: 18,
-	                display: 'flex',
-	                alignItems: 'center',
-	                gap: 10,
-	                fontSize: '0.86rem',
-	                fontWeight: 800,
-	                color: '#041018',
-	                background: 'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)',
-	                border: '1px solid rgba(255,255,255,0.18)',
-	                boxShadow: '0 10px 28px rgba(0,200,232,0.28)',
-	              } : {
-	                ...CONTROL_BUTTON_BASE,
-	                minHeight: 44,
-	                padding: '0 18px',
-	                borderRadius: 18,
-	                display: 'flex',
-	                alignItems: 'center',
-	                gap: 10,
-	                fontSize: '0.86rem',
-	                fontWeight: 800,
-	                color: '#EFF6FF',
-	                background: 'rgba(10,22,40,0.92)',
-	                border: '1px solid rgba(0,200,232,0.16)',
-	                boxShadow: '0 10px 28px rgba(0,0,0,0.22)',
-	              }}
-	            >
+            <button
+              onClick={isTracking ? stopTracking : startTracking}
+              style={
+                isTracking
+                  ? {
+                      ...CONTROL_BUTTON_BASE,
+                      minHeight: 44,
+                      padding: '0 18px',
+                      borderRadius: 18,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      fontSize: '0.86rem',
+                      fontWeight: 800,
+                      color: '#041018',
+                      background: 'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)',
+                      border: '1px solid rgba(255,255,255,0.18)',
+                      boxShadow: '0 10px 28px rgba(0,200,232,0.28)',
+                    }
+                  : {
+                      ...CONTROL_BUTTON_BASE,
+                      minHeight: 44,
+                      padding: '0 18px',
+                      borderRadius: 18,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      fontSize: '0.86rem',
+                      fontWeight: 800,
+                      color: '#EFF6FF',
+                      background: 'rgba(10,22,40,0.92)',
+                      border: '1px solid rgba(0,200,232,0.16)',
+                      boxShadow: '0 10px 28px rgba(0,0,0,0.22)',
+                    }
+              }
+            >
               {isTracking ? (
                 <>
                   <div className="w-2 h-2 bg-white rounded-full animate-pulse" />

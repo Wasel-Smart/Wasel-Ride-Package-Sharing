@@ -72,11 +72,11 @@ export const activeTripAPI = {
     try {
       const headers = await authHeaders();
       const response = await fetchWithRetry(
-        `${API_URL}/active-trip`, 
+        `${API_URL}/active-trip`,
         {
           headers,
           signal,
-        }
+        },
         // Using defaults: 1 retry, 500ms backoff, 5s timeout
       );
       if (!response.ok) return null;
@@ -96,17 +96,21 @@ export const activeTripAPI = {
     try {
       const headers = await authHeaders();
       const response = await fetchWithRetry(
-        `${API_URL}/active-trip`, 
+        `${API_URL}/active-trip`,
         {
           method: 'POST',
           headers: { ...headers, 'Content-Type': 'application/json' },
           body: JSON.stringify(tripData),
-        }
+        },
         // Using defaults: 1 retry, 500ms backoff, 5s timeout
       );
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        console.error('[activeTripAPI.setActiveTrip] Server error:', response.status, sanitizeLogMessage(JSON.stringify(body)));
+        console.error(
+          '[activeTripAPI.setActiveTrip] Server error:',
+          response.status,
+          sanitizeLogMessage(JSON.stringify(body)),
+        );
         return null;
       }
       const data = await response.json();
@@ -124,12 +128,12 @@ export const activeTripAPI = {
     try {
       const headers = await authHeaders();
       const response = await fetchWithRetry(
-        `${API_URL}/active-trip`, 
+        `${API_URL}/active-trip`,
         {
           method: 'PATCH',
           headers: { ...headers, 'Content-Type': 'application/json' },
           body: JSON.stringify(updates),
-        }
+        },
         // Using defaults: 1 retry, 500ms backoff, 5s timeout
       );
       if (!response.ok) return null;
@@ -146,11 +150,11 @@ export const activeTripAPI = {
     try {
       const headers = await authHeaders();
       const response = await fetchWithRetry(
-        `${API_URL}/active-trip`, 
+        `${API_URL}/active-trip`,
         {
           method: 'DELETE',
           headers,
-        }
+        },
         // Using defaults: 1 retry, 500ms backoff, 5s timeout
       );
       return response.ok;

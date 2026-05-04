@@ -25,8 +25,8 @@ export * from '../styles/wasel-page-theme';
 export { friendlyAuthError, pwStrength } from '../utils/authHelpers';
 
 // ── Components ────────────────────────────────────────────────────────────────
-export { WaselLogo }   from '../components/wasel-ds/WaselLogo';
-export { WaselBadge }  from '../components/wasel-ui/WaselBadge';
+export { WaselLogo } from '../components/wasel-ds/WaselLogo';
+export { WaselBadge } from '../components/wasel-ui/WaselBadge';
 export { WaselButton } from '../components/wasel-ui/WaselButton';
-export { WaselInput }  from '../components/wasel-ui/WaselInput';
-export { WaselCard }   from '../components/wasel-ui/WaselCard';
+export { WaselInput } from '../components/wasel-ui/WaselInput';
+export { WaselCard } from '../components/wasel-ui/WaselCard';

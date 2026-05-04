@@ -61,9 +61,7 @@ export function sortCorridorProjections(corridors: CorridorProjection[]): Corrid
   return [...corridors].sort((left, right) => right.demand_pressure - left.demand_pressure);
 }
 
-export function buildMobilityMetrics(
-  corridors: CorridorProjection[],
-): MobilitySystemMetrics {
+export function buildMobilityMetrics(corridors: CorridorProjection[]): MobilitySystemMetrics {
   const ranked = sortCorridorProjections(corridors);
   const hottest = ranked[0];
 
@@ -76,10 +74,7 @@ export function buildMobilityMetrics(
       ? `${hottest.corridor.origin} -> ${hottest.corridor.destination}`
       : '',
     seat_revenue_run_rate: roundTo(
-      ranked.reduce(
-        (sum, item) => sum + item.dynamic_seat_price * item.corridor.seats_booked,
-        0,
-      ),
+      ranked.reduce((sum, item) => sum + item.dynamic_seat_price * item.corridor.seats_booked, 0),
       2,
     ),
     cargo_revenue_run_rate: roundTo(
@@ -150,9 +145,7 @@ function isProjectionPayload(
   );
 }
 
-export function normalizeMobilityOutboxRow(
-  row: MobilityOutboxRow,
-): MobilityEventEnvelope | null {
+export function normalizeMobilityOutboxRow(row: MobilityOutboxRow): MobilityEventEnvelope | null {
   if (!isMobilityEventType(row.event_type) || !row.payload || typeof row.payload !== 'object') {
     return null;
   }
@@ -216,9 +209,7 @@ export function applyMobilityEventToSnapshot(
   const incomingProjection = cloneProjection(corridorEvent.payload.projection);
   const corridors = sortCorridorProjections([
     incomingProjection,
-    ...snapshot.corridors.filter(
-      (current) => current.corridor.id !== incomingProjection.corridor.id,
-    ),
+    ...snapshot.corridors.filter(current => current.corridor.id !== incomingProjection.corridor.id),
   ]);
 
   return {

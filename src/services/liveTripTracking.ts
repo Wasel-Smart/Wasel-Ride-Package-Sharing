@@ -57,17 +57,17 @@ export interface LiveTripSnapshot {
 
 const CITY_COORDS: Record<string, LatLng> = {
   amman: { lat: 31.9539, lng: 35.9106 },
-  aqaba: { lat: 29.5321, lng: 35.0060 },
+  aqaba: { lat: 29.5321, lng: 35.006 },
   irbid: { lat: 32.5568, lng: 35.8479 },
-  zarqa: { lat: 32.0728, lng: 36.0880 },
+  zarqa: { lat: 32.0728, lng: 36.088 },
   jerash: { lat: 32.2744, lng: 35.8961 },
-  mafraq: { lat: 32.3429, lng: 36.2080 },
+  mafraq: { lat: 32.3429, lng: 36.208 },
   madaba: { lat: 31.7196, lng: 35.7939 },
   karak: { lat: 31.1854, lng: 35.7048 },
   salt: { lat: 32.0392, lng: 35.7272 },
   ajloun: { lat: 32.3326, lng: 35.7519 },
   tafila: { lat: 30.8375, lng: 35.6042 },
-  maan: { lat: 30.1962, lng: 35.7360 },
+  maan: { lat: 30.1962, lng: 35.736 },
 };
 
 type CanonicalUserRow = {
@@ -176,7 +176,7 @@ function parseLocation(value: string | null | undefined): LatLng | null {
 function buildInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
   if (parts.length === 0) return 'WD';
-  return parts.map((part) => part[0]?.toUpperCase() ?? '').join('');
+  return parts.map(part => part[0]?.toUpperCase() ?? '').join('');
 }
 
 function haversineKm(a: LatLng, b: LatLng): number {
@@ -194,13 +194,13 @@ function haversineKm(a: LatLng, b: LatLng): number {
 
 function interpolate(a: LatLng, b: LatLng, ratio: number): LatLng {
   return {
-    lat: a.lat + ((b.lat - a.lat) * ratio),
-    lng: a.lng + ((b.lng - a.lng) * ratio),
+    lat: a.lat + (b.lat - a.lat) * ratio,
+    lng: a.lng + (b.lng - a.lng) * ratio,
   };
 }
 
 function formatClockEta(minutesFromNow: number): string {
-  const date = new Date(Date.now() + (minutesFromNow * 60 * 1000));
+  const date = new Date(Date.now() + minutesFromNow * 60 * 1000);
   return date.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
@@ -215,10 +215,7 @@ function isFreshHeartbeat(value: string | null | undefined): boolean {
   return Date.now() - heartbeatAt <= 5 * 60 * 1000;
 }
 
-function mapTripStatus(
-  tripStatus: string | null | undefined,
-  progress: number,
-): LiveTripStatus {
+function mapTripStatus(tripStatus: string | null | undefined, progress: number): LiveTripStatus {
   if (tripStatus === 'completed' || progress >= 99.5) return 'completed';
   if (tripStatus === 'in_progress' && progress >= 85) return 'arriving';
   if (tripStatus === 'in_progress') return 'en_route';
@@ -244,7 +241,9 @@ async function fetchLatestActiveBooking(canonicalUserId: string): Promise<Bookin
 
   const { data, error } = await supabase
     .from('bookings')
-    .select('booking_id, id, trip_id, seats_requested, total_price, amount, created_at, booking_status, status')
+    .select(
+      'booking_id, id, trip_id, seats_requested, total_price, amount, created_at, booking_status, status',
+    )
     .eq('passenger_id', canonicalUserId)
     .in('booking_status', ['confirmed', 'checked_in', 'completed'])
     .order('updated_at', { ascending: false })
@@ -276,7 +275,9 @@ async function fetchLiveTripSnapshot(authUserId: string): Promise<LiveTripSnapsh
   const [{ data: tripData, error: tripError }, { data: presenceData }] = await Promise.all([
     supabase
       .from('trips')
-      .select('trip_id, driver_id, origin_name, origin_location, destination_name, destination_location, origin_city, destination_city, departure_time, price_per_seat, trip_status')
+      .select(
+        'trip_id, driver_id, origin_name, origin_location, destination_name, destination_location, origin_city, destination_city, departure_time, price_per_seat, trip_status',
+      )
       .eq('trip_id', booking.trip_id)
       .maybeSingle(),
     supabase
@@ -330,12 +331,15 @@ async function fetchLiveTripSnapshot(authUserId: string): Promise<LiveTripSnapsh
   const fromCoord = parseLocation(trip.origin_location) ?? coordFromCity(trip.origin_city);
   const toCoord = parseLocation(trip.destination_location) ?? coordFromCity(trip.destination_city);
   const fallbackDriverPosition = interpolate(fromCoord, toCoord, 0.18);
-  const lastLocation = presence?.last_location && typeof presence.last_location === 'object'
-    ? {
-        lat: parseCoordValue(presence.last_location.lat) ?? fallbackDriverPosition.lat,
-        lng: parseCoordValue(presence.last_location.lng ?? presence.last_location.lon) ?? fallbackDriverPosition.lng,
-      }
-    : fallbackDriverPosition;
+  const lastLocation =
+    presence?.last_location && typeof presence.last_location === 'object'
+      ? {
+          lat: parseCoordValue(presence.last_location.lat) ?? fallbackDriverPosition.lat,
+          lng:
+            parseCoordValue(presence.last_location.lng ?? presence.last_location.lon) ??
+            fallbackDriverPosition.lng,
+        }
+      : fallbackDriverPosition;
 
   const totalDistanceKm = Math.max(haversineKm(fromCoord, toCoord), 0.8);
   const travelledKm = Math.min(haversineKm(fromCoord, lastLocation), totalDistanceKm);
@@ -371,7 +375,9 @@ async function fetchLiveTripSnapshot(authUserId: string): Promise<LiveTripSnapsh
       initials: buildInitials(driverUser?.full_name?.trim() || 'Wasel Driver'),
     },
     vehicle: {
-      model: [vehicle?.vehicle_make, vehicle?.vehicle_model].filter(Boolean).join(' ') || 'Wasel Vehicle',
+      model:
+        [vehicle?.vehicle_make, vehicle?.vehicle_model].filter(Boolean).join(' ') ||
+        'Wasel Vehicle',
       color: 'White',
       plate: vehicle?.plate_number?.trim() || 'WASEL',
       year: new Date().getFullYear(),
@@ -380,7 +386,10 @@ async function fetchLiveTripSnapshot(authUserId: string): Promise<LiveTripSnapsh
     startedAt,
     estimatedArrival: formatClockEta(timeLeftMinutes),
     totalDistanceKm: Number(totalDistanceKm.toFixed(1)),
-    passengers: Math.max(1, Number(presence?.active_passengers ?? booking.seats_requested ?? 1) || 1),
+    passengers: Math.max(
+      1,
+      Number(presence?.active_passengers ?? booking.seats_requested ?? 1) || 1,
+    ),
     shareCode: String(trip.trip_id).slice(-8).toUpperCase(),
     progress,
     timeLeftMinutes,
@@ -417,7 +426,7 @@ export function subscribeToLiveTripPresence(
     }
 
     refreshing = fetchLiveTripSnapshot(authUserId)
-      .then((snapshot) => {
+      .then(snapshot => {
         if (active) {
           onSnapshot(snapshot);
         }

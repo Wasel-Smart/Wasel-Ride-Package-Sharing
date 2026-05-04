@@ -23,7 +23,7 @@ function isConfiguredValue(value: string | undefined): value is string {
   if (!normalized) return false;
 
   const lower = normalized.toLowerCase();
-  return !PLACEHOLDER_MARKERS.some((marker) => lower.includes(marker));
+  return !PLACEHOLDER_MARKERS.some(marker => lower.includes(marker));
 }
 
 function isValidPublicSupabaseUrl(value: string): boolean {
@@ -39,7 +39,11 @@ function isValidPublicSupabaseUrl(value: string): boolean {
 }
 
 function pickConfiguredUrl(...candidates: Array<string | undefined>): string {
-  return candidates.find((candidate) => isConfiguredValue(candidate) && isValidPublicSupabaseUrl(candidate)) ?? '';
+  return (
+    candidates.find(
+      candidate => isConfiguredValue(candidate) && isValidPublicSupabaseUrl(candidate),
+    ) ?? ''
+  );
 }
 
 function pickConfiguredKey(...candidates: Array<string | undefined>): string {

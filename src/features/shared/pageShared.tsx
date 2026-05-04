@@ -33,35 +33,44 @@ export const pill = (color: string) => ({
 
 // ── Jordan city coordinates ───────────────────────────────────────────────────
 export const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
-  Amman:      { lat: 31.9539, lng: 35.9106 },
-  Aqaba:      { lat: 29.5321, lng: 35.0060 },
-  Irbid:      { lat: 32.5568, lng: 35.8479 },
-  Zarqa:      { lat: 32.0728, lng: 36.0880 },
-  'Dead Sea': { lat: 31.5590, lng: 35.4732 },
-  Karak:      { lat: 31.1854, lng: 35.7048 },
-  Madaba:     { lat: 31.7196, lng: 35.7939 },
-  Petra:      { lat: 30.3285, lng: 35.4444 },
-  Jerash:     { lat: 32.2744, lng: 35.8961 },
-  Mafraq:     { lat: 32.3429, lng: 36.2080 },
-  Salt:       { lat: 32.0392, lng: 35.7272 },
+  Amman: { lat: 31.9539, lng: 35.9106 },
+  Aqaba: { lat: 29.5321, lng: 35.006 },
+  Irbid: { lat: 32.5568, lng: 35.8479 },
+  Zarqa: { lat: 32.0728, lng: 36.088 },
+  'Dead Sea': { lat: 31.559, lng: 35.4732 },
+  Karak: { lat: 31.1854, lng: 35.7048 },
+  Madaba: { lat: 31.7196, lng: 35.7939 },
+  Petra: { lat: 30.3285, lng: 35.4444 },
+  Jerash: { lat: 32.2744, lng: 35.8961 },
+  Mafraq: { lat: 32.3429, lng: 36.208 },
+  Salt: { lat: 32.0392, lng: 35.7272 },
   'Wadi Rum': { lat: 29.5734, lng: 35.4196 },
-  Ajloun:     { lat: 32.3333, lng: 35.7528 },
-  "Ma'in":    { lat: 31.6796, lng: 35.6217 },
+  Ajloun: { lat: 32.3333, lng: 35.7528 },
+  "Ma'in": { lat: 31.6796, lng: 35.6217 },
 };
 
 export const CITIES = [
-  'Amman','Aqaba','Irbid','Zarqa','Dead Sea',
-  'Karak','Madaba','Petra','Jerash','Mafraq','Salt','Wadi Rum','Ajloun',"Ma'in",
+  'Amman',
+  'Aqaba',
+  'Irbid',
+  'Zarqa',
+  'Dead Sea',
+  'Karak',
+  'Madaba',
+  'Petra',
+  'Jerash',
+  'Mafraq',
+  'Salt',
+  'Wadi Rum',
+  'Ajloun',
+  "Ma'in",
 ];
 
 export function resolveCityCoord(city: string) {
   return CITY_COORDS[city] ?? CITY_COORDS.Amman;
 }
 
-export function midpoint(
-  a: { lat: number; lng: number },
-  b: { lat: number; lng: number },
-) {
+export function midpoint(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   return { lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 };
 }
 
@@ -103,7 +112,9 @@ export function Protected({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -114,10 +125,17 @@ export function Protected({ children }: { children: ReactNode }) {
 
   if (!user) {
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '60vh', gap: 16, background: DS.bg,
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '60vh',
+          gap: 16,
+          background: DS.bg,
+        }}
+      >
         <div style={{ fontSize: '3rem' }}>🔒</div>
         <div style={{ color: DS.sub, fontFamily: DS.F }}>Redirecting to sign in…</div>
       </div>
@@ -131,13 +149,16 @@ export function PageShell({ children }: { children: ReactNode }) {
   const { language } = useLanguage();
   const ar = language === 'ar';
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: `radial-gradient(circle at 12% 10%, rgba(0,200,232,0.12), transparent 24%), radial-gradient(circle at 88% 6%, rgba(240,168,48,0.10), transparent 22%), radial-gradient(circle at 80% 86%, rgba(0,200,117,0.08), transparent 24%), ${DS.bg}`,
-      fontFamily: DS.F, direction: ar ? 'rtl' : 'ltr',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: `radial-gradient(circle at 12% 10%, rgba(0,200,232,0.12), transparent 24%), radial-gradient(circle at 88% 6%, rgba(240,168,48,0.10), transparent 22%), radial-gradient(circle at 80% 86%, rgba(0,200,117,0.08), transparent 24%), ${DS.bg}`,
+        fontFamily: DS.F,
+        direction: ar ? 'rtl' : 'ltr',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
       <style>{`
         :root { color-scheme: dark; scroll-behavior: smooth; }
         .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(0,200,232,0.28); }
@@ -183,7 +204,8 @@ export function PageShell({ children }: { children: ReactNode }) {
         style={{
           position: 'fixed',
           inset: 0,
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)',
+          backgroundImage:
+            'linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)',
           backgroundSize: '54px 54px',
           maskImage: 'radial-gradient(circle at center, black 0%, black 44%, transparent 82%)',
           pointerEvents: 'none',
@@ -199,7 +221,15 @@ export function PageShell({ children }: { children: ReactNode }) {
           pointerEvents: 'none',
         }}
       />
-      <div className="sp-inner" style={{ position:'relative', maxWidth: 1120, margin: '0 auto', padding: '24px 16px 36px' }}>
+      <div
+        className="sp-inner"
+        style={{
+          position: 'relative',
+          maxWidth: 1120,
+          margin: '0 auto',
+          padding: '24px 16px 36px',
+        }}
+      >
         {children}
       </div>
     </div>
@@ -208,9 +238,18 @@ export function PageShell({ children }: { children: ReactNode }) {
 
 // ── Section header ────────────────────────────────────────────────────────────
 export function SectionHead({
-  emoji, title, titleAr, sub, color = DS.cyan, action,
+  emoji,
+  title,
+  titleAr,
+  sub,
+  color = DS.cyan,
+  action,
 }: {
-  emoji: string; title: string; titleAr?: string; sub?: string; color?: string;
+  emoji: string;
+  title: string;
+  titleAr?: string;
+  sub?: string;
+  color?: string;
   action?: { label: string; onClick: () => void };
 }) {
   const { language } = useLanguage();
@@ -218,46 +257,92 @@ export function SectionHead({
   const displayTitle = ar && titleAr ? titleAr : title;
 
   return (
-    <div className="sp-head" style={{
-      background: `linear-gradient(135deg, rgba(11,29,69,0.96), rgba(13,31,56,0.94))`,
-      borderRadius: r(22), padding: '26px 24px',
-      marginBottom: 20, position: 'relative', overflow: 'hidden',
-      border: `1px solid ${color}20`, boxShadow: '0 16px 44px rgba(0,0,0,0.42)',
-    }}>
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}14,transparent 64%)`,
-        pointerEvents: 'none',
-      }} />
-      <div className="sp-head-inner" style={{
-        display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', position: 'relative',
-      }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{
-            width: 58, height: 58, borderRadius: r(18),
-            background: `${color}18`, border: `1.5px solid ${color}34`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1.85rem', flexShrink: 0,
-          }}>
+    <div
+      className="sp-head"
+      style={{
+        background: `linear-gradient(135deg, rgba(11,29,69,0.96), rgba(13,31,56,0.94))`,
+        borderRadius: r(22),
+        padding: '26px 24px',
+        marginBottom: 20,
+        position: 'relative',
+        overflow: 'hidden',
+        border: `1px solid ${color}20`,
+        boxShadow: '0 16px 44px rgba(0,0,0,0.42)',
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}14,transparent 64%)`,
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        className="sp-head-inner"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'relative',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: r(18),
+              background: `${color}18`,
+              border: `1.5px solid ${color}34`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.85rem',
+              flexShrink: 0,
+            }}
+          >
             {emoji}
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <h1 style={{ fontSize: '1.62rem', fontWeight: 950, color: '#fff', margin: 0, letterSpacing: '-0.03em' }}>{displayTitle}</h1>
+              <h1
+                style={{
+                  fontSize: '1.62rem',
+                  fontWeight: 950,
+                  color: '#fff',
+                  margin: 0,
+                  letterSpacing: '-0.03em',
+                }}
+              >
+                {displayTitle}
+              </h1>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-              {sub && <span style={{ color: 'rgba(255,255,255,0.48)', fontSize: '0.78rem' }}>{sub}</span>}
+              {sub && (
+                <span style={{ color: 'rgba(255,255,255,0.48)', fontSize: '0.78rem' }}>{sub}</span>
+              )}
             </div>
           </div>
         </div>
         {action && (
-          <button onClick={action.onClick} className="sp-head-btn" style={{
-            height: 44, padding: '0 22px', borderRadius: '99px', border: 'none',
-            background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 52%, #18D7C8 100%)',
-            color: '#041018', fontWeight: 900, fontSize: '0.875rem',
-            boxShadow: `0 12px 28px ${DS.cyan}25`, cursor: 'pointer', flexShrink: 0,
-          }}>
+          <button
+            onClick={action.onClick}
+            className="sp-head-btn"
+            style={{
+              height: 44,
+              padding: '0 22px',
+              borderRadius: '99px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 52%, #18D7C8 100%)',
+              color: '#041018',
+              fontWeight: 900,
+              fontSize: '0.875rem',
+              boxShadow: `0 12px 28px ${DS.cyan}25`,
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
             {action.label}
           </button>
         )}
@@ -268,21 +353,34 @@ export function SectionHead({
 
 // ── Core experience banner ────────────────────────────────────────────────────
 export function CoreExperienceBanner({
-  title, detail: _detail, tone = DS.cyan,
+  title,
+  detail: _detail,
+  tone = DS.cyan,
 }: {
-  title: string; detail: string; tone?: string;
+  title: string;
+  detail: string;
+  tone?: string;
 }) {
   return (
-    <div style={{
-      display: 'flex', gap: 10,
-      alignItems: 'center',
-      background: `linear-gradient(135deg, ${tone}12, rgba(255,255,255,0.02))`,
-      border: `1px solid ${tone}30`, borderRadius: r(16),
-      padding: '12px 14px', marginBottom: 18,
-      boxShadow: '0 14px 34px rgba(0,0,0,0.22)',
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        gap: 10,
+        alignItems: 'center',
+        background: `linear-gradient(135deg, ${tone}12, rgba(255,255,255,0.02))`,
+        border: `1px solid ${tone}30`,
+        borderRadius: r(16),
+        padding: '12px 14px',
+        marginBottom: 18,
+        boxShadow: '0 14px 34px rgba(0,0,0,0.22)',
+      }}
+    >
       <span style={pill(tone)}>Info</span>
-      <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.92rem', letterSpacing: '-0.02em' }}>{title}</div>
+      <div
+        style={{ color: '#fff', fontWeight: 800, fontSize: '0.92rem', letterSpacing: '-0.02em' }}
+      >
+        {title}
+      </div>
     </div>
   );
 }

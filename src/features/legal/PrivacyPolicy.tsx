@@ -13,8 +13,9 @@ export function PrivacyPolicy() {
     ar: {
       title: 'سياسة الخصوصية',
       subtitle: 'آخر تحديث: 16 مارس 2026',
-      intro: 'في واصل، نحترم خصوصيتك ونلتزم بحماية بياناتك الشخصية. توضح هذه السياسة كيف نجمع ونستخدم ونحمي معلوماتك.',
-      
+      intro:
+        'في واصل، نحترم خصوصيتك ونلتزم بحماية بياناتك الشخصية. توضح هذه السياسة كيف نجمع ونستخدم ونحمي معلوماتك.',
+
       sections: [
         {
           icon: FileText,
@@ -24,8 +25,8 @@ export function PrivacyPolicy() {
             'بيانات التحقق: رقم البطاقة الوطنية (سند) للتحقق الحكومي',
             'بيانات الموقع: لمطابقة الرحلات والتتبع المباشر',
             'معلومات الدفع: تفاصيل الدفع (مشفرة)',
-            'بيانات الاستخدام: سجل الرحلات، التفضيلات، التقييمات'
-          ]
+            'بيانات الاستخدام: سجل الرحلات، التفضيلات، التقييمات',
+          ],
         },
         {
           icon: Lock,
@@ -36,8 +37,8 @@ export function PrivacyPolicy() {
             'معالجة المدفوعات والحجوزات',
             'تحسين الأمان ومنع الاحتيال',
             'إرسال إشعارات الرحلات والتحديثات',
-            'تخصيص تجربتك (أوقات الصلاة، تفضيلات الجنس)'
-          ]
+            'تخصيص تجربتك (أوقات الصلاة، تفضيلات الجنس)',
+          ],
         },
         {
           icon: Shield,
@@ -48,8 +49,8 @@ export function PrivacyPolicy() {
             'مصادقة ثنائية لحسابات السائقين',
             'عمليات تدقيق أمنية منتظمة',
             'الوصول المحدود إلى البيانات الشخصية',
-            'نسخ احتياطي آمن ومشفر'
-          ]
+            'نسخ احتياطي آمن ومشفر',
+          ],
         },
         {
           icon: Eye,
@@ -59,8 +60,8 @@ export function PrivacyPolicy() {
             'مع معالجات الدفع: تفاصيل الدفع المشفرة',
             'مع السلطات: عند الطلب القانوني فقط',
             'لا نبيع بياناتك أبداً لأطراف ثالثة',
-            'لا نشارك البيانات للإعلانات'
-          ]
+            'لا نشارك البيانات للإعلانات',
+          ],
         },
         {
           icon: FileText,
@@ -71,34 +72,35 @@ export function PrivacyPolicy() {
             'الحذف: حذف حسابك وبياناتك',
             'النقل: تصدير بياناتك بصيغة قابلة للقراءة',
             'الاعتراض: رفض معالجة بيانات معينة',
-            'السحب: إلغاء الموافقة في أي وقت'
-          ]
-        }
+            'السحب: إلغاء الموافقة في أي وقت',
+          ],
+        },
       ],
-      
+
       contact: {
         title: 'اتصل بنا',
         subtitle: 'لأسئلة الخصوصية أو طلبات البيانات:',
         email: 'privacy@wasel.jo',
         phone: '+962 79 000 0000',
-        address: 'عمان، الأردن'
+        address: 'عمان، الأردن',
       },
-      
+
       compliance: {
         title: 'الامتثال القانوني',
         items: [
           'متوافق مع اللائحة العامة لحماية البيانات (GDPR)',
           'يتبع قوانين حماية البيانات الأردنية',
           'معتمد من هيئة تنظيم قطاع الاتصالات (TRC)',
-          'تحديثات منتظمة للسياسة'
-        ]
-      }
+          'تحديثات منتظمة للسياسة',
+        ],
+      },
     },
     en: {
       title: 'Privacy Policy',
       subtitle: 'Last Updated: March 16, 2026',
-      intro: 'At Wasel, we respect your privacy and are committed to protecting your personal data. This policy explains how we collect, use, and protect your information.',
-      
+      intro:
+        'At Wasel, we respect your privacy and are committed to protecting your personal data. This policy explains how we collect, use, and protect your information.',
+
       sections: [
         {
           icon: FileText,
@@ -108,8 +110,8 @@ export function PrivacyPolicy() {
             'Verification Data: National ID (Sanad) for government verification',
             'Location Data: For ride matching and live tracking',
             'Payment Information: Payment details (encrypted)',
-            'Usage Data: Trip history, preferences, ratings'
-          ]
+            'Usage Data: Trip history, preferences, ratings',
+          ],
         },
         {
           icon: Lock,
@@ -120,8 +122,8 @@ export function PrivacyPolicy() {
             'Process payments and bookings',
             'Improve security and prevent fraud',
             'Send trip notifications and updates',
-            'Personalize your experience (prayer times, gender preferences)'
-          ]
+            'Personalize your experience (prayer times, gender preferences)',
+          ],
         },
         {
           icon: Shield,
@@ -132,8 +134,8 @@ export function PrivacyPolicy() {
             'Two-factor authentication for driver accounts',
             'Regular security audits',
             'Limited access to personal data',
-            'Secure encrypted backups'
-          ]
+            'Secure encrypted backups',
+          ],
         },
         {
           icon: Eye,
@@ -143,8 +145,8 @@ export function PrivacyPolicy() {
             'With payment processors: Encrypted payment details',
             'With authorities: Legal requests only',
             'We never sell your data to third parties',
-            'No data sharing for advertising'
-          ]
+            'No data sharing for advertising',
+          ],
         },
         {
           icon: FileText,
@@ -155,35 +157,38 @@ export function PrivacyPolicy() {
             'Erasure: Delete your account and data',
             'Portability: Export your data in readable format',
             'Object: Refuse certain data processing',
-            'Withdraw: Cancel consent at any time'
-          ]
-        }
+            'Withdraw: Cancel consent at any time',
+          ],
+        },
       ],
-      
+
       contact: {
         title: 'Contact Us',
         subtitle: 'For privacy questions or data requests:',
         email: 'privacy@wasel.jo',
         phone: '+962 79 000 0000',
-        address: 'Amman, Jordan'
+        address: 'Amman, Jordan',
       },
-      
+
       compliance: {
         title: 'Legal Compliance',
         items: [
           'GDPR Compliant',
           'Follows Jordanian Data Protection Laws',
           'TRC (Telecommunications Regulatory Commission) Certified',
-          'Regular policy updates'
-        ]
-      }
-    }
+          'Regular policy updates',
+        ],
+      },
+    },
   };
 
   const t = content[language as 'ar' | 'en'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir={dir}>
+    <div
+      className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
+      dir={dir}
+    >
       {/* Header */}
       <div className="border-b border-white/10 bg-white/5 backdrop-blur-xl">
         <div className="max-w-4xl mx-auto px-4 py-8">
@@ -237,11 +242,17 @@ export function PrivacyPolicy() {
           </div>
           <p className="text-slate-300 mb-4">{t.contact.subtitle}</p>
           <div className="space-y-2">
-            <a href={`mailto:${t.contact.email}`} className="flex items-center gap-2 text-teal-400 hover:text-teal-300">
+            <a
+              href={`mailto:${t.contact.email}`}
+              className="flex items-center gap-2 text-teal-400 hover:text-teal-300"
+            >
               <Mail className="w-4 h-4" />
               <span>{t.contact.email}</span>
             </a>
-            <a href={`tel:${t.contact.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 text-teal-400 hover:text-teal-300">
+            <a
+              href={`tel:${t.contact.phone.replace(/\s/g, '')}`}
+              className="flex items-center gap-2 text-teal-400 hover:text-teal-300"
+            >
               <Phone className="w-4 h-4" />
               <span>{t.contact.phone}</span>
             </a>

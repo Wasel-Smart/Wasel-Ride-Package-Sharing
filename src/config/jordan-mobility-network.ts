@@ -216,18 +216,16 @@ export const JORDAN_MOBILITY_NETWORK: JordanRoute[] = [
 ];
 
 export function getRoute(routeId: string): JordanRoute | undefined {
-  return JORDAN_MOBILITY_NETWORK.find((route) => route.id === routeId);
+  return JORDAN_MOBILITY_NETWORK.find(route => route.id === routeId);
 }
 
 export function getRoutesFrom(city: string): JordanRoute[] {
-  return JORDAN_MOBILITY_NETWORK.filter(
-    (route) => route.origin.toLowerCase() === city.toLowerCase(),
-  );
+  return JORDAN_MOBILITY_NETWORK.filter(route => route.origin.toLowerCase() === city.toLowerCase());
 }
 
 export function getRoutesTo(city: string): JordanRoute[] {
   return JORDAN_MOBILITY_NETWORK.filter(
-    (route) => route.destination.toLowerCase() === city.toLowerCase(),
+    route => route.destination.toLowerCase() === city.toLowerCase(),
   );
 }
 
@@ -236,7 +234,7 @@ export function getRouteBetween(city1: string, city2: string): JordanRoute | und
   const c2 = city2.toLowerCase();
 
   return JORDAN_MOBILITY_NETWORK.find(
-    (route) =>
+    route =>
       (route.origin.toLowerCase() === c1 && route.destination.toLowerCase() === c2) ||
       (route.origin.toLowerCase() === c2 && route.destination.toLowerCase() === c1),
   );
@@ -244,7 +242,7 @@ export function getRouteBetween(city1: string, city2: string): JordanRoute | und
 
 export function getAllCities(): string[] {
   const cities = new Set<string>();
-  JORDAN_MOBILITY_NETWORK.forEach((route) => {
+  JORDAN_MOBILITY_NETWORK.forEach(route => {
     cities.add(route.origin);
     cities.add(route.destination);
   });
@@ -252,7 +250,7 @@ export function getAllCities(): string[] {
 }
 
 export function getPopularRoutes(): JordanRoute[] {
-  return JORDAN_MOBILITY_NETWORK.filter((route) => route.popularity === 'high');
+  return JORDAN_MOBILITY_NETWORK.filter(route => route.popularity === 'high');
 }
 
 export function calculateFare(

@@ -7,7 +7,10 @@ export interface ServicePriorityItem {
   priority: 'P1' | 'P2' | 'P3' | 'P4';
 }
 
-export const SERVICE_PRIORITY_GROUPS: { priority: ServicePriorityItem['priority']; items: ServicePriorityItem[] }[] = [
+export const SERVICE_PRIORITY_GROUPS: {
+  priority: ServicePriorityItem['priority'];
+  items: ServicePriorityItem[];
+}[] = [
   {
     priority: 'P1',
     items: [
@@ -15,7 +18,8 @@ export const SERVICE_PRIORITY_GROUPS: { priority: ServicePriorityItem['priority'
         id: 'mobility-os',
         label: 'Mobility OS',
         labelAr: 'نظام الحركة',
-        description: 'Real-time control layer for the network, supply balancing, and corridor orchestration.',
+        description:
+          'Real-time control layer for the network, supply balancing, and corridor orchestration.',
         descriptionAr: 'طبقة التحكم الفوري بالشبكة وتوازن العرض وإدارة الممرات.',
         priority: 'P1',
       },
@@ -135,4 +139,4 @@ export const SERVICE_PRIORITY_GROUPS: { priority: ServicePriorityItem['priority'
 ];
 
 export const P1_CRITICAL_SERVICES =
-  SERVICE_PRIORITY_GROUPS.find((group) => group.priority === 'P1')?.items ?? [];
+  SERVICE_PRIORITY_GROUPS.find(group => group.priority === 'P1')?.items ?? [];

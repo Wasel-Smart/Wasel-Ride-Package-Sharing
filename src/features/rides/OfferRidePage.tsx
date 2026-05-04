@@ -4,28 +4,32 @@ import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { createGenderMeta, OFFER_RIDE_DRAFT_KEY } from '../../pages/waselCoreRideData';
-import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
-import { createOfferRideDefaultForm, validateOfferRideStep } from '../../pages/waselCorePageHelpers';
+import {
+  CoreExperienceBanner,
+  DS,
+  PageShell,
+  Protected,
+  r,
+  SectionHead,
+} from '../../pages/waselServiceShared';
+import {
+  createOfferRideDefaultForm,
+  validateOfferRideStep,
+} from '../../pages/waselCorePageHelpers';
 import { readStoredObject } from '../../pages/waselCoreStorage';
 import {
   createConnectedRide,
   getConnectedRides,
   getConnectedStats,
 } from '../../services/journeyLogistics';
-import {
-  getBookingsForDriver,
-  type RideBookingRecord,
-} from '../../services/rideLifecycle';
+import { getBookingsForDriver, type RideBookingRecord } from '../../services/rideLifecycle';
 import { notificationsAPI } from '../../services/notifications.js';
 import { subscribeToRideBookingRealtime } from '../../services/rideRealtime';
 import { getDriverReadinessSummary } from '../../services/driverOnboarding';
 import { evaluateTrustCapability } from '../../services/trustRules';
 import { recordMovementActivity } from '../../services/movementMembership';
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
-import {
-  buildDriverRoutePlan,
-  getMarketplaceNodes,
-} from '../../config/wasel-movement-network';
+import { buildDriverRoutePlan, getMarketplaceNodes } from '../../config/wasel-movement-network';
 import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { OfferRideFormPanel } from './components/OfferRideFormPanel';
 import { OfferRideIncomingRequests } from './components/OfferRideIncomingRequests';
@@ -57,12 +61,16 @@ export function OfferRidePage() {
   );
   const routeIntelligence = useLiveRouteIntelligence({ from: form.from, to: form.to });
   const selectedSignal = routeIntelligence.selectedSignal;
-  const corridorCount = getConnectedRides().filter((ride) => ride.from === form.from && ride.to === form.to).length;
-  const recentPostedRides = getConnectedRides().filter((ride) => ride.from === form.from && ride.to === form.to).slice(0, 3);
+  const corridorCount = getConnectedRides().filter(
+    ride => ride.from === form.from && ride.to === form.to,
+  ).length;
+  const recentPostedRides = getConnectedRides()
+    .filter(ride => ride.from === form.from && ride.to === form.to)
+    .slice(0, 3);
   const incomingRequests = user
     ? getBookingsForDriver(user.id, getConnectedRides())
-        .filter((booking) => {
-          const liveBooking = rideBookings.find((item) => item.id === booking.id);
+        .filter(booking => {
+          const liveBooking = rideBookings.find(item => item.id === booking.id);
           return (liveBooking ?? booking).status === 'pending_driver';
         })
         .slice(0, 4)
@@ -87,7 +95,7 @@ export function OfferRidePage() {
   }, [form]);
 
   const updateForm = (key: string, value: string | number | boolean) => {
-    setForm((previous) => ({ ...previous, [key]: value }));
+    setForm(previous => ({ ...previous, [key]: value }));
   };
 
   const moveToStep = (targetStep: number) => {
@@ -149,13 +157,17 @@ export function OfferRidePage() {
         window.localStorage.removeItem(OFFER_RIDE_DRAFT_KEY);
       }
 
-      notificationsAPI.createNotification({
-        title: 'Ride offer posted',
-        message: form.acceptsPackages ? `Your ${form.from} to ${form.to} route is live for riders and packages.` : `Your ${form.from} to ${form.to} route is now live.`,
-        type: 'booking',
-        priority: 'high',
-        action_url: '/app/offer-ride',
-      }).catch(() => {});
+      notificationsAPI
+        .createNotification({
+          title: 'Ride offer posted',
+          message: form.acceptsPackages
+            ? `Your ${form.from} to ${form.to} route is live for riders and packages.`
+            : `Your ${form.from} to ${form.to} route is now live.`,
+          type: 'booking',
+          priority: 'high',
+          action_url: '/app/offer-ride',
+        })
+        .catch(() => {});
 
       if (permission === 'default') {
         requestPermission().catch(() => {});
@@ -163,7 +175,9 @@ export function OfferRidePage() {
       notifyTripConfirmed('Wasel Network', `${createdRide.from} to ${createdRide.to}`);
       void recordMovementActivity('route_published', driverPlan?.corridor.id ?? null);
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'We could not post the route right now.');
+      setFormError(
+        error instanceof Error ? error.message : 'We could not post the route right now.',
+      );
     } finally {
       setBusyState('idle');
     }
@@ -187,25 +201,95 @@ export function OfferRidePage() {
         />
 
         {(!offerGate.allowed || (form.acceptsPackages && !packageGate.allowed)) && (
-          <div style={{ marginBottom: 18, background: 'rgba(240,168,48,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: '#fff' }}>
+          <div
+            style={{
+              marginBottom: 18,
+              background: 'rgba(240,168,48,0.10)',
+              border: `1px solid ${DS.gold}35`,
+              borderRadius: r(16),
+              padding: '14px 16px',
+              color: '#fff',
+            }}
+          >
             <div style={{ fontWeight: 800, marginBottom: 6 }}>Finish trust setup</div>
-            <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>{(!offerGate.allowed ? offerGate.reason : packageGate.reason) ?? 'Finish account checks before going live.'}</div>
+            <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>
+              {(!offerGate.allowed ? offerGate.reason : packageGate.reason) ??
+                'Finish account checks before going live.'}
+            </div>
             <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
-              {driverReadiness.steps.filter((step) => !step.complete).slice(0, 3).map((step) => (
-                <div key={step.id} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${DS.border}`, borderRadius: r(12), padding: '10px 12px' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.8rem', color: '#fff' }}>{step.label}</div>
-                  <div style={{ color: DS.muted, fontSize: '0.75rem', marginTop: 4, lineHeight: 1.5 }}>{step.description}</div>
-                </div>
-              ))}
+              {driverReadiness.steps
+                .filter(step => !step.complete)
+                .slice(0, 3)
+                .map(step => (
+                  <div
+                    key={step.id}
+                    style={{
+                      background: 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${DS.border}`,
+                      borderRadius: r(12),
+                      padding: '10px 12px',
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: '0.8rem', color: '#fff' }}>
+                      {step.label}
+                    </div>
+                    <div
+                      style={{
+                        color: DS.muted,
+                        fontSize: '0.75rem',
+                        marginTop: 4,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {step.description}
+                    </div>
+                  </div>
+                ))}
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
-              <button onClick={() => nav('/app/trust')} style={{ height: 40, padding: '0 16px', borderRadius: '99px', border: 'none', background: DS.gradG, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Finish checks</button>
-              <button onClick={() => nav('/app/driver')} style={{ height: 40, padding: '0 16px', borderRadius: '99px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Open driver</button>
+              <button
+                onClick={() => nav('/app/trust')}
+                style={{
+                  height: 40,
+                  padding: '0 16px',
+                  borderRadius: '99px',
+                  border: 'none',
+                  background: DS.gradG,
+                  color: '#fff',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Finish checks
+              </button>
+              <button
+                onClick={() => nav('/app/driver')}
+                style={{
+                  height: 40,
+                  padding: '0 16px',
+                  borderRadius: '99px',
+                  border: 'none',
+                  background: DS.gradC,
+                  color: '#fff',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Open driver
+              </button>
             </div>
           </div>
         )}
 
-        <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 18 }}>
+        <div
+          className="sp-4col"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4,1fr)',
+            gap: 14,
+            marginBottom: 18,
+          }}
+        >
           {[
             {
               label: 'Seat price',
@@ -227,23 +311,74 @@ export function OfferRidePage() {
             },
             {
               label: 'Demand',
-              value: selectedSignal ? `${selectedSignal.forecastDemandScore}/100` : driverPlan ? `${driverPlan.corridor.predictedDemandScore}/100` : String(networkStats.ridesPosted),
-              detail: selectedSignal ? `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings | ${selectedSignal.livePackages} packages` : driverPlan ? 'Route demand score' : 'Network activity',
+              value: selectedSignal
+                ? `${selectedSignal.forecastDemandScore}/100`
+                : driverPlan
+                  ? `${driverPlan.corridor.predictedDemandScore}/100`
+                  : String(networkStats.ridesPosted),
+              detail: selectedSignal
+                ? `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings | ${selectedSignal.livePackages} packages`
+                : driverPlan
+                  ? 'Route demand score'
+                  : 'Network activity',
               color: DS.blue,
             },
-          ].map((item) => (
-            <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(18), border: `1px solid ${DS.border}`, padding: '18px 18px 16px', boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
-              <div style={{ color: item.color, fontWeight: 900, fontSize: '1.2rem', marginBottom: 4 }}>{item.value}</div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>{item.label}</div>
-              <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>{item.detail}</div>
+          ].map(item => (
+            <div
+              key={item.label}
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
+                borderRadius: r(18),
+                border: `1px solid ${DS.border}`,
+                padding: '18px 18px 16px',
+                boxShadow: '0 12px 28px rgba(0,0,0,0.16)',
+              }}
+            >
+              <div
+                style={{ color: item.color, fontWeight: 900, fontSize: '1.2rem', marginBottom: 4 }}
+              >
+                {item.value}
+              </div>
+              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>
+                {item.label}
+              </div>
+              <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
+                {item.detail}
+              </div>
             </div>
           ))}
         </div>
 
-        <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
-          <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
+        <div
+          className="sp-2col"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1.15fr 0.85fr',
+            gap: 14,
+            marginBottom: 18,
+          }}
+        >
+          <div
+            style={{
+              background: DS.card,
+              borderRadius: r(18),
+              padding: '18px 18px 16px',
+              border: `1px solid ${DS.border}`,
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}28`, display: 'grid', placeItems: 'center' }}>
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: r(12),
+                  background: `${DS.cyan}12`,
+                  border: `1px solid ${DS.cyan}28`,
+                  display: 'grid',
+                  placeItems: 'center',
+                }}
+              >
                 <Brain size={18} color={DS.cyan} />
               </div>
               <div>
@@ -255,20 +390,57 @@ export function OfferRidePage() {
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {[
-                selectedSignal?.recommendedReason ?? driverPlan?.waselBrainNote ?? 'Pick a route to see pricing tips.',
-                selectedSignal ? `Best window: ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.` : driverPlan?.corridor.autoGroupWindow ?? 'Shared matching starts when demand builds.',
-                selectedSignal ? `${selectedSignal.productionSources.slice(0, 3).join(' | ')}.` : driverPlan ? `${driverPlan.emptySeatCostJod} JOD lost per empty seat.` : 'Full seats matter most.',
-              ].map((line) => (
-                <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
+                selectedSignal?.recommendedReason ??
+                  driverPlan?.waselBrainNote ??
+                  'Pick a route to see pricing tips.',
+                selectedSignal
+                  ? `Best window: ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.`
+                  : (driverPlan?.corridor.autoGroupWindow ??
+                    'Shared matching starts when demand builds.'),
+                selectedSignal
+                  ? `${selectedSignal.productionSources.slice(0, 3).join(' | ')}.`
+                  : driverPlan
+                    ? `${driverPlan.emptySeatCostJod} JOD lost per empty seat.`
+                    : 'Full seats matter most.',
+              ].map(line => (
+                <div
+                  key={line}
+                  style={{
+                    borderRadius: r(14),
+                    border: `1px solid ${DS.border}`,
+                    background: DS.card2,
+                    padding: '12px 14px',
+                    color: '#fff',
+                    fontSize: '0.82rem',
+                    lineHeight: 1.65,
+                  }}
+                >
                   {line}
                 </div>
               ))}
             </div>
           </div>
 
-          <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
+          <div
+            style={{
+              background: DS.card,
+              borderRadius: r(18),
+              padding: '18px 18px 16px',
+              border: `1px solid ${DS.border}`,
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.green}12`, border: `1px solid ${DS.green}28`, display: 'grid', placeItems: 'center' }}>
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: r(12),
+                  background: `${DS.green}12`,
+                  border: `1px solid ${DS.green}28`,
+                  display: 'grid',
+                  placeItems: 'center',
+                }}
+              >
                 <Network size={18} color={DS.green} />
               </div>
               <div>
@@ -279,17 +451,39 @@ export function OfferRidePage() {
               </div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
-              {marketplaceNodes.map((node) => (
-                <div key={node.id} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>{node.title}</div>
-                  <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.55 }}>{node.summary}</div>
+              {marketplaceNodes.map(node => (
+                <div
+                  key={node.id}
+                  style={{
+                    borderRadius: r(14),
+                    border: `1px solid ${DS.border}`,
+                    background: DS.card2,
+                    padding: '12px 14px',
+                  }}
+                >
+                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>
+                    {node.title}
+                  </div>
+                  <div
+                    style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.55 }}
+                  >
+                    {node.summary}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="sp-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
+        <div
+          className="sp-3col"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            gap: 14,
+            marginBottom: 18,
+          }}
+        >
           {[
             {
               title: 'Company riders',
@@ -311,48 +505,169 @@ export function OfferRidePage() {
               action: () => nav('/app/analytics'),
               label: 'Open analytics',
             },
-          ].map((item) => (
-            <div key={item.title} style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
+          ].map(item => (
+            <div
+              key={item.title}
+              style={{
+                background: DS.card,
+                borderRadius: r(18),
+                padding: '18px 18px 16px',
+                border: `1px solid ${DS.border}`,
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: r(10), background: `${DS.blue}14`, border: `1px solid ${DS.blue}28`, display: 'grid', placeItems: 'center' }}>
+                <div
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: r(10),
+                    background: `${DS.blue}14`,
+                    border: `1px solid ${DS.blue}28`,
+                    display: 'grid',
+                    placeItems: 'center',
+                  }}
+                >
                   <Briefcase size={16} color={DS.blue} />
                 </div>
                 <div style={{ color: '#fff', fontWeight: 800 }}>{item.title}</div>
               </div>
-              <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>{item.detail}</div>
-              <button onClick={item.action} style={{ width: '100%', height: 40, marginTop: 12, borderRadius: '999px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+              <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>
+                {item.detail}
+              </div>
+              <button
+                onClick={item.action}
+                style={{
+                  width: '100%',
+                  height: 40,
+                  marginTop: 12,
+                  borderRadius: '999px',
+                  border: 'none',
+                  background: DS.gradC,
+                  color: '#fff',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
                 {item.label}
               </button>
             </div>
           ))}
         </div>
 
-        <OfferRideIncomingRequests incomingRequests={incomingRequests} onStatusMessage={setDraftMessage} />
+        <OfferRideIncomingRequests
+          incomingRequests={incomingRequests}
+          onStatusMessage={setDraftMessage}
+        />
 
         {submitted ? (
-          <div style={{ background: DS.card, borderRadius: r(20), padding: '60px 28px', textAlign: 'center', border: `1px solid ${DS.border}` }}>
+          <div
+            style={{
+              background: DS.card,
+              borderRadius: r(20),
+              padding: '60px 28px',
+              textAlign: 'center',
+              border: `1px solid ${DS.border}`,
+            }}
+          >
             <div style={{ fontSize: '4rem', marginBottom: 20 }}>OK</div>
-            <h2 style={{ color: DS.green, fontWeight: 900, fontSize: '1.5rem', margin: '0 0 12px' }}>Ride offer is live</h2>
+            <h2
+              style={{ color: DS.green, fontWeight: 900, fontSize: '1.5rem', margin: '0 0 12px' }}
+            >
+              Ride offer is live
+            </h2>
             <p style={{ color: DS.sub }}>
-              Your route from <strong style={{ color: '#fff' }}>{form.from}</strong> to <strong style={{ color: '#fff' }}>{form.to}</strong> is now part of the Wasel movement network.
+              Your route from <strong style={{ color: '#fff' }}>{form.from}</strong> to{' '}
+              <strong style={{ color: '#fff' }}>{form.to}</strong> is now part of the Wasel movement
+              network.
             </p>
             <p style={{ color: DS.muted, fontSize: '0.85rem', marginTop: 8 }}>
-              {form.acceptsPackages ? 'Passengers, packages, and service demand can now attach to this corridor.' : 'Passengers can now discover this route across the network.'}
+              {form.acceptsPackages
+                ? 'Passengers, packages, and service demand can now attach to this corridor.'
+                : 'Passengers can now discover this route across the network.'}
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, maxWidth: 760, margin: '22px auto 0' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: 12,
+                maxWidth: 760,
+                margin: '22px auto 0',
+              }}
+            >
               {[
-                { label: 'Corridor readiness', value: corridorCount > 0 ? `${corridorCount + 1} live routes` : 'First live route' },
-                { label: 'Driver playbook', value: driverPlan ? `${driverPlan.grossWhenFullJod} JOD when full` : 'Fill seats to unlock savings' },
-                { label: 'Delivery mode', value: form.acceptsPackages ? `Packages on (${form.packageCapacity})` : 'Passengers only' },
-              ].map((item) => (
-                <div key={item.label} style={{ background: DS.card2, borderRadius: r(14), padding: '14px 15px', border: `1px solid ${DS.border}` }}>
-                  <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem', marginTop: 6 }}>{item.value}</div>
+                {
+                  label: 'Corridor readiness',
+                  value:
+                    corridorCount > 0 ? `${corridorCount + 1} live routes` : 'First live route',
+                },
+                {
+                  label: 'Driver playbook',
+                  value: driverPlan
+                    ? `${driverPlan.grossWhenFullJod} JOD when full`
+                    : 'Fill seats to unlock savings',
+                },
+                {
+                  label: 'Delivery mode',
+                  value: form.acceptsPackages
+                    ? `Packages on (${form.packageCapacity})`
+                    : 'Passengers only',
+                },
+              ].map(item => (
+                <div
+                  key={item.label}
+                  style={{
+                    background: DS.card2,
+                    borderRadius: r(14),
+                    padding: '14px 15px',
+                    border: `1px solid ${DS.border}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      color: DS.muted,
+                      fontSize: '0.68rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                    }}
+                  >
+                    {item.label}
+                  </div>
+                  <div
+                    style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem', marginTop: 6 }}
+                  >
+                    {item.value}
+                  </div>
                 </div>
               ))}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginTop: 24 }}>
-              <button onClick={() => { setSubmitted(false); setStep(1); setForm(defaultForm); }} style={{ padding: '12px 28px', borderRadius: '99px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 700, fontFamily: DS.F, cursor: 'pointer' }}>Post another route</button>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 10,
+                flexWrap: 'wrap',
+                marginTop: 24,
+              }}
+            >
+              <button
+                onClick={() => {
+                  setSubmitted(false);
+                  setStep(1);
+                  setForm(defaultForm);
+                }}
+                style={{
+                  padding: '12px 28px',
+                  borderRadius: '99px',
+                  border: 'none',
+                  background: DS.gradC,
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontFamily: DS.F,
+                  cursor: 'pointer',
+                }}
+              >
+                Post another route
+              </button>
             </div>
           </div>
         ) : (
@@ -373,7 +688,9 @@ export function OfferRidePage() {
           />
         )}
 
-        <ServiceFlowPlaybook focusService={form.acceptsPackages ? 'deliver-package' : 'share-ride'} />
+        <ServiceFlowPlaybook
+          focusService={form.acceptsPackages ? 'deliver-package' : 'share-ride'}
+        />
       </PageShell>
     </Protected>
   );

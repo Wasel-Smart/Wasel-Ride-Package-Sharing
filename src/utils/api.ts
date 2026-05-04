@@ -58,7 +58,7 @@ export function getApiHeaders(accessToken?: string, requestId?: string): Headers
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export function generateId(prefix: string = 'id'): string {
@@ -269,10 +269,7 @@ export async function apiPatch<T = unknown>(
   });
 }
 
-export async function apiDelete<T = unknown>(
-  endpoint: string,
-  accessToken?: string,
-): Promise<T> {
+export async function apiDelete<T = unknown>(endpoint: string, accessToken?: string): Promise<T> {
   return apiRequest<T>(endpoint, {
     method: 'DELETE',
     headers: getApiHeaders(accessToken),

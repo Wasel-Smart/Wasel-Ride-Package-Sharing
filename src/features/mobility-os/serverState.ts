@@ -20,7 +20,9 @@ async function fetchMobilityServerSnapshot(): Promise<MobilitySystemSnapshot> {
   });
 }
 
-async function createMobilityServerBooking(request: BookingRequest): Promise<ServerBookingResponse> {
+async function createMobilityServerBooking(
+  request: BookingRequest,
+): Promise<ServerBookingResponse> {
   return requestEdgeJson<ServerBookingResponse>({
     path: `${MOBILITY_OS_BASE}/booking/create`,
     operation: 'Create Mobility OS booking',
@@ -49,13 +51,14 @@ function isMobilityFallbackEligible(error: unknown): boolean {
   }
 
   return (
-    error.message === 'Not authenticated' ||
-    error.message === 'Supabase client is not initialised'
+    error.message === 'Not authenticated' || error.message === 'Supabase client is not initialised'
   );
 }
 
 export function useMobilityOSServerState() {
-  const [snapshot, setSnapshot] = useState<MobilitySystemSnapshot>(() => mobilityOSRuntime.getSnapshot());
+  const [snapshot, setSnapshot] = useState<MobilitySystemSnapshot>(() =>
+    mobilityOSRuntime.getSnapshot(),
+  );
   const [loading, setLoading] = useState(true);
   const [source, setSource] = useState<'server' | 'fallback'>('fallback');
   const activeRef = useRef(true);

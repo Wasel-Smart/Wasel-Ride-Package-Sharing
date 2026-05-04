@@ -43,7 +43,10 @@ function normalizeAccountSettings(
   };
 }
 
-function readStoredAccountSettings(userId: string | null | undefined, fallback: AccountSettings): AccountSettings {
+function readStoredAccountSettings(
+  userId: string | null | undefined,
+  fallback: AccountSettings,
+): AccountSettings {
   if (typeof window === 'undefined') return fallback;
 
   try {

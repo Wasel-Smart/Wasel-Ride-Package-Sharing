@@ -17,9 +17,7 @@ import {
 } from './model';
 import { buildMobilityInternalSnapshot, toPublicMobilitySnapshot } from './snapshot';
 
-type EventListener<TType extends MobilityEventType> = (
-  event: MobilityEventEnvelope<TType>,
-) => void;
+type EventListener<TType extends MobilityEventType> = (event: MobilityEventEnvelope<TType>) => void;
 
 type SnapshotListener = () => void;
 
@@ -56,8 +54,8 @@ export class MobilityEventBus {
     this.history.unshift(event);
     this.history = this.history.slice(0, 60);
 
-    this.listeners.get(event.type)?.forEach((listener) => listener(event));
-    this.listenersAll.forEach((listener) => listener(event));
+    this.listeners.get(event.type)?.forEach(listener => listener(event));
+    this.listenersAll.forEach(listener => listener(event));
   }
 
   emit<TType extends MobilityEventType>(
@@ -129,9 +127,14 @@ export class PricingEngine {
     const dynamicSeatPrice = roundTo(this.getDynamicPrice(corridor.base_price_seat, corridor), 2);
     const dynamicCargoPrice = roundTo(this.getDynamicPrice(corridor.base_price_kg, corridor), 2);
     const previousSeatPrice = corridor.price_history.at(-1) ?? null;
-    const previousCargoPrice = previousSeatPrice === null
-      ? null
-      : roundTo((previousSeatPrice / Math.max(corridor.base_price_seat, 0.0001)) * corridor.base_price_kg, 2);
+    const previousCargoPrice =
+      previousSeatPrice === null
+        ? null
+        : roundTo(
+            (previousSeatPrice / Math.max(corridor.base_price_seat, 0.0001)) *
+              corridor.base_price_kg,
+            2,
+          );
 
     return {
       corridor: cloneCorridor(corridor),
@@ -155,7 +158,7 @@ export class CorridorService {
     private readonly pricingEngine: PricingEngine,
     seedCorridors: Corridor[],
   ) {
-    seedCorridors.forEach((corridor) => {
+    seedCorridors.forEach(corridor => {
       this.corridors.set(corridor.id, cloneCorridor(corridor));
     });
 
@@ -239,10 +242,7 @@ export class CorridorService {
     const corridor = this.corridors.get(corridorId);
     if (!corridor) return null;
 
-    corridor.price_history = trimHistory([
-      ...corridor.price_history,
-      roundTo(seatPrice, 2),
-    ]);
+    corridor.price_history = trimHistory([...corridor.price_history, roundTo(seatPrice, 2)]);
     corridor.updated_at = nowIso();
 
     return cloneCorridor(corridor);
@@ -250,7 +250,7 @@ export class CorridorService {
 
   buildProjections(): CorridorProjection[] {
     return this.getAll()
-      .map((corridor) => this.pricingEngine.project(corridor))
+      .map(corridor => this.pricingEngine.project(corridor))
       .sort((left, right) => right.demand_pressure - left.demand_pressure);
   }
 }
@@ -268,14 +268,15 @@ export class DemandEngine {
     const corridor = this.corridorService.getById(event.payload.corridor_id);
     if (!corridor) return;
 
-    const capacityBase = event.payload.type === 'seat'
-      ? Math.max(corridor.seats_total, 1)
-      : Math.max(corridor.cargo_total_kg, 1);
+    const capacityBase =
+      event.payload.type === 'seat'
+        ? Math.max(corridor.seats_total, 1)
+        : Math.max(corridor.cargo_total_kg, 1);
     const quantityShare = event.payload.quantity / capacityBase;
     const utilization = this.pricingEngine.getUtilization(corridor);
     const directionalBias = event.payload.type === 'seat' ? 0.05 : 0.03;
     const nextDemandIndex = clamp(
-      corridor.demand_index * 0.74 + quantityShare * 0.16 + utilization * 0.10 + directionalBias,
+      corridor.demand_index * 0.74 + quantityShare * 0.16 + utilization * 0.1 + directionalBias,
       0.18,
       1.85,
     );
@@ -301,7 +302,10 @@ export class PriceCoordinator {
   private handleDemandUpdated = (event: MobilityEventEnvelope<'DemandUpdated'>): void => {
     const updatedCorridor = this.corridorService.appendPricePoint(
       event.payload.corridor_id,
-      this.pricingEngine.getDynamicPrice(event.payload.corridor.base_price_seat, event.payload.corridor),
+      this.pricingEngine.getDynamicPrice(
+        event.payload.corridor.base_price_seat,
+        event.payload.corridor,
+      ),
     );
     if (!updatedCorridor) return;
 
@@ -352,9 +356,8 @@ export class BookingService {
     }
 
     const projection = this.pricingEngine.project(corridor);
-    const remaining = request.type === 'seat'
-      ? projection.seats_available
-      : projection.cargo_available_kg;
+    const remaining =
+      request.type === 'seat' ? projection.seats_available : projection.cargo_available_kg;
 
     if (request.quantity > remaining) {
       throw new Error(
@@ -396,7 +399,7 @@ export class RealtimeGateway {
 
   private handleCorridorUpdated = (): void => {
     this.snapshot = this.buildSnapshot();
-    this.listeners.forEach((listener) => listener());
+    this.listeners.forEach(listener => listener());
   };
 
   private buildSnapshot(): MobilityInternalSystemSnapshot {
@@ -422,7 +425,7 @@ export class RealtimeGateway {
   getInternalSnapshot(): MobilityInternalSystemSnapshot {
     return {
       ...this.snapshot,
-      corridors: this.snapshot.corridors.map((projection) => ({
+      corridors: this.snapshot.corridors.map(projection => ({
         ...projection,
         corridor: cloneCorridor(projection.corridor),
       })),
@@ -464,7 +467,11 @@ export class MobilityOSRuntime {
       options.seedCorridors ?? buildSeedCorridors(),
     );
     this.demandEngine = new DemandEngine(this.bus, this.corridorService, this.pricingEngine);
-    this.priceCoordinator = new PriceCoordinator(this.bus, this.corridorService, this.pricingEngine);
+    this.priceCoordinator = new PriceCoordinator(
+      this.bus,
+      this.corridorService,
+      this.pricingEngine,
+    );
     this.bookingService = new BookingService(this.bus, this.corridorService, this.pricingEngine);
     this.realtimeGateway = new RealtimeGateway(this.bus, this.corridorService, this.pricingEngine);
     this.realtimeGateway.refresh();
@@ -474,17 +481,18 @@ export class MobilityOSRuntime {
     if (typeof window === 'undefined' || this.generator) return;
 
     this.generator = window.setInterval(() => {
-      const corridors = this.corridorService.buildProjections().filter(
-        (corridor) => corridor.seats_available > 0 || corridor.cargo_available_kg > 0,
-      );
+      const corridors = this.corridorService
+        .buildProjections()
+        .filter(corridor => corridor.seats_available > 0 || corridor.cargo_available_kg > 0);
       if (corridors.length === 0) return;
 
       const target = corridors[Math.floor(Math.random() * corridors.length)];
       const cargoFlow = Math.random() > 0.6;
       const type: BookingType = cargoFlow ? 'cargo' : 'seat';
-      const quantity = type === 'seat'
-        ? Math.min(target.seats_available, Math.random() > 0.75 ? 2 : 1)
-        : Math.min(target.cargo_available_kg, Math.random() > 0.7 ? 20 : 10);
+      const quantity =
+        type === 'seat'
+          ? Math.min(target.seats_available, Math.random() > 0.75 ? 2 : 1)
+          : Math.min(target.cargo_available_kg, Math.random() > 0.7 ? 20 : 10);
 
       if (quantity <= 0) return;
 
@@ -638,7 +646,7 @@ export const mobilityOSRuntime = new MobilityOSRuntime();
 
 export function useMobilityOSProjection(): MobilitySystemSnapshot {
   return useSyncExternalStore(
-    (listener) => mobilityOSRuntime.subscribe(listener),
+    listener => mobilityOSRuntime.subscribe(listener),
     () => mobilityOSRuntime.getSnapshot(),
     () => mobilityOSRuntime.getSnapshot(),
   );

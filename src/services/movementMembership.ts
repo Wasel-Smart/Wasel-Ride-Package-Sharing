@@ -60,12 +60,23 @@ function readSnapshot(): MovementMembershipSnapshot {
 
     return {
       plusActive: Boolean(parsed.plusActive),
-      commuterPassRouteId: typeof parsed.commuterPassRouteId === 'string' ? parsed.commuterPassRouteId : null,
-      movementCredits: Number(parsed.movementCredits ?? DEFAULT_SNAPSHOT.movementCredits) || DEFAULT_SNAPSHOT.movementCredits,
-      streakDays: Number(parsed.streakDays ?? DEFAULT_SNAPSHOT.streakDays) || DEFAULT_SNAPSHOT.streakDays,
-      dailyRouteId: typeof parsed.dailyRouteId === 'string' ? parsed.dailyRouteId : DEFAULT_SNAPSHOT.dailyRouteId,
-      loyaltyTier: resolveTier(Number(parsed.movementCredits ?? DEFAULT_SNAPSHOT.movementCredits) || DEFAULT_SNAPSHOT.movementCredits),
-      lastActivityDate: typeof parsed.lastActivityDate === 'string' ? parsed.lastActivityDate : null,
+      commuterPassRouteId:
+        typeof parsed.commuterPassRouteId === 'string' ? parsed.commuterPassRouteId : null,
+      movementCredits:
+        Number(parsed.movementCredits ?? DEFAULT_SNAPSHOT.movementCredits) ||
+        DEFAULT_SNAPSHOT.movementCredits,
+      streakDays:
+        Number(parsed.streakDays ?? DEFAULT_SNAPSHOT.streakDays) || DEFAULT_SNAPSHOT.streakDays,
+      dailyRouteId:
+        typeof parsed.dailyRouteId === 'string'
+          ? parsed.dailyRouteId
+          : DEFAULT_SNAPSHOT.dailyRouteId,
+      loyaltyTier: resolveTier(
+        Number(parsed.movementCredits ?? DEFAULT_SNAPSHOT.movementCredits) ||
+          DEFAULT_SNAPSHOT.movementCredits,
+      ),
+      lastActivityDate:
+        typeof parsed.lastActivityDate === 'string' ? parsed.lastActivityDate : null,
     };
   } catch {
     return DEFAULT_SNAPSHOT;
@@ -150,7 +161,7 @@ export function startCommuterPass(routeId: string) {
     streakDays:
       streak.streakDays === 'increment'
         ? current.streakDays + 1
-        : streak.streakDays ?? current.streakDays,
+        : (streak.streakDays ?? current.streakDays),
     loyaltyTier: resolveTier(credits),
     lastActivityDate: streak.lastActivityDate,
   };
@@ -172,7 +183,7 @@ export function recordMovementActivity(
     streakDays:
       streak.streakDays === 'increment'
         ? current.streakDays + 1
-        : streak.streakDays ?? current.streakDays,
+        : (streak.streakDays ?? current.streakDays),
     loyaltyTier: resolveTier(credits),
     lastActivityDate: streak.lastActivityDate,
   };

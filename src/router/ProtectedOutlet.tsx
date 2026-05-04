@@ -5,9 +5,7 @@ import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 
 function buildReturnTo(location: ReturnType<typeof useLocation>) {
   const returnTo = `${location.pathname}${location.search}${location.hash}`;
-  return returnTo.startsWith('/') && !returnTo.startsWith('//')
-    ? returnTo
-    : '/app/find-ride';
+  return returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/app/find-ride';
 }
 
 function LoadingState() {

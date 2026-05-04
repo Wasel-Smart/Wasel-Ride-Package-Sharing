@@ -3,9 +3,7 @@
  * Uses inline SVG charts to avoid shipping a large charting runtime for one tab.
  */
 
-import {
-  ArrowUpRight, ArrowDownLeft, TrendingUp, TrendingDown, Zap,
-} from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, TrendingUp, TrendingDown, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { WaselColors } from '../../../tokens/wasel-tokens';
 import { PIE_COLORS } from './WalletShared';
@@ -44,18 +42,15 @@ function MiniTrendChart({
   spentLabel: string;
 }) {
   const chartData = data.slice(-6);
-  const maxValue = Math.max(
-    1,
-    ...chartData.flatMap((point) => [point.earned, point.spent]),
-  );
+  const maxValue = Math.max(1, ...chartData.flatMap(point => [point.earned, point.spent]));
   const innerWidth = BAR_CHART_WIDTH - BAR_CHART_MARGIN.left - BAR_CHART_MARGIN.right;
   const innerHeight = BAR_CHART_HEIGHT - BAR_CHART_MARGIN.top - BAR_CHART_MARGIN.bottom;
   const slotWidth = innerWidth / Math.max(chartData.length, 1);
   const groupWidth = Math.min(32, Math.max(18, slotWidth * 0.56));
   const barWidth = Math.max(7, Math.floor(groupWidth / 2) - 2);
   const ticks = Array.from({ length: 4 }, (_, index) => {
-    const value = maxValue * (1 - (index / 3));
-    const y = BAR_CHART_MARGIN.top + ((innerHeight / 3) * index);
+    const value = maxValue * (1 - index / 3);
+    const y = BAR_CHART_MARGIN.top + (innerHeight / 3) * index;
     return { value, y };
   });
 
@@ -90,7 +85,7 @@ function MiniTrendChart({
         ))}
 
         {chartData.map((point, index) => {
-          const x = BAR_CHART_MARGIN.left + (slotWidth * index) + ((slotWidth - groupWidth) / 2);
+          const x = BAR_CHART_MARGIN.left + slotWidth * index + (slotWidth - groupWidth) / 2;
           const earnedHeight = (point.earned / maxValue) * innerHeight;
           const spentHeight = (point.spent / maxValue) * innerHeight;
           const baseline = BAR_CHART_MARGIN.top + innerHeight;
@@ -118,7 +113,7 @@ function MiniTrendChart({
                 <title>{`${point.month}: ${spentLabel} ${point.spent.toFixed(2)}`}</title>
               </rect>
               <text
-                x={x + (groupWidth / 2)}
+                x={x + groupWidth / 2}
                 y={BAR_CHART_HEIGHT - 10}
                 textAnchor="middle"
                 fill="#94A3B8"
@@ -165,29 +160,30 @@ function MiniCategoryDonut({ data }: { data: CategoryPoint[] }) {
         stroke="rgba(148, 163, 184, 0.18)"
         strokeWidth={DONUT_STROKE}
       />
-      {total > 0 && data.map((item) => {
-        const arc = (item.value / total) * circumference;
-        const circle = (
-          <circle
-            key={item.name}
-            cx="60"
-            cy="60"
-            r={DONUT_RADIUS}
-            fill="none"
-            stroke={item.color}
-            strokeWidth={DONUT_STROKE}
-            strokeDasharray={`${arc} ${circumference - arc}`}
-            strokeDashoffset={-offset}
-            transform="rotate(-90 60 60)"
-            strokeLinecap="round"
-          >
-            <title>{`${item.name}: ${item.value.toFixed(2)}`}</title>
-          </circle>
-        );
+      {total > 0 &&
+        data.map(item => {
+          const arc = (item.value / total) * circumference;
+          const circle = (
+            <circle
+              key={item.name}
+              cx="60"
+              cy="60"
+              r={DONUT_RADIUS}
+              fill="none"
+              stroke={item.color}
+              strokeWidth={DONUT_STROKE}
+              strokeDasharray={`${arc} ${circumference - arc}`}
+              strokeDashoffset={-offset}
+              transform="rotate(-90 60 60)"
+              strokeLinecap="round"
+            >
+              <title>{`${item.name}: ${item.value.toFixed(2)}`}</title>
+            </circle>
+          );
 
-        offset += arc;
-        return circle;
-      })}
+          offset += arc;
+          return circle;
+        })}
       <text x="60" y="55" textAnchor="middle" fill="#F8FAFC" fontSize="16" fontWeight="700">
         {total.toFixed(0)}
       </text>
@@ -224,14 +220,18 @@ export function InsightsTab({ insights, isRTL, t }: InsightsTabProps) {
             <ArrowUpRight className="w-4 h-4 text-red-400" />
             <span className="text-xs text-muted-foreground">{t.spent}</span>
           </div>
-          <p className="text-2xl font-bold text-foreground tabular-nums">{insights.thisMonthSpent.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-foreground tabular-nums">
+            {insights.thisMonthSpent.toFixed(2)}
+          </p>
           <div className="flex items-center gap-1 mt-1">
             {insights.changePercent > 0 ? (
               <TrendingUp className="w-3 h-3 text-red-400" />
             ) : (
               <TrendingDown className="w-3 h-3 text-green-400" />
             )}
-            <span className={`text-xs ${insights.changePercent > 0 ? 'text-red-400' : 'text-green-400'}`}>
+            <span
+              className={`text-xs ${insights.changePercent > 0 ? 'text-red-400' : 'text-green-400'}`}
+            >
               {Math.abs(insights.changePercent)}% {t.vsLastMonth}
             </span>
           </div>
@@ -241,7 +241,9 @@ export function InsightsTab({ insights, isRTL, t }: InsightsTabProps) {
             <ArrowDownLeft className="w-4 h-4 text-green-400" />
             <span className="text-xs text-muted-foreground">{t.earned}</span>
           </div>
-          <p className="text-2xl font-bold text-foreground tabular-nums">{insights.thisMonthEarned.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-foreground tabular-nums">
+            {insights.thisMonthEarned.toFixed(2)}
+          </p>
           <div className="flex items-center gap-1 mt-1">
             <Zap className="w-3 h-3 text-teal-400" />
             <span className="text-xs text-teal-400">
@@ -273,13 +275,17 @@ export function InsightsTab({ insights, isRTL, t }: InsightsTabProps) {
             <div className="flex items-center gap-6">
               <MiniCategoryDonut data={categoryData} />
               <div className="flex-1 space-y-2">
-                {categoryData.map((item) => (
+                {categoryData.map(item => (
                   <div key={item.name} className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full" style={{ background: item.color }} />
-                      <span className="text-xs text-muted-foreground capitalize">{item.name.replace(/_/g, ' ')}</span>
+                      <span className="text-xs text-muted-foreground capitalize">
+                        {item.name.replace(/_/g, ' ')}
+                      </span>
                     </div>
-                    <span className="text-xs font-medium text-foreground tabular-nums">{item.value.toFixed(2)} {t.jod}</span>
+                    <span className="text-xs font-medium text-foreground tabular-nums">
+                      {item.value.toFixed(2)} {t.jod}
+                    </span>
                   </div>
                 ))}
               </div>

@@ -7,7 +7,9 @@
    RESET & BASE (Modern CSS Reset)
    ═══════════════════════════════════════════════════════════════ */
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -19,25 +21,27 @@ html {
   text-rendering: optimizeLegibility;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
-  
+
   /* Prevent horizontal scroll */
   overflow-x: hidden;
-  
+
   /* Smooth scrolling */
   scroll-behavior: smooth;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   font-size: 16px; /* Base font size */
   line-height: 1.5;
-  color: #0F172A;
-  background: #F8FAFC;
+  color: #0f172a;
+  background: #f8fafc;
   overflow-x: hidden;
-  
+
   /* iOS-specific */
   -webkit-overflow-scrolling: touch;
-  
+
   /* Prevent pull-to-refresh on mobile */
   overscroll-behavior-y: contain;
 }
@@ -59,7 +63,7 @@ body {
 /* Viewport meta for mobile */
 @viewport {
   width: device-width;
-  zoom: 1.0;
+  zoom: 1;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -73,7 +77,13 @@ body {
 }
 
 /* Touch targets - minimum 44x44px (WCAG) */
-button, a, input, select, textarea, [role="button"], [role="link"] {
+button,
+a,
+input,
+select,
+textarea,
+[role='button'],
+[role='link'] {
   min-height: 44px;
   min-width: 44px;
 }
@@ -125,14 +135,20 @@ p {
   line-height: 1.625;
 }
 
-small, .caption {
+small,
+.caption {
   font-size: 0.875rem; /* 14px */
   line-height: 1.5;
 }
 
 /* Arabic text support */
-[dir="rtl"] {
-  font-family: 'Tajawal', 'Cairo', 'Almarai', -apple-system, sans-serif;
+[dir='rtl'] {
+  font-family:
+    'Tajawal',
+    'Cairo',
+    'Almarai',
+    -apple-system,
+    sans-serif;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -229,19 +245,35 @@ small, .caption {
   }
 }
 
-.grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
-.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-1 {
+  grid-template-columns: repeat(1, 1fr);
+}
+.grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
 
 @media (min-width: 768px) {
-  .md\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-  .md\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-  .md\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .md\:grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 @media (min-width: 1024px) {
-  .lg\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-  .lg\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
-  .lg\:grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .lg\:grid-cols-5 {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -308,7 +340,7 @@ small, .caption {
 
 /* Focus visible (keyboard navigation) */
 :focus-visible {
-  outline: 2px solid #00C8E8;
+  outline: 2px solid #00c8e8;
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -356,8 +388,8 @@ small, .caption {
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   body {
-    background: #0B1120;
-    color: #F8FAFC;
+    background: #0b1120;
+    color: #f8fafc;
   }
 }
 
@@ -387,7 +419,9 @@ img {
 
 /* iOS input zoom fix */
 @supports (-webkit-touch-callout: none) {
-  input, select, textarea {
+  input,
+  select,
+  textarea {
     font-size: 16px !important;
   }
 }
@@ -404,8 +438,9 @@ img {
   body {
     user-select: none;
   }
-  
-  a, button {
+
+  a,
+  button {
     user-select: none;
   }
 }
@@ -423,21 +458,22 @@ img {
     box-shadow: none !important;
     text-shadow: none !important;
   }
-  
+
   a,
   a:visited {
     text-decoration: underline;
   }
-  
+
   a[href]::after {
-    content: " (" attr(href) ")";
+    content: ' (' attr(href) ')';
   }
-  
+
   img {
     page-break-inside: avoid;
   }
-  
-  h2, h3 {
+
+  h2,
+  h3 {
     page-break-after: avoid;
   }
 }

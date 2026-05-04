@@ -12,12 +12,7 @@
  */
 import { Suspense } from 'react';
 import { AlertTriangle, LoaderCircle, SearchX } from 'lucide-react';
-import {
-  createBrowserRouter,
-  isRouteErrorResponse,
-  Navigate,
-  useRouteError,
-} from 'react-router';
+import { createBrowserRouter, isRouteErrorResponse, Navigate, useRouteError } from 'react-router';
 import { Button } from './components/ui/button';
 import { WaselStateCard } from './components/system/WaselStateCard';
 import { useLanguage } from './contexts/LanguageContext';
@@ -33,7 +28,11 @@ function PageLoader() {
     <WaselStateCard
       eyebrow={ar ? 'تحميل' : 'Loading'}
       title={ar ? 'نفتح شاشة واصل التالية' : 'Opening the next Wasel view'}
-      description={ar ? 'نجهز المسار ونحمل بيانات الشاشة ونستعيد آخر سياق لك.' : 'We are preparing the route, loading the screen data, and restoring your last context.'}
+      description={
+        ar
+          ? 'نجهز المسار ونحمل بيانات الشاشة ونستعيد آخر سياق لك.'
+          : 'We are preparing the route, loading the screen data, and restoring your last context.'
+      }
       icon={LoaderCircle}
       loading
       minHeight="60vh"
@@ -43,8 +42,7 @@ function PageLoader() {
 
 function lazy(
   importFn: () => Promise<
-    | { default: React.ComponentType<any> }
-    | { [key: string]: React.ComponentType<any> }
+    { default: React.ComponentType<any> } | { [key: string]: React.ComponentType<any> }
   >,
   exportName?: string,
 ) {
@@ -113,14 +111,18 @@ function NotFound() {
     <WaselStateCard
       eyebrow="404"
       title={ar ? 'الصفحة غير موجودة' : 'Page not found'}
-      description={ar ? 'الصفحة المطلوبة غير متاحة أو أن الرابط قديم.' : 'The page you requested is unavailable or the link is outdated.'}
+      description={
+        ar
+          ? 'الصفحة المطلوبة غير متاحة أو أن الرابط قديم.'
+          : 'The page you requested is unavailable or the link is outdated.'
+      }
       icon={SearchX}
       minHeight="80vh"
-      actions={(
+      actions={
         <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
           <a href="/">{ar ? 'العودة إلى واصل' : 'Back to Wasel'}</a>
         </Button>
-      )}
+      }
     />
   );
 }
@@ -146,24 +148,31 @@ function RouteErrorFallback() {
       icon={AlertTriangle}
       tone="danger"
       minHeight="100vh"
-      actions={(
+      actions={
         <>
           <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
             <a href="/app/find-ride">{ar ? 'ابحث عن مشوار' : 'Find a ride'}</a>
           </Button>
-          <Button asChild variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
+          <Button
+            asChild
+            variant="outline"
+            className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+          >
             <a href="/">{ar ? 'العودة للرئيسية' : 'Go home'}</a>
           </Button>
         </>
-      )}
-      footer={ar ? 'إذا تكرر هذا، فأعد تحميل التطبيق أو افتح التدفق مرة أخرى من الشاشة الرئيسية.' : 'If this repeats, reload the app shell or reopen the flow from the home screen.'}
+      }
+      footer={
+        ar
+          ? 'إذا تكرر هذا، فأعد تحميل التطبيق أو افتح التدفق مرة أخرى من الشاشة الرئيسية.'
+          : 'If this repeats, reload the app shell or reopen the flow from the home screen.'
+      }
     />
   );
 }
 
 // ── Route children factory ────────────────────────────────────────────────────
 const buildMainChildren = () => [
-
   // ── Landing ──────────────────────────────────────────────────────────────
   {
     index: true,
@@ -171,22 +180,25 @@ const buildMainChildren = () => [
   },
 
   // ── Auth ─────────────────────────────────────────────────────────────────
-  { path: 'auth',          lazy: lazy(() => import('./pages/WaselAuth')) },
+  { path: 'auth', lazy: lazy(() => import('./pages/WaselAuth')) },
   { path: 'auth/callback', lazy: lazy(() => import('./pages/WaselAuthCallback')) },
 
   // ── Dashboard ────────────────────────────────────────────────────────────
   { path: 'dashboard', Component: () => <RedirectTo to="/app" /> },
-  { path: 'home',      Component: () => <RedirectTo to="/app" /> },
+  { path: 'home', Component: () => <RedirectTo to="/app" /> },
 
   {
     Component: ProtectedOutlet,
     children: [
-      { path: 'find-ride',  lazy: lazy(() => import('./features/rides/FindRidePage')) },
+      { path: 'find-ride', lazy: lazy(() => import('./features/rides/FindRidePage')) },
       { path: 'offer-ride', lazy: lazy(() => import('./features/rides/OfferRidePage')) },
-      { path: 'post-ride',  Component: () => <RedirectTo to="/app/offer-ride" /> },
+      { path: 'post-ride', Component: () => <RedirectTo to="/app/offer-ride" /> },
       { path: 'my-trips', lazy: lazy(() => import('./features/trips/MyTripsPage')) },
       { path: 'booking-requests', Component: () => <RedirectTo to="/app/my-trips?tab=rides" /> },
-      { path: 'live-trip', lazy: lazy(() => import('./components/LiveTripTracking'), 'LiveTripTracking') },
+      {
+        path: 'live-trip',
+        lazy: lazy(() => import('./components/LiveTripTracking'), 'LiveTripTracking'),
+      },
     ],
   },
 
@@ -207,10 +219,10 @@ const buildMainChildren = () => [
     Component: ProtectedOutlet,
     children: [
       { path: 'bus', lazy: lazy(() => import('./features/bus/BusPage'), 'BusPage') },
-      { path: 'packages',     lazy: lazy(() => import('./features/packages/PackagesPage')) },
-      { path: 'awasel/send',  Component: () => <RedirectTo to="/app/packages" /> },
+      { path: 'packages', lazy: lazy(() => import('./features/packages/PackagesPage')) },
+      { path: 'awasel/send', Component: () => <RedirectTo to="/app/packages" /> },
       { path: 'awasel/track', Component: () => <RedirectTo to="/app/packages" /> },
-      { path: 'raje3',          lazy: lazy(() => import('./features/raje3/ReturnMatching')) },
+      { path: 'raje3', lazy: lazy(() => import('./features/raje3/ReturnMatching')) },
       { path: 'services/raje3', Component: () => <RedirectTo to="/app/raje3" /> },
     ],
   },
@@ -222,12 +234,24 @@ const buildMainChildren = () => [
   // ── Raje3 Returns ─────────────────────────────────────────────────────────
 
   // ── B2B / B2S ─────────────────────────────────────────────────────────────
-  { path: 'services/corporate', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
-  { path: 'services/school',    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
-  { path: 'innovation-hub',     lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
-  { path: 'analytics',          lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
-  { path: 'mobility-os',        lazy: lazy(() => import('./features/mobility-os')) },
-  { path: 'ai-intelligence',    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
+  {
+    path: 'services/corporate',
+    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+  },
+  {
+    path: 'services/school',
+    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+  },
+  {
+    path: 'innovation-hub',
+    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+  },
+  { path: 'analytics', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
+  { path: 'mobility-os', lazy: lazy(() => import('./features/mobility-os')) },
+  {
+    path: 'ai-intelligence',
+    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+  },
 
   // ── Wallet ────────────────────────────────────────────────────────────────
 
@@ -248,7 +272,7 @@ const buildMainChildren = () => [
   {
     Component: ProtectedOutlet,
     children: [
-      { path: 'wallet',   lazy: lazy(() => import('./features/wallet'), 'WalletDashboard') },
+      { path: 'wallet', lazy: lazy(() => import('./features/wallet'), 'WalletDashboard') },
       { path: 'payments', Component: () => <RedirectTo to="/app/wallet" /> },
       { path: 'plus', lazy: lazy(() => import('./features/plus/WaselPlusPage')) },
       { path: 'profile', lazy: lazy(() => import('./features/profile/ProfilePage')) },
@@ -264,10 +288,10 @@ const buildMainChildren = () => [
   },
 
   // ── Legal ─────────────────────────────────────────────────────────────────
-  { path: 'privacy',        lazy: lazy(() => import('./features/legal/PrivacyPolicy'), 'PrivacyPolicy') },
-  { path: 'terms',          lazy: lazy(() => import('./features/legal/TermsOfService'), 'TermsOfService') },
-  { path: 'legal/privacy',  Component: () => <RedirectTo to="/app/privacy" /> },
-  { path: 'legal/terms',    Component: () => <RedirectTo to="/app/terms" /> },
+  { path: 'privacy', lazy: lazy(() => import('./features/legal/PrivacyPolicy'), 'PrivacyPolicy') },
+  { path: 'terms', lazy: lazy(() => import('./features/legal/TermsOfService'), 'TermsOfService') },
+  { path: 'legal/privacy', Component: () => <RedirectTo to="/app/privacy" /> },
+  { path: 'legal/terms', Component: () => <RedirectTo to="/app/terms" /> },
 
   // ── Moderation ────────────────────────────────────────────────────────────
   { path: 'moderation', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },

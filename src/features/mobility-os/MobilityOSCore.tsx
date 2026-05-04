@@ -69,16 +69,19 @@ export default function MobilityOSCore() {
 
   useEffect(() => {
     if (!snapshot.corridors.length) return;
-    if (snapshot.corridors.some((corridor) => corridor.corridor.id === selectedCorridorId)) return;
+    if (snapshot.corridors.some(corridor => corridor.corridor.id === selectedCorridorId)) return;
     setSelectedCorridorId(snapshot.corridors[0].corridor.id);
   }, [selectedCorridorId, snapshot.corridors]);
 
   useEffect(() => {
-    setQuantity((current) => Math.max(1, current));
+    setQuantity(current => Math.max(1, current));
   }, [bookingMode]);
 
   const selectedCorridor = useMemo(
-    () => snapshot.corridors.find((corridor) => corridor.corridor.id === selectedCorridorId) ?? snapshot.corridors[0] ?? null,
+    () =>
+      snapshot.corridors.find(corridor => corridor.corridor.id === selectedCorridorId) ??
+      snapshot.corridors[0] ??
+      null,
     [selectedCorridorId, snapshot.corridors],
   );
 
@@ -155,18 +158,60 @@ export default function MobilityOSCore() {
     >
       <div style={{ maxWidth: 1360, margin: '0 auto', display: 'grid', gap: 18 }}>
         <section style={panelStyle({ padding: 26, borderRadius: 34 })}>
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 14% 12%, rgba(88,221,255,0.12), transparent 20%), radial-gradient(circle at 82% 24%, rgba(255,190,92,0.1), transparent 16%)' }} />
-          <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'minmax(0, 1.25fr) minmax(320px, 0.95fr)', gap: 18 }}>
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              background:
+                'radial-gradient(circle at 14% 12%, rgba(88,221,255,0.12), transparent 20%), radial-gradient(circle at 82% 24%, rgba(255,190,92,0.1), transparent 16%)',
+            }}
+          />
+          <div
+            style={{
+              position: 'relative',
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1.25fr) minmax(320px, 0.95fr)',
+              gap: 18,
+            }}
+          >
             <div style={{ display: 'grid', gap: 14 }}>
-              <div style={{ display: 'inline-flex', width: 'fit-content', padding: '10px 14px', borderRadius: R.full, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.04)' }}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  width: 'fit-content',
+                  padding: '10px 14px',
+                  borderRadius: R.full,
+                  border: `1px solid ${C.border}`,
+                  background: 'rgba(255,255,255,0.04)',
+                }}
+              >
                 <WaselLogo size={42} theme="light" variant="full" />
               </div>
               {subheading('Mobility Operating System')}
-              <h1 style={{ margin: 0, fontSize: 'clamp(2.4rem, 4vw, 4.25rem)', lineHeight: 0.95, letterSpacing: '-0.05em', maxWidth: 760 }}>
+              <h1
+                style={{
+                  margin: 0,
+                  fontSize: 'clamp(2.4rem, 4vw, 4.25rem)',
+                  lineHeight: 0.95,
+                  letterSpacing: '-0.05em',
+                  maxWidth: 760,
+                }}
+              >
                 Corridor capacity exchange for Jordan, projected from live demand and availability.
               </h1>
-              <p style={{ margin: 0, color: C.textSub, fontSize: '1rem', lineHeight: 1.76, maxWidth: 780 }}>
-                The page stays focused on corridor state, capacity pressure, and active availability. The interface only renders projection data that the simulation runtime has already resolved.
+              <p
+                style={{
+                  margin: 0,
+                  color: C.textSub,
+                  fontSize: '1rem',
+                  lineHeight: 1.76,
+                  maxWidth: 780,
+                }}
+              >
+                The page stays focused on corridor state, capacity pressure, and active
+                availability. The interface only renders projection data that the simulation runtime
+                has already resolved.
               </p>
 
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -175,7 +220,7 @@ export default function MobilityOSCore() {
                   'continuous capacity updates',
                   'seat and cargo visibility',
                   'Jordan network coverage',
-                ].map((item) => (
+                ].map(item => (
                   <div
                     key={item}
                     style={{
@@ -193,7 +238,13 @@ export default function MobilityOSCore() {
                 ))}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: 12,
+                }}
+              >
                 {[
                   {
                     title: 'Signal Field',
@@ -213,27 +264,68 @@ export default function MobilityOSCore() {
                     icon: TimerReset,
                     accent: C.green,
                   },
-                ].map((item) => (
-                  <article key={item.title} style={panelStyle({ padding: 18, borderRadius: 22, background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))' })}>
-                    <div style={{ width: 42, height: 42, borderRadius: 14, background: `${item.accent}18`, border: `1px solid ${item.accent}2f`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                ].map(item => (
+                  <article
+                    key={item.title}
+                    style={panelStyle({
+                      padding: 18,
+                      borderRadius: 22,
+                      background:
+                        'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
+                    })}
+                  >
+                    <div
+                      style={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: 14,
+                        background: `${item.accent}18`,
+                        border: `1px solid ${item.accent}2f`,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
                       <item.icon size={18} color={item.accent} />
                     </div>
                     <h3 style={{ margin: '14px 0 8px', fontSize: '1rem' }}>{item.title}</h3>
-                    <p style={{ margin: 0, color: C.textSub, lineHeight: 1.64, fontSize: '0.9rem' }}>{item.body}</p>
+                    <p
+                      style={{ margin: 0, color: C.textSub, lineHeight: 1.64, fontSize: '0.9rem' }}
+                    >
+                      {item.body}
+                    </p>
                   </article>
                 ))}
               </div>
             </div>
 
             <div style={panelStyle({ padding: 18, borderRadius: 30, minHeight: 420 })}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 12 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  alignItems: 'center',
+                  marginBottom: 12,
+                }}
+              >
                 <div>
                   {subheading('Realtime Projection')}
-                  <div style={{ marginTop: 6, fontSize: '1.2rem', fontWeight: 900 }}>Jordan corridor signal field</div>
+                  <div style={{ marginTop: 6, fontSize: '1.2rem', fontWeight: 900 }}>
+                    Jordan corridor signal field
+                  </div>
                 </div>
                 <div
                   data-testid="mobility-os-runtime-chip"
-                  style={{ padding: '8px 10px', borderRadius: R.full, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.03)', fontFamily: FM, color: source === 'server' ? C.green : C.gold, fontSize: '0.78rem' }}
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: R.full,
+                    border: `1px solid ${C.border}`,
+                    background: 'rgba(255,255,255,0.03)',
+                    fontFamily: FM,
+                    color: source === 'server' ? C.green : C.gold,
+                    fontSize: '0.78rem',
+                  }}
                 >
                   {runtimeModeLabel}
                 </div>
@@ -253,20 +345,58 @@ export default function MobilityOSCore() {
                 utilization={selectedCorridor?.utilization}
               />
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
-                <div style={{ borderRadius: 18, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
-                  <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: 10,
+                }}
+              >
+                <div
+                  style={{
+                    borderRadius: 18,
+                    border: `1px solid ${C.borderFaint}`,
+                    background: 'rgba(255,255,255,0.03)',
+                    padding: '12px 13px',
+                  }}
+                >
+                  <div
+                    style={{
+                      color: C.textMuted,
+                      fontSize: '0.72rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.12em',
+                    }}
+                  >
                     Selected Corridor
                   </div>
                   <div style={{ marginTop: 6, fontWeight: 800 }}>
-                    {selectedCorridor ? `${selectedCorridor.corridor.origin} -> ${selectedCorridor.corridor.destination}` : 'No corridor selected'}
+                    {selectedCorridor
+                      ? `${selectedCorridor.corridor.origin} -> ${selectedCorridor.corridor.destination}`
+                      : 'No corridor selected'}
                   </div>
                 </div>
-                <div style={{ borderRadius: 18, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
-                  <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                <div
+                  style={{
+                    borderRadius: 18,
+                    border: `1px solid ${C.borderFaint}`,
+                    background: 'rgba(255,255,255,0.03)',
+                    padding: '12px 13px',
+                  }}
+                >
+                  <div
+                    style={{
+                      color: C.textMuted,
+                      fontSize: '0.72rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.12em',
+                    }}
+                  >
                     Projection Target
                   </div>
-                  <div style={{ marginTop: 6, fontWeight: 800 }}>{snapshot.metrics.event_latency_target_ms}ms refresh target</div>
+                  <div style={{ marginTop: 6, fontWeight: 800 }}>
+                    {snapshot.metrics.event_latency_target_ms}ms refresh target
+                  </div>
                 </div>
               </div>
 
@@ -276,7 +406,8 @@ export default function MobilityOSCore() {
                   marginTop: 10,
                   borderRadius: 18,
                   border: `1px solid ${source === 'server' ? `${C.green}30` : `${C.gold}30`}`,
-                  background: source === 'server' ? 'rgba(71,214,158,0.08)' : 'rgba(255,190,92,0.08)',
+                  background:
+                    source === 'server' ? 'rgba(71,214,158,0.08)' : 'rgba(255,190,92,0.08)',
                   padding: '12px 13px',
                 }}
               >
@@ -300,7 +431,9 @@ export default function MobilityOSCore() {
                   {runtimeModeLabel}
                   {loading ? ' / synchronizing' : ''}
                 </div>
-                <div style={{ marginTop: 6, color: C.textSub, fontSize: '0.83rem', lineHeight: 1.6 }}>
+                <div
+                  style={{ marginTop: 6, color: C.textSub, fontSize: '0.83rem', lineHeight: 1.6 }}
+                >
                   {runtimeModeBody}
                 </div>
               </div>
@@ -308,38 +441,103 @@ export default function MobilityOSCore() {
           </div>
         </section>
 
-        <section style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))' }}>
-          {marketMetrics.map((metric) => (
+        <section
+          style={{
+            display: 'grid',
+            gap: 14,
+            gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+          }}
+        >
+          {marketMetrics.map(metric => (
             <article key={metric.label} style={statCardStyle(metric.accent)}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 14, background: `${metric.accent}18`, border: `1px solid ${metric.accent}2f`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 14,
+                    background: `${metric.accent}18`,
+                    border: `1px solid ${metric.accent}2f`,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <metric.icon size={18} color={metric.accent} />
                 </div>
-                <div style={{ fontSize: '1.58rem', lineHeight: 1, fontWeight: 900, color: metric.accent }}>{metric.value}</div>
+                <div
+                  style={{
+                    fontSize: '1.58rem',
+                    lineHeight: 1,
+                    fontWeight: 900,
+                    color: metric.accent,
+                  }}
+                >
+                  {metric.value}
+                </div>
               </div>
               <div style={{ marginTop: 14, fontWeight: 800 }}>{metric.label}</div>
-              <div style={{ marginTop: 8, color: C.textSub, fontSize: '0.86rem', lineHeight: 1.62 }}>{metric.detail}</div>
+              <div
+                style={{ marginTop: 8, color: C.textSub, fontSize: '0.86rem', lineHeight: 1.62 }}
+              >
+                {metric.detail}
+              </div>
             </article>
           ))}
         </section>
 
-        <section style={{ display: 'grid', gap: 18, gridTemplateColumns: 'minmax(0, 1.3fr) minmax(330px, 0.9fr)' }}>
+        <section
+          style={{
+            display: 'grid',
+            gap: 18,
+            gridTemplateColumns: 'minmax(0, 1.3fr) minmax(330px, 0.9fr)',
+          }}
+        >
           <div style={panelStyle({ padding: 18, borderRadius: 30 })}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 14 }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 14,
+                flexWrap: 'wrap',
+                alignItems: 'flex-end',
+                marginBottom: 14,
+              }}
+            >
               <div>
                 {subheading('Live Market')}
-                <div style={{ marginTop: 8, fontSize: '1.28rem', fontWeight: 900 }}>Corridor order book</div>
+                <div style={{ marginTop: 8, fontSize: '1.28rem', fontWeight: 900 }}>
+                  Corridor order book
+                </div>
                 <p style={{ margin: '8px 0 0', color: C.textSub, lineHeight: 1.68, maxWidth: 760 }}>
-                  Each corridor card renders live availability, utilization, pressure, and dynamic prices from the active simulation state.
+                  Each corridor card renders live availability, utilization, pressure, and dynamic
+                  prices from the active simulation state.
                 </p>
               </div>
-              <div style={{ padding: '10px 12px', borderRadius: R.full, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.03)', fontSize: '0.78rem', color: C.textSub }}>
-                {snapshot.metrics.hottest_corridor || 'No active corridor'} is the highest-pressure lane
+              <div
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: R.full,
+                  border: `1px solid ${C.border}`,
+                  background: 'rgba(255,255,255,0.03)',
+                  fontSize: '0.78rem',
+                  color: C.textSub,
+                }}
+              >
+                {snapshot.metrics.hottest_corridor || 'No active corridor'} is the highest-pressure
+                lane
               </div>
             </div>
 
-            <div data-testid="mobility-os-corridor-book" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: 14 }}>
-              {snapshot.corridors.map((projection) => (
+            <div
+              data-testid="mobility-os-corridor-book"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))',
+                gap: 14,
+              }}
+            >
+              {snapshot.corridors.map(projection => (
                 <CorridorCard
                   key={projection.corridor.id}
                   projection={projection}
@@ -352,12 +550,29 @@ export default function MobilityOSCore() {
 
           <div style={{ display: 'grid', gap: 16 }}>
             <section style={panelStyle({ padding: 18, borderRadius: 30 })}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  alignItems: 'center',
+                }}
+              >
                 <div>
                   {subheading('Execution')}
-                  <div style={{ marginTop: 8, fontSize: '1.18rem', fontWeight: 900 }}>Consume capacity</div>
+                  <div style={{ marginTop: 8, fontSize: '1.18rem', fontWeight: 900 }}>
+                    Consume capacity
+                  </div>
                 </div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: C.green, fontSize: '0.82rem' }}>
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    color: C.green,
+                    fontSize: '0.82rem',
+                  }}
+                >
                   <Radio size={15} />
                   streaming live
                 </div>
@@ -365,20 +580,48 @@ export default function MobilityOSCore() {
 
               {selectedCorridor ? (
                 <div style={{ display: 'grid', gap: 14, marginTop: 16 }}>
-                  <div style={{ borderRadius: 20, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.03)', padding: '14px 15px' }}>
-                    <div style={{ color: C.textMuted, fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                  <div
+                    style={{
+                      borderRadius: 20,
+                      border: `1px solid ${C.border}`,
+                      background: 'rgba(255,255,255,0.03)',
+                      padding: '14px 15px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: C.textMuted,
+                        fontSize: '0.72rem',
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                      }}
+                    >
                       Selected Instrument
                     </div>
-                    <div data-testid="mobility-os-selected-instrument" style={{ marginTop: 8, fontSize: '1.08rem', fontWeight: 900 }}>
-                      {selectedCorridor.corridor.origin} {'->'} {selectedCorridor.corridor.destination}
+                    <div
+                      data-testid="mobility-os-selected-instrument"
+                      style={{ marginTop: 8, fontSize: '1.08rem', fontWeight: 900 }}
+                    >
+                      {selectedCorridor.corridor.origin} {'->'}{' '}
+                      {selectedCorridor.corridor.destination}
                     </div>
-                    <div data-testid="mobility-os-selected-availability" style={{ marginTop: 6, color: C.textSub, fontSize: '0.86rem' }}>
-                      {selectedCorridor.seats_available} seats / {selectedCorridor.cargo_available_kg} kg remain.
+                    <div
+                      data-testid="mobility-os-selected-availability"
+                      style={{ marginTop: 6, color: C.textSub, fontSize: '0.86rem' }}
+                    >
+                      {selectedCorridor.seats_available} seats /{' '}
+                      {selectedCorridor.cargo_available_kg} kg remain.
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
-                    {(['seat', 'cargo'] as BookingType[]).map((mode) => {
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                      gap: 10,
+                    }}
+                  >
+                    {(['seat', 'cargo'] as BookingType[]).map(mode => {
                       const active = bookingMode === mode;
                       return (
                         <button
@@ -405,13 +648,28 @@ export default function MobilityOSCore() {
                   </div>
 
                   <div style={{ display: 'grid', gap: 10 }}>
-                    <div style={{ color: C.textMuted, fontSize: '0.74rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                    <div
+                      style={{
+                        color: C.textMuted,
+                        fontSize: '0.74rem',
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                      }}
+                    >
                       Quantity
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '52px minmax(0, 1fr) 52px', gap: 10 }}>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '52px minmax(0, 1fr) 52px',
+                        gap: 10,
+                      }}
+                    >
                       <button
                         type="button"
-                        onClick={() => setQuantity((current) => Math.max(1, current - quantityStep(bookingMode)))}
+                        onClick={() =>
+                          setQuantity(current => Math.max(1, current - quantityStep(bookingMode)))
+                        }
                         style={{
                           height: 52,
                           borderRadius: 16,
@@ -424,12 +682,29 @@ export default function MobilityOSCore() {
                       >
                         -
                       </button>
-                      <div style={{ height: 52, borderRadius: 16, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FM, fontSize: '1rem' }}>
-                        {quantity}{bookingMode === 'seat' ? ' seats' : ' kg'}
+                      <div
+                        style={{
+                          height: 52,
+                          borderRadius: 16,
+                          border: `1px solid ${C.border}`,
+                          background: 'rgba(255,255,255,0.03)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontFamily: FM,
+                          fontSize: '1rem',
+                        }}
+                      >
+                        {quantity}
+                        {bookingMode === 'seat' ? ' seats' : ' kg'}
                       </div>
                       <button
                         type="button"
-                        onClick={() => setQuantity((current) => Math.min(selectedMaxQuantity, current + quantityStep(bookingMode)))}
+                        onClick={() =>
+                          setQuantity(current =>
+                            Math.min(selectedMaxQuantity, current + quantityStep(bookingMode)),
+                          )
+                        }
                         style={{
                           height: 52,
                           borderRadius: 16,
@@ -445,21 +720,61 @@ export default function MobilityOSCore() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
-                    <div style={{ borderRadius: 18, border: `1px solid ${C.goldDim}`, background: 'rgba(255,190,92,0.08)', padding: '12px 13px' }}>
-                      <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                      gap: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        borderRadius: 18,
+                        border: `1px solid ${C.goldDim}`,
+                        background: 'rgba(255,190,92,0.08)',
+                        padding: '12px 13px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: C.textMuted,
+                          fontSize: '0.72rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.12em',
+                        }}
+                      >
                         Dynamic Unit Price
                       </div>
                       <div style={{ marginTop: 6, fontWeight: 900, color: C.gold }}>
-                        {bookingMode === 'seat' ? money(selectedCorridor.dynamic_seat_price) : money(selectedCorridor.dynamic_cargo_price)}
+                        {bookingMode === 'seat'
+                          ? money(selectedCorridor.dynamic_seat_price)
+                          : money(selectedCorridor.dynamic_cargo_price)}
                       </div>
                     </div>
-                    <div style={{ borderRadius: 18, border: `1px solid ${C.greenDim}`, background: 'rgba(71,214,158,0.08)', padding: '12px 13px' }}>
-                      <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                    <div
+                      style={{
+                        borderRadius: 18,
+                        border: `1px solid ${C.greenDim}`,
+                        background: 'rgba(71,214,158,0.08)',
+                        padding: '12px 13px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: C.textMuted,
+                          fontSize: '0.72rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.12em',
+                        }}
+                      >
                         Estimated Order Value
                       </div>
                       <div style={{ marginTop: 6, fontWeight: 900, color: C.green }}>
-                        {money((bookingMode === 'seat' ? selectedCorridor.dynamic_seat_price : selectedCorridor.dynamic_cargo_price) * quantity)}
+                        {money(
+                          (bookingMode === 'seat'
+                            ? selectedCorridor.dynamic_seat_price
+                            : selectedCorridor.dynamic_cargo_price) * quantity,
+                        )}
                       </div>
                     </div>
                   </div>
@@ -473,7 +788,9 @@ export default function MobilityOSCore() {
                       height: 54,
                       borderRadius: 18,
                       border: 'none',
-                      background: !selectedMaxQuantity ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg, #58DDFF 0%, #2DC4FF 52%, #47D69E 100%)',
+                      background: !selectedMaxQuantity
+                        ? 'rgba(255,255,255,0.08)'
+                        : 'linear-gradient(135deg, #58DDFF 0%, #2DC4FF 52%, #47D69E 100%)',
                       color: !selectedMaxQuantity ? C.textMuted : C.bgDeep,
                       fontWeight: 900,
                       cursor: !selectedMaxQuantity ? 'not-allowed' : 'pointer',
@@ -484,7 +801,8 @@ export default function MobilityOSCore() {
                   </button>
 
                   <div style={{ color: C.textMuted, fontSize: '0.78rem', lineHeight: 1.65 }}>
-                    Bookings feed back into corridor availability, pressure, and price before the next projection arrives.
+                    Bookings feed back into corridor availability, pressure, and price before the
+                    next projection arrives.
                   </div>
                 </div>
               ) : null}
@@ -493,7 +811,9 @@ export default function MobilityOSCore() {
             {selectedCorridor ? (
               <section style={panelStyle({ padding: 18, borderRadius: 30 })}>
                 {subheading('Corridor Readout')}
-                <div style={{ marginTop: 8, fontSize: '1.18rem', fontWeight: 900 }}>Selected corridor signal</div>
+                <div style={{ marginTop: 8, fontSize: '1.18rem', fontWeight: 900 }}>
+                  Selected corridor signal
+                </div>
                 <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
                   {[
                     ['Pressure', `${selectedCorridor.demand_pressure.toFixed(2)}x`],
@@ -501,8 +821,23 @@ export default function MobilityOSCore() {
                     ['Seat price', money(selectedCorridor.dynamic_seat_price)],
                     ['Cargo price', money(selectedCorridor.dynamic_cargo_price)],
                   ].map(([label, value]) => (
-                    <div key={label} style={{ borderRadius: 18, border: `1px solid ${C.borderFaint}`, background: 'rgba(255,255,255,0.03)', padding: '12px 13px' }}>
-                      <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                    <div
+                      key={label}
+                      style={{
+                        borderRadius: 18,
+                        border: `1px solid ${C.borderFaint}`,
+                        background: 'rgba(255,255,255,0.03)',
+                        padding: '12px 13px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: C.textMuted,
+                          fontSize: '0.72rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.12em',
+                        }}
+                      >
                         {label}
                       </div>
                       <div style={{ marginTop: 6, fontWeight: 900 }}>{value}</div>
@@ -514,7 +849,13 @@ export default function MobilityOSCore() {
           </div>
         </section>
 
-        <section style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+        <section
+          style={{
+            display: 'grid',
+            gap: 14,
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          }}
+        >
           {[
             {
               title: 'Hottest corridor',
@@ -534,13 +875,33 @@ export default function MobilityOSCore() {
               body: 'Visible state is refreshed from the current corridor snapshot only.',
               accent: C.purple,
             },
-          ].map((item) => (
+          ].map(item => (
             <article key={item.title} style={panelStyle({ padding: 18, borderRadius: 22 })}>
-              <div style={{ color: C.textMuted, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+              <div
+                style={{
+                  color: C.textMuted,
+                  fontSize: '0.72rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.12em',
+                }}
+              >
                 {item.title}
               </div>
-              <div style={{ marginTop: 10, fontSize: '1.12rem', fontWeight: 900, color: item.accent }}>{item.value}</div>
-              <p style={{ margin: '10px 0 0', color: C.textSub, lineHeight: 1.62, fontSize: '0.9rem' }}>{item.body}</p>
+              <div
+                style={{ marginTop: 10, fontSize: '1.12rem', fontWeight: 900, color: item.accent }}
+              >
+                {item.value}
+              </div>
+              <p
+                style={{
+                  margin: '10px 0 0',
+                  color: C.textSub,
+                  lineHeight: 1.62,
+                  fontSize: '0.9rem',
+                }}
+              >
+                {item.body}
+              </p>
             </article>
           ))}
         </section>

@@ -10,7 +10,7 @@ export function sanitizeString(input: string): string {
   if (typeof input !== 'string') return '';
 
   return Array.from(input)
-    .filter((char) => {
+    .filter(char => {
       const code = char.charCodeAt(0);
       return code > 31 && code !== 127;
     })
@@ -42,12 +42,12 @@ export function sanitizeEventPayload<T extends Record<string, unknown>>(payload:
 export function validateApiUrl(url: string, allowedDomains: string[]): boolean {
   try {
     const parsed = new URL(url);
-    
+
     // Only allow HTTPS
     if (parsed.protocol !== 'https:') {
       return false;
     }
-    
+
     // Block private IP ranges
     const hostname = parsed.hostname;
     const privateIpPatterns = [
@@ -58,11 +58,11 @@ export function validateApiUrl(url: string, allowedDomains: string[]): boolean {
       /^169\.254\./,
       /^localhost$/i,
     ];
-    
+
     if (privateIpPatterns.some(pattern => pattern.test(hostname))) {
       return false;
     }
-    
+
     // Check against allowlist
     return allowedDomains.some(domain => hostname.endsWith(domain));
   } catch {
@@ -76,7 +76,7 @@ export function validateApiUrl(url: string, allowedDomains: string[]): boolean {
  */
 export function sanitizeHtml(input: string): string {
   if (typeof input !== 'string') return '';
-  
+
   return input
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

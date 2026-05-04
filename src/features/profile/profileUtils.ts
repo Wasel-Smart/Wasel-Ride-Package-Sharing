@@ -1,12 +1,14 @@
 export function getProfileInitials(name?: string | null) {
-  return (name ?? '')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part[0] ?? '')
-    .join('')
-    .slice(0, 2)
-    .toUpperCase() || 'WU';
+  return (
+    (name ?? '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(part => part[0] ?? '')
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || 'WU'
+  );
 }
 
 export function normalizeProfilePhone(phone: string) {

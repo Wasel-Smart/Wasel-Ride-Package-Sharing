@@ -65,14 +65,18 @@ function toLocalDate(date = new Date()) {
 }
 
 function parseTimeParts(time: string) {
-  const [hours, minutes] = time.split(':').map((value) => Number(value));
+  const [hours, minutes] = time.split(':').map(value => Number(value));
   return {
     hours: Number.isFinite(hours) ? hours : 7,
     minutes: Number.isFinite(minutes) ? minutes : 30,
   };
 }
 
-function nextReminderDate(frequency: ReminderFrequency, preferredTime: string, fromDate = new Date()) {
+function nextReminderDate(
+  frequency: ReminderFrequency,
+  preferredTime: string,
+  fromDate = new Date(),
+) {
   const next = toLocalDate(fromDate);
   const { hours, minutes } = parseTimeParts(preferredTime);
   next.setHours(hours, minutes, 0, 0);
@@ -115,11 +119,14 @@ function buildReason(signal: LiveCorridorSignal, weeklyFrequency: number) {
 export function getRouteReminders() {
   return readReminders()
     .slice()
-    .sort((left, right) => new Date(left.nextReminderAt).getTime() - new Date(right.nextReminderAt).getTime());
+    .sort(
+      (left, right) =>
+        new Date(left.nextReminderAt).getTime() - new Date(right.nextReminderAt).getTime(),
+    );
 }
 
 export function getRouteReminderForCorridor(corridorId: string) {
-  return readReminders().find((reminder) => reminder.corridorId === corridorId) ?? null;
+  return readReminders().find(reminder => reminder.corridorId === corridorId) ?? null;
 }
 
 export function getRecurringRouteSuggestions(limit = 4) {
@@ -143,30 +150,37 @@ export function getRecurringRouteSuggestions(limit = 4) {
   };
 
   for (const event of events) {
-    const signal = snapshot.allSignals.find((item) => item.from === event.from && item.to === event.to)
-      ?? snapshot.allSignals.find((item) => item.from === event.to && item.to === event.from);
+    const signal =
+      snapshot.allSignals.find(item => item.from === event.from && item.to === event.to) ??
+      snapshot.allSignals.find(item => item.from === event.to && item.to === event.from);
     addUsage(signal, event.createdAt);
   }
 
   for (const booking of bookings) {
-    const signal = snapshot.allSignals.find((item) => item.from === booking.from && item.to === booking.to)
-      ?? snapshot.allSignals.find((item) => item.from === booking.to && item.to === booking.from);
+    const signal =
+      snapshot.allSignals.find(item => item.from === booking.from && item.to === booking.to) ??
+      snapshot.allSignals.find(item => item.from === booking.to && item.to === booking.from);
     addUsage(signal, booking.createdAt);
   }
 
   for (const alert of alerts) {
-    const signal = snapshot.allSignals.find((item) => item.from === alert.from && item.to === alert.to)
-      ?? snapshot.allSignals.find((item) => item.from === alert.to && item.to === alert.from);
+    const signal =
+      snapshot.allSignals.find(item => item.from === alert.from && item.to === alert.to) ??
+      snapshot.allSignals.find(item => item.from === alert.to && item.to === alert.from);
     addUsage(signal, alert.createdAt);
   }
 
   const suggestions = snapshot.allSignals
-    .map((signal) => {
+    .map(signal => {
       const usage = usageMap.get(signal.id);
       const weeklyFrequency = usage?.count ?? 0;
       const confidenceScore = Math.min(
         98,
-        Math.round((signal.forecastDemandScore * 0.58) + (signal.routeOwnershipScore * 0.18) + (weeklyFrequency * 5.4)),
+        Math.round(
+          signal.forecastDemandScore * 0.58 +
+            signal.routeOwnershipScore * 0.18 +
+            weeklyFrequency * 5.4,
+        ),
       );
       return {
         corridorId: signal.id,
@@ -177,12 +191,13 @@ export function getRecurringRouteSuggestions(limit = 4) {
         weeklyFrequency,
         reason: buildReason(signal, weeklyFrequency),
         recommendedTime: inferReminderTime(usage?.hours ?? []),
-        recommendedFrequency: weeklyFrequency >= 3 ? 'weekdays' : weeklyFrequency >= 1 ? 'weekly' : 'daily',
+        recommendedFrequency:
+          weeklyFrequency >= 3 ? 'weekdays' : weeklyFrequency >= 1 ? 'weekly' : 'daily',
         liveSignal: signal,
         priceQuote: signal.priceQuote,
       } satisfies RecurringRouteSuggestion;
     })
-    .filter((suggestion) => suggestion.confidenceScore >= 58)
+    .filter(suggestion => suggestion.confidenceScore >= 58)
     .sort((left, right) => right.confidenceScore - left.confidenceScore);
 
   return suggestions.slice(0, limit);
@@ -211,9 +226,13 @@ export function upsertRouteReminder(args: {
     createdAt: new Date().toISOString(),
   };
 
-  const index = reminders.findIndex((reminder) => reminder.corridorId === args.corridorId);
+  const index = reminders.findIndex(reminder => reminder.corridorId === args.corridorId);
   if (index >= 0) {
-    reminders[index] = { ...reminders[index], ...nextReminder, createdAt: reminders[index].createdAt };
+    reminders[index] = {
+      ...reminders[index],
+      ...nextReminder,
+      createdAt: reminders[index].createdAt,
+    };
   } else {
     reminders.unshift(nextReminder);
   }
@@ -234,11 +253,12 @@ export function createReminderFromSuggestion(suggestion: RecurringRouteSuggestio
 }
 
 export function formatRouteReminderSchedule(reminder: RouteReminder) {
-  const label = reminder.frequency === 'weekdays'
-    ? 'Weekdays'
-    : reminder.frequency === 'weekly'
-      ? 'Weekly'
-      : 'Daily';
+  const label =
+    reminder.frequency === 'weekdays'
+      ? 'Weekdays'
+      : reminder.frequency === 'weekly'
+        ? 'Weekly'
+        : 'Daily';
   return `${label} at ${reminder.preferredTime}`;
 }
 
@@ -246,7 +266,7 @@ export async function syncRouteReminders(user?: Pick<WaselUser, 'email' | 'phone
   let reminders = readReminders();
   const now = new Date();
   const dueReminders = reminders.filter(
-    (reminder) => reminder.enabled && new Date(reminder.nextReminderAt).getTime() <= now.getTime(),
+    reminder => reminder.enabled && new Date(reminder.nextReminderAt).getTime() <= now.getTime(),
   );
   if (dueReminders.length === 0) {
     return [];
@@ -255,29 +275,36 @@ export async function syncRouteReminders(user?: Pick<WaselUser, 'email' | 'phone
   const delivered: string[] = [];
 
   for (const reminder of dueReminders) {
-    const signal = buildRouteIntelligenceSnapshot({ from: reminder.from, to: reminder.to }).selectedSignal;
-    const nextReminderAt = nextReminderDate(reminder.frequency, reminder.preferredTime, now).toISOString();
-    reminders = reminders.map((item) => (
-      item.id === reminder.id
-        ? { ...item, lastSentAt: now.toISOString(), nextReminderAt }
-        : item
-    ));
+    const signal = buildRouteIntelligenceSnapshot({
+      from: reminder.from,
+      to: reminder.to,
+    }).selectedSignal;
+    const nextReminderAt = nextReminderDate(
+      reminder.frequency,
+      reminder.preferredTime,
+      now,
+    ).toISOString();
+    reminders = reminders.map(item =>
+      item.id === reminder.id ? { ...item, lastSentAt: now.toISOString(), nextReminderAt } : item,
+    );
     writeReminders(reminders);
 
-    await notificationsAPI.createNotification({
-      title: `Route reminder: ${reminder.label}`,
-      message: signal
-        ? `${signal.nextWaveWindow}. Live demand ${signal.forecastDemandScore}/100 and your current price is ${signal.priceQuote.finalPriceJod} JOD.`
-        : `Your recurring route is ready to check again.`,
-      type: 'trip_updates',
-      priority: 'medium',
-      action_url: `/app/find-ride?from=${encodeURIComponent(reminder.from)}&to=${encodeURIComponent(reminder.to)}&search=1`,
-      channels: ['in_app', 'push', 'email', 'sms'],
-      contact: {
-        email: user?.email,
-        phone: user?.phone,
-      },
-    }).catch(() => {});
+    await notificationsAPI
+      .createNotification({
+        title: `Route reminder: ${reminder.label}`,
+        message: signal
+          ? `${signal.nextWaveWindow}. Live demand ${signal.forecastDemandScore}/100 and your current price is ${signal.priceQuote.finalPriceJod} JOD.`
+          : `Your recurring route is ready to check again.`,
+        type: 'trip_updates',
+        priority: 'medium',
+        action_url: `/app/find-ride?from=${encodeURIComponent(reminder.from)}&to=${encodeURIComponent(reminder.to)}&search=1`,
+        channels: ['in_app', 'push', 'email', 'sms'],
+        contact: {
+          email: user?.email,
+          phone: user?.phone,
+        },
+      })
+      .catch(() => {});
 
     delivered.push(reminder.id);
   }

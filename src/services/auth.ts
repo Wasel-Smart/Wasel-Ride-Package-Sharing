@@ -5,7 +5,11 @@ import {
   requestEdgeJson,
   runBackendWorkflow,
 } from './backendWorkflow';
-import { getDirectProfile, getDirectVerificationRecord, updateDirectProfile } from './directSupabase';
+import {
+  getDirectProfile,
+  getDirectVerificationRecord,
+  updateDirectProfile,
+} from './directSupabase';
 import { getAuthCallbackUrl, getConfig } from '../utils/env';
 
 function getDirectFallbackError(operation: string): Error {
@@ -44,7 +48,9 @@ function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'gen
 
 function requireSupabase() {
   if (!supabase) {
-    throw new Error('Supabase auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.');
+    throw new Error(
+      'Supabase auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.',
+    );
   }
 
   return supabase;
@@ -74,8 +80,9 @@ function mergeVerificationIntoProfile(
   const current = profile ?? {};
   const sanadVerified = verification.sanad_status === 'verified';
   const documentVerified = verification.document_status === 'verified';
-  const verificationLevel = verification.verification_level
-    || (sanadVerified ? 'level_3' : documentVerified ? 'level_2' : 'level_0');
+  const verificationLevel =
+    verification.verification_level ||
+    (sanadVerified ? 'level_3' : documentVerified ? 'level_2' : 'level_0');
 
   return {
     ...current,
@@ -87,11 +94,15 @@ function mergeVerificationIntoProfile(
       verification.updated_at ??
       verification.verification_timestamp ??
       null,
-    verification_failure_reason: current.verification_failure_reason ?? verification.failure_reason ?? null,
+    verification_failure_reason:
+      current.verification_failure_reason ?? verification.failure_reason ?? null,
   };
 }
 
-async function enrichProfileWithVerification(userId: string, profile: Record<string, unknown> | null) {
+async function enrichProfileWithVerification(
+  userId: string,
+  profile: Record<string, unknown> | null,
+) {
   try {
     const verification = await getDirectVerificationRecord(userId);
     return mergeVerificationIntoProfile(profile, verification);
@@ -103,16 +114,25 @@ async function enrichProfileWithVerification(userId: string, profile: Record<str
 async function loadProfileViaFallback(userId: string) {
   let profile: Record<string, unknown> | null = null;
   try {
-    profile = await getDirectProfile(userId) as Record<string, unknown> | null;
+    profile = (await getDirectProfile(userId)) as Record<string, unknown> | null;
   } catch {
     profile = null;
   }
-  const enrichedProfile = await enrichProfileWithVerification(userId, profile as Record<string, unknown> | null);
+  const enrichedProfile = await enrichProfileWithVerification(
+    userId,
+    profile as Record<string, unknown> | null,
+  );
   return { profile: enrichedProfile };
 }
 
 export const authAPI = {
-  async signUp(email: string, password: string, firstName: string, lastName: string, phone: string) {
+  async signUp(
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    phone: string,
+  ) {
     const client = requireSupabase();
     const redirectTo = getAuthCallbackUrl(
       typeof window !== 'undefined' ? window.location.origin : undefined,
@@ -157,14 +177,16 @@ export const authAPI = {
       const maxAttempts = 3;
 
       while (!session && attempts < maxAttempts) {
-        const { data: { session: currentSession } } = await client.auth.getSession();
+        const {
+          data: { session: currentSession },
+        } = await client.auth.getSession();
         if (currentSession) {
           session = currentSession;
           break;
         }
 
         attempts += 1;
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
       if (!session) {
@@ -215,8 +237,12 @@ export const authAPI = {
           });
 
           if (!retryResponse.ok) {
-            const retryErrorData = await retryResponse.json().catch(() => ({ error: 'Unknown error' }));
-            throw new Error(retryErrorData.error || `Failed to create profile: ${retryResponse.status}`);
+            const retryErrorData = await retryResponse
+              .json()
+              .catch(() => ({ error: 'Unknown error' }));
+            throw new Error(
+              retryErrorData.error || `Failed to create profile: ${retryResponse.status}`,
+            );
           }
 
           return await retryResponse.json();
@@ -271,10 +297,7 @@ export const authAPI = {
           context,
           operation: 'Failed to load profile',
         });
-        const enrichedProfile = await enrichProfileWithVerification(
-          context.userId,
-          data,
-        );
+        const enrichedProfile = await enrichProfileWithVerification(context.userId, data);
         return { profile: enrichedProfile };
       } catch {
         return loadProfileViaFallback(context.userId);
@@ -291,14 +314,15 @@ export const authAPI = {
         authMode: 'required',
         fallbackPolicy: 'writes-if-enabled',
         fallback: ({ userId }) => updateDirectProfile(userId!, updates),
-        edge: (context) => requestEdgeJson<Record<string, unknown>>({
-          path: `/profile/${context.userId}`,
-          method: 'PATCH',
-          authMode: 'required',
-          context,
-          body: updates,
-          operation: 'Failed to update profile',
-        }),
+        edge: context =>
+          requestEdgeJson<Record<string, unknown>>({
+            path: `/profile/${context.userId}`,
+            method: 'PATCH',
+            authMode: 'required',
+            context,
+            body: updates,
+            operation: 'Failed to update profile',
+          }),
       });
       return { success: true, profile };
     } catch (error) {
@@ -307,7 +331,8 @@ export const authAPI = {
       }
       return {
         success: false,
-        error: error instanceof Error ? error.message : getDirectFallbackError('Profile update').message,
+        error:
+          error instanceof Error ? error.message : getDirectFallbackError('Profile update').message,
       };
     }
   },

@@ -15,7 +15,10 @@ export class BackendRequestError extends Error {
   payload?: unknown;
   recoverable: boolean;
 
-  constructor(message: string, options?: { status?: number; payload?: unknown; recoverable?: boolean }) {
+  constructor(
+    message: string,
+    options?: { status?: number; payload?: unknown; recoverable?: boolean },
+  ) {
     super(message);
     this.name = 'BackendRequestError';
     this.status = options?.status;
@@ -46,7 +49,9 @@ type BackendWorkflowOptions<T> = {
 };
 
 export function getSecureBackendFallbackError(operation: string): Error {
-  return new Error(`${operation} is temporarily unavailable while the secure backend is degraded. Please try again shortly.`);
+  return new Error(
+    `${operation} is temporarily unavailable while the secure backend is degraded. Please try again shortly.`,
+  );
 }
 
 export function hasConfiguredEdgeTransport(authMode: BackendAuthMode = 'none'): boolean {
@@ -92,7 +97,7 @@ function getPayloadMessage(payload: unknown): string | null {
 
   const data = payload as Record<string, unknown>;
   const candidates = [data.error, data.message, data.details];
-  const message = candidates.find((value) => typeof value === 'string' && value.trim().length > 0);
+  const message = candidates.find(value => typeof value === 'string' && value.trim().length > 0);
   return typeof message === 'string' ? message : null;
 }
 
@@ -133,9 +138,12 @@ export async function requestEdgeJson<T>({
   retries,
 }: EdgeJsonOptions): Promise<T> {
   if (!hasConfiguredEdgeTransport(authMode)) {
-    throw new BackendRequestError(`${operation} is unavailable because the backend transport is not configured.`, {
-      recoverable: true,
-    });
+    throw new BackendRequestError(
+      `${operation} is unavailable because the backend transport is not configured.`,
+      {
+        recoverable: true,
+      },
+    );
   }
 
   // Validate API_URL to prevent SSRF
@@ -147,7 +155,8 @@ export async function requestEdgeJson<T>({
     });
   }
 
-  const resolvedContext = authMode === 'required' ? (context ?? await resolveContext(authMode)) : (context ?? {});
+  const resolvedContext =
+    authMode === 'required' ? (context ?? (await resolveContext(authMode))) : (context ?? {});
   const finalHeaders = createEdgeHeaders(
     headers,
     authMode === 'required' ? resolvedContext.token : undefined,
@@ -161,12 +170,16 @@ export async function requestEdgeJson<T>({
     finalHeaders.set('Content-Type', 'application/json');
   }
 
-  const response = await fetchWithRetry(`${API_URL}${path}`, {
-    method,
-    headers: finalHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    timeout,
-  }, retries);
+  const response = await fetchWithRetry(
+    `${API_URL}${path}`,
+    {
+      method,
+      headers: finalHeaders,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      timeout,
+    },
+    retries,
+  );
 
   if (!response.ok) {
     const payload = await response.json().catch(() => null);
@@ -207,7 +220,9 @@ export async function runBackendWorkflow<T>({
       throw getSecureBackendFallbackError(operation);
     }
 
-    throw new BackendRequestError(`${operation} is unavailable because the backend transport is not configured.`);
+    throw new BackendRequestError(
+      `${operation} is unavailable because the backend transport is not configured.`,
+    );
   }
 
   try {

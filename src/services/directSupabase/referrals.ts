@@ -64,9 +64,13 @@ export async function getDirectReferralSnapshot(userId: string) {
   return {
     code: referralCode,
     invited: rows.length,
-    converted: rows.filter((r) => r.referee_completed_first_trip).length,
-    pendingCredit: rows.filter((r) => !r.referrer_rewarded).reduce((sum, r) => sum + toNumber(r.referrer_reward_jod, 0), 0),
-    earnedCredit: rows.filter((r) => r.referrer_rewarded).reduce((sum, r) => sum + toNumber(r.referrer_reward_jod, 0), 0),
+    converted: rows.filter(r => r.referee_completed_first_trip).length,
+    pendingCredit: rows
+      .filter(r => !r.referrer_rewarded)
+      .reduce((sum, r) => sum + toNumber(r.referrer_reward_jod, 0), 0),
+    earnedCredit: rows
+      .filter(r => r.referrer_rewarded)
+      .reduce((sum, r) => sum + toNumber(r.referrer_reward_jod, 0), 0),
   };
 }
 

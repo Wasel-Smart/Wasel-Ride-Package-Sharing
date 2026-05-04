@@ -132,7 +132,8 @@ export const translations: Record<Language, any> = {
     landing: {
       hero: {
         title: 'Your Complete Mobility Super App',
-        subtitle: 'From rides to deliveries, rentals to public transport - everything you need in one app',
+        subtitle:
+          'From rides to deliveries, rentals to public transport - everything you need in one app',
         getStarted: 'Get Started',
         learnMore: 'Learn More',
         watchVideo: 'Watch Video',
@@ -1104,11 +1105,12 @@ export const translations: Record<Language, any> = {
       notStarted: 'Not Started',
       rejected: 'Rejected',
       underReview: 'Under Review',
-      privacyNote: 'All documents are encrypted and stored securely. We never share your personal information with other users.',
+      privacyNote:
+        'All documents are encrypted and stored securely. We never share your personal information with other users.',
       identity: 'Identity Verification',
       identityDesc: 'Verify your identity with a government-issued ID',
       uploadId: 'Upload ID',
-      idTypes: 'Accepted IDs: Passport, National ID, Driver\'s License',
+      idTypes: "Accepted IDs: Passport, National ID, Driver's License",
       email: 'Email Verification',
       emailDesc: 'Verify your email address',
       verifyEmail: 'Verify Email',
@@ -1118,8 +1120,8 @@ export const translations: Record<Language, any> = {
       verifyPhone: 'Verify Phone',
       enterCode: 'Enter verification code',
       driver: 'Driver Verification',
-      driverDesc: 'Upload driver\'s license and vehicle documents',
-      driverLicense: 'Driver\'s License',
+      driverDesc: "Upload driver's license and vehicle documents",
+      driverLicense: "Driver's License",
       vehicleRegistration: 'Vehicle Registration',
       insurance: 'Insurance',
       backgroundCheck: 'Background Check',
@@ -1242,7 +1244,7 @@ export const translations: Record<Language, any> = {
       unauthorized: 'Unauthorized',
       notFound: 'Not found',
       serverError: 'Server error',
-      maintenanceMode: 'We\'re currently under maintenance',
+      maintenanceMode: "We're currently under maintenance",
       comingSoon: 'Coming soon',
     },
     success: {
@@ -1266,7 +1268,8 @@ export const translations: Record<Language, any> = {
       skip: 'Skip',
       welcome: {
         title: 'Welcome to Wasel!',
-        description: 'Jordan\'s complete mobility network for rides, deliveries, corridor travel, and more.',
+        description:
+          "Jordan's complete mobility network for rides, deliveries, corridor travel, and more.",
       },
       book: {
         title: 'Book Your Ride',
@@ -1315,7 +1318,8 @@ export const translations: Record<Language, any> = {
       needHelp: 'Need help? Contact us at',
       connectionError: 'Connection Error',
       offline: 'Your device is offline. Please check your internet connection.',
-      serverUnreachable: 'Unable to connect to Wasel servers. This might be a temporary network issue.',
+      serverUnreachable:
+        'Unable to connect to Wasel servers. This might be a temporary network issue.',
       retry: 'Retry Connection',
       forceReload: 'Force Reload',
       skipToContent: 'Skip to main content',
@@ -2427,7 +2431,8 @@ export const translations: Record<Language, any> = {
       notStarted: 'لم يبدأ',
       rejected: 'مرفوض',
       underReview: 'قيد المراجعة',
-      privacyNote: 'جميع المستندات مشفرة ومخزنة بشكل آمن. نحن لا نشارك معلوماتك الشخصية مع المستخدمين الآخرين أبداً.',
+      privacyNote:
+        'جميع المستندات مشفرة ومخزنة بشكل آمن. نحن لا نشارك معلوماتك الشخصية مع المستخدمين الآخرين أبداً.',
       identity: 'التحقق من الهوية',
       identityDesc: 'تحقق من هويتك باستخدام هوية صادرة عن الحكومة',
       uploadId: 'رفع الهوية',
@@ -2649,7 +2654,8 @@ export const translations: Record<Language, any> = {
     // ============ NEW: COOKIE CONSENT ============
     cookies: {
       title: 'نحن نستخدم ملفات تعريف الارتباط',
-      description: 'نستخدم ملفات تعريف الارتباط وتقنيات مماثلة لتحسين تجربتك، وتحليل استخدام الموقع، والمساعدة في جهودنا التسويقية.',
+      description:
+        'نستخدم ملفات تعريف الارتباط وتقنيات مماثلة لتحسين تجربتك، وتحليل استخدام الموقع، والمساعدة في جهودنا التسويقية.',
       accept_all: 'قبول الكل',
       reject_all: 'رفض الكل',
       customize: 'تخصيص',
@@ -2683,7 +2689,8 @@ export const translations: Record<Language, any> = {
         activity: 'سجل النشاط',
         activity_desc: 'تسجيلات الدخول والإجراءات والأحداث',
         privacy_title: 'بياناتك آمنة',
-        privacy_desc: 'نحن نحترم خصوصيتك. سيتم تشفير بياناتك وحذفها من سيرفراتنا بعد 30 يوماً من التنزيل.',
+        privacy_desc:
+          'نحن نحترم خصوصيتك. سيتم تشفير بياناتك وحذفها من سيرفراتنا بعد 30 يوماً من التنزيل.',
         included_data: 'البيانات المضمنة في التصدير',
         ready_desc: 'ملف ZIP الخاص بك جاهز للتنزيل',
         download_data: 'تنزيل بياناتي',

@@ -8,8 +8,12 @@ import {
 export { projectId, publicAnonKey };
 
 const configuredApiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
-const configuredFunctionsBaseUrl = (import.meta.env.VITE_EDGE_FUNCTIONS_BASE_URL as string | undefined)?.trim();
-const configuredFunctionName = (import.meta.env.VITE_EDGE_FUNCTION_NAME as string | undefined)?.trim();
+const configuredFunctionsBaseUrl = (
+  import.meta.env.VITE_EDGE_FUNCTIONS_BASE_URL as string | undefined
+)?.trim();
+const configuredFunctionName = (
+  import.meta.env.VITE_EDGE_FUNCTION_NAME as string | undefined
+)?.trim();
 const defaultFunctionsBaseUrl = supabaseUrl ? `${supabaseUrl}/functions/v1` : '';
 const resolvedFunctionsBaseUrl = configuredFunctionsBaseUrl || defaultFunctionsBaseUrl;
 const resolvedFunctionName = configuredFunctionName || 'make-server-0b1f4071';
@@ -95,7 +99,7 @@ function buildAvailabilitySnapshot(): AvailabilitySnapshot {
 
 function notifyAvailabilityListeners(): void {
   const snapshot = buildAvailabilitySnapshot();
-  availabilityListeners.forEach((listener) => listener(snapshot));
+  availabilityListeners.forEach(listener => listener(snapshot));
 }
 
 function setEdgeFunctionAvailability(nextValue: boolean): void {
@@ -273,11 +277,7 @@ export async function fetchWithRetry(
     );
   }
 
-  const {
-    timeout = 5_000,
-    signal: callerSignal,
-    ...fetchOptions
-  } = options;
+  const { timeout = 5_000, signal: callerSignal, ...fetchOptions } = options;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
@@ -319,8 +319,7 @@ export async function fetchWithRetry(
     }
 
     const isRetryable =
-      error instanceof TypeError ||
-      (error instanceof DOMException && error.name === 'AbortError');
+      error instanceof TypeError || (error instanceof DOMException && error.name === 'AbortError');
 
     if (retries > 0 && isRetryable) {
       await delay(backoff);
@@ -341,7 +340,7 @@ export async function fetchWithRetry(
 }
 
 function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export const supabase = supabaseClient;
@@ -356,7 +355,10 @@ export async function getAuthDetails(): Promise<AuthDetails> {
     throw new Error('Supabase client is not initialised');
   }
 
-  const { data: { session }, error } = await supabase.auth.getSession();
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
   if (error) {
     throw error;
   }

@@ -26,7 +26,7 @@ export function sanitizeURL(url: string): string {
   if (!url) return '';
 
   const trimmed = url.trim().toLowerCase();
-  
+
   // Block dangerous protocols
   if (
     trimmed.startsWith('javascript:') ||
@@ -126,10 +126,12 @@ export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       sanitized[key as keyof T] = sanitizeObject(value);
     } else if (Array.isArray(value)) {
-      sanitized[key as keyof T] = value.map(item => 
-        typeof item === 'string' ? sanitizeText(item) : 
-        typeof item === 'object' ? sanitizeObject(item) : 
-        item
+      sanitized[key as keyof T] = value.map(item =>
+        typeof item === 'string'
+          ? sanitizeText(item)
+          : typeof item === 'object'
+            ? sanitizeObject(item)
+            : item,
       ) as any;
     } else {
       sanitized[key as keyof T] = value;

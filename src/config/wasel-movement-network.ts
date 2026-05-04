@@ -95,25 +95,29 @@ const MOVEMENT_LAYERS: MovementLayer[] = [
   {
     id: 'people',
     title: 'People',
-    summary: 'Daily commuters, families, students, and intercity travelers move through fixed corridors instead of random one-off requests.',
+    summary:
+      'Daily commuters, families, students, and intercity travelers move through fixed corridors instead of random one-off requests.',
     valueLine: 'Demand density makes each corridor faster and cheaper to fill.',
   },
   {
     id: 'goods',
     title: 'Goods',
-    summary: 'Packages, returns, samples, and urgent handoffs ride on the same live routes already moving through the network.',
+    summary:
+      'Packages, returns, samples, and urgent handoffs ride on the same live routes already moving through the network.',
     valueLine: 'Goods piggyback on movement instead of opening wasteful empty trips.',
   },
   {
     id: 'services',
     title: 'Services',
-    summary: 'Field teams, mobile technicians, and route-based operators can buy recurring capacity on the same infrastructure.',
+    summary:
+      'Field teams, mobile technicians, and route-based operators can buy recurring capacity on the same infrastructure.',
     valueLine: 'The network becomes a service delivery layer, not only a transport layer.',
   },
   {
     id: 'data',
     title: 'Data',
-    summary: 'Demand pulses, pickup point learning, fill-rate behavior, and corridor economics keep making the system smarter.',
+    summary:
+      'Demand pulses, pickup point learning, fill-rate behavior, and corridor economics keep making the system smarter.',
     valueLine: 'Every search improves the next route decision.',
   },
 ];
@@ -122,31 +126,36 @@ const MARKETPLACE_NODES: MarketplaceNode[] = [
   {
     id: 'riders',
     title: 'Riders',
-    summary: 'Shared-route discovery and automatic grouping bring cheaper trips with less searching.',
+    summary:
+      'Shared-route discovery and automatic grouping bring cheaper trips with less searching.',
     moat: 'Dense rider demand improves every corridor recommendation.',
   },
   {
     id: 'drivers',
     title: 'Drivers',
-    summary: 'Drivers open route supply once and monetize seats, empty trunk space, and predictable corridor demand.',
+    summary:
+      'Drivers open route supply once and monetize seats, empty trunk space, and predictable corridor demand.',
     moat: 'Better fill rates make driver earnings harder for generic ride apps to match.',
   },
   {
     id: 'businesses',
     title: 'Businesses',
-    summary: 'Corporate movement, returns, staff travel, and light logistics can all run through recurring corridor capacity.',
+    summary:
+      'Corporate movement, returns, staff travel, and light logistics can all run through recurring corridor capacity.',
     moat: 'Recurring B2B volume hardens the best corridors.',
   },
   {
     id: 'truck-owners',
     title: 'Truck owners',
-    summary: 'Larger cargo owners can plug into the same demand map when a corridor needs higher-volume movement.',
+    summary:
+      'Larger cargo owners can plug into the same demand map when a corridor needs higher-volume movement.',
     moat: 'Multi-vehicle coverage turns Wasel into a real movement exchange.',
   },
   {
     id: 'service-providers',
     title: 'Service providers',
-    summary: 'Installers, technicians, and mobile service teams gain a route-aware way to plan jobs and movement together.',
+    summary:
+      'Installers, technicians, and mobile service teams gain a route-aware way to plan jobs and movement together.',
     moat: 'Service demand adds a third layer on top of riders and drivers.',
   },
 ];
@@ -155,25 +164,29 @@ const HABIT_LOOP_PROGRAMS: HabitLoopProgram[] = [
   {
     id: 'credits',
     title: 'Movement credits',
-    summary: 'Every booked seat, posted route, and delivered parcel adds credits back into the network wallet.',
+    summary:
+      'Every booked seat, posted route, and delivered parcel adds credits back into the network wallet.',
     outcome: 'Users have a reason to come back before they think about another app.',
   },
   {
     id: 'daily-routes',
     title: 'Daily routes',
-    summary: 'Frequent corridors become pinned habits with remembered pickup nodes and expected cost bands.',
+    summary:
+      'Frequent corridors become pinned habits with remembered pickup nodes and expected cost bands.',
     outcome: 'Wasel becomes the default movement ritual for commuters.',
   },
   {
     id: 'subscriptions',
     title: 'Commuter subscriptions',
-    summary: 'Monthly corridor passes reduce churn for people who move between the same cities every week.',
+    summary:
+      'Monthly corridor passes reduce churn for people who move between the same cities every week.',
     outcome: 'Recurring revenue is tied directly to route ownership.',
   },
   {
     id: 'rewards',
     title: 'Density rewards',
-    summary: 'Riders and drivers gain better pricing and bonuses when they help fill strategic corridors.',
+    summary:
+      'Riders and drivers gain better pricing and bonuses when they help fill strategic corridors.',
     outcome: 'Network behavior reinforces the moat instead of fighting it.',
   },
 ];
@@ -186,7 +199,8 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     autoGroupWindow: 'Group departures every 15 minutes during commute peaks.',
     movementLayers: ['commuters', 'students', 'light parcels', 'field teams'],
     businessDemand: ['university travel', 'staff transport', 'document returns'],
-    routeMoat: 'This route teaches Wasel how northern demand shifts by hour, campus calendar, and return flow.',
+    routeMoat:
+      'This route teaches Wasel how northern demand shifts by hour, campus calendar, and return flow.',
     attachRatePercent: 62,
     fillTargetSeats: 4,
     intelligenceSignals: [
@@ -202,7 +216,8 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     autoGroupWindow: 'Auto-group micro departures every 10 minutes around shift changes.',
     movementLayers: ['workers', 'daily commuters', 'industrial deliveries', 'service crews'],
     businessDemand: ['factory staff transport', 'parts delivery', 'maintenance teams'],
-    routeMoat: 'High-frequency commuting lets Wasel learn Jordanian movement cadence faster than any generic ride app.',
+    routeMoat:
+      'High-frequency commuting lets Wasel learn Jordanian movement cadence faster than any generic ride app.',
     attachRatePercent: 68,
     fillTargetSeats: 4,
     intelligenceSignals: [
@@ -218,7 +233,8 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     autoGroupWindow: 'Bundle long-haul travelers into larger departure waves twice each day.',
     movementLayers: ['long-haul travel', 'cargo handoffs', 'tourism', 'service runs'],
     businessDemand: ['port logistics', 'tourism crews', 'sample delivery'],
-    routeMoat: 'Wasel can own the long-haul economics by combining riders, logistics, and predictable rest-stop behavior.',
+    routeMoat:
+      'Wasel can own the long-haul economics by combining riders, logistics, and predictable rest-stop behavior.',
     attachRatePercent: 57,
     fillTargetSeats: 4,
     intelligenceSignals: [
@@ -234,7 +250,8 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     autoGroupWindow: 'Stack departures in 20-minute grouping windows near leisure peaks.',
     movementLayers: ['tourism', 'families', 'small packages', 'guide services'],
     businessDemand: ['tourism movement', 'guided routes', 'festival support'],
-    routeMoat: 'Seasonal demand teaches Wasel when leisure corridors deserve temporary supply boosts.',
+    routeMoat:
+      'Seasonal demand teaches Wasel when leisure corridors deserve temporary supply boosts.',
     attachRatePercent: 49,
     fillTargetSeats: 3,
     intelligenceSignals: [
@@ -250,7 +267,8 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     autoGroupWindow: 'Use route alerts to cluster low-frequency demand into reliable shared trips.',
     movementLayers: ['leisure riders', 'families', 'weekend goods', 'eco-services'],
     businessDemand: ['hospitality staff', 'tourism services', 'maintenance visits'],
-    routeMoat: 'Lower-frequency routes become defendable when Wasel knows exactly when to wake demand.',
+    routeMoat:
+      'Lower-frequency routes become defendable when Wasel knows exactly when to wake demand.',
     attachRatePercent: 44,
     fillTargetSeats: 3,
     intelligenceSignals: [
@@ -266,7 +284,8 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     autoGroupWindow: 'Refresh auto-grouping every 12 minutes around airport and city movement.',
     movementLayers: ['commuters', 'airport-linked riders', 'small goods', 'service calls'],
     businessDemand: ['airport transfers', 'field teams', 'local delivery'],
-    routeMoat: 'Fast-moving airport-adjacent demand helps Wasel optimize pickup precision and time reliability.',
+    routeMoat:
+      'Fast-moving airport-adjacent demand helps Wasel optimize pickup precision and time reliability.',
     attachRatePercent: 52,
     fillTargetSeats: 4,
     intelligenceSignals: [
@@ -282,7 +301,8 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     autoGroupWindow: 'Offer guided grouping for morning and late-afternoon corridor waves.',
     movementLayers: ['students', 'family movement', 'returns', 'field services'],
     businessDemand: ['education travel', 'document returns', 'mobile technicians'],
-    routeMoat: 'This route compounds intelligence around mid-range intercity movement and same-day returns.',
+    routeMoat:
+      'This route compounds intelligence around mid-range intercity movement and same-day returns.',
     attachRatePercent: 46,
     fillTargetSeats: 3,
     intelligenceSignals: [
@@ -298,7 +318,8 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     autoGroupWindow: 'Use demand alerts to create departures only when route confidence is high.',
     movementLayers: ['regional riders', 'small cargo', 'maintenance visits', 'service circuits'],
     businessDemand: ['public service travel', 'equipment runs', 'returns'],
-    routeMoat: 'Emerging routes become defensible when Wasel accumulates more route-confidence data than anyone else.',
+    routeMoat:
+      'Emerging routes become defensible when Wasel accumulates more route-confidence data than anyone else.',
     attachRatePercent: 36,
     fillTargetSeats: 3,
     intelligenceSignals: [
@@ -330,7 +351,8 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     autoGroupWindow: 'Continuously merge riders into the next viable departure.',
     movementLayers: ['students', 'workers', 'returns', 'service teams'],
     businessDemand: ['industrial staff movement', 'education corridor', 'returns'],
-    routeMoat: 'Cross-north industrial flow creates a distinct route graph that compounds with every trip.',
+    routeMoat:
+      'Cross-north industrial flow creates a distinct route graph that compounds with every trip.',
     attachRatePercent: 55,
     fillTargetSeats: 4,
     intelligenceSignals: [
@@ -346,7 +368,8 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     autoGroupWindow: 'Build dependable daily route waves instead of random sparse rides.',
     movementLayers: ['local riders', 'families', 'local goods', 'service visits'],
     businessDemand: ['local commerce', 'tourism service', 'repair visits'],
-    routeMoat: 'Owning reliable low-distance grouping is how Wasel expands density into smaller corridors.',
+    routeMoat:
+      'Owning reliable low-distance grouping is how Wasel expands density into smaller corridors.',
     attachRatePercent: 43,
     fillTargetSeats: 3,
     intelligenceSignals: [
@@ -387,33 +410,35 @@ function normalizeRoute(route: JordanRoute, from?: string, to?: string) {
 }
 
 function getCorridorMeta(routeId: string): CorridorMeta {
-  return CORRIDOR_META[routeId] ?? {
-    demandScore: 70,
-    density: 'steady',
-    pickupPoints: ['Main corridor node', 'Trusted pickup zone', 'Demand capture point'],
-    autoGroupWindow: 'Use route alerts and cost sharing to build the next departure wave.',
-    movementLayers: ['people', 'goods', 'services', 'data'],
-    businessDemand: ['staff movement', 'returns', 'service calls'],
-    routeMoat: 'Wasel learns how this corridor behaves faster every time the route is searched.',
-    attachRatePercent: 42,
-    fillTargetSeats: 3,
-    intelligenceSignals: [
-      'Predict the next departure wave from saved alerts.',
-      'Suggest the best pickup node before search friction appears.',
-      'Use cost sharing to keep the route cheaper than solo movement.',
-    ],
-  };
+  return (
+    CORRIDOR_META[routeId] ?? {
+      demandScore: 70,
+      density: 'steady',
+      pickupPoints: ['Main corridor node', 'Trusted pickup zone', 'Demand capture point'],
+      autoGroupWindow: 'Use route alerts and cost sharing to build the next departure wave.',
+      movementLayers: ['people', 'goods', 'services', 'data'],
+      businessDemand: ['staff movement', 'returns', 'service calls'],
+      routeMoat: 'Wasel learns how this corridor behaves faster every time the route is searched.',
+      attachRatePercent: 42,
+      fillTargetSeats: 3,
+      intelligenceSignals: [
+        'Predict the next departure wave from saved alerts.',
+        'Suggest the best pickup node before search friction appears.',
+        'Use cost sharing to keep the route cheaper than solo movement.',
+      ],
+    }
+  );
 }
 
 function buildRoutePrices(route: JordanRoute, demandScore: number) {
-  const soloReferencePriceJod = roundMoney((route.baseFare * 1.75) + (route.distance * 0.02) + 1.8);
+  const soloReferencePriceJod = roundMoney(route.baseFare * 1.75 + route.distance * 0.02 + 1.8);
   const totalTripCost = Math.max(route.baseFare * 1.2, soloReferencePriceJod * 0.88);
   const priceLadder = SmartPricingEngine.calculateSharedRidePricing(totalTripCost, 4);
   const densityDiscount = demandScore >= 90 ? 0.92 : demandScore >= 80 ? 0.96 : 1;
   const sharedPriceJod = roundMoney((priceLadder[2]?.price ?? route.baseFare) * densityDiscount);
   const savingsPercent = Math.max(
     20,
-    Math.round((1 - (sharedPriceJod / Math.max(soloReferencePriceJod, sharedPriceJod + 1))) * 100),
+    Math.round((1 - sharedPriceJod / Math.max(soloReferencePriceJod, sharedPriceJod + 1)) * 100),
   );
 
   return {
@@ -428,8 +453,12 @@ function buildOpportunity(route: JordanRoute, from?: string, to?: string): Corri
   const normalized = normalizeRoute(route, from, to);
   const meta = getCorridorMeta(route.id);
   const prices = buildRoutePrices(route, meta.demandScore);
-  const driverBoostJod = roundMoney((prices.sharedPriceJod * meta.fillTargetSeats * 0.18) + (meta.attachRatePercent * 0.04));
-  const subscriptionPriceJod = roundMoney((prices.sharedPriceJod * 18) * (meta.density === 'surging' ? 0.92 : 0.97));
+  const driverBoostJod = roundMoney(
+    prices.sharedPriceJod * meta.fillTargetSeats * 0.18 + meta.attachRatePercent * 0.04,
+  );
+  const subscriptionPriceJod = roundMoney(
+    prices.sharedPriceJod * 18 * (meta.density === 'surging' ? 0.92 : 0.97),
+  );
 
   return {
     id: route.id,
@@ -476,7 +505,7 @@ export function getHabitLoopPrograms() {
 }
 
 export function getAllCorridorOpportunities() {
-  return JORDAN_MOBILITY_NETWORK.map((route) => buildOpportunity(route)).sort(
+  return JORDAN_MOBILITY_NETWORK.map(route => buildOpportunity(route)).sort(
     (left, right) => right.predictedDemandScore - left.predictedDemandScore,
   );
 }
@@ -486,19 +515,22 @@ export function getFeaturedCorridors(limit = 6) {
 }
 
 export function getCorridorOpportunityById(routeId: string) {
-  const route = JORDAN_MOBILITY_NETWORK.find((item) => item.id === routeId)
-    ?? JORDAN_MOBILITY_NETWORK.find((item) => item.id === DEFAULT_CORRIDOR_ID);
+  const route =
+    JORDAN_MOBILITY_NETWORK.find(item => item.id === routeId) ??
+    JORDAN_MOBILITY_NETWORK.find(item => item.id === DEFAULT_CORRIDOR_ID);
   return route ? buildOpportunity(route) : null;
 }
 
 export function getCorridorOpportunity(from: string, to: string) {
-  const route = getRouteBetween(from, to)
-    ?? JORDAN_MOBILITY_NETWORK.find((item) => item.id === DEFAULT_CORRIDOR_ID);
+  const route =
+    getRouteBetween(from, to) ??
+    JORDAN_MOBILITY_NETWORK.find(item => item.id === DEFAULT_CORRIDOR_ID);
   return route ? buildOpportunity(route, from, to) : null;
 }
 
 export function buildDriverRoutePlan(from: string, to: string, seats: number) {
-  const corridor = getCorridorOpportunity(from, to) ?? getCorridorOpportunityById(DEFAULT_CORRIDOR_ID);
+  const corridor =
+    getCorridorOpportunity(from, to) ?? getCorridorOpportunityById(DEFAULT_CORRIDOR_ID);
   if (!corridor) {
     return null;
   }
@@ -508,10 +540,13 @@ export function buildDriverRoutePlan(from: string, to: string, seats: number) {
     Math.max(2, seats),
   );
   const recommendedSeatPriceJod = roundMoney(
-    (priceModel[Math.min(Math.max(seats - 1, 0), priceModel.length - 1)]?.price ?? corridor.sharedPriceJod) * 0.98,
+    (priceModel[Math.min(Math.max(seats - 1, 0), priceModel.length - 1)]?.price ??
+      corridor.sharedPriceJod) * 0.98,
   );
   const grossWhenFullJod = roundMoney(recommendedSeatPriceJod * Math.max(2, seats));
-  const emptySeatCostJod = roundMoney(Math.max(0, grossWhenFullJod - (recommendedSeatPriceJod * Math.max(1, seats - 1))));
+  const emptySeatCostJod = roundMoney(
+    Math.max(0, grossWhenFullJod - recommendedSeatPriceJod * Math.max(1, seats - 1)),
+  );
   const packageBonusJod = roundMoney(corridor.driverBoostJod * 0.55);
 
   return {

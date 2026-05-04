@@ -20,12 +20,7 @@ export type RideBookingStatus =
   | 'cancelled'
   | 'completed';
 
-export type RidePaymentStatus =
-  | 'pending'
-  | 'authorized'
-  | 'captured'
-  | 'refunded'
-  | 'failed';
+export type RidePaymentStatus = 'pending' | 'authorized' | 'captured' | 'refunded' | 'failed';
 
 export interface RideBookingRecord {
   id: string;
@@ -81,8 +76,8 @@ function writeBookings(bookings: RideBookingRecord[]): void {
 }
 
 function upsertBookings(records: RideBookingRecord[]): void {
-  const current = new Map(readBookings().map((booking) => [booking.id, booking]));
-  records.forEach((record) => {
+  const current = new Map(readBookings().map(booking => [booking.id, booking]));
+  records.forEach(record => {
     current.set(record.id, record);
   });
   writeBookings(Array.from(current.values()));
@@ -292,36 +287,27 @@ export function createRideBooking(input: {
 }
 
 export function getBookingsForRide(rideId: string): RideBookingRecord[] {
-  return getRideBookings().filter((booking) => booking.rideId === rideId);
+  return getRideBookings().filter(booking => booking.rideId === rideId);
 }
 
-export function getBookingsForDriver(
-  userId: string,
-  rides: PostedRide[],
-): RideBookingRecord[] {
-  const rideIds = new Set(
-    rides.filter((ride) => ride.ownerId === userId).map((ride) => ride.id),
-  );
+export function getBookingsForDriver(userId: string, rides: PostedRide[]): RideBookingRecord[] {
+  const rideIds = new Set(rides.filter(ride => ride.ownerId === userId).map(ride => ride.id));
 
   return getRideBookings().filter(
-    (booking) => booking.ownerId === userId || rideIds.has(booking.rideId),
+    booking => booking.ownerId === userId || rideIds.has(booking.rideId),
   );
 }
 
 export function getBookingsForPassenger(passengerName: string): RideBookingRecord[] {
-  return getRideBookings().filter(
-    (booking) => booking.passengerName === passengerName,
-  );
+  return getRideBookings().filter(booking => booking.passengerName === passengerName);
 }
 
 export function updateRideBooking(
   bookingId: string,
-  updates: Partial<
-    Pick<RideBookingRecord, 'status' | 'paymentStatus' | 'supportThreadOpen'>
-  >,
+  updates: Partial<Pick<RideBookingRecord, 'status' | 'paymentStatus' | 'supportThreadOpen'>>,
 ): RideBookingRecord | null {
   const bookings = readBookings();
-  const target = bookings.find((booking) => booking.id === bookingId);
+  const target = bookings.find(booking => booking.id === bookingId);
 
   if (!target) {
     return null;
@@ -338,7 +324,7 @@ export function updateRideBooking(
     updatedAt: new Date().toISOString(),
   };
 
-  writeBookings(bookings.map((booking) => (booking.id === bookingId ? updated : booking)));
+  writeBookings(bookings.map(booking => (booking.id === bookingId ? updated : booking)));
 
   if (
     updated.backendBookingId &&
@@ -347,8 +333,7 @@ export function updateRideBooking(
       updates.status === 'cancelled' ||
       updates.status === 'confirmed')
   ) {
-    const directStatus =
-      updates.status === 'confirmed' ? 'accepted' : updates.status;
+    const directStatus = updates.status === 'confirmed' ? 'accepted' : updates.status;
 
     void updateDirectBookingStatus(
       updated.backendBookingId,
@@ -420,7 +405,7 @@ export async function hydrateRideBookings(
     getDirectDriverBookings(userId),
   ]);
 
-  const knownRides = new Map(rides.map((ride) => [ride.id, ride]));
+  const knownRides = new Map(rides.map(ride => [ride.id, ride]));
   const normalize = (raw: Record<string, unknown>): RideBookingRecord => {
     const rideId = String(raw.trip_id ?? '');
     const ride = knownRides.get(rideId);
@@ -444,9 +429,7 @@ export async function hydrateRideBookings(
       to: String(raw.dropoff_location ?? ride?.to ?? ''),
       date:
         ride?.date ??
-        new Date(String(raw.created_at ?? new Date().toISOString()))
-          .toISOString()
-          .slice(0, 10),
+        new Date(String(raw.created_at ?? new Date().toISOString())).toISOString().slice(0, 10),
       time: ride?.time ?? '08:00',
       driverName: ride ? ride.carModel || 'Wasel Captain' : 'Wasel Captain',
       passengerName: 'Passenger',
@@ -461,7 +444,11 @@ export async function hydrateRideBookings(
             : 'authorized',
       routeMode: ride ? 'live_post' : 'network_inventory',
       supportThreadOpen: false,
-      ticketCode: `RIDE-${String(raw.booking_id ?? raw.id ?? '').slice(-6).toUpperCase() || 'SYNCED'}`,
+      ticketCode: `RIDE-${
+        String(raw.booking_id ?? raw.id ?? '')
+          .slice(-6)
+          .toUpperCase() || 'SYNCED'
+      }`,
       createdAt: String(raw.created_at ?? new Date().toISOString()),
       updatedAt: String(raw.updated_at ?? raw.created_at ?? new Date().toISOString()),
       syncedAt: new Date().toISOString(),
@@ -472,8 +459,8 @@ export async function hydrateRideBookings(
     ...(passengerBookings.status === 'fulfilled' ? passengerBookings.value : []),
     ...(driverBookings.status === 'fulfilled' ? driverBookings.value : []),
   ]
-    .map((item) => normalize(item as Record<string, unknown>))
-    .filter((item) => item.id);
+    .map(item => normalize(item as Record<string, unknown>))
+    .filter(item => item.id);
 
   if (remote.length > 0) {
     upsertBookings(remote);
@@ -482,11 +469,9 @@ export async function hydrateRideBookings(
   return getRideBookings();
 }
 
-export function syncRideBookingCompletion(
-  referenceDate = Date.now(),
-): RideBookingRecord[] {
+export function syncRideBookingCompletion(referenceDate = Date.now()): RideBookingRecord[] {
   const bookings = readBookings();
-  const next = bookings.map((booking) => {
+  const next = bookings.map(booking => {
     if (booking.status !== 'confirmed') {
       return booking;
     }
@@ -500,8 +485,7 @@ export function syncRideBookingCompletion(
       ...booking,
       status: 'completed',
       lifecycleStatus: 'completed',
-      paymentStatus:
-        booking.paymentStatus === 'authorized' ? 'captured' : booking.paymentStatus,
+      paymentStatus: booking.paymentStatus === 'authorized' ? 'captured' : booking.paymentStatus,
       updatedAt: new Date(referenceDate).toISOString(),
     };
 

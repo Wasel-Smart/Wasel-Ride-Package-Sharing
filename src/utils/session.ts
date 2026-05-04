@@ -1,6 +1,6 @@
 /**
  * Session Management Utility
- * 
+ *
  * Implements secure session handling with:
  * - Session timeout
  * - Concurrent session detection
@@ -34,11 +34,11 @@ interface SessionStore {
 function generateDeviceId(): string {
   const stored = localStorage.getItem('wasel-device-id');
   if (stored) return stored;
-  
+
   const array = new Uint8Array(16);
   crypto.getRandomValues(array);
   const deviceId = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-  
+
   localStorage.setItem('wasel-device-id', deviceId);
   return deviceId;
 }
@@ -59,11 +59,11 @@ function getSessionStore(): SessionStore {
   if (typeof sessionStorage === 'undefined') {
     return { current: null, all: [] };
   }
-  
+
   try {
     const stored = sessionStorage.getItem(SESSION_KEY);
     if (!stored) return { current: null, all: [] };
-    
+
     return JSON.parse(stored) as SessionStore;
   } catch {
     return { current: null, all: [] };
@@ -75,7 +75,7 @@ function getSessionStore(): SessionStore {
  */
 function saveSessionStore(store: SessionStore): void {
   if (typeof sessionStorage === 'undefined') return;
-  
+
   try {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(store));
   } catch (error) {
@@ -96,14 +96,14 @@ export function createSession(userId: string): SessionMetadata {
     deviceId: generateDeviceId(),
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
   };
-  
+
   const store = getSessionStore();
   store.current = session;
   store.all = [session, ...store.all.slice(0, MAX_CONCURRENT_SESSIONS - 1)];
-  
+
   saveSessionStore(store);
   startActivityTracking();
-  
+
   return session;
 }
 
@@ -113,7 +113,7 @@ export function createSession(userId: string): SessionMetadata {
 export function updateSessionActivity(): void {
   const store = getSessionStore();
   if (!store.current) return;
-  
+
   store.current.lastActivity = Date.now();
   saveSessionStore(store);
 }
@@ -124,7 +124,7 @@ export function updateSessionActivity(): void {
 export function isSessionExpired(): boolean {
   const store = getSessionStore();
   if (!store.current) return true;
-  
+
   const timeSinceActivity = Date.now() - store.current.lastActivity;
   return timeSinceActivity > SESSION_TIMEOUT_MS;
 }
@@ -135,10 +135,10 @@ export function isSessionExpired(): boolean {
 export function getTimeUntilExpiry(): number {
   const store = getSessionStore();
   if (!store.current) return 0;
-  
+
   const timeSinceActivity = Date.now() - store.current.lastActivity;
   const remaining = SESSION_TIMEOUT_MS - timeSinceActivity;
-  
+
   return Math.max(0, remaining);
 }
 
@@ -148,10 +148,10 @@ export function getTimeUntilExpiry(): number {
 export function destroySession(): void {
   const store = getSessionStore();
   if (!store.current) return;
-  
+
   store.all = store.all.filter(s => s.sessionId !== store.current?.sessionId);
   store.current = null;
-  
+
   saveSessionStore(store);
   stopActivityTracking();
 }
@@ -162,7 +162,7 @@ export function destroySession(): void {
 export function getActiveSessions(): SessionMetadata[] {
   const store = getSessionStore();
   const now = Date.now();
-  
+
   return store.all.filter(session => {
     const timeSinceActivity = now - session.lastActivity;
     return timeSinceActivity <= SESSION_TIMEOUT_MS;
@@ -182,12 +182,12 @@ export function hasConcurrentSessions(): boolean {
  */
 export function terminateSession(sessionId: string): void {
   const store = getSessionStore();
-  
+
   if (store.current?.sessionId === sessionId) {
     destroySession();
     return;
   }
-  
+
   store.all = store.all.filter(s => s.sessionId !== sessionId);
   saveSessionStore(store);
 }
@@ -198,7 +198,7 @@ export function terminateSession(sessionId: string): void {
 export function terminateOtherSessions(): void {
   const store = getSessionStore();
   if (!store.current) return;
-  
+
   store.all = [store.current];
   saveSessionStore(store);
 }
@@ -219,15 +219,15 @@ let activityTrackingInterval: ReturnType<typeof setInterval> | null = null;
 function startActivityTracking(): void {
   if (activityTrackingInterval) return;
   if (typeof window === 'undefined') return;
-  
+
   // Update activity on user interactions
   const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
   const updateActivity = () => updateSessionActivity();
-  
+
   events.forEach(event => {
     window.addEventListener(event, updateActivity, { passive: true });
   });
-  
+
   // Check for expiry periodically
   activityTrackingInterval = setInterval(() => {
     if (isSessionExpired()) {
@@ -242,7 +242,7 @@ function startActivityTracking(): void {
  */
 function stopActivityTracking(): void {
   if (!activityTrackingInterval) return;
-  
+
   clearInterval(activityTrackingInterval);
   activityTrackingInterval = null;
 }
@@ -252,30 +252,30 @@ function stopActivityTracking(): void {
  */
 export function initializeSessionManagement(): void {
   if (typeof window === 'undefined') return;
-  
+
   // Clean up expired sessions on load
   const store = getSessionStore();
   const now = Date.now();
-  
+
   store.all = store.all.filter(session => {
     const timeSinceActivity = now - session.lastActivity;
     return timeSinceActivity <= SESSION_TIMEOUT_MS;
   });
-  
+
   if (store.current) {
     const timeSinceActivity = now - store.current.lastActivity;
     if (timeSinceActivity > SESSION_TIMEOUT_MS) {
       store.current = null;
     }
   }
-  
+
   saveSessionStore(store);
-  
+
   // Start tracking if session exists
   if (store.current) {
     startActivityTracking();
   }
-  
+
   // Clean up on page unload
   window.addEventListener('beforeunload', () => {
     stopActivityTracking();

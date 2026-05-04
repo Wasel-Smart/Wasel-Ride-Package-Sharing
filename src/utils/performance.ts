@@ -1,7 +1,7 @@
 /**
  * Performance Monitoring & Web Vitals
  * Version: 1.0.0
- * 
+ *
  * Tracks Core Web Vitals and performance metrics
  */
 
@@ -20,24 +20,24 @@ export interface WebVital {
 }
 
 export interface PerformanceMetrics {
-  cls: number;  // Cumulative Layout Shift
-  fid: number;  // Legacy First Input Delay alias mapped from INP
-  fcp: number;  // First Contentful Paint
-  lcp: number;  // Largest Contentful Paint
+  cls: number; // Cumulative Layout Shift
+  fid: number; // Legacy First Input Delay alias mapped from INP
+  fcp: number; // First Contentful Paint
+  lcp: number; // Largest Contentful Paint
   ttfb: number; // Time to First Byte
-  inp: number;  // Interaction to Next Paint
+  inp: number; // Interaction to Next Paint
 }
 
 const metrics: Partial<PerformanceMetrics> = {};
 
 // Performance budgets (in milliseconds)
 const PERFORMANCE_BUDGETS = {
-  fcp: 1800,  // First Contentful Paint
-  lcp: 2500,  // Largest Contentful Paint
-  fid: 200,   // Legacy First Input Delay alias mapped from INP
-  cls: 0.1,   // Cumulative Layout Shift
-  ttfb: 600,  // Time to First Byte
-  inp: 200,   // Interaction to Next Paint
+  fcp: 1800, // First Contentful Paint
+  lcp: 2500, // Largest Contentful Paint
+  fid: 200, // Legacy First Input Delay alias mapped from INP
+  cls: 0.1, // Cumulative Layout Shift
+  ttfb: 600, // Time to First Byte
+  inp: 200, // Interaction to Next Paint
 };
 
 // Initialize Web Vitals tracking
@@ -47,31 +47,31 @@ export function initPerformanceMonitoring() {
   performanceMonitoringInitialized = true;
 
   // Track Cumulative Layout Shift
-  onCLS((metric) => {
+  onCLS(metric => {
     metrics.cls = metric.value;
     reportWebVital(metric);
   });
 
   // Track First Contentful Paint
-  onFCP((metric) => {
+  onFCP(metric => {
     metrics.fcp = metric.value;
     reportWebVital(metric);
   });
 
   // Track Largest Contentful Paint
-  onLCP((metric) => {
+  onLCP(metric => {
     metrics.lcp = metric.value;
     reportWebVital(metric);
   });
 
   // Track Time to First Byte
-  onTTFB((metric) => {
+  onTTFB(metric => {
     metrics.ttfb = metric.value;
     reportWebVital(metric);
   });
 
   // Track Interaction to Next Paint
-  onINP((metric) => {
+  onINP(metric => {
     metrics.inp = metric.value;
     reportWebVital(metric);
     metrics.fid = metric.value;
@@ -91,7 +91,8 @@ function reportWebVital(metric: Metric) {
 
   // Log to console in development
   if (import.meta.env.DEV) {
-    const emoji = vital.rating === 'good' ? '✅' : vital.rating === 'needs-improvement' ? '⚠️' : '❌';
+    const emoji =
+      vital.rating === 'good' ? '✅' : vital.rating === 'needs-improvement' ? '⚠️' : '❌';
     console.log(`${emoji} ${vital.name}: ${vital.value.toFixed(2)}ms (${vital.rating})`);
   }
 
@@ -143,7 +144,7 @@ function sendToAnalytics(vital: WebVital) {
         userAgent: navigator.userAgent,
       }),
       keepalive: true,
-    }).catch((error) => {
+    }).catch(error => {
       console.error('Failed to send analytics:', error);
     });
   }
@@ -157,12 +158,12 @@ export function markPerformance(name: string) {
 
 export function measurePerformance(name: string, startMark: string, endMark?: string) {
   if (typeof window === 'undefined') return;
-  
+
   try {
     const measure = performance.measure(name, startMark, endMark);
-    
+
     console.log(`⏱️ ${name}: ${measure.duration.toFixed(2)}ms`);
-    
+
     // Log slow operations
     if (measure.duration > 1000) {
       logger.warning(`Slow operation: ${name}`, {
@@ -171,7 +172,7 @@ export function measurePerformance(name: string, startMark: string, endMark?: st
         endMark,
       });
     }
-    
+
     return measure.duration;
   } catch (error) {
     console.error('Performance measurement failed:', error);
@@ -187,45 +188,45 @@ export function getMetrics(): Partial<PerformanceMetrics> {
 // Get performance score (0-100)
 export function getPerformanceScore(): number {
   const scores: number[] = [];
-  
+
   // LCP score
   if (metrics.lcp) {
     if (metrics.lcp <= 2500) scores.push(100);
     else if (metrics.lcp <= 4000) scores.push(50);
     else scores.push(0);
   }
-  
+
   // FID score
   if (metrics.fid) {
     if (metrics.fid <= 100) scores.push(100);
     else if (metrics.fid <= 300) scores.push(50);
     else scores.push(0);
   }
-  
+
   // CLS score
   if (metrics.cls !== undefined) {
     if (metrics.cls <= 0.1) scores.push(100);
     else if (metrics.cls <= 0.25) scores.push(50);
     else scores.push(0);
   }
-  
+
   // FCP score
   if (metrics.fcp) {
     if (metrics.fcp <= 1800) scores.push(100);
     else if (metrics.fcp <= 3000) scores.push(50);
     else scores.push(0);
   }
-  
+
   return scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 }
 
 // Resource timing
 export function getResourceTimings() {
   if (typeof window === 'undefined') return [];
-  
+
   const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-  
-  return resources.map((resource) => ({
+
+  return resources.map(resource => ({
     name: resource.name,
     type: resource.initiatorType,
     duration: resource.duration,
@@ -238,8 +239,8 @@ export function detectLongTasks() {
   if (typeof window === 'undefined' || longTaskObserverStarted) return;
 
   longTaskObserverStarted = true;
-  
-  const observer = new PerformanceObserver((list) => {
+
+  const observer = new PerformanceObserver(list => {
     for (const entry of list.getEntries()) {
       if (entry.duration > 50) {
         logger.warning('Long task detected', {
@@ -250,7 +251,7 @@ export function detectLongTasks() {
       }
     }
   });
-  
+
   try {
     observer.observe({ entryTypes: ['longtask'] });
   } catch (error) {
@@ -262,10 +263,10 @@ export function detectLongTasks() {
 // Memory usage (Chrome only)
 export function getMemoryUsage() {
   if (typeof window === 'undefined') return null;
-  
+
   const memory = (performance as any).memory;
   if (!memory) return null;
-  
+
   return {
     usedJSHeapSize: memory.usedJSHeapSize,
     totalJSHeapSize: memory.totalJSHeapSize,
@@ -277,10 +278,10 @@ export function getMemoryUsage() {
 // Navigation timing
 export function getNavigationTiming() {
   if (typeof window === 'undefined') return null;
-  
+
   const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
   if (!navigation) return null;
-  
+
   return {
     dns: navigation.domainLookupEnd - navigation.domainLookupStart,
     tcp: navigation.connectEnd - navigation.connectStart,
@@ -309,12 +310,12 @@ export function exportPerformanceReport() {
 // React hook for performance monitoring
 export function usePerformanceMonitor(componentName: string) {
   if (typeof window === 'undefined') return;
-  
+
   const startMark = `${componentName}-start`;
   const endMark = `${componentName}-end`;
-  
+
   markPerformance(startMark);
-  
+
   return () => {
     markPerformance(endMark);
     measurePerformance(componentName, startMark, endMark);

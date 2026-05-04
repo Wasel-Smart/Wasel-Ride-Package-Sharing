@@ -1,6 +1,6 @@
 /**
  * CSRF Protection Utility
- * 
+ *
  * Implements Cross-Site Request Forgery protection for all state-changing operations.
  * Uses double-submit cookie pattern with additional validation.
  */
@@ -25,11 +25,11 @@ function generateSecureToken(): string {
     crypto.getRandomValues(array);
     return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   }
-  
+
   // Fallback for environments without crypto API (should not happen in modern browsers)
   console.warn('crypto.getRandomValues not available, using less secure fallback');
-  return Array.from({ length: TOKEN_LENGTH }, () => 
-    Math.floor(Math.random() * 16).toString(16)
+  return Array.from({ length: TOKEN_LENGTH }, () =>
+    Math.floor(Math.random() * 16).toString(16),
   ).join('');
 }
 
@@ -38,7 +38,7 @@ function generateSecureToken(): string {
  */
 function storeToken(tokenData: CsrfTokenData): void {
   if (typeof sessionStorage === 'undefined') return;
-  
+
   try {
     sessionStorage.setItem(CSRF_TOKEN_KEY, JSON.stringify(tokenData));
   } catch (error) {
@@ -51,19 +51,19 @@ function storeToken(tokenData: CsrfTokenData): void {
  */
 function retrieveToken(): CsrfTokenData | null {
   if (typeof sessionStorage === 'undefined') return null;
-  
+
   try {
     const stored = sessionStorage.getItem(CSRF_TOKEN_KEY);
     if (!stored) return null;
-    
+
     const tokenData = JSON.parse(stored) as CsrfTokenData;
-    
+
     // Check if token is expired
     if (Date.now() > tokenData.expiresAt) {
       sessionStorage.removeItem(CSRF_TOKEN_KEY);
       return null;
     }
-    
+
     return tokenData;
   } catch (error) {
     console.error('Failed to retrieve CSRF token:', error);
@@ -76,7 +76,7 @@ function retrieveToken(): CsrfTokenData | null {
  */
 export function getCsrfToken(): string {
   let tokenData = retrieveToken();
-  
+
   if (!tokenData) {
     const now = Date.now();
     tokenData = {
@@ -86,7 +86,7 @@ export function getCsrfToken(): string {
     };
     storeToken(tokenData);
   }
-  
+
   return tokenData.token;
 }
 
@@ -95,22 +95,22 @@ export function getCsrfToken(): string {
  */
 export function validateCsrfToken(token: string): boolean {
   const stored = retrieveToken();
-  
+
   if (!stored) {
     console.warn('No CSRF token found in storage');
     return false;
   }
-  
+
   if (stored.token !== token) {
     console.warn('CSRF token mismatch');
     return false;
   }
-  
+
   if (Date.now() > stored.expiresAt) {
     console.warn('CSRF token expired');
     return false;
   }
-  
+
   return true;
 }
 
@@ -139,9 +139,9 @@ export function clearCsrfToken(): void {
 export function addCsrfHeader(headers: HeadersInit = {}): Headers {
   const finalHeaders = new Headers(headers);
   const token = getCsrfToken();
-  
+
   finalHeaders.set(CSRF_HEADER_NAME, token);
-  
+
   return finalHeaders;
 }
 
@@ -150,7 +150,7 @@ export function addCsrfHeader(headers: HeadersInit = {}): Headers {
  */
 export function withCsrfProtection(options: RequestInit = {}): RequestInit {
   const headers = addCsrfHeader(options.headers);
-  
+
   return {
     ...options,
     headers,
@@ -162,29 +162,26 @@ export function withCsrfProtection(options: RequestInit = {}): RequestInit {
  */
 export function validateCsrfFromHeaders(headers: Headers): boolean {
   const token = headers.get(CSRF_HEADER_NAME);
-  
+
   if (!token) {
     return false;
   }
-  
+
   return validateCsrfToken(token);
 }
 
 /**
  * CSRF-protected fetch wrapper
  */
-export async function csrfFetch(
-  url: string,
-  options: RequestInit = {}
-): Promise<Response> {
+export async function csrfFetch(url: string, options: RequestInit = {}): Promise<Response> {
   // Only add CSRF protection for state-changing methods
   const method = (options.method || 'GET').toUpperCase();
   const requiresCsrf = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
-  
+
   if (requiresCsrf) {
     return fetch(url, withCsrfProtection(options));
   }
-  
+
   return fetch(url, options);
 }
 
@@ -194,21 +191,24 @@ export async function csrfFetch(
 export function initializeCsrfProtection(): void {
   // Generate initial token
   getCsrfToken();
-  
+
   // Refresh token periodically
   if (typeof setInterval !== 'undefined') {
-    setInterval(() => {
-      const tokenData = retrieveToken();
-      if (tokenData) {
-        const timeUntilExpiry = tokenData.expiresAt - Date.now();
-        // Refresh if less than 10 minutes remaining
-        if (timeUntilExpiry < 10 * 60 * 1000) {
-          refreshCsrfToken();
+    setInterval(
+      () => {
+        const tokenData = retrieveToken();
+        if (tokenData) {
+          const timeUntilExpiry = tokenData.expiresAt - Date.now();
+          // Refresh if less than 10 minutes remaining
+          if (timeUntilExpiry < 10 * 60 * 1000) {
+            refreshCsrfToken();
+          }
         }
-      }
-    }, 5 * 60 * 1000); // Check every 5 minutes
+      },
+      5 * 60 * 1000,
+    ); // Check every 5 minutes
   }
-  
+
   // Clear token on page unload
   if (typeof window !== 'undefined') {
     window.addEventListener('beforeunload', () => {

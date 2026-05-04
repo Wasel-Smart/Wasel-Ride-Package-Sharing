@@ -51,10 +51,7 @@ export function unwrapApiEnvelope<T>(value: T | ApiEnvelope<T>): T {
   });
 }
 
-export function createSuccessEnvelope<T>(
-  data: T,
-  metadata?: ApiMetadata,
-): ApiSuccessEnvelope<T> {
+export function createSuccessEnvelope<T>(data: T, metadata?: ApiMetadata): ApiSuccessEnvelope<T> {
   return {
     success: true,
     data,

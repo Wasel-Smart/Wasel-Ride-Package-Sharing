@@ -18,28 +18,30 @@ export const bookingsAPI = {
       operation: 'Booking creation',
       authMode: 'required',
       fallbackPolicy: 'writes-if-enabled',
-      fallback: ({ userId }) => createDirectBooking({
-        tripId,
-        userId: userId!,
-        seatsRequested,
-        pickup,
-        dropoff,
-        metadata,
-      }),
-      edge: (context) => requestEdgeJson<any>({
-        path: '/bookings',
-        method: 'POST',
-        authMode: 'required',
-        context,
-        body: {
-          trip_id: tripId,
-          seats_requested: seatsRequested,
-          pickup_stop: pickup,
-          dropoff_stop: dropoff,
-          ...metadata,
-        },
-        operation: 'Failed to create booking',
-      }),
+      fallback: ({ userId }) =>
+        createDirectBooking({
+          tripId,
+          userId: userId!,
+          seatsRequested,
+          pickup,
+          dropoff,
+          metadata,
+        }),
+      edge: context =>
+        requestEdgeJson<any>({
+          path: '/bookings',
+          method: 'POST',
+          authMode: 'required',
+          context,
+          body: {
+            trip_id: tripId,
+            seats_requested: seatsRequested,
+            pickup_stop: pickup,
+            dropoff_stop: dropoff,
+            ...metadata,
+          },
+          operation: 'Failed to create booking',
+        }),
     });
   },
 
@@ -48,12 +50,13 @@ export const bookingsAPI = {
       operation: 'User booking loading',
       authMode: 'required',
       fallback: ({ userId }) => getDirectUserBookings(userId!),
-      edge: (context) => requestEdgeJson<any>({
-        path: `/bookings/user/${context.userId}`,
-        authMode: 'required',
-        context,
-        operation: 'Failed to fetch bookings',
-      }),
+      edge: context =>
+        requestEdgeJson<any>({
+          path: `/bookings/user/${context.userId}`,
+          authMode: 'required',
+          context,
+          operation: 'Failed to fetch bookings',
+        }),
     });
   },
 
@@ -62,12 +65,13 @@ export const bookingsAPI = {
       operation: 'Trip booking loading',
       authMode: 'required',
       fallback: () => getDirectTripBookings(tripId),
-      edge: (context) => requestEdgeJson<any>({
-        path: `/trips/${tripId}/bookings`,
-        authMode: 'required',
-        context,
-        operation: 'Failed to fetch trip bookings',
-      }),
+      edge: context =>
+        requestEdgeJson<any>({
+          path: `/trips/${tripId}/bookings`,
+          authMode: 'required',
+          context,
+          operation: 'Failed to fetch trip bookings',
+        }),
     });
   },
 
@@ -77,14 +81,15 @@ export const bookingsAPI = {
       authMode: 'required',
       fallbackPolicy: 'writes-if-enabled',
       fallback: () => updateDirectBookingStatus(bookingId, status),
-      edge: (context) => requestEdgeJson<any>({
-        path: `/bookings/${bookingId}`,
-        method: 'PUT',
-        authMode: 'required',
-        context,
-        body: { status },
-        operation: 'Failed to update booking',
-      }),
+      edge: context =>
+        requestEdgeJson<any>({
+          path: `/bookings/${bookingId}`,
+          method: 'PUT',
+          authMode: 'required',
+          context,
+          body: { status },
+          operation: 'Failed to update booking',
+        }),
     });
   },
 };

@@ -100,11 +100,13 @@ const walletTextSource = {
     rewardClaimed: 'Reward claimed!',
     pinSetSuccess: 'PIN set successfully',
     topUpUnavailableHint: 'Secure wallet top-up is not configured in this environment yet.',
-    subscriptionUnavailableHint: 'Subscription checkout is disabled until wallet billing is configured.',
-    rewardClaimUnavailableHint: 'Rewards are visible, but claiming stays disabled until the wallet backend is configured.',
+    subscriptionUnavailableHint:
+      'Subscription checkout is disabled until wallet billing is configured.',
+    rewardClaimUnavailableHint:
+      'Rewards are visible, but claiming stays disabled until the wallet backend is configured.',
     pinUnavailableHint: 'PIN setup is disabled until the secure wallet backend is configured.',
   },
-ar: {
+  ar: {
     topUpUnavailableHint: 'شحن المحفظة الآمن غير مفعّل في هذه البيئة بعد.',
     subscriptionUnavailableHint: 'الاشتراك معطّل حتى يكتمل إعداد فوترة المحفظة.',
     rewardClaimUnavailableHint: 'المكافآت مرئية، لكن استلامها معطّل حتى يكتمل إعداد خلفية المحفظة.',
@@ -180,7 +182,8 @@ ar: {
     walletSubtitle: 'المدفوعات والرصيد والمكافآت',
     redirectingToSignIn: 'جارٍ تحويلك إلى تسجيل الدخول...',
     walletUnavailableTitle: 'المحفظة قيد الإطلاق',
-    walletUnavailableDescription: 'نجهز تدفق المدفوعات والأمان والتسوية. أكمل إعداد الخلفية لرؤية تجربة المحفظة الكاملة.',
+    walletUnavailableDescription:
+      'نجهز تدفق المدفوعات والأمان والتسوية. أكمل إعداد الخلفية لرؤية تجربة المحفظة الكاملة.',
     walletUnavailableHint: 'تجربة مالية أكثر تنسيقاً قريباً',
     rewardsEmptyHint: 'أكمل رحلات لتربح مكافآت',
     availableLabel: 'الرصيد المتاح',

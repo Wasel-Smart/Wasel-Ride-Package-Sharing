@@ -53,13 +53,28 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
         gap: 14,
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: 12,
+          alignItems: 'flex-start',
+        }}
+      >
         <div>
-          <div style={{ fontSize: '0.74rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: C.textMuted }}>
+          <div
+            style={{
+              fontSize: '0.74rem',
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: C.textMuted,
+            }}
+          >
             Corridor Instrument
           </div>
           <div style={{ marginTop: 6, fontSize: '1.08rem', fontWeight: 900 }}>
-            {projection.corridor.origin} <span style={{ color: C.textMuted }}>{'->'}</span> {projection.corridor.destination}
+            {projection.corridor.origin} <span style={{ color: C.textMuted }}>{'->'}</span>{' '}
+            {projection.corridor.destination}
           </div>
           <div style={{ marginTop: 5, color: C.textMuted, fontSize: '0.8rem' }}>
             {projection.corridor.distance_km} km / {projection.corridor.travel_time_min} min
@@ -96,7 +111,14 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
               padding: '12px 12px 10px',
             }}
           >
-            <div style={{ color: C.textMuted, fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            <div
+              style={{
+                color: C.textMuted,
+                fontSize: '0.7rem',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}
+            >
               {label}
             </div>
             <div style={{ marginTop: 6, fontSize: '0.98rem', fontWeight: 800 }}>{value}</div>
@@ -113,10 +135,26 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
             padding: '12px 13px',
           }}
         >
-          <div style={{ color: C.textMuted, fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          <div
+            style={{
+              color: C.textMuted,
+              fontSize: '0.7rem',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}
+          >
             Dynamic Seat Price
           </div>
-          <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 900, color: C.gold }}>
+          <div
+            style={{
+              marginTop: 6,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontWeight: 900,
+              color: C.gold,
+            }}
+          >
             {money(projection.dynamic_seat_price)}
             <span style={{ display: 'inline-flex', alignItems: 'center', color: seatDirection }}>
               {directionIcon(projection.seat_price_direction)}
@@ -131,10 +169,26 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
             padding: '12px 13px',
           }}
         >
-          <div style={{ color: C.textMuted, fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          <div
+            style={{
+              color: C.textMuted,
+              fontSize: '0.7rem',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}
+          >
             Dynamic Cargo Price
           </div>
-          <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 8, fontWeight: 900, color: C.green }}>
+          <div
+            style={{
+              marginTop: 6,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontWeight: 900,
+              color: C.green,
+            }}
+          >
             {money(projection.dynamic_cargo_price)}
             <span style={{ display: 'inline-flex', alignItems: 'center', color: cargoDirection }}>
               {directionIcon(projection.cargo_price_direction)}

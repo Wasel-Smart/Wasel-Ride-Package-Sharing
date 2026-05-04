@@ -3,7 +3,14 @@ import { Brain, Boxes, Network } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
-import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
+import {
+  CoreExperienceBanner,
+  DS,
+  PageShell,
+  Protected,
+  r,
+  SectionHead,
+} from '../../pages/waselServiceShared';
 import { createPackageComposer, validatePackageComposer } from '../../pages/waselCorePageHelpers';
 import {
   createConnectedPackage,
@@ -34,28 +41,32 @@ export function PackagesPage() {
   const [activeTab, setActiveTab] = useState<'send' | 'track' | 'raje3'>('send');
   const [pkg, setPkg] = useState(() => createPackageComposer());
   const [trackId, setTrackId] = useState('');
-  const [trackedPackage, setTrackedPackage] = useState<PackageRequest | null>(() => getConnectedPackages()[0] ?? null);
+  const [trackedPackage, setTrackedPackage] = useState<PackageRequest | null>(
+    () => getConnectedPackages()[0] ?? null,
+  );
   const [networkStats, setNetworkStats] = useState(() => getConnectedStats());
-  const [recentPackages, setRecentPackages] = useState<PackageRequest[]>(() => getConnectedPackages().slice(0, 4));
+  const [recentPackages, setRecentPackages] = useState<PackageRequest[]>(() =>
+    getConnectedPackages().slice(0, 4),
+  );
   const [createError, setCreateError] = useState<string | null>(null);
   const [trackingMessage, setTrackingMessage] = useState<string | null>(null);
   const [busyState, setBusyState] = useState<'idle' | 'creating' | 'tracking'>('idle');
 
   const featuredCorridors = useMemo(() => getFeaturedCorridors(3), []);
   const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(2), []);
-  const corridorPlan = useMemo(
-    () => getCorridorOpportunity(pkg.from, pkg.to),
-    [pkg.from, pkg.to],
-  );
+  const corridorPlan = useMemo(() => getCorridorOpportunity(pkg.from, pkg.to), [pkg.from, pkg.to]);
 
-  const matchingRideCount = getConnectedRides().filter((ride) => ride.acceptsPackages && ride.from === pkg.from && ride.to === pkg.to).length;
-  const trackedStatusColor = trackedPackage?.status === 'delivered'
-    ? DS.green
-    : trackedPackage?.status === 'in_transit'
-      ? DS.cyan
-      : trackedPackage?.status === 'matched'
-        ? DS.gold
-        : DS.muted;
+  const matchingRideCount = getConnectedRides().filter(
+    ride => ride.acceptsPackages && ride.from === pkg.from && ride.to === pkg.to,
+  ).length;
+  const trackedStatusColor =
+    trackedPackage?.status === 'delivered'
+      ? DS.green
+      : trackedPackage?.status === 'in_transit'
+        ? DS.cyan
+        : trackedPackage?.status === 'matched'
+          ? DS.gold
+          : DS.muted;
 
   const refreshPackageSnapshot = () => {
     setNetworkStats(getConnectedStats());
@@ -99,20 +110,24 @@ export function PackagesPage() {
         recipientPhone: pkg.recipientPhone,
       });
 
-      setPkg((previous) => ({ ...previous, sent: true, trackingId: created.trackingId }));
+      setPkg(previous => ({ ...previous, sent: true, trackingId: created.trackingId }));
       setTrackedPackage(created);
       setTrackId(created.trackingId);
       setTrackingMessage(`Tracking live: ${created.trackingId}.`);
       refreshPackageSnapshot();
       void recordMovementActivity('package_created', corridorPlan?.id ?? null);
 
-      notificationsAPI.createNotification({
-        title: packageType === 'return' ? 'Return request started' : 'Package booking started',
-        message: created.matchedRideId ? `Your package was matched to a live ${created.from} to ${created.to} route.` : 'Your package request is live and waiting for the next matching route.',
-        type: 'booking',
-        priority: 'high',
-        action_url: '/app/packages',
-      }).catch(() => {});
+      notificationsAPI
+        .createNotification({
+          title: packageType === 'return' ? 'Return request started' : 'Package booking started',
+          message: created.matchedRideId
+            ? `Your package was matched to a live ${created.from} to ${created.to} route.`
+            : 'Your package request is live and waiting for the next matching route.',
+          type: 'booking',
+          priority: 'high',
+          action_url: '/app/packages',
+        })
+        .catch(() => {});
 
       if (permission === 'default') {
         requestPermission().catch(() => {});
@@ -120,11 +135,17 @@ export function PackagesPage() {
 
       notify({
         title: packageType === 'return' ? 'Return Started' : 'Package request created',
-        body: created.matchedRideId ? `Matched to ${created.matchedDriver || 'a connected route'}. Tracking ID: ${created.trackingId}` : `Tracking ID: ${created.trackingId}. We are searching for the next corridor match now.`,
+        body: created.matchedRideId
+          ? `Matched to ${created.matchedDriver || 'a connected route'}. Tracking ID: ${created.trackingId}`
+          : `Tracking ID: ${created.trackingId}. We are searching for the next corridor match now.`,
         tag: 'package-created',
       });
     } catch (error) {
-      setCreateError(error instanceof Error ? error.message : 'We could not create the package request right now.');
+      setCreateError(
+        error instanceof Error
+          ? error.message
+          : 'We could not create the package request right now.',
+      );
     } finally {
       setBusyState('idle');
     }
@@ -144,7 +165,9 @@ export function PackagesPage() {
     }
   };
 
-  const handleVerificationAction = (action: 'share_code' | 'confirm_pickup' | 'confirm_delivery') => {
+  const handleVerificationAction = (
+    action: 'share_code' | 'confirm_pickup' | 'confirm_delivery',
+  ) => {
     if (!trackedPackage) return;
     const updated = updatePackageVerification(trackedPackage.trackingId, action);
     if (!updated) return;
@@ -174,13 +197,15 @@ export function PackagesPage() {
       });
 
       setTrackingMessage(`Support opened: ${ticket.id}.`);
-      notificationsAPI.createNotification({
-        title: 'Package support opened',
-        message: `Support is now following ${trackedPackage.trackingId}.`,
-        type: 'support',
-        priority: 'high',
-        action_url: '/app/profile',
-      }).catch(() => {});
+      notificationsAPI
+        .createNotification({
+          title: 'Package support opened',
+          message: `Support is now following ${trackedPackage.trackingId}.`,
+          type: 'support',
+          priority: 'high',
+          action_url: '/app/profile',
+        })
+        .catch(() => {});
     })();
   };
 
@@ -202,25 +227,96 @@ export function PackagesPage() {
           tone={DS.gold}
         />
 
-        <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
+        <div
+          className="sp-4col"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+            gap: 14,
+            marginBottom: 18,
+          }}
+        >
           {[
-            { label: 'Ready routes', value: String(networkStats.packageEnabledRides), detail: 'Routes accepting packages', color: DS.green },
-            { label: 'Match rate', value: corridorPlan ? `${corridorPlan.attachRatePercent}%` : '--', detail: 'Chance of a fast match', color: DS.gold },
-            { label: 'Shared price', value: corridorPlan ? `${corridorPlan.sharedPriceJod} JOD` : '--', detail: 'Expected route price', color: DS.cyan },
-            { label: 'Matched', value: String(networkStats.matchedPackages), detail: 'Already linked to rides', color: DS.blue },
-          ].map((item) => (
-            <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(18), border: `1px solid ${DS.border}`, padding: '18px 18px 16px', boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
-              <div style={{ color: item.color, fontWeight: 900, fontSize: '1.2rem', marginBottom: 4 }}>{item.value}</div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>{item.label}</div>
-              <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.45 }}>{item.detail}</div>
+            {
+              label: 'Ready routes',
+              value: String(networkStats.packageEnabledRides),
+              detail: 'Routes accepting packages',
+              color: DS.green,
+            },
+            {
+              label: 'Match rate',
+              value: corridorPlan ? `${corridorPlan.attachRatePercent}%` : '--',
+              detail: 'Chance of a fast match',
+              color: DS.gold,
+            },
+            {
+              label: 'Shared price',
+              value: corridorPlan ? `${corridorPlan.sharedPriceJod} JOD` : '--',
+              detail: 'Expected route price',
+              color: DS.cyan,
+            },
+            {
+              label: 'Matched',
+              value: String(networkStats.matchedPackages),
+              detail: 'Already linked to rides',
+              color: DS.blue,
+            },
+          ].map(item => (
+            <div
+              key={item.label}
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
+                borderRadius: r(18),
+                border: `1px solid ${DS.border}`,
+                padding: '18px 18px 16px',
+                boxShadow: '0 12px 28px rgba(0,0,0,0.16)',
+              }}
+            >
+              <div
+                style={{ color: item.color, fontWeight: 900, fontSize: '1.2rem', marginBottom: 4 }}
+              >
+                {item.value}
+              </div>
+              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>
+                {item.label}
+              </div>
+              <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.45 }}>
+                {item.detail}
+              </div>
             </div>
           ))}
         </div>
 
-        <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
-          <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
+        <div
+          className="sp-2col"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1.15fr 0.85fr',
+            gap: 14,
+            marginBottom: 18,
+          }}
+        >
+          <div
+            style={{
+              background: DS.card,
+              borderRadius: r(18),
+              padding: '18px 18px 16px',
+              border: `1px solid ${DS.border}`,
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}28`, display: 'grid', placeItems: 'center' }}>
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: r(12),
+                  background: `${DS.cyan}12`,
+                  border: `1px solid ${DS.cyan}28`,
+                  display: 'grid',
+                  placeItems: 'center',
+                }}
+              >
                 <Brain size={18} color={DS.cyan} />
               </div>
               <div>
@@ -241,17 +337,45 @@ export function PackagesPage() {
                 corridorPlan
                   ? `Demand: ${corridorPlan.businessDemand.join(', ')}.`
                   : 'Returns and documents can improve weak routes.',
-              ].map((line) => (
-                <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
+              ].map(line => (
+                <div
+                  key={line}
+                  style={{
+                    borderRadius: r(14),
+                    border: `1px solid ${DS.border}`,
+                    background: DS.card2,
+                    padding: '12px 14px',
+                    color: '#fff',
+                    fontSize: '0.82rem',
+                    lineHeight: 1.65,
+                  }}
+                >
                   {line}
                 </div>
               ))}
             </div>
           </div>
 
-          <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
+          <div
+            style={{
+              background: DS.card,
+              borderRadius: r(18),
+              padding: '18px 18px 16px',
+              border: `1px solid ${DS.border}`,
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 38, height: 38, borderRadius: r(12), background: `${DS.green}12`, border: `1px solid ${DS.green}28`, display: 'grid', placeItems: 'center' }}>
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: r(12),
+                  background: `${DS.green}12`,
+                  border: `1px solid ${DS.green}28`,
+                  display: 'grid',
+                  placeItems: 'center',
+                }}
+              >
                 <Network size={18} color={DS.green} />
               </div>
               <div>
@@ -262,29 +386,81 @@ export function PackagesPage() {
               </div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
-              {marketplaceNodes.map((node) => (
-                <div key={node.id} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>{node.title}</div>
-                  <div style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.55, marginTop: 4 }}>{node.summary}</div>
+              {marketplaceNodes.map(node => (
+                <div
+                  key={node.id}
+                  style={{
+                    borderRadius: r(14),
+                    border: `1px solid ${DS.border}`,
+                    background: DS.card2,
+                    padding: '12px 14px',
+                  }}
+                >
+                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>
+                    {node.title}
+                  </div>
+                  <div
+                    style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.55, marginTop: 4 }}
+                  >
+                    {node.summary}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="sp-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14, marginBottom: 24 }}>
-          {featuredCorridors.map((corridor) => (
-            <div key={corridor.id} style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.86rem' }}>{corridor.label}</div>
-                <span style={{ color: DS.cyan, fontSize: '0.72rem', fontWeight: 700 }}>{corridor.predictedDemandScore}/100</span>
+        <div
+          className="sp-3col"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            gap: 14,
+            marginBottom: 24,
+          }}
+        >
+          {featuredCorridors.map(corridor => (
+            <div
+              key={corridor.id}
+              style={{
+                background: DS.card,
+                borderRadius: r(18),
+                padding: '18px 18px 16px',
+                border: `1px solid ${DS.border}`,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                }}
+              >
+                <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.86rem' }}>
+                  {corridor.label}
+                </div>
+                <span style={{ color: DS.cyan, fontSize: '0.72rem', fontWeight: 700 }}>
+                  {corridor.predictedDemandScore}/100
+                </span>
               </div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.55, marginTop: 8 }}>
                 {corridor.routeMoat}
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
-                {corridor.movementLayers.slice(0, 3).map((layer) => (
-                  <span key={layer} style={{ padding: '5px 9px', borderRadius: '999px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${DS.border}`, color: DS.sub, fontSize: '0.69rem', fontWeight: 700 }}>
+                {corridor.movementLayers.slice(0, 3).map(layer => (
+                  <span
+                    key={layer}
+                    style={{
+                      padding: '5px 9px',
+                      borderRadius: '999px',
+                      background: 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${DS.border}`,
+                      color: DS.sub,
+                      fontSize: '0.69rem',
+                      fontWeight: 700,
+                    }}
+                  >
                     {layer}
                   </span>
                 ))}
@@ -293,15 +469,57 @@ export function PackagesPage() {
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: 8, background: 'rgba(255,255,255,0.03)', borderRadius: r(16), padding: 6, border: `1px solid ${DS.border}`, marginBottom: 24, boxShadow: '0 10px 22px rgba(0,0,0,0.14)' }}>
-          {([['send', 'Send Package'], ['track', 'Track Package'], ['raje3', 'Raje3 Returns']] as const).map(([key, label]) => (
-            <button key={key} onClick={() => setActiveTab(key)} style={{ flex: 1, height: 44, borderRadius: r(12), border: 'none', cursor: 'pointer', fontFamily: DS.F, fontWeight: activeTab === key ? 800 : 600, fontSize: '0.82rem', letterSpacing: '-0.01em', background: activeTab === key ? DS.gradG : 'transparent', color: activeTab === key ? '#fff' : DS.muted, transition: 'all 0.18s' }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            background: 'rgba(255,255,255,0.03)',
+            borderRadius: r(16),
+            padding: 6,
+            border: `1px solid ${DS.border}`,
+            marginBottom: 24,
+            boxShadow: '0 10px 22px rgba(0,0,0,0.14)',
+          }}
+        >
+          {(
+            [
+              ['send', 'Send Package'],
+              ['track', 'Track Package'],
+              ['raje3', 'Raje3 Returns'],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              style={{
+                flex: 1,
+                height: 44,
+                borderRadius: r(12),
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: DS.F,
+                fontWeight: activeTab === key ? 800 : 600,
+                fontSize: '0.82rem',
+                letterSpacing: '-0.01em',
+                background: activeTab === key ? DS.gradG : 'transparent',
+                color: activeTab === key ? '#fff' : DS.muted,
+                transition: 'all 0.18s',
+              }}
+            >
               {label}
             </button>
           ))}
         </div>
 
-        <div style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(22), padding: '28px 28px', border: `1px solid ${DS.border}`, boxShadow: '0 16px 38px rgba(0,0,0,0.18)' }}>
+        <div
+          style={{
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
+            borderRadius: r(22),
+            padding: '28px 28px',
+            border: `1px solid ${DS.border}`,
+            boxShadow: '0 16px 38px rgba(0,0,0,0.18)',
+          }}
+        >
           {activeTab === 'send' && (
             <PackageSendPanel
               pkg={pkg}
@@ -314,7 +532,7 @@ export function PackagesPage() {
               onCreate={() => handlePackageCreate('delivery')}
               onReset={resetComposer}
               onOpenTracking={() => setActiveTab('track')}
-              onOpenRecent={(item) => focusTrackingItem(item, true)}
+              onOpenRecent={item => focusTrackingItem(item, true)}
             />
           )}
 
@@ -330,7 +548,7 @@ export function PackagesPage() {
               onSearch={handleTrackingSearch}
               onVerificationAction={handleVerificationAction}
               onOpenSupport={handleOpenSupport}
-              onOpenRecent={(item) => focusTrackingItem(item)}
+              onOpenRecent={item => focusTrackingItem(item)}
             />
           )}
 
@@ -344,13 +562,22 @@ export function PackagesPage() {
         </div>
 
         <div style={{ marginTop: 18, display: 'grid', gap: 10 }}>
-          <div style={{ borderRadius: r(16), border: `1px solid ${DS.border}`, background: DS.card, padding: '16px 18px' }}>
+          <div
+            style={{
+              borderRadius: r(16),
+              border: `1px solid ${DS.border}`,
+              background: DS.card,
+              padding: '16px 18px',
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
               <Boxes size={18} color={DS.gold} />
               <div style={{ color: '#fff', fontWeight: 800 }}>Why this works</div>
             </div>
             <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.65 }}>
-              Every package request improves route matching, handoff clarity, and corridor coverage. Senders get simpler delivery, and the network gets better at moving parcels on real daily routes.
+              Every package request improves route matching, handoff clarity, and corridor coverage.
+              Senders get simpler delivery, and the network gets better at moving parcels on real
+              daily routes.
             </div>
           </div>
         </div>

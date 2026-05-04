@@ -52,11 +52,14 @@ export function buildServiceProviderWorkflowSnapshot(
     58,
     96,
   );
-  const activeAccounts = Math.max(4, Math.round((forecast / 12) + (route.packageEnabled ? 2 : 1)));
-  const recurringVisitsPerWeek = Math.max(12, Math.round((forecast * 0.55) + (liveSignal?.liveBookings ?? 0)));
-  const baseDispatchPrice = roundMoney(Math.max(4.5, (route.distanceKm * 0.08) + 2.4));
+  const activeAccounts = Math.max(4, Math.round(forecast / 12 + (route.packageEnabled ? 2 : 1)));
+  const recurringVisitsPerWeek = Math.max(
+    12,
+    Math.round(forecast * 0.55 + (liveSignal?.liveBookings ?? 0)),
+  );
+  const baseDispatchPrice = roundMoney(Math.max(4.5, route.distanceKm * 0.08 + 2.4));
   const monthlyRouteRevenueJod = roundMoney(
-    (baseDispatchPrice * recurringVisitsPerWeek * 4.2) + ((liveSignal?.livePackages ?? 0) * 3.2),
+    baseDispatchPrice * recurringVisitsPerWeek * 4.2 + (liveSignal?.livePackages ?? 0) * 3.2,
   );
   const packageBackhaulPercent = clamp(
     Math.round((liveSignal?.livePackages ?? (route.packageEnabled ? 7 : 2)) * 6 + 24),
@@ -107,13 +110,15 @@ export function buildServiceProviderWorkflowSnapshot(
         label: 'Midday service lane',
         serviceMix: 'Technician hops, invoice pickups, low-friction returns',
         targetPriceJod: roundMoney(baseDispatchPrice),
-        recommendedPickupPoint: liveSignal?.recommendedPickupPoint ?? `${route.to} central connector`,
+        recommendedPickupPoint:
+          liveSignal?.recommendedPickupPoint ?? `${route.to} central connector`,
       },
       {
         label: 'Evening backhaul window',
         serviceMix: 'Returns, tools, empty-seat recovery',
         targetPriceJod: roundMoney(baseDispatchPrice * 0.88),
-        recommendedPickupPoint: liveSignal?.recommendedPickupPoint ?? `${route.to} return-lane gate`,
+        recommendedPickupPoint:
+          liveSignal?.recommendedPickupPoint ?? `${route.to} return-lane gate`,
       },
     ],
     workflowSteps: [

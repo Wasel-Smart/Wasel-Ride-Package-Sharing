@@ -28,7 +28,9 @@ function hasDriverRole(user: WaselUser | null | undefined): boolean {
   return user?.role === 'driver' || user?.role === 'both';
 }
 
-export function getDriverReadinessSummary(user: WaselUser | null | undefined): DriverReadinessSummary {
+export function getDriverReadinessSummary(
+  user: WaselUser | null | undefined,
+): DriverReadinessSummary {
   const steps: DriverReadinessStep[] = [
     {
       id: 'account_role',
@@ -52,7 +54,9 @@ export function getDriverReadinessSummary(user: WaselUser | null | undefined): D
       id: 'identity',
       label: 'Identity verified',
       description: 'Reach Level 2 or higher.',
-      complete: Boolean(user?.verificationLevel === 'level_2' || user?.verificationLevel === 'level_3'),
+      complete: Boolean(
+        user?.verificationLevel === 'level_2' || user?.verificationLevel === 'level_3',
+      ),
     },
     {
       id: 'driver_clearance',

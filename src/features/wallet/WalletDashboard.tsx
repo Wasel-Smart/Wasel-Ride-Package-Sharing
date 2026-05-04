@@ -143,7 +143,10 @@ export function WalletDashboard() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-foreground">{t.walletTitle}</h1>
-              <Badge variant="secondary" className="border border-primary/20 bg-primary/10 text-primary">
+              <Badge
+                variant="secondary"
+                className="border border-primary/20 bg-primary/10 text-primary"
+              >
                 {t.activeLabel}
               </Badge>
             </div>
@@ -172,11 +175,21 @@ export function WalletDashboard() {
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="w-full grid grid-cols-5 h-11 rounded-xl bg-card">
-          <TabsTrigger value="overview" className="text-xs rounded-lg">{t.overview}</TabsTrigger>
-          <TabsTrigger value="transactions" className="text-xs rounded-lg">{t.transactions}</TabsTrigger>
-          <TabsTrigger value="rewards" className="text-xs rounded-lg">{t.rewardsTab}</TabsTrigger>
-          <TabsTrigger value="insights" className="text-xs rounded-lg">{t.insights}</TabsTrigger>
-          <TabsTrigger value="settings" className="text-xs rounded-lg">{t.settings}</TabsTrigger>
+          <TabsTrigger value="overview" className="text-xs rounded-lg">
+            {t.overview}
+          </TabsTrigger>
+          <TabsTrigger value="transactions" className="text-xs rounded-lg">
+            {t.transactions}
+          </TabsTrigger>
+          <TabsTrigger value="rewards" className="text-xs rounded-lg">
+            {t.rewardsTab}
+          </TabsTrigger>
+          <TabsTrigger value="insights" className="text-xs rounded-lg">
+            {t.insights}
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs rounded-lg">
+            {t.settings}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-4">
@@ -194,8 +207,10 @@ export function WalletDashboard() {
         <TabsContent value="transactions" className="mt-4">
           <Card className="rounded-xl">
             <CardContent className="pt-4">
-              {(!walletData?.transactions || walletData.transactions.length === 0) ? (
-                <div className="text-center py-12 text-muted-foreground text-sm">{t.noTransactions}</div>
+              {!walletData?.transactions || walletData.transactions.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground text-sm">
+                  {t.noTransactions}
+                </div>
               ) : (
                 walletData.transactions.map((tx: any) => (
                   <SharedTransactionRow key={tx.id} tx={tx} isRTL={isRTL} jodLabel={t.jod} />
@@ -214,13 +229,11 @@ export function WalletDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {(!walletData?.activeRewards || walletData.activeRewards.length === 0) ? (
+              {!walletData?.activeRewards || walletData.activeRewards.length === 0 ? (
                 <div className="text-center py-8">
                   <Gift className="w-12 h-12 mx-auto mb-3 text-muted-foreground/30" />
                   <p className="text-muted-foreground text-sm">{t.noRewards}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t.rewardsEmptyHint}
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">{t.rewardsEmptyHint}</p>
                 </div>
               ) : (
                 <>
@@ -230,18 +243,31 @@ export function WalletDashboard() {
                     </p>
                   ) : null}
                   {walletData.activeRewards.map((r: any) => (
-                    <div key={r.id} className="flex items-center justify-between py-3 border-b border-border/30 last:border-0">
+                    <div
+                      key={r.id}
+                      className="flex items-center justify-between py-3 border-b border-border/30 last:border-0"
+                    >
                       <div>
                         <p className="text-sm font-medium">{r.description}</p>
                         <p className="text-xs text-muted-foreground">
-                          {t.expires}: {new Date(r.expirationDate).toLocaleDateString(isRTL ? 'ar-JO' : 'en-US', { month: 'short', day: 'numeric' })}
+                          {t.expires}:{' '}
+                          {new Date(r.expirationDate).toLocaleDateString(
+                            isRTL ? 'ar-JO' : 'en-US',
+                            { month: 'short', day: 'numeric' },
+                          )}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className="bg-purple-500/10 text-purple-400 border-purple-500/30 font-bold">
                           {r.amount} {t.jod}
                         </Badge>
-                        <Button size="sm" variant="outline" onClick={() => handleClaimReward(r.id)} disabled={!walletCapabilities.rewardClaim} className="text-xs border-purple-500/30 text-purple-400 hover:bg-purple-500/10 disabled:opacity-60">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleClaimReward(r.id)}
+                          disabled={!walletCapabilities.rewardClaim}
+                          className="text-xs border-purple-500/30 text-purple-400 hover:bg-purple-500/10 disabled:opacity-60"
+                        >
                           {t.claim}
                         </Button>
                       </div>

@@ -51,7 +51,9 @@ function getBooleanEnv(key: string, fallback: boolean): boolean {
   return value.toLowerCase() === 'true';
 }
 
-export function getRuntimeConfigIssues(envSource: EnvSource = readEnvSource()): RuntimeConfigIssue[] {
+export function getRuntimeConfigIssues(
+  envSource: EnvSource = readEnvSource(),
+): RuntimeConfigIssue[] {
   const issues: RuntimeConfigIssue[] = [];
   const apiUrl = envSource.VITE_API_URL?.trim() || '';
   const supabaseUrl = envSource.VITE_SUPABASE_URL?.trim() || '';
@@ -120,7 +122,10 @@ export function getRuntimeConfigIssues(envSource: EnvSource = readEnvSource()): 
     });
   }
 
-  if (isTruthy(envSource.VITE_ENABLE_EMAIL_NOTIFICATIONS) && !envSource.VITE_SUPPORT_EMAIL?.trim()) {
+  if (
+    isTruthy(envSource.VITE_ENABLE_EMAIL_NOTIFICATIONS) &&
+    !envSource.VITE_SUPPORT_EMAIL?.trim()
+  ) {
     issues.push({
       key: 'VITE_SUPPORT_EMAIL',
       message: 'Email notifications are enabled but no support email is configured.',
@@ -128,7 +133,10 @@ export function getRuntimeConfigIssues(envSource: EnvSource = readEnvSource()): 
     });
   }
 
-  if (isTruthy(envSource.VITE_ENABLE_SMS_NOTIFICATIONS) && !envSource.VITE_SUPPORT_SMS_NUMBER?.trim()) {
+  if (
+    isTruthy(envSource.VITE_ENABLE_SMS_NOTIFICATIONS) &&
+    !envSource.VITE_SUPPORT_SMS_NUMBER?.trim()
+  ) {
     issues.push({
       key: 'VITE_SUPPORT_SMS_NUMBER',
       message: 'SMS notifications are enabled but no support SMS number is configured.',
@@ -150,7 +158,8 @@ export function getRuntimeConfigIssues(envSource: EnvSource = readEnvSource()): 
   if (isTruthy(envSource.VITE_ENABLE_TWO_FACTOR_AUTH) && !hasApiTransport) {
     issues.push({
       key: 'VITE_ENABLE_TWO_FACTOR_AUTH',
-      message: 'Two-factor auth requires a backend transport. Configure the API path before enabling it.',
+      message:
+        'Two-factor auth requires a backend transport. Configure the API path before enabling it.',
       severity: 'error',
     });
   }
@@ -161,7 +170,7 @@ export function getRuntimeConfigIssues(envSource: EnvSource = readEnvSource()): 
 export function validateRuntimeConfiguration(envSource: EnvSource = readEnvSource()) {
   const issues = getRuntimeConfigIssues(envSource);
   return {
-    ok: issues.every((issue) => issue.severity !== 'error'),
+    ok: issues.every(issue => issue.severity !== 'error'),
     issues,
   };
 }

@@ -136,11 +136,16 @@ export function useWalletDashboardController() {
       toast.info('Payment was cancelled before completion.');
     }
     if (subscriptionState === 'success') {
-      toast.success(t.subscriptionCheckoutCompleted ?? 'Subscription checkout completed. Membership is refreshing.');
+      toast.success(
+        t.subscriptionCheckoutCompleted ??
+          'Subscription checkout completed. Membership is refreshing.',
+      );
       void fetchWallet();
     }
     if (subscriptionState === 'cancelled') {
-      toast.info(t.subscriptionCheckoutCancelled ?? 'Subscription checkout was cancelled before completion.');
+      toast.info(
+        t.subscriptionCheckoutCancelled ?? 'Subscription checkout was cancelled before completion.',
+      );
     }
   }, [fetchWallet, location.search]);
 
@@ -166,13 +171,13 @@ export function useWalletDashboardController() {
 
     setActionLoading(true);
     try {
-      const result = await walletApi.topUp(effectiveUserId, amt, topUpMethod) as
+      const result = (await walletApi.topUp(effectiveUserId, amt, topUpMethod)) as
         | { payment?: { checkoutUrl?: string | null; provider?: string } }
         | WalletData;
 
       const checkoutUrl =
         typeof result === 'object' && result && 'payment' in result
-          ? result.payment?.checkoutUrl ?? null
+          ? (result.payment?.checkoutUrl ?? null)
           : null;
 
       if (checkoutUrl) {
@@ -299,21 +304,23 @@ export function useWalletDashboardController() {
 
     setActionLoading(true);
     try {
-      const result = await walletApi.subscribe(effectiveUserId, 'Wasel Plus', 9.99) as
+      const result = (await walletApi.subscribe(effectiveUserId, 'Wasel Plus', 9.99)) as
         | { subscription?: { checkoutUrl?: string | null; provider?: string } }
         | { payment?: { checkoutUrl?: string | null; provider?: string } };
 
       const checkoutUrl =
         typeof result === 'object' && result
           ? 'subscription' in result
-            ? result.subscription?.checkoutUrl ?? null
+            ? (result.subscription?.checkoutUrl ?? null)
             : 'payment' in result
-              ? result.payment?.checkoutUrl ?? null
+              ? (result.payment?.checkoutUrl ?? null)
               : null
           : null;
 
       if (checkoutUrl) {
-        toast.success(t.redirectingToSubscriptionCheckout ?? 'Redirecting to secure subscription checkout');
+        toast.success(
+          t.redirectingToSubscriptionCheckout ?? 'Redirecting to secure subscription checkout',
+        );
         window.location.assign(checkoutUrl);
         return;
       }

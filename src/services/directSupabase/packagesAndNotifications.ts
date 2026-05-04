@@ -143,16 +143,22 @@ export async function getDirectCommunicationPreferences(userId: string) {
   return (data as RawCommunicationPreferences | null) ?? null;
 }
 
-export async function upsertDirectCommunicationPreferences(userId: string, updates: Record<string, unknown>) {
+export async function upsertDirectCommunicationPreferences(
+  userId: string,
+  updates: Record<string, unknown>,
+) {
   const context = await buildUserContext(userId);
   const db = getDb();
   const { data, error } = await db
     .from('communication_preferences')
-    .upsert({
-      user_id: context.user.id,
-      ...updates,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' })
+    .upsert(
+      {
+        user_id: context.user.id,
+        ...updates,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' },
+    )
     .select('*')
     .single();
   if (error) throw error;
@@ -166,7 +172,7 @@ export async function queueDirectCommunicationDeliveries(
   const context = await buildUserContext(userId);
   const db = getDb();
   const now = new Date().toISOString();
-  const payload = deliveries.map((delivery) => ({
+  const payload = deliveries.map(delivery => ({
     user_id: context.user.id,
     notification_id: delivery.notification_id ?? null,
     channel: delivery.channel,
@@ -181,10 +187,7 @@ export async function queueDirectCommunicationDeliveries(
     queued_at: now,
   }));
 
-  const { data, error } = await db
-    .from('communication_deliveries')
-    .insert(payload)
-    .select('*');
+  const { data, error } = await db.from('communication_deliveries').insert(payload).select('*');
   if (error) throw error;
   return Array.isArray(data) ? (data as RawCommunicationDelivery[]) : [];
 }

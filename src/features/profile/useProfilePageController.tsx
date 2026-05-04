@@ -2,10 +2,7 @@ import { useState, type ChangeEvent, type ReactNode, type RefObject } from 'reac
 import { Bell, Car, CreditCard, Settings } from 'lucide-react';
 import type { WaselUser } from '../../contexts/LocalAuth';
 import { sanitizeText } from '../../utils/sanitize';
-import {
-  buildProfileExportPayload,
-  normalizeProfilePhone,
-} from './profileUtils';
+import { buildProfileExportPayload, normalizeProfilePhone } from './profileUtils';
 
 export const PROFILE_BG = '#040C18';
 export const PROFILE_BORDER = 'rgba(255,255,255,0.09)';
@@ -43,9 +40,7 @@ interface UseProfilePageControllerArgs {
   user: WaselUser;
   ar: boolean;
   nav: (path: string) => void;
-  updateProfile: (
-    updates: Record<string, unknown>,
-  ) => Promise<{ error: unknown }>;
+  updateProfile: (updates: Record<string, unknown>) => Promise<{ error: unknown }>;
   notificationSupport: NotificationSupport;
   showToast: (message: string) => void;
   signOut: () => Promise<void>;
@@ -81,10 +76,7 @@ function getWalletStatus(user: WaselUser, ar: boolean): ProfileStatusChip {
   return { label: ar ? 'نشط' : 'Active', color: '#22C55E' };
 }
 
-function getPermissionStatus(
-  support: NotificationSupport,
-  ar: boolean,
-): ProfileStatusChip {
+function getPermissionStatus(support: NotificationSupport, ar: boolean): ProfileStatusChip {
   if (!support.isSupported) {
     return { label: ar ? 'غير مدعوم' : 'Unsupported', color: '#94A3B8' };
   }
@@ -124,10 +116,7 @@ function getRoleLabel(role: WaselUser['role'], ar: boolean) {
   return ar ? 'راكب' : 'Rider';
 }
 
-function buildVerificationItems(
-  user: WaselUser,
-  ar: boolean,
-): ProfileVerificationItem[] {
+function buildVerificationItems(user: WaselUser, ar: boolean): ProfileVerificationItem[] {
   return [
     {
       label: ar ? 'البريد الإلكتروني' : 'Email',
@@ -187,18 +176,14 @@ function buildQuickActions(
     },
     {
       label: ar ? 'المحفظة والدفع' : 'Wallet & Payments',
-      detail: ar
-        ? 'راقب الرصيد والمدفوعات وميزات واصل.'
-        : 'Balance and payments.',
+      detail: ar ? 'راقب الرصيد والمدفوعات وميزات واصل.' : 'Balance and payments.',
       icon: <CreditCard size={18} />,
       color: '#F59E0B',
       onClick: () => nav('/app/wallet'),
     },
     {
       label: ar ? 'مركز الإشعارات' : 'Notification Center',
-      detail: ar
-        ? 'ثبت التنبيهات المهمة للحجوزات والرحلات والطرود.'
-        : 'Trip and account alerts.',
+      detail: ar ? 'ثبت التنبيهات المهمة للحجوزات والرحلات والطرود.' : 'Trip and account alerts.',
       icon: <Bell size={18} />,
       color: '#22C55E',
       onClick: () => {
@@ -207,9 +192,7 @@ function buildQuickActions(
     },
     {
       label: ar ? 'إعدادات الحساب' : 'Account Settings',
-      detail: ar
-        ? 'حدّث لغتك وتفضيلاتك وأمان حسابك.'
-        : 'Language, preferences, and security.',
+      detail: ar ? 'حدّث لغتك وتفضيلاتك وأمان حسابك.' : 'Language, preferences, and security.',
       icon: <Settings size={18} />,
       color: '#A78BFA',
       onClick: () => nav('/app/settings?section=account'),
@@ -227,9 +210,7 @@ export function useProfilePageController({
   signOut,
   photoInputRef,
 }: UseProfilePageControllerArgs) {
-  const [editingField, setEditingField] = useState<'name' | 'phone' | null>(
-    null,
-  );
+  const [editingField, setEditingField] = useState<'name' | 'phone' | null>(null);
   const [nameInput, setNameInput] = useState(user.name ?? '');
   const [phoneInput, setPhoneInput] = useState(user.phone ?? '');
   const [savingField, setSavingField] = useState<SavingField>(null);
@@ -246,9 +227,7 @@ export function useProfilePageController({
     const { error } = await updateProfile({ full_name: clean });
     setSavingField(null);
     if (error) {
-      showToast(
-        ar ? 'تعذر حفظ الاسم حالياً' : 'Unable to save your name right now',
-      );
+      showToast(ar ? 'تعذر حفظ الاسم حالياً' : 'Unable to save your name right now');
       return;
     }
 
@@ -259,9 +238,7 @@ export function useProfilePageController({
   const handleSavePhone = async () => {
     const normalized = normalizeProfilePhone(phoneInput);
     if (normalized === null) {
-      showToast(
-        ar ? 'يرجى إدخال رقم هاتف صالح' : 'Please enter a valid phone number',
-      );
+      showToast(ar ? 'يرجى إدخال رقم هاتف صالح' : 'Please enter a valid phone number');
       return;
     }
 
@@ -274,11 +251,7 @@ export function useProfilePageController({
     const { error } = await updateProfile({ phone_number: normalized });
     setSavingField(null);
     if (error) {
-      showToast(
-        ar
-          ? 'تعذر حفظ رقم الهاتف حالياً'
-          : 'Unable to save your phone right now',
-      );
+      showToast(ar ? 'تعذر حفظ رقم الهاتف حالياً' : 'Unable to save your phone right now');
       return;
     }
 
@@ -300,9 +273,7 @@ export function useProfilePageController({
     showToast(ar ? 'تم تصدير بياناتك' : 'Data exported');
   };
 
-  const handlePhotoSelection = async (
-    event: ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handlePhotoSelection = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -312,9 +283,7 @@ export function useProfilePageController({
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      showToast(
-        ar ? 'الحد الأقصى للصورة 2MB' : 'Please choose an image smaller than 2MB',
-      );
+      showToast(ar ? 'الحد الأقصى للصورة 2MB' : 'Please choose an image smaller than 2MB');
       return;
     }
 
@@ -324,11 +293,7 @@ export function useProfilePageController({
       const { error } = await updateProfile({ avatar_url: avatarUrl });
       setSavingField(null);
       if (error) {
-        showToast(
-          ar
-            ? 'تعذر تحديث الصورة حالياً'
-            : 'Unable to update your photo right now',
-        );
+        showToast(ar ? 'تعذر تحديث الصورة حالياً' : 'Unable to update your photo right now');
         return;
       }
 

@@ -3,10 +3,12 @@ import type { LucideIcon } from 'lucide-react';
 export type TripMode = 'one-way' | 'round';
 
 export interface QuickAction {
-  badge: string;
+  badge?: string;
   icon: LucideIcon;
+  kicker: string;
   title: string;
   desc: string;
+  outcome: string;
   color: string;
   dim: string;
   border: string;
@@ -31,6 +33,8 @@ export interface CorridorCard {
   title: string;
   detail: string;
   meta: string;
+  insight?: string;
+  featured?: boolean;
   path: string;
   accent: string;
 }

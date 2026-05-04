@@ -1,20 +1,10 @@
 import { motion } from 'motion/react';
-import {
-  Brain,
-  CheckCircle2,
-  Clock,
-  Package,
-  Star,
-  Users,
-} from 'lucide-react';
+import { Brain, CheckCircle2, Clock, Package, Star, Users } from 'lucide-react';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
 import { getCorridorOpportunity } from '../../../config/wasel-movement-network';
 import { getMovementPriceQuote } from '../../../services/movementPricing';
 import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
-import {
-  createGenderMeta,
-  type Ride,
-} from '../../../pages/waselCoreRideData';
+import { createGenderMeta, type Ride } from '../../../pages/waselCoreRideData';
 
 const GENDER_META = createGenderMeta(DS);
 
@@ -60,10 +50,10 @@ export function FindRideCard({
         overflow: 'hidden',
         transition: 'border-color 0.2s',
       }}
-      onMouseEnter={(event) => {
+      onMouseEnter={event => {
         event.currentTarget.style.borderColor = DS.borderH;
       }}
-      onMouseLeave={(event) => {
+      onMouseLeave={event => {
         event.currentTarget.style.borderColor = DS.border;
       }}
     >
@@ -186,7 +176,13 @@ export function FindRideCard({
                 boxShadow: `0 0 8px ${DS.green}60`,
               }}
             />
-            <div style={{ width: 1, height: 22, background: `linear-gradient(180deg,${DS.green},${DS.cyan})` }} />
+            <div
+              style={{
+                width: 1,
+                height: 22,
+                background: `linear-gradient(180deg,${DS.green},${DS.cyan})`,
+              }}
+            />
             <div
               style={{
                 width: 7,
@@ -202,7 +198,9 @@ export function FindRideCard({
           </div>
           <div style={{ flex: 1, textAlign: 'right' }}>
             <div style={{ fontWeight: 800, color: '#fff', fontSize: '0.92rem' }}>{ride.to}</div>
-            <div style={{ color: DS.muted, fontSize: '0.7rem', marginTop: 1 }}>{ride.distance} km</div>
+            <div style={{ color: DS.muted, fontSize: '0.7rem', marginTop: 1 }}>
+              {ride.distance} km
+            </div>
           </div>
         </div>
 
@@ -218,7 +216,9 @@ export function FindRideCard({
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <Brain size={14} color={DS.cyan} />
-              <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.8rem' }}>Wasel Brain</span>
+              <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.8rem' }}>
+                Wasel Brain
+              </span>
             </div>
             <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.6 }}>
               {signal
@@ -257,7 +257,9 @@ export function FindRideCard({
             )}
             {signal && <span style={pill(DS.green)}>Demand {signal.forecastDemandScore}</span>}
             {signal && <span style={pill(DS.cyan)}>Owns {signal.routeOwnershipScore}</span>}
-            {!signal && corridorPlan && <span style={pill(DS.green)}>Demand {corridorPlan.predictedDemandScore}</span>}
+            {!signal && corridorPlan && (
+              <span style={pill(DS.green)}>Demand {corridorPlan.predictedDemandScore}</span>
+            )}
             {hasBooking && (
               <span style={pill(bookingStatus === 'pending_driver' ? DS.gold : DS.green)}>
                 <CheckCircle2 size={9} /> Booked
@@ -289,7 +291,7 @@ export function FindRideCard({
             </span>
             <motion.button
               whileTap={{ scale: 0.94 }}
-              onClick={(event) => {
+              onClick={event => {
                 event.stopPropagation();
                 if (hasBooking) {
                   onOpenBooking();
@@ -328,11 +330,7 @@ export function FindRideCard({
                 opacity: soldOut ? 0.88 : 1,
               }}
             >
-              {hasBooking
-                ? 'Open in My Trips'
-                : soldOut
-                  ? 'Sold out'
-                  : 'View details'}
+              {hasBooking ? 'Open in My Trips' : soldOut ? 'Sold out' : 'View details'}
             </motion.button>
           </div>
         </div>

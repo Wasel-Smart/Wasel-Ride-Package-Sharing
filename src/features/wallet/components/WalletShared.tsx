@@ -6,8 +6,18 @@
 
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Plus, ArrowDownLeft, ArrowUpRight, Send, Gift, RefreshCw,
-  TrendingUp, Clock, CheckCircle, Lock, Crown, Zap,
+  Plus,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Send,
+  Gift,
+  RefreshCw,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  Lock,
+  Crown,
+  Zap,
   CreditCard,
 } from 'lucide-react';
 import { WaselColors } from '../../../tokens/wasel-tokens';
@@ -28,21 +38,40 @@ export const TX_ICONS: Record<string, any> = {
   cashback: { icon: Zap, color: '#A855F7', bg: 'bg-purple-500/10' },
 };
 
-export const PIE_COLORS = ['#04ADBF', '#D9965B', '#22C55E', '#A855F7', '#3B82F6', '#F59E0B', '#EF4444'];
+export const PIE_COLORS = [
+  '#04ADBF',
+  '#D9965B',
+  '#22C55E',
+  '#A855F7',
+  '#3B82F6',
+  '#F59E0B',
+  '#EF4444',
+];
 
 const TX_STATUS_META: Record<string, { label: string; className: string }> = {
   pending: { label: 'Pending', className: 'text-amber-300 border-amber-400/30 bg-amber-500/10' },
   processing: { label: 'Processing', className: 'text-sky-300 border-sky-400/30 bg-sky-500/10' },
   authorized: { label: 'Authorized', className: 'text-cyan-300 border-cyan-400/30 bg-cyan-500/10' },
   posted: { label: 'Posted', className: 'text-cyan-300 border-cyan-400/30 bg-cyan-500/10' },
-  completed: { label: 'Completed', className: 'text-green-300 border-green-400/30 bg-green-500/10' },
+  completed: {
+    label: 'Completed',
+    className: 'text-green-300 border-green-400/30 bg-green-500/10',
+  },
   captured: { label: 'Captured', className: 'text-green-300 border-green-400/30 bg-green-500/10' },
   refunded: { label: 'Refunded', className: 'text-sky-300 border-sky-400/30 bg-sky-500/10' },
   failed: { label: 'Failed', className: 'text-red-300 border-red-400/30 bg-red-500/10' },
 };
 
 // Shared transaction row used across wallet tabs
-export function TransactionRow({ tx, isRTL, jodLabel }: { tx: any; isRTL: boolean; jodLabel: string }) {
+export function TransactionRow({
+  tx,
+  isRTL,
+  jodLabel,
+}: {
+  tx: any;
+  isRTL: boolean;
+  jodLabel: string;
+}) {
   const txType = tx.type || 'payment';
   const iconCfg = TX_ICONS[txType] || TX_ICONS.payment;
   const Icon = iconCfg.icon;
@@ -66,9 +95,16 @@ export function TransactionRow({ tx, isRTL, jodLabel }: { tx: any; isRTL: boolea
         <p className="text-sm font-medium text-foreground truncate">{tx.description}</p>
         <div className="flex flex-wrap items-center gap-2 mt-1">
           <p className="text-xs text-muted-foreground">
-            {date.toLocaleDateString(isRTL ? 'ar-JO' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            {date.toLocaleDateString(isRTL ? 'ar-JO' : 'en-US', {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
           </p>
-          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusMeta.className}`}>
+          <span
+            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusMeta.className}`}
+          >
             {statusMeta.label}
           </span>
           {reference ? (
@@ -78,15 +114,28 @@ export function TransactionRow({ tx, isRTL, jodLabel }: { tx: any; isRTL: boolea
           ) : null}
         </div>
       </div>
-      <span className={`text-sm font-bold tabular-nums ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
-        {isPositive ? '+' : ''}{amount.toFixed(2)} {jodLabel}
+      <span
+        className={`text-sm font-bold tabular-nums ${isPositive ? 'text-green-400' : 'text-red-400'}`}
+      >
+        {isPositive ? '+' : ''}
+        {amount.toFixed(2)} {jodLabel}
       </span>
     </motion.div>
   );
 }
 
 // Shared modal shell for wallet actions
-export function ActionModal({ show, onClose, title, children }: { show: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
+export function ActionModal({
+  show,
+  onClose,
+  title,
+  children,
+}: {
+  show: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <AnimatePresence>
       {show && (
@@ -104,7 +153,7 @@ export function ActionModal({ show, onClose, title, children }: { show: boolean;
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="w-full max-w-md rounded-2xl border border-border/50 p-6 space-y-4"
             style={{ background: WaselColors.navyCard }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <h3 className="text-lg font-bold text-foreground">{title}</h3>
             {children}

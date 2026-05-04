@@ -1,12 +1,6 @@
 import type { Notification } from '../../hooks/useNotifications';
 
-export type NotificationCategory =
-  | 'rides'
-  | 'messages'
-  | 'wallet'
-  | 'trust'
-  | 'support'
-  | 'system';
+export type NotificationCategory = 'rides' | 'messages' | 'wallet' | 'trust' | 'support' | 'system';
 
 export type NotificationSectionKey = 'today' | 'week' | 'earlier';
 
@@ -30,7 +24,7 @@ export function getNotificationCategory(notification: Notification): Notificatio
   const haystack = `${notification.type} ${notification.title} ${notification.message}`;
 
   for (const entry of CATEGORY_PATTERNS) {
-    if (entry.patterns.some((pattern) => pattern.test(haystack))) {
+    if (entry.patterns.some(pattern => pattern.test(haystack))) {
       return entry.category;
     }
   }
@@ -56,7 +50,8 @@ export function matchesNotificationFilter(args: {
 
   if (filter === 'all') return true;
   if (filter === 'unread') return !notification.read;
-  if (filter === 'urgent') return notification.priority === 'urgent' || notification.priority === 'high';
+  if (filter === 'urgent')
+    return notification.priority === 'urgent' || notification.priority === 'high';
 
   return getNotificationCategory(notification) === filter;
 }
@@ -71,7 +66,7 @@ export function matchesNotificationSearch(notification: Notification, searchTerm
     notification.type,
     notification.priority ?? '',
     getNotificationCategory(notification),
-  ].some((value) => value.toLowerCase().includes(normalized));
+  ].some(value => value.toLowerCase().includes(normalized));
 }
 
 export function buildNotificationSections(
@@ -103,19 +98,19 @@ export function buildNotificationSections(
   }
 
   return (Object.keys(buckets) as NotificationSectionKey[])
-    .map((key) => ({
+    .map(key => ({
       key,
       title: labels[key],
       items: buckets[key],
     }))
-    .filter((section) => section.items.length > 0);
+    .filter(section => section.items.length > 0);
 }
 
 export function getNotificationSummary(notifications: Notification[], archivedIds: Set<string>) {
-  const visible = notifications.filter((notification) => !archivedIds.has(notification.id));
-  const unread = visible.filter((notification) => !notification.read).length;
+  const visible = notifications.filter(notification => !archivedIds.has(notification.id));
+  const unread = visible.filter(notification => !notification.read).length;
   const urgent = visible.filter(
-    (notification) => notification.priority === 'urgent' || notification.priority === 'high',
+    notification => notification.priority === 'urgent' || notification.priority === 'high',
   ).length;
 
   return {

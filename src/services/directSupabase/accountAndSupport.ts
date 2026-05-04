@@ -61,7 +61,9 @@ function makeId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function sortByDateDesc<T extends { updated_at?: string | null; created_at?: string | null }>(rows: T[]) {
+function sortByDateDesc<T extends { updated_at?: string | null; created_at?: string | null }>(
+  rows: T[],
+) {
   return [...rows].sort((a, b) => {
     const left = new Date(a.updated_at ?? a.created_at ?? 0).getTime();
     const right = new Date(b.updated_at ?? b.created_at ?? 0).getTime();
@@ -159,15 +161,17 @@ export async function getDirectSupportTickets(userId: string) {
   try {
     const tickets = await trySelectTickets(userId);
     const events = await trySelectTicketEvents(
-      tickets.map((ticket) => String(ticket.id ?? '')).filter(Boolean),
+      tickets.map(ticket => String(ticket.id ?? '')).filter(Boolean),
     );
     return { tickets, events };
   } catch {
     const tickets = sortByDateDesc(
-      readStore<DirectSupportTicketRow>(SUPPORT_TICKETS_KEY).filter((ticket) => ticket.user_id === userId),
+      readStore<DirectSupportTicketRow>(SUPPORT_TICKETS_KEY).filter(
+        ticket => ticket.user_id === userId,
+      ),
     );
-    const ticketIds = new Set(tickets.map((ticket) => String(ticket.id ?? '')));
-    const events = readStore<DirectSupportTicketEventRow>(SUPPORT_EVENTS_KEY).filter((event) =>
+    const ticketIds = new Set(tickets.map(ticket => String(ticket.id ?? '')));
+    const events = readStore<DirectSupportTicketEventRow>(SUPPORT_EVENTS_KEY).filter(event =>
       ticketIds.has(String(event.ticket_id ?? '')),
     );
     return { tickets, events };
@@ -215,7 +219,7 @@ export async function updateDirectSupportTicketStatus(
     };
   } catch {
     const tickets = readStore<DirectSupportTicketRow>(SUPPORT_TICKETS_KEY);
-    const nextTickets = tickets.map((ticket) =>
+    const nextTickets = tickets.map(ticket =>
       ticket.id === ticketId && ticket.user_id === userId
         ? {
             ...ticket,
@@ -226,7 +230,7 @@ export async function updateDirectSupportTicketStatus(
         : ticket,
     );
     const updatedTicket =
-      nextTickets.find((ticket) => ticket.id === ticketId && ticket.user_id === userId) ?? null;
+      nextTickets.find(ticket => ticket.id === ticketId && ticket.user_id === userId) ?? null;
     if (!updatedTicket) {
       throw new Error('Support ticket not found');
     }
@@ -249,7 +253,8 @@ export async function getDirectUserSettings(userId: string) {
     return (data as DirectUserSettingsRow | null) ?? null;
   } catch {
     return (
-      readStore<DirectUserSettingsRow>(USER_SETTINGS_KEY).find((row) => row.user_id === userId) ?? null
+      readStore<DirectUserSettingsRow>(USER_SETTINGS_KEY).find(row => row.user_id === userId) ??
+      null
     );
   }
 }
@@ -277,7 +282,7 @@ export async function upsertDirectUserSettings(
     return (data as DirectUserSettingsRow | null) ?? nextRow;
   } catch {
     const rows = readStore<DirectUserSettingsRow>(USER_SETTINGS_KEY);
-    const filtered = rows.filter((row) => row.user_id !== userId);
+    const filtered = rows.filter(row => row.user_id !== userId);
     writeStore(USER_SETTINGS_KEY, [...filtered, nextRow]);
     return nextRow;
   }

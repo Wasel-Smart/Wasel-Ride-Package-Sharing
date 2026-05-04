@@ -25,7 +25,19 @@ export function Badge({ label, color = C.cyan }: { label: string; color?: string
   const col = map[label] || color;
 
   return (
-    <span style={{ fontSize: '0.52rem', fontWeight: 800, letterSpacing: '0.08em', padding: '2px 6px', borderRadius: R.full, background: `${col}18`, color: col, border: `1px solid ${col}30`, flexShrink: 0 }}>
+    <span
+      style={{
+        fontSize: '0.52rem',
+        fontWeight: 800,
+        letterSpacing: '0.08em',
+        padding: '2px 6px',
+        borderRadius: R.full,
+        background: `${col}18`,
+        color: col,
+        border: `1px solid ${col}30`,
+        flexShrink: 0,
+      }}
+    >
       {label}
     </span>
   );
@@ -33,8 +45,32 @@ export function Badge({ label, color = C.cyan }: { label: string; color?: string
 
 export function AppPill({ ar }: { ar: boolean }) {
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 30, padding: '0 12px', borderRadius: R.full, background: C.cyanDim, border: `1px solid ${C.border}`, color: C.textSub, fontSize: '0.72rem', fontWeight: 700, fontFamily: F, whiteSpace: 'nowrap' }}>
-      <span style={{ width: 7, height: 7, borderRadius: '50%', background: C.gold, boxShadow: `0 0 10px ${C.gold}` }} />
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 8,
+        height: 30,
+        padding: '0 12px',
+        borderRadius: R.full,
+        background: C.cyanDim,
+        border: `1px solid ${C.border}`,
+        color: C.textSub,
+        fontSize: '0.72rem',
+        fontWeight: 700,
+        fontFamily: F,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <span
+        style={{
+          width: 7,
+          height: 7,
+          borderRadius: '50%',
+          background: C.gold,
+          boxShadow: `0 0 10px ${C.gold}`,
+        }}
+      />
       {ar ? 'واصل لتنقل أبسط' : 'Wasel for simpler movement'}
     </div>
   );

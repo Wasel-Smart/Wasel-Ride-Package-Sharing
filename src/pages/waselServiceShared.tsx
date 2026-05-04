@@ -34,15 +34,15 @@ export const pill = (color: string) => ({
 
 const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   Amman: { lat: 31.9539, lng: 35.9106 },
-  Aqaba: { lat: 29.5321, lng: 35.0060 },
+  Aqaba: { lat: 29.5321, lng: 35.006 },
   Irbid: { lat: 32.5568, lng: 35.8479 },
-  Zarqa: { lat: 32.0728, lng: 36.0880 },
-  'Dead Sea': { lat: 31.5590, lng: 35.4732 },
+  Zarqa: { lat: 32.0728, lng: 36.088 },
+  'Dead Sea': { lat: 31.559, lng: 35.4732 },
   Karak: { lat: 31.1854, lng: 35.7048 },
   Madaba: { lat: 31.7196, lng: 35.7939 },
   Petra: { lat: 30.3285, lng: 35.4444 },
   Jerash: { lat: 32.2744, lng: 35.8961 },
-  Mafraq: { lat: 32.3429, lng: 36.2080 },
+  Mafraq: { lat: 32.3429, lng: 36.208 },
 };
 
 export function resolveCityCoord(city: string) {
@@ -74,15 +74,50 @@ export function Protected({ children }: { children: ReactNode }) {
 
   if (!user) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', background: DS.bg, padding: '24px 16px' }}>
-        <div style={{ width: '100%', maxWidth: 480, padding: '28px 24px', borderRadius: r(24), background: `linear-gradient(180deg, ${DS.card} 0%, ${DS.bg} 100%)`, border: `1px solid ${DS.border}`, boxShadow: '0 20px 60px rgba(0,0,0,0.35)', textAlign: 'center' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '60vh',
+          background: DS.bg,
+          padding: '24px 16px',
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            maxWidth: 480,
+            padding: '28px 24px',
+            borderRadius: r(24),
+            background: `linear-gradient(180deg, ${DS.card} 0%, ${DS.bg} 100%)`,
+            border: `1px solid ${DS.border}`,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
+            textAlign: 'center',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
             <WaselLogo size={42} theme="light" variant="full" />
           </div>
-          <div style={{ width: 58, height: 58, borderRadius: r(18), margin: '0 auto 14px', background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}24`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DS.cyan }}>
+          <div
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: r(18),
+              margin: '0 auto 14px',
+              background: `${DS.cyan}12`,
+              border: `1px solid ${DS.cyan}24`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: DS.cyan,
+            }}
+          >
             <Shield size={24} />
           </div>
-          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Sign in required</div>
+          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>
+            Sign in required
+          </div>
           <div style={{ color: DS.sub, fontFamily: DS.F, fontSize: '0.85rem', lineHeight: 1.7 }}>
             Sign in to continue.
           </div>
@@ -99,7 +134,14 @@ export function PageShell({ children }: { children: ReactNode }) {
   const ar = language === 'ar';
 
   return (
-    <div style={{ minHeight: '100vh', background: DS.bg, fontFamily: DS.F, direction: ar ? 'rtl' : 'ltr' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: DS.bg,
+        fontFamily: DS.F,
+        direction: ar ? 'rtl' : 'ltr',
+      }}
+    >
       <style>{`
         :root { color-scheme: dark; }
         .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(0,200,232,0.28); }
@@ -135,11 +177,43 @@ export function PageShell({ children }: { children: ReactNode }) {
         }
       `}</style>
       <div className="sp-inner" style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 16px' }}>
-        <div className="sp-brand-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
+        <div
+          className="sp-brand-row"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            marginBottom: 18,
+          }}
+        >
           <WaselLogo size={34} theme="light" variant="full" />
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: '999px', background: 'rgba(0,200,232,0.08)', border: '1px solid rgba(0,200,232,0.16)', color: 'rgba(239,246,255,0.78)', fontSize: '0.72rem', fontWeight: 700 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: DS.green, boxShadow: `0 0 10px ${DS.green}` }} />
-            {ar ? 'واصل للحركة اليومية والطرود في الأردن' : 'Wasel for daily movement and parcels across Jordan'}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 12px',
+              borderRadius: '999px',
+              background: 'rgba(0,200,232,0.08)',
+              border: '1px solid rgba(0,200,232,0.16)',
+              color: 'rgba(239,246,255,0.78)',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+            }}
+          >
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: DS.green,
+                boxShadow: `0 0 10px ${DS.green}`,
+              }}
+            />
+            {ar
+              ? 'واصل للحركة اليومية والطرود في الأردن'
+              : 'Wasel for daily movement and parcels across Jordan'}
           </div>
         </div>
         {children}
@@ -148,7 +222,14 @@ export function PageShell({ children }: { children: ReactNode }) {
   );
 }
 
-export function SectionHead({ emoji, title, titleAr, sub, color = DS.cyan, action }: {
+export function SectionHead({
+  emoji,
+  title,
+  titleAr,
+  sub,
+  color = DS.cyan,
+  action,
+}: {
   emoji: string;
   title: string;
   titleAr?: string;
@@ -174,21 +255,71 @@ export function SectionHead({ emoji, title, titleAr, sub, color = DS.cyan, actio
         boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
       }}
     >
-      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}12,transparent)`, pointerEvents: 'none' }} />
-      <div className="sp-head-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}12,transparent)`,
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        className="sp-head-inner"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'relative',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 56, height: 56, borderRadius: r(16), background: `${color}18`, border: `1.5px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.9rem', flexShrink: 0 }}>
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: r(16),
+              background: `${color}18`,
+              border: `1.5px solid ${color}30`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.9rem',
+              flexShrink: 0,
+            }}
+          >
             {emoji}
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>{displayTitle}</h1>
+              <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>
+                {displayTitle}
+              </h1>
             </div>
-            {sub && <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.46)', margin: 0 }}>{sub}</p>}
+            {sub && (
+              <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.46)', margin: 0 }}>
+                {sub}
+              </p>
+            )}
           </div>
         </div>
         {action && (
-          <button onClick={action.onClick} className="sp-head-btn" style={{ height: 44, padding: '0 22px', borderRadius: '99px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 700, fontSize: '0.875rem', boxShadow: `0 4px 16px ${DS.cyan}30`, cursor: 'pointer', flexShrink: 0 }}>
+          <button
+            onClick={action.onClick}
+            className="sp-head-btn"
+            style={{
+              height: 44,
+              padding: '0 22px',
+              borderRadius: '99px',
+              border: 'none',
+              background: DS.gradC,
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              boxShadow: `0 4px 16px ${DS.cyan}30`,
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
             {action.label}
           </button>
         )}

@@ -13,9 +13,7 @@ import { API_URL, fetchWithRetry, getAuthDetails } from '@/services/core';
 import { getConfig } from '@/utils/env';
 import { logger } from '@/utils/monitoring';
 
-const IS_DEV =
-  typeof import.meta !== 'undefined' &&
-  import.meta.env?.MODE === 'development';
+const IS_DEV = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development';
 
 export const CSP_DIRECTIVES = {
   'default-src': ["'self'"],
@@ -25,11 +23,7 @@ export const CSP_DIRECTIVES = {
     'https://js.stripe.com',
     'https://maps.googleapis.com',
   ],
-  'style-src': [
-    "'self'",
-    "'unsafe-inline'",
-    'https://fonts.googleapis.com',
-  ],
+  'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
   'img-src': [
     "'self'",
     'data:',
@@ -39,11 +33,7 @@ export const CSP_DIRECTIVES = {
     'https://images.unsplash.com',
     'https://api.qrserver.com',
   ],
-  'font-src': [
-    "'self'",
-    'data:',
-    'https://fonts.gstatic.com',
-  ],
+  'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com'],
   'connect-src': [
     "'self'",
     'https://*.supabase.co',
@@ -53,11 +43,7 @@ export const CSP_DIRECTIVES = {
     'https://*.sentry.io',
     ...(IS_DEV ? ['ws://localhost:*', 'http://localhost:*'] : []),
   ],
-  'frame-src': [
-    "'self'",
-    'https://js.stripe.com',
-    'https://hooks.stripe.com',
-  ],
+  'frame-src': ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
   'object-src': ["'none'"],
   'base-uri': ["'self'"],
   'form-action': ["'self'"],
@@ -105,14 +91,17 @@ export function resetRateLimit(key: string): void {
 }
 
 if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, record] of rateLimitStore.entries()) {
-      if (now > record.resetAt) {
-        rateLimitStore.delete(key);
+  setInterval(
+    () => {
+      const now = Date.now();
+      for (const [key, record] of rateLimitStore.entries()) {
+        if (now > record.resetAt) {
+          rateLimitStore.delete(key);
+        }
       }
-    }
-  }, 5 * 60 * 1000);
+    },
+    5 * 60 * 1000,
+  );
 }
 
 export interface PasswordStrength {
@@ -146,7 +135,7 @@ export function checkPasswordStrength(password: string): PasswordStrength {
   score += Math.min(diversityScore - 1, 2);
 
   const commonPatterns = [/^123456/, /password/i, /qwerty/i, /admin/i, /letmein/i];
-  if (commonPatterns.some((pattern) => pattern.test(password))) {
+  if (commonPatterns.some(pattern => pattern.test(password))) {
     feedback.push('Avoid common patterns');
     score = Math.max(0, score - 1);
   }
@@ -234,7 +223,9 @@ export async function disable2FA(_userId: string, code: string): Promise<boolean
   }
 
   try {
-    const payload = await callTwoFactorEndpoint<{ disabled: boolean }>('/auth/2fa/disable', { code });
+    const payload = await callTwoFactorEndpoint<{ disabled: boolean }>('/auth/2fa/disable', {
+      code,
+    });
     if (payload.disabled) {
       logger.info('2FA disabled', { important: true });
     }

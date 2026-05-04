@@ -31,7 +31,10 @@ export default function WaselAuthCallback() {
   const [savingPassword, setSavingPassword] = useState(false);
   const callbackType = useMemo(() => readCallbackParam('type'), []);
   const callbackError = useMemo(
-    () => decodeURIComponent(readCallbackParam('error_description') || readCallbackParam('error') || ''),
+    () =>
+      decodeURIComponent(
+        readCallbackParam('error_description') || readCallbackParam('error') || '',
+      ),
     [],
   );
 
@@ -56,7 +59,7 @@ export default function WaselAuthCallback() {
 
       const {
         data: { subscription },
-      } = supabase.auth.onAuthStateChange((event) => {
+      } = supabase.auth.onAuthStateChange(event => {
         if (!active) return;
 
         if (event === 'PASSWORD_RECOVERY') {
@@ -68,7 +71,7 @@ export default function WaselAuthCallback() {
       });
 
       try {
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        await new Promise(resolve => setTimeout(resolve, 50));
 
         if (isRecoveryFlow) {
           if (!active) return;
@@ -179,9 +182,7 @@ export default function WaselAuthCallback() {
             <h1 style={{ margin: '0 0 8px', fontSize: '1.35rem', lineHeight: 1.2 }}>
               Reset your password
             </h1>
-            <p style={{ margin: 0, color: 'rgba(239,246,255,0.7)', lineHeight: 1.6 }}>
-              {message}
-            </p>
+            <p style={{ margin: 0, color: 'rgba(239,246,255,0.7)', lineHeight: 1.6 }}>{message}</p>
           </div>
 
           <label style={{ display: 'grid', gap: 6 }}>
@@ -189,7 +190,7 @@ export default function WaselAuthCallback() {
             <input
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={event => setPassword(event.target.value)}
               placeholder="Enter a new password"
               style={{
                 width: '100%',
@@ -209,7 +210,7 @@ export default function WaselAuthCallback() {
             <input
               type="password"
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
+              onChange={event => setConfirmPassword(event.target.value)}
               placeholder="Re-enter your new password"
               style={{
                 width: '100%',
@@ -242,7 +243,9 @@ export default function WaselAuthCallback() {
 
           <button
             type="button"
-            onClick={() => { void handlePasswordUpdate(); }}
+            onClick={() => {
+              void handlePasswordUpdate();
+            }}
             disabled={savingPassword}
             style={{
               minHeight: 46,
@@ -310,9 +313,15 @@ export default function WaselAuthCallback() {
             height: 42,
             margin: '0 auto 16px',
             borderRadius: '50%',
-            border: state === 'error' ? '3px solid rgba(255,68,85,0.3)' : '3px solid rgba(0,200,232,0.15)',
+            border:
+              state === 'error'
+                ? '3px solid rgba(255,68,85,0.3)'
+                : '3px solid rgba(0,200,232,0.15)',
             borderTop: state === 'error' ? '3px solid #FF4455' : '3px solid #00C8E8',
-            animation: state === 'redirecting' || state === 'loading' || state === 'closing' ? 'spin 0.8s linear infinite' : 'none',
+            animation:
+              state === 'redirecting' || state === 'loading' || state === 'closing'
+                ? 'spin 0.8s linear infinite'
+                : 'none',
           }}
         />
         <h1 style={{ margin: '0 0 8px', fontSize: '1.35rem', lineHeight: 1.2 }}>

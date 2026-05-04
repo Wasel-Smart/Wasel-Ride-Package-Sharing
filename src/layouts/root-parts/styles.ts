@@ -99,9 +99,7 @@ export function menuRowStyle(
   };
 }
 
-export function navListRowStyle(
-  textAlign: CSSProperties['textAlign'],
-): CSSProperties {
+export function navListRowStyle(textAlign: CSSProperties['textAlign']): CSSProperties {
   return {
     display: 'flex',
     alignItems: 'center',
@@ -115,11 +113,7 @@ export function navListRowStyle(
   };
 }
 
-export function coloredDotStyle(
-  color: string,
-  glow = 10,
-  extra?: CSSProperties,
-): CSSProperties {
+export function coloredDotStyle(color: string, glow = 10, extra?: CSSProperties): CSSProperties {
   return {
     width: 8,
     height: 8,

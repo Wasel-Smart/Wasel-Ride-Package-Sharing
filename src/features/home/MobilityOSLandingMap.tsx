@@ -182,7 +182,11 @@ export function MobilityOSLandingMap({
   const uiFocusStroke = runtimeMode === 'fallback' ? '#ffbe5c' : FLOW;
   const uiFocusStrength = Math.max(
     0.28,
-    Math.min(1, Math.max(0, Math.min(utilization ?? 0.45, 1)) * 0.62 + ((Math.max(0.85, Math.min(demandPressure ?? 1, 2.4)) - 0.85) / 1.55) * 0.64),
+    Math.min(
+      1,
+      Math.max(0, Math.min(utilization ?? 0.45, 1)) * 0.62 +
+        ((Math.max(0.85, Math.min(demandPressure ?? 1, 2.4)) - 0.85) / 1.55) * 0.64,
+    ),
   );
 
   useEffect(() => {
@@ -499,7 +503,9 @@ export function MobilityOSLandingMap({
 
         const riderCount = Math.max(
           2,
-          Math.round(2 + route.riderFlow * 7 + (isFocused ? focusPressure * 3 + focusUtilization * 2 : 0)),
+          Math.round(
+            2 + route.riderFlow * 7 + (isFocused ? focusPressure * 3 + focusUtilization * 2 : 0),
+          ),
         );
         for (let i = 0; i < riderCount; i += 1) {
           const t = (time * 0.000055 * (1 + i * 0.08) + i / riderCount + index * 0.06) % 1;
@@ -515,7 +521,9 @@ export function MobilityOSLandingMap({
 
         const parcelCount = Math.max(
           1,
-          Math.round(1 + route.parcelFlow * 4 + (isFocused ? focusUtilization * 3 + focusStrength * 1.4 : 0)),
+          Math.round(
+            1 + route.parcelFlow * 4 + (isFocused ? focusUtilization * 3 + focusStrength * 1.4 : 0),
+          ),
         );
         for (let i = 0; i < parcelCount; i += 1) {
           const t = 1 - ((time * 0.000038 * (1 + i * 0.08) + i / parcelCount + index * 0.05) % 1);
@@ -571,7 +579,13 @@ export function MobilityOSLandingMap({
 
         if (cityFocused) {
           ctx.beginPath();
-          ctx.arc(point.x, point.y, lerp(11, 18, focusStrength) + Math.sin(time * 0.004 + city.id) * 1.2, 0, Math.PI * 2);
+          ctx.arc(
+            point.x,
+            point.y,
+            lerp(11, 18, focusStrength) + Math.sin(time * 0.004 + city.id) * 1.2,
+            0,
+            Math.PI * 2,
+          );
           ctx.strokeStyle = withAlpha(focusStroke, 0.22 + focusStrength * 0.18);
           ctx.lineWidth = 1.4;
           ctx.stroke();
@@ -733,7 +747,9 @@ export function MobilityOSLandingMap({
                   >
                     Pressure
                   </div>
-                  <div style={{ marginTop: 4, color: '#f4fbff', fontWeight: 900, fontSize: '0.82rem' }}>
+                  <div
+                    style={{ marginTop: 4, color: '#f4fbff', fontWeight: 900, fontSize: '0.82rem' }}
+                  >
                     {demandPressure.toFixed(2)}x
                   </div>
                 </div>
@@ -759,7 +775,9 @@ export function MobilityOSLandingMap({
                   >
                     Utilization
                   </div>
-                  <div style={{ marginTop: 4, color: '#f4fbff', fontWeight: 900, fontSize: '0.82rem' }}>
+                  <div
+                    style={{ marginTop: 4, color: '#f4fbff', fontWeight: 900, fontSize: '0.82rem' }}
+                  >
                     {Math.round(utilization * 100)}%
                   </div>
                 </div>

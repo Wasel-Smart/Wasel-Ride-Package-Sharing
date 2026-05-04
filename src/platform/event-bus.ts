@@ -39,11 +39,11 @@ class InMemoryDomainEventBus {
     this.history.unshift(event);
     this.history = this.history.slice(0, 200);
 
-    this.listeners.get(event.type)?.forEach((listener) => {
+    this.listeners.get(event.type)?.forEach(listener => {
       listener(event);
     });
 
-    this.anyListeners.forEach((listener) => {
+    this.anyListeners.forEach(listener => {
       listener(event);
     });
   }

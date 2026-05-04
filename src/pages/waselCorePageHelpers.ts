@@ -84,8 +84,12 @@ export interface PackageComposer {
 export function parseFindRideParams(search: string) {
   const corridorParams = new URLSearchParams(search);
   return {
-    initialFrom: CITIES.includes(corridorParams.get('from') ?? '') ? corridorParams.get('from')! : 'Amman',
-    initialTo: CITIES.includes(corridorParams.get('to') ?? '') ? corridorParams.get('to')! : 'Aqaba',
+    initialFrom: CITIES.includes(corridorParams.get('from') ?? '')
+      ? corridorParams.get('from')!
+      : 'Amman',
+    initialTo: CITIES.includes(corridorParams.get('to') ?? '')
+      ? corridorParams.get('to')!
+      : 'Aqaba',
     initialDate: corridorParams.get('date') ?? '',
     initialSearched: corridorParams.get('search') === '1',
   };
@@ -99,7 +103,9 @@ export function createFindRideCopy(ar: boolean): FindRideCopy {
     searchRides: ar ? 'ابحث عن الرحلات' : 'Search Rides',
     searching: ar ? 'جارٍ البحث...' : 'Searching...',
     searchRoute: ar ? 'مسار البحث' : 'Search Route',
-    previewCorridor: ar ? 'عاين المسار قبل استعراض الرحلات.' : 'Preview the corridor before browsing rides.',
+    previewCorridor: ar
+      ? 'عاين المسار قبل استعراض الرحلات.'
+      : 'Preview the corridor before browsing rides.',
     clearFirstStep: ar ? 'واضح من الخطوة الأولى' : 'Clear from the first step',
     popularRoutes: ar ? 'مسارات شائعة' : 'Popular routes',
     showing: ar ? 'عرض' : 'Showing',
@@ -116,12 +122,18 @@ export function createFindRideCopy(ar: boolean): FindRideCopy {
     recentSearches: ar ? 'عمليات البحث الأخيرة' : 'Recent searches',
     recommendedForYou: ar ? 'موصى بها لك' : 'Recommended for you',
     instantMatch: ar ? 'مطابقة فورية' : 'Instant match',
-    searchHelp: ar ? 'اختر مدينتين مختلفتين لعرض أفضل الرحلات.' : 'Choose two different cities to unlock the best rides.',
-    dateHelp: ar ? 'التاريخ اختياري، لكن إضافته تجعل النتائج أدق.' : 'Date is optional, but it makes the results more precise.',
+    searchHelp: ar
+      ? 'اختر مدينتين مختلفتين لعرض أفضل الرحلات.'
+      : 'Choose two different cities to unlock the best rides.',
+    dateHelp: ar
+      ? 'التاريخ اختياري، لكن إضافته تجعل النتائج أدق.'
+      : 'Date is optional, but it makes the results more precise.',
     bookedTrips: ar ? 'رحلاتك المحجوزة' : 'Your booked trips',
     bookingSaved: ar ? 'تم حفظ الحجز في حسابك.' : 'This booking is now saved in your account.',
     bookingStarted: ar ? 'تم بدء الحجز' : 'Booking started',
-    chooseDifferentCities: ar ? 'اختر مدينتين مختلفتين.' : 'Choose different origin and destination cities.',
+    chooseDifferentCities: ar
+      ? 'اختر مدينتين مختلفتين.'
+      : 'Choose different origin and destination cities.',
     routeSummary: ar ? 'ملخص المسار' : 'Route summary',
     seatsLeft: ar ? 'مقاعد متبقية' : 'Seats left',
     routeIntensity: ar ? 'كثافة المسار' : 'Route intensity',
@@ -129,13 +141,23 @@ export function createFindRideCopy(ar: boolean): FindRideCopy {
     clearDateFilter: ar ? 'امسح فلتر التاريخ' : 'Clear date filter',
     openBusFallback: ar ? 'افتح الباصات لهذا المسار' : 'Open bus fallback',
     nearbyCorridors: ar ? 'ممرات قريبة' : 'Nearby corridors',
-    seatsStillMove: ar ? 'المقاعد تتحرك سريعاً على هذا المسار.' : 'Seats move quickly on this corridor.',
-    noTripsYet: ar ? 'لا توجد رحلات محفوظة بعد. أول حجز سيظهر هنا.' : 'No trips reserved yet. Your first confirmed ride will appear here.',
-    bookingSavedBetter: ar ? 'تم حفظ المقعد مع التنبيهات وتفاصيل الصعود.' : 'Seat saved with departure alerts and boarding details.',
-    busSupport: ar ? 'إذا امتلأت الرحلة، افتح الباصات أو جرّب موعداً قريباً.' : 'If the ride fills up, open buses or try a nearby departure.',
+    seatsStillMove: ar
+      ? 'المقاعد تتحرك سريعاً على هذا المسار.'
+      : 'Seats move quickly on this corridor.',
+    noTripsYet: ar
+      ? 'لا توجد رحلات محفوظة بعد. أول حجز سيظهر هنا.'
+      : 'No trips reserved yet. Your first confirmed ride will appear here.',
+    bookingSavedBetter: ar
+      ? 'تم حفظ المقعد مع التنبيهات وتفاصيل الصعود.'
+      : 'Seat saved with departure alerts and boarding details.',
+    busSupport: ar
+      ? 'إذا امتلأت الرحلة، افتح الباصات أو جرّب موعداً قريباً.'
+      : 'If the ride fills up, open buses or try a nearby departure.',
     sendPackageTitle: ar ? 'أرسل طرداً مع رحلة' : 'Send a Package with a Ride',
     deliveryRoute: ar ? 'مسار التوصيل' : 'Delivery Route',
-    deliveryHint: ar ? 'المسار يربط بين المرسل والراكب والمستلم في رحلة واحدة واضحة.' : 'The route connects sender, rider, and receiver in one clear trip.',
+    deliveryHint: ar
+      ? 'المسار يربط بين المرسل والراكب والمستلم في رحلة واحدة واضحة.'
+      : 'The route connects sender, rider, and receiver in one clear trip.',
     packageFriendly: ar ? 'مناسب للطرود' : 'Package-friendly',
     weight: ar ? 'الوزن' : 'Weight',
     note: ar ? 'ملاحظة' : 'Note',
@@ -143,7 +165,9 @@ export function createFindRideCopy(ar: boolean): FindRideCopy {
     sendPackageBtn: ar ? 'إرسال الطرد مع الرحلة' : 'Send package with ride',
     sentTitle: ar ? 'تم إرسال طلب الطرد للراكب!' : 'Package request sent to a rider',
     sendAnother: ar ? 'أرسل طرداً آخر' : 'Send Another',
-    matchingDesc: ar ? 'سنطابقك مع راكب موثوق متجه إلى' : "We'll match you with a verified rider heading to",
+    matchingDesc: ar
+      ? 'سنطابقك مع راكب موثوق متجه إلى'
+      : "We'll match you with a verified rider heading to",
   };
 }
 
@@ -197,11 +221,18 @@ export function createPackageComposer(): PackageComposer {
 
 export function validatePackageComposer(pkg: PackageComposer) {
   if (pkg.from === pkg.to) return 'Pickup and destination need to be different cities.';
-  if (!pkg.recipientName.trim()) return 'Add the recipient name so the captain knows who will receive it.';
-  if (pkg.recipientPhone.replace(/[^\d]/g, '').length < 9) return 'Add a valid recipient phone number.';
+  if (!pkg.recipientName.trim())
+    return 'Add the recipient name so the captain knows who will receive it.';
+  if (pkg.recipientPhone.replace(/[^\d]/g, '').length < 9)
+    return 'Add a valid recipient phone number.';
   return null;
 }
 
 export function scoreRideForRecommendation(ride: Ride) {
-  return (ride.driver.rating * 10) + (ride.seatsAvailable * 2) + (ride.prayerStops ? 2 : 0) + (ride.pkgCapacity !== 'none' ? 1 : 0);
+  return (
+    ride.driver.rating * 10 +
+    ride.seatsAvailable * 2 +
+    (ride.prayerStops ? 2 : 0) +
+    (ride.pkgCapacity !== 'none' ? 1 : 0)
+  );
 }
