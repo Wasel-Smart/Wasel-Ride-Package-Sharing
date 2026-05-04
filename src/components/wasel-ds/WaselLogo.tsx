@@ -1,5 +1,4 @@
 import type { CSSProperties } from 'react';
-import { SH } from '../../utils/wasel-ds';
 
 interface WaselLogoProps {
   size?: number;
@@ -10,57 +9,29 @@ interface WaselLogoProps {
   framed?: boolean;
 }
 
+const WASEL_FULL_SRC = '/brand/wasellogo-512.png';
+const WASEL_FULL_SRCSET =
+  '/brand/wasellogo-64.png 64w, /brand/wasellogo-96.png 96w, /brand/wasellogo-160.png 160w, /brand/wasellogo-280.png 280w, /brand/wasellogo-512.png 512w';
+const WASEL_FULL_RATIO = 945 / 233;
+
 const WASEL_W_SRC = '/brand/wasel-w-mark.png';
-const WASEL_W_RATIO = 540 / 462;
+const WASEL_W_RATIO = 328 / 233;
 
-function getMarkShadow(theme: 'dark' | 'light') {
-  return theme === 'dark'
-    ? 'drop-shadow(0 5px 10px rgba(17, 24, 31, 0.12))'
-    : 'drop-shadow(0 10px 22px rgba(4, 17, 28, 0.22))';
-}
-
-function getWordStyle(theme: 'dark' | 'light', size: number): CSSProperties {
-  const common: CSSProperties = {
-    display: 'inline-block',
-    fontFamily: "'Segoe UI Black', 'Arial Black', 'Plus Jakarta Sans', sans-serif",
-    fontWeight: 900,
-    fontSize: Math.max(18, size * 0.84),
-    lineHeight: 0.88,
-    letterSpacing: '-0.06em',
-    whiteSpace: 'nowrap',
-    userSelect: 'none',
-    transform: `translateY(${Math.max(1, size * 0.045)}px)`,
-    textRendering: 'geometricPrecision',
-  };
-
+function getImageFilter(theme: 'dark' | 'light', framed: boolean) {
   if (theme === 'dark') {
-    return {
-      ...common,
-      background: 'linear-gradient(180deg, #1A1F27 0%, #2D3743 100%)',
-      backgroundClip: 'text',
-      WebkitBackgroundClip: 'text',
-      color: 'transparent',
-      WebkitTextFillColor: 'transparent',
-      WebkitTextStroke: '0.6px rgba(28, 34, 40, 0.12)',
-      textShadow: '0 1px 0 rgba(255,255,255,0.14)',
-    };
+    return framed
+      ? 'drop-shadow(0 6px 14px rgba(2, 32, 56, 0.22))'
+      : 'drop-shadow(0 3px 8px rgba(2, 32, 56, 0.16))';
   }
 
-  return {
-    ...common,
-    background: 'linear-gradient(180deg, #FBFDFF 0%, #EEF4FB 52%, #DEE7F6 100%)',
-    backgroundClip: 'text',
-    WebkitBackgroundClip: 'text',
-    color: 'transparent',
-    WebkitTextFillColor: 'transparent',
-    WebkitTextStroke: '0.8px rgba(255, 245, 226, 0.24)',
-    textShadow: '0 4px 16px rgba(4, 17, 28, 0.22)',
-    filter: SH.cyan,
-  };
+  return framed
+    ? 'drop-shadow(0 12px 24px rgba(4, 17, 28, 0.28))'
+    : 'drop-shadow(0 8px 18px rgba(4, 17, 28, 0.22))';
 }
 
 function BrandImage({
   src,
+  srcSet,
   alt,
   size,
   ratio,
@@ -68,6 +39,7 @@ function BrandImage({
   theme,
 }: {
   src: string;
+  srcSet?: string;
   alt: string;
   size: number;
   ratio: number;
@@ -77,16 +49,19 @@ function BrandImage({
   return (
     <img
       src={src}
+      srcSet={srcSet}
+      sizes={`${Math.round(size * ratio)}px`}
       alt={alt}
       width={Math.round(size * ratio)}
       height={Math.round(size)}
+      decoding="async"
       style={{
         display: 'block',
         width: size * ratio,
         height: size,
         objectFit: 'contain',
         flexShrink: 0,
-        filter: framed ? getMarkShadow(theme) : undefined,
+        filter: getImageFilter(theme, framed),
       }}
     />
   );
@@ -125,32 +100,16 @@ function LogoWordmark({
   framed?: boolean;
 }) {
   return (
-    <span
-      aria-label="Wasel"
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: Math.max(0, size * 0.006),
-        lineHeight: 0,
-      }}
-    >
+    <span aria-label="Wasel" style={{ display: 'inline-flex', alignItems: 'center', lineHeight: 0 }}>
       <BrandImage
-        src={WASEL_W_SRC}
-        alt=""
+        src={WASEL_FULL_SRC}
+        srcSet={WASEL_FULL_SRCSET}
+        alt="Wasel"
         size={size}
-        ratio={WASEL_W_RATIO}
+        ratio={WASEL_FULL_RATIO}
         framed={framed}
         theme={theme}
       />
-      <span
-        aria-hidden="true"
-        style={{
-          ...getWordStyle(theme, size),
-          marginInlineStart: Math.max(-6, size * -0.085),
-        }}
-      >
-        asel
-      </span>
     </span>
   );
 }
@@ -191,7 +150,6 @@ export function WaselHeroMark({ size = 120 }: { size?: number }) {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        filter: 'drop-shadow(0 14px 28px rgba(4, 17, 28, 0.28))',
       }}
     >
       <LogoWordmark size={Math.max(36, size * 0.46)} theme="light" framed />

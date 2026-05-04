@@ -4,20 +4,20 @@ import path from 'node:path';
 const root = process.cwd();
 
 const requiredFiles = [
-  'src/supabase/migrations/20260326080000_legacy_public_table_cutover.sql',
-  'src/supabase/migrations/20260327090000_production_operating_model.sql',
-  'src/supabase/migrations/20260327110000_notifications_runtime_contract.sql',
-  'src/supabase/migrations/20260401093000_database_hardening.sql',
-  'src/supabase/migrations/20260401113000_unified_backend_contract.sql',
-  'src/supabase/migrations/20260401133000_align_canonical_rls_policies.sql',
-  'src/supabase/migrations/20260401143000_harden_rpc_execute_permissions.sql',
-  'src/supabase/migrations/20260401183000_growth_and_demand_alerts.sql',
-  'src/supabase/migrations/20260401193000_referrals_and_growth_events.sql',
-  'src/supabase/migrations/20260401213000_expand_runtime_contract_tables.sql',
-  'src/supabase/migrations/20260401223000_communications_runtime_contract.sql',
-  'src/supabase/migrations/20260401233000_communication_delivery_operations.sql',
-  'src/supabase/seeds/mock_engine_launch_pack.sql',
-  'src/supabase/seeds/mock_engine_smoke_checks.sql',
+  'supabase/migrations/20260326080000_legacy_public_table_cutover.sql',
+  'supabase/migrations/20260327090000_production_operating_model.sql',
+  'supabase/migrations/20260327110000_notifications_runtime_contract.sql',
+  'supabase/migrations/20260401093000_database_hardening.sql',
+  'supabase/migrations/20260401113000_unified_backend_contract.sql',
+  'supabase/migrations/20260401133000_align_canonical_rls_policies.sql',
+  'supabase/migrations/20260401143000_harden_rpc_execute_permissions.sql',
+  'supabase/migrations/20260401183000_growth_and_demand_alerts.sql',
+  'supabase/migrations/20260401193000_referrals_and_growth_events.sql',
+  'supabase/migrations/20260401213000_expand_runtime_contract_tables.sql',
+  'supabase/migrations/20260401223000_communications_runtime_contract.sql',
+  'supabase/migrations/20260401233000_communication_delivery_operations.sql',
+  'supabase/seeds/mock_engine_launch_pack.sql',
+  'supabase/seeds/mock_engine_smoke_checks.sql',
   'docs/MOCK_ENGINE_LAUNCH_PACK.md',
   'docs/LAUNCH_REHEARSAL_CHECKLIST.md',
   'docs/PRODUCTION_CUTOVER_CHECKLIST.md',
@@ -71,8 +71,8 @@ if (JSON.stringify(migrationNames) !== JSON.stringify(sortedNames)) {
 }
 
 printSection('Migration Bookkeeping');
-if (exists('src/supabase/migrations/MIGRATIONS_README.md')) {
-  const readme = read('src/supabase/migrations/MIGRATIONS_README.md');
+if (exists('supabase/migrations/MIGRATIONS_README.md')) {
+  const readme = read('supabase/migrations/MIGRATIONS_README.md');
   for (const name of migrationNames) {
     if (!readme.includes(name)) {
       fail(`MIGRATIONS_README.md does not reference ${name}`);
@@ -80,11 +80,11 @@ if (exists('src/supabase/migrations/MIGRATIONS_README.md')) {
   }
   console.log('Migration README references all rollout migrations.');
 } else {
-  fail('Missing src/supabase/migrations/MIGRATIONS_README.md');
+  fail('Missing supabase/migrations/MIGRATIONS_README.md');
 }
 
 printSection('Policy Coverage');
-const rlsMigration = 'src/supabase/migrations/20260401133000_align_canonical_rls_policies.sql';
+const rlsMigration = 'supabase/migrations/20260401133000_align_canonical_rls_policies.sql';
 if (exists(rlsMigration)) {
   const text = read(rlsMigration);
   const expectedPolicies = [
@@ -108,7 +108,7 @@ if (exists(rlsMigration)) {
 }
 
 printSection('RPC Hardening');
-const rpcMigration = 'src/supabase/migrations/20260401143000_harden_rpc_execute_permissions.sql';
+const rpcMigration = 'supabase/migrations/20260401143000_harden_rpc_execute_permissions.sql';
 if (exists(rpcMigration)) {
   const text = read(rpcMigration);
   const expectedSnippets = [
@@ -130,7 +130,7 @@ if (exists(rpcMigration)) {
 }
 
 printSection('Seed Pack Coverage');
-const seedFile = 'src/supabase/seeds/mock_engine_launch_pack.sql';
+const seedFile = 'supabase/seeds/mock_engine_launch_pack.sql';
 if (exists(seedFile)) {
   const text = read(seedFile);
   const expectedTables = [
@@ -156,7 +156,7 @@ if (exists(seedFile)) {
 }
 
 printSection('Communications Runtime');
-const communicationsMigration = 'src/supabase/migrations/20260401233000_communication_delivery_operations.sql';
+const communicationsMigration = 'supabase/migrations/20260401233000_communication_delivery_operations.sql';
 if (exists(communicationsMigration)) {
   const text = read(communicationsMigration);
   const expectedSnippets = [

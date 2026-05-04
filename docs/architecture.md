@@ -12,7 +12,7 @@ The codebase is organized around bounded contexts and production concerns:
 - `src/platform`: event bus, API envelope, geo-stream throttling, observability, and RBAC primitives
 - `src/platform/service-topology.ts`: explicit service catalog, ownership, and SLO posture
 - `src/utils`: security, monitoring, configuration, validation, and performance helpers
-- `src/supabase`: schema, migrations, and seed artifacts
+- `supabase`: local project config, edge functions, schema, migrations, and seed artifacts
 - `tests`: unit, service, browser, and load-testing assets
 - `infra`: Kubernetes, worker, and observability deployment scaffolding
 

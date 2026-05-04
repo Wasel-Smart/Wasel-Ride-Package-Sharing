@@ -13,11 +13,11 @@ users and live operational traffic.
 
 ## 2. Database Rollout
 
-- Apply [20260401113000_unified_backend_contract.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401113000_unified_backend_contract.sql)
-- Apply [20260401133000_align_canonical_rls_policies.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401133000_align_canonical_rls_policies.sql)
-- Apply [20260401143000_harden_rpc_execute_permissions.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401143000_harden_rpc_execute_permissions.sql)
+- Apply [20260401113000_unified_backend_contract.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/supabase/migrations/20260401113000_unified_backend_contract.sql)
+- Apply [20260401133000_align_canonical_rls_policies.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/supabase/migrations/20260401133000_align_canonical_rls_policies.sql)
+- Apply [20260401143000_harden_rpc_execute_permissions.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/supabase/migrations/20260401143000_harden_rpc_execute_permissions.sql)
 - Confirm all migrations complete without manual edits in the dashboard
-- Confirm [MIGRATIONS_README.md](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/MIGRATIONS_README.md) matches what is applied
+- Confirm [MIGRATIONS_README.md](/C:/Users/user/OneDrive/Desktop/Wdoubleme/supabase/migrations/MIGRATIONS_README.md) matches what is applied
 
 ## 3. Auth to Canonical User Binding
 

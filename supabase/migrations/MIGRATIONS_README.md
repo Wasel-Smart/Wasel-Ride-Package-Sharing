@@ -67,8 +67,8 @@ For older production projects that still have legacy `public.users`, `public.tri
 10. `20260401213000_expand_runtime_contract_tables.sql`
 11. `20260401223000_communications_runtime_contract.sql`
 12. `20260401233000_communication_delivery_operations.sql`
-13. `src/supabase/seeds/mock_engine_launch_pack.sql`
-14. `src/supabase/seeds/mock_engine_smoke_checks.sql`
+13. `supabase/seeds/mock_engine_launch_pack.sql`
+14. `supabase/seeds/mock_engine_smoke_checks.sql`
 
 ---
 
@@ -93,7 +93,7 @@ psql "$SUPABASE_DB_URL" -f migrations/20260401120000_my_change.sql
 
 ## Seed Packs
 
-Mock engine seed assets live in `src/supabase/seeds/`.
+Mock engine seed assets live in `supabase/seeds/`.
 
 - `mock_engine_launch_pack.sql`
 - `mock_engine_smoke_checks.sql`

@@ -1,43 +1,30 @@
 /**
- * Run this once from the project root:
- *   node scripts/update-logo-assets.js
+ * Convenience wrapper around the canonical Python asset generator.
  *
- * It replaces all Wasel logo PNG files (src/assets + public/brand)
- * with the new branded W mark (transparent background).
+ * The checked-in source files live in:
+ *   - src/assets/wasel-logo-source.png
+ *   - src/assets/wasel-mark-source.png
+ *
+ * Run from the project root:
+ *   node scripts/update-logo-assets.js
  */
 
-const fs = require('fs');
-const path = require('path');
+import { spawnSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-// ─── Read the base64 W mark from WaselLogo.tsx ────────────────────────────────
-const logoSrc = fs.readFileSync(
-  path.join(__dirname, '../src/components/wasel-ds/WaselLogo.tsx'),
-  'utf8'
-);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const projectRoot = path.join(__dirname, '..');
+const scriptPath = path.join(__dirname, 'generate-wasel-brand-assets.py');
 
-const match = logoSrc.match(/base64,([A-Za-z0-9+/=]+)'/);
-if (!match) {
-  console.error('Could not find base64 data in WaselLogo.tsx');
+const result = spawnSync('python', [scriptPath], {
+  cwd: projectRoot,
+  stdio: 'inherit',
+});
+
+if (result.error) {
+  console.error('Failed to run Python logo asset generator:', result.error.message);
   process.exit(1);
 }
 
-const pngBuffer = Buffer.from(match[1], 'base64');
-console.log(`Decoded W mark PNG: ${pngBuffer.length} bytes`);
-
-// ─── Destination paths ────────────────────────────────────────────────────────
-const targets = [
-  'src/assets/wasellogo.png',
-  'public/brand/wasellogo-64.png',
-  'public/brand/wasellogo-96.png',
-  'public/brand/wasellogo-160.png',
-  'public/brand/wasellogo-280.png',
-  'public/brand/wasellogo-512.png',
-];
-
-targets.forEach((rel) => {
-  const dest = path.join(__dirname, '..', rel);
-  fs.writeFileSync(dest, pngBuffer);
-  console.log(`✓  Updated ${rel}`);
-});
-
-console.log('\nAll logo assets updated! Restart your dev server.');
+process.exit(result.status ?? 0);

@@ -5,9 +5,9 @@ for mock launch, QA rehearsals, demos, and pre-production smoke runs.
 
 Files:
 
-- `src/supabase/seeds/mock_engine_launch_pack.sql`
-- `src/supabase/seeds/mock_engine_smoke_checks.sql`
-- `src/supabase/migrations/20260401133000_align_canonical_rls_policies.sql`
+- `supabase/seeds/mock_engine_launch_pack.sql`
+- `supabase/seeds/mock_engine_smoke_checks.sql`
+- `supabase/migrations/20260401133000_align_canonical_rls_policies.sql`
 
 ## What It Seeds
 

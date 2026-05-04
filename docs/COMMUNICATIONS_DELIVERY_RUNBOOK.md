@@ -20,8 +20,8 @@ This runbook turns Wasel communications from queued records into real provider-b
 
 Run these after the existing rollout pack:
 
-1. `src/supabase/migrations/20260401223000_communications_runtime_contract.sql`
-2. `src/supabase/migrations/20260401233000_communication_delivery_operations.sql`
+1. `supabase/migrations/20260401223000_communications_runtime_contract.sql`
+2. `supabase/migrations/20260401233000_communication_delivery_operations.sql`
 
 ## Required server secrets
 

@@ -47,6 +47,7 @@ flowchart LR
 docs/           Architecture, OpenAPI, observability, launch docs
 docker/         Nginx runtime configuration
 scripts/        Build and verification helpers
+supabase/       Local Supabase project, functions, migrations, and seeds
 src/
   domain/       Canonical lifecycle and event contracts
   features/     Route-level product areas
@@ -77,6 +78,18 @@ npm install
 cp .env.example .env
 npm run dev
 ```
+
+## Backend setup
+
+Use the repo-local Supabase CLI workflow instead of relying on a global install.
+
+```bash
+npm run supabase:start
+npm run supabase:db:reset
+npm run dev
+```
+
+Supabase project config lives in `supabase/config.toml`, with migrations in `supabase/migrations`, seed data in `supabase/seeds`, and edge functions in `supabase/functions`.
 
 ## Quality gate
 

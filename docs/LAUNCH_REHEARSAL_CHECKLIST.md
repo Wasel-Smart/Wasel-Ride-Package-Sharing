@@ -4,11 +4,11 @@ Use this checklist before moving from mock launch into wider rollout.
 
 ## Supabase Rollout
 
-- Apply [20260401113000_unified_backend_contract.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401113000_unified_backend_contract.sql)
-- Apply [20260401133000_align_canonical_rls_policies.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401133000_align_canonical_rls_policies.sql)
-- Apply [20260401143000_harden_rpc_execute_permissions.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401143000_harden_rpc_execute_permissions.sql)
-- Run [mock_engine_launch_pack.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/seeds/mock_engine_launch_pack.sql)
-- Run [mock_engine_smoke_checks.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/seeds/mock_engine_smoke_checks.sql)
+- Apply [20260401113000_unified_backend_contract.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/supabase/migrations/20260401113000_unified_backend_contract.sql)
+- Apply [20260401133000_align_canonical_rls_policies.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/supabase/migrations/20260401133000_align_canonical_rls_policies.sql)
+- Apply [20260401143000_harden_rpc_execute_permissions.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/supabase/migrations/20260401143000_harden_rpc_execute_permissions.sql)
+- Run [mock_engine_launch_pack.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/supabase/seeds/mock_engine_launch_pack.sql)
+- Run [mock_engine_smoke_checks.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/supabase/seeds/mock_engine_smoke_checks.sql)
 - Run `node scripts/verify-supabase-rollout.mjs`
 
 ## Application Checks
