@@ -126,6 +126,14 @@ export function getCSRFHeaderName(): string {
   return CSRF_TOKEN_HEADER;
 }
 
+/**
+ * Initialize CSRF protection (called on app start)
+ */
+export function initializeCsrfProtection(): void {
+  // Generate initial token
+  generateCSRFToken();
+}
+
 export const CSRF = {
   generateToken: generateCSRFToken,
   getToken: getCSRFToken,
@@ -134,6 +142,7 @@ export const CSRF = {
   clearToken: clearCSRFToken,
   refreshToken: refreshCSRFToken,
   getHeaderName: getCSRFHeaderName,
+  initialize: initializeCsrfProtection,
 };
 
 export default CSRF;

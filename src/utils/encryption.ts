@@ -159,3 +159,11 @@ export async function hashData(data: string): Promise<string> {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
+
+/**
+ * Clear master encryption key (on logout)
+ */
+export function clearMasterKey(): void {
+  sessionStorage.removeItem('wasel_session_id');
+  secureStorage.clear();
+}
