@@ -22,7 +22,7 @@ import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { checkRateLimit, validateEmail } from '../utils/security';
 import { useAuth } from '../contexts/AuthContext';
-import { getConfig, getWhatsAppSupportUrl } from '../utils/env';
+import { getConfig, getWhatsAppSupportUrl, normalizeReturnToPath } from '../utils/env';
 import { friendlyAuthError, pwStrength } from '../utils/authHelpers';
 import { C, R, TYPE, F, SPACE } from '../utils/wasel-ds';
 
@@ -330,10 +330,7 @@ export default function WaselAuth() {
   const mountedRef = useRef(true);
   const { supportWhatsAppNumber } = getConfig();
 
-  const safeReturnTo = (() => {
-    const raw = params.get('returnTo') || '/app/find-ride';
-    return raw.startsWith('/') && !raw.startsWith('//') ? raw : '/app/find-ride';
-  })();
+  const safeReturnTo = normalizeReturnToPath(params.get('returnTo'));
 
   useEffect(() => {
     mountedRef.current = true;
@@ -416,7 +413,7 @@ export default function WaselAuth() {
       setError('Too many attempts. Please wait a minute and try again.');
       return;
     }
-    const registration = await register(name, email, password, phone);
+    const registration = await register(name, email, password, phone, safeReturnTo);
     if (registration.error) {
       setError(friendlyAuthError(registration.error, 'Sign up failed. Please try again.'));
       return;
@@ -441,7 +438,7 @@ export default function WaselAuth() {
       setError('Please enter a valid email address.');
       return;
     }
-    const { error: resetError } = await resetPassword(email);
+    const { error: resetError } = await resetPassword(email, safeReturnTo);
     if (resetError) {
       setError(friendlyAuthError(resetError, 'Password reset failed.'));
       return;
@@ -452,13 +449,13 @@ export default function WaselAuth() {
 
   const handleGoogleSignIn = async () => {
     setError('');
-    const { error: oauthError } = await signInWithGoogle();
+    const { error: oauthError } = await signInWithGoogle(safeReturnTo);
     if (oauthError) setError(friendlyAuthError(oauthError, 'Google sign-in failed.'));
   };
 
   const handleFacebookSignIn = async () => {
     setError('');
-    const { error: oauthError } = await signInWithFacebook();
+    const { error: oauthError } = await signInWithFacebook(safeReturnTo);
     if (oauthError) setError(friendlyAuthError(oauthError, 'Facebook sign-in failed.'));
   };
 

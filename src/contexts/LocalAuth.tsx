@@ -141,6 +141,7 @@ interface LocalAuthCtx {
     email: string,
     password: string,
     phone?: string,
+    returnTo?: string,
   ) => Promise<{
     error: string | null;
     requiresEmailConfirmation?: boolean;
@@ -232,12 +233,13 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     phone?: string,
+    returnTo?: string,
   ): Promise<{
     error: string | null;
     requiresEmailConfirmation?: boolean;
     email?: string;
   }> => {
-    const result = await auth.signUp(email, password, name, phone);
+    const result = await auth.signUp(email, password, name, phone, returnTo);
     return {
       error: result.error ? toMessage(result.error) : null,
       requiresEmailConfirmation: result.requiresEmailConfirmation,

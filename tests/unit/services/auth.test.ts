@@ -6,7 +6,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 // ── Auth URL helpers ──────────────────────────────────────────────────────────
 // These helpers are pure functions and need no mocking.
-import { getAuthCallbackUrl, getConfig } from '@/utils/env';
+import { getAuthCallbackUrl, getConfig, normalizeReturnToPath } from '@/utils/env';
 
 describe('getAuthCallbackUrl', () => {
   it('appends the callback path to the given origin', () => {
@@ -25,6 +25,36 @@ describe('getAuthCallbackUrl', () => {
     expect(typeof url).toBe('string');
     expect(url.length).toBeGreaterThan(0);
     expect(url).toContain('/app/auth/callback');
+  });
+
+  it('preserves a safe return target in callback query params', () => {
+    const url = getAuthCallbackUrl('https://wasel14.online', {
+      returnTo: '/app/wallet?tab=overview',
+    });
+
+    expect(url).toBe(
+      'https://wasel14.online/app/auth/callback?returnTo=%2Fapp%2Fwallet%3Ftab%3Doverview',
+    );
+  });
+
+  it('normalizes unsafe return targets to the default app surface', () => {
+    const url = getAuthCallbackUrl('https://wasel14.online', {
+      returnTo: 'https://malicious.example/steal',
+    });
+
+    expect(url).toBe(
+      'https://wasel14.online/app/auth/callback?returnTo=%2Fapp%2Ffind-ride',
+    );
+  });
+});
+
+describe('normalizeReturnToPath', () => {
+  it('accepts safe in-app routes', () => {
+    expect(normalizeReturnToPath('/app/profile?tab=security')).toBe('/app/profile?tab=security');
+  });
+
+  it('rejects unsafe absolute urls', () => {
+    expect(normalizeReturnToPath('https://malicious.example')).toBe('/app/find-ride');
   });
 });
 

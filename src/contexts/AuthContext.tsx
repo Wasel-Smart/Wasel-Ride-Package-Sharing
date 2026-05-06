@@ -27,14 +27,15 @@ interface AuthContextType {
     password: string,
     fullName: string,
     phone?: string,
+    returnTo?: string,
   ) => Promise<SignUpResult>;
   signIn: (email: string, password: string) => Promise<{ error: AuthOperationError }>;
-  signInWithGoogle: () => Promise<{ error: AuthOperationError }>;
-  signInWithFacebook: () => Promise<{ error: AuthOperationError }>;
+  signInWithGoogle: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
+  signInWithFacebook: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: AuthOperationError }>;
   refreshProfile: () => Promise<void>;
-  resetPassword: (email: string) => Promise<{ error: AuthOperationError }>;
+  resetPassword: (email: string, returnTo?: string) => Promise<{ error: AuthOperationError }>;
   changePassword: (nextPassword: string) => Promise<{ error: AuthOperationError }>;
 }
 
@@ -222,6 +223,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       password: string,
       fullName: string,
       phone?: string,
+      returnTo?: string,
     ): Promise<SignUpResult> => {
       if (!supabase) {
         return { error: new Error('Backend not configured') };
@@ -231,7 +233,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setBusy(true);
       try {
-        const data = await authAPI.signUp(email, password, firstName, lastName, phone ?? '');
+        const data = await authAPI.signUp(
+          email,
+          password,
+          firstName,
+          lastName,
+          phone ?? '',
+          returnTo,
+        );
         const authUser = data.user ?? data.session?.user ?? null;
 
         if (authUser && data.session) {
@@ -277,13 +286,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     [fetchProfile],
   );
 
-  const signInWithGoogle = useCallback(async (): Promise<{ error: AuthOperationError }> => {
-    return signInWithOAuthProvider(supabase, 'google');
-  }, []);
+  const signInWithGoogle = useCallback(
+    async (returnTo?: string): Promise<{ error: AuthOperationError }> => {
+      return signInWithOAuthProvider(supabase, 'google', returnTo);
+    },
+    [],
+  );
 
-  const signInWithFacebook = useCallback(async (): Promise<{ error: AuthOperationError }> => {
-    return signInWithOAuthProvider(supabase, 'facebook');
-  }, []);
+  const signInWithFacebook = useCallback(
+    async (returnTo?: string): Promise<{ error: AuthOperationError }> => {
+      return signInWithOAuthProvider(supabase, 'facebook', returnTo);
+    },
+    [],
+  );
 
   const signOut = useCallback(async () => {
     setBusy(true);
@@ -335,12 +350,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [fetchProfile, user]);
 
   const resetPassword = useCallback(
-    async (email: string): Promise<{ error: AuthOperationError }> => {
+    async (email: string, returnTo?: string): Promise<{ error: AuthOperationError }> => {
       if (!supabase) return { error: new Error('Backend not configured') };
 
       try {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: getAuthCallbackUrl(window.location.origin),
+          redirectTo: getAuthCallbackUrl(
+            window.location.origin,
+            returnTo ? { returnTo } : undefined,
+          ),
         });
         return { error: error ?? null };
       } catch (error: unknown) {

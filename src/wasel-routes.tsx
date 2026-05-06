@@ -233,24 +233,36 @@ const buildMainChildren = () => [
 
   // ── Raje3 Returns ─────────────────────────────────────────────────────────
 
-  // ── B2B / B2S ─────────────────────────────────────────────────────────────
+  // ── B2B / B2S / Ops ──────────────────────────────────────────────────────
   {
-    path: 'services/corporate',
-    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
-  },
-  {
-    path: 'services/school',
-    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
-  },
-  {
-    path: 'innovation-hub',
-    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
-  },
-  { path: 'analytics', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
-  { path: 'mobility-os', lazy: lazy(() => import('./features/mobility-os')) },
-  {
-    path: 'ai-intelligence',
-    lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+    Component: ProtectedOutlet,
+    children: [
+      {
+        path: 'services/corporate',
+        lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+      },
+      {
+        path: 'services/school',
+        lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+      },
+      {
+        path: 'innovation-hub',
+        lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+      },
+      {
+        path: 'analytics',
+        lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+      },
+      { path: 'mobility-os', lazy: lazy(() => import('./features/mobility-os')) },
+      {
+        path: 'ai-intelligence',
+        lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+      },
+      {
+        path: 'moderation',
+        lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+      },
+    ],
   },
 
   // ── Wallet ────────────────────────────────────────────────────────────────
@@ -292,9 +304,6 @@ const buildMainChildren = () => [
   { path: 'terms', lazy: lazy(() => import('./features/legal/TermsOfService'), 'TermsOfService') },
   { path: 'legal/privacy', Component: () => <RedirectTo to="/app/privacy" /> },
   { path: 'legal/terms', Component: () => <RedirectTo to="/app/terms" /> },
-
-  // ── Moderation ────────────────────────────────────────────────────────────
-  { path: 'moderation', lazy: lazy(() => import('./features/operations/OperationsOverviewPage')) },
 
   // ── 404 catch-all ─────────────────────────────────────────────────────────
   { path: '*', Component: NotFound },

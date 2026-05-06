@@ -1,4 +1,7 @@
 type EnvSource = Record<string, string | undefined>;
+type AuthCallbackParams = Record<string, string | null | undefined>;
+
+export const DEFAULT_AUTH_RETURN_TO = '/app/find-ride';
 
 export interface RuntimeConfigIssue {
   key: string;
@@ -217,10 +220,31 @@ export function getConfig() {
   };
 }
 
-export function getAuthCallbackUrl(origin?: string): string {
+export function normalizeReturnToPath(
+  returnTo: string | null | undefined,
+  fallback = DEFAULT_AUTH_RETURN_TO,
+): string {
+  if (!returnTo) {
+    return fallback;
+  }
+
+  return returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : fallback;
+}
+
+export function getAuthCallbackUrl(origin?: string, params?: AuthCallbackParams): string {
   const { appUrl, authCallbackPath } = getConfig();
   const base = (origin || appUrl || 'http://localhost:3000').replace(/\/$/, '');
-  return `${base}${authCallbackPath}`;
+  const url = new URL(`${base}${authCallbackPath}`);
+
+  Object.entries(params ?? {}).forEach(([key, value]) => {
+    if (typeof value !== 'string' || value.length === 0) {
+      return;
+    }
+
+    url.searchParams.set(key, key === 'returnTo' ? normalizeReturnToPath(value) : value);
+  });
+
+  return url.toString();
 }
 
 export function getWhatsAppSupportUrl(message = 'Hi Wasel'): string {

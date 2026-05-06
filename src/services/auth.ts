@@ -132,10 +132,12 @@ export const authAPI = {
     firstName: string,
     lastName: string,
     phone: string,
+    returnTo?: string,
   ) {
     const client = requireSupabase();
     const redirectTo = getAuthCallbackUrl(
       typeof window !== 'undefined' ? window.location.origin : undefined,
+      returnTo ? { returnTo } : undefined,
     );
 
     const { data, error } = await client.auth.signUp({

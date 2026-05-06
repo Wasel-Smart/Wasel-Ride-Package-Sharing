@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { AuthChangeEvent } from '@supabase/supabase-js';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { supabase } from '../utils/supabase/client';
+import { normalizeReturnToPath } from '../utils/env';
 
 type CallbackState = 'loading' | 'closing' | 'redirecting' | 'recovery' | 'error';
 
@@ -31,6 +32,7 @@ export default function WaselAuthCallback() {
   const [formError, setFormError] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
   const callbackType = useMemo(() => readCallbackParam('type'), []);
+  const returnTo = useMemo(() => normalizeReturnToPath(readCallbackParam('returnTo')), []);
   const callbackError = useMemo(
     () =>
       decodeURIComponent(
@@ -103,7 +105,7 @@ export default function WaselAuthCallback() {
 
         setState('redirecting');
         setMessage('Sign-in complete. Redirecting...');
-        navigate('/app/find-ride', { replace: true });
+        navigate(returnTo, { replace: true });
       } catch (error) {
         if (!active) return;
         setState('error');
@@ -118,7 +120,7 @@ export default function WaselAuthCallback() {
     return () => {
       active = false;
     };
-  }, [callbackError, callbackType, navigate]);
+  }, [callbackError, callbackType, navigate, returnTo]);
 
   const handlePasswordUpdate = async () => {
     if (!supabase) {
@@ -150,7 +152,9 @@ export default function WaselAuthCallback() {
 
     setState('redirecting');
     setMessage('Password updated. Redirecting to sign in...');
-    navigate('/app/auth?tab=signin&reset=success', { replace: true });
+    navigate(`/app/auth?tab=signin&reset=success&returnTo=${encodeURIComponent(returnTo)}`, {
+      replace: true,
+    });
   };
 
   if (state === 'recovery') {

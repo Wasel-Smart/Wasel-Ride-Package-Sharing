@@ -78,6 +78,7 @@ export function normalizeOperationError(error: unknown, fallback: string): Error
 export async function signInWithOAuthProvider(
   client: SupabaseClient | null,
   provider: 'google' | 'facebook',
+  returnTo?: string,
 ): Promise<{ error: AuthOperationError }> {
   if (!client) {
     return { error: new Error('Backend not configured') };
@@ -89,6 +90,7 @@ export async function signInWithOAuthProvider(
       options: {
         redirectTo: getAuthCallbackUrl(
           typeof window !== 'undefined' ? window.location.origin : undefined,
+          returnTo ? { returnTo } : undefined,
         ),
       },
     });
