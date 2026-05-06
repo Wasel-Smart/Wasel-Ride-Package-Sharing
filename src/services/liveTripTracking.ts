@@ -138,7 +138,7 @@ function normalizeCity(value: string | null | undefined): string {
 }
 
 function coordFromCity(city: string | null | undefined): LatLng {
-  return CITY_COORDS[normalizeCity(city)] ?? CITY_COORDS.amman;
+  return CITY_COORDS[normalizeCity(city)] ?? CITY_COORDS.amman!;
 }
 
 function parseCoordValue(value: unknown): number | null {

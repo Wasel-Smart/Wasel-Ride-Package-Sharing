@@ -64,9 +64,7 @@ export class SmartPricingEngine {
       // However, the prompt asks for "Rider can offer every seat in a different price".
       // Let's simulate a curve where the "Next Seat" is always attractive.
 
-      const share = 1 / Math.max(i, 1);
       const platformFee = 0.1; // 10%
-      const efficiencyBonus = 0.05 * (i - 1); // 5% discount per extra rider logic simulation
 
       // This calculates what the price WOULD be if the vehicle stops filling at 'i' passengers.
       const pricePerPerson = (totalTripCost * (1 + platformFee)) / i;

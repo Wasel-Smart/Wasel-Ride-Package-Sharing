@@ -25,7 +25,7 @@ import {
   type ServiceProviderWorkflowSnapshot,
 } from '../../services/serviceProviderWorkflows';
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
-import { C, F, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import { C, F, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 const CYAN = '#00C8E8';
 const GOLD = '#F59E0B';
 const GREEN = '#22C55E';

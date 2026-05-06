@@ -13,7 +13,6 @@
 import { startTransition, useDeferredValue, useMemo, useState } from 'react';
 import {
   AlertTriangle,
-  Bell,
   BellOff,
   CheckCheck,
   Inbox,

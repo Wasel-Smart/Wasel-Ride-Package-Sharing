@@ -98,7 +98,7 @@ export async function signInWithOAuthProvider(
     return {
       error: normalizeOperationError(
         error,
-        `${provider[0].toUpperCase()}${provider.slice(1)} login failed`,
+        `${provider.charAt(0).toUpperCase()}${provider.slice(1)} login failed`,
       ),
     };
   }

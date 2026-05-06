@@ -65,7 +65,7 @@ function toLocalDate(date = new Date()) {
 }
 
 function parseTimeParts(time: string) {
-  const [hours, minutes] = time.split(':').map(value => Number(value));
+  const [hours = 7, minutes = 30] = time.split(':').map(value => Number(value));
   return {
     hours: Number.isFinite(hours) ? hours : 7,
     minutes: Number.isFinite(minutes) ? minutes : 30,
@@ -228,10 +228,12 @@ export function upsertRouteReminder(args: {
 
   const index = reminders.findIndex(reminder => reminder.corridorId === args.corridorId);
   if (index >= 0) {
+    const currentReminder = reminders[index];
+    if (!currentReminder) return nextReminder;
     reminders[index] = {
-      ...reminders[index],
+      ...currentReminder,
       ...nextReminder,
-      createdAt: reminders[index].createdAt,
+      createdAt: currentReminder.createdAt,
     };
   } else {
     reminders.unshift(nextReminder);

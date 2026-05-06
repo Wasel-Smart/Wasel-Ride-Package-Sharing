@@ -23,7 +23,6 @@ import {
   ZoomOut,
   Maximize2,
   Minimize2,
-  Car,
   Radio,
   AlertTriangle,
   X,
@@ -535,21 +534,23 @@ function WaselMapCompact({
 
       const start = rPts[0];
       const end = rPts[rPts.length - 1];
-      const startM = L.circleMarker([start.lat, start.lng], {
-        radius: 6,
-        color: '#00C875',
-        weight: 2,
-        fillColor: '#00C875',
-        fillOpacity: 1,
-      }).addTo(map);
-      const endM = L.circleMarker([end.lat, end.lng], {
-        radius: 6,
-        color: '#F0A830',
-        weight: 2,
-        fillColor: '#F0A830',
-        fillOpacity: 1,
-      }).addTo(map);
-      drawnLayersRef.current.push(startM, endM);
+      if (start && end) {
+        const startM = L.circleMarker([start.lat, start.lng], {
+          radius: 6,
+          color: '#00C875',
+          weight: 2,
+          fillColor: '#00C875',
+          fillOpacity: 1,
+        }).addTo(map);
+        const endM = L.circleMarker([end.lat, end.lng], {
+          radius: 6,
+          color: '#F0A830',
+          weight: 2,
+          fillColor: '#F0A830',
+          fillOpacity: 1,
+        }).addTo(map);
+        drawnLayersRef.current.push(startM, endM);
+      }
     }
 
     mPts.forEach(m => {
@@ -601,9 +602,10 @@ function WaselMapCompact({
     };
 
     const routePts = (route ?? []).map(p => project(p.lat, p.lng));
+    const firstRoutePoint = routePts[0];
     const pathD =
-      routePts.length >= 2
-        ? `M ${routePts[0].x} ${routePts[0].y} ` +
+      routePts.length >= 2 && firstRoutePoint
+        ? `M ${firstRoutePoint.x} ${firstRoutePoint.y} ` +
           routePts
             .slice(1)
             .map(p => `L ${p.x} ${p.y}`)

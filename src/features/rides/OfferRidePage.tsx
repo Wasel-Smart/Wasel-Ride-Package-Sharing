@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Brain, Briefcase, Network, TrendingUp } from 'lucide-react';
+import { Brain, Briefcase, Network } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';

@@ -13,7 +13,6 @@ import {
   Gift,
   RefreshCw,
   TrendingUp,
-  Clock,
   CheckCircle,
   Lock,
   Crown,
@@ -79,7 +78,7 @@ export function TransactionRow({
   const isPositive = amount > 0;
   const date = new Date(tx.createdAt || tx.created_at);
   const statusKey = String(tx.status ?? tx.transaction_status ?? 'completed').toLowerCase();
-  const statusMeta = TX_STATUS_META[statusKey] ?? TX_STATUS_META.completed;
+  const statusMeta = TX_STATUS_META[statusKey] ?? TX_STATUS_META.completed!;
   const reference = tx.reference || tx.reference_id || tx.externalReference || tx.id;
 
   return (

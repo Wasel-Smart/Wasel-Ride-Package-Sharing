@@ -329,6 +329,7 @@ export function optimizeMultiStopRoute(
   departureTimeISO: string,
   distanceMatrix: Record<string, Record<string, number>>, // city → city → km
 ): RouteOptimizationResult {
+  void departureTimeISO;
   if (waypoints.length === 0) {
     const direct = distanceMatrix[origin]?.[destination] ?? 0;
     return {
@@ -350,7 +351,7 @@ export function optimizeMultiStopRoute(
   let current = origin;
 
   while (unvisited.length > 0) {
-    let nearest = unvisited[0];
+    let nearest = unvisited[0] ?? destination;
     let nearestDist = distanceMatrix[current]?.[nearest] ?? Infinity;
 
     for (const city of unvisited) {
@@ -427,7 +428,7 @@ export function calculateLiquidityHealth(
   const availableTrips = availableTripsOrMetrics;
   const safeTotalSeats = totalSeats ?? 0;
   const safeBookedSeats = bookedSeats ?? 0;
-  const utilizationRate = totalSeats > 0 ? bookedSeats / totalSeats : 0;
+  const utilizationRate = safeTotalSeats > 0 ? safeBookedSeats / safeTotalSeats : 0;
   let healthScore: number;
   let status: LiquidityMetrics['status'];
 
@@ -511,6 +512,7 @@ export function calculatePrayerStops(
   totalDurationMin: number,
   country: CountryCode,
 ): PrayerStop[] {
+  void country;
   const stops: PrayerStop[] = [];
   const dep = new Date(departureISO).getTime();
 
@@ -638,7 +640,10 @@ function calcOrderedDistance(
 ): number {
   let total = 0;
   for (let i = 0; i < stops.length - 1; i++) {
-    total += matrix[stops[i]]?.[stops[i + 1]] ?? 0;
+    const currentStop = stops[i];
+    const nextStop = stops[i + 1];
+    if (!currentStop || !nextStop) continue;
+    total += matrix[currentStop]?.[nextStop] ?? 0;
   }
   return total;
 }

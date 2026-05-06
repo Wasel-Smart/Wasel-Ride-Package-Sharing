@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type ReactNode, type RefObject } from 'react';
 import { Bell, Car, CreditCard, Settings } from 'lucide-react';
 import type { WaselUser } from '../../contexts/LocalAuth';
+import { createSupportTicket } from '../../services/supportInbox';
 import { sanitizeText } from '../../utils/sanitize';
 import { C, F } from '../../utils/wasel-ds';
 import { buildProfileExportPayload, normalizeProfilePhone } from './profileUtils';
@@ -346,10 +347,18 @@ export function useProfilePageController({
   };
 
   const handleDeletionContinue = async () => {
+    const ticket = await createSupportTicket(user.id, {
+      topic: 'cancellation',
+      subject: 'Account deletion request',
+      detail: 'User requested account deletion from the profile danger zone and was signed out while support reviews the request.',
+      relatedId: user.id,
+      routeLabel: 'Profile deletion request',
+      priority: 'high',
+    });
     showToast(
       ar
-        ? 'تم تسجيل الخروج. تابع طلب الحذف عبر الدعم.'
-        : 'Signed out. Continue the deletion request through support.',
+        ? `تم تسجيل طلب الحذف عبر التذكرة ${ticket.id}. سيتم تسجيل الخروج الآن.`
+        : `Deletion request logged as support ticket ${ticket.id}. Signing you out now.`,
     );
     await handleSignOut();
   };

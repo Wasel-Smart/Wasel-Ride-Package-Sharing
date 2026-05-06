@@ -80,9 +80,21 @@ export function WalletActionModals({
   onTopUp,
   onWithdraw,
 }: WalletActionModalsProps) {
+  void isRTL;
+
+  const addMoneyLabel = t.addMoney ?? 'Add money';
+  const withdrawLabel = t.withdraw ?? 'Withdraw';
+  const sendMoneyLabel = t.sendMoney ?? 'Send money';
+  const setPinLabel = t.setPin ?? 'Set PIN';
+  const changePinLabel = t.changePin ?? 'Change PIN';
+
   return (
     <>
-      <SharedActionModal show={showTopUp} onClose={() => setShowTopUp(false)} title={t.addMoney}>
+      <SharedActionModal
+        show={showTopUp}
+        onClose={() => setShowTopUp(false)}
+        title={addMoneyLabel}
+      >
         <div className="space-y-3">
           <div className="grid grid-cols-4 gap-2">
             {[5, 10, 20, 50].map(amt => (
@@ -144,7 +156,7 @@ export function WalletActionModals({
       <SharedActionModal
         show={showWithdraw}
         onClose={() => setShowWithdraw(false)}
-        title={t.withdraw}
+        title={withdrawLabel}
       >
         <div className="space-y-3">
           <div>
@@ -196,7 +208,11 @@ export function WalletActionModals({
         </div>
       </SharedActionModal>
 
-      <SharedActionModal show={showSend} onClose={() => setShowSend(false)} title={t.sendMoney}>
+      <SharedActionModal
+        show={showSend}
+        onClose={() => setShowSend(false)}
+        title={sendMoneyLabel}
+      >
         <div className="space-y-3">
           <div>
             <Label className="text-xs text-muted-foreground">{t.recipientId}</Label>
@@ -245,7 +261,7 @@ export function WalletActionModals({
           setShowPinSetup(false);
           setPinValue('');
         }}
-        title={walletData?.pinSet ? t.changePin : t.setPin}
+        title={walletData?.pinSet ? changePinLabel : setPinLabel}
       >
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">{t.pinDescription}</p>

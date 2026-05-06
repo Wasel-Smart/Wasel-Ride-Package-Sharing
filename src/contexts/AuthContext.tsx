@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { Session, User } from '@supabase/supabase-js';
+import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import { authAPI } from '../services/auth';
 import { getAuthCallbackUrl } from '../utils/env';
 import { isSupabaseConfigured, supabase } from '../utils/supabase/client';
@@ -180,7 +180,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, nextSession: Session | null) => {
       syncFromSession(event, nextSession);
     });
 

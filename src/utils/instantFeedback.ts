@@ -16,7 +16,6 @@ interface FeedbackOptions {
 class InstantFeedbackEngine {
   private supportsHaptics: boolean = false;
   private audioContext: AudioContext | null = null;
-  private feedbackCache: Map<string, HTMLElement> = new Map();
   private initialized = false;
 
   constructor() {
@@ -187,7 +186,7 @@ class InstantFeedbackEngine {
    * OPTIMIZED: Non-blocking
    */
   instant(element: HTMLElement, type: FeedbackType = 'light', options: FeedbackOptions = {}): void {
-    const { haptic = true, visual = true, audio = false, duration = 100 } = options;
+    const { haptic = true, visual = true, audio = false } = options;
 
     // All feedback runs in parallel for <50ms total time
 
@@ -223,6 +222,7 @@ class InstantFeedbackEngine {
     const handleTouchStart = (e: TouchEvent) => {
       // Provide immediate feedback
       const touch = e.touches[0];
+      if (!touch) return;
       this.haptic(type);
       this.ripple(element, { x: touch.clientX, y: touch.clientY });
     };
@@ -251,6 +251,7 @@ class InstantFeedbackEngine {
    */
   attachClickFeedback(element: HTMLElement, type: FeedbackType = 'light'): () => void {
     const handleMouseDown = (e: MouseEvent) => {
+      this.haptic(type);
       this.ripple(element, { x: e.clientX, y: e.clientY });
       this.scalePress(element);
     };
@@ -280,6 +281,7 @@ export const instantFeedback = new InstantFeedbackEngine();
 import { useEffect, useRef } from 'react';
 
 export function useInstantFeedback(type: FeedbackType = 'light', options: FeedbackOptions = {}) {
+  void options;
   const elementRef = useRef<HTMLElement>(null);
 
   useEffect(() => {

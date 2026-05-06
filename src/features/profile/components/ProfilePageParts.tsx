@@ -69,7 +69,7 @@ export function VerificationBadge({
     level_2: { label: ar ? 'موثق الهوية' : 'ID Verified', color: accent },
     level_3: { label: ar ? 'موثوق' : 'Trusted', color: C.green },
   };
-  const value = map[level] ?? map.level_0;
+  const value = map[level] ?? map.level_0!;
 
   return (
     <span style={{ display: 'inline-flex', flexShrink: 0 }}>

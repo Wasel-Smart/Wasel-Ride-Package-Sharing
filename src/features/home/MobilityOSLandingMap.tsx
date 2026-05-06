@@ -415,8 +415,11 @@ export function MobilityOSLandingMap({
       ctx.stroke();
 
       routes.forEach((route, index) => {
-        const from = project(CITIES[route.from].lat, CITIES[route.from].lon, width, height);
-        const to = project(CITIES[route.to].lat, CITIES[route.to].lon, width, height);
+        const fromCity = CITIES[route.from];
+        const toCity = CITIES[route.to];
+        if (!fromCity || !toCity) return;
+        const from = project(fromCity.lat, fromCity.lon, width, height);
+        const to = project(toCity.lat, toCity.lon, width, height);
         const control = getCurve(from, to, index, route.weight);
         const isFocused = route.focused;
         const muted = focusedRoute && !isFocused;

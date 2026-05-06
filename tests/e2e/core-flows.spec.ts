@@ -39,3 +39,10 @@ test('packages flow creates tracking', async ({ page }) => {
   await expect(page.getByText('Tracking ID', { exact: true })).toBeVisible();
   await expect(page.getByText('Handoff code', { exact: true })).toBeVisible();
 });
+
+test('wallet stays available in local fallback mode', async ({ page }) => {
+  await page.goto('/app/wallet');
+  await expect(page.getByText(/wallet unavailable/i)).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: /wasel wallet/i })).toBeVisible();
+  await expect(page.getByText(/^Available$/i)).toBeVisible();
+});

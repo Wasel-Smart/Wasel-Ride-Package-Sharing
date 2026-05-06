@@ -178,11 +178,21 @@ export function FindRidePage() {
   const searchFromCoord = resolveCityCoord(from);
   const searchToCoord = resolveCityCoord(to);
   const connectedRides = getConnectedRides().map(buildRideFromPostedRide);
-  const previewRides = [...connectedRides, ...ALL_RIDES];
+  const localRideCatalog = useMemo(() => {
+    const seen = new Set<string>();
+    const catalog: Ride[] = [];
+
+    for (const ride of [...connectedRides, ...ALL_RIDES]) {
+      if (seen.has(ride.id)) continue;
+      seen.add(ride.id);
+      catalog.push(ride);
+    }
+
+    return catalog;
+  }, [connectedRides]);
+  const previewRides = localRideCatalog;
   const activeCatalog = activeSearch ? searchResults : previewRides;
   const corridorRides = activeCatalog.filter(ride => ride.from === from && ride.to === to);
-  const availableCorridorRides = corridorRides.filter(ride => ride.seatsAvailable > 0);
-  const soldOutCorridorRides = corridorRides.filter(ride => ride.seatsAvailable <= 0);
   const nearbyCorridors = activeCatalog
     .filter(
       ride =>
@@ -293,7 +303,7 @@ export function FindRidePage() {
 
   const filterLocalRides = (searchFrom: string, searchTo: string, searchDate: string) =>
     sortRideResults(
-      connectedRides.filter(
+      localRideCatalog.filter(
         ride =>
           (!searchFrom ||
             ride.from.toLowerCase().includes(searchFrom.toLowerCase()) ||
@@ -302,7 +312,7 @@ export function FindRidePage() {
             ride.to.toLowerCase().includes(searchTo.toLowerCase()) ||
             ride.toAr === searchTo) &&
           (!searchDate || ride.date === searchDate),
-      ),
+        ),
     );
 
   const mergeSearchResults = (remote: Ride[], local: Ride[]) => {

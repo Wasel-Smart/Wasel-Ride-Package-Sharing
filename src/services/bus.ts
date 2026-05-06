@@ -1,4 +1,5 @@
 import { bookingsAPI } from './bookings';
+import { BackendRequestError } from './backendWorkflow';
 import { trackGrowthEvent } from './growthEngine';
 import { tripsAPI } from './trips';
 import { OFFICIAL_JORDAN_BUS_ROUTES } from '../data/jordanBusNetwork';
@@ -49,7 +50,7 @@ export interface BusBookingPayload {
 }
 
 export interface BusBookingResult {
-  source: 'server';
+  source: 'server' | 'local';
   bookingId: string;
   ticketCode: string;
 }
@@ -59,7 +60,7 @@ export interface StoredBusBooking extends BusBookingPayload {
   created_at: string;
   ticket_code: string;
   status: 'confirmed' | 'cancelled' | 'completed';
-  source?: 'server';
+  source?: 'server' | 'local';
   backend_booking_id?: string;
 }
 
@@ -126,7 +127,7 @@ export function normalizeBusRoute(raw: Record<string, unknown>, index: number): 
     seats,
     company: toText(raw.company, 'Wasel Express'),
     amenities: amenities.length ? amenities : ['AC', 'USB'],
-    color: colors[index % colors.length],
+    color: colors[index % colors.length] ?? colors[0]!,
     via: via.length ? via : ['Main Corridor'],
     duration: toText(raw.duration, '2h 00m'),
     frequency: toText(raw.frequency, 'Daily'),
@@ -211,6 +212,58 @@ function persistBusBooking(booking: StoredBusBooking): StoredBusBooking {
   return booking;
 }
 
+function buildBusTicketCode(bookingId: string): string {
+  return `BUS-${bookingId.replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase()}`;
+}
+
+function shouldUseLocalBusFallback(error: unknown): boolean {
+  if (error instanceof BackendRequestError) {
+    return error.recoverable || error.status === 404;
+  }
+
+  const message = error instanceof Error ? error.message : String(error ?? '');
+  return (
+    message.includes('temporarily unavailable') ||
+    message.includes('backend transport is not configured') ||
+    message.includes('secure backend') ||
+    message.includes('Supabase client is not initialised')
+  );
+}
+
+function createLocalBusBooking(payload: BusBookingPayload): BusBookingResult {
+  const bookingId = `local-bus-${Date.now()}`;
+  const ticketCode = buildBusTicketCode(bookingId);
+
+  persistBusBooking({
+    ...payload,
+    id: bookingId,
+    created_at: new Date().toISOString(),
+    ticket_code: ticketCode,
+    status: 'confirmed',
+    source: 'local',
+  });
+
+  void trackGrowthEvent({
+    eventName: 'bus_booking_created',
+    funnelStage: 'booked',
+    serviceType: 'bus',
+    from: payload.pickupStop,
+    to: payload.dropoffStop,
+    valueJod: payload.totalPrice,
+    metadata: {
+      tripId: payload.tripId,
+      source: 'local',
+      scheduleDate: payload.scheduleDate,
+    },
+  });
+
+  return {
+    source: 'local',
+    bookingId,
+    ticketCode,
+  };
+}
+
 export function getStoredBusBookings(): StoredBusBooking[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -243,7 +296,7 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
     const result: BusBookingResult = {
       source: 'server',
       bookingId: String(bookingId),
-      ticketCode: `BUS-${String(bookingId).slice(-6).toUpperCase()}`,
+      ticketCode: buildBusTicketCode(String(bookingId)),
     };
 
     persistBusBooking({
@@ -271,6 +324,10 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
     });
     return result;
   } catch (error) {
+    if (shouldUseLocalBusFallback(error)) {
+      return createLocalBusBooking(payload);
+    }
+
     throw error instanceof Error
       ? error
       : new Error(

@@ -66,11 +66,14 @@ export const CITIES = [
   "Ma'in",
 ];
 
-export function resolveCityCoord(city: string) {
-  return CITY_COORDS[city] ?? CITY_COORDS.Amman;
+export function resolveCityCoord(city: string): { lat: number; lng: number } {
+  return CITY_COORDS[city] ?? CITY_COORDS.Amman!;
 }
 
-export function midpoint(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+export function midpoint(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number },
+): { lat: number; lng: number } {
   return { lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 };
 }
 

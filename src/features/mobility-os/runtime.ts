@@ -391,7 +391,6 @@ export class RealtimeGateway {
   constructor(
     private readonly bus: MobilityEventBus,
     private readonly corridorService: CorridorService,
-    private readonly pricingEngine: PricingEngine,
   ) {
     this.snapshot = this.buildSnapshot();
     this.bus.subscribe('CorridorUpdated', this.handleCorridorUpdated);
@@ -473,7 +472,7 @@ export class MobilityOSRuntime {
       this.pricingEngine,
     );
     this.bookingService = new BookingService(this.bus, this.corridorService, this.pricingEngine);
-    this.realtimeGateway = new RealtimeGateway(this.bus, this.corridorService, this.pricingEngine);
+    this.realtimeGateway = new RealtimeGateway(this.bus, this.corridorService);
     this.realtimeGateway.refresh();
   }
 
@@ -487,6 +486,7 @@ export class MobilityOSRuntime {
       if (corridors.length === 0) return;
 
       const target = corridors[Math.floor(Math.random() * corridors.length)];
+      if (!target) return;
       const cargoFlow = Math.random() > 0.6;
       const type: BookingType = cargoFlow ? 'cargo' : 'seat';
       const quantity =

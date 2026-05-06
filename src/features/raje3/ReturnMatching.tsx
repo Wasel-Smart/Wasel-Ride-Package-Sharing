@@ -5,9 +5,7 @@
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  RotateCcw,
   Check,
-  Clock,
   Star,
   CheckCircle2,
   AlertCircle,

@@ -96,7 +96,7 @@ const DEFAULT_BUSINESS_ROUTE_ID = 'JO_AMM_IRB';
 const DEFAULT_SCHOOL_ROUTE_ID = 'JO_AMM_ZRQ';
 
 function getJordanRoute(routeId: string, fallbackId: string): CityRoute {
-  return findRoute(routeId) ?? findRoute(fallbackId) ?? getTier1Routes('JO')[0];
+  return findRoute(routeId) ?? findRoute(fallbackId) ?? getTier1Routes('JO')[0]!;
 }
 
 function buildTripCandidates(route: CityRoute, seatsPerTrip: number): TripSummary[] {
@@ -125,6 +125,7 @@ function buildTripCandidates(route: CityRoute, seatsPerTrip: number): TripSummar
 }
 
 function buildDefaultBusinessEmployees(route: CityRoute, seatPrice: number): BusinessEmployee[] {
+  void route;
   return [
     {
       id: generateId('emp'),

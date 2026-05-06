@@ -757,8 +757,8 @@ function ProfilePageContent({
               }}
             >
               {ar
-                ? 'الحذف الكامل غير متاح من هذا السطح حالياً. سنسجل خروجك الآن لتأمين الحساب، ثم يمكنك متابعة طلب الحذف عبر الدعم.'
-                : 'Full account deletion is not available from this screen yet. We will sign you out now so you can safely continue a deletion request through support.'}
+                ? 'الحذف الكامل غير متاح من هذا السطح حالياً. سننشئ تذكرة دعم باسمك ثم نسجل خروجك لتأمين الحساب حتى يراجع الفريق الطلب.'
+                : 'Full account deletion is not available from this screen yet. We will create a support ticket for you, then sign you out while the team reviews the request.'}
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button

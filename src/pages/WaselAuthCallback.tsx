@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { AuthChangeEvent } from '@supabase/supabase-js';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { supabase } from '../utils/supabase/client';
 
@@ -59,7 +60,7 @@ export default function WaselAuthCallback() {
 
       const {
         data: { subscription },
-      } = supabase.auth.onAuthStateChange(event => {
+      } = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
         if (!active) return;
 
         if (event === 'PASSWORD_RECOVERY') {

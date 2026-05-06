@@ -18,21 +18,21 @@ export type FindRideStaticCopy = {
 export function getFindRideStaticCopy(ar: boolean): FindRideStaticCopy {
   if (ar) {
     return {
-      tabRide: 'ابحث عن رحلة',
-      tabPackage: 'أرسل طرد',
+      tabRide: 'دوّر على رحلة',
+      tabPackage: 'ابعث طرد',
       pageSub: 'مسارات يومية بين المدن مع حجز واضح وتجربة مناسبة للأردن.',
       pageAction: 'اعرض رحلة',
       packageTitle: 'خدمة الطرود',
-      packageSent: 'تم الإرسال',
-      packageHint: 'نحن نطابق شحنتك مع رحلة موثوقة متجهة إلى',
-      packageReset: 'إرسال شحنة أخرى',
+      packageSent: 'انبعث الطلب',
+      packageHint: 'عم ندوّر على رحلة موثوقة رايحة ع',
+      packageReset: 'ابعث طرد ثاني',
       packageFlow: [
-        { title: 'المرسل', desc: 'اختر المسار والوزن وأضف ملاحظات الشحنة.' },
-        { title: 'المطابقة', desc: 'نربط الطلب مع رحلة فعلية على نفس المسار.' },
-        { title: 'الاستلام', desc: 'يكتمل التسليم على نفس الخط مع متابعة واضحة.' },
+        { title: 'المرسل', desc: 'اختار المسار والوزن وضيف ملاحظات الشحنة.' },
+        { title: 'المطابقة', desc: 'منربط الطلب مع رحلة فعلية على نفس المسار.' },
+        { title: 'الاستلام', desc: 'بيكمل التسليم على نفس الخط مع متابعة واضحة.' },
       ],
-      notifyMe: 'أخبرني عند توفر رحلة',
-      noResultsIcon: 'لا توجد',
+      notifyMe: 'خبّرني لمّا تفضى رحلة',
+      noResultsIcon: 'ما في',
       packageIcon: 'طرد',
     };
   }

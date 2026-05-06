@@ -17,6 +17,7 @@ import { walletText } from './walletText';
 import { resolveWalletRuntimeMode } from './walletRuntime';
 
 const WALLET_BACKEND_READY = Boolean(projectId && publicAnonKey);
+const WALLET_LOCAL_FALLBACK_READY = typeof window !== 'undefined';
 
 export function useWalletDashboardController() {
   const location = useLocation();
@@ -30,6 +31,7 @@ export function useWalletDashboardController() {
   const runtimeMode = resolveWalletRuntimeMode({
     hasUser: Boolean(localUser || user),
     backendReady: WALLET_BACKEND_READY,
+    localFallbackReady: WALLET_LOCAL_FALLBACK_READY,
   });
   const walletCapabilities = getWalletCapabilities();
   const [walletError, setWalletError] = useState<string | null>(null);

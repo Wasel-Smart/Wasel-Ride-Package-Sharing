@@ -206,10 +206,13 @@ export function InsightsTab({ insights, isRTL, t }: InsightsTabProps) {
     );
   }
 
+  const earnedLabel = t.earned ?? 'Earned';
+  const spentLabel = t.spent ?? 'Spent';
+  const jodLabel = t.jod ?? 'JOD';
   const categoryData = Object.entries(insights.categoryBreakdown).map(([name, value], index) => ({
     name,
     value,
-    color: PIE_COLORS[index % PIE_COLORS.length],
+    color: PIE_COLORS[index % PIE_COLORS.length] ?? WaselColors.teal,
   }));
 
   return (
@@ -260,8 +263,8 @@ export function InsightsTab({ insights, isRTL, t }: InsightsTabProps) {
         <CardContent>
           <MiniTrendChart
             data={insights.monthlyTrend}
-            earnedLabel={t.earned}
-            spentLabel={t.spent}
+            earnedLabel={earnedLabel}
+            spentLabel={spentLabel}
           />
         </CardContent>
       </Card>
@@ -284,7 +287,7 @@ export function InsightsTab({ insights, isRTL, t }: InsightsTabProps) {
                       </span>
                     </div>
                     <span className="text-xs font-medium text-foreground tabular-nums">
-                      {item.value.toFixed(2)} {t.jod}
+                      {item.value.toFixed(2)} {jodLabel}
                     </span>
                   </div>
                 ))}

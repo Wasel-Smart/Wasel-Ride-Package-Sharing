@@ -48,5 +48,5 @@ export function pwStrength(password: string): { score: number; label: string; co
     { score: 5, label: 'Excellent', color: C.green },
   ];
 
-  return map[Math.min(score, 5)];
+  return map[Math.min(score, 5)] ?? map[0]!;
 }

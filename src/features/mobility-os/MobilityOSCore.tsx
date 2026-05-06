@@ -70,7 +70,9 @@ export default function MobilityOSCore() {
   useEffect(() => {
     if (!snapshot.corridors.length) return;
     if (snapshot.corridors.some(corridor => corridor.corridor.id === selectedCorridorId)) return;
-    setSelectedCorridorId(snapshot.corridors[0].corridor.id);
+    const firstCorridor = snapshot.corridors[0];
+    if (!firstCorridor) return;
+    setSelectedCorridorId(firstCorridor.corridor.id);
   }, [selectedCorridorId, snapshot.corridors]);
 
   useEffect(() => {

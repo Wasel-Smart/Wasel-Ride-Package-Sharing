@@ -10,7 +10,7 @@
  * ✅ Structured error logging with method context
  */
 
-import { API_URL, fetchWithRetry, getAuthDetails, supabase } from './core';
+import { API_URL, fetchWithRetry, getAuthDetails } from './core';
 import { sanitizeLogMessage } from '../utils/sanitization';
 
 // ── Types ─────────────────────────────────────────────────────────────────────

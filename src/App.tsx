@@ -180,8 +180,8 @@ function AppRuntimeCoordinator() {
   useEffect(() => {
     const runtimeValidation = validateRuntimeConfiguration();
     let cancelled = false;
-    let stopPolling = () => undefined;
-    let stopEventTelemetry = () => undefined;
+    let stopPolling = (): void => {};
+    let stopEventTelemetry = (): void => {};
     let probeHealth: null | (() => Promise<unknown>) = null;
 
     const syncOnlineState = () => {

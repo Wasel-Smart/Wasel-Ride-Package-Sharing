@@ -47,6 +47,8 @@ const JOURNEY_PRESETS = [
   { from: 'Amman', to: 'Wadi Rum', label: 'Amman to Wadi Rum' },
   { from: 'Irbid', to: 'Amman', label: 'Irbid to Amman' },
 ];
+const DEFAULT_BUS_ROUTE =
+  getOfficialBusRoutes({ from: 'Amman', to: 'Aqaba' })[0] ?? getOfficialBusRoutes()[0]!;
 
 function getTodayIsoDate() {
   const now = new Date();
@@ -63,7 +65,7 @@ function getScheduleTimes(route: BusRoute) {
 }
 
 function toMinutes(time: string) {
-  const [hours, minutes] = time.split(':').map(Number);
+  const [hours = 0, minutes = 0] = time.split(':').map(Number);
   return (Number.isFinite(hours) ? hours : 0) * 60 + (Number.isFinite(minutes) ? minutes : 0);
 }
 
@@ -120,12 +122,8 @@ export function BusPage() {
   const [busRoutes, setBusRoutes] = useState<BusRoute[]>(() =>
     getOfficialBusRoutes({ from: 'Amman', to: 'Aqaba' }),
   );
-  const [selected, setSelected] = useState(
-    () => getOfficialBusRoutes({ from: 'Amman', to: 'Aqaba' })[0]?.id ?? '',
-  );
-  const [selectedDeparture, setSelectedDeparture] = useState(
-    () => getOfficialBusRoutes({ from: 'Amman', to: 'Aqaba' })[0]?.dep ?? '07:00',
-  );
+  const [selected, setSelected] = useState(() => DEFAULT_BUS_ROUTE.id);
+  const [selectedDeparture, setSelectedDeparture] = useState(() => DEFAULT_BUS_ROUTE.dep);
   const [routesLoading, setRoutesLoading] = useState(false);
   const [routesInfo, setRoutesInfo] = useState<string | null>(null);
   const [bookingBusy, setBookingBusy] = useState(false);
@@ -145,9 +143,10 @@ export function BusPage() {
         to: destination,
         seats: passengers,
       });
+      const fallbackPrimaryRoute = fallbackRoutes[0] ?? DEFAULT_BUS_ROUTE;
       if (origin === destination) {
         setBusRoutes(fallbackRoutes);
-        setSelected(fallbackRoutes[0]?.id ?? '');
+        setSelected(fallbackPrimaryRoute.id);
         setRoutesInfo('Choose two different cities.');
         setRoutesLoading(false);
         return;
@@ -166,35 +165,30 @@ export function BusPage() {
           isExactRoute(route, origin, destination),
         );
         const nextRoutes = exactLiveRoutes.length ? exactLiveRoutes : liveRoutes;
+        const nextPrimaryRoute = nextRoutes[0] ?? fallbackPrimaryRoute;
         if (nextRoutes.length) {
           setBusRoutes(nextRoutes);
-          setSelected(prev =>
-            nextRoutes.some(route => route.id === prev) ? prev : nextRoutes[0].id,
-          );
+          setSelected(prev => (nextRoutes.some(route => route.id === prev) ? prev : nextPrimaryRoute.id));
           setRoutesInfo(
-            nextRoutes[0]?.dataSource === 'live'
+            nextPrimaryRoute.dataSource === 'live'
               ? 'Live departures loaded.'
-              : `Official schedule shown. Verified ${nextRoutes[0]?.lastVerifiedAt ?? today}.`,
+              : `Official schedule shown. Verified ${nextPrimaryRoute.lastVerifiedAt ?? today}.`,
           );
         } else {
           setBusRoutes(fallbackRoutes);
-          setSelected(prev =>
-            fallbackRoutes.some(route => route.id === prev) ? prev : (fallbackRoutes[0]?.id ?? ''),
-          );
+          setSelected(prev => (fallbackRoutes.some(route => route.id === prev) ? prev : fallbackPrimaryRoute.id));
           setRoutesInfo(
             fallbackRoutes.some(route => isExactRoute(route, origin, destination))
-              ? `Official schedule shown. Verified ${fallbackRoutes[0]?.lastVerifiedAt ?? today}.`
+              ? `Official schedule shown. Verified ${fallbackPrimaryRoute.lastVerifiedAt ?? today}.`
               : 'No exact route yet. Showing close matches.',
           );
         }
       } catch {
         if (cancelled) return;
         setBusRoutes(fallbackRoutes);
-        setSelected(prev =>
-          fallbackRoutes.some(route => route.id === prev) ? prev : (fallbackRoutes[0]?.id ?? ''),
-        );
+        setSelected(prev => (fallbackRoutes.some(route => route.id === prev) ? prev : fallbackPrimaryRoute.id));
         setRoutesInfo(
-          `Live routes unavailable. Official schedule shown. Verified ${fallbackRoutes[0]?.lastVerifiedAt ?? today}.`,
+          `Live routes unavailable. Official schedule shown. Verified ${fallbackPrimaryRoute.lastVerifiedAt ?? today}.`,
         );
       } finally {
         if (!cancelled) setRoutesLoading(false);
@@ -206,8 +200,7 @@ export function BusPage() {
     };
   }, [destination, origin, passengers, tripDate]);
 
-  const activeBus =
-    busRoutes.find(route => route.id === selected) ?? busRoutes[0] ?? getOfficialBusRoutes()[0];
+  const activeBus = busRoutes.find(route => route.id === selected) ?? busRoutes[0] ?? DEFAULT_BUS_ROUTE;
   const pickupCoord = resolveCityCoord(activeBus.from);
   const dropoffCoord = resolveCityCoord(activeBus.to);
   const routeCenter = midpoint(pickupCoord, dropoffCoord);
@@ -270,7 +263,11 @@ export function BusPage() {
           action_url: '/app/bus',
         })
         .catch(() => {});
-      setRoutesInfo('Seat confirmed and saved to your account.');
+      setRoutesInfo(
+        result.source === 'local'
+          ? 'Seat saved locally while secure booking reconnects.'
+          : 'Seat confirmed and saved to your account.',
+      );
     } catch (error) {
       setBookingSource(null);
       setBookingTicketCode(null);
@@ -1265,6 +1262,9 @@ export function BusPage() {
                       {departureLabel}. Ticket code {bookingTicketCode ?? 'pending'} was saved for
                       the {activeBus.from} to {activeBus.to} corridor. Saved in your account with
                       departure reminders.
+                      {bookingSource === 'local'
+                        ? ' Secure confirmation will sync when the booking backend reconnects.'
+                        : ''}
                     </div>
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
                       <button

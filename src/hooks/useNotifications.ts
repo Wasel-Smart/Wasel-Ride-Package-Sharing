@@ -89,8 +89,10 @@ export function useNotifications() {
     queryKey: notificationsQueryKey(effectiveUserId),
     queryFn: async () => {
       const response = await notificationsAPI.getNotifications();
-      const items = Array.isArray(response.notifications) ? response.notifications : [];
-      return items.map((item: RawNotification) => normalizeNotification(item));
+      const items = Array.isArray(response.notifications)
+        ? (response.notifications as RawNotification[])
+        : [];
+      return items.map(normalizeNotification);
     },
     enabled: Boolean(effectiveUserId),
     staleTime: 30 * 1000,

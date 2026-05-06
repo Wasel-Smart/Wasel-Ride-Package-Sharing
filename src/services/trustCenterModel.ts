@@ -190,7 +190,7 @@ export function buildFallbackTrustCenterStatus(user: FallbackTrustUser): TrustCe
           },
         );
 
-  const walletStanding =
+  const walletStanding: TrustCenterStatus['steps']['walletStanding'] =
     user.walletStatus === 'active'
       ? buildStatus(
           'wallet_standing',
@@ -214,7 +214,12 @@ export function buildFallbackTrustCenterStatus(user: FallbackTrustUser): TrustCe
             'failed',
             `Wallet standing is ${user.walletStatus}.`,
             {
-              walletStatus: user.walletStatus,
+              walletStatus:
+                user.walletStatus === 'closed'
+                  ? 'closed'
+                  : user.walletStatus === 'frozen'
+                    ? 'frozen'
+                    : 'unavailable',
             },
             {
               failureReason:

@@ -36,8 +36,8 @@ function roundMoney(value: number) {
   return Math.round(value * 10) / 10;
 }
 
-function getRoute(routeId: string, fallbackId: string) {
-  return findRoute(routeId) ?? findRoute(fallbackId) ?? getTier1Routes('JO')[0];
+function getRoute(routeId: string, fallbackId: string): CityRoute {
+  return findRoute(routeId) ?? findRoute(fallbackId) ?? getTier1Routes('JO')[0]!;
 }
 
 export function buildServiceProviderWorkflowSnapshot(

@@ -3,7 +3,6 @@
  * Extracted from WalletDashboard to reduce file size
  */
 
-import * as motion from 'motion/react-m';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -41,6 +40,7 @@ export function OverviewTab({
   actionLoading,
 }: OverviewTabProps) {
   const transactions = walletData?.transactions ?? [];
+  const jodLabel = t.jod ?? 'JOD';
   const pendingCount = transactions.filter((tx: any) =>
     ['pending', 'processing', 'authorized', 'posted'].includes(
       String(tx.status ?? '').toLowerCase(),
@@ -248,7 +248,7 @@ export function OverviewTab({
             walletData.transactions
               .slice(0, 5)
               .map((tx: any) => (
-                <TransactionRow key={tx.id} tx={tx} isRTL={isRTL} jodLabel={t.jod} />
+                <TransactionRow key={tx.id} tx={tx} isRTL={isRTL} jodLabel={jodLabel} />
               ))
           )}
         </CardContent>
