@@ -26,6 +26,8 @@ interface MobilityOSLandingMapProps {
   runtimeMode?: 'server' | 'fallback';
   demandPressure?: number;
   utilization?: number;
+  preferredHeight?: number;
+  minimalText?: boolean;
 }
 
 const FLOW = '#62f5ef';
@@ -174,11 +176,13 @@ export function MobilityOSLandingMap({
   runtimeMode = 'server',
   demandPressure,
   utilization,
+  preferredHeight,
+  minimalText = false,
 }: MobilityOSLandingMapProps = {}) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
-  const [size, setSize] = useState({ width: 720, height: 560 });
+  const [size, setSize] = useState({ width: 720, height: preferredHeight ?? 560 });
   const uiFocusStroke = runtimeMode === 'fallback' ? '#ffbe5c' : FLOW;
   const uiFocusStrength = Math.max(
     0.28,
@@ -196,14 +200,14 @@ export function MobilityOSLandingMap({
       const rect = el.getBoundingClientRect();
       setSize({
         width: Math.max(320, rect.width),
-        height: Math.max(360, rect.height),
+        height: Math.max(preferredHeight ?? 360, rect.height),
       });
     };
 
     update();
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
-  }, []);
+  }, [preferredHeight]);
 
   const routes = useMemo(
     () =>
@@ -614,7 +618,7 @@ export function MobilityOSLandingMap({
         }
       });
 
-      if (!compact) {
+      if (!compact && !minimalText) {
         const liveTextX = width * 0.075;
         const liveTextY = height * 0.86;
         ctx.fillStyle = 'rgba(211,245,247,0.7)';
@@ -632,7 +636,9 @@ export function MobilityOSLandingMap({
     return () => {
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     };
-  }, [routes, size]);
+  }, [demandPressure, focusOrigin, focusRouteId, focusDestination, focusLabel, minimalText, preferredHeight, routes, runtimeMode, size, utilization]);
+
+  const resolvedHeight = preferredHeight ?? (size.width < 480 ? 460 : 520);
 
   return (
     <div
@@ -640,7 +646,7 @@ export function MobilityOSLandingMap({
       style={{
         position: 'relative',
         width: '100%',
-        minHeight: size.width < 480 ? 460 : 520,
+        minHeight: resolvedHeight,
         borderRadius: 34,
         overflow: 'hidden',
         background: 'linear-gradient(180deg, rgba(12, 23, 35, 0.94), rgba(5, 12, 19, 0.98))',
@@ -810,7 +816,7 @@ export function MobilityOSLandingMap({
           display: 'block',
           width: '100%',
           height: '100%',
-          minHeight: size.width < 480 ? 460 : 520,
+          minHeight: resolvedHeight,
         }}
       />
     </div>
