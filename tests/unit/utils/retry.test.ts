@@ -16,7 +16,7 @@ describe('Retry Logic', () => {
 
   it('should retry on failure', async () => {
     const fn = vi.fn()
-      .mockRejectedValueOnce(new Error('Failed'))
+      .mockRejectedValueOnce(new Error('network failed'))
       .mockResolvedValue('success');
     
     const result = await withRetry(fn, { maxAttempts: 2, initialDelayMs: 10 });
@@ -26,11 +26,11 @@ describe('Retry Logic', () => {
   });
 
   it('should throw after max attempts', async () => {
-    const fn = vi.fn().mockRejectedValue(new Error('Failed'));
+    const fn = vi.fn().mockRejectedValue(new Error('network failed'));
     
     await expect(
       withRetry(fn, { maxAttempts: 3, initialDelayMs: 10 })
-    ).rejects.toThrow('Failed');
+    ).rejects.toThrow('network failed');
     
     expect(fn).toHaveBeenCalledTimes(3);
   });
@@ -55,7 +55,7 @@ describe('Retry Logic', () => {
 
   it('should call onRetry callback', async () => {
     const fn = vi.fn()
-      .mockRejectedValueOnce(new Error('Failed'))
+      .mockRejectedValueOnce(new Error('network failed'))
       .mockResolvedValue('success');
     
     const onRetry = vi.fn();
@@ -72,7 +72,7 @@ describe('Retry Logic', () => {
 
   it('should use preset configurations', async () => {
     const fn = vi.fn()
-      .mockRejectedValueOnce(new Error('Failed'))
+      .mockRejectedValueOnce(new Error('network failed'))
       .mockResolvedValue('success');
     
     const result = await withRetry(fn, {
@@ -84,25 +84,28 @@ describe('Retry Logic', () => {
   });
 
   it('should apply exponential backoff', async () => {
-    const fn = vi.fn()
-      .mockRejectedValueOnce(new Error('Failed'))
-      .mockRejectedValueOnce(new Error('Failed'))
-      .mockResolvedValue('success');
-    
-    const delays: number[] = [];
-    const startTime = Date.now();
+    const callTimes: number[] = [];
+    const fn = vi.fn().mockImplementation(async () => {
+      callTimes.push(Date.now());
+      if (callTimes.length < 3) {
+        throw new Error('network failed');
+      }
+
+      return 'success';
+    });
     
     await withRetry(fn, {
       maxAttempts: 3,
-      initialDelayMs: 100,
+      initialDelayMs: 40,
       backoffMultiplier: 2,
       jitterFactor: 0,
-      onRetry: () => {
-        delays.push(Date.now() - startTime);
-      },
     });
     
-    // Second delay should be roughly 2x the first
-    expect(delays[1]).toBeGreaterThan(delays[0]! * 1.5);
+    const firstDelay = callTimes[1]! - callTimes[0]!;
+    const secondDelay = callTimes[2]! - callTimes[1]!;
+
+    expect(firstDelay).toBeGreaterThanOrEqual(30);
+    expect(secondDelay).toBeGreaterThanOrEqual(70);
+    expect(secondDelay).toBeGreaterThan(firstDelay);
   });
 });
