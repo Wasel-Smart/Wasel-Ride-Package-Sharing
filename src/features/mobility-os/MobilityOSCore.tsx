@@ -63,7 +63,7 @@ function routeLabel(projection: CorridorProjection | null): string {
     : 'No corridor selected';
 }
 
-function eyebrow(text: string, color = C.cyan) {
+function eyebrow(text: string, color: string = C.cyan) {
   return (
     <div
       style={{
@@ -78,7 +78,7 @@ function eyebrow(text: string, color = C.cyan) {
   );
 }
 
-function chip(label: string, value: string, accent = C.textSub): JSX.Element {
+function chip(label: string, value: string, accent: string = C.textSub): JSX.Element {
   return (
     <div
       style={{
