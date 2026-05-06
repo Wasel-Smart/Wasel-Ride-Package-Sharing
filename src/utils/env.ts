@@ -198,7 +198,8 @@ export function getConfig() {
   const enableEmailNotifications = getBooleanEnv('VITE_ENABLE_EMAIL_NOTIFICATIONS', true);
   const enableSmsNotifications = getBooleanEnv('VITE_ENABLE_SMS_NOTIFICATIONS', true);
   const enableWhatsAppNotifications = getBooleanEnv('VITE_ENABLE_WHATSAPP_NOTIFICATIONS', true);
-  const allowDirectSupabaseFallback = getBooleanEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', !isProd);
+  const allowDirectSupabaseFallback =
+    !isProd && getBooleanEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', true);
 
   return {
     appName: getEnv('VITE_APP_NAME', 'Wasel'),

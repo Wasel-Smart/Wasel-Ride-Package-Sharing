@@ -21,6 +21,11 @@ import {
   hashBackupCodes,
   verifyTwoFactorChallenge,
 } from './_shared/two-factor-runtime.ts';
+import {
+  buildPublicHealthPayload,
+  isRuntimeAdminEnabled,
+  resolveAllowedOrigin,
+} from './_shared/request-security.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('VITE_SUPABASE_ANON_KEY') ?? '';
@@ -32,11 +37,17 @@ const STRIPE_API_VERSION = Deno.env.get('STRIPE_API_VERSION') ?? '2026-02-25.clo
 const APP_BASE_URL = (Deno.env.get('APP_BASE_URL') ?? 'https://wasel14.online').replace(/\/$/, '');
 const CLIQ_CHECKOUT_URL_TEMPLATE = Deno.env.get('CLIQ_CHECKOUT_URL_TEMPLATE') ?? '';
 const STRIPE_WASEL_PLUS_PRICE_ID = Deno.env.get('STRIPE_WASEL_PLUS_PRICE_ID') ?? '';
+const ADDITIONAL_ALLOWED_ORIGINS = Deno.env.get('ALLOWED_ORIGINS') ?? '';
+const RUNTIME_ADMIN_ENABLED = isRuntimeAdminEnabled(Deno.env.get('ENABLE_RUNTIME_ADMIN_ENDPOINTS'));
+const SERVICE_NAME = 'make-server-0b1f4071';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+const responseBaseHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-communication-worker-secret, stripe-signature',
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
+  'Cache-Control': 'no-store',
+  'Referrer-Policy': 'no-referrer',
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
 };
 
 const deliveryEnv: DeliveryProcessorEnv = {
@@ -234,7 +245,6 @@ function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
-      ...corsHeaders,
       'Content-Type': 'application/json',
     },
   });
@@ -243,8 +253,42 @@ function json(data: unknown, status = 200) {
 function noContent(status = 204) {
   return new Response(null, {
     status,
-    headers: corsHeaders,
   });
+}
+
+function buildResponseHeaders(request: Request, extra?: HeadersInit) {
+  const headers = new Headers(extra ?? {});
+  const allowedOrigin = resolveAllowedOrigin(
+    request.headers.get('origin'),
+    APP_BASE_URL,
+    ADDITIONAL_ALLOWED_ORIGINS,
+  );
+
+  Object.entries(responseBaseHeaders).forEach(([key, value]) => {
+    headers.set(key, value);
+  });
+
+  headers.set('Vary', 'Origin');
+
+  if (allowedOrigin) {
+    headers.set('Access-Control-Allow-Origin', allowedOrigin);
+  } else {
+    headers.delete('Access-Control-Allow-Origin');
+  }
+
+  return headers;
+}
+
+function finalizeResponse(request: Request, response: Response): Response {
+  return new Response(response.body, {
+    status: response.status,
+    headers: buildResponseHeaders(request, response.headers),
+  });
+}
+
+function isOriginAllowed(request: Request): boolean {
+  const origin = request.headers.get('origin');
+  return !origin || Boolean(resolveAllowedOrigin(origin, APP_BASE_URL, ADDITIONAL_ALLOWED_ORIGINS));
 }
 
 function getAdminClient() {
@@ -311,6 +355,18 @@ function hasWorkerAccess(request: Request): boolean {
   const secret = getWorkerSecret();
   if (!secret) return false;
   return request.headers.get('x-communication-worker-secret') === secret;
+}
+
+function ensureRuntimeAdminAccess(request: Request): Response | null {
+  if (!RUNTIME_ADMIN_ENABLED) {
+    return json({ error: 'Runtime admin endpoints are disabled.' }, 404);
+  }
+
+  if (!hasWorkerAccess(request)) {
+    return json({ error: 'Missing worker secret' }, 401);
+  }
+
+  return null;
 }
 
 function getFunctionBaseUrl(request: Request): string {
@@ -1308,10 +1364,16 @@ async function verifyStripeWebhookSignature(payload: string, signatureHeader: st
   return candidates.some((candidate) => constantTimeEquals(candidate, expected));
 }
 
-async function handleHealth() {
+async function handleHealth(request: Request) {
+  const publicPayload = buildPublicHealthPayload(SERVICE_NAME);
+
+  if (!RUNTIME_ADMIN_ENABLED || !hasWorkerAccess(request)) {
+    return json(publicPayload);
+  }
+
   return json({
-    ok: true,
-    service: 'make-server-0b1f4071',
+    ...publicPayload,
+    runtimeAdminEnabled: true,
     twoFactor: {
       enabled: true,
       serverVerified: true,
@@ -2078,9 +2140,8 @@ async function handleProcessCommunicationQueue(request: Request) {
 }
 
 async function handleSendTestCommunication(request: Request) {
-  if (!hasWorkerAccess(request)) {
-    return json({ error: 'Missing worker secret' }, 401);
-  }
+  const accessError = ensureRuntimeAdminAccess(request);
+  if (accessError) return accessError;
 
   const body = await request.json().catch(() => ({}));
   const channel = String(body.channel ?? 'email');
@@ -2159,9 +2220,8 @@ async function handleSendTestCommunication(request: Request) {
 }
 
 async function handleProviderDiagnostics(request: Request) {
-  if (!hasWorkerAccess(request)) {
-    return json({ error: 'Missing worker secret' }, 401);
-  }
+  const accessError = ensureRuntimeAdminAccess(request);
+  if (accessError) return accessError;
 
   const diagnostics: Record<string, unknown> = {
     resend: {
@@ -2253,9 +2313,8 @@ async function handleProviderDiagnostics(request: Request) {
 }
 
 async function handleApplyCommunicationMigrations(request: Request) {
-  if (!hasWorkerAccess(request)) {
-    return json({ error: 'Missing worker secret' }, 401);
-  }
+  const accessError = ensureRuntimeAdminAccess(request);
+  if (accessError) return accessError;
 
   await executeSqlStatements(COMMUNICATIONS_RUNTIME_SQL);
   await executeSqlStatements(COMMUNICATIONS_OPERATIONS_SQL);
@@ -2269,9 +2328,8 @@ async function handleApplyCommunicationMigrations(request: Request) {
 }
 
 async function handleApplyModerationMigrations(request: Request) {
-  if (!hasWorkerAccess(request)) {
-    return json({ error: 'Missing worker secret' }, 401);
-  }
+  const accessError = ensureRuntimeAdminAccess(request);
+  if (accessError) return accessError;
 
   await executeSqlStatements(CONTENT_MODERATION_SQL);
 
@@ -2645,8 +2703,16 @@ async function handleTwilioWebhook(request: Request) {
 }
 
 Deno.serve(async (request) => {
+  let response: Response;
+
+  if (!isOriginAllowed(request)) {
+    response = json({ error: 'Origin not allowed' }, 403);
+    return finalizeResponse(request, response);
+  }
+
   if (request.method === 'OPTIONS') {
-    return noContent();
+    response = noContent();
+    return finalizeResponse(request, response);
   }
 
   try {
@@ -2654,109 +2720,135 @@ Deno.serve(async (request) => {
     const path = url.pathname.replace(/^.*make-server-0b1f4071/, '') || '/';
 
     if (request.method === 'GET' && path === '/health') {
-      return await handleHealth();
+      response = await handleHealth(request);
+      return finalizeResponse(request, response);
     }
 
     const walletRoute = parseWalletRoute(path);
     if (walletRoute) {
       if (request.method === 'GET' && walletRoute.action === 'subscription') {
-        return await handleGetWalletSubscription(request, walletRoute.userId);
+        response = await handleGetWalletSubscription(request, walletRoute.userId);
+        return finalizeResponse(request, response);
       }
       if (request.method === 'POST' && walletRoute.action === 'top-up') {
-        return await handleWalletTopUp(request, walletRoute.userId);
+        response = await handleWalletTopUp(request, walletRoute.userId);
+        return finalizeResponse(request, response);
       }
       if (request.method === 'POST' && walletRoute.action === 'subscribe') {
-        return await handleWalletSubscribe(request, walletRoute.userId);
+        response = await handleWalletSubscribe(request, walletRoute.userId);
+        return finalizeResponse(request, response);
       }
     }
 
     if (request.method === 'GET' && path === '/communications/preferences') {
-      return await handleGetCommunicationPreferences(request);
+      response = await handleGetCommunicationPreferences(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'GET' && path === '/trust/status') {
-      return await handleGetTrustStatus(request);
+      response = await handleGetTrustStatus(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/trust/phone/start') {
-      return await handleStartPhoneVerification(request);
+      response = await handleStartPhoneVerification(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/trust/phone/confirm') {
-      return await handleConfirmPhoneVerification(request);
+      response = await handleConfirmPhoneVerification(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/trust/identity/submit') {
-      return await handleSubmitIdentityVerification(request);
+      response = await handleSubmitIdentityVerification(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/trust/driver-mode/enable') {
-      return await handleEnableDriverMode(request);
+      response = await handleEnableDriverMode(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/trust/driver-documents/submit') {
-      return await handleSubmitDriverDocuments(request);
+      response = await handleSubmitDriverDocuments(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/auth/2fa/setup') {
-      return await handleTwoFactorSetup(request);
+      response = await handleTwoFactorSetup(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/auth/2fa/verify') {
-      return await handleTwoFactorVerify(request);
+      response = await handleTwoFactorVerify(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/auth/2fa/disable') {
-      return await handleTwoFactorDisable(request);
+      response = await handleTwoFactorDisable(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'PATCH' && path === '/communications/preferences') {
-      return await handlePatchCommunicationPreferences(request);
+      response = await handlePatchCommunicationPreferences(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/communications/deliver') {
-      return await handleQueueCommunicationDeliveries(request);
+      response = await handleQueueCommunicationDeliveries(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/communications/process') {
-      return await handleProcessCommunicationQueue(request);
+      response = await handleProcessCommunicationQueue(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/communications/admin/send-test') {
-      return await handleSendTestCommunication(request);
+      response = await handleSendTestCommunication(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'GET' && path === '/communications/admin/provider-diagnostics') {
-      return await handleProviderDiagnostics(request);
+      response = await handleProviderDiagnostics(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/communications/admin/apply-migrations') {
-      return await handleApplyCommunicationMigrations(request);
+      response = await handleApplyCommunicationMigrations(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/moderation/admin/apply-migrations') {
-      return await handleApplyModerationMigrations(request);
+      response = await handleApplyModerationMigrations(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/payments/webhooks/stripe') {
-      return await handleStripeWebhook(request);
+      response = await handleStripeWebhook(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/communications/webhooks/resend') {
-      return await handleResendWebhook(request);
+      response = await handleResendWebhook(request);
+      return finalizeResponse(request, response);
     }
 
     if (request.method === 'POST' && path === '/communications/webhooks/twilio') {
-      return await handleTwilioWebhook(request);
+      response = await handleTwilioWebhook(request);
+      return finalizeResponse(request, response);
     }
 
-    return json({ error: 'Route not found', path }, 404);
+    response = json({ error: 'Route not found', path }, 404);
   } catch (error) {
-    return json(
+    response = json(
       {
         error: error instanceof Error ? error.message : String(error),
       },
       500,
     );
   }
+
+  return finalizeResponse(request, response);
 });

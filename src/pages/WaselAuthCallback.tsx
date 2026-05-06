@@ -269,7 +269,11 @@ export default function WaselAuthCallback() {
 
           <button
             type="button"
-            onClick={() => navigate('/app/auth?tab=signin', { replace: true })}
+            onClick={() =>
+              navigate(`/app/auth?tab=signin&returnTo=${encodeURIComponent(returnTo)}`, {
+                replace: true,
+              })
+            }
             style={{
               minHeight: 42,
               borderRadius: 12,

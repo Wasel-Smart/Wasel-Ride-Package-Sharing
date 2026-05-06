@@ -79,6 +79,22 @@ describe('getConfig', () => {
   it('enableTwoFactorAuth is a boolean', () => {
     expect(typeof getConfig().enableTwoFactorAuth).toBe('boolean');
   });
+
+  it('hard-disables direct Supabase fallback in production config', () => {
+    const previousMode = process.env.MODE;
+    const previousFlag = process.env.VITE_ALLOW_DIRECT_SUPABASE_FALLBACK;
+
+    process.env.MODE = 'production';
+    process.env.VITE_ALLOW_DIRECT_SUPABASE_FALLBACK = 'true';
+
+    expect(getConfig().allowDirectSupabaseFallback).toBe(false);
+
+    if (previousMode === undefined) delete process.env.MODE;
+    else process.env.MODE = previousMode;
+
+    if (previousFlag === undefined) delete process.env.VITE_ALLOW_DIRECT_SUPABASE_FALLBACK;
+    else process.env.VITE_ALLOW_DIRECT_SUPABASE_FALLBACK = previousFlag;
+  });
 });
 
 // ── Session token validation logic ────────────────────────────────────────────
