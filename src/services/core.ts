@@ -5,6 +5,8 @@ import {
   supabaseUrl,
 } from '../utils/supabase/client';
 import { validateApiUrl } from '../utils/sanitization';
+import { addCSRFHeader } from '../utils/csrf';
+import { circuitBreakers } from '../utils/circuitBreaker';
 
 export { projectId, publicAnonKey };
 
@@ -35,8 +37,15 @@ export interface AvailabilitySnapshot {
   lastCheckedAt: number | null;
 }
 
-export function createEdgeHeaders(headers?: HeadersInit, userToken?: string): Headers {
-  const finalHeaders = new Headers(headers ?? {});
+export function createEdgeHeaders(headers?: HeadersInit, userToken?: string, includeCSRF = true): Headers {
+  let headersInit = headers ?? {};
+  
+  // Add CSRF token for state-changing operations
+  if (includeCSRF) {
+    headersInit = addCSRFHeader(headersInit);
+  }
+  
+  const finalHeaders = new Headers(headersInit);
 
   if (publicAnonKey && !finalHeaders.has('apikey')) {
     finalHeaders.set('apikey', publicAnonKey);
@@ -282,6 +291,7 @@ export async function fetchWithRetry(
   const allowedDomains = [
     'supabase.co',
     'supabase.net',
+    'wasel14.online',
     'localhost',
     '127.0.0.1',
   ];
@@ -290,66 +300,79 @@ export async function fetchWithRetry(
     throw new Error('Invalid or unauthorized URL');
   }
 
-  const { timeout = 5_000, signal: callerSignal, ...fetchOptions } = options;
+  // Use circuit breaker for API calls
+  const breaker = circuitBreakers.get('api-calls', {
+    failureThreshold: 5,
+    timeout: 30000,
+  });
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeout);
+  return breaker.execute(async () => {
+    const { timeout = 5_000, signal: callerSignal, ...fetchOptions } = options;
 
-  if (callerSignal?.aborted) {
-    clearTimeout(timer);
-    throw new DOMException('Request aborted', 'AbortError');
-  }
-
-  const onCallerAbort = () => controller.abort();
-  callerSignal?.addEventListener('abort', onCallerAbort, { once: true });
-
-  try {
-    const response = await fetch(url, {
-      ...fetchOptions,
-      signal: controller.signal,
-    });
-
-    if (response.ok) {
-      setBackendStatus('healthy');
-      if (edgeFunctionAvailable || url.includes('/health')) {
-        setEdgeFunctionAvailability(true);
-      }
+    // Add CSRF token for state-changing operations
+    if (fetchOptions.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(fetchOptions.method)) {
+      fetchOptions.headers = addCSRFHeader(fetchOptions.headers);
     }
 
-    if (retries > 0 && [502, 503, 504].includes(response.status)) {
-      await delay(backoff);
-      return fetchWithRetry(url, options, retries - 1, backoff * 2);
-    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
 
-    if (!response.ok && response.status >= 500) {
-      setBackendStatus(getNetworkOnline() ? 'degraded' : 'offline');
-    }
-
-    return response;
-  } catch (error: unknown) {
     if (callerSignal?.aborted) {
+      clearTimeout(timer);
+      throw new DOMException('Request aborted', 'AbortError');
+    }
+
+    const onCallerAbort = () => controller.abort();
+    callerSignal?.addEventListener('abort', onCallerAbort, { once: true });
+
+    try {
+      const response = await fetch(url, {
+        ...fetchOptions,
+        signal: controller.signal,
+      });
+
+      if (response.ok) {
+        setBackendStatus('healthy');
+        if (edgeFunctionAvailable || url.includes('/health')) {
+          setEdgeFunctionAvailability(true);
+        }
+      }
+
+      if (retries > 0 && [502, 503, 504].includes(response.status)) {
+        await delay(backoff);
+        return fetchWithRetry(url, options, retries - 1, backoff * 2);
+      }
+
+      if (!response.ok && response.status >= 500) {
+        setBackendStatus(getNetworkOnline() ? 'degraded' : 'offline');
+      }
+
+      return response;
+    } catch (error: unknown) {
+      if (callerSignal?.aborted) {
+        throw error;
+      }
+
+      const isRetryable =
+        error instanceof TypeError || (error instanceof DOMException && error.name === 'AbortError');
+
+      if (retries > 0 && isRetryable) {
+        await delay(backoff);
+        return fetchWithRetry(url, options, retries - 1, backoff * 2);
+      }
+
+      setBackendStatus(getNetworkOnline() ? 'degraded' : 'offline');
+
+      if (url.startsWith(API_URL)) {
+        setEdgeFunctionAvailability(false);
+      }
+
       throw error;
+    } finally {
+      clearTimeout(timer);
+      callerSignal?.removeEventListener('abort', onCallerAbort);
     }
-
-    const isRetryable =
-      error instanceof TypeError || (error instanceof DOMException && error.name === 'AbortError');
-
-    if (retries > 0 && isRetryable) {
-      await delay(backoff);
-      return fetchWithRetry(url, options, retries - 1, backoff * 2);
-    }
-
-    setBackendStatus(getNetworkOnline() ? 'degraded' : 'offline');
-
-    if (url.startsWith(API_URL)) {
-      setEdgeFunctionAvailability(false);
-    }
-
-    throw error;
-  } finally {
-    clearTimeout(timer);
-    callerSignal?.removeEventListener('abort', onCallerAbort);
-  }
+  });
 }
 
 function delay(ms: number): Promise<void> {

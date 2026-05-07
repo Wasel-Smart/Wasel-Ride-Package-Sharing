@@ -183,6 +183,8 @@ function AppRuntimeCoordinator() {
     let cancelled = false;
     let stopPolling = (): void => {};
     let stopEventTelemetry = (): void => {};
+    let stopHealthMonitoring = (): void => {};
+    let stopAlertSubscription = (): void => {};
     let probeHealth: null | (() => Promise<unknown>) = null;
 
     const syncOnlineState = () => {
@@ -201,10 +203,12 @@ function AppRuntimeCoordinator() {
     const scheduleBackgroundBootstrap = () => {
       const runner = async () => {
         try {
-          const [monitoring, performance, core] = await Promise.all([
+          const [monitoring, performance, core, healthCheck, alerting] = await Promise.all([
             import('./utils/monitoring'),
             import('./utils/performance'),
             import('./services/core'),
+            import('./utils/healthCheck'),
+            import('./utils/alerting'),
           ]);
 
           if (cancelled) return;
@@ -231,6 +235,17 @@ function AppRuntimeCoordinator() {
           stopPolling = core.startAvailabilityPolling();
           stopEventTelemetry = domainEventBus.subscribeAll(event => {
             monitoring.trackDomainEvent(event);
+          });
+
+          // Start health monitoring
+          stopHealthMonitoring = healthCheck.startHealthMonitoring(60000);
+
+          // Subscribe to alerts
+          stopAlertSubscription = alerting.alerting.subscribe((alert) => {
+            // Log critical and error alerts
+            if (alert.severity === 'CRITICAL' || alert.severity === 'ERROR') {
+              monitoring.logger.error('Alert triggered', { alert });
+            }
           });
 
           syncOnlineState();
@@ -266,6 +281,8 @@ function AppRuntimeCoordinator() {
       cancelBootstrap();
       stopPolling();
       stopEventTelemetry();
+      stopHealthMonitoring();
+      stopAlertSubscription();
       if (typeof window !== 'undefined') {
         window.removeEventListener('online', syncOnlineState);
         window.removeEventListener('offline', syncOnlineState);

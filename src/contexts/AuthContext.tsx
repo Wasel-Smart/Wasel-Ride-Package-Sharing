@@ -4,6 +4,7 @@ import { authAPI } from '../services/auth';
 import { getAuthCallbackUrl } from '../utils/env';
 import { isSupabaseConfigured, supabase } from '../utils/supabase/client';
 import { sanitizeLogMessage } from '../utils/sanitization';
+import { parseOAuthError } from '../utils/oauthErrors';
 import {
   normalizeOperationError,
   signInWithOAuthProvider,
@@ -289,14 +290,56 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signInWithGoogle = useCallback(
     async (returnTo?: string): Promise<{ error: AuthOperationError }> => {
-      return signInWithOAuthProvider(supabase, 'google', returnTo);
+      if (!supabase) {
+        return { error: new Error('Backend not configured') };
+      }
+
+      try {
+        const result = await signInWithOAuthProvider(supabase, 'google', returnTo);
+        
+        if (result.error) {
+          // Parse and handle OAuth-specific errors
+          const oauthError = parseOAuthError(result.error, 'google');
+          if (oauthError && import.meta.env?.DEV) {
+            console.error('[OAuth Google]', oauthError);
+          }
+        }
+        
+        return result;
+      } catch (error: unknown) {
+        if (import.meta.env?.DEV) {
+          console.error('[OAuth Google] Unexpected error:', error);
+        }
+        return { error: normalizeOperationError(error, 'Google sign-in failed') };
+      }
     },
     [],
   );
 
   const signInWithFacebook = useCallback(
     async (returnTo?: string): Promise<{ error: AuthOperationError }> => {
-      return signInWithOAuthProvider(supabase, 'facebook', returnTo);
+      if (!supabase) {
+        return { error: new Error('Backend not configured') };
+      }
+
+      try {
+        const result = await signInWithOAuthProvider(supabase, 'facebook', returnTo);
+        
+        if (result.error) {
+          // Parse and handle OAuth-specific errors
+          const oauthError = parseOAuthError(result.error, 'facebook');
+          if (oauthError && import.meta.env?.DEV) {
+            console.error('[OAuth Facebook]', oauthError);
+          }
+        }
+        
+        return result;
+      } catch (error: unknown) {
+        if (import.meta.env?.DEV) {
+          console.error('[OAuth Facebook] Unexpected error:', error);
+        }
+        return { error: normalizeOperationError(error, 'Facebook sign-in failed') };
+      }
     },
     [],
   );

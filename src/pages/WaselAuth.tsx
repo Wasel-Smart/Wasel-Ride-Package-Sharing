@@ -24,6 +24,7 @@ import { checkRateLimit, validateEmail } from '../utils/security';
 import { useAuth } from '../contexts/AuthContext';
 import { getConfig, getWhatsAppSupportUrl, normalizeReturnToPath } from '../utils/env';
 import { friendlyAuthError, pwStrength } from '../utils/authHelpers';
+import { parseOAuthError } from '../utils/oauthErrors';
 import { C, R, TYPE, F, SPACE } from '../utils/wasel-ds';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -450,13 +451,25 @@ export default function WaselAuth() {
   const handleGoogleSignIn = async () => {
     setError('');
     const { error: oauthError } = await signInWithGoogle(safeReturnTo);
-    if (oauthError) setError(friendlyAuthError(oauthError, 'Google sign-in failed.'));
+    
+    if (oauthError) {
+      // Use enhanced OAuth error handling
+      handleOAuthError(oauthError, 'google', (message) => {
+        setError(message);
+      });
+    }
   };
 
   const handleFacebookSignIn = async () => {
     setError('');
     const { error: oauthError } = await signInWithFacebook(safeReturnTo);
-    if (oauthError) setError(friendlyAuthError(oauthError, 'Facebook sign-in failed.'));
+    
+    if (oauthError) {
+      // Use enhanced OAuth error handling
+      handleOAuthError(oauthError, 'facebook', (message) => {
+        setError(message);
+      });
+    }
   };
 
   const handleWhatsAppHelp = () => {

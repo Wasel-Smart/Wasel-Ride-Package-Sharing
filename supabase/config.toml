@@ -70,12 +70,19 @@ max_frequency = "1s"
 otp_length = 6
 otp_expiry = 3600
 
-# Uncomment and populate these for local OAuth testing.
-# [auth.external.google]
-# enabled = true
-# client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
-# secret = "env(SUPABASE_AUTH_GOOGLE_CLIENT_SECRET)"
-# redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
+# OAuth Providers - Google and Facebook
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GOOGLE_CLIENT_SECRET)"
+redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
+skip_nonce_check = false
+
+[auth.external.facebook]
+enabled = true
+client_id = "env(SUPABASE_AUTH_FACEBOOK_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET)"
+redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
 
 [functions.make-server-0b1f4071]
 verify_jwt = false

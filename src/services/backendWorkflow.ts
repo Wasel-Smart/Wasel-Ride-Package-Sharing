@@ -157,9 +157,14 @@ export async function requestEdgeJson<T>({
 
   const resolvedContext =
     authMode === 'required' ? (context ?? (await resolveContext(authMode))) : (context ?? {});
+  
+  // Determine if CSRF should be included (for state-changing operations)
+  const includeCSRF = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
+  
   const finalHeaders = createEdgeHeaders(
     headers,
     authMode === 'required' ? resolvedContext.token : undefined,
+    includeCSRF,
   );
 
   if (authMode === 'none' && !publicAnonKey) {

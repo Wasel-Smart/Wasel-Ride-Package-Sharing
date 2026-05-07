@@ -64,6 +64,8 @@ tests/
 
 - [Architecture](./docs/architecture.md)
 - [API contract](./docs/api-contract.md)
+- [OAuth Setup Guide](./docs/oauth-setup-guide.md) ⭐ **NEW**
+- [OAuth Setup Checklist](./docs/oauth-setup-checklist.md) ⭐ **NEW**
 - [Security and identity](./docs/security-and-identity.md)
 - [Observability](./docs/observability.md)
 - [Reliability SLOs](./docs/reliability-slos.md)
