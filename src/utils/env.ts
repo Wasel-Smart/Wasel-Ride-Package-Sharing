@@ -68,18 +68,41 @@ export function getRuntimeConfigIssues(
   const sentryDsn = envSource.VITE_SENTRY_DSN?.trim() || '';
   const mode = envSource.MODE || envSource.VITE_MODE || envSource.NODE_ENV || 'development';
   const isProd = mode === 'production';
+  const isBuildTime = typeof window === 'undefined';
   const hasApiTransport = Boolean(apiUrl) || (Boolean(supabaseUrl) && Boolean(supabasePublicKey));
 
   if (!appUrl) {
     issues.push({
       key: 'VITE_APP_URL',
       message: 'VITE_APP_URL should be set so auth callbacks and support links resolve correctly.',
-      severity: 'error',
+      severity: isBuildTime ? 'warning' : 'error',
     });
   } else if (!isAbsoluteHttpUrl(appUrl)) {
     issues.push({
       key: 'VITE_APP_URL',
       message: 'VITE_APP_URL must be an absolute http(s) URL.',
+      severity: isBuildTime ? 'warning' : 'error',
+    });
+  } else if (isProd && !isBuildTime && !appUrl.startsWith('https://')) {
+    issues.push({
+      key: 'VITE_APP_URL',
+      message: 'Protected environments must use an HTTPS VITE_APP_URL',
+      severity: 'error',
+    });
+  }
+
+  if (!supabaseUrl) {
+    issues.push({
+      key: 'VITE_SUPABASE_URL',
+      message: 'VITE_SUPABASE_URL is not configured',
+      severity: 'error',
+    });
+  }
+
+  if (!supabasePublicKey) {
+    issues.push({
+      key: 'VITE_SUPABASE_ANON_KEY',
+      message: 'VITE_SUPABASE_ANON_KEY is not configured',
       severity: 'error',
     });
   }
@@ -88,7 +111,7 @@ export function getRuntimeConfigIssues(
     issues.push({
       key: 'VITE_API_URL',
       message:
-        'Set VITE_API_URL or provide both VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY so ride and package flows have a backend transport.',
+        'Protected environments must define VITE_API_URL or VITE_EDGE_FUNCTION_NAME',
       severity: 'error',
     });
   }
@@ -105,6 +128,12 @@ export function getRuntimeConfigIssues(
     issues.push({
       key: 'VITE_SUPABASE_URL',
       message: 'VITE_SUPABASE_URL must be an absolute http(s) URL when provided.',
+      severity: 'error',
+    });
+  } else if (isProd && !isBuildTime && supabaseUrl && !supabaseUrl.startsWith('https://')) {
+    issues.push({
+      key: 'VITE_SUPABASE_URL',
+      message: 'Protected environments must use an HTTPS Supabase URL',
       severity: 'error',
     });
   }

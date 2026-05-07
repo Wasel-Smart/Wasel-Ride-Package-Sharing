@@ -98,7 +98,7 @@
     "supabase:status": "supabase status",
     "supabase:db:reset": "supabase db reset",
     "supabase:migration:list": "supabase migration list --local",
-    "build": "tsc --noEmit && vite build && npm run sync:build-output",
+    "build": "node scripts/check-build-env.mjs && tsc --noEmit && vite build && npm run sync:build-output",
     "preview": "vite preview",
     "sync:build-output": "node scripts/sync-build-output.mjs",
     "test": "vitest run",

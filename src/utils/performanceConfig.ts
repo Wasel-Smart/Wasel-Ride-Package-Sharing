@@ -67,7 +67,7 @@ export function applyGlobalOptimizations() {
 
   if (passiveSupported) {
     ['touchstart', 'touchmove', 'wheel', 'mousewheel'].forEach((event) => {
-      document.addEventListener(event, () => {}, { passive: true });
+      document.addEventListener(event, () => {}, { passive: true } as AddEventListenerOptions);
     });
   }
 

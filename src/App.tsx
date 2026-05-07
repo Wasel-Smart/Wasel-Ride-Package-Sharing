@@ -9,6 +9,7 @@ import { LocalAuthProvider } from './contexts/LocalAuth';
 import { WaselLogo } from './components/wasel-ds/WaselLogo';
 import { SessionTimeoutWarning } from './components/system/SessionTimeoutWarning';
 import { CookieConsentBanner } from './components/gdpr/CookieConsentBanner';
+import { ConfigErrorPage } from './pages/ConfigErrorPage';
 import { domainEventBus } from './platform/event-bus';
 import { validateRuntimeConfiguration } from './utils/env';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
@@ -299,6 +300,12 @@ function AppRuntimeCoordinator() {
 
 export default function App() {
   const [queryClient] = useState(() => new QueryClient({ defaultOptions: DEFAULT_QUERY_OPTIONS }));
+  const runtimeValidation = validateRuntimeConfiguration();
+
+  // Show config error page if there are critical errors
+  if (!runtimeValidation.ok) {
+    return <ConfigErrorPage issues={runtimeValidation.issues} />;
+  }
 
   return (
     <AppErrorBoundary>

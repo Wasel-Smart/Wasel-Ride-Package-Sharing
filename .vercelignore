@@ -1,0 +1,12 @@
+# Exclude Next.js app from Vercel build
+with-supabase-app/
+
+# Exclude other non-essential directories
+.codex/
+.codex_tmp/
+.kilo/
+backups/
+review-screenshots/
+test-results/
+playwright-report/
+.anima/

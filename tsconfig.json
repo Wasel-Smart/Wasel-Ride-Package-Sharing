@@ -29,7 +29,7 @@
     "esModuleInterop": true,
 
     /* Silence deprecation warnings */
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
 
     /* Path aliases */
     "baseUrl": ".",
@@ -41,7 +41,7 @@
     "types": ["vite/client", "node"]
   },
   "include": [
-    "src/main.tsx",
+    "src/**/*",
     "src/**/*.d.ts",
     "vite.config.ts",
     "vitest.config.ts",
@@ -51,6 +51,7 @@
     "node_modules",
     "build",
     "dist",
+    "with-supabase-app",
     "src/features/testing",
     "src/cypress",
     "src/supabase/functions",

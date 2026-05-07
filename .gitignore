@@ -2,9 +2,11 @@
 build/
 dist/
 .vite/
+.next/
 
 # Dependencies
 node_modules/
+with-supabase-app/node_modules/
 
 # Environment variables
 .env
