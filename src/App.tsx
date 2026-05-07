@@ -7,6 +7,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { LocalAuthProvider } from './contexts/LocalAuth';
 import { WaselLogo } from './components/wasel-ds/WaselLogo';
+import { SessionTimeoutWarning } from './components/system/SessionTimeoutWarning';
+import { CookieConsentBanner } from './components/gdpr/CookieConsentBanner';
 import { domainEventBus } from './platform/event-bus';
 import { validateRuntimeConfiguration } from './utils/env';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
@@ -304,6 +306,8 @@ export default function App() {
             <LocalAuthProvider>
               <AppRuntimeCoordinator />
               <RouterProvider router={waselRouter} />
+              <SessionTimeoutWarning />
+              <CookieConsentBanner />
               <Toaster
                 position="bottom-center"
                 toastOptions={{
