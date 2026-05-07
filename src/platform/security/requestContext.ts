@@ -1,5 +1,3 @@
-import { randomBytes } from 'crypto';
-
 export interface PlatformRequestContext {
   correlationId: string;
   idempotencyKey: string;
@@ -9,13 +7,28 @@ export interface PlatformRequestContext {
   timestamp: string;
 }
 
+function getWebCryptoOrThrow(): Crypto {
+  const webCrypto = globalThis.crypto;
+  if (!webCrypto?.getRandomValues) {
+    throw new Error('Secure random generation is unavailable in this runtime.');
+  }
+
+  return webCrypto;
+}
+
+function randomHex(bytesLength: number): string {
+  const bytes = new Uint8Array(bytesLength);
+  getWebCryptoOrThrow().getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 function randomId(prefix: string): string {
   const uuid = globalThis.crypto?.randomUUID?.();
   if (uuid) {
     return uuid;
   }
 
-  return `${prefix}-${Date.now()}-${randomBytes(16).toString('hex')}`;
+  return `${prefix}-${Date.now()}-${randomHex(16)}`;
 }
 
 function getOrCreateSessionId(): string {

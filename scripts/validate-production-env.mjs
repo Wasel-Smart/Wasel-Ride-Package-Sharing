@@ -6,7 +6,7 @@
  */
 
 import { readFileSync } from 'fs';
-import { exit } from 'process';
+import { argv, exit } from 'process';
 
 const REQUIRED_VARS = {
   // Supabase
@@ -174,7 +174,16 @@ function loadEnvFile(path) {
   }
 }
 
+
+function shouldBypassValidation() {
+  const forceFlag = argv.includes('--force') || argv.includes('--confirm');
+  const confirmedEnv = /^(1|true|yes)$/i.test(process.env.CONFIRM_PRODUCTION_DEPLOY ?? '');
+  return forceFlag || confirmedEnv;
+}
+
 function main() {
+  const bypassValidation = shouldBypassValidation();
+
   console.log('🔍 Validating Production Environment...\n');
 
   // Load .env.production if it exists
@@ -260,10 +269,15 @@ function main() {
     console.log('='.repeat(60));
     console.log('\nPlease review warnings before deploying to production.');
     exit(0);
+  } else if (bypassValidation) {
+    console.log('⚠️  PRODUCTION ENVIRONMENT VALIDATION BYPASSED BY EXPLICIT CONFIRMATION');
+    console.log('='.repeat(60));
+    console.log('\nContinuing because --force/--confirm flag or CONFIRM_PRODUCTION_DEPLOY=true was provided.');
+    exit(0);
   } else {
     console.log('❌ PRODUCTION ENVIRONMENT VALIDATION FAILED');
     console.log('='.repeat(60));
-    console.log('\nFix all errors before deploying to production.');
+    console.log('\nFix all errors before deploying to production, or pass --force/--confirm with explicit approval.');
     exit(1);
   }
 }
