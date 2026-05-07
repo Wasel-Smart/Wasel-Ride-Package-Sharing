@@ -14,6 +14,7 @@ import { validateRuntimeConfiguration } from './utils/env';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
 import { sanitizeLogMessage } from './utils/sanitization';
+import { applyGlobalOptimizations } from './utils/performanceConfig';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -181,6 +182,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
 
 function AppRuntimeCoordinator() {
   useEffect(() => {
+    applyGlobalOptimizations();
     const runtimeValidation = validateRuntimeConfiguration();
     let cancelled = false;
     let stopPolling = (): void => {};

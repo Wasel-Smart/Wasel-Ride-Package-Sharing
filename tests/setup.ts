@@ -1,57 +1,99 @@
-import '@testing-library/jest-dom';
+/**
+ * Vitest Setup File
+ * Configures test environment and mocks
+ */
 
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: (query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: () => undefined,
-    removeListener: () => undefined,
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-    dispatchEvent: () => false,
-  }),
+import { vi } from 'vitest';
+
+// Mock import.meta.env for all tests
+const mockEnv = {
+  MODE: 'test',
+  DEV: false,
+  PROD: false,
+  SSR: false,
+  VITE_SUPABASE_URL: 'https://djccmatubyyudeosrngm.supabase.co',
+  VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test',
+  VITE_SUPABASE_PUBLISHABLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test',
+  VITE_APP_URL: 'http://localhost:3000',
+  VITE_ENABLE_TWO_FACTOR_AUTH: 'false',
+  VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true',
+};
+
+// Mock import.meta
+vi.stubGlobal('import', {
+  meta: {
+    env: mockEnv,
+  },
 });
 
-class MemoryStorage implements Storage {
-  private store = new Map<string, string>();
+// Mock window.requestIdleCallback for tests
+if (typeof window !== 'undefined' && !window.requestIdleCallback) {
+  window.requestIdleCallback = (callback: IdleRequestCallback) => {
+    const start = Date.now();
+    return setTimeout(() => {
+      callback({
+        didTimeout: false,
+        timeRemaining: () => Math.max(0, 50 - (Date.now() - start)),
+      });
+    }, 1) as unknown as number;
+  };
 
-  get length() {
-    return this.store.size;
-  }
-
-  clear() {
-    this.store.clear();
-  }
-
-  getItem(key: string) {
-    return this.store.has(key) ? this.store.get(key)! : null;
-  }
-
-  key(index: number) {
-    return Array.from(this.store.keys())[index] ?? null;
-  }
-
-  removeItem(key: string) {
-    this.store.delete(key);
-  }
-
-  setItem(key: string, value: string) {
-    this.store.set(key, String(value));
-  }
+  window.cancelIdleCallback = (id: number) => {
+    clearTimeout(id);
+  };
 }
 
+// Mock sessionStorage for tests
 try {
-  window.localStorage.clear();
-} catch {
-  const storage = new MemoryStorage();
-  Object.defineProperty(window, 'localStorage', {
-    configurable: true,
-    value: storage,
-  });
-  Object.defineProperty(globalThis, 'localStorage', {
-    configurable: true,
-    value: storage,
-  });
+  if (typeof sessionStorage === 'undefined') {
+    const storage: Record<string, string> = {};
+    global.sessionStorage = {
+      getItem: (key: string) => storage[key] || null,
+      setItem: (key: string, value: string) => {
+        storage[key] = value;
+      },
+      removeItem: (key: string) => {
+        delete storage[key];
+      },
+      clear: () => {
+        Object.keys(storage).forEach(key => delete storage[key]);
+      },
+      length: 0,
+      key: () => null,
+    };
+  }
+} catch (e) {
+  // sessionStorage check failed, skip mock
+}
+
+// Mock localStorage for tests
+try {
+  if (typeof localStorage === 'undefined') {
+    const storage: Record<string, string> = {};
+    global.localStorage = {
+      getItem: (key: string) => storage[key] || null,
+      setItem: (key: string, value: string) => {
+        storage[key] = value;
+      },
+      removeItem: (key: string) => {
+        delete storage[key];
+      },
+      clear: () => {
+        Object.keys(storage).forEach(key => delete storage[key]);
+      },
+      length: 0,
+      key: () => null,
+    };
+  }
+} catch (e) {
+  // localStorage check failed, skip mock
+}
+
+// Initialize session ID for tests
+try {
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.setItem('wasel_session_id', 'test-session-id-12345678901234567890123456789012');
+  }
+} catch (e) {
+  // sessionStorage not available, skip initialization
 }
