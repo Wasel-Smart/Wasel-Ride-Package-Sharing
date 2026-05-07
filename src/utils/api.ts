@@ -2,6 +2,7 @@ import { unwrapApiEnvelope } from '../platform/api-envelope';
 import { createCorrelationId } from '../platform/observability';
 import { API_URL, publicAnonKey } from '../services/core';
 import { logger, trackAPICall } from './monitoring';
+import { validateApiUrl } from './sanitization';
 
 export const API_BASE_URL = API_URL;
 export const REQUEST_TIMEOUT = 30_000;
@@ -74,6 +75,18 @@ async function fetchWithTimeout(
   options: RequestInit,
   timeout: number = REQUEST_TIMEOUT,
 ): Promise<Response> {
+  // Validate URL to prevent SSRF attacks
+  const allowedDomains = [
+    'supabase.co',
+    'supabase.net',
+    'localhost',
+    '127.0.0.1',
+  ];
+  
+  if (!validateApiUrl(url, allowedDomains)) {
+    throw new APIError('Invalid or unauthorized URL', 403, 'invalid_url');
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
 

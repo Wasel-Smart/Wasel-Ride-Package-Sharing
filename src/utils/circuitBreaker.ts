@@ -4,6 +4,7 @@
  */
 
 import { logger } from './monitoring';
+import { sanitizeLogMessage } from './sanitization';
 
 export enum CircuitState {
   CLOSED = 'CLOSED',     // Normal operation
@@ -54,9 +55,9 @@ export class CircuitBreaker {
     if (this.state === CircuitState.OPEN) {
       if (this.shouldAttemptReset()) {
         this.state = CircuitState.HALF_OPEN;
-        logger.info(`Circuit breaker ${this.name} entering HALF_OPEN state`);
+        logger.info(`Circuit breaker ${sanitizeLogMessage(this.name)} entering HALF_OPEN state`);
       } else {
-        throw new Error(`Circuit breaker ${this.name} is OPEN`);
+        throw new Error(`Circuit breaker ${sanitizeLogMessage(this.name)} is OPEN`);
       }
     }
 
@@ -84,7 +85,7 @@ export class CircuitBreaker {
         this.state = CircuitState.CLOSED;
         this.successes = 0;
         this.lastStateChange = Date.now();
-        logger.info(`Circuit breaker ${this.name} closed after recovery`);
+        logger.info(`Circuit breaker ${sanitizeLogMessage(this.name)} closed after recovery`);
       }
     }
   }
@@ -97,7 +98,7 @@ export class CircuitBreaker {
     this.lastFailureTime = Date.now();
     this.successes = 0;
 
-    logger.warning(`Circuit breaker ${this.name} failure`, {
+    logger.warning(`Circuit breaker ${sanitizeLogMessage(this.name)} failure`, {
       failures: this.failures,
       threshold: this.config.failureThreshold,
     });
@@ -105,11 +106,11 @@ export class CircuitBreaker {
     if (this.state === CircuitState.HALF_OPEN) {
       this.state = CircuitState.OPEN;
       this.lastStateChange = Date.now();
-      logger.error(`Circuit breaker ${this.name} reopened after failed recovery`);
+      logger.error(`Circuit breaker ${sanitizeLogMessage(this.name)} reopened after failed recovery`);
     } else if (this.failures >= this.config.failureThreshold) {
       this.state = CircuitState.OPEN;
       this.lastStateChange = Date.now();
-      logger.error(`Circuit breaker ${this.name} opened due to failures`);
+      logger.error(`Circuit breaker ${sanitizeLogMessage(this.name)} opened due to failures`);
     }
   }
 
@@ -142,7 +143,7 @@ export class CircuitBreaker {
     this.successes = 0;
     this.lastFailureTime = 0;
     this.lastStateChange = Date.now();
-    logger.info(`Circuit breaker ${this.name} manually reset`);
+    logger.info(`Circuit breaker ${sanitizeLogMessage(this.name)} manually reset`);
   }
 
   /**

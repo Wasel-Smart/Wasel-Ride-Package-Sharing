@@ -3,6 +3,7 @@ import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import { authAPI } from '../services/auth';
 import { getAuthCallbackUrl } from '../utils/env';
 import { isSupabaseConfigured, supabase } from '../utils/supabase/client';
+import { sanitizeLogMessage } from '../utils/sanitization';
 import {
   normalizeOperationError,
   signInWithOAuthProvider,
@@ -117,7 +118,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         nextProfile = await loadProfileFromBackend();
       } catch (error) {
         if (import.meta.env?.DEV) {
-          console.warn('[Auth] Profile bootstrap skipped:', error);
+          console.warn('[Auth] Profile bootstrap skipped:', sanitizeLogMessage(String(error)));
         }
       }
     }
@@ -168,7 +169,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         void fetchProfile(shouldEnsureProfile, nextSession.user)
           .catch(error => {
             if (import.meta.env?.DEV) {
-              console.warn('[Auth] Profile refresh warning:', error);
+              console.warn('[Auth] Profile refresh warning:', sanitizeLogMessage(String(error)));
             }
           })
           .finally(() => {
@@ -199,7 +200,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await fetchProfile(true, data.session.user);
       } catch (error) {
         if (import.meta.env?.DEV) {
-          console.warn('Auth callback sync warning:', error);
+          console.warn('Auth callback sync warning:', sanitizeLogMessage(String(error)));
         }
       } finally {
         if (mounted) {
@@ -309,7 +310,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setSession(null);
     } catch (error) {
       if (import.meta.env?.DEV) {
-        console.error('Sign out error:', error);
+        console.error('Sign out error:', sanitizeLogMessage(String(error)));
       }
     } finally {
       setBusy(false);

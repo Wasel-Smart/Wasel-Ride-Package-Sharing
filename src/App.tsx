@@ -11,6 +11,7 @@ import { domainEventBus } from './platform/event-bus';
 import { validateRuntimeConfiguration } from './utils/env';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
+import { sanitizeLogMessage } from './utils/sanitization';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -51,7 +52,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
 
     if (ignoredPatterns.some(pattern => message.includes(pattern))) return;
 
-    console.error('[Wasel ErrorBoundary]', message, info?.componentStack ?? '');
+    console.error('[Wasel ErrorBoundary]', sanitizeLogMessage(message), sanitizeLogMessage(info?.componentStack ?? ''));
   }
 
   render() {

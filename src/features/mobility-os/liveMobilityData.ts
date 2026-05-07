@@ -336,7 +336,8 @@ function isFreshHeartbeat(timestamp: string | null | undefined): boolean {
 
 function getGoogleMapsApiKey(): string | null {
   const key = String(import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '').trim();
-  if (!key || key === 'your-google-maps-api-key-here') return null;
+  // Don't use hardcoded placeholder values
+  if (!key || key.length < 10) return null;
   return key;
 }
 

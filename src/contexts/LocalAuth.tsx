@@ -152,8 +152,8 @@ interface LocalAuthCtx {
 }
 
 const Ctx = createContext<LocalAuthCtx | null>(null);
-const STORAGE_KEY = 'wasel_local_user_v2';
-const LOCAL_ACCOUNTS_KEY = 'wasel_local_accounts_v1';
+const STORAGE_KEY = 'wasel_user_session';
+const LOCAL_ACCOUNTS_KEY = 'wasel_accounts';
 
 type LocalStoredAccount = {
   email: string;

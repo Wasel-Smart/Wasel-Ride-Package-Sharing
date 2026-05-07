@@ -2,6 +2,7 @@
 
 import { getDb, packageSizeFromWeight } from './helpers';
 import { buildUserContext } from './userContext.ts';
+import { sanitizeHtml } from '../../utils/sanitization';
 import type {
   RawCommunicationDelivery,
   RawCommunicationPreferences,
@@ -118,8 +119,8 @@ export async function createDirectNotification(input: {
     .from('notifications')
     .insert({
       user_id: context.user.id,
-      title: input.title,
-      message: input.message,
+      title: sanitizeHtml(input.title),
+      message: sanitizeHtml(input.message),
       type: input.type,
       read: false,
       is_read: false,

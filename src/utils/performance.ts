@@ -7,6 +7,7 @@
 
 import { onCLS, onFCP, onLCP, onTTFB, onINP, type Metric } from 'web-vitals';
 import { logger } from './monitoring';
+import { sanitizeLogMessage } from './sanitization';
 
 let performanceMonitoringInitialized = false;
 let longTaskObserverStarted = false;
@@ -99,7 +100,7 @@ function reportWebVital(metric: Metric) {
   // Check against performance budget
   const budget = PERFORMANCE_BUDGETS[vital.name.toLowerCase() as keyof typeof PERFORMANCE_BUDGETS];
   if (budget && vital.value > budget) {
-    logger.warning(`Performance budget exceeded: ${vital.name}`, {
+    logger.warning(`Performance budget exceeded: ${sanitizeLogMessage(vital.name)}`, {
       value: vital.value,
       budget,
       exceeded: vital.value - budget,
@@ -112,7 +113,7 @@ function reportWebVital(metric: Metric) {
 
   // Send to Sentry for poor metrics
   if (vital.rating === 'poor') {
-    logger.error(`Poor performance: ${vital.name}`, new Error('Performance threshold exceeded'), {
+    logger.error(`Poor performance: ${sanitizeLogMessage(vital.name)}`, new Error('Performance threshold exceeded'), {
       metric: vital,
     });
   }
@@ -166,7 +167,7 @@ export function measurePerformance(name: string, startMark: string, endMark?: st
 
     // Log slow operations
     if (measure.duration > 1000) {
-      logger.warning(`Slow operation: ${name}`, {
+      logger.warning(`Slow operation: ${sanitizeLogMessage(name)}`, {
         duration: measure.duration,
         startMark,
         endMark,

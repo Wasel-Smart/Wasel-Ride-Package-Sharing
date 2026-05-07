@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/react';
 import type { DomainEventEnvelope } from '../domain/events';
 import { createCorrelationId, createStructuredLogEntry } from '../platform/observability';
+import { sanitizeLogMessage } from './sanitization';
 
 let sentryInitialized = false;
 
@@ -89,8 +90,8 @@ export function initSentry(): void {
 
 export const logger = {
   error(message: string, error?: unknown, context?: Record<string, unknown>): void {
-    writeConsole('error', message, context);
-    Sentry.captureException(error || new Error(message), {
+    writeConsole('error', sanitizeLogMessage(message), context);
+    Sentry.captureException(error || new Error(sanitizeLogMessage(message)), {
       level: 'error',
       tags: { type: 'application_error' },
       extra: context,
@@ -98,8 +99,8 @@ export const logger = {
   },
 
   warning(message: string, context?: Record<string, unknown>): void {
-    writeConsole('warning', message, context);
-    Sentry.captureMessage(message, {
+    writeConsole('warning', sanitizeLogMessage(message), context);
+    Sentry.captureMessage(sanitizeLogMessage(message), {
       level: 'warning',
       tags: { type: 'application_warning' },
       extra: context,
@@ -107,9 +108,9 @@ export const logger = {
   },
 
   info(message: string, context?: Record<string, unknown>): void {
-    writeConsole('info', message, context);
+    writeConsole('info', sanitizeLogMessage(message), context);
     if (context?.important) {
-      Sentry.captureMessage(message, {
+      Sentry.captureMessage(sanitizeLogMessage(message), {
         level: 'info',
         tags: { type: 'application_info' },
         extra: context,
@@ -147,24 +148,24 @@ export function trackAPICall(
   duration: number,
   status: number,
 ): void {
-  logger.addBreadcrumb(`API ${method} ${endpoint}`, 'api', {
-    endpoint,
-    method,
+  logger.addBreadcrumb(`API ${sanitizeLogMessage(method)} ${sanitizeLogMessage(endpoint)}`, 'api', {
+    endpoint: sanitizeLogMessage(endpoint),
+    method: sanitizeLogMessage(method),
     duration,
     status,
   });
 
   logger.metric('api.duration_ms', duration, {
-    endpoint,
-    method,
+    endpoint: sanitizeLogMessage(endpoint),
+    method: sanitizeLogMessage(method),
     status: String(status),
   });
 
   if (duration > 3000) {
-    logger.warning(`Slow API call: ${method} ${endpoint}`, {
+    logger.warning(`Slow API call: ${sanitizeLogMessage(method)} ${sanitizeLogMessage(endpoint)}`, {
       duration,
       status,
-      endpoint,
+      endpoint: sanitizeLogMessage(endpoint),
     });
   }
 }

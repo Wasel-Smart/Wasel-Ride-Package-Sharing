@@ -4,6 +4,7 @@ import {
   supabase as supabaseClient,
   supabaseUrl,
 } from '../utils/supabase/client';
+import { validateApiUrl } from '../utils/sanitization';
 
 export { projectId, publicAnonKey };
 
@@ -275,6 +276,18 @@ export async function fetchWithRetry(
     throw new Error(
       'Backend API is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.',
     );
+  }
+
+  // Validate URL to prevent SSRF attacks
+  const allowedDomains = [
+    'supabase.co',
+    'supabase.net',
+    'localhost',
+    '127.0.0.1',
+  ];
+  
+  if (!validateApiUrl(url, allowedDomains)) {
+    throw new Error('Invalid or unauthorized URL');
   }
 
   const { timeout = 5_000, signal: callerSignal, ...fetchOptions } = options;

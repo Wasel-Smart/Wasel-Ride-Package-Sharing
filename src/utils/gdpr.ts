@@ -5,6 +5,7 @@
 
 import { logger } from './monitoring';
 import { supabase } from './supabase/client';
+import { sanitizeLogMessage } from './sanitization';
 
 export interface ConsentRecord {
   userId: string;
@@ -53,7 +54,7 @@ class GDPRCompliance {
       if (error) throw error;
 
       logger.info('Consent recorded', {
-        userId: consent.userId,
+        userId: sanitizeLogMessage(consent.userId),
         type: consent.consentType,
         granted: consent.granted,
       });
@@ -116,7 +117,7 @@ class GDPRCompliance {
 
       if (error) throw error;
 
-      logger.info('Data export requested', { userId });
+      logger.info('Data export requested', { userId: sanitizeLogMessage(userId) });
 
       // Trigger async export job (would be handled by worker)
       this.generateDataExport(userId).catch((error) => {
