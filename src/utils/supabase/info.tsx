@@ -46,6 +46,37 @@ function isValidPublicSupabaseUrl(value: string): boolean {
   }
 }
 
+function decodeBase64Url(value: string): string | null {
+  try {
+    const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4));
+    return atob(`${normalized}${padding}`);
+  } catch {
+    return null;
+  }
+}
+
+function getProjectRefFromJwt(value: string | undefined): string | null {
+  if (!isConfiguredValue(value)) return null;
+
+  const parts = value.split('.');
+  if (parts.length < 2) return null;
+
+  const decoded = decodeBase64Url(parts[1]);
+  if (!decoded) return null;
+
+  try {
+    const payload = JSON.parse(decoded) as { ref?: string };
+    return typeof payload.ref === 'string' && payload.ref.length > 0 ? payload.ref : null;
+  } catch {
+    return null;
+  }
+}
+
+function getProjectRefFromUrl(value: string): string {
+  return value.replace(/^https?:\/\//, '').replace(/\/$/, '').replace(/\.supabase\.co$/, '');
+}
+
 function pickConfiguredUrl(...candidates: Array<string | undefined>): string {
   return (
     candidates.find(
@@ -54,8 +85,20 @@ function pickConfiguredUrl(...candidates: Array<string | undefined>): string {
   );
 }
 
-function pickConfiguredKey(...candidates: Array<string | undefined>): string {
-  return candidates.find(isConfiguredValue) ?? '';
+function pickConfiguredKey(url: string, ...candidates: Array<string | undefined>): string {
+  const configured = candidates.filter(isConfiguredValue);
+  if (configured.length === 0) return '';
+
+  const urlProjectRef = url ? getProjectRefFromUrl(url) : '';
+  if (!urlProjectRef) return configured[0];
+
+  const matchingJwtCandidate = configured.find(candidate => getProjectRefFromJwt(candidate) === urlProjectRef);
+  if (matchingJwtCandidate) return matchingJwtCandidate;
+
+  const opaqueCandidate = configured.find(candidate => !getProjectRefFromJwt(candidate));
+  if (opaqueCandidate) return opaqueCandidate;
+
+  return configured[0];
 }
 
 export const publicSupabaseUrl = pickConfiguredUrl(
@@ -66,15 +109,13 @@ export const publicSupabaseUrl = pickConfiguredUrl(
 );
 
 export const publicAnonKey = pickConfiguredKey(
-  import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
+  publicSupabaseUrl,
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined,
+  import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
   import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY as string | undefined,
   ...(ALLOW_CHECKED_IN_PUBLIC_FALLBACK ? [CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY] : []),
 );
 
-export const projectId: string = publicSupabaseUrl
-  .replace(/^https?:\/\//, '')
-  .replace(/\/$/, '')
-  .replace(/\.supabase\.co$/, '');
+export const projectId: string = publicSupabaseUrl ? getProjectRefFromUrl(publicSupabaseUrl) : '';
 
 export const hasSupabasePublicConfig = Boolean(publicSupabaseUrl && publicAnonKey);

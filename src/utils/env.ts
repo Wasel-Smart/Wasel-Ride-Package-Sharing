@@ -36,6 +36,41 @@ function isAbsoluteHttpUrl(value: string): boolean {
   }
 }
 
+function decodeBase64Url(value: string): string | null {
+  try {
+    const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4));
+    return atob(`${normalized}${padding}`);
+  } catch {
+    return null;
+  }
+}
+
+function getSupabaseProjectRefFromUrl(value: string): string | null {
+  try {
+    return new URL(value).hostname.replace(/\.supabase\.co$/, '');
+  } catch {
+    return null;
+  }
+}
+
+function getSupabaseProjectRefFromJwt(value: string | undefined): string | null {
+  if (!value) return null;
+
+  const parts = value.split('.');
+  if (parts.length < 2) return null;
+
+  const decoded = decodeBase64Url(parts[1]);
+  if (!decoded) return null;
+
+  try {
+    const payload = JSON.parse(decoded) as { ref?: string };
+    return typeof payload.ref === 'string' && payload.ref.length > 0 ? payload.ref : null;
+  } catch {
+    return null;
+  }
+}
+
 export function getEnv(key: string, fallback = ''): string {
   const value = readEnvSource()[key];
   return typeof value === 'string' && value.length > 0 ? value : fallback;
@@ -134,6 +169,16 @@ export function getRuntimeConfigIssues(
     issues.push({
       key: 'VITE_SUPABASE_URL',
       message: 'Protected environments must use an HTTPS Supabase URL',
+      severity: 'error',
+    });
+  }
+
+  const supabaseUrlProjectRef = supabaseUrl ? getSupabaseProjectRefFromUrl(supabaseUrl) : null;
+  const anonKeyProjectRef = getSupabaseProjectRefFromJwt(envSource.VITE_SUPABASE_ANON_KEY?.trim());
+  if (supabaseUrlProjectRef && anonKeyProjectRef && supabaseUrlProjectRef !== anonKeyProjectRef) {
+    issues.push({
+      key: 'VITE_SUPABASE_ANON_KEY',
+      message: `VITE_SUPABASE_ANON_KEY belongs to project ${anonKeyProjectRef}, but VITE_SUPABASE_URL points to ${supabaseUrlProjectRef}.`,
       severity: 'error',
     });
   }
