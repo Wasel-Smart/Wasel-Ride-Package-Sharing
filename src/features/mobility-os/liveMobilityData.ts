@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../services/core';
+
+const DEBOUNCE_MS = 2000;
 
 export type LiveMobilityRouteSnapshot = {
   routeId: string;
@@ -725,6 +727,8 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
 export function useMobilityOSLiveData(ar: boolean) {
   const [snapshot, setSnapshot] = useState<LiveMobilitySnapshot | null>(null);
   const [loading, setLoading] = useState(true);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const channelRef = useRef<any>(null);
 
   useEffect(() => {
     if (!supabase) {
@@ -747,25 +751,84 @@ export function useMobilityOSLiveData(ar: boolean) {
 
     void refresh();
 
+    // Debounce: clear any pending refresh
+    const scheduleRefresh = () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        void refresh();
+      }, DEBOUNCE_MS);
+    };
+
+    // Create a single channel with filtered events to reduce noise
     const channel = supabase
-      .channel(`mobility-os-live-${ar ? 'ar' : 'en'}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, () => {
-        void refresh();
+      .channel(`mobility-os-live-${ar ? 'ar' : 'en'}`, {
+        config: { broadcast: { self: false } },
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
-        void refresh();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'packages' }, () => {
-        void refresh();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trip_presence' }, () => {
-        void refresh();
-      })
-      .subscribe();
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'trips',
+          filter: 'deleted_at=is.null', // Only care about active trips
+        },
+        () => {
+          scheduleRefresh();
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bookings',
+          filter: 'booking_status!=cs.cancelled', // Only non-cancelled bookings
+        },
+        () => {
+          scheduleRefresh();
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'packages',
+          filter: 'package_status!=cs.delivered', // Only active packages
+        },
+        () => {
+          scheduleRefresh();
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'trip_presence',
+        },
+        () => {
+          scheduleRefresh();
+        },
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIPTION_ERROR') {
+          console.error('MobilityOS realtime subscription error');
+        }
+      });
+
+    channelRef.current = channel;
 
     return () => {
       cancelled = true;
-      void supabase.removeChannel(channel);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      if (channelRef.current) {
+        void supabase.removeChannel(channelRef.current);
+      }
     };
   }, [ar]);
 

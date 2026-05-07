@@ -15,6 +15,14 @@ import {
 
 const LOCAL_NOTIFICATION_KEY = 'wasel-local-notifications';
 
+// In-memory cache for notifications to reduce database I/O
+type NotificationCacheEntry = {
+  data: StoredNotification[];
+  timestamp: number;
+};
+const notificationCache = new Map<string, NotificationCacheEntry>();
+const NOTIFICATION_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 type StoredNotification = {
   id: string;
   title: string;
@@ -211,9 +219,19 @@ export const notificationsAPI = {
       return { notifications: sortNotifications(localNotifications.map(normalizeNotification)) };
     }
 
+    // Check cache for server notifications
+    const cachedEntry = notificationCache.get(userId);
+    const now = Date.now();
+    if (cachedEntry && (now - cachedEntry.timestamp < NOTIFICATION_CACHE_TTL)) {
+      return {
+        notifications: mergeNotifications(localNotifications, cachedEntry.data),
+      };
+    }
+
     if (!canUseEdgeApi()) {
       try {
         const serverNotifications = await getDirectNotifications(userId);
+        notificationCache.set(userId, { data: serverNotifications as StoredNotification[], timestamp: Date.now() });
         return {
           notifications: mergeNotifications(
             localNotifications,
@@ -236,6 +254,7 @@ export const notificationsAPI = {
 
       const data = await response.json();
       const serverNotifications = Array.isArray(data?.notifications) ? data.notifications : [];
+      notificationCache.set(userId, { data: serverNotifications, timestamp: Date.now() });
       return {
         notifications: mergeNotifications(localNotifications, serverNotifications),
       };
