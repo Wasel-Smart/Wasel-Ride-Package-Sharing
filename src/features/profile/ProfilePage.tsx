@@ -13,10 +13,9 @@ import {
   Settings,
   Shield,
   Star,
-  User,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { WaselStateCard } from '../../components/system/WaselStateCard';
+import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import { PageHero, PageShell, StatusBadge } from '../../components/wasel-ui/WaselPagePrimitives';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -72,27 +71,7 @@ export default function ProfilePage() {
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   if (!user) {
-    return (
-      <WaselStateCard
-        eyebrow={ar ? 'الملف الشخصي' : 'Profile'}
-        title={ar ? 'سجل الدخول لعرض ملفك' : 'Sign in to view your profile'}
-        description={
-          ar
-            ? 'الهوية والثقة والإعدادات تظهر هنا في سطح واحد واضح.'
-            : 'Identity, trust, and settings appear here in one clear surface.'
-        }
-        icon={User}
-        minHeight="60vh"
-        actions={
-          <Button
-            onClick={() => nav('/app/auth')}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            {ar ? 'تسجيل الدخول' : 'Sign in'}
-          </Button>
-        }
-      />
-    );
+    return <ProtectedPagePreview pathname="/app/profile" />;
   }
 
   return (

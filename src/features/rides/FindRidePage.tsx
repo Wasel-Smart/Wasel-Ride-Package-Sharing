@@ -29,7 +29,6 @@ import {
   createReminderFromSuggestion,
   formatRouteReminderSchedule,
   getRecurringRouteSuggestions,
-  getRouteReminderForCorridor,
   getRouteReminders,
   syncRouteReminders,
 } from '../../services/movementRetention';
@@ -218,6 +217,7 @@ export function FindRidePage() {
     .sort((left, right) => scoreRideForRecommendation(right) - scoreRideForRecommendation(left))
     .slice(0, 2);
   const bookedRides = activeCatalog.filter(ride => bookedRideIds.has(ride.id)).slice(0, 3);
+  const reminderSuggestion = recurringSuggestions[0] ?? null;
   const selectedPriceQuote =
     selectedSignal?.priceQuote ??
     (corridorPlan
@@ -536,12 +536,6 @@ export function FindRidePage() {
           action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
         />
 
-        <CoreExperienceBanner
-          title="Compare rides for one route."
-          detail="Search once and compare confirmed drivers, grouped departures, and the strongest route options for this corridor."
-          tone={DS.cyan}
-        />
-
         <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
           {(
             [
@@ -579,6 +573,33 @@ export function FindRidePage() {
                 marginBottom: 24,
               }}
             >
+              <div style={{ marginBottom: 16 }}>
+                <div
+                  style={{
+                    color: DS.cyan,
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Route command
+                </div>
+                <div
+                  style={{
+                    color: '#fff',
+                    fontSize: '1.45rem',
+                    fontWeight: 900,
+                    lineHeight: 1.1,
+                    marginTop: 8,
+                  }}
+                >
+                  {from} to {to}
+                </div>
+                <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.55, marginTop: 6 }}>
+                  Search once, read the lane, then open the strongest departure.
+                </div>
+              </div>
               <div
                 className="sp-search-grid"
                 style={{
@@ -772,7 +793,7 @@ export function FindRidePage() {
                   center={midpoint(searchFromCoord, searchToCoord)}
                   pickupLocation={searchFromCoord}
                   dropoffLocation={searchToCoord}
-                  height={180}
+                  height={220}
                   showMosques={false}
                   showRadars={false}
                 />
@@ -1232,10 +1253,10 @@ export function FindRidePage() {
             </div>
 
             <div
-              className="sp-2col"
+              className="sp-3col"
               style={{
                 display: 'grid',
-                gridTemplateColumns: '1.15fr 0.85fr',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
                 gap: 14,
                 marginBottom: 18,
               }}
@@ -1249,207 +1270,38 @@ export function FindRidePage() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <div
-                    style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: r(12),
-                      background: `${DS.cyan}12`,
-                      border: `1px solid ${DS.cyan}28`,
-                      display: 'grid',
-                      placeItems: 'center',
-                    }}
-                  >
-                    <Brain size={18} color={DS.cyan} />
-                  </div>
-                  <div>
-                    <div style={{ color: '#fff', fontWeight: 800 }}>Why it fits</div>
-                    <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                      Quick route signals.
-                    </div>
-                  </div>
+                  <Brain size={18} color={DS.cyan} />
+                  <div style={{ color: '#fff', fontWeight: 800 }}>Route radar</div>
                 </div>
                 <div style={{ display: 'grid', gap: 10 }}>
-                  {(selectedSignal
-                    ? [
-                        selectedSignal.recommendedReason,
-                        `Next wave: ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.`,
-                        `Live feed: ${selectedSignal.productionSources.slice(0, 3).join(' | ')}.`,
-                      ]
-                    : (corridorPlan?.intelligenceSignals ?? [
-                        'Demand builds before departure.',
-                        'Pickup points stay simple.',
-                        'Shared rides stay cheaper.',
-                      ])
-                  ).map(line => (
-                    <div
-                      key={line}
+                  {featuredSignals.slice(0, 3).map(corridor => (
+                    <button
+                      key={corridor.id}
+                      onClick={() => {
+                        setFrom(corridor.from);
+                        setTo(corridor.to);
+                        void handleSearch({ from: corridor.from, to: corridor.to, date: '' });
+                      }}
                       style={{
+                        textAlign: 'left',
                         borderRadius: r(14),
                         border: `1px solid ${DS.border}`,
                         background: DS.card2,
                         padding: '12px 14px',
-                        color: '#fff',
-                        fontSize: '0.82rem',
-                        lineHeight: 1.65,
+                        cursor: 'pointer',
                       }}
                     >
-                      {line}
-                    </div>
-                  ))}
-                </div>
-                <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {(corridorPlan?.movementLayers ?? ['people', 'goods', 'services']).map(layer => (
-                    <span key={layer} style={pill(DS.green)}>
-                      <Sparkles size={10} /> {layer}
-                    </span>
+                      <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>
+                        {corridor.label}
+                      </div>
+                      <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
+                        {corridor.priceQuote.finalPriceJod} JOD • {corridor.forecastDemandScore}/100
+                      </div>
+                    </button>
                   ))}
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gap: 14 }}>
-                <div
-                  style={{
-                    background: DS.card,
-                    borderRadius: r(18),
-                    padding: '18px 18px 16px',
-                    border: `1px solid ${DS.border}`,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    <div
-                      style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: r(12),
-                        background: `${DS.gold}12`,
-                        border: `1px solid ${DS.gold}28`,
-                        display: 'grid',
-                        placeItems: 'center',
-                      }}
-                    >
-                      <TrendingUp size={18} color={DS.gold} />
-                    </div>
-                    <div>
-                      <div style={{ color: '#fff', fontWeight: 800 }}>Popular now</div>
-                      <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                        Routes with strong live activity.
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {featuredSignals.map(corridor => (
-                      <button
-                        key={corridor.id}
-                        onClick={() => {
-                          setFrom(corridor.from);
-                          setTo(corridor.to);
-                          void handleSearch({ from: corridor.from, to: corridor.to, date: '' });
-                        }}
-                        style={{
-                          textAlign: 'left',
-                          borderRadius: r(14),
-                          border: `1px solid ${DS.border}`,
-                          background: DS.card2,
-                          padding: '12px 14px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 12,
-                            flexWrap: 'wrap',
-                          }}
-                        >
-                          <div>
-                            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>
-                              {corridor.label}
-                            </div>
-                            <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                              Demand {corridor.forecastDemandScore} |{' '}
-                              {corridor.priceQuote.finalPriceJod} JOD | Owns{' '}
-                              {corridor.routeOwnershipScore}
-                            </div>
-                          </div>
-                          <span style={pill(DS.cyan)}>{corridor.pricePressure}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    background: DS.card,
-                    borderRadius: r(18),
-                    padding: '18px 18px 16px',
-                    border: `1px solid ${DS.border}`,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    <div
-                      style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: r(12),
-                        background: `${DS.green}12`,
-                        border: `1px solid ${DS.green}28`,
-                        display: 'grid',
-                        placeItems: 'center',
-                      }}
-                    >
-                      <Network size={18} color={DS.green} />
-                    </div>
-                    <div>
-                      <div style={{ color: '#fff', fontWeight: 800 }}>Package-ready rides</div>
-                      <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                        Some rides also carry packages.
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {marketplaceNodes.map(node => (
-                      <div
-                        key={node.id}
-                        style={{
-                          borderRadius: r(14),
-                          border: `1px solid ${DS.border}`,
-                          background: DS.card2,
-                          padding: '12px 14px',
-                        }}
-                      >
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>
-                          {node.title}
-                        </div>
-                        <div
-                          style={{
-                            color: DS.muted,
-                            fontSize: '0.74rem',
-                            marginTop: 4,
-                            lineHeight: 1.55,
-                          }}
-                        >
-                          {node.summary}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              className="sp-2col"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1.15fr 0.85fr',
-                gap: 14,
-                marginBottom: 18,
-              }}
-            >
               <div
                 style={{
                   background: DS.card,
@@ -1458,169 +1310,12 @@ export function FindRidePage() {
                   border: `1px solid ${DS.border}`,
                 }}
               >
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
-                  Suggested reminders
-                </div>
-                {recurringSuggestions.length > 0 ? (
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {recurringSuggestions.map(suggestion => {
-                      const alreadySaved = Boolean(
-                        getRouteReminderForCorridor(suggestion.corridorId),
-                      );
-                      return (
-                        <div
-                          key={suggestion.corridorId}
-                          style={{
-                            borderRadius: r(14),
-                            border: `1px solid ${DS.border}`,
-                            background: DS.card2,
-                            padding: '12px 14px',
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              gap: 12,
-                              flexWrap: 'wrap',
-                            }}
-                          >
-                            <div>
-                              <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>
-                                {suggestion.label}
-                              </div>
-                              <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                                {suggestion.confidenceScore}/100 |{' '}
-                                {suggestion.priceQuote.finalPriceJod} JOD |{' '}
-                                {suggestion.weeklyFrequency} signals
-                              </div>
-                            </div>
-                            <span style={pill(DS.green)}>{suggestion.recommendedFrequency}</span>
-                          </div>
-                          <div
-                            style={{
-                              color: DS.sub,
-                              fontSize: '0.76rem',
-                              lineHeight: 1.55,
-                              marginTop: 8,
-                            }}
-                          >
-                            {suggestion.reason}
-                          </div>
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-                            <button
-                              onClick={() => {
-                                setFrom(suggestion.from);
-                                setTo(suggestion.to);
-                                void handleSearch({
-                                  from: suggestion.from,
-                                  to: suggestion.to,
-                                  date: '',
-                                });
-                              }}
-                              style={{
-                                height: 38,
-                                padding: '0 14px',
-                                borderRadius: '999px',
-                                border: `1px solid ${DS.border}`,
-                                background: DS.card,
-                                color: '#fff',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                              }}
-                            >
-                              Search route
-                            </button>
-                            <button
-                              onClick={() => handleSaveReminder(suggestion.corridorId)}
-                              style={{
-                                height: 38,
-                                padding: '0 14px',
-                                borderRadius: '999px',
-                                border: 'none',
-                                background: alreadySaved ? DS.gradG : DS.gradC,
-                                color: '#fff',
-                                fontWeight: 800,
-                                cursor: 'pointer',
-                              }}
-                            >
-                              {alreadySaved ? 'Reminder active' : 'Save reminder'}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div style={{ color: DS.muted, fontSize: '0.8rem' }}>
-                    Book more rides to unlock reminders.
-                  </div>
-                )}
-              </div>
-
-              <div
-                style={{
-                  background: DS.card,
-                  borderRadius: r(18),
-                  padding: '18px 18px 16px',
-                  border: `1px solid ${DS.border}`,
-                }}
-              >
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
-                  Saved reminders
-                </div>
-                {savedReminders.length > 0 ? (
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {savedReminders.slice(0, 4).map(reminder => (
-                      <div
-                        key={reminder.id}
-                        style={{
-                          borderRadius: r(12),
-                          border: `1px solid ${DS.border}`,
-                          background: DS.card2,
-                          padding: '11px 12px',
-                        }}
-                      >
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>
-                          {reminder.label}
-                        </div>
-                        <div style={{ color: DS.muted, fontSize: '0.73rem', marginTop: 4 }}>
-                          {formatRouteReminderSchedule(reminder)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ color: DS.muted, fontSize: '0.8rem', lineHeight: 1.55 }}>
-                    Save a route to see reminders here.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div
-              className="sp-2col"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1.15fr 0.85fr',
-                gap: 14,
-                marginBottom: 18,
-              }}
-            >
-              <div
-                style={{
-                  background: DS.card,
-                  borderRadius: r(18),
-                  padding: '18px 18px 16px',
-                  border: `1px solid ${DS.border}`,
-                }}
-              >
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
-                  Best ride matches
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <TrendingUp size={18} color={DS.gold} />
+                  <div style={{ color: '#fff', fontWeight: 800 }}>Best matches</div>
                 </div>
                 <div style={{ display: 'grid', gap: 10 }}>
-                  {recommendedRides.map(ride => {
+                  {recommendedRides.slice(0, 3).map(ride => {
                     const rideSignal = resolveSignalForRoute(ride.from, ride.to);
                     const ridePriceQuote = getMovementPriceQuote({
                       basePriceJod: ride.pricePerSeat,
@@ -1642,33 +1337,14 @@ export function FindRidePage() {
                           cursor: 'pointer',
                         }}
                       >
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 12,
-                            flexWrap: 'wrap',
-                          }}
-                        >
-                          <div>
-                            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>
-                              {ride.from} to {ride.to}
-                            </div>
-                            <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                              {ride.time} | {ride.driver.name} |{' '}
-                              {rideSignal
-                                ? `${rideSignal.routeOwnershipScore}/100 ownership`
-                                : ride.car}
-                            </div>
-                          </div>
-                          <span
-                            style={{ ...pill(bookedRideIds.has(ride.id) ? DS.green : DS.cyan) }}
-                          >
-                            {bookedRideIds.has(ride.id)
-                              ? 'Booked'
-                              : `${ridePriceQuote.finalPriceJod} JOD`}
-                          </span>
+                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>
+                          {ride.from} to {ride.to}
+                        </div>
+                        <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
+                          {ride.time} • {ride.driver.name}
+                        </div>
+                        <div style={{ color: DS.cyan, fontWeight: 800, fontSize: '0.76rem', marginTop: 6 }}>
+                          {bookedRideIds.has(ride.id) ? 'Booked' : `${ridePriceQuote.finalPriceJod} JOD`}
                         </div>
                       </button>
                     );
@@ -1676,52 +1352,60 @@ export function FindRidePage() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gap: 14 }}>
-                {[
-                  { title: t.recentSearches, items: recentSearches, empty: t.searchHelp },
-                  {
-                    title: t.bookedTrips,
-                    items: bookedRides.map(
-                      ride => `${ride.from} to ${ride.to} | ${ride.time} | ${ride.driver.name}`,
-                    ),
-                    empty: t.noTripsYet,
-                  },
-                ].map(card => (
-                  <div
-                    key={card.title}
+              <div
+                style={{
+                  background: DS.card,
+                  borderRadius: r(18),
+                  padding: '18px 18px 16px',
+                  border: `1px solid ${DS.border}`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <Sparkles size={18} color={DS.green} />
+                  <div style={{ color: '#fff', fontWeight: 800 }}>Route memory</div>
+                </div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {[...savedReminders.slice(0, 2).map(reminder => reminder.label), ...recentSearches.slice(0, 1), ...bookedRides.slice(0, 1).map(ride => `${ride.from} to ${ride.to}`)]
+                    .slice(0, 4)
+                    .map(item => (
+                      <div
+                        key={item}
+                        style={{
+                          borderRadius: r(12),
+                          border: `1px solid ${DS.border}`,
+                          background: DS.card2,
+                          padding: '11px 12px',
+                          color: '#fff',
+                          fontSize: '0.78rem',
+                        }}
+                      >
+                        {item}
+                      </div>
+                    ))}
+                  {savedReminders.length === 0 && recentSearches.length === 0 && bookedRides.length === 0 && (
+                    <div style={{ color: DS.muted, fontSize: '0.8rem', lineHeight: 1.55 }}>
+                      Save a lane or book a ride to build memory here.
+                    </div>
+                  )}
+                </div>
+                {reminderSuggestion && (
+                  <button
+                    onClick={() => handleSaveReminder(reminderSuggestion.corridorId)}
                     style={{
-                      background: DS.card,
-                      borderRadius: r(18),
-                      padding: '18px 18px 16px',
-                      border: `1px solid ${DS.border}`,
+                      width: '100%',
+                      height: 40,
+                      marginTop: 12,
+                      borderRadius: '999px',
+                      border: 'none',
+                      background: DS.gradG,
+                      color: '#fff',
+                      fontWeight: 800,
+                      cursor: 'pointer',
                     }}
                   >
-                    <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
-                      {card.title}
-                    </div>
-                    {card.items.length > 0 ? (
-                      <div style={{ display: 'grid', gap: 10 }}>
-                        {card.items.map(item => (
-                          <div
-                            key={item}
-                            style={{
-                              borderRadius: r(12),
-                              border: `1px solid ${DS.border}`,
-                              background: DS.card2,
-                              padding: '11px 12px',
-                              color: '#fff',
-                              fontSize: '0.78rem',
-                            }}
-                          >
-                            {item}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div style={{ color: DS.muted, fontSize: '0.8rem' }}>{card.empty}</div>
-                    )}
-                  </div>
-                ))}
+                    Save reminder
+                  </button>
+                )}
               </div>
             </div>
           </>
@@ -1730,8 +1414,6 @@ export function FindRidePage() {
         {tab === 'package' && (
           <FindRidePackagePanel ar={ar} copy={copy} t={t} pkg={pkg} setPkg={setPkg} />
         )}
-
-        <ServiceFlowPlaybook focusService={tab === 'ride' ? 'find-ride' : 'send-package'} />
 
         {selected && (
           <FindRideTripDetailModal

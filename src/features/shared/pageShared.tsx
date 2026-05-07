@@ -6,11 +6,10 @@
  * live in their own file without duplicating DS bindings, city
  * data, storage helpers, or the Protected / PageShell wrappers.
  */
-import { useEffect, useRef, type ReactNode } from 'react';
-import { useLocation } from 'react-router';
+import type { ReactNode } from 'react';
+import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
 
 // ── Design-system shorthand ───────────────────────────────────────────────────
@@ -109,40 +108,9 @@ export function readStoredObject<T>(key: string, fallback: T): T {
 // ── Auth guard ────────────────────────────────────────────────────────────────
 export function Protected({ children }: { children: ReactNode }) {
   const { user } = useLocalAuth();
-  const nav = useIframeSafeNavigate();
-  const location = useLocation();
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!user && mountedRef.current) {
-      nav(`/app/auth?returnTo=${encodeURIComponent(location.pathname)}`);
-    }
-  }, [user]);
 
   if (!user) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '60vh',
-          gap: 16,
-          background: DS.bg,
-        }}
-      >
-        <div style={{ fontSize: '3rem' }}>🔒</div>
-        <div style={{ color: DS.sub, fontFamily: DS.F }}>Redirecting to sign in…</div>
-      </div>
-    );
+    return <ProtectedPagePreview />;
   }
   return <>{children}</>;
 }

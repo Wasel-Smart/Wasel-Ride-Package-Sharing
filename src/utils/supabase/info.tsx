@@ -1,11 +1,19 @@
 /**
  * Public Supabase credentials.
  *
- * All credentials must be supplied via environment variables.
- * No hardcoded fallback values — missing config will surface clearly at runtime.
+ * Environment variables stay the primary source of truth.
+ * In development we also keep a checked-in public fallback so a long-running
+ * dev server does not strand the auth screen if it was started before the
+ * Supabase env vars were loaded.
  */
 
 const FORCE_LOCAL_E2E_AUTH = (import.meta.env.VITE_E2E_LOCAL_AUTH as string | undefined) === 'true';
+const ALLOW_CHECKED_IN_PUBLIC_FALLBACK =
+  !FORCE_LOCAL_E2E_AUTH && (import.meta.env.MODE as string | undefined) === 'development';
+
+const CHECKED_IN_PUBLIC_SUPABASE_URL = 'https://djccmatubyyudeosrngm.supabase.co';
+const CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqY2NtYXR1Ynl5dWRlb3NybmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNjY5MjUsImV4cCI6MjA3NzQyNjkyNX0.WlYJmK-OUKlNyp3ktcb2ShILFN1vgCumAL4tOATziTQ';
 
 const PLACEHOLDER_MARKERS = [
   'your-project.supabase.co',
@@ -57,6 +65,7 @@ export const publicSupabaseUrl = pickConfiguredUrl(
         import.meta.env.VITE_SUPABASE_URL as string | undefined,
         import.meta.env.VITE_SUPABASE_PROJECT_URL as string | undefined,
         import.meta.env.VITE_PUBLIC_SUPABASE_URL as string | undefined,
+        ...(ALLOW_CHECKED_IN_PUBLIC_FALLBACK ? [CHECKED_IN_PUBLIC_SUPABASE_URL] : []),
       ]),
 );
 
@@ -67,6 +76,7 @@ export const publicAnonKey = pickConfiguredKey(
         import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
         import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined,
         import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY as string | undefined,
+        ...(ALLOW_CHECKED_IN_PUBLIC_FALLBACK ? [CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY] : []),
       ]),
 );
 

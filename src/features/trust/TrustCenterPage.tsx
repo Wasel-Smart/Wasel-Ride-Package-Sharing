@@ -12,7 +12,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { WaselStateCard } from '../../components/system/WaselStateCard';
+import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import {
   MetricCard,
   PageHero,
@@ -252,27 +252,7 @@ export default function TrustCenterPage() {
   }, [user?.id]);
 
   if (!user) {
-    return (
-      <WaselStateCard
-        eyebrow={ar ? 'الثقة' : 'Trust'}
-        title={ar ? 'سجل الدخول لفتح مركز الثقة' : 'Sign in to open Trust Center'}
-        description={
-          ar
-            ? 'التحقق والجاهزية والقدرات المفتوحة تظهر هنا في شاشة واحدة.'
-            : 'Verification, readiness, and unlocked actions appear here in one view.'
-        }
-        icon={Shield}
-        minHeight="60vh"
-        actions={
-          <Button
-            onClick={() => nav('/app/auth')}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            {ar ? 'تسجيل الدخول' : 'Sign in'}
-          </Button>
-        }
-      />
-    );
+    return <ProtectedPagePreview pathname="/app/trust" />;
   }
 
   const capabilityRows = [

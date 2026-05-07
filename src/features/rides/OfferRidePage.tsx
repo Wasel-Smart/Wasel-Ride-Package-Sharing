@@ -293,7 +293,7 @@ export function OfferRidePage() {
                     margin: '0 0 12px',
                   }}
                 >
-                  Route is live
+                  Ride offer is live
                 </h2>
                 <p style={{ color: DS.sub, margin: 0 }}>
                   <strong style={{ color: '#fff' }}>{form.from}</strong> to{' '}

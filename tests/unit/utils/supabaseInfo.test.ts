@@ -46,4 +46,15 @@ describe('supabase public config', () => {
     expect(info.publicAnonKey).toBe('custom-anon-key');
     expect(info.hasSupabasePublicConfig).toBe(false);
   });
+
+  it('uses the checked-in public fallback during development when env vars are missing', async () => {
+    vi.stubEnv('MODE', 'development');
+
+    const info = await importInfo();
+
+    expect(info.publicSupabaseUrl).toBe('https://djccmatubyyudeosrngm.supabase.co');
+    expect(info.projectId).toBe('djccmatubyyudeosrngm');
+    expect(info.publicAnonKey).toContain('eyJhbGciOiJIUzI1Ni');
+    expect(info.hasSupabasePublicConfig).toBe(true);
+  });
 });

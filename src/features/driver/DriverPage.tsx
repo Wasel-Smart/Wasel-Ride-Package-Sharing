@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Brain, Network, ShieldCheck, Truck } from 'lucide-react';
+import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
@@ -14,7 +15,7 @@ export default function DriverPage() {
   const membership = useMemo(() => getMovementMembershipSnapshot(), []);
   const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(1, 4), []);
 
-  if (!user) return null;
+  if (!user) return <ProtectedPagePreview pathname="/app/driver" />;
 
   const readiness = getDriverReadinessSummary(user);
   const completedSteps = readiness.steps.filter(step => step.complete).length;
