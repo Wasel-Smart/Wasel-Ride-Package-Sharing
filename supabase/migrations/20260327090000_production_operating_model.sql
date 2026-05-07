@@ -271,18 +271,24 @@ create or replace function public.current_user_id()
 returns uuid
 language sql
 stable
+security definer
+set search_path = public, auth, pg_temp
 as $$ select id from public.users where auth_user_id = auth.uid() limit 1; $$;
 
 create or replace function public.current_user_role()
 returns text
 language sql
 stable
+security definer
+set search_path = public, auth, pg_temp
 as $$ select role::text from public.users where auth_user_id = auth.uid() limit 1; $$;
 
 create or replace function public.is_admin()
 returns boolean
 language sql
 stable
+security definer
+set search_path = public, auth, pg_temp
 as $$ select coalesce(public.current_user_role() = 'admin', false); $$;
 
 create or replace function public.wallet_post_transaction(

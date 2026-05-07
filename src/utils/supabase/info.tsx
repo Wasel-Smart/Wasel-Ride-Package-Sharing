@@ -62,7 +62,7 @@ function getProjectRefFromJwt(value: string | undefined): string | null {
   const parts = value.split('.');
   if (parts.length < 2) return null;
 
-  const decoded = decodeBase64Url(parts[1]);
+  const decoded = decodeBase64Url(parts[1] ?? '');
   if (!decoded) return null;
 
   try {
@@ -86,11 +86,11 @@ function pickConfiguredUrl(...candidates: Array<string | undefined>): string {
 }
 
 function pickConfiguredKey(url: string, ...candidates: Array<string | undefined>): string {
-  const configured = candidates.filter(isConfiguredValue);
+  const configured = candidates.filter((candidate): candidate is string => isConfiguredValue(candidate));
   if (configured.length === 0) return '';
 
   const urlProjectRef = url ? getProjectRefFromUrl(url) : '';
-  if (!urlProjectRef) return configured[0];
+  if (!urlProjectRef) return configured[0] ?? '';
 
   const matchingJwtCandidate = configured.find(candidate => getProjectRefFromJwt(candidate) === urlProjectRef);
   if (matchingJwtCandidate) return matchingJwtCandidate;
@@ -98,7 +98,7 @@ function pickConfiguredKey(url: string, ...candidates: Array<string | undefined>
   const opaqueCandidate = configured.find(candidate => !getProjectRefFromJwt(candidate));
   if (opaqueCandidate) return opaqueCandidate;
 
-  return configured[0];
+  return configured[0] ?? '';
 }
 
 export const publicSupabaseUrl = pickConfiguredUrl(

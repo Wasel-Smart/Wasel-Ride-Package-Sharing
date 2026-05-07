@@ -60,7 +60,7 @@ function getSupabaseProjectRefFromJwt(value: string | undefined): string | null 
   const parts = value.split('.');
   if (parts.length < 2) return null;
 
-  const decoded = decodeBase64Url(parts[1]);
+  const decoded = decodeBase64Url(parts[1] ?? '');
   if (!decoded) return null;
 
   try {

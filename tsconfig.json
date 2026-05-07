@@ -37,8 +37,8 @@
       "@/*": ["src/*"]
     },
 
-    /* Type roots */
-    "types": ["vite/client", "node"]
+    /* Global types */
+    "types": ["node"]
   },
   "include": [
     "src/**/*",
