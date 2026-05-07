@@ -6,7 +6,6 @@ import {
   Calendar,
   CheckCircle2,
   MapPin,
-  Network,
   Search,
   Shield,
   Sparkles,
@@ -46,7 +45,7 @@ import {
   type RideBookingRecord,
 } from '../../services/rideLifecycle';
 import { tripsAPI } from '../../services/trips';
-import { getCorridorOpportunity, getMarketplaceNodes } from '../../config/wasel-movement-network';
+import { getCorridorOpportunity } from '../../config/wasel-movement-network';
 import {
   ALL_RIDES,
   buildRideFromPostedRide,
@@ -63,7 +62,6 @@ import {
 } from '../../pages/waselCorePageHelpers';
 import { readStoredStringList, writeStoredStringList } from '../../pages/waselCoreStorage';
 import {
-  CoreExperienceBanner,
   DS,
   midpoint,
   PageShell,
@@ -73,7 +71,6 @@ import {
   resolveCityCoord,
   SectionHead,
 } from '../../pages/waselServiceShared';
-import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { FindRideCard } from './components/FindRideCard';
 import { FindRidePackagePanel } from './components/FindRidePackagePanel';
 import { FindRideTripDetailModal } from './components/FindRideTripDetailModal';
@@ -133,7 +130,6 @@ export function FindRidePage() {
     date: initialDate,
   }));
 
-  const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(0, 3), []);
   const corridorPlan = useMemo(() => getCorridorOpportunity(from, to), [from, to]);
   const routeIntelligence = useLiveRouteIntelligence({ from, to });
   const selectedSignal = routeIntelligence.selectedSignal;
