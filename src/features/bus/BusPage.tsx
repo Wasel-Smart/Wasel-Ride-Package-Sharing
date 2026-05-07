@@ -226,6 +226,15 @@ export function BusPage() {
   const fallbackBuses = busRoutes
     .filter(route => route.id !== activeBus.id && route.seats > 0)
     .slice(0, 2);
+  const selectedSourceLabel = activeBus.dataSource === 'live' ? 'Live operator feed' : 'Official schedule';
+  const selectedSourceDetail =
+    activeBus.dataSource === 'live'
+      ? 'Departure times and seat counts are coming from the live route response.'
+      : `Published route data is active. Last verified ${activeBus.lastVerifiedAt ?? today}.`;
+  const exactCoverageText =
+    exactRouteCount > 0
+      ? `${exactRouteCount} exact departures currently match ${origin} to ${destination}.`
+      : 'No exact departure returned, so the closest verified corridor alternatives are shown.';
 
   useEffect(() => {
     setPassengers(value => (activeBus.seats > 0 ? Math.min(value, activeBus.seats) : 1));
@@ -592,6 +601,137 @@ export function BusPage() {
             {routesLoading ? 'Refreshing departures...' : routesInfo}
           </div>
         )}
+
+        <div
+          className="sp-2col"
+          style={{
+            marginBottom: 18,
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1.15fr) minmax(280px, 0.85fr)',
+            gap: 14,
+          }}
+        >
+          <div
+            style={{
+              borderRadius: r(20),
+              padding: '18px 18px 16px',
+              background: 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(255,255,255,0.03))',
+              border: `1px solid ${activeStatus.color}22`,
+              boxShadow: '0 14px 34px rgba(0,0,0,0.16)',
+              display: 'grid',
+              gap: 10,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <div>
+                <div
+                  style={{
+                    color: activeStatus.color,
+                    fontSize: '0.68rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Departure plan
+                </div>
+                <div style={{ color: '#fff', fontSize: '1.08rem', fontWeight: 900, marginTop: 6 }}>
+                  {activeBus.from} to {activeBus.to}
+                </div>
+              </div>
+              <span style={{ ...pill(activeStatus.color), fontSize: '0.68rem' }}>{activeStatus.label}</span>
+            </div>
+
+            <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.65 }}>
+              {departureLabel}. {selectedSourceDetail}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ ...pill(activeBus.color ?? DS.cyan), fontSize: '0.68rem' }}>
+                {selectedSourceLabel}
+              </span>
+              <span style={{ ...pill(DS.green), fontSize: '0.68rem' }}>
+                {activeBus.serviceLevel ?? 'Standard'} · {activeBus.company}
+              </span>
+              <span style={{ ...pill(DS.gold), fontSize: '0.68rem' }}>
+                {activeBus.dep} to {activeBus.arr}
+              </span>
+            </div>
+
+            <div style={{ color: DS.muted, fontSize: '0.78rem', lineHeight: 1.6 }}>
+              {exactCoverageText}
+            </div>
+          </div>
+
+          <div
+            style={{
+              borderRadius: r(20),
+              padding: '18px 18px 16px',
+              background: DS.card,
+              border: `1px solid ${DS.border}`,
+              boxShadow: '0 14px 34px rgba(0,0,0,0.16)',
+              display: 'grid',
+              gap: 10,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  color: DS.gold,
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Fallback departures
+              </div>
+              <div style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', marginTop: 6 }}>
+                {fallbackBuses.length > 0 ? 'Keep one calmer alternative visible' : 'Selected departure is currently the clearest fit'}
+              </div>
+            </div>
+
+            {fallbackBuses.length > 0 ? (
+              fallbackBuses.map(route => (
+                <button
+                  key={route.id}
+                  type="button"
+                  onClick={() => {
+                    setSelected(route.id);
+                    setBookingComplete(false);
+                    setBookingSource(null);
+                  }}
+                  style={{
+                    textAlign: 'left',
+                    borderRadius: r(14),
+                    border: `1px solid ${route.color ?? DS.cyan}24`,
+                    background: 'rgba(255,255,255,0.03)',
+                    padding: '12px 14px',
+                    cursor: 'pointer',
+                    display: 'grid',
+                    gap: 6,
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+                    <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>
+                      {route.company}
+                    </span>
+                    <span style={{ ...pill(route.color ?? DS.cyan), fontSize: '0.64rem' }}>
+                      {route.dep}
+                    </span>
+                  </div>
+                  <div style={{ color: DS.sub, fontSize: '0.78rem' }}>
+                    {route.from} to {route.to} · {route.price} JOD · {route.seats} seats
+                  </div>
+                </button>
+              ))
+            ) : (
+              <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>
+                No fallback departure is currently cleaner than the selected route. You can continue with the booking plan below.
+              </div>
+            )}
+          </div>
+        </div>
 
         <div
           className="sp-2col"

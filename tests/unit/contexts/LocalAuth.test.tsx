@@ -1,5 +1,5 @@
 import { act, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockUseAuth = vi.fn();
 
@@ -10,7 +10,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 import { LocalAuthProvider, useLocalAuth } from '@/contexts/LocalAuth';
 
 function Consumer() {
-  const { user, loading, register, updateUser } = useLocalAuth();
+  const { user, loading, register, signIn, updateUser } = useLocalAuth();
 
   return (
     <div>
@@ -29,6 +29,14 @@ function Consumer() {
       <button
         type="button"
         onClick={() => {
+          void signIn('sara@example.com', 'password123');
+        }}
+      >
+        signin
+      </button>
+      <button
+        type="button"
+        onClick={() => {
           updateUser({ phone: '+962790000001', phoneVerified: false });
         }}
       >
@@ -42,6 +50,10 @@ describe('LocalAuthProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('maps the canonical auth context into the Wasel user shape', () => {
@@ -134,6 +146,7 @@ describe('LocalAuthProvider', () => {
       'password123',
       'Sara Ali',
       '+962790000000',
+      undefined,
     );
 
     await act(async () => {
@@ -221,5 +234,99 @@ describe('LocalAuthProvider', () => {
     );
 
     expect(screen.getByText('level_2')).toBeInTheDocument();
+  });
+
+  it('registers and persists a local account when e2e local auth is enabled', async () => {
+    vi.stubEnv('VITE_E2E_LOCAL_AUTH', 'true');
+
+    const signUp = vi.fn();
+    mockUseAuth.mockReturnValue({
+      user: null,
+      profile: null,
+      loading: false,
+      isBackendConnected: true,
+      signIn: vi.fn(),
+      signUp,
+      signOut: vi.fn(),
+    });
+
+    render(
+      <LocalAuthProvider>
+        <Consumer />
+      </LocalAuthProvider>,
+    );
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'register' }).click();
+    });
+
+    expect(signUp).not.toHaveBeenCalled();
+    expect(screen.getByText('Sara Ali')).toBeInTheDocument();
+
+    const storedSession = JSON.parse(window.localStorage.getItem('wasel_local_user_v2') ?? 'null');
+    const storedAccounts = JSON.parse(
+      window.localStorage.getItem('wasel_local_accounts_v1') ?? '[]',
+    );
+
+    expect(storedSession?.email).toBe('sara@example.com');
+    expect(storedAccounts).toHaveLength(1);
+    expect(storedAccounts[0].email).toBe('sara@example.com');
+  });
+
+  it('signs into a persisted local account when e2e local auth is enabled', async () => {
+    vi.stubEnv('VITE_E2E_LOCAL_AUTH', 'true');
+
+    window.localStorage.setItem(
+      'wasel_local_accounts_v1',
+      JSON.stringify([
+        {
+          email: 'sara@example.com',
+          password: 'password123',
+          user: {
+            id: 'local-user-1',
+            name: 'Sara Ali',
+            email: 'sara@example.com',
+            phone: '+962790000000',
+            role: 'rider',
+            balance: 0,
+            rating: 5,
+            trips: 0,
+            verified: false,
+            sanadVerified: false,
+            verificationLevel: 'level_0',
+            walletStatus: 'active',
+            joinedAt: '2026-05-07',
+            emailVerified: true,
+            phoneVerified: false,
+            twoFactorEnabled: false,
+            trustScore: 55,
+            backendMode: 'supabase',
+          },
+        },
+      ]),
+    );
+
+    mockUseAuth.mockReturnValue({
+      user: null,
+      profile: null,
+      loading: false,
+      isBackendConnected: true,
+      signIn: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+    });
+
+    render(
+      <LocalAuthProvider>
+        <Consumer />
+      </LocalAuthProvider>,
+    );
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'signin' }).click();
+    });
+
+    expect(screen.getByText('Sara Ali')).toBeInTheDocument();
+    expect(screen.getByText('+962790000000')).toBeInTheDocument();
   });
 });

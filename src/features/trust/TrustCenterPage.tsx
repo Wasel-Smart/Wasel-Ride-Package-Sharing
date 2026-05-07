@@ -36,6 +36,7 @@ import {
 import {
   buildFallbackTrustCenterStatus,
   type TrustCenterStatus,
+  type TrustStepId,
   type TrustStepState,
 } from '../../services/trustCenterModel';
 import { evaluateTrustCapability } from '../../services/trustRules';
@@ -77,6 +78,46 @@ function formatTimestamp(value?: string | null): string | null {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
   return date.toLocaleString();
+}
+
+function getTrustStepTitle(stepId: TrustStepId | null, ar: boolean): string {
+  switch (stepId) {
+    case 'identity':
+      return ar ? 'الهوية / سند' : 'Identity / Sanad';
+    case 'email':
+      return ar ? 'البريد الإلكتروني' : 'Email';
+    case 'phone':
+      return ar ? 'الهاتف' : 'Phone';
+    case 'driver_documents':
+      return ar ? 'وثائق السائق' : 'Driver documents';
+    case 'wallet_standing':
+      return ar ? 'سلامة المحفظة' : 'Wallet standing';
+    default:
+      return ar ? 'جاهز' : 'Ready';
+  }
+}
+
+function getNextTrustStepDetail(status: TrustCenterStatus | null, ar: boolean): string {
+  if (!status?.nextStepId) {
+    return ar
+      ? 'كل القدرات الأساسية جاهزة الآن ولا توجد خطوة تشغيلية معلقة.'
+      : 'Every core capability is ready now and no operational trust step is pending.';
+  }
+
+  switch (status.nextStepId) {
+    case 'identity':
+      return status.steps.identity.detail;
+    case 'email':
+      return status.steps.email.detail;
+    case 'phone':
+      return status.steps.phone.detail;
+    case 'driver_documents':
+      return status.steps.driverDocuments.detail;
+    case 'wallet_standing':
+      return status.steps.walletStanding.detail;
+    default:
+      return ar ? 'راجع سير التحقق أدناه.' : 'Review the verification flow below.';
+  }
 }
 
 function FormField({
@@ -271,6 +312,7 @@ export default function TrustCenterPage() {
     },
   ];
   const unlockedCount = capabilityRows.filter(item => item.gate.allowed).length;
+  const lockedCapabilities = capabilityRows.filter(item => !item.gate.allowed);
   const walletStep = effectiveStatus?.steps.walletStanding;
   const walletTone =
     walletStep?.meta.walletStatus === 'closed'
@@ -555,6 +597,129 @@ export default function TrustCenterPage() {
             accent={walletTone.color}
           />
         </div>
+
+        <SectionCard
+          title={ar ? 'ما الذي يفتح بعد هذه الخطوة؟' : 'What unlocks after this step?'}
+          subtitle={
+            ar
+              ? 'اربط الإجراء التالي بالقدرات التي ستصبح متاحة أو أوضح عند اكتماله.'
+              : 'Tie the next action directly to the capabilities that become available or clearer once it is done.'
+          }
+          icon={<BadgeCheck size={16} color={heroAccent} />}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: SPACE[4],
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gap: SPACE[3],
+                padding: SPACE[4],
+                borderRadius: 20,
+                border: `1px solid ${heroAccent}24`,
+                background: `radial-gradient(circle at top left, ${heroAccent}12, transparent 36%), rgba(255,255,255,0.03)`,
+              }}
+            >
+              <div
+                style={{
+                  color: heroAccent,
+                  fontSize: TYPE.size.xs,
+                  fontWeight: TYPE.weight.bold,
+                  textTransform: 'uppercase',
+                  letterSpacing: TYPE.letterSpacing.wider,
+                  fontFamily: F,
+                }}
+              >
+                {ar ? 'الخطوة التالية' : 'Next unlock'}
+              </div>
+              <div
+                style={{
+                  color: '#FFFFFF',
+                  fontSize: TYPE.size.xl,
+                  fontWeight: TYPE.weight.ultra,
+                  fontFamily: F,
+                }}
+              >
+                {getTrustStepTitle(effectiveStatus?.nextStepId ?? null, ar)}
+              </div>
+              <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7, fontFamily: F }}>
+                {getNextTrustStepDetail(effectiveStatus ?? null, ar)}
+              </div>
+              {effectiveStatus?.blockedSteps.length ? (
+                <div
+                  style={{
+                    borderRadius: 14,
+                    padding: '12px 14px',
+                    border: `1px solid ${C.error}26`,
+                    background: `${C.error}12`,
+                    color: '#FECACA',
+                    fontSize: TYPE.size.sm,
+                    lineHeight: 1.65,
+                    fontFamily: F,
+                  }}
+                >
+                  {ar
+                    ? `هناك ${effectiveStatus.blockedSteps.length} خطوة محظورة يجب حلها قبل اعتبار الحساب جاهزاً بالكامل.`
+                    : `${effectiveStatus.blockedSteps.length} blocked checks still need to be resolved before the account is fully ready.`}
+                </div>
+              ) : null}
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gap: SPACE[3],
+                padding: SPACE[4],
+                borderRadius: 20,
+                border: `1px solid ${C.border}`,
+                background: 'rgba(255,255,255,0.03)',
+              }}
+            >
+              <div
+                style={{
+                  color: C.cyan,
+                  fontSize: TYPE.size.xs,
+                  fontWeight: TYPE.weight.bold,
+                  textTransform: 'uppercase',
+                  letterSpacing: TYPE.letterSpacing.wider,
+                  fontFamily: F,
+                }}
+              >
+                {ar ? 'القدرات المقفلة الآن' : 'Capabilities still gated'}
+              </div>
+              {lockedCapabilities.length > 0 ? (
+                lockedCapabilities.map(item => (
+                  <div
+                    key={item.title}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 10,
+                      borderRadius: 14,
+                      border: `1px solid ${C.border}`,
+                      padding: '10px 12px',
+                      background: 'rgba(255,255,255,0.02)',
+                    }}
+                  >
+                    <span style={{ color: '#FFFFFF', fontSize: TYPE.size.sm, fontFamily: F }}>{item.title}</span>
+                    <StatusBadge label={ar ? 'بانتظار الخطوة' : 'Waiting on next step'} accent={heroAccent} />
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7, fontFamily: F }}>
+                  {ar
+                    ? 'لا توجد قدرة أساسية مقفلة الآن. استخدم هذه الصفحة للمراجعة الدورية فقط.'
+                    : 'No core capability is currently gated. Use this page for periodic review only.'}
+                </div>
+              )}
+            </div>
+          </div>
+        </SectionCard>
 
         <div ref={workflowRef} style={{ display: 'grid', gap: SPACE[5], marginBottom: SPACE[6] }}>
           <SectionCard

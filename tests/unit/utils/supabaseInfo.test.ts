@@ -57,4 +57,17 @@ describe('supabase public config', () => {
     expect(info.publicAnonKey).toContain('eyJhbGciOiJIUzI1Ni');
     expect(info.hasSupabasePublicConfig).toBe(true);
   });
+
+  it('keeps explicit Supabase env values even when e2e local auth is enabled', async () => {
+    vi.stubEnv('VITE_E2E_LOCAL_AUTH', 'true');
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://custom-project.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'custom-anon-key');
+
+    const info = await importInfo();
+
+    expect(info.publicSupabaseUrl).toBe('https://custom-project.supabase.co');
+    expect(info.projectId).toBe('custom-project');
+    expect(info.publicAnonKey).toBe('custom-anon-key');
+    expect(info.hasSupabasePublicConfig).toBe(true);
+  });
 });

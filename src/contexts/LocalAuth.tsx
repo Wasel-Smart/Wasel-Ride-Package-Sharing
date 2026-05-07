@@ -153,6 +153,50 @@ interface LocalAuthCtx {
 
 const Ctx = createContext<LocalAuthCtx | null>(null);
 const STORAGE_KEY = 'wasel_local_user_v2';
+const LOCAL_ACCOUNTS_KEY = 'wasel_local_accounts_v1';
+
+type LocalStoredAccount = {
+  email: string;
+  password: string;
+  user: WaselUser;
+};
+
+function isLocalE2EAuthEnabled() {
+  return (import.meta.env.VITE_E2E_LOCAL_AUTH as string | undefined) === 'true';
+}
+
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function createLocalUser(name: string, email: string, phone?: string): WaselUser {
+  const now = new Date();
+  const id =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `local-${Date.now()}`;
+
+  return {
+    id,
+    name: name.trim() || email.split('@')[0] || 'Wasel User',
+    email: normalizeEmail(email),
+    phone: phone?.trim() || undefined,
+    role: 'rider',
+    balance: 0,
+    rating: 5,
+    trips: 0,
+    verified: false,
+    sanadVerified: false,
+    verificationLevel: 'level_0',
+    walletStatus: 'active',
+    joinedAt: now.toISOString().slice(0, 10),
+    emailVerified: true,
+    phoneVerified: false,
+    twoFactorEnabled: false,
+    trustScore: 55,
+    backendMode: 'supabase',
+  };
+}
 
 function loadUser(): WaselUser | null {
   try {
@@ -178,6 +222,25 @@ function saveUser(user: WaselUser | null) {
   }
 }
 
+function loadLocalAccounts(): LocalStoredAccount[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_ACCOUNTS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as LocalStoredAccount[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalAccounts(accounts: LocalStoredAccount[]) {
+  try {
+    localStorage.setItem(LOCAL_ACCOUNTS_KEY, JSON.stringify(accounts));
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
 function toMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return 'Something went wrong';
@@ -186,6 +249,7 @@ function toMessage(error: unknown): string {
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<WaselUser | null>(loadUser);
   const [optimisticUpdates, setOptimisticUpdates] = useState<Partial<WaselUser> | null>(null);
+  const [localLoading, setLocalLoading] = useState(false);
   const auth = useAuth();
 
   useEffect(() => {
@@ -194,7 +258,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (!auth.user) {
-      if (!auth.isBackendConnected) {
+      if (isLocalE2EAuthEnabled() || !auth.isBackendConnected) {
         const storedUser = loadUser();
         setUser(storedUser);
         return;
@@ -224,6 +288,25 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
   }, [authUserId]);
 
   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
+    if (isLocalE2EAuthEnabled()) {
+      setLocalLoading(true);
+      try {
+        const account = loadLocalAccounts().find(
+          entry => normalizeEmail(entry.email) === normalizeEmail(email),
+        );
+
+        if (!account || account.password !== password) {
+          return { error: 'Incorrect email or password.' };
+        }
+
+        setUser(account.user);
+        saveUser(account.user);
+        return { error: null };
+      } finally {
+        setLocalLoading(false);
+      }
+    }
+
     const result = await auth.signIn(email, password);
     return { error: result.error ? toMessage(result.error) : null };
   };
@@ -239,6 +322,42 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     requiresEmailConfirmation?: boolean;
     email?: string;
   }> => {
+    if (isLocalE2EAuthEnabled()) {
+      setLocalLoading(true);
+      try {
+        const normalizedEmail = normalizeEmail(email);
+        const accounts = loadLocalAccounts();
+
+        if (accounts.some(account => normalizeEmail(account.email) === normalizedEmail)) {
+          return {
+            error: 'This email is already registered.',
+            requiresEmailConfirmation: false,
+            email: normalizedEmail,
+          };
+        }
+
+        const localUser = createLocalUser(name, normalizedEmail, phone);
+        accounts.push({
+          email: normalizedEmail,
+          password,
+          user: localUser,
+        });
+
+        saveLocalAccounts(accounts);
+        saveUser(localUser);
+        setUser(localUser);
+        setOptimisticUpdates(null);
+
+        return {
+          error: null,
+          requiresEmailConfirmation: false,
+          email: normalizedEmail,
+        };
+      } finally {
+        setLocalLoading(false);
+      }
+    }
+
     const result = await auth.signUp(email, password, name, phone, returnTo);
     return {
       error: result.error ? toMessage(result.error) : null,
@@ -262,6 +381,13 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     setUser(previous => {
       if (!previous) return previous;
       const next = applyUserUpdates(previous, updates);
+      if (isLocalE2EAuthEnabled()) {
+        const accounts = loadLocalAccounts();
+        const nextAccounts = accounts.map(account =>
+          account.user.id === next.id ? { ...account, user: next } : account,
+        );
+        saveLocalAccounts(nextAccounts);
+      }
       saveUser(next);
       return next;
     });
@@ -271,7 +397,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     <Ctx.Provider
       value={{
         user,
-        loading: auth.loading,
+        loading: auth.loading || localLoading,
         signIn,
         register,
         signOut,

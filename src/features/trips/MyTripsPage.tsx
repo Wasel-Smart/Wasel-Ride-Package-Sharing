@@ -127,6 +127,13 @@ const supportPriorityConfig: Record<SupportPriority, { label: string; color: str
   urgent: { label: 'Urgent', color: RED },
 };
 
+const lifecycleRank: Record<TripLifecycle, number> = {
+  attention: 0,
+  active: 1,
+  completed: 2,
+  cancelled: 3,
+};
+
 function formatDateLabel(input: string): string {
   const date = new Date(input);
   if (Number.isNaN(date.getTime())) return input || 'Flexible';
@@ -591,11 +598,20 @@ export default function MyTripsPage() {
   const location = useLocation();
   const isRTL = language === 'ar';
 
-  const initialTab = new URLSearchParams(location.search).get('tab');
+  const searchParams = new URLSearchParams(location.search);
+  const initialTab = searchParams.get('tab');
+  const initialFilter = searchParams.get('filter');
   const [tab, setTab] = useState<TripKind>(
     initialTab === 'packages' || initialTab === 'buses' ? initialTab : 'rides',
   );
-  const [filter, setFilter] = useState<TripLifecycle | 'all'>('all');
+  const [filter, setFilter] = useState<TripLifecycle | 'all'>(
+    initialFilter === 'active' ||
+      initialFilter === 'attention' ||
+      initialFilter === 'completed' ||
+      initialFilter === 'cancelled'
+      ? initialFilter
+      : 'all',
+  );
 
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
 
@@ -614,6 +630,22 @@ export default function MyTripsPage() {
       cancelled = true;
     };
   }, [user?.id]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const nextTab = params.get('tab');
+    const nextFilter = params.get('filter');
+
+    setTab(nextTab === 'packages' || nextTab === 'buses' ? nextTab : 'rides');
+    setFilter(
+      nextFilter === 'active' ||
+        nextFilter === 'attention' ||
+        nextFilter === 'completed' ||
+        nextFilter === 'cancelled'
+        ? nextFilter
+        : 'all',
+    );
+  }, [location.search]);
 
   const rideItems = useMemo(() => {
     return syncRideBookingCompletion().map(booking => {
@@ -656,7 +688,16 @@ export default function MyTripsPage() {
   };
 
   const items = collections[tab];
-  const filtered = filter === 'all' ? items : items.filter(trip => trip.lifecycle === filter);
+  const filtered = useMemo(() => {
+    const visible = filter === 'all' ? items : items.filter(trip => trip.lifecycle === filter);
+
+    return [...visible].sort((left, right) => {
+      const lifecycleDiff = lifecycleRank[left.lifecycle] - lifecycleRank[right.lifecycle];
+      if (lifecycleDiff !== 0) return lifecycleDiff;
+      if (left.supportCount !== right.supportCount) return right.supportCount - left.supportCount;
+      return left.time.localeCompare(right.time);
+    });
+  }, [filter, items]);
   const stats = useMemo(
     () => ({
       total: items.length,
@@ -667,6 +708,15 @@ export default function MyTripsPage() {
     [items],
   );
   const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+  const attentionItems = useMemo(
+    () => items.filter(trip => trip.lifecycle === 'attention'),
+    [items],
+  );
+  const activeItems = useMemo(() => items.filter(trip => trip.lifecycle === 'active'), [items]);
+  const nextPriorityTrip = attentionItems[0] ?? activeItems[0] ?? filtered[0] ?? null;
+  const supportBacklog = supportTickets.filter(
+    ticket => ticket.status !== 'resolved' && ticket.status !== 'closed',
+  ).length;
 
   const createPath =
     tab === 'rides' ? '/app/offer-ride' : tab === 'packages' ? '/app/packages' : '/app/bus';
@@ -909,6 +959,185 @@ export default function MyTripsPage() {
             icon={<CheckCircle size={18} color={GREEN} />}
           />
         </div>
+
+        <SectionCard
+          title="Priority Board"
+          subtitle="Bring active issues and the next live item to the top before scanning the full lane."
+          icon={<ShieldAlert size={18} color={AMBER} />}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                background: 'linear-gradient(135deg, rgba(0,200,232,0.12), rgba(255,255,255,0.03))',
+                border: `1px solid ${nextPriorityTrip?.lifecycle === 'attention' ? AMBER : CYAN}24`,
+                borderRadius: 18,
+                padding: '18px 18px 16px',
+                display: 'grid',
+                gap: 10,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                <div>
+                  <div
+                    style={{
+                      color: nextPriorityTrip?.lifecycle === 'attention' ? AMBER : CYAN,
+                      fontSize: '0.68rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {nextPriorityTrip?.lifecycle === 'attention' ? 'Next item needing action' : 'Next live item'}
+                  </div>
+                  <div style={{ color: TEXT, fontWeight: 900, fontSize: '1rem', marginTop: 6 }}>
+                    {nextPriorityTrip
+                      ? `${nextPriorityTrip.from} to ${nextPriorityTrip.to}`
+                      : 'No trip is active yet'}
+                  </div>
+                </div>
+                {nextPriorityTrip ? <LifecycleBadge lifecycle={nextPriorityTrip.lifecycle} /> : null}
+              </div>
+
+              <div style={{ color: MUTED, fontSize: '0.84rem', lineHeight: 1.65, fontFamily: FONT }}>
+                {nextPriorityTrip
+                  ? `${nextPriorityTrip.primaryStatus}. ${nextPriorityTrip.supportCount > 0 ? `${nextPriorityTrip.supportCount} support thread${nextPriorityTrip.supportCount > 1 ? 's are' : ' is'} attached.` : 'No support thread is attached yet.'}`
+                  : 'The lane is clear right now. Start a new ride, package movement, or bus booking from here.'}
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => (nextPriorityTrip ? nav(nextPriorityTrip.openPath) : nav(createPath))}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: 12,
+                    border: 'none',
+                    background: nextPriorityTrip?.lifecycle === 'attention' ? AMBER : CYAN,
+                    color: '#041018',
+                    fontWeight: 800,
+                    fontFamily: FONT,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
+                >
+                  {nextPriorityTrip ? 'Open item' : 'Create movement'}
+                  <ArrowRight size={14} />
+                </button>
+                {nextPriorityTrip ? (
+                  <button
+                    onClick={() => {
+                      setTab(nextPriorityTrip.kind);
+                      setFilter(nextPriorityTrip.lifecycle === 'attention' ? 'attention' : 'active');
+                    }}
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 12,
+                      border: `1px solid ${BORDER}`,
+                      background: CARD,
+                      color: TEXT,
+                      fontWeight: 700,
+                      fontFamily: FONT,
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Focus this lane
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: CARD,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 18,
+                padding: '18px 18px 16px',
+                display: 'grid',
+                gap: 8,
+              }}
+            >
+              <div style={{ color: AMBER, fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                Attention lane
+              </div>
+              <div style={{ color: TEXT, fontSize: '1.3rem', fontWeight: 900 }}>{attentionItems.length}</div>
+              <div style={{ color: MUTED, fontSize: '0.8rem', lineHeight: 1.65 }}>
+                Bookings, route matches, or settlements that still need a decision.
+              </div>
+              <button
+                onClick={() => setFilter('attention')}
+                style={{
+                  marginTop: 'auto',
+                  padding: '10px 12px',
+                  borderRadius: 12,
+                  border: `1px solid ${AMBER}24`,
+                  background: 'rgba(245,158,11,0.10)',
+                  color: AMBER,
+                  fontWeight: 800,
+                  fontFamily: FONT,
+                  fontSize: '0.78rem',
+                  cursor: 'pointer',
+                }}
+              >
+                Review attention items
+              </button>
+            </div>
+
+            <div
+              style={{
+                background: CARD,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 18,
+                padding: '18px 18px 16px',
+                display: 'grid',
+                gap: 8,
+              }}
+            >
+              <div style={{ color: GREEN, fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                Support and completion
+              </div>
+              <div style={{ color: TEXT, fontSize: '1.3rem', fontWeight: 900 }}>
+                {supportBacklog > 0 ? `${supportBacklog} open` : `${completionRate}%`}
+              </div>
+              <div style={{ color: MUTED, fontSize: '0.8rem', lineHeight: 1.65 }}>
+                {supportBacklog > 0
+                  ? 'Open support threads stay visible until they are resolved.'
+                  : 'Completion stays high when active lanes and attention lanes remain separated.'}
+              </div>
+              <button
+                onClick={() => {
+                  if (supportBacklog > 0) {
+                    setFilter('attention');
+                    return;
+                  }
+                  setFilter('completed');
+                }}
+                style={{
+                  marginTop: 'auto',
+                  padding: '10px 12px',
+                  borderRadius: 12,
+                  border: `1px solid ${GREEN}24`,
+                  background: 'rgba(34,197,94,0.10)',
+                  color: GREEN,
+                  fontWeight: 800,
+                  fontFamily: FONT,
+                  fontSize: '0.78rem',
+                  cursor: 'pointer',
+                }}
+              >
+                {supportBacklog > 0 ? 'Open support-linked items' : 'Review completed items'}
+              </button>
+            </div>
+          </div>
+        </SectionCard>
 
         <SupportQueue tickets={supportTickets} />
 

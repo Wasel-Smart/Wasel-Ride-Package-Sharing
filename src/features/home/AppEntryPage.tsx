@@ -22,6 +22,7 @@ import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { getMovementMembershipSnapshot } from '../../services/movementMembership';
 import { C as DS, F, GRAD, GRAD_GOLD, SH } from '../../utils/wasel-ds';
+import { AppCommandCenter } from './AppCommandCenter';
 import { MobilityOSLandingMap } from './MobilityOSLandingMap';
 
 const C = {
@@ -103,12 +104,18 @@ export default function AppEntryPage() {
   const ar = language === 'ar';
   const primaryLabel = user
     ? ar
-      ? 'افتح الشبكة'
-      : 'Open the network'
+      ? 'افتح الرحلات الحية'
+      : 'Open live rides'
     : ar
       ? 'ابدأ الآن'
       : 'Get started';
-  const primaryPath = user ? '/app' : '/app/auth?returnTo=/app';
+  const primaryPath = user
+    ? membership.dailyRoute
+      ? `/app/find-ride?from=${encodeURIComponent(membership.dailyRoute.from)}&to=${encodeURIComponent(
+          membership.dailyRoute.to,
+        )}&search=1`
+      : '/app/find-ride'
+    : '/app/auth?returnTo=/app';
 
   const spotlightCorridor = membership.dailyRoute ?? corridors[0];
   const corridorCards = spotlightCorridor
@@ -474,6 +481,8 @@ export default function AppEntryPage() {
             {heroCopy.topbarPill}
           </span>
         </motion.div>
+
+        {user ? <AppCommandCenter /> : null}
 
         <div
           className="landing-hero-grid"

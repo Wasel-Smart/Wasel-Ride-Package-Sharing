@@ -59,25 +59,17 @@ function pickConfiguredKey(...candidates: Array<string | undefined>): string {
 }
 
 export const publicSupabaseUrl = pickConfiguredUrl(
-  ...(FORCE_LOCAL_E2E_AUTH
-    ? []
-    : [
-        import.meta.env.VITE_SUPABASE_URL as string | undefined,
-        import.meta.env.VITE_SUPABASE_PROJECT_URL as string | undefined,
-        import.meta.env.VITE_PUBLIC_SUPABASE_URL as string | undefined,
-        ...(ALLOW_CHECKED_IN_PUBLIC_FALLBACK ? [CHECKED_IN_PUBLIC_SUPABASE_URL] : []),
-      ]),
+  import.meta.env.VITE_SUPABASE_URL as string | undefined,
+  import.meta.env.VITE_SUPABASE_PROJECT_URL as string | undefined,
+  import.meta.env.VITE_PUBLIC_SUPABASE_URL as string | undefined,
+  ...(ALLOW_CHECKED_IN_PUBLIC_FALLBACK ? [CHECKED_IN_PUBLIC_SUPABASE_URL] : []),
 );
 
 export const publicAnonKey = pickConfiguredKey(
-  ...(FORCE_LOCAL_E2E_AUTH
-    ? []
-    : [
-        import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
-        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined,
-        import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY as string | undefined,
-        ...(ALLOW_CHECKED_IN_PUBLIC_FALLBACK ? [CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY] : []),
-      ]),
+  import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined,
+  import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY as string | undefined,
+  ...(ALLOW_CHECKED_IN_PUBLIC_FALLBACK ? [CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY] : []),
 );
 
 export const projectId: string = publicSupabaseUrl
