@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { QueryClient } from '@tanstack/react-query';
+import { Analytics } from '@vercel/analytics/react';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AppShell } from './components/app/AppShell';
@@ -28,6 +29,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <AppContent />
+      <Analytics />
     </ErrorBoundary>
   );
 }

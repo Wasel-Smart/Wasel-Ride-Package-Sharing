@@ -1,5 +1,3 @@
-import { randomBytes } from 'crypto';
-
 export interface PlatformRequestContext {
   correlationId: string;
   idempotencyKey: string;
@@ -15,7 +13,13 @@ function randomId(prefix: string): string {
     return uuid;
   }
 
-  return `${prefix}-${Date.now()}-${randomBytes(16).toString('hex')}`;
+  // Fallback using Web Crypto API for browsers
+  const array = new Uint8Array(16);
+  globalThis.crypto?.getRandomValues(array);
+  const hexString = Array.from(array)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return `${prefix}-${Date.now()}-${hexString}`;
 }
 
 function getOrCreateSessionId(): string {
