@@ -1,5 +1,12 @@
 import { supabase } from '@/utils/supabase/client';
 
+type DriverReviewRow = {
+  rating: number | null;
+  review: string | null;
+  tags: string[] | null;
+  created_at: string;
+};
+
 export interface RatingSubmission {
   bookingId: string;
   tripId: string;
@@ -113,14 +120,16 @@ class RatingsService {
       throw reviewsError;
     }
 
+    const reviewRows = (recentReviews ?? []) as DriverReviewRow[];
+
     return {
       averageRating: profile.average_rating || 0,
       totalRatings: profile.total_ratings || 0,
-      recentReviews: (recentReviews || []).map(r => ({
-        rating: r.rating,
-        review: r.review || '',
-        tags: r.tags || [],
-        createdAt: r.created_at,
+      recentReviews: reviewRows.map(review => ({
+        rating: review.rating ?? 0,
+        review: review.review || '',
+        tags: review.tags || [],
+        createdAt: review.created_at,
       })),
     };
   }

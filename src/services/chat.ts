@@ -122,7 +122,6 @@ class ChatService {
           supabase
             .from('messages')
             .update({
-              read_by: [...message.read_by, user.id],
               read_by: [...(message.read_by ?? []), user.id],
             })
             .eq('id', message.id)

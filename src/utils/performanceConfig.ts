@@ -53,14 +53,16 @@ export function applyGlobalOptimizations() {
   const passiveSupported = (() => {
     let supported = false;
     try {
-      const options = {
-        get passive() {
+      const noop = () => undefined;
+      const options = {} as AddEventListenerOptions;
+      Object.defineProperty(options, 'passive', {
+        get() {
           supported = true;
           return false;
         },
-      };
-      window.addEventListener('test', null as any, options);
-      window.removeEventListener('test', null as any, options);
+      });
+      window.addEventListener('test-passive', noop, options);
+      window.removeEventListener('test-passive', noop, options);
     } catch (err) {
       supported = false;
     }
