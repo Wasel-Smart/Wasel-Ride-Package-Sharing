@@ -75,3 +75,6 @@ vitest.config.mjs
 
 # Cleanup staging area
 _REMOVED/
+
+.vercel
+.env*.local

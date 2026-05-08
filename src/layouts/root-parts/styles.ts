@@ -7,18 +7,18 @@ interface ToolbarButtonOptions {
   color: string;
   padding?: string;
   gap?: number;
-  borderRadius?: number;
-  fontSize?: string;
+  borderRadius?: CSSProperties['borderRadius'];
+  fontSize?: CSSProperties['fontSize'];
   fontWeight?: number;
-  height?: number;
+  height?: CSSProperties['height'];
 }
 
 interface PopoverOptions {
   width: number | string;
-  top?: string;
-  insetInlineEnd?: number;
+  top?: CSSProperties['top'];
+  insetInlineEnd?: CSSProperties['insetInlineEnd'];
   padding?: number;
-  borderRadius?: number;
+  borderRadius?: CSSProperties['borderRadius'];
   background?: string;
   boxShadow?: string;
 }

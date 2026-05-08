@@ -77,6 +77,9 @@ const NODES = [
   },
 ] as const;
 
+type NodeDef = (typeof NODES)[number];
+type NodeId = NodeDef['id'];
+
 const ROUTES = [
   {
     id: 'r1',
@@ -163,6 +166,17 @@ const ROUTES = [
     accent: 'purple',
   },
 ] as const;
+
+type RouteStat = (typeof ROUTES)[number] & {
+  fromNode: NodeDef;
+  toNode: NodeDef;
+  load: number;
+  reliability: number;
+  speedIndex: number;
+  packageSync: number;
+  etaLive: number;
+  score: number;
+};
 
 const UNITS: {
   id: string;
@@ -322,8 +336,11 @@ export default function MobilityOSPage() {
   }, [paused]);
 
   const routeStats = useMemo(() => {
-    const nodeMap = Object.fromEntries(NODES.map(node => [node.id, node]));
-    return ROUTES.map(route => {
+    const nodeMap = Object.fromEntries(NODES.map(node => [node.id, node])) as Record<
+      NodeId,
+      NodeDef
+    >;
+    return ROUTES.map<RouteStat>(route => {
       const fromNode = nodeMap[route.from];
       const toNode = nodeMap[route.to];
       const wave = 0.5 + 0.5 * Math.sin((tick + route.phase) * Math.PI * 2.2);
@@ -405,6 +422,11 @@ export default function MobilityOSPage() {
 
   const hottest = routeStats[0];
   const weakest = [...routeStats].sort((a, b) => a.reliability - b.reliability)[0];
+  const benchmarkRoute = routeStats[0] ?? null;
+
+  if (!hottest || !weakest || !benchmarkRoute) {
+    return null;
+  }
 
   return (
     <div
@@ -957,7 +979,7 @@ export default function MobilityOSPage() {
                 {[
                   `${hottest.fromNode.name} -> ${hottest.toNode.name} is carrying the hottest demand wave at ${Math.round(hottest.load * 100)}% load.`,
                   `${weakest.fromNode.name} -> ${weakest.toNode.name} is the first corridor to protect if reliability slips further.`,
-                  `${routeStats[0].fromNode.name} -> ${routeStats[0].toNode.name} sets the current corridor benchmark with a score of ${routeStats[0].score}.`,
+                  `${benchmarkRoute.fromNode.name} -> ${benchmarkRoute.toNode.name} sets the current corridor benchmark with a score of ${benchmarkRoute.score}.`,
                 ].map((line, index) => (
                   <article
                     key={line}

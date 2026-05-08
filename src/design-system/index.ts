@@ -16,7 +16,15 @@ export * from '../utils/wasel-ds';
 
 // ── Extended colour / typography / spacing constants ─────────────────────────
 // (WaselColors, WaselTypography, WaselSpacing, WaselRadius, WaselAnimations …)
-export * from '../styles/wasel-design-system';
+export {
+  WaselAnimations,
+  WaselBreakpoints,
+  WaselImages,
+  WaselTypography,
+  cardStyle,
+  glassmorphism,
+  glowEffect,
+} from '../styles/wasel-design-system';
 
 // ── Page-level theme shorthand ───────────────────────────────────────────────
 export * from '../styles/wasel-page-theme';

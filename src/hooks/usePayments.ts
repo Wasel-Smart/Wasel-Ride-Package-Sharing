@@ -36,7 +36,7 @@ export function usePayments() {
 
   const confirmPayment = useCallback(
     async (
-      clientSecret: string,
+      _clientSecret: string,
       elements: StripeElements,
       returnUrl?: string
     ) => {

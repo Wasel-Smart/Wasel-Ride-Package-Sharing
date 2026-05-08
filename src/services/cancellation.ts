@@ -1,6 +1,12 @@
 import { supabase } from '@/utils/supabase/client';
 import { paymentService } from './payment';
 
+type TripBookingRow = {
+  id: string;
+  user_id: string;
+  payment_status: string | null;
+};
+
 export interface CancelBookingRequest {
   bookingId: string;
   reason: string;
@@ -127,8 +133,10 @@ class CancellationService {
       throw tripUpdateError;
     }
 
-    if (bookings && bookings.length > 0) {
-      const bookingIds = bookings.map(b => b.id);
+    const activeBookings = (bookings ?? []) as TripBookingRow[];
+
+    if (activeBookings.length > 0) {
+      const bookingIds = activeBookings.map(booking => booking.id);
       
       await supabase
         .from('bookings')
@@ -140,7 +148,7 @@ class CancellationService {
         })
         .in('id', bookingIds);
 
-      for (const booking of bookings) {
+      for (const booking of activeBookings) {
         if (booking.payment_status === 'succeeded') {
           try {
             await paymentService.processRefund({

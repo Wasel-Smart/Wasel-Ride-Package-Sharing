@@ -813,7 +813,7 @@ export function useMobilityOSLiveData(ar: boolean) {
           scheduleRefresh();
         },
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         if (status === 'SUBSCRIPTION_ERROR') {
           console.error('MobilityOS realtime subscription error');
         }

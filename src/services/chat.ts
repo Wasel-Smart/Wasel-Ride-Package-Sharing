@@ -1,6 +1,11 @@
 import { supabase } from '@/utils/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
+type MessageReadRow = {
+  id: string;
+  read_by: string[] | null;
+};
+
 export interface Message {
   id: string;
   trip_id: string;
@@ -102,8 +107,9 @@ class ChatService {
 
     if (error || !messages) return;
 
-    const messagesToUpdate = messages.filter(
-      (m) => !m.read_by.includes(user.id)
+    const messageRows = (messages ?? []) as MessageReadRow[];
+    const messagesToUpdate = messageRows.filter(
+      message => !(message.read_by ?? []).includes(user.id)
     );
 
     if (messagesToUpdate.length === 0) return;
@@ -117,6 +123,7 @@ class ChatService {
             .from('messages')
             .update({
               read_by: [...message.read_by, user.id],
+              read_by: [...(message.read_by ?? []), user.id],
             })
             .eq('id', message.id)
         ),
@@ -124,22 +131,19 @@ class ChatService {
     }
   }
 
-  async subscribeToTrip(
+  subscribeToTrip(
     tripId: string,
     onMessage: (message: Message) => void,
     onError?: (error: Error) => void
-  ): Promise<() => void> {
+  ): () => void {
     const channelName = `trip:${tripId}`;
 
     if (this.channels.has(channelName)) {
       const oldChannel = this.channels.get(channelName);
-      await new Promise<void>((resolve) => {
-        const unsubscribe = () => {
-          this.channels.delete(channelName);
-          resolve();
-        };
-        oldChannel?.unsubscribe(unsubscribe);
-      });
+      if (oldChannel) {
+        void oldChannel.unsubscribe();
+        this.channels.delete(channelName);
+      }
     }
 
     const channel = supabase
@@ -154,7 +158,7 @@ class ChatService {
           table: 'messages',
           filter: `trip_id=eq.${tripId}`,
         },
-        async (payload) => {
+        async (payload: { new: { id: string } }) => {
           try {
             const { data } = await supabase
               .from('messages')
@@ -170,7 +174,7 @@ class ChatService {
           }
         },
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         if (status === 'SUBSCRIPTION_ERROR' && onError) {
           onError(new Error('Subscription failed'));
         }
@@ -179,7 +183,7 @@ class ChatService {
     this.channels.set(channelName, channel);
 
     return () => {
-      channel.unsubscribe();
+      void channel.unsubscribe();
       this.channels.delete(channelName);
     };
   }
