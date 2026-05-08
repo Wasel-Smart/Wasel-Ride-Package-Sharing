@@ -1,4 +1,4 @@
-import { supabase } from '@/utils/supabase/client';
+import { supabase, supabaseUrl } from '@/utils/supabase/client';
 
 export interface PaymentIntentRequest {
   amount: number;
@@ -27,25 +27,30 @@ export interface RefundResponse {
 class PaymentService {
   private async callEdgeFunction<T>(
     functionName: string,
-    body: unknown
+    body: unknown,
   ): Promise<T> {
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const functionsBaseUrl = supabaseUrl ? `${supabaseUrl.replace(/\/$/, '')}/functions/v1` : '';
+
+    if (!functionsBaseUrl) {
+      throw new Error('Payments are not configured. Supabase Functions URL is unavailable.');
+    }
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
     if (!session) {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    const response = await fetch(`${functionsBaseUrl}/${functionName}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(body),
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -55,11 +60,11 @@ class PaymentService {
     return response.json();
   }
 
-  async createPaymentIntent(
-    request: PaymentIntentRequest
-  ): Promise<PaymentIntentResponse> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+  async createPaymentIntent(request: PaymentIntentRequest): Promise<PaymentIntentResponse> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
       throw new Error('Not authenticated');
     }

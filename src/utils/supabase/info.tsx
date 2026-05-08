@@ -2,18 +2,19 @@
  * Public Supabase credentials.
  *
  * Environment variables stay the primary source of truth.
- * In development we also keep a checked-in public fallback so a long-running
- * dev server does not strand the auth screen if it was started before the
- * Supabase env vars were loaded.
+ * We also keep a checked-in public fallback so static builds still boot when
+ * Vite env injection is unavailable. These values are public by design and are
+ * limited by Supabase RLS plus the app's backend fallback policy.
  */
 
 const FORCE_LOCAL_E2E_AUTH = (import.meta.env.VITE_E2E_LOCAL_AUTH as string | undefined) === 'true';
-const ALLOW_CHECKED_IN_PUBLIC_FALLBACK =
-  !FORCE_LOCAL_E2E_AUTH && (import.meta.env.MODE as string | undefined) === 'development';
+const ALLOW_CHECKED_IN_PUBLIC_FALLBACK = !FORCE_LOCAL_E2E_AUTH;
 
-const CHECKED_IN_PUBLIC_SUPABASE_URL = 'https://djccmatubyyudeosrngm.supabase.co';
+const CHECKED_IN_PUBLIC_SUPABASE_URL = 'https://zexlxabdcsjefptmjhuq.supabase.co';
+const CHECKED_IN_PUBLIC_SUPABASE_PUBLISHABLE_KEY =
+  'sb_publishable_t2cOnKt1HH-l2KmvJIAwcg_8fpCWdN0';
 const CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqY2NtYXR1Ynl5dWRlb3NybmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNjY5MjUsImV4cCI6MjA3NzQyNjkyNX0.WlYJmK-OUKlNyp3ktcb2ShILFN1vgCumAL4tOATziTQ';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzU3MjYsImV4cCI6MjA5MzM1MTcyNn0.p17L08rXvykUbPpTev82S5WQo_uhSakwP7WI3HbMmA0';
 
 const PLACEHOLDER_MARKERS = [
   'your-project.supabase.co',
@@ -113,7 +114,9 @@ export const publicAnonKey = pickConfiguredKey(
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined,
   import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
   import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY as string | undefined,
-  ...(ALLOW_CHECKED_IN_PUBLIC_FALLBACK ? [CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY] : []),
+  ...(ALLOW_CHECKED_IN_PUBLIC_FALLBACK
+    ? [CHECKED_IN_PUBLIC_SUPABASE_PUBLISHABLE_KEY, CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY]
+    : []),
 );
 
 export const projectId: string = publicSupabaseUrl ? getProjectRefFromUrl(publicSupabaseUrl) : '';

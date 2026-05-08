@@ -1,3 +1,8 @@
+import {
+  publicAnonKey as resolvedPublicSupabaseKey,
+  publicSupabaseUrl as resolvedPublicSupabaseUrl,
+} from './supabase/info';
+
 type EnvSource = Record<string, string | undefined>;
 type AuthCallbackParams = Record<string, string | null | undefined>;
 
@@ -44,6 +49,111 @@ function decodeBase64Url(value: string): string | null {
   } catch {
     return null;
   }
+}
+
+function trimConfiguredValue(value: string | undefined): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function getFirstConfiguredValue(...candidates: Array<string | undefined>): string {
+  for (const candidate of candidates) {
+    const trimmed = trimConfiguredValue(candidate);
+    if (trimmed) {
+      return trimmed;
+    }
+  }
+
+  return '';
+}
+
+function getBrowserOrigin(): string {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  const origin = window.location?.origin ?? '';
+  return isAbsoluteHttpUrl(origin) ? origin : '';
+}
+
+function isLocalHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return ['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function resolveAppUrl(envSource: EnvSource = readEnvSource()): string {
+  const configuredAppUrl = getFirstConfiguredValue(
+    envSource.VITE_APP_URL,
+    envSource.VITE_PRODUCTION_APP_URL,
+  );
+  const browserOrigin = getBrowserOrigin();
+
+  if (!browserOrigin) {
+    return configuredAppUrl;
+  }
+
+  if (!configuredAppUrl || !isAbsoluteHttpUrl(configuredAppUrl)) {
+    return browserOrigin;
+  }
+
+  if (isLocalHttpUrl(configuredAppUrl) && !isLocalHttpUrl(browserOrigin)) {
+    return browserOrigin;
+  }
+
+  if (configuredAppUrl.startsWith('http://') && browserOrigin.startsWith('https://')) {
+    return browserOrigin;
+  }
+
+  return configuredAppUrl;
+}
+
+function resolveSupabaseUrl(envSource: EnvSource = readEnvSource()): string {
+  return getFirstConfiguredValue(
+    envSource.VITE_SUPABASE_URL,
+    envSource.VITE_SUPABASE_PROJECT_URL,
+    envSource.VITE_PUBLIC_SUPABASE_URL,
+    resolvedPublicSupabaseUrl,
+  );
+}
+
+function resolveSupabasePublicKey(envSource: EnvSource = readEnvSource()): string {
+  return getFirstConfiguredValue(
+    envSource.VITE_SUPABASE_PUBLISHABLE_KEY,
+    envSource.VITE_SUPABASE_ANON_KEY,
+    envSource.VITE_PUBLIC_SUPABASE_ANON_KEY,
+    resolvedPublicSupabaseKey,
+  );
+}
+
+function resolveEdgeFunctionName(envSource: EnvSource = readEnvSource()): string {
+  return getFirstConfiguredValue(envSource.VITE_EDGE_FUNCTION_NAME) || 'make-server-0b1f4071';
+}
+
+function resolveFunctionsBaseUrl(envSource: EnvSource = readEnvSource()): string {
+  const configuredBaseUrl = getFirstConfiguredValue(envSource.VITE_EDGE_FUNCTIONS_BASE_URL);
+  if (configuredBaseUrl) {
+    return configuredBaseUrl.replace(/\/$/, '');
+  }
+
+  const supabaseUrl = resolveSupabaseUrl(envSource);
+  return supabaseUrl ? `${supabaseUrl.replace(/\/$/, '')}/functions/v1` : '';
+}
+
+function resolveApiUrl(envSource: EnvSource = readEnvSource()): string {
+  const configuredApiUrl = getFirstConfiguredValue(envSource.VITE_API_URL);
+  if (configuredApiUrl) {
+    return configuredApiUrl.replace(/\/$/, '');
+  }
+
+  const functionsBaseUrl = resolveFunctionsBaseUrl(envSource);
+  if (!functionsBaseUrl) {
+    return '';
+  }
+
+  return `${functionsBaseUrl}/${resolveEdgeFunctionName(envSource)}`;
 }
 
 function getSupabaseProjectRefFromUrl(value: string): string | null {
@@ -93,14 +203,11 @@ export function getRuntimeConfigIssues(
   envSource: EnvSource = readEnvSource(),
 ): RuntimeConfigIssue[] {
   const issues: RuntimeConfigIssue[] = [];
-  const apiUrl = envSource.VITE_API_URL?.trim() || '';
-  const supabaseUrl = envSource.VITE_SUPABASE_URL?.trim() || '';
-  const supabasePublicKey =
-    envSource.VITE_SUPABASE_PUBLISHABLE_KEY?.trim() ||
-    envSource.VITE_SUPABASE_ANON_KEY?.trim() ||
-    '';
-  const appUrl = envSource.VITE_APP_URL?.trim() || '';
-  const sentryDsn = envSource.VITE_SENTRY_DSN?.trim() || '';
+  const apiUrl = resolveApiUrl(envSource);
+  const supabaseUrl = resolveSupabaseUrl(envSource);
+  const supabasePublicKey = resolveSupabasePublicKey(envSource);
+  const appUrl = resolveAppUrl(envSource);
+  const sentryDsn = trimConfiguredValue(envSource.VITE_SENTRY_DSN);
   const mode = envSource.MODE || envSource.VITE_MODE || envSource.NODE_ENV || 'development';
   const isProd = mode === 'production';
   const isBuildTime = typeof window === 'undefined';
@@ -136,8 +243,8 @@ export function getRuntimeConfigIssues(
 
   if (!supabasePublicKey) {
     issues.push({
-      key: 'VITE_SUPABASE_ANON_KEY',
-      message: 'VITE_SUPABASE_ANON_KEY is not configured',
+      key: 'VITE_SUPABASE_PUBLISHABLE_KEY',
+      message: 'VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY is not configured',
       severity: 'error',
     });
   }
@@ -174,11 +281,15 @@ export function getRuntimeConfigIssues(
   }
 
   const supabaseUrlProjectRef = supabaseUrl ? getSupabaseProjectRefFromUrl(supabaseUrl) : null;
-  const anonKeyProjectRef = getSupabaseProjectRefFromJwt(envSource.VITE_SUPABASE_ANON_KEY?.trim());
-  if (supabaseUrlProjectRef && anonKeyProjectRef && supabaseUrlProjectRef !== anonKeyProjectRef) {
+  const publicKeyProjectRef = getSupabaseProjectRefFromJwt(supabasePublicKey);
+  if (
+    supabaseUrlProjectRef &&
+    publicKeyProjectRef &&
+    supabaseUrlProjectRef !== publicKeyProjectRef
+  ) {
     issues.push({
-      key: 'VITE_SUPABASE_ANON_KEY',
-      message: `VITE_SUPABASE_ANON_KEY belongs to project ${anonKeyProjectRef}, but VITE_SUPABASE_URL points to ${supabaseUrlProjectRef}.`,
+      key: 'VITE_SUPABASE_PUBLISHABLE_KEY',
+      message: `Configured Supabase public key belongs to project ${publicKeyProjectRef}, but VITE_SUPABASE_URL points to ${supabaseUrlProjectRef}.`,
       severity: 'error',
     });
   }
@@ -253,7 +364,7 @@ export function validateRuntimeConfiguration(envSource: EnvSource = readEnvSourc
 }
 
 export function getConfig() {
-  const appUrl = getEnv('VITE_APP_URL', 'http://localhost:3000');
+  const appUrl = resolveAppUrl() || getEnv('VITE_PRODUCTION_APP_URL') || 'http://localhost:3000';
   const supportWhatsAppNumber = getEnv('VITE_SUPPORT_WHATSAPP_NUMBER')
     .replace(/[^\d+]/g, '')
     .trim();

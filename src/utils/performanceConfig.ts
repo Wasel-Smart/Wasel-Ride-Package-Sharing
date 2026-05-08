@@ -3,6 +3,8 @@
  * Implements smooth scrolling, lazy loading, and navigation optimization
  */
 
+import { publicSupabaseUrl } from './supabase/info';
+
 export const PERFORMANCE_CONFIG = {
   // Scroll optimization
   scroll: {
@@ -120,7 +122,7 @@ export function applyGlobalOptimizations() {
 
   // Preconnect to critical origins
   const origins = [
-    import.meta.env.VITE_SUPABASE_URL,
+    publicSupabaseUrl,
     'https://maps.googleapis.com',
     'https://js.stripe.com',
   ];

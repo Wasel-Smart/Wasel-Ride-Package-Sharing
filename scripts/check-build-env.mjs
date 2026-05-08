@@ -28,6 +28,8 @@ const SUPABASE_PUBLIC_KEY_KEYS = [
   'VITE_PUBLIC_SUPABASE_ANON_KEY',
 ];
 
+const presetEnvKeys = new Set(Object.keys(process.env));
+
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return;
 
@@ -44,7 +46,7 @@ function loadEnvFile(filePath) {
     if (separatorIndex <= 0) continue;
 
     const key = normalizedLine.slice(0, separatorIndex).trim();
-    if (!key || process.env[key]) continue;
+    if (!key || presetEnvKeys.has(key)) continue;
 
     let value = normalizedLine.slice(separatorIndex + 1).trim();
     const hasMatchingQuotes =
@@ -112,7 +114,7 @@ if (missingVars.length > 0) {
 
 // Validate URLs in production
 if (mode === 'production') {
-  const appUrl = process.env.VITE_APP_URL || '';
+  const appUrl = process.env.VITE_APP_URL || process.env.VITE_PRODUCTION_APP_URL || '';
   
   if (appUrl && !appUrl.startsWith('https://')) {
     console.error('\n❌ Build failed: VITE_APP_URL must use HTTPS in production');
