@@ -139,6 +139,11 @@ if (!rootElement) {
 }
 
 rootElement.textContent = '';
+document.documentElement.dataset.appMounted = 'true';
+const bootStatus = document.getElementById('boot-status');
+if (bootStatus) {
+  bootStatus.setAttribute('data-state', 'hidden');
+}
 
 initializePerformanceOptimizations();
 
