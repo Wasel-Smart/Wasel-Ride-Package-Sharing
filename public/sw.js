@@ -79,8 +79,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle static assets with long-term caching
-  if (url.pathname.startsWith('/assets/') || url.pathname.includes('-') && (url.pathname.endsWith('.js') || url.pathname.endsWith('.css'))) {
+  // Hashed JS/CSS should prefer network to avoid stale shell -> missing chunk blank screens.
+  if (url.pathname.startsWith('/assets/') && (url.pathname.endsWith('.js') || url.pathname.endsWith('.css'))) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // Images/fonts can stay cache-first with expiry.
+  if (url.pathname.startsWith('/assets/')) {
     event.respondWith(cacheFirstWithExpiry(request));
     return;
   }

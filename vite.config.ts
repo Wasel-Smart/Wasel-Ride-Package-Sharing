@@ -110,14 +110,14 @@ export default defineConfig({
   },
 
   server: {
-    port: 3000,
+    port: 3002,
     strictPort: false,
     open: false,
     host: true,
   },
 
   preview: {
-    port: 4173,
+    port: 3003,
     host: true,
   },
 

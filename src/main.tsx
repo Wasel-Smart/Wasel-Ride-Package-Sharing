@@ -24,6 +24,41 @@ import { adaptiveLoading } from './utils/performance/adaptiveLoading';
 
 let telemetryInitialized = false;
 
+class RootErrorBoundary extends React.Component<React.PropsWithChildren, { hasError: boolean; message: string }> {
+  constructor(props: React.PropsWithChildren) {
+    super(props);
+    this.state = { hasError: false, message: '' };
+  }
+
+  static getDerivedStateFromError(error: unknown) {
+    return {
+      hasError: true,
+      message: error instanceof Error ? error.message : 'Unknown startup error',
+    };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error('[Wasel] Unhandled render error:', sanitizeForLog(String(error)));
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', color: '#fff', background: '#0B0F14' }}>
+          <div style={{ maxWidth: '560px', background: '#111827', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', padding: '28px' }}>
+            <h1 style={{ margin: 0, color: '#F5B041' }}>Application Error</h1>
+            <p style={{ marginTop: '12px' }}>A runtime error prevented the app from rendering.</p>
+            <p style={{ fontFamily: 'monospace', fontSize: '13px', opacity: 0.85 }}>{this.state.message}</p>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+
 function initializeTelemetry() {
   if (telemetryInitialized || !hasTelemetryConsent()) {
     return;
@@ -104,12 +139,19 @@ if (!rootElement) {
 }
 
 rootElement.textContent = '';
+document.documentElement.dataset.appMounted = 'true';
+const bootStatus = document.getElementById('boot-status');
+if (bootStatus) {
+  bootStatus.setAttribute('data-state', 'hidden');
+}
 
 initializePerformanceOptimizations();
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <App />
+    <RootErrorBoundary>
+      <App />
+    </RootErrorBoundary>
   </React.StrictMode>,
 );
 
@@ -124,7 +166,7 @@ if (typeof window !== 'undefined') {
   });
 }
 
-if (import.meta.env.PROD && import.meta.env.MODE !== 'test' && 'serviceWorker' in navigator) {
+if (import.meta.env.PROD && import.meta.env.MODE !== 'test' && 'serviceWorker' in navigator && !window.location.hostname.includes('127.0.0.1') && window.location.hostname !== 'localhost') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((error) => {
       console.warn('[Wasel] Service Worker registration failed:', sanitizeForLog(String(error)));
