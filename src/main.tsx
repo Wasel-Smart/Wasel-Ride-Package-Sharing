@@ -166,7 +166,7 @@ if (typeof window !== 'undefined') {
   });
 }
 
-if (import.meta.env.PROD && import.meta.env.MODE !== 'test' && 'serviceWorker' in navigator) {
+if (import.meta.env.PROD && import.meta.env.MODE !== 'test' && 'serviceWorker' in navigator && !window.location.hostname.includes('127.0.0.1') && window.location.hostname !== 'localhost') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch((error) => {
       console.warn('[Wasel] Service Worker registration failed:', sanitizeForLog(String(error)));
