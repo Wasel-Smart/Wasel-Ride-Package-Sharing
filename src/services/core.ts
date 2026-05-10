@@ -39,12 +39,12 @@ export interface AvailabilitySnapshot {
 
 export function createEdgeHeaders(headers?: HeadersInit, userToken?: string, includeCSRF = true): Headers {
   let headersInit = headers ?? {};
-  
+
   // Add CSRF token for state-changing operations
   if (includeCSRF) {
     headersInit = addCSRFHeader(headersInit);
   }
-  
+
   const finalHeaders = new Headers(headersInit);
 
   if (publicAnonKey && !finalHeaders.has('apikey')) {
@@ -63,7 +63,29 @@ type AvailabilityListener = (snapshot: AvailabilitySnapshot) => void;
 let edgeFunctionAvailable = Boolean(supabaseClient || API_URL);
 let backendStatus: BackendStatus = supabaseClient ? 'unknown' : 'degraded';
 let lastCheckedAt: number | null = null;
+let loggedLocalHealthBypass = false;
 const availabilityListeners = new Set<AvailabilityListener>();
+
+function shouldPreferDirectSupabaseHealth(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  try {
+    const { hostname, protocol } = new URL(window.location.origin);
+    const isLocalOrigin =
+      protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1');
+
+    if (isLocalOrigin && import.meta.env.DEV && !loggedLocalHealthBypass) {
+      loggedLocalHealthBypass = true;
+      console.info('[Wasel] Local dev origin detected, bypassing remote edge health probe.');
+    }
+
+    return isLocalOrigin;
+  } catch {
+    return false;
+  }
+}
 
 async function markSupabaseHealth(): Promise<boolean> {
   if (!supabaseClient) {
@@ -172,7 +194,7 @@ export async function probeBackendHealth(timeout = 8_000): Promise<AvailabilityS
     return buildAvailabilitySnapshot();
   }
 
-  if (!API_URL || !publicAnonKey) {
+  if (!API_URL || !publicAnonKey || shouldPreferDirectSupabaseHealth()) {
     await markSupabaseHealth();
     return buildAvailabilitySnapshot();
   }
@@ -206,7 +228,7 @@ export async function warmUpServer(): Promise<void> {
     return;
   }
 
-  if (!API_URL || !publicAnonKey) {
+  if (!API_URL || !publicAnonKey || shouldPreferDirectSupabaseHealth()) {
     serverWarm = await markSupabaseHealth();
     return;
   }
@@ -295,7 +317,7 @@ export async function fetchWithRetry(
     'localhost',
     '127.0.0.1',
   ];
-  
+
   if (!validateApiUrl(url, allowedDomains)) {
     throw new Error('Invalid or unauthorized URL');
   }
