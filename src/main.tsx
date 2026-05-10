@@ -5,10 +5,76 @@ import './index.css';
 import { initializeCsrfProtection } from './utils/csrf';
 import { initializeSessionManagement } from './utils/session';
 import { clearMasterKey } from './utils/encryption';
+import {
+  safeStorageGetItem,
+  safeStorageRemoveItem,
+  safeStorageSetItem,
+} from './utils/browserStorage';
+
+const LOCAL_DEV_RESET_KEY = 'wasel-local-dev-cache-reset';
+
+function isLocalDevelopmentOrigin(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  try {
+    const { hostname, protocol } = new URL(window.location.origin);
+    return protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1');
+  } catch {
+    return false;
+  }
+}
+
+async function resetLocalDevelopmentArtifacts(): Promise<void> {
+  if (!isLocalDevelopmentOrigin() || !('serviceWorker' in navigator)) {
+    return;
+  }
+
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    if (registrations.length === 0) {
+      safeStorageRemoveItem('sessionStorage', LOCAL_DEV_RESET_KEY);
+      return;
+    }
+
+    await Promise.allSettled(registrations.map(registration => registration.unregister()));
+
+    if ('caches' in window) {
+      const cacheKeys = await caches.keys();
+      await Promise.allSettled(cacheKeys.map(cacheKey => caches.delete(cacheKey)));
+    }
+
+    if (!safeStorageGetItem('sessionStorage', LOCAL_DEV_RESET_KEY)) {
+      safeStorageSetItem('sessionStorage', LOCAL_DEV_RESET_KEY, '1');
+      window.location.reload();
+      return;
+    }
+
+    safeStorageRemoveItem('sessionStorage', LOCAL_DEV_RESET_KEY);
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('[Wasel] Local cache cleanup skipped.', error);
+    }
+  }
+}
 
 // Initialize security features
-initializeCsrfProtection();
-initializeSessionManagement();
+try {
+  initializeCsrfProtection();
+} catch (error) {
+  if (import.meta.env.DEV) {
+    console.warn('[Wasel] CSRF startup initialization failed.', error);
+  }
+}
+
+try {
+  initializeSessionManagement();
+} catch (error) {
+  if (import.meta.env.DEV) {
+    console.warn('[Wasel] Session startup initialization failed.', error);
+  }
+}
 
 // Clear encryption key on logout
 window.addEventListener('storage', e => {
@@ -30,6 +96,8 @@ ReactDOM.createRoot(rootElement).render(
     <App />
   </React.StrictMode>,
 );
+
+void resetLocalDevelopmentArtifacts();
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

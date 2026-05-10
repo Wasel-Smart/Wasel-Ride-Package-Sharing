@@ -4,6 +4,11 @@
  */
 
 import { generateSecureId } from './encryption';
+import {
+  safeStorageGetItem,
+  safeStorageRemoveItem,
+  safeStorageSetItem,
+} from './browserStorage';
 
 const CSRF_TOKEN_KEY = 'wasel_csrf_token';
 const CSRF_TOKEN_HEADER = 'X-CSRF-Token';
@@ -12,6 +17,30 @@ const TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 interface CSRFTokenData {
   token: string;
   expiresAt: number;
+}
+
+let inMemoryTokenData: CSRFTokenData | null = null;
+
+function persistToken(tokenData: CSRFTokenData): void {
+  inMemoryTokenData = tokenData;
+  safeStorageSetItem('sessionStorage', CSRF_TOKEN_KEY, JSON.stringify(tokenData));
+}
+
+function readTokenData(): CSRFTokenData | null {
+  const stored = safeStorageGetItem('sessionStorage', CSRF_TOKEN_KEY);
+
+  if (!stored) {
+    return inMemoryTokenData;
+  }
+
+  try {
+    const parsed = JSON.parse(stored) as CSRFTokenData;
+    inMemoryTokenData = parsed;
+    return parsed;
+  } catch {
+    safeStorageRemoveItem('sessionStorage', CSRF_TOKEN_KEY);
+    return inMemoryTokenData;
+  }
 }
 
 /**
@@ -23,8 +52,8 @@ export function generateCSRFToken(): string {
     token,
     expiresAt: Date.now() + TOKEN_EXPIRY_MS,
   };
-  
-  sessionStorage.setItem(CSRF_TOKEN_KEY, JSON.stringify(tokenData));
+
+  persistToken(tokenData);
   return token;
 }
 
@@ -32,49 +61,37 @@ export function generateCSRFToken(): string {
  * Get current CSRF token, generate new one if expired or missing
  */
 export function getCSRFToken(): string {
-  const stored = sessionStorage.getItem(CSRF_TOKEN_KEY);
-  
-  if (!stored) {
+  const tokenData = readTokenData();
+
+  if (!tokenData) {
     return generateCSRFToken();
   }
-  
-  try {
-    const tokenData: CSRFTokenData = JSON.parse(stored);
-    
-    // Check if token is expired
-    if (Date.now() > tokenData.expiresAt) {
-      return generateCSRFToken();
-    }
-    
-    return tokenData.token;
-  } catch {
+
+  // Check if token is expired
+  if (Date.now() > tokenData.expiresAt) {
     return generateCSRFToken();
   }
+
+  return tokenData.token;
 }
 
 /**
  * Validate CSRF token from request
  */
 export function validateCSRFToken(token: string): boolean {
-  const stored = sessionStorage.getItem(CSRF_TOKEN_KEY);
-  
-  if (!stored) {
+  const tokenData = readTokenData();
+
+  if (!tokenData) {
     return false;
   }
-  
-  try {
-    const tokenData: CSRFTokenData = JSON.parse(stored);
-    
-    // Check expiry
-    if (Date.now() > tokenData.expiresAt) {
-      return false;
-    }
-    
-    // Constant-time comparison to prevent timing attacks
-    return constantTimeCompare(token, tokenData.token);
-  } catch {
+
+  // Check expiry
+  if (Date.now() > tokenData.expiresAt) {
     return false;
   }
+
+  // Constant-time comparison to prevent timing attacks
+  return constantTimeCompare(token, tokenData.token);
 }
 
 /**
@@ -97,8 +114,18 @@ function constantTimeCompare(a: string, b: string): boolean {
  * Add CSRF token to request headers
  */
 export function addCSRFHeader(headers: HeadersInit = {}): HeadersInit {
-  const token = getCSRFToken();
-  
+  let token = '';
+
+  try {
+    token = getCSRFToken();
+  } catch {
+    token = '';
+  }
+
+  if (!token) {
+    return headers;
+  }
+
   return {
     ...headers,
     [CSRF_TOKEN_HEADER]: token,
@@ -109,7 +136,8 @@ export function addCSRFHeader(headers: HeadersInit = {}): HeadersInit {
  * Clear CSRF token (on logout)
  */
 export function clearCSRFToken(): void {
-  sessionStorage.removeItem(CSRF_TOKEN_KEY);
+  inMemoryTokenData = null;
+  safeStorageRemoveItem('sessionStorage', CSRF_TOKEN_KEY);
 }
 
 /**
@@ -130,8 +158,13 @@ export function getCSRFHeaderName(): string {
  * Initialize CSRF protection (called on app start)
  */
 export function initializeCsrfProtection(): void {
-  // Generate initial token
-  generateCSRFToken();
+  try {
+    getCSRFToken();
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('[Wasel] CSRF bootstrap skipped.', error);
+    }
+  }
 }
 
 export const CSRF = {

@@ -5,6 +5,11 @@
 
 import { logger } from './monitoring';
 import { generateSecureId } from './encryption';
+import {
+  safeStorageGetItem,
+  safeStorageRemoveItem,
+  safeStorageSetItem,
+} from './browserStorage';
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 const MAX_CONCURRENT_SESSIONS = 3;
@@ -12,6 +17,19 @@ const ACTIVITY_CHECK_INTERVAL = 60 * 1000; // 1 minute
 const SESSION_ID_KEY = 'wasel_session_id';
 const SESSION_METADATA_KEY = 'wasel_session_metadata';
 const LAST_ACTIVITY_KEY = 'wasel_last_activity';
+
+function canUseBrowserRuntime(): boolean {
+  return typeof window !== 'undefined' && typeof document !== 'undefined';
+}
+
+function createRuntimeSafeId(length = 32): string {
+  try {
+    return generateSecureId(length);
+  } catch {
+    const fallback = `${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`;
+    return fallback.padEnd(length * 2, '0').slice(0, length * 2);
+  }
+}
 
 export interface SessionMetadata {
   sessionId: string;
@@ -45,15 +63,17 @@ class SessionManager {
     };
 
     this.deviceId = this.getOrCreateDeviceId();
-    this.initializeActivityTracking();
+    if (canUseBrowserRuntime()) {
+      this.initializeActivityTracking();
+    }
   }
 
   /**
    * Start a new session
    */
   startSession(userId: string): SessionMetadata {
-    this.sessionId = generateSecureId(32);
-    
+    this.sessionId = createRuntimeSafeId(32);
+
     const metadata: SessionMetadata = {
       sessionId: this.sessionId,
       deviceId: this.deviceId,
@@ -63,7 +83,7 @@ class SessionManager {
       isActive: true,
     };
 
-    sessionStorage.setItem(SESSION_ID_KEY, this.sessionId);
+    safeStorageSetItem('sessionStorage', SESSION_ID_KEY, this.sessionId);
     this.saveSessionMetadata(metadata);
     this.updateLastActivity();
 
@@ -82,11 +102,11 @@ class SessionManager {
   endSession(): void {
     if (this.sessionId) {
       logger.info('Session ended', { sessionId: this.sessionId });
-      
-      sessionStorage.removeItem(SESSION_ID_KEY);
-      sessionStorage.removeItem(SESSION_METADATA_KEY);
-      sessionStorage.removeItem(LAST_ACTIVITY_KEY);
-      
+
+      safeStorageRemoveItem('sessionStorage', SESSION_ID_KEY);
+      safeStorageRemoveItem('sessionStorage', SESSION_METADATA_KEY);
+      safeStorageRemoveItem('sessionStorage', LAST_ACTIVITY_KEY);
+
       this.sessionId = null;
     }
   }
@@ -95,7 +115,7 @@ class SessionManager {
    * Check if session is valid and active
    */
   isSessionValid(): boolean {
-    const sessionId = sessionStorage.getItem(SESSION_ID_KEY);
+    const sessionId = safeStorageGetItem('sessionStorage', SESSION_ID_KEY) ?? this.sessionId;
     if (!sessionId) {
       return false;
     }
@@ -124,7 +144,7 @@ class SessionManager {
    */
   updateLastActivity(): void {
     const now = Date.now();
-    sessionStorage.setItem(LAST_ACTIVITY_KEY, now.toString());
+    safeStorageSetItem('sessionStorage', LAST_ACTIVITY_KEY, now.toString());
 
     const metadata = this.getSessionMetadata();
     if (metadata) {
@@ -158,7 +178,7 @@ class SessionManager {
    * Get current session metadata
    */
   getSessionMetadata(): SessionMetadata | null {
-    const stored = sessionStorage.getItem(SESSION_METADATA_KEY);
+    const stored = safeStorageGetItem('sessionStorage', SESSION_METADATA_KEY);
     if (!stored) {
       return null;
     }
@@ -204,11 +224,11 @@ class SessionManager {
    * Get or create device ID
    */
   private getOrCreateDeviceId(): string {
-    let deviceId = localStorage.getItem('wasel_device_id');
-    
+    let deviceId = safeStorageGetItem('localStorage', 'wasel_device_id');
+
     if (!deviceId) {
-      deviceId = generateSecureId(32);
-      localStorage.setItem('wasel_device_id', deviceId);
+      deviceId = createRuntimeSafeId(32);
+      safeStorageSetItem('localStorage', 'wasel_device_id', deviceId);
     }
 
     return deviceId;
@@ -218,14 +238,14 @@ class SessionManager {
    * Save session metadata
    */
   private saveSessionMetadata(metadata: SessionMetadata): void {
-    sessionStorage.setItem(SESSION_METADATA_KEY, JSON.stringify(metadata));
+    safeStorageSetItem('sessionStorage', SESSION_METADATA_KEY, JSON.stringify(metadata));
   }
 
   /**
    * Get last activity timestamp
    */
   private getLastActivity(): number | null {
-    const stored = sessionStorage.getItem(LAST_ACTIVITY_KEY);
+    const stored = safeStorageGetItem('sessionStorage', LAST_ACTIVITY_KEY);
     if (!stored) {
       return null;
     }
@@ -247,9 +267,13 @@ class SessionManager {
    * Initialize activity tracking
    */
   private initializeActivityTracking(): void {
+    if (!canUseBrowserRuntime()) {
+      return;
+    }
+
     // Track user activity
     const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
-    
+
     const handleActivity = () => {
       if (this.isSessionValid()) {
         this.updateLastActivity();

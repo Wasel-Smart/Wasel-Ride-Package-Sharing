@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { safeStorageGetItem, safeStorageSetItem } from '@/utils/browserStorage';
 
 const CONSENT_KEY = 'wasel_cookie_consent';
 
@@ -11,27 +12,35 @@ export function CookieConsentBanner() {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem(CONSENT_KEY);
+    const consent = safeStorageGetItem('localStorage', CONSENT_KEY);
     if (!consent) {
       setShowBanner(true);
     }
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem(CONSENT_KEY, JSON.stringify({
-      accepted: true,
-      timestamp: Date.now(),
-      version: '1.0',
-    }));
+    safeStorageSetItem(
+      'localStorage',
+      CONSENT_KEY,
+      JSON.stringify({
+        accepted: true,
+        timestamp: Date.now(),
+        version: '1.0',
+      }),
+    );
     setShowBanner(false);
   };
 
   const handleDecline = () => {
-    localStorage.setItem(CONSENT_KEY, JSON.stringify({
-      accepted: false,
-      timestamp: Date.now(),
-      version: '1.0',
-    }));
+    safeStorageSetItem(
+      'localStorage',
+      CONSENT_KEY,
+      JSON.stringify({
+        accepted: false,
+        timestamp: Date.now(),
+        version: '1.0',
+      }),
+    );
     setShowBanner(false);
   };
 
