@@ -8,7 +8,6 @@ import { z } from 'zod';
 // Common validation patterns
 const phoneRegex = /^\+?[1-9]\d{1,14}$/;
 const jordanPhoneRegex = /^(\+962|00962|962|0)?7[789]\d{7}$/;
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Custom error messages
 const errorMessages = {
