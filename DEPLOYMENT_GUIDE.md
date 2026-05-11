@@ -1,392 +1,189 @@
-# Wasel - Deployment & Testing Guide
+# 🚀 WASEL DEPLOYMENT GUIDE - Wasel14.online
 
-## 🚀 Quick Start
+## **📋 DEPLOYMENT STEPS**
 
-### 1. Install Dependencies
+### **Step 1: Fix Vercel Project Settings**
+
+Go to your Vercel project dashboard: https://vercel.com/your-project/settings
+
+#### **1.1 General Settings**
+- **Root Directory**: Leave EMPTY or set to `.` (not the Windows path)
+- **Framework Preset**: Vite
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Install Command**: `npm install`
+
+#### **1.2 Node.js Version**
+- Set to: **20.x** (matches your package.json engines)
+
+### **Step 2: Set Environment Variables**
+
+Go to: https://vercel.com/your-project/settings/environment-variables
+
+Add these variables for **Production** environment:
+
 ```bash
-npm install
-```
-
-### 2. Configure Environment
-Your `.env` is already configured with production credentials:
-- ✅ Google OAuth & Maps
-- ✅ Stripe Payment Processing
-- ✅ Twilio Communications
-- ✅ Supabase Production
-
-### 3. Apply Database Migrations
-```bash
-npm run supabase:db:reset
-```
-
-This will create:
-- `ratings` table
-- `refunds` table
-- `messages` table
-- `notifications` table
-- Enhanced `bookings` and `profiles` tables
-- All triggers and RLS policies
-
-### 4. Deploy Edge Functions
-```bash
-# Deploy payment processing
-supabase functions deploy payment-sheet --project-ref djccmatubyyudeosrngm
-
-# Deploy refund processing
-supabase functions deploy refund --project-ref djccmatubyyudeosrngm
-
-# Deploy webhook handler
-supabase functions deploy webhook --project-ref djccmatubyyudeosrngm
-```
-
-### 5. Set Supabase Secrets
-```bash
-supabase secrets set STRIPE_SECRET_KEY="sk_test_51SZmpKENhKSYxMCX03sEOKEiljDGWYTX0ZKTVmqKM0NeNH60jWc6pzyW8vaMHr7ahEKfKRNG24UqNrlsELnEGvHZ004Ec5d33u" --project-ref djccmatubyyudeosrngm
-
-supabase secrets set STRIPE_WEBHOOK_SECRET="whsec_your_webhook_secret" --project-ref djccmatubyyudeosrngm
-
-supabase secrets set SUPABASE_URL="https://djccmatubyyudeosrngm.supabase.co" --project-ref djccmatubyyudeosrngm
-
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqY2NtYXR1Ynl5dWRlb3NybmdtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjA2NjkyNSwiZXhwIjoyMDc3NDI2OTI1fQ.7_fGWjK9c8iGk36iHMqH37nBJEAdosg4G8aZSaYdWeQ" --project-ref djccmatubyyudeosrngm
-```
-
-### 6. Configure Stripe Webhook
-
-1. Go to: https://dashboard.stripe.com/test/webhooks
-2. Click "Add endpoint"
-3. Endpoint URL: `https://djccmatubyyudeosrngm.supabase.co/functions/v1/webhook`
-4. Select events:
-   - `payment_intent.succeeded`
-   - `payment_intent.payment_failed`
-   - `refund.updated`
-5. Copy the webhook signing secret
-6. Update the secret in Supabase (step 5 above)
-
-### 7. Start Development Server
-```bash
-npm run dev
-```
-
----
-
-## 🧪 Testing Guide
-
-### Test 1: Payment Flow
-
-#### Steps:
-1. Navigate to Find Ride page
-2. Search for a trip
-3. Book a trip
-4. Click "Pay Now"
-5. Enter test card: `4242 4242 4242 4242`
-6. Expiry: Any future date
-7. CVC: Any 3 digits
-8. Confirm payment
-
-#### Expected Results:
-- ✅ Payment intent created
-- ✅ Stripe payment sheet appears
-- ✅ Payment succeeds
-- ✅ Booking status → "confirmed"
-- ✅ Payment status → "succeeded"
-- ✅ Notification sent to driver
-- ✅ Notification sent to passenger
-
-#### Verify in Database:
-```sql
-SELECT * FROM bookings WHERE id = 'booking_id';
--- payment_status should be 'succeeded'
--- payment_intent_id should be set
-```
-
----
-
-### Test 2: Booking Cancellation
-
-#### Steps:
-1. Go to My Trips
-2. Find a confirmed booking
-3. Click "Cancel Booking"
-4. Enter cancellation reason
-5. Confirm cancellation
-
-#### Expected Results:
-- ✅ Booking status → "cancelled"
-- ✅ Seats restored to trip
-- ✅ Refund processed automatically
-- ✅ Notification sent to driver
-- ✅ Refund appears in refunds table
-
-#### Verify in Database:
-```sql
--- Check booking
-SELECT status, cancelled_at, cancellation_reason FROM bookings WHERE id = 'booking_id';
-
--- Check refund
-SELECT * FROM refunds WHERE booking_id = 'booking_id';
-
--- Check seats restored
-SELECT available_seats FROM trips WHERE id = 'trip_id';
-```
-
----
-
-### Test 3: Trip Cancellation (Driver)
-
-#### Steps:
-1. Login as driver
-2. Go to My Trips
-3. Find an active trip
-4. Click "Cancel Trip"
-5. Enter reason
-6. Confirm
-
-#### Expected Results:
-- ✅ Trip status → "cancelled"
-- ✅ All bookings cancelled
-- ✅ All passengers refunded
-- ✅ Notifications sent to all passengers
-
-#### Verify in Database:
-```sql
--- Check trip
-SELECT status, cancelled_at FROM trips WHERE id = 'trip_id';
-
--- Check all bookings cancelled
-SELECT COUNT(*) FROM bookings WHERE trip_id = 'trip_id' AND status = 'cancelled';
-
--- Check all refunds processed
-SELECT COUNT(*) FROM refunds WHERE booking_id IN (
-  SELECT id FROM bookings WHERE trip_id = 'trip_id'
-);
-```
-
----
-
-### Test 4: Rating System
-
-#### Steps:
-1. Complete a trip (set booking status to 'completed')
-2. Go to My Trips
-3. Click "Rate Driver"
-4. Select 5 stars
-5. Add tags: "punctual", "friendly"
-6. Write review: "Great driver!"
-7. Submit
-
-#### Expected Results:
-- ✅ Rating saved
-- ✅ Driver average rating updated
-- ✅ Driver total ratings incremented
-- ✅ Notification sent to driver
-- ✅ Cannot rate same trip twice
-
-#### Verify in Database:
-```sql
--- Check rating
-SELECT * FROM ratings WHERE booking_id = 'booking_id';
-
--- Check driver profile updated
-SELECT average_rating, total_ratings FROM profiles WHERE id = 'driver_id';
-```
-
----
-
-### Test 5: Real-Time Chat
-
-#### Steps:
-1. Open trip details
-2. Click "Chat"
-3. Send message: "Hello!"
-4. Open same trip in another browser/incognito
-5. Login as driver
-6. Check chat
-
-#### Expected Results:
-- ✅ Message appears instantly
-- ✅ Read receipts work
-- ✅ Unread count updates
-- ✅ Messages persist on refresh
-- ✅ Only trip participants can access
-
-#### Verify in Database:
-```sql
--- Check messages
-SELECT * FROM messages WHERE trip_id = 'trip_id' ORDER BY created_at;
-
--- Check read receipts
-SELECT read_by FROM messages WHERE id = 'message_id';
-```
-
----
-
-### Test 6: Performance
-
-#### Smooth Scrolling Test:
-1. Navigate to Find Ride page
-2. Scroll through trip list
-3. Check for smooth 60fps scrolling
-4. No jank or stuttering
-
-#### Lazy Loading Test:
-1. Open page with many images
-2. Open DevTools Network tab
-3. Scroll down
-4. Images should load as they enter viewport
-
-#### Navigation Test:
-1. Click through multiple pages rapidly
-2. No lag or freezing
-3. Instant page transitions
-4. Smooth animations
-
----
-
-## 🔍 Debugging
-
-### Check Edge Function Logs
-```bash
-supabase functions logs payment-sheet --project-ref djccmatubyyudeosrngm
-supabase functions logs refund --project-ref djccmatubyyudeosrngm
-supabase functions logs webhook --project-ref djccmatubyyudeosrngm
-```
-
-### Check Database Logs
-1. Go to: https://app.supabase.com/project/djccmatubyyudeosrngm/logs/postgres-logs
-2. Filter by table or query
-
-### Check Stripe Events
-1. Go to: https://dashboard.stripe.com/test/events
-2. Find your payment_intent
-3. Check webhook delivery
-
-### Common Issues
-
-#### Payment Intent Creation Fails
-- Check Stripe secret key is set
-- Verify amount is > 0
-- Check booking exists
-
-#### Refund Fails
-- Verify payment was successful
-- Check payment_intent_id exists
-- Ensure not already refunded
-
-#### Chat Not Real-Time
-- Check Supabase Realtime is enabled
-- Verify RLS policies allow access
-- Check subscription is active
-
-#### Ratings Not Updating
-- Verify trigger is created
-- Check booking status is 'completed'
-- Ensure no duplicate ratings
-
----
-
-## 📊 Monitoring
-
-### Key Metrics to Track
-
-#### Performance
-- First Contentful Paint < 1.5s
-- Time to Interactive < 3.5s
-- Largest Contentful Paint < 2.5s
-- Cumulative Layout Shift < 0.1
-
-#### Reliability
-- API success rate > 99%
-- Payment success rate > 98%
-- Refund success rate > 99%
-- Message delivery rate > 99.9%
-
-#### Business
-- Booking conversion rate
-- Cancellation rate
-- Average rating
-- Chat engagement
-
----
-
-## 🔐 Security Checklist
-
-- [x] RLS enabled on all tables
-- [x] Edge functions validate auth
-- [x] Payment intents validated
-- [x] Refunds authorized
-- [x] Chat participants verified
-- [x] Secrets not in code
-- [x] HTTPS only
-- [x] CORS configured
-
----
-
-## 📱 Mobile Testing
-
-### iOS
-```bash
-# Install Expo Go
-# Scan QR code from terminal
-npm run dev
-```
-
-### Android
-```bash
-# Install Expo Go
-# Scan QR code from terminal
-npm run dev
-```
-
-### Test Checklist
-- [ ] Smooth scrolling
-- [ ] Touch gestures work
-- [ ] Keyboard doesn't cover inputs
-- [ ] Back button works
-- [ ] Deep links work
-- [ ] Push notifications work
-- [ ] Offline mode graceful
-
----
-
-## 🚀 Production Deployment
-
-### 1. Update Environment Variables
-```bash
-# Set production URLs
+# App Environment
+VITE_APP_ENV=production
+VITE_APP_NAME=Wasel
+MODE=production
+NODE_ENV=production
+
+# Supabase
+VITE_SUPABASE_URL=https://zexlxabdcsjefptmjhuq.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzU3MjYsImV4cCI6MjA5MzM1MTcyNn0.p17L08rXvykUbPpTev82S5WQo_uhSakwP7WI3HbMmA0
+VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzU3MjYsImV4cCI6MjA5MzM1MTcyNn0.p17L08rXvykUbPpTev82S5WQo_uhSakwP7WI3HbMmA0
+VITE_EDGE_FUNCTION_NAME=make-server-0b1f4071
+VITE_API_URL=https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071
+
+# Feature Flags
+VITE_ALLOW_DIRECT_SUPABASE_FALLBACK=false
+VITE_ENABLE_DEMO_DATA=false
+VITE_ENABLE_SYNTHETIC_TRIPS=false
+VITE_ENABLE_TWO_FACTOR_AUTH=false
+VITE_ENABLE_EMAIL_NOTIFICATIONS=true
+VITE_ENABLE_SMS_NOTIFICATIONS=false
+VITE_ENABLE_WHATSAPP_NOTIFICATIONS=false
+
+# App URLs
 VITE_APP_URL=https://wasel14.online
-VITE_SUPABASE_URL=https://djccmatubyyudeosrngm.supabase.co
+VITE_PRODUCTION_APP_URL=https://wasel14.online
+
+# Support
+VITE_SUPPORT_EMAIL=support@wasel.app
+VITE_SUPPORT_PHONE_NUMBER=962790000000
+VITE_BUSINESS_ADDRESS=Amman, Jordan
+VITE_BUSINESS_ADDRESS_AR=عمّان، الأردن
+VITE_FOUNDER_NAME=Wasel Team
+
+# Auth
+VITE_AUTH_CALLBACK_PATH=/app/auth/callback
+
+# Google Maps
+VITE_GOOGLE_MAPS_API_KEY=AIzaSyBWqXeMJ-oPSDpqeR548hw3QUU0EaxE85s
+VITE_GOOGLE_CLIENT_ID=235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com
+
+# Stripe
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_51SZmpKENhKSYxMCXJ2TgwgNMNjUjHk5CwPQ31zWTEsokWdkD7GgaVhgU3ZPD7ti5gd6NWBvwdWcH3R0hXQCOG3QI00lTUi6x7v
+
+# Monitoring (optional)
+VITE_SENTRY_DSN=
 ```
 
-### 2. Build for Production
+### **Step 3: Update Supabase Auth Settings**
+
+Go to your Supabase dashboard: https://supabase.com/dashboard/project/zexlxabdcsjefptmjhuq/auth/url-configuration
+
+Add these URLs:
+
+**Site URL:**
+```
+https://wasel14.online
+```
+
+**Redirect URLs (add all):**
+```
+https://wasel14.online/app/auth/callback
+https://wasel14.online/auth/callback
+http://localhost:3002/app/auth/callback
+http://localhost:3002/auth/callback
+```
+
+### **Step 4: Push Changes to GitHub**
+
 ```bash
-npm run build
+# Commit the fixed vercel.json
+git add vercel.json .env.production
+git commit -m "fix: vercel deployment configuration"
+git push origin master
 ```
 
-### 3. Deploy
-```bash
-# Deploy to your hosting provider
-# Vercel, Netlify, AWS, etc.
-```
+### **Step 5: Redeploy on Vercel**
 
-### 4. Configure Production Stripe Webhook
-- Use production Stripe keys
-- Update webhook URL to production
-- Test with production cards
+Option A: **Automatic** (if connected to GitHub)
+- Vercel will auto-deploy after push
 
-### 5. Monitor
-- Set up Sentry alerts
-- Monitor Supabase logs
-- Track Stripe events
-- Check performance metrics
+Option B: **Manual**
+- Go to: https://vercel.com/your-project
+- Click "Redeploy" button
+
+### **Step 6: Verify Deployment**
+
+Once deployed, test:
+
+1. **Home Page**: https://wasel14.online
+2. **Auth**: https://wasel14.online/app/auth
+3. **Find Ride**: https://wasel14.online/app/rides/find
 
 ---
 
-## 📞 Support
+## **🔧 TROUBLESHOOTING**
 
-Issues? Contact:
-- Email: support@wasel14.online
-- Docs: [COMPLETE_IMPLEMENTATION.md](./COMPLETE_IMPLEMENTATION.md)
+### **Issue: "Root Directory does not exist"**
+**Solution**: 
+- Go to Vercel Project Settings → General
+- Set Root Directory to: `.` or leave EMPTY
+- Do NOT use Windows path like `C:\Users\...`
+
+### **Issue: "Build failed"**
+**Solution**:
+- Check build logs in Vercel dashboard
+- Verify all environment variables are set
+- Ensure Node.js version is 20.x
+
+### **Issue: "Configuration Error" on deployed site**
+**Solution**:
+- Verify all `VITE_*` environment variables are set in Vercel
+- Make sure `VITE_APP_URL` is `https://wasel14.online`
+- Redeploy after adding variables
+
+### **Issue: "Auth callback fails"**
+**Solution**:
+- Add `https://wasel14.online/app/auth/callback` to Supabase redirect URLs
+- Update Supabase Site URL to `https://wasel14.online`
 
 ---
 
-**Ready to launch! 🚀**
+## **✅ DEPLOYMENT CHECKLIST**
+
+- [ ] Vercel Root Directory is `.` or empty
+- [ ] All environment variables set in Vercel
+- [ ] `VITE_APP_URL=https://wasel14.online`
+- [ ] `MODE=production`
+- [ ] Supabase redirect URLs updated
+- [ ] Supabase Site URL updated
+- [ ] Code pushed to GitHub
+- [ ] Deployment triggered
+- [ ] Site loads at https://wasel14.online
+- [ ] Auth works
+- [ ] Ride search works
+
+---
+
+## **🎯 QUICK FIX COMMANDS**
+
+If you need to redeploy quickly:
+
+```bash
+# 1. Ensure changes are committed
+git add .
+git commit -m "fix: deployment configuration"
+git push origin master
+
+# 2. Vercel will auto-deploy
+# Or manually trigger at: https://vercel.com/your-project
+```
+
+---
+
+## **📞 SUPPORT**
+
+If deployment still fails:
+1. Check Vercel build logs
+2. Verify environment variables
+3. Test locally first: `npm run build && npm run preview`
+4. Check Supabase dashboard for auth errors
+
+---
+
+**Your app should now deploy successfully to https://wasel14.online** 🚀
