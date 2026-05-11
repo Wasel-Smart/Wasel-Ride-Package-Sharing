@@ -1,9 +1,15 @@
 {
-  "buildCommand": "npm run vercel-build",
-  "outputDirectory": "dist",
-  "installCommand": "npm install",
-  "framework": null,
-  "devCommand": "npm run dev",
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist",
+        "buildCommand": "npm run vercel-build"
+      }
+    }
+  ],
   "routes": [
     {
       "handle": "filesystem"

@@ -157,7 +157,38 @@ Or use Vercel CLI:
 vercel --force
 ```
 
-### 9. Node Version Mismatch
+### 9. "No entrypoint found" Error
+
+**Symptoms:**
+- Error: "No entrypoint found in /vercel/path0"
+- Vercel looking for app.js, index.js, server.js, etc.
+- Vercel treating project as Node.js server instead of static site
+
+**Solution:**
+
+This is already fixed in the current vercel.json configuration:
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist",
+        "buildCommand": "npm run vercel-build"
+      }
+    }
+  ]
+}
+```
+
+If still having issues:
+1. Ensure vercel.json is committed and pushed
+2. Clear Vercel cache in dashboard
+3. Redeploy
+
+### 10. Node Version Mismatch
 
 **Symptoms:**
 - Build fails with Node.js version errors
@@ -185,7 +216,27 @@ If not working, add to vercel.json:
 }
 ```
 
-### 10. Environment Variables Not Available in Build
+### 10. Node Version Mismatch
+
+**Symptoms:**
+- Build fails with Node.js version errors
+- Syntax errors for modern JavaScript
+
+**Solution:**
+
+Vercel should auto-detect from package.json engines:
+```json
+{
+  "engines": {
+    "node": ">=20.10.0",
+    "npm": ">=10.0.0"
+  }
+}
+```
+
+If not working, the vercel.json configuration with `@vercel/static-build` will use the correct Node version.
+
+### 11. Environment Variables Not Available in Build
 
 **Symptoms:**
 - Build fails with "undefined" errors

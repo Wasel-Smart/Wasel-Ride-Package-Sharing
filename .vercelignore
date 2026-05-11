@@ -1,12 +1,50 @@
-# Exclude Next.js app from Vercel build
-with-supabase-app/
+# Vercel ignore file
+# Ignore everything except the build output
 
-# Exclude other non-essential directories
-.codex/
-.codex_tmp/
-.kilo/
-backups/
-review-screenshots/
-test-results/
-playwright-report/
-.anima/
+# Source files (not needed in deployment)
+src/
+scripts/
+tests/
+supabase/
+
+# Config files
+*.config.ts
+*.config.js
+*.config.mjs
+tsconfig.json
+vite.config.ts
+vitest.config.ts
+playwright.config.ts
+
+# Development files
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build artifacts (except dist)
+.vite/
+coverage/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Git
+.git/
+.github/
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+docker/
+Dockerfile
+docker-compose*.yml
+
+# Kubernetes
+infra/
