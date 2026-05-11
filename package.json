@@ -124,6 +124,10 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
+    "release": "node scripts/release.mjs",
+    "release:patch": "node scripts/release.mjs patch",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major",
     "verify:ci": "npm run type-check && npm run lint && npm run verify:contracts && npm run test:unit && npm run build",
     "verify": "npm run type-check && npm run lint && npm run verify:contracts && npm run test && npm run build && npm run test:e2e"
   }
