@@ -5,6 +5,7 @@ import { getAuthCallbackUrl } from '../utils/env';
 import { isSupabaseConfigured, supabase } from '../utils/supabase/client';
 import { sanitizeLogMessage } from '../utils/sanitization';
 import { parseOAuthError } from '../utils/oauthErrors';
+import { sessionManager } from '../utils/sessionManager';
 import {
   normalizeOperationError,
   signInWithOAuthProvider,
@@ -150,7 +151,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (!nextSession?.user) {
         setProfile(null);
         setInitializing(false);
+        sessionManager.endSession();
         return;
+      }
+
+      // Start session tracking on sign in
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        sessionManager.startSession(nextSession.user.id);
       }
 
       const shouldEnsureProfile =
@@ -351,6 +358,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null);
       setProfile(null);
       setSession(null);
+      sessionManager.endSession();
     } catch (error) {
       if (import.meta.env?.DEV) {
         console.error('Sign out error:', sanitizeLogMessage(String(error)));

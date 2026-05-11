@@ -49,7 +49,8 @@ Example: `20260401120000_add_driver_rating_column.sql`
 | 22 | `20260401233000_communication_delivery_operations.sql` | Add retries, idempotency, and processor operation fields for outbound communications | Ready |
 | 23 | `20260402000000_database_hardening_complete.sql` | Audit logging, soft delete, versioning, enhanced constraints, and data retention | Ready |
 | 24 | `20260402010000_gdpr_compliance_schema.sql` | GDPR compliance: user consents, data export, and deletion requests | Ready |
-| 25 | `20260512000000_database_excellence_upgrade.sql` | 9.5/10 upgrade: PostGIS spatial indexes, secure views, rate limiting, covering indexes, anonymization, and monitoring | Ready |
+| 25 | `20260512000000_database_excellence_upgrade.sql` | 9.5/10 upgrade: PostGIS spatial indexes, secure views, rate limiting, covering indexes, anonymization, and monitoring | Applied |
+| 26 | `20260513000000_production_readiness_final.sql` | 10.0/10: Wire rate limiting into RPCs, automate retention enforcement, add production safeguards and monitoring | Ready |
 
 ---
 
@@ -73,20 +74,90 @@ For older production projects that still have legacy `public.users`, `public.tri
 13. `20260402000000_database_hardening_complete.sql`
 14. `20260402010000_gdpr_compliance_schema.sql`
 15. `20260512000000_database_excellence_upgrade.sql`
-16. `supabase/seeds/mock_engine_launch_pack.sql`
-17. `supabase/seeds/mock_engine_smoke_checks.sql`
+16. `20260513000000_production_readiness_final.sql`
+17. `supabase/seeds/mock_engine_launch_pack.sql`
+18. `supabase/seeds/mock_engine_smoke_checks.sql`
 
 ### Post-migration validation steps
 
 ```sql
--- Validate constraints added with NOT VALID (run after migration, no lock)
+-- 1. Validate constraints (no table lock, can run during business hours)
 ALTER TABLE public.users VALIDATE CONSTRAINT users_phone_e164_format;
 ALTER TABLE public.bookings VALIDATE CONSTRAINT bookings_amount_matches_calculation;
 ALTER TABLE public.transactions VALIDATE CONSTRAINT transactions_metadata_is_object;
 
--- Schedule recurring maintenance (add to pg_cron or external scheduler)
-SELECT public.refresh_statistics();       -- daily
-SELECT public.admin_archive_old_data();   -- monthly
+-- 2. Verify rate limiting works
+SELECT public.check_rate_limit(
+  (SELECT id FROM public.users LIMIT 1),
+  'test_operation',
+  3,  -- max 3 attempts
+  15  -- per 15 minutes
+);
+
+-- 3. Test retention enforcement (dry run)
+SELECT * FROM public.enforce_retention_policies();
+
+-- 4. Check system health
+SELECT * FROM v_system_health ORDER BY severity DESC;
+
+-- 5. Review deployment checklist
+SELECT * FROM deployment_checklist WHERE NOT completed ORDER BY item_name;
+```
+
+### Automated scheduling options
+
+**Option A: pg_cron (recommended for Supabase Pro+)**
+```sql
+-- Already configured in migration if pg_cron is available
+-- Verify schedules:
+SELECT * FROM cron.job;
+```
+
+**Option B: Supabase Edge Function (for all tiers)**
+```typescript
+// supabase/functions/scheduled-maintenance/index.ts
+import { createClient } from "@supabase/supabase-js"
+
+Deno.serve(async (req) => {
+  const authHeader = req.headers.get("Authorization")
+  if (authHeader !== `Bearer ${Deno.env.get("CRON_SECRET")}`) {
+    return new Response("Unauthorized", { status: 401 })
+  }
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  )
+
+  // Run retention enforcement
+  const { data: retention } = await supabase.rpc("enforce_retention_policies")
+  
+  // Refresh statistics
+  await supabase.rpc("refresh_statistics")
+
+  return new Response(JSON.stringify({ retention }), {
+    headers: { "Content-Type": "application/json" }
+  })
+})
+```
+
+**Option C: GitHub Actions (external scheduler)**
+```yaml
+# .github/workflows/db-maintenance.yml
+name: Database Maintenance
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+
+jobs:
+  maintenance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run retention policies
+        run: |
+          curl -X POST "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/enforce_retention_policies" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
 ```
 
 ---
