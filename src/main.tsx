@@ -69,51 +69,61 @@ document.documentElement.dir = initialDirection;
 document.documentElement.lang = initialLocale;
 installNonBlockingFonts();
 
-// Validate environment configuration early
-try {
-  validateEnvironmentConfig();
-  enforceSyntheticDataSafety();
-} catch (error) {
-  console.error('[Wasel] Failed to initialize application due to configuration error:', sanitizeForLog(String(error)));
-  const isArabic = initialLanguage === 'ar';
-  const configurationTitle = isArabic ? '\u0641\u064a \u0645\u0634\u0643\u0644\u0629 \u0628\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a' : 'Configuration Error';
-  const configurationBody = error instanceof Error
-    ? error.message
-    : isArabic
-      ? '\u062d\u062f\u062b \u062e\u0637\u0623 \u063a\u064a\u0631 \u0645\u0639\u0631\u0648\u0641 \u0641\u064a \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a.'
-      : 'Unknown configuration error';
-  const configurationHelp = isArabic
-    ? '\u0631\u0627\u062c\u0639 \u0645\u062a\u063a\u064a\u0631\u0627\u062a \u0627\u0644\u0628\u064a\u0626\u0629 \u0623\u0648 \u062a\u0648\u0627\u0635\u0644 \u0645\u0639 \u0641\u0631\u064a\u0642 \u0627\u0644\u062f\u0639\u0645.'
-    : 'Please contact support or check your environment variables.';
-
-  renderStartupConfigurationError({
-    direction: initialDirection,
-    isArabic,
-    themePreference: initialThemePreference,
-    title: configurationTitle,
-    body: configurationBody,
-    help: configurationHelp,
-  });
-  throw error;
-}
-
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {
   throw new Error('[Wasel] Root element #root not found. Check index.html.');
 }
 
-rootElement.textContent = '';
+const environmentIsValid = (() => {
+  try {
+    validateEnvironmentConfig();
+    enforceSyntheticDataSafety();
+    return true;
+  } catch (error) {
+    console.error(
+      "[Wasel] Failed to initialize application due to configuration error:",
+      sanitizeForLog(String(error)),
+    );
+    const isArabic = initialLanguage === "ar";
+    const configurationTitle = isArabic
+      ? "\u0641\u064a \u0645\u0634\u0643\u0644\u0629 \u0628\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a"
+      : "Configuration Error";
+    const configurationBody =
+      error instanceof Error
+        ? error.message
+        : isArabic
+          ? "\u062d\u062f\u062b \u062e\u0637\u0623 \u063a\u064a\u0631 \u0645\u0639\u0631\u0648\u0641 \u0641\u064a \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a."
+          : "Unknown configuration error";
+    const configurationHelp = isArabic
+      ? "\u0631\u0627\u062c\u0639 \u0645\u062a\u063a\u064a\u0631\u0627\u062a \u0627\u0644\u0628\u064a\u0626\u0629 \u0623\u0648 \u062a\u0648\u0627\u0635\u0644 \u0645\u0639 \u0641\u0631\u064a\u0642 \u0627\u0644\u062f\u0639\u0645."
+      : "Please contact support or check your environment variables.";
 
-initializePerformanceOptimizations();
+    renderStartupConfigurationError({
+      direction: initialDirection,
+      isArabic,
+      themePreference: initialThemePreference,
+      title: configurationTitle,
+      body: configurationBody,
+      help: configurationHelp,
+    });
+    return false;
+  }
+})();
 
-ReactDOM.createRoot(rootElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+if (environmentIsValid) {
+  rootElement.textContent = "";
 
-initializeTelemetry();
+  initializePerformanceOptimizations();
+
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+
+  initializeTelemetry();
+}
 
 if (typeof window !== 'undefined') {
   window.addEventListener(CONSENT_DECISION_EVENT, (event: Event) => {
