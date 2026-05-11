@@ -7,6 +7,14 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Run baseline-browser-mapping",
+            "runtimeExecutable": "baseline-browser-mapping",
+            "cwd": "${workspaceFolder}",
+            "args": []
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Run semver",
             "runtimeExecutable": "semver",
             "cwd": "${workspaceFolder}/node_modules/@mapbox/node-pre-gyp",
