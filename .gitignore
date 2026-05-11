@@ -47,6 +47,9 @@ desktop.ini
 .anima/
 backups/
 review-screenshots/
+.codex_tmp/
+.codex/
+.kilo/
 
 # Firebase and native mobile config not used by the web client
 src/GoogleService-Info.plist
