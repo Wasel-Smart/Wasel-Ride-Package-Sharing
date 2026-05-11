@@ -47,6 +47,9 @@ Example: `20260401120000_add_driver_rating_column.sql`
 | 20 | `20260401213000_expand_runtime_contract_tables.sql` | Add the remaining trip, booking, and package columns required by the live app runtime contract | Ready |
 | 21 | `20260401223000_communications_runtime_contract.sql` | Persist communication preferences and outbound delivery queue rows | Ready |
 | 22 | `20260401233000_communication_delivery_operations.sql` | Add retries, idempotency, and processor operation fields for outbound communications | Ready |
+| 23 | `20260402000000_database_hardening_complete.sql` | Audit logging, soft delete, versioning, enhanced constraints, and data retention | Ready |
+| 24 | `20260402010000_gdpr_compliance_schema.sql` | GDPR compliance: user consents, data export, and deletion requests | Ready |
+| 25 | `20260512000000_database_excellence_upgrade.sql` | 9.5/10 upgrade: PostGIS spatial indexes, secure views, rate limiting, covering indexes, anonymization, and monitoring | Ready |
 
 ---
 
@@ -67,8 +70,24 @@ For older production projects that still have legacy `public.users`, `public.tri
 10. `20260401213000_expand_runtime_contract_tables.sql`
 11. `20260401223000_communications_runtime_contract.sql`
 12. `20260401233000_communication_delivery_operations.sql`
-13. `supabase/seeds/mock_engine_launch_pack.sql`
-14. `supabase/seeds/mock_engine_smoke_checks.sql`
+13. `20260402000000_database_hardening_complete.sql`
+14. `20260402010000_gdpr_compliance_schema.sql`
+15. `20260512000000_database_excellence_upgrade.sql`
+16. `supabase/seeds/mock_engine_launch_pack.sql`
+17. `supabase/seeds/mock_engine_smoke_checks.sql`
+
+### Post-migration validation steps
+
+```sql
+-- Validate constraints added with NOT VALID (run after migration, no lock)
+ALTER TABLE public.users VALIDATE CONSTRAINT users_phone_e164_format;
+ALTER TABLE public.bookings VALIDATE CONSTRAINT bookings_amount_matches_calculation;
+ALTER TABLE public.transactions VALIDATE CONSTRAINT transactions_metadata_is_object;
+
+-- Schedule recurring maintenance (add to pg_cron or external scheduler)
+SELECT public.refresh_statistics();       -- daily
+SELECT public.admin_archive_old_data();   -- monthly
+```
 
 ---
 

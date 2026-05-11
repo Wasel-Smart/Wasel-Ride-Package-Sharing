@@ -11,7 +11,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Strictness — tightened for production */
+    /* Strictness */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -29,7 +29,6 @@
     "esModuleInterop": true,
 
     /* Path aliases */
-    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
