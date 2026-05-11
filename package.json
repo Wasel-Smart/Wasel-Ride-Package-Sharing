@@ -103,6 +103,7 @@
     "supabase:migration:list": "supabase migration list --local",
     "health:check": "node -e \"import('./src/utils/healthCheck.ts').then(m => m.performHealthCheck(true).then(console.log))\"",
     "build": "node scripts/check-build-env.mjs && tsc --noEmit && vite build && npm run sync:build-output",
+    "vercel-build": "vite build",
     "preview": "vite preview",
     "sync:build-output": "node scripts/sync-build-output.mjs",
     "test": "vitest run",
