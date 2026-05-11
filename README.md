@@ -62,8 +62,10 @@ tests/
 
 ## Start here
 
+- [🚨 IMMEDIATE FIX: Entrypoint Error](./IMMEDIATE_FIX_ENTRYPOINT_ERROR.md) ⭐⭐⭐ **FIX NOW**
 - [🚀 DEPLOY NOW](./DEPLOY_NOW.md) ⭐⭐⭐ **DEPLOY TO VERCEL**
 - [Add ALL Environment Variables](./ADD_ALL_ENV_VARIABLES.md) ⭐⭐ **COMPLETE GUIDE**
+- [Fix Vercel Dashboard Settings](./FIX_VERCEL_DASHBOARD_SETTINGS.md) ⭐⭐ **DASHBOARD CONFIG**
 - [Wiring Quick Reference](./WIRING_QUICK_REFERENCE.md) ⭐ **START HERE**
 - [Vercel Quick Reference](./VERCEL_QUICK_REFERENCE.md) ⭐ **DEPLOYMENT**
 - [Vercel Deployment Checklist](./VERCEL_DEPLOYMENT_CHECKLIST.md) ⭐ **DEPLOYMENT**
