@@ -1,8 +1,9 @@
 {
-  "buildCommand": "vite build",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": null,
+  "devCommand": "npm run dev",
   "routes": [
     {
       "handle": "filesystem"
@@ -10,6 +11,17 @@
     {
       "src": "/(.*)",
       "dest": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     }
   ]
 }

@@ -63,6 +63,10 @@ tests/
 ## Start here
 
 - [Wiring Quick Reference](./WIRING_QUICK_REFERENCE.md) ⭐ **START HERE**
+- [Vercel Quick Reference](./VERCEL_QUICK_REFERENCE.md) ⭐ **DEPLOYMENT**
+- [Vercel Deployment Checklist](./VERCEL_DEPLOYMENT_CHECKLIST.md) ⭐ **DEPLOYMENT**
+- [Vercel Environment Setup](./VERCEL_ENV_SETUP.md) ⭐ **DEPLOYMENT**
+- [Vercel Troubleshooting](./VERCEL_TROUBLESHOOTING.md) ⭐ **DEPLOYMENT**
 - [Architecture](./docs/architecture.md)
 - [Wiring Architecture](./docs/WIRING_ARCHITECTURE.md) ⭐ **NEW**
 - [API contract](./docs/api-contract.md)

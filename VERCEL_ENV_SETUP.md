@@ -1,71 +1,108 @@
 # Vercel Environment Variables Setup
 
-## Required Steps
+## Required Environment Variables
 
-1. Go to your Vercel project dashboard
-2. Navigate to **Settings** → **Environment Variables**
-3. Add the following variables for **Production**, **Preview**, and **Development**:
+Add these in Vercel Dashboard → Your Project → Settings → Environment Variables
 
-## Critical Variables (MUST SET)
+### Critical (Required for Build)
 
-```bash
-# Supabase Configuration
-VITE_SUPABASE_URL=https://zexlxabdcsjefptmjhuq.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqY2NtYXR1Ynl5dWRlb3NybmdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNjY5MjUsImV4cCI6MjA3NzQyNjkyNX0.WlYJmK-OUKlNyp3ktcb2ShILFN1vgCumAL4tOATziTQ
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE
-VITE_EDGE_FUNCTION_NAME=make-server-0b1f4071
+```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
 
-# App Configuration (CHANGE THIS TO YOUR VERCEL DOMAIN)
+### App Configuration
+
+```
 VITE_APP_URL=https://your-app.vercel.app
 VITE_APP_NAME=Wasel
+```
 
-# API Configuration (Use Supabase URL as API)
-VITE_API_URL=https://zexlxabdcsjefptmjhuq.supabase.co
+### Maps
 
-# Feature Flags
+```
+VITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
+```
+
+### OAuth (Client-Side)
+
+```
+VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+VITE_FACEBOOK_APP_ID=your-facebook-app-id
+```
+
+### Support Contact
+
+```
+VITE_SUPPORT_WHATSAPP_NUMBER=962790000000
+VITE_SUPPORT_EMAIL=support@wasel.jo
+VITE_SUPPORT_PHONE_NUMBER=962790000000
+VITE_SUPPORT_SMS_NUMBER=962790000000
+VITE_AUTH_CALLBACK_PATH=/app/auth/callback
+```
+
+### Feature Flags
+
+```
+VITE_ENABLE_TWO_FACTOR_AUTH=false
+VITE_ENABLE_EMAIL_NOTIFICATIONS=true
+VITE_ENABLE_SMS_NOTIFICATIONS=true
+VITE_ENABLE_WHATSAPP_NOTIFICATIONS=true
 VITE_ENABLE_DEMO_DATA=false
 VITE_ENABLE_SYNTHETIC_TRIPS=false
 VITE_ALLOW_DIRECT_SUPABASE_FALLBACK=false
-VITE_ENABLE_TWO_FACTOR_AUTH=false
-VITE_ENABLE_EMAIL_NOTIFICATIONS=true
-VITE_ENABLE_SMS_NOTIFICATIONS=false
-VITE_ENABLE_WHATSAPP_NOTIFICATIONS=false
+```
 
-# Auth
-VITE_AUTH_CALLBACK_PATH=/app/auth/callback
+### Payments
 
-# Support
-VITE_SUPPORT_EMAIL=support@wasel.app
-VITE_SUPPORT_PHONE_NUMBER=962790000000
+```
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...
+```
 
-# Google Maps & OAuth
-VITE_GOOGLE_MAPS_API_KEY=AIzaSyBWqXeMJ-oPSDpqeR548hw3QUU0EaxE85s
-VITE_GOOGLE_CLIENT_ID=235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com
+### Monitoring & Analytics
 
-# Stripe
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_51SZmpKENhKSYxMCXJ2TgwgNMNjUjHk5CwPQ31zWTEsokWdkD7GgaVhgU3ZPD7ti5gd6NWBvwdWcH3R0hXQCOG3QI00lTUi6x7v
+```
+VITE_SENTRY_DSN=https://your-dsn@sentry.io/project-id
+VITE_ANALYTICS_ENDPOINT=https://analytics.wasel14.online/api/v1
+VITE_CDN_URL=https://cdn.wasel14.online
+```
+
+### Edge Function
+
+```
+VITE_EDGE_FUNCTION_NAME=make-server-0b1f4071
+```
+
+## Optional Overrides
+
+```
+VITE_EDGE_FUNCTIONS_BASE_URL=https://your-project.supabase.co/functions/v1
+VITE_API_URL=https://api.example.com
 ```
 
 ## Important Notes
 
-1. **VITE_APP_URL**: After your first deployment, update this to your actual Vercel URL (e.g., `https://wasel-app.vercel.app`)
-2. **VITE_API_URL**: Set this to your Supabase URL to satisfy the validation
-3. All URLs MUST use `https://` in production (not `http://`)
-4. Don't add server-side secrets (SUPABASE_SERVICE_ROLE_KEY, STRIPE_SECRET_KEY, etc.) to Vercel unless you have backend functions
+1. **Only add VITE_* prefixed variables** - These are safe for browser exposure
+2. **DO NOT add these server-side secrets to Vercel** (for static site deployment):
+   - SUPABASE_SERVICE_ROLE_KEY
+   - STRIPE_SECRET_KEY
+   - STRIPE_WEBHOOK_SECRET
+   - TWILIO_AUTH_TOKEN
+   - SENDGRID_API_KEY
+   - RESEND_API_KEY
+   - Any *_SECRET or *_PRIVATE_KEY variables
 
-## Quick Setup Command
+3. **Environment Scope**: Set variables for:
+   - Production (required)
+   - Preview (recommended)
+   - Development (optional)
 
-You can also use Vercel CLI:
+4. **After adding variables**: Redeploy your project
 
-```bash
-vercel env add VITE_SUPABASE_URL production
-vercel env add VITE_SUPABASE_ANON_KEY production
-vercel env add VITE_APP_URL production
-vercel env add VITE_API_URL production
-```
+## Quick Setup Script
 
-## After Adding Variables
+Copy all VITE_* variables from your local `.env` file and paste them into Vercel Dashboard.
 
-1. Redeploy your application
-2. Update `VITE_APP_URL` to match your actual Vercel domain
-3. Update Supabase Auth settings to allow your Vercel domain as a redirect URL
+## Verification
+
+After deployment, check browser console for any missing environment variable warnings.
