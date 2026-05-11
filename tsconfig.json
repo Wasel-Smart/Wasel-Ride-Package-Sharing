@@ -29,7 +29,7 @@
     "esModuleInterop": true,
 
     /* Silence deprecation warnings */
-    "ignoreDeprecations": "5.0",
+    "ignoreDeprecations": "6.0",
 
     /* Path aliases */
     "baseUrl": ".",
