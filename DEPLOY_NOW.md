@@ -17,9 +17,11 @@ The "No entrypoint found" error has been resolved. Your project is now properly 
 ### Step 1: Add Environment Variables to Vercel
 
 ```bash
-# Extract your variables
-npm run extract:vercel-env
+# Generate all variables with defaults
+npm run generate:vercel-env
 ```
+
+This will display all 28 VITE_* environment variables.
 
 Go to **Vercel Dashboard → Your Project → Settings → Environment Variables**
 
@@ -27,9 +29,11 @@ Add these **REQUIRED** variables:
 - `VITE_SUPABASE_URL` = your Supabase project URL
 - `VITE_SUPABASE_ANON_KEY` = your Supabase anon key
 
-Add all other `VITE_*` variables from the extract output.
+Add all other `VITE_*` variables from the output.
 
 Select scope: **Production**, **Preview**, and optionally **Development**
+
+📚 **Need detailed instructions?** See [ADD_ALL_ENV_VARIABLES.md](./ADD_ALL_ENV_VARIABLES.md)
 
 ### Step 2: Commit and Push
 
@@ -126,6 +130,7 @@ npm run vercel-build
 
 ## 📚 Documentation
 
+- [ADD_ALL_ENV_VARIABLES.md](./ADD_ALL_ENV_VARIABLES.md) - Complete guide to add all 28 variables
 - [Quick Reference](./VERCEL_QUICK_REFERENCE.md)
 - [Deployment Checklist](./VERCEL_DEPLOYMENT_CHECKLIST.md)
 - [Environment Setup](./VERCEL_ENV_SETUP.md)

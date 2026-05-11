@@ -120,6 +120,7 @@
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
     "verify:supabase-rollout": "node scripts/verify-supabase-rollout.mjs",
     "extract:vercel-env": "node scripts/extract-vercel-env.mjs",
+    "generate:vercel-env": "node scripts/generate-all-vercel-env.mjs",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
