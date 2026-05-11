@@ -23,7 +23,7 @@
         {
             "name": "SWA: Run with-supabase-app",
             "request": "launch",
-            "type": "pwa-chrome",
+            "type": "chrome",
             "url": "http://localhost:4280",
             "preLaunchTask": "swa: start with-supabase-app",
             "webRoot": "${workspaceFolder}/with-supabase-app",
@@ -32,7 +32,7 @@
         {
             "name": "SWA: Run Wdoubleme",
             "request": "launch",
-            "type": "pwa-chrome",
+            "type": "chrome",
             "url": "http://localhost:4280",
             "preLaunchTask": "swa: start Wdoubleme",
             "webRoot": "${workspaceFolder}/",
