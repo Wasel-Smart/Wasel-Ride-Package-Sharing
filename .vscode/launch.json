@@ -4,12 +4,16 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
-
-      
-
         {
-             "name": "SWA: Run with-supabase-app",
+            "type": "node",
+            "request": "launch",
+            "name": "Run semver",
+            "runtimeExecutable": "semver",
+            "cwd": "${workspaceFolder}/node_modules/@mapbox/node-pre-gyp",
+            "args": []
+        },
+        {
+            "name": "SWA: Run with-supabase-app",
             "request": "launch",
             "type": "pwa-chrome",
             "url": "http://localhost:4280",
