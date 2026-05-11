@@ -1,21 +1,19 @@
 import { Component, useEffect, useState, type ReactNode } from 'react';
-import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
-import { SpeedInsights } from '@vercel/speed-insights/react';
+import {
+  QueryClient,
+  QueryClientProvider,
+  onlineManager,
+} from '@tanstack/react-query';
 import { RouterProvider } from 'react-router';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { LocalAuthProvider } from './contexts/LocalAuth';
 import { WaselLogo } from './components/wasel-ds/WaselLogo';
-import { SessionTimeoutWarning } from './components/system/SessionTimeoutWarning';
-import { CookieConsentBanner } from './components/gdpr/CookieConsentBanner';
-import { ConfigErrorPage } from './pages/ConfigErrorPage';
 import { domainEventBus } from './platform/event-bus';
 import { validateRuntimeConfiguration } from './utils/env';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
-import { sanitizeLogMessage } from './utils/sanitization';
-import { applyGlobalOptimizations } from './utils/performanceConfig';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -38,7 +36,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
       'figma_app-',
     ];
 
-    if (ignoredPatterns.some(pattern => message.includes(pattern))) {
+    if (ignoredPatterns.some((pattern) => message.includes(pattern))) {
       return { hasError: false, error: '' };
     }
 
@@ -54,9 +52,9 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
       'setupMessageChannel',
     ];
 
-    if (ignoredPatterns.some(pattern => message.includes(pattern))) return;
+    if (ignoredPatterns.some((pattern) => message.includes(pattern))) return;
 
-    console.error('[Wasel ErrorBoundary]', sanitizeLogMessage(message), sanitizeLogMessage(info?.componentStack ?? ''));
+    console.error('[Wasel ErrorBoundary]', message, info?.componentStack ?? '');
   }
 
   render() {
@@ -87,8 +85,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
             width: 'min(100%, 560px)',
             borderRadius: 28,
             padding: 28,
-            background:
-              'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), rgba(10,22,40,0.94)',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), rgba(10,22,40,0.94)',
             border: '1px solid rgba(85,233,255,0.14)',
             boxShadow: '0 28px 70px rgba(0,0,0,0.42)',
             backdropFilter: 'blur(18px)',
@@ -112,28 +109,11 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
           <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#EFF6FF', margin: '0 0 10px' }}>
             Something interrupted this screen
           </h2>
-          <p
-            style={{
-              color: 'rgba(239,246,255,0.72)',
-              fontSize: '0.92rem',
-              margin: '0 auto 16px',
-              maxWidth: 420,
-              lineHeight: 1.7,
-            }}
-          >
+          <p style={{ color: 'rgba(239,246,255,0.72)', fontSize: '0.92rem', margin: '0 auto 16px', maxWidth: 420, lineHeight: 1.7 }}>
             {this.state.error || 'An unexpected error occurred while loading this part of Wasel.'}
           </p>
-          <p
-            style={{
-              color: 'rgba(239,246,255,0.52)',
-              fontSize: '0.84rem',
-              margin: '0 auto 22px',
-              maxWidth: 440,
-              lineHeight: 1.7,
-            }}
-          >
-            Refresh this experience to continue. If the issue repeats, return to the home screen and
-            reopen the flow.
+          <p style={{ color: 'rgba(239,246,255,0.52)', fontSize: '0.84rem', margin: '0 auto 22px', maxWidth: 440, lineHeight: 1.7 }}>
+            Refresh this experience to continue. If the issue repeats, return to the home screen and reopen the flow.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
@@ -183,13 +163,10 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
 
 function AppRuntimeCoordinator() {
   useEffect(() => {
-    applyGlobalOptimizations();
     const runtimeValidation = validateRuntimeConfiguration();
     let cancelled = false;
-    let stopPolling = (): void => {};
-    let stopEventTelemetry = (): void => {};
-    let stopHealthMonitoring = (): void => {};
-    let stopAlertSubscription = (): void => {};
+    let stopPolling: () => void = () => undefined;
+    let stopEventTelemetry: () => void = () => undefined;
     let probeHealth: null | (() => Promise<unknown>) = null;
 
     const syncOnlineState = () => {
@@ -208,19 +185,21 @@ function AppRuntimeCoordinator() {
     const scheduleBackgroundBootstrap = () => {
       const runner = async () => {
         try {
-          const [monitoring, performance, core, healthCheck, alerting] = await Promise.all([
+          const [
+            monitoring,
+            performance,
+            core,
+          ] = await Promise.all([
             import('./utils/monitoring'),
             import('./utils/performance'),
             import('./services/core'),
-            import('./utils/healthCheck'),
-            import('./utils/alerting'),
           ]);
 
           if (cancelled) return;
 
           monitoring.initSentry();
 
-          runtimeValidation.issues.forEach(issue => {
+          runtimeValidation.issues.forEach((issue) => {
             const context = { key: issue.key, valid: runtimeValidation.ok };
             if (issue.severity === 'error') {
               monitoring.logger.error(issue.message, undefined, context);
@@ -238,19 +217,8 @@ function AppRuntimeCoordinator() {
           void probeHealth();
 
           stopPolling = core.startAvailabilityPolling();
-          stopEventTelemetry = domainEventBus.subscribeAll(event => {
+          stopEventTelemetry = domainEventBus.subscribeAll((event) => {
             monitoring.trackDomainEvent(event);
-          });
-
-          // Start health monitoring
-          stopHealthMonitoring = healthCheck.startHealthMonitoring(60000);
-
-          // Subscribe to alerts
-          stopAlertSubscription = alerting.alerting.subscribe((alert) => {
-            // Log critical and error alerts
-            if (alert.severity === 'CRITICAL' || alert.severity === 'ERROR') {
-              monitoring.logger.error('Alert triggered', { alert });
-            }
           });
 
           syncOnlineState();
@@ -262,12 +230,9 @@ function AppRuntimeCoordinator() {
       };
 
       if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-        const handle = window.requestIdleCallback(
-          () => {
-            void runner();
-          },
-          { timeout: 1500 },
-        );
+        const handle = window.requestIdleCallback(() => {
+          void runner();
+        }, { timeout: 1500 });
 
         return () => window.cancelIdleCallback(handle);
       }
@@ -286,8 +251,6 @@ function AppRuntimeCoordinator() {
       cancelBootstrap();
       stopPolling();
       stopEventTelemetry();
-      stopHealthMonitoring();
-      stopAlertSubscription();
       if (typeof window !== 'undefined') {
         window.removeEventListener('online', syncOnlineState);
         window.removeEventListener('offline', syncOnlineState);
@@ -299,13 +262,9 @@ function AppRuntimeCoordinator() {
 }
 
 export default function App() {
-  const [queryClient] = useState(() => new QueryClient({ defaultOptions: DEFAULT_QUERY_OPTIONS }));
-  const runtimeValidation = validateRuntimeConfiguration();
-
-  // Show config error page if there are critical errors
-  if (!runtimeValidation.ok) {
-    return <ConfigErrorPage issues={runtimeValidation.issues} />;
-  }
+  const [queryClient] = useState(
+    () => new QueryClient({ defaultOptions: DEFAULT_QUERY_OPTIONS }),
+  );
 
   return (
     <AppErrorBoundary>
@@ -315,8 +274,6 @@ export default function App() {
             <LocalAuthProvider>
               <AppRuntimeCoordinator />
               <RouterProvider router={waselRouter} />
-              <SessionTimeoutWarning />
-              <CookieConsentBanner />
               <Toaster
                 position="bottom-center"
                 toastOptions={{
@@ -328,7 +285,6 @@ export default function App() {
                   },
                 }}
               />
-              <SpeedInsights />
             </LocalAuthProvider>
           </AuthProvider>
         </LanguageProvider>
