@@ -6,7 +6,7 @@ import {
 } from '../utils/supabase/client';
 import { validateApiUrl } from '../utils/sanitization';
 import { addCSRFHeader } from '../utils/csrf';
-import { circuitBreakers } from '../utils/circuitBreaker';
+import { circuitBreakers, CircuitState } from '../utils/circuitBreaker';
 
 export { projectId, publicAnonKey };
 
@@ -165,6 +165,12 @@ export function subscribeAvailability(listener: AvailabilityListener): () => voi
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
     notifyAvailabilityListeners();
+    // Reset circuit breaker when network comes back online
+    const breaker = circuitBreakers.get('api-calls');
+    if (breaker.getState() === CircuitState.OPEN) {
+      breaker.reset();
+      console.info('[Wasel] API circuit breaker reset due to network recovery');
+    }
   });
 
   window.addEventListener('offline', () => {
@@ -325,7 +331,7 @@ export async function fetchWithRetry(
   // Use circuit breaker for API calls
   const breaker = circuitBreakers.get('api-calls', {
     failureThreshold: 5,
-    timeout: 30000,
+    timeout: 10000,
   });
 
   return breaker.execute(async () => {
@@ -358,6 +364,8 @@ export async function fetchWithRetry(
         if (edgeFunctionAvailable || url.includes('/health')) {
           setEdgeFunctionAvailability(true);
         }
+        // Reset circuit breaker on successful response
+        breaker.reset();
       }
 
       if (retries > 0 && [502, 503, 504].includes(response.status)) {
@@ -402,6 +410,23 @@ function delay(ms: number): Promise<void> {
 }
 
 export const supabase = supabaseClient;
+
+/**
+ * Reset the API circuit breaker to recover from OPEN state
+ */
+export function resetApiCircuitBreaker(): void {
+  const breaker = circuitBreakers.get('api-calls');
+  breaker.reset();
+  console.info('[Wasel] API circuit breaker manually reset');
+}
+
+/**
+ * Get the current state of the API circuit breaker
+ */
+export function getApiCircuitBreakerState() {
+  const breaker = circuitBreakers.get('api-calls');
+  return breaker.getStats();
+}
 
 export interface AuthDetails {
   token: string;

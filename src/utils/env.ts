@@ -2,6 +2,7 @@ import {
   publicAnonKey as resolvedPublicSupabaseKey,
   publicSupabaseUrl as resolvedPublicSupabaseUrl,
 } from './supabase/info';
+import { getEdgeFunctionName } from './edgeFunctionConfig';
 
 type EnvSource = Record<string, string | undefined>;
 type AuthCallbackParams = Record<string, string | null | undefined>;
@@ -129,7 +130,7 @@ function resolveSupabasePublicKey(envSource: EnvSource = readEnvSource()): strin
 }
 
 function resolveEdgeFunctionName(envSource: EnvSource = readEnvSource()): string {
-  return getFirstConfiguredValue(envSource.VITE_EDGE_FUNCTION_NAME) || 'make-server-0b1f4071';
+  return getFirstConfiguredValue(envSource.VITE_EDGE_FUNCTION_NAME) || getEdgeFunctionName();
 }
 
 function resolveFunctionsBaseUrl(envSource: EnvSource = readEnvSource()): string {

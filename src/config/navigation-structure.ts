@@ -390,7 +390,6 @@ export const getUserExperienceLevel = (user: any): UserExperienceLevel => {
   if (!user) return 'new';
   
   const ridesCompleted = user.stats?.ridesCompleted || 0;
-  const daysActive = user.stats?.daysActive || 0;
   
   if (ridesCompleted === 0) return 'new';
   if (ridesCompleted < 5) return 'beginner';

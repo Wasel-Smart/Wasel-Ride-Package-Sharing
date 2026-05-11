@@ -1,305 +1,188 @@
-/**
- * Health Check System
- * Monitors service health and dependencies
- */
-
-import { logger } from './monitoring';
-import { supabase } from './supabase/client';
-
-export enum HealthStatus {
-  HEALTHY = 'HEALTHY',
-  DEGRADED = 'DEGRADED',
-  UNHEALTHY = 'UNHEALTHY',
-}
+import { getEnv } from './env';
+import { supabase, isSupabaseConfigured } from './supabase/client';
 
 export interface HealthCheckResult {
-  status: HealthStatus;
-  message?: string;
-  latencyMs?: number;
-  timestamp: number;
-}
-
-export interface SystemHealth {
-  overall: HealthStatus;
-  checks: {
-    database: HealthCheckResult;
-    authentication: HealthCheckResult;
-    storage: HealthCheckResult;
-    network: HealthCheckResult;
+  healthy: boolean;
+  services: {
+    supabase: boolean;
+    edgeFunction: boolean;
+    database: boolean;
   };
-  timestamp: number;
+  timestamp: string;
+  errors: string[];
 }
 
+let lastHealthCheck: HealthCheckResult | null = null;
+let healthCheckInProgress = false;
+
 /**
- * Check database connectivity
+ * Verify Supabase connection
  */
-async function checkDatabase(): Promise<HealthCheckResult> {
-  const startTime = Date.now();
-  
-  try {
-    if (!supabase) {
-      return {
-        status: HealthStatus.UNHEALTHY,
-        message: 'Supabase client not initialized',
-        timestamp: Date.now(),
-      };
-    }
-
-    const { error } = await supabase.from('users').select('count').limit(1).single();
-    
-    const latencyMs = Date.now() - startTime;
-
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" which is OK
-      return {
-        status: HealthStatus.UNHEALTHY,
-        message: `Database error: ${error.message}`,
-        latencyMs,
-        timestamp: Date.now(),
-      };
-    }
-
-    return {
-      status: latencyMs > 1000 ? HealthStatus.DEGRADED : HealthStatus.HEALTHY,
-      latencyMs,
-      timestamp: Date.now(),
-    };
-  } catch (error) {
-    return {
-      status: HealthStatus.UNHEALTHY,
-      message: error instanceof Error ? error.message : 'Database check failed',
-      latencyMs: Date.now() - startTime,
-      timestamp: Date.now(),
-    };
+async function checkSupabaseHealth(): Promise<boolean> {
+  if (!isSupabaseConfigured || !supabase) {
+    return false;
   }
-}
 
-/**
- * Check authentication service
- */
-async function checkAuthentication(): Promise<HealthCheckResult> {
-  const startTime = Date.now();
-  
   try {
-    if (!supabase) {
-      return {
-        status: HealthStatus.UNHEALTHY,
-        message: 'Supabase client not initialized',
-        timestamp: Date.now(),
-      };
-    }
-
     const { error } = await supabase.auth.getSession();
-    const latencyMs = Date.now() - startTime;
-
-    if (error) {
-      return {
-        status: HealthStatus.UNHEALTHY,
-        message: `Auth error: ${error.message}`,
-        latencyMs,
-        timestamp: Date.now(),
-      };
-    }
-
-    return {
-      status: latencyMs > 500 ? HealthStatus.DEGRADED : HealthStatus.HEALTHY,
-      latencyMs,
-      timestamp: Date.now(),
-    };
-  } catch (error) {
-    return {
-      status: HealthStatus.UNHEALTHY,
-      message: error instanceof Error ? error.message : 'Auth check failed',
-      latencyMs: Date.now() - startTime,
-      timestamp: Date.now(),
-    };
+    return !error;
+  } catch {
+    return false;
   }
 }
 
 /**
- * Check storage availability
+ * Verify edge function availability
  */
-async function checkStorage(): Promise<HealthCheckResult> {
-  const startTime = Date.now();
-  
-  try {
-    // Test localStorage
-    const testKey = '__wasel_health_check__';
-    const testValue = Date.now().toString();
-    
-    localStorage.setItem(testKey, testValue);
-    const retrieved = localStorage.getItem(testKey);
-    localStorage.removeItem(testKey);
+async function checkEdgeFunctionHealth(): Promise<boolean> {
+  const edgeFunctionName = getEnv('VITE_EDGE_FUNCTION_NAME', 'make-server-0b1f4071');
+  const supabaseUrl = getEnv('VITE_SUPABASE_URL');
 
-    if (retrieved !== testValue) {
-      return {
-        status: HealthStatus.UNHEALTHY,
-        message: 'localStorage read/write failed',
-        latencyMs: Date.now() - startTime,
-        timestamp: Date.now(),
-      };
-    }
-
-    // Test sessionStorage
-    sessionStorage.setItem(testKey, testValue);
-    const sessionRetrieved = sessionStorage.getItem(testKey);
-    sessionStorage.removeItem(testKey);
-
-    if (sessionRetrieved !== testValue) {
-      return {
-        status: HealthStatus.DEGRADED,
-        message: 'sessionStorage read/write failed',
-        latencyMs: Date.now() - startTime,
-        timestamp: Date.now(),
-      };
-    }
-
-    return {
-      status: HealthStatus.HEALTHY,
-      latencyMs: Date.now() - startTime,
-      timestamp: Date.now(),
-    };
-  } catch (error) {
-    return {
-      status: HealthStatus.UNHEALTHY,
-      message: error instanceof Error ? error.message : 'Storage check failed',
-      latencyMs: Date.now() - startTime,
-      timestamp: Date.now(),
-    };
+  if (!supabaseUrl || !edgeFunctionName) {
+    return false;
   }
-}
 
-/**
- * Check network connectivity
- */
-async function checkNetwork(): Promise<HealthCheckResult> {
-  const startTime = Date.now();
-  
   try {
-    if (!navigator.onLine) {
-      return {
-        status: HealthStatus.UNHEALTHY,
-        message: 'No network connection',
-        timestamp: Date.now(),
-      };
-    }
-
-    // Simple connectivity check
-    const response = await fetch('/favicon.ico', {
-      method: 'HEAD',
-      cache: 'no-cache',
+    const healthUrl = `${supabaseUrl}/functions/v1/${edgeFunctionName}/health`;
+    const response = await fetch(healthUrl, {
+      method: 'GET',
+      signal: AbortSignal.timeout(5000),
     });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
 
-    const latencyMs = Date.now() - startTime;
+/**
+ * Verify database connectivity via a simple query
+ */
+async function checkDatabaseHealth(): Promise<boolean> {
+  if (!isSupabaseConfigured || !supabase) {
+    return false;
+  }
 
-    if (!response.ok) {
-      return {
-        status: HealthStatus.DEGRADED,
-        message: `Network check returned ${response.status}`,
-        latencyMs,
-        timestamp: Date.now(),
-      };
-    }
-
-    return {
-      status: latencyMs > 2000 ? HealthStatus.DEGRADED : HealthStatus.HEALTHY,
-      latencyMs,
-      timestamp: Date.now(),
-    };
-  } catch (error) {
-    return {
-      status: HealthStatus.UNHEALTHY,
-      message: error instanceof Error ? error.message : 'Network check failed',
-      latencyMs: Date.now() - startTime,
-      timestamp: Date.now(),
-    };
+  try {
+    const { error } = await supabase.from('profiles').select('id').limit(1);
+    return !error;
+  } catch {
+    return false;
   }
 }
 
 /**
  * Perform comprehensive health check
  */
-export async function performHealthCheck(): Promise<SystemHealth> {
-  logger.info('Performing system health check');
-
-  const [database, authentication, storage, network] = await Promise.all([
-    checkDatabase(),
-    checkAuthentication(),
-    checkStorage(),
-    checkNetwork(),
-  ]);
-
-  const checks = { database, authentication, storage, network };
-
-  // Determine overall health
-  const statuses = Object.values(checks).map(check => check.status);
-  let overall: HealthStatus;
-
-  if (statuses.every(s => s === HealthStatus.HEALTHY)) {
-    overall = HealthStatus.HEALTHY;
-  } else if (statuses.some(s => s === HealthStatus.UNHEALTHY)) {
-    overall = HealthStatus.UNHEALTHY;
-  } else {
-    overall = HealthStatus.DEGRADED;
+export async function performHealthCheck(force = false): Promise<HealthCheckResult> {
+  // Return cached result if recent and not forced
+  if (!force && lastHealthCheck) {
+    const age = Date.now() - new Date(lastHealthCheck.timestamp).getTime();
+    if (age < 30000) {
+      // 30 seconds cache
+      return lastHealthCheck;
+    }
   }
 
-  const health: SystemHealth = {
-    overall,
-    checks,
-    timestamp: Date.now(),
-  };
+  // Prevent concurrent health checks
+  if (healthCheckInProgress) {
+    return (
+      lastHealthCheck || {
+        healthy: false,
+        services: { supabase: false, edgeFunction: false, database: false },
+        timestamp: new Date().toISOString(),
+        errors: ['Health check already in progress'],
+      }
+    );
+  }
 
-  logger.info('Health check completed', {
-    overall,
-    database: database.status,
-    authentication: authentication.status,
-    storage: storage.status,
-    network: network.status,
-  });
+  healthCheckInProgress = true;
+  const errors: string[] = [];
 
-  return health;
+  try {
+    const [supabaseHealthy, edgeFunctionHealthy, databaseHealthy] = await Promise.all([
+      checkSupabaseHealth().catch(err => {
+        errors.push(`Supabase: ${err.message}`);
+        return false;
+      }),
+      checkEdgeFunctionHealth().catch(err => {
+        errors.push(`Edge Function: ${err.message}`);
+        return false;
+      }),
+      checkDatabaseHealth().catch(err => {
+        errors.push(`Database: ${err.message}`);
+        return false;
+      }),
+    ]);
+
+    const result: HealthCheckResult = {
+      healthy: supabaseHealthy && (edgeFunctionHealthy || databaseHealthy),
+      services: {
+        supabase: supabaseHealthy,
+        edgeFunction: edgeFunctionHealthy,
+        database: databaseHealthy,
+      },
+      timestamp: new Date().toISOString(),
+      errors,
+    };
+
+    lastHealthCheck = result;
+    return result;
+  } finally {
+    healthCheckInProgress = false;
+  }
+}
+
+/**
+ * Verify backend connection on startup
+ */
+export async function verifyBackendConnection(): Promise<{
+  connected: boolean;
+  message: string;
+}> {
+  try {
+    const health = await performHealthCheck(true);
+
+    if (health.healthy) {
+      return {
+        connected: true,
+        message: 'Backend services are operational',
+      };
+    }
+
+    const failedServices = Object.entries(health.services)
+      .filter(([, status]) => !status)
+      .map(([service]) => service);
+
+    return {
+      connected: false,
+      message: `Backend services unavailable: ${failedServices.join(', ')}`,
+    };
+  } catch (error) {
+    return {
+      connected: false,
+      message: error instanceof Error ? error.message : 'Backend connection failed',
+    };
+  }
+}
+
+/**
+ * Get last health check result without performing a new check
+ */
+export function getLastHealthCheck(): HealthCheckResult | null {
+  return lastHealthCheck;
 }
 
 /**
  * Start periodic health checks
  */
-export function startHealthMonitoring(intervalMs = 60000): () => void {
-  const intervalId = setInterval(async () => {
-    const health = await performHealthCheck();
-    
-    if (health.overall === HealthStatus.UNHEALTHY) {
-      logger.error('System health check failed', { health });
-    } else if (health.overall === HealthStatus.DEGRADED) {
-      logger.warning('System health degraded', { health });
-    }
+export function startHealthCheckMonitoring(intervalMs = 60000): () => void {
+  const intervalId = setInterval(() => {
+    void performHealthCheck(false);
   }, intervalMs);
 
+  // Perform initial check
+  void performHealthCheck(true);
+
+  // Return cleanup function
   return () => clearInterval(intervalId);
-}
-
-/**
- * Get health status color for UI
- */
-export function getHealthStatusColor(status: HealthStatus): string {
-  switch (status) {
-    case HealthStatus.HEALTHY:
-      return 'green';
-    case HealthStatus.DEGRADED:
-      return 'yellow';
-    case HealthStatus.UNHEALTHY:
-      return 'red';
-  }
-}
-
-/**
- * Get health status label
- */
-export function getHealthStatusLabel(status: HealthStatus): string {
-  switch (status) {
-    case HealthStatus.HEALTHY:
-      return 'All systems operational';
-    case HealthStatus.DEGRADED:
-      return 'Some services degraded';
-    case HealthStatus.UNHEALTHY:
-      return 'System unavailable';
-  }
 }

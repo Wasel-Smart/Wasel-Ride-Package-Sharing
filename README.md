@@ -62,7 +62,9 @@ tests/
 
 ## Start here
 
+- [Wiring Quick Reference](./WIRING_QUICK_REFERENCE.md) ⭐ **START HERE**
 - [Architecture](./docs/architecture.md)
+- [Wiring Architecture](./docs/WIRING_ARCHITECTURE.md) ⭐ **NEW**
 - [API contract](./docs/api-contract.md)
 - [OAuth Setup Guide](./docs/oauth-setup-guide.md) ⭐ **NEW**
 - [OAuth Setup Checklist](./docs/oauth-setup-checklist.md) ⭐ **NEW**

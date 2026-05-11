@@ -1,6 +1,7 @@
 import { API_URL, createEdgeHeaders, fetchWithRetry, getAuthDetails, publicAnonKey } from './core';
 import { getConfig } from '../utils/env';
 import { validateApiUrl } from '../utils/sanitization';
+import { isFallbackAllowed, logFallbackUsage, getFallbackDeniedError } from '../utils/fallbackStrategy';
 
 export type BackendAuthMode = 'none' | 'public' | 'required';
 export type FallbackPolicy = 'always' | 'writes-if-enabled' | 'never';
@@ -78,12 +79,12 @@ function isRecoverableError(error: unknown): boolean {
   return error instanceof TypeError || isAbortError(error);
 }
 
-function resolveFallbackPolicy(policy: FallbackPolicy | undefined): boolean {
+function resolveFallbackPolicy(policy: FallbackPolicy | undefined, operationType: 'read' | 'write'): boolean {
   switch (policy ?? 'always') {
     case 'always':
-      return true;
+      return isFallbackAllowed(operationType);
     case 'writes-if-enabled':
-      return getConfig().allowDirectSupabaseFallback;
+      return operationType === 'write' && isFallbackAllowed('write');
     case 'never':
     default:
       return false;
@@ -214,15 +215,17 @@ export async function runBackendWorkflow<T>({
   fallback,
 }: BackendWorkflowOptions<T>): Promise<T> {
   const context = await resolveContext(authMode);
-  const fallbackAllowed = Boolean(fallback) && resolveFallbackPolicy(fallbackPolicy);
+  const operationType: 'read' | 'write' = fallbackPolicy === 'writes-if-enabled' ? 'write' : 'read';
+  const fallbackAllowed = Boolean(fallback) && resolveFallbackPolicy(fallbackPolicy, operationType);
 
   if (!edgeAvailable) {
     if (fallbackAllowed && fallback) {
+      logFallbackUsage(operation, 'Edge function unavailable, using direct fallback');
       return fallback(context);
     }
 
     if (fallback && !fallbackAllowed) {
-      throw getSecureBackendFallbackError(operation);
+      throw getFallbackDeniedError(operation);
     }
 
     throw new BackendRequestError(
@@ -234,11 +237,12 @@ export async function runBackendWorkflow<T>({
     return await edge(context);
   } catch (error) {
     if (fallbackAllowed && fallback && isRecoverableError(error)) {
+      logFallbackUsage(operation, `Edge function error: ${error instanceof Error ? error.message : 'Unknown'}`);
       return fallback(context);
     }
 
     if (fallback && !fallbackAllowed && isRecoverableError(error)) {
-      throw getSecureBackendFallbackError(operation);
+      throw getFallbackDeniedError(operation);
     }
 
     throw error;

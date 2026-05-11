@@ -152,8 +152,6 @@ export function FindRidePage() {
   const connectedRides = getConnectedRides().map(buildRideFromPostedRide);
   const allAvailableRides = [...connectedRides, ...ALL_RIDES];
   const corridorRides = allAvailableRides.filter((ride) => ride.from === from && ride.to === to);
-  const availableCorridorRides = corridorRides.filter((ride) => ride.seatsAvailable > 0);
-  const soldOutCorridorRides = corridorRides.filter((ride) => ride.seatsAvailable <= 0);
   const nearbyCorridors = allAvailableRides
     .filter(
       (ride) =>

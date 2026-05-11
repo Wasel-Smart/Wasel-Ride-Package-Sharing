@@ -10,6 +10,10 @@ import {
   safeStorageRemoveItem,
   safeStorageSetItem,
 } from './utils/browserStorage';
+import { verifyBackendConnection, startHealthCheckMonitoring } from './utils/healthCheck';
+import { sanitizeLogMessage } from './utils/sanitization';
+import { circuitBreakers } from './utils/circuitBreaker';
+import { resetApiCircuitBreaker, getApiCircuitBreakerState } from './services/core';
 
 const LOCAL_DEV_RESET_KEY = 'wasel-local-dev-cache-reset';
 
@@ -76,6 +80,23 @@ try {
   }
 }
 
+// Verify backend connectivity on startup
+if (import.meta.env.DEV) {
+  verifyBackendConnection()
+    .then(result => {
+      if (result.connected) {
+        console.log('[Wasel] ✓ Backend connected:', result.message);
+        // Start periodic health monitoring in development
+        startHealthCheckMonitoring(60000);
+      } else {
+        console.warn('[Wasel] ⚠ Backend connection issue:', result.message);
+      }
+    })
+    .catch(error => {
+      console.error('[Wasel] Backend health check failed:', sanitizeLogMessage(String(error)));
+    });
+}
+
 // Clear encryption key on logout
 window.addEventListener('storage', e => {
   if (e.key === 'wasel-auth-state' && !e.newValue) {
@@ -98,6 +119,20 @@ ReactDOM.createRoot(rootElement).render(
 );
 
 void resetLocalDevelopmentArtifacts();
+
+// Expose circuit breaker utilities globally for debugging
+if (typeof window !== 'undefined') {
+  (window as any).__waselDebug = {
+    resetApiCircuitBreaker,
+    getApiCircuitBreakerState,
+    getAllCircuitBreakers: () => circuitBreakers.getAllStats(),
+    resetAllCircuitBreakers: () => circuitBreakers.resetAll(),
+  };
+  
+  if (import.meta.env.DEV) {
+    console.info('[Wasel] Debug utilities available at window.__waselDebug');
+  }
+}
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

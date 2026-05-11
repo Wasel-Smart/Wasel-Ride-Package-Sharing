@@ -29,9 +29,9 @@ interface CircuitBreakerStats {
 
 const DEFAULT_CONFIG: CircuitBreakerConfig = {
   failureThreshold: 5,
-  successThreshold: 2,
-  timeout: 60000, // 1 minute
-  monitoringPeriod: 120000, // 2 minutes
+  successThreshold: 1,
+  timeout: 10000, // 10 seconds
+  monitoringPeriod: 60000, // 1 minute
 };
 
 export class CircuitBreaker {
@@ -186,6 +186,16 @@ class CircuitBreakerRegistry {
    */
   resetAll(): void {
     this.breakers.forEach(breaker => breaker.reset());
+  }
+
+  /**
+   * Reset a specific circuit breaker by name
+   */
+  reset(name: string): void {
+    const breaker = this.breakers.get(name);
+    if (breaker) {
+      breaker.reset();
+    }
   }
 }
 

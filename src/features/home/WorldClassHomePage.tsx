@@ -3,7 +3,6 @@ import { ArrowRight, MapPin, Clock, Star, TrendingUp } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { QUICK_ACTIONS, getUserExperienceLevel, ONBOARDING_STEPS } from '../../config/navigation-structure';
 
 /**
  * WORLD-CLASS HOME PAGE - 10/10 UX
@@ -76,8 +75,6 @@ export function WorldClassHomePage() {
   const navigate = useIframeSafeNavigate();
   
   const ar = language === 'ar';
-  const userLevel = getUserExperienceLevel(user);
-  const isNewUser = userLevel === 'new';
   
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null);

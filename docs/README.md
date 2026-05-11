@@ -9,6 +9,7 @@ This folder is the engineering handoff for Wasel: architecture, contracts, obser
 - [security-and-identity.md](./security-and-identity.md): auth posture, abuse controls, and secrets handling
 - [observability.md](./observability.md): logs, metrics, tracing, SLOs, and failure triage
 - [reliability-slos.md](./reliability-slos.md): service objectives, alert thresholds, and error-budget rules
+- [circuit-breaker-recovery.md](./circuit-breaker-recovery.md): troubleshooting and recovery guide for circuit breaker issues
 - [scaling-and-tradeoffs.md](./scaling-and-tradeoffs.md): architectural rationale and scale assumptions
 - [workers-and-queues.md](./workers-and-queues.md): async topology, queue ownership, and worker responsibilities
 - [testing.md](./testing.md): local verification and test-layer guidance

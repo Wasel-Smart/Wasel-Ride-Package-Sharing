@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { ArrowRight, Phone, Mail, Lock, Check } from 'lucide-react';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { useAuth } from '../../contexts/AuthContext';
-import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 
 /**
  * WORLD-CLASS AUTH PAGE - 10/10 UX
@@ -23,7 +23,7 @@ type AuthStep = 'phone' | 'verify' | 'complete';
 
 export function WorldClassAuthPage() {
   const { language } = useLanguage();
-  const { signIn, register } = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useIframeSafeNavigate();
   
   const ar = language === 'ar';
@@ -95,7 +95,7 @@ export function WorldClassAuthPage() {
     setLoading(true);
     
     // Create account
-    const result = await register(name, email || `${phone}@wasel.app`, password || 'temp123', phone, '/app');
+    const result = await signUp(name, email || `${phone}@wasel.app`, password || 'temp123', phone, '/app');
     
     if (result.error) {
       setError(ar ? 'حدث خطأ. حاول مرة أخرى' : 'Something went wrong. Try again');
