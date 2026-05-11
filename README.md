@@ -62,6 +62,7 @@ tests/
 
 ## Start here
 
+- [🚨 CRITICAL: Configure Vercel Dashboard](./CRITICAL_VERCEL_DASHBOARD_CONFIG.md) ⭐⭐⭐ **DO THIS FIRST**
 - [🚨 IMMEDIATE FIX: Entrypoint Error](./IMMEDIATE_FIX_ENTRYPOINT_ERROR.md) ⭐⭐⭐ **FIX NOW**
 - [🚀 DEPLOY NOW](./DEPLOY_NOW.md) ⭐⭐⭐ **DEPLOY TO VERCEL**
 - [Add ALL Environment Variables](./ADD_ALL_ENV_VARIABLES.md) ⭐⭐ **COMPLETE GUIDE**
