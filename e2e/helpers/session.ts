@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 
-const STORAGE_KEY = 'wasel_local_user_v2';
+// Must match the STORAGE_KEY constant in src/contexts/LocalAuth.tsx
+const STORAGE_KEY = 'wasel_user_session';
 
 export const demoUser = {
   id: 'demo-e2e-user',

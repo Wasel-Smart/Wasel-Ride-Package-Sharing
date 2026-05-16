@@ -9,7 +9,8 @@ import { BackendRequestError, requestEdgeJson } from './backendWorkflow';
 
 const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
 const LOCAL_WALLET_KEY = 'wasel-wallet-local-v1';
-const LOCAL_AUTH_USER_KEY = 'wasel_local_user_v2';
+// Must match STORAGE_KEY in src/contexts/LocalAuth.tsx so balance reads stay in sync
+const LOCAL_AUTH_USER_KEY = 'wasel_user_session';
 
 type DbClient = any;
 
