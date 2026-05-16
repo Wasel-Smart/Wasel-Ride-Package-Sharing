@@ -114,6 +114,22 @@ export async function decryptData(encryptedData: string): Promise<string> {
   }
 }
 
+    const key = await deriveKey(sessionId, salt);
+    
+    const decryptedData = await crypto.subtle.decrypt(
+      { name: ALGORITHM, iv },
+      key,
+      data
+    );
+
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedData);
+  } catch (error) {
+    console.error('Decryption failed:', error);
+    throw new Error('Failed to decrypt data');
+  }
+}
+
 /**
  * Secure storage wrapper with encryption
  */
