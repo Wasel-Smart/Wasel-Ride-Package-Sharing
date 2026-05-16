@@ -99,7 +99,7 @@
       "undici": "7.25.0",
       "path-to-regexp": "8.4.2",
       "srvx": "0.11.13",
-      "ajv": "8.18.0",
+      "ajv": "8.16.0",
       "minimatch": "10.2.3",
       "smol-toml": "1.6.1"
     }
