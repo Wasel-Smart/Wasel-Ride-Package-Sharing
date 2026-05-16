@@ -219,66 +219,67 @@ export class ProductionMonitor {
     this.alertCallbacks.get(alertName)!.push(callback);
   }
 
-  getMetricStats(name: string): {
-    min: number;
-    max: number;
-    avg: number;
-    p95: number;
-    p99: number;
-  } | null {
-    const values = this.metrics.get(name);
-    if (!values || values.length === 0) return null;
+   getMetricStats(name: string): {
+     min: number;
+     max: number;
+     avg: number;
+     p95: number;
+     p99: number;
+   } | null {
+     const values = this.metrics.get(name);
+     if (!values || values.length === 0) return null;
 
-    const sorted = [...values].sort((a, b) => a - b);
-    const sum = sorted.reduce((acc, val) => acc + val, 0);
+     const sorted = [...values].sort((a, b) => a - b);
+     const sum = sorted.reduce((acc, val) => acc + val, 0);
+     const length = sorted.length;
 
-    return {
-      min: sorted[0],
-      max: sorted[sorted.length - 1],
-      avg: sum / sorted.length,
-      p95: sorted[Math.floor(sorted.length * 0.95)],
-      p99: sorted[Math.floor(sorted.length * 0.99)],
-    };
-  }
+     return {
+       min: sorted[0]!,
+       max: sorted[sorted.length - 1]!,
+       avg: sum / length,
+       p95: sorted[Math.floor(length * 0.95)]!,
+       p99: sorted[Math.floor(length * 0.99)]!,
+     };
+   }
 
-  async performHealthChecks(): Promise<{
-    healthy: boolean;
-    checks: { name: string; status: 'pass' | 'fail'; latency: number }[];
-  }> {
-    const results = await Promise.all(
-      healthChecks.map(async check => {
-        const start = Date.now();
-        try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), check.timeout * 1000);
+   async performHealthChecks(): Promise<{
+     healthy: boolean;
+     checks: { name: string; status: 'pass' | 'fail'; latency: number }[];
+   }> {
+     const checkResults = await Promise.all(
+       healthChecks.map(async check => {
+         const start = Date.now();
+         try {
+           const controller = new AbortController();
+           const timeout = setTimeout(() => controller.abort(), check.timeout * 1000);
 
-          const response = await fetch(check.endpoint, {
-            signal: controller.signal,
-          });
+           const response = await fetch(check.endpoint, {
+             signal: controller.signal,
+           });
 
-          clearTimeout(timeout);
-          const latency = Date.now() - start;
+           clearTimeout(timeout);
+           const latency = Date.now() - start;
 
-          return {
-            name: check.name,
-            status: response.status === check.expectedStatus ? ('pass' as const) : ('fail' as const),
-            latency,
-          };
-        } catch {
-          return {
-            name: check.name,
-            status: 'fail' as const,
-            latency: Date.now() - start,
-          };
-        }
-      }),
-    );
+           return {
+             name: check.name,
+             status: response.status === check.expectedStatus ? ('pass' as const) : ('fail' as const),
+             latency,
+           };
+         } catch {
+           return {
+             name: check.name,
+             status: 'fail' as const,
+             latency: Date.now() - start,
+           };
+         }
+       }),
+     );
 
-    const criticalChecks = results.filter((_, i) => healthChecks[i].critical);
-    const healthy = criticalChecks.every(check => check.status === 'pass');
+     const criticalChecks = checkResults.filter((_, index) => healthChecks[index]?.critical ?? false);
+     const healthy = criticalChecks.every(check => check.status === 'pass');
 
-    return { healthy, checks: results };
-  }
+     return { healthy, checks: checkResults };
+   }
 }
 
 export const monitor = new ProductionMonitor();
