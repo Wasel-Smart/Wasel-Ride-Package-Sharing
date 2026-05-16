@@ -143,13 +143,6 @@ body {
   overscroll-behavior-y: contain;
 }
 
-/* ── Global scroll container fix ─────────────────────────────────────────── */
-#root,
-[data-app-root] {
-  height: 100%;
-  overflow: visible; /* allow page-level scrolling */
-}
-
 /* ── W Double me — 8pt Spacing + Typography System ────────────────────── */
 :root {
   --sp-1: 4px;
@@ -2077,5 +2070,53 @@ svg {
   .splash-logo {
     width: 112px;
     height: 112px;
+  }
+}
+
+/* ========================================
+   SCROLL PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/* Promote fixed/sticky elements to GPU layer */
+header,
+nav,
+.wasel-bottom-nav {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Contain paint for glass elements */
+.glass,
+.glass-card,
+.glass-dark,
+.glass-nav,
+.glass-teal,
+.glass-green,
+.glass-bronze,
+.sidebar-glass {
+  contain: paint;
+}
+
+/* Optimize scroll containers */
+.scrollbar-thin,
+.overflow-y-auto,
+.overflow-y-scroll {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+}
+
+/* Remove background-attachment: fixed on mobile (causes jank) */
+@media (max-width: 1023px) {
+  body {
+    background-attachment: scroll;
+  }
+}
+
+/* Fix Safari sticky header jitter */
+@supports (-webkit-touch-callout: none) {
+  header {
+    transform: translate3d(0, 0, 0);
   }
 }

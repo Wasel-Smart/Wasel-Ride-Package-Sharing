@@ -46,7 +46,6 @@ export function NavDropdown({
         top: 'calc(100% + 10px)',
         ...posStyle,
         background: 'rgba(8,22,35,0.98)',
-        backdropFilter: 'blur(28px)',
         border: `1px solid ${C.border}`,
         borderRadius: 18,
         boxShadow: '0 24px 64px rgba(0,0,0,0.65)',
@@ -71,6 +70,7 @@ export function NavDropdown({
               onNavigate(item.path);
             }
           }}
+          className="wrl-dropdown-item"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -164,7 +164,6 @@ export function UserMenu({
           border: `1px solid ${open ? C.borderHov : C.border}`,
           cursor: 'pointer',
           transition: 'all 0.15s',
-          backdropFilter: 'blur(12px)',
         }}
       >
         <div
@@ -209,7 +208,6 @@ export function UserMenu({
             insetInlineEnd: 0,
             width: 272,
             background: 'rgba(8,22,35,0.98)',
-            backdropFilter: 'blur(28px)',
             border: `1px solid ${C.border}`,
             borderRadius: 16,
             boxShadow: '0 24px 64px rgba(0,0,0,0.75)',
@@ -369,32 +367,35 @@ export function MobileDrawer({
   if (!open) return null;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 2000,
-        background: 'rgba(0,0,0,0.75)',
-        backdropFilter: 'blur(6px)',
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          insetInlineEnd: 0,
-          width: 300,
-          height: '100%',
-          background: C.bg,
-          borderInlineStart: `1px solid ${C.border}`,
-          boxShadow: ar ? '20px 0 60px rgba(0,0,0,0.7)' : '-20px 0 60px rgba(0,0,0,0.7)',
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
+<div
+       style={{
+         position: 'fixed',
+         inset: 0,
+         zIndex: 2000,
+         background: 'rgba(0,0,0,0.75)',
+         contain: 'layout style',
+       }}
+       onClick={onClose}
+     >
+       <div
+         style={{
+           position: 'absolute',
+           top: 0,
+           insetInlineEnd: 0,
+           width: 300,
+           height: '100%',
+           background: C.bg,
+           borderInlineStart: `1px solid ${C.border}`,
+           boxShadow: ar ? '20px 0 60px rgba(0,0,0,0.7)' : '-20px 0 60px rgba(0,0,0,0.7)',
+           overflowY: 'auto',
+           WebkitOverflowScrolling: 'touch',
+           display: 'flex',
+           flexDirection: 'column',
+           transform: 'translateZ(0)',
+           willChange: 'transform',
+         }}
+         onClick={e => e.stopPropagation()}
+       >
         <div
           style={{
             padding: '16px 20px',

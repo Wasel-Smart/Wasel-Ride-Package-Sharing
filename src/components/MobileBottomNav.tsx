@@ -4,7 +4,6 @@
  */
 
 import { Bus, Clock, Package, PlusCircle, Search } from 'lucide-react';
-import { motion } from 'motion/react';
 import { useLocation, useNavigate } from 'react-router';
 import { CORE_NAV_ITEMS } from '../config/user-navigation';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -63,14 +62,14 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
           right: 0,
           zIndex: 600,
           background: BG,
-          backdropFilter: 'blur(28px)',
-          WebkitBackdropFilter: 'blur(28px)',
           borderTop: `1px solid ${BORDER}`,
           boxShadow: '0 -12px 36px rgba(0,0,0,0.42), 0 -1px 0 rgba(88,221,255,0.08)',
           paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))',
           flexDirection: 'row',
           justifyContent: 'space-around',
           alignItems: 'stretch',
+          willChange: 'transform',
+          transform: 'translateZ(0)',
         }}
       >
         {CORE_NAV_ITEMS.map(item => {
@@ -80,11 +79,9 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
           const itemColor = item.accent === 'gold' ? GOLD : CYAN;
 
           return (
-            <motion.button
+            <button
               key={item.id}
               onClick={() => navigate(item.path)}
-              whileTap={{ scale: 0.86 }}
-              transition={{ duration: 0.09, type: 'spring', stiffness: 500, damping: 30 }}
               aria-label={isArabic ? item.labelAr : item.label}
               aria-current={active ? 'page' : undefined}
               style={{
@@ -103,11 +100,12 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
                 WebkitTapHighlightColor: 'transparent',
                 outline: 'none',
                 position: 'relative',
+                transform: active ? 'scale(1.05)' : 'scale(1)',
+                transition: 'transform 0.15s ease',
               }}
             >
               {active && !isPost && (
-                <motion.div
-                  layoutId="nav-accent"
+                <div
                   style={{
                     position: 'absolute',
                     top: 0,
@@ -161,8 +159,7 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
                       strokeWidth={active ? 2.5 : 1.8}
                       style={{
                         color: active ? itemColor : INACTIVE,
-                        transition: 'color 0.18s ease, transform 0.18s ease',
-                        transform: active ? 'scale(1.05)' : 'scale(1)',
+                        transition: 'color 0.18s ease',
                       }}
                     />
                   )}
@@ -183,7 +180,7 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
               >
                 {isArabic ? item.labelAr : item.label}
               </span>
-            </motion.button>
+            </button>
           );
         })}
       </nav>
