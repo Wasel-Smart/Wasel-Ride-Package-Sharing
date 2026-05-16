@@ -450,7 +450,7 @@ export const notificationsAPI = {
         return { success: false, source: 'local', ...deliveryResult };
       }
 
-      const server = await response.json().catch(() => ({}));
+       const server = await (response.json().catch(() => ({})));
       const notificationId = String(server?.notification?.id ?? localDraft.id);
       writeLocalNotifications(
         sortNotifications([
