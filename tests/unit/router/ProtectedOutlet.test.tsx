@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import '@testing-library/jest-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockNavigate = vi.fn();
@@ -15,12 +16,17 @@ vi.mock('@/contexts/LocalAuth', () => ({
 
 import ProtectedOutlet from '@/router/ProtectedOutlet';
 
-function renderProtectedRoute(initialEntry = '/app/profile?tab=security#alerts') {
+function renderProtectedRoute(
+  initialEntry = '/app/profile?tab=security#alerts',
+) {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route element={<ProtectedOutlet />}>
-          <Route path="/app/profile" element={<div>Protected content</div>} />
+          <Route
+            path="/app/profile"
+            element={<div>Protected content</div>}
+          />
         </Route>
       </Routes>
     </MemoryRouter>,
@@ -33,16 +39,25 @@ describe('ProtectedOutlet', () => {
   });
 
   it('waits for auth hydration before redirecting', () => {
-    mockUseLocalAuth.mockReturnValue({ user: null, loading: true });
+    mockUseLocalAuth.mockReturnValue({
+      user: null,
+      loading: true,
+    });
 
     renderProtectedRoute();
 
-    expect(screen.getByText('Restoring your Wasel session...')).toBeInTheDocument();
+    expect(
+      screen.getByText('Restoring your Wasel session...')
+    ).toBeInTheDocument();
+
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it('redirects guests to sign in with a safe return target', async () => {
-    mockUseLocalAuth.mockReturnValue({ user: null, loading: false });
+    mockUseLocalAuth.mockReturnValue({
+      user: null,
+      loading: false,
+    });
 
     renderProtectedRoute();
 
@@ -54,11 +69,17 @@ describe('ProtectedOutlet', () => {
   });
 
   it('renders the child route for authenticated users', () => {
-    mockUseLocalAuth.mockReturnValue({ user: { id: 'user-1' }, loading: false });
+    mockUseLocalAuth.mockReturnValue({
+      user: { id: 'user-1' },
+      loading: false,
+    });
 
     renderProtectedRoute();
 
-    expect(screen.getByText('Protected content')).toBeInTheDocument();
+    expect(
+      screen.getByText('Protected content')
+    ).toBeInTheDocument();
+
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 });
