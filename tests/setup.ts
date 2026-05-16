@@ -4,6 +4,7 @@
  */
 
 import { vi } from 'vitest';
+import '@testing-library/jest-dom';
 
 // Mock import.meta.env for all tests
 const mockEnv = {
@@ -26,6 +27,43 @@ vi.stubGlobal('import', {
   },
 });
 
+// Better mock for localStorage and sessionStorage
+const createMockStorage = () => {
+  const storage = new Map<string, string>();
+  return {
+    getItem: (key: string | null) => {
+      if (key === null) return null;
+      return storage.get(key) || null;
+    },
+    setItem: (key: string, value: string) => {
+      storage.set(key, value);
+    },
+    removeItem: (key: string) => {
+      storage.delete(key);
+    },
+    clear: () => {
+      storage.clear();
+    },
+    get length() {
+      return storage.size;
+    },
+    key: (index: number) => {
+      const keys = Array.from(storage.keys());
+      return keys[index] || null;
+    },
+  };
+};
+
+// Mock localStorage
+const mockLocalStorage = createMockStorage();
+if (typeof window !== 'undefined') {
+  window.localStorage = mockLocalStorage as Storage;
+  window.sessionStorage = createMockStorage() as Storage;
+} else {
+  global.localStorage = mockLocalStorage as Storage;
+  global.sessionStorage = createMockStorage() as Storage;
+}
+
 // Mock window.requestIdleCallback for tests
 if (typeof window !== 'undefined' && !window.requestIdleCallback) {
   window.requestIdleCallback = (callback: IdleRequestCallback) => {
@@ -43,53 +81,7 @@ if (typeof window !== 'undefined' && !window.requestIdleCallback) {
   };
 }
 
-// Mock sessionStorage for tests
-try {
-  if (typeof sessionStorage === 'undefined') {
-    const storage: Record<string, string> = {};
-    global.sessionStorage = {
-      getItem: (key: string) => storage[key] || null,
-      setItem: (key: string, value: string) => {
-        storage[key] = value;
-      },
-      removeItem: (key: string) => {
-        delete storage[key];
-      },
-      clear: () => {
-        Object.keys(storage).forEach(key => delete storage[key]);
-      },
-      length: 0,
-      key: () => null,
-    };
-  }
-} catch (e) {
-  // sessionStorage check failed, skip mock
-}
-
-// Mock localStorage for tests
-try {
-  if (typeof localStorage === 'undefined') {
-    const storage: Record<string, string> = {};
-    global.localStorage = {
-      getItem: (key: string) => storage[key] || null,
-      setItem: (key: string, value: string) => {
-        storage[key] = value;
-      },
-      removeItem: (key: string) => {
-        delete storage[key];
-      },
-      clear: () => {
-        Object.keys(storage).forEach(key => delete storage[key]);
-      },
-      length: 0,
-      key: () => null,
-    };
-  }
-} catch (e) {
-  // localStorage check failed, skip mock
-}
-
-// Initialize session ID for tests
+// Initialize test session ID
 try {
   if (typeof sessionStorage !== 'undefined') {
     sessionStorage.setItem('wasel_session_id', 'test-session-id-12345678901234567890123456789012');
