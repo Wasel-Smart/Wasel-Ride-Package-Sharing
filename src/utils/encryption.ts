@@ -140,108 +140,11 @@ export const secureStorage = {
     localStorage.removeItem(`secure_${key}`);
   },
 
-  clear(): void {
+   clear(): void {
     const keys = Object.keys(localStorage);
-    keys.forEach(key => {
-      if (key.startsWith('secure_')) {
-        localStorage.removeItem(key);
-      }
-    });
-  },
-};
-
-/**
- * Generate cryptographically secure random ID
- */
-export function generateSecureId(length = 32): string {
-  const array = new Uint8Array(length);
-  crypto.getRandomValues(array);
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-}
-
-/**
- * Hash sensitive data (one-way)
- */
-export async function hashData(data: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const dataBuffer = encoder.encode(data);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-/**
- * Clear master encryption key (on logout)
- */
-export function clearMasterKey(): void {
-  sessionStorage.removeItem('wasel_session_id');
-  secureStorage.clear();
-}
-
-    const key = await deriveKey(sessionId, salt);
-    
-    const decryptedData = await crypto.subtle.decrypt(
-      { name: ALGORITHM, iv },
-      key,
-      data
-    );
-
-    const decoder = new TextDecoder();
-    return decoder.decode(decryptedData);
-  } catch (error) {
-    console.error('Decryption failed:', error);
-    throw new Error('Failed to decrypt data');
-  }
-}
-
-    const key = await deriveKey(sessionId, salt);
-    
-    const decryptedData = await crypto.subtle.decrypt(
-      { name: ALGORITHM, iv },
-      key,
-      data
-    );
-
-    const decoder = new TextDecoder();
-    return decoder.decode(decryptedData);
-  } catch (error) {
-    console.error('Decryption failed:', error);
-    throw new Error('Failed to decrypt data');
-  }
-}
-
-/**
- * Secure storage wrapper with encryption
- */
-export const secureStorage = {
-  async setItem(key: string, value: string): Promise<void> {
-    const encrypted = await encryptData(value);
-    localStorage.setItem(`secure_${key}`, encrypted);
-  },
-
-  async getItem(key: string): Promise<string | null> {
-    const encrypted = localStorage.getItem(`secure_${key}`);
-    if (!encrypted) return null;
-    
-    try {
-      return await decryptData(encrypted);
-    } catch {
-      // If decryption fails, remove corrupted data
-      localStorage.removeItem(`secure_${key}`);
-      return null;
-    }
-  },
-
-  removeItem(key: string): void {
-    localStorage.removeItem(`secure_${key}`);
-  },
-
-  clear(): void {
-    const keys = Object.keys(localStorage);
-    keys.forEach(key => {
-      if (key.startsWith('secure_')) {
-        localStorage.removeItem(key);
-      }
+    const secureKeys = keys.filter(key => key.startsWith('secure_'));
+    secureKeys.forEach(key => {
+      localStorage.removeItem(key);
     });
   },
 };

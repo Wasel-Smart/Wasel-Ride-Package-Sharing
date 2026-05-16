@@ -60,18 +60,20 @@ describe('Secure Storage Integration', () => {
     expect(retrieved).toBe(originalData);
   });
 
-  it('should clear all secure storage', async () => {
-    await secureStorage.setItem('key1', 'value1');
-    await secureStorage.setItem('key2', 'value2');
-    
-    secureStorage.clear();
-    
-    const retrieved1 = await secureStorage.getItem('key1');
-    const retrieved2 = await secureStorage.getItem('key2');
-    
-    expect(retrieved1).toBeNull();
-    expect(retrieved2).toBeNull();
-  });
+   it('should clear all secure storage', async () => {
+     await secureStorage.setItem('key1', 'value1');
+     await secureStorage.setItem('key2', 'value2');
+     
+     console.log('LocalStorage before clear:', Object.keys(localStorage));
+     secureStorage.clear();
+     console.log('LocalStorage after clear:', Object.keys(localStorage));
+     
+     const retrieved1 = await secureStorage.getItem('key1');
+     const retrieved2 = await secureStorage.getItem('key2');
+     
+     expect(retrieved1).toBeNull();
+     expect(retrieved2).toBeNull();
+   });
 });
 
 describe('SSRF Protection Integration', () => {
