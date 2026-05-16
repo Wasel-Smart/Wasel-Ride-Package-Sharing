@@ -6,6 +6,7 @@
 const ALGORITHM = 'AES-GCM';
 const KEY_LENGTH = 256;
 const IV_LENGTH = 12;
+const SALT_LENGTH = 16;
 
 /**
  * Generate a cryptographic key from a password
@@ -38,14 +39,15 @@ async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey>
 /**
  * Get or create encryption key for the session
  */
-async function getSessionKey(): Promise<CryptoKey> {
+async function getSessionKeyAndSalt(): Promise<{ key: CryptoKey; salt: Uint8Array }> {
   const sessionId = sessionStorage.getItem('wasel_session_id');
   if (!sessionId) {
     throw new Error('No active session');
   }
 
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  return deriveKey(sessionId, salt);
+  const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
+  const key = await deriveKey(sessionId, salt);
+  return { key, salt };
 }
 
 /**
@@ -53,7 +55,7 @@ async function getSessionKey(): Promise<CryptoKey> {
  */
 export async function encryptData(data: string): Promise<string> {
   try {
-    const key = await getSessionKey();
+    const { key, salt } = await getSessionKeyAndSalt();
     const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
     const encoder = new TextEncoder();
     const encodedData = encoder.encode(data);
@@ -64,10 +66,11 @@ export async function encryptData(data: string): Promise<string> {
       encodedData
     );
 
-    // Combine IV and encrypted data
-    const combined = new Uint8Array(iv.length + encryptedData.byteLength);
-    combined.set(iv, 0);
-    combined.set(new Uint8Array(encryptedData), iv.length);
+    // Combine salt + IV + encrypted data
+    const combined = new Uint8Array(salt.length + iv.length + encryptedData.byteLength);
+    combined.set(salt, 0);
+    combined.set(iv, salt.length);
+    combined.set(new Uint8Array(encryptedData), salt.length + iv.length);
 
     // Convert to base64
     return btoa(String.fromCharCode(...combined));
@@ -82,15 +85,21 @@ export async function encryptData(data: string): Promise<string> {
  */
 export async function decryptData(encryptedData: string): Promise<string> {
   try {
-    const key = await getSessionKey();
-    
     // Decode from base64
     const combined = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
     
-    // Extract IV and encrypted data
-    const iv = combined.slice(0, IV_LENGTH);
-    const data = combined.slice(IV_LENGTH);
+    // Extract salt, IV and encrypted data
+    const salt = combined.slice(0, SALT_LENGTH);
+    const iv = combined.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
+    const data = combined.slice(SALT_LENGTH + IV_LENGTH);
 
+    const sessionId = sessionStorage.getItem('wasel_session_id');
+    if (!sessionId) {
+      throw new Error('No active session');
+    }
+
+    const key = await deriveKey(sessionId, salt);
+    
     const decryptedData = await crypto.subtle.decrypt(
       { name: ALGORITHM, iv },
       key,
