@@ -60,6 +60,7 @@
     "sonner": "^2.0.3",
     "stripe": "^22.1.0",
     "tailwind-merge": "^3.5.0",
+    "tar": "^7.5.11",
     "tw-animate-css": "^1.3.8",
     "vaul": "^1.1.2",
     "vercel": "^50.41.0",
