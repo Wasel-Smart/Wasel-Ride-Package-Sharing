@@ -151,12 +151,10 @@ export default function App() {
   return (
     <AppErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        
-        {/* Router stays stable → fixes navigation lag */}
-        <Router />
-
-        {/* Providers no longer affect routing */}
+        {/* Providers */}
         <AppProviders>
+          {/* Router stays stable → fixes navigation lag */}
+          <Router />
           <AppRuntimeCoordinator />
         </AppProviders>
 
@@ -171,7 +169,7 @@ export default function App() {
             },
           }}
         />
-
+      
       </QueryClientProvider>
     </AppErrorBoundary>
   );
