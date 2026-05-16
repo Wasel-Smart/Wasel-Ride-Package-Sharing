@@ -157,26 +157,26 @@ describe('LocalAuthProvider', () => {
   });
 
   it('keeps the stored local session when the backend is unavailable', () => {
-    window.localStorage.setItem('wasel_local_user_v2', JSON.stringify({
-      id: 'demo-e2e-user',
-      name: 'Demo Rider',
-      email: 'demo.rider@wasel.jo',
-      phone: '+962790000999',
-      role: 'both',
-      balance: 145.75,
-      rating: 4.8,
-      trips: 18,
-      verified: true,
-      sanadVerified: true,
-      verificationLevel: 'level_3',
-      walletStatus: 'active',
-      joinedAt: '2026-03-01',
-      emailVerified: true,
-      phoneVerified: true,
-      twoFactorEnabled: false,
-      trustScore: 92,
-      backendMode: 'supabase',
-    }));
+    window.localStorage.setItem('wasel_user_session', JSON.stringify({
+       id: 'demo-e2e-user',
+       name: 'Demo Rider',
+       email: 'demo.rider@wasel.jo',
+       phone: '+962790000999',
+       role: 'both',
+       balance: 145.75,
+       rating: 4.8,
+       trips: 18,
+       verified: true,
+       sanadVerified: true,
+       verificationLevel: 'level_3',
+       walletStatus: 'active',
+       joinedAt: '2026-03-01',
+       emailVerified: true,
+       phoneVerified: true,
+       twoFactorEnabled: false,
+       trustScore: 92,
+       backendMode: 'supabase',
+     }));
 
     mockUseAuth.mockReturnValue({
       user: null,
@@ -263,10 +263,10 @@ describe('LocalAuthProvider', () => {
     expect(signUp).not.toHaveBeenCalled();
     expect(screen.getByText('Sara Ali')).toBeInTheDocument();
 
-    const storedSession = JSON.parse(window.localStorage.getItem('wasel_local_user_v2') ?? 'null');
-    const storedAccounts = JSON.parse(
-      window.localStorage.getItem('wasel_local_accounts_v1') ?? '[]',
-    );
+     const storedSession = JSON.parse(window.localStorage.getItem('wasel_user_session') ?? 'null');
+     const storedAccounts = JSON.parse(
+       window.localStorage.getItem('wasel_accounts') ?? '[]',
+     );
 
     expect(storedSession?.email).toBe('sara@example.com');
     expect(storedAccounts).toHaveLength(1);
@@ -277,34 +277,34 @@ describe('LocalAuthProvider', () => {
     vi.stubEnv('VITE_E2E_LOCAL_AUTH', 'true');
 
     window.localStorage.setItem(
-      'wasel_local_accounts_v1',
-      JSON.stringify([
-        {
-          email: 'sara@example.com',
-          password: 'password123',
-          user: {
-            id: 'local-user-1',
-            name: 'Sara Ali',
-            email: 'sara@example.com',
-            phone: '+962790000000',
-            role: 'rider',
-            balance: 0,
-            rating: 5,
-            trips: 0,
-            verified: false,
-            sanadVerified: false,
-            verificationLevel: 'level_0',
-            walletStatus: 'active',
-            joinedAt: '2026-05-07',
-            emailVerified: true,
-            phoneVerified: false,
-            twoFactorEnabled: false,
-            trustScore: 55,
-            backendMode: 'supabase',
-          },
-        },
-      ]),
-    );
+       'wasel_accounts',
+       JSON.stringify([
+         {
+           email: 'sara@example.com',
+           password: 'password123',
+           user: {
+             id: 'local-user-1',
+             name: 'Sara Ali',
+             email: 'sara@example.com',
+             phone: '+962790000000',
+             role: 'rider',
+             balance: 0,
+             rating: 5,
+             trips: 0,
+             verified: false,
+             sanadVerified: false,
+             verificationLevel: 'level_0',
+             walletStatus: 'active',
+             joinedAt: '2026-05-07',
+             emailVerified: true,
+             phoneVerified: false,
+             twoFactorEnabled: false,
+             trustScore: 55,
+             backendMode: 'supabase',
+           },
+         },
+       ]),
+     );
 
     mockUseAuth.mockReturnValue({
       user: null,
