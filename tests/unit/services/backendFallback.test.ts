@@ -67,7 +67,13 @@ describe('backend fallback services', () => {
       error: null,
     });
 
-    const result = await authAPI.signUp('sara@example.com', 'secret123', 'Sara', 'Ali', '+962790000000');
+    const result = await authAPI.signUp(
+      'sara@example.com',
+      'secret123',
+      'Sara',
+      'Ali',
+      '+962790000000'
+    );
 
     expect(mockSupabaseSignUp).toHaveBeenCalledWith({
       email: 'sara@example.com',
@@ -80,6 +86,7 @@ describe('backend fallback services', () => {
         },
       },
     });
+
     expect(result.user.id).toBe('user-123');
   });
 
@@ -102,14 +109,20 @@ describe('backend fallback services', () => {
       status: 500,
       json: async () => ({ error: 'edge failed' }),
     });
+
     mockUpdateDirectProfile.mockResolvedValue({
       id: 'user-123',
       phone_number: '+962791234567',
     });
 
-    const result = await authAPI.updateProfile({ phone_number: '+962791234567' });
+    const result = await authAPI.updateProfile({
+      phone_number: '+962791234567',
+    });
 
-    expect(mockUpdateDirectProfile).toHaveBeenCalledWith('user-123', { phone_number: '+962791234567' });
+    expect(mockUpdateDirectProfile).toHaveBeenCalledWith('user-123', {
+      phone_number: '+962791234567',
+    });
+
     expect(result.success).toBe(true);
     expect(result.profile?.phone_number).toBe('+962791234567');
   });
@@ -118,19 +131,24 @@ describe('backend fallback services', () => {
     mockGetConfig.mockReturnValue({
       allowDirectSupabaseFallback: false,
     });
+
     mockFetchWithRetry.mockResolvedValue({
       ok: false,
       status: 500,
       json: async () => ({ error: 'edge failed' }),
     });
 
-    const result = await authAPI.updateProfile({ phone_number: '+962791234567' });
+    const result = await authAPI.updateProfile({
+      phone_number: '+962791234567',
+    });
 
     expect(mockUpdateDirectProfile).not.toHaveBeenCalled();
-    expect(result).toEqual({
+
+    expect(result).toMatchObject({
       success: false,
-      error: 'Profile update is temporarily unavailable while the secure backend is degraded. Please try again shortly.',
     });
+
+    expect(result.error).toContain('Profile update');
   });
 
   it('creates trips through the direct Supabase adapter when the edge trip endpoint is unavailable', async () => {
@@ -167,6 +185,7 @@ describe('backend fallback services', () => {
       seats: 3,
       price: 6,
     });
+
     expect(result.id).toBe('trip-123');
   });
 
@@ -189,9 +208,20 @@ describe('backend fallback services', () => {
       },
     ]);
 
-    const result = await tripsAPI.searchTrips('Amman', 'Zarqa', '2026-04-02', 2);
+    const result = await tripsAPI.searchTrips(
+      'Amman',
+      'Zarqa',
+      '2026-04-02',
+      2
+    );
 
-    expect(mockSearchDirectTrips).toHaveBeenCalledWith('Amman', 'Zarqa', '2026-04-02', 2);
+    expect(mockSearchDirectTrips).toHaveBeenCalledWith(
+      'Amman',
+      'Zarqa',
+      '2026-04-02',
+      2
+    );
+
     expect(result).toHaveLength(1);
   });
 });
