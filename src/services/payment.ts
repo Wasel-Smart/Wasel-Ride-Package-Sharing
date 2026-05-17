@@ -1,4 +1,5 @@
 import { supabase, supabaseUrl } from '@/utils/supabase/client';
+import { addCSRFHeader } from '@/utils/csrf';
 
 export interface PaymentIntentRequest {
   amount: number;
@@ -24,12 +25,25 @@ export interface RefundResponse {
   amount: number;
 }
 
+const PAYMENT_TIMEOUT_MS = 15_000;
+
+function requireSupabaseClient() {
+  if (!supabase) {
+    throw new Error(
+      'Payments are not available: Supabase client is not configured. ' +
+        'Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.',
+    );
+  }
+  return supabase;
+}
+
 class PaymentService {
-  private async callEdgeFunction<T>(
-    functionName: string,
-    body: unknown,
-  ): Promise<T> {
-    const functionsBaseUrl = supabaseUrl ? `${supabaseUrl.replace(/\/$/, '')}/functions/v1` : '';
+  private async callEdgeFunction<T>(functionName: string, body: unknown): Promise<T> {
+    const client = requireSupabaseClient();
+
+    const functionsBaseUrl = supabaseUrl
+      ? `${supabaseUrl.replace(/\/$/, '')}/functions/v1`
+      : '';
 
     if (!functionsBaseUrl) {
       throw new Error('Payments are not configured. Supabase Functions URL is unavailable.');
@@ -37,35 +51,49 @@ class PaymentService {
 
     const {
       data: { session },
-    } = await supabase.auth.getSession();
+      error: sessionError,
+    } = await client.auth.getSession();
 
-    if (!session) {
+    if (sessionError || !session) {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(`${functionsBaseUrl}/${functionName}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify(body),
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), PAYMENT_TIMEOUT_MS);
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Payment request failed');
+    try {
+      const response = await fetch(`${functionsBaseUrl}/${functionName}`, {
+        method: 'POST',
+        headers: addCSRFHeader({
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        }),
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Payment request failed' }));
+        throw new Error(
+          typeof error.error === 'string' ? error.error : `Payment request failed (${response.status})`,
+        );
+      }
+
+      return response.json() as Promise<T>;
+    } finally {
+      clearTimeout(timer);
     }
-
-    return response.json();
   }
 
   async createPaymentIntent(request: PaymentIntentRequest): Promise<PaymentIntentResponse> {
+    const client = requireSupabaseClient();
+
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+      error: userError,
+    } = await client.auth.getUser();
 
-    if (!user) {
+    if (userError || !user) {
       throw new Error('Not authenticated');
     }
 
@@ -80,7 +108,9 @@ class PaymentService {
   }
 
   async confirmPayment(bookingId: string, paymentIntentId: string): Promise<void> {
-    const { error } = await supabase
+    const client = requireSupabaseClient();
+
+    const { error } = await client
       .from('bookings')
       .update({
         payment_intent_id: paymentIntentId,
@@ -88,23 +118,20 @@ class PaymentService {
       })
       .eq('id', bookingId);
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
   }
 
   async getPaymentStatus(bookingId: string): Promise<string> {
-    const { data, error } = await supabase
+    const client = requireSupabaseClient();
+
+    const { data, error } = await client
       .from('bookings')
       .select('payment_status')
       .eq('id', bookingId)
       .single();
 
-    if (error) {
-      throw error;
-    }
-
-    return data.payment_status;
+    if (error) throw error;
+    return data.payment_status as string;
   }
 }
 

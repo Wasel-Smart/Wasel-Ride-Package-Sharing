@@ -23,7 +23,9 @@ export const CSP_DIRECTIVES = {
     'https://js.stripe.com',
     'https://maps.googleapis.com',
   ],
-  'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+  'style-src': IS_DEV
+    ? ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com']
+    : ["'self'", 'https://fonts.googleapis.com'],
   'img-src': [
     "'self'",
     'data:',
@@ -38,6 +40,7 @@ export const CSP_DIRECTIVES = {
     "'self'",
     'https://*.supabase.co',
     'wss://*.supabase.co',
+    'wss://*.sentry.io',
     'https://api.stripe.com',
     'https://maps.googleapis.com',
     'https://*.sentry.io',
@@ -242,10 +245,20 @@ export const SECURITY_HEADERS = `
   X-Content-Type-Options: nosniff
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=(self)
-  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Permissions-Policy: camera=(), microphone=(), geolocation=(self), payment=(self)
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
   Content-Security-Policy: ${getCSPHeader()}
 `;
+
+/**
+ * NOTE: SECURITY_HEADERS above is kept for reference and local tooling.
+ * In production, all headers are applied via vercel.json so they are sent
+ * as real HTTP response headers — not meta tags or JS strings.
+ * If you change any policy here, update vercel.json Content-Security-Policy
+ * to match.
+ */
 
 export function sanitizeInput(input: string): string {
   return input

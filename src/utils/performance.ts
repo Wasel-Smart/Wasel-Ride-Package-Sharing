@@ -120,8 +120,15 @@ function reportWebVital(metric: Metric) {
 }
 
 function sendToAnalytics(vital: WebVital) {
+  if (typeof window === 'undefined') return;
+
+  // Check analytics consent before sending
+  if (!localStorage.getItem('consent-analytics')) {
+    return;
+  }
+
   // Send to Google Analytics
-  if (typeof window !== 'undefined' && (window as any).gtag) {
+  if ((window as any).gtag) {
     (window as any).gtag('event', vital.name, {
       event_category: 'Web Vitals',
       value: Math.round(vital.value),

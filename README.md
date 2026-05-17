@@ -62,22 +62,11 @@ tests/
 
 ## Start here
 
-- [🚨 CRITICAL: Configure Vercel Dashboard](./CRITICAL_VERCEL_DASHBOARD_CONFIG.md) ⭐⭐⭐ **DO THIS FIRST**
-- [🚨 IMMEDIATE FIX: Entrypoint Error](./IMMEDIATE_FIX_ENTRYPOINT_ERROR.md) ⭐⭐⭐ **FIX NOW**
-- [🚀 DEPLOY NOW](./DEPLOY_NOW.md) ⭐⭐⭐ **DEPLOY TO VERCEL**
-- [📦 Release Guide](./docs/RELEASE_GUIDE.md) ⭐⭐⭐ **INCREMENTAL RELEASES**
-- [Add ALL Environment Variables](./ADD_ALL_ENV_VARIABLES.md) ⭐⭐ **COMPLETE GUIDE**
-- [Fix Vercel Dashboard Settings](./FIX_VERCEL_DASHBOARD_SETTINGS.md) ⭐⭐ **DASHBOARD CONFIG**
-- [Wiring Quick Reference](./WIRING_QUICK_REFERENCE.md) ⭐ **START HERE**
-- [Vercel Quick Reference](./VERCEL_QUICK_REFERENCE.md) ⭐ **DEPLOYMENT**
-- [Vercel Deployment Checklist](./VERCEL_DEPLOYMENT_CHECKLIST.md) ⭐ **DEPLOYMENT**
-- [Vercel Environment Setup](./VERCEL_ENV_SETUP.md) ⭐ **DEPLOYMENT**
-- [Vercel Troubleshooting](./VERCEL_TROUBLESHOOTING.md) ⭐ **DEPLOYMENT**
 - [Architecture](./docs/architecture.md)
-- [Wiring Architecture](./docs/WIRING_ARCHITECTURE.md) ⭐ **NEW**
+- [Implementation status](./docs/implementation-status.md)
 - [API contract](./docs/api-contract.md)
-- [OAuth Setup Guide](./docs/oauth-setup-guide.md) ⭐ **NEW**
-- [OAuth Setup Checklist](./docs/oauth-setup-checklist.md) ⭐ **NEW**
+- [Deployment guide](./docs/deployment.md)
+- [OAuth setup guide](./docs/oauth-setup-guide.md)
 - [Security and identity](./docs/security-and-identity.md)
 - [Observability](./docs/observability.md)
 - [Reliability SLOs](./docs/reliability-slos.md)

@@ -80,22 +80,22 @@ try {
   }
 }
 
-// Verify backend connectivity on startup
-if (import.meta.env.DEV) {
-  verifyBackendConnection()
-    .then(result => {
-      if (result.connected) {
+// Verify backend connectivity on startup (both dev and prod).
+// In production we log warnings without blocking render.
+verifyBackendConnection()
+  .then(result => {
+    if (result.connected) {
+      if (import.meta.env.DEV) {
         console.log('[Wasel] ✓ Backend connected:', result.message);
-        // Start periodic health monitoring in development
-        startHealthCheckMonitoring(60000);
-      } else {
-        console.warn('[Wasel] ⚠ Backend connection issue:', result.message);
       }
-    })
-    .catch(error => {
-      console.error('[Wasel] Backend health check failed:', sanitizeLogMessage(String(error)));
-    });
-}
+      startHealthCheckMonitoring(60_000);
+    } else {
+      console.warn('[Wasel] ⚠ Backend connection issue:', sanitizeLogMessage(result.message));
+    }
+  })
+  .catch(error => {
+    console.error('[Wasel] Backend health check failed:', sanitizeLogMessage(String(error)));
+  });
 
 // Clear encryption key on logout
 window.addEventListener('storage', e => {
@@ -120,18 +120,16 @@ ReactDOM.createRoot(rootElement).render(
 
 void resetLocalDevelopmentArtifacts();
 
-// Expose circuit breaker utilities globally for debugging
-if (typeof window !== 'undefined') {
+// Expose circuit breaker utilities globally — DEV builds only.
+// In production this block is dead code and tree-shaken by esbuild.
+if (import.meta.env.DEV && typeof window !== 'undefined') {
   (window as any).__waselDebug = {
     resetApiCircuitBreaker,
     getApiCircuitBreakerState,
     getAllCircuitBreakers: () => circuitBreakers.getAllStats(),
     resetAllCircuitBreakers: () => circuitBreakers.resetAll(),
   };
-  
-  if (import.meta.env.DEV) {
-    console.info('[Wasel] Debug utilities available at window.__waselDebug');
-  }
+  console.info('[Wasel] Debug utilities available at window.__waselDebug');
 }
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
