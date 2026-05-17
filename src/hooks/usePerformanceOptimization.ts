@@ -1,8 +1,8 @@
 import { useEffect, useCallback, useRef } from 'react';
 
 export function usePerformanceOptimization() {
-  const rafId = useRef<number>();
-  const scrollTimeout = useRef<NodeJS.Timeout>();
+  const rafId = useRef<number | null>(null);
+  const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const style = document.createElement('style');
@@ -67,32 +67,29 @@ export function usePerformanceOptimization() {
     };
   }, []);
 
-  const debounce = useCallback(<T extends (...args: unknown[]) => unknown>(
-    func: T,
-    wait: number
-  ): ((...args: Parameters<T>) => void) => {
-    let timeout: NodeJS.Timeout;
-    
-    return (...args: Parameters<T>) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func(...args), wait);
-    };
-  }, []);
+   const debounce = useCallback(
+     <T extends (...args: unknown[]) => unknown>(func: T, wait: number): ((...args: Parameters<T>) => void) => {
+       let timeout: NodeJS.Timeout;
+       
+       return (...args: Parameters<T>) => {
+         clearTimeout(timeout);
+         timeout = setTimeout(() => func(...args), wait);
+       };
+     },
+   []);
 
-  const throttle = useCallback(<T extends (...args: unknown[]) => unknown>(
-    func: T,
-    limit: number
-  ): ((...args: Parameters<T>) => void) => {
-    let inThrottle: boolean;
-    
-    return (...args: Parameters<T>) => {
-      if (!inThrottle) {
-        func(...args);
-        inThrottle = true;
-        setTimeout(() => (inThrottle = false), limit);
-      }
-    };
-  }, []);
+    const throttle = useCallback(
+      <T extends (...args: unknown[]) => unknown>(func: T, limit: number): ((...args: Parameters<T>) => void) => {
+        let inThrottle = false;
+        return (...args: Parameters<T>) => {
+          if (!inThrottle) {
+            func(...args);
+            inThrottle = true;
+            setTimeout(() => (inThrottle = false), limit);
+          }
+        };
+      },
+    []);
 
   const requestIdleCallback = useCallback((callback: () => void) => {
     if ('requestIdleCallback' in window) {
@@ -130,7 +127,7 @@ export function usePerformanceOptimization() {
 }
 
 export function useLazyLoad(threshold = 0.1) {
-  const observerRef = useRef<IntersectionObserver>();
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(

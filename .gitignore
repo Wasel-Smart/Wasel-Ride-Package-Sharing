@@ -51,6 +51,16 @@ review-screenshots/
 .codex/
 .kilo/
 
+# Security: never commit backup codes, key exports, or credential docs
+Backup-codes-*.txt
+backup-codes*.txt
+*-backup-codes.txt
+client_secret_*.json
+*.pem
+*.p8
+*.key
+COMPLETE_DEPLOYMENT_GUIDE.md
+
 # Firebase and native mobile config not used by the web client
 src/GoogleService-Info.plist
 src/google-services.json

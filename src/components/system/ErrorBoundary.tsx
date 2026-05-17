@@ -4,6 +4,7 @@
  */
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import type { JSX } from 'react';
 import { logger } from '@/utils/monitoring';
 
 interface Props {

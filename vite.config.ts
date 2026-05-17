@@ -6,7 +6,10 @@ import path from 'path';
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss(),
+    tailwindcss({
+      // Optimize and minify the output CSS
+      optimize: true,
+    }),
   ],
 
   resolve: {

@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 import Stripe from 'https://esm.sh/stripe@14.10.0?target=deno';
+import { createRateLimitMiddleware } from '../_shared/rate-limiter.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   apiVersion: '2024-11-20',
@@ -8,12 +9,16 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
 });
 
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || '';
+const rateLimitMiddleware = createRateLimitMiddleware({ windowMs: 60000, maxRequests: 100 });
 
 serve(async (req) => {
+  const rateLimitResponse = rateLimitMiddleware(req);
+  if (rateLimitResponse) return rateLimitResponse;
+
   const signature = req.headers.get('stripe-signature');
 
   if (!signature) {
-    return new Response('No signature', { status: 400 });
+    return new Response(JSON.stringify({ error: 'No signature' }), { status: 400 });
   }
 
   try {

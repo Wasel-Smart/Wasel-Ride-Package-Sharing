@@ -87,16 +87,63 @@ function getFirstConfiguredValue(keys) {
 
 hydrateBuildEnv();
 
+const PLACEHOLDER_PATTERNS = [
+  /your-project/i,
+  /your-anon-key/i,
+  /your-project-ref/i,
+  /replace[_-]with/i,
+  /example\.com/i,
+  /<[^>]+>/,
+  /\.\.\./,
+];
+
+function isPlaceholder(value) {
+  return PLACEHOLDER_PATTERNS.some(re => re.test(value));
+}
+
+function getProjectRefFromJwt(jwt) {
+  try {
+    const payload = jwt.split('.')[1];
+    const decoded = Buffer.from(payload, 'base64url').toString('utf8');
+    return JSON.parse(decoded).ref ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function getProjectRefFromUrl(url) {
+  try {
+    return new URL(url).hostname.replace('.supabase.co', '');
+  } catch {
+    return null;
+  }
+}
+
 const supabaseUrl = getFirstConfiguredValue(SUPABASE_URL_KEYS);
 const supabasePublicKey = getFirstConfiguredValue(SUPABASE_PUBLIC_KEY_KEYS);
 const missingVars = [];
 
 if (!supabaseUrl) {
   missingVars.push(`one of: ${SUPABASE_URL_KEYS.join(', ')}`);
+} else if (isPlaceholder(supabaseUrl)) {
+  missingVars.push(`VITE_SUPABASE_URL still holds a placeholder value`);
 }
 
 if (!supabasePublicKey) {
   missingVars.push(`one of: ${SUPABASE_PUBLIC_KEY_KEYS.join(', ')}`);
+} else if (isPlaceholder(supabasePublicKey)) {
+  missingVars.push(`VITE_SUPABASE_ANON_KEY still holds a placeholder value`);
+}
+
+// Cross-check: URL and anon key must reference the same project
+if (supabaseUrl && supabasePublicKey && !isPlaceholder(supabaseUrl) && !isPlaceholder(supabasePublicKey)) {
+  const urlRef = getProjectRefFromUrl(supabaseUrl);
+  const jwtRef = getProjectRefFromJwt(supabasePublicKey);
+  if (urlRef && jwtRef && urlRef !== jwtRef) {
+    missingVars.push(
+      `Supabase project mismatch: URL points to "${urlRef}" but anon key belongs to "${jwtRef}"`
+    );
+  }
 }
 
 if (missingVars.length > 0) {

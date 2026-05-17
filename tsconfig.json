@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "ignoreDeprecations": "5.0",
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
@@ -11,8 +10,12 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-
-    /* Strictness */
+    "jsxImportSource": "react",
+    "allowJs": true,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -26,17 +29,10 @@
     "alwaysStrict": true,
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-
-    /* Path aliases */
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    },
-
-    /* Global types */
-    "types": ["node"]
+    }
   },
   "include": [
     "src/**/*",

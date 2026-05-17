@@ -384,11 +384,5 @@ class GDPRCompliance {
 // Export singleton instance
 export const gdpr = new GDPRCompliance();
 
-// Schedule deletion execution (in production, this would be a worker)
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    gdpr.executeScheduledDeletions().catch((error) => {
-      logger.error('Scheduled deletion execution failed', error);
-    });
-  }, 24 * 60 * 60 * 1000); // Daily
-}
+// Note: In production, scheduled deletions are handled by the gdpr-deletion-scheduler
+// edge function. The client-side timer is disabled to prevent unnecessary API calls.

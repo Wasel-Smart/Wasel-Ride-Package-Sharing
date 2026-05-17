@@ -98,7 +98,7 @@ interface ProfilePageContentProps {
   isSupported: boolean;
   permission: NotificationPermission;
   requestPermission: () => Promise<NotificationPermission>;
-  photoInputRef: React.RefObject<HTMLInputElement>;
+   photoInputRef: React.MutableRefObject<HTMLInputElement | null>;
 }
 
 function ProfilePageContent({

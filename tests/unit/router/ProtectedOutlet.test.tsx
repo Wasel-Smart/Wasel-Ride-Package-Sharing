@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockNavigate = vi.fn();
@@ -12,6 +12,10 @@ vi.mock('@/hooks/useIframeSafeNavigate', () => ({
 
 vi.mock('@/contexts/LocalAuth', () => ({
   useLocalAuth: () => mockUseLocalAuth(),
+}));
+
+vi.mock('@/contexts/LanguageContext', () => ({
+  useLanguage: () => ({ language: 'en' }),
 }));
 
 import ProtectedOutlet from '@/router/ProtectedOutlet';
@@ -38,7 +42,7 @@ describe('ProtectedOutlet', () => {
     vi.clearAllMocks();
   });
 
-  it('waits for auth hydration before redirecting', () => {
+  it('shows a loading state while auth is being hydrated', () => {
     mockUseLocalAuth.mockReturnValue({
       user: null,
       loading: true,
@@ -47,13 +51,13 @@ describe('ProtectedOutlet', () => {
     renderProtectedRoute();
 
     expect(
-      screen.getByText('Restoring your Wasel session...')
+      screen.getByText('Restoring your Wasel session...'),
     ).toBeInTheDocument();
 
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('redirects guests to sign in with a safe return target', async () => {
+  it('renders the sign-in preview page for unauthenticated users', () => {
     mockUseLocalAuth.mockReturnValue({
       user: null,
       loading: false,
@@ -61,11 +65,10 @@ describe('ProtectedOutlet', () => {
 
     renderProtectedRoute();
 
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith(
-        '/app/auth?returnTo=%2Fapp%2Fprofile%3Ftab%3Dsecurity%23alerts',
-      );
-    });
+    // ProtectedPagePreview renders a Sign in button for guests
+    expect(screen.getByText('Sign in')).toBeInTheDocument();
+    // The outlet child should not be rendered
+    expect(screen.queryByText('Protected content')).not.toBeInTheDocument();
   });
 
   it('renders the child route for authenticated users', () => {
@@ -77,7 +80,7 @@ describe('ProtectedOutlet', () => {
     renderProtectedRoute();
 
     expect(
-      screen.getByText('Protected content')
+      screen.getByText('Protected content'),
     ).toBeInTheDocument();
 
     expect(mockNavigate).not.toHaveBeenCalled();

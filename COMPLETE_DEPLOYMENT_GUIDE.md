@@ -1,3 +1,7 @@
+<!-- IMPORTANT: This file is git-ignored and must never be committed to source control.
+     It is retained locally as a reference only. All placeholder values below must be
+     filled in from your own provider dashboards — never hardcode real credentials here. -->
+
 # Complete Deployment Guide - 100% Connectivity
 
 This guide ensures **100% frontend-backend connectivity** by covering:
@@ -22,13 +26,13 @@ supabase login
 ### Step 1.3: Link to Production Project
 ```bash
 # Link to your production Supabase project
-supabase link --project-ref zexlxabdcsjefptmjhuq
+supabase link --project-ref YOUR_SUPABASE_PROJECT_REF
 ```
 
 ### Step 1.4: Deploy Edge Function
 ```bash
 # Deploy the edge function to production
-supabase functions deploy make-server-0b1f4071
+supabase functions deploy YOUR_EDGE_FUNCTION_NAME
 
 # Verify deployment
 supabase functions list
@@ -38,10 +42,10 @@ supabase functions list
 ```bash
 # Set all required secrets for the edge function
 supabase secrets set \
-  SUPABASE_URL="https://zexlxabdcsjefptmjhuq.supabase.co" \
-  SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzU3MjYsImV4cCI6MjA5MzM1MTcyNn0.p17L08rXvykUbPpTev82S5WQo_uhSakwP7WI3HbMmA0" \
-  SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3NTcyNiwiZXhwIjoyMDkzMzUxNzI2fQ.YT92TwRlZDMvyu11sTzuB2mhlSIHVplxT5EybXio30U" \
-  APP_BASE_URL="https://wasel14.online"
+  SUPABASE_URL="https://YOUR_PROJECT_REF.supabase.co" \
+  SUPABASE_ANON_KEY="YOUR_SUPABASE_ANON_KEY" \
+  SUPABASE_SERVICE_ROLE_KEY="YOUR_SUPABASE_SERVICE_ROLE_KEY" \
+  APP_BASE_URL="https://your-domain.com"
 
 # Verify secrets are set
 supabase secrets list
@@ -50,7 +54,7 @@ supabase secrets list
 ### Step 1.6: Test Edge Function
 ```bash
 # Test the health endpoint
-curl https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/health
+curl https://YOUR_PROJECT_REF.supabase.co/functions/v1/YOUR_EDGE_FUNCTION_NAME/health
 ```
 
 **Expected Response:**
@@ -76,13 +80,13 @@ curl https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/
 4. **Create OAuth 2.0 Credentials**:
    - Application type: Web application
    - Authorized JavaScript origins:
-     - `https://wasel14.online`
-     - `https://zexlxabdcsjefptmjhuq.supabase.co`
+     - `https://your-domain.com`
+     - `https://YOUR_PROJECT_REF.supabase.co`
    - Authorized redirect URIs:
-     - `https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback`
-     - `https://wasel14.online/app/auth/callback`
+     - `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
+     - `https://your-domain.com/app/auth/callback`
 5. **Copy Credentials**:
-   - Client ID: `235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com`
+   - Client ID: (copy from Google Cloud Console)
    - Client Secret: (copy from console)
 
 ### Step 2.2: Facebook OAuth Setup
@@ -91,8 +95,8 @@ curl https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/
 2. **Create App**: "Wasel"
 3. **Add Facebook Login Product**
 4. **Configure OAuth Redirect URIs**:
-   - `https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback`
-   - `https://wasel14.online/app/auth/callback`
+   - `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
+   - `https://your-domain.com/app/auth/callback`
 5. **Copy Credentials**:
    - App ID: (from dashboard)
    - App Secret: (from dashboard)
@@ -105,7 +109,7 @@ curl https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/
    - Publishable key: `pk_live_...`
    - Secret key: `sk_live_...`
 4. **Create Webhook**:
-   - URL: `https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/payments/webhooks/stripe`
+   - URL: `https://YOUR_PROJECT_REF.supabase.co/functions/v1/YOUR_EDGE_FUNCTION_NAME/payments/webhooks/stripe`
    - Events to send:
      - `checkout.session.completed`
      - `checkout.session.expired`
@@ -125,18 +129,17 @@ curl https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/
 
 1. **Go to Twilio Console**: https://console.twilio.com
 2. **Get Account Credentials**:
-   - Account SID: `AC1386e065d313ae43d256ca0394d0b4e6`
-   - Auth Token: (from console)
+   - Account SID: (copy from Twilio Console dashboard)
+   - Auth Token: (copy from Twilio Console dashboard)
 3. **Create Messaging Service**:
    - Name: "Wasel Notifications"
    - Copy Messaging Service SID: `MG...`
 4. **Buy Phone Number** (Jordan):
    - Country: Jordan (+962)
    - Capabilities: SMS, Voice
-   - Example: `+962790000000`
 5. **Create API Key**:
    - Friendly Name: "Wasel Production"
-   - Copy API Key SID: `SK4519926e3b0a4186bee07283ab57b018`
+   - Copy API Key SID: (shown on creation)
    - Copy API Key Secret: (shown once)
 
 ### Step 2.5: Email Provider Setup (Choose One)
@@ -174,16 +177,16 @@ cat > set-production-secrets.sh << 'EOF'
 #!/bin/bash
 
 # Supabase
-supabase secrets set SUPABASE_URL="https://zexlxabdcsjefptmjhuq.supabase.co"
-supabase secrets set SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzU3MjYsImV4cCI6MjA5MzM1MTcyNn0.p17L08rXvykUbPpTev82S5WQo_uhSakwP7WI3HbMmA0"
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3NTcyNiwiZXhwIjoyMDkzMzUxNzI2fQ.YT92TwRlZDMvyu11sTzuB2mhlSIHVplxT5EybXio30U"
-supabase secrets set SUPABASE_DB_URL="postgresql://postgres.zexlxabdcsjefptmjhuq:YOUR_DB_PASSWORD@aws-0-us-east-1.pooler.supabase.com:6543/postgres"
+supabase secrets set SUPABASE_URL="https://YOUR_PROJECT_REF.supabase.co"
+supabase secrets set SUPABASE_ANON_KEY="YOUR_SUPABASE_ANON_KEY"
+supabase secrets set SUPABASE_SERVICE_ROLE_KEY="YOUR_SUPABASE_SERVICE_ROLE_KEY"
+supabase secrets set SUPABASE_DB_URL="postgresql://postgres.YOUR_PROJECT_REF:YOUR_DB_PASSWORD@aws-0-us-east-1.pooler.supabase.com:6543/postgres"
 
 # App
 supabase secrets set APP_BASE_URL="https://wasel14.online"
 
 # Google OAuth (REPLACE WITH YOUR VALUES)
-supabase secrets set SUPABASE_AUTH_GOOGLE_CLIENT_ID="235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com"
+supabase secrets set SUPABASE_AUTH_GOOGLE_CLIENT_ID="YOUR_GOOGLE_CLIENT_ID"
 supabase secrets set SUPABASE_AUTH_GOOGLE_CLIENT_SECRET="YOUR_GOOGLE_CLIENT_SECRET"
 
 # Facebook OAuth (REPLACE WITH YOUR VALUES)
@@ -197,13 +200,13 @@ supabase secrets set STRIPE_API_VERSION="2024-11-20.acacia"
 supabase secrets set STRIPE_WASEL_PLUS_PRICE_ID="price_YOUR_PRICE_ID"
 
 # Twilio (REPLACE WITH YOUR VALUES)
-supabase secrets set TWILIO_ACCOUNT_SID="AC1386e065d313ae43d256ca0394d0b4e6"
+supabase secrets set TWILIO_ACCOUNT_SID="YOUR_TWILIO_ACCOUNT_SID"
 supabase secrets set TWILIO_AUTH_TOKEN="YOUR_TWILIO_AUTH_TOKEN"
-supabase secrets set TWILIO_API_KEY_SID="SK4519926e3b0a4186bee07283ab57b018"
+supabase secrets set TWILIO_API_KEY_SID="YOUR_TWILIO_API_KEY_SID"
 supabase secrets set TWILIO_API_KEY_SECRET="YOUR_TWILIO_API_KEY_SECRET"
 supabase secrets set TWILIO_MESSAGING_SERVICE_SID="YOUR_MESSAGING_SERVICE_SID"
-supabase secrets set TWILIO_SMS_FROM="+962790000000"
-supabase secrets set TWILIO_WHATSAPP_FROM="whatsapp:+14155238886"
+supabase secrets set TWILIO_SMS_FROM="YOUR_TWILIO_PHONE_NUMBER"
+supabase secrets set TWILIO_WHATSAPP_FROM="whatsapp:YOUR_WHATSAPP_NUMBER"
 
 # Email - Resend (REPLACE WITH YOUR VALUES)
 supabase secrets set RESEND_API_KEY="re_YOUR_RESEND_API_KEY"
@@ -231,12 +234,12 @@ chmod +x set-production-secrets.sh
 
 ### Step 3.2: Update Supabase Dashboard Settings
 
-1. **Go to Supabase Dashboard**: https://supabase.com/dashboard/project/zexlxabdcsjefptmjhuq
+1. **Go to Supabase Dashboard**: https://supabase.com/dashboard/project/YOUR_PROJECT_REF
 2. **Authentication → URL Configuration**:
-   - Site URL: `https://wasel14.online`
+   - Site URL: `https://your-domain.com`
    - Redirect URLs:
-     - `https://wasel14.online/app/auth/callback`
-     - `https://wasel14.online/**`
+     - `https://your-domain.com/app/auth/callback`
+     - `https://your-domain.com/**`
 3. **Authentication → Providers**:
    - Enable Google OAuth
    - Enable Facebook OAuth
@@ -265,28 +268,28 @@ vercel link
 
 # Set production environment variables
 vercel env add VITE_SUPABASE_URL production
-# Paste: https://zexlxabdcsjefptmjhuq.supabase.co
+# Paste: https://YOUR_PROJECT_REF.supabase.co
 
 vercel env add VITE_SUPABASE_ANON_KEY production
-# Paste: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzU3MjYsImV4cCI6MjA5MzM1MTcyNn0.p17L08rXvykUbPpTev82S5WQo_uhSakwP7WI3HbMmA0
+# Paste: YOUR_SUPABASE_ANON_KEY
 
 vercel env add VITE_EDGE_FUNCTION_NAME production
-# Paste: make-server-0b1f4071
+# Paste: YOUR_EDGE_FUNCTION_NAME
 
 vercel env add VITE_API_URL production
-# Paste: https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071
+# Paste: https://YOUR_PROJECT_REF.supabase.co/functions/v1/YOUR_EDGE_FUNCTION_NAME
 
 vercel env add VITE_APP_URL production
-# Paste: https://wasel14.online
+# Paste: https://your-domain.com
 
 vercel env add VITE_GOOGLE_MAPS_API_KEY production
-# Paste: AIzaSyBWqXeMJ-oPSDpqeR548hw3QUU0EaxE85s
+# Paste: YOUR_GOOGLE_MAPS_API_KEY
 
 vercel env add VITE_GOOGLE_CLIENT_ID production
-# Paste: 235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com
+# Paste: YOUR_GOOGLE_CLIENT_ID
 
 vercel env add VITE_STRIPE_PUBLISHABLE_KEY production
-# Paste: pk_test_51SZmpKENhKSYxMCXJ2TgwgNMNjUjHk5CwPQ31zWTEsokWdkD7GgaVhgU3ZPD7ti5gd6NWBvwdWcH3R0hXQCOG3QI00lTUi6x7v
+# Paste: pk_live_YOUR_STRIPE_PUBLISHABLE_KEY
 
 vercel env add VITE_SENTRY_DSN production
 # Paste: YOUR_SENTRY_DSN
@@ -311,29 +314,29 @@ VITE_APP_NAME=Wasel
 NODE_ENV=production
 
 # Supabase
-VITE_SUPABASE_URL=https://zexlxabdcsjefptmjhuq.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzU3MjYsImV4cCI6MjA5MzM1MTcyNn0.p17L08rXvykUbPpTev82S5WQo_uhSakwP7WI3HbMmA0
-VITE_EDGE_FUNCTION_NAME=make-server-0b1f4071
-VITE_API_URL=https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+VITE_EDGE_FUNCTION_NAME=YOUR_EDGE_FUNCTION_NAME
+VITE_API_URL=https://YOUR_PROJECT_REF.supabase.co/functions/v1/YOUR_EDGE_FUNCTION_NAME
 
 # Feature Flags
 VITE_ALLOW_DIRECT_SUPABASE_FALLBACK=false
 VITE_ENABLE_DEMO_DATA=false
 
 # App URLs
-VITE_APP_URL=https://wasel14.online
+VITE_APP_URL=https://your-domain.com
 VITE_AUTH_CALLBACK_PATH=/app/auth/callback
 
 # Google
-VITE_GOOGLE_MAPS_API_KEY=AIzaSyBWqXeMJ-oPSDpqeR548hw3QUU0EaxE85s
-VITE_GOOGLE_CLIENT_ID=235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com
+VITE_GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
+VITE_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID
 
 # Stripe
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_51SZmpKENhKSYxMCXJ2TgwgNMNjUjHk5CwPQ31zWTEsokWdkD7GgaVhgU3ZPD7ti5gd6NWBvwdWcH3R0hXQCOG3QI00lTUi6x7v
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_YOUR_STRIPE_PUBLISHABLE_KEY
 
 # Support
-VITE_SUPPORT_EMAIL=support@wasel14.online
-VITE_SUPPORT_PHONE_NUMBER=962790000000
+VITE_SUPPORT_EMAIL=support@your-domain.com
+VITE_SUPPORT_PHONE_NUMBER=YOUR_SUPPORT_PHONE
 EOF
 ```
 
@@ -358,11 +361,11 @@ git push origin main
 
 ```bash
 # Test health endpoint
-curl https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/health
+curl https://YOUR_PROJECT_REF.supabase.co/functions/v1/YOUR_EDGE_FUNCTION_NAME/health
 
 # Test with authentication (replace TOKEN with real JWT)
 curl -H "Authorization: Bearer TOKEN" \
-  https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/trust/status
+  https://YOUR_PROJECT_REF.supabase.co/functions/v1/YOUR_EDGE_FUNCTION_NAME/trust/status
 ```
 
 ### Step 4.3: Verify Provider Connectivity
@@ -371,7 +374,7 @@ curl -H "Authorization: Bearer TOKEN" \
 # Run provider diagnostics (requires worker secret)
 curl -X GET \
   -H "x-communication-worker-secret: YOUR_WORKER_SECRET" \
-  https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/communications/admin/provider-diagnostics
+  https://YOUR_PROJECT_REF.supabase.co/functions/v1/YOUR_EDGE_FUNCTION_NAME/communications/admin/provider-diagnostics
 ```
 
 ### Step 4.4: Run Complete Verification
@@ -433,7 +436,7 @@ supabase functions deploy make-server-0b1f4071 --no-verify-jwt
 2. Check webhook signing secret matches
 3. Test webhook with Stripe CLI:
 ```bash
-stripe listen --forward-to https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/payments/webhooks/stripe
+stripe listen --forward-to https://YOUR_PROJECT_REF.supabase.co/functions/v1/YOUR_EDGE_FUNCTION_NAME/payments/webhooks/stripe
 ```
 
 ### Email Not Sending
@@ -445,7 +448,7 @@ curl -X POST \
   -H "x-communication-worker-secret: YOUR_SECRET" \
   -H "Content-Type: application/json" \
   -d '{"channel":"email","destination":"test@example.com"}' \
-  https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/communications/admin/send-test
+  https://YOUR_PROJECT_REF.supabase.co/functions/v1/YOUR_EDGE_FUNCTION_NAME/communications/admin/send-test
 ```
 
 ---

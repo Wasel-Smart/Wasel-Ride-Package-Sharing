@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createPaymentError, createNetworkError } from '../../src/utils/errors';
+import { createPaymentError, createNetworkError } from '../../../src/utils/errors';
 
 // Mock Stripe
 const mockStripe = {
