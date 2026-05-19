@@ -29,8 +29,10 @@ export interface DriverRating {
 
 class RatingsService {
   async submitRating(submission: RatingSubmission): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
       throw new Error('Not authenticated');
     }
@@ -68,17 +70,15 @@ class RatingsService {
       throw new Error('You have already rated this trip');
     }
 
-    const { error: insertError } = await supabase
-      .from('ratings')
-      .insert({
-        booking_id: submission.bookingId,
-        trip_id: submission.tripId,
-        rider_id: user.id,
-        driver_id: submission.driverId,
-        rating: submission.rating,
-        review: submission.review,
-        tags: submission.tags || [],
-      });
+    const { error: insertError } = await supabase.from('ratings').insert({
+      booking_id: submission.bookingId,
+      trip_id: submission.tripId,
+      rider_id: user.id,
+      driver_id: submission.driverId,
+      rating: submission.rating,
+      review: submission.review,
+      tags: submission.tags || [],
+    });
 
     if (insertError) {
       throw insertError;
@@ -89,8 +89,8 @@ class RatingsService {
       type: 'rating_received',
       title: 'New Rating',
       body: `You received a ${submission.rating}-star rating`,
-      data: { 
-        bookingId: submission.bookingId, 
+      data: {
+        bookingId: submission.bookingId,
         tripId: submission.tripId,
         rating: submission.rating,
       },
@@ -138,8 +138,10 @@ class RatingsService {
     canRate: boolean;
     reason?: string;
   }> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
       return { canRate: false, reason: 'Not authenticated' };
     }

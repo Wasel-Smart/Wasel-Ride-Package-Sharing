@@ -50,7 +50,9 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
   const popularRoutes = getPopularRoutes();
   const connectedCities = getAllCities().length;
   const publishedCorridors = JORDAN_MOBILITY_NETWORK.length;
-  const intercityCount = JORDAN_MOBILITY_NETWORK.filter(route => route.category === 'intercity').length;
+  const intercityCount = JORDAN_MOBILITY_NETWORK.filter(
+    route => route.category === 'intercity',
+  ).length;
   const handleGetStarted = onGetStarted ?? (() => navigate('/app/find-ride'));
 
   const openRoute = (route: JordanRoute) =>
@@ -150,7 +152,12 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
                   type="button"
                   onClick={() => openRoute(route)}
                   className="w-full text-left"
-                  style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                  }}
                 >
                   <div className="mb-4">
                     <div className="mb-2 flex items-center justify-between">
@@ -234,7 +241,9 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
             <CardContent className="p-8">
               <h3 className="mb-3 text-foreground">
-                {isRTL ? 'ابدأ من الممر ثم اختر النمط' : 'Start from the corridor, then choose the mode'}
+                {isRTL
+                  ? 'ابدأ من الممر ثم اختر النمط'
+                  : 'Start from the corridor, then choose the mode'}
               </h3>
               <p className="mx-auto mb-6 max-w-2xl text-muted-foreground">
                 {isRTL

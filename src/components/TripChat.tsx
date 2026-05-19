@@ -22,15 +22,12 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
 
   useEffect(() => {
     loadMessages();
-    const unsubscribe = chatService.subscribeToTrip(
-      tripId,
-      (message) => {
-        setMessages((prev) => [...prev, message]);
-        if (message.sender_id !== user?.id) {
-          chatService.markAsRead([message.id]);
-        }
+    const unsubscribe = chatService.subscribeToTrip(tripId, message => {
+      setMessages(prev => [...prev, message]);
+      if (message.sender_id !== user?.id) {
+        chatService.markAsRead([message.id]);
       }
-    );
+    });
 
     return () => {
       unsubscribe();
@@ -45,11 +42,11 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
     try {
       const data = await chatService.getMessages(tripId);
       setMessages(data);
-      
+
       const unreadIds = data
-        .filter((m) => m.sender_id !== user?.id && !m.read_by.includes(user?.id || ''))
-        .map((m) => m.id);
-      
+        .filter(m => m.sender_id !== user?.id && !m.read_by.includes(user?.id || ''))
+        .map(m => m.id);
+
       if (unreadIds.length > 0) {
         await chatService.markAsRead(unreadIds);
       }
@@ -102,10 +99,7 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
       <div className="flex items-center justify-between p-4 border-b">
         <h3 className="font-semibold">Trip Chat</h3>
         {onClose && (
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             ✕
           </button>
         )}
@@ -117,19 +111,13 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
             No messages yet. Start the conversation!
           </div>
         ) : (
-          messages.map((message) => {
+          messages.map(message => {
             const isOwn = message.sender_id === user?.id;
             return (
-              <div
-                key={message.id}
-                className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`}
-              >
+              <div key={message.id} className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`}>
                 <Avatar className="w-8 h-8 flex-shrink-0">
                   {message.sender?.avatar_url ? (
-                    <img
-                      src={message.sender.avatar_url}
-                      alt={message.sender.full_name}
-                    />
+                    <img src={message.sender.avatar_url} alt={message.sender.full_name} />
                   ) : (
                     <div className="w-full h-full bg-blue-500 flex items-center justify-center text-white text-sm">
                       {message.sender?.full_name?.[0] || '?'}
@@ -139,9 +127,7 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
                 <div className={`flex-1 ${isOwn ? 'text-right' : ''}`}>
                   <div
                     className={`inline-block px-4 py-2 rounded-lg max-w-[70%] ${
-                      isOwn
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-100 text-gray-900'
+                      isOwn ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-900'
                     }`}
                   >
                     {message.content}
@@ -166,22 +152,14 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
             ref={inputRef}
             type="text"
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={e => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type a message..."
             className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={sending}
           />
-          <Button
-            onClick={handleSend}
-            disabled={!newMessage.trim() || sending}
-            className="px-4"
-          >
-            {sending ? (
-              <Loader2 className="animate-spin" size={20} />
-            ) : (
-              <Send size={20} />
-            )}
+          <Button onClick={handleSend} disabled={!newMessage.trim() || sending} className="px-4">
+            {sending ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
           </Button>
         </div>
       </div>

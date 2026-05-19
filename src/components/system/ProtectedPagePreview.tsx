@@ -16,7 +16,9 @@ type PreviewConfig = {
 };
 
 function matches(pathname: string, candidates: string[]) {
-  return candidates.some(candidate => pathname === candidate || pathname.startsWith(`${candidate}/`));
+  return candidates.some(
+    candidate => pathname === candidate || pathname.startsWith(`${candidate}/`),
+  );
 }
 
 function resolvePreviewConfig(pathname: string, ar: boolean): PreviewConfig {
@@ -30,7 +32,11 @@ function resolvePreviewConfig(pathname: string, ar: boolean): PreviewConfig {
         : 'Open this corridor to see live seat supply, demand signals, and pickup clarity before you book.',
       highlights: ar
         ? ['مقارنة السعر والوقت والثقة', 'تذكيرات للممرات المتكررة', 'خيارات بديلة عند ضعف العرض']
-        : ['Compare price, timing, and trust', 'Save recurring corridor reminders', 'See fallback options when supply is thin'],
+        : [
+            'Compare price, timing, and trust',
+            'Save recurring corridor reminders',
+            'See fallback options when supply is thin',
+          ],
       secondaryTarget: '/app',
       secondaryLabel: ar ? 'العودة للرئيسية' : 'Back to home',
     };
@@ -46,7 +52,11 @@ function resolvePreviewConfig(pathname: string, ar: boolean): PreviewConfig {
         : 'Post a route, review readiness, and manage seats and parcels from one supply surface.',
       highlights: ar
         ? ['خطة سعر وربح للمسار', 'طلبات مباشرة من الركاب', 'بوابات ثقة قبل النشر']
-        : ['Route pricing and earnings plan', 'Incoming rider requests', 'Trust gates before going live'],
+        : [
+            'Route pricing and earnings plan',
+            'Incoming rider requests',
+            'Trust gates before going live',
+          ],
       secondaryTarget: '/app/trust',
       secondaryLabel: ar ? 'استكشف الثقة' : 'Explore trust',
     };
@@ -62,7 +72,11 @@ function resolvePreviewConfig(pathname: string, ar: boolean): PreviewConfig {
         : 'Keep tickets, status, support, and live trip tracking in one clear place.',
       highlights: ar
         ? ['الرحلات النشطة أولًا', 'حالة الدفع والدعم في سجل واحد', 'تتبع حي أثناء الحركة']
-        : ['Active trips and exceptions first', 'Payment and support state in one ledger', 'Live tracking during movement'],
+        : [
+            'Active trips and exceptions first',
+            'Payment and support state in one ledger',
+            'Live tracking during movement',
+          ],
       secondaryTarget: '/app',
       secondaryLabel: ar ? 'العودة للرئيسية' : 'Back to home',
     };
@@ -77,8 +91,16 @@ function resolvePreviewConfig(pathname: string, ar: boolean): PreviewConfig {
         ? 'شاهد المغادرات الرسمية، حالة التوفر، وخيارات النسخ الاحتياطية قبل الحجز.'
         : 'See official departures, seat status, and fallback options before you book.',
       highlights: ar
-        ? ['جداول رسمية ومصادر مباشرة', 'مقارنة المشغلين والمغادرات', 'خيار بديل عند عدم ملاءمة المشاركة']
-        : ['Official schedules and verified sources', 'Compare operators and departures', 'Fallback when shared rides are not the right fit'],
+        ? [
+            'جداول رسمية ومصادر مباشرة',
+            'مقارنة المشغلين والمغادرات',
+            'خيار بديل عند عدم ملاءمة المشاركة',
+          ]
+        : [
+            'Official schedules and verified sources',
+            'Compare operators and departures',
+            'Fallback when shared rides are not the right fit',
+          ],
       secondaryTarget: '/app/routes',
       secondaryLabel: ar ? 'استكشف المسارات' : 'Explore routes',
     };
@@ -93,8 +115,16 @@ function resolvePreviewConfig(pathname: string, ar: boolean): PreviewConfig {
         ? 'وصّل الطرود على نفس شبكة الرحلات، أو افتح تدفق الإرجاع الذكي من نفس المسار.'
         : 'Move parcels on the same route network, or open the smart returns flow from the same corridor system.',
       highlights: ar
-        ? ['إرسال وتتبع وإرجاع من سطح واحد', 'مطابقة فورية مع الرحلات المناسبة', 'أكواد تسليم ودعم مرتبط بالطلب']
-        : ['Send, track, and return in one place', 'Match parcels to live connected rides', 'Handoff proof and support on the same request'],
+        ? [
+            'إرسال وتتبع وإرجاع من سطح واحد',
+            'مطابقة فورية مع الرحلات المناسبة',
+            'أكواد تسليم ودعم مرتبط بالطلب',
+          ]
+        : [
+            'Send, track, and return in one place',
+            'Match parcels to live connected rides',
+            'Handoff proof and support on the same request',
+          ],
       secondaryTarget: '/app/routes',
       secondaryLabel: ar ? 'استكشف المسارات' : 'Explore routes',
     };
@@ -110,7 +140,11 @@ function resolvePreviewConfig(pathname: string, ar: boolean): PreviewConfig {
         : 'See balance, transfers, rewards, and subscriptions from one financial surface.',
       highlights: ar
         ? ['شحن وسحب وتحويلات', 'مكافآت وWasel Plus', 'تحليلات وإنفاق واضح']
-        : ['Top-up, withdraw, and send money', 'Rewards and Wasel Plus access', 'Clear spending and insight views'],
+        : [
+            'Top-up, withdraw, and send money',
+            'Rewards and Wasel Plus access',
+            'Clear spending and insight views',
+          ],
       secondaryTarget: '/app',
       secondaryLabel: ar ? 'العودة للرئيسية' : 'Back to home',
     };
@@ -126,7 +160,11 @@ function resolvePreviewConfig(pathname: string, ar: boolean): PreviewConfig {
         : 'Update identity, preferences, security, and support channels from one account surface.',
       highlights: ar
         ? ['بيانات الهوية والثقة', 'الأمان وكلمات المرور و2FA', 'اللغة والإشعارات والخصوصية']
-        : ['Identity and trust details', 'Passwords, security, and 2FA', 'Language, notifications, and privacy controls'],
+        : [
+            'Identity and trust details',
+            'Passwords, security, and 2FA',
+            'Language, notifications, and privacy controls',
+          ],
       secondaryTarget: '/app',
       secondaryLabel: ar ? 'العودة للرئيسية' : 'Back to home',
     };
@@ -142,7 +180,11 @@ function resolvePreviewConfig(pathname: string, ar: boolean): PreviewConfig {
         : 'Triage rides, wallet, trust, and support updates from one feed.',
       highlights: ar
         ? ['تصفية حسب النوع والأولوية', 'فتح الإجراء مباشرة من الإشعار', 'أرشفة دون فقدان السياق']
-        : ['Filter by type and urgency', 'Open the next action directly', 'Archive without losing context'],
+        : [
+            'Filter by type and urgency',
+            'Open the next action directly',
+            'Archive without losing context',
+          ],
       secondaryTarget: '/app',
       secondaryLabel: ar ? 'العودة للرئيسية' : 'Back to home',
     };
@@ -158,7 +200,11 @@ function resolvePreviewConfig(pathname: string, ar: boolean): PreviewConfig {
         : 'Verify identity, confirm contact channels, and unlock sensitive flows with a trusted account.',
       highlights: ar
         ? ['خطوات ثقة واضحة', 'جاهزية السائق والمحفظة', 'سجل حماية ودعم أثناء الحركة']
-        : ['Clear staged trust workflow', 'Driver and wallet readiness gates', 'Protection and support during movement'],
+        : [
+            'Clear staged trust workflow',
+            'Driver and wallet readiness gates',
+            'Protection and support during movement',
+          ],
       secondaryTarget: '/app',
       secondaryLabel: ar ? 'العودة للرئيسية' : 'Back to home',
     };
@@ -172,8 +218,16 @@ function resolvePreviewConfig(pathname: string, ar: boolean): PreviewConfig {
       ? 'نُبقي هذه المعاينة واضحة حتى تعرف ما الذي سيفتحه حساب واصل الموثق بعد تسجيل الدخول.'
       : 'This preview stays visible so you can see what a trusted Wasel account unlocks after sign-in.',
     highlights: ar
-      ? ['رحلات وطرود ومحفظة في شبكة واحدة', 'تفضيلات وحماية مرتبطة بالحساب', 'الخطوة التالية واضحة من أول شاشة']
-      : ['Rides, parcels, and wallet on one network', 'Preferences and protection tied to your account', 'A clear next step from the first screen'],
+      ? [
+          'رحلات وطرود ومحفظة في شبكة واحدة',
+          'تفضيلات وحماية مرتبطة بالحساب',
+          'الخطوة التالية واضحة من أول شاشة',
+        ]
+      : [
+          'Rides, parcels, and wallet on one network',
+          'Preferences and protection tied to your account',
+          'A clear next step from the first screen',
+        ],
     secondaryTarget: '/app',
     secondaryLabel: ar ? 'العودة للرئيسية' : 'Back to home',
   };
@@ -329,7 +383,13 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
             </Button>
           </div>
 
-          <div style={{ color: C.textDim, fontSize: TYPE.size.sm, lineHeight: TYPE.lineHeight.relaxed }}>
+          <div
+            style={{
+              color: C.textDim,
+              fontSize: TYPE.size.sm,
+              lineHeight: TYPE.lineHeight.relaxed,
+            }}
+          >
             <strong style={{ color: C.textSub }}>{unlockLabel}</strong>{' '}
             {ar
               ? 'نُبقي تجربة واصل قابلة للاستكشاف قبل تسجيل الدخول، لكن الحجوزات والبيانات الشخصية والإجراءات الحساسة تبقى خلف الحساب.'

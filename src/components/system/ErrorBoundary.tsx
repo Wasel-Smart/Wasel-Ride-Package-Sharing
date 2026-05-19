@@ -56,7 +56,7 @@ export class ErrorBoundary extends Component<Props, State> {
     // Reset error boundary when reset keys change
     if (this.state.hasError && this.props.resetKeys) {
       const hasResetKeyChanged = this.props.resetKeys.some(
-        (key, index) => key !== prevProps.resetKeys?.[index]
+        (key, index) => key !== prevProps.resetKeys?.[index],
       );
 
       if (hasResetKeyChanged) {
@@ -97,11 +97,11 @@ export class ErrorBoundary extends Component<Props, State> {
                 />
               </svg>
             </div>
-            
+
             <h2 className="text-xl font-semibold text-gray-900 text-center mb-2">
               Something went wrong
             </h2>
-            
+
             <p className="text-gray-600 text-center mb-6">
               We're sorry for the inconvenience. Please try refreshing the page.
             </p>
@@ -125,7 +125,7 @@ export class ErrorBoundary extends Component<Props, State> {
               >
                 Refresh Page
               </button>
-              
+
               <button
                 onClick={this.reset}
                 className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"

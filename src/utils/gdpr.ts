@@ -67,10 +67,7 @@ class GDPRCompliance {
   /**
    * Get user consent status
    */
-  async getConsent(
-    userId: string,
-    consentType: ConsentRecord['consentType']
-  ): Promise<boolean> {
+  async getConsent(userId: string, consentType: ConsentRecord['consentType']): Promise<boolean> {
     try {
       if (!supabase) {
         return false;
@@ -120,7 +117,7 @@ class GDPRCompliance {
       logger.info('Data export requested', { userId: sanitizeLogMessage(userId) });
 
       // Trigger async export job (would be handled by worker)
-      this.generateDataExport(userId).catch((error) => {
+      this.generateDataExport(userId).catch(error => {
         logger.error('Data export generation failed', error);
       });
 
@@ -161,7 +158,7 @@ class GDPRCompliance {
 
       // Convert to JSON
       const jsonData = JSON.stringify(exportData, null, 2);
-      
+
       // In production, upload to secure storage and return URL
       // For now, return data URL
       const dataUrl = `data:application/json;base64,${btoa(jsonData)}`;
@@ -190,10 +187,7 @@ class GDPRCompliance {
   /**
    * Request account deletion (Right to be Forgotten)
    */
-  async requestDeletion(
-    userId: string,
-    reason?: string
-  ): Promise<DataDeletionRequest> {
+  async requestDeletion(userId: string, reason?: string): Promise<DataDeletionRequest> {
     try {
       if (!supabase) {
         throw new Error('Supabase not initialized');
@@ -282,7 +276,7 @@ class GDPRCompliance {
       for (const request of requests) {
         try {
           await this.deleteUserData(request.user_id);
-          
+
           // Mark as completed
           await supabase
             .from('data_deletion_requests')
@@ -315,10 +309,7 @@ class GDPRCompliance {
 
     // Soft delete user data
     await Promise.all([
-      supabase
-        .from('users')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', userId),
+      supabase.from('users').update({ deleted_at: new Date().toISOString() }).eq('id', userId),
       supabase
         .from('ride_bookings')
         .update({ deleted_at: new Date().toISOString() })

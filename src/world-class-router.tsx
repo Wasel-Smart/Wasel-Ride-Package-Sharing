@@ -1,12 +1,12 @@
 /**
  * WASEL ROUTER - 10/10 UX VERSION
- * 
+ *
  * Complete reorganization with:
  * - 4 main tabs (Home, Rides, Activity, Account)
  * - Progressive feature disclosure
  * - Smart routing based on user level
  * - Context-aware navigation
- * 
+ *
  * Based on best practices from Uber, Airbnb, WhatsApp
  */
 
@@ -33,20 +33,22 @@ const BusPage = lazy(() => import('./features/bus/BusPage'));
 // Loading fallback
 function PageLoader() {
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0B1D2D 0%, #051218 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: '#fff'
-    }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0B1D2D 0%, #051218 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#fff',
+      }}
+    >
       <div style={{ textAlign: 'center' }}>
-        <LoaderCircle 
-          size={48} 
+        <LoaderCircle
+          size={48}
           color="#00C8E8"
           style={{
-            animation: 'spin 1s linear infinite'
+            animation: 'spin 1s linear infinite',
           }}
         />
         <p style={{ marginTop: '16px', color: '#94A3B8' }}>Loading...</p>
@@ -71,7 +73,7 @@ function lazyLoad(Component: React.LazyExoticComponent<any>) {
 
 /**
  * MAIN ROUTER CONFIGURATION
- * 
+ *
  * Structure:
  * / - Landing/Home
  * /app - Main app shell
@@ -264,10 +266,10 @@ export const worldClassRouter = createBrowserRouter([
 // Get appropriate home route based on user state
 export function getHomeRoute(user: any): string {
   if (!user) return '/app';
-  
+
   // If user has active trip, go to trips
   if (user.hasActiveTrip) return '/app/activity/trips';
-  
+
   // Default to home
   return '/app';
 }
@@ -283,11 +285,11 @@ export function isFeatureUnlocked(featureId: string, userLevel: string): boolean
   const featureGates: Record<string, string[]> = {
     'rides-find': ['new', 'beginner', 'intermediate', 'expert'],
     'rides-offer': ['beginner', 'intermediate', 'expert'],
-    'packages': ['beginner', 'intermediate', 'expert'],
-    'transport': ['intermediate', 'expert'],
-    'analytics': ['expert'],
+    packages: ['beginner', 'intermediate', 'expert'],
+    transport: ['intermediate', 'expert'],
+    analytics: ['expert'],
   };
-  
+
   return featureGates[featureId]?.includes(userLevel) ?? false;
 }
 

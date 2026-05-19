@@ -2,14 +2,7 @@
 
 import { supabase } from '../../utils/supabase/client';
 import { evaluateTrustCapability } from '../trustRules';
-import type {
-  DbClient,
-  RawBooking,
-  RawProfile,
-  TripRow,
-  UserContext,
-  WalletRow,
-} from './types';
+import type { DbClient, RawBooking, RawProfile, TripRow, UserContext, WalletRow } from './types';
 import type { TripCreatePayload, TripSearchResult } from '../trips';
 
 export function getDb(): DbClient {

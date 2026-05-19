@@ -75,7 +75,10 @@ function getProjectRefFromJwt(value: string | undefined): string | null {
 }
 
 function getProjectRefFromUrl(value: string): string {
-  return value.replace(/^https?:\/\//, '').replace(/\/$/, '').replace(/\.supabase\.co$/, '');
+  return value
+    .replace(/^https?:\/\//, '')
+    .replace(/\/$/, '')
+    .replace(/\.supabase\.co$/, '');
 }
 
 function pickConfiguredUrl(...candidates: Array<string | undefined>): string {
@@ -87,13 +90,17 @@ function pickConfiguredUrl(...candidates: Array<string | undefined>): string {
 }
 
 function pickConfiguredKey(url: string, ...candidates: Array<string | undefined>): string {
-  const configured = candidates.filter((candidate): candidate is string => isConfiguredValue(candidate));
+  const configured = candidates.filter((candidate): candidate is string =>
+    isConfiguredValue(candidate),
+  );
   if (configured.length === 0) return '';
 
   const urlProjectRef = url ? getProjectRefFromUrl(url) : '';
   if (!urlProjectRef) return configured[0] ?? '';
 
-  const matchingJwtCandidate = configured.find(candidate => getProjectRefFromJwt(candidate) === urlProjectRef);
+  const matchingJwtCandidate = configured.find(
+    candidate => getProjectRefFromJwt(candidate) === urlProjectRef,
+  );
   if (matchingJwtCandidate) return matchingJwtCandidate;
 
   const opaqueCandidate = configured.find(candidate => !getProjectRefFromJwt(candidate));

@@ -41,9 +41,7 @@ class PaymentService {
   private async callEdgeFunction<T>(functionName: string, body: unknown): Promise<T> {
     const client = requireSupabaseClient();
 
-    const functionsBaseUrl = supabaseUrl
-      ? `${supabaseUrl.replace(/\/$/, '')}/functions/v1`
-      : '';
+    const functionsBaseUrl = supabaseUrl ? `${supabaseUrl.replace(/\/$/, '')}/functions/v1` : '';
 
     if (!functionsBaseUrl) {
       throw new Error('Payments are not configured. Supabase Functions URL is unavailable.');
@@ -75,7 +73,9 @@ class PaymentService {
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Payment request failed' }));
         throw new Error(
-          typeof error.error === 'string' ? error.error : `Payment request failed (${response.status})`,
+          typeof error.error === 'string'
+            ? error.error
+            : `Payment request failed (${response.status})`,
         );
       }
 

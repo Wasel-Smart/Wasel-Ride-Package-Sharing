@@ -15,31 +15,24 @@ export function usePayments() {
     return stripeInstance;
   }, []);
 
-  const createPaymentIntent = useCallback(
-    async (request: PaymentIntentRequest) => {
-      setLoading(true);
-      setError(null);
+  const createPaymentIntent = useCallback(async (request: PaymentIntentRequest) => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const response = await paymentService.createPaymentIntent(request);
-        return response;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Payment failed';
-        setError(errorMessage);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+    try {
+      const response = await paymentService.createPaymentIntent(request);
+      return response;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Payment failed';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const confirmPayment = useCallback(
-    async (
-      _clientSecret: string,
-      elements: StripeElements,
-      returnUrl?: string
-    ) => {
+    async (_clientSecret: string, elements: StripeElements, returnUrl?: string) => {
       if (!stripe) {
         throw new Error('Stripe not initialized');
       }
@@ -67,31 +60,28 @@ export function usePayments() {
         setLoading(false);
       }
     },
-    [stripe]
+    [stripe],
   );
 
-  const processRefund = useCallback(
-    async (bookingId: string, reason: string, amount?: number) => {
-      setLoading(true);
-      setError(null);
+  const processRefund = useCallback(async (bookingId: string, reason: string, amount?: number) => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const response = await paymentService.processRefund({
-          bookingId,
-          reason,
-          amount,
-        });
-        return response;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Refund failed';
-        setError(errorMessage);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
+    try {
+      const response = await paymentService.processRefund({
+        bookingId,
+        reason,
+        amount,
+      });
+      return response;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Refund failed';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return {
     stripe,

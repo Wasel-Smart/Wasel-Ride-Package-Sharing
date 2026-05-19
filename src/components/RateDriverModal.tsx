@@ -67,9 +67,7 @@ export function RateDriverModal({
   };
 
   const toggleTag = (tag: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
+    setSelectedTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]));
   };
 
   return (
@@ -79,7 +77,7 @@ export function RateDriverModal({
         <p className="text-gray-600 mb-6">How was your experience with {driverName}?</p>
 
         <div className="flex justify-center gap-2 mb-6">
-          {[1, 2, 3, 4, 5].map((star) => (
+          {[1, 2, 3, 4, 5].map(star => (
             <button
               key={star}
               type="button"
@@ -101,11 +99,9 @@ export function RateDriverModal({
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium mb-2">
-            What did you like? (Optional)
-          </label>
+          <label className="block text-sm font-medium mb-2">What did you like? (Optional)</label>
           <div className="flex flex-wrap gap-2">
-            {RATING_TAGS.map((tag) => (
+            {RATING_TAGS.map(tag => (
               <button
                 key={tag}
                 type="button"
@@ -123,12 +119,10 @@ export function RateDriverModal({
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium mb-2">
-            Additional Comments (Optional)
-          </label>
+          <label className="block text-sm font-medium mb-2">Additional Comments (Optional)</label>
           <textarea
             value={review}
-            onChange={(e) => setReview(e.target.value)}
+            onChange={e => setReview(e.target.value)}
             placeholder="Share more about your experience..."
             className="w-full p-3 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             rows={4}
@@ -144,19 +138,10 @@ export function RateDriverModal({
         )}
 
         <div className="flex gap-3">
-          <Button
-            onClick={onClose}
-            variant="outline"
-            className="flex-1"
-            disabled={loading}
-          >
+          <Button onClick={onClose} variant="outline" className="flex-1" disabled={loading}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSubmit}
-            className="flex-1"
-            disabled={loading || rating === 0}
-          >
+          <Button onClick={handleSubmit} className="flex-1" disabled={loading || rating === 0}>
             {loading ? 'Submitting...' : 'Submit Rating'}
           </Button>
         </div>

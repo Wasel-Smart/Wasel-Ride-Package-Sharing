@@ -34,7 +34,7 @@ class AppErrorBoundary extends Component<
       'setupMessageChannel',
     ];
 
-    if (ignored.some((p) => message.includes(p))) {
+    if (ignored.some(p => message.includes(p))) {
       return { hasError: false, error: '' };
     }
 
@@ -48,9 +48,7 @@ class AppErrorBoundary extends Component<
       <div style={{ padding: 40, color: 'white', background: '#0A0F1A' }}>
         <h2>App Error</h2>
         <p>{this.state.error}</p>
-        <button onClick={() => window.location.reload()}>
-          Reload
-        </button>
+        <button onClick={() => window.location.reload()}>Reload</button>
       </div>
     );
   }
@@ -96,7 +94,7 @@ function AppRuntimeCoordinator() {
           monitoring.initSentry();
           performance.initPerformanceMonitoring();
 
-          validation.issues.forEach((issue) => {
+          validation.issues.forEach(issue => {
             if (issue.severity === 'error') {
               monitoring.logger.error(issue.message);
             } else {
@@ -108,7 +106,7 @@ function AppRuntimeCoordinator() {
 
           const stopPolling = core.startAvailabilityPolling();
 
-          const stopEvents = domainEventBus.subscribeAll((event) => {
+          const stopEvents = domainEventBus.subscribeAll(event => {
             monitoring.trackDomainEvent(event);
           });
 
@@ -169,7 +167,6 @@ export default function App() {
             },
           }}
         />
-      
       </QueryClientProvider>
     </AppErrorBoundary>
   );

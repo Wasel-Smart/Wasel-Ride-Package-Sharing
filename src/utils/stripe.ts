@@ -20,7 +20,7 @@ const rateLimitStore = new Map<string, RateLimitState>();
  */
 export function check_rate_limit(
   key: string,
-  config: RateLimitConfig = { maxRequests: 100, windowMs: 60000 }
+  config: RateLimitConfig = { maxRequests: 100, windowMs: 60000 },
 ): boolean {
   const now = Date.now();
   const state = rateLimitStore.get(key);
@@ -51,9 +51,9 @@ export function set_updated_at(metadata: Record<string, string>): Record<string,
 /**
  * Set updated_at in metadata object structure
  */
-export function set_updated_at_metadata(
-  obj: { metadata?: Record<string, string> }
-): { metadata: Record<string, string> } {
+export function set_updated_at_metadata(obj: { metadata?: Record<string, string> }): {
+  metadata: Record<string, string>;
+} {
   return {
     ...obj,
     metadata: set_updated_at(obj.metadata || {}),

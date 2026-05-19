@@ -76,13 +76,8 @@ async function fetchWithTimeout(
   timeout: number = REQUEST_TIMEOUT,
 ): Promise<Response> {
   // Validate URL to prevent SSRF attacks
-  const allowedDomains = [
-    'supabase.co',
-    'supabase.net',
-    'localhost',
-    '127.0.0.1',
-  ];
-  
+  const allowedDomains = ['supabase.co', 'supabase.net', 'localhost', '127.0.0.1'];
+
   if (!validateApiUrl(url, allowedDomains)) {
     throw new APIError('Invalid or unauthorized URL', 403, 'invalid_url');
   }

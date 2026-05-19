@@ -213,7 +213,10 @@ function persistBusBooking(booking: StoredBusBooking): StoredBusBooking {
 }
 
 function buildBusTicketCode(bookingId: string): string {
-  return `BUS-${bookingId.replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase()}`;
+  return `BUS-${bookingId
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .slice(-6)
+    .toUpperCase()}`;
 }
 
 function shouldUseLocalBusFallback(error: unknown): boolean {

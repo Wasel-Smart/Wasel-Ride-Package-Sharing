@@ -117,14 +117,13 @@ export function AppCommandCenter() {
   const rides = useMemo(() => getRideBookings(), [refreshKey]);
   const packages = useMemo(() => getConnectedPackages(), [refreshKey]);
   const buses = useMemo(() => getStoredBusBookings(), [refreshKey]);
-  const trustStatus = useMemo(
-    () => (user ? buildFallbackTrustCenterStatus(user) : null),
-    [user],
-  );
+  const trustStatus = useMemo(() => (user ? buildFallbackTrustCenterStatus(user) : null), [user]);
 
   if (!user) return null;
 
-  const supportOpen = supportTickets.filter(ticket => ticket.status !== 'resolved' && ticket.status !== 'closed');
+  const supportOpen = supportTickets.filter(
+    ticket => ticket.status !== 'resolved' && ticket.status !== 'closed',
+  );
   const rideAttention = rides.filter(
     booking =>
       booking.status === 'pending_driver' ||
@@ -218,7 +217,9 @@ export function AppCommandCenter() {
     metricCard(
       ar ? 'تحتاج متابعة' : 'Needs attention',
       `${totalAttention}`,
-      ar ? 'عناصر تنتظر موافقة أو دعماً أو حلاً.' : 'Items waiting on approval, support, or resolution.',
+      ar
+        ? 'عناصر تنتظر موافقة أو دعماً أو حلاً.'
+        : 'Items waiting on approval, support, or resolution.',
       totalAttention > 0 ? C.gold : C.green,
       AlertTriangle,
     ),
@@ -449,7 +450,8 @@ export function AppCommandCenter() {
             style={{
               borderRadius: 24,
               border: `1px solid ${C.borderSoft}`,
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025))',
+              background:
+                'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025))',
               padding: '18px 18px 16px',
               display: 'grid',
               gap: 14,
@@ -476,7 +478,8 @@ export function AppCommandCenter() {
                   fontFamily: F,
                 }}
               >
-                {dailyCorridor?.label ?? (ar ? 'ابدأ من أي ممر حي' : 'Start from any live corridor')}
+                {dailyCorridor?.label ??
+                  (ar ? 'ابدأ من أي ممر حي' : 'Start from any live corridor')}
               </div>
               <div
                 style={{
@@ -511,7 +514,9 @@ export function AppCommandCenter() {
                   padding: '12px 14px',
                 }}
               >
-                <div style={{ color: C.gold, fontSize: TYPE.size.xs, fontWeight: TYPE.weight.bold }}>
+                <div
+                  style={{ color: C.gold, fontSize: TYPE.size.xs, fontWeight: TYPE.weight.bold }}
+                >
                   {ar ? 'الرصيد والتجديد' : 'Balance and continuity'}
                 </div>
                 <div style={{ marginTop: 6, color: '#FFFFFF', fontWeight: TYPE.weight.ultra }}>

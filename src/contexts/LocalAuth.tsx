@@ -247,159 +247,159 @@ function toMessage(error: unknown): string {
 }
 
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
-   const [user, setUser] = useState<WaselUser | null>(loadUser);
-   const [optimisticUpdates, setOptimisticUpdates] = useState<Partial<WaselUser> | null>(null);
-   const [localLoading, setLocalLoading] = useState(false);
-   const auth = useAuth();
+  const [user, setUser] = useState<WaselUser | null>(loadUser);
+  const [optimisticUpdates, setOptimisticUpdates] = useState<Partial<WaselUser> | null>(null);
+  const [localLoading, setLocalLoading] = useState(false);
+  const auth = useAuth();
 
-   useEffect(() => {
-     if (auth.loading) {
-       return;
-     }
+  useEffect(() => {
+    if (auth.loading) {
+      return;
+    }
 
-     if (!auth.user) {
-       if (isLocalE2EAuthEnabled() || !auth.isBackendConnected) {
-         const storedUser = loadUser();
-         setUser(storedUser);
-         return;
-       }
+    if (!auth.user) {
+      if (isLocalE2EAuthEnabled() || !auth.isBackendConnected) {
+        const storedUser = loadUser();
+        setUser(storedUser);
+        return;
+      }
 
-       setUser(null);
-       setOptimisticUpdates(null);
-       saveUser(null);
-       return;
-     }
+      setUser(null);
+      setOptimisticUpdates(null);
+      saveUser(null);
+      return;
+    }
 
-     const mapped = mapBackendProfile({
-       authUser: auth.user,
-       profile: auth.profile,
-     });
-     const nextUser = optimisticUpdates ? applyUserUpdates(mapped, optimisticUpdates) : mapped;
-     setUser(nextUser);
-     saveUser(nextUser);
-   }, [auth.isBackendConnected, auth.loading, auth.profile, auth.user, optimisticUpdates]);
+    const mapped = mapBackendProfile({
+      authUser: auth.user,
+      profile: auth.profile,
+    });
+    const nextUser = optimisticUpdates ? applyUserUpdates(mapped, optimisticUpdates) : mapped;
+    setUser(nextUser);
+    saveUser(nextUser);
+  }, [auth.isBackendConnected, auth.loading, auth.profile, auth.user, optimisticUpdates]);
 
-   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
-     if (isLocalE2EAuthEnabled()) {
-       setLocalLoading(true);
-       try {
-         const account = loadLocalAccounts().find(
-           entry => normalizeEmail(entry.email) === normalizeEmail(email),
-         );
+  const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
+    if (isLocalE2EAuthEnabled()) {
+      setLocalLoading(true);
+      try {
+        const account = loadLocalAccounts().find(
+          entry => normalizeEmail(entry.email) === normalizeEmail(email),
+        );
 
-         if (!account || account.password !== password) {
-           return { error: 'Incorrect email or password.' };
-         }
+        if (!account || account.password !== password) {
+          return { error: 'Incorrect email or password.' };
+        }
 
-         setUser(account.user);
-         saveUser(account.user);
-         return { error: null };
-       } finally {
-         setLocalLoading(false);
-       }
-     }
+        setUser(account.user);
+        saveUser(account.user);
+        return { error: null };
+      } finally {
+        setLocalLoading(false);
+      }
+    }
 
-     const result = await auth.signIn(email, password);
-     return { error: result.error ? toMessage(result.error) : null };
-   };
+    const result = await auth.signIn(email, password);
+    return { error: result.error ? toMessage(result.error) : null };
+  };
 
-   const register = async (
-     name: string,
-     email: string,
-     password: string,
-     phone?: string,
-     returnTo?: string,
-   ): Promise<{
-     error: string | null;
-     requiresEmailConfirmation?: boolean;
-     email?: string;
-   }> => {
-     if (isLocalE2EAuthEnabled()) {
-       setLocalLoading(true);
-       try {
-         const normalizedEmail = normalizeEmail(email);
-         const accounts = loadLocalAccounts();
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+    phone?: string,
+    returnTo?: string,
+  ): Promise<{
+    error: string | null;
+    requiresEmailConfirmation?: boolean;
+    email?: string;
+  }> => {
+    if (isLocalE2EAuthEnabled()) {
+      setLocalLoading(true);
+      try {
+        const normalizedEmail = normalizeEmail(email);
+        const accounts = loadLocalAccounts();
 
-         if (accounts.some(account => normalizeEmail(account.email) === normalizedEmail)) {
-           return {
-             error: 'This email is already registered.',
-             requiresEmailConfirmation: false,
-             email: normalizedEmail,
-           };
-         }
+        if (accounts.some(account => normalizeEmail(account.email) === normalizedEmail)) {
+          return {
+            error: 'This email is already registered.',
+            requiresEmailConfirmation: false,
+            email: normalizedEmail,
+          };
+        }
 
-         const localUser = createLocalUser(name, normalizedEmail, phone);
-         accounts.push({
-           email: normalizedEmail,
-           password,
-           user: localUser,
-         });
+        const localUser = createLocalUser(name, normalizedEmail, phone);
+        accounts.push({
+          email: normalizedEmail,
+          password,
+          user: localUser,
+        });
 
-         saveLocalAccounts(accounts);
-         saveUser(localUser);
-         setUser(localUser);
-         setOptimisticUpdates(null);
+        saveLocalAccounts(accounts);
+        saveUser(localUser);
+        setUser(localUser);
+        setOptimisticUpdates(null);
 
-         return {
-           error: null,
-           requiresEmailConfirmation: false,
-           email: normalizedEmail,
-         };
-       } finally {
-         setLocalLoading(false);
-       }
-     }
+        return {
+          error: null,
+          requiresEmailConfirmation: false,
+          email: normalizedEmail,
+        };
+      } finally {
+        setLocalLoading(false);
+      }
+    }
 
-     const result = await auth.signUp(email, password, name, phone, returnTo);
-     return {
-       error: result.error ? toMessage(result.error) : null,
-       requiresEmailConfirmation: result.requiresEmailConfirmation,
-       email,
-     };
-   };
+    const result = await auth.signUp(email, password, name, phone, returnTo);
+    return {
+      error: result.error ? toMessage(result.error) : null,
+      requiresEmailConfirmation: result.requiresEmailConfirmation,
+      email,
+    };
+  };
 
-   const signOut = async () => {
-     try {
-       await auth.signOut();
-     } finally {
-       setUser(null);
-       setOptimisticUpdates(null);
-       saveUser(null);
-     }
-   };
+  const signOut = async () => {
+    try {
+      await auth.signOut();
+    } finally {
+      setUser(null);
+      setOptimisticUpdates(null);
+      saveUser(null);
+    }
+  };
 
-   const updateUser = (updates: Partial<WaselUser>) => {
-     setOptimisticUpdates(previous => ({ ...(previous ?? {}), ...updates }));
-     setUser(previous => {
-       if (!previous) return previous;
-       const next = applyUserUpdates(previous, updates);
-       if (isLocalE2EAuthEnabled()) {
-         const accounts = loadLocalAccounts();
-         const nextAccounts = accounts.map(account =>
-           account.user.id === next.id ? { ...account, user: next } : account,
-         );
-         saveLocalAccounts(nextAccounts);
-       }
-       saveUser(next);
-       return next;
-     });
-   };
+  const updateUser = (updates: Partial<WaselUser>) => {
+    setOptimisticUpdates(previous => ({ ...(previous ?? {}), ...updates }));
+    setUser(previous => {
+      if (!previous) return previous;
+      const next = applyUserUpdates(previous, updates);
+      if (isLocalE2EAuthEnabled()) {
+        const accounts = loadLocalAccounts();
+        const nextAccounts = accounts.map(account =>
+          account.user.id === next.id ? { ...account, user: next } : account,
+        );
+        saveLocalAccounts(nextAccounts);
+      }
+      saveUser(next);
+      return next;
+    });
+  };
 
-   return (
-     <Ctx.Provider
-       value={{
-         user,
-         loading: auth.loading || localLoading,
-         signIn,
-         register,
-         signOut,
-         updateUser,
-       }}
-     >
-       {children}
-     </Ctx.Provider>
-   );
- }
+  return (
+    <Ctx.Provider
+      value={{
+        user,
+        loading: auth.loading || localLoading,
+        signIn,
+        register,
+        signOut,
+        updateUser,
+      }}
+    >
+      {children}
+    </Ctx.Provider>
+  );
+}
 
 export function useLocalAuth() {
   const ctx = useContext(Ctx);

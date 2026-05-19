@@ -1,9 +1,4 @@
-export type TrustStepId =
-  | 'identity'
-  | 'email'
-  | 'phone'
-  | 'driver_documents'
-  | 'wallet_standing';
+export type TrustStepId = 'identity' | 'email' | 'phone' | 'driver_documents' | 'wallet_standing';
 
 export type TrustStepState = 'not_started' | 'in_progress' | 'completed' | 'failed';
 
@@ -87,9 +82,7 @@ function buildStatus<TMeta>(
   };
 }
 
-function pickNextStepId(
-  steps: TrustCenterStatus['steps'],
-): TrustCenterStatus['nextStepId'] {
+function pickNextStepId(steps: TrustCenterStatus['steps']): TrustCenterStatus['nextStepId'] {
   const ordered = [
     steps.phone,
     steps.email,
@@ -109,15 +102,10 @@ export function buildFallbackTrustCenterStatus(user: FallbackTrustUser): TrustCe
     verificationLevel === 'level_3';
 
   const identity = identityComplete
-    ? buildStatus(
-        'identity',
-        'completed',
-        'Identity verification is complete.',
-        {
-          providerReference: null,
-          documentReference: null,
-        },
-      )
+    ? buildStatus('identity', 'completed', 'Identity verification is complete.', {
+        providerReference: null,
+        documentReference: null,
+      })
     : buildStatus(
         'identity',
         verificationLevel === 'level_1' ? 'in_progress' : 'not_started',
@@ -160,15 +148,10 @@ export function buildFallbackTrustCenterStatus(user: FallbackTrustUser): TrustCe
   const driverDocuments =
     user.role === 'driver' || user.role === 'both'
       ? verificationLevel === 'level_3'
-        ? buildStatus(
-            'driver_documents',
-            'completed',
-            'Driver documents are approved.',
-            {
-              role: user.role,
-              licenseNumber: null,
-            },
-          )
+        ? buildStatus('driver_documents', 'completed', 'Driver documents are approved.', {
+            role: user.role,
+            licenseNumber: null,
+          })
         : buildStatus(
             'driver_documents',
             verificationLevel === 'level_2' ? 'in_progress' : 'not_started',
@@ -192,14 +175,9 @@ export function buildFallbackTrustCenterStatus(user: FallbackTrustUser): TrustCe
 
   const walletStanding: TrustCenterStatus['steps']['walletStanding'] =
     user.walletStatus === 'active'
-      ? buildStatus(
-          'wallet_standing',
-          'completed',
-          'Wallet standing is healthy.',
-          {
-            walletStatus: 'active',
-          },
-        )
+      ? buildStatus('wallet_standing', 'completed', 'Wallet standing is healthy.', {
+          walletStatus: 'active',
+        })
       : user.walletStatus === 'limited'
         ? buildStatus(
             'wallet_standing',

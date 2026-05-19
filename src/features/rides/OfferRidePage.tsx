@@ -319,7 +319,9 @@ export function OfferRidePage() {
                     },
                     {
                       label: 'Mode',
-                      value: form.acceptsPackages ? `Packages ${form.packageCapacity}` : 'Passengers',
+                      value: form.acceptsPackages
+                        ? `Packages ${form.packageCapacity}`
+                        : 'Passengers',
                     },
                   ].map(item => (
                     <div
@@ -342,7 +344,12 @@ export function OfferRidePage() {
                         {item.label}
                       </div>
                       <div
-                        style={{ color: '#fff', fontWeight: 800, fontSize: '0.86rem', marginTop: 6 }}
+                        style={{
+                          color: '#fff',
+                          fontWeight: 800,
+                          fontSize: '0.86rem',
+                          marginTop: 6,
+                        }}
                       >
                         {item.value}
                       </div>
@@ -528,7 +535,12 @@ export function OfferRidePage() {
                       {node.title}
                     </div>
                     <div
-                      style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.5, marginTop: 4 }}
+                      style={{
+                        color: DS.muted,
+                        fontSize: '0.74rem',
+                        lineHeight: 1.5,
+                        marginTop: 4,
+                      }}
                     >
                       {node.summary}
                     </div>
@@ -564,7 +576,12 @@ export function OfferRidePage() {
                         {step.label}
                       </div>
                       <div
-                        style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.5, marginTop: 4 }}
+                        style={{
+                          color: DS.muted,
+                          fontSize: '0.74rem',
+                          lineHeight: 1.5,
+                          marginTop: 4,
+                        }}
                       >
                         {step.description}
                       </div>

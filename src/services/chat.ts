@@ -33,7 +33,9 @@ class ChatService {
   private channels: Map<string, RealtimeChannel> = new Map();
 
   async sendMessage(request: SendMessageRequest): Promise<Message> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       throw new Error('Not authenticated');
@@ -66,7 +68,9 @@ class ChatService {
         metadata: request.metadata || {},
         read_by: [user.id],
       })
-      .select('id, trip_id, sender_id, content, type, metadata, read_by, created_at, sender:profiles(id, full_name, avatar_url)')
+      .select(
+        'id, trip_id, sender_id, content, type, metadata, read_by, created_at, sender:profiles(id, full_name, avatar_url)',
+      )
       .single();
 
     if (error) {
@@ -79,7 +83,9 @@ class ChatService {
   async getMessages(tripId: string, limit = 50): Promise<Message[]> {
     const { data, error } = await supabase
       .from('messages')
-      .select('id, trip_id, sender_id, content, type, metadata, read_by, created_at, sender:profiles(id, full_name, avatar_url)')
+      .select(
+        'id, trip_id, sender_id, content, type, metadata, read_by, created_at, sender:profiles(id, full_name, avatar_url)',
+      )
       .eq('trip_id', tripId)
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -92,7 +98,9 @@ class ChatService {
   }
 
   async markAsRead(messageIds: string[]): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       throw new Error('Not authenticated');
@@ -109,7 +117,7 @@ class ChatService {
 
     const messageRows = (messages ?? []) as MessageReadRow[];
     const messagesToUpdate = messageRows.filter(
-      message => !(message.read_by ?? []).includes(user.id)
+      message => !(message.read_by ?? []).includes(user.id),
     );
 
     if (messagesToUpdate.length === 0) return;
@@ -118,13 +126,13 @@ class ChatService {
     for (let i = 0; i < messagesToUpdate.length; i += BATCH_SIZE) {
       const batch = messagesToUpdate.slice(i, i + BATCH_SIZE);
       await Promise.all(
-        batch.map((message) =>
+        batch.map(message =>
           supabase
             .from('messages')
             .update({
               read_by: [...(message.read_by ?? []), user.id],
             })
-            .eq('id', message.id)
+            .eq('id', message.id),
         ),
       );
     }
@@ -133,7 +141,7 @@ class ChatService {
   subscribeToTrip(
     tripId: string,
     onMessage: (message: Message) => void,
-    onError?: (error: Error) => void
+    onError?: (error: Error) => void,
   ): () => void {
     const channelName = `trip:${tripId}`;
 
@@ -161,7 +169,9 @@ class ChatService {
           try {
             const { data } = await supabase
               .from('messages')
-              .select('id, trip_id, sender_id, content, type, metadata, read_by, created_at, sender:profiles(id, full_name, avatar_url)')
+              .select(
+                'id, trip_id, sender_id, content, type, metadata, read_by, created_at, sender:profiles(id, full_name, avatar_url)',
+              )
               .eq('id', payload.new.id)
               .single();
 
@@ -188,7 +198,9 @@ class ChatService {
   }
 
   async getUnreadCount(tripId: string): Promise<number> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return 0;

@@ -46,12 +46,12 @@ export function usePerformanceOptimization() {
 
     element.style.willChange = 'scroll-position';
     element.style.transform = 'translateZ(0)';
-    
+
     const handleScroll = () => {
       if (scrollTimeout.current) {
         clearTimeout(scrollTimeout.current);
       }
-      
+
       scrollTimeout.current = setTimeout(() => {
         element.style.willChange = 'auto';
       }, 150);
@@ -67,29 +67,37 @@ export function usePerformanceOptimization() {
     };
   }, []);
 
-   const debounce = useCallback(
-     <T extends (...args: unknown[]) => unknown>(func: T, wait: number): ((...args: Parameters<T>) => void) => {
-       let timeout: NodeJS.Timeout;
-       
-       return (...args: Parameters<T>) => {
-         clearTimeout(timeout);
-         timeout = setTimeout(() => func(...args), wait);
-       };
-     },
-   []);
+  const debounce = useCallback(
+    <T extends (...args: unknown[]) => unknown>(
+      func: T,
+      wait: number,
+    ): ((...args: Parameters<T>) => void) => {
+      let timeout: NodeJS.Timeout;
 
-    const throttle = useCallback(
-      <T extends (...args: unknown[]) => unknown>(func: T, limit: number): ((...args: Parameters<T>) => void) => {
-        let inThrottle = false;
-        return (...args: Parameters<T>) => {
-          if (!inThrottle) {
-            func(...args);
-            inThrottle = true;
-            setTimeout(() => (inThrottle = false), limit);
-          }
-        };
-      },
-    []);
+      return (...args: Parameters<T>) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+      };
+    },
+    [],
+  );
+
+  const throttle = useCallback(
+    <T extends (...args: unknown[]) => unknown>(
+      func: T,
+      limit: number,
+    ): ((...args: Parameters<T>) => void) => {
+      let inThrottle = false;
+      return (...args: Parameters<T>) => {
+        if (!inThrottle) {
+          func(...args);
+          inThrottle = true;
+          setTimeout(() => (inThrottle = false), limit);
+        }
+      };
+    },
+    [],
+  );
 
   const requestIdleCallback = useCallback((callback: () => void) => {
     if ('requestIdleCallback' in window) {
@@ -131,26 +139,26 @@ export function useLazyLoad(threshold = 0.1) {
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             const target = entry.target as HTMLElement;
             const src = target.dataset.src;
-            
+
             if (src) {
               if (target instanceof HTMLImageElement) {
                 target.src = src;
               } else {
                 target.style.backgroundImage = `url(${src})`;
               }
-              
+
               target.removeAttribute('data-src');
               observerRef.current?.unobserve(target);
             }
           }
         });
       },
-      { threshold, rootMargin: '50px' }
+      { threshold, rootMargin: '50px' },
     );
 
     return () => {
@@ -167,11 +175,7 @@ export function useLazyLoad(threshold = 0.1) {
   return { observe };
 }
 
-export function useVirtualScroll<T>(
-  items: T[],
-  itemHeight: number,
-  containerHeight: number
-) {
+export function useVirtualScroll<T>(items: T[], itemHeight: number, containerHeight: number) {
   const scrollTop = useRef(0);
   const visibleStart = Math.floor(scrollTop.current / itemHeight);
   const visibleEnd = Math.ceil((scrollTop.current + containerHeight) / itemHeight);
@@ -179,7 +183,7 @@ export function useVirtualScroll<T>(
 
   const visibleItems = items.slice(
     Math.max(0, visibleStart - buffer),
-    Math.min(items.length, visibleEnd + buffer)
+    Math.min(items.length, visibleEnd + buffer),
   );
 
   const totalHeight = items.length * itemHeight;

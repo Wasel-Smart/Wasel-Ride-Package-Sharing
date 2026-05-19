@@ -70,7 +70,7 @@ export function applyGlobalOptimizations() {
   })();
 
   if (passiveSupported) {
-    ['touchstart', 'touchmove', 'wheel', 'mousewheel'].forEach((event) => {
+    ['touchstart', 'touchmove', 'wheel', 'mousewheel'].forEach(event => {
       document.addEventListener(event, () => {}, { passive: true } as AddEventListenerOptions);
     });
   }
@@ -123,13 +123,9 @@ export function applyGlobalOptimizations() {
   }
 
   // Preconnect to critical origins
-  const origins = [
-    publicSupabaseUrl,
-    'https://maps.googleapis.com',
-    'https://js.stripe.com',
-  ];
+  const origins = [publicSupabaseUrl, 'https://maps.googleapis.com', 'https://js.stripe.com'];
 
-  origins.forEach((origin) => {
+  origins.forEach(origin => {
     if (!origin) return;
     const link = document.createElement('link');
     link.rel = 'preconnect';
@@ -142,7 +138,7 @@ export function applyGlobalOptimizations() {
 // Debounce utility
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  wait: number
+  wait: number,
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout;
   return (...args: Parameters<T>) => {
@@ -154,7 +150,7 @@ export function debounce<T extends (...args: any[]) => any>(
 // Throttle utility
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
-  limit: number
+  limit: number,
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
   return (...args: Parameters<T>) => {

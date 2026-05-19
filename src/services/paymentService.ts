@@ -26,19 +26,19 @@ export interface RefundRequest {
 }
 
 class PaymentService {
-   private cliqConfig: {
-     merchantId: string;
-     apiKey: string;
-     checkoutUrl: string;
-   };
+  private cliqConfig: {
+    merchantId: string;
+    apiKey: string;
+    checkoutUrl: string;
+  };
 
-   constructor() {
-     this.cliqConfig = {
-       merchantId: import.meta.env.CLIQ_MERCHANT_ID || '',
-       apiKey: import.meta.env.CLIQ_API_KEY || '',
-       checkoutUrl: import.meta.env.CLIQ_CHECKOUT_URL_TEMPLATE || '',
-     };
-   }
+  constructor() {
+    this.cliqConfig = {
+      merchantId: import.meta.env.CLIQ_MERCHANT_ID || '',
+      apiKey: import.meta.env.CLIQ_API_KEY || '',
+      checkoutUrl: import.meta.env.CLIQ_CHECKOUT_URL_TEMPLATE || '',
+    };
+  }
 
   async createPaymentIntent(
     amount: number,
@@ -67,31 +67,28 @@ class PaymentService {
     });
   }
 
-   async confirmPayment(
-     intentId: string,
-     paymentMethod: PaymentMethod,
-   ): Promise<PaymentIntent> {
-     return withRateLimit(paymentLimiter, async () => {
-       try {
-         const response = await fetch('/api/payments/confirm', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ intentId, paymentMethod }),
-         });
+  async confirmPayment(intentId: string, paymentMethod: PaymentMethod): Promise<PaymentIntent> {
+    return withRateLimit(paymentLimiter, async () => {
+      try {
+        const response = await fetch('/api/payments/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ intentId, paymentMethod }),
+        });
 
-         if (!response.ok) {
-           throw new Error(`Payment confirmation failed: ${response.statusText}`);
-         }
+        if (!response.ok) {
+          throw new Error(`Payment confirmation failed: ${response.statusText}`);
+        }
 
-         const data = await response.json();
-         logger.info('Payment confirmed', { intentId, status: data.status });
-         return data;
-       } catch (error) {
-         logger.error('Failed to confirm payment', error, { intentId });
-         throw error;
-       }
-     }) as Promise<PaymentIntent>;
-   }
+        const data = await response.json();
+        logger.info('Payment confirmed', { intentId, status: data.status });
+        return data;
+      } catch (error) {
+        logger.error('Failed to confirm payment', error, { intentId });
+        throw error;
+      }
+    }) as Promise<PaymentIntent>;
+  }
 
   async createCliqCheckout(
     amount: number,
@@ -156,34 +153,31 @@ class PaymentService {
     }
   }
 
-   verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
-     try {
-       const crypto = window.crypto || (window as any).msCrypto;
-       const encoder = new TextEncoder();
-       const data = encoder.encode(payload);
-       const key = encoder.encode(secret);
+  verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
+    try {
+      const crypto = window.crypto || (window as any).msCrypto;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(payload);
+      const key = encoder.encode(secret);
 
-       let result = false;
-       crypto.subtle
-         .importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-         .then((cryptoKey: CryptoKey) => crypto.subtle.sign('HMAC', cryptoKey, data))
-         .then((signatureBuffer: ArrayBuffer) => {
-           const signatureArray = Array.from(new Uint8Array(signatureBuffer));
-           const signatureHex = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
-           result = signatureHex === signature;
-         })
-         .catch(() => false);
+      let result = false;
+      crypto.subtle
+        .importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+        .then((cryptoKey: CryptoKey) => crypto.subtle.sign('HMAC', cryptoKey, data))
+        .then((signatureBuffer: ArrayBuffer) => {
+          const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+          const signatureHex = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
+          result = signatureHex === signature;
+        })
+        .catch(() => false);
 
-       return result;
-     } catch {
-       return false;
-     }
-   }
+      return result;
+    } catch {
+      return false;
+    }
+  }
 
-  async handleWebhook(event: {
-    type: string;
-    data: Record<string, unknown>;
-  }): Promise<void> {
+  async handleWebhook(event: { type: string; data: Record<string, unknown> }): Promise<void> {
     logger.info('Processing payment webhook', { type: event.type });
 
     switch (event.type) {

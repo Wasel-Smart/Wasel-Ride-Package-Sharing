@@ -471,7 +471,7 @@ export function initializeMonitoring() {
   // Initialize Sentry
   const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
   if (sentryDsn) {
-    import('@sentry/react').then((Sentry) => {
+    import('@sentry/react').then(Sentry => {
       Sentry.init({
         dsn: sentryDsn,
         environment: import.meta.env.MODE,
@@ -486,7 +486,7 @@ export function initializeMonitoring() {
 
           if (event.exception?.values?.[0]?.value) {
             const errorMessage = event.exception.values[0].value;
-            if (ignoredErrors.some((ignored) => errorMessage.includes(ignored))) {
+            if (ignoredErrors.some(ignored => errorMessage.includes(ignored))) {
               return null;
             }
           }
