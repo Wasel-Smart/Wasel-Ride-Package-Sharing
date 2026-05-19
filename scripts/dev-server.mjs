@@ -9,10 +9,10 @@ const workspaceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)),
 const viteBin = path.resolve(workspaceRoot, 'node_modules', 'vite', 'bin', 'vite.js');
 const cliArgs = process.argv.slice(2);
 const host = readCliOption('host') ?? process.env.HOST ?? '127.0.0.1';
-const port = Number.parseInt(readCliOption('port') ?? process.env.PORT ?? '3002', 10);
+const requestedPort = Number.parseInt(readCliOption('port') ?? process.env.PORT ?? '3002', 10);
 
-if (!Number.isInteger(port) || port <= 0) {
-  console.error(`[dev-server] Invalid port: ${String(port)}`);
+if (!Number.isInteger(requestedPort) || requestedPort <= 0) {
+  console.error(`[dev-server] Invalid port: ${String(requestedPort)}`);
   process.exit(1);
 }
 
@@ -164,44 +164,84 @@ function describeProcess(details) {
     : `${details.name || 'process'} (${details.pid})`;
 }
 
+async function findNextAvailablePort(startPort, targetHost, maxOffset = 20) {
+  for (let offset = 1; offset <= maxOffset; offset += 1) {
+    const candidatePort = startPort + offset;
+    if (await isPortAvailable(candidatePort, targetHost)) {
+      return candidatePort;
+    }
+  }
+
+  return null;
+}
+
+async function useFallbackPort(targetPort, targetHost, reason) {
+  const fallbackPort = await findNextAvailablePort(targetPort, targetHost);
+  if (fallbackPort == null) {
+    throw new Error(reason);
+  }
+
+  console.warn(`[dev-server] ${reason} Using port ${fallbackPort} instead.`);
+  return fallbackPort;
+}
+
 async function ensurePortReady(targetPort, targetHost) {
   if (await isPortAvailable(targetPort, targetHost)) {
-    return;
+    return targetPort;
   }
 
   const pidList = listListeningPids(targetPort);
   const processDetails = pidList.map(getProcessDetails);
 
   if (!processDetails.length) {
-    throw new Error(`Port ${targetPort} is busy, but the owning process could not be detected.`);
+    return useFallbackPort(
+      targetPort,
+      targetHost,
+      `Port ${targetPort} is busy, but the owning process could not be detected.`,
+    );
   }
 
   const untrustedProcess = processDetails.find(details => !isTrustedStaleProcess(details));
   if (untrustedProcess) {
-    throw new Error(
-      `Port ${targetPort} is already in use by ${describeProcess(untrustedProcess)}. Stop it or run dev on another port.`,
+    return useFallbackPort(
+      targetPort,
+      targetHost,
+      `Port ${targetPort} is already in use by ${describeProcess(untrustedProcess)}.`,
     );
   }
 
   for (const details of processDetails) {
     console.warn(`[dev-server] Reclaiming port ${targetPort} from ${describeProcess(details)}.`);
-    stopProcess(details.pid);
+    try {
+      stopProcess(details.pid);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return useFallbackPort(
+        targetPort,
+        targetHost,
+        `Could not reclaim port ${targetPort} from ${describeProcess(details)} (${message}).`,
+      );
+    }
   }
 
   for (let attempt = 0; attempt < 10; attempt += 1) {
     if (await isPortAvailable(targetPort, targetHost)) {
-      return;
+      return targetPort;
     }
 
     await new Promise(resolve => setTimeout(resolve, 300));
   }
 
-  throw new Error(`Port ${targetPort} is still busy after stopping the previous dev process.`);
+  return useFallbackPort(
+    targetPort,
+    targetHost,
+    `Port ${targetPort} is still busy after stopping the previous dev process.`,
+  );
 }
 
 async function main() {
   await assertWorkspaceFilesReadable({ cwd: workspaceRoot });
-  await ensurePortReady(port, host);
+  const port = await ensurePortReady(requestedPort, host);
 
   const child = spawn(process.execPath, [viteBin, '--host', host, '--port', String(port), '--strictPort', ...cliArgs], {
     cwd: workspaceRoot,
