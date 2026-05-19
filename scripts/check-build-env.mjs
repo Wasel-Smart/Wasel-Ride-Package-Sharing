@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { assertWorkspaceFilesReadable } from './assert-workspace-files-readable.mjs';
 
 const mode =
   process.env.MODE ||
@@ -29,6 +30,8 @@ const SUPABASE_PUBLIC_KEY_KEYS = [
 ];
 
 const presetEnvKeys = new Set(Object.keys(process.env));
+
+await assertWorkspaceFilesReadable({ cwd: process.cwd() });
 
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return;

@@ -1,7 +1,11 @@
 import { API_URL, createEdgeHeaders, fetchWithRetry, getAuthDetails, publicAnonKey } from './core';
 import { getConfig } from '../utils/env';
 import { validateApiUrl } from '../utils/sanitization';
-import { isFallbackAllowed, logFallbackUsage, getFallbackDeniedError } from '../utils/fallbackStrategy';
+import {
+  isFallbackAllowed,
+  logFallbackUsage,
+  getFallbackDeniedError,
+} from '../utils/fallbackStrategy';
 
 export type BackendAuthMode = 'none' | 'public' | 'required';
 export type FallbackPolicy = 'always' | 'writes-if-enabled' | 'never';
@@ -79,7 +83,10 @@ function isRecoverableError(error: unknown): boolean {
   return error instanceof TypeError || isAbortError(error);
 }
 
-function resolveFallbackPolicy(policy: FallbackPolicy | undefined, operationType: 'read' | 'write'): boolean {
+function resolveFallbackPolicy(
+  policy: FallbackPolicy | undefined,
+  operationType: 'read' | 'write',
+): boolean {
   switch (policy ?? 'always') {
     case 'always':
       return isFallbackAllowed(operationType);
@@ -158,10 +165,10 @@ export async function requestEdgeJson<T>({
 
   const resolvedContext =
     authMode === 'required' ? (context ?? (await resolveContext(authMode))) : (context ?? {});
-  
+
   // Determine if CSRF should be included (for state-changing operations)
   const includeCSRF = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
-  
+
   const finalHeaders = createEdgeHeaders(
     headers,
     authMode === 'required' ? resolvedContext.token : undefined,
@@ -237,7 +244,10 @@ export async function runBackendWorkflow<T>({
     return await edge(context);
   } catch (error) {
     if (fallbackAllowed && fallback && isRecoverableError(error)) {
-      logFallbackUsage(operation, `Edge function error: ${error instanceof Error ? error.message : 'Unknown'}`);
+      logFallbackUsage(
+        operation,
+        `Edge function error: ${error instanceof Error ? error.message : 'Unknown'}`,
+      );
       return fallback(context);
     }
 

@@ -58,29 +58,37 @@ export function OfferRideIncomingRequests({
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <button
-                  onClick={() => {
-                    const updated = updateRideBooking(request.id, {
-                      status: 'confirmed',
-                      paymentStatus: 'authorized',
-                    });
-                    const ride = getConnectedRides().find(item => item.id === request.rideId);
-                    if (ride) {
-                      updateConnectedRide(ride.id, {
-                        seats: Math.max(0, ride.seats - request.seatsRequested),
+                  onClick={async () => {
+                    try {
+                      const updated = await updateRideBooking(request.id, {
+                        status: 'confirmed',
+                        paymentStatus: 'authorized',
                       });
+                      const ride = getConnectedRides().find(item => item.id === request.rideId);
+                      if (ride) {
+                        updateConnectedRide(ride.id, {
+                          seats: Math.max(0, ride.seats - request.seatsRequested),
+                        });
+                      }
+                      if (updated) {
+                        void notificationsAPI
+                          .createNotification({
+                            title: 'Ride request confirmed',
+                            message: `${updated.from} to ${updated.to} is now confirmed for ${updated.passengerName}.`,
+                            type: 'booking',
+                            priority: 'high',
+                            action_url: '/app/my-trips?tab=rides',
+                          })
+                          .catch(() => {});
+                      }
+                      onStatusMessage('Booking request confirmed and seats updated.');
+                    } catch (error) {
+                      onStatusMessage(
+                        error instanceof Error
+                          ? error.message
+                          : 'Unable to confirm this booking request right now.',
+                      );
                     }
-                    if (updated) {
-                      notificationsAPI
-                        .createNotification({
-                          title: 'Ride request confirmed',
-                          message: `${updated.from} to ${updated.to} is now confirmed for ${updated.passengerName}.`,
-                          type: 'booking',
-                          priority: 'high',
-                          action_url: '/app/my-trips?tab=rides',
-                        })
-                        .catch(() => {});
-                    }
-                    onStatusMessage('Booking request confirmed and seats updated.');
                   }}
                   style={{
                     height: 38,
@@ -96,23 +104,31 @@ export function OfferRideIncomingRequests({
                   Accept
                 </button>
                 <button
-                  onClick={() => {
-                    const updated = updateRideBooking(request.id, {
-                      status: 'rejected',
-                      paymentStatus: 'failed',
-                    });
-                    if (updated) {
-                      notificationsAPI
-                        .createNotification({
-                          title: 'Ride request declined',
-                          message: `${updated.from} to ${updated.to} could not be confirmed. The rider can choose another departure.`,
-                          type: 'booking',
-                          priority: 'medium',
-                          action_url: '/app/find-ride',
-                        })
-                        .catch(() => {});
+                  onClick={async () => {
+                    try {
+                      const updated = await updateRideBooking(request.id, {
+                        status: 'rejected',
+                        paymentStatus: 'failed',
+                      });
+                      if (updated) {
+                        void notificationsAPI
+                          .createNotification({
+                            title: 'Ride request declined',
+                            message: `${updated.from} to ${updated.to} could not be confirmed. The rider can choose another departure.`,
+                            type: 'booking',
+                            priority: 'medium',
+                            action_url: '/app/find-ride',
+                          })
+                          .catch(() => {});
+                      }
+                      onStatusMessage('Booking request declined.');
+                    } catch (error) {
+                      onStatusMessage(
+                        error instanceof Error
+                          ? error.message
+                          : 'Unable to decline this booking request right now.',
+                      );
                     }
-                    onStatusMessage('Booking request declined.');
                   }}
                   style={{
                     height: 38,

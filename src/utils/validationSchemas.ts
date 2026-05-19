@@ -78,14 +78,16 @@ export const resetPasswordSchema = z.object({
   email: emailSchema,
 });
 
-export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, errorMessages.required),
-  newPassword: passwordSchema,
-  confirmPassword: z.string().min(1, errorMessages.required),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, errorMessages.required),
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, errorMessages.required),
+  })
+  .refine(data => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 // ============================================================================
 // Profile Schemas
@@ -154,12 +156,14 @@ export const rideSearchSchema = z.object({
   dropoff: locationSchema,
   passengers: z.number().int().min(1).max(8).default(1),
   departureTime: z.string().datetime().optional(),
-  preferences: z.object({
-    smokingAllowed: z.boolean().optional(),
-    petsAllowed: z.boolean().optional(),
-    musicAllowed: z.boolean().optional(),
-    maxDetour: z.number().min(0).max(30).optional(),
-  }).optional(),
+  preferences: z
+    .object({
+      smokingAllowed: z.boolean().optional(),
+      petsAllowed: z.boolean().optional(),
+      musicAllowed: z.boolean().optional(),
+      maxDetour: z.number().min(0).max(30).optional(),
+    })
+    .optional(),
 });
 
 export const rideOfferSchema = z.object({
@@ -171,16 +175,22 @@ export const rideOfferSchema = z.object({
   vehicleInfo: z.object({
     make: z.string().min(1),
     model: z.string().min(1),
-    year: z.number().int().min(1990).max(new Date().getFullYear() + 1),
+    year: z
+      .number()
+      .int()
+      .min(1990)
+      .max(new Date().getFullYear() + 1),
     color: z.string().min(1),
     licensePlate: z.string().min(1),
   }),
-  preferences: z.object({
-    smokingAllowed: z.boolean().default(false),
-    petsAllowed: z.boolean().default(false),
-    musicAllowed: z.boolean().default(true),
-    maxDetour: z.number().min(0).max(30).default(10),
-  }).optional(),
+  preferences: z
+    .object({
+      smokingAllowed: z.boolean().default(false),
+      petsAllowed: z.boolean().default(false),
+      musicAllowed: z.boolean().default(true),
+      maxDetour: z.number().min(0).max(30).default(10),
+    })
+    .optional(),
 });
 
 export const rideBookingSchema = z.object({
@@ -266,15 +276,7 @@ export const notificationPreferencesSchema = z.object({
 // ============================================================================
 
 export const supportTicketSchema = z.object({
-  category: z.enum([
-    'account',
-    'payment',
-    'ride',
-    'package',
-    'technical',
-    'safety',
-    'other',
-  ]),
+  category: z.enum(['account', 'payment', 'ride', 'package', 'technical', 'safety', 'other']),
   subject: z.string().min(5).max(200, errorMessages.stringTooLong),
   description: z.string().min(20).max(2000, errorMessages.stringTooLong),
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
@@ -285,14 +287,11 @@ export const supportTicketSchema = z.object({
 // Validation Helper Functions
 // ============================================================================
 
-export type ValidationResult<T> = 
+export type ValidationResult<T> =
   | { success: true; data: T }
   | { success: false; errors: Record<string, string[]> };
 
-export function validate<T>(
-  schema: z.ZodSchema<T>,
-  data: unknown
-): ValidationResult<T> {
+export function validate<T>(schema: z.ZodSchema<T>, data: unknown): ValidationResult<T> {
   const result = schema.safeParse(data);
 
   if (result.success) {
@@ -300,7 +299,7 @@ export function validate<T>(
   }
 
   const errors: Record<string, string[]> = {};
-  result.error.errors.forEach((error) => {
+  result.error.errors.forEach(error => {
     const path = error.path.join('.');
     if (!errors[path]) {
       errors[path] = [];
@@ -311,10 +310,7 @@ export function validate<T>(
   return { success: false, errors };
 }
 
-export function validateField<T>(
-  schema: z.ZodSchema<T>,
-  data: unknown
-): string | null {
+export function validateField<T>(schema: z.ZodSchema<T>, data: unknown): string | null {
   const result = schema.safeParse(data);
   if (result.success) {
     return null;
@@ -329,29 +325,29 @@ export const validationSchemas = {
   signIn: signInSchema,
   resetPassword: resetPasswordSchema,
   changePassword: changePasswordSchema,
-  
+
   // Profile
   profileUpdate: profileUpdateSchema,
-  
+
   // Wallet & Payment
   topUp: topUpSchema,
   withdraw: withdrawSchema,
   transfer: transferSchema,
-  
+
   // Ride
   rideSearch: rideSearchSchema,
   rideOffer: rideOfferSchema,
   rideBooking: rideBookingSchema,
   rideCancellation: rideCancellationSchema,
   rideRating: rideRatingSchema,
-  
+
   // Package
   package: packageSchema,
   packageTracking: packageTrackingSchema,
-  
+
   // Notification
   notificationPreferences: notificationPreferencesSchema,
-  
+
   // Support
   supportTicket: supportTicketSchema,
 };

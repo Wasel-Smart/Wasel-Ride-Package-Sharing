@@ -7,16 +7,16 @@ import { logger } from './monitoring';
 import { sanitizeLogMessage } from './sanitization';
 
 export enum CircuitState {
-  CLOSED = 'CLOSED',     // Normal operation
-  OPEN = 'OPEN',         // Failing fast
-  HALF_OPEN = 'HALF_OPEN' // Testing if service recovered
+  CLOSED = 'CLOSED', // Normal operation
+  OPEN = 'OPEN', // Failing fast
+  HALF_OPEN = 'HALF_OPEN', // Testing if service recovered
 }
 
 interface CircuitBreakerConfig {
-  failureThreshold: number;      // Number of failures before opening
-  successThreshold: number;      // Number of successes to close from half-open
-  timeout: number;               // Time in ms before attempting recovery
-  monitoringPeriod: number;      // Time window for failure counting
+  failureThreshold: number; // Number of failures before opening
+  successThreshold: number; // Number of successes to close from half-open
+  timeout: number; // Time in ms before attempting recovery
+  monitoringPeriod: number; // Time window for failure counting
 }
 
 interface CircuitBreakerStats {
@@ -80,7 +80,7 @@ export class CircuitBreaker {
 
     if (this.state === CircuitState.HALF_OPEN) {
       this.successes++;
-      
+
       if (this.successes >= this.config.successThreshold) {
         this.state = CircuitState.CLOSED;
         this.successes = 0;
@@ -106,7 +106,9 @@ export class CircuitBreaker {
     if (this.state === CircuitState.HALF_OPEN) {
       this.state = CircuitState.OPEN;
       this.lastStateChange = Date.now();
-      logger.error(`Circuit breaker ${sanitizeLogMessage(this.name)} reopened after failed recovery`);
+      logger.error(
+        `Circuit breaker ${sanitizeLogMessage(this.name)} reopened after failed recovery`,
+      );
     } else if (this.failures >= this.config.failureThreshold) {
       this.state = CircuitState.OPEN;
       this.lastStateChange = Date.now();
@@ -204,10 +206,7 @@ export const circuitBreakers = new CircuitBreakerRegistry();
 /**
  * Decorator for automatic circuit breaker protection
  */
-export function withCircuitBreaker<T>(
-  name: string,
-  config?: Partial<CircuitBreakerConfig>
-) {
+export function withCircuitBreaker<T>(name: string, config?: Partial<CircuitBreakerConfig>) {
   return (fn: () => Promise<T>): Promise<T> => {
     const breaker = circuitBreakers.get(name, config);
     return breaker.execute(fn);

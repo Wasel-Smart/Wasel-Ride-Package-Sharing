@@ -98,7 +98,7 @@ interface ProfilePageContentProps {
   isSupported: boolean;
   permission: NotificationPermission;
   requestPermission: () => Promise<NotificationPermission>;
-   photoInputRef: React.MutableRefObject<HTMLInputElement | null>;
+  photoInputRef: React.MutableRefObject<HTMLInputElement | null>;
 }
 
 function ProfilePageContent({
@@ -487,9 +487,7 @@ function ProfilePageContent({
           ))}
           <SharedRow
             label={ar ? 'الوضع التشغيلي' : 'Operational standing'}
-            value={
-              ar ? `${trustTier} - ${memberLabel}` : `${trustTier} - ${memberLabel}`
-            }
+            value={ar ? `${trustTier} - ${memberLabel}` : `${trustTier} - ${memberLabel}`}
             icon={<CheckCircle size={15} />}
             onClick={() => nav('/app/my-trips')}
           />

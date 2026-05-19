@@ -26,13 +26,10 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
 /**
  * Calculate delay with exponential backoff and jitter
  */
-function calculateDelay(
-  attempt: number,
-  config: RetryConfig
-): number {
+function calculateDelay(attempt: number, config: RetryConfig): number {
   const exponentialDelay = Math.min(
     config.initialDelayMs * Math.pow(config.backoffMultiplier, attempt - 1),
-    config.maxDelayMs
+    config.maxDelayMs,
   );
 
   // Add jitter to prevent thundering herd
@@ -73,7 +70,7 @@ function isRetryableError(error: unknown): boolean {
  */
 export async function withRetry<T>(
   fn: () => Promise<T>,
-  config: Partial<RetryConfig> = {}
+  config: Partial<RetryConfig> = {},
 ): Promise<T> {
   const finalConfig: RetryConfig = {
     ...DEFAULT_RETRY_CONFIG,
@@ -100,7 +97,7 @@ export async function withRetry<T>(
       }
 
       const delay = calculateDelay(attempt, finalConfig);
-      
+
       logger.warning('Retrying after error', {
         attempt,
         maxAttempts: finalConfig.maxAttempts,
@@ -173,12 +170,12 @@ export const RetryPresets = {
 export async function withRetryAndTimeout<T>(
   fn: () => Promise<T>,
   timeoutMs: number,
-  retryConfig: Partial<RetryConfig> = {}
+  retryConfig: Partial<RetryConfig> = {},
 ): Promise<T> {
   return Promise.race([
     withRetry(fn, retryConfig),
     new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error('Operation timed out')), timeoutMs)
+      setTimeout(() => reject(new Error('Operation timed out')), timeoutMs),
     ),
   ]);
 }
@@ -188,7 +185,7 @@ export async function withRetryAndTimeout<T>(
  */
 export async function batchRetry<T>(
   operations: Array<() => Promise<T>>,
-  config: Partial<RetryConfig> = {}
+  config: Partial<RetryConfig> = {},
 ): Promise<T[]> {
   return Promise.all(operations.map(op => withRetry(op, config)));
 }
@@ -197,11 +194,7 @@ export async function batchRetry<T>(
  * Retry decorator for class methods
  */
 export function Retry(config: Partial<RetryConfig> = {}) {
-  return function (
-    _target: unknown,
-    _propertyKey: string,
-    descriptor: PropertyDescriptor
-  ) {
+  return function (_target: unknown, _propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: unknown[]) {

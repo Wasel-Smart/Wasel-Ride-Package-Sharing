@@ -59,7 +59,7 @@ class AlertingSystem {
       id: 'high-error-rate',
       name: 'High Error Rate',
       metric: 'error_rate',
-      condition: (value) => value > 0.05, // 5% error rate
+      condition: value => value > 0.05, // 5% error rate
       severity: AlertSeverity.ERROR,
       message: 'Error rate exceeded 5%',
       cooldownMs: 5 * 60 * 1000, // 5 minutes
@@ -69,7 +69,7 @@ class AlertingSystem {
       id: 'critical-error-rate',
       name: 'Critical Error Rate',
       metric: 'error_rate',
-      condition: (value) => value > 0.1, // 10% error rate
+      condition: value => value > 0.1, // 10% error rate
       severity: AlertSeverity.CRITICAL,
       message: 'Error rate exceeded 10%',
       cooldownMs: 5 * 60 * 1000,
@@ -80,7 +80,7 @@ class AlertingSystem {
       id: 'high-latency',
       name: 'High API Latency',
       metric: 'api_latency_p95',
-      condition: (value) => value > 1000, // 1 second
+      condition: value => value > 1000, // 1 second
       severity: AlertSeverity.WARNING,
       message: 'P95 latency exceeded 1 second',
       cooldownMs: 10 * 60 * 1000, // 10 minutes
@@ -90,7 +90,7 @@ class AlertingSystem {
       id: 'critical-latency',
       name: 'Critical API Latency',
       metric: 'api_latency_p95',
-      condition: (value) => value > 3000, // 3 seconds
+      condition: value => value > 3000, // 3 seconds
       severity: AlertSeverity.CRITICAL,
       message: 'P95 latency exceeded 3 seconds',
       cooldownMs: 5 * 60 * 1000,
@@ -101,7 +101,7 @@ class AlertingSystem {
       id: 'high-memory',
       name: 'High Memory Usage',
       metric: 'memory_usage_percent',
-      condition: (value) => value > 80,
+      condition: value => value > 80,
       severity: AlertSeverity.WARNING,
       message: 'Memory usage exceeded 80%',
       cooldownMs: 15 * 60 * 1000, // 15 minutes
@@ -111,7 +111,7 @@ class AlertingSystem {
       id: 'critical-memory',
       name: 'Critical Memory Usage',
       metric: 'memory_usage_percent',
-      condition: (value) => value > 90,
+      condition: value => value > 90,
       severity: AlertSeverity.CRITICAL,
       message: 'Memory usage exceeded 90%',
       cooldownMs: 5 * 60 * 1000,
@@ -122,7 +122,7 @@ class AlertingSystem {
       id: 'low-booking-rate',
       name: 'Low Booking Rate',
       metric: 'booking_success_rate',
-      condition: (value) => value < 0.7, // 70% success rate
+      condition: value => value < 0.7, // 70% success rate
       severity: AlertSeverity.WARNING,
       message: 'Booking success rate below 70%',
       cooldownMs: 30 * 60 * 1000, // 30 minutes
@@ -132,7 +132,7 @@ class AlertingSystem {
       id: 'payment-failures',
       name: 'High Payment Failure Rate',
       metric: 'payment_failure_rate',
-      condition: (value) => value > 0.1, // 10% failure rate
+      condition: value => value > 0.1, // 10% failure rate
       severity: AlertSeverity.ERROR,
       message: 'Payment failure rate exceeded 10%',
       cooldownMs: 10 * 60 * 1000,
@@ -159,7 +159,7 @@ class AlertingSystem {
    * Check metric against all rules
    */
   checkMetric(metric: MetricValue): void {
-    this.rules.forEach((rule) => {
+    this.rules.forEach(rule => {
       if (rule.metric === metric.metric) {
         this.evaluateRule(rule, metric);
       }
@@ -204,9 +204,10 @@ class AlertingSystem {
     this.alerts.push(alert);
 
     // Log alert
-    const logLevel = alert.severity === AlertSeverity.CRITICAL || alert.severity === AlertSeverity.ERROR
-      ? 'error'
-      : 'warning';
+    const logLevel =
+      alert.severity === AlertSeverity.CRITICAL || alert.severity === AlertSeverity.ERROR
+        ? 'error'
+        : 'warning';
 
     logger[logLevel]('Alert triggered', {
       alertId: alert.id,
@@ -218,7 +219,7 @@ class AlertingSystem {
     });
 
     // Notify listeners
-    this.listeners.forEach((listener) => {
+    this.listeners.forEach(listener => {
       try {
         listener(alert);
       } catch (error) {
@@ -251,11 +252,11 @@ class AlertingSystem {
     let filtered = [...this.alerts];
 
     if (options?.severity) {
-      filtered = filtered.filter((a) => a.severity === options.severity);
+      filtered = filtered.filter(a => a.severity === options.severity);
     }
 
     if (options?.acknowledged !== undefined) {
-      filtered = filtered.filter((a) => a.acknowledged === options.acknowledged);
+      filtered = filtered.filter(a => a.acknowledged === options.acknowledged);
     }
 
     // Sort by timestamp descending
@@ -272,7 +273,7 @@ class AlertingSystem {
    * Acknowledge an alert
    */
   acknowledgeAlert(alertId: string): void {
-    const alert = this.alerts.find((a) => a.id === alertId);
+    const alert = this.alerts.find(a => a.id === alertId);
     if (alert) {
       alert.acknowledged = true;
       logger.info('Alert acknowledged', { alertId });
@@ -285,9 +286,9 @@ class AlertingSystem {
   clearOldAlerts(maxAgeMs = 24 * 60 * 60 * 1000): void {
     const cutoff = Date.now() - maxAgeMs;
     const before = this.alerts.length;
-    this.alerts = this.alerts.filter((a) => a.timestamp > cutoff);
+    this.alerts = this.alerts.filter(a => a.timestamp > cutoff);
     const removed = before - this.alerts.length;
-    
+
     if (removed > 0) {
       logger.info('Old alerts cleared', { removed });
     }
@@ -312,7 +313,7 @@ class AlertingSystem {
       unacknowledged: 0,
     };
 
-    this.alerts.forEach((alert) => {
+    this.alerts.forEach(alert => {
       stats.bySeverity[alert.severity]++;
       if (!alert.acknowledged) {
         stats.unacknowledged++;
@@ -328,7 +329,10 @@ export const alerting = new AlertingSystem();
 
 // Auto-cleanup old alerts every hour
 if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    alerting.clearOldAlerts();
-  }, 60 * 60 * 1000);
+  setInterval(
+    () => {
+      alerting.clearOldAlerts();
+    },
+    60 * 60 * 1000,
+  );
 }

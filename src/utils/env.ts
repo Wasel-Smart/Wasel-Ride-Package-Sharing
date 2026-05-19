@@ -253,8 +253,7 @@ export function getRuntimeConfigIssues(
   if (!hasApiTransport) {
     issues.push({
       key: 'VITE_API_URL',
-      message:
-        'Protected environments must define VITE_API_URL or VITE_EDGE_FUNCTION_NAME',
+      message: 'Protected environments must define VITE_API_URL or VITE_EDGE_FUNCTION_NAME',
       severity: 'error',
     });
   }

@@ -25,7 +25,9 @@ export function AccountDeletionDialog() {
   const handleDelete = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
       const { error } = await supabase.rpc('request_account_deletion', {
@@ -35,7 +37,8 @@ export function AccountDeletionDialog() {
       if (error) throw error;
 
       toast.success('Account deletion requested', {
-        description: 'Your account will be deleted within 30 days. You will receive a confirmation email.',
+        description:
+          'Your account will be deleted within 30 days. You will receive a confirmation email.',
       });
 
       setOpen(false);
@@ -57,16 +60,16 @@ export function AccountDeletionDialog() {
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive">
-          Delete Account
-        </Button>
+        <Button variant="destructive">Delete Account</Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Account Permanently?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
-            <br /><br />
+            This action cannot be undone. This will permanently delete your account and remove all
+            your data from our servers.
+            <br />
+            <br />
             You will receive a confirmation email and have 30 days to cancel this request.
           </AlertDialogDescription>
         </AlertDialogHeader>

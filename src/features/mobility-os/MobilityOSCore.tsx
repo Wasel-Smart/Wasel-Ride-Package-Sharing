@@ -208,7 +208,9 @@ export default function MobilityOSCore() {
           background: 'linear-gradient(180deg, rgba(88,221,255,0.1), rgba(6,16,28,0.96))',
         })}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div
+          style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}
+        >
           <div>
             {eyebrow('Focus')}
             <div
@@ -259,7 +261,10 @@ export default function MobilityOSCore() {
           }}
         >
           {[
-            ['pressure', selectedCorridor ? `${selectedCorridor.demand_pressure.toFixed(2)}x` : '--'],
+            [
+              'pressure',
+              selectedCorridor ? `${selectedCorridor.demand_pressure.toFixed(2)}x` : '--',
+            ],
             ['utilization', selectedCorridor ? percent(selectedCorridor.utilization) : '--'],
             ['seat', selectedCorridor ? money(selectedCorridor.dynamic_seat_price) : '--'],
             ['cargo', selectedCorridor ? money(selectedCorridor.dynamic_cargo_price) : '--'],
@@ -385,7 +390,9 @@ export default function MobilityOSCore() {
         >
           <div>
             {eyebrow('Execute', C.textMuted)}
-            <div style={{ marginTop: 8, fontSize: '1.05rem', fontWeight: 900 }}>Capacity booking</div>
+            <div style={{ marginTop: 8, fontSize: '1.05rem', fontWeight: 900 }}>
+              Capacity booking
+            </div>
           </div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: C.green }}>
             <Radio size={15} />
@@ -447,7 +454,9 @@ export default function MobilityOSCore() {
           >
             <button
               type="button"
-              onClick={() => setQuantity(current => Math.max(1, current - quantityStep(bookingMode)))}
+              onClick={() =>
+                setQuantity(current => Math.max(1, current - quantityStep(bookingMode)))
+              }
               style={{
                 height: 52,
                 borderRadius: 16,
@@ -479,7 +488,9 @@ export default function MobilityOSCore() {
             <button
               type="button"
               onClick={() =>
-                setQuantity(current => Math.min(selectedAvailability, current + quantityStep(bookingMode)))
+                setQuantity(current =>
+                  Math.min(selectedAvailability, current + quantityStep(bookingMode)),
+                )
               }
               style={{
                 height: 52,
@@ -664,7 +675,8 @@ export default function MobilityOSCore() {
               </div>
               {selectedCorridor ? (
                 <div style={{ marginTop: 7, color: C.textSub, fontSize: '0.8rem' }}>
-                  {selectedCorridor.seats_available} seats / {selectedCorridor.cargo_available_kg} kg
+                  {selectedCorridor.seats_available} seats / {selectedCorridor.cargo_available_kg}{' '}
+                  kg
                 </div>
               ) : null}
             </div>
@@ -681,7 +693,14 @@ export default function MobilityOSCore() {
       >
         {systemMetrics.map(item => (
           <article key={item.label} style={panelStyle({ padding: 16, borderRadius: 22 })}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 10,
+                alignItems: 'center',
+              }}
+            >
               <div
                 style={{
                   width: 40,
@@ -696,7 +715,9 @@ export default function MobilityOSCore() {
               >
                 <item.icon size={17} color={item.accent} />
               </div>
-              <div style={{ fontSize: '1.12rem', fontWeight: 900, color: item.accent }}>{item.value}</div>
+              <div style={{ fontSize: '1.12rem', fontWeight: 900, color: item.accent }}>
+                {item.value}
+              </div>
             </div>
             <div
               style={{

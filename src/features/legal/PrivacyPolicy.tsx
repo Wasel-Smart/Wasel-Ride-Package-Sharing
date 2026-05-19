@@ -417,7 +417,9 @@ export function PrivacyPolicy() {
                     <div style={{ color: '#FFFFFF', fontWeight: TYPE.weight.black }}>
                       {t.contact.phone}
                     </div>
-                    <div style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>{t.contact.address}</div>
+                    <div style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>
+                      {t.contact.address}
+                    </div>
                   </div>
                 </div>
               </a>

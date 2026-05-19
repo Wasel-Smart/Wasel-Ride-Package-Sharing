@@ -83,11 +83,13 @@ export class MigrationManager {
     }
   }
 
-  async verifyRLSPolicies(): Promise<{
-    table: string;
-    policy: string;
-    enabled: boolean;
-  }[]> {
+  async verifyRLSPolicies(): Promise<
+    {
+      table: string;
+      policy: string;
+      enabled: boolean;
+    }[]
+  > {
     const response = await fetch(`${this.supabaseUrl}/rest/v1/rpc/verify_rls_policies`, {
       method: 'POST',
       headers: {

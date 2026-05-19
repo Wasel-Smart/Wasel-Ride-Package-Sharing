@@ -20,25 +20,25 @@ const OAUTH_ERROR_CODES = {
   // User-initiated cancellations
   access_denied: 'User denied access',
   user_cancelled: 'User cancelled the sign-in',
-  
+
   // Configuration errors
   invalid_client: 'OAuth client configuration error',
   unauthorized_client: 'OAuth client not authorized',
   invalid_request: 'Invalid OAuth request',
-  
+
   // Redirect errors
   redirect_uri_mismatch: 'Redirect URI mismatch',
-  
+
   // Scope errors
   invalid_scope: 'Invalid OAuth scope requested',
-  
+
   // Server errors
   server_error: 'OAuth provider server error',
   temporarily_unavailable: 'OAuth provider temporarily unavailable',
-  
+
   // Token errors
   invalid_grant: 'Invalid authorization grant',
-  
+
   // Network errors
   network_error: 'Network connection failed',
   timeout: 'Request timed out',
@@ -47,16 +47,13 @@ const OAUTH_ERROR_CODES = {
 /**
  * Parse OAuth error from URL parameters or error object
  */
-export function parseOAuthError(
-  error: unknown,
-  provider?: OAuthProvider,
-): OAuthError | null {
+export function parseOAuthError(error: unknown, provider?: OAuthProvider): OAuthError | null {
   // Handle URL error parameters
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
     const errorCode = params.get('error');
     const errorDescription = params.get('error_description');
-    
+
     if (errorCode) {
       return createOAuthError(errorCode, errorDescription, provider);
     }
@@ -64,11 +61,7 @@ export function parseOAuthError(
 
   // Handle error objects
   if (error instanceof Error) {
-    return createOAuthError(
-      'unknown_error',
-      error.message,
-      provider,
-    );
+    return createOAuthError('unknown_error', error.message, provider);
   }
 
   // Handle string errors
@@ -87,9 +80,7 @@ function createOAuthError(
   description: string | null,
   provider?: OAuthProvider,
 ): OAuthError {
-  const providerName = provider
-    ? provider.charAt(0).toUpperCase() + provider.slice(1)
-    : 'OAuth';
+  const providerName = provider ? provider.charAt(0).toUpperCase() + provider.slice(1) : 'OAuth';
 
   let userMessage: string;
   let recoveryAction: string | undefined;
@@ -187,12 +178,9 @@ export function isConfigurationError(error: OAuthError): boolean {
  * Check if error is temporary and retryable
  */
 export function isRetryableError(error: OAuthError): boolean {
-  return [
-    'server_error',
-    'temporarily_unavailable',
-    'network_error',
-    'timeout',
-  ].includes(error.code);
+  return ['server_error', 'temporarily_unavailable', 'network_error', 'timeout'].includes(
+    error.code,
+  );
 }
 
 /**
@@ -249,7 +237,9 @@ export function handleOAuthError(
   const oauthError = parseOAuthError(error, provider);
 
   if (!oauthError) {
-    onError(`${provider.charAt(0).toUpperCase()}${provider.slice(1)} sign-in failed. Please try again.`);
+    onError(
+      `${provider.charAt(0).toUpperCase()}${provider.slice(1)} sign-in failed. Please try again.`,
+    );
     return;
   }
 

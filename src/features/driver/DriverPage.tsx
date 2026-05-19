@@ -447,7 +447,8 @@ export default function DriverPage() {
                 marginTop: 14,
                 borderRadius: r(16),
                 border: `1px solid ${DS.border}`,
-                background: 'linear-gradient(135deg, rgba(240,168,48,0.10), rgba(255,255,255,0.03))',
+                background:
+                  'linear-gradient(135deg, rgba(240,168,48,0.10), rgba(255,255,255,0.03))',
                 padding: '14px 16px',
                 display: 'flex',
                 alignItems: 'flex-start',

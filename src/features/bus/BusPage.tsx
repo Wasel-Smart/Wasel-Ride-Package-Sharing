@@ -168,7 +168,9 @@ export function BusPage() {
         const nextPrimaryRoute = nextRoutes[0] ?? fallbackPrimaryRoute;
         if (nextRoutes.length) {
           setBusRoutes(nextRoutes);
-          setSelected(prev => (nextRoutes.some(route => route.id === prev) ? prev : nextPrimaryRoute.id));
+          setSelected(prev =>
+            nextRoutes.some(route => route.id === prev) ? prev : nextPrimaryRoute.id,
+          );
           setRoutesInfo(
             nextPrimaryRoute.dataSource === 'live'
               ? 'Live departures loaded.'
@@ -176,7 +178,9 @@ export function BusPage() {
           );
         } else {
           setBusRoutes(fallbackRoutes);
-          setSelected(prev => (fallbackRoutes.some(route => route.id === prev) ? prev : fallbackPrimaryRoute.id));
+          setSelected(prev =>
+            fallbackRoutes.some(route => route.id === prev) ? prev : fallbackPrimaryRoute.id,
+          );
           setRoutesInfo(
             fallbackRoutes.some(route => isExactRoute(route, origin, destination))
               ? `Official schedule shown. Verified ${fallbackPrimaryRoute.lastVerifiedAt ?? today}.`
@@ -186,7 +190,9 @@ export function BusPage() {
       } catch {
         if (cancelled) return;
         setBusRoutes(fallbackRoutes);
-        setSelected(prev => (fallbackRoutes.some(route => route.id === prev) ? prev : fallbackPrimaryRoute.id));
+        setSelected(prev =>
+          fallbackRoutes.some(route => route.id === prev) ? prev : fallbackPrimaryRoute.id,
+        );
         setRoutesInfo(
           `Live routes unavailable. Official schedule shown. Verified ${fallbackPrimaryRoute.lastVerifiedAt ?? today}.`,
         );
@@ -200,7 +206,8 @@ export function BusPage() {
     };
   }, [destination, origin, passengers, tripDate]);
 
-  const activeBus = busRoutes.find(route => route.id === selected) ?? busRoutes[0] ?? DEFAULT_BUS_ROUTE;
+  const activeBus =
+    busRoutes.find(route => route.id === selected) ?? busRoutes[0] ?? DEFAULT_BUS_ROUTE;
   const pickupCoord = resolveCityCoord(activeBus.from);
   const dropoffCoord = resolveCityCoord(activeBus.to);
   const routeCenter = midpoint(pickupCoord, dropoffCoord);
@@ -226,7 +233,8 @@ export function BusPage() {
   const fallbackBuses = busRoutes
     .filter(route => route.id !== activeBus.id && route.seats > 0)
     .slice(0, 2);
-  const selectedSourceLabel = activeBus.dataSource === 'live' ? 'Live operator feed' : 'Official schedule';
+  const selectedSourceLabel =
+    activeBus.dataSource === 'live' ? 'Live operator feed' : 'Official schedule';
   const selectedSourceDetail =
     activeBus.dataSource === 'live'
       ? 'Departure times and seat counts are coming from the live route response.'
@@ -622,7 +630,15 @@ export function BusPage() {
               gap: 10,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: 12,
+                flexWrap: 'wrap',
+              }}
+            >
               <div>
                 <div
                   style={{
@@ -639,7 +655,9 @@ export function BusPage() {
                   {activeBus.from} to {activeBus.to}
                 </div>
               </div>
-              <span style={{ ...pill(activeStatus.color), fontSize: '0.68rem' }}>{activeStatus.label}</span>
+              <span style={{ ...pill(activeStatus.color), fontSize: '0.68rem' }}>
+                {activeStatus.label}
+              </span>
             </div>
 
             <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.65 }}>
@@ -687,7 +705,9 @@ export function BusPage() {
                 Fallback departures
               </div>
               <div style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', marginTop: 6 }}>
-                {fallbackBuses.length > 0 ? 'Keep one calmer alternative visible' : 'Selected departure is currently the clearest fit'}
+                {fallbackBuses.length > 0
+                  ? 'Keep one calmer alternative visible'
+                  : 'Selected departure is currently the clearest fit'}
               </div>
             </div>
 
@@ -712,7 +732,14 @@ export function BusPage() {
                     gap: 6,
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: 10,
+                      alignItems: 'center',
+                    }}
+                  >
                     <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>
                       {route.company}
                     </span>
@@ -727,7 +754,8 @@ export function BusPage() {
               ))
             ) : (
               <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>
-                No fallback departure is currently cleaner than the selected route. You can continue with the booking plan below.
+                No fallback departure is currently cleaner than the selected route. You can continue
+                with the booking plan below.
               </div>
             )}
           </div>

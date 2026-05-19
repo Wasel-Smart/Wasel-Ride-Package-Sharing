@@ -222,7 +222,7 @@ export const notificationsAPI = {
     // Check cache for server notifications
     const cachedEntry = notificationCache.get(userId);
     const now = Date.now();
-    if (cachedEntry && (now - cachedEntry.timestamp < NOTIFICATION_CACHE_TTL)) {
+    if (cachedEntry && now - cachedEntry.timestamp < NOTIFICATION_CACHE_TTL) {
       return {
         notifications: mergeNotifications(localNotifications, cachedEntry.data),
       };
@@ -231,7 +231,10 @@ export const notificationsAPI = {
     if (!canUseEdgeApi()) {
       try {
         const serverNotifications = await getDirectNotifications(userId);
-        notificationCache.set(userId, { data: serverNotifications as StoredNotification[], timestamp: Date.now() });
+        notificationCache.set(userId, {
+          data: serverNotifications as StoredNotification[],
+          timestamp: Date.now(),
+        });
         return {
           notifications: mergeNotifications(
             localNotifications,
@@ -450,7 +453,7 @@ export const notificationsAPI = {
         return { success: false, source: 'local', ...deliveryResult };
       }
 
-       const server = await (response.json().catch(() => ({})));
+      const server = await response.json().catch(() => ({}));
       const notificationId = String(server?.notification?.id ?? localDraft.id);
       writeLocalNotifications(
         sortNotifications([

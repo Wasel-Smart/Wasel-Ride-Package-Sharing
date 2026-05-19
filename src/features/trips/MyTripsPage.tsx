@@ -982,7 +982,15 @@ export default function MyTripsPage() {
                 gap: 10,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                  flexWrap: 'wrap',
+                }}
+              >
                 <div>
                   <div
                     style={{
@@ -993,7 +1001,9 @@ export default function MyTripsPage() {
                       textTransform: 'uppercase',
                     }}
                   >
-                    {nextPriorityTrip?.lifecycle === 'attention' ? 'Next item needing action' : 'Next live item'}
+                    {nextPriorityTrip?.lifecycle === 'attention'
+                      ? 'Next item needing action'
+                      : 'Next live item'}
                   </div>
                   <div style={{ color: TEXT, fontWeight: 900, fontSize: '1rem', marginTop: 6 }}>
                     {nextPriorityTrip
@@ -1001,10 +1011,14 @@ export default function MyTripsPage() {
                       : 'No trip is active yet'}
                   </div>
                 </div>
-                {nextPriorityTrip ? <LifecycleBadge lifecycle={nextPriorityTrip.lifecycle} /> : null}
+                {nextPriorityTrip ? (
+                  <LifecycleBadge lifecycle={nextPriorityTrip.lifecycle} />
+                ) : null}
               </div>
 
-              <div style={{ color: MUTED, fontSize: '0.84rem', lineHeight: 1.65, fontFamily: FONT }}>
+              <div
+                style={{ color: MUTED, fontSize: '0.84rem', lineHeight: 1.65, fontFamily: FONT }}
+              >
                 {nextPriorityTrip
                   ? `${nextPriorityTrip.primaryStatus}. ${nextPriorityTrip.supportCount > 0 ? `${nextPriorityTrip.supportCount} support thread${nextPriorityTrip.supportCount > 1 ? 's are' : ' is'} attached.` : 'No support thread is attached yet.'}`
                   : 'The lane is clear right now. Start a new ride, package movement, or bus booking from here.'}
@@ -1012,7 +1026,9 @@ export default function MyTripsPage() {
 
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button
-                  onClick={() => (nextPriorityTrip ? nav(nextPriorityTrip.openPath) : nav(createPath))}
+                  onClick={() =>
+                    nextPriorityTrip ? nav(nextPriorityTrip.openPath) : nav(createPath)
+                  }
                   style={{
                     padding: '10px 14px',
                     borderRadius: 12,
@@ -1035,7 +1051,9 @@ export default function MyTripsPage() {
                   <button
                     onClick={() => {
                       setTab(nextPriorityTrip.kind);
-                      setFilter(nextPriorityTrip.lifecycle === 'attention' ? 'attention' : 'active');
+                      setFilter(
+                        nextPriorityTrip.lifecycle === 'attention' ? 'attention' : 'active',
+                      );
                     }}
                     style={{
                       padding: '10px 14px',
@@ -1065,10 +1083,20 @@ export default function MyTripsPage() {
                 gap: 8,
               }}
             >
-              <div style={{ color: AMBER, fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              <div
+                style={{
+                  color: AMBER,
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                }}
+              >
                 Attention lane
               </div>
-              <div style={{ color: TEXT, fontSize: '1.3rem', fontWeight: 900 }}>{attentionItems.length}</div>
+              <div style={{ color: TEXT, fontSize: '1.3rem', fontWeight: 900 }}>
+                {attentionItems.length}
+              </div>
               <div style={{ color: MUTED, fontSize: '0.8rem', lineHeight: 1.65 }}>
                 Bookings, route matches, or settlements that still need a decision.
               </div>
@@ -1101,7 +1129,15 @@ export default function MyTripsPage() {
                 gap: 8,
               }}
             >
-              <div style={{ color: GREEN, fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              <div
+                style={{
+                  color: GREEN,
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                }}
+              >
                 Support and completion
               </div>
               <div style={{ color: TEXT, fontSize: '1.3rem', fontWeight: 900 }}>
@@ -1157,60 +1193,60 @@ export default function MyTripsPage() {
               marginBottom: 16,
             }}
           >
-          {(
-            [
-              ['rides', <Car key="car" size={14} />, 'Rides'],
-              ['packages', <Package key="pkg" size={14} />, 'Packages'],
-              ['buses', <Bus key="bus" size={14} />, 'Buses'],
-            ] as const
-          ).map(([key, icon, label]) => (
-            <button
-              key={key}
-              onClick={() => setTab(key)}
-              style={{
-                flex: 1,
-                padding: '9px 0',
-                borderRadius: 10,
-                background: tab === key ? 'rgba(0,200,232,0.12)' : 'transparent',
-                border: tab === key ? '1px solid rgba(0,200,232,0.25)' : '1px solid transparent',
-                color: tab === key ? CYAN : MUTED,
-                fontWeight: tab === key ? 800 : 600,
-                fontFamily: FONT,
-                fontSize: '0.82rem',
-                cursor: 'pointer',
-                transition: 'all 0.14s',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-              }}
-            >
-              {icon}
-              {label}
-            </button>
-          ))}
+            {(
+              [
+                ['rides', <Car key="car" size={14} />, 'Rides'],
+                ['packages', <Package key="pkg" size={14} />, 'Packages'],
+                ['buses', <Bus key="bus" size={14} />, 'Buses'],
+              ] as const
+            ).map(([key, icon, label]) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                style={{
+                  flex: 1,
+                  padding: '9px 0',
+                  borderRadius: 10,
+                  background: tab === key ? 'rgba(0,200,232,0.12)' : 'transparent',
+                  border: tab === key ? '1px solid rgba(0,200,232,0.25)' : '1px solid transparent',
+                  color: tab === key ? CYAN : MUTED,
+                  fontWeight: tab === key ? 800 : 600,
+                  fontFamily: FONT,
+                  fontSize: '0.82rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.14s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                }}
+              >
+                {icon}
+                {label}
+              </button>
+            ))}
           </div>
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-          {filters.map(filterOption => (
-            <button
-              key={filterOption.key}
-              onClick={() => setFilter(filterOption.key)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 999,
-                fontSize: '0.75rem',
-                fontWeight: filter === filterOption.key ? 800 : 600,
-                fontFamily: FONT,
-                cursor: 'pointer',
-                border: `1px solid ${filter === filterOption.key ? CYAN : BORDER}`,
-                background: filter === filterOption.key ? 'rgba(0,200,232,0.12)' : 'transparent',
-                color: filter === filterOption.key ? CYAN : MUTED,
-              }}
-            >
-              {filterOption.label}
-            </button>
-          ))}
+            {filters.map(filterOption => (
+              <button
+                key={filterOption.key}
+                onClick={() => setFilter(filterOption.key)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 999,
+                  fontSize: '0.75rem',
+                  fontWeight: filter === filterOption.key ? 800 : 600,
+                  fontFamily: FONT,
+                  cursor: 'pointer',
+                  border: `1px solid ${filter === filterOption.key ? CYAN : BORDER}`,
+                  background: filter === filterOption.key ? 'rgba(0,200,232,0.12)' : 'transparent',
+                  color: filter === filterOption.key ? CYAN : MUTED,
+                }}
+              >
+                {filterOption.label}
+              </button>
+            ))}
           </div>
 
           {filtered.length === 0 ? (
@@ -1224,41 +1260,41 @@ export default function MyTripsPage() {
                 borderRadius: 18,
               }}
             >
-            {tab === 'rides' ? (
-              <Car size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
-            ) : tab === 'packages' ? (
-              <Package size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
-            ) : (
-              <Bus size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
-            )}
-            <p style={{ fontFamily: FONT, fontSize: '0.94rem', margin: 0 }}>
-              No {tab} match this lifecycle filter yet
-            </p>
-            <button
-              onClick={() => nav(createPath)}
-              style={{
-                marginTop: 16,
-                padding: '10px 18px',
-                borderRadius: 10,
-                background: 'rgba(0,200,232,0.12)',
-                border: '1px solid rgba(0,200,232,0.25)',
-                color: CYAN,
-                fontWeight: 800,
-                fontFamily: FONT,
-                fontSize: '0.82rem',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              {tab === 'rides'
-                ? 'Create ride'
-                : tab === 'packages'
-                  ? 'Create package request'
-                  : 'Find a bus'}
-              <ArrowRight size={14} />
-            </button>
+              {tab === 'rides' ? (
+                <Car size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
+              ) : tab === 'packages' ? (
+                <Package size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
+              ) : (
+                <Bus size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
+              )}
+              <p style={{ fontFamily: FONT, fontSize: '0.94rem', margin: 0 }}>
+                No {tab} match this lifecycle filter yet
+              </p>
+              <button
+                onClick={() => nav(createPath)}
+                style={{
+                  marginTop: 16,
+                  padding: '10px 18px',
+                  borderRadius: 10,
+                  background: 'rgba(0,200,232,0.12)',
+                  border: '1px solid rgba(0,200,232,0.25)',
+                  color: CYAN,
+                  fontWeight: 800,
+                  fontFamily: FONT,
+                  fontSize: '0.82rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                {tab === 'rides'
+                  ? 'Create ride'
+                  : tab === 'packages'
+                    ? 'Create package request'
+                    : 'Find a bus'}
+                <ArrowRight size={14} />
+              </button>
             </div>
           ) : (
             filtered.map(trip => (

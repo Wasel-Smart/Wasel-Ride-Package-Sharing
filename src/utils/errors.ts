@@ -230,7 +230,7 @@ export const ErrorCodes = {
 export function createAuthError(
   code: keyof typeof ErrorCodes,
   context?: ErrorContext,
-  originalError?: unknown
+  originalError?: unknown,
 ): WaselError {
   return new WaselError({
     code,
@@ -246,7 +246,7 @@ export function createAuthError(
 export function createWalletError(
   code: keyof typeof ErrorCodes,
   context?: ErrorContext,
-  originalError?: unknown
+  originalError?: unknown,
 ): WaselError {
   return new WaselError({
     code,
@@ -262,7 +262,7 @@ export function createWalletError(
 export function createPaymentError(
   code: keyof typeof ErrorCodes,
   context?: ErrorContext,
-  originalError?: unknown
+  originalError?: unknown,
 ): WaselError {
   return new WaselError({
     code,
@@ -278,7 +278,7 @@ export function createPaymentError(
 export function createRideError(
   code: keyof typeof ErrorCodes,
   context?: ErrorContext,
-  originalError?: unknown
+  originalError?: unknown,
 ): WaselError {
   return new WaselError({
     code,
@@ -294,7 +294,7 @@ export function createRideError(
 export function createPackageError(
   code: keyof typeof ErrorCodes,
   context?: ErrorContext,
-  originalError?: unknown
+  originalError?: unknown,
 ): WaselError {
   return new WaselError({
     code,
@@ -310,7 +310,7 @@ export function createPackageError(
 export function createNetworkError(
   code: keyof typeof ErrorCodes,
   context?: ErrorContext,
-  originalError?: unknown
+  originalError?: unknown,
 ): WaselError {
   return new WaselError({
     code,
@@ -326,7 +326,7 @@ export function createNetworkError(
 export function createValidationError(
   code: keyof typeof ErrorCodes,
   context?: ErrorContext,
-  originalError?: unknown
+  originalError?: unknown,
 ): WaselError {
   return new WaselError({
     code,
@@ -342,7 +342,7 @@ export function createValidationError(
 export function createPermissionError(
   code: keyof typeof ErrorCodes,
   context?: ErrorContext,
-  originalError?: unknown
+  originalError?: unknown,
 ): WaselError {
   return new WaselError({
     code,
@@ -358,7 +358,7 @@ export function createPermissionError(
 export function createSystemError(
   code: keyof typeof ErrorCodes,
   context?: ErrorContext,
-  originalError?: unknown
+  originalError?: unknown,
 ): WaselError {
   return new WaselError({
     code,

@@ -20,11 +20,7 @@ export function safeStorageGetItem(kind: BrowserStorageKind, key: string): strin
   }
 }
 
-export function safeStorageSetItem(
-  kind: BrowserStorageKind,
-  key: string,
-  value: string,
-): boolean {
+export function safeStorageSetItem(kind: BrowserStorageKind, key: string, value: string): boolean {
   try {
     const storage = getBrowserStorage(kind);
     if (!storage) {

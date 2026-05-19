@@ -1,11 +1,11 @@
 /**
  * WASEL NAVIGATION STRUCTURE - 10/10 UX
- * 
+ *
  * Based on best practices from:
  * - Uber: Simple 4-tab navigation
  * - Airbnb: Progressive disclosure
  * - WhatsApp: Context-aware features
- * 
+ *
  * Principles:
  * 1. Maximum 4 main tabs (cognitive load limit)
  * 2. Progressive feature disclosure
@@ -153,7 +153,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
     icon: '⚡',
     action: 'book-frequent-route',
     priority: 1,
-    condition: (user) => user?.frequentRoute !== null,
+    condition: user => user?.frequentRoute !== null,
   },
   {
     id: 'amman-aqaba',
@@ -173,12 +173,12 @@ export const QUICK_ACTIONS: QuickAction[] = [
   },
   {
     id: 'post-route',
-    label: 'Post today\'s route',
+    label: "Post today's route",
     labelAr: 'انشر مسار اليوم',
     icon: '➕',
     action: 'quick-post-route',
     priority: 4,
-    condition: (user) => user?.isDriver === true,
+    condition: user => user?.isDriver === true,
   },
   {
     id: 'send-package',
@@ -187,7 +187,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
     icon: '📦',
     action: 'send-package',
     priority: 5,
-    condition: (user) => user?.experienceLevel !== 'new',
+    condition: user => user?.experienceLevel !== 'new',
   },
 ];
 
@@ -210,7 +210,7 @@ export const FEATURE_GATES: FeatureGate[] = [
     featureId: 'find-ride-basic',
     requiredLevel: 'new',
   },
-  
+
   // After first ride, unlock packages
   {
     featureId: 'packages',
@@ -220,7 +220,7 @@ export const FEATURE_GATES: FeatureGate[] = [
       threshold: 1,
     },
   },
-  
+
   // After 3 rides, unlock offering rides
   {
     featureId: 'offer-ride',
@@ -230,7 +230,7 @@ export const FEATURE_GATES: FeatureGate[] = [
       threshold: 3,
     },
   },
-  
+
   // After 5 rides, unlock advanced features
   {
     featureId: 'advanced-search',
@@ -240,7 +240,7 @@ export const FEATURE_GATES: FeatureGate[] = [
       threshold: 5,
     },
   },
-  
+
   // After 10 rides, unlock driver console
   {
     featureId: 'driver-console',
@@ -250,7 +250,7 @@ export const FEATURE_GATES: FeatureGate[] = [
       threshold: 10,
     },
   },
-  
+
   // Expert features (analytics, mobility OS)
   {
     featureId: 'mobility-os',
@@ -368,7 +368,7 @@ export const CONTEXTUAL_HELP: ContextualHelp[] = [
     triggerId: 'first-offer-ride',
     title: 'Earn money on your trips',
     titleAr: 'اكسب المال من رحلاتك',
-    message: 'Post routes you\'re already taking and earn money from empty seats.',
+    message: "Post routes you're already taking and earn money from empty seats.",
     messageAr: 'انشر المسارات التي تسلكها بالفعل واكسب المال من المقاعد الفارغة.',
     showOnce: true,
   },
@@ -388,9 +388,9 @@ export const CONTEXTUAL_HELP: ContextualHelp[] = [
  */
 export const getUserExperienceLevel = (user: any): UserExperienceLevel => {
   if (!user) return 'new';
-  
+
   const ridesCompleted = user.stats?.ridesCompleted || 0;
-  
+
   if (ridesCompleted === 0) return 'new';
   if (ridesCompleted < 5) return 'beginner';
   if (ridesCompleted < 20) return 'intermediate';
@@ -403,12 +403,7 @@ export const getUserExperienceLevel = (user: any): UserExperienceLevel => {
  */
 export const getVisibleFeatures = (level: UserExperienceLevel) => {
   const features = {
-    new: [
-      'home',
-      'find-ride-basic',
-      'profile-basic',
-      'settings-language',
-    ],
+    new: ['home', 'find-ride-basic', 'profile-basic', 'settings-language'],
     beginner: [
       'home',
       'find-ride-basic',
@@ -434,7 +429,7 @@ export const getVisibleFeatures = (level: UserExperienceLevel) => {
       'all', // Everything unlocked
     ],
   };
-  
+
   return features[level];
 };
 

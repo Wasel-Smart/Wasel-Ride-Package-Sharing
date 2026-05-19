@@ -350,7 +350,8 @@ export function useProfilePageController({
     const ticket = await createSupportTicket(user.id, {
       topic: 'cancellation',
       subject: 'Account deletion request',
-      detail: 'User requested account deletion from the profile danger zone and was signed out while support reviews the request.',
+      detail:
+        'User requested account deletion from the profile danger zone and was signed out while support reviews the request.',
       relatedId: user.id,
       routeLabel: 'Profile deletion request',
       priority: 'high',

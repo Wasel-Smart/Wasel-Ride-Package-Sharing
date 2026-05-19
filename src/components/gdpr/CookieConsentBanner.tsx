@@ -60,15 +60,29 @@ export function CookieConsentBanner() {
         backdropFilter: 'blur(10px)',
       }}
     >
-      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+      <div
+        style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1.5rem',
+          flexWrap: 'wrap',
+        }}
+      >
         <div style={{ flex: 1, minWidth: '300px' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#EFF6FF', marginBottom: '0.5rem' }}>
+          <h3
+            style={{ fontSize: '1rem', fontWeight: 700, color: '#EFF6FF', marginBottom: '0.5rem' }}
+          >
             Cookie Consent
           </h3>
           <p style={{ fontSize: '0.875rem', color: 'rgba(239, 246, 255, 0.7)', lineHeight: 1.6 }}>
-            We use cookies to enhance your experience, analyze site usage, and provide personalized content. 
-            By clicking "Accept", you consent to our use of cookies. See our{' '}
-            <a href="/privacy" style={{ color: '#55E9FF', textDecoration: 'underline' }}>Privacy Policy</a> for details.
+            We use cookies to enhance your experience, analyze site usage, and provide personalized
+            content. By clicking "Accept", you consent to our use of cookies. See our{' '}
+            <a href="/privacy" style={{ color: '#55E9FF', textDecoration: 'underline' }}>
+              Privacy Policy
+            </a>{' '}
+            for details.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>

@@ -3,6 +3,7 @@ import net from 'node:net';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { assertWorkspaceFilesReadable } from './assert-workspace-files-readable.mjs';
 
 const workspaceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const viteBin = path.resolve(workspaceRoot, 'node_modules', 'vite', 'bin', 'vite.js');
@@ -199,6 +200,7 @@ async function ensurePortReady(targetPort, targetHost) {
 }
 
 async function main() {
+  await assertWorkspaceFilesReadable({ cwd: workspaceRoot });
   await ensurePortReady(port, host);
 
   const child = spawn(process.execPath, [viteBin, '--host', host, '--port', String(port), '--strictPort', ...cliArgs], {

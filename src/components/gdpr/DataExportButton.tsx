@@ -13,7 +13,9 @@ export function DataExportButton() {
   const handleExport = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
       const { error } = await supabase.rpc('request_data_export', {
@@ -35,11 +37,7 @@ export function DataExportButton() {
   };
 
   return (
-    <Button
-      onClick={handleExport}
-      disabled={loading}
-      variant="outline"
-    >
+    <Button onClick={handleExport} disabled={loading} variant="outline">
       {loading ? 'Requesting...' : 'Export My Data'}
     </Button>
   );

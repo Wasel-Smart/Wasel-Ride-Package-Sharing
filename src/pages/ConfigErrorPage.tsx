@@ -44,7 +44,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
           <WaselLogo size={48} theme="light" variant="compact" />
         </div>
-        
+
         <div
           style={{
             fontSize: '0.74rem',
@@ -57,7 +57,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
         >
           Configuration Error
         </div>
-        
+
         <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#EFF6FF', margin: '0 0 16px' }}>
           Environment configuration errors
         </h2>
@@ -75,7 +75,14 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
                   marginBottom: 12,
                 }}
               >
-                <div style={{ color: '#FCA5A5', fontSize: '0.88rem', fontWeight: 700, marginBottom: 6 }}>
+                <div
+                  style={{
+                    color: '#FCA5A5',
+                    fontSize: '0.88rem',
+                    fontWeight: 700,
+                    marginBottom: 6,
+                  }}
+                >
                   {issue.message}
                 </div>
                 <div style={{ color: 'rgba(239,246,255,0.52)', fontSize: '0.82rem' }}>
@@ -88,7 +95,9 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
 
         {warnings.length > 0 && (
           <div style={{ textAlign: 'left', marginBottom: 24 }}>
-            <div style={{ color: '#F5B11E', fontSize: '0.88rem', fontWeight: 700, marginBottom: 12 }}>
+            <div
+              style={{ color: '#F5B11E', fontSize: '0.88rem', fontWeight: 700, marginBottom: 12 }}
+            >
               Warnings:
             </div>
             {warnings.map((issue, idx) => (

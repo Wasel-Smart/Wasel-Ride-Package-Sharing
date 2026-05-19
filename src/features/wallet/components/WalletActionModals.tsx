@@ -90,11 +90,7 @@ export function WalletActionModals({
 
   return (
     <>
-      <SharedActionModal
-        show={showTopUp}
-        onClose={() => setShowTopUp(false)}
-        title={addMoneyLabel}
-      >
+      <SharedActionModal show={showTopUp} onClose={() => setShowTopUp(false)} title={addMoneyLabel}>
         <div className="space-y-3">
           <div className="grid grid-cols-4 gap-2">
             {[5, 10, 20, 50].map(amt => (
@@ -208,11 +204,7 @@ export function WalletActionModals({
         </div>
       </SharedActionModal>
 
-      <SharedActionModal
-        show={showSend}
-        onClose={() => setShowSend(false)}
-        title={sendMoneyLabel}
-      >
+      <SharedActionModal show={showSend} onClose={() => setShowSend(false)} title={sendMoneyLabel}>
         <div className="space-y-3">
           <div>
             <Label className="text-xs text-muted-foreground">{t.recipientId}</Label>

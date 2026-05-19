@@ -37,7 +37,11 @@ export interface AvailabilitySnapshot {
   lastCheckedAt: number | null;
 }
 
-export function createEdgeHeaders(headers?: HeadersInit, userToken?: string, includeCSRF = true): Headers {
+export function createEdgeHeaders(
+  headers?: HeadersInit,
+  userToken?: string,
+  includeCSRF = true,
+): Headers {
   let headersInit = headers ?? {};
 
   // Add CSRF token for state-changing operations
@@ -384,7 +388,8 @@ export async function fetchWithRetry(
       }
 
       const isRetryable =
-        error instanceof TypeError || (error instanceof DOMException && error.name === 'AbortError');
+        error instanceof TypeError ||
+        (error instanceof DOMException && error.name === 'AbortError');
 
       if (retries > 0 && isRetryable) {
         await delay(backoff);

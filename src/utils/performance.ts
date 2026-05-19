@@ -113,9 +113,13 @@ function reportWebVital(metric: Metric) {
 
   // Send to Sentry for poor metrics
   if (vital.rating === 'poor') {
-    logger.error(`Poor performance: ${sanitizeLogMessage(vital.name)}`, new Error('Performance threshold exceeded'), {
-      metric: vital,
-    });
+    logger.error(
+      `Poor performance: ${sanitizeLogMessage(vital.name)}`,
+      new Error('Performance threshold exceeded'),
+      {
+        metric: vital,
+      },
+    );
   }
 }
 

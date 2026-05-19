@@ -367,35 +367,35 @@ export function MobileDrawer({
   if (!open) return null;
 
   return (
-<div
-       style={{
-         position: 'fixed',
-         inset: 0,
-         zIndex: 2000,
-         background: 'rgba(0,0,0,0.75)',
-         contain: 'layout style',
-       }}
-       onClick={onClose}
-     >
-       <div
-         style={{
-           position: 'absolute',
-           top: 0,
-           insetInlineEnd: 0,
-           width: 300,
-           height: '100%',
-           background: C.bg,
-           borderInlineStart: `1px solid ${C.border}`,
-           boxShadow: ar ? '20px 0 60px rgba(0,0,0,0.7)' : '-20px 0 60px rgba(0,0,0,0.7)',
-           overflowY: 'auto',
-           WebkitOverflowScrolling: 'touch',
-           display: 'flex',
-           flexDirection: 'column',
-           transform: 'translateZ(0)',
-           willChange: 'transform',
-         }}
-         onClick={e => e.stopPropagation()}
-       >
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 2000,
+        background: 'rgba(0,0,0,0.75)',
+        contain: 'layout style',
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          insetInlineEnd: 0,
+          width: 300,
+          height: '100%',
+          background: C.bg,
+          borderInlineStart: `1px solid ${C.border}`,
+          boxShadow: ar ? '20px 0 60px rgba(0,0,0,0.7)' : '-20px 0 60px rgba(0,0,0,0.7)',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          display: 'flex',
+          flexDirection: 'column',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
         <div
           style={{
             padding: '16px 20px',

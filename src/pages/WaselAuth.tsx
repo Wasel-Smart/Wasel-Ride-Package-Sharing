@@ -451,7 +451,7 @@ export default function WaselAuth() {
   const handleGoogleSignIn = async () => {
     setError('');
     const { error: oauthError } = await signInWithGoogle(safeReturnTo);
-    
+
     if (oauthError) {
       setError(friendlyAuthError(oauthError, 'Google sign in failed. Please try again.'));
     }
@@ -460,7 +460,7 @@ export default function WaselAuth() {
   const handleFacebookSignIn = async () => {
     setError('');
     const { error: oauthError } = await signInWithFacebook(safeReturnTo);
-    
+
     if (oauthError) {
       setError(friendlyAuthError(oauthError, 'Facebook sign in failed. Please try again.'));
     }

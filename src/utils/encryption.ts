@@ -19,7 +19,7 @@ async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey>
     encoder.encode(password),
     'PBKDF2',
     false,
-    ['deriveBits', 'deriveKey']
+    ['deriveBits', 'deriveKey'],
   );
 
   return crypto.subtle.deriveKey(
@@ -32,7 +32,7 @@ async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey>
     passwordKey,
     { name: ALGORITHM, length: KEY_LENGTH },
     false,
-    ['encrypt', 'decrypt']
+    ['encrypt', 'decrypt'],
   );
 }
 
@@ -60,11 +60,7 @@ export async function encryptData(data: string): Promise<string> {
     const encoder = new TextEncoder();
     const encodedData = encoder.encode(data);
 
-    const encryptedData = await crypto.subtle.encrypt(
-      { name: ALGORITHM, iv },
-      key,
-      encodedData
-    );
+    const encryptedData = await crypto.subtle.encrypt({ name: ALGORITHM, iv }, key, encodedData);
 
     // Combine salt + IV + encrypted data
     const combined = new Uint8Array(salt.length + iv.length + encryptedData.byteLength);
@@ -87,7 +83,7 @@ export async function decryptData(encryptedData: string): Promise<string> {
   try {
     // Decode from base64
     const combined = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
-    
+
     // Extract salt, IV and encrypted data
     const salt = combined.slice(0, SALT_LENGTH);
     const iv = combined.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
@@ -99,12 +95,8 @@ export async function decryptData(encryptedData: string): Promise<string> {
     }
 
     const key = await deriveKey(sessionId, salt);
-    
-    const decryptedData = await crypto.subtle.decrypt(
-      { name: ALGORITHM, iv },
-      key,
-      data
-    );
+
+    const decryptedData = await crypto.subtle.decrypt({ name: ALGORITHM, iv }, key, data);
 
     const decoder = new TextDecoder();
     return decoder.decode(decryptedData);
@@ -126,7 +118,7 @@ export const secureStorage = {
   async getItem(key: string): Promise<string | null> {
     const encrypted = localStorage.getItem(`secure_${key}`);
     if (!encrypted) return null;
-    
+
     try {
       return await decryptData(encrypted);
     } catch {
@@ -140,7 +132,7 @@ export const secureStorage = {
     localStorage.removeItem(`secure_${key}`);
   },
 
-   clear(): void {
+  clear(): void {
     const keys = Object.keys(localStorage);
     const secureKeys = keys.filter(key => key.startsWith('secure_'));
     secureKeys.forEach(key => {

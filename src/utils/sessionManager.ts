@@ -5,11 +5,7 @@
 
 import { logger } from './monitoring';
 import { generateSecureId } from './encryption';
-import {
-  safeStorageGetItem,
-  safeStorageRemoveItem,
-  safeStorageSetItem,
-} from './browserStorage';
+import { safeStorageGetItem, safeStorageRemoveItem, safeStorageSetItem } from './browserStorage';
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 const MAX_CONCURRENT_SESSIONS = 3;

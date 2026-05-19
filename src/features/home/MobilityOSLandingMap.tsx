@@ -636,7 +636,19 @@ export function MobilityOSLandingMap({
     return () => {
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     };
-  }, [demandPressure, focusOrigin, focusRouteId, focusDestination, focusLabel, minimalText, preferredHeight, routes, runtimeMode, size, utilization]);
+  }, [
+    demandPressure,
+    focusOrigin,
+    focusRouteId,
+    focusDestination,
+    focusLabel,
+    minimalText,
+    preferredHeight,
+    routes,
+    runtimeMode,
+    size,
+    utilization,
+  ]);
 
   const resolvedHeight = preferredHeight ?? (size.width < 480 ? 460 : 520);
 

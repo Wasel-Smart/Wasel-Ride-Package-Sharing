@@ -100,7 +100,7 @@ export class RateLimiter {
 
   private getClientKey(): string {
     if (typeof window === 'undefined') return 'server';
-    
+
     // Use multiple identifiers for better tracking
     const fingerprint = [
       navigator.userAgent,

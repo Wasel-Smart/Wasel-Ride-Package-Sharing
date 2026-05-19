@@ -1,6 +1,17 @@
 // ─── Raw DB row types ────────────────────────────────────────────────────────
+// DbClient is now properly typed via the SupabaseClient interface.
+// All `any` casts are gone; use the shared typed client from helpers.
 
-export type DbClient = any;
+import type { SupabaseClient } from '@supabase/supabase-js';
+export type { SupabaseClient };
+
+/**
+ * The canonical DB client type used across the directSupabase layer.
+ * Replaces the old `any`-typed alias.
+ */
+export type DbClient = SupabaseClient;
+
+// ── Profile ──────────────────────────────────────────────────────────────────
 
 export type RawProfile = {
   id?: string;
@@ -28,6 +39,8 @@ export type RawProfile = {
   created_at?: string | null;
 };
 
+// ── Users ────────────────────────────────────────────────────────────────────
+
 export type UserRow = {
   id: string;
   auth_user_id?: string | null;
@@ -45,6 +58,8 @@ export type UserRow = {
   created_at?: string | null;
 };
 
+// ── Drivers ──────────────────────────────────────────────────────────────────
+
 export type DriverRow = {
   driver_id: string;
   user_id: string;
@@ -54,6 +69,8 @@ export type DriverRow = {
   created_at?: string | null;
 };
 
+// ── Wallets ──────────────────────────────────────────────────────────────────
+
 export type WalletRow = {
   wallet_id?: string;
   user_id?: string;
@@ -61,8 +78,14 @@ export type WalletRow = {
   pending_balance?: number | string | null;
   wallet_status?: string | null;
   currency_code?: string | null;
+  auto_top_up_enabled?: boolean | null;
+  auto_top_up_amount?: number | string | null;
+  auto_top_up_threshold?: number | string | null;
+  pin_hash?: string | null;
   created_at?: string | null;
 };
+
+// ── Trips ────────────────────────────────────────────────────────────────────
 
 export type TripRow = {
   trip_id?: string;
@@ -81,6 +104,8 @@ export type TripRow = {
   created_at?: string | null;
 };
 
+// ── Bookings ─────────────────────────────────────────────────────────────────
+
 export type RawBooking = {
   id?: string;
   booking_id?: string;
@@ -95,9 +120,12 @@ export type RawBooking = {
   amount?: number | string;
   status?: string | null;
   booking_status?: string | null;
+  confirmed_by_driver?: boolean | null;
   created_at?: string | null;
   updated_at?: string | null;
 };
+
+// ── Packages ─────────────────────────────────────────────────────────────────
 
 export type RawPackage = {
   id?: string;
@@ -120,6 +148,8 @@ export type RawPackage = {
   created_at?: string | null;
 };
 
+// ── Notifications ─────────────────────────────────────────────────────────────
+
 export type RawNotification = {
   id?: string;
   user_id?: string;
@@ -134,6 +164,8 @@ export type RawNotification = {
   created_at?: string | null;
   metadata?: Record<string, unknown> | null;
 };
+
+// ── Communication ─────────────────────────────────────────────────────────────
 
 export type RawCommunicationPreferences = {
   user_id?: string;
@@ -179,6 +211,8 @@ export type RawCommunicationDelivery = {
   created_at?: string | null;
 };
 
+// ── Growth & Demand ───────────────────────────────────────────────────────────
+
 export type RawDemandAlert = {
   id?: string;
   user_id?: string | null;
@@ -191,6 +225,8 @@ export type RawDemandAlert = {
   created_at?: string | null;
 };
 
+// ── Verifications ─────────────────────────────────────────────────────────────
+
 export type RawVerificationRecord = {
   sanad_status?: string | null;
   document_status?: string | null;
@@ -199,6 +235,8 @@ export type RawVerificationRecord = {
   failure_reason?: string | null;
   updated_at?: string | null;
 };
+
+// ── Referrals ────────────────────────────────────────────────────────────────
 
 export type RawReferral = {
   id?: string;
@@ -215,6 +253,8 @@ export type RawReferral = {
   created_at?: string | null;
 };
 
+// ── Growth Events ─────────────────────────────────────────────────────────────
+
 export type RawGrowthEvent = {
   id?: string;
   user_id?: string | null;
@@ -228,10 +268,25 @@ export type RawGrowthEvent = {
   created_at?: string | null;
 };
 
+// ── User Context ──────────────────────────────────────────────────────────────
+
 export type UserContext = {
   user: UserRow;
   wallet: WalletRow | null;
   verification: RawVerificationRecord | null;
   driver: DriverRow | null;
   authUserId: string;
+};
+
+// ── Domain Events Table ───────────────────────────────────────────────────────
+// Used by the Supabase-backed realtime event bus.
+
+export type RawDomainEvent = {
+  id: string;
+  event_type: string;
+  payload: Record<string, unknown>;
+  producer: string;
+  trace_id: string;
+  occurred_at: string;
+  channel?: string | null;
 };

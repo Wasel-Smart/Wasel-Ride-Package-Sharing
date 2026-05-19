@@ -24,8 +24,10 @@ class CancellationService {
     reason,
     refundRequested = true,
   }: CancelBookingRequest): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
       throw new Error('Not authenticated');
     }
@@ -87,8 +89,10 @@ class CancellationService {
   }
 
   async cancelTrip({ tripId, reason }: CancelTripRequest): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
       throw new Error('Not authenticated');
     }
@@ -137,7 +141,7 @@ class CancellationService {
 
     if (activeBookings.length > 0) {
       const bookingIds = activeBookings.map(booking => booking.id);
-      
+
       await supabase
         .from('bookings')
         .update({

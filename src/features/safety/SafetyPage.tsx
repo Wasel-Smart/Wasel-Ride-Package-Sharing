@@ -1,11 +1,4 @@
-import {
-  AlertTriangle,
-  Headphones,
-  Shield,
-  ShieldCheck,
-  Siren,
-  UserCheck,
-} from 'lucide-react';
+import { AlertTriangle, Headphones, Shield, ShieldCheck, Siren, UserCheck } from 'lucide-react';
 import {
   MetricCard,
   PageHero,

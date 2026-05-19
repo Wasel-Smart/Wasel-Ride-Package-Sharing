@@ -44,10 +44,11 @@ async function checkEdgeFunctionHealth(): Promise<boolean> {
       (headers as Record<string, string>)['apikey'] = publicAnonKey;
     }
 
-    const response = await fetch(
-      `${supabaseUrl}/functions/v1/${edgeFunctionName}/health`,
-      { method: 'GET', headers, signal: AbortSignal.timeout(5_000) },
-    );
+    const response = await fetch(`${supabaseUrl}/functions/v1/${edgeFunctionName}/health`, {
+      method: 'GET',
+      headers,
+      signal: AbortSignal.timeout(5_000),
+    });
     // 200 = healthy; 404 means the function exists but has no /health route —
     // still counts as the edge runtime being reachable.
     return response.ok || response.status === 404;
@@ -120,7 +121,11 @@ export async function performHealthCheck(force = false): Promise<HealthCheckResu
 
     const result: HealthCheckResult = {
       healthy: supabaseHealthy && (edgeFunctionHealthy || databaseHealthy),
-      services: { supabase: supabaseHealthy, edgeFunction: edgeFunctionHealthy, database: databaseHealthy },
+      services: {
+        supabase: supabaseHealthy,
+        edgeFunction: edgeFunctionHealthy,
+        database: databaseHealthy,
+      },
       timestamp: new Date().toISOString(),
       errors,
     };

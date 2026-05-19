@@ -2,10 +2,7 @@ import type { WaselUser } from '../contexts/LocalAuth';
 import { getAuthCallbackUrl } from '../utils/env';
 import { supabase } from '../utils/supabase/client';
 import { requestEdgeJson } from './backendWorkflow';
-import {
-  buildFallbackTrustCenterStatus,
-  type TrustCenterStatus,
-} from './trustCenterModel';
+import { buildFallbackTrustCenterStatus, type TrustCenterStatus } from './trustCenterModel';
 
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -30,9 +27,7 @@ export interface DriverDocumentsPayload {
   documentReference?: string;
 }
 
-export async function getTrustCenterStatus(
-  user?: WaselUser | null,
-): Promise<TrustCenterStatus> {
+export async function getTrustCenterStatus(user?: WaselUser | null): Promise<TrustCenterStatus> {
   try {
     const payload = await requestEdgeJson<{ status: TrustCenterStatus }>({
       path: '/trust/status',
@@ -48,9 +43,7 @@ export async function getTrustCenterStatus(
   }
 }
 
-export async function startTrustPhoneVerification(
-  payload: StartPhoneVerificationPayload,
-) {
+export async function startTrustPhoneVerification(payload: StartPhoneVerificationPayload) {
   const response = await requestEdgeJson<{
     started: boolean;
     phoneNumber: string;
@@ -66,9 +59,7 @@ export async function startTrustPhoneVerification(
   return response;
 }
 
-export async function confirmTrustPhoneVerification(
-  payload: ConfirmPhoneVerificationPayload,
-) {
+export async function confirmTrustPhoneVerification(payload: ConfirmPhoneVerificationPayload) {
   const response = await requestEdgeJson<{
     verified: boolean;
     phoneNumber: string;
@@ -83,9 +74,7 @@ export async function confirmTrustPhoneVerification(
   return response;
 }
 
-export async function submitTrustIdentityVerification(
-  payload: IdentityVerificationPayload,
-) {
+export async function submitTrustIdentityVerification(payload: IdentityVerificationPayload) {
   const response = await requestEdgeJson<{
     submitted: boolean;
     verificationId: string;
@@ -114,9 +103,7 @@ export async function enableTrustDriverMode() {
   return response;
 }
 
-export async function submitTrustDriverDocuments(
-  payload: DriverDocumentsPayload,
-) {
+export async function submitTrustDriverDocuments(payload: DriverDocumentsPayload) {
   const response = await requestEdgeJson<{
     submitted: boolean;
     driverId: string;

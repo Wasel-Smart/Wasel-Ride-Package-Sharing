@@ -25,7 +25,7 @@ export function SessionTimeoutWarning() {
   useEffect(() => {
     const checkInterval = setInterval(() => {
       const stats = sessionManager.getSessionStats();
-      
+
       if (!stats.isActive) {
         setShowWarning(false);
         return;
@@ -66,16 +66,13 @@ export function SessionTimeoutWarning() {
         <AlertDialogHeader>
           <AlertDialogTitle>Session Expiring Soon</AlertDialogTitle>
           <AlertDialogDescription>
-            Your session will expire in {formatTime(timeRemaining)}. Would you like to extend your session?
+            Your session will expire in {formatTime(timeRemaining)}. Would you like to extend your
+            session?
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleLogout}>
-            Logout
-          </AlertDialogCancel>
-          <AlertDialogAction onClick={handleExtendSession}>
-            Extend Session
-          </AlertDialogAction>
+          <AlertDialogCancel onClick={handleLogout}>Logout</AlertDialogCancel>
+          <AlertDialogAction onClick={handleExtendSession}>Extend Session</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -22,6 +22,9 @@ with-supabase-app/node_modules/
 coverage/
 test-results/
 playwright-report/
+.playwright-dist/
+.eslintcache
+vitest-results*.json
 
 # Logs
 *.log
@@ -60,6 +63,7 @@ client_secret_*.json
 *.p8
 *.key
 COMPLETE_DEPLOYMENT_GUIDE.md
+vercel-env-variables.txt
 
 # Firebase and native mobile config not used by the web client
 src/GoogleService-Info.plist
@@ -91,3 +95,4 @@ _REMOVED/
 
 .vercel
 .env*.local
+wasel/

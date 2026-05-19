@@ -303,7 +303,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       try {
         const result = await signInWithOAuthProvider(supabase, 'google', returnTo);
-        
+
         if (result.error) {
           // Parse and handle OAuth-specific errors
           const oauthError = parseOAuthError(result.error, 'google');
@@ -311,7 +311,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             console.error('[OAuth Google]', oauthError);
           }
         }
-        
+
         return result;
       } catch (error: unknown) {
         if (import.meta.env?.DEV) {
@@ -331,7 +331,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       try {
         const result = await signInWithOAuthProvider(supabase, 'facebook', returnTo);
-        
+
         if (result.error) {
           // Parse and handle OAuth-specific errors
           const oauthError = parseOAuthError(result.error, 'facebook');
@@ -339,7 +339,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             console.error('[OAuth Facebook]', oauthError);
           }
         }
-        
+
         return result;
       } catch (error: unknown) {
         if (import.meta.env?.DEV) {
