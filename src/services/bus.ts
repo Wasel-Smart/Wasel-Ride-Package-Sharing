@@ -1,3 +1,16 @@
+/**
+ * bus.ts
+ *
+ * Architecture:
+ *  - Bus bookings are persisted to Supabase via bookingsAPI.createBooking.
+ *  - An in-memory cache provides instant session-scoped reads.
+ *  - localStorage is NOT used. Bus bookings are travel/payment records
+ *    and belong in the FORBIDDEN category for browser persistence.
+ *  - When the backend is unreachable, createBusBooking throws rather than
+ *    silently creating a phantom booking.
+ *  - Call clearBusBookingCache() on sign-out.
+ */
+
 import { bookingsAPI } from './bookings';
 import { BackendRequestError } from './backendWorkflow';
 import { trackGrowthEvent } from './growthEngine';
@@ -50,7 +63,7 @@ export interface BusBookingPayload {
 }
 
 export interface BusBookingResult {
-  source: 'server' | 'local';
+  source: 'server';
   bookingId: string;
   ticketCode: string;
 }
@@ -60,9 +73,37 @@ export interface StoredBusBooking extends BusBookingPayload {
   created_at: string;
   ticket_code: string;
   status: 'confirmed' | 'cancelled' | 'completed';
-  source?: 'server' | 'local';
+  source?: 'server';
   backend_booking_id?: string;
 }
+
+// ── In-memory cache (session-scoped) ─────────────────────────────────────────
+
+const busBookingCache: StoredBusBooking[] = [];
+
+function addToCache(booking: StoredBusBooking): void {
+  const idx = busBookingCache.findIndex(b => b.id === booking.id);
+  if (idx >= 0) {
+    busBookingCache[idx] = booking;
+  } else {
+    busBookingCache.unshift(booking);
+  }
+  if (busBookingCache.length > 50) {
+    busBookingCache.splice(50);
+  }
+}
+
+/** Get in-memory bus bookings for the current session. */
+export function getStoredBusBookings(): StoredBusBooking[] {
+  return [...busBookingCache];
+}
+
+/** Clear bus booking cache. Call on sign-out. */
+export function clearBusBookingCache(): void {
+  busBookingCache.splice(0);
+}
+
+// ── Utility helpers ───────────────────────────────────────────────────────────
 
 function toText(value: unknown, fallback: string): string {
   return typeof value === 'string' && value.trim() ? value : fallback;
@@ -105,6 +146,7 @@ export function looksLikeBusTrip(item: Record<string, unknown>): boolean {
 export function normalizeBusRoute(raw: Record<string, unknown>, index: number): BusRoute {
   const colors = ['#00C8E8', '#2060E8', '#00C875', '#F0A830'];
   const defaultId = `live-bus-${index + 1}`;
+  const color = colors[index % colors.length] || '#00C8E8';
   const from = toText(raw.from ?? raw.origin_city, 'Amman');
   const to = toText(raw.to ?? raw.destination_city, 'Aqaba');
   const dep = toText(raw.departure_time ?? raw.dep, '07:00');
@@ -127,7 +169,7 @@ export function normalizeBusRoute(raw: Record<string, unknown>, index: number): 
     seats,
     company: toText(raw.company, 'Wasel Express'),
     amenities: amenities.length ? amenities : ['AC', 'USB'],
-    color: colors[index % colors.length] ?? colors[0]!,
+    color,
     via: via.length ? via : ['Main Corridor'],
     duration: toText(raw.duration, '2h 00m'),
     frequency: toText(raw.frequency, 'Daily'),
@@ -193,24 +235,7 @@ export async function fetchBusRoutes(query: BusRouteQuery): Promise<BusRoute[]> 
   }
 }
 
-function persistBusBooking(booking: StoredBusBooking): StoredBusBooking {
-  const key = 'wasel-bus-bookings';
-
-  if (typeof window !== 'undefined') {
-    let current: StoredBusBooking[] = [];
-    try {
-      const currentRaw = window.localStorage.getItem(key);
-      const parsed = currentRaw ? JSON.parse(currentRaw) : [];
-      current = Array.isArray(parsed) ? (parsed as StoredBusBooking[]) : [];
-    } catch {
-      current = [];
-    }
-    const next = [booking, ...current.filter(item => item.id !== booking.id)].slice(0, 50);
-    window.localStorage.setItem(key, JSON.stringify(next));
-  }
-
-  return booking;
-}
+// ── Booking ───────────────────────────────────────────────────────────────────
 
 function buildBusTicketCode(bookingId: string): string {
   return `BUS-${bookingId
@@ -219,7 +244,7 @@ function buildBusTicketCode(bookingId: string): string {
     .toUpperCase()}`;
 }
 
-function shouldUseLocalBusFallback(error: unknown): boolean {
+function isBackendUnavailable(error: unknown): boolean {
   if (error instanceof BackendRequestError) {
     return error.recoverable || error.status === 404;
   }
@@ -233,54 +258,10 @@ function shouldUseLocalBusFallback(error: unknown): boolean {
   );
 }
 
-function createLocalBusBooking(payload: BusBookingPayload): BusBookingResult {
-  const bookingId = `local-bus-${Date.now()}`;
-  const ticketCode = buildBusTicketCode(bookingId);
-
-  persistBusBooking({
-    ...payload,
-    id: bookingId,
-    created_at: new Date().toISOString(),
-    ticket_code: ticketCode,
-    status: 'confirmed',
-    source: 'local',
-  });
-
-  void trackGrowthEvent({
-    eventName: 'bus_booking_created',
-    funnelStage: 'booked',
-    serviceType: 'bus',
-    from: payload.pickupStop,
-    to: payload.dropoffStop,
-    valueJod: payload.totalPrice,
-    metadata: {
-      tripId: payload.tripId,
-      source: 'local',
-      scheduleDate: payload.scheduleDate,
-    },
-  });
-
-  return {
-    source: 'local',
-    bookingId,
-    ticketCode,
-  };
-}
-
-export function getStoredBusBookings(): StoredBusBooking[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem('wasel-bus-bookings');
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
 export async function createBusBooking(payload: BusBookingPayload): Promise<BusBookingResult> {
+  let server;
   try {
-    const server = await bookingsAPI.createBooking(
+    server = await bookingsAPI.createBooking(
       payload.tripId,
       payload.seatsRequested,
       payload.pickupStop,
@@ -293,48 +274,49 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
         total_price: payload.totalPrice,
       },
     );
-
-    const bookingId = server?.booking?.id ?? server?.id ?? `server-${Date.now()}`;
-
-    const result: BusBookingResult = {
-      source: 'server',
-      bookingId: String(bookingId),
-      ticketCode: buildBusTicketCode(String(bookingId)),
-    };
-
-    persistBusBooking({
-      ...payload,
-      id: String(bookingId),
-      backend_booking_id: String(bookingId),
-      created_at: new Date().toISOString(),
-      ticket_code: result.ticketCode,
-      status: 'confirmed',
-      source: 'server',
-    });
-
-    void trackGrowthEvent({
-      eventName: 'bus_booking_created',
-      funnelStage: 'booked',
-      serviceType: 'bus',
-      from: payload.pickupStop,
-      to: payload.dropoffStop,
-      valueJod: payload.totalPrice,
-      metadata: {
-        tripId: payload.tripId,
-        source: 'server',
-        scheduleDate: payload.scheduleDate,
-      },
-    });
-    return result;
   } catch (error) {
-    if (shouldUseLocalBusFallback(error)) {
-      return createLocalBusBooking(payload);
+    if (isBackendUnavailable(error)) {
+      throw new Error(
+        'Bus booking is temporarily unavailable. The seat reservation backend could not confirm your booking. Please try again shortly.',
+      );
     }
-
     throw error instanceof Error
       ? error
       : new Error(
-          'Bus booking is temporarily unavailable because the secure booking backend could not confirm the seat.',
+          'Bus booking failed. Please check your connection and try again.',
         );
   }
+
+  const bookingId = server.booking.id || `server-${Date.now()}`;
+  const result: BusBookingResult = {
+    source: 'server',
+    bookingId: String(bookingId),
+    ticketCode: buildBusTicketCode(String(bookingId)),
+  };
+
+  addToCache({
+    ...payload,
+    id: String(bookingId),
+    backend_booking_id: String(bookingId),
+    created_at: new Date().toISOString(),
+    ticket_code: result.ticketCode,
+    status: 'confirmed',
+    source: 'server',
+  });
+
+  void trackGrowthEvent({
+    eventName: 'bus_booking_created',
+    funnelStage: 'booked',
+    serviceType: 'bus',
+    from: payload.pickupStop,
+    to: payload.dropoffStop,
+    valueJod: payload.totalPrice,
+    metadata: {
+      tripId: payload.tripId,
+      source: 'server',
+      scheduleDate: payload.scheduleDate,
+    },
+  });
+
+  return result;
 }

@@ -1,8 +1,12 @@
 import js from '@eslint/js';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default tseslint.config(
   { ignores: ['build', 'node_modules', 'dist'] },
@@ -12,6 +16,10 @@ export default tseslint.config(
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: __dirname,
+      },
     },
     plugins: {
       'react-hooks': reactHooks,
@@ -19,19 +27,45 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      'react-hooks/exhaustive-deps': 'off',
-      'react-refresh/only-export-components': 'off',
-      // TypeScript
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'off',
-      '@typescript-eslint/consistent-type-imports': 'off',
+
+      // Re-enabled: stale closures cause subtle runtime bugs
+      'react-hooks/exhaustive-deps': 'warn',
+
+      // Re-enabled: catches dead exports that bloat the bundle
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+
+      // TypeScript — tightened
+      '@typescript-eslint/no-explicit-any': 'warn',          // warn, not error, to allow gradual migration
+      '@typescript-eslint/no-unused-vars': ['error', {        // was off — dead code is now caught
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      }],
+      '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/consistent-type-imports': ['warn', { prefer: 'type-imports' }],
+      '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',  // too many false positives in JSX
+
+      // Console — warn in source, errors block CI
+      // Devs can use console.* during development but production code should use logger.*
+      'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
+
       // General code quality
-      'no-console': 'off',
       'prefer-const': 'error',
       'no-var': 'error',
       'eqeqeq': ['error', 'always'],
       'no-duplicate-imports': 'error',
+      'no-debugger': 'error',
+      'no-alert': 'warn',
+
+      // Catch process.env usage in browser code — use import.meta.env instead
+      'no-restricted-globals': [
+        'error',
+        {
+          name: 'process',
+          message: "Use import.meta.env instead of process.env in browser/Vite code.",
+        },
+      ],
     },
   },
 );

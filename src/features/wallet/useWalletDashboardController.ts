@@ -6,10 +6,13 @@ import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import {
+  getWalletCheckoutUrl,
   getWalletCapabilities,
   walletApi,
   type InsightsData,
   type WalletData,
+  type WalletSubscribeResponse,
+  type WalletTopUpResponse,
 } from '../../services/walletApi';
 import { setWaselPlusActive } from '../../services/movementMembership';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
@@ -26,7 +29,7 @@ export function useWalletDashboardController() {
   const { language } = useLanguage();
   const navigate = useIframeSafeNavigate();
   const isRTL = language === 'ar';
-  const t: Record<string, string> = walletText[isRTL ? 'ar' : 'en'] as Record<string, string>;
+  const t = walletText[isRTL ? 'ar' : 'en'];
   const effectiveUserId = localUser?.id ?? user?.id ?? '';
   const runtimeMode = resolveWalletRuntimeMode({
     hasUser: Boolean(localUser || user),
@@ -61,6 +64,14 @@ export function useWalletDashboardController() {
   const [autoTopUpEnabled, setAutoTopUpEnabled] = useState(false);
   const [autoTopUpAmount, setAutoTopUpAmount] = useState('20');
   const [autoTopUpThreshold, setAutoTopUpThreshold] = useState('5');
+  const subscriptionCheckoutCompletedText =
+    t.subscriptionCheckoutCompleted ??
+    'Subscription checkout completed. Membership is refreshing.';
+  const subscriptionCheckoutCancelledText =
+    t.subscriptionCheckoutCancelled ?? 'Subscription checkout was cancelled before completion.';
+
+  const getErrorMessage = (error: unknown) =>
+    error instanceof Error ? error.message : 'Wallet action failed.';
 
   const fetchWallet = useCallback(async () => {
     if (shouldRedirectToAuth) {
@@ -82,7 +93,9 @@ export function useWalletDashboardController() {
     try {
       setWalletError(null);
       const data = await walletApi.getWallet(effectiveUserId);
-      setWaselPlusActive(Boolean(data.subscription));
+      if (effectiveUserId) {
+        void setWaselPlusActive(effectiveUserId, Boolean(data.subscription));
+      }
       setWalletData(data);
       setAutoTopUpEnabled(data.wallet.autoTopUp || false);
       setAutoTopUpAmount(String(data.wallet.autoTopUpAmount || 20));
@@ -138,18 +151,18 @@ export function useWalletDashboardController() {
       toast.info('Payment was cancelled before completion.');
     }
     if (subscriptionState === 'success') {
-      toast.success(
-        t.subscriptionCheckoutCompleted ??
-          'Subscription checkout completed. Membership is refreshing.',
-      );
+      toast.success(subscriptionCheckoutCompletedText);
       void fetchWallet();
     }
     if (subscriptionState === 'cancelled') {
-      toast.info(
-        t.subscriptionCheckoutCancelled ?? 'Subscription checkout was cancelled before completion.',
-      );
+      toast.info(subscriptionCheckoutCancelledText);
     }
-  }, [fetchWallet, location.search]);
+  }, [
+    fetchWallet,
+    location.search,
+    subscriptionCheckoutCancelledText,
+    subscriptionCheckoutCompletedText,
+  ]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -173,14 +186,12 @@ export function useWalletDashboardController() {
 
     setActionLoading(true);
     try {
-      const result = (await walletApi.topUp(effectiveUserId, amt, topUpMethod)) as
-        | { payment?: { checkoutUrl?: string | null; provider?: string } }
-        | WalletData;
-
-      const checkoutUrl =
-        typeof result === 'object' && result && 'payment' in result
-          ? (result.payment?.checkoutUrl ?? null)
-          : null;
+      const result: WalletTopUpResponse = await walletApi.topUp(
+        effectiveUserId,
+        amt,
+        topUpMethod,
+      );
+      const checkoutUrl = getWalletCheckoutUrl(result);
 
       if (checkoutUrl) {
         toast.success('Redirecting to secure payment checkout');
@@ -193,8 +204,8 @@ export function useWalletDashboardController() {
       setShowTopUp(false);
       setTopUpAmount('');
       await fetchWallet();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     } finally {
       setActionLoading(false);
     }
@@ -213,8 +224,8 @@ export function useWalletDashboardController() {
       setWithdrawAmount('');
       setWithdrawBank('');
       await fetchWallet();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     } finally {
       setActionLoading(false);
     }
@@ -234,8 +245,8 @@ export function useWalletDashboardController() {
       setSendRecipient('');
       setSendNote('');
       await fetchWallet();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     } finally {
       setActionLoading(false);
     }
@@ -258,8 +269,8 @@ export function useWalletDashboardController() {
       setShowPinSetup(false);
       setPinValue('');
       await fetchWallet();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     } finally {
       setActionLoading(false);
     }
@@ -275,8 +286,8 @@ export function useWalletDashboardController() {
       await walletApi.claimReward(effectiveUserId, rewardId);
       toast.success(t.rewardClaimed);
       await fetchWallet();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     }
   };
 
@@ -292,9 +303,9 @@ export function useWalletDashboardController() {
       );
       toast.success(enabled ? t.autoTopUpEnabledToast : t.autoTopUpDisabledToast);
       await fetchWallet();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setAutoTopUpEnabled(!enabled);
-      toast.error(err.message);
+      toast.error(getErrorMessage(err));
     }
   };
 
@@ -306,18 +317,12 @@ export function useWalletDashboardController() {
 
     setActionLoading(true);
     try {
-      const result = (await walletApi.subscribe(effectiveUserId, 'Wasel Plus', 9.99)) as
-        | { subscription?: { checkoutUrl?: string | null; provider?: string } }
-        | { payment?: { checkoutUrl?: string | null; provider?: string } };
-
-      const checkoutUrl =
-        typeof result === 'object' && result
-          ? 'subscription' in result
-            ? (result.subscription?.checkoutUrl ?? null)
-            : 'payment' in result
-              ? (result.payment?.checkoutUrl ?? null)
-              : null
-          : null;
+      const result: WalletSubscribeResponse = await walletApi.subscribe(
+        effectiveUserId,
+        'Wasel Plus',
+        9.99,
+      );
+      const checkoutUrl = getWalletCheckoutUrl(result);
 
       if (checkoutUrl) {
         toast.success(
@@ -329,8 +334,8 @@ export function useWalletDashboardController() {
 
       toast.success(t.welcomeToPlus);
       await fetchWallet();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     } finally {
       setActionLoading(false);
     }

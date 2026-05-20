@@ -224,6 +224,10 @@ export async function runBackendWorkflow<T>({
   const context = await resolveContext(authMode);
   const operationType: 'read' | 'write' = fallbackPolicy === 'writes-if-enabled' ? 'write' : 'read';
   const fallbackAllowed = Boolean(fallback) && resolveFallbackPolicy(fallbackPolicy, operationType);
+  const fallbackDeniedError =
+    fallbackPolicy === 'writes-if-enabled'
+      ? getSecureBackendFallbackError(operation)
+      : getFallbackDeniedError(operation);
 
   if (!edgeAvailable) {
     if (fallbackAllowed && fallback) {
@@ -232,7 +236,7 @@ export async function runBackendWorkflow<T>({
     }
 
     if (fallback && !fallbackAllowed) {
-      throw getFallbackDeniedError(operation);
+      throw fallbackDeniedError;
     }
 
     throw new BackendRequestError(
@@ -252,7 +256,7 @@ export async function runBackendWorkflow<T>({
     }
 
     if (fallback && !fallbackAllowed && isRecoverableError(error)) {
-      throw getFallbackDeniedError(operation);
+      throw fallbackDeniedError;
     }
 
     throw error;

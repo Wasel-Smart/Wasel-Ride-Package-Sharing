@@ -3,6 +3,7 @@
 // All `any` casts are gone; use the shared typed client from helpers.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '../../utils/supabase/database.types';
 export type { SupabaseClient };
 
 /**
@@ -10,6 +11,8 @@ export type { SupabaseClient };
  * Replaces the old `any`-typed alias.
  */
 export type DbClient = SupabaseClient;
+export type PaymentMethodRow = Database['public']['Tables']['payment_methods']['Row'];
+export type TransactionRow = Database['public']['Tables']['transactions']['Row'];
 
 // ── Profile ──────────────────────────────────────────────────────────────────
 

@@ -5,16 +5,6 @@ const mockGetAuthDetails = vi.fn();
 const mockGetCommunicationPreferences = vi.fn();
 const mockQueueCommunicationDeliveries = vi.fn();
 const mockGetCommunicationCapabilities = vi.fn();
-const memoryStorage = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: (key: string) => store[key] ?? null,
-    setItem: (key: string, value: string) => { store[key] = value; },
-    clear: () => { store = {}; },
-    removeItem: (key: string) => { delete store[key]; },
-  };
-})();
-
 vi.mock('../../../src/services/core', () => ({
   API_URL: 'https://test.supabase.co/functions/v1/server',
   createEdgeHeaders: (headers?: HeadersInit, userToken?: string) => {
@@ -36,6 +26,7 @@ vi.mock('../../../src/services/communicationPreferences', () => ({
 }));
 
 import { notificationsAPI } from '../../../src/services/notifications';
+import { clearNotificationCache } from '../../../src/services/notifications';
 
 function response(data: any, ok = true) {
   return {
@@ -47,8 +38,7 @@ function response(data: any, ok = true) {
 describe('notificationsAPI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal('window', { localStorage: memoryStorage } as any);
-    memoryStorage.clear();
+    clearNotificationCache();
     mockGetCommunicationPreferences.mockResolvedValue({
       inApp: true,
       push: true,
@@ -83,14 +73,19 @@ describe('notificationsAPI', () => {
     });
 
     expect(result.source).toBe('local');
-    expect(JSON.parse(window.localStorage.getItem('wasel-local-notifications') || '[]')).toHaveLength(1);
+    const buffered = await notificationsAPI.getNotifications();
+    expect(buffered.notifications).toHaveLength(1);
+    expect(buffered.notifications[0].title).toBe('Ride posted');
   });
 
-  it('returns local notifications when the server list is unavailable', async () => {
-    window.localStorage.setItem(
-      'wasel-local-notifications',
-      JSON.stringify([{ id: 'local-1', title: 'Saved', message: 'Offline', source: 'local' }]),
-    );
+  it('returns buffered session notifications when the server list is unavailable', async () => {
+    mockGetAuthDetails.mockRejectedValueOnce(new Error('no session'));
+    await notificationsAPI.createNotification({
+      title: 'Saved',
+      message: 'Offline',
+      type: 'booking',
+    });
+
     mockGetAuthDetails.mockResolvedValue({ token: 'token-123', userId: 'user-123' });
     mockFetchWithRetry.mockResolvedValue(response({}, false));
 
@@ -114,7 +109,9 @@ describe('notificationsAPI', () => {
     });
 
     expect(result.source).toBe('server');
-    expect(JSON.parse(window.localStorage.getItem('wasel-local-notifications') || '[]')[0].id).toBe('notif-1');
+    mockFetchWithRetry.mockResolvedValueOnce(response({ notifications: [] }));
+    const continuity = await notificationsAPI.getNotifications();
+    expect(continuity.notifications[0].id).toBe('notif-1');
   });
 
   it('queues secondary communication deliveries when contact details are available', async () => {

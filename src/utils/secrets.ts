@@ -81,14 +81,27 @@ function cacheSecret(key: string, value: string): void {
   };
 }
 
+function readNodeEnv(): Record<string, string | undefined> {
+  const processEnv =
+    typeof globalThis === 'object'
+      ? (
+          globalThis as {
+            process?: { env?: Record<string, string | undefined> };
+          }
+        ).process?.env
+      : undefined;
+
+  return processEnv && typeof processEnv === 'object' ? processEnv : {};
+}
+
 /**
  * Get secret from environment variables
  */
 function getSecretFromEnv(key: string): string | null {
   // Try process.env first (Node.js)
-  if (typeof process !== 'undefined' && process.env) {
-    const value = process.env[key];
-    if (value) return value;
+  const processEnv = readNodeEnv();
+  if (processEnv[key]) {
+    return processEnv[key] ?? null;
   }
 
   // Try import.meta.env (Vite)
@@ -112,8 +125,8 @@ async function fetchFromAWSSecretsManager(secretName: string): Promise<string | 
     // This would be implemented in edge functions with AWS SDK
     // For now, return null to fall back to environment variables
     return null;
-  } catch (error) {
-    console.error(`Failed to fetch secret from AWS Secrets Manager: ${secretName}`, error);
+  } catch (_error) {
+    console.error(`Failed to fetch secret from AWS Secrets Manager: ${secretName}`);
     return null;
   }
 }

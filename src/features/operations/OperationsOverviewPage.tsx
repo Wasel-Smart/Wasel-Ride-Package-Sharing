@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import type { JSX } from 'react';
+import { type JSX, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { Activity, Briefcase, Brain, GraduationCap, LineChart, Shield } from 'lucide-react';
 import {
   MetricCard,

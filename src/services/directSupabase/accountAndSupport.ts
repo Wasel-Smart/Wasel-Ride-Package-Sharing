@@ -1,4 +1,5 @@
 import { getDb } from './helpers';
+import { readRuntimeState, writeRuntimeState } from '../../utils/runtimeStore';
 
 type DirectSupportTicketRow = {
   id?: string;
@@ -42,19 +43,12 @@ const SUPPORT_EVENTS_KEY = 'wasel.direct.supportTicketEvents';
 const USER_SETTINGS_KEY = 'wasel.direct.userSettings';
 
 function readStore<T>(key: string): T[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(key);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? (parsed as T[]) : [];
-  } catch {
-    return [];
-  }
+  const stored = readRuntimeState<unknown>(key, []);
+  return Array.isArray(stored) ? (stored as T[]) : [];
 }
 
 function writeStore<T>(key: string, value: T[]) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(key, JSON.stringify(value));
+  writeRuntimeState(key, value);
 }
 
 function makeId(prefix: string) {

@@ -49,13 +49,13 @@ describe('AppEntryPage', () => {
     expect(screen.getAllByRole('button', { name: /Get started/i }).length).toBeGreaterThan(0);
   });
 
-  it('navigates authenticated users straight into the app shell', () => {
+  it('navigates authenticated users straight into the live ride flow', () => {
     mockUseLocalAuth.mockReturnValue({ user: { id: 'user-1' } });
 
     renderWithProviders(<AppEntryPage />);
 
-    screen.getAllByRole('button', { name: /Open the network/i })[0].click();
+    screen.getAllByRole('button', { name: /Open live rides/i })[0].click();
 
-    expect(mockNavigate).toHaveBeenCalledWith('/app');
+    expect(mockNavigate).toHaveBeenCalledWith(expect.stringMatching(/^\/app\/find-ride/));
   });
 });

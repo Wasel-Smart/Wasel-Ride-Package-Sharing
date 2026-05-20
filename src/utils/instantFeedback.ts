@@ -44,7 +44,7 @@ class InstantFeedbackEngine {
     if ('AudioContext' in window || 'webkitAudioContext' in window) {
       try {
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      } catch (e) {
+      } catch (_error) {
         // Ignore - audio not critical
       }
     }
@@ -78,7 +78,7 @@ class InstantFeedbackEngine {
       } else {
         navigator.vibrate(pattern);
       }
-    } catch (e) {
+    } catch (_error) {
       // Ignore vibration errors silently
     }
   }
@@ -175,7 +175,7 @@ class InstantFeedbackEngine {
 
       oscillator.start(this.audioContext.currentTime);
       oscillator.stop(this.audioContext.currentTime + duration / 1000);
-    } catch (e) {
+    } catch (_error) {
       // Ignore audio errors silently
     }
   }

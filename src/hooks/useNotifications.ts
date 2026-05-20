@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { notificationsAPI } from '../services/notifications.js';
+import { readRuntimeState, writeRuntimeState } from '../utils/runtimeStore';
 
 export interface Notification {
   id: string;
@@ -45,22 +46,14 @@ function archiveStorageKey(userId?: string) {
 }
 
 function readArchivedNotificationIds(userId?: string): string[] {
-  if (typeof window === 'undefined') return [];
-
-  try {
-    const raw = window.localStorage.getItem(archiveStorageKey(userId));
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed)
-      ? parsed.filter((value): value is string => typeof value === 'string')
-      : [];
-  } catch {
-    return [];
-  }
+  const archived = readRuntimeState<unknown>(archiveStorageKey(userId), []);
+  return Array.isArray(archived)
+    ? archived.filter((value): value is string => typeof value === 'string')
+    : [];
 }
 
 function writeArchivedNotificationIds(userId: string | undefined, ids: string[]) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(archiveStorageKey(userId), JSON.stringify(ids.slice(0, 200)));
+  writeRuntimeState(archiveStorageKey(userId), ids.slice(0, 200));
 }
 
 export function useNotifications() {

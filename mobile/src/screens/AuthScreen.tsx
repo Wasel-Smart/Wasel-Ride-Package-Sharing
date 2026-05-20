@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, StatusBar, KeyboardAvoidingView, Platform, Alert,
+  StyleSheet, StatusBar, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -153,7 +153,7 @@ export default function AuthScreen() {
             </View>
 
             {/* Error */}
-            {error && (
+            {error !== null && (
               <View style={styles.errorBox}>
                 <Ionicons name="alert-circle" size={16} color={C.red} />
                 <Text style={styles.errorText}>{error}</Text>
@@ -176,15 +176,11 @@ export default function AuthScreen() {
               <View style={styles.divLine} />
             </View>
 
-            {/* Google */}
-            <TouchableOpacity
-              style={styles.socialBtn}
-              activeOpacity={0.8}
-              onPress={() => Alert.alert('OAuth', 'Google sign-in coming soon.')}
-            >
-              <Ionicons name="logo-google" size={20} color={C.text} />
-              <Text style={styles.socialText}>Continue with Google</Text>
-            </TouchableOpacity>
+            {/* Google — coming soon, shown as disabled with clear label */}
+            <View style={styles.socialBtnDisabled} accessible accessibilityRole="button" accessibilityState={{ disabled: true }}>
+              <Ionicons name="logo-google" size={20} color={C.muted} />
+              <Text style={styles.socialTextDisabled}>Google sign-in — coming soon</Text>
+            </View>
           </View>
 
           <Text style={styles.legalText}>
@@ -245,12 +241,13 @@ const styles = StyleSheet.create({
   divLine:  { flex: 1, height: 0.5, backgroundColor: C.border },
   divText:  { fontSize: 13, color: C.muted },
 
-  socialBtn: {
+  socialBtnDisabled: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: S.md, height: 50, borderRadius: R.md,
     backgroundColor: C.card2, borderWidth: 1, borderColor: C.border,
+    opacity: 0.45,
   },
-  socialText: { fontSize: 15, fontWeight: '600', color: C.text },
+  socialTextDisabled: { fontSize: 14, fontWeight: '500', color: C.muted },
 
   legalText: { fontSize: 11, color: C.dim, textAlign: 'center', marginTop: S.xl, lineHeight: 16 },
 });

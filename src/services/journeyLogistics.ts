@@ -6,6 +6,7 @@ import {
 } from './directSupabase';
 import { trackGrowthEvent } from './growthEngine';
 import { tripsAPI } from './trips';
+import { readRuntimeState, writeRuntimeState } from '../utils/runtimeStore';
 
 export interface PostedRide {
   id: string;
@@ -60,19 +61,12 @@ const PACKAGE_LIMIT = 50;
 const RIDE_LIMIT = 50;
 
 function readList<T>(key: string): T[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(key);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  const list = readRuntimeState<unknown>(key, []);
+  return Array.isArray(list) ? (list as T[]) : [];
 }
 
 function writeList<T>(key: string, list: T[]): void {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(key, JSON.stringify(list));
+  writeRuntimeState(key, list);
 }
 
 function makeId(prefix: string): string {
@@ -81,11 +75,6 @@ function makeId(prefix: string): string {
 
 function generateHandoffCode(): string {
   return `HC-${Math.floor(100000 + Math.random() * 900000)}`;
-}
-
-function pickDriverName(carModel: string): string {
-  if (!carModel.trim()) return 'Wasel Captain';
-  return `${carModel.split(' ')[0]} Captain`;
 }
 
 function parseWeight(weight: string): number {
@@ -256,6 +245,7 @@ function normalizeServerPackage(
         String(
           raw.rider_pickup_confirmed_at ??
             raw.riderPickupConfirmedAt ??
+            raw.picked_up_at ??
             fallback.verification?.riderPickupConfirmedAt ??
             '',
         ).trim() || undefined,
@@ -263,6 +253,7 @@ function normalizeServerPackage(
         String(
           raw.receiver_delivery_confirmed_at ??
             raw.receiverDeliveryConfirmedAt ??
+            raw.delivered_at ??
             fallback.verification?.receiverDeliveryConfirmedAt ??
             '',
         ).trim() || undefined,
@@ -279,6 +270,7 @@ function normalizeServerPackage(
         String(
           raw.rider_pickup_confirmed_at ??
             raw.riderPickupConfirmedAt ??
+            raw.picked_up_at ??
             fallback.verification?.riderPickupConfirmedAt ??
             '',
         ).trim() || undefined,
@@ -286,6 +278,7 @@ function normalizeServerPackage(
         String(
           raw.receiver_delivery_confirmed_at ??
             raw.receiverDeliveryConfirmedAt ??
+            raw.delivered_at ??
             fallback.verification?.receiverDeliveryConfirmedAt ??
             '',
         ).trim() || undefined,
@@ -387,18 +380,6 @@ function saveRides(...lists: PostedRide[][]): PostedRide[] {
   return rides;
 }
 
-function findBestMatchingRide(
-  rides: PostedRide[],
-  input: { from: string; to: string; weight: string },
-): PostedRide | undefined {
-  const requestedWeight = parseWeight(input.weight);
-  const capacityRank = { small: 1, medium: 5, large: 10 };
-
-  return sortByCreatedAtDesc(rides)
-    .filter(ride => ride.acceptsPackages && ride.from === input.from && ride.to === input.to)
-    .find(ride => capacityRank[ride.packageCapacity] >= requestedWeight);
-}
-
 export function getConnectedRides(): PostedRide[] {
   const rides = mergeRides(readList<PostedRide>(RIDES_KEY));
   writeList(RIDES_KEY, rides);
@@ -445,38 +426,9 @@ export async function createConnectedRide(
       metadata: { seats: created.seats, acceptsPackages: created.acceptsPackages },
     });
     return created;
-  } catch {
-    saveRides([ride], getConnectedRides());
-    void trackGrowthEvent({
-      userId: input.ownerId,
-      eventName: 'ride_offer_created',
-      funnelStage: 'selected',
-      serviceType: 'ride',
-      from: ride.from,
-      to: ride.to,
-      valueJod: ride.price,
-      metadata: { seats: ride.seats, acceptsPackages: ride.acceptsPackages, source: 'local' },
-    });
-    return ride;
+  } catch (error) {
+    throw error instanceof Error ? error : new Error('We could not post the route right now.');
   }
-}
-
-export function updateConnectedRide(
-  rideId: string,
-  updates: Partial<Pick<PostedRide, 'seats' | 'status' | 'note' | 'date' | 'time'>>,
-): PostedRide | null {
-  const rides = getConnectedRides();
-  const target = rides.find(ride => ride.id === rideId);
-  if (!target) return null;
-
-  const updated: PostedRide = {
-    ...target,
-    ...updates,
-    seats: typeof updates.seats === 'number' ? Math.max(0, updates.seats) : target.seats,
-  };
-
-  saveRides(rides.map(ride => (ride.id === rideId ? updated : ride)));
-  return updated;
 }
 
 export function getConnectedPackages(): PackageRequest[] {
@@ -553,43 +505,17 @@ export async function createConnectedPackage(input: {
         body: JSON.stringify(buildServerPackagePayload(pkg)),
       });
 
-      if (response.ok) {
-        const server = await response.json();
-        const created = normalizeServerPackage(server.package as Record<string, unknown>, pkg);
-        savePackages([created], getConnectedPackages());
-        void trackGrowthEvent({
-          userId,
-          eventName: 'package_request_created',
-          funnelStage: created.matchedRideId ? 'selected' : 'searched',
-          serviceType: 'package',
-          from: created.from,
-          to: created.to,
-          valueJod: 5,
-          metadata: {
-            trackingId: created.trackingId,
-            packageType: created.packageType,
-          },
-        });
-        return created;
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        const message =
+          payload && typeof payload === 'object' && typeof payload.message === 'string'
+            ? payload.message
+            : 'We could not create the package request right now.';
+        throw new Error(message);
       }
-    } else {
-      const createdDirect = await createDirectPackage({
-        userId,
-        trackingNumber: pkg.trackingId,
-        from: pkg.from,
-        to: pkg.to,
-        weightKg: parseWeight(pkg.weight),
-        description: pkg.note,
-        recipientName: pkg.recipientName,
-        recipientPhone: pkg.recipientPhone,
-      });
 
-      const created = normalizeServerPackage(createdDirect as Record<string, unknown>, {
-        ...pkg,
-        from: String(createdDirect.origin_name ?? pkg.from),
-        to: String(createdDirect.destination_name ?? pkg.to),
-        weight: sanitizeWeight(String(createdDirect.weight_kg ?? pkg.weight)),
-      });
+      const server = await response.json();
+      const created = normalizeServerPackage(server.package as Record<string, unknown>, pkg);
       savePackages([created], getConnectedPackages());
       void trackGrowthEvent({
         userId,
@@ -606,36 +532,44 @@ export async function createConnectedPackage(input: {
       });
       return created;
     }
-  } catch {
-    // Fall back to local storage below.
+
+    const createdDirect = await createDirectPackage({
+      userId,
+      trackingNumber: pkg.trackingId,
+      from: pkg.from,
+      to: pkg.to,
+      weightKg: parseWeight(pkg.weight),
+      description: pkg.note,
+      recipientName: pkg.recipientName,
+      recipientPhone: pkg.recipientPhone,
+    });
+
+    const created = normalizeServerPackage(createdDirect as Record<string, unknown>, {
+      ...pkg,
+      from: String(createdDirect.origin_name ?? pkg.from),
+      to: String(createdDirect.destination_name ?? pkg.to),
+      weight: sanitizeWeight(String(createdDirect.weight_kg ?? pkg.weight)),
+    });
+    savePackages([created], getConnectedPackages());
+    void trackGrowthEvent({
+      userId,
+      eventName: 'package_request_created',
+      funnelStage: created.matchedRideId ? 'selected' : 'searched',
+      serviceType: 'package',
+      from: created.from,
+      to: created.to,
+      valueJod: 5,
+      metadata: {
+        trackingId: created.trackingId,
+        packageType: created.packageType,
+      },
+    });
+    return created;
+  } catch (error) {
+    throw error instanceof Error
+      ? error
+      : new Error('We could not create the package request right now.');
   }
-
-  const rides = getConnectedRides();
-  const matchedRide = findBestMatchingRide(rides, { from, to, weight: input.weight });
-  const fallbackStatus: PackageStatus = matchedRide ? 'matched' : 'searching';
-  const fallbackPackage: PackageRequest = {
-    ...pkg,
-    matchedRideId: matchedRide?.id,
-    matchedDriver: matchedRide ? pickDriverName(matchedRide.carModel) : undefined,
-    status: fallbackStatus,
-    timeline: buildTimeline(fallbackStatus, matchedRide?.id, pkg.verification),
-  };
-
-  savePackages([fallbackPackage], getConnectedPackages());
-  void trackGrowthEvent({
-    eventName: 'package_request_created',
-    funnelStage: fallbackPackage.matchedRideId ? 'selected' : 'searched',
-    serviceType: 'package',
-    from: fallbackPackage.from,
-    to: fallbackPackage.to,
-    valueJod: 5,
-    metadata: {
-      trackingId: fallbackPackage.trackingId,
-      packageType: fallbackPackage.packageType,
-      source: 'local',
-    },
-  });
-  return fallbackPackage;
 }
 
 export async function getPackageByTrackingId(trackingId: string): Promise<PackageRequest | null> {
@@ -723,10 +657,10 @@ export function getConnectedStats() {
 
 export type PackageVerificationAction = 'share_code' | 'confirm_pickup' | 'confirm_delivery';
 
-export function updatePackageVerification(
+export async function updatePackageVerification(
   trackingId: string,
   action: PackageVerificationAction,
-): PackageRequest | null {
+): Promise<PackageRequest | null> {
   const normalizedTrackingId = trackingId.trim().toUpperCase();
   if (!normalizedTrackingId) return null;
 
@@ -763,12 +697,14 @@ export function updatePackageVerification(
     timeline: buildTimeline(status, target.matchedRideId, verification),
   };
 
-  savePackages(packages.map(item => (item.trackingId === normalizedTrackingId ? updated : item)));
+  await updateDirectPackageStatus(normalizedTrackingId, status === 'searching' ? 'matched' : status, {
+    pickupVerified: Boolean(verification.riderPickupConfirmedAt),
+    dropoffVerified: Boolean(verification.receiverDeliveryConfirmedAt),
+    pickedUpAt: verification.riderPickupConfirmedAt ?? null,
+    deliveredAt: verification.receiverDeliveryConfirmedAt ?? null,
+  });
 
-  void updateDirectPackageStatus(
-    normalizedTrackingId,
-    status === 'searching' ? 'matched' : status,
-  ).catch(() => {});
+  savePackages(packages.map(item => (item.trackingId === normalizedTrackingId ? updated : item)));
 
   void trackGrowthEvent({
     eventName: 'package_verification_updated',

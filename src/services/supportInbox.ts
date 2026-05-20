@@ -1,8 +1,27 @@
+/**
+ * supportInbox.ts
+ *
+ * Architecture:
+ *  - Supabase `support_tickets` table is the PRIMARY store (via directSupabase).
+ *  - An in-memory cache provides instant reads for the current session.
+ *  - localStorage is NOT used. Support tickets are financial/legal records;
+ *    browser-local persistence is a data-integrity and compliance risk.
+ *  - Unauthenticated (guest) users get an in-memory-only experience.
+ *    Their tickets ARE written to Supabase (anonymously where possible).
+ *  - On sign-out, call clearSupportTicketCache() to wipe the cache.
+ */
+
 import {
   createDirectSupportTicket,
   getDirectSupportTickets,
   updateDirectSupportTicketStatus,
 } from './directSupabase';
+import {
+  readPendingSyncRecords,
+  replacePendingSyncRecords,
+  upsertPendingSyncRecord,
+  type PendingSyncRecord,
+} from './pendingSyncBuffer';
 
 export type SupportTopic =
   | 'ride_booking'
@@ -67,46 +86,80 @@ type DirectSupportTicketEventRow = {
   created_at?: string | null;
 };
 
-const SUPPORT_KEY = 'wasel-support-tickets';
+type PendingSupportOperation =
+  | {
+      kind: 'create';
+      userId: string;
+      localTicketId: string;
+      input: {
+        topic: SupportTopic;
+        subject: string;
+        detail: string;
+        relatedId?: string;
+        routeLabel?: string;
+        priority?: SupportPriority;
+        channel?: SupportChannel;
+      };
+    }
+  | {
+      kind: 'update';
+      userId: string;
+      ticketId: string;
+      status: SupportStatus;
+      options?: {
+        note?: string;
+        resolutionSummary?: string;
+        priority?: SupportPriority;
+        channel?: SupportChannel;
+      };
+    };
 
-function storageKeyFor(userId?: string | null) {
-  return `${SUPPORT_KEY}:${userId || 'guest'}`;
-}
+const SUPPORT_SYNC_QUEUE = 'support-tickets';
 
-function generateId(prefix: string) {
-  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-}
+// ── In-memory cache (keyed by userId or 'guest') ──────────────────────────────
 
-function readTicketArray(key: string): SupportTicket[] {
-  if (typeof window === 'undefined') return [];
+const ticketCache = new Map<string, SupportTicket[]>();
 
-  try {
-    const raw = window.localStorage.getItem(key);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? (parsed as SupportTicket[]) : [];
-  } catch {
-    return [];
-  }
+function cacheKey(userId?: string | null): string {
+  return userId ? String(userId) : 'guest';
 }
 
 function readTickets(userId?: string | null): SupportTicket[] {
-  const scoped = readTicketArray(storageKeyFor(userId));
-  if (scoped.length > 0) {
-    return scoped;
-  }
-
-  return readTicketArray(SUPPORT_KEY);
+  return ticketCache.get(cacheKey(userId)) ?? [];
 }
 
-function writeTickets(userId: string | null | undefined, tickets: SupportTicket[]) {
-  if (typeof window === 'undefined') return;
+function writeTickets(userId: string | null | undefined, tickets: SupportTicket[]): void {
+  ticketCache.set(cacheKey(userId), sortTickets(tickets).slice(0, 100));
+}
 
-  const trimmed = sortTickets(tickets).slice(0, 100);
-  window.localStorage.setItem(storageKeyFor(userId), JSON.stringify(trimmed));
+function upsertTicket(userId: string | null | undefined, ticket: SupportTicket): SupportTicket {
+  const existing = readTickets(userId);
+  writeTickets(userId, [ticket, ...existing.filter(item => item.id !== ticket.id)]);
+  return ticket;
+}
 
-  if (!userId) {
-    window.localStorage.setItem(SUPPORT_KEY, JSON.stringify(trimmed));
-  }
+function replaceTicket(
+  userId: string | null | undefined,
+  previousId: string,
+  ticket: SupportTicket,
+): SupportTicket {
+  const existing = readTickets(userId);
+  writeTickets(
+    userId,
+    [ticket, ...existing.filter(item => item.id !== previousId && item.id !== ticket.id)],
+  );
+  return ticket;
+}
+
+/** Clear the in-memory cache. Call on sign-out. */
+export function clearSupportTicketCache(): void {
+  ticketCache.clear();
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function generateId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 }
 
 function sortTickets(items: SupportTicket[]) {
@@ -184,15 +237,6 @@ function normalizeChannel(value: string | null | undefined): SupportChannel {
   }
 }
 
-function upsertLocalTicket(
-  userId: string | null | undefined,
-  ticket: SupportTicket,
-): SupportTicket {
-  const existing = readTickets(userId);
-  writeTickets(userId, [ticket, ...existing.filter(item => item.id !== ticket.id)]);
-  return ticket;
-}
-
 function mapDirectEvent(row: DirectSupportTicketEventRow): SupportTicketEvent {
   const status = normalizeStatus(row.status);
   return makeEvent(
@@ -265,6 +309,77 @@ function buildDirectTicketList(
   return sortTickets(tickets);
 }
 
+async function flushPendingSupportOperations(): Promise<void> {
+  const records = readPendingSyncRecords<PendingSupportOperation>(SUPPORT_SYNC_QUEUE);
+  if (records.length === 0) return;
+
+  const remaining: PendingSyncRecord<PendingSupportOperation>[] = [];
+
+  for (let index = 0; index < records.length; index += 1) {
+    const record = records[index];
+    if (!record) continue;
+
+    try {
+      const payload = record.payload;
+
+      if (payload.kind === 'create') {
+        const direct = await createDirectSupportTicket(payload.userId, payload.input);
+        const persisted = replaceTicket(
+          payload.userId,
+          payload.localTicketId,
+          mapDirectTicket(direct.ticket as DirectSupportTicketRow, [
+            mapDirectEvent(direct.event as DirectSupportTicketEventRow),
+          ]),
+        );
+
+        for (let cursor = index + 1; cursor < records.length; cursor += 1) {
+          const pending = records[cursor];
+          if (!pending) continue;
+          if (
+            pending.payload.kind === 'update' &&
+            pending.payload.userId === payload.userId &&
+            pending.payload.ticketId === payload.localTicketId
+          ) {
+            records[cursor] = {
+              ...pending,
+              payload: {
+                ...pending.payload,
+                ticketId: persisted.id,
+              },
+            };
+          }
+        }
+
+        continue;
+      }
+
+      const direct = await updateDirectSupportTicketStatus(
+        payload.userId,
+        payload.ticketId,
+        payload.status,
+        payload.options,
+      );
+      const current = readTickets(payload.userId).find(ticket => ticket.id === payload.ticketId);
+      const history = current
+        ? [...current.history, mapDirectEvent(direct.event as DirectSupportTicketEventRow)]
+        : [mapDirectEvent(direct.event as DirectSupportTicketEventRow)];
+      upsertTicket(
+        payload.userId,
+        mapDirectTicket(direct.ticket as DirectSupportTicketRow, history),
+      );
+    } catch (error) {
+      remaining.push({
+        ...record,
+        attempts: record.attempts + 1,
+        updatedAt: new Date().toISOString(),
+        lastError: error instanceof Error ? error.message : 'Support sync failed',
+      });
+    }
+  }
+
+  replacePendingSyncRecords(SUPPORT_SYNC_QUEUE, remaining);
+}
+
 function defaultPriority(topic: SupportTopic): SupportPriority {
   switch (topic) {
     case 'payment':
@@ -279,19 +394,22 @@ function defaultPriority(topic: SupportTopic): SupportPriority {
   }
 }
 
+// ── Public API ────────────────────────────────────────────────────────────────
+
 export async function getSupportTickets(userId?: string | null): Promise<SupportTicket[]> {
-  const local = sortTickets(readTickets(userId));
+  const cached = sortTickets(readTickets(userId));
   if (!userId) {
-    return local;
+    return cached;
   }
 
   try {
+    await flushPendingSupportOperations();
     const payload = await getDirectSupportTickets(userId);
     const remote = buildDirectTicketList(payload);
     writeTickets(userId, remote);
     return remote;
   } catch {
-    return local;
+    return cached;
   }
 }
 
@@ -343,7 +461,8 @@ export async function createSupportTicket(
   };
 
   if (!userId) {
-    return upsertLocalTicket(userId, fallbackTicket);
+    // Guest: in-memory only for this session
+    return upsertTicket(userId, fallbackTicket);
   }
 
   try {
@@ -356,14 +475,29 @@ export async function createSupportTicket(
       priority: input.priority,
       channel: input.channel,
     });
-    return upsertLocalTicket(
+    return upsertTicket(
       userId,
       mapDirectTicket(direct.ticket as DirectSupportTicketRow, [
         mapDirectEvent(direct.event as DirectSupportTicketEventRow),
       ]),
     );
   } catch {
-    return upsertLocalTicket(userId, fallbackTicket);
+    upsertPendingSyncRecord(SUPPORT_SYNC_QUEUE, {
+      kind: 'create',
+      userId,
+      localTicketId: fallbackTicket.id,
+      input: {
+        topic: input.topic,
+        subject: input.subject,
+        detail: input.detail,
+        relatedId: input.relatedId,
+        routeLabel: input.routeLabel,
+        priority: input.priority,
+        channel: input.channel,
+      },
+    });
+    // Supabase write failed: surface in-memory copy for the session.
+    return upsertTicket(userId, fallbackTicket);
   }
 }
 
@@ -397,7 +531,7 @@ export async function updateSupportTicketStatus(
 
   if (!userId) {
     if (!fallbackUpdated) return null;
-    return upsertLocalTicket(userId, fallbackUpdated);
+    return upsertTicket(userId, fallbackUpdated);
   }
 
   try {
@@ -405,12 +539,26 @@ export async function updateSupportTicketStatus(
     const history = current
       ? [...current.history, mapDirectEvent(direct.event as DirectSupportTicketEventRow)]
       : [mapDirectEvent(direct.event as DirectSupportTicketEventRow)];
-    return upsertLocalTicket(
+    return upsertTicket(
       userId,
       mapDirectTicket(direct.ticket as DirectSupportTicketRow, history),
     );
   } catch {
     if (!fallbackUpdated) return null;
-    return upsertLocalTicket(userId, fallbackUpdated);
+    upsertPendingSyncRecord(
+      SUPPORT_SYNC_QUEUE,
+      {
+        kind: 'update',
+        userId,
+        ticketId: id,
+        status,
+        options,
+      },
+      record =>
+        record.payload.kind === 'update' &&
+        record.payload.userId === userId &&
+        record.payload.ticketId === id,
+    );
+    return upsertTicket(userId, fallbackUpdated);
   }
 }

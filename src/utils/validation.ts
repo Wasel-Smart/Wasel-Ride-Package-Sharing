@@ -8,7 +8,7 @@
  *   import { signInSchema, type SignInFields } from '@/utils/validation';
  *   const form = useForm<SignInFields>({ resolver: zodResolver(signInSchema) });
  */
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 // ── Reusable field validators ─────────────────────────────────────────────────
 

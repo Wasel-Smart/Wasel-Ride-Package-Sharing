@@ -433,7 +433,7 @@ export async function getDirectTripBookings(tripId: string) {
 
 export async function updateDirectBookingStatus(
   bookingId: string,
-  status: 'accepted' | 'rejected' | 'cancelled',
+  status: 'accepted' | 'rejected' | 'cancelled' | 'completed',
 ) {
   const db = getDb();
   const mappedStatus = normalizeBookingStatus(status);

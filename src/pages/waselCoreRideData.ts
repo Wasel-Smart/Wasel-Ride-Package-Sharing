@@ -1,3 +1,16 @@
+/**
+ * waselCoreRideData.ts
+ *
+ * IMPORTANT: ALL_RIDES is intentionally EMPTY in production.
+ * The platform uses only real rides fetched from Supabase via journeyLogistics / tripsAPI.
+ *
+ * Historical context: A static demo array existed here during early prototyping.
+ * It was removed because mixing fake and real rides is a data-integrity violation.
+ *
+ * DO NOT add hardcoded rides back to this file.
+ * To seed test data use: supabase/seeds/rides.sql
+ */
+
 import type { PostedRide } from '../services/journeyLogistics';
 import type { TripSearchResult } from '../services/trips';
 
@@ -39,237 +52,12 @@ export interface Ride {
   reviews?: { name: string; rating: number; text: string }[];
 }
 
-function formatDateISO(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
+// ── Production data ────────────────────────────────────────────────────────────
+// Real rides come from Supabase via getConnectedRides() + tripsAPI.searchTrips()
+// This array is intentionally empty. Do not add demo data here.
+export const ALL_RIDES: Ride[] = [];
 
-function createUpcomingDate(offsetDays: number) {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  date.setDate(date.getDate() + offsetDays);
-  return formatDateISO(date);
-}
-
-function normalizeRideDate(date?: string, fallbackOffset = 1) {
-  if (!date) {
-    return createUpcomingDate(fallbackOffset);
-  }
-
-  const parsed = new Date(`${date}T00:00:00`);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  if (!Number.isFinite(parsed.getTime()) || parsed < today) {
-    return createUpcomingDate(fallbackOffset);
-  }
-
-  return date;
-}
-
-export const ALL_RIDES: Ride[] = [
-  {
-    id: 'r1',
-    driver: {
-      name: 'Ahmad Hassan',
-      nameAr: 'أحمد حسن',
-      rating: 4.9,
-      verified: true,
-      trips: 1240,
-      phone: '+962790000001',
-      avatar: 'AH',
-    },
-    from: 'Amman',
-    fromAr: 'عمّان',
-    fromPoint: '8th Circle',
-    to: 'Aqaba',
-    toAr: 'العقبة',
-    toPoint: 'City Center',
-    date: normalizeRideDate('2026-03-25', 1),
-    time: '07:00',
-    seatsAvailable: 2,
-    totalSeats: 4,
-    pricePerSeat: 8,
-    distance: 330,
-    duration: '4h',
-    genderPref: 'mixed',
-    amenities: ['A/C', 'Wi-Fi', 'Charger'],
-    prayerStops: true,
-    ramadan: true,
-    car: 'Toyota Camry 2024',
-    carColor: '#C0C0C0',
-    pkgCapacity: 'medium',
-    conversationLevel: 'normal',
-    intermediateStops: ['Karak (brief stop)'],
-    reviews: [
-      { name: 'Khalid N.', rating: 5, text: 'Very professional driver, on time and clean car.' },
-    ],
-  },
-  {
-    id: 'r2',
-    driver: {
-      name: 'Sara Al-Khalidi',
-      nameAr: 'سارة الخالدي',
-      rating: 4.8,
-      verified: true,
-      trips: 876,
-      phone: '+962790000002',
-      avatar: 'SK',
-    },
-    from: 'Amman',
-    fromAr: 'عمّان',
-    fromPoint: 'Abdali Terminal',
-    to: 'Irbid',
-    toAr: 'إربد',
-    toPoint: 'University District',
-    date: normalizeRideDate('2026-03-25', 1),
-    time: '08:30',
-    seatsAvailable: 3,
-    totalSeats: 3,
-    pricePerSeat: 4,
-    distance: 85,
-    duration: '1.5h',
-    genderPref: 'women_only',
-    amenities: ['A/C', 'Quiet ride'],
-    prayerStops: false,
-    car: 'Honda Civic 2023',
-    carColor: '#FFFFFF',
-    pkgCapacity: 'small',
-    conversationLevel: 'quiet',
-    reviews: [
-      { name: 'Hana M.', rating: 5, text: 'Great driver, felt very safe. Will use again!' },
-    ],
-  },
-  {
-    id: 'r3',
-    driver: {
-      name: 'Khalid Nabulsi',
-      nameAr: 'خالد النابلسي',
-      rating: 4.7,
-      verified: true,
-      trips: 543,
-      phone: '+962790000003',
-      avatar: 'KN',
-    },
-    from: 'Amman',
-    fromAr: 'عمّان',
-    fromPoint: 'Sweifieh',
-    to: 'Dead Sea',
-    toAr: 'البحر الميت',
-    toPoint: 'Zara Resort',
-    date: normalizeRideDate('2026-03-25', 1),
-    time: '09:00',
-    seatsAvailable: 1,
-    totalSeats: 4,
-    pricePerSeat: 7,
-    distance: 60,
-    duration: '1h',
-    genderPref: 'mixed',
-    amenities: ['A/C', 'Music', 'Large trunk'],
-    prayerStops: false,
-    car: 'Kia Sportage 2022',
-    carColor: '#1a3a6a',
-    pkgCapacity: 'large',
-    conversationLevel: 'talkative',
-  },
-  {
-    id: 'r4',
-    driver: {
-      name: 'Lina Al-Masri',
-      nameAr: 'لينا المصري',
-      rating: 5.0,
-      verified: true,
-      trips: 320,
-      phone: '+962790000004',
-      avatar: 'LM',
-    },
-    from: 'Amman',
-    fromAr: 'عمّان',
-    fromPoint: 'Gardens',
-    to: 'Petra',
-    toAr: 'البتراء',
-    toPoint: 'Visitor Center',
-    date: normalizeRideDate('2026-03-26', 2),
-    time: '06:30',
-    seatsAvailable: 2,
-    totalSeats: 4,
-    pricePerSeat: 12,
-    distance: 215,
-    duration: '3h',
-    genderPref: 'family_only',
-    amenities: ['A/C', 'Family friendly', 'Booster seat'],
-    prayerStops: true,
-    car: 'Hyundai Tucson 2024',
-    carColor: '#1a1a1a',
-    pkgCapacity: 'medium',
-    conversationLevel: 'normal',
-  },
-  {
-    id: 'r5',
-    driver: {
-      name: 'Omar Zaid',
-      nameAr: 'عمر زيد',
-      rating: 4.6,
-      verified: true,
-      trips: 189,
-      phone: '+962790000005',
-      avatar: 'OZ',
-    },
-    from: 'Irbid',
-    fromAr: 'إربد',
-    fromPoint: 'University Gate',
-    to: 'Amman',
-    toAr: 'عمّان',
-    toPoint: '7th Circle',
-    date: normalizeRideDate('2026-03-25', 1),
-    time: '14:00',
-    seatsAvailable: 3,
-    totalSeats: 4,
-    pricePerSeat: 4,
-    distance: 85,
-    duration: '1.5h',
-    genderPref: 'mixed',
-    amenities: ['A/C'],
-    prayerStops: false,
-    car: 'Hyundai Elantra 2021',
-    carColor: '#333',
-    pkgCapacity: 'small',
-    conversationLevel: 'normal',
-  },
-  {
-    id: 'r6',
-    driver: {
-      name: 'Nour Awamleh',
-      nameAr: 'نور العواملة',
-      rating: 4.9,
-      verified: true,
-      trips: 710,
-      phone: '+962790000006',
-      avatar: 'NA',
-    },
-    from: 'Amman',
-    fromAr: 'عمّان',
-    fromPoint: 'Mecca Mall',
-    to: 'Aqaba',
-    toAr: 'العقبة',
-    toPoint: 'South Beach',
-    date: normalizeRideDate('2026-03-25', 1),
-    time: '06:00',
-    seatsAvailable: 1,
-    totalSeats: 3,
-    pricePerSeat: 9,
-    distance: 330,
-    duration: '4h',
-    genderPref: 'women_only',
-    amenities: ['A/C', 'Prayer stop', 'Charger'],
-    prayerStops: true,
-    ramadan: true,
-    car: 'Toyota Corolla 2023',
-    carColor: '#FFFFFF',
-    pkgCapacity: 'medium',
-    conversationLevel: 'quiet',
-  },
-];
-
+// ── City list ──────────────────────────────────────────────────────────────────
 export const CITIES = [
   'Amman',
   'Aqaba',
@@ -284,9 +72,34 @@ export const CITIES = [
   'Salt',
 ];
 
+// ── Storage keys (localStorage used only as read-through cache) ───────────────
 export const RIDE_BOOKINGS_KEY = 'wasel-find-ride-bookings';
 export const RIDE_SEARCHES_KEY = 'wasel-find-ride-searches';
 export const OFFER_RIDE_DRAFT_KEY = 'wasel-offer-ride-draft';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatDateISO(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function createUpcomingDate(offsetDays: number) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + offsetDays);
+  return formatDateISO(date);
+}
+
+export function normalizeRideDate(date?: string, fallbackOffset = 1) {
+  if (!date) return createUpcomingDate(fallbackOffset);
+  const parsed = new Date(`${date}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (!Number.isFinite(parsed.getTime()) || parsed < today) {
+    return createUpcomingDate(fallbackOffset);
+  }
+  return date;
+}
 
 export function createGenderMeta(theme: { cyan: string; gold: string }) {
   return {
@@ -314,7 +127,7 @@ export function buildRideFromPostedRide(ride: PostedRide): Ride {
       rating: 4.8,
       verified: true,
       trips: 0,
-      phone: '+962790000000',
+      phone: '',
       avatar: (ride.carModel || 'Wasel').slice(0, 2).toUpperCase(),
     },
     from: ride.from,
@@ -365,7 +178,7 @@ export function buildRideFromTripSearchResult(ride: TripSearchResult): Ride {
       rating: ride.driver.rating,
       verified: ride.driver.verified,
       trips: 0,
-      phone: '+962790000000',
+      phone: '',
       avatar: driverInitials,
     },
     from: ride.from,

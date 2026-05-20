@@ -1,9 +1,24 @@
+/**
+ * growthEngine.ts
+ *
+ * Architecture:
+ *  - Supabase `growth_events` table is the PRIMARY store.
+ *  - A small in-memory queue (max 50 events) provides a write buffer for offline scenarios.
+ *  - localStorage is NOT used for growth events (PII + analytics integrity requirement).
+ *  - Referral snapshots are fetched from Supabase on demand with a short TTL memory cache.
+ *
+ * Security: No sensitive data is held in localStorage. The memory cache is cleared on sign-out.
+ */
+
 import {
   getDirectGrowthAnalytics,
   getDirectReferralSnapshot,
   recordDirectGrowthEvent,
   redeemDirectReferralCode,
 } from './directSupabase';
+import { logger } from '../utils/monitoring';
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface ReferralSnapshot {
   code: string;
@@ -15,25 +30,11 @@ export interface ReferralSnapshot {
 }
 
 export interface GrowthDashboard {
-  funnel: {
-    searched: number;
-    selected: number;
-    booked: number;
-    completed: number;
-  };
-  serviceMix: {
-    rides: number;
-    buses: number;
-    packages: number;
-    referrals: number;
-  };
+  funnel: { searched: number; selected: number; booked: number; completed: number };
+  serviceMix: { rides: number; buses: number; packages: number; referrals: number };
   revenueJod: number;
   activeDemand: number;
-  topCorridors: Array<{
-    corridor: string;
-    demand: number;
-    conversions: number;
-  }>;
+  topCorridors: Array<{ corridor: string; demand: number; conversions: number }>;
 }
 
 export interface GrowthEventRecord {
@@ -46,135 +47,7 @@ export interface GrowthEventRecord {
   createdAt: string;
 }
 
-const EMPTY_GROWTH_DASHBOARD: GrowthDashboard = {
-  funnel: {
-    searched: 0,
-    selected: 0,
-    booked: 0,
-    completed: 0,
-  },
-  serviceMix: {
-    rides: 0,
-    buses: 0,
-    packages: 0,
-    referrals: 0,
-  },
-  revenueJod: 0,
-  activeDemand: 0,
-  topCorridors: [],
-};
-
-const LOCAL_REFERRAL_KEY = 'wasel-referral-snapshot';
-const LOCAL_GROWTH_EVENTS_KEY = 'wasel-growth-events';
-const LOCAL_DEMAND_KEY = 'wasel-demand-alerts';
-
-function buildFallbackCode(userId?: string, name?: string) {
-  const seed = (name || userId || 'wasel')
-    .replace(/[^a-z0-9]/gi, '')
-    .slice(0, 6)
-    .toUpperCase();
-  return `WASEL-${seed || 'MOVE'}`;
-}
-
-function readLocalSnapshots(): Record<string, ReferralSnapshot> {
-  if (typeof window === 'undefined') return {};
-  try {
-    const raw = window.localStorage.getItem(LOCAL_REFERRAL_KEY);
-    const parsed = raw ? JSON.parse(raw) : {};
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeLocalSnapshots(snapshots: Record<string, ReferralSnapshot>) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(LOCAL_REFERRAL_KEY, JSON.stringify(snapshots));
-}
-
-function readLocalGrowthEvents(): GrowthEventRecord[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(LOCAL_GROWTH_EVENTS_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeLocalGrowthEvents(events: GrowthEventRecord[]) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(LOCAL_GROWTH_EVENTS_KEY, JSON.stringify(events.slice(0, 300)));
-}
-
-export function getGrowthEventFeed(): GrowthEventRecord[] {
-  return readLocalGrowthEvents()
-    .slice()
-    .sort(
-      (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
-    );
-}
-
-function buildGrowthDashboardFromLocal(): GrowthDashboard {
-  const events = readLocalGrowthEvents();
-  const alerts = readLocalDemandAlerts();
-  const corridorMap = new Map<string, { corridor: string; demand: number; conversions: number }>();
-
-  for (const event of events) {
-    const corridor = [event.from, event.to].filter(Boolean).join(' to ');
-    if (!corridor) continue;
-
-    const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
-    current.conversions += event.funnelStage === 'booked' ? 1 : 0;
-    corridorMap.set(corridor, current);
-  }
-
-  for (const alert of alerts) {
-    const corridor = `${alert.from} to ${alert.to}`;
-    const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
-    current.demand += alert.status === 'active' ? 1 : 0;
-    corridorMap.set(corridor, current);
-  }
-
-  return {
-    funnel: {
-      searched: events.filter(event => event.funnelStage === 'searched').length,
-      selected: events.filter(event => event.funnelStage === 'selected').length,
-      booked: events.filter(event => event.funnelStage === 'booked').length,
-      completed: events.filter(event => event.funnelStage === 'completed').length,
-    },
-    serviceMix: {
-      rides: events.filter(event => event.serviceType === 'ride').length,
-      buses: events.filter(event => event.serviceType === 'bus').length,
-      packages: events.filter(event => event.serviceType === 'package').length,
-      referrals: events.filter(event => event.serviceType === 'referral').length,
-    },
-    revenueJod: Number(events.reduce((sum, event) => sum + (event.valueJod ?? 0), 0).toFixed(2)),
-    activeDemand: alerts.filter(alert => alert.status === 'active').length,
-    topCorridors: Array.from(corridorMap.values())
-      .sort((left, right) => right.demand + right.conversions - (left.demand + left.conversions))
-      .slice(0, 6),
-  };
-}
-
-function readLocalDemandAlerts(): Array<{
-  from: string;
-  to: string;
-  status: string;
-  service: 'ride' | 'bus' | 'package';
-}> {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(LOCAL_DEMAND_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-export async function trackGrowthEvent(input: {
+type GrowthEventInput = {
   userId?: string;
   eventName: string;
   funnelStage: string;
@@ -183,31 +56,84 @@ export async function trackGrowthEvent(input: {
   to?: string;
   valueJod?: number;
   metadata?: Record<string, unknown>;
-}) {
-  writeLocalGrowthEvents([
-    {
-      eventName: input.eventName,
-      funnelStage: input.funnelStage,
-      serviceType: input.serviceType,
-      from: input.from,
-      to: input.to,
-      valueJod: input.valueJod,
-      createdAt: new Date().toISOString(),
-    },
-    ...readLocalGrowthEvents(),
-  ]);
+};
 
+// ── In-memory write buffer (non-persisted, clears on navigation) ──────────────
+
+const EVENT_BUFFER_MAX = 50;
+const eventBuffer: GrowthEventRecord[] = [];
+
+// ── In-memory referral cache (TTL = 2 minutes) ────────────────────────────────
+
+const referralCache = new Map<string, { snapshot: ReferralSnapshot; expiresAt: number }>();
+const REFERRAL_TTL_MS = 2 * 60 * 1000;
+
+const EMPTY_DASHBOARD: GrowthDashboard = {
+  funnel: { searched: 0, selected: 0, booked: 0, completed: 0 },
+  serviceMix: { rides: 0, buses: 0, packages: 0, referrals: 0 },
+  revenueJod: 0,
+  activeDemand: 0,
+  topCorridors: [],
+};
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+/**
+ * Returns the in-memory event buffer — useful for route intelligence signals.
+ * This is intentionally ephemeral and resets on page reload.
+ */
+export function getGrowthEventFeed(): GrowthEventRecord[] {
+  return [...eventBuffer].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+}
+
+/**
+ * Track a growth event.
+ * Primary: write to Supabase via recordDirectGrowthEvent.
+ * Buffer: append to in-memory buffer for same-session route intelligence.
+ * Never writes to localStorage.
+ */
+export async function trackGrowthEvent(input: GrowthEventInput): Promise<void> {
+  const record: GrowthEventRecord = {
+    eventName: input.eventName,
+    funnelStage: input.funnelStage,
+    serviceType: input.serviceType,
+    from: input.from,
+    to: input.to,
+    valueJod: input.valueJod,
+    createdAt: new Date().toISOString(),
+  };
+
+  // Append to in-memory buffer (bounded)
+  eventBuffer.unshift(record);
+  if (eventBuffer.length > EVENT_BUFFER_MAX) {
+    eventBuffer.splice(EVENT_BUFFER_MAX);
+  }
+
+  // Persist to Supabase (fire-and-forget, never blocks UI)
   try {
     await recordDirectGrowthEvent(input);
-  } catch {
-    // local fallback is already stored
+  } catch (err) {
+    // Non-fatal: in-memory buffer is still populated for current session
+    logger.warning('[growthEngine] trackGrowthEvent Supabase write failed', {
+      eventName: input.eventName,
+      err,
+    });
   }
 }
 
+/**
+ * Get the referral snapshot for a user.
+ * Uses a short in-memory cache to avoid redundant Supabase reads.
+ */
 export async function getReferralSnapshot(
   user?: { id?: string; name?: string } | null,
 ): Promise<ReferralSnapshot | null> {
   if (!user?.id) return null;
+
+  const cached = referralCache.get(user.id);
+  if (cached && cached.expiresAt > Date.now()) return cached.snapshot;
 
   const shareUrlBase =
     typeof window !== 'undefined' ? window.location.origin : 'https://wasel14.online';
@@ -218,46 +144,29 @@ export async function getReferralSnapshot(
       ...remote,
       shareUrl: `${shareUrlBase}/app/auth?ref=${encodeURIComponent(remote.code)}`,
     };
-    const snapshots = readLocalSnapshots();
-    snapshots[user.id] = snapshot;
-    writeLocalSnapshots(snapshots);
+    referralCache.set(user.id, { snapshot, expiresAt: Date.now() + REFERRAL_TTL_MS });
     return snapshot;
-  } catch {
-    const snapshots = readLocalSnapshots();
-    const existing = snapshots[user.id];
-    if (existing) return existing;
-
-    const fallbackCode = buildFallbackCode(user.id, user.name);
-    const fallback: ReferralSnapshot = {
-      code: fallbackCode,
-      invited: 0,
-      converted: 0,
-      pendingCredit: 0,
-      earnedCredit: 0,
-      shareUrl: `${shareUrlBase}/app/auth?ref=${encodeURIComponent(fallbackCode)}`,
-    };
-    snapshots[user.id] = fallback;
-    writeLocalSnapshots(snapshots);
-    return fallback;
+  } catch (err) {
+    logger.warning('[growthEngine] getReferralSnapshot failed', { userId: user.id, err });
+    return null;
   }
 }
 
+/**
+ * Redeem a referral code for a user.
+ */
 export async function applyReferralCode(
   user: { id?: string; name?: string } | null | undefined,
   code: string,
-) {
-  if (!user?.id) {
-    throw new Error('Sign in to redeem a referral code.');
-  }
-
+): Promise<ReferralSnapshot | null> {
+  if (!user?.id) throw new Error('Sign in to redeem a referral code.');
   const normalizedCode = code.trim().toUpperCase();
-  if (!normalizedCode) {
-    throw new Error('Enter a referral code first.');
-  }
+  if (!normalizedCode) throw new Error('Enter a referral code first.');
 
   try {
     await redeemDirectReferralCode(user.id, normalizedCode);
   } finally {
+    // Always track the attempt
     await trackGrowthEvent({
       userId: user.id,
       eventName: 'referral_attempted',
@@ -267,40 +176,56 @@ export async function applyReferralCode(
     }).catch(() => {});
   }
 
+  // Invalidate cache so next read fetches fresh data
+  referralCache.delete(user.id);
   return getReferralSnapshot(user);
 }
 
+/**
+ * Get the growth dashboard.
+ * Fetches from Supabase. Returns empty dashboard on failure.
+ */
 export async function getGrowthDashboard(userId?: string): Promise<GrowthDashboard> {
   try {
     return await getDirectGrowthAnalytics(userId);
-  } catch {
-    const fallback = buildGrowthDashboardFromLocal();
-    return JSON.stringify(fallback) === JSON.stringify(EMPTY_GROWTH_DASHBOARD)
-      ? EMPTY_GROWTH_DASHBOARD
-      : fallback;
+  } catch (err) {
+    logger.warning('[growthEngine] getGrowthDashboard failed', { userId, err });
+    return EMPTY_DASHBOARD;
   }
 }
 
+/**
+ * Returns corridor demand leaders from the in-memory event buffer.
+ * Only reflects current session — not historical data. For full analytics, use getGrowthDashboard().
+ */
 export function getCorridorDemandLeaders(limit = 3) {
-  const alerts = readLocalDemandAlerts();
   const corridorMap = new Map<string, { corridor: string; active: number; serviceLabel: string }>();
 
-  for (const alert of alerts.filter(item => item.status === 'active')) {
-    const key = `${alert.from} to ${alert.to}`;
+  for (const event of eventBuffer) {
+    if (!event.from || !event.to) continue;
+    const key = `${event.from} to ${event.to}`;
     const existing = corridorMap.get(key);
     corridorMap.set(key, {
       corridor: key,
       active: (existing?.active ?? 0) + 1,
       serviceLabel:
-        alert.service === 'bus'
+        event.serviceType === 'bus'
           ? 'Bus demand'
-          : alert.service === 'package'
+          : event.serviceType === 'package'
             ? 'Package demand'
             : 'Ride demand',
     });
   }
 
   return Array.from(corridorMap.values())
-    .sort((left, right) => right.active - left.active)
+    .sort((a, b) => b.active - a.active)
     .slice(0, limit);
+}
+
+/**
+ * Clear the in-memory caches (call on sign-out).
+ */
+export function clearGrowthEngineCache(): void {
+  eventBuffer.splice(0);
+  referralCache.clear();
 }

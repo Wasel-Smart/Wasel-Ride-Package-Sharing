@@ -15,18 +15,26 @@ export interface RuntimeConfigIssue {
   severity: 'warning' | 'error';
 }
 
+function readProcessEnvSource(): EnvSource {
+  const processEnv =
+    typeof globalThis === 'object'
+      ? (
+          globalThis as {
+            process?: { env?: EnvSource };
+          }
+        ).process?.env
+      : undefined;
+
+  return processEnv && typeof processEnv === 'object' ? processEnv : {};
+}
+
 function readEnvSource(): EnvSource {
   const importMetaEnv =
     typeof import.meta !== 'undefined' && typeof import.meta.env === 'object'
       ? (import.meta.env as EnvSource)
       : {};
 
-  const processEnv =
-    typeof process !== 'undefined' && typeof process.env === 'object'
-      ? (process.env as EnvSource)
-      : {};
-
-  return { ...processEnv, ...importMetaEnv };
+  return { ...readProcessEnvSource(), ...importMetaEnv };
 }
 
 function isTruthy(value: string | undefined): boolean {
@@ -113,6 +121,8 @@ function resolveAppUrl(envSource: EnvSource = readEnvSource()): string {
 
 function resolveSupabaseUrl(envSource: EnvSource = readEnvSource()): string {
   return getFirstConfiguredValue(
+    envSource.VITE_STORADGE_SUPABASE_URL,
+    envSource.NEXT_PUBLIC_STORADGE_SUPABASE_URL,
     envSource.VITE_SUPABASE_URL,
     envSource.VITE_SUPABASE_PROJECT_URL,
     envSource.VITE_PUBLIC_SUPABASE_URL,
@@ -122,6 +132,9 @@ function resolveSupabaseUrl(envSource: EnvSource = readEnvSource()): string {
 
 function resolveSupabasePublicKey(envSource: EnvSource = readEnvSource()): string {
   return getFirstConfiguredValue(
+    envSource.VITE_STORADGE_SUPABASE_PUBLISHABLE_KEY,
+    envSource.NEXT_PUBLIC_STORADGE_SUPABASE_PUBLISHABLE_KEY,
+    envSource.VITE_STORADGE_SUPABASE_ANON_KEY,
     envSource.VITE_SUPABASE_PUBLISHABLE_KEY,
     envSource.VITE_SUPABASE_ANON_KEY,
     envSource.VITE_PUBLIC_SUPABASE_ANON_KEY,

@@ -6,29 +6,19 @@
 
 import { API_URL, supabase } from './core';
 import { BackendRequestError, requestEdgeJson } from './backendWorkflow';
+import type { DbClient, PaymentMethodRow, WalletRow } from './directSupabase';
+import { safeStorageGetItem, safeStorageSetItem } from '../utils/browserStorage';
+import { readRuntimeState, writeRuntimeState } from '../utils/runtimeStore';
 
 const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
-const LOCAL_WALLET_KEY = 'wasel-wallet-local-v1';
 // Must match STORAGE_KEY in src/contexts/LocalAuth.tsx so balance reads stay in sync
 const LOCAL_AUTH_USER_KEY = 'wasel_user_session';
+const WALLET_RUNTIME_CACHE_KEY = 'wallet-runtime-cache';
+const WALLET_INSIGHTS_CACHE_KEY = 'wallet-insights-cache';
+const WALLET_PAYMENT_METHODS_CACHE_KEY = 'wallet-payment-methods-cache';
+const WALLET_TRUST_SCORE_CACHE_KEY = 'wallet-trust-score-cache';
 
-type DbClient = any;
-
-type WalletRow = {
-  wallet_id?: string;
-  user_id?: string;
-  balance?: number | string | null;
-  pending_balance?: number | string | null;
-  wallet_status?: string | null;
-  currency_code?: string | null;
-  auto_top_up_enabled?: boolean | null;
-  auto_top_up_amount?: number | string | null;
-  auto_top_up_threshold?: number | string | null;
-  pin_hash?: string | null;
-  created_at?: string | null;
-};
-
-type TransactionRow = {
+type WalletTransactionSource = {
   transaction_id?: string;
   amount?: number | string | null;
   direction?: string | null;
@@ -38,16 +28,16 @@ type TransactionRow = {
   metadata?: Record<string, unknown> | null;
 };
 
-type PaymentMethodRow = {
-  payment_method_id?: string;
-  method_type?: string | null;
-  provider?: string | null;
-  token_reference?: string | null;
-  is_default?: boolean | null;
-  status?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-};
+export interface WalletPaymentMethod {
+  id: string;
+  provider: string;
+  type: string;
+  tokenReference: string | null;
+  isDefault: boolean;
+  status: string;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
 
 export interface WalletSummary {
   id: string | null;
@@ -58,7 +48,7 @@ export interface WalletSummary {
   autoTopUp: boolean;
   autoTopUpAmount: number;
   autoTopUpThreshold: number;
-  paymentMethods: any[];
+  paymentMethods: WalletPaymentMethod[];
   createdAt: string | null;
 }
 
@@ -105,7 +95,7 @@ export interface WalletData {
   pinSet: boolean;
   autoTopUp: boolean;
   transactions: WalletTransaction[];
-  activeEscrows: any[];
+  activeEscrows: WalletEscrow[];
   activeRewards: RewardItem[];
   subscription: WalletSubscription | null;
 }
@@ -131,6 +121,66 @@ export interface InsightsData {
   carbonSaved: number;
 }
 
+export interface WalletEscrow {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  createdAt: string | null;
+}
+
+export interface WalletTrustScore {
+  totalTrips: number;
+  cashRating: number;
+  onTimePayments: number;
+  deposit: number;
+}
+
+export interface WalletPaymentMethodsResponse {
+  methods: WalletPaymentMethod[];
+}
+
+export interface WalletTransactionsResponse {
+  transactions: WalletTransaction[];
+  page: number;
+  limit: number;
+  total: number;
+}
+
+export interface WalletCheckoutSession {
+  checkoutUrl?: string | null;
+  provider?: string;
+  sessionId?: string | null;
+  plan?: string | null;
+  status?: string | null;
+}
+
+export interface WalletTopUpResponse {
+  payment?: WalletCheckoutSession | null;
+  subscription?: WalletCheckoutSession | null;
+  wallet?: WalletData | null;
+}
+
+export interface WalletSubscribeResponse {
+  subscription?: WalletCheckoutSession | null;
+  payment?: WalletCheckoutSession | null;
+}
+
+export interface WalletSendMoneyResult {
+  success: boolean;
+  note?: string;
+  wallet: WalletData;
+}
+
+export interface WalletPaymentMethodInput {
+  type: string;
+  provider: string;
+  token_reference?: string;
+  last4?: string;
+  is_default?: boolean;
+  [key: string]: unknown;
+}
+
 function getDb(): DbClient {
   if (!supabase) {
     throw new Error('Supabase client is not initialised');
@@ -139,372 +189,212 @@ function getDb(): DbClient {
   return supabase as DbClient;
 }
 
+function getWalletRuntimeCacheKey(prefix: string, userId: string): string {
+  return `${prefix}:${userId}`;
+}
+
+function readWalletCache(userId: string): WalletData | null {
+  return readRuntimeState<WalletData | null>(
+    getWalletRuntimeCacheKey(WALLET_RUNTIME_CACHE_KEY, userId),
+    null,
+  );
+}
+
+function writeWalletCache(userId: string, wallet: WalletData): WalletData {
+  const normalizedWallet = normalizeWalletDataContract(wallet);
+  writeRuntimeState(getWalletRuntimeCacheKey(WALLET_RUNTIME_CACHE_KEY, userId), normalizedWallet);
+  syncLocalAuthBalance(userId, normalizedWallet.balance);
+  if (Array.isArray(normalizedWallet.wallet.paymentMethods)) {
+    writePaymentMethodsCache(userId, normalizedWallet.wallet.paymentMethods);
+  }
+  return normalizedWallet;
+}
+
+function readInsightsCache(userId: string): InsightsData | null {
+  return readRuntimeState<InsightsData | null>(
+    getWalletRuntimeCacheKey(WALLET_INSIGHTS_CACHE_KEY, userId),
+    null,
+  );
+}
+
+function writeInsightsCache(userId: string, insights: InsightsData): InsightsData {
+  writeRuntimeState(getWalletRuntimeCacheKey(WALLET_INSIGHTS_CACHE_KEY, userId), insights);
+  return insights;
+}
+
+function readPaymentMethodsCache(userId: string): WalletPaymentMethodsResponse | null {
+  const cached = readRuntimeState<WalletPaymentMethodsResponse | null>(
+    getWalletRuntimeCacheKey(WALLET_PAYMENT_METHODS_CACHE_KEY, userId),
+    null,
+  );
+  return cached ? { methods: normalizeWalletPaymentMethods(cached.methods) } : null;
+}
+
+function writePaymentMethodsCache(
+  userId: string,
+  methods: WalletPaymentMethod[],
+): WalletPaymentMethodsResponse {
+  const payload = { methods: normalizeWalletPaymentMethods(methods) };
+  writeRuntimeState(getWalletRuntimeCacheKey(WALLET_PAYMENT_METHODS_CACHE_KEY, userId), payload);
+  return payload;
+}
+
+function readTrustScoreCache(userId: string): WalletTrustScore | null {
+  return readRuntimeState<WalletTrustScore | null>(
+    getWalletRuntimeCacheKey(WALLET_TRUST_SCORE_CACHE_KEY, userId),
+    null,
+  );
+}
+
+function writeTrustScoreCache(userId: string, trustScore: WalletTrustScore): WalletTrustScore {
+  writeRuntimeState(
+    getWalletRuntimeCacheKey(WALLET_TRUST_SCORE_CACHE_KEY, userId),
+    trustScore,
+  );
+  return trustScore;
+}
+
 function canUseEdgeApi(): boolean {
   return Boolean(WALLET_API_BASE);
 }
 
-type LocalWalletRecord = {
-  userId: string;
-  balance: number;
-  pendingBalance: number;
-  currency: string;
-  autoTopUpEnabled: boolean;
-  autoTopUpAmount: number;
-  autoTopUpThreshold: number;
-  pinSet: boolean;
-  paymentMethods: any[];
-  transactions: WalletTransaction[];
-  createdAt: string;
-  updatedAt: string;
-};
-
-function canUseLocalWalletStorage(): boolean {
-  if (typeof window === 'undefined') return false;
-
-  try {
-    return Boolean(window.localStorage);
-  } catch {
-    return false;
-  }
-}
-
-function getLocalWalletStorageKey(userId: string): string {
-  return `${LOCAL_WALLET_KEY}:${userId}`;
-}
-
-function readLocalAuthBalance(userId: string): number {
-  if (!canUseLocalWalletStorage()) return 0;
-
-  try {
-    const raw = window.localStorage.getItem(LOCAL_AUTH_USER_KEY);
-    if (!raw) return 0;
-    const parsed = JSON.parse(raw) as { id?: string; balance?: number | string };
-    if (parsed?.id !== userId) return 0;
-    return toNumber(parsed.balance, 0);
-  } catch {
-    return 0;
-  }
-}
-
 function syncLocalAuthBalance(userId: string, balance: number): void {
-  if (!canUseLocalWalletStorage()) return;
-
   try {
-    const raw = window.localStorage.getItem(LOCAL_AUTH_USER_KEY);
+    const raw = safeStorageGetItem('sessionStorage', LOCAL_AUTH_USER_KEY);
     if (!raw) return;
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     if (parsed?.id !== userId) return;
     parsed.balance = Number(balance.toFixed(2));
-    window.localStorage.setItem(LOCAL_AUTH_USER_KEY, JSON.stringify(parsed));
+    safeStorageSetItem('sessionStorage', LOCAL_AUTH_USER_KEY, JSON.stringify(parsed));
   } catch {
     // Ignore local sync failures.
   }
 }
 
-function buildDefaultLocalWalletRecord(userId: string): LocalWalletRecord {
-  const now = new Date().toISOString();
-  const openingBalance = readLocalAuthBalance(userId);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function toOptionalString(value: unknown): string | null {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  return null;
+}
+
+function normalizeWalletPaymentMethodType(method: unknown): string {
+  switch (String(method ?? '').trim()) {
+    case 'card_payment':
+      return 'card';
+    case 'wallet_balance':
+      return 'wallet';
+    case 'local_gateway':
+      return 'bank_transfer';
+    case 'government_api':
+      return 'government_api';
+    case 'apple_pay':
+    case 'google_pay':
+    case 'bank_transfer':
+    case 'wallet':
+    case 'card':
+      return String(method);
+    default:
+      return 'card';
+  }
+}
+
+function normalizeWalletPaymentMethod(raw: unknown): WalletPaymentMethod {
+  const row = isRecord(raw) ? raw : {};
+  const id =
+    toOptionalString(row.id) ??
+    toOptionalString(row.payment_method_id) ??
+    `pm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   return {
-    userId,
-    balance: openingBalance,
-    pendingBalance: 0,
-    currency: 'JOD',
-    autoTopUpEnabled: false,
-    autoTopUpAmount: 20,
-    autoTopUpThreshold: 5,
-    pinSet: false,
-    paymentMethods: [],
-    transactions:
-      openingBalance > 0
-        ? [
-            {
-              id: `local-wallet-opening-${userId}`,
-              type: 'add_funds',
-              description: 'Opening wallet balance',
-              amount: openingBalance,
-              createdAt: now,
-              status: 'posted',
-            },
-          ]
-        : [],
-    createdAt: now,
-    updatedAt: now,
+    id,
+    provider: toOptionalString(row.provider) ?? 'wallet',
+    type: normalizeWalletPaymentMethodType(row.type ?? row.method_type),
+    tokenReference: toOptionalString(row.tokenReference ?? row.token_reference ?? row.last4),
+    isDefault: row.isDefault === true || row.is_default === true,
+    status: toOptionalString(row.status) ?? 'active',
+    createdAt: toOptionalString(row.createdAt ?? row.created_at),
+    updatedAt: toOptionalString(row.updatedAt ?? row.updated_at),
   };
 }
 
-function normalizeLocalWalletRecord(userId: string, value: unknown): LocalWalletRecord {
-  const fallback = buildDefaultLocalWalletRecord(userId);
-  if (!value || typeof value !== 'object') {
-    return fallback;
-  }
+function normalizeWalletPaymentMethods(methods: unknown): WalletPaymentMethod[] {
+  return Array.isArray(methods) ? methods.map(normalizeWalletPaymentMethod) : [];
+}
 
-  const record = value as Partial<LocalWalletRecord>;
+function normalizeWalletDataContract(wallet: WalletData): WalletData {
   return {
-    userId,
-    balance: toNumber(record.balance, fallback.balance),
-    pendingBalance: toNumber(record.pendingBalance, 0),
-    currency: String(record.currency ?? fallback.currency).trim().toUpperCase() || 'JOD',
-    autoTopUpEnabled: Boolean(record.autoTopUpEnabled),
-    autoTopUpAmount: toNumber(record.autoTopUpAmount, 20),
-    autoTopUpThreshold: toNumber(record.autoTopUpThreshold, 5),
-    pinSet: Boolean(record.pinSet),
-    paymentMethods: Array.isArray(record.paymentMethods) ? record.paymentMethods : [],
-    transactions: Array.isArray(record.transactions)
-      ? record.transactions.map(tx => ({
-          id: String(tx.id ?? `local-wallet-tx-${Date.now()}`),
-          type: String(tx.type ?? 'wallet'),
-          description: String(tx.description ?? 'Wallet transaction'),
-          amount: toNumber(tx.amount, 0),
-          createdAt: String(tx.createdAt ?? fallback.updatedAt),
-          status: tx.status ? String(tx.status) : 'posted',
-        }))
-      : fallback.transactions,
-    createdAt: String(record.createdAt ?? fallback.createdAt),
-    updatedAt: String(record.updatedAt ?? fallback.updatedAt),
-  };
-}
-
-function readLocalWalletRecord(userId: string): LocalWalletRecord {
-  if (!canUseLocalWalletStorage()) {
-    return buildDefaultLocalWalletRecord(userId);
-  }
-
-  try {
-    const raw = window.localStorage.getItem(getLocalWalletStorageKey(userId));
-    if (!raw) {
-      return buildDefaultLocalWalletRecord(userId);
-    }
-
-    return normalizeLocalWalletRecord(userId, JSON.parse(raw));
-  } catch {
-    return buildDefaultLocalWalletRecord(userId);
-  }
-}
-
-function writeLocalWalletRecord(userId: string, record: LocalWalletRecord): LocalWalletRecord {
-  const normalized = normalizeLocalWalletRecord(userId, record);
-  if (canUseLocalWalletStorage()) {
-    window.localStorage.setItem(getLocalWalletStorageKey(userId), JSON.stringify(normalized));
-  }
-  syncLocalAuthBalance(userId, normalized.balance);
-  return normalized;
-}
-
-function createLocalWalletTransaction(
-  type: string,
-  description: string,
-  amount: number,
-  status = 'posted',
-): WalletTransaction {
-  return {
-    id: `local-wallet-tx-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    type,
-    description,
-    amount: Number(amount.toFixed(2)),
-    createdAt: new Date().toISOString(),
-    status,
-  };
-}
-
-function buildWalletPayloadFromLocal(record: LocalWalletRecord): WalletData {
-  const transactions = [...record.transactions].sort(
-    (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
-  );
-  const totalEarned = transactions
-    .filter(tx => tx.amount > 0)
-    .reduce((total, tx) => total + tx.amount, 0);
-  const totalSpent = transactions
-    .filter(tx => tx.amount < 0)
-    .reduce((total, tx) => total + Math.abs(tx.amount), 0);
-  const totalDeposited = transactions
-    .filter(tx => tx.type === 'add_funds' && tx.amount > 0)
-    .reduce((total, tx) => total + tx.amount, 0);
-
-  return {
+    ...wallet,
     wallet: {
-      id: `local-wallet-${record.userId}`,
-      userId: record.userId,
-      walletType: 'user',
-      status: 'active',
-      currency: record.currency,
-      autoTopUp: record.autoTopUpEnabled,
-      autoTopUpAmount: record.autoTopUpAmount,
-      autoTopUpThreshold: record.autoTopUpThreshold,
-      paymentMethods: record.paymentMethods,
-      createdAt: record.createdAt,
+      ...wallet.wallet,
+      paymentMethods: normalizeWalletPaymentMethods(wallet.wallet.paymentMethods),
     },
-    balance: Number(record.balance.toFixed(2)),
-    pendingBalance: Number(record.pendingBalance.toFixed(2)),
-    rewardsBalance: 0,
-    total_earned: Number(totalEarned.toFixed(2)),
-    total_spent: Number(totalSpent.toFixed(2)),
-    total_deposited: Number(totalDeposited.toFixed(2)),
-    currency: record.currency,
-    pinSet: record.pinSet,
-    autoTopUp: record.autoTopUpEnabled,
-    transactions,
-    activeEscrows: [],
-    activeRewards: [],
-    subscription: null,
+    activeEscrows: Array.isArray(wallet.activeEscrows) ? wallet.activeEscrows : [],
+    activeRewards: Array.isArray(wallet.activeRewards) ? wallet.activeRewards : [],
+    transactions: Array.isArray(wallet.transactions) ? wallet.transactions : [],
   };
 }
 
-function updateLocalWalletRecord(
-  userId: string,
-  updater: (current: LocalWalletRecord) => LocalWalletRecord,
-): WalletData {
-  const current = readLocalWalletRecord(userId);
-  const next = updater(current);
-  const persisted = writeLocalWalletRecord(userId, {
-    ...next,
-    userId,
-    updatedAt: new Date().toISOString(),
-  });
-  return buildWalletPayloadFromLocal(persisted);
-}
-
-async function fetchWalletLocal(userId: string): Promise<WalletData> {
-  return buildWalletPayloadFromLocal(writeLocalWalletRecord(userId, readLocalWalletRecord(userId)));
-}
-
-async function sendMoneyLocal(
-  userId: string,
-  recipientId: string,
-  amount: number,
-  note?: string,
-): Promise<{ success: true; note?: string; wallet: WalletData }> {
-  const wallet = updateLocalWalletRecord(userId, current => {
-    if (current.balance < amount) {
-      throw new Error('Insufficient wallet balance');
-    }
-
-    return {
-      ...current,
-      balance: current.balance - amount,
-      transactions: [
-        createLocalWalletTransaction(
-          'transfer_funds',
-          note?.trim() || `Wallet transfer sent to ${recipientId}`,
-          -Math.abs(amount),
-        ),
-        ...current.transactions,
-      ],
-    };
-  });
+function normalizeWalletCheckoutSession(raw: unknown): WalletCheckoutSession | null {
+  if (!isRecord(raw)) {
+    return null;
+  }
 
   return {
-    success: true,
-    note,
-    wallet,
+    checkoutUrl: toOptionalString(raw.checkoutUrl),
+    provider: toOptionalString(raw.provider) ?? undefined,
+    sessionId: toOptionalString(raw.sessionId),
+    plan: toOptionalString(raw.plan),
+    status: toOptionalString(raw.status),
   };
 }
 
-async function withdrawWalletFundsLocal(
-  userId: string,
-  amount: number,
-  bankAccount: string,
-  method: string,
-): Promise<WalletData> {
-  return updateLocalWalletRecord(userId, current => {
-    if (current.balance < amount) {
-      throw new Error('Insufficient wallet balance');
-    }
-
-    return {
-      ...current,
-      balance: current.balance - amount,
-      transactions: [
-        createLocalWalletTransaction(
-          'withdrawal',
-          `Withdrawal to ${bankAccount} via ${method}`,
-          -Math.abs(amount),
-        ),
-        ...current.transactions,
-      ],
-    };
-  });
+function isWalletDataLike(value: unknown): value is WalletData {
+  return (
+    isRecord(value) &&
+    isRecord(value.wallet) &&
+    typeof value.balance === 'number' &&
+    typeof value.pendingBalance === 'number' &&
+    Array.isArray(value.transactions)
+  );
 }
 
-async function setAutoTopUpLocal(
-  userId: string,
-  enabled: boolean,
-  amount: number,
-  threshold: number,
-): Promise<WalletData> {
-  return updateLocalWalletRecord(userId, current => ({
-    ...current,
-    autoTopUpEnabled: enabled,
-    autoTopUpAmount: amount,
-    autoTopUpThreshold: threshold,
-  }));
-}
+function normalizeWalletTopUpResponse(payload: unknown): WalletTopUpResponse {
+  if (isWalletDataLike(payload)) {
+    return { wallet: normalizeWalletDataContract(payload) };
+  }
 
-async function getPaymentMethodsLocal(userId: string): Promise<{ methods: any[] }> {
-  const wallet = readLocalWalletRecord(userId);
+  const row = isRecord(payload) ? payload : {};
   return {
-    methods: Array.isArray(wallet.paymentMethods) ? wallet.paymentMethods : [],
+    payment: normalizeWalletCheckoutSession(row.payment),
+    wallet: isWalletDataLike(row.wallet) ? normalizeWalletDataContract(row.wallet) : null,
   };
 }
 
-async function addPaymentMethodLocal(
-  userId: string,
-  method: { type: string; provider: string; [key: string]: any },
-): Promise<any> {
-  const nextMethod = {
-    ...method,
-    id: method.id ?? `local-payment-method-${Date.now()}`,
-    type: method.type,
-    provider: method.provider,
-    is_default: Boolean(method.is_default),
-    status: 'active',
-  };
-
-  updateLocalWalletRecord(userId, current => ({
-    ...current,
-    paymentMethods: [
-      nextMethod,
-      ...current.paymentMethods.filter(item => item?.id !== nextMethod.id),
-    ],
-  }));
-
-  return nextMethod;
-}
-
-async function deletePaymentMethodLocal(userId: string, methodId: string): Promise<{ success: true }> {
-  updateLocalWalletRecord(userId, current => ({
-    ...current,
-    paymentMethods: current.paymentMethods.filter(item => item?.id !== methodId),
-  }));
-
-  return { success: true };
-}
-
-async function setWalletPinLocal(userId: string): Promise<{ success: true }> {
-  updateLocalWalletRecord(userId, current => ({
-    ...current,
-    pinSet: true,
-  }));
-
-  return { success: true };
-}
-
-async function verifyWalletPinLocal(userId: string, pin: string): Promise<{ success: boolean }> {
-  const wallet = readLocalWalletRecord(userId);
-  return { success: wallet.pinSet && /^\d{4}$/.test(pin) };
-}
-
-async function getTrustScoreLocal(
-  userId: string,
-): Promise<{ totalTrips: number; cashRating: number; onTimePayments: number; deposit: number }> {
-  const wallet = await fetchWalletLocal(userId);
+function normalizeWalletSubscribeResponse(payload: unknown): WalletSubscribeResponse {
+  const row = isRecord(payload) ? payload : {};
   return {
-    totalTrips: 0,
-    cashRating: 5,
-    onTimePayments: 98,
-    deposit: wallet.balance,
+    subscription: normalizeWalletCheckoutSession(row.subscription),
+    payment: normalizeWalletCheckoutSession(row.payment),
   };
 }
+
+export function getWalletCheckoutUrl(
+  result: WalletTopUpResponse | WalletSubscribeResponse,
+): string | null {
+  return result.subscription?.checkoutUrl ?? result.payment?.checkoutUrl ?? null;
+}
+
 
 export function getWalletCapabilities(): WalletCapabilities {
   const secureEdgeReady = canUseEdgeApi();
@@ -550,7 +440,11 @@ function currencyFromWallet(wallet: WalletRow | null): string {
   return code || 'JOD';
 }
 
-function describeTransaction(row: TransactionRow): string {
+function toWalletPaymentMethod(row: PaymentMethodRow): WalletPaymentMethod {
+  return normalizeWalletPaymentMethod(row);
+}
+
+function describeTransaction(row: WalletTransactionSource): string {
   const metadataLabel =
     typeof row.metadata?.description === 'string'
       ? row.metadata.description
@@ -580,7 +474,7 @@ function describeTransaction(row: TransactionRow): string {
   }
 }
 
-function toWalletTransaction(row: TransactionRow): WalletTransaction {
+function toWalletTransaction(row: WalletTransactionSource): WalletTransaction {
   const amount = toNumber(row.amount, 0);
   const signedAmount = row.direction === 'debit' ? -Math.abs(amount) : Math.abs(amount);
 
@@ -594,11 +488,11 @@ function toWalletTransaction(row: TransactionRow): WalletTransaction {
   };
 }
 
-function isCredit(row: TransactionRow): boolean {
+function isCredit(row: WalletTransactionSource): boolean {
   return row.direction === 'credit';
 }
 
-function isDebit(row: TransactionRow): boolean {
+function isDebit(row: WalletTransactionSource): boolean {
   return row.direction === 'debit';
 }
 
@@ -663,7 +557,7 @@ function buildInsightsFromTransactions(transactions: WalletTransaction[]): Insig
 
 function buildWalletPayload(
   wallet: WalletRow | null,
-  transactions: TransactionRow[],
+  transactions: WalletTransactionSource[],
   paymentMethods: PaymentMethodRow[] = [],
 ): WalletData {
   const normalizedTransactions = transactions.map(toWalletTransaction);
@@ -687,7 +581,7 @@ function buildWalletPayload(
       autoTopUp: Boolean(wallet?.auto_top_up_enabled),
       autoTopUpAmount: toNumber(wallet?.auto_top_up_amount, 20),
       autoTopUpThreshold: toNumber(wallet?.auto_top_up_threshold, 5),
-      paymentMethods,
+      paymentMethods: paymentMethods.map(toWalletPaymentMethod),
       createdAt: wallet?.created_at ?? null,
     },
     balance: toNumber(wallet?.balance, 0),
@@ -776,14 +670,17 @@ async function fetchWalletDirect(userId: string): Promise<WalletData> {
     .order('is_default', { ascending: false })
     .order('created_at', { ascending: false });
 
-  return buildWalletPayload(
-    wallet as WalletRow,
-    (Array.isArray(transactions) ? transactions.slice(0, 50) : []) as TransactionRow[],
-    (Array.isArray(paymentMethods) ? paymentMethods : []) as PaymentMethodRow[],
+  return writeWalletCache(
+    userId,
+    buildWalletPayload(
+      wallet,
+      (Array.isArray(transactions) ? transactions.slice(0, 50) : []) as WalletTransactionSource[],
+      (Array.isArray(paymentMethods) ? paymentMethods : []) as PaymentMethodRow[],
+    ),
   );
 }
 
-async function getWalletTransactionRows(userId: string): Promise<TransactionRow[]> {
+async function getWalletTransactionRows(userId: string): Promise<WalletTransactionSource[]> {
   const wallet = await fetchWalletDirect(userId);
   return wallet.transactions.map(tx => ({
     transaction_id: tx.id,
@@ -901,17 +798,17 @@ async function updateWalletPreferencesDirect(
   return fetchWalletDirect(userId);
 }
 
-async function getPaymentMethodsDirect(userId: string): Promise<{ methods: any[] }> {
+async function getPaymentMethodsDirect(userId: string): Promise<WalletPaymentMethodsResponse> {
   const wallet = await fetchWalletDirect(userId);
   return {
-    methods: Array.isArray(wallet.wallet.paymentMethods) ? wallet.wallet.paymentMethods : [],
+    methods: normalizeWalletPaymentMethods(wallet.wallet.paymentMethods),
   };
 }
 
 async function addPaymentMethodDirect(
   userId: string,
-  method: { type: string; provider: string; [key: string]: any },
-) {
+  method: WalletPaymentMethodInput,
+): Promise<WalletPaymentMethod> {
   const db = getDb();
   const { data, error } = await db
     .from('payment_methods')
@@ -930,7 +827,7 @@ async function addPaymentMethodDirect(
     throw error;
   }
 
-  return data;
+  return toWalletPaymentMethod(data as PaymentMethodRow);
 }
 
 async function deletePaymentMethodDirect(userId: string, methodId: string) {
@@ -960,7 +857,7 @@ async function deletePaymentMethodDirect(userId: string, methodId: string) {
   return { success: true };
 }
 
-async function getTrustScoreDirect(userId: string) {
+async function getTrustScoreDirect(userId: string): Promise<WalletTrustScore> {
   const db = getDb();
   const canonicalUserId = await resolveCanonicalUserId(userId);
   const [{ data: user, error: userError }, { data: wallet }, { data: driver }] = await Promise.all([
@@ -1061,21 +958,25 @@ export const walletApi = {
   async getWallet(userId: string): Promise<WalletData> {
     if (canUseEdgeApi()) {
       try {
-        return await requestWalletJson<WalletData>(userId, '', 'Load wallet');
+        return writeWalletCache(
+          userId,
+          normalizeWalletDataContract(await requestWalletJson<WalletData>(userId, '', 'Load wallet')),
+        );
       } catch {
         // Fall back to direct Supabase below.
       }
     }
 
-    let wallet: WalletData;
+    let wallet: WalletData | null = null;
     try {
       wallet = await fetchWalletDirect(userId);
     } catch (error) {
-      if (!canUseLocalWalletStorage()) {
-        throw error;
+      const cachedWallet = readWalletCache(userId);
+      if (cachedWallet) {
+        return cachedWallet;
       }
 
-      return fetchWalletLocal(userId);
+      throw error;
     }
 
     if (canUseEdgeApi()) {
@@ -1086,10 +987,15 @@ export const walletApi = {
       }
     }
 
-    return wallet;
+    return writeWalletCache(userId, wallet);
   },
 
-  async getTransactions(userId: string, page = 1, limit = 20, type?: string) {
+  async getTransactions(
+    userId: string,
+    page = 1,
+    limit = 20,
+    type?: string,
+  ): Promise<WalletTransactionsResponse> {
     if (canUseEdgeApi()) {
       try {
         const params = new URLSearchParams({
@@ -1097,7 +1003,7 @@ export const walletApi = {
           limit: String(limit),
         });
         if (type) params.set('type', type);
-        return await requestWalletJson(
+        return await requestWalletJson<WalletTransactionsResponse>(
           userId,
           `/transactions?${params.toString()}`,
           'Load wallet transactions',
@@ -1107,9 +1013,17 @@ export const walletApi = {
       }
     }
 
-    const wallet = canUseLocalWalletStorage()
-      ? await fetchWalletDirect(userId).catch(() => fetchWalletLocal(userId))
-      : await fetchWalletDirect(userId);
+    let wallet: WalletData;
+    try {
+      wallet = await fetchWalletDirect(userId);
+    } catch (error) {
+      const cachedWallet = readWalletCache(userId);
+      if (!cachedWallet) {
+        throw error;
+      }
+
+      wallet = cachedWallet;
+    }
     const filtered = type
       ? wallet.transactions.filter(tx => tx.type === type)
       : wallet.transactions;
@@ -1122,13 +1036,15 @@ export const walletApi = {
     };
   },
 
-  async topUp(userId: string, amount: number, paymentMethod: string) {
+  async topUp(userId: string, amount: number, paymentMethod: string): Promise<WalletTopUpResponse> {
     if (canUseEdgeApi()) {
       try {
-        return await requestWalletJson(userId, '/top-up', 'Create wallet top-up', {
-          method: 'POST',
-          body: { amount, paymentMethod },
-        });
+        return normalizeWalletTopUpResponse(
+          await requestWalletJson(userId, '/top-up', 'Create wallet top-up', {
+            method: 'POST',
+            body: { amount, paymentMethod },
+          }),
+        );
       } catch (error) {
         if (isWalletTopUpConnectivityError(error)) {
           throw buildWalletTopUpBackendError();
@@ -1153,21 +1069,18 @@ export const walletApi = {
       }
     }
 
-    if (canUseLocalWalletStorage()) {
-      try {
-        return await withdrawWalletFundsDirect(userId, amount, bankAccount, method);
-      } catch {
-        return withdrawWalletFundsLocal(userId, amount, bankAccount, method);
-      }
-    }
-
     return withdrawWalletFundsDirect(userId, amount, bankAccount, method);
   },
 
-  async sendMoney(userId: string, recipientId: string, amount: number, note?: string) {
+  async sendMoney(
+    userId: string,
+    recipientId: string,
+    amount: number,
+    note?: string,
+  ): Promise<WalletSendMoneyResult> {
     if (canUseEdgeApi()) {
       try {
-        return await requestWalletJson(userId, '/send', 'Send wallet funds', {
+        return await requestWalletJson<WalletSendMoneyResult>(userId, '/send', 'Send wallet funds', {
           method: 'POST',
           body: { recipientId, amount, note },
         });
@@ -1176,11 +1089,7 @@ export const walletApi = {
       }
     }
 
-    const wallet = canUseLocalWalletStorage()
-      ? await transferWalletFundsDirect(userId, recipientId, amount).catch(() =>
-          sendMoneyLocal(userId, recipientId, amount, note).then(result => result.wallet),
-        )
-      : await transferWalletFundsDirect(userId, recipientId, amount);
+    const wallet = await transferWalletFundsDirect(userId, recipientId, amount);
     return {
       success: true,
       note,
@@ -1223,17 +1132,23 @@ export const walletApi = {
     return { subscription: null };
   },
 
-  async subscribe(userId: string, planName: string, price: number) {
+  async subscribe(
+    userId: string,
+    planName: string,
+    price: number,
+  ): Promise<WalletSubscribeResponse> {
     if (canUseEdgeApi()) {
       try {
-        return await requestWalletJson(
-          userId,
-          '/subscribe',
-          'Create wallet subscription checkout',
-          {
-            method: 'POST',
-            body: { planName, price },
-          },
+        return normalizeWalletSubscribeResponse(
+          await requestWalletJson(
+            userId,
+            '/subscribe',
+            'Create wallet subscription checkout',
+            {
+              method: 'POST',
+              body: { planName, price },
+            },
+          ),
         );
       } catch (error) {
         if (isWalletSubscriptionConnectivityError(error)) {
@@ -1256,26 +1171,31 @@ export const walletApi = {
       }
     }
 
-    let rows: TransactionRow[];
+    let rows: WalletTransactionSource[];
     try {
       rows = await getWalletTransactionRows(userId);
     } catch (error) {
-      if (!canUseLocalWalletStorage()) {
-        throw error;
+      const cachedInsights = readInsightsCache(userId);
+      if (cachedInsights) {
+        return cachedInsights;
       }
 
-      const localWallet = await fetchWalletLocal(userId);
-      return buildInsightsFromTransactions(localWallet.transactions);
+      const cachedWallet = readWalletCache(userId);
+      if (cachedWallet) {
+        return writeInsightsCache(userId, buildInsightsFromTransactions(cachedWallet.transactions));
+      }
+
+      throw error;
     }
 
-    return buildInsightsFromTransactions(rows.map(toWalletTransaction));
+    return writeInsightsCache(
+      userId,
+      buildInsightsFromTransactions(rows.map(toWalletTransaction)),
+    );
   },
 
   async setPin(userId: string, pin: string) {
     if (!canUseEdgeApi()) {
-      if (canUseLocalWalletStorage()) {
-        return setWalletPinLocal(userId);
-      }
       throw new Error('Wallet PIN management requires the wallet backend.');
     }
 
@@ -1287,9 +1207,6 @@ export const walletApi = {
 
   async verifyPin(userId: string, pin: string) {
     if (!canUseEdgeApi()) {
-      if (canUseLocalWalletStorage()) {
-        return verifyWalletPinLocal(userId, pin);
-      }
       throw new Error('Wallet PIN verification requires the wallet backend.');
     }
 
@@ -1311,18 +1228,6 @@ export const walletApi = {
       }
     }
 
-    if (canUseLocalWalletStorage()) {
-      try {
-        return await updateWalletPreferencesDirect(userId, {
-          auto_top_up_enabled: enabled,
-          auto_top_up_amount: amount,
-          auto_top_up_threshold: threshold,
-        });
-      } catch {
-        return setAutoTopUpLocal(userId, enabled, amount, threshold);
-      }
-    }
-
     return updateWalletPreferencesDirect(userId, {
       auto_top_up_enabled: enabled,
       auto_top_up_amount: amount,
@@ -1330,54 +1235,62 @@ export const walletApi = {
     });
   },
 
-  async getPaymentMethods(userId: string): Promise<{ methods: any[] }> {
+  async getPaymentMethods(userId: string): Promise<WalletPaymentMethodsResponse> {
     if (canUseEdgeApi()) {
       try {
-        return await requestWalletJson<{ methods: any[] }>(
+        const response = await requestWalletJson<WalletPaymentMethodsResponse>(
           userId,
           '/payment-methods',
           'Load wallet payment methods',
+        );
+        return writePaymentMethodsCache(userId, response.methods);
+      } catch {
+        // Fall back to direct Supabase below.
+      }
+    }
+
+    try {
+      const methods = await getPaymentMethodsDirect(userId);
+      return writePaymentMethodsCache(userId, methods.methods);
+    } catch (error) {
+      const cachedMethods = readPaymentMethodsCache(userId);
+      if (cachedMethods) {
+        return cachedMethods;
+      }
+
+      const cachedWallet = readWalletCache(userId);
+      if (cachedWallet?.wallet.paymentMethods) {
+        return writePaymentMethodsCache(userId, cachedWallet.wallet.paymentMethods);
+      }
+
+      throw error;
+    }
+  },
+
+  async addPaymentMethod(
+    userId: string,
+    method: WalletPaymentMethodInput,
+  ): Promise<WalletPaymentMethod> {
+    if (canUseEdgeApi()) {
+      try {
+        return normalizeWalletPaymentMethod(
+          await requestWalletJson(userId, '/payment-methods', 'Add wallet payment method', {
+            method: 'POST',
+            body: method,
+          }),
         );
       } catch {
         // Fall back to direct Supabase below.
       }
     }
 
-    if (canUseLocalWalletStorage()) {
-      try {
-        return await getPaymentMethodsDirect(userId);
-      } catch {
-        return getPaymentMethodsLocal(userId);
-      }
-    }
-
-    return getPaymentMethodsDirect(userId);
-  },
-
-  async addPaymentMethod(
-    userId: string,
-    method: { type: string; provider: string; [key: string]: any },
-  ) {
-    if (canUseEdgeApi()) {
-      try {
-        return await requestWalletJson(userId, '/payment-methods', 'Add wallet payment method', {
-          method: 'POST',
-          body: method,
-        });
-      } catch {
-        // Fall back to direct Supabase below.
-      }
-    }
-
-    if (canUseLocalWalletStorage()) {
-      try {
-        return await addPaymentMethodDirect(userId, method);
-      } catch {
-        return addPaymentMethodLocal(userId, method);
-      }
-    }
-
-    return addPaymentMethodDirect(userId, method);
+    const createdMethod = await addPaymentMethodDirect(userId, method);
+    const cachedMethods = readPaymentMethodsCache(userId)?.methods ?? [];
+    writePaymentMethodsCache(
+      userId,
+      [createdMethod, ...cachedMethods.filter(item => item.id !== createdMethod.id)],
+    );
+    return createdMethod;
   },
 
   async deletePaymentMethod(userId: string, methodId: string) {
@@ -1396,15 +1309,13 @@ export const walletApi = {
       }
     }
 
-    if (canUseLocalWalletStorage()) {
-      try {
-        return await deletePaymentMethodDirect(userId, methodId);
-      } catch {
-        return deletePaymentMethodLocal(userId, methodId);
-      }
-    }
-
-    return deletePaymentMethodDirect(userId, methodId);
+    const result = await deletePaymentMethodDirect(userId, methodId);
+    const cachedMethods = readPaymentMethodsCache(userId)?.methods ?? [];
+    writePaymentMethodsCache(
+      userId,
+      cachedMethods.filter(item => item.id !== methodId),
+    );
+    return result;
   },
 
   async getTrustScore(
@@ -1418,14 +1329,15 @@ export const walletApi = {
       }
     }
 
-    if (canUseLocalWalletStorage()) {
-      try {
-        return await getTrustScoreDirect(userId);
-      } catch {
-        return getTrustScoreLocal(userId);
+    try {
+      return writeTrustScoreCache(userId, await getTrustScoreDirect(userId));
+    } catch (error) {
+      const cachedTrustScore = readTrustScoreCache(userId);
+      if (cachedTrustScore) {
+        return cachedTrustScore;
       }
-    }
 
-    return getTrustScoreDirect(userId);
+      throw error;
+    }
   },
 };
