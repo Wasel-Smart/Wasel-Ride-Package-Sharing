@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/Button';
+import { DateTimePicker } from '../components/ui/DateTimePicker';
 import { supabase } from '../lib/supabase';
 import { C, S, R, T } from '../theme';
 
@@ -151,28 +152,22 @@ export default function OfferRideScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Date &amp; Time</Text>
             <View style={styles.row2}>
-              <View style={[styles.card, { flex: 1 }]}>
-                <Text style={styles.cityFieldLabel}>Date</Text>
-                <TextInput
-                  style={styles.inlineInput}
+              <View style={{ flex: 1 }}>
+                <DateTimePicker
+                  mode="date"
                   value={date}
-                  onChangeText={setDate}
-                  placeholder="2025-08-15"
-                  placeholderTextColor={C.muted}
-                  selectionColor={C.cyan}
-                  keyboardType="numbers-and-punctuation"
+                  onChange={setDate}
+                  label="Date"
+                  placeholder="Select date"
                 />
               </View>
-              <View style={[styles.card, { flex: 1 }]}>
-                <Text style={styles.cityFieldLabel}>Time</Text>
-                <TextInput
-                  style={styles.inlineInput}
+              <View style={{ flex: 1 }}>
+                <DateTimePicker
+                  mode="time"
                   value={time}
-                  onChangeText={setTime}
-                  placeholder="08:30"
-                  placeholderTextColor={C.muted}
-                  selectionColor={C.cyan}
-                  keyboardType="numbers-and-punctuation"
+                  onChange={setTime}
+                  label="Time"
+                  placeholder="Select time"
                 />
               </View>
             </View>

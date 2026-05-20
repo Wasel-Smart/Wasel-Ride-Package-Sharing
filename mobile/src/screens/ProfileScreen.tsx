@@ -215,6 +215,35 @@ export default function ProfileScreen() {
             ))}
           </View>
 
+          {/* Quick Links */}
+          <View style={styles.linksCard}>
+            <TouchableOpacity
+              style={styles.linkRow}
+              onPress={() => nav.navigate('Wallet' as any)}
+              accessibilityLabel="Open wallet"
+              accessibilityRole="button"
+            >
+              <View style={styles.linkLeft}>
+                <Ionicons name="wallet-outline" size={20} color={C.gold} />
+                <Text style={styles.linkText}>Wallet & Credits</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={C.muted} />
+            </TouchableOpacity>
+            <View style={styles.linkDivider} />
+            <TouchableOpacity
+              style={styles.linkRow}
+              onPress={() => nav.navigate('Support' as any)}
+              accessibilityLabel="Get support"
+              accessibilityRole="button"
+            >
+              <View style={styles.linkLeft}>
+                <Ionicons name="help-circle-outline" size={20} color={C.cyan} />
+                <Text style={styles.linkText}>Help & Support</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={C.muted} />
+            </TouchableOpacity>
+          </View>
+
           {/* Sign out */}
           <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
             <Ionicons name="log-out-outline" size={18} color="#EF4444" />
@@ -258,6 +287,11 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   infoLabel: { fontSize: 11, color: C.muted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
   infoValue: { fontSize: 14, color: C.text, fontWeight: '600' },
+  linksCard: { backgroundColor: C.card, borderRadius: 16, padding: 4, borderWidth: 1, borderColor: C.border },
+  linkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14 },
+  linkLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  linkText: { fontSize: 15, fontWeight: '600', color: C.text },
+  linkDivider: { height: 1, backgroundColor: C.border, marginHorizontal: 14 },
   signOutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#EF444422', borderRadius: 14, height: 50, borderWidth: 1, borderColor: '#EF444430' },
   signOutText: { fontSize: 15, fontWeight: '700', color: '#EF4444' },
   version: { textAlign: 'center', fontSize: 12, color: C.muted },

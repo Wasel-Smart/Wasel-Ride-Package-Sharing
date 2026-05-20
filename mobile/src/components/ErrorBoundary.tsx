@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { sanitizeLogMessage, sanitizeErrorMessage } from '../utils/sanitization';
 
 interface Props {
   children: ReactNode;
@@ -38,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, errorInfo);
+    console.error('ErrorBoundary caught:', sanitizeLogMessage(error.message));
     this.setState({ error, errorInfo });
     
     // TODO: Send to Sentry or error tracking service
@@ -70,9 +71,9 @@ export class ErrorBoundary extends Component<Props, State> {
             {__DEV__ && this.state.error && (
               <ScrollView style={styles.errorDetails}>
                 <Text style={styles.errorTitle}>Error Details (Dev Only):</Text>
-                <Text style={styles.errorText}>{this.state.error.toString()}</Text>
+                <Text style={styles.errorText}>{sanitizeErrorMessage(this.state.error)}</Text>
                 {this.state.errorInfo && (
-                  <Text style={styles.errorStack}>{this.state.errorInfo.componentStack}</Text>
+                  <Text style={styles.errorStack}>{sanitizeLogMessage(this.state.errorInfo.componentStack || '')}</Text>
                 )}
               </ScrollView>
             )}

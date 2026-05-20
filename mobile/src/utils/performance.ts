@@ -1,16 +1,17 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { InteractionManager } from 'react-native';
+import { sanitizeLogMessage } from './sanitization';
 
 export function usePerformanceMonitor(screenName: string) {
   const startTime = useRef(Date.now());
 
   useEffect(() => {
     const loadTime = Date.now() - startTime.current;
-    console.log(`[Performance] ${screenName} loaded in ${loadTime}ms`);
+    console.log(`[Performance] ${sanitizeLogMessage(screenName)} loaded in ${loadTime}ms`);
 
     return () => {
       const totalTime = Date.now() - startTime.current;
-      console.log(`[Performance] ${screenName} total time: ${totalTime}ms`);
+      console.log(`[Performance] ${sanitizeLogMessage(screenName)} total time: ${totalTime}ms`);
     };
   }, [screenName]);
 }
@@ -32,7 +33,7 @@ export function measureAsync<T>(
   const start = Date.now();
   return fn().finally(() => {
     const duration = Date.now() - start;
-    console.log(`[Performance] ${name} took ${duration}ms`);
+    console.log(`[Performance] ${sanitizeLogMessage(name)} took ${duration}ms`);
   });
 }
 
@@ -40,7 +41,7 @@ export function measureSync<T>(name: string, fn: () => T): T {
   const start = Date.now();
   const result = fn();
   const duration = Date.now() - start;
-  console.log(`[Performance] ${name} took ${duration}ms`);
+  console.log(`[Performance] ${sanitizeLogMessage(name)} took ${duration}ms`);
   return result;
 }
 
@@ -56,12 +57,12 @@ export class PerformanceTracker {
     const end = endMark ? this.marks.get(endMark) : Date.now();
 
     if (!start) {
-      console.warn(`Start mark "${startMark}" not found`);
+      console.warn(`Start mark "${sanitizeLogMessage(startMark)}" not found`);
       return 0;
     }
 
     const duration = (end ?? Date.now()) - start;
-    console.log(`[Performance] ${name}: ${duration}ms`);
+    console.log(`[Performance] ${sanitizeLogMessage(name)}: ${duration}ms`);
     return duration;
   }
 

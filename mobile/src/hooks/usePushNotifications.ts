@@ -4,6 +4,7 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { supabase } from '../lib/supabase';
+import { sanitizeLogMessage } from '../utils/sanitization';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -107,20 +108,20 @@ async function savePushTokenToBackend(token: string) {
       .update({ push_token: token, push_enabled: true })
       .eq('id', user.id);
   } catch (error) {
-    console.error('Failed to save push token:', error);
+    console.error('Failed to save push token:', sanitizeLogMessage(error));
   }
 }
 
 function handleNotificationResponse(data: any) {
   if (data?.type === 'ride_update') {
     // Navigate to ride detail
-    console.log('Navigate to ride:', data.rideId);
+    console.log('Navigate to ride:', sanitizeLogMessage(data.rideId));
   } else if (data?.type === 'booking_update') {
     // Navigate to booking detail
-    console.log('Navigate to booking:', data.bookingId);
+    console.log('Navigate to booking:', sanitizeLogMessage(data.bookingId));
   } else if (data?.type === 'message') {
     // Navigate to chat
-    console.log('Navigate to chat:', data.chatId);
+    console.log('Navigate to chat:', sanitizeLogMessage(data.chatId));
   }
 }
 
