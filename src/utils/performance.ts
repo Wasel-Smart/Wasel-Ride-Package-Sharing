@@ -171,7 +171,7 @@ function reportWebVital(metric: Metric) {
   if (import.meta.env.DEV) {
     const emoji =
       vital.rating === 'good' ? '✅' : vital.rating === 'needs-improvement' ? '⚠️' : '❌';
-    console.log(`${emoji} ${vital.name}: ${vital.value.toFixed(2)}ms (${vital.rating})`);
+    console.log(`${emoji} ${sanitizeLogMessage(vital.name)}: ${vital.value.toFixed(2)}ms (${vital.rating})`);
   }
 
   // Check against performance budget
@@ -240,7 +240,7 @@ export function measurePerformance(name: string, startMark: string, endMark?: st
   try {
     const measure = performance.measure(name, startMark, endMark);
 
-    console.log(`⏱️ ${name}: ${measure.duration.toFixed(2)}ms`);
+    console.log(`⏱️ ${sanitizeLogMessage(name)}: ${measure.duration.toFixed(2)}ms`);
 
     // Log slow operations
     if (measure.duration > 1000) {
