@@ -70,11 +70,13 @@ export function sanitizePhoneNumber(phone: string): string {
 export function sanitizeEmail(email: string): string {
   if (!email || !email.includes('@')) return '***@***';
   
-  const [username, domain] = email.split('@');
-  if (username.length <= 2) return `**@${domain}`;
+  const [username] = email.split('@');
+  const atIdx = email.indexOf('@');
+  const domain = atIdx >= 0 ? email.slice(atIdx + 1) : '';
+  if (!domain || username.length <= 2) return `**@${domain}`;
   
-  const visibleChars = Math.min(2, Math.floor(username.length / 3));
-  const masked = username.slice(0, visibleChars) + '***';
+  const visibleChars = Math.min(2, Math.floor((username ?? '').length / 3));
+  const masked = (username ?? '').slice(0, visibleChars) + '***';
   
   return `${masked}@${domain}`;
 }
@@ -129,6 +131,37 @@ export function safeStringify(obj: unknown): string {
   } catch {
     return '[Unstringifiable]';
   }
+}
+
+/**
+ * Validate and sanitize URL to prevent SSRF
+ * Wraps sanitizeUrl and returns a boolean for guard-expression call sites.
+ */
+export function validateApiUrl(url: string, allowedDomains?: string[]): boolean {
+  return sanitizeUrl(url, allowedDomains) !== null;
+}
+
+/**
+ * Sanitize arbitrary event payloads to eliminate control characters that could
+ * poison log lines or downstream parsers.  Preserves the caller's structural
+ * type so no cast is required at the call site.
+ */
+export function sanitizeEventPayload<T>(payload: T): T {
+  if (payload === null || payload === undefined) return payload;
+  if (typeof payload === 'string') return sanitizeLogMessage(payload) as unknown as T;
+  if (typeof payload === 'number' || typeof payload === 'boolean') return payload;
+  if (Array.isArray(payload as unknown as unknown[]))
+    return (payload as unknown[]).map(sanitizeEventPayload) as unknown as T;
+  if (payload instanceof Date) return payload.toISOString() as unknown as T;
+  if (typeof payload === 'object') {
+    return Object.fromEntries(
+      Object.entries(payload as Record<string, unknown>).map(([k, v]) => [
+        k,
+        sanitizeEventPayload(v),
+      ]),
+    ) as unknown as T;
+  }
+  return payload;
 }
 
 /**
