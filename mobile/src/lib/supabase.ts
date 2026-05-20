@@ -1,54 +1,59 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
-import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 
-const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl as string | undefined;
-const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey as string | undefined;
+const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl ?? process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey ?? process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    '[Wasel Mobile] Missing Supabase config. Add supabaseUrl and supabaseAnonKey to app.json extra.',
-  );
+  throw new Error('Missing Supabase environment variables. Please check your app.json or .env file.');
 }
-
-/**
- * SecureStore adapter — uses Expo SecureStore for tokens (encrypted on-device),
- * falls back to AsyncStorage for values > 2048 chars (Supabase JWT can be long).
- */
-const ExpoSecureStoreAdapter = {
-  getItem: async (key: string): Promise<string | null> => {
-    try {
-      return await SecureStore.getItemAsync(key);
-    } catch {
-      return AsyncStorage.getItem(key);
-    }
-  },
-  setItem: async (key: string, value: string): Promise<void> => {
-    try {
-      if (value.length < 2048) {
-        await SecureStore.setItemAsync(key, value);
-      } else {
-        await AsyncStorage.setItem(key, value);
-      }
-    } catch {
-      await AsyncStorage.setItem(key, value);
-    }
-  },
-  removeItem: async (key: string): Promise<void> => {
-    await Promise.allSettled([
-      SecureStore.deleteItemAsync(key),
-      AsyncStorage.removeItem(key),
-    ]);
-  },
-};
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: ExpoSecureStoreAdapter,
+    storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
   },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+  global: {
+    headers: {
+      'x-client-info': 'wasel-mobile/1.0.0',
+    },
+  },
 });
+
+// Helper to check connection
+export async function checkSupabaseConnection(): Promise<boolean> {
+  try {
+    const { error } = await supabase.from('profiles').select('count').limit(1).single();
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+// Helper to get current user
+export async function getCurrentUser() {
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error) throw error;
+  return user;
+}
+
+// Helper to get user profile
+export async function getUserProfile(userId: string) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
