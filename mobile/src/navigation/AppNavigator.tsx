@@ -13,18 +13,25 @@ import WalletScreen from '../screens/WalletScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import AuthScreen from '../screens/AuthScreen';
 import RideDetailScreen from '../screens/RideDetailScreen';
+import MyTripsScreen from '../screens/MyTripsScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import ChatScreen from '../screens/ChatScreen';
+import SupportScreen from '../screens/SupportScreen';
 
 export type RootStackParamList = {
   Main: undefined;
   Auth: undefined;
   RideDetail: { rideId: string };
+  Chat: { tripId: string; otherUserId: string; otherUserName: string };
+  Notifications: undefined;
+  Support: undefined;
 };
 
 export type MainTabParamList = {
   Home: undefined;
+  MyTrips: undefined;
   FindRide: undefined;
   OfferRide: undefined;
-  Wallet: undefined;
   Profile: undefined;
 };
 
@@ -55,9 +62,9 @@ function MainTabs() {
         tabBarIcon: ({ color, size, focused }) => {
           const icons: Record<string, [string, string]> = {
             Home: ['home', 'home-outline'],
+            MyTrips: ['list', 'list-outline'],
             FindRide: ['search', 'search-outline'],
             OfferRide: ['car', 'car-outline'],
-            Wallet: ['wallet', 'wallet-outline'],
             Profile: ['person', 'person-outline'],
           };
           const [filled, outline] = icons[route.name] ?? ['ellipse', 'ellipse-outline'];
@@ -72,9 +79,9 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="FindRide" component={FindRideScreen} options={{ tabBarLabel: 'Find Ride' }} />
-      <Tab.Screen name="OfferRide" component={OfferRideScreen} options={{ tabBarLabel: 'Offer Ride' }} />
-      <Tab.Screen name="Wallet" component={WalletScreen} options={{ tabBarLabel: 'Wallet' }} />
+      <Tab.Screen name="MyTrips" component={MyTripsScreen} options={{ tabBarLabel: 'My Trips' }} />
+      <Tab.Screen name="FindRide" component={FindRideScreen} options={{ tabBarLabel: 'Find' }} />
+      <Tab.Screen name="OfferRide" component={OfferRideScreen} options={{ tabBarLabel: 'Offer' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
   );
@@ -107,6 +114,21 @@ export default function AppNavigator() {
                 headerTitle: 'Ride Details',
                 presentation: 'modal',
               }}
+            />
+            <Stack.Screen
+              name="Chat"
+              component={ChatScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Notifications"
+              component={NotificationsScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Support"
+              component={SupportScreen}
+              options={{ headerShown: false }}
             />
           </>
         ) : (

@@ -1,10 +1,11 @@
 /**
- * Sanitization utilities for web application
- * Prevents XSS, log injection, and SSRF attacks
+ * Sanitization utilities for mobile app
+ * Prevents log injection and XSS attacks
  */
 
 /**
  * Sanitize log messages to prevent log injection attacks
+ * Removes newlines, carriage returns, and control characters
  */
 export function sanitizeLogMessage(message: unknown): string {
   if (message === null || message === undefined) {
@@ -13,26 +14,17 @@ export function sanitizeLogMessage(message: unknown): string {
 
   const str = String(message);
   
+  // Remove control characters, newlines, and carriage returns
   return str
     .replace(/[\r\n\t\x00-\x1F\x7F-\x9F]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 500);
-}
-
-/**
- * Sanitize HTML to prevent XSS attacks
- */
-export function sanitizeHTML(html: string): string {
-  if (!html) return '';
-  
-  const div = document.createElement('div');
-  div.textContent = html;
-  return div.innerHTML;
+    .slice(0, 500); // Limit length to prevent log flooding
 }
 
 /**
  * Sanitize user input for display
+ * Prevents XSS by escaping HTML entities
  */
 export function sanitizeUserInput(input: string): string {
   if (!input) return '';
@@ -45,11 +37,12 @@ export function sanitizeUserInput(input: string): string {
     .replace(/'/g, '&#x27;')
     .replace(/\//g, '&#x2F;')
     .trim()
-    .slice(0, 10000);
+    .slice(0, 1000); // Reasonable limit for user input
 }
 
 /**
  * Sanitize phone number for logging
+ * Masks middle digits for privacy
  */
 export function sanitizePhoneNumber(phone: string): string {
   if (!phone || phone.length < 4) return '***';
@@ -66,6 +59,7 @@ export function sanitizePhoneNumber(phone: string): string {
 
 /**
  * Sanitize email for logging
+ * Masks username partially
  */
 export function sanitizeEmail(email: string): string {
   if (!email || !email.includes('@')) return '***@***';
@@ -81,12 +75,14 @@ export function sanitizeEmail(email: string): string {
 
 /**
  * Sanitize error messages for user display
+ * Removes technical details that could leak sensitive info
  */
 export function sanitizeErrorMessage(error: unknown): string {
   if (!error) return 'An error occurred';
   
   const message = error instanceof Error ? error.message : String(error);
   
+  // Remove file paths, stack traces, and technical details
   return message
     .replace(/\/[^\s]+/g, '[path]')
     .replace(/at\s+[^\n]+/g, '')
@@ -111,6 +107,7 @@ export function safeStringify(obj: unknown): string {
         seen.add(value);
       }
       
+      // Redact sensitive keys
       if (typeof key === 'string') {
         const lowerKey = key.toLowerCase();
         if (
@@ -132,22 +129,27 @@ export function safeStringify(obj: unknown): string {
 }
 
 /**
- * Validate and sanitize URL to prevent SSRF
+ * Validate and sanitize URL
+ * Prevents SSRF attacks
  */
-export function sanitizeUrl(url: string, allowedDomains?: string[]): string | null {
+export function sanitizeUrl(url: string): string | null {
   if (!url) return null;
   
   try {
     const parsed = new URL(url);
     
-    if (import.meta.env.PROD && parsed.protocol !== 'https:') {
-      return null;
+    // Only allow https in production
+    if (__DEV__) {
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        return null;
+      }
+    } else {
+      if (parsed.protocol !== 'https:') {
+        return null;
+      }
     }
     
-    if (!['http:', 'https:'].includes(parsed.protocol)) {
-      return null;
-    }
-    
+    // Block private IP ranges
     const hostname = parsed.hostname.toLowerCase();
     const privatePatterns = [
       /^localhost$/,
@@ -158,53 +160,14 @@ export function sanitizeUrl(url: string, allowedDomains?: string[]): string | nu
       /^169\.254\./,
       /^::1$/,
       /^fe80:/,
-      /^0\.0\.0\.0$/,
     ];
     
-    if (import.meta.env.PROD && privatePatterns.some(pattern => pattern.test(hostname))) {
+    if (!__DEV__ && privatePatterns.some(pattern => pattern.test(hostname))) {
       return null;
-    }
-    
-    if (allowedDomains && allowedDomains.length > 0) {
-      const isAllowed = allowedDomains.some(domain => 
-        hostname === domain || hostname.endsWith(`.${domain}`)
-      );
-      if (!isAllowed) return null;
     }
     
     return parsed.toString();
   } catch {
     return null;
   }
-}
-
-/**
- * Sanitize SQL-like input to prevent injection
- */
-export function sanitizeSQLInput(input: string): string {
-  if (!input) return '';
-  
-  return input
-    .replace(/['";\\]/g, '')
-    .replace(/--/g, '')
-    .replace(/\/\*/g, '')
-    .replace(/\*\//g, '')
-    .replace(/xp_/gi, '')
-    .replace(/sp_/gi, '')
-    .trim()
-    .slice(0, 1000);
-}
-
-/**
- * Sanitize command input to prevent command injection
- */
-export function sanitizeCommandInput(input: string): string {
-  if (!input) return '';
-  
-  return input
-    .replace(/[;&|`$(){}[\]<>]/g, '')
-    .replace(/\n/g, '')
-    .replace(/\r/g, '')
-    .trim()
-    .slice(0, 500);
 }
