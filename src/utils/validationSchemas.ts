@@ -3,7 +3,7 @@
  * Uses Zod for type-safe validation
  */
 
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 // Common validation patterns
 const phoneRegex = /^\+?[1-9]\d{1,14}$/;
@@ -299,12 +299,12 @@ export function validate<T>(schema: z.ZodSchema<T>, data: unknown): ValidationRe
   }
 
   const errors: Record<string, string[]> = {};
-  result.error.errors.forEach(error => {
-    const path = error.path.join('.');
+  result.error.issues.forEach(issue => {
+    const path = issue.path.join('.');
     if (!errors[path]) {
       errors[path] = [];
     }
-    errors[path].push(error.message);
+    errors[path].push(issue.message);
   });
 
   return { success: false, errors };
@@ -315,7 +315,7 @@ export function validateField<T>(schema: z.ZodSchema<T>, data: unknown): string 
   if (result.success) {
     return null;
   }
-  return result.error.errors[0]?.message || 'Invalid input';
+  return result.error.issues[0]?.message || 'Invalid input';
 }
 
 // Export all schemas as a registry

@@ -65,11 +65,24 @@ export async function getDirectPackageByTrackingId(trackingNumber: string) {
 export async function updateDirectPackageStatus(
   trackingNumber: string,
   status: 'matched' | 'in_transit' | 'delivered',
+  options?: {
+    pickupVerified?: boolean;
+    dropoffVerified?: boolean;
+    pickedUpAt?: string | null;
+    deliveredAt?: string | null;
+  },
 ) {
   const db = getDb();
   const { data, error } = await db
     .from('packages')
-    .update({ status, package_status: status })
+    .update({
+      status,
+      package_status: status,
+      pickup_verified: options?.pickupVerified,
+      dropoff_verified: options?.dropoffVerified,
+      picked_up_at: options?.pickedUpAt ?? undefined,
+      delivered_at: options?.deliveredAt ?? undefined,
+    })
     .or(`tracking_number.eq.${trackingNumber},package_code.eq.${trackingNumber}`)
     .select('*')
     .maybeSingle();

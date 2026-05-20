@@ -1,14 +1,17 @@
 /**
  * Ride Lifecycle Service — Supabase-first persistence
  *
- * Strategy (v2):
- *  1. All writes go to Supabase first. If Supabase is unavailable, we throw
+ * Strategy (v3):
+ *  1. All writes go to Supabase first. If Supabase is unavailable we throw
  *     so the UI can surface a real error rather than silently creating
  *     phantom bookings that live only in the browser.
- *  2. localStorage acts as a read-through cache for instant UI hydration.
- *     It is populated AFTER a successful Supabase write, never before.
- *  3. `hydrateRideBookings` remains the authoritative sync path — it pulls
- *     from Supabase and overwrites the local cache on every app load.
+ *  2. An in-memory cache (module-level array) provides instant UI hydration
+ *     within the current session. It is populated AFTER a successful Supabase
+ *     write, never before.
+ *  3. localStorage is NOT used. Reason: bookings are financial records and
+ *     must survive browser-clear, device-switch, and multi-tab use. The cache
+ *     is populated by hydrateRideBookings() which pulls from Supabase on every
+ *     app load and auth-state change.
  */
 
 import {
@@ -60,38 +63,31 @@ export interface RideBookingRecord {
   syncedAt?: string;
 }
 
-// ── Cache helpers (localStorage as L1 read-through, NOT primary store) ────────
+// ── In-memory cache (session-scoped, populated from Supabase on hydration) ────
 
-const BOOKING_CACHE_KEY = 'wasel-ride-booking-cache-v2';
 const CACHE_MAX = 100;
+const bookingCache: RideBookingRecord[] = [];
 
 function readCache(): RideBookingRecord[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(BOOKING_CACHE_KEY);
-    const parsed = raw ? (JSON.parse(raw) as RideBookingRecord[]) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  return [...bookingCache];
 }
 
 function writeCache(bookings: RideBookingRecord[]): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const sorted = [...bookings].sort(
-      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-    );
-    window.localStorage.setItem(BOOKING_CACHE_KEY, JSON.stringify(sorted.slice(0, CACHE_MAX)));
-  } catch {
-    // Storage quota exceeded or private mode — silently skip cache write.
-  }
+  const sorted = [...bookings].sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+  );
+  bookingCache.splice(0, bookingCache.length, ...sorted.slice(0, CACHE_MAX));
 }
 
 function upsertCache(records: RideBookingRecord[]): void {
   const map = new Map(readCache().map(b => [b.id, b]));
   records.forEach(r => map.set(r.id, r));
   writeCache(Array.from(map.values()));
+}
+
+/** Clear the in-memory cache. Call on sign-out. */
+export function clearRideBookingsCache(): void {
+  bookingCache.splice(0);
 }
 
 // ── Ticket code ───────────────────────────────────────────────────────────────
@@ -188,7 +184,7 @@ export function getRideBookings(): RideBookingRecord[] {
 /**
  * Create a booking.
  *
- * Primary path: write to Supabase, then populate the local cache.
+ * Primary path: write to Supabase, then populate the in-memory cache.
  * Throws on Supabase failure — callers must handle the error and surface it
  * to the user rather than silently continuing with browser-only state.
  */
@@ -375,7 +371,7 @@ export async function updateRideBooking(
 }
 
 /**
- * Authoritative sync: pulls from Supabase and overwrites the local cache.
+ * Authoritative sync: pulls from Supabase and overwrites the in-memory cache.
  * Should be called on app load and after auth state changes.
  */
 export async function hydrateRideBookings(
@@ -480,7 +476,7 @@ export function syncRideBookingCompletion(referenceDate = Date.now()): RideBooki
   toUpdate.forEach(b => {
     publishLifecycleEvent(b);
     if (b.backendBookingId) {
-      void updateDirectBookingStatus(b.backendBookingId, 'cancelled').catch(() => undefined);
+      void updateDirectBookingStatus(b.backendBookingId, 'completed').catch(() => undefined);
     }
   });
 

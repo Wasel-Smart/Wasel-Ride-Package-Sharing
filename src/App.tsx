@@ -3,14 +3,39 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router';
 import { Toaster } from 'sonner';
 
+import { WaselStateCard } from './components/system/WaselStateCard';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { LocalAuthProvider } from './contexts/LocalAuth';
 
 import { domainEventBus } from './platform/event-bus';
+import { startAvailabilityPolling, warmUpServer } from './services/core';
 import { validateRuntimeConfiguration } from './utils/env';
+import { initSentry, logger, trackDomainEvent } from './utils/monitoring';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
+import { initPerformanceMonitoring } from './utils/performance';
 import { waselRouter } from './router';
+
+const CRASH_ACTION_STYLE = {
+  minHeight: 44,
+  padding: '0 18px',
+  borderRadius: 999,
+  border: '1px solid rgba(88,221,255,0.24)',
+  background: 'linear-gradient(135deg, rgba(88,221,255,0.18), rgba(71,214,158,0.12))',
+  color: '#EEF8FF',
+  fontWeight: 800,
+  cursor: 'pointer',
+} as const;
+
+const CRASH_SECONDARY_ACTION_STYLE = {
+  ...CRASH_ACTION_STYLE,
+  background: 'rgba(255,255,255,0.04)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  textDecoration: 'none',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+} as const;
 
 /* ---------------------------
    ERROR BOUNDARY
@@ -45,11 +70,32 @@ class AppErrorBoundary extends Component<
     if (!this.state.hasError) return this.props.children;
 
     return (
-      <div style={{ padding: 40, color: 'white', background: '#0A0F1A' }}>
-        <h2>App Error</h2>
-        <p>{this.state.error}</p>
-        <button onClick={() => window.location.reload()}>Reload</button>
-      </div>
+      <WaselStateCard
+        eyebrow="App error"
+        title="Wasel hit an unexpected state"
+        description="We preserved the shell, but this view failed to render cleanly. Reload the app or jump back to the main route graph."
+        tone="danger"
+        minHeight="100vh"
+        actions={
+          <>
+            <button onClick={() => window.location.reload()} style={CRASH_ACTION_STYLE}>
+              Reload app
+            </button>
+            <a href="/app" style={CRASH_SECONDARY_ACTION_STYLE}>
+              Return home
+            </a>
+          </>
+        }
+        footer={
+          import.meta.env.DEV ? (
+            <code style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {this.state.error}
+            </code>
+          ) : (
+            'If this repeats, reopen the flow from the home screen so background services can resync.'
+          )
+        }
+      />
     );
   }
 }
@@ -69,61 +115,46 @@ function AppProviders({ children }: { children: ReactNode }) {
 
 /* ---------------------------
    BACKGROUND BOOTSTRAP (NON-BLOCKING)
+   Delay reduced from 1500 ms → 400 ms:
+   - Enough to avoid blocking the first meaningful paint
+   - Short enough not to miss crash data in the first second
 ----------------------------*/
 function AppRuntimeCoordinator() {
   useEffect(() => {
-    let cancelled = false;
+    let timeoutId: number | null = null;
+    let stopPolling: (() => void) | undefined;
+    let stopEvents: (() => void) | undefined;
+    const validation = validateRuntimeConfiguration();
 
-    const run = async () => {
+    timeoutId = window.setTimeout(() => {
       try {
-        const validation = validateRuntimeConfiguration();
+        initSentry();
+        initPerformanceMonitoring();
 
-        // VERY LIGHT FIRST STEP ONLY
-        if (typeof navigator !== 'undefined') {
-          console.log('[Wasel] Online:', navigator.onLine);
-        }
+        validation.issues.forEach(issue => {
+          if (issue.severity === 'error') {
+            logger.error(issue.message);
+          } else {
+            logger.warning(issue.message);
+          }
+        });
 
-        // DEFER EVERYTHING HEAVY
-        setTimeout(async () => {
-          if (cancelled) return;
-
-          const monitoring = await import('./utils/monitoring');
-          const performance = await import('./utils/performance');
-          const core = await import('./services/core');
-
-          monitoring.initSentry();
-          performance.initPerformanceMonitoring();
-
-          validation.issues.forEach(issue => {
-            if (issue.severity === 'error') {
-              monitoring.logger.error(issue.message);
-            } else {
-              monitoring.logger.warning(issue.message);
-            }
-          });
-
-          core.warmUpServer();
-
-          const stopPolling = core.startAvailabilityPolling();
-
-          const stopEvents = domainEventBus.subscribeAll(event => {
-            monitoring.trackDomainEvent(event);
-          });
-
-          return () => {
-            stopPolling?.();
-            stopEvents?.();
-          };
-        }, 1500);
-      } catch (e) {
-        console.warn('[Runtime bootstrap failed]', e);
+        // warmUpServer guard in core.ts prevents a true double-call;
+        // calling here ensures the coordinator owns the retry lifecycle.
+        void warmUpServer();
+        stopPolling = startAvailabilityPolling();
+        stopEvents = domainEventBus.subscribeAll(trackDomainEvent);
+      } catch (error) {
+        console.warn('[Runtime bootstrap failed]', error);
       }
-    };
-
-    run();
+    }, 400);
 
     return () => {
-      cancelled = true;
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+      stopPolling?.();
+      stopEvents?.();
     };
   }, []);
 
@@ -160,10 +191,12 @@ export default function App() {
           position="bottom-center"
           toastOptions={{
             style: {
-              background: '#0A1628',
-              border: '1px solid rgba(0,200,232,0.25)',
+              background: 'rgba(7,21,33,0.96)',
+              border: '1px solid rgba(88,221,255,0.22)',
+              borderRadius: '18px',
               color: '#EFF6FF',
-              fontFamily: "-apple-system, 'Inter', sans-serif",
+              boxShadow: '0 18px 40px rgba(0,0,0,0.34)',
+              fontFamily: "'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif",
             },
           }}
         />

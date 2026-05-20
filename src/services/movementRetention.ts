@@ -1,12 +1,24 @@
-import type { WaselUser } from '../contexts/LocalAuth';
+/**
+ * movementRetention.ts
+ *
+ * Architecture:
+ *  - Supabase `route_reminders` table is the PRIMARY store.
+ *  - In-memory cache provides instant reads after the first hydration.
+ *  - localStorage is NOT used for reminders (cross-device sync requirement).
+ *  - Writes go to Supabase first. Failures are surfaced, not swallowed.
+ */
+
+import { supabase } from '../utils/supabase/client';
+import { logger } from '../utils/monitoring';
 import { notificationsAPI } from './notifications.js';
 import { getDemandAlerts } from './demandCapture';
 import { getGrowthEventFeed } from './growthEngine';
 import type { MovementPriceQuote } from './movementPricing';
 import { buildRouteIntelligenceSnapshot, type LiveCorridorSignal } from './routeDemandIntelligence';
 import { getRideBookings } from './rideLifecycle';
+import type { WaselUser } from '../contexts/LocalAuth';
 
-const REMINDER_KEY = 'wasel-route-reminders';
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 export type ReminderFrequency = 'weekdays' | 'daily' | 'weekly';
 
@@ -22,6 +34,7 @@ export interface RouteReminder {
   enabled: boolean;
   createdAt: string;
   lastSentAt?: string;
+  userId?: string;
 }
 
 export interface RecurringRouteSuggestion {
@@ -38,98 +51,178 @@ export interface RecurringRouteSuggestion {
   priceQuote: MovementPriceQuote;
 }
 
-function readReminders(): RouteReminder[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(REMINDER_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+// ── In-memory cache ───────────────────────────────────────────────────────────
+
+const reminderCache: RouteReminder[] = [];
+
+function upsertReminderCache(reminders: RouteReminder[]): void {
+  const byId = new Map(reminderCache.map(r => [r.id, r]));
+  for (const r of reminders) byId.set(r.id, r);
+  reminderCache.splice(0, reminderCache.length, ...Array.from(byId.values()).slice(0, 30));
 }
 
-function writeReminders(reminders: RouteReminder[]) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(REMINDER_KEY, JSON.stringify(reminders.slice(0, 30)));
-}
-
-function makeReminderId(corridorId: string) {
-  return `route-reminder-${corridorId}`;
-}
-
-function toLocalDate(date = new Date()) {
-  const next = new Date(date);
-  next.setSeconds(0, 0);
-  return next;
-}
+// ── Date helpers ──────────────────────────────────────────────────────────────
 
 function parseTimeParts(time: string) {
-  const [hours = 7, minutes = 30] = time.split(':').map(value => Number(value));
+  const [hours = 7, minutes = 30] = time.split(':').map(Number);
   return {
     hours: Number.isFinite(hours) ? hours : 7,
     minutes: Number.isFinite(minutes) ? minutes : 30,
   };
 }
 
-function nextReminderDate(
-  frequency: ReminderFrequency,
-  preferredTime: string,
-  fromDate = new Date(),
-) {
-  const next = toLocalDate(fromDate);
+function nextReminderDate(frequency: ReminderFrequency, preferredTime: string, fromDate = new Date()) {
+  const next = new Date(fromDate);
   const { hours, minutes } = parseTimeParts(preferredTime);
   next.setHours(hours, minutes, 0, 0);
-
-  if (next.getTime() <= fromDate.getTime()) {
-    next.setDate(next.getDate() + 1);
-  }
-
-  if (frequency === 'weekly') {
-    next.setDate(next.getDate() + 6);
-  }
-
+  if (next.getTime() <= fromDate.getTime()) next.setDate(next.getDate() + 1);
+  if (frequency === 'weekly') next.setDate(next.getDate() + 6);
   if (frequency === 'weekdays') {
-    while (next.getDay() === 5 || next.getDay() === 6) {
-      next.setDate(next.getDate() + 1);
-    }
+    while (next.getDay() === 5 || next.getDay() === 6) next.setDate(next.getDate() + 1);
   }
-
   return next;
 }
 
-function inferReminderTime(hours: number[]) {
-  if (hours.length === 0) return '07:30';
-  const averageHour = Math.round(hours.reduce((sum, hour) => sum + hour, 0) / hours.length);
-  if (averageHour <= 10) return '07:30';
-  if (averageHour <= 15) return '12:30';
+function inferReminderTime(hours: number[]): string {
+  if (!hours.length) return '07:30';
+  const avg = Math.round(hours.reduce((s, h) => s + h, 0) / hours.length);
+  if (avg <= 10) return '07:30';
+  if (avg <= 15) return '12:30';
   return '17:30';
 }
 
-function buildReason(signal: LiveCorridorSignal, weeklyFrequency: number) {
-  if (weeklyFrequency >= 5) {
-    return `You repeatedly move on ${signal.label}, so Wasel should treat it like a default corridor.`;
+function buildReason(signal: LiveCorridorSignal, weeklyFrequency: number): string {
+  if (weeklyFrequency >= 5) return `You repeatedly move on ${signal.label}, so Wasel treats it as your default corridor.`;
+  if (signal.activeDemandAlerts > signal.activeSupply) return `Demand alerts are stacking up on ${signal.label} — a strong signal for a recurring nudge.`;
+  return `${signal.label} shows strong live demand and credit-adjusted pricing.`;
+}
+
+// ── Row normalizer ────────────────────────────────────────────────────────────
+
+function rowToReminder(row: Record<string, unknown>): RouteReminder {
+  return {
+    id: String(row.id ?? ''),
+    corridorId: String(row.corridor_id ?? ''),
+    label: String(row.label ?? ''),
+    from: String(row.origin_city ?? ''),
+    to: String(row.destination_city ?? ''),
+    frequency: (row.frequency as ReminderFrequency) ?? 'weekly',
+    preferredTime: String(row.preferred_time ?? '07:30'),
+    nextReminderAt: String(row.next_reminder_at ?? new Date().toISOString()),
+    enabled: Boolean(row.enabled ?? true),
+    createdAt: String(row.created_at ?? new Date().toISOString()),
+    lastSentAt: String(row.last_sent_at ?? '').trim() || undefined,
+    userId: String(row.user_id ?? '').trim() || undefined,
+  };
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+/**
+ * Load reminders from Supabase into the in-memory cache.
+ */
+export async function hydrateRouteReminders(userId: string): Promise<RouteReminder[]> {
+  try {
+    const { data, error } = await supabase
+      .from('route_reminders')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('enabled', true)
+      .order('next_reminder_at', { ascending: true });
+
+    if (error) throw error;
+    const reminders = (data ?? []).map((row: Record<string, unknown>) => rowToReminder(row));
+    upsertReminderCache(reminders);
+    return getRouteReminders();
+  } catch (err) {
+    logger.warning('[movementRetention] hydrateRouteReminders failed', { userId, err });
+    return getRouteReminders();
   }
-  if (signal.activeDemandAlerts > signal.activeSupply) {
-    return `Demand alerts are stacking up on ${signal.label}, making this a strong recurring reminder lane.`;
+}
+
+/** Synchronous read from in-memory cache. */
+export function getRouteReminders(): RouteReminder[] {
+  return [...reminderCache].sort(
+    (a, b) => new Date(a.nextReminderAt).getTime() - new Date(b.nextReminderAt).getTime(),
+  );
+}
+
+/** Look up a reminder for a specific corridor. */
+export function getRouteReminderForCorridor(corridorId: string): RouteReminder | null {
+  return reminderCache.find(r => r.corridorId === corridorId) ?? null;
+}
+
+/**
+ * Upsert a route reminder in Supabase.
+ * Throws on Supabase failure.
+ */
+export async function upsertRouteReminder(
+  userId: string,
+  args: {
+    corridorId: string;
+    label: string;
+    from: string;
+    to: string;
+    preferredTime: string;
+    frequency: ReminderFrequency;
+  },
+): Promise<RouteReminder> {
+  const nextReminderAt = nextReminderDate(args.frequency, args.preferredTime).toISOString();
+
+  const payload = {
+    user_id: userId,
+    corridor_id: args.corridorId,
+    label: args.label,
+    origin_city: args.from,
+    destination_city: args.to,
+    frequency: args.frequency,
+    preferred_time: args.preferredTime,
+    next_reminder_at: nextReminderAt,
+    enabled: true,
+    updated_at: new Date().toISOString(),
+  };
+
+  try {
+    const { data, error } = await supabase
+      .from('route_reminders')
+      .upsert(payload, { onConflict: 'user_id,corridor_id' })
+      .select()
+      .single();
+
+    if (error) throw error;
+    const reminder = rowToReminder(data as Record<string, unknown>);
+    upsertReminderCache([reminder]);
+    return reminder;
+  } catch (err) {
+    logger.error('[movementRetention] upsertRouteReminder failed', { userId, args, err });
+    throw new Error('Could not save reminder. Please check your connection and try again.');
   }
-  return `${signal.label} keeps showing strong live demand and credit-adjusted pricing, so it is ready for a recurring nudge.`;
 }
 
-export function getRouteReminders() {
-  return readReminders()
-    .slice()
-    .sort(
-      (left, right) =>
-        new Date(left.nextReminderAt).getTime() - new Date(right.nextReminderAt).getTime(),
-    );
+export async function createReminderFromSuggestion(
+  userId: string,
+  suggestion: RecurringRouteSuggestion,
+): Promise<RouteReminder> {
+  return upsertRouteReminder(userId, {
+    corridorId: suggestion.corridorId,
+    label: suggestion.label,
+    from: suggestion.from,
+    to: suggestion.to,
+    preferredTime: suggestion.recommendedTime,
+    frequency: suggestion.recommendedFrequency,
+  });
 }
 
-export function getRouteReminderForCorridor(corridorId: string) {
-  return readReminders().find(reminder => reminder.corridorId === corridorId) ?? null;
+export function formatRouteReminderSchedule(reminder: RouteReminder): string {
+  const label =
+    reminder.frequency === 'weekdays' ? 'Weekdays'
+    : reminder.frequency === 'weekly' ? 'Weekly'
+    : 'Daily';
+  return `${label} at ${reminder.preferredTime}`;
 }
 
-export function getRecurringRouteSuggestions(limit = 4) {
+/** Compute recurring route suggestions from signal + event data. */
+export function getRecurringRouteSuggestions(limit = 4): RecurringRouteSuggestion[] {
   const snapshot = buildRouteIntelligenceSnapshot();
   const events = getGrowthEventFeed();
   const bookings = getRideBookings();
@@ -141,46 +234,35 @@ export function getRecurringRouteSuggestions(limit = 4) {
     const current = usageMap.get(signal.id) ?? { count: 0, hours: [] };
     current.count += 1;
     if (timestamp) {
-      const date = new Date(timestamp);
-      if (!Number.isNaN(date.getTime())) {
-        current.hours.push(date.getHours());
-      }
+      const d = new Date(timestamp);
+      if (!Number.isNaN(d.getTime())) current.hours.push(d.getHours());
     }
     usageMap.set(signal.id, current);
   };
 
   for (const event of events) {
-    const signal =
-      snapshot.allSignals.find(item => item.from === event.from && item.to === event.to) ??
-      snapshot.allSignals.find(item => item.from === event.to && item.to === event.from);
+    const signal = snapshot.allSignals.find(s => s.from === event.from && s.to === event.to)
+      ?? snapshot.allSignals.find(s => s.from === event.to && s.to === event.from);
     addUsage(signal, event.createdAt);
   }
-
-  for (const booking of bookings) {
-    const signal =
-      snapshot.allSignals.find(item => item.from === booking.from && item.to === booking.to) ??
-      snapshot.allSignals.find(item => item.from === booking.to && item.to === booking.from);
-    addUsage(signal, booking.createdAt);
+  for (const b of bookings) {
+    const signal = snapshot.allSignals.find(s => s.from === b.from && s.to === b.to)
+      ?? snapshot.allSignals.find(s => s.from === b.to && s.to === b.from);
+    addUsage(signal, b.createdAt);
+  }
+  for (const a of alerts) {
+    const signal = snapshot.allSignals.find(s => s.from === a.from && s.to === a.to)
+      ?? snapshot.allSignals.find(s => s.from === a.to && s.to === a.from);
+    addUsage(signal, a.createdAt);
   }
 
-  for (const alert of alerts) {
-    const signal =
-      snapshot.allSignals.find(item => item.from === alert.from && item.to === alert.to) ??
-      snapshot.allSignals.find(item => item.from === alert.to && item.to === alert.from);
-    addUsage(signal, alert.createdAt);
-  }
-
-  const suggestions = snapshot.allSignals
+  return snapshot.allSignals
     .map(signal => {
       const usage = usageMap.get(signal.id);
       const weeklyFrequency = usage?.count ?? 0;
       const confidenceScore = Math.min(
         98,
-        Math.round(
-          signal.forecastDemandScore * 0.58 +
-            signal.routeOwnershipScore * 0.18 +
-            weeklyFrequency * 5.4,
-        ),
+        Math.round(signal.forecastDemandScore * 0.58 + signal.routeOwnershipScore * 0.18 + weeklyFrequency * 5.4),
       );
       return {
         corridorId: signal.id,
@@ -191,125 +273,76 @@ export function getRecurringRouteSuggestions(limit = 4) {
         weeklyFrequency,
         reason: buildReason(signal, weeklyFrequency),
         recommendedTime: inferReminderTime(usage?.hours ?? []),
-        recommendedFrequency:
-          weeklyFrequency >= 3 ? 'weekdays' : weeklyFrequency >= 1 ? 'weekly' : 'daily',
+        recommendedFrequency: (weeklyFrequency >= 3 ? 'weekdays' : weeklyFrequency >= 1 ? 'weekly' : 'daily') as ReminderFrequency,
         liveSignal: signal,
         priceQuote: signal.priceQuote,
       } satisfies RecurringRouteSuggestion;
     })
-    .filter(suggestion => suggestion.confidenceScore >= 58)
-    .sort((left, right) => right.confidenceScore - left.confidenceScore);
-
-  return suggestions.slice(0, limit);
+    .filter(s => s.confidenceScore >= 58)
+    .sort((a, b) => b.confidenceScore - a.confidenceScore)
+    .slice(0, limit);
 }
 
-export function upsertRouteReminder(args: {
-  corridorId: string;
-  label: string;
-  from: string;
-  to: string;
-  preferredTime: string;
-  frequency: ReminderFrequency;
-}) {
-  const reminders = readReminders();
-  const nextReminderAt = nextReminderDate(args.frequency, args.preferredTime).toISOString();
-  const nextReminder: RouteReminder = {
-    id: makeReminderId(args.corridorId),
-    corridorId: args.corridorId,
-    label: args.label,
-    from: args.from,
-    to: args.to,
-    preferredTime: args.preferredTime,
-    frequency: args.frequency,
-    nextReminderAt,
-    enabled: true,
-    createdAt: new Date().toISOString(),
-  };
-
-  const index = reminders.findIndex(reminder => reminder.corridorId === args.corridorId);
-  if (index >= 0) {
-    const currentReminder = reminders[index];
-    if (!currentReminder) return nextReminder;
-    reminders[index] = {
-      ...currentReminder,
-      ...nextReminder,
-      createdAt: currentReminder.createdAt,
-    };
-  } else {
-    reminders.unshift(nextReminder);
-  }
-
-  writeReminders(reminders);
-  return nextReminder;
-}
-
-export function createReminderFromSuggestion(suggestion: RecurringRouteSuggestion) {
-  return upsertRouteReminder({
-    corridorId: suggestion.corridorId,
-    label: suggestion.label,
-    from: suggestion.from,
-    to: suggestion.to,
-    preferredTime: suggestion.recommendedTime,
-    frequency: suggestion.recommendedFrequency,
-  });
-}
-
-export function formatRouteReminderSchedule(reminder: RouteReminder) {
-  const label =
-    reminder.frequency === 'weekdays'
-      ? 'Weekdays'
-      : reminder.frequency === 'weekly'
-        ? 'Weekly'
-        : 'Daily';
-  return `${label} at ${reminder.preferredTime}`;
-}
-
-export async function syncRouteReminders(user?: Pick<WaselUser, 'email' | 'phone'> | null) {
-  let reminders = readReminders();
+/** Fire due reminders and return IDs of delivered ones. */
+export async function syncRouteReminders(
+  userId: string,
+  user?: Pick<WaselUser, 'email' | 'phone'> | null,
+): Promise<string[]> {
   const now = new Date();
-  const dueReminders = reminders.filter(
-    reminder => reminder.enabled && new Date(reminder.nextReminderAt).getTime() <= now.getTime(),
+  const due = reminderCache.filter(
+    reminder =>
+      reminder.userId === userId &&
+      reminder.enabled &&
+      new Date(reminder.nextReminderAt).getTime() <= now.getTime(),
   );
-  if (dueReminders.length === 0) {
-    return [];
-  }
+  if (!due.length) return [];
 
   const delivered: string[] = [];
 
-  for (const reminder of dueReminders) {
-    const signal = buildRouteIntelligenceSnapshot({
-      from: reminder.from,
-      to: reminder.to,
-    }).selectedSignal;
-    const nextReminderAt = nextReminderDate(
-      reminder.frequency,
-      reminder.preferredTime,
-      now,
-    ).toISOString();
-    reminders = reminders.map(item =>
-      item.id === reminder.id ? { ...item, lastSentAt: now.toISOString(), nextReminderAt } : item,
-    );
-    writeReminders(reminders);
+  for (const reminder of due) {
+    const signal = buildRouteIntelligenceSnapshot({ from: reminder.from, to: reminder.to }).selectedSignal;
+    const nextReminderAt = nextReminderDate(reminder.frequency, reminder.preferredTime, now).toISOString();
 
-    await notificationsAPI
-      .createNotification({
+    try {
+      // Update Supabase
+      const { error } = await supabase
+        .from('route_reminders')
+        .update({
+          last_sent_at: now.toISOString(),
+          next_reminder_at: nextReminderAt,
+          updated_at: now.toISOString(),
+        })
+        .eq('id', reminder.id)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      // Update in-memory cache
+      upsertReminderCache([{ ...reminder, lastSentAt: now.toISOString(), nextReminderAt }]);
+
+      // Fire notification
+      await notificationsAPI.createNotification({
         title: `Route reminder: ${reminder.label}`,
         message: signal
-          ? `${signal.nextWaveWindow}. Live demand ${signal.forecastDemandScore}/100 and your current price is ${signal.priceQuote.finalPriceJod} JOD.`
+          ? `${signal.nextWaveWindow}. Live demand ${signal.forecastDemandScore}/100, price ${signal.priceQuote.finalPriceJod} JOD.`
           : `Your recurring route is ready to check again.`,
         type: 'trip_updates',
         priority: 'medium',
         action_url: `/app/find-ride?from=${encodeURIComponent(reminder.from)}&to=${encodeURIComponent(reminder.to)}&search=1`,
         channels: ['in_app', 'push', 'email', 'sms'],
-        contact: {
-          email: user?.email,
-          phone: user?.phone,
-        },
-      })
-      .catch(() => {});
+        contact: { email: user?.email, phone: user?.phone },
+      }).catch(() => {});
 
-    delivered.push(reminder.id);
+      delivered.push(reminder.id);
+    } catch (err) {
+      logger.warning('[movementRetention] syncRouteReminders reminder failed', { reminderId: reminder.id, err });
+    }
   }
 
   return delivered;
+}
+
+/** Clear the cache on sign-out. */
+export function clearRouteRemindersCache(): void {
+  reminderCache.splice(0);
 }

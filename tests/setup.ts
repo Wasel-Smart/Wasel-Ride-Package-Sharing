@@ -12,7 +12,7 @@ const mockEnv = {
   DEV: false,
   PROD: false,
   SSR: false,
-  VITE_SUPABASE_URL: 'https://djccmatubyyudeosrngm.supabase.co',
+  VITE_SUPABASE_URL: 'https://zexlxabdcsjefptmjhuq.supabase.co',
   VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test',
   VITE_SUPABASE_PUBLISHABLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test',
   VITE_APP_URL: 'http://localhost:3000',

@@ -2,12 +2,13 @@
  * Supabase Client — Production
  *
  * Credentials resolved in priority order:
- *   1. VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY  (from .env)
- *   2. info.tsx fallback (checked-in public project config)
+ *   1. VITE_STORADGE_SUPABASE_URL / VITE_STORADGE_SUPABASE_PUBLISHABLE_KEY
+ *   2. VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY
+ *   3. info.tsx fallback (checked-in public project config)
  *
  * Set these in your .env file for full portability:
- *   VITE_SUPABASE_URL=https://<project-id>.supabase.co
- *   VITE_SUPABASE_PUBLISHABLE_KEY=<your-publishable-key-or-anon-key>
+ *   VITE_STORADGE_SUPABASE_URL=https://<project-id>.supabase.co
+ *   VITE_STORADGE_SUPABASE_PUBLISHABLE_KEY=<your-publishable-key>
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -116,7 +117,7 @@ function queueIfOffline<T>(fn: () => Promise<T>): Promise<T> {
 const getSupabaseClient = () => {
   if (!isSupabaseConfigured) {
     console.error(
-      '[Supabase] Missing valid credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in your .env file.',
+      '[Supabase] Missing valid credentials. Set VITE_STORADGE_SUPABASE_URL and VITE_STORADGE_SUPABASE_PUBLISHABLE_KEY in your .env file.',
     );
     return null;
   }
@@ -132,7 +133,7 @@ const getSupabaseClient = () => {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
-        storage: getBrowserStorage('localStorage'),
+        storage: getBrowserStorage('sessionStorage'),
       },
       global: {
         headers: { 'X-Client-Info': 'wasel-web' },

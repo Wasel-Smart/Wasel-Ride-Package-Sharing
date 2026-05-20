@@ -1,5 +1,4 @@
 import { notificationsAPI } from '../../../services/notifications.js';
-import { getConnectedRides, updateConnectedRide } from '../../../services/journeyLogistics';
 import { updateRideBooking, type RideBookingRecord } from '../../../services/rideLifecycle';
 import { DS, r } from '../../../pages/waselServiceShared';
 
@@ -64,12 +63,6 @@ export function OfferRideIncomingRequests({
                         status: 'confirmed',
                         paymentStatus: 'authorized',
                       });
-                      const ride = getConnectedRides().find(item => item.id === request.rideId);
-                      if (ride) {
-                        updateConnectedRide(ride.id, {
-                          seats: Math.max(0, ride.seats - request.seatsRequested),
-                        });
-                      }
                       if (updated) {
                         void notificationsAPI
                           .createNotification({
@@ -81,7 +74,7 @@ export function OfferRideIncomingRequests({
                           })
                           .catch(() => {});
                       }
-                      onStatusMessage('Booking request confirmed and seats updated.');
+                      onStatusMessage('Booking request confirmed.');
                     } catch (error) {
                       onStatusMessage(
                         error instanceof Error

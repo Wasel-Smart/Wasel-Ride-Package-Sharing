@@ -30,6 +30,19 @@ export const STRIPE_PAYMENTS_FUNCTION: EdgeFunctionConfig = {
   description: 'Stripe payment processing and webhook handling',
 };
 
+function readNodeEnv(): Record<string, string | undefined> {
+  const processEnv =
+    typeof globalThis === 'object'
+      ? (
+          globalThis as {
+            process?: { env?: Record<string, string | undefined> };
+          }
+        ).process?.env
+      : undefined;
+
+  return processEnv && typeof processEnv === 'object' ? processEnv : {};
+}
+
 /**
  * Get the active edge function name
  * Supports override via environment variable
@@ -39,8 +52,9 @@ export function getEdgeFunctionName(): string {
     return String(import.meta.env.VITE_EDGE_FUNCTION_NAME);
   }
 
-  if (typeof process !== 'undefined' && process.env?.VITE_EDGE_FUNCTION_NAME) {
-    return String(process.env.VITE_EDGE_FUNCTION_NAME);
+  const processEnv = readNodeEnv();
+  if (processEnv.VITE_EDGE_FUNCTION_NAME) {
+    return String(processEnv.VITE_EDGE_FUNCTION_NAME);
   }
 
   return WASEL_EDGE_FUNCTION.hash;

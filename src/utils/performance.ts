@@ -31,6 +31,16 @@ export interface PerformanceMetrics {
 
 const metrics: Partial<PerformanceMetrics> = {};
 
+type AnalyticsEventPayload = {
+  type: 'web_vital';
+  name: string;
+  value: number;
+  rating: WebVital['rating'];
+  timestamp: number;
+  url: string;
+  userAgent: string;
+};
+
 // Performance budgets (in milliseconds)
 const PERFORMANCE_BUDGETS = {
   fcp: 1800, // First Contentful Paint
@@ -81,6 +91,73 @@ export function initPerformanceMonitoring() {
   console.log('✅ Performance monitoring initialized');
 }
 
+export function hasAnalyticsConsent(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    return window.localStorage.getItem('consent-analytics') === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function isDoNotTrackEnabled(): boolean {
+  if (typeof navigator === 'undefined') return false;
+
+  const doNotTrackValue =
+    navigator.doNotTrack ?? (window as Window & { doNotTrack?: string }).doNotTrack ?? null;
+  const normalized = String(doNotTrackValue ?? '').toLowerCase();
+
+  return normalized === '1' || normalized === 'yes';
+}
+
+export function isTrustedAnalyticsEndpoint(endpoint: string): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    const resolved = new URL(endpoint, window.location.origin);
+    if (resolved.protocol === 'https:') {
+      return true;
+    }
+
+    return (
+      import.meta.env.DEV &&
+      resolved.protocol === 'http:' &&
+      (resolved.hostname === 'localhost' || resolved.hostname === '127.0.0.1')
+    );
+  } catch {
+    return false;
+  }
+}
+
+function sendAnalyticsPayload(endpoint: string, vital: WebVital): void {
+  const payload: AnalyticsEventPayload = {
+    type: 'web_vital',
+    name: vital.name,
+    value: vital.value,
+    rating: vital.rating,
+    timestamp: Date.now(),
+    url: window.location.href,
+    userAgent: navigator.userAgent,
+  };
+  const body = JSON.stringify(payload);
+
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(endpoint, new Blob([body], { type: 'application/json' }));
+    return;
+  }
+
+  fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+    keepalive: true,
+    signal: AbortSignal.timeout(3000),
+  }).catch(error => {
+    console.error('Failed to send analytics:', error);
+  });
+}
+
 function reportWebVital(metric: Metric) {
   const vital: WebVital = {
     name: metric.name,
@@ -126,14 +203,17 @@ function reportWebVital(metric: Metric) {
 function sendToAnalytics(vital: WebVital) {
   if (typeof window === 'undefined') return;
 
-  // Check analytics consent before sending
-  if (!localStorage.getItem('consent-analytics')) {
+  if (!hasAnalyticsConsent() || isDoNotTrackEnabled()) {
     return;
   }
 
   // Send to Google Analytics
-  if ((window as any).gtag) {
-    (window as any).gtag('event', vital.name, {
+  const analyticsWindow = window as Window & {
+    gtag?: (command: 'event', eventName: string, parameters: Record<string, unknown>) => void;
+  };
+
+  if (analyticsWindow.gtag) {
+    analyticsWindow.gtag('event', vital.name, {
       event_category: 'Web Vitals',
       value: Math.round(vital.value),
       event_label: vital.id,
@@ -142,23 +222,9 @@ function sendToAnalytics(vital: WebVital) {
   }
 
   // Send to custom analytics endpoint
-  if (import.meta.env.VITE_ANALYTICS_ENDPOINT) {
-    fetch(import.meta.env.VITE_ANALYTICS_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'web_vital',
-        name: vital.name,
-        value: vital.value,
-        rating: vital.rating,
-        timestamp: Date.now(),
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-      }),
-      keepalive: true,
-    }).catch(error => {
-      console.error('Failed to send analytics:', error);
-    });
+  const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT?.trim();
+  if (endpoint && isTrustedAnalyticsEndpoint(endpoint)) {
+    sendAnalyticsPayload(endpoint, vital);
   }
 }
 
@@ -266,7 +332,7 @@ export function detectLongTasks() {
 
   try {
     observer.observe({ entryTypes: ['longtask'] });
-  } catch (error) {
+  } catch (_error) {
     longTaskObserverStarted = false;
     console.warn('Long task detection not supported');
   }

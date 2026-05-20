@@ -3,9 +3,30 @@
  * Catches React component errors and provides fallback UI
  */
 
-import { Component, type ErrorInfo, type ReactNode } from 'react';
-import type { JSX } from 'react';
+import { Component, type ErrorInfo, type JSX, type ReactNode } from 'react';
 import { logger } from '@/utils/monitoring';
+import { WaselStateCard } from './WaselStateCard';
+
+const PRIMARY_ACTION_STYLE = {
+  minHeight: 44,
+  padding: '0 18px',
+  borderRadius: 999,
+  border: '1px solid rgba(88,221,255,0.24)',
+  background: 'linear-gradient(135deg, rgba(88,221,255,0.18), rgba(71,214,158,0.12))',
+  color: '#EEF8FF',
+  fontWeight: 800,
+  cursor: 'pointer',
+} as const;
+
+const SECONDARY_ACTION_STYLE = {
+  ...PRIMARY_ACTION_STYLE,
+  background: 'rgba(255,255,255,0.04)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  textDecoration: 'none',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+} as const;
 
 interface Props {
   children: ReactNode;
@@ -38,7 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    logger.error('React Error Boundary caught error', {
+    logger.error('React Error Boundary caught error', error, {
       error: error.message,
       stack: error.stack,
       componentStack: errorInfo.componentStack,
@@ -80,68 +101,46 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
-            <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
-              <svg
-                className="w-6 h-6 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-            </div>
-
-            <h2 className="text-xl font-semibold text-gray-900 text-center mb-2">
-              Something went wrong
-            </h2>
-
-            <p className="text-gray-600 text-center mb-6">
-              We're sorry for the inconvenience. Please try refreshing the page.
-            </p>
-
-            {import.meta.env?.DEV && this.state.error && (
-              <details className="mb-4 p-4 bg-gray-50 rounded border border-gray-200">
-                <summary className="cursor-pointer font-medium text-sm text-gray-700 mb-2">
-                  Error Details (Development Only)
-                </summary>
-                <pre className="text-xs text-red-600 overflow-auto">
+        <WaselStateCard
+          eyebrow="Recovery mode"
+          title="This surface hit an unexpected error"
+          description="Wasel kept the session alive, but this part of the interface needs to recover. Try resetting the view or returning to the main route graph."
+          tone="danger"
+          minHeight="100vh"
+          actions={
+            <>
+              <button onClick={this.reset} style={PRIMARY_ACTION_STYLE}>
+                Try again
+              </button>
+              <button onClick={() => window.location.reload()} style={SECONDARY_ACTION_STYLE}>
+                Reload page
+              </button>
+              <a href="/app" style={SECONDARY_ACTION_STYLE}>
+                Go to home
+              </a>
+            </>
+          }
+          footer={
+            import.meta.env?.DEV && this.state.error ? (
+              <details style={{ textAlign: 'left' }}>
+                <summary style={{ cursor: 'pointer', fontWeight: 700 }}>Error details</summary>
+                <pre
+                  style={{
+                    marginTop: 12,
+                    overflow: 'auto',
+                    color: '#FFD4DA',
+                    fontSize: '0.75rem',
+                  }}
+                >
                   {this.state.error.toString()}
                   {this.state.errorInfo?.componentStack}
                 </pre>
               </details>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => window.location.reload()}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Refresh Page
-              </button>
-
-              <button
-                onClick={this.reset}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                Try Again
-              </button>
-            </div>
-
-            <button
-              onClick={() => (window.location.href = '/')}
-              className="w-full mt-3 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Go to Home
-            </button>
-          </div>
-        </div>
+            ) : (
+              'If this view keeps failing, return to the dashboard and reopen the flow.'
+            )
+          }
+        />
       );
     }
 
@@ -156,18 +155,18 @@ export function RouteErrorBoundary({ children }: { children: ReactNode }): JSX.E
   return (
     <ErrorBoundary
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Page Error</h1>
-            <p className="text-gray-600 mb-4">This page encountered an error.</p>
-            <button
-              onClick={() => (window.location.href = '/app')}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Go to Dashboard
-            </button>
-          </div>
-        </div>
+        <WaselStateCard
+          eyebrow="Page error"
+          title="This page could not finish loading"
+          description="The route opened, but the page state broke before it became interactive."
+          tone="danger"
+          minHeight="100vh"
+          actions={
+            <a href="/app" style={PRIMARY_ACTION_STYLE}>
+              Go to dashboard
+            </a>
+          }
+        />
       }
     >
       {children}
@@ -182,11 +181,13 @@ export function FeatureErrorBoundary({ children }: { children: ReactNode }): JSX
   return (
     <ErrorBoundary
       fallback={
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800">
-            This feature is temporarily unavailable. Please try again later.
-          </p>
-        </div>
+        <WaselStateCard
+          eyebrow="Feature unavailable"
+          title="This feature is temporarily offline"
+          description="The surrounding page is still available, but this module needs to recover before you can use it again."
+          tone="warning"
+          minHeight={260}
+        />
       }
     >
       {children}

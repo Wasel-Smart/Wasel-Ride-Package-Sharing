@@ -51,7 +51,7 @@ async function getSessionKeyAndSalt(): Promise<{ key: CryptoKey; salt: Uint8Arra
 }
 
 /**
- * Encrypt sensitive data before storing in localStorage
+ * Encrypt sensitive data before storing in sessionStorage
  */
 export async function encryptData(data: string): Promise<string> {
   try {
@@ -77,7 +77,7 @@ export async function encryptData(data: string): Promise<string> {
 }
 
 /**
- * Decrypt data from localStorage
+ * Decrypt data from sessionStorage
  */
 export async function decryptData(encryptedData: string): Promise<string> {
   try {
@@ -112,32 +112,33 @@ export async function decryptData(encryptedData: string): Promise<string> {
 export const secureStorage = {
   async setItem(key: string, value: string): Promise<void> {
     const encrypted = await encryptData(value);
-    localStorage.setItem(`secure_${key}`, encrypted);
+    sessionStorage.setItem(`secure_${key}`, encrypted);
   },
 
   async getItem(key: string): Promise<string | null> {
-    const encrypted = localStorage.getItem(`secure_${key}`);
+    const encrypted = sessionStorage.getItem(`secure_${key}`);
     if (!encrypted) return null;
 
     try {
       return await decryptData(encrypted);
     } catch {
       // If decryption fails, remove corrupted data
-      localStorage.removeItem(`secure_${key}`);
+      sessionStorage.removeItem(`secure_${key}`);
       return null;
     }
   },
 
   removeItem(key: string): void {
-    localStorage.removeItem(`secure_${key}`);
+    sessionStorage.removeItem(`secure_${key}`);
   },
 
   clear(): void {
-    const keys = Object.keys(localStorage);
-    const secureKeys = keys.filter(key => key.startsWith('secure_'));
-    secureKeys.forEach(key => {
-      localStorage.removeItem(key);
-    });
+    for (let index = sessionStorage.length - 1; index >= 0; index -= 1) {
+      const key = sessionStorage.key(index);
+      if (key?.startsWith('secure_')) {
+        sessionStorage.removeItem(key);
+      }
+    }
   },
 };
 

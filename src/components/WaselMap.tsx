@@ -330,7 +330,7 @@ function safeAddTo(marker: any, map: any): any {
   if (!map || !map._panes || !map._panes['markerPane']) return marker;
   try {
     return marker.addTo(map);
-  } catch (e) {
+  } catch (_error) {
     // Swallow silently — already guarded above, this is a last-resort safety net
     return marker;
   }

@@ -11,6 +11,10 @@ import { ProtectedPagePreview } from '../../components/system/ProtectedPagePrevi
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
+import {
+  safeStorageGetItem,
+  safeStorageSetItem,
+} from '../../utils/browserStorage';
 
 // ── Design-system shorthand ───────────────────────────────────────────────────
 export const DS = PAGE_DS;
@@ -76,11 +80,10 @@ export function midpoint(
   return { lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 };
 }
 
-// ── localStorage helpers ──────────────────────────────────────────────────────
+// ── session cache helpers ────────────────────────────────────────────────────
 export function readStoredStringList(key: string): string[] {
-  if (typeof window === 'undefined') return [];
   try {
-    const raw = window.localStorage.getItem(key);
+    const raw = safeStorageGetItem('sessionStorage', key);
     const parsed = raw ? JSON.parse(raw) : [];
     return Array.isArray(parsed)
       ? parsed.filter((item): item is string => typeof item === 'string')
@@ -91,14 +94,12 @@ export function readStoredStringList(key: string): string[] {
 }
 
 export function writeStoredStringList(key: string, values: string[]) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(key, JSON.stringify(values));
+  safeStorageSetItem('sessionStorage', key, JSON.stringify(values));
 }
 
 export function readStoredObject<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback;
   try {
-    const raw = window.localStorage.getItem(key);
+    const raw = safeStorageGetItem('sessionStorage', key);
     return raw ? { ...fallback, ...JSON.parse(raw) } : fallback;
   } catch {
     return fallback;

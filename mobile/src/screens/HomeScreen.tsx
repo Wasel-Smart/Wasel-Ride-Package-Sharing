@@ -34,12 +34,22 @@ const C = {
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
-const SERVICES = [
-  { id: 'find',     icon: 'search',       label: 'Find Ride',  color: C.cyan,  screen: 'FindRide'  },
-  { id: 'offer',    icon: 'car',          label: 'Offer Ride', color: C.green, screen: 'OfferRide' },
-  { id: 'wallet',   icon: 'wallet',       label: 'Wallet',     color: C.gold,  screen: 'Wallet'    },
-  { id: 'profile',  icon: 'person',       label: 'Profile',    color: '#A78BFA', screen: 'Profile' },
-] as const;
+type ServiceScreen = keyof RootStackParamList;
+
+interface ServiceItem {
+  id: string;
+  icon: string;
+  label: string;
+  color: string;
+  screen: ServiceScreen;
+}
+
+const SERVICES: ServiceItem[] = [
+  { id: 'find',    icon: 'search',  label: 'Find Ride',  color: C.cyan,     screen: 'FindRide'  },
+  { id: 'offer',   icon: 'car',     label: 'Offer Ride', color: C.green,    screen: 'OfferRide' },
+  { id: 'wallet',  icon: 'wallet',  label: 'Wallet',     color: C.gold,     screen: 'Wallet'    },
+  { id: 'profile', icon: 'person',  label: 'Profile',    color: '#A78BFA',  screen: 'Profile'   },
+];
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -47,7 +57,7 @@ export default function HomeScreen() {
   const nav = useNavigation<NavProp>();
   const [refreshing, setRefreshing] = React.useState(false);
 
-  const firstName = user?.user_metadata?.full_name?.split(' ')[0] ?? 'Traveller';
+  const firstName = (user?.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? 'Traveller';
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -83,7 +93,7 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={styles.searchBanner}
           activeOpacity={0.85}
-          onPress={() => (nav as any).navigate('FindRide')}
+          onPress={() => nav.navigate('FindRide')}
         >
           <Ionicons name="search" size={18} color={C.muted} />
           <Text style={styles.searchPlaceholder}>Search rides — Amman to Aqaba…</Text>
@@ -100,10 +110,10 @@ export default function HomeScreen() {
               key={svc.id}
               style={styles.serviceCard}
               activeOpacity={0.8}
-              onPress={() => (nav as any).navigate(svc.screen)}
+              onPress={() => nav.navigate(svc.screen)}
             >
               <View style={[styles.serviceIcon, { backgroundColor: svc.color + '22', borderColor: svc.color + '33' }]}>
-                <Ionicons name={svc.icon as any} size={24} color={svc.color} />
+                <Ionicons name={svc.icon as React.ComponentProps<typeof Ionicons>['name']} size={24} color={svc.color} />
               </View>
               <Text style={styles.serviceLabel}>{svc.label}</Text>
             </TouchableOpacity>
@@ -113,7 +123,7 @@ export default function HomeScreen() {
         {/* Featured rides */}
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>Available now</Text>
-          <TouchableOpacity onPress={() => (nav as any).navigate('FindRide')}>
+          <TouchableOpacity onPress={() => nav.navigate('FindRide')}>
             <Text style={styles.seeAll}>See all</Text>
           </TouchableOpacity>
         </View>

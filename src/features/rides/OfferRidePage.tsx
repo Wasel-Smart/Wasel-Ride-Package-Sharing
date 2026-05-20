@@ -23,6 +23,10 @@ import { evaluateTrustCapability } from '../../services/trustRules';
 import { recordMovementActivity } from '../../services/movementMembership';
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
 import { buildDriverRoutePlan, getMarketplaceNodes } from '../../config/wasel-movement-network';
+import {
+  safeStorageRemoveItem,
+  safeStorageSetItem,
+} from '../../utils/browserStorage';
 import { OfferRideFormPanel } from './components/OfferRideFormPanel';
 import { OfferRideIncomingRequests } from './components/OfferRideIncomingRequests';
 
@@ -82,8 +86,7 @@ export function OfferRidePage() {
   }, [user?.id]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(OFFER_RIDE_DRAFT_KEY, JSON.stringify(form));
+    safeStorageSetItem('sessionStorage', OFFER_RIDE_DRAFT_KEY, JSON.stringify(form));
   }, [form]);
 
   const updateForm = (key: string, value: string | number | boolean) => {
@@ -145,9 +148,7 @@ export function OfferRidePage() {
       setSubmitted(true);
       setDraftMessage('Ride posted. Draft cleared.');
       setNetworkStats(getConnectedStats());
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(OFFER_RIDE_DRAFT_KEY);
-      }
+      safeStorageRemoveItem('sessionStorage', OFFER_RIDE_DRAFT_KEY);
 
       notificationsAPI
         .createNotification({
@@ -165,7 +166,7 @@ export function OfferRidePage() {
         requestPermission().catch(() => {});
       }
       notifyTripConfirmed('Wasel Network', `${createdRide.from} to ${createdRide.to}`);
-      void recordMovementActivity('route_published', driverPlan?.corridor.id ?? null);
+      void recordMovementActivity(user.id, 'route_published', driverPlan?.corridor.id);
     } catch (error) {
       setFormError(
         error instanceof Error ? error.message : 'We could not post the route right now.',

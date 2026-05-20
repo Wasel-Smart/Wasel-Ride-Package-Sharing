@@ -91,7 +91,6 @@ export function ReturnMatching() {
   const searchMatches = async () => {
     setSearching(true);
     setError(null);
-    await new Promise(resolve => setTimeout(resolve, 450));
     setSearching(false);
     setStep(2);
   };

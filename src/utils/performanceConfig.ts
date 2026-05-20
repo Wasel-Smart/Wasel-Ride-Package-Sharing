@@ -63,7 +63,7 @@ export function applyGlobalOptimizations() {
       });
       window.addEventListener('test-passive', noop, options);
       window.removeEventListener('test-passive', noop, options);
-    } catch (err) {
+    } catch (_error) {
       supported = false;
     }
     return supported;

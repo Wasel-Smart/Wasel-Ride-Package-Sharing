@@ -5,6 +5,7 @@
 export type {
   DbClient,
   DriverRow,
+  PaymentMethodRow,
   RawBooking,
   RawCommunicationDelivery,
   RawCommunicationPreferences,
@@ -15,6 +16,7 @@ export type {
   RawProfile,
   RawReferral,
   RawVerificationRecord,
+  TransactionRow,
   TripRow,
   UserContext,
   UserRow,

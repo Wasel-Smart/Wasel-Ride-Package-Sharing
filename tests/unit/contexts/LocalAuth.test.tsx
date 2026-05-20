@@ -49,7 +49,6 @@ function Consumer() {
 describe('LocalAuthProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.localStorage.clear();
   });
 
   afterEach(() => {
@@ -156,28 +155,7 @@ describe('LocalAuthProvider', () => {
     expect(screen.getByText('+962790000001')).toBeInTheDocument();
   });
 
-  it('keeps the stored local session when the backend is unavailable', () => {
-    window.localStorage.setItem('wasel_user_session', JSON.stringify({
-       id: 'demo-e2e-user',
-       name: 'Demo Rider',
-       email: 'demo.rider@wasel.jo',
-       phone: '+962790000999',
-       role: 'both',
-       balance: 145.75,
-       rating: 4.8,
-       trips: 18,
-       verified: true,
-       sanadVerified: true,
-       verificationLevel: 'level_3',
-       walletStatus: 'active',
-       joinedAt: '2026-03-01',
-       emailVerified: true,
-       phoneVerified: true,
-       twoFactorEnabled: false,
-       trustScore: 92,
-       backendMode: 'supabase',
-     }));
-
+  it('does not restore a browser-local session when the backend is unavailable', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       profile: null,
@@ -195,8 +173,8 @@ describe('LocalAuthProvider', () => {
     );
 
     expect(screen.getByText('ready')).toBeInTheDocument();
-    expect(screen.getByText('Demo Rider')).toBeInTheDocument();
-    expect(screen.getByText('+962790000999')).toBeInTheDocument();
+    expect(screen.getByText('no-user')).toBeInTheDocument();
+    expect(screen.getByText('no-phone')).toBeInTheDocument();
   });
 
   it('falls back to level_2 for Sanad-verified riders without driver clearance', () => {
@@ -236,10 +214,13 @@ describe('LocalAuthProvider', () => {
     expect(screen.getByText('level_2')).toBeInTheDocument();
   });
 
-  it('registers and persists a local account when e2e local auth is enabled', async () => {
+  it('delegates registration to the canonical auth flow even when legacy e2e flags are present', async () => {
     vi.stubEnv('VITE_E2E_LOCAL_AUTH', 'true');
 
-    const signUp = vi.fn();
+    const signUp = vi.fn().mockResolvedValue({
+      error: null,
+      requiresEmailConfirmation: false,
+    });
     mockUseAuth.mockReturnValue({
       user: null,
       profile: null,
@@ -260,58 +241,25 @@ describe('LocalAuthProvider', () => {
       screen.getByRole('button', { name: 'register' }).click();
     });
 
-    expect(signUp).not.toHaveBeenCalled();
-    expect(screen.getByText('Sara Ali')).toBeInTheDocument();
-
-     const storedSession = JSON.parse(window.localStorage.getItem('wasel_user_session') ?? 'null');
-     const storedAccounts = JSON.parse(
-       window.localStorage.getItem('wasel_accounts') ?? '[]',
-     );
-
-    expect(storedSession?.email).toBe('sara@example.com');
-    expect(storedAccounts).toHaveLength(1);
-    expect(storedAccounts[0].email).toBe('sara@example.com');
+    expect(signUp).toHaveBeenCalledWith(
+      'sara@example.com',
+      'password123',
+      'Sara Ali',
+      '+962790000000',
+      undefined,
+    );
   });
 
-  it('signs into a persisted local account when e2e local auth is enabled', async () => {
+  it('delegates sign-in to the canonical auth flow even when legacy e2e flags are present', async () => {
     vi.stubEnv('VITE_E2E_LOCAL_AUTH', 'true');
 
-    window.localStorage.setItem(
-       'wasel_accounts',
-       JSON.stringify([
-         {
-           email: 'sara@example.com',
-           password: 'password123',
-           user: {
-             id: 'local-user-1',
-             name: 'Sara Ali',
-             email: 'sara@example.com',
-             phone: '+962790000000',
-             role: 'rider',
-             balance: 0,
-             rating: 5,
-             trips: 0,
-             verified: false,
-             sanadVerified: false,
-             verificationLevel: 'level_0',
-             walletStatus: 'active',
-             joinedAt: '2026-05-07',
-             emailVerified: true,
-             phoneVerified: false,
-             twoFactorEnabled: false,
-             trustScore: 55,
-             backendMode: 'supabase',
-           },
-         },
-       ]),
-     );
-
+    const signIn = vi.fn().mockResolvedValue({ error: null });
     mockUseAuth.mockReturnValue({
       user: null,
       profile: null,
       loading: false,
       isBackendConnected: true,
-      signIn: vi.fn(),
+      signIn,
       signUp: vi.fn(),
       signOut: vi.fn(),
     });
@@ -326,7 +274,6 @@ describe('LocalAuthProvider', () => {
       screen.getByRole('button', { name: 'signin' }).click();
     });
 
-    expect(screen.getByText('Sara Ali')).toBeInTheDocument();
-    expect(screen.getByText('+962790000000')).toBeInTheDocument();
+    expect(signIn).toHaveBeenCalledWith('sara@example.com', 'password123');
   });
 });

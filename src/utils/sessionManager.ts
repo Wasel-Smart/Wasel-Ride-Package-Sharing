@@ -34,6 +34,7 @@ export interface SessionMetadata {
   ipAddress?: string;
   createdAt: number;
   lastActivity: number;
+  expiresAt: number;
   isActive: boolean;
 }
 
@@ -69,13 +70,15 @@ class SessionManager {
    */
   startSession(userId: string): SessionMetadata {
     this.sessionId = createRuntimeSafeId(32);
+    const now = Date.now();
 
     const metadata: SessionMetadata = {
       sessionId: this.sessionId,
       deviceId: this.deviceId,
       userAgent: navigator.userAgent,
-      createdAt: Date.now(),
-      lastActivity: Date.now(),
+      createdAt: now,
+      lastActivity: now,
+      expiresAt: now + this.config.timeoutMs,
       isActive: true,
     };
 
@@ -116,16 +119,19 @@ class SessionManager {
       return false;
     }
 
-    const lastActivity = this.getLastActivity();
-    if (!lastActivity) {
+    const metadata = this.getSessionMetadata();
+    const expiresAt = this.resolveExpiryAt(metadata);
+    if (!expiresAt) {
       return false;
     }
 
-    const timeSinceActivity = Date.now() - lastActivity;
-    if (timeSinceActivity > this.config.timeoutMs) {
+    const timeRemaining = expiresAt - Date.now();
+    if (timeRemaining < 0) {
       logger.warning('Session timeout', {
         sessionId,
-        timeSinceActivity,
+        lastActivity: metadata?.lastActivity ?? this.getLastActivity(),
+        expiresAt,
+        timeRemaining,
         timeoutMs: this.config.timeoutMs,
       });
       this.handleSessionTimeout();
@@ -145,6 +151,7 @@ class SessionManager {
     const metadata = this.getSessionMetadata();
     if (metadata) {
       metadata.lastActivity = now;
+      metadata.expiresAt = now + this.config.timeoutMs;
       this.saveSessionMetadata(metadata);
     }
   }
@@ -153,20 +160,27 @@ class SessionManager {
    * Get time until session timeout
    */
   getTimeUntilTimeout(): number {
-    const lastActivity = this.getLastActivity();
-    if (!lastActivity) {
+    const expiresAt = this.resolveExpiryAt(this.getSessionMetadata());
+    if (!expiresAt) {
       return 0;
     }
 
-    const timeSinceActivity = Date.now() - lastActivity;
-    return Math.max(0, this.config.timeoutMs - timeSinceActivity);
+    return Math.max(0, expiresAt - Date.now() + 1);
   }
 
   /**
    * Extend session timeout
    */
   extendSession(): void {
-    this.updateLastActivity();
+    const now = Date.now();
+    safeStorageSetItem('sessionStorage', LAST_ACTIVITY_KEY, now.toString());
+
+    const metadata = this.getSessionMetadata();
+    if (metadata) {
+      metadata.lastActivity = now;
+      metadata.expiresAt = Math.max(this.resolveExpiryAt(metadata) ?? 0, now + this.config.timeoutMs);
+      this.saveSessionMetadata(metadata);
+    }
     logger.info('Session extended', { sessionId: this.sessionId });
   }
 
@@ -220,11 +234,11 @@ class SessionManager {
    * Get or create device ID
    */
   private getOrCreateDeviceId(): string {
-    let deviceId = safeStorageGetItem('localStorage', 'wasel_device_id');
+    let deviceId = safeStorageGetItem('sessionStorage', 'wasel_device_id');
 
     if (!deviceId) {
       deviceId = createRuntimeSafeId(32);
-      safeStorageSetItem('localStorage', 'wasel_device_id', deviceId);
+      safeStorageSetItem('sessionStorage', 'wasel_device_id', deviceId);
     }
 
     return deviceId;
@@ -235,6 +249,19 @@ class SessionManager {
    */
   private saveSessionMetadata(metadata: SessionMetadata): void {
     safeStorageSetItem('sessionStorage', SESSION_METADATA_KEY, JSON.stringify(metadata));
+  }
+
+  private resolveExpiryAt(metadata: SessionMetadata | null): number | null {
+    if (metadata?.expiresAt) {
+      return metadata.expiresAt;
+    }
+
+    const lastActivity = this.getLastActivity();
+    if (!lastActivity) {
+      return null;
+    }
+
+    return lastActivity + this.config.timeoutMs;
   }
 
   /**

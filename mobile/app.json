@@ -50,8 +50,7 @@
           "locationAlwaysAndWhenInUsePermission": "Wasel needs location access to match you with drivers and track your trip."
         }
       ],
-      "expo-secure-store",
-      "expo-router"
+      "expo-secure-store"
     ],
     "scheme": "wasel",
     "extra": {

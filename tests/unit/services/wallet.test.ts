@@ -188,6 +188,18 @@ describe('walletApi', () => {
     expect(wallet.transactions).toHaveLength(2);
     expect(wallet.total_deposited).toBe(40);
     expect(wallet.total_spent).toBe(12.5);
+    expect(wallet.wallet.paymentMethods).toEqual([
+      {
+        id: 'pm-1',
+        provider: 'stripe',
+        type: 'card',
+        tokenReference: null,
+        isDefault: false,
+        status: 'active',
+        createdAt: null,
+        updatedAt: null,
+      },
+    ]);
   });
 
   it('uses the backend RPC to transfer wallet funds when edge endpoints are unavailable', async () => {

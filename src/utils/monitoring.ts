@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/react';
 import type { DomainEventEnvelope } from '../domain/events';
 import { createCorrelationId, createStructuredLogEntry } from '../platform/observability';
 import { sanitizeLogMessage } from './sanitization';
+import { safeStorageGetItem } from './browserStorage';
 
 let sentryInitialized = false;
 
@@ -35,7 +36,7 @@ export function initSentry(): void {
     return;
   }
 
-  const dsn = import.meta.env.VITE_SENTRY_DSN;
+  const dsn = import.meta.env.VITE_SENTRY_DSN?.trim();
   const environment = import.meta.env.MODE;
 
   if (!dsn) {
@@ -57,10 +58,10 @@ export function initSentry(): void {
     ],
     beforeSend(event) {
       try {
-        const raw = localStorage.getItem('wasel_local_user_v2');
+        const raw = safeStorageGetItem('sessionStorage', 'wasel_user_session');
         if (raw) {
           const userData = JSON.parse(raw) as { id?: string };
-          // Only attach the opaque user ID — never PII
+          // Only attach the opaque user ID - never PII
           if (userData.id && typeof userData.id === 'string') {
             event.user = { id: userData.id };
           }
@@ -71,8 +72,11 @@ export function initSentry(): void {
 
       const allowedLanguages = ['ar', 'en'];
       const allowedThemes = ['dark', 'light'];
-      const lang = localStorage.getItem('wasel_language') || 'ar';
-      const theme = localStorage.getItem('wasel_theme') || 'dark';
+      const lang =
+        safeStorageGetItem('localStorage', 'wasel-language') ||
+        safeStorageGetItem('localStorage', 'wasel_language') ||
+        'ar';
+      const theme = safeStorageGetItem('localStorage', 'wasel_theme') || 'dark';
 
       event.tags = {
         ...event.tags,
@@ -88,9 +92,17 @@ export function initSentry(): void {
   writeConsole('info', 'Sentry initialized.');
 }
 
+function isSentryActive(): boolean {
+  return sentryInitialized;
+}
+
 export const logger = {
   error(message: string, error?: unknown, context?: Record<string, unknown>): void {
     writeConsole('error', sanitizeLogMessage(message), context);
+    if (!isSentryActive()) {
+      return;
+    }
+
     Sentry.captureException(error || new Error(sanitizeLogMessage(message)), {
       level: 'error',
       tags: { type: 'application_error' },
@@ -100,6 +112,10 @@ export const logger = {
 
   warning(message: string, context?: Record<string, unknown>): void {
     writeConsole('warning', sanitizeLogMessage(message), context);
+    if (!isSentryActive()) {
+      return;
+    }
+
     Sentry.captureMessage(sanitizeLogMessage(message), {
       level: 'warning',
       tags: { type: 'application_warning' },
@@ -109,7 +125,7 @@ export const logger = {
 
   info(message: string, context?: Record<string, unknown>): void {
     writeConsole('info', sanitizeLogMessage(message), context);
-    if (context?.important) {
+    if (context?.important && isSentryActive()) {
       Sentry.captureMessage(sanitizeLogMessage(message), {
         level: 'info',
         tags: { type: 'application_info' },
@@ -120,6 +136,10 @@ export const logger = {
 
   metric(name: string, value: number, tags?: Record<string, string>): void {
     writeConsole('info', `metric:${name}`, { value, tags });
+    if (!isSentryActive()) {
+      return;
+    }
+
     Sentry.addBreadcrumb({
       category: 'metric',
       message: name,
@@ -138,6 +158,10 @@ export const logger = {
   },
 
   addBreadcrumb(message: string, category: string, data?: Record<string, unknown>): void {
+    if (!isSentryActive()) {
+      return;
+    }
+
     Sentry.addBreadcrumb({ message, category, level: 'info', data });
   },
 };

@@ -38,7 +38,6 @@ describe('CSRF Protection Integration', () => {
 
 describe('Secure Storage Integration', () => {
   beforeEach(() => {
-    localStorage.clear();
     sessionStorage.clear();
     sessionStorage.setItem('wasel_session_id', 'test-session-id');
   });
@@ -47,7 +46,7 @@ describe('Secure Storage Integration', () => {
     const sensitiveData = 'user-token-12345';
     await secureStorage.setItem('auth_token', sensitiveData);
     
-    const stored = localStorage.getItem('secure_auth_token');
+    const stored = sessionStorage.getItem('secure_auth_token');
     expect(stored).toBeTruthy();
     expect(stored).not.toContain(sensitiveData);
   });
@@ -63,10 +62,8 @@ describe('Secure Storage Integration', () => {
    it('should clear all secure storage', async () => {
      await secureStorage.setItem('key1', 'value1');
      await secureStorage.setItem('key2', 'value2');
-     
-     console.log('LocalStorage before clear:', Object.keys(localStorage));
+
      secureStorage.clear();
-     console.log('LocalStorage after clear:', Object.keys(localStorage));
      
      const retrieved1 = await secureStorage.getItem('key1');
      const retrieved2 = await secureStorage.getItem('key2');

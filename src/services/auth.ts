@@ -213,7 +213,7 @@ export const authAPI = {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
 
-        if (response.status === 401 && errorData.message?.includes('JWT')) {
+        if (response.status === 401 && (errorData.message as string | undefined)?.includes('JWT')) {
           const {
             data: { session: refreshedSession },
             error: refreshError,
@@ -243,19 +243,24 @@ export const authAPI = {
               .json()
               .catch(() => ({ error: 'Unknown error' }));
             throw new Error(
-              retryErrorData.error || `Failed to create profile: ${retryResponse.status}`,
+              (retryErrorData.error as string | undefined) ||
+                `Failed to create profile: ${retryResponse.status}`,
             );
           }
 
           return await retryResponse.json();
         }
 
-        throw new Error(errorData.error || `Failed to create profile: ${response.status}`);
+        throw new Error(
+          (errorData.error as string | undefined) ||
+            `Failed to create profile: ${response.status}`,
+        );
       }
 
       return await response.json();
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      // Use import.meta.env.DEV instead of process.env.NODE_ENV — Vite strips this correctly
+      if (import.meta.env.DEV) {
         console.error('createProfile error:', error);
       }
 
@@ -328,7 +333,8 @@ export const authAPI = {
       });
       return { success: true, profile };
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      // Use import.meta.env.DEV — correct for Vite browser builds
+      if (import.meta.env.DEV) {
         console.error('[authAPI.updateProfile] Error:', error);
       }
       return {

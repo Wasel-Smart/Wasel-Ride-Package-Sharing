@@ -115,7 +115,9 @@ export function PackagesPage() {
       setTrackId(created.trackingId);
       setTrackingMessage(`Tracking live: ${created.trackingId}.`);
       refreshPackageSnapshot();
-      void recordMovementActivity('package_created', corridorPlan?.id ?? null);
+      if (user?.id) {
+        void recordMovementActivity(user.id, 'package_created', corridorPlan?.id);
+      }
 
       notificationsAPI
         .createNotification({
@@ -165,23 +167,35 @@ export function PackagesPage() {
     }
   };
 
-  const handleVerificationAction = (
+  const handleVerificationAction = async (
     action: 'share_code' | 'confirm_pickup' | 'confirm_delivery',
   ) => {
     if (!trackedPackage) return;
-    const updated = updatePackageVerification(trackedPackage.trackingId, action);
-    if (!updated) return;
+    setBusyState('tracking');
 
-    setTrackedPackage(updated);
-    setTrackId(updated.trackingId);
-    setTrackingMessage(
-      action === 'share_code'
-        ? `Code shared for ${updated.trackingId}.`
-        : action === 'confirm_pickup'
-          ? `Pickup confirmed for ${updated.trackingId}.`
-          : `Delivered: ${updated.trackingId}.`,
-    );
-    refreshPackageSnapshot();
+    try {
+      const updated = await updatePackageVerification(trackedPackage.trackingId, action);
+      if (!updated) return;
+
+      setTrackedPackage(updated);
+      setTrackId(updated.trackingId);
+      setTrackingMessage(
+        action === 'share_code'
+          ? `Code shared for ${updated.trackingId}.`
+          : action === 'confirm_pickup'
+            ? `Pickup confirmed for ${updated.trackingId}.`
+            : `Delivered: ${updated.trackingId}.`,
+      );
+      refreshPackageSnapshot();
+    } catch (error) {
+      setTrackingMessage(
+        error instanceof Error
+          ? error.message
+          : 'We could not sync this package update right now.',
+      );
+    } finally {
+      setBusyState('idle');
+    }
   };
 
   const handleOpenSupport = () => {

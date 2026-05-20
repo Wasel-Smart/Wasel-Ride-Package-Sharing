@@ -1,5 +1,21 @@
+/**
+ * demandCapture.ts
+ *
+ * Architecture:
+ *  - Supabase `demand_alerts` table is the PRIMARY store.
+ *  - A small in-memory cache (max 100 alerts) provides instant UI reads post-hydration.
+ *  - localStorage is NOT used. Cache lives in module scope and resets on page load.
+ *  - createDemandAlert writes to Supabase first. If Supabase fails, the alert is not created
+ *    (we surface the error rather than silently creating a phantom alert).
+ *
+ * This design ensures alerts are durable across devices and browser clears.
+ */
+
 import { createDirectDemandAlert, getDirectDemandAlerts } from './directSupabase';
 import { trackGrowthEvent } from './growthEngine';
+import { logger } from '../utils/monitoring';
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 export type DemandService = 'ride' | 'bus' | 'package';
 export type DemandStatus = 'active' | 'matched' | 'expired';
@@ -17,93 +33,85 @@ export interface DemandAlert {
   backendId?: string;
 }
 
-const DEMAND_KEY = 'wasel-demand-alerts';
+// ── In-memory cache ───────────────────────────────────────────────────────────
 
-function readAlerts(): DemandAlert[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(DEMAND_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
+const CACHE_MAX = 100;
+const alertCache: DemandAlert[] = [];
+
+function upsertCache(incoming: DemandAlert[]): void {
+  const byId = new Map(alertCache.map(a => [a.id, a]));
+  for (const alert of incoming) {
+    byId.set(alert.id, alert);
   }
+  alertCache.splice(0, alertCache.length, ...Array.from(byId.values()).slice(0, CACHE_MAX));
 }
 
-function writeAlerts(alerts: DemandAlert[]) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(DEMAND_KEY, JSON.stringify(alerts.slice(0, 100)));
+// ── Normalizer ────────────────────────────────────────────────────────────────
+
+function normalizeRemote(raw: Record<string, unknown>): DemandAlert {
+  return {
+    id: String(raw.id ?? `demand-${Date.now()}`),
+    backendId: String(raw.id ?? ''),
+    from: String(raw.origin_city ?? raw.from ?? ''),
+    to: String(raw.destination_city ?? raw.to ?? ''),
+    date: String(raw.requested_date ?? raw.date ?? '').slice(0, 10),
+    service:
+      raw.service_type === 'bus' || raw.service_type === 'package'
+        ? raw.service_type
+        : 'ride',
+    seatsOrSlots: Math.max(1, Number(raw.seats_or_slots ?? 1)),
+    status:
+      raw.status === 'matched' || raw.status === 'expired'
+        ? raw.status
+        : 'active',
+    createdAt: String(raw.created_at ?? new Date().toISOString()),
+    syncedAt: new Date().toISOString(),
+  };
 }
 
-function syncAlerts(alerts: DemandAlert[]) {
-  writeAlerts(alerts);
-  return alerts;
-}
+// ── Public API ────────────────────────────────────────────────────────────────
 
-function updateLocalAlert(id: string, updates: Partial<DemandAlert>) {
-  const next = readAlerts().map(alert => (alert.id === id ? { ...alert, ...updates } : alert));
-  syncAlerts(next);
-}
-
+/**
+ * Hydrate the in-memory cache from Supabase.
+ * Should be called on app mount and after auth state changes.
+ */
 export async function hydrateDemandAlerts(userId?: string): Promise<DemandAlert[]> {
   try {
     const remote = await getDirectDemandAlerts(userId);
-    const merged = [...readAlerts()];
-
-    for (const item of remote) {
-      const normalized: DemandAlert = {
-        id: String(item.id ?? `demand-${Date.now()}`),
-        backendId: String(item.id ?? ''),
-        from: String(item.origin_city ?? ''),
-        to: String(item.destination_city ?? ''),
-        date: String(item.requested_date ?? '').slice(0, 10),
-        service:
-          item.service_type === 'bus' || item.service_type === 'package'
-            ? item.service_type
-            : 'ride',
-        seatsOrSlots: Number(item.seats_or_slots ?? 1) || 1,
-        status: item.status === 'matched' || item.status === 'expired' ? item.status : 'active',
-        createdAt: String(item.created_at ?? new Date().toISOString()),
-        syncedAt: new Date().toISOString(),
-      };
-
-      const index = merged.findIndex(
-        alert =>
-          alert.backendId === normalized.backendId ||
-          (alert.from === normalized.from &&
-            alert.to === normalized.to &&
-            alert.date === normalized.date &&
-            alert.service === normalized.service),
-      );
-
-      if (index >= 0) merged[index] = { ...merged[index], ...normalized };
-      else merged.unshift(normalized);
-    }
-
-    return syncAlerts(merged.slice(0, 100)).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-  } catch {
+    const normalized = remote.map(item => normalizeRemote(item as Record<string, unknown>));
+    upsertCache(normalized);
+    return getDemandAlerts();
+  } catch (err) {
+    logger.warning('[demandCapture] hydrateDemandAlerts failed', { userId, err });
     return getDemandAlerts();
   }
 }
 
+/**
+ * Get demand alerts from the in-memory cache.
+ * Always call hydrateDemandAlerts() first for authoritative data.
+ */
 export function getDemandAlerts(): DemandAlert[] {
-  return [...readAlerts()].sort(
+  return [...alertCache].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 }
 
-export function createDemandAlert(input: {
+/**
+ * Create a demand alert.
+ * Primary path: write to Supabase.
+ * Throws on Supabase failure — do not silently create phantom alerts.
+ */
+export async function createDemandAlert(input: {
   from: string;
   to: string;
   date: string;
   service: DemandService;
   seatsOrSlots?: number;
   userId?: string;
-}): DemandAlert {
-  const alerts = readAlerts();
-  const existing = alerts.find(
+}): Promise<DemandAlert> {
+  // Idempotency: check in-memory cache first
+  const existing = alertCache.find(
     item =>
       item.from === input.from &&
       item.to === input.to &&
@@ -113,33 +121,35 @@ export function createDemandAlert(input: {
   );
   if (existing) return existing;
 
-  const alert: DemandAlert = {
-    id: `demand-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    from: input.from,
-    to: input.to,
-    date: input.date,
-    service: input.service,
-    seatsOrSlots: Math.max(1, input.seatsOrSlots ?? 1),
-    status: 'active',
-    createdAt: new Date().toISOString(),
-  };
+  const seatsOrSlots = Math.max(1, input.seatsOrSlots ?? 1);
 
-  syncAlerts([alert, ...alerts]);
-  void createDirectDemandAlert({
-    from: alert.from,
-    to: alert.to,
-    date: alert.date,
-    service: alert.service,
-    seatsOrSlots: alert.seatsOrSlots,
-    userId: input.userId,
-  })
-    .then(remote => {
-      updateLocalAlert(alert.id, {
-        backendId: String(remote.id ?? ''),
-        syncedAt: new Date().toISOString(),
-      });
-    })
-    .catch(() => {});
+  // Write to Supabase (primary store)
+  let remote: Record<string, unknown>;
+  try {
+    remote = await createDirectDemandAlert({
+      from: input.from,
+      to: input.to,
+      date: input.date,
+      service: input.service,
+      seatsOrSlots,
+      userId: input.userId,
+    });
+  } catch (err) {
+    logger.error('[demandCapture] createDemandAlert Supabase write failed', { input, err });
+    throw new Error('Could not save demand alert. Please check your connection and try again.');
+  }
+
+  const alert = normalizeRemote({
+    ...remote,
+    origin_city: input.from,
+    destination_city: input.to,
+    requested_date: input.date,
+    service_type: input.service,
+    seats_or_slots: seatsOrSlots,
+  });
+
+  upsertCache([alert]);
+
   void trackGrowthEvent({
     userId: input.userId,
     eventName: 'demand_alert_created',
@@ -147,20 +157,28 @@ export function createDemandAlert(input: {
     serviceType: input.service,
     from: alert.from,
     to: alert.to,
-    metadata: {
-      date: alert.date,
-      seatsOrSlots: alert.seatsOrSlots,
-    },
-  });
+    metadata: { date: alert.date, seatsOrSlots: alert.seatsOrSlots },
+  }).catch(() => {});
+
   return alert;
 }
 
+/**
+ * Aggregate stats from the in-memory cache.
+ */
 export function getDemandStats() {
-  const alerts = getDemandAlerts();
+  const active = alertCache.filter(item => item.status === 'active');
   return {
-    active: alerts.filter(item => item.status === 'active').length,
-    rides: alerts.filter(item => item.service === 'ride' && item.status === 'active').length,
-    buses: alerts.filter(item => item.service === 'bus' && item.status === 'active').length,
-    packages: alerts.filter(item => item.service === 'package' && item.status === 'active').length,
+    active: active.length,
+    rides: active.filter(item => item.service === 'ride').length,
+    buses: active.filter(item => item.service === 'bus').length,
+    packages: active.filter(item => item.service === 'package').length,
   };
+}
+
+/**
+ * Clear the in-memory cache (call on sign-out).
+ */
+export function clearDemandAlertsCache(): void {
+  alertCache.splice(0);
 }

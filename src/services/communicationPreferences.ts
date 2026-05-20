@@ -6,6 +6,8 @@ import {
   upsertDirectCommunicationPreferences,
 } from './directSupabase';
 import { getConfig } from '../utils/env';
+import { flushPendingSyncQueue, upsertPendingSyncRecord } from './pendingSyncBuffer';
+import { readRuntimeState, writeRuntimeState } from '../utils/runtimeStore';
 
 export type CommunicationChannel = 'in_app' | 'push' | 'email' | 'sms' | 'whatsapp';
 export type NotificationTopic =
@@ -50,6 +52,8 @@ export type DeliveryQueueRequest = {
 
 const PREFERENCES_KEY = 'wasel.communication.preferences';
 const OUTBOX_KEY = 'wasel.communication.outbox';
+const PREFERENCES_SYNC_QUEUE = 'communication-preferences';
+const DELIVERIES_SYNC_QUEUE = 'communication-deliveries';
 
 export const defaultCommunicationPreferences: CommunicationPreferences = {
   inApp: true,
@@ -81,24 +85,19 @@ function storageKeyFor(userId: string | null | undefined) {
 }
 
 function readStoredPreferences(userId?: string | null): CommunicationPreferences {
-  if (typeof window === 'undefined') return defaultCommunicationPreferences;
-
-  try {
-    const raw = window.localStorage.getItem(storageKeyFor(userId));
-    return raw
-      ? normalizePreferences(JSON.parse(raw) as Partial<CommunicationPreferences>)
-      : defaultCommunicationPreferences;
-  } catch {
-    return defaultCommunicationPreferences;
-  }
+  return normalizePreferences(
+    readRuntimeState<Partial<CommunicationPreferences> | null>(
+      storageKeyFor(userId),
+      defaultCommunicationPreferences,
+    ),
+  );
 }
 
 function writeStoredPreferences(
   userId: string | null | undefined,
   prefs: CommunicationPreferences,
 ): void {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(storageKeyFor(userId), JSON.stringify(prefs));
+  writeRuntimeState(storageKeyFor(userId), prefs);
 }
 
 type QueuedDeliveryRecord = DeliveryQueueRequest & {
@@ -108,19 +107,12 @@ type QueuedDeliveryRecord = DeliveryQueueRequest & {
 };
 
 function readOutbox(): QueuedDeliveryRecord[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(OUTBOX_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? (parsed as QueuedDeliveryRecord[]) : [];
-  } catch {
-    return [];
-  }
+  const records = readRuntimeState<unknown>(OUTBOX_KEY, []);
+  return Array.isArray(records) ? (records as QueuedDeliveryRecord[]) : [];
 }
 
 function writeOutbox(records: QueuedDeliveryRecord[]): void {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(OUTBOX_KEY, JSON.stringify(records.slice(0, 200)));
+  writeRuntimeState(OUTBOX_KEY, records.slice(0, 200));
 }
 
 function normalizeDirectPreferences(
@@ -157,6 +149,34 @@ function toDirectPreferenceUpdate(prefs: Partial<CommunicationPreferences>) {
     critical_alerts_enabled: prefs.criticalAlerts,
     preferred_language: prefs.preferredLanguage,
   };
+}
+
+async function flushPendingCommunicationPreferences(): Promise<void> {
+  await flushPendingSyncQueue<{ userId: string; preferences: CommunicationPreferences }>(
+    PREFERENCES_SYNC_QUEUE,
+    async record => {
+      await upsertDirectCommunicationPreferences(
+        record.payload.userId,
+        toDirectPreferenceUpdate(record.payload.preferences),
+      );
+    },
+  ).catch(() => {});
+}
+
+async function flushPendingCommunicationDeliveries(): Promise<void> {
+  await flushPendingSyncQueue<{
+    userId: string;
+    notificationId?: string | null;
+    requests: DeliveryQueueRequest[];
+  }>(DELIVERIES_SYNC_QUEUE, async record => {
+    await queueDirectCommunicationDeliveries(
+      record.payload.userId,
+      record.payload.requests.map(request => ({
+        ...request,
+        notification_id: record.payload.notificationId ?? null,
+      })),
+    );
+  }).catch(() => {});
 }
 
 export function resolveNotificationTopic(type: string): NotificationTopic {
@@ -240,6 +260,7 @@ export async function getCommunicationPreferences(
   if (!userId) return localPrefs;
 
   try {
+    await flushPendingCommunicationPreferences();
     const normalized = await runBackendWorkflow({
       operation: 'Communication preferences loading',
       authMode: 'required',
@@ -294,7 +315,11 @@ export async function updateCommunicationPreferences(
         }),
     });
   } catch {
-    // keep local copy even if backend sync is unavailable
+    upsertPendingSyncRecord(
+      PREFERENCES_SYNC_QUEUE,
+      { userId, preferences: merged },
+      record => record.payload.userId === userId,
+    );
   }
 
   return merged;
@@ -324,6 +349,7 @@ export async function queueCommunicationDeliveries(args: {
   }
 
   try {
+    await flushPendingCommunicationDeliveries();
     await runBackendWorkflow({
       operation: 'Communication delivery queueing',
       authMode: 'required',
@@ -351,6 +377,11 @@ export async function queueCommunicationDeliveries(args: {
     });
     return { queued: localRecords.length, source: 'server' as const };
   } catch {
+    upsertPendingSyncRecord(DELIVERIES_SYNC_QUEUE, {
+      userId: args.userId,
+      notificationId: args.notificationId ?? null,
+      requests: args.requests,
+    });
     return { queued: localRecords.length, source: 'local' as const };
   }
 }
@@ -361,6 +392,7 @@ export async function getCommunicationDeliveryHistory(userId?: string | null) {
   }
 
   try {
+    await flushPendingCommunicationDeliveries();
     return await getDirectCommunicationDeliveries(userId);
   } catch {
     return readOutbox().filter(record => record.userId === userId);

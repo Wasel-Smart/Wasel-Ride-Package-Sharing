@@ -63,7 +63,10 @@ async function resetLocalDevelopmentArtifacts(): Promise<void> {
   }
 }
 
-// Initialize security features
+// ── Security bootstrappers ─────────────────────────────────────────────────
+// These run synchronously before React mounts so CSRF and session tokens
+// are available to the first authenticated API call.
+
 try {
   initializeCsrfProtection();
 } catch (error) {
@@ -80,13 +83,13 @@ try {
   }
 }
 
-// Verify backend connectivity on startup (both dev and prod).
-// In production we log warnings without blocking render.
+// ── Backend connectivity check (non-blocking) ─────────────────────────────
+// verifyBackendConnection is fire-and-forget; it does NOT delay first render.
 verifyBackendConnection()
   .then(result => {
     if (result.connected) {
       if (import.meta.env.DEV) {
-        console.log('[Wasel] ✓ Backend connected:', result.message);
+        console.info('[Wasel] ✓ Backend connected:', result.message);
       }
       startHealthCheckMonitoring(60_000);
     } else {
@@ -97,20 +100,23 @@ verifyBackendConnection()
     console.error('[Wasel] Backend health check failed:', sanitizeLogMessage(String(error)));
   });
 
-// Clear encryption key on logout
+// ── Encryption key cleanup on logout ──────────────────────────────────────
 window.addEventListener('storage', e => {
   if (e.key === 'wasel-auth-state' && !e.newValue) {
     clearMasterKey();
   }
 });
 
+// ── Mount React ────────────────────────────────────────────────────────────
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {
   throw new Error('[Wasel] Root element #root not found. Check index.html.');
 }
 
-rootElement.innerHTML = '';
+// NOTE: Do NOT clear rootElement.innerHTML here.
+// If a static skeleton or SSR shell is present, React should hydrate it.
+// Clearing it causes a flash of empty content before React mounts.
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
@@ -118,22 +124,26 @@ ReactDOM.createRoot(rootElement).render(
   </React.StrictMode>,
 );
 
+// ── Local dev: unregister stale service workers ────────────────────────────
+// Called AFTER render so it does not delay the first paint.
+// If a reload is required, it happens after the UI is visible.
 void resetLocalDevelopmentArtifacts();
 
-// Expose circuit breaker utilities globally — DEV builds only.
-// In production this block is dead code and tree-shaken by esbuild.
+// ── Production service worker registration ────────────────────────────────
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+  });
+}
+
+// ── DEV-only debug utilities ───────────────────────────────────────────────
+// Esbuild tree-shakes this entire block in production builds.
 if (import.meta.env.DEV && typeof window !== 'undefined') {
-  (window as any).__waselDebug = {
+  (window as Window & { __waselDebug?: unknown }).__waselDebug = {
     resetApiCircuitBreaker,
     getApiCircuitBreakerState,
     getAllCircuitBreakers: () => circuitBreakers.getAllStats(),
     resetAllCircuitBreakers: () => circuitBreakers.resetAll(),
   };
   console.info('[Wasel] Debug utilities available at window.__waselDebug');
-}
-
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => undefined);
-  });
 }

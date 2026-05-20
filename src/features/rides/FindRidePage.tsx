@@ -32,6 +32,7 @@ import {
   getRecurringRouteSuggestions,
   getRouteReminderForCorridor,
   getRouteReminders,
+  hydrateRouteReminders,
   syncRouteReminders,
 } from '../../services/movementRetention';
 import { notificationsAPI } from '../../services/notifications.js';
@@ -50,7 +51,6 @@ import {
   ALL_RIDES,
   buildRideFromPostedRide,
   CITIES,
-  RIDE_BOOKINGS_KEY,
   RIDE_SEARCHES_KEY,
   type Ride,
 } from '../../pages/waselCoreRideData';
@@ -236,6 +236,7 @@ export function FindRidePage() {
       onBookingsChange: setRideBookings,
     });
     void hydrateDemandAlerts(user.id);
+    void hydrateRouteReminders(user.id).then(setSavedReminders);
     return unsubscribe;
   }, [user?.id]);
 
@@ -244,16 +245,14 @@ export function FindRidePage() {
   }, [routeIntelligence.updatedAt]);
 
   useEffect(() => {
-    void syncRouteReminders(user ?? undefined).then(delivered => {
+    if (!user?.id) return;
+
+    void syncRouteReminders(user.id, { email: user.email, phone: user.phone }).then(delivered => {
       if (delivered.length > 0) {
         setSavedReminders(getRouteReminders());
       }
     });
-  }, [routeIntelligence.updatedAt, user?.email, user?.phone]);
-
-  useEffect(() => {
-    writeStoredStringList(RIDE_BOOKINGS_KEY, Array.from(bookedRideIds));
-  }, [bookedRideIds]);
+  }, [routeIntelligence.updatedAt, user?.email, user?.id, user?.phone]);
 
   useEffect(() => {
     writeStoredStringList(RIDE_SEARCHES_KEY, recentSearches);
@@ -282,24 +281,21 @@ export function FindRidePage() {
     setBookingMessage(null);
     setBookingSuccess(null);
     setLoading(true);
-
-    setTimeout(() => {
-      setLoading(false);
-      setSearched(true);
-      setRecentSearches(previous => {
-        const label = `${from} to ${to}${date ? ` on ${date}` : ''}`;
-        return [label, ...previous.filter(item => item !== label)].slice(0, 4);
-      });
-      void trackGrowthEvent({
-        userId: user?.id,
-        eventName: 'ride_search_executed',
-        funnelStage: 'searched',
-        serviceType: 'ride',
-        from,
-        to,
-        metadata: { date: date || null },
-      });
-    }, 700);
+    setSearched(true);
+    setRecentSearches(previous => {
+      const label = `${from} to ${to}${date ? ` on ${date}` : ''}`;
+      return [label, ...previous.filter(item => item !== label)].slice(0, 4);
+    });
+    void trackGrowthEvent({
+      userId: user?.id,
+      eventName: 'ride_search_executed',
+      funnelStage: 'searched',
+      serviceType: 'ride',
+      from,
+      to,
+      metadata: { date: date || null },
+    });
+    setLoading(false);
   };
 
   const handleOpenRide = (ride: Ride) => {
@@ -406,7 +402,7 @@ export function FindRidePage() {
       }
 
       notifyTripConfirmed(ride.driver.name, `${ride.from} to ${ride.to}`);
-      void recordMovementActivity('ride_booked', corridorPlan?.id ?? null);
+      void recordMovementActivity(user.id, 'ride_booked', corridorPlan?.id);
     } catch (error) {
       setBookingSuccess(null);
       setBookingMessage(
@@ -417,31 +413,38 @@ export function FindRidePage() {
     }
   };
 
-  const handleDemandCapture = () => {
-    const alert = createDemandAlert({
-      from,
-      to,
-      date: date || new Date().toISOString().slice(0, 10),
-      service: 'ride',
-      userId: user?.id,
-    });
+  const handleDemandCapture = async () => {
+    if (!user?.id) {
+      nav('/app/auth');
+      return;
+    }
 
-    setWaitlistMessage(`Alert saved for ${alert.from} to ${alert.to}.`);
-    void trackGrowthEvent({
-      userId: user?.id,
-      eventName: 'route_demand_alert_saved',
-      funnelStage: 'searched',
-      serviceType: 'ride',
-      from: alert.from,
-      to: alert.to,
-    });
+    try {
+      const alert = await createDemandAlert({
+        from,
+        to,
+        date: date || new Date().toISOString().slice(0, 10),
+        service: 'ride',
+        userId: user.id,
+      });
+
+      setWaitlistMessage(`Alert saved for ${alert.from} to ${alert.to}.`);
+    } catch (error) {
+      setWaitlistMessage(
+        error instanceof Error ? error.message : 'Could not save this alert right now.',
+      );
+    }
   };
 
-  const handleSaveReminder = (corridorId: string) => {
+  const handleSaveReminder = async (corridorId: string) => {
     const suggestion = recurringSuggestions.find(item => item.corridorId === corridorId);
     if (!suggestion) return;
+    if (!user?.id) {
+      nav('/app/auth');
+      return;
+    }
 
-    const reminder = createReminderFromSuggestion(suggestion);
+    const reminder = await createReminderFromSuggestion(user.id, suggestion);
     setSavedReminders(getRouteReminders());
     setRetentionMessage(`Reminder saved. ${formatRouteReminderSchedule(reminder)}.`);
     void trackGrowthEvent({

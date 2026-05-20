@@ -128,7 +128,7 @@ export function BusPage() {
   const [routesInfo, setRoutesInfo] = useState<string | null>(null);
   const [bookingBusy, setBookingBusy] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
-  const [bookingSource, setBookingSource] = useState<'server' | 'local' | null>(null);
+  const [bookingSource, setBookingSource] = useState<'server' | null>(null);
   const [bookingTicketCode, setBookingTicketCode] = useState<string | null>(null);
 
   useEffect(() => {
@@ -280,11 +280,7 @@ export function BusPage() {
           action_url: '/app/bus',
         })
         .catch(() => {});
-      setRoutesInfo(
-        result.source === 'local'
-          ? 'Seat saved locally while secure booking reconnects.'
-          : 'Seat confirmed and saved to your account.',
-      );
+      setRoutesInfo('Seat confirmed and saved to your account.');
     } catch (error) {
       setBookingSource(null);
       setBookingTicketCode(null);
@@ -1430,9 +1426,7 @@ export function BusPage() {
                       {departureLabel}. Ticket code {bookingTicketCode ?? 'pending'} was saved for
                       the {activeBus.from} to {activeBus.to} corridor. Saved in your account with
                       departure reminders.
-                      {bookingSource === 'local'
-                        ? ' Secure confirmation will sync when the booking backend reconnects.'
-                        : ''}
+                      {bookingSource === 'server' ? ' Confirmed through the Wasel network.' : ''}
                     </div>
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
                       <button

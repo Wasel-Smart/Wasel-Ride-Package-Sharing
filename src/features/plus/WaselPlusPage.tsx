@@ -13,6 +13,7 @@ import {
 import {
   activateWaselPlus,
   getMovementMembershipSnapshot,
+  loadMembershipSnapshot,
   startCommuterPass,
   type MovementMembershipSnapshot,
 } from '../../services/movementMembership';
@@ -20,6 +21,7 @@ import {
   createReminderFromSuggestion,
   formatRouteReminderSchedule,
   getRecurringRouteSuggestions,
+  hydrateRouteReminders,
   getRouteReminderForCorridor,
   getRouteReminders,
   syncRouteReminders,
@@ -52,21 +54,46 @@ export default function WaselPlusPage() {
   );
   const dailySignal = routeIntelligence.selectedSignal;
 
-  const handleActivatePlus = () => {
-    activateWaselPlus();
-    setMembership(getMovementMembershipSnapshot());
+  useEffect(() => {
+    if (!user?.id) return;
+
+    void (async () => {
+      await loadMembershipSnapshot(user.id);
+      setMembership(getMovementMembershipSnapshot(user.id));
+      const reminders = await hydrateRouteReminders(user.id);
+      setSavedReminders(reminders);
+    })();
+  }, [user?.id]);
+
+  const handleActivatePlus = async () => {
+    if (!user?.id) {
+      nav('/app/auth');
+      return;
+    }
+
+    await activateWaselPlus(user.id);
+    setMembership(getMovementMembershipSnapshot(user.id));
   };
 
-  const handleStartPass = (routeId: string) => {
-    startCommuterPass(routeId);
-    setMembership(getMovementMembershipSnapshot());
+  const handleStartPass = async (routeId: string) => {
+    if (!user?.id) {
+      nav('/app/auth');
+      return;
+    }
+
+    await startCommuterPass(user.id, routeId);
+    setMembership(getMovementMembershipSnapshot(user.id));
   };
 
-  const handleSaveReminder = (corridorId: string) => {
+  const handleSaveReminder = async (corridorId: string) => {
     const suggestion = recurringSuggestions.find(item => item.corridorId === corridorId);
     if (!suggestion) return;
+    if (!user?.id) {
+      nav('/app/auth');
+      return;
+    }
 
-    const reminder = createReminderFromSuggestion(suggestion);
+    const reminder = await createReminderFromSuggestion(user.id, suggestion);
     setSavedReminders(getRouteReminders());
     setRetentionMessage(`Reminder saved. ${formatRouteReminderSchedule(reminder)}.`);
   };
@@ -76,12 +103,14 @@ export default function WaselPlusPage() {
   }, [routeIntelligence.updatedAt]);
 
   useEffect(() => {
-    void syncRouteReminders(user ?? undefined).then(delivered => {
+    if (!user?.id) return;
+
+    void syncRouteReminders(user.id, { email: user.email, phone: user.phone }).then(delivered => {
       if (delivered.length > 0) {
         setSavedReminders(getRouteReminders());
       }
     });
-  }, [routeIntelligence.updatedAt, user?.email, user?.phone]);
+  }, [routeIntelligence.updatedAt, user?.email, user?.id, user?.phone]);
 
   return (
     <Protected>
