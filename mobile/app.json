@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Wasel",
-    "slug": "wasel",
+    "slug": "wasel-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,12 +11,20 @@
       "resizeMode": "contain",
       "backgroundColor": "#0A1628"
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "com.wasel.app",
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wasel.mobile",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Wasel uses your location to find nearby rides and show your position on the map.",
-        "NSLocationAlwaysUsageDescription": "Wasel uses your location to update your position as a driver during an active trip."
+        "NSLocationWhenInUseUsageDescription": "Wasel needs your location to find nearby rides and show accurate pickup points.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Wasel needs your location to track your ride and provide real-time updates.",
+        "NSCameraUsageDescription": "Wasel needs camera access to verify your identity and upload profile photos.",
+        "NSPhotoLibraryUsageDescription": "Wasel needs photo library access to upload profile and vehicle photos.",
+        "NSFaceIDUsageDescription": "Wasel uses Face ID to securely authenticate you.",
+        "UIBackgroundModes": ["location", "fetch", "remote-notification"]
+      },
+      "config": {
+        "googleMapsApiKey": "YOUR_IOS_GOOGLE_MAPS_KEY"
       }
     },
     "android": {
@@ -24,39 +32,60 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A1628"
       },
-      "package": "com.wasel.app",
+      "package": "com.wasel.mobile",
       "permissions": [
-        "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "RECEIVE_BOOT_COMPLETED",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
         "VIBRATE"
-      ]
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_ANDROID_GOOGLE_MAPS_KEY"
+        }
+      }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
+      "expo-location",
+      "expo-notifications",
+      "expo-secure-store",
       [
-        "expo-notifications",
+        "expo-build-properties",
         {
-          "icon": "./assets/notification-icon.png",
-          "color": "#00C8E8",
-          "sounds": []
+          "ios": {
+            "useFrameworks": "static"
+          }
         }
-      ],
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Wasel needs location access to match you with drivers and track your trip."
-        }
-      ],
-      "expo-secure-store"
+      ]
     ],
-    "scheme": "wasel",
     "extra": {
       "eas": {
-        "projectId": "wasel-mobile-project"
+        "projectId": "YOUR_EAS_PROJECT_ID"
       }
+    },
+    "owner": "wasel",
+    "scheme": "wasel",
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#00C8E8",
+      "androidMode": "default",
+      "androidCollapsedTitle": "New notification from Wasel"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/YOUR_PROJECT_ID"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
     }
   }
 }
