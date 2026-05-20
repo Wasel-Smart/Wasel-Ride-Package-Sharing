@@ -15,7 +15,8 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuth } from '../hooks/useAuth';
-import { useRides } from '../hooks/useRides';
+import { useOptimizedRides } from '../hooks/useOptimizedRides';
+import { useHaptics } from '../hooks/useHaptics';
 
 const { width } = Dimensions.get('window');
 
@@ -53,7 +54,8 @@ const SERVICES: ServiceItem[] = [
 
 export default function HomeScreen() {
   const { user } = useAuth();
-  const { rides, loading, refresh } = useRides();
+  const { rides, loading, refetch } = useOptimizedRides();
+  const { light } = useHaptics();
   const nav = useNavigation<NavProp>();
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -61,7 +63,8 @@ export default function HomeScreen() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await refresh();
+    light();
+    await refetch();
     setRefreshing(false);
   };
 
@@ -84,7 +87,12 @@ export default function HomeScreen() {
             <Text style={styles.greeting}>Good day, {firstName} 👋</Text>
             <Text style={styles.tagline}>Where are you heading today?</Text>
           </View>
-          <TouchableOpacity style={styles.notifBtn}>
+          <TouchableOpacity 
+            style={styles.notifBtn}
+            onPress={() => { light(); nav.navigate('Notifications' as any); }}
+            accessibilityLabel="View notifications"
+            accessibilityRole="button"
+          >
             <Ionicons name="notifications-outline" size={22} color={C.text} />
           </TouchableOpacity>
         </View>
@@ -93,7 +101,9 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={styles.searchBanner}
           activeOpacity={0.85}
-          onPress={() => nav.navigate('FindRide')}
+          onPress={() => { light(); nav.navigate('FindRide'); }}
+          accessibilityLabel="Search for rides from Amman to Aqaba"
+          accessibilityRole="search"
         >
           <Ionicons name="search" size={18} color={C.muted} />
           <Text style={styles.searchPlaceholder}>Search rides — Amman to Aqaba…</Text>
@@ -110,7 +120,9 @@ export default function HomeScreen() {
               key={svc.id}
               style={styles.serviceCard}
               activeOpacity={0.8}
-              onPress={() => nav.navigate(svc.screen)}
+              onPress={() => { light(); nav.navigate(svc.screen); }}
+              accessibilityLabel={`${svc.label} service`}
+              accessibilityRole="button"
             >
               <View style={[styles.serviceIcon, { backgroundColor: svc.color + '22', borderColor: svc.color + '33' }]}>
                 <Ionicons name={svc.icon as React.ComponentProps<typeof Ionicons>['name']} size={24} color={svc.color} />
@@ -123,7 +135,11 @@ export default function HomeScreen() {
         {/* Featured rides */}
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>Available now</Text>
-          <TouchableOpacity onPress={() => nav.navigate('FindRide')}>
+          <TouchableOpacity 
+            onPress={() => { light(); nav.navigate('FindRide'); }}
+            accessibilityLabel="See all available rides"
+            accessibilityRole="button"
+          >
             <Text style={styles.seeAll}>See all</Text>
           </TouchableOpacity>
         </View>
@@ -144,7 +160,9 @@ export default function HomeScreen() {
               key={ride.id}
               style={styles.rideCard}
               activeOpacity={0.85}
-              onPress={() => nav.navigate('RideDetail', { rideId: ride.id })}
+              onPress={() => { light(); nav.navigate('RideDetail', { rideId: ride.id }); }}
+              accessibilityLabel={`Ride from ${ride.from} to ${ride.to}, ${ride.price_jod} JOD, ${ride.seats_available} seats available`}
+              accessibilityRole="button"
             >
               {/* Accent bar */}
               <View style={styles.rideAccent} />

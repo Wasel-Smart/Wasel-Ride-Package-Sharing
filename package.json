@@ -68,6 +68,7 @@
     "@vitest/coverage-v8": "^4.1.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
     "framer-motion": "^12.39.0",
     "jsdom": "^29.1.1",
     "leaflet": "^1.9.4",

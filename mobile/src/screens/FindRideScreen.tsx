@@ -9,6 +9,8 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useRides, type MobileRide } from '../hooks/useRides';
+import { useHaptics } from '../hooks/useHaptics';
+import { useDebouncedCallback } from '../hooks/useDebounce';
 
 const C = {
   bg: '#0A1628', card: '#0E1D35', card2: '#112240',
@@ -73,6 +75,7 @@ function RideResultCard({ ride, onPress }: { ride: MobileRide; onPress: () => vo
 export default function FindRideScreen() {
   const nav = useNavigation<NavProp>();
   const { rides, loading, error, searchRides } = useRides();
+  const { light, medium } = useHaptics();
 
   const [from, setFrom] = useState('Amman');
   const [to, setTo] = useState('Aqaba');
@@ -81,12 +84,18 @@ export default function FindRideScreen() {
   const [activeField, setActiveField] = useState<'from' | 'to' | null>(null);
   const [sortBy, setSortBy] = useState<'price' | 'rating' | 'time'>('rating');
 
-  const handleSearch = async () => {
+  const debouncedSearch = useDebouncedCallback(async () => {
     if (from === to) return;
-    Keyboard.dismiss();
-    setActiveField(null);
     setHasSearched(true);
     await searchRides(from, to, date || undefined);
+  }, 300);
+
+  const handleSearch = async () => {
+    if (from === to) return;
+    medium();
+    Keyboard.dismiss();
+    setActiveField(null);
+    await debouncedSearch();
   };
 
   const sortedRides = [...rides].sort((a, b) =>
@@ -146,7 +155,12 @@ export default function FindRideScreen() {
               <TouchableOpacity
                 key={city}
                 style={styles.suggestionChip}
-                onPress={() => { if (activeField === 'from') setFrom(city); else setTo(city); setActiveField(null); }}
+                onPress={() => { 
+                  light();
+                  if (activeField === 'from') setFrom(city); 
+                  else setTo(city); 
+                  setActiveField(null); 
+                }}
               >
                 <Text style={styles.suggestionText}>{city}</Text>
               </TouchableOpacity>
@@ -210,7 +224,7 @@ export default function FindRideScreen() {
           renderItem={({ item }) => (
             <RideResultCard
               ride={item}
-              onPress={() => nav.navigate('RideDetail', { rideId: item.id })}
+              onPress={() => { light(); nav.navigate('RideDetail', { rideId: item.id }); }}
             />
           )}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, gap: 12 }}
