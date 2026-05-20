@@ -689,9 +689,6 @@ export default function WaselAuth() {
                   type="password"
                   value={password}
                   onChange={setPassword}
-                  placeholder={
-                    tab === 'signin' ? 'Enter your password' : 'Create a secure password'
-                  }
                   icon={<Lock size={16} />}
                   hint={
                     tab === 'signup' && password.length > 0 ? (

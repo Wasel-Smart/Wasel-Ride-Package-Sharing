@@ -5,11 +5,11 @@
 
 // Re-export shared HTML sanitization from canonical module and keep a local binding
 // for recursive helpers in this module.
-import { sanitizeHtml } from './sanitization';
+import { sanitizeHTML } from './sanitization';
 
-const sanitizeText = sanitizeHtml;
+const sanitizeText = sanitizeHTML;
 
-export { sanitizeHtml as sanitizeHTML, sanitizeText };
+export { sanitizeHTML, sanitizeText };
 
 // DOM-based HTML sanitizer (strips tags entirely via browser parser)
 export function sanitizeHTMLStrict(html: string): string {
