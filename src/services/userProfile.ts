@@ -43,13 +43,20 @@ export interface UpdateProfileData {
   whatsapp_notifications?: boolean;
 }
 
+export interface DriverVerificationData {
+  national_id: string;
+  driver_license: string;
+  vehicle_registration?: string;
+  vehicle_insurance?: string;
+}
+
 /**
  * Get current user profile with all information
  */
 export async function getUserProfile(): Promise<{ data: UserProfile | null; error: string | null }> {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return { data: null, error: 'Not authenticated' };
     }
@@ -70,7 +77,7 @@ export async function getUserProfile(): Promise<{ data: UserProfile | null; erro
         .from('profiles')
         .update({ email: user.email })
         .eq('id', user.id);
-      
+
       data.email = user.email;
     }
 
@@ -89,7 +96,7 @@ export async function updateUserProfile(
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return { success: false, error: 'Not authenticated' };
     }
@@ -99,7 +106,7 @@ export async function updateUserProfile(
       if (!phoneRegex.test(updates.phone_number.replace(/\s/g, ''))) {
         return { success: false, error: 'Invalid Jordanian phone number format' };
       }
-      
+
       let normalized = updates.phone_number.replace(/\s/g, '');
       if (normalized.startsWith('0')) {
         normalized = '+962' + normalized.slice(1);
@@ -140,7 +147,7 @@ export async function updatePhoneNumber(
 ): Promise<{ success: boolean; error: string | null; verificationRequired?: boolean }> {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return { success: false, error: 'Not authenticated' };
     }
@@ -201,7 +208,7 @@ export async function updateEmail(
 ): Promise<{ success: boolean; error: string | null; verificationRequired?: boolean }> {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return { success: false, error: 'Not authenticated' };
     }
@@ -249,7 +256,7 @@ export async function uploadAvatar(
 ): Promise<{ success: boolean; url: string | null; error: string | null }> {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+
     if (authError || !user) {
       return { success: false, url: null, error: 'Not authenticated' };
     }
@@ -292,5 +299,42 @@ export async function uploadAvatar(
   } catch (error) {
     console.error('uploadAvatar error:', sanitizeLogMessage(error));
     return { success: false, url: null, error: 'Failed to upload avatar' };
+  }
+}
+
+/**
+ * Submit driver verification documents
+ */
+export async function submitDriverVerification(
+  data: DriverVerificationData
+): Promise<{ success: boolean; error: string | null }> {
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { success: false, error: 'Not authenticated' };
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        national_id: data.national_id,
+        driver_license: data.driver_license,
+        is_driver: true,
+        verification_status: 'pending',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+
+    if (error) {
+      console.error('Failed to submit verification:', sanitizeLogMessage(error.message));
+      return { success: false, error: error.message };
+    }
+
+    console.log('Driver verification submitted');
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('submitDriverVerification error:', sanitizeLogMessage(error));
+    return { success: false, error: 'Failed to submit verification' };
   }
 }

@@ -30,15 +30,12 @@ export function createAdminClient() {
   assertServerOnly();
 
   const supabaseUrl = getRequiredEnv(
-    'VITE_STORADGE_SUPABASE_URL',
-    'NEXT_PUBLIC_STORADGE_SUPABASE_URL',
     'VITE_SUPABASE_URL',
+    'NEXT_PUBLIC_SUPABASE_URL',
   );
 
   const secretKey = getRequiredEnv(
-    'STORADGE_SUPABASE_SECRET_KEY',
     'SUPABASE_SECRET_KEY',
-    'STORADGE_SUPABASE_SERVICE_ROLE_KEY',
     'SUPABASE_SERVICE_ROLE_KEY',
   );
 
