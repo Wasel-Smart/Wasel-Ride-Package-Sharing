@@ -73,7 +73,7 @@ export function sanitizeEmail(email: string): string {
   const [username] = email.split('@');
   const atIdx = email.indexOf('@');
   const domain = atIdx >= 0 ? email.slice(atIdx + 1) : '';
-  if (!domain || username.length <= 2) return `**@${domain}`;
+  if (!domain || (username ?? '').length <= 2) return `**@${domain}`;
   
   const visibleChars = Math.min(2, Math.floor((username ?? '').length / 3));
   const masked = (username ?? '').slice(0, visibleChars) + '***';
