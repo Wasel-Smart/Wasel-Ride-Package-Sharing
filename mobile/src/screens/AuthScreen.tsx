@@ -6,6 +6,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../hooks/useAuth';
+import { useBiometric } from '../hooks/useBiometric';
+import { useHaptics } from '../hooks/useHaptics';
 import { Button } from '../components/ui/Button';
 import { C, S, R, T } from '../theme';
 
@@ -13,6 +15,8 @@ type Tab = 'signin' | 'signup';
 
 export default function AuthScreen() {
   const { signIn, signUp } = useAuth();
+  const { authenticate, isAvailable } = useBiometric();
+  const { light, success, error: hapticError } = useHaptics();
 
   const [tab,      setTab]      = useState<Tab>('signin');
   const [email,    setEmail]    = useState('');
@@ -21,21 +25,26 @@ export default function AuthScreen() {
   const [loading,  setLoading]  = useState(false);
   const [showPw,   setShowPw]   = useState(false);
   const [error,    setError]    = useState<string | null>(null);
+  const [useBiometricAuth, setUseBiometricAuth] = useState(false);
 
   const handleSubmit = async () => {
     setError(null);
     if (!email.trim() || !password.trim()) {
       setError('Please fill in all fields.');
+      hapticError();
       return;
     }
     if (tab === 'signup' && !name.trim()) {
       setError('Please enter your full name.');
+      hapticError();
       return;
     }
     if (password.length < 6) {
       setError('Password must be at least 6 characters.');
+      hapticError();
       return;
     }
+    light();
     setLoading(true);
     const result = tab === 'signin'
       ? await signIn(email.trim(), password)
@@ -43,6 +52,22 @@ export default function AuthScreen() {
     setLoading(false);
     if (result.error) {
       setError(result.error);
+      hapticError();
+    } else {
+      success();
+    }
+  };
+
+  const handleBiometricAuth = async () => {
+    light();
+    const result = await authenticate('Sign in to Wasel');
+    if (result.success) {
+      success();
+      // Auto-fill stored credentials or proceed
+      await handleSubmit();
+    } else {
+      hapticError();
+      setError(result.error || 'Biometric authentication failed');
     }
   };
 
@@ -176,7 +201,21 @@ export default function AuthScreen() {
               <View style={styles.divLine} />
             </View>
 
-            {/* Google — coming soon, shown as disabled with clear label */}
+            {/* Biometric Auth */}
+            {isAvailable && tab === 'signin' && (
+              <TouchableOpacity
+                style={styles.biometricBtn}
+                onPress={handleBiometricAuth}
+                disabled={loading}
+                accessibilityLabel="Sign in with biometric authentication"
+                accessibilityRole="button"
+              >
+                <Ionicons name="finger-print" size={20} color={C.cyan} />
+                <Text style={styles.biometricText}>Sign in with biometrics</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Google — coming soon */}
             <View style={styles.socialBtnDisabled} accessible accessibilityRole="button" accessibilityState={{ disabled: true }}>
               <Ionicons name="logo-google" size={20} color={C.muted} />
               <Text style={styles.socialTextDisabled}>Google sign-in — coming soon</Text>
@@ -240,6 +279,14 @@ const styles = StyleSheet.create({
   divider:  { flexDirection: 'row', alignItems: 'center', gap: S.md, marginVertical: S.lg },
   divLine:  { flex: 1, height: 0.5, backgroundColor: C.border },
   divText:  { fontSize: 13, color: C.muted },
+
+  biometricBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: S.md, height: 50, borderRadius: R.md,
+    backgroundColor: C.cyanDim, borderWidth: 1, borderColor: C.cyanBorder,
+    marginBottom: S.sm,
+  },
+  biometricText: { fontSize: 14, fontWeight: '600', color: C.cyan },
 
   socialBtnDisabled: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
