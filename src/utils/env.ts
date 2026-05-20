@@ -121,9 +121,8 @@ function resolveAppUrl(envSource: EnvSource = readEnvSource()): string {
 
 function resolveSupabaseUrl(envSource: EnvSource = readEnvSource()): string {
   return getFirstConfiguredValue(
-    envSource.VITE_STORADGE_SUPABASE_URL,
-    envSource.NEXT_PUBLIC_STORADGE_SUPABASE_URL,
     envSource.VITE_SUPABASE_URL,
+    envSource.NEXT_PUBLIC_STORADGE_SUPABASE_URL,
     envSource.VITE_SUPABASE_PROJECT_URL,
     envSource.VITE_PUBLIC_SUPABASE_URL,
     resolvedPublicSupabaseUrl,
@@ -132,10 +131,8 @@ function resolveSupabaseUrl(envSource: EnvSource = readEnvSource()): string {
 
 function resolveSupabasePublicKey(envSource: EnvSource = readEnvSource()): string {
   return getFirstConfiguredValue(
-    envSource.VITE_STORADGE_SUPABASE_PUBLISHABLE_KEY,
-    envSource.NEXT_PUBLIC_STORADGE_SUPABASE_PUBLISHABLE_KEY,
-    envSource.VITE_STORADGE_SUPABASE_ANON_KEY,
     envSource.VITE_SUPABASE_PUBLISHABLE_KEY,
+    envSource.NEXT_PUBLIC_STORADGE_SUPABASE_PUBLISHABLE_KEY,
     envSource.VITE_SUPABASE_ANON_KEY,
     envSource.VITE_PUBLIC_SUPABASE_ANON_KEY,
     resolvedPublicSupabaseKey,

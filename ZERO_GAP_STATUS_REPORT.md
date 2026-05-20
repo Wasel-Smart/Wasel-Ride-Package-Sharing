@@ -78,6 +78,7 @@ All critical security vulnerabilities, configuration gaps, and user information 
 - ✅ Complete type safety with TypeScript
 - ✅ Error handling with sanitized messages
 - ✅ Integration with Supabase Auth and Storage
+- ✅ Driver verification document submission (`submitDriverVerification`)
 
 #### Enhanced Profile Hook
 **File:** `mobile/src/hooks/useProfile.ts`
@@ -158,7 +159,8 @@ const {
 
 #### Environment Variables
 **Fixed:**
-- ✅ Corrected typo: `VITE_STORADGE_*` → `VITE_SUPABASE_*`
+- ✅ Corrected typo: `STORADGE_*` → `SUPABASE_*` in env.ts, admin.ts, client.ts
+- ✅ Corrected typo: `VITE_STORADGE_*` → `VITE_SUPABASE_*` in .env.example
 - ✅ Created `mobile/.env.example` with all required variables
 - ✅ Documented all environment variables
 
