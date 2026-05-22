@@ -2,148 +2,352 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+
 import { initializeCsrfProtection } from './utils/csrf';
 import { initializeSessionManagement } from './utils/session';
 import { clearMasterKey } from './utils/encryption';
+
 import {
   safeStorageGetItem,
   safeStorageRemoveItem,
   safeStorageSetItem,
 } from './utils/browserStorage';
-import { verifyBackendConnection, startHealthCheckMonitoring } from './utils/healthCheck';
+
+import {
+  verifyBackendConnection,
+  startHealthCheckMonitoring,
+} from './utils/healthCheck';
+
 import { sanitizeLogMessage } from './utils/sanitization';
 import { circuitBreakers } from './utils/circuitBreaker';
-import { resetApiCircuitBreaker, getApiCircuitBreakerState } from './services/core';
+
+import {
+  resetApiCircuitBreaker,
+  getApiCircuitBreakerState,
+} from './services/core';
 
 const LOCAL_DEV_RESET_KEY = 'wasel-local-dev-cache-reset';
 
+const IS_BROWSER =
+  typeof window !== 'undefined' &&
+  typeof document !== 'undefined';
+
+const IS_DEV = import.meta.env.DEV;
+const IS_PROD = import.meta.env.PROD;
+
+/**
+ * Safe logger wrapper
+ */
+const logger = {
+  info: (...args: unknown[]) => {
+    if (IS_DEV) console.info(...args);
+  },
+
+  warn: (...args: unknown[]) => {
+    console.warn(...args);
+  },
+
+  error: (...args: unknown[]) => {
+    console.error(...args);
+  },
+};
+
+/**
+ * Check if app is running on localhost dev environment
+ */
 function isLocalDevelopmentOrigin(): boolean {
-  if (typeof window === 'undefined') {
-    return false;
-  }
+  if (!IS_BROWSER) return false;
 
   try {
     const { hostname, protocol } = new URL(window.location.origin);
-    return protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1');
+
+    return (
+      protocol === 'http:' &&
+      ['localhost', '127.0.0.1'].includes(hostname)
+    );
   } catch {
     return false;
   }
 }
 
+/**
+ * Cleanup stale local service workers and cache
+ * Prevents old assets from causing broken dev builds.
+ */
 async function resetLocalDevelopmentArtifacts(): Promise<void> {
-  if (!isLocalDevelopmentOrigin() || !('serviceWorker' in navigator)) {
+  if (
+    !IS_BROWSER ||
+    !isLocalDevelopmentOrigin() ||
+    !('serviceWorker' in navigator)
+  ) {
     return;
   }
 
   try {
-    const registrations = await navigator.serviceWorker.getRegistrations();
+    const registrations =
+      await navigator.serviceWorker.getRegistrations();
+
     if (registrations.length === 0) {
-      safeStorageRemoveItem('sessionStorage', LOCAL_DEV_RESET_KEY);
+      safeStorageRemoveItem(
+        'sessionStorage',
+        LOCAL_DEV_RESET_KEY
+      );
       return;
     }
 
-    await Promise.allSettled(registrations.map(registration => registration.unregister()));
+    await Promise.allSettled(
+      registrations.map(reg =>
+        reg.unregister()
+      )
+    );
 
     if ('caches' in window) {
       const cacheKeys = await caches.keys();
-      await Promise.allSettled(cacheKeys.map(cacheKey => caches.delete(cacheKey)));
+
+      await Promise.allSettled(
+        cacheKeys.map(key =>
+          caches.delete(key)
+        )
+      );
     }
 
-    if (!safeStorageGetItem('sessionStorage', LOCAL_DEV_RESET_KEY)) {
-      safeStorageSetItem('sessionStorage', LOCAL_DEV_RESET_KEY, '1');
+    const alreadyReloaded =
+      safeStorageGetItem(
+        'sessionStorage',
+        LOCAL_DEV_RESET_KEY
+      );
+
+    if (!alreadyReloaded) {
+      safeStorageSetItem(
+        'sessionStorage',
+        LOCAL_DEV_RESET_KEY,
+        '1'
+      );
+
       window.location.reload();
       return;
     }
 
-    safeStorageRemoveItem('sessionStorage', LOCAL_DEV_RESET_KEY);
+    safeStorageRemoveItem(
+      'sessionStorage',
+      LOCAL_DEV_RESET_KEY
+    );
   } catch (error) {
-    if (import.meta.env.DEV) {
-      console.warn('[Wasel] Local cache cleanup skipped.', error);
-    }
+    logger.warn(
+      '[Wasel] Local cache cleanup skipped.',
+      sanitizeLogMessage(String(error))
+    );
   }
 }
 
-// ── Security bootstrappers ─────────────────────────────────────────────────
-// These run synchronously before React mounts so CSRF and session tokens
-// are available to the first authenticated API call.
+/**
+ * Security initialization
+ * Must run before first API request.
+ */
+function initializeSecurity(): void {
+  try {
+    initializeCsrfProtection();
+  } catch (error) {
+    logger.warn(
+      '[Wasel] CSRF startup failed.',
+      sanitizeLogMessage(String(error))
+    );
+  }
 
-try {
-  initializeCsrfProtection();
-} catch (error) {
-  if (import.meta.env.DEV) {
-    console.warn('[Wasel] CSRF startup initialization failed.', error);
+  try {
+    initializeSessionManagement();
+  } catch (error) {
+    logger.warn(
+      '[Wasel] Session startup failed.',
+      sanitizeLogMessage(String(error))
+    );
   }
 }
 
-try {
-  initializeSessionManagement();
-} catch (error) {
-  if (import.meta.env.DEV) {
-    console.warn('[Wasel] Session startup initialization failed.', error);
-  }
-}
+/**
+ * Backend health monitoring
+ * Fire-and-forget, never blocks render.
+ */
+async function initializeBackendHealth(): Promise<void> {
+  try {
+    const result =
+      await verifyBackendConnection();
 
-// ── Backend connectivity check (non-blocking) ─────────────────────────────
-// verifyBackendConnection is fire-and-forget; it does NOT delay first render.
-verifyBackendConnection()
-  .then(result => {
     if (result.connected) {
-      if (import.meta.env.DEV) {
-        console.info('[Wasel] ✓ Backend connected:', result.message);
-      }
-      startHealthCheckMonitoring(60_000);
+      logger.info(
+        '[Wasel] Backend connected:',
+        result.message
+      );
+
+      startHealthCheckMonitoring(
+        60_000
+      );
     } else {
-      console.warn('[Wasel] ⚠ Backend connection issue:', sanitizeLogMessage(result.message));
+      logger.warn(
+        '[Wasel] Backend issue:',
+        sanitizeLogMessage(
+          result.message
+        )
+      );
     }
-  })
-  .catch(error => {
-    console.error('[Wasel] Backend health check failed:', sanitizeLogMessage(String(error)));
-  });
-
-// ── Encryption key cleanup on logout ──────────────────────────────────────
-window.addEventListener('storage', e => {
-  if (e.key === 'wasel-auth-state' && !e.newValue) {
-    clearMasterKey();
+  } catch (error) {
+    logger.error(
+      '[Wasel] Health check failed:',
+      sanitizeLogMessage(
+        String(error)
+      )
+    );
   }
-});
-
-// ── Mount React ────────────────────────────────────────────────────────────
-const rootElement = document.getElementById('root');
-
-if (!rootElement) {
-  throw new Error('[Wasel] Root element #root not found. Check index.html.');
 }
 
-// NOTE: Do NOT clear rootElement.innerHTML here.
-// If a static skeleton or SSR shell is present, React should hydrate it.
-// Clearing it causes a flash of empty content before React mounts.
+/**
+ * Encryption cleanup on logout
+ */
+function initializeStorageListeners(): void {
+  if (!IS_BROWSER) return;
 
-ReactDOM.createRoot(rootElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
-
-// ── Local dev: unregister stale service workers ────────────────────────────
-// Called AFTER render so it does not delay the first paint.
-// If a reload is required, it happens after the UI is visible.
-void resetLocalDevelopmentArtifacts();
-
-// ── Production service worker registration ────────────────────────────────
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => undefined);
-  });
+  window.addEventListener(
+    'storage',
+    (event: StorageEvent) => {
+      try {
+        if (
+          event.key ===
+            'wasel-auth-state' &&
+          !event.newValue
+        ) {
+          clearMasterKey();
+        }
+      } catch (error) {
+        logger.warn(
+          '[Wasel] Failed to clear master key:',
+          sanitizeLogMessage(
+            String(error)
+          )
+        );
+      }
+    }
+  );
 }
 
-// ── DEV-only debug utilities ───────────────────────────────────────────────
-// Esbuild tree-shakes this entire block in production builds.
-if (import.meta.env.DEV && typeof window !== 'undefined') {
-  (window as Window & { __waselDebug?: unknown }).__waselDebug = {
+/**
+ * Register production service worker
+ */
+function registerServiceWorker(): void {
+  if (
+    !IS_PROD ||
+    !IS_BROWSER ||
+    !('serviceWorker' in navigator)
+  ) {
+    return;
+  }
+
+  window.addEventListener(
+    'load',
+    () => {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then(() => {
+          logger.info(
+            '[Wasel] Service worker registered.'
+          );
+        })
+        .catch(error => {
+          logger.warn(
+            '[Wasel] SW registration failed:',
+            sanitizeLogMessage(
+              String(error)
+            )
+          );
+        });
+    },
+    { once: true }
+  );
+}
+
+/**
+ * Debug utilities (DEV only)
+ */
+function initializeDebugTools(): void {
+  if (!IS_DEV || !IS_BROWSER) {
+    return;
+  }
+
+  interface WaselWindow
+    extends Window {
+    __waselDebug?: {
+      resetApiCircuitBreaker:
+        typeof resetApiCircuitBreaker;
+      getApiCircuitBreakerState:
+        typeof getApiCircuitBreakerState;
+      getAllCircuitBreakers: () => unknown;
+      resetAllCircuitBreakers: () => void;
+    };
+  }
+
+  (
+    window as WaselWindow
+  ).__waselDebug = {
     resetApiCircuitBreaker,
     getApiCircuitBreakerState,
-    getAllCircuitBreakers: () => circuitBreakers.getAllStats(),
-    resetAllCircuitBreakers: () => circuitBreakers.resetAll(),
+    getAllCircuitBreakers:
+      () =>
+        circuitBreakers.getAllStats(),
+    resetAllCircuitBreakers:
+      () =>
+        circuitBreakers.resetAll(),
   };
-  console.info('[Wasel] Debug utilities available at window.__waselDebug');
+
+  logger.info(
+    '[Wasel] Debug tools available: window.__waselDebug'
+  );
 }
+
+/**
+ * Mount React app
+ */
+function mountApplication(): void {
+  if (!IS_BROWSER) {
+    throw new Error(
+      '[Wasel] Browser environment unavailable.'
+    );
+  }
+
+  const rootElement =
+    document.getElementById(
+      'root'
+    );
+
+  if (!rootElement) {
+    throw new Error(
+      '[Wasel] Root element #root not found.'
+    );
+  }
+
+  ReactDOM.createRoot(
+    rootElement
+  ).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}
+
+/**
+ * Bootstrap application
+ */
+async function bootstrap(): Promise<void> {
+  initializeSecurity();
+
+  initializeStorageListeners();
+
+  mountApplication();
+
+  // Non-blocking background tasks
+  void initializeBackendHealth();
+  void resetLocalDevelopmentArtifacts();
+
+  registerServiceWorker();
+  initializeDebugTools();
+}
+
+void bootstrap();
