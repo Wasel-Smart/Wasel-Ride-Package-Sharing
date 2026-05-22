@@ -119,10 +119,13 @@ function resolveAppUrl(envSource: EnvSource = readEnvSource()): string {
   return configuredAppUrl;
 }
 
+// ✅ Gap 4 fixed: removed NEXT_PUBLIC_STORADGE_* typo fallback variants from both
+// resolvers. Canonical variable names are VITE_SUPABASE_URL and
+// VITE_SUPABASE_PUBLISHABLE_KEY. Any deployments that relied on the typo variant
+// must migrate to the correct name.
 function resolveSupabaseUrl(envSource: EnvSource = readEnvSource()): string {
   return getFirstConfiguredValue(
     envSource.VITE_SUPABASE_URL,
-    envSource.NEXT_PUBLIC_STORADGE_SUPABASE_URL,
     envSource.VITE_SUPABASE_PROJECT_URL,
     envSource.VITE_PUBLIC_SUPABASE_URL,
     resolvedPublicSupabaseUrl,
@@ -132,7 +135,6 @@ function resolveSupabaseUrl(envSource: EnvSource = readEnvSource()): string {
 function resolveSupabasePublicKey(envSource: EnvSource = readEnvSource()): string {
   return getFirstConfiguredValue(
     envSource.VITE_SUPABASE_PUBLISHABLE_KEY,
-    envSource.NEXT_PUBLIC_STORADGE_SUPABASE_PUBLISHABLE_KEY,
     envSource.VITE_SUPABASE_ANON_KEY,
     envSource.VITE_PUBLIC_SUPABASE_ANON_KEY,
     resolvedPublicSupabaseKey,

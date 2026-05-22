@@ -78,6 +78,13 @@ export {
   upsertDirectUserSettings,
 } from './accountAndSupport';
 
+// ✅ Gap 9 fixed: re-export SMS verification functions so any import of
+// directSupabase can access them without a second import path.
+// The canonical implementations live in ../smsVerification to keep Twilio
+// credentials server-only; these re-exports give consumers a single surface.
+export type { SMSOtpResult, SMSVerifyResult } from '../smsVerification';
+export { getSMSOtp, verifySMSCode, verifyPhoneNumber } from '../smsVerification';
+
 // Price calculator (pure, no Supabase dependency)
 import type { PriceCalculationResult } from '../trips';
 import { toNumber } from './helpers';

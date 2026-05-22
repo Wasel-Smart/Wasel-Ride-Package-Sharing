@@ -1,14 +1,8 @@
 /**
- * Canonical Supabase database types for the current Wasel app.
- *
- * This file intentionally merges:
- * - the latest production operating model migration family
- * - legacy compatibility tables still referenced by the web app
- *
- * The goal is to keep createClient<Database>() aligned with both the real
- * production schema direction and the tables the app currently queries.
+ * Canonical Supabase database types — Wasel app.
+ * ✅ Gap 1 fixed: profiles Row now includes ALL fields from
+ *    migration 20260520000000_complete_user_profile_schema.sql
  */
-
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 type RowSet<Row, Insert = Partial<Row>, Update = Partial<Insert>> = {
@@ -45,20 +39,12 @@ export interface Database {
         created_at: string;
         updated_at: string | null;
       }>;
-
       communication_deliveries: RowSet<{
         delivery_id: string;
         user_id: string;
         notification_id: string | null;
         channel: 'email' | 'sms' | 'whatsapp' | 'push' | 'in_app' | string;
-        delivery_status:
-          | 'queued'
-          | 'processing'
-          | 'sent'
-          | 'delivered'
-          | 'failed'
-          | 'cancelled'
-          | string;
+        delivery_status: 'queued' | 'processing' | 'sent' | 'delivered' | 'failed' | 'cancelled' | string;
         destination: string | null;
         subject: string | null;
         payload: Json | null;
@@ -79,7 +65,6 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
-
       communication_preferences: RowSet<{
         user_id: string;
         in_app_enabled: boolean | null;
@@ -97,28 +82,18 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
-
       drivers: RowSet<{
         driver_id: string;
         user_id: string;
         license_number: string;
         vehicle_id: string | null;
-        driver_status:
-          | 'draft'
-          | 'pending_approval'
-          | 'approved'
-          | 'rejected'
-          | 'suspended'
-          | 'offline'
-          | 'online'
-          | 'busy';
+        driver_status: 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'suspended' | 'offline' | 'online' | 'busy';
         verification_level: 'level_0' | 'level_1' | 'level_2' | 'level_3';
         sanad_identity_linked: boolean;
         background_check_status: 'unverified' | 'pending' | 'verified' | 'rejected' | 'expired';
         created_at: string;
         updated_at: string;
       }>;
-
       notifications: RowSet<{
         id: string;
         user_id: string;
@@ -133,7 +108,6 @@ export interface Database {
         metadata: Json | null;
         created_at: string;
       }>;
-
       package_events: RowSet<{
         package_event_id: string;
         package_id: string;
@@ -143,7 +117,6 @@ export interface Database {
         created_by: string | null;
         created_at: string;
       }>;
-
       packages: RowSet<{
         id: string;
         package_id: string | null;
@@ -168,14 +141,7 @@ export interface Database {
         trip_id: string | null;
         carrier_id: string | null;
         payment_transaction_id: string | null;
-        package_status:
-          | 'created'
-          | 'assigned'
-          | 'in_transit'
-          | 'delivered'
-          | 'cancelled'
-          | 'disputed'
-          | null;
+        package_status: 'created' | 'assigned' | 'in_transit' | 'delivered' | 'cancelled' | 'disputed' | null;
         status: string | null;
         delivered_at: string | null;
         picked_up_at: string | null;
@@ -189,79 +155,89 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
-
       payment_methods: RowSet<{
         payment_method_id: string;
         user_id: string;
         provider: string;
-        method_type:
-          | 'wallet_balance'
-          | 'card_payment'
-          | 'local_gateway'
-          | 'government_api'
-          | string;
+        method_type: 'wallet_balance' | 'card_payment' | 'local_gateway' | 'government_api' | string;
         token_reference: string;
         is_default: boolean;
         status: string;
         created_at: string;
         updated_at: string;
       }>;
-
+      /**
+       * profiles — canonical user profile table.
+       * ✅ All fields from migration 20260520000000_complete_user_profile_schema.sql
+       *    previously missing fields now added (marked ← added):
+       *    email_verified, verification_status, trust_score, rating_as_passenger,
+       *    total_rides_as_passenger, total_rides_as_driver, push_token, push_enabled,
+       *    email_notifications, sms_notifications, whatsapp_notifications,
+       *    preferred_language, deleted_at, date_of_birth, gender.
+       */
       profiles: RowSet<{
+        // Identity
         id: string;
         email: string | null;
         full_name: string | null;
-        phone: string | null;
+        // Contact
         phone_number: string | null;
+        phone: string | null;
+        // Contact verification
+        phone_verified: boolean | null;
+        email_verified: boolean | null;          // ← added
+        // Personal information
+        date_of_birth: string | null;            // ← added
+        gender: 'male' | 'female' | 'other' | null; // ← added
+        avatar_url: string | null;
+        // Roles & status
         role: 'rider' | 'driver' | 'both' | 'passenger' | 'admin' | null;
-        wallet_balance: number | null;
-        balance: number | null;
-        rating: number | null;
-        rating_as_driver: number | null;
-        trip_count: number | null;
-        trips: number | null;
+        is_driver: boolean | null;
+        // Verification
         verified: boolean | null;
         id_verified: boolean | null;
         is_verified: boolean | null;
         sanad_verified: boolean | null;
-        phone_verified: boolean | null;
+        verification_status: 'pending' | 'verified' | 'rejected' | null; // ← added
         verification_level: string | null;
+        // Verification documents
+        national_id: string | null;
+        driver_license: string | null;
+        // Trust & ratings
+        trust_score: number | null;              // ← added
+        rating: number | null;
+        rating_as_passenger: number | null;      // ← added
+        rating_as_driver: number | null;
+        // Trip statistics
+        trip_count: number | null;
+        trips: number | null;
+        total_rides_as_passenger: number | null; // ← added
+        total_rides_as_driver: number | null;    // ← added
+        // Push notifications
+        push_token: string | null;               // ← added
+        push_enabled: boolean | null;            // ← added
+        // Notification preferences
+        email_notifications: boolean | null;     // ← added
+        sms_notifications: boolean | null;       // ← added
+        whatsapp_notifications: boolean | null;  // ← added
+        // Localisation
+        preferred_language: 'en' | 'ar' | null; // ← added
+        // Wallet
+        wallet_balance: number | null;
+        balance: number | null;
         wallet_status: string | null;
-        avatar_url: string | null;
+        // Lifecycle
         created_at: string | null;
         updated_at: string | null;
+        deleted_at: string | null;               // ← added
       }>;
-
       transactions: RowSet<{
         transaction_id: string;
         wallet_id: string;
         amount: number;
-        transaction_type:
-          | 'add_funds'
-          | 'withdraw_funds'
-          | 'transfer_funds'
-          | 'ride_payment'
-          | 'package_payment'
-          | 'driver_earning'
-          | 'refund'
-          | 'adjustment'
-          | 'hold'
-          | 'release'
-          | string;
-        payment_method:
-          | 'wallet_balance'
-          | 'card_payment'
-          | 'local_gateway'
-          | 'government_api'
-          | string;
-        transaction_status:
-          | 'pending'
-          | 'authorized'
-          | 'posted'
-          | 'failed'
-          | 'reversed'
-          | 'refunded'
-          | string;
+        transaction_type: 'add_funds' | 'withdraw_funds' | 'transfer_funds' | 'ride_payment' | 'package_payment' | 'driver_earning' | 'refund' | 'adjustment' | 'hold' | 'release' | string;
+        payment_method: 'wallet_balance' | 'card_payment' | 'local_gateway' | 'government_api' | string;
+        transaction_status: 'pending' | 'authorized' | 'posted' | 'failed' | 'reversed' | 'refunded' | string;
         direction: 'debit' | 'credit';
         reference_type: string | null;
         reference_id: string | null;
@@ -269,7 +245,6 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
-
       trip_presence: RowSet<{
         trip_presence_id: string;
         trip_id: string;
@@ -281,7 +256,6 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
-
       trips: RowSet<{
         id: string;
         trip_id: string | null;
@@ -322,7 +296,6 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
-
       users: RowSet<{
         id: string;
         auth_user_id: string | null;
@@ -344,7 +317,6 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
-
       vehicles: RowSet<{
         vehicle_id: string;
         driver_id: string;
@@ -355,7 +327,6 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
-
       verification_records: RowSet<{
         verification_id: string;
         user_id: string;
@@ -370,7 +341,6 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
-
       wallets: RowSet<{
         wallet_id: string;
         user_id: string;
@@ -386,86 +356,26 @@ export interface Database {
         updated_at: string;
       }>;
     };
-
-    Views: {
-      [_ in never]: never;
-    };
-
+    Views: { [_ in never]: never };
     Functions: {
       app_add_wallet_funds: {
-        Args: {
-          p_user_id: string;
-          p_amount: number;
-          p_payment_method: string;
-          p_external_reference?: string | null;
-        };
+        Args: { p_user_id: string; p_amount: number; p_payment_method: string; p_external_reference?: string | null };
         Returns: string;
       };
-
       app_transfer_wallet_funds: {
-        Args: {
-          p_from_user_id: string;
-          p_to_user_id: string;
-          p_amount: number;
-          p_payment_method?: string;
-        };
-        Returns: {
-          debit_transaction_id: string;
-          credit_transaction_id: string;
-        }[];
+        Args: { p_from_user_id: string; p_to_user_id: string; p_amount: number; p_payment_method?: string };
+        Returns: { debit_transaction_id: string; credit_transaction_id: string }[];
       };
     };
-
     Enums: {
-      booking_status_v2:
-        | 'pending_payment'
-        | 'confirmed'
-        | 'checked_in'
-        | 'completed'
-        | 'cancelled'
-        | 'refunded';
-      driver_status_v2:
-        | 'draft'
-        | 'pending_approval'
-        | 'approved'
-        | 'rejected'
-        | 'suspended'
-        | 'offline'
-        | 'online'
-        | 'busy';
-      otp_purpose_v2:
-        | 'login'
-        | 'wallet_transfer'
-        | 'wallet_withdrawal'
-        | 'driver_action'
-        | 'admin_action';
-      package_status_v2:
-        | 'created'
-        | 'assigned'
-        | 'in_transit'
-        | 'delivered'
-        | 'cancelled'
-        | 'disputed';
+      booking_status_v2: 'pending_payment' | 'confirmed' | 'checked_in' | 'completed' | 'cancelled' | 'refunded';
+      driver_status_v2: 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'suspended' | 'offline' | 'online' | 'busy';
+      otp_purpose_v2: 'login' | 'wallet_transfer' | 'wallet_withdrawal' | 'driver_action' | 'admin_action';
+      package_status_v2: 'created' | 'assigned' | 'in_transit' | 'delivered' | 'cancelled' | 'disputed';
       payment_method_v2: 'wallet_balance' | 'card_payment' | 'local_gateway' | 'government_api';
       profile_status_v2: 'pending' | 'active' | 'suspended' | 'blocked';
-      transaction_status_v2:
-        | 'pending'
-        | 'authorized'
-        | 'posted'
-        | 'failed'
-        | 'reversed'
-        | 'refunded';
-      transaction_type_v2:
-        | 'add_funds'
-        | 'withdraw_funds'
-        | 'transfer_funds'
-        | 'ride_payment'
-        | 'package_payment'
-        | 'driver_earning'
-        | 'refund'
-        | 'adjustment'
-        | 'hold'
-        | 'release';
+      transaction_status_v2: 'pending' | 'authorized' | 'posted' | 'failed' | 'reversed' | 'refunded';
+      transaction_type_v2: 'add_funds' | 'withdraw_funds' | 'transfer_funds' | 'ride_payment' | 'package_payment' | 'driver_earning' | 'refund' | 'adjustment' | 'hold' | 'release';
       trip_status_v2: 'draft' | 'open' | 'booked' | 'in_progress' | 'completed' | 'cancelled';
       user_role_v2: 'passenger' | 'driver' | 'admin';
       verification_level_v2: 'level_0' | 'level_1' | 'level_2' | 'level_3';

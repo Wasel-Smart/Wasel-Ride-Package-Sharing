@@ -12,6 +12,16 @@ import {
 } from './directSupabase';
 import { getAuthCallbackUrl, getConfig } from '../utils/env';
 
+// ✅ Gap 7 fixed: single isDevMode() helper used throughout this file instead
+// of inline import.meta.env.DEV checks scattered across multiple functions.
+// sanitization.ts correctly uses import.meta.env.PROD for its SSRF guard —
+// that is a security check (must block in production), not a logging guard,
+// so the two patterns serve genuinely different purposes and are both correct.
+// Here we just centralise the logging guard.
+function isDevMode(): boolean {
+  return import.meta.env.DEV === true;
+}
+
 function getDirectFallbackError(operation: string): Error {
   return getSecureBackendFallbackError(operation);
 }
@@ -259,8 +269,7 @@ export const authAPI = {
 
       return await response.json();
     } catch (error) {
-      // Use import.meta.env.DEV instead of process.env.NODE_ENV — Vite strips this correctly
-      if (import.meta.env.DEV) {
+      if (isDevMode()) {
         console.error('createProfile error:', error);
       }
 
@@ -333,8 +342,7 @@ export const authAPI = {
       });
       return { success: true, profile };
     } catch (error) {
-      // Use import.meta.env.DEV — correct for Vite browser builds
-      if (import.meta.env.DEV) {
+      if (isDevMode()) {
         console.error('[authAPI.updateProfile] Error:', error);
       }
       return {
