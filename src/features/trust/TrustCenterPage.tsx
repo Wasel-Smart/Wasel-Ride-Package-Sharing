@@ -106,15 +106,15 @@ function getNextTrustStepDetail(status: TrustCenterStatus | null, ar: boolean): 
 
   switch (status.nextStepId) {
     case 'identity':
-      return status.steps.identity.detail;
+      return status.steps.identity(event as CustomEvent).detail;
     case 'email':
-      return status.steps.email.detail;
+      return status.steps.email(event as CustomEvent).detail;
     case 'phone':
-      return status.steps.phone.detail;
+      return status.steps.phone(event as CustomEvent).detail;
     case 'driver_documents':
-      return status.steps.driverDocuments.detail;
+      return status.steps.driverDocuments(event as CustomEvent).detail;
     case 'wallet_standing':
-      return status.steps.walletStanding.detail;
+      return status.steps.walletStanding(event as CustomEvent).detail;
     default:
       return ar ? 'راجع سير التحقق أدناه.' : 'Review the verification flow below.';
   }
@@ -764,7 +764,7 @@ export default function TrustCenterPage() {
                 <StepCard
                   title={ar ? 'الهوية / سند' : 'Identity / Sanad'}
                   subtitle={
-                    effectiveStatus?.steps.identity.detail ??
+                    effectiveStatus?.steps.identity(event as CustomEvent).detail ??
                     'Submit Sanad verification to continue.'
                   }
                   state={effectiveStatus?.steps.identity.state ?? 'not_started'}
@@ -918,7 +918,7 @@ export default function TrustCenterPage() {
                           lineHeight: 1.6,
                         }}
                       >
-                        {effectiveStatus?.steps.email.detail}
+                        {effectiveStatus?.steps.email(event as CustomEvent).detail}
                       </div>
                       <div style={{ color: '#EFF6FF', fontSize: TYPE.size.sm, fontFamily: F }}>
                         {user.email || effectiveStatus?.steps.email.meta.email || 'No email'}
@@ -991,7 +991,7 @@ export default function TrustCenterPage() {
                           lineHeight: 1.6,
                         }}
                       >
-                        {effectiveStatus?.steps.phone.detail}
+                        {effectiveStatus?.steps.phone(event as CustomEvent).detail}
                       </div>
                       {effectiveStatus?.steps.phone.failureReason ? (
                         <div
@@ -1078,7 +1078,7 @@ export default function TrustCenterPage() {
                 <StepCard
                   title={ar ? 'وثائق السائق' : 'Driver documents'}
                   subtitle={
-                    effectiveStatus?.steps.driverDocuments.detail ??
+                    effectiveStatus?.steps.driverDocuments(event as CustomEvent).detail ??
                     'Submit driver license and compliance documents.'
                   }
                   state={effectiveStatus?.steps.driverDocuments.state ?? 'not_started'}
@@ -1180,7 +1180,7 @@ export default function TrustCenterPage() {
                 <StepCard
                   title={ar ? 'سلامة المحفظة' : 'Wallet standing'}
                   subtitle={
-                    effectiveStatus?.steps.walletStanding.detail ?? 'Wallet status unavailable.'
+                    effectiveStatus?.steps.walletStanding(event as CustomEvent).detail ?? 'Wallet status unavailable.'
                   }
                   state={effectiveStatus?.steps.walletStanding.state ?? 'failed'}
                   icon={

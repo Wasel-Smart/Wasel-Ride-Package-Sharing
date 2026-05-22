@@ -962,7 +962,7 @@ export default function AppEntryPage() {
                       lineHeight: 1.74,
                     }}
                   >
-                    {service.detail}
+                    {service(event as CustomEvent).detail}
                   </div>
 
                   <div
@@ -1085,7 +1085,7 @@ export default function AppEntryPage() {
                       lineHeight: 1.72,
                     }}
                   >
-                    {card.detail}
+                    {card(event as CustomEvent).detail}
                   </div>
                 </div>
               );

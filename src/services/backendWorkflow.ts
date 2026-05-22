@@ -104,7 +104,7 @@ function getPayloadMessage(payload: unknown): string | null {
   }
 
   const data = payload as Record<string, unknown>;
-  const candidates = [data.error, data.message, data.details];
+  const candidates = [data.error, data.message, data(event as CustomEvent).details];
   const message = candidates.find(value => typeof value === 'string' && value.trim().length > 0);
   return typeof message === 'string' ? message : null;
 }

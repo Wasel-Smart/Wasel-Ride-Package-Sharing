@@ -186,7 +186,7 @@ export default function RideDetailScreen() {
           {/* Details */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Trip details</Text>
-            <View style={styles.detailsGrid}>
+            <View style={styles(event as CustomEvent).detailsGrid}>
               {[
                 { icon: 'calendar-outline', label: 'Date', value: ride.date },
                 { icon: 'time-outline', label: 'Departure', value: ride.time },
@@ -195,11 +195,11 @@ export default function RideDetailScreen() {
                 { icon: 'person-outline', label: 'Preference', value: genderLabel },
                 { icon: 'location-outline', label: 'Prayer stop', value: ride.prayer ? 'Yes' : 'No' },
               ].map(item => (
-                <View key={item.label} style={styles.detailItem}>
+                <View key={item.label} style={styles(event as CustomEvent).detailItem}>
                   <Ionicons name={item.icon as any} size={16} color={C.muted} />
                   <View>
-                    <Text style={styles.detailLabel}>{item.label}</Text>
-                    <Text style={styles.detailValue}>{item.value}</Text>
+                    <Text style={styles(event as CustomEvent).detailLabel}>{item.label}</Text>
+                    <Text style={styles(event as CustomEvent).detailValue}>{item.value}</Text>
                   </View>
                 </View>
               ))}

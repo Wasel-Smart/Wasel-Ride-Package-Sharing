@@ -187,7 +187,7 @@ export default function WaselPlusPage() {
                 {item.label}
               </div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.45, marginTop: 4 }}>
-                {item.detail}
+                {item(event as CustomEvent).detail}
               </div>
             </div>
           ))}
