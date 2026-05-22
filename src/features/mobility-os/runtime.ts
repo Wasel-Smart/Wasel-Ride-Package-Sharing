@@ -126,7 +126,8 @@ export class PricingEngine {
     const demandPressure = this.getDemandPressure(corridor);
     const dynamicSeatPrice = roundTo(this.getDynamicPrice(corridor.base_price_seat, corridor), 2);
     const dynamicCargoPrice = roundTo(this.getDynamicPrice(corridor.base_price_kg, corridor), 2);
-    const previousSeatPrice = corridor.price_history.at(-1) ?? null;
+    const previousSeatPrice =
+      corridor.price_history.length > 0 ? corridor.price_history[corridor.price_history.length - 1] : null;
     const previousCargoPrice =
       previousSeatPrice === null
         ? null

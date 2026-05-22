@@ -39,6 +39,7 @@ export class CircuitBreaker {
   private failures = 0;
   private successes = 0;
   private lastFailureTime = 0;
+  private lastSuccessTime = 0;
   private lastStateChange = Date.now();
   private config: CircuitBreakerConfig;
   private name: string;
@@ -76,6 +77,7 @@ export class CircuitBreaker {
    */
   private onSuccess(): void {
     this.failures = 0;
+    this.lastSuccessTime = Date.now();
     this.lastFailureTime = 0;
 
     if (this.state === CircuitState.HALF_OPEN) {
@@ -131,7 +133,7 @@ export class CircuitBreaker {
       failures: this.failures,
       successes: this.successes,
       lastFailureTime: this.lastFailureTime,
-      lastSuccessTime: Date.now(),
+      lastSuccessTime: this.lastSuccessTime,
       state: this.state,
     };
   }
@@ -144,6 +146,7 @@ export class CircuitBreaker {
     this.failures = 0;
     this.successes = 0;
     this.lastFailureTime = 0;
+    this.lastSuccessTime = 0;
     this.lastStateChange = Date.now();
     logger.info(`Circuit breaker ${sanitizeLogMessage(this.name)} manually reset`);
   }

@@ -4,6 +4,9 @@ dist/
 .vite/
 .next/
 
+# CI runner binaries — never commit these
+actions-runner/
+
 # Dependencies
 node_modules/
 with-supabase-app/node_modules/

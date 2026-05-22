@@ -1,9 +1,15 @@
 {
-  "buildCommand": "npm run vercel-build",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
   "installCommand": "npm install",
   "devCommand": "npm run dev",
+  "rewrites": [
+    {
+      "source": "/((?!assets/|favicon.ico|sw.js|manifest.json|robots.txt|sitemap.xml|offline.html|icon-192.png|icon-512.png|apple-touch-icon.png|brand/|health$).*)",
+      "destination": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

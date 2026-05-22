@@ -1,20 +1,15 @@
 # Vercel ignore file
-# Ignore everything except the build output
+# Keep source/config files available for the remote Vite build and exclude local-only artifacts.
 
-# Source files (not needed in deployment)
-src/
-scripts/
-tests/
-supabase/
-
-# Config files
-*.config.ts
-*.config.js
-*.config.mjs
-tsconfig.json
-vite.config.ts
-vitest.config.ts
-playwright.config.ts
+# Local agent/tooling state
+.agents/
+.claude/
+.codex/
+.codex_tmp/
+.commandcode/
+.continue/
+.kilo/
+actions-runner/
 
 # Development files
 .env
@@ -24,9 +19,13 @@ playwright.config.ts
 # Dependencies
 node_modules/
 
-# Build artifacts (except dist)
+# Build and test artifacts
+build/
+dist/
 .vite/
 coverage/
+playwright-report/
+test-results/
 
 # Documentation
 docs/
@@ -44,7 +43,11 @@ docs/
 # Docker
 docker/
 Dockerfile
+Dockerfile.dev
 docker-compose*.yml
 
 # Kubernetes
 infra/
+
+# Non-web app workspace
+mobile/

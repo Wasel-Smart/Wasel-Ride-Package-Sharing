@@ -299,7 +299,9 @@ export function stopAvailabilityPolling(): void {
   healthPollTimer = null;
 }
 
-warmUpServer().catch(() => {
+// Kick off warm-up eagerly at module load. The serverWarm guard inside
+// warmUpServer() prevents any double-invocation from App.tsx's coordinator.
+void warmUpServer().catch(() => {
   markEdgeFunctionUnavailable();
 });
 

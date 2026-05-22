@@ -1,12 +1,19 @@
 import * as Sentry from '@sentry/react';
 import type { DomainEventEnvelope } from '../domain/events';
 
-// @ts-ignore — Sentry SDK has these at runtime; types are not in @sentry/react v10 export surface
 import { createCorrelationId, createStructuredLogEntry } from '../platform/observability';
 import { sanitizeLogMessage } from './sanitization';
 import { safeStorageGetItem } from './browserStorage';
 
 let sentryInitialized = false;
+
+type SentryRuntime = typeof Sentry & {
+  captureException?: (error: unknown, context?: Record<string, unknown>) => void;
+  captureMessage?: (message: string, context?: Record<string, unknown>) => void;
+  addBreadcrumb?: (breadcrumb: Record<string, unknown>) => void;
+};
+
+const sentryRuntime = Sentry as SentryRuntime;
 
 function writeConsole(
   level: 'info' | 'warning' | 'error',
@@ -59,8 +66,7 @@ export function initSentry(): void {
       'Failed to fetch',
     ],
     beforeSend(
-      // @ts-ignore — Sentry v10 BeforeSend event type not exported from @sentry/react public surface
-      event,
+      event: Sentry.ErrorEvent,
     ) {
       try {
         const raw = safeStorageGetItem('sessionStorage', 'wasel_user_session');
@@ -108,8 +114,7 @@ export const logger = {
       return;
     }
 
-    // @ts-ignore — runtime api present; type surface not exported from @sentry/react v10
-    Sentry.captureException(error || new Error(sanitizeLogMessage(message)), {
+    sentryRuntime.captureException?.(error || new Error(sanitizeLogMessage(message)), {
       level: 'error',
       tags: { type: 'application_error' },
       extra: context,
@@ -122,8 +127,7 @@ export const logger = {
       return;
     }
 
-    // @ts-ignore — runtime api present; type surface not exported from @sentry/react v10
-    Sentry.captureMessage(sanitizeLogMessage(message), {
+    sentryRuntime.captureMessage?.(sanitizeLogMessage(message), {
       level: 'warning',
       tags: { type: 'application_warning' },
       extra: context,
@@ -133,8 +137,7 @@ export const logger = {
   info(message: string, context?: Record<string, unknown>): void {
     writeConsole('info', sanitizeLogMessage(message), context);
     if (context?.important && isSentryActive()) {
-    // @ts-ignore — runtime api present; type surface not exported from @sentry/react v10
-    Sentry.captureMessage(sanitizeLogMessage(message), {
+    sentryRuntime.captureMessage?.(sanitizeLogMessage(message), {
         level: 'info',
         tags: { type: 'application_info' },
         extra: context,
@@ -148,8 +151,7 @@ export const logger = {
       return;
     }
 
-    // @ts-ignore — runtime api present; type surface not exported from @sentry/react v10
-    Sentry.addBreadcrumb({
+    sentryRuntime.addBreadcrumb?.({
       category: 'metric',
       message: name,
       level: 'info',
@@ -160,9 +162,11 @@ export const logger = {
     });
   },
 
-  startTransaction(name: string, op: string) {
-    const requestId = createCorrelationId('txn');
-    logger.addBreadcrumb(`Transaction:${name}`, 'performance', { op, requestId });
+  startTransaction(name: string, _op: string) {
+    // Stub — Sentry SDK v10 no longer uses manual transactions.
+    // Retained for call-site compatibility; upgrade callers to use Sentry spans if needed.
+    const label = sanitizeLogMessage(name);
+    logger.addBreadcrumb(`Transaction:${label}`, 'performance');
     return { finish: () => undefined };
   },
 
@@ -171,8 +175,7 @@ export const logger = {
       return;
     }
 
-    // @ts-ignore — runtime api present; type surface not exported from @sentry/react v10
-    Sentry.addBreadcrumb({ message, category, level: 'info', data });
+    sentryRuntime.addBreadcrumb?.({ message, category, level: 'info', data });
   },
 };
 
