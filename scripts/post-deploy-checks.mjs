@@ -53,14 +53,23 @@ async function httpStatus(url) {
 
 console.log(`\n🔍 Post-Deploy Checks — ${APP_URL}\n`);
 
+await check('Backend health endpoint returns JSON ok:true', async () => {
+  const res = await fetch(`${APP_URL}/health`, {
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+  if (!res.ok) return false;
+  const body = await res.json().catch(() => null);
+  return body?.ok === true;
+});
+
 await check('Homepage responds (2xx/3xx)', async () => {
   const s = await httpStatus(APP_URL);
-  return s >= 200 && s < 500;
+  return s >= 200 && s < 400;
 });
 
 await check('Auth page accessible', async () => {
   const s = await httpStatus(`${APP_URL}/app/auth`);
-  return s >= 200 && s < 500;
+  return s >= 200 && s < 400;
 });
 
 await check('Favicon served', async () => {

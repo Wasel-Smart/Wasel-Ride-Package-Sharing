@@ -477,8 +477,7 @@ export function initializeMonitoring() {
         environment: import.meta.env.MODE,
         tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
         beforeSend(
-          // @ts-ignore — Sentry v10 BeforeSend event type not exported from @sentry/react public surface
-          event,
+          event: any,
         ) {
           // Filter out ignored errors
           const ignoredErrors = [

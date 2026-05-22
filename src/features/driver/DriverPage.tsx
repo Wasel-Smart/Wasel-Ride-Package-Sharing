@@ -68,7 +68,7 @@ export default function DriverPage() {
         <SectionHead
           emoji="Driver"
           title="Driver Console"
-          titleAr="ÙˆØ§Ø¬Ù‡Ø© Ø§Ù„Ø³Ø§Ø¦Ù‚"
+          titleAr="واجهة السائق"
           sub="Route, earnings, readiness."
           color={DS.blue}
           action={{ label: 'Offer a ride', onClick: () => navigate('/app/offer-ride') }}

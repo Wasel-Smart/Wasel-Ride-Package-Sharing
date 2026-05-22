@@ -178,9 +178,11 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
       authUser: auth.user,
       profile: auth.profile,
     });
-    const nextUser = optimisticUpdates ? applyUserUpdates(mapped, optimisticUpdates) : mapped;
-    setUser(nextUser);
-  }, [auth.isBackendConnected, auth.loading, auth.profile, auth.user, optimisticUpdates]);
+    // Clear optimistic updates once the backend profile has been refreshed
+    // so stale UI overrides don't persist past the next authoritative sync.
+    setOptimisticUpdates(null);
+    setUser(mapped);
+  }, [auth.isBackendConnected, auth.loading, auth.profile, auth.user]);
 
   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
     const result = await auth.signIn(email, password);

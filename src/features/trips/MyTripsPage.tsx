@@ -581,7 +581,9 @@ function SupportQueue({ tickets }: { tickets: SupportTicket[] }) {
                 </div>
               </div>
               <div style={{ color: DIM, fontSize: '0.74rem', fontFamily: FONT }}>
-                {ticket.resolutionSummary ?? ticket.history.at(-1)?.note ?? ticket.detail}
+                {ticket.resolutionSummary ??
+                  ticket.history[ticket.history.length - 1]?.note ??
+                  ticket.detail}
               </div>
             </div>
           );

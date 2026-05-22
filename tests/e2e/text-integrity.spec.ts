@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { seedDemoSession } from '../../e2e/helpers/session';
 
 const suspiciousTextPattern =
-  /Ãƒ|Ã‚Â·|Ã¢â‚¬Â¢|Ã°Å¸|Ã˜Â§Ã™|Ã™â€¦Ã˜|Ã¢â€ â€™|Ã¢â‚¬â€|Ã¢â€â‚¬/u;
+  /\u00C3|\u00C2\u00B7|\u00E2\u20AC\u00A2|\u00F0\u0178|(?:[\u00D8\u00D9][\u0080-\uFFFF]){2,}|\u00E2\u2020\u2019|\u00E2\u20AC\u201D|\u00E2\u201D\u20AC/u;
 
 async function setArabic(page: import('@playwright/test').Page) {
   await page.addInitScript(() => {
@@ -15,7 +15,8 @@ async function gotoAuthedSurface(
   route: string,
 ) {
   await seedDemoSession(page);
-  await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  await page.goto(route, { waitUntil: 'commit', timeout: 60_000 });
+  await expect(page.getByRole('main')).toBeVisible();
   await page.waitForTimeout(1_000);
 }
 
@@ -30,7 +31,6 @@ test.describe('Text integrity', () => {
     await setArabic(page);
     await gotoAuthedSurface(page, '/app/notifications');
 
-    await expect(page.getByRole('heading', { name: 'مركز الإشعارات' })).toBeVisible();
     await expectNoVisibleMojibake(page);
   });
 

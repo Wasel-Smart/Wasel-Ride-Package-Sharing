@@ -80,6 +80,7 @@ export default function WaselRoot() {
           background: C.bg,
           fontFamily: ar ? FA : F,
           direction: ar ? 'rtl' : 'ltr',
+          overflowX: 'hidden',
         }}
       >
         <SkipToContent targetId="main-content" />
@@ -263,7 +264,7 @@ export default function WaselRoot() {
               {user ? (
                 <>
                   <button
-                    onClick={() => navigate('/notifications')}
+                    onClick={() => navigate('/app/notifications')}
                     title={shellCopy.notifications}
                     aria-label={shellCopy.notifications}
                     style={{
@@ -408,7 +409,7 @@ export default function WaselRoot() {
           ar={ar}
         />
 
-        <div className="wrl-main-content">
+        <div className="wrl-main-content wasel-main-content">
           <main
             id="main-content"
             role="main"

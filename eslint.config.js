@@ -34,9 +34,9 @@ export default tseslint.config(
       // Re-enabled: catches dead exports that bloat the bundle
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
 
-      // TypeScript — tightened
+      // TypeScript - tightened
       '@typescript-eslint/no-explicit-any': 'warn',          // warn, not error, to allow gradual migration
-      '@typescript-eslint/no-unused-vars': ['error', {        // was off — dead code is now caught
+      '@typescript-eslint/no-unused-vars': ['error', {        // was off - dead code is now caught
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_',
         caughtErrorsIgnorePattern: '^_',
@@ -46,7 +46,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
       '@typescript-eslint/prefer-nullish-coalescing': 'off',  // too many false positives in JSX
 
-      // Console — warn in source, errors block CI
+      // Console - warn in source, errors block CI
       // Devs can use console.* during development but production code should use logger.*
       'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
 
@@ -58,7 +58,13 @@ export default tseslint.config(
       'no-debugger': 'error',
       'no-alert': 'warn',
 
-      // Catch process.env usage in browser code — use import.meta.env instead
+      // React Compiler advisory rules are not actionable until the app opts into the compiler.
+      'react-hooks/immutability': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+
+      // Catch process.env usage in browser code - use import.meta.env instead
       'no-restricted-globals': [
         'error',
         {

@@ -14,6 +14,7 @@ export function sanitizeLogMessage(message: unknown): string {
   const str = String(message);
   
   return str
+    // eslint-disable-next-line no-control-regex -- intentional control-character stripping for log safety
     .replace(/[\r\n\t\x00-\x1F\x7F-\x9F]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()

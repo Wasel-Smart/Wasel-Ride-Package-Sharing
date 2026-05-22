@@ -205,14 +205,6 @@ const buildMainChildren = () => [
   // ── Rides — FindRidePage & OfferRidePage still live in WaselServicePage
   //            until they are individually migrated (they share type Ride and
   //            a lot of internal state logic that benefits from a separate pass).
-
-  // ── My Trips ──────────────────────────────────────────────────────────────
-
-  // ── Booking Requests ──────────────────────────────────────────────────────
-
-  // ── Live Trip ─────────────────────────────────────────────────────────────
-
-  // ── Routes / Popular ──────────────────────────────────────────────────────
   { path: 'routes', lazy: lazy(() => import('./components/PopularRoutes'), 'PopularRoutes') },
 
   {
@@ -228,10 +220,6 @@ const buildMainChildren = () => [
   },
 
   // ── Bus — now its own dedicated file ─────────────────────────────────────
-
-  // ── Packages / Awasel — still in WaselServicePage pending migration ───────
-
-  // ── Raje3 Returns ─────────────────────────────────────────────────────────
 
   // ── B2B / B2S / Ops ──────────────────────────────────────────────────────
   {
@@ -265,22 +253,7 @@ const buildMainChildren = () => [
     ],
   },
 
-  // ── Wallet ────────────────────────────────────────────────────────────────
-
-  // ── Plus ──────────────────────────────────────────────────────────────────
-
-  // ── Profile ───────────────────────────────────────────────────────────────
-
-  // ── Settings ──────────────────────────────────────────────────────────────
-
-  // ── Notifications ─────────────────────────────────────────────────────────
-
-  // ── Trust Center ──────────────────────────────────────────────────────────
-
-  // ── Driver ────────────────────────────────────────────────────────────────
-
-  // ── Safety ────────────────────────────────────────────────────────────────
-
+  // ── Wallet / Plus / Profile / Settings / Notifications / Trust / Driver / Safety ──
   {
     Component: ProtectedOutlet,
     children: [
