@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { useCallback } from 'react';
 
-export type HapticFeedbackType = 
+export type HapticFeedbackType =
   | 'light'
   | 'medium'
   | 'heavy'
@@ -10,6 +10,12 @@ export type HapticFeedbackType =
   | 'error'
   | 'selection';
 
+/**
+ * useHaptics — central haptic feedback hook.
+ * Returns both a generic `trigger(type)` AND convenience shorthands
+ * (light, medium, heavy, success, warning, error, selection) so that
+ * every screen can destructure exactly what it needs.
+ */
 export function useHaptics() {
   const trigger = useCallback((type: HapticFeedbackType = 'light') => {
     try {
@@ -36,16 +42,24 @@ export function useHaptics() {
           Haptics.selectionAsync();
           break;
       }
-    } catch (error) {
-      // Haptics not supported on this device
-      console.warn('Haptics not supported:', error);
+    } catch {
+      // Haptics not supported on this device — fail silently
     }
   }, []);
 
-  return { trigger };
+  // ── Convenience shorthands ──────────────────────────────────────────────
+  const light     = useCallback(() => trigger('light'),     [trigger]);
+  const medium    = useCallback(() => trigger('medium'),    [trigger]);
+  const heavy     = useCallback(() => trigger('heavy'),     [trigger]);
+  const success   = useCallback(() => trigger('success'),   [trigger]);
+  const warning   = useCallback(() => trigger('warning'),   [trigger]);
+  const error     = useCallback(() => trigger('error'),     [trigger]);
+  const selection = useCallback(() => trigger('selection'), [trigger]);
+
+  return { trigger, light, medium, heavy, success, warning, error, selection };
 }
 
-// Convenience hooks for specific feedback types
+// Standalone convenience hooks
 export function useSuccessHaptic() {
   const { trigger } = useHaptics();
   return useCallback(() => trigger('success'), [trigger]);

@@ -24,7 +24,7 @@
         "UIBackgroundModes": ["location", "fetch", "remote-notification"]
       },
       "config": {
-        "googleMapsApiKey": "YOUR_IOS_GOOGLE_MAPS_KEY"
+        "googleMapsApiKey": "REPLACE_WITH_IOS_GOOGLE_MAPS_KEY"
       }
     },
     "android": {
@@ -46,7 +46,7 @@
       ],
       "config": {
         "googleMaps": {
-          "apiKey": "YOUR_ANDROID_GOOGLE_MAPS_KEY"
+          "apiKey": "REPLACE_WITH_ANDROID_GOOGLE_MAPS_KEY"
         }
       }
     },
@@ -69,7 +69,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "YOUR_EAS_PROJECT_ID"
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
       }
     },
     "owner": "wasel",
@@ -82,7 +82,7 @@
     },
     "updates": {
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/YOUR_PROJECT_ID"
+      "url": "https://u.expo.dev/REPLACE_WITH_EAS_PROJECT_ID"
     },
     "runtimeVersion": {
       "policy": "sdkVersion"

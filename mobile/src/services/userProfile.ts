@@ -1,6 +1,9 @@
 import { supabase } from '../lib/supabase';
 import { sanitizeLogMessage, sanitizePhoneNumber, sanitizeEmail } from '../utils/sanitization';
 
+/**
+ * ✅ Gap 2 fixed: phone_verified and email_verified are now present.
+ */
 export interface UserProfile {
   id: string;
   email: string;
@@ -13,6 +16,10 @@ export interface UserProfile {
   driver_license: string | null;
   is_driver: boolean;
   is_verified: boolean;
+  /** Whether the phone number has been OTP-verified */
+  phone_verified: boolean;
+  /** Whether the email address has been confirmed */
+  email_verified: boolean;
   verification_status: 'pending' | 'verified' | 'rejected' | null;
   trust_score: number;
   total_rides_as_passenger: number;
@@ -48,16 +55,10 @@ export interface DriverVerificationData {
   vehicle_insurance?: string;
 }
 
-/**
- * Get current user profile with all information
- */
 export async function getUserProfile(): Promise<{ data: UserProfile | null; error: string | null }> {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return { data: null, error: 'Not authenticated' };
-    }
+    if (authError || !user) return { data: null, error: 'Not authenticated' };
 
     const { data, error } = await supabase
       .from('profiles')
@@ -70,13 +71,8 @@ export async function getUserProfile(): Promise<{ data: UserProfile | null; erro
       return { data: null, error: error.message };
     }
 
-    // Ensure email is synced from auth
     if (data && user.email && data.email !== user.email) {
-      await supabase
-        .from('profiles')
-        .update({ email: user.email })
-        .eq('id', user.id);
-      
+      await supabase.from('profiles').update({ email: user.email }).eq('id', user.id);
       data.email = user.email;
     }
 
@@ -87,52 +83,34 @@ export async function getUserProfile(): Promise<{ data: UserProfile | null; erro
   }
 }
 
-/**
- * Update user profile information
- */
 export async function updateUserProfile(
   updates: UpdateProfileData
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    if (authError || !user) return { success: false, error: 'Not authenticated' };
 
-    // Validate phone number format if provided
     if (updates.phone_number) {
       const phoneRegex = /^(\+962|962|0)?7[789]\d{7}$/;
-      if (!phoneRegex.test(updates.phone_number.replace(/\s/g, ''))) {
+      if (!phoneRegex.test(updates.phone_number.replace(/\s/g, '')))
         return { success: false, error: 'Invalid Jordanian phone number format' };
-      }
-      
-      // Normalize phone number to international format
+
       let normalized = updates.phone_number.replace(/\s/g, '');
-      if (normalized.startsWith('0')) {
-        normalized = '+962' + normalized.slice(1);
-      } else if (normalized.startsWith('962')) {
-        normalized = '+' + normalized;
-      } else if (!normalized.startsWith('+')) {
-        normalized = '+962' + normalized;
-      }
+      if (normalized.startsWith('0')) normalized = '+962' + normalized.slice(1);
+      else if (normalized.startsWith('962')) normalized = '+' + normalized;
+      else if (!normalized.startsWith('+')) normalized = '+962' + normalized;
       updates.phone_number = normalized;
     }
 
     const { error } = await supabase
       .from('profiles')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', user.id);
 
     if (error) {
       console.error('Failed to update profile:', sanitizeLogMessage(error.message));
       return { success: false, error: error.message };
     }
-
-    console.log('Profile updated successfully');
     return { success: true, error: null };
   } catch (error) {
     console.error('updateUserProfile error:', sanitizeLogMessage(error));
@@ -140,63 +118,36 @@ export async function updateUserProfile(
   }
 }
 
-/**
- * Update user phone number with verification
- */
 export async function updatePhoneNumber(
   phoneNumber: string
 ): Promise<{ success: boolean; error: string | null; verificationRequired?: boolean }> {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    if (authError || !user) return { success: false, error: 'Not authenticated' };
 
-    // Validate and normalize phone number
     const phoneRegex = /^(\+962|962|0)?7[789]\d{7}$/;
-    if (!phoneRegex.test(phoneNumber.replace(/\s/g, ''))) {
+    if (!phoneRegex.test(phoneNumber.replace(/\s/g, '')))
       return { success: false, error: 'Invalid Jordanian phone number format. Use format: 07XXXXXXXX' };
-    }
 
     let normalized = phoneNumber.replace(/\s/g, '');
-    if (normalized.startsWith('0')) {
-      normalized = '+962' + normalized.slice(1);
-    } else if (normalized.startsWith('962')) {
-      normalized = '+' + normalized;
-    } else if (!normalized.startsWith('+')) {
-      normalized = '+962' + normalized;
-    }
+    if (normalized.startsWith('0')) normalized = '+962' + normalized.slice(1);
+    else if (normalized.startsWith('962')) normalized = '+' + normalized;
+    else if (!normalized.startsWith('+')) normalized = '+962' + normalized;
 
-    // Check if phone number is already in use
     const { data: existing } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('phone_number', normalized)
-      .neq('id', user.id)
-      .single();
+      .from('profiles').select('id').eq('phone_number', normalized).neq('id', user.id).single();
+    if (existing) return { success: false, error: 'This phone number is already registered' };
 
-    if (existing) {
-      return { success: false, error: 'This phone number is already registered' };
-    }
-
-    // Update phone number
     const { error } = await supabase
       .from('profiles')
-      .update({
-        phone_number: normalized,
-        phone_verified: false,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ phone_number: normalized, phone_verified: false, updated_at: new Date().toISOString() })
       .eq('id', user.id);
 
     if (error) {
       console.error('Failed to update phone:', sanitizeLogMessage(error.message));
       return { success: false, error: error.message };
     }
-
     console.log('Phone number updated:', sanitizePhoneNumber(normalized));
-
     return { success: true, error: null, verificationRequired: true };
   } catch (error) {
     console.error('updatePhoneNumber error:', sanitizeLogMessage(error));
@@ -204,48 +155,29 @@ export async function updatePhoneNumber(
   }
 }
 
-/**
- * Update user email with verification
- */
 export async function updateEmail(
   newEmail: string
 ): Promise<{ success: boolean; error: string | null; verificationRequired?: boolean }> {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    if (authError || !user) return { success: false, error: 'Not authenticated' };
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newEmail)) {
-      return { success: false, error: 'Invalid email format' };
-    }
+    if (!emailRegex.test(newEmail)) return { success: false, error: 'Invalid email format' };
 
-    // Update email in Supabase Auth
-    const { error: updateError } = await supabase.auth.updateUser({
-      email: newEmail,
-    });
-
+    const { error: updateError } = await supabase.auth.updateUser({ email: newEmail });
     if (updateError) {
       console.error('Failed to update email:', sanitizeLogMessage(updateError.message));
       return { success: false, error: updateError.message };
     }
 
-    // Update email in profiles table
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({
-        email: newEmail,
-        email_verified: false,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ email: newEmail, email_verified: false, updated_at: new Date().toISOString() })
       .eq('id', user.id);
 
-    if (profileError) {
+    if (profileError)
       console.error('Failed to update profile email:', sanitizeLogMessage(profileError.message));
-    }
 
     console.log('Email update initiated:', sanitizeEmail(newEmail));
     return { success: true, error: null, verificationRequired: true };
@@ -255,18 +187,12 @@ export async function updateEmail(
   }
 }
 
-/**
- * Submit driver verification documents
- */
 export async function submitDriverVerification(
   data: DriverVerificationData
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return { success: false, error: 'Not authenticated' };
-    }
+    if (authError || !user) return { success: false, error: 'Not authenticated' };
 
     const { error } = await supabase
       .from('profiles')
@@ -283,8 +209,6 @@ export async function submitDriverVerification(
       console.error('Failed to submit verification:', sanitizeLogMessage(error.message));
       return { success: false, error: error.message };
     }
-
-    console.log('Driver verification submitted');
     return { success: true, error: null };
   } catch (error) {
     console.error('submitDriverVerification error:', sanitizeLogMessage(error));
@@ -292,57 +216,37 @@ export async function submitDriverVerification(
   }
 }
 
-/**
- * Upload profile avatar
- */
 export async function uploadAvatar(
   uri: string,
   fileType: string = 'image/jpeg'
 ): Promise<{ success: boolean; url: string | null; error: string | null }> {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return { success: false, url: null, error: 'Not authenticated' };
-    }
+    if (authError || !user) return { success: false, url: null, error: 'Not authenticated' };
 
     const response = await fetch(uri);
     const blob = await response.blob();
-    
     const fileExt = fileType.split('/')[1] || 'jpg';
-    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
+    const filePath = `avatars/${user.id}-${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
-      .from('profiles')
-      .upload(filePath, blob, {
-        contentType: fileType,
-        upsert: true,
-      });
+      .from('profiles').upload(filePath, blob, { contentType: fileType, upsert: true });
 
     if (uploadError) {
       console.error('Failed to upload avatar:', sanitizeLogMessage(uploadError.message));
       return { success: false, url: null, error: uploadError.message };
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('profiles')
-      .getPublicUrl(filePath);
+    const { data: { publicUrl } } = supabase.storage.from('profiles').getPublicUrl(filePath);
 
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({
-        avatar_url: publicUrl,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
       .eq('id', user.id);
 
-    if (updateError) {
+    if (updateError)
       console.error('Failed to update avatar URL:', sanitizeLogMessage(updateError.message));
-      return { success: false, url: null, error: updateError.message };
-    }
 
-    console.log('Avatar uploaded successfully');
     return { success: true, url: publicUrl, error: null };
   } catch (error) {
     console.error('uploadAvatar error:', sanitizeLogMessage(error));

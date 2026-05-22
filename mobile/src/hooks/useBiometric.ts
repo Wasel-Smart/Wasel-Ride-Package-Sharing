@@ -2,11 +2,17 @@ import { useCallback, useEffect, useState } from 'react';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 
+export interface BiometricResult {
+  success: boolean;
+  error?: string;
+}
+
 export interface BiometricHook {
   isAvailable: boolean;
   isEnrolled: boolean;
   biometricType: string | null;
-  authenticate: () => Promise<boolean>;
+  /** Prompt the user; accepts optional prompt message string. */
+  authenticate: (promptMessage?: string) => Promise<BiometricResult>;
   isEnabled: boolean;
   enableBiometric: () => Promise<void>;
   disableBiometric: () => Promise<void>;
@@ -16,9 +22,9 @@ const BIOMETRIC_ENABLED_KEY = 'biometric_auth_enabled';
 
 export function useBiometric(): BiometricHook {
   const [isAvailable, setIsAvailable] = useState(false);
-  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isEnrolled, setIsEnrolled]   = useState(false);
   const [biometricType, setBiometricType] = useState<string | null>(null);
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [isEnabled, setIsEnabled]     = useState(false);
 
   useEffect(() => {
     checkBiometricAvailability();
@@ -29,11 +35,9 @@ export function useBiometric(): BiometricHook {
     try {
       const compatible = await LocalAuthentication.hasHardwareAsync();
       setIsAvailable(compatible);
-
       if (compatible) {
         const enrolled = await LocalAuthentication.isEnrolledAsync();
         setIsEnrolled(enrolled);
-
         const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
         if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
           setBiometricType('Face ID');
@@ -43,8 +47,8 @@ export function useBiometric(): BiometricHook {
           setBiometricType('Iris');
         }
       }
-    } catch (error) {
-      console.error('Failed to check biometric availability:', error);
+    } catch (err) {
+      console.error('Biometric availability check failed:', err);
     }
   };
 
@@ -52,66 +56,51 @@ export function useBiometric(): BiometricHook {
     try {
       const enabled = await SecureStore.getItemAsync(BIOMETRIC_ENABLED_KEY);
       setIsEnabled(enabled === 'true');
-    } catch (error) {
-      console.error('Failed to check biometric enabled status:', error);
+    } catch {
+      // ignore
     }
   };
 
-  const authenticate = useCallback(async (): Promise<boolean> => {
-    try {
-      if (!isAvailable || !isEnrolled) {
-        return false;
+  const authenticate = useCallback(
+    async (promptMessage = 'Authenticate to continue'): Promise<BiometricResult> => {
+      try {
+        if (!isAvailable || !isEnrolled) {
+          return { success: false, error: 'Biometrics not available on this device' };
+        }
+        const result = await LocalAuthentication.authenticateAsync({
+          promptMessage,
+          fallbackLabel: 'Use passcode',
+          disableDeviceFallback: false,
+          cancelLabel: 'Cancel',
+        });
+        if (result.success) return { success: true };
+        return { success: false, error: 'Authentication cancelled' };
+      } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : 'Authentication failed' };
       }
-
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Authenticate to continue',
-        fallbackLabel: 'Use passcode',
-        disableDeviceFallback: false,
-        cancelLabel: 'Cancel',
-      });
-
-      return result.success;
-    } catch (error) {
-      console.error('Biometric authentication failed:', error);
-      return false;
-    }
-  }, [isAvailable, isEnrolled]);
+    },
+    [isAvailable, isEnrolled]
+  );
 
   const enableBiometric = useCallback(async () => {
-    try {
-      const success = await authenticate();
-      if (success) {
-        await SecureStore.setItemAsync(BIOMETRIC_ENABLED_KEY, 'true');
-        setIsEnabled(true);
-      }
-    } catch (error) {
-      console.error('Failed to enable biometric:', error);
-      throw error;
+    const result = await authenticate('Enable biometric sign-in');
+    if (result.success) {
+      await SecureStore.setItemAsync(BIOMETRIC_ENABLED_KEY, 'true');
+      setIsEnabled(true);
+    } else {
+      throw new Error(result.error ?? 'Failed to enable biometric');
     }
   }, [authenticate]);
 
   const disableBiometric = useCallback(async () => {
-    try {
-      await SecureStore.deleteItemAsync(BIOMETRIC_ENABLED_KEY);
-      setIsEnabled(false);
-    } catch (error) {
-      console.error('Failed to disable biometric:', error);
-      throw error;
-    }
+    await SecureStore.deleteItemAsync(BIOMETRIC_ENABLED_KEY);
+    setIsEnabled(false);
   }, []);
 
-  return {
-    isAvailable,
-    isEnrolled,
-    biometricType,
-    authenticate,
-    isEnabled,
-    enableBiometric,
-    disableBiometric,
-  };
+  return { isAvailable, isEnrolled, biometricType, authenticate, isEnabled, enableBiometric, disableBiometric };
 }
 
-// Secure token storage with biometric protection
+// ── Secure token helpers ────────────────────────────────────────────────────
 export async function storeSecureToken(key: string, value: string): Promise<void> {
   await SecureStore.setItemAsync(key, value, {
     keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
@@ -119,7 +108,7 @@ export async function storeSecureToken(key: string, value: string): Promise<void
 }
 
 export async function getSecureToken(key: string): Promise<string | null> {
-  return await SecureStore.getItemAsync(key);
+  return SecureStore.getItemAsync(key);
 }
 
 export async function deleteSecureToken(key: string): Promise<void> {
