@@ -96,3 +96,8 @@ _REMOVED/
 .vercel
 .env*.local
 wasel/
+
+/generated/prisma
+
+.vercel
+.env*.local
