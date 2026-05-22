@@ -476,7 +476,10 @@ export function initializeMonitoring() {
         dsn: sentryDsn,
         environment: import.meta.env.MODE,
         tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
-        beforeSend(event) {
+        beforeSend(
+          // @ts-ignore — Sentry v10 BeforeSend event type not exported from @sentry/react public surface
+          event,
+        ) {
           // Filter out ignored errors
           const ignoredErrors = [
             'IframeMessageAbortError',

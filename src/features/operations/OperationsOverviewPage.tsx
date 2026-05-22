@@ -344,7 +344,7 @@ export default function OperationsOverviewPage() {
           eyebrow="Wasel Operations"
           icon={config.icon}
           title={config.title}
-          description={config(event as CustomEvent).detail}
+          description={config.detail}
           accent={config.accent}
           aside={
             <div style={{ display: 'grid', gap: SPACE[3] }}>
@@ -366,7 +366,7 @@ export default function OperationsOverviewPage() {
                     key={item.label}
                     label={item.label}
                     value={item.value}
-                    detail={item(event as CustomEvent).detail}
+                    detail={item.detail}
                     accent={item.accent}
                   />
                 ))}

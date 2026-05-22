@@ -106,7 +106,7 @@ export async function createDirectSupportTicket(
     user_id: userId,
     topic: input.topic,
     subject: input.subject,
-    detail: input(event as CustomEvent).detail,
+    detail: input.detail,
     related_id: input.relatedId ?? null,
     route_label: input.routeLabel ?? null,
     status: input.priority === 'urgent' ? 'investigating' : 'open',

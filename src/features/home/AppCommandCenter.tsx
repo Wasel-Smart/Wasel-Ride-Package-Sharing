@@ -342,7 +342,7 @@ export function AppCommandCenter() {
                 maxWidth: 720,
               }}
             >
-              {nextAction(event as CustomEvent).detail}
+              {nextAction.detail}
             </p>
           </div>
 
@@ -440,7 +440,7 @@ export function AppCommandCenter() {
                     lineHeight: 1.6,
                   }}
                 >
-                  {item(event as CustomEvent).detail}
+                  {item.detail}
                 </div>
               </div>
             ))}

@@ -1,4 +1,4 @@
--- Wassel Database Schema - Production Grade
+-- Wasel Database Schema - Production Grade
 -- Version: 1.0.0
 -- Description: Complete database schema for Wassel ride-sharing platform
 
@@ -606,39 +606,76 @@ FOR EACH ROW EXECUTE FUNCTION update_stop_geography();
 CREATE OR REPLACE FUNCTION update_profile_rating()
 RETURNS TRIGGER AS $$
 DECLARE
-  avg_rating DECIMAL(3,2);
-  review_count INTEGER;
-  is_driver BOOLEAN;
+  cached_avg   DECIMAL(3,2);
+  cached_count INTEGER;
+  is_driver    BOOLEAN;
+  new_avg      DECIMAL(3,2);
+  new_count    INTEGER;
 BEGIN
-  -- Check if reviewee was driver or passenger
+  -- ── 1. Determine if reviewee acts as driver on this trip ─────────────────
   SELECT (driver_id = NEW.reviewee_id) INTO is_driver
   FROM trips WHERE id = NEW.trip_id;
-  
-  -- Calculate new average rating
-  SELECT AVG(overall_rating), COUNT(*)
-  INTO avg_rating, review_count
-  FROM reviews
-  WHERE reviewee_id = NEW.reviewee_id AND is_visible = TRUE;
-  
-  -- Update profile
+
+  -- ── 2. Read current cached totals (O(log N) index lookup) ─────────────────
+  SELECT avg_rating, review_count
+  INTO   cached_avg, cached_count
+  FROM   public.profile_rating_cache
+  WHERE  reviewee_id = NEW.reviewee_id;
+
+  -- ── 3. Incrementally derive new totals ────────────────────────────────────
+  IF cached_count IS NULL THEN
+    -- Cache miss: first review for this user — seed from NEW row only
+    new_avg   := NEW.overall_rating::DECIMAL(3,2);
+    new_count := 1;
+  ELSE
+    new_avg   := (cached_avg * cached_count + (NEW.overall_rating::DECIMAL - cached_avg)) / (cached_count + 1);
+    new_count := cached_count + 1;
+  END IF;
+
+  -- ── 4. Upsert into cache ──────────────────────────────────────────────────
+  INSERT INTO public.profile_rating_cache (reviewee_id, avg_rating, review_count, updated_at)
+  VALUES (NEW.reviewee_id, new_avg, new_count, NOW())
+  ON CONFLICT (reviewee_id) DO UPDATE
+    SET avg_rating   = EXCLUDED.avg_rating,
+        review_count = EXCLUDED.review_count,
+        updated_at   = NOW();
+
+  -- ── 5. Mirror into profiles ───────────────────────────────────────────────
   IF is_driver THEN
     UPDATE profiles
-    SET rating_as_driver = avg_rating,
-        total_ratings_received = review_count
+    SET rating_as_driver    = new_avg,
+        total_ratings_received = new_count
     WHERE id = NEW.reviewee_id;
   ELSE
     UPDATE profiles
-    SET rating_as_passenger = avg_rating,
-        total_ratings_received = review_count
+    SET rating_as_passenger = new_avg,
+        total_ratings_received = new_count
     WHERE id = NEW.reviewee_id;
   END IF;
-  
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER update_rating_on_review AFTER INSERT OR UPDATE ON reviews
 FOR EACH ROW EXECUTE FUNCTION update_profile_rating();
+
+-- ── Profile rating cache (avoids O(N) scan on reviews per trigger fire) ──────
+-- The reviews table can grow without bound; aggregating it row-by-row in a
+-- trigger is O(N) per review. This cache stores one row per reviewee and is
+-- updated incrementally by the same trigger, making each fire O(log N) via the
+-- reviewee_id index instead of a full table scan.
+CREATE TABLE IF NOT EXISTS public.profile_rating_cache (
+  reviewee_id  UUID PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  avg_rating   DECIMAL(3,2) NOT NULL DEFAULT 0,
+  review_count INTEGER      NOT NULL DEFAULT 0,
+  updated_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_profile_rating_cache_updated_at ON public.profile_rating_cache(updated_at DESC);
+
+ALTER TABLE public.profile_rating_cache ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "own rating cache readable" ON public.profile_rating_cache FOR SELECT USING (auth.uid() = reviewee_id);
+CREATE POLICY "admin manages cache"      ON public.profile_rating_cache FOR ALL USING ((auth.uid() IN (SELECT id FROM profiles WHERE role = 'admin')));
 
 -- Update trip seats when booking is created/cancelled
 CREATE OR REPLACE FUNCTION update_trip_seats()

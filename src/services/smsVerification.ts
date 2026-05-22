@@ -48,7 +48,7 @@ async function callEdgeFunction<T>(
   body: Record<string, unknown>,
 ): Promise<{ data: T | null; error: string | null }> {
   try {
-    const { data, error } = await supabase.functions.invoke<T>(fnName, { body });
+    const { data, error } = await supabase.functions.invoke(fnName, { body });
 
     if (error) {
       if (isDevMode()) console.error(`[smsVerification] ${fnName} error:`, sanitizeLogMessage(error));

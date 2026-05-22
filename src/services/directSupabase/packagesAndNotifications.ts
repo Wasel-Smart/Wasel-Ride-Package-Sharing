@@ -1,7 +1,7 @@
 // ─── Package & notification operations ───────────────────────────────────────
 
 import { getDb, packageSizeFromWeight } from './helpers';
-import { buildUserContext } from './userContext.ts';
+import { buildUserContext } from './userContext';
 import { sanitizeHTML } from '../../utils/sanitization';
 import type {
   RawCommunicationDelivery,

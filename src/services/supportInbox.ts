@@ -275,7 +275,7 @@ function mapDirectTicket(
       typeof row.subject === 'string' && row.subject.trim().length > 0
         ? row.subject.trim()
         : 'Support request',
-    detail: typeof row(event as CustomEvent).detail === 'string' ? row(event as CustomEvent).detail.trim() : '',
+    detail: typeof row.detail === 'string' ? row.detail.trim() : '',
     relatedId: row.related_id ?? undefined,
     routeLabel: row.route_label ?? undefined,
     status,
@@ -441,7 +441,7 @@ export async function createSupportTicket(
     id: generateId('support'),
     topic: input.topic,
     subject: input.subject.trim(),
-    detail: input(event as CustomEvent).detail.trim(),
+    detail: input.detail.trim(),
     relatedId: input.relatedId,
     routeLabel: input.routeLabel,
     status: initialStatus,
@@ -469,7 +469,7 @@ export async function createSupportTicket(
     const direct = await createDirectSupportTicket(userId, {
       topic: input.topic,
       subject: input.subject,
-      detail: input(event as CustomEvent).detail,
+      detail: input.detail,
       relatedId: input.relatedId,
       routeLabel: input.routeLabel,
       priority: input.priority,
@@ -486,15 +486,15 @@ export async function createSupportTicket(
       kind: 'create',
       userId,
       localTicketId: fallbackTicket.id,
-      input: {
-        topic: input.topic,
-        subject: input.subject,
-        detail: input(event as CustomEvent).detail,
-        relatedId: input.relatedId,
-        routeLabel: input.routeLabel,
-        priority: input.priority,
-        channel: input.channel,
-      },
+    input: {
+      topic: input.topic,
+      subject: input.subject,
+      detail: input.detail,
+      relatedId: input.relatedId,
+      routeLabel: input.routeLabel,
+      priority: input.priority,
+      channel: input.channel,
+    },
     });
     // Supabase write failed: surface in-memory copy for the session.
     return upsertTicket(userId, fallbackTicket);

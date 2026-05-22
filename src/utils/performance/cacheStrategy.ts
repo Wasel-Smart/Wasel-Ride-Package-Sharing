@@ -220,7 +220,7 @@ export const MUTATION_INVALIDATIONS = {
 
   /** After a booking is made */
   bookTrip: (tripId: string, userId: string) => [
-    QUERY_KEYS.trips(event as CustomEvent).detail(tripId),
+    QUERY_KEYS.trips.detail(tripId),
     QUERY_KEYS.bookings.forTrip(tripId),
     QUERY_KEYS.bookings.forUser(userId),
     QUERY_KEYS.trips.myPassengerTrips(userId),
@@ -235,14 +235,14 @@ export const MUTATION_INVALIDATIONS = {
 
   /** After a package is delivered */
   deliverPackage: (packageId: string, userId: string) => [
-    QUERY_KEYS.packages(event as CustomEvent).detail(packageId),
+    QUERY_KEYS.packages.detail(packageId),
     QUERY_KEYS.packages.delivering(userId),
     QUERY_KEYS.profile.trustScore(userId),
   ],
 
   /** After trip cancellation */
   cancelTrip: (tripId: string, userId: string, country: string) => [
-    QUERY_KEYS.trips(event as CustomEvent).detail(tripId),
+    QUERY_KEYS.trips.detail(tripId),
     QUERY_KEYS.trips.myDriverTrips(userId),
     QUERY_KEYS.bookings.forTrip(tripId),
     QUERY_KEYS.admin.liquidity(country),
@@ -250,7 +250,7 @@ export const MUTATION_INVALIDATIONS = {
 
   /** After profile update */
   updateProfile: (userId: string) => [
-    QUERY_KEYS.profile(event as CustomEvent).detail(userId),
+    QUERY_KEYS.profile.detail(userId),
     QUERY_KEYS.profile.trustScore(userId),
   ],
 } as const;
