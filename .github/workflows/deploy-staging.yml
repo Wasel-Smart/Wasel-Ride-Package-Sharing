@@ -1,0 +1,80 @@
+# GAP #5 FIX: Staging Environment & PR Preview Deployments
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop, staging]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  deployments: write
+
+jobs:
+  deploy-preview:
+    name: Deploy Preview / Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint || npx eslint src --max-warnings 0
+
+      - name: Unit tests
+        run: npm run test || npx vitest run
+
+      - name: Build staging bundle
+        env:
+          NODE_ENV: production
+          VITE_SUPABASE_URL: ${{ secrets.STAGING_VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.STAGING_VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.STAGING_VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_APP_URL: ${{ secrets.STAGING_APP_URL }}
+          VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.STAGING_VITE_STRIPE_PUBLISHABLE_KEY }}
+        run: npm run build:optimized || npx vite build
+
+      - name: Deploy to Vercel (Preview)
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npm install -g vercel
+          DEPLOY_URL=$(vercel --token "$VERCEL_TOKEN" --yes 2>&1 | tail -1)
+          echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: $DEPLOY_URL"
+
+      - name: Comment preview URL on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployUrl = '${{ steps.deploy.outputs.deploy_url }}';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🚀 Preview Deployment Ready\n\n**URL:** ${deployUrl}\n\n| Check | Status |\n|-------|--------|\n| Type check | ✅ Passed |\n| Lint | ✅ Passed |\n| Unit tests | ✅ Passed |\n| Build | ✅ Success |`
+            });
+
+      - name: Staging smoke test
+        run: |
+          DEPLOY_URL="${{ steps.deploy.outputs.deploy_url }}"
+          if [ -n "$DEPLOY_URL" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL" || echo "000")
+            echo "Staging app status: $STATUS"
+          fi

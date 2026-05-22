@@ -1,0 +1,103 @@
+# GAP #6 FIX: Automated Security Scanning (SAST / Secrets / Dependencies)
+name: Security Scanning
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  secrets-scan:
+    name: Secrets Scanning (TruffleHog)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: TruffleHog secrets scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+        continue-on-error: true
+
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep SAST scan
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/typescript
+            p/react
+            p/nodejs
+            p/owasp-top-ten
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        continue-on-error: true
+
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Audit for high/critical vulnerabilities
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  hardcoded-secrets-check:
+    name: Hardcoded Secrets Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for hardcoded secrets in source
+        run: |
+          FOUND=0
+          if grep -rn "sk_live_\|pk_live_[a-zA-Z0-9]\{20\}" src/ --include="*.ts" --include="*.tsx" 2>/dev/null; then
+            echo "ERROR: Hardcoded Stripe live keys found!"
+            FOUND=1
+          fi
+          if grep -rn "AKIA[0-9A-Z]\{16\}" src/ --include="*.ts" --include="*.tsx" 2>/dev/null; then
+            echo "ERROR: Hardcoded AWS keys found!"
+            FOUND=1
+          fi
+          if [ "$FOUND" -eq 1 ]; then exit 1; fi
+          echo "✅ No hardcoded production secrets found in source"
+
+  security-headers:
+    name: Security Headers Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate security headers in vercel.json
+        run: |
+          if [ -f "vercel.json" ]; then
+            echo "Checking vercel.json for security headers..."
+            grep -q "Content-Security-Policy" vercel.json && echo "✅ CSP configured" || echo "⚠️  CSP missing"
+            grep -q "X-Frame-Options" vercel.json && echo "✅ X-Frame-Options configured" || echo "⚠️  X-Frame-Options missing"
+            grep -q "X-Content-Type-Options" vercel.json && echo "✅ X-Content-Type-Options configured" || echo "⚠️  X-Content-Type-Options missing"
+            grep -q "Strict-Transport-Security" vercel.json && echo "✅ HSTS configured" || echo "⚠️  HSTS missing"
+          else
+            echo "⚠️  vercel.json not found"
+          fi

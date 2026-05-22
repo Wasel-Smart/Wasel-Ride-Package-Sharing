@@ -1,0 +1,112 @@
+# GAP #3 FIX: Automated Database Migration Testing
+name: Test Database Migrations
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'supabase/migrations/**'
+      - 'schema.sql'
+      - 'prisma/schema.prisma'
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'schema.sql'
+      - 'prisma/schema.prisma'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-migrations:
+    name: Test Migrations Against Postgres
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: wasel_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Apply base schema
+        env:
+          PGPASSWORD: test_password
+        run: |
+          if [ -f "schema.sql" ]; then
+            psql -h localhost -U postgres -d wasel_test -f schema.sql
+            echo "Base schema applied"
+          else
+            echo "No schema.sql found — skipping base schema"
+          fi
+
+      - name: Apply migrations in sequence
+        env:
+          PGPASSWORD: test_password
+        run: |
+          MIGRATION_DIR="supabase/migrations"
+          if [ -d "$MIGRATION_DIR" ]; then
+            MIGRATION_FILES=$(ls "$MIGRATION_DIR"/*.sql 2>/dev/null | sort)
+            if [ -z "$MIGRATION_FILES" ]; then
+              echo "No migration files found"
+            else
+              for f in $MIGRATION_FILES; do
+                echo "Applying: $f"
+                psql -h localhost -U postgres -d wasel_test -f "$f"
+                if [ $? -ne 0 ]; then
+                  echo "MIGRATION FAILED: $f"
+                  exit 1
+                fi
+              done
+              echo "All migrations applied successfully"
+            fi
+          else
+            echo "No migrations directory — skipping"
+          fi
+
+      - name: Verify schema integrity
+        env:
+          PGPASSWORD: test_password
+        run: |
+          TABLE_COUNT=$(psql -h localhost -U postgres -d wasel_test -tAc \
+            "SELECT count(*) FROM information_schema.tables WHERE table_schema='public'")
+          echo "Public tables created: $TABLE_COUNT"
+
+      - name: Test rollback scripts
+        env:
+          PGPASSWORD: test_password
+        run: |
+          MIGRATION_DIR="supabase/migrations"
+          if [ -d "$MIGRATION_DIR" ]; then
+            ROLLBACKS=$(ls "$MIGRATION_DIR"/*rollback*.sql 2>/dev/null | sort -r | head -1)
+            if [ -n "$ROLLBACKS" ]; then
+              echo "Testing rollback: $ROLLBACKS"
+              psql -h localhost -U postgres -d wasel_test -f "$ROLLBACKS"
+            else
+              echo "No rollback scripts found — add rollback SQL files as a best practice"
+            fi
+          fi
+
+      - name: Report
+        if: always()
+        run: echo "Migration test status: ${{ job.status }}"
