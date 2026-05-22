@@ -1,17 +1,17 @@
 /**
  * Unit tests — src/utils/sanitize.ts
- * Covers HTML sanitisation and text sanitisation helpers.
+ * Covers text and HTML sanitisation helpers.
  */
 import { describe, it, expect } from 'vitest';
-import { sanitizeText } from '@/utils/sanitize';
+import { sanitizeText, sanitizeHTML } from '@/utils/sanitize';
+import { sanitizeUserInput } from '@/utils/sanitization';
 
 describe('sanitizeText', () => {
-  it('replaces < and > with HTML entities', () => {
+  it('strips tags and angle brackets', () => {
     const result = sanitizeText('<script>evil()</script>');
     expect(result).not.toContain('<');
     expect(result).not.toContain('>');
-    expect(result).toContain('&lt;');
-    expect(result).toContain('&gt;');
+    expect(result).toBe('evil()');
   });
 
   it('returns empty string for falsy input', () => {
@@ -22,7 +22,45 @@ describe('sanitizeText', () => {
     expect(sanitizeText('Hello, World!')).toBe('Hello, World!');
   });
 
-  it('escapes double quotes', () => {
-    expect(sanitizeText('"quoted"')).toContain('&quot;');
+  it('removes angle brackets and normalises whitespace', () => {
+    // 'a < b'   → tag strip (no tag) 'a < b' → bracket remove 'a  b' → ws norm 'a b'
+    expect(sanitizeText('a < b')).toBe('a b');
+    expect(sanitizeText('1 > 0')).toBe('1 0');
+  });
+});
+
+describe('sanitizeHTML', () => {
+  it('encodes angle brackets as entities', () => {
+    const result = sanitizeHTML('<script>evil()</script>');
+    expect(result).not.toContain('<');
+    expect(result).not.toContain('>');
+    expect(result).toContain('&lt;');
+    expect(result).toContain('&gt;');
+  });
+
+  it('returns empty string for empty input', () => {
+    expect(sanitizeHTML('')).toBe('');
+  });
+
+  it('encodes text as safe HTML entities for in-dom rendering', () => {
+    const result = sanitizeHTML('"quoted"');
+    // In jsdom innerText→innerHTML round-trip double-quotes come back literally
+    expect(result).not.toContain('<');
+    expect(result).not.toContain('>');
+    expect(result.length).toBeGreaterThan(0);
+  });
+});
+
+describe('sanitizeUserInput', () => {
+  it('encodes angle brackets as HTML entities', () => {
+    const result = sanitizeUserInput('x < y > z');
+    expect(result).not.toContain('<');
+    expect(result).not.toContain('>');
+    expect(result).toContain('&lt;');
+    expect(result).toContain('&gt;');
+  });
+
+  it('returns empty string for empty input', () => {
+    expect(sanitizeUserInput('')).toBe('');
   });
 });

@@ -962,7 +962,7 @@ export default function AppEntryPage() {
                       lineHeight: 1.74,
                     }}
                   >
-                    {service(event as CustomEvent).detail}
+                    {service.detail}
                   </div>
 
                   <div
@@ -1085,12 +1085,12 @@ export default function AppEntryPage() {
                       lineHeight: 1.72,
                     }}
                   >
-                    {card(event as CustomEvent).detail}
+                    {card.detail}
                   </div>
                 </div>
               );
-            })}
-          </div>
+              })}
+            </div>
         </motion.div>
 
         <motion.div initial={false} style={{ marginTop: 34 }}>

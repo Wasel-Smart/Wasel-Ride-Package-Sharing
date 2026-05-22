@@ -298,7 +298,7 @@ export function ServiceFlowPlaybook({
             <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginBottom: 6 }}>
               {step.title}
             </div>
-            <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>{step(event as CustomEvent).detail}</div>
+            <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>{step.detail}</div>
           </div>
         ))}
       </div>

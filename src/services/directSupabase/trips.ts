@@ -17,7 +17,7 @@ import {
   buildUserContext,
   ensureDriverForUser,
   getLatestVerificationRecord,
-} from './userContext.ts';
+} from './userContext';
 import { recordDirectGrowthEvent } from './growth';
 import { processReferralConversionForPassenger } from './referrals';
 import type {

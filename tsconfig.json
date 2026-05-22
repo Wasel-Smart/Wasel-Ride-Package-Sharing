@@ -9,7 +9,7 @@
     ],
 
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
 
     "jsx": "react-jsx",
 
@@ -34,14 +34,11 @@
 
     "allowImportingTsExtensions": false,
 
-    "strictPropertyInitialization": false,
-
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "strictPropertyInitialization": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
 
     "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
-
     "paths": {
       "@/*": ["src/*"]
     },

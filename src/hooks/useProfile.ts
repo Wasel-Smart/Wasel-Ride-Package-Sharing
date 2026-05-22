@@ -62,8 +62,8 @@ export function useProfile() {
   });
 
   const uploadAvatarMutation = useMutation({
-    mutationFn: ({ file, fileType }: { file: File; fileType?: string }) =>
-      uploadAvatar(file, fileType),
+    mutationFn: ({ file }: { file: File; fileType?: string }) =>
+      uploadAvatar(file),
     onSuccess: invalidate,
     onError: (err) => console.error('Upload avatar failed:', sanitizeLogMessage(err)),
   });

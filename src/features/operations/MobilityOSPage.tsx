@@ -620,7 +620,7 @@ export default function MobilityOSPage() {
                 {card.value}
               </div>
               <div style={{ marginTop: 10, color: C.textSub, lineHeight: 1.5, fontSize: '0.9rem' }}>
-                {card(event as CustomEvent).detail}
+                {card.detail}
               </div>
             </div>
           ))}

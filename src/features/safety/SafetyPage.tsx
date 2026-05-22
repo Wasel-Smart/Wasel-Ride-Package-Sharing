@@ -254,7 +254,7 @@ export default function SafetyPage() {
                         lineHeight: TYPE.lineHeight.relaxed,
                       }}
                     >
-                      {item(event as CustomEvent).detail}
+                      {item.detail}
                     </div>
                   </div>
                 );
@@ -312,7 +312,7 @@ export default function SafetyPage() {
                         lineHeight: TYPE.lineHeight.relaxed,
                       }}
                     >
-                      {step(event as CustomEvent).detail}
+                      {step.detail}
                     </div>
                   </div>
                 ))}

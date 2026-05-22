@@ -40,10 +40,10 @@ export const CSP_DIRECTIVES = {
     "'self'",
     'https://*.supabase.co',
     'wss://*.supabase.co',
-    'wss://*.sentry.io',
+    'wss://*.sentry.io',           // Sentry error-ingest (WSS transport)
+    'https://*.sentry.io',         // Sentry REST API (ingestion / release-health)
     'https://api.stripe.com',
     'https://maps.googleapis.com',
-    'https://*.sentry.io',
     ...(IS_DEV ? ['ws://localhost:*', 'http://localhost:*'] : []),
   ],
   'frame-src': ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],

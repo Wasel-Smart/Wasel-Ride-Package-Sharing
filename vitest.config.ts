@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
+import os from 'os';
 
 export default defineConfig({
   resolve: {
@@ -11,8 +12,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     pool: 'threads',
-    fileParallelism: false,
-    maxWorkers: 1,
+    fileParallelism: true,
+    maxWorkers: os.cpus().length,
     testTimeout: 15000,
     setupFiles: ['./tests/setup.ts'],
     environmentOptions: {
@@ -43,6 +44,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
+      thresholds: {
+        lines: 70,
+        functions: 70,
+        statements: 70,
+        branches: 60,
+      },
       exclude: [
         'node_modules',
         'tests',

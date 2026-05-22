@@ -47,7 +47,7 @@ export function unwrapApiEnvelope<T>(value: T | ApiEnvelope<T>): T {
 
   throw Object.assign(new Error(error.message), {
     code: error.code,
-    details: error(event as CustomEvent).details,
+    details: error.details,
   });
 }
 

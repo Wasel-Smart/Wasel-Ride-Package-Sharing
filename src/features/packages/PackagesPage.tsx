@@ -296,7 +296,7 @@ export function PackagesPage() {
                 {item.label}
               </div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.45 }}>
-                {item(event as CustomEvent).detail}
+                {item.detail}
               </div>
             </div>
           ))}

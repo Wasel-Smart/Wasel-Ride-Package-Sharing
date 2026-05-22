@@ -398,7 +398,7 @@ export function OfferRideFormPanel({
                   <div
                     style={{ color: DS.sub, fontSize: '0.73rem', lineHeight: 1.45, marginTop: 5 }}
                   >
-                    {item(event as CustomEvent).detail}
+                    {item.detail}
                   </div>
                 </div>
               ))}

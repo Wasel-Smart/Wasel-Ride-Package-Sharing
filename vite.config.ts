@@ -38,8 +38,11 @@ export default defineConfig({
             id.includes('/node_modules/scheduler/')
           ) return 'react-core';
 
-          // Animation
-          if (id.includes('/node_modules/motion/')) return 'motion';
+          // Animation (motion v12 + framer-motion v12 share the same package set)
+          if (
+            id.includes('/node_modules/motion/') ||
+            id.includes('/node_modules/framer-motion/')
+          ) return 'motion';
 
           // UI primitives
           if (

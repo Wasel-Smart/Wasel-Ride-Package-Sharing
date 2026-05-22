@@ -1,7 +1,7 @@
 // ─── Growth events & demand alerts ───────────────────────────────────────────
 
 import { getDb, toNumber } from './helpers';
-import { buildUserContext } from './userContext.ts';
+import { buildUserContext } from './userContext';
 import type { RawDemandAlert, RawGrowthEvent } from './types';
 
 export async function recordDirectGrowthEvent(input: {

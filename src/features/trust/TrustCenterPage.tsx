@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+﻿import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import {
   Activity,
@@ -50,13 +50,13 @@ function toErrorMessage(error: unknown): string {
 function getStepBadge(state: TrustStepState, ar: boolean) {
   switch (state) {
     case 'completed':
-      return { label: ar ? 'مكتمل' : 'Completed', accent: C.green };
+      return { label: ar ? 'Ù…ÙƒØªÙ…Ù„' : 'Completed', accent: C.green };
     case 'in_progress':
-      return { label: ar ? 'قيد التنفيذ' : 'In Progress', accent: C.cyan };
+      return { label: ar ? 'Ù‚ÙŠØ¯ Ø§Ù„ØªÙ†ÙÙŠØ°' : 'In Progress', accent: C.cyan };
     case 'failed':
-      return { label: ar ? 'فشل' : 'Failed', accent: C.error };
+      return { label: ar ? 'ÙØ´Ù„' : 'Failed', accent: C.error };
     default:
-      return { label: ar ? 'لم يبدأ' : 'Not Started', accent: C.gold };
+      return { label: ar ? 'Ù„Ù… ÙŠØ¨Ø¯Ø£' : 'Not Started', accent: C.gold };
   }
 }
 
@@ -83,40 +83,40 @@ function formatTimestamp(value?: string | null): string | null {
 function getTrustStepTitle(stepId: TrustStepId | null, ar: boolean): string {
   switch (stepId) {
     case 'identity':
-      return ar ? 'الهوية / سند' : 'Identity / Sanad';
+      return ar ? 'Ø§Ù„Ù‡ÙˆÙŠØ© / Ø³Ù†Ø¯' : 'Identity / Sanad';
     case 'email':
-      return ar ? 'البريد الإلكتروني' : 'Email';
+      return ar ? 'Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ' : 'Email';
     case 'phone':
-      return ar ? 'الهاتف' : 'Phone';
+      return ar ? 'Ø§Ù„Ù‡Ø§ØªÙ' : 'Phone';
     case 'driver_documents':
-      return ar ? 'وثائق السائق' : 'Driver documents';
+      return ar ? 'ÙˆØ«Ø§Ø¦Ù‚ Ø§Ù„Ø³Ø§Ø¦Ù‚' : 'Driver documents';
     case 'wallet_standing':
-      return ar ? 'سلامة المحفظة' : 'Wallet standing';
+      return ar ? 'Ø³Ù„Ø§Ù…Ø© Ø§Ù„Ù…Ø­ÙØ¸Ø©' : 'Wallet standing';
     default:
-      return ar ? 'جاهز' : 'Ready';
+      return ar ? 'Ø¬Ø§Ù‡Ø²' : 'Ready';
   }
 }
 
 function getNextTrustStepDetail(status: TrustCenterStatus | null, ar: boolean): string {
   if (!status?.nextStepId) {
     return ar
-      ? 'كل القدرات الأساسية جاهزة الآن ولا توجد خطوة تشغيلية معلقة.'
+      ? 'ÙƒÙ„ Ø§Ù„Ù‚Ø¯Ø±Ø§Øª Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ© Ø¬Ø§Ù‡Ø²Ø© Ø§Ù„Ø¢Ù† ÙˆÙ„Ø§ ØªÙˆØ¬Ø¯ Ø®Ø·ÙˆØ© ØªØ´ØºÙŠÙ„ÙŠØ© Ù…Ø¹Ù„Ù‚Ø©.'
       : 'Every core capability is ready now and no operational trust step is pending.';
   }
 
   switch (status.nextStepId) {
     case 'identity':
-      return status.steps.identity(event as CustomEvent).detail;
+      return status.steps.identity.detail;
     case 'email':
-      return status.steps.email(event as CustomEvent).detail;
+      return status.steps.email.detail;
     case 'phone':
-      return status.steps.phone(event as CustomEvent).detail;
+      return status.steps.phone.detail;
     case 'driver_documents':
-      return status.steps.driverDocuments(event as CustomEvent).detail;
+      return status.steps.driverDocuments.detail;
     case 'wallet_standing':
-      return status.steps.walletStanding(event as CustomEvent).detail;
+      return status.steps.walletStanding.detail;
     default:
-      return ar ? 'راجع سير التحقق أدناه.' : 'Review the verification flow below.';
+      return ar ? 'Ø±Ø§Ø¬Ø¹ Ø³ÙŠØ± Ø§Ù„ØªØ­Ù‚Ù‚ Ø£Ø¯Ù†Ø§Ù‡.' : 'Review the verification flow below.';
   }
 }
 
@@ -297,17 +297,17 @@ export default function TrustCenterPage() {
   }
 
   const capabilityRows = [
-    { title: ar ? 'نشر رحلة' : 'Post rides', gate: evaluateTrustCapability(user, 'offer_ride') },
+    { title: ar ? 'Ù†Ø´Ø± Ø±Ø­Ù„Ø©' : 'Post rides', gate: evaluateTrustCapability(user, 'offer_ride') },
     {
-      title: ar ? 'حمل الطرود' : 'Carry packages',
+      title: ar ? 'Ø­Ù…Ù„ Ø§Ù„Ø·Ø±ÙˆØ¯' : 'Carry packages',
       gate: evaluateTrustCapability(user, 'carry_packages'),
     },
     {
-      title: ar ? 'استلام الدفعات' : 'Receive payouts',
+      title: ar ? 'Ø§Ø³ØªÙ„Ø§Ù… Ø§Ù„Ø¯ÙØ¹Ø§Øª' : 'Receive payouts',
       gate: evaluateTrustCapability(user, 'receive_payouts'),
     },
     {
-      title: ar ? 'الدعم السريع' : 'Priority support',
+      title: ar ? 'Ø§Ù„Ø¯Ø¹Ù… Ø§Ù„Ø³Ø±ÙŠØ¹' : 'Priority support',
       gate: evaluateTrustCapability(user, 'priority_support'),
     },
   ];
@@ -316,14 +316,14 @@ export default function TrustCenterPage() {
   const walletStep = effectiveStatus?.steps.walletStanding;
   const walletTone =
     walletStep?.meta.walletStatus === 'closed'
-      ? { label: ar ? 'مغلقة' : 'Closed', color: C.error }
+      ? { label: ar ? 'Ù…ØºÙ„Ù‚Ø©' : 'Closed', color: C.error }
       : walletStep?.meta.walletStatus === 'frozen'
-        ? { label: ar ? 'مجمدة' : 'Frozen', color: C.error }
+        ? { label: ar ? 'Ù…Ø¬Ù…Ø¯Ø©' : 'Frozen', color: C.error }
         : walletStep?.meta.walletStatus === 'limited'
-          ? { label: ar ? 'محدودة' : 'Limited', color: C.gold }
+          ? { label: ar ? 'Ù…Ø­Ø¯ÙˆØ¯Ø©' : 'Limited', color: C.gold }
           : walletStep?.meta.walletStatus === 'unavailable'
-            ? { label: ar ? 'غير متاحة' : 'Unavailable', color: C.error }
-            : { label: ar ? 'نشطة' : 'Active', color: C.green };
+            ? { label: ar ? 'ØºÙŠØ± Ù…ØªØ§Ø­Ø©' : 'Unavailable', color: C.error }
+            : { label: ar ? 'Ù†Ø´Ø·Ø©' : 'Active', color: C.green };
   const heroAccent = effectiveStatus?.blockedSteps.length
     ? C.error
     : effectiveStatus?.nextStepId
@@ -331,14 +331,14 @@ export default function TrustCenterPage() {
       : C.green;
   const heroLabel = effectiveStatus?.blockedSteps.length
     ? ar
-      ? 'تحتاج متابعة'
+      ? 'ØªØ­ØªØ§Ø¬ Ù…ØªØ§Ø¨Ø¹Ø©'
       : 'Needs review'
     : effectiveStatus?.nextStepId
       ? ar
-        ? 'إجراء مطلوب'
+        ? 'Ø¥Ø¬Ø±Ø§Ø¡ Ù…Ø·Ù„ÙˆØ¨'
         : 'Action needed'
       : ar
-        ? 'جاهز'
+        ? 'Ø¬Ø§Ù‡Ø²'
         : 'Ready';
 
   const runAction = async (key: string, work: () => Promise<void>) => {
@@ -467,24 +467,24 @@ export default function TrustCenterPage() {
     <PageShell maxWidth={880} dir={ar ? 'rtl' : 'ltr'}>
       <div style={{ paddingInline: SPACE[4] }}>
         <PageHero
-          eyebrow={ar ? 'مركز الثقة' : 'Trust Center'}
+          eyebrow={ar ? 'Ù…Ø±ÙƒØ² Ø§Ù„Ø«Ù‚Ø©' : 'Trust Center'}
           icon={<StatusBadge label={heroLabel} accent={heroAccent} />}
           title={
             ar
-              ? 'كل خطوة يجب أن تنتهي بحالة واضحة'
+              ? 'ÙƒÙ„ Ø®Ø·ÙˆØ© ÙŠØ¬Ø¨ Ø£Ù† ØªÙ†ØªÙ‡ÙŠ Ø¨Ø­Ø§Ù„Ø© ÙˆØ§Ø¶Ø­Ø©'
               : 'Every trust check should end in a clear state'
           }
           description={
             effectiveStatus
               ? effectiveStatus.nextStepId
                 ? ar
-                  ? `أكمل ${effectiveStatus.totalSteps - effectiveStatus.completedSteps} خطوات متبقية وتجنب أي حالة معلقة.`
+                  ? `Ø£ÙƒÙ…Ù„ ${effectiveStatus.totalSteps - effectiveStatus.completedSteps} Ø®Ø·ÙˆØ§Øª Ù…ØªØ¨Ù‚ÙŠØ© ÙˆØªØ¬Ù†Ø¨ Ø£ÙŠ Ø­Ø§Ù„Ø© Ù…Ø¹Ù„Ù‚Ø©.`
                   : `Complete ${effectiveStatus.totalSteps - effectiveStatus.completedSteps} remaining checks and avoid any stuck state.`
                 : ar
-                  ? 'جميع خطوات الثقة الآن محسومة ويمكن للمستخدم فهم وضع الحساب فوراً.'
+                  ? 'Ø¬Ù…ÙŠØ¹ Ø®Ø·ÙˆØ§Øª Ø§Ù„Ø«Ù‚Ø© Ø§Ù„Ø¢Ù† Ù…Ø­Ø³ÙˆÙ…Ø© ÙˆÙŠÙ…ÙƒÙ† Ù„Ù„Ù…Ø³ØªØ®Ø¯Ù… ÙÙ‡Ù… ÙˆØ¶Ø¹ Ø§Ù„Ø­Ø³Ø§Ø¨ ÙÙˆØ±Ø§Ù‹.'
                   : 'Every trust step is now resolved clearly and the account state is readable at a glance.'
               : ar
-                ? 'تحميل حالة الثقة الحالية...'
+                ? 'ØªØ­Ù…ÙŠÙ„ Ø­Ø§Ù„Ø© Ø§Ù„Ø«Ù‚Ø© Ø§Ù„Ø­Ø§Ù„ÙŠØ©...'
                 : 'Loading the current trust state...'
           }
           accent={heroAccent}
@@ -496,10 +496,10 @@ export default function TrustCenterPage() {
               >
                 {effectiveStatus?.nextStepId
                   ? ar
-                    ? 'افتح الخطوة التالية'
+                    ? 'Ø§ÙØªØ­ Ø§Ù„Ø®Ø·ÙˆØ© Ø§Ù„ØªØ§Ù„ÙŠØ©'
                     : 'Open next step'
                   : ar
-                    ? 'راجع الخطوات'
+                    ? 'Ø±Ø§Ø¬Ø¹ Ø§Ù„Ø®Ø·ÙˆØ§Øª'
                     : 'Review checks'}
               </Button>
               <Button
@@ -512,10 +512,10 @@ export default function TrustCenterPage() {
                 {statusLoading ? (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                     <LoaderCircle size={14} className="animate-spin" />
-                    {ar ? 'يتم التحديث' : 'Refreshing'}
+                    {ar ? 'ÙŠØªÙ… Ø§Ù„ØªØ­Ø¯ÙŠØ«' : 'Refreshing'}
                   </span>
                 ) : ar ? (
-                  'تحديث الحالة'
+                  'ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø­Ø§Ù„Ø©'
                 ) : (
                   'Refresh status'
                 )}
@@ -535,13 +535,13 @@ export default function TrustCenterPage() {
                 <StatusBadge
                   label={
                     effectiveStatus
-                      ? `${effectiveStatus.completedSteps}/${effectiveStatus.totalSteps} ${ar ? 'مكتمل' : 'complete'}`
-                      : `0/5 ${ar ? 'مكتمل' : 'complete'}`
+                      ? `${effectiveStatus.completedSteps}/${effectiveStatus.totalSteps} ${ar ? 'Ù…ÙƒØªÙ…Ù„' : 'complete'}`
+                      : `0/5 ${ar ? 'Ù…ÙƒØªÙ…Ù„' : 'complete'}`
                   }
                   accent={C.cyan}
                 />
                 <StatusBadge
-                  label={ar ? `${unlockedCount}/4 مفتوح` : `${unlockedCount}/4 open`}
+                  label={ar ? `${unlockedCount}/4 Ù…ÙØªÙˆØ­` : `${unlockedCount}/4 open`}
                   accent={C.green}
                 />
               </div>
@@ -550,7 +550,7 @@ export default function TrustCenterPage() {
               </div>
               <div style={{ color: C.textMuted, fontSize: '0.88rem', lineHeight: 1.7 }}>
                 {ar
-                  ? 'كل بطاقة أدناه توضح ما إذا كانت الخطوة لم تبدأ أو قيد التنفيذ أو مكتملة أو فاشلة، مع سبب واضح.'
+                  ? 'ÙƒÙ„ Ø¨Ø·Ø§Ù‚Ø© Ø£Ø¯Ù†Ø§Ù‡ ØªÙˆØ¶Ø­ Ù…Ø§ Ø¥Ø°Ø§ ÙƒØ§Ù†Øª Ø§Ù„Ø®Ø·ÙˆØ© Ù„Ù… ØªØ¨Ø¯Ø£ Ø£Ùˆ Ù‚ÙŠØ¯ Ø§Ù„ØªÙ†ÙÙŠØ° Ø£Ùˆ Ù…ÙƒØªÙ…Ù„Ø© Ø£Ùˆ ÙØ§Ø´Ù„Ø©ØŒ Ù…Ø¹ Ø³Ø¨Ø¨ ÙˆØ§Ø¶Ø­.'
                   : 'Each card below shows whether a step is Not Started, In Progress, Completed, or Failed, with a clear reason.'}
               </div>
             </div>
@@ -566,40 +566,40 @@ export default function TrustCenterPage() {
           }}
         >
           <MetricCard
-            label={ar ? 'درجة الثقة' : 'Trust score'}
+            label={ar ? 'Ø¯Ø±Ø¬Ø© Ø§Ù„Ø«Ù‚Ø©' : 'Trust score'}
             value={`${user.trustScore}/100`}
-            detail={ar ? 'الرقم الذي يترجم الثقة داخل التطبيق.' : 'The number behind in-app trust.'}
+            detail={ar ? 'Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø°ÙŠ ÙŠØªØ±Ø¬Ù… Ø§Ù„Ø«Ù‚Ø© Ø¯Ø§Ø®Ù„ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚.' : 'The number behind in-app trust.'}
             icon={<Shield size={18} />}
             accent={heroAccent}
           />
           <MetricCard
-            label={ar ? 'التحقق المكتمل' : 'Checks done'}
+            label={ar ? 'Ø§Ù„ØªØ­Ù‚Ù‚ Ø§Ù„Ù…ÙƒØªÙ…Ù„' : 'Checks done'}
             value={
               effectiveStatus
                 ? `${effectiveStatus.completedSteps}/${effectiveStatus.totalSteps}`
                 : '0/5'
             }
-            detail={ar ? 'هوية واتصال ووثائق ومحفظة.' : 'Identity, contact, documents, and wallet.'}
+            detail={ar ? 'Ù‡ÙˆÙŠØ© ÙˆØ§ØªØµØ§Ù„ ÙˆÙˆØ«Ø§Ø¦Ù‚ ÙˆÙ…Ø­ÙØ¸Ø©.' : 'Identity, contact, documents, and wallet.'}
             icon={<CheckCircle2 size={18} />}
             accent={C.cyan}
           />
           <MetricCard
-            label={ar ? 'الخطوات المحظورة' : 'Blocked checks'}
+            label={ar ? 'Ø§Ù„Ø®Ø·ÙˆØ§Øª Ø§Ù„Ù…Ø­Ø¸ÙˆØ±Ø©' : 'Blocked checks'}
             value={`${effectiveStatus?.blockedSteps.length ?? 0}`}
             detail={
               ar
-                ? 'أي خطوة فاشلة تظهر بسبب واضح ولا تبقى معلقة.'
+                ? 'Ø£ÙŠ Ø®Ø·ÙˆØ© ÙØ§Ø´Ù„Ø© ØªØ¸Ù‡Ø± Ø¨Ø³Ø¨Ø¨ ÙˆØ§Ø¶Ø­ ÙˆÙ„Ø§ ØªØ¨Ù‚Ù‰ Ù…Ø¹Ù„Ù‚Ø©.'
                 : 'Failed steps show a reason instead of staying stuck.'
             }
             icon={<AlertTriangle size={18} />}
             accent={(effectiveStatus?.blockedSteps.length ?? 0) > 0 ? C.error : C.green}
           />
           <MetricCard
-            label={ar ? 'حالة المحفظة' : 'Wallet status'}
+            label={ar ? 'Ø­Ø§Ù„Ø© Ø§Ù„Ù…Ø­ÙØ¸Ø©' : 'Wallet status'}
             value={walletTone.label}
             detail={
               ar
-                ? 'المحفظة السليمة تحافظ على تدفق العمليات.'
+                ? 'Ø§Ù„Ù…Ø­ÙØ¸Ø© Ø§Ù„Ø³Ù„ÙŠÙ…Ø© ØªØ­Ø§ÙØ¸ Ø¹Ù„Ù‰ ØªØ¯ÙÙ‚ Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª.'
                 : 'Healthy wallet standing keeps operations available.'
             }
             icon={<Wallet size={18} />}
@@ -608,10 +608,10 @@ export default function TrustCenterPage() {
         </div>
 
         <SectionCard
-          title={ar ? 'ما الذي يفتح بعد هذه الخطوة؟' : 'What unlocks after this step?'}
+          title={ar ? 'Ù…Ø§ Ø§Ù„Ø°ÙŠ ÙŠÙØªØ­ Ø¨Ø¹Ø¯ Ù‡Ø°Ù‡ Ø§Ù„Ø®Ø·ÙˆØ©ØŸ' : 'What unlocks after this step?'}
           subtitle={
             ar
-              ? 'اربط الإجراء التالي بالقدرات التي ستصبح متاحة أو أوضح عند اكتماله.'
+              ? 'Ø§Ø±Ø¨Ø· Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡ Ø§Ù„ØªØ§Ù„ÙŠ Ø¨Ø§Ù„Ù‚Ø¯Ø±Ø§Øª Ø§Ù„ØªÙŠ Ø³ØªØµØ¨Ø­ Ù…ØªØ§Ø­Ø© Ø£Ùˆ Ø£ÙˆØ¶Ø­ Ø¹Ù†Ø¯ Ø§ÙƒØªÙ…Ø§Ù„Ù‡.'
               : 'Tie the next action directly to the capabilities that become available or clearer once it is done.'
           }
           icon={<BadgeCheck size={16} color={heroAccent} />}
@@ -643,7 +643,7 @@ export default function TrustCenterPage() {
                   fontFamily: F,
                 }}
               >
-                {ar ? 'الخطوة التالية' : 'Next unlock'}
+                {ar ? 'Ø§Ù„Ø®Ø·ÙˆØ© Ø§Ù„ØªØ§Ù„ÙŠØ©' : 'Next unlock'}
               </div>
               <div
                 style={{
@@ -679,7 +679,7 @@ export default function TrustCenterPage() {
                   }}
                 >
                   {ar
-                    ? `هناك ${effectiveStatus.blockedSteps.length} خطوة محظورة يجب حلها قبل اعتبار الحساب جاهزاً بالكامل.`
+                    ? `Ù‡Ù†Ø§Ùƒ ${effectiveStatus.blockedSteps.length} Ø®Ø·ÙˆØ© Ù…Ø­Ø¸ÙˆØ±Ø© ÙŠØ¬Ø¨ Ø­Ù„Ù‡Ø§ Ù‚Ø¨Ù„ Ø§Ø¹ØªØ¨Ø§Ø± Ø§Ù„Ø­Ø³Ø§Ø¨ Ø¬Ø§Ù‡Ø²Ø§Ù‹ Ø¨Ø§Ù„ÙƒØ§Ù…Ù„.`
                     : `${effectiveStatus.blockedSteps.length} blocked checks still need to be resolved before the account is fully ready.`}
                 </div>
               ) : null}
@@ -705,7 +705,7 @@ export default function TrustCenterPage() {
                   fontFamily: F,
                 }}
               >
-                {ar ? 'القدرات المقفلة الآن' : 'Capabilities still gated'}
+                {ar ? 'Ø§Ù„Ù‚Ø¯Ø±Ø§Øª Ø§Ù„Ù…Ù‚ÙÙ„Ø© Ø§Ù„Ø¢Ù†' : 'Capabilities still gated'}
               </div>
               {lockedCapabilities.length > 0 ? (
                 lockedCapabilities.map(item => (
@@ -726,7 +726,7 @@ export default function TrustCenterPage() {
                       {item.title}
                     </span>
                     <StatusBadge
-                      label={ar ? 'بانتظار الخطوة' : 'Waiting on next step'}
+                      label={ar ? 'Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø®Ø·ÙˆØ©' : 'Waiting on next step'}
                       accent={heroAccent}
                     />
                   </div>
@@ -741,7 +741,7 @@ export default function TrustCenterPage() {
                   }}
                 >
                   {ar
-                    ? 'لا توجد قدرة أساسية مقفلة الآن. استخدم هذه الصفحة للمراجعة الدورية فقط.'
+                    ? 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ù‚Ø¯Ø±Ø© Ø£Ø³Ø§Ø³ÙŠØ© Ù…Ù‚ÙÙ„Ø© Ø§Ù„Ø¢Ù†. Ø§Ø³ØªØ®Ø¯Ù… Ù‡Ø°Ù‡ Ø§Ù„ØµÙØ­Ø© Ù„Ù„Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„Ø¯ÙˆØ±ÙŠØ© ÙÙ‚Ø·.'
                     : 'No core capability is currently gated. Use this page for periodic review only.'}
                 </div>
               )}
@@ -751,10 +751,10 @@ export default function TrustCenterPage() {
 
         <div ref={workflowRef} style={{ display: 'grid', gap: SPACE[5], marginBottom: SPACE[6] }}>
           <SectionCard
-            title={ar ? 'سير التحقق العملي' : 'Actionable verification flow'}
+            title={ar ? 'Ø³ÙŠØ± Ø§Ù„ØªØ­Ù‚Ù‚ Ø§Ù„Ø¹Ù…Ù„ÙŠ' : 'Actionable verification flow'}
             subtitle={
               ar
-                ? 'كل خطوة لديها إجراء واضح ولا يسمح لأي حالة أن تبقى غير محسومة.'
+                ? 'ÙƒÙ„ Ø®Ø·ÙˆØ© Ù„Ø¯ÙŠÙ‡Ø§ Ø¥Ø¬Ø±Ø§Ø¡ ÙˆØ§Ø¶Ø­ ÙˆÙ„Ø§ ÙŠØ³Ù…Ø­ Ù„Ø£ÙŠ Ø­Ø§Ù„Ø© Ø£Ù† ØªØ¨Ù‚Ù‰ ØºÙŠØ± Ù…Ø­Ø³ÙˆÙ…Ø©.'
                 : 'Each step has a direct action and no state is allowed to remain indeterminate.'
             }
             icon={<Activity size={16} color={C.cyan} />}
@@ -762,9 +762,9 @@ export default function TrustCenterPage() {
             <div style={{ display: 'grid', gap: SPACE[4] }}>
               <div ref={identityRef}>
                 <StepCard
-                  title={ar ? 'الهوية / سند' : 'Identity / Sanad'}
+                  title={ar ? 'Ø§Ù„Ù‡ÙˆÙŠØ© / Ø³Ù†Ø¯' : 'Identity / Sanad'}
                   subtitle={
-                    effectiveStatus?.steps.identity(event as CustomEvent).detail ??
+                    effectiveStatus?.steps.identity.detail ??
                     'Submit Sanad verification to continue.'
                   }
                   state={effectiveStatus?.steps.identity.state ?? 'not_started'}
@@ -788,14 +788,14 @@ export default function TrustCenterPage() {
                       >
                         {actionKey === 'identity'
                           ? ar
-                            ? 'جارٍ الإرسال'
+                            ? 'Ø¬Ø§Ø±Ù Ø§Ù„Ø¥Ø±Ø³Ø§Ù„'
                             : 'Submitting'
                           : effectiveStatus?.steps.identity.state === 'failed'
                             ? ar
-                              ? 'إعادة الإرسال'
+                              ? 'Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ø¥Ø±Ø³Ø§Ù„'
                               : 'Resubmit'
                             : ar
-                              ? 'إرسال للمراجعة'
+                              ? 'Ø¥Ø±Ø³Ø§Ù„ Ù„Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©'
                               : 'Submit for review'}
                       </Button>
                       <Button
@@ -805,7 +805,7 @@ export default function TrustCenterPage() {
                         }}
                         className="border-white/15 bg-white/5 text-white hover:bg-white/10"
                       >
-                        {ar ? 'تحديث' : 'Refresh'}
+                        {ar ? 'ØªØ­Ø¯ÙŠØ«' : 'Refresh'}
                       </Button>
                     </div>
                   }
@@ -830,16 +830,16 @@ export default function TrustCenterPage() {
                     <FormField
                       value={identityReference}
                       onChange={setIdentityReference}
-                      placeholder={ar ? 'مرجع سند أو رقم الجلسة' : 'Sanad reference or session id'}
+                      placeholder={ar ? 'Ù…Ø±Ø¬Ø¹ Ø³Ù†Ø¯ Ø£Ùˆ Ø±Ù‚Ù… Ø§Ù„Ø¬Ù„Ø³Ø©' : 'Sanad reference or session id'}
                     />
                     <FormField
                       value={identityDocumentReference}
                       onChange={setIdentityDocumentReference}
-                      placeholder={ar ? 'مرجع المستند (اختياري)' : 'Document reference (optional)'}
+                      placeholder={ar ? 'Ù…Ø±Ø¬Ø¹ Ø§Ù„Ù…Ø³ØªÙ†Ø¯ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)' : 'Document reference (optional)'}
                     />
                     {formatTimestamp(effectiveStatus?.steps.identity.updatedAt) ? (
                       <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}>
-                        {ar ? 'آخر تحديث:' : 'Last update:'}{' '}
+                        {ar ? 'Ø¢Ø®Ø± ØªØ­Ø¯ÙŠØ«:' : 'Last update:'}{' '}
                         {formatTimestamp(effectiveStatus?.steps.identity.updatedAt)}
                       </div>
                     ) : null}
@@ -849,10 +849,10 @@ export default function TrustCenterPage() {
 
               <div ref={contactRef}>
                 <StepCard
-                  title={ar ? 'البريد والهاتف' : 'Email and phone'}
+                  title={ar ? 'Ø§Ù„Ø¨Ø±ÙŠØ¯ ÙˆØ§Ù„Ù‡Ø§ØªÙ' : 'Email and phone'}
                   subtitle={
                     ar
-                      ? 'تأكيد البريد والهاتف يجب أن يغيّر الحالة مباشرة.'
+                      ? 'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø¨Ø±ÙŠØ¯ ÙˆØ§Ù„Ù‡Ø§ØªÙ ÙŠØ¬Ø¨ Ø£Ù† ÙŠØºÙŠÙ‘Ø± Ø§Ù„Ø­Ø§Ù„Ø© Ù…Ø¨Ø§Ø´Ø±Ø©.'
                       : 'Email and phone verification should move state immediately.'
                   }
                   state={
@@ -897,7 +897,7 @@ export default function TrustCenterPage() {
                         <div
                           style={{ color: '#EFF6FF', fontWeight: TYPE.weight.bold, fontFamily: F }}
                         >
-                          {ar ? 'تأكيد البريد' : 'Email confirmation'}
+                          {ar ? 'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø¨Ø±ÙŠØ¯' : 'Email confirmation'}
                         </div>
                         <StatusBadge
                           label={
@@ -918,7 +918,7 @@ export default function TrustCenterPage() {
                           lineHeight: 1.6,
                         }}
                       >
-                        {effectiveStatus?.steps.email(event as CustomEvent).detail}
+                        {effectiveStatus?.steps.email.detail}
                       </div>
                       <div style={{ color: '#EFF6FF', fontSize: TYPE.size.sm, fontFamily: F }}>
                         {user.email || effectiveStatus?.steps.email.meta.email || 'No email'}
@@ -936,14 +936,14 @@ export default function TrustCenterPage() {
                         >
                           {actionKey === 'email'
                             ? ar
-                              ? 'يتم الإرسال'
+                              ? 'ÙŠØªÙ… Ø§Ù„Ø¥Ø±Ø³Ø§Ù„'
                               : 'Sending'
                             : effectiveStatus?.steps.email.state === 'completed'
                               ? ar
-                                ? 'تم التأكيد'
+                                ? 'ØªÙ… Ø§Ù„ØªØ£ÙƒÙŠØ¯'
                                 : 'Confirmed'
                               : ar
-                                ? 'إرسال رابط التأكيد'
+                                ? 'Ø¥Ø±Ø³Ø§Ù„ Ø±Ø§Ø¨Ø· Ø§Ù„ØªØ£ÙƒÙŠØ¯'
                                 : 'Send confirmation'}
                         </Button>
                       </div>
@@ -970,7 +970,7 @@ export default function TrustCenterPage() {
                         <div
                           style={{ color: '#EFF6FF', fontWeight: TYPE.weight.bold, fontFamily: F }}
                         >
-                          {ar ? 'تأكيد الهاتف' : 'Phone confirmation'}
+                          {ar ? 'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ù‡Ø§ØªÙ' : 'Phone confirmation'}
                         </div>
                         <StatusBadge
                           label={
@@ -991,7 +991,7 @@ export default function TrustCenterPage() {
                           lineHeight: 1.6,
                         }}
                       >
-                        {effectiveStatus?.steps.phone(event as CustomEvent).detail}
+                        {effectiveStatus?.steps.phone.detail}
                       </div>
                       {effectiveStatus?.steps.phone.failureReason ? (
                         <div
@@ -1025,14 +1025,14 @@ export default function TrustCenterPage() {
                         >
                           {actionKey === 'phone-start'
                             ? ar
-                              ? 'يتم الإرسال'
+                              ? 'ÙŠØªÙ… Ø§Ù„Ø¥Ø±Ø³Ø§Ù„'
                               : 'Sending'
                             : effectiveStatus?.steps.phone.state === 'in_progress'
                               ? ar
-                                ? 'إعادة إرسال الكود'
+                                ? 'Ø¥Ø¹Ø§Ø¯Ø© Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„ÙƒÙˆØ¯'
                                 : 'Resend code'
                               : ar
-                                ? 'إرسال الكود'
+                                ? 'Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„ÙƒÙˆØ¯'
                                 : 'Send code'}
                         </Button>
                       </div>
@@ -1042,7 +1042,7 @@ export default function TrustCenterPage() {
                           <FormField
                             value={phoneCode}
                             onChange={setPhoneCode}
-                            placeholder={ar ? 'أدخل كود التحقق' : 'Enter verification code'}
+                            placeholder={ar ? 'Ø£Ø¯Ø®Ù„ ÙƒÙˆØ¯ Ø§Ù„ØªØ­Ù‚Ù‚' : 'Enter verification code'}
                           />
                           <Button
                             onClick={() => {
@@ -1053,17 +1053,17 @@ export default function TrustCenterPage() {
                           >
                             {actionKey === 'phone-confirm'
                               ? ar
-                                ? 'جارٍ التأكيد'
+                                ? 'Ø¬Ø§Ø±Ù Ø§Ù„ØªØ£ÙƒÙŠØ¯'
                                 : 'Confirming'
                               : ar
-                                ? 'تأكيد الهاتف'
+                                ? 'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ù‡Ø§ØªÙ'
                                 : 'Confirm phone'}
                           </Button>
                           {formatTimestamp(effectiveStatus?.steps.phone.meta.expiresAt) ? (
                             <div
                               style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}
                             >
-                              {ar ? 'ينتهي الكود:' : 'Code expires:'}{' '}
+                              {ar ? 'ÙŠÙ†ØªÙ‡ÙŠ Ø§Ù„ÙƒÙˆØ¯:' : 'Code expires:'}{' '}
                               {formatTimestamp(effectiveStatus?.steps.phone.meta.expiresAt)}
                             </div>
                           ) : null}
@@ -1076,9 +1076,9 @@ export default function TrustCenterPage() {
 
               <div ref={documentsRef}>
                 <StepCard
-                  title={ar ? 'وثائق السائق' : 'Driver documents'}
+                  title={ar ? 'ÙˆØ«Ø§Ø¦Ù‚ Ø§Ù„Ø³Ø§Ø¦Ù‚' : 'Driver documents'}
                   subtitle={
-                    effectiveStatus?.steps.driverDocuments(event as CustomEvent).detail ??
+                    effectiveStatus?.steps.driverDocuments.detail ??
                     'Submit driver license and compliance documents.'
                   }
                   state={effectiveStatus?.steps.driverDocuments.state ?? 'not_started'}
@@ -1119,10 +1119,10 @@ export default function TrustCenterPage() {
                         >
                           {actionKey === 'driver-mode'
                             ? ar
-                              ? 'يتم التفعيل'
+                              ? 'ÙŠØªÙ… Ø§Ù„ØªÙØ¹ÙŠÙ„'
                               : 'Enabling'
                             : ar
-                              ? 'تفعيل وضع السائق'
+                              ? 'ØªÙØ¹ÙŠÙ„ ÙˆØ¶Ø¹ Ø§Ù„Ø³Ø§Ø¦Ù‚'
                               : 'Enable Driver mode'}
                         </Button>
                       </div>
@@ -1131,13 +1131,13 @@ export default function TrustCenterPage() {
                         <FormField
                           value={licenseNumber}
                           onChange={setLicenseNumber}
-                          placeholder={ar ? 'رقم رخصة السائق' : 'Driver license number'}
+                          placeholder={ar ? 'Ø±Ù‚Ù… Ø±Ø®ØµØ© Ø§Ù„Ø³Ø§Ø¦Ù‚' : 'Driver license number'}
                         />
                         <FormField
                           value={driverDocumentReference}
                           onChange={setDriverDocumentReference}
                           placeholder={
-                            ar ? 'مرجع المستند (اختياري)' : 'Document reference (optional)'
+                            ar ? 'Ù…Ø±Ø¬Ø¹ Ø§Ù„Ù…Ø³ØªÙ†Ø¯ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)' : 'Document reference (optional)'
                           }
                         />
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -1153,14 +1153,14 @@ export default function TrustCenterPage() {
                           >
                             {actionKey === 'driver-documents'
                               ? ar
-                                ? 'جارٍ الإرسال'
+                                ? 'Ø¬Ø§Ø±Ù Ø§Ù„Ø¥Ø±Ø³Ø§Ù„'
                                 : 'Submitting'
                               : effectiveStatus?.steps.driverDocuments.state === 'failed'
                                 ? ar
-                                  ? 'إعادة الإرسال'
+                                  ? 'Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ø¥Ø±Ø³Ø§Ù„'
                                   : 'Resubmit'
                                 : ar
-                                  ? 'إرسال الوثائق'
+                                  ? 'Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„ÙˆØ«Ø§Ø¦Ù‚'
                                   : 'Submit documents'}
                           </Button>
                         </div>
@@ -1168,7 +1168,7 @@ export default function TrustCenterPage() {
                     )}
                     {formatTimestamp(effectiveStatus?.steps.driverDocuments.updatedAt) ? (
                       <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}>
-                        {ar ? 'آخر تحديث:' : 'Last update:'}{' '}
+                        {ar ? 'Ø¢Ø®Ø± ØªØ­Ø¯ÙŠØ«:' : 'Last update:'}{' '}
                         {formatTimestamp(effectiveStatus?.steps.driverDocuments.updatedAt)}
                       </div>
                     ) : null}
@@ -1178,9 +1178,9 @@ export default function TrustCenterPage() {
 
               <div ref={walletRef}>
                 <StepCard
-                  title={ar ? 'سلامة المحفظة' : 'Wallet standing'}
+                  title={ar ? 'Ø³Ù„Ø§Ù…Ø© Ø§Ù„Ù…Ø­ÙØ¸Ø©' : 'Wallet standing'}
                   subtitle={
-                    effectiveStatus?.steps.walletStanding(event as CustomEvent).detail ?? 'Wallet status unavailable.'
+                    effectiveStatus?.steps.walletStanding.detail ?? 'Wallet status unavailable.'
                   }
                   state={effectiveStatus?.steps.walletStanding.state ?? 'failed'}
                   icon={
@@ -1197,14 +1197,14 @@ export default function TrustCenterPage() {
                         onClick={() => nav('/app/wallet')}
                         className="bg-primary text-primary-foreground hover:bg-primary/90"
                       >
-                        {ar ? 'افتح المحفظة' : 'Open wallet'}
+                        {ar ? 'Ø§ÙØªØ­ Ø§Ù„Ù…Ø­ÙØ¸Ø©' : 'Open wallet'}
                       </Button>
                       <Button
                         variant="outline"
                         onClick={() => nav('/app/settings?section=account')}
                         className="border-white/15 bg-white/5 text-white hover:bg-white/10"
                       >
-                        {ar ? 'إعدادات الحساب' : 'Account settings'}
+                        {ar ? 'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ø­Ø³Ø§Ø¨' : 'Account settings'}
                       </Button>
                     </div>
                   }
@@ -1232,10 +1232,10 @@ export default function TrustCenterPage() {
         </div>
 
         <SectionCard
-          title={ar ? 'القدرات المفتوحة الآن' : 'Capability matrix'}
+          title={ar ? 'Ø§Ù„Ù‚Ø¯Ø±Ø§Øª Ø§Ù„Ù…ÙØªÙˆØ­Ø© Ø§Ù„Ø¢Ù†' : 'Capability matrix'}
           subtitle={
             ar
-              ? 'الحالة النهائية للثقة يجب أن تظهر كقدرات مفتوحة أو مغلقة بوضوح.'
+              ? 'Ø§Ù„Ø­Ø§Ù„Ø© Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠØ© Ù„Ù„Ø«Ù‚Ø© ÙŠØ¬Ø¨ Ø£Ù† ØªØ¸Ù‡Ø± ÙƒÙ‚Ø¯Ø±Ø§Øª Ù…ÙØªÙˆØ­Ø© Ø£Ùˆ Ù…ØºÙ„Ù‚Ø© Ø¨ÙˆØ¶ÙˆØ­.'
               : 'Final trust state should read as open or blocked capabilities.'
           }
           icon={<BadgeCheck size={16} color={C.green} />}
@@ -1270,15 +1270,15 @@ export default function TrustCenterPage() {
                   >
                     {item.gate.allowed
                       ? ar
-                        ? 'الشرط مكتمل ويمكن تنفيذ الإجراء الآن.'
+                        ? 'Ø§Ù„Ø´Ø±Ø· Ù…ÙƒØªÙ…Ù„ ÙˆÙŠÙ…ÙƒÙ† ØªÙ†ÙÙŠØ° Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡ Ø§Ù„Ø¢Ù†.'
                         : 'This action is available right now.'
                       : (item.gate.reason ??
                         item.gate.recommendation ??
-                        (ar ? 'خطوة إضافية مطلوبة.' : 'One more step is required.'))}
+                        (ar ? 'Ø®Ø·ÙˆØ© Ø¥Ø¶Ø§ÙÙŠØ© Ù…Ø·Ù„ÙˆØ¨Ø©.' : 'One more step is required.'))}
                   </div>
                 </div>
                 <StatusBadge
-                  label={item.gate.allowed ? (ar ? 'مفتوح' : 'Open') : ar ? 'مغلق' : 'Locked'}
+                  label={item.gate.allowed ? (ar ? 'Ù…ÙØªÙˆØ­' : 'Open') : ar ? 'Ù…ØºÙ„Ù‚' : 'Locked'}
                   accent={item.gate.allowed ? C.green : C.gold}
                 />
               </div>
@@ -1289,3 +1289,4 @@ export default function TrustCenterPage() {
     </PageShell>
   );
 }
+

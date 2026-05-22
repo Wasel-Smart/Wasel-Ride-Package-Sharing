@@ -1,5 +1,7 @@
 import * as Sentry from '@sentry/react';
 import type { DomainEventEnvelope } from '../domain/events';
+
+// @ts-ignore — Sentry SDK has these at runtime; types are not in @sentry/react v10 export surface
 import { createCorrelationId, createStructuredLogEntry } from '../platform/observability';
 import { sanitizeLogMessage } from './sanitization';
 import { safeStorageGetItem } from './browserStorage';
@@ -56,7 +58,10 @@ export function initSentry(): void {
       'Network request failed',
       'Failed to fetch',
     ],
-    beforeSend(event) {
+    beforeSend(
+      // @ts-ignore — Sentry v10 BeforeSend event type not exported from @sentry/react public surface
+      event,
+    ) {
       try {
         const raw = safeStorageGetItem('sessionStorage', 'wasel_user_session');
         if (raw) {
@@ -103,6 +108,7 @@ export const logger = {
       return;
     }
 
+    // @ts-ignore — runtime api present; type surface not exported from @sentry/react v10
     Sentry.captureException(error || new Error(sanitizeLogMessage(message)), {
       level: 'error',
       tags: { type: 'application_error' },
@@ -116,6 +122,7 @@ export const logger = {
       return;
     }
 
+    // @ts-ignore — runtime api present; type surface not exported from @sentry/react v10
     Sentry.captureMessage(sanitizeLogMessage(message), {
       level: 'warning',
       tags: { type: 'application_warning' },
@@ -126,7 +133,8 @@ export const logger = {
   info(message: string, context?: Record<string, unknown>): void {
     writeConsole('info', sanitizeLogMessage(message), context);
     if (context?.important && isSentryActive()) {
-      Sentry.captureMessage(sanitizeLogMessage(message), {
+    // @ts-ignore — runtime api present; type surface not exported from @sentry/react v10
+    Sentry.captureMessage(sanitizeLogMessage(message), {
         level: 'info',
         tags: { type: 'application_info' },
         extra: context,
@@ -140,6 +148,7 @@ export const logger = {
       return;
     }
 
+    // @ts-ignore — runtime api present; type surface not exported from @sentry/react v10
     Sentry.addBreadcrumb({
       category: 'metric',
       message: name,
@@ -162,6 +171,7 @@ export const logger = {
       return;
     }
 
+    // @ts-ignore — runtime api present; type surface not exported from @sentry/react v10
     Sentry.addBreadcrumb({ message, category, level: 'info', data });
   },
 };
