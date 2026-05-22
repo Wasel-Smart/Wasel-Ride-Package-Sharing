@@ -28,7 +28,7 @@ export class APIError extends Error {
     return {
       error: this.message,
       code: this.code,
-      details: this.details,
+      details: this(event as CustomEvent).details,
       statusCode: this.statusCode,
     };
   }
@@ -153,7 +153,7 @@ export async function apiRequest<T = unknown>(
                     response.statusText,
                 ) || 'Request failed',
               code: (payload as { code?: string }).code,
-              details: (payload as { details?: unknown }).details,
+              details: (payload as { details?: unknown })(event as CustomEvent).details,
             }
           : {
               message: String(payload || response.statusText || 'Request failed'),
@@ -178,7 +178,7 @@ export async function apiRequest<T = unknown>(
         normalizedError.message,
         response.status,
         normalizedError.code,
-        normalizedError.details,
+        normalizedError(event as CustomEvent).details,
       );
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));

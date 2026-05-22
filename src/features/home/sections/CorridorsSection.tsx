@@ -99,7 +99,7 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
                 fontSize: '0.84rem',
               }}
             >
-              {card.detail}
+              {card(event as CustomEvent).detail}
             </div>
             {card.insight ? (
               <div

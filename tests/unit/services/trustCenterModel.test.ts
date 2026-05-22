@@ -32,7 +32,7 @@ describe('trustCenterModel', () => {
     });
 
     expect(status.steps.driverDocuments.state).toBe('not_started');
-    expect(status.steps.driverDocuments.detail).toContain('Enable Driver mode');
+    expect(status.steps.driverDocuments(event as CustomEvent).detail).toContain('Enable Driver mode');
   });
 
   it('treats closed wallets as failed trust state', () => {

@@ -584,7 +584,7 @@ export function BusPage() {
                 {item.label}
               </div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                {item.detail}
+                {item(event as CustomEvent).detail}
               </div>
             </div>
           ))}
@@ -930,7 +930,7 @@ export function BusPage() {
                         },
                         {
                           label: 'Status',
-                          value: routeStatus.detail,
+                          value: routeStatus(event as CustomEvent).detail,
                           icon: <Award size={13} color={route.color ?? DS.cyan} />,
                         },
                       ].map(item => (
@@ -1113,7 +1113,7 @@ export function BusPage() {
                       fontWeight: 700,
                     }}
                   >
-                    {activeStatus.detail}
+                    {activeStatus(event as CustomEvent).detail}
                   </div>
                 </div>
                 <div>

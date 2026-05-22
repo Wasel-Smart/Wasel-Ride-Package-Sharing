@@ -126,7 +126,7 @@ export default function DriverPage() {
                   {primaryCorridor?.label ?? 'Choose your first corridor'}
                 </h2>
                 <div style={{ color: DS.sub, fontSize: '0.88rem', lineHeight: 1.55 }}>
-                  {driverPlan?.waselBrainNote ?? readiness.detail}
+                  {driverPlan?.waselBrainNote ?? readiness(event as CustomEvent).detail}
                 </div>
               </div>
               <span
@@ -171,7 +171,7 @@ export default function DriverPage() {
                     {item.label}
                   </div>
                   <div style={{ color: DS.muted, fontSize: '0.72rem', marginTop: 4 }}>
-                    {item.detail}
+                    {item(event as CustomEvent).detail}
                   </div>
                 </div>
               ))}

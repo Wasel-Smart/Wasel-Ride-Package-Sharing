@@ -399,7 +399,7 @@ function ProfilePageContent({
               <SharedQuickActionCard
                 key={action.label}
                 label={action.label}
-                detail={action.detail}
+                detail={action(event as CustomEvent).detail}
                 icon={action.icon}
                 color={action.color}
                 onClick={action.onClick}

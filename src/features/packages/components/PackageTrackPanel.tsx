@@ -182,7 +182,7 @@ export function PackageTrackPanel({
                 <div
                   style={{ color: DS.muted, fontSize: '0.72rem', marginTop: 6, lineHeight: 1.45 }}
                 >
-                  {item.detail}
+                  {item(event as CustomEvent).detail}
                 </div>
               </div>
             ))}
