@@ -77,9 +77,87 @@ export function PageShell({
         direction: dir,
         position: 'relative',
         paddingBottom: 96,
+        overflowX: 'hidden',
         ...style,
       }}
     >
+      <style>{`
+        :root { color-scheme: dark; }
+        .wasel-container {
+          width: 100%;
+          padding-inline: clamp(14px, 4vw, 32px) !important;
+        }
+        .wasel-page-hero {
+          grid-template-columns: var(--wasel-hero-columns, 1fr) !important;
+          padding: clamp(20px, 5vw, 32px) clamp(18px, 5vw, 28px) !important;
+          border-radius: clamp(22px, 5vw, 32px) !important;
+        }
+        .wasel-page-hero h1 {
+          font-size: clamp(1.85rem, 7vw, 3rem) !important;
+          line-height: 1.08 !important;
+          letter-spacing: 0 !important;
+          text-wrap: balance;
+        }
+        .wasel-page-hero p {
+          font-size: clamp(0.95rem, 2.5vw, 1rem) !important;
+          line-height: 1.68 !important;
+        }
+        .wasel-page-actions {
+          gap: 12px !important;
+        }
+        .wasel-page-actions > button,
+        .wasel-page-actions > a {
+          min-height: 48px !important;
+        }
+        .wasel-section-card,
+        .wasel-metric-card,
+        .wasel-action-tile {
+          min-width: 0;
+        }
+        .wasel-section-card {
+          border-radius: 22px !important;
+        }
+        .wasel-action-tile {
+          min-height: 176px;
+        }
+        .wasel-data-row {
+          min-height: 58px;
+        }
+        @media (min-width: 981px) {
+          .wasel-page-hero[data-has-aside='true'] {
+            --wasel-hero-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
+          }
+        }
+        @media (max-width: 980px) {
+          .wasel-page-hero {
+            grid-template-columns: 1fr !important;
+          }
+          .wasel-page-hero-aside {
+            padding: 18px !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .wasel-container {
+            padding-inline: 14px !important;
+          }
+          .wasel-page-actions {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+          }
+          .wasel-page-actions > * {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+          .wasel-section-heading {
+            flex-direction: column !important;
+            align-items: stretch !important;
+          }
+          .wasel-section-heading h2,
+          .wasel-section-heading span {
+            overflow-wrap: anywhere;
+          }
+        }
+      `}</style>
       <div
         aria-hidden="true"
         style={{
@@ -120,6 +198,8 @@ export function PageHero({
 }: PageHeroProps) {
   return (
     <div
+      className="wasel-page-hero"
+      data-has-aside={aside ? 'true' : 'false'}
       style={{
         position: 'relative',
         overflow: 'hidden',
@@ -175,7 +255,7 @@ export function PageHero({
             margin: 0,
             fontSize: 'clamp(2rem, 5vw, 3rem)',
             lineHeight: TYPE.lineHeight.tight,
-            letterSpacing: TYPE.letterSpacing.tighter,
+            letterSpacing: TYPE.letterSpacing.normal,
             fontWeight: TYPE.weight.ultra,
             color: '#FFFFFF',
             maxWidth: 760,
@@ -197,13 +277,17 @@ export function PageHero({
           </p>
         ) : null}
         {actions ? (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: SPACE[3], marginTop: SPACE[5] }}>
+          <div
+            className="wasel-page-actions"
+            style={{ display: 'flex', flexWrap: 'wrap', gap: SPACE[3], marginTop: SPACE[5] }}
+          >
             {actions}
           </div>
         ) : null}
       </div>
       {aside ? (
         <div
+          className="wasel-page-hero-aside"
           style={{
             position: 'relative',
             minWidth: 0,
@@ -231,8 +315,9 @@ export function SectionCard({
   contentPadding = SPACE[5],
 }: SectionCardProps) {
   return (
-    <section style={{ marginBottom: SPACE[6] }}>
+    <section className="wasel-section-card-shell" style={{ marginBottom: SPACE[6] }}>
       <div
+        className="wasel-section-heading"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -272,6 +357,7 @@ export function SectionCard({
         {action}
       </div>
       <div
+        className="wasel-section-card"
         style={{
           background:
             'radial-gradient(circle at top left, rgba(88,221,255,0.05), transparent 28%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)',
@@ -290,7 +376,7 @@ export function SectionCard({
 export function MetricCard({ label, value, detail, accent = C.cyan, icon }: MetricCardProps) {
   return (
     <div
-      className="wasel-card"
+      className="wasel-card wasel-metric-card"
       style={{
         minWidth: 0,
         padding: `${SPACE[5]} ${SPACE[4]}`,
@@ -370,6 +456,7 @@ export function ActionTile({ label, detail, icon, accent = C.cyan, onClick }: Ac
   return (
     <button
       type="button"
+      className="wasel-action-tile"
       onClick={onClick}
       disabled={!clickable}
       style={{
@@ -453,6 +540,7 @@ export function DataRow({ label, value, sub, icon, badge, onClick, danger = fals
   return (
     <button
       type="button"
+      className="wasel-data-row"
       onClick={onClick}
       disabled={!onClick}
       style={{

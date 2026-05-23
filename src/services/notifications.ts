@@ -69,6 +69,15 @@ type NotificationCreateResult = {
   channels?: CommunicationChannel[];
 };
 
+type SmsNotificationInput = {
+  phone: string;
+  message: string;
+  title?: string;
+  type?: string;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  action_url?: string;
+};
+
 type PendingNotificationOperation =
   | {
       kind: 'create';
@@ -690,5 +699,19 @@ export const notificationsAPI = {
         return { success: true, source: 'local', ...deliveryResult };
       }
     }
+  },
+
+  async sendSmsNotification(data: SmsNotificationInput): Promise<NotificationCreateResult> {
+    return this.createNotification({
+      title: data.title ?? 'Wasel notification',
+      message: data.message,
+      type: data.type ?? 'sms_notification',
+      priority: data.priority ?? 'medium',
+      action_url: data.action_url,
+      channels: ['sms'],
+      contact: {
+        phone: data.phone,
+      },
+    });
   },
 };

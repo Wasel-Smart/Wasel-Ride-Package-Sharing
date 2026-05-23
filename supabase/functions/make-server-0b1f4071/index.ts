@@ -2685,9 +2685,14 @@ async function handleTwilioWebhook(request: Request) {
   const status = mapTwilioStatusToLifecycle(rawStatus);
   const now = new Date().toISOString();
   const payload = Object.fromEntries(form.entries());
+  const providerError = String(
+    form.get('ErrorMessage') ??
+    form.get('ErrorCode') ??
+    rawStatus,
+  );
   const admin = getAdminClient();
   const patch = status === 'failed'
-    ? { delivery_status: 'failed', failed_at: now, error_message: rawStatus, provider_response: payload, updated_at: now }
+    ? { delivery_status: 'failed', failed_at: now, error_message: providerError, provider_response: payload, updated_at: now }
     : status === 'delivered'
       ? { delivery_status: 'delivered', delivered_at: now, provider_response: payload, updated_at: now }
       : { delivery_status: 'sent', provider_response: payload, updated_at: now };
@@ -2699,7 +2704,7 @@ async function handleTwilioWebhook(request: Request) {
     .eq('provider_name', 'twilio');
 
   if (error) return json({ error: error.message }, 500);
-  return json({ received: true, status });
+  return noContent();
 }
 
 Deno.serve(async (request) => {

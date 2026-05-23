@@ -96,6 +96,33 @@ describe('communication runtime helpers', () => {
     expect(String(request.init.body)).toContain('StatusCallback=');
   });
 
+  it('builds twilio requests for SMS with delivery tracking', () => {
+    const request = buildTwilioRequest(
+      {
+        delivery_id: 'd3',
+        channel: 'sms',
+        destination: '962790000000',
+        subject: 'Hello',
+        payload: { body: 'Body text' },
+        provider_name: 'twilio',
+        external_reference: null,
+        attempts_count: 0,
+      },
+      {
+        twilioAccountSid: 'AC123',
+        twilioAuthToken: 'secret',
+        twilioMessagingServiceSid: 'MG123',
+        communicationWebhookToken: 'token-123',
+        functionBaseUrl: 'https://example.supabase.co/functions/v1/make-server-0b1f4071',
+      },
+    );
+
+    expect(request.url).toContain('/Messages.json');
+    expect(String(request.init.body)).toContain('To=%2B962790000000');
+    expect(String(request.init.body)).toContain('MessagingServiceSid=MG123');
+    expect(String(request.init.body)).toContain('StatusCallback=');
+  });
+
   it('maps webhook states into lifecycle states', () => {
     expect(mapResendEventToStatus('email.delivered')).toBe('delivered');
     expect(mapResendEventToStatus('email.bounced')).toBe('failed');

@@ -107,7 +107,9 @@ export function WaselButton({
     fontSize: s.fontSize,
     fontWeight: TYPE.weight.black,
     fontFamily: F,
-    letterSpacing: '-0.01em',
+    letterSpacing: '0',
+    minHeight: s.height,
+    minWidth: fullWidth ? '100%' : 44,
     borderRadius: s.borderRadius,
     border: v.border,
     background: v.background,
@@ -129,28 +131,28 @@ export function WaselButton({
       style={baseStyle}
       onMouseEnter={e => {
         if (!isDisabled) {
-          (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px) scale(1.01)';
-          (e.currentTarget as HTMLButtonElement).style.boxShadow = v.hoverShadow;
+          e.currentTarget.style.transform = 'translateY(-1px) scale(1.01)';
+          e.currentTarget.style.boxShadow = v.hoverShadow;
           if (variant === 'outline') {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = C.borderHov;
-            (e.currentTarget as HTMLButtonElement).style.background = C.cyanDim;
+            e.currentTarget.style.borderColor = C.borderHov;
+            e.currentTarget.style.background = C.cyanDim;
           }
         }
         onMouseEnter?.(e);
       }}
       onMouseLeave={e => {
-        (e.currentTarget as HTMLButtonElement).style.transform = '';
-        (e.currentTarget as HTMLButtonElement).style.boxShadow = v.boxShadow;
-        (e.currentTarget as HTMLButtonElement).style.borderColor = '';
-        (e.currentTarget as HTMLButtonElement).style.background = v.background;
+        e.currentTarget.style.transform = '';
+        e.currentTarget.style.boxShadow = v.boxShadow;
+        e.currentTarget.style.borderColor = '';
+        e.currentTarget.style.background = v.background;
         onMouseLeave?.(e);
       }}
       onMouseDown={e => {
-        if (!isDisabled) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)';
+        if (!isDisabled) e.currentTarget.style.transform = 'scale(0.97)';
         rest.onMouseDown?.(e);
       }}
       onMouseUp={e => {
-        if (!isDisabled) (e.currentTarget as HTMLButtonElement).style.transform = '';
+        if (!isDisabled) e.currentTarget.style.transform = '';
         rest.onMouseUp?.(e);
       }}
     >

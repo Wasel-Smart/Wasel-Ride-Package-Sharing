@@ -133,6 +133,10 @@ export function Protected({ children }: { children: ReactNode }) {
 }
 
 export function PageShell({ children }: { children: ReactNode }) {
+  return <SharedPageShell>{children}</SharedPageShell>;
+}
+
+export function LegacyPageShellUnused({ children }: { children: ReactNode }) {
   const { language } = useLanguage();
   const ar = language === 'ar';
 
@@ -240,95 +244,17 @@ export function SectionHead({
   color?: string;
   action?: { label: string; onClick: () => void };
 }) {
-  const { language } = useLanguage();
-  const ar = language === 'ar';
-  const displayTitle = ar && titleAr ? titleAr : title;
-
   return (
-    <div
-      className="sp-head"
-      style={{
-        background: DS.gradNav,
-        borderRadius: r(20),
-        padding: '24px 24px',
-        marginBottom: 20,
-        position: 'relative',
-        overflow: 'hidden',
-        border: `1px solid ${color}18`,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-      }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}12,transparent)`,
-          pointerEvents: 'none',
-        }}
-      />
-      <div
-        className="sp-head-inner"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'relative',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: r(16),
-              background: `${color}18`,
-              border: `1.5px solid ${color}30`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.9rem',
-              flexShrink: 0,
-            }}
-          >
-            {emoji}
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>
-                {displayTitle}
-              </h1>
-            </div>
-            {sub && (
-              <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.46)', margin: 0 }}>
-                {sub}
-              </p>
-            )}
-          </div>
-        </div>
-        {action && (
-          <button
-            onClick={action.onClick}
-            className="sp-head-btn"
-            style={{
-              height: 44,
-              padding: '0 22px',
-              borderRadius: '99px',
-              border: 'none',
-              background: DS.gradC,
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: '0.875rem',
-              boxShadow: `0 4px 16px ${DS.cyan}30`,
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          >
-            {action.label}
-          </button>
-        )}
-      </div>
-    </div>
+    <SharedSectionHead
+      emoji={emoji}
+      title={title}
+      titleAr={titleAr}
+      sub={sub}
+      color={color}
+      action={action}
+    />
   );
+
 }
 
 export function CoreExperienceBanner({
@@ -340,23 +266,8 @@ export function CoreExperienceBanner({
   detail: string;
   tone?: string;
 }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        background: `linear-gradient(135deg, ${tone}10, rgba(255,255,255,0.02))`,
-        border: `1px solid ${tone}28`,
-        borderRadius: r(16),
-        padding: '12px 14px',
-        marginBottom: 18,
-      }}
-    >
-      <Shield size={16} color={tone} style={{ flexShrink: 0 }} />
-      <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>{title}</div>
-    </div>
-  );
+  return <SharedCoreExperienceBanner title={title} detail={_detail} tone={tone} />;
+
 }
 
 export const SharedPrimitives = {

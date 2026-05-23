@@ -139,4 +139,33 @@ describe('notificationsAPI', () => {
       ],
     });
   });
+
+  it('queues SMS notifications through the delivery pipeline', async () => {
+    mockGetAuthDetails.mockResolvedValue({ token: 'token-123', userId: 'user-123' });
+    mockFetchWithRetry.mockResolvedValue(response({ notification: { id: 'notif-sms' } }));
+    mockQueueCommunicationDeliveries.mockResolvedValue({ queued: 1, source: 'server' });
+
+    const result = await notificationsAPI.sendSmsNotification({
+      phone: '+962790000000',
+      message: 'Your driver is arriving in 5 minutes.',
+      title: 'Driver arriving',
+      type: 'trip_update',
+      priority: 'high',
+    });
+
+    expect(result.deliveriesQueued).toBe(1);
+    expect(mockQueueCommunicationDeliveries).toHaveBeenCalledWith({
+      userId: 'user-123',
+      notificationId: 'notif-sms',
+      requests: [
+        expect.objectContaining({
+          channel: 'sms',
+          destination: '+962790000000',
+          subject: 'Driver arriving',
+          body: 'Your driver is arriving in 5 minutes.',
+          metadata: { type: 'trip_update' },
+        }),
+      ],
+    });
+  });
 });
