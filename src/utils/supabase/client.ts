@@ -52,7 +52,10 @@ function getBrowserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | u
   if (typeof window === 'undefined') return undefined;
 
   try {
-    return window[kind];
+    if (kind === 'localStorage') {
+      return window.localStorage;
+    }
+    return window.sessionStorage;
   } catch {
     return undefined;
   }
@@ -60,9 +63,9 @@ function getBrowserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | u
 
 // ── Request queue (used only if a request fires while offline) ────────────────
 const requestQueue: Array<{
-  fn: () => Promise<any>;
-  resolve: (v: any) => void;
-  reject: (e: any) => void;
+  fn: () => Promise<unknown>;
+  resolve: (v: unknown) => void;
+  reject: (e: unknown) => void;
 }> = [];
 
 function getIsOnline(): boolean {
@@ -72,7 +75,10 @@ function getIsOnline(): boolean {
 
 async function processRequestQueue(): Promise<void> {
   while (requestQueue.length > 0 && getIsOnline()) {
-    const { fn, resolve, reject } = requestQueue.shift()!;
+    const queuedRequest = requestQueue.shift();
+    if (!queuedRequest) return;
+
+    const { fn, resolve, reject } = queuedRequest;
     try {
       resolve(await fn());
     } catch (e) {
@@ -86,13 +92,16 @@ async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   retries = RETRY_CONFIG.maxRetries,
 ): Promise<T> {
-  let lastError: any;
+  let lastError: unknown;
   for (let i = 0; i < retries; i++) {
     try {
       return await fn();
-    } catch (error: any) {
+    } catch (error: unknown) {
       lastError = error;
-      if (error?.status >= 400 && error?.status < 500 && error?.status !== 429) throw error;
+      const typedError = error as { status?: number };
+      if (typedError.status && typedError.status >= 400 && typedError.status < 500 && typedError.status !== 429) {
+        throw error;
+      }
       const delay = Math.min(
         RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffMultiplier, i),
         RETRY_CONFIG.maxDelay,
@@ -113,17 +122,22 @@ function queueIfOffline<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 // ── Supabase singleton ────────────────────────────────────────────────────────
+type GlobalSupabaseHolder = typeof globalThis & {
+  [key: symbol]: ReturnType<typeof createClient<Database>> | undefined;
+};
+
 const getSupabaseClient = () => {
   if (!isSupabaseConfigured) {
-console.error(
-       '[Supabase] Missing valid credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in your .env file.',
-     );
+    console.error(
+      '[Supabase] Missing valid credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in your .env file.',
+    );
     return null;
   }
 
   const CLIENT_KEY = Symbol.for('supabase.client.instance.v4');
-  const globalAny = typeof window !== 'undefined' ? window : globalThis;
-  if ((globalAny as any)[CLIENT_KEY]) return (globalAny as any)[CLIENT_KEY];
+  const globalObject = (typeof window !== 'undefined' ? window : globalThis) as GlobalSupabaseHolder;
+  const existingClient = globalObject[CLIENT_KEY];
+  if (existingClient) return existingClient;
 
   try {
     const client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -140,7 +154,7 @@ console.error(
       db: { schema: 'public' },
       realtime: { params: { eventsPerSecond: 10 } },
     });
-    (globalAny as any)[CLIENT_KEY] = client;
+    globalObject[CLIENT_KEY] = client;
     return client;
   } catch (error) {
     console.error('[Supabase] Failed to create client:', error);

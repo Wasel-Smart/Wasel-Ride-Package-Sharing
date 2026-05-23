@@ -1,5 +1,5 @@
 import { supabase } from '@/utils/supabase/client';
-import { sanitizeLogMessage, sanitizePhoneNumber, sanitizeEmail } from '@/utils/sanitization';
+import { sanitizeLogMessage } from '@/utils/sanitization';
 
 export interface UserProfile {
   id: string;
@@ -131,7 +131,6 @@ export async function updateUserProfile(
       return { success: false, error: error.message };
     }
 
-    console.log('Profile updated successfully');
     return { success: true, error: null };
   } catch (error) {
     console.error('updateUserProfile error:', sanitizeLogMessage(error));
@@ -191,8 +190,6 @@ export async function updatePhoneNumber(
       return { success: false, error: error.message };
     }
 
-    console.log('Phone number updated:', sanitizePhoneNumber(normalized));
-
     return { success: true, error: null, verificationRequired: true };
   } catch (error) {
     console.error('updatePhoneNumber error:', sanitizeLogMessage(error));
@@ -238,9 +235,9 @@ export async function updateEmail(
 
     if (profileError) {
       console.error('Failed to update profile email:', sanitizeLogMessage(profileError.message));
+      return { success: false, error: profileError.message };
     }
 
-    console.log('Email update initiated:', sanitizeEmail(newEmail));
     return { success: true, error: null, verificationRequired: true };
   } catch (error) {
     console.error('updateEmail error:', sanitizeLogMessage(error));
@@ -294,7 +291,6 @@ export async function uploadAvatar(
       return { success: false, url: null, error: updateError.message };
     }
 
-    console.log('Avatar uploaded successfully');
     return { success: true, url: publicUrl, error: null };
   } catch (error) {
     console.error('uploadAvatar error:', sanitizeLogMessage(error));
@@ -331,7 +327,6 @@ export async function submitDriverVerification(
       return { success: false, error: error.message };
     }
 
-    console.log('Driver verification submitted');
     return { success: true, error: null };
   } catch (error) {
     console.error('submitDriverVerification error:', sanitizeLogMessage(error));

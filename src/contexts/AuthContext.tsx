@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import { authAPI } from '../services/auth';
 import { getAuthCallbackUrl } from '../utils/env';
@@ -102,6 +102,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [initializing, setInitializing] = useState(true);
   const [busy, setBusy] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(isSupabaseConfigured);
+  const mountedRef = useRef(true);
 
   const fetchProfile = useCallback(async (forceCreate = false, authUser?: User | null) => {
     if (!authUser || !supabase) {
@@ -139,10 +140,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
-    let mounted = true;
+    mountedRef.current = true;
 
     const syncFromSession = (event: string, nextSession: Session | null) => {
-      if (!mounted) return;
+      if (!mountedRef.current) return;
 
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
@@ -181,7 +182,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             }
           })
           .finally(() => {
-            if (mounted) {
+            if (mountedRef.current) {
               setInitializing(false);
             }
           });
@@ -201,7 +202,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         const { data, error } = await supabase.auth.getSession();
         if (error) throw error;
-        if (!mounted || !data.session) return;
+        if (!mountedRef.current || !data.session) return;
 
         setSession(data.session);
         setUser(data.session.user);
@@ -211,7 +212,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.warn('Auth callback sync warning:', sanitizeLogMessage(String(error)));
         }
       } finally {
-        if (mounted) {
+        if (mountedRef.current) {
           setInitializing(false);
         }
       }
@@ -220,7 +221,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     window.addEventListener('message', handleAuthMessage);
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       window.removeEventListener('message', handleAuthMessage);
       subscription.unsubscribe();
     };
@@ -301,11 +302,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return { error: new Error('Backend not configured') };
       }
 
+      setBusy(true);
       try {
         const result = await signInWithOAuthProvider(supabase, 'google', returnTo);
 
         if (result.error) {
-          // Parse and handle OAuth-specific errors
           const oauthError = parseOAuthError(result.error, 'google');
           if (oauthError && import.meta.env?.DEV) {
             console.error('[OAuth Google]', oauthError);
@@ -318,6 +319,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.error('[OAuth Google] Unexpected error:', error);
         }
         return { error: normalizeOperationError(error, 'Google sign-in failed') };
+      } finally {
+        setBusy(false);
       }
     },
     [],
@@ -329,11 +332,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return { error: new Error('Backend not configured') };
       }
 
+      setBusy(true);
       try {
         const result = await signInWithOAuthProvider(supabase, 'facebook', returnTo);
 
         if (result.error) {
-          // Parse and handle OAuth-specific errors
           const oauthError = parseOAuthError(result.error, 'facebook');
           if (oauthError && import.meta.env?.DEV) {
             console.error('[OAuth Facebook]', oauthError);
@@ -346,6 +349,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.error('[OAuth Facebook] Unexpected error:', error);
         }
         return { error: normalizeOperationError(error, 'Facebook sign-in failed') };
+      } finally {
+        setBusy(false);
       }
     },
     [],
