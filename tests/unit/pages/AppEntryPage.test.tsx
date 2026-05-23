@@ -20,6 +20,14 @@ vi.mock('@/contexts/LocalAuth', () => ({
   useLocalAuth: () => mockUseLocalAuth(),
 }));
 
+vi.mock('@/features/home/MobilityOSLandingMap', () => ({
+  MobilityOSLandingMap: () => <div>Landing map</div>,
+}));
+
+vi.mock('@/features/home/AppCommandCenter', () => ({
+  AppCommandCenter: () => <div>App command center</div>,
+}));
+
 vi.mock('@/components/wasel-ds/WaselLogo', () => ({
   WaselLogo: () => <div>Wasel</div>,
   WaselIcon: () => <div>Icon</div>,

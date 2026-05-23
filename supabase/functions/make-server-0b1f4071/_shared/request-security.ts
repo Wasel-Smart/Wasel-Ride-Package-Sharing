@@ -61,6 +61,5 @@ export function buildPublicHealthPayload(service: string) {
   return {
     ok: true,
     service,
-    timestamp: new Date().toISOString(),
   };
 }
