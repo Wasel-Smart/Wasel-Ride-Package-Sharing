@@ -5,9 +5,9 @@ import {
   useState,
   useMemo,
   useCallback,
-  ReactNode,
+  type ReactNode,
 } from 'react';
-import { translations, Language } from '../locales/translations';
+import { translations, type Language } from '../locales/translations';
 
 interface LanguageContextType {
   language: Language;
@@ -32,50 +32,61 @@ interface LanguageProviderProps {
 }
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
-  const [language, setLanguageState] = useState<Language>(() => {
+  const [language, setLanguageState] = useState<Language>('en');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     try {
-      const saved = localStorage.getItem('wasel-language');
-      return (saved === 'ar' ? 'ar' : 'en') as Language;
-    } catch (error) {
-      console.error('Failed to load language from localStorage:', error);
-      return 'en';
+      const saved = window.localStorage.getItem('wasel-language');
+      if (saved === 'ar') {
+        setLanguageState('ar');
+      }
+    } catch {
+      // Ignore storage failures in private mode or restricted browsers.
     }
-  });
+  }, []);
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
-    try {
-      localStorage.setItem('wasel-language', lang);
-    } catch (error) {
-      console.error('Failed to save language to localStorage:', error);
-    }
 
-    // Update HTML dir attribute
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = lang;
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem('wasel-language', lang);
+      } catch {
+        // Ignore storage failures in private mode.
+      }
+
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = lang;
+    }
   }, []);
 
   const toggleLanguage = useCallback(() => {
-    setLanguage(language === 'ar' ? 'en' : 'ar');
-  }, [language, setLanguage]);
+    setLanguage(prevLanguage => (prevLanguage === 'ar' ? 'en' : 'ar'));
+  }, [setLanguage]);
 
   useEffect(() => {
-    // Set initial dir attribute
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = language;
+    if (typeof window !== 'undefined') {
+      document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = language;
+    }
   }, [language]);
 
   // Memoized translation function
   const t = useCallback(
     (key: string): string => {
       const keys = key.split('.');
-      let value: any = translations[language];
+      let value: unknown = translations[language];
 
       for (const k of keys) {
-        value = value?.[k];
+        if (typeof value !== 'object' || value === null) {
+          return key;
+        }
+        value = (value as Record<string, unknown>)[k];
       }
 
-      return value || key;
+      return typeof value === 'string' ? value : key;
     },
     [language],
   );

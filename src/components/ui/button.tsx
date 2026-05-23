@@ -62,28 +62,23 @@ const Button = React.forwardRef<
       const element = buttonRef.current;
       if (!element || !enableFeedback) return;
 
-      // Defer feedback attachment to avoid blocking initial interactions
-      const timeoutId = setTimeout(() => {
-        const cleanupTouch = instantFeedback.attachTouchFeedback(element, feedbackType);
-        const cleanupClick = instantFeedback.attachClickFeedback(element, feedbackType);
+      let cleanupTouch: (() => void) | undefined;
+      let cleanupClick: (() => void) | undefined;
 
-        // Store cleanup functions for unmount
-        (element as any).__feedbackCleanup = () => {
-          cleanupTouch();
-          cleanupClick();
-        };
-      }, 100); // Defer by 100ms
+      const timeoutId = window.setTimeout(() => {
+        cleanupTouch = instantFeedback.attachTouchFeedback(element, feedbackType);
+        cleanupClick = instantFeedback.attachClickFeedback(element, feedbackType);
+      }, 100);
 
       return () => {
-        clearTimeout(timeoutId);
-        if ((element as any).__feedbackCleanup) {
-          (element as any).__feedbackCleanup();
-        }
+        window.clearTimeout(timeoutId);
+        cleanupTouch?.();
+        cleanupClick?.();
       };
     }, [enableFeedback, feedbackType]);
 
     // Merge refs
-    React.useImperativeHandle(ref, () => buttonRef.current!);
+    React.useImperativeHandle(ref, () => buttonRef.current, []);
 
     return (
       <Comp
