@@ -1,0 +1,238 @@
+/* =========================================================
+   WASEL QUALITY LIFT — v9+ Improvements
+   Targeting: Mobile, Brand, Flow, Production Polish
+   ========================================================= */
+
+/* ── FindRidePage Responsive Grids ──────────────────────── */
+
+/* Search row: 3 cols → stack on mobile */
+.sp-search-grid {
+  grid-template-columns: 1fr 1fr 180px;
+}
+@media (max-width: 680px) {
+  .sp-search-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* 4-column KPI strip */
+@media (max-width: 900px) {
+  .sp-4col {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 480px) {
+  .sp-4col {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  .sp-4col > div {
+    padding: 10px 11px !important;
+  }
+}
+
+/* 2-column side-by-side panels */
+@media (max-width: 760px) {
+  .sp-2col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Results header + sort bar wrapping */
+@media (max-width: 600px) {
+  .sp-results-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+  .sp-sort-bar {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .sp-sort-bar button {
+    font-size: 0.7rem !important;
+    padding: 5px 10px !important;
+    min-height: 34px !important;
+  }
+}
+
+/* Empty state action grid */
+@media (max-width: 480px) {
+  .sp-empty-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Home Page Hero: Trip mode toggle stacking ────────────── */
+@media (max-width: 640px) {
+  .wasel-trip-mode-toggle {
+    grid-template-columns: 1fr !important;
+    min-width: unset !important;
+  }
+}
+
+/* ── QuickActions: always 2-up on mobile, not 1-up ─────────── */
+@media (max-width: 480px) {
+  .wasel-home-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Micro-interactions: universal card hover lift ──────────── */
+.wasel-card,
+.wasel-action-card {
+  transition:
+    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+  will-change: transform;
+}
+
+/* Smooth press feedback for all interactive buttons */
+button:not([disabled]):active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease !important;
+}
+
+/* ── Input focus ring refinement ────────────────────────────── */
+select:focus,
+input[type='date']:focus,
+input[type='text']:focus,
+input[type='email']:focus,
+input[type='tel']:focus {
+  outline: 2px solid rgba(88, 221, 255, 0.45);
+  outline-offset: 0;
+  border-radius: 10px;
+  box-shadow: 0 0 0 3px rgba(88, 221, 255, 0.12);
+}
+
+/* ── Tab-style toggles: consistent transition ───────────────── */
+.wasel-tab-btn {
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+/* ── Bottom nav: safe-area + smooth label ───────────────────── */
+.wasel-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 8px) !important;
+}
+@media (max-width: 899px) {
+  .wasel-bottom-nav {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+  .wasel-bottom-nav button span {
+    font-size: 10px;
+    letter-spacing: 0.01em;
+  }
+}
+
+/* ── WorldClassHomePage: fix brand color tokens ─────────────── */
+/* Ensure onboarding and hero use Wasel palette not Tailwind greens */
+.wasel-price-value {
+  color: #47d69e !important; /* Wasel green */
+}
+.wasel-green-badge {
+  background: rgba(71, 214, 158, 0.15) !important;
+  color: #47d69e !important;
+}
+
+/* ── Typography: consistent heading gradient ──────────────────  */
+.wasel-hero-title {
+  background: linear-gradient(135deg, #58ddff 0%, #47d69e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Pill badges: tighter padding on mobile ──────────────────── */
+@media (max-width: 480px) {
+  .pill,
+  [style*='border-radius: 12px'][style*='padding: 6px'] {
+    font-size: 0.7rem;
+  }
+}
+
+/* ── Corridors section: prevent horizontal overflow ──────────── */
+@media (max-width: 540px) {
+  .wasel-home-route-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Skeleton shimmer: richer animation ─────────────────────── */
+@keyframes wasel-shimmer-v2 {
+  0% { background-position: -400% 0; }
+  100% { background-position: 400% 0; }
+}
+.skeleton-base {
+  background: linear-gradient(
+    90deg,
+    rgba(16, 37, 58, 0.6) 0%,
+    rgba(88, 221, 255, 0.04) 40%,
+    rgba(88, 221, 255, 0.08) 50%,
+    rgba(88, 221, 255, 0.04) 60%,
+    rgba(16, 37, 58, 0.6) 100%
+  ) !important;
+  background-size: 400% 100% !important;
+  animation: wasel-shimmer-v2 2s ease-in-out infinite !important;
+}
+
+/* ── Search bar: tactile press effect ───────────────────────── */
+[data-testid='find-ride-search']:active {
+  transform: scale(0.985) !important;
+  box-shadow: 0 6px 18px rgba(88, 221, 255, 0.18) !important;
+}
+
+/* ── Booking success card: entrance animation ────────────────── */
+@keyframes booking-success-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+/* Applied via JS but defined here */
+.booking-success-card {
+  animation: booking-success-in 0.28s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+
+/* ── Empty state: center alignment improvement ───────────────── */
+@media (max-width: 480px) {
+  .sp-empty-actions button {
+    width: 100% !important;
+  }
+}
+
+/* ── Selection / text highlight brand color ─────────────────── */
+::selection {
+  background: rgba(88, 221, 255, 0.22);
+  color: #eef8ff;
+}
+
+/* ── RTL: correct arrow directions for button icons ─────────── */
+[dir='rtl'] .wasel-arrow-icon {
+  transform: scaleX(-1);
+}
+
+/* ── Focus ring on cards for keyboard nav ────────────────────── */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgba(88, 221, 255, 0.6);
+  outline-offset: 3px;
+}
+
+/* ── Print: hide chrome ─────────────────────────────────────── */
+@media print {
+  .wasel-bottom-nav,
+  .sidebar-glass,
+  header {
+    display: none !important;
+  }
+}
