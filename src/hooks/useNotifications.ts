@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
-import { notificationsAPI } from '../services/notifications.js';
+import { notificationsAPI } from '../services/notifications';
+import { supabase } from '../utils/supabase/client';
 import { readRuntimeState, writeRuntimeState } from '../utils/runtimeStore';
 
 export interface Notification {
@@ -108,6 +109,52 @@ export function useNotifications() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // ── Supabase Realtime — instant notification updates ───────────────────────
+  useEffect(() => {
+    if (!effectiveUserId || !supabase) return undefined;
+
+    const queryKey = notificationsQueryKey(effectiveUserId);
+
+    const channel = supabase
+      .channel(`notifications:${effectiveUserId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${effectiveUserId}`,
+        },
+        payload => {
+          const incoming = normalizeNotification(payload.new as RawNotification);
+          queryClient.setQueryData<Notification[]>(queryKey, (current = []) => {
+            if (current.some(n => n.id === incoming.id)) return current;
+            return [incoming, ...current];
+          });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${effectiveUserId}`,
+        },
+        payload => {
+          const updated = normalizeNotification(payload.new as RawNotification);
+          queryClient.setQueryData<Notification[]>(queryKey, (current = []) =>
+            current.map(n => (n.id === updated.id ? updated : n)),
+          );
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [effectiveUserId, queryClient]);
 
   const unreadCount = notifications.filter(
     notification => !notification.read && !archivedIds.includes(notification.id),
