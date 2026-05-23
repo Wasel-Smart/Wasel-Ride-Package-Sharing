@@ -109,7 +109,7 @@ export function WorldClassHomePage() {
       <div
         style={{
           minHeight: '100vh',
-          background: 'linear-gradient(135deg, #0B1D2D 0%, #051218 100%)',
+          background: 'linear-gradient(135deg, #06131f 0%, #040e18 100%)',
           color: '#fff',
           display: 'flex',
           alignItems: 'center',
@@ -200,10 +200,10 @@ export function WorldClassHomePage() {
                   style={{
                     fontSize: '1.2rem',
                     fontWeight: '900',
-                    color: '#10B981',
-                  }}
-                >
-                  {route.price} JOD
+                    color: '#47d69e',
+                    }}
+                    >
+                    {route.price} JOD
                 </div>
               </div>
             ))}
@@ -251,9 +251,9 @@ export function WorldClassHomePage() {
     <div
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0B1D2D 0%, #051218 100%)',
+        background: 'linear-gradient(135deg, #06131f 0%, #040e18 100%)',
         color: '#fff',
-        fontFamily: 'Inter, system-ui, sans-serif',
+        fontFamily: "'Plus Jakarta Sans', 'Cairo', Inter, system-ui, sans-serif",
       }}
     >
       {/* Hero Section - Uber-style */}
@@ -519,8 +519,8 @@ export function WorldClassHomePage() {
               >
                 <span
                   style={{
-                    background: 'rgba(16,185,129,0.2)',
-                    color: '#10B981',
+                    background: 'rgba(71,214,158,0.15)',
+                    color: '#47d69e',
                     padding: '6px 12px',
                     borderRadius: '12px',
                     fontSize: '0.85rem',
@@ -566,7 +566,7 @@ export function WorldClassHomePage() {
             <button
               onClick={() => navigate('/app/rides/offer')}
               style={{
-                background: 'linear-gradient(135deg, #10B981, #059669)',
+                background: 'linear-gradient(135deg, #47d69e, #2aaa80)',
                 border: 'none',
                 borderRadius: '16px',
                 padding: '24px',

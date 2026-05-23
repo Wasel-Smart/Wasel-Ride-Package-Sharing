@@ -141,7 +141,7 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
                 }}
               >
                 {ar ? 'افتح هذا المسار' : 'Open this flow'}
-                <ArrowRight size={13} />
+                <ArrowRight size={13} style={{ transform: ar ? 'scaleX(-1)' : 'none' }} />
               </div>
             </motion.button>
           );
