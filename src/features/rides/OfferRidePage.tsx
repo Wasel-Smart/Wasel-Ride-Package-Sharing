@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Brain, Network } from 'lucide-react';
+import { Brain, CheckCircle2, Network } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
@@ -16,7 +16,7 @@ import {
   getConnectedStats,
 } from '../../services/journeyLogistics';
 import { getBookingsForDriver, type RideBookingRecord } from '../../services/rideLifecycle';
-import { notificationsAPI } from '../../services/notifications.js';
+import { notificationsAPI } from '../../services/notifications';
 import { subscribeToRideBookingRealtime } from '../../services/rideRealtime';
 import { getDriverReadinessSummary } from '../../services/driverOnboarding';
 import { evaluateTrustCapability } from '../../services/trustRules';
@@ -285,7 +285,7 @@ export function OfferRidePage() {
                   border: `1px solid ${DS.border}`,
                 }}
               >
-                <div style={{ fontSize: '4rem', marginBottom: 18 }}>OK</div>
+                <CheckCircle2 size={64} color={DS.green} style={{ marginBottom: 18 }} />
                 <h2
                   style={{
                     color: DS.green,

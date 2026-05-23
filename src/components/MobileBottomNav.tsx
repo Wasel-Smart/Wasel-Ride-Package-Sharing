@@ -35,11 +35,13 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
   const isArabic = resolvedLanguage === 'ar';
 
   const isActive = (path: string) => {
-    if (path === '/')
+    if (path === '/app' || path === '/')
       return (
-        location.pathname === '/' || location.pathname === '/app' || location.pathname === '/app/'
+        location.pathname === '/'
+        || location.pathname === '/app'
+        || location.pathname === '/app/'
       );
-    return location.pathname.startsWith(path) || location.pathname.startsWith('/app' + path);
+    return location.pathname.startsWith(path);
   };
 
   return (

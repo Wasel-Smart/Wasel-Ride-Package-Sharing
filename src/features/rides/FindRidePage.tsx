@@ -35,7 +35,7 @@ import {
   hydrateRouteReminders,
   syncRouteReminders,
 } from '../../services/movementRetention';
-import { notificationsAPI } from '../../services/notifications.js';
+import { notificationsAPI } from '../../services/notifications';
 import { subscribeToRideBookingRealtime } from '../../services/rideRealtime';
 import {
   getLiveCorridorSignal,

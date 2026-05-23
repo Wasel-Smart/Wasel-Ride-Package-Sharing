@@ -310,7 +310,7 @@ export default function WaselRoot() {
               ) : (
                 <>
                   <button
-                    onClick={() => navigate('/auth')}
+                    onClick={() => navigate('/app/auth')}
                     style={{
                       height: 38,
                       padding: '0 16px',
@@ -329,7 +329,7 @@ export default function WaselRoot() {
                     {shellCopy.signIn}
                   </button>
                   <button
-                    onClick={() => navigate('/auth?tab=register')}
+                    onClick={() => navigate('/app/auth?tab=register')}
                     style={{
                       height: 40,
                       padding: '0 18px',
