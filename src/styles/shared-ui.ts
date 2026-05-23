@@ -84,7 +84,7 @@ export const LANDING_RESPONSIVE_STYLES = `
   .wasel-lift-card { 
     transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; 
   }
-  .landing-glow-card { position: relative; overflow: hidden; }
+  .landing-glow-card { position: relative; }
   .landing-glow-card::before {
     content: '';
     position: absolute;

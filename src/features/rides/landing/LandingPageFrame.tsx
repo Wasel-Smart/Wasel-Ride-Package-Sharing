@@ -20,7 +20,6 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
         color: LANDING_COLORS.text,
         fontFamily: LANDING_FONT,
         position: 'relative',
-        overflow: 'hidden',
       }}
     >
       <style>{LANDING_RESPONSIVE_STYLES}</style>
