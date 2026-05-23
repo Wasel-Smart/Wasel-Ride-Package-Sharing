@@ -2,69 +2,43 @@
   "compilerOptions": {
     "target": "ES2020",
 
-    "lib": [
-      "ES2020",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
 
     "module": "ESNext",
     "moduleResolution": "bundler",
 
     "jsx": "react-jsx",
 
-    "useDefineForClassFields": true,
-
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-
-    "forceConsistentCasingInFileNames": true,
-
     "strict": true,
-    "strictNullChecks": true,
+
+    "noEmit": true,
+    "isolatedModules": true,
 
     "skipLibCheck": true,
 
-    "allowJs": false,
-    "checkJs": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
 
-    "allowImportingTsExtensions": false,
-
-    "strictPropertyInitialization": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "forceConsistentCasingInFileNames": true,
 
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     },
 
-    "types": [
-      "vite/client"
-    ]
+    "types": ["vite/client"],
+
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+
+    "useDefineForClassFields": true,
+
+    "allowJs": false,
+    "checkJs": false
   },
 
-  "include": [
-    "src",
-    "vite.config.ts",
-    "vitest.config.ts",
-    "playwright.config.ts"
-  ],
+  "include": ["src", "vite.config.ts", "vitest.config.ts", "playwright.config.ts"],
 
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage",
-    "tests",
-    "src/tests",
-    "src/cypress",
-    "src/features/testing",
-    "src/supabase/functions",
-    "with-supabase-app"
-  ]
+  "exclude": ["node_modules", "dist", "build", "coverage"]
 }
