@@ -71,7 +71,6 @@ import {
   resolveCityCoord,
   SectionHead,
 } from '../../pages/waselServiceShared';
-import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { FindRideCard } from './components/FindRideCard';
 import { FindRidePackagePanel } from './components/FindRidePackagePanel';
 import { FindRideTripDetailModal } from './components/FindRideTripDetailModal';
@@ -1656,8 +1655,6 @@ export function FindRidePage() {
         {tab === 'package' && (
           <FindRidePackagePanel ar={ar} copy={copy} t={t} pkg={pkg} setPkg={setPkg} />
         )}
-
-        <ServiceFlowPlaybook focusService={tab === 'ride' ? 'find-ride' : 'send-package'} />
 
         {selected && (
           <FindRideTripDetailModal
