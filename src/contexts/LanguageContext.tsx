@@ -1,13 +1,7 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useMemo,
-  useCallback,
-  type ReactNode,
-} from 'react';
-import { translations, type Language } from '../locales/translations';
+import * as React from 'react';
+import { translations } from '../locales/translations';
+
+type Language = 'en' | 'ar';
 
 interface LanguageContextType {
   language: Language;
@@ -17,10 +11,10 @@ interface LanguageContextType {
   dir: 'ltr' | 'rtl';
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+const LanguageContext = React.createContext<LanguageContextType | undefined>(undefined);
 
 export const useLanguage = () => {
-  const context = useContext(LanguageContext);
+  const context = React.useContext(LanguageContext);
   if (!context) {
     throw new Error('useLanguage must be used within LanguageProvider');
   }
@@ -28,13 +22,13 @@ export const useLanguage = () => {
 };
 
 interface LanguageProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
-  const [language, setLanguageState] = useState<Language>('en');
+  const [language, setLanguageState] = React.useState<Language>('en');
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (typeof window === 'undefined') return;
 
     try {
@@ -47,7 +41,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     }
   }, []);
 
-  const setLanguage = useCallback((lang: Language) => {
+  const setLanguage = React.useCallback((lang: Language) => {
     setLanguageState(lang);
 
     if (typeof window !== 'undefined') {
@@ -62,11 +56,11 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     }
   }, []);
 
-  const toggleLanguage = useCallback(() => {
+  const toggleLanguage = React.useCallback(() => {
     setLanguage(prevLanguage => (prevLanguage === 'ar' ? 'en' : 'ar'));
   }, [setLanguage]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (typeof window !== 'undefined') {
       document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
       document.documentElement.lang = language;
@@ -74,7 +68,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   }, [language]);
 
   // Memoized translation function
-  const t = useCallback(
+  const t = React.useCallback(
     (key: string): string => {
       const keys = key.split('.');
       let value: unknown = translations[language];
@@ -94,7 +88,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   const dir: LanguageContextType['dir'] = language === 'ar' ? 'rtl' : 'ltr';
 
   // Memoize the context value
-  const value = useMemo(
+  const value = React.useMemo(
     () => ({
       language,
       setLanguage,
