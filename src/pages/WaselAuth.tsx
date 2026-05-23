@@ -261,6 +261,39 @@ function StrengthBar({ password }: { password: string }) {
   );
 }
 
+function AuthProgress({ tab, success, notice }: { tab: Tab; success: boolean; notice: string }) {
+  if (tab !== 'signup') {
+    return null;
+  }
+
+  const completed = success || Boolean(notice) ? 2 : 1;
+  const percentage = completed === 2 ? 100 : 50;
+
+  return (
+    <div style={{ marginBottom: SPACE[6], display: 'grid', gap: SPACE[3] }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: SPACE[4],
+        }}
+      >
+        <span style={{ fontSize: TYPE.size.xs, fontWeight: TYPE.weight.semibold, color: C.textMuted }}>
+          {completed === 2 ? 'Account verification in progress' : 'Secure account creation'}
+        </span>
+        <span style={{ fontSize: TYPE.size.xs, color: C.textMuted }}>
+          {completed}/2 steps
+        </span>
+      </div>
+
+      <div className="step-progress-track" style={{ width: '100%' }}>
+        <div className="step-progress-fill" style={{ width: `${percentage}%` }} />
+      </div>
+    </div>
+  );
+}
+
 // ─── Tab switcher ─────────────────────────────────────────────────────────────
 function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
   return (
@@ -487,21 +520,44 @@ export default function WaselAuth() {
       className="auth-grid"
       style={{
         minHeight: '100vh',
+        minWidth: 0,
         background: C.bg,
         color: C.text,
         fontFamily: F,
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        gridTemplateColumns: 'minmax(0, 1fr) minmax(420px, 560px)',
+        gap: SPACE[6],
       }}
     >
       <style>{`
-        @media(max-width:768px){
-          .auth-grid{grid-template-columns:1fr!important}
-          .auth-brand-panel{display:none!important}
-          .auth-form-panel{padding:${SPACE[7]} ${SPACE[5]}!important;align-items:flex-start!important}
-          .auth-mobile-header{display:flex!important}
+        @media (max-width: 900px) {
+          .auth-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .auth-brand-panel {
+            display: none !important;
+          }
+
+          .auth-form-panel {
+            padding: ${SPACE[8]} ${SPACE[5]} !important;
+            align-items: flex-start !important;
+          }
+
+          .auth-mobile-header {
+            display: flex !important;
+          }
         }
-        @keyframes spin{to{transform:rotate(360deg)}}
+
+        @media (max-width: 480px) {
+          .auth-form-panel {
+            padding: ${SPACE[6]} ${SPACE[4]} !important;
+          }
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
       `}</style>
 
       <BrandPanel />
@@ -551,6 +607,8 @@ export default function WaselAuth() {
           </div>
 
           <TabSwitcher tab={tab} onChange={handleTabChange} />
+
+          <AuthProgress tab={tab} success={success} notice={notice} />
 
           {/* Heading */}
           <div style={{ marginBottom: SPACE[6] }}>
