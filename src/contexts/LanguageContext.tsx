@@ -57,8 +57,8 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   }, []);
 
   const toggleLanguage = React.useCallback(() => {
-    setLanguage(prevLanguage => (prevLanguage === 'ar' ? 'en' : 'ar'));
-  }, [setLanguage]);
+    setLanguageState(prev => (prev === 'ar' ? 'en' : 'ar'));
+  }, []);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {

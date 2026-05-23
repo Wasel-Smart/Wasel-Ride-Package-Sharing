@@ -78,7 +78,7 @@ const Button = React.forwardRef<
     }, [enableFeedback, feedbackType]);
 
     // Merge refs
-    React.useImperativeHandle(ref, () => buttonRef.current, []);
+    React.useImperativeHandle(ref, () => buttonRef.current as HTMLButtonElement, []);
 
     return (
       <Comp

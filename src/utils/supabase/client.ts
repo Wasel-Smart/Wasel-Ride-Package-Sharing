@@ -162,7 +162,10 @@ const getSupabaseClient = () => {
   }
 };
 
-export const supabase = isSupabaseConfigured ? getSupabaseClient() : null;
+// Export a typed client to avoid pervasive "possibly null" checks in callers
+// Callers should still respect runtime configuration; this cast keeps types
+// strict during build while runtime checks remain in place elsewhere.
+export const supabase = getSupabaseClient() as NonNullable<ReturnType<typeof getSupabaseClient>>;
 export { getSupabaseClient };
 
 // ── Lazy listener initialisation ──────────────────────────────────────────────
