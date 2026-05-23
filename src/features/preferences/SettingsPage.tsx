@@ -63,23 +63,32 @@ function Section({
   );
 }
 
-function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+function Toggle({
+  value,
+  onChange,
+  saving,
+}: {
+  value: boolean;
+  onChange: (v: boolean) => void;
+  saving?: boolean;
+}) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={value}
-      onClick={() => onChange(!value)}
+      onClick={() => !saving && onChange(!value)}
       style={{
         width: 44,
         height: 24,
         borderRadius: 12,
         background: value ? C.cyan : 'rgba(255,255,255,0.15)',
         border: 'none',
-        cursor: 'pointer',
+        cursor: saving ? 'wait' : 'pointer',
         position: 'relative',
         transition: 'background 0.2s',
         flexShrink: 0,
+        opacity: saving ? 0.65 : 1,
       }}
     >
       <span
@@ -509,6 +518,7 @@ export default function SettingsPage() {
       phone: normalized || undefined,
       phoneVerified: false,
     });
+    await refreshProfile();
     toast.success(normalized ? 'Phone number saved.' : 'Phone number removed.');
   };
 
