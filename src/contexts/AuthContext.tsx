@@ -227,6 +227,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [fetchProfile]);
 
+  // ── Profile Realtime — cross-device live sync ───────────────────────────
+  // When the profile row changes in Supabase (from another session, device,
+  // or admin action) the UI reflects the new data without a full reload.
+  useEffect(() => {
+    if (!user?.id || !supabase) return undefined;
+
+    const channel = supabase
+      .channel(`profile:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        },
+        () => {
+          if (!mountedRef.current) return;
+          void fetchProfile(false, user);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [fetchProfile, user]);
+
   const signUp = useCallback(
     async (
       email: string,
