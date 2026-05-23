@@ -10,8 +10,9 @@ import {
   Sparkles,
   Truck,
   Users,
+  type LucideIcon,
 } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, type CSSProperties } from 'react';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import {
   getFeaturedCorridors,
@@ -61,6 +62,62 @@ function corridorMeta(corridor?: CorridorOpportunity | null) {
     pickup: corridor.pickupPoints?.[0] ?? 'Closest active stop',
     grouping: corridor.autoGroupWindow,
   };
+}
+
+interface LandingServiceCardProps {
+  detail: string;
+  icon: LucideIcon;
+  openLabel: string;
+  onClick: () => void;
+  signal: string;
+  title: string;
+  tone: string;
+}
+
+function LandingServiceCard({
+  detail,
+  icon: Icon,
+  openLabel,
+  onClick,
+  signal,
+  title,
+  tone,
+}: LandingServiceCardProps) {
+  return (
+    <button
+      type="button"
+      className="landing-service-card"
+      onClick={onClick}
+      style={
+        {
+          '--service-tone': tone,
+          '--service-tone-10': `${tone}1A`,
+          '--service-tone-14': `${tone}24`,
+          '--service-tone-18': `${tone}2E`,
+          '--service-tone-22': `${tone}38`,
+          '--service-tone-28': `${tone}47`,
+          '--service-tone-42': `${tone}6B`,
+        } as CSSProperties
+      }
+    >
+      <div className="landing-service-card__top">
+        <div className="landing-service-card__icon" aria-hidden="true">
+          <Icon size={20} strokeWidth={2.25} />
+        </div>
+        <span className="landing-service-card__signal">{signal}</span>
+      </div>
+
+      <div className="landing-service-card__body">
+        <h3>{title}</h3>
+        <p>{detail}</p>
+      </div>
+
+      <div className="landing-service-card__cta">
+        <span>{openLabel}</span>
+        <ArrowRight size={16} strokeWidth={2.4} />
+      </div>
+    </button>
+  );
 }
 
 export default function AppEntryPage() {
@@ -354,6 +411,169 @@ export default function AppEntryPage() {
     >
       <style>{`
         :root { color-scheme: dark; }
+        .landing-shell {
+          width: 100%;
+          max-width: 1240px;
+          margin: 0 auto;
+          padding: clamp(18px, 4vw, 32px) clamp(16px, 4vw, 24px) clamp(72px, 10vw, 88px);
+        }
+        .landing-section-head > div:first-child {
+          min-width: 0;
+          max-width: 720px;
+        }
+        .landing-section-kicker {
+          font-size: clamp(0.7rem, 1.6vw, 0.76rem);
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+        .landing-section-title {
+          margin: 10px 0 0;
+          font-size: clamp(1.65rem, 5vw, 2.7rem);
+          line-height: 1.08;
+          letter-spacing: 0;
+          text-wrap: balance;
+        }
+        .landing-section-body {
+          max-width: 460px;
+          color: ${C.muted};
+          line-height: 1.72;
+          font-size: clamp(0.93rem, 2.2vw, 0.98rem);
+        }
+        .landing-service-grid {
+          align-items: stretch;
+        }
+        .landing-service-card {
+          min-width: 0;
+          min-height: 236px;
+          width: 100%;
+          text-align: left;
+          border-radius: 24px;
+          padding: 20px;
+          background:
+            linear-gradient(180deg, rgba(18,43,65,0.82), rgba(7,19,31,0.94)),
+            radial-gradient(circle at 18% 0%, var(--service-tone-22), transparent 38%);
+          border: 1px solid var(--service-tone-22);
+          color: ${C.text};
+          backdrop-filter: blur(16px);
+          cursor: pointer;
+          box-shadow: ${SH.card};
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          gap: 18px;
+          overflow: hidden;
+          position: relative;
+          transform: translateZ(0);
+          transition:
+            transform 180ms cubic-bezier(0.2, 0, 0.2, 1),
+            border-color 180ms ease,
+            box-shadow 180ms ease,
+            background 180ms ease;
+        }
+        .landing-service-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent 34%);
+          opacity: 0.8;
+        }
+        .landing-service-card:hover {
+          transform: translate3d(0, -3px, 0);
+          border-color: var(--service-tone-42);
+          box-shadow: 0 18px 42px rgba(0,0,0,0.34), 0 0 0 1px var(--service-tone-18);
+        }
+        .landing-service-card:active {
+          transform: translate3d(0, -1px, 0) scale(0.99);
+        }
+        .landing-service-card:focus-visible {
+          outline: 3px solid var(--service-tone-42);
+          outline-offset: 3px;
+        }
+        .landing-service-card__top,
+        .landing-service-card__body,
+        .landing-service-card__cta {
+          position: relative;
+          z-index: 1;
+        }
+        .landing-service-card__top {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 14px;
+        }
+        .landing-service-card__icon {
+          width: 50px;
+          height: 50px;
+          flex: 0 0 auto;
+          border-radius: 16px;
+          display: grid;
+          place-items: center;
+          color: var(--service-tone);
+          background: var(--service-tone-14);
+          border: 1px solid var(--service-tone-28);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+        }
+        .landing-service-card__signal {
+          max-width: min(62%, 180px);
+          min-height: 34px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: flex-end;
+          padding: 7px 10px;
+          border-radius: 9999px;
+          background: rgba(255,255,255,0.045);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: ${C.soft};
+          font-size: 0.68rem;
+          font-weight: 800;
+          line-height: 1.2;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          text-align: right;
+        }
+        .landing-service-card__body {
+          display: grid;
+          gap: 9px;
+        }
+        .landing-service-card__body h3 {
+          margin: 0;
+          color: ${C.text};
+          font-size: clamp(1.14rem, 2.4vw, 1.28rem);
+          line-height: 1.14;
+          letter-spacing: 0;
+          font-weight: 900;
+          text-wrap: balance;
+        }
+        .landing-service-card__body p {
+          margin: 0;
+          color: ${C.muted};
+          font-size: clamp(0.91rem, 1.9vw, 0.96rem);
+          line-height: 1.58;
+          max-width: 36rem;
+        }
+        .landing-service-card__cta {
+          min-height: 46px;
+          width: 100%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          margin-top: auto;
+          padding: 0 2px;
+          color: var(--service-tone);
+          font-weight: 900;
+          font-size: 0.9rem;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .landing-service-card,
+          .landing-service-card:hover,
+          .landing-service-card:active {
+            transform: none;
+            transition: none;
+          }
+        }
         @media (max-width: 1140px) {
           .landing-hero-grid,
           .landing-proof-grid,
@@ -382,14 +602,59 @@ export default function AppEntryPage() {
           .landing-hero-copy,
           .landing-hero-map-shell,
           .landing-corridor-shell {
-            padding: 22px !important;
-            border-radius: 28px !important;
+            padding: clamp(18px, 5vw, 22px) !important;
+            border-radius: 24px !important;
           }
           .landing-hero-title {
-            font-size: clamp(2.7rem, 15vw, 4.1rem) !important;
+            font-size: clamp(2.35rem, 12vw, 3.6rem) !important;
+            line-height: 0.98 !important;
+            letter-spacing: 0 !important;
           }
           .landing-hero-map-caption {
             max-width: none !important;
+          }
+          .landing-section-head {
+            gap: 12px !important;
+          }
+          .landing-section-body {
+            max-width: none;
+          }
+          .landing-service-card {
+            min-height: 0;
+            border-radius: 22px;
+            padding: 18px;
+            gap: 16px;
+          }
+          .landing-service-card__top {
+            align-items: center;
+          }
+          .landing-service-card__signal {
+            max-width: calc(100% - 64px);
+            min-height: 32px;
+            font-size: 0.66rem;
+          }
+          .landing-service-card__cta {
+            min-height: 48px;
+            padding-top: 2px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+          }
+          .landing-cta > button {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+        @media (max-width: 420px) {
+          .landing-shell {
+            padding-inline: 14px;
+          }
+          .landing-service-card__top {
+            display: grid;
+            grid-template-columns: 50px minmax(0, 1fr);
+          }
+          .landing-service-card__signal {
+            max-width: none;
+            justify-content: flex-end;
+            overflow-wrap: anywhere;
           }
         }
       `}</style>
@@ -425,14 +690,7 @@ export default function AppEntryPage() {
         }}
       />
 
-      <div
-        style={{
-          position: 'relative',
-          maxWidth: 1240,
-          margin: '0 auto',
-          padding: '32px 24px 88px',
-        }}
-      >
+      <div className="landing-shell" style={{ position: 'relative' }}>
         <motion.div
           className="landing-topbar"
           initial={false}
@@ -545,7 +803,7 @@ export default function AppEntryPage() {
                   margin: '22px 0 14px',
                   fontSize: 'clamp(3.35rem, 6.4vw, 5.8rem)',
                   lineHeight: 0.92,
-                  letterSpacing: '-0.075em',
+                  letterSpacing: 0,
                   fontWeight: 950,
                   maxWidth: 760,
                 }}
@@ -846,33 +1104,24 @@ export default function AppEntryPage() {
           >
             <div>
               <div
+                className="landing-section-kicker"
                 style={{
-                  fontSize: '0.76rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
                   color: C.gold,
                 }}
               >
                 {heroCopy.servicesEyebrow}
               </div>
               <h2
+                className="landing-section-title"
                 style={{
-                  margin: '10px 0 0',
-                  fontSize: 'clamp(1.8rem, 3vw, 2.7rem)',
-                  lineHeight: 1.02,
-                  letterSpacing: '-0.05em',
                 }}
               >
                 {heroCopy.servicesTitle}
               </h2>
             </div>
             <div
+              className="landing-section-body"
               style={{
-                maxWidth: 430,
-                color: C.muted,
-                lineHeight: 1.75,
-                fontSize: '0.94rem',
               }}
             >
               {heroCopy.servicesBody}
@@ -889,97 +1138,17 @@ export default function AppEntryPage() {
             }}
           >
             {heroCopy.serviceCards.map(service => {
-              const Icon = service.icon;
               return (
-                <button
+                <LandingServiceCard
                   key={service.title}
+                  title={service.title}
+                  detail={service.detail}
+                  signal={service.signal}
+                  icon={service.icon}
+                  tone={service.tone}
+                  openLabel={heroCopy.openService}
                   onClick={() => navigate(service.path)}
-                  style={{
-                    textAlign: 'left',
-                    borderRadius: 28,
-                    padding: '22px 20px 20px',
-                    background: 'linear-gradient(180deg, rgba(16,37,58,0.78), rgba(8,22,35,0.92))',
-                    border: `1px solid ${C.borderSoft}`,
-                    backdropFilter: 'blur(14px)',
-                    cursor: 'pointer',
-                    boxShadow: SH.card,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      gap: 10,
-                      alignItems: 'start',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 46,
-                        height: 46,
-                        borderRadius: 16,
-                        display: 'grid',
-                        placeItems: 'center',
-                        background: `${service.tone}14`,
-                        border: `1px solid ${service.tone}28`,
-                      }}
-                    >
-                      <Icon size={19} color={service.tone} />
-                    </div>
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        padding: '6px 10px',
-                        borderRadius: 9999,
-                        background: 'rgba(255,255,255,0.04)',
-                        color: C.soft,
-                        fontSize: '0.7rem',
-                        fontWeight: 800,
-                        letterSpacing: '0.06em',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {service.signal}
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 18,
-                      fontWeight: 900,
-                      fontSize: '1.06rem',
-                      lineHeight: 1.18,
-                    }}
-                  >
-                    {service.title}
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 9,
-                      color: C.muted,
-                      fontSize: '0.88rem',
-                      lineHeight: 1.74,
-                    }}
-                  >
-                    {service.detail}
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 18,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      color: service.tone,
-                      fontWeight: 800,
-                      fontSize: '0.84rem',
-                    }}
-                  >
-                    {heroCopy.openService}
-                    <ArrowRight size={15} />
-                  </div>
-                </button>
+                />
               );
             })}
           </div>
@@ -1013,7 +1182,7 @@ export default function AppEntryPage() {
                   margin: '10px 0 0',
                   fontSize: 'clamp(1.65rem, 2.8vw, 2.4rem)',
                   lineHeight: 1.04,
-                  letterSpacing: '-0.045em',
+                  letterSpacing: 0,
                 }}
               >
                 {heroCopy.proofTitle}
@@ -1131,7 +1300,7 @@ export default function AppEntryPage() {
                     margin: '10px 0 0',
                     fontSize: 'clamp(1.85rem, 3vw, 2.8rem)',
                     lineHeight: 1.02,
-                    letterSpacing: '-0.05em',
+                    letterSpacing: 0,
                   }}
                 >
                   {heroCopy.corridorsTitle}
