@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/react';
 import type { DomainEventEnvelope } from '../domain/events';
 
-import { createCorrelationId, createStructuredLogEntry } from '../platform/observability';
+import { createStructuredLogEntry } from '../platform/observability';
 import { sanitizeLogMessage } from './sanitization';
 import { safeStorageGetItem } from './browserStorage';
 

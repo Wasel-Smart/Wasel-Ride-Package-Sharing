@@ -160,7 +160,7 @@ function toMessage(error: unknown): string {
 
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<WaselUser | null>(null);
-  const [optimisticUpdates, setOptimisticUpdates] = useState<Partial<WaselUser> | null>(null);
+  const [, setOptimisticUpdates] = useState<Partial<WaselUser> | null>(null);
   const auth = useAuth();
 
   useEffect(() => {
