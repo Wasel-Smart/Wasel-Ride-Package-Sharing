@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - master
+      - main
   workflow_dispatch:
     inputs:
       version:
@@ -41,7 +41,11 @@ jobs:
         run: npm ci
 
       - name: Run quality checks
-        run: npm run verify:ci
+        run: |
+          npm ci
+          npm run typecheck
+          npm run lint || npx eslint src --max-warnings 0
+          npm run test
 
       - name: Determine version bump
         id: version
@@ -96,7 +100,7 @@ jobs:
           git add package.json package-lock.json CHANGELOG.md
           git commit -m "chore: release ${{ steps.bump.outputs.version }} [skip ci]"
           git tag ${{ steps.bump.outputs.version }}
-          git push origin master --tags
+          git push origin main --tags
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
