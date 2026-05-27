@@ -199,7 +199,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-head-inner { align-items: flex-start !important; }
         }
         @media (max-width: 899px) {
-          .sp-inner { padding: 18px 14px 36px !important; }
+          .sp-inner { padding: 12px 10px 22px !important; }
           .sp-2col,
           .sp-3col,
           .sp-search-grid,
@@ -209,7 +209,20 @@ export function PageShell({ children }: { children: ReactNode }) {
           .pkg-send-steps-grid,
           .sp-clarity-grid { grid-template-columns: 1fr !important; }
           .sp-4col { grid-template-columns: 1fr 1fr !important; }
-          .sp-head { padding: 20px 18px !important; border-radius: 22px !important; }
+          .sp-head { padding: 14px 12px !important; border-radius: 18px !important; }
+          .sp-section,
+          .sp-frame,
+          .sp-card,
+          .sp-panel { margin-bottom: 10px !important; }
+          .sp-2col,
+          .sp-3col,
+          .sp-4col,
+          .sp-search-grid,
+          .sp-summary-grid,
+          .sp-bus-card-grid,
+          .pkg-send-form-grid,
+          .pkg-send-steps-grid,
+          .sp-clarity-grid { gap: 10px !important; }
           .sp-head-inner,
           .sp-brief,
           .sp-results-header,
@@ -232,7 +245,13 @@ export function PageShell({ children }: { children: ReactNode }) {
         @media (max-width: 640px) {
           .sp-4col { grid-template-columns: 1fr !important; }
           .sp-head-btn { width: 100% !important; display: flex !important; justify-content: center !important; }
-          .sp-frame { padding: 18px !important; border-radius: 24px !important; }
+          .sp-frame { padding: 12px !important; border-radius: 16px !important; }
+          .sp-head { padding: 12px 10px !important; border-radius: 14px !important; }
+          .sp-inner { padding: 10px 8px 18px !important; }
+          .sp-section-title,
+          .sp-title { margin-bottom: 8px !important; line-height: 1.2 !important; }
+          .sp-subtitle,
+          .sp-section-subtitle { margin-bottom: 8px !important; line-height: 1.35 !important; }
         }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
