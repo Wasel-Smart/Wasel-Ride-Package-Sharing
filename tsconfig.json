@@ -10,8 +10,6 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-
-    /* ── Strict mode — production-grade enforcement ───────────────────────── */
     "strict": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
@@ -24,22 +22,16 @@
     "forceConsistentCasingInFileNames": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-
-    /* ── Interop ──────────────────────────────────────────────────────────── */
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-
-    /* ── Path aliases ─────────────────────────────────────────────────────── */
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
       "@domains/*": ["src/domains/*"],
       "@platform/*": ["src/platform/*"]
     },
-
-    /* ── Type roots ───────────────────────────────────────────────────────── */
-    "types": ["vite/client", "node"]
+    "ignoreDeprecations": "6.0"
   },
   "include": [
     "src/main.tsx",
