@@ -4,6 +4,7 @@ import { clearAllRuntimeState } from '../../../src/utils/runtimeStore';
 const mockCreateTrip = vi.fn();
 const mockFetchWithRetry = vi.fn();
 const mockGetAuthDetails = vi.fn();
+const mockGetDirectDriverTrips = vi.fn();
 const mockUpdateDirectPackageStatus = vi.fn();
 vi.mock('../../../src/services/trips', () => ({
   tripsAPI: {
@@ -12,6 +13,7 @@ vi.mock('../../../src/services/trips', () => ({
 }));
 
 vi.mock('../../../src/services/directSupabase', () => ({
+  getDirectDriverTrips: (...args: any[]) => mockGetDirectDriverTrips(...args),
   updateDirectPackageStatus: (...args: any[]) => mockUpdateDirectPackageStatus(...args),
 }));
 
@@ -34,6 +36,7 @@ import {
   getConnectedPackages,
   getConnectedRides,
   getPackageByTrackingId,
+  hydrateConnectedRides,
   updatePackageVerification,
 } from '../../../src/services/journeyLogistics';
 
@@ -49,6 +52,7 @@ describe('journeyLogistics', () => {
     vi.clearAllMocks();
     clearAllRuntimeState();
     mockGetAuthDetails.mockResolvedValue({ token: 'token-123', userId: 'user-123' });
+    mockGetDirectDriverTrips.mockResolvedValue([]);
     mockUpdateDirectPackageStatus.mockResolvedValue({});
   });
 
@@ -85,6 +89,41 @@ describe('journeyLogistics', () => {
     expect(mockCreateTrip).toHaveBeenCalledOnce();
     expect(created.id).toBe('trip-1');
     expect(getConnectedRides()).toHaveLength(1);
+  });
+
+  it('hydrates driver rides from the backend into the runtime cache', async () => {
+    mockGetDirectDriverTrips.mockResolvedValue([
+      {
+        id: 'trip-live-1',
+        from: 'Amman',
+        to: 'Jerash',
+        date: '2026-04-03',
+        time: '06:45',
+        seats: 2,
+        price: 4.5,
+        driver: {
+          id: 'driver-77',
+          name: 'Captain Hadi',
+          rating: 4.9,
+          verified: true,
+        },
+      },
+    ]);
+
+    const rides = await hydrateConnectedRides('user-123');
+
+    expect(mockGetDirectDriverTrips).toHaveBeenCalledWith('user-123');
+    expect(rides).toHaveLength(1);
+    expect(rides[0]).toMatchObject({
+      id: 'trip-live-1',
+      from: 'Amman',
+      to: 'Jerash',
+      time: '06:45',
+      seats: 2,
+      price: 4.5,
+      ownerId: 'driver-77',
+      status: 'active',
+    });
   });
 
   it('uses backend-confirmed package matches instead of simulating local pairing', async () => {

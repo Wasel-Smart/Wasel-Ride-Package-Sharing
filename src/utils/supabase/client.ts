@@ -115,7 +115,11 @@ async function retryWithBackoff<T>(
 function queueIfOffline<T>(fn: () => Promise<T>): Promise<T> {
   if (!getIsOnline()) {
     return new Promise((resolve, reject) => {
-      requestQueue.push({ fn, resolve, reject });
+      requestQueue.push({
+        fn: fn as () => Promise<unknown>,
+        resolve: resolve as (v: unknown) => void,
+        reject,
+      });
     });
   }
   return fn();
@@ -128,9 +132,6 @@ type GlobalSupabaseHolder = typeof globalThis & {
 
 const getSupabaseClient = () => {
   if (!isSupabaseConfigured) {
-    console.error(
-      '[Supabase] Missing valid credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in your .env file.',
-    );
     return null;
   }
 
@@ -166,6 +167,9 @@ const getSupabaseClient = () => {
 // Callers should still respect runtime configuration; this cast keeps types
 // strict during build while runtime checks remain in place elsewhere.
 export const supabase = getSupabaseClient() as NonNullable<ReturnType<typeof getSupabaseClient>>;
+// Temporary escape hatch for tables/RPCs that are not yet fully represented in generated typings.
+// Keep usage explicit so remaining schema typing debt is easy to find and remove.
+export const unsafeSupabase = supabase as any;
 export { getSupabaseClient };
 
 // ── Lazy listener initialisation ──────────────────────────────────────────────

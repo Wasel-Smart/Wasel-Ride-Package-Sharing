@@ -1,6 +1,6 @@
 # Wasel Ride And Package Sharing
 
-[![CI](https://img.shields.io/github/actions/workflow/status/Wasel-Smart/Wasel-Ride-Package-Sharing/ci.yml?branch=master&label=ci)](https://github.com/Wasel-Smart/Wasel-Ride-Package-Sharing/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/Wasel-Smart/Wasel-Ride-Package-Sharing/ci.yml?branch=main&label=ci)](https://github.com/Wasel-Smart/Wasel-Ride-Package-Sharing/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?logo=vite&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth-3FCF8E?logo=supabase&logoColor=white)
@@ -65,7 +65,8 @@ tests/
 - [Architecture](./docs/architecture.md)
 - [Implementation status](./docs/implementation-status.md)
 - [API contract](./docs/api-contract.md)
-- [Deployment guide](./docs/deployment.md)
+- [Release guide](./docs/RELEASE_GUIDE.md)
+- [9+ quality scorecard](./docs/quality-scorecard.md)
 - [OAuth setup guide](./docs/oauth-setup-guide.md)
 - [Security and identity](./docs/security-and-identity.md)
 - [Observability](./docs/observability.md)
@@ -97,16 +98,13 @@ Supabase project config lives in `supabase/config.toml`, with migrations in `sup
 ## Quality gate
 
 ```bash
-npm run type-check
-npm run lint
-npm run test:unit
-npm run build
-npm run test:e2e
+npm run quality
 ```
 
-For load smoke checks:
+The full production gate runs linting, unit tests, contract validation, type checking, and the production build. Browser and load checks can be run separately when validating a release candidate:
 
 ```bash
+npm run test:e2e
 npm run test:load:smoke
 ```
 

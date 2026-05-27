@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react';
 import { motion } from 'motion/react';
 import { Brain, CheckCircle2, Clock, Package, Star, Users } from 'lucide-react';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
@@ -50,10 +51,10 @@ export function FindRideCard({
         overflow: 'hidden',
         transition: 'border-color 0.2s',
       }}
-      onMouseEnter={event => {
+      onMouseEnter={(event: MouseEvent<HTMLDivElement>) => {
         event.currentTarget.style.borderColor = DS.borderH;
       }}
-      onMouseLeave={event => {
+      onMouseLeave={(event: MouseEvent<HTMLDivElement>) => {
         event.currentTarget.style.borderColor = DS.border;
       }}
     >
@@ -291,7 +292,7 @@ export function FindRideCard({
             </span>
             <motion.button
               whileTap={{ scale: 0.94 }}
-              onClick={event => {
+              onClick={(event: MouseEvent<HTMLButtonElement>) => {
                 event.stopPropagation();
                 if (hasBooking) {
                   onOpenBooking();

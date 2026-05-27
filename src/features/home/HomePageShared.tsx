@@ -114,6 +114,7 @@ export function SectionHeader({
 }) {
   return (
     <div
+      className="wasel-home-section-header"
       style={{
         display: 'flex',
         alignItems: 'flex-end',
@@ -155,7 +156,7 @@ export function SectionHeader({
           >
             {icon}
           </span>
-          Section
+          Wasel
         </div>
         <h2
           style={{
@@ -171,6 +172,7 @@ export function SectionHeader({
       </div>
       {action && onAction ? (
         <button
+          className="wasel-home-section-action"
           onClick={onAction}
           style={{
             height: 36,

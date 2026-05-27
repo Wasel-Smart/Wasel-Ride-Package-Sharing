@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import {
   useNavigate as useRouterNavigate,
   type NavigateFunction,
@@ -69,14 +70,16 @@ function normalizeTo(to: To): To {
 export function useIframeSafeNavigate(): NavigateFunction {
   const navigate = useRouterNavigate();
 
-  return ((to: To | number, options?: NavigateOptions) => {
+  const safeNavigate: NavigateFunction = useCallback((to: To | number, options?: NavigateOptions) => {
     if (typeof to === 'number') {
       navigate(to);
       return;
     }
 
     navigate(normalizeTo(to), options);
-  }) as NavigateFunction;
+  }, [navigate]);
+
+  return safeNavigate;
 }
 
 export { useIframeSafeNavigate as useNavigate };

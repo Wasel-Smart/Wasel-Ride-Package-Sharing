@@ -290,11 +290,16 @@ const buildLegacyAliases = () =>
 
 // ── Router ────────────────────────────────────────────────────────────────────
 export const waselRouter = createBrowserRouter([
-  { path: '/', lazy: lazy(() => import('./features/home/AppEntryPage')) },
+  {
+    path: '/',
+    HydrateFallback: PageLoader,
+    lazy: lazy(() => import('./features/home/AppEntryPage')),
+  },
   ...buildLegacyAliases(),
   {
     path: '/app',
     Component: WaselRoot,
+    HydrateFallback: PageLoader,
     errorElement: <RouteErrorFallback />,
     children: buildMainChildren(),
   },

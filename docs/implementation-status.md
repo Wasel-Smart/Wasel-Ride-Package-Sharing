@@ -9,7 +9,7 @@ This document is the honest, up-to-date record of what is live, what is contract
 These capabilities are fully implemented and running in the current deployment.
 
 ### Web client
-- React 18 + TypeScript 5 + Vite 6 SPA, deployed on Vercel
+- React 19 + TypeScript 5 + Vite 6 SPA, deployed on Vercel
 - Ride request and booking flow (find ride, offer ride, Raje3 return trips)
 - Package delivery request and tracking UI
 - Bus corridor discovery
@@ -22,6 +22,12 @@ These capabilities are fully implemented and running in the current deployment.
 - Operator-facing Mobility OS surface
 - Wasel Plus subscription tier
 - Arabic and English internationalisation
+
+### Mobile client foundation
+- React Native / Expo app shell with authenticated navigation
+- Home, auth, find ride, offer ride, ride detail, chat, trips, wallet, notifications, profile, and support screens
+- Shared hooks for auth, rides, bookings, wallet, profile, realtime updates, push notifications, location, biometric checks, and network status
+- Production app-store release still depends on the configuration checklist in `mobile/MOBILE_CONFIGURATION.md`
 
 ### Identity and auth
 - Supabase Auth: email/password, Google OAuth, Facebook OAuth
@@ -72,13 +78,13 @@ Deployment manifests and environment overlays for `dev`, `staging`, and `prod` l
 
 ---
 
-## Roadmap (not yet started)
+## Roadmap
 
 - Real-time driver location on map (requires backend geo-stream service)
 - In-app chat between riders and drivers
 - Corridor demand analytics dashboard (requires ops worker)
 - Automated settlement and payout reporting (requires payment worker)
-- Native mobile clients (iOS and Android)
+- Native mobile app-store release for iOS and Android
 
 ---
 

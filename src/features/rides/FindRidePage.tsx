@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import {
@@ -49,6 +49,7 @@ import {
 import { getCorridorOpportunity, getMarketplaceNodes } from '../../config/wasel-movement-network';
 import {
   ALL_RIDES,
+  buildRideFromTripSearchResult,
   buildRideFromPostedRide,
   CITIES,
   RIDE_SEARCHES_KEY,
@@ -71,6 +72,7 @@ import {
   resolveCityCoord,
   SectionHead,
 } from '../../pages/waselServiceShared';
+import { tripsAPI } from '../../services/trips';
 import { FindRideCard } from './components/FindRideCard';
 import { FindRidePackagePanel } from './components/FindRidePackagePanel';
 import { FindRideTripDetailModal } from './components/FindRideTripDetailModal';
@@ -94,8 +96,8 @@ export function FindRidePage() {
   const { initialFrom, initialTo, initialDate, initialSearched } = parseFindRideParams(
     location.search,
   );
-  const t = createFindRideCopy(ar);
-  const copy = getFindRideStaticCopy(ar);
+  const t = useMemo(() => createFindRideCopy(ar), [ar]);
+  const copy = useMemo(() => getFindRideStaticCopy(ar), [ar]);
 
   const [tab, setTab] = useState<'ride' | 'package'>('ride');
   const [from, setFrom] = useState(initialFrom);
@@ -116,6 +118,7 @@ export function FindRidePage() {
   const [waitlistMessage, setWaitlistMessage] = useState<string | null>(null);
   const [retentionMessage, setRetentionMessage] = useState<string | null>(null);
   const [savedReminders, setSavedReminders] = useState(() => getRouteReminders());
+  const [networkRides, setNetworkRides] = useState<Ride[]>([]);
   const [pkg, setPkg] = useState({
     from: 'Amman',
     to: 'Aqaba',
@@ -128,11 +131,14 @@ export function FindRidePage() {
   const corridorPlan = useMemo(() => getCorridorOpportunity(from, to), [from, to]);
   const routeIntelligence = useLiveRouteIntelligence({ from, to });
   const selectedSignal = routeIntelligence.selectedSignal;
-  const featuredSignals = routeIntelligence.featuredSignals.slice(0, 4);
-  const recurringSuggestions = useMemo(
-    () => getRecurringRouteSuggestions(3),
-    [routeIntelligence.updatedAt],
+  const featuredSignals = useMemo(
+    () => routeIntelligence.featuredSignals.slice(0, 4),
+    [routeIntelligence.featuredSignals],
   );
+  const recurringSuggestions = useMemo(() => {
+    void routeIntelligence.updatedAt;
+    return getRecurringRouteSuggestions(3);
+  }, [routeIntelligence.updatedAt]);
   const bookingByRideId = useMemo(() => {
     const next = new Map<string, RideBookingRecord>();
 
@@ -160,41 +166,64 @@ export function FindRidePage() {
       lookup.set(`${signal.to}::${signal.from}`, signal);
     }
     return lookup;
+  }, [routeIntelligence.allSignals]);
+  const demandStats = useMemo(() => {
+    void routeIntelligence.updatedAt;
+    return getDemandStats();
   }, [routeIntelligence.updatedAt]);
-  const demandStats = getDemandStats();
 
-  const searchFromCoord = resolveCityCoord(from);
-  const searchToCoord = resolveCityCoord(to);
-  const connectedRides = getConnectedRides().map(buildRideFromPostedRide);
-  const allAvailableRides = [...connectedRides, ...ALL_RIDES];
-  const corridorRides = allAvailableRides.filter(ride => ride.from === from && ride.to === to);
-  const nearbyCorridors = allAvailableRides
-    .filter(
-      ride =>
-        ride.id &&
-        !(ride.from === from && ride.to === to) &&
-        (ride.from === from || ride.to === to || ride.to === from || ride.from === to),
-    )
-    .slice(0, 3);
-
-  const results: Ride[] = searched
-    ? allAvailableRides
+  const searchFromCoord = useMemo(() => resolveCityCoord(from), [from]);
+  const searchToCoord = useMemo(() => resolveCityCoord(to), [to]);
+  const connectedRides = useMemo(() => {
+    void routeIntelligence.updatedAt;
+    return getConnectedRides().map(buildRideFromPostedRide);
+  }, [routeIntelligence.updatedAt]);
+  const allAvailableRides = useMemo(() => {
+    const rideMap = new Map<string, Ride>();
+    for (const ride of [...connectedRides, ...networkRides, ...ALL_RIDES]) {
+      rideMap.set(ride.id, ride);
+    }
+    return Array.from(rideMap.values());
+  }, [connectedRides, networkRides]);
+  const corridorRides = useMemo(
+    () => allAvailableRides.filter(ride => ride.from === from && ride.to === to),
+    [allAvailableRides, from, to],
+  );
+  const nearbyCorridors = useMemo(
+    () =>
+      allAvailableRides
         .filter(
           ride =>
-            (!from ||
-              ride.from.toLowerCase().includes(from.toLowerCase()) ||
-              ride.fromAr === from) &&
-            (!to || ride.to.toLowerCase().includes(to.toLowerCase()) || ride.toAr === to) &&
-            (!date || ride.date === date),
+            ride.id &&
+            !(ride.from === from && ride.to === to) &&
+            (ride.from === from || ride.to === to || ride.to === from || ride.from === to),
         )
-        .sort((left, right) =>
-          sort === 'price'
-            ? left.pricePerSeat - right.pricePerSeat
-            : sort === 'time'
-              ? left.time.localeCompare(right.time)
-              : right.driver.rating - left.driver.rating,
-        )
-    : allAvailableRides.slice(0, 4);
+        .slice(0, 3),
+    [allAvailableRides, from, to],
+  );
+
+  const results: Ride[] = useMemo(
+    () =>
+      searched
+        ? allAvailableRides
+            .filter(
+              ride =>
+                (!from ||
+                  ride.from.toLowerCase().includes(from.toLowerCase()) ||
+                  ride.fromAr === from) &&
+                (!to || ride.to.toLowerCase().includes(to.toLowerCase()) || ride.toAr === to) &&
+                (!date || ride.date === date),
+            )
+            .sort((left, right) =>
+              sort === 'price'
+                ? left.pricePerSeat - right.pricePerSeat
+                : sort === 'time'
+                  ? left.time.localeCompare(right.time)
+                  : right.driver.rating - left.driver.rating,
+            )
+        : allAvailableRides.slice(0, 4),
+    [allAvailableRides, date, from, searched, sort, to],
+  );
 
   const routeReadinessLabel =
     corridorRides.length >= 2
@@ -202,10 +231,17 @@ export function FindRidePage() {
       : corridorRides.length === 1
         ? t.bookingReady
         : t.searchHelp;
-  const recommendedRides = [...results]
-    .sort((left, right) => scoreRideForRecommendation(right) - scoreRideForRecommendation(left))
-    .slice(0, 2);
-  const bookedRides = allAvailableRides.filter(ride => bookedRideIds.has(ride.id)).slice(0, 3);
+  const recommendedRides = useMemo(
+    () =>
+      [...results]
+        .sort((left, right) => scoreRideForRecommendation(right) - scoreRideForRecommendation(left))
+        .slice(0, 2),
+    [results],
+  );
+  const bookedRides = useMemo(
+    () => allAvailableRides.filter(ride => bookedRideIds.has(ride.id)).slice(0, 3),
+    [allAvailableRides, bookedRideIds],
+  );
   const selectedPriceQuote =
     selectedSignal?.priceQuote ??
     (corridorPlan
@@ -217,9 +253,12 @@ export function FindRidePage() {
         })
       : null);
 
-  const resolveSignalForRoute = (routeFrom: string, routeTo: string) =>
-    signalLookup.get(`${routeFrom}::${routeTo}`) ??
-    getLiveCorridorSignal(routeFrom, routeTo, routeIntelligence.membership);
+  const resolveSignalForRoute = useCallback(
+    (routeFrom: string, routeTo: string) =>
+      signalLookup.get(`${routeFrom}::${routeTo}`) ??
+      getLiveCorridorSignal(routeFrom, routeTo, routeIntelligence.membership),
+    [routeIntelligence.membership, signalLookup],
+  );
   const openMyTrips = () => nav('/app/my-trips?tab=rides');
   const selectedBooking = selected ? (bookingByRideId.get(selected.id) ?? null) : null;
   const getRideBookingStatus = (rideId: string): 'pending_driver' | 'confirmed' | null => {
@@ -259,8 +298,10 @@ export function FindRidePage() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const nextFrom = CITIES.includes(params.get('from') ?? '') ? params.get('from')! : 'Amman';
-    const nextTo = CITIES.includes(params.get('to') ?? '') ? params.get('to')! : 'Aqaba';
+    const fromParam = params.get('from') ?? '';
+    const toParam = params.get('to') ?? '';
+    const nextFrom = CITIES.includes(fromParam) ? fromParam : 'Amman';
+    const nextTo = CITIES.includes(toParam) ? toParam : 'Aqaba';
     const nextDate = params.get('date') ?? '';
     const nextSearched = params.get('search') === '1';
     setFrom(nextFrom);
@@ -269,7 +310,44 @@ export function FindRidePage() {
     setSearched(nextSearched);
   }, [location.search]);
 
-  const handleSearch = () => {
+  useEffect(() => {
+    if (!searched || from === to) return;
+
+    let cancelled = false;
+
+    const loadSearchResults = async () => {
+      setLoading(true);
+      setSearchError(null);
+
+      try {
+        const trips = await tripsAPI.searchTrips(from, to, date || undefined);
+        if (cancelled) return;
+        setNetworkRides(trips.map(buildRideFromTripSearchResult));
+      } catch (error) {
+        if (cancelled) return;
+        setNetworkRides([]);
+        setSearchError(
+          error instanceof Error
+            ? error.message
+            : ar
+              ? 'تعذر تحديث الرحلات الآن'
+              : 'Unable to refresh live rides right now',
+        );
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadSearchResults();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ar, date, from, searched, to]);
+
+  const handleSearch = async () => {
     if (from === to) {
       setSearchError(t.chooseDifferentCities);
       setSearched(false);
@@ -294,7 +372,6 @@ export function FindRidePage() {
       to,
       metadata: { date: date || null },
     });
-    setLoading(false);
   };
 
   const handleOpenRide = (ride: Ride) => {

@@ -10,8 +10,9 @@ import { getConnectedPackages, getConnectedRides } from './journeyLogistics';
 import { getMovementMembershipSnapshot } from './movementMembership';
 import { getMovementPriceQuote, type MovementPriceQuote } from './movementPricing';
 import { getRideBookings } from './rideLifecycle';
+import { subscribeRuntimeState } from '../utils/runtimeStore';
 
-const REFRESH_MS = 15_000;
+const REFRESH_MS = 60_000;
 const DAY_MS = 86_400_000;
 const LOOKBACK_MS = 14 * DAY_MS;
 
@@ -317,17 +318,26 @@ export function getLiveCorridorSignal(
 
 export function useLiveRouteIntelligence(args?: { from?: string | null; to?: string | null }) {
   const [tick, setTick] = useState(0);
+  const from = args?.from;
+  const to = args?.to;
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
     const refresh = () => setTick(value => value + 1);
     const interval = window.setInterval(refresh, REFRESH_MS);
-    window.addEventListener('storage', refresh);
+    const unsubscribe = subscribeRuntimeState(key => {
+      if (!key.startsWith('wasel-')) return;
+      refresh();
+    });
+
     return () => {
       window.clearInterval(interval);
-      window.removeEventListener('storage', refresh);
+      unsubscribe();
     };
   }, []);
 
-  return useMemo(() => buildRouteIntelligenceSnapshot(args), [args?.from, args?.to, tick]);
+  return useMemo(() => {
+    void tick;
+    return buildRouteIntelligenceSnapshot({ from, to });
+  }, [from, to, tick]);
 }

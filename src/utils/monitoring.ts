@@ -7,6 +7,17 @@ import { safeStorageGetItem } from './browserStorage';
 
 let sentryInitialized = false;
 
+function isPlaceholderSentryDsn(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+
+  return (
+    normalized.length === 0 ||
+    normalized.includes('your-dsn') ||
+    normalized.includes('project-id') ||
+    normalized.includes('example.com')
+  );
+}
+
 type SentryRuntime = typeof Sentry & {
   captureException?: (error: unknown, context?: Record<string, unknown>) => void;
   captureMessage?: (message: string, context?: Record<string, unknown>) => void;
@@ -48,8 +59,7 @@ export function initSentry(): void {
   const dsn = import.meta.env.VITE_SENTRY_DSN?.trim();
   const environment = import.meta.env.MODE;
 
-  if (!dsn) {
-    writeConsole('warning', 'Sentry DSN is not configured; remote error capture is disabled.');
+  if (!dsn || isPlaceholderSentryDsn(dsn)) {
     return;
   }
 

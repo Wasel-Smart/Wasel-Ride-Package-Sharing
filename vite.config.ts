@@ -77,6 +77,8 @@ export default defineConfig({
 
           // Payments
           if (id.includes('/node_modules/@stripe/')) return 'payments';
+
+          return undefined;
         },
       },
     },

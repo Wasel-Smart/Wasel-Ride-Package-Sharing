@@ -1,6 +1,8 @@
 import { supabase } from '@/utils/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
+const db = supabase as any;
+
 type MessageReadRow = {
   id: string;
   read_by: string[] | null;
@@ -19,6 +21,35 @@ export interface Message {
     id: string;
     full_name: string;
     avatar_url: string;
+  };
+}
+
+type MessageRow = {
+  id: string;
+  trip_id: string | null;
+  conversation_id: string | null;
+  sender_id: string;
+  content: string | null;
+  type: string | null;
+  message_type: string | null;
+  metadata: Record<string, unknown> | null;
+  read_by: string[] | null;
+  created_at: string;
+  sender?: Message['sender'] | Message['sender'][];
+};
+
+function normalizeMessage(row: MessageRow): Message {
+  const sender = Array.isArray(row.sender) ? row.sender[0] : row.sender;
+  return {
+    id: row.id,
+    trip_id: row.trip_id ?? row.conversation_id ?? '',
+    sender_id: row.sender_id,
+    content: row.content ?? '',
+    type: (row.type ?? row.message_type ?? 'text') as Message['type'],
+    metadata: row.metadata ?? {},
+    read_by: row.read_by ?? [],
+    created_at: row.created_at,
+    sender,
   };
 }
 
@@ -41,30 +72,32 @@ class ChatService {
       throw new Error('Not authenticated');
     }
 
-    const { data: trip } = await supabase
+    const { data: trip } = await db
       .from('trips')
       .select('driver_id')
       .eq('id', request.tripId)
       .single();
 
-    const { data: booking } = await supabase
+    const { data: booking } = await db
       .from('bookings')
-      .select('user_id')
+      .select('passenger_id')
       .eq('trip_id', request.tripId)
-      .eq('user_id', user.id)
+      .eq('passenger_id', user.id)
       .single();
 
     if (!trip && !booking) {
       throw new Error('Not authorized to send messages in this trip');
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('messages')
       .insert({
         trip_id: request.tripId,
+        conversation_id: request.tripId,
         sender_id: user.id,
         content: request.content,
         type: request.type || 'text',
+        message_type: request.type || 'text',
         metadata: request.metadata || {},
         read_by: [user.id],
       })
@@ -77,11 +110,11 @@ class ChatService {
       throw error;
     }
 
-    return data as Message;
+    return normalizeMessage(data as MessageRow);
   }
 
   async getMessages(tripId: string, limit = 50): Promise<Message[]> {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('messages')
       .select(
         'id, trip_id, sender_id, content, type, metadata, read_by, created_at, sender:profiles(id, full_name, avatar_url)',
@@ -94,7 +127,7 @@ class ChatService {
       throw error;
     }
 
-    return (data as Message[]).reverse();
+    return (data as MessageRow[]).map(normalizeMessage).reverse();
   }
 
   async markAsRead(messageIds: string[]): Promise<void> {
@@ -108,7 +141,7 @@ class ChatService {
 
     if (messageIds.length === 0) return;
 
-    const { data: messages, error } = await supabase
+    const { data: messages, error } = await db
       .from('messages')
       .select('id, read_by')
       .in('id', messageIds);
@@ -127,7 +160,7 @@ class ChatService {
       const batch = messagesToUpdate.slice(i, i + BATCH_SIZE);
       await Promise.all(
         batch.map(message =>
-          supabase
+          db
             .from('messages')
             .update({
               read_by: [...(message.read_by ?? []), user.id],
@@ -167,7 +200,7 @@ class ChatService {
         },
         async (payload: { new: { id: string } }) => {
           try {
-            const { data } = await supabase
+            const { data } = await db
               .from('messages')
               .select(
                 'id, trip_id, sender_id, content, type, metadata, read_by, created_at, sender:profiles(id, full_name, avatar_url)',
@@ -176,7 +209,7 @@ class ChatService {
               .single();
 
             if (data) {
-              onMessage(data as Message);
+              onMessage(normalizeMessage(data as MessageRow));
             }
           } catch (err) {
             console.error('Error fetching new message:', err);
@@ -206,7 +239,7 @@ class ChatService {
       return 0;
     }
 
-    const { count } = await supabase
+    const { count } = await db
       .from('messages')
       .select('*', { count: 'exact', head: true })
       .eq('trip_id', tripId)

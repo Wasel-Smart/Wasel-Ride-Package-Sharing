@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
-import { parse } from 'yaml';
 
 const workerManifests = [
   ['matching-worker', 'infra/kubernetes/workers/matching-worker.yaml'],
@@ -12,12 +11,13 @@ const workerManifests = [
 ];
 
 for (const [workerName, relativePath] of workerManifests) {
-  const manifest = parse(
-    await readFile(path.join(process.cwd(), relativePath), 'utf8'),
-  );
-  const args = manifest?.spec?.template?.spec?.containers?.[0]?.args ?? [];
+  const manifest = await readFile(path.join(process.cwd(), relativePath), 'utf8');
 
-  if (!Array.isArray(args) || !args.includes(workerName)) {
+  const escapedWorkerName = workerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const hasInlineArg = new RegExp(`args:\\s*\\[\\s*["']${escapedWorkerName}["']\\s*\\]`).test(manifest);
+  const hasListArg = new RegExp(`^\\s*-\\s*["']?${escapedWorkerName}["']?\\s*$`, 'm').test(manifest);
+
+  if (!hasInlineArg && !hasListArg) {
     throw new Error(`Worker manifest ${relativePath} must start ${workerName}`);
   }
 }

@@ -18,11 +18,23 @@ const configuredFunctionName = (
   import.meta.env.VITE_EDGE_FUNCTION_NAME as string | undefined
 )?.trim();
 const defaultFunctionsBaseUrl = supabaseUrl ? `${supabaseUrl}/functions/v1` : '';
-const resolvedFunctionsBaseUrl = configuredFunctionsBaseUrl || defaultFunctionsBaseUrl;
+const hasPlaceholderSegment = (value: string | undefined) =>
+  Boolean(
+    value &&
+      ['your-project', 'replace_with', 'example.com'].some(segment =>
+        value.toLowerCase().includes(segment),
+      ),
+  );
+const resolvedFunctionsBaseUrl =
+  configuredFunctionsBaseUrl && !hasPlaceholderSegment(configuredFunctionsBaseUrl)
+    ? configuredFunctionsBaseUrl
+    : defaultFunctionsBaseUrl;
 const resolvedFunctionName = configuredFunctionName || 'make-server-0b1f4071';
 
 export const API_URL = configuredApiUrl
-  ? configuredApiUrl.replace(/\/$/, '')
+  ? hasPlaceholderSegment(configuredApiUrl)
+    ? ''
+    : configuredApiUrl.replace(/\/$/, '')
   : resolvedFunctionsBaseUrl
     ? `${resolvedFunctionsBaseUrl.replace(/\/$/, '')}/${resolvedFunctionName}`
     : '';

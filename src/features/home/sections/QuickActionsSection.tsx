@@ -12,12 +12,12 @@ interface QuickActionsSectionProps {
 export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActionsSectionProps) {
   return (
     <motion.section initial={false} style={{ marginTop: 34 }}>
-      <SectionHeader title={ar ? 'ابدأ من الخدمة المناسبة' : 'Choose the right mode'} icon="+" />
+      <SectionHeader title={ar ? 'اختر ما تريد فعله' : 'Choose what you need'} icon="+" />
       <div
         className="wasel-home-actions"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+          gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
           gap: 14,
         }}
       >
@@ -25,94 +25,60 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
           const Icon = action.icon;
           return (
             <motion.button
+              className="wasel-home-card wasel-home-action-card"
               key={action.path}
               onClick={() => onNavigate(action.path)}
-              whileHover={{ y: -2 }}
+              whileHover={{ y: -1 }}
               style={{
-                minHeight: 220,
-                textAlign: 'left',
-                borderRadius: 26,
-                padding: '20px 20px 18px',
-                background:
-                  'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
+                minHeight: 214,
+                textAlign: ar ? 'right' : 'left',
+                borderRadius: 18,
+                padding: '18px 16px',
+                background: 'rgba(255,255,255,0.035)',
                 border: `1px solid ${action.border}`,
                 cursor: 'pointer',
-                boxShadow: '0 16px 34px rgba(0,0,0,0.18)',
+                boxShadow: '0 12px 28px rgba(0,0,0,0.14)',
                 display: 'flex',
                 flexDirection: 'column',
               }}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                  alignItems: 'flex-start',
-                }}
-              >
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                 <div
                   style={{
                     width: 48,
                     height: 48,
-                    borderRadius: 16,
+                    borderRadius: 14,
                     display: 'grid',
                     placeItems: 'center',
                     background: action.dim,
                     border: `1px solid ${action.border}`,
                   }}
                 >
-                  <Icon size={20} color={action.color} />
+                  <Icon size={20} color={action.color} aria-hidden="true" />
                 </div>
                 <div
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    height: 30,
-                    padding: '0 10px',
+                    minHeight: 30,
+                    padding: '7px 10px',
                     borderRadius: 999,
                     background: 'rgba(255,255,255,0.03)',
                     border: '1px solid rgba(255,255,255,0.08)',
                     color: C.textMuted,
                     fontSize: '0.68rem',
                     fontWeight: 800,
-                    letterSpacing: '0.08em',
+                    letterSpacing: '0.04em',
                     textTransform: 'uppercase',
+                    lineHeight: 1.25,
                   }}
                 >
-                  <span
-                    style={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: '50%',
-                      background: action.color,
-                      boxShadow: `0 0 12px ${action.color}55`,
-                    }}
-                  />
                   {action.kicker}
                 </div>
               </div>
 
-              <div
-                style={{
-                  marginTop: 18,
-                  fontWeight: 900,
-                  fontSize: '1rem',
-                  letterSpacing: '-0.02em',
-                  color: C.text,
-                }}
-              >
+              <div style={{ marginTop: 18, fontWeight: 900, fontSize: '1rem', color: C.text }}>
                 {action.title}
               </div>
-              <div
-                style={{
-                  marginTop: 8,
-                  color: C.textMuted,
-                  fontSize: '0.82rem',
-                  lineHeight: 1.68,
-                  maxWidth: 420,
-                }}
-              >
+              <div style={{ marginTop: 8, color: C.textMuted, fontSize: '0.84rem', lineHeight: 1.62 }}>
                 {action.desc}
               </div>
               <div
@@ -121,8 +87,8 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
                   paddingTop: 14,
                   borderTop: `1px solid ${C.borderFaint}`,
                   color: C.textSub,
-                  fontSize: '0.76rem',
-                  lineHeight: 1.55,
+                  fontSize: '0.78rem',
+                  lineHeight: 1.5,
                 }}
               >
                 {action.outcome}
@@ -137,11 +103,11 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
                   gap: 7,
                   color: action.color,
                   fontWeight: 800,
-                  fontSize: '0.78rem',
+                  fontSize: '0.8rem',
                 }}
               >
-                {ar ? 'افتح هذا المسار' : 'Open this flow'}
-                <ArrowRight size={13} style={{ transform: ar ? 'scaleX(-1)' : 'none' }} />
+                {ar ? 'ابدأ الآن' : 'Start now'}
+                <ArrowRight size={13} style={{ transform: ar ? 'scaleX(-1)' : 'none' }} aria-hidden="true" />
               </div>
             </motion.button>
           );

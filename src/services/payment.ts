@@ -1,4 +1,4 @@
-import { supabase, supabaseUrl } from '@/utils/supabase/client';
+import { supabase, supabaseUrl, unsafeSupabase } from '@/utils/supabase/client';
 import { addCSRFHeader } from '@/utils/csrf';
 
 export interface PaymentIntentRequest {
@@ -108,9 +108,9 @@ class PaymentService {
   }
 
   async confirmPayment(bookingId: string, paymentIntentId: string): Promise<void> {
-    const client = requireSupabaseClient();
+    requireSupabaseClient();
 
-    const { error } = await client
+    const { error } = await unsafeSupabase
       .from('bookings')
       .update({
         payment_intent_id: paymentIntentId,
@@ -122,9 +122,9 @@ class PaymentService {
   }
 
   async getPaymentStatus(bookingId: string): Promise<string> {
-    const client = requireSupabaseClient();
+    requireSupabaseClient();
 
-    const { data, error } = await client
+    const { data, error } = await unsafeSupabase
       .from('bookings')
       .select('payment_status')
       .eq('id', bookingId)

@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { translations } from '../locales/translations';
+import { normalizeTextTree } from '../utils/textEncoding';
 
 type Language = 'en' | 'ar';
+const normalizedTranslations = normalizeTextTree(translations);
 
 interface LanguageContextType {
   language: Language;
@@ -13,6 +15,8 @@ interface LanguageContextType {
 
 const LanguageContext = React.createContext<LanguageContextType | undefined>(undefined);
 
+// Context hook exports are intentional for provider ergonomics.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useLanguage = () => {
   const context = React.useContext(LanguageContext);
   if (!context) {
@@ -41,9 +45,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     }
   }, []);
 
-  const setLanguage = React.useCallback((lang: Language) => {
-    setLanguageState(lang);
-
+  const persistLanguage = React.useCallback((lang: Language) => {
     if (typeof window !== 'undefined') {
       try {
         window.localStorage.setItem('wasel-language', lang);
@@ -56,9 +58,21 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     }
   }, []);
 
+  const setLanguage = React.useCallback(
+    (lang: Language) => {
+      setLanguageState(lang);
+      persistLanguage(lang);
+    },
+    [persistLanguage],
+  );
+
   const toggleLanguage = React.useCallback(() => {
-    setLanguageState(prev => (prev === 'ar' ? 'en' : 'ar'));
-  }, []);
+    setLanguageState(prev => {
+      const next = prev === 'ar' ? 'en' : 'ar';
+      persistLanguage(next);
+      return next;
+    });
+  }, [persistLanguage]);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -71,7 +85,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   const t = React.useCallback(
     (key: string): string => {
       const keys = key.split('.');
-      let value: unknown = translations[language];
+      let value: unknown = normalizedTranslations[language];
 
       for (const k of keys) {
         if (typeof value !== 'object' || value === null) {

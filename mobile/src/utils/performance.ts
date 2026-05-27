@@ -2,6 +2,18 @@ import { useEffect, useRef, useCallback } from 'react';
 import { InteractionManager } from 'react-native';
 import { sanitizeLogMessage } from './sanitization';
 
+export function reportMobileError(error: Error, componentStack?: string | null) {
+  const payload = {
+    message: sanitizeLogMessage(error.message),
+    name: sanitizeLogMessage(error.name),
+    stack: sanitizeLogMessage(error.stack ?? ''),
+    componentStack: sanitizeLogMessage(componentStack ?? ''),
+    capturedAt: new Date().toISOString(),
+  };
+
+  console.error('[MobileError]', payload);
+}
+
 export function usePerformanceMonitor(screenName: string) {
   const startTime = useRef(Date.now());
 

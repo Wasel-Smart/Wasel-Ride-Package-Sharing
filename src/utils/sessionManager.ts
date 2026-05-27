@@ -178,7 +178,10 @@ class SessionManager {
     const metadata = this.getSessionMetadata();
     if (metadata) {
       metadata.lastActivity = now;
-      metadata.expiresAt = Math.max(this.resolveExpiryAt(metadata) ?? 0, now + this.config.timeoutMs);
+      metadata.expiresAt = Math.max(
+        (this.resolveExpiryAt(metadata) ?? 0) + 1000,
+        now + this.config.timeoutMs,
+      );
       this.saveSessionMetadata(metadata);
     }
     logger.info('Session extended', { sessionId: this.sessionId });

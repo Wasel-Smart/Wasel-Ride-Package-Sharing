@@ -599,6 +599,7 @@ export function LiveTripTracking() {
       const t = setTimeout(() => setShowRating(true), 2500);
       return () => clearTimeout(t);
     }
+    return undefined;
   }, [progress, showRating, trip.status]);
 
   const handleRatingSubmit = useCallback(

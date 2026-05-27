@@ -19,6 +19,7 @@
 
 import { supabase } from '@/utils/supabase/client';
 import { sanitizeLogMessage, sanitizePhoneNumber } from '@/utils/sanitization';
+import { requestEdgeJson } from './backendWorkflow';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -62,6 +63,35 @@ async function callEdgeFunction<T>(
   }
 }
 
+async function callBackendApi<T>(
+  path: string,
+  operation: string,
+  body: Record<string, unknown>,
+): Promise<{ data: T | null; error: string | null }> {
+  try {
+    const data = await requestEdgeJson<T>({
+      path,
+      operation,
+      authMode: 'required',
+      method: 'POST',
+      body,
+      timeout: 20000,
+      retries: 1,
+    });
+
+    return { data, error: null };
+  } catch (err) {
+    if (isDevMode()) {
+      console.error(`[smsVerification] ${operation} failed:`, sanitizeLogMessage(err));
+    }
+
+    return {
+      data: null,
+      error: err instanceof Error ? err.message : 'SMS service unavailable',
+    };
+  }
+}
+
 // ── Public API ─────────────────────────────────────────────────────────────────
 
 /**
@@ -74,14 +104,42 @@ async function callEdgeFunction<T>(
  * @param phoneNumber — E.164 format, e.g. +962791234567
  */
 export async function getSMSOtp(phoneNumber: string): Promise<SMSOtpResult> {
-  const { data, error } = await callEdgeFunction<{ sentTo: string }>('send-sms-otp', {
+  const { data, error } = await callBackendApi<{ phoneNumber: string }>(
+    '/trust/phone/start',
+    'Start phone verification',
+    { phoneNumber },
+  );
+
+  if (error && supabase) {
+    const fallback = await callEdgeFunction<{ sentTo: string }>('send-sms-otp', {
+      phone: phoneNumber,
+    });
+
+    if (!fallback.error) {
+      console.info('OTP sent to:', sanitizePhoneNumber(phoneNumber));
+      return { success: true, error: null, sentTo: fallback.data?.sentTo };
+    }
+  }
+
+  if (error) return { success: false, error };
+
+  console.info('OTP sent to:', sanitizePhoneNumber(phoneNumber));
+  return {
+    success: true,
+    error: null,
+    sentTo: data?.phoneNumber ?? sanitizePhoneNumber(phoneNumber),
+  };
+}
+
+async function callLegacyVerifySMSCode(phoneNumber: string, code: string): Promise<SMSVerifyResult> {
+  const { data, error } = await callEdgeFunction<{ verified: boolean }>('verify-sms-otp', {
     phone: phoneNumber,
+    code,
   });
 
   if (error) return { success: false, error };
 
-  console.log('OTP sent to:', sanitizePhoneNumber(phoneNumber));
-  return { success: true, error: null, sentTo: data?.sentTo };
+  return { success: true, error: null, verified: data?.verified === true };
 }
 
 /**
@@ -103,16 +161,21 @@ export async function verifySMSCode(
     return { success: false, error: 'Invalid code format — must be 4–8 digits' };
   }
 
-  const { data, error } = await callEdgeFunction<{ verified: boolean }>('verify-sms-otp', {
-    phone: phoneNumber,
-    code: code.trim(),
-  });
+  const { data, error } = await callBackendApi<{ verified: boolean }>(
+    '/trust/phone/confirm',
+    'Confirm phone verification',
+    { code: code.trim() },
+  );
+
+  if (error && supabase) {
+    return callLegacyVerifySMSCode(phoneNumber, code.trim());
+  }
 
   if (error) return { success: false, error };
 
   const verified = data?.verified === true;
   if (verified) {
-    console.log('Phone verified:', sanitizePhoneNumber(phoneNumber));
+    console.info('Phone verified:', sanitizePhoneNumber(phoneNumber));
   }
 
   return { success: true, error: null, verified };

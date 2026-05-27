@@ -182,7 +182,10 @@ export function useWalletDashboardController() {
     }
 
     const amt = parseFloat(topUpAmount);
-    if (!amt || amt <= 0) return toast.error(t.invalidAmount);
+    if (!amt || amt <= 0) {
+      toast.error(t.invalidAmount);
+      return;
+    }
 
     setActionLoading(true);
     try {
@@ -213,8 +216,14 @@ export function useWalletDashboardController() {
 
   const handleWithdraw = async () => {
     const amt = parseFloat(withdrawAmount);
-    if (!amt || amt <= 0) return toast.error(t.invalidAmount);
-    if (!withdrawBank.trim()) return toast.error(t.enterBankAccount);
+    if (!amt || amt <= 0) {
+      toast.error(t.invalidAmount);
+      return;
+    }
+    if (!withdrawBank.trim()) {
+      toast.error(t.enterBankAccount);
+      return;
+    }
 
     setActionLoading(true);
     try {
@@ -233,8 +242,14 @@ export function useWalletDashboardController() {
 
   const handleSend = async () => {
     const amt = parseFloat(sendAmount);
-    if (!amt || amt <= 0) return toast.error(t.invalidAmount);
-    if (!sendRecipient.trim()) return toast.error(t.enterRecipientId);
+    if (!amt || amt <= 0) {
+      toast.error(t.invalidAmount);
+      return;
+    }
+    if (!sendRecipient.trim()) {
+      toast.error(t.enterRecipientId);
+      return;
+    }
 
     setActionLoading(true);
     try {
@@ -259,7 +274,8 @@ export function useWalletDashboardController() {
     }
 
     if (pinValue.length !== 4 || !/^\d{4}$/.test(pinValue)) {
-      return toast.error(t.pinMustBeFourDigits);
+      toast.error(t.pinMustBeFourDigits);
+      return;
     }
 
     setActionLoading(true);

@@ -2,6 +2,9 @@ import { defineConfig } from 'vitest/config';
 import path from 'path';
 import os from 'os';
 
+const localWorkerCount = Math.max(1, Math.min(4, Math.floor(os.cpus().length / 2)));
+const maxWorkers = process.env.CI ? 2 : localWorkerCount;
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -13,7 +16,7 @@ export default defineConfig({
     environment: 'jsdom',
     pool: 'threads',
     fileParallelism: true,
-    maxWorkers: os.cpus().length,
+    maxWorkers,
     testTimeout: 15000,
     setupFiles: ['./tests/setup.ts'],
     environmentOptions: {

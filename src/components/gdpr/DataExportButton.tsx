@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/utils/supabase/client';
+import { supabase, unsafeSupabase } from '@/utils/supabase/client';
 import { toast } from 'sonner';
 
 export function DataExportButton() {
@@ -18,7 +18,7 @@ export function DataExportButton() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase.rpc('request_data_export', {
+      const { error } = await unsafeSupabase.rpc('request_data_export', {
         p_user_id: user.id,
       });
 

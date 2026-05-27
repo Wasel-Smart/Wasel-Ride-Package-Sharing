@@ -18,6 +18,7 @@ export interface Database {
         id: string;
         trip_id: string;
         passenger_id: string;
+        user_id: string | null;
         seats_requested: number | null;
         seats_booked: number | null;
         seat_number: number | null;
@@ -29,6 +30,7 @@ export interface Database {
         total_price: number | null;
         amount: number | null;
         payment_transaction_id: string | null;
+        payment_intent_id: string | null;
         status: string | null;
         booking_status: string | null;
         confirmed_by_driver: boolean | null;
@@ -36,6 +38,9 @@ export interface Database {
         passenger_rating: number | null;
         driver_review: string | null;
         passenger_review: string | null;
+        cancelled_by: string | null;
+        cancelled_at: string | null;
+        cancellation_reason: string | null;
         created_at: string;
         updated_at: string | null;
       }>;
@@ -101,12 +106,33 @@ export interface Database {
         title: string;
         title_ar: string | null;
         message: string;
+        body: string | null;
         message_ar: string | null;
         read: boolean | null;
         is_read: boolean | null;
         read_at: string | null;
         metadata: Json | null;
+        data: Json | null;
+        booking_id: string | null;
+        trip_id: string | null;
+        related_booking_id: string | null;
+        related_trip_id: string | null;
+        action_url: string | null;
         created_at: string;
+        updated_at: string | null;
+      }>;
+      messages: RowSet<{
+        id: string;
+        trip_id: string | null;
+        conversation_id: string | null;
+        sender_id: string;
+        content: string | null;
+        type: 'text' | 'location' | 'system' | string | null;
+        message_type: 'text' | 'location' | 'system' | string | null;
+        metadata: Json | null;
+        read_by: string[] | null;
+        created_at: string;
+        updated_at: string | null;
       }>;
       package_events: RowSet<{
         package_event_id: string;
@@ -206,6 +232,8 @@ export interface Database {
         // Trust & ratings
         trust_score: number | null;              // ← added
         rating: number | null;
+        average_rating: number | null;
+        total_ratings: number | null;
         rating_as_passenger: number | null;      // ← added
         rating_as_driver: number | null;
         // Trip statistics
@@ -245,6 +273,35 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
+      ratings: RowSet<{
+        id: string;
+        booking_id: string;
+        trip_id: string;
+        rider_id: string;
+        reviewer_id: string | null;
+        reviewee_id: string | null;
+        driver_id: string;
+        rating: number | null;
+        review: string | null;
+        tags: string[] | null;
+        created_at: string;
+        updated_at: string | null;
+      }>;
+      route_reminders: RowSet<{
+        id: string;
+        user_id: string;
+        corridor_id: string;
+        label: string;
+        origin_city: string;
+        destination_city: string;
+        frequency: 'weekdays' | 'daily' | 'weekly' | string;
+        preferred_time: string;
+        next_reminder_at: string;
+        enabled: boolean;
+        last_sent_at: string | null;
+        created_at: string;
+        updated_at: string;
+      }>;
       trip_presence: RowSet<{
         trip_presence_id: string;
         trip_id: string;
@@ -253,6 +310,27 @@ export interface Database {
         active_packages: number;
         last_location: Json;
         last_heartbeat_at: string;
+        created_at: string;
+        updated_at: string;
+      }>;
+      user_consents: RowSet<{
+        id: string;
+        user_id: string;
+        consent_type: string;
+        granted: boolean;
+        ip_address: string | null;
+        user_agent: string | null;
+        created_at: string;
+      }>;
+      user_membership: RowSet<{
+        user_id: string;
+        plus_active: boolean;
+        commuter_pass_route_id: string | null;
+        movement_credits: number;
+        streak_days: number;
+        daily_route_id: string | null;
+        loyalty_tier: string | null;
+        last_activity_date: string | null;
         created_at: string;
         updated_at: string;
       }>;
@@ -314,6 +392,7 @@ export interface Database {
         two_factor_enabled: boolean | null;
         two_factor_secret: string | null;
         two_factor_backup_codes: string[] | null;
+        deleted_at: string | null;
         created_at: string;
         updated_at: string;
       }>;
@@ -355,6 +434,35 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
+      wallet_transactions: RowSet<{
+        id: string;
+        user_id: string;
+        deleted_at: string | null;
+        created_at: string;
+      }>;
+      data_export_requests: RowSet<{
+        id: string;
+        user_id: string;
+        requested_at: string;
+        completed_at: string | null;
+        download_url: string | null;
+        expires_at: string | null;
+        status: string;
+      }>;
+      data_deletion_requests: RowSet<{
+        id: string;
+        user_id: string;
+        requested_at: string;
+        scheduled_for: string;
+        completed_at: string | null;
+        reason: string | null;
+        status: string;
+      }>;
+      ride_bookings: RowSet<{
+        id: string;
+        passenger_id: string;
+        deleted_at: string | null;
+      }>;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -365,6 +473,14 @@ export interface Database {
       app_transfer_wallet_funds: {
         Args: { p_from_user_id: string; p_to_user_id: string; p_amount: number; p_payment_method?: string };
         Returns: { debit_transaction_id: string; credit_transaction_id: string }[];
+      };
+      request_account_deletion: {
+        Args: { p_user_id: string };
+        Returns: Json;
+      };
+      request_data_export: {
+        Args: { p_user_id: string };
+        Returns: Json;
       };
     };
     Enums: {

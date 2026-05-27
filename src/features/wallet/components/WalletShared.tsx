@@ -3,7 +3,7 @@
  *
  * Shared wallet primitives used across the dashboard surface.
  */
-
+import type { MouseEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Plus,
@@ -152,7 +152,7 @@ export function ActionModal({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="w-full max-w-md rounded-2xl border border-border/50 p-6 space-y-4"
             style={{ background: WaselColors.navyCard }}
-            onClick={e => e.stopPropagation()}
+            onClick={(event: MouseEvent<HTMLDivElement>) => event.stopPropagation()}
           >
             <h3 className="text-lg font-bold text-foreground">{title}</h3>
             {children}

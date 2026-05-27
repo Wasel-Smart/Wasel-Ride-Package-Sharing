@@ -88,7 +88,9 @@ export function initPerformanceMonitoring() {
     metrics.fid = metric.value;
   });
 
-  console.log('✅ Performance monitoring initialized');
+  if (import.meta.env.DEV) {
+    console.info('[Wasel] Performance monitoring initialized.');
+  }
 }
 
 export function hasAnalyticsConsent(): boolean {
@@ -176,7 +178,7 @@ function reportWebVital(metric: Metric) {
 
   // Check against performance budget
   const budget = PERFORMANCE_BUDGETS[vital.name.toLowerCase() as keyof typeof PERFORMANCE_BUDGETS];
-  if (budget && vital.value > budget) {
+  if (budget && vital.value > budget && !import.meta.env.DEV) {
     logger.warning(`Performance budget exceeded: ${sanitizeLogMessage(vital.name)}`, {
       value: vital.value,
       budget,
@@ -189,7 +191,7 @@ function reportWebVital(metric: Metric) {
   sendToAnalytics(vital);
 
   // Send to Sentry for poor metrics
-  if (vital.rating === 'poor') {
+  if (vital.rating === 'poor' && !import.meta.env.DEV) {
     logger.error(
       `Poor performance: ${sanitizeLogMessage(vital.name)}`,
       new Error('Performance threshold exceeded'),

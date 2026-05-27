@@ -11,4 +11,208 @@
     height: 100%;
     margin: 0;
   }
+
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    touch-action: manipulation;
+  }
+
+  #root {
+    isolation: isolate;
+    overflow-x: clip;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  img,
+  picture,
+  video,
+  canvas,
+  svg,
+  iframe {
+    max-width: 100%;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+  }
+
+  input,
+  select,
+  textarea {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  dd,
+  blockquote,
+  figcaption,
+  label,
+  button,
+  a {
+    overflow-wrap: anywhere;
+  }
+
+  [dir='rtl'] {
+    font-family:
+      'Tajawal',
+      'Cairo',
+      'Noto Sans Arabic',
+      system-ui,
+      sans-serif;
+  }
+}
+
+@layer components {
+  .wasel-main-content,
+  .wasel-main-content main,
+  .wasel-page,
+  .wasel-container,
+  .page-pad {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .wasel-main-content main > * {
+    min-width: 0;
+  }
+
+  .wasel-main-content table {
+    width: 100%;
+  }
+
+  .wasel-main-content :where(.glass, .glass-card, .wasel-card, [class*='Card'], [class*='card']) {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .wasel-main-content :where(button, a, input, select, textarea, [role='button']) {
+    min-height: 44px;
+  }
+
+  .wasel-main-content :where(button, a, [role='button']) {
+    touch-action: manipulation;
+  }
+}
+
+@media (max-width: 1023px) {
+  .wasel-main-content main {
+    padding-inline: max(12px, env(safe-area-inset-left, 0px)) max(12px, env(safe-area-inset-right, 0px));
+  }
+
+  .wasel-main-content main [style*='grid-template-columns'] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .wasel-main-content main [style*='grid-column'] {
+    grid-column: auto !important;
+  }
+
+  .wasel-main-content main [style*='min-width'] {
+    min-width: 0 !important;
+  }
+
+  .wasel-main-content main [style*='max-width'] {
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .wasel-main-content main {
+    padding-inline: max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-right, 0px));
+  }
+
+  .wasel-main-content main [style*='display: flex'],
+  .wasel-main-content main [style*='display:flex'] {
+    flex-wrap: wrap !important;
+  }
+
+  .wasel-main-content main [style*='flex-basis'],
+  .wasel-main-content main [style*='width: 50'],
+  .wasel-main-content main [style*='width:50'],
+  .wasel-main-content main [style*='width: 33'],
+  .wasel-main-content main [style*='width:33'] {
+    width: 100% !important;
+    flex-basis: 100% !important;
+  }
+
+  .wasel-main-content main :where(.grid, [class*='grid-cols-'], [class*='md:grid-cols-'], [class*='lg:grid-cols-']) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .wasel-main-content main :where(.flex-row, [class*='md:flex-row'], [class*='lg:flex-row']) {
+    flex-direction: column !important;
+  }
+
+  .wasel-main-content main :where(.overflow-x-auto, .overflow-x-scroll) {
+    max-width: calc(100vw - 20px);
+  }
+
+  .wasel-main-content main :where(button, a, [role='button']) {
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 430px) {
+  .wasel-main-content main {
+    padding-inline: max(8px, env(safe-area-inset-left, 0px)) max(8px, env(safe-area-inset-right, 0px));
+  }
+
+  .wasel-main-content main h1 {
+    font-size: clamp(1.8rem, 9vw, 2.35rem);
+    line-height: 1.08;
+  }
+
+  .wasel-main-content main h2 {
+    font-size: clamp(1.35rem, 7vw, 1.8rem);
+    line-height: 1.16;
+  }
+
+  .wasel-main-content main [style*='padding: 30'],
+  .wasel-main-content main [style*='padding:30'],
+  .wasel-main-content main [style*='padding: 28'],
+  .wasel-main-content main [style*='padding:28'],
+  .wasel-main-content main [style*='padding: 26'],
+  .wasel-main-content main [style*='padding:26'] {
+    padding: 18px 14px !important;
+  }
+
+  .wasel-main-content main [style*='border-radius: 30'],
+  .wasel-main-content main [style*='border-radius:30'],
+  .wasel-main-content main [style*='border-radius: 28'],
+  .wasel-main-content main [style*='border-radius:28'],
+  .wasel-main-content main [style*='border-radius: 26'],
+  .wasel-main-content main [style*='border-radius:26'] {
+    border-radius: 18px !important;
+  }
 }

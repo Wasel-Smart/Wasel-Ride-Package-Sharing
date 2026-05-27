@@ -1,10 +1,24 @@
 import { supabase } from '@/utils/supabase/client';
 import { paymentService } from './payment';
 
+const db = supabase as any;
+
 type TripBookingRow = {
   id: string;
-  user_id: string;
+  passenger_id: string;
   payment_status: string | null;
+};
+
+type BookingWithTrip = {
+  id: string;
+  passenger_id: string;
+  payment_status: string | null;
+  status: string | null;
+  trip_id: string;
+  trips: {
+    driver_id: string | null;
+    departure_time: string | null;
+  } | null;
 };
 
 export interface CancelBookingRequest {
@@ -32,17 +46,19 @@ class CancellationService {
       throw new Error('Not authenticated');
     }
 
-    const { data: booking, error: fetchError } = await supabase
+    const { data: bookingData, error: fetchError } = await db
       .from('bookings')
-      .select('*, trips(*)')
+      .select('id, passenger_id, payment_status, status, trip_id, trips(driver_id, departure_time)')
       .eq('id', bookingId)
       .single();
+
+    const booking = bookingData as BookingWithTrip | null;
 
     if (fetchError || !booking) {
       throw new Error('Booking not found');
     }
 
-    if (booking.user_id !== user.id) {
+    if (booking.passenger_id !== user.id) {
       throw new Error('Unauthorized');
     }
 
@@ -54,7 +70,7 @@ class CancellationService {
       throw new Error('Cannot cancel completed booking');
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await db
       .from('bookings')
       .update({
         status: 'cancelled',
@@ -79,13 +95,17 @@ class CancellationService {
       }
     }
 
-    await supabase.from('notifications').insert({
-      user_id: booking.trips.driver_id,
-      type: 'booking_cancelled',
-      title: 'Booking Cancelled',
-      body: `A passenger cancelled their booking. Reason: ${reason}`,
-      data: { bookingId, tripId: booking.trip_id },
-    });
+    if (booking.trips?.driver_id) {
+      await db.from('notifications').insert({
+        user_id: booking.trips.driver_id,
+        type: 'booking_cancelled',
+        title: 'Booking Cancelled',
+        message: `A passenger cancelled their booking. Reason: ${reason}`,
+        metadata: { bookingId, tripId: booking.trip_id },
+        related_booking_id: bookingId,
+        related_trip_id: booking.trip_id,
+      });
+    }
   }
 
   async cancelTrip({ tripId, reason }: CancelTripRequest): Promise<void> {
@@ -97,7 +117,7 @@ class CancellationService {
       throw new Error('Not authenticated');
     }
 
-    const { data: trip, error: fetchError } = await supabase
+    const { data: trip, error: fetchError } = await db
       .from('trips')
       .select('*')
       .eq('id', tripId)
@@ -119,13 +139,13 @@ class CancellationService {
       throw new Error('Cannot cancel completed trip');
     }
 
-    const { data: bookings } = await supabase
+    const { data: bookings } = await db
       .from('bookings')
       .select('*')
       .eq('trip_id', tripId)
       .in('status', ['pending', 'confirmed']);
 
-    const { error: tripUpdateError } = await supabase
+    const { error: tripUpdateError } = await db
       .from('trips')
       .update({
         status: 'cancelled',
@@ -142,7 +162,7 @@ class CancellationService {
     if (activeBookings.length > 0) {
       const bookingIds = activeBookings.map(booking => booking.id);
 
-      await supabase
+      await db
         .from('bookings')
         .update({
           status: 'cancelled',
@@ -164,12 +184,14 @@ class CancellationService {
           }
         }
 
-        await supabase.from('notifications').insert({
-          user_id: booking.user_id,
+        await db.from('notifications').insert({
+          user_id: booking.passenger_id,
           type: 'trip_cancelled',
           title: 'Trip Cancelled',
-          body: `Your trip has been cancelled by the driver. Reason: ${reason}`,
-          data: { bookingId: booking.id, tripId },
+          message: `Your trip has been cancelled by the driver. Reason: ${reason}`,
+          metadata: { bookingId: booking.id, tripId },
+          related_booking_id: booking.id,
+          related_trip_id: tripId,
         });
       }
     }
@@ -179,11 +201,13 @@ class CancellationService {
     canCancel: boolean;
     reason?: string;
   }> {
-    const { data: booking, error } = await supabase
+    const { data: bookingData, error } = await db
       .from('bookings')
       .select('status, trips(departure_time)')
       .eq('id', bookingId)
       .single();
+
+    const booking = bookingData as Pick<BookingWithTrip, 'status' | 'trips'> | null;
 
     if (error || !booking) {
       return { canCancel: false, reason: 'Booking not found' };
@@ -197,7 +221,12 @@ class CancellationService {
       return { canCancel: false, reason: 'Trip completed' };
     }
 
-    const departureTime = new Date(booking.trips.departure_time);
+    const departureValue = booking.trips?.departure_time;
+    if (!departureValue) {
+      return { canCancel: false, reason: 'Departure time unavailable' };
+    }
+
+    const departureTime = new Date(departureValue);
     const now = new Date();
     const hoursUntilDeparture = (departureTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
