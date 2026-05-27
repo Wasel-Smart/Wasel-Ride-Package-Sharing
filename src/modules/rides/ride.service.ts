@@ -199,6 +199,45 @@ function toRideResultFromCatalogRide(ride: CatalogRide): RideResult {
   };
 }
 
+function toRideResultFromPostedRide(ride: ReturnType<typeof getConnectedRides>[number]): RideResult {
+  const etaMinutes = estimateEtaMinutes(ride.from, ride.to);
+  const fallbackName = ride.ownerPhone ? `Driver ${ride.ownerPhone.slice(-4)}` : 'Wasel driver';
+  const vehicleLabel = ride.carModel?.trim() || 'Shared ride';
+  return {
+    id: ride.id,
+    from: ride.from,
+    to: ride.to,
+    date: ride.date,
+    time: ride.time,
+    seatsAvailable: ride.seats,
+    totalSeats: ride.seats,
+    pricePerSeat: ride.price,
+    driver: {
+      id: ride.ownerId ?? `posted-driver-${ride.id}`,
+      name: fallbackName,
+      rating: 4.7,
+      verified: true,
+      trips: 36,
+      phone: ride.ownerPhone,
+      email: ride.ownerEmail,
+    },
+    routeMode: 'shared_route',
+    ownerId: ride.ownerId,
+    vehicleType: vehicleLabel,
+    carModel: vehicleLabel,
+    etaMinutes,
+    estimatedArrivalLabel: formatArrivalLabel(etaMinutes),
+    recommendedReason: 'Posted by a Wasel driver',
+    rideType: inferRideType(vehicleLabel),
+    supportsPackages: ride.acceptsPackages,
+    packageCapacity: ride.acceptsPackages ? ride.packageCapacity : undefined,
+    packageNote: ride.packageNote,
+    postedRideId: ride.id,
+    durationLabel: formatArrivalLabel(etaMinutes).replace(' ETA', ''),
+    lastUpdatedAt: ride.syncedAt ?? ride.createdAt,
+  };
+}
+
 function isCatalogFallbackEnabled() {
   const { isDev, isTest } = getConfig();
   return isDev || isTest;
@@ -303,9 +342,15 @@ function indexRequestsByRideId(bookings: RideBookingRecord[]) {
 
 export const rideService = {
   async searchRides(params: RideSearchParams): Promise<RideResult[]> {
+    const postedResults = filterAndSortRideResults(
+      getConnectedRides().map(toRideResultFromPostedRide),
+      params,
+    );
+
     try {
       const liveTrips = await tripsAPI.searchTrips(params.from, params.to, params.date, params.seats);
-      return filterAndSortRideResults(liveTrips.map(toRideResultFromTrip), params);
+      const liveResults = filterAndSortRideResults(liveTrips.map(toRideResultFromTrip), params);
+      return dedupeResults([...liveResults, ...postedResults]);
     } catch (error) {
       logger.error('[rideService] ride search failed', error, {
         operation: 'ride.search.backend_failure',
@@ -313,6 +358,16 @@ export const rideService = {
         to: params.to,
         date: params.date,
       });
+      if (postedResults.length > 0) {
+        logger.warning('[rideService] using posted rides fallback for ride.search', {
+          operation: 'ride.search.posted_rides_fallback',
+          from: params.from,
+          to: params.to,
+          date: params.date,
+          resultCount: postedResults.length,
+        });
+        return postedResults;
+      }
       if (isCatalogFallbackEnabled()) {
         logger.warning('[rideService] falling back to local Wasel ride catalog', {
           operation: 'ride.search.catalog_fallback',
