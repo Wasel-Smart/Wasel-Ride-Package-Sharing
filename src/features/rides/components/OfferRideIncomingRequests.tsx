@@ -1,4 +1,4 @@
-import { notificationsAPI } from '../../../services/notifications.js';
+import { notificationsAPI } from '../../../services/notifications';
 import { updateRideBooking, type RideBookingRecord } from '../../../services/rideLifecycle';
 import { DS, r } from '../../../pages/waselServiceShared';
 

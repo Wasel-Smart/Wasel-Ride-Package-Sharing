@@ -159,7 +159,10 @@ export function clearSupportTicketCache(): void {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function generateId(prefix: string) {
-  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
 }
 
 function sortTickets(items: SupportTicket[]) {

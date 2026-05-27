@@ -63,6 +63,10 @@ function mapBackendProfile({
   >;
   profile: Profile | null;
 }): WaselUser {
+  if (!authUser?.id) {
+    throw new Error('Authenticated Supabase user id is required.');
+  }
+
   const name =
     profile?.full_name ||
     authUser?.user_metadata?.full_name ||
@@ -92,7 +96,7 @@ function mapBackendProfile({
       : 'active';
 
   const baseUser: WaselUser = {
-    id: authUser?.id || `user-${Date.now()}`,
+    id: authUser.id,
     name,
     email: authUser?.email || profile?.email || '',
     phone,

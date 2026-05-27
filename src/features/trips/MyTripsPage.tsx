@@ -28,6 +28,8 @@ import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { getStoredBusBookings, type StoredBusBooking } from '../../services/bus';
 import { getConnectedPackages, type PackageRequest } from '../../services/journeyLogistics';
 import {
+  getRideBookings,
+  hydrateRideBookings,
   syncRideBookingCompletion,
   type RideBookingRecord,
   type RidePaymentStatus,
@@ -616,6 +618,8 @@ export default function MyTripsPage() {
   );
 
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
+  const [rideBookings, setRideBookings] = useState<RideBookingRecord[]>(() => getRideBookings());
+  const [completionClock, setCompletionClock] = useState(() => Date.now());
 
   useEffect(() => {
     let cancelled = false;
@@ -649,8 +653,38 @@ export default function MyTripsPage() {
     );
   }, [location.search]);
 
+  useEffect(() => {
+    if (!user?.id) {
+      setRideBookings([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const hydrate = async () => {
+      try {
+        const bookings = await hydrateRideBookings(user.id);
+        if (!cancelled) setRideBookings(bookings);
+      } catch {
+        if (!cancelled) setRideBookings(getRideBookings());
+      }
+    };
+
+    void hydrate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setCompletionClock(Date.now()), 60_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
   const rideItems = useMemo(() => {
-    return syncRideBookingCompletion().map(booking => {
+    void rideBookings;
+    return syncRideBookingCompletion(completionClock).map(booking => {
       const relatedSupport = getSupportForItem(supportTickets, [
         booking.id,
         booking.backendBookingId,
@@ -659,7 +693,7 @@ export default function MyTripsPage() {
       ]);
       return toRideItem(booking, relatedSupport);
     });
-  }, [supportTickets]);
+  }, [completionClock, rideBookings, supportTickets]);
 
   const packageItems = useMemo(() => {
     return getConnectedPackages().map(pkg => {

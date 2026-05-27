@@ -21,7 +21,7 @@ import {
   updatePackageVerification,
   type PackageRequest,
 } from '../../services/journeyLogistics';
-import { notificationsAPI } from '../../services/notifications.js';
+import { notificationsAPI } from '../../services/notifications';
 import { recordMovementActivity } from '../../services/movementMembership';
 import { createSupportTicket } from '../../services/supportInbox';
 import {

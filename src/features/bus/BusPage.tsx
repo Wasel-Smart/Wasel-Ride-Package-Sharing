@@ -25,7 +25,7 @@ import {
   type BusRoute,
 } from '../../services/bus';
 import { createSupportTicket } from '../../services/supportInbox';
-import { notificationsAPI } from '../../services/notifications.js';
+import { notificationsAPI } from '../../services/notifications';
 import {
   CITIES,
   CoreExperienceBanner,

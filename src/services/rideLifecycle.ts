@@ -49,6 +49,7 @@ export interface RideBookingRecord {
   date: string;
   time: string;
   driverName: string;
+  passengerId: string;
   passengerName: string;
   seatsRequested: number;
   status: RideBookingStatus;
@@ -244,6 +245,7 @@ export async function createRideBooking(input: {
     date: input.date,
     time: input.time,
     driverName: input.driverName,
+    passengerId: input.passengerId,
     passengerName: input.passengerName,
     seatsRequested,
     status: remoteStatus,
@@ -293,8 +295,8 @@ export function getBookingsForDriver(userId: string, rides: PostedRide[]): RideB
   return getRideBookings().filter(b => b.ownerId === userId || rideIds.has(b.rideId));
 }
 
-export function getBookingsForPassenger(passengerName: string): RideBookingRecord[] {
-  return getRideBookings().filter(b => b.passengerName === passengerName);
+export function getBookingsForPassenger(passengerId: string): RideBookingRecord[] {
+  return getRideBookings().filter(b => b.passengerId === passengerId);
 }
 
 /**
@@ -412,6 +414,7 @@ export async function hydrateRideBookings(
         new Date(String(raw.created_at ?? new Date().toISOString())).toISOString().slice(0, 10),
       time: ride?.time ?? '08:00',
       driverName: ride ? ride.carModel || 'Wasel Captain' : 'Wasel Captain',
+      passengerId: userId,
       passengerName: 'Passenger',
       seatsRequested: Number(raw.seats_requested ?? 1) || 1,
       status,

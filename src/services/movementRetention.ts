@@ -10,7 +10,7 @@
 
 import { unsafeSupabase } from '../utils/supabase/client';
 import { logger } from '../utils/monitoring';
-import { notificationsAPI } from './notifications.js';
+import { notificationsAPI } from './notifications';
 import { getDemandAlerts } from './demandCapture';
 import { getGrowthEventFeed } from './growthEngine';
 import type { MovementPriceQuote } from './movementPricing';

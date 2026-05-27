@@ -355,6 +355,11 @@ export async function createDirectBooking(input: {
       booking_status: input.bookingStatus ?? 'confirmed',
       status: input.bookingStatus ?? 'confirmed',
       confirmed_by_driver: input.bookingStatus === 'pending_driver' ? false : true,
+      seats_requested: input.seatsRequested,
+      pickup_location: input.pickup ?? null,
+      dropoff_location: input.dropoff ?? null,
+      price_per_seat: pricePerSeat,
+      total_price: totalPrice,
       amount: totalPrice,
     })
     .select('*')

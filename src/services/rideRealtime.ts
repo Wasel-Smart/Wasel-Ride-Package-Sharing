@@ -19,9 +19,10 @@ export function subscribeToRideBookingRealtime({
 
   let active = true;
   let queued = false;
+  let refreshTimer: ReturnType<typeof setTimeout> | null = null;
   let refreshing: Promise<void> | null = null;
 
-  const refresh = () => {
+  const refreshNow = () => {
     if (!active) {
       return;
     }
@@ -43,21 +44,37 @@ export function subscribeToRideBookingRealtime({
 
         if (queued) {
           queued = false;
-          refresh();
+          refreshNow();
         }
       });
   };
 
-  refresh();
+  const refresh = () => {
+    if (refreshTimer) {
+      clearTimeout(refreshTimer);
+    }
+    refreshTimer = setTimeout(() => {
+      refreshTimer = null;
+      refreshNow();
+    }, 750);
+  };
+
+  refreshNow();
 
   const channel = supabase
     .channel(`ride-bookings-live-${userId}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, refresh)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, refresh)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'bookings', filter: `passenger_id=eq.${userId}` },
+      refresh,
+    )
     .subscribe();
 
   return () => {
     active = false;
+    if (refreshTimer) {
+      clearTimeout(refreshTimer);
+    }
     void supabase.removeChannel(channel);
   };
 }
