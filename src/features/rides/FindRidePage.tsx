@@ -48,7 +48,6 @@ import {
 } from '../../services/rideLifecycle';
 import { getCorridorOpportunity, getMarketplaceNodes } from '../../config/wasel-movement-network';
 import {
-  ALL_RIDES,
   buildRideFromTripSearchResult,
   buildRideFromPostedRide,
   CITIES,
@@ -103,6 +102,7 @@ export function FindRidePage() {
   const [from, setFrom] = useState(initialFrom);
   const [to, setTo] = useState(initialTo);
   const [date, setDate] = useState(initialDate);
+  const [searchCount, setSearchCount] = useState(0);
   const [searched, setSearched] = useState(initialSearched);
   const [loading, setLoading] = useState(false);
   const [sort, setSort] = useState<'price' | 'time' | 'rating'>('rating');
@@ -180,7 +180,7 @@ export function FindRidePage() {
   }, [routeIntelligence.updatedAt]);
   const allAvailableRides = useMemo(() => {
     const rideMap = new Map<string, Ride>();
-    for (const ride of [...connectedRides, ...networkRides, ...ALL_RIDES]) {
+    for (const ride of [...connectedRides, ...networkRides]) {
       rideMap.set(ride.id, ride);
     }
     return Array.from(rideMap.values());
@@ -312,11 +312,14 @@ export function FindRidePage() {
 
   useEffect(() => {
     if (!searched || from === to) return;
+    // Inclusion of searchCount allows forced refresh on re-search
+    void searchCount;
 
     let cancelled = false;
 
     const loadSearchResults = async () => {
       setLoading(true);
+      setNetworkRides([]); // Clear old results during fetch
       setSearchError(null);
 
       try {
@@ -345,7 +348,7 @@ export function FindRidePage() {
     return () => {
       cancelled = true;
     };
-  }, [ar, date, from, searched, to]);
+  }, [ar, date, from, searched, to, searchCount]);
 
   const handleSearch = async () => {
     if (from === to) {
@@ -359,6 +362,7 @@ export function FindRidePage() {
     setBookingSuccess(null);
     setLoading(true);
     setSearched(true);
+    setSearchCount(prev => prev + 1);
     setRecentSearches(previous => {
       const label = `${from} to ${to}${date ? ` on ${date}` : ''}`;
       return [label, ...previous.filter(item => item !== label)].slice(0, 4);
@@ -471,10 +475,14 @@ export function FindRidePage() {
           priority: 'high',
           action_url: '/app/my-trips?tab=rides',
         })
-        .catch(() => {});
+        .catch((err) => {
+          console.error('[Notification Error]:', err);
+        });
 
       if (permission === 'default') {
-        requestPermission().catch(() => {});
+        requestPermission().catch((err) => {
+          console.error('[Push Permission Error]:', err);
+        });
       }
 
       notifyTripConfirmed(ride.driver.name, `${ride.from} to ${ride.to}`);
