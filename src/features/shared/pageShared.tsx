@@ -109,7 +109,8 @@ export function Protected({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!loading && !user && mountedRef.current) {
+    const onAuthRoute = location.pathname === '/auth' || location.pathname === '/app/auth';
+    if (!loading && !user && mountedRef.current && !onAuthRoute) {
       nav(
         buildAuthPagePath(
           'signin',
