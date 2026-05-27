@@ -177,6 +177,7 @@
     "verify:gaps": "node scripts/verify-gaps-fixed.mjs",
     "backup:db": "node scripts/backup-database.mjs --type=full",
     "backup:schema": "node scripts/backup-database.mjs --type=schema",
-    "backup:data": "node scripts/backup-database.mjs --type=data"
+    "backup:data": "node scripts/backup-database.mjs --type=data",
+    "package:final": "npm run build && node scripts/package-final-release.mjs"
   }
 }
