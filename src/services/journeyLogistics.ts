@@ -13,7 +13,7 @@ import {
   routeMatchesLocationPair,
 } from '../utils/jordanLocations';
 import { logger } from '../utils/logging';
-import { requireDirectSupabaseFallback } from './runtimePolicy';
+import { allowLocalPersistenceFallback, requireDirectSupabaseFallback } from './runtimePolicy';
 
 export type RecordSyncState = 'local-only' | 'syncing' | 'synced' | 'sync-error';
 
@@ -548,7 +548,26 @@ export async function createConnectedRide(
       seats: ride.seats,
       price: ride.price,
     });
-    throw new Error('Ride could not be created right now. Please try again.');
+
+    if (allowLocalPersistenceFallback()) {
+      const localRide: PostedRide = {
+        ...ride,
+        status: 'active',
+        syncState: 'local-only',
+        syncedAt: undefined,
+      };
+      saveRides([localRide], getConnectedRides());
+      logger.warning('[journeyLogistics] saved ride locally while backend unavailable', {
+        operation: 'ride.create.local_fallback',
+        rideId: localRide.id,
+        from: localRide.from,
+        to: localRide.to,
+      });
+      return localRide;
+    }
+
+    const message = error instanceof Error ? error.message : 'Ride could not be created right now. Please try again.';
+    throw new Error(message);
   }
 }
 
