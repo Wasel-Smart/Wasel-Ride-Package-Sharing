@@ -112,6 +112,7 @@ export function FindRidePage() {
   const [recentSearches, setRecentSearches] = useState<string[]>(() =>
     readStoredStringList(RIDE_SEARCHES_KEY),
   );
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [searchError, setSearchError] = useState<string | null>(null);
   const [bookingMessage, setBookingMessage] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState<BookingSuccessState | null>(null);
@@ -312,8 +313,6 @@ export function FindRidePage() {
 
   useEffect(() => {
     if (!searched || from === to) return;
-    // Inclusion of searchCount allows forced refresh on re-search
-    void searchCount;
 
     let cancelled = false;
 
@@ -326,6 +325,7 @@ export function FindRidePage() {
         const trips = await tripsAPI.searchTrips(from, to, date || undefined);
         if (cancelled) return;
         setNetworkRides(trips.map(buildRideFromTripSearchResult));
+        setLastUpdated(new Date());
       } catch (error) {
         if (cancelled) return;
         setNetworkRides([]);
@@ -348,7 +348,7 @@ export function FindRidePage() {
     return () => {
       cancelled = true;
     };
-  }, [ar, date, from, searched, to, searchCount]);
+  }, [ar, date, from, searched, to, searchCount]); // searchCount acts as a refresh trigger
 
   const handleSearch = async () => {
     if (from === to) {
@@ -1044,12 +1044,37 @@ export function FindRidePage() {
                   ? `${from} to ${to} | ${results.length} route match${results.length !== 1 ? 'es' : ''}`
                   : `Popular routes | showing ${results.length} departures`}
               </h2>
-              {selectedSignal ? (
-                <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
-                  Live lane price {selectedSignal.priceQuote.finalPriceJod} JOD | Next wave{' '}
-                  {selectedSignal.nextWaveWindow}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ textAlign: 'right' }}>
+                  {selectedSignal ? (
+                    <div style={{ color: DS.muted, fontSize: '0.7rem' }}>
+                      Live lane price {selectedSignal.priceQuote.finalPriceJod} JOD | Next wave{' '}
+                      {selectedSignal.nextWaveWindow}
+                    </div>
+                  ) : null}
+                  <div style={{ color: DS.sub, fontSize: '0.65rem' }}>
+                    {ar ? 'آخر تحديث: ' : 'Last updated: '}
+                    {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
-              ) : null}
+                <button
+                  onClick={() => setSearchCount(prev => prev + 1)}
+                  disabled={loading}
+                  style={{
+                    background: DS.card2,
+                    border: `1px solid ${DS.border}`,
+                    borderRadius: '50%',
+                    width: 32,
+                    height: 32,
+                    display: 'grid',
+                    placeItems: 'center',
+                    cursor: 'pointer',
+                    color: DS.muted,
+                  }}
+                >
+                  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                </button>
+              </div>
               <div className="sp-sort-bar" style={{ display: 'flex', gap: 6 }}>
                 {(
                   [
